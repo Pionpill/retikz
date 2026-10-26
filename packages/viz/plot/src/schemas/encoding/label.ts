@@ -7,13 +7,9 @@ import { ChannelSchema } from './channel';
 
 /** 校验标签字体的独立字段绑定，未编码的字体叶子保留固定配置和继承 */
 export const LabelFontEncodingSchema = strictObject({
-  /** 字号字段；省略显式比例尺时直接读取合法字号 */
   size: ChannelSchema.optional().describe('Font size field, optionally mapped through an explicit numeric scale'),
-  /** 字重字段；显式比例尺输出仍须符合字体字重契约 */
   weight: ChannelSchema.optional().describe('Font weight field, optionally mapped through an explicit numeric scale'),
-  /** 字体族字段，直接读取，不支持比例尺绑定 */
   family: NonBlankStringSchema.optional().describe('Font family field; direct values only, without a scale'),
-  /** 字形字段，直接读取，不支持比例尺绑定 */
   style: NonBlankStringSchema.optional().describe('Font style field; direct values only, without a scale'),
 }).describe('Independent font field bindings; unencoded leaves retain fixed settings and inheritance');
 
@@ -22,13 +18,10 @@ export const LabelFontEncodingSchema = strictObject({
  * @description 与 properties.label 按标签索引组合；常量不写入编码，额外目标必须经过通道注册和宿主校验
  */
 export const LabelEncodingSchema = strictObject({
-  /** 内容字段；格式由固定属性 displayFormat 控制 */
   text: NonBlankStringSchema.optional().describe('Label text field; formatting is configured in fixed properties'),
   font: LabelFontEncodingSchema.optional(),
   textColor: ChannelSchema.optional(),
-  /** 标签自身的标量透明度，不使用图元的 overall / fill / stroke 对象 */
   opacity: ChannelSchema.optional().describe('Scalar label opacity field, independent of mark opacity factor bindings'),
-  /** 附着位置字段，值语义由节点或路径宿主决定 */
   position: NonBlankStringSchema.optional().describe(
     'Attachment position field; values follow the label host contract',
   ),

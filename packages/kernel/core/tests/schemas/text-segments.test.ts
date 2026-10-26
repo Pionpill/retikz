@@ -1,6 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
-import { LineSchema, MathSegmentSchema, SegmentedLineSchema, NodeSchema, TextSegmentSchema } from '../../src/schemas';
+import {
+  LineSchema,
+  MathSegmentSchema,
+  SegmentedLineSchema,
+  NodeSchema,
+  TextSegmentSchema,
+  NodeLabelSchema,
+  PathLabelSchema,
+} from '../../src/schemas';
+
+describe('label text blocks', () => {
+  it.each([NodeLabelSchema, PathLabelSchema])('accepts the shared text block and rejects non-block inputs', schema => {
+    const text = ['first', { text: 'second', fill: '#f00' }, { segments: [{ text: 'third' }] }];
+    expect(schema.parse({ text }).text).toEqual(text);
+    expect(schema.safeParse({ text: [] }).success).toBe(false);
+    expect(schema.safeParse({ text: { segments: [{ text: 'old' }] } }).success).toBe(false);
+  });
+});
 
 describe('[text-segments] segment schemas', () => {
   it('accepts a text segment with per-segment style', () => {

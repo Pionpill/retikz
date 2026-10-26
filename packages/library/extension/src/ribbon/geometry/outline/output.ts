@@ -1,18 +1,18 @@
-import type { IRPosition, PathCommand, PathPrim, ResolvedPathKindAppearance } from '@retikz/core';
+import type { IRPosition, PathCommand, PathPrimitive, ResolvedPathAppearance } from '@retikz/core';
 
 import type { RibbonLike } from '../types';
 
 /**
- * 将闭合轮廓命令写成最终 PathPrim
+ * 将闭合轮廓命令写成最终 PathPrimitive
  * @description 仅当用户显式请求 stroke / strokeWidth 时写描边字段
  */
 export const styledPrimitiveFromOutline = (
   ribbon: RibbonLike,
   outline: { commands: Array<PathCommand>; points: Array<IRPosition> },
-  appearance: ResolvedPathKindAppearance,
-): PathPrim => {
+  appearance: ResolvedPathAppearance,
+): PathPrimitive => {
   const strokeRequested = ribbon.style?.stroke !== undefined || ribbon.style?.strokeWidth !== undefined;
-  const primitive: PathPrim = {
+  const primitive: PathPrimitive = {
     type: 'path',
     commands: outline.commands,
     fill: appearance.fill ?? appearance.color ?? 'currentColor',
@@ -28,8 +28,8 @@ export const styledPrimitiveFromOutline = (
     primitive.strokeOpacity = appearance.strokeOpacity;
     primitive.dashPattern = appearance.dashPattern;
     primitive.dashOffset = appearance.dashOffset;
-    primitive.strokeLinecap = appearance.strokeLinecap;
-    primitive.strokeLinejoin = appearance.strokeLinejoin;
+    primitive.lineCap = appearance.lineCap;
+    primitive.lineJoin = appearance.lineJoin;
   }
 
   return primitive;

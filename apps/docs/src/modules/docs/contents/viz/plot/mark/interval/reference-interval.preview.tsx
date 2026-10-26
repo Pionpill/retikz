@@ -2,36 +2,39 @@ import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { annotationX, annotationXScale } from '../shared/reference-coordinate';
-import type { AnnotationCoordinate } from '../shared/reference-coordinate';
+import { referenceX, referenceXScale } from '../shared/reference-coordinate';
+import type { ReferenceCoordinate } from '../shared/reference-coordinate';
 
-/** 标注试验场参数 */
-export type AnnotationIntervalValues = {
-  coordinate: AnnotationCoordinate;
+/** 图元位置试验场参数 */
+export type ReferenceIntervalValues = {
+  coordinate: ReferenceCoordinate;
   connection: 'coordinate' | 'straight';
   startCategory: string;
   endCategory: string;
   from: number;
   to: number;
   fullHeight: boolean;
+  fullWidth: boolean;
   opacity: number;
   showLabel: boolean;
   labelPosition: 'top' | 'center' | 'bottom';
 };
 /** 常量几何及其标签的可交互预览 */
-export const AnnotationIntervalPreview: FC<AnnotationIntervalValues> = values => (
+export const ReferenceIntervalPreview: FC<ReferenceIntervalValues> = values => (
   <Layout viewBox={{ x: -50, y: -55, width: 420, height: 350 }}>
     <Plot data={[]} width={320} height={240} coordinate={values.coordinate === 'cartesian' ? undefined : 'polar2D'}>
-      <PlotScale dimension="x" {...annotationXScale(values.coordinate)} />
+      <PlotScale dimension="x" {...referenceXScale(values.coordinate)} />
       <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
       <IntervalMark
         contributeToDomain={false}
         encodings={{
           bounds: {
-            x: {
-              from: { value: annotationX(values.coordinate, values.from, values.startCategory) },
-              to: { value: annotationX(values.coordinate, values.to, values.endCategory) },
-            },
+            x: values.fullWidth
+              ? { from: { edge: 'start' }, to: { edge: 'end' } }
+              : {
+                  from: { value: referenceX(values.coordinate, values.from, values.startCategory) },
+                  to: { value: referenceX(values.coordinate, values.to, values.endCategory) },
+                },
             y: values.fullHeight
               ? { from: { edge: 'start' }, to: { edge: 'end' } }
               : { from: { value: 25 }, to: { value: 75 } },

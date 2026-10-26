@@ -25,7 +25,7 @@ describe('compile path: fill / fillRule', () => {
     expect(path.fillRule).toBeUndefined();
   });
 
-  it('显式 fill 透传到 PathPrim', () => {
+  it('显式 fill 透传到 PathPrimitive', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

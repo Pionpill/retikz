@@ -1,12 +1,12 @@
-import type { AnyPathKindDefinition, IRBoundaryLabel, IRScene, ScenePrimitive } from '@retikz/core';
+import type { AnyPathDefinition, IRBoundaryLabel, IRScene, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import {
-  createRibbonPathKindDefinition,
+  createRibbonPathDefinition,
   defineRibbonCap,
-  RibbonPathKindDefinition,
+  RibbonPathDefinition,
   RibbonPathOptionsSchema,
 } from '../../src/ribbon';
 
@@ -52,7 +52,7 @@ describe('Ribbon endpoint labels', () => {
           },
         ],
       },
-      { pathKinds: [RibbonPathKindDefinition] },
+      { paths: [RibbonPathDefinition] },
     ).scene;
 
     expect(textsOf(scene.primitives)).toEqual(expect.arrayContaining(['source', 'target', 'detail', 'flow']));
@@ -62,7 +62,7 @@ describe('Ribbon endpoint labels', () => {
 const labeledScene = (
   cap: { name: string; params?: Record<string, number | Array<number>> },
   label: IRBoundaryLabel = { text: 'endpoint' },
-  definition: AnyPathKindDefinition = RibbonPathKindDefinition,
+  definition: AnyPathDefinition = RibbonPathDefinition,
 ) =>
   compileToScene(
     {
@@ -80,7 +80,7 @@ const labeledScene = (
         },
       ],
     },
-    { pathKinds: [definition], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
+    { paths: [definition], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
   ).scene;
 
 describe('Endpoint label cap clearance', () => {
@@ -115,7 +115,7 @@ describe('Endpoint label cap clearance', () => {
     const scene = labeledScene(
       { name: 'curved' },
       { text: 'endpoint' },
-      createRibbonPathKindDefinition({ caps: [custom] }),
+      createRibbonPathDefinition({ caps: [custom] }),
     );
 
     expect(scene.layout.x + scene.layout.width).toBeCloseTo(164, 2);
@@ -175,7 +175,7 @@ it('places both labels at zero-width butt caps and preserves parent transforms',
   };
   const restored = JSON.parse(JSON.stringify(input));
   const result = compileToScene(restored, {
-    pathKinds: [RibbonPathKindDefinition],
+    paths: [RibbonPathDefinition],
     padding: 0,
     measureText: () => ({ width: 40, height: 20 }),
   });
@@ -212,7 +212,7 @@ it('inherits Kernel label font and color, multiplies opacity, and retains host m
       },
     ],
   };
-  const scene = compileToScene(input, { pathKinds: [RibbonPathKindDefinition] }).scene;
+  const scene = compileToScene(input, { paths: [RibbonPathDefinition] }).scene;
   const primitives = allPrimitives(scene.primitives);
   const text = primitives.find(p => p.type === 'text');
 
@@ -239,7 +239,7 @@ it('uses the specified endpoint section for radial rotation and tangent alignmen
         },
       ],
     },
-    { pathKinds: [RibbonPathKindDefinition] },
+    { paths: [RibbonPathDefinition] },
   ).scene;
   const angles = allPrimitives(scene.primitives).flatMap(p =>
     p.type === 'group' ? (p.transforms?.filter(t => t.kind === 'rotate').map(t => t.degrees) ?? []) : [],
@@ -284,7 +284,7 @@ describe('Whole Ribbon transforms', () => {
           },
         ],
       },
-      { pathKinds: [RibbonPathKindDefinition], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
+      { paths: [RibbonPathDefinition], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
     );
 
     for (const key of ['x', 'y', 'width', 'height'] as const)

@@ -1,4 +1,4 @@
-import { definePathKind, PathSchema } from '@retikz/core';
+import { definePath, PathSchema } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { infer as ZodInfer } from 'zod';
@@ -27,15 +27,15 @@ describe('Layout public API', () => {
     expect(LayoutRuntimeMode).toEqual({ Retained: 'retained', Static: 'static' });
   });
 
-  it('pathKinds 接受带完整 subject schema 的自定义 Definition', () => {
+  it('paths 接受带完整 subject schema 的自定义 Definition', () => {
     const schema = PathSchema.extend({ kind: literal('precise-options') });
-    const definition = definePathKind<ZodInfer<typeof schema>>({
+    const definition = definePath<ZodInfer<typeof schema>>({
       name: 'precise-options',
       schema,
       compile: context => context.emitStroke(context.path),
     });
-    const pathKinds: NonNullable<LayoutExtensions['pathKinds']> = [definition];
+    const paths: NonNullable<LayoutExtensions['paths']> = [definition];
 
-    expect(pathKinds).toEqual([definition]);
+    expect(paths).toEqual([definition]);
   });
 });

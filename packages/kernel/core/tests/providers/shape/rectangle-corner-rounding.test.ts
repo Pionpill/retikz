@@ -10,8 +10,8 @@ const identity = (n: number): number => n;
 
 const aaRect = (width = 120, height = 80): CenteredBox => ({ x: 0, y: 0, width, height, rotate: 0 });
 
-describe('rectangle cornerRadius — emit 仍 RectPrim', () => {
-  it('rect_emit_stays_rectprim：emit 出 RectPrim（含 cornerRadius），非 path', () => {
+describe('rectangle cornerRadius — emit 仍 RectPrimitive', () => {
+  it('rect_emit_stays_rectprim：emit 出 RectPrimitive（含 cornerRadius），非 path', () => {
     const rect = aaRect();
     const prims = [...rectangle.emit(rect, { cornerRadius: 10 }, round2, { cornerRadius: 8 })];
 
@@ -27,7 +27,7 @@ describe('rectangle cornerRadius — emit 仍 RectPrim', () => {
     expect(prim.cornerRadius).toBe(8);
   });
 
-  it('rect_emit_no_cornerRadius：省略 → cornerRadius 字段 undefined（仍 RectPrim）', () => {
+  it('rect_emit_no_cornerRadius：省略 → cornerRadius 字段 undefined（仍 RectPrimitive）', () => {
     const rect = aaRect();
     const prims = [...rectangle.emit(rect, {}, round2, {})];
     const prim = prims[0];

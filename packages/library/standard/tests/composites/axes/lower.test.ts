@@ -74,8 +74,8 @@ describe('lowerAxes', () => {
       [100, 100],
       [100, 40],
     ]);
-    expect(xAxis.marks).toEqual([{ pos: 1, mark: { kind: 'arrow' } }]);
-    expect(yAxis.marks).toEqual([{ pos: 1, mark: { kind: 'arrow' } }]);
+    expect(xAxis.arrow).toEqual({ end: {} });
+    expect(yAxis.arrow).toEqual({ end: {} });
 
     const tickPaths = lowered.slice(12, 20) as Array<IRPath>;
 
@@ -156,7 +156,7 @@ describe('lowerAxes', () => {
     expect(lowered.children.every(child => child.id === undefined)).toBe(true);
   });
 
-  it('places arrow marks at independently configured axis endpoints', () => {
+  it('places arrows at independently configured axis endpoints', () => {
     const lowered = lowerAxesChildren(
       createAxes({
         x: { extent: 20, line: { arrows: 'negative' }, label: false },
@@ -164,14 +164,11 @@ describe('lowerAxes', () => {
       }),
     ) as Array<IRPath>;
 
-    expect(lowered[0]?.marks).toEqual([{ pos: 0, mark: { kind: 'arrow' } }]);
-    expect(lowered[1]?.marks).toEqual([
-      { pos: 0, mark: { kind: 'arrow' } },
-      { pos: 1, mark: { kind: 'arrow' } },
-    ]);
+    expect(lowered[0]?.arrow).toEqual({ start: {} });
+    expect(lowered[1]?.arrow).toEqual({ start: {}, end: {} });
   });
 
-  it('merges shared and endpoint arrow details onto negative and positive marks', () => {
+  it('merges shared and endpoint arrow details onto negative and positive arrows', () => {
     const lowered = lowerAxesChildren(
       createAxes({
         x: {
@@ -192,16 +189,10 @@ describe('lowerAxes', () => {
       }),
     ) as Array<IRPath>;
 
-    expect(lowered[0]?.marks).toEqual([
-      {
-        pos: 0,
-        mark: { kind: 'arrow', shape: 'openStealth', scale: 1.5, color: '#0f172a', width: 8 },
-      },
-      {
-        pos: 1,
-        mark: { kind: 'arrow', shape: 'openStealth', scale: 1.5, color: '#0f172a', length: 10, opacity: 0.7 },
-      },
-    ]);
+    expect(lowered[0]?.arrow).toEqual({
+      start: { shape: 'openStealth', scale: 1.5, color: '#0f172a', width: 8 },
+      end: { shape: 'openStealth', scale: 1.5, color: '#0f172a', length: 10, opacity: 0.7 },
+    });
   });
 
   it('uses independent axis-local grid offsets without moving the shared origin or extents', () => {

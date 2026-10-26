@@ -1,4 +1,4 @@
-import type { RectPrim, Scene } from '@retikz/core';
+import type { RectPrimitive, Scene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { renderToSvgString } from '../../../src/svg/serialize/to-string';
@@ -38,7 +38,7 @@ describe('renderToSvgString —— SvgNode → 字符串', () => {
   });
 
   it('rect → 逐字 kebab / SVG 真名属性，无 React camelCase', () => {
-    const rect: RectPrim = {
+    const rect: RectPrimitive = {
       type: 'rect',
       x: 1,
       y: 2,
@@ -59,7 +59,7 @@ describe('renderToSvgString —— SvgNode → 字符串', () => {
   });
 
   it('含 var() 的 fill → 拼进 style="fill:var(--brand)"，不进 fill attribute', () => {
-    const rect: RectPrim = { type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: 'var(--brand)' };
+    const rect: RectPrimitive = { type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: 'var(--brand)' };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
 
     expect(out).toContain('style="fill:var(--brand)"');

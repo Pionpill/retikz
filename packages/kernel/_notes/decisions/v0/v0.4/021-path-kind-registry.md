@@ -1,9 +1,9 @@
 ---
-description: Path kind registry
+description: Path registry
 keywords: 'Path、kind、registry、ribbon、RibbonSchema、IRRibbon、DrawableStyleSchema'
 ---
 
-# ADR-021：Path kind registry
+# ADR-021：Path registry
 
 - 状态：Accepted
 - 决策日期：2026-06-27
@@ -21,31 +21,31 @@ Path 是 Core 唯一的 path-like relation host。公开 IR 使用 `type: "path"
 - `kind: "ribbon"` 表示可变宽度 ribbon，参数位于 `ribbon`
 - 不发布 `type: "ribbon"`、`RibbonSchema` 或 `IRRibbon`
 
-新增统一 Path kind provider contract：
+新增统一 Path provider contract：
 
 ```ts
-type PathKindDefinition = {
+type PathDefinition = {
   schema: ZodType<{ kind: string } & IRJsonObject>;
-  compile: (path: IRPath, options: IRJsonObject, context: PathKindCompileContext) => PathKindCompileResult;
+  compile: (path: IRPath, options: IRJsonObject, context: PathCompileContext) => PathCompileResult;
 };
 
-const definePathKind: <TDefinition extends PathKindDefinition>(definition: TDefinition) => TDefinition;
+const definePath: <TDefinition extends PathDefinition>(definition: TDefinition) => TDefinition;
 
 type CompileOptions = {
-  pathKinds?: ReadonlyArray<PathKindDefinition>;
+  paths?: ReadonlyArray<PathDefinition>;
 };
 ```
 
 Built-in 与 custom kind 使用同一 registry。未知 kind 必须 fail-loud 并报告已注册 kind；重复 key 不得静默覆盖，builtin / custom 冲突按统一 duplicate 规则处理
 
-`DrawableStyleSchema` 与 `DrawableMetaSchema` 承载共享 style/meta；`Path.label` 统一承载 `GeometryLabelSchema`；`RibbonPathOptionsSchema` 承载 mode、width、start、end、interpolation、align、samples、sampling、upper、lower 等 ribbon-only 字段。React `<Ribbon>` 可以作为 sugar，但必须生成 `Path kind="ribbon"`
+`DrawableStyleSchema` 与 `DrawableMetaSchema` 承载共享 style/meta；`Path.label` 统一承载 `GeometryLabelSchema`；`RibbonPathOptionsSchema` 承载 mode、width、start、end、interpolation、align、samples、sampling、upper、lower 等 ribbon-only 字段。React `<Ribbon>` 可以作为 sugar，但必须生成 `Path="ribbon"`
 
 ## 行为、失败语义与兼容性
 
 省略 `kind` 的既有 Path 继续按 stroke 解析。注册 Definition 中的函数和 schema 只存在 compile options / provider runtime，不进入 JSON IR；Scene 只保存闭合 Path primitive。未知、重复或 provider 输出无效时在 Core compile fail-loud，不由 renderer 或上层 fallback
 
-这是 0.x 的 Path host 收敛：独立 Ribbon 实体被删除，不保留旧别名、内置 if/else 或 renderer registry。自定义 Path kind 与内置 kind 共用 schema、registry、compile 和诊断链路
+这是 0.x 的 Path host 收敛：独立 Ribbon 实体被删除，不保留旧别名、内置 if/else 或 renderer registry。自定义 Path 与内置 kind 共用 schema、registry、compile 和诊断链路
 
 ## 最终结果与遗留边界
 
-普通 stroke、Ribbon 和 custom path kind 已统一进入 Path host；React sugar、Vanilla authoring 和领域 relation 只消费该公开 contract。Path kind 之外的领域布局、命中策略和 renderer 扩展须由各自 owner 另行设计
+普通 stroke、Ribbon 和 custom path 已统一进入 Path host；React sugar、Vanilla authoring 和领域 relation 只消费该公开 contract。Path 之外的领域布局、命中策略和 renderer 扩展须由各自 owner 另行设计

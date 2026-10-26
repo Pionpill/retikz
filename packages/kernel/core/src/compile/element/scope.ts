@@ -1,4 +1,4 @@
-import type { GroupPrim } from '../../contract';
+import type { GroupPrimitive } from '../../contract';
 import { CompileExpansionKind } from '../../contract';
 import { resolveClip } from '../../resolve/resource';
 import { ScopeBoundingShape } from '../../schemas';
@@ -48,7 +48,7 @@ export const compileScope = (
       preparation.positionTarget,
       preparation.preliminaryTransforms,
     );
-    const group: Omit<GroupPrim, 'children'> = { type: 'group' };
+    const group: Omit<GroupPrimitive, 'children'> = { type: 'group' };
     if (input.id !== undefined) group.id = input.id;
     if (input.meta !== undefined) group.meta = input.meta;
     if (transforms.length > 0) group.transforms = transforms;

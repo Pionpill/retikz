@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ArrowMarkSchema, BendStepSchema, PathScaleSchema, PathSchema } from '../../../src/schemas';
+import { MarkStyleSchema, BendStepSchema, PathScaleSchema, PathSchema } from '../../../src/schemas';
 
 /** 构造一条最小合法 path（两 step），用于叠加被测字段 */
 const basePath = (extra: Record<string, unknown>) => ({
@@ -143,14 +143,13 @@ describe('PathScaleSchema：等比 number / 非等比 {x,y}', () => {
   });
 });
 
-describe('ArrowMarkSchema：kind:arrow + 视觉子集', () => {
-  it('最小合法（仅 kind）', () => {
-    expect(ArrowMarkSchema.safeParse({ kind: 'arrow' }).success).toBe(true);
+describe('MarkStyleSchema：标记视觉字段', () => {
+  it('空样式合法', () => {
+    expect(MarkStyleSchema.safeParse({}).success).toBe(true);
   });
 
-  it('kind + shape + 全视觉字段合法', () => {
-    const ok = ArrowMarkSchema.safeParse({
-      kind: 'arrow',
+  it('shape 与视觉字段合法', () => {
+    const ok = MarkStyleSchema.safeParse({
       shape: 'stealth',
       scale: 1.5,
       length: 10,
@@ -165,29 +164,29 @@ describe('ArrowMarkSchema：kind:arrow + 视觉子集', () => {
   });
 
   it('接受从 Path master 派生的数值 color 与从 marker color 派生的数值 fill', () => {
-    expect(ArrowMarkSchema.safeParse({ kind: 'arrow', color: 0.9, fill: 0.2 }).success).toBe(true);
+    expect(MarkStyleSchema.safeParse({ color: 0.9, fill: 0.2 }).success).toBe(true);
   });
 
   it('shape 任意非空名 schema 接受（注册名校验在编译层）', () => {
-    expect(ArrowMarkSchema.safeParse({ kind: 'arrow', shape: 'myArrow' }).success).toBe(true);
+    expect(MarkStyleSchema.safeParse({ shape: 'myArrow' }).success).toBe(true);
   });
 
-  it('kind 非 arrow 拒（首批仅 arrow）', () => {
-    expect(ArrowMarkSchema.safeParse({ kind: 'dot' }).success).toBe(false);
-    expect(ArrowMarkSchema.safeParse({ kind: 'text', shape: 'stealth' }).success).toBe(false);
+  it('拒绝额外 kind 字段', () => {
+    expect(MarkStyleSchema.safeParse({ kind: 'dot' }).success).toBe(false);
+    expect(MarkStyleSchema.safeParse({ kind: 'text', shape: 'stealth' }).success).toBe(false);
   });
 
-  it('缺 kind 拒', () => {
-    expect(ArrowMarkSchema.safeParse({ shape: 'stealth' }).success).toBe(false);
+  it('仅指定 shape 合法', () => {
+    expect(MarkStyleSchema.safeParse({ shape: 'stealth' }).success).toBe(true);
   });
 
   it('shape:"->" 是合法非空名但语义上是箭头名（不是方向记号）', () => {
     // schema 只校验非空字符串；'->' 当作（不存在的）箭头名，编译期会因未注册而 throw
-    expect(ArrowMarkSchema.safeParse({ kind: 'arrow', shape: '->' }).success).toBe(true);
+    expect(MarkStyleSchema.safeParse({ shape: '->' }).success).toBe(true);
   });
 
   it('scale 为 0 拒（positive，继承视觉子集约束）', () => {
-    expect(ArrowMarkSchema.safeParse({ kind: 'arrow', scale: 0 }).success).toBe(false);
+    expect(MarkStyleSchema.safeParse({ scale: 0 }).success).toBe(false);
   });
 });
 
@@ -223,19 +222,14 @@ describe('PathSchema：rotate / scale 合法', () => {
 
 describe('PathSchema：marks 合法', () => {
   it('接受单个中点 mark', () => {
-    expect(
-      PathSchema.safeParse(basePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] })).success,
-    ).toBe(true);
+    expect(PathSchema.safeParse(basePath({ marks: [{ pos: 0.5, shape: 'stealth' }] })).success).toBe(true);
   });
 
   it('接受多个 mark + pos 端点 0 / 1', () => {
     expect(
       PathSchema.safeParse(
         basePath({
-          marks: [
-            { pos: 0, mark: { kind: 'arrow' } },
-            { pos: 1, mark: { kind: 'arrow', shape: 'normal' } },
-          ],
+          arrow: { start: {}, end: { shape: 'normal' } },
         }),
       ).success,
     ).toBe(true);
@@ -248,31 +242,27 @@ describe('PathSchema：marks 合法', () => {
 
 describe('PathSchema：marks 错误路径', () => {
   it('mark pos 1.5 拒（schema max(1)，非实现钳制）', () => {
-    expect(
-      PathSchema.safeParse(basePath({ marks: [{ pos: 1.5, mark: { kind: 'arrow', shape: 'stealth' } }] })).success,
-    ).toBe(false);
+    expect(PathSchema.safeParse(basePath({ marks: [{ pos: 1.5, shape: 'stealth' }] })).success).toBe(false);
   });
 
   it('mark pos -0.1 拒（schema min(0)）', () => {
-    expect(PathSchema.safeParse(basePath({ marks: [{ pos: -0.1, mark: { kind: 'arrow' } }] })).success).toBe(false);
+    expect(PathSchema.safeParse(basePath({ marks: [{ pos: -0.1 }] })).success).toBe(false);
   });
 
-  it('mark.kind 非 arrow 拒', () => {
-    expect(PathSchema.safeParse(basePath({ marks: [{ pos: 0.5, mark: { kind: 'dot' } }] })).success).toBe(false);
+  it('标记拒绝额外 kind 字段', () => {
+    expect(PathSchema.safeParse(basePath({ marks: [{ pos: 0.5, kind: 'arrow' }] })).success).toBe(false);
   });
 
   it('mark 缺 pos 拒（结构错）', () => {
-    expect(PathSchema.safeParse(basePath({ marks: [{ mark: { kind: 'arrow', shape: 'stealth' } }] })).success).toBe(
-      false,
-    );
+    expect(PathSchema.safeParse(basePath({ marks: [{ shape: 'stealth' }] })).success).toBe(false);
   });
 
   it('marks 非数组拒（结构错）', () => {
-    expect(PathSchema.safeParse(basePath({ marks: { pos: 0.5, mark: { kind: 'arrow' } } })).success).toBe(false);
+    expect(PathSchema.safeParse(basePath({ marks: { pos: 0.5 } })).success).toBe(false);
   });
 
-  it('mark 缺 mark 字段拒（结构错）', () => {
-    expect(PathSchema.safeParse(basePath({ marks: [{ pos: 0.5 }] })).success).toBe(false);
+  it('标记缺省形状合法', () => {
+    expect(PathSchema.safeParse(basePath({ marks: [{ pos: 0.5 }] })).success).toBe(true);
   });
 });
 
@@ -283,8 +273,8 @@ describe('JSON round-trip', () => {
       rotate: 30,
       scale: { x: 1.5, y: 0.8 },
       marks: [
-        { pos: 0.5, mark: { kind: 'arrow' as const, shape: 'stealth' } },
-        { pos: 0.9, mark: { kind: 'arrow' as const, shape: 'normal', scale: 1.2, color: 'red' } },
+        { pos: 0.5, shape: 'stealth' },
+        { pos: 0.9, shape: 'normal', scale: 1.2, color: 'red' },
       ],
       children: [
         { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },

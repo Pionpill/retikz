@@ -87,14 +87,14 @@ describe('boundaryPoint honours rect.rotate (rotate-bearing rect)', () => {
 describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>', () => {
   const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   const style: ResolvedShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
-  it('rectangle → single RectPrim', () => {
+  it('rectangle → single RectPrimitive', () => {
     const prims = [...BUILTIN_SHAPES.get('rectangle')!.emit(rect, style, id, NO_PARAMS)];
 
     expect(prims).toHaveLength(1);
     expect(prims[0].type).toBe('rect');
   });
 
-  it('circle (= ellipse equal) emit → EllipsePrim with rx === ry', () => {
+  it('circle (= ellipse equal) emit → EllipsePrimitive with rx === ry', () => {
     const square: CenteredBox = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
     const prims = [...BUILTIN_SHAPES.get('ellipse')!.emit(square, style, id, EQUAL_PARAMS)];
 
@@ -103,7 +103,7 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
     if (prims[0].type === 'ellipse') expect(prims[0].rx).toBe(prims[0].ry);
   });
 
-  it('diamond (= polygon 4/0) → PathPrim with 4 vertices + close', () => {
+  it('diamond (= polygon 4/0) → PathPrimitive with 4 vertices + close', () => {
     const prims = [...BUILTIN_SHAPES.get('polygon')!.emit(rect, style, id, DIAMOND_PARAMS)];
 
     expect(prims[0].type).toBe('path');

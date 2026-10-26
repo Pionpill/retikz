@@ -1,11 +1,11 @@
-import type { GroupPrim, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
+import type { GroupPrimitive, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { createGrid, GridDefinition, lowerGrid } from '../../../src/presentation';
 import { fullScopeProps } from '../presentation/scope-props';
 
-const findGridGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined => {
+const findGridGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive | undefined => {
   for (const primitive of primitives) {
     if (primitive.type !== 'group') continue;
     if (primitive.children.some(child => child.type === 'path')) return primitive;

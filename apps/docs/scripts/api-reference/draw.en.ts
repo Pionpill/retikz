@@ -1,5 +1,63 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  标记图元生成上下文: 'Context for generating mark primitives',
+  自定义形状参数: 'Custom shape parameters',
+  已解析的描边: 'Resolved stroke',
+  已解析的填充: 'Resolved fill',
+  局部轮廓线宽: 'Outline width in local coordinates',
+  虚线节奏: 'Dash pattern',
+  虚线偏移: 'Dash offset',
+  描边端帽: 'Stroke line cap',
+  描边连接: 'Stroke line join',
+  坐标取整函数: 'Coordinate rounding function',
+  可注册的标记形状定义: 'Registerable mark shape definition',
+  注册名称: 'Registered name',
+  '局部基准正方形边长，默认 10': 'Local base-square size; defaults to 10',
+  '局部放置锚点，默认基准正方形中心': 'Local placement anchor; defaults to the base-square center',
+  '是否通过描边表达空心轮廓，默认 false': 'Whether stroke draws a hollow outline; defaults to false',
+  '默认长度参数，默认 8': 'Default length parameter; defaults to 8',
+  '默认宽度参数，默认 8': 'Default width parameter; defaults to 8',
+  根据已解析的样式和参数生成局部基础图元: 'Generate local primitives from resolved styles and parameters',
+  声明标记形状定义: 'Declare a mark shape definition',
+  增加端点接触与截断几何的箭头定义:
+    'Arrow definition extending mark generation with endpoint contact and shortening geometry',
+  '局部几何沿箭头轴向的包络后缘，必须不晚于线接触点':
+    'Back edge along the arrow axis; must not exceed the line contact coordinate',
+  '线接触点，决定路径截断与端点定位': 'Line contact coordinate for path shortening and endpoint placement',
+  '外轮廓补偿量，默认空心定义为 lineWidth / 2，实心定义为 0':
+    'Outline inset; defaults to lineWidth / 2 for hollow definitions and 0 for solid definitions',
+  '尖端横坐标，默认 baseSize；沿线放置时以尖端为锚点':
+    'Tip x-coordinate; defaults to baseSize and serves as the along-path anchor',
+  声明端点箭头定义: 'Declare an endpoint arrow definition',
+  '端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头':
+    'Endpoint arrow configuration, or a direction shorthand enabling the start, end, or both arrows',
+  '支持方向简写 ->、<-、<->，或用 start 与 end 分别配置端点箭头':
+    'Supports ->, <-, and <-> direction shorthands, or start and end objects for individual endpoint configuration',
+  起末端箭头配置: 'Endpoint arrow configuration',
+  路径起点与终点的箭头配置: 'Arrow configuration at the path start and end',
+  'start 与 end 分别启用端点箭头并处理路径截断':
+    'start and end independently enable endpoint arrows and stroke shortening',
+  '起末端箭头配置；start / end 分别声明外观与 endpointOverlap，并根据接触几何截断主线':
+    'Endpoint arrows: start / end configure appearance and endpointOverlap, shortening the stroke according to contact geometry',
+  '沿整条路径弧长放置内容；每项包含 pos、rotate、scale 和 mark，不改变宿主路径几何':
+    'Content placed by whole-path arc length, with pos, rotate, scale, and mark; does not change host geometry',
+  '起末端箭头配置，包含外观和端点重叠': 'Endpoint arrow appearance and overlap',
+  沿路径按弧长比例放置图元标记: 'Place primitive marks by arc-length fraction along the path',
+  '复用箭头外观或注册标记定义，任何位置均不截断路径':
+    'Reuse arrow appearance or registered mark definitions without shortening the path at any position',
+  '箭头注册名称，供端点箭头与箭头形标记的 shape 引用':
+    'Registered arrow name referenced by shape on endpoint arrows and arrow-shaped marks',
+  声明沿路径标记定义: 'Declare a mark definition for placement along paths',
+  可注册的沿路径标记定义: 'A registrable definition for marks along paths',
+  标记注册名称: 'Registered mark name',
+  生成以原点为放置锚点的局部基础图元: 'Emit local primitives anchored at the origin',
+  标记定义生成局部图元所需的宿主上下文: 'Host context for emitting mark-local primitives',
+  宿主路径的有效描边: 'Effective host path stroke',
+  编译坐标精度取整: 'Round coordinates to compile precision',
+  "十三种 kind：'move' / 'line'（默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生":
+    "Thirteen kinds: 'move', 'line' (default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', and 'smooth'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`. Named types for each kind support wrappers and derived props",
+  '声明路径中的一个动作，例如移动、连线、曲线、圆弧或闭合':
+    'Declare a path action such as moving, drawing a line or curve, drawing an arc, or closing a subpath',
   '有效描边；实心定义默认无轮廓，空心定义缺少主色时继承宿主描边':
     'Effective stroke; filled definitions have no outline by default, while hollow definitions without a master color inherit the host stroke',
   '原定义对象，保留路径和产物类型，不复制或修改输入':
@@ -53,31 +111,29 @@ const translations: Readonly<Partial<Record<string, string>>> = {
 
   '箭头名称、尺寸及几何生成函数组成的定义': 'Definition containing the arrow name, dimensions, and geometry emitter',
   '原定义对象，不复制或修改输入': 'The original definition object, without copying or modifying the input',
-  '路径生成器名称、参数 schema 及命令生成函数组成的定义':
-    'Definition containing the path generator name, parameter schema, and command generator',
   '校验名称后的原定义对象，不复制或修改输入':
     'The original definition object after name validation, without copying or modifying the input',
   'RetikzCoreError 当 name 为空或仅含空白字符时': 'RetikzCoreError when name is empty or contains only whitespace',
-  定义不发布所属者产物的路径种类: 'Define a path kind that does not publish owner output',
+  定义不发布所属者产物的路径定义: 'Define a path that does not publish owner output',
   '经定义 schema 解析后的路径类型，默认使用 IRPathBase':
     'Path type parsed by the definition schema; defaults to IRPathBase',
   '包含名称、完整路径 schema 和编译函数的定义':
     'Definition containing the name, complete path schema, and compile function',
   '校验后的原定义对象，保留路径类型，不复制或修改输入':
     'The original validated definition, preserving the path type without copying or modifying the input',
-  定义发布所属者产物的路径种类: 'Define a path kind that publishes owner output',
+  定义发布所属者产物的路径定义: 'Define a path that publishes owner output',
   '经定义 schema 解析后的路径类型': 'Path type parsed by the definition schema',
   '由 ownerOutput.schema 校验、通过编译上下文发布的 JSON 产物类型':
     'Type of JSON output validated by ownerOutput.schema and published through the compile context',
-  '包含路径定义及 ownerOutput.schema 的定义': 'Path kind definition including ownerOutput.schema',
+  '包含路径定义及 ownerOutput.schema 的定义': 'Path definition including ownerOutput.schema',
   '校验后的原定义对象，保留路径和产物类型，不复制或修改输入':
     'The original validated definition, preserving path and output types without copying or modifying the input',
-  '定义路径种类，保留路径及所属者产物的类型关联':
-    'Define a path kind while preserving the relationship between path and owner output types',
+  '定义路径，保留路径及所属者产物的类型关联':
+    'Define a path while preserving the relationship between path and owner output types',
   'RetikzCoreError 当 name 为空或仅含空白字符、schema 没有 parse 函数，或提供的 ownerOutput.schema 不是对象时':
     'RetikzCoreError when name is empty or whitespace-only, schema has no parse function, or the supplied ownerOutput.schema is not an object',
-  '注册路径种类的解析、编译与可选所属者产物契约':
-    'Contract for registering path kind parsing, compilation, and optional owner output',
+  '注册路径定义的解析、编译与可选所属者产物契约':
+    'Contract for registering path parsing, compilation, and optional owner output',
   '完整路径 schema 的解析结果类型，同时决定编译上下文的 path 字段；默认使用 IRPathBase':
     'Result type of the complete path schema, also determining the compile context path field; defaults to IRPathBase',
   '所属者产物的 JSON 类型；默认 never 时不能声明 ownerOutput，否则必须提供对应的产物 schema':
@@ -98,10 +154,10 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '椭圆的 x、y 轴半径': 'Ellipse radii on the x and y axes',
   '用步骤或路径简写声明路径，并设置样式、箭头与交互':
     'Declare a path with steps or shorthand, and configure its style, arrows, and interactions',
-  '路径种类，省略时使用内置 stroke；自定义种类通过 Layout.extensions.pathKinds 注册':
-    'Path kind; defaults to built-in stroke. Register custom kinds through Layout.extensions.pathKinds',
-  '所选路径种类的 JSON 参数；内置 stroke 不接受此字段':
-    'JSON options for the selected path kind; built-in stroke does not accept this field',
+  '路径定义，省略时使用内置 stroke；自定义种类通过 Layout.extensions.paths 注册':
+    'Path; defaults to built-in stroke. Register custom kinds through Layout.extensions.paths',
+  '所选路径定义的 JSON 参数；内置 stroke 不接受此字段':
+    'JSON options for the selected path; built-in stroke does not accept this field',
   附着于整条路径的一个或多个几何标签: 'One or more geometry labels attached to the whole path',
   '创建作者侧路径输入，身份由配置中的 id 声明':
     'Create path authoring input, with identity declared by the configuration id',
@@ -182,14 +238,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'Fold action：两段或三段正交折线': 'Fold action: a two- or three-segment orthogonal polyline',
   '`-|` / `|-` 使用一个转折点；`-|-` / `|-|` 使用两个转折点，并可用归一化 `fraction` 调整中间腿位置':
     '`-|` and `|-` use one turn; `-|-` and `|-|` use two turns, with normalized `fraction` controlling the middle leg',
-  'Generator action：调用内置或运行时注册的 path generator 生成一段低层路径命令':
-    'Generator action: invoke a built-in or registered path generator to produce low-level path commands',
-  '生成器 step 鉴别字面量': 'Discriminant for a generator step',
-  'path generator 名称；内置名或 `<Layout extensions={{ pathGenerators }}>` 注册名':
-    'Path generator name: a built-in name or one registered through Layout extensions.pathGenerators',
-  'JSON-safe 参数对象；目标引用需写在 generator 的 `targetParams` 顶层 key 上':
-    "JSON-safe parameter object; target references must occupy top-level keys listed in the generator's `targetParams`",
-  '可选终点，会作为 generator context 的 `to` 传入': 'Optional endpoint passed as `to` in the generator context',
   'Line action：从当前游标到目标点画直线（TikZ `(A) -- (B)`）':
     'Line action: draw from the cursor to a target (TikZ `(A) -- (B)`)',
   'sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略':
@@ -214,8 +262,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定':
     'Path id, used by other paths or positions to reference it and by hydration to bind event handlers',
   '沿路径在归一化位置放标记（首批仅箭头）': 'Place marks at normalized positions along the path; currently only arrows',
-  "每个 `{ pos, mark }`：`pos∈[0,1]`，`mark.kind:'arrow'` + 视觉子集（shape 为已注册箭头名，方向随路径切线）":
-    "Each `{ pos, mark }` uses `pos∈[0,1]` and `mark.kind:'arrow'` plus visual settings; shape is a registered arrow name and direction follows the path tangent",
   '用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局。须为 JSON 可序列化对象':
     'JSON-serializable user metadata available in event and hydration contexts; does not participate in layout',
   '单击该图元（DOM `click`）': 'Click on this element (DOM `click`)',
@@ -260,8 +306,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Ordered points after the cursor; one point creates one segment, and the cursor ends at the last point',
   '切线长度乘子（TikZ `tension`）；缺省 1，<1 更紧、>1 更鼓':
     'Tangent-length multiplier (TikZ `tension`); defaults to 1, with lower values tighter and higher values more rounded',
-  "十四种 kind：'move' / 'line'（默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线） / 'generator'（内置或注册路径生成器）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`，'generator' 用 `name` + JSON-safe `params`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生":
-    "Fourteen kinds: 'move', 'line' (default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', 'smooth', and 'generator'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`; 'generator' uses `name` and JSON-safe `params`. Named types for each kind support wrappers and derived props",
   'Sugar 组件，将路径 grammar 原样调度给 Vanilla': 'Sugar component forwarding path grammar to Vanilla unchanged',
   'React 只负责 JSX sugar；`normalizePath` 是 `way` 的唯一 parser 调度位置':
     'React only provides JSX sugar; `normalizePath` is the sole parser dispatch point for `way`',
@@ -269,8 +313,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '本组件自身不渲染 DOM；最终路径由 `<Layout>` 根据 step 序列、样式、箭头和标记输出':
     'This component does not render DOM itself; `<Layout>` produces the final path from steps, styles, arrows, and marks',
   'Step 是 DSL 标记组件——本身不渲染': 'Step is a DSL marker component and does not render itself',
-  '声明路径中的一个动作，例如移动、连线、曲线、圆弧、闭合或生成器片段':
-    'Declares one path action, such as a move, line, curve, arc, closure, or generator segment',
   作者侧路径输入: 'Authoring input for a path',
   箭头的顶层默认与端点覆盖配置: 'Top-level arrow defaults and endpoint overrides',
   箭头端点的共享与逐端放置配置: 'Shared and per-end arrow placement settings',
@@ -317,20 +359,17 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Precision rounding shared with compile and render to keep geometry consistent',
   "描边颜色（无 override 时 = `{ kind: 'contextStroke' }`，继承 path stroke）":
     "Stroke color; without an override, `{ kind: 'contextStroke' }` inherits the path stroke",
-  '可注册的 path generator 定义': 'Registerable path generator definition',
   '描述 JSON 参数、可解析 target 参数和命令生成能力；定义本身不进入 IR':
     'Describes JSON parameters, resolvable target parameters, and command generation; the definition itself is not IR',
   '根据上下文生成低层 path 命令': 'Generate low-level path commands from the context',
   '返回命令使用与上下文一致的局部坐标；可返回 `move` 形成 sub-path':
     'Commands use the same local coordinates as the context and may contain `move` to start a subpath',
-  'generator 名称，由 generator step 的 `name` 引用': "Generator name referenced by the generator step's `name`",
   '实例参数 schema': 'Instance parameter schema',
   '解析结果必须是 JSON object': 'Parsed output must be a JSON object',
   '需要解析为当前 Path 局部坐标的 params 顶层 key':
     "Top-level parameter keys to resolve into the current Path's local coordinates",
-  'path generator 的运行时上下文': 'Runtime context for a path generator',
-  '坐标均位于当前 Path 的局部坐标系，返回的命令由所属 GroupPrim 统一应用 scope transform':
-    'All coordinates are local to the current Path; the owning GroupPrim applies the Scope transform to the returned commands',
+  '坐标均位于当前 Path 的局部坐标系，返回的命令由所属 GroupPrimitive 统一应用 scope transform':
+    'All coordinates are local to the current Path; the owning GroupPrimitive applies the Scope transform to the returned commands',
   '当前游标局部坐标（上一段终点 / sub-path 起点）':
     'Current local cursor position: the preceding segment endpoint or subpath start',
   'paramsSchema 校验后的参数对象': 'Parameter object validated by paramsSchema',
@@ -340,24 +379,24 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'step.to resolve 后的局部坐标\n缺省表示 step 未给 `to`':
     'Local coordinates after resolving step.to; absent when the step omits `to`',
   '使用当前 `path`': 'Use the current `path`',
-  'path kind 编译上下文': 'Path-kind compilation context',
-  '自定义 kind 可以完全接管输出，也可以调用回调复用标准描边逻辑':
+  'path 编译上下文': 'Path compilation context',
+  '自定义路径可以完全接管输出，也可以调用回调复用标准描边逻辑':
     'A custom kind can take over output completely or reuse standard stroke logic through callbacks',
   '已解析的 renderer-neutral 宿主外观': 'Resolved renderer-neutral host appearance',
-  '编译共享宿主标签，并支持 kind 提供侧向距离':
+  '编译共享宿主标签，并支持路径定义提供侧向距离':
     'Compile shared host labels with optional side offsets supplied by the kind',
-  '合并宿主标签默认配置，供路径种类在采样前确定标签位置':
-    'Merge host label defaults before the path kind samples label positions',
+  '合并宿主标签默认配置，供路径定义在采样前确定标签位置':
+    'Merge host label defaults before the path samples label positions',
   '复用 core 标准描边编译逻辑；不传 path 时使用当前 `path`':
     "Reuse Core's standard stroke compiler; omission uses the current `path`",
-  '物化选定 steps，不应用 marker、dash、fill 或 kind-specific geometry':
-    'Materialize selected steps without applying markers, dashes, fill, or kind-specific geometry',
-  '当前 Path kind 的最终所属者产物 publisher': 'Publisher for the final output owned by the current Path kind',
+  '物化选定 steps，不应用 marker、dash、fill 或 custom path geometry':
+    'Materialize selected steps without applying markers, dashes, fill, or custom path geometry',
+  '当前 Path 的最终所属者产物 publisher': 'Publisher for the final output owned by the current Path',
   '经该 definition 完整 schema 解析后的 path subject': "Path subject parsed through this definition's complete schema",
   '与本次 compile 一致的取整函数': 'Rounding function shared with the current compilation',
-  'path kind 编译结果': 'Path-kind compilation result',
-  'path kind definition 把高层 path 形态编译成当前 Path 局部坐标系中的 Scene primitive，\n  并返回同一坐标系内参与 bbox / transform 计算的关键点集合':
-    "A path-kind definition compiles a high-level path into Scene primitives in the current Path's local coordinates and returns points in that same space for bounds and transform calculations",
+  'path 编译结果': 'Path compilation result',
+  'path definition 把高层 path 形态编译成当前 Path 局部坐标系中的 Scene primitive，\n  并返回同一坐标系内参与 bbox / transform 计算的关键点集合':
+    "A path definition compiles a high-level path into Scene primitives in the current Path's local coordinates and returns points in that same space for bounds and transform calculations",
   '当前 Path 局部坐标系中的 layout 与路径级 rotate / scale 几何依据':
     "Geometry used for layout and path-level rotate/scale in the current Path's local coordinates",
   '当前 Path 局部坐标系中的实际渲染输出': "Actual rendering output in the current Path's local coordinates",
@@ -371,10 +410,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '定义 arrow 注册项': 'Define an arrow registry entry',
   '当前是 typed identity；保留入口用于对齐 registry API，并为未来校验或归一化预留空间':
     'Currently a typed identity, retained to align registry APIs and allow future validation or normalization',
-  '定义 path generator 注册项': 'Define a path-generator registry entry',
   '当 name 为空时': 'When name is empty',
-  'generator 输出的 JSON-safe 校验仍由 compile 阶段负责':
-    'JSON-safe validation of generator output remains the responsibility of compilation',
   '`<Arc>` 形态：圆弧（radius number）/ 椭圆弧（radius {x,y}）；必给角度（startAngle / endAngle / sweepAngle 三选二）':
     '`<Arc>` inputs: circular arc (numeric radius) or elliptical arc (radius {x,y}); exactly two of startAngle, endAngle and sweepAngle are required',
   '默认开放弧；给 `close="chord"`（弦闭合）或 `close="sector"`（连回圆心成扇形）可闭合成可填充区域。\n  `label` 透传到底层弧 step，文字沿弧定位（`position` 缺省 midway，按 startAngle..endAngle 线性映射）':

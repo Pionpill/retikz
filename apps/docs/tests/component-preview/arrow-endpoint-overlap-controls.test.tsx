@@ -44,7 +44,7 @@ describe('Arrow endpoint-overlap controlled demo', () => {
   it('提供中英文一致的 Core 箭头形状与 overlap 范围契约', () => {
     expect(chineseContract).toBeDefined();
     expect(chineseContract?.canonicalValues).toEqual({ shape: 'openCircle', overlap: 0.5 });
-    expect(chineseContract?.relatedApis).toEqual(['Draw.arrowDetail', 'Draw.arrowPlacement']);
+    expect(chineseContract?.relatedApis).toEqual(['Draw.arrow']);
     expect(englishContract?.canonicalValues).toEqual(chineseContract?.canonicalValues);
     expect(englishContract?.relatedApis).toEqual(chineseContract?.relatedApis);
 
@@ -94,7 +94,7 @@ describe('Arrow endpoint-overlap controlled demo', () => {
       },
       {
         type: 'path',
-        marks: [{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow', shape: 'openCircle' } }],
+        arrow: { end: { shape: 'openCircle', endpointOverlap: 0.5 } },
       },
     ]);
   });

@@ -155,8 +155,6 @@ const createRenderConfig = (
     animation: {
       enabled: resolveAnimationEnabled(state.animation.enabled, prefersReducedMotion()),
       ...(state.animation.snapshotAt === undefined ? {} : { snapshotAt: state.animation.snapshotAt }),
-      ...(state.animation.easings === undefined ? {} : { easings: state.animation.easings }),
-      ...(state.canvas.animationProperties === undefined ? {} : { properties: state.canvas.animationProperties }),
     },
     ...(canvas === undefined ? {} : { canvas }),
     cachePolicy: resolveCachePolicy(state.runtimeMeta),

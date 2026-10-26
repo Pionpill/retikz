@@ -28,7 +28,7 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
   return undefined;
 };
 
-/** 递归收集 path 的视觉 line 端点，应用沿途 GroupPrim transform */
+/** 递归收集 path 的视觉 line 端点，应用沿途 GroupPrimitive transform */
 const collectVisualLineEnds = (
   primitives: ReadonlyArray<ScenePrimitive>,
   scopeChain: ReadonlyArray<Transform> = [],
@@ -292,8 +292,8 @@ describe('scope.id 始终注册到父 frame', () => {
   });
 });
 
-describe('GroupPrim 形态仍随 localNamespace 不变（仅命名空间隔离，scope.transforms 透传不受影响）', () => {
-  it('localNamespace=true + transforms 非空 → 仍产 GroupPrim 含 transforms', () => {
+describe('GroupPrimitive 形态仍随 localNamespace 不变（仅命名空间隔离，scope.transforms 透传不受影响）', () => {
+  it('localNamespace=true + transforms 非空 → 仍产 GroupPrimitive 含 transforms', () => {
     const ir = scene([
       {
         type: 'scope',

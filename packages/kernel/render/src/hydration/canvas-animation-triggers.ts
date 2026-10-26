@@ -1,6 +1,6 @@
 import type { Scene } from '@retikz/core';
-import { visitSceneContent } from '@retikz/core';
 
+import { visitSceneAnimations } from '../shared';
 import { geometryOf } from './context';
 import type { ElementHandlers, HydrationHandlers } from './events';
 import { RetikzEvent } from './events';
@@ -12,7 +12,7 @@ const isRetikzEventName = (event: string): event is RetikzEvent => EVENT_NAMES.h
 /** Scene 中含 canvas `{ onEvent }` trigger 的 id → 事件名集合 */
 export const collectCanvasAnimationEventTriggers = (scene: Scene): Map<string, Set<RetikzEvent>> => {
   const triggers = new Map<string, Set<RetikzEvent>>();
-  visitSceneContent(scene, (primitive, { hostId }) => {
+  visitSceneAnimations(scene, (primitive, { hostId }) => {
     if (hostId === undefined || primitive.animations === undefined) return;
 
     for (const track of primitive.animations) {
@@ -58,7 +58,7 @@ export const withCanvasAnimationEventHandlers = (
 /** Scene 中含 `visible` trigger 的 id 集合 */
 export const collectCanvasVisibleAnimationIds = (scene: Scene): Set<string> => {
   const ids = new Set<string>();
-  visitSceneContent(scene, (primitive, { hostId }) => {
+  visitSceneAnimations(scene, (primitive, { hostId }) => {
     if (hostId === undefined || primitive.animations === undefined) return;
     if (primitive.animations.some(track => track.trigger === 'visible')) ids.add(hostId);
   });

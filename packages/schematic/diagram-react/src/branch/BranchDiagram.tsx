@@ -7,7 +7,7 @@ import type { FC } from 'react';
 import { useId, useMemo } from 'react';
 
 import type { BranchDiagramProps } from './authoring';
-import { collectBranchDiagramInput, createBranchDiagramInput, branchDiagramLayoutHostPropsOf } from './authoring';
+import { branchDiagramLayoutHostPropsOf, collectBranchDiagramInput, createBranchDiagramInput } from './authoring';
 
 export type { BranchDiagramLayoutHostProps, BranchDiagramProps } from './authoring';
 
@@ -34,18 +34,8 @@ BranchRuntimeEmbed.createInputEmbedProps = props => (props as BranchRuntimeEmbed
 const BranchDiagramComponent: FC<BranchDiagramProps> = props => {
   const generatedId = useId();
   const input = useMemo(() => collectBranchDiagramInput(props, false), [props]);
-  const {
-    shapes,
-    boundaries,
-    clips,
-    arrows,
-    patterns,
-    pathGenerators,
-    pathKinds,
-    composites,
-    themeDefinitions,
-    ...hostProps
-  } = branchDiagramLayoutHostPropsOf(props);
+  const { shapes, boundaries, clips, arrows, patterns, paths, composites, themeDefinitions, ...hostProps } =
+    branchDiagramLayoutHostPropsOf(props);
 
   return (
     <Layout
@@ -56,8 +46,7 @@ const BranchDiagramComponent: FC<BranchDiagramProps> = props => {
         clips,
         arrows,
         patterns,
-        pathGenerators,
-        pathKinds,
+        paths,
         composites,
         themeDefinitions,
       }}

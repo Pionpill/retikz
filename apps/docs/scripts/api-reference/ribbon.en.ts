@@ -1,5 +1,13 @@
 /** Ribbon 公开说明的受审阅英文翻译；未知中文阻止生成 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '端帽名称、参数 schema 与几何构造回调；不执行参数解析或构造回调':
+    'Cap name, parameter schema, and geometry callback; does not parse parameters or invoke the callback',
+  '宽度函数名称、可选参数 schema 与采样回调；不执行参数解析或采样':
+    'Width profile name, optional parameter schema, and sampling callback; does not parse parameters or sample',
+  '定义可注册的 Ribbon 端帽': 'Define a registrable Ribbon cap',
+  '定义可注册的 Ribbon 宽度函数': 'Define a registrable Ribbon width profile',
+  'RetikzExtensionError：不同宽度函数定义同名，或端帽注册名重复时':
+    'RetikzExtensionError when different width profiles share a name or cap names are duplicated',
   '定义可注册的 Ribbon 端帽并校验名称': 'Define a registrable Ribbon cap and validate its name',
   内置与自定义端帽共用的参数解析和几何构造契约:
     'Shared parameter parsing and geometry contract for built-in and custom caps',
@@ -27,20 +35,20 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Single continuous open command chain in Path-local coordinates, starting with move and containing no later move or close',
   '接点先沿 outward 移动 extension；start 从右接点走向左接点，end 从左接点走向右接点，首尾必须匹配移动后的接点':
     'Attachments are shifted by extension along outward; start runs from right to left and end from left to right, with endpoints matching the shifted attachments',
-  '创建供 Core 依赖解析器装配 Ribbon Path kind 的贡献项':
-    'Create a contribution for the Core dependency resolver to assemble the Ribbon Path kind',
+  '创建供 Core 依赖解析器装配 Ribbon Path 的贡献项':
+    'Create a contribution for the Core dependency resolver to assemble the Ribbon Path',
   '包含 ribbon 根依赖与内置定义，调用方可追加宽度函数和端帽；不自动注入编译器':
     'Includes the ribbon root dependency and built-in definitions, with optional custom width profiles and caps; does not automatically inject them into the compiler',
-  '使用内置 bulge 宽度函数与 butt、square、round、arc 端帽的 Ribbon Path kind':
-    'Ribbon Path kind with the built-in bulge width profile and butt, square, round, and arc caps',
-  '需要在当前图的 pathKinds 中显式装配，不自动注册':
-    'Must be explicitly supplied through pathKinds for the current drawing; not automatically registered',
-  '创建包含内置与自定义宽度函数、端帽的 Ribbon Path kind':
-    'Create a Ribbon Path kind containing built-in and custom width profiles and caps',
+  '使用内置 bulge 宽度函数与 butt、square、round、arc 端帽的 Ribbon Path':
+    'Ribbon Path with the built-in bulge width profile and butt, square, round, and arc caps',
+  '需要在当前图的 paths 中显式装配，不自动注册':
+    'Must be explicitly supplied through paths for the current drawing; not automatically registered',
+  '创建包含内置与自定义宽度函数、端帽的 Ribbon Path':
+    'Create a Ribbon Path containing built-in and custom width profiles and caps',
   '扩展注册项，默认 {}；profiles 与 caps 默认 []，仍保留全部内置定义':
     'Extension registrations, defaulting to {}; profiles and caps default to [], while all built-in definitions remain available',
-  '名称为 ribbon 的 Path kind，供当前图的 pathKinds 显式装配':
-    'Path kind named ribbon, to be explicitly supplied through pathKinds for the current drawing',
+  '名称为 ribbon 的 Path，供当前图的 paths 显式装配':
+    'Path named ribbon, to be explicitly supplied through paths for the current drawing',
   '包含 ribbon 根依赖及对应 provider 的贡献项，交给 resolveCoreProviderDependencies 装配':
     'Contribution containing the ribbon root dependency and its provider, assembled by resolveCoreProviderDependencies',
   'RetikzExtensionError：注册名为空或全空白、不同宽度函数定义同名，或端帽注册名重复时':

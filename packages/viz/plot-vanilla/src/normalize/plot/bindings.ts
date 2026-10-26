@@ -24,6 +24,7 @@ import type {
   NormalizedPlotBindings,
   PlotBindingsNormalizationContext,
 } from './input';
+import { normalizePlotPathMark } from './path';
 
 type Composition = NonNullable<IRPlot['composition']>;
 
@@ -63,7 +64,7 @@ const stripMarkBindings = (mark: InputPlotMark): IRPlotMark => {
   void _facetId;
   void _trackId;
 
-  return rest;
+  return rest.type === 'path' ? { ...normalizePlotPathMark(rest), type: 'path' } : rest;
 };
 
 /** 移除 guide 上的 authoring-only binding 字段 */

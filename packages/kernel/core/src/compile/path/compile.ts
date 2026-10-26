@@ -1,32 +1,27 @@
 import type {
   EmitStrokeOwnerOutputOptions,
-  PathKindCompileContext,
-  PathKindCompileResult,
-  PathKindLabelInput,
-  PathKindBoundaryLabelInput,
-  PathPrim,
-  ResolvedPathKindAppearance,
+  PathBoundaryLabelInput,
+  PathCompileContext,
+  PathLabelInput,
+  ResolvedPathAppearance,
   ScenePrimitive,
   Transform,
 } from '../../contract';
 import type { PathResolution, PathTargetResolver } from '../../resolve';
 import {
-  resolvePath as resolvePathValue,
-  resolveStrokePathProviders,
   resolvePathLabel,
   resolvePathLabelColors,
+  resolvePath as resolvePathValue,
+  resolveStrokePathProviders,
 } from '../../resolve';
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import type { IRPathBase, IRPosition, IRStep } from '../../schemas';
 import { formatCompileOccurrence } from '../artifact';
 import type { CompileEnvironment } from '../environment';
 import type { NodeGeometryContext } from '../node';
-import { freezeOccurrence } from '../orchestration';
-import type { CompileObservationRuntime } from '../orchestration';
-import { createOwnerOutputPublisher } from '../orchestration';
-import { pathTargetViewOf } from '../orchestration';
-import type { PendingPathEmission } from '../orchestration';
-import type { PaintRegistry } from '../resource';
+import type { CompileObservationRuntime, PendingPathEmission } from '../orchestration';
+import { createOwnerOutputPublisher, freezeOccurrence, pathTargetViewOf } from '../orchestration';
+import type { ClipRegistry, PaintRegistry } from '../resource';
 import {
   snapshotProviderPosition,
   validateScenePrimitives,
@@ -35,17 +30,19 @@ import {
 import type { EffectiveScopeTransform } from '../transform';
 import type { CompileWarningInput } from '../warning';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
-import { emitPathPrimitive, wrapPathPrimitiveOutput } from './stroke';
+import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';
 
 /** Path 宿主编译所需的显式服务与本次工作区 */
 export type PathCompileHost = Pick<
   CompileEnvironment,
-  'round' | 'lowerTex' | 'rootFontSize' | 'pathKinds' | 'pathGenerators' | 'arrows' | 'patterns' | 'measureText'
+  'round' | 'lowerTex' | 'rootFontSize' | 'paths' | 'arrows' | 'marks' | 'patterns' | 'measureText'
 > & {
   /** 本次几何缓存 */
   nodeGeometry: NodeGeometryContext;
   /** 本次绘制资源 */
   paint: PaintRegistry;
+  /** 本次裁剪资源 */
+  clip: ClipRegistry;
   /** 本次诊断收集器 */
   onWarn: (warning: CompileWarningInput) => void;
   /** 本次观察会话 */
@@ -53,29 +50,19 @@ export type PathCompileHost = Pick<
   /** Core 提供的坐标变换解析 */
   resolveTransform: (chain: ReadonlyArray<Transform>) => EffectiveScopeTransform;
 };
-/** 校验并脱离 BuiltinPathKind provider 返回的 primitive 与 bounds point */
-const validatePathKindCompileResult = (
-  kind: string,
-  value: unknown,
-): Readonly<{
-  result: PathKindCompileResult;
-  source: Record<string, unknown>;
-}> | null =>
-  withProviderOutputValidationBoundary(`Path kind '${kind}'`, () => {
+/** 校验并脱离 BuiltinPath provider 返回的 primitive 与 bounds point */
+const validatePathCompileResult = (kind: string, value: unknown) =>
+  withProviderOutputValidationBoundary(`Path '${kind}'`, () => {
     if (value === null) return null;
     if (typeof value !== 'object') {
-      throw createCompositeContractError(`Path kind '${kind}' must return a compile result object or null.`);
+      throw createCompositeContractError(`Path '${kind}' must return a compile result object or null.`);
     }
 
     const result = value as Record<string, unknown>;
-    const primitives = validateScenePrimitives(`Path kind '${kind}'`, result.primitives);
+    const primitives = validateScenePrimitives(`Path '${kind}'`, result.primitives);
     const rawBoundsPoints = result.boundsPoints;
-    if (!Array.isArray(rawBoundsPoints)) {
-      throw createCompositeContractError(`Path kind '${kind}' must return boundsPoints as an array.`);
-    }
-
-    const boundsPoints = Array.from(rawBoundsPoints, (point, index): IRPosition =>
-      snapshotProviderPosition(`Path kind '${kind}' bounds point at index ${index}`, point),
+    const boundsPoints = Array.from(rawBoundsPoints as Iterable<IRPosition>, (point, index): IRPosition =>
+      snapshotProviderPosition(`Path '${kind}' bounds point at index ${index}`, point),
     );
 
     return {
@@ -84,8 +71,8 @@ const validatePathKindCompileResult = (
     };
   });
 
-/** 消费 resolve/path 已绑定的 path kind，并提供内置 stroke emit 回调 */
-export const emitPathKindPrimitive = (
+/** 消费 resolve/path 已绑定的 path，并提供内置 stroke emit 回调 */
+export const emitDefinedPath = (
   pendingPath: Pick<
     PendingPathEmission,
     'path' | 'scopeChain' | 'irPath' | 'occurrence' | 'scopeDefaults' | 'theme' | 'ancestors' | 'observationSink'
@@ -93,7 +80,7 @@ export const emitPathKindPrimitive = (
   resolution: PathResolution,
   targetResolver: PathTargetResolver,
   context: PathCompileHost,
-): PathKindCompileResult | null => {
+) => {
   const { path, scopeChain } = pendingPath;
   const { irPath } = resolution;
   const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
@@ -109,6 +96,7 @@ export const emitPathKindPrimitive = (
   );
 
   const emitOptions = {
+    resources: () => [...context.paint.resources(), ...context.clip.resources()],
     onWarn: context.onWarn,
     scopeChain,
     resolvePaint: context.paint.register,
@@ -124,9 +112,9 @@ export const emitPathKindPrimitive = (
           mode: pendingPath.theme.mode,
           scopeChain,
           targetResolver,
-          pathKinds: context.pathKinds,
-          pathGenerators: context.pathGenerators,
+          paths: context.paths,
           arrows: context.arrows,
+          marks: context.marks,
           patterns: context.patterns,
           round: context.round,
           irPath,
@@ -137,9 +125,9 @@ export const emitPathKindPrimitive = (
     const sourceResolution = resolutionOf(source);
     const strokeResolution = resolveStrokePathProviders(sourceResolution, {
       mode: pendingPath.theme.mode,
-      pathKinds: context.pathKinds,
-      pathGenerators: context.pathGenerators,
+      paths: context.paths,
       arrows: context.arrows,
+      marks: context.marks,
       patterns: context.patterns,
       round: context.round,
       irPath,
@@ -169,23 +157,17 @@ export const emitPathKindPrimitive = (
     const source: IRPathBase = {
       ...pathWithoutKindOptions,
       kind: 'stroke',
-      ...(input?.children === undefined ? {} : { children: [...input.children] }),
+      children: (input?.children ?? path.children ?? []).map(step =>
+        'label' in step ? { ...step, label: undefined } : step,
+      ),
       label: undefined,
       marks: undefined,
       style: { ...path.style, color: undefined, fill: undefined, stroke: undefined, strokeWidth: undefined },
       rotate: undefined,
       scale: undefined,
     };
-    const emittedResolution = resolveStrokePathProviders(resolutionOf(source), {
-      mode: pendingPath.theme.mode,
-      pathKinds: context.pathKinds,
-      pathGenerators: context.pathGenerators,
-      arrows: context.arrows,
-      patterns: context.patterns,
-      round: context.round,
-      irPath,
-    });
-    const emitted = emitPathPrimitive(emittedResolution, {
+    const emittedResolution = resolutionOf(source);
+    const geometry = lowerStrokePathGeometry(emittedResolution, {
       targetView: pathTargetViewOf(
         emittedResolution.targets,
         targetWarn,
@@ -197,30 +179,13 @@ export const emitPathKindPrimitive = (
       options: emitOptions,
     });
 
-    const findPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
-      for (const primitive of primitives) {
-        if (primitive.type === 'path') return primitive;
-        if (primitive.type === 'group') {
-          const nested = findPath(primitive.children);
-          if (nested !== undefined) return nested;
-        }
-      }
-
-      return undefined;
-    };
-
-    const primitive = emitted === null ? undefined : findPath(emitted.primitives);
-
-    return {
-      commands: primitive?.commands ?? [],
-      boundsPoints: emitted?.boundsPoints ?? [],
-    };
+    return geometry?.commands ?? [];
   };
 
   const resolvedFill = resolution.path.fill === undefined ? undefined : emitOptions.resolvePaint(resolution.path.fill);
   const resolvedStroke =
     resolution.path.stroke === undefined ? undefined : emitOptions.resolvePaint(resolution.path.stroke);
-  const appearance: ResolvedPathKindAppearance = Object.freeze({
+  const appearance: ResolvedPathAppearance = Object.freeze({
     ...(resolution.path.color === undefined ? {} : { color: resolution.path.color }),
     ...(resolvedFill === undefined ? {} : { fill: resolvedFill }),
     ...(resolvedStroke === undefined ? {} : { stroke: resolvedStroke }),
@@ -228,8 +193,8 @@ export const emitPathKindPrimitive = (
     strokeWidth: resolution.path.strokeWidth,
     ...(resolution.path.dashPattern === undefined ? {} : { dashPattern: resolution.path.dashPattern }),
     ...(resolution.path.dashOffset === undefined ? {} : { dashOffset: resolution.path.dashOffset }),
-    ...(resolution.path.lineCap === undefined ? {} : { strokeLinecap: resolution.path.lineCap }),
-    ...(resolution.path.lineJoin === undefined ? {} : { strokeLinejoin: resolution.path.lineJoin }),
+    ...(resolution.path.lineCap === undefined ? {} : { lineCap: resolution.path.lineCap }),
+    ...(resolution.path.lineJoin === undefined ? {} : { lineJoin: resolution.path.lineJoin }),
     ...(resolution.path.opacity === undefined ? {} : { opacity: resolution.path.opacity }),
     ...(resolution.path.fillOpacity === undefined ? {} : { fillOpacity: resolution.path.fillOpacity }),
     ...(resolution.path.strokeOpacity === undefined ? {} : { strokeOpacity: resolution.path.strokeOpacity }),
@@ -238,9 +203,9 @@ export const emitPathKindPrimitive = (
   });
 
   const hostLabelBoundsPoints: Array<IRPosition> = [];
-  const resolveHostLabel: PathKindCompileContext['resolveHostLabel'] = label =>
+  const resolveHostLabel: PathCompileContext['resolveHostLabel'] = label =>
     resolvePathLabel(label, pendingPath.scopeDefaults.path?.label ?? {}, resolution.path.color);
-  const emitHostLabels = (input: PathKindLabelInput): ReadonlyArray<ScenePrimitive> =>
+  const emitHostLabels = (input: PathLabelInput): ReadonlyArray<ScenePrimitive> =>
     input.labels.flatMap((label, index) => {
       const sample = input.samples[index];
       const labelDefault = pendingPath.scopeDefaults.path?.label ?? {};
@@ -272,7 +237,7 @@ export const emitPathKindPrimitive = (
 
       return [emittedLabel.primitive];
     });
-  const emitBoundaryLabels = (input: ReadonlyArray<PathKindBoundaryLabelInput>): ReadonlyArray<ScenePrimitive> =>
+  const emitBoundaryLabels = (input: ReadonlyArray<PathBoundaryLabelInput>): ReadonlyArray<ScenePrimitive> =>
     input.map(request => {
       const labelDefault = pendingPath.scopeDefaults.path?.label ?? {};
       const styled = resolvePathLabelColors(
@@ -298,8 +263,8 @@ export const emitPathKindPrimitive = (
       return emitted.primitive;
     });
 
-  const compilePathKind = definition.compile as unknown as (context: PathKindCompileContext) => unknown;
-  const produced = compilePathKind({
+  const compilePath = definition.compile as unknown as (context: PathCompileContext) => unknown;
+  const produced = compilePath({
     path: resolution.kind.path,
     ownerOutput: ownerOutput.publisher,
     materializePath,
@@ -307,28 +272,30 @@ export const emitPathKindPrimitive = (
     emitHostLabels,
     resolveHostLabel,
     emitBoundaryLabels,
-    wrapOutput: output => {
-      const boundsPoints = [...output.boundsPoints, ...hostLabelBoundsPoints];
-      const primitive = output.primitives.at(0);
-      if (primitive === undefined) return { ...output, boundsPoints };
+    wrapOutput: output =>
+      withProviderOutputValidationBoundary(`Path '${kind}'`, () => {
+        const boundsPoints = [...output.boundsPoints, ...hostLabelBoundsPoints];
+        const primitives = [...output.primitives];
+        const primitive = primitives.at(0);
+        if (primitive === undefined) return { primitives, boundsPoints };
 
-      return wrapPathPrimitiveOutput({
-        path: resolution.path,
-        primitive,
-        bodyPrims: output.primitives,
-        boundsPoints,
-        round: context.round,
-      });
-    },
+        return wrapPathPrimitiveOutput({
+          path: resolution.path,
+          primitive,
+          bodyPrims: primitives,
+          boundsPoints,
+          round: context.round,
+        });
+      }),
     appearance,
     round: context.round,
   });
 
-  const validated = validatePathKindCompileResult(kind, produced);
+  const validated = validatePathCompileResult(kind, produced);
   if (validated === null) {
     if (ownerOutput.publisher.requested && ownerOutput.hasPublished()) {
       throw createCompositeContractError(
-        `Path kind '${kind}' at ${formatCompileOccurrence(pendingPath.occurrence)} must not publish owner output when it returns null.`,
+        `Path '${kind}' at ${formatCompileOccurrence(pendingPath.occurrence)} must not publish owner output when it returns null.`,
       );
     }
 
@@ -338,7 +305,7 @@ export const emitPathKindPrimitive = (
   const value = ownerOutput.value();
   if (ownerOutput.publisher.requested && value === undefined) {
     throw createCompositeContractError(
-      `Path kind '${kind}' at ${formatCompileOccurrence(pendingPath.occurrence)} must publish its owner output exactly once.`,
+      `Path '${kind}' at ${formatCompileOccurrence(pendingPath.occurrence)} must publish its owner output exactly once.`,
     );
   }
 

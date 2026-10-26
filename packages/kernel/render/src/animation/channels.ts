@@ -3,36 +3,27 @@
  * @description SVG（svg/animation）与 Canvas（canvas/drawScene）共用，避免两端通道语义漂移
  */
 import type { IRAnimationOrigin, IRAnimationTrack, ScenePrimitive } from '@retikz/core';
-import { Anchor, BuiltinAnimationProperty, CenterAnchor } from '@retikz/core';
+import { Anchor, AnimationProperty, CenterAnchor } from '@retikz/core';
 
 /** transform 类通道（落 transform，需支点 origin） */
 const TRANSFORM_PROPERTIES = new Set<string>([
-  BuiltinAnimationProperty.TranslateX,
-  BuiltinAnimationProperty.TranslateY,
-  BuiltinAnimationProperty.Rotate,
-  BuiltinAnimationProperty.Scale,
-  BuiltinAnimationProperty.ScaleX,
-  BuiltinAnimationProperty.ScaleY,
+  AnimationProperty.TranslateX,
+  AnimationProperty.TranslateY,
+  AnimationProperty.Rotate,
+  AnimationProperty.Scale,
+  AnimationProperty.ScaleX,
+  AnimationProperty.ScaleY,
 ]);
 
-/** 通道分类：css 直属 / transform / pathDraw 揭示 / viewBox 镜头 / 自定义 */
-export type PropertyClass = 'css' | 'transform' | 'pathDraw' | 'viewBox' | 'custom';
+/** 通道分类：css 直属 / transform / pathDraw 揭示 / viewBox 镜头 */
+export type PropertyClass = 'css' | 'transform' | 'pathDraw' | 'viewBox';
 
 /** 把 property 名归类 */
-export const classifyProperty = (property: string): PropertyClass => {
+export const classifyProperty = (property: IRAnimationTrack['property']): PropertyClass => {
   if (TRANSFORM_PROPERTIES.has(property)) return 'transform';
-  if (property === BuiltinAnimationProperty.PathDraw) return 'pathDraw';
-  if (property === BuiltinAnimationProperty.ViewBox) return 'viewBox';
-  if (
-    property === BuiltinAnimationProperty.Opacity ||
-    property === BuiltinAnimationProperty.Fill ||
-    property === BuiltinAnimationProperty.Stroke ||
-    property === BuiltinAnimationProperty.StrokeWidth
-  ) {
-    return 'css';
-  }
-
-  return 'custom';
+  if (property === AnimationProperty.PathDraw) return 'pathDraw';
+  if (property === AnimationProperty.ViewBox) return 'viewBox';
+  return 'css';
 };
 
 /** rect/ellipse 的轴对齐包围盒（user units）；其余 prim 返回 undefined */
@@ -108,3 +99,16 @@ export const primHasStroke = (prim: ScenePrimitive): boolean =>
  */
 export const isAutoplayTrigger = (track: IRAnimationTrack): boolean =>
   track.trigger === undefined || track.trigger === 'load';
+
+/** 返回动画目标不适用或通道冲突的原因 */
+export const animationSkipReason = (prim: ScenePrimitive, track: IRAnimationTrack): string | undefined => {
+  const property = track.property;
+  if (property === 'viewBox') return 'viewBox is scene-root only';
+  if (property === 'pathDraw') return primHasStroke(prim) ? undefined : 'pathDraw requires a stroked element';
+  if (property === 'dashOffset' && primHasStroke(prim) && prim.animations?.some(item => item.property === 'pathDraw'))
+    return 'dashOffset conflicts with pathDraw; pathDraw takes priority';
+  if (classifyProperty(property) === 'transform' || property === 'opacity') return undefined;
+  if (prim.type === 'group') return `group property "${property}" cannot be inherited by children`;
+  if (prim.type === 'text' && property !== 'fill') return `${property} is not supported on ${prim.type} primitives`;
+  return undefined;
+};

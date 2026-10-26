@@ -2,7 +2,7 @@ import type { IRNodeLabel } from '@retikz/core';
 
 import type { MarkChannelDefinition, ResolveLabel } from '../../../contract';
 import { ChannelDefinitionKind, labelEntries } from '../../../contract';
-import type { IRPlotMarkLabelText, IRPlotMark } from '../../../schemas';
+import type { IRPlotMark } from '../../../schemas';
 import { labelOf } from '../shared';
 
 /** 内置文本通道 definition 的按名称索引类型 */
@@ -20,7 +20,7 @@ export type BuiltinTextChannelOptions = {
 /** 文本目标的字段来源、固定内容与显示配置 */
 type LabelContentSources = {
   field?: string;
-  text?: IRPlotMarkLabelText;
+  text?: IRNodeLabel['text'];
   displayFormat?: string;
 };
 
@@ -28,12 +28,12 @@ const labelContentSources = (mark: IRPlotMark): LabelContentSources => {
   const source = mark as {
     encodings?: { text?: string; label?: string | { text?: string } | Array<string | { text?: string }> };
     properties?: {
-      text?: IRPlotMarkLabelText;
+      text?: IRNodeLabel['text'];
       displayFormat?: string;
       label?:
         | string
-        | { text?: IRPlotMarkLabelText; displayFormat?: string }
-        | Array<string | { text?: IRPlotMarkLabelText; displayFormat?: string }>;
+        | { text?: IRNodeLabel['text']; displayFormat?: string }
+        | Array<string | { text?: IRNodeLabel['text']; displayFormat?: string }>;
     };
   };
   if (source.encodings?.text !== undefined || source.properties?.text !== undefined) {

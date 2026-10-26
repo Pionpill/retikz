@@ -1,10 +1,10 @@
 import type {
   AnyCompositeDefinition,
-  AnyPathKindDefinition,
+  AnyPathDefinition,
   ArrowDefinition,
+  MarkDefinition,
   BoundaryDefinition,
   ClipDefinition,
-  PathGeneratorDefinition,
   PatternDefinition,
   ShapeDefinition,
   ThemeDefinition,
@@ -12,11 +12,11 @@ import type {
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import {
   resolveArrowRegistry,
+  resolveMarkRegistry,
   resolveBoundaryRegistry,
   resolveClipRegistry,
   resolveCompositeRegistry,
-  resolvePathGeneratorRegistry,
-  resolvePathKindRegistry,
+  resolvePathRegistry,
   resolvePatternRegistry,
   resolveShapeRegistry,
   resolveThemeRegistry,
@@ -25,8 +25,8 @@ import {
   DEFAULT_FONT_SIZE,
   DEFAULT_LABEL_DISTANCE,
   DEFAULT_LAYOUT_PADDING,
-  DEFAULT_NODE_DISTANCE,
   DEFAULT_MAX_COMPOSITE_DEPTH,
+  DEFAULT_NODE_DISTANCE,
 } from './constants';
 import { DEFAULT_MAX_CLIP_DEPTH } from './resource';
 import { createRound, DEFAULT_PRECISION } from './scene';
@@ -67,12 +67,12 @@ export type CompileEnvironment = Readonly<{
   maxClipDepth: number;
   /** arrow provider 注册表 */
   arrows: ReadonlyMap<string, ArrowDefinition>;
+  /** 普通路径标记定义注册表 */
+  marks: ReadonlyMap<string, MarkDefinition>;
   /** pattern provider 注册表 */
   patterns: ReadonlyMap<string, PatternDefinition>;
-  /** path generator provider 注册表 */
-  pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
-  /** path kind provider 注册表 */
-  pathKinds: ReadonlyMap<string, AnyPathKindDefinition>;
+  /** path provider 注册表 */
+  paths: ReadonlyMap<string, AnyPathDefinition>;
 }>;
 
 /** 可跨次持有的编译环境选项，不包含单次输入、观测及诊断接收器 */
@@ -99,6 +99,7 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
   }
 
   const patterns = resolvePatternRegistry(options.patterns);
+  const arrows = resolveArrowRegistry(options.arrows);
   const composites = resolveCompositeRegistry(options.composites);
   const themeDefinitions = resolveThemeRegistry(options.themeDefinitions);
 
@@ -118,9 +119,9 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
     boundaries: resolveBoundaryRegistry(options.boundaries),
     clips,
     maxClipDepth,
-    arrows: resolveArrowRegistry(options.arrows),
+    arrows,
+    marks: resolveMarkRegistry(options.marks, arrows),
     patterns,
-    pathGenerators: resolvePathGeneratorRegistry(options.pathGenerators),
-    pathKinds: resolvePathKindRegistry(options.pathKinds),
+    paths: resolvePathRegistry(options.paths),
   });
 };

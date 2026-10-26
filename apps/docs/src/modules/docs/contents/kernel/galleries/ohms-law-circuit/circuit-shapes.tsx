@@ -104,7 +104,7 @@ const circuitBattery: ShapeDefinition = defineShape({
       strokeOpacity: style.strokeOpacity,
       dashPattern: style.dashPattern,
       opacity: style.opacity,
-      strokeLinecap: 'round' as const,
+      lineCap: 'round' as const,
     };
 
     yield {
@@ -172,7 +172,7 @@ const circuitSwitch: ShapeDefinition = defineShape({
         { kind: 'move', to: [round(rect.x - halfWidth), round(rect.y)] },
         { kind: 'line', to: [round(leftContactX - contactRadius), round(rect.y)] },
       ],
-      strokeLinecap: 'round',
+      lineCap: 'round',
       ...shared,
     };
     yield {
@@ -181,7 +181,7 @@ const circuitSwitch: ShapeDefinition = defineShape({
         { kind: 'move', to: [round(rightContactX + contactRadius), round(rect.y)] },
         { kind: 'line', to: [round(rect.x + halfWidth), round(rect.y)] },
       ],
-      strokeLinecap: 'round',
+      lineCap: 'round',
       ...shared,
     };
     yield {
@@ -208,7 +208,7 @@ const circuitSwitch: ShapeDefinition = defineShape({
         { kind: 'move', to: [round(leftContactX + contactRadius), round(rect.y - 2)] },
         { kind: 'line', to: leverEnd },
       ],
-      strokeLinecap: 'round',
+      lineCap: 'round',
       ...shared,
     };
   },
@@ -239,7 +239,7 @@ const circuitResistor: ShapeDefinition = defineShape({
       ],
       stroke,
       strokeWidth,
-      strokeLinecap: 'round',
+      lineCap: 'round',
       opacity: style.opacity,
     };
     yield {
@@ -262,7 +262,7 @@ const circuitResistor: ShapeDefinition = defineShape({
       ],
       stroke,
       strokeWidth,
-      strokeLinecap: 'round',
+      lineCap: 'round',
       opacity: style.opacity,
     };
   },
@@ -295,7 +295,7 @@ const circuitRheostat: ShapeDefinition = defineShape({
       ],
       stroke,
       strokeWidth,
-      strokeLinecap: 'round',
+      lineCap: 'round',
       opacity: style.opacity,
     };
     yield {
@@ -317,7 +317,7 @@ const circuitRheostat: ShapeDefinition = defineShape({
       ],
       stroke,
       strokeWidth,
-      strokeLinecap: 'round',
+      lineCap: 'round',
       opacity: style.opacity,
     };
 
@@ -330,7 +330,7 @@ const circuitRheostat: ShapeDefinition = defineShape({
       ],
       stroke,
       strokeWidth,
-      strokeLinecap: 'round',
+      lineCap: 'round',
       opacity: style.opacity,
     };
 
@@ -344,8 +344,8 @@ const circuitRheostat: ShapeDefinition = defineShape({
       ],
       stroke,
       strokeWidth,
-      strokeLinecap: 'round',
-      strokeLinejoin: 'round',
+      lineCap: 'round',
+      lineJoin: 'round',
       opacity: style.opacity,
     };
   },

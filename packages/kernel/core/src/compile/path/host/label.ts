@@ -1,7 +1,7 @@
 import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
+import type { GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../../contract';
 import type { CanonicalFont, CanonicalPathLabel } from '../../../resolve';
 import { resolveFont, resolveTextLine } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
@@ -157,13 +157,13 @@ export const emitLabelPrimitive = (
         round,
       );
     });
-    const group: GroupPrim = { type: 'group', children };
+    const group: GroupPrimitive = { type: 'group', children };
     const right = left + blockWidth;
     const bottom = top + blockHeight;
 
     if (sloped) {
       const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
-      const rotated: GroupPrim = {
+      const rotated: GroupPrimitive = {
         type: 'group',
         transforms: [{ kind: 'rotate', degrees: round(angleDeg), cx: round(ax), cy: round(ay) }],
         children: [group],
@@ -195,7 +195,7 @@ export const emitLabelPrimitive = (
     };
   }
 
-  // 纯文本：维持既有 TextPrim 路径（gating 时用反转义后的文字，否则原字符串、零回归）
+  // 纯文本：维持既有 TextPrimitive 路径（gating 时用反转义后的文字，否则原字符串、零回归）
   const resolved = resolvedLines[0];
   const text = resolved.plainText;
   const lineHeight = fontSize * LABEL_LINE_HEIGHT_FACTOR;
@@ -225,7 +225,7 @@ export const emitLabelPrimitive = (
   }
 
   const emittedLineHeight = round(lineHeight);
-  const textPrim: TextPrim = {
+  const textPrim: TextPrimitive = {
     type: 'text',
     x: round(x),
     y: round(toAlphabeticBaselineY({ y, baseline, lineCount: 1, lineHeight: emittedLineHeight, fontSize })),

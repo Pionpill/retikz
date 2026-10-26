@@ -21,7 +21,7 @@ This package is ESM-only and requires Node.js 24 or newer.
 import { compileToScene } from '@retikz/core';
 
 const { scene, artifacts } = compileToScene(ir);
-// optional: compileToScene(ir, { measureText, shapes, arrows, clips, pathKinds, padding, ... })
+// optional: compileToScene(ir, { measureText, shapes, arrows, clips, paths, padding, ... })
 // hand `scene` to @retikz/render/svg, @retikz/render/canvas, or a runtime
 // inspect `artifacts` when composite definitions or node layout collection publish compile DTOs
 ```
@@ -36,8 +36,8 @@ Most users consume core indirectly through [`@retikz/react`](https://www.npmjs.c
 - IR & `Scene` zod schemas + inferred types
 - `parseWay` / `parseNodeTarget` / `parseTargetSugar` — pure parsers
 - `point` / `rect` / `circle` / `ellipse` / `diamond` / `polar` — geometry
-- Provider registries and definition helpers for `shapes`, `boundaries`, `clips`, `arrows`, `patterns`, `pathGenerators`, `pathKinds`, and `composites`
-- Built-in provider collections such as `BUILTIN_SHAPES`, `BUILTIN_BOUNDARIES`, `BUILTIN_CLIPS`, `BUILTIN_ARROWS`, `BUILTIN_PATTERNS`, `BUILTIN_PATH_GENERATORS`, and `BUILTIN_PATH_KINDS`; optional kinds such as Ribbon come from `@retikz/extension` and are injected through `pathKinds` or a provider contribution
+- Provider registries and definition helpers for `shapes`, `boundaries`, `clips`, `arrows`, `patterns`, `pathGenerators`, `paths`, and `composites`
+- Built-in provider collections such as `BUILTIN_SHAPES`, `BUILTIN_BOUNDARIES`, `BUILTIN_CLIPS`, `BUILTIN_ARROWS`, `BUILTIN_PATTERNS`, `BUILTIN_PATH_GENERATORS`, and `BUILTIN_PATHS`; optional kinds such as Ribbon come from `@retikz/extension` and are injected through `paths` or a provider contribution
 
 ## Docs
 

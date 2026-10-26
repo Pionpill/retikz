@@ -52,7 +52,7 @@ export const circuitMeter: ShapeDefinition = defineShape({
         { kind: 'line', to: [round(rect.x - radius), round(rect.y)] },
       ],
       ...shared,
-      strokeLinecap: 'round',
+      lineCap: 'round',
     };
     yield {
       type: 'path',
@@ -61,7 +61,7 @@ export const circuitMeter: ShapeDefinition = defineShape({
         { kind: 'line', to: [round(rect.x + rect.width / 2), round(rect.y)] },
       ],
       ...shared,
-      strokeLinecap: 'round',
+      lineCap: 'round',
     };
     yield {
       type: 'ellipse',

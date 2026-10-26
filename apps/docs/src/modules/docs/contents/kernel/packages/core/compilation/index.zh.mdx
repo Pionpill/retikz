@@ -268,7 +268,7 @@ export type NodeTextLayout = {
 
 A、B 登记完成后，`flushPendingPathEmissions` 查询目标布局，解析路径并生成图元。只指定节点 id 时，本例会按连接边界裁剪端点，所以 A 的右边界 `[30, 0]` 和 B 的左边界 `[150, 0]` 成为可见线段的起止点。
 
-随后，Core 在原数组中找到占位项，用实际 PathPrim 替换它。虽然路径比节点晚计算，它仍位于数组第 0 项。回填完成后再按 `zIndex` 稳定排序；相同 `zIndex` 保持声明顺序。所有占位必须在返回 Scene 前消失。
+随后，Core 在原数组中找到占位项，用实际 PathPrimitive 替换它。虽然路径比节点晚计算，它仍位于数组第 0 项。回填完成后再按 `zIndex` 稳定排序；相同 `zIndex` 保持声明顺序。所有占位必须在返回 Scene 前消失。
 
 本例的最终路径字段摘录如下：
 
@@ -370,7 +370,7 @@ export type Scene = {
   animations?: Array<IRAnimationTrack>;
 };
 
-export type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
+export type ScenePrimitive = RectPrimitive | EllipsePrimitive | TextPrimitive | PathPrimitive | GroupPrimitive;
 ```
 
 </DocTab>

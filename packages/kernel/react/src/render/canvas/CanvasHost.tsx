@@ -8,7 +8,6 @@ import {
   sceneHasAutoplayTrigger,
 } from '@retikz/render/animation';
 import type { PrimAnimationResolution } from '@retikz/render/canvas';
-import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/canvas';
 import { hitTest, renderFrameToCanvas } from '@retikz/render/canvas';
 import type { BuildContext, HydrationHandlers } from '@retikz/render/hydration';
 import {
@@ -88,10 +87,6 @@ export type CanvasHostProps = {
   snapshotAt?: number;
   /** 命令式动画句柄出口：写入 rAF 时钟 AnimationControls（无动画 / 截帧 / 降级时为 null） */
   animationRef?: Ref<AnimationControls | null>;
-  /** 自定义 easing 注册表（透传 drawScene） */
-  easings?: EasingRegistry;
-  /** 自定义 property 插值器注册表（透传 drawScene） */
-  animationProperties?: AnimationPropertyRegistry;
 };
 
 /** 写入 ref（兼容 callback ref 与 RefObject）；value 为 null 表示清空 */
@@ -137,19 +132,7 @@ const clientToScene = (
 
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
-  const {
-    frame,
-    handlers,
-    width,
-    height,
-    className,
-    style,
-    animate,
-    snapshotAt,
-    animationRef,
-    easings,
-    animationProperties,
-  } = props;
+  const { frame, handlers, width, height, className, style, animate, snapshotAt, animationRef } = props;
   const scene = frame.primary;
   const initialRatio = devicePixelRatio();
   const displaySize = computeDisplaySize(scene.layout, width, height);
@@ -206,8 +189,6 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       devicePixelRatio: ratio,
       defaultFontFamily: canvasFontFamily(canvas),
       getImage: (href: string) => loadImage(href, bumpRender),
-      easings,
-      animationProperties,
     };
     const registry = registryRef.current as IdClockRegistry;
 
@@ -257,7 +238,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     };
     // className / style 不参与依赖：effect 不读取它们（仅 JSX 应用到 <canvas>），把内联 style={{...}} 的
     // 每次新引用纳入依赖会让本 effect 每次父渲染都 dispose+重建 rAF 时钟、动画从头重播。
-  }, [animate, snapshotAt, animationRef, animationProperties, easings, frame, height, renderTick, scene, width]);
+  }, [animate, snapshotAt, animationRef, frame, height, renderTick, scene, width]);
 
   useEffect(() => {
     const canvas = ref.current;

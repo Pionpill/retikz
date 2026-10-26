@@ -80,7 +80,6 @@ const mountStaticSvg = (
         defaultFontFamily: options.defaultFontFamily,
         animate,
         snapshotAt: animation.snapshotAt,
-        easings: animation.easings,
       },
     );
 

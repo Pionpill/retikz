@@ -4,7 +4,7 @@ import { compileToScene } from '../../src/compile/compile';
 import type { NodeLayout } from '../../src/compile/node';
 import { boxInsets } from '../../src/compile/node';
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
-import type { ScenePrimitive, TextPrim } from '../../src/contract';
+import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import type { IRScene } from '../../src/schemas';
 import { NodeSchema } from '../../src/schemas';
@@ -181,7 +181,7 @@ describe('margin：不外扩护栏 + 校验', () => {
     });
 
     const labelY = (margin: number): number | undefined => {
-      const texts: Array<TextPrim> = [];
+      const texts: Array<TextPrimitive> = [];
 
       const walk = (prims: Array<ScenePrimitive>): void => {
         for (const p of prims) {

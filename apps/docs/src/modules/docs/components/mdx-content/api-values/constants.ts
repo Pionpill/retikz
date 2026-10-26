@@ -1,8 +1,8 @@
 import {
   AnimationDirection,
-  BuiltinAnimationEasing,
+  AnimationEasing,
   AnimationFill,
-  BuiltinAnimationProperty,
+  AnimationProperty,
   AnimationTrigger,
   BendDirection,
   BlendMode,
@@ -15,7 +15,7 @@ import {
   NodeTextAlign,
   CirclePathCloseMode,
   PathFillRule,
-  BuiltinPathKind,
+  BuiltinPath,
   PathLineCap,
   PathLineJoin,
   BuiltinPatternShape,
@@ -93,14 +93,14 @@ export const API_VALUE_REGISTRY = {
   AnimationDirection: {
     values: Object.values(AnimationDirection),
   },
-  BuiltinAnimationEasing: {
-    values: Object.values(BuiltinAnimationEasing),
+  AnimationEasing: {
+    values: Object.values(AnimationEasing),
   },
   AnimationFill: {
     values: Object.values(AnimationFill),
   },
-  BuiltinAnimationProperty: {
-    values: Object.values(BuiltinAnimationProperty),
+  AnimationProperty: {
+    values: Object.values(AnimationProperty),
   },
   AnimationTrigger: {
     values: Object.values(AnimationTrigger),
@@ -239,8 +239,8 @@ export const API_VALUE_REGISTRY = {
   PathFillRule: {
     values: Object.values(PathFillRule),
   },
-  BuiltinPathKind: {
-    values: Object.values(BuiltinPathKind),
+  BuiltinPath: {
+    values: Object.values(BuiltinPath),
   },
   PathLineCap: {
     values: Object.values(PathLineCap),

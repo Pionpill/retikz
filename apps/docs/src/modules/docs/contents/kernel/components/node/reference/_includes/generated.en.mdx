@@ -263,19 +263,19 @@ export type InputCoordinate = IRCoordinate & {
 
 <ApiTable>
 
-| Member         | Type                                                                                                                                                                                  | Default | Description                                                                                                               |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `align?`       | `"start" \| "middle" \| "end"`                                                                                                                                                        | —       | Attachment tangent alignment: start, middle, or end. Defaults to middle.                                                  |
-| `distance?`    | `number`                                                                                                                                                                              | —       | Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.    |
-| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —       | Label font overrides. Missing fields inherit from the parent node font.                                                   |
-| `keepUpright?` | `false \| true`                                                                                                                                                                       | —       | Flip upside-down labels when true. Default false.                                                                         |
-| `opacity?`     | `number`                                                                                                                                                                              | —       | Label opacity override; omitted values inherit the node overall opacity.                                                  |
-| `pin?`         | `IRNodeLabel['pin']`                                                                                                                                                                  | —       | Outside-label leader line. Use true for defaults or an object for style overrides.                                        |
-| `placement?`   | `"outside" \| "inside"`                                                                                                                                                               | —       | Outside or inside the attachment point. Default outside.                                                                  |
-| `position?`    | `InputNodeLabelPosition`                                                                                                                                                              | —       | Label position; defaults to above the node, accepting a direction, angle, or boundary fraction                            |
-| `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                           | —       | Label self-rotation: none, radial, tangent, or an explicit angle in degrees.                                              |
-| `text`         | `IRNodeLabel['text']`                                                                                                                                                                 | —       | Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ segments }` mixed text+math line. Single-line. |
-| `textColor?`   | `string \| number`                                                                                                                                                                    | —       | Label text color; falls back to currentColor.                                                                             |
+| Member         | Type                                                                                                                                                                                  | Default | Description                                                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `align?`       | `"start" \| "middle" \| "end"`                                                                                                                                                        | —       | Attachment tangent alignment: start, middle, or end. Defaults to middle.                                                                                              |
+| `distance?`    | `number`                                                                                                                                                                              | —       | Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.                                                |
+| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —       | Label font overrides. Missing fields inherit from the parent node font.                                                                                               |
+| `keepUpright?` | `false \| true`                                                                                                                                                                       | —       | Flip upside-down labels when true. Default false.                                                                                                                     |
+| `opacity?`     | `number`                                                                                                                                                                              | —       | Label opacity override; omitted values inherit the node overall opacity.                                                                                              |
+| `pin?`         | `IRNodeLabel['pin']`                                                                                                                                                                  | —       | Outside-label leader line. Use true for defaults or an object for style overrides.                                                                                    |
+| `placement?`   | `"outside" \| "inside"`                                                                                                                                                               | —       | Outside or inside the attachment point. Default outside.                                                                                                              |
+| `position?`    | `InputNodeLabelPosition`                                                                                                                                                              | —       | Label position; defaults to above the node, accepting a direction, angle, or boundary fraction                                                                        |
+| `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                           | —       | Label self-rotation: none, radial, tangent, or an explicit angle in degrees.                                                                                          |
+| `text`         | `IRNodeLabel['text']`                                                                                                                                                                 | —       | Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides, `{ segments }` for mixed text+math). |
+| `textColor?`   | `string \| number`                                                                                                                                                                    | —       | Label text color; falls back to currentColor.                                                                                                                         |
 
 </ApiTable>
 
@@ -347,7 +347,7 @@ export type InputNodeLabelPosition =
 
 ## Execution and supporting contracts
 
-#### <ApiSourceLink label={"BoundaryFitContext"} path={"packages/kernel/core/src/contract/boundary.ts"} startLine={10}>BoundaryFitContext</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryFitContext"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={10}>BoundaryFitContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -389,7 +389,7 @@ export type NodeTextColor = ValueOf<typeof NodeTextColor>;
 
 ## Extension definitions and registration
 
-#### <ApiSourceLink label={"BoundaryDefinition"} path={"packages/kernel/core/src/contract/boundary.ts"} startLine={49}>BoundaryDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryDefinition"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={49}>BoundaryDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -420,7 +420,7 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BoundaryDefinitionInput"} path={"packages/kernel/core/src/contract/boundary.ts"} startLine={21}>BoundaryDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryDefinitionInput"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={21}>BoundaryDefinitionInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -459,7 +459,7 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/shape/shape.ts"} startLine={183}>ShapeDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={183}>ShapeDefinition</ApiSourceLink>
 
 All functions receive `JsonObject`; `paramsSchema.parse` guarantees the concrete type during compilation. The registry is homogeneous and non-generic to avoid variance issues or any. Use `defineShape<TParams>` for type safety at the definition site.
 
@@ -498,7 +498,7 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinitionInput"} path={"packages/kernel/core/src/contract/shape/shape.ts"} startLine={111}>ShapeDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeDefinitionInput"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={111}>ShapeDefinitionInput</ApiSourceLink>
 
 Runtime capability contract shared by third-party and built-in shapes; the definition itself is not stored in IR. Each capability function receives instance-level `params` as its last argument.
 
@@ -587,7 +587,7 @@ export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
 ]);
 ```
 
-#### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/boundary.ts"} startLine={58}>defineBoundary</ApiSourceLink>
+#### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={58}>defineBoundary</ApiSourceLink>
 
 Add the result to CompileOptions.boundaries so nodes or path endpoints can reference its name through boundary. This function does not register the boundary or parse instance parameters
 
@@ -619,7 +619,7 @@ export declare const defineBoundary: <TParams extends JsonObject>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/shape/shape.ts"} startLine={192}>defineShape</ApiSourceLink>
+#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={192}>defineShape</ApiSourceLink>
 
 Add the result to CompileOptions.shapes so nodes can reference its name through shape. This function does not register the shape or parse instance parameters
 
@@ -728,7 +728,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={112}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={105}>NodeLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={113}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={106}>NodeLabelSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -736,19 +736,19 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 <ApiTable>
 
-| Member         | Type                                                                                                                                                                                                                    | Default | Description                                                                                                               |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `align?`       | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —       | Attachment tangent alignment: start, middle, or end. Defaults to middle.                                                  |
-| `distance?`    | `number`                                                                                                                                                                                                                | —       | Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.    |
-| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                   | —       | Label font overrides. Missing fields inherit from the parent node font.                                                   |
-| `keepUpright?` | `false \| true`                                                                                                                                                                                                         | —       | Flip upside-down labels when true. Default false.                                                                         |
-| `opacity?`     | `number`                                                                                                                                                                                                                | —       | Label opacity override; omitted values inherit the node overall opacity.                                                  |
-| `pin?`         | `ZodInfer<typeof NodeLabelSchema.shape["pin"]>`                                                                                                                                                                         | —       | Outside-label leader line. Use true for defaults or an object for style overrides.                                        |
-| `placement?`   | `"outside" \| "inside"`                                                                                                                                                                                                 | —       | Outside or inside the attachment point. Default outside.                                                                  |
-| `position?`    | `number \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| "center" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —       | Label attachment point: canonical direction, center, angle, or `{ boundary, fraction }`. Omitted fields use top.          |
-| `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —       | Label self-rotation: none, radial, tangent, or an explicit angle in degrees.                                              |
-| `text`         | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —       | Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ segments }` mixed text+math line. Single-line. |
-| `textColor?`   | `string \| number`                                                                                                                                                                                                      | —       | Label text color; falls back to currentColor.                                                                             |
+| Member         | Type                                                                                                                                                                                                                    | Default | Description                                                                                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `align?`       | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —       | Attachment tangent alignment: start, middle, or end. Defaults to middle.                                                                                              |
+| `distance?`    | `number`                                                                                                                                                                                                                | —       | Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.                                                |
+| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                   | —       | Label font overrides. Missing fields inherit from the parent node font.                                                                                               |
+| `keepUpright?` | `false \| true`                                                                                                                                                                                                         | —       | Flip upside-down labels when true. Default false.                                                                                                                     |
+| `opacity?`     | `number`                                                                                                                                                                                                                | —       | Label opacity override; omitted values inherit the node overall opacity.                                                                                              |
+| `pin?`         | `ZodInfer<typeof NodeLabelSchema.shape["pin"]>`                                                                                                                                                                         | —       | Outside-label leader line. Use true for defaults or an object for style overrides.                                                                                    |
+| `placement?`   | `"outside" \| "inside"`                                                                                                                                                                                                 | —       | Outside or inside the attachment point. Default outside.                                                                                                              |
+| `position?`    | `number \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| "center" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —       | Label attachment point: canonical direction, center, angle, or `{ boundary, fraction }`. Omitted fields use top.                                                      |
+| `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —       | Label self-rotation: none, radial, tangent, or an explicit angle in degrees.                                                                                          |
+| `text`         | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —       | Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides, `{ segments }` for mixed text+math). |
+| `textColor?`   | `string \| number`                                                                                                                                                                                                      | —       | Label text color; falls back to currentColor.                                                                                                                         |
 
 </ApiTable>
 
@@ -858,11 +858,11 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 
 <ZodSchema name="NodeSchema" />
 
-#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={40}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={41}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
 
 <ZodSchema name="NodeLabelBoundaryPositionSchema" />
 
-#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={48}>NodeLabelPinSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={49}>NodeLabelPinSchema</ApiSourceLink>
 
 <ZodSchema name="NodeLabelPinSchema" />
 
@@ -870,8 +870,8 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 
 <ZodSchema name="BoundarySchema" />
 
-#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/label.ts"} startLine={36}>BoundaryLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/label.ts"} startLine={31}>BoundaryLabelSchema</ApiSourceLink>
 
-The shared Kernel boundary-label contract. Node reuses its rotation, placement, and alignment fields while retaining its own position, leader, single-line content, and defaults. Ribbon endpoints use this schema directly.
+The shared Kernel boundary-label contract. Node reuses its rotation, placement, and alignment fields while retaining its own position, leader, text blocks, and defaults. Ribbon endpoints use this schema directly.
 
 <ZodSchema shallow name="BoundaryLabelSchema" />

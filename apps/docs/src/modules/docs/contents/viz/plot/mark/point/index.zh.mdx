@@ -168,27 +168,55 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 以下视觉属性除特别注明外，均支持常量通道和字段通道。数字、布尔或对象可作为常量简写；颜色等有歧义的字符串使用显式常量绑定，字段绑定规则见[通道绑定](/viz/plot/channel/binding)。表格按属性职责分组，demo 展示同组属性的组合效果。
 
-### 位置与大小
+### 位置
 
-`x`、`y` 指定读取哪个字段。默认直角坐标系将它们解释为横向和纵向位置；切换到极坐标后，`x` 表示角向位置，`y` 表示径向位置。两种坐标下仍是一行数据一个点。
+`encodings.position` 按坐标角色指定位置来源。直角坐标中 x、y 表示水平与垂直位置；极坐标中 x 表示角度，y 表示半径。一维提供 x，二维提供 x、y，三维依次提供 x、y、z。
 
-| 属性          | 含义         | 说明                                                                                                        |
-| ------------- | ------------ | ----------------------------------------------------------------------------------------------------------- |
-| `x`、`y`      | 位置字段     | 组件属性只接受字段名或字段路径；直角坐标下对应横向和纵向，极坐标下对应角向和径向。一维坐标只使用 `x`        |
-| `z`           | 第三位置字段 | 仅供消费第三位置 role 的自定义坐标系使用，内置坐标系不使用                                                  |
-| `size`        | 节点半径     | 常量直接指定半径；数值字段默认通过平方根比例尺映射，便于比较面积。负值报错                                  |
-| `minimumSize` | 最小视觉尺寸 | 支持数字或包含 `width`、`height`、`default` 的对象；普通点的 `size` 优先。示例切换到“最小尺寸”后省略 `size` |
-| `color`       | 整体颜色     | 本例按地区分类着色；完整颜色与绘制样式见下节                                                                |
+| 输入     | 写法                                    | 含义                                                   |
+| -------- | --------------------------------------- | ------------------------------------------------------ |
+| 字段     | `{ field: 'x' }`                        | 读取当前数据行的字段，再经过比例尺映射                 |
+| 常量     | `{ value: 50 }`                         | 固定的数据空间值，也可以是分类字符串；仍经过比例尺映射 |
+| 范围边界 | `{ edge: 'start' }` / `{ edge: 'end' }` | 最终坐标角色范围的起点或终点，跟随范围反转             |
 
-先保持位置字段不变，比较固定散点与人口气泡，再切换字段观察位置变化。
+#### 字段位置
+
+切换 x、y 字段与坐标系，观察同一组数据的位置变化。节点半径固定为 10。
 
 <ComponentPreview
   mode="showcase"
   files={['point-position', 'point-position.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-position' }}
   size="lg"
-  caption="切换位置、颜色与尺寸编码，对比普通散点、分类散点和气泡。"
+  caption="切换位置字段和坐标系，观察节点位置的变化。"
   defaultSourceFile="point-position.preview.tsx"
+/>
+
+#### 常量与边界位置
+
+使用常量指定固定的数据位置，或用范围边界定位到坐标范围的起点、终点；两者都可以与字段混合使用。下面调整常量位置，观察节点在不同坐标系中的变化。
+
+<ComponentPreview
+  mode="showcase"
+  files={['reference-point', 'reference-point.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-point.preview.tsx"
+  controls={{ name: 'reference-point' }}
+  size="md"
+/>
+
+#### 统计结果位置
+
+下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换平均值 / 中位数或分组，观察每个结果行产生的独立参考图元；小点保留原始观测。
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'reference-data-point',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-point' }}
+  size="md"
 />
 
 ### 外观
@@ -197,6 +225,8 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 | 属性                  | 含义             | 说明                                                                                                                               |
 | --------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `size`                | 节点半径         | 常量直接指定半径；数值字段默认通过平方根比例尺映射，便于比较面积。负值报错                                                         |
+| `minimumSize`         | 最小视觉尺寸     | 支持数字或包含 `width`、`height`、`default` 的对象；普通点的 `size` 优先。示例切换到“最小尺寸”后省略 `size`                        |
 | `color`               | 整体颜色         | 分类字段通过颜色比例尺映射；常量颜色使用显式常量绑定。显式 `fill` 可覆盖节点填充                                                   |
 | `fill`                | 填充             | 支持字段、常量色，以及 `linearGradient`、`radialGradient`、`conicGradient`、`pattern`、`image` 等 Paint `kind`；字符串按字段名解析 |
 | `dashOffset`          | 虚线偏移         | 有限正负数；与 `dashPattern` 配合，支持固定属性和字段编码                                                                          |
@@ -214,6 +244,8 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 固定 `fill`、`stroke` 可使用 CSS 颜色、结构化 Paint 或 0–1 的主色权重（`0` 也是有效值）。固定 `opacity: 0.6` 等价于 `{ overall: 0.6 }`；`encodings.opacity` 仍按 `overall`、`fill`、`stroke` 分量绑定，只覆盖对应的固定分量。 `textColor` 支持 CSS 颜色或 0 到 1 的主色权重。
 
 示例将节点成对重叠，便于观察混合模式与绘制顺序。先关闭自定义虚线和虚线，再开启点线比较描边；切换正序、倒序，观察重叠边缘的遮挡变化。
+
+尺寸可使用固定半径、按人口字段映射或最小尺寸三种模式。最小尺寸模式不设置 `size`，由 `minimumSize` 决定节点大小。
 
 <ComponentPreview
   mode="showcase"
@@ -436,31 +468,9 @@ Plot 按图元实际使用的位置尺度汇总需求。最大半径加净空构
   ]}
 />
 
-## 参考点与文字
+## 图元引用
 
-`encodings.position` 的 x 必填；二维提供 x、y，三维提供 x、y、z，不能跳过 y。位置可使用 `{ field: '字段名' }`、`{ value: 50 }`（也可为分类字符串）或 `{ edge: 'start' }` / `{ edge: 'end' }`。常量位置沿用形状、文本、朝向与标签能力。
-
-以下参考图元显式设置 `contributeToDomain={false}`，不扩大主体数据的定义域。使用控件切换坐标系、位置、几何与标签。
-
-<ComponentPreview
-  files={['reference-point', 'reference-point.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
-  defaultSourceFile="reference-point.preview.tsx"
-  controls={{ name: 'reference-point' }}
-  size="md"
-/>
-
-下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换平均值 / 中位数或分组，观察每个结果行产生的独立参考图元；小点保留原始观测。
-
-<ComponentPreview
-  files={[
-    'reference-data-point',
-    '/viz/plot/mark/shared/reference-data.preview.tsx',
-    '/viz/plot/mark/shared/reference-data.data.ts',
-  ]}
-  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
-  controls={{ name: 'reference-data-point' }}
-  size="md"
-/>
+设置 Mark 的 `id` 和 `encodings.anchorId` 身份字段后，后面声明的 Path 可以通过 `mark + key` 连接其中一个节点。`key` 匹配最终数据行的身份值，不是拼接后的 Core id；固定模板或生成器则以其输出作为身份。数值 `1` 与字符串 `'1'` 视为同一身份，同一 Mark 内不得重复。用法见 [Path 图元目标](/viz/plot/mark/path#图元目标)。
 
 ## API 参考
 

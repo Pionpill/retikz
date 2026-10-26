@@ -13,12 +13,10 @@ export type DrawProps = Readonly<{
   way: WayDSL;
   /** 折线拐角几何圆角半径 */
   cornerRadius?: IRPath['cornerRadius'];
-  /** 路径级箭头方向 */
+  /** 路径起点与终点的箭头配置 */
   arrow?: PathProps['arrow'];
-  /** 箭头详细配置 */
-  arrowDetail?: PathProps['arrowDetail'];
-  /** 箭头端点放置配置 */
-  arrowPlacement?: PathProps['arrowPlacement'];
+  /** 沿路径按弧长比例放置图元标记 */
+  marks?: PathProps['marks'];
   /** 同层 stack 顺序 */
   zIndex?: IRPath['zIndex'];
 }>;

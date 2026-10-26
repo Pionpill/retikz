@@ -4,4 +4,4 @@ export * from './data-execution';
 export * from './position-adjustment';
 export { mergePlotDefaults, resolvePlotTheme } from './theme';
 
-export { isSingleMark, resolveMarkInstances } from './mark';
+export { isSingleMark, resolveMarkInstances, resolveMarkTargets } from './mark';

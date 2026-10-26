@@ -1,4 +1,5 @@
-﻿import type { ExternalRow } from '@retikz/data';
+import type { IRNodeLabel } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
@@ -7,7 +8,7 @@ import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
 import type { FieldCollector, ResolveLabel } from '../../../contract';
 import { channelField } from '../../../contract';
-import type { IRPlotChannel, IRPlotMarkLabelText } from '../../../schemas';
+import type { IRPlotChannel } from '../../../schemas';
 
 /**
  * 读取字段编码在当前行中的原始值
@@ -50,13 +51,13 @@ const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: Da
  * @returns 格式化文本或常量内容；字段为空或没有内容时返回 undefined
  */
 export const labelOf = (
-  text: IRPlotMarkLabelText | undefined,
+  text: IRNodeLabel['text'] | undefined,
   row: ExternalRow,
   fieldType?: DataFieldType,
   resolveLabel?: ResolveLabel,
   field?: string,
   displayFormat?: string,
-): IRPlotMarkLabelText | string | undefined => {
+): IRNodeLabel['text'] | string | undefined => {
   if (resolveLabel !== undefined) return String(resolveLabel(row));
   if (field !== undefined) {
     const value = resolveFieldPath(row, field);

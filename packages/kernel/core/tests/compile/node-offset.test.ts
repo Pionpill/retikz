@@ -1,22 +1,22 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { EllipsePrim, RectPrim, ScenePrimitive } from '../../src/contract';
+import type { EllipsePrimitive, RectPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IROffsetPosition, IRScene } from '../../src/schemas';
 import { OffsetPositionSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
-/** 取所有 RectPrim（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
-const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
-  flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
+/** 取所有 RectPrimitive（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
+const rects = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
+  flattenPrims(prims).filter((p): p is RectPrimitive => p.type === 'rect');
 
-const ellipses = (prims: Array<ScenePrimitive>): Array<EllipsePrim> =>
-  flattenPrims(prims).filter((p): p is EllipsePrim => p.type === 'ellipse');
+const ellipses = (prims: Array<ScenePrimitive>): Array<EllipsePrimitive> =>
+  flattenPrims(prims).filter((p): p is EllipsePrimitive => p.type === 'ellipse');
 
 /** rect 中心点 */
-const rectCenter = (r: RectPrim): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
+const rectCenter = (r: RectPrimitive): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
 
-const ellipseCenter = (e: EllipsePrim): [number, number] => [e.cx, e.cy];
+const ellipseCenter = (e: EllipsePrimitive): [number, number] => [e.cx, e.cy];
 
 describe('OffsetPosition: schema 校验', () => {
   it('合法 of=string + offset 通过校验', () => {

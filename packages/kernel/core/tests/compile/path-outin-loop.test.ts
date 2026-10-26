@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { CubicPathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
+import type { CubicPathCommand, PathPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene, IRStep } from '../../src/schemas';
 
-const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrim => {
+const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrimitive => {
   for (const p of prims) {
     if (p.type === 'path') return p;
     if (p.type === 'group') {
@@ -16,18 +16,18 @@ const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrim => {
     }
   }
 
-  throw new Error('expected a PathPrim in scene');
+  throw new Error('expected a PathPrimitive in scene');
 };
 
 /** 首个 cubic 命令 */
-const firstCubic = (path: PathPrim): CubicPathCommand => {
+const firstCubic = (path: PathPrimitive): CubicPathCommand => {
   const c = path.commands.find((x): x is CubicPathCommand => x.kind === 'cubic');
   if (!c) throw new Error('expected a cubic command');
   return c;
 };
 
 /** 段起点（首个 move 的 to） */
-const firstMove = (path: PathPrim): [number, number] => {
+const firstMove = (path: PathPrimitive): [number, number] => {
   const m = path.commands.find(x => x.kind === 'move');
   if (!m) throw new Error('expected a move command');
   return m.to;

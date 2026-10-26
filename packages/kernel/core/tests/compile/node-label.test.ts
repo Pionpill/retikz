@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { ScenePrimitive, TextPrim } from '../../src/contract';
+import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 // fallback measurer 不提供 ascent / descent，Node label 规范化为上下对称视觉盒
-const visualMiddle = (t: TextPrim): number => t.y;
+const visualMiddle = (t: TextPrimitive): number => t.y;
 
-/** 收集 scene 里所有 TextPrim（包括 group 嵌套里的） */
-const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
-  const out: Array<TextPrim> = [];
+/** 收集 scene 里所有 TextPrimitive（包括 group 嵌套里的） */
+const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrimitive> => {
+  const out: Array<TextPrimitive> = [];
 
   for (const p of prims) {
     if (p.type === 'text') out.push(p);
@@ -19,10 +19,54 @@ const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   return out;
 };
 
-const findLabel = (prims: Array<ScenePrimitive>, text: string): TextPrim | undefined =>
+const findLabel = (prims: Array<ScenePrimitive>, text: string): TextPrimitive | undefined =>
   collectTexts(prims).find(t => t.lines.some(l => (typeof l === 'string' ? l : l.text) === text));
 
 describe('Node label', () => {
+  it('preserves per-line and segment styles in a multiline label', () => {
+    const scene = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          style: { fill: '#000000', textColor: 'contrast' },
+          label: {
+            position: 'center',
+            opacity: 0.5,
+            text: [
+              { text: 'styled', fill: '#ff0000', opacity: 0.4, font: { size: 24 } },
+              { segments: [{ text: 'inherited' }, { text: 'explicit', fill: '#00ff00' }] },
+            ],
+          },
+        },
+      ],
+    }).scene;
+    const styled = findLabel(scene.primitives, 'styled');
+    const inherited = findLabel(scene.primitives, 'inherited');
+    expect(styled?.fontSize).toBe(24);
+    expect(styled?.fill).toBe('#ff0000');
+    expect(styled?.opacity).toBeCloseTo(0.2);
+    expect(inherited?.fill).toBe('#ffffff');
+    expect(findLabel(scene.primitives, 'explicit')?.fill).toBe('#00ff00');
+    expect(inherited!.y).toBeGreaterThan(styled!.y);
+  });
+  it('lays out hard line breaks as one centered label block', () => {
+    const scene = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [{ type: 'node', label: { text: 'first\nsecond', position: 'center', font: { size: 10 } } }],
+      },
+      { measureText: text => ({ width: text.length * 6, height: 10, ascent: 7, descent: 3 }) },
+    ).scene;
+    const first = findLabel(scene.primitives, 'first');
+    const second = findLabel(scene.primitives, 'second');
+    expect(first).toBeDefined();
+    expect(second).toBeDefined();
+    expect(second!.y - first!.y).toBeCloseTo(12);
+    expect(first!.x + first!.measuredWidth / 2).toBeCloseTo(second!.x + second!.measuredWidth / 2);
+  });
   it.each([undefined, 0, 0.4])('普通、混排标签及默认引线使用标签透明度，省略时继承节点：%s', opacity => {
     const scene = compileToScene({
       version: 1,
@@ -34,7 +78,7 @@ describe('Node label', () => {
           label: [
             { text: 'plain', pin: true, ...(opacity === undefined ? {} : { opacity }) },
             {
-              text: { segments: [{ text: 'mixed', opacity: 0.5 }] },
+              text: [{ segments: [{ text: 'mixed', opacity: 0.5 }] }],
               pin: { opacity: 0.7 },
               ...(opacity === undefined ? {} : { opacity }),
             },
@@ -49,7 +93,7 @@ describe('Node label', () => {
   });
 
   describe('基本生成', () => {
-    it('单对象 label → 一个 TextPrim', () => {
+    it('单对象 label → 一个 TextPrimitive', () => {
       const ir: IRScene = {
         version: 1,
         type: 'scene',
@@ -69,7 +113,7 @@ describe('Node label', () => {
       expect(labelText).toBeDefined();
     });
 
-    it('数组 label → 多个 TextPrim', () => {
+    it('数组 label → 多个 TextPrimitive', () => {
       const ir: IRScene = {
         version: 1,
         type: 'scene',
@@ -312,7 +356,7 @@ describe('Node label', () => {
       expect(labelText.fontFamily).toBe('Inter');
     });
 
-    it('label TextPrim 写入真实 measuredWidth', () => {
+    it('label TextPrimitive 写入真实 measuredWidth', () => {
       const ir: IRScene = {
         version: 1,
         type: 'scene',

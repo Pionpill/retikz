@@ -1,4 +1,4 @@
-import type { NodeLayoutObservation, GroupPrim, PathPrim, ScenePrimitive } from '@retikz/core';
+import type { NodeLayoutObservation, GroupPrimitive, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { compileToScene, isNodeLayoutCompileArtifact, rect as rectOps } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -6,10 +6,10 @@ import type { FrameInput } from '../../../src/presentation';
 import { createFrame, FrameDefinition, FrameHeaderDirection } from '../../../src/presentation';
 import { fullScopeProps } from '../presentation/scope-props';
 
-const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrim> =>
+const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
   primitives.flatMap(primitive => (primitive.type === 'group' ? [primitive, ...groupsOf(primitive.children)] : []));
 
-const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrim> =>
+const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive> =>
   primitives.flatMap(primitive =>
     primitive.type === 'group' ? pathsOf(primitive.children) : primitive.type === 'path' ? [primitive] : [],
   );

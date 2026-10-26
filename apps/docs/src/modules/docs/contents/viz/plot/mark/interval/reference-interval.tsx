@@ -3,13 +3,13 @@ import type { FC } from 'react';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract } from './reference-interval.controls';
-import { AnnotationIntervalPreview } from './reference-interval.preview';
+import { ReferenceIntervalPreview } from './reference-interval.preview';
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => AnnotationIntervalPreview(values));
+const controlledPreview = defineControlledPreview(previewControlContract, values => ReferenceIntervalPreview(values));
 /** 稳定源码状态 */
 export const previewSource = controlledPreview.source;
-/** 标注属性控件 */
+/** 图元属性控件 */
 export const previewControls = previewControlContract.controls;
-/** 标注交互示例 */
-const AnnotationInterval: FC = controlledPreview.Component;
-export default AnnotationInterval;
+/** 图元交互示例 */
+const ReferenceInterval: FC = controlledPreview.Component;
+export default ReferenceInterval;

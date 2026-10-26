@@ -14,7 +14,7 @@ const resolveConnection = (
     ...parent?.path,
     ...source?.path,
     style: { stroke: 'currentColor', ...parent?.path.style, ...source?.path?.style },
-    marks: source?.path?.marks ?? parent?.path.marks ?? [{ pos: 1, mark: { kind: 'arrow' } }],
+    arrow: source?.path?.arrow ?? parent?.path.arrow ?? { end: {} },
   };
 
   if (route === '-|-' || route === '|-|') {

@@ -48,7 +48,7 @@ Endpoint mode decides where a connection lands; path steps decide how it travels
 | Orthogonal fold | `'-\|'` / `'\|-'`        | Flowcharts and structure maps |
 | Curve           | `{ bend }` / `{ curve }` | Avoidance and parallel edges  |
 
-Complete step and path-kind parameters belong to [Draw](/kernel/components/path/usage) and [Path Schema](/kernel/components/path/reference). This concept page gives selection guidance instead of duplicating an API dictionary.
+Complete step and path-definition parameters belong to [Draw](/kernel/components/path/usage) and [Path Schema](/kernel/components/path/reference). This concept page gives selection guidance instead of duplicating an API dictionary.
 
 A path can move relative to its previous endpoint: `{ relative }` applies a temporary offset without advancing the accumulated base, while `{ relativeAccumulate }` advances it. React Sugar also accepts `'+dx,dy'` / `'++dx,dy'`:
 
@@ -112,7 +112,7 @@ The target Node uses an ellipse as its visual shape and a rectangle as its defau
     },
     {
       title: 'Draw',
-      description: 'Step, path kind, arrow, and routing APIs',
+      description: 'Step, path, arrow, and routing APIs',
       url: '/kernel/components/path/usage',
     },
     {

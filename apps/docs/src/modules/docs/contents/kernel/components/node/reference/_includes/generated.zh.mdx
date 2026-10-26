@@ -275,7 +275,7 @@ export type InputCoordinate = IRCoordinate & {
 | `placement?`   | `"outside" \| "inside"`                                                                                                                                                               | —      | 标签位于附着点的外侧或内侧，缺省 outside                                     |
 | `position?`    | `InputNodeLabelPosition`                                                                                                                                                              | —      | 标签位置；省略时位于节点上方，支持方向、角度或边界比例                       |
 | `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                           | —      | 标签自身旋转：none、radial、tangent 或角度；边界比例位置以所选边的外法向为准 |
-| `text`         | `IRNodeLabel['text']`                                                                                                                                                                 | —      | 标签文字或混排行                                                             |
+| `text`         | `IRNodeLabel['text']`                                                                                                                                                                 | —      | 标签文本块：字符串支持换行，非空行数组支持逐行样式与混排片段                 |
 | `textColor?`   | `string \| number`                                                                                                                                                                    | —      | 标签文字颜色，缺省沿继承链求值                                               |
 
 </ApiTable>
@@ -348,7 +348,7 @@ export type InputNodeLabelPosition =
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"BoundaryFitContext"} path={"packages/kernel/core/src/contract/boundary.ts"} startLine={10}>BoundaryFitContext</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryFitContext"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={10}>BoundaryFitContext</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -390,7 +390,7 @@ export type NodeTextColor = ValueOf<typeof NodeTextColor>;
 
 ## 扩展定义与注册
 
-#### <ApiSourceLink label={"BoundaryDefinition"} path={"packages/kernel/core/src/contract/boundary.ts"} startLine={49}>BoundaryDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryDefinition"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={49}>BoundaryDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -421,7 +421,7 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BoundaryDefinitionInput"} path={"packages/kernel/core/src/contract/boundary.ts"} startLine={21}>BoundaryDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryDefinitionInput"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={21}>BoundaryDefinitionInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -460,7 +460,7 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/shape/shape.ts"} startLine={183}>ShapeDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={183}>ShapeDefinition</ApiSourceLink>
 
 所有函数收 `JsonObject`（实际类型由 `paramsSchema.parse` 在编译期保证）；registry 同构
 不泛型化（避免逆变 / 落 any）。定义点用 `defineShape<TParams>` 拿类型安全
@@ -500,7 +500,7 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinitionInput"} path={"packages/kernel/core/src/contract/shape/shape.ts"} startLine={111}>ShapeDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeDefinitionInput"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={111}>ShapeDefinitionInput</ApiSourceLink>
 
 描述第三方作者和内置 shape 共同实现的运行时能力契约；定义本身不进入 IR。
 每个能力函数都以实例级 `params` 作为末位参数
@@ -590,7 +590,7 @@ export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
 ]);
 ```
 
-#### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/boundary.ts"} startLine={58}>defineBoundary</ApiSourceLink>
+#### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={58}>defineBoundary</ApiSourceLink>
 
 将返回值加入 CompileOptions.boundaries 后，节点或路径端点可通过 boundary 引用其 name。此函数不注册连接面，也不解析实例参数
 
@@ -622,7 +622,7 @@ export declare const defineBoundary: <TParams extends JsonObject>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/shape/shape.ts"} startLine={192}>defineShape</ApiSourceLink>
+#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={192}>defineShape</ApiSourceLink>
 
 将返回值加入 CompileOptions.shapes 后，节点可通过 shape 引用其 name。此函数不注册形状，也不解析实例参数
 
@@ -739,7 +739,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={112}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={105}>NodeLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRNodeLabel"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={113}>IRNodeLabel</ApiSourceLink> / <ApiSourceLink label={"NodeLabelSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={106}>NodeLabelSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -758,7 +758,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 | `placement?`   | `"outside" \| "inside"`                                                                                                                                                                                                 | —      | 标签位于附着点的外侧或内侧，缺省 outside                                     |
 | `position?`    | `number \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| "center" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —      | 命名方向、center、角度或边界比例位置，缺省 top                               |
 | `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —      | 标签自身旋转：none、radial、tangent 或角度；边界比例位置以所选边的外法向为准 |
-| `text`         | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —      | 标签文字或混排行                                                             |
+| `text`         | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —      | 标签文本块：字符串支持换行，非空行数组支持逐行样式与混排片段                 |
 | `textColor?`   | `string \| number`                                                                                                                                                                                                      | —      | 标签文字颜色，缺省沿继承链求值                                               |
 
 </ApiTable>
@@ -779,7 +779,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
   name="NodeLabelSchema"
   description="附着在节点边界或中心的额外文字，Node.label 可使用数组添加多个标签"
   descriptions={{
-    text: '标签文字或混排行',
+    text: '标签文本块：字符串支持换行，非空行数组支持逐行样式与混排片段',
     textColor: '标签文字颜色，缺省沿继承链求值',
     opacity: '标签不透明度覆盖；省略时继承节点整体不透明度',
     font: '标签字体覆盖，缺省字段继承节点字体',
@@ -940,7 +940,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={40}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelBoundaryPositionSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={41}>NodeLabelBoundaryPositionSchema</ApiSourceLink>
 
 <ZodSchema
   name="NodeLabelBoundaryPositionSchema"
@@ -951,7 +951,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   }}
 />
 
-#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={48}>NodeLabelPinSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NodeLabelPinSchema"} path={"packages/kernel/core/src/schemas/node/label.ts"} startLine={49}>NodeLabelPinSchema</ApiSourceLink>
 
 <ZodSchema
   name="NodeLabelPinSchema"
@@ -975,8 +975,8 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
   descriptions={{}}
 />
 
-#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/label.ts"} startLine={36}>BoundaryLabelSchema</ApiSourceLink>
+#### <ApiSourceLink label={"BoundaryLabelSchema"} path={"packages/kernel/core/src/schemas/text/label.ts"} startLine={31}>BoundaryLabelSchema</ApiSourceLink>
 
-Kernel 共享的边界标签契约。Node 复用其中的旋转、放置和对齐字段，同时保留自己的位置、引线、单行内容及默认值；Ribbon 端点直接使用此 Schema。
+Kernel 共享的边界标签契约。Node 复用其中的旋转、放置和对齐字段，同时保留自己的位置、引线、文本块及默认值；Ribbon 端点直接使用此 Schema。
 
 <ZodSchema shallow name="BoundaryLabelSchema" />

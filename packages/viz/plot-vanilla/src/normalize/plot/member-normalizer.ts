@@ -22,6 +22,7 @@ import type {
 import type { InputPlotScale } from './input-scales';
 import { normalizeIntervalDeclaration, recordFieldColor } from './interval';
 import { recordResolveLabel } from './mark-normalizers';
+import { normalizePlotPathMark } from './path';
 
 type Collected = NormalizationState;
 
@@ -90,10 +91,11 @@ export const applyDeclaration = (declaration: PlotAuthoringDeclaration, into: Co
 
   if (declaration.kind === 'path-mark' || declaration.kind === 'point-mark' || declaration.kind === 'relation-mark') {
     const props = child.props as InputPlotPathMark | InputPlotPointMark | InputPlotRelationMark;
-    const { resolveLabel, ...source } = props;
+    const { resolveLabel, ...rawSource } = props;
+    const source = declaration.kind === 'path-mark' ? normalizePlotPathMark(props as InputPlotPathMark) : rawSource;
     const type = declaration.kind === 'path-mark' ? 'path' : declaration.kind === 'point-mark' ? 'point' : 'relation';
     const path = type === 'path' ? (props as InputPlotPathMark) : undefined;
-    const series = path?.encodings.series;
+    const series = path?.encodings?.series;
     let encodings: typeof source.encodings =
       type === 'path' &&
       series !== undefined &&

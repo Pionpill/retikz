@@ -1,15 +1,14 @@
-import type { IRAnimationTrack, PathPrim, RectPrim, Scene, ScenePrimitive } from '@retikz/core';
+import type { IRAnimationTrack, PathPrimitive, RectPrimitive, Scene, ScenePrimitive } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createIdClockRegistry } from '../../src/animation';
-import type { AnimationPropertyDefinition } from '../../src/animation/registry';
 import { drawScene } from '../../src/canvas';
 
 /**
  * Canvas 动画播放：drawScene({time}) 逐帧应用 opacity/transform/pathDraw/自定义；无 time = 静态帧；
  *   自定义未注册 / pathDraw 无描边 warn；camera viewBox 叠 ctx 变换
  */
-type Call = { name: string; args: Array<unknown>; globalAlpha: number };
+type Call = { name: string; args: Array<unknown>; globalAlpha: number; lineDashOffset: number };
 
 type SpyCtx = CanvasRenderingContext2D & { calls: Array<Call> };
 
@@ -25,7 +24,7 @@ const createCtx = (): SpyCtx => {
         if (snapshot) ctx.globalAlpha = snapshot.globalAlpha;
       }
 
-      calls.push({ name, args, globalAlpha: ctx.globalAlpha });
+      calls.push({ name, args, globalAlpha: ctx.globalAlpha, lineDashOffset: ctx.lineDashOffset });
     };
   const ctx = {
     calls,
@@ -76,7 +75,7 @@ const scene = (primitives: Array<ScenePrimitive>, animations?: Array<IRAnimation
   ...(animations ? { animations } : {}),
 });
 
-const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
+const rect = (extra: Partial<RectPrimitive> = {}): RectPrimitive => ({
   type: 'rect',
   x: 0,
   y: 0,
@@ -90,6 +89,68 @@ const argsOf = (ctx: SpyCtx, name: string): Array<Array<unknown>> =>
   ctx.calls.filter(c => c.name === name).map(c => c.args);
 
 describe('Happy：drawScene({time}) 应用通道', () => {
+  it('分别应用填充透明度、描边透明度与虚线偏移', () => {
+    const animations: Array<IRAnimationTrack> = [
+      {
+        property: 'fillOpacity',
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 1 },
+        ],
+        duration: 400,
+      },
+      {
+        property: 'strokeOpacity',
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 0.5 },
+        ],
+        duration: 400,
+      },
+      {
+        property: 'dashOffset',
+        keyframes: [
+          { at: 0, value: -10 },
+          { at: 1, value: 10 },
+        ],
+        duration: 400,
+      },
+    ];
+    const ctx = createCtx();
+    drawScene(ctx, scene([rect({ opacity: 0.5, stroke: '#000', dashPattern: [4, 2], animations })]), { time: 200 });
+    expect(ctx.calls.find(call => call.name === 'fill')?.globalAlpha).toBeCloseTo(0.25);
+    expect(ctx.calls.find(call => call.name === 'stroke')?.globalAlpha).toBeCloseTo(0.125);
+    expect(ctx.calls.find(call => call.name === 'stroke')?.lineDashOffset).toBe(0);
+  });
+
+  it.each([false, true])('pathDraw 优先于 dashOffset，与声明顺序无关：%s', reverse => {
+    const draw: IRAnimationTrack = {
+      property: 'pathDraw',
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 1, value: 1 },
+      ],
+      duration: 400,
+    };
+    const dash: IRAnimationTrack = {
+      property: 'dashOffset',
+      keyframes: [
+        { at: 0, value: 100 },
+        { at: 1, value: 200 },
+      ],
+      duration: 400,
+    };
+    const ctx = createCtx();
+    const warn = vi.fn();
+    drawScene(ctx, scene([rect({ stroke: '#000', animations: reverse ? [dash, draw] : [draw, dash] })]), {
+      time: 200,
+      warnUnsupported: warn,
+    });
+    expect(ctx.calls.find(call => call.name === 'stroke')?.lineDashOffset).toBe(20);
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('dashOffset conflicts with pathDraw') }),
+    );
+  });
   it('translateX track 在中点 → ctx.translate(50, 0)', () => {
     const t: IRAnimationTrack = {
       property: 'translateX',
@@ -123,7 +184,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
   });
 
   it('pathDraw（有描边）→ setLineDash([len]) + lineDashOffset 设置', () => {
-    const path: PathPrim = {
+    const path: PathPrimitive = {
       type: 'path',
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -149,7 +210,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
   });
 
   it('pathDraw v=1（settled）→ 不加 [len] dash override（避免曲线弧长低估留永久缺口）', () => {
-    const path: PathPrim = {
+    const path: PathPrimitive = {
       type: 'path',
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -170,26 +231,6 @@ describe('Happy：drawScene({time}) 应用通道', () => {
     const dash = argsOf(ctx, 'setLineDash').find(a => Array.isArray(a[0]) && (a[0] as Array<number>).length === 1);
 
     expect(dash).toBeUndefined();
-  });
-
-  it('自定义 property → 注册 def 的 applyCanvas 被调', () => {
-    const apply = vi.fn();
-    const def: AnimationPropertyDefinition = {
-      interpolate: (a, b, t) => (a as number) + ((b as number) - (a as number)) * t,
-      applyCanvas: apply,
-    };
-    const blur: IRAnimationTrack = {
-      property: 'blur',
-      keyframes: [
-        { at: 0, value: 4 },
-        { at: 1, value: 0 },
-      ],
-      duration: 400,
-    };
-    drawScene(createCtx(), scene([rect({ animations: [blur] })]), { time: 200, animationProperties: { blur: def } });
-
-    expect(apply).toHaveBeenCalledTimes(1);
-    expect(apply.mock.calls[0][2]).toBeCloseTo(2); // 中点值
   });
 
   it('group opacity track wraps child drawing in ctx.globalAlpha', () => {
@@ -305,42 +346,6 @@ describe('trigger 过滤（auto 时钟只施加 load/缺省 track）', () => {
 });
 
 describe('降级', () => {
-  it('未注册自定义 property → warn + skip', () => {
-    const warn = vi.fn();
-    const blur: IRAnimationTrack = {
-      property: 'blur',
-      keyframes: [
-        { at: 0, value: 4 },
-        { at: 1, value: 0 },
-      ],
-      duration: 400,
-    };
-    drawScene(createCtx(), scene([rect({ animations: [blur] })]), { time: 200, warnUnsupported: warn });
-
-    expect(warn).toHaveBeenCalledWith(expect.objectContaining({ feature: 'animation' }));
-  });
-
-  it('原型成员名 custom property 在普通空注册表中仍按未注册项 warn + skip', () => {
-    const warn = vi.fn();
-    const inheritedName: IRAnimationTrack = {
-      property: 'toString',
-      keyframes: [
-        { at: 0, value: 0 },
-        { at: 1, value: 1 },
-      ],
-      duration: 400,
-    };
-
-    expect(() =>
-      drawScene(createCtx(), scene([rect({ animations: [inheritedName] })]), {
-        time: 200,
-        animationProperties: {},
-        warnUnsupported: warn,
-      }),
-    ).not.toThrow();
-    expect(warn).toHaveBeenCalledWith(expect.objectContaining({ feature: 'animation' }));
-  });
-
   it('pathDraw 挂无描边元素 → warn + skip', () => {
     const warn = vi.fn();
     const draw: IRAnimationTrack = {

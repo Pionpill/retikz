@@ -48,7 +48,7 @@ parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 ## Scene 编译
 
 - `ScenePrimitive` 是后端最大公约子集，避免 SVG-only 或 Canvas-only 特性泄漏进 core。
-- `PathPrim.commands` 与 `GroupPrim.transforms` 必须是结构化数组，不输出 SVG `d` / `transform` 字符串。
+- `PathPrimitive.commands` 与 `GroupPrimitive.transforms` 必须是结构化数组，不输出 SVG `d` / `transform` 字符串。
 - `circlePath` / `ellipsePath` 可在 IR 编译为结构化 `ellipseArc`；后端自行映射为原生 API。
 - 文本在 Scene 编译完成时必须已有度量结果；度量函数通过 `CompileOptions.measureText` 注入，缺省走 fallback。
 - Composite 声明的 local spatial bounds 只由 Core 根据最终 Scope / placement / replay transform 发布 world-space sidecar；renderer 不做二次变换或语义推断。
@@ -59,12 +59,12 @@ parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 - 内置 definition 不享有特殊入口。有效表应由内置表与 options 自定义表合并，冲突通过 warning 或明确策略处理。
 - 跨 namespace Composite 传递依赖按完整 `namespace + type` key 进入 Core provider graph；React / Vanilla 只收集 contribution，不各自实现拓扑、dataset 合并或 definition 去重。
 - `node.shape` 在 IR 中永远是字符串名；`ShapeDefinition` 不进 IR，经 `CompileOptions.shapes` 注入。schema 只校验字符串形状，未注册名在 resolve 期处理。
-- Shape 几何方法围绕外接 `Rect` 工作；`emit` 接轴对齐 rect，rotate 由外层 `GroupPrim` 统一施加。
+- Shape 几何方法围绕外接 `Rect` 工作；`emit` 接轴对齐 rect，rotate 由外层 `GroupPrimitive` 统一施加。
 - 改内置 shape 几何或 emit 时，优先跑 shape baseline snapshot 和相关 compile 测试。
 
 ## Scope 与命名
 
-- `IRScope` 表示分组、局部 transform 与样式默认作用域；scope transform 在 compile pass 中下沉到 Scene `GroupPrim.transforms`。
+- `IRScope` 表示分组、局部 transform 与样式默认作用域；scope transform 在 compile pass 中下沉到 Scene `GroupPrimitive.transforms`。
 - compile 使用 `NameStack` 做 id 查找：默认全局扁平；`localNamespace` 时隔离子 frame；`scope.id` 始终注册到父 frame，作为外部句柄。
 - lookup 按 inside-out；同 frame 重复 id 发 warning 并 last-wins，跨 frame 同名是 shadowing。
 - scope traversal、相对定位与 bbox synthetic layout 的阶段调度属于 compile；样式继承、`resetStyle` 和局部覆盖优先级由 resolve 结合当前 scope context 确定。改动前读相关代码与测试，不把规则复制到 renderer。

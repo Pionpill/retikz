@@ -1,54 +1,10 @@
-import type { ArrowEmitContext, PaintValue, ScenePrimitive, PathCommand, ResolvedArrowEnd } from '../../../contract';
+import type { PathCommand, ResolvedArrowEnd } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { ArrowMarkResolution } from '../../../resolve';
-import { createLayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';
 import type { PaintResolver } from '../../resource';
-import { materializeScenePrimitives } from '../../resource';
 import { shortenEndpointContacts } from './endpoint-contact';
 import type { EndpointArrowSpecs } from './endpoint-contact';
-
-/** 调用 arrow emit，并校验 marker 产物 */
-const emitArrowMarkerPrimitives = (
-  shape: string,
-  def: ArrowMarkResolution['definition'],
-  ctx: ArrowEmitContext,
-): Array<ScenePrimitive> => {
-  let emitted: Iterable<ScenePrimitive>;
-
-  try {
-    emitted = def.emit(ctx);
-  } catch (e) {
-    throw createLayoutProbeRecoverableError(`Arrow '${shape}' emit failed: ${safeThrownDetail(e)}`, {
-      cause: e,
-      providerKey: `arrow:${shape}`,
-    });
-  }
-
-  return materializeScenePrimitives(`Arrow '${shape}'`, emitted);
-};
-
-/** 构造 ArrowDefinition.emit 的上下文 */
-const buildEmitContext = (
-  resolution: ArrowMarkResolution,
-  round: (n: number) => number,
-  resolvePaint: PaintResolver,
-): ArrowEmitContext => {
-  const { visual, definition } = resolution;
-  const contextStroke: PaintValue = { kind: 'contextStroke' };
-  const stroke: PaintValue = resolvePaint(visual.stroke) ?? contextStroke;
-  const fill: PaintValue = definition.hollow ? contextStroke : (resolvePaint(visual.fill) ?? contextStroke);
-
-  return {
-    stroke,
-    fill,
-    lineWidth: visual.lineWidth,
-    round,
-    dashPattern: visual.dashPattern,
-    dashOffset: visual.dashOffset,
-    lineCap: visual.lineCap,
-    lineJoin: visual.lineJoin,
-  };
-};
+import { emitMarkPrimitives } from './marks';
 
 /** 把箭头视觉输入物化为 Scene 端点箭头描述 */
 const emitArrowEnd = (
@@ -56,9 +12,11 @@ const emitArrowEnd = (
   round: (n: number) => number,
   resolvePaint: PaintResolver,
 ): ResolvedArrowEnd => {
-  const { visual, geometry, definition } = resolution;
-  const ctx = buildEmitContext(resolution, round, resolvePaint);
-  const marker = emitArrowMarkerPrimitives(visual.shape, definition, ctx);
+  const { visual, geometry } = resolution;
+  const marker = emitMarkPrimitives(resolution, round, resolvePaint, {
+    label: `Arrow '${visual.shape}'`,
+    providerKey: `arrow:${visual.shape}`,
+  });
   const out: ResolvedArrowEnd = {
     shape: visual.shape,
     baseSize: geometry.baseSize,
@@ -123,15 +81,6 @@ export const emitEndpointArrowMark = (
     shrink: endpointShrink,
     boundaryOuterInset: geometry.boundaryOuterInset * (1 - endpointOverlap),
   };
-};
-
-/** 解析中段 arrow mark 为 marker 描述 */
-export const emitMarkArrow = (
-  resolution: ArrowMarkResolution,
-  round: (n: number) => number,
-  resolvePaint: PaintResolver,
-): ResolvedArrowEnd => {
-  return emitArrowEnd(resolution, round, resolvePaint);
 };
 
 /** 箭头收缩改写所需上下文 */

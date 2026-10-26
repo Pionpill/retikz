@@ -897,7 +897,7 @@ describe('lowerGuide (contract)', () => {
     const axisPath = (axisLayer as IRScope).children[0] as IRPath;
 
     expect(axisPath.style?.lineCap).toBe('round');
-    expect(axisPath.marks).toEqual([{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', length: 8 } }]);
+    expect(axisPath.arrow).toEqual({ end: { shape: 'stealth', length: 8 } });
   });
 
   it('axis_line_negative_arrow_and_extent_lower_to_path', () => {
@@ -916,7 +916,7 @@ describe('lowerGuide (contract)', () => {
 
     expect(axisPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [80, 260] });
     expect(axisPath.children[1]).toEqual({ type: 'step', kind: 'line', to: [120, 260] });
-    expect(axisPath.marks).toEqual([{ pos: 0, mark: { kind: 'arrow' } }]);
+    expect(axisPath.arrow).toEqual({ start: {} });
   });
 
   it('shape_tick_mark_lowers_to_nodes_instead_of_tick_path', () => {
@@ -1142,7 +1142,7 @@ describe('lowerGuide (contract)', () => {
 
     expect(axisPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [40, 35] });
     expect(axisPath.children[1]).toEqual({ type: 'step', kind: 'line', to: [40, -15] });
-    expect(axisPath.marks).toEqual([{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', length: 8 } }]);
+    expect(axisPath.arrow).toEqual({ end: { shape: 'stealth', length: 8 } });
   });
 
   it('origin_crossing_hides_tick_and_renders_single_corner_label_when_configured', () => {

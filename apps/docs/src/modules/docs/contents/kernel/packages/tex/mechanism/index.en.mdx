@@ -86,11 +86,11 @@ The baseline aligns text and formulas on a line; it is not the bottom of their b
 
 `layoutInlineLine()` validates and freezes the lowered result, using `height - depth` above the baseline and `depth` below it. The superscript in this example therefore participates in line layout instead of receiving special positioning in the renderer.
 
-Core emits each glyph path as a `PathPrim` inside a baseline-translated `GroupPrim`. Paint is resolved with host styling at this boundary. Renderers receive ordinary Scene primitives and need no TeX, MathJax, or SVG knowledge.
+Core emits each glyph path as a `PathPrimitive` inside a baseline-translated `GroupPrimitive`. Paint is resolved with host styling at this boundary. Renderers receive ordinary Scene primitives and need no TeX, MathJax, or SVG knowledge.
 
 <SourceLinks
   sources={[
-    { label: 'Baseline metrics and PathPrim emission', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+    { label: 'Baseline metrics and PathPrimitive emission', path: 'packages/kernel/core/src/compile/text/layout.ts' },
   ]}
 />
 

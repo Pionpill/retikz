@@ -4,31 +4,15 @@ import type {
   IRDataReducerOperation,
   TransformSemanticContext,
   IRDataTransform,
-  IRDataTransformDeclaration,
 } from '@retikz/data';
-import {
-  BuiltinDataTransform,
-  DataTransformBindingClass,
-  DataTransformFieldEffect,
-  DataTransformPhase,
-} from '@retikz/data';
+import { BuiltinDataTransform } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 
 import { RetikzChartError } from '../../../error';
 import type { ChartEncodingResolveContext, ChartResolvedFieldMapping } from '../../contract/recipe';
 import type { IRChartSource } from '../../schemas';
 import { directFieldsOf, invalidEncoding, mappingKindOf, mappingPathOf, objectValueOf } from './shared';
-import type { ChartEncodingFieldConsumer, FieldConsumer, FieldProducer, TransformOperationRecord } from './types';
-
-const transformPhaseOrder: ReadonlyArray<DataTransformPhase> = [
-  DataTransformPhase.RowShape,
-  DataTransformPhase.FieldDerive,
-  DataTransformPhase.RowOrder,
-  DataTransformPhase.CumulativeDerive,
-  DataTransformPhase.FieldAdjust,
-];
-
-const transformPhaseIndex = new Map(transformPhaseOrder.map((phase, index) => [phase, index] as const));
+import type { ChartEncodingFieldConsumer, ChartAggregateOperation } from './types';
 
 const outputDescriptorsOf = (model: DataTransformOutputModel): ReadonlyArray<DataTransformOutputDescriptor> =>
   model.kind === 'preserve' ? model.outputs : model.fields;
@@ -104,99 +88,6 @@ const transformContextOf = (context: ChartEncodingResolveContext): TransformSema
   rowSelectorRegistry: context.runtime.selectors,
 });
 
-const parseDerivedMapping = (
-  context: ChartEncodingResolveContext,
-  consumer: ChartEncodingFieldConsumer,
-  value: JsonObject,
-  slotIndex: number,
-): Readonly<{ record: TransformOperationRecord; descriptor: DataTransformOutputDescriptor }> => {
-  const declaration = objectValueOf(value.transform) as IRDataTransformDeclaration | undefined;
-  const operation = declaration?.operation;
-  const output = value.output;
-  const path = mappingPathOf(consumer.slot);
-  if (operation === undefined || typeof operation.kind !== 'string' || typeof output !== 'string') {
-    throw invalidEncoding(`Chart encoding "${consumer.slot}" has an invalid derived mapping`, path);
-  }
-
-  const definition = context.runtime.transforms.get(operation.kind);
-  if (definition === undefined) {
-    throw invalidEncoding(`Chart transform "${operation.kind}" is not registered`, [...path, 'transform']);
-  }
-
-  const schedule = definition.schedule;
-  if (schedule === undefined || schedule.bindingClass !== DataTransformBindingClass.Field) {
-    throw invalidEncoding(`Chart transform "${operation.kind}" is not available for encoding field mapping`, [
-      ...path,
-      'transform',
-    ]);
-  }
-
-  if (!transformPhaseIndex.has(schedule.phase)) {
-    throw invalidEncoding(`Chart transform "${operation.kind}" declares an unknown schedule phase`, [
-      ...path,
-      'transform',
-    ]);
-  }
-
-  const accepted = consumer.transforms?.some(
-    capability => capability.phase === schedule.phase && capability.fieldEffect === schedule.fieldEffect,
-  );
-  if (accepted !== true) {
-    throw invalidEncoding(`Chart transform "${operation.kind}" is incompatible with encoding "${consumer.slot}"`, [
-      ...path,
-      'transform',
-    ]);
-  }
-
-  try {
-    const parsed = definition.schema.parse(operation) as never;
-    const transformContext = transformContextOf(context);
-    const model = definition.outputModel(parsed, transformContext);
-    const expectedEffect =
-      model.kind === 'preserve' ? DataTransformFieldEffect.Preserve : DataTransformFieldEffect.Replace;
-    if (schedule.fieldEffect !== expectedEffect) {
-      throw invalidEncoding(
-        `Chart transform "${operation.kind}" schedule field effect does not match its output model`,
-        [...path, 'transform'],
-      );
-    }
-
-    const descriptors = outputDescriptorsOf(model);
-    const producedFields = producedFieldsOfOutputModel(model);
-    const matches = descriptors.filter(descriptor => descriptor.field === output);
-    if (matches.length !== 1) {
-      throw invalidEncoding(
-        `Chart transform "${operation.kind}" must describe mapping output "${output}" exactly once`,
-        [...path, 'output'],
-      );
-    }
-
-    assertOutputType(matches[0], consumer);
-
-    return {
-      record: {
-        id: `derived:${consumer.slot}`,
-        slot: consumer.slot,
-        slotIndex,
-        phase: schedule.phase,
-        operation: parsed,
-        ...(declaration?.dataExecution === undefined ? {} : { dataExecution: declaration.dataExecution }),
-        fieldEffect: schedule.fieldEffect,
-        inputs: definition.inputFields?.(parsed, transformContext) ?? [],
-        outputs: descriptors,
-        producedFields,
-        ...(schedule.fieldEffect === DataTransformFieldEffect.Replace
-          ? { fieldsAfterReplace: descriptors.map(descriptor => descriptor.field) }
-          : {}),
-      },
-      descriptor: matches[0],
-    };
-  } catch (error) {
-    if (error instanceof RetikzChartError) throw error;
-    throw invalidEncoding(`Chart transform "${operation.kind}" is invalid`, [...path, 'transform'], error);
-  }
-};
-
 const canonicalJson = (value: unknown): string => {
   if (Array.isArray(value)) return `[${value.map(item => canonicalJson(item)).join(',')}]`;
   if (value !== null && typeof value === 'object') {
@@ -208,23 +99,6 @@ const canonicalJson = (value: unknown): string => {
   }
 
   return JSON.stringify(value);
-};
-
-const assertUniqueOperations = (records: ReadonlyArray<TransformOperationRecord>): void => {
-  const sourceByOperation = new Map<string, string>();
-
-  for (const record of records) {
-    const key = canonicalJson(record.operation);
-    const previous = sourceByOperation.get(key);
-    if (previous !== undefined) {
-      throw invalidEncoding(`Chart transform is already declared by encoding "${previous}"`, [
-        ...mappingPathOf(record.slot),
-        'transform',
-      ]);
-    }
-
-    sourceByOperation.set(key, record.slot);
-  }
 };
 
 const extensionTransformOutputs = (
@@ -245,7 +119,7 @@ const extensionTransformOutputs = (
 
 const assertExtensionTransformConflicts = (
   context: ChartEncodingResolveContext,
-  records: ReadonlyArray<TransformOperationRecord>,
+  records: ReadonlyArray<ChartAggregateOperation>,
 ): void => {
   const extensionTransforms = context.source.plotExtension?.transform ?? [];
   if (extensionTransforms.length === 0) return;
@@ -256,7 +130,7 @@ const assertExtensionTransformConflicts = (
   );
 
   for (const record of records) {
-    const path = [...mappingPathOf(record.slot), 'transform'];
+    const path = [...mappingPathOf(record.slot), 'aggregate'];
     if (extensionOperations.has(canonicalJson(record.operation))) {
       throw invalidEncoding('Chart transform is also declared by plotExtension', path);
     }
@@ -268,80 +142,16 @@ const assertExtensionTransformConflicts = (
   }
 };
 
-const assertFieldDependencies = (
-  producers: ReadonlyMap<string, FieldProducer>,
-  consumers: ReadonlyArray<FieldConsumer>,
-): void => {
-  for (const consumer of consumers) {
-    const consumerPhase = transformPhaseIndex.get(consumer.phase) as number;
-
-    for (const field of consumer.fields) {
-      const producer = producers.get(field);
-      if (producer === undefined) continue;
-      if (consumer.allowsSelfOutput && producer.id === consumer.id) continue;
-
-      const producerPhase = transformPhaseIndex.get(producer.phase) as number;
-      if (producerPhase < consumerPhase) continue;
-      if (producerPhase === consumerPhase && producer.slotIndex < consumer.slotIndex) continue;
-
-      throw invalidEncoding(
-        `Chart encoding "${consumer.slot}" reads field "${field}" before encoding "${producer.slot}" produces it`,
-        mappingPathOf(consumer.slot),
-      );
-    }
-  }
-};
-
-const assertRowShapeAvailability = (
-  records: ReadonlyArray<TransformOperationRecord>,
-  finalConsumers: ReadonlyArray<Readonly<{ slot: string; field: string }>>,
-): void => {
-  let availableFields: Set<string> | undefined;
-
-  for (const record of records) {
-    if (availableFields !== undefined) {
-      const currentFields = availableFields;
-      const missing = record.inputs.find(field => !currentFields.has(field));
-      if (missing !== undefined) {
-        throw invalidEncoding(
-          `Chart encoding "${record.slot}" reads field "${missing}" after a row-shaping operation removed it`,
-          mappingPathOf(record.slot),
-        );
-      }
-    }
-
-    if (record.fieldEffect === DataTransformFieldEffect.Replace) {
-      availableFields = new Set(record.fieldsAfterReplace ?? []);
-      continue;
-    }
-
-    if (availableFields !== undefined) {
-      for (const descriptor of record.outputs) availableFields.add(descriptor.field);
-    }
-  }
-
-  if (availableFields === undefined) return;
-
-  for (const consumer of finalConsumers) {
-    if (availableFields.has(consumer.field)) continue;
-
-    throw invalidEncoding(
-      `Chart encoding "${consumer.slot}" binds field "${consumer.field}" after a row-shaping operation removed it`,
-      mappingPathOf(consumer.slot),
-    );
-  }
-};
-
-/** transform mapping 解析、依赖检查与 phase 调度结果 */
+/** 字段绑定与聚合操作的解析结果 */
 export type ChartEncodingTransformResolution = Readonly<{
   /** 已改写为直接字段消费形式的映射 */
   encodings: JsonObject;
-  /** 满足阶段与依赖顺序的派生变换记录 */
-  records: ReadonlyArray<TransformOperationRecord>;
+  /** 由聚合映射合并生成的数据操作 */
+  records: ReadonlyArray<ChartAggregateOperation>;
 }>;
 
 /**
- * 解析 exact field mappings 中的 direct、aggregate 与 derived transform
+ * 解析直接字段映射，并将聚合映射合并为 Data 汇总操作
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  * @template TEncodingSlot 当前 recipe 允许的字段映射槽位名称
  * @template TConsumerSlot 当前消费方实际使用的字段映射槽位子集
@@ -355,23 +165,20 @@ export const resolveChartEncodingTransforms = <
   encodingSlots: ReadonlyArray<TEncodingSlot>,
   consumers: ReadonlyArray<ChartEncodingFieldConsumer<TConsumerSlot>>,
 ): ChartEncodingTransformResolution => {
-  const slotOrder = new Map(encodingSlots.map((slot, index) => [slot, index] as const));
+  const slots = new Set(encodingSlots);
   const directEncodings: JsonObject = {};
   const aggregateMappings: Array<
     Readonly<{
       slot: string;
-      slotIndex: number;
       operation: IRDataReducerOperation;
       descriptor: DataTransformOutputDescriptor;
       inputs: ReadonlyArray<string>;
     }>
   > = [];
-  const transformRecords: Array<TransformOperationRecord> = [];
 
   for (const consumer of consumers) {
     const slot = consumer.slot;
-    const slotIndex = slotOrder.get(slot);
-    if (slotIndex === undefined) {
+    if (!slots.has(slot)) {
       throw invalidEncoding(`Chart encoding consumer "${slot}" is absent from ordered encodingSlots`, [
         'encodingSlots',
       ]);
@@ -392,15 +199,8 @@ export const resolveChartEncodingTransforms = <
     }
 
     const mapping = objectValueOf(value) as JsonObject;
-    if (kind === 'aggregate') {
-      const resolved = parseAggregateMapping(context, consumer, mapping);
-      aggregateMappings.push({ slot, slotIndex, ...resolved });
-      directEncodings[slot] = { field: resolved.descriptor.field } satisfies ChartResolvedFieldMapping;
-      continue;
-    }
-
-    const resolved = parseDerivedMapping(context, consumer, mapping, slotIndex);
-    transformRecords.push(resolved.record);
+    const resolved = parseAggregateMapping(context, consumer, mapping);
+    aggregateMappings.push({ slot, ...resolved });
     directEncodings[slot] = { field: resolved.descriptor.field } satisfies ChartResolvedFieldMapping;
   }
 
@@ -435,15 +235,11 @@ export const resolveChartEncodingTransforms = <
     aggregateOutputs.add(mapping.descriptor.field);
   }
 
-  const summarySlotIndex = Math.min(...aggregateMappings.map(mapping => mapping.slotIndex));
-  const summaryRecord: TransformOperationRecord | undefined =
+  const summaryRecord: ChartAggregateOperation | undefined =
     aggregateMappings.length === 0
       ? undefined
       : {
-          id: 'aggregate-summary',
           slot: aggregateMappings[0].slot,
-          slotIndex: summarySlotIndex,
-          phase: DataTransformPhase.RowShape,
           operation: {
             kind: BuiltinDataTransform.Summarize,
             params: {
@@ -451,90 +247,21 @@ export const resolveChartEncodingTransforms = <
               metrics: aggregateMappings.map(mapping => mapping.operation),
             },
           },
-          fieldEffect: DataTransformFieldEffect.Replace,
-          inputs: [...groupBy, ...aggregateMappings.flatMap(mapping => mapping.inputs)],
-          outputs: aggregateMappings.map(mapping => mapping.descriptor),
           producedFields: aggregateMappings.map(mapping => mapping.descriptor.field),
-          fieldsAfterReplace: [...groupBy, ...aggregateMappings.map(mapping => mapping.descriptor.field)],
         };
 
-  const operationRecords = [...transformRecords, ...(summaryRecord === undefined ? [] : [summaryRecord])];
-  assertUniqueOperations(transformRecords);
+  const operationRecords = summaryRecord === undefined ? [] : [summaryRecord];
   assertExtensionTransformConflicts(context, operationRecords);
 
-  const producers = new Map<string, FieldProducer>();
-
-  for (const record of operationRecords) {
-    for (const field of record.producedFields) {
-      const previous = producers.get(field);
-      if (previous !== undefined && previous.id !== record.id) {
-        throw invalidEncoding(`Chart transform output "${field}" is already produced by encoding "${previous.slot}"`, [
-          ...mappingPathOf(record.slot),
-          'transform',
-        ]);
-      }
-
-      producers.set(field, {
-        id: record.id,
-        slot: record.slot,
-        phase: record.phase,
-        slotIndex: record.slotIndex,
-      });
-    }
-  }
-
-  const fieldConsumers: Array<FieldConsumer> = transformRecords.map(record => ({
-    id: record.id,
-    slot: record.slot,
-    phase: record.phase,
-    slotIndex: record.slotIndex,
-    fields: record.inputs,
-    allowsSelfOutput: true,
-  }));
-
   for (const mapping of aggregateMappings) {
-    fieldConsumers.push({
-      id: 'aggregate-summary',
-      slot: mapping.slot,
-      phase: DataTransformPhase.RowShape,
-      slotIndex: summarySlotIndex,
-      fields: mapping.inputs,
-      allowsSelfOutput: false,
-    });
-  }
-
-  for (const [field, slot] of groupBySources) {
-    fieldConsumers.push({
-      id: 'aggregate-summary',
-      slot,
-      phase: DataTransformPhase.RowShape,
-      slotIndex: summarySlotIndex,
-      fields: [field],
-      allowsSelfOutput: false,
-    });
-  }
-
-  assertFieldDependencies(producers, fieldConsumers);
-
-  operationRecords.sort((left, right) => {
-    const phaseDifference =
-      (transformPhaseIndex.get(left.phase) as number) - (transformPhaseIndex.get(right.phase) as number);
-    return phaseDifference === 0 ? left.slotIndex - right.slotIndex : phaseDifference;
-  });
-
-  const finalConsumers: Array<Readonly<{ slot: string; field: string }>> = [];
-
-  for (const slot of encodingSlots) {
-    const resolved = objectValueOf(directEncodings[slot]);
-    if (resolved !== undefined && typeof resolved.field === 'string') {
-      finalConsumers.push({ slot, field: resolved.field });
-      continue;
+    const dependentOutput = mapping.inputs.find(field => aggregateOutputs.has(field));
+    if (dependentOutput !== undefined) {
+      throw invalidEncoding(
+        `Chart aggregate cannot read sibling aggregate output "${dependentOutput}"`,
+        mappingPathOf(mapping.slot),
+      );
     }
-
-    for (const field of directFieldsOf(context.encodings[slot])) finalConsumers.push({ slot, field });
   }
-
-  assertRowShapeAvailability(operationRecords, finalConsumers);
 
   return { encodings: directEncodings, records: operationRecords };
 };

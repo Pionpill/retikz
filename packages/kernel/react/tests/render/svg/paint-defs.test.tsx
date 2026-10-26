@@ -1,4 +1,4 @@
-import type { PathPrim, RectPrim, SceneResource } from '@retikz/core';
+import type { PathPrimitive, RectPrimitive, SceneResource } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -7,7 +7,14 @@ import { renderPrim } from '../../../src/render/svg';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
-const rect = (fill: RectPrim['fill']): RectPrim => ({ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill });
+const rect = (fill: RectPrimitive['fill']): RectPrimitive => ({
+  type: 'rect',
+  x: 0,
+  y: 0,
+  width: 10,
+  height: 10,
+  fill,
+});
 
 describe('renderPrim — PaintValue fill 分派', () => {
   it('纯色 string → fill attribute', () => {
@@ -45,7 +52,7 @@ describe('renderPrim — PaintValue fill 分派', () => {
 });
 
 describe('renderPrim — PaintValue stroke 分派', () => {
-  const path: PathPrim = {
+  const path: PathPrimitive = {
     type: 'path',
     commands: [
       { kind: 'move', to: [0, 0] },

@@ -74,6 +74,8 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 `label` accepts one object or an array. Choose the attachment point, then adjust its style:
 
+Each label's `text` uses the same Core text block as path labels: `\n` in a string creates a line break, or you can supply a non-empty line array such as `text: ['First line', { text: 'Second line', fill: 'red' }]`. Write mixed content as `text: [{ segments: [{ text: 'Note ' }, { tex: 'x' }] }]`. All lines share one label box, attachment, rotation, and leader. An array of `label` objects instead creates separate labels.
+
 - `position` defaults to `'top'` and accepts `'top'`, `'top-right'`, `'right'`, `'bottom-right'`, `'bottom'`, `'bottom-left'`, `'left'`, and `'top-left'`
 - It also accepts the center `'center'`, an angle such as `30`, or a boundary fraction such as `{ boundary: 'right', fraction: 0.25 }`; centered labels have no collision avoidance
 - `placement` defaults to `'outside'`; use `'inside'` to place the label inside the border
@@ -150,6 +152,8 @@ Leader lines share the same width and dash constraints as Path: `strokeWidth` is
 </Comparison>
 
 ## Label style
+
+The example starts with two lines. Toggle “Multiline text” to compare the label boxes, and change the font size to see the whole block resize.
 
 The position stays fixed at the right outside of the node while the panel controls color, font size, and opacity.
 

@@ -77,7 +77,7 @@ Within a compile context, metrics for identical text and font combinations are r
 
 When A contains text mixed with formulas, text still goes to the measurer and formula segments go to `lowerTex`. The MathJax integration in `@retikz/tex` initializes its engine asynchronously, then supplies a synchronous lowerer. Core does not wait for the engine to load during layout.
 
-Formulas follow TeX → MathJax SVG → `LoweredTex` paths and metrics → Core `PathPrim` → Render. Their dimensions come from SVG lowering rather than Canvas text measurement; both SVG and Canvas backends consume the same path primitives. See [TeX Implementation](/kernel/packages/tex/mechanism) for the conversion details.
+Formulas follow TeX → MathJax SVG → `LoweredTex` paths and metrics → Core `PathPrimitive` → Render. Their dimensions come from SVG lowering rather than Canvas text measurement; both SVG and Canvas backends consume the same path primitives. See [TeX Implementation](/kernel/packages/tex/mechanism) for the conversion details.
 
 The lowered result's `width` determines horizontal space. `height - depth` is the height above the baseline, and `depth` is the depth below it. Core adds segment widths and takes the maximum ascent and descent separately to form the line's baseline box. The mixed line's slot height is the greater of the configured line height and this box height, giving tall formulas enough room between lines.
 

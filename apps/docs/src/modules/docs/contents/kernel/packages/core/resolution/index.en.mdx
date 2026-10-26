@@ -33,7 +33,7 @@ export type PathResolution = Readonly<{
   irPath: string;
   path: CanonicalPath;
   targets: ReadonlyMap<string, TargetResolution>;
-  kind: PathKindResolution;
+  kind: PathDefinitionResolution;
 }>;
 ```
 
@@ -56,17 +56,17 @@ A Definition contains a capability's implementation and parameter contract. `sha
 
 `createCompileContext` builds a separate registry for each capability, adding builtins before external definitions from `CompileOptions`. Names must be unique within a registry. An external definition that collides with a builtin also causes an error.
 
-| Registry                                  | Capability                            | Consumer                                               |
-| ----------------------------------------- | ------------------------------------- | ------------------------------------------------------ |
-| `shapes` / `boundaries`                   | Node shapes and connection boundaries | Node configuration resolution                          |
-| `patterns` / `clips`                      | Pattern paints and clipping           | Corresponding paint or clip resolution and compilation |
-| `pathKinds` / `pathGenerators` / `arrows` | Path kinds, generators, and arrows    | Corresponding path and arrow processing                |
-| `themeDefinitions`                        | Themes                                | Root or local theme resolution                         |
-| `composites`                              | Composite compilation                 | Traversal of a composite item                          |
+| Registry                | Capability                            | Consumer                                               |
+| ----------------------- | ------------------------------------- | ------------------------------------------------------ |
+| `shapes` / `boundaries` | Node shapes and connection boundaries | Node configuration resolution                          |
+| `patterns` / `clips`    | Pattern paints and clipping           | Corresponding paint or clip resolution and compilation |
+| `paths` / `arrows`      | Path definitions and arrows           | Corresponding path and arrow processing                |
+| `themeDefinitions`      | Themes                                | Root or local theme resolution                         |
+| `composites`            | Composite compilation                 | Traversal of a composite item                          |
 
 After Node styles and defaults are merged, `resolveNodeShape` looks up the effective `shape`, parses parameters with the Definition's `paramsSchema`, and returns `{ name, definition, params }`. An omitted shape selects `rectangle`. `circle` first expands into `ellipse` with equal-dimension parameters, then looks up that definition.
 
-Path looks up a path kind by `kind`, using builtin `stroke` when the field is omitted. Generators and arrows also use their respective registries; their binding timing is covered in the Path branch below.
+Path looks up a path by `kind`, using builtin `stroke` when the field is omitted. Arrows also use their registry; their binding timing is covered in the Path branch below.
 
 `resolveBoundaryReference` resolves the connection boundary next. It can use the visual shape or bind a separate boundary. Layout receives these results and calls the selected capabilities directly. Unknown names and parameters that violate a Definition's contract fail the compilation.
 
@@ -246,7 +246,7 @@ The example's `NodeResolution` has four fields:
 
 ### Path
 
-`resolvePath` obtains effective styles and resolves contextual colors for Path, Label, and Arrow. `resolvePathKind` then looks up the Definition by `kind`, using builtin `stroke` when omitted. Unlike a shape Definition that parses `params`, a path kind Definition parses the full path declaration through its `schema`.
+`resolvePath` obtains effective styles and resolves contextual colors for Path, Label, and Arrow. `resolvePathDefinition` then looks up the Definition by `kind`, using builtin `stroke` when omitted. Unlike a shape Definition that parses `params`, a path Definition parses the full path declaration through its `schema`.
 
 That schema may supply fields, so contextual colors are resolved again afterward. `canonicalizePath` then expands path fields: it collects `style` fields into the path, turns labels into arrays, and supplies static defaults for label placement and steps such as bend and smooth. The result is not yet final drawing commands.
 
@@ -274,12 +274,12 @@ P inherits master color `'#204060'`; its stroke resolves to `'#90a0b0'` in Light
 
 Path likewise stores resolved paint in its Canonical object, as `path.fill` and `path.stroke`.
 
-Label appearance comes from the Label channel; path canonicalization supplies static placement configuration. Arrow defaults come from the Arrow channel. Its master color resolves first, then supplies the basis for its fill. The builtin Stroke emission chain subsequently calls `resolveStrokePathProviders` to supply omitted fill and stroke as `none` and `currentColor` and bind Definitions for the generator steps and arrow marks it consumes. This produces `StrokePathResolution` with `generators` and `arrows` maps. Those bindings are absent from the base `resolvePath` result. This example has neither generators nor arrows, so both maps are empty.
+Label appearance comes from the Label channel; path canonicalization supplies static placement configuration. Arrow defaults come from the Arrow channel. Its master color resolves first, then supplies the basis for its fill. The builtin Stroke emission chain subsequently calls `resolveStrokePathProviders` to supply omitted fill and stroke as `none` and `currentColor` and bind Definitions for the arrow marks it consumes. This produces `StrokePathResolution` with an `arrows` map. Those bindings are absent from the base `resolvePath` result. This example has no arrows, so the map is empty.
 
 <SourceLinks
   sources={[
     { label: 'Path styles, colors, and canonicalization', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: 'Path kind, generator, and arrow binding', path: 'packages/kernel/core/src/resolve/path/provider.ts' },
+    { label: 'Path and arrow binding', path: 'packages/kernel/core/src/resolve/path/provider.ts' },
     { label: 'PathResolution / StrokePathResolution', path: 'packages/kernel/core/src/resolve/path/types.ts' },
   ]}
 />

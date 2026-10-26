@@ -1,7 +1,7 @@
 import type { Lang } from '@/i18n';
 
 /** 数据绑定示例的公共文案 */
-export const annotationDataI18n: Record<
+export const referenceDataI18n: Record<
   Lang,
   {
     data: string;
@@ -12,6 +12,7 @@ export const annotationDataI18n: Record<
     mean: string;
     median: string;
     fullX: string;
+    fullY: string;
     point: string;
     path: string;
     interval: string;
@@ -26,6 +27,7 @@ export const annotationDataI18n: Record<
     mean: '平均值',
     median: '中位数',
     fullX: '横向使用整个视图范围',
+    fullY: '纵向使用整个视图范围',
     point: '聚合参考点',
     path: '统计参考线',
     interval: '数据范围区域',
@@ -39,6 +41,7 @@ export const annotationDataI18n: Record<
     mean: 'Mean',
     median: 'Median',
     fullX: 'Span the full horizontal view',
+    fullY: 'Span the full vertical view',
     point: 'Aggregate reference points',
     path: 'Statistical reference lines',
     interval: 'Data extent regions',

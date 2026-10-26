@@ -149,15 +149,6 @@ const translations: Partial<Record<string, string>> = {
   是否在播放: 'Whether playback is active',
   '跳到指定时刻（毫秒）并渲染该帧': 'Seek to a time in milliseconds and render that frame',
   '当前时刻（毫秒）': 'Current time in milliseconds',
-  '单个自定义 property 的插值 + Canvas 应用定义':
-    'Interpolation and Canvas application definition for one custom property',
-  '把当下值应用到 Canvas context（绘制该 prim 前调用；在 ctx.save/restore 作用域内）':
-    'Apply the current value to the Canvas context before drawing the primitive, inside save/restore',
-  '两关键帧值 + 段进度 → 当下值（喂给 evaluateTrack 的 interpolateCustom）':
-    'Map two keyframe values and segment progress to the current value for evaluateTrack.interpolateCustom',
-  '自定义 property 注册表：property 名 → 定义': 'Custom property registry mapping names to definitions',
-  '自定义缓动注册表：名 → cubic-bezier 四元组（CSS / WAAPI 通用）或函数（仅 Canvas / JS）':
-    'Custom easing registry mapping names to cubic-bezier tuples (CSS/WAAPI) or functions (Canvas/JavaScript only)',
 };
 
 /** 缺少审阅后的中文说明翻译时阻止生成 */

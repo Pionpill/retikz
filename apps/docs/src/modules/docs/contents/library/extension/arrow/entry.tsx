@@ -10,8 +10,8 @@ const Entry: FC = () => (
         [-70, 0],
         [70, 0],
       ]}
-      arrow="->"
-      arrowDetail={{ end: { shape: 'diamond', color: '#2563eb' } }}
+      arrow={{ end: { shape: 'diamond', color: '#2563eb' } }}
+
       style={{ stroke: 'gray', strokeWidth: 2 }}
     />
   </Layout>

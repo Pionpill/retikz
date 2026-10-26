@@ -26,7 +26,7 @@ const scene: Scene = {
   ],
 };
 
-describe('TeX lowered PathPrim renderer parity', () => {
+describe('TeX lowered PathPrimitive renderer parity', () => {
   it('SVG 保留多通道 paint 与 opacity', () => {
     const svg = renderToSvgString(scene, { idPrefix: 'tex' });
 
@@ -38,7 +38,7 @@ describe('TeX lowered PathPrim renderer parity', () => {
     expect(svg).toContain('fill-rule="evenodd"');
   });
 
-  it('Canvas 对同一 PathPrim 应用 fill / stroke paint 与透明度', () => {
+  it('Canvas 对同一 PathPrimitive 应用 fill / stroke paint 与透明度', () => {
     const context = createSpyCanvasContext();
     drawScene(context as unknown as CanvasRenderingContext2D, scene);
 

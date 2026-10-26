@@ -5,10 +5,14 @@ import { evaluateTrack } from '../../src/animation/evaluate';
 
 /**
  * 共享插值引擎 evaluateTrack：数值 / 颜色 oklch / viewBox 分量插值；delay / iteration / direction / fill；
- *   自定义插值器；活动区间外返回 null（caller 用 base）
+ *   活动区间外返回 null（caller 用 base）
  */
-const num = (over: Partial<IRAnimationTrack> = {}): IRAnimationTrack => ({
-  property: 'opacity',
+const num = (
+  over: Partial<
+    Extract<IRAnimationTrack, { property: 'translateX' | 'translateY' | 'rotate' | 'scale' | 'scaleX' | 'scaleY' }>
+  > = {},
+): IRAnimationTrack => ({
+  property: 'translateX',
   keyframes: [
     { at: 0, value: 0 },
     { at: 1, value: 100 },
@@ -18,6 +22,57 @@ const num = (over: Partial<IRAnimationTrack> = {}): IRAnimationTrack => ({
 });
 
 describe('数值线性 + easing', () => {
+  it('同一时间的多帧取最后一帧作为该时刻的值', () => {
+    const repeated: IRAnimationTrack = {
+      property: 'translateX',
+      duration: 100,
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 0, value: 10 },
+        { at: 0.5, value: 20 },
+        { at: 0.5, value: 30 },
+        { at: 1, value: 40 },
+      ],
+    };
+    expect(evaluateTrack(repeated, 0)?.value).toBe(10);
+    expect(evaluateTrack(repeated, 50)?.value).toBe(30);
+  });
+  it('受限数值会限幅，普通位移仍保留回弹，镜头宽高保持正数', () => {
+    const opacity: IRAnimationTrack = {
+      property: 'opacity',
+      duration: 400,
+      easing: [0.34, 1.56, 0.64, 1],
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 1, value: 1 },
+      ],
+    };
+    const width: IRAnimationTrack = {
+      property: 'strokeWidth',
+      duration: 400,
+      easing: [0.34, 1.56, 0.64, 1],
+      keyframes: [
+        { at: 0, value: 1 },
+        { at: 1, value: 0 },
+      ],
+    };
+    const camera: IRAnimationTrack = {
+      property: 'viewBox',
+      duration: 400,
+      easing: [0.34, 1.56, 0.64, 1],
+      keyframes: [
+        { at: 0, value: [0, 0, 100, 100] },
+        { at: 1, value: [0, 0, 1, 1] },
+      ],
+    };
+    expect(evaluateTrack(opacity, 200)?.value).toBe(1);
+    expect(evaluateTrack(width, 200)?.value).toBe(0);
+    expect(evaluateTrack(camera, 200)?.value).toEqual([0, 0, 1, 1]);
+    expect(Number(evaluateTrack({ ...opacity, property: 'translateX' }, 200)?.value)).toBeGreaterThan(1);
+  });
+  it('贝塞尔四元组保持线性曲线的求值结果', () => {
+    expect(evaluateTrack(num({ easing: [0, 0, 1, 1] }), 200)?.value).toBeCloseTo(50);
+  });
   it('t=0 / 中点 / 末尾线性求值', () => {
     expect(evaluateTrack(num(), 0)?.value).toBe(0);
     expect(evaluateTrack(num(), 200)?.value).toBe(50);
@@ -28,10 +83,6 @@ describe('数值线性 + easing', () => {
     const eased = evaluateTrack(num({ easing: 'ease-out' }), 200)?.value as number;
 
     expect(eased).toBeGreaterThan(50);
-  });
-
-  it.each(['toString', 'constructor', 'valueOf'])('原型成员名 %s 未注册时按 linear 回退', easing => {
-    expect(evaluateTrack(num({ easing }), 200)?.value).toBe(50);
   });
 });
 
@@ -91,25 +142,5 @@ describe('iteration / direction / fill', () => {
   it('delay 前：forwards → null；backwards → 首帧', () => {
     expect(evaluateTrack(num({ delay: 100 }), 50)).toBeNull();
     expect(evaluateTrack(num({ delay: 100, fill: 'backwards' }), 50)?.value).toBe(0);
-  });
-});
-
-describe('自定义插值器', () => {
-  it('非数值 / 颜色 / 数组 → 用注入的 interpolateCustom', () => {
-    const track: IRAnimationTrack = {
-      property: 'blur',
-      keyframes: [
-        { at: 0, value: { px: 4 } },
-        { at: 1, value: { px: 0 } },
-      ],
-      duration: 400,
-    };
-    const r = evaluateTrack(track, 200, {
-      interpolateCustom: (from, to, t) => ({
-        px: (from as { px: number }).px + ((to as { px: number }).px - (from as { px: number }).px) * t,
-      }),
-    });
-
-    expect(r?.value).toEqual({ px: 2 });
   });
 });

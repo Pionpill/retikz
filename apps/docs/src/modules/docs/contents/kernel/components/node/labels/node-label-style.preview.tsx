@@ -5,6 +5,7 @@ export type NodeLabelStylePreviewValues = {
   textColor: string;
   fontSize: number;
   opacity: number;
+  multiline: boolean;
 };
 
 /** 绘制示例图形 */
@@ -13,7 +14,7 @@ export const NodeLabelStylePreview = (values: NodeLabelStylePreviewValues) => (
     <Node
       position={[0, 0]}
       label={{
-        text: 'styled label',
+        text: values.multiline ? ['styled label', { text: 'second line', font: { weight: 'bold' } }] : 'styled label',
         position: 'right',
         placement: 'outside',
         textColor: values.textColor,

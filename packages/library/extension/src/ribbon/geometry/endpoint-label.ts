@@ -1,4 +1,4 @@
-import type { PathKindBoundaryLabelInput } from '@retikz/core';
+import type { PathBoundaryLabelInput } from '@retikz/core';
 import { curve } from '@retikz/math';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
@@ -11,7 +11,7 @@ export const endpointLabelInput = (
   endpoint: 'start' | 'end',
   config: CanonicalRibbonEndpoint,
   geometry: RibbonEndpointGeometry,
-): Array<PathKindBoundaryLabelInput> => {
+): Array<PathBoundaryLabelInput> => {
   if (config.label === undefined) return [];
 
   const { center, outward, commands } = geometry;

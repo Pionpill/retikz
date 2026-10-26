@@ -1,4 +1,4 @@
-import type { EllipsePrim, PathPrim, RectPrim, ResolvedArrowEnd, Scene } from '@retikz/core';
+import type { EllipsePrimitive, PathPrimitive, RectPrimitive, ResolvedArrowEnd, Scene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { renderToSvgString } from '../../../src/svg/serialize/to-string';
@@ -37,7 +37,7 @@ const sceneOf = (primitives: Scene['primitives']): Scene => ({
 
 describe('[svg-effects] drop shadow', () => {
   it('shadowed rect → <feDropShadow> def + filter ref', () => {
-    const rect: RectPrim = {
+    const rect: RectPrimitive = {
       type: 'rect',
       x: 0,
       y: 0,
@@ -62,7 +62,7 @@ describe('[svg-effects] drop shadow', () => {
   });
 
   it('filter region 取 userSpaceOnUse + scene viewBox（避免 objectBoundingBox 默认区域裁掉投影）', () => {
-    const rect: RectPrim = {
+    const rect: RectPrimitive = {
       type: 'rect',
       x: 0,
       y: 0,
@@ -80,7 +80,7 @@ describe('[svg-effects] drop shadow', () => {
 
   it('水平直线（包围盒退化为零高）也能拿到非退化 filter region', () => {
     // objectBoundingBox 默认区域下 120%×0≈0 会把直线投影整段裁没；userSpaceOnUse 区域不依赖 bbox
-    const line: PathPrim = {
+    const line: PathPrimitive = {
       type: 'path',
       commands: [
         { kind: 'move', to: [0, 50] },
@@ -98,7 +98,7 @@ describe('[svg-effects] drop shadow', () => {
   });
 
   it('shadow opacity → flood-opacity', () => {
-    const rect: RectPrim = {
+    const rect: RectPrimitive = {
       type: 'rect',
       x: 0,
       y: 0,
@@ -112,7 +112,7 @@ describe('[svg-effects] drop shadow', () => {
   });
 
   it('两个相同 shadow → 去重为一个 filter def', () => {
-    const mk = (x: number): RectPrim => ({
+    const mk = (x: number): RectPrimitive => ({
       type: 'rect',
       x,
       y: 0,
@@ -126,7 +126,7 @@ describe('[svg-effects] drop shadow', () => {
   });
 
   it('无 shadow → 不产 filter / feDropShadow', () => {
-    const rect: RectPrim = { type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#fff' };
+    const rect: RectPrimitive = { type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#fff' };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
 
     expect(out).not.toContain('feDropShadow');
@@ -134,7 +134,7 @@ describe('[svg-effects] drop shadow', () => {
   });
 
   it('applies one shadow to the path and its arrow content', () => {
-    const path: PathPrim = {
+    const path: PathPrimitive = {
       type: 'path',
       commands: [
         { kind: 'move', to: [0, 50] },
@@ -150,7 +150,7 @@ describe('[svg-effects] drop shadow', () => {
   });
 
   it('shadow on ellipse + path 也注入 filter', () => {
-    const el: EllipsePrim = {
+    const el: EllipsePrimitive = {
       type: 'ellipse',
       cx: 5,
       cy: 5,
@@ -158,7 +158,7 @@ describe('[svg-effects] drop shadow', () => {
       ry: 4,
       shadow: { offsetX: 0, offsetY: 2, blur: 4, color: '#000' },
     };
-    const path: PathPrim = {
+    const path: PathPrimitive = {
       type: 'path',
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -176,7 +176,7 @@ describe('[svg-effects] drop shadow', () => {
 
 describe('[svg-effects] blend mode', () => {
   it('blended rect → style="mix-blend-mode:multiply"', () => {
-    const rect: RectPrim = {
+    const rect: RectPrimitive = {
       type: 'rect',
       x: 0,
       y: 0,
@@ -194,15 +194,15 @@ describe('[svg-effects] blend mode', () => {
   });
 
   it('blendMode="normal" / 省略 → 不出 mix-blend-mode', () => {
-    const normal: RectPrim = { type: 'rect', x: 0, y: 0, width: 10, height: 10, blendMode: 'normal' };
-    const omitted: RectPrim = { type: 'rect', x: 0, y: 0, width: 10, height: 10 };
+    const normal: RectPrimitive = { type: 'rect', x: 0, y: 0, width: 10, height: 10, blendMode: 'normal' };
+    const omitted: RectPrimitive = { type: 'rect', x: 0, y: 0, width: 10, height: 10 };
 
     expect(renderToSvgString(sceneOf([normal]), { idPrefix: 'd1' })).not.toContain('mix-blend-mode');
     expect(renderToSvgString(sceneOf([omitted]), { idPrefix: 'd1' })).not.toContain('mix-blend-mode');
   });
 
   it('blend + shadow + var() fill 共存：mix-blend-mode 与 fill 同进 style，filter 进 attr', () => {
-    const rect: RectPrim = {
+    const rect: RectPrimitive = {
       type: 'rect',
       x: 0,
       y: 0,

@@ -15,7 +15,7 @@ Both examples connect A to B. The left uses center coordinates; the right uses n
 
 <ComponentPreview files="path-example" size="sm" hideCode type="illustration" />
 
-This page follows the built-in stroke path. Custom Path kinds emit primitives through their own Definitions; path generators supply geometry commands within the stroke pipeline.
+This page follows the built-in stroke path. Custom Path definitions emit primitives through their own Definitions.
 
 <SourceLinks
   sources={[
@@ -60,7 +60,7 @@ Both paths below start at `[0, 0]` and apply `[60, 30]` twice. `relative` keeps 
 
 <ComponentPreview files="path-relative" size="md" hideCode type="illustration" />
 
-Relative targets that can be determined early become local coordinates during resolution. Targets that depend on runtime results, such as axis-line projection, are calculated while consuming steps. A `move` starts a new pen position. Lines, folds, and curves become commands segment by segment; arcs, closed shapes, smooth curves, and generators use dedicated branches and pass on their pen positions.
+Relative targets that can be determined early become local coordinates during resolution. Targets that depend on runtime results, such as axis-line projection, are calculated while consuming steps. A `move` starts a new pen position. Lines, folds, and curves become commands segment by segment; arcs, closed shapes, and smooth curves use dedicated branches and pass on their pen positions.
 
 | Input step                                 | Geometry change                                                                               |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
@@ -68,7 +68,7 @@ Relative targets that can be determined early become local coordinates during re
 | fold                                       | Compute orthogonal corners and connect them                                                   |
 | curve / cubic / bend                       | Emit a quadratic or cubic Bezier curve using supplied or calculated controls                  |
 | arc / circlePath / ellipsePath / rectangle | Emit shape commands and maintain the following pen position                                   |
-| smooth / generator                         | Emit continuous curves or commands supplied by a Definition                                   |
+| smooth                                     | Emit smooth curves through the supplied points                                                |
 | cycle                                      | Return to the latest move target and close the current subpath                                |
 
 <SourceLinks
@@ -76,7 +76,6 @@ Relative targets that can be determined early become local coordinates during re
     { label: 'Cursor state and advancement', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts' },
     { label: 'Lines, folds, and curves', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
     { label: 'Shape steps and pen handoff', path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts' },
-    { label: 'Generator command output', path: 'packages/kernel/core/src/compile/path/stroke/lower.ts' },
   ]}
 />
 
@@ -189,7 +188,7 @@ Start at `resolvePath` and follow its canonical result into `emitPathPrimitive`.
 
 Output can contain multiple stroke fragments, text, and decoration primitives. An output group carries the path's own rotation and scale. Outer groups retain Scope transforms, and the renderer consumes this structured result.
 
-An unresolved ordinary target or a missing required predecessor produces a warning in the relevant branch and skips the whole path. Some steps with no drawable content can emit no commands. Contract violations such as invalid generator output throw errors, so failure behavior depends on the branch.
+An unresolved ordinary target or a missing required predecessor produces a warning in the relevant branch and skips the whole path. Some steps with no drawable content can emit no commands. Violations of path geometry constraints throw errors, so failure behavior depends on the branch.
 
 <SourceLinks
   sources={[

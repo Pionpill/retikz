@@ -1,14 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import type { ClipDefinition, ClipResource, ClipShape, IRClip, ClipFillRule, IRScene, PathCommand } from '../../src';
+import type { ClipDefinition, ClipResource, IRClip, ClipFillRule, IRScene, PathCommand } from '../../src';
 import { compileToScene, defineClip } from '../../src';
-
-type TestPathClipShape = ClipShape & {
-  kind: string;
-  commands: Array<PathCommand>;
-  fillRule?: ClipFillRule;
-};
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -19,16 +13,9 @@ const clippedIr = (clip: IRClip): IRScene => ({
 const pathOperation = (kind: string, commands: Array<PathCommand>, fillRule?: ClipFillRule): ClipDefinition =>
   defineClip({
     kind,
-    schema: strictObject({ kind: literal(kind) }),
-    resolve: () => {
-      const shape: TestPathClipShape = {
-        kind,
-        commands,
-        ...(fillRule === undefined ? {} : { fillRule }),
-      };
-      return shape;
-    },
-    lower: shape => ({ commands: shape.commands, fillRule: shape.fillRule ?? 'nonzero' }),
+    schema: strictObject({ kind: literal(kind), params: strictObject({}) }),
+
+    lower: () => ({ commands, fillRule: fillRule ?? 'nonzero' }),
   });
 
 const compilePath = (
@@ -36,7 +23,7 @@ const compilePath = (
   options: Readonly<{ fillRule?: ClipFillRule; precision?: number }> = {},
 ): ClipResource['path'] => {
   const kind = 'testPath';
-  const scene = compileToScene(clippedIr({ kind }), {
+  const scene = compileToScene(clippedIr({ kind, params: {} }), {
     clips: [pathOperation(kind, commands, options.fillRule)],
     ...(options.precision === undefined ? {} : { precision: options.precision }),
   }).scene;
@@ -75,8 +62,16 @@ describe('canonical SceneClipPath', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'scope', clip: { kind: 'pathA' }, children: [{ type: 'node', position: [0, 0], text: 'A' }] },
-        { type: 'scope', clip: { kind: 'pathB' }, children: [{ type: 'node', position: [10, 0], text: 'B' }] },
+        {
+          type: 'scope',
+          clip: { kind: 'pathA', params: {} },
+          children: [{ type: 'node', position: [0, 0], text: 'A' }],
+        },
+        {
+          type: 'scope',
+          clip: { kind: 'pathB', params: {} },
+          children: [{ type: 'node', position: [10, 0], text: 'B' }],
+        },
       ],
     };
 

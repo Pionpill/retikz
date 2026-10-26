@@ -1,32 +1,4 @@
-import type { IRArrowDetail, IRAxisLineTarget, IRPath, IRStep, IRStepLabel, IRTarget, WayDSL } from '@retikz/core';
-import type { ValueOf } from '@retikz/foundation';
-
-/** 作者侧路径箭头方向 */
-export const InputPathArrowDirection = {
-  None: 'none',
-  Forward: '->',
-  Backward: '<-',
-  Both: '<->',
-} as const;
-
-/** 作者侧路径箭头方向取值 */
-export type InputPathArrowDirection = ValueOf<typeof InputPathArrowDirection>;
-
-/** 作者侧单个路径箭头端点的放置配置 */
-export type InputPathArrowEndpointPlacement = {
-  /** 箭头从默认位置推进到最终视觉后缘对齐逻辑端点位置的归一化比例 */
-  overlap?: number;
-};
-
-/** 作者侧路径箭头端点放置配置 */
-export type InputPathArrowPlacement = {
-  /** 实际创建端点共享的重叠比例 */
-  overlap?: number;
-  /** 起点箭头的逐字段覆盖 */
-  start?: InputPathArrowEndpointPlacement;
-  /** 终点箭头的逐字段覆盖 */
-  end?: InputPathArrowEndpointPlacement;
-};
+import type { IRAxisLineTarget, IRPath, IRStep, IRStepLabel, IRTarget, WayDSL } from '@retikz/core';
 
 /** 作者侧路径步骤标签 */
 export type InputStepLabel = IRStepLabel;
@@ -127,14 +99,6 @@ export type InputSmoothStep = Omit<Extract<IRStep, { kind: 'smooth' }>, 'points'
   label?: InputStepLabel;
 };
 
-/** 以作者侧 target 组装的 generator 步骤 */
-export type InputGeneratorStep = Omit<Extract<IRStep, { kind: 'generator' }>, 'to' | 'label'> & {
-  /** 交给路径生成器的可选终点目标 */
-  to?: InputTarget;
-  /** 附着在生成路径上的可选标签 */
-  label?: InputStepLabel;
-};
-
 /** 作者侧路径步骤 */
 export type InputStep =
   | InputMoveStep
@@ -149,21 +113,16 @@ export type InputStep =
   | InputEllipsePathStep
   | InputArcStep
   | InputRectangleStep
-  | InputSmoothStep
-  | InputGeneratorStep;
+  | InputSmoothStep;
 
 /** 作者侧路径输入的公共字段 */
-type InputPathBase = Omit<IRPath, 'type' | 'children'> & {
+type InputPathBase = Omit<IRPath, 'type' | 'children' | 'arrow'> & {
+  /** 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 */
+  arrow?: IRPath['arrow'] | '->' | '<-' | '<->';
   /** 路径步骤序列；与 way 互斥 */
   children?: ReadonlyArray<InputStep>;
   /** TikZ 风格的路径走向简写 */
   way?: WayDSL;
-  /** 路径级箭头方向 */
-  arrow?: InputPathArrowDirection;
-  /** 箭头的顶层默认与端点覆盖配置 */
-  arrowDetail?: IRArrowDetail;
-  /** 箭头端点的共享与逐端放置配置 */
-  arrowPlacement?: InputPathArrowPlacement;
   /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
   authoring?: unknown;
 };

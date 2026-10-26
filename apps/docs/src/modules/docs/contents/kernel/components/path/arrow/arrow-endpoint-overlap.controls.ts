@@ -55,7 +55,7 @@ export const createPreviewControlContract = (lang: Lang) =>
   ({
     controls: createControls(lang),
     canonicalValues: { shape: 'openCircle', overlap: 0.5 },
-    relatedApis: ['Draw.arrowDetail', 'Draw.arrowPlacement'],
+    relatedApis: ['Draw.arrow'],
   }) satisfies PreviewControlContract;
 
 /** 默认中文预览契约 */

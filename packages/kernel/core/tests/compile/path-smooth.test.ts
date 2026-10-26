@@ -3,15 +3,16 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, IRTarget } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
+import type { CubicPathCommand, PathPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import { PathSchema, SmoothStepSchema } from '../../src/schemas';
+import { flattenPrims } from '../helpers/flatten';
 import { move } from '../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
 
-const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
-  const p = prims.find((x): x is PathPrim => x.type === 'path');
-  if (!p) throw new Error('expected a PathPrim in scene');
+const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive => {
+  const p = prims.find((x): x is PathPrimitive => x.type === 'path');
+  if (!p) throw new Error('expected a PathPrimitive in scene');
   return p;
 };
 
@@ -230,7 +231,7 @@ describe('smooth step：错误路径', () => {
 });
 
 describe('smooth step：交互', () => {
-  it('smooth + label → 产出 label primitive（TextPrim）', () => {
+  it('smooth + label → 产出 label primitive（TextPrimitive）', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
       {
@@ -244,7 +245,7 @@ describe('smooth step：交互', () => {
       },
     );
     const prims = compileToScene(ir, silent).scene.primitives;
-    const labels = prims.filter((p): p is TextPrim => p.type === 'text');
+    const labels = prims.filter((p): p is TextPrimitive => p.type === 'text');
 
     expect(labels.length).toBeGreaterThan(0);
     expect(labels.some(l => l.lines.some(line => line.text === 'flow'))).toBe(true);
@@ -309,7 +310,7 @@ describe('smooth step：交互', () => {
     const withMark: IRScene = scene([
       {
         type: 'path',
-        marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
+        marks: [{ pos: 0.5, shape: 'stealth' }],
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           {
@@ -323,8 +324,8 @@ describe('smooth step：交互', () => {
         ],
       } as never,
     ]);
-    const baseCount = compileToScene(without, silent).scene.primitives.length;
-    const markCount = compileToScene(withMark, silent).scene.primitives.length;
+    const baseCount = flattenPrims(compileToScene(without, silent).scene.primitives).length;
+    const markCount = flattenPrims(compileToScene(withMark, silent).scene.primitives).length;
 
     expect(markCount).toBeGreaterThan(baseCount);
   });

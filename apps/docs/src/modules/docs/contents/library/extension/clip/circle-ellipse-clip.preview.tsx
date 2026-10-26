@@ -33,15 +33,17 @@ export const renderCircleEllipseClipPreview = (values: CircleEllipseClipPreviewV
     extensions={{ clips: [CircleClipDefinition, EllipseClipDefinition] }}
   >
     {sourceBoundary(-105)}
-    <Scope clip={{ kind: 'circle', cx: -105, cy: 0, r: values.circleRadius }}>{clippedContent(-105)}</Scope>
+    <Scope clip={{ kind: 'circle', params: { cx: -105, cy: 0, r: values.circleRadius } }}>{clippedContent(-105)}</Scope>
     {sourceBoundary(105)}
     <Scope
       clip={{
         kind: 'ellipse',
-        cx: 105,
-        cy: 0,
-        rx: values.ellipseRadiusX,
-        ry: values.ellipseRadiusY,
+        params: {
+          cx: 105,
+          cy: 0,
+          rx: values.ellipseRadiusX,
+          ry: values.ellipseRadiusY,
+        },
       }}
     >
       {clippedContent(105)}

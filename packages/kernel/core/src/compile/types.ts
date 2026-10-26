@@ -235,7 +235,7 @@ export type CompileOptions<
   CompileProviderOptions &
   CompileCompositeOptions<TComposites> & {
     /**
-     * Clip resolve 与 ClipShape lower 共用的最大边数
+     * 单次裁剪转换允许访问的声明数量，包含根声明及递归子声明
      * @default 32
      */
     maxClipDepth?: number;

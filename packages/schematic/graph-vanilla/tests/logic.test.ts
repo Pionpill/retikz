@@ -281,7 +281,7 @@ describe('normalizeGraph', () => {
       transforms: [{ kind: 'translate' as const, x: 10, y: 20 }],
       position: { kind: 'anchor', target: [30, 40], selfAnchor: 'center' },
       zIndex: 2,
-      clip: { kind: 'rect' as const, x: 0, y: 0, width: 220, height: 120 },
+      clip: { kind: 'rect' as const, params: { x: 0, y: 0, width: 220, height: 120 } },
       boundingShape: 'circle',
       animations: [],
       meta: { source: 'architecture-catalog' },

@@ -41,8 +41,8 @@ const Demo: FC = () => (
     </Node>
     <Draw
       way={['a', 'b']}
-      arrow="->"
-      arrowDetail={{ shape: 'bracket' }}
+      arrow={{ end: { shape: 'bracket' } }}
+
       style={{ stroke: 'darkorange', strokeWidth: 1.5 }}
     />
   </Layout>

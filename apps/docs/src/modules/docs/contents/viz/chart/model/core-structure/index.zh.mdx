@@ -37,7 +37,7 @@ recipe: {
 encodings: { x: 'weight', y: 'efficiency', color: 'group' }
 ```
 
-不同 `chartType` 开放的通道不同。通道值除了直接字段名，还可配置字段映射、transform、scale 等；解析后会生成 Plot 使用的字段、变换与比例尺。字段类型、格式及分类顺序属于 `data.model`，不由 Chart 重新定义。如果某个通道既提供字段 encoding，又提供同名常量 property，优先使用 encoding。recipe 只消费该类型实际声明的通道，未被 recipe 或当前叠加图元消费的配置会报错，不会被静默忽略。
+不同 `chartType` 开放的通道不同。通道值除了直接字段名，还可按通道支持情况配置聚合与尺度绑定。数据变换通过 Data 或 `plotExtension.transform` 完成，encoding 引用结果字段，不接受内联 `transform` 与 `output`。字段类型、格式及分类顺序属于 `data.model`，不由 Chart 重新定义。如果某个通道既提供字段 encoding，又提供同名常量 property，优先使用 encoding。recipe 只消费该类型实际声明的通道，未被 recipe 或当前叠加图元消费的配置会报错，不会被静默忽略。
 
 ## 图形属性：properties
 

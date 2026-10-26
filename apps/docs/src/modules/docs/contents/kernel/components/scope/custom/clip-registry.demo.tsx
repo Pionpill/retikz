@@ -12,7 +12,7 @@ import vanillaCode from './clip-registry.vanilla.ts?raw';
 
 const Content: FC = () => (
   <>
-    <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
+    <Scope clip={{ kind: 'rounded-rect', params: { x: -150, y: -72, width: 300, height: 144, radius: 36 } }}>
       <Node
         position={[-88, -8]}
         shape="circle"

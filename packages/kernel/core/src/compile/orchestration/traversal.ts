@@ -3,23 +3,23 @@ import type { BoundsRect } from '@retikz/math';
 import { boundsToRect } from '@retikz/math';
 
 import type {
-  ClipShape,
   CompileObservationOwner,
   CompileOccurrenceLocator,
-  CompositeCompileChild,
   CompositeBoundChild,
-  CompositeRuntimeInputContext,
+  CompositeCompileChild,
+  CompositeCompileContext,
+  CompositeCompileResult,
   CompositeCompileScopeProps,
+  CompositeContributionResult,
   CompositeReplay,
   CompositeReplayWrapper,
-  GroupPrim,
+  CompositeRuntimeInputContext,
+  GroupPrimitive,
   LayoutChildResult,
   LayoutContribution,
   LayoutMeasurementAxis,
-  CompositeCompileResult,
-  CompositeContributionResult,
-  CompositeCompileContext,
   LayoutProposal,
+  SceneClipPath,
   ScenePrimitive,
   SceneResource,
   SpatialHandleOwner,
@@ -32,10 +32,10 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolver, PathTargetResolver, TargetResolution } from '../../resolve';
 import {
   bindComposite,
-  resolveScopeDefaults,
   resolveBoundaryReference,
   resolveComposite,
   resolvePath as resolvePathValue,
+  resolveScopeDefaults,
   resolveTheme,
 } from '../../resolve';
 import {
@@ -61,16 +61,16 @@ import { NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 import {
   alignmentGuidesOfNode,
-  projectNodeLayoutObservation,
   compileNodeState,
   createScopePlaceholderLayout,
   createSyntheticRectangleLayout,
   emitNodePrimitives,
   labelExtentPoints,
   outerRectOf,
+  projectNodeLayoutObservation,
   projectNodeOwnerOutput,
 } from '../node';
-import { emitPathKindPrimitive } from '../path';
+import { emitDefinedPath } from '../path';
 import {
   createCompileInvariantError,
   createLayoutChildFailure,
@@ -82,9 +82,9 @@ import { createClipRegistry, createPaintRegistry, importSceneResources, remapPri
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import {
   createIntrinsicScopeLayout,
-  resolveScopePositionTarget,
   resolveFinalScopeTransforms,
   resolvePreliminaryScopeTransforms,
+  resolveScopePositionTarget,
 } from '../scope';
 import { createScopeTransformContext } from '../transform';
 import type { CompositeCompileArtifact } from '../types';
@@ -94,8 +94,8 @@ import { filterAnimations } from './animation';
 import { freezeCompileArtifact, freezeOccurrence, orderCompileArtifacts } from './artifact';
 import { canonicalizeBoundsRect, collectLayoutBounds } from './bounds';
 import {
-  createCompositeReplayChild,
   createCompositeBoundChild,
+  createCompositeReplayChild,
   createCompositeScopeChild,
   snapshotCompositeLayoutChild,
   snapshotCompositeOutputChild,
@@ -123,6 +123,7 @@ import {
 import { createCompileProvenanceTracker } from './provenance';
 import { replayPendingSpatialHandle } from './spatial-handle';
 import type {
+  CompileSemanticOwner,
   CompositeCompileOwner,
   CompositeReplayMaterializeContext,
   CompositeReplayTransaction,
@@ -132,7 +133,6 @@ import type {
   NodeChild,
   PathChild,
   PendingPathEmission,
-  CompileSemanticOwner,
   ScopeChild,
   ScopeLayoutPlaceholder,
   ScopeLayoutPlaceholderContext,
@@ -224,8 +224,8 @@ export const compileChildrenToPrimitives = (
       clips: context.clips,
       patterns: context.patterns,
       arrows: context.arrows,
-      pathGenerators: context.pathGenerators,
-      pathKinds: context.pathKinds,
+      marks: context.marks,
+      paths: context.paths,
       paint: context.paint,
       clip: context.clip,
       composites: context.composites,
@@ -354,10 +354,10 @@ export const compileChildrenToPrimitives = (
   /** 把 allocation contribution 绑定到最近的显式 composite allocation boundary */
   const pushAllocation = (
     sink: TraversalFrame['allocationSink'],
-    points: Array<IRPosition>,
+    boundsPoints: Array<IRPosition>,
     allocationBoundary?: object,
   ): void => {
-    sink.push({ points, ...(allocationBoundary === undefined ? {} : { allocationBoundary }) });
+    sink.push({ boundsPoints, ...(allocationBoundary === undefined ? {} : { allocationBoundary }) });
   };
 
   /** 只保留当前 traversal 对外可见的 allocation contribution */
@@ -379,15 +379,15 @@ export const compileChildrenToPrimitives = (
             mode: pendingPath.theme.mode,
             scopeChain: pendingPath.scopeChain,
             targetResolver,
-            pathKinds: runtime.context.pathKinds,
-            pathGenerators: runtime.context.pathGenerators,
+            paths: runtime.context.paths,
             arrows: runtime.context.arrows,
+            marks: runtime.context.marks,
             patterns: runtime.context.patterns,
             round: runtime.context.round,
             irPath: pendingPath.irPath,
           });
           const result = withWarningOccurrence(pendingPath.occurrence, () =>
-            emitPathKindPrimitive(pendingPath, resolution, targetResolver, {
+            emitDefinedPath(pendingPath, resolution, targetResolver, {
               ...runtime.context,
               resolveTransform: scopeTransformsContext.resolve,
             }),
@@ -409,7 +409,7 @@ export const compileChildrenToPrimitives = (
           for (const prim of primitives) recordPrimitiveZIndex(runtime.state.zIndexOf, prim, pendingPath.zIndex);
           if (result !== null) {
             pendingPath.boundsSink.push({
-              points: [...result.boundsPoints],
+              boundsPoints: [...result.boundsPoints],
               shadow: resolution.path.shadow,
             });
             pushAllocation(pendingPath.allocationSink, [...result.boundsPoints], pendingPath.allocationBoundary);
@@ -487,8 +487,8 @@ export const compileChildrenToPrimitives = (
       rectOps.anchor(outerRect, Anchor.BottomLeft),
       rectOps.anchor(outerRect, Anchor.BottomRight),
     ];
-    frame.boundsSink.push({ points: nodeBoundsPoints, shadow: properties.shadow });
-    frame.boundsSink.push({ points: labelExtentPoints(layout) });
+    frame.boundsSink.push({ boundsPoints: nodeBoundsPoints, shadow: properties.shadow });
+    frame.boundsSink.push({ boundsPoints: labelExtentPoints(layout) });
     pushAllocation(frame.allocationSink, nodeBoundsPoints, frame.allocationBoundary);
     const alignmentGuides = alignmentGuidesOfNode(layout, runtime.context.round);
     if (alignmentGuides !== undefined) {
@@ -596,7 +596,7 @@ export const compileChildrenToPrimitives = (
 
   /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画 */
   const emitScopeGroup = (child: ScopeChild, input: EmitScopeGroupContext): string | undefined => {
-    const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipShape, semanticOwner } = input;
+    const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipPath, semanticOwner } = input;
     const { primitiveSink, locatorPrefix } = frame;
     const scopeIrPath = formatCompileChildPath(locatorPrefix, index, 'scope');
     const hasScopeTransforms = scopeTransforms.length > 0;
@@ -604,7 +604,7 @@ export const compileChildrenToPrimitives = (
       scopePrimitiveSink.length === 0 && !hasScopeTransforms && child.id === undefined && child.clip === undefined;
     if (isPrunable) return;
 
-    const group: GroupPrim = {
+    const group: GroupPrimitive = {
       type: 'group',
       children: stableSortByZIndex(sealSink(scopePrimitiveSink), runtime.state.zIndexOf),
     };
@@ -617,8 +617,8 @@ export const compileChildrenToPrimitives = (
     });
     if (scopeAnimations !== undefined) group.animations = scopeAnimations;
     if (hasScopeTransforms) group.transforms = [...scopeTransforms];
-    if (resolvedClipShape !== undefined) {
-      group.clipRef = runtime.context.clip.importResolved(resolvedClipShape);
+    if (resolvedClipPath !== undefined) {
+      group.clipRef = runtime.context.clip.importPath(resolvedClipPath);
     } else if (child.clip !== undefined) {
       group.clipRef = runtime.context.clip.register(
         resolveClipValue(child.clip, { clips: runtime.context.clips, irPath: `${scopeIrPath}.clip` }),
@@ -641,7 +641,7 @@ export const compileChildrenToPrimitives = (
     compositeDepth = options.compositeDepth ?? 0,
     semanticOwner?: CompileSemanticOwner,
     compileNested?: (scopeFrame: TraversalFrame, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
-    preResolvedClipShape?: ClipShape,
+    preResolvedClipPath?: SceneClipPath,
   ): void => {
     const { locatorPrefix, scopeDefaults } = frame;
     const scopeOccurrence = generatedOccurrence ?? {
@@ -828,7 +828,7 @@ export const compileChildrenToPrimitives = (
       for (const contribution of effectiveAllocations(scopeAllocations)) {
         pushAllocation(
           frame.allocationSink,
-          contribution.points.map(point => scopeTransformsContext.apply(point, scopeTransforms)),
+          contribution.boundsPoints.map(point => scopeTransformsContext.apply(point, scopeTransforms)),
           frame.allocationBoundary,
         );
       }
@@ -850,12 +850,12 @@ export const compileChildrenToPrimitives = (
       scopePrimitiveSink,
       frame,
       ...(semanticOwner === undefined ? {} : { semanticOwner }),
-      ...(preResolvedClipShape === undefined ? {} : { resolvedClipShape: preResolvedClipShape }),
+      ...(preResolvedClipPath === undefined ? {} : { resolvedClipPath: preResolvedClipPath }),
     });
 
     for (const contribution of scopeBounds) {
       if (contribution.decoration === true) {
-        const bounds = collectLayoutBounds(undefined, contribution.points);
+        const bounds = collectLayoutBounds(undefined, contribution.boundsPoints);
         if (bounds === undefined) continue;
 
         const rectangle = boundsToRect(bounds);
@@ -870,10 +870,11 @@ export const compileChildrenToPrimitives = (
           ],
           context.clip.resources(),
         );
-        if (projected !== undefined) frame.boundsSink.push({ points: allocationPointsOf(projected), decoration: true });
+        if (projected !== undefined)
+          frame.boundsSink.push({ boundsPoints: allocationPointsOf(projected), decoration: true });
       } else {
         frame.boundsSink.push({
-          points: contribution.points.map(point => scopeTransformsContext.apply(point, scopeTransforms)),
+          boundsPoints: contribution.boundsPoints.map(point => scopeTransformsContext.apply(point, scopeTransforms)),
           shadow: contribution.shadow,
         });
       }
@@ -893,7 +894,7 @@ export const compileChildrenToPrimitives = (
   const boundsRectOf = (result: TraversalResult): Readonly<BoundsRect> =>
     (() => {
       const allocation = effectiveAllocations(result.allocations).reduce(
-        (current, contribution) => collectLayoutBounds(current, contribution.points),
+        (current, contribution) => collectLayoutBounds(current, contribution.boundsPoints),
         undefined as TraversalResult['layoutBounds'],
       );
       return allocation === undefined ? emptyBounds() : canonicalizeBoundsRect(boundsToRect(allocation));
@@ -965,7 +966,7 @@ export const compileChildrenToPrimitives = (
 
   type PreparedReplay = Readonly<{
     transaction: CompositeReplayTransaction;
-    wrapperClipShape?: ClipShape;
+    wrapperClipPath?: SceneClipPath;
   }>;
 
   /** replay transaction 捕获的 primitive resource ref 必须在提交前完整可解析 */
@@ -1010,7 +1011,7 @@ export const compileChildrenToPrimitives = (
     const prepared = preparedReplays.get(token);
     if (prepared === undefined) throw createCompileInvariantError('internal: replay was not preflighted before commit');
 
-    const { wrapperClipShape } = prepared;
+    const { wrapperClipPath } = prepared;
     const transaction =
       prepared.transaction.materialize !== undefined &&
       (prepared.transaction.styleFingerprint !== replayStyleFingerprint(frame.scopeDefaults) ||
@@ -1027,8 +1028,7 @@ export const compileChildrenToPrimitives = (
     const authoredPreliminary = transaction.scopeChainApplied ? undefined : authoredPreliminaryTransforms;
     const resourceIds = importSceneResources(transaction.resources, runtime.context.paint, runtime.context.clip);
 
-    const wrapperClipRef =
-      wrapperClipShape === undefined ? undefined : runtime.context.clip.importResolved(wrapperClipShape);
+    const wrapperClipRef = wrapperClipPath === undefined ? undefined : runtime.context.clip.importPath(wrapperClipPath);
     publishClipObservation(
       wrapperClipRef,
       replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, transaction.originOccurrence),
@@ -1048,9 +1048,9 @@ export const compileChildrenToPrimitives = (
           transforms === undefined || transforms.length === 0
             ? primitive
             : { type: 'group', transforms: [...transforms], children: [primitive] };
-        const wrapped: GroupPrim =
+        const wrapped: GroupPrimitive =
           wrapperClipRef === undefined
-            ? (placed as GroupPrim)
+            ? (placed as GroupPrimitive)
             : { type: 'group', clipRef: wrapperClipRef, children: [placed] };
         frame.primitiveSink.push(wrapped);
         committedPrimitives.push(wrapped);
@@ -1105,10 +1105,10 @@ export const compileChildrenToPrimitives = (
     if (wrapperClipRef === undefined) {
       for (const contribution of transaction.bounds) {
         frame.boundsSink.push({
-          points:
+          boundsPoints:
             transforms === undefined || transforms.length === 0
-              ? contribution.points
-              : contribution.points.map(point => scopeTransformsContext.apply(point, transforms)),
+              ? contribution.boundsPoints
+              : contribution.boundsPoints.map(point => scopeTransformsContext.apply(point, transforms)),
           shadow: contribution.shadow,
           ...(contribution.decoration === undefined ? {} : { decoration: contribution.decoration }),
         });
@@ -1120,7 +1120,7 @@ export const compileChildrenToPrimitives = (
       ]);
       if (visualBounds !== undefined)
         frame.boundsSink.push({
-          points: allocationPointsOf(visualBounds),
+          boundsPoints: allocationPointsOf(visualBounds),
           ...(transaction.bounds.some(contribution => contribution.decoration === true) ? { decoration: true } : {}),
         });
     }
@@ -1129,8 +1129,8 @@ export const compileChildrenToPrimitives = (
       pushAllocation(
         frame.allocationSink,
         transforms === undefined || transforms.length === 0
-          ? contribution.points
-          : contribution.points.map(point => scopeTransformsContext.apply(point, transforms)),
+          ? contribution.boundsPoints
+          : contribution.boundsPoints.map(point => scopeTransformsContext.apply(point, transforms)),
         frame.allocationBoundary,
       );
     }
@@ -1252,7 +1252,7 @@ export const compileChildrenToPrimitives = (
 
   type PreparedRuntimeOutput = Readonly<{
     output: CompositeRuntimeOutputChild;
-    scopeClipShape?: ClipShape;
+    scopeClipPath?: SceneClipPath;
   }>;
 
   type PreparedCompositeOutputs = Readonly<{
@@ -1316,15 +1316,15 @@ export const compileChildrenToPrimitives = (
           }
         }
 
-        const scopeClipShape =
+        const scopeClipPath =
           entry.child.props.clip === undefined
             ? undefined
-            : runtime.context.clip.resolve(
+            : runtime.context.clip.lower(
                 resolveClipValue(entry.child.props.clip, { clips: runtime.context.clips, irPath: 'clip' }),
               );
         preparedOutputs.set(handle, {
           output: entry.child,
-          ...(scopeClipShape === undefined ? {} : { scopeClipShape }),
+          ...(scopeClipPath === undefined ? {} : { scopeClipPath }),
         });
 
         for (const child of entry.child.children) if (isCompositeOutputHandle(child)) visitHandle(child);
@@ -1358,16 +1358,16 @@ export const compileChildrenToPrimitives = (
         );
       }
 
-      const wrapperClipShape =
+      const wrapperClipPath =
         entry.child.wrapper?.clip === undefined
           ? undefined
-          : runtime.context.clip.resolve(
+          : runtime.context.clip.lower(
               resolveClipValue(entry.child.wrapper.clip, { clips: runtime.context.clips, irPath: 'clip' }),
             );
       validateReplayResourceRefs(transaction);
       preparedReplays.set(entry.child.replay, {
         transaction,
-        ...(wrapperClipShape === undefined ? {} : { wrapperClipShape }),
+        ...(wrapperClipPath === undefined ? {} : { wrapperClipPath }),
       });
       transactionsToConsume.push(transaction);
     };
@@ -1406,7 +1406,7 @@ export const compileChildrenToPrimitives = (
     owner: CompositeCompileOwner,
     prepared: PreparedCompositeOutputs,
     semanticOwner?: CompileSemanticOwner,
-    preparedScopeClipShape?: ClipShape,
+    preparedScopeClipPath?: SceneClipPath,
     authoredPreliminaryTransforms?: ReadonlyArray<Transform>,
   ): void => {
     if (output.kind === 'bound') {
@@ -1509,12 +1509,12 @@ export const compileChildrenToPrimitives = (
             owner,
             prepared,
             scopeSemanticOwner,
-            preparedChild.scopeClipShape,
+            preparedChild.scopeClipPath,
             scopePreliminaryTransforms,
           );
         }
       },
-      preparedScopeClipShape,
+      preparedScopeClipPath,
     );
   };
 
@@ -1643,7 +1643,7 @@ export const compileChildrenToPrimitives = (
       };
 
       const paint = createPaintRegistry(context.round);
-      const clip = createClipRegistry(context.round, context.clips, context.maxClipDepth);
+      const clip = createClipRegistry(context.round, context.maxClipDepth);
       const probeProvenanceTracker =
         runtime.state.provenanceTracker === undefined ? undefined : createCompileProvenanceTracker();
       let probeWarningOccurrence = probeOccurrence;
@@ -1964,9 +1964,9 @@ export const compileChildrenToPrimitives = (
                   pointOfTarget: target => bindingOf(target)?.point ?? null,
                   bindTarget: target => bindingOf(target),
                 },
-                pathKinds: context.pathKinds,
-                pathGenerators: context.pathGenerators,
+                paths: context.paths,
                 arrows: context.arrows,
+                marks: context.marks,
                 patterns: context.patterns,
                 round: context.round,
                 irPath: 'query',
@@ -2275,7 +2275,7 @@ export const compileChildrenToPrimitives = (
         owner,
         preparedOutputs,
         semanticOwner,
-        preparedOutputs.outputs.get(output)?.scopeClipShape,
+        preparedOutputs.outputs.get(output)?.scopeClipPath,
       );
     }
 
@@ -2418,7 +2418,7 @@ export const compileChildrenToPrimitives = (
   for (const contribution of rootBounds) {
     runtime.state.layoutBounds = collectLayoutBounds(
       runtime.state.layoutBounds,
-      contribution.points,
+      contribution.boundsPoints,
       contribution.shadow,
     );
   }

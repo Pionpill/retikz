@@ -24,7 +24,7 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '../hydration';
-import { computeDisplaySize, pathBounds } from '../shared';
+import { computeDisplaySize, pathBounds, prepareRuntimeSceneContent } from '../shared';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
@@ -36,7 +36,6 @@ import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import {
   diffSceneAnimationDescriptors,
   occurrenceAnimationTracks,
-  materializeEasingRegistry,
   SceneAnimationOccurrenceChangeKind,
 } from './runtime-options';
 import type { SceneIdentityMap } from './shared';
@@ -50,7 +49,8 @@ import {
   runtimeStructuralEquals,
 } from './shared';
 
-const asScene = (snapshot: SceneRuntimeSnapshot): Scene => snapshot.scene as unknown as Scene;
+const prepareCanvasScene = (snapshot: SceneRuntimeSnapshot): Scene =>
+  prepareRuntimeSceneContent(snapshot.scene as unknown as Scene);
 
 /** 按 snapshot primitive path 读取 exact occurrence */
 const primitiveAtPath = (
@@ -76,13 +76,13 @@ const primitiveAtPath = (
 /** 读取单个 occurrence 自身动画 descriptor 的有限结束时刻 */
 const primitiveAnimationDurationMs = (
   primitive: RuntimeScenePrimitive,
-  resources: SceneRuntimeSnapshot['scene']['resources'],
+  snapshot: SceneRuntimeSnapshot,
 ): number | null =>
   sceneAnimationDurationMs({
     layout: { x: 0, y: 0, width: 0, height: 0 },
     resources: [],
     primitives: [],
-    animations: occurrenceAnimationTracks(primitive, resources),
+    animations: occurrenceAnimationTracks(primitive, snapshot),
   });
 
 /** 判断 readonly Runtime descriptor 集合是否含 load / 缺省自动播放 track */
@@ -611,7 +611,7 @@ const createBitmap = (
   bitmap.height = size.height;
   renderFrameToCanvas(
     bitmap,
-    { primary: animationFrame?.scene ?? asScene(snapshot), layers },
+    { primary: animationFrame?.scene ?? prepareCanvasScene(snapshot), layers },
     {
       devicePixelRatio: options.devicePixelRatio,
       time,
@@ -621,8 +621,7 @@ const createBitmap = (
       ...(animationFrame === undefined
         ? {}
         : { resolvePrimAnimation: (id: string | undefined) => animationFrame.resolvePrimAnimation(id, time ?? 0) }),
-      animationProperties: config.animation?.properties,
-      easings: materializeEasingRegistry(config),
+
       defaultFontFamily: hostStyle.defaultFontFamily,
       currentColor: hostStyle.currentColor,
       getImage,
@@ -723,8 +722,7 @@ const createIncrementalBitmap = (
       ...(animationFrame === undefined
         ? {}
         : { resolvePrimAnimation: (id: string | undefined) => animationFrame.resolvePrimAnimation(id, time ?? 0) }),
-      animationProperties: config.animation?.properties,
-      easings: materializeEasingRegistry(config),
+
       defaultFontFamily: hostStyle.defaultFontFamily,
       currentColor: hostStyle.currentColor,
       getImage,
@@ -842,7 +840,7 @@ const createCanvasHydration = (
   config: RenderRuntimeConfig,
   animation: CanvasAnimationState | undefined,
 ): HydrationController | undefined => {
-  const scene = asScene(snapshot);
+  const scene = prepareCanvasScene(snapshot);
   const topologyByPath = new Map(snapshot.topology.map(node => [node.primitivePath.join('.'), node]));
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
   const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology);
@@ -867,10 +865,10 @@ const createCanvasHydration = (
     };
   };
 
-  const animationOwnerScene: Scene = {
+  const animationOwnerScene = prepareRuntimeSceneContent({
     ...scene,
     primitives: snapshot.scene.primitives.map((primitive, index) => stampAnimationOwners(primitive, [index])),
-  };
+  });
   const handlers = withCanvasAnimationEventHandlers(animationOwnerScene, mergeRenderHandlers(config));
   if (Object.keys(handlers).length === 0) return undefined;
 
@@ -902,10 +900,10 @@ const createCanvasHydration = (
     };
   };
 
-  const hitScene: Scene = {
+  const hitScene = prepareRuntimeSceneContent({
     ...scene,
     primitives: snapshot.scene.primitives.map((primitive, index) => stamp(primitive, [index])),
-  };
+  });
 
   const locateTarget = (event: Event): HydrationTarget | null => {
     const point = resolveCanvasPoint(host, snapshot, event);
@@ -975,10 +973,10 @@ const createCanvasAnimationOccurrenceIndex = (
   };
 
   return Object.freeze({
-    scene: {
+    scene: prepareRuntimeSceneContent({
       ...(snapshot.scene as unknown as Scene),
       primitives: snapshot.scene.primitives.map((primitive, index) => stamp(primitive, [index])),
-    },
+    }),
     tokenByIdentity,
     tokensByPublicId: new Map(
       Array.from(tokensByPublicId, ([publicId, tokens]) => [publicId, Object.freeze(tokens)] as const),
@@ -998,7 +996,7 @@ const createCanvasAnimation = (
   if (
     config.animation?.enabled === false ||
     config.animation?.snapshotAt !== undefined ||
-    !sceneHasAnimations(asScene(snapshot))
+    !sceneHasAnimations(prepareCanvasScene(snapshot))
   ) {
     return undefined;
   }
@@ -1006,6 +1004,7 @@ const createCanvasAnimation = (
   let tokenSequence = 0;
   const allocateToken = (): string => `retikz-canvas-animation-${tokenSequence++}`;
   let occurrenceIndex = createCanvasAnimationOccurrenceIndex(snapshot, undefined, allocateToken);
+  let animationSnapshot = snapshot;
   let scene = occurrenceIndex.scene;
   let currentLayers = layers;
   let animationConfig = config;
@@ -1044,8 +1043,7 @@ const createCanvasAnimation = (
         devicePixelRatio: options.devicePixelRatio,
         time,
         rootAnimationTime: Math.max(0, time - rootTimelineStart),
-        animationProperties: animationConfig.animation?.properties,
-        easings: materializeEasingRegistry(animationConfig),
+
         resolvePrimAnimation: id => resolveWithRegistry(registry, id, time),
         getImage,
       },
@@ -1242,22 +1240,15 @@ const createCanvasAnimation = (
 
     const currentTime = clock.time;
 
-    const walk = (primitives: ReadonlyArray<Scene['primitives'][number]>): void => {
-      for (const primitive of primitives) {
-        if (primitive.id !== undefined && registry.isActive(primitive.id)) {
-          const duration = primitiveAnimationDurationMs(primitive, snapshot.scene.resources);
-          const effectiveTime = registry.timeFor(primitive.id, currentTime);
-          timelineEndByToken.set(
-            primitive.id,
-            duration === null ? null : currentTime + Math.max(0, duration - effectiveTime),
-          );
-        }
-
-        if (primitive.type === 'group') walk(primitive.children);
-      }
-    };
-
-    walk(scene.primitives);
+    for (const node of animationSnapshot.topology) {
+      const token = occurrenceIndex.tokenByIdentity.get(node.identity);
+      if (token === undefined || !registry.isActive(token)) continue;
+      const primitive = primitiveAtPath(animationSnapshot, node.primitivePath);
+      if (primitive === undefined) continue;
+      const duration = primitiveAnimationDurationMs(primitive, animationSnapshot);
+      const effectiveTime = registry.timeFor(token, currentTime);
+      timelineEndByToken.set(token, duration === null ? null : currentTime + Math.max(0, duration - effectiveTime));
+    }
     const requiredEnd = animationEnvelopeEnd();
     const requiresReplacement = requiredEnd === null ? clockEnd !== null : clockEnd !== null && requiredEnd > clockEnd;
     if (requiresReplacement) replaceClock(currentTime, true);
@@ -1268,7 +1259,7 @@ const createCanvasAnimation = (
     const token = occurrenceIndex.tokenByIdentity.get(node.identity);
     const primitive = primitiveAtPath(snapshot, node.primitivePath);
     if (token !== undefined && primitive !== undefined)
-      timelineEndByToken.set(token, primitiveAnimationDurationMs(primitive, snapshot.scene.resources));
+      timelineEndByToken.set(token, primitiveAnimationDurationMs(primitive, snapshot));
   }
 
   clockEnd = sceneAnimationDurationMs(scene);
@@ -1384,11 +1375,9 @@ const createCanvasAnimation = (
               'Canvas animation occurrence topology is incomplete',
             );
 
-          const duration = primitiveAnimationDurationMs(primitive, nextSnapshot.scene.resources);
+          const duration = primitiveAnimationDurationMs(primitive, nextSnapshot);
           candidateTimelineEndByToken.set(nextToken, duration === null ? null : candidateTime + duration);
-          restartedAutoplay ||= runtimeAnimationsHaveAutoplay(
-            occurrenceAnimationTracks(primitive, nextSnapshot.scene.resources),
-          );
+          restartedAutoplay ||= runtimeAnimationsHaveAutoplay(occurrenceAnimationTracks(primitive, nextSnapshot));
         }
       }
 
@@ -1402,6 +1391,7 @@ const createCanvasAnimation = (
         ...candidateFrame,
         commit: () => {
           const previousOccurrenceIndex = occurrenceIndex;
+          const previousAnimationSnapshot = animationSnapshot;
           const previousScene = scene;
           const previousLayers = currentLayers;
           const previousConfig = animationConfig;
@@ -1412,6 +1402,7 @@ const createCanvasAnimation = (
           const previousRunning = clock.running;
           const previousAutoplay = sceneHasAutoplayTrigger(scene);
           occurrenceIndex = nextOccurrenceIndex;
+          animationSnapshot = nextSnapshot;
           scene = nextOccurrenceIndex.scene;
           currentLayers = nextLayers;
           animationConfig = nextConfig;
@@ -1429,6 +1420,7 @@ const createCanvasAnimation = (
             replaceClock(previousTime, shouldPlay);
           } catch (cause) {
             occurrenceIndex = previousOccurrenceIndex;
+            animationSnapshot = previousAnimationSnapshot;
             scene = previousScene;
             currentLayers = previousLayers;
             animationConfig = previousConfig;
@@ -1448,6 +1440,7 @@ const createCanvasAnimation = (
 
           return () => {
             occurrenceIndex = previousOccurrenceIndex;
+            animationSnapshot = previousAnimationSnapshot;
             scene = previousScene;
             currentLayers = previousLayers;
             animationConfig = previousConfig;
@@ -1568,7 +1561,7 @@ export const createBuiltinCanvasRetainedRenderer = (
         currentAnimation !== undefined &&
         config.animation?.enabled !== false &&
         config.animation?.snapshotAt === undefined &&
-        sceneHasAnimations(asScene(snapshot)) &&
+        sceneHasAnimations(prepareCanvasScene(snapshot)) &&
         !replaceScene &&
         runtimeStructuralEquals(currentPaintConfig, config.animation);
       const candidateTime = reuseAnimation

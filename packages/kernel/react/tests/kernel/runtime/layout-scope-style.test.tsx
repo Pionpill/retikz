@@ -9,7 +9,7 @@
  *   断言层：wrapRootScope（Layout 实际调用的合成函数）+ Vanilla normalize 出 IR 形态；compileToScene 出已解析 primitive 样式
  */
 import type { IRScene } from '@retikz/core';
-import type { EllipsePrim, PathPrim, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
+import type { EllipsePrimitive, PathPrimitive, RectPrimitive, ScenePrimitive, TextPrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
 import type { ReactNode } from 'react';
@@ -24,7 +24,7 @@ import { normalizeReactInput } from '../../helpers/normalize-input';
 
 // --- helpers ---------------------------------------------------------------
 
-/** 递归展开 GroupPrim，把所有叶子 primitive 拍平（合成 scope 的子元素都在 GroupPrim 内） */
+/** 递归展开 GroupPrimitive，把所有叶子 primitive 拍平（合成 scope 的子元素都在 GroupPrimitive 内） */
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
 
@@ -44,17 +44,17 @@ const layoutIR = (style: ScopeStyleProps, children: ReactNode): IRScene =>
 const layoutPrims = (style: ScopeStyleProps, children: ReactNode): Array<ScenePrimitive> =>
   flatten(compileToScene(layoutIR(style, children)).scene.primitives);
 
-const rectOf = (prims: Array<ScenePrimitive>): RectPrim | undefined =>
-  prims.find((p): p is RectPrim => p.type === 'rect');
+const rectOf = (prims: Array<ScenePrimitive>): RectPrimitive | undefined =>
+  prims.find((p): p is RectPrimitive => p.type === 'rect');
 
-const ellipseOf = (prims: Array<ScenePrimitive>): EllipsePrim | undefined =>
-  prims.find((p): p is EllipsePrim => p.type === 'ellipse');
+const ellipseOf = (prims: Array<ScenePrimitive>): EllipsePrimitive | undefined =>
+  prims.find((p): p is EllipsePrimitive => p.type === 'ellipse');
 
-const linePathOf = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
-  prims.find((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
+const linePathOf = (prims: Array<ScenePrimitive>): PathPrimitive | undefined =>
+  prims.find((p): p is PathPrimitive => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
 
-const textWith = (prims: Array<ScenePrimitive>, content: string): TextPrim | undefined =>
-  prims.find((p): p is TextPrim => p.type === 'text' && p.lines[0]?.text === content);
+const textWith = (prims: Array<ScenePrimitive>, content: string): TextPrimitive | undefined =>
+  prims.find((p): p is TextPrimitive => p.type === 'text' && p.lines[0]?.text === content);
 
 /** 两端点 + 一条 Draw，供 path / 边 label 级联测试复用 */
 const twoNodesAndDraw = (drawProps: Record<string, unknown> = {}): ReactNode => (
@@ -150,7 +150,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
     const path = linePathOf(prims);
 
     expect(path?.strokeWidth).toBe(5);
-    expect(path?.strokeLinecap).toBe('round');
+    expect(path?.lineCap).toBe('round');
   });
 
   it('layout_color_cascades：color="blue" → node 边/填充 + path stroke 全蓝', () => {

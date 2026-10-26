@@ -9,6 +9,8 @@ Foundation keeps generic scalar validation and error shape together: assertions 
 
 `RetikzErrorOptions`, `RetikzError`, and `isRetikzError` provide the smallest shared error shape. The domain package that owns a failure should extend `RetikzError` and define its own error codes, details, and recovery semantics. `RetikzFoundationError` carries only Foundation-owned atomic failures.
 
+Error-code members in Retikz packages use PascalCase. Their string values use UPPER_SNAKE_CASE with a package or domain prefix, for example `InvalidChartIR: 'CHART_INVALID_CHART_IR'`. Compare `code` against the error-code constants exported by the owning package.
+
 ```ts
 import { assertPositiveNumber, RetikzError, type ValueOf } from '@retikz/foundation';
 

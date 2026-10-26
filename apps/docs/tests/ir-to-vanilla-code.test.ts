@@ -158,7 +158,7 @@ describe('irToVanillaCode', () => {
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [50, 50] },
           ],
-          arrow: '->',
+          arrow: { end: {} },
         },
       ]),
     );
@@ -346,7 +346,7 @@ describe('irToVanillaCode', () => {
 });
 
 describe('irToVanillaCode fallback', () => {
-  it('rectangle/generator stay runnable as raw IR child', () => {
+  it('rectangle stays runnable as raw IR child', () => {
     const code = irToVanillaCode(
       ir([
         {

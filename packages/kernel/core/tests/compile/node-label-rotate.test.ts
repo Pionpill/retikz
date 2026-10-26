@@ -1,25 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract';
+import type { GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { NodeLabelSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 // fallback measurer 不提供 ascent / descent，Node label 规范化为上下对称视觉盒
-const visualMiddle = (t: TextPrim): number => t.y;
+const visualMiddle = (t: TextPrimitive): number => t.y;
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 const silent = { onWarn: () => {} };
 
-const labelText = (prims: Array<ScenePrimitive>, text: string): TextPrim | undefined =>
+const labelText = (prims: Array<ScenePrimitive>, text: string): TextPrimitive | undefined =>
   flattenPrims(prims).find(
-    (p): p is TextPrim => p.type === 'text' && p.lines.some(l => (typeof l === 'string' ? l : l.text) === text),
+    (p): p is TextPrimitive => p.type === 'text' && p.lines.some(l => (typeof l === 'string' ? l : l.text) === text),
   );
 
 /** 找包住指定 label 文本的 rotate group（深度优先；group 仅含该 text 且带 rotate transform） */
-const findLabelRotateGroup = (prims: Array<ScenePrimitive>, text: string): GroupPrim | undefined => {
+const findLabelRotateGroup = (prims: Array<ScenePrimitive>, text: string): GroupPrimitive | undefined => {
   for (const p of prims) {
     if (p.type === 'group') {
       const only = p.children.length === 1 ? p.children[0] : undefined;
@@ -56,7 +56,7 @@ describe('Node label rotate', () => {
 
     expect(rot.degrees).toBe(30);
 
-    const txt = g.children[0] as TextPrim;
+    const txt = g.children[0] as TextPrimitive;
 
     // 绕 label 视觉中心自旋：cx = 文本水平锚点，cy = 文本视觉中心（alphabetic 基线上推回中心）
     expect(rot.cx).toBe(txt.x);
@@ -167,7 +167,7 @@ describe('Node label rotate', () => {
     const lb = labelText(compileToScene(base, silent).scene.primitives, 'L')!;
     const lr = labelText(compileToScene(rotated, silent).scene.primitives, 'L')!;
 
-    // 修双重旋转后：旋转 Node 的 label TextPrim 局部坐标 = 不旋转版（外层 node group 统一旋转一次）
+    // 修双重旋转后：旋转 Node 的 label TextPrimitive 局部坐标 = 不旋转版（外层 node group 统一旋转一次）
     expect(lr.x).toBeCloseTo(lb.x);
     expect(lr.y).toBeCloseTo(lb.y);
   });

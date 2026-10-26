@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { BuiltinCompileWarningCode } from '../../../src';
 import { compileToScene } from '../../../src/compile/compile';
 import type { CompileWarning } from '../../../src/compile/warning';
-import type { TextPrim } from '../../../src/contract';
+import type { TextPrimitive } from '../../../src/contract';
 import { chooseBlackOrWhiteForLuminance } from '../../../src/resolve/node';
 import type { IRNode, IRNodeStyle, IRScene } from '../../../src/schemas';
 import { flattenPrims } from '../../helpers/flatten';
@@ -17,15 +17,15 @@ const sceneOf = (node: Partial<IRNode>): IRScene =>
     children: [{ type: 'node', position: [0, 0], text: 'Status', ...node }],
   }) as unknown as IRScene;
 
-const textPrimitives = (ir: IRScene, warnings: Array<CompileWarning> = []): Array<TextPrim> =>
+const textPrimitives = (ir: IRScene, warnings: Array<CompileWarning> = []): Array<TextPrimitive> =>
   flattenPrims(compileToScene(ir, { onWarn: warning => warnings.push(warning) }).scene.primitives).filter(
-    (primitive): primitive is TextPrim => primitive.type === 'text',
+    (primitive): primitive is TextPrimitive => primitive.type === 'text',
   );
 
 const resolvedTextColor = (
   fill: IRNodeStyle['fill'],
   node: Partial<IRNode> = {},
-): { fill: TextPrim['fill'] | undefined; warnings: Array<CompileWarning> } => {
+): { fill: TextPrimitive['fill'] | undefined; warnings: Array<CompileWarning> } => {
   const warnings: Array<CompileWarning> = [];
   const [text] = textPrimitives(
     sceneOf({
@@ -121,7 +121,7 @@ describe('Node auto-contrast consumers and warnings', () => {
           type: 'node',
           position: [0, 0],
           text: [{ segments: [{ text: 'body' }, { text: 'mixed body' }] }],
-          label: [{ text: 'label' }, { text: { segments: [{ text: 'mixed' }] } }],
+          label: [{ text: 'label' }, { text: [{ segments: [{ text: 'mixed' }] }] }],
           style: {
             fill: {
               kind: 'linearGradient',
@@ -180,7 +180,7 @@ describe('Node auto-contrast consumers and warnings', () => {
             position: [0, 0],
             text: [{ text: 'body', fill: 'red' }],
             label: {
-              text: { segments: [{ text: 'label', fill: 'blue' }] },
+              text: [{ segments: [{ text: 'label', fill: 'blue' }] }],
               textColor: 'green',
               pin: { stroke: 'purple' },
             },
@@ -199,7 +199,7 @@ describe('Node auto-contrast consumers and warnings', () => {
     const ir = sceneOf({
       text: [{ text: 'body', fill: 'red' }],
       label: {
-        text: { segments: [{ text: 'label', fill: 'blue' }] },
+        text: [{ segments: [{ text: 'label', fill: 'blue' }] }],
         pin: true,
       },
       style: { fill: '#000000', textColor: AUTO_CONTRAST },

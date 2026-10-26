@@ -1,17 +1,11 @@
-import type { JsonObject } from '@retikz/foundation';
-
+import type { AnyPathDefinition, ArrowDefinition, MarkDefinition, PatternDefinition, Transform } from '../../contract';
 import type {
-  AnyPathKindDefinition,
-  ArrowDefinition,
-  PathGeneratorDefinition,
-  PatternDefinition,
-  Transform,
-} from '../../contract';
-import type {
-  IRArrowMark,
-  IRPathLabel,
+  IRMarkStyle,
+  IRPathMark,
+  IRArrowStyle,
   IRPaint,
   IRPathBase,
+  IRPathLabel,
   IRPathStyle,
   IRPosition,
   IRStep,
@@ -75,18 +69,18 @@ type WithResolvedStepLabel<TStep extends IRStep> = TStep extends unknown
 /** 已把 step label 派生颜色确定为字符串的步骤 */
 export type ResolvedStepSource = WithResolvedStepLabel<IRStep>;
 
-/** 已把 arrow 派生颜色确定为字符串的 mark */
-export type ResolvedArrowMark = Omit<IRArrowMark, 'color' | 'fill' | 'stroke'> & {
-  /** 已确定的箭头主色 */
+/** 已解析上下文颜色的标记外观 */
+export type ResolvedMarkStyle = Omit<IRMarkStyle, 'color' | 'fill' | 'stroke'> & {
+  /** 已确定的标记主色 */
   color?: string;
-  /** 已确定的箭头填充 */
+  /** 已确定的标记填充 */
   fill?: string | IRPaint;
   /** 已解析的描边 */
   stroke?: string | IRPaint;
 };
 
 /** 已把所有上下文颜色确定为字符串的 Path Source 投影 */
-export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label' | 'marks'> & {
+export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label' | 'marks' | 'arrow'> & {
   /** 已确定上下文颜色的路径样式 */
   style?: Omit<IRPathStyle, 'fill' | 'stroke'> & {
     /** 已确定的路径填充 */
@@ -98,13 +92,13 @@ export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label'
   children?: Array<ResolvedStepSource>;
   /** 已确定的宿主标签 */
   label?: ResolvedPathLabel | Array<ResolvedPathLabel>;
-  /** 已确定 arrow 颜色的 marks */
-  marks?: Array<
-    Omit<NonNullable<IRPathBase['marks']>[number], 'mark'> & {
-      /** 已解析上下文颜色的箭头标记 */
-      mark: ResolvedArrowMark;
-    }
-  >;
+  /** 已解析的端点箭头 */
+  arrow?: {
+    start?: ResolvedMarkStyle & { endpointOverlap?: number };
+    end?: ResolvedMarkStyle & { endpointOverlap?: number };
+  };
+  /** 已解析颜色与放置配置的沿线标记 */
+  marks?: Array<ResolvedMarkStyle & Pick<IRPathMark, 'pos' | 'rotate'>>;
 };
 
 type WithCanonicalStepLabel<TStep extends ResolvedStepSource> = TStep extends unknown
@@ -153,32 +147,18 @@ export type CanonicalPath = Omit<
     shadow?: ResolvedDropShadow;
   };
 
-/** path kind provider 在 resolving 阶段绑定后的定义与 kindOptions */
-export type PathKindResolution = Readonly<{
-  /** 当前路径种类的注册名称 */
+/** path provider 在 resolving 阶段绑定后的定义与 kindOptions */
+export type PathDefinitionResolution = Readonly<{
+  /** 当前路径定义的注册名称 */
   name: string;
-  /** 与当前路径匹配的路径种类定义 */
-  definition: AnyPathKindDefinition;
+  /** 与当前路径匹配的路径定义 */
+  definition: AnyPathDefinition;
   /** 通过该 definition 完整 schema 解析后的 source subject */
   path: IRPathBase;
 }>;
 
-/** path generator step 在 resolving 阶段绑定后的定义与参数 */
-export type PathGeneratorResolution = Readonly<{
-  /** 生成器步骤在路径子步骤中的零基索引 */
-  stepIndex: number;
-  /** 路径生成器的注册名称 */
-  name: string;
-  /** 当前步骤匹配的生成器定义 */
-  definition: PathGeneratorDefinition;
-  /** 经生成器参数 schema 校验的 JSON 参数 */
-  params: JsonObject;
-  /** 用于定位生成器错误的 IR 路径 */
-  irPath: string;
-}>;
-
-/** arrow mark 的有效视觉属性 */
-export type ArrowMarkVisual = Readonly<{
+/** 箭头与标记共用的有效视觉属性 */
+export type MarkVisual = Readonly<{
   /** 箭头形状定义的注册名称 */
   shape: string;
   /** 对有效长度与宽度共同应用的比例系数 */
@@ -192,13 +172,13 @@ export type ArrowMarkVisual = Readonly<{
   /** 已解析的描边 */
   stroke?: PaintResolutionInput;
   /** 显式虚线序列 */
-  dashPattern?: IRArrowMark['dashPattern'];
+  dashPattern?: IRMarkStyle['dashPattern'];
   /** 虚线相位偏移 */
   dashOffset?: number;
   /** 描边端帽 */
-  lineCap?: IRArrowMark['lineCap'];
+  lineCap?: IRMarkStyle['lineCap'];
   /** 描边连接形状 */
-  lineJoin?: IRArrowMark['lineJoin'];
+  lineJoin?: IRMarkStyle['lineJoin'];
   /** 与宿主路径不透明度相乘的箭头不透明度 */
   opacity?: number;
   /** 空心箭头在定义基准坐标中的描边宽度 */
@@ -228,11 +208,11 @@ export type ArrowMarkGeometry = Readonly<{
 /** arrow mark 在 resolving 阶段绑定的 provider、视觉属性与几何输入 */
 export type ArrowMarkResolution = Readonly<{
   /** 当前箭头标记的输入声明 */
-  mark: IRArrowMark;
+  mark: IRArrowStyle;
   /** 当前箭头匹配的形状定义 */
   definition: ArrowDefinition;
   /** 完成默认值与颜色解析的视觉属性 */
-  visual: ArrowMarkVisual;
+  visual: MarkVisual;
   /** 用于端点放置和路径收缩的几何参数 */
   geometry: ArrowMarkGeometry;
 }>;
@@ -273,12 +253,12 @@ export type PathResolveContext = Readonly<{
   mode: ThemeMode;
   /** target/reference 解析能力 */
   targetResolver?: PathTargetResolver;
-  /** 路径种类能力注册表 */
-  pathKinds: ReadonlyMap<string, AnyPathKindDefinition>;
-  /** 路径生成器能力注册表 */
-  pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
+  /** 路径定义能力注册表 */
+  paths: ReadonlyMap<string, AnyPathDefinition>;
   /** 箭头能力注册表 */
   arrows: ReadonlyMap<string, ArrowDefinition>;
+  /** 普通标记注册表 */
+  marks?: ReadonlyMap<string, MarkDefinition>;
   /** 图案填充能力注册表 */
   patterns: ReadonlyMap<string, PatternDefinition>;
   /** 填充资源尺寸的数值舍入函数 */
@@ -309,15 +289,27 @@ export type PathResolution = Readonly<{
   path: CanonicalPath;
   /** 按步骤 locator 保存的 target 绑定 */
   targets: ReadonlyMap<string, TargetResolution>;
-  /** 已绑定的 path kind provider 与 options */
-  kind: PathKindResolution;
+  /** 已绑定的 path provider 与 options */
+  kind: PathDefinitionResolution;
 }>;
 
 /** stroke emitter 消费的、已绑定 secondary provider 的 path resolution */
 export type StrokePathResolution = PathResolution &
   Readonly<{
-    /** 按 canonical step 对象索引的 generator resolution */
-    generators: ReadonlyMap<CanonicalStep, PathGeneratorResolution>;
     /** 按 canonical arrow mark 对象索引的 arrow resolution */
-    arrows: ReadonlyMap<IRArrowMark, ArrowMarkResolution>;
+    arrows: ReadonlyMap<IRArrowStyle, ArrowMarkResolution>;
+    /** 按标记声明索引的解析结果 */
+    marks: ReadonlyMap<IRPathMark, MarkResolution>;
   }>;
+
+/** 标记的已解析定义、样式与放置几何 */
+export type MarkResolution = Readonly<{
+  /** 源样式与参数 */
+  mark: IRMarkStyle;
+  /** 已绑定的形状定义 */
+  definition: MarkDefinition;
+  /** 有效绘制样式 */
+  visual: MarkVisual;
+  /** 局部尺寸和锚点 */
+  geometry: { baseSize: number; resolvedLength: number; resolvedWidth: number; anchor: IRPosition };
+}>;

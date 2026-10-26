@@ -74,7 +74,7 @@ Core tells Inspect which category produced which final result. First distinguish
 
 Three fields describe each result:
 
-- `owner`: identifies the output category; Path kinds also have a `name`. This is not the Inspector's registry name.
+- `owner`: identifies the output category; Path definitions also have a `name`. This is not the Inspector's registry name.
 - `occurrence`: locates and distinguishes final instances produced by compilation, without storing their geometry.
 - `value`: holds the instance's resolved geometry and other output for the Inspector to read.
 
@@ -95,7 +95,7 @@ With that flow in mind, the following fields show how Core supplies results and 
 
 A custom Inspector therefore requires the corresponding object to publish final output in Core. Registering an Inspector alone does not make an object without observation support emit observations. Core provides notification and isolated compilation; it does not look up Inspectors or choose auxiliary styling.
 
-The curve example only uses `path`; Core's full observation-owner list is: `path` (a named final Path kind), `node` (Node geometry and text layout), `scope` (the intrinsic Scope envelope), `coordinate` (a resolved coordinate point), `clip` (one logical Clip application), and `composite` (a composite owner identified by namespace and type). Built-in Inspectors bind to these owners; registering an Inspector cannot create an observation for an owner that publishes no final output.
+The curve example only uses `path`; Core's full observation-owner list is: `path` (a named final Path), `node` (Node geometry and text layout), `scope` (the intrinsic Scope envelope), `coordinate` (a resolved coordinate point), `clip` (one logical Clip application), and `composite` (a composite owner identified by namespace and type). Built-in Inspectors bind to these owners; registering an Inspector cannot create an observation for an owner that publishes no final output.
 
 Each observation also carries `ancestors`, an outside-in chain of the Scope and composite containers with their occurrences. An Inspector can use it to explain hierarchy or distinguish the same owner in different containers without guessing parentage from a source path.
 

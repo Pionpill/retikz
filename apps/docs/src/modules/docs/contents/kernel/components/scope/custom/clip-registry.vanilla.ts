@@ -10,7 +10,7 @@ const input: InputScene = {
   children: [
     {
       type: 'scope',
-      clip: { kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 },
+      clip: { kind: 'rounded-rect', params: { x: -150, y: -72, width: 300, height: 144, radius: 36 } },
       children: [
         {
           type: 'node',

@@ -262,8 +262,8 @@ export const scene: Scene = {
       stroke: '#222',
       fill: '#ddd',
       fillRule: 'evenodd',
-      strokeLinecap: 'round',
-      strokeLinejoin: 'bevel',
+      lineCap: 'round',
+      lineJoin: 'bevel',
       dashPattern: [4, 2],
     },
     {

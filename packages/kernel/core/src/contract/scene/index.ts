@@ -1,3 +1,4 @@
+export * from './base';
 export * from './ellipse';
 export * from './group';
 export * from './paint';

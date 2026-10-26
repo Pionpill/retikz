@@ -6,7 +6,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"BranchDiagram"} path={"packages/schematic/diagram-react/src/branch/BranchDiagram.tsx"} startLine={71}>BranchDiagram</ApiSourceLink> / <ApiSourceLink label={"BranchDiagramProps"} path={"packages/schematic/diagram-react/src/branch/authoring.ts"} startLine={109}>BranchDiagramProps</ApiSourceLink>
+#### <ApiSourceLink label={"BranchDiagram"} path={"packages/schematic/diagram-react/src/branch/BranchDiagram.tsx"} startLine={60}>BranchDiagram</ApiSourceLink> / <ApiSourceLink label={"BranchDiagramProps"} path={"packages/schematic/diagram-react/src/branch/authoring.ts"} startLine={104}>BranchDiagramProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -127,8 +127,6 @@ export type BranchDiagramLayoutHostProps = Pick<
   | 'animate'
   | 'snapshotAt'
   | 'animationRef'
-  | 'easings'
-  | 'animationProperties'
   | 'idPrefix'
   | 'nodeDistance'
   | 'fontSize'
@@ -137,8 +135,7 @@ export type BranchDiagramLayoutHostProps = Pick<
   | 'clips'
   | 'arrows'
   | 'patterns'
-  | 'pathGenerators'
-  | 'pathKinds'
+  | 'paths'
   | 'composites'
   | 'themeDefinitions'
   | 'lowerTex'
@@ -361,38 +358,38 @@ export type BranchLayoutSegmentOutput = Readonly<{
 
 <ApiTable>
 
-| 成员                                | 类型                                                                                     | 默认值  | 说明                                                                         |
-| ----------------------------------- | ---------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------- |
-| `animations?`                       | `InputBranchDiagram['animations']`                                                       | —       | 完整图示的动画配置                                                           |
-| `boundingShape?`                    | `"rectangle" \| "circle"`                                                                | —       | 作用域边界形状                                                               |
-| `branches`                          | `InputBranchDiagram['branches']`                                                         | —       | 非空有序分支数组                                                             |
-| `readonly branchLayouts?`           | `ReadonlyArray<BranchLayoutDefinition>`                                                  | —       | 追加的命名布局，不能覆盖其他定义                                             |
-| `clip?`                             | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | 作用域裁剪                                                                   |
-| `readonly defaultBranchLayout?`     | `string`                                                                                 | —       | 缺省使用 lanes                                                               |
-| `defaultDiagram?`                   | `InputBranchDiagram['defaultDiagram']`                                                   | —       | Diagram 默认外观                                                             |
-| `defaults?`                         | `InputBranchDiagram['defaults']`                                                         | —       | 后代图元默认配置                                                             |
-| `readonly diagramThemeDefinitions?` | `ReadonlyArray<DiagramThemeDefinition>`                                                  | `[]`    | 与 Core Theme 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义 |
-| `readonly entityKinds?`             | `ReadonlyArray<EntityKindDefinition>`                                                    | `[]`    | 自定义 Entity kind definitions                                               |
-| `readonly entityPredicates?`        | `ReadonlyArray<EntityPredicateDefinition>`                                               | `[]`    | 自定义 Entity predicate definitions                                          |
-| `readonly entityRoles?`             | `ReadonlyArray<EntityRoleDefinition>`                                                    | `[]`    | 自定义 Entity role definitions                                               |
-| `frame?`                            | `InputBranchDiagram['frame']`                                                            | —       | 外框及区域间距                                                               |
-| `readonly graphThemeDefinitions?`   | `ReadonlyArray<GraphThemeDefinition>`                                                    | `[]`    | 与 Core Theme 同名的 Graph Theme definitions                                 |
-| `id?`                               | `string`                                                                                 | —       | 完整图示的可选标识                                                           |
-| `layout?`                           | `IRBranchLayoutIntent`                                                                   | —       | 分支方向与净间距覆盖值，由布局解析补齐缺省项                                 |
-| `localNamespace?`                   | `false \| true`                                                                          | —       | 为后代引用建立局部命名空间                                                   |
-| `mainBranch?`                       | `string`                                                                                 | —       | 保持同轨的已声明分支 ID                                                      |
-| `meta?`                             | `Record<string, JsonValue>`                                                              | —       | 图示 JSON 元数据                                                             |
-| `nodes`                             | `Array<IRBranchNode>`                                                                    | —       | 共享节点目录，保留各节点可省略的尺寸与外观字段                               |
-| `position?`                         | `InputBranchDiagram['position']`                                                         | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐                                   |
-| `presentation?`                     | `InputBranchDiagram['presentation']`                                                     | —       | 标题、说明与显式图例                                                         |
-| `readonly relationKinds?`           | `ReadonlyArray<RelationKindDefinition>`                                                  | `[]`    | 自定义 Relation kind definitions                                             |
-| `readonly relationPredicates?`      | `ReadonlyArray<RelationPredicateDefinition>`                                             | `[]`    | 自定义 Relation predicate definitions                                        |
-| `readonly relationRoles?`           | `ReadonlyArray<RelationRoleDefinition>`                                                  | `[]`    | 自定义 Relation role definitions                                             |
-| `theme?`                            | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                 | —       | 作用域主题                                                                   |
-| `transforms?`                       | `InputBranchDiagram['transforms']`                                                       | —       | 完整图示的变换序列                                                           |
-| `zIndex?`                           | `number`                                                                                 | —       | 图示绘制层级                                                                 |
-| `input` (参数)                      | `BranchDiagramInputEmbedProps`                                                           | —       | Branch 声明与运行时扩展；由 adapter 在编译时组装 Source 和 provider          |
-| 返回值                              | `InputEmbed<BranchDiagramInputEmbedProps>`                                               | —       | 保留 input 对象引用的 embed 节点，不在此处执行布局                           |
+| 成员                                | 类型                                                                                                                                          | 默认值  | 说明                                                                         |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------- |
+| `animations?`                       | `InputBranchDiagram['animations']`                                                                                                            | —       | 完整图示的动画配置                                                           |
+| `boundingShape?`                    | `"rectangle" \| "circle"`                                                                                                                     | —       | 作用域边界形状                                                               |
+| `branches`                          | `InputBranchDiagram['branches']`                                                                                                              | —       | 非空有序分支数组                                                             |
+| `readonly branchLayouts?`           | `ReadonlyArray<BranchLayoutDefinition>`                                                                                                       | —       | 追加的命名布局，不能覆盖其他定义                                             |
+| `clip?`                             | `{ kind: string; params: Record<string, JsonValue>; } \| { kind: "rect"; params: { x: number; y: number; width: number; height: number; }; }` | —       | 作用域裁剪                                                                   |
+| `readonly defaultBranchLayout?`     | `string`                                                                                                                                      | —       | 缺省使用 lanes                                                               |
+| `defaultDiagram?`                   | `InputBranchDiagram['defaultDiagram']`                                                                                                        | —       | Diagram 默认外观                                                             |
+| `defaults?`                         | `InputBranchDiagram['defaults']`                                                                                                              | —       | 后代图元默认配置                                                             |
+| `readonly diagramThemeDefinitions?` | `ReadonlyArray<DiagramThemeDefinition>`                                                                                                       | `[]`    | 与 Core Theme 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义 |
+| `readonly entityKinds?`             | `ReadonlyArray<EntityKindDefinition>`                                                                                                         | `[]`    | 自定义 Entity kind definitions                                               |
+| `readonly entityPredicates?`        | `ReadonlyArray<EntityPredicateDefinition>`                                                                                                    | `[]`    | 自定义 Entity predicate definitions                                          |
+| `readonly entityRoles?`             | `ReadonlyArray<EntityRoleDefinition>`                                                                                                         | `[]`    | 自定义 Entity role definitions                                               |
+| `frame?`                            | `InputBranchDiagram['frame']`                                                                                                                 | —       | 外框及区域间距                                                               |
+| `readonly graphThemeDefinitions?`   | `ReadonlyArray<GraphThemeDefinition>`                                                                                                         | `[]`    | 与 Core Theme 同名的 Graph Theme definitions                                 |
+| `id?`                               | `string`                                                                                                                                      | —       | 完整图示的可选标识                                                           |
+| `layout?`                           | `IRBranchLayoutIntent`                                                                                                                        | —       | 分支方向与净间距覆盖值，由布局解析补齐缺省项                                 |
+| `localNamespace?`                   | `false \| true`                                                                                                                               | —       | 为后代引用建立局部命名空间                                                   |
+| `mainBranch?`                       | `string`                                                                                                                                      | —       | 保持同轨的已声明分支 ID                                                      |
+| `meta?`                             | `Record<string, JsonValue>`                                                                                                                   | —       | 图示 JSON 元数据                                                             |
+| `nodes`                             | `Array<IRBranchNode>`                                                                                                                         | —       | 共享节点目录，保留各节点可省略的尺寸与外观字段                               |
+| `position?`                         | `InputBranchDiagram['position']`                                                                                                              | `[0,0]` | 父坐标系中的原点位置或局部变换后的锚点对齐                                   |
+| `presentation?`                     | `InputBranchDiagram['presentation']`                                                                                                          | —       | 标题、说明与显式图例                                                         |
+| `readonly relationKinds?`           | `ReadonlyArray<RelationKindDefinition>`                                                                                                       | `[]`    | 自定义 Relation kind definitions                                             |
+| `readonly relationPredicates?`      | `ReadonlyArray<RelationPredicateDefinition>`                                                                                                  | `[]`    | 自定义 Relation predicate definitions                                        |
+| `readonly relationRoles?`           | `ReadonlyArray<RelationRoleDefinition>`                                                                                                       | `[]`    | 自定义 Relation role definitions                                             |
+| `theme?`                            | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                      | —       | 作用域主题                                                                   |
+| `transforms?`                       | `InputBranchDiagram['transforms']`                                                                                                            | —       | 完整图示的变换序列                                                           |
+| `zIndex?`                           | `number`                                                                                                                                      | —       | 图示绘制层级                                                                 |
+| `input` (参数)                      | `BranchDiagramInputEmbedProps`                                                                                                                | —       | Branch 声明与运行时扩展；由 adapter 在编译时组装 Source 和 provider          |
+| 返回值                              | `InputEmbed<BranchDiagramInputEmbedProps>`                                                                                                    | —       | 保留 input 对象引用的 embed 节点，不在此处执行布局                           |
 
 </ApiTable>
 
@@ -485,7 +482,7 @@ export type InputBranchNode = IRBranchNode;
 export declare const BranchDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<BranchDiagramInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"createBranchDiagramVanillaAdapters"} path={"packages/schematic/diagram-vanilla/src/branch/adapters.ts"} startLine={14}>createBranchDiagramVanillaAdapters</ApiSourceLink>
+#### <ApiSourceLink label={"createBranchDiagramVanillaAdapters"} path={"packages/schematic/diagram-vanilla/src/branch/adapters.ts"} startLine={6}>createBranchDiagramVanillaAdapters</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

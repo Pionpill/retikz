@@ -5,7 +5,7 @@ keywords: 'SVG、load、CSS、WAAPI'
 
 # ADR-018：SVG 动画播放——load 用 CSS，交互用 WAAPI
 
-- 状态：Accepted
+- 状态：Accepted（动画属性与求值契约由 [074](../v0.5/074-animation-property-contract.md) 部分替代）
 - 决策日期：2026-06-07
 - 关联：[ADR-017 动画 IR](./017-timeline-animation-ir.md) · [ADR-020 runtime 控制](./020-runtime-control.md)
 

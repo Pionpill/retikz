@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { PathPrim, ScenePrimitive } from '../../src/contract';
+import type { PathPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { arc, close, ellipseArc, line, move } from '../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
 
-const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
-  const p = prims.find((x): x is PathPrim => x.type === 'path');
-  if (!p) throw new Error('expected a PathPrim in scene');
+const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive => {
+  const p = prims.find((x): x is PathPrimitive => x.type === 'path');
+  if (!p) throw new Error('expected a PathPrimitive in scene');
   return p;
 };
 

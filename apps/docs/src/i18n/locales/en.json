@@ -91,9 +91,10 @@
     "draw": "Draw syntax",
     "arrow": "arrow",
     "step": "Step composition",
-    "pathGenerator": "Custom generators",
     "pathCustomPath": "Custom paths",
     "pathCustomArrow": "Custom arrows",
+    "pathMark": "mark · Marks",
+    "pathCustomMark": "Custom marks",
     "effects": "Effects",
     "effectsShadow": "Shadow",
     "effectsBlend": "Blend",
@@ -190,7 +191,6 @@
     "visualApiReference": "API reference",
     "visualCustomPattern": "Custom patterns",
     "visualCustomShadow": "Custom shadows",
-    "visualCustomAnimation": "Custom animation",
     "visualExtendedUsage": "Extended usage"
   },
   "library": {

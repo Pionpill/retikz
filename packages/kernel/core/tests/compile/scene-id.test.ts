@@ -17,11 +17,11 @@ const allOfType = (prims: ReadonlyArray<ScenePrimitive>, type: ScenePrimitive['t
   flattenPrims(prims).filter(p => p.type === type);
 
 describe('纯几何 Node（无文本 / 无 rotate）带 id → 平铺 shape 图元逐个 stamp 同一 id', () => {
-  it('rectangle 纯几何 Node 带 id → 其 RectPrim 带该 id（不强制包 group）', () => {
+  it('rectangle 纯几何 Node 带 id → 其 RectPrimitive 带该 id（不强制包 group）', () => {
     const ir = scene([{ type: 'node', id: 'a', position: [0, 0] }]);
     const prims = compileToScene(ir, silent).scene.primitives;
 
-    // 纯几何 rectangle → 平铺 RectPrim，不包 group
+    // 纯几何 rectangle → 平铺 RectPrimitive，不包 group
     expect(prims.map(p => p.type)).toEqual(['rect']);
 
     const rects = allOfType(prims, 'rect');
@@ -33,7 +33,7 @@ describe('纯几何 Node（无文本 / 无 rotate）带 id → 平铺 shape 图�
     }
   });
 
-  it('circle 纯几何 Node 带 id → 其 EllipsePrim 带该 id', () => {
+  it('circle 纯几何 Node 带 id → 其 EllipsePrimitive 带该 id', () => {
     const ir = scene([{ type: 'node', id: 'c', position: [0, 0], shape: 'circle' }]);
     const prims = compileToScene(ir, silent).scene.primitives;
     const ellipses = allOfType(prims, 'ellipse');
@@ -46,8 +46,8 @@ describe('纯几何 Node（无文本 / 无 rotate）带 id → 平铺 shape 图�
   });
 });
 
-describe('带文本 Node 带 id → 落成的 GroupPrim 带该 id', () => {
-  it('文本 Node 带 id → 顶层 GroupPrim.id = id', () => {
+describe('带文本 Node 带 id → 落成的 GroupPrimitive 带该 id', () => {
+  it('文本 Node 带 id → 顶层 GroupPrimitive.id = id', () => {
     const ir = scene([{ type: 'node', id: 'n', position: [0, 0], text: 'A' }]);
     const prims = compileToScene(ir, silent).scene.primitives;
 
@@ -60,8 +60,8 @@ describe('带文本 Node 带 id → 落成的 GroupPrim 带该 id', () => {
   });
 });
 
-describe('Path 带 id → 其 PathPrim 带该 id', () => {
-  it('两段 line 的 Path 带 id → PathPrim.id = id', () => {
+describe('Path 带 id → 其 PathPrimitive 带该 id', () => {
+  it('两段 line 的 Path 带 id → PathPrimitive.id = id', () => {
     const ir = scene([
       {
         type: 'path',
@@ -83,8 +83,8 @@ describe('Path 带 id → 其 PathPrim 带该 id', () => {
   });
 });
 
-describe('Scope 带 id → 其 GroupPrim 带该 id', () => {
-  it('scope 带 id（含纯几何子节点）→ 该 scope 的 GroupPrim.id = id', () => {
+describe('Scope 带 id → 其 GroupPrimitive 带该 id', () => {
+  it('scope 带 id（含纯几何子节点）→ 该 scope 的 GroupPrimitive.id = id', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -103,7 +103,7 @@ describe('Scope 带 id → 其 GroupPrim 带该 id', () => {
 });
 
 describe('无 id 的元素 → emit 图元不含 id', () => {
-  it('无 id 的纯几何 Node → RectPrim.id 为 undefined', () => {
+  it('无 id 的纯几何 Node → RectPrimitive.id 为 undefined', () => {
     const ir = scene([{ type: 'node', position: [0, 0] }]);
     const prims = compileToScene(ir, silent).scene.primitives;
     const rects = allOfType(prims, 'rect');
@@ -115,7 +115,7 @@ describe('无 id 的元素 → emit 图元不含 id', () => {
     }
   });
 
-  it('无 id 的 Path → PathPrim.id 为 undefined', () => {
+  it('无 id 的 Path → PathPrimitive.id 为 undefined', () => {
     const ir = scene([
       {
         type: 'path',

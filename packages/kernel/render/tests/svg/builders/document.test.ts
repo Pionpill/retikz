@@ -1,4 +1,4 @@
-import type { PathPrim, RectPrim, ResolvedArrowEnd, Scene, SceneResource } from '@retikz/core';
+import type { PathPrimitive, RectPrimitive, ResolvedArrowEnd, Scene, SceneResource } from '@retikz/core';
 import type { SvgNode } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 
@@ -52,7 +52,7 @@ describe('buildSvgDocument —— 边界', () => {
 
 describe('buildSvgDocument —— 交互', () => {
   it('places both arrow ends in the owning path container', () => {
-    const path: PathPrim = {
+    const path: PathPrimitive = {
       type: 'path',
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -84,7 +84,7 @@ describe('buildSvgDocument —— 交互', () => {
         ],
       },
     };
-    const rect: RectPrim = {
+    const rect: RectPrimitive = {
       type: 'rect',
       x: 0,
       y: 0,
@@ -121,7 +121,7 @@ describe('buildSvgDocument —— 交互', () => {
         ],
       },
     };
-    const rect: RectPrim = {
+    const rect: RectPrimitive = {
       type: 'rect',
       x: 0,
       y: 0,

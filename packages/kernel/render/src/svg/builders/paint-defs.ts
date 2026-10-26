@@ -136,10 +136,10 @@ const buildPatternTile = (tile: ResolvedPatternTile, id: string, context: BuildC
 /**
  * 一个 paint 资源 → SVG paint server SvgNode（gradient / pattern / image）
  * @description gradient / image 用 objectBoundingBox（随形状缩放）；pattern 用 userSpaceOnUse（tile 固定 user units）。
- *   `id` 已由 caller 加实例前缀。pattern 资源缺 `tile` 是不该出现的 compile bug → 产空 `<pattern id>` 兜底、不抛
  */
 export const buildPaintDef = (resource: PaintResource, id: string, context: BuildContext = {}): SvgNode => {
-  const spec: IRPaint = resource.spec;
+  if ('tile' in resource) return buildPatternTile(resource.tile, id, context);
+  const spec = resource.spec;
 
   switch (spec.kind) {
     case 'linearGradient': {
@@ -166,8 +166,6 @@ export const buildPaintDef = (resource: PaintResource, id: string, context: Buil
     }
     case 'conicGradient':
       return buildConicGradient(spec, id);
-    case 'pattern':
-      return resource.tile ? buildPatternTile(resource.tile, id, context) : { tag: 'pattern', attrs: { id } };
     case 'image':
       return {
         tag: 'pattern',

@@ -24,7 +24,7 @@ const steps = [
   { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
 ];
 
-const mark = { pos: 0.5, mark: { kind: 'arrow' as const, shape: 'stealth' } };
+const mark = { pos: 0.5, shape: 'stealth' };
 
 describe('Core atomic drawing contracts', () => {
   it('parses graphic paint as an independent strict fragment', () => {

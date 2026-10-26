@@ -74,6 +74,8 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 `label` 接受一个对象或对象数组。先选择附着位置，再按需调整样式：
 
+每个标签的 `text` 与路径标签共用 Core 文本块：字符串中的 `\n` 表示换行，也可传入非空行数组，如 `text: ['第一行', { text: '第二行', fill: 'red' }]`。混排行写成 `text: [{ segments: [{ text: '说明 ' }, { tex: 'x' }] }]`。多行共同占用一个标签视觉盒，位置、旋转和引线作用于整块；`label` 对象数组则表示多个独立标签。
+
 - `position` 默认 `'top'`，支持 `'top'`、`'top-right'`、`'right'`、`'bottom-right'`、`'bottom'`、`'bottom-left'`、`'left'`、`'top-left'` 八个方向
 - 还可写中心 `'center'`、角度 `30`，或边界比例 `{ boundary: 'right', fraction: 0.25 }`；中心标签不做重叠避让
 - `placement` 默认 `'outside'`，写 `'inside'` 可放在边框内侧
@@ -150,6 +152,8 @@ import { Node } from '@retikz/react';
 </Comparison>
 
 ## 标签样式
+
+下面默认显示两行文本；切换“多行文本”可比较单行与多行的视觉盒，调整字号可观察整块尺寸变化。
 
 位置固定为右侧外置标签，用面板单独调整文字颜色、字号和透明度。
 

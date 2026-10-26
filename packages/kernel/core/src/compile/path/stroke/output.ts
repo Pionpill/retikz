@@ -1,12 +1,11 @@
-import type { GroupPrim, ScenePrimitive } from '../../../contract';
+import type { GroupPrimitive, ScenePrimitive } from '../../../contract';
 import type { CanonicalPath } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { PaintResolver } from '../../resource';
-import type { PathPrimitiveEmitResult } from '../types';
 import type { PathBaseProps } from './split';
 import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
 
-/** 已物化默认值后的 PathPrim 公共样式属性 */
+/** 已物化默认值后的 PathPrimitive 公共样式属性 */
 export type PathBasePropsWithStrokeWidth = PathBaseProps & {
   /** 最终描边宽度 */
   strokeWidth: number;
@@ -18,7 +17,7 @@ export type EmitPathBasePropsContext = {
   resolvePaint: PaintResolver;
 };
 
-/** 将已解析 path 样式物化为 PathPrim 公共属性 */
+/** 将已解析 path 样式物化为 PathPrimitive 公共属性 */
 export const emitPathBaseProps = (
   path: CanonicalPath,
   context: EmitPathBasePropsContext,
@@ -31,8 +30,8 @@ export const emitPathBaseProps = (
     fillRule: path.fillRule,
     dashPattern: path.dashPattern,
     dashOffset: path.dashOffset,
-    strokeLinecap: path.lineCap,
-    strokeLinejoin: path.lineJoin,
+    lineCap: path.lineCap,
+    lineJoin: path.lineJoin,
     opacity: path.opacity,
     fillOpacity: path.fillOpacity,
     strokeOpacity: path.strokeOpacity,
@@ -55,9 +54,22 @@ export type WrapPathPrimitiveOutputInput = {
   round: (n: number) => number;
 };
 
+/** 路径绘制进度保留在主体上，其余动画随整个宿主输出播放 */
+const assignPathAnimations = (owner: ScenePrimitive, primitive: ScenePrimitive, path: CanonicalPath): void => {
+  if (path.animations === undefined) return;
+  if (owner === primitive) {
+    owner.animations = path.animations;
+    return;
+  }
+  const drawing = path.animations.filter(track => track.property === 'pathDraw');
+  const remaining = path.animations.filter(track => track.property !== 'pathDraw');
+  if (drawing.length > 0) primitive.animations = drawing;
+  if (remaining.length > 0) owner.animations = remaining;
+};
+
 /**
  * 包装 path 最终输出
- * @description rotate / scale 需要最后包 GroupPrim；水合 id/meta/animations 只落在最外层主体 primitive
+ * @description rotate / scale 与标记共用宿主分组；id/meta 和整体动画归属宿主，pathDraw 归属主线
  */
 export const wrapPathPrimitiveOutput = ({
   path,
@@ -65,23 +77,24 @@ export const wrapPathPrimitiveOutput = ({
   bodyPrims,
   boundsPoints,
   round,
-}: WrapPathPrimitiveOutputInput): PathPrimitiveEmitResult => {
+}: WrapPathPrimitiveOutputInput) => {
   if ((path.rotate !== undefined || path.scale !== undefined) && boundsPoints.length > 0) {
     const center = bboxCenter(boundsPoints);
     const transforms = buildPathTransforms({ rotate: path.rotate, scale: path.scale, center, round });
     if (transforms.length > 0) {
-      const group: GroupPrim = { type: 'group', transforms, children: bodyPrims };
+      const group: GroupPrimitive = { type: 'group', transforms, children: bodyPrims };
       if (path.id !== undefined) group.id = path.id;
       if (path.meta !== undefined) group.meta = path.meta;
-      if (path.animations !== undefined) group.animations = path.animations;
+      assignPathAnimations(group, primitive, path);
 
       return { primitives: [group], boundsPoints: projectPathTransformPoints(boundsPoints, transforms) };
     }
   }
 
-  if (path.id !== undefined) primitive.id = path.id;
-  if (path.meta !== undefined) primitive.meta = path.meta;
-  if (path.animations !== undefined) primitive.animations = path.animations;
+  const owner: ScenePrimitive = path.marks?.length ? { type: 'group', children: bodyPrims } : primitive;
+  if (path.id !== undefined) owner.id = path.id;
+  if (path.meta !== undefined) owner.meta = path.meta;
+  assignPathAnimations(owner, primitive, path);
 
-  return { primitives: bodyPrims, boundsPoints };
+  return { primitives: owner === primitive ? bodyPrims : [owner], boundsPoints };
 };

@@ -221,7 +221,7 @@ describe('buildPlotIR 装配', () => {
           lineCap: 'round',
           lineJoin: 'bevel',
           cornerRadius: 4,
-          marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+          arrow: { end: {} },
         }}
       />,
       '__plot',
@@ -235,7 +235,7 @@ describe('buildPlotIR 装配', () => {
         lineCap: 'round',
         lineJoin: 'bevel',
         cornerRadius: 4,
-        marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+        arrow: { end: {} },
         opacity: { overall: 0.6 },
       },
     });
@@ -298,7 +298,7 @@ describe('buildPlotIR 装配', () => {
             source: { anchorId: { prefix: 'pt' } },
             target: { anchorId: { prefix: 'pt' } },
             label: { position: 'midway' },
-            geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], cornerRadius: 6 } },
+            geometry: { kind: 'path', options: { arrow: { end: {} }, cornerRadius: 6 } },
           }}
         />
       </>,
@@ -323,7 +323,7 @@ describe('buildPlotIR 装配', () => {
         source: { anchorId: { prefix: 'pt' } },
         target: { anchorId: { prefix: 'pt' } },
         label: { position: 'midway' },
-        geometry: { kind: 'path', options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], cornerRadius: 6 } },
+        geometry: { kind: 'path', options: { arrow: { end: {} }, cornerRadius: 6 } },
       },
     });
     expect(() => PlotSchema.parse(spec)).not.toThrow();

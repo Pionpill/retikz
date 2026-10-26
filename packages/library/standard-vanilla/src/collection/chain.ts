@@ -9,10 +9,14 @@ import { normalizeCells, dataCellDependencies } from './cell';
 import type { InputCell } from './cell';
 
 /** 连接输入只增加 Kernel 箭头语法糖 */
-export type InputChainConnection = IRChainConnection & {
-  /** 连接线路径配置，额外接受 Vanilla 箭头简写与端点放置参数 */
-  path?: NonNullable<IRChainConnection['path']> & Pick<InputPath, 'arrow' | 'arrowDetail' | 'arrowPlacement'>;
-};
+export type InputChainConnection = IRChainConnection extends infer TConnection
+  ? TConnection extends IRChainConnection
+    ? Omit<TConnection, 'path'> & {
+        /** 连接线路径配置，额外接受 Vanilla 箭头方向简写 */
+        path?: Omit<NonNullable<TConnection['path']>, 'arrow'> & Pick<InputPath, 'arrow'>;
+      }
+    : never
+  : never;
 
 /** 递归单元支持 Vanilla drawable */
 export type InputChainItem =
@@ -65,10 +69,11 @@ export type InputChain = Omit<
 
 /** 复用路径归一化，只保留呈现字段和显式空 marks */
 const normalizeConnection = (defaultConnection: InputChainConnection): IRChainConnection => {
-  if (defaultConnection.path === undefined) return defaultConnection;
+  const { path: inputPath, ...connection } = defaultConnection;
+  if (inputPath === undefined) return connection;
 
   const { type, children, ...path } = normalizePath({
-    ...defaultConnection.path,
+    ...inputPath,
     way: [
       [0, 0],
       [1, 0],
@@ -76,9 +81,9 @@ const normalizeConnection = (defaultConnection: InputChainConnection): IRChainCo
   });
   void type;
   void children;
-  const explicit = defaultConnection.path.arrow !== undefined || defaultConnection.path.marks !== undefined;
+  const explicit = inputPath.arrow !== undefined || inputPath.marks !== undefined;
 
-  return { ...defaultConnection, path: { ...path, ...(explicit ? { marks: path.marks ?? [] } : {}) } };
+  return { ...connection, path: { ...path, ...(explicit ? { marks: path.marks ?? [] } : {}) } };
 };
 
 /** 递归收集内容，通过 Kernel 归一化一次并保留依赖 */

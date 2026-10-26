@@ -91,9 +91,10 @@
     "draw": "Draw · 路径写法",
     "arrow": "arrow · 箭头",
     "step": "Step · 路径组合",
-    "pathGenerator": "自定义生成器",
     "pathCustomPath": "自定义路径",
     "pathCustomArrow": "自定义箭头",
+    "pathMark": "mark · 标记",
+    "pathCustomMark": "自定义标记",
     "effects": "效果",
     "effectsShadow": "shadow · 阴影",
     "effectsBlend": "blend · 混合",
@@ -190,7 +191,6 @@
     "visualApiReference": "API 参考",
     "visualCustomPattern": "自定义图案",
     "visualCustomShadow": "自定义阴影",
-    "visualCustomAnimation": "自定义动画",
     "visualExtendedUsage": "扩展用法"
   },
   "library": {

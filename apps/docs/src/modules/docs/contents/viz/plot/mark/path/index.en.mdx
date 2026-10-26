@@ -1,4 +1,4 @@
----
+﻿---
 title: PathMark
 description: Connect data positions in order with PathMark to draw lines, multiple series, polar outlines, and closed regions.
 ---
@@ -148,17 +148,19 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 ## Basic usage
 
-### Position and order
+### Position
 
-`x` and `y` name position fields; `order` names the sorting field. For example, `x="month"`, `y="revenue"`, and `order="month"` connect revenue positions by month. Without `order`, PathMark follows array order; it does not automatically sort by x.
+#### Vertex positions and order
+
+`encodings.position` specifies each vertex position, and `encodings.order` selects the connection order. Bind x to month, y to revenue, and order to month to connect revenue values chronologically. Without order, PathMark follows the input row order.
 
 The example deliberately shuffles the rows. Switch connection order to compare a path that doubles back with monthly ordering. In polar coordinates, x represents angle and y represents radius.
 
-| Property          | Purpose           | Notes                                                                                                         |
-| ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| `x`, `y`          | Position fields   | Field names or paths; horizontal and vertical in Cartesian coordinates, angle and radius in polar coordinates |
-| `order`           | Connection order  | Sort by this field before connecting; omit to preserve data array order                                       |
-| `Plot.coordinate` | Coordinate system | Determines position semantics; the example switches between `cartesian2D` and `polar2D`                       |
+| Property             | Purpose           | Notes                                                                                                 |
+| -------------------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `encodings.position` | Vertex positions  | Each role accepts a field, constant, or range edge; x/y represent horizontal/vertical or angle/radius |
+| `order`              | Connection order  | Sort by this field before connecting; omit to preserve data array order                               |
+| `Plot.coordinate`    | Coordinate system | Determines position semantics; the example switches between `cartesian2D` and `polar2D`               |
 
 <ComponentPreview
   mode="showcase"
@@ -167,6 +169,34 @@ The example deliberately shuffles the rows. Switch connection order to compare a
   size="lg"
   caption="Switch coordinate, position fields, and connection order to see how the same ordered points form a trajectory."
   defaultSourceFile="line-basic.preview.tsx"
+/>
+
+#### Endpoint positions
+
+Set two complete positions with `encodings.from` and `encodings.to`. Each role accepts a field, a constant, or a view edge. Endpoints and `encodings.position` vertices are mutually exclusive. `properties.connection` selects a coordinate-aware connection or a straight projected line; switch to polar coordinates to compare an arc with a chord.
+
+<ComponentPreview
+  mode="showcase"
+  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-path.preview.tsx"
+  controls={{ name: 'reference-path' }}
+  size="md"
+/>
+
+#### Statistical positions
+
+The following example binds fields produced by a local `summarize` transform to the same Mark. Change the statistic or grouping to inspect the reference geometry generated for each result row; small points retain the original observations.
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'reference-data-path',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-path' }}
+  size="md"
 />
 
 ### Series and labels
@@ -296,6 +326,86 @@ The coordinate system defaults to `polar` for a continuous angular scale and `ch
   defaultSourceFile="line-radar.preview.tsx"
 />
 
+## Relationship usage
+
+Use `PathMark` to draw relationships between data coordinates or previously declared marks. Specify the connection targets, then use path steps to control the route between them.
+
+### Mark targets
+
+An endpoint can reference generated geometry: `mark` selects the target Mark's `id`, and `key` selects an exposed instance identity. Declare targets before connections. The target uses `encodings.anchorId` to name its identity field; the connection uses `key.field` to read its current row or `key.value` for a fixed identity.
+
+<ComponentPreview mode="showcase" files={['mark-target']} size="md" />
+
+Coordinate endpoints and Mark references can be mixed. Node references accept `anchor`, `boundary`, and `offset`, using the target's actual geometry. Any connection containing a Mark reference defaults to straight and rejects `connection: 'coordinate'`.
+
+| Field      | Meaning                                                                                                                |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `mark`     | Target Mark ID in the same view, declared before the connection                                                        |
+| `key`      | `{ field: 'sourceId' }` or `{ value: 'A' }`; no scale mapping                                                          |
+| `anchor`   | Target node anchor; omit for automatic connection                                                                      |
+| `boundary` | Optional connection-surface override; inherits the target node configuration, which defaults to its own shape boundary |
+| `offset`   | Drawing-space offset `[dx, dy]` after anchor resolution                                                                |
+
+Point and Interval expose individual nodes or regions. Vertex-based Paths expose data vertices with position and offset only; whole paths cannot be targets. References stay within the current facet. Incorrect declaration order, duplicate identities, and targets that were not generated produce errors.
+
+### Path construction
+
+Use `encodings.steps` for orthogonal connections, bends, or multi-segment routes. Field bindings produce one complete path per result row; a path with only constant positions and appearance produces one instance.
+
+React also accepts `PlotPathStep` children. Vanilla `normalizePlot` accepts `way` or `encodings.steps` on a path mark. All forms produce the same persisted steps.
+
+```text
+Plot
+└── PathMark
+    ├── PlotPathStep
+    └── PlotPathStep
+```
+
+This example connects the before and after bars in each pair and labels their difference. Switch path types to compare straight lines, bends, and orthogonal routes above the bars:
+
+<ComponentPreview
+  mode="showcase"
+  files={['path-construction', 'path-construction.preview.tsx', 'path-construction.data.ts']}
+  defaultSourceFile="path-construction.preview.tsx"
+  size="lg"
+/>
+
+For common routes, `way` starts at its first target and connects subsequent targets with lines. Insert a fold or curve operator to change a segment. The same relationships below use three-leg orthogonal connections:
+
+```tsx
+<PathMark
+  way={[
+    { mark: 'bars', key: { field: 'sourceId' }, anchor: 'top' },
+    '-|-',
+    { mark: 'bars', key: { field: 'targetId' }, anchor: 'top' },
+  ]}
+  arrow="->"
+  properties={{ cornerRadius: 5 }}
+/>
+```
+
+| Input                           | Purpose                                                                                |
+| ------------------------------- | -------------------------------------------------------------------------------------- |
+| `position`                      | Vertices across rows, with sorting, grouping, interpolation and missing-value handling |
+| `from` / `to`                   | One simple connection per row                                                          |
+| `steps` / `way` / step children | One complete constructed path per row; these inputs are mutually exclusive             |
+
+Full steps support `move`, `line`, `axis-line`, `fold`, `cycle`, `curve`, `cubic`, `bend`, `arc`, `circlePath`, `ellipsePath`, `rectangle`, and `smooth`, with the same parameters as Core [Path steps](/kernel/components/path/step). `way` covers common shorthand; use explicit steps for full control. `arrow` accepts Core direction shorthand or endpoint objects; configure dimensions, styles, and overlap in `arrow.start` / `arrow.end`.
+
+Data positions such as `{ x: { field: 'x' }, y: { field: 'y' } }`, including control points, pass through scales and coordinate projection before constructing the route. Tuples, radii, relative offsets and angles retain Core drawing-space units. Axis-line steps remain horizontal or vertical after projection.
+
+Data positions contribute to domains; target identities and fixed drawing coordinates do not. Explicit steps do not use `series`, `order`, `curve`, `closure`, `closed`, `connectNulls`, `interpolation`, or `connection`. Use steps such as `cycle` to close a path. An invalid data position fails the instance instead of dropping a step and reconnecting the remaining points.
+
+### Path types
+
+The underlying path mechanism supports custom path types; PathMark currently integrates `stroke` and `ribbon`. This minimal Sankey example uses the extension package's [ribbon](/library/extension/ribbon). Set `properties.kind` to `ribbon` to draw a band along the same centerline. Bind its width with `encodings.ribbon.width`, or declare a fixed rule in `properties.ribbon.width`.
+
+Two PathMarks share one Plot and one endpoint table. Each selects one row per node ID or flow ID to draw the rectangular nodes and ribbons without duplicates. The data already assigns node positions and connection slots. Adjust curvature to change the centerlines, or reduce the width factor to see the space occupied by each flow.
+
+<ComponentPreview mode="showcase" files={['path-ribbon', 'path-ribbon.data.ts']} size="lg" />
+
+Sankey layout is separate from rendering. Without an explicit scale, width fields use drawing units and do not contribute to position domains. Band width is independent of stroke width.
+
 ## Errors and limitations
 
 - Built-in Cartesian 2D and polar 2D coordinates support paths and closed regions. Generic coordinate frames support open paths with no `closure` and `closed` other than `true`.
@@ -369,33 +479,11 @@ The default polar connection depends on what the angle axis represents:
 
 These are defaults chosen from the angle scale, not restrictions imposed by the coordinate system. Set `interpolation` explicitly to choose `chord` or `polar`. The `curve` option still determines how the resulting samples are connected.
 
-## Endpoint paths and reference lines
-
-Set two complete positions with `encodings.from` and `encodings.to`. Each role accepts a field, a constant, or a view edge. Endpoints and `encodings.position` vertices are mutually exclusive. `properties.connection` selects a coordinate-aware connection or a straight projected line; switch to polar coordinates to compare an arc with a chord.
-
-These reference marks set `contributeToDomain={false}` so they do not expand the data domain. Use the controls to change coordinates, positions, geometry, and labels.
-
-<ComponentPreview
-  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
-  defaultSourceFile="reference-path.preview.tsx"
-  controls={{ name: 'reference-path' }}
-  size="md"
-/>
-
-The following example binds fields produced by a local `summarize` transform to the same Mark. Change the statistic or grouping to inspect the reference geometry generated for each result row; small points retain the original observations.
-
-<ComponentPreview
-  files={[
-    'reference-data-path',
-    '/viz/plot/mark/shared/reference-data.preview.tsx',
-    '/viz/plot/mark/shared/reference-data.data.ts',
-  ]}
-  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
-  controls={{ name: 'reference-data-path' }}
-  size="md"
-/>
-
 ## API Reference
+
+`properties.ribbon.width` accepts fixed, tapered, stop-based, and registered profile rules. Use `encodings.ribbon.width` / `endWidth` for field bindings with optional numeric scales. Alignment, endpoint caps, and sampling belong to `properties.ribbon`.
+
+Ribbons reject closure, gap bridging, corner rounding, arrows, path markers, and step labels. Host labels use `properties.label` / `encodings.label`; `placement="inside"` places them inside the band. Stroke interruption is not supported.
 
 Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/reference/encoding#labelencodingschema).
 

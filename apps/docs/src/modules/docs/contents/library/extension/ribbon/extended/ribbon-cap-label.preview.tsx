@@ -1,6 +1,6 @@
 import type { IRBoundaryLabel } from '@retikz/core';
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { Layout, Path, Step } from '@retikz/react';
 
 /** 端帽标签交互参数 */
@@ -28,10 +28,7 @@ export const renderRibbonCapLabelPreview = (values: RibbonCapLabelPreviewValues)
   } satisfies IRBoundaryLabel;
 
   return (
-    <Layout
-      viewBox={{ x: -260, y: -130, width: 520, height: 260 }}
-      extensions={{ pathKinds: [RibbonPathKindDefinition] }}
-    >
+    <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ paths: [RibbonPathDefinition] }}>
       <Path
         kind="ribbon"
         kindOptions={{

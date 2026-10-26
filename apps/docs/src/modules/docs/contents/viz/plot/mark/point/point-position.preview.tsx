@@ -7,13 +7,9 @@ import { points } from './point-api.data';
 
 /** 图形参数 */
 export type PointPositionPreviewValues = {
-  /** 最小尺寸 */
-  minimumSize: number;
   coordinate: 'cartesian2D' | 'polar2D';
   xField: 'x' | 'y' | 'pop';
   yField: 'x' | 'y' | 'pop';
-  colorMode: 'none' | 'region';
-  sizeMode: 'fixed' | 'population' | 'minimum';
 };
 
 /** 绘制示例图形 */
@@ -22,14 +18,9 @@ export const PointPositionPreview = (values: PointPositionPreviewValues) => (
     <Plot data={points} width={400} height={280} coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}>
       <PointMark
         encodings={{
-          ...(values.colorMode === 'region' ? { color: 'region' } : {}),
-          ...(values.sizeMode === 'minimum' ? {} : { size: values.sizeMode === 'population' ? 'pop' : undefined }),
           position: { x: { field: values.xField }, y: { field: values.yField } },
         }}
-        properties={{
-          size: values.sizeMode === 'minimum' ? undefined : values.sizeMode === 'population' ? undefined : 10,
-          minimumSize: values.sizeMode === 'minimum' ? values.minimumSize : undefined,
-        }}
+        properties={{ size: 10 }}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

@@ -433,26 +433,102 @@ export declare const stagger: (
 
 ## Animation declarations
 
-#### <ApiSourceLink label={"IRAnimationTrack"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={198}>IRAnimationTrack</ApiSourceLink> / <ApiSourceLink label={"AnimationTrackSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={122}>AnimationTrackSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRAnimationTrack"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={195}>IRAnimationTrack</ApiSourceLink> / <ApiSourceLink label={"AnimationTrackSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={167}>AnimationTrackSchema</ApiSourceLink>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
+**Common members**
 
 <ApiTable>
 
-| Member        | Type                                                                                                                                                                                                                                                                          | Default | Description |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `delay?`      | `number`                                                                                                                                                                                                                                                                      | —       | —           |
-| `direction?`  | `"reverse" \| "normal" \| "alternate" \| "alternate-reverse"`                                                                                                                                                                                                                 | —       | —           |
-| `duration`    | `number`                                                                                                                                                                                                                                                                      | —       | —           |
-| `easing?`     | `string & {} \| "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number]`                                                                                                                                                           | —       | —           |
-| `fill?`       | `"none" \| "forwards" \| "backwards" \| "both"`                                                                                                                                                                                                                               | —       | —           |
-| `iterations?` | `number \| "infinite"`                                                                                                                                                                                                                                                        | —       | —           |
-| `keyframes`   | `Array<{ at: number; value: JsonValue; easing?: OpenString<ValueOf<{ readonly Linear: "linear"; readonly Ease: "ease"; readonly EaseIn: "ease-in"; readonly EaseOut: "ease-out"; readonly EaseInOut: "ease-in-out"; }>> \| [number, number, number, number] \| undefined; }>` | —       | —           |
-| `origin?`     | `"top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| "center"`                                                                                                                                      | —       | —           |
-| `property`    | `ZodInfer<typeof AnimationTrackSchema.shape["property"]>`                                                                                                                                                                                                                     | —       | —           |
-| `trigger?`    | `"load" \| "visible" \| "manual" \| { onEvent: string; }`                                                                                                                                                                                                                     | —       | —           |
+| Member        | Type                                                                                                                                     | Default | Description |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `delay?`      | `number`                                                                                                                                 | —       | —           |
+| `direction?`  | `"reverse" \| "normal" \| "alternate" \| "alternate-reverse"`                                                                            | —       | —           |
+| `duration`    | `number`                                                                                                                                 | —       | —           |
+| `easing?`     | `"linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number]`                                     | —       | —           |
+| `fill?`       | `"none" \| "forwards" \| "backwards" \| "both"`                                                                                          | —       | —           |
+| `iterations?` | `number \| "infinite"`                                                                                                                   | —       | —           |
+| `origin?`     | `"top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| "center"` | —       | —           |
+| `trigger?`    | `"load" \| "visible" \| "manual" \| { onEvent: string; }`                                                                                | —       | —           |
+
+</ApiTable>
+
+Common members apply to every branch; a value must also satisfy at least one branch.
+
+<DocTabs defaultValue="opacity">
+
+<DocTab value="opacity" label="Members · Opacity and progress">
+
+<ApiTable>
+
+| Member      | Type                                                                                                                                                              | Default | Description |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `keyframes` | `Array<{ at: number; value: number; easing?: "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number] \| undefined; }>` | —       | —           |
+| `property`  | `"opacity" \| "fillOpacity" \| "strokeOpacity" \| "pathDraw"`                                                                                                     | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="stroke-width" label="Members · Stroke width">
+
+<ApiTable>
+
+| Member      | Type                                                                                                                                                              | Default | Description |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `keyframes` | `Array<{ at: number; value: number; easing?: "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number] \| undefined; }>` | —       | —           |
+| `property`  | `"strokeWidth"`                                                                                                                                                   | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="dash-offset" label="Members · Dash offset">
+
+<ApiTable>
+
+| Member      | Type                                                                                                                                                              | Default | Description |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `keyframes` | `Array<{ at: number; value: number; easing?: "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number] \| undefined; }>` | —       | —           |
+| `property`  | `"dashOffset"`                                                                                                                                                    | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="color" label="Members · Color">
+
+<ApiTable>
+
+| Member      | Type                                                                                                                                                              | Default | Description |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `keyframes` | `Array<{ at: number; value: string; easing?: "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number] \| undefined; }>` | —       | —           |
+| `property`  | `"fill" \| "stroke"`                                                                                                                                              | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="transform" label="Members · Transform">
+
+<ApiTable>
+
+| Member      | Type                                                                                                                                                              | Default | Description |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `keyframes` | `Array<{ at: number; value: number; easing?: "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number] \| undefined; }>` | —       | —           |
+| `property`  | `"translateX" \| "translateY" \| "rotate" \| "scale" \| "scaleX" \| "scaleY"`                                                                                     | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="camera" label="Members · Camera">
+
+<ApiTable>
+
+| Member      | Type                                                                                                                                                                                        | Default | Description |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `keyframes` | `Array<{ at: number; value: [number, number, number, number]; easing?: "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number] \| undefined; }>` | —       | —           |
+| `property`  | `"viewBox"`                                                                                                                                                                                 | —       | —           |
 
 </ApiTable>
 
@@ -470,13 +546,20 @@ export type IRAnimationTrack = ZodInfer<typeof AnimationTrackSchema>;
 
 <ZodSchema name="AnimationTrackSchema" />
 
-Built-in properties further refine `value`: opacity, strokeWidth, translation, rotation, scale, and pathDraw use numbers; fill / stroke use color strings; scene-root viewBox uses `[x, y, width, height]`. Custom properties are interpreted by renderer-registered interpolators.
+Tracks discriminate keyframe values by `property`, keeping TypeScript types and runtime validation aligned:
+
+- `opacity`, `fillOpacity`, `strokeOpacity`, and `pathDraw`: values from 0 to 1
+- `strokeWidth`: nonnegative numbers; `dashOffset`, translation, rotation, and scale: finite numbers
+- `fill` and `stroke`: nonempty color strings, excluding gradient and image resource objects
+- Scene-root `viewBox`: a numeric `[x, y, width, height]` tuple with positive width and height
+
+Property names use `AnimationProperty`; easing presets use `AnimationEasing`. Unknown names are rejected by the schema.
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRKeyframe"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={201}>IRKeyframe</ApiSourceLink> / <ApiSourceLink label={"KeyframeSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={89}>KeyframeSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRKeyframe"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={198}>IRKeyframe</ApiSourceLink> / <ApiSourceLink label={"KeyframeSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={94}>KeyframeSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -484,11 +567,11 @@ Built-in properties further refine `value`: opacity, strokeWidth, translation, r
 
 <ApiTable>
 
-| Member    | Type                                                                                                                | Default | Description |
-| --------- | ------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `at`      | `number`                                                                                                            | —       | —           |
-| `easing?` | `string & {} \| "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number]` | —       | —           |
-| `value`   | `JsonValue`                                                                                                         | —       | —           |
+| Member    | Type                                                                                                 | Default | Description |
+| --------- | ---------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `at`      | `number`                                                                                             | —       | —           |
+| `easing?` | `"linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number]` | —       | —           |
+| `value`   | `string \| number \| [number, number, number, number]`                                               | —       | —           |
 
 </ApiTable>
 
@@ -510,7 +593,7 @@ export type IRKeyframe = ZodInfer<typeof KeyframeSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnimationDirection"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={47}>AnimationDirection</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationDirection"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={49}>AnimationDirection</ApiSourceLink>
 
 ```ts
 export const AnimationDirection = {
@@ -523,7 +606,7 @@ export const AnimationDirection = {
 export type AnimationDirection = ValueOf<typeof AnimationDirection>;
 ```
 
-#### <ApiSourceLink label={"AnimationFill"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={55}>AnimationFill</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationFill"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={57}>AnimationFill</ApiSourceLink>
 
 ```ts
 export const AnimationFill = {
@@ -536,7 +619,7 @@ export const AnimationFill = {
 export type AnimationFill = ValueOf<typeof AnimationFill>;
 ```
 
-#### <ApiSourceLink label={"AnimationTrigger"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={63}>AnimationTrigger</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationTrigger"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={65}>AnimationTrigger</ApiSourceLink>
 
 ```ts
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
@@ -544,10 +627,10 @@ export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'man
 export type AnimationTrigger = ValueOf<typeof AnimationTrigger>;
 ```
 
-#### <ApiSourceLink label={"BuiltinAnimationEasing"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={38}>BuiltinAnimationEasing</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationEasing"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={40}>AnimationEasing</ApiSourceLink>
 
 ```ts
-export const BuiltinAnimationEasing = {
+export const AnimationEasing = {
   Linear: 'linear',
   Ease: 'ease',
   EaseIn: 'ease-in',
@@ -555,16 +638,19 @@ export const BuiltinAnimationEasing = {
   EaseInOut: 'ease-in-out',
 } as const;
 
-export type BuiltinAnimationEasing = ValueOf<typeof BuiltinAnimationEasing>;
+export type AnimationEasing = ValueOf<typeof AnimationEasing>;
 ```
 
-#### <ApiSourceLink label={"BuiltinAnimationProperty"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={22}>BuiltinAnimationProperty</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationProperty"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={21}>AnimationProperty</ApiSourceLink>
 
 viewBox is valid only at the scene root for camera animation; element-level viewBox tracks are rejected. pathDraw is stroke-reveal progress from 0 to 1. scaleX/scaleY are nonuniform scale; scale is uniform. Transform origins are specified by track.origin and default to the geometry center. SVG maps channels to WAAPI/CSS; Canvas uses animation-frame interpolation.
 
 ```ts
-export const BuiltinAnimationProperty = {
+export const AnimationProperty = {
   Opacity: 'opacity',
+  FillOpacity: 'fillOpacity',
+  StrokeOpacity: 'strokeOpacity',
+  DashOffset: 'dashOffset',
   Fill: 'fill',
   Stroke: 'stroke',
   StrokeWidth: 'strokeWidth',
@@ -578,12 +664,12 @@ export const BuiltinAnimationProperty = {
   ViewBox: 'viewBox',
 } as const;
 
-export type BuiltinAnimationProperty = ValueOf<typeof BuiltinAnimationProperty>;
+export type AnimationProperty = ValueOf<typeof AnimationProperty>;
 ```
 
 ## Playback and extensions
 
-#### <ApiSourceLink label={"AnimationControls"} path={"packages/kernel/render/src/animation/runtime.ts"} startLine={28}>AnimationControls</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationControls"} path={"packages/kernel/render/src/animation/runtime.ts"} startLine={29}>AnimationControls</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -621,110 +707,30 @@ export type AnimationControls = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnimationPropertyDefinition"} path={"packages/kernel/render/src/animation/registry.ts"} startLine={10}>AnimationPropertyDefinition</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member        | Type                                                                            | Default | Description                                                                                           |
-| ------------- | ------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| `applyCanvas` | `(ctx: CanvasRenderingContext2D, prim: ScenePrimitive, value: unknown) => void` | —       | Apply the current value to the Canvas context before drawing the primitive, inside save/restore       |
-| `interpolate` | `(from: unknown, to: unknown, t: number) => unknown`                            | —       | Map two keyframe values and segment progress to the current value for evaluateTrack.interpolateCustom |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type AnimationPropertyDefinition = {
-  interpolate: (from: unknown, to: unknown, t: number) => unknown;
-  applyCanvas: (ctx: CanvasRenderingContext2D, prim: ScenePrimitive, value: unknown) => void;
-};
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"AnimationPropertyRegistry"} path={"packages/kernel/render/src/animation/registry.ts"} startLine={18}>AnimationPropertyRegistry</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member          | Type                                         | Default | Description |
-| --------------- | -------------------------------------------- | ------- | ----------- |
-| Index signature | `[key: string]: AnimationPropertyDefinition` | —       | —           |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type AnimationPropertyRegistry = Record<string, AnimationPropertyDefinition>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-#### <ApiSourceLink label={"EasingRegistry"} path={"packages/kernel/render/src/animation/types.ts"} startLine={14}>EasingRegistry</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable>
-
-| Member          | Type                                     | Default | Description |
-| --------------- | ---------------------------------------- | ------- | ----------- |
-| Index signature | `[key: string]: CubicBezier \| EasingFn` | —       | —           |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type EasingRegistry = Record<string, CubicBezier | EasingFn>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ## Configuration and validation
 
-#### <ApiSourceLink label={"EasingSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={81}>EasingSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EasingSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={83}>EasingSchema</ApiSourceLink>
 
-`EasingSchema` accepts a built-in / custom easing name or a cubic-bezier tuple `[x1, y1, x2, y2]`.
+`EasingSchema` accepts a built-in easing name or a cubic-bezier tuple `[x1, y1, x2, y2]`.
+
+`x1` and `x2` must be between 0 and 1. `y1` and `y2` may exceed that range to express overshoot.
 
 <ZodSchema name="EasingSchema" />
 
-#### <ApiSourceLink label={"TriggerSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={107}>TriggerSchema</ApiSourceLink>
+#### <ApiSourceLink label={"TriggerSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={112}>TriggerSchema</ApiSourceLink>
 
 `TriggerSchema` accepts `load`, `visible`, `manual`, or an object carrying an event name. The IR stores the name, never a callback function.
 
 <ZodSchema name="TriggerSchema" />
 
-#### <ApiSourceLink label={"EventTriggerSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={102}>EventTriggerSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EventTriggerSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={107}>EventTriggerSchema</ApiSourceLink>
 
 <ZodSchema name="EventTriggerSchema" />
 
-#### <ApiSourceLink label={"OriginSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={112}>OriginSchema</ApiSourceLink>
+#### <ApiSourceLink label={"OriginSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={117}>OriginSchema</ApiSourceLink>
 
 `OriginSchema` accepts a canonical anchor name or element-local `[x, y]` coordinates. It affects scale, scaleX, scaleY, and rotate only.
 
 <ZodSchema name="OriginSchema" />
 
-For presets, triggers, and fallback behavior at the component layer, see [Animation](/kernel/visual/animation/usage). For custom properties, interpolators, and the renderer registry, see [Custom Animation](/kernel/visual/animation/custom-animation).
+For presets, triggers, and fallback behavior at the component layer, see [Animation](/kernel/visual/animation/usage).

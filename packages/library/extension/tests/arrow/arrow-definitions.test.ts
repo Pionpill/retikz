@@ -1,4 +1,4 @@
-import type { IRScene, PathPrim, ScenePrimitive } from '@retikz/core';
+import type { IRScene, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -31,7 +31,7 @@ const arrowScene = (shape: string): IRScene => ({
   children: [
     {
       type: 'path',
-      marks: [{ pos: 1, mark: { kind: 'arrow', shape } }],
+      arrow: { end: { shape } },
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
@@ -40,7 +40,7 @@ const arrowScene = (shape: string): IRScene => ({
   ],
 });
 
-const firstPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
+const firstPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrimitive | undefined => {
   for (const primitive of primitives) {
     if (primitive.type === 'path') return primitive;
     if (primitive.type === 'group') {
@@ -108,12 +108,13 @@ describe('Extension optional arrow definitions', () => {
     });
     expect(compiled[1]?.arrowEnd?.marker[0]).toMatchObject({
       type: 'path',
-      strokeLinejoin: 'round',
+      lineJoin: 'round',
     });
   });
 
   it('emits TikZ diamond and kite families with their frozen solid and open geometry', () => {
     const context = {
+      params: {},
       stroke: '#123456',
       fill: '#abcdef',
       lineWidth: 2,
@@ -147,7 +148,7 @@ describe('Extension optional arrow definitions', () => {
         fill: 'none',
         stroke: '#123456',
         strokeWidth: 2,
-        strokeLinejoin: 'round',
+        lineJoin: 'round',
       },
     ]);
     expect([...KiteArrowDefinition.emit(context)]).toEqual([
@@ -177,7 +178,7 @@ describe('Extension optional arrow definitions', () => {
         fill: 'none',
         stroke: '#123456',
         strokeWidth: 2,
-        strokeLinejoin: 'round',
+        lineJoin: 'round',
       },
     ]);
     expect(DiamondArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
@@ -188,6 +189,7 @@ describe('Extension optional arrow definitions', () => {
 
   it('emits TikZ square solid and open geometry with independent length and width scaling', () => {
     const context = {
+      params: {},
       stroke: '#123456',
       fill: '#abcdef',
       lineWidth: 2,
@@ -221,7 +223,7 @@ describe('Extension optional arrow definitions', () => {
         fill: 'none',
         stroke: '#123456',
         strokeWidth: 2,
-        strokeLinejoin: 'round',
+        lineJoin: 'round',
       },
     ]);
 
@@ -231,12 +233,7 @@ describe('Extension optional arrow definitions', () => {
       children: [
         {
           type: 'path',
-          marks: [
-            {
-              pos: 1,
-              mark: { kind: 'arrow', shape: 'openSquare', length: 12, width: 18, lineWidth: 2 },
-            },
-          ],
+          arrow: { end: { shape: 'openSquare', length: 12, width: 18, lineWidth: 2 } },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -265,10 +262,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [
-                { pos: 0, mark: { kind: 'arrow', shape: 'kite' } },
-                { pos: 1, mark: { kind: 'arrow', shape: 'openSquare' } },
-              ],
+              arrow: { start: { shape: 'kite' }, end: { shape: 'openSquare' } },
               children: [
                 { type: 'step', kind: 'move', to: [100, 0] },
                 { type: 'step', kind: 'line', to: [0, 0] },
@@ -290,6 +284,7 @@ describe('Extension optional arrow definitions', () => {
 
   it('emits bar and crowFoot as deterministic open stroke geometry', () => {
     const context = {
+      params: {},
       stroke: { kind: 'contextStroke' } as const,
       fill: { kind: 'contextStroke' } as const,
       lineWidth: 2,
@@ -337,6 +332,7 @@ describe('Extension optional arrow definitions', () => {
 
     expect([
       ...definition.emit({
+        params: {},
         stroke: '#123456',
         fill: '#abcdef',
         lineWidth: 2,
@@ -373,19 +369,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [
-                {
-                  pos: 1,
-                  mark: {
-                    kind: 'arrow',
-                    shape: 'straightBarb',
-                    length: 12,
-                    width: 18,
-                    lineWidth: 2,
-                    color: '#f00',
-                  },
-                },
-              ],
+              arrow: { end: { shape: 'straightBarb', length: 12, width: 18, lineWidth: 2, color: '#f00' } },
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [100, 0] },
@@ -414,7 +398,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }],
+              arrow: { end: { shape: 'straightBarb' } },
               children: [
                 { type: 'step', kind: 'move', to: [100, 0] },
                 { type: 'step', kind: 'line', to: [0, 0] },
@@ -436,10 +420,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [
-                { pos: 0, mark: { kind: 'arrow', shape: 'straightBarb' } },
-                { pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } },
-              ],
+              arrow: { start: { shape: 'straightBarb' }, end: { shape: 'straightBarb' } },
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [100, 0] },
@@ -478,20 +459,7 @@ describe('Extension optional arrow definitions', () => {
       children: [
         {
           type: 'path',
-          marks: [
-            {
-              pos: 1,
-              mark: {
-                kind: 'arrow',
-                shape: 'bar',
-                length: 12,
-                width: 18,
-                lineWidth: 2,
-                color: '#f00',
-                opacity: 0.4,
-              },
-            },
-          ],
+          arrow: { end: { shape: 'bar', length: 12, width: 18, lineWidth: 2, color: '#f00', opacity: 0.4 } },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -513,7 +481,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'crowFoot' } }],
+              arrow: { end: { shape: 'crowFoot' } },
               children: [
                 { type: 'step', kind: 'move', to: [100, 0] },
                 { type: 'step', kind: 'line', to: [0, 0] },
@@ -535,10 +503,7 @@ describe('Extension optional arrow definitions', () => {
           children: [
             {
               type: 'path',
-              marks: [
-                { pos: 0, mark: { kind: 'arrow', shape: 'bar' } },
-                { pos: 1, mark: { kind: 'arrow', shape: 'crowFoot' } },
-              ],
+              arrow: { start: { shape: 'bar' }, end: { shape: 'crowFoot' } },
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [100, 0] },
@@ -566,7 +531,7 @@ describe('Extension optional arrow definitions', () => {
       children: [
         {
           type: 'path',
-          marks: [{ pos: 1, endpointOverlap: 1, mark: { kind: 'arrow', shape, scale: 2 } }],
+          arrow: { end: { shape, scale: 2, endpointOverlap: 1 } },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },

@@ -7,6 +7,7 @@ keywords: 'Path、backX、endpointOverlap、ArrowDefinition.backX、lineContactX
 
 - 状态：Accepted
 - 决策日期：2026-09-03
+- 后续决策：[075](./075-path-arrows-and-marks.md) 将端点重叠输入迁入 `arrow.start` / `arrow.end`，替代本文的 mark 与作者 API 输入形式；重叠几何语义保留
 - 关联：[alpha.4 roadmap](./roadmap.md) · [v0.5 roadmap](./roadmap.md) · [Core 绘图完备设计](../../../architecture/core-drawing-complete.md)
 
 ## 背景与目标

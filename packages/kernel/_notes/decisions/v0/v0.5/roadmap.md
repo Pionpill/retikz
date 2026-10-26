@@ -13,7 +13,7 @@
 | 增量运行时     | 完成 Reconciler 编译树、依赖响应与同步增量计算闭环                     | [011](./011-runtime-identity-source-registry.md)、[012](./012-computation-transaction-lifecycle.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-retained-renderer.md)、[016](./016-runtime-execution-policy.md)                                                                |
 | 基础契约与入口 | 建立 Foundation、统一 authoring 与能力依赖接入                         | [019](./019-core-atomic-contracts.md)、[023](./023-foundation-package.md)、[026](./026-foundation-schema-primitives.md)、[027](./027-composite-dependency-provider-graph.md)、[029](./029-vanilla-authoring-normalization.md)                                                                         |
 | 颜色与 Source  | 统一颜色解析、Theme 来源、Source 分组与 schema 边界                    | [024](./024-lightweight-theme-resolution.md)、[032](./032-contextual-color-resolution.md)、[035](./035-json-undefined-field-contracts.md)、[036](./036-source-ir-semantic-grouping.md)、[037](./037-theme-source-fragments.md)、[071](./071-macro-visual-property-resolution.md)                      |
-| 路径与诊断     | 完善裁剪、居中标签断线、箭头重叠与 Inspect                             | [021](./021-extensible-inspector-content.md)、[031](./031-single-clip-definition.md)、[033](./033-stroke-path-label-interruption.md)、[034](./034-path-endpoint-arrow-overlap.md)、[039](./039-builtin-inspection.md)                                                                                 |
+| 路径与诊断     | 完善裁剪、居中标签断线、箭头重叠与 Inspect                             | [021](./021-extensible-inspector-content.md)、[031](./031-single-clip-definition.md)、[073](./073-clip-params-envelope.md)、[033](./033-stroke-path-label-interruption.md)、[034](./034-path-endpoint-arrow-overlap.md)、[039](./039-builtin-inspection.md)                                           |
 | Scope 外框     | 在保持内容包络、锚点与布局不变的前提下添加背景装饰                     | [044](./044-scope-frame.md)                                                                                                                                                                                                                                                                           |
 | 候选方向       | Headless Interaction、协作并发、渐进物化与生成会话；不作为本版本必交项 | [040](./040-cooperative-concurrent-runtime.md)、[041](./041-progressive-materialization.md)、[042](./042-generation-session.md)                                                                                                                                                                       |
 
@@ -117,6 +117,7 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 
 - 建立 Foundation，收敛通用契约和基础 schema 所有权。
 - 统一 authoring 入口与 composite 依赖接入，减少平行解释。
+- 收敛动画属性与关键帧值契约，补齐填充／描边透明度和虚线偏移动画，统一 SVG／Canvas 求值边界：[074](./074-animation-property-contract.md)。
 - 箭头与 Pattern 内容统一使用基础场景图元，定义侧封装归能力 owner，补齐资源与运行时消费：[070](./070-marker-scene-primitives.md)。
 - Composite 统一使用 compile，布局能力按需调用，移除独立展开通道：[052](./052-unified-composite-compilation.md)。
 - 支持共享异步作者准备与实例运行时输入，保持同步编译和原子发布：[047](./047-async-authoring-preparation.md)、[048](./048-composite-runtime-input.md)。
@@ -153,6 +154,7 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 规划内容：
 
 - 完善裁剪、居中标签断线和箭头视觉重叠处理。
+- 分离端点箭头与沿线标记，支持普通图元标记和箭头外观复用，统一弧长定位：[075](./075-path-arrows-and-marks.md)。
 - 优化标签断线的编译开销：按实际断线需求选择处理路径，无需断线时跳过专用计算，有断线需求时才进入完整截断链路；保持标签定位、箭头与最终绘制结果一致。
 - 扩展 Inspect 内容与内置检查能力，不把诊断实现混入领域模型。
 
@@ -170,7 +172,7 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 规划内容：
 
 - 保留 Headless Interaction、Concurrent、渐进物化与生成会话候选。
-- 编译产物与 Inspect 数据来源统一（待研究）：评估丰富节点等附加产物，让 Inspect 消费统一产物契约，减少布局摘要与观察输出的重叠。需明确按需收集、主题与坐标上下文、辅助图形编译及增量结果一致性；是否保留观察通道、调整节点产物命名，留待后续设计决定。
+- Inspect 实现替换（后续规划）：移除现有编译观察机制，替代方案与能力闭环待设计。
 - 候选不作为必交项；设计接受、实现授权与实际交付分别判断。
 
 预期效果：

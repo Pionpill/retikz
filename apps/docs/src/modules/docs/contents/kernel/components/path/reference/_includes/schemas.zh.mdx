@@ -1,6 +1,6 @@
 本页收录绘制拥有的输入契约。`PathSchema` 接受开放的 `kind`；实际 kind 的完整 schema 再校验该路径。内置 `stroke` 通常需要至少两个步骤；单个自包含的 rectangle 步骤是例外，自定义 kind 的要求由其 definition 决定。
 
-`way`、`arrow` 与 `arrowPlacement` 是作者侧输入，由 Vanilla 转换成步骤或 `marks`；不会原样写入持久化 Path。`ArrowDetailSchema` 属于这条专属配置通道。
+`way` 由 Vanilla 转换成步骤。`arrow` 与 `marks` 在作者 API 和持久化 IR 中使用相同结构；`ArrowDetailSchema` 用于共享箭头默认配置。
 
 ## PathSchema
 
@@ -11,8 +11,8 @@
   descriptions={{
     style: '当前实例的视觉覆盖，按字段继承与覆盖',
     type: '判别字段，标记此子节点为 path',
-    kind: 'Path kind provider 名；省略时使用内置 `stroke`',
-    kindOptions: '由选定 Path kind provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析',
+    kind: 'Path provider 名；省略时使用内置 `stroke`',
+    kindOptions: '由选定 Path provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析',
     'style.color': '主色（TikZ color=）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke）',
     'style.stroke':
       '描边 paint：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；默认 currentColor',
@@ -37,8 +37,8 @@
     scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
     cornerRadius: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
     label: '附着在 Path 或其它 path-like 宿主上的路径标签',
-    marks:
-      "沿路径放方向标记：每项 `{ pos, endpointOverlap?, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线；endpointOverlap 只适用于内置 Stroke Path 实际选中的端点 mark",
+    arrow: '起末端箭头配置；start / end 分别声明外观与 endpointOverlap，并根据接触几何截断主线',
+    marks: '沿整条路径弧长放置内容；每项包含 pos、rotate、scale 和 mark，不改变宿主路径几何',
   }}
 />
 
@@ -248,23 +248,6 @@
   }}
 />
 
-## GeneratorStepSchema
-
-<ZodSchema
-  shallow
-  name="GeneratorStepSchema"
-  description="生成器动作：委托本次已注册的自定义 path generator 产出子路径。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`generator` —— 把本段委托给 CompileOptions.pathGenerators 里按 `name` 查到的生成器，编译期把 from / to / params 变成底层 path 命令',
-    name: '生成器名；由 CompileOptions.pathGenerators 显式注册。未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数不进 IR',
-    to: '可选终点（作为段末传给生成器）；纯参数化曲线（闭环 / 定长波形等）不需要终点时可省略',
-    params:
-      '传给生成器的 JSON 参数对象（须为纯 JSON 对象，由 JsonObjectSchema 校验）；生成器自身用 paramsSchema 校验形态。generator targetParams 列出的顶层 key 会先把节点目标解析到当前 Path 的局部坐标再运行',
-    label: '边标注：附在生成段上的文字标签',
-  }}
-/>
-
 ## PathLabelSchema
 
 <ZodSchema
@@ -287,22 +270,41 @@
   }}
 />
 
-## ArrowMarkSchema
+## PathArrowSchema
 
 <ZodSchema
   shallow
-  name="ArrowMarkSchema"
-  description="路径上的箭头标记；端点箭头和中段方向标记共用同一结构。"
+  name="PathArrowSchema"
+  description="起末端箭头；只创建显式声明的端点。"
+  descriptions={{ start: '起点箭头', end: '终点箭头' }}
+/>
+
+## PathArrowEndSchema
+
+<ZodSchema
+  shallow
+  name="PathArrowEndSchema"
+  description="单端箭头的外观与接触配置。"
+  descriptions={{ endpointOverlap: '进入逻辑端点的比例 0..1；0 为尖端对齐，1 为视觉后缘对齐' }}
+/>
+
+## MarkStyleSchema
+
+<ZodSchema
+  shallow
+  name="MarkStyleSchema"
+  description="标记与箭头共用的形状、尺寸和外观字段。"
   descriptions={{
-    kind: '判别字段；当前支持 `arrow`',
-    shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时回退 stealth',
-    scale: '等比缩放因子',
-    length: '尖长（user units）',
-    width: '尖宽（user units）',
-    color: '描边色 override',
-    fill: '填充色 override（空心 shape 忽略）',
-    opacity: '箭头透明度 0..1',
-    lineWidth: '空心 shape 描边粗细',
+    shape: '标记或箭头定义的注册名称；缺省为 stealth',
+    params: '定义解释的 JSON 参数，缺省为空对象',
+    scale: '长度和宽度的统一缩放，默认 1',
+    length: '沿路径方向的尺寸参数，最终尺寸随宿主线宽缩放',
+    width: '垂直路径方向的尺寸参数，最终尺寸随宿主线宽缩放',
+    color: '标记主色',
+    fill: '填充覆盖，空心定义忽略',
+    stroke: '描边覆盖',
+    opacity: '标记透明度，与宿主透明度相乘',
+    lineWidth: '局部轮廓线宽',
   }}
 />
 
@@ -311,11 +313,13 @@
 <ZodSchema
   shallow
   name="PathMarkPlacementSchema"
-  description="路径上的一个归一化标记位置及其 mark。"
+  description="沿路径放置的标记，直接组合位置、形状、尺寸与外观字段。"
   descriptions={{
-    pos: '路径上的归一化位置 0..1；line-like step 按弧长，曲线 step 按参数位置',
-    endpointOverlap: '仅用于内置 Stroke Path 实际选中的端点箭头；0 保持现有默认放置，1 让最终视觉后缘对齐逻辑端点',
-    mark: '放置的标记；当前为沿路径切线定向的 ArrowMark',
+    pos: '整条路径累计弧长的比例 0..1，在箭头截断和标签断线之前采样',
+    rotate: '缺省或 auto 沿切线定向；数字为路径局部坐标中的固定角度',
+    scale: '长度和宽度的统一缩放，默认 1',
+    shape: '已注册标记或箭头名称',
+    params: '自定义 JSON 参数',
   }}
 />
 
@@ -335,8 +339,8 @@
     fill: '填充色 override（仅实心 shape 生效）；空心 shape 上 silent no-op（写了静默丢）',
     opacity: '箭头独立透明度 0..1；缺省继承 path opacity',
     lineWidth: '空心 shape 描边粗细（user units）；默认 1.5；实心 shape 忽略',
-    start: '起端 override（仅 arrow 含起端时生效：`<-` / `<->`）',
-    end: '末端 override（仅 arrow 含末端时生效：`->` / `<->`）',
+    start: '起点默认覆盖，仅显式声明 arrow.start 时生效',
+    end: '终点默认覆盖，仅显式声明 arrow.end 时生效',
   }}
 />
 

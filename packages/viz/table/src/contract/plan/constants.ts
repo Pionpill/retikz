@@ -210,6 +210,8 @@ export const TableCellAppearanceTracePath = {
   ContentPathArrowDefaultWidth: '/content/defaults/path/arrow/width',
   /** 路径箭头默认 color */
   ContentPathArrowDefaultColor: '/content/defaults/path/arrow/color',
+  /** 路径箭头默认自定义参数 */
+  ContentPathArrowDefaultParams: '/content/defaults/path/arrow/params',
   /** 路径箭头默认 fill */
   ContentPathArrowDefaultFill: '/content/defaults/path/arrow/fill',
   /** 路径箭头默认 opacity */

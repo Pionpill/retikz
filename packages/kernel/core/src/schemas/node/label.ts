@@ -5,7 +5,8 @@ import type { infer as ZodInfer } from 'zod';
 
 import { Anchor, Side } from '../../shared';
 import { GraphicStrokeSchema, OpacitySchema } from '../style/graphic';
-import { createLabelVisualStyleShape, BoundaryLabelSchema, LabelTextContentSchema } from '../text/label';
+import { createLabelVisualStyleShape, BoundaryLabelSchema } from '../text/label';
+import { TextBlockSchema } from '../text/text';
 
 /** 节点标签相对节点的位置关键字 */
 export const NodeLabelPosition = {
@@ -102,7 +103,7 @@ export const NodeLabelConfigSchema = object({
   .describe('Node label configuration without text content.');
 
 /** 校验附着于节点边界的标签内容与配置 */
-export const NodeLabelSchema = NodeLabelConfigSchema.safeExtend({ text: LabelTextContentSchema }).describe(
+export const NodeLabelSchema = NodeLabelConfigSchema.safeExtend({ text: TextBlockSchema }).describe(
   'Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.',
 );
 

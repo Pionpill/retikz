@@ -4,7 +4,7 @@ import { strictObject } from 'zod';
 
 import type { CompileOptions, NodeLayoutObservation } from '../../src/compile';
 import { compileToScene, isNodeLayoutCompileArtifact } from '../../src/compile';
-import type { RectPrim } from '../../src/contract';
+import type { RectPrimitive } from '../../src/contract';
 import { defineBoundary } from '../../src/contract';
 import type { IRNode, IRScene } from '../../src/schemas';
 import { rect as rectOps } from '../../src/shared/geometry';
@@ -365,7 +365,7 @@ describe('Node anchor-to-anchor position', () => {
     const output = result.scene;
     const observed = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
     const currentPrimitive = flattenPrims(output.primitives).find(
-      (primitive): primitive is RectPrim => primitive.type === 'rect' && primitive.id === 'current',
+      (primitive): primitive is RectPrimitive => primitive.type === 'rect' && primitive.id === 'current',
     );
 
     expect(observed[1].rect).toMatchObject({ x: 100, y: 50 });

@@ -259,6 +259,26 @@ const erasePathChannelDefinition = (def: unknown): AnyChannelDefinition => def a
 export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = [
   ...Object.values(BUILTIN_PATH_CHANNELS).map(def => erasePathChannelDefinition(def)),
   ...(['width', 'endWidth'] as const).map((target): AnyChannelDefinition => ({
+    channel: `ribbon.${target}`,
+    kind: ChannelDefinitionKind.Mark,
+    resolve: (context, mark) => {
+      if (mark.type !== 'path' || mark.properties?.kind !== 'ribbon') return undefined;
+      const binding = mark.encodings.ribbon?.[target];
+      if (binding === undefined) return undefined;
+      const resolution = resolveNumericChannel(context.node, context.rows, context.model, binding, `ribbon.${target}`);
+      if (resolution === undefined) throw new RetikzPlotError(`Path ribbon.${target} cannot resolve its field`);
+      return {
+        ...resolution,
+        resolver: row => {
+          const width = resolution.resolver(row);
+          if (width === undefined || !Number.isFinite(width) || width < 0)
+            throw new RetikzPlotError(`Path ${mark.id ?? ''} ribbon.${target} must map to a non-negative finite width`);
+          return width;
+        },
+      };
+    },
+  })),
+  ...(['width', 'endWidth'] as const).map((target): AnyChannelDefinition => ({
     channel: `geometry.${target}`,
     kind: ChannelDefinitionKind.Mark,
     resolve: (context, mark) => {

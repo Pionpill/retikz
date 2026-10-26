@@ -162,7 +162,7 @@ export declare function optional(first?: string, ...rest: Array<number>): void;
     expect(source).toContain('path?: string');
     expect(source).toContain('options?: MergePropertiesOptions<NoInfer<T>>');
     expect(source).toContain('| `options?` |');
-    expect(source).toContain('| `ownerError?` |');
+    expect(source).toContain('| `path?` |');
     expect(source).not.toContain('=> predicate');
     expect(source).not.toContain('=> templateLiteral');
   });

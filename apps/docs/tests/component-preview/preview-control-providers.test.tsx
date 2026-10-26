@@ -1,5 +1,5 @@
 import { fadeIn } from '@retikz/core';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -24,7 +24,7 @@ const AnimatedDemo: FC = () => (
 );
 
 const RibbonDemo: FC = () => (
-  <Layout width={40} height={20} extensions={{ pathKinds: [RibbonPathKindDefinition] }}>
+  <Layout width={40} height={20} extensions={{ paths: [RibbonPathDefinition] }}>
     <Node id="ribbon" position={[0, 0]} />
   </Layout>
 );
@@ -63,8 +63,8 @@ describe('preview control providers', () => {
     ).toEqual([]);
   });
 
-  it('retains generic path kind definitions while resolving preview controls', () => {
-    expect(buildPreviewIR(RibbonDemo).pathKinds).toEqual([RibbonPathKindDefinition]);
+  it('retains generic path definitions while resolving preview controls', () => {
+    expect(buildPreviewIR(RibbonDemo).paths).toEqual([RibbonPathDefinition]);
   });
 
   it('merges slot groups in input order', () => {

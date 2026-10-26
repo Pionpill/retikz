@@ -1,4 +1,3 @@
-import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 import type { RenderTraceReporter } from '../trace';
 
 /** Canvas renderer 暂不支持能力的降级类别 */
@@ -82,10 +81,6 @@ export type DrawOptions = {
    *   onEvent track。无此项时退回 `options.time` + 仅自动播（与单时钟整图播放一致）
    */
   resolvePrimAnimation?: (id: string | undefined) => PrimAnimationResolution;
-  /** 自定义 property 插值器注册表（内置通道内建处理；未注册的自定义 property → warn + skip） */
-  animationProperties?: AnimationPropertyRegistry;
-  /** 自定义 easing 注册表（名 → cubic-bezier 四元组 / 函数） */
-  easings?: EasingRegistry;
 };
 
 /** HTMLCanvasElement 渲染选项 */

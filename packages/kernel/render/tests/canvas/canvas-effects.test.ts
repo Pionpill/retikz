@@ -1,5 +1,5 @@
 import { createCanvas } from '@napi-rs/canvas';
-import type { PathPrim, RectPrim, ResolvedArrowEnd, Scene } from '@retikz/core';
+import type { PathPrimitive, RectPrimitive, ResolvedArrowEnd, Scene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -15,7 +15,7 @@ it('编译后的中段mark在SVG和Canvas中保留透明度乘积', () => {
         {
           type: 'path',
           style: { opacity: 0.5, stroke: 'none' },
-          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'square', opacity: 0.4 } }],
+          marks: [{ pos: 0.5, shape: 'square', opacity: 0.4 }],
           children: [
             { type: 'step', kind: 'move', to: [0, 20] },
             { type: 'step', kind: 'line', to: [40, 20] },
@@ -44,7 +44,8 @@ it('编译后的中段mark在SVG和Canvas中保留透明度乘积', () => {
   const canvas = createCanvas(40, 40);
   const context = canvas.getContext('2d');
   drawScene(context as unknown as CanvasRenderingContext2D, scene);
-  expect(Math.abs(context.getImageData(20, 20, 1, 1).data[3] - 255 * 0.1)).toBeLessThanOrEqual(1);
+  // 标记以 x=20 的尖端为锚点，取内部像素以避开边缘覆盖率
+  expect(Math.abs(context.getImageData(16, 20, 1, 1).data[3] - 255 * 0.1)).toBeLessThanOrEqual(1);
 });
 
 /** 最小可绘制的端点箭头规格（验证箭头随主路径一起进 shadow / blend 状态绘制） */
@@ -68,7 +69,7 @@ const arrowEndSpec: ResolvedArrowEnd = {
   ],
 };
 
-const arrowPathScene = (extra: Partial<PathPrim>): Scene =>
+const arrowPathScene = (extra: Partial<PathPrimitive>): Scene =>
   sceneOf([
     {
       type: 'path',
@@ -141,7 +142,7 @@ const makeRecordingCtx = (
   }) as unknown as CanvasRenderingContext2D;
 };
 
-const rectScene = (extra: Partial<RectPrim>): Scene =>
+const rectScene = (extra: Partial<RectPrimitive>): Scene =>
   sceneOf([{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00', ...extra }]);
 
 describe('[canvas-effects] drop shadow', () => {

@@ -41,6 +41,7 @@ export type {
   InputPlotOpacity,
   InputPlotPathLabel,
   InputPlotPathMark,
+  InputPlotPathWay,
   InputPlotPointMark,
   InputPlotRelationMark,
   InputPlotRelationPathGeometry,
@@ -49,3 +50,4 @@ export type {
 } from './input-marks';
 export type { InputPlotPositionScaleType, InputPlotScale, InputPlotScaleDimension } from './input-scales';
 export { normalizePlot, normalizePlotDeclarations } from './normalize';
+export * from './path';

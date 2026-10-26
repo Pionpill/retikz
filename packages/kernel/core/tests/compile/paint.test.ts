@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';
+import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRPaint, IRScene } from '../../src/schemas';
-import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
+import { pathArrows } from '../helpers/path-arrows';
 
 const grad: IRPaint = {
   kind: 'linearGradient',
@@ -15,11 +15,11 @@ const grad: IRPaint = {
   ],
 };
 
-const rectsOf = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
-  flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
+const rectsOf = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
+  flattenPrims(prims).filter((p): p is RectPrimitive => p.type === 'rect');
 
-const pathsOf = (prims: Array<ScenePrimitive>): Array<PathPrim> =>
-  flattenPrims(prims).filter((p): p is PathPrim => p.type === 'path');
+const pathsOf = (prims: Array<ScenePrimitive>): Array<PathPrimitive> =>
+  flattenPrims(prims).filter((p): p is PathPrimitive => p.type === 'path');
 
 describe('node IRPaint fill → 资源表 + resourceRef', () => {
   it('单 node gradient → primitive.fill = resourceRef + resources 1 条', () => {
@@ -142,7 +142,7 @@ describe('去重 + 稳定 id', () => {
 });
 
 describe('path IRPaint fill', () => {
-  it('path gradient fill → PathPrim.fill = resourceRef', () => {
+  it('path gradient fill → PathPrimitive.fill = resourceRef', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -222,7 +222,7 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
 });
 
 describe('stroke IRPaint → 资源表 + resourceRef', () => {
-  it('path stroke linearGradient → PathPrim.stroke = resourceRef', () => {
+  it('path stroke linearGradient → PathPrimitive.stroke = resourceRef', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -243,7 +243,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
   });
 
-  it('node stroke radialGradient → RectPrim.stroke = resourceRef', () => {
+  it('node stroke radialGradient → RectPrimitive.stroke = resourceRef', () => {
     const radial: IRPaint = { kind: 'radialGradient', stops: grad.stops };
     const ir: IRScene = {
       version: 1,
@@ -365,7 +365,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->'),
+          arrow: pathArrows('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -390,7 +390,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       children: [
         {
           type: 'path',
-          marks: arrowMarks('->', { color: '#111' }),
+          arrow: pathArrows('->', { color: '#111' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },

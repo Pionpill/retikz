@@ -51,7 +51,7 @@ describe('Theme retained invalidation', () => {
                   type: 'path',
                   id: 'edge',
                   style: { stroke: 'black' },
-                  marks: [{ pos: 1, mark: { kind: 'arrow', color: 'orange' } }],
+                  arrow: { end: { color: 'orange' } },
                   children: [
                     { type: 'step', kind: 'move', to: [0, 0] },
                     { type: 'step', kind: 'line', to: [100, 0] },
