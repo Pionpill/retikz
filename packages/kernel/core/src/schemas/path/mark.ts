@@ -19,6 +19,7 @@ export const BuiltinMarkShape = {
   Star: 'star',
 } as const;
 
+/** 内置普通标记形状名称 */
 export type BuiltinMarkShape = ValueOf<typeof BuiltinMarkShape>;
 
 /** 标记的形状、尺寸与视觉样式 */
@@ -59,5 +60,7 @@ export const PathMarkPlacementSchema = MarkStyleSchema.extend({
     .describe('Tangent orientation by default, or a fixed angle in degrees.'),
 });
 
+/** 标记的形状、尺寸与视觉样式配置 */
 export type IRMarkStyle = ZodInfer<typeof MarkStyleSchema>;
+/** 沿路径放置的标记，包含弧长位置、朝向与视觉样式 */
 export type IRPathMark = ZodInfer<typeof PathMarkPlacementSchema>;
