@@ -3,12 +3,12 @@ import type { PointMarkProps } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { annotationX, annotationXScale } from '../shared/reference-coordinate';
-import type { AnnotationCoordinate } from '../shared/reference-coordinate';
+import { referenceX, referenceXScale } from '../shared/reference-coordinate';
+import type { ReferenceCoordinate } from '../shared/reference-coordinate';
 
-/** 标注试验场参数 */
-export type AnnotationPointValues = {
-  coordinate: AnnotationCoordinate;
+/** 图元位置试验场参数 */
+export type ReferencePointValues = {
+  coordinate: ReferenceCoordinate;
   category: string;
   orientation: 'screen' | 'x-tangent' | 'x-normal' | 'y-tangent' | 'y-normal';
   preset: 'shape' | 'text';
@@ -22,7 +22,7 @@ export type AnnotationPointValues = {
   distance: number;
 };
 /** 常量几何及其标签的可交互预览 */
-export const AnnotationPointPreview: FC<AnnotationPointValues> = values => {
+export const ReferencePointPreview: FC<ReferencePointValues> = values => {
   const orientation: NonNullable<PointMarkProps['properties']>['orientation'] =
     values.coordinate === 'cartesian' || values.orientation === 'screen'
       ? { kind: 'screen' }
@@ -34,14 +34,14 @@ export const AnnotationPointPreview: FC<AnnotationPointValues> = values => {
   return (
     <Layout viewBox={{ x: -50, y: -55, width: 420, height: 350 }}>
       <Plot data={[]} width={320} height={240} coordinate={values.coordinate === 'cartesian' ? undefined : 'polar2D'}>
-        <PlotScale dimension="x" {...annotationXScale(values.coordinate)} />
+        <PlotScale dimension="x" {...referenceXScale(values.coordinate)} />
         <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
         {values.preset === 'text' ? (
           <PointMark
             contributeToDomain={false}
             encodings={{
               position: {
-                x: { value: annotationX(values.coordinate, values.x, values.category) },
+                x: { value: referenceX(values.coordinate, values.x, values.category) },
                 y: { value: values.y },
               },
             }}
@@ -52,7 +52,7 @@ export const AnnotationPointPreview: FC<AnnotationPointValues> = values => {
             contributeToDomain={false}
             encodings={{
               position: {
-                x: { value: annotationX(values.coordinate, values.x, values.category) },
+                x: { value: referenceX(values.coordinate, values.x, values.category) },
                 y: { value: values.y },
               },
             }}

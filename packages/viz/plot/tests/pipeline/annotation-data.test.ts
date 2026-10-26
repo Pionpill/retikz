@@ -1,4 +1,4 @@
-import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -52,6 +52,37 @@ const rows = [
 const options = { textMeasurer: measureLabel };
 
 describe('data-bound annotations', () => {
+  it.each([6, 14, 24])('常量位置在没有数据行时保留固定半径 %s', size => {
+    const output = lowerPlot(
+      plot([{ ...point, properties: { ...point.properties, size, minimumSize: 2 } }]),
+      { rows: [] },
+      options,
+    );
+    const { scene } = compileToScene({ type: 'scene', version: 1, children: [output] });
+    const flatten = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>
+      items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
+    const ellipses = flatten(scene.primitives).filter(item => item.type === 'ellipse');
+    const dataOutput = lowerPlot(
+      plot([
+        {
+          ...point,
+          encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
+          properties: { ...point.properties, size, minimumSize: 2 },
+        },
+      ]),
+      { rows: [{ x: 1, y: 2 }] },
+      options,
+    );
+    const expected = flatten(
+      compileToScene({ type: 'scene', version: 1, children: [dataOutput] }).scene.primitives,
+    ).filter(item => item.type === 'ellipse');
+    expect(ellipses).toHaveLength(1);
+    expect(expected).toHaveLength(1);
+    expect(expected[0].rx).toBeGreaterThan(2);
+    expect(ellipses[0].rx).toBeCloseTo(expected[0].rx, 3);
+    expect(ellipses[0].ry).toBeCloseTo(expected[0].ry, 3);
+  });
+
   it('preserves empty transforms and field bindings through JSON', () => {
     const source = MarkSchema.parse({
       ...point,

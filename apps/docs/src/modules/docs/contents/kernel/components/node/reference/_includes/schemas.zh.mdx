@@ -77,7 +77,7 @@ Node.position 可省略，Core 解析时使用局部原点 [0, 0]；直接 schem
   name="NodeLabelSchema"
   description="附着在节点边界或中心的额外文字，Node.label 可使用数组添加多个标签"
   descriptions={{
-    text: '标签文字或混排行',
+    text: '标签文本块：字符串支持换行，非空行数组支持逐行样式与混排片段',
     textColor: '标签文字颜色，缺省沿继承链求值',
     opacity: '标签不透明度覆盖；省略时继承节点整体不透明度',
     font: '标签字体覆盖，缺省字段继承节点字体',
@@ -140,6 +140,6 @@ Node.position 可省略，Core 解析时使用局部原点 [0, 0]；直接 schem
 
 ## BoundaryLabelSchema
 
-Kernel 共享的边界标签契约。Node 复用其中的旋转、放置和对齐字段，同时保留自己的位置、引线、单行内容及默认值；Ribbon 端点直接使用此 Schema。
+Kernel 共享的边界标签契约。Node 复用其中的旋转、放置和对齐字段，同时保留自己的位置、引线、文本块及默认值；Ribbon 端点直接使用此 Schema。
 
 <ZodSchema shallow name="BoundaryLabelSchema" />

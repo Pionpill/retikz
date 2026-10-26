@@ -1096,7 +1096,7 @@ describe('Typed Point Chart React declarations', () => {
           </ChartExtension>
         </>,
       ),
-    ).toThrow(/duplicate-declaration-source/i);
+    ).toThrow(/PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE/i);
   });
 
   it('rejects root ChartCoordinate combined with child composition', () => {
@@ -1161,7 +1161,7 @@ describe('Typed Point Chart React declarations', () => {
           </ChartExtension>
         </>,
       ),
-    ).toThrow(/unsupported-chart-child/i);
+    ).toThrow(/PLOT_VANILLA_UNSUPPORTED_CHART_CHILD/i);
   });
 
   it('rejects ordinary iterables and custom wrappers instead of widening direct-child semantics', () => {

@@ -15,6 +15,7 @@ import { Fragment, isValidElement } from 'react';
 import {
   IntervalMark,
   PathMark,
+  PlotPathStep,
   PlotAxis,
   PlotFacet,
   PlotLegend,
@@ -25,6 +26,7 @@ import {
   PointMark,
   RelationMark,
 } from '../components';
+import { RetikzPlotReactError } from '../error';
 
 const declarationKindOf = (element: ReactElement): PlotDeclarationKind | undefined => {
   if (element.type === PlotFacet) return 'facet';
@@ -171,6 +173,7 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
     }
 
     const kind = declarationKindOf(slot);
+    if (slot.type === PlotPathStep) throw new RetikzPlotReactError('PlotPathStep must be declared inside PathMark');
     if (kind === undefined) {
       appendDeclaration('unsupported', { valueKind: 'element' }, path, context);
       return;
@@ -249,6 +252,27 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
       return;
     }
 
+    if (kind === 'path-mark' && rawProps.children !== undefined) {
+      const steps: Array<JsonObject> = [];
+      const visitStep = (child: unknown): void => {
+        if (child === null || child === undefined || typeof child === 'boolean') return;
+        if (Array.isArray(child) || isRawIterable(child)) {
+          for (const member of child) visitStep(member);
+          return;
+        }
+        if (!isValidElement(child)) throw new RetikzPlotReactError('PathMark children must be PlotPathStep elements');
+        if (child.type === Fragment) {
+          visitStep((child.props as { children?: ReactNode }).children);
+          return;
+        }
+        if (child.type !== PlotPathStep)
+          throw new RetikzPlotReactError('PathMark children must be PlotPathStep elements');
+        steps.push(plainPropsOf(child.props as Record<string, unknown>));
+      };
+      visitStep(rawProps.children);
+      appendDeclaration(kind, plainPropsOf(rawProps, { children: steps }), path, context);
+      return;
+    }
     appendDeclaration(kind, plainPropsOf(rawProps), path, context);
   };
 

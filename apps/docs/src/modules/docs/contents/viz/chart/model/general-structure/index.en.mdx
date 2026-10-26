@@ -7,7 +7,9 @@ The root fields of Chart Source describe the complete graphic. They identify its
 
 ## Data transforms and runtime entry points
 
-Every Chart root supports `transform: Array<IRDataTransformDeclaration>` and `dataExecution`. Each declaration is `{ operation, dataExecution? }`; derived encodings also wrap their operation and can configure that stage. Stages run root transforms, then derived encodings, then recipe/mark-local transforms. dataExecution reuses the Plot shared policy or independent `{ root, marks }` policies. Declarations override their selected scope, followed by executor defaults and finally builtin. See [Plot execution policies](/viz/plot/reference/plot#plotdataexecutionschema).
+Data owns data processing. Run a built-in or custom transform first, then pass its rows and field model to Chart. Synchronous Vanilla uses `data` and `dataModel`; asynchronous entry points also accept `{ kind: 'result', result: { rows, model } }` through `dataBindings`. Encodings bind output fields and do not accept inline `transform` or `output`.
+
+To execute a processing chain with the chart, declare ordered `{ operation, dataExecution? }` entries in `plotExtension.transform`. Supply custom definitions and implementations through `lowerOptions.definitions.transforms` and `lowerOptions.implementations.transforms`. The explicit chain runs before encoding aggregates, followed by recipe/mark-local transforms. Root `dataExecution` reuses the Plot shared policy or independent `{ root, marks }` policies. Declarations override their selected scope, followed by executor defaults and finally builtin. See [Plot execution policies](/viz/plot/reference/plot#plotdataexecutionschema).
 
 All six React Chart families accept dataBindings, dataTransformExecutor and signal. Raw rows and dataBindings are exclusive; lowerOptions injects separate Data Definitions and Implementations. Standalone clients prepare automatically; embedded Charts enable async runtime.preparation on the outer Layout.
 

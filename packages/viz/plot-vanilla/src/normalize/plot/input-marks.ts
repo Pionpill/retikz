@@ -1,4 +1,4 @@
-import type { IRGraphicStyle } from '@retikz/core';
+import type { IRGraphicStyle, WayDSL } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type {
   IRPlotPointMark,
@@ -11,7 +11,12 @@ import type {
   IRPlotRelationPathGeometry,
   IRPlotRelationRouteStep,
   IRPlotRelationStepLabel,
+  IRPlotPathStep,
+  IRPlotPathStepTarget,
+  PathMarkAppearanceEncodingSchema,
 } from '@retikz/plot';
+import type { InputPath } from '@retikz/vanilla';
+import type { infer as ZodInfer } from 'zod';
 
 /** 字段路径，直接保留为 Source 字符串 */
 export type InputPlotFieldName = string;
@@ -31,7 +36,32 @@ export type InputPlotDatumLabel = {
 };
 
 export type InputPlotPointMark = Omit<IRPlotPointMark, 'type'> & InputPlotCoordinateScope & InputPlotDatumLabel;
-export type InputPlotPathMark = Omit<IRPlotPathMark, 'type'> & InputPlotCoordinateScope & InputPlotDatumLabel;
+/** 路径简写沿用 Core 算子，位置槽允许 Plot 数据绑定 */
+export type InputPlotPathWay = WayDSL<
+  IRPlotPathStepTarget,
+  Extract<IRPlotPathStep, { kind: 'curve' }>['control'],
+  Extract<IRPlotPathStep, { kind: 'axis-line' }>['to']
+>;
+
+type PlotPathAppearanceEncoding = ZodInfer<typeof PathMarkAppearanceEncodingSchema> & {
+  steps?: never;
+  position?: never;
+  from?: never;
+  to?: never;
+  series?: never;
+  order?: never;
+  closure?: never;
+};
+
+export type InputPlotPathMark = Omit<IRPlotPathMark, 'type' | 'encodings'> &
+  InputPlotCoordinateScope &
+  InputPlotDatumLabel &
+  Pick<InputPath, 'arrow'> &
+  (
+    | { encodings: IRPlotPathMark['encodings']; way?: never; children?: never }
+    | { way: InputPlotPathWay; encodings?: PlotPathAppearanceEncoding; children?: never }
+    | { children: Array<IRPlotPathStep>; encodings?: PlotPathAppearanceEncoding; way?: never }
+  );
 export type InputPlotRelationMark = Omit<IRPlotRelationMark, 'type'> & InputPlotCoordinateScope & InputPlotDatumLabel;
 
 /** 区间构造糖保持 Data 变换语义，视觉目标与 Source 使用同一分组 */

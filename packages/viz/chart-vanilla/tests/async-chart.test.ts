@@ -33,10 +33,11 @@ describe('Chart async data preparation', () => {
       dataExecution: { mode: 'external', external: 'fixture' },
       dataTransformExecutor: createDataTransformExecutor({ externalProviders: [{ name: 'fixture', provider }] }),
       title: 'Prepared chart',
+      plotExtension: { transform: [{ operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } }] },
       panel: { position: [24, 12], transforms: [{ kind: 'scale', x: 0.5 }], zIndex: 3 },
       encodings: {
         x: 'x',
-        y: { transform: { operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } }, output: 'ratio' },
+        y: 'ratio',
       },
     });
     const result = await renderChartAsync(input, {
@@ -73,15 +74,14 @@ describe('Chart async data preparation', () => {
       },
       dataExecution: { mode: 'external', external: 'fixture' },
       dataTransformExecutor: createDataTransformExecutor({ externalProviders: [{ name: 'fixture', provider }] }),
+      plotExtension: {
+        transform: [
+          { operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } }, dataExecution: { mode: 'builtin' } },
+        ],
+      },
       encodings: {
         x: 'x',
-        y: {
-          transform: {
-            operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } },
-            dataExecution: { mode: 'builtin' },
-          },
-          output: 'ratio',
-        },
+        y: 'ratio',
       },
     });
     const result = await renderChartAsync(input, {

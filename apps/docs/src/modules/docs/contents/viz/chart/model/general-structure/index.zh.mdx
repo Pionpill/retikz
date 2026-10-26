@@ -7,7 +7,9 @@ Chart Source 的根级字段描述整张图。先识别它属于哪个图形家�
 
 ## 数据变换与运行入口
 
-所有 Chart 根支持 `transform: Array<IRDataTransformDeclaration>` 与 `dataExecution`；每条声明使用 `{ operation, dataExecution? }`。派生 encoding 同样将操作写入 operation，并可指定该阶段的执行配置。阶段顺序为根变换、派生 encoding，再到 recipe / 图元局部变换。dataExecution 复用 Plot 的统一或 `{ root, marks }` 分组策略；两组独立，声明覆盖所属作用域，之后继承执行器默认值，最终模式缺省为 builtin。见 [Plot 执行策略](/viz/plot/reference/plot#plotdataexecutionschema)。
+数据处理由 Data 提供。可以先执行内置或自定义 transform，再把结果的行数据与字段模型交给 Chart；同步 Vanilla 使用 `data` 与 `dataModel`，异步入口也可通过 `dataBindings` 传入 `{ kind: 'result', result: { rows, model } }`。encoding 绑定结果字段，不接受内联 `transform` 或 `output`。
+
+需要随图表运行的处理链时，在 `plotExtension.transform` 中声明有序的 `{ operation, dataExecution? }`，并通过 `lowerOptions.definitions.transforms` 与 `lowerOptions.implementations.transforms` 注入自定义操作的定义和实现。执行顺序为显式处理链、encoding 聚合，再到 recipe / 图元局部变换。根 `dataExecution` 复用 Plot 的统一或 `{ root, marks }` 分组策略；声明覆盖所属作用域，之后继承执行器默认值，最终模式缺省为 builtin。见 [Plot 执行策略](/viz/plot/reference/plot#plotdataexecutionschema)。
 
 React 六类 Chart 接收 dataBindings、dataTransformExecutor 和 signal；原始 rows 与 dataBindings 互斥，Data Definition/Implementation 通过 lowerOptions 分别注入。独立客户端自动异步准备；嵌入外层 Layout 时开启 runtime.preparation 为 async。
 

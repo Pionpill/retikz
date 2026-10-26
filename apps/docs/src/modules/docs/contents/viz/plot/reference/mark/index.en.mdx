@@ -7,6 +7,15 @@ Marks are the geometry-output layer of the graphics grammar. Point, Path, Interv
 
 Fixed `fill` / `stroke` reuse Core PaintValue: CSS colors, a master color weight from 0 to 1, or structured Paint. `opacity` accepts a number (equivalent to `overall`) or an object with independent `overall` / `fill` / `stroke` factors. Relation primitive styles follow the same rules.
 
+## PlotPathStepSchema
+
+<ZodSchema
+  name="PlotPathStepSchema"
+  description="Constructs a path with Core steps after projecting data positions. Steps use kind and omit the type field."
+/>
+
+Targets accept Core drawing coordinates, Plot data positions, or mark references. Bezier control points accept only absolute coordinates or data positions. See [Path construction](/viz/plot/mark/path#path-construction).
+
 ## MarkSchema
 
 <ZodSchema name="MarkSchema" />
@@ -127,9 +136,7 @@ Exactly one of `field`, `template`, and `generator` must be present.
 
 Fixed labels use an optional `text` field. When omitted, `encodings.label.text` at the same index can provide the content. A label is omitted if neither source supplies valid text. String shorthand follows the same rules.
 
-### MarkLabelTextSchema
-
-<ZodSchema name="MarkLabelTextSchema" />
+Node and path labels both use the Core text block: a string with line breaks or a non-empty array of lines. Per-line styles and mixed segments belong inside that array. One text block still represents one label.
 
 ### MarkNodeLabelSchema
 

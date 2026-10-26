@@ -1,13 +1,13 @@
 import type { Lang } from '@/i18n';
 
-import { annotationCategories } from './reference-coordinate';
-import { annotationCoordinateI18n } from './reference-coordinate.i18n';
+import { referenceCategories } from './reference-coordinate';
+import { referenceCoordinateI18n } from './reference-coordinate.i18n';
 
 /** 连续位置控件的显示条件 */
-export const annotationContinuousCondition = { controlId: 'coordinate', oneOf: ['cartesian', 'polar-continuous'] };
+export const referenceContinuousCondition = { controlId: 'coordinate', oneOf: ['cartesian', 'polar-continuous'] };
 /** 坐标切换控件 */
-export const annotationCoordinateControl = (lang: Lang) => {
-  const text = annotationCoordinateI18n[lang];
+export const referenceCoordinateControl = (lang: Lang) => {
+  const text = referenceCoordinateI18n[lang];
   return {
     kind: 'select',
     id: 'coordinate',
@@ -21,7 +21,7 @@ export const annotationCoordinateControl = (lang: Lang) => {
   } as const;
 };
 /** 离散角度选择控件 */
-export const annotationCategoryControl = <TId extends string>(
+export const referenceCategoryControl = <TId extends string>(
   lang: Lang,
   id: TId,
   defaultValue: string,
@@ -30,8 +30,8 @@ export const annotationCategoryControl = <TId extends string>(
   ({
     kind: 'select',
     id,
-    label: annotationCoordinateI18n[lang][label],
+    label: referenceCoordinateI18n[lang][label],
     defaultValue,
-    options: annotationCategories.map(value => ({ value, label: value })),
+    options: referenceCategories.map(value => ({ value, label: value })),
     visibleWhen: { controlId: 'coordinate', oneOf: ['polar-discrete'] },
   }) as const;

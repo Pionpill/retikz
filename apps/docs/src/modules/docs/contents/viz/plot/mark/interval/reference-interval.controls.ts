@@ -3,15 +3,15 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import {
-  annotationCoordinateControl,
-  annotationCategoryControl,
-  annotationContinuousCondition,
+  referenceCoordinateControl,
+  referenceCategoryControl,
+  referenceContinuousCondition,
 } from '../shared/reference-coordinate.controls';
-import { annotationI18n } from './reference-interval.i18n';
+import { referenceIntervalI18n } from './reference-interval.i18n';
 
-/** 标注试验场的控件与稳定状态 */
+/** 图元位置试验场的控件与稳定状态 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
-  const text = annotationI18n[lang];
+  const text = referenceIntervalI18n[lang];
   return {
     controls: definePreviewControls({
       presentation: 'panel',
@@ -19,7 +19,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       sections: [
         {
           controls: [
-            annotationCoordinateControl(lang),
+            referenceCoordinateControl(lang),
             {
               kind: 'select',
               id: 'connection',
@@ -30,12 +30,12 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
                 { value: 'straight', label: text.connection1 },
               ],
             },
-            annotationCategoryControl(lang, 'startCategory', 'B', 'start'),
-            annotationCategoryControl(lang, 'endCategory', 'E', 'end'),
+            referenceCategoryControl(lang, 'startCategory', 'B', 'start'),
+            referenceCategoryControl(lang, 'endCategory', 'E', 'end'),
             {
               kind: 'range',
               id: 'from',
-              visibleWhen: annotationContinuousCondition,
+              visibleWhen: referenceContinuousCondition,
               label: text.from,
               defaultValue: 20,
               min: 10,
@@ -45,7 +45,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
             {
               kind: 'range',
               id: 'to',
-              visibleWhen: annotationContinuousCondition,
+              visibleWhen: referenceContinuousCondition,
               label: text.to,
               defaultValue: 70,
               min: 60,
@@ -53,6 +53,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
               step: 5,
             },
             { kind: 'switch', id: 'fullHeight', label: text.fullHeight, defaultValue: false },
+            { kind: 'switch', id: 'fullWidth', label: text.fullWidth, defaultValue: false },
             { kind: 'range', id: 'opacity', label: text.opacity, defaultValue: 0.25, min: 0.1, max: 0.8, step: 0.05 },
             { kind: 'switch', id: 'showLabel', label: text.showLabel, defaultValue: true },
             {
@@ -78,6 +79,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       from: 20,
       to: 70,
       fullHeight: false,
+      fullWidth: false,
       opacity: 0.25,
       showLabel: true,
       labelPosition: 'top',

@@ -1,15 +1,10 @@
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { union, string, strictObject, enum as zodEnum, number, boolean } from 'zod';
+import { union, strictObject, enum as zodEnum, number, boolean } from 'zod';
 import type { input as ZodInput } from 'zod';
 
 import { ContextualColorSchema, OpacitySchema } from '../style/graphic';
 import { FontSchema } from './font';
-import { SegmentedLineSchema, TextBlockSchema, TextAlignSchema } from './text';
-
-/** 校验单行标签内容，接受文本语法糖或显式混排片段 */
-export const LabelTextContentSchema = union([string(), SegmentedLineSchema]).describe(
-  'Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ segments }` mixed text+math line. Single-line.',
-);
+import { TextBlockSchema, TextAlignSchema } from './text';
 
 /** 允许调用方替换的标签字段说明 */
 type LabelVisualStyleDescriptionOverrides = Partial<Record<'textColor' | 'opacity' | 'font', string>>;

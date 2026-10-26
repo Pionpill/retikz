@@ -15,7 +15,7 @@ import { resolvePaint } from '../resource';
 import { resolveBoxSpacing } from '../spacing';
 import { resolveGraphicOpacity, mergeNodeLabelDefaults } from '../style';
 import { resolveContextualColor, resolveDashPattern, resolveDropShadow, resolveEffectiveNodeStyle } from '../style';
-import type { ResolvedInlineSourceSegment, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
+import type { ResolvedInlineSourceSegment, ResolvedTextLine } from '../text';
 import { resolveBoundaryReference } from './boundary';
 import { resolveNodeShape } from './shape';
 import { resolveNodeTextColor } from './text-color';
@@ -235,26 +235,6 @@ const resolveNodeLineColors = (
   };
 };
 
-/** 确定 label 单行内容中各 segment 的派生颜色 */
-const resolveLabelTextColors = (
-  text: IRNodeLabel['text'],
-  masterColor: string | undefined,
-  mode: NodeResolveContext['mode'],
-  fieldPath: string,
-): ResolvedLabelTextContent =>
-  typeof text === 'string'
-    ? text
-    : {
-        ...text,
-        fill:
-          text.fill === undefined
-            ? undefined
-            : resolveContextualColor(text.fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }),
-        segments: text.segments.map((segment, index) =>
-          resolveInlineSegmentColor(segment, masterColor, mode, `${fieldPath}.segments[${index}]`),
-        ),
-      };
-
 /** 确定 Node label 的文字主色、segment 与 pin 颜色 */
 const resolveNodeLabelColors = (
   label: MaterializedNodeLabel,
@@ -300,7 +280,12 @@ const resolveNodeLabelColors = (
   return {
     ...source,
     ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
-    text: resolveLabelTextColors(text, textMaster, context.mode, `${fieldPath}.text`),
+    text:
+      typeof text === 'string'
+        ? text
+        : text.map((line, index) =>
+            resolveNodeLineColors(line, textMaster, context.mode, `${fieldPath}.text[${index}]`),
+          ),
     ...(resolvedPin === undefined ? {} : { pin: resolvedPin }),
   };
 };

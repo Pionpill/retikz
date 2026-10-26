@@ -5,6 +5,7 @@ export const NodeLabelStyleControlId = {
   TextColor: 'textColor',
   FontSize: 'fontSize',
   Opacity: 'opacity',
+  Multiline: 'multiline',
 } as const;
 
 export const nodeLabelStyleControls = definePreviewControls({
@@ -13,6 +14,7 @@ export const nodeLabelStyleControls = definePreviewControls({
   sections: [
     {
       controls: [
+        { kind: 'switch', id: NodeLabelStyleControlId.Multiline, label: '多行文本', defaultValue: true },
         { kind: 'color', id: NodeLabelStyleControlId.TextColor, label: '文字颜色', defaultValue: '#2563eb' },
         {
           kind: 'range',
@@ -43,6 +45,7 @@ export const previewControlContract = {
     textColor: '#2563eb',
     fontSize: 16,
     opacity: 1,
+    multiline: true,
   },
   relatedApis: ['Node.label'],
 } satisfies PreviewControlContract;

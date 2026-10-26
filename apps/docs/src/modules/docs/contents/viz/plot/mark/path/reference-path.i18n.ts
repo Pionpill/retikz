@@ -1,7 +1,7 @@
-/** 标注试验场的双语控件文案 */
-export const annotationI18n = {
+/** 图元位置试验场的双语控件文案 */
+export const referencePathI18n = {
   zh: {
-    title: '路径标注',
+    title: '路径位置',
     connection: '连接方式',
     connection0: '沿坐标系',
     connection1: '直线连接',
@@ -12,7 +12,7 @@ export const annotationI18n = {
     distance: '标签间距',
   },
   en: {
-    title: 'Path annotation',
+    title: 'Path positions',
     connection: 'Connection',
     connection0: 'Follow coordinates',
     connection1: 'Straight',

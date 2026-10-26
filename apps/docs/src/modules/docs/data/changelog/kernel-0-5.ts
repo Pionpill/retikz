@@ -399,6 +399,13 @@ export const kernelV05: Release = {
           },
         },
         {
+          label: { zh: '待发布：BREAKING 标签统一多行文本块', en: 'Unreleased: BREAKING unified multiline labels' },
+          content: {
+            zh: '节点与路径标签统一使用 TextBlock，支持换行字符串、非空行数组及逐行样式；附着、旋转和引线按整个文本块计算。移除 LabelTextContentSchema；旧 text: { segments: [...] } 改为 text: [{ segments: [...] }]。React、Vanilla 和 Plot 使用同一文本契约。',
+            en: 'Node and path labels share TextBlock, supporting strings with line breaks, non-empty line arrays, and per-line styles. Attachment, rotation, and leaders use the whole block. LabelTextContentSchema is removed; change text: { segments: [...] } to text: [{ segments: [...] }]. React, Vanilla, and Plot use the same text contract.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：主色传播与箭头绘制上下文', en: 'BREAKING: master colors and arrow drawing contexts' },
           content: {
             zh: 'Path 的有效 color 覆盖 mark 的 color，具体 stroke / fill 仍优先。Arrow Definition 直接消费已解析的绘制上下文，包括虚线、端帽和连接样式；Core 不再覆盖输出图元的局部样式。实心定义默认无描边，需要同色线条的自定义定义改用上下文 fill。透明度语义保持不变。',

@@ -15,16 +15,6 @@ import type { IRPlotMark, IRPlotLabelEncoding } from '../../schemas';
 import { resolveMarkOperation } from '../mark';
 import type { ChannelResolveContext } from './types';
 
-const definitionContextOf = (context: ChannelResolveContext): ChannelDefinitionResolveContext => ({
-  node: context.node,
-  rows: context.rows,
-  model: context.model,
-  resolveChannelScale: context.resolveChannelScale,
-  resolveCategoryDomain: context.resolveCategoryDomain,
-  resolveColorScheme: context.resolveColorScheme,
-  ...(context.palette !== undefined ? { palette: context.palette } : {}),
-});
-
 /** 查找 legend / guide 消费的 channel definition；具体输出能力由 resolve owner 统一提供 */
 export const resolveChannelDefinition = (
   channel: string,
@@ -53,12 +43,14 @@ export const resolveMarkChannels = (mark: IRPlotMark, context: ChannelResolveCon
   const structuredTargets = new Set([
     'position',
     'from',
+    'steps',
     'to',
     'bounds',
     'closure',
     'source',
     'target',
     'geometry',
+    'ribbon',
     'label',
     'opacity',
     'anchorId',
@@ -101,7 +93,15 @@ export const resolveMarkChannels = (mark: IRPlotMark, context: ChannelResolveCon
     );
   };
 
-  const definitionContext = definitionContextOf(context);
+  const definitionContext: ChannelDefinitionResolveContext = {
+    node: context.node,
+    rows: context.rows,
+    model: context.model,
+    resolveChannelScale: context.resolveChannelScale,
+    resolveCategoryDomain: context.resolveCategoryDomain,
+    resolveColorScheme: context.resolveColorScheme,
+    ...(context.palette !== undefined ? { palette: context.palette } : {}),
+  };
   const labelDeliveries: Array<LabelChannelDelivery> = [];
   const labelSource = mark.encodings?.label;
   const host = operationResolution.definition.labelHost;

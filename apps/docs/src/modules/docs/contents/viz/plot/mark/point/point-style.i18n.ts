@@ -3,6 +3,10 @@ import type { Lang } from '@/i18n';
 /** 散点试验场的双语可见文案 */
 export const pointStyleI18n = {
   zh: {
+    sizeMode: '尺寸来源',
+    fixedSize: '固定半径',
+    populationSize: '人口字段',
+    minimumSize: '最小尺寸',
     dashOffset: '虚线偏移',
     lineCap: '线帽',
     lineJoin: '连接角',
@@ -56,6 +60,10 @@ export const pointStyleI18n = {
     gradientEmphasis: '渐变强调',
   },
   en: {
+    sizeMode: 'Size source',
+    fixedSize: 'Fixed radius',
+    populationSize: 'Population field',
+    minimumSize: 'Minimum size',
     dashOffset: 'Dash offset',
     lineCap: 'Line cap',
     lineJoin: 'Line join',

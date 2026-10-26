@@ -37,7 +37,7 @@ recipe: {
 encodings: { x: 'weight', y: 'efficiency', color: 'group' }
 ```
 
-Each `chartType` exposes its own channels. Beyond a direct field name, a channel can describe field mapping, transforms, scales, and related behavior; resolution produces the fields, transformations, and scales used by Plot. Field type, format, and categorical order belong to `data.model`, rather than a parallel Chart field model. If a field encoding and a constant property target the same channel, the encoding takes precedence. A recipe consumes only the channels its type declares; a configuration consumed by neither the recipe nor the authored overlay marks fails instead of being silently ignored.
+Each `chartType` exposes its own channels. Beyond a direct field name, supported channels accept aggregates and scale bindings. Run transforms through Data or `plotExtension.transform`, then reference their output fields in encodings; inline `transform` and `output` are not accepted. Field type, format, and categorical order belong to `data.model`. If a field encoding and a constant property target the same channel, the encoding takes precedence. A recipe consumes only the channels its type declares; a configuration consumed by neither the recipe nor the authored overlay marks fails instead of being silently ignored.
 
 ## Chart properties: properties
 

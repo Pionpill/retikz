@@ -170,14 +170,14 @@ it('开放边框只有三边，隐藏边框不改变独立留白', () => {
     ]);
   expect(bounds(compile({ ...props, border: false }), 'container')).toEqual(bounds(result, 'container'));
 });
-it('根frame与开放border独立，外部连接命中变换后的单格而非外框', () => {
+it('开放边框与外部连接分别使用容器和变换后的单格边界', () => {
   const result = compile({
     type: 'scope',
     children: [
       {
         ...base,
         id: 'root',
-        frame: { padding: 2, style: { stroke: 'red' } },
+        border: { style: { stroke: 'red' } },
         items: [{ id: 'target' }],
         transforms: [{ kind: 'translate', x: 7, y: 11 }],
         defaultCell: { layout: { width: 20, height: 10 } },

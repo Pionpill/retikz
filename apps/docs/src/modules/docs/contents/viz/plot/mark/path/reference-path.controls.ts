@@ -3,15 +3,15 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import {
-  annotationCoordinateControl,
-  annotationCategoryControl,
-  annotationContinuousCondition,
+  referenceCoordinateControl,
+  referenceCategoryControl,
+  referenceContinuousCondition,
 } from '../shared/reference-coordinate.controls';
-import { annotationI18n } from './reference-path.i18n';
+import { referencePathI18n } from './reference-path.i18n';
 
-/** 标注试验场的控件与稳定状态 */
+/** 图元位置试验场的控件与稳定状态 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
-  const text = annotationI18n[lang];
+  const text = referencePathI18n[lang];
   return {
     controls: definePreviewControls({
       presentation: 'panel',
@@ -19,8 +19,8 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       sections: [
         {
           controls: [
-            annotationCoordinateControl(lang),
-            annotationCategoryControl(lang, 'category', 'C'),
+            referenceCoordinateControl(lang),
+            referenceCategoryControl(lang, 'category', 'C'),
             {
               kind: 'select',
               id: 'connection',
@@ -34,7 +34,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
             {
               kind: 'range',
               id: 'end',
-              visibleWhen: annotationContinuousCondition,
+              visibleWhen: referenceContinuousCondition,
               label: text.end,
               defaultValue: 70,
               min: 20,

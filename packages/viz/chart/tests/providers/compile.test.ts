@@ -901,13 +901,13 @@ describe('Chart providers through Core compile', () => {
       type: 'point',
       id: 'scatter-custom-transform',
       data: { reference: 'scatter.rows' },
+      plotExtension: {
+        transform: [{ operation: { kind: 'copy-chart-field', params: { field: 'x', as: 'copiedX' } } }],
+      },
       recipe: {
         chartType: 'scatter',
         encodings: {
-          x: {
-            transform: { operation: { kind: 'copy-chart-field', params: { field: 'x', as: 'copiedX' } } },
-            output: 'copiedX',
-          },
+          x: 'copiedX',
           y: 'y',
         },
       },
