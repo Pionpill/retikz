@@ -22,3 +22,5 @@
 roadmap 只管理中版本能力目标和依赖，不分配预发布批次任务；ADR 在同一 family / 中版本内用三位连续编号。Accepted 表示设计接受，不代表实现或发布完成。Standard 历史布局决策保留，当前 owner、namespace 与公开入口以 Layout ADR-001 及当前公开契约为准。
 
 跨包能力边界以根 [`../../../notes/architecture/capability-design.md`](../../../notes/architecture/capability-design.md) 为准。
+
+功能比较使用 [Kernel 功能比较 prompt](../../kernel/_notes/analysis/kernel-compare-analysis.md)，覆盖 Kernel 与 Library 两组。

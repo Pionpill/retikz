@@ -20,7 +20,7 @@
 - [`decisions/v0/v0.4/history.md`](./decisions/v0/v0.4/history.md)：v0.4 早期路线讨论与已完成方向快照。
 - [`decisions/_template.md`](./decisions/_template.md)：kernel ADR 模板。
 - [`architecture/core-drawing-complete.md`](./architecture/core-drawing-complete.md)：core 绘图完备检测设计。
-- [`analysis/core-compare-analysis.md`](./analysis/core-compare-analysis.md)：core 底座横向对比。
+- [Kernel 功能比较 prompt](analysis/kernel-compare-analysis.md)：底座比较对象与维度，结果放根目录 ignored reports。
 
 ## 规则
 
