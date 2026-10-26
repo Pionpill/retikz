@@ -1682,7 +1682,7 @@ export type FieldCollector = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"channelValue"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={18}>channelValue</ApiSourceLink>
+#### <ApiSourceLink label={"channelValue"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={19}>channelValue</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1710,7 +1710,7 @@ export declare const channelValue: (channel: IRPlotChannel | undefined, row: Ext
 
 </DocTabs>
 
-#### <ApiSourceLink label={"labelOf"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={52}>labelOf</ApiSourceLink>
+#### <ApiSourceLink label={"labelOf"} path={"packages/viz/plot/src/providers/channel/shared/field.ts"} startLine={53}>labelOf</ApiSourceLink>
 
 resolveLabel 最高优先；有字段编码时读取字段，否则使用固定内容
 
@@ -1722,13 +1722,13 @@ resolveLabel 最高优先；有字段编码时读取字段，否则使用固定�
 
 | 类别   | 名称             | 类型 / 签名                                  | 说明                                                     |
 | ------ | ---------------- | -------------------------------------------- | -------------------------------------------------------- |
-| 参数   | `text`           | `IRPlotMarkLabelText \| undefined`           | 固定文本内容                                             |
+| 参数   | `text`           | `IRNodeLabel['text'] \| undefined`           | 固定文本内容                                             |
 |        | `row`            | `ExternalRow`                                | 当前图元使用的数据行                                     |
 |        | `fieldType?`     | `DataFieldType`                              | 字段类型；temporal 使用 UTC 时间格式，其余使用数值格式   |
 |        | `resolveLabel?`  | `ResolveLabel`                               | 优先于声明内容的运行时标签回调；省略时读取 text          |
 |        | `field?`         | `string`                                     | 可选的字段编码；无效值不回退到固定内容                   |
 |        | `displayFormat?` | `string`                                     | 字段值的显示格式                                         |
-| 返回值 | —                | `IRPlotMarkLabelText \| string \| undefined` | 格式化文本或常量内容；字段为空或没有内容时返回 undefined |
+| 返回值 | —                | `IRNodeLabel['text'] \| string \| undefined` | 格式化文本或常量内容；字段为空或没有内容时返回 undefined |
 
 </ApiTable>
 
@@ -1738,13 +1738,13 @@ resolveLabel 最高优先；有字段编码时读取字段，否则使用固定�
 
 ```ts
 export declare const labelOf: (
-  text: IRPlotMarkLabelText | undefined,
+  text: IRNodeLabel['text'] | undefined,
   row: ExternalRow,
   fieldType?: DataFieldType,
   resolveLabel?: ResolveLabel,
   field?: string,
   displayFormat?: string,
-) => IRPlotMarkLabelText | string | undefined;
+) => IRNodeLabel['text'] | string | undefined;
 ```
 
 </DocTab>

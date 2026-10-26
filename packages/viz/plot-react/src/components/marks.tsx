@@ -1,3 +1,4 @@
+import type { IRPlotPathStep } from '@retikz/plot';
 import type {
   InputPlotCoreNodeChannels,
   InputPlotCorePathChannels,
@@ -7,9 +8,16 @@ import type {
   InputPlotPointMark,
   InputPlotRelationMark,
 } from '@retikz/plot-vanilla';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 
-export type PathMarkProps = InputPlotPathMark;
+export type PathMarkProps =
+  | Exclude<InputPlotPathMark, { children: Array<IRPlotPathStep> }>
+  | (Omit<Extract<InputPlotPathMark, { children: Array<IRPlotPathStep> }>, 'children'> & { children: ReactNode });
+
+export type PlotPathStepProps = IRPlotPathStep;
+
+/** 声明数据绑定路径步骤，由 PathMark 收集后统一交给 Vanilla */
+export const PlotPathStep: FC<PlotPathStepProps> = () => null;
 
 export type PointMarkProps = InputPlotPointMark;
 

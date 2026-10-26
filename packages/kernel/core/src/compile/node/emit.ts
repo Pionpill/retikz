@@ -248,23 +248,29 @@ const emitNodeLabelContentPrimitive = (
 ): ScenePrimitive => {
   const [lx, ly] = labelCenterPosition;
   if (label.laid) {
-    const laid = label.laid;
-    const originX = lx - laid.width / 2;
-    const baselineY = ly + (laid.ascent - laid.descent) / 2;
-
+    let offset = 0;
     return {
       type: 'group',
-      children: emitInlineLine(
-        laid,
-        {
-          color: labelProperties.textColor,
-          opacity: labelProperties.opacity ?? properties.opacity,
-          segments: inlineSegmentPaintsOf(labelProperties.text.segments),
-        },
-        originX,
-        baselineY,
-        round,
-      ),
+      children: label.laid.flatMap((laid, index) => {
+        const height =
+          label.laid!.length > 1
+            ? Math.max(labelProperties.font.size * DEFAULT_LINE_HEIGHT_FACTOR, laid.ascent + laid.descent)
+            : laid.ascent + laid.descent;
+        const baselineY =
+          ly - label.measuredHeight / 2 + offset + (height - laid.ascent - laid.descent) / 2 + laid.ascent;
+        offset += height;
+        return emitInlineLine(
+          laid,
+          {
+            color: labelProperties.textColor,
+            opacity: labelProperties.opacity ?? properties.opacity,
+            segments: inlineSegmentPaintsOf(labelProperties.text[index].segments),
+          },
+          lx - laid.width / 2,
+          baselineY,
+          round,
+        );
+      }),
     };
   }
 
@@ -274,7 +280,7 @@ const emitNodeLabelContentPrimitive = (
     type: 'text',
     x: round(lx),
     y: round(ly + (label.ascent - label.descent) / 2),
-    lines: [{ text: labelProperties.text.plainText }],
+    lines: [{ text: labelProperties.text[0].plainText }],
     fontSize: labelProperties.font.size,
     fontFamily: labelProperties.font.family,
     fontWeight: labelProperties.font.weight,

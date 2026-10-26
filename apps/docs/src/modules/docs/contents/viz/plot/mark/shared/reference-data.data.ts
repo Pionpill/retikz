@@ -1,5 +1,5 @@
-/** 三个统计标注示例共同使用的观测数据 */
-export const annotationRows = [
+/** 三个统计位置示例共同使用的观测数据 */
+export const referenceRows = [
   { group: 'A', x: 1, y: 2 },
   { group: 'A', x: 2, y: 3 },
   { group: 'A', x: 4, y: 9 },

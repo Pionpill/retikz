@@ -54,7 +54,7 @@ export type StrokeSamplingCollector = {
   /** 设置后续 collect 所属的 Source Path step */
   beginStep: (sourceStepIndex: number, stepKind: CanonicalStep['kind']) => void;
   /** 登记采样器并按需延迟记录 step label */
-  collect: (step: CanonicalStep, sampleAt: StrokeSegmentSampler) => void;
+  collect: (step: CanonicalStep, sampleAt: StrokeSegmentSampler, segmentCount?: number) => void;
   /** 在最终 command geometry 上 materialize 已登记的 step label */
   materializeStepLabels: (
     geometry: Parameters<typeof sampleStrokeStepParameterGeometry>[0],
@@ -91,6 +91,8 @@ type StrokeSamplerRecord = {
   sourceStepIndex: number;
   stepKind: CanonicalStep['kind'];
   sampleAt: StrokeSegmentSampler;
+  /** 当前绘制段在源 step 参数区间中的起止位置 */
+  parameterRange: readonly [number, number];
 };
 
 const parameterBoundaryOwnerOfStep = (stepKind: CanonicalStep['kind']): 'previous' | 'next' =>
@@ -154,12 +156,13 @@ export const createStrokeSamplingCollector = ({
     boundsPoints.push(...result.boundsPoints);
   };
 
-  const addSampler = (sampleAt: StrokeSegmentSampler): void => {
+  const addSampler = (sampleAt: StrokeSegmentSampler, parameterRange: readonly [number, number] = [0, 1]): void => {
     segmentSamplers.push(sampleAt);
     samplerRecords.push({
       sourceStepIndex: activeStepIndex,
       stepKind: activeStepKind,
       sampleAt,
+      parameterRange,
     });
   };
 
@@ -168,8 +171,12 @@ export const createStrokeSamplingCollector = ({
     activeStepKind = stepKind;
   };
 
-  const collect = (step: CanonicalStep, sampleAt: StrokeSegmentSampler): void => {
-    addSampler(sampleAt);
+  const collect = (step: CanonicalStep, sampleAt: StrokeSegmentSampler, segmentCount = 1): void => {
+    for (let index = 0; index < segmentCount; index += 1) {
+      const start = index / segmentCount;
+      const end = (index + 1) / segmentCount;
+      addSampler(t => sampleAt(start + t * (end - start)), [start, end]);
+    }
     if (step.kind === 'move' || step.kind === 'cycle' || !('label' in step) || !step.label) return;
     if (!step.label.interrupt) {
       emitLegacyLabel(step.label, sampleAt(step.label.position));
@@ -238,10 +245,12 @@ export const createStrokeSamplingCollector = ({
     const samplerIndex = Math.min(Math.floor(scaled), samplerRecords.length - 1);
     const localPosition = position === 1 ? 1 : scaled - samplerIndex;
     const record = samplerRecords[samplerIndex];
+    const stepPosition =
+      record.parameterRange[0] + localPosition * (record.parameterRange[1] - record.parameterRange[0]);
     const logicalSample = sampleStrokeStepParameterGeometry(
       geometry,
       record.sourceStepIndex,
-      localPosition,
+      stepPosition,
       parameterBoundaryOwnerOfStep(record.stepKind),
     );
     if (logicalSample === undefined) return undefined;

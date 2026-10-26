@@ -9,6 +9,7 @@ export const nodeLabelStyleControls = definePreviewControls({
   sections: [
     {
       controls: [
+        { kind: 'switch', id: NodeLabelStyleControlId.Multiline, label: 'Multiline text', defaultValue: true },
         { kind: 'color', id: NodeLabelStyleControlId.TextColor, label: 'Text color', defaultValue: '#2563eb' },
         {
           kind: 'range',
@@ -39,6 +40,7 @@ export const previewControlContract = {
     textColor: '#2563eb',
     fontSize: 16,
     opacity: 1,
+    multiline: true,
   },
   relatedApis: ['Node.label'],
 } satisfies PreviewControlContract;

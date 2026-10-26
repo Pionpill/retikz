@@ -2,29 +2,29 @@ import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@r
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { annotationX, annotationXScale } from './shared/reference-coordinate';
-import type { AnnotationCoordinate } from './shared/reference-coordinate';
+import { referenceX, referenceXScale } from './shared/reference-coordinate';
+import type { ReferenceCoordinate } from './shared/reference-coordinate';
 
-/** 独立标注试验场参数 */
-export type AnnotationPreviewProps = {
-  coordinate: AnnotationCoordinate;
+/** 独立图元位置试验场参数 */
+export type ReferencePreviewProps = {
+  coordinate: ReferenceCoordinate;
   /** 参考位置 */
   threshold: number;
 };
 
 /** 空数组仍是显式根数据绑定，三种标注各产生一个实例 */
-export const AnnotationPreview: FC<AnnotationPreviewProps> = props => {
+export const ReferencePreview: FC<ReferencePreviewProps> = props => {
   const { threshold, coordinate } = props;
   return (
     <Layout viewBox={{ x: -32, y: -24, width: 384, height: 268 }}>
       <Plot data={[]} width={320} height={220} coordinate={coordinate === 'cartesian' ? undefined : 'polar2D'}>
-        <PlotScale dimension="x" {...annotationXScale(coordinate)} />
+        <PlotScale dimension="x" {...referenceXScale(coordinate)} />
         <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
         <IntervalMark
           contributeToDomain={false}
           encodings={{
             bounds: {
-              x: { from: { value: annotationX(coordinate, 20, 'B') }, to: { value: annotationX(coordinate, 40, 'C') } },
+              x: { from: { value: referenceX(coordinate, 20, 'B') }, to: { value: referenceX(coordinate, 40, 'C') } },
               y: { from: { edge: 'start' }, to: { edge: 'end' } },
             },
           }}
@@ -40,7 +40,7 @@ export const AnnotationPreview: FC<AnnotationPreviewProps> = props => {
         />
         <PointMark
           contributeToDomain={false}
-          encodings={{ position: { x: { value: annotationX(coordinate, 80, 'E') }, y: { value: 80 } } }}
+          encodings={{ position: { x: { value: referenceX(coordinate, 80, 'E') }, y: { value: 80 } } }}
           properties={{ text: '80', textColor: 'darkorange' }}
         />
         <PlotAxis dimension="x" />

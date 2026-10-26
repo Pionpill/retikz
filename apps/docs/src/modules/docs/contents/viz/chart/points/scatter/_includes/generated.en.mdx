@@ -28,7 +28,7 @@ Use `ScatterEncodings` in React, `encodings` in the Vanilla API, and `recipe.enc
 | `row` / `column` | Field name, facet dimension  | Creates row or column facets, including ordered hierarchies            |
 | `facet`          | `IRPlotFacetOptions`         | Configures facets; requires `row` or `column`                          |
 
-Mapping objects may reference scales, aggregate, or transform data as supported by each channel. Shared transform parameters are not expanded here. See the [Schema reference](#scatterencodings--irscatterchartencodings--scatterchartencodingsschema) for exact inputs and [Errors and limitations](#errors-and-limitations) for combination constraints.
+Mapping objects may reference scales or aggregate data as supported by each channel. Built-in and custom transforms run through Data or `plotExtension.transform`; mappings bind their output fields. See the [Schema reference](#scatterencodings--irscatterchartencodings--scatterchartencodingsschema) for exact inputs and [Errors and limitations](#errors-and-limitations) for combination constraints.
 
 </DocTab>
 

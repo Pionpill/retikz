@@ -48,7 +48,7 @@ import {
   mappedRoleValue,
 } from '../shared';
 import type { MarkDefinition } from '../types';
-import { lowerPathEndpoints } from './path-endpoints';
+import { lowerPathInstances } from './path-instances';
 
 /**
  * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）
@@ -615,8 +615,10 @@ export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathSt
 /** path child 的可变形态（series 多段时按需补 segment id），直接复用 core IRPath 属性面 */
 type IRPathChild = IRPath;
 
-const pathMarkOptions = (mark: IRPlotPathMark): Partial<Pick<IRPath, 'marks'>> =>
-  mark.properties?.marks === undefined ? {} : { marks: mark.properties.marks };
+const pathMarkOptions = (mark: IRPlotPathMark): Partial<Pick<IRPath, 'marks' | 'arrow'>> => ({
+  ...(mark.properties?.marks === undefined ? {} : { marks: mark.properties.marks }),
+  ...(mark.properties?.arrow === undefined ? {} : { arrow: mark.properties.arrow }),
+});
 
 /** 按 series 分组并构造独立 scope owner */
 export const buildSeriesPathScopes = (
@@ -762,7 +764,7 @@ const lowerPath = (
   }
 
   const closure = pathClosureOf(mark);
-  const closed = mark.properties?.closed ?? isPolarCoordinateFrame(frame);
+  const closed = mark.properties?.closed ?? (mark.properties?.kind !== 'ribbon' && isPolarCoordinateFrame(frame));
   const seriesField = pathSeriesField(mark, rows);
   const defaultStroke = markPaintOf(mark, channels, 'stroke', rows, defaultColor ?? DEFAULT_FILL) ?? DEFAULT_FILL;
   const defaultFill = markPaintOf(mark, channels, 'fill', rows, undefined);
@@ -899,13 +901,14 @@ const pathAnchorCoordinates = (
       markIndex: ctx.markIndex,
       transformedIndex,
     };
-    const id = ctx.anchors.makeId(
+    const identity = ctx.anchors.identify(
       mark.properties?.anchorId ?? {},
       { kind: 'row', row, transformedIndex },
       owner,
       mark.encodings.anchorId,
     );
-    coordinates.push(ctx.anchors.coordinate(id, position, owner));
+    coordinates.push(ctx.anchors.coordinate(identity.id, position, owner));
+    ctx.targets?.register(identity, owner, 'coordinate');
   }
 
   return coordinates;
@@ -965,7 +968,8 @@ export const pathMarkDefinition: MarkDefinition<IRPlotPathMark> = {
     collectPathMarkChannelFields(mark, fields);
   },
   lower: (mark, input, frame, channels, context) => {
-    if (mark.encodings.from !== undefined) return lowerPathEndpoints(mark, input, frame, channels, context);
+    if (mark.encodings.from !== undefined || mark.encodings.steps !== undefined)
+      return lowerPathInstances(mark, input, frame, channels, context);
     if (input.kind === 'single') return null;
     return lowerPathLayer(mark, input.rows, frame, channels, context);
   },

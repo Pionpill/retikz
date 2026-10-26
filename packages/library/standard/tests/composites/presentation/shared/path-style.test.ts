@@ -12,8 +12,7 @@ describe('Standard presentation path style fragments', () => {
       dashOffset: -1,
       lineCap: 'round' as const,
       lineJoin: 'bevel' as const,
-      opacity: 0.8,
-      strokeOpacity: 0.6,
+      opacity: { overall: 0.8, stroke: 0.6 },
       zIndex: 3,
     };
 
@@ -31,7 +30,7 @@ describe('Standard presentation path style fragments', () => {
       stroke: '#111827',
       strokeWidth: 2,
       fill: '#fee2e2',
-      fillOpacity: 0.4,
+      opacity: { fill: 0.4 },
       fillRule: 'evenodd' as const,
       zIndex: 1,
     };

@@ -10,6 +10,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     textColor: values.textColor,
     fontSize: values.fontSize,
     opacity: values.opacity,
+    multiline: values.multiline,
   }),
 );
 

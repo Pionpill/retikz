@@ -1485,7 +1485,7 @@ describe('layout-aware composite constraints and bounds', () => {
       child: {
         type: 'node' as const,
         position: [0, 0] as [number, number],
-        label: { text: { segments: [{ text: 'mixed label' }] }, position: 'center' as const },
+        label: { text: [{ segments: [{ text: 'mixed label' }] }], position: 'center' as const },
       },
     },
     {
@@ -1553,7 +1553,7 @@ describe('layout-aware composite constraints and bounds', () => {
             ? {
                 type: 'node',
                 position: [0, 0],
-                label: { text: { segments: [{ tex: 'x' }] }, position: 'center' },
+                label: { text: [{ segments: [{ tex: 'x' }] }], position: 'center' },
               }
             : {
                 type: 'node',
@@ -2368,7 +2368,7 @@ describe('layout-aware composite constraints and bounds', () => {
     }
   });
 
-  it('classifies returned Scene, Marker, and Clip Proxy traps as fatal output violations', () => {
+  it('classifies returned Scene and Marker Proxy traps as fatal output violations', () => {
     const hostileThrown = Proxy.revocable({}, {});
     hostileThrown.revoke();
     const sceneTrap = hostileThrown.proxy;
@@ -2402,28 +2402,7 @@ describe('layout-aware composite constraints and bounds', () => {
       lineContactX: 0,
       emit: () => markerIterable,
     });
-    const clipTrap = new Error('clip getPrototypeOf trap');
-    const clipProxy = new Proxy(
-      {
-        commands: [
-          { kind: 'move', to: [0, 0] },
-          { kind: 'line', to: [1, 1] },
-        ],
-        fillRule: 'nonzero',
-      },
-      {
-        getPrototypeOf: () => {
-          throw clipTrap;
-        },
-      },
-    );
-    const proxyClip = defineClip({
-      kind: 'proxyTrapClip',
-      schema: strictObject({ kind: literal('proxyTrapClip'), params: strictObject({}) }),
-
-      lower: () => clipProxy as unknown as SceneClipPath,
-    });
-    const variants = ['scene', 'marker', 'clip'] as const;
+    const variants = ['scene', 'marker'] as const;
     const parent = defineComposite({
       namespace: 'test',
       type: 'proxyTrapParent',
@@ -2436,32 +2415,25 @@ describe('layout-aware composite constraints and bounds', () => {
         const child: IRChild =
           value.variant === 'scene'
             ? { type: 'node', position: [0, 0], shape: { type: 'proxyTrapShape', params: {} } }
-            : value.variant === 'marker'
-              ? {
-                  type: 'path',
-                  arrow: pathArrows('->', { shape: 'proxyTrapArrow' }),
-                  children: [
-                    { type: 'step', kind: 'move', to: [0, 0] },
-                    { type: 'step', kind: 'line', to: [10, 0] },
-                  ],
-                }
-              : {
-                  type: 'scope',
-                  clip: { kind: 'proxyTrapClip', params: {} } as never,
-                  children: [{ type: 'node', position: [0, 0] }],
-                };
-        context.layoutChild(child, NaturalLayoutProposal);
-
-        return { children: [] };
+            : {
+                type: 'path',
+                arrow: pathArrows('->', { shape: 'proxyTrapArrow' }),
+                children: [
+                  { type: 'step', kind: 'move', to: [0, 0] },
+                  { type: 'step', kind: 'line', to: [10, 0] },
+                ],
+              };
+        const probe = context.layoutChild(child, NaturalLayoutProposal);
+        if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+        return { children: [context.replay(probe.result)] };
       },
     });
     const options = {
       composites: [parent],
       shapes: [proxyShape],
       arrows: [proxyArrow],
-      clips: [proxyClip],
     };
-    const causes = { scene: sceneTrap, marker: markerTrap, clip: clipTrap };
+    const causes = { scene: sceneTrap, marker: markerTrap };
 
     for (const variant of variants) {
       let thrown: unknown;

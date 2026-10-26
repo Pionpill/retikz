@@ -2,30 +2,72 @@
 
 **组件属性**
 
-#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={12}>PathMarkProps</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkProps"} path={"packages/viz/plot-react/src/components/marks.tsx"} startLine={13}>PathMarkProps</ApiSourceLink>
 
-<DocTabs defaultValue="members">
+**公共属性**
 
-<DocTab value="members" label="属性">
+<ApiTable>
 
-<ApiTable grouped>
+| 成员                  | 类型                                       | 默认值 | 说明                                                     |
+| --------------------- | ------------------------------------------ | ------ | -------------------------------------------------------- |
+| `arrow?`              | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —      | 端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头 |
+| `contributeToDomain?` | `false \| true`                            | —      | —                                                        |
+| `coordinateView?`     | `string`                                   | —      | —                                                        |
+| `defaultColorGroup?`  | `string`                                   | —      | —                                                        |
+| `defaultColorIndex?`  | `number`                                   | —      | —                                                        |
+| `facetId?`            | `string`                                   | —      | —                                                        |
+| `id?`                 | `string`                                   | —      | —                                                        |
+| `layer?`              | `{ zIndex?: number \| undefined; }`        | —      | —                                                        |
+| `properties?`         | `PathMarkProps["properties"]`              | —      | —                                                        |
+| `resolveLabel?`       | `(row: ExternalRow) => string`             | —      | —                                                        |
+| `trackId?`            | `string`                                   | —      | —                                                        |
+| `transforms?`         | `PathMarkProps["transforms"]`              | —      | —                                                        |
+| `xAxisId?`            | `string`                                   | —      | —                                                        |
+| `yAxisId?`            | `string`                                   | —      | —                                                        |
 
-| 分组 | 成员                  | 类型                                | 默认值 | 说明 |
-| ---- | --------------------- | ----------------------------------- | ------ | ---- |
-| 主要 | `id?`                 | `string`                            | —      | —    |
-| 数据 | `contributeToDomain?` | `false \| true`                     | —      | —    |
-|      | `encodings`           | `InputPlotPathMark['encodings']`    | —      | —    |
-|      | `transforms?`         | `InputPlotPathMark['transforms']`   | —      | —    |
-| 几何 | `coordinateView?`     | `string`                            | —      | —    |
-|      | `properties?`         | `InputPlotPathMark['properties']`   | —      | —    |
-|      | `xAxisId?`            | `string`                            | —      | —    |
-|      | `yAxisId?`            | `string`                            | —      | —    |
-| 布局 | `facetId?`            | `string`                            | —      | —    |
-|      | `trackId?`            | `string`                            | —      | —    |
-| 样式 | `defaultColorGroup?`  | `string`                            | —      | —    |
-|      | `defaultColorIndex?`  | `number`                            | —      | —    |
-|      | `layer?`              | `{ zIndex?: number \| undefined; }` | —      | —    |
-| 回调 | `resolveLabel?`       | `(row: ExternalRow) => string`      | —      | —    |
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="encodings">
+
+<DocTab value="encodings" label="属性 · 显式编码">
+
+<ApiTable>
+
+| 成员        | 类型                          | 默认值 | 说明 |
+| ----------- | ----------------------------- | ------ | ---- |
+| `children?` | `never`                       | —      | —    |
+| `encodings` | `IRPlotPathMark['encodings']` | —      | —    |
+| `way?`      | `never`                       | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="way" label="属性 · 路径简写">
+
+<ApiTable>
+
+| 成员         | 类型                         | 默认值 | 说明 |
+| ------------ | ---------------------------- | ------ | ---- |
+| `children?`  | `never`                      | —      | —    |
+| `encodings?` | `PlotPathAppearanceEncoding` | —      | —    |
+| `way`        | `InputPlotPathWay`           | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · 步骤子组件">
+
+<ApiTable>
+
+| 成员         | 类型                         | 默认值 | 说明 |
+| ------------ | ---------------------------- | ------ | ---- |
+| `children`   | `ReactNode`                  | —      | —    |
+| `encodings?` | `PlotPathAppearanceEncoding` | —      | —    |
+| `way?`       | `never`                      | —      | —    |
 
 </ApiTable>
 
@@ -34,14 +76,31 @@
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type PathMarkProps = InputPlotPathMark;
+export type PathMarkProps =
+  | Exclude<
+      InputPlotPathMark,
+      {
+        children: Array<IRPlotPathStep>;
+      }
+    >
+  | (Omit<
+      Extract<
+        InputPlotPathMark,
+        {
+          children: Array<IRPlotPathStep>;
+        }
+      >,
+      'children'
+    > & {
+      children: ReactNode;
+    });
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRPlotPathMark"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={186}>IRPlotPathMark</ApiSourceLink> / <ApiSourceLink label={"PathMarkSchema"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={170}>PathMarkSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPlotPathMark"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={296}>IRPlotPathMark</ApiSourceLink> / <ApiSourceLink label={"PathMarkSchema"} path={"packages/viz/plot/src/schemas/mark/path.ts"} startLine={223}>PathMarkSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 

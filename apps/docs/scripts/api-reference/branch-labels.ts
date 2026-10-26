@@ -32,6 +32,11 @@ export const apiReferenceBranchLabels: Readonly<
     },
     { value: 'camera', field: 'property', type: '"viewBox"', label: { zh: '镜头', en: 'Camera' } },
   ],
+  '@retikz/plot-react#PathMarkProps': [
+    { value: 'encodings', field: 'encodings', required: true, label: { zh: '显式编码', en: 'Explicit encodings' } },
+    { value: 'way', field: 'way', required: true, label: { zh: '路径简写', en: 'Way shorthand' } },
+    { value: 'children', field: 'children', required: true, label: { zh: '步骤子组件', en: 'Step children' } },
+  ],
   '@retikz/plot#ChannelDefinition': [
     { value: 'label', field: 'kind', type: '"label"', label: { zh: '标签', en: 'Label' } },
     { value: 'position', field: 'kind', type: '"position"', label: { zh: '位置', en: 'Position' } },

@@ -4,6 +4,15 @@ import { AxisLineTargetSchema, parseTargetSugar, parseWay } from '@retikz/core';
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type { InputAxisLineTarget, InputPath, InputStep, InputTarget } from './types';
 
+/** 将方向简写转换为端点箭头对象，供 Kernel 与领域路径作者入口复用 */
+export const normalizePathArrow = (arrow: InputPath['arrow']): IRPath['arrow'] =>
+  typeof arrow === 'string'
+    ? {
+        ...(arrow === '<-' || arrow === '<->' ? { start: {} } : {}),
+        ...(arrow === '->' || arrow === '<->' ? { end: {} } : {}),
+      }
+    : arrow;
+
 /** 将作者目标写法转换为 IR 目标 */
 const normalizeTarget = (input: InputTarget): IRTarget => parseTargetSugar(input);
 
@@ -103,13 +112,7 @@ export const normalizePath = (input: InputPath): IRPath => {
   }
 
   const normalizedChildren = normalizePathChildren(authoredChildren);
-  const normalizedArrow =
-    typeof arrow === 'string'
-      ? {
-          ...(arrow === '<-' || arrow === '<->' ? { start: {} } : {}),
-          ...(arrow === '->' || arrow === '<->' ? { end: {} } : {}),
-        }
-      : arrow;
+  const normalizedArrow = normalizePathArrow(arrow);
 
   return {
     type: 'path',

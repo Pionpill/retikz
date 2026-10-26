@@ -109,14 +109,14 @@ it('骨架与显式单元等价', () => {
     compile({ ...base, items: ['A', {}] }).scene,
   );
 });
-it('根frame、变换与外部连线命中实际单格，局部命名空间可复用id', () => {
+it('边框、变换与外部连线命中实际单格，局部命名空间可复用id', () => {
   const result = compile({
     type: 'scope',
     children: [
       {
         ...base,
         id: 'q',
-        frame: { padding: 2, style: { stroke: 'red' } },
+        border: { style: { stroke: 'red' } },
         items: [{ id: 'target' }],
         transforms: [{ kind: 'translate', x: 7, y: 11 }],
         defaultCell: { layout: { width: 20, height: 10 } },

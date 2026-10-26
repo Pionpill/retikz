@@ -1,23 +1,23 @@
 ---
 description: Chart encoding 字段映射计划；背景：Chart 原先把 recipe.encodings 的值限制为字段名字符串
-keywords: 'Chart、encoding、normalize、facet、plotExtension.marks、ChartFacet'
+keywords: 'Chart、encoding、Data、facet、plotExtension.marks、ChartFacet'
 ---
 
 # ADR-011：Chart encoding 字段映射计划
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-25
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Chart 总设计](../../../../architecture/chart-design.md) · [Chart 封装完备设计](../../../../architecture/chart-encapsulation-complete.md) · [Data 能力完备设计](../../../../architecture/data-capability-complete.md) · [Plot 可视化完备设计](../../../../architecture/plot-visualization-complete.md) · [ADR-009](./009-family-recipe-chart-schema.md) · [ADR-010](./010-chart-plot-declaration-authoring.md)
-- 拟替代：本 ADR Accepted 后替代 ADR-010 中 `ChartFacet`、`recipe.facet` 以及“facet 不属于 encodings”的决定
+- 替代：ADR-010 中 `ChartFacet`、`recipe.facet` 以及“facet 不属于 encodings”的决定
 - 保留：ADR-010 的 Plot 声明 owner、`PlotXxx` 命名、Plot canonical facet resolver 与低层 Plot 出口
 
 ## 背景与目标
 
-Chart 原先把 `recipe.encodings` 的值限制为字段名字符串。它能表达最小 Scatter，却不能在字段映射位置说明 scale、聚合、字段派生或字段驱动 composition；常见意图因此被拆进 `plotExtension` 或独立 facet 结构，同一个字段事实出现多条 authoring 路径。
+Chart 原先把 `recipe.encodings` 的值限制为字段名字符串。它能表达最小 Scatter，却不能在字段映射位置说明 scale、聚合或字段驱动 composition；常见意图因此被拆进 `plotExtension` 或独立 facet 结构，同一个字段事实出现多条 authoring 路径。
 
-本 ADR 把 encoding 定义为**字段映射计划**：每个 exact slot 把已有字段或显式派生字段绑定给一个确定 consumer，并可携带该映射所需的 Data / Plot operation。Data 继续拥有字段、transform、statistics 与类型证据；Plot 继续拥有 channel、scale、facet、track、lowering、provenance、lineage 与 locator；Chart 只组合具体 chartType 的精确 slot、执行顺序与 consumer 连接。轨道服务共享轴与多 mark 结构，不属于当前单 mark Chart 的字段映射封装。
+本 ADR 把 encoding 定义为**字段映射计划**：每个精确 slot 绑定已有字段，或声明单值聚合，并可连接 Plot 尺度。Data 拥有内置与自定义 transform、字段模型和执行结果；Chart 不在 encoding 内声明或调度 transform。Plot 继续拥有通道、尺度、分面、lowering、provenance、lineage 与 locator。
 
-Flint Chart、Vega-Lite 与 Observable Plot 证明了字段映射可以诱导 transform 与 composition，但 Retikz 不采用通用宽 encoding union、函数 accessor、隐式 fold 或后端适配模型。Source 仍需 JSON-safe、chartType-specific、owner 单一，并沿 Chart → Plot 正式主链下沉。
+数据处理与图形绑定分离沿用成熟产品的做法：Apache ECharts 的 [Data Transform](https://echarts.apache.org/handbook/en/concepts/data-transform/) 在 dataset 上处理数据，由 series 引用结果。Retikz 复用现有 Data / Plot 契约，不新增平行 dataset 或函数 accessor IR。
 
 ## 决策：每个 chartType 使用精确 slot schema
 
@@ -29,26 +29,26 @@ Flint Chart、Vega-Lite 与 Observable Plot 证明了字段映射可以诱导 tr
 
 当前Scatter冻结下列strict slot矩阵：
 
-| slot           | required | mapping                                                                                | scale                      | consumer / 约束                    |
-| -------------- | -------- | -------------------------------------------------------------------------------------- | -------------------------- | ---------------------------------- |
-| `x`            | 是       | string、direct、aggregate、bindable `bin / normalize / jitter`或同能力custom operation | Plot position              | Point x；jitter只能作用x           |
-| `y`            | 是       | string、direct、aggregate、bindable `bin / normalize / jitter`或同能力custom operation | Plot position              | Point y；jitter只能作用y           |
-| `color`        | 否       | string、direct、aggregate                                                              | ordinal / continuous color | Point field-bound color            |
-| `size`         | 否       | string、direct、aggregate、bindable `normalize`或同能力custom operation                | `sqrt`                     | 输出必须continuous                 |
-| `opacity`      | 否       | string、direct、aggregate、bindable `normalize`或同能力custom operation                | `linear`                   | 输出必须continuous                 |
-| `shape`        | 否       | string、direct                                                                         | 无named scale              | Point categorical shape palette    |
-| `row / column` | 否       | string、Plot partition dimension或非空hierarchy                                        | 无                         | Plot facet partition；至少一个存在 |
-| `facet`        | 否       | Plot facet options                                                                     | 无                         | 仅在row / column存在时合法         |
+| slot           | required | mapping                                         | scale                      | consumer / 约束                    |
+| -------------- | -------- | ----------------------------------------------- | -------------------------- | ---------------------------------- |
+| `x`            | 是       | string、direct、aggregate                       | Plot position              | Point x                            |
+| `y`            | 是       | string、direct、aggregate                       | Plot position              | Point y                            |
+| `color`        | 否       | string、direct、aggregate                       | ordinal / continuous color | Point field-bound color            |
+| `size`         | 否       | string、direct、aggregate                       | `sqrt`                     | 输出必须continuous                 |
+| `opacity`      | 否       | string、direct、aggregate                       | `linear`                   | 输出必须continuous                 |
+| `shape`        | 否       | string、direct                                  | 无named scale              | Point categorical shape palette    |
+| `row / column` | 否       | string、Plot partition dimension或非空hierarchy | 无                         | Plot facet partition；至少一个存在 |
+| `facet`        | 否       | Plot facet options                              | 无                         | 仅在row / column存在时合法         |
 
-Scatter拒绝`series / detail / order / text`，因为当前recipe没有确定consumer。authored Scatter mark只接受`x / y / color / size / opacity / shape` direct override，不接受aggregate、derived transform或composition。
+Scatter拒绝`series / detail / order / text`，因为当前recipe没有确定consumer。authored Scatter mark只接受`x / y / color / size / opacity / shape` direct override，不接受aggregate或composition。
 
-每个recipe Definition必须提供一个ordered `encodingSlots` contract。Scatter顺序固定为`x → y → color → size → opacity → shape → row → column → facet`；exact schema消费、unused检查、mark继承、aggregate `groupBy`与同阶段operation调度都使用该顺序。JSON属性顺序、Zod shape顺序和object spread不能成为第二权威。
+每个recipe Definition必须提供一个ordered `encodingSlots` contract。Scatter顺序固定为`x → y → color → size → opacity → shape → row → column → facet`；exact schema消费、unused检查、mark继承、aggregate `groupBy`都使用该顺序。JSON属性顺序、Zod shape顺序和object spread不能成为第二权威。
 
 ### 开放 vocabulary 与闭合结构分离
 
 registry-backed的transform / reducer / selector `kind`、scale / coordinate / mark `type`以及format / scheme / shape / theme name复用Foundation `OpenString<TKnown>`、`createOpenStringSchema(...)`或owner导出的开放schema。内置const object enum只提供常用authoring提示与内置Definition键，不封闭合法值全集。
 
-开放discriminator不等于开放结构。Data / Plot继续使用“精确built-in schema union + JSON-safe external envelope”：external key排除built-in、reserved与removed值，避免字段不完整的built-in回退成custom config。形态合法的custom key可通过Source parse；Definition注册、完整config、output model、phase和consumer compatibility在owner resolve阶段fail-loud。exact slot名、composition `kind`、axis、field type与binding phase仍是闭合集合。
+开放discriminator不等于开放结构。Data / Plot继续使用“精确built-in schema union + JSON-safe external envelope”：external key排除built-in、reserved与removed值，避免字段不完整的built-in回退成custom config。形态合法的custom key可通过Source parse；Definition注册、完整config、output model和consumer compatibility在owner resolve阶段fail-loud。exact slot名、composition `kind`、axis、field type仍是闭合集合。
 
 ## 决策：字段事实与rich mapping保持单一真源
 
@@ -59,7 +59,6 @@ rich mapping只组合owner契约：
 ```ts
 type DirectMapping = { field: string; scale?: ScaleBinding };
 type AggregateMapping = { aggregate: IRDataScalarReducerOperation; scale?: ScaleBinding };
-type DerivedMapping = { transform: IRDataTransform; output: string; scale?: ScaleBinding };
 type ScaleBinding = { operation: IRPlotScaleOperation } | { reference: string };
 ```
 
@@ -67,27 +66,17 @@ type ScaleBinding = { operation: IRPlotScaleOperation } | { reference: string };
 
 React `XxxChart` prop、Vanilla factory input与手写JSON使用同一rich结构。Vanilla只展开`row / column`字符串shorthand，不读取data或registry改变mapping；React只桥接Vanilla input。runtime reducer / transform / scale Definition通过provider sidecar传递，不进入JSON Source，SSR与compile消费同一Source和sidecar。
 
-## 决策：encoding只诱导输出明确的operation
+## 决策：数据变换由 Data 执行，encoding 只绑定字段
 
-mapping可以携带一个由该mapping诱导的aggregate或derived operation，但不接受任意`transform[]`。operation必须来自Data / Plot正式schema与Definition registry；Chart只选择当前slot允许的binding class，并把一个确定output绑定给consumer。
+encoding 不接受内联 `transform`、`output` 或任意变换数组。内置与自定义 transform 使用 Data 的同一 Definition、implementation 和 registry；Chart 不为这些操作维护白名单、binding capability、phase 或调度器。
 
-Data transform Definition公开：
+作者可以先用 Data 处理数据，再将结果的 rows 与 model 一起交给 Chart。同步 Vanilla 使用 data 与 dataModel；异步运行也可使用 dataBindings 中的 result。需要随图表执行时，显式 plotExtension.transform 保存 Data operation 声明，自定义 Definition 与 implementation 通过运行时 lowerOptions 注入，不进入 JSON Source。
 
-- `outputModel`：`preserve`保留输入并增加/覆盖descriptor；`replace`列出operation后的完整字段集合
-- `schedule`：声明binding class、闭合`DataTransformPhase`、field effect与可选output选择规则
-- statistics `outputs`：声明scalar或multi-output reducer结果；compact aggregate只接受恰好一个完整scalar descriptor
+显式处理链按声明顺序执行，然后执行 encoding 聚合，最后进入 recipe / 图元局部操作。执行策略、字段输出模型、异步执行与错误语义由 Data / Plot 拥有；Chart 不复制数据处理算法。Regression 等具体图表为自身语义生成的 Data 操作仍保留。
 
-Data pipeline逐步产出`{ rows, model }`。每一步先基于当前view解析input和output model，再执行operation并推进类型证据；Plot coordinate、scale、channel、guide、locator与lineage只读各自实际view。descriptor缺失的external operation仍可用于完整Plot transform，但不能进入type-dependent encoding transform。
+多个 aggregate mapping 合并为一个 summarize。每个 as 是对应 consumer 的字段；groupBy 只包含仍由 recipe-level direct role 消费的字段，并按 encodingSlots 筛选、去重。输出重名、与 groupBy 冲突、读取同批 aggregate 输出以及与显式处理链重复产生输出均拒绝。聚合后的字段可见性继续由正式 Data / Plot 管线验证。
 
-多个aggregate mapping合并为一个summarize。每个`as`是对应consumer的字段；`groupBy`只包含summarize后仍被recipe-level direct role消费的字段，并按ordered `encodingSlots`筛选、去重。aggregate输入、临时字段、authored Chart mark与`plotExtension.marks`不能反向改变root aggregate粒度。
-
-显式`plotExtension.transform`先执行，用于准备encoding输入；随后Chart-generated operation按Definition声明的闭合阶段执行：`row-shape → field-derive → row-order → cumulative-derive → field-adjust`，同阶段按ordered slot执行。custom `kind`不能自定义phase，later-stage output不能喂earlier-stage input。
-
-内置常用能力包括scalar aggregate、position `bin`、`normalize`和单轴`jitter`；表内名称只是vocabulary，不是custom白名单。custom Definition具备同等output model、schedule与consumer type时走同一路径。`select / annotate / relate / density / smooth`等没有single-slot完整语义的operation继续属于完整Plot transform。
-
-encoding jitter禁止`axis: 'both'`：x mapping只改x，y mapping只改y；双轴需要两个operation或完整`plotExtension.transform`。带composition grouping的bin在Plot提供正式grouped-bin contract前拒绝，Chart不补写owner operation没有声明的grouping或output。
-
-一个Chart只生成一个共享encoding data view。root transform、encoding-derived operation、facet partition、semantic mark、authored Chart mark与`plotExtension.marks`都消费aggregate / derived后的rows；Chart不自动保留raw分支。raw + aggregate layering、mark-local独立数据视图或不同transform分支必须直接使用Plot正式能力。
+一个 Chart 的 semantic mark、authored Chart mark 与 plotExtension.marks 共享最终数据视图，不自动保留 raw 分支。多数据视图或独立分支使用 Plot 正式能力。
 
 ## 决策：scale由Plot拥有，Chart只连接consumer
 
@@ -136,12 +125,12 @@ Chart不提供`track`或`trackOptions` encoding。轨道需要作者先声明稳
 
 ## 公开契约、失败语义与迁移
 
-Scatter的JSON、Vanilla与React exact Source可组合direct、aggregate、derived、scale以及facet；adapter不执行这些算法。Chart resolve沿一个长期顺序生成完整`IRPlot`：
+Scatter的JSON、Vanilla与React exact Source可组合direct、aggregate、scale以及facet；adapter不执行这些算法。Chart resolve沿一个长期顺序生成完整`IRPlot`：
 
 ```text
 exact Chart Source
   -> authored Plot root transforms
-  -> encoding-derived operations and final DataView
+  -> encoding aggregates and final DataView
   -> field / scale / composition bindings
   -> recipe semantic marks and guides
   -> authored Chart mark inheritance / override
@@ -158,10 +147,8 @@ breaking public surface：
 
 现有字段名字符串无需迁移。`average`不新增为重复reducer；使用Data开放reducer operation。`quantitative / nominal / ordinal`不进入Chart；使用Data field model。通用`sortBy / sortOrder`与顶层scheme不进入宽mapping；使用具体chartType的order consumer与Plot scale operation。
 
-以下情况必须在所属owner fail-loud：未知或未注册Definition、malformed built-in、空字段、strict model中不存在的字段、output descriptor / phase / consumer不兼容、later-stage dependency、重复operation或output、scale多source / reference / family冲突、facet依赖错误、普通slot数组、facet encoding与显式Plot composition并存、显式coordinate替换不可替换的recipe spatial scaffold、默认role字段不能承载scale binding且Definition未提供自定义hook、Scatter替换coordinate的roles不是恰好`x / y`，以及position scale没有合法coordinate role。Chart不维护第二套字段、scale、transform、coordinate或composition诊断。
+以下情况必须在所属owner fail-loud：未知或未注册Definition、malformed built-in、空字段、strict model中不存在的字段、aggregate输出 / consumer不兼容、aggregate同批输出依赖、重复operation或output、scale多source / reference / family冲突、facet依赖错误、普通slot数组、facet encoding与显式Plot composition并存、显式coordinate替换不可替换的recipe spatial scaffold、默认role字段不能承载scale binding且Definition未提供自定义hook、Scatter替换coordinate的roles不是恰好`x / y`，以及position scale没有合法coordinate role。Chart不维护第二套字段、scale、transform、coordinate或composition诊断。
 
-## 实现结果与保留边界
+## 不支持边界
 
-当前实现已把Data output model与transform schedule、Chart exact mapping scheduler、React / Vanilla同形Source及旧facet surface删除接入同一端到端路径。Scene、lineage与locator在一次runtime请求内复用同一次lowering / data artifact；独立请求仍各自执行transform。
-
-本ADR仍保持Proposed。非目标继续包括：万能encoding union、Scatter `series / detail / order / text`、隐式fold、多数据视图、Chart轨道封装以及尚无consumer的预防性slot。
+不提供 encoding 内联数据变换、万能 encoding union、隐式 fold、多数据视图或 Chart 轨道封装。删除的 transform/output 结构由精确 schema 拒绝，不保留别名、兼容解析器或双轨入口。

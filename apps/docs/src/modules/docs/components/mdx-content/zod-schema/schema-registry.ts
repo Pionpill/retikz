@@ -2221,11 +2221,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathEncoding',
     url: '/viz/plot/reference/encoding#pathencodingschema',
   },
-  MarkLabelTextSchema: {
-    schema: IRPlot.MarkLabelTextSchema,
-    label: 'MarkLabelText',
-    url: '/viz/plot/reference/mark#marklabeltextschema',
-  },
   PathMarkEncodingSchema: {
     schema: IRPlot.PathMarkEncodingSchema,
     label: 'PathMarkEncoding',
@@ -2365,6 +2360,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IRPlot.PathMarkSchema,
     label: 'PathMark',
     url: '/viz/plot/reference/mark#pathmarkschema',
+  },
+  PlotPathStepSchema: {
+    schema: IRPlot.PlotPathStepSchema,
+    label: 'PlotPathStep',
+    url: '/viz/plot/reference/mark#plotpathstepschema',
   },
   IntervalMarkSchema: {
     schema: IRPlot.IntervalMarkSchema,

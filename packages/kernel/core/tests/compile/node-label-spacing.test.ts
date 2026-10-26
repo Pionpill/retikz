@@ -62,6 +62,21 @@ const pinLine = (primitives: Array<ScenePrimitive>): PathPrimitive => {
 };
 
 describe('Node label visual-box spacing', () => {
+  it('attaches a multiline block and terminates its pin at the whole visual box', () => {
+    const scene = compileToScene(
+      sceneWithLabel({ text: ['first', 'second'], position: 'top', distance: 8, pin: true }),
+      {
+        measureText: fixedMeasure,
+        padding: 0,
+      },
+    ).scene;
+    expect(labelText(scene.primitives, 'first').y).toBeCloseTo(-63);
+    expect(labelText(scene.primitives, 'second').y).toBeCloseTo(-43);
+    expect(pinLine(scene.primitives).commands).toEqual([
+      { kind: 'move', to: [0, -30] },
+      { kind: 'line', to: [0, -38] },
+    ]);
+  });
   it('uses distance as the right-side gap to the measured visual box', () => {
     const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'right', distance: 8 }), {
       measureText: fixedMeasure,
@@ -240,7 +255,7 @@ describe('Node label resolved metrics', () => {
 
   it('rejects invalid metrics for mixed Node labels and mixed Node body text', () => {
     const invalidHeight: TextMeasurer = () => ({ width: 10, height: -1, ascent: 6, descent: 2 });
-    const labelScene = sceneWithLabel({ text: { segments: [{ text: 'L' }] }, position: 'center' });
+    const labelScene = sceneWithLabel({ text: [{ segments: [{ text: 'L' }] }], position: 'center' });
     const nodeTextScene: IRScene = {
       version: 1,
       type: 'scene',
@@ -264,7 +279,7 @@ describe('Node label resolved metrics', () => {
     });
 
     expect(() =>
-      compileToScene(sceneWithLabel({ text: { segments: [{ tex: 'x' }] }, position: 'center' }), {
+      compileToScene(sceneWithLabel({ text: [{ segments: [{ tex: 'x' }] }], position: 'center' }), {
         lowerTex,
         measureText: fixedMeasure,
       }),
@@ -273,7 +288,7 @@ describe('Node label resolved metrics', () => {
 
   it('keeps lowerTex null as a warning-based absence on the Node label path', () => {
     const warnings: Array<CompileWarning> = [];
-    const scene = compileToScene(sceneWithLabel({ text: { segments: [{ tex: 'x' }] }, position: 'center' }), {
+    const scene = compileToScene(sceneWithLabel({ text: [{ segments: [{ tex: 'x' }] }], position: 'center' }), {
       lowerTex: () => null,
       measureText: fixedMeasure,
       onWarn: warning => warnings.push(warning),

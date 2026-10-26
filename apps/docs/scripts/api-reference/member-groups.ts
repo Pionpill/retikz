@@ -110,25 +110,6 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
       direction: 'Geometry',
     },
   },
-  '@retikz/plot-react#PathMarkProps': {
-    order: ['Main', 'Data', 'Geometry', 'Layout', 'Style', 'Callbacks'],
-    members: {
-      contributeToDomain: 'Data',
-      id: 'Main',
-      encodings: 'Data',
-      transforms: 'Data',
-      properties: 'Geometry',
-      coordinateView: 'Geometry',
-      xAxisId: 'Geometry',
-      yAxisId: 'Geometry',
-      facetId: 'Layout',
-      trackId: 'Layout',
-      defaultColorGroup: 'Style',
-      defaultColorIndex: 'Style',
-      layer: 'Style',
-      resolveLabel: 'Callbacks',
-    },
-  },
   '@retikz/plot-react#PointMarkProps': {
     order: ['Main', 'Data', 'Geometry', 'Layout', 'Style', 'Callbacks'],
     members: {

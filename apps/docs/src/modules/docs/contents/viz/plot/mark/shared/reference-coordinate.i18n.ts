@@ -1,5 +1,5 @@
-/** 所有标注演示共用的坐标控件文案 */
-export const annotationCoordinateI18n = {
+/** 参考图元演示共用的坐标控件文案 */
+export const referenceCoordinateI18n = {
   zh: {
     coordinate: '坐标系',
     cartesian: '笛卡尔坐标',
@@ -8,7 +8,7 @@ export const annotationCoordinateI18n = {
     category: '角度分类',
     start: '起始分类',
     end: '终止分类',
-    title: '标注概览',
+    title: '参考图元概览',
   },
   en: {
     coordinate: 'Coordinates',
@@ -18,6 +18,6 @@ export const annotationCoordinateI18n = {
     category: 'Angle category',
     start: 'Start category',
     end: 'End category',
-    title: 'Annotations overview',
+    title: 'Reference marks overview',
   },
 };

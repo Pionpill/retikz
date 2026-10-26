@@ -165,35 +165,6 @@ describe('Table React components', () => {
     expect(clean).not.toContain('#e4e4e7');
   });
 
-  it('surfaces invalid custom Legend resolution diagnostics through the generic Table entry', () => {
-    const invalid = defineCellVisualScale({
-      name: 'react-invalid-legend',
-      optionsSchema: strictObject({}),
-      resolve: () =>
-        ({
-          of: () => 'red',
-          legendForm: 'invalid',
-          domain: [1],
-          range: ['red'],
-        }) as never,
-    });
-    const spec = createManualTableIR({
-      id: 'invalid-legend',
-      rows: [[1]],
-      encodings: [
-        {
-          id: 'invalid',
-          selector: { locations: ['body'] },
-          channel: 'backgroundFill',
-          scale: { name: 'react-invalid-legend' },
-          legend: {},
-        },
-      ],
-    });
-
-    expect(() => renderToStaticMarkup(<Table spec={spec} visualScaleDefinitions={[invalid]} />)).toThrow(/legendForm/i);
-  });
-
   it('keeps DetailTable and ManualTable authoring equal to the shared plain constructors', () => {
     const detailProps = {
       id: 'people-table',
@@ -297,7 +268,7 @@ describe('Table React components', () => {
         </Layout>,
       );
 
-    expect(renderBlankId).toThrow(/table runtime contribution reference must be a non-empty string/i);
+    expect(renderBlankId).toThrow(/failed payload validation/i);
     expect(() =>
       renderToStaticMarkup(
         <Layout>

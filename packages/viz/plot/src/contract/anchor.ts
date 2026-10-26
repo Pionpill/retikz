@@ -1,6 +1,6 @@
-import type { IRCoordinate } from '@retikz/core';
+import type { IRCoordinate, IRNodeTarget } from '@retikz/core';
 
-import type { IRPlotAnchorId } from '../schemas';
+import type { IRPlotAnchorId, IRPlotMarkTarget } from '../schemas';
 import type { MarkInstance } from './mark';
 import type { MarkPositionResolution } from './position-adjustment';
 import type { MarkProvenance } from './provenance';
@@ -36,6 +36,8 @@ export type AnchorOwner = {
 
 /** 图元下沉期间注册、解析并校验锚点引用的运行时接口 */
 export type AnchorRegistry = {
+  /** 一次求值同时取得实例身份和 Core 标识 */
+  identify: (spec: IRPlotAnchorId, instance: MarkInstance, owner: AnchorOwner, field?: string) => MarkAnchorIdentity;
   /** 按常量、字段或生成规则计算当前数据目标的锚点标识 */
   makeId: (spec: IRPlotAnchorId, instance: MarkInstance, owner: AnchorOwner, field?: string) => string;
   /** 登记锚点归属，并拒绝重复标识 */
@@ -48,6 +50,22 @@ export type AnchorRegistry = {
   assertResolved: () => void;
 };
 
+/** 目标侧身份求值结果，不持久化 */
+export type MarkAnchorIdentity = {
+  /** 已生成的 Core 标识 */
+  id: string;
+  /** 数据或生成规则提供的身份 */
+  key: unknown;
+};
+
+/** 单个视图内的 Mark 目标解析能力 */
+export type MarkTargetResolution = {
+  /** 登记实际生成的可寻址实体 */
+  register: (identity: MarkAnchorIdentity, owner: AnchorOwner, kind: 'node' | 'coordinate') => void;
+  /** 解析已经声明并生成的端点目标 */
+  reference: (target: IRPlotMarkTarget, instance: MarkInstance, owner: AnchorOwner) => IRNodeTarget;
+};
+
 /** 单个图元下沉时可用的 provenance 与锚点能力 */
 export type MarkLoweringContext = {
   /** 当前 mark 在声明列表中的索引 */
@@ -58,6 +76,8 @@ export type MarkLoweringContext = {
   provenance?: MarkProvenance;
   /** 当前下沉过程共享的锚点注册与引用能力 */
   anchors?: AnchorRegistry;
+  /** 当前实际视图的 Mark 身份引用 */
+  targets?: MarkTargetResolution;
   /** Mark Placement pipeline 已解析的最终屏幕位置 */
   positions?: MarkPositionResolution;
 };

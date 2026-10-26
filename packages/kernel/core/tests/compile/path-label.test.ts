@@ -57,6 +57,34 @@ const linePathHostLabelIR = (label: NonNullable<Parameters<typeof JSON.stringify
 });
 
 describe('path.label：stroke host label 几何', () => {
+  it.each([
+    { via: '-|' as const, expected: [60, 0] },
+    { via: '|-' as const, expected: [0, 40] },
+    { via: '-|-' as const, expected: [60, 0] },
+    { via: '|-|' as const, expected: [0, 40] },
+  ])('前置直线与 $via 按实际绘制段均分位置', ({ via, expected }) => {
+    for (const interrupt of [false, true]) {
+      const scene = compileToScene({
+        type: 'scene',
+        version: 1,
+        children: [
+          {
+            type: 'path',
+            label: { text: 'host', position: 0.5, side: 'center', sloped: false, interrupt },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 100] },
+              { type: 'step', kind: 'line', to: [0, 0] },
+              { type: 'step', kind: 'fold', via, to: [120, 80] },
+            ],
+          },
+        ],
+      }).scene;
+      const label = findTextPrims(scene.primitives)[0];
+      expect(label.x).toBeCloseTo(expected[0]);
+      expect(visualMiddle(label)).toBeCloseTo(expected[1]);
+    }
+  });
+
   it('显式 center 将标签放在线上，同时允许保持水平', () => {
     const scene = compileToScene(
       {

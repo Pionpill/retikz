@@ -3,18 +3,19 @@ import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@r
 import { Layout } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { annotationRows } from './reference-data.data';
+import { referenceRows } from './reference-data.data';
 
-/** 聚合标注的交互参数 */
-export type AnnotationDataValues = {
+/** 聚合图元的交互参数 */
+export type ReferenceDataValues = {
   coordinate: 'cartesian' | 'polar2D';
   grouped: boolean;
   statistic: 'mean' | 'median';
   fullX: boolean;
+  fullY?: boolean;
 };
 
 /** 分组时按稳定顺序选择聚合行，使常量样式与分组颜色对应 */
-const selectAnnotationGroup = (
+const selectReferenceGroup = (
   transform: Array<IRDataTransformDeclaration>,
   grouped: boolean,
   index: number,
@@ -34,16 +35,16 @@ const selectAnnotationGroup = (
     : transform;
 
 /** 三个示例共用的固定坐标与输入观测 */
-const AnnotationDataPlot: FC<{
+const ReferenceDataPlot: FC<{
   children: ReactNode;
-  coordinate: AnnotationDataValues['coordinate'];
+  coordinate: ReferenceDataValues['coordinate'];
   grouped?: boolean;
 }> = props => {
   const { children, coordinate, grouped = false } = props;
   return (
     <Layout viewBox={{ x: -45, y: -30, width: 400, height: 310 }}>
       <Plot
-        data={annotationRows}
+        data={referenceRows}
         width={320}
         height={240}
         coordinate={coordinate === 'cartesian' ? undefined : coordinate}
@@ -63,7 +64,7 @@ const AnnotationDataPlot: FC<{
 };
 
 /** 将每个聚合结果的两轴统计量绑定为参考点 */
-export const AnnotationDataPointPreview: FC<AnnotationDataValues> = props => {
+export const ReferenceDataPointPreview: FC<ReferenceDataValues> = props => {
   const { coordinate, grouped, statistic } = props;
   const colors = grouped ? ['dodgerblue', 'darkorange'] : ['dodgerblue'];
   const transform: Array<IRDataTransformDeclaration> = [
@@ -81,31 +82,31 @@ export const AnnotationDataPointPreview: FC<AnnotationDataValues> = props => {
     },
   ];
   return (
-    <AnnotationDataPlot coordinate={coordinate} grouped={grouped}>
+    <ReferenceDataPlot coordinate={coordinate} grouped={grouped}>
       {colors.map((color, index) => (
         <PointMark
           contributeToDomain={false}
           key={color}
-          transforms={selectAnnotationGroup(transform, grouped, index)}
+          transforms={selectReferenceGroup(transform, grouped, index)}
           defaultColorIndex={index}
           encodings={{ position: { x: { field: 'centerX' }, y: { field: 'centerY' } } }}
           properties={{ size: 9, fill: grouped ? undefined : color, stroke: 'none' }}
         />
       ))}
-    </AnnotationDataPlot>
+    </ReferenceDataPlot>
   );
 };
 /** 每组统计量生成一条路径，端点可切换字段极值或视图边界 */
-export const AnnotationDataPathPreview: FC<AnnotationDataValues> = props => {
+export const ReferenceDataPathPreview: FC<ReferenceDataValues> = props => {
   const { coordinate, grouped, statistic, fullX } = props;
   const groups = grouped ? [0, 1] : [0];
   return (
-    <AnnotationDataPlot coordinate={coordinate} grouped={grouped}>
+    <ReferenceDataPlot coordinate={coordinate} grouped={grouped}>
       {groups.map(index => (
         <PathMark
           contributeToDomain={false}
           key={index}
-          transforms={selectAnnotationGroup(
+          transforms={selectReferenceGroup(
             [
               {
                 operation: {
@@ -135,40 +136,45 @@ export const AnnotationDataPathPreview: FC<AnnotationDataValues> = props => {
           }}
         />
       ))}
-    </AnnotationDataPlot>
+    </ReferenceDataPlot>
   );
 };
 
 /** 聚合各轴极值，生成包含观测范围的区域 */
-export const AnnotationDataIntervalPreview: FC<AnnotationDataValues> = props => {
-  const { coordinate, grouped, fullX } = props;
-  const groups = grouped ? [0, 1] : [0];
+export const ReferenceDataIntervalPreview: FC<ReferenceDataValues> = props => {
+  const { coordinate, grouped, fullX, fullY = false } = props;
+  const fullView = fullX && fullY;
+  const groups = grouped && !fullView ? [0, 1] : [0];
   return (
-    <AnnotationDataPlot coordinate={coordinate} grouped={grouped}>
+    <ReferenceDataPlot coordinate={coordinate} grouped={grouped}>
       {groups.map(index => (
         <IntervalMark
           contributeToDomain={false}
           key={index}
-          transforms={selectAnnotationGroup(
-            [
-              {
-                operation: {
-                  kind: 'summarize',
-                  params: {
-                    groupBy: grouped ? ['group'] : [],
-                    metrics: [
-                      { kind: 'min', field: 'x', as: 'xMin' },
-                      { kind: 'max', field: 'x', as: 'xMax' },
-                      { kind: 'min', field: 'y', as: 'yMin' },
-                      { kind: 'max', field: 'y', as: 'yMax' },
-                    ],
-                  },
-                },
-              },
-            ],
-            grouped,
-            index,
-          )}
+          transforms={
+            fullView
+              ? undefined
+              : selectReferenceGroup(
+                  [
+                    {
+                      operation: {
+                        kind: 'summarize',
+                        params: {
+                          groupBy: grouped ? ['group'] : [],
+                          metrics: [
+                            { kind: 'min', field: 'x', as: 'xMin' },
+                            { kind: 'max', field: 'x', as: 'xMax' },
+                            { kind: 'min', field: 'y', as: 'yMin' },
+                            { kind: 'max', field: 'y', as: 'yMax' },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                  grouped,
+                  index,
+                )
+          }
           defaultColorIndex={index}
           encodings={{
             bounds: {
@@ -176,7 +182,10 @@ export const AnnotationDataIntervalPreview: FC<AnnotationDataValues> = props => 
                 from: fullX ? { edge: 'start' } : { field: 'xMin' },
                 to: fullX ? { edge: 'end' } : { field: 'xMax' },
               },
-              y: { from: { field: 'yMin' }, to: { field: 'yMax' } },
+              y: {
+                from: fullY ? { edge: 'start' } : { field: 'yMin' },
+                to: fullY ? { edge: 'end' } : { field: 'yMax' },
+              },
             },
           }}
           properties={{
@@ -187,6 +196,6 @@ export const AnnotationDataIntervalPreview: FC<AnnotationDataValues> = props => 
           }}
         />
       ))}
-    </AnnotationDataPlot>
+    </ReferenceDataPlot>
   );
 };

@@ -121,7 +121,7 @@ describe('Node auto-contrast consumers and warnings', () => {
           type: 'node',
           position: [0, 0],
           text: [{ segments: [{ text: 'body' }, { text: 'mixed body' }] }],
-          label: [{ text: 'label' }, { text: { segments: [{ text: 'mixed' }] } }],
+          label: [{ text: 'label' }, { text: [{ segments: [{ text: 'mixed' }] }] }],
           style: {
             fill: {
               kind: 'linearGradient',
@@ -180,7 +180,7 @@ describe('Node auto-contrast consumers and warnings', () => {
             position: [0, 0],
             text: [{ text: 'body', fill: 'red' }],
             label: {
-              text: { segments: [{ text: 'label', fill: 'blue' }] },
+              text: [{ segments: [{ text: 'label', fill: 'blue' }] }],
               textColor: 'green',
               pin: { stroke: 'purple' },
             },
@@ -199,7 +199,7 @@ describe('Node auto-contrast consumers and warnings', () => {
     const ir = sceneOf({
       text: [{ text: 'body', fill: 'red' }],
       label: {
-        text: { segments: [{ text: 'label', fill: 'blue' }] },
+        text: [{ segments: [{ text: 'label', fill: 'blue' }] }],
         pin: true,
       },
       style: { fill: '#000000', textColor: AUTO_CONTRAST },

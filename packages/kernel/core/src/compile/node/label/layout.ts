@@ -2,6 +2,7 @@ import type { CanonicalFont } from '../../../resolve';
 import { resolveFont, resolveTextLine } from '../../../resolve';
 import type { TextMeasurer } from '../../text';
 import { layoutInlineLine, normalizeTextMetrics } from '../../text';
+import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content/text';
 import type {
   MeasuredNodeLabel,
   NodeLabelResolution,
@@ -48,33 +49,39 @@ export const measureNodeLabels = (
     const labTextColor = lab.textColor ?? node.textColor;
     const labTextFont: CanonicalFont = { size: labFontSize, family: labFamily, weight: labWeight, style: labStyle };
 
-    const resolved = resolveTextLine(lab.text, {
-      rootFontSize,
-      inheritedFont: labTextFont,
-      gatingOn: texGatingOn,
-      warn: inlineWarn,
-      warningMessage: 'Unbalanced `$` in node label; the trailing fragment is kept literal.',
-    });
-    const plainText = resolved.plainText;
-    const isMixed = resolved.mixed;
-
-    const laid = isMixed
-      ? layoutInlineLine(resolved.segments, {
-          measureText: measureLabelText,
-          lowerTex: texLowering?.lowerTex,
-          font: labTextFont,
-          warn: inlineWarn,
-        })
-      : undefined;
-
-    const metrics = laid
-      ? {
-          width: laid.width,
-          height: laid.ascent + laid.descent,
-          ascent: laid.ascent,
-          descent: laid.descent,
-        }
-      : normalizeTextMetrics(measureText(plainText, labTextFont));
+    const sourceLines = typeof lab.text === 'string' ? lab.text.split('\n') : lab.text;
+    const resolved = sourceLines.map(line =>
+      resolveTextLine(line, {
+        rootFontSize,
+        inheritedFont: labTextFont,
+        gatingOn: texGatingOn,
+        warn: inlineWarn,
+        warningMessage: 'Unbalanced `$` in node label; the trailing fragment is kept literal.',
+      }),
+    );
+    const laid =
+      resolved.length > 1 || resolved[0].mixed || resolved[0].style !== undefined
+        ? resolved.map(line =>
+            layoutInlineLine(line.segments, {
+              measureText: measureLabelText,
+              lowerTex: texLowering?.lowerTex,
+              font: labTextFont,
+              warn: inlineWarn,
+            }),
+          )
+        : undefined;
+    const height = laid?.reduce(
+      (total, line) =>
+        total +
+        (laid.length > 1
+          ? Math.max(labFontSize * DEFAULT_LINE_HEIGHT_FACTOR, line.ascent + line.descent)
+          : line.ascent + line.descent),
+      0,
+    );
+    const metrics =
+      laid && height !== undefined
+        ? { width: Math.max(...laid.map(line => line.width)), height, ascent: height / 2, descent: height / 2 }
+        : normalizeTextMetrics(measureText(resolved[0].plainText, labTextFont));
 
     return {
       properties: { ...lab, text: resolved, font: labTextFont, textColor: labTextColor },

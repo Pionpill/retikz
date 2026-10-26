@@ -27,8 +27,7 @@ const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: IRNodeLabe
     return false;
   }
 
-  const textInherits =
-    typeof label.text === 'string' || label.text.segments.some(segment => segment.fill === undefined);
+  const textInherits = bodyInheritsNodeTextColor(label.text);
   const pinInherits = label.pin === true || (typeof label.pin === 'object' && label.pin.stroke === undefined);
 
   return textInherits || pinInherits;
