@@ -28,7 +28,7 @@ describe('ellipse shape — circumscribe 策略', () => {
     );
   });
 
-  it('ellipse_equal_isotropic：equal → halfWidth = halfHeight = √(hw²+hh²)', () => {
+  it('椭圆等向外接时 halfWidth = halfHeight = √(hw²+hh²)', () => {
     const r = Math.hypot(10, 4);
 
     expect(ellipseShape.computeCircumscribedGeometry(10, 4, { circumscribe: 'equal' })).toEqual({
@@ -56,7 +56,7 @@ describe('ellipse shape — circumscribe 策略', () => {
     expect(halfWidth).toBeGreaterThan(100); // 严格大于长轴，未退化
   });
 
-  it('invalid_circumscribe_enum_rejected：{circumscribe:"foo"} → paramsSchema reject', () => {
+  it('paramsSchema 拒绝无效的 circumscribe:"foo"', () => {
     expect(ellipseShape.paramsSchema.safeParse({ circumscribe: 'foo' }).success).toBe(false);
   });
 

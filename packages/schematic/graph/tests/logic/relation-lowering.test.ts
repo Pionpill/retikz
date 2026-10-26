@@ -36,7 +36,7 @@ const lower = (source: Graph.IRGraphRelation, definitions?: Graph.GraphDefinitio
   );
 };
 
-describe('Relation lowering', () => {
+describe('Relation 下沉', () => {
   it.each(['fill', 'fillOpacity', 'fillRule'])('style 分组继续禁止 %s', field => {
     expect(
       Graph.RelationSchema.safeParse({
@@ -50,7 +50,7 @@ describe('Relation lowering', () => {
     ).toBe(false);
   });
 
-  it('creates a direct source-to-target route when route is omitted and preserves omitted id', () => {
+  it('当省略路由时创建直接源到目标的路由并保留省略的 id', () => {
     const source = relation({
       source: { id: 'source', anchor: 'east', offset: [1, 0] },
       target: { id: 'target', anchor: 'west' },
@@ -66,13 +66,13 @@ describe('Relation lowering', () => {
     expect(lower(source)).not.toHaveProperty('id');
   });
 
-  it('does not pass the Graph-only Relation group to the lowered Core Path', () => {
+  it('不将仅 Graph 的 Relation 组传递给下沉的 Core Path', () => {
     const lowered = lower(relation({ group: 'forward' }));
 
     expect(lowered).not.toHaveProperty('group');
   });
 
-  it('preserves an explicit route and every inherited Core Path instance field', () => {
+  it('保留显式路由和每个继承的 Core Path 实例字段', () => {
     const route = [
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [100, 0] },
@@ -126,7 +126,7 @@ describe('Relation lowering', () => {
     });
   });
 
-  it('uses Relation label appearance as defaults and lets each label override exact fields', () => {
+  it('使用 Relation 标签外观作为默认值，并让每个标签覆盖确切的字段', () => {
     const lowered = lower(
       relation({
         labelTextForeground: '#334155',
@@ -166,7 +166,7 @@ describe('Relation lowering', () => {
     ]);
   });
 
-  it('passes a multi-line Core TextBlock through Relation lowering unchanged', () => {
+  it('通过 Relation 下沉不变地传递多线 Core TextBlock', () => {
     const text = ['编译', { text: '生成 Scene', fill: 'gray' }];
 
     expect(lower(relation({ labels: [{ text }] })).label).toMatchObject({ text });
@@ -178,14 +178,14 @@ describe('Relation lowering', () => {
     { role: 'dependency', shape: 'straightBarb' },
     { role: 'flow', shape: 'stealth' },
     { role: 'influence', shape: 'circle' },
-  ])('lowers the $role default to a solid path and target marker', ({ role, shape }) => {
+  ])('将 $role 默认值下沉为实心路径和目标标记', ({ role, shape }) => {
     const lowered = lower(relation({ role }));
 
     expect(lowered).toMatchObject({ arrow: { end: { shape } } });
     expect(lowered).not.toHaveProperty('style.dashPattern');
   });
 
-  it('lowers an explicitly registered kind with direction narrowing and sparse marker overrides', () => {
+  it('通过方向缩小和稀疏标记覆盖来下沉显式注册的类型', () => {
     const kind = Graph.defineRelationKind({
       kind: 'domain.shared',
       role: 'association',
@@ -203,7 +203,7 @@ describe('Relation lowering', () => {
     expect(lowered.arrow?.end).toBeUndefined();
   });
 
-  it('compiles a direct Relation between a Core Node and Scope target', () => {
+  it('在 Core Node 和 Scope 目标之间编译直接 Relation', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -238,7 +238,7 @@ describe('Relation lowering', () => {
     ).toBe(true);
   });
 
-  it('inherits the Relation foreground while applying the Graph preset font size to an unstyled label', () => {
+  it('继承 Relation 前景，同时将 Graph 预设字体大小应用于无样式标签', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -272,7 +272,7 @@ describe('Relation lowering', () => {
     { status: 'warning', color: theme.colors.semantic.warning, structureDashPattern: false, dashPattern: undefined },
     { status: 'disabled', color: theme.colors.semantic.guide, structureDashPattern: [6, 4], dashPattern: [6, 4] },
   ] as const)(
-    'resolves the Neutral $status status to Core semantic colors for the Relation path and markers',
+    '将 Relation 路径和标记的中性 $status 状态解析为 Core 语义颜色',
     ({ status, color, structureDashPattern, dashPattern }) => {
       const options = Graph.resolveGraphDefinitionOptions();
       const canonical = Graph.resolveRelation(relation({ status }), options);
@@ -293,7 +293,7 @@ describe('Relation lowering', () => {
     },
   );
 
-  it('keeps an authored dash pattern above a matching Relation rule structure', () => {
+  it('将编写的破折号模式保留在匹配的 Relation 规则结构上方', () => {
     const options = Graph.resolveGraphDefinitionOptions();
     const canonical = Graph.resolveRelation(relation({ status: 'disabled', style: { dashPattern: [2, 1] } }), options);
 
@@ -301,7 +301,7 @@ describe('Relation lowering', () => {
     expect(lower(relation({ status: 'disabled', style: { dashPattern: [2, 1] } })).style?.dashPattern).toEqual([2, 1]);
   });
 
-  it('lets authored Relation and endpoint appearance override the status Theme without removing status', () => {
+  it('允许编写的 Relation 和端点外观覆盖状态主题而不删除状态', () => {
     const options = Graph.resolveGraphDefinitionOptions();
     const canonical = Graph.resolveRelation(
       relation({
@@ -321,7 +321,7 @@ describe('Relation lowering', () => {
     });
   });
 
-  it('delegates an unresolved target to the Core reference diagnostic', () => {
+  it('将未解析的目标委托给 Core 参考诊断', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
     });

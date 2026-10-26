@@ -29,7 +29,7 @@ const firstStepPosition = (child: LoweredChild): unknown => {
 };
 
 describe('GridDefinition', () => {
-  it('lowers a uniform grid to ordered Core paths', () => {
+  it('将统一网格下沉到有序的 Core 路径', () => {
     const lowered = lowerGridChildren(createGrid({ bounds: { start: [0, 0], end: [20, 10] } }));
 
     expect(lowered).toEqual([
@@ -71,7 +71,7 @@ describe('GridDefinition', () => {
     ]);
   });
 
-  it('preserves authored Scope props on one stable root', () => {
+  it('在一个稳定的根上保留编写的 Scope props', () => {
     const lowered = lowerGrid(
       createGrid({
         ...fullScopeProps,
@@ -84,14 +84,14 @@ describe('GridDefinition', () => {
     expect(lowered.children.every(child => child.id === undefined)).toBe(true);
   });
 
-  it('normalizes reversed corners independently on both axes', () => {
+  it('在两个轴上独立标准化反转角', () => {
     const ordered = lowerGridChildren(createGrid({ bounds: { start: [0, 0], end: [20, 10] }, line: { spacing: 10 } }));
     const reversed = lowerGridChildren(createGrid({ bounds: { start: [20, 0], end: [0, 10] }, line: { spacing: 10 } }));
 
     expect(reversed).toEqual(ordered);
   });
 
-  it('uses direction-specific spacing, line styles, and major styles', () => {
+  it('使用特定于方向的间距、线条样式和主要样式', () => {
     const lowered = lowerGridChildren(
       createGrid({
         bounds: { start: [0, 0], end: [25, 20] },
@@ -133,7 +133,7 @@ describe('GridDefinition', () => {
     expect(lowered[7]).toMatchObject({ style: { stroke: '#64748b', strokeWidth: 3 } });
   });
 
-  it('disables all grid lines without disabling the border', () => {
+  it('禁用所有网格线而不禁用边框', () => {
     const lowered = lowerGridChildren(
       createGrid({
         bounds: { start: [0, 0], end: [20, 10] },
@@ -149,7 +149,7 @@ describe('GridDefinition', () => {
     });
   });
 
-  it('lowers center bounds in local coordinates inside an offset Scope', () => {
+  it('下沉偏移量 Scope 内局部坐标的中心边界', () => {
     const lowered = lowerGridChildren(
       createGrid({ bounds: { position: [10, 5], width: 20, height: 10 }, line: { spacing: 10 } }),
     );
@@ -168,7 +168,7 @@ describe('GridDefinition', () => {
     });
   });
 
-  it('keeps centered-position allocation separate from the authored root Scope', () => {
+  it('将居中位置分配与编写的根 Scope 分开', () => {
     const lowered = lowerGrid(
       createGrid({
         ...fullScopeProps,
@@ -189,7 +189,7 @@ describe('GridDefinition', () => {
     expect(allocationScope).not.toHaveProperty('placement');
   });
 
-  it('keeps center origin local and defaults it to the local top-left corner', () => {
+  it('保持中心原点为本地，默认为本地左上角', () => {
     const defaultOrigin = lowerGridChildren(
       createGrid({ bounds: { position: [30, 20], width: 25, height: 15 }, line: { spacing: 10 } }),
     )[0] as IRScope;
@@ -214,7 +214,7 @@ describe('GridDefinition', () => {
     });
   });
 
-  it('lowers zero-width and zero-height center bounds to finite degenerate paths', () => {
+  it('将零宽度和零高度中心边界下沉到有限简并路径', () => {
     const zeroWidth = lowerGridChildren(
       createGrid({ bounds: { position: [10, 5], width: 0, height: 10 }, line: { spacing: 10 } }),
     )[0] as IRScope;
@@ -236,7 +236,7 @@ describe('GridDefinition', () => {
     }
   });
 
-  it('keeps major identity origin-relative when boundary insertion changes output positions', () => {
+  it('当边界插入改变输出位置时，保持主标识原点相关', () => {
     const lowered = lowerGridChildren(
       createGrid({
         bounds: { start: [1, 0], end: [25, 10] },
@@ -270,7 +270,7 @@ describe('GridDefinition', () => {
     ]);
   });
 
-  it('emits an extended behind border before grid lines', () => {
+  it('在网格线之前发出延伸的后边框', () => {
     const lowered = lowerGridChildren(
       createGrid({
         bounds: { start: [0, 0], end: [10, 10] },
@@ -306,7 +306,7 @@ describe('GridDefinition', () => {
     });
   });
 
-  it('compiles a Cartesian center through the registered Grid definition', () => {
+  it('通过注册的 Grid 定义编译笛卡尔中心', () => {
     const warnings: Array<string> = [];
     const scene = compileToScene(
       {
@@ -322,7 +322,7 @@ describe('GridDefinition', () => {
     expect(group?.transforms).toEqual([{ kind: 'translate', x: 10, y: 5 }]);
   });
 
-  it('resolves recursive PolarPosition center references in Core', () => {
+  it('解析 Core 中的递归 PolarPosition 中心引用', () => {
     const warnings: Array<string> = [];
     const scene = compileToScene(
       {
@@ -348,7 +348,7 @@ describe('GridDefinition', () => {
     expect(group?.transforms).toEqual([{ kind: 'translate', x: 70, y: 50 }]);
   });
 
-  it('keeps Core diagnostics for an unresolved PolarPosition center reference', () => {
+  it('保留未解析的 PolarPosition 中心参考的 Core 诊断', () => {
     const warnings: Array<string> = [];
     compileToScene(
       {
@@ -367,7 +367,7 @@ describe('GridDefinition', () => {
     expect(warnings).toContain('OFFSET_BASE_UNRESOLVED');
   });
 
-  it('keeps Core diagnostics for direct Grid IR without its definition', () => {
+  it('保留直接 Grid IR 的 Core 诊断，而无需其定义', () => {
     const warnings: Array<string> = [];
     compileToScene(
       {
@@ -381,7 +381,7 @@ describe('GridDefinition', () => {
     expect(warnings).toContain('COMPOSITE_NOT_REGISTERED');
   });
 
-  it('fails fast when unchecked corner or center IR would produce non-finite lattice indices', () => {
+  it('当未检查的角或中心 IR 会产生非有限晶格索引时，会快速失败', () => {
     expect(() =>
       lowerGridChildren({
         namespace: 'standard',

@@ -28,8 +28,8 @@ const expectFrozenDefinitionList = (definitions: ReadonlyArray<object>, resolveF
   }
 };
 
-describe('data public default state', () => {
-  it('keeps the default transform context immutable at runtime', () => {
+describe('数据公共默认状态', () => {
+  it('保持默认转换上下文在运行时不可变', () => {
     const original = DEFAULT_TRANSFORM_CONTEXT.readSourceIndex;
     const changed = Reflect.set(DEFAULT_TRANSFORM_CONTEXT, 'readSourceIndex', () => -1);
 
@@ -42,7 +42,7 @@ describe('data public default state', () => {
     }
   });
 
-  it('keeps public builtin definition lists isolated from default registries', () => {
+  it('使公共内置定义列表与默认注册表隔离', () => {
     expectFrozenDefinitionList(BUILTIN_TRANSFORMS, () => resolveTransformRegistry().get('sort'));
     expectFrozenDefinitionList(BUILTIN_FORMATS, () => resolveFormatRegistry().get('iso'));
     expectFrozenDefinitionList(BUILTIN_STATISTICS_REDUCERS, () => resolveStatisticsReducerRegistry().get('count'));

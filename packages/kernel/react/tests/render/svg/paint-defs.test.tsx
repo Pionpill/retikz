@@ -37,7 +37,7 @@ describe('renderPrim — PaintValue fill 分派', () => {
     expect(el.props.fill).toBe('url(#X-paint-1)');
   });
 
-  it('contextStroke → fill="context-stroke"', () => {
+  it('contextStroke→填充="context-stroke"', () => {
     const el = renderPrim(rect({ kind: 'contextStroke' }), 0) as AnyEl;
 
     expect(el.props.fill).toBe('context-stroke');

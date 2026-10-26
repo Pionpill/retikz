@@ -33,8 +33,8 @@ const compilePath = (
   return resource.path;
 };
 
-describe('canonical SceneClipPath', () => {
-  it('defaults fillRule, rebuilds stable field order, rounds precision, and removes negative zero', () => {
+describe('规范的 SceneClipPath', () => {
+  it('补全 fillRule 默认值、固定字段顺序、舍入精度并消除负零', () => {
     const path = compilePath(
       [
         { to: [-0.001, -0.004], kind: 'move' },
@@ -55,7 +55,7 @@ describe('canonical SceneClipPath', () => {
     expect(Object.is(path.commands[0].kind === 'move' ? path.commands[0].to[0] : undefined, -0)).toBe(false);
   });
 
-  it('deduplicates canonical geometry when authored object key order differs', () => {
+  it('当编写的对象键顺序不同时，对规范几何进行去重', () => {
     const commandsA = [{ to: [0, 0], kind: 'move' } as PathCommand, { to: [4, 2], kind: 'line' } as PathCommand];
     const commandsB = [{ kind: 'move', to: [0, 0] } as PathCommand, { kind: 'line', to: [4, 2] } as PathCommand];
     const ir: IRScene = {
@@ -86,7 +86,7 @@ describe('canonical SceneClipPath', () => {
     { name: 'move only', commands: [{ kind: 'move', to: [0, 0] }] },
     { name: 'move then close only', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'close' }] },
   ] satisfies Array<{ name: string; commands: Array<PathCommand> }>)(
-    'rejects a path with no drawing segment: $name',
+    '拒绝没有绘图段的路径：$name',
     ({ commands }) => {
       expect(() => compilePath(commands)).toThrow(/drawing segment/i);
     },
@@ -110,13 +110,13 @@ describe('canonical SceneClipPath', () => {
       ],
     },
   ] satisfies Array<{ name: string; commands: Array<PathCommand> }>)(
-    'rejects $name without an active subpath',
+    '拒绝没有活动子路径的 $name',
     ({ commands }) => {
       expect(() => compilePath(commands)).toThrow(/active subpath/i);
     },
   );
 
-  it('allows an arc to establish a subpath and preserves a legal open path', () => {
+  it('允许弧建立子路径并保留合法的开放路径', () => {
     const path = compilePath([
       { kind: 'arc', center: [0, 0], radius: 2, startAngle: 0, endAngle: 90 },
       { kind: 'line', to: [3, 3] },
@@ -132,7 +132,7 @@ describe('canonical SceneClipPath', () => {
   it.each([
     { kind: 'arc', center: [0, 0], radius: 0.004, startAngle: 0, endAngle: 360 },
     { kind: 'ellipseArc', center: [0, 0], radiusX: 0.004, radiusY: 1, startAngle: 0, endAngle: 360 },
-  ] satisfies Array<PathCommand>)('rejects a $kind radius that precision would collapse to zero', command => {
+  ] satisfies Array<PathCommand>)('拒绝按精度舍入后变为零的 $kind 半径', command => {
     expect(() => compilePath([command], { precision: 2 })).toThrow(/greater than 0/i);
   });
 });

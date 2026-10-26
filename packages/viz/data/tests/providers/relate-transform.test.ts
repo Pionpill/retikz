@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { applyTransforms, resolveTransformRegistry, TransformSchema } from '../../src';
 
-describe('relate transform', () => {
+describe('关联变换', () => {
   const operation = {
     kind: 'relate',
     params: {
@@ -12,11 +12,11 @@ describe('relate transform', () => {
     },
   };
 
-  it('accepts relate schema and preserves JSON round trip', () => {
+  it('接受关联 schema 并保留 JSON 往返', () => {
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
-  it('rejects min/max selectors without by', () => {
+  it('拒绝不带 by 的最小/最大选择器', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'relate',
@@ -28,7 +28,7 @@ describe('relate transform', () => {
     ).toThrow();
   });
 
-  it('rejects endpoint selectors with empty fields', () => {
+  it('拒绝具有空字段的端点选择器', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'relate',
@@ -40,7 +40,7 @@ describe('relate transform', () => {
     ).toThrow();
   });
 
-  it('derives one global relation row from min to max', () => {
+  it('从最小到最大导出一个全局关系行', () => {
     const rows = applyTransforms(
       [
         { id: 'a', x: 0, value: 12 },
@@ -65,7 +65,7 @@ describe('relate transform', () => {
     ]);
   });
 
-  it('derives one relation row per group', () => {
+  it('每组导出一个关系行', () => {
     const rows = applyTransforms(
       [
         { group: 'A', id: 'a1', x: 0, value: 12 },
@@ -83,7 +83,7 @@ describe('relate transform', () => {
     ]);
   });
 
-  it('uses deterministic tie handling and skips groups without finite values', () => {
+  it('使用确定性平局处理并跳过没有有限值的组', () => {
     const rows = applyTransforms(
       [
         { group: 'A', id: 'first', value: 10 },

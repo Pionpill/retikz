@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { resolveEffectivePath, resolveScopeDefaults } from '../../src/resolve/style';
 import { resolvePathWithBuiltinProviders } from './path-helper';
 
-describe('path host style', () => {
+describe('路径宿主样式', () => {
   it.each([
     ['cascade-only', undefined, { style: { color: 'gold' } }, 'gold'],
     ['pathDefault-only', undefined, { path: { style: { color: 'purple' } } }, 'purple'],
@@ -13,7 +13,7 @@ describe('path host style', () => {
       { style: { color: 'gold' }, path: { style: { color: 'purple' } } },
       'teal',
     ],
-  ])('keeps %s color effective until the selected path consumes it', (_, style, defaults, color) => {
+  ])('保持 %s 颜色有效，直到所选路径消费它', (_, style, defaults, color) => {
     const resolved = resolveEffectivePath(
       { type: 'path', kind: 'custom', children: [], style },
       resolveScopeDefaults({ type: 'scope', children: [], defaults }),
@@ -22,7 +22,7 @@ describe('path host style', () => {
     expect(resolved.style?.stroke).toBeUndefined();
   });
 
-  it('uses cascaded fill before rejecting a requested label interruption', () => {
+  it('在拒绝请求的标签中断之前使用级联填充', () => {
     expect(() =>
       resolvePathWithBuiltinProviders(
         {

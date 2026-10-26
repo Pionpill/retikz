@@ -14,13 +14,13 @@ const minimal = {
   recipe: { chartType: 'connected-scatter', encodings: { x: 'x', y: 'y', order: 'year' } },
 } as const;
 
-describe('Connected Scatter exact Source schema', () => {
-  it('accepts minimal JSON and requires explicit order', () => {
+describe('连接分散精确 Source schema', () => {
+  it('接受最小的 JSON 并需要明确的顺序', () => {
     expect(ConnectedScatterChartSchema.parse(JSON.parse(JSON.stringify(minimal)))).toEqual(minimal);
     expect(() => ConnectedScatterChartEncodingsSchema.parse({ x: 'x', y: 'y' })).toThrow();
   });
 
-  it('accepts point/path appearance and rejects core layer or topology changes', () => {
+  it('接受点/路径外观并拒绝核心层或拓扑更改', () => {
     expect(
       ConnectedScatterChartPropertiesSchema.parse({
         point: { size: 4, color: '#2563eb' },
@@ -31,7 +31,7 @@ describe('Connected Scatter exact Source schema', () => {
     expect(() => ConnectedScatterChartPropertiesSchema.parse({ path: { closed: true } })).toThrow();
   });
 
-  it('keeps position domain padding recipe-only', () => {
+  it('仅保留位置域填充配方', () => {
     expect(
       ConnectedScatterChartPropertiesSchema.parse({
         domainPadding: { kind: 'range', x: 8, top: 3 },
@@ -45,7 +45,7 @@ describe('Connected Scatter exact Source schema', () => {
     ).toBe(false);
   });
 
-  it('keeps series recipe-only', () => {
+  it('仅保留系列配方', () => {
     expect(() =>
       ConnectedScatterChartSchema.parse({
         ...minimal,

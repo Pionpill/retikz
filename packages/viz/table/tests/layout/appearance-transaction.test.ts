@@ -26,8 +26,8 @@ const contentNode = (id: string, fill: string, text = id): IRChild => ({
   layout: { minimumSize: { width: 4, height: 4 }, padding: 0 },
 });
 
-describe('Presented Table layout transaction', () => {
-  it('does not claim a named style when token resolution is omitted', () => {
+describe('提出 Table 布局交易', () => {
+  it('当省略标记解析时，不声明命名样式', () => {
     const semantic = normalizeTableStructure({ kind: 'manual', rows: [['plain']] });
     const presented = presentTable(formatDefaultTable(semantic));
     let transaction: ResolvedTableTransaction | undefined;
@@ -60,7 +60,7 @@ describe('Presented Table layout transaction', () => {
     });
   });
 
-  it('fails loud for a mixed Presented content branch before probing Core content', () => {
+  it('在探测 Core 内容之前，混合呈现内容分支明确报错', () => {
     const semantic = normalizeTableStructure({
       kind: 'manual',
       rows: [[{ id: 'mixed', content: contentNode('mixed-content', '#111111') }]],
@@ -95,7 +95,7 @@ describe('Presented Table layout transaction', () => {
     ).toThrow(/transaction presentation Cell 0 shape differs/i);
   });
 
-  it('fails loud when a Presented raw value differs from the canonical semantic payload', () => {
+  it('当呈现的原始值与规范语义负载不同时，会明确报错', () => {
     const semantic = normalizeTableStructure({ kind: 'manual', rows: [[{ id: 'tampered', value: 7 }]] });
     const presented = presentTable(formatDefaultTable(semantic));
     const malformed = {
@@ -127,7 +127,7 @@ describe('Presented Table layout transaction', () => {
     ).toThrow(/transaction presentation Cell 0 raw value differs/i);
   });
 
-  it('consumes supplied appearances through the real layout transaction', () => {
+  it('通过真实布局事务消费提供的外观', () => {
     const wrapProbe = defineComposite({
       namespace: 'fixture',
       type: 'styled-wrap-probe',
@@ -343,7 +343,7 @@ describe('Presented Table layout transaction', () => {
     expect(Math.max(...contentIndexes)).toBeLessThan(Math.min(...borderIndexes));
   });
 
-  it('omits cleared, transparent, and zero-area backgrounds without losing a visible background-only Cell', () => {
+  it('省略清除的、透明的和零区域的背景，而不会丢失仅可见的背景 Cell', () => {
     const invisibleContent = (id: string): IRChild => ({
       type: 'node',
       id,
@@ -428,7 +428,7 @@ describe('Presented Table layout transaction', () => {
     ]);
   });
 
-  it('keeps background paint out of intrinsic track contributions', () => {
+  it('使背景涂料远离固有轨道贡献', () => {
     const semantic = normalizeTableStructure({
       kind: 'manual',
       rows: [

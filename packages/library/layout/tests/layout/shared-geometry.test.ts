@@ -12,8 +12,8 @@ import {
   resolveLayoutAxisSize,
 } from '../../src/composites/internal';
 
-describe('shared layout size resolution', () => {
-  it('selects minimum or natural content contribution and clamps through author and parent ranges', () => {
+describe('共享布局尺寸解析结果', () => {
+  it('选择最小或自然的内容贡献并通过作者和父级范围进行限制', () => {
     const common = {
       axis: 'x' as const,
       policy: { kind: LayoutAxisSizeKind.Content, min: 20, max: 80 } as const,
@@ -47,7 +47,7 @@ describe('shared layout size resolution', () => {
     ).toEqual({ allocationSize: 40, finiteAvailable: 40 });
   });
 
-  it('keeps an authored minimum when no authored maximum exists', () => {
+  it('当不存在编写的最大值时，保留编写的最小值', () => {
     expect(
       resolveLayoutAxisSize({
         axis: 'x',
@@ -68,7 +68,7 @@ describe('shared layout size resolution', () => {
     ).toEqual({ allocationSize: 20, finiteAvailable: 10 });
   });
 
-  it('preserves authored fixed allocation when the parent slot conflicts', () => {
+  it('当父槽冲突时保留编写的固定分配', () => {
     expect(
       resolveLayoutAxisSize({
         axis: 'y',
@@ -80,7 +80,7 @@ describe('shared layout size resolution', () => {
     ).toEqual({ allocationSize: 50, finiteAvailable: 10 });
   });
 
-  it('fills only a finite parent allocation and reports the exact physical axis when unbounded', () => {
+  it('仅填充有限父分配，并在无界时报告确切的物理轴', () => {
     const common = {
       policy: { kind: LayoutAxisSizeKind.Fill, min: 20, max: 80 } as const,
       minimumContribution: 0,
@@ -111,8 +111,8 @@ describe('shared layout size resolution', () => {
   });
 });
 
-describe('shared layout Box geometry', () => {
-  it('normalizes spacing with side over axis over default precedence', () => {
+describe('共享布局盒几何形状', () => {
+  it('标准化间距，侧边轴高于默认优先级', () => {
     expect(normalizeLayoutSpacing({ default: 1, x: 2, y: 3, left: 4 })).toEqual({
       top: 3,
       right: 2,
@@ -122,7 +122,7 @@ describe('shared layout Box geometry', () => {
     expect(normalizeLayoutSpacing(0)).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
   });
 
-  it('keeps authored leading padding when excessive padding collapses content to zero', () => {
+  it('当过多的填充将内容折叠为零时，保留编写的前导填充', () => {
     expect(contentRectOf({ x: 0, y: 0, width: 10, height: 6 }, { top: 4, right: 8, bottom: 4, left: 7 })).toEqual({
       x: 7,
       y: 4,
@@ -131,7 +131,7 @@ describe('shared layout Box geometry', () => {
     });
   });
 
-  it('outsets a non-zero-origin child rect by item margins', () => {
+  it('按项目边距开始非零原点子矩形', () => {
     expect(outsetLayoutRect({ x: -5, y: 3, width: 20, height: 10 }, { top: 2, right: 4, bottom: 6, left: 8 })).toEqual({
       x: -13,
       y: 1,
@@ -140,7 +140,7 @@ describe('shared layout Box geometry', () => {
     });
   });
 
-  it('fails loudly when finite rect and spacing inputs overflow finite geometry', () => {
+  it('当有限的矩形和间距输入溢出有限的几何图形时，会明确报错', () => {
     expect(() =>
       contentRectOf(
         { x: Number.MAX_VALUE, y: 0, width: 10, height: 10 },
@@ -155,7 +155,7 @@ describe('shared layout Box geometry', () => {
     ).toThrow(/finite/i);
   });
 
-  it('aligns real allocation bounds inside a parent slot without assuming a zero origin', () => {
+  it('对齐父槽内的实际分配边界，而不假设零原点', () => {
     const slot = { x: 100, y: 20, width: 40, height: 30 };
     const child = { x: -5, y: 3, width: 20, height: 10 };
 
@@ -165,7 +165,7 @@ describe('shared layout Box geometry', () => {
     expect(alignAllocationInSlot(slot, child, 'y', LayoutAlignment.End)).toBe(37);
   });
 
-  it('resolves a positioned slot from a content origin, target, anchor, and offset', () => {
+  it('根据内容原点、目标、锚点和偏移量解析定位槽', () => {
     expect(
       positionedLayoutSlotOf({
         content: { x: 10, y: 20, width: 100, height: 50 },
@@ -177,7 +177,7 @@ describe('shared layout Box geometry', () => {
     ).toEqual({ x: 52, y: 34, width: 20, height: 10 });
   });
 
-  it('uses the Core rect clip for positive and zero-area allocations', () => {
+  it('使用 Core 矩形裁剪进行正区域和零区域分配', () => {
     const positive = layoutClipOf({ width: 20, height: 10 });
     const zeroWidth = layoutClipOf({ width: 0, height: 10 });
 

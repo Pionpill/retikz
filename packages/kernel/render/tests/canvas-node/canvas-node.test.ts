@@ -90,7 +90,7 @@ const scene: Scene = {
 };
 
 describe('renderSceneToImage', () => {
-  it('renders a Scene into an encoded Node canvas image buffer', { timeout: 15_000 }, async () => {
+  it('将 Scene 渲染到编码的 Node 画布图像缓冲区中', { timeout: 15_000 }, async () => {
     const { renderSceneToImage } = await import('../../src/canvas-node');
 
     const buffer = await renderSceneToImage(scene, {
@@ -111,7 +111,7 @@ describe('renderSceneToImage', () => {
     expect(contexts[0].calls.map(call => call.name)).toContain('fill');
   });
 
-  it('validates output dimensions before loading the optional peer', async () => {
+  it('在加载可选对等点之前验证输出尺寸', async () => {
     const { renderSceneToImage } = await import('../../src/canvas-node');
 
     await expect(renderSceneToImage(scene, { width: 0, height: 100 })).rejects.toThrow(

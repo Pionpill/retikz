@@ -20,7 +20,7 @@ const compileOptions: CompileOptions = {
   rehypePlugins: [rehypeSlug, [rehypeMdxCodeProps, { tagName: 'code' }]],
 };
 
-describe('TeX API Reference MDX', () => {
+describe('TeX API 参考 MDX', () => {
   it('把 package exports 的公开导出生成可直接内联的中文 MDX', async () => {
     const source = await createTexApiReferenceMdx('zh');
 

@@ -64,8 +64,8 @@ const compileLegendScene = (): Scene =>
     { composites: [LegendDefinition] },
   ).scene;
 
-describe('Standard Legend renderer boundary', () => {
-  it('keeps direct, React, and Vanilla canonical IR, Scene, and typed artifact equivalent', () => {
+describe('Standard Legend 渲染器边界', () => {
+  it('保持直接、React 和 Vanilla 规范 IR、Scene 和类型化产物等效', () => {
     const input = {
       title: { type: 'node', position: [0, 0], text: 'Legend' },
       contentAlign: 'end',
@@ -111,7 +111,7 @@ describe('Standard Legend renderer boundary', () => {
     expect(outputs[2]?.artifacts).toEqual(outputs[0]?.artifacts);
   });
 
-  it('renders one lowered Core Scene through SVG and Canvas without renderer-side Legend knowledge', () => {
+  it('通过 SVG 和 Canvas 渲染一个下沉的 Core Scene，而无需渲染器端 Legend 知识', () => {
     const compiledScene = compileLegendScene();
     const calls: Array<string> = [];
     const svg = renderToSvgString(compiledScene, { idPrefix: 'legend' });

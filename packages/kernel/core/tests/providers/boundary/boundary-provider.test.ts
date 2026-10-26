@@ -69,7 +69,7 @@ const outlinedBoundary = (): BoundaryDefinition =>
     ],
   });
 
-describe('Boundary provider contract', () => {
+describe('边界提供者契约', () => {
   it('builtin boundary params 应用 schema 默认值，并允许有限负 gap', () => {
     for (const boundary of BUILTIN_BOUNDARIES.values()) {
       expect(boundary.paramsSchema.parse({})).toEqual({ fit: 'tight', gap: 0 });
@@ -143,7 +143,7 @@ describe('Boundary provider contract', () => {
     expect(BoundarySchema.parse(JSON.parse(JSON.stringify(boundary)))).toEqual(boundary);
   });
 
-  it('custom boundary may publish an explicit closed outline', () => {
+  it('自定义边界可以发布显式的闭合轮廓', () => {
     const boundary = outlinedBoundary();
     const rect: CenteredBox = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
 
@@ -156,7 +156,7 @@ describe('Boundary provider contract', () => {
     ]);
   });
 
-  it('built-in circle, rectangle, and ellipse boundaries publish explicit closed outlines', () => {
+  it('内置圆形、矩形和椭圆形边界发布显式闭合轮廓', () => {
     const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
     for (const boundary of BUILTIN_BOUNDARIES.values()) {

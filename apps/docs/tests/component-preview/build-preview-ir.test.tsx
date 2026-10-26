@@ -23,7 +23,7 @@ import { createGraphPreviewSource } from '../../src/modules/docs/preview';
 
 const hookedDatasets = { sample: [{ value: 1 }] };
 
-it('keeps data-transform source IR semantic without inline visual styles', () => {
+it('保留数据转换源 IR 语义，无需内联视觉样式', () => {
   const preview = buildPreviewIR(DataTransformDemo);
   const source = JSON.stringify(preview.sourceIr);
   expect(source).not.toContain('"stroke"');
@@ -36,7 +36,7 @@ it('keeps data-transform source IR semantic without inline visual styles', () =>
   expect(source).toContain('summarize');
 });
 
-it('preserves the Layout theme selector in source and runtime preview IR', () => {
+it('在源和运行时预览 IR 中保留 Layout 主题选择器', () => {
   const Demo: FC = () => (
     <Layout theme={{ name: 'docs.logic', mode: 'dark' }}>
       <Node>Theme</Node>
@@ -121,7 +121,7 @@ const BubbleStandaloneDemo: FC = () => (
 );
 
 describe('buildPreviewIR', () => {
-  it('renders Standard shape semantics through IR and Vanilla preview with family helpers', () => {
+  it('使用同系列辅助函数通过 IR 和 Vanilla 预览渲染 Standard 形状语义', () => {
     const preview = buildPreviewIR(() => (
       <Layout>
         <Circle center={[0, 0]} radius={10} />
@@ -147,7 +147,7 @@ describe('buildPreviewIR', () => {
     expect(vanilla.svg).toContain('<path');
   });
 
-  it('preserves rootScope styles and defaults in Source IR and Vanilla output', () => {
+  it('在 Source IR 和 Vanilla 输出中保留 rootScope 样式及默认值', () => {
     const preview = buildPreviewIR(() => (
       <Layout
         rootScope={{ defaults: { style: { stroke: '#123456', strokeWidth: 3 }, node: { layout: { padding: 12 } } } }}
@@ -181,7 +181,7 @@ describe('buildPreviewIR', () => {
   });
 
   it.each<LayoutProps['rootScope']>([undefined, {}, { defaults: { style: {} } }, { defaults: { reset: false } }])(
-    'does not add a Scope for ineffective rootScope %j or host props',
+    '不为无效的 rootScope %j 或宿主 props 添加 Scope',
     rootScope => {
       const preview = buildPreviewIR(() => (
         <Layout rootScope={rootScope} style={{ opacity: 0.5 }} runtime={{ mode: 'static' }}>
@@ -194,7 +194,7 @@ describe('buildPreviewIR', () => {
     },
   );
 
-  it('keeps complete IR unchanged when rootScope is supplied', () => {
+  it('当提供 rootScope 时，保持完整的 IR 不变', () => {
     const ir = { type: 'scene' as const, version: 1 as const, children: [] };
     const preview = buildPreviewIR(() => <Layout ir={ir} rootScope={{ defaults: { style: { stroke: 'red' } } }} />);
 
@@ -202,14 +202,14 @@ describe('buildPreviewIR', () => {
     expect(preview.ir).toBe(ir);
   });
 
-  it('does not execute hookful embeddable root components', () => {
+  it('不执行使用 Hook 的可嵌入根组件', () => {
     const preview = buildPreviewIR(HookedEmbeddableDemo);
 
     expect(preview.ir.children).toEqual([{ namespace: 'hooked', type: 'demo' }]);
     expect(preview.contributions).toEqual([hookedCompositeDependencies]);
   });
 
-  it('retains the normalized Scene IR without a Graph-specific input projection', () => {
+  it('保留归一化的 Scene IR，而无需 Graph 特定的输入投影', () => {
     const preview = buildPreviewIR(GraphInputDemo);
 
     expect(preview.ir).toMatchObject({
@@ -226,7 +226,7 @@ describe('buildPreviewIR', () => {
     expect(preview).not.toHaveProperty('inputIR');
   });
 
-  it('promotes standalone Graph host props when deriving canonical preview IR', () => {
+  it('在派生规范预览 IR 时提升独立 Graph 宿主 props', () => {
     const canonical = GraphStandalonePreviewSource.canonicalRender?.() ?? null;
 
     expect(isValidElement(canonical) ? canonical.type : null).toBe(Layout);
@@ -243,14 +243,14 @@ describe('buildPreviewIR', () => {
     });
   });
 
-  it('removes standalone Plot host props before deriving embedded preview content', () => {
+  it('在导出嵌入预览内容之前删除独立的 Plot 宿主 props', () => {
     const preview = buildPreviewIR(PlotStandaloneDemo);
 
     expect(preview).toMatchObject({ width: 240, height: 120 });
     expect(preview.ir.children[0]).toMatchObject({ namespace: 'plot', type: 'plot', width: 240, height: 120 });
   });
 
-  it('reads standalone dimensions from ChartLayout while preserving an explicit Source layout', () => {
+  it('从 ChartLayout 读取独立尺寸，同时保留显式的 Source 布局', () => {
     const preview = buildPreviewIR(ChartStandaloneDemo);
 
     expect(preview).toMatchObject({ width: 640, height: 360 });
@@ -261,7 +261,7 @@ describe('buildPreviewIR', () => {
     });
   });
 
-  it('collects the exact Bubble Source from the React authoring tree', () => {
+  it('从 React 编写树中收集确切的 Bubble Source', () => {
     expect(collectPreviewChartSources(BubbleStandaloneDemo({}))).toMatchObject([
       {
         namespace: 'chart',
@@ -275,7 +275,7 @@ describe('buildPreviewIR', () => {
     ]);
   });
 
-  it('rebuilds Graph Source IR from authoring input instead of runtime defaults', () => {
+  it('根据编写输入而不是运行时默认值重建 Graph Source IR', () => {
     const source = buildPreviewSourceIR(
       {
         type: 'scene',

@@ -91,20 +91,20 @@ const closedObjectSchemaCases: Array<{
   },
 ];
 
-describe('transform schema', () => {
-  it('parses transform operation and survives JSON round-trip', () => {
+describe('转换 schema', () => {
+  it('解析变换操作并保持 JSON 往返等价', () => {
     const operation = TransformSchema.parse({ kind: 'sort', params: { field: 'month', order: 'ascending' } });
 
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
-  it('rejects invalid built-in transform shape at schema boundary', () => {
+  it('拒绝 schema 边界处无效的内置变换形状', () => {
     expect(() => TransformSchema.parse({ kind: 'sort', params: { field: '' } })).toThrow();
     expect(ReducerOperationSchema.safeParse({ kind: 'sum' }).success).toBe(false);
     expect(SelectorOperationSchema.safeParse({ kind: 'min' }).success).toBe(false);
   });
 
-  it('accepts scalar reducer candidates while excluding multi-output built-ins', () => {
+  it('接受标量归约器候选，同时排除多输出内置', () => {
     expect(DataScalarReducerOperationSchema.parse({ kind: 'custom.scalar', field: 'value', as: 'metric' })).toEqual({
       kind: 'custom.scalar',
       field: 'value',
@@ -125,11 +125,11 @@ describe('transform schema', () => {
     { min: 'low', max: ' ' },
     { min: 'same', max: 'same' },
     { min: 'low', max: 'high', extra: true },
-  ])('rejects invalid extent output mappings: %j', as => {
+  ])('拒绝无效范围输出映射：%j', as => {
     expect(BuiltinReducerOperationSchemas.Extent.safeParse({ kind: 'extent', field: 'value', as }).success).toBe(false);
   });
 
-  it('reports extent endpoint conflicts at their declaration paths', () => {
+  it('报告其声明路径上的范围端点冲突', () => {
     const duplicateEndpoint = BuiltinReducerOperationSchemas.Extent.safeParse({
       kind: 'extent',
       field: 'value',
@@ -181,7 +181,7 @@ describe('transform schema', () => {
     }
   });
 
-  it('rejects transform output fields that collide within one operation', () => {
+  it('拒绝在一次操作中发生冲突的变换输出字段', () => {
     expect(
       TransformSchema.safeParse({
         kind: 'summarize',
@@ -213,7 +213,7 @@ describe('transform schema', () => {
     ).toBe(false);
   });
 
-  it('limits annotate to selectors that return at most one row', () => {
+  it('将注释限制为最多返回一行的选择器', () => {
     const accepted = [
       { kind: 'min', by: 'value' },
       { kind: 'max', by: 'value', tie: 'last' },
@@ -241,14 +241,14 @@ describe('transform schema', () => {
     }
   });
 
-  it('accepts custom selectors for select but not annotate', () => {
+  it('接受自定义选择器进行选择但不进行注释', () => {
     const selector = { kind: 'custom-selector', field: 'value' };
 
     expect(SelectTransformSchema.safeParse({ kind: 'select', params: { selector } }).success).toBe(true);
     expect(AnnotateSelectorSchema.safeParse({ selector, as: 'annotation' }).success).toBe(false);
   });
 
-  it('rejects unknown keys on built-in transforms without blocking external config', () => {
+  it('拒绝内置转换上的未知键，而不阻止外部配置', () => {
     expect(() => TransformSchema.parse({ kind: 'sort', params: { field: 'month', oder: 'descending' } })).toThrow();
     expect(() =>
       TransformSchema.parse({
@@ -272,7 +272,7 @@ describe('transform schema', () => {
     ['bigint', BigInt(1)],
     ['NaN', Number.NaN],
     ['Infinity', Number.POSITIVE_INFINITY],
-  ])('reports a custom %s leaf through the native Zod catchall path', (_name, value) => {
+  ])('通过本机 Zod 包罗万象的路径报告自定义 %s 叶', (_name, value) => {
     const schemas: Array<ZodType> = [
       ExternalTransformSchema,
       ExternalReducerOperationSchema,
@@ -292,7 +292,7 @@ describe('transform schema', () => {
     }
   });
 
-  it.each(closedObjectSchemaCases)('$name survives JSON round-trip and rejects extra fields', ({ schema, value }) => {
+  it.each(closedObjectSchemaCases)('$name 保持 JSON 往返等价并拒绝额外字段', ({ schema, value }) => {
     const parsed = schema.parse(value);
 
     expect(schema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);

@@ -11,8 +11,8 @@ import {
   PlotScaleTypeSchema,
 } from '../../src/schemas/scale';
 
-describe('Plot registry-backed open string schemas', () => {
-  it('hints built-in color schemes while preserving custom resolver names', () => {
+describe('Plot 注册表支持的开放字符串 schema', () => {
+  it('提示内置配色方案，同时保留自定义解析器名称', () => {
     expect(toJSONSchema(ColorSchemeNameSchema)).toMatchObject({
       anyOf: [
         { type: 'string', enum: Object.values(BuiltinPlotColorScheme) },
@@ -24,7 +24,7 @@ describe('Plot registry-backed open string schemas', () => {
     expect(() => ColorSchemeNameSchema.parse('   ')).toThrow();
   });
 
-  it('reuses the Core shape vocabulary for fixed shape properties', () => {
+  it('重复使用 Core 形状词汇来固定形状属性', () => {
     expect(PointPropertiesSchema.parse({ shape: 'custom.glyph' }).shape).toBe('custom.glyph');
     expect(() => PointPropertiesSchema.parse({ shape: '   ' })).toThrow();
     expect(toJSONSchema(ShapeNameSchema)).toMatchObject({ anyOf: expect.any(Array) });
@@ -33,7 +33,7 @@ describe('Plot registry-backed open string schemas', () => {
   it.each([
     ['transform', ExternalTransformSchema.shape.kind, Object.values(BuiltinDataTransform)],
     ['scale', PlotScaleTypeSchema, Object.values(BuiltinPlotScale)],
-  ])('keeps %s provider keys open while retaining built-in hints', (_label, schema, builtins) => {
+  ])('保持 %s 提供者键打开，同时保留内置提示', (_label, schema, builtins) => {
     expect(toJSONSchema(schema)).toMatchObject({
       anyOf: [
         { type: 'string', enum: expect.arrayContaining(builtins) },

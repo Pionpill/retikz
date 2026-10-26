@@ -324,7 +324,7 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
     });
 
   // 错误路径：line + 离散化 color → fail-loud（离散色仅 point/bar/sector）
-  it('line + quantize color fail-loud', () => {
+  it('线条使用 quantize 颜色比例尺时明确报错', () => {
     const data = [
       { x: 0, y: 1, v: 0 },
       { x: 1, y: 3, v: 50 },
@@ -336,7 +336,7 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
     ).toThrow();
   });
 
-  it('area + threshold color fail-loud', () => {
+  it('区域+阈值颜色失败', () => {
     const data = [
       { x: 0, y: 1, v: 0 },
       { x: 1, y: 3, v: 50 },
@@ -348,7 +348,7 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
     ).toThrow();
   });
 
-  it('line + quantile color fail-loud', () => {
+  it('线条使用 quantile 颜色比例尺时明确报错', () => {
     const data = [
       { x: 0, y: 1, v: 0 },
       { x: 1, y: 3, v: 50 },

@@ -75,7 +75,7 @@ const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>
   };
 };
 
-describe('Scene Patch validator', () => {
+describe('Scene 补丁验证器', () => {
   it('接受 canonical clip path，并在 full snapshot 拒绝旧 shape 与 malformed path', () => {
     const valid = createRectSnapshot(0, ['a']);
     const canonical: SceneRuntimeSnapshot = {

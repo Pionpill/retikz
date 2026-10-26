@@ -358,7 +358,7 @@ it('共享 Pattern 文本在 retained 提交与回滚时对所有宿主原子生
   executor.dispose();
 });
 
-describe('builtin retained renderers', () => {
+describe('内置保留渲染器', () => {
   it('SVG retained renderer 原子替换有序 readonly layers，rollback 恢复旧整帧', () => {
     const pair = createCorePair(scene('#ef4444'), scene('#22c55e'));
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');

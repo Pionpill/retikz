@@ -24,7 +24,7 @@ const path = (...steps: Array<unknown>): IRScene => scene([{ type: 'path', child
 const isFiniteCubic = (cmd: CubicPathCommand): boolean =>
   [cmd.control1, cmd.control2, cmd.to].every(p => Number.isFinite(p[0]) && Number.isFinite(p[1]));
 
-describe('smooth step：happy path', () => {
+describe('平稳的步伐：快乐的道路', () => {
   it('cursor + 2 points（3 knot）→ move + 2 cubic，每段 .to 命中对应 knot', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
@@ -358,7 +358,7 @@ describe('smooth step：交互', () => {
   });
 });
 
-describe('smooth step：JSON round-trip', () => {
+describe('平滑步：JSON 往返', () => {
   it('含 smooth step 的 IRPath → parse(JSON.parse(stringify)) 与原 parse 深等', () => {
     const ir = {
       type: 'path' as const,
@@ -385,7 +385,7 @@ describe('smooth step：JSON round-trip', () => {
   });
 });
 
-it('clips the final implicit smooth NodeTarget while keeping intermediate knots', () => {
+it('裁剪最终隐式平滑 NodeTarget，同时保留中间结', () => {
   const result = compileToScene(
     scene([
       {
@@ -418,7 +418,7 @@ it('clips the final implicit smooth NodeTarget while keeping intermediate knots'
 it.each<{ target: IRTarget; expected: [number, number] }>([
   { target: { id: 'end', anchor: 'right' }, expected: [110, 0] },
   { target: { id: 'end', offset: [5, 4] }, expected: [105, 4] },
-])('keeps explicit terminal anchor or offset positions: $target', ({ target, expected }) => {
+])('保留显式终端锚点或偏移位置：$target', ({ target, expected }) => {
   const result = compileToScene(
     scene([
       {

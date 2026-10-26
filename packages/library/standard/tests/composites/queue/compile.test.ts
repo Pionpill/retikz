@@ -253,7 +253,7 @@ it.each([
     ],
   ],
 ] as const)(
-  '%s operation paths match manual Core geometry and preserve allocation',
+  '%s 操作路径与手动 Core 几何形状匹配并保留分配',
   (direction, incoming, outgoing) => {
     const source = {
       ...base,
@@ -283,7 +283,7 @@ it.each([
     expect(bounds(actual, 'container')).toEqual(bounds(disabled, 'container'));
   },
 );
-it('empty collections suppress arrows and each custom arrow can be independently disabled', () => {
+it('空集合抑制箭头，每个自定义箭头可以独立禁用', () => {
   const props = {
     ...base,
     items: [{}],
@@ -306,7 +306,7 @@ it('empty collections suppress arrows and each custom arrow can be independently
   expect(empty).not.toContain('red');
 });
 
-it('operation arrows are absent by default and explicitly enabled without changing cells', () => {
+it('默认情况下不存在操作箭头，并且在不更改单元格的情况下显式启用', () => {
   const source = { ...base, items: ['A'] };
   const plain = compile(source);
   expect(plain.scene).toEqual(compile({ ...source, arrow: { input: false, output: false } }).scene);
@@ -318,7 +318,7 @@ it('operation arrows are absent by default and explicitly enabled without changi
   ).toHaveLength(2);
 });
 
-it('arrow shorthand and omitted sides preserve independent operation semantics', () => {
+it('箭头简写和省略的边保留独立的操作语义', () => {
   const source = { ...base, items: ['A', 'B'] };
   expect(compile({ ...source, arrow: true }).scene).toEqual(
     compile({ ...source, arrow: { input: true, output: true } }).scene,

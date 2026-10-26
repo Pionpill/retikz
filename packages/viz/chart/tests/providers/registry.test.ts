@@ -37,8 +37,8 @@ const recipe = defineChartRecipe({
   }),
 });
 
-describe('active Chart provider registry', () => {
-  it('builds one exact Point schema union for active recipes', () => {
+describe('活动的 Chart 提供者注册表', () => {
+  it('为活动配方构建一个精确的点 schema 联合', () => {
     const registry = resolveChartProviderRegistry([
       { family: 'point', recipe: eraseChartRecipeDefinition(ScatterChartDefinition), chartThemeDefinitions: [] },
       { family: 'point', recipe: eraseChartRecipeDefinition(BubbleChartDefinition), chartThemeDefinitions: [] },
@@ -56,7 +56,7 @@ describe('active Chart provider registry', () => {
     ).toBe(true);
   });
 
-  it('deduplicates identical recipes and rejects duplicate identities or family mismatches', () => {
+  it('删除重复的相同食谱并拒绝重复的身份或系列不匹配', () => {
     expect(
       resolveChartProviderRegistry([
         { family: 'point', recipe, chartThemeDefinitions: [] },
@@ -78,7 +78,7 @@ describe('active Chart provider registry', () => {
     );
   });
 
-  it('resolves Core style chains, Chart defaults, and Plot extensions through the provider entry', () => {
+  it('通过提供者条目解析 Core 样式链、Chart 默认值和 Plot 扩展', () => {
     const base = defineChartTheme({
       name: 'base',
       defaults: { background: { fill: '#101010' }, layout: { gap: 4 } },
@@ -126,7 +126,7 @@ describe('active Chart provider registry', () => {
     expect(resolution.plot.plotRules).toEqual(source.plotExtension?.plotRules);
   });
 
-  it('wraps invalid Definition shapes at the registry boundary', () => {
+  it('在注册表边界处包装无效的 Definition 形状', () => {
     const invalid = Object.defineProperty({ name: 'invalid' }, 'defaults', { enumerable: true, value: { recipe: {} } });
 
     expect(() =>

@@ -68,8 +68,8 @@ const doubleTransformImplementation = defineTransformImplementation({
     })),
 });
 
-describe('mark-local transform', () => {
-  it('retains unknown output fields and category order across empty root and mark scopes', () => {
+describe('标记局部变换', () => {
+  it('在空根和标记范围内保留未知的输出字段和类别顺序', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -124,7 +124,7 @@ describe('mark-local transform', () => {
     expect(dataArtifact.markDataViews[0].dataView.rows).toEqual([]);
   });
 
-  it('builtin_mark_uses_local_transform_rows_for_lowering', () => {
+  it('内置标记使用局部变换行进行下沉', () => {
     const layer = firstLayer(groupPointSpec(), {
       sales: [
         { category: 'A', value: 4 },
@@ -136,13 +136,13 @@ describe('mark-local transform', () => {
     expect(layer.children).toHaveLength(2);
   });
 
-  it('mark_local_transform_fields_feed_source_field_collection', () => {
+  it('标记本地转换字段馈送源字段集合', () => {
     const fields = collectSourceFields(groupPointSpec());
 
     expect([...fields].sort()).toEqual(['category', 'value']);
   });
 
-  it('mark_local_same_name_output_keeps_source_field', () => {
+  it('标记本地同名输出保留源字段', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -164,7 +164,7 @@ describe('mark-local transform', () => {
     expect([...collectSourceFields(spec)].sort()).toEqual(['value', 'x']);
   });
 
-  it('mark_data_view_contains_local_transform_rows', () => {
+  it('标记数据视图包含本地变换行', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -211,7 +211,7 @@ describe('mark-local transform', () => {
     ]);
   });
 
-  it('mark_local_transform_uses_custom_transform_registry', () => {
+  it('标记本地转换使用自定义转换注册表', () => {
     const layer = firstLayer(
       PlotSchema.parse({
         namespace: 'plot',
@@ -246,7 +246,7 @@ describe('mark-local transform', () => {
     expect(layer.children).toHaveLength(2);
   });
 
-  it('mark_local_custom_transform_fields_use_same_registry', () => {
+  it('标记本地自定义转换字段使用相同的注册表', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

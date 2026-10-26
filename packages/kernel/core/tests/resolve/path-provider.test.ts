@@ -16,8 +16,8 @@ const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({
   ...overrides,
 });
 
-describe('resolve/path provider bindings', () => {
-  it('binds builtin and custom path definitions and parses options once', () => {
+describe('解析/路径提供者绑定', () => {
+  it('绑定内置和自定义路径定义并解析一次选项', () => {
     const custom = definePath({
       name: 'highlight',
       schema: PathSchema.extend({
@@ -36,7 +36,7 @@ describe('resolve/path provider bindings', () => {
     expect(resolvePathWithBuiltinProviders(path()).kind.name).toBe('stroke');
   });
 
-  it('reports unsupported explicit interruption before a custom strict path-definition schema parses the label', () => {
+  it('在自定义严格路径定义 schema 解析标签之前报告不支持的显式中断', () => {
     const strictRibbon = definePath({
       name: 'ribbon',
       schema: PathSchema.extend({
@@ -53,7 +53,7 @@ describe('resolve/path provider bindings', () => {
     ).toThrow(/label\.interrupt.*built-in stroke path/i);
   });
 
-  it('reports filled Stroke interruption requests at the host-array and step-label locators', () => {
+  it('报告宿主阵列和步骤标签定位器处已填充的行程中断请求', () => {
     expect(() =>
       resolvePathWithBuiltinProviders(
         path({
@@ -82,13 +82,13 @@ describe('resolve/path provider bindings', () => {
     ).toMatchObject([{ text: 'continuous', interrupt: false }]);
   });
 
-  it('fails unknown path definitions through the resolver registry diagnostic', () => {
+  it('通过解析器注册表诊断未知路径定义失败', () => {
     expect(() => resolvePathWithBuiltinProviders(path({ kind: 'missing' }), { paths: resolvePathRegistry() })).toThrow(
       /Unknown provider 'missing'.*available: stroke/s,
     );
   });
 
-  it('reports unknown arrow names from the resolver', () => {
+  it('从解析器报告未知的箭头名称', () => {
     expect(() =>
       resolveStrokePathWithBuiltinProviders(path({ arrow: { end: { shape: 'missing-arrow' } } }), {
         irPath: 'children[0].path',
@@ -96,7 +96,7 @@ describe('resolve/path provider bindings', () => {
     ).toThrow(/Unknown provider 'missing-arrow'.*available:/s);
   });
 
-  it('binds arrow hollow visual defaults and geometry before marker emit', () => {
+  it('在标记发出之前绑定箭头空心视觉默认值和几何形状', () => {
     const arrow = {
       name: 'hollowProbe',
       hollow: true,
@@ -137,7 +137,7 @@ describe('resolve/path provider bindings', () => {
       definition: { backX: 1, lineContactX: 9, tipX: 8 },
       expected: /backX.*lineContactX.*tipX/i,
     },
-  ])('rejects invalid arrow geometry: $name', ({ definition, expected }) => {
+  ])('拒绝无效的箭头几何形状：$name', ({ definition, expected }) => {
     const arrow = {
       name: 'invalidGeometry',
       ...definition,
@@ -151,7 +151,7 @@ describe('resolve/path provider bindings', () => {
     ).toThrow(expected);
   });
 
-  it('rejects a non-finite resolved visual back before compile consumes it', () => {
+  it('在编译消费前拒绝解析后非有限的 visual back 值', () => {
     const arrow = {
       name: 'overflowBack',
       backX: -Number.MAX_VALUE,

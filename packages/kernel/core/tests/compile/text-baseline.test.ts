@@ -198,8 +198,8 @@ describe('toAlphabeticBaselineY', () => {
   });
 });
 
-describe('Node layout alignment baselines', () => {
-  it('uses the same single physical-line metrics for equal first and last baselines', () => {
+describe('Node 布局对齐基线', () => {
+  it('对相同的第一个和最后一个基线使用相同的单个物理线路度量', () => {
     const measureText = vi.fn<TextMeasurer>(fixedMeasurer);
 
     expect(
@@ -219,7 +219,7 @@ describe('Node layout alignment baselines', () => {
     expect(measureText).toHaveBeenCalledTimes(1);
   });
 
-  it('uses the authored first physical-line metrics and fixed lineHeight slots for multiline baselines', () => {
+  it('使用编写的第一个物理线路指标和固定的 lineHeight 槽位作为多线路基线', () => {
     const measureText = vi.fn<TextMeasurer>(text => ({
       width: text.length * 10,
       height: 10,
@@ -244,7 +244,7 @@ describe('Node layout alignment baselines', () => {
     expect(measureText).toHaveBeenCalledTimes(2);
   });
 
-  it('does not invent baseline guides for children without body text', () => {
+  it('不会为没有正文的儿童发明基线辅助线', () => {
     expect(
       probeGuidesOf(
         {
@@ -269,7 +269,7 @@ describe('Node layout alignment baselines', () => {
     ).toBeUndefined();
   });
 
-  it('uses the same authoritative baseline for the guide and emitted single physical line', () => {
+  it('对引导和发射的单条物理线使用相同的权威基线', () => {
     const output = probeEmissionOf(
       {
         type: 'node',
@@ -283,7 +283,7 @@ describe('Node layout alignment baselines', () => {
     expect(emittedFirstLastBaselines(output.primitives)).toEqual(output.guides?.map(guide => guide.position));
   });
 
-  it('keeps authored textHeight while matching oversized multiline metrics to emitted physical baselines', () => {
+  it('保留编写的 textHeight，同时将超大的多行指标与发出的物理基线进行匹配', () => {
     const output = probeEmissionOf(
       {
         type: 'node',
@@ -302,7 +302,7 @@ describe('Node layout alignment baselines', () => {
     expect(emittedPhysicalBaselines(output.primitives)).toEqual([4, 24]);
   });
 
-  it('keeps one grouped multiline TextPrimitive and fixed visual bounds when authored line metrics differ', () => {
+  it('当编写的线指标不同时，保留一组多线 TextPrimitive 和固定的视觉边界', () => {
     const output = probeEmissionOf(
       {
         type: 'node',
@@ -329,7 +329,7 @@ describe('Node layout alignment baselines', () => {
     expect(output.visualBounds).toEqual({ x: -1, y: -17, width: 10, height: 40 });
   });
 
-  it('rounds guides with the same precision as grouped TextPrimitive physical baselines', () => {
+  it('以与分组 TextPrimitive 物理基线相同的精度倒圆导轨', () => {
     const output = probeEmissionOf(
       {
         type: 'node',
@@ -356,7 +356,7 @@ describe('Node layout alignment baselines', () => {
     expect(output.visualBounds).toEqual({ x: -1, y: -17.3, width: 10, height: 40.5 });
   });
 
-  it('uses each mixed/TeX line real rounded baseline instead of grouped plain lineHeight spacing', () => {
+  it('使用每个混合/TeX 线真正的圆形基线，而不是分组的普通 lineHeight 间距', () => {
     const lowerTex: LowerTex = () => ({ paths: [], width: 1, height: 1, depth: 0 });
     const output = probeEmissionOf(
       {

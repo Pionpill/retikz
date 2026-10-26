@@ -26,8 +26,8 @@ const compile = (children: Array<IRChild>) =>
     },
   );
 
-describe('Array / Map appearance and identity', () => {
-  it('resolves numeric content paint against the cell master color before replay', () => {
+describe('Array / Map 外观和身份', () => {
+  it('在回放之前根据单元主颜色解析数字内容绘制', () => {
     const result = compile([
       {
         namespace: 'standard',
@@ -42,7 +42,7 @@ describe('Array / Map appearance and identity', () => {
     );
   });
 
-  it('overrides index text style without changing cell text and merges font fields', () => {
+  it('覆盖索引文本样式而不更改单元格文本并合并字体字段', () => {
     const result = compile([
       {
         namespace: 'standard',
@@ -71,7 +71,7 @@ describe('Array / Map appearance and identity', () => {
     });
   });
 
-  it('clips oversized content by default in fixed cells without scaling text', () => {
+  it('默认在固定单元格中裁剪超大内容，而不缩放文本', () => {
     const result = compile([
       {
         namespace: 'standard',
@@ -106,7 +106,7 @@ describe('Array / Map appearance and identity', () => {
     });
   });
 
-  it('merges overall, role, and cell styles without dimming text with fillOpacity', () => {
+  it('使用 fillOpacity 合并整体、角色和单元格样式，而不使文本变暗', () => {
     const result = compile([
       {
         namespace: 'standard',
@@ -133,7 +133,7 @@ describe('Array / Map appearance and identity', () => {
     expect(texts.every(node => node.opacity === undefined || node.opacity === 1)).toBe(true);
   });
 
-  it('publishes cell allocation when background and border are absent', () => {
+  it('当背景和边框不存在时发布单元格分配', () => {
     const result = compile([
       {
         namespace: 'standard',
@@ -165,7 +165,7 @@ describe('Array / Map appearance and identity', () => {
     ).toMatchObject({ kind: 'move', to: [110, 50] });
   });
 
-  it('does not create cell handles without authored ids, including indexed lists', () => {
+  it('如果没有编写的 ID，则不会创建单元格句柄，包括索引列表', () => {
     const result = compile([{ namespace: 'standard', type: 'array', index: { start: 4 }, items: [{ content }] }]);
 
     expect(result.spatialHandles.entries.filter(entry => entry.role === 'array-cell')).toHaveLength(0);
@@ -174,7 +174,7 @@ describe('Array / Map appearance and identity', () => {
     );
   });
 
-  it('applies root font defaults during allocation and clips each cell separately', () => {
+  it('在分配期间应用根字体默认值并单独裁剪每个单元格', () => {
     const result = compile([
       {
         namespace: 'standard',
@@ -200,7 +200,7 @@ describe('Array / Map appearance and identity', () => {
   });
 });
 
-it('preserves Core namespace isolation, duplicate diagnostics, and delayed cell references', () => {
+it('保留 Core 命名空间隔离、重复诊断和延迟单元引用', () => {
   for (const localNamespace of [true, false]) {
     const warnings: Array<CompileWarning> = [];
     const result = compileToScene(
@@ -249,7 +249,7 @@ it('preserves Core namespace isolation, duplicate diagnostics, and delayed cell 
   }
 });
 
-it('compiles persistent text cells exactly like explicit undecorated nodes without rewriting Source', () => {
+it('完全像显式未修饰节点一样编译持久文本单元，而无需重写 Source', () => {
   const textNode: IRChild = {
     type: 'node',
     position: [0, 0],

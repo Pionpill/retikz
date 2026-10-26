@@ -147,7 +147,7 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
     expect(out![0]).toEqual({ kind: 'translate', x: 0, y: -15 });
   });
 
-  it('offset-translate of=string + offset', () => {
+  it('偏移翻译=字符串+偏移', () => {
     const idx = makeStack([['A', [0, 0]]]);
     const out = lower([{ kind: 'offset-translate', of: 'A', offset: [10, 5] }], idx);
 

@@ -61,8 +61,8 @@ const legendHorizontalCenterDelta = (Preview: FC): number => {
   return legendCenter - viewBoxCenter;
 };
 
-describe('Standard Legend documentation', () => {
-  it('keeps the bilingual component-page structure and public schema anchors aligned', () => {
+describe('Standard Legend 文档', () => {
+  it('保持双语组件页面结构和公共 schema 锚点对齐', () => {
     const zh = readPage('zh');
     const en = readPage('en');
 
@@ -76,7 +76,7 @@ describe('Standard Legend documentation', () => {
     }
   });
 
-  it('documents all authoring entries and the executable preview sources in both languages', () => {
+  it('记录两种语言的所有编写条目和可执行预览源', () => {
     for (const source of [readPage('zh'), readPage('en')]) {
       for (const api of ['LegendInputEmbedAdapter', 'LegendDefinition', 'InputLegend', 'IRLegend']) {
         expect(source).toContain(api);
@@ -92,7 +92,7 @@ describe('Standard Legend documentation', () => {
     }
   });
 
-  it('documents the strict marker and slot composition boundary in both languages', () => {
+  it('记录两种语言中严格的标记和槽组成边界', () => {
     const zh = readPage('zh');
     const en = readPage('en');
 
@@ -110,7 +110,7 @@ describe('Standard Legend documentation', () => {
     expect(en).toMatch(/optional label[^\n]*exactly one convertible function element[^\n]*DOM \/ object wrappers/);
   });
 
-  it('exposes bilingual title and content-kind controls with branch-specific fields', () => {
+  it('使用特定于分支的字段公开双语标题和内容类型控件', () => {
     const chineseFields = fieldContractOf(legendPlaygroundControls);
     const englishFields = fieldContractOf(legendPlaygroundEnControls);
     const itemsOnly = { controlId: 'kind', oneOf: ['items'] };
@@ -274,7 +274,7 @@ describe('Standard Legend documentation', () => {
     ]);
   });
 
-  it('renders editable titles and switches between items and direction-aware ramps', () => {
+  it('渲染可编辑标题并在项目和方向感知渐变之间切换', () => {
     const canonical = legendPlaygroundContract.canonicalValues;
 
     expect(legendOf(canonical)).toMatchObject({
@@ -318,7 +318,7 @@ describe('Standard Legend documentation', () => {
     });
   });
 
-  it('centers each Legend allocation inside its fixed demo viewBox', () => {
+  it('将每个 Legend 的分配区域居中放置在固定演示 viewBox 内', () => {
     const PlaygroundDemo: FC = () => LegendPlaygroundPreview(legendPlaygroundContract.canonicalValues);
     const deltas = [
       legendHorizontalCenterDelta(LegendBasicZhDemo),
@@ -331,7 +331,7 @@ describe('Standard Legend documentation', () => {
     for (const delta of deltas) expect(delta).toBeCloseTo(0, 5);
   });
 
-  it('switches kind by rendering the matching marker tree and keeps title styles on the title child', () => {
+  it('通过渲染匹配的标记树来切换种类，并在标题子项上保留标题样式', () => {
     const source = readLegendFile('legend-playground.preview.tsx');
 
     expect(source).toMatch(
@@ -345,7 +345,7 @@ describe('Standard Legend documentation', () => {
     expect(source).not.toMatch(/<Legend[^>]+title=\{/);
   });
 
-  it('distinguishes title text alignment from Legend content-block alignment in both languages', () => {
+  it('区分两种语言中的标题文本对齐和 Legend 内容块对齐', () => {
     const chineseFields = getPreviewControlFields(legendPlaygroundControls);
     const englishFields = getPreviewControlFields(legendPlaygroundEnControls);
 

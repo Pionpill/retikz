@@ -270,7 +270,7 @@ describe('convertIRToReactNode', () => {
     expect(back).toEqual(ir);
   });
 
-  it('Path fill / fillRule round-trip', () => {
+  it('Path 补/fillRule 往返', () => {
     const ir: IRKernelScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
@@ -499,7 +499,7 @@ describe('convertIRToReactNode', () => {
     expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
   });
 
-  describe('step.label round-trip', () => {
+  describe('step.label 往返', () => {
     it('line + label round-trip 完整保留 text/position/side', () => {
       const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
@@ -687,7 +687,7 @@ describe('convertIRToReactNode', () => {
   });
 
   describe('扩展形态 round-trip', () => {
-    it('round-trips AtPosition Node：{ direction, of, distance }', () => {
+    it('AtPosition Node 的 { direction, of, distance } 保持往返等价', () => {
       const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
@@ -833,7 +833,7 @@ describe('convertIRToReactNode', () => {
     });
 
     it.each(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end'] as const)(
-      "round-trips StepLabel.position keyword '%s'",
+      "往返 StepLabel.position 关键字'%s'",
       position => {
         const ir: IRKernelScene = {
           version: CURRENT_IR_VERSION,
@@ -881,7 +881,7 @@ describe('convertIRToReactNode', () => {
       expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('round-trips IRTarget `relative` / `relativeAccumulate`', () => {
+    it('往返 IRTarget `relative` / `relativeAccumulate`', () => {
       const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
@@ -1113,7 +1113,7 @@ describe('convertIRToReactNode', () => {
   });
 
   describe('补充能力新增形态 round-trip', () => {
-    it('round-trips Node fill IRPaint：linearGradient / radialGradient / pattern / image', () => {
+    it('往返 Node 填充 IRPaint：linearGradient / radialGradient /图案/图像', () => {
       const fills = [
         {
           kind: 'linearGradient' as const,
@@ -1175,7 +1175,7 @@ describe('convertIRToReactNode', () => {
       expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('round-trips Scope.clip：circle / rect / ellipse / polygon', () => {
+    it('往返 Scope.clip：圆/矩形/椭圆/多边形', () => {
       const clips: Array<IRClip> = [
         { kind: 'circle' as const, params: { cx: 0, cy: 0, r: 80 } },
         { kind: 'rect' as const, params: { x: -10, y: -10, width: 40, height: 30 } },
@@ -1264,7 +1264,7 @@ describe('convertIRToReactNode', () => {
       expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('round-trips bend out/in/looseness（asymmetric / self-loop）', () => {
+    it('往返弯外/内/松（不对称/自环）', () => {
       const ir: IRKernelScene = {
         version: CURRENT_IR_VERSION,
         type: 'scene',

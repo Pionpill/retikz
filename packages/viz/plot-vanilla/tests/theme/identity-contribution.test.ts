@@ -53,8 +53,8 @@ const plotTheme = definePlotTheme({
   resolve: () => ({}),
 });
 
-describe('Plot Vanilla runtime style options', () => {
-  it('SSR renderPlot passes Core style definitions and keeps Plot style definitions in lowering', () => {
+describe('Plot Vanilla 运行时样式选项', () => {
+  it('SSR renderPlot 传递 Core 样式定义并保持 Plot 样式定义下沉', () => {
     compileCalls.length = 0;
 
     expect(renderPlot(spec, data, { definitions: { plotThemeDefinitions: [plotTheme] }, themeDefinitions: [] })).toBe(
@@ -66,7 +66,7 @@ describe('Plot Vanilla runtime style options', () => {
     expect(options?.themeDefinitions).toEqual([]);
   });
 
-  it('embedded PlotInputEmbedAdapter keeps runtime style definitions out of the contribution payload', () => {
+  it('嵌入式 PlotInputEmbedAdapter 将运行时样式定义保留在贡献有效负载之外', () => {
     const contribution = PlotInputEmbedAdapter.lower({ spec, datasets: data }, contextOf('panel'));
 
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');

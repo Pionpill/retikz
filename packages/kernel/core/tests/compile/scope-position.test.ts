@@ -185,7 +185,7 @@ describe('applyTransformChain / inverseTransformChain 对偶性', () => {
     expect(inverseTransformChain(applyTransformChain(p, chain), chain)).toEqual([10, 20]);
   });
 
-  it('scale x=0 inverse fail-loud', () => {
+  it('x 缩放为零时逆变换明确报错', () => {
     const chain = [{ kind: 'scale' as const, x: 0 }];
 
     expect(() => inverseTransformChain([5, 10], chain)).toThrow('non-invertible scope transform');
@@ -871,7 +871,7 @@ describe('path step 在 scope 内（笛卡尔 / 相对 to）按 scope 局部度�
   });
 });
 
-describe('path relative inside scope', () => {
+describe('范围内的相对路径', () => {
   it('scope rotate(90) 内 path {relative:[10,0]} → 端点视觉沿 +y 方向（局部右 10 经 scope rotate 90 投影到 (0, 10)）', () => {
     // move 到 (0, 0) 全局；line relative (10, 0) 局部 = (10, 0) 局部 → apply rotate 90 = (0, 10) 全局
     // 旧实现 double apply：localShifted (10, 0) 在 relative.ts 已 applyTransformChain(rotate 90) → (0, 10) 全局

@@ -8,8 +8,8 @@ import {
   TableFormatterRefSchema,
 } from '../../src';
 
-describe('Table formatter IR', () => {
-  it('parses a strict JSON formatter reference without materializing options', () => {
+describe('Table 格式化程序 IR', () => {
+  it('解析严格的 JSON 格式化程序引用，而不具体化选项', () => {
     const reference = TableFormatterRefSchema.parse({ name: 'number' });
 
     expect(reference).toEqual({ name: 'number' });
@@ -21,7 +21,7 @@ describe('Table formatter IR', () => {
     expect(() => TableFormatterRefSchema.parse({ name: 'number', unknown: true })).toThrow();
   });
 
-  it('keeps formatter and presentation as independent value payload references', () => {
+  it('将格式化程序和表示保留为独立的值有效负载引用', () => {
     const payload = TableCellValuePayloadSchema.parse({
       kind: 'value',
       value: 12.5,
@@ -40,7 +40,7 @@ describe('Table formatter IR', () => {
     );
   });
 
-  it('accepts formatter references on rich manual values but rejects them on direct content', () => {
+  it('接受丰富手动值的格式化程序引用，但拒绝直接内容', () => {
     expect(ManualTableValueCellSchema.parse({ value: true, formatter: { name: 'boolean' } })).toMatchObject({
       formatter: { name: 'boolean' },
     });
@@ -52,7 +52,7 @@ describe('Table formatter IR', () => {
     ).toThrow();
   });
 
-  it('accepts a formatter for detail body values without changing the header payload', () => {
+  it('接受详细主体值的格式化程序，而不更改头部有效负载', () => {
     const column = TableDetailColumnSchema.parse({
       id: 'revenue',
       field: 'revenue',

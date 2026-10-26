@@ -81,29 +81,29 @@ const expandOf = (spec: IRPlot): IRScope => {
   ) as IRScope;
 };
 
-describe('coordinate composition registry schema', () => {
-  it('compat_coordinate_shorthand_parses', () => {
+describe('坐标组合注册表 schema', () => {
+  it('兼容坐标简写解析', () => {
     expect(parsePlotIR(coordinateShorthandSpec)).toEqual(coordinateShorthandSpec);
   });
 
-  it('composition_scope_registry_parses_without_top_level_coordinate', () => {
+  it('组合范围注册表在没有顶级坐标的情况下进行解析', () => {
     expect(parsePlotIR(compositionSpec)).toEqual(compositionSpec);
   });
 
-  it('composition_scope_registry_round_trips_through_json', () => {
+  it('通过 json 进行组合范围注册表往返', () => {
     const json = JSON.parse(JSON.stringify(compositionSpec));
 
     expect(parsePlotIR(json)).toEqual(compositionSpec);
   });
 
-  it('mark_and_axis_coordinate_scope_fields_are_preserved', () => {
+  it('保留标记及坐标轴的坐标作用域字段', () => {
     const parsed = parsedComposition();
 
     expect(parsed.marks[1]).toMatchObject({ coordinateView: 'xy' });
     expect(parsed.guides?.[1]).toMatchObject({ coordinateView: 'xy' });
   });
 
-  it('single_explicit_root_scope_matches_schema_contract', () => {
+  it('单个显式根范围与 schema 契约匹配', () => {
     const spec = {
       ...compositionSpec,
       composition: {
@@ -123,7 +123,7 @@ describe('coordinate composition registry schema', () => {
     expect(parsePlotIR(spec)).toEqual(spec);
   });
 
-  it('custom_coordinate_scope_schema_passes_and_round_trips', () => {
+  it('自定义坐标范围 schemaschema 传递和往返行程', () => {
     const spec = {
       ...compositionSpec,
       composition: {
@@ -137,13 +137,13 @@ describe('coordinate composition registry schema', () => {
     expect(parsePlotIR(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
   });
 
-  it('empty_composition_scopes_rejected', () => {
+  it('空的组合范围被拒绝', () => {
     const spec = { ...compositionSpec, composition: { defaultView: 'main', views: [] } };
 
     expect(() => parsePlotIR(spec)).toThrow();
   });
 
-  it('duplicate_scope_id_rejected', () => {
+  it('重复范围 ID 被拒绝', () => {
     const spec = {
       ...compositionSpec,
       composition: {
@@ -158,7 +158,7 @@ describe('coordinate composition registry schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/duplicate coordinate view/i);
   });
 
-  it('missing_default_scope_rejected', () => {
+  it('缺少默认范围被拒绝', () => {
     const spec = {
       ...compositionSpec,
       composition: {
@@ -170,7 +170,7 @@ describe('coordinate composition registry schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/defaultView/);
   });
 
-  it('missing_mark_coordinate_scope_rejected', () => {
+  it('缺少标记坐标范围被拒绝', () => {
     const spec = {
       ...compositionSpec,
       marks: [
@@ -186,7 +186,7 @@ describe('coordinate composition registry schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
   });
 
-  it('missing_axis_coordinate_scope_rejected', () => {
+  it('缺少轴坐标范围被拒绝', () => {
     const spec = {
       ...compositionSpec,
       guides: [{ type: 'axis', dimension: 'x', coordinateView: 'missing' }],
@@ -195,7 +195,7 @@ describe('coordinate composition registry schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
   });
 
-  it('compat_mark_coordinate_scope_must_reference_implicit_default_scope', () => {
+  it('兼容标记坐标范围必须引用隐式默认范围', () => {
     const spec = {
       ...coordinateShorthandSpec,
       marks: [
@@ -211,7 +211,7 @@ describe('coordinate composition registry schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
   });
 
-  it('compat_axis_coordinate_scope_must_reference_implicit_default_scope', () => {
+  it('兼容轴坐标范围必须引用隐式默认范围', () => {
     const spec = {
       ...coordinateShorthandSpec,
       guides: [{ type: 'axis', dimension: 'x', coordinateView: 'missing' }],
@@ -220,13 +220,13 @@ describe('coordinate composition registry schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/coordinateView/);
   });
 
-  it('coordinate_and_composition_coexistence_rejected', () => {
+  it('坐标和组合共存被拒绝', () => {
     const spec = { ...compositionSpec, coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yValue' } };
 
     expect(() => parsePlotIR(spec)).toThrow(/composition/);
   });
 
-  it('overlay_target_must_reference_registered_scope', () => {
+  it('覆盖目标必须引用注册范围', () => {
     const spec = {
       ...compositionSpec,
       composition: {
@@ -253,7 +253,7 @@ describe('coordinate composition registry schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/target/);
   });
 
-  it('overlay_target_cannot_reference_itself', () => {
+  it('覆盖目标无法引用自身', () => {
     const spec = {
       ...compositionSpec,
       composition: {
@@ -271,7 +271,7 @@ describe('coordinate composition registry schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/target/);
   });
 
-  it('track_arrangement_requires_track_views', () => {
+  it('轨道布置需要轨道视图', () => {
     const spec = {
       ...compositionSpec,
       composition: {
@@ -292,14 +292,14 @@ describe('coordinate composition registry schema', () => {
   });
 });
 
-describe('coordinate composition registry lowering', () => {
-  it('mark_and_axis_lowering_use_their_bound_coordinate_scope', () => {
+describe('坐标合成注册表下沉', () => {
+  it('标记和轴下沉使用其绑定坐标范围', () => {
     const outer = expandOf(parsedComposition());
 
     expect(outer.children.length).toBeGreaterThanOrEqual(4);
   });
 
-  it('axis_scope_binding_can_use_dimension_that_only_exists_on_bound_scope', () => {
+  it('轴范围绑定可以使用仅存在于绑定范围上的维度', () => {
     const spec = {
       ...compositionSpec,
       composition: {

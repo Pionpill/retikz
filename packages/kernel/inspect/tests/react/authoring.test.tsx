@@ -30,7 +30,7 @@ beforeEach(() => {
 
 const normalizeEmptyElements = (value: string): string => value.replace(/><\/(ellipse|path|rect)>/g, ' />');
 
-describe('@retikz/inspect/react authoring and driver', () => {
+describe('@retikz/inspect/react 编写和驱动程序', () => {
   it('Node/Coordinate wrappers 在 static 与 retained SSR 中输出相同只读图层', () => {
     const children = (
       <>
@@ -108,7 +108,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
     expect(html).not.toContain('hsl(210, 38%, 48%)');
   });
 
-  it('rejects a self request whose authored site owner does not match the Inspector owner', () => {
+  it('拒绝其编写网站所属模块与 Inspector 所属模块不匹配的自我请求', () => {
     const driver = createInspectionVanillaDriver({ registry });
     const session = driver.create({
       instance: {},
@@ -140,7 +140,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
     expect(() => session.observers[0]?.createSession()).toThrow(/owner/i);
   });
 
-  it('counts composite owners structurally when namespace or type contains a colon', () => {
+  it('当命名空间或类型包含冒号时，按结构对复合所属模块进行计数', () => {
     const firstOwner = { kind: 'composite' as const, namespace: 'a:b', type: 'c' };
     const secondOwner = { kind: 'composite' as const, namespace: 'a', type: 'b:c' };
     const firstKey = { namespace: 'fixture', type: 'first' };

@@ -10,15 +10,15 @@ const options = {
   marks: [{ pos: 0.5, shape: 'stealth' }],
 };
 
-describe('Plot atomic path fragment consumption', () => {
-  it('keeps relation path options field set and strict behavior', () => {
+describe('Plot 原子路径片段的消费', () => {
+  it('保持关系路径选项字段设置和严格行为', () => {
     expect(RelationPathSpecificOptionsSchema.parse(options)).toEqual(options);
     expect(RelationPathSpecificOptionsSchema.safeParse({ style: { dashOffset: 1 } }).success).toBe(false);
     expect(RelationPathSpecificOptionsSchema.safeParse({ ...options, kind: 'stroke' }).success).toBe(false);
     expect(RelationPathSpecificOptionsSchema.safeParse({ ...options, label: { text: 'edge' } }).success).toBe(false);
   });
 
-  it('accepts fragment options in RelationPathGeometry and relation mark IR', () => {
+  it('接受 RelationPathGeometry 和关系标记 IR 中的片段选项', () => {
     const geometry = RelationPathGeometrySchema.parse({ options });
 
     expect(geometry.options).toEqual(options);
@@ -35,7 +35,7 @@ describe('Plot atomic path fragment consumption', () => {
     expect(relation.properties.geometry.options).toEqual(options);
   });
 
-  it('keeps relation path fragment input JSON round-trippable', () => {
+  it('保持关系路径片段输入 JSON 可往返', () => {
     const restored = RelationPathSpecificOptionsSchema.parse(JSON.parse(JSON.stringify(options)));
 
     expect(restored).toEqual(options);

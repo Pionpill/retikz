@@ -37,7 +37,7 @@ const contribute = ({ children, ...props }: LegendProps) => {
 };
 
 describe('<Legend>', () => {
-  it('forwards authored root Scope identity and metadata through both forms', () => {
+  it('通过两种形式转发编写的根 Scope 身份和元数据', () => {
     const contribution = contribute({
       kind: LegendContentKind.Items,
       id: 'authored-legend',
@@ -48,7 +48,7 @@ describe('<Legend>', () => {
     expect(contribution.node).toMatchObject({ id: 'authored-legend', meta: { source: 'react' } });
   });
 
-  it('exports explicit items and ramp forms with required marker props', () => {
+  it('导出具有所需标记 props 的显式项目和坡道形式', () => {
     expect(Legend).toBeTypeOf('function');
     expect(LegendTitle).toBeTypeOf('function');
     expect(LegendItem).toBeTypeOf('function');
@@ -56,7 +56,7 @@ describe('<Legend>', () => {
     expect(LegendTick).toBeTypeOf('function');
   });
 
-  it('converts items and ramp marker trees to canonical Legend IR', () => {
+  it('将项目和坡道标记树转换为规范的 Legend IR', () => {
     const itemsProps = {
       kind: LegendContentKind.Items,
       contentAlign: 'end' as const,
@@ -145,7 +145,7 @@ describe('<Legend>', () => {
     expect(LegendProvider.makeDefinition([])).toBe(LegendDefinition);
   });
 
-  it('preserves authored marker order through arrays and Fragments', () => {
+  it('通过数组和片段保留编写的标记顺序', () => {
     const conditional = false;
     const contribution = contribute({
       kind: LegendContentKind.Items,
@@ -171,7 +171,7 @@ describe('<Legend>', () => {
     });
   });
 
-  it('accepts empty items and rejects invalid ramp offsets through the Standard schema', () => {
+  it('通过 Standard schema 接受空项并拒绝无效的斜坡偏移', () => {
     expect(contribute({ kind: LegendContentKind.Items, children: null }).node).toEqual(
       createLegend({ content: { kind: LegendContentKind.Items, items: [] } }),
     );
@@ -215,7 +215,7 @@ describe('<Legend>', () => {
     ).toThrow(/offset/i);
   });
 
-  it('rejects invalid marker lists and standalone markers', () => {
+  it('拒绝无效标记列表和独立标记', () => {
     const Unknown = () => <LegendItem itemKey="hidden" sample={itemSample} />;
     const MemoizedItem = memo(Unknown);
     const ForwardedItem = forwardRef<never>(() => <LegendItem itemKey="hidden" sample={itemSample} />);
@@ -274,7 +274,7 @@ describe('<Legend>', () => {
     );
   });
 
-  it('rejects invalid required and optional slot cardinality before conversion', () => {
+  it('在转换之前拒绝无效的必需和可选槽基数', () => {
     const invalidTitles: Array<ReactNode> = [
       null,
       'Status',
@@ -309,7 +309,7 @@ describe('<Legend>', () => {
     ).toThrow(/LegendItem label.*at most one/i);
   });
 
-  it('accepts one-child function Sugar without rewriting the public builder', () => {
+  it('接受独子函数 Sugar，无需重写公共构建器', () => {
     const SampleSugar = () => itemSample;
     const InvalidSugar = () => (
       <>
@@ -334,7 +334,7 @@ describe('<Legend>', () => {
     ).toThrow(/LegendItem sample.*exactly one/i);
   });
 
-  it('renders the same static output as direct canonical IR in the same compile environment', () => {
+  it('在相同的编译环境中呈现与直接规范 IR 相同的静态输出', () => {
     const props = {
       kind: LegendContentKind.Items,
       children: (

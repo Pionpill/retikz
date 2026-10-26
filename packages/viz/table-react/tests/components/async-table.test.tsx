@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DetailTable, Table } from '../../src';
 
-describe('Table client preparation', () => {
+describe('Table 客户端准备', () => {
   beforeEach(() => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
@@ -16,7 +16,7 @@ describe('Table client preparation', () => {
 
   afterEach(() => vi.restoreAllMocks());
 
-  it.each([false, true])('renders typed Promise data with embedded=%s', async embedded => {
+  it.each([false, true])('渲染带有嵌入 = %s 的类型化 Promise 数据', async embedded => {
     let executions = 0;
     const dataTransformExecutor = createDataTransformExecutor<{ values: Array<number> }>({
       dataExecution: { mode: 'external', external: 'native' },

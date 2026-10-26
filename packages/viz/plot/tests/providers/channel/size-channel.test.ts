@@ -161,7 +161,7 @@ const sizeResolutionOf = (
 
 describe('size channel 映射节点半径', () => {
   // sqrt 半径映射：domain [0,16]、range [MIN,MAX] 时，v=4 映射到半程半径
-  it('size_field_maps_radius_by_sqrt', () => {
+  it('大小字段按 sqrt 映射半径', () => {
     const data = [
       { x: 0, y: 0, p: 0 },
       { x: 1, y: 1, p: 4 },
@@ -179,7 +179,7 @@ describe('size channel 映射节点半径', () => {
   });
 
   // 常量 value 直接表示最终半径，不经过 scale
-  it('size_value_is_final_radius_bypassing_scale', () => {
+  it('尺寸值为最终绕过比例的半径', () => {
     const data = [
       { x: 0, y: 0 },
       { x: 1, y: 1 },
@@ -190,7 +190,7 @@ describe('size channel 映射节点半径', () => {
   });
 
   // size 与 color 独立生效：半径逐节点解析，颜色按值分组
-  it('size_with_color_both_apply', () => {
+  it('尺寸与颜色均适用', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -224,7 +224,7 @@ describe('size channel 映射节点半径', () => {
 });
 
 describe('size channel 边界输入', () => {
-  it('field_size_omits_glyphs_for_missing_null_and_non_finite_values', () => {
+  it('字段大小省略缺失 null 和非有限值的字形', () => {
     const data = [
       { x: 0, y: 0, p: undefined },
       { x: 1, y: 1, p: null },
@@ -241,7 +241,7 @@ describe('size channel 边界输入', () => {
     expect(radiusOf(nodes[0])).toBeCloseTo(SIZE_MAX_RADIUS, 6);
   });
 
-  it('field_size_does_not_filter_generic_point_text_mode', () => {
+  it('字段大小不过滤通用点文本模式', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -267,7 +267,7 @@ describe('size channel 边界输入', () => {
     expect(nodes.map(node => node.meta?.transformedIndex)).toEqual([0, 1, 2, 3]);
   });
 
-  it('no_positive_values_all_min_radius', () => {
+  it('所有最小半径都没有正值', () => {
     const data = [
       { x: 0, y: 0, p: 0 },
       { x: 1, y: 1, p: 0 },
@@ -277,7 +277,7 @@ describe('size channel 边界输入', () => {
     expect(nodes.every(n => Math.abs(radiusOf(n)! - SIZE_MIN_RADIUS) < 1e-6)).toBe(true);
   });
 
-  it('single_positive_value_maps_to_range_top', () => {
+  it('单正值映射到范围顶部', () => {
     const data = [
       { x: 0, y: 0, p: 7 },
       { x: 1, y: 1, p: 7 },
@@ -287,13 +287,13 @@ describe('size channel 边界输入', () => {
     expect(nodes.every(n => Math.abs(radiusOf(n)! - SIZE_MAX_RADIUS) < 1e-6)).toBe(true);
   });
 
-  it('empty_data_no_nodes', () => {
+  it('空数据无节点', () => {
     const outer = expandOf(pointSpec('p'), { d: [] }, cartOpts);
 
     expect(outer.children).toHaveLength(0);
   });
 
-  it('empty_data_preserves_explicit_sqrt_definition_in_resolver_and_descriptor', () => {
+  it('空数据在解析器和描述符中保留显式 sqrt 定义', () => {
     const resolution = sizeResolutionOf(
       { field: 'p', scale: 'sizeScale' },
       [],
@@ -314,7 +314,7 @@ describe('size channel 边界输入', () => {
   it.each([
     ['empty', []],
     ['all-missing', [{ p: undefined }, { p: null }, { p: Number.NaN }]],
-  ])('untyped_%s_rows_preserve_the_size_descriptor', (_label, rows) => {
+  ])('未指定类型的 %s 行保留尺寸描述符', (_label, rows) => {
     const resolution = sizeResolutionOf('p', rows);
 
     expect(resolution.descriptor).toMatchObject({
@@ -330,7 +330,7 @@ describe('size channel 边界输入', () => {
     expect(collectNodes(expandOf(pointSpec('p'), { d: data }, cartOpts))).toEqual([]);
   });
 
-  it('all_zero_data_uses_explicit_sqrt_range_in_resolver_and_descriptor', () => {
+  it('所有零数据在解析器和描述符中使用显式 sqrt 范围', () => {
     const rows = [{ p: 0 }, { p: 0 }];
     const resolution = sizeResolutionOf({ field: 'p', scale: 'sizeScale' }, rows, [
       { type: 'sqrt', name: 'sizeScale', domain: [0, 16], range: [3, 11] },
@@ -344,7 +344,7 @@ describe('size channel 边界输入', () => {
     });
   });
 
-  it('derived_all_zero_scale_reports_the_effective_constant_range', () => {
+  it('全零数据推导的比例尺报告实际生效的常量值域', () => {
     const rows = [{ p: 0 }, { p: 0 }];
     const resolution = sizeResolutionOf('p', rows);
 
@@ -355,7 +355,7 @@ describe('size channel 边界输入', () => {
     });
   });
 
-  it('explicit_degenerate_domain_uses_the_formal_sqrt_mapping', () => {
+  it('显式退化定义域使用正式 sqrt 映射', () => {
     const resolution = sizeResolutionOf(
       { field: 'p', scale: 'sizeScale' },
       [],
@@ -366,7 +366,7 @@ describe('size channel 边界输入', () => {
     expect(resolution.descriptor).toMatchObject({ domain: [5, 5], range: [3, 11] });
   });
 
-  it('nice_sqrt_scale_exposes_the_domain_used_by_the_resolver', () => {
+  it('很好的 sqrt 比例公开了解析器使用的域', () => {
     const resolution = sizeResolutionOf(
       { field: 'p', scale: 'sizeScale' },
       [{ p: 2.5 }],
@@ -377,7 +377,7 @@ describe('size channel 边界输入', () => {
     expect(resolution.descriptor).toMatchObject({ domain: [0, 10], range: [3, 11] });
   });
 
-  it('single_positive_default_scale_keeps_resolver_and_descriptor_identity_aligned', () => {
+  it('单个正默认比例保持解析器和描述符身份对齐', () => {
     const rows = [{ p: 7 }];
     const resolution = sizeResolutionOf('p', rows);
 
@@ -389,7 +389,7 @@ describe('size channel 边界输入', () => {
     });
   });
 
-  it('no_size_channel_keeps_default_uniform_size', () => {
+  it('无尺寸通道保持默认统一尺寸', () => {
     const data = [
       { x: 0, y: 0 },
       { x: 1, y: 1 },
@@ -404,7 +404,7 @@ describe('size channel 错误输入', () => {
   it.each([
     ['categorical', 'large'],
     ['temporal', '2026-08-02'],
-  ])('observed_derived_%s_size_field_fails_loud', (_label, value) => {
+  ])('观测推导的 %s 尺寸字段明确报错', (_label, value) => {
     expect(() =>
       expandOf(
         derivedSizePointSpec(value),
@@ -418,7 +418,7 @@ describe('size channel 错误输入', () => {
     ).toThrow(/size requires a continuous field/);
   });
 
-  it('observed_derived_continuous_size_descriptor_reports_its_type', () => {
+  it('观察到的派生连续大小描述符报告其类型', () => {
     const node = pointSpec('derivedSize');
     const resolution = BUILTIN_NODE_CHANNELS.size.resolve(
       {
@@ -442,7 +442,7 @@ describe('size channel 错误输入', () => {
     expect(resolution?.descriptor?.fieldType).toBe(DataFieldType.Continuous);
   });
 
-  it('resolve_field_type_overrides_model_for_size_validation', () => {
+  it('解析字段类型覆盖大小验证的模型', () => {
     const rows = [{ x: 0, y: 0, p: 4 }];
     const model = [
       { name: 'x', type: DataFieldType.Continuous },
@@ -469,7 +469,7 @@ describe('size channel 错误输入', () => {
     ).toThrow(/size requires a continuous field/);
   });
 
-  it('resolve_field_type_overrides_format_and_runs_once_per_field', () => {
+  it('解析字段类型覆盖格式并每个字段运行一次', () => {
     const spec = pointSpec(
       'p',
       [],
@@ -491,7 +491,7 @@ describe('size channel 错误输入', () => {
     expect(sizeFieldCalls).toBe(1);
   });
 
-  it('mark_local_same_name_transform_uses_output_type_evidence', () => {
+  it('标记本地同名变换使用输出类型证据', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -523,7 +523,7 @@ describe('size channel 错误输入', () => {
   it.each([
     ['empty', []],
     ['all-missing', [{ x: 0, y: 0, p: undefined }]],
-  ])('resolve_field_type_remains_authoritative_for_%s_rows', (_label, rows) => {
+  ])('解析字段类型对于 %s 行仍然具有权威性', (_label, rows) => {
     const spec = pointSpec('p');
     const resolveField: LowerPlotsOptions['resolveField'] = field =>
       field === 'p' ? { type: DataFieldType.Categorical } : undefined;
@@ -533,7 +533,7 @@ describe('size channel 错误输入', () => {
     );
   });
 
-  it('format_implied_type_remains_authoritative_for_all_missing_rows', () => {
+  it('格式隐含类型对于所有缺失的行仍然具有权威性', () => {
     const spec = pointSpec(
       'p',
       [],
@@ -552,7 +552,7 @@ describe('size channel 错误输入', () => {
   it.each([
     ['categorical', DataFieldType.Categorical],
     ['temporal', DataFieldType.Temporal],
-  ])('explicit_%s_size_field_fails_for_positive_empty_and_all_missing_rows', (_label, fieldType) => {
+  ])('显式 %s 大小字段对于正空和所有缺失行失败', (_label, fieldType) => {
     const model = [{ name: 'p', type: fieldType }];
     const rowSets = [[{ p: 4 }], [], [{ p: undefined }, { p: null }, { p: Number.NaN }]];
 
@@ -564,11 +564,11 @@ describe('size channel 错误输入', () => {
   it.each([
     ['categorical', [{ x: 0, y: 0, p: 'large' }]],
     ['temporal', [{ x: 0, y: 0, p: '2026-08-02' }]],
-  ])('observed_untyped_%s_size_field_fails_loud', (_label, rows) => {
+  ])('观察到的未类型化 %s 大小字段明确报错', (_label, rows) => {
     expect(() => expandOf(pointSpec('p'), { d: rows }, cartOpts)).toThrow(/size requires a continuous field/);
   });
 
-  it('negative_field_value_fails_loud', () => {
+  it('字段值为负时明确报错', () => {
     const data = [
       { x: 0, y: 0, p: 1 },
       { x: 1, y: 1, p: -3 },
@@ -577,7 +577,7 @@ describe('size channel 错误输入', () => {
     expect(() => expandOf(pointSpec('p'), { d: data }, cartOpts)).toThrow(/negative/);
   });
 
-  it('unknown_size_scale_fails_loud', () => {
+  it('未知尺寸比例尺明确报错', () => {
     const data = [{ x: 0, y: 0, p: 1 }];
 
     expect(() => expandOf(pointSpec({ field: 'p', scale: 'nope' }), { d: data }, cartOpts)).toThrow(/unknown scale/);
@@ -586,11 +586,11 @@ describe('size channel 错误输入', () => {
   it.each([
     ['empty', []],
     ['all-zero', [{ p: 0 }, { p: 0 }]],
-  ])('unknown_size_scale_fails_loud_for_%s_rows', (_label, rows) => {
+  ])('%s 行使用未知尺寸比例尺时明确报错', (_label, rows) => {
     expect(() => sizeResolutionOf({ field: 'p', scale: 'nope' }, rows)).toThrow(/unknown scale/);
   });
 
-  it('non_sqrt_size_scale_fails_loud', () => {
+  it('非 sqrt 尺寸比例尺明确报错', () => {
     const data = [
       { x: 0, y: 0, p: 1 },
       { x: 1, y: 1, p: 4 },
@@ -603,7 +603,7 @@ describe('size channel 错误输入', () => {
   it.each([
     ['empty', []],
     ['all-zero', [{ p: 0 }, { p: 0 }]],
-  ])('non_sqrt_size_scale_fails_loud_for_%s_rows', (_label, rows) => {
+  ])('对于 %s 行，非 sqrt 大小比例失败', (_label, rows) => {
     expect(() => sizeResolutionOf({ field: 'p', scale: 'mySize' }, rows, [{ type: 'linear', name: 'mySize' }])).toThrow(
       /must be a sqrt scale/,
     );
@@ -612,7 +612,7 @@ describe('size channel 错误输入', () => {
   it.each([
     ['empty', []],
     ['all-zero', [{ p: 0 }, { p: 0 }]],
-  ])('negative_degenerate_sqrt_domain_fails_loud_for_%s_rows', (_label, rows) => {
+  ])('%s 行使用负的退化 sqrt 定义域时明确报错', (_label, rows) => {
     expect(() =>
       sizeResolutionOf({ field: 'p', scale: 'sizeScale' }, rows, [
         { type: 'sqrt', name: 'sizeScale', domain: [-1, -1] },
@@ -620,7 +620,7 @@ describe('size channel 错误输入', () => {
     ).toThrow(/domain must be non-negative/);
   });
 
-  it('field_size_descriptor_uses_explicit_scale_identity', () => {
+  it('字段大小描述符使用显式比例标识', () => {
     const resolution = sizeResolutionOf(
       { field: 'p', scale: 'mySize' },
       [{ p: 4 }],

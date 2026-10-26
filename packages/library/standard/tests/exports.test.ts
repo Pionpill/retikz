@@ -14,8 +14,8 @@ import {
   LegendSchema,
 } from '../src/presentation';
 
-describe('@retikz/standard family exports', () => {
-  it('exposes presentation composites from their family entry', () => {
+describe('@retikz/standard 系列出口', () => {
+  it('公开其家族条目中的演示复合组件', () => {
     expect(AxesDefinition).toBe(presentationExports.AxesDefinition);
     expect(FrameDefinition).toBe(presentationExports.FrameDefinition);
     expect(GridDefinition).toBe(presentationExports.GridDefinition);

@@ -5,7 +5,7 @@ import { collectTestBoundaryDiagnostics, formatTestBoundaryDiagnostic } from './
 
 const source = (filePath, content, tracked = true) => ({ content, filePath, tracked });
 
-test('rejects every type-only marker in runtime test and spec files', () => {
+test('拒绝运行时测试和规范文件中的每个仅类型标记', () => {
   const diagnostics = collectTestBoundaryDiagnostics([
     source(
       'packages/kernel/core/tests/example.test.ts',
@@ -31,7 +31,7 @@ test('rejects every type-only marker in runtime test and spec files', () => {
   );
 });
 
-test('rejects standalone typecheck fixtures', () => {
+test('拒绝独立的类型检查测试数据', () => {
   const diagnostics = collectTestBoundaryDiagnostics([
     source('packages/viz/table/tests/types/public.typecheck.ts', 'const value: string = "ok";'),
     source('apps/docs/tests/types/preview.typecheck.tsx', 'export {};', false),
@@ -46,7 +46,7 @@ test('rejects standalone typecheck fixtures', () => {
   );
 });
 
-test('accepts runtime assertions and ordinary source typing', () => {
+test('接受运行时断言和普通源类型', () => {
   const diagnostics = collectTestBoundaryDiagnostics([
     source('packages/kernel/core/tests/example.test.ts', 'expect(value).toEqual(expected);'),
     source('packages/kernel/core/src/example.ts', 'const value: string = "ok";'),
@@ -55,7 +55,7 @@ test('accepts runtime assertions and ordinary source typing', () => {
   assert.deepEqual(diagnostics, []);
 });
 
-test('rejects tracked scratch tests but omits ignored untracked scratch files', () => {
+test('拒绝被 Git 跟踪的临时测试且跳过已忽略的未跟踪临时文件', () => {
   const diagnostics = collectTestBoundaryDiagnostics([
     source('packages/kernel/core/tests/_scratch/tracked.test.ts', 'expect(true).toBe(true);'),
     source('packages/kernel/core/tests/_scratch/local.test.ts', 'expectTypeOf<Value>();', false),
@@ -67,7 +67,7 @@ test('rejects tracked scratch tests but omits ignored untracked scratch files', 
   );
 });
 
-test('normalizes Windows separators and reports multiple diagnostics', () => {
+test('标准化 Windows 分隔符并报告多个诊断', () => {
   const diagnostics = collectTestBoundaryDiagnostics([
     source('apps\\docs\\tests\\types\\preview.typecheck.tsx', 'export {};'),
     source('packages\\kernel\\core\\tests\\scene.spec.ts', '// @ts-expect-error invalid scene'),

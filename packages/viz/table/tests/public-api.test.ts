@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import * as Table from '../src';
 import * as StructurePublic from '../src/contract/structure/public';
 
-describe('@retikz/table public API', () => {
-  it('exports the runtime contribution, compile, schema, and manifest surface without pipeline stages', () => {
+describe('@retikz/table 公共 API', () => {
+  it('导出运行时贡献、编译、schema 和清单表面，无需管线阶段', () => {
     expect(Table).toHaveProperty('createTableRuntimeContribution');
     expect(Table).toHaveProperty('createTableProvider');
     expect(Table).not.toHaveProperty('makeTableRuntimeComposites');
@@ -72,7 +72,7 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('resolveCellVisualScale');
   });
 
-  it('accepts row-major manual Cell and border fields', () => {
+  it('接受行优先手动 Cell 和边界字段', () => {
     const parsed = Table.TableStructureSchema.parse({
       kind: 'manual',
       rows: [

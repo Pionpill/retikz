@@ -144,7 +144,7 @@ describe('resolveCoreProviderDependencies', () => {
     expect(resolved.shapes).toEqual([definition]);
   });
 
-  it('keeps delimiter-bearing namespace and type fields as distinct qualified identities', () => {
+  it('将带有分隔符的命名空间和类型字段保留为不同的限定标识', () => {
     const left = compositeKey('a.b', 'c');
     const right = compositeKey('a', 'b.c');
 
@@ -155,7 +155,7 @@ describe('resolveCoreProviderDependencies', () => {
     expect(compositeNamesOf(resolved.composites ?? [])).toEqual(['a.b/c', 'a/b.c']);
   });
 
-  it('materializes only the reachable dependency-first closure with a stable first-reach tie break', () => {
+  it('仅实现具有稳定的首次到达抢七的可到达依赖优先闭包', () => {
     const shared = compositeKey('shared', 'base');
     const left = compositeKey('left', 'card');
     const right = compositeKey('right', 'card');
@@ -243,7 +243,7 @@ describe('resolveCoreProviderDependencies', () => {
     expect(resolved.shapes?.map(definition => definition.name)).toEqual(['left', 'right']);
   });
 
-  it('keeps same-name providers separate across capabilities', () => {
+  it('使同名提供者在功能之间保持独立', () => {
     const shape = shapeKey('cross');
     const arrow = arrowKey('cross');
     const resolved = resolveCoreProviderDependencies({
@@ -254,7 +254,7 @@ describe('resolveCoreProviderDependencies', () => {
     expect(resolved.arrows?.map(definition => definition.name)).toEqual(['cross']);
   });
 
-  it('materializes one complete custom clip provider without a shape dependency', () => {
+  it('具体化一个完整的自定义裁剪提供者，无需形状依赖性', () => {
     const key = clipKey('ticket');
     const definition = clipDefinitionOf('ticket');
     const maker = vi.fn(() => definition);
@@ -267,7 +267,7 @@ describe('resolveCoreProviderDependencies', () => {
     expect(resolved).toEqual({ clips: [definition] });
   });
 
-  it('rejects a second explicit complete definition at the same clip key', () => {
+  it('拒绝同一裁剪键处的第二个显式完整定义', () => {
     const key = clipKey('ticket');
     const providerDefinition = clipDefinitionOf('ticket');
     const explicitDefinition = clipDefinitionOf('ticket');
@@ -280,7 +280,7 @@ describe('resolveCoreProviderDependencies', () => {
     ).toThrow(/definition.*conflict.*clip:ticket/i);
   });
 
-  it('rejects conflicting maker references and ordered dependency declarations before any maker runs', () => {
+  it('在任何工厂运行之前拒绝冲突的工厂引用和有序依赖声明', () => {
     const root = compositeKey('third', 'card');
     const firstDependency = compositeKey('standard', 'frame');
     const secondDependency = compositeKey('layout', 'flexLayout');
@@ -324,7 +324,7 @@ describe('resolveCoreProviderDependencies', () => {
     expect(dependencyMaker).not.toHaveBeenCalled();
   });
 
-  it('preflights missing roots, missing dependencies, and cycles before any maker runs', () => {
+  it('在任何生成器运行之前预检缺少根、缺少依赖项和循环', () => {
     const root = compositeKey('third', 'card');
     const dependency = compositeKey('standard', 'frame');
     const rootMaker = vi.fn(() => definitionOf(root));
@@ -360,7 +360,7 @@ describe('resolveCoreProviderDependencies', () => {
     expect(dependencyMaker).not.toHaveBeenCalled();
   });
 
-  it('rejects a maker output whose capability or qualified key differs from its provider key', () => {
+  it('拒绝能力或合格键与其提供者键不同的工厂输出', () => {
     const root = shapeKey('cross');
     const makeDefinition = vi.fn(() => arrowDefinitionOf('other'));
 
@@ -381,7 +381,7 @@ describe('resolveCoreProviderDependencies', () => {
     expect(mismatchedName).toHaveBeenCalledTimes(1);
   });
 
-  it('appends explicit definitions in authored order, deduplicates the same object, and rejects conflicts', () => {
+  it('按编写顺序附加显式定义，对同一对象进行去重，并拒绝冲突', () => {
     const root = compositeKey('third', 'card');
     const providerDefinition = compositeDefinitionOf('third', 'card');
     const explicit = compositeDefinitionOf('host', 'overlay');
@@ -404,7 +404,7 @@ describe('resolveCoreProviderDependencies', () => {
     ).toThrow(/definition.*conflict.*composite:third\.card/i);
   });
 
-  it('snapshots explicit definitions before provider makers execute', () => {
+  it('在提供者执行之前快照显式定义', () => {
     const root = compositeKey('third', 'card');
     const providerDefinition = compositeDefinitionOf('third', 'card');
     const explicit = compositeDefinitionOf('host', 'overlay');

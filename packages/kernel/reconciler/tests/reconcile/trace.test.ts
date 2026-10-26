@@ -14,7 +14,7 @@ import { ReconcilerSession, ReconcilerTracePhase, ReconcilerTraceUnit } from '..
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
-describe('Reconciler compilation trace', () => {
+describe('协调器编译跟踪', () => {
   it('基础场景报告实际 Weave 元素编译次数', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const trace = (record: PerformanceTraceRecord) => records.push(record);

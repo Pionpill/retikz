@@ -52,8 +52,8 @@ const firstPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrimitive | u
   return undefined;
 };
 
-describe('Extension optional arrow definitions', () => {
-  it('keeps every explicit optional arrow definition as its own compiled marker geometry', () => {
+describe('扩展可选箭头定义', () => {
+  it('将每个显式可选箭头定义保留为其自己编译的标记几何形状', () => {
     const definitions = [
       DiamondArrowDefinition,
       OpenDiamondArrowDefinition,
@@ -112,7 +112,7 @@ describe('Extension optional arrow definitions', () => {
     });
   });
 
-  it('emits TikZ diamond and kite families with their frozen solid and open geometry', () => {
+  it('发射 TikZ 钻石和风筝系列，具有冻结的固体和开放的几何形状', () => {
     const context = {
       params: {},
       stroke: '#123456',
@@ -187,7 +187,7 @@ describe('Extension optional arrow definitions', () => {
     expect(OpenKiteArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
   });
 
-  it('emits TikZ square solid and open geometry with independent length and width scaling', () => {
+  it('发出 TikZ 方形实体和开放几何形状，具有独立的长度和宽度缩放', () => {
     const context = {
       params: {},
       stroke: '#123456',
@@ -253,7 +253,7 @@ describe('Extension optional arrow definitions', () => {
     expect(OpenSquareArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
   });
 
-  it('places the new solid and open families at both ends of a reversed route', () => {
+  it('将新的实体和开放族放置在反向路线的两端', () => {
     const reversed = firstPath(
       compileToScene(
         {
@@ -282,7 +282,7 @@ describe('Extension optional arrow definitions', () => {
     expect(reversed?.arrowEnd?.shape).toBe('openSquare');
   });
 
-  it('emits bar and crowFoot as deterministic open stroke geometry', () => {
+  it('将条形和 crowFoot 发出为确定性开放描边几何形状', () => {
     const context = {
       params: {},
       stroke: { kind: 'contextStroke' } as const,
@@ -323,7 +323,7 @@ describe('Extension optional arrow definitions', () => {
     expect(CrowFootArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
   });
 
-  it('emits straightBarb as one continuous open stroke path', () => {
+  it('将 straightBarb 作为一个连续的开放行程路径发出', () => {
     const definition = ExtensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
 
     expect(definition).toBeDefined();
@@ -354,7 +354,7 @@ describe('Extension optional arrow definitions', () => {
     expect(definition).toMatchObject({ hollow: true, lineContactX: 9, tipX: 9 });
   });
 
-  it('places straightBarb at forward, reverse, and double endpoints through Core marker geometry', () => {
+  it('通过 Core 标记几何体将 straightBarb 放置在正向、反向和双端点处', () => {
     const definition = ExtensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
 
     expect(definition).toBeDefined();
@@ -438,7 +438,7 @@ describe('Extension optional arrow definitions', () => {
     ]);
   });
 
-  it('publishes straightBarb through the Extension arrow collections', () => {
+  it('通过扩展箭头集合发布 straightBarb', () => {
     const definition = ExtensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
     const provider = ExtensionArrowProviders.find(
       candidate => candidate.key.capability === 'arrow' && candidate.key.name === 'straightBarb',
@@ -452,7 +452,7 @@ describe('Extension optional arrow definitions', () => {
     expect(provider.makeDefinition([])).toBe(definition);
   });
 
-  it('uses Core marker placement for visual overrides, reverse routes, and double endpoints', () => {
+  it('使用 Core 标记放置来实现视觉覆盖、反向路线和双端点', () => {
     const customizedScene: IRScene = {
       type: 'scene',
       version: 1,
@@ -524,7 +524,7 @@ describe('Extension optional arrow definitions', () => {
   it.each([
     { definition: BarArrowDefinition, shape: 'bar' },
     { definition: CrowFootArrowDefinition, shape: 'crowFoot' },
-  ])('uses the shared Core visual-back placement for $shape', ({ definition, shape }) => {
+  ])('使用 $shape 的共享 Core 视觉后置位置', ({ definition, shape }) => {
     const scene: IRScene = {
       type: 'scene',
       version: 1,
@@ -544,7 +544,7 @@ describe('Extension optional arrow definitions', () => {
     expect(primitive?.commands.at(-1)).toEqual({ kind: 'line', to: [100, 0] });
   });
 
-  it('exports every optional arrow definition and static provider without implicit registration', () => {
+  it('导出每个可选箭头定义和静态提供者，无需隐式注册', () => {
     const definitions = [
       DiamondArrowDefinition,
       OpenDiamondArrowDefinition,

@@ -36,15 +36,15 @@ const ir: IRScene = {
   ],
 };
 
-describe('stroke Path Inspector', () => {
-  it('defaults ellipse axes to off and merges their independent override', () => {
+describe('行程 Path Inspector', () => {
+  it('默认椭圆轴关闭并合并其独立覆盖', () => {
     expect(PathInspectOptionsSchema.parse({})).toHaveProperty('ellipseAxes', false);
     expect(PATH_INSPECTOR.mergeOptionsInput?.({ ellipseAxes: true }, { ellipseAxes: false })).toEqual({
       ellipseAxes: false,
     });
   });
 
-  it('treats a typed undefined override as omission during selection', () => {
+  it('在选择过程中将键入的 undefined 覆盖视为省略', () => {
     const local: { labels?: boolean } = { labels: undefined };
     const result = compileInspectionToScene(ir, {
       registry: createDefaultInspectorRegistry(),
@@ -70,7 +70,7 @@ describe('stroke Path Inspector', () => {
     expect(local).toEqual({ labels: undefined });
   });
 
-  it('exports the same defaults and descriptions to JSON Schema', () => {
+  it('将相同的默认值和描述导出到 JSON schema', () => {
     expect(toJSONSchema(PathInspectOptionsSchema)).toMatchObject({
       properties: {
         controlPoints: { default: true, description: expect.any(String) },
@@ -81,11 +81,11 @@ describe('stroke Path Inspector', () => {
     });
   });
 
-  it('uses the Core package namespace for its registry key', () => {
+  it('使用 Core 包命名空间作为其注册表项', () => {
     expect(PATH_INSPECTOR_KEY).toEqual({ namespace: 'core', type: 'path' });
   });
 
-  it('materializes schema defaults when explicitly parsing a configuration snapshot', () => {
+  it('显式解析配置快照时具体化 schema 默认值', () => {
     const source = PathInspectOptionsSchema.parse({});
 
     expect(source).toEqual({
@@ -105,7 +105,7 @@ describe('stroke Path Inspector', () => {
     });
   });
 
-  it('draws handles, control points, and optional labels from settled owner output', () => {
+  it('从固定的所属模块输出中绘制手柄、控制点和可选标签', () => {
     const result = compileInspectionToScene(ir, {
       registry: createDefaultInspectorRegistry(),
       selection: {
@@ -125,7 +125,7 @@ describe('stroke Path Inspector', () => {
   });
 
   it.each<boolean | Record<string, boolean>>([true, {}, { labels: false }, PathInspectOptionsSchema.parse({})])(
-    'inherits scene labels unless self explicitly disables them: %j',
+    '继承场景标签，除非自己明确禁用它们：%j',
     local => {
       const result = compileInspectionToScene(ir, {
         registry: createDefaultInspectorRegistry(),
@@ -153,7 +153,7 @@ describe('stroke Path Inspector', () => {
     },
   );
 
-  it('ignores undefined overrides and preserves explicit false during option merging', () => {
+  it('忽略 undefined 的覆盖并在选项合并期间保留显式 false', () => {
     const inherited = { labels: true, controlPoints: true };
     const merged = PATH_INSPECTOR.mergeOptionsInput?.(inherited, { labels: undefined, controlPoints: false });
 
@@ -161,7 +161,7 @@ describe('stroke Path Inspector', () => {
     expect(inherited).toEqual({ labels: true, controlPoints: true });
   });
 
-  it('enables the explicitly requested builtin across the scene', () => {
+  it('在场景中启用明确请求的内置功能', () => {
     const result = compileInspectionToScene(ir, {
       registry: createDefaultInspectorRegistry(),
       selection: {
@@ -172,7 +172,7 @@ describe('stroke Path Inspector', () => {
     expect(result.inspection?.entries.length).toBeGreaterThan(0);
   });
 
-  it('continues control handles from arc endpoints and closed subpath starts', () => {
+  it('从圆弧端点及闭合子路径起点继续绘制控制柄', () => {
     const context = {
       transform: [1, 0, 0, 1, 0, 0] as const,
       round: (value: number) => value,
@@ -225,7 +225,7 @@ describe('stroke Path Inspector', () => {
     });
   });
 
-  it('keeps vertex, control, and arc center labels clear of their point markers', () => {
+  it('使顶点、控制和圆弧中心标签远离其点标记', () => {
     const output = PATH_INSPECTOR.inspect(
       {
         commands: [
@@ -275,7 +275,7 @@ describe('stroke Path Inspector', () => {
     [true, false, 1],
     [false, true, 1],
     [true, true, 2],
-  ] as const)('independently draws radius guides (%s) and ellipse axes (%s)', (arcGeometry, ellipseAxes, pathCount) => {
+  ] as const)('独立绘制半径导轨（%s）和椭圆轴（%s）', (arcGeometry, ellipseAxes, pathCount) => {
     const output = PATH_INSPECTOR.inspect(
       {
         commands: [

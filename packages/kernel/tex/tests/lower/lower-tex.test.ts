@@ -11,8 +11,8 @@ const fakeSvg = (tex: string): string =>
   `<svg viewBox="0 -100 ${tex.length * 100} 110"><g transform="scale(1,-1)">` +
   `<path d="M0 100 L${tex.length * 100} 100 L${tex.length * 100} -10 Z"></path></g></svg>`;
 
-describe('[lower-tex] createLowerTex with a fake engine', () => {
-  it('returns paths and a bbox', () => {
+describe('[lower-tex] createLowerTex，带有假引擎', () => {
+  it('返回路径和 bbox', () => {
     const lower = createLowerTex({ convert: tex => fakeSvg(tex) });
     const result = lower({ tex: 'ab' }, { fontSize: 1000 });
 
@@ -21,7 +21,7 @@ describe('[lower-tex] createLowerTex with a fake engine', () => {
     expect(result!.paths.length).toBeGreaterThan(0);
   });
 
-  it('caches by source, display mode, and font size', () => {
+  it('按源、显示模式和字体大小进行缓存', () => {
     let calls = 0;
     const engine: MathJaxSvgEngine = {
       convert: tex => {
@@ -38,7 +38,7 @@ describe('[lower-tex] createLowerTex with a fake engine', () => {
     expect(calls).toBe(3);
   });
 
-  it('returns null when the engine throws', () => {
+  it('引擎抛出时返回 null', () => {
     const lower = createLowerTex({
       convert: () => {
         throw new Error('boom');
@@ -48,13 +48,13 @@ describe('[lower-tex] createLowerTex with a fake engine', () => {
     expect(lower({ tex: 'x' }, { fontSize: 14 })).toBeNull();
   });
 
-  it('returns null when the SVG has no viewBox', () => {
+  it('当 SVG 没有 viewBox 时返回 null', () => {
     const lower = createLowerTex({ convert: () => '<svg><path d="M0 0"/></svg>' });
 
     expect(lower({ tex: 'x' }, { fontSize: 14 })).toBeNull();
   });
 
-  it('returns null for MathJax merror output', () => {
+  it('对于 MathJax merror 输出返回 null', () => {
     const lower = createLowerTex({
       convert: () => '<svg viewBox="0 0 100 100"><g data-mml-node="merror"><path d="M0 0 L1 1"/></g></svg>',
     });
@@ -63,9 +63,9 @@ describe('[lower-tex] createLowerTex with a fake engine', () => {
   });
 });
 
-describe('[lower-tex] MathJax integration', () => {
+describe('[低特克斯] MathJax 集成', () => {
   it(
-    'renders a simple formula and a fraction',
+    '呈现一个简单的公式和分数',
     async () => {
       const engine = await createMathJaxEngine();
       const lower = createLowerTex(engine);
@@ -85,7 +85,7 @@ describe('[lower-tex] MathJax integration', () => {
   );
 
   it(
-    'returns null for syntax errors that MathJax marks as merror',
+    '对于 MathJax 标记为 merror 的语法错误返回 null',
     async () => {
       const engine = await createMathJaxEngine();
       const lower = createLowerTex(engine);
@@ -96,7 +96,7 @@ describe('[lower-tex] MathJax integration', () => {
   );
 
   it(
-    'returns null for undefined control sequences',
+    '未定义的 TeX 控制序列返回 null',
     async () => {
       const engine = await createMathJaxEngine();
       const lower = createLowerTex(engine);
@@ -107,7 +107,7 @@ describe('[lower-tex] MathJax integration', () => {
   );
 
   it(
-    'works end to end through compileToScene',
+    '通过 compileToScene 端到端工作',
     async () => {
       const lowerTex = createLowerTex(await createMathJaxEngine());
       const ir: IRScene = {

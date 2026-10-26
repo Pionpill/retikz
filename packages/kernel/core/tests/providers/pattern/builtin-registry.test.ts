@@ -115,7 +115,7 @@ const multiPrimPattern = (): PatternDefinition =>
     ],
   });
 
-describe('Pattern registry — happy path', () => {
+describe('模式注册表——正常流程', () => {
   it('builtin_3_via_registry：内置 lines/dots/grid 经 compileToScene → tile motif 等价旧 switch（golden）', () => {
     // lines：一个 path 横线居中 d "M0,4 L8,4"（size 缺省 8，中线 y=size/2=4，避免边缘半宽裁切）
     const linesTile = tileOf({ kind: 'pattern', shape: 'lines' });
@@ -168,7 +168,7 @@ describe('Pattern registry — happy path', () => {
   });
 });
 
-describe('Pattern registry — boundary', () => {
+describe('模式注册表-边界', () => {
   it('default_size：缺省 size 8、dots 半径 size/5、color currentColor', () => {
     const tile = tileOf({ kind: 'pattern', shape: 'dots' });
 
@@ -482,7 +482,7 @@ describe('Pattern registry — boundary', () => {
   });
 });
 
-describe('Pattern registry — error path', () => {
+describe('模式注册表 - 错误路径', () => {
   it('unregistered_pattern_throws：未注册 pattern 名 → 编译期 throw（带可用名）', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'nope' });
 
@@ -504,7 +504,7 @@ describe('Pattern registry — error path', () => {
   });
 });
 
-describe('Pattern registry — interaction', () => {
+describe('模式注册表——交互', () => {
   it('pattern_currentColor：motif color 缺省 currentColor（跟随 svg color）', () => {
     // lines motif 缺省 color → path stroke 'currentColor'（不冻结成纯色，主题反应）
     const tile = tileOf({ kind: 'pattern', shape: 'lines' });

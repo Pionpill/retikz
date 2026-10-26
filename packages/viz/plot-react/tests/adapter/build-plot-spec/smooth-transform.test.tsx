@@ -5,8 +5,8 @@ import { createSmoothTrendSpec } from '../../../../plot/tests/helpers/plot-spec-
 import { buildPlotIR } from '../../../src/adapter';
 import { PathMark, PointMark } from '../../../src/components/marks';
 
-describe('buildPlotIR smooth transform forwarding', () => {
-  it('smooth_declared_to_ir', () => {
+describe('buildPlotIR 平滑变换转发', () => {
+  it('顺利宣告到 ir', () => {
     const spec = buildPlotIR(
       <>
         <PointMark encodings={{ color: 'series', position: { x: { field: 'time' }, y: { field: 'value' } } }} />

@@ -6,7 +6,7 @@ import { expect, it } from 'vitest';
 import { Matrix, MatrixRow, MatrixCell, Map, Array } from '../src/collection';
 import { synchronousAdapters } from './helpers/synchronous-adapters';
 
-it('JSX rows preserve empty cells and explicit aliases with Vanilla parity', () => {
+it('JSX 行保留空单元格和具有 Vanilla 等价性的显式别名', () => {
   const jsx = createInputScene(
     <Matrix id="m" cellIdMode="index">
       <>
@@ -43,7 +43,7 @@ it('JSX rows preserve empty cells and explicit aliases with Vanilla parity', () 
     renderToSvgString(vanilla, { adapters: [MatrixInputEmbedAdapter] }),
   );
 });
-it('automatically collects nested Matrix, Array, Map and clipping providers', () => {
+it('自动收集嵌套的 Matrix、Array、Map 和裁剪提供者', () => {
   const jsx = createInputScene(
     <Matrix defaultCell={{ layout: { width: 80, height: 50 } }}>
       <MatrixRow>
@@ -67,7 +67,7 @@ it('automatically collects nested Matrix, Array, Map and clipping providers', ()
 
   expect(renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toContain('<svg');
 });
-it('empty React input and all three explicit inputs compile', () => {
+it('空 React 输入和所有三个显式输入均进行编译', () => {
   for (const element of [
     <Matrix />,
     <Matrix items={[]} />,
@@ -79,7 +79,7 @@ it('empty React input and all three explicit inputs compile', () => {
     expect(renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toContain('<svg');
   }
 });
-it('rejects misplaced markers, multiple drawable children and ragged rows', () => {
+it('拒绝放错位置的标记、多个可绘制子项和参差不齐的行', () => {
   for (const element of [
     <Matrix>
       <MatrixCell />

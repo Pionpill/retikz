@@ -22,7 +22,7 @@ const createProbe = (observed: Array<ResolvedTheme>) =>
     },
   });
 
-describe('Theme compile context', () => {
+describe('主题编译上下文', () => {
   it('从 selector 生成没有 token bag 的完整共享 Theme', () => {
     const observed: Array<ResolvedTheme> = [];
     compileToScene(sceneOf([{ namespace: 'theme-test', type: 'probe' }], { mode: ThemeMode.Light }), {

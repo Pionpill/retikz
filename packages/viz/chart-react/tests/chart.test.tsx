@@ -146,7 +146,7 @@ const coordinateRootPropCases = [
   },
 ] as const;
 
-describe('Typed Point Chart React declarations', () => {
+describe('类型化点 Chart React 声明', () => {
   it.each([
     {
       name: 'ScatterChart',
@@ -213,7 +213,7 @@ describe('Typed Point Chart React declarations', () => {
           },
         }),
     },
-  ])('supports root-only IR-like authoring for $name', ({ chartType, createInput }) => {
+  ])('支持 $name 的类似 IR 的 root 权限编写', ({ chartType, createInput }) => {
     const input = createInput();
 
     expect(input.source).toMatchObject({
@@ -223,7 +223,7 @@ describe('Typed Point Chart React declarations', () => {
     });
   });
 
-  it('maps every structured root slot through the existing Vanilla input', () => {
+  it('通过现有的 Vanilla 输入映射每个结构化根槽', () => {
     const rows = [{ x: 1, y: 2 }];
     const root = inputFromProps(ScatterChart, {
       rows,
@@ -254,7 +254,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(root.input.data).toBe(rows);
   });
 
-  it('preserves sparse Point recipe guide controls and matches Vanilla normalization', () => {
+  it('保留稀疏点配方辅助线控制并匹配 Vanilla 标准化', () => {
     const scatter = inputFromProps(ScatterChart, {
       rows: [{ x: 1, y: 2, size: 3 }],
       data: { reference: 'guide.scatter' },
@@ -294,7 +294,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(strip.source.recipe.guides).toEqual({ grid: false });
   });
 
-  it('keeps declaration-only authoring equal to structured root authoring', () => {
+  it('保持仅声明编写与结构化根编写相同', () => {
     const rows = [{ x: 1, y: 2 }];
     const root = inputFromProps(ScatterChart, {
       rows,
@@ -324,7 +324,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(root.input.data).toEqual(declarations.input.data);
   });
 
-  it('allows root and headless declarations to mix across owner slots', () => {
+  it('允许根声明和无头声明在所属模块槽之间混合', () => {
     const input = inputFromProps(ScatterChart, {
       rows: [{ x: 1, y: 2 }],
       data: { reference: 'hybrid.rows' },
@@ -430,11 +430,11 @@ describe('Typed Point Chart React declarations', () => {
           children: <ChartTitle>Child title</ChartTitle>,
         }),
     },
-  ])('rejects root and declaration sources for the same $name slot', ({ name, createInput }) => {
+  ])('拒绝同一 $name 槽的根和声明源', ({ name, createInput }) => {
     expect(createInput).toThrow(new RegExp(`${name}.*both`, 'iu'));
   });
 
-  it('reports missing runtime rows and recipe encodings at the React boundary', () => {
+  it('报告 React 边界处缺少的运行时行和配方编码', () => {
     expect(() =>
       inputFromProps(ScatterChart, {
         data: { reference: 'missing.rows' },
@@ -449,7 +449,7 @@ describe('Typed Point Chart React declarations', () => {
     ).toThrow(/recipe.*encodings.*required/iu);
   });
 
-  it('preserves authored zero, false, and empty arrays from structured root recipe slots', () => {
+  it('保留结构化根配方槽中编写的零、假和空数组', () => {
     const connected = inputFromProps(ConnectedScatterChart, {
       rows: [{ x: 1, y: 2, order: 1 }],
       data: { reference: 'falsy.rows' },
@@ -469,7 +469,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(connected.source.plotExtension?.guides).toEqual([]);
   });
 
-  it('uses root layout dimensions for a standalone host and keeps them Source-only when embedded', () => {
+  it('使用独立宿主的根布局尺寸，并在嵌入时仅保留它们 Source', () => {
     const rootProps = {
       rows: [{ x: 1, y: 2 }],
       data: { reference: 'layout.rows' },
@@ -485,7 +485,7 @@ describe('Typed Point Chart React declarations', () => {
   });
 
   it.each(coordinateRootPropCases)(
-    'maps $name coordinate root props through Vanilla normalization',
+    '通过 Vanilla 标准化映射 $name 坐标根 props',
     ({ createInput }) => {
       expect(createInput().source.coordinate).toEqual({
         type: 'polar2D',
@@ -493,7 +493,7 @@ describe('Typed Point Chart React declarations', () => {
     },
   );
 
-  it('preserves a configured coordinate object from the concrete Chart root prop', () => {
+  it('保留具体 Chart 根 prop 中配置的坐标对象', () => {
     const input = inputFromProps(ScatterChart, {
       coordinate: { type: 'polar2D', innerRadius: 0, startAngle: -90 },
       children: requiredDeclarations,
@@ -506,7 +506,7 @@ describe('Typed Point Chart React declarations', () => {
     });
   });
 
-  it('rejects simultaneous coordinate root prop and ChartCoordinate declaration', () => {
+  it('拒绝同时坐标根属性和 ChartCoordinate 声明', () => {
     expect(() =>
       inputFromProps(ScatterChart, {
         coordinate: 'polar2D',
@@ -526,7 +526,7 @@ describe('Typed Point Chart React declarations', () => {
     );
   });
 
-  it('maps ChartCoordinate string and object declarations through Vanilla normalization', () => {
+  it('通过 Vanilla 规范化映射 ChartCoordinate 字符串和对象声明', () => {
     const stringInput = inputOf(
       ScatterChart,
       <>
@@ -560,7 +560,7 @@ describe('Typed Point Chart React declarations', () => {
     );
   });
 
-  it('maps Connected Scatter and Ranged Dot declarations through typed Vanilla inputs', () => {
+  it('通过键入的 Vanilla 输入映射 Connected Scatter 和 Ranged Dot 声明', () => {
     const connected = inputOf(
       ConnectedScatterChart,
       <>
@@ -600,7 +600,7 @@ describe('Typed Point Chart React declarations', () => {
     );
   });
 
-  it('enforces Connected Scatter and Ranged Dot declaration cardinality', () => {
+  it('强制连接散点和范围点声明基数', () => {
     expect(() => inputOf(ConnectedScatterChart, <ChartData data={[]} />)).toThrow(
       /ConnectedScatterEncodings.*exactly once/i,
     );
@@ -630,7 +630,7 @@ describe('Typed Point Chart React declarations', () => {
     ).toThrow(/RangedDotProperties.*at most once/i);
   });
 
-  it('renders Connected Scatter and Ranged Dot through one standalone or embedded SVG host', () => {
+  it('通过一台独立或嵌入式 SVG 宿主渲染连接散点和范围点', () => {
     const charts = [
       <ConnectedScatterChart key="connected">
         <ChartData data={[{ x: 1, y: 2, order: 1 }]} />
@@ -648,7 +648,7 @@ describe('Typed Point Chart React declarations', () => {
     }
   });
 
-  it('maps exact Bubble declarations and preserves authored mark order', () => {
+  it('映射精确的 Bubble 声明并保留编写的标记顺序', () => {
     const input = inputOf(
       BubbleChart,
       <>
@@ -672,7 +672,7 @@ describe('Typed Point Chart React declarations', () => {
     );
   });
 
-  it('requires one BubbleEncodings declaration and at most one BubbleProperties declaration', () => {
+  it('需要 1 个 BubbleEncodings 声明，最多 1 个 BubbleProperties 声明', () => {
     expect(() =>
       inputOf(
         BubbleChart,
@@ -694,7 +694,7 @@ describe('Typed Point Chart React declarations', () => {
     ).toThrow(/BubbleProperties.*at most once/i);
   });
 
-  it('renders Bubble standalone through one SVG host', () => {
+  it('通过一台 SVG 宿主独立渲染 Bubble', () => {
     const markup = renderToStaticMarkup(
       <BubbleChart>
         {requiredBubbleDeclarations}
@@ -705,7 +705,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(markup.match(/<svg/g)).toHaveLength(1);
   });
 
-  it('maps exact Regression declarations with nested properties and preserves Fragment/array mark order', () => {
+  it('使用嵌套属性映射精确的回归声明并保留片段/数组标记顺序', () => {
     const marks = [
       <RegressionMark key="override" override properties={{ point: { opacity: 0.25 }, trend: { strokeWidth: 3 } }} />,
       <RegressionMark key="append" encodings={{ y: 'alternateY' }} properties={{ method: { kind: 'quadratic' } }} />,
@@ -750,7 +750,7 @@ describe('Typed Point Chart React declarations', () => {
     );
   });
 
-  it('enforces Regression singleton declarations and direct-child boundaries', () => {
+  it('强制回归单例声明和直接子边界', () => {
     expect(() =>
       inputOf(
         RegressionChart,
@@ -782,7 +782,7 @@ describe('Typed Point Chart React declarations', () => {
     ).toThrow(/direct Chart child/i);
   });
 
-  it('renders Regression standalone and embedded through one SVG host', () => {
+  it('独立渲染回归并通过一台 SVG 宿主嵌入', () => {
     const chart = <RegressionChart>{requiredRegressionDeclarations}</RegressionChart>;
     const standalone = renderToStaticMarkup(chart);
     const embedded = renderToStaticMarkup(<Layout>{chart}</Layout>);
@@ -791,7 +791,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(embedded.match(/<svg/g)).toHaveLength(1);
   });
 
-  it('renders standalone and embedded Chart through one SVG host and inherits the outer Theme mode', () => {
+  it('通过一台 SVG 宿主渲染独立和嵌入的 Chart，并继承外部 Theme 模式', () => {
     const chart = <ScatterChart>{requiredDeclarations}</ScatterChart>;
     const standalone = renderToStaticMarkup(chart);
     const embedded = renderToStaticMarkup(<Layout theme={{ mode: 'dark' }}>{chart}</Layout>);
@@ -806,7 +806,7 @@ describe('Typed Point Chart React declarations', () => {
   it.each([
     { name: 'ChartData', children: <ScatterEncodings x="x" y="y" /> },
     { name: 'ScatterEncodings', children: <ChartData data={[]} /> },
-  ])('requires exactly one $name declaration', ({ name, children }) => {
+  ])('仅需要一个 $name 声明', ({ name, children }) => {
     expect(() => inputOf(ScatterChart, children)).toThrow(new RegExp(`${name}.*exactly once`, 'i'));
   });
 
@@ -871,11 +871,11 @@ describe('Typed Point Chart React declarations', () => {
         </>
       ),
     },
-  ])('rejects duplicate $name singleton declarations', ({ name, declarations }) => {
+  ])('拒绝重复的 $name 单例声明', ({ name, declarations }) => {
     expect(() => inputOf(ScatterChart, declarations)).toThrow(new RegExp(`${name}.*at most once`, 'i'));
   });
 
-  it('normalizes presentation markers into fixed slots independent of JSX order', () => {
+  it('将呈现标记标准化为独立于 JSX 顺序的固定槽', () => {
     const input = inputOf(
       ScatterChart,
       <>
@@ -897,7 +897,7 @@ describe('Typed Point Chart React declarations', () => {
     });
   });
 
-  it('rejects duplicate presentation slots and non-text presentation payloads', () => {
+  it('拒绝重复的呈现槽和非文本呈现负载', () => {
     expect(() =>
       inputOf(
         ScatterChart,
@@ -922,7 +922,7 @@ describe('Typed Point Chart React declarations', () => {
     ).toThrow(/accept only strings, Fragment, or Text/);
   });
 
-  it('maps exact Scatter declarations and preserves direct mark order', () => {
+  it('映射精确的 Scatter 声明并保留直接标记顺序', () => {
     const input = inputOf(
       ScatterChart,
       <>
@@ -952,7 +952,7 @@ describe('Typed Point Chart React declarations', () => {
     });
   });
 
-  it('maps exact Strip declarations, preserves normal jitter values, and matches Vanilla', () => {
+  it('映射精确的 Strip 声明，保留正常抖动值，并匹配 Vanilla', () => {
     const rows = [
       { category: 'A', value: 2 },
       { category: 'B', value: 4 },
@@ -985,7 +985,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(input.input.data).toBe(rows);
   });
 
-  it('supports declaration-only and hybrid Strip authoring while rejecting same-slot duplicates', () => {
+  it('支持仅声明和混合 Strip 编写，同时拒绝同槽重复', () => {
     const declarationOnly = inputOf(StripChart, requiredStripDeclarations);
     const hybrid = inputFromProps(StripChart, {
       rows: [
@@ -1012,7 +1012,7 @@ describe('Typed Point Chart React declarations', () => {
     ).toThrow(/recipe\.encodings.*both/i);
   });
 
-  it('renders finite deterministic Strip points through the shared standalone host', () => {
+  it('通过共享独立宿主渲染有限确定性 Strip 点', () => {
     const chart = (
       <StripChart layout={{ width: 360, height: 240 }}>
         {requiredStripDeclarations}
@@ -1027,7 +1027,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(first).not.toMatch(/NaN|Infinity/);
   });
 
-  it('matches Vanilla for encoding-driven facets and delegates Plot declarations through ChartExtension', () => {
+  it('与编码驱动方面的 Vanilla 匹配，并通过 ChartExtension 委托 Plot 声明', () => {
     const input = inputOf(
       ScatterChart,
       <>
@@ -1056,7 +1056,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(input.source).toEqual(vanilla);
   });
 
-  it('does not materialize plotExtension for an empty ChartExtension declaration', () => {
+  it('对于空的 ChartExtension 声明，不会具体化 plotExtension', () => {
     const input = inputOf(
       ScatterChart,
       <>
@@ -1068,7 +1068,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(input.source).not.toHaveProperty('plotExtension');
   });
 
-  it('keeps Transform append order and reports Plot prop-child collection conflicts', () => {
+  it('保持 Transform 附加顺序并报告 Plot 属性子集合冲突', () => {
     const input = inputOf(
       ScatterChart,
       <>
@@ -1099,7 +1099,7 @@ describe('Typed Point Chart React declarations', () => {
     ).toThrow(/PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE/i);
   });
 
-  it('rejects root ChartCoordinate combined with child composition', () => {
+  it('拒绝根 ChartCoordinate 与子组合的组合', () => {
     expect(() =>
       ScatterChartSchema.parse(
         inputOf(
@@ -1121,7 +1121,7 @@ describe('Typed Point Chart React declarations', () => {
     );
   });
 
-  it('renders Chart-owned marks before explicit Plot extension marks', () => {
+  it('在显式 Plot 扩展标记之前渲染 Chart 拥有的标记', () => {
     const markup = renderToStaticMarkup(
       <ScatterChart>
         <ChartData data={[{ x: 1, y: 2 }]} />
@@ -1140,7 +1140,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(markup.indexOf('fill="#0000ff"')).toBeGreaterThan(markup.indexOf('fill="#ff0000"'));
   });
 
-  it('rejects Plot declarations outside ChartExtension and Chart declarations inside it', () => {
+  it('拒绝 ChartExtension 外部的 Plot 声明和内部的 Chart 声明', () => {
     expect(() =>
       inputOf(
         ScatterChart,
@@ -1164,7 +1164,7 @@ describe('Typed Point Chart React declarations', () => {
     ).toThrow(/PLOT_VANILLA_UNSUPPORTED_CHART_CHILD/i);
   });
 
-  it('rejects ordinary iterables and custom wrappers instead of widening direct-child semantics', () => {
+  it('拒绝普通的迭代和自定义包装器，而不是扩大直接子语义', () => {
     const iterableChildren = new Set<ReactNode>([<PlotAxis key="axis" dimension="x" />]);
 
     expect(() =>
@@ -1189,7 +1189,7 @@ describe('Typed Point Chart React declarations', () => {
   });
 
   it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
-    'rejects non-positive or non-finite standalone ChartLayout width %s',
+    '拒绝非正或非有限独立 ChartLayout 宽度 %s',
     width => {
       expect(() =>
         renderToStaticMarkup(
@@ -1208,7 +1208,7 @@ describe('Typed Point Chart React declarations', () => {
     },
   );
 
-  it('mirrors standalone dimensions into Source layout unless an explicit layout is present', () => {
+  it('除非存在显式布局，否则将独立尺寸镜像到 Source 布局中', () => {
     const mirrored = renderToStaticMarkup(
       <ScatterChart>
         {requiredDeclarations}
@@ -1255,7 +1255,7 @@ describe('Typed Point Chart React declarations', () => {
     expect(svg).toContain('viewBox="-10 -10 340 ');
   });
 
-  it('rejects embedded host dimensions but accepts Source-only layout', () => {
+  it('拒绝嵌入式宿主尺寸，但接受仅 Source 布局', () => {
     expect(() =>
       inputOf(
         ScatterChart,

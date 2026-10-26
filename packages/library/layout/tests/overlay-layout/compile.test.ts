@@ -188,8 +188,8 @@ const translationOf = (primitives: ReadonlyArray<ScenePrimitive>, id: string): R
   return found;
 };
 
-describe('OverlayLayout compile contract', () => {
-  it('keeps minimum and natural aligned profiles distinct', () => {
+describe('OverlayLayout 编译契约', () => {
+  it('保持最小和自然对齐的轮廓清晰', () => {
     const overlay = createOverlayLayout({
       children: [
         {
@@ -206,7 +206,7 @@ describe('OverlayLayout compile contract', () => {
     expect(natural.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 30, height: 20 });
   });
 
-  it('uses final constraints directly and measures only missing positioned dimensions', () => {
+  it('直接使用最终约束并仅测量缺失的定位尺寸', () => {
     const result = compileOverlay(
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 40 }, y: { kind: 'fixed', value: 20 } },
@@ -239,7 +239,7 @@ describe('OverlayLayout compile contract', () => {
     expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 40, height: 20 });
   });
 
-  it('uses exact authored positioned sizes for include and exclude items', () => {
+  it('使用精确编写的定位尺寸来包含和排除项目', () => {
     const result = compileOverlay(
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 40 }, y: { kind: 'fixed', value: 20 } },
@@ -282,7 +282,7 @@ describe('OverlayLayout compile contract', () => {
     expect(excludeProposals).toEqual(includeProposals);
   });
 
-  it('keeps baseline and positioned minimum contributions separate from their natural profiles', () => {
+  it('将基线和定位的最小贡献与其自然轮廓分开', () => {
     const baseline = createOverlayLayout({
       alignItems: LayoutAlignment.FirstBaseline,
       children: [
@@ -329,7 +329,7 @@ describe('OverlayLayout compile contract', () => {
     });
   });
 
-  it('uses positioned positive-side slot extent without counting padding twice', () => {
+  it('使用定位正侧槽范围，不计算填充两次', () => {
     const result = compileOverlay(
       createOverlayLayout({
         padding: { top: 2, right: 4, bottom: 3, left: 5 },
@@ -355,7 +355,7 @@ describe('OverlayLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'badge')).toEqual({ x: 22, y: 9 });
   });
 
-  it('keeps exclude items out of content size while still probing and replaying them', () => {
+  it('exclude 条目不计入内容尺寸但仍参与探测和回放', () => {
     const result = compileOverlay(
       createOverlayLayout({
         children: [
@@ -375,7 +375,7 @@ describe('OverlayLayout compile contract', () => {
     expect(result.logs.at(-1)?.id).toBe('floating');
   });
 
-  it('aligns real, fallback and exclude first-baseline items to one include target', () => {
+  it('将实际、回退和排除第一基线项目与一个包含目标对齐', () => {
     const result = compileOverlay(
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 60 }, y: { kind: 'content' } },
@@ -409,7 +409,7 @@ describe('OverlayLayout compile contract', () => {
     expect(result.observed.alignmentGuides?.find(guide => guide.name === 'first-baseline')?.position).toBe(7);
   });
 
-  it('uses authored include edges for outgoing guides when every aligned child omits them', () => {
+  it('当每个对齐的子项都忽略它们时，使用编写的包含边缘作为传出辅助线', () => {
     const result = compileOverlay(
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 40 } },
@@ -439,7 +439,7 @@ describe('OverlayLayout compile contract', () => {
     ]);
   });
 
-  it('anchors positioned slots independently from margin and compensates allocation origins', () => {
+  it('独立于边距锚定定位槽并补偿分配源', () => {
     const result = compileOverlay(
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 50 } },
@@ -469,7 +469,7 @@ describe('OverlayLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'positioned')).toEqual({ x: 37, y: 12 });
   });
 
-  it('emits item scopes in stable zIndex and authored tie order', () => {
+  it('以稳定的 zIndex 和编写的平局顺序发出项目范围', () => {
     const result = compileOverlay(
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 10 }, y: { kind: 'fixed', value: 10 } },
@@ -489,7 +489,7 @@ describe('OverlayLayout compile contract', () => {
     ).toEqual(['b', 'a', 'c']);
   });
 
-  it('raises a selected exclude final failure rather than replaying an earlier probe', () => {
+  it('引发选定的排除最终失败，而不是回放早期的探测', () => {
     expect(() =>
       compileOverlay(
         createOverlayLayout({
@@ -510,7 +510,7 @@ describe('OverlayLayout compile contract', () => {
     ).toThrow(/rejected an exact proposal/);
   });
 
-  it('clips a zero-area container with a rect while preserving final replay', () => {
+  it('用矩形裁剪零区域容器，同时保留最终回放', () => {
     const result = compileOverlay(
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 0 }, y: { kind: 'fixed', value: 10 } },
@@ -536,7 +536,7 @@ describe('OverlayLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'child')).toBeDefined();
   });
 
-  it('supports nested OverlayLayout through the same custom composite registry', () => {
+  it('通过相同的自定义组合注册表支持嵌套 OverlayLayout', () => {
     const inner = createOverlayLayout({
       size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 10 } },
       children: [{ kind: LayoutItemKind.Overlay, key: 'leaf', child: leaf('nested-leaf', 20, 10) }],
@@ -552,7 +552,7 @@ describe('OverlayLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'nested-leaf')).toEqual({ x: 10, y: 5 });
   });
 
-  it('fails loudly with the physical axis when root fill has no finite parent allocation', () => {
+  it('当根填充没有有限的父分配时，物理轴会明确报错', () => {
     const proposal = intrinsicProposal('natural');
 
     expect(() => compileOverlay(createOverlayLayout({ size: { x: { kind: 'fill' } } }), proposal)).toThrow(

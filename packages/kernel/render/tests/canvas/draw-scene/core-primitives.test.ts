@@ -5,7 +5,7 @@ import { drawScene } from '../../../src/canvas';
 import { createSpyCanvasContext, scene } from './helpers';
 
 describe('drawScene 规格', () => {
-  it('rounded rect uses circular quarter-arcs so Canvas matches SVG rounded corners', () => {
+  it('圆角矩形使用圆形四分之一圆弧，因此 Canvas 与 SVG 圆角匹配', () => {
     const context = createSpyCanvasContext();
     const roundedScene: Scene = {
       layout: { x: 0, y: 0, width: 60, height: 40 },
@@ -159,7 +159,7 @@ describe('drawScene 规格', () => {
     expect(strokeCalls.map(call => call.lineDashOffset)).toEqual([6, 0]);
   });
 
-  it('text-default-font-family: uses DrawOptions.defaultFontFamily when text has no fontFamily', () => {
+  it('text-default-font-family：当文本没有 fontFamily 时使用 DrawOptions.defaultFontFamily', () => {
     const context = createSpyCanvasContext();
     const textScene: Scene = {
       layout: { x: 0, y: 0, width: 80, height: 40 },
@@ -186,7 +186,7 @@ describe('drawScene 规格', () => {
     expect(context.calls.find(call => call.name === 'fillText')?.font).toBe('12px Inter, sans-serif');
   });
 
-  it('text-explicit-font-family: text fontFamily wins over DrawOptions.defaultFontFamily', () => {
+  it('文本显式字体系列：文本 fontFamily 胜过 DrawOptions.defaultFontFamily', () => {
     const context = createSpyCanvasContext();
     const textScene: Scene = {
       layout: { x: 0, y: 0, width: 80, height: 40 },

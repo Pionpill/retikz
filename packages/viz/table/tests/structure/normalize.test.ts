@@ -17,11 +17,11 @@ import { presentTable } from '../../src/pipeline/presentation';
 import { formatDefaultTable } from '../utils/stages';
 
 describe('normalizeTableStructure', () => {
-  it('exports stable source discriminator values', () => {
+  it('输出稳定的源判别字段值', () => {
     expect(TableCellSourceKind).toEqual({ Manual: 'manual', Field: 'field', Generated: 'generated' });
   });
 
-  it('normalizes manual cells without synthesizing identity', () => {
+  it('标准化手动单元而不合成身份', () => {
     const model = normalizeTableStructure({
       kind: 'manual',
       rows: [
@@ -96,7 +96,7 @@ describe('normalizeTableStructure', () => {
     expect(Object.isFrozen(model.cells[0].source)).toBe(true);
   });
 
-  it('materializes manual header/body location and rejects semantic mismatches', () => {
+  it('实现手动标题/正文位置并拒绝语义不匹配', () => {
     const model = normalizeTableStructure({
       kind: 'manual',
       rows: [['Name'], ['Ada']],
@@ -116,7 +116,7 @@ describe('normalizeTableStructure', () => {
     ).toThrow(/table: structure "manual"/);
   });
 
-  it('preserves all-null tracks and rejects occupied span slots, out-of-range spans, and duplicate ids', () => {
+  it('保留全空轨道并拒绝占用的跨度槽、超出范围的跨度和重复的 ID', () => {
     const empty = normalizeTableStructure({
       kind: 'manual',
       rows: [
@@ -150,7 +150,7 @@ describe('normalizeTableStructure', () => {
     ).toThrow(/duplicate.*same/i);
   });
 
-  it('normalizes detail headers, nested fields, scalar values, and source identity', () => {
+  it('标准化详细信息头部、嵌套字段、标量值和源标识', () => {
     const model = normalizeTableStructure(
       {
         kind: 'detail',
@@ -195,7 +195,7 @@ describe('normalizeTableStructure', () => {
     expect(model.cells[7]).toMatchObject({ payload: { kind: 'value', value: null } });
   });
 
-  it('supports header false and a model-free empty dataset', () => {
+  it('支持 header false 和无模型的空数据集', () => {
     const withoutHeader = normalizeTableStructure(
       { kind: 'detail', header: false, columns: [{ id: 'name', field: 'name' }] },
       { data: { reference: 'sales' }, datasets: { sales: [{ name: 'Ada' }] } },
@@ -211,7 +211,7 @@ describe('normalizeTableStructure', () => {
     expect(empty.cells).toHaveLength(1);
   });
 
-  it('fails loud for missing datasets, strict-model unknown fields, missing values, and non-scalars', () => {
+  it('由于缺少数据集、严格模型未知字段、缺失值和非标量而失败', () => {
     const detail = { kind: 'detail' as const, columns: [{ id: 'score', field: 'score' }] };
 
     expect(() => normalizeTableStructure(detail)).toThrow(/table: structure "detail"/);
@@ -232,7 +232,7 @@ describe('normalizeTableStructure', () => {
     ).toThrow(/scalar/i);
   });
 
-  it.each(['toString', '__proto__'])('treats inherited dataset name %j as missing', reference => {
+  it.each(['toString', '__proto__'])('将继承的数据集名称 %j 视为缺失', reference => {
     const detail = { kind: 'detail' as const, header: false, columns: [{ id: 'value', field: 'value' }] };
 
     expect(() => normalizeTableStructure(detail, { data: { reference }, datasets: {} })).toThrow(
@@ -246,7 +246,7 @@ describe('normalizeTableStructure', () => {
     ).toEqual({ kind: 'value', value: reference });
   });
 
-  it('dispatches custom structures and validates their output through the canonical guard', () => {
+  it('调度自定义结构并通过规范防护验证其输出', () => {
     const summary = defineTableStructure({
       schema: strictObject({ kind: literal('summary'), label: string() }),
       build: spec => ({
@@ -289,7 +289,7 @@ describe('normalizeTableStructure', () => {
     );
   });
 
-  it('rejects missing, duplicate, built-in, and future-reserved structure definitions', () => {
+  it('拒绝丢失、重复、内置和未来保留的结构定义', () => {
     const extension = defineTableStructure({
       schema: strictObject({ kind: literal('extension') }),
       build: () => ({ rows: [], columns: [], cells: [] }),
@@ -309,7 +309,7 @@ describe('normalizeTableStructure', () => {
     }
   });
 
-  it('presents canonical cells from a detached snapshot without changing identity or order', () => {
+  it('在不更改身份或顺序的情况下呈现分离快照中的规范单元', () => {
     const semantic = normalizeTableStructure({
       kind: 'manual',
       rows: [['A', { content: { type: 'node', position: [0, 0] } }]],

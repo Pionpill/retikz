@@ -57,8 +57,8 @@ const boundsOf = (output: ReturnType<typeof run>, id: string) => {
   return bounds;
 };
 
-describe('layered Flow layout', () => {
-  it('uses stable authored order inside minimal DAG ranks and keeps margin boxes apart', () => {
+describe('分层 Flow 布局', () => {
+  it('在最小 DAG 排名内使用稳定的编写顺序，并保持边距框分开', () => {
     const output = run({
       layout: layout(),
       elements: [
@@ -78,7 +78,7 @@ describe('layered Flow layout', () => {
     expect(output.elements.map(element => element.id)).toEqual(['source', 'first', 'second']);
   });
 
-  it('honors explicit rank as a hard constraint and rejects an impossible precedence', () => {
+  it('将显式排名视为硬约束并拒绝不可能的优先级', () => {
     const ranked = run({
       layout: layout(),
       elements: [leaf('a', 0), leaf('b', 2)],
@@ -108,7 +108,7 @@ describe('layered Flow layout', () => {
     ['left', 'x', -1],
     ['down', 'y', 1],
     ['up', 'y', -1],
-  ] as const)('maps canonical ranks to %s without changing relation order', (direction, axis, sign) => {
+  ] as const)('将规范等级映射到 %s，而不改变关系顺序', (direction, axis, sign) => {
     const output = run({
       layout: layout(direction),
       elements: [leaf('a'), leaf('b')],
@@ -122,7 +122,7 @@ describe('layered Flow layout', () => {
   });
 
   it.each(['right', 'left', 'down', 'up'] as const)(
-    'preserves non-square measured leaf size when the primary direction is %s',
+    '当主方向为 %s 时，保留非方形测量的叶子尺寸',
     direction => {
       const output = executeFlowLayout(
         LayeredFlowLayoutDefinition,
@@ -138,7 +138,7 @@ describe('layered Flow layout', () => {
     },
   );
 
-  it('centers different-height singleton ranks so forward routes stay on one line', () => {
+  it('将不同高度的单列居中，以便前向路线保持在一条线上', () => {
     const output = run({
       layout: layout(),
       elements: [
@@ -161,7 +161,7 @@ describe('layered Flow layout', () => {
   });
 
   it.each(['right', 'left', 'down', 'up'] as const)(
-    'keeps aligned endpoints straight despite different sizes when direction is %s',
+    '当方向为 %s 时，尽管尺寸不同，但仍保持对齐端点笔直',
     direction => {
       const horizontal = direction === 'right' || direction === 'left';
       const output = run({
@@ -187,7 +187,7 @@ describe('layered Flow layout', () => {
   );
 
   it.each(['down', 'up'] as const)(
-    'maps asymmetric physical margins without overlapping siblings when the primary direction is %s',
+    '当主方向为 %s 时，映射不对称的物理边距而不重叠同级',
     direction => {
       const firstMargin = { top: 2, right: 11, bottom: 5, left: 3 };
       const secondMargin = { top: 13, right: 7, bottom: 17, left: 19 };
@@ -210,7 +210,7 @@ describe('layered Flow layout', () => {
     },
   );
 
-  it('routes cycles and parallel relations deterministically and reserves measured labels', () => {
+  it('确定性地路由循环和并行关系并保留测量标签', () => {
     const input: FlowLayoutInput = {
       layout: layout(),
       elements: [leaf('a'), leaf('b')],
@@ -236,7 +236,7 @@ describe('layered Flow layout', () => {
     }
   });
 
-  it('reserves a horizontal rank gap for the full measured relation-label width', () => {
+  it('为完整测量的关系标签宽度保留水平排名间隙', () => {
     const output = run({
       layout: layout('right'),
       elements: [
@@ -258,7 +258,7 @@ describe('layered Flow layout', () => {
     expect(target.x - (labelBounds.x + labelBounds.width)).toBeGreaterThanOrEqual(20);
   });
 
-  it('reserves a vertical rank gap for the full measured relation-label height', () => {
+  it('为完整测量的关系标签高度保留垂直等级间隙', () => {
     const output = run({
       layout: layout('down'),
       elements: [
@@ -281,7 +281,7 @@ describe('layered Flow layout', () => {
   });
 
   it.each(['right', 'left', 'down', 'up'] as const)(
-    'reserves only the largest label extent on a shared authored Layout side facing %s',
+    '仅保留面向 %s 的共享编写 Layout 一侧的最大标签范围',
     direction => {
       const horizontal = direction === 'right' || direction === 'left';
       let placementInput: FlowLayoutPlacementOutput | undefined;
@@ -349,7 +349,7 @@ describe('layered Flow layout', () => {
     },
   );
 
-  it('centers nested Group children when its minimum cross size exceeds the child scope', () => {
+  it('当嵌套 Group 子级的最小交叉大小超过子级范围时，将其居中', () => {
     const output = run({
       layout: layout('down'),
       elements: [
@@ -373,7 +373,7 @@ describe('layered Flow layout', () => {
     expect(output.relations[0]?.route.points.every(point => point[0] === 45)).toBe(true);
   });
 
-  it('lays out recursive Groups before their parent and keeps cross-Group endpoints in one root coordinate system', () => {
+  it('将递归组布置在其父级之前，并将交叉 Group 端点保留在一个根坐标系中', () => {
     const output = run({
       layout: layout(),
       elements: [
@@ -407,7 +407,7 @@ describe('layered Flow layout', () => {
     expect(output.relations).toHaveLength(3);
   });
 
-  it('delegates authored Layout placement once and does not derive its child order from relations', () => {
+  it('仅委托一次显式 Layout 放置且不从关系推导其子项顺序', () => {
     let calls = 0;
     const output = LayeredFlowLayoutDefinition.layout(
       {

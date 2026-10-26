@@ -21,7 +21,7 @@ class RetikzDemoError extends RetikzError<RetikzDemoErrorCode, DemoDetails> {
 }
 
 describe('RetikzError', () => {
-  it('keeps subclass identity, machine fields, and details identity', () => {
+  it('保留子类标识、机器字段和详细信息标识', () => {
     const details = { source: 'test' } as const;
     const cause = { reason: 'input' };
     const error = new RetikzDemoError(details, cause);
@@ -36,7 +36,7 @@ describe('RetikzError', () => {
     expect(Object.isFrozen(error.details)).toBe(false);
   });
 
-  it('always owns a cause property, including when the option is omitted', () => {
+  it('始终拥有原因属性，包括省略该选项时', () => {
     const omittedCause = new RetikzDemoError({ source: 'test' }, undefined, false);
     const explicitUndefinedCause = new RetikzDemoError({ source: 'test' }, undefined, true);
 
@@ -47,7 +47,7 @@ describe('RetikzError', () => {
     }
   });
 
-  it('classifies the Foundation hierarchy but not shape-compatible objects', () => {
+  it('对 Foundation 层次结构进行分类，但不对形状兼容的对象进行分类', () => {
     const error = new RetikzDemoError({ source: 'test' });
     const forged = { code: RetikzDemoErrorCode.Failed, details: { source: 'test' }, message: 'Demo failed' };
 
@@ -59,7 +59,7 @@ describe('RetikzError', () => {
 });
 
 describe('RetikzFoundationError', () => {
-  it('uses the Foundation default code for a single message argument', () => {
+  it('对单个消息参数使用 Foundation 默认代码', () => {
     const error = new RetikzFoundationError('Foundation failed');
 
     expect(error.code).toBe(RetikzFoundationErrorCode.Default);
@@ -67,7 +67,7 @@ describe('RetikzFoundationError', () => {
     expect(error.details).toEqual({});
   });
 
-  it('exposes a stable color error code for static color atoms', () => {
+  it('公开静态颜色原子的稳定颜色错误代码', () => {
     expect(RetikzFoundationErrorCode.Color).toBe('FOUNDATION_COLOR_ERROR');
   });
 });

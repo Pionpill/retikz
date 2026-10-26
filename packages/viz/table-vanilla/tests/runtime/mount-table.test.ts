@@ -32,8 +32,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Table Vanilla mounted runtime', () => {
-  it('updates SVG data while preserving root identity and supports the Canvas host', () => {
+describe('Table Vanilla 安装运行时', () => {
+  it('更新 SVG 数据，同时保留根身份并支持 Canvas 宿主', () => {
     const spec = detailTable({
       dataRef: 'people',
       header: false,

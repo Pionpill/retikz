@@ -12,7 +12,7 @@ import {
   processToStaticResult,
 } from '../../src';
 
-describe('Vanilla processing', () => {
+describe('Vanilla 处理', () => {
   it('只在 processing prepare 中解析 InputEmbed 的 Composite contribution', () => {
     const definition = defineComposite({
       namespace: 'fixture',

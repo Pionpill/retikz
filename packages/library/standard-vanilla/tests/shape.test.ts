@@ -6,7 +6,7 @@ import { expect, it } from 'vitest';
 import * as rootEntry from '../src';
 import { StandardInputEmbedAdapters } from '../src';
 
-it('keeps circle intent, authored id and exact provider through Vanilla normalization', () => {
+it('通过 Vanilla 规范化保留循环意图、编写 ID 和确切的提供者', () => {
   const result = normalizeScene(scene({ children: [shape.circle({ id: 'c1', center: 'origin', radius: 20 })] }), {
     adapters: StandardInputEmbedAdapters,
   });
@@ -21,11 +21,11 @@ it('keeps circle intent, authored id and exact provider through Vanilla normaliz
   expect(result.contributions).toEqual([{ roots: [CircleProvider.key], providers: [CircleProvider] }]);
 });
 
-it('keeps the shape family out of the root entry', () => {
+it('使形状族远离根条目', () => {
   expect(rootEntry).not.toHaveProperty('shape');
 });
 
-it('keeps anonymous shapes anonymous after normalization', () => {
+it('标准化后保持匿名形状匿名', () => {
   const input = shape.circle({ center: [0, 0], radius: 20 });
   const result = normalizeScene(scene([input]), { adapters: StandardInputEmbedAdapters });
 

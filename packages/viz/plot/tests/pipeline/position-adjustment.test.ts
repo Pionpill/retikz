@@ -76,8 +76,8 @@ const positionsOf = (
 const defaultFrameOf = (spec: IRPlot, data: Array<ExternalRow> = rows) =>
   [...loweredOf(spec, {}, data).dataArtifact.frameByCoordinateScopeId.values()][0];
 
-describe('Mark Placement pipeline', () => {
-  it('uses ratio 0.3 and seed 0 when jitter defaults are omitted', () => {
+describe('标记放置管线', () => {
+  it('当省略抖动默认值时，使用比率 0.3 和种子 0', () => {
     const implicit = positionsOf(specOf([{ kind: 'jitter', role: 'x' }]));
     const explicit = positionsOf(specOf([{ kind: 'jitter', role: 'x', span: { kind: 'ratio', value: 0.3 }, seed: 0 }]));
     const previousDefault = positionsOf(
@@ -88,7 +88,7 @@ describe('Mark Placement pipeline', () => {
     expect(implicit).not.toEqual(previousDefault);
   });
 
-  it('applies deterministic ratio jitter after scale mapping', () => {
+  it('在比例映射后应用确定性比率抖动', () => {
     const spec = specOf([{ kind: 'jitter', role: 'x', span: { kind: 'ratio', value: 0.8 }, seed: 3 }]);
     const first = positionsOf(spec);
     const second = positionsOf(spec);
@@ -103,7 +103,7 @@ describe('Mark Placement pipeline', () => {
     }
   });
 
-  it('samples bounded normal jitter around the discrete role center', () => {
+  it('对离散角色中心周围的有界法向抖动进行采样', () => {
     const sampleRows = Array.from({ length: 128 }, (_, index) => ({
       category: index % 2 === 0 ? 'A' : 'B',
       value: index,
@@ -147,7 +147,7 @@ describe('Mark Placement pipeline', () => {
     expect(centralNormal).toBeGreaterThan(centralUniform);
   });
 
-  it('changes normal spread with sigma without changing the jitter envelope', () => {
+  it('使用 sigma 更改正常扩展，而不更改抖动包络', () => {
     const narrow = specOf([
       {
         kind: 'jitter',
@@ -171,7 +171,7 @@ describe('Mark Placement pipeline', () => {
     expect(defaultFrameOf(narrow).roleScales?.x?.range()).toEqual(defaultFrameOf(wide).roleScales?.x?.range());
   });
 
-  it('keeps later normal samples stable when a null target occupies an earlier random slot', () => {
+  it('当空目标占据较早的随机槽时，保持后面的正常样本稳定', () => {
     const spec = specOf([
       {
         kind: 'jitter',
@@ -198,7 +198,7 @@ describe('Mark Placement pipeline', () => {
     expect(withNull[1]).toEqual(withPlaceholder[2]);
   });
 
-  it('runs custom screen-space initializers after projection', () => {
+  it('投影后运行自定义屏幕空间初始值设定项', () => {
     const NudgeSchema = strictObject({ kind: literal('screen-nudge'), dx: number() });
     type Nudge = { kind: 'screen-nudge'; dx: number };
     const definition: ScreenPositionAdjustmentDefinition<Nudge> = {
@@ -218,7 +218,7 @@ describe('Mark Placement pipeline', () => {
     expect(shifted).toEqual(base.map(([x, y]) => [x + 7, y]));
   });
 
-  it('rejects reordered targets and changed target keys from a screen initializer', () => {
+  it('拒绝屏幕初始化程序中重新排序的目标和更改的目标键', () => {
     const ReorderSchema = strictObject({ kind: literal('screen-reorder') });
     const reorder: ScreenPositionAdjustmentDefinition<{ kind: 'screen-reorder' }> = {
       space: 'screen',
@@ -245,7 +245,7 @@ describe('Mark Placement pipeline', () => {
     ).toThrow(/preserve placement target order and keys/);
   });
 
-  it('rejects null changes, non-finite positions, and non-2D screen results', () => {
+  it('拒绝空更改、非有限位置和非 2D 屏幕结果', () => {
     const NullSchema = strictObject({ kind: literal('screen-fill-null') });
     const fillNull: ScreenPositionAdjustmentDefinition<{ kind: 'screen-fill-null' }> = {
       space: 'screen',
@@ -300,7 +300,7 @@ describe('Mark Placement pipeline', () => {
     ).toThrow(/finite values with stable dimensions/);
   });
 
-  it('keeps later jitter samples stable when a null target occupies an earlier random slot', () => {
+  it('当空目标占据较早的随机时隙时，保持后面的抖动样本稳定', () => {
     const spec = specOf([{ kind: 'jitter', role: 'x', span: { kind: 'ratio', value: 0.8 }, seed: 17 }]);
     const rowsWithNullTarget = [
       { category: 'A', value: 1 },
@@ -319,7 +319,7 @@ describe('Mark Placement pipeline', () => {
     expect(withNull[1]).toEqual(withPlaceholder[2]);
   });
 
-  it('keeps Cartesian axis boundaries fixed while containing numeric jitter', () => {
+  it('保持笛卡尔轴边界固定，同时包含数字抖动', () => {
     const makeSpec = (span: number) =>
       PlotSchema.parse({
         ...specOf([{ kind: 'jitter', role: 'x', span, seed: 7 }]),
@@ -362,7 +362,7 @@ describe('Mark Placement pipeline', () => {
     }
   });
 
-  it('reserves discrete jitter half-step plus glyph and stroke extent at Cartesian edges', () => {
+  it('在笛卡尔边缘保留离散抖动半步加上字形和描边范围', () => {
     const spec = PlotSchema.parse({
       ...specOf([{ kind: 'jitter', role: 'x', span: { kind: 'ratio', value: 1 }, seed: 3 }]),
       marks: [
@@ -382,14 +382,14 @@ describe('Mark Placement pipeline', () => {
     expect(frame.roleScales?.x?.step).toBe(88);
   });
 
-  it('preserves reversed ranges while containing numeric role-space jitter', () => {
+  it('保留反向范围，同时包含数字角色空间抖动', () => {
     const spec = specOf([{ kind: 'jitter', role: 'y', span: 20, seed: 1 }]);
     const frame = defaultFrameOf(spec);
 
     expect(frame.roleScales?.y?.range()).toEqual([85, 15]);
   });
 
-  it('fails instead of rewriting an explicit continuous range for containment', () => {
+  it('失败而不是重写显式连续范围以进行遏制', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -420,7 +420,7 @@ describe('Mark Placement pipeline', () => {
     ).toThrow(/explicit range.*containment/i);
   });
 
-  it('wraps custom role-space containment failures at the Plot owner boundary', () => {
+  it('在 Plot 所属模块边界处包装自定义角色空间遏制失败', () => {
     const MeasureFailureSchema = strictObject({ kind: literal('measure-failure') });
     const measureFailure: RolePositionAdjustmentDefinition<{ kind: 'measure-failure' }> = {
       space: 'role',
@@ -440,7 +440,7 @@ describe('Mark Placement pipeline', () => {
     ).toThrow('lowerPlots: position adjustment "measure-failure" containment failed');
   });
 
-  it('projects discrete chord angle adjustments along adjacent polygon edges', () => {
+  it('沿相邻多边形边投影离散弦角调整', () => {
     const FixedAngleSchema = strictObject({ kind: literal('fixed-angle'), offset: number() });
     type FixedAngle = { kind: 'fixed-angle'; offset: number };
     const fixedAngle = {
@@ -496,7 +496,7 @@ describe('Mark Placement pipeline', () => {
     expect(shifted[0][1]).toBeCloseTo(base[0][1] * 0.75 + base[1][1] * 0.25, 6);
   });
 
-  it('keeps explicit polar angle adjustments on arcs whose displacement follows radius', () => {
+  it('在位移跟随半径的圆弧上保持显式极角调整', () => {
     const FixedPolarAngleSchema = strictObject({ kind: literal('fixed-polar-angle'), offset: number() });
     type FixedPolarAngle = { kind: 'fixed-polar-angle'; offset: number };
     const fixedPolarAngle = {
@@ -554,7 +554,7 @@ describe('Mark Placement pipeline', () => {
     expect(displacement(1)).toBeCloseTo(displacement(0) * 2, 6);
   });
 
-  it('keeps continuous angular values on their exact polar projection even when path interpolation is chord', () => {
+  it('即使路径插值是弦插值，也可以在精确的极投影上保持连续的角度值', () => {
     const FixedContinuousAngleSchema = strictObject({ kind: literal('fixed-continuous-angle'), offset: number() });
     type FixedContinuousAngle = { kind: 'fixed-continuous-angle'; offset: number };
     const fixedContinuousAngle = {
@@ -609,7 +609,7 @@ describe('Mark Placement pipeline', () => {
     expect(distanceFromCenter(shifted[1])).toBeCloseTo(distanceFromCenter(base[1]), 6);
   });
 
-  it('does not create a seam for full polar sweeps and fails when partial-sweep glyph containment is impossible', () => {
+  it('不会为完全极坐标扫描创建接缝，并且在不可能进行部分扫描字形遏制时会失败', () => {
     const polarSpec = (endAngle: number): IRPlot =>
       PlotSchema.parse({
         namespace: 'plot',
@@ -635,7 +635,7 @@ describe('Mark Placement pipeline', () => {
     expect(() => defaultFrameOf(polarSpec(180), [{ category: 'A', value: 0 }])).toThrow(/cannot contain glyph extent/);
   });
 
-  it('uses the same two-stage projection contract for placement-capable custom coordinates', () => {
+  it('使用相同的两阶段投影协定来实现可放置的自定义坐标', () => {
     const customCoordinate = defineCoordinate({
       schema: strictObject({ type: literal('placement-line') }),
       roles: ['x'],
@@ -699,7 +699,7 @@ describe('Mark Placement pipeline', () => {
     ).toBe(true);
   });
 
-  it('keeps projectRoles equivalent to the explicit map-then-project stages', () => {
+  it('保持 projectRoles 等效于显式映射然后项目阶段', () => {
     const cartesianFrame = defaultFrameOf(specOf());
     const cartesianRoles = ['A', 2] as const;
     const cartesianMapped = cartesianFrame.mapRoles?.(cartesianRoles);
@@ -735,7 +735,7 @@ describe('Mark Placement pipeline', () => {
     );
   });
 
-  it('fails loudly when a custom coordinate lacks two-stage projection for placement', () => {
+  it('当自定义坐标缺少用于放置的两阶段投影时，会明确报错', () => {
     const LegacyCoordinateSchema = strictObject({ type: literal('legacy-projection') });
     const legacyCoordinate = defineCoordinate({
       schema: LegacyCoordinateSchema,
@@ -788,7 +788,7 @@ describe('Mark Placement pipeline', () => {
     ).toThrow(/does not expose mapped-role projection/);
   });
 
-  it('resolves jitter independently for each facet panel', () => {
+  it('独立解决每个面面板的抖动', () => {
     const facetRows = [
       { panel: 'left', category: 'A', value: 1 },
       { panel: 'left', category: 'B', value: 2 },
@@ -828,7 +828,7 @@ describe('Mark Placement pipeline', () => {
     expect(positions[1]).toEqual(positions[3]);
   });
 
-  it('locator reads final adjusted Point positions without replaying the initializer', () => {
+  it('定位器读取最终调整后的点位置，而不回放初始化程序', () => {
     const CountedSchema = strictObject({ kind: literal('counted-screen-nudge'), dx: number() });
     let initializeCount = 0;
     const countedNudge: ScreenPositionAdjustmentDefinition<{ kind: 'counted-screen-nudge'; dx: number }> = {
@@ -856,7 +856,7 @@ describe('Mark Placement pipeline', () => {
     expect(initializeCount).toBe(1);
   });
 
-  it('fails loudly for unknown kinds, ambiguous role, and illegal initializer output', () => {
+  it('由于未知类型、不明确的角色和非法初始化输出而明确报错', () => {
     expect(() => positionsOf(specOf([{ kind: 'missing' }]))).toThrow(/not registered/);
     expect(() => positionsOf(specOf([{ kind: 'jitter', role: 'z', span: 10 }]))).toThrow(
       /not provided by the coordinate frame/,
@@ -874,7 +874,7 @@ describe('Mark Placement pipeline', () => {
     ).toThrow(/preserve placement target count/);
   });
 
-  it('rejects sparse or undefined initializer entries with a diagnostic Plot error', () => {
+  it('拒绝稀疏或 undefined 的初始值设定项，并显示诊断 Plot 错误', () => {
     const SparseSchema = strictObject({ kind: literal('sparse-screen') });
     const sparse: ScreenPositionAdjustmentDefinition<{ kind: 'sparse-screen' }> = {
       space: 'screen',

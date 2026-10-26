@@ -25,7 +25,7 @@ const polarInput: PolarCoordinateInput = {
   secondary: scale,
 };
 
-describe('mapped-role local tangent', () => {
+describe('映射角色局部切线', () => {
   it('直角坐标方向来自映射后参数，与数据 scale 顺序无关', () => {
     const reversed = linearPositionScale(
       resolveLinearScale({ type: 'linear', name: 'r', domain: [0, 360] }, [0, 360], [360, 0]),

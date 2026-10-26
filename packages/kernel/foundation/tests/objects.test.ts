@@ -2,7 +2,7 @@ import { mergeProperties, RetikzFoundationError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
 describe('mergeProperties', () => {
-  it('merges any number of layers in order, including explicit undefined and null', () => {
+  it('按顺序合并任意数量的层，包括显式 undefined 和空', () => {
     const result = mergeProperties<{ enabled?: boolean; count?: number; label?: string | null }>([
       { enabled: true, count: 2, label: 'base' },
       undefined,
@@ -17,7 +17,7 @@ describe('mergeProperties', () => {
     expect(mergeProperties([undefined])).toEqual({});
   });
 
-  it('applies the configured predicate to first writes and overrides without deleting existing values', () => {
+  it('将配置的谓词应用于首次写入和覆盖，而不删除现有值', () => {
     const sources: Array<{ count: number; label: string | null; absent?: string }> = [
       { count: 3, label: 'base', absent: undefined },
       { count: 0, label: null },
@@ -35,7 +35,7 @@ describe('mergeProperties', () => {
     expect(mergeProperties(sources, { shouldOverride: () => false })).toEqual({});
   });
 
-  it('preserves shallow references and leaves frozen inputs untouched', () => {
+  it('保留浅引用并保持冻结输入不变', () => {
     const nested = { color: 'red' };
     const source = Object.freeze({ nested, list: [1, 2] });
     const result = mergeProperties([source]);
@@ -50,7 +50,7 @@ describe('mergeProperties', () => {
     expect(mergeProperties([source, { ...source, nested: replacement }]).nested).toBe(replacement);
   });
 
-  it('copies enumerable string and symbol properties, excluding inherited and hidden properties', () => {
+  it('复制可枚举字符串和符号属性，不包括继承和隐藏属性', () => {
     const symbol = Symbol('option');
 
     class Source {
@@ -68,7 +68,7 @@ describe('mergeProperties', () => {
     expect(Reflect.ownKeys(mergeProperties([source]))).toEqual(['own', symbol]);
   });
 
-  it('creates data properties for special keys without changing the output prototype', () => {
+  it('在不更改输出原型的情况下为特殊键创建数据属性', () => {
     const source = Object.fromEntries([
       ['__proto__', { injected: true }],
       ['constructor', 'value'],
@@ -81,7 +81,7 @@ describe('mergeProperties', () => {
     expect(result['constructor']).toBe('value');
   });
 
-  it('reads enumerable accessors once and preserves property-read failures as the cause', () => {
+  it('读取可枚举访问器一次并将属性读取失败保留为原因', () => {
     let reads = 0;
     const source = {
       get count() {
@@ -109,7 +109,7 @@ describe('mergeProperties', () => {
     }
   });
 
-  it('preserves callback failures as the cause of a Foundation error', () => {
+  it('保留回调失败作为 Foundation 错误的原因', () => {
     const cause = new Error('filter failed');
 
     expect(() =>

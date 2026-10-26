@@ -25,15 +25,15 @@ const realization = Graph.defineRelationKind({
   directions: { forward: { targetMarker: { shape: 'open' }, dashPattern: [6, 4] } },
 });
 
-describe('Relation data resolution', () => {
-  it('defaults association to forward navigation while preserving explicit directions', () => {
+describe('Relation 数据解析结果', () => {
+  it('默认关联到正向导航，同时保留明确的方向', () => {
     const context = Graph.resolveGraphDefinitionOptions();
 
     expect(Graph.resolveRelation(relation(), context).effectiveDirection).toBe('forward');
     expect(Graph.resolveRelation(relation({ direction: 'none' }), context).effectiveDirection).toBe('none');
   });
 
-  it('resolves an explicitly registered kind through its role without endpoint projection', () => {
+  it('通过其角色解析显式注册的类型，无需端点投影', () => {
     const canonical = Graph.resolveRelation(
       relation({ id: 'realizes', role: 'dependency', kind: 'uml.realization' }),
       Graph.resolveGraphDefinitionOptions({ relationKinds: [realization] }),
@@ -53,7 +53,7 @@ describe('Relation data resolution', () => {
     expect(canonical).not.toHaveProperty('targetEntityId');
   });
 
-  it('preserves complete Core NodeTargets for later Core resolution', () => {
+  it('保留完整的 Core NodeTargets 以供以后的 Core 解析结果使用', () => {
     const source = { id: 'node', anchor: { side: 'right', fraction: 0.25 }, offset: [2, -3], boundary: 'shape' };
     const target = { id: 'scope', anchor: 'west' };
     const canonical = Graph.resolveRelation(relation({ source, target }), Graph.resolveGraphDefinitionOptions());
@@ -62,7 +62,7 @@ describe('Relation data resolution', () => {
     expect(canonical.source.target).toEqual(target);
   });
 
-  it('rejects an explicit direction outside the selected role and kind subset', () => {
+  it('拒绝所选角色和种类子集之外的显式方向', () => {
     expect(() =>
       Graph.resolveRelation(
         relation({ id: 'invalid-direction', role: 'dependency', direction: 'reverse' }),
@@ -78,13 +78,13 @@ describe('Relation data resolution', () => {
     'uml.generalization',
     'uml.dependency',
     'uml.realization',
-  ])('rejects unregistered kind %s without falling back to the role', kind => {
+  ])('拒绝未注册的类型 %s，而不回退到角色', kind => {
     expect(() => Graph.resolveRelation(relation({ kind }), Graph.resolveGraphDefinitionOptions())).toThrow(
       /not registered/i,
     );
   });
 
-  it('rejects a registered kind under another role or an expanded direction', () => {
+  it('拒绝在另一个角色或扩展方向下注册的类型', () => {
     const context = Graph.resolveGraphDefinitionOptions({ relationKinds: [realization] });
 
     expect(() => Graph.resolveRelation(relation({ role: 'generalization', kind: realization.kind }), context)).toThrow(

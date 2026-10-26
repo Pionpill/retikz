@@ -43,8 +43,8 @@ const lower = (properties: object, ribbon?: object, width = 12) =>
     ),
   );
 
-describe('PathMark ribbon', () => {
-  it('compiles the lowered curve to the same Scene as a directly authored ribbon', () => {
+describe('PathMark 色带', () => {
+  it('将下沉的曲线编译为与直接编写的功能区相同的 Scene', () => {
     const [actual] = lower({
       kind: 'ribbon',
       stroke: 'none',
@@ -63,7 +63,7 @@ describe('PathMark ribbon', () => {
     expect(compile(actual)).toEqual(compile(direct));
     expect(compile(actual).primitives.length).toBeGreaterThan(0);
   });
-  it('maps width through an explicit scale while leaving drawing positions unchanged', () => {
+  it('通过显式比例映射宽度，同时保持绘图位置不变', () => {
     const spec = source({ kind: 'ribbon' }, { width: { field: 'width', scale: 'width' } });
     const parsed = PlotSchema.parse({
       ...spec,
@@ -73,7 +73,7 @@ describe('PathMark ribbon', () => {
     expect(path.kindOptions?.width).toEqual({ kind: 'fixed', value: 6 });
     expect(path.children[0]).toMatchObject({ to: [0, 0] });
   });
-  it('delivers field fill to per-row ribbon instances', () => {
+  it('向每行功能区实例提供字段填充', () => {
     const spec = source({ kind: 'ribbon' }, { width: 'width' });
     const parsed = PlotSchema.parse({
       ...spec,
@@ -94,7 +94,7 @@ describe('PathMark ribbon', () => {
     expect(result[0].style?.fill).toBeDefined();
     expect(result[0].style?.fill).not.toEqual(result[1].style?.fill);
   });
-  it('uses the first vertex of each series for its ribbon width', () => {
+  it('使用每个系列的第一个顶点作为其色带宽度', () => {
     const spec = source({ kind: 'ribbon' });
     const parsed = PlotSchema.parse({
       ...spec,
@@ -125,7 +125,7 @@ describe('PathMark ribbon', () => {
     expect(result).toHaveLength(1);
     expect(result[0].kindOptions?.width).toEqual({ kind: 'fixed', value: 8 });
   });
-  it('binds widths per row and retains the authored centerline', () => {
+  it('绑定每行的宽度并保留编写的中心线', () => {
     const result = lower({ kind: 'ribbon' }, { width: 'width' });
     expect(result).toHaveLength(2);
     expect(result.map(path => path.kindOptions?.width)).toEqual([
@@ -135,7 +135,7 @@ describe('PathMark ribbon', () => {
     expect(result[0].kind).toBe('ribbon');
     expect(result[0].children[1]).toMatchObject({ kind: 'cubic', control1: [40, 0] });
   });
-  it('uses a single constant instance and moves host labels into ribbon options', () => {
+  it('使用单个常量实例并将宿主标签移动到功能区选项中', () => {
     const result = lower({
       kind: 'ribbon',
       ribbon: { width: { kind: 'profile', name: 'custom', params: { height: 8 } } },
@@ -148,17 +148,17 @@ describe('PathMark ribbon', () => {
     });
     expect(result[0].label).toBeUndefined();
   });
-  it('supports taper bindings and zero width without changing the rule', () => {
+  it('支持锥度装订和零宽度，无需更改规则', () => {
     expect(lower({ kind: 'ribbon' }, { width: 'width', endWidth: 'end' }, 0)[0].kindOptions?.width).toEqual({
       kind: 'taper',
       start: 0,
       end: 4,
     });
   });
-  it('rejects negative resolved widths', () => {
+  it('拒绝负解析宽度', () => {
     expect(() => lower({ kind: 'ribbon' }, { width: 'width' }, -1)).toThrow(/width/i);
   });
-  it('rejects incompatible geometry and width declarations at the source boundary', () => {
+  it('拒绝源边界处不兼容的几何形状和宽度声明', () => {
     for (const properties of [
       { kind: 'stroke', ribbon: { width: { kind: 'fixed', value: 2 } } },
       { kind: 'ribbon' },

@@ -16,9 +16,9 @@ const compileGraph = (source: unknown) => {
 const fillsOf = (output: ReturnType<typeof compileGraph>): Array<unknown> =>
   primitivesOf(output.scene.primitives).flatMap(primitive => ('fill' in primitive ? [primitive.fill] : []));
 
-describe('Graph defaults and rules Source fragments', () => {
+describe('Graph 默认并规则 Source 片段', () => {
   it.each([{}, { entity: { style: { font: {} }, layout: {} } }])(
-    'keeps Core Node font defaults effective when Graph contributes no font values',
+    '当 Graph 没有贡献字体值时，保持 Core Node 字体默认有效',
     defaultGraph => {
       const output = compileGraph({
         namespace: 'graph',
@@ -33,7 +33,7 @@ describe('Graph defaults and rules Source fragments', () => {
     },
   );
 
-  it('does not materialize absent fonts or markers from empty defaults groups', () => {
+  it('不会具体化空默认组中缺少的字体或标记', () => {
     const defaults = Graph.mergeGraphDefaults(undefined, {
       entity: { style: { font: {} }, layout: {} },
       relation: { style: {}, labelFont: {}, sourceMarker: {}, targetMarker: {} },
@@ -43,7 +43,7 @@ describe('Graph defaults and rules Source fragments', () => {
     expect(defaults?.relation).toEqual({});
   });
 
-  it('ignores empty Node fonts and replaces nonempty fonts while completing label fonts by field', () => {
+  it('忽略空的 Node 字体并替换非空字体，同时按字段完成标签字体', () => {
     const project = (font: Record<string, unknown>) => {
       const source = Graph.GraphSchema.parse({
         namespace: 'graph',
@@ -81,7 +81,7 @@ describe('Graph defaults and rules Source fragments', () => {
     expect(replaced[1]).toMatchObject({ labelFont: { family: 'serif', weight: 700, size: 20 } });
   });
 
-  it('accepts source-shaped Graph defaults and ordered rules and preserves their JSON form', () => {
+  it('接受源形状的 Graph 默认值和有序规则，并保留其 JSON 形式', () => {
     const source = {
       namespace: 'graph',
       type: 'graph',
@@ -104,7 +104,7 @@ describe('Graph defaults and rules Source fragments', () => {
     expect(JSON.parse(JSON.stringify(parsed))).toEqual({ ...source, position: [0, 0] });
   });
 
-  it('accepts a Relation rule dash structure without opening marker structure', () => {
+  it('接受 Relation 规则破折号结构，而不打开标记结构', () => {
     const source = {
       namespace: 'graph',
       type: 'graph',
@@ -127,7 +127,7 @@ describe('Graph defaults and rules Source fragments', () => {
     ).toBe(false);
   });
 
-  it('rejects the removed graphTheme root with an exact unknown-key issue', () => {
+  it('由于确切的未知键问题而拒绝删除的 graphTheme 根', () => {
     const result = Graph.GraphSchema.safeParse({
       namespace: 'graph',
       type: 'graph',
@@ -150,7 +150,7 @@ describe('Graph defaults and rules Source fragments', () => {
     );
   });
 
-  it('rejects the removed appearance rule field at the graphRules item path', () => {
+  it('拒绝 graphRules 项路径中删除的外观规则字段', () => {
     const result = Graph.GraphSchema.safeParse({
       namespace: 'graph',
       type: 'graph',
@@ -207,7 +207,7 @@ describe('Graph defaults and rules Source fragments', () => {
       path: ['graphRules', 0],
       key: 'layout',
     },
-  ])('rejects $name and points to the offending field', ({ source, path, key }) => {
+  ])('拒绝 $name 并指向违规字段', ({ source, path, key }) => {
     const result = Graph.GraphSchema.safeParse(source);
 
     expect(result.success).toBe(false);
@@ -225,7 +225,7 @@ describe('Graph defaults and rules Source fragments', () => {
     );
   });
 
-  it('applies Graph defaults before rules and keeps explicit Entity style highest across a themed Scope', () => {
+  it('在规则之前应用 Graph 默认值，并在主题 Scope 中保持显式 Entity 样式最高', () => {
     const createSource = (entity: Record<string, unknown>) => ({
       namespace: 'graph',
       type: 'graph',
@@ -262,7 +262,7 @@ describe('Graph defaults and rules Source fragments', () => {
     expect(fillsOf(explicitOutput)).not.toContain('#ff0000');
   });
 
-  it('uses incoming ancestor defaults for descendant Group and Block shells', () => {
+  it('使用后代 Group 和 Block shell 的传入祖先默认值', () => {
     const output = compileGraph({
       namespace: 'graph',
       type: 'graph',
@@ -295,7 +295,7 @@ describe('Graph defaults and rules Source fragments', () => {
     expect(fills.filter(fill => fill === '#444444')).toHaveLength(1);
   });
 
-  it('keeps an unknown composite payload opaque when Graph defaults are projected', () => {
+  it('当投影 Graph 默认值时，保持未知复合有效负载不透明', () => {
     const opaque = {
       namespace: 'custom',
       type: 'opaque',
@@ -319,7 +319,7 @@ describe('Graph defaults and rules Source fragments', () => {
     expect(projected[0]).toEqual(opaque);
   });
 
-  it('applies relation style defaults without changing role-owned marker structure', () => {
+  it('应用关系样式默认值而不更改角色拥有的标记结构', () => {
     const source = {
       namespace: 'graph',
       type: 'graph',
@@ -351,7 +351,7 @@ describe('Graph defaults and rules Source fragments', () => {
     expect(paths.map(path => path.dashPattern)).toEqual(baselinePaths.map(path => path.dashPattern));
   });
 
-  it('projects a matching Relation rule dash structure without changing the marker family', () => {
+  it('在不更改标记系列的情况下投影匹配的 Relation 规则破折号结构', () => {
     const output = compileGraph({
       namespace: 'graph',
       type: 'graph',

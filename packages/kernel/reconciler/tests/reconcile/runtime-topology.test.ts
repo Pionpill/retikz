@@ -91,7 +91,7 @@ const recordsOf = (ir: IRScene) => {
   });
 };
 
-describe('Core canonical Runtime topology', () => {
+describe('Core 规范 Runtime 拓扑', () => {
   it('把 provider 重复返回的同一 primitive 对象物化为独立 occurrence identity', () => {
     const sharedPrimitive: ScenePrimitive = {
       type: 'rect',
@@ -491,7 +491,7 @@ describe('Core canonical Runtime topology', () => {
   });
 });
 
-describe('Core compile warning collection', () => {
+describe('Core 编译警告集合', () => {
   it('把 direct output 后发生的 replay late duplicate 排在 replay placement', () => {
     const replaying = defineComposite({
       namespace: 'test',

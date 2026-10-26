@@ -60,8 +60,8 @@ const children: IRScene['children'] = [
   }),
 ];
 
-describe('Layout inspect compile integration', () => {
-  it('observes final Flex, Grid, and Overlay artifacts through the optional registry', () => {
+describe('Layout 检查编译集成', () => {
+  it('通过可选注册表观察最终的 Flex、Grid 和覆盖产物', () => {
     const registry = createInspectorRegistry([FLEX_LAYOUT_INSPECTOR, GRID_LAYOUT_INSPECTOR, OVERLAY_LAYOUT_INSPECTOR]);
     const output = compileInspectionToScene(
       { type: 'scene', version: 1, children },

@@ -22,8 +22,8 @@ import { Table } from '../../src';
 
 const spec = createManualTableIR({ id: 'scores', rows: [[null]] });
 
-describe('Table React runtime style contract', () => {
-  it('standalone Table does not inject removed theme definitions into Layout', () => {
+describe('Table React 运行时风格契约', () => {
+  it('独立的 Table 不会将已删除的主题定义注入到 Layout 中', () => {
     capturedLayouts.length = 0;
 
     renderToStaticMarkup(<Table spec={spec} />);
@@ -31,7 +31,7 @@ describe('Table React runtime style contract', () => {
     expect(capturedLayouts.at(-1)).not.toHaveProperty('themeTokenDefinitions');
   });
 
-  it('Table Vanilla adapter keeps removed theme definitions out of the contribution payload', () => {
+  it('Table Vanilla 适配器将已删除的主题定义保留在贡献负载之外', () => {
     const input = Table.createInputEmbedProps({ spec });
     const context: InputEmbedContext = {
       id: 'scores',

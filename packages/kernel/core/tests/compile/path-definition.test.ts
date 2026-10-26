@@ -42,8 +42,8 @@ const pathPrims = (ir: IRScene, options?: Parameters<typeof compileToScene>[1]):
 
 const customPathSchema = <TKind extends string>(kind: TKind) => PathSchema.extend({ kind: literal(kind) });
 
-describe('Path registry', () => {
-  it('compiles omitted kind as the built-in stroke path', () => {
+describe('Path 注册表', () => {
+  it('将省略的种类编译为内置描边路径', () => {
     const [prim] = pathPrims(
       scene([
         {
@@ -58,7 +58,7 @@ describe('Path registry', () => {
     expect(prim.fill).toBe('none');
   });
 
-  it('throws for unknown path definitions until a provider is registered', () => {
+  it('在注册提供者之前抛出未知路径定义', () => {
     expect(
       () =>
         compileToScene(
@@ -67,7 +67,7 @@ describe('Path registry', () => {
     ).toThrow(/Unknown provider 'missing'/);
   });
 
-  it('lets custom path definitions reuse the built-in stroke emitter', () => {
+  it('让自定义路径定义重用内置描边发射器', () => {
     const highlight = definePath({
       name: 'highlight',
       schema: PathSchema.extend({
@@ -121,7 +121,7 @@ describe('Path registry', () => {
     expect(observed).not.toHaveProperty('stroke');
   });
 
-  it('keeps Source shorthand visible to custom providers before emitStroke canonicalizes it', () => {
+  it('在 emitStroke 规范化之前，保持 Source 简写对自定义提供者可见', () => {
     let observedPosition: unknown;
     let observedStyle: unknown;
     let observedStroke: unknown;
@@ -156,7 +156,7 @@ describe('Path registry', () => {
     expect(label).toMatchObject({ type: 'text', x: 100 });
   });
 
-  it('does not resolve unused secondary providers for custom output', () => {
+  it('不解析自定义输出的未使用的辅助提供者', () => {
     const silent = definePath({
       name: 'silent',
       schema: customPathSchema('silent'),
@@ -182,7 +182,7 @@ describe('Path registry', () => {
     ).not.toThrow();
   });
 
-  it('rejects endpoint arrow overlap before a custom path provider can consume it', () => {
+  it('在自定义路径提供者可以使用端点箭头重叠之前拒绝端点箭头重叠', () => {
     const custom = definePath({
       name: 'custom-overlap',
       schema: customPathSchema('custom-overlap'),
@@ -202,7 +202,7 @@ describe('Path registry', () => {
     );
   });
 
-  it('keeps custom short emitStroke ahead of secondary provider lookup', () => {
+  it('在二级提供者查找之前保留自定义短 emitStroke', () => {
     const shortStroke = definePath({
       name: 'short-stroke',
       schema: customPathSchema('short-stroke'),
@@ -234,7 +234,7 @@ describe('Path registry', () => {
     expect(warnings[0]).toMatchObject({ code: BuiltinCompileWarningCode.PathTooShort });
   });
 
-  it('keeps the no-Inspector emitStroke result free of inspection-only subject data', () => {
+  it('保留 no-Inspector emitStroke 结果不含仅检查主题数据', () => {
     const observed: Array<ReadonlyArray<string>> = [];
     const plain = definePath({
       name: 'plain-stroke',
@@ -253,7 +253,7 @@ describe('Path registry', () => {
     expect(observed).toEqual([['primitives', 'boundsPoints']]);
   });
 
-  it('keeps custom path primitives in the transformed owner group', () => {
+  it('将自定义路径基元保留在转换后的所属模块组中', () => {
     const badge = definePath({
       name: 'badge',
       schema: customPathSchema('badge'),
@@ -297,7 +297,7 @@ describe('Path registry', () => {
     expect(group.children).toEqual([{ type: 'rect', x: 0, y: 0, width: 10, height: 6, fill: 'gold' }]);
   });
 
-  it('custom_path_kind_options_error_contains_provider_and_ir_path', () => {
+  it('自定义路径类型选项错误包含提供者和 ir 路径', () => {
     const highlight = definePath({
       name: 'highlight',
       schema: PathSchema.extend({
@@ -320,7 +320,7 @@ describe('Path registry', () => {
   });
 });
 
-describe('Path output wrapping', () => {
+describe('Path 输出环绕', () => {
   const once = <T>(items: ReadonlyArray<T>): Iterable<T> => {
     let consumed = false;
     return {
@@ -426,7 +426,7 @@ describe('Path output wrapping', () => {
       children: [steps[0], { type: 'step', kind: 'rectangle', from: [10, 20], to: [80, 60] }],
     },
   ] satisfies Array<Pick<IRPathBase, 'children' | 'cornerRadius'>>)(
-    'materializes the same geometry as an undecorated stroke: %j',
+    '实现与未修饰描边相同的几何形状：%j',
     input => {
       let commands: ReadonlyArray<PathCommand> = [];
       const custom = definePath({
@@ -445,7 +445,7 @@ describe('Path output wrapping', () => {
     },
   );
 
-  it('materializes geometry without measuring labels or resolving marks', () => {
+  it('在不测量标签或解析标记的情况下具体化几何形状', () => {
     let measurements = 0;
     let commands: ReadonlyArray<PathCommand> = [];
     const custom = definePath({
@@ -482,7 +482,7 @@ describe('Path output wrapping', () => {
     expect(measurements).toBe(0);
   });
 
-  it('wraps custom geometry and shared labels in one host transform', () => {
+  it('将自定义几何图形和共享标签包装在一个宿主转换中', () => {
     const custom = definePath({
       name: 'boundary-label-host',
       schema: customPathSchema('boundary-label-host'),
@@ -522,7 +522,7 @@ describe('Path output wrapping', () => {
     expect(output.primitives[0]).toMatchObject({ type: 'group', id: 'host', meta: { source: 'custom' } });
   });
 
-  it('does not wrap a delegated stroke result twice', () => {
+  it('不将委托描边结果包装两次', () => {
     const custom = definePath({
       name: 'delegated',
       schema: customPathSchema('delegated'),

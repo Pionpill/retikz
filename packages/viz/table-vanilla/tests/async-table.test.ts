@@ -12,8 +12,8 @@ const table = () =>
     transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'ratio' } } }],
   });
 
-describe('async Table authoring', () => {
-  it('returns the same SVG and committed manifest as builtin synchronous rendering', async () => {
+describe('异步 Table 编写', () => {
+  it('返回相同的 SVG 和提交的清单作为内置同步渲染', async () => {
     const spec = table();
     const rows = [{ value: 2 }, { value: 6 }];
     const expected = renderTable(spec, { data: { rows }, artifacts: true });
@@ -23,7 +23,7 @@ describe('async Table authoring', () => {
     expect(expected.svg).toContain('0.75');
   });
 
-  it('renders distinct anonymous native bindings and executes each only once through probes', async () => {
+  it('渲染不同的匿名原生绑定且每个绑定在探测链路中仅执行一次', async () => {
     let executions = 0;
     const dataTransformExecutor = createDataTransformExecutor<{ values: Array<number> }>({
       dataExecution: { mode: 'external', external: 'native' },

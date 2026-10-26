@@ -28,7 +28,7 @@ const input: InputFrame = {
   children: [{ type: 'node', position: [0, 0], text: 'A' }],
 };
 
-describe('frame()', () => {
+describe('框架（）', () => {
   it('正文节点可省略位置且 authoring 保留稀疏 Source', () => {
     const result = normalizeScene(scene([frame({ children: [{ type: 'node', text: 'origin' }] })]), {
       adapters: [FrameInputEmbedAdapter],
@@ -38,7 +38,7 @@ describe('frame()', () => {
     expect(JSON.stringify(result.ir)).not.toContain('position');
   });
 
-  it('validates JSON-safe title and description builders', () => {
+  it('验证 JSON 安全的标题和描述构建器', () => {
     expect(
       frameTitle({
         text: 'Title',
@@ -59,7 +59,7 @@ describe('frame()', () => {
     });
   });
 
-  it('keeps an anonymous Frame anonymous through its embed', () => {
+  it('匿名 Frame 经嵌入后仍保持匿名', () => {
     const embed = frame(input);
     const normalized = normalizeScene(scene({ children: [embed] }), { adapters: [FrameInputEmbedAdapter] });
 
@@ -82,7 +82,7 @@ describe('frame()', () => {
     expect(explicit.ir.children[0]).toHaveProperty('id', 'frame-model');
   });
 
-  it('coexists with Grid and Axes and contributes all definitions once', () => {
+  it('与 Grid 和 Axes 共存，并一次性贡献所有定义', () => {
     const result = normalizeScene(
       scene({
         children: [

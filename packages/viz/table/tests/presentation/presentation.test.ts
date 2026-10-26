@@ -19,14 +19,14 @@ const presentedCellOf = (
   return presentTable(formatted, { presentationDefinitions }).cells[0];
 };
 
-describe('Cell presentation registry', () => {
+describe('Cell 表示注册表', () => {
   it.each([
     ['Revenue', 'Revenue'],
     [42, '42'],
     [true, 'true'],
     [false, 'false'],
     [null, ''],
-  ] as const)('presents scalar %j through the built-in text definition', (value, text) => {
+  ] as const)('通过内置文本定义呈现标量 %j', (value, text) => {
     expect(presentedCellOf({ value }).content).toEqual({
       type: 'node',
       position: [0, 0],
@@ -36,7 +36,7 @@ describe('Cell presentation registry', () => {
     });
   });
 
-  it('dispatches custom definitions with raw, formatted, context, and appearance input', () => {
+  it('使用原始、格式化、上下文和外观输入调度自定义定义', () => {
     const badge = defineCellPresentation({
       name: 'badge',
       optionsSchema: strictObject({ prefix: string() }),
@@ -69,7 +69,7 @@ describe('Cell presentation registry', () => {
     expect(presented.cells[0].content).toMatchObject({ text: '#7>7@cell.r0.c0:#fff4e5' });
   });
 
-  it('passes canonical address without inventing identity for an anonymous Cell', () => {
+  it('传递规范地址，而不为匿名 Cell 发明身份', () => {
     let observed: unknown;
     const inspect = defineCellPresentation({
       name: 'anonymous-inspect',
@@ -98,7 +98,7 @@ describe('Cell presentation registry', () => {
     });
   });
 
-  it('validates omitted options as an empty object', () => {
+  it('将省略的选项验证为空对象', () => {
     const empty = defineCellPresentation({
       name: 'empty',
       optionsSchema: strictObject({}),
@@ -114,7 +114,7 @@ describe('Cell presentation registry', () => {
     });
   });
 
-  it('rejects duplicate, built-in-conflicting, and missing definitions', () => {
+  it('拒绝重复、内置冲突和缺失的定义', () => {
     const definition = defineCellPresentation({
       name: 'badge',
       optionsSchema: strictObject({}),
@@ -130,7 +130,7 @@ describe('Cell presentation registry', () => {
     );
   });
 
-  it('uses exact option transforms and preserves snapshot errors', () => {
+  it('使用精确选项转换并保留快照错误', () => {
     const transformedOptions = defineCellPresentation({
       name: 'transformed-options',
       optionsSchema: strictObject({}).transform(() => ({ value: Number.NaN })),
@@ -154,7 +154,7 @@ describe('Cell presentation registry', () => {
     );
   });
 
-  it('returns detached recursively frozen direct and generated content', () => {
+  it('返回分离的递归冻结的直接内容和生成的内容', () => {
     const direct: IRChild = { type: 'scope', children: [{ type: 'node', position: [0, 0], text: 'direct' }] };
     const nestedOutput = {
       type: 'scope' as const,

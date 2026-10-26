@@ -143,13 +143,13 @@ describe('irToVanillaCode', () => {
     expect(anon).not.toContain("node('");
   });
 
-  it('coordinate-codegen：coordinate({ id, position })', () => {
+  it('coordinate 代码生成：coordinate({ id, position })', () => {
     const code = irToVanillaCode(ir([{ type: 'coordinate', id: 'm', position: [60, 40] }]));
 
     expect(code).toContain("coordinate({ id: 'm', position: [60, 40] })");
   });
 
-  it('path-way-line：move+line steps → path({ way })', () => {
+  it('直线路径代码生成：move 与 line 步骤转换为 path({ way })', () => {
     const code = irToVanillaCode(
       ir([
         {
@@ -345,8 +345,8 @@ describe('irToVanillaCode', () => {
   });
 });
 
-describe('irToVanillaCode fallback', () => {
-  it('rectangle stays runnable as raw IR child', () => {
+describe('irToVanillaCode 回退', () => {
+  it('矩形作为原始 IR 子项保持可运行', () => {
     const code = irToVanillaCode(
       ir([
         {
@@ -364,7 +364,7 @@ describe('irToVanillaCode fallback', () => {
     expect(code.split('\n')[0]).not.toContain('draw');
   });
 
-  it('explicit center arc and partial circle are not faked as way', () => {
+  it('显式圆心圆弧和部分圆不伪装为 way', () => {
     const centeredArc = irToVanillaCode(
       ir([
         {

@@ -12,8 +12,8 @@ import { svg as customProfileSvg } from '../../src/modules/docs/contents/library
 import { renderRibbonEndpointsPreview } from '../../src/modules/docs/contents/library/extension/ribbon/extended/ribbon-endpoints.preview';
 import RibbonBasicDemo from '../../src/modules/docs/contents/library/extension/ribbon/usage/ribbon-basic.demo';
 
-describe('Ribbon Vanilla preview', () => {
-  it('preserves independent endpoint directions through React and Vanilla authoring', () => {
+describe('Ribbon 的 Vanilla 预览', () => {
+  it('通过 React 和 Vanilla 编写保留独立的端点方向', () => {
     const preview = buildPreviewIR(() =>
       renderRibbonEndpointsPreview({
         centerline: 'line',
@@ -66,7 +66,7 @@ describe('Ribbon Vanilla preview', () => {
     expect(rendered.svg).toContain('<path');
   });
 
-  it('renders custom caps through both React preview and explicit Vanilla authoring', () => {
+  it('React 预览和显式 Vanilla 编写方式均可渲染自定义端帽', () => {
     const automatic = buildVanillaPreview(buildPreviewIR(() => renderRibbonCustomCapPreview({ depth: 24 })));
 
     expect(automatic.svg).toContain('<path');
@@ -75,7 +75,7 @@ describe('Ribbon Vanilla preview', () => {
     expect(customCapSvg).toContain('-174');
   });
 
-  it('carries the React demo Path into both generated source and SVG rendering', () => {
+  it('将 React 演示 Path 携带到生成的源和 SVG 渲染中', () => {
     const preview = buildPreviewIR(RibbonBasicDemo);
 
     expect(preview.paths).toEqual([RibbonPathDefinition]);
@@ -89,7 +89,7 @@ describe('Ribbon Vanilla preview', () => {
     expect(vanilla.svg).toContain('<path');
   });
 
-  it('renders the custom profile from its explicit Vanilla source', () => {
+  it('从显式 Vanilla 源码渲染自定义轮廓', () => {
     expect(customProfileSvg).toContain('<svg');
     expect(customProfileSvg).toContain('<path');
 

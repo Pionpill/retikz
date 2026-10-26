@@ -84,8 +84,8 @@ const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreTo
   });
 };
 
-describe('compile ribbon', () => {
-  it('schema accepts JSON round-trip fixed width and rejects negative widths', () => {
+describe('编译功能区', () => {
+  it('schema 接受 JSON 往返固定宽度并拒绝负宽度', () => {
     expect(RibbonSchema.parse(JSON.parse(JSON.stringify(ribbon())))).toMatchObject(ribbon());
     expect(() => RibbonSchema.parse(ribbon({ width: { kind: 'fixed', value: -1 } }))).toThrow();
     expect(() => RibbonSchema.parse(ribbon({ width: { kind: 'taper', start: -1, end: 2 } }))).toThrow();
@@ -127,7 +127,7 @@ describe('compile ribbon', () => {
     ).toThrow();
   });
 
-  it('fixed-width ribbon lowers a straight centerline to one filled closed path', () => {
+  it('固定宽度功能区将直线中心线下沉到一条填充的闭合路径', () => {
     const compiled = compileToScene(scene([ribbon()]), { padding: 0 }).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
@@ -142,7 +142,7 @@ describe('compile ribbon', () => {
     ]);
   });
 
-  it('default sampling connects a straight centerline through cubic segments', () => {
+  it('默认采样通过立方段连接直线中心线', () => {
     const compiled = compileToScene(scene([ribbonWithDefaultSampling()]), { padding: 0 }).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
@@ -151,7 +151,7 @@ describe('compile ribbon', () => {
     expect(prim.commands[0]).toEqual({ kind: 'move', to: [0, 2] });
   });
 
-  it('default sampling connects quadratic centerlines into cubic outline commands', () => {
+  it('默认采样将二次中心线连接到三次轮廓命令', () => {
     const compiled = compileToScene(
       scene([
         ribbonWithDefaultSampling({
@@ -169,7 +169,7 @@ describe('compile ribbon', () => {
     expect(prim.commands.at(-1)).toEqual({ kind: 'close' });
   });
 
-  it('omitted sampling uses the default fixed sampling count', () => {
+  it('省略采样使用默认的固定采样计数', () => {
     const parsed = RibbonSchema.parse(ribbon({ sampling: undefined }));
     const compiled = compileToScene(scene([parsed]), { padding: 0 }).scene;
     const prim = pathPrim(compiled.primitives[0]);
@@ -177,7 +177,7 @@ describe('compile ribbon', () => {
     expect(prim.commands).toHaveLength(129);
   });
 
-  it('default sampling preserves stepped width stops', () => {
+  it('默认采样保留阶梯宽度停止点', () => {
     const compiled = compileToScene(
       scene([
         ribbonWithDefaultSampling({
@@ -200,7 +200,7 @@ describe('compile ribbon', () => {
     expect(prim.commands).toContainEqual({ kind: 'line', to: [5, -2] });
   });
 
-  it('linear taper changes start and end widths independently', () => {
+  it('线性锥度独立改变开始和结束宽度', () => {
     const compiled = compileToScene(
       scene([ribbon({ width: { kind: 'taper', start: 4, end: 2 }, sampling: { kind: 'fixed', samples: 2 } })]),
       { padding: 0 },
@@ -216,7 +216,7 @@ describe('compile ribbon', () => {
     ]);
   });
 
-  it('stop widths can make the middle narrower than both ends', () => {
+  it('停止宽度可以使中间比两端窄', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -246,7 +246,7 @@ describe('compile ribbon', () => {
     ]);
   });
 
-  it('stop widths are sorted by offset before interpolation', () => {
+  it('停止宽度在插值之前按偏移量排序', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -268,7 +268,7 @@ describe('compile ribbon', () => {
     expect(prim.commands[1]).toEqual({ kind: 'line', to: [10, 1] });
   });
 
-  it('stop widths extend missing endpoint values outward', () => {
+  it('停止宽度向外延伸缺失的端点值', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -290,7 +290,7 @@ describe('compile ribbon', () => {
     expect(prim.commands).toContainEqual(expect.objectContaining({ kind: 'cubic', to: [10, 4] }));
   });
 
-  it('cubic ribbon lowers to a closed sampled path with finite coordinates', () => {
+  it('立方带下降到具有有限坐标的闭合采样路径', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -311,7 +311,7 @@ describe('compile ribbon', () => {
     expect(points.every(point => point.every(Number.isFinite))).toBe(true);
   });
 
-  it('curved ribbon endpoint caps follow the centerline endpoint tangents by default', () => {
+  it('默认情况下，弯曲带状端点帽遵循中心线端点切线', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -330,7 +330,7 @@ describe('compile ribbon', () => {
     expect(prim.commands[2]).toMatchObject({ kind: 'cubic', to: [11.41, 1.41] });
   });
 
-  it('endpoint direction overrides accept angle and vector forms', () => {
+  it('端点方向覆盖接受角度和矢量形式', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -351,7 +351,7 @@ describe('compile ribbon', () => {
     ]);
   });
 
-  it('endpoint direction override accepts PolarPosition sugar', () => {
+  it('端点方向覆盖接受 PolarPosition 糖', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -372,7 +372,7 @@ describe('compile ribbon', () => {
     ]);
   });
 
-  it('aligns centerline ribbons to the left or right side', () => {
+  it('将中心线色带向左侧或右侧对齐', () => {
     const left = pathPrim(compileToScene(scene([ribbon({ align: 'left' })]), { padding: 0 }).scene.primitives[0]);
     const right = pathPrim(compileToScene(scene([ribbon({ align: 'right' })]), { padding: 0 }).scene.primitives[0]);
 
@@ -392,7 +392,7 @@ describe('compile ribbon', () => {
     ]);
   });
 
-  it('supports square caps on centerline ribbons', () => {
+  it('支持中心线色带上的方形帽', () => {
     const prim = pathPrim(
       compileToScene(scene([ribbon({ start: { cap: { name: 'square' } }, end: { cap: { name: 'square' } } })]), {
         padding: 0,
@@ -408,7 +408,7 @@ describe('compile ribbon', () => {
     ]);
   });
 
-  it('uses the ribbon side midpoint for round caps when aligned right', () => {
+  it('右对齐时，使用圆帽的色带侧中点', () => {
     const prim = pathPrim(
       compileToScene(
         scene([
@@ -426,7 +426,7 @@ describe('compile ribbon', () => {
     expect(prim.commands.at(-2)).toMatchObject({ kind: 'arc', center: [0, -2], radius: 2 });
   });
 
-  it('supports custom arc caps with explicit center and radius', () => {
+  it('支持具有明确中心和半径的自定义圆弧帽', () => {
     const parsed = RibbonSchema.parse(
       ribbon({
         start: { cap: { name: 'arc', params: { center: [0, 0], radius: 2, sweep: 'long' } } },
@@ -440,7 +440,7 @@ describe('compile ribbon', () => {
     expect(prim.commands.at(-1)).toEqual({ kind: 'close' });
   });
 
-  it('throws when a custom arc cap radius does not reach both ribbon sides', () => {
+  it('当自定义圆弧帽半径未到达功能区两侧时抛出', () => {
     const parsed = RibbonSchema.parse(
       ribbon({ start: { cap: { name: 'arc', params: { center: [0, 0], radius: 3 } } } }),
     );
@@ -448,7 +448,7 @@ describe('compile ribbon', () => {
     expect(() => compileToScene(scene([parsed]), { padding: 0 }).scene).toThrow(/arc cap/);
   });
 
-  it('uses fixed sampling config as the samples shorthand replacement', () => {
+  it('使用固定采样配置作为样本简写替换', () => {
     const prim = pathPrim(
       compileToScene(scene([ribbon({ sampling: { kind: 'fixed', samples: 3 } })]), {
         padding: 0,
@@ -461,7 +461,7 @@ describe('compile ribbon', () => {
     );
   });
 
-  it('normalizes angle, vector, and polar endpoint directions through the same path', () => {
+  it('通过同一路径标准化角度、矢量和极端点方向', () => {
     type RibbonDirection = NonNullable<Extract<IRRibbonPathOptions, { mode?: 'centerline' }>['start']>['direction'];
     const commandsFor = (startDirection: RibbonDirection, endDirection: RibbonDirection) =>
       pathPrim(
@@ -485,7 +485,7 @@ describe('compile ribbon', () => {
     expect(commandsFor({ angle: 90, radius: 1 }, { angle: 90, radius: 1 })).toEqual(commandsFor(90, 90));
   });
 
-  it('endpoint directions preserve the sampled centerline', () => {
+  it('端点方向保留采样的中心线', () => {
     const children: Array<IRStep> = [
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'curve', control: [30, -40], to: [80, 20] },
@@ -509,7 +509,7 @@ describe('compile ribbon', () => {
     expect(ribbonCenterAt(withDirection, 5, 1)).toEqual(ribbonCenterAt(withoutDirection, 5, 1));
   });
 
-  it('keeps a straight segment before a curved segment when the centerline asks for it', () => {
+  it('当中心线需要时，将直线段保留在曲线段之前', () => {
     const prim = pathPrim(
       compileToScene(
         scene([
@@ -531,7 +531,7 @@ describe('compile ribbon', () => {
     expect(prim.commands[0]).toEqual({ kind: 'move', to: [0, 2] });
   });
 
-  it('keeps endpoint override sides aligned with the sampled outline', () => {
+  it('保持端点覆盖边与采样轮廓对齐', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -556,7 +556,7 @@ describe('compile ribbon', () => {
     ]);
   });
 
-  it('keeps explicit endpoint direction at the cap without rotating nearby straight-line sections', () => {
+  it('在盖子处保持明确的端点方向，而不旋转附近的直线部分', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -576,7 +576,7 @@ describe('compile ribbon', () => {
     expect(prim.commands[1]).toMatchObject({ kind: 'cubic', to: [14.29, 2] });
   });
 
-  it('registered width profile receives JSON params and total length', () => {
+  it('注册的宽度轮廓接收 JSON 参数和总长度', () => {
     const taper = defineRibbonWidthProfile<{ start: number; end: number }>({
       name: 'taper',
       widthAt: ({ offset, length, params }) => {
@@ -599,14 +599,14 @@ describe('compile ribbon', () => {
     expect(prim.commands[2]).toEqual({ kind: 'line', to: [10, 0] });
   });
 
-  it('throws for an unregistered width profile', () => {
+  it('抛出未注册的宽度配置', () => {
     expect(() => compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'missing' } })])).scene).toThrow(
       /missing/,
     );
   });
 
   it.each([Number.NaN, Number.POSITIVE_INFINITY, -1])(
-    'throws when a registered width profile returns an invalid width (%s)',
+    '当注册的宽度配置返回无效宽度（%s）时抛出',
     invalidWidth => {
       const bad = defineRibbonWidthProfile({
         name: 'bad',
@@ -622,7 +622,7 @@ describe('compile ribbon', () => {
     },
   );
 
-  it('lowers explicit boundary ribbons from upper and lower open paths', () => {
+  it('从上下两条开放路径下沉显式边界 Ribbon', () => {
     const boundary = ribbon({
       kind: 'boundary',
       upper: [
@@ -656,7 +656,7 @@ describe('compile ribbon', () => {
     expect(prim.fill).toBe('#bfdbfe');
   });
 
-  it('rejects closed centerlines', () => {
+  it('拒绝闭合中心线', () => {
     expect(
       () =>
         compileToScene(
@@ -673,7 +673,7 @@ describe('compile ribbon', () => {
     ).toThrow(/open/);
   });
 
-  it('rejects zero-length centerlines', () => {
+  it('拒绝零长度中心线', () => {
     expect(
       () =>
         compileToScene(
@@ -714,7 +714,7 @@ describe('compile ribbon', () => {
         { type: 'step' as const, kind: 'line' as const, to: [0, 0] as [number, number] },
       ],
     ],
-  ])('rejects a boundary with a %s', (_label, upper) => {
+  ])('拒绝带有 %s 的边界', (_label, upper) => {
     expect(() =>
       compileToScene(
         scene([
@@ -728,7 +728,7 @@ describe('compile ribbon', () => {
     ).toThrow(/upper boundary|open|zero|subpath/i);
   });
 
-  it('resolves conic gradient fill through paint resources', () => {
+  it('通过绘画资源解析圆锥渐变填充', () => {
     const conic = {
       kind: 'conicGradient' as const,
       stops: [
@@ -753,7 +753,7 @@ describe('compile ribbon', () => {
     });
   });
 
-  it('preserves outline and opacity style on the lowered path', () => {
+  it('保留下沉路径上的轮廓和不透明度样式', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
@@ -777,7 +777,7 @@ describe('compile ribbon', () => {
     expect(prim.opacity).toBe(0.5);
   });
 
-  it('uses ribbon zIndex when sorting lowered path primitives', () => {
+  it('对下沉的路径基元进行排序时使用功能区 zIndex', () => {
     const compiled = compileToScene(scene([ribbon({ id: 'front', zIndex: 2 }), ribbon({ id: 'back', zIndex: 0 })]), {
       padding: 0,
     }).scene;

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
 
-describe('Graph provider closure', () => {
-  it('installs the complete Graph family with Group and Block composition dependencies', () => {
+describe('Graph 提供者关闭', () => {
+  it('安装完整的 Graph 系列以及 Group 和 Block 组合依赖项', () => {
     const resolved = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -31,7 +31,7 @@ describe('Graph provider closure', () => {
     expect(resolved.clips?.map(definition => definition.kind)).toEqual(['path']);
   });
 
-  it('compiles the same custom definitions through Graph, Entity and Relation roots without dataset conflict', () => {
+  it('通过 Graph、Entity 和 Relation 根编译相同的自定义定义，而不会发生数据集冲突', () => {
     const entityRole = Graph.defineEntityRole({
       role: 'custom-entity',
       description: 'Custom Entity role',

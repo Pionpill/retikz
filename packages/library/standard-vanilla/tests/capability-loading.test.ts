@@ -50,8 +50,8 @@ const input = scene({
   ],
 });
 
-describe('Standard Vanilla definition loading', () => {
-  it('provides the current adapter catalog once in stable frozen order', () => {
+describe('Standard Vanilla 定义加载', () => {
+  it('以稳定的冻结顺序提供当前适配器目录', () => {
     expect(StandardInputEmbedAdapters).toEqual([
       TreeInputEmbedAdapter,
       QueueInputEmbedAdapter,
@@ -77,20 +77,20 @@ describe('Standard Vanilla definition loading', () => {
     expect(Object.isFrozen(GridInputEmbedAdapter)).toBe(false);
   });
 
-  it('normalizes all current embeds with the all-adapters preset', () => {
+  it('使用全适配器预设标准化所有当前嵌入', () => {
     const normalized = normalizeScene(input, { adapters: StandardInputEmbedAdapters });
 
     expect(normalized.contributions).toHaveLength(5);
     expect(normalized.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame', 'surface', 'legend']);
   });
 
-  it('keeps partial adapter selection explicit', () => {
+  it('保持部分适配器选择显式', () => {
     expect(() => normalizeScene(input, { adapters: [GridInputEmbedAdapter, FrameInputEmbedAdapter] })).toThrow(
       /kind "standard\.axes" but no adapter was provided/i,
     );
   });
 
-  it('compiles direct Standard IR with explicit definitions and no adapters', () => {
+  it('使用显式定义编译直接 Standard IR，没有适配器', () => {
     const ir = {
       type: 'scene' as const,
       version: 1 as const,
@@ -100,7 +100,7 @@ describe('Standard Vanilla definition loading', () => {
     expect(() => renderToSvgString(ir, { compile: { composites: [GridDefinition] } })).not.toThrow();
   });
 
-  it('deduplicates the same explicit definition object and rejects a different object at the same key', () => {
+  it('对相同显式定义对象进行去重，并拒绝同一键上的不同对象', () => {
     expect(() =>
       renderToSvgString(
         scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),

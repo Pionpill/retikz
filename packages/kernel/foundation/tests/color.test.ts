@@ -49,12 +49,12 @@ describe('parseStaticCssColor', () => {
     ['legacy hsl', 'hsla(120, 100%, 50%, 0.25)', { r: 0, g: 1, b: 0, a: 0.25 }],
     ['modern hsl', 'hsl(240 100% 50%)', { r: 0, g: 0, b: 1, a: 1 }],
     ['transparent', 'transparent', { r: 0, g: 0, b: 0, a: 0 }],
-  ])('parses %s without depending on a host CSS environment', (_name, input, expected) => {
+  ])('解析 %s，不依赖于宿主 CSS 环境', (_name, input, expected) => {
     expect(parseStaticCssColor(input)).toEqual(expected);
   });
 
   it.each(['currentColor', 'var(--accent)', 'CanvasText', 'color(display-p3 1 0 0)', ''])(
-    'returns null for dynamic or unsupported color %s',
+    '对于动态或不支持的颜色 %s 返回 null',
     input => {
       expect(parseStaticCssColor(input)).toBeNull();
     },
@@ -62,7 +62,7 @@ describe('parseStaticCssColor', () => {
 });
 
 describe('StaticCssNamedColorHexByName', () => {
-  it('exposes a frozen manifest derived from the named-color parser source', () => {
+  it('公开从命名颜色解析器源派生的冻结清单', () => {
     const namedColorHexByName = staticCssNamedColorHexByName();
 
     expect(Object.isFrozen(namedColorHexByName)).toBe(true);
@@ -76,14 +76,14 @@ describe('StaticCssNamedColorHexByName', () => {
 });
 
 describe('compositeOpaqueColor', () => {
-  it('precomposes normalized foreground weight over opaque light and dark backdrops', () => {
+  it('在不透明的浅色和深色背景上预合成标准化前景权重', () => {
     expect(compositeOpaqueColor('#336699', '#ffffff', 0.6)).toBe('#85a3c2');
     expect(compositeOpaqueColor('#336699', '#000000', 0.4)).toBe('#14293d');
     expect(compositeOpaqueColor('#336699', '#ffffff', 0)).toBe('#ffffff');
     expect(compositeOpaqueColor('#336699', '#000000', 1)).toBe('#336699');
   });
 
-  it('multiplies foreground alpha by weight before producing an opaque color', () => {
+  it('在产生不透明颜色之前将前景 alpha 乘以权重', () => {
     expect(compositeOpaqueColor('rgb(255 0 0 / 50%)', '#ffffff', 0.4)).toBe('#ffcccc');
     expect(compositeOpaqueColor('hsl(120 100% 50%)', '#000000', 0.5)).toBe('#008000');
   });
@@ -95,7 +95,7 @@ describe('compositeOpaqueColor', () => {
     ['weight', '#336699', '#ffffff', -0.1, -0.1],
     ['weight', '#336699', '#ffffff', 1.1, 1.1],
     ['weight', '#336699', '#ffffff', Number.NaN, Number.NaN],
-  ] as const)('reports the original invalid %s input', (input, foreground, backdrop, weight, value) => {
+  ] as const)('报告原始无效的 %s 输入', (input, foreground, backdrop, weight, value) => {
     const error = captureFoundationError(() => compositeOpaqueColor(foreground, backdrop, weight));
 
     expect(error.code).toBe(RetikzFoundationErrorCode.Color);

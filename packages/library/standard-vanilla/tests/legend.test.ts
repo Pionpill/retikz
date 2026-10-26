@@ -22,8 +22,8 @@ const input = {
   },
 } satisfies InputLegend;
 
-describe('legend()', () => {
-  it('creates a stable embed whose adapter lowers to canonical Legend IR', () => {
+describe('图例（）', () => {
+  it('创建一个稳定的嵌入，其适配器下沉到规范的 Legend IR', () => {
     const embed = legend(input);
     const normalized = normalizeScene(scene({ children: [embed] }), { adapters: [LegendInputEmbedAdapter] });
 
@@ -33,7 +33,7 @@ describe('legend()', () => {
     expect(normalized.contributions[0]).toEqual({ roots: [LegendProvider.key], providers: [LegendProvider] });
   });
 
-  it('renders the same SVG as direct canonical IR in the same compile environment', () => {
+  it('在相同的编译环境中渲染与直接规范 IR 相同的 SVG', () => {
     const embed = legend(input);
     const normalized = normalizeScene(scene({ children: [embed] }), { adapters: [LegendInputEmbedAdapter] });
     const direct = normalized.ir.children[0];

@@ -28,8 +28,8 @@ const steps = [
   { type: 'step', kind: 'line', to: [100, 0] },
 ];
 
-describe('host-owned defaults', () => {
-  it('keeps sparse defaults through JSON and rejects content in templates', () => {
+describe('宿主拥有的默认值', () => {
+  it('通过 JSON 保持稀疏默认值并拒绝模板中的内容', () => {
     const defaults = {
       node: { label: nodeLabel },
       path: { label: pathLabel, arrow: { shape: 'stealth' } },
@@ -41,7 +41,7 @@ describe('host-owned defaults', () => {
     expect(ScopeDefaultsSchema.safeParse({ reset: ['label'] }).success).toBe(false);
   });
 
-  it('applies every node label template to actual labels without generating content', () => {
+  it('将每个节点标签模板应用到实际标签而不生成内容', () => {
     expect(
       render({ node: { label: nodeLabel } }, [{ type: 'node', label: [{ text: 'a' }, { text: 'b', distance: 20 }] }]),
     ).toEqual(
@@ -63,7 +63,7 @@ describe('host-owned defaults', () => {
     ).toEqual(render({}, [{ type: 'node' }, { type: 'path', children: steps }]));
   });
 
-  it('applies path and step label defaults and arrow endpoints equivalently to explicit fields', () => {
+  it('路径和步骤标签默认值及箭头端点与显式字段具有等价行为', () => {
     const arrow = { shape: 'stealth', scale: 1.4, end: { fill: 'red' } };
     const endpointArrow = { end: {} };
     expect(
@@ -89,7 +89,7 @@ describe('host-owned defaults', () => {
     );
   });
 
-  it('inherits font fields through scopes and instance overrides', () => {
+  it('通过范围和实例覆盖继承字体字段', () => {
     const children = [
       {
         type: 'scope',
@@ -131,7 +131,7 @@ describe('host-owned defaults', () => {
     );
   });
 
-  it('rejects a pin conflict introduced by inheritance and accepts an explicit false', () => {
+  it('拒绝继承引入的 pin 冲突并接受明确的 false', () => {
     expect(() =>
       render({ node: { label: { pin: true } } }, [{ type: 'node', label: { text: 'x', placement: 'inside' } }]),
     ).toThrow(/pin/i);
@@ -143,7 +143,7 @@ describe('host-owned defaults', () => {
   });
 });
 
-it('host reset clears its decorations without affecting siblings or the other host', () => {
+it('宿主重置清除其装饰，而不影响兄弟或其他宿主', () => {
   const leaf = [
     { type: 'node', label: { text: 'node' } },
     { type: 'path', children: steps, label: { text: 'path' }, arrow: { end: {} } },
@@ -188,7 +188,7 @@ it('host reset clears its decorations without affecting siblings or the other ho
   );
 });
 
-it('merges pin fields and path label fonts while preserving explicit false and zero', () => {
+it('合并 pin 字段和路径标签字体，同时保留显式的 false 和零', () => {
   expect(
     render({ node: { label: { pin: { stroke: 'red', strokeWidth: 3 } } } }, [
       { type: 'node', label: { text: 'x', pin: { opacity: 0.4 } } },

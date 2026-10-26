@@ -16,7 +16,7 @@ const synchronousAdapters = (adapters: ReturnType<typeof createInputScene>['adap
     return adapter;
   });
 
-it('omits empty catalogs in React and Vanilla Source with equivalent parsed defaults', () => {
+it('忽略具有等效解析默认值的 React 和 Vanilla Source 中的空目录', () => {
   const input = createInputScene(
     <FlowReact.FlowDiagram>
       <FlowReact.FlowEntity id="item" text="Item" />
@@ -37,7 +37,7 @@ it('omits empty catalogs in React and Vanilla Source with equivalent parsed defa
   expect(FlowDiagramSchema.parse(vanilla)).toMatchObject({ groups: [], layouts: [] });
 });
 
-it('preserves Graph Group captions, labels and local context through React and Vanilla equally', () => {
+it('通过 React 和 Vanilla 同样保留 Graph Group 标题、标签和本地上下文', () => {
   const group = {
     id: 'service',
     caption: { description: { text: ['Service', 'Runtime boundary'] }, side: 'bottom' as const },
@@ -66,7 +66,7 @@ it('preserves Graph Group captions, labels and local context through React and V
   expect(vanilla.groups?.[0]).toEqual({ ...group, children: ['request'] });
 });
 
-it('preserves local Layout exclusion through React and Vanilla equally', () => {
+it('通过 React 和 Vanilla 同样保留局部 Layout 排除', () => {
   const input = createInputScene(
     <FlowReact.FlowDiagram>
       <FlowReact.FlowLayout id="row" kind="linear" direction="right" excludeFromBounds={['png']}>
@@ -169,7 +169,7 @@ const expectedSource = {
 };
 
 describe('@retikz/diagram-react/flow', () => {
-  it.each(['-|', '|-'] as const)('renders %s with the same Source as Vanilla and direct IR', kind => {
+  it.each(['-|', '|-'] as const)('用与 Vanilla 相同的 Source 和直接 IR 渲染 %s', kind => {
     const entities = [
       { id: 'a', text: 'A' },
       { id: 'b', text: 'B' },
@@ -217,7 +217,7 @@ describe('@retikz/diagram-react/flow', () => {
       },
     },
   ])(
-    'preserves $form Grid placements through typed React, Vanilla and direct Source inside a Group',
+    '通过键入 React、Vanilla 和 Group 内的直接 Source 保留 $form Grid 放置',
     ({ placements }) => {
       const grid = {
         kind: 'grid' as const,
@@ -261,7 +261,7 @@ describe('@retikz/diagram-react/flow', () => {
     },
   );
 
-  it('preserves Source-shaped defaults and instance paths through typed React and Vanilla authoring', () => {
+  it('通过类型化的 React 和 Vanilla 编写保留 Source 形状的默认值和实例路径', () => {
     const props = {
       presentation: { title: { text: 'Pipeline', style: { font: { size: 21 } } } },
       defaultDiagram: { presentation: { title: { style: { opacity: 0.8 } } } },
@@ -298,7 +298,7 @@ describe('@retikz/diagram-react/flow', () => {
     expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
   });
 
-  it('exports the supported Flow root, single and batch JSX markers', () => {
+  it('导出支持的 Flow 根、单个和批量 JSX 标记', () => {
     const exported = components();
 
     expect(exported.FlowDiagram).toBeDefined();
@@ -311,7 +311,7 @@ describe('@retikz/diagram-react/flow', () => {
     expect(componentExport('FlowBlock')).toBeUndefined();
   });
 
-  it('expands batch Entity and Relation forms in mixed JSX order', () => {
+  it('以 JSX 混合顺序扩展批次 Entity 和 Relation 形式', () => {
     const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -373,7 +373,7 @@ describe('@retikz/diagram-react/flow', () => {
   });
 
   it.each(['entities', 'relations'] as const)(
-    'rejects a complete %s marker beside any same-owner declaration',
+    '拒绝任何同一所属模块声明旁边的完整 %s 标记',
     declarationKind => {
       const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
 
@@ -426,7 +426,7 @@ describe('@retikz/diagram-react/flow', () => {
     },
   );
 
-  it('scopes complete Entity lists to their direct Flow, Group, or Layout owner', () => {
+  it('将完整的 Entity 列表范围扩展到其直接 Flow、Group 或 Layout 所属模块', () => {
     const { FlowDiagram, FlowEntities, FlowGroup, FlowLayout } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -470,7 +470,7 @@ describe('@retikz/diagram-react/flow', () => {
     });
   });
 
-  it('keeps duplicate ids in additive collectors on the existing Flow diagnostic path', () => {
+  it('在现有 Flow 诊断路径上的附加收集器中保留重复的 ID', () => {
     const { FlowDiagram, FlowEntities, FlowEntity } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -501,7 +501,7 @@ describe('@retikz/diagram-react/flow', () => {
     );
   });
 
-  it('expands batch Entities inside Group and Layout owners', () => {
+  it('扩展 Group 和 Layout 所属模块内的批量实体', () => {
     const { FlowDiagram, FlowEntities, FlowGroup, FlowLayout } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -540,7 +540,7 @@ describe('@retikz/diagram-react/flow', () => {
     });
   });
 
-  it.each(['group', 'layout'] as const)('rejects batch Relations inside a %s owner', ownerKind => {
+  it.each(['group', 'layout'] as const)('拒绝 %s 所属模块内的批处理关系', ownerKind => {
     const { FlowDiagram, FlowGroup, FlowLayout, FlowRelations } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -565,7 +565,7 @@ describe('@retikz/diagram-react/flow', () => {
     );
   });
 
-  it('treats empty batch markers as no operations', () => {
+  it('将空批次标记视为无操作', () => {
     const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -600,7 +600,7 @@ describe('@retikz/diagram-react/flow', () => {
     });
   });
 
-  it('produces the same Source from batch and single markers', () => {
+  it('从批次和单个标记生成相同的 Source', () => {
     const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -650,7 +650,7 @@ describe('@retikz/diagram-react/flow', () => {
     expect(batchSource).toEqual(singleSource);
   });
 
-  it('flattens nested Group and Layout JSX with root relations to the exact Direct Source', () => {
+  it('展平嵌套的 Group 和 Layout JSX，其根关系与精确的 Direct Source 相同', () => {
     const { FlowDiagram, FlowEntity, FlowGroup, FlowLayout, FlowRelation } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -681,7 +681,7 @@ describe('@retikz/diagram-react/flow', () => {
     expect(Object.keys(normalized.ir.children[0]).at(-1)).toBe('children');
   });
 
-  it('normalizes a Core-compatible Entity text block and existing text layout props without JSX children', () => {
+  it('标准化 Core 兼容的 Entity 文本块和现有文本布局 props，没有 JSX 子项', () => {
     const { FlowDiagram, FlowEntity } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -718,7 +718,7 @@ describe('@retikz/diagram-react/flow', () => {
     ]);
   });
 
-  it('rejects Relation inside Group and every embedded standalone host prop including explicit undefined', () => {
+  it('拒绝 Group 内的 Relation 和每个嵌入式独立宿主属性，包括显式 undefined', () => {
     const { FlowDiagram, FlowEntity, FlowGroup, FlowRelation } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -746,7 +746,7 @@ describe('@retikz/diagram-react/flow', () => {
     ).toThrowError(expect.objectContaining({ code: 'DIAGRAM_REACT_FLOW_HOST_PROPS_INVALID' }));
   });
 
-  it('reuses Layout for standalone SSR without firing host lifecycle callbacks', () => {
+  it('将 Layout 重用于独立 SSR，而不触发宿主生命周期回调', () => {
     const { FlowDiagram, FlowEntity } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -774,7 +774,7 @@ describe('@retikz/diagram-react/flow', () => {
     expect(compileResultCalls).toBe(0);
   });
 
-  it('produces the same artifact value from embedded React authoring', () => {
+  it('从嵌入式 React 编写中生成相同的产物值', () => {
     const { FlowDiagram, FlowEntity } = components();
 
     expect(FlowDiagram).toBeDefined();
@@ -800,7 +800,7 @@ describe('@retikz/diagram-react/flow', () => {
   });
 });
 
-it('compiles bend and complete labels identically through React, Vanilla and direct Source', () => {
+it('通过 React、Vanilla 和直接 Source 相同地编译弯曲和完整标签', () => {
   const relation = {
     source: 'a',
     target: 'b',
@@ -856,7 +856,7 @@ it('compiles bend and complete labels identically through React, Vanilla and dir
   );
 });
 
-it('preserves automatic, explicit Bezier and smooth routing through all authoring entries', () => {
+it('在所有编写条目中保留自动、显式贝塞尔曲线和平滑路由', () => {
   const relations = [
     {
       source: 'a',
@@ -931,7 +931,7 @@ it('preserves automatic, explicit Bezier and smooth routing through all authorin
   );
 });
 
-it('keeps endpoint constraints and sparse defaults equal across React, Vanilla and JSON', () => {
+it('在 React、Vanilla 和 JSON 上保持端点约束和稀疏默认值相等', () => {
   const entities = [
     { id: 'a', text: 'A' },
     { id: 'b', text: 'B' },

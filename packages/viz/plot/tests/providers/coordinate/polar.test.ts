@@ -65,13 +65,13 @@ const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record
   });
 
 describe('lowerPlots polar 投影几何 (contract)', () => {
-  it('infers polar interpolation for a continuous angular scale', () => {
+  it('推断连续角度刻度的极坐标插值', () => {
     const spec = polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } });
 
     expect(resolvedInterpolationOf(spec, { d: [{ theta: 0, value: 1 }] })).toBe(PolarInterpolation.Polar);
   });
 
-  it.each(['band', 'point'] as const)('infers chord interpolation for a %s angular scale', type => {
+  it.each(['band', 'point'] as const)('推断 %s 角度刻度的弦插值', type => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -90,7 +90,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   it.each([
     ['linear', PolarInterpolation.Chord],
     ['point', PolarInterpolation.Polar],
-  ] as const)('coordinate interpolation overrides %s continuity with %s', (type, interpolation) => {
+  ] as const)('坐标插值覆盖 %s 与 %s 的连续性', (type, interpolation) => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -109,7 +109,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   it.each([
     ['continuous', PolarInterpolation.Polar],
     ['discrete', PolarInterpolation.Chord],
-  ] as const)('uses custom position scale continuity=%s', (continuity, expected) => {
+  ] as const)('使用自定义位置刻度连续性=%s', (continuity, expected) => {
     const CustomAngleSchema = strictObject({ type: literal(`custom-${continuity}`), name: NonBlankStringSchema });
     const customScale = defineScale({
       family: 'position',
@@ -148,7 +148,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     ).toBe(expected);
   });
 
-  it('polar_full_circle_centers_in_a_wide_canvas', () => {
+  it('极坐标完整圆在宽画布中居中', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -167,7 +167,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     expect(leftmost[1]).toBeCloseTo(150, 6);
   });
 
-  it('angular_label_bounds_preserve_a_centered_readable_radius', () => {
+  it('角度标签边界保留中心可读半径', () => {
     const categories = ['University Farm', 'Waseca', 'Morris', 'Crookston', 'Grand Rapids', 'Duluth'];
     const rows = categories.flatMap(category => [
       { category, value: 0 },
@@ -214,7 +214,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   // Happy path
-  it('polar_point_angle0_radiusmax_lands_right_of_center', () => {
+  it('极坐标角度为零且半径最大时点位于中心右侧', () => {
     // 角向 domain 显式 [0,360]，行 angle=0 → θ=startAngle=0°；径向 domain [0,10]、值=10 → r=outerRadius
     // 期望屏幕点 [cx + outerRadius, cy]：x > cx、y ≈ cy（屏幕 y 不变）
     const spec = PlotSchema.parse({
@@ -243,7 +243,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     expect(rightmost[0]).toBeGreaterThan(center[0]);
   });
 
-  it('polar_quarter_turn_lands_below_center', () => {
+  it('极坐标转过四分之一圈后点位于中心下方', () => {
     // angle=90 → θ=90° → cos=0、sin=1 → [cx, cy + r]（屏幕 y 向下，90° 在圆心下方）
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -267,7 +267,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   // 交互：polar 下 x/y 被坐标系重解释为 angle/radius（x/y 是唯一位置通道）
-  it('polar_xy_channels_projected_via_coordinate', () => {
+  it('极坐标 x、y 通道通过坐标系投影', () => {
     const rows = [
       { theta: 45, value: 7 },
       { theta: 200, value: 3 },
@@ -285,7 +285,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   // 边界：整圆 vs 半圆 — 角向 range 随 endAngle 缩放
-  it('half_circle_vs_full_circle_scales_angular_range', () => {
+  it('半圆与整圆按比例使用角度范围', () => {
     // 同一 angle 值（domain 中点）在整圆 vs 半圆下投影到不同角度
     const rows = [
       { theta: 0, value: 0 }, // 圆心，定 cx/cy
@@ -323,7 +323,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   // 边界：innerRadius>0 — radius domain min → frame.innerRadius（非圆心）
-  it('inner_radius_min_value_off_center', () => {
+  it('内部半径最小值偏离中心', () => {
     const rows = [
       { theta: 0, value: 0 }, // radius domain min
       { theta: 0, value: 10 }, // radius domain max
@@ -364,7 +364,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   // 边界：band 角向 scale — 类别绕圆周
-  it('band_angular_scale_distributes_categories_around_circle', () => {
+  it('带角刻度将类别分布在圆周围', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -393,7 +393,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   // 边界：非有限值跳过
-  it('non_finite_radius_skipped', () => {
+  it('非有限半径跳过', () => {
     const rows = [
       { theta: 0, value: 5 },
       { theta: 1, value: 'oops' }, // 非有限径向 → 跳过
@@ -406,7 +406,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   // 端到端：多行 point 各落对应极坐标点（结构完整）
-  it('polar_point_end_to_end_all_rows_placed', () => {
+  it('极坐标 Point 端到端处理会放置所有数据行', () => {
     const rows = [
       { theta: 0, value: 4 },
       { theta: 90, value: 6 },
@@ -427,7 +427,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   // 交互：polar × color 编码 → 分色子 Scope（不受坐标系影响）
-  it('polar_with_color_groups_into_subscopes', () => {
+  it('极坐标按颜色分组到子作用域', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -461,7 +461,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   // 错误路径
-  it('polar_angle_references_unknown_scale_throws', () => {
+  it('极坐标角度引用未知比例尺时抛出错误', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -477,7 +477,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     expect(() => expandOf(spec, { d: [{ theta: 0, value: 1 }] }, opts)).toThrow(/missing|unknown scale/);
   });
 
-  it('ordinal_scale_as_angular_position_throws', () => {
+  it('作为角度位置投掷的序数尺度', () => {
     // ordinal 不可作位置通道（复用 resolvePositionScale 守卫）
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -496,7 +496,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
 
   // 位置通道完整性由 coordinate 级 lowering 校验——
   // x/y 在 parse 期合法（可选），缺角色在 lowering fail-loud（polar2D / cartesian2D 都需 x+y）
-  it('polar_encoding_missing_y_fails_loud_at_lowering', () => {
+  it('极坐标编码缺少 y 时在下沉阶段明确报错', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -512,7 +512,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     expect(() => expandOf(spec, { d: [{ theta: 0 }] }, opts)).toThrow(/polar2D|requires|y/i);
   });
 
-  it('cartesian_encoding_missing_x_fails_loud_at_lowering', () => {
+  it('笛卡尔编码缺少 x 在下沉时失败', () => {
     expect(() =>
       PlotSchema.parse({
         namespace: 'plot',
@@ -545,7 +545,7 @@ describe('lowerPlots cartesian 回归 (contract)', () => {
     marks: [{ type: 'point', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
   });
 
-  it('cartesian_point_positions_unchanged', () => {
+  it('笛卡尔点位置未更改', () => {
     // 无 guides → plot area 满；domain x[0,2]->[0,480]、y[9,14]->[300,0]
     const layer = firstLayer(cartPointSpec, { sales: SALES }, opts);
     const positions = positionsOf(layer);

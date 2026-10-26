@@ -16,8 +16,8 @@ import {
 import { reducerInputFields, reducerOutputFields, resolveReducerComputation } from '../../src/operators/reducer';
 import { resolveSelectorComputation, selectorInputFields } from '../../src/operators/selector';
 
-describe('statistics provider runtime', () => {
-  it('computes scalar reducers and extent endpoints from finite field values', () => {
+describe('统计提供者运行时', () => {
+  it('根据有限字段值计算标量缩减器和范围端点', () => {
     const rows = [{ value: 1 }, { value: 4 }, { value: 9 }, { value: Number.NaN }, { value: Infinity }, {}];
 
     expect(
@@ -70,7 +70,7 @@ describe('statistics provider runtime', () => {
     ).toEqual({ result: 2.5 });
   });
 
-  it('keeps finite mean and median results stable near the numeric limit', () => {
+  it('使有限均值和中值结果在数值极限附近保持稳定', () => {
     const reduce = (
       values: Array<number>,
       kind: typeof BuiltinReducerOperationKind.Mean | typeof BuiltinReducerOperationKind.Median,
@@ -86,7 +86,7 @@ describe('statistics provider runtime', () => {
     expect(reduce([-1e308, 1e308], BuiltinReducerOperationKind.Median)).toBe(0);
   });
 
-  it('computes large-group extrema without expanding values into call arguments', () => {
+  it('计算大群极值，而不将值扩展为调用参数', () => {
     const rows = Array.from({ length: 1_000_000 }, (_, index) => ({ value: index + 1 }));
 
     expect(
@@ -121,7 +121,7 @@ describe('statistics provider runtime', () => {
     ).toMatchObject({ min: 1, max: 1_000_000 });
   });
 
-  it('keeps count and sum identities but marks undefined empty statistics invalid', () => {
+  it('保留计数和总和标识，但将 undefined 的空统计标记为无效', () => {
     const identityOperations: Array<IRDataReducerOperation> = [
       { kind: BuiltinReducerOperationKind.Count, as: 'result' },
       { kind: BuiltinReducerOperationKind.Sum, field: 'value', as: 'result' },
@@ -185,7 +185,7 @@ describe('statistics provider runtime', () => {
     }
   });
 
-  it('computes quantile-band points, spread fences, whiskers and extent metadata', () => {
+  it('计算分位数带点、扩展栅栏、晶须和范围元数据', () => {
     const operation: IRDataReducerOperation = {
       kind: BuiltinReducerOperationKind.QuantileBand,
       field: 'value',
@@ -241,7 +241,7 @@ describe('statistics provider runtime', () => {
     ).toEqual({ lower: 1, upper: 3, whiskerMin: 0, whiskerMax: 100 });
   });
 
-  it('reports reducer input and output fields through the registry contract', () => {
+  it('通过 registry 契约报告 reducer 输入输出字段', () => {
     const quantileBand: IRDataReducerOperation = {
       kind: BuiltinReducerOperationKind.QuantileBand,
       field: 'value',
@@ -255,7 +255,7 @@ describe('statistics provider runtime', () => {
     expect(reducerOutputFields(quantileBand)).toEqual(['q1', 'q3', 'median', 'count']);
   });
 
-  it('selects min and max rows with first, last and all tie policies', () => {
+  it('使用第一个、最后一个和所有关系策略选择最小和最大行', () => {
     const rows = [
       { id: 'first-min', value: 1 },
       { id: 'last-min', value: 1 },
@@ -277,7 +277,7 @@ describe('statistics provider runtime', () => {
     expect(selectIds({ kind: BuiltinSelectorOperationKind.Max, by: 'value' })).toEqual(['max']);
   });
 
-  it('selects ordered first, last and nth rows with stable one-based ranks', () => {
+  it('选择有序的第一行、最后一行和第 n 行，具有稳定的基于 1 的排名', () => {
     const rows = [
       { id: 'b', order: 2 },
       { id: 'a-1', order: 1 },
@@ -308,7 +308,7 @@ describe('statistics provider runtime', () => {
     ).toEqual([]);
   });
 
-  it('extends top and bottom selections according to the boundary tie policy', () => {
+  it('根据边界连接策略扩展顶部和底部选择', () => {
     const rows = [
       { id: 'high', value: 3 },
       { id: 'tie-first', value: 2 },
@@ -330,7 +330,7 @@ describe('statistics provider runtime', () => {
     ).toEqual(['low', 'tie-last']);
   });
 
-  it('selects rows outside quantile bands and spread fences', () => {
+  it('选择分位数带和扩展栅栏之外的行', () => {
     const rows = [{ value: 0 }, { value: 1 }, { value: 2 }, { value: 3 }, { value: 100 }];
     const selectValues = (operation: IRDataSelectorOperation) =>
       resolveSelectorComputation(operation, DEFAULT_TRANSFORM_CONTEXT)(rows).map(selection => selection.row.value);
@@ -345,7 +345,7 @@ describe('statistics provider runtime', () => {
     expect(selectValues({ ...base, boundary: { kind: 'spread', factor: 1.5 } })).toEqual([100]);
   });
 
-  it('returns no selection for empty or non-finite numeric inputs', () => {
+  it('不返回空或非有限数字输入的选择', () => {
     const operations: Array<IRDataSelectorOperation> = [
       { kind: BuiltinSelectorOperationKind.Min, by: 'value' },
       { kind: BuiltinSelectorOperationKind.Max, by: 'value' },
@@ -374,7 +374,7 @@ describe('statistics provider runtime', () => {
     ).toEqual([]);
   });
 
-  it('reports selector fields and rejects duplicate or unknown registrations', () => {
+  it('报告选择器字段并拒绝重复或未知的注册', () => {
     expect(
       selectorInputFields({
         kind: BuiltinSelectorOperationKind.Nth,

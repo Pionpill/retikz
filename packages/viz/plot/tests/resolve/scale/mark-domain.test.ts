@@ -75,8 +75,8 @@ describe('mark padding 编译闭环', () => {
   });
 });
 
-describe('shared mark padding', () => {
-  it.each(['linear', 'radial'])('shares one padded %s domain across facet panels with different guides', type => {
+describe('共享标记填充', () => {
+  it.each(['linear', 'radial'])('在具有不同参考线的小平面面板上共享一个填充的 %s 域', type => {
     const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: 8, upper: 15 } });
     const { coordinate, ...rest } = base;
     const spec = PlotSchema.parse({
@@ -125,7 +125,7 @@ describe('shared mark padding', () => {
     expect(frames[0].roleScales!.y!.domain()).not.toEqual(frames[1].roleScales!.y!.domain());
   });
 
-  it.each(['log', 'pow', 'sqrt', 'symlog', 'radial'])('protects glyphs with %s position mapping', type => {
+  it.each(['log', 'pow', 'sqrt', 'symlog', 'radial'])('使用 %s 位置映射保护字形', type => {
     const base = plotOf();
     const spec = PlotSchema.parse({
       ...base,
@@ -143,8 +143,8 @@ describe('shared mark padding', () => {
   });
 });
 
-describe('mark padding final geometry', () => {
-  it.each(['sqrt', 'pow'])('keeps %s domains valid at zero while preserving edge space', type => {
+describe('标记填充最终几何形状', () => {
+  it.each(['sqrt', 'pow'])('保持 %s 域有效为零，同时保留边缘空间', type => {
     const base = plotOf();
     const spec = PlotSchema.parse({
       ...base,
@@ -165,7 +165,7 @@ describe('mark padding final geometry', () => {
     expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
   });
 
-  it.each(['log', 'radial'])('protects reversed %s ranges with directional clearance', type => {
+  it.each(['log', 'radial'])('通过方向间隙保护反向 %s 范围', type => {
     const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: 3, upper: 9 } });
     const data = [{ x: 1, y: 0, r: 2 }, rows[1], rows[2]];
     const spec = PlotSchema.parse({
@@ -188,7 +188,7 @@ describe('mark padding final geometry', () => {
     }
   });
 
-  it('protects both annular boundaries using radial scale and screen-unit clearance', () => {
+  it('使用径向刻度和屏幕单元间隙保护两个环形边界', () => {
     const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: 4 });
     const spec = PlotSchema.parse({
       ...base,
@@ -211,7 +211,7 @@ describe('mark padding final geometry', () => {
     }
   });
 
-  it.each(['band', 'point'])('protects categorical %s edges without changing category order', type => {
+  it.each(['band', 'point'])('保护分类 %s 边缘而不更改类别顺序', type => {
     const base = plotOf();
     const data = [
       { x: 'a', y: 0, r: 12 },
@@ -239,7 +239,7 @@ describe('mark padding final geometry', () => {
     }
   });
 
-  it.each([360, 90, -90, 270])('protects polar boundaries for a %s degree sweep', endAngle => {
+  it.each([360, 90, -90, 270])('保护 %s 度扫描的极边界', endAngle => {
     const base = plotOf();
     const spec = PlotSchema.parse({
       ...base,
@@ -274,7 +274,7 @@ describe('mark padding final geometry', () => {
     if (endAngle === 360) expect(angular.domain()).toEqual([0, 10]);
   });
 
-  it('contains discrete polar points inside their chord boundary', () => {
+  it('在其弦边界内包含离散极点', () => {
     const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: 3 });
     const data = ['a', 'b', 'c', 'd'].map((x, index) => ({ x, y: index * 3, r: 8 }));
     const spec = PlotSchema.parse({
@@ -316,7 +316,7 @@ describe('mark padding final geometry', () => {
       ).dataArtifact.frameByCoordinateScopeId.values(),
     ][0];
 
-  it('preserves a fixed zero end while protecting the opposite end', () => {
+  it('保留固定零端，同时保护另一端', () => {
     const scale = frameOf(plotOf({ kind: 'mark', marks: ['dots'], lower: 0 })).roleScales!.x!;
     const [start, end] = scale.range();
 
@@ -324,7 +324,7 @@ describe('mark padding final geometry', () => {
     expect(end - scale.coordinate(10)).toBeGreaterThanOrEqual(2);
   });
 
-  it('ignores outside-domain targets without filtering rendered data', () => {
+  it('忽略域外目标而不过滤渲染数据', () => {
     const base = plotOf();
     const spec = {
       ...base,
@@ -340,7 +340,7 @@ describe('mark padding final geometry', () => {
     ).toBeDefined();
   });
 
-  it('recomputes geometry for a changed drawing area', () => {
+  it('重新计算更改的绘图区域的几何图形', () => {
     const base = plotOf();
     const narrow = frameOf(base).roleScales!.x!;
     const wide = frameOf({ ...base, width: 300 }).roleScales!.x!;
@@ -350,7 +350,7 @@ describe('mark padding final geometry', () => {
     expect(wide.coordinate(0) - wide.range()[0]).toBeLessThan(2.02);
   });
 
-  it('retains fractional time padding below one millisecond', () => {
+  it('保留低于一毫秒的小数时间填充', () => {
     const base = plotOf();
     const spec = {
       ...base,
@@ -363,7 +363,7 @@ describe('mark padding final geometry', () => {
     expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(2);
   });
 
-  it('keeps direction-independent protection for a reversed range', () => {
+  it('对反向范围保持与方向无关的保护', () => {
     const base = plotOf();
     const spec = {
       ...base,
@@ -375,7 +375,7 @@ describe('mark padding final geometry', () => {
     expect(Math.abs(scale.coordinate(10) - scale.range()[1])).toBeGreaterThanOrEqual(2);
   });
 
-  it('adds no padding for an empty visible sample set', () => {
+  it('为空的可见样本集不添加填充', () => {
     const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: 80 });
     const spec = {
       ...base,
@@ -387,11 +387,11 @@ describe('mark padding final geometry', () => {
     expect(frameOf(spec, []).roleScales!.x!.domain()).toEqual([0, 10]);
   });
 
-  it('reports impossible extent instead of rendering a clipped automatic edge', () => {
+  it('报告不可能的范围，而不是渲染剪裁的自动边缘', () => {
     expect(() => frameOf({ ...plotOf(), width: 40 })).toThrow(/feasible/);
   });
 
-  it('protects projected relation endpoints independently', () => {
+  it('独立保护投影关系端点', () => {
     const base = plotOf();
     const spec = {
       ...base,
@@ -420,8 +420,8 @@ describe('mark padding final geometry', () => {
   });
 });
 
-describe('mark padding capabilities', () => {
-  it('dispatches custom scales with builtin marks through the scale registry', () => {
+describe('标记填充功能', () => {
+  it('通过秤注册表调度带有内置标记的自定义秤', () => {
     const linear = resolveScaleRegistry().get('linear')!;
     const customScale = { ...linear, schema: LinearScaleSchema.extend({ type: literal('custom-affine') }) };
     const base = plotOf();
@@ -445,7 +445,7 @@ describe('mark padding capabilities', () => {
     { span: { kind: 'ratio', value: 1 }, automatic: false },
     { span: 4, automatic: true },
     { span: { kind: 'ratio', value: 1 }, automatic: true },
-  ])('protects actual jittered positions for %j', ({ span, automatic }) => {
+  ])('保护 %j 的实际抖动位置', ({ span, automatic }) => {
     const base = plotOf();
     const spec = PlotSchema.parse({
       ...base,
@@ -478,8 +478,8 @@ describe('mark padding capabilities', () => {
   });
 });
 
-describe('mark padding effective observations', () => {
-  it('uses locally transformed positions and sizes', () => {
+describe('标记填充有效观测值', () => {
+  it('使用局部变换的位置和大小', () => {
     const base = plotOf();
     const transformed = PlotSchema.parse({
       ...base,
@@ -516,7 +516,7 @@ describe('mark padding effective observations', () => {
     expect(domainOf(transformed, duplicateRows)).toEqual(domainOf(base, compactRows));
   });
 
-  it('ignores missing positions and mapped sizes', () => {
+  it('忽略缺失的位置和映射的大小', () => {
     const base = plotOf();
     const getDomain = (data: Array<Record<string, number | null>>) =>
       [
@@ -531,8 +531,8 @@ describe('mark padding effective observations', () => {
   });
 });
 
-describe('mark padding shared coordinate views', () => {
-  it('combines marks from overlay views that consume one shared scale', () => {
+describe('标记填充共享坐标视图', () => {
+  it('组合来自使用一个共享比例的覆盖视图的标记', () => {
     const base = plotOf();
     const { coordinate, ...rest } = base;
     const spec = PlotSchema.parse({
@@ -569,8 +569,8 @@ describe('mark padding shared coordinate views', () => {
   });
 });
 
-describe('mark padding clearance', () => {
-  it('protects final extents with additional clearance and honors a fixed zero end', () => {
+describe('标记填充间隙', () => {
+  it('通过附加间隙保护最终范围并遵循固定的零端', () => {
     const result = lowerPlotWithDataArtifact(
       plotOf({ kind: 'mark', marks: ['dots'], clearance: 8, lower: 0 }),
       {
@@ -587,7 +587,7 @@ describe('mark padding clearance', () => {
       expect(scale.range()[1] - scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r) + 8);
   });
 
-  it('rejects impossible clearance and invalid JSON numbers', () => {
+  it('拒绝不可能的清关和无效的 JSON 号码', () => {
     expect(() =>
       lowerPlotWithDataArtifact(
         plotOf({ kind: 'mark', marks: ['dots'], clearance: 60 }),
@@ -601,8 +601,8 @@ describe('mark padding clearance', () => {
   });
 });
 
-describe('directional mark clearance', () => {
-  it('defaults an omitted clearance end to zero and preserves fixed ends', () => {
+describe('方向标记间隙', () => {
+  it('默认省略的间隙端为零并保留固定端', () => {
     const result = lowerPlotWithDataArtifact(
       plotOf({ kind: 'mark', marks: ['dots'], clearance: { upper: 8 }, lower: 0 }),
       { rows },
@@ -618,7 +618,7 @@ describe('directional mark clearance', () => {
   it.each([
     [0, 100],
     [100, 0],
-  ])('preserves asymmetric clearance with range %j', (start, end) => {
+  ])('保留范围 %j 的不对称间隙', (start, end) => {
     const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: 3, upper: 15 } });
     const plot = PlotSchema.parse({
       ...base,

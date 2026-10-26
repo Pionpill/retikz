@@ -62,7 +62,7 @@ const sectorParams = (
 };
 
 // ── interval polar → sector（显式 polar 插值的径向柱 / 玫瑰）─────────────────────────────
-describe('lowerPlots interval→sector under polar2D (contract)', () => {
+describe('lowerPlots 区间→polar2D 下的扇区（契约）', () => {
   const SALES = [
     { month: 'Jan', amount: 3 },
     { month: 'Feb', amount: 6 },
@@ -81,7 +81,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
       marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'amount' } } } }],
     });
 
-  it('rose_each_row_one_sector_node', () => {
+  it('每行上升一个扇区节点', () => {
     const layer = firstLayer(roseSpec(), { sales: SALES });
     const nodes = sectorNodes(layer);
 
@@ -98,13 +98,13 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     }
   });
 
-  it('rose_inner_radius_is_radius_baseline', () => {
+  it('玫瑰内半径为半径基线', () => {
     // innerRadius=0（实心）→ 半径基线 radiusScale(0) = innerRadiusUnits = 0
     const params = sectorNodes(firstLayer(roseSpec(), { sales: SALES })).map(sectorParams);
     for (const p of params) expect(p.innerRadius).toBeCloseTo(0, 6);
   });
 
-  it('rose_outer_radius_encodes_value', () => {
+  it('玫瑰外半径编码值', () => {
     // 半径编码值：amount 3 < 6 < 9 → outerRadius 单调递增
     const outer = sectorNodes(firstLayer(roseSpec(), { sales: SALES })).map(n => sectorParams(n).outerRadius);
 
@@ -115,7 +115,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     expect(Math.max(...outer)).toBeCloseTo(200, 6);
   });
 
-  it('rose_band_angles_equal_arc_per_category', () => {
+  it('玫瑰带角度等于每个类别的弧度', () => {
     // 3 类别等分整圆 → 每片角带宽相等（band bandwidth）
     const params = sectorNodes(firstLayer(roseSpec(), { sales: SALES })).map(sectorParams);
     const arcs = params.map(p => p.endAngle - p.startAngle);
@@ -125,7 +125,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     expect(arcs[0]).toBeGreaterThan(0);
   });
 
-  it('rose_single_category_occupies_full_band', () => {
+  it('玫瑰单品类占据全波段', () => {
     const layer = firstLayer(roseSpec(), { sales: [{ month: 'Jan', amount: 5 }] });
     const nodes = sectorNodes(layer);
 
@@ -136,7 +136,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     expect(params.endAngle - params.startAngle).toBeGreaterThan(0);
   });
 
-  it('rose_negative_value_swaps_to_keep_outer_gt_inner', () => {
+  it('增加负值掉期以保持外部 GT 内部', () => {
     // 负值径向柱：value 跨 baseline，swap 保证 outerRadius > innerRadius（core 硬约束）
     const params = sectorNodes(
       firstLayer(roseSpec(), {
@@ -150,14 +150,14 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     for (const p of params) expect(p.outerRadius).toBeGreaterThan(p.innerRadius);
   });
 
-  it('rose_empty_data_yields_no_layer', () => {
+  it('上升空数据产生无层', () => {
     const outer = expandOf(roseSpec(), { sales: [] });
 
     // 无可绘制 sector → mark 图层被丢弃（children 为空）
     expect(outer.children).toHaveLength(0);
   });
 
-  it('rose_color_splits_into_subscopes', () => {
+  it('玫瑰色分为子范围', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -186,7 +186,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     expect(sectorNodes(layer)).toHaveLength(3);
   });
 
-  it('rose_sector_corner_radius_and_pad_angle_lower_into_shape_params', () => {
+  it('玫瑰扇形角半径和焊盘角度下沉到形状参数中', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -238,7 +238,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     }
   });
 
-  it('rose_compiles_to_scene_with_the_explicit_standard_sector_definition', async () => {
+  it('rose 编译为具有明确标准扇区定义的场景', async () => {
     const { compileToScene } = await import('@retikz/core');
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [roseSpec()] },
@@ -250,7 +250,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
 });
 
 // ── sector mark（饼图 / 环图）──────────────────────────────────────────
-describe('lowerPlots sector mark pie / donut (contract)', () => {
+describe('lowerPlots 扇区标记饼图/甜甜圈（契约）', () => {
   const SHARE = [
     { label: 'A', value: 3 },
     { label: 'B', value: 5 },
@@ -278,7 +278,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
       ],
     });
 
-  it('pie_each_row_one_sector_node', () => {
+  it('饼图每行一个扇区节点', () => {
     const nodes = sectorNodes(firstLayer(pieSpec(), { share: SHARE }));
 
     expect(nodes).toHaveLength(3);
@@ -286,7 +286,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     for (const node of nodes) expect(node.position).toEqual([200, 200]);
   });
 
-  it('pie_angles_track_cumulative_bounds', () => {
+  it('饼图角度跟踪累积界限', () => {
     // 累积 A[0,3] B[3,8] C[8,10]、total 10、角向 linear [0,10]→[0,360]
     const params = sectorNodes(firstLayer(pieSpec(), { share: SHARE })).map(sectorParams);
 
@@ -297,7 +297,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     expect(params[2].endAngle).toBeCloseTo(360, 6); // 10/10*360
   });
 
-  it('pie_fills_full_circle', () => {
+  it('饼图填充满圆', () => {
     const params = sectorNodes(firstLayer(pieSpec(), { share: SHARE })).map(sectorParams);
 
     // 各扇片角度相接、整圆铺满 [0,360]
@@ -309,7 +309,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     }
   });
 
-  it('pie_radius_is_constant_full_ring', () => {
+  it('饼图半径为恒定的全环', () => {
     // 半径常量满铺 [frame.innerRadius, frame.outerRadius] = [0, 200]，各片相同
     const params = sectorNodes(firstLayer(pieSpec(), { share: SHARE })).map(sectorParams);
 
@@ -319,7 +319,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     }
   });
 
-  it('donut_inner_radius_from_coordinate', () => {
+  it('甜甜圈内部半径来自坐标', () => {
     // 环图：coordinate.innerRadius=0.5 → frame.innerRadius = 0.5 * 200 = 100
     const params = sectorNodes(firstLayer(pieSpec(0.5), { share: SHARE })).map(sectorParams);
 
@@ -330,7 +330,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     }
   });
 
-  it('pie_single_slice_full_circle', () => {
+  it('饼图单片全圆', () => {
     const params = sectorNodes(firstLayer(pieSpec(), { share: [{ label: 'A', value: 7 }] })).map(sectorParams);
 
     expect(params).toHaveLength(1);
@@ -338,7 +338,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     expect(params[0].endAngle).toBeCloseTo(360, 6);
   });
 
-  it('pie_color_splits_into_subscopes', () => {
+  it('饼图颜色分为子范围', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -369,7 +369,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     expect(sectorNodes(layer)).toHaveLength(3);
   });
 
-  it('pie_compiles_to_scene_with_the_explicit_standard_sector_definition', async () => {
+  it('饼图编译为具有显式标准扇区定义的场景', async () => {
     const { compileToScene } = await import('@retikz/core');
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [pieSpec()] },
@@ -380,7 +380,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
   });
 
   // 错误路径：sector mark 读不到累积界字段（未跑 transform）→ 抛清晰错误
-  it('pie_missing_cumulative_fields_throws', () => {
+  it('饼图缺少累积字段抛出', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -405,7 +405,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
 
   // 负值饼图：旧 sector mark 曾对负累积界 fail-loud；合并进 interval 后 extent bound 不再带此守卫，
   // stack transform 亦不校验负值 → 现不再 throw（行为变更，已上报）。此处仅锁定「不再抛 /non-negative/」的现状
-  it('pie_negative_value_no_longer_throws', () => {
+  it('饼图负值无更长投掷', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

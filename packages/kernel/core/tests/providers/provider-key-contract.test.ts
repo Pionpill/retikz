@@ -11,8 +11,8 @@ import {
   defineShape,
 } from '../../src';
 
-describe('provider key contract', () => {
-  it('shape_definitions_declare_their_registry_name', () => {
+describe('提供者键契约', () => {
+  it('形状定义声明其注册表名称', () => {
     const shapeNames = [...BUILTIN_SHAPES.values()].map(def => def.name).sort();
 
     expect(shapeNames).toContain('rectangle');
@@ -20,7 +20,7 @@ describe('provider key contract', () => {
     expect(new Set(shapeNames).size).toBe(shapeNames.length);
   });
 
-  it('custom_shape_uses_definition_name_not_record_key', () => {
+  it('自定义形状使用定义名称而不是记录键', () => {
     const ring = defineShape({
       name: 'ring',
       paramsSchema: object({}),
@@ -38,7 +38,7 @@ describe('provider key contract', () => {
     expect(() => compileToScene(ir, { shapes: [ring] }).scene).not.toThrow();
   });
 
-  it('custom_shape_cannot_override_a_builtin_name', () => {
+  it('自定义形状不能覆盖内置名称', () => {
     const rectangle = defineShape({
       name: 'rectangle',
       paramsSchema: object({}),
@@ -58,13 +58,13 @@ describe('provider key contract', () => {
     );
   });
 
-  it('path_kind_definitions_are_keyed_by_definition_name', () => {
+  it('路径类型定义由定义名称作为键控', () => {
     const pathNames = [...BUILTIN_PATHS.values()].map(def => def.name).sort();
 
     expect(pathNames).toEqual(['stroke']);
   });
 
-  it('composite_definition_declares_namespace_and_type_as_provider_key', () => {
+  it('复合定义将命名空间和类型声明为提供者键', () => {
     const schema = CompositeBaseSchema.extend({
       namespace: literal('demo'),
       type: literal('badge'),
@@ -110,7 +110,7 @@ describe('provider key contract', () => {
     ).toThrow(/payload validation/);
   });
 
-  it('composite_object_union_declares_one_shared_provider_key', () => {
+  it('复合对象联合声明一个共享提供者键', () => {
     const schema = union([
       CompositeBaseSchema.extend({
         namespace: literal('demo'),

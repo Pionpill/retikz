@@ -59,8 +59,8 @@ import {
   TrapezoidShapeProvider,
 } from '../src/node-shape';
 
-describe('Extension extension collections', () => {
-  it('groups all Extension shape definitions and providers', () => {
+describe('扩展扩展集合', () => {
+  it('对所有扩展形状定义和提供者进行分组', () => {
     expect(ExtensionShapeDefinitions).toEqual([
       ContourShapeDefinition,
       CrossShapeDefinition,
@@ -85,7 +85,7 @@ describe('Extension extension collections', () => {
     ]);
   });
 
-  it('groups all Extension arrow definitions and providers', () => {
+  it('对所有扩展箭头定义和提供者进行分组', () => {
     expect(ExtensionArrowDefinitions).toEqual([
       DiamondArrowDefinition,
       OpenDiamondArrowDefinition,
@@ -110,7 +110,7 @@ describe('Extension extension collections', () => {
     ]);
   });
 
-  it('groups all Extension clip definitions and providers', () => {
+  it('对所有扩展裁剪定义和提供者进行分组', () => {
     expect(ExtensionClipDefinitions).toEqual([
       CircleClipDefinition,
       EllipseClipDefinition,
@@ -127,7 +127,7 @@ describe('Extension extension collections', () => {
     ]);
   });
 
-  it('keeps every provider paired with its Definition', () => {
+  it('使每个提供者与其 Definition 配对', () => {
     const pairs = [
       [ExtensionShapeProviders, ExtensionShapeDefinitions],
       [ExtensionArrowProviders, ExtensionArrowDefinitions],

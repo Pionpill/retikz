@@ -22,7 +22,7 @@ const makeLayout = (_id: string, x = 0, y = 0): NodeLayout => ({
 });
 
 describe('NamespaceStack 基本 register / lookup', () => {
-  it('name_stack_basic_register_lookup', () => {
+  it('名称堆栈基本寄存器查找', () => {
     const stack = new NamespaceStack();
     const layout = makeLayout('A', 10, 20);
     stack.register('A', layout);
@@ -44,7 +44,7 @@ describe('NamespaceStack 基本 register / lookup', () => {
 });
 
 describe('NamespaceStack push / pop frame 隔离', () => {
-  it('name_stack_push_pop_frame_isolated', () => {
+  it('名称堆栈推入弹出帧隔离', () => {
     const stack = new NamespaceStack();
     stack.pushFrame();
 
@@ -71,8 +71,8 @@ describe('NamespaceStack push / pop frame 隔离', () => {
   });
 });
 
-describe('NamespaceStack inside-out shadowing', () => {
-  it('name_stack_lookup_inside_out_shadowing', () => {
+describe('NamespaceStack 由内而外的阴影', () => {
+  it('名称堆栈查找由内而外的阴影', () => {
     const stack = new NamespaceStack();
     const outer = makeLayout('A', 0);
     stack.register('A', outer);
@@ -111,7 +111,7 @@ describe('NamespaceStack inside-out shadowing', () => {
 });
 
 describe('NamespaceStack pop 根 frame 防御性 throw', () => {
-  it('name_stack_pop_empty_throws', () => {
+  it('空命名栈弹出时抛出错误', () => {
     const stack = new NamespaceStack();
 
     expect(() => stack.popFrame()).toThrow(/cannot pop the root frame/);
@@ -129,7 +129,7 @@ describe('NamespaceStack pop 根 frame 防御性 throw', () => {
 });
 
 describe('NamespaceStack register 返回 overwritten flag', () => {
-  it('name_stack_register_returns_overwritten_flag', () => {
+  it('名称堆栈寄存器返回覆盖标志', () => {
     const stack = new NamespaceStack();
     const first = makeLayout('A', 0);
     const second = makeLayout('A', 10);
@@ -210,7 +210,7 @@ describe('NamespaceStack onDuplicate 回调', () => {
 });
 
 describe('NamespaceStack resolving phase 禁止 register', () => {
-  it('namespace_stack_register_during_resolving', () => {
+  it('解析期间的命名空间堆栈寄存器', () => {
     const stack = new NamespaceStack();
     stack.register('A', makeLayout('A'));
     stack.enterResolvingPhase();
@@ -248,7 +248,7 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
   });
 });
 
-it('preserves measurement identity for unchanged forks and invalidates every namespace mutation', () => {
+it('保留未更改的分叉的测量身份，并使每个名称空间突变无效', () => {
   const stack = new NamespaceStack();
   let identity = stack.measurementIdentity;
   expect(stack.fork().measurementIdentity).toBe(identity);

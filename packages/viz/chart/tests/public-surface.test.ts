@@ -11,8 +11,8 @@ const RecipeSchema = strictObject({
   properties: strictObject({ visible: boolean().optional() }).optional(),
 });
 
-describe('@retikz/chart public surface', () => {
-  it('exports only family-independent Chart contracts from the root', () => {
+describe('@retikz/chart 公开接口', () => {
+  it('仅从根导出与系列无关的 Chart 契约', () => {
     expect(chart).toHaveProperty('ChartPresentationSchema');
     expect(chart).toHaveProperty('ChartLayoutSchema');
     expect(chart).toHaveProperty('ChartPlotExtensionSchema');
@@ -35,7 +35,7 @@ describe('@retikz/chart public surface', () => {
     expect(chart).not.toHaveProperty('resolveChart');
   });
 
-  it('exposes concrete Point schemas and provider contributions from the Point entry', () => {
+  it('公开来自点条目的具体点 schema 和提供者贡献', () => {
     expect(point.ChartFamily).toEqual({ Point: 'point' });
     expect(point.ChartType).toEqual({
       Bubble: 'bubble',
@@ -67,7 +67,7 @@ describe('@retikz/chart public surface', () => {
     expect(point).not.toHaveProperty('PathMarkDefinition');
   });
 
-  it('keeps generated Source JSON-safe without publishing a wide Chart schema', () => {
+  it('保持生成的 Source JSON 安全，无需发布广泛的 Chart schema', () => {
     expect(chart).not.toHaveProperty('ChartSchema');
     expect(chart).not.toHaveProperty('IRChart');
 

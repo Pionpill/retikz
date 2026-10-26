@@ -82,7 +82,7 @@ describe('DemoRenderer', () => {
     expect(markup).not.toContain('<svg');
   });
 
-  it('passes canvas mode through component wrappers', () => {
+  it('通过组件包装器传递 canvas 模式', () => {
     const markup = renderToStaticMarkup(<DemoRenderer Component={WrappedDemo} rendererMode="canvas" />);
 
     expect(markup).toContain('<canvas');
@@ -165,7 +165,7 @@ describe('RendererModeButton', () => {
 });
 
 describe('useComponentPreviewStore', () => {
-  it('defaults to svg and toggles canvas globally', () => {
+  it('默认为 svg 并支持全局切换 canvas', () => {
     const originalMode = useComponentPreviewStore.getState().rendererMode;
     useComponentPreviewStore.getState().setRendererMode('svg');
 
@@ -359,7 +359,7 @@ describe('PreviewControlSlotLayer', () => {
   });
 });
 
-describe('animation control slots', () => {
+describe('动画控制槽', () => {
   it('同一组定义按面板 runtime 渲染播放状态', () => {
     const slots = buildAnimationControlSlots();
     const pausedMarkup = renderSlots(slots, {

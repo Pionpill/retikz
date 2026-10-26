@@ -70,7 +70,7 @@ const makeFixture = (options: {
   return Fixture;
 };
 
-describe('<Layout> Composite provider graph', () => {
+describe('<Layout> 复合提供者图', () => {
   it('按顺序收集相同键的参数，并为多个实例具体化一个提供者定义', () => {
     const key = { capability: 'composite' as const, namespace: 'demo', type: 'panel' } as const;
     const dataA = { rows: [1, 2] };
@@ -94,7 +94,7 @@ describe('<Layout> Composite provider graph', () => {
     expect(svg).toContain('data-retikz-id="demo-two"');
   });
 
-  it('resolves cross-namespace dependencies before their authored root', () => {
+  it('在其编写的根之前解决跨命名空间依赖关系', () => {
     const frameKey = { capability: 'composite' as const, namespace: 'standard', type: 'frame' } as const;
     const cardKey = { capability: 'composite' as const, namespace: 'third', type: 'card' } as const;
     const calls: Array<string> = [];
@@ -124,7 +124,7 @@ describe('<Layout> Composite provider graph', () => {
     expect(svg).toContain('data-retikz-id="third-one"');
   });
 
-  it('uses explicit Layout composites only as final definitions after provider materialization', () => {
+  it('仅使用显式 Layout 组合作为提供者具体化后的最终定义', () => {
     const demoKey = { capability: 'composite' as const, namespace: 'demo', type: 'panel' } as const;
     const userKey = { capability: 'composite' as const, namespace: 'user', type: 'panel' } as const;
     const demoMaker = vi.fn(() => definitionOf(demoKey));
@@ -203,7 +203,7 @@ describe('<Layout> Composite provider graph', () => {
     ).toThrow(/definition conflict.*demo\.panel/i);
   });
 
-  it('keeps a pure Kernel Layout unchanged when no contribution exists', () => {
+  it('当不存在贡献时，保持纯内核 Layout 不变', () => {
     const svg = renderToStaticMarkup(
       <Layout width={100} height={100}>
         <Node id="plain" position={[0, 0]} text="hi" />

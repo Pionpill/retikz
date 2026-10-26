@@ -376,7 +376,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
   });
 });
 
-describe('contract schema accept/reject', () => {
+describe('契约 schema 接受/拒绝', () => {
   it('text-channel-both-reject：text 通道同时设 field 与 value → refine 拒', () => {
     expect(() => textSpec({ encodings: { text: { field: 'label', value: 'x' } } })).toThrow();
   });

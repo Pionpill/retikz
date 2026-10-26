@@ -24,7 +24,7 @@ const normalizeReactNode = (element: ReactNode) => {
 };
 
 describe('LogicFigureFrame', () => {
-  it('provides logic-figure Group defaults and semantic caption parts', () => {
+  it('提供逻辑图 Group 默认值和语义标题部分', () => {
     const frame = readFrame(
       <LogicFigureFrame id="core">
         <LogicFigureFrameTitle>Core</LogicFigureFrameTitle>
@@ -61,7 +61,7 @@ describe('LogicFigureFrame', () => {
     });
   });
 
-  it('lets explicit Group appearance replace defaults while shallow-merging caption fonts', () => {
+  it('让显式的 Group 外观替换默认值，同时浅层合并字幕字体', () => {
     const frame = readFrame(
       <LogicFigureFrame
         id="custom"
@@ -101,7 +101,7 @@ describe('LogicFigureFrame', () => {
     expect(frame.border?.dashPattern).toBeUndefined();
   });
 
-  it('rejects semantic header parts used outside LogicFigureFrame', () => {
+  it('拒绝在 LogicFigureFrame 之外使用的语义头部部分', () => {
     expect(() => normalizeReactNode(<LogicFigureFrameTitle>Standalone</LogicFigureFrameTitle>)).toThrow(
       /direct child of LogicFigureFrame/i,
     );

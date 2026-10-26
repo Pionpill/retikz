@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { finiteFieldValuesOf } from '../../src/operators';
 import { groupRowsByFields, linearSamplesOf } from '../../src/transform';
 
-describe('transform shared helpers', () => {
-  it('groups hierarchically in field order while preserving first-seen keys at each level', () => {
+describe('转换共享助手', () => {
+  it('按字段顺序分层分组，同时保留每个级别首次看到的键', () => {
     const rows: Array<ExternalRow> = [
       { region: 'north', series: 'A', value: 1 },
       { region: 'south', series: 'A', value: 2 },
@@ -31,7 +31,7 @@ describe('transform shared helpers', () => {
     expect(groups[0].rows[0]).toBe(rows[0]);
   });
 
-  it('keeps nested missing and null keys together at every level without merging numeric and string keys', () => {
+  it('在每个级别将嵌套的缺失键和空键保持在一起，而不合并数字和字符串键', () => {
     const rows: Array<ExternalRow> = [
       { team: { name: 'Z' }, item: null, category: 1, value: 1 },
       { team: { name: 'A' }, item: 'x', category: 1, value: 2 },
@@ -46,13 +46,13 @@ describe('transform shared helpers', () => {
     expect(groupRowsByFields([], ['team.name', 'item'])).toEqual([]);
   });
 
-  it('returns a single global group when fields are omitted', () => {
+  it('省略字段时返回单个全局组', () => {
     const rows: Array<ExternalRow> = [{ value: 1 }, { value: 2 }];
 
     expect(groupRowsByFields(rows)).toEqual([{ key: '__all__', rows, values: {} }]);
   });
 
-  it('extracts finite numeric field values only', () => {
+  it('仅提取有限的数字字段值', () => {
     const rows: Array<ExternalRow> = [
       { value: 0 },
       { value: Number.NaN },
@@ -64,7 +64,7 @@ describe('transform shared helpers', () => {
     expect(finiteFieldValuesOf(rows, 'value')).toEqual([0, 2]);
   });
 
-  it('samples inclusive linear positions with exact endpoints', () => {
+  it('包含具有精确端点的线性位置的样本', () => {
     expect(linearSamplesOf([0, 8], 5)).toEqual([0, 2, 4, 6, 8]);
     expect(linearSamplesOf([2, 10], 2)).toEqual([2, 10]);
   });

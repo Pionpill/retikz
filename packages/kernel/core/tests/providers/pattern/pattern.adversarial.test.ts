@@ -94,7 +94,7 @@ describe('ADV — 非 finite size / lineWidth / rotation 抛', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // 攻击面 2：round-trip——非 finite 源头被拦，干净 pattern Scene round-trip 无损
 // ─────────────────────────────────────────────────────────────────────────────
-describe('ADV — JSON round-trip', () => {
+describe('ADV — JSON 往返', () => {
   it('infinity_size_rejected_before_scene：Infinity size 不进 Scene（编译期抛）', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: Infinity })).toThrow();
   });
@@ -369,7 +369,7 @@ describe('ADV — dedup / override / 交叉', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // 攻击面 7：override warn / background 透传
 // ─────────────────────────────────────────────────────────────────────────────
-describe('ADV — duplicate registration / background', () => {
+describe('ADV — 重复注册/背景', () => {
   it('duplicate_builtin_name_rejected_even_if_unused：注册同名内置但场景未用 → 仍失败', () => {
     const customLines: PatternDefinition = { name: 'lines', emit: (): Array<ScenePrimitive> => [] };
 

@@ -88,8 +88,8 @@ const pieSpec = (extraMark: Record<string, unknown> = {}, innerRadius = 0): IRPl
     ],
   });
 
-describe('IntervalMark.pull sector geometry', () => {
-  it('constant pull moves sector node center along the final mid angle', () => {
+describe('IntervalMark.pull 扇形几何形状', () => {
+  it('恒定拉力沿最终中角移动扇区节点中心', () => {
     const spec = pieSpec({ properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } }, pull: 20 } });
     const nodes = sectorNodes(firstLayer(spec, { share }));
 
@@ -102,7 +102,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(nodes[0].position).toEqual(pointAtArcAngle([200, 200], 20, 45));
   });
 
-  it('field-bound pull only moves rows with a non-zero field value', () => {
+  it('字段绑定拉动仅移动具有非零字段值的行', () => {
     const nodes = sectorNodes(
       firstLayer(
         pieSpec({
@@ -118,7 +118,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(nodes[1].position).toEqual(pointAtArcAngle([200, 200], 18, 225));
   });
 
-  it('maps pull through a named scale and exposes the same displaced locator anchor', () => {
+  it('地图通过指定比例拉动并暴露相同的移位定位器锚点', () => {
     const spec = pieSpec({
       encodings: {
         bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } },
@@ -137,7 +137,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(locator.datum(1)?.position).toEqual(pointAtArcAngle(vectorPosition(nodes[1]), 100, 225));
   });
 
-  it('padAngle and pull use the padded sector mid angle without rewriting radii', () => {
+  it('padAngle 和拉动使用填充扇区中角，无需重写半径', () => {
     const nodes = sectorNodes(
       firstLayer(
         pieSpec(
@@ -156,7 +156,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(nodes[0].position).toEqual(pointAtArcAngle([200, 200], 12, 45));
   });
 
-  it('pull zero matches an omitted pull', () => {
+  it('拉零匹配省略的拉', () => {
     const pulled = sectorNodes(
       firstLayer(pieSpec({ properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } }, pull: 0 } }), {
         share,
@@ -168,7 +168,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(pulled.map(sectorParams)).toEqual(plain.map(sectorParams));
   });
 
-  it('large finite pull keeps sector radii and angles unchanged', () => {
+  it('大的有限拉力保持扇形半径和角度不变', () => {
     const nodes = sectorNodes(
       firstLayer(pieSpec({ properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } }, pull: 260 } }), {
         share,
@@ -183,7 +183,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(nodes[0].position).toEqual(pointAtArcAngle([200, 200], 260, 45));
   });
 
-  it('cartesian interval rejects pull instead of ignoring it', () => {
+  it('笛卡尔区间拒绝拉力而不是忽略它', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -205,7 +205,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(() => expandOf(spec, { share })).toThrow(/pull|sector/i);
   });
 
-  it('invalid field-bound pull fails loud', () => {
+  it('字段绑定的 pull 无效时明确报错', () => {
     const spec = pieSpec({
       encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'label', pull: 'offset' },
     });
@@ -214,7 +214,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(() => expandOf(spec, { share: [{ label: 'A', value: 1, offset: 'far' }] })).toThrow(/pull|numeric/i);
   });
 
-  it('locator datum anchor follows pulled sector geometry', () => {
+  it('定位器基准锚遵循拉动的扇形几何形状', () => {
     const spec = pieSpec({ properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'full' } }, pull: 20 } });
     const locator = createPlotLocator(spec, { share }, { ...opts, environment: {} });
     const node = sectorNodes(firstLayer(spec, { share }))[0];
@@ -225,7 +225,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(locator.datum(0)?.position).toEqual(pointAtArcAngle(vectorPosition(node), midRadius, midAngle));
   });
 
-  it('locator series centroid uses pulled datum anchors', () => {
+  it('定位器系列质心采用拉力基准锚', () => {
     const spec = pieSpec({
       encodings: {
         bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } },
@@ -239,7 +239,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(locator.series('B')?.position).toEqual(locator.datum(1)?.position);
   });
 
-  it('chord interpolation applies padAngle and pull before contour projection', () => {
+  it('弦插值应用 padAngle 并在轮廓投影之前拉动', () => {
     const spec = pieSpec({
       properties: {
         bounds: { x: { kind: 'extent' }, y: { kind: 'full' } },

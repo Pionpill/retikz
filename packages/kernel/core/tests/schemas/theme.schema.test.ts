@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { SceneSchema, ScopeSchema, ThemeMode, ThemeSchema } from '../../src';
 
-describe('Theme schema', () => {
+describe('主题 schema', () => {
   it('接受 JSON-safe selector 并保持 round-trip', () => {
     const parsed = ThemeSchema.parse({
       name: 'academic',

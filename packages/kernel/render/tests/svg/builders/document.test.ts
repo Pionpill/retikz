@@ -51,7 +51,7 @@ describe('buildSvgDocument —— 边界', () => {
 });
 
 describe('buildSvgDocument —— 交互', () => {
-  it('places both arrow ends in the owning path container', () => {
+  it('将箭头两端放置在所属路径容器中', () => {
     const path: PathPrimitive = {
       type: 'path',
       commands: [
@@ -109,7 +109,7 @@ describe('buildSvgDocument —— 交互', () => {
     expect(b1).not.toContain('retikz-paint-a-');
   });
 
-  it('unsafe idPrefix is normalized before resource ids and url fragments are emitted', () => {
+  it('不安全的 idPrefix 在发出资源 ID 和 url 片段之前已标准化', () => {
     const gradient: SceneResource = {
       kind: 'paint',
       id: 'paint-1',

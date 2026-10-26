@@ -20,15 +20,15 @@ const EQUAL_PARAMS = { circumscribe: 'equal' } as const;
 /** diamond 是内置 shape preset；compile 解析后由 polygon + 此 params 提供几何 */
 const DIAMOND_PARAMS = { sides: 4, rotate: 0 } as const;
 
-describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
-  it('rectangle is identity', () => {
+describe('BUILTIN_SHAPES.circumscribe 与传统 layoutNode 交换机匹配', () => {
+  it('矩形为单位', () => {
     expect(BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry(10, 6, NO_PARAMS)).toEqual({
       halfWidth: 10,
       halfHeight: 6,
     });
   });
 
-  it('circle (= ellipse equal) = √(hw²+hh²) on both axes', () => {
+  it('两个轴上的圆（= 椭圆相等）= √(hw²+hh²)', () => {
     const r = Math.hypot(10, 6);
 
     expect(BUILTIN_SHAPES.get('ellipse')!.computeCircumscribedGeometry(10, 6, EQUAL_PARAMS)).toEqual({
@@ -37,7 +37,7 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
     });
   });
 
-  it('ellipse = inner × √2', () => {
+  it('椭圆=内×√2', () => {
     expect(BUILTIN_SHAPES.get('ellipse')!.computeCircumscribedGeometry(10, 6, NO_PARAMS)).toEqual({
       halfWidth: 10 * SQRT2,
       halfHeight: 6 * SQRT2,
@@ -53,29 +53,29 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   });
 });
 
-describe('BUILTIN_SHAPES.anchor returns canonical anchors, undefined otherwise', () => {
+describe('BUILTIN_SHAPES.anchor 返回规范锚点，否则 undefined', () => {
   const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
-  it('rectangle named anchors', () => {
+  it('名为锚点的矩形', () => {
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'center', NO_PARAMS)).toBeUndefined();
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'right', NO_PARAMS)).toEqual([10, 0]);
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
 
-  it('canonical directional anchors remain accepted by built-in providers', () => {
+  it('规范的方向锚点仍然被内置提供者接受', () => {
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'top', NO_PARAMS)).toEqual([0, -5]);
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'bottom-left', NO_PARAMS)).toEqual([-10, 5]);
   });
 
-  it('unknown anchor name → undefined (caller throws clear error)', () => {
+  it('未知的锚点名称→undefined（调用者抛出明确的错误）', () => {
     expect(BUILTIN_SHAPES.get('rectangle')!.resolveAnchor(rect, 'foobar', NO_PARAMS)).toBeUndefined();
     expect(BUILTIN_SHAPES.get('ellipse')!.resolveAnchor(rect, 'middle', EQUAL_PARAMS)).toBeUndefined();
     expect(BUILTIN_SHAPES.get('polygon')!.resolveAnchor(rect, '', DIAMOND_PARAMS)).toBeUndefined();
   });
 });
 
-describe('boundaryPoint honours rect.rotate (rotate-bearing rect)', () => {
-  it('rectangle rotated 90° clips toward +x at the rotated short half-axis', () => {
+describe('boundaryPoint 尊重 rect.rotate（旋转轴承矩形）', () => {
+  it('旋转 90° 的矩形在旋转的短半轴处朝 +x 裁剪', () => {
     const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: Math.PI / 2 };
     const [px, py] = BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint(rect, [100, 0], NO_PARAMS);
 
@@ -84,17 +84,17 @@ describe('boundaryPoint honours rect.rotate (rotate-bearing rect)', () => {
   });
 });
 
-describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>', () => {
+describe('发出在轴对齐空间中运行并返回 Iterable<ScenePrimitive>', () => {
   const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   const style: ResolvedShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
-  it('rectangle → single RectPrimitive', () => {
+  it('矩形→单个 RectPrimitive', () => {
     const prims = [...BUILTIN_SHAPES.get('rectangle')!.emit(rect, style, id, NO_PARAMS)];
 
     expect(prims).toHaveLength(1);
     expect(prims[0].type).toBe('rect');
   });
 
-  it('circle (= ellipse equal) emit → EllipsePrimitive with rx === ry', () => {
+  it('圆（= 椭圆相等）发出 → EllipsePrimitive，其中 rx === ry', () => {
     const square: CenteredBox = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
     const prims = [...BUILTIN_SHAPES.get('ellipse')!.emit(square, style, id, EQUAL_PARAMS)];
 
@@ -103,7 +103,7 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
     if (prims[0].type === 'ellipse') expect(prims[0].rx).toBe(prims[0].ry);
   });
 
-  it('diamond (= polygon 4/0) → PathPrimitive with 4 vertices + close', () => {
+  it('菱形（= 多边形 4/0）→ PathPrimitive 有 4 个顶点 + 闭合', () => {
     const prims = [...BUILTIN_SHAPES.get('polygon')!.emit(rect, style, id, DIAMOND_PARAMS)];
 
     expect(prims[0].type).toBe('path');
@@ -127,7 +127,7 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
   });
 });
 
-describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
+describe('自定义 ShapeDefinition 是一个普通对象（工厂友好）', () => {
   const createPolygonShape = (): ShapeDefinition =>
     defineShape({
       name: 'customPolygon',
@@ -163,7 +163,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
       },
     });
 
-  it('a returned plain object satisfies ShapeDefinition', () => {
+  it('返回的普通对象满足 ShapeDefinition', () => {
     const poly = createPolygonShape();
 
     expect(poly.computeCircumscribedGeometry(3, 4, NO_PARAMS)).toEqual({ halfWidth: 5, halfHeight: 5 });
@@ -175,13 +175,13 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
     expect(prims).toHaveLength(1);
   });
 
-  it('edgePoint is optional —— custom shape may omit it', () => {
+  it('edgePoint 为可选——自定义形状可省略', () => {
     const poly = createPolygonShape();
 
     expect(poly.computeEdgePoint).toBeUndefined();
   });
 
-  it('outline and keyPoints are optional geometry capabilities with JSON-safe results', () => {
+  it('轮廓和 keyPoints 是可选的几何功能，具有 JSON 安全结果', () => {
     const poly = createPolygonShape();
     const rect: CenteredBox = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
 
@@ -196,10 +196,10 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
   });
 });
 
-describe('BUILTIN_SHAPES outline contract', () => {
+describe('BUILTIN_SHAPES 大纲契约', () => {
   const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
 
-  it('publishes explicit closed outlines for rectangle, ellipse, and polygon', () => {
+  it('发布矩形、椭圆形和多边形的显式闭合轮廓', () => {
     const rectangleOutline = BUILTIN_SHAPES.get('rectangle')!.computeOutline?.(rect, NO_PARAMS);
     const ellipseOutline = BUILTIN_SHAPES.get('ellipse')!.computeOutline?.(rect, NO_PARAMS);
     const polygonOutline = BUILTIN_SHAPES.get('polygon')!.computeOutline?.(rect, DIAMOND_PARAMS);
@@ -212,7 +212,7 @@ describe('BUILTIN_SHAPES outline contract', () => {
     expect(polygonOutline?.at(-1)).toEqual({ kind: 'close' });
   });
 
-  it('publishes stable named key points for the built-in shape family', () => {
+  it('为内置形状族发布稳定的命名关键点', () => {
     const rectangleKeyPoints = BUILTIN_SHAPES.get('rectangle')!.computeKeyPoints?.(rect, NO_PARAMS);
     const ellipseKeyPoints = BUILTIN_SHAPES.get('ellipse')!.computeKeyPoints?.(rect, NO_PARAMS);
     const polygonKeyPoints = BUILTIN_SHAPES.get('polygon')!.computeKeyPoints?.(rect, DIAMOND_PARAMS);

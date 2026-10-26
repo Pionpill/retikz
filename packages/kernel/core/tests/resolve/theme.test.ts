@@ -5,8 +5,8 @@ import { RetikzCoreErrorCode } from '../../src/error';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../src/resolve/theme';
 import { ThemeMode } from '../../src/shared';
 
-describe('resolve theme', () => {
-  it('inherits the parent name and mode when the sparse selector omits them', () => {
+describe('解决主题', () => {
+  it('当稀疏选择器省略时继承父名称和模式', () => {
     const brand = defineTheme({
       name: 'brand-inheritance',
       resolve: ({ mode }) => ({
@@ -35,7 +35,7 @@ describe('resolve theme', () => {
     expect(child).not.toBe(parent);
   });
 
-  it('resolves default colors for an explicit mode without a name', () => {
+  it('解析没有名称的显式模式的默认颜色', () => {
     const resolved = resolveTheme(DEFAULT_RESOLVED_THEME, { mode: ThemeMode.Dark }, 'scene.theme');
 
     expect(resolved).toMatchObject({
@@ -46,7 +46,7 @@ describe('resolve theme', () => {
     expect(Object.isFrozen(resolved)).toBe(true);
   });
 
-  it('resolves a registered name with the selected mode', () => {
+  it('用所选模式解析注册名称', () => {
     const brand = defineTheme({
       name: 'brand',
       resolve: ({ mode }) => ({ semantic: { error: mode === ThemeMode.Dark ? '#ffaaaa' : '#aa0000' } }),
@@ -70,7 +70,7 @@ describe('resolve theme', () => {
     expect(Object.isFrozen(resolved.colors.semantic)).toBe(true);
   });
 
-  it('replaces only an explicitly provided categorical palette', () => {
+  it('仅替换明确提供的分类调色板', () => {
     const categorical: [string] = ['#112233'];
     const brand = defineTheme({ name: 'brand-palette', resolve: () => ({ categorical }) });
     const resolved = resolveTheme(
@@ -87,7 +87,7 @@ describe('resolve theme', () => {
     expect(Object.isFrozen(resolved.colors.categorical)).toBe(true);
   });
 
-  it('uses the mode default when a sparse semantic role is explicitly undefined', () => {
+  it('当稀疏语义角色明确 undefined 时，使用默认模式', () => {
     const brand = defineTheme({ name: 'brand-undefined', resolve: () => ({ semantic: { guide: undefined } }) });
     const resolved = resolveTheme(
       DEFAULT_RESOLVED_THEME,
@@ -101,7 +101,7 @@ describe('resolve theme', () => {
     );
   });
 
-  it('wraps a Theme name callback exception without replacing its cause', () => {
+  it('包装主题名称回调异常而不替换其原因', () => {
     const cause = new Error('custom Theme name failed');
     const definition = defineTheme({
       name: 'throwing-name',
@@ -125,7 +125,7 @@ describe('resolve theme', () => {
     );
   });
 
-  it('projects external name color object outputs through the owner schema', () => {
+  it('通过所属模块 schema 投影外部名称颜色对象输出', () => {
     class EmptyStyleOutput {}
 
     const getterOutput = Object.defineProperty({}, 'semantic', {
@@ -184,7 +184,7 @@ describe('resolve theme', () => {
     }
   });
 
-  it('fails with the selector path when the name is not registered', () => {
+  it('当名称未注册时，选择器路径失败', () => {
     expect(() => resolveTheme(DEFAULT_RESOLVED_THEME, { name: 'missing' }, 'scope.theme')).toThrow(
       "Theme name 'missing' is not registered at scope.theme.",
     );

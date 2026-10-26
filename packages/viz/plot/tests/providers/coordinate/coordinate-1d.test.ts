@@ -51,7 +51,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
     });
 
   // Happy path：水平 rug — 各点落底边基线轴、x 随值展开
-  it('horizontal_rug_points_on_baseline', () => {
+  it('基线上的水平地毯点', () => {
     const rows = [{ v: 0 }, { v: 5 }, { v: 10 }];
     const positions = positionsOf(firstLayer(rugSpec(), { d: rows }, opts));
 
@@ -62,7 +62,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
   });
 
   // Happy path：垂直 orientation — 各点落左边基线、y 随值
-  it('vertical_orientation_points_on_left_baseline', () => {
+  it('左侧基线上的垂直方向点', () => {
     const rows = [{ v: 0 }, { v: 10 }];
     const positions = positionsOf(firstLayer(rugSpec({ orientation: 'vertical' }), { d: rows }, opts));
 
@@ -72,12 +72,12 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
   });
 
   // 边界：单数据点不崩
-  it('single_point_ok', () => {
+  it('单点确定', () => {
     expect(positionsOf(firstLayer(rugSpec(), { d: [{ v: 4 }] }, opts))).toHaveLength(1);
   });
 
   // 交互：1D × categorical color → 分色子 Scope（非位置通道仍工作）
-  it('cartesian1d_with_color_groups_into_subscopes', () => {
+  it('笛卡尔 1d，将颜色分组到子范围中', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -110,7 +110,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
   });
 
   // 错误路径：interval（柱）在 cartesian1D 无几何意义 → fail-loud
-  it('cartesian1d_interval_fails_loud', () => {
+  it('笛卡尔 1d 间隔明确报错', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -124,7 +124,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
   });
 
   // 错误路径：缺单维通道 → fail-loud（contract 必填角色校验）
-  it('cartesian1d_missing_x_fails_loud', () => {
+  it('cartesian1d 缺少 x 时明确报错', () => {
     expect(() =>
       PlotSchema.parse({
         namespace: 'plot',
@@ -138,7 +138,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
   });
 
   // 错误路径：非法维度（cartesian1D 合法集 {x}）→ fail-loud
-  it('cartesian1d_angle_dimension_rejected_by_coordinate_definition_roles', () => {
+  it('cartesian1d 的坐标定义角色拒绝 angle 维度', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -153,7 +153,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
   });
 
   // 交互：1D 直线轴 guide 下沉（dimension x 合法、产出轴层）
-  it('cartesian1d_axis_guide_lowers', () => {
+  it('下沉 cartesian1d 坐标轴辅助元素', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -169,7 +169,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
     expect(root.children.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('cartesian1d_does_not_emit_grid_without_a_plot_area', () => {
+  it('cartesian1d 不会发出没有绘图区域的网格', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -199,7 +199,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
     });
 
   // Happy path：角向投影落半径 R=150 圆周（angle 0 → 圆心右、angle 90 → 圆心下）
-  it('polar1d_points_on_circle', () => {
+  it('圆上的极坐标点', () => {
     const positions = positionsOf(firstLayer(ringSpec(), { d: [{ deg: 0 }, { deg: 90 }] }, opts));
 
     expect(positions[0][0]).toBeCloseTo(390, 4); // [240+150, 150]
@@ -211,7 +211,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   });
 
   // 边界：radius 占比 0.5 → 落半径一半（75）的圈
-  it('polar1d_radius_fraction_halves_circle', () => {
+  it('polar1d 的半径比例将圆半径减半', () => {
     const [p] = positionsOf(firstLayer(ringSpec({ radius: 0.5 }), { d: [{ deg: 0 }] }, opts));
 
     expect(dist(p, CENTER)).toBeCloseTo(75, 4);
@@ -219,7 +219,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   });
 
   // 边界：半环 startAngle/endAngle — 角向 range 缩到 [0,180]
-  it('polar1d_half_arc_scales_angular_range', () => {
+  it('polar1d 半圆弧按比例调整角度范围', () => {
     // domain[0,360] range[0,180]：deg=360 → θ=180° → 圆心左侧
     const [p] = positionsOf(firstLayer(ringSpec({ startAngle: 0, endAngle: 180 }), { d: [{ deg: 360 }] }, opts));
 
@@ -229,7 +229,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   });
 
   // 交互：polar1D 复用 angle（x 别名）+ 角向轴 guide 下沉
-  it('polar1d_angular_axis_guide_lowers', () => {
+  it('下沉 polar1d 角度轴辅助元素', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -244,7 +244,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
     expect(root.children.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('polar1d_does_not_emit_grid_without_a_plot_area', () => {
+  it('在没有绘图区域的情况下，polar1d 不会发出网格', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -261,7 +261,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   });
 
   // 错误路径：sector 在 polar1D 无几何意义 → fail-loud
-  it('polar1d_sector_fails_loud', () => {
+  it('polar1d 扇区失败声音很大', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -283,7 +283,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   });
 
   // 错误路径：非法维度（polar1D 合法集 {angle, x}）→ fail-loud
-  it('polar1d_radius_dimension_rejected_by_coordinate_definition_roles', () => {
+  it('polar1d 的坐标定义角色拒绝 radius 维度', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

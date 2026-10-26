@@ -17,7 +17,7 @@ import {
   PreviewThemeOptions,
 } from '@/modules/docs/components/component-preview/theme';
 
-describe('docs-owned theme presets', () => {
+describe('文档拥有的主题预设', () => {
   it('发布包不公开命名 Theme，docs 维持四个闭合选择项', () => {
     expect('Theme' in corePackage).toBe(false);
     expect(PreviewThemeOptions).toEqual(['default', 'academic', 'vibrant', 'clean']);

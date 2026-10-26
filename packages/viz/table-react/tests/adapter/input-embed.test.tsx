@@ -26,8 +26,8 @@ const inputOf = <TProps,>(component: InputEmbeddableTableComponent, props: TProp
   return component.createInputEmbedProps(props as Readonly<Record<string, unknown>>);
 };
 
-describe('Table React InputEmbed routing', () => {
-  it('maps all React authoring entries to the shared Table Vanilla adapter', () => {
+describe('Table React InputEmbed 路由', () => {
+  it('将所有 React 编写条目映射到共享 Table Vanilla 适配器', () => {
     const spec = createManualTableIR({ id: 'generic', rows: [['Ada']] });
     const generic = inputOf(Table, { spec });
     const detail = inputOf(DetailTable, {

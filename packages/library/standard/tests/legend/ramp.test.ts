@@ -96,8 +96,8 @@ const compileRamp = (child: IRChild, proposal?: LayoutProposal) => {
 const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
   primitives.flatMap(primitive => (primitive.type === 'group' ? [primitive, ...groupsOf(primitive.children)] : []));
 
-describe('Legend ramp compile contract', () => {
-  it('keeps ramp authored Scope props separate from allocation and replay scopes', () => {
+describe('Legend 斜坡编译契约', () => {
+  it('将斜坡编写的 Scope props 与分配和回放范围分开', () => {
     const { output } = compileRamp(
       createLegend({
         ...fullScopeProps,
@@ -137,7 +137,7 @@ describe('Legend ramp compile contract', () => {
     [LayoutAlignment.Center, 70, 20],
     [LayoutAlignment.End, 140, 40],
   ] as const)(
-    'aligns title and the complete ramp structure independently for contentAlign=%s',
+    '独立对齐标题和完整的斜坡结构，contentAlign=%s',
     (contentAlign, titleX, bodyX) => {
       const { artifact } = compileRamp(
         createLegend({
@@ -170,7 +170,7 @@ describe('Legend ramp compile contract', () => {
     [LayoutAlignment.Start, 0],
     [LayoutAlignment.Center, 30],
     [LayoutAlignment.End, 60],
-  ] as const)('aligns a ramp-only body for contentAlign=%s', (contentAlign, bodyX) => {
+  ] as const)('对齐 contentAlign=%s 的仅斜坡主体', (contentAlign, bodyX) => {
     const { artifact } = compileRamp(
       createLegend({
         contentAlign,
@@ -193,7 +193,7 @@ describe('Legend ramp compile contract', () => {
     [LayoutAlignment.Start, 0],
     [LayoutAlignment.Center, -10],
     [LayoutAlignment.End, -20],
-  ] as const)('does not clamp an overwide ramp for contentAlign=%s', (contentAlign, bodyX) => {
+  ] as const)('对于 contentAlign=%s，不钳位过宽斜坡', (contentAlign, bodyX) => {
     const { artifact } = compileRamp(
       createLegend({
         contentAlign,
@@ -213,7 +213,7 @@ describe('Legend ramp compile contract', () => {
     expect(artifact.container.allocationBounds.width).toBe(100);
   });
 
-  it('normalizes horizontal endpoint-label overhang together with sample slots and anchors', () => {
+  it('标准化水平端点标签悬垂以及样本槽和锚点', () => {
     const { observed, artifact } = compileRamp(
       createLegend({
         content: {
@@ -243,7 +243,7 @@ describe('Legend ramp compile contract', () => {
     expect(artifact.ticks[1]?.label?.slotBounds).toEqual({ x: 100, y: 15, width: 20, height: 4 });
   });
 
-  it('normalizes vertical endpoint-label overhang and keeps sampleGap on physical x', () => {
+  it('标准化垂直端点标签悬垂并将 sampleGap 保留在物理 x 上', () => {
     const { observed, artifact } = compileRamp(
       createLegend({
         content: {
@@ -271,7 +271,7 @@ describe('Legend ramp compile contract', () => {
     expect(artifact.ticks[1]?.label?.slotBounds).toEqual({ x: 15, y: 100, width: 20, height: 20 });
   });
 
-  it('keeps dense authored ticks in order without collision avoidance', () => {
+  it('按顺序保持密集编写的刻度，而不避免碰撞', () => {
     const { artifact } = compileRamp(
       createLegend({
         content: {
@@ -294,7 +294,7 @@ describe('Legend ramp compile contract', () => {
     expect(artifact.ticks[1]?.label?.slotBounds.x).toBe(36);
   });
 
-  it('keeps empty ticks as a sample-only non-empty body without applying sampleGap', () => {
+  it('将空刻度保留为仅样本非空主体，而不应用 sampleGap', () => {
     const { observed, artifact } = compileRamp(
       createLegend({
         content: {
@@ -316,7 +316,7 @@ describe('Legend ramp compile contract', () => {
     expect(artifact.ticks).toEqual([]);
   });
 
-  it('rejects a zero sample main axis but preserves a non-zero sample under a zero body budget', () => {
+  it('拒绝零样本主轴，但在零主体预算下保留非零样本', () => {
     expect(() =>
       compileRamp(
         createLegend({
@@ -355,7 +355,7 @@ describe('Legend ramp compile contract', () => {
     expect(artifact.container.allocationBounds.height).toBe(10);
   });
 
-  it('does not move anchors or expand container sizing for final allocation overhang', () => {
+  it('不移动锚点或扩展容器大小以实现最终分配悬垂', () => {
     const { observed, artifact } = compileRamp(
       createLegend({
         content: {

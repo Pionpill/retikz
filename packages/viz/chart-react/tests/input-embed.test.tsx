@@ -33,8 +33,8 @@ const sourceOf = (input: ScatterChartInputEmbedProps<unknown>): IRChartSource =>
   normalizeScene(scene({ children: [scatterChart(input)] }), { adapters: [ScatterChartInputEmbedAdapter] }).ir
     .children[0] as IRChartSource;
 
-describe('Chart React InputEmbed routing', () => {
-  it('preserves anchor positioning and auxiliary panel properties through React and Vanilla', () => {
+describe('Chart React InputEmbed 路由', () => {
+  it('通过 React 和 Vanilla 保留锚定位和辅助面板属性', () => {
     const panel: NonNullable<ScatterChartInputEmbedProps['panel']> = {
       position: { kind: 'anchor', target: [120, 40], selfAnchor: 'origin' },
       transforms: [{ kind: 'scale', x: 1.5 }],
@@ -60,13 +60,13 @@ describe('Chart React InputEmbed routing', () => {
     expect(normalize(reactInput).children[0]).toMatchObject({ type: 'scope', ...panel });
   });
 
-  it('uses the matching Vanilla adapter for every typed chartType component', () => {
+  it('为每个类型的 chartType 组件使用匹配的 Vanilla 适配器', () => {
     expect(BubbleChart.inputEmbedAdapter).toBe(BubbleChartInputEmbedAdapter);
     expect(RegressionChart.inputEmbedAdapter).toBe(RegressionChartInputEmbedAdapter);
     expect(ScatterChart.inputEmbedAdapter).toBe(ScatterChartInputEmbedAdapter);
   });
 
-  it('produces the same precise Regression input as its Vanilla factory', () => {
+  it('产生与其 Vanilla 工厂相同的精确回归输入', () => {
     const regressionInput = {
       data: [
         { x: 1, y: 2, species: 'setosa' },
@@ -108,7 +108,7 @@ describe('Chart React InputEmbed routing', () => {
     expect(reactInput).toEqual(vanillaInput);
   });
 
-  it('produces the same precise Bubble input as its Vanilla factory', () => {
+  it('生产与其 Vanilla 工厂相同的精确气泡输入', () => {
     const bubbleInput: BubbleChartInputEmbedProps = {
       data: [
         { income: 1000, lifeExpectancy: 60, population: 1_000_000 },
@@ -143,7 +143,7 @@ describe('Chart React InputEmbed routing', () => {
     expect(reactInput).toEqual(vanillaInput);
   });
 
-  it('produces the same precise Point input as its Vanilla factory', () => {
+  it('产生与其 Vanilla 工厂相同的精确点输入', () => {
     const pointInput: ScatterChartInputEmbedProps = {
       data: [
         { x: 0, y: 1, size: 2, region: 'north' },
@@ -178,7 +178,7 @@ describe('Chart React InputEmbed routing', () => {
     expect(reactInput).toEqual(vanillaInput);
   });
 
-  it('maps ChartData reference/model without serializing runtime rows', () => {
+  it('映射 ChartData 参考/模型，无需序列化运行时行', () => {
     const input = inputOf(ScatterChart, {
       children: (
         <>
@@ -196,7 +196,7 @@ describe('Chart React InputEmbed routing', () => {
     expect(JSON.stringify(sourceOf(input))).not.toContain('"x":0');
   });
 
-  it('forwards Theme definitions without putting them in Source IR', () => {
+  it('转发主题定义，而不将它们放入 Source IR 中', () => {
     const chartThemeDefinitions = [] as const;
     const input = inputOf(ScatterChart, {
       chartThemeDefinitions,
@@ -212,7 +212,7 @@ describe('Chart React InputEmbed routing', () => {
     expect(sourceOf(input)).not.toHaveProperty('chartThemeDefinitions');
   });
 
-  it('keeps resolveLabel in runtime options and lets explicit lowerOptions win by mark id', () => {
+  it('resolveLabel 保留在运行时选项中且显式 lowerOptions 按标记 id 优先覆盖', () => {
     const childResolveLabel = (row: Record<string, unknown>): string => String(row.label);
     const explicitResolveLabel = (): string => 'explicit';
     const input = inputOf(ScatterChart, {
@@ -243,8 +243,8 @@ describe('Chart React InputEmbed routing', () => {
   });
 });
 
-describe('custom Regression adapter parity', () => {
-  it('preserves custom methods and runtime definitions through React and Vanilla', () => {
+describe('自定义回归适配器等价性', () => {
+  it('通过 React 和 Vanilla 保留自定义方法和运行时定义', () => {
     const definition = defineRegression({ schema: strictObject({ kind: literal('identity-fit') }) });
     const definitionImplementation = defineRegressionImplementation({
       definition,

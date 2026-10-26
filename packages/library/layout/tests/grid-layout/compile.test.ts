@@ -188,8 +188,8 @@ const gridArtifactOf = (output: ReturnType<typeof compileToScene>): GridLayoutCo
   return artifact as GridLayoutCompileArtifact;
 };
 
-describe('GridLayout compile contract', () => {
-  it('resolves fixed, content and fraction columns before placing authored children', () => {
+describe('GridLayout 编译契约', () => {
+  it('在放置编写的子项之前解析固定列、内容列和分数列', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'content' } },
@@ -217,7 +217,7 @@ describe('GridLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'fraction')).toEqual({ x: 50, y: 0 });
   });
 
-  it('feeds frozen spanning column width into row contribution probes', () => {
+  it('将冻结的跨列宽度馈送到行贡献探测中', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 40 }, y: { kind: 'content' } },
@@ -245,7 +245,7 @@ describe('GridLayout compile contract', () => {
     expect(result.logs.some(log => log.proposal.x.kind === 'exact' && log.proposal.x.value === 40)).toBe(true);
   });
 
-  it('uses exact proposals only for stretch and replays one final candidate per item', () => {
+  it('仅对拉伸使用精确提案并回放每个项目的一个最终候选', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 80 }, y: { kind: 'fixed', value: 20 } },
@@ -282,7 +282,7 @@ describe('GridLayout compile contract', () => {
     expect(groupsOf(result.output.scene.primitives).filter(group => group.id === 'bounded')).toHaveLength(1);
   });
 
-  it('keeps structural slots separate from refused allocations and compensates non-zero origins', () => {
+  it('将结构槽与拒绝的分配分开并补偿非零来源', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 40 }, y: { kind: 'fixed', value: 20 } },
@@ -304,7 +304,7 @@ describe('GridLayout compile contract', () => {
     expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 40, height: 20 });
   });
 
-  it('aligns single-row baseline participants and excludes spanning items from the row metric', () => {
+  it('对齐单行基线参与者并从行指标中排除跨度项目', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 60 }, y: { kind: 'content' } },
@@ -342,7 +342,7 @@ describe('GridLayout compile contract', () => {
     expect(result.observed.alignmentGuides?.find(guide => guide.name === 'first-baseline')?.position).toBe(7);
   });
 
-  it('keeps a fixed row size when baseline allocation overflows it', () => {
+  it('当基线分配溢出时保持固定的行大小', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 10 } },
@@ -365,7 +365,7 @@ describe('GridLayout compile contract', () => {
     expect(result.observed.alignmentGuides?.find(guide => guide.name === 'last-baseline')?.position).toBe(10);
   });
 
-  it('chooses the last authored real guide when a row has no last-baseline participant', () => {
+  it('当一行没有最后基线参与者时，选择最后编写的真实辅助线', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 40 }, y: { kind: 'fixed', value: 10 } },
@@ -396,7 +396,7 @@ describe('GridLayout compile contract', () => {
     expect(result.observed.alignmentGuides?.find(guide => guide.name === 'last-baseline')?.position).toBe(8);
   });
 
-  it('raises the selected final failure instead of replaying an earlier contribution probe', () => {
+  it('引发选定的最终失败，而不是回放早期的贡献探测', () => {
     expect(() =>
       compileGrid(
         createGridLayout({
@@ -411,7 +411,7 @@ describe('GridLayout compile contract', () => {
     ).toThrow(/rejected an exact proposal/);
   });
 
-  it('uses a zero-size rect clip without changing a zero-area allocation', () => {
+  it('使用零大小矩形裁剪而不更改零区域分配', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 0 }, y: { kind: 'fixed', value: 20 } },
@@ -431,7 +431,7 @@ describe('GridLayout compile contract', () => {
     ).toBe(true);
   });
 
-  it('supports nested GridLayout through the same custom composite registry', () => {
+  it('通过相同的自定义组合注册表支持嵌套 GridLayout', () => {
     const inner = createGridLayout({
       size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 10 } },
       columns: [{ kind: 'fixed', value: 20 }],
@@ -453,7 +453,7 @@ describe('GridLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'nested-leaf')).toEqual({ x: 0, y: 0 });
   });
 
-  it('fails loudly with the physical axis when root fill has no finite parent allocation', () => {
+  it('当根填充没有有限的父分配时，物理轴会明确报错', () => {
     const proposal: LayoutProposal = {
       x: { kind: LayoutAxisProposalKind.Intrinsic, mode: 'natural' },
       y: { kind: LayoutAxisProposalKind.Intrinsic, mode: 'natural' },
@@ -473,7 +473,7 @@ describe('GridLayout compile contract', () => {
     ).toThrow('Layout fill requires a finite parent allocation on y');
   });
 
-  it('applies finite content distribution after fraction and minmax growth', () => {
+  it('在分数和最小最大增长之后应用有限内容分布', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 10 } },
@@ -496,7 +496,7 @@ describe('GridLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'b')).toEqual({ x: 80, y: 0 });
   });
 
-  it('records centered fixed gaps and distributed space on both full content bands', () => {
+  it('记录在两个完整内容带上集中固定间隙和分布式空间', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
@@ -526,7 +526,7 @@ describe('GridLayout compile contract', () => {
     ]);
   });
 
-  it('records single-track leading and trailing distribution without inventing a gap', () => {
+  it('记录单轨前导和尾随分布，不产生间隙', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 10 } },
@@ -543,7 +543,7 @@ describe('GridLayout compile contract', () => {
     ]);
   });
 
-  it('keeps an authored gap but omits distributed segments under negative free space', () => {
+  it('保留编写间隙，但忽略负可用空间下的分布式段', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 10 } },

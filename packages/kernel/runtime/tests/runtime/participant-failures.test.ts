@@ -25,7 +25,7 @@ const defineCounterSource = () =>
     },
   });
 
-describe('runtime runtime participant failure lifecycle', () => {
+describe('Runtime 运行时参与者失败生命周期', () => {
   it.each([
     ['prepare', RetikzRuntimeErrorCode.ParticipantPrepareFailed] as const,
     ['commit', RetikzRuntimeErrorCode.ParticipantCommitFailed] as const,

@@ -234,7 +234,7 @@ const expandOf = (
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
-describe('custom node channel registry', () => {
+describe('自定义节点通道注册表', () => {
   const rows = [
     { x: 0, y: 0, score: 0 },
     { x: 1, y: 1, score: 5 },
@@ -242,7 +242,7 @@ describe('custom node channel registry', () => {
   ];
 
   // Happy path：score 0/5/10 → opacity 0.3 / 0.65 / 1.0，落到各 node
-  it('custom_intensity_delivers_to_node_opacity', () => {
+  it('自定义强度传递给节点不透明度', () => {
     const spec = scatterSpec({ intensity: 'score' });
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
     const opacities = nodes.map(n => n.style?.opacity ?? NaN);
@@ -253,7 +253,7 @@ describe('custom node channel registry', () => {
   });
 
   // 边界：encoding.channels 不绑该键 → 不应用（node 无 custom opacity）
-  it('unbound_custom_channel_not_applied', () => {
+  it('未应用未绑定的自定义通道', () => {
     const spec = scatterSpec();
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
 
@@ -261,14 +261,14 @@ describe('custom node channel registry', () => {
   });
 
   // 错误路径：encoding.channels 写了通道名，但没有对应 definition → fail-loud
-  it('channels_binding_without_registered_def_fails_loud', () => {
+  it('通道绑定缺少已注册定义时明确报错', () => {
     const spec = scatterSpec({ intensity: 'score' });
 
     expect(() => firstLayer(spec, { d: rows }, opts())).toThrow(/channel "intensity" is not registered/);
   });
 
   // 错误路径：自定义通道撞内置名 → fail-loud
-  it('collision_with_builtin_channel_fails_loud', () => {
+  it('与内置通道冲突时明确报错', () => {
     const bad = defineNodeChannel<number>({
       channel: 'size',
       output: { outputKind: 'number', range: [1, 2] },
@@ -282,7 +282,7 @@ describe('custom node channel registry', () => {
   });
 
   // 错误路径：缺 deliver → fail-loud
-  it('missing_deliver_fails_loud', () => {
+  it('缺少 deliver 时明确报错', () => {
     const bad = {
       channel: 'glow',
       kind: ChannelDefinitionKind.Node,
@@ -296,7 +296,7 @@ describe('custom node channel registry', () => {
   });
 
   // 错误路径：两个自定义通道同名 → fail-loud
-  it('duplicate_custom_channel_fails_loud', () => {
+  it('重复的自定义通道明确报错', () => {
     expect(() =>
       lowerPlot(
         scatterSpec(),
@@ -307,7 +307,7 @@ describe('custom node channel registry', () => {
   });
 
   // 交互：自定义通道 + 内置 size 同图各自生效（size→radius、intensity→opacity）
-  it('custom_channel_coexists_with_builtin_size', () => {
+  it('自定义通道与内置大小共存', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -330,14 +330,14 @@ describe('custom node channel registry', () => {
     expect(nodes.some(n => n.layout?.minimumSize !== undefined)).toBe(true);
   });
 
-  it('custom_scope_channel_delivers_to_layer_node_default', () => {
+  it('自定义范围通道默认传递到层节点', () => {
     const spec = scatterSpec({ scopeTint: 'tint' });
     const layer = firstLayer(spec, { d: rows.map(row => ({ ...row, tint: '#f66' })) }, opts([scopeTintChannel]));
 
     expect(layer.defaults?.node?.style?.fill).toBe('#f66');
   });
 
-  it('custom_path_channel_delivers_to_path_stroke_width', () => {
+  it('自定义路径通道传递至 Path 描边宽度', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -366,7 +366,7 @@ describe('custom node channel registry', () => {
   });
 
   // 交互：自定义 node 通道也可被 legend guide 引用；schema 不再把 channel 限死在内置 color/size/opacity/shape
-  it('custom_channel_legend_lowers_from_registry_descriptor', () => {
+  it('自定义通道图例从注册表描述符中下沉', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -396,7 +396,7 @@ describe('custom node channel registry', () => {
     expect(ramp).toBeDefined();
   });
 
-  it('custom_color_channel_swatch_uses_descriptor_colors', () => {
+  it('自定义颜色通道样本使用描述符颜色', () => {
     const colorRows = [
       { x: 0, y: 0, tone: 'warm' },
       { x: 1, y: 1, tone: 'cool' },
@@ -429,7 +429,7 @@ describe('custom node channel registry', () => {
     expect(fills).toEqual(['#dc2626', '#2563eb']);
   });
 
-  it('symbol_legend_without_default_color_uses_the_first_series_color', () => {
+  it('没有默认颜色的符号图例使用第一个系列颜色', () => {
     const symbolRows = [
       { x: 0, y: 0, kind: 'A' },
       { x: 1, y: 1, kind: 'B' },
@@ -451,7 +451,7 @@ describe('custom node channel registry', () => {
     expect(fills).toEqual([mark?.defaults?.node?.style?.fill, mark?.defaults?.node?.style?.fill]);
   });
 
-  it('custom_channel_legend_rejects_incompatible_output_kind', () => {
+  it('自定义通道图例拒绝不兼容输出类型', () => {
     const invalidChannel = defineNodeChannel<number>({
       channel: 'invalidSymbol',
       output: { outputKind: 'number', range: [1, 2] },
@@ -489,7 +489,7 @@ describe('custom node channel registry', () => {
   });
 
   // JSON round-trip：encoding.channels 进 IR 不丢
-  it('encoding_channels_survives_json_roundtrip', () => {
+  it('编码通道保持 JSON 往返等价', () => {
     const spec = scatterSpec({ intensity: 'score' });
     const back = PlotSchema.parse(JSON.parse(JSON.stringify(spec)));
     const mark = back.marks[0];

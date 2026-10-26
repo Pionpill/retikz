@@ -27,8 +27,8 @@ const findText = (scene: ReturnType<typeof compileToScene>['scene'], text: strin
   return primitive!;
 };
 
-describe('compile font size presets and relative units', () => {
-  it('uses the root font size as the default font size', () => {
+describe('编译字体大小预设和相对单位', () => {
+  it('使用根字体大小作为默认字体大小', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -38,7 +38,7 @@ describe('compile font size presets and relative units', () => {
     expect(findText(compileToScene(ir).scene, 'default').fontSize).toBe(16);
   });
 
-  it('resolves web presets with the default root font size', () => {
+  it('使用默认根字体大小解析网页预设', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -55,7 +55,7 @@ describe('compile font size presets and relative units', () => {
     expect(findText(compileToScene(ir).scene, 'web').fontSize).toBe(14);
   });
 
-  it('rejects TikZ presets in core schema', () => {
+  it('拒绝核心 schema 中的 TikZ 预设', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -78,7 +78,7 @@ describe('compile font size presets and relative units', () => {
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
-  it('resolves rem from CompileOptions.fontSize', () => {
+  it('从 CompileOptions.fontSize 解析 rem', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -95,7 +95,7 @@ describe('compile font size presets and relative units', () => {
     expect(findText(compileToScene(ir, { fontSize: 20 }).scene, 'rem').fontSize).toBe(25);
   });
 
-  it('resolves path label presets', () => {
+  it('解析路径标签预设', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -113,7 +113,7 @@ describe('compile font size presets and relative units', () => {
     expect(findText(compileToScene(ir).scene, 'label').fontSize).toBe(18);
   });
 
-  it('resolves line em from the node font size', () => {
+  it('从节点字体大小解析行 em', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -132,7 +132,7 @@ describe('compile font size presets and relative units', () => {
     expect(text.lines[0].fontSize).toBe(9);
   });
 
-  it('applies existing node scale after resolving presets', () => {
+  it('解析预设后应用现有节点比例', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -150,7 +150,7 @@ describe('compile font size presets and relative units', () => {
     expect(findText(compileToScene(ir).scene, 'scaled').fontSize).toBe(36);
   });
 
-  it('passes resolved font size to lowerTex', () => {
+  it('将解析的字体大小传递给 lowerTex', () => {
     const calls: Array<number> = [];
     const ir: IRScene = {
       version: 1,
@@ -175,7 +175,7 @@ describe('compile font size presets and relative units', () => {
     expect(calls).toEqual([14]);
   });
 
-  it('rejects non-positive root font size', () => {
+  it('拒绝非正根字体大小', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

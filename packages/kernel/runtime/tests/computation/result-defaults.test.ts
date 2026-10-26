@@ -18,7 +18,7 @@ const counter = defineRuntimeSource<number, number, number, never>({
 
 const sources = createRuntimeSourceRegistry([counter]);
 
-describe('Computation result defaults', () => {
+describe('计算结果默认', () => {
   it('省略配置后发布完整结果，并向增量更新和 observer 提供数值', () => {
     const observed: Array<number> = [];
     const computation = defineRuntimeComputation({

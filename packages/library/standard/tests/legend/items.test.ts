@@ -203,8 +203,8 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePathPrim
 const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
   primitives.flatMap(primitive => (primitive.type === 'group' ? [primitive, ...groupsOf(primitive.children)] : []));
 
-describe('Legend items compile contract', () => {
-  it('keeps authored Scope props on one root and allocation clip on an anonymous nested Scope', () => {
+describe('Legend 项目编译契约', () => {
+  it('将编写的 Scope props 保留在一个根上，并将分配裁剪保留在匿名嵌套的 Scope 上', () => {
     const { output } = compileLegend(
       createLegend({
         ...fullScopeProps,
@@ -238,7 +238,7 @@ describe('Legend items compile contract', () => {
     expect(groupsOf(output.scene.primitives).filter(group => group.clipRef !== undefined)).toHaveLength(2);
   });
 
-  it('keeps an empty authored Legend root without manufacturing a placeholder child', () => {
+  it('保留空的编写的 Legend 根而不创建占位符子项', () => {
     const { output } = compileLegend(
       createLegend({
         id: 'empty-legend',
@@ -251,7 +251,7 @@ describe('Legend items compile contract', () => {
     expect(root?.children).not.toContainEqual(expect.objectContaining({ type: 'node', text: '' }));
   });
 
-  it('uses the authored root zIndex when ordering the complete Legend group', () => {
+  it('订购完整的 Legend 组时，使用编写的根 zIndex', () => {
     const output = compileToScene(
       {
         type: 'scene',
@@ -283,7 +283,7 @@ describe('Legend items compile contract', () => {
     [LayoutAlignment.Center, 40, 30],
     [LayoutAlignment.End, 80, 60],
   ] as const)(
-    'aligns title and items independently for contentAlign=%s, including title-only and items-only',
+    'contentAlign=%s 时标题和项目独立对齐，包括仅标题和仅项目',
     (contentAlign, titleX, bodyX) => {
       const both = legendArtifactOf(
         compileLegend(
@@ -337,7 +337,7 @@ describe('Legend items compile contract', () => {
     [LayoutAlignment.Start, 0],
     [LayoutAlignment.Center, -10],
     [LayoutAlignment.End, -20],
-  ] as const)('does not clamp overwide items for contentAlign=%s', (contentAlign, expectedX) => {
+  ] as const)('对于 contentAlign=%s，不夹紧过宽的项目', (contentAlign, expectedX) => {
     const clipped = legendArtifactOf(
       compileLegend(
         createLegend({
@@ -365,7 +365,7 @@ describe('Legend items compile contract', () => {
     expect(visible.container.allocationBounds.width).toBe(100);
   });
 
-  it('lays out the default vertical form with a shared sample column and authored paint order', () => {
+  it('使用共享示例列和编写的绘制顺序布置默认垂直表单', () => {
     const { logs, observed, output } = compileLegend(
       createLegend({
         title: leaf('title', 40, 4),
@@ -406,7 +406,7 @@ describe('Legend items compile contract', () => {
     [LegendSampleAlignment.Start, 0],
     [LegendSampleAlignment.Center, 5],
     [LegendSampleAlignment.End, 10],
-  ] as const)('keeps sampleAlign=%s on the physical y axis in horizontal content', (sampleAlign, labelY) => {
+  ] as const)('将 sampleAlign=%s 保留在水平内容的物理 y 轴上', (sampleAlign, labelY) => {
     const { output } = compileLegend(
       createLegend({
         content: {
@@ -424,7 +424,7 @@ describe('Legend items compile contract', () => {
     expect(artifact.items[0]?.label?.slotBounds).toEqual({ x: 12, y: labelY, width: 5, height: 10 });
   });
 
-  it('forms rows once from the preliminary range budget and then shrinks content to the widest row', () => {
+  it('从初步范围预算形成行一次，然后将内容缩小到最宽的行', () => {
     const { observed, output } = compileLegend(
       createLegend({
         content: {
@@ -448,7 +448,7 @@ describe('Legend items compile contract', () => {
     expect(artifact.container.allocationBounds.width).toBe(120);
   });
 
-  it('keeps fixed, fill, and exact allocations after wrap while content intrinsic follows its contribution', () => {
+  it('在换行后保持固定、填充和精确分配，而内容内在遵循其贡献', () => {
     const content = {
       kind: LegendContentKind.Items,
       direction: LegendDirection.Horizontal,
@@ -479,7 +479,7 @@ describe('Legend items compile contract', () => {
     );
   });
 
-  it('preserves authored hard bounds when they do not intersect the parent proposal', () => {
+  it('当编写的硬边界不与父提案相交时，保留它们', () => {
     const { observed } = compileLegend(
       createLegend({
         size: { x: { kind: 'content', min: 200 }, y: { kind: 'content' } },
@@ -492,7 +492,7 @@ describe('Legend items compile contract', () => {
     expect(observed.allocationBounds.width).toBe(200);
   });
 
-  it('does not compress titleGap when fixed height leaves a zero body budget', () => {
+  it('当固定高度留下零主体预算时，不压缩 titleGap', () => {
     const { output } = compileLegend(
       createLegend({
         title: leaf('title', 20, 10),
@@ -508,7 +508,7 @@ describe('Legend items compile contract', () => {
     expect(artifact.container.allocationBounds.height).toBe(12);
   });
 
-  it('uses no phantom gaps for title-only, empty, or unlabeled content and keeps asymmetric padding physical', () => {
+  it('对于仅标题、空或未标记的内容不使用幻像间隙，并保持不对称的物理填充', () => {
     const titleOnly = legendArtifactOf(
       compileLegend(
         createLegend({
@@ -543,7 +543,7 @@ describe('Legend items compile contract', () => {
     expect(unlabeled.container.allocationBounds.width).toBe(10);
   });
 
-  it('keeps final allocation overhang observable without changing the structural container allocation', () => {
+  it('保持最终分配悬垂可观察，而不改变结构容器分配', () => {
     const { observed, output } = compileLegend(
       createLegend({
         content: {
@@ -565,7 +565,7 @@ describe('Legend items compile contract', () => {
     expect(artifact.bodyBounds).toEqual({ x: 0, y: 0, width: 30, height: 10 });
   });
 
-  it('preserves authored Core Path stroke and dash semantics in a Legend sample', () => {
+  it('保留 Legend 示例中编写的 Core Path 描边和破折号语义', () => {
     const output = compileToScene(
       {
         type: 'scene',
@@ -598,7 +598,7 @@ describe('Legend items compile contract', () => {
     expect(path).toMatchObject({ stroke: '#0f766e', strokeWidth: 3, dashPattern: [4, 2] });
   });
 
-  it('accepts a Core Scope as a Legend sample through the same probe and replay chain', () => {
+  it('通过相同的探测和回放链接受 Core Scope 作为 Legend 样本', () => {
     const output = compileToScene(
       {
         type: 'scene',
@@ -637,7 +637,7 @@ describe('Legend items compile contract', () => {
     expect(translationOf(output.scene.primitives, 'scope-sample')).toEqual(sample.translation);
   });
 
-  it('resolves a Legend Path sample reference from the ancestor compile environment', () => {
+  it('解析来自祖先编译环境的 Legend Path 示例引用', () => {
     const warnings: Array<CompileWarning> = [];
     const output = compileToScene(
       {
@@ -674,7 +674,7 @@ describe('Legend items compile contract', () => {
     expect(line).toMatchObject({ to: [40, 0] });
   });
 
-  it('raises an unresolved Path reference with the child provider and probe occurrence', () => {
+  it('引发未解析的 Path 引用以及子提供者和探测实例', () => {
     let thrown: unknown;
 
     try {
@@ -714,7 +714,7 @@ describe('Legend items compile contract', () => {
     expect((thrown as Error).message).toMatch(/unresolved reference.*missing/i);
   });
 
-  it('keeps a registered composite sample artifact in an independent Core envelope', () => {
+  it('将已注册的复合样本产物保留在独立的 Core 信封中', () => {
     const typedSampleDefinition = defineComposite({
       namespace: 'legend-test',
       type: 'typed-sample',
@@ -754,7 +754,7 @@ describe('Legend items compile contract', () => {
     expect(samplePlacement).not.toHaveProperty('role');
   });
 
-  it('raises a required final child failure instead of replaying an earlier contribution probe', () => {
+  it('引发所需的最终子失败，而不是回放早期的贡献探测', () => {
     expect(() =>
       compileLegend(
         createLegend({
@@ -767,7 +767,7 @@ describe('Legend items compile contract', () => {
     ).toThrow(/legend-test\.leaf.*children\[0\].*broken|broken.*children\[0\]/i);
   });
 
-  it('raises an unregistered nested composite with its provider and sample occurrence', () => {
+  it('引发未注册的嵌套复合及其提供者和样本出现', () => {
     expect(() =>
       compileLegend(
         createLegend({
@@ -780,7 +780,7 @@ describe('Legend items compile contract', () => {
     ).toThrow(/missing\.sample.*children\[0\]|children\[0\].*missing\.sample/i);
   });
 
-  it('commits replay duplicate ids with one Core warning and last-wins lookup', () => {
+  it('提交回放重复 ID，并带有一个 Core 警告和后写优先查找', () => {
     const warnings: Array<CompileWarning> = [];
     const output = compileToScene(
       {
@@ -823,7 +823,7 @@ describe('Legend items compile contract', () => {
     });
   });
 
-  it('clips visible bounds without erasing real allocation and visual bounds', () => {
+  it('裁剪可见边界而不擦除实际分配和视觉边界', () => {
     const { output } = compileLegend(
       createLegend({
         contentAlign: LayoutAlignment.Center,

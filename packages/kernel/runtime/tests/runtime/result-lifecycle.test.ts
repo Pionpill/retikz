@@ -23,7 +23,7 @@ type Result = Readonly<{ value: number }>;
 
 type ResultDefinition = RuntimeComputationResultDefinitionInput<number, Result, number, number>;
 
-describe('runtime Computation result lifecycle', () => {
+describe('运行时计算结果生命周期', () => {
   const failureCases: ReadonlyArray<{
     name: string;
     expectedCode: string;

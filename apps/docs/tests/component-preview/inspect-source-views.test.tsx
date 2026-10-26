@@ -63,9 +63,9 @@ const demos = [
   ['inspect-scope', Demo6, source6, contract6],
   ['inspect-coordinate', Demo7, source7, contract7],
 ] as const;
-describe('Inspect demo source views', () => {
+describe('Inspect 演示源码视图', () => {
   it.each(demos)(
-    '%s has matching bilingual controls and keeps main geometry independent of inspection',
+    '%s 具有匹配的双语控制，并使主要几何形状独立于检查',
     (_name, _Component, source, contractFor) => {
       const zh = contractFor('zh');
       const en = contractFor('en');
@@ -117,7 +117,7 @@ describe('Inspect demo source views', () => {
     },
   );
 
-  it('rebuilds geometry and inspection options from current controls', () => {
+  it('从当前控件重建几何形状和检查选项', () => {
     const baseline = source4.buildViews?.({ lang: 'zh' });
     const changed = source4.buildViews?.({ lang: 'zh', values: { position: [30, 20], bounds: false } });
 
@@ -126,7 +126,7 @@ describe('Inspect demo source views', () => {
   });
 
   it.each(demos)(
-    '%s preserves inspection in generated Vanilla and Config for both languages',
+    '%s 在生成的 Vanilla 和两种语言的 Config 中保留检查',
     (name, Component, previewSource) => {
       for (const lang of ['zh', 'en'] as const) {
         const previewTheme = { mode: lang === 'zh' ? 'light' : 'dark' } as const;

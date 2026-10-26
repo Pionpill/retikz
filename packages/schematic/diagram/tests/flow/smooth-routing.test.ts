@@ -13,8 +13,8 @@ import {
 import type { FlowLayoutDefinition } from '../../src/flow';
 import { flowRouteLabelBounds, flowSmoothConflicts } from '../../src/flow/providers';
 
-describe('smooth authoring contract', () => {
-  it('preserves intermediate targets, duplicate knots and tension through JSON', () => {
+describe('顺利的编写契约', () => {
+  it('通过 JSON 保留中间目标、重复结和张力', () => {
     const routing = {
       kind: 'smooth',
       points: [
@@ -35,11 +35,11 @@ describe('smooth authoring contract', () => {
     { kind: 'smooth', points: [[1, 2]], tension: 0 },
     { kind: 'smooth', points: [[1, 2]], tension: -1 },
     { kind: 'smooth', points: [[1, 2]], mode: 'auto' },
-  ])('rejects incomplete or invalid smooth input', routing => {
+  ])('拒绝不完整或无效的平滑输入', routing => {
     expect(FlowRoutingSchema.safeParse(routing).success).toBe(false);
   });
 
-  it('keeps smooth relation-only and accepts omitted tension', () => {
+  it('仅保持平滑关系并接受省略的张力', () => {
     const routing = { kind: 'smooth', points: [[1, 2]] };
 
     expect(FlowRoutingSchema.parse(routing)).toEqual(routing);
@@ -91,7 +91,7 @@ const compileSmooth = (
   return { result, artifact, warnings };
 };
 
-it('resolves cursor targets, preserves duplicates and appends the real relation target', () => {
+it('解析游标目标，保留重复项并附加真实的关系目标', () => {
   const { artifact } = compileSmooth([
     [40, -50],
     [40, -50],
@@ -122,11 +122,11 @@ it('resolves cursor targets, preserves duplicates and appends the real relation 
   expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
 });
 
-it('rejects an out-of-flow nested reference without dropping the point', () => {
+it('拒绝流外嵌套引用而不删除点', () => {
   expect(() => compileSmooth([{ between: [[0, 0], { of: 'outside', offset: [1, 2] }], fraction: 0.5 }])).toThrow();
 });
 
-it('accepts real Group anchors but rejects Layout identities in nested targets', () => {
+it('接受真实的 Group 锚点，但拒绝嵌套目标中的 Layout 身份', () => {
   const { artifact } = compileSmooth([{ id: 'container', anchor: 'top' }], undefined, 1, 'group');
 
   expect(artifact.relations[0].route.points).toHaveLength(3);
@@ -135,14 +135,14 @@ it('accepts real Group anchors but rejects Layout identities in nested targets',
   );
 });
 
-it('warns when a route reenters its source and keeps all authored knots', () => {
+it('当路线重新进入其来源时发出警告并保留所有编写的节点', () => {
   const { artifact, warnings } = compileSmooth([[100, -50], { id: 'a' }, [100, -50]]);
 
   expect(warnings.some(warning => warning.code === 'FlowSmoothObstacleConflict')).toBe(true);
   expect(artifact.relations[0].route.points).toHaveLength(5);
 });
 
-it('keeps NodeTarget offsets in world units under the Flow root transform', () => {
+it('在 Flow 根变换下保留世界单位中的 NodeTarget 偏移量', () => {
   const { artifact } = compileSmooth([{ id: 'a', offset: [20, 0] }], undefined, 2);
   const points = artifact.relations[0].route.points;
 
@@ -150,7 +150,7 @@ it('keeps NodeTarget offsets in world units under the Flow root transform', () =
   expect(points[1][1] - points[0][1]).toBeCloseTo(0);
 });
 
-it('rejects smooth before calling a provider that does not declare support', () => {
+it('在调用未声明支持的提供者之前拒绝平滑', () => {
   let called = false;
   const provider: FlowLayoutDefinition = {
     ...LayeredFlowLayoutDefinition,
@@ -169,7 +169,7 @@ it('rejects smooth before calling a provider that does not declare support', () 
   expect(called).toBe(false);
 });
 
-it('rejects provider mutation of a middle knot', () => {
+it('拒绝中间结的提供者突变', () => {
   const provider: FlowLayoutDefinition = {
     ...LayeredFlowLayoutDefinition,
     name: 'changed-smooth',
@@ -196,7 +196,7 @@ it('rejects provider mutation of a middle knot', () => {
   expect(() => compileSmooth([[40, -50]], provider)).toThrow(/smooth route must preserve/);
 });
 
-it('detects smooth crossings between safe knots and retains reentry into endpoint nodes', () => {
+it('检测安全结之间的平滑交叉并保留重新进入端点节点', () => {
   const route = {
     kind: 'smooth' as const,
     points: [

@@ -150,13 +150,13 @@ const polarSpec = (marks: unknown, interpolation: 'polar' | 'chord' = 'polar'): 
     marks,
   });
 
-describe('RelationMark and anchorId lowering', () => {
+describe('RelationMark 和 anchorId 下沉', () => {
   const rows = [
     { id: 'A', x: 0, y: 0, source: 'A', target: 'B', label: 'A to B' },
     { id: 'B', x: 1, y: 1, source: 'A', target: 'B', label: 'A to B' },
   ];
 
-  it('accepts relation schema and rejects invalid anchorId / via-route combinations', () => {
+  it('接受关系 schema 并拒绝无效的 anchorId / via-route 组合', () => {
     expect(() =>
       baseSpec([
         {
@@ -207,7 +207,7 @@ describe('RelationMark and anchorId lowering', () => {
     ).toThrow(/cannot use via and route together/);
   });
 
-  it('writes point anchorId to generated core Node ids', () => {
+  it('将点 anchorId 写入生成的核心 Node id', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -224,7 +224,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(ids).toEqual(['pt.A', 'pt.B']);
   });
 
-  it('writes interval anchorId to generated core Node ids', () => {
+  it('将间隔 anchorId 写入生成的核心 Node id', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -239,7 +239,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(collectNodes(markLayer(root, 0)).map(node => node.id)).toEqual(['bar.A', 'bar.B']);
   });
 
-  it('supports runtime anchorId generator keys without storing functions in the spec', () => {
+  it('支持运行时 anchorId 生成器键，无需在规范中存储函数', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -262,7 +262,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(ids).toEqual(['generated.a', 'generated.b']);
   });
 
-  it('collects and resolves anchorId template field placeholders', () => {
+  it('收集并解析 anchorId 模板字段占位符', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -287,7 +287,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'pt.B' } });
   });
 
-  it('writes path anchorId as per-datum coordinates', () => {
+  it('将路径 anchorId 写入每个基准坐标', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -303,7 +303,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(coordinates.map(coordinate => coordinate.id)).toEqual(['way.A', 'way.B']);
   });
 
-  it('lowers fixed generated anchor source-target refs to core Path node targets', () => {
+  it('将固定生成的锚点源目标引用下沉到核心 Path 节点目标', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -329,7 +329,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1]).toMatchObject({ kind: 'line', to: { id: 'pt.B', anchor: 'left' } });
   });
 
-  it('lowers generated source-target anchors to a core Path with labels and path mark config', () => {
+  it('将生成的源-目标锚点下沉到带有标签和路径标记配置的核心 Path', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -374,7 +374,7 @@ describe('RelationMark and anchorId lowering', () => {
     });
   });
 
-  it('defaults relation route labels to sloped and keeps explicit route step label before shorthand label', () => {
+  it('默认关系路线标签为倾斜并在简写标签之前保留显式路线步骤标签', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -416,7 +416,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect('label' in path.children[2] ? path.children[2].label : undefined).toBeUndefined();
   });
 
-  it('passes explicit relation label canonical side names', () => {
+  it('传递显式关系标签规范侧面名称', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -445,7 +445,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1]).toMatchObject({ kind: 'line', label: { text: 'A to B', side: 'top' } });
   });
 
-  it('skips rows whose generated relation anchor fields are missing', () => {
+  it('跳过生成的关系锚字段缺失的行', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -486,7 +486,7 @@ describe('RelationMark and anchorId lowering', () => {
     });
   });
 
-  it('generates coordinates for relation projected via waypoints', () => {
+  it('生成通过航路点投影的关系的坐标', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -517,7 +517,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(collectPaths(relationLayer)[0].children[1]).toMatchObject({ kind: 'line', to: { id: 'rel.0.via.0' } });
   });
 
-  it('inherits polar interpolation for a default all-projected relation path', () => {
+  it('继承默认全投影关系路径的极坐标插值', () => {
     const root = expandOf(
       polarSpec([
         {
@@ -538,7 +538,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1].kind === 'smooth' && path.children[1].points.length).toBeGreaterThan(2);
   });
 
-  it('lets a relation polar override take precedence over a chord coordinate', () => {
+  it('让关系极坐标优先于弦坐标', () => {
     const root = expandOf(
       polarSpec(
         [
@@ -560,7 +560,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1]).toMatchObject({ kind: 'smooth' });
   });
 
-  it('samples projected via segments while preserving every authored target identity', () => {
+  it('通过分段投影的样本，同时保留每个编写的目标身份', () => {
     const root = expandOf(
       polarSpec([
         {
@@ -611,7 +611,7 @@ describe('RelationMark and anchorId lowering', () => {
     });
   });
 
-  it('keeps projected polar vertices when anchor context is absent', () => {
+  it('当锚点上下文不存在时，保留投影极顶点', () => {
     const spec = polarSpec([
       {
         type: 'relation',
@@ -647,7 +647,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1]).toMatchObject({ kind: 'smooth' });
   });
 
-  it('rejects explicit relation interpolation on unsupported coordinate and target forms', () => {
+  it('拒绝在不支持的坐标和目标形式上进行显式关系插值', () => {
     const cartesian = baseSpec([
       {
         type: 'relation',
@@ -676,7 +676,7 @@ describe('RelationMark and anchorId lowering', () => {
     );
   });
 
-  it('rejects explicit relation interpolation with route, routing, or ribbon geometry', () => {
+  it('拒绝与路线、布线或带状几何形状的显式关系插值', () => {
     const row = { sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 };
     const projectedTargets = {
       source: { position: { x: { value: 'sourceAngle' }, y: { value: 'sourceRadius' } } },
@@ -718,7 +718,7 @@ describe('RelationMark and anchorId lowering', () => {
     ).toThrow();
   });
 
-  it('preserves unsupported relation-owned routing when interpolation is omitted', () => {
+  it('当省略插值时，保留不支持的关系拥有的路由', () => {
     const root = expandOf(
       polarSpec([
         {
@@ -738,7 +738,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children.map(step => step.kind)).toEqual(['move', 'line']);
   });
 
-  it('fails loud on duplicate anchor ids', () => {
+  it('重复锚点 ID 时失败', () => {
     const spec = baseSpec([
       {
         type: 'point',
@@ -750,7 +750,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(() => expandOf(spec, { d: rows })).toThrow(/duplicate anchor id "pt.A"/);
   });
 
-  it('fails loud on missing generated relation anchors after lowering', () => {
+  it('下沉后丢失生成的关系锚点时失败', () => {
     const spec = baseSpec([
       {
         type: 'point',
@@ -771,7 +771,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(() => expandOf(spec, { d: [{ id: 'A', x: 0, y: 0, source: 'A', missing: 'Z' }] })).toThrow(/pt.Z/);
   });
 
-  it('derives relation rows locally and connects generated anchor targets', () => {
+  it('本地导出关系行并连接生成的锚点目标', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -834,7 +834,7 @@ describe('RelationMark and anchorId lowering', () => {
     });
   });
 
-  it('uses relation-local projected fields for scale domain and lowering', () => {
+  it('使用关系局部投影场进行尺度域和下沉', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -871,7 +871,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1]).toMatchObject({ kind: 'line' });
   });
 
-  it('atomically lowers projected relation endpoint glyphs after connectors', () => {
+  it('自动下沉连接器后的投影关系端点字形', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -919,7 +919,7 @@ describe('RelationMark and anchorId lowering', () => {
     });
   });
 
-  it('uses the same final-radius geometry for Point and Relation endpoint glyphs', () => {
+  it('对 Point 和 Relation 端点字形使用相同的最终半径几何形状', () => {
     const root = expandOf(
       baseSpec([
         { type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } }, properties: { size: 5 } },
@@ -943,7 +943,7 @@ describe('RelationMark and anchorId lowering', () => {
     ]);
   });
 
-  it('keeps zero-length projected relations and overlapping endpoint glyphs', () => {
+  it('保持零长度投影关系和重叠端点字形', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -971,7 +971,7 @@ describe('RelationMark and anchorId lowering', () => {
     ]);
   });
 
-  it('keeps endpoint datum provenance without registering duplicate datum ids', () => {
+  it('保留端点数据来源，无需注册重复的数据 ID', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -996,7 +996,7 @@ describe('RelationMark and anchorId lowering', () => {
     ]);
   });
 
-  it('lowers orthogonal routing to explicit line segments and attaches shorthand label to the main segment', () => {
+  it('将正交布线下沉到显式线段，并将简写标签附加到主线段', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -1045,7 +1045,7 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[2]).toMatchObject({ kind: 'line' });
   });
 
-  it('rejects route and routing conflicts plus malformed orthogonal routing', () => {
+  it('拒绝路由和路由冲突以及格式错误的正交路由', () => {
     expect(() =>
       baseSpec([
         {
@@ -1073,7 +1073,7 @@ describe('RelationMark and anchorId lowering', () => {
     ).toThrow(/via/);
   });
 
-  it('lowers ribbon relation kind to core ribbon path with shared style and field-bound width', () => {
+  it('通过共享样式和字段绑定宽度下沉功能区与核心功能区路径的关系类型', () => {
     const root = expandOf(
       {
         ...baseSpec([
@@ -1117,7 +1117,7 @@ describe('RelationMark and anchorId lowering', () => {
     });
   });
 
-  it('delivers custom path channels to ribbon relation paths', () => {
+  it('将自定义路径通道提供给功能区关系路径', () => {
     const root = expandOf(
       baseSpec([
         {

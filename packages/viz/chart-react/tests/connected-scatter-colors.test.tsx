@@ -9,7 +9,7 @@ import {
   ConnectedScatterProperties,
 } from '../src/point/connected-scatter';
 
-it('preserves Connected Scatter colorMode through React and Vanilla', () => {
+it('通过 React 和 Vanilla 保留连通散点图 colorMode', () => {
   const rows = [
     { x: 0, y: 0, order: 1 },
     { x: 1, y: 2, order: 2 },

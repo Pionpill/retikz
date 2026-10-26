@@ -42,8 +42,8 @@ const textPrimitives = (source: ReturnType<typeof compileChart>): Array<Extract<
     (primitive): primitive is Extract<ScenePrimitive, { type: 'text' }> => primitive.type === 'text',
   );
 
-describe('Chart formal presentation, defaults, and Plot forwarding', () => {
-  it('accepts formal presentation regions and sparse defaultChart', () => {
+describe('Chart 正式呈现，默认，Plot 转发', () => {
+  it('接受正式表示区域和稀疏 defaultChart', () => {
     const source = baseChart({
       presentation: {
         title: {
@@ -65,7 +65,7 @@ describe('Chart formal presentation, defaults, and Plot forwarding', () => {
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
   });
 
-  it('does not create a title or other presentation region from defaults alone', () => {
+  it('不单独从默认值创建标题或其他呈现区域', () => {
     const output = compileChart(
       baseChart({
         defaultChart: {
@@ -81,7 +81,7 @@ describe('Chart formal presentation, defaults, and Plot forwarding', () => {
     expect(textPrimitives(output)).toHaveLength(0);
   });
 
-  it('forwards Plot defaults through plotExtension without creating Chart-owned Plot state', () => {
+  it('通过 plotExtension 默认转发 Plot，而不创建 Chart 拥有的 Plot 状态', () => {
     const output = compileChart(
       baseChart({
         plotExtension: {

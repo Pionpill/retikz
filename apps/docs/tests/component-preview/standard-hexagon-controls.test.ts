@@ -6,7 +6,7 @@ import { previewControlContract as hexagonZh } from '@/modules/docs/contents/lib
 import { previewSource } from '@/modules/docs/contents/library/extension/shape/hexagon-example.demo';
 import { previewControlContract as hexagonEn } from '@/modules/docs/contents/library/extension/shape/hexagon-example.en.controls';
 
-describe('Standard Hexagon controls', () => {
+describe('Standard 六边形控件', () => {
   it('用固定 user-unit 肩深替代随总宽增长的肩部比例', () => {
     expect(
       getPreviewControlFields(hexagonZh.controls).map(field => ({

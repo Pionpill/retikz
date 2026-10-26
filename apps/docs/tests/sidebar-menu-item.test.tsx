@@ -72,7 +72,7 @@ afterEach(() => {
 });
 
 describe('<AppSidebarMenuItem>', () => {
-  it('opens the active branch and selects its leaf after URL navigation', () => {
+  it('在 URL 导航后打开活动分支并选择其叶子', () => {
     const container = renderMenuItem();
     const navigationButton = findButton(container, 'Navigate to principles');
 

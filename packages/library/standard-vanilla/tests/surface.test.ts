@@ -12,8 +12,8 @@ import { describe, expect, it } from 'vitest';
 
 import { frame, FrameInputEmbedAdapter, surface, surfaceChild, SurfaceInputEmbedAdapter } from '../src/presentation';
 
-describe('surface()', () => {
-  it('forwards prepared input for an arbitrary nested composite through Surface probes', async () => {
+describe('表面（）', () => {
+  it('通过 Surface 探测转发任意嵌套复合组件的准备输入', async () => {
     let executions = 0;
     const definition = {
       ...FrameDefinition,
@@ -49,7 +49,7 @@ describe('surface()', () => {
     expect(executions).toBe(1);
   });
 
-  it('wraps a raw Core child without inventing child dependencies', () => {
+  it('包装原始 Core 子项，而不创建子项依赖项', () => {
     const child = surfaceChild({ type: 'node', position: [0, 0], text: 'A' });
     const normalized = normalizeScene(scene({ children: [surface({ padding: 4, child })] }), {
       adapters: [SurfaceInputEmbedAdapter],
@@ -76,7 +76,7 @@ describe('surface()', () => {
     expect(explicit.ir.children[0]).toHaveProperty('id', 'surface-model');
   });
 
-  it('preserves explicit nested Tier-2 dependencies after Surface in authored order', () => {
+  it('按编写顺序保留 Surface 之后的显式嵌套第 2 层依赖项', () => {
     const childEmbed = frame({ children: [{ type: 'node', position: [0, 0], text: 'A' }] });
     const normalized = normalizeScene(scene({ children: [surface({ child: surfaceChild(childEmbed) })] }), {
       adapters: [SurfaceInputEmbedAdapter, FrameInputEmbedAdapter],
@@ -86,7 +86,7 @@ describe('surface()', () => {
     expect(normalized.contributions[0]?.providers).toEqual([SurfaceProvider, PathClipProvider, FrameProvider]);
   });
 
-  it('normalizes through the public Vanilla embed without leaking runtime child metadata into IR', () => {
+  it('通过公共 Vanilla 嵌入进行规范化，而不会将运行时子元数据泄漏到 IR 中', () => {
     const result = normalizeScene(
       scene({
         children: [surface({ child: surfaceChild({ type: 'node', position: [0, 0] }) })],

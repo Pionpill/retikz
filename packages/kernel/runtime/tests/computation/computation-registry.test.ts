@@ -42,7 +42,7 @@ const defineComputation = (
     run: () => ({ kind: RuntimeComputationKind.Full, result: 1 }),
   });
 
-describe('runtime computation definition and registry', () => {
+describe('运行时计算定义和注册表', () => {
   it('统一注册计算列表，并按拓扑后 owner/key code-unit 顺序返回', () => {
     const owner = defineSource('counter');
     const upperSource = defineSource('Counter');

@@ -51,7 +51,7 @@ const rows = [
 ];
 const options = { textMeasurer: measureLabel };
 
-describe('data-bound annotations', () => {
+describe('数据绑定注释', () => {
   it.each([6, 14, 24])('常量位置在没有数据行时保留固定半径 %s', size => {
     const output = lowerPlot(
       plot([{ ...point, properties: { ...point.properties, size, minimumSize: 2 } }]),
@@ -83,7 +83,7 @@ describe('data-bound annotations', () => {
     expect(ellipses[0].ry).toBeCloseTo(expected[0].ry, 3);
   });
 
-  it('preserves empty transforms and field bindings through JSON', () => {
+  it('通过 JSON 保留空转换和字段绑定', () => {
     const source = MarkSchema.parse({
       ...point,
       transforms: [],
@@ -100,7 +100,7 @@ describe('data-bound annotations', () => {
     ).toBe(false);
   });
 
-  it('keeps constants independent with an explicitly empty data chain', () => {
+  it('使常量与显式空数据链保持独立', () => {
     expect(leaves(lowerPlot(plot([point]), { rows }, options))).toHaveLength(1);
     expect(
       leaves(lowerPlot(plot([{ ...point, transforms: [], properties: { ...point.properties } }]), { rows }, options)),
@@ -112,7 +112,7 @@ describe('data-bound annotations', () => {
     ).toHaveLength(1);
   });
 
-  it('projects each point and interval row identically to explicit constants', () => {
+  it('将每个点和间隔行相同地投影为显式常量', () => {
     const data = plot([
       {
         ...point,
@@ -153,7 +153,7 @@ describe('data-bound annotations', () => {
     expect(() => compileToScene({ type: 'scene', version: 1, children: [output] })).not.toThrow();
   });
 
-  it('computes a local mean without mutating a sibling data view', () => {
+  it('计算局部平均值而不改变同级数据视图', () => {
     const output = lowerPlot(
       plot([
         { ...path, transforms: summarize, properties: { ...path.properties } },
@@ -183,7 +183,7 @@ describe('data-bound annotations', () => {
     expect(leaves(output)).toHaveLength(3);
   });
 
-  it('uses the same aggregated results for asynchronous preparation and lineage', async () => {
+  it('使用相同的聚合结果进行异步准备和血缘', async () => {
     const source = plot([{ ...path, id: 'mean', transforms: summarize, properties: { ...path.properties } }]);
     const prepared = await (
       await preparePlotData(source, { dataBindings: { rows: { kind: 'rows', rows } } })
@@ -204,7 +204,7 @@ describe('data-bound annotations', () => {
     expect(result.lineage.data.marks).toHaveLength(1);
   });
 
-  it('rejects fields removed by aggregation and skips missing point values', () => {
+  it('拒绝通过聚合删除的字段并跳过缺失的点值', () => {
     expect(() =>
       lowerPlot(
         plot([
@@ -231,7 +231,7 @@ describe('data-bound annotations', () => {
     ).toHaveLength(0);
   });
 
-  it('creates independent group spans and exposes one datum with aggregate provenance per path', () => {
+  it('创建独立的组跨度并公开一个数据以及每条路径的聚合来源', () => {
     const source = plot([
       {
         ...path,
@@ -279,7 +279,7 @@ describe('data-bound annotations', () => {
     expect(locator.datum(2, { markIndex: 0 })).toBeNull();
   });
 
-  it('aggregates the actual facet partition and preserves scoped locator identity', async () => {
+  it('聚合实际的分面分区并保留作用域定位器标识', async () => {
     const source = plot([{ ...path, transforms: summarize, properties: { ...path.properties } }]);
     delete source.coordinate;
     source.composition = {
@@ -309,7 +309,7 @@ describe('data-bound annotations', () => {
     expect(a?.anchor.position).not.toEqual(b?.anchor.position);
   });
 
-  it('only contributes final data positions to an inferred domain when enabled', () => {
+  it('启用时仅将最终数据位置贡献给推断域', () => {
     const source = plot([
       {
         type: 'point',
@@ -340,7 +340,7 @@ describe('data-bound annotations', () => {
     expect(included).toHaveLength(4);
   });
 
-  it('retains coordinate connection semantics for field-driven polar paths and regions', () => {
+  it('保留场驱动极路径和区域的坐标连接语义', () => {
     const source = plot([
       {
         ...path,
@@ -363,7 +363,7 @@ describe('data-bound annotations', () => {
     expect(result[1]).toHaveProperty('shape.type', 'sector');
   });
 
-  it('applies marks execution policy and declaration overrides to annotation transforms', () => {
+  it('将标记执行策略和声明覆盖应用于注释转换', () => {
     const source = plot([{ ...path, transforms: summarize, properties: { ...path.properties } }]);
     source.dataExecution = { root: { mode: 'builtin' }, marks: { mode: 'external', external: 'fixture' } };
     expect(() => lowerPlot(source, { rows }, options)).toThrow(/async preparation/i);

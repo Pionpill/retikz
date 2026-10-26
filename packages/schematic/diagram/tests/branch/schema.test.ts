@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import { BranchDiagramSchema, BranchLayoutIntentSchema } from '../../src/branch/schemas';
 
-describe('Branch Source', () => {
+describe('分支 Source', () => {
   const source = {
     namespace: 'diagram',
     type: 'branch',
     nodes: [{ id: 'a' }],
     branches: [{ id: 'main', nodes: ['a'] }],
   };
-  it('round-trips a single-node branch and defaults layout intent', () => {
+  it('往返单节点分支并默认布局意图', () => {
     const parsed = BranchDiagramSchema.parse(source);
 
     expect(BranchDiagramSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
@@ -22,7 +22,7 @@ describe('Branch Source', () => {
     { ...source, branches: [{ id: 'main', nodes: [] }] },
     { ...source, nodes: [{ id: 'a', text: 'body' }] },
     { ...source, nodes: [{ id: 'a', position: [0, 0] }] },
-  ])('rejects invalid Source %j', invalid => {
+  ])('拒绝无效的 Source %j', invalid => {
     expect(BranchDiagramSchema.safeParse(invalid).success).toBe(false);
   });
 });

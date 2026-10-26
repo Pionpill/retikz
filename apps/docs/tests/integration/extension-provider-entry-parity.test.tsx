@@ -59,8 +59,8 @@ const definitions = {
   paths: [RibbonPathDefinition],
 } as const;
 
-describe('Extension root entry integration', () => {
-  it('renders the quick-start input only when its selected definition is supplied', () => {
+describe('扩展根条目集成', () => {
+  it('仅在提供所选定义时渲染快速启动输入', () => {
     const input = scene({
       children: [
         {
@@ -82,7 +82,7 @@ describe('Extension root entry integration', () => {
     expect(svg).toContain('<path');
   });
 
-  it('keeps direct Core compile and Vanilla compilation scene-equivalent with exact capability entries', () => {
+  it('保持直接 Core 编译和 Vanilla 编译场景与精确的功能条目等效', () => {
     const direct = compileToScene(source, definitions);
     const vanilla = toSceneResult(source, { compile: definitions });
     const svg = renderToSvgString(source, { compile: definitions });
@@ -97,7 +97,7 @@ describe('Extension root entry integration', () => {
     expect(direct.scene.primitives.filter(primitive => primitive.type === 'path').length).toBeGreaterThan(1);
   });
 
-  it('renders the same explicitly assembled capability set through React SSR', () => {
+  it('通过 React SSR 呈现相同的显式组装的能力集', () => {
     const markup = renderToStaticMarkup(
       <Layout ir={source} extensions={definitions} idPrefix="extension-provider-entry" />,
     );
@@ -110,7 +110,7 @@ describe('Extension root entry integration', () => {
     expect(markup).toContain('d="M 0 5 L 5 0 L 10 5 L 5 10 Z"');
   });
 
-  it('resolves the Extension Ribbon provider contribution into the same compile entry', () => {
+  it('将 Extension Ribbon 提供者贡献解析到同一编译入口', () => {
     const providerDefinitions = resolveCoreProviderDependencies({
       contributions: [createRibbonProviderContribution()],
       definitions: {

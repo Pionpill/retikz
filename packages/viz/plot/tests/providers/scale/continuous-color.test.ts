@@ -374,7 +374,7 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
   });
 
   // 错误路径：temporal 字段 + diverging → fail-loud（diverging 对 temporal 无意义）
-  it('temporal + diverging fail-loud', () => {
+  it('时间+发散的失败声音', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

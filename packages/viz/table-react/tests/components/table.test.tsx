@@ -72,8 +72,8 @@ const inputOf = <TProps,>(component: InputTableComponent, props: TProps): InputT
 const contributionOf = <TProps,>(component: InputTableComponent, props: TProps, id: string) =>
   TableInputEmbedAdapter.lower(inputOf(component, props), contextOf(id));
 
-describe('Table React components', () => {
-  it('renders generic manual, detail, and custom Table specs through the same Table runtime', () => {
+describe('Table React 元件', () => {
+  it('通过相同的 Table 运行时呈现通用手册、详细信息和自定义 Table 规格', () => {
     const customOutput: TableStructureOutput = {
       rows: [{ id: 'row.0', kind: TableRowKind.Body }],
       columns: [{ id: 'column.0' }],
@@ -111,7 +111,7 @@ describe('Table React components', () => {
     );
   });
 
-  it('keeps Table defaults, encodings, and custom visual scales equal in standalone and embedded runtimes', () => {
+  it('在独立运行时和嵌入式运行时中保持 Table 默认值、编码和自定义视觉比例相同', () => {
     const visualScale = defineCellVisualScale({
       name: 'react-palette',
       optionsSchema: strictObject({}),
@@ -149,7 +149,7 @@ describe('Table React components', () => {
     expect(embedded).toContain('1');
   });
 
-  it('uses the effective Core Theme to select a different Table preset', () => {
+  it('使用有效的 Core 主题选择不同的 Table 预设', () => {
     const defaultTheme = renderToStaticMarkup(<Table spec={createManualTableIR({ rows: [['Ada']] })} />);
     const clean = renderToStaticMarkup(
       <ThemeProvider theme={{ name: 'clean', mode: 'light' }} themeDefinitions={[cleanCoreTheme]}>
@@ -165,7 +165,7 @@ describe('Table React components', () => {
     expect(clean).not.toContain('#e4e4e7');
   });
 
-  it('keeps DetailTable and ManualTable authoring equal to the shared plain constructors', () => {
+  it('保持 DetailTable 和 ManualTable 编写与共享普通构造函数相同', () => {
     const detailProps = {
       id: 'people-table',
       dataRef: 'people',
@@ -194,7 +194,7 @@ describe('Table React components', () => {
     expect(renderToStaticMarkup(<ManualTable {...manualProps} />)).toContain('98');
   });
 
-  it('routes all three components through the shared Vanilla adapter with stable runtime references', () => {
+  it('通过具有稳定运行时引用的共享 Vanilla 适配器路由所有三个组件', () => {
     const tableContribution = contributionOf(Table, { spec: manualSpec('generic') }, 'generic');
     const detailContribution = contributionOf(
       DetailTable,
@@ -230,7 +230,7 @@ describe('Table React components', () => {
     );
   });
 
-  it('renders all three components as embedded Layout children without calling their render functions', () => {
+  it('将所有三个组件渲染为嵌入式 Layout 子组件，而不调用其渲染函数', () => {
     const svg = renderToStaticMarkup(
       <Layout>
         <Table spec={manualSpec('generic')} />
@@ -250,7 +250,7 @@ describe('Table React components', () => {
     expect(svg).toContain('Lin');
   });
 
-  it('allows anonymous embedded Tables while retaining explicit-id and host-prop diagnostics', () => {
+  it('允许匿名嵌入表，同时保留显式 ID 和宿主属性诊断', () => {
     expect(
       renderToStaticMarkup(
         <Layout>
@@ -288,7 +288,7 @@ describe('Table React components', () => {
     ).toThrow(/onManifest.*outer.*Layout/i);
   });
 
-  it('rejects standalone-only host props together in embedded mode', () => {
+  it('在嵌入模式下拒绝仅独立的宿主 props', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout>
@@ -318,7 +318,7 @@ describe('Table React components', () => {
     ).toThrow(/width.*onManifest.*embeddables.*outer.*Layout/i);
   });
 
-  it('rejects containerStyle from all three embedded authoring entries', () => {
+  it('拒绝所有三个嵌入式编写条目中的 containerStyle', () => {
     const containerStyle = { color: 'rebeccapurple' };
 
     expect(() => inputOf(Table, { spec: manualSpec('generic-style'), containerStyle })).toThrow(
@@ -338,7 +338,7 @@ describe('Table React components', () => {
     );
   });
 
-  it('passes nested composite definitions through standalone Table runtime', () => {
+  it('通过独立的 Table 运行时传递嵌套复合定义', () => {
     const schema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
       type: literal('badge'),
@@ -358,7 +358,7 @@ describe('Table React components', () => {
   });
 });
 
-it.each([false, true])('passes category definitions through Table React with embedded=%s', embedded => {
+it.each([false, true])('通过嵌入=%s 的 Table React 传递类别定义', embedded => {
   const spec = TableSchema.parse({
     namespace: 'table',
     type: 'table',

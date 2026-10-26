@@ -121,9 +121,9 @@ const nodeByText = (layer: IRScope, text: string): IRNode => {
   return node as IRNode;
 };
 
-describe('lowerGuide (contract)', () => {
+describe('lowerGuide（契约）', () => {
   // Happy path
-  it('lower_axis_x_structure', () => {
+  it('下沉 x 轴结构', () => {
     const { gridLayer, axisLayer } = lowerGuide({ type: 'axis', dimension: 'x' }, ctx);
 
     expect(gridLayer).toBeNull();
@@ -143,7 +143,7 @@ describe('lowerGuide (contract)', () => {
     expect((layer.children[0] as IRPath).children[0]).toEqual({ type: 'step', kind: 'move', to: [40, 260] });
   });
 
-  it('lower_axis_y_structure', () => {
+  it('下沉 y 轴结构', () => {
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'y' }, ctx);
     const layer = axisLayer as IRScope;
     const labels = nodeChildren(layer);
@@ -155,7 +155,7 @@ describe('lowerGuide (contract)', () => {
     expect((labels[0].position as [number, number])[0]).toBeLessThan(40);
   });
 
-  it('y_axis_title_defaults_to_rotated_top_edge_near_left_axis', () => {
+  it('y 轴标题默认为左轴附近的旋转顶部边缘', () => {
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'y', title: 'Revenue' }, ctx);
     const title = nodeByText(axisLayer as IRScope, 'Revenue');
 
@@ -164,7 +164,7 @@ describe('lowerGuide (contract)', () => {
     expect((title.position as [number, number])[1]).toBe(135);
   });
 
-  it('right_y_axis_title_defaults_to_rotated_top_edge_near_left_side', () => {
+  it('右 y 轴标题默认为旋转顶部边缘靠近左侧', () => {
     const { axisLayer } = lowerGuide(
       { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'right' }, title: 'Revenue' },
       ctx,
@@ -176,14 +176,14 @@ describe('lowerGuide (contract)', () => {
     expect((title.position as [number, number])[1]).toBe(135);
   });
 
-  it('explicit_y_axis_title_rotation_is_preserved', () => {
+  it('保留显式 y 轴标题旋转角', () => {
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'y', title: { text: 'Revenue', rotate: 0 } }, ctx);
     const title = nodeByText(axisLayer as IRScope, 'Revenue');
 
     expect(title.rotate).toBe(0);
   });
 
-  it('horizontal_y_axis_title_orientation_overrides_default_rotation', () => {
+  it('水平 y 轴标题朝向覆盖默认旋转角', () => {
     const { axisLayer } = lowerGuide(
       { type: 'axis', dimension: 'y', title: { text: 'y', placement: 'at-end', orientation: 'horizontal' } },
       ctx,
@@ -194,7 +194,7 @@ describe('lowerGuide (contract)', () => {
     expect((title.position as [number, number])[1]).toBe(10);
   });
 
-  it('explicit_title_rotate_overrides_title_orientation', () => {
+  it('显式标题 rotate 优先于标题朝向', () => {
     const { axisLayer } = lowerGuide(
       { type: 'axis', dimension: 'y', title: { text: 'Revenue', orientation: 'horizontal', rotate: 45 } },
       ctx,
@@ -204,21 +204,21 @@ describe('lowerGuide (contract)', () => {
     expect(title.rotate).toBe(45);
   });
 
-  it('axis_title_at_end_places_x_title_near_positive_axis_end', () => {
+  it('轴标题位于末端，x 标题靠近正轴末端', () => {
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', title: { text: 'x', placement: 'at-end' } }, ctx);
     const title = nodeByText(axisLayer as IRScope, 'x');
 
     expect((title.position as [number, number])[0]).toBe(440);
   });
 
-  it('axis_title_ratio_placement_samples_baseline_from_negative_to_positive', () => {
+  it('坐标轴标题按比例沿基线从负向到正向采样放置', () => {
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', title: { text: 'x', placement: 0.4 } }, ctx);
     const title = nodeByText(axisLayer as IRScope, 'x');
 
     expect((title.position as [number, number])[0]).toBe(200);
   });
 
-  it('axis_title_padding_shift_and_anchor_lower_to_title_node', () => {
+  it('轴标题填充移位并将锚点下沉到标题节点', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -241,14 +241,14 @@ describe('lowerGuide (contract)', () => {
     expect((title.position as [number, number])[1]).toBe(301.8);
   });
 
-  it('axis_title_at_end_places_y_title_near_visual_top', () => {
+  it('末端的轴标题将 y 标题放置在视觉顶部附近', () => {
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'y', title: { text: 'y', placement: 'at-end' } }, ctx);
     const title = nodeByText(axisLayer as IRScope, 'y');
 
     expect((title.position as [number, number])[1]).toBe(10);
   });
 
-  it('polar_angular_axis_title_placement_samples_angle_range', () => {
+  it('极坐标角度轴标题放置沿角度范围采样', () => {
     const { axisLayer } = lowerGuide(
       { type: 'axis', dimension: 'x', title: { text: 'theta', placement: 'at-end' } },
       {
@@ -289,7 +289,7 @@ describe('lowerGuide (contract)', () => {
     expect((title.position as [number, number])[0]).toBeLessThan(40);
   });
 
-  it('polar_angular_axis_title_orientation_axis_follows_arc_tangent', () => {
+  it('极坐标角度轴标题采用 axis 朝向时沿圆弧切线', () => {
     const { axisLayer } = lowerGuide(
       { type: 'axis', dimension: 'x', title: { text: 'theta', placement: 'at-end', orientation: 'axis' } },
       {
@@ -330,7 +330,7 @@ describe('lowerGuide (contract)', () => {
     expect(title.rotate).toBeCloseTo(-90, 6);
   });
 
-  it('polar_angular_tick_labels_extend_outward_by_angle', () => {
+  it('极坐标角度刻度标签随角度向外延伸', () => {
     const values = [0, 30, 90, 180, 270];
     const labels = ['Right', 'Diagonal label', 'Bottom', 'Left', 'Top'];
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'x' }, polarAngularGuideContext(values, labels));
@@ -356,7 +356,7 @@ describe('lowerGuide (contract)', () => {
     expect(top.position).toEqual([200, 84]);
   });
 
-  it('polar_angular_tick_label_center_moves_continuously_across_a_cardinal_angle', () => {
+  it('极坐标角度刻度标签中心跨越主方位角时连续移动', () => {
     const atCardinal = nodeByText(
       lowerGuide({ type: 'axis', dimension: 'x' }, polarAngularGuideContext([90], ['Waseca'])).axisLayer as IRScope,
       'Waseca',
@@ -371,7 +371,7 @@ describe('lowerGuide (contract)', () => {
     expect(Math.hypot(pastX - cardinalX, pastY - cardinalY)).toBeLessThan(4);
   });
 
-  it('polar_angular_tick_label_explicit_alignment_overrides_angle_default', () => {
+  it('极坐标角度刻度标签的显式对齐覆盖角度默认值', () => {
     const { axisLayer } = lowerGuide(
       { type: 'axis', dimension: 'x', tickLabels: { align: 'middle' } },
       polarAngularGuideContext([0], ['Right']),
@@ -380,7 +380,7 @@ describe('lowerGuide (contract)', () => {
     expect(nodeByText(axisLayer as IRScope, 'Right').layout?.align).toBe('middle');
   });
 
-  it('polar_radial_axis_title_placement_samples_radius_range', () => {
+  it('极坐标半径轴标题放置沿半径范围采样', () => {
     const { axisLayer } = lowerGuide(
       { type: 'axis', dimension: 'y', title: { text: 'radius', placement: 'at-end' } },
       {
@@ -421,7 +421,7 @@ describe('lowerGuide (contract)', () => {
     expect((title.position as [number, number])[0]).toBeGreaterThan(170);
   });
 
-  it('custom_axis_title_placement_samples_numeric_axis_range', () => {
+  it('自定义轴标题放置样本数字轴范围', () => {
     const scale = fakeTickScale(value => value * 10, [0, 5, 10]);
     const frame = createCoordinateFrame(
       'custom-line',
@@ -444,7 +444,7 @@ describe('lowerGuide (contract)', () => {
     expect((title.position as [number, number])[0]).toBeCloseTo(100, 6);
   });
 
-  it('lower_axis_x_grid_lines', () => {
+  it('下轴 x 网格线', () => {
     const { gridLayer } = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, ctx);
     const layer = gridLayer as IRScope;
     const path = layer.children[0] as IRPath;
@@ -455,7 +455,7 @@ describe('lowerGuide (contract)', () => {
     expect(path.children[1]).toEqual({ type: 'step', kind: 'line', to: [40, 260] });
   });
 
-  it('lower_axis_y_grid_lines', () => {
+  it('下轴 y 网格线', () => {
     const { gridLayer } = lowerGuide({ type: 'axis', dimension: 'y', grid: true }, ctx);
     const path = (gridLayer as IRScope).children[0] as IRPath;
 
@@ -464,7 +464,7 @@ describe('lowerGuide (contract)', () => {
     expect(path.children[1]).toEqual({ type: 'step', kind: 'line', to: [440, 35] });
   });
 
-  it('axis_grid_can_use_independent_tick_source_and_line_cap', () => {
+  it('轴网格可以使用独立的刻度源和线帽', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -479,7 +479,7 @@ describe('lowerGuide (contract)', () => {
     expect(gridPath.style?.lineCap).toBe('round');
   });
 
-  it('axis_grid_density_samples_grid_ticks_without_changing_axis_ticks', () => {
+  it('轴网格密度样本网格网格刻度而不改变轴刻度', () => {
     const { axisLayer, gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -494,7 +494,7 @@ describe('lowerGuide (contract)', () => {
     expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['0', '1', '2', '3']);
   });
 
-  it('axis_grid_range_boundaries_are_opt_in', () => {
+  it('选择加入轴网格范围边界', () => {
     const endpointCtx: GuideContext = {
       ...ctx,
       projectX: fakeScale(value => 40 + value * 40, [-1, 3]),
@@ -510,7 +510,7 @@ describe('lowerGuide (contract)', () => {
     expect(((explicitlyDisabled.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
   });
 
-  it('axis_grid_appends_missing_scale_range_boundaries_after_explicit_source', () => {
+  it('轴网格在显式源之后附加缺少的比例范围边界', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -527,7 +527,7 @@ describe('lowerGuide (contract)', () => {
     expect(steps[4]).toEqual({ type: 'step', kind: 'move', to: [440, 10] });
   });
 
-  it('axis_grid_appends_scale_range_boundaries_after_density_without_changing_axis_ticks', () => {
+  it('轴网格在密度之后附加比例范围边界，而不更改轴刻度', () => {
     const { axisLayer, gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -546,7 +546,7 @@ describe('lowerGuide (contract)', () => {
     expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['1', '2', '3', '4']);
   });
 
-  it('axis_grid_range_boundaries_dedupe_by_finite_projected_coordinate', () => {
+  it('通过有限投影坐标消除轴网格范围边界的重复', () => {
     const existingEndpoint = lowerGuide(
       { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
       {
@@ -580,7 +580,7 @@ describe('lowerGuide (contract)', () => {
     expect(((nonFiniteEndpoint.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
   });
 
-  it('axis_grid_include_domain_uses_plot_range_boundaries_for_band_scale', () => {
+  it('轴网格包括域使用绘图范围边界作为带标度', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -600,7 +600,7 @@ describe('lowerGuide (contract)', () => {
     expect(gridPath.children[2]).toEqual({ type: 'step', kind: 'move', to: [210, 10] });
   });
 
-  it('axis_grid_include_domain_uses_plot_range_boundaries_for_point_scale', () => {
+  it('轴网格包括域使用点比例的绘图范围边界', () => {
     const { gridLayer } = lowerGuide(
       { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
       {
@@ -617,7 +617,7 @@ describe('lowerGuide (contract)', () => {
     expect(gridPath.children[4]).toEqual({ type: 'step', kind: 'move', to: [210, 10] });
   });
 
-  it('axis_grid_include_domain_draws_boundaries_without_ticks', () => {
+  it('轴网格包括域绘制没有刻度的边界', () => {
     const { gridLayer } = lowerGuide(
       { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
       {
@@ -631,7 +631,7 @@ describe('lowerGuide (contract)', () => {
     expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
   });
 
-  it('axis_grid_range_boundaries_do_not_change_minor_grid_candidates', () => {
+  it('轴网格范围边界不会更改次要网格候选者', () => {
     const { axisLayer, gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -655,7 +655,7 @@ describe('lowerGuide (contract)', () => {
     expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['1']);
   });
 
-  it('axis_grid_minor_uses_second_path_and_skips_major_overlap', () => {
+  it('轴网格次要使用第二条路径并跳过主要重叠', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -675,7 +675,7 @@ describe('lowerGuide (contract)', () => {
     expect(typeof minorGrid.style?.opacity === 'object' ? minorGrid.style.opacity.stroke : undefined).toBe(0.08);
   });
 
-  it('axis_grid_band_position_offsets_grid_line_inside_band', () => {
+  it('轴网格带位置在带内偏移网格线', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -693,7 +693,7 @@ describe('lowerGuide (contract)', () => {
     expect(gridPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [90, 10] });
   });
 
-  it('axis_grid_minor_band_position_compares_actual_major_positions', () => {
+  it('轴网格次带位置与实际主要位置进行比较', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -712,7 +712,7 @@ describe('lowerGuide (contract)', () => {
     expect(minorGrid.children[0]).toEqual({ type: 'step', kind: 'move', to: [110, 10] });
   });
 
-  it('polar_angular_grid_source_and_minor_keep_spoke_paths', () => {
+  it('极坐标角度网格的 source 和 minor 保留辐射路径', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -760,7 +760,7 @@ describe('lowerGuide (contract)', () => {
     expect(minorGrid.style?.dashPattern).toEqual([2, 2]);
   });
 
-  it('polar_angular_grid_dedupes_cyclic_domain_endpoints', () => {
+  it('极坐标角度网格去重周期定义域端点', () => {
     const angularScale = fakeScale(value => value % 360, [0, 360]);
     const { gridLayer } = lowerGuide(
       {
@@ -806,7 +806,7 @@ describe('lowerGuide (contract)', () => {
     expect(gridPath.children).toHaveLength(4);
   });
 
-  it('tick_pixels_match_projector', () => {
+  it('勾选像素匹配投影仪', () => {
     const layer = lowerGuide({ type: 'axis', dimension: 'x' }, ctx).axisLayer as IRScope;
     const labels = nodeChildren(layer);
 
@@ -815,11 +815,11 @@ describe('lowerGuide (contract)', () => {
   });
 
   // 边界
-  it('axis_no_grid_null_layer', () => {
+  it('轴无网格空层', () => {
     expect(lowerGuide({ type: 'axis', dimension: 'x' }, ctx).gridLayer).toBeNull();
   });
 
-  it('axis_ticklabels_false_no_text', () => {
+  it('轴刻度标签 false 无文本', () => {
     const layer = lowerGuide({ type: 'axis', dimension: 'x', tickLabels: false }, ctx).axisLayer as IRScope;
 
     // 只剩轴线 + 刻度线 Path，无 label Node
@@ -828,7 +828,7 @@ describe('lowerGuide (contract)', () => {
     expect(nodeChildren(layer)).toEqual([]);
   });
 
-  it('grid_empty_ticks_skipped', () => {
+  it('跳过网格空刻度', () => {
     const emptyCtx: GuideContext = { ...ctx, xTicks: { values: [], labels: [] } };
     const { gridLayer, axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, emptyCtx);
 
@@ -839,7 +839,7 @@ describe('lowerGuide (contract)', () => {
   });
 
   // 错误路径 / 退化
-  it('guide_styles_hoisted', () => {
+  it('吊装导轨样式', () => {
     const { gridLayer, axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, ctx);
 
     expect((axisLayer as IRScope).defaults?.path?.style?.stroke).toBe('currentColor');
@@ -848,7 +848,7 @@ describe('lowerGuide (contract)', () => {
     expect(((gridLayer as IRScope).children[0] as IRPath).style?.opacity).toEqual({ stroke: 0.15 });
   });
 
-  it('axis_text_nodes_inherit_no_stroke_or_fill_defaults', () => {
+  it('轴文本节点不继承描边或填充默认值', () => {
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', title: 'Month' }, ctx);
     const layer = axisLayer as IRScope;
 
@@ -859,7 +859,7 @@ describe('lowerGuide (contract)', () => {
     expect(nodeChildren(layer).map(node => node.text)).toEqual(['0', '1', '2', 'Month']);
   });
 
-  it('guide_line_style_includes_dash_offset', () => {
+  it('引导线样式包括虚线偏移', () => {
     const { gridLayer, axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -882,7 +882,7 @@ describe('lowerGuide (contract)', () => {
     expect(gridPath.style?.dashOffset).toBe(3);
   });
 
-  it('axis_line_positive_arrow_and_line_cap_lower_to_path', () => {
+  it('坐标轴正向箭头和端帽下沉至 Path', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -900,7 +900,7 @@ describe('lowerGuide (contract)', () => {
     expect(axisPath.arrow).toEqual({ end: { shape: 'stealth', length: 8 } });
   });
 
-  it('axis_line_negative_arrow_and_extent_lower_to_path', () => {
+  it('轴线负箭头和范围下层到路径', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -919,7 +919,7 @@ describe('lowerGuide (contract)', () => {
     expect(axisPath.arrow).toEqual({ start: {} });
   });
 
-  it('shape_tick_mark_lowers_to_nodes_instead_of_tick_path', () => {
+  it('形状刻度线下沉到节点而不是刻度路径', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -941,7 +941,7 @@ describe('lowerGuide (contract)', () => {
     expect(nodes[0].style?.fill).toBe('#111');
   });
 
-  it('triangle_tick_marker_points_up_on_bottom_x_axis_when_inward', () => {
+  it('三角形刻度标记向内时在底部 x 轴上指向上方', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -956,7 +956,7 @@ describe('lowerGuide (contract)', () => {
     expect(triangle?.rotate).toBe(270);
   });
 
-  it('custom_shape_tick_mark_preserves_shape_ref', () => {
+  it('自定义形状刻度线保留形状参考', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -978,7 +978,7 @@ describe('lowerGuide (contract)', () => {
     expect(node?.layout?.minimumSize).toEqual({ width: 8, height: 6 });
   });
 
-  it('tick_label_auto_rotate_chooses_first_non_overlapping_angle', () => {
+  it('刻度标签自动旋转选择第一个不重叠的角度', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -994,7 +994,7 @@ describe('lowerGuide (contract)', () => {
     expect(labels.every(label => label.rotate === -90)).toBe(true);
   });
 
-  it('fixed_tick_label_rotate_overrides_auto_rotate', () => {
+  it('固定刻度标签旋转优先于自动旋转', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -1010,7 +1010,7 @@ describe('lowerGuide (contract)', () => {
     expect(labels.every(label => label.rotate === 0)).toBe(true);
   });
 
-  it('greedy_tick_label_hide_removes_overlaps_without_changing_grid_ticks', () => {
+  it('贪心隐藏刻度标签以消除重叠且不改变网格刻度', () => {
     const labels = ['January', 'February', 'March', 'April', 'September'];
     const { axisLayer, gridLayer } = lowerGuide(
       {
@@ -1030,7 +1030,7 @@ describe('lowerGuide (contract)', () => {
     expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(10);
   });
 
-  it('layout_false_preserves_all_tick_labels', () => {
+  it('布局 false 保留所有刻度标签', () => {
     const labels = ['January', 'February', 'March', 'April', 'September'];
     const { axisLayer } = lowerGuide(
       {
@@ -1046,7 +1046,7 @@ describe('lowerGuide (contract)', () => {
     expect(tickLabels.map(label => label.text)).toEqual(labels);
   });
 
-  it('rotated_bottom_x_tick_labels_keep_near_endpoint_outside_axis', () => {
+  it('旋转的底部 x 刻度标签保持在端点外轴附近', () => {
     const labels = ['January revenue', 'February revenue'];
     const { axisLayer } = lowerGuide(
       {
@@ -1062,7 +1062,7 @@ describe('lowerGuide (contract)', () => {
     expect(tickLabels.every(label => (label.position as [number, number])[1] > 310)).toBe(true);
   });
 
-  it('single_rotated_tick_label_still_applies_endpoint_alignment', () => {
+  it('单个旋转刻度标签仍然应用端点对齐', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -1077,7 +1077,7 @@ describe('lowerGuide (contract)', () => {
     expect((label.position as [number, number])[1]).toBeGreaterThan(310);
   });
 
-  it('auto_rotated_tick_labels_use_endpoint_alignment_before_overlap_hiding', () => {
+  it('自动旋转刻度标签在重叠隐藏之前使用端点对齐', () => {
     const labels = ['January revenue', 'February revenue', 'March revenue'];
     const { axisLayer } = lowerGuide(
       {
@@ -1093,7 +1093,7 @@ describe('lowerGuide (contract)', () => {
     expect(tickLabels.every(label => (label.position as [number, number])[1] > 310)).toBe(true);
   });
 
-  it('bounds_flush_moves_edge_tick_labels_inside_axis_range', () => {
+  it('边界齐平在轴范围内移动边缘刻度标签', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -1110,7 +1110,7 @@ describe('lowerGuide (contract)', () => {
     expect((end.position as [number, number])[0]).toBeLessThan(440);
   });
 
-  it('mark_false_hides_tick_marks_but_keeps_grid_source', () => {
+  it('标记 false 隐藏刻度线但保留网格源', () => {
     const { axisLayer, gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -1126,7 +1126,7 @@ describe('lowerGuide (contract)', () => {
     expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
   });
 
-  it('y_axis_line_positive_arrow_and_extent_follow_axis_direction', () => {
+  it('y 轴正向箭头及延伸范围遵循坐标轴方向', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -1145,7 +1145,7 @@ describe('lowerGuide (contract)', () => {
     expect(axisPath.arrow).toEqual({ end: { shape: 'stealth', length: 8 } });
   });
 
-  it('origin_crossing_hides_tick_and_renders_single_corner_label_when_configured', () => {
+  it('配置后，原点交叉隐藏刻度并呈现单角标签', () => {
     const originCtx: GuideContext = {
       ...ctx,
       xTicks: { values: [-1, 0, 1], labels: ['-1', '0', '1'] },
@@ -1182,7 +1182,7 @@ describe('lowerGuide (contract)', () => {
     expect((xOriginLabel.position as [number, number])[1]).toBeGreaterThan(260);
   });
 
-  it('axis_endpoint_policy_hides_tick_mark_near_arrow_but_keeps_label_and_grid_by_default', () => {
+  it('轴端点策略隐藏箭头附近的刻度线，但默认保留标签和网格', () => {
     const endpointCtx: GuideContext = {
       ...ctx,
       xTicks: { values: [0, 5, 10], labels: ['0', '5', '10'] },
@@ -1206,7 +1206,7 @@ describe('lowerGuide (contract)', () => {
     expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
   });
 
-  it('axis_endpoint_default_hides_tick_mark_near_arrow_without_endpoint_config', () => {
+  it('轴端点默认隐藏箭头附近的刻度线，无需端点配置', () => {
     const endpointCtx: GuideContext = {
       ...ctx,
       xTicks: { values: [0, 5, 10], labels: ['0', '5', '10'] },
@@ -1229,7 +1229,7 @@ describe('lowerGuide (contract)', () => {
     expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
   });
 
-  it('polar_axis_rejects_structural_line_geometry', () => {
+  it('极轴拒绝结构线几何', () => {
     expect(() =>
       lowerGuide(
         { type: 'axis', dimension: 'x', line: { arrow: { positive: true } } },
@@ -1268,7 +1268,7 @@ describe('lowerGuide (contract)', () => {
     ).toThrow(/axis line/);
   });
 
-  it('origin_placement_crosses_projected_value_and_respects_tick_side', () => {
+  it('原点位置穿过投影值并尊重刻度线', () => {
     const { axisLayer } = lowerGuide(
       {
         type: 'axis',
@@ -1285,19 +1285,19 @@ describe('lowerGuide (contract)', () => {
     expect(tickPath.children[1]).toEqual({ type: 'step', kind: 'line', to: [40, 27] });
   });
 
-  it('axis_id_to_scope_id', () => {
+  it('轴 id 到范围 id', () => {
     const layer = lowerGuide({ type: 'axis', dimension: 'x', id: 'xAxis' }, ctx).axisLayer as IRScope;
 
     expect(layer.id).toBe('xAxis');
   });
 
-  it('origin_placement_rejects_invalid_tick_side_for_dimension', () => {
+  it('原点放置拒绝尺寸的无效刻度线', () => {
     expect(() =>
       lowerGuide({ type: 'axis', dimension: 'x', placement: { kind: 'origin', tickSide: 'left' } }, ctx),
     ).toThrow(/tickSide/);
   });
 
-  it('origin_axis_gap_offsets_are_grouped_by_dimension_and_default_tick_side', () => {
+  it('原点轴间隙偏移按尺寸和默认刻度线分组', () => {
     const spec = guidedSpec([
       { type: 'axis', dimension: 'x', placement: { kind: 'origin', origin: 0 } },
       { type: 'axis', dimension: 'y', placement: { kind: 'origin', origin: 0 } },
@@ -1315,7 +1315,7 @@ describe('lowerGuide (contract)', () => {
     ).not.toThrow();
   });
 
-  it('origin_axis_duplicate_detection_normalizes_default_tick_side', () => {
+  it('原点轴重复检测标准化默认刻度侧', () => {
     expect(() =>
       expandOf(
         guidedSpec([
@@ -1358,8 +1358,8 @@ const expandOf = (spec: IRPlot): IRScope => {
   ) as IRScope;
 };
 
-describe('lowerPlots guide orchestration (contract)', () => {
-  it('zorder_grid_mark_axis', () => {
+describe('lowerPlots 指导编排（契约）', () => {
+  it('zorder 网格标记轴', () => {
     const outer = expandOf(
       guidedSpec([
         { type: 'axis', dimension: 'x' },
@@ -1378,7 +1378,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
     expect((outer.children[4] as IRScope).defaults?.node?.style?.stroke).toBe('none');
   });
 
-  it('compile_with_guides_scene', () => {
+  it('使用引导场景进行编译', () => {
     const spec = guidedSpec([
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },
@@ -1391,7 +1391,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
-  it('duplicate_axis_placement_rejected', () => {
+  it('重复轴放置被拒绝', () => {
     expect(() =>
       expandOf(
         guidedSpec([
@@ -1402,7 +1402,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
     ).toThrow(/placement/);
   });
 
-  it('explicit_range_axis_line_aligns_with_ticks', () => {
+  it('显式值域下坐标轴线与刻度对齐', () => {
     // 显式 range 时轴线须随实际 range 走（而非 margin 的 plotArea），与刻度/mark 对齐
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -1428,7 +1428,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
     expect((axisLine[1] as { to: [number, number] }).to[0]).toBe(200);
   });
 
-  it('grid_uses_density_sampled_visible_tick_set_then_appends_theme_endpoints', () => {
+  it('网格使用按密度采样后的可见刻度集合并追加主题端点', () => {
     const outer = expandOf(
       guidedSpec([
         {

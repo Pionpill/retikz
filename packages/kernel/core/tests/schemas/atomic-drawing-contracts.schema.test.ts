@@ -26,8 +26,8 @@ const steps = [
 
 const mark = { pos: 0.5, shape: 'stealth' };
 
-describe('Core atomic drawing contracts', () => {
-  it('parses graphic paint as an independent strict fragment', () => {
+describe('Core 原子绘图契约', () => {
+  it('将图形绘制解析为独立的严格片段', () => {
     const value = { color: 'red', fill: 'none', stroke: '#000' };
 
     expect(GraphicPaintSchema.parse(value)).toEqual(value);
@@ -35,7 +35,7 @@ describe('Core atomic drawing contracts', () => {
     expect(GraphicPaintSchema.safeParse({ ...value, unknown: true }).success).toBe(false);
   });
 
-  it('parses graphic opacity and effects with their existing bounds', () => {
+  it('解析图形不透明度和效果及其现有边界', () => {
     expect(GraphicOpacitySchema.parse({ opacity: { overall: 0, fill: 0.5, stroke: 1 } })).toEqual({
       opacity: { overall: 0, fill: 0.5, stroke: 1 },
     });
@@ -50,7 +50,7 @@ describe('Core atomic drawing contracts', () => {
     expect(GraphicEffectsSchema.safeParse({ effects: {} }).success).toBe(false);
   });
 
-  it('parses shared stroke style and path stroke fragments', () => {
+  it('解析共享描边样式和路径描边片段', () => {
     const stroke = { strokeWidth: 2, dashPattern: [4, 2], dashOffset: -1 };
 
     expect(GraphicStrokeSchema.parse(stroke)).toEqual(stroke);
@@ -77,7 +77,7 @@ describe('Core atomic drawing contracts', () => {
     expect(PathStrokeSchema.safeParse({ dashed: true }).success).toBe(false);
   });
 
-  it('parses path fill, geometry, decoration, and structure independently', () => {
+  it('独立解析路径填充、几何、装饰和结构', () => {
     expect(PathTransformSchema.parse({ rotate: 30, scale: 2 })).toEqual({ rotate: 30, scale: 2 });
     expect(PathTransformSchema.safeParse({ cornerRadius: 3 }).success).toBe(false);
     expect(PathFillSchema.parse({ fillRule: 'evenodd' })).toEqual({ fillRule: 'evenodd' });
@@ -100,7 +100,7 @@ describe('Core atomic drawing contracts', () => {
     expect(PathStructureSchema.safeParse({ children: steps }).success).toBe(false);
   });
 
-  it('keeps full Path refinement on the aggregate contract', () => {
+  it('对聚合契约保持完整的 Path 细化', () => {
     const path = {
       type: 'path' as const,
       children: steps,
@@ -126,7 +126,7 @@ describe('Core atomic drawing contracts', () => {
     expect(StrokePathSchema.safeParse({ ...path, kindOptions: {} }).success).toBe(false);
   });
 
-  it('reuses atomic leaf schema instances in compatibility aggregates', () => {
+  it('在兼容性聚合中重用原子叶 schema 实例', () => {
     expect(GraphicStyleSchema.shape.color).toBe(GraphicPaintSchema.shape.color);
     expect(GraphicStyleSchema.shape.fill).toBe(GraphicPaintSchema.shape.fill);
     expect(GraphicStyleSchema.shape.stroke).toBe(GraphicPaintSchema.shape.stroke);
@@ -148,7 +148,7 @@ describe('Core atomic drawing contracts', () => {
     expect(PathDefaultSchema.shape.rotate).toBe(PathGeometrySchema.shape.rotate);
   });
 
-  it('keeps atomic JSON round-trips lossless', () => {
+  it('保持原子 JSON 往返无损', () => {
     const value = {
       color: '#0f172a',
       opacity: 0.8,

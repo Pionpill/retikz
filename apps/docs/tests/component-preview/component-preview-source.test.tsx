@@ -166,7 +166,7 @@ const renderPreview = async (
   return capture.read();
 };
 
-describe('ComponentPreview Vanilla source', () => {
+describe('ComponentPreview Vanilla 源', () => {
   it('打开源码前不生成 Vanilla 视图，打开后提供可用源码', async () => {
     const initial = await renderPreview(
       ['viz', 'plot', 'coordinate', '2d'],
@@ -309,7 +309,7 @@ describe('ComponentPreview Vanilla source', () => {
   });
 });
 
-describe('ComponentPreview localized controls', () => {
+describe('ComponentPreview 本地化控件', () => {
   it('将默认源码文件名透传给卡片', async () => {
     const props = await renderPreview(
       ['viz', 'plot', 'mark', 'path'],
@@ -582,7 +582,7 @@ describe('ComponentPreview localized controls', () => {
   });
 });
 
-describe('ComponentPreview files source', () => {
+describe('ComponentPreview 文件源', () => {
   it('将主文件对象的 diffFrom 用作 React 主源码 baseline', async () => {
     const props = await renderPreview(
       ['kernel', 'galleries', 'learning-path'],

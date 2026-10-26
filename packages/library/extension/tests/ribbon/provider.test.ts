@@ -28,8 +28,8 @@ const profileScene = (name: string): IRScene => ({
   ],
 });
 
-describe('Extension Ribbon provider contribution', () => {
-  it('uses one stable maker and contributes the official bulge profile by default', () => {
+describe('扩展功能区提供者的贡献', () => {
+  it('使用一个稳定器，默认提供官方凸出轮廓', () => {
     const first = createRibbonProviderContribution();
     const second = createRibbonProviderContribution();
     const firstProvider = first.providers[0];
@@ -44,7 +44,7 @@ describe('Extension Ribbon provider contribution', () => {
     expect(definitions.paths).toMatchObject([{ name: 'ribbon' }]);
   });
 
-  it('merges repeated profile references from multiple contributions into one Ribbon definition', () => {
+  it('将多个贡献的重复配置引用合并到一个功能区定义中', () => {
     const custom = profile('custom', 8);
     const first = createRibbonProviderContribution({ profiles: [custom] });
     const second = createRibbonProviderContribution({ profiles: [custom] });
@@ -59,7 +59,7 @@ describe('Extension Ribbon provider contribution', () => {
     ).not.toThrow();
   });
 
-  it('fails loudly when contributions define the same profile name with different objects', () => {
+  it('当贡献使用不同的对象定义相同的配置名称时，会明确报错', () => {
     const first = createRibbonProviderContribution({ profiles: [profile('custom', 8)] });
     const second = createRibbonProviderContribution({ profiles: [profile('custom', 12)] });
 
@@ -85,7 +85,7 @@ describe('Extension Ribbon provider contribution', () => {
     ).not.toThrow();
   });
 
-  it('fails loudly when different contributions define __proto__ with different objects', () => {
+  it('当不同的贡献用不同的对象定义 __proto__ 时，会明确报错', () => {
     const first = createRibbonProviderContribution({ profiles: [profile('__proto__', 8)] });
     const second = createRibbonProviderContribution({ profiles: [profile('__proto__', 12)] });
 

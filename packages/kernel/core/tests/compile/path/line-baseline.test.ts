@@ -5,7 +5,7 @@ import type { IRScene } from '../../../src/schemas';
 import { line, move } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
-describe('compile path: line baseline', () => {
+describe('编译路径：行基线', () => {
   it('两段 line 产出 M ... L ...', () => {
     const ir: IRScene = {
       version: 1,

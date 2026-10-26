@@ -117,7 +117,7 @@ describe('drawScene clip 裁剪', () => {
     expect(context.calls.filter(c => c.name === 'lineTo').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('missing clip fails before drawing any primitive', () => {
+  it('在绘制任何基元之前缺少裁剪失败', () => {
     const context = createSpyCanvasContext();
     const s: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },

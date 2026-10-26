@@ -49,7 +49,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-describe('showcase preview', () => {
+describe('展示预览', () => {
   it.each([PreviewControlBar, PreviewControlPanel])('%s 范围标签承担播放开关，不再占用独立播放按钮', Controls => {
     const container = document.createElement('div');
     document.body.appendChild(container);

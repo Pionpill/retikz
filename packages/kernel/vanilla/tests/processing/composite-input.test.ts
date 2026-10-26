@@ -39,8 +39,8 @@ const source = (text: string): InputSceneChildren => ({
   children: [{ type: 'embed', kind: 'prepared', props: { text } }],
 });
 
-describe('prepared composite input consumption', () => {
-  it('keeps synchronous and async anonymous instances equivalent', async () => {
+describe('预处理复合组件输入的消费', () => {
+  it('保持同步和异步匿名实例等效', async () => {
     const input: InputSceneChildren = {
       children: [...source('left-ready').children, ...source('right-ready').children],
     };
@@ -53,7 +53,7 @@ describe('prepared composite input consumption', () => {
     expect(JSON.stringify(async.scene)).toContain('right-ready');
   });
 
-  it('updates prepared input when authoring normalizes to identical JSON', async () => {
+  it('编写规范化为相同的 JSON 时更新准备好的输入', async () => {
     const controller = await createProcessingControllerAsync(source('first-ready'), {
       adapters: [adapter],
       compile: { composites: [leafDefinition] },
@@ -68,7 +68,7 @@ describe('prepared composite input consumption', () => {
     controller.dispose();
   });
 
-  it('transports prepared nested children through an opaque Source slot', async () => {
+  it('通过不透明的 Source 槽位传输准备好的嵌套子级', async () => {
     const outerDefinition = defineComposite({
       namespace: 'fixture',
       type: 'outer',

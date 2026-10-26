@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { DiagramDefaultsSchema, DiagramFrameSchema } from '../../src/_diagram';
 
-describe('Diagram Frame schema', () => {
-  it('parses the complete fixed arrangement and preserves Surface input fields', () => {
+describe('Diagram 框架 schema', () => {
+  it('解析完整的固定排列并保留 Surface 输入字段', () => {
     const frame = DiagramFrameSchema.parse({
       legendPosition: 'bottom',
       legendAlign: 'center',
@@ -32,7 +32,7 @@ describe('Diagram Frame schema', () => {
     expect(JSON.parse(JSON.stringify(frame))).toEqual(frame);
   });
 
-  it.each(['top', 'right', 'bottom', 'left'])('accepts the %s Legend side', legendPosition => {
+  it.each(['top', 'right', 'bottom', 'left'])('接受 %s Legend 侧', legendPosition => {
     expect(DiagramFrameSchema.parse({ legendPosition })).toEqual({ legendPosition });
   });
 
@@ -46,13 +46,13 @@ describe('Diagram Frame schema', () => {
     { drawingLegendGap: -1 },
     { padding: -1 },
     { overflow: 'scroll' },
-  ])('rejects an empty or invalid Frame record: %j', input => {
+  ])('拒绝空或无效的帧记录：%j', input => {
     expect(() => DiagramFrameSchema.parse(input)).toThrow();
   });
 });
 
-describe('Diagram Theme schema', () => {
-  it('parses non-empty frame and presentation appearance slices', () => {
+describe('Diagram 主题 schema', () => {
+  it('解析非空帧和呈现外观切片', () => {
     const theme = DiagramDefaultsSchema.parse({
       frame: {
         padding: 14,
@@ -94,7 +94,7 @@ describe('Diagram Theme schema', () => {
     { presentation: { description: { stroke: '#000000' } } },
     { title: { style: { opacity: 1 } } },
     { description: { style: { opacity: 1 } } },
-  ])('rejects fields outside Diagram appearance ownership: %j', input => {
+  ])('拒绝 Diagram 外观所有权之外的字段：%j', input => {
     expect(() => DiagramDefaultsSchema.parse(input)).toThrow();
   });
 
@@ -104,7 +104,7 @@ describe('Diagram Theme schema', () => {
     { presentation: {} },
     { presentation: { title: {} } },
     { presentation: { description: { style: {}, layout: {} } } },
-  ])('accepts sparse empty defaults: %j', input => {
+  ])('接受稀疏空默认值：%j', input => {
     expect(DiagramDefaultsSchema.parse(input)).toEqual(input);
   });
 });

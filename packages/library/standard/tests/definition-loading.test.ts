@@ -10,14 +10,14 @@ const gridScene: IRScene = {
   children: [createGrid({ bounds: { start: [0, 0], end: [10, 10] }, line: { spacing: 10 } })],
 };
 
-describe('Standard direct definition loading', () => {
-  it('compiles selected Standard composites through Core compile options', () => {
+describe('Standard 直接定义加载', () => {
+  it('通过 Core 编译选项编译选定的 Standard 复合组件', () => {
     const direct = compileToScene(gridScene, { composites: [GridDefinition] });
 
     expect(direct.scene.primitives).not.toHaveLength(0);
   });
 
-  it('retains the Core warning when a definition is omitted', () => {
+  it('省略定义时保留 Core 警告', () => {
     const warningCodes: Array<string> = [];
 
     compileToScene(gridScene, {
@@ -27,13 +27,13 @@ describe('Standard direct definition loading', () => {
     expect(warningCodes).toContain('COMPOSITE_NOT_REGISTERED');
   });
 
-  it('leaves duplicate composite keys for the Core registry to diagnose', () => {
+  it('留下重复的复合键以供 Core 注册表进行诊断', () => {
     expect(() => compileToScene(gridScene, { composites: [GridDefinition, GridDefinition] })).toThrow(
       /duplicate composite registration.*standard\.grid/i,
     );
   });
 
-  it('does not implicitly collect definitions for nested Standard samples', () => {
+  it('不隐式收集嵌套 Standard 样本的定义', () => {
     const legend = createLegend({
       content: {
         kind: 'items',

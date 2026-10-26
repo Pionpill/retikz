@@ -39,14 +39,14 @@ const registryOf = (...definitions: ReadonlyArray<AnyCompositeDefinition>) =>
   new Map(definitions.map(definition => [`${definition.namespace}.${definition.type}`, definition]));
 
 describe('resolveComposite', () => {
-  it('returns the canonical provider key when the composite is unregistered', () => {
+  it('当组合未注册时返回规范提供者键', () => {
     expect(bindComposite(source(), new Map())).toEqual({
       kind: 'unregistered',
       key: 'test.box',
     });
   });
 
-  it('binds and parses a composite once', () => {
+  it('绑定并解析一次组合', () => {
     const binding = bindComposite(source(), registryOf(expandDefinition));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
 
@@ -57,7 +57,7 @@ describe('resolveComposite', () => {
     expect(resolution.compile).toBe(expandDefinition.compile);
   });
 
-  it('binds a layout-aware composite with its artifact schema', () => {
+  it('将布局感知组合与其产物 schema 绑定', () => {
     const binding = bindComposite(source({ type: 'layout' }), registryOf(layoutDefinition));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
 
@@ -68,7 +68,7 @@ describe('resolveComposite', () => {
     expect(resolution.artifactSchema).toBe(layoutDefinition.artifactSchema);
   });
 
-  it('reports provider key and IR locator when payload parsing fails', () => {
+  it('当负载解析失败时报告提供者键和 IR 定位器', () => {
     const binding = bindComposite(source({ value: 'invalid' }), registryOf(expandDefinition));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
 

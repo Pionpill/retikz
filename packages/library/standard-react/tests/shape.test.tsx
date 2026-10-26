@@ -8,7 +8,7 @@ import { expect, it } from 'vitest';
 import * as rootEntry from '../src';
 import { synchronousAdapters } from './helpers/synchronous-adapters';
 
-it('keeps the complete family equivalent across adapters with Path authoring conveniences', () => {
+it('通过 Path 编写便利，在适配器之间保持整个系列的等效性', () => {
   const visual = {
     style: { strokeWidth: 2 },
     arrow: '->' as const,
@@ -49,7 +49,7 @@ it('keeps the complete family equivalent across adapters with Path authoring con
   });
 });
 
-it('shares the Circle Source and provider contribution across React and Vanilla', () => {
+it('在 React 和 Vanilla 之间共享 Circle Source 和提供者贡献', () => {
   const input = createInputScene(<Circle id="c1" center="origin" radius={20} />);
   const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   const vanilla = normalizeScene(scene({ children: [shape.circle({ id: 'c1', center: 'origin', radius: 20 })] }), {
@@ -60,13 +60,13 @@ it('shares the Circle Source and provider contribution across React and Vanilla'
   expect(react.contributions).toEqual(vanilla.contributions);
 });
 
-it('does not persist a generated occurrence id when React omits the authored id', () => {
+it('当 React 省略编写 ID 时，不会保留生成的实例 ID', () => {
   const input = createInputScene(<Circle center={[0, 0]} radius={20} />);
   const result = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 
   expect(result.ir.children[0]).not.toHaveProperty('id');
 });
 
-it('keeps the shape family out of the root entry', () => {
+it('使形状族远离根条目', () => {
   expect(rootEntry).not.toHaveProperty('Circle');
 });

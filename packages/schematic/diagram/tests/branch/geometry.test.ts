@@ -35,7 +35,7 @@ const source = {
   mainBranch: 'main',
 };
 
-it('keeps layout deterministic when catalog order differs from branch progression', () => {
+it('当目录顺序与分支进度不同时，保持布局确定性', () => {
   const reversed = { ...source, nodes: [...source.nodes].reverse() };
   const first = compile(reversed);
 
@@ -87,7 +87,7 @@ const invalidOutputs: Array<{
   },
 ];
 
-it.each(invalidOutputs)('rejects custom layout output: $name', ({ change }) => {
+it.each(invalidOutputs)('拒绝自定义布局输出：$name', ({ change }) => {
   const definition = defineBranchLayout({
     name: 'invalid',
     description: 'Invalid geometry fixture',
@@ -98,7 +98,7 @@ it.each(invalidOutputs)('rejects custom layout output: $name', ({ change }) => {
 });
 
 it.each(['right', 'left', 'up', 'down'])(
-  'aligns shared marker geometry with assembled Scene in %s direction',
+  '将共享标记几何体与 %s 方向上组装的 Scene 对齐',
   direction => {
     const result = compile({
       ...source,
@@ -132,7 +132,7 @@ it.each(['right', 'left', 'up', 'down'])(
   },
 );
 
-it('merges identical directed segments while retaining both branch correspondences', () => {
+it('合并相同的有向线段，同时保留两个分支对应关系', () => {
   const result = compile({
     nodes: [{ id: 'a' }, { id: 'b' }],
     branches: [
@@ -148,7 +148,7 @@ it('merges identical directed segments while retaining both branch correspondenc
   expect(artifact.branches.map(branch => branch.segments)).toEqual([[0], [0]]);
 });
 
-it('uses custom layout through the same registry and rejects omitted geometry', () => {
+it('通过相同的注册表使用自定义布局并拒绝省略的几何图形', () => {
   const custom = defineBranchLayout({ ...LanesBranchLayoutDefinition, name: 'custom' });
 
   expect(
@@ -162,7 +162,7 @@ it('uses custom layout through the same registry and rejects omitted geometry', 
   expect(() => compile(source, { branchLayouts: [{ ...custom, name: 'lanes' }] })).toThrow();
 });
 
-it('supports standalone nodes and keeps local namespaces independent', () => {
+it('支持独立节点并保持本地命名空间独立', () => {
   const child: IRChild = BranchDiagramSchema.parse({
     namespace: 'diagram',
     type: 'branch',
@@ -180,7 +180,7 @@ it('supports standalone nodes and keeps local namespaces independent', () => {
   );
 });
 
-it('preserves explicit root defaults and publishes geometry after the root transform', () => {
+it('保留显式根默认值并在根变换后发布几何体', () => {
   const result = compile({
     ...source,
     defaults: { node: { style: { stroke: 'red', font: { size: 24 } } } },

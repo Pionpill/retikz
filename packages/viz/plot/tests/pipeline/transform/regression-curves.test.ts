@@ -83,30 +83,30 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
     ),
   )[0];
 };
-describe('regression curve geometry', () => {
-  it('keeps all linear predictions with interpolating and explicit linear curves', () => {
+describe('回归曲线几何', () => {
+  it('通过插值和显式线性曲线保留所有线性预测', () => {
     expect(draw(1).children[1]).toMatchObject({ kind: 'smooth' });
     expect(draw(1).children[1]).toHaveProperty('points.length', 7);
     expect(draw(1, 'linear', false, 'linear').children).toHaveLength(8);
   });
 
-  it('keeps sampled interpolating geometry for nonlinear methods and projections', () => {
+  it('为非线性方法和投影保留采样的插值几何形状', () => {
     for (const path of [draw(2), draw(1, 'log'), draw(1, 'linear', true)]) {
       expect(path.children[1]).toMatchObject({ kind: 'smooth' });
       expect(path.children[1]).toHaveProperty('points.length', 7);
     }
   });
 
-  it('keeps all samples after a subsequent transform', () => {
+  it('在后续转换后保留所有样本', () => {
     expect(draw(1, 'linear', false, 'linear', true).children).toHaveLength(8);
   });
 
-  it('honors explicit step interpolation', () => {
+  it('支持显式步进插值', () => {
     expect(draw(1, 'linear', false, 'step').children.length).toBeGreaterThan(2);
   });
 });
 
-it('rejects invalid intermediate predictions', () => {
+it('拒绝无效的中间预测', () => {
   const brokenDefinition = defineRegression({
     schema: strictObject({ kind: literal('broken-line') }),
   });
@@ -140,7 +140,7 @@ it('rejects invalid intermediate predictions', () => {
   ).toThrow(/non-finite/);
 });
 
-it('rejects a degenerate inferred extent even when a custom fitter accepts the observations', () => {
+it('即使自定义拟合程序接受观察结果，也会拒绝退化的推断范围', () => {
   expect(
     () =>
       applyTransforms(

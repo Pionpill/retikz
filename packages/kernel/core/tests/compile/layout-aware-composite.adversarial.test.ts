@@ -112,8 +112,8 @@ const createBoundsProbe = () =>
     },
   });
 
-describe('layout-aware composite constraints and bounds', () => {
-  it('keeps margin in allocation while visual bounds follow paint and shadow', () => {
+describe('布局感知的复契约束和边界', () => {
+  it('在分配中保持边距，同时视觉边界遵循绘制和阴影', () => {
     const definition = createBoundsProbe();
     const result = compileToScene(
       sceneOf({
@@ -145,7 +145,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
   });
 
-  it('treats maxWidth as a reflow upper bound without scaling fixed geometry', () => {
+  it('将 maxWidth 视为回流上限，而不缩放固定几何形状', () => {
     const definition = createBoundsProbe();
     const pathResult = compileToScene(
       sceneOf({
@@ -187,7 +187,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
   });
 
-  it('lays out Coordinate, Scope, and empty output with finite bounds', () => {
+  it('布局 Coordinate、Scope 和具有有限边界的空输出', () => {
     const definition = createBoundsProbe();
     const result = compileToScene(
       sceneOf(
@@ -236,7 +236,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ]);
   });
 
-  it('passes the exact full two-axis proposal through nested layout-aware composites', () => {
+  it('通过嵌套布局感知复合组件原样传递完整双轴布局提议', () => {
     const nested = defineComposite({
       namespace: 'test',
       type: 'nestedConstraint',
@@ -300,7 +300,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ]);
   });
 
-  it('keeps arrow marker paint outside path allocation but inside visual bounds', () => {
+  it('将箭头标记绘制保留在路径分配之外但在视觉边界内', () => {
     const definition = createBoundsProbe();
     const result = compileToScene(
       sceneOf({
@@ -364,7 +364,7 @@ describe('layout-aware composite constraints and bounds', () => {
         y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
       },
     },
-  ])('rejects $label with the composite key and occurrence before child dispatch', ({ proposal }) => {
+  ])('在调度子项前拒绝 $label 并报告复合组件键及实例', ({ proposal }) => {
     let dispatched = false;
     const dispatchSentinel = defineComposite({
       namespace: 'test',
@@ -405,7 +405,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(dispatched).toBe(false);
   });
 
-  it('keeps an invalid proposal from a nested composite fatal when its parent discards the probe', () => {
+  it('父级丢弃探测结果时嵌套复合组件的无效布局提议仍为致命错误', () => {
     const nested = defineComposite({
       namespace: 'test',
       type: 'invalidNestedProposal',
@@ -444,7 +444,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(/test\.invalidNestedProposal.*proposal.*finite and non-negative/i);
   });
 
-  it('keeps hostile proposal access fatal when a parent discards the nested probe', () => {
+  it('父级丢弃嵌套探测结果时恶意布局提议访问仍为致命错误', () => {
     const nested = defineComposite({
       namespace: 'test',
       type: 'hostileNestedProposal',
@@ -505,7 +505,7 @@ describe('layout-aware composite constraints and bounds', () => {
       name: 'exact',
       axis: { kind: LayoutAxisProposalKind.Exact, value: 10 },
     },
-  ])('reads every $name proposal field once before validation and detaches it', ({ axis }) => {
+  ])('在验证之前读取每个 $name 提案字段一次并将其分离', ({ axis }) => {
     const reads = new Map<PropertyKey, number>();
     const guardedAxis = new Proxy(axis, {
       get: (target, property, receiver) => {
@@ -543,7 +543,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect([...reads.values()]).toEqual([...reads.values()].map(() => 1));
   });
 
-  it('preserves explicit zero and canonicalizes negative zero before child dispatch and slot resolution', () => {
+  it('在子调度和槽解析之前保留显式零并规范化负零', () => {
     let received: LayoutProposal | undefined;
     const nested = defineComposite({
       namespace: 'test',
@@ -595,7 +595,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(Object.is(size.height, -0)).toBe(false);
   });
 
-  it('fails loudly when layoutChild depends on a later external reference', () => {
+  it('当 layoutChild 依赖于稍后的外部参考时，会明确报错', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'forwardReference',
@@ -636,7 +636,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(/later|reference|not found|unresolved/i);
   });
 
-  it('turns ordinary Error and non-Error throws into opaque discardable failed probes', () => {
+  it('将普通错误和非错误抛出转换为不透明的可丢弃失败探测', () => {
     const ordinaryCause = new Error('ordinary child failure');
     const thrownValue = Object.freeze({ reason: 'non-error child failure' });
     const ordinary = defineComposite({
@@ -697,7 +697,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(result.artifacts).toEqual([]);
   });
 
-  it('preserves null and undefined causes and consumes a failure on its first raise', () => {
+  it('保留 null 和 undefined 原因并在首次抛出时消费失败结果', () => {
     let invocation = 0;
     const leaf = defineComposite({
       namespace: 'test',
@@ -738,7 +738,7 @@ describe('layout-aware composite constraints and bounds', () => {
     compileToScene(sceneOf({ namespace: 'test', type: 'rawCauseParent' }), { composites: [leaf, parent] });
   });
 
-  it('returns failed for an unregistered Composite in a probe without publishing its warning', () => {
+  it('在探测器中未注册的复合组件返回失败，而不发布其警告', () => {
     const warnings: Array<CompileWarning> = [];
     const parent = defineComposite({
       namespace: 'test',
@@ -760,7 +760,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('snapshots the real provider and deepest nested Scope occurrence for schema failure', () => {
+  it('schema 失败时对实际提供者及最深层嵌套 Scope 实例进行快照', () => {
     const leaf = defineComposite({
       namespace: 'test',
       type: 'deepSchemaLeaf',
@@ -799,7 +799,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(/test\.deepSchemaLeaf.*scopeChild\[0\]::scopeChild\[0\]/i);
   });
 
-  it('promotes only the selected failure with provider, source, occurrence, and original cause', () => {
+  it('仅提升所选失败并保留提供者、来源、实例及原始原因', () => {
     const cause = new Error('selected candidate failed');
     const leaf = defineComposite({
       namespace: 'test',
@@ -848,7 +848,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect((thrown as Error & { cause?: unknown }).cause).toBe(cause);
   });
 
-  it('rejects forged, copied, cross-callback, and cross-compile failures', () => {
+  it('拒绝伪造、复制、交叉回调、交叉编译失败', () => {
     let retained: LayoutChildFailure | undefined;
     let run = 0;
     const leaf = defineComposite({
@@ -914,7 +914,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(/failure.*compile|forged|does not belong/i);
   });
 
-  it('lets branded Core invariants pierce the probe catch boundary', () => {
+  it('让带有标识的 Core 不变量穿透探测捕获边界', () => {
     const invariant = createCompileInvariantError('forced namespace invariant');
 
     expect(invariant).toBeInstanceOf(RetikzError);
@@ -943,7 +943,7 @@ describe('layout-aware composite constraints and bounds', () => {
     diff.mockRestore();
   });
 
-  it('reaches a branded Runtime topology invariant through the real layoutChild catch boundary', () => {
+  it('通过真实的 layoutChild 捕获边界达到带有标识的 Runtime 拓扑不变量', () => {
     const parent = defineComposite({
       namespace: 'test',
       type: 'compileProvenanceInvariantParent',
@@ -976,7 +976,7 @@ describe('layout-aware composite constraints and bounds', () => {
     createProbeTracker.mockRestore();
   });
 
-  it('does not downgrade an invalid layoutChild discriminator to a failed probe', () => {
+  it('不会将无效的 layoutChild 判别字段降级为失败的探测', () => {
     const parent = defineComposite({
       namespace: 'test',
       type: 'invalidLayoutChildDiscriminatorParent',
@@ -997,7 +997,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('rejects an accessor-backed layoutChild input before the recoverable dispatch boundary', () => {
+  it('在可恢复调度边界之前拒绝访问器支持的 layoutChild 输入', () => {
     const hostileChild: Record<string, unknown> = { id: 'point', position: [0, 0] };
     Object.defineProperty(hostileChild, 'type', {
       enumerable: true,
@@ -1023,7 +1023,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('rejects automatic allocation bounds whose transformed edges become non-finite', () => {
+  it('拒绝变换后的边变成非有限的自动分配边界', () => {
     const parent = defineComposite({
       namespace: 'test',
       type: 'nonFiniteAutomaticAllocationParent',
@@ -1051,7 +1051,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('does not downgrade malformed nested Composite output to a failed probe', () => {
+  it('不会将格式错误的嵌套复合输出降级为失败的探测', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'malformedProbeChild',
@@ -1075,7 +1075,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(/malformedProbeChild.*children|invalid.*children/i);
   });
 
-  it('snapshots dynamic Composite result fields before validation and commit', () => {
+  it('在验证和提交之前对动态复合结果字段进行快照', () => {
     let childrenReads = 0;
     const result = new Proxy(
       { children: [{ type: 'node', position: [0, 0] }] as Array<IRChild> },
@@ -1108,7 +1108,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(childrenReads).toBe(1);
   });
 
-  it('does not downgrade a sparse nested Composite children array to a failed probe', () => {
+  it('不会将稀疏嵌套复合子数组降级为失败的探测', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'sparseProbeChildren',
@@ -1135,7 +1135,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('does not downgrade an invalid nested Composite output child to a failed probe', () => {
+  it('不会将无效的嵌套复合输出子级降级为失败的探测器', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'invalidOutputChild',
@@ -1162,7 +1162,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(/invalidOutputChild.*output child.*index 0/i);
   });
 
-  it('does not downgrade hostile nested Composite result reflection to a failed probe', () => {
+  it('不会将恶意嵌套复合结果反射降级为失败的探测', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'hostileCallbackResult',
@@ -1197,7 +1197,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('does not downgrade replay wrapper access errors to a failed probe', () => {
+  it('不会将回放包装器访问错误降级为失败的探测', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'hostileReplayWrapper',
@@ -1238,7 +1238,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('reads a replay wrapper clip once before validation and detaches it', () => {
+  it('在验证之前读取一次回放包装裁剪并将其分离', () => {
     let clipReads = 0;
     const wrapper: Record<string, unknown> = {};
     Object.defineProperty(wrapper, 'clip', {
@@ -1270,7 +1270,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(clipReads).toBe(1);
   });
 
-  it('does not downgrade hostile nested runtime Scope props reflection to a failed probe', () => {
+  it('不会降级敌对嵌套运行时 Scope props 反射到失败的探测器', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'hostileRuntimeScopeProps',
@@ -1310,7 +1310,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('does not downgrade sparse nested runtime Scope children to a failed probe', () => {
+  it('不会将稀疏嵌套运行时 Scope 子级降级为失败的探测', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'sparseRuntimeScopeChildren',
@@ -1340,7 +1340,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('keeps detailed expanded child compilation on the existing dispatch path', () => {
+  it('在现有调度路径上保留详细的扩展子编译', () => {
     const expanded = defineComposite({
       namespace: 'test',
       type: 'singleRectangleExpand',
@@ -1377,7 +1377,7 @@ describe('layout-aware composite constraints and bounds', () => {
   });
 
   it.each([{ variant: 'invalidChild' as const }, { variant: 'hostileArray' as const }])(
-    'does not downgrade $variant composite output to a failed probe',
+    '不会将 $variant 复合输出降级为故障探测',
     ({ variant }) => {
       const expanded = defineComposite({
         namespace: 'test',
@@ -1422,7 +1422,7 @@ describe('layout-aware composite constraints and bounds', () => {
     },
   );
 
-  it('lets malformed provider geometry and text metrics pierce the probe catch boundary', () => {
+  it('让格式错误的提供者几何图形和文本度量刺穿探测捕获边界', () => {
     const malformedShape = defineShape({
       name: 'malformedProbeShape',
       paramsSchema: strictObject({}),
@@ -1503,7 +1503,7 @@ describe('layout-aware composite constraints and bounds', () => {
         ],
       },
     },
-  ])('keeps hostile measureText output fatal for $variant inside a discarded probe', ({ variant, child }) => {
+  ])('丢弃探测结果时 $variant 中恶意 measureText 输出仍为致命错误', ({ variant, child }) => {
     const parent = defineComposite({
       namespace: 'test',
       type: `hostileMetrics${variant}Parent`,
@@ -1539,7 +1539,7 @@ describe('layout-aware composite constraints and bounds', () => {
     { variant: 'invalidBodyCommand' as const },
     { variant: 'invalidBodyPaint' as const },
     { variant: 'invalidLabelMetrics' as const },
-  ])('keeps malformed lowerTex output fatal for $variant inside a discarded probe', ({ variant }) => {
+  ])('将畸形的 lowerTex 输出保留在废弃探测内，对于 $variant 来说是致命的', ({ variant }) => {
     const parent = defineComposite({
       namespace: 'test',
       type: `malformedTex${variant}Parent`,
@@ -1606,7 +1606,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it.each(['measureText', 'lowerTex'] as const)('keeps an ordinary %s execution throw recoverable', provider => {
+  it.each(['measureText', 'lowerTex'] as const)('保持普通 %s 执行抛出可恢复', provider => {
     const parent = defineComposite({
       namespace: 'test',
       type: `throwing${provider}Parent`,
@@ -1649,7 +1649,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).not.toThrow();
   });
 
-  it('keeps hostile Shape circumscribe output reflection fatal inside a discarded probe', () => {
+  it('在废弃探测内保持敌对形状限制输出反射致命', () => {
     const hostileShape = defineShape({
       name: 'hostileCircumscribeShape',
       paramsSchema: strictObject({}),
@@ -1695,7 +1695,7 @@ describe('layout-aware composite constraints and bounds', () => {
     { variant: 'shapeAnchor' as const, anchor: 'right' as const },
     { variant: 'shapeEdgePoint' as const, anchor: { side: 'top' as const, fraction: 0.5 } },
     { variant: 'boundaryAnchor' as const, anchor: 'right' as const },
-  ])('keeps hostile $variant output reflection fatal inside a discarded probe', ({ variant, anchor }) => {
+  ])('将敌对的 $variant 输出反射致命保留在废弃的探测内', ({ variant, anchor }) => {
     const hostilePoint = () =>
       new Proxy([10, 0] as [number, number], {
         get: () => {
@@ -1766,7 +1766,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('keeps hostile Shape scaleParams output reflection fatal inside a discarded probe', () => {
+  it('在废弃探测内保持敌对形状 scaleParams 输出反射致命', () => {
     const hostileShape = defineShape({
       name: 'hostileScaleParamsShape',
       paramsSchema: strictObject({ radius: number() }),
@@ -1816,7 +1816,7 @@ describe('layout-aware composite constraints and bounds', () => {
   it.each([
     { variant: 'connectionEnvelope' as const, boundary: 'circle' },
     { variant: 'resolveRect' as const, boundary: 'hostileRectBoundary' },
-  ])('keeps hostile $variant output reflection fatal inside a discarded probe', ({ variant, boundary }) => {
+  ])('将敌对的 $variant 输出反射致命保留在废弃的探测内', ({ variant, boundary }) => {
     const hostileEnvelopeShape = defineShape({
       name: 'hostileEnvelopeShape',
       paramsSchema: strictObject({}),
@@ -1892,7 +1892,7 @@ describe('layout-aware composite constraints and bounds', () => {
   it.each([
     { label: 'null', output: null },
     { label: 'undefined', output: undefined },
-  ])('keeps a Boundary resolveRect $label output fatal inside a discarded probe', ({ output }) => {
+  ])('在废弃的探测内保留致命的边界 resolveRect $label 输出', ({ output }) => {
     const malformedBoundary = defineBoundary({
       name: 'nullishRectBoundary',
       paramsSchema: strictObject({}),
@@ -1936,7 +1936,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('keeps hostile BuiltinPath compile output reflection fatal inside a discarded probe', () => {
+  it('将恶意的 BuiltinPath 编译输出反射致命保留在废弃的探测内', () => {
     const hostilePath = definePath({
       name: 'hostilePath',
       schema: PathSchema.extend({ kind: literal('hostilePath') }),
@@ -1981,7 +1981,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('snapshots dynamic BuiltinPath bounds points before validation and layout publication', () => {
+  it('在验证和布局发布之前快照动态 BuiltinPath 边界点', () => {
     let boundsPointsReads = 0;
     let xReads = 0;
     const point = new Proxy([10, 0] as [number, number], {
@@ -2029,7 +2029,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect({ boundsPointsReads, xReads }).toEqual({ boundsPointsReads: 1, xReads: 1 });
   });
 
-  it('lets invalid provider geometry and clip grammar pierce a discarded probe', () => {
+  it('让无效的提供者几何体和裁剪语法刺穿废弃的探测', () => {
     const badShape = defineShape({
       name: 'badEmitShape',
       paramsSchema: strictObject({}),
@@ -2115,7 +2115,7 @@ describe('layout-aware composite constraints and bounds', () => {
     }
   });
 
-  it('lets malformed fonts, shadows, and cyclic provider trees pierce a discarded probe', () => {
+  it('让格式错误的字体、阴影和循环提供者树刺穿废弃的探测', () => {
     const invalidText = (overrides: Record<string, unknown>): ScenePrimitive =>
       ({
         type: 'text',
@@ -2239,7 +2239,7 @@ describe('layout-aware composite constraints and bounds', () => {
     }
   });
 
-  it('rejects lossy animation tracks and symbol-keyed provider output in a discarded probe', () => {
+  it('拒绝丢弃的探测中的有损动画轨道和符号键控提供者输出', () => {
     const validTrack = (): Record<PropertyKey, unknown> => ({
       property: 'opacity',
       keyframes: [
@@ -2368,7 +2368,7 @@ describe('layout-aware composite constraints and bounds', () => {
     }
   });
 
-  it('classifies returned Scene and Marker Proxy traps as fatal output violations', () => {
+  it('将返回的 Scene 和标记代理陷阱分类为致命输出违规', () => {
     const hostileThrown = Proxy.revocable({}, {});
     hostileThrown.revoke();
     const sceneTrap = hostileThrown.proxy;
@@ -2449,7 +2449,7 @@ describe('layout-aware composite constraints and bounds', () => {
     }
   });
 
-  it('snapshots a dynamic Shape Scene primitive before validation and downstream use', () => {
+  it('在验证和下游使用之前对动态形状 Scene 基元进行快照', () => {
     let xReads = 0;
     const dynamicRect = new Proxy({ type: 'rect', x: 0, y: 0, width: 10, height: 10 } as const, {
       get: (target, property, receiver) => {
@@ -2480,7 +2480,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(xReads).toBe(0);
   });
 
-  it('rejects visual bounds whose derived edges become non-finite inside a discarded probe', () => {
+  it('拒绝视觉边界，其派生边缘在丢弃的探测内变得非有限', () => {
     const farShape = defineShape({
       name: 'nonFiniteVisualBoundsShape',
       paramsSchema: strictObject({}),
@@ -2518,7 +2518,7 @@ describe('layout-aware composite constraints and bounds', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('snapshots a dynamic Arrow marker primitive before validation and downstream use', () => {
+  it('在验证和下游使用之前对动态箭头标记基元进行快照', () => {
     let xReads = 0;
     const dynamicRect = new Proxy({ type: 'rect', x: 0, y: 0, width: 10, height: 10 } as const, {
       get: (target, property, receiver) => {
@@ -2555,7 +2555,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(xReads).toBe(0);
   });
 
-  it('snapshots a dynamic clip path before resource registration', () => {
+  it('在资源注册之前对动态裁剪路径进行快照', () => {
     let commandsReads = 0;
     const path: SceneClipPath = {
       commands: [
@@ -2588,7 +2588,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(clip?.path.commands).toHaveLength(4);
   });
 
-  it('snapshots dynamic Shape sizing and offset fields before layout consumption', () => {
+  it('在布局使用之前快照动态形状大小和偏移字段', () => {
     let halfWidthReads = 0;
     let offsetXReads = 0;
     const circumscribed = new Proxy(
@@ -2644,7 +2644,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect({ halfWidthReads, offsetXReads }).toEqual({ halfWidthReads: 1, offsetXReads: 1 });
   });
 
-  it('snapshots a dynamic provider position before finite validation and publication', () => {
+  it('在有限验证和发布之前对动态提供者位置进行快照', () => {
     let xReads = 0;
     const position = new Proxy([10, 0] as [number, number], {
       get: (target, property, receiver) => {
@@ -2661,7 +2661,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(xReads).toBe(1);
   });
 
-  it('omits an optional undefined Scene field while detaching the primitive', () => {
+  it('在分离基元时省略可选的 undefined Scene 字段', () => {
     const shapeOf = (name: string, primitive: ScenePrimitive) =>
       defineShape({
         name,
@@ -2690,7 +2690,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(Object.isFrozen(rect)).toBe(false);
   });
 
-  it('rejects explicit undefined and sparse Scene or Marker arrays before primitive validation', () => {
+  it('在基元验证之前拒绝显式 undefined 和稀疏的 Scene 或标记数组', () => {
     const lossyArrays: Array<Array<unknown>> = [[undefined], new Array(1)];
 
     for (const [index, children] of lossyArrays.entries()) {
@@ -2730,7 +2730,7 @@ describe('layout-aware composite constraints and bounds', () => {
     }
   });
 
-  it('keeps a directly thrown revoked Proxy recoverable with exact selected cause identity', () => {
+  it('保持直接抛出的撤销代理可恢复并具有精确选择的原因标识', () => {
     const hostileThrown = Proxy.revocable({}, {});
     hostileThrown.revoke();
     const throwingShape = defineShape({
@@ -2783,7 +2783,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect((selected as Error & { cause?: unknown }).cause).toBe(hostileThrown.proxy);
   });
 
-  it('terminates a self-returning prototype trap on the first identity cycle', () => {
+  it('在第一个身份周期终止自返回原型陷阱', () => {
     let prototypeTrapCalls = 0;
     const selfReturningProxy: object = new Proxy(
       {},
@@ -2855,7 +2855,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect((selected as Error & { cause?: unknown }).cause).toBe(selfReturningProxy);
   });
 
-  it('keeps an ordinary clip provider throw recoverable and discardable', () => {
+  it('保持普通裁剪提供者抛出可恢复和可丢弃', () => {
     const throwingClip = defineClip({
       kind: 'ordinaryThrowingClip',
       schema: strictObject({ kind: literal('ordinaryThrowingClip'), params: strictObject({}) }),
@@ -2896,8 +2896,8 @@ describe('layout-aware composite constraints and bounds', () => {
   });
 });
 
-describe('layout-aware composite replay ownership', () => {
-  it('publishes one duplicate-id warning and commits replay last-wins', () => {
+describe('布局感知的复合回放所有权', () => {
+  it('只发布一次重复 id 警告并按后写优先语义提交回放', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'duplicateReplayId',
@@ -2939,7 +2939,7 @@ describe('layout-aware composite replay ownership', () => {
     });
   });
 
-  it('still reports an id introduced by raw output before replay commit', () => {
+  it('仍然报告回放提交之前原始输出引入的 ID', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'rawBeforeReplayId',
@@ -2982,7 +2982,7 @@ describe('layout-aware composite replay ownership', () => {
     });
   });
 
-  it('preserves replay root zIndex when mixed with raw output', () => {
+  it('与原始输出混合时保留回放根 zIndex', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'mixedZIndex',
@@ -3015,7 +3015,7 @@ describe('layout-aware composite replay ownership', () => {
     expect(result.scene.primitives.map(primitive => primitive.type)).toEqual(['path', 'rect']);
   });
 
-  it('preserves replay root zIndex through placement transforms', () => {
+  it('通过布局变换保留回放根 zIndex', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'transformedZIndex',
@@ -3048,7 +3048,7 @@ describe('layout-aware composite replay ownership', () => {
     expect(result.scene.primitives.map(primitive => primitive.type)).toEqual(['path', 'group']);
   });
 
-  it('wraps multiple replay roots independently around a sibling and deduplicates the wrapper clip', () => {
+  it('将多个回放根独立地包裹在同级周围，并对包裹裁剪进行去重', () => {
     const roots = defineComposite({
       namespace: 'test',
       type: 'multipleRoots',
@@ -3099,7 +3099,7 @@ describe('layout-aware composite replay ownership', () => {
     expect(result.scene.resources?.filter(resource => resource.kind === 'clip')).toHaveLength(1);
   });
 
-  it('rejects a replay token retained from a previous compile', () => {
+  it('拒绝从先前编译中保留的回放令牌', () => {
     let retained: LayoutChildResult | undefined;
     let reuse = false;
     const definition = defineComposite({
@@ -3132,7 +3132,7 @@ describe('layout-aware composite replay ownership', () => {
     ).toThrow(/does not belong to this compile|forged/i);
   });
 
-  it('rejects a structurally forged replay token', () => {
+  it('拒绝结构伪造的回放令牌', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'forgedReplay',
@@ -3159,7 +3159,7 @@ describe('layout-aware composite replay ownership', () => {
     ).toThrow(/does not belong to this compile|forged/i);
   });
 
-  it('rejects a copied layout result even when it retains a real replay token', () => {
+  it('拒绝复制的布局结果，即使它保留了真实的回放令牌', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'copiedLayoutResult',
@@ -3187,7 +3187,7 @@ describe('layout-aware composite replay ownership', () => {
     ).toThrow(/test\.copiedLayoutResult.*children\[0\].*(invalid|forged).*layout result/i);
   });
 
-  it('applies replay transforms to allocation, Scene, namespace, and Node artifacts', () => {
+  it('将回放转换应用于分配、Scene、命名空间和 Node 产物', () => {
     const moved = defineComposite({
       namespace: 'test',
       type: 'moved',
@@ -3260,8 +3260,8 @@ describe('layout-aware composite replay ownership', () => {
   });
 });
 
-describe('layout-aware composite artifacts and lowering errors', () => {
-  it('applies maxCompositeDepth to the layout-aware compile branch', () => {
+describe('布局感知复合组件的产物与下沉错误', () => {
+  it('将 maxCompositeDepth 应用于布局感知编译分支', () => {
     const recursive = defineComposite({
       namespace: 'test',
       type: 'recursive',
@@ -3283,7 +3283,7 @@ describe('layout-aware composite artifacts and lowering errors', () => {
     ).toThrow(/COMPOSITE_NEST_TOO_DEEP.*children\[0\]/);
   });
 
-  it('rejects schema-accepted values that are not JSON-safe plain data', () => {
+  it('拒绝非 JSON 安全纯数据的 schema 接受值', () => {
     const unsafeSchema = custom<JsonValue>(() => true);
     const definition = defineComposite({
       namespace: 'test',
@@ -3306,7 +3306,7 @@ describe('layout-aware composite artifacts and lowering errors', () => {
     ).toThrow(/plain objects and arrays/i);
   });
 
-  it('preserves JSON special keys in detached artifacts', () => {
+  it('在分离的产物中保留 JSON 特殊键', () => {
     const payload = JSON.parse('{"__proto__":{"safe":true}}') as JsonValue;
     const definition = defineComposite({
       namespace: 'test',
@@ -3328,7 +3328,7 @@ describe('layout-aware composite artifacts and lowering errors', () => {
     expect(JSON.stringify(artifact.value)).toBe('{"__proto__":{"safe":true}}');
   });
 
-  it('rejects symbol-keyed artifact properties instead of silently dropping them', () => {
+  it('拒绝符号键控的产物属性，而不是默默地删除它们', () => {
     const payload = { visible: true, [Symbol('hidden')]: 'not-json' } as unknown as JsonValue;
     const definition = defineComposite({
       namespace: 'test',
@@ -3348,7 +3348,7 @@ describe('layout-aware composite artifacts and lowering errors', () => {
     ).toThrow(/symbol key/i);
   });
 
-  it('rejects functions, sets, class instances, symbols, and cyclic artifact data', () => {
+  it('拒绝函数、集合、类实例、符号和循环产物数据', () => {
     class ArtifactClass {
       value = true;
     }

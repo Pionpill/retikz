@@ -26,8 +26,8 @@ const expectOwnCause = (error: Error, cause: unknown): void => {
   expect(Object.getOwnPropertyNames(error)).toContain('cause');
 };
 
-describe('runtime structured errors', () => {
-  it('preserves RetikzRuntimeError compatibility while exposing Runtime details', () => {
+describe('运行时结构化错误', () => {
+  it('保留 RetikzRuntimeError 兼容性，同时公开 Runtime 详细信息', () => {
     const cause = { input: 'scene' };
     const error = new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.ComputationRunFailed,
@@ -56,7 +56,7 @@ describe('runtime structured errors', () => {
     expectOwnCause(error, cause);
   });
 
-  it('omits optional owner and computation from Runtime details while retaining diagnostics', () => {
+  it('在保留诊断的同时，省略 Runtime 详细信息中的可选所属模块和计算', () => {
     const error = new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision' });
 
     expect(error.owner).toBeUndefined();
@@ -69,7 +69,7 @@ describe('runtime structured errors', () => {
     expect(isRetikzError(error)).toBe(true);
   });
 
-  it('preserves a package-level Runtime error message, phase, and cause', () => {
+  it('保留包级 Runtime 错误消息、阶段和原因', () => {
     const cause = { state: 'missing' };
     const error = new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.InternalInvariant,
@@ -89,7 +89,7 @@ describe('runtime structured errors', () => {
     expectOwnCause(error, cause);
   });
 
-  it('uses RetikzRuntimeError for owner lifecycle failures', () => {
+  it('使用 RetikzRuntimeError 来处理所属模块生命周期故障', () => {
     const cause = new Error('dispose failed');
     const lifecycleDiagnostics = [
       {
@@ -127,7 +127,7 @@ describe('runtime structured errors', () => {
     expectOwnCause(error, cause);
   });
 
-  it('uses RetikzRuntimeError for source registry failures', () => {
+  it('使用 RetikzRuntimeError 来处理源注册表故障', () => {
     const error = new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.Unknown,
       phase: 'source-registry',
@@ -146,7 +146,7 @@ describe('runtime structured errors', () => {
     expectOwnCause(error, undefined);
   });
 
-  it('uses RetikzRuntimeError for identity failures', () => {
+  it('标识失败使用 RetikzRuntimeError', () => {
     const rejectedValue = ' ';
     const error = new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.IdentityInvalid,

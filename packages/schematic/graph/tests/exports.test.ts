@@ -12,8 +12,8 @@ const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.
   publishConfig: { exports: Record<string, unknown> };
 };
 
-describe('@retikz/graph package boundary', () => {
-  it('declares the Graph release metadata and one root export', () => {
+describe('@retikz/graph 封装边界', () => {
+  it('声明 Graph 版本元数据和一个根导出', () => {
     expect(manifest).toMatchObject({
       name: '@retikz/graph',
       version: '0.1.0-alpha.3',
@@ -23,7 +23,7 @@ describe('@retikz/graph package boundary', () => {
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);
   });
 
-  it('exposes one Graph semantic compile root and Source authoring surface', () => {
+  it('公开一个 Graph 语义编译根和 Source 编写表面', () => {
     expect(graphExports.GRAPH_NAMESPACE).toBe('graph');
     expect(graphExports.GraphDefinition).toBeDefined();
     expect(graphExports.GraphProviderKey).toEqual({
@@ -100,7 +100,7 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports.createGraphProviders).toBeTypeOf('function');
   });
 
-  it('does not expose split member wrappers or private continuation artifacts', () => {
+  it('不公开拆分成员包装器或私有延续产物', () => {
     expect(graphExports).not.toHaveProperty('BlockCellDefinition');
     expect(graphExports).not.toHaveProperty('BlockCellProviderKey');
     expect(graphExports).not.toHaveProperty('BlockRegionSchema');
@@ -119,7 +119,7 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports).not.toHaveProperty('GraphRelationLabelSchema');
   });
 
-  it('exposes the three independent member vocabularies and extension hooks', () => {
+  it('公开三个独立的成员词汇表和扩展钩子', () => {
     expect(graphExports.BuiltinEntityRole).toEqual({
       Participant: 'participant',
       Activity: 'activity',
@@ -167,7 +167,7 @@ describe('@retikz/graph package boundary', () => {
     }
   });
 
-  it('rejects the former namespace and does not register the former role vocabulary', () => {
+  it('拒绝原命名空间，不注册原角色词汇', () => {
     expect(() =>
       graphExports.EntitySchema.parse({ namespace: 'notation', type: 'entity', id: 'legacy', role: 'stage' }),
     ).toThrow();

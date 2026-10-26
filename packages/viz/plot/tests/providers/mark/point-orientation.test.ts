@@ -54,7 +54,7 @@ const render = (
   );
 };
 
-describe('PointMark coordinate orientation', () => {
+describe('PointMark 坐标方向', () => {
   it('沿角向切线及正法向旋转，并叠加常量角', () => {
     expect(
       render({ properties: { orientation: { kind: 'coordinate', role: 'x', align: 'tangent' }, rotate: 15 } })[0]

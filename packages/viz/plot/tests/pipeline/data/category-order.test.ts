@@ -69,13 +69,13 @@ const bandCategorySequence = (layer: IRScope, rows: Array<Record<string, unknown
 };
 
 describe('IRDataFieldDefinition.order — schema 接受 / 拒绝', () => {
-  it('explicit_array_order_accepted_by_schema', () => {
+  it('schema 接受显式数组排序', () => {
     const def = { name: 'size', type: 'categorical', order: ['S', 'M', 'L', 'XL'] };
 
     expect(FieldDefinitionSchema.parse(def)).toEqual(def);
   });
 
-  it('enum_order_accepted_by_schema', () => {
+  it('schema 接受的枚举顺序', () => {
     for (const order of ['appearance', 'ascending', 'descending'] as const) {
       const def = { name: 'grade', type: 'categorical', order };
 
@@ -85,7 +85,7 @@ describe('IRDataFieldDefinition.order — schema 接受 / 拒绝', () => {
 });
 
 describe('IRDataFieldDefinition.order — 显式数组域', () => {
-  it('explicit_array_order', () => {
+  it('遵循显式数组顺序', () => {
     // order:['S','M','L'] → band 域按数组序，与数据出现序无关
     const spec = bandSpec(
       [
@@ -108,7 +108,7 @@ describe('IRDataFieldDefinition.order — 显式数组域', () => {
 });
 
 describe('IRDataFieldDefinition.order — 排序枚举', () => {
-  it('ascending_sorts_numeric', () => {
+  it('升序排序数字', () => {
     // 全数值类别 + order:'ascending' → 按数值升序（10 在 2 之后，而非字符串序）
     const spec = bandSpec(
       [
@@ -128,7 +128,7 @@ describe('IRDataFieldDefinition.order — 排序枚举', () => {
     expect(bandCategorySequence(layer, rows)).toEqual([1, 2, 10]);
   });
 
-  it('ascending_mixed_falls_back_string', () => {
+  it('上升混合下降字符串', () => {
     // 类别混 string + number → 统一字符串 locale 比，不抛
     const spec = bandSpec(
       [
@@ -156,7 +156,7 @@ describe('IRDataFieldDefinition.order — 排序枚举', () => {
 });
 
 describe('IRDataFieldDefinition.order — 默认与边界', () => {
-  it('default_data_order_preserved', () => {
+  it('默认数据顺序保留', () => {
     // 不写 order（缺省 'appearance'）→ 出现序，与现状逐字等价
     const noOrder = bandSpec(
       [
@@ -189,7 +189,7 @@ describe('IRDataFieldDefinition.order — 默认与边界', () => {
     expect(ax).toEqual(bx);
   });
 
-  it('array_missing_value_appended', () => {
+  it('数组缺失值附加', () => {
     // 数据含 'XL'，但 order 数组无 → 追加末尾、不丢（4 类别全在域里）
     const spec = bandSpec(
       [
@@ -210,7 +210,7 @@ describe('IRDataFieldDefinition.order — 默认与边界', () => {
     expect(bandCategorySequence(layer, rows)).toEqual(['S', 'M', 'L', 'XL']);
   });
 
-  it('single_category_order', () => {
+  it('单个类别的排序', () => {
     // 单一类别 + order → 正常下沉，一个 band
     const spec = bandSpec(
       [
@@ -236,7 +236,7 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
       value: '2024/01/01',
       field: { name: 'cx', format: 'slashDate', order: 'ascending' },
     },
-  ])('rejects category order after resolving $label', ({ value, field }) => {
+  ])('解析 $label 后拒绝类别排序配置', ({ value, field }) => {
     // Source 省略 type，格式或数据确定为非分类字段后拒绝类别顺序
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -256,7 +256,7 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
     expect(() => expandOf(spec, { d: [{ cx: value, val: 2 }] })).toThrow(/order.*categorical/);
   });
 
-  it('conflicting_order_same_role_throws', () => {
+  it('冲突顺序相同角色抛出', () => {
     // 同一 x role 两字段给不同非默认 order → fail-loud
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -280,7 +280,7 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
     expect(() => expandOf(spec, { d: [{ a: 'x', b: 'p', val: 1 }] })).toThrow();
   });
 
-  it('empty_array_order_rejected', () => {
+  it('拒绝空数组排序', () => {
     // order:[] 被 FieldDefinitionSchema.parse 拒（.min(1)）—— zod parse 错误路径
     expect(() => FieldDefinitionSchema.parse({ name: 'cat', type: 'categorical', order: [] })).toThrow();
 
@@ -290,7 +290,7 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
 });
 
 describe('IRDataFieldDefinition.order — 交互', () => {
-  it('order_applies_to_position_and_color', () => {
+  it('排序同时应用于位置和颜色', () => {
     // 同一有序字段 cat 既作 x(band) 又作 color(ordinal) → 两处类别序一致
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -340,7 +340,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
     expect(fillByCategory.get('L')).toBe(sharedCategorical[2]);
   });
 
-  it('order_with_type_driven_scale', () => {
+  it('订购时配有类型驱动秤', () => {
     // {categorical, order} + 省略 scale → 派生 band 且域按 order
     const spec = bandSpec([
       { name: 'cat', type: 'categorical', order: ['S', 'M', 'L'] },
@@ -363,7 +363,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
     expect(bandCategorySequence(layer, rows)).toEqual(['S', 'M', 'L']);
   });
 
-  it('explicit_domain_overrides_order', () => {
+  it('显式域覆盖顺序', () => {
     // scale 显式 domain + 字段 order 同在 → 用显式 domain（order 被忽略）
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -418,8 +418,8 @@ describe('IRDataFieldDefinition.order — 交互', () => {
   });
 });
 
-describe('IRDataFieldDefinition.order — JSON round-trip', () => {
-  it('order_json_roundtrip', () => {
+describe('IRDataFieldDefinition.order — JSON 往返', () => {
+  it('顺序 json 往返', () => {
     // 含 order（含 Array 形态）的 model JSON.parse(JSON.stringify()) 后 schema parse 等价
     const model = DataModelSchema.parse([
       { name: 'size', type: 'categorical', order: ['S', 'M', 'L', 'XL'] },
@@ -433,7 +433,7 @@ describe('IRDataFieldDefinition.order — JSON round-trip', () => {
   });
 });
 
-describe('registered category orders', () => {
+describe('已注册的类别排序', () => {
   const rows = [
     { cat: '10.18', val: 1 },
     { cat: '10.2', val: 2 },
@@ -451,11 +451,11 @@ describe('registered category orders', () => {
   it.each([
     ['naturalAscending', ['2.0', '10.2', '10.18']],
     ['naturalDescending', ['10.18', '10.2', '2.0']],
-  ])('positions versions with %s', (order, expected) => {
+  ])('带有 %s 的定位版本', (order, expected) => {
     expect(bandCategorySequence(firstLayer(specOf(String(order)), { d: rows }), rows)).toEqual(expected);
   });
 
-  it('dispatches custom definitions and retains request isolation', () => {
+  it('分派自定义定义并保留请求隔离', () => {
     const definition = defineFieldOrder({ name: 'length', compare: (a, b) => String(a).length - String(b).length });
     expect(
       bandCategorySequence(
@@ -467,13 +467,13 @@ describe('registered category orders', () => {
   });
 
   it.each([{ values: [] }, { values: [rows[0]] }])(
-    'rejects unknown orders even without enough observations',
+    '观测值不足时仍拒绝未知排序',
     ({ values }) => {
       expect(() => firstLayer(specOf('missing'), { d: values })).toThrow(/unknown order/);
     },
   );
 
-  it('validates registration even when an explicit visual domain wins', () => {
+  it('即使显式视觉域获胜，也会验证注册', () => {
     const spec = specOf('missing');
     spec.coordinate = { type: 'cartesian2D', x: 'cx', y: 'yv' };
     spec.scales.push({ type: 'band', name: 'cx', domain: ['10.18', '10.2', '2.0'] });
@@ -488,7 +488,7 @@ describe('registered category orders', () => {
   });
 });
 
-it('uses the same natural domain for position, color, and legend', () => {
+it('对位置、颜色和图例使用相同的自然域', () => {
   const make = (order: string | Array<string>) =>
     PlotSchema.parse({
       ...bandSpec(
@@ -511,7 +511,7 @@ it('uses the same natural domain for position, color, and legend', () => {
   expect(expandOf(make('naturalAscending'), data)).toEqual(expandOf(make(['2.0', '10.2', '10.18']), data));
 });
 
-it('checks async result and native source models before execution', async () => {
+it('在执行之前检查异步结果和本机源模型', async () => {
   const spec = bandSpec(
     [
       { name: 'cat', type: 'categorical', order: 'business' },

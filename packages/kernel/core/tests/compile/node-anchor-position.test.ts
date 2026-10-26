@@ -32,7 +32,7 @@ const inflatedRect = (layout: NodeLayoutObservation, marginX: number, marginY = 
   height: layout.rect.height + marginY * 2,
 });
 
-describe('Node anchor-to-anchor position', () => {
+describe('Node 锚点到锚点位置', () => {
   it('Node → Node 默认以双方 center 对齐', () => {
     const layouts = compileLayouts(
       scene([
@@ -374,7 +374,7 @@ describe('Node anchor-to-anchor position', () => {
   });
 });
 
-describe('Node anchor-to-anchor position fail-loud', () => {
+describe('Node 锚点到锚点位置故障声音', () => {
   it('拒绝 undefined target', () => {
     expect(
       () =>

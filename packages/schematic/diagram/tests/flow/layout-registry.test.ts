@@ -35,8 +35,8 @@ const customDefinition = (name = 'custom'): FlowLayoutDefinition =>
     layout: () => ({ elements: [], relations: [] }),
   });
 
-describe('Flow Layout registry and catalog', () => {
-  it('keeps built-ins first, deduplicates identity and selects one explicit runtime default', () => {
+describe('Flow Layout 注册表和目录', () => {
+  it('首先保留内置函数，删除重复身份并选择一个显式运行时默认值', () => {
     const custom = customDefinition();
     const resolved = resolveFlowLayoutRegistry({
       flowLayouts: [custom, custom],
@@ -47,7 +47,7 @@ describe('Flow Layout registry and catalog', () => {
     expect(resolved.defaultLayout).toBe(custom);
   });
 
-  it('rejects same-name different identities and unknown defaults without last-wins fallback', () => {
+  it('拒绝同名不同身份和未知默认值，没有后写优先的回退', () => {
     const custom = customDefinition();
 
     for (const [run, code] of [
@@ -73,7 +73,7 @@ describe('Flow Layout registry and catalog', () => {
     }
   });
 
-  it('projects a JSON-safe catalog from the dispatch registry with exactly one default', () => {
+  it('从调度注册表中投影 JSON 安全目录，并且只有一个默认值', () => {
     const catalog = getFlowLayoutCatalog({ flowLayouts: [customDefinition()], defaultFlowLayout: 'custom' });
 
     expect(catalog.map(entry => entry.name)).toEqual(['layered', 'custom']);
@@ -82,7 +82,7 @@ describe('Flow Layout registry and catalog', () => {
     expect(catalog.every(entry => !('layout' in entry))).toBe(true);
   });
 
-  it('publishes straight as the built-in layered routing default while retaining orthogonal support defaults', () => {
+  it('直接发布为内置分层路由默认值，同时保留正交支持默认值', () => {
     const layered = getFlowLayoutCatalog().find(entry => entry.name === 'layered');
 
     expect(layered?.defaults).toEqual({
@@ -95,8 +95,8 @@ describe('Flow Layout registry and catalog', () => {
   });
 });
 
-describe('Flow Layout capability preflight', () => {
-  it('requires compound scope support but never group endpoint support for a Layout', () => {
+describe('Flow Layout 能力预检', () => {
+  it('需要复合范围支持，但从不支持 Layout 的组端点', () => {
     const source = FlowDiagramSchema.parse({
       namespace: 'diagram',
       type: 'flow',
@@ -115,7 +115,7 @@ describe('Flow Layout capability preflight', () => {
     ]);
   });
 
-  it('derives compound, endpoint, cross-Group, cycle, self-loop, parallel, label, direction and routing needs', () => {
+  it('导出复合、端点、交叉 Group、循环、自环、并行、标签、方向和路由需求', () => {
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
       type: 'flow',

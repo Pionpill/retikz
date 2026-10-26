@@ -20,7 +20,7 @@ const expandOf = (
 const layerOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, index: number): IRScope =>
   expandOf(spec, datasets, opts).children[index] as IRScope;
 
-describe('stat-geom composition surface (contract)', () => {
+describe('统计几何组合表面（契约）', () => {
   const boxRows = [
     { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 1 },
     { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 2 },
@@ -71,7 +71,7 @@ describe('stat-geom composition surface (contract)', () => {
     },
   } as const;
 
-  it('boxplot composition uses interval, relation, and point layers without a boxplot mark type', () => {
+  it('箱线图合成使用区间、关系和点图层，没有箱线图标记类型', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -132,7 +132,7 @@ describe('stat-geom composition surface (contract)', () => {
     expect(JSON.stringify(spec)).not.toMatch(/boxplot|densityMark|regression/i);
   });
 
-  it('raw and derived stat layers can coexist without named data views', () => {
+  it('原始统计层和派生统计层可以共存，无需命名数据视图', () => {
     const samples = [
       { group: 'A', time: 0, value: 1 },
       { group: 'A', time: 1, value: 3 },

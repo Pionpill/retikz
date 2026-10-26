@@ -136,8 +136,8 @@ const compile = (children: IRScene['children']) => compileWithWarnings(children)
 const compositeArtifacts = (output: ReturnType<typeof compile>) =>
   output.artifacts.filter(artifact => artifact.kind === 'composite');
 
-describe('layout compile artifacts', () => {
-  it('sorts spacing by axis, physical coordinates, kind, and stable generation order', () => {
+describe('布局编译产物', () => {
+  it('按轴、物理坐标、种类和稳定生成顺序对间距进行排序', () => {
     const firstDistributed = {
       kind: 'distributed',
       axis: 'x',
@@ -164,7 +164,7 @@ describe('layout compile artifacts', () => {
     ]);
   });
 
-  it('returns canonical zero geometry for empty default-content layouts', () => {
+  it('返回空默认内容布局的规范零几何图形', () => {
     const output = compile([
       createFlexLayout({}),
       createGridLayout({ columns: [{ kind: 'content', mode: 'natural' }] }),
@@ -187,7 +187,7 @@ describe('layout compile artifacts', () => {
     }
   });
 
-  it('preserves fixed allocation and canonical zero visual geometry for empty layouts', () => {
+  it('为空布局保留固定分配和规范的零视觉几何形状', () => {
     const output = compile([
       createFlexLayout({ size: { x: { kind: 'fixed', value: 40 }, y: { kind: 'fixed', value: 20 } } }),
       createGridLayout({
@@ -213,7 +213,7 @@ describe('layout compile artifacts', () => {
     }
   });
 
-  it('generates deterministic effective keys without colliding with explicit keys', () => {
+  it('生成确定性有效键，而不与显式键冲突', () => {
     const output = compile([
       createFlexLayout({
         children: [
@@ -244,7 +244,7 @@ describe('layout compile artifacts', () => {
     ]);
   });
 
-  it('records Flex physical lines, authored items, translated bounds and clip overflow', () => {
+  it('记录 Flex 物理行、编写项目、翻译边界和裁剪溢出', () => {
     const output = compile([
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 25 }, y: { kind: 'fixed', value: 20 } },
@@ -278,7 +278,7 @@ describe('layout compile artifacts', () => {
     expect(artifact.value.items[0].overflow.allocation.x).toBe(true);
   });
 
-  it('records reverse and wrap-reverse Flex lines in final physical order', () => {
+  it('以最终物理顺序记录反向和换行 Flex 行', () => {
     const output = compile([
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 60 }, y: { kind: 'fixed', value: 50 } },
@@ -306,7 +306,7 @@ describe('layout compile artifacts', () => {
     expect(artifact.value.lines.map(line => line.crossStart)).toEqual([10, 25, 40]);
   });
 
-  it('records Grid explicit and implicit tracks with resolved item spans', () => {
+  it('记录 Grid 显式和隐式跟踪以及已解析的项目跨度', () => {
     const output = compile([
       createGridLayout({
         columns: [{ kind: 'fixed', value: 10 }],
@@ -339,7 +339,7 @@ describe('layout compile artifacts', () => {
     expect(artifact.value.items[0]).toMatchObject({ column: 1, row: 0, columnSpan: 1, rowSpan: 1 });
   });
 
-  it('classifies every Grid track source kind', () => {
+  it('对每个 Grid 轨道源类型进行分类', () => {
     const output = compile([
       createGridLayout({
         size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 10 } },
@@ -365,7 +365,7 @@ describe('layout compile artifacts', () => {
     expect(artifact.value.columns.every(track => track.implicit === false)).toBe(true);
   });
 
-  it('keeps Overlay authored identity separate from stable paint order', () => {
+  it('将 Overlay 编写身份与稳定的绘制顺序分开', () => {
     const output = compile([
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 10 } },
@@ -394,7 +394,7 @@ describe('layout compile artifacts', () => {
     });
   });
 
-  it('records slot, allocation, visual and clip overflow without diagnostics', () => {
+  it('记录槽位、分配、视觉和裁剪溢出，无需诊断', () => {
     const { output, warnings } = compileWithWarnings([
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 20 } },
@@ -447,7 +447,7 @@ describe('layout compile artifacts', () => {
     expect(fullyClipped).toMatchObject({ visibleBounds: null, overflow: { clipped: true } });
   });
 
-  it('marks an epsilon-small visual intersection change as actual clipping', () => {
+  it('将 epsilon 小视觉交叉变化标记为实际裁剪', () => {
     const delta = 1e-13;
     const result: LayoutChildResult = {
       slotSize: { width: 20, height: 20 },
@@ -471,7 +471,7 @@ describe('layout compile artifacts', () => {
     expect(item.overflow.clipped).toBe(true);
   });
 
-  it('keeps container visible bounds null when opposite-side items are fully clipped', () => {
+  it('当对面的项目被完全剪切时，保持容器可见边界为空', () => {
     const output = compile([
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 20 } },
@@ -508,7 +508,7 @@ describe('layout compile artifacts', () => {
     expect(artifact.value.container.visibleBounds).toBeNull();
   });
 
-  it('normalizes single and separated degenerate visible-policy bounds to null', () => {
+  it('将单个和分离的简并可见策略边界标准化为空', () => {
     const positionedItem = (key: string, x: number) => ({
       kind: LayoutItemKind.Overlay,
       key,
@@ -540,7 +540,7 @@ describe('layout compile artifacts', () => {
     expect(artifacts[1].value.container.visibleBounds).toBeNull();
   });
 
-  it('records translated real and fallback alignment guides', () => {
+  it('记录翻译的真实和回退对齐辅助线', () => {
     const output = compile([
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 20 } },
@@ -565,7 +565,7 @@ describe('layout compile artifacts', () => {
     ]);
   });
 
-  it('keeps an empty fill layout allocation inside a finite parent slot', () => {
+  it('在有限父槽内保留空填充布局分配', () => {
     const inner = createGridLayout({
       columns: [{ kind: 'fixed', value: 10 }],
       size: { x: { kind: 'fill' }, y: { kind: 'fill' } },
@@ -610,7 +610,7 @@ describe('layout compile artifacts', () => {
     });
   });
 
-  it('keeps nested layout artifacts in independent occurrences and local key spaces', () => {
+  it('将嵌套布局产物保留在独立出现和本地键空间中', () => {
     const inner = createOverlayLayout({
       size: { x: { kind: 'fixed', value: 10 }, y: { kind: 'fixed', value: 10 } },
       children: [{ kind: LayoutItemKind.Overlay, key: 'local', child: leaf('nested-leaf', 5, 5) }],

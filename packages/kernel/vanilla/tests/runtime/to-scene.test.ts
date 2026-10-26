@@ -10,7 +10,7 @@ const scene: Scene = {
   primitives: [],
 };
 
-describe('toSceneResult runtime metadata', () => {
+describe('toSceneResult 运行时元数据', () => {
   it('Vanilla 与直接 JSON 在 Dark Theme 下解析相同 contextual color', () => {
     const theme = { mode: ThemeMode.Dark } as const;
     const child: IRNode = {

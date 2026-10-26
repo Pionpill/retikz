@@ -155,8 +155,8 @@ const scopeChildrenOf = (child: IRChild): Array<IRScope> => {
   return [child as IRScope, ...(child as IRScope).children.flatMap(scopeChildrenOf)];
 };
 
-describe('plot lineage runtime', () => {
-  it('keeps lowerPlots shape unchanged when lineage API is not used', () => {
+describe('绘制血缘运行时间', () => {
+  it('当不使用血缘 API 时，保持 lowerPlots 形状不变', () => {
     const result = {
       children: [lowerPlot(pointSpec(), datasets, { layout: { width: 480, height: 300 }, textMeasurer: measureLabel })],
     };
@@ -165,7 +165,7 @@ describe('plot lineage runtime', () => {
     expect(scopeChildrenOf(result.children[0]).some(scope => scope.meta?.source === 'plot')).toBe(false);
   });
 
-  it('records minimal mark lineage without writing full lineage into scene meta', () => {
+  it('记录最小标记血缘，而不将完整血缘写入场景元', () => {
     const { children, lineage } = lowerPlotWithLineage(pointSpec(), datasets, { environment: {}, lineage: {} });
 
     expect(children).toHaveLength(1);
@@ -182,7 +182,7 @@ describe('plot lineage runtime', () => {
     expect(nodeChildrenOf(children[0]).some(node => 'lineage' in (node.meta ?? {}))).toBe(false);
   });
 
-  it('keeps the required identity skeleton when markIdentity is disabled', () => {
+  it('当 markIdentity 禁用时保留所需的身份骨架', () => {
     const { lineage } = lowerPlotWithLineage(pointSpec(), datasets, {
       environment: {},
       lineage: { markIdentity: false },
@@ -196,7 +196,7 @@ describe('plot lineage runtime', () => {
     expect(lineage.marks[0]).not.toHaveProperty('markId');
   });
 
-  it('keeps root and mark-local transform scopes separate', () => {
+  it('将根和标记局部转换范围分开', () => {
     const { lineage } = lowerPlotWithLineage(summarySpec(), datasets, { environment: {}, lineage: {} });
 
     expect(lineage.data.root.events.filter(event => event.kind === 'transformStep')).toHaveLength(1);
@@ -208,7 +208,7 @@ describe('plot lineage runtime', () => {
     expect(lineage.data.marks[0]?.events.filter(event => event.kind === 'transformStep')).toHaveLength(1);
   });
 
-  it('keeps original source identities after root reorder and mark-local transforms', () => {
+  it('在根重新排序和标记本地转换后保留原始源标识', () => {
     const spec = pointSpec();
     spec.transform = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'descending' } } }];
     spec.marks[0].transforms = [{ operation: { kind: 'sort', params: { field: 'revenue', order: 'ascending' } } }];
@@ -223,7 +223,7 @@ describe('plot lineage runtime', () => {
     );
   });
 
-  it('records host metadata, scale mappings, layout context, and row values only when enabled', () => {
+  it('仅在启用时记录宿主元数据、比例映射、布局上下文和行值', () => {
     const { lineage } = lowerPlotWithLineage(pointSpec(), datasets, {
       environment: {},
       lineage: {
@@ -265,7 +265,7 @@ describe('plot lineage runtime', () => {
     expect(lineage.marks[0]?.rowValues).toEqual([{ region: 'East', revenue: 3 }]);
   });
 
-  it('executes root and mark-local transforms once for the shared Scene and lineage artifact', () => {
+  it('为共享 Scene 和血缘产物执行一次根和标记本地转换', () => {
     const applyCounts = { root: 0, mark: 0 };
     const countingTransform = defineTransform({
       kind: 'count-lineage-apply',
@@ -293,7 +293,7 @@ describe('plot lineage runtime', () => {
     expect(applyCounts).toEqual({ root: 1, mark: 1 });
   });
 
-  it('executes root and mark-local transforms once for a lineage locator request', () => {
+  it('针对血缘定位器请求执行一次根和标记本地转换', () => {
     const applyCounts = { root: 0, mark: 0 };
     const countingTransform = defineTransform({
       kind: 'count-lineage-locator-apply',
@@ -321,7 +321,7 @@ describe('plot lineage runtime', () => {
     expect(applyCounts).toEqual({ root: 1, mark: 1 });
   });
 
-  it('executes transforms independently for separate Scene and lineage lowering requests', () => {
+  it('针对单独的 Scene 和血缘下沉请求独立执行转换', () => {
     const applyCounts = { root: 0, mark: 0 };
     const countingTransform = defineTransform({
       kind: 'count-independent-lineage-apply',
@@ -350,7 +350,7 @@ describe('plot lineage runtime', () => {
     expect(applyCounts).toEqual({ root: 2, mark: 2 });
   });
 
-  it('omits host metadata when enabled fields are absent', () => {
+  it('当启用的字段不存在时，忽略宿主元数据', () => {
     const { lineage } = lowerPlotWithLineage(pointSpec(), datasets, {
       environment: {},
       lineage: { hostMetadata: { query: true } },
@@ -360,7 +360,7 @@ describe('plot lineage runtime', () => {
     expect('hostMetadata' in lineage).toBe(false);
   });
 
-  it('records extension channel field and declared scale binding', () => {
+  it('记录扩展通道字段和声明的比例绑定', () => {
     const { lineage } = lowerPlotWithLineage(extensionChannelSpec(), datasets, {
       definitions: { channels: [intensityChannel] },
       environment: {},
@@ -383,7 +383,7 @@ describe('plot lineage runtime', () => {
     );
   });
 
-  it('rejects unbounded row value options', () => {
+  it('拒绝无界行值选项', () => {
     expect(() =>
       lowerPlotWithLineage(pointSpec(), datasets, {
         environment: {},
@@ -398,7 +398,7 @@ describe('plot lineage runtime', () => {
     ).toThrow(/rowValues.fields/);
   });
 
-  it.each([0.5, 1.5, NaN, Infinity])('rejects rowValues.maxRows=%s', maxRows => {
+  it.each([0.5, 1.5, NaN, Infinity])('拒绝 rowValues.maxRows=%s', maxRows => {
     expect(() =>
       lowerPlotWithLineage(pointSpec(), datasets, {
         environment: {},
@@ -407,7 +407,7 @@ describe('plot lineage runtime', () => {
     ).toThrow(/rowValues\.maxRows must be a positive integer/);
   });
 
-  it('keeps unknown transform errors aligned with lowerPlots', () => {
+  it('使未知变换误差与 lowerPlots 保持一致', () => {
     const spec = {
       ...pointSpec(),
       transform: [{ operation: { kind: 'missing-transform' as const, params: {} } }],
@@ -417,7 +417,7 @@ describe('plot lineage runtime', () => {
     expect(() => lowerPlotWithLineage(spec, datasets, { environment: {}, lineage: {} })).toThrow(/not registered/);
   });
 
-  it('returns locator lineage aligned with anchor meta', () => {
+  it('返回与锚元对齐的定位器血缘', () => {
     const locator = createPlotLineageLocator(pointSpec(), datasets, {
       layout: { width: 480, height: 300 },
       environment: {},
@@ -443,7 +443,7 @@ describe('plot lineage runtime', () => {
     );
   });
 
-  it('does not fabricate datum lineage for series anchors', () => {
+  it('不为系列锚点制作基准血缘', () => {
     const locator = createPlotLineageLocator(seriesSpec(), datasets, {
       layout: { width: 480, height: 300 },
       environment: {},

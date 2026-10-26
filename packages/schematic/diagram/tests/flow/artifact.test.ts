@@ -78,8 +78,8 @@ const artifact = {
   ],
 } as const;
 
-describe('Flow Diagram artifact schema', () => {
-  it('publishes a strict JSON-safe recursive artifact contract', () => {
+describe('Flow Diagram 产物 schema', () => {
+  it('发布严格的 JSON 安全递归产物契约', () => {
     const candidate: unknown = Flow;
     const schema =
       typeof candidate === 'object' && candidate !== null && 'FlowDiagramArtifactSchema' in candidate

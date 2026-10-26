@@ -5,7 +5,7 @@ import { NodeDefaultSchema, NodeSchema } from '../../src/schemas';
 
 const CONTRAST = 'contrast' as const;
 
-describe('Node auto-contrast textColor keyword', () => {
+describe('Node 自动对比 textColor 关键字', () => {
   it('公开稳定的 contract 关键字', () => {
     expect(Reflect.get(SchemaExports, 'NodeTextColor')).toMatchObject({ Contrast: CONTRAST });
   });

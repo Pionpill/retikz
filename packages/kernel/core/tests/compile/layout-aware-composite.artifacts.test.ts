@@ -39,8 +39,8 @@ const gradient = (first: string, second: string): IRPaint => ({
   ],
 });
 
-describe('layout-aware composite transactions and artifacts', () => {
-  it('commits only the exact probe across minimum, natural, and exact transaction side effects', () => {
+describe('布局感知的复合事务和产物', () => {
+  it('仅针对最小的、自然的和精确的事务副作用提交精确的探测', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'multiProposalIsolation',
@@ -104,7 +104,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     expect(result.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(1);
   });
 
-  it('publishes only replayed resources and preserves final resource ordering', () => {
+  it('仅发布回放的资源并保留最终的资源排序', () => {
     const discarded = gradient('#f00', '#0f0');
     const selected = gradient('#00f', '#fff');
     const definition = defineComposite({
@@ -142,7 +142,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     expect(result.scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: selected }]);
   });
 
-  it('discards probe warnings until the corresponding replay is selected', () => {
+  it('丢弃探测警告，直到选择相应的回放', () => {
     const warnings: Array<{ code: string }> = [];
     const definition = defineComposite({
       namespace: 'test',
@@ -174,7 +174,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     });
   });
 
-  it('discards resources, warnings, identities, observations, and artifacts created before a failed child', () => {
+  it('丢弃在失败的子项之前创建的资源、警告、身份、观察结果和产物', () => {
     const failure = defineComposite({
       namespace: 'test',
       type: 'lateProbeFailure',
@@ -228,7 +228,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     expect(JSON.stringify(result)).not.toContain('discarded-side-effects');
   });
 
-  it('commits replayed namespace entries before later siblings resolve them', () => {
+  it('在后续同级节点解析前提交回放的命名空间条目', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'namedChild',
@@ -263,7 +263,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     expect(result.scene.primitives.some(primitive => primitive.type === 'path')).toBe(true);
   });
 
-  it('keeps a discarded probe namespace invisible to later siblings', () => {
+  it('使废弃的探测命名空间对后来的同级不可见', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'discardedNamespace',
@@ -300,7 +300,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     expect(result.scene.primitives.some(primitive => primitive.type === 'path')).toBe(false);
   });
 
-  it('lets layoutChild resolve references completed before the composite occurrence', () => {
+  it('让 layoutChild 解析在复合发生之前完成的引用', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'currentReferences',
@@ -335,7 +335,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     expect(result.scene.primitives.some(primitive => primitive.type === 'path')).toBe(true);
   });
 
-  it('emits parent artifacts before replay descendants and composes occurrence locators', () => {
+  it('在回放后代前输出父级产物并组合实例定位器', () => {
     const child = defineComposite({
       namespace: 'test',
       type: 'child',
@@ -387,7 +387,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     ]);
   });
 
-  it('tracks nested artifacts through generated output occurrences', () => {
+  it('通过生成的输出事件跟踪嵌套产物', () => {
     const layout = defineComposite({
       namespace: 'test',
       type: 'layoutArtifact',
@@ -418,7 +418,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     });
   });
 
-  it('distinguishes generated output Scope descendants from canonical Scope descendants', () => {
+  it('区分生成的输出 Scope 后代和规范 Scope 后代', () => {
     const leaf = defineComposite({
       namespace: 'test',
       type: 'leafArtifact',
@@ -471,7 +471,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     ]);
   });
 
-  it('composes replay with nested Scope provenance and ignores discarded probes', () => {
+  it('使用嵌套的 Scope 来源组成回放并忽略丢弃的探测', () => {
     const leaf = defineComposite({
       namespace: 'test',
       type: 'replayedLeaf',
@@ -520,7 +520,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     expect(formatCompileOccurrence(result.artifacts[0].occurrence)).toBe('children[0]::replay[0]::scopeChild[0]');
   });
 
-  it('returns immutable detached artifacts and keeps Node layouts opt-in', () => {
+  it('返回已分离且不可变的产物并仅在显式启用时输出 Node 布局', () => {
     const payload = { width: 10 };
     const definition = defineComposite({
       namespace: 'test',
@@ -553,7 +553,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     expect(withLayouts.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(1);
   });
 
-  it('publishes a replayed Node layout artifact exactly once', () => {
+  it('仅发布一次回放的 Node 布局产物', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'replayedNodeLayout',
@@ -583,7 +583,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     ]);
   });
 
-  it('orders Node layout and composite artifacts by logical occurrence preorder', () => {
+  it('按逻辑发生预序对 Node 布局和复合产物进行排序', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'laterArtifact',

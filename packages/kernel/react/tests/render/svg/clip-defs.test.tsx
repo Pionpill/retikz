@@ -71,7 +71,7 @@ describe('renderClipDefs — canonical SceneClipPath 物化', () => {
   });
 });
 
-describe('renderPrim — GroupPrimitive.clipRef → <g clip-path>', () => {
+describe('renderPrim — GroupPrimitive.clipRef → <g 裁剪路径>', () => {
   const groupWithClip = (clipRef?: string): GroupPrimitive => ({
     type: 'group',
     clipRef,

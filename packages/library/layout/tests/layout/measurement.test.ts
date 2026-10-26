@@ -12,7 +12,7 @@ import {
   OverlayLayoutDefinition,
 } from '../../src';
 
-it('matches full layout slots for requested axes under content, fixed, and constrained layouts', () => {
+it('匹配内容、固定和约束布局下请求的轴的完整布局槽', () => {
   const leaf: IRChild = { type: 'node', position: [0, 0], text: 'alpha beta gamma delta', layout: { padding: 0 } };
   const proposals: Array<LayoutProposal> = [
     { x: { kind: 'intrinsic', mode: 'minimum' }, y: { kind: 'intrinsic', mode: 'natural' } },

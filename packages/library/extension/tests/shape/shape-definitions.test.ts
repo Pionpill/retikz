@@ -39,8 +39,8 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<Extract<Scene
     primitive.type === 'path' ? [primitive] : primitive.type === 'group' ? pathsOf(primitive.children) : [],
   );
 
-describe('Extension optional shape definitions', () => {
-  it('resolves cross width and height overrides by side, axis, then default', () => {
+describe('扩展可选形状定义', () => {
+  it('解决横向宽度和高度覆盖的边、轴，然后默认', () => {
     const compiled = compileToScene(
       scene([
         {
@@ -77,7 +77,7 @@ describe('Extension optional shape definitions', () => {
     ]);
   });
 
-  it('accepts scalar cross width and height for symmetric arms', () => {
+  it('接受对称臂的标量交叉宽度和高度', () => {
     const compiled = compileToScene(
       scene([
         {
@@ -108,7 +108,7 @@ describe('Extension optional shape definitions', () => {
     ]);
   });
 
-  it('uses cross axis overrides before object defaults', () => {
+  it('在对象默认值之前使用交叉轴覆盖', () => {
     const compiled = compileToScene(
       scene([
         {
@@ -145,7 +145,7 @@ describe('Extension optional shape definitions', () => {
     ]);
   });
 
-  it('compiles a zero-thickness sector as an open arc', () => {
+  it('将零厚度扇区编译为开放弧', () => {
     const compiled = compileToScene(
       scene([
         {
@@ -167,7 +167,7 @@ describe('Extension optional shape definitions', () => {
     expect(path?.commands.some(command => command.kind === 'close')).toBe(false);
   });
 
-  it('rejects an inner radius larger than the outer radius', () => {
+  it('拒绝大于外半径的内半径', () => {
     expect(() =>
       compileToScene(
         scene([
@@ -182,7 +182,7 @@ describe('Extension optional shape definitions', () => {
     ).toThrow('outerRadius must be greater than or equal to innerRadius');
   });
 
-  it('compiles cross, sector, star, and contour definitions with their visual path semantics', () => {
+  it('编译十字、扇形、星形和轮廓定义及其视觉路径语义', () => {
     const compiled = compileToScene(
       scene([
         { type: 'node', position: [0, 0], shape: 'cross' },
@@ -225,7 +225,7 @@ describe('Extension optional shape definitions', () => {
     ).toHaveLength(2);
   });
 
-  it('keeps every explicit optional shape definition observable in the compiled Scene', () => {
+  it('在编译的 Scene 中保持每个显式可选形状定义可观察', () => {
     const compiled = compileToScene(
       scene([
         { type: 'node', position: [0, 0], shape: 'cross' },
@@ -292,7 +292,7 @@ describe('Extension optional shape definitions', () => {
     ]);
   });
 
-  it('exports each shape through an independent static Core provider', () => {
+  it('通过独立的静态 Core 提供者导出每个形状', () => {
     expect(CrossShapeProvider.makeDefinition([])).toBe(CrossShapeDefinition);
     expect(SectorShapeProvider.makeDefinition([])).toBe(SectorShapeDefinition);
     expect(StarShapeProvider.makeDefinition([])).toBe(StarShapeDefinition);

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { triangle } from '../../src';
 
-describe('triangle', () => {
+describe('三角形', () => {
   it('circumCircle：直角三角形外心 = 斜边中点', () => {
     const c = triangle.circumCircle([0, 0], [4, 0], [0, 3]);
 

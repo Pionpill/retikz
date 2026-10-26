@@ -35,8 +35,8 @@ const sceneOf = (primitives: Scene['primitives']): Scene => ({
   layout: { x: 0, y: 0, width: 100, height: 100 },
 });
 
-describe('[svg-effects] drop shadow', () => {
-  it('shadowed rect → <feDropShadow> def + filter ref', () => {
+describe('[svg 效果] 阴影', () => {
+  it('阴影矩形 → <feDropShadow> def + 过滤器引用', () => {
     const rect: RectPrimitive = {
       type: 'rect',
       x: 0,
@@ -97,7 +97,7 @@ describe('[svg-effects] drop shadow', () => {
     expect(out).toMatch(/<path [^>]*filter="url\(#retikz-shadow-/);
   });
 
-  it('shadow opacity → flood-opacity', () => {
+  it('阴影不​​透明度→泛光不透明度', () => {
     const rect: RectPrimitive = {
       type: 'rect',
       x: 0,
@@ -133,7 +133,7 @@ describe('[svg-effects] drop shadow', () => {
     expect(out).not.toContain('filter=');
   });
 
-  it('applies one shadow to the path and its arrow content', () => {
+  it('将一个阴影应用于路径及其箭头内容', () => {
     const path: PathPrimitive = {
       type: 'path',
       commands: [
@@ -174,8 +174,8 @@ describe('[svg-effects] drop shadow', () => {
   });
 });
 
-describe('[svg-effects] blend mode', () => {
-  it('blended rect → style="mix-blend-mode:multiply"', () => {
+describe('[svg-effects] 混合模式', () => {
+  it('混合矩形→样式="mix-blend-mode:multiply"', () => {
     const rect: RectPrimitive = {
       type: 'rect',
       x: 0,

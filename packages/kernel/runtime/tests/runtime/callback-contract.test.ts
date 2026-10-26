@@ -19,7 +19,7 @@ const defineSource = () =>
     },
   });
 
-describe('runtime callback contract', () => {
+describe('运行时回调契约', () => {
   it('创建时复制 updateStrategy，后续修改 options 不改变既有 Runtime', () => {
     const owner = defineSource();
     const sources = createRuntimeSourceRegistry([owner]);

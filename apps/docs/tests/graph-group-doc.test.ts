@@ -6,8 +6,8 @@ import { previewSource as groupPreviewSource } from '../src/modules/docs/content
 import { previewSource as groupLabelPreviewSource } from '../src/modules/docs/contents/schematic/graph/group/group-label';
 import { previewSource as groupStylePreviewSource } from '../src/modules/docs/contents/schematic/graph/group/group-style';
 
-describe('Graph Group documentation', () => {
-  it('keeps Group children in the executable canonical preview and Vanilla code view', () => {
+describe('Graph Group 文档', () => {
+  it('将 Group 子项保留在可执行规范预览和 Vanilla 代码视图中', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     try {
@@ -29,7 +29,7 @@ describe('Graph Group documentation', () => {
     ['caption', groupPreviewSource],
     ['label', groupLabelPreviewSource],
     ['style', groupStylePreviewSource],
-  ] as const)('renders the %s preview canonical state', (_name, previewSource) => {
+  ] as const)('渲染 %s 预览规范状态', (_name, previewSource) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     try {

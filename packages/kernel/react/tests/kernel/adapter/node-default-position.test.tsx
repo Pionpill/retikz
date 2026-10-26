@@ -4,7 +4,7 @@ import { convertIRToReactNode } from '../../../src/kernel/adapter';
 import { Node } from '../../../src/kernel/components';
 import { normalizeReactInput } from '../../helpers/normalize-input';
 
-describe('Node optional position', () => {
+describe('Node 可选位置', () => {
   it('JSX 与 IR 往返保留省略位置', () => {
     const ir = normalizeReactInput(<Node id="origin">Hello</Node>);
 

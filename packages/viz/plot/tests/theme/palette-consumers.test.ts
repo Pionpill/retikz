@@ -44,8 +44,8 @@ const base = {
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
 } as const;
 
-describe('Plot defaults palette consumers', () => {
-  it('sequential scheme from defaultPlot reaches the real scale consumer', () => {
+describe('Plot 默认调色板消费者', () => {
+  it('从 defaultPlot 开始的时序方案到达真正比例尺的消费者', () => {
     const root = lower(
       {
         ...base,
@@ -73,7 +73,7 @@ describe('Plot defaults palette consumers', () => {
     expect(layers.map(layer => layer.children.length)).toEqual([1, 2]);
   });
 
-  it('explicit scale range and mark color retain priority over palette defaults', () => {
+  it('明确的比例范围和标记颜色保留优先于调色板默认值', () => {
     const source = {
       ...base,
       defaultPlot: { palette: { categorical: ['#default-a', '#default-b'] } },
@@ -100,7 +100,7 @@ describe('Plot defaults palette consumers', () => {
     expect((ordinalLayer.children[0] as IRScope).defaults?.node?.style?.fill).toBe('#range-a');
   });
 
-  it('categorical palette reaches the legend swatch consumer', () => {
+  it('传奇色板消费者的分类调色板', () => {
     const source = {
       ...base,
       defaultPlot: { palette: { categorical: ['#legend-a', '#legend-b'] } },

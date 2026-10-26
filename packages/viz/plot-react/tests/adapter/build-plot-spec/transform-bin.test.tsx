@@ -6,8 +6,8 @@ import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark } from '../../../src/components/marks';
 import { PlotTransform } from '../../../src/components/transform';
 
-describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () => {
-  it('transform_bin_declared_to_ir', () => {
+describe('buildPlotIR 的 PlotTransform、bin、summarize 及 x0x1 直方图', () => {
+  it('将声明的 bin 转换为 ir', () => {
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'bin', params: { field: 'measurement', count: 20 } }} />
@@ -19,7 +19,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     expect(spec.transform).toEqual([{ operation: { kind: 'bin', params: { field: 'measurement', count: 20 } } }]);
   });
 
-  it('bar_x0x1_histogram_continuous_x_not_band', () => {
+  it('条形图 x0x1 直方图连续 x 非带状', () => {
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'bin', params: { field: 'm', step: 5 } }} />
@@ -44,7 +44,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     expect(spec.scales.find(s => s.name === '__x')?.type).not.toBe('band');
   });
 
-  it('bar_width_proportional_keeps_x_as_axis_label_field', () => {
+  it('条形宽度成比例，将 x 保持为轴标签字段', () => {
     const spec = buildPlotIR(
       <IntervalMark
         width="gdp"
@@ -66,7 +66,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     expect(spec.scales.find(scale => scale.name === '__x')?.type).toBe('linear');
   });
 
-  it('transform_summarize_declared_to_ir', () => {
+  it('声明为 ir 的变换汇总', () => {
     const spec = buildPlotIR(
       <>
         <PlotTransform
@@ -102,7 +102,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     });
   });
 
-  it('plot_transforms_option_direct_pass', () => {
+  it('绘图变换选项直接传递', () => {
     const spec = buildPlotIR(
       <IntervalMark encodings={{ position: { x: { field: 'region' }, y: { field: 'total' } } }} />,
       '__plot',
@@ -134,7 +134,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     ]);
   });
 
-  it('explicit_stack_suppresses_shortcut_stack_no_double', () => {
+  it('显式堆叠抑制快捷堆叠无双倍', () => {
     // 显式 stack operation 存在时，IntervalMark stack 的 shortcut 不再注入
     const spec = buildPlotIR(
       <>
@@ -158,7 +158,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     });
   });
 
-  it('options_transforms_with_stack_suppresses_shortcut_stack', () => {
+  it('选项通过堆叠进行转换，抑制快捷方式堆叠', () => {
     const spec = buildPlotIR(
       <IntervalMark
         stack
@@ -175,7 +175,7 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     ).toHaveLength(1);
   });
 
-  it('transform_order_explicit_before_shortcut_stack', () => {
+  it('在快捷方式堆叠之前显式转换顺序', () => {
     // summarize（显式）在前、无显式 stack → shortcut stack 补在后
     const spec = buildPlotIR(
       <>

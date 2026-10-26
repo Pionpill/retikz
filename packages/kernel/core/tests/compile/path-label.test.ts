@@ -109,7 +109,7 @@ describe('path.label：stroke host label 几何', () => {
     expect(findLabelGroupPrim(scene.primitives)).toBeUndefined();
     expect(resolvePathLabelPlacement({ side: 'center', sloped: false }, true).interrupt).toBe(true);
   });
-  it('public route sampling matches host label sampling', () => {
+  it('公共路由采样与宿主标签采样匹配', () => {
     const commands = [
       { kind: 'move' as const, to: [0, 0] as [number, number] },
       { kind: 'line' as const, to: [100, 0] as [number, number] },
@@ -144,7 +144,7 @@ describe('path.label：stroke host label 几何', () => {
     });
   });
 
-  it('rounded public sampling retains cubic segments and matches rendered host labels', () => {
+  it('舍入公共采样保留立方段并匹配渲染的宿主标签', () => {
     const commands = [
       { kind: 'move' as const, to: [0, 0] as [number, number] },
       {
@@ -176,7 +176,7 @@ describe('path.label：stroke host label 几何', () => {
     expect(visualBottom(label)).toBeCloseTo(sample!.point[1], 2);
   });
 
-  it('renders a host label at the whole-path position', () => {
+  it('在全路径位置渲染宿主标签', () => {
     const scene = compileToScene(linePathHostLabelIR({ text: 'relation', position: 'near-end' })).scene;
     const labels = findTextPrims(scene.primitives);
 
@@ -187,7 +187,7 @@ describe('path.label：stroke host label 几何', () => {
 });
 
 describe('step.label：line 段的 label 几何', () => {
-  it('schema rejects sloped as a side value and accepts sloped as a boolean flag', async () => {
+  it('schema 拒绝将倾斜作为边值并接受倾斜作为布尔标志', async () => {
     const { PathLabelSchema } = await import('../../src/schemas');
 
     expect(PathLabelSchema.safeParse({ text: 'x', side: 'sloped' }).success).toBe(false);
@@ -617,35 +617,35 @@ describe('label on line：keyword + 数值 t', () => {
     expect(t.x).toBe(0);
   });
 
-  it('label_keyword_very_near_start：position="very-near-start" → x=12.5（t=0.125）', () => {
+  it('标签 position="very-near-start" 对应 x=12.5 和 t=0.125', () => {
     const scene = compileToScene(lineWithLabel('very-near-start')).scene;
     const t = findTextPrims(scene.primitives)[0];
 
     expect(t.x).toBe(12.5);
   });
 
-  it('label_keyword_near_start：position="near-start" → x=25', () => {
+  it('标签 position="near-start" 对应 x=25', () => {
     const scene = compileToScene(lineWithLabel('near-start')).scene;
     const t = findTextPrims(scene.primitives)[0];
 
     expect(t.x).toBe(25);
   });
 
-  it('label_keyword_midway：position="midway" → x=50', () => {
+  it('标签 position="midway" 对应 x=50', () => {
     const scene = compileToScene(lineWithLabel('midway')).scene;
     const t = findTextPrims(scene.primitives)[0];
 
     expect(t.x).toBe(50);
   });
 
-  it('label_keyword_near_end：position="near-end" → x=75', () => {
+  it('标签 position="near-end" 对应 x=75', () => {
     const scene = compileToScene(lineWithLabel('near-end')).scene;
     const t = findTextPrims(scene.primitives)[0];
 
     expect(t.x).toBe(75);
   });
 
-  it('label_keyword_very_near_end：position="very-near-end" → x=87.5（t=0.875）', () => {
+  it('标签 position="very-near-end" 对应 x=87.5 和 t=0.875', () => {
     const scene = compileToScene(lineWithLabel('very-near-end')).scene;
     const t = findTextPrims(scene.primitives)[0];
 
@@ -659,7 +659,7 @@ describe('label on line：keyword + 数值 t', () => {
     expect(t.x).toBe(100);
   });
 
-  it('label_numeric_0_3_line：position=0.3 → x=30', () => {
+  it('直线标签 position=0.3 对应 x=30', () => {
     const scene = compileToScene(lineWithLabel(0.3)).scene;
     const t = findTextPrims(scene.primitives)[0];
 
@@ -717,7 +717,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
     ],
   });
 
-  it('label_fold_midway_matches_numeric_0_5', () => {
+  it('标签中途折叠匹配数字 0 5', () => {
     const numeric = compileToScene(foldIR(0.5)).scene;
     const keyword = compileToScene(foldIR('midway')).scene;
 
@@ -728,7 +728,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
     );
   });
 
-  it('label_fold_sloped_uses_tangent_of_actual_sampled_leg', () => {
+  it('折线路径的倾斜标签使用实际采样线段的切线', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -859,7 +859,7 @@ describe('label on curve (quadratic Bezier)：Bezier 参数 t（非弧长）', (
     expect(t.y).toBeLessThan(-50);
   });
 
-  it('label_curve_t_0_25_at_bezier_0_25：position=0.25 → Bezier t=0.25', () => {
+  it('曲线标签 position=0.25 对应贝塞尔参数 t=0.25', () => {
     const scene = compileToScene(curveIR(0.25)).scene;
     const t = findTextPrims(scene.primitives)[0];
 
@@ -932,7 +932,7 @@ describe('label on cubic Bezier：Bezier 参数 t', () => {
     expect(t.y).toBeLessThan(-75);
   });
 
-  it('label_cubic_t_0_25：position=0.25', () => {
+  it('三次曲线标签支持 position=0.25', () => {
     const scene = compileToScene(cubicIR(0.25)).scene;
     const t = findTextPrims(scene.primitives)[0];
 
@@ -1006,7 +1006,7 @@ describe('label on arc：角度参数化 startAngle..endAngle', () => {
     expect(t.y).toBeLessThan(Math.sin(Math.PI / 4) * 100);
   });
 
-  it('label_arc_t_0_25_at_quarter_angle：position=0.25 → start + (end-start)·0.25', () => {
+  it('圆弧标签 position=0.25 对应 start + (end-start)·0.25', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -1083,7 +1083,7 @@ describe('label on circlePath：整圆 t∈[0,1]，t=0 = angle 0 (+x), CCW', () 
     ],
   });
 
-  it('label_circlePath_t_0_at_pos_x：position=0 → angle 0° (100, 0)', () => {
+  it('circlePath 标签 position=0 对应 0° 的 (100, 0)', () => {
     const scene = compileToScene(circleIR(0)).scene;
     const t = findTextPrims(scene.primitives)[0];
 
@@ -1101,7 +1101,7 @@ describe('label on circlePath：整圆 t∈[0,1]，t=0 = angle 0 (+x), CCW', () 
     expect(visualBottom(t)).toBeGreaterThan(95); // top 偏移 -4，块底 ≈ 96
   });
 
-  it('label_circlePath_t_0_5_at_180deg：position=0.5 → 180° (-100, 0)', () => {
+  it('circlePath 标签 position=0.5 对应 180° 的 (-100, 0)', () => {
     const scene = compileToScene(circleIR(0.5)).scene;
     const t = findTextPrims(scene.primitives)[0];
 
@@ -1128,7 +1128,7 @@ describe('label on circlePath：整圆 t∈[0,1]，t=0 = angle 0 (+x), CCW', () 
 });
 
 describe('label on ellipsePath：同 circlePath 角度参数化（非弧长）', () => {
-  it('label_ellipsePath_t_0_5_at_180deg：rx≠ry，position=0.5 → angle 180° (-rx, 0)', () => {
+  it('椭圆 rx≠ry 时 position=0.5 对应 180° 的 (-rx, 0)', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -1153,7 +1153,7 @@ describe('label on ellipsePath：同 circlePath 角度参数化（非弧长）',
     expect(t.x).toBeCloseTo(-150, 1);
   });
 
-  it('label_ellipsePath_t_0_at_pos_x：position=0 → (rx, 0)', () => {
+  it('ellipsePath 标签 position=0 对应 (rx, 0)', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -1202,7 +1202,7 @@ describe('label.position schema 边界：异常值由 zod 拒绝（不在 compil
     expect(result.success).toBe(false);
   });
 
-  it('label_compat_position_alias_keywords_accepted', async () => {
+  it('接受标签兼容位置别名关键字', async () => {
     const { PathLabelSchema } = await import('../../src/schemas');
 
     // compat: these position aliases remain accepted PathLabelSchema input.

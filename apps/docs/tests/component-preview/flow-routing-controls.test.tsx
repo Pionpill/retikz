@@ -8,8 +8,8 @@ import { renderFlowBendPreview } from '../../src/modules/docs/contents/schematic
 import { createPreviewControlContract } from '../../src/modules/docs/contents/schematic/diagram/flow/usage/flow-routing.controls';
 import { renderFlowRoutingPreview } from '../../src/modules/docs/contents/schematic/diagram/flow/usage/flow-routing.preview';
 
-describe('Flow routing controls', () => {
-  it('keeps automatic bend compact and tangent fields exclusive in real Source', () => {
+describe('Flow 路由控制', () => {
+  it('真实 Source 中自动弯曲配置保持精简且切线字段互斥', () => {
     const values = createPreviewControlContract().canonicalValues;
 
     expect(createPreviewControlContract('en').canonicalValues).toEqual(values);
@@ -40,7 +40,7 @@ describe('Flow routing controls', () => {
     expect(buildVanillaPreview(preview).svg).toMatch(/d="M[^"]*C /);
   });
 
-  it.each(['zh', 'en'] as const)('forwards exposed label controls in %s', lang => {
+  it.each(['zh', 'en'] as const)('转发 %s 中暴露的标签控件', lang => {
     const values = { ...createBendControls(lang).canonicalValues, position: 0.2, sloped: false, interrupt: false };
     const preview = buildPreviewIR(() => renderFlowBendPreview(values, lang));
 

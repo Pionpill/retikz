@@ -5,7 +5,7 @@ import type { IRScene } from '../../../src/schemas';
 import { arc, ellipseArc, line, move, quad } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
-describe("compile path: 'relative' / 'relativeAccumulate'", () => {
+describe("编译路径：'relative' / 'relativeAccumulate'", () => {
   it('relative 解析为 prevEnd + offset；prevEnd 不更新（链式 relative 全相对同一锚点）', () => {
     const ir: IRScene = {
       version: 1,

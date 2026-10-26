@@ -41,8 +41,8 @@ const roundedRectClip = (): ClipDefinition =>
     },
   });
 
-describe('Extension compound clip definition', () => {
-  it('provides polygon and path definitions as explicit Extension extensions', () => {
+describe('扩展复合裁剪定义', () => {
+  it('提供多边形和路径定义作为显式扩展扩展', () => {
     expect(PolygonClipDefinition.kind).toBe('polygon');
     expect(PathClipDefinition.kind).toBe('path');
 
@@ -70,7 +70,7 @@ describe('Extension compound clip definition', () => {
     expect(() => compileToScene(scene, { clips: [PolygonClipDefinition] })).not.toThrow();
   });
 
-  it('parses recursive compound children and delegates a custom child to Core registry resolution', () => {
+  it('解析递归复合子项并将自定义子项委托给 Core 注册表解析', () => {
     const clip = CompoundClipSchema.parse({
       kind: 'compound',
       params: {
@@ -111,12 +111,12 @@ describe('Extension compound clip definition', () => {
     ]);
   });
 
-  it('materializes one complete compound definition without shape dependencies', () => {
+  it('具体化一种完整的复合定义，无需形状依赖性', () => {
     expect(CompoundClipProvider.makeDefinition([])).toBe(CompoundClipDefinition);
     expect(CompoundClipProvider.dependencies ?? []).toEqual([]);
   });
 
-  it('requires a third-party child definition to be present in the active clips registry', () => {
+  it('要求活动裁剪注册表中存在第三方子定义', () => {
     const scene: IRScene = {
       type: 'scene',
       version: 1,
@@ -145,11 +145,11 @@ describe('Extension compound clip definition', () => {
     );
   });
 
-  it('reports the Extension compound schema diagnostic before compile when children are empty', () => {
+  it('当子项为空时，在编译前报告扩展复合 schema 诊断', () => {
     expect(() => CompoundClipSchema.parse({ kind: 'compound', params: { children: [] } })).toThrow(/children/i);
   });
 
-  it('requires the Compound definition to be explicitly injected into Core clip resolution', () => {
+  it('要求将复合定义显式注入到 Core 裁剪解析结果中', () => {
     const scene: IRScene = {
       type: 'scene',
       version: 1,

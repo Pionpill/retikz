@@ -62,8 +62,8 @@ const contextOf = (id: string, kind: string): InputEmbedContext => ({
 
 const lower = <TProps>(spec: InputEmbed<TProps>, adapter: SynchronousInputEmbedAdapter<TProps>) =>
   adapter.lower(spec.props, contextOf(spec.id ?? '__test-embed', spec.kind));
-describe('@retikz/graph-vanilla package boundary', () => {
-  it('exports one adapter and builder for each Graph semantic composite', async () => {
+describe('@retikz/graph-vanilla 封装边界', () => {
+  it('为每个 Graph 语义组合导出一个适配器和构建器', async () => {
     const graphVanilla = await import('../src');
 
     expect(graphVanilla.GraphInputEmbedAdapter).toBeDefined();
@@ -110,7 +110,7 @@ describe('normalizeBlock', () => {
     );
   });
 
-  it('keeps string Header and Section text as sparse Source values', () => {
+  it('将字符串 Header 和 Section 文本保留为稀疏 Source 值', () => {
     expect(normalizeBlockHeader({ title: 'User', description: 'Domain entity' })).toEqual({
       namespace: 'graph',
       type: 'blockHeader',
@@ -124,7 +124,7 @@ describe('normalizeBlock', () => {
     });
   });
 
-  it('keeps Row text content as the minimal Source value', () => {
+  it('将 Row 文本内容保留为最小 Source 值', () => {
     expect(normalizeBlockRow({ content: 'name' })).toEqual({
       namespace: 'graph',
       type: 'blockRow',
@@ -146,7 +146,7 @@ describe('normalizeBlock', () => {
     });
   });
 
-  it('normalizes open Block-family semantic children to the same sparse Source as Direct authoring', () => {
+  it('将开放的 Block 系列语义子规范化为与直接编写相同的稀疏 Source', () => {
     const header = {
       type: 'blockHeader',
       title: { text: 'User' },
@@ -210,7 +210,7 @@ describe('normalizeBlock', () => {
     ]);
   });
 
-  it('preserves omitted and explicit empty Block-family children', () => {
+  it('保留省略的和显式的空 Block 系列子代', () => {
     expect(normalizeBlock({})).toEqual({ namespace: 'graph', type: 'block' });
     expect(normalizeBlock({ children: [] })).toEqual({ namespace: 'graph', type: 'block', children: [] });
     expect(normalizeBlockSection({})).toEqual({ namespace: 'graph', type: 'blockSection' });
@@ -223,7 +223,7 @@ describe('normalizeBlock', () => {
   });
 });
 describe('normalizeGroup', () => {
-  it('preserves Group presentation and normalizes collocated Entity / Relation Source', () => {
+  it('保留 Group 表示并标准化并置的 Entity / Relation Source', () => {
     const input: InputGroup = {
       id: 'runtime',
       caption: { title: { text: 'Runtime' } },
@@ -257,7 +257,7 @@ describe('normalizeGroup', () => {
   });
 });
 describe('normalizeGraph', () => {
-  it('omits absent children while preserving an explicit empty array', () => {
+  it('忽略不存在的子元素，同时保留显式的空数组', () => {
     expect(normalizeGraph({})).toEqual({ namespace: 'graph', type: 'graph' });
     expect(normalizeGraph({ children: [] })).toEqual({
       namespace: 'graph',
@@ -266,7 +266,7 @@ describe('normalizeGraph', () => {
     });
   });
 
-  it('preserves the complete authored Scope surface directly on Graph', () => {
+  it('直接在 Graph 上保留完整的编写 Scope 曲面', () => {
     const input: InputGraph = {
       id: 'architecture',
       theme: { mode: 'dark' as const },
@@ -300,7 +300,7 @@ describe('normalizeGraph', () => {
     });
   });
 
-  it('keeps defaultGraph and graphRules identical to Direct Source IR', () => {
+  it('保持 defaultGraph 和 graphRules 与直接 Source IR 相同', () => {
     const input: InputGraph = {
       id: 'parity',
       defaultGraph: {
@@ -330,7 +330,7 @@ describe('normalizeGraph', () => {
     );
   });
 
-  it('normalizes only Entity, Relation and Way authoring sugar', () => {
+  it('仅标准化 Entity、Relation 和 Way 编写糖', () => {
     expect(
       normalizeGraph({
         children: [
@@ -378,8 +378,8 @@ describe('normalizeGraph', () => {
     });
   });
 });
-describe('Graph Vanilla embed adapters', () => {
-  it('uses one explicit Graph id for the Entity embed and Source identities', () => {
+describe('Graph Vanilla 嵌入适配器', () => {
+  it('对 Entity 嵌入和 Source 身份使用一个显式 Graph id', () => {
     const contribution = lower(
       entity({ id: 'client', role: 'participant', position: [0, 0], text: 'Client' }),
       EntityInputEmbedAdapter,
@@ -395,7 +395,7 @@ describe('Graph Vanilla embed adapters', () => {
     });
   });
 
-  it('keeps an anonymous Entity out of the Graph Source namespace', () => {
+  it('将匿名 Entity 保留在 Graph Source 命名空间之外', () => {
     const contribution = lower(
       entity({ role: 'event', position: [0, 0], text: 'Anonymous event' }),
       EntityInputEmbedAdapter,
@@ -410,7 +410,7 @@ describe('Graph Vanilla embed adapters', () => {
     });
   });
 
-  it('keeps embed identity separate from optional authored identity for every composite', () => {
+  it('将每个组合的嵌入身份与可选的编写身份分开', () => {
     const graphContribution = lower(graph({}), GraphInputEmbedAdapter);
     const entityContribution = lower(
       entity({ role: 'participant', status: 'success', position: [0, 0] }),
@@ -466,7 +466,7 @@ describe('Graph Vanilla embed adapters', () => {
     expect(rowContribution.node).not.toHaveProperty('id');
   });
 
-  it('normalizes Relation Way while preserving complete Core NodeTargets', () => {
+  it('标准化 Relation 方式，同时保留完整的 Core NodeTargets', () => {
     const contribution = lower(
       relation({
         source: {
@@ -500,7 +500,7 @@ describe('Graph Vanilla embed adapters', () => {
     });
   });
 
-  it('normalizes string Relation endpoints into Core NodeTargets', () => {
+  it('将字符串 Relation 端点标准化为 Core NodeTargets', () => {
     expect(
       normalizeRelation({
         type: 'relation',
@@ -517,7 +517,7 @@ describe('Graph Vanilla embed adapters', () => {
     });
   });
 
-  it('normalizes arbitrary nested embeds without adding a panel Scope', () => {
+  it('标准化任意嵌套嵌入，无需添加面板 Scope', () => {
     const normalized = normalizeScene(
       {
         children: [
@@ -572,7 +572,7 @@ describe('Graph Vanilla embed adapters', () => {
     ]);
   });
 
-  it('normalizes nested independent structure embeds while merging provider contributions', () => {
+  it('在合并提供者贡献的同时标准化嵌套的独立结构嵌入', () => {
     const normalized = normalizeScene(
       {
         children: [
@@ -630,7 +630,7 @@ describe('Graph Vanilla embed adapters', () => {
     );
   });
 
-  it('compiles a collocated Block declared directly inside a standalone Group', () => {
+  it('编译直接在独立 Group 内声明的并置 Block', () => {
     expect(() =>
       processToStaticInputResult(
         {
@@ -650,7 +650,7 @@ describe('Graph Vanilla embed adapters', () => {
     ).not.toThrow();
   });
 
-  it('contributes the provider closure rooted at the matching semantic composite', () => {
+  it('贡献基于匹配语义组合的提供者闭包', () => {
     const graphContribution = lower(graph({}), GraphInputEmbedAdapter);
     const entityContribution = lower(entity({ role: 'participant', position: [0, 0] }), EntityInputEmbedAdapter);
     const relationContribution = lower(
@@ -701,7 +701,7 @@ describe('Graph Vanilla embed adapters', () => {
     expect(relationContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(5);
   });
 
-  it('keeps Graph definitions out of Source IR and compiles standalone members with built-in definitions', () => {
+  it('将 Graph 定义保留在 Source IR 之外，并使用内置定义编译独立成员', () => {
     const entityRole = defineEntityRole({
       role: 'custom-entity',
       description: 'Custom Entity role',

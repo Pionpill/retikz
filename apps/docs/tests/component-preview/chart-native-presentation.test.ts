@@ -39,8 +39,8 @@ type ControlSections = ReadonlyArray<Readonly<{ controls: ReadonlyArray<Readonly
 const controlIdsOf = (sections: ControlSections): Array<string> =>
   sections.flatMap(section => section.controls.map(control => control.id));
 
-describe('Chart-native Scatter presentation', () => {
-  it('keeps the bilingual Presentation control contracts structurally aligned', () => {
+describe('Chart 原生 Scatter 呈现', () => {
+  it('保持双语 Presentation 控件契约的结构一致', () => {
     expect(controlIdsOf(presentationLayoutZhContract.controls.sections)).toEqual(
       controlIdsOf(presentationLayoutEnContract.controls.sections),
     );
@@ -55,7 +55,7 @@ describe('Chart-native Scatter presentation', () => {
     });
   });
 
-  it('derives concise Chart Source with every presentation slot from the canonical state', () => {
+  it('从规范状态推导包含所有呈现槽位的精简 Chart Source', () => {
     const preview = buildPreviewIR(() => presentationLayoutZhSource.canonicalRender?.() ?? null);
 
     expect(preview.ir.children).toEqual([
@@ -73,7 +73,7 @@ describe('Chart-native Scatter presentation', () => {
     ]);
   });
 
-  it('keeps the presentation playground on automatic framing', () => {
+  it('呈现交互演示使用自动取景', () => {
     const preview = buildPreviewIR(() =>
       createElement(ChartPresentationLayoutPreview, {
         copy: {
@@ -89,7 +89,7 @@ describe('Chart-native Scatter presentation', () => {
     expect(preview.ir.viewBox).toBeUndefined();
   });
 
-  it('expands the Chart with the showcase viewport', () => {
+  it('Chart 随展示视口扩展', () => {
     const preview = buildPreviewIR(() =>
       createElement(ChartPresentationLayoutPreview, {
         copy: { title: 'Title', subtitle: 'Subtitle', note: 'Note', source: 'Source' },
@@ -102,7 +102,7 @@ describe('Chart-native Scatter presentation', () => {
     expect(preview.ir.children[0]).toMatchObject({ layout: { width: 776, height: 384 } });
   });
 
-  it('keeps Plot and omits presentation when every shorthand is disabled', () => {
+  it('当每个简写被禁用时，保留 Plot 并省略显示', () => {
     const preview = buildPreviewIR(() =>
       createElement(ChartPresentationLayoutPreview, {
         copy: {
@@ -126,7 +126,7 @@ describe('Chart-native Scatter presentation', () => {
     expect(preview.ir.children[0]).not.toHaveProperty('presentation');
   });
 
-  it('uses the ScatterChart shorthand without presentation for the World Bank example', () => {
+  it('世界银行示例使用不含呈现配置的 ScatterChart 简写', () => {
     for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource]) {
       const chart = canonicalScatterChartOf(source);
 
@@ -144,7 +144,7 @@ describe('Chart-native Scatter presentation', () => {
     }
   });
 
-  it('generates reusable Vanilla source and SVG from the real Scatter datasets', () => {
+  it('从真实的 Scatter 数据集生成可重用的 Vanilla 源和 SVG', () => {
     const cases = [
       [fertilityWorkZhPreviewSource, './scatter-fertility-work.data', 'fertilityWorkData'],
       [fertilityWorkEnPreviewSource, './scatter-fertility-work.data', 'fertilityWorkData'],
@@ -167,7 +167,7 @@ describe('Chart-native Scatter presentation', () => {
     }
   });
 
-  it('passes the preview text measurer into the Vanilla Chart compile path', () => {
+  it('将预览文本测量器传递到 Vanilla Chart 编译路径中', () => {
     const preview = buildPreviewIR(() => fertilityWorkZhPreviewSource.canonicalRender?.() ?? null);
     let measureCalls = 0;
     const vanilla = buildVanillaPreview(preview, {
@@ -181,7 +181,7 @@ describe('Chart-native Scatter presentation', () => {
     expect(vanilla.svg).toContain('<svg');
   });
 
-  it('renders a selected docs Chart theme through the Vanilla preview path', () => {
+  it('通过 Vanilla 预览路径渲染选定的文档 Chart 主题', () => {
     const preview = buildPreviewIR(() => fertilityWorkZhPreviewSource.canonicalRender?.() ?? null);
     const vanilla = buildVanillaPreview(preview, {
       datasetImports: fertilityWorkZhPreviewSource.datasetImports,

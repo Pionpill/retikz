@@ -15,8 +15,8 @@ const textsOf = (items: ReadonlyArray<ScenePrimitive>): Array<string> =>
     item.type === 'group' ? textsOf(item.children) : item.type === 'text' ? item.lines.map(line => line.text) : [],
   );
 
-describe('Ribbon endpoint labels', () => {
-  it('accepts Kernel rotation modes and rejects centerline-only fields', () => {
+describe('功能区端点标签', () => {
+  it('接受内核旋转模式并拒绝仅中心线字段', () => {
     const width = { kind: 'fixed', value: 20 };
 
     expect(
@@ -30,7 +30,7 @@ describe('Ribbon endpoint labels', () => {
     ).toBe(false);
   });
 
-  it('emits both endpoint labels alongside a centerline label', () => {
+  it('在中心线标签旁边发出两个端点标签', () => {
     const scene = compileToScene(
       {
         version: 1,
@@ -83,24 +83,24 @@ const labeledScene = (
     { paths: [definition], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
   ).scene;
 
-describe('Endpoint label cap clearance', () => {
+describe('端点标签盖间隙', () => {
   it.each([
     { name: 'butt', right: 144 },
     { name: 'square', right: 154 },
     { name: 'round', right: 154 },
-  ])('places text beyond the complete $name cap', ({ name, right }) => {
+  ])('将文本放置在完整的 $name 端帽之外', ({ name, right }) => {
     const scene = labeledScene({ name });
 
     expect(scene.layout.x + scene.layout.width).toBeCloseTo(right, 2);
   });
 
-  it('accounts for projected text size after independent rotation', () => {
+  it('考虑独立旋转后的投影文本大小', () => {
     const scene = labeledScene({ name: 'butt' }, { text: 'endpoint', rotate: 'tangent' });
 
     expect(scene.layout.x + scene.layout.width).toBeCloseTo(124, 2);
   });
 
-  it('uses the true quadratic cap extremum, not its control point', () => {
+  it('使用二次曲线端帽的实际极值而非控制点', () => {
     const custom = defineRibbonCap({
       name: 'curved',
       paramsSchema: strictObject({}),
@@ -121,7 +121,7 @@ describe('Endpoint label cap clearance', () => {
     expect(scene.layout.x + scene.layout.width).toBeCloseTo(164, 2);
   });
 
-  it('keeps inside labels on the inward side without expanding the end', () => {
+  it('将内部标签保留在内侧，而不扩展末端', () => {
     const scene = labeledScene({ name: 'butt' }, { text: 'endpoint', placement: 'inside' });
 
     expect(scene.layout.x + scene.layout.width).toBeCloseTo(100, 2);
@@ -131,7 +131,7 @@ describe('Endpoint label cap clearance', () => {
 const allPrimitives = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? [item, ...allPrimitives(item.children)] : [item]));
 
-it('keeps numeric rotations readable without changing the projected clearance', () => {
+it('在不改变预计间隙的情况下保持数字旋转的可读性', () => {
   const scene = labeledScene({ name: 'butt' }, { text: 'endpoint', rotate: 180, keepUpright: true });
 
   expect(scene.layout.x + scene.layout.width).toBeCloseTo(144, 2);
@@ -142,12 +142,12 @@ it('keeps numeric rotations readable without changing the projected clearance', 
 
   expect(angles).toContain(360);
 });
-it('measures rotated multiline blocks rather than a single line', () => {
+it('测量旋转的多行块而不是单行', () => {
   const scene = labeledScene({ name: 'butt' }, { text: ['first', 'second'], rotate: 'tangent', font: { size: 20 } });
 
   expect(scene.layout.x + scene.layout.width).toBeCloseTo(152, 2);
 });
-it('places both labels at zero-width butt caps and preserves parent transforms', () => {
+it('将两个标签放置在零宽度对接大写处并保留父变换', () => {
   const input: IRScene = {
     version: 1,
     type: 'scene',
@@ -186,7 +186,7 @@ it('places both labels at zero-width butt caps and preserves parent transforms',
   expect(result.scene.layout.width).toBeCloseTo(188, 2);
 });
 
-it('inherits Kernel label font and color, multiplies opacity, and retains host metadata', () => {
+it('继承内核标签字体和颜色，倍增不透明度，并保留宿主元数据', () => {
   const input: IRScene = {
     version: 1,
     type: 'scene',
@@ -219,7 +219,7 @@ it('inherits Kernel label font and color, multiplies opacity, and retains host m
   expect(text).toMatchObject({ fill: 'blue', fontSize: 18, fontWeight: 'bold', opacity: 0.2 });
   expect(primitives.some(p => p.type === 'group' && p.meta?.source === 'connection')).toBe(true);
 });
-it('uses the specified endpoint section for radial rotation and tangent alignment', () => {
+it('使用指定的端点截面进行径向旋转和切线对齐', () => {
   const scene = compileToScene(
     {
       version: 1,
@@ -248,7 +248,7 @@ it('uses the specified endpoint section for radial rotation and tangent alignmen
   expect(angles).toContain(-45);
 });
 
-it('uses arc cap extrema for rich text labels', () => {
+it('对富文本标签使用圆弧帽极值', () => {
   const scene = labeledScene(
     { name: 'arc', params: { center: [0, 0], radius: 10 } },
     { text: [{ segments: [{ text: 'rich', fill: 'red' }] }] },
@@ -258,12 +258,12 @@ it('uses arc cap extrema for rich text labels', () => {
   expect(scene.layout.x + scene.layout.width).toBeCloseTo(154, 2);
 });
 
-describe('Whole Ribbon transforms', () => {
+describe('整个功能区变换', () => {
   it.each([
     { rotate: 90, scale: undefined, x: 62, y: -72, width: 20, height: 144 },
     { rotate: undefined, scale: 2, x: -72, y: -20, width: 288, height: 40 },
     { rotate: 90, scale: { x: 2, y: 3 }, x: 42, y: -144, width: 60, height: 288 },
-  ])('transforms outline and endpoint label together: $rotate / $scale', ({ rotate, scale, ...expected }) => {
+  ])('将轮廓和端点标签一起变换：$rotate / $scale', ({ rotate, scale, ...expected }) => {
     const result = compileToScene(
       {
         version: 1,

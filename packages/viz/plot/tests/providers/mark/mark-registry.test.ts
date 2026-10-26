@@ -35,13 +35,13 @@ const specWithChannel = (channel: string) =>
     ],
   });
 
-describe('closed mark vocabulary and channel extensions', () => {
-  it('rejects unknown mark types at the JSON boundary', () => {
+describe('封闭标记词汇和通道扩展', () => {
+  it('拒绝 JSON 边界处的未知标记类型', () => {
     expect(MarkSchema.safeParse({ type: 'dot', encodings: { position: { x: { field: 'a' } } } }).success).toBe(false);
     expect(PlotSchema.safeParse({ ...specWithChannel('bareIntensity'), marks: [{ type: 'dot' }] }).success).toBe(false);
   });
 
-  it('rejects unregistered channels on builtin marks', () => {
+  it('拒绝内置标记上未注册的通道', () => {
     expect(() =>
       lowerPlot(
         specWithChannel('ghost'),
@@ -51,7 +51,7 @@ describe('closed mark vocabulary and channel extensions', () => {
     ).toThrow(/channel "ghost" is not registered/);
   });
 
-  it('delivers registered extension channels on builtin marks', () => {
+  it('在内置标记上提供已注册的扩展通道', () => {
     const delivered: { value?: number } = {};
     lowerPlot(
       specWithChannel('bareIntensity'),

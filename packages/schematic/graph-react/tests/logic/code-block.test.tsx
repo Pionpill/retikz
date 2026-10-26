@@ -63,8 +63,8 @@ const Service = Object.assign(ServiceView, {
   inputEmbedAdapter: adapter,
 });
 
-describe('Custom code block React authoring', () => {
-  it('reuses the Vanilla adapter and matches Direct IR and Vanilla Scene', () => {
+describe('自定义代码块 React 编写', () => {
+  it('重复使用 Vanilla 适配器并匹配 Direct IR 和 Vanilla Scene', () => {
     const input = createInputScene(<Service key="service" {...source} />);
     const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 

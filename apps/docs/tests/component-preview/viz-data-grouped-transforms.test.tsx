@@ -55,7 +55,7 @@ const renderDemo = (
     ),
   );
 
-describe('Grouped Data transform documentation demos', () => {
+describe('分组数据转换文档演示', () => {
   const demos: Array<{
     name: string;
     Demo: FC<{ lang?: Lang }>;
@@ -128,7 +128,7 @@ describe('Grouped Data transform documentation demos', () => {
       field: 'sourceId',
     },
   ];
-  it.each(demos)('$name has a complete bilingual Reset baseline', ({ contractOf }) => {
+  it.each(demos)('$name 具有完整的双语 Reset 基线', ({ contractOf }) => {
     const zh = contractOf('zh');
     expect(comparableContract(zh)).toBe(comparableContract(contractOf('en')));
     expect(Object.keys(zh.canonicalValues).sort()).toEqual(
@@ -138,7 +138,7 @@ describe('Grouped Data transform documentation demos', () => {
     );
   });
   it.each(demos)(
-    '$name renders its result table through the actual controlled entry',
+    '$name 通过实际受控入口渲染结果表',
     ({ Demo, contractOf, values, field }) => {
       for (const lang of ['zh', 'en'] as const) {
         const contract = contractOf(lang);

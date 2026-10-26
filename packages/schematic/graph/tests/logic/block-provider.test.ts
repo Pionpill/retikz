@@ -5,8 +5,8 @@ import { literal } from 'zod';
 
 import * as Graph from '../../src';
 
-describe('Block provider closure', () => {
-  it('resolves Block, public structures, Entity, Relation, FlexLayout and Surface', () => {
+describe('Block 提供者关闭', () => {
+  it('解析 Block、公共结构、Entity、Relation、FlexLayout 和 Surface', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.BlockProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -27,7 +27,7 @@ describe('Block provider closure', () => {
     expect(keys).not.toContain('graph.internalBlockRegion');
   });
 
-  it('keeps structure providers independent from Block and Group providers', () => {
+  it('使结构提供者独立于 Block 和 Group 提供者', () => {
     for (const root of [Graph.BlockHeaderProviderKey, Graph.BlockSectionProviderKey, Graph.BlockRowProviderKey]) {
       const definitions = resolveCoreProviderDependencies({
         contributions: [{ roots: [root], providers: Graph.createGraphProviders() }],
@@ -40,7 +40,7 @@ describe('Block provider closure', () => {
     }
   });
 
-  it('lowers a custom Tier 3 composite to Block through the Core provider path', () => {
+  it('通过 Core 提供者路径将自定义第 3 层复合下沉到 Block', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'serviceBlock',
@@ -69,7 +69,7 @@ describe('Block provider closure', () => {
     expect(JSON.stringify(output.scene.primitives)).toContain('Service');
   });
 
-  it('does not export a Cell composite or the removed internal region runtime', () => {
+  it('不导出 Cell 组合或已删除的内部区域运行时', () => {
     expect('BlockCellDefinition' in Graph).toBe(false);
     expect('BlockCellProviderKey' in Graph).toBe(false);
     expect('InternalBlockRegionProvider' in Graph).toBe(false);

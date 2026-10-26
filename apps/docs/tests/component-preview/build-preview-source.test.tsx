@@ -208,7 +208,7 @@ describe('buildPreviewSource', () => {
       expect(svg).not.toContain('Unknown provider');
     }
   });
-  it('preserves a positioned Scope and its children in authoring Source', () => {
+  it('在编写 Source 时保留定位的 Scope 及其子项', () => {
     const PositionedScopeDemo: FC = () => (
       <Layout>
         <Scope position={[120, 40]}>
@@ -677,7 +677,7 @@ describe('buildPreviewSource', () => {
     expect(result.previewIr).toBeNull();
   });
 
-  it('automatic Vanilla preview consumes the ambient Theme selector', () => {
+  it('自动 Vanilla 预览使用上下文中的 Theme 选择器', () => {
     const firstTheme = { mode: ThemeMode.Light };
     const secondTheme = { mode: ThemeMode.Dark };
     const firstColor = resolveDefaultCoreThemeColors(firstTheme.mode).categorical[0];
@@ -703,7 +703,7 @@ describe('buildPreviewSource', () => {
     expect(firstMarkup).not.toBe(secondMarkup);
   });
 
-  it('explicit vanillaSvg remains unchanged when the ambient Theme changes', () => {
+  it('当环境主题更改时，显式 vanillaSvg 保持不变', () => {
     const vanillaSvg = '<svg data-static="true"><path fill="#123456" /></svg>';
     const first = buildPreviewSource(
       createInput({

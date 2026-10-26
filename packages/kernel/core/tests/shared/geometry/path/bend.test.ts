@@ -4,7 +4,7 @@ import { RetikzCoreError } from '../../../../src/error';
 import { bendControlPoints, outInControlPoints } from '../../../../src/shared/geometry/path';
 
 describe('bendControlPoints', () => {
-  it('computed nonfinite controls use owner error', () => {
+  it('计算的非有限控件使用所属模块错误', () => {
     expect(() => outInControlPoints([0, 0], [100, 0], 0, 180, Number.MAX_VALUE)).toThrow(RetikzCoreError);
     expect(() => bendControlPoints([-Number.MAX_VALUE, 0], [Number.MAX_VALUE, 0], 'left', 30)).toThrow(RetikzCoreError);
   });

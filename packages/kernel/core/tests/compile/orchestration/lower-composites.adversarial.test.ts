@@ -24,7 +24,7 @@ const labeledBox = defineComposite({
   }),
 });
 
-describe('lowerComposites — adversarial', () => {
+describe('lowerComposites — 对抗性', () => {
   it('duplicate-registration-throws: 两个 def 同 namespace.type → 注册期 throw（即使 IR 无 tier2）', () => {
     const dupA = defineComposite({
       namespace: 'x',

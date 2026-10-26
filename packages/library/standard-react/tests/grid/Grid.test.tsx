@@ -14,7 +14,7 @@ const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) =
 };
 
 describe('<Grid>', () => {
-  it('forwards authored root Scope identity and metadata unchanged', () => {
+  it('转发编写的根 Scope 身份和元数据不变', () => {
     const result = normalizeReactInput(
       <Grid
         id="authored-grid"
@@ -30,7 +30,7 @@ describe('<Grid>', () => {
     });
   });
 
-  it('contributes the same Standard Grid IR and a stable exact-key provider', () => {
+  it('提供相同的 Standard Grid IR 和稳定的精确键提供者', () => {
     const first = normalizeReactInput(<Grid bounds={{ start: [0, 0], end: [20, 10] }} line={{ spacing: 10 }} />);
     const second = normalizeReactInput(<Grid bounds={{ start: [0, 0], end: [20, 10] }} line={{ spacing: 10 }} />);
 
@@ -40,7 +40,7 @@ describe('<Grid>', () => {
     expect(GridProvider.makeDefinition([])).toBe(GridDefinition);
   });
 
-  it('accepts a center-form Cartesian position through the shared Grid input', () => {
+  it('通过共享 Grid 输入接受中心形式笛卡尔位置', () => {
     const input = {
       bounds: { position: [20, 10], width: 40, height: 20 },
       line: { spacing: 10 },
@@ -49,7 +49,7 @@ describe('<Grid>', () => {
     expect(normalizeReactInput(<Grid {...input} />).ir.children[0]).toEqual(createGrid(input));
   });
 
-  it('accepts a PolarPosition center through the shared Grid input', () => {
+  it('通过共享 Grid 输入接受 PolarPosition 中心', () => {
     const input = {
       bounds: {
         position: { origin: [10, 5], angle: 90, radius: 20 },

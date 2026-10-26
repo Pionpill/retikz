@@ -108,7 +108,7 @@ const findChild = (element: AnyElement, type: string): AnyElement => {
   return child as AnyElement;
 };
 
-describe('string-react-parity', () => {
+describe('字符串反应等价性', () => {
   it('字符串序列化与 React 映射保持同一份 SVG 语义', () => {
     const idPrefix = 'parity';
     const svgString = renderToSvgString(scene, { idPrefix });

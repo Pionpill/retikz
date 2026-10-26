@@ -5,7 +5,7 @@ import { expect, it } from 'vitest';
 import { StandardInputEmbedAdapters } from '../src';
 import { matrix, array, map } from '../src/collection';
 
-it('normalizes nested authoring and resolves providers for each input', () => {
+it('标准化嵌套编写并解析每个输入的提供者', () => {
   for (const child of [
     matrix({ skeleton: { rows: 2, columns: 3 } }),
     matrix({ data: [[{ a: [1, 2] }, [3, 4]]] }),
@@ -18,7 +18,7 @@ it('normalizes nested authoring and resolves providers for each input', () => {
   }
 });
 
-it('keeps empty cells JSON-safe when entering retained processing', () => {
+it('进入保留处理时保持空单元格 JSON 安全', () => {
   for (const child of [
     matrix({ items: [[{}]] }),
     array({ items: [{}] }),

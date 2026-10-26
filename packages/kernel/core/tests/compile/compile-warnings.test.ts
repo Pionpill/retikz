@@ -12,7 +12,7 @@ const scene = (children: IRScene['children']): IRScene => ({
 });
 
 describe('CompileOptions.onWarn', () => {
-  it('keeps PATH_TOO_SHORT ahead of unused arrow and generator lookup', () => {
+  it('使 PATH_TOO_SHORT 保持在未使用的箭头和生成器查找之前', () => {
     const cases: Array<IRScene['children'][number]> = [
       {
         type: 'path',

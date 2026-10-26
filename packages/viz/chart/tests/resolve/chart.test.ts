@@ -83,7 +83,7 @@ const resolve = (input = source) => {
   });
 };
 
-describe('Chart resolve', () => {
+describe('Chart 解析', () => {
   it('向 Plot 透明传递分组执行策略', () => {
     const input = sourceSchema.parse({
       ...source,
@@ -91,7 +91,7 @@ describe('Chart resolve', () => {
     });
     expect(resolve(input).plot.dataExecution).toEqual(input.dataExecution);
   });
-  it('applies Definition and Source defaults only to existing presentation slots', () => {
+  it('仅将 Definition 和 Source 默认应用于现有的演示槽位', () => {
     const result = resolve();
 
     expect(result.theme.defaults.layout?.gap).toBe(8);
@@ -100,7 +100,7 @@ describe('Chart resolve', () => {
     expect(result.plot.defaultPlot).toEqual({ palette: { series: ['#0f766e'] } });
   });
 
-  it('uses explicit Source values after defaultChart and preserves authored marks', () => {
+  it('在 defaultChart 之后使用显式 Source 值并保留编写标记', () => {
     const result = resolve(
       sourceSchema.parse({
         ...source,
@@ -114,7 +114,7 @@ describe('Chart resolve', () => {
     expect(result.plot.marks.map(mark => mark.id)).toEqual(['semantic', 'annotation']);
   });
 
-  it('keeps plotExtension guide replacement independent from recipe guide defaults', () => {
+  it('保持 plotExtension 辅助线替换独立于配方辅助线默认值', () => {
     const result = resolve(
       sourceSchema.parse({ ...source, plotExtension: { guides: [{ type: 'axis', dimension: 'x' }] } }),
     );
@@ -122,7 +122,7 @@ describe('Chart resolve', () => {
     expect(result.plot.guides).toEqual([{ type: 'axis', dimension: 'x' }]);
   });
 
-  it('rejects unconsumed recipe slots with the source path', () => {
+  it('拒绝带有源路径的未使用的配方槽', () => {
     expect(() =>
       sourceSchema.parse({ ...source, recipe: { ...source.recipe, encodings: { x: 'x', y: 'y', extra: 'z' } } }),
     ).toThrow();

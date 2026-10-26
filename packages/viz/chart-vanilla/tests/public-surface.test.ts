@@ -5,8 +5,8 @@ import * as point from '../src/point';
 
 const pointChartCases = ['Bubble', 'ConnectedScatter', 'RangedDot', 'Regression', 'Scatter', 'Strip'] as const;
 
-describe('@retikz/chart-vanilla public surface', () => {
-  it('keeps only shared rendering primitives on the root entry', () => {
+describe('@retikz/chart-vanilla 公开接口', () => {
+  it('仅在根条目上保留共享渲染基元', () => {
     expect(chart).toHaveProperty('renderChart');
     expect(chart).not.toHaveProperty('ChartInputEmbedAdapter');
     expect(chart).toHaveProperty('normalizeChartCoordinate');
@@ -16,7 +16,7 @@ describe('@retikz/chart-vanilla public surface', () => {
     expect(chart).not.toHaveProperty('InputChartFacet');
   });
 
-  it('exports precise Point factories and normalizers from the Point entry', () => {
+  it('从点条目导出精确的点工厂和标准化器', () => {
     for (const prefix of pointChartCases) {
       expect(point).toHaveProperty(`${prefix[0].toLowerCase()}${prefix.slice(1)}Chart`);
       expect(point).toHaveProperty(`normalize${prefix}Chart`);

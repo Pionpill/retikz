@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { normalizePlot, normalizePlotPathMark } from '../../../src';
 import type { InputPlotPathMark } from '../../../src';
 
-describe('Plain path construction', () => {
-  it('rejects arrow shorthand for ribbon instead of losing it during lowering', () => {
+describe('普通路径构造', () => {
+  it('拒绝色带的箭头简写，而不是在下沉过程中丢失它', () => {
     expect(() =>
       normalizePlotPathMark({
         way: [
@@ -16,7 +16,7 @@ describe('Plain path construction', () => {
       }),
     ).toThrow(/Ribbon/);
   });
-  it('normalizes way on plain Plot marks without retaining authoring fields', () => {
+  it('标准化普通 Plot 标记上的方式，而不保留编写字段', () => {
     const plot = normalizePlot({
       data: { reference: 'data' },
       scales: [],
@@ -48,7 +48,7 @@ describe('Plain path construction', () => {
     expect(plot.marks[0]).not.toHaveProperty('arrow');
   });
 
-  it('rejects vertex properties on constructed paths', () => {
+  it('拒绝构造路径上的顶点属性', () => {
     expect(() =>
       normalizePlotPathMark({
         way: [
@@ -60,7 +60,7 @@ describe('Plain path construction', () => {
     ).toThrow(/curve/);
   });
 
-  it('preserves relative shorthand and full source steps', () => {
+  it('保留相对简写和完整源步骤', () => {
     expect(normalizePlotPathMark({ way: ['A', '++2,3'] }).encodings.steps).toEqual([
       { kind: 'move', to: { id: 'A' } },
       { kind: 'line', to: { relativeAccumulate: [2, 3] } },

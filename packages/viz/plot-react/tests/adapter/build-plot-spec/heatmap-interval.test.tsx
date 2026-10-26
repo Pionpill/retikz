@@ -52,7 +52,7 @@ describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）
     expect(spec.scales).toContainEqual({ type: 'band', name: '__y' });
   });
 
-  it('heatmap_explicit_band_scale_forwards_padding_on_forced_dimension', () => {
+  it('热图显式带比例在强制尺寸上向前填充', () => {
     const spec = buildPlotIR(
       <>
         <IntervalMark

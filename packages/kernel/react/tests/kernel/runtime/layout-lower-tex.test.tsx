@@ -29,7 +29,7 @@ const lowerTex: LowerTex = () => ({
   depth: 2,
 });
 
-describe('<Layout lowerTex> multi-path passthrough', () => {
+describe('<Layout lowerTex>多路径直通', () => {
   it('把 custom lowerer 的多条路径与 paint 交给同一 Core consumer', () => {
     const svg = renderToStaticMarkup(
       <Layout lowerTex={lowerTex}>

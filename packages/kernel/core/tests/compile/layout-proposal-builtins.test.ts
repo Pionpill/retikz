@@ -96,8 +96,8 @@ const probeChild = (
   };
 };
 
-describe('plain Node proposal consumption', () => {
-  it('uses authored hard lines for natural width and the widest breakable unit for minimum width', () => {
+describe('普通 Node 对布局提议的消费', () => {
+  it('使用编写的硬线作为自然宽度，使用最宽的易碎单元作为最小宽度', () => {
     const child = plainNode('aa bbbb\ncc d');
     const natural = probeChild(child, { x: naturalAxis, y: naturalAxis });
     const minimum = probeChild(child, { x: minimumAxis, y: naturalAxis });
@@ -109,7 +109,7 @@ describe('plain Node proposal consumption', () => {
     expect(minimum.textPrimitives[0].lines.map(line => line.text)).toEqual(['aa', 'bbbb', 'cc d']);
   });
 
-  it('reflows at an exact allocation width and reports the resulting natural y contribution', () => {
+  it('以精确的分配宽度回流并报告所得的自然 y 贡献', () => {
     const probed = probeChild(plainNode('aa bb cc'), {
       x: { kind: LayoutAxisProposalKind.Exact, value: 40 },
       y: naturalAxis,
@@ -120,7 +120,7 @@ describe('plain Node proposal consumption', () => {
     expect(probed.textPrimitives[0].lines.map(line => line.text)).toEqual(['aa', 'bb', 'cc']);
   });
 
-  it('resolves y minimum from the actual height after applying the x proposal', () => {
+  it('应用 x 建议后从实际高度解析 y 最小值', () => {
     const child = plainNode('aa bb cc');
     const minimum = probeChild(child, {
       x: { kind: LayoutAxisProposalKind.Exact, value: 40 },
@@ -136,7 +136,7 @@ describe('plain Node proposal consumption', () => {
     expect(minimum.result.slotSize.height).toBe(natural.result.slotSize.height);
   });
 
-  it('keeps real text height when the y proposal is exact', () => {
+  it('当 y 建议准确时保持真实文本高度', () => {
     const probed = probeChild(plainNode('aa'), {
       x: naturalAxis,
       y: { kind: LayoutAxisProposalKind.Exact, value: 2 },
@@ -147,7 +147,7 @@ describe('plain Node proposal consumption', () => {
     expect(probed.textPrimitives[0].measuredHeight).toBe(10);
   });
 
-  it('keeps natural layout inside a range and reflows only at its finite upper budget', () => {
+  it('将自然布局保持在一定范围内，并且仅在其有限的上限预算下进行回流', () => {
     const child = plainNode('aa bb cc');
     const natural = probeChild(child, {
       x: { kind: LayoutAxisProposalKind.Range, min: 30, max: 100 },
@@ -164,7 +164,7 @@ describe('plain Node proposal consumption', () => {
     expect(reflowed.textPrimitives[0].lines.map(line => line.text)).toEqual(['aa bb', 'cc']);
   });
 
-  it('subtracts allocation margin and padding while preserving a stricter authored maxTextWidth', () => {
+  it('减去分配边距和填充，同时保留更严格的编写的 maxTextWidth', () => {
     const boxed = probeChild(
       {
         ...plainNode('aa bb'),
@@ -194,7 +194,7 @@ describe('plain Node proposal consumption', () => {
     expect(authored.textPrimitives[0].lines.map(line => line.text)).toEqual(['aa', 'bb']);
   });
 
-  it('uses the actual allocation box of builtin and custom non-rectangular shapes as the finite width budget', () => {
+  it('使用内置和自定义非矩形形状的实际分配框作为有限宽度预算', () => {
     const ellipse = probeChild(
       {
         ...plainNode('aa bb cc'),
@@ -231,7 +231,7 @@ describe('plain Node proposal consumption', () => {
     expect(custom.result.allocationBounds.width).toBeLessThanOrEqual(60);
   });
 
-  it('preserves the best real allocation across non-monotonic custom shape feedback', () => {
+  it('在非单调自定义形状反馈中保留最佳实际分配', () => {
     const nonMonotonicShape = {
       ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'non-monotonic',
@@ -257,7 +257,7 @@ describe('plain Node proposal consumption', () => {
     expect(probed.textPrimitives[0].lines.map(line => line.text)).toEqual(['aa bb', 'cc dd']);
   });
 
-  it('keeps the authored natural candidate when rotation makes its real allocation fit', () => {
+  it('当旋转使其真正的分配适合时，保留编写的自然候选者', () => {
     const rotated = probeChild(
       {
         ...plainNode('aa bb cc'),
@@ -275,7 +275,7 @@ describe('plain Node proposal consumption', () => {
   });
 });
 
-describe('atomic Node content proposal refusal', () => {
+describe('原子 Node 内容拒绝不支持的布局提议', () => {
   const mixedNode: IRChild = {
     type: 'node',
     position: [0, 0],
@@ -284,7 +284,7 @@ describe('atomic Node content proposal refusal', () => {
     layout: { lineHeight: 10, padding: 0, margin: 0 },
   };
 
-  it('keeps mixed authored lines atomic for minimum and exact x proposals', () => {
+  it('保持混合编写行的原子性，以实现最小和精确的 x 提案', () => {
     const minimum = probeChild(mixedNode, { x: minimumAxis, y: naturalAxis });
     const exact = probeChild(mixedNode, {
       x: { kind: LayoutAxisProposalKind.Exact, value: 20 },
@@ -297,7 +297,7 @@ describe('atomic Node content proposal refusal', () => {
     expect(exact.result.allocationBounds).toMatchObject({ width: 50, height: 20 });
   });
 
-  it('keeps a lowered TeX authored line atomic for minimum, range, and exact x proposals', () => {
+  it('已下沉的 TeX 显式行在最小、范围及精确 x 布局提议下保持原子性', () => {
     const texNode: IRChild = {
       type: 'node',
       position: [0, 0],
@@ -341,7 +341,7 @@ describe('atomic Node content proposal refusal', () => {
   });
 });
 
-describe('fixed built-in geometry proposal refusal', () => {
+describe('固定内置几何拒绝不支持的布局提议', () => {
   const path: IRChild = {
     type: 'path',
     children: [
@@ -350,7 +350,7 @@ describe('fixed built-in geometry proposal refusal', () => {
     ],
   };
 
-  it('keeps a Path real allocation under exact and range proposals', () => {
+  it('在精确和范围建议下保留 Path 实际分配', () => {
     const exact = probeChild(path, {
       x: { kind: LayoutAxisProposalKind.Exact, value: 20 },
       y: naturalAxis,
@@ -378,7 +378,7 @@ describe('fixed built-in geometry proposal refusal', () => {
     expect(unbounded.result.allocationBounds.width).toBe(100);
   });
 
-  it('keeps an ordinary Scope real allocation instead of forwarding its proposal to descendants', () => {
+  it('保留普通的 Scope 实际分配，而不是将其提案转发给后代', () => {
     const probed = probeChild(
       {
         type: 'scope',
@@ -396,7 +396,7 @@ describe('fixed built-in geometry proposal refusal', () => {
     expect(probed.result.allocationBounds.width).toBe(100);
   });
 
-  it('returns finite zero-compatible Coordinate and empty Scope results without negative zero', () => {
+  it('返回有限零兼容 Coordinate 和空 Scope 结果，不带负零', () => {
     const coordinate = probeChild(
       { type: 'coordinate', id: 'origin', position: [-0, -0] },
       {
@@ -429,7 +429,7 @@ describe('fixed built-in geometry proposal refusal', () => {
     expect(empty.result.allocationBounds).toEqual({ x: 0, y: 0, width: 0, height: 0 });
   });
 
-  it('normalizes negative zero in non-empty primitive visual bounds', () => {
+  it('消除非空图元视觉边界中的负零', () => {
     const negativeZeroVisualShape = {
       ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'negative-zero-visual',

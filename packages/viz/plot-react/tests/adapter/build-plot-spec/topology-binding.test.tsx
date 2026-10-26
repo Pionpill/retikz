@@ -6,8 +6,8 @@ import { PlotFacet, PlotScaffold, PlotTrack } from '../../../src/components/comp
 import { PlotAxis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
 
-describe('buildPlotIR alpha.14 topology binding sugar', () => {
-  it('track_binding_generates_shared_scaffold_composition', () => {
+describe('buildPlotIR alpha.14 拓扑结合糖', () => {
+  it('轨道绑定生成共享支架组合物', () => {
     const spec = buildPlotIR(
       <>
         <PlotScaffold
@@ -62,7 +62,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('track_binding_inherits_plot_coordinate_when_scaffold_coordinate_is_omitted', () => {
+  it('基础结构省略坐标配置时轨道绑定继承 Plot 坐标', () => {
     const spec = buildPlotIR(
       <>
         <PlotScaffold id="radar" sharedRoles={['x']}>
@@ -94,7 +94,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('scaffold_track_container_scopes_child_axes_and_marks', () => {
+  it('轨道容器基础结构为子坐标轴及标记建立作用域', () => {
     const spec = buildPlotIR(
       <PlotScaffold id="ops" sharedRoles={['x']}>
         <PlotAxis dimension="x" grid title="week" />
@@ -136,7 +136,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('facet_binding_generates_facet_composition', () => {
+  it('facet 绑定生成 facet 组合', () => {
     const spec = buildPlotIR(
       <>
         <PlotFacet
@@ -186,7 +186,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('facet_container_scopes_child_axes_and_marks', () => {
+  it('构面容器范围子轴和标记', () => {
     const spec = buildPlotIR(
       <PlotFacet id="sales" column="region">
         <PlotAxis dimension="x" title="month" />
@@ -213,7 +213,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('facet_container_accepts_multi_level_row_dimensions', () => {
+  it('构面容器接受多级行维度', () => {
     const spec = buildPlotIR(
       <PlotFacet
         id="sales"
@@ -250,7 +250,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('rejects missing topology binding targets and conflicting binding props', () => {
+  it('拒绝缺失的拓扑绑定目标和冲突的绑定属性', () => {
     expect(() =>
       buildPlotIR(
         <>

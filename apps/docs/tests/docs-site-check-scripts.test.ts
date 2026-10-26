@@ -10,8 +10,8 @@ type PackageJson = {
 
 const readPackageJson = (path: string): PackageJson => JSON.parse(readFileSync(path, 'utf8')) as PackageJson;
 
-describe('Docs site check commands', () => {
-  it('exposes static, build, runtime, and aggregate checks from the repository root', () => {
+describe('文档站点检查命令', () => {
+  it('公开来自存储库根的静态、构建、运行时和聚合检查', () => {
     const docsPackage = readPackageJson(resolve(import.meta.dirname, '..', 'package.json'));
     const rootPackage = readPackageJson(resolve(import.meta.dirname, '..', '..', '..', 'package.json'));
 
@@ -24,7 +24,7 @@ describe('Docs site check commands', () => {
     expect(rootPackage.scripts?.['check:docs']).toContain('@retikz/docs');
   });
 
-  it('runs the static checker from the Docs package directory', () => {
+  it('从 Docs 包目录运行静态检查器', () => {
     const result = spawnSync(process.execPath, ['scripts/check-doc-static.mjs', '--scope', '__empty_scope__'], {
       cwd: resolve(import.meta.dirname, '..'),
       encoding: 'utf8',
@@ -34,7 +34,7 @@ describe('Docs site check commands', () => {
     expect(result.stdout).toContain('Docs integrity passed (0 pages, scope: __empty_scope__).');
   });
 
-  it('exposes an MDX mounted state for the runtime checker', () => {
+  it('向运行时检查器提供 MDX 挂载状态', () => {
     const source = readFileSync(
       resolve(import.meta.dirname, '..', 'src/modules/docs/components/mdx-content/MdxContent.tsx'),
       'utf8',
@@ -44,7 +44,7 @@ describe('Docs site check commands', () => {
     expect(source).toContain('data-doc-content-state="error"');
   });
 
-  it('checks the production Docs manifest instead of a hot-reloading development server', () => {
+  it('检查生产文档清单而不是热重载开发服务器', () => {
     const source = readFileSync(resolve(import.meta.dirname, '..', 'scripts/check-doc-runtime.mjs'), 'utf8');
 
     expect(source).toContain("import { preview } from 'vite'");

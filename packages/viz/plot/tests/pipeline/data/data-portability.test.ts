@@ -91,13 +91,13 @@ const doubleDefinitionImplementation = defineTransformImplementation({
 });
 
 describe('coerceValue — 按 DataFieldType 值强制（contract）', () => {
-  it('continuous_number_and_strict_string', () => {
+  it('连续数字和严格字符串', () => {
     expect(coerceValue(120, DataFieldType.Continuous)).toBe(120);
     expect(coerceValue('120', DataFieldType.Continuous)).toBe(120);
     expect(coerceValue(' 1.5e3 ', DataFieldType.Continuous)).toBe(1500);
   });
 
-  it('continuous_rejects_dirty_strings', () => {
+  it('连续类型拒绝含无效内容的字符串', () => {
     for (const bad of ['', '12px', '0xFF', 'Infinity', 'NaN', 'abc']) {
       expect(Number.isNaN(coerceValue(bad, DataFieldType.Continuous) as number)).toBe(true);
     }
@@ -105,12 +105,12 @@ describe('coerceValue — 按 DataFieldType 值强制（contract）', () => {
     expect(Number.isNaN(coerceValue({}, DataFieldType.Continuous) as number)).toBe(true);
   });
 
-  it('continuous_keeps_negative_and_above_one', () => {
+  it('连续类型保留负数及大于 1 的数值', () => {
     expect(coerceValue(1.5, DataFieldType.Continuous)).toBe(1.5);
     expect(coerceValue('-0.2', DataFieldType.Continuous)).toBe(-0.2);
   });
 
-  it('temporal_accepts_date_iso_epoch', () => {
+  it('时间接受日期 iso 纪元', () => {
     const expected = Date.parse('2024-01-01');
 
     expect(coerceValue('2024-01-01', DataFieldType.Temporal)).toBe(expected);
@@ -118,12 +118,12 @@ describe('coerceValue — 按 DataFieldType 值强制（contract）', () => {
     expect(coerceValue(expected, DataFieldType.Temporal)).toBe(expected);
   });
 
-  it('temporal_invalid_is_nan', () => {
+  it('时间无效为 nan', () => {
     expect(Number.isNaN(coerceValue('2024/01/01', DataFieldType.Temporal) as number)).toBe(true);
     expect(Number.isNaN(coerceValue('abc', DataFieldType.Temporal) as number)).toBe(true);
   });
 
-  it('categorical_keeps_string_or_number', () => {
+  it('分类保留字符串或数字', () => {
     expect(coerceValue('north', DataFieldType.Categorical)).toBe('north');
     expect(coerceValue(3, DataFieldType.Categorical)).toBe(3);
     expect(coerceValue({}, DataFieldType.Categorical)).toBeUndefined();
@@ -136,14 +136,14 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
     ['revenue', DataFieldType.Continuous],
   ]);
 
-  it('identity_coerces_in_place', () => {
+  it('身份强制到位', () => {
     const out = normalizeRows([{ month: '2024-01-01', revenue: '120' }], fieldTypeMap);
 
     expect(out[0].month).toBe(Date.parse('2024-01-01'));
     expect(out[0].revenue).toBe(120);
   });
 
-  it('fieldmap_renames_then_coerces', () => {
+  it('字段映射重命名然后强制', () => {
     const out = normalizeRows([{ period: '2024-01-01', amount: '90' }], fieldTypeMap, {
       month: 'period',
       revenue: 'amount',
@@ -153,7 +153,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
     expect(out[0].revenue).toBe(90);
   });
 
-  it('nested_physical_path_via_fieldmap', () => {
+  it('嵌套物理路径通过字段映射', () => {
     const out = normalizeRows([{ pricing: { amount: 42 } }], new Map([['revenue', DataFieldType.Continuous]]), {
       revenue: 'pricing.amount',
     });
@@ -161,7 +161,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
     expect(out[0].revenue).toBe(42);
   });
 
-  it('nested_logical_path_coerces', () => {
+  it('嵌套逻辑路径强制', () => {
     // 点路径逻辑名归一化写扁平 key，下游 resolveFieldPath exact-first 命中 coerced 值（不再读回原始嵌套字符串）
     const out = normalizeRows([{ user: { age: '42' } }], new Map([['user.age', DataFieldType.Continuous]]));
 
@@ -169,7 +169,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
     expect(resolveFieldPath(out[0], 'user.age')).toBe(42);
   });
 
-  it('preserves_source_index', () => {
+  it('保留源索引', () => {
     const tagged = tagSourceIndex([{ revenue: '5' }, { revenue: '7' }]);
     const out = normalizeRows(tagged, new Map([['revenue', DataFieldType.Continuous]]));
 
@@ -179,7 +179,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
 });
 
 describe('coerce-before-transform 关键回归', () => {
-  it('numeric_string_stacks_correctly', () => {
+  it('数字字符串堆栈正确', () => {
     // 数字串先归一化成数值，再 stack 累加 → 得 8 而非 0
     const normalized = normalizeRows(
       [
@@ -197,7 +197,7 @@ describe('coerce-before-transform 关键回归', () => {
 });
 
 describe('数据字典 own-key 语义（contract 集成）', () => {
-  it.each(['constructor', 'toString', '__proto__'])('inherited dataset key %s is treated as missing', reference => {
+  it.each(['constructor', 'toString', '__proto__'])('继承的数据集键 %s 被视为缺失', reference => {
     expect(() => compile(specNoModel(reference), {})).toThrow(
       `lowerPlots: dataset "${reference}" not found in provided datasets`,
     );
@@ -206,14 +206,14 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     expect(createPlotLocator(specNoModel(reference), {}, { environment: {} }).datum(0)).toBeNull();
   });
 
-  it.each(['constructor', 'toString', '__proto__'])('own dataset key %s remains usable', reference => {
+  it.each(['constructor', 'toString', '__proto__'])('自己的数据集键 %s 仍然可用', reference => {
     const datasets = ownRecord(reference, [{ a: 1, b: 2 }]);
 
     expect(() => compile(specNoModel(reference), datasets)).not.toThrow();
     expect(createPlotLocator(specNoModel(reference), datasets, { environment: {} }).datum(0)).not.toBeNull();
   });
 
-  it.each(['constructor', 'toString', '__proto__'])('inherited datasetFieldMaps key %s is ignored', reference => {
+  it.each(['constructor', 'toString', '__proto__'])('继承的 datasetFieldMaps 键 %s 被忽略', reference => {
     const datasets = ownRecord(reference, [{ month: '2024-01-01', revenue: 1 }]);
     const datasetFieldMaps = inheritedRecord(reference, { month: 'missingMonth', revenue: 'missingRevenue' });
 
@@ -224,7 +224,7 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
   });
 
   it.each(['constructor', 'toString', '__proto__'])(
-    'own datasetFieldMaps key %s cannot target an inherited dataset',
+    '自己的 datasetFieldMaps 键 %s 无法定位继承的数据集',
     reference => {
       const datasetFieldMaps = ownRecord(reference, { month: 'period' });
 
@@ -234,7 +234,7 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     },
   );
 
-  it.each(['constructor', 'toString', '__proto__'])('own datasetFieldMaps key %s remains usable', reference => {
+  it.each(['constructor', 'toString', '__proto__'])('自己的 datasetFieldMaps 键 %s 仍然可用', reference => {
     const datasets = ownRecord(reference, [{ period: '2024-01-01', amount: 1 }]);
     const datasetFieldMaps = ownRecord(reference, { month: 'period', revenue: 'amount' });
 
@@ -244,13 +244,13 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     ).not.toBeNull();
   });
 
-  it('fieldmap_without_model_throws', () => {
+  it('没有模型抛出的字段图', () => {
     expect(() => compile(specNoModel(), { d: [{ a: 1, b: 2 }] }, { datasetFieldMaps: { d: { a: 'x' } } })).toThrow(
       /requires data\.model/i,
     );
   });
 
-  it('fieldmap_unknown_logical_throws', () => {
+  it('fieldmap 引用未知逻辑字段时抛出错误', () => {
     expect(() =>
       compile(
         specWithModel(),
@@ -260,7 +260,7 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     ).toThrow(/unknown logical field/i);
   });
 
-  it('fieldmap_unknown_dataset_throws', () => {
+  it('字段映射未知数据集抛出', () => {
     expect(() =>
       compile(
         specWithModel(),
@@ -270,7 +270,7 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     ).toThrow(/unknown dataset/i);
   });
 
-  it('identity_swap_same_model_compiles', () => {
+  it('身份交换相同模型编译', () => {
     // 同名同类型换源（恒等）→ 正常下沉，不抛
     expect(() =>
       compile(specWithModel(), {
@@ -282,7 +282,7 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     ).not.toThrow();
   });
 
-  it('fieldmap_rename_compiles', () => {
+  it('字段映射重命名编译', () => {
     const renamed = compile(
       specWithModel(),
       { d: [{ period: '2024-01-01', amount: 10 }] },
@@ -293,19 +293,19 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
   });
 });
 
-describe('validateData（contract）', () => {
-  it('off_by_default_missing_field_no_throw', () => {
+describe('validateData（契约）', () => {
+  it('默认关闭，缺失字段不抛出', () => {
     // 默认不校验绑定数据：字段缺失只是空图，不抛
     expect(() => compile(specWithModel(), { d: [{ wrong: 1 }] })).not.toThrow();
   });
 
-  it('on_throws_when_field_absent', () => {
+  it('启用检查时字段缺失会抛出错误', () => {
     expect(() => compile(specWithModel(), { d: [{ wrong: 1 }] }, { validateData: true })).toThrow(/no valid values/i);
   });
 });
 
-describe('locator datasetFieldMaps parity', () => {
-  it('locator_build_throws_like_render', () => {
+describe('定位器 datasetFieldMaps 等价性', () => {
+  it('定位器构建像渲染一样抛出', () => {
     // 同 spec+options：render 抛 unknown logical field → locator build 也抛（不再静默返回结果）
     expect(() =>
       createPlotLocator(
@@ -316,7 +316,7 @@ describe('locator datasetFieldMaps parity', () => {
     ).toThrow(/unknown logical field/i);
   });
 
-  it('locator_build_throws_fieldmap_without_model', () => {
+  it('定位器构建抛出没有模型的字段图', () => {
     expect(() =>
       createPlotLocator(
         specNoModel(),
@@ -327,7 +327,7 @@ describe('locator datasetFieldMaps parity', () => {
   });
 });
 
-describe('custom transform data portability（contract）', () => {
+describe('自定义变换数据可移植性（契约）', () => {
   const customSpec = (): IRPlot =>
     PlotSchema.parse({
       namespace: 'plot',
@@ -348,7 +348,7 @@ describe('custom transform data portability（contract）', () => {
       marks: [{ type: 'point', encodings: { position: { x: { field: 'x2' }, y: { field: 'y' } } } }],
     });
 
-  it('strict_model_accepts_registered_custom_output_field', () => {
+  it('严格模型接受注册自定义输出字段', () => {
     expect(() =>
       compile(
         customSpec(),
@@ -361,7 +361,7 @@ describe('custom transform data portability（contract）', () => {
     ).not.toThrow();
   });
 
-  it('strict_model_rejects_unregistered_custom_output_field', () => {
+  it('严格模型拒绝未注册自定义输出字段', () => {
     const missingOutputDefinition = defineTransform({
       kind: 'double',
       paramsSchema: doubleDefinition.schema.shape.params,

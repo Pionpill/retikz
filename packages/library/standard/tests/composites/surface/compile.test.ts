@@ -123,8 +123,8 @@ const compileSurface = (
   return { logs, observed, output };
 };
 
-describe('Surface layout compile', () => {
-  it('adds padding to intrinsic slot and aligns a non-zero child allocation origin', () => {
+describe('Surface 布局编译', () => {
+  it('向内在槽添加填充并对齐非零子分配原点', () => {
     const result = compileSurface(leaf({ originX: -5, originY: 3 }), naturalProposal(), {
       top: 2,
       right: 5,
@@ -143,7 +143,7 @@ describe('Surface layout compile', () => {
     });
   });
 
-  it('subtracts padding from range proposals and clamps child minimum at zero', () => {
+  it('从范围建议中减去填充并将子最小值固定为零', () => {
     const proposal: LayoutProposal = {
       x: { kind: LayoutAxisProposalKind.Range, min: 30, max: 40 },
       y: { kind: LayoutAxisProposalKind.Range, min: 4 },
@@ -157,7 +157,7 @@ describe('Surface layout compile', () => {
     expect(result.observed.slotSize).toEqual({ width: 30, height: 16 });
   });
 
-  it('subtracts padding from exact proposals while preserving the parent fixed slot', () => {
+  it('从精确提案中减去填充，同时保留父固定槽', () => {
     const proposal: LayoutProposal = {
       x: { kind: LayoutAxisProposalKind.Exact, value: 50 },
       y: { kind: LayoutAxisProposalKind.Exact, value: 30 },
@@ -187,7 +187,7 @@ describe('Surface layout compile', () => {
         y: { kind: LayoutAxisProposalKind.Intrinsic, mode: 'natural' },
       } satisfies LayoutProposal,
     },
-  ])('fails $label proposals smaller than horizontal padding before probing the child', ({ proposal }) => {
+  ])('在探测子级之前，小于水平填充的 $label 提案失败', ({ proposal }) => {
     const logs: Array<ProbeLog> = [];
     const harness = defineComposite({
       namespace: 'surface-test',
@@ -223,11 +223,11 @@ describe('Surface layout compile', () => {
     expect(logs).toEqual([]);
   });
 
-  it('propagates child probe failure without substituting intrinsic layout', () => {
+  it('传播子探测故障而不替换内在布局', () => {
     expect(() => compileSurface(leaf({ reject: true }))).toThrow(/Leaf 'content' rejected/);
   });
 
-  it('keeps allocation at the border box while reporting border stroke as visual overflow', () => {
+  it('保留边界框的分配，同时将边界描边报告为视觉溢出', () => {
     const result = compileSurface(leaf(), naturalProposal(), 2, {
       border: { stroke: '#0f172a', strokeWidth: 6 },
     });

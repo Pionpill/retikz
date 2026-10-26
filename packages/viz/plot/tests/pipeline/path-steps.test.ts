@@ -31,7 +31,7 @@ const lower = (
     { textMeasurer: measureLabel },
   );
 
-describe('Projected path construction', () => {
+describe('投影路径构建', () => {
   it('保留构造路径的端点箭头并生成 Scene 箭头', () => {
     const output = lowerPlot(
       PlotSchema.parse({
@@ -62,7 +62,7 @@ describe('Projected path construction', () => {
     expect(scene.primitives[0]).toMatchObject({ type: 'path', arrowEnd: { markerWidth: 7 } });
   });
 
-  it('includes data control points in inferred domains while drawing coordinates stay fixed', () => {
+  it('包括推断域中的数据控制点，同时绘图坐标保持固定', () => {
     const compile = (maximum: number, domain?: [number, number]) =>
       lowerPlot(
         PlotSchema.parse({
@@ -95,7 +95,7 @@ describe('Projected path construction', () => {
     expect(paths(compile(20))[0].children).toEqual(paths(compile(20, [0, 20]))[0].children);
   });
 
-  it('constructs a cubic after polar projection of its data control points', () => {
+  it('在其数据控制点的极坐标投影后构造一个立方体', () => {
     const point = { x: { value: 90 }, y: { value: 5 } };
     const source = PlotSchema.parse({
       namespace: 'plot',
@@ -126,7 +126,7 @@ describe('Projected path construction', () => {
     expect(curve.control1).toEqual(start.to);
     expect(curve.control2).toEqual([10, 20]);
   });
-  it('projects each row and preserves local offsets', () => {
+  it('投影每一行并保留本地偏移量', () => {
     const result = lower([
       { kind: 'move', to: { x: { field: 'x' }, y: { field: 'y' } } },
       { kind: 'cubic', control1: [10, 20], control2: { x: { value: 5 }, y: { value: 5 } }, to: { relative: [30, 40] } },
@@ -140,7 +140,7 @@ describe('Projected path construction', () => {
     );
   });
 
-  it('creates one constant instance and zero instances for empty field data', () => {
+  it('为空字段数据创建 1 个常量实例和 0 个实例', () => {
     expect(
       paths(
         lower([
@@ -162,7 +162,7 @@ describe('Projected path construction', () => {
     ).toHaveLength(0);
   });
 
-  it('fails the whole instance on an invalid projected position', () => {
+  it('整个实例在无效的投影位置上失败', () => {
     expect(() =>
       lower(
         [

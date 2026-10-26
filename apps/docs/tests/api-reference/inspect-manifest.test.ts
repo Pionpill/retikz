@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { createInspectApiReferenceMdx } from '../../scripts/api-reference/inspect';
 import { ApiTable } from '../../src/modules/docs/components/mdx-content/api-table';
 
-describe('Inspect API Reference', () => {
+describe('Inspect API 参考', () => {
   it('保留公开入口、调用契约与语义分支，Schema 只展示摘要', async () => {
     for (const lang of ['zh', 'en'] as const) {
       const source = await createInspectApiReferenceMdx(lang);

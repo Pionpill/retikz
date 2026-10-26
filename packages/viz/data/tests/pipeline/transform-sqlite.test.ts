@@ -11,7 +11,7 @@ import {
   resolveTransformRegistry,
 } from '../../src';
 
-it('hands SQLite aggregation results through builtin sorting into a second SQLite aggregation', async () => {
+it('通过内置排序将 SQLite 聚合结果传递到第二个 SQLite 聚合中', async () => {
   const database = new DatabaseSync(':memory:');
   const rows = [
     { group: 'B', value: 3 },

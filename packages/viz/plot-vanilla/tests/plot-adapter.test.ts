@@ -53,7 +53,7 @@ const datasets = {
   ],
 };
 
-describe('Plot Vanilla Tier2 adapter', () => {
+describe('Plot Vanilla Tier2 适配器', () => {
   it('plotIROf 只归一化显式 input 并原样返回显式 IR', () => {
     const spec = salesSpec('sales');
 
@@ -84,7 +84,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(contribution.node).toBe(spec);
   });
 
-  it('exposes one Plot-owned contribution builder for complete IRPlot inputs', () => {
+  it('公开一个 Plot 拥有的贡献生成器以获取完整的 IRplot 输入', () => {
     const spec = salesSpec('sales');
     const result = PlotInputEmbedAdapter.lower(
       { spec, datasets, lowerOptions: { layout: { width: 360, height: 200 } } },
@@ -213,7 +213,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(() => renderToSvgString(inputScene, { adapters: [PlotInputEmbedAdapter] })).toThrow(/sales/i);
   });
 
-  it('reuses the Source id and preserves anonymous Source without inventing an id', () => {
+  it('重用 Source id 并保留匿名 Source 而不发明 id', () => {
     const named = salesSpec('sales');
     const anonymous = salesSpec();
 

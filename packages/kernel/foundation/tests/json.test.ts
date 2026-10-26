@@ -9,7 +9,7 @@ import {
 import { describe, expect, it } from 'vitest';
 
 describe('jsonStructuralEquals', () => {
-  it('compares nested objects independently of property insertion order without changing inputs', () => {
+  it('独立于属性插入顺序比较嵌套对象，无需更改输入', () => {
     const left = cloneAndFreezeJson({ filters: [{ field: 'age', value: 18 }], enabled: true });
     const right = cloneAndFreezeJson({ enabled: true, filters: [{ value: 18, field: 'age' }] });
     expect(jsonStructuralEquals(left, right)).toBe(true);
@@ -33,18 +33,18 @@ describe('jsonStructuralEquals', () => {
     [1, '1'],
     [false, 0],
     [0, -0],
-  ])('distinguishes different structures or values: %j versus %j', (left, right) => {
+  ])('区分不同的结构或值：%j 与 %j', (left, right) => {
     expect(jsonStructuralEquals(left, right)).toBe(false);
     expect(jsonStructuralEquals(right, left)).toBe(false);
   });
 
-  it.each([null, true, false, '', 'value', 0, -0, 1.5, [], {}])('compares equal JSON values: %j', value => {
+  it.each([null, true, false, '', 'value', 0, -0, 1.5, [], {}])('比较相等的 JSON 值：%j', value => {
     expect(jsonStructuralEquals(value, cloneAndFreezeJson(value))).toBe(true);
   });
 });
 
 describe('cloneAndFreezeJson', () => {
-  it('returns a detached deeply frozen JSON tree', () => {
+  it('返回分离的深度冻结的 JSON 树', () => {
     const input: { nested: { label: string }; values: [number, { enabled: boolean }] } = {
       nested: { label: 'before' },
       values: [1, { enabled: true }],
@@ -62,7 +62,7 @@ describe('cloneAndFreezeJson', () => {
     expect(Object.isFrozen(output.values[1])).toBe(true);
   });
 
-  it('accepts null-prototype objects and shared references by cloning each branch', () => {
+  it('通过克隆每个分支来接受空原型对象和共享引用', () => {
     const shared = { nested: { value: 'shared' } };
     const input = Object.assign(Object.create(null), { first: shared, second: shared });
 
@@ -73,7 +73,7 @@ describe('cloneAndFreezeJson', () => {
     expect(output.first.nested).not.toBe(output.second.nested);
   });
 
-  it('copies prototype-related property names as frozen own data without changing the output prototype', () => {
+  it('将原型相关的属性名称复制为冻结自己的数据，而不更改输出原型', () => {
     const input = JSON.parse('{"__proto__":{"value":1},"constructor":"data","toString":2}');
     const output = cloneAndFreezeJson(input);
     expect(Object.getPrototypeOf(output)).toBeNull();
@@ -96,12 +96,12 @@ describe('cloneAndFreezeJson', () => {
     ['undefined', undefined],
     ['function', () => 'value'],
     ['bigint', BigInt(1)],
-  ])('rejects %s', (_label, value) => {
+  ])('拒绝 %s', (_label, value) => {
     expect(() => cloneAndFreezeJson(value, 'payload')).toThrowError(RetikzFoundationError);
     expect(() => cloneAndFreezeJson(value, 'payload')).toThrowError(/payload/);
   });
 
-  it('rejects cycles, sparse arrays, symbol keys, accessors, and class instances', () => {
+  it('拒绝循环、稀疏数组、符号键、访问器和类实例', () => {
     const cyclic: Record<string, unknown> = {};
     cyclic.self = cyclic;
     const sparse = [] as Array<unknown>;
@@ -115,7 +115,7 @@ describe('cloneAndFreezeJson', () => {
     }
   });
 
-  it('classifies invalid JSON data with a stable code and path detail', () => {
+  it('使用稳定的代码和路径详细信息对无效的 JSON 数据进行分类', () => {
     let failure: unknown;
 
     try {
@@ -133,7 +133,7 @@ describe('cloneAndFreezeJson', () => {
     expect((failure as RetikzFoundationError).message).toBe('payload.nested must contain only finite JSON numbers');
   });
 
-  it('keeps nested error paths after visiting valid sibling branches', () => {
+  it('在访问有效的兄弟分支后保留嵌套的错误路径', () => {
     const input = { items: [{ value: 1 }, { value: Infinity }] };
     let failure: unknown;
     try {
@@ -151,7 +151,7 @@ describe('cloneAndFreezeJson', () => {
   });
 
   it.each([undefined, () => true, BigInt(1), Symbol('value'), NaN])(
-    'rejects invalid nested leaves in arrays and objects',
+    '拒绝数组和对象中无效的嵌套叶',
     value => {
       for (const input of [[value], { value }]) {
         expect(() => cloneAndFreezeJson(input, 'payload')).toThrowError(RetikzFoundationError);
@@ -159,7 +159,7 @@ describe('cloneAndFreezeJson', () => {
     },
   );
 
-  it('rejects nested accessors without evaluating them and preserves descriptor error paths', () => {
+  it('拒绝嵌套访问器而不评估它们并保留描述符错误路径', () => {
     let reads = 0;
     const item = Object.defineProperty({}, 'secret', { enumerable: true, get: () => ++reads });
     const input = { items: [{ value: 1 }, item] };
@@ -180,7 +180,7 @@ describe('cloneAndFreezeJson', () => {
 });
 
 describe('assertPlainDataContainers', () => {
-  it('accepts plain containers while leaving primitive leaf validation to the caller', () => {
+  it('接受普通容器，同时将原始叶验证留给调用者', () => {
     const shared = { value: undefined };
 
     expect(() =>
@@ -188,7 +188,7 @@ describe('assertPlainDataContainers', () => {
     ).not.toThrow();
   });
 
-  it('rejects unsafe container structure without reading accessors', () => {
+  it('拒绝不安全的容器结构而不读取访问器', () => {
     const cyclic: Record<string, unknown> = {};
     cyclic.self = cyclic;
     const sparse = [] as Array<unknown>;
@@ -214,7 +214,7 @@ describe('assertPlainDataContainers', () => {
     expect(getterReadCount).toBe(0);
   });
 
-  it('rejects Array subclasses as non-plain containers', () => {
+  it('拒绝 Array 子类作为非普通容器', () => {
     class ArraySubclass extends Array<string> {}
 
     const value = new ArraySubclass('item');

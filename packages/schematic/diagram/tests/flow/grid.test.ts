@@ -70,9 +70,9 @@ const compile = (
   return { result, grid: gridArtifact, children: gridArtifact.elements };
 };
 
-describe('Flow Grid', () => {
+describe('Flow 网格布局', () => {
   it.each(['right', 'left', 'up', 'down'])(
-    'reserves measured label width and height under %s without losing shared centers',
+    '在 %s 下保留测量的标签宽度和高度，而不丢失共享中心',
     direction => {
       const horizontal = compile(layout, direction, 17, {}, [
         { source: 'a', target: 'b', label: 'A very long relation label' },
@@ -90,7 +90,7 @@ describe('Flow Grid', () => {
     },
   );
 
-  it('applies the same measured label constraints for a custom provider', () => {
+  it('对自定义提供者应用相同的测量标签约束', () => {
     const provider = defineFlowLayout({ ...LayeredFlowLayoutDefinition, name: 'custom-labels' });
     const relations = [{ source: 'b', target: 'a', label: 'x'.repeat(40) }];
 
@@ -99,7 +99,7 @@ describe('Flow Grid', () => {
     ).toEqual(compile(layout, 'right', 17, {}, relations).children);
   });
 
-  it('adds each Grid axis label dimension to the configured track gap by default', () => {
+  it('默认将每个 Grid 轴标签尺寸添加到配置的轨道间隙中', () => {
     const configured = { ...layout, gap: 32 };
     const baseline = compile(configured);
     const horizontal = compile(configured, 'right', 17, {}, [{ source: 'a', target: 'b', label: 'xy' }]);
@@ -109,7 +109,7 @@ describe('Flow Grid', () => {
     expect(vertical.grid.bounds.height - baseline.grid.bounds.height).toBeCloseTo(16.8, 8);
   });
 
-  it('uses configured Grid gaps without label reservation when disabled', () => {
+  it('禁用时使用配置的 Grid 间隙而不保留标签', () => {
     const configured = { ...layout, gap: 32, reserveLabelSpace: false };
     const baseline = compile(configured);
     const labeled = compile(configured, 'right', 17, {}, [
@@ -121,7 +121,7 @@ describe('Flow Grid', () => {
     expect(labeled.children).toEqual(baseline.children);
   });
 
-  it('reserves each sparse column gap for the largest measured label deterministically', () => {
+  it('确定性地为最大测量标签保留每个稀疏列间隙', () => {
     const sparse = {
       ...layout,
       placements: [
@@ -148,7 +148,7 @@ describe('Flow Grid', () => {
     expect(b.x - a.x - a.width).toBeGreaterThanOrEqual(2400);
   });
 
-  it('declares both placement kinds in the builtin catalog and rejects unsupported kinds before callbacks', () => {
+  it('在内置目录中声明两种放置类型，并在回调之前拒绝不支持的类型', () => {
     expect(getFlowLayoutCatalog()[0].capabilities.placementKinds).toEqual(['linear', 'grid']);
 
     let calls = 0;
@@ -167,7 +167,7 @@ describe('Flow Grid', () => {
   });
 
   it.each([{ placementKinds: [] }, { placementKinds: ['grid', 'grid'] }] as const)(
-    'rejects empty or repeated placement capabilities %#',
+    '拒绝空的或重复的放置能力 %#',
     ({ placementKinds }) => {
       const provider = defineFlowLayout({
         ...LayeredFlowLayoutDefinition,
@@ -179,7 +179,7 @@ describe('Flow Grid', () => {
     },
   );
 
-  it('gives custom providers the same single-call Grid boundary', () => {
+  it('为自定义提供者提供相同的单次调用 Grid 边界', () => {
     let calls = 0;
     const custom = defineFlowLayout({
       ...LayeredFlowLayoutDefinition,
@@ -209,7 +209,7 @@ describe('Flow Grid', () => {
     expect(customResult.children).toEqual(compile().children);
   });
 
-  it('rejects provider changes to authored cells and to final relative positions', () => {
+  it('拒绝提供者对编写单元格和最终相对位置的更改', () => {
     const changedCells = defineFlowLayout({
       ...LayeredFlowLayoutDefinition,
       name: 'change-cells',
@@ -256,13 +256,13 @@ describe('Flow Grid', () => {
     expect(() => compile(layout, 'right', 17, { flowLayouts: [shifted], defaultFlowLayout: shifted.name })).toThrow();
   });
 
-  it('round-trips Grid placement rows without deriving containment or sorting children', () => {
+  it('往返 Grid 放置行，而不派生包含或对子项进行排序', () => {
     const source = FlowLayoutSchema.parse({ ...layout, gap: { row: 12, column: 24 } });
 
     expect(FlowLayoutSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
   });
 
-  it('uses a numeric Grid gap for both axes and accepts a complete axis object', () => {
+  it('两个轴使用数字 Grid 间隙并接受完整的轴对象', () => {
     const numeric = compile({ ...layout, gap: 24 }, 'right', 0);
     const axes = compile({ ...layout, gap: { row: 24, column: 24 } }, 'right', 0);
 
@@ -272,7 +272,7 @@ describe('Flow Grid', () => {
     );
   });
 
-  it('rejects an object gap for Linear at the Source schema boundary', () => {
+  it('拒绝 Source schema 边界处 Linear 的对象间隙', () => {
     expect(
       FlowLayoutSchema.safeParse({
         kind: 'linear',
@@ -284,7 +284,7 @@ describe('Flow Grid', () => {
     ).toBe(false);
   });
 
-  it('accepts object-mapped placements with the same Grid geometry as a matrix', () => {
+  it('接受具有与矩阵相同的 Grid 几何形状的对象映射放置', () => {
     const source = {
       ...layout,
       placements: objectPlacements,
@@ -352,11 +352,11 @@ describe('Flow Grid', () => {
         ['c', 'd'],
       ],
     },
-  ])('rejects malformed grid input %#', source => {
+  ])('拒绝格式错误的网格输入 %#', source => {
     expect(FlowLayoutSchema.safeParse(source).success).toBe(false);
   });
 
-  it('locates missing placements at the Grid matrix', () => {
+  it('定位 Grid 矩阵中缺失的位置', () => {
     const parsed = FlowLayoutSchema.safeParse({
       ...layout,
       placements: [
@@ -371,7 +371,7 @@ describe('Flow Grid', () => {
   });
 
   it.each(['right', 'left', 'up', 'down'])(
-    'shares physical centers with asymmetric margins under %s routing',
+    '在 %s 路由下共享物理中心，边缘不对称',
     direction => {
       const { children } = compile(layout, direction);
       const [a, b, c, d] = children.map(child => child.bounds);
@@ -387,7 +387,7 @@ describe('Flow Grid', () => {
     },
   );
 
-  it('uses nodeGap independently for both axes and respects explicit zero', () => {
+  it('两个轴独立使用 nodeGap 并遵循显式零', () => {
     const implicit = compile().grid.bounds;
     const explicit = compile({ ...layout, gap: 17 }).grid.bounds;
     const zero = compile({ ...layout, gap: 0 }).grid.bounds;
@@ -397,7 +397,7 @@ describe('Flow Grid', () => {
     expect(explicit.height - zero.height).toBeCloseTo(17, 8);
   });
 
-  it('preserves empty tracks and authored order without synthetic children', () => {
+  it('保留空轨道和编写顺序，没有合成子项', () => {
     const sparse = {
       ...layout,
       children: ['d', 'c', 'b', 'a'],

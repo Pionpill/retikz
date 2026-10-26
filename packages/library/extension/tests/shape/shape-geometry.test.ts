@@ -19,8 +19,8 @@ const pathOf = (definition: ShapeDefinition, rect: CenteredBox, params: JsonObje
   return primitive;
 };
 
-describe('Extension container shape geometry', () => {
-  it('circumscribes and emits a trapezoid from the selected short side', () => {
+describe('扩展容器形状几何形状', () => {
+  it('从选定的短边外接并发射梯形', () => {
     expect(TrapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, {})).toEqual({
       halfWidth: 50,
       halfHeight: 20,
@@ -64,7 +64,7 @@ describe('Extension container shape geometry', () => {
     });
   });
 
-  it('mirrors parallelogram slant direction and degenerates 90 degrees to a rectangle', () => {
+  it('镜像平行四边形倾斜方向并退化 90 度为矩形', () => {
     const right = { slantAngle: 45, slantDirection: 'right' } as const;
     const left = { slantAngle: 45, slantDirection: 'left' } as const;
 
@@ -92,7 +92,7 @@ describe('Extension container shape geometry', () => {
     });
   });
 
-  it('uses a fixed 12-unit shoulder depth independent of the elongated hexagon width', () => {
+  it('使用独立于细长六边形宽度的固定 12 单位肩部深度', () => {
     expect(HexagonShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({
       halfWidth: 32,
       halfHeight: 10,
@@ -123,7 +123,7 @@ describe('Extension container shape geometry', () => {
     ]);
   });
 
-  it('emits a vertical cylinder as one outer contour plus one cap divider subpath', () => {
+  it('发射一个垂直圆柱体作为一个外部轮廓加上一个盖子分隔子路径', () => {
     expect(CylinderShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({ halfWidth: 20, halfHeight: 18 });
     expect(pathOf(CylinderShapeDefinition, { x: 0, y: 0, width: 40, height: 36 }, {}).commands).toEqual([
       { kind: 'move', to: [-20, -10] },
@@ -143,7 +143,7 @@ describe('Extension container shape geometry', () => {
     ]);
   });
 
-  it('transposes cylinder geometry for a horizontal axis and clamps only the emitted cap depth', () => {
+  it('将圆柱体几何形状转置为水平轴并仅夹紧发射的盖深度', () => {
     const params = { axis: 'horizontal', capDepth: 8 } as const;
 
     expect(CylinderShapeDefinition.computeCircumscribedGeometry(20, 10, params)).toEqual({
@@ -194,7 +194,7 @@ describe('Extension container shape geometry', () => {
     expect(clamped.commands[1]).toMatchObject({ center: [0, 0], radiusX: 5, radiusY: 10 });
   });
 
-  it('emits a vertical elliptic capsule as one closed outer contour without a cap divider', () => {
+  it('发射垂直椭圆形胶囊作为一个封闭的外部轮廓，没有盖子分隔器', () => {
     expect(EllipticCapsuleShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({
       halfWidth: 20,
       halfHeight: 18,
@@ -208,7 +208,7 @@ describe('Extension container shape geometry', () => {
     ]);
   });
 
-  it('transposes the elliptic capsule and degenerates zero cap depth to a rectangle', () => {
+  it('转置椭圆胶囊并将零帽深度退化为矩形', () => {
     const horizontal = { axis: 'horizontal', capDepth: 8 } as const;
 
     expect(EllipticCapsuleShapeDefinition.computeCircumscribedGeometry(20, 10, horizontal)).toEqual({
@@ -249,7 +249,7 @@ describe('Extension container shape geometry', () => {
     ]);
   });
 
-  it('expands rounded polygonal shapes until their content corners remain inside the final contour', () => {
+  it('扩展圆角多边形形状，直到其内容角保留在最终轮廓内', () => {
     const sharp = TrapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, {});
     const roundedParams = { cornerRadius: 10 };
     const rounded = TrapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, roundedParams);
@@ -271,7 +271,7 @@ describe('Extension container shape geometry', () => {
     }
   });
 
-  it('uses the final contour for directional boundary points', () => {
+  it('使用最终轮廓作为方向边界点', () => {
     expect(TrapezoidShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 100, height: 40 }, [100, 0], {})).toEqual(
       [43, 0],
     );
@@ -310,7 +310,7 @@ describe('Extension container shape geometry', () => {
     expect(rotated[1]).toBeCloseTo(0);
   });
 
-  it('scales only authored user-unit lengths', () => {
+  it('仅缩放编写的用户单位长度', () => {
     expect(
       TrapezoidShapeDefinition.scaleParams?.({ shortSide: 'left', shortSideRatio: 0.6, cornerRadius: 4 }, 4, 9),
     ).toEqual({ shortSide: 'left', shortSideRatio: 0.6, cornerRadius: 24 });
@@ -331,7 +331,7 @@ describe('Extension container shape geometry', () => {
     });
   });
 
-  it('rejects invalid params and non-finite derived geometry', () => {
+  it('拒绝无效参数和非有限导出几何', () => {
     expect(() => TrapezoidShapeDefinition.paramsSchema.parse({ shortSideRatio: 0 })).toThrow();
     expect(() => HexagonShapeDefinition.paramsSchema.parse({ shoulderDepth: -1 })).toThrow();
     expect(() => HexagonShapeDefinition.paramsSchema.parse({ shoulderRatio: 0.2 })).toThrow();

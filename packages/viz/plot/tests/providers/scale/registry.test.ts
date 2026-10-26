@@ -92,25 +92,25 @@ const expandOf = (
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
-describe('scale registry（contract spec）', () => {
+describe('比例尺登记（契约规格）', () => {
   it('defineScale 保留 schema 推导出的注册 type 与 family', () => {
     expect(extractScaleType(unitScale.schema)).toBe('unit');
     expect(unitScale.family).toBe('position');
     expect(monoScale.family).toBe('channel');
   });
 
-  it('public_barrel_exports_scale_definition_helpers', () => {
+  it('公共聚合入口导出比例定义助手', () => {
     expect(plot.defineScale).toBe(defineScale);
     expect(plot.extractScaleType).toBe(extractScaleType);
     expect(plot.resolveScaleRegistry).toBe(resolveScaleRegistry);
     expect('createCustomScale' in plot).toBe(false);
   });
 
-  it('builtin_scales_cover_public_builtin_types', () => {
+  it('内置秤覆盖公共内置类型', () => {
     expect(BUILTIN_SCALES.map(def => extractScaleType(def.schema)).sort()).toEqual([...BUILTIN_SCALE_TYPES].sort());
   });
 
-  it('position_scale_definitions_declare_closed_continuity_metadata', () => {
+  it('位置比例尺定义声明封闭的连续性元数据', () => {
     const positionDefinitions = BUILTIN_SCALES.filter(definition => definition.family === 'position');
 
     expect(positionDefinitions.map(definition => definition.continuity).sort()).toEqual([
@@ -130,7 +130,7 @@ describe('scale registry（contract spec）', () => {
     expect(unitScale.continuity).toBe('continuous');
   });
 
-  it('position_scale_definition_without_continuity_fails_loud', () => {
+  it('位置比例尺定义缺少连续性声明时明确报错', () => {
     const malformed = { ...unitScale } as AnyScaleDefinition & { continuity?: unknown };
     delete malformed.continuity;
 
@@ -164,7 +164,7 @@ describe('scale registry（contract spec）', () => {
     expect(() => resolveScaleRegistry([malformed])).toThrow(/must declare type as a non-empty z.literal string/);
   });
 
-  it('unknown_scale_type_throws', () => {
+  it('未知的比例尺类型抛出', () => {
     const registry = resolveScaleRegistry();
 
     expect(() => resolvePositionScale({ type: 'nope', name: 'x' }, [], [0, 1], { registry })).toThrow(
@@ -172,7 +172,7 @@ describe('scale registry（contract spec）', () => {
     );
   });
 
-  it('custom_position_scale_projects', () => {
+  it('自定义位置比例尺项目', () => {
     const registry = resolveScaleRegistry([unitScale]);
     const scale = resolvePositionScale({ type: 'unit', name: 'x' }, [0, 0.5, 1], [0, 100], { registry });
 
@@ -181,7 +181,7 @@ describe('scale registry（contract spec）', () => {
     expect(scale.coordinate(0.5)).toBe(50);
   });
 
-  it('reports positive discrete step for reversed band and point ranges while continuous stays zero', () => {
+  it('报告反转带和点范围的正离散步长，同时连续保持为零', () => {
     const registry = resolveScaleRegistry();
     const band = resolvePositionScale({ type: 'band', name: 'band' }, ['A', 'B'], [100, 0], { registry });
     const point = resolvePositionScale({ type: 'point', name: 'point' }, ['A', 'B'], [100, 0], { registry });
@@ -192,7 +192,7 @@ describe('scale registry（contract spec）', () => {
     expect(continuous.step).toBe(0);
   });
 
-  it('channel_scale_as_position_fails_loud', () => {
+  it('将通道比例尺用作位置比例尺时明确报错', () => {
     const registry = resolveScaleRegistry();
 
     expect(() => resolvePositionScale({ type: 'ordinal', name: 'c' }, [], [0, 1], { registry })).toThrow(
@@ -200,7 +200,7 @@ describe('scale registry（contract spec）', () => {
     );
   });
 
-  it('position_scale_as_color_fails_loud', () => {
+  it('颜色失败时的位置比例', () => {
     const registry = resolveScaleRegistry();
 
     expect(() => resolveChannelScale({ type: 'linear', name: 'x' }, [], channelCtx(), { registry })).toThrow(
@@ -208,7 +208,7 @@ describe('scale registry（contract spec）', () => {
     );
   });
 
-  it('custom_channel_scale_resolves_with_legend_form', () => {
+  it('自定义通道比例以图例形式解析', () => {
     const registry = resolveScaleRegistry([monoScale]);
     const resolution = resolveChannelScale(
       { type: 'mono', name: 'c' },
@@ -223,7 +223,7 @@ describe('scale registry（contract spec）', () => {
     expect(resolution.domain).toEqual(['a', 'b']);
   });
 
-  it('custom_channel_field_incompatible_fails', () => {
+  it('自定义通道字段不兼容失败', () => {
     const registry = resolveScaleRegistry([monoScale]);
 
     expect(() =>
@@ -233,7 +233,7 @@ describe('scale registry（contract spec）', () => {
     ).toThrow(/incompatible/i);
   });
 
-  it('custom_color_scheme_resolves', () => {
+  it('自定义颜色方案解析', () => {
     const registry = resolveScaleRegistry();
     const ctx = channelCtx({
       fieldType: DataFieldType.Continuous,
@@ -264,7 +264,7 @@ describe('scale registry（contract spec）', () => {
     expect(() => assertBaselineScaleCompatible('linear', [{ type: 'interval' }], { registry })).not.toThrow();
   });
 
-  it('custom_position_scale_lowers_in_plot', () => {
+  it('绘图中的自定义位置比例下沉', () => {
     const spec: IRPlot = {
       namespace: 'plot',
       type: 'plot',
@@ -303,7 +303,7 @@ describe('scale registry（contract spec）', () => {
     }
   });
 
-  it('custom_channel_scale_lowers_color_in_plot', () => {
+  it('自定义通道比例会下沉绘图中的颜色', () => {
     const spec: IRPlot = {
       namespace: 'plot',
       type: 'plot',

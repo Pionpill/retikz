@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { FlowDiagramSchema, FlowRoutingSchema } from '../../src/flow';
 
-describe('Flow bend authoring', () => {
-  it('preserves omitted direction and inactive authored fields through JSON', () => {
+describe('Flow 折弯编写', () => {
+  it('通过 JSON 保留省略的方向和不活动的编写字段', () => {
     expect(FlowRoutingSchema.parse({ kind: 'bend' })).toEqual({ kind: 'bend' });
 
     const authored = { kind: 'bend', bendDirection: 'right', bendAngle: 0, outAngle: 45, looseness: 2 };
@@ -11,7 +11,7 @@ describe('Flow bend authoring', () => {
     expect(FlowRoutingSchema.parse(JSON.parse(JSON.stringify(authored)))).toEqual(authored);
   });
 
-  it.each([-180, 180, Infinity])('rejects invalid bend angle %s at its field', bendAngle => {
+  it.each([-180, 180, Infinity])('拒绝其场内无效的弯曲角度 %s', bendAngle => {
     const parsed = FlowRoutingSchema.safeParse({ kind: 'bend', bendAngle });
 
     expect(parsed.success).toBe(false);
@@ -103,8 +103,8 @@ const completeFlow = {
   },
 } as const;
 
-describe('Flow Source schema', () => {
-  it('defaults omitted catalogs to empty arrays while retaining required members', () => {
+describe('Flow Source 的 schema', () => {
+  it('默认省略的目录为空数组，同时保留所需的成员', () => {
     const source = {
       namespace: 'diagram',
       type: 'flow',
@@ -116,7 +116,7 @@ describe('Flow Source schema', () => {
     expect(FlowDiagramSchema.safeParse({ ...source, children: [] }).success).toBe(false);
   });
 
-  it('preserves root and Group-local Graph rules', () => {
+  it('保留根规则和 Group 本地 Graph 规则', () => {
     const source = {
       namespace: 'diagram',
       type: 'flow',
@@ -140,7 +140,7 @@ describe('Flow Source schema', () => {
     ).toBe(true);
   });
 
-  it('round-trips a Flow Relation group and rejects non-string groups', () => {
+  it('往返 Flow Relation 组并拒绝非字符串组', () => {
     const source = {
       namespace: 'diagram',
       type: 'flow',
@@ -165,7 +165,7 @@ describe('Flow Source schema', () => {
     ).toBe(false);
   });
 
-  it('parses the flat catalog Source and round-trips without changing it', () => {
+  it('解析平面目录 Source 并往返而不改变它', () => {
     const parsed = FlowDiagramSchema.parse(completeFlow);
 
     expect(parsed).toEqual({ ...completeFlow, position: [0, 0] });
@@ -175,7 +175,7 @@ describe('Flow Source schema', () => {
     expect(JSON.stringify(parsed)).not.toContain('members');
   });
 
-  it('accepts required empty groups while keeping entities and every children list non-empty', () => {
+  it('接受所需的空组，同时保持实体和每个子列表非空', () => {
     const parsed = FlowDiagramSchema.parse({
       namespace: 'diagram',
       type: 'flow',
@@ -188,7 +188,7 @@ describe('Flow Source schema', () => {
     expect(parsed.groups).toEqual([]);
   });
 
-  it('accepts Core-compatible multi-line Entity text without an element type discriminator', () => {
+  it('接受 Core 兼容的多行 Entity 文本，不带元素类型判别字段', () => {
     const text = [
       'Frontend form',
       { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } },
@@ -216,7 +216,7 @@ describe('Flow Source schema', () => {
     });
   });
 
-  it('accepts a non-blank Core TextBlock as a Relation label', () => {
+  it('接受非空白 Core TextBlock 作为 Relation 标签', () => {
     const label = ['编译', { text: '生成 Scene', fill: 'gray' }];
     const parsed = FlowDiagramSchema.parse({
       namespace: 'diagram',
@@ -234,7 +234,7 @@ describe('Flow Source schema', () => {
     expect(parsed.relations?.[0]?.label).toEqual(label);
   });
 
-  it('keeps Group visible and gives Layout a separate closed schema', () => {
+  it('保持 Group 可见，并为 Layout 提供单独的封闭 schema', () => {
     const source = {
       namespace: 'diagram',
       type: 'flow',
@@ -275,7 +275,7 @@ describe('Flow Source schema', () => {
     ).toBe(false);
   });
 
-  it('accepts direct-Entity item width strategies and rejects invalid values', () => {
+  it('接受直接 Entity 项宽度策略并拒绝无效值', () => {
     const source = {
       namespace: 'diagram',
       type: 'flow',
@@ -307,7 +307,7 @@ describe('Flow Source schema', () => {
     { entityStatus: 'planned', relationStatus: 'warning' },
     { entityStatus: 'success', relationStatus: 'planned' },
     { entityStatus: ['success'], relationStatus: 'warning' },
-  ])('rejects non-Graph status values: %j', ({ entityStatus, relationStatus }) => {
+  ])('拒绝非 Graph 状态值：%j', ({ entityStatus, relationStatus }) => {
     expect(
       FlowDiagramSchema.safeParse({
         ...completeFlow,
@@ -322,7 +322,7 @@ describe('Flow Source schema', () => {
   it.each([
     { type: 'relation', source: 'sugar', target: 'ir' },
     { id: 'sugar-to-ir', source: 'sugar', target: 'ir' },
-  ])('rejects redundant Flow relation identity fields: %j', relation => {
+  ])('拒绝冗余的 Flow 关系标识字段：%j', relation => {
     expect(FlowDiagramSchema.safeParse({ ...completeFlow, relations: [relation] }).success).toBe(false);
   });
 
@@ -352,7 +352,7 @@ describe('Flow Source schema', () => {
       type: 'flow',
       elements: [{ type: 'entity', id: 'legacy', text: 'Legacy' }],
     },
-  ])('rejects non-canonical, empty or invalid Source input: %j', input => {
+  ])('拒绝非规范、空或无效的 Source 输入：%j', input => {
     expect(FlowDiagramSchema.safeParse(input).success).toBe(false);
   });
 
@@ -361,7 +361,7 @@ describe('Flow Source schema', () => {
     { id: 'shape', text: 'x', style: { shape: 'circle' } },
     { id: 'padding', text: 'x', style: { padding: 8 } },
     { id: 'boundary', text: 'x', style: { boundary: 'rectangle' } },
-  ])('rejects Graph geometry on Entity declarations: %j', entity => {
+  ])('拒绝 Entity 声明上的 Graph 几何图形：%j', entity => {
     expect(
       FlowDiagramSchema.safeParse({
         namespace: 'diagram',
@@ -374,7 +374,7 @@ describe('Flow Source schema', () => {
     ).toBe(false);
   });
 
-  it('rejects unsupported Flow Block declarations', () => {
+  it('拒绝不受支持的 Flow Block 声明', () => {
     expect(
       FlowDiagramSchema.safeParse({
         namespace: 'diagram',
@@ -402,7 +402,7 @@ describe('Flow Source schema', () => {
       target: 'ir',
       targetMarker: { shape: 'stealth' },
     },
-  ])('rejects Graph-only route and marker recipe fields on root relations: %j', relation => {
+  ])('拒绝根关系上仅 Graph 的路由和标记配方字段：%j', relation => {
     expect(FlowDiagramSchema.safeParse({ ...completeFlow, relations: [relation] }).success).toBe(false);
   });
 
@@ -413,11 +413,11 @@ describe('Flow Source schema', () => {
     { layout: { nodeGap: -1 } },
     { layout: { direction: 'right' } },
     { relation: { routing: { kind: 'straight' } } },
-  ])('rejects structural or invalid Flow defaults: %j', defaultFlow => {
+  ])('拒绝结构性或无效的 Flow 默认值：%j', defaultFlow => {
     expect(FlowDiagramSchema.safeParse({ ...completeFlow, defaultFlow }).success).toBe(false);
   });
 
-  it('rejects the unsupported structured Flow Block theme slice', () => {
+  it('拒绝不支持的结构化 Flow Block 主题切片', () => {
     expect(
       FlowDiagramSchema.safeParse({
         namespace: 'diagram',

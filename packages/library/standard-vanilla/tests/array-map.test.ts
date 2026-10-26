@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { StandardInputEmbedAdapters } from '../src';
 import { array, map } from '../src/collection';
 
-describe('Array / Map provider assembly', () => {
-  it('keeps object text display in Array and Map data inputs', () => {
+describe('Array / Map 提供者集', () => {
+  it('在 Array 和 Map 数据输入中保持对象文本显示', () => {
     for (const child of [
       array({ data: [{ value: 1 }], dataExpand: ['array'] }),
       map({ data: { item: { value: 1 } }, dataExpand: ['array'] }),
@@ -20,7 +20,7 @@ describe('Array / Map provider assembly', () => {
     }
   });
 
-  it('keeps Array content width in typed Vanilla inputs and compiled cell allocations', () => {
+  it('在类型化 Vanilla 输入和编译的单元分配中保留 Array 内容宽度', () => {
     const normalized = normalizeScene(
       scene({ children: [array({ items: [{ content: 'A', layout: { width: 'content' } }, 'longer'] })] }),
       { adapters: StandardInputEmbedAdapters },
@@ -32,7 +32,7 @@ describe('Array / Map provider assembly', () => {
     expect(result.scene.primitives.length).toBeGreaterThan(0);
   });
 
-  it('compiles nested lists inside clipped map cells through the public adapter catalog', () => {
+  it('通过公开适配器目录编译裁剪 Map 单元格内的嵌套列表', () => {
     const input = scene({
       children: [
         map({
@@ -70,7 +70,7 @@ describe('Array / Map provider assembly', () => {
   });
 });
 
-it('assembles both data definitions and clipping from either root adapter', () => {
+it('从任一根适配器组装数据定义和裁剪', () => {
   for (const child of [
     map({ data: { values: [1, { id: 'a' }] }, defaultCell: { layout: { width: 30 } } }),
     array({ data: [{ values: [1, 1] }], defaultCell: { layout: { height: 20 } } }),

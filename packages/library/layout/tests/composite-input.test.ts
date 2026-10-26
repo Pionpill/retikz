@@ -20,8 +20,8 @@ const leaf = defineComposite({
   compile: (_node, context) => ({ children: [{ type: 'node', position: [0, 0], text: String(context.runtimeInput) }] }),
 });
 
-describe('Layout prepared child input', () => {
-  it('retains instance input across every Layout family probe', () => {
+describe('Layout 准备子输入', () => {
+  it('保留每个 Layout 系列探测的实例输入', () => {
     const child = { namespace: 'fixture', type: 'prepared' };
     const containers = [
       createFlexLayout({ children: [{ kind: LayoutItemKind.Flex, child }] }),

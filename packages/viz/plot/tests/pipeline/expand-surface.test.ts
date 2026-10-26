@@ -9,7 +9,7 @@ import { createPlotProviderContribution } from '../../src/pipeline/expand';
 import { coordinateScopeIdOf, resolveCoordinateScopeRegistry } from '../../src/resolve/composition';
 import { resolveCoordinateFrame } from '../../src/resolve/coordinate';
 
-describe('expand pipeline stable surface', () => {
+describe('扩大管线稳定面', () => {
   it('复用同名行数组，拒绝不同引用覆盖同名数据集', () => {
     const rows = [{ value: 1 }];
     const first = createPlotProviderContribution({ sales: rows });
@@ -54,7 +54,7 @@ describe('expand pipeline stable surface', () => {
     ).toThrow(field);
   });
 
-  it('keeps the established runtime exports available', () => {
+  it('保持已建立的运行时导出可用', () => {
     expect(
       [
         expand.lowerPlots,

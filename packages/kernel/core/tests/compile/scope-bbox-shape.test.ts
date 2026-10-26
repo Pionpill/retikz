@@ -46,7 +46,7 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
 });
 
 describe('createScopeCircleLayout 单元测试', () => {
-  it('shapeName ellipse + shapeParams circumscribe:equal', () => {
+  it('shapeName 椭圆 + shapeParams 外接：相等', () => {
     const layout = createScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [0, 0] });
 
     expect(layout.shape.name).toBe('ellipse');

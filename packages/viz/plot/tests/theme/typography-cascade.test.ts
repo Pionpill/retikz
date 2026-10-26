@@ -15,7 +15,7 @@ const theme = {
   colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 };
 
-describe('Plot typography cascade', () => {
+describe('Plot 排版级联', () => {
   it('后来源 typography 覆盖早来源 Axis/Legend 专用文本，显式 guide 字段最高', () => {
     const style = definePlotTheme({
       name: 'early-specialized',

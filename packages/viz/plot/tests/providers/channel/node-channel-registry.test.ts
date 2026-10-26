@@ -16,7 +16,7 @@ import {
  * 本文件锁「声明式契约」（output 判别 union + legend 形态 + 注册成员）；逐行解析行为由 size/opacity/shape-channel
  * 三套 e2e（经 lowerPlots，已用本 registry 分派）覆盖，不在此重复
  */
-describe('node channel registry', () => {
+describe('节点通道注册表', () => {
   const registry = resolveChannelRegistry();
 
   it('暴露 size / opacity / strokeWidth / shape 四个内置 node 通道', () => {

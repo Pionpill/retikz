@@ -19,8 +19,8 @@ const sourceFiles = (directory: string): Array<string> => {
   });
 };
 
-describe('resolve source structure', () => {
-  it('keeps builtin path emitters resolution-only', () => {
+describe('解析源结构', () => {
+  it('仅保持内置路径发射器解析结果', () => {
     const stroke = source('src/compile/path/stroke/emit.ts');
 
     expect(stroke).not.toContain('normalizePath(');
@@ -33,14 +33,14 @@ describe('resolve source structure', () => {
     expect(stroke).toMatch(/export const emitPathPrimitive = \(\s*resolution:\s*StrokePathResolution/u);
   });
 
-  it('keeps node layout free of provider lookup orchestration', () => {
+  it('使节点布局不受提供者查找编排的影响', () => {
     const text = source('src/compile/node/layout.ts');
 
     expect(text).not.toContain('providerDefinitionOf(');
     expect(text).not.toContain('resolveShapeRegistry(');
   });
 
-  it('keeps all path compile files free of direct provider lookups', () => {
+  it('使所有路径编译文件免于直接提供者查找', () => {
     const offenders = sourceFiles('src/compile/path')
       .filter(path => /providerDefinitionOf\(|resolve[A-Z][A-Za-z]*Registry\s*\(/u.test(source(path)))
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
@@ -48,7 +48,7 @@ describe('resolve source structure', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('keeps position resolve independent from compile orchestration', () => {
+  it('保持位置解析独立于编译编排', () => {
     const offenders = sourceFiles('src/resolve/position')
       .filter(path => /from\s+['"][^'"]*compile|NamespaceStack|CompileContext|TraversalFrame/u.test(source(path)))
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
@@ -57,7 +57,7 @@ describe('resolve source structure', () => {
     expect(source('src/resolve/index.ts')).not.toContain("export * from './position';");
   });
 
-  it('keeps composite provider binding in resolve', () => {
+  it('在解析中保持复合提供者绑定', () => {
     expect(source('src/resolve/index.ts')).toContain("export * from './composite';");
 
     const lower = source('src/compile/orchestration/composite-output.ts');
@@ -69,7 +69,7 @@ describe('resolve source structure', () => {
     expect(traversal).not.toContain('runtime.context.composites.get(');
   });
 
-  it('keeps text Source IR determination in resolve', () => {
+  it('在解析中保留文本 Source IR 确定', () => {
     expect(source('src/resolve/index.ts')).toContain("export * from './text';");
 
     const compileText = sourceFiles('src/compile/text').map(source).join('\n');
@@ -88,7 +88,7 @@ describe('resolve source structure', () => {
     expect(pathLabel).not.toContain('resolveFontSize');
   });
 
-  it('keeps Scope translate Source IR determination in position resolve', () => {
+  it('在位置解析中保持 Scope 平移 Source IR 确定', () => {
     const scope = source('src/compile/scope/layout.ts');
 
     expect(scope).toContain('resolveTransformTranslation');

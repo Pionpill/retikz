@@ -43,7 +43,7 @@ const compile = (
   return { scene, observed };
 };
 
-describe('Matrix parent allocation', () => {
+describe('Matrix 父分配', () => {
   const source = {
     namespace: 'standard',
     type: 'matrix',
@@ -53,7 +53,7 @@ describe('Matrix parent allocation', () => {
     layout: { gap: 2 },
     defaultCell: { layout: { width: 30, height: 20 } },
   };
-  it('keeps cell sizes when parent gives surplus space', () => {
+  it('当父级提供剩余空间时保持单元格大小', () => {
     const result = compile(source, { x: { kind: 'exact', value: 100 }, y: { kind: 'range', min: 80, max: 100 } });
 
     expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 100, height: 80 });
@@ -67,7 +67,7 @@ describe('Matrix parent allocation', () => {
     ]);
   });
 
-  it('rejects a parent smaller than the required tracks', () => {
+  it('拒绝小于所需轨道的父轨道', () => {
     expect(() => compile(source, { x: { kind: 'exact', value: 20 }, y: { kind: 'exact', value: 80 } })).toThrow();
   });
 });

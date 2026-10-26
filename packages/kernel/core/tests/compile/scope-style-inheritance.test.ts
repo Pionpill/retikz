@@ -192,7 +192,7 @@ describe('Happy: 主色级联 / 四通道', () => {
 // ===========================================================================
 
 describe('边界: 缺省 / 显式 / 内置', () => {
-  it('specific_overrides_master_same_source：<Node color="blue" stroke="red"> → stroke red、fill/text blue', () => {
+  it('同一来源的具体颜色覆盖通用颜色：描边为红色且填充和文本为蓝色', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -310,7 +310,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
     expect(rectOf(ir)?.stroke).toBe('blue');
   });
 
-  it('node_default_beats_scope_cascade：<Scope stroke="red" nodeDefault={{stroke:"green"}}> → node green', () => {
+  it('nodeDefault 的绿色描边优先于 Scope 级联的红色描边', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

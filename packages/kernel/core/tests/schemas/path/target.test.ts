@@ -60,7 +60,7 @@ describe('AnchorRefSchema：命名 / 角度 / 边上比例点', () => {
   });
 });
 
-describe('NodeTargetSchema：{ id, anchor?, offset? }', () => {
+describe('NodeTargetSchema：{ id, 锚点？, 偏移量？ }', () => {
   it('仅 id', () => {
     expect(NodeTargetSchema.parse({ id: 'A' })).toEqual({ id: 'A' });
   });
@@ -109,7 +109,7 @@ describe('TargetSchema 接受对象形态 + 既有形态', () => {
   });
 });
 
-describe('JSON round-trip', () => {
+describe('JSON 往返', () => {
   it('NodeTarget 对象经 JSON.stringify/parse 语义不变', () => {
     const target = { id: 'A', anchor: { side: 'left', fraction: 1 / 3 }, offset: [-4, 0] };
     const round = NodeTargetSchema.parse(JSON.parse(JSON.stringify(target)));

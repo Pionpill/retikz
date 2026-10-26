@@ -39,7 +39,7 @@ describe('资源内容复用基础图元', () => {
   });
 });
 
-describe('Scene resource dependency closure', () => {
+describe('Scene 资源依赖关闭', () => {
   it('资源依赖失败时不向目标注册表发布部分内容', () => {
     const paint = createPaintRegistry(value => value);
     const clip = createClipRegistry(value => value);
@@ -123,7 +123,7 @@ describe('Scene resource dependency closure', () => {
     expect(owners).toEqual(['host', 'host', 'host', 'host', 'host']);
     expect(resources[0].id).toBe('outer');
   });
-  it('rejects missing and wrong-kind resource references with their use path', () => {
+  it('拒绝丢失和错误类型的资源引用及其使用路径', () => {
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 10, height: 10 },
       primitives: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: { kind: 'resourceRef', id: 'missing' } }],
@@ -132,7 +132,7 @@ describe('Scene resource dependency closure', () => {
     scene.resources = [{ kind: 'clip', id: 'missing', path: { fillRule: 'nonzero', commands: [] } }];
     expect(() => visitSceneContent(scene)).toThrow(/expected paint resource/);
   });
-  it('rejects cyclic Pattern dependencies and cyclic group objects', () => {
+  it('拒绝循环模式依赖性和循环组对象', () => {
     const primitive = {
       type: 'rect' as const,
       x: 0,
@@ -153,7 +153,7 @@ describe('Scene resource dependency closure', () => {
     group.children.push(group);
     expect(() => visitSceneContent({ primitives: [group] })).toThrow(/cyclic/);
   });
-  it('visits shared content per host without treating reuse as a cycle', () => {
+  it('访问每个宿主的共享内容，而不将重用视为循环', () => {
     const content = { type: 'rect' as const, id: 'local', x: 0, y: 0, width: 1, height: 1 };
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 10, height: 10 },

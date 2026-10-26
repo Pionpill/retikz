@@ -249,7 +249,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('@retikz/vanilla retained mount', () => {
+describe('@retikz/vanilla 保留安装座', () => {
   it('同一 retained session 原子提交编译驱动产生的只读图层', () => {
     const frames: Array<RenderFrameSnapshot> = [];
     const configs: Array<RenderRuntimeConfig> = [];

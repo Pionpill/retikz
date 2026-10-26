@@ -6,8 +6,8 @@ import {
   createScatterChartProviderContribution,
 } from '../../src/point';
 
-describe('concrete Chart provider contributions', () => {
-  it('uses one chart.point key, one maker reference and equal dependencies', () => {
+describe('具体的 Chart 提供者贡献', () => {
+  it('使用一个 chart.point 键、一个工厂参考和相等的依赖关系', () => {
     const scatter = createScatterChartProviderContribution();
     const provider = scatter.providers.at(-1);
 
@@ -23,17 +23,17 @@ describe('concrete Chart provider contributions', () => {
     expect(first?.makeDefinition).toBe(second?.makeDefinition);
   });
 
-  it('accepts Plot lowering runtime Definitions as the second factory argument', () => {
+  it('接受 Plot 下沉运行时定义作为第二个工厂参数', () => {
     expect(() => createScatterChartProviderContribution([], { definitions: { transforms: [] } })).not.toThrow();
   });
 
-  it('contributes Bubble through the same Point provider key', () => {
+  it('通过相同的点提供者键贡献 Bubble', () => {
     const bubble = createBubbleChartProviderContribution();
 
     expect(bubble.providers.at(-1)?.key).toEqual({ capability: 'composite', namespace: 'chart', type: 'point' });
   });
 
-  it('contributes Regression through the same Point provider key', () => {
+  it('通过相同的点提供者键贡献回归', () => {
     const regression = createRegressionChartProviderContribution();
 
     expect(regression.providers.at(-1)?.key).toEqual({

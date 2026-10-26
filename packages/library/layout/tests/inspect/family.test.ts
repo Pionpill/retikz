@@ -9,20 +9,20 @@ import {
   OVERLAY_LAYOUT_INSPECTOR_KEY,
 } from '../../src/inspect';
 
-describe('Layout Inspector definitions', () => {
-  it('uses the Layout package namespace for every registry key', () => {
+describe('Layout Inspector 定义', () => {
+  it('对每个注册表项使用 Layout 包命名空间', () => {
     expect(FLEX_LAYOUT_INSPECTOR_KEY).toEqual({ namespace: 'layout', type: 'flex-layout' });
     expect(GRID_LAYOUT_INSPECTOR_KEY).toEqual({ namespace: 'layout', type: 'grid-layout' });
     expect(OVERLAY_LAYOUT_INSPECTOR_KEY).toEqual({ namespace: 'layout', type: 'overlay-layout' });
   });
 
-  it('binds each definition to the exact Layout composite owner', () => {
+  it('将每个定义绑定到确切的 Layout 复合所属模块', () => {
     expect(FLEX_LAYOUT_INSPECTOR.owner).toEqual({ kind: 'composite', namespace: 'layout', type: 'flexLayout' });
     expect(GRID_LAYOUT_INSPECTOR.owner).toEqual({ kind: 'composite', namespace: 'layout', type: 'gridLayout' });
     expect(OVERLAY_LAYOUT_INSPECTOR.owner).toEqual({ kind: 'composite', namespace: 'layout', type: 'overlayLayout' });
   });
 
-  it('keeps Inspector definitions independent from the root composite definitions', async () => {
+  it('使 Inspector 定义独立于根复合定义', async () => {
     const layout = await import('../../src');
 
     expect(layout.FlexLayoutDefinition).not.toHaveProperty('inspector');

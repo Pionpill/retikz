@@ -40,7 +40,7 @@ import { lookupSchema, SCHEMA_REGISTRY } from '@/modules/docs/components';
 import { expandMdxIncludes } from '@/modules/docs/lib';
 
 describe('SCHEMA_REGISTRY', () => {
-  it('contains the documented Kernel, Data, Table, and Plot schema surfaces', () => {
+  it('包含文档中声明的 Kernel、Data、Table 和 Plot schema 接口', () => {
     const expected = {
       SceneSchema: { schema: SceneSchema },
       ContextualColorSchema: {
@@ -83,7 +83,7 @@ describe('SCHEMA_REGISTRY', () => {
     }
   });
 
-  it('each entry has a schema and label, with an optional documentation URL', () => {
+  it('每个条目都有一个 schema 和标签，以及一个可选文档 URL', () => {
     for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
@@ -92,7 +92,7 @@ describe('SCHEMA_REGISTRY', () => {
     }
   });
 
-  it('lookupSchema resolves a registered schema by identity', () => {
+  it('lookupSchema 通过身份解析已注册的 schema', () => {
     expect(lookupSchema(SceneSchema)?.label).toBe('SceneSchema');
     expect(lookupSchema(CoordinateSchema)?.url).toBe(
       '/kernel/components/node/reference#ircoordinate--coordinateschema',
@@ -109,7 +109,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/presentation/surface#surfaceschema');
   });
 
-  it('links Layout Inspector options to the bilingual merged reference', async () => {
+  it('将 Layout Inspector 选项链接到双语合并参考', async () => {
     const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/layout/flex-layout/reference');
 
     for (const lang of ['zh', 'en'] as const) {
@@ -121,7 +121,7 @@ describe('SCHEMA_REGISTRY', () => {
   });
 
   it.each(['data', 'table', 'plot'] as const)(
-    'keeps every Viz %s contract registry URL on a documented English heading',
+    '将每个 Viz %s 契约注册表 URL 保留在记录的英文标题上',
     async moduleId => {
       const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
         entry.url?.startsWith(`/viz/${moduleId}/reference/`),
@@ -147,7 +147,7 @@ describe('SCHEMA_REGISTRY', () => {
     },
   );
 
-  it('keeps every Standard composite registry URL on a documented English heading', async () => {
+  it('将每个 Standard 复合注册表 URL 保留在记录的英文标题上', async () => {
     const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
       /^\/library\/standard\/presentation\/(grid|axes|frame|surface|legend)(#|\/|$)/.test(entry.url ?? ''),
     );
@@ -171,7 +171,7 @@ describe('SCHEMA_REGISTRY', () => {
     }
   });
 
-  it('returns undefined for unregistered schemas', () => {
+  it('对于未注册的 schema 返回 undefined', () => {
     expect(lookupSchema(z.string())).toBeUndefined();
   });
 

@@ -18,7 +18,7 @@ const expandOf = (
   return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
 };
 
-describe('smooth path composition (contract)', () => {
+describe('平滑路径合成（契约）', () => {
   const samples = [
     { group: 'A', time: 0, value: 1 },
     { group: 'A', time: 1, value: 3 },
@@ -28,7 +28,7 @@ describe('smooth path composition (contract)', () => {
     { group: 'B', time: 2, value: 6 },
   ];
 
-  it('smooth rows can be consumed by PathMark without SmoothMark', () => {
+  it('平滑行可以被 PathMark 消费，无需 SmoothMark', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -82,7 +82,7 @@ describe('smooth path composition (contract)', () => {
     }
   });
 
-  it('smooth mark-local transform only affects the path layer that declares it', () => {
+  it('平滑标记局部变换仅影响声明它的路径层', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -118,7 +118,7 @@ describe('smooth path composition (contract)', () => {
     expect((pathLayer.children[0] as IRPath).children).toHaveLength(5);
   });
 
-  it('fits the current rows of every facet panel and records the actual mark outputs', () => {
+  it('适合每个 facet panel 的当前行并记录实际的标记输出', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -168,7 +168,7 @@ describe('smooth path composition (contract)', () => {
     ]);
   });
 
-  it('keeps grouped regression rows in data space when coordinate projection changes', () => {
+  it('当坐标投影发生变化时，在数据空间中保留分组回归行', () => {
     const specOf = (coordinate: Readonly<Record<string, unknown>>): IRPlot =>
       PlotSchema.parse({
         namespace: 'plot',

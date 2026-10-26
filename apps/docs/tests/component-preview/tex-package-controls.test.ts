@@ -29,7 +29,7 @@ const fieldContractOf = (definition: PreviewControlsDefinition) => {
 const presetContractOf = (contract: PreviewControlContract) =>
   contract.presets?.map(preset => ({ id: preset.id, values: preset.values })) ?? [];
 
-describe('@retikz/tex package playground controls', () => {
+describe('@retikz/tex 封装交互演示控件', () => {
   it('提供完整且双语一致的面板契约', () => {
     const texPlaygroundEnContract = createPreviewControlContract('en');
     const zhFields = fieldContractOf(texPlaygroundContract.controls);

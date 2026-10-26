@@ -28,8 +28,8 @@ const expectIssuePath = (value: unknown, path: string): void => {
   }
 };
 
-describe('Legend schema and factory', () => {
-  it('exports static defaults in the parsed configuration', () => {
+describe('Legend schema 和工厂', () => {
+  it('导出解析配置中的静态默认值', () => {
     expect(
       LegendSchema.parse({ namespace: 'standard', type: 'legend', content: { kind: 'items', items: [] } }),
     ).toMatchObject({
@@ -38,7 +38,7 @@ describe('Legend schema and factory', () => {
     });
   });
 
-  it('reuses the complete Core Scope authored surface', () => {
+  it('重用完整的 Core Scope 编写的曲面', () => {
     const parsed = LegendSchema.parse({
       namespace: 'standard',
       type: 'legend',
@@ -50,7 +50,7 @@ describe('Legend schema and factory', () => {
     expect(LegendSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('keeps authored items sparse and resolves execution defaults', () => {
+  it('保持编写项目稀疏并解析执行默认值', () => {
     const input = {
       content: {
         kind: LegendContentKind.Items,
@@ -83,7 +83,7 @@ describe('Legend schema and factory', () => {
     });
   });
 
-  it('normalizes uniform gap shorthand while preserving independent axis values and explicit zero', () => {
+  it('标准化均匀间隙简写，同时保留独立轴值和显式零', () => {
     const uniform = createLegend({
       content: { kind: LegendContentKind.Items, gap: 5, items: [] },
     });
@@ -101,7 +101,7 @@ describe('Legend schema and factory', () => {
     expect(resolveLegend(zero).content).toMatchObject({ gap: { row: 0, column: 0 } });
   });
 
-  it('creates canonical ramp IR and survives a real JSON round-trip', () => {
+  it('创建规范渐变 IR 并保持实际 JSON 往返等价', () => {
     const parsed = createLegend({
       title: label,
       content: {
@@ -138,7 +138,7 @@ describe('Legend schema and factory', () => {
     expect(resolveLegend(roundTripped)).toEqual({ ...resolveLegend(parsed), position: [0, 0] });
   });
 
-  it('persists explicit content alignment through JSON and rejects unsupported values at the root field', () => {
+  it('通过 JSON 保持显式内容对齐，并拒绝根字段中不支持的值', () => {
     const centered = createLegend({
       contentAlign: LayoutAlignment.Center,
       content: { kind: LegendContentKind.Items, items: [] },
@@ -162,7 +162,7 @@ describe('Legend schema and factory', () => {
     );
   });
 
-  it('preserves explicit direction, wrapping, alignment, spacing, size, padding, and overflow', () => {
+  it('保留明确的方向、换行、对齐、间距、大小、填充和溢出', () => {
     expect(
       createLegend({
         title: label,
@@ -195,7 +195,7 @@ describe('Legend schema and factory', () => {
     });
   });
 
-  it('rejects unknown root, content, item, and tick fields at their authored paths', () => {
+  it('拒绝其编写路径中的未知根、内容、项目和刻度字段', () => {
     const root = createLegend({ content: { kind: LegendContentKind.Items, items: [] } });
 
     expectIssuePath({ ...root, extra: true }, '');
@@ -218,7 +218,7 @@ describe('Legend schema and factory', () => {
     );
   });
 
-  it('accepts root Scope identity and rejects non-child title, sample, and label values', () => {
+  it('接受根 Scope 身份并拒绝非子标题、样本和标签值', () => {
     const base = createLegend({ content: { kind: LegendContentKind.Items, items: [] } });
 
     const scoped = createLegend({
@@ -255,7 +255,7 @@ describe('Legend schema and factory', () => {
     );
   });
 
-  it('rejects blank and duplicate authored keys at the key that must change', () => {
+  it('在必须更改的键处拒绝空白和重复的编写键', () => {
     const base = createLegend({ content: { kind: LegendContentKind.Items, items: [] } });
 
     const blank = LegendSchema.safeParse({
@@ -300,7 +300,7 @@ describe('Legend schema and factory', () => {
     );
   });
 
-  it('rejects negative or non-finite spacing and invalid overflow values', () => {
+  it('拒绝负数或非有限间距以及无效的溢出值', () => {
     const items = { kind: LegendContentKind.Items, items: [] } satisfies Extract<
       LegendInput['content'],
       { kind: typeof LegendContentKind.Items }
@@ -351,7 +351,7 @@ describe('Legend schema and factory', () => {
     );
   });
 
-  it('rejects malformed content, fixed, and fill size variants', () => {
+  it('拒绝格式错误的内容、固定内容和填充大小变体', () => {
     const base = {
       namespace: 'standard',
       type: 'legend',
@@ -365,7 +365,7 @@ describe('Legend schema and factory', () => {
     expectIssuePath({ ...base, size: { x: { kind: 'fill', min: 20, max: 10 }, y: { kind: 'content' } } }, 'size.x.max');
   });
 
-  it('rejects fields from the other content form instead of silently dropping them', () => {
+  it('拒绝其他内容表单中的字段，而不是默默地删除它们', () => {
     const base = {
       namespace: 'standard',
       type: 'legend',
@@ -375,7 +375,7 @@ describe('Legend schema and factory', () => {
     expectIssuePath({ ...base, content: { kind: 'ramp', sample, ticks: [], items: [], wrap: 'wrap' } }, 'content');
   });
 
-  it('rejects non-finite, out-of-range, and decreasing ramp offsets at precise paths', () => {
+  it('拒绝精确路径上的非有限、超出范围和递减的斜坡偏移', () => {
     const base = {
       namespace: 'standard',
       type: 'legend',

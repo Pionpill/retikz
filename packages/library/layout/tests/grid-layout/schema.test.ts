@@ -27,8 +27,8 @@ const child: IRChild = { type: 'node', position: [0, 0], text: 'Revenue' };
 const parseGridLayout = (input: Record<string, unknown>) =>
   GridLayoutSchema.parse({ namespace: 'layout', type: 'gridLayout', ...input });
 
-describe('GridLayout schema and factory', () => {
-  it('creates canonical JSON IR from author input defaults', () => {
+describe('GridLayout schema 和工厂', () => {
+  it('根据作者输入默认值创建规范的 JSON IR', () => {
     const item = { kind: LayoutItemKind.Grid, key: 'label', child } satisfies GridLayoutItemInput;
     const input = { columns: [{ kind: 'fixed', value: 20 }], children: [item] } satisfies GridLayoutInput;
     const source = createGridLayout(input);
@@ -71,7 +71,7 @@ describe('GridLayout schema and factory', () => {
     expect(ChildSchema.safeParse(parsed.children[0]?.child).success).toBe(true);
   });
 
-  it('keeps track, placement and item inputs aligned with parsed schema outputs', () => {
+  it('保持跟踪、放置和项目输入与解析的 schema 输出保持一致', () => {
     const breadth = { kind: 'content', mode: 'minimum' } satisfies GridTrackBreadthInput;
     const track = { kind: 'minmax', min: breadth, max: { kind: 'fraction', factor: 2 } } satisfies GridTrackInput;
     const placement = { start: 0 } satisfies GridPlacementInput;
@@ -81,7 +81,7 @@ describe('GridLayout schema and factory', () => {
     ).toMatchObject({ columns: [track], children: [{ column: { start: 0 } }] });
   });
 
-  it('accepts a span without a start as an auto-placement axis', () => {
+  it('接受没有起点的跨度作为自动放置轴', () => {
     const autoSpan = { span: 2 } satisfies GridPlacementInput;
 
     expect(
@@ -92,7 +92,7 @@ describe('GridLayout schema and factory', () => {
     ).toEqual({ span: 2 });
   });
 
-  it('keeps an omitted item key out of Source IR', () => {
+  it('将省略的项目键保留在 Source IR 之外', () => {
     const parsed = parseGridLayout({
       columns: [{ kind: 'fixed', value: 20 }],
       children: [{ kind: LayoutItemKind.Grid, child }],
@@ -101,7 +101,7 @@ describe('GridLayout schema and factory', () => {
     expect(parsed.children[0]).not.toHaveProperty('key');
   });
 
-  it('rejects an auto span above the track guard at the authored span path', () => {
+  it('拒绝在编写的跨度路径上的轨道防护装置上方的自动跨度', () => {
     const result = GridLayoutSchema.safeParse({
       namespace: 'layout',
       type: 'gridLayout',
@@ -123,7 +123,7 @@ describe('GridLayout schema and factory', () => {
     expect(result.error.issues.some(issue => issue.path.join('.') === 'children.0.column.span')).toBe(true);
   });
 
-  it('rejects invalid tracks, placement, duplicate keys and every nested unknown field', () => {
+  it('拒绝无效的轨道、放置、重复的键和每个嵌套的未知字段', () => {
     const base = { columns: [{ kind: 'fixed', value: 20 }], children: [] } satisfies GridLayoutInput;
     const invalid = [
       { kind: 'fraction', factor: 0 },
@@ -160,7 +160,7 @@ describe('GridLayout schema and factory', () => {
     expect(() => GridLayoutSchema.parse({ namespace: 'layout', type: 'gridLayout', ...base, unknown: true })).toThrow();
   });
 
-  it('keeps alignment subsets, flow values and the public track guard exact', () => {
+  it('保持对齐子集、流量值和公共轨道防护准确', () => {
     expect(GRID_LAYOUT_MAX_TRACKS_PER_AXIS).toBe(10_000);
     expect(Object.values(GridAutoFlow)).toEqual(['row', 'column']);
     expect(Object.values(GridOverlap)).toEqual(['reject', 'allow']);

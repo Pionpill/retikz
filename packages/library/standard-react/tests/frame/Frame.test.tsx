@@ -23,7 +23,7 @@ const contribute = ({ children, ...props }: FrameProps) => {
 };
 
 describe('<Frame>', () => {
-  it('keeps root Scope fields separate from the nested border Path fields', () => {
+  it('将根 Scope 字段与嵌套边界 Path 字段分开', () => {
     const result = normalizeReactInput(
       <Frame
         id="root"
@@ -43,7 +43,7 @@ describe('<Frame>', () => {
     });
   });
 
-  it('converts semantic header parts and body Nodes to canonical Frame IR', () => {
+  it('将语义头部部分和主体节点转换为规范框架 IR', () => {
     const props = {
       id: 'definition-contract/frame',
       padding: 12,
@@ -83,7 +83,7 @@ describe('<Frame>', () => {
     expect(second.providerDependencies.providers[0]).toBe(FrameProvider);
   });
 
-  it('preserves JSON-safe Node fields on FrameTitle and FrameDescription', () => {
+  it('在 FrameTitle 和 FrameDescription 上保留 JSON 安全的 Node 字段', () => {
     const animations = [
       {
         property: 'opacity' as const,
@@ -128,7 +128,7 @@ describe('<Frame>', () => {
     });
   });
 
-  it('fails loudly for duplicate parts, unsupported body children, and standalone parts', () => {
+  it('重复零件、不受支持的身体子零件和独立零件明确报错', () => {
     expect(() =>
       contribute({
         id: 'duplicate/frame',
@@ -160,7 +160,7 @@ describe('<Frame>', () => {
     );
   });
 
-  it('rejects object-style title and description props at the React boundary', () => {
+  it('拒绝 React 边界处的对象样式标题和描述属性', () => {
     const objectHeaderProps = {
       title: { text: 'Object title' },
       description: { text: 'Object description' },
@@ -175,7 +175,7 @@ describe('<Frame>', () => {
     ).toThrow(/FrameTitle.*FrameDescription/i);
   });
 
-  it('coexists with Grid and Axes under distinct contribution namespaces', () => {
+  it('与 Grid 和 Axes 在不同的贡献命名空间下共存', () => {
     const result = normalizeReactInput(
       <>
         <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />

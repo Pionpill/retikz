@@ -22,8 +22,8 @@ const path = (id: string): IRChild => ({
   ],
 });
 
-describe('Array direct cell identities', () => {
-  it('Map position publishes the same geometry and references as an outer translation', () => {
+describe('Array 直接小区标识', () => {
+  it('Map 位置发布与外部平移相同的几何图形和参考', () => {
     const map = { namespace: 'standard', type: 'map', id: 'map', entries: [{ key: 'key', value: 'value' }] };
     const positioned = compile([{ ...map, position: [100, 50], transforms: [{ kind: 'scale', x: 2 }] }, path('map')]);
     const translated = compile([
@@ -40,14 +40,14 @@ describe('Array direct cell identities', () => {
     expect(positioned.spatialHandles).toEqual(translated.spatialHandles);
   });
 
-  it('formats zero-based ids and rejects invalid helper arguments', () => {
+  it('格式化从零开始的 id 并拒绝无效的辅助参数', () => {
     expect(getArrayCellId('array', 1)).toBe('array-1');
 
     for (const index of [-1, 0.5, Infinity, NaN])
       expect(() => getArrayCellId('array', index)).toThrow(RetikzStandardError);
   });
 
-  it('validates missing parent identities, data modes, and cross-cell collisions', () => {
+  it('验证缺失的父身份、数据模式和跨单元冲突', () => {
     for (const input of [
       { namespace: 'standard', type: 'array', items: [], cellIdMode: 'index' },
       { ...base, data: ['a'], cellIdMode: 'string' },
@@ -61,7 +61,7 @@ describe('Array direct cell identities', () => {
     expect(ArraySchema.parse(JSON.parse(JSON.stringify(source))).items).toEqual(source.items);
   });
 
-  it('publishes one record for generated and explicit ids and deduplicates identical names', () => {
+  it('发布生成的显式 ID 的一条记录，并删除重复的名称', () => {
     const result = compile([
       {
         ...base,
@@ -81,7 +81,7 @@ describe('Array direct cell identities', () => {
     expect(Object.isFrozen(handles[0]?.aliasIds)).toBe(true);
   });
 
-  it('assigns ids only to direct data cells independently of displayed numbering', () => {
+  it('仅将 id 分配给直接数据单元格，与显示的编号无关', () => {
     const result = compile([{ ...base, data: ['a', ['b', 'c'], { nested: [1, 2] }], index: { start: 100 } }]);
     const handles = selectSpatialHandles(result.spatialHandles, { role: 'array-cell' });
 
@@ -91,7 +91,7 @@ describe('Array direct cell identities', () => {
     ).toEqual([]);
   });
 
-  it('resolves both ids through transformed layout replay without duplicated geometry', () => {
+  it('通过转换后的布局回放来解析两个 id，而无需重复的几何图形', () => {
     const nested: IRChild = {
       ...base,
       items: [{ id: 'named', content: 'a' }],

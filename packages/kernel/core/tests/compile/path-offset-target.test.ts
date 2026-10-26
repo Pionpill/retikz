@@ -55,8 +55,8 @@ describe('OffsetPosition: step.to schema 校验', () => {
   });
 });
 
-describe('OffsetPosition: step.to compile resolve', () => {
-  describe('Happy path', () => {
+describe('OffsetPosition: step.to 编译解析', () => {
+  describe('正常流程', () => {
     it('step_to_offset_of_string：path 终点 = A + (10, 5)', () => {
       const ir: IRScene = {
         version: 1,

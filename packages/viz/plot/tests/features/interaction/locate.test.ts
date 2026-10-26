@@ -183,8 +183,8 @@ const squareOpts: LowerPlotsOptions = { layout: { width: 400, height: 400 } };
 // =====================================================================
 // Happy path
 // =====================================================================
-describe('datum locator — happy path', () => {
-  it('datum_position_matches_lowering_point', () => {
+describe('基准定位器 - 快乐路径', () => {
+  it('基准位置匹配下沉点', () => {
     // point mark：locator.datum(i).position === lowering 第 i 行 Node.position（cartesian）
     const spec = pointSpec({ id: 'sales' });
     const datasets: Datasets = { sales: SALES };
@@ -201,7 +201,7 @@ describe('datum locator — happy path', () => {
     }
   });
 
-  it('datum_position_matches_lowering_interval', () => {
+  it('基准位置与下降间隔匹配', () => {
     // interval mark：柱锚点 === lowering 柱 Node.position（柱中心 [xCenter,(yBase+yValue)/2]）
     const spec = barSpec({ id: 'sales' });
     const datasets: Datasets = { sales: SALES };
@@ -218,7 +218,7 @@ describe('datum locator — happy path', () => {
     }
   });
 
-  it('datum_meta_synthesized', () => {
+  it('数据元合成', () => {
     // datumProvenance 关（默认）→ locator.datum(i).meta 仍给同构 meta（locator 按需合成，零 IR 代价）
     const spec = barSpec({ id: 'sales' });
     const datasets: Datasets = { sales: SALES };
@@ -245,7 +245,7 @@ describe('datum locator — happy path', () => {
     }
   });
 
-  it('resolve_path_series', () => {
+  it('解析路径系列', () => {
     // resolve('<plotId>.series.<v>') → 该 series 已渲染 datum 锚点 centroid
     const TREND = [
       { t: 0, v: 4, city: 'X' },
@@ -283,7 +283,7 @@ describe('datum locator — happy path', () => {
     expect(locator.series('X')).toEqual(anchor);
   });
 
-  it('resolves a mark-local transformed Path series inside each facet panel', () => {
+  it('解析每个面面板内的标记局部转换的 Path 系列', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -358,8 +358,8 @@ describe('datum locator — happy path', () => {
 // =====================================================================
 // 边界
 // =====================================================================
-describe('datum locator — boundary', () => {
-  it('datum_out_of_range', () => {
+describe('基准定位器 — 边界', () => {
+  it('数据超出范围', () => {
     // datum(负 / ≥ rowCount) → null（不抛）
     const spec = pointSpec({ id: 'sales' });
     const locator = createPlotLocator(spec, { sales: SALES }, { ...opts, environment: {} });
@@ -369,7 +369,7 @@ describe('datum locator — boundary', () => {
     expect(locator.datum(999)).toBeNull();
   });
 
-  it('unrendered_datum_null', () => {
+  it('未渲染的数据为空', () => {
     // 中间行投影无效（y=NaN）被 lowering 跳过 → locator.datum(该行)=null；且不计入 series centroid
     const rows = [
       { month: 0, revenue: 10, city: 'X' },
@@ -410,7 +410,7 @@ describe('datum locator — boundary', () => {
     expect(centroid!.position[1]).toBeCloseTo((a0[1] + a2[1]) / 2, 6);
   });
 
-  it('series_not_found', () => {
+  it('系列未找到', () => {
     // series(不存在值) → null；全被跳过的 series → null
     const rows = [
       { month: 0, revenue: 10, city: 'X' },
@@ -439,7 +439,7 @@ describe('datum locator — boundary', () => {
     expect(locator.series('Z')).toBeNull();
   });
 
-  it('no_plot_id_structural', () => {
+  it('无情节 ID 结构', () => {
     // root 无 id → 结构寻址 datum(i) 仍解析（不依赖 plotId）；点路径支持无前缀形式 'datum.<i>'
     const spec = pointSpec(); // 无 id
     const locator = createPlotLocator(spec, { sales: SALES }, { ...opts, environment: {} });
@@ -465,8 +465,8 @@ describe('datum locator — boundary', () => {
 // =====================================================================
 // 错误路径
 // =====================================================================
-describe('datum locator — errors', () => {
-  it('invalid_address', () => {
+describe('基准定位器 — 错误', () => {
+  it('无效地址', () => {
     // 非法 address → null（不抛）：垃圾串、错 plotId、错段、越界、错类别值
     const spec = pointSpec({ id: 'sales' });
     const locator = createPlotLocator(spec, { sales: SALES }, { ...opts, environment: {} });
@@ -480,7 +480,7 @@ describe('datum locator — errors', () => {
     // 不抛——以上调用全程不 throw（被 expect 包住即说明无异常逸出）
   });
 
-  it('locator_pure_no_ir_mutation', () => {
+  it('定位器纯无 ir 突变', () => {
     // 建 locator + 多次解析：不改 spec / 不污染输入 datasets / 不产 IR / 不注册 core 元素
     const rows = [
       { month: 0, revenue: 10 },
@@ -514,8 +514,8 @@ describe('datum locator — errors', () => {
 // =====================================================================
 // 交互
 // =====================================================================
-describe('datum locator — interaction', () => {
-  it('polar_datum_parity', () => {
+describe('基准定位器——交互', () => {
+  it('极坐标数据项保持等价', () => {
     // sector(饼图)：centroid 落在渲染扇区内（inner ≤ |anchor-center| ≤ outer，角度在 [start,end]）
     //   不与 Node.position（圆心）相等——sector 锚点取扇片 centroid
     const spec = pieSpec({ id: 'pie' });
@@ -560,7 +560,7 @@ describe('datum locator — interaction', () => {
     }
   });
 
-  it('id_backfill_on_datumIdField', () => {
+  it('datumIdField 上的 id 回填', () => {
     // datumIdField 设 → datum(i).id === '<plotId>.datum.<slug(value)>'（与 lowering 给该 Node 绑的 id 一致）
     const rows = [
       { month: 0, revenue: 10, q: 'Q1' },
@@ -585,7 +585,7 @@ describe('datum locator — interaction', () => {
     expect(plain.datum(0)!.id).toBeUndefined();
   });
 
-  it('shared_anchor_no_drift', () => {
+  it('共享锚点无漂移', () => {
     // 共享几何单一真源：point / interval 下 locator.position 与 lowering Node.position 完全一致（同 #datum_position_matches_*，
     //   此处显式命名「无漂移」——验证 datumAnchor 被 mark.ts 与 locate.ts 同源调用，无两套投影偏差）
     for (const make of [pointSpec, barSpec]) {
@@ -605,8 +605,8 @@ describe('datum locator — interaction', () => {
 // =====================================================================
 // Bug Hunter 回归（stage 3 对抗提升为正式测试）
 // =====================================================================
-describe('datum locator — bug hunter regressions', () => {
-  it('locator_matches_lowering_under_transform', () => {
+describe('数据定位器 - bug 猎人回归', () => {
+  it('定位器匹配变换下的下沉', () => {
     // 关键对抗：locator 必须与 lowering 用「同一份 transform 后行」。带 descending sort 时，
     //   locator.datum(i) 须对齐 lowering 渲染序第 i 个 Node（而非原始数据序），且 meta.sourceIndex 正确回指
     const spec = PlotSchema.parse({
@@ -650,7 +650,7 @@ describe('datum locator — bug hunter regressions', () => {
     expect(nodes.map(n => (n.meta as { sourceIndex?: number }).sourceIndex)).toEqual([1, 0, 2]);
   });
 
-  it('locator_does_not_mutate_input_datasets', () => {
+  it('定位器不会改变输入数据集', () => {
     // locator 为合成 meta 需 tagSourceIndex，但必须打在克隆行、不污染调用方原始数据
     const rows = [
       { month: 0, revenue: 10 },
@@ -670,8 +670,8 @@ describe('datum locator — bug hunter regressions', () => {
   });
 });
 
-describe('datum locator transform registry parity', () => {
-  it('custom_transform_locator_matches_lowering', () => {
+describe('数据定位器变换注册表等价性', () => {
+  it('自定义变换定位器匹配下沉', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -706,7 +706,7 @@ describe('datum locator transform registry parity', () => {
     }
   });
 
-  it('mark_local_transform_locator_matches_lowering', () => {
+  it('标记局部变换定位器匹配下沉', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -745,7 +745,7 @@ describe('datum locator transform registry parity', () => {
     expect(nodes.map(node => (node.meta as { sourceIndex?: number }).sourceIndex)).toEqual([1, 0, 2]);
   });
 
-  it('custom_group_transform_locator_meta_carries_source_indices', () => {
+  it('自定义组变换定位器元携带源索引', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -781,7 +781,7 @@ describe('datum locator transform registry parity', () => {
 // =====================================================================
 // 跨评审回归（BLOCKER #1/#2/#3 + WARNING #4 的正式回归网）
 // =====================================================================
-describe('datum locator — anchor parity and fail-loud', () => {
+describe('数据项定位器的锚点等价性及明确报错', () => {
   // dodge：2 系列分组柱（band-x，series 切等分子带）
   const dodgeSpec = (): IRPlot =>
     PlotSchema.parse({
@@ -876,7 +876,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
     { cat: 'B', g: 'q', v: 2 },
   ];
 
-  it('anchor_parity_cartesian_dodge', () => {
+  it('锚奇偶笛卡尔闪避', () => {
     // dodge 柱：每个已渲染行 locator.datum(i).position 与 lowered Node.position 逐点相等
     //   修 #1 前 barCenterAnchor 只匹配 plain → 子带柱漂移；修后共享 intervalRect
     const spec = dodgeSpec();
@@ -894,7 +894,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
     }
   });
 
-  it('anchor_parity_cartesian_stack', () => {
+  it('锚等价性笛卡尔堆叠', () => {
     // stack 柱：每行 locator.datum(i).position === lowered Node.position（y0/y1 中点）
     const spec = stackSpec();
     const datasets: Datasets = { d: STACK_ROWS };
@@ -911,7 +911,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
     }
   });
 
-  it('anchor_parity_polar_dodge', () => {
+  it('锚定奇偶性极闪避', () => {
     // polar 2 系列 interval：locator datum centroid 落在 lowered 扇区内 + 等于该扇区 params 的 wedgeCentroid
     const spec = polarDodgeSpec();
     const datasets: Datasets = { d: POLAR_DODGE_ROWS };
@@ -945,7 +945,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
     }
   });
 
-  it('datum_id_cross_mark_throws', () => {
+  it('基准 id 十字标记抛出', () => {
     // point + bar 两 datum-bearing mark 同 datumIdField 同数据 → 跨 mark 撞同 id（每个 mark 各渲染一遍同值）
     //   → lowering 抛 + createPlotLocator 抛（plot 级共享 registrar，#2/#3 parity）
     const rows = [
@@ -973,7 +973,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
     expect(() => createPlotLocator(spec, { d: rows }, { ...options, environment: {} })).toThrow();
   });
 
-  it('locator_datum_id_fail_loud', () => {
+  it('数据项定位器的 id 无效时明确报错', () => {
     // datumIdField 指向某行缺字段 → createPlotLocator 抛（与 lowering fail-loud parity，#3）
     const rows = [
       { month: 0, revenue: 10, q: 'Q1' },
@@ -988,7 +988,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
     ).toThrow();
   });
 
-  it('resolve_series_numeric', () => {
+  it('解析系列数字', () => {
     // 数值 series 值经 resolve('plotId.series.<n>')（字符串 token）可达——宽松字符串比对（#4）
     const TREND = [
       { t: 0, v: 4, g: 5 },

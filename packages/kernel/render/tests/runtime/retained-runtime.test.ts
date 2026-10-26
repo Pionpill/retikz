@@ -114,7 +114,7 @@ const createHarness = (capability: 'none' | 'group' | 'entity' = 'entity', initi
   return { renderer, handle, session, factory };
 };
 
-describe('@retikz/render/runtime public contract', () => {
+describe('@retikz/render/runtime 公共契约', () => {
   it('公开稳定错误码、具名错误和类型守卫', () => {
     const cause = new Error('invalid patch');
     const details = { source: 'test' };
@@ -137,7 +137,7 @@ describe('@retikz/render/runtime public contract', () => {
     expect(isRetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchInvalid })).toBe(false);
   });
 
-  it('retains an own undefined cause when omitted', () => {
+  it('省略时保留自己的 undefined 原因', () => {
     const error = new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
 
     expect(error).toBeInstanceOf(RetikzRenderError);

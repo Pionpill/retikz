@@ -39,8 +39,8 @@ const input: InputScene = {
   ],
 };
 
-describe('Vanilla Clip processing parity', () => {
-  it('preserves complete clips through InputScene static and retained processing', () => {
+describe('Vanilla 裁剪处理等价性', () => {
+  it('通过 InputScene 静态和保留处理保留完整裁剪', () => {
     const compile = { clips: [customClip()] };
     const direct = compileToScene(normalizeScene(input).ir, compile).scene;
     const staticResult = processToStaticInputResult(input, { compile });
@@ -55,7 +55,7 @@ describe('Vanilla Clip processing parity', () => {
     retained.dispose();
   });
 
-  it('includes explicit clips in provider-graph conflict checks', () => {
+  it('在提供者图冲突检查中包含显式裁剪', () => {
     const contributed = customClip();
     const adapter: InputEmbedAdapter<Record<string, never>> = {
       kind: 'ticketClip',

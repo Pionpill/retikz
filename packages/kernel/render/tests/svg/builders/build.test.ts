@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { buildPaintDef } from '../../../src/svg/builders/paint-defs';
 import { buildPrim } from '../../../src/svg/builders/prim';
 
-describe('buildPrim —— primitive → SvgNode', () => {
+describe('buildPrim——原始→SvgNode', () => {
   it('prim-rect-to-node：rect → tag/kebab/SVG 真名属性，无 React camelCase', () => {
     const rect: RectPrimitive = {
       type: 'rect',
@@ -136,7 +136,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
   });
 });
 
-describe('buildPrim —— marker primitive → SvgNode', () => {
+describe('buildPrim —— 标记基元 → SvgNode', () => {
   it('marker-group-transform：group.transforms 应落到 SVG g.transform', () => {
     const group: ScenePrimitive = {
       type: 'group',

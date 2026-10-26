@@ -15,8 +15,8 @@ const customScale = (name: string) =>
     }),
   });
 
-describe('Cell visual scale registry', () => {
-  it('dispatches built-in and custom definitions through one registry', () => {
+describe('Cell 视觉比例注册表', () => {
+  it('通过一个注册表调度内置和自定义定义', () => {
     const custom = customScale('company-color');
     const registry = resolveCellVisualScaleRegistry([custom]);
 
@@ -25,7 +25,7 @@ describe('Cell visual scale registry', () => {
     expect(() => cellVisualScaleDefinitionOf('missing', registry)).toThrow(/not registered/i);
   });
 
-  it('fails loud for duplicate and built-in-conflicting names', () => {
+  it('重复和内置冲突名称时会失败', () => {
     expect(() => resolveCellVisualScaleRegistry([customScale('same'), customScale('same')])).toThrow(
       /duplicate.*same/i,
     );

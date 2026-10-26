@@ -43,9 +43,9 @@ const elementsAt = (target: Position): FlowLayoutOutput['elements'] => [
 const flatten = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
 
-describe('Flow single-elbow routing', () => {
+describe('Flow 单弯头铣削', () => {
   it.each(['-|', '|-'] as const)(
-    'inherits %s through Group scopes and rejects undeclared capabilities before layout',
+    '通过 Group 范围继承 %s，并拒绝布局前未声明的功能',
     kind => {
       const source = FlowDiagramSchema.parse({
         namespace: 'diagram',
@@ -116,7 +116,7 @@ describe('Flow single-elbow routing', () => {
     },
   );
 
-  it.each(['-|', '|-'] as const)('compiles %s to clipped paths and preserves rounded-corner geometry', kind => {
+  it.each(['-|', '|-'] as const)('将 %s 编译为剪切路径并保留圆角几何形状', kind => {
     for (const group of [false, true]) {
       for (const cornerRadius of [0, 6]) {
         const source = FlowDiagramSchema.parse({
@@ -188,7 +188,7 @@ describe('Flow single-elbow routing', () => {
     }
   });
 
-  it.each(['-|', '|-'] as const)('admits %s-only providers with a radius default', kind => {
+  it.each(['-|', '|-'] as const)('仅允许具有默认半径的 %s 提供者', kind => {
     const provider = {
       ...LayeredFlowLayoutDefinition,
       name: 'elbow',
@@ -205,7 +205,7 @@ describe('Flow single-elbow routing', () => {
     ).toThrow();
   });
 
-  it.each(['-|', '|-'] as const)('preserves %s and radius through JSON parsing', kind => {
+  it.each(['-|', '|-'] as const)('通过 JSON 解析保留 %s 和半径', kind => {
     expect(FlowRoutingSchema.parse(JSON.parse(JSON.stringify({ kind, cornerRadius: 4 })))).toEqual({
       kind,
       cornerRadius: 4,
@@ -323,7 +323,7 @@ describe('Flow single-elbow routing', () => {
       ],
     ],
   ] satisfies Array<['-|' | '|-', Position, Array<Position>]>)(
-    '%s routes to %j in the authored order',
+    '%s 按编写的顺序路由到 %j',
     (kind, target, expected) => {
       const input = inputFor(kind);
       const elements = elementsAt(target);
@@ -341,7 +341,7 @@ describe('Flow single-elbow routing', () => {
     },
   );
 
-  it.each(['-|', '|-'] as const)('rejects an invalid %s provider point chain', kind => {
+  it.each(['-|', '|-'] as const)('拒绝无效的 %s 提供者点链', kind => {
     for (const points of [
       [
         [0, 0],
@@ -411,7 +411,7 @@ describe('Flow single-elbow routing', () => {
     ).toThrow();
   });
 
-  it('inherits rounded corners across axis-aligned modes and preserves explicit zero', () => {
+  it('继承跨轴对齐模式的圆角并保留显式零', () => {
     const parent = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, {
       kind: '-|',
       cornerRadius: 11,

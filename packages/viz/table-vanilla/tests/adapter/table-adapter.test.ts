@@ -22,8 +22,8 @@ const detailSpec = (): IRDetailTable => ({
   structure: { kind: 'detail', header: false, columns: [{ id: 'name', field: 'name' }] },
 });
 
-describe('Table Vanilla adapter', () => {
-  it('keeps runtime embed identity separate from optional Table model identity', () => {
+describe('Table Vanilla 适配器', () => {
+  it('将运行时嵌入标识与可选的 Table 模型标识分开', () => {
     const anonymous = createManualTableIR({ rows: [[null]] });
     const named = createManualTableIR({ id: 'scores', rows: [[null]] });
 
@@ -35,7 +35,7 @@ describe('Table Vanilla adapter', () => {
     });
   });
 
-  it('preserves explicit Table identity and all root authoring fields', () => {
+  it('保留显式的 Table 身份和所有根编写字段', () => {
     const spec = createManualTableIR({
       id: 'scores',
       rows: [[98]],
@@ -71,7 +71,7 @@ describe('Table Vanilla adapter', () => {
     expect(lowered.defaultAppearance).toEqual(spec.defaultAppearance);
   });
 
-  it('returns table.table roots and the shared stable provider maker for every lower call', () => {
+  it('返回 table.table 根和每个下沉调用的共享稳定提供者工厂', () => {
     const spec = createManualTableIR({ rows: [[null]] });
     const first = TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('first'));
     const second = TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('second'));
@@ -85,7 +85,7 @@ describe('Table Vanilla adapter', () => {
     expect(first.providerDependencies.providers[0]?.params).toHaveProperty('lowerOptions');
   });
 
-  it('enters scene/layer SSR and reads each embed runtime data', () => {
+  it('进入场景/图层 SSR 并读取每个嵌入运行时数据', () => {
     const spec = detailSpec();
     const inputScene = scene({
       layers: [
@@ -110,7 +110,7 @@ describe('Table Vanilla adapter', () => {
     for (const child of normalized.ir.children) expect(child).not.toHaveProperty('id');
   });
 
-  it('passes extra composites through the shared adapter contribution', () => {
+  it('通过共享适配器贡献传递额外的复合组件', () => {
     const schema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
       type: literal('badge'),

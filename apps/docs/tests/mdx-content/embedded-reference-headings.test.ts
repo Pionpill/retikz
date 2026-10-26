@@ -13,14 +13,14 @@ const pages = import.meta.glob<string>('../../src/modules/docs/contents/**/index
 
 const referenceTitles = new Set(['API 参考', 'api reference', 'Schema 参考', 'schema reference']);
 
-describe('embedded API and Schema references', () => {
-  it('projects package labels and public members while preserving code fences', () => {
+describe('嵌入的 API 和 schema 参考', () => {
+  it('投影包标签和公开成员并保留代码围栏', () => {
     expect(
       embedApiReferenceMdx('## `@retikz/standard`\n\n### Array / ArrayProps\n\n```md\n### Code heading\n```'),
     ).toBe('**`@retikz/standard`**\n\n#### Array / ArrayProps\n\n```md\n### Code heading\n```');
   });
 
-  it('keeps reference members out of the page TOC after expanding includes', async () => {
+  it('扩展包含后将引用成员保留在页面 TOC 之外', async () => {
     const violations: Array<string> = [];
     let referenceCount = 0;
 

@@ -75,7 +75,7 @@ describe('resolveNode', () => {
     expect(source).not.toHaveProperty('position');
   });
 
-  it('expands numeric and CSS-like box spacing while preserving explicit zero', () => {
+  it('扩展数字和类似 CSS 的框间距，同时保留显式零', () => {
     expect(
       resolve(
         node({
@@ -101,7 +101,7 @@ describe('resolveNode', () => {
     });
   });
 
-  it('expands node size and scale shorthand while preserving explicit zero', () => {
+  it('扩展节点大小和比例简写，同时保留显式零', () => {
     expect(
       resolve(
         node({
@@ -127,7 +127,7 @@ describe('resolveNode', () => {
     });
   });
 
-  it('rejects layout.width below the effective minimum visible width', () => {
+  it('拒绝低于有效最小可见宽度的 layout.width', () => {
     expect(() => resolve(node({ layout: { width: 40, minimumSize: { width: 50 } } }))).toThrowError(
       expect.objectContaining({ code: RetikzCoreErrorCode.Resolve }) as RetikzCoreError,
     );
@@ -135,7 +135,7 @@ describe('resolveNode', () => {
     expect(resolve(node({ layout: { width: 50, minimumSize: { width: 50 } } })).node.width).toBe(50);
   });
 
-  it('supplies Node defaults without changing unrelated IR fields', () => {
+  it('提供 Node 默认值，而不更改不相关的 IR 字段', () => {
     const source = node({ id: 'node-a', text: 'A' });
 
     expect(resolve(source).node).toEqual({
@@ -153,7 +153,7 @@ describe('resolveNode', () => {
     });
   });
 
-  it('canonicalizes text shorthand without dropping an empty string or reordering lines', () => {
+  it('规范化文本简写，而不删除空字符串或重新排序行', () => {
     expect(resolve(node({ text: '' })).node.text).toEqual(['']);
 
     const lines: NonNullable<IRNode['text']> = ['first', { text: 'second' }];
@@ -161,7 +161,7 @@ describe('resolveNode', () => {
     expect(resolve(node({ text: lines })).node.text).toEqual(lines);
   });
 
-  it('materializes effective label defaults into every canonical label', () => {
+  it('将有效标签默认值具体化到每个规范标签中', () => {
     const frame = resolveScopeDefaults({
       type: 'scope',
       children: [],
@@ -200,7 +200,7 @@ describe('resolveNode', () => {
     ]);
   });
 
-  it('fills canonical label defaults without replacing explicit zero or false values', () => {
+  it('填充规范标签默认值，而不替换明确的零或 false', () => {
     expect(resolve(node({ label: { text: 'default' } })).node.label).toEqual([
       { text: 'default', align: 'middle', position: 'top', placement: 'outside', distance: 12 },
     ]);
@@ -231,7 +231,7 @@ describe('resolveNode', () => {
     ]);
   });
 
-  it('defaults canonical label alignment to middle and preserves explicit alignment', () => {
+  it('默认规范标签对齐到中间并保留显式对齐', () => {
     expect(resolve(node({ label: { text: 'default' } })).node.label).toEqual([
       { text: 'default', position: 'top', placement: 'outside', distance: 12, align: 'middle' },
     ]);
@@ -241,7 +241,7 @@ describe('resolveNode', () => {
     ]);
   });
 
-  it('fills the boundary label fraction when its position omits one', () => {
+  it('当其位置省略 1 时，填充边界标签分数', () => {
     expect(resolve(node({ label: { text: 'boundary', position: { boundary: 'right' } } })).node.label).toEqual([
       {
         text: 'boundary',
@@ -253,7 +253,7 @@ describe('resolveNode', () => {
     ]);
   });
 
-  it('resolves Node scalar defaults and static dash and shadow forms', () => {
+  it('解析 Node 标量默认值以及静态虚线和阴影形式', () => {
     const defaults = resolve(node()).node;
 
     expect(defaults.align).toBe('middle');
@@ -300,7 +300,7 @@ describe('resolveNode', () => {
     });
   });
 
-  it('returns shape and boundary provider resolutions alongside the canonical node', () => {
+  it('返回规范节点旁边的形状和边界提供者解析结果', () => {
     const resolved = resolve(node({ shape: 'rectangle', boundary: 'circle' }));
 
     expect(resolved.shape.name).toBe('rectangle');
@@ -309,7 +309,7 @@ describe('resolveNode', () => {
     expect(resolved.boundary.definition.name).toBe('circle');
   });
 
-  it('compiles compact and expanded Node forms to the same Scene', () => {
+  it('将紧凑和扩展的 Node 形式编译为相同的 Scene', () => {
     const compact = node({
       id: 'equivalent',
       text: 'A',
@@ -334,7 +334,7 @@ describe('resolveNode', () => {
     expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);
   });
 
-  it('compiles compact Node static forms to the same Scene as canonical IR equivalents', () => {
+  it('将紧凑的 Node 静态形式编译为与规范 IR 等效项相同的 Scene', () => {
     const compact = node({
       text: 'A',
       label: { text: 'L' },

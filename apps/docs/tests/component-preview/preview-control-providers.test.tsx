@@ -41,37 +41,37 @@ const slotB: PreviewControlSlot = {
   render: () => null,
 };
 
-describe('preview control providers', () => {
-  it('does not resolve animation controls for a static preview by default', () => {
+describe('预览控件提供者', () => {
+  it('默认情况下不解析静态预览的动画控件', () => {
     expect(resolveBuiltinControlSlots({ previewIr: buildPreviewIR(StaticDemo), options: {} })).toEqual([]);
   });
 
-  it('resolves hover animation controls for an animated preview by default', () => {
+  it('默认解析动画预览的悬停动画控件', () => {
     expect(resolveBuiltinControlSlots({ previewIr: buildPreviewIR(AnimatedDemo), options: {} })[0]).toMatchObject({
       id: 'animation-controls',
       visibility: 'hover',
     });
   });
 
-  it('force enables animation controls without preview IR', () => {
+  it('强制启用动画控件，无需预览 IR', () => {
     expect(resolveBuiltinControlSlots({ previewIr: null, options: { animation: true } })).toHaveLength(1);
   });
 
-  it('force disables animation controls for an animated preview', () => {
+  it('强制禁用动画预览的动画控件', () => {
     expect(
       resolveBuiltinControlSlots({ previewIr: buildPreviewIR(AnimatedDemo), options: { animation: false } }),
     ).toEqual([]);
   });
 
-  it('retains generic path definitions while resolving preview controls', () => {
+  it('在解析预览控件时保留通用路径定义', () => {
     expect(buildPreviewIR(RibbonDemo).paths).toEqual([RibbonPathDefinition]);
   });
 
-  it('merges slot groups in input order', () => {
+  it('按输入顺序合并槽组', () => {
     expect(mergePreviewControlSlots([slotA], [slotB])).toEqual([slotA, slotB]);
   });
 
-  it('rejects duplicate slot ids', () => {
+  it('拒绝重复的槽 ID', () => {
     expect(() => mergePreviewControlSlots([slotA], [{ ...slotB, id: slotA.id }])).toThrow(
       'Duplicate preview control slot id: "slot-a".',
     );

@@ -14,8 +14,8 @@ import type { CompositeEvaluationResult, LayoutContribution } from '../../src';
 const schema = <const TType extends string>(type: TType) =>
   CompositeBaseSchema.extend({ namespace: literal('measurement-test'), type: literal(type) });
 
-describe('isolated size contributions', () => {
-  it('projects allocation onto the proposal and still performs final full layout', () => {
+describe('孤立的大小贡献', () => {
+  it('将分配项目投影到提案上，并仍然执行最终的完整布局', () => {
     const results: Array<LayoutContribution> = [];
     let full = 0;
     const leaf = defineComposite({
@@ -96,7 +96,7 @@ describe('isolated size contributions', () => {
     expect(full).toBe(1);
   });
 
-  it('rejects a contribution in a full layout request', () => {
+  it('拒绝完整布局请求中的贡献', () => {
     const leaf = defineComposite({
       namespace: 'measurement-test',
       type: 'invalid',
@@ -113,7 +113,7 @@ describe('isolated size contributions', () => {
 });
 
 it.each(['source', 'generated', 'bound'])(
-  'reuses only stable authored contributions across ancestor probes: %s',
+  '仅重用跨祖先探测的稳定编写贡献：%s',
   mode => {
     let queries = 0;
     let full = 0;
@@ -187,7 +187,7 @@ it.each(['source', 'generated', 'bound'])(
   },
 );
 
-it('does not cache recoverable failures or publish warnings from size-only candidates', () => {
+it('不缓存可恢复的故障或发布来自仅大小候选者的警告', () => {
   let attempts = 0;
   const warnings: Array<string> = [];
   const leaf = defineComposite({
@@ -222,7 +222,7 @@ it('does not cache recoverable failures or publish warnings from size-only candi
   expect(warnings).toEqual([]);
 });
 
-it('separates theme environments and accepts non-JSON runtime bindings', () => {
+it('分隔主题环境并接受非 JSON 运行时绑定', () => {
   const widths: Array<number> = [];
   const leaf = defineComposite({
     namespace: 'measurement-test',
@@ -269,7 +269,7 @@ it.each([
   { axis: 'y' as const, height: 10 },
   { axis: 'x' as const, width: Infinity },
   { axis: 'x' as const, width: -1 },
-])('throws invalid contributions instead of returning a recoverable failure: %j', contribution => {
+])('抛出无效的贡献而不是返回可恢复的失败：%j', contribution => {
   const leaf = defineComposite({
     namespace: 'measurement-test',
     type: 'fatal',
@@ -294,7 +294,7 @@ it.each([
 });
 
 it.each([false, true])(
-  'keeps identical authored objects at different source positions independent: nested=%s',
+  '保持不同源位置的相同编写对象独立：nested=%s',
   nested => {
     let calls = 0;
     const leaf = defineComposite({
@@ -347,7 +347,7 @@ it.each([false, true])(
   },
 );
 
-it('isolates full fallback candidates and publishes only the independent final replay', () => {
+it('隔离完整的回退候选者并仅发布独立的最终回放', () => {
   let calls = 0;
   const leaf = defineComposite({
     namespace: 'measurement-test',
@@ -413,7 +413,7 @@ it('isolates full fallback candidates and publishes only the independent final r
   expect(calls).toBe(3);
 });
 
-it('recomputes reference-dependent sizes after ancestor namespace changes', () => {
+it('在祖先命名空间更改后重新计算依赖于引用的大小', () => {
   const widths: Array<number> = [];
   const query = defineComposite({
     namespace: 'measurement-test',

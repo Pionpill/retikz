@@ -29,7 +29,7 @@ const input: AxesInput = {
 };
 
 describe('<Axes>', () => {
-  it('forwards authored root Scope identity instead of deriving it from React host state', () => {
+  it('转发编写的根 Scope 身份，而不是从 React 宿主状态派生它', () => {
     const result = normalizeReactInput(
       <Axes {...input} id="authored-axes" localNamespace meta={{ source: 'react' }} />,
     );
@@ -41,7 +41,7 @@ describe('<Axes>', () => {
     });
   });
 
-  it('contributes canonical Axes IR through one stable exact-key provider', () => {
+  it('通过一个稳定的精确键提供者贡献规范的 Axes IR', () => {
     const first = normalizeReactInput(<Axes {...input} />);
     const second = normalizeReactInput(<Axes {...input} />);
 
@@ -51,7 +51,7 @@ describe('<Axes>', () => {
     expect(AxesProvider.makeDefinition([])).toBe(AxesDefinition);
   });
 
-  it('coexists with Grid under distinct qualified provider keys', () => {
+  it('与 Grid 在不同的合格提供者键下共存', () => {
     const result = normalizeReactInput(
       <>
         <Grid bounds={{ start: [-2, -1], end: [2, 1] }} line={{ spacing: 1 }} />

@@ -20,7 +20,7 @@ const contribute = ({ children, ...props }: SurfaceProps) => {
 };
 
 describe('<Surface>', () => {
-  it('converts exactly one Core child to canonical Surface IR', () => {
+  it('将一个 Core 子项转换为规范的 Surface IR', () => {
     const contribution = contribute({
       id: 'panel',
       padding: { x: 4, y: 2 },
@@ -42,7 +42,7 @@ describe('<Surface>', () => {
     });
   });
 
-  it('preserves nested Tier-2 roots and providers after Surface in authored order', () => {
+  it('按编写顺序保留 Surface 之后的嵌套 Tier-2 根和提供者', () => {
     const input = createInputScene(
       <Surface id="panel">
         <Frame id="card">
@@ -64,7 +64,7 @@ describe('<Surface>', () => {
     });
   });
 
-  it('fails loudly unless children lower to exactly one IR child', () => {
+  it('除非孩子们正好降到一个 IR 孩子，否则会明确报错', () => {
     expect(() => contribute({ children: null })).toThrow(/exactly one/i);
     expect(() =>
       contribute({

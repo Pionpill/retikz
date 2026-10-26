@@ -134,7 +134,7 @@ describe('手搓非法 viewBox 经 compileToScene 抛清晰错', () => {
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
-  it('height = NaN → throw', () => {
+  it('高度=NaN→投掷', () => {
     const ir = scene([circleNode('o', [0, 0])], {
       x: 0,
       y: 0,

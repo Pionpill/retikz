@@ -75,7 +75,7 @@ const SERIES_DATA = [
 
 describe('color × series · B/C 收口（contract）', () => {
   // Happy path：多系列 line 显式 series → 每系列一条着色线
-  it('explicit_series_line_splits_and_colors', () => {
+  it('显式系列将线条分组并着色', () => {
     const spec = specOf({
       type: 'path',
       encodings: {
@@ -92,7 +92,7 @@ describe('color × series · B/C 收口（contract）', () => {
   });
 
   // Happy path：单 line + categorical color 字段（无 series）→ 隐式拆系列（修「静默丢弃」）
-  it('single_line_categorical_color_implicitly_splits', () => {
+  it('单行分类颜色隐式分割', () => {
     const spec = specOf({
       type: 'path',
       encodings: {
@@ -107,7 +107,7 @@ describe('color × series · B/C 收口（contract）', () => {
   });
 
   // 关键：隐式拆产物等价于显式 series（locator parity）
-  it('implicit_split_equals_explicit_series', () => {
+  it('隐式拆分与显式系列等价', () => {
     const implicit = specOf({
       type: 'path',
       encodings: {
@@ -130,7 +130,7 @@ describe('color × series · B/C 收口（contract）', () => {
   });
 
   // Happy path：area 同理隐式拆
-  it('single_closed_path_categorical_color_implicitly_splits', () => {
+  it('单个闭合路径分类颜色隐式分割', () => {
     const spec = specOf({
       type: 'path',
       encodings: {
@@ -146,7 +146,7 @@ describe('color × series · B/C 收口（contract）', () => {
   });
 
   // point 按 datum 着色，不拆系列（B/C：非 path mark 不引入 series）
-  it('point_colors_per_datum_no_series', () => {
+  it('每个基准的点颜色，无系列', () => {
     const spec = specOf({
       type: 'point',
       encodings: { color: { field: 'city', scale: 'col' }, position: { x: { field: 't' }, y: { field: 'v' } } },
@@ -157,8 +157,8 @@ describe('color × series · B/C 收口（contract）', () => {
   });
 });
 
-describe('plot theme default palette', () => {
-  it('mark_without_color_uses_shared_categorical_by_default', () => {
+describe('绘图主题默认调色板', () => {
+  it('没有颜色的标记默认使用共享分类', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -185,7 +185,7 @@ describe('plot theme default palette', () => {
     expect(barLayerNode.defaults?.node?.style?.fill).toBe(sharedCategorical[1]);
   });
 
-  it('mark_without_color_uses_plot_palette_by_layer_index', () => {
+  it('无颜色标记按图层索引使用绘图调色板', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -215,7 +215,7 @@ describe('plot theme default palette', () => {
     expect(pointLayer.defaults?.node?.style?.fill).toBe('currentColor');
   });
 
-  it('categorical_color_uses_plot_palette_as_ordinal_range', () => {
+  it('分类颜色使用绘图调色板作为序数范围', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -249,7 +249,7 @@ describe('plot theme default palette', () => {
 });
 
 describe('color 类型兼容校验（contract）', () => {
-  it('continuous_color_field_fails_loud', () => {
+  it('连续类型的颜色字段明确报错', () => {
     const spec = specOf({
       type: 'point',
       encodings: { color: 'v', position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -265,7 +265,7 @@ describe('color 类型兼容校验（contract）', () => {
     ).toThrow(/continuous\/temporal color/);
   });
 
-  it('temporal_color_field_fails_loud', () => {
+  it('时间色场明确报错', () => {
     const spec = specOf({
       type: 'point',
       encodings: { color: 'date', position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -283,7 +283,7 @@ describe('color 类型兼容校验（contract）', () => {
 });
 
 describe('series + color 冲突（contract）', () => {
-  it('color_not_constant_within_series_fails_loud', () => {
+  it('同一系列内颜色不一致时明确报错', () => {
     // series=city 但 color=shade 在同一 city 内多值 → fail-loud
     const spec = specOf({
       type: 'path',
@@ -302,7 +302,7 @@ describe('series + color 冲突（contract）', () => {
     expect(() => expandOf(spec, { d: data })).toThrow(/not constant within series/);
   });
 
-  it('color_equals_series_field_ok', () => {
+  it('颜色字段与系列字段相同时可正常处理', () => {
     const spec = specOf({
       type: 'path',
       encodings: {

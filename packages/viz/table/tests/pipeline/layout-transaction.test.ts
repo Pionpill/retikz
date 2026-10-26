@@ -44,8 +44,8 @@ const errorChainOf = (error: unknown): Array<Error> => {
   return chain;
 };
 
-describe('Table layout transaction', () => {
-  it('uses the shared Retikz error contract for stage context', () => {
+describe('Table 布局事务', () => {
+  it('使用共享的 Retikz 错误契约作为阶段上下文', () => {
     const cause = new Error('intrinsic failed');
     const error = new RetikzTableError({
       code: RetikzTableErrorCode.TransactionStageFailed,
@@ -75,7 +75,7 @@ describe('Table layout transaction', () => {
     });
   });
 
-  it('solves span-aware tracks and publishes complete Cell boxes in canonical order', () => {
+  it('解决跨度感知轨道并按规范顺序发布完整的 Cell 框', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -115,7 +115,7 @@ describe('Table layout transaction', () => {
     ]);
   });
 
-  it('applies replay-local scale before Table-local translation and keeps clip outside the transform', () => {
+  it('在 Table 本地平移之前应用回放本地缩放，并将裁剪保留在变换之外', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -163,7 +163,7 @@ describe('Table layout transaction', () => {
     expect(nodeArtifact?.value.rect).toMatchObject({ x: 30, y: 25, width: 50, height: 10 });
   });
 
-  it('uses a full finite range proposal as the selected wrap replay and publishes its nested artifact once', () => {
+  it('使用完整的有限范围提案作为选定的包装回放并发布其嵌套产物一次', () => {
     const calls: Array<CompositeCompileContext['proposal']> = [];
     const ProbeSchema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
@@ -244,7 +244,7 @@ describe('Table layout transaction', () => {
   it.each([
     ['exact', { kind: LayoutAxisProposalKind.Exact, value: 60 }],
     ['finite range', { kind: LayoutAxisProposalKind.Range, min: 10, max: 60 }],
-  ] as const)('maps an explicit parent %s width into the column solver exactly once', (_kind, x) => {
+  ] as const)('将显式父 %s 宽度映射到列解算器一次', (_kind, x) => {
     const OuterSchema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
       type: literal('outer'),
@@ -295,7 +295,7 @@ describe('Table layout transaction', () => {
     ['natural', { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural }, 20],
     ['unbounded range', { kind: LayoutAxisProposalKind.Range, min: 0 }, 20],
     ['explicit exact zero', { kind: LayoutAxisProposalKind.Exact, value: 0 }, 0],
-  ] as const)('maps parent %s without inventing or dropping a column limit', (_kind, x, expectedWidth) => {
+  ] as const)('映射父 %s，而不发明或删除列限制', (_kind, x, expectedWidth) => {
     const OuterSchema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
       type: literal('limit-observer'),
@@ -352,7 +352,7 @@ describe('Table layout transaction', () => {
     expect(tableArtifact?.value.allocationBounds.width).toBe(expectedWidth);
   });
 
-  it('keeps zero-size clipped Cell identity while omitting its selected replay', () => {
+  it('保留零大小剪裁的 Cell 标识，同时忽略其选定的回放', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -393,7 +393,7 @@ describe('Table layout transaction', () => {
     );
   });
 
-  it('selects the canonical root manifest when a nested Table reuses the same public id', () => {
+  it('当嵌套 Table 重用相同的公共 id 时，选择规范根清单', () => {
     const nested: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -434,7 +434,7 @@ describe('Table layout transaction', () => {
     expect(result.manifest.cells[0].cellId).toBe('nested-cell');
   });
 
-  it('keeps a fatal nested Cell contract error fatal when an ancestor discards the Table probe', () => {
+  it('当祖先丢弃 Table 探测时，保留致命的嵌套 Cell 契约错误', () => {
     const malformed = defineComposite({
       namespace: 'fixture',
       type: 'malformed-cell-output',
@@ -479,7 +479,7 @@ describe('Table layout transaction', () => {
     ).toThrow(/malformed-cell-output.*invalid output child.*index 0/i);
   });
 
-  it('associates intrinsic Cell layout failures with the Table and Cell while preserving the cause', () => {
+  it('将固有的 Cell 布局故障与 Table 和 Cell 相关联，同时保留原因', () => {
     const rootCause = new Error('fixture intrinsic failure');
     const FailingSchema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
@@ -530,7 +530,7 @@ describe('Table layout transaction', () => {
     expect(message).not.toContain("Layout child provider 'table.table'");
   });
 
-  it('locates anonymous intrinsic Cell layout failures by canonical address', () => {
+  it('通过规范地址定位匿名内在 Cell 布局失败', () => {
     const failing = defineComposite({
       namespace: 'fixture',
       type: 'anonymous-intrinsic-failure',
@@ -556,7 +556,7 @@ describe('Table layout transaction', () => {
     );
   });
 
-  it('keeps one leaf failure envelope when an outer solver raises a failed Table probe', () => {
+  it('当外部解算器引发失败的 Table 探测时，保留一个叶失败包络', () => {
     const rootCause = new Error('fixture nested Table failure');
     const failing = defineComposite({
       namespace: 'fixture',
@@ -617,7 +617,7 @@ describe('Table layout transaction', () => {
     expect(errorChainOf(thrown)).toContain(rootCause);
   });
 
-  it('associates constrained Cell layout failures with the Table and Cell while preserving the cause', () => {
+  it('将受约束的 Cell 布局失败与 Table 和 Cell 相关联，同时保留原因', () => {
     const rootCause = new Error('fixture constrained failure');
     const FailingSchema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
@@ -678,7 +678,7 @@ describe('Table layout transaction', () => {
     expect(chain.some(error => error.message.includes('children[0]'))).toBe(true);
   });
 
-  it('locates anonymous constrained Cell layout failures by canonical address', () => {
+  it('通过规范地址定位匿名约束的 Cell 布局失败', () => {
     const failing = defineComposite({
       namespace: 'fixture',
       type: 'anonymous-constrained-failure',
@@ -719,7 +719,7 @@ describe('Table layout transaction', () => {
     );
   });
 
-  it('associates Border Scope layout failures with the Table while preserving the cause', () => {
+  it('将边框 Scope 布局失败与 Table 关联起来，同时保留原因', () => {
     const rootCause = new Error('fixture border failure');
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,

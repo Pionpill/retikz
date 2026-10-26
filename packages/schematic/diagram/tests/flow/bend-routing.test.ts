@@ -43,7 +43,7 @@ const routingElements: FlowLayoutOutput['elements'] = [
 const flatten = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
 
-describe('Flow bend routing', () => {
+describe('Flow 弯曲布线', () => {
   it.each([1, 100])('在 %s 倍尺度下排除曲线内侧空白并保留相切接触', scale => {
     const route = {
       kind: 'bend' as const,
@@ -75,7 +75,7 @@ describe('Flow bend routing', () => {
     expect(score({ x: 99, y: -77.73502691896257, width: 2, height: 20 })).toBe(1);
   });
 
-  it('searches six candidates, prefers smaller angles on ties, and honors a fixed side', () => {
+  it('搜索六名候选人，喜欢平局上较小的角度，并尊重固定的一面', () => {
     const input = routingInput();
     const automatic: FlowLayoutInput = {
       ...input,
@@ -117,7 +117,7 @@ describe('Flow bend routing', () => {
     expect(routeFlowRelations(automatic, blockFortyFive)).toEqual(routeFlowRelations(automatic, blockFortyFive));
   });
 
-  it('preserves omitted angles through resolution and locks inherited explicit zero and negative angles', () => {
+  it('通过解析结果保留省略的角度并锁定继承的显式零角和负角', () => {
     const automatic = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, { kind: 'bend' });
 
     expect(automatic.routing).toEqual({ kind: 'bend' });
@@ -139,7 +139,7 @@ describe('Flow bend routing', () => {
     }
   });
 
-  it('accepts only automatic candidate angles and preserves the symmetric family at the provider boundary', () => {
+  it('仅接受自动候选角度并保留提供者边界处的对称族', () => {
     const input: FlowLayoutInput = {
       ...routingInput(),
       relations: [{ ...routingInput().relations[0], routing: { kind: 'bend' } }],
@@ -195,7 +195,7 @@ describe('Flow bend routing', () => {
     ).toThrow('parameter family');
   });
 
-  it('rejects the legacy relation output record from an external provider', () => {
+  it('拒绝来自外部提供者的旧关系输出记录', () => {
     const outputJson = JSON.stringify({
       elements: routingElements,
       relations: [
@@ -213,7 +213,7 @@ describe('Flow bend routing', () => {
     ).toThrow('expected a resolved endpoint target');
   });
 
-  it('uses reserved labels as a secondary score but never trades a clear node route for a clear label', () => {
+  it('使用保留标签作为辅助分数，但绝不会用清晰的节点路由来换取清晰的标签', () => {
     const input = routingInput();
     const labelRelation = {
       ...input.relations[0],
@@ -238,7 +238,7 @@ describe('Flow bend routing', () => {
     });
   });
 
-  it('artifact translates reference endpoints together while the drawing contains the curve extent', () => {
+  it('产物将参考端点一起平移，同时绘图包含曲线范围', () => {
     let output: FlowLayoutOutput | undefined;
     const provider = {
       ...LayeredFlowLayoutDefinition,
@@ -301,7 +301,7 @@ describe('Flow bend routing', () => {
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
   });
 
-  it('rejects unsupported bend before invoking a custom layout callback', () => {
+  it('在调用自定义布局回调之前拒绝不支持的弯曲', () => {
     let calls = 0;
     const provider = {
       ...LayeredFlowLayoutDefinition,
@@ -346,7 +346,7 @@ describe('Flow bend routing', () => {
     expect(calls).toBe(0);
   });
 
-  it('rejects a sloped label reservation with unrotated dimensions', () => {
+  it('拒绝具有未旋转尺寸的倾斜标签预留', () => {
     const input = routingInput();
     const relation = {
       ...input.relations[0],
@@ -372,7 +372,7 @@ describe('Flow bend routing', () => {
     ).toThrow('preserve measured size');
   });
 
-  it('rejects mixed, incomplete, legacy and nonfinite persisted routes at the external boundary', () => {
+  it('拒绝外部边界处的混合、不完整、遗留和非有限持久路由', () => {
     const valid = {
       kind: 'bend',
       points: [
@@ -403,7 +403,7 @@ describe('Flow bend routing', () => {
     }
   });
 
-  it('retains both-side conflicts and treats tangent contact conservatively', () => {
+  it('保留双方冲突，保守对待切线接触', () => {
     const input = routingInput();
     const blocked = routingElements.map(element =>
       element.id === 'obstacle' ? { ...element, bounds: { x: 80, y: -100, width: 40, height: 200 } } : element,
@@ -437,7 +437,7 @@ describe('Flow bend routing', () => {
     ).toBeGreaterThan(0);
   });
 
-  it('partial tangents preserve zero and different routing kinds break inheritance', () => {
+  it('部分切线保留零，不同的布线类型会破坏继承', () => {
     const root = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, {
       kind: 'bend',
       outAngle: 45,
@@ -459,7 +459,7 @@ describe('Flow bend routing', () => {
     });
   });
 
-  it('legal endpoint ingress is exempt but a tangent route reentering its source is a conflict', () => {
+  it('合法端点入口不受限制，但重新进入其源的切线路径存在冲突', () => {
     const route = {
       kind: 'bend' as const,
       points: [
@@ -483,7 +483,7 @@ describe('Flow bend routing', () => {
     ).toEqual([]);
   });
 
-  it('relevant Group shells and invisible Layouts are not solid while their children remain obstacles', () => {
+  it('相关的 Group shell 和不可见的布局不是固体，而它们的子级仍然是障碍', () => {
     const input = routingInput();
     const grouped: FlowLayoutInput = {
       ...input,
@@ -522,7 +522,7 @@ describe('Flow bend routing', () => {
     ).toBe(1);
   });
 
-  it('conflicting custom bends emit a source-located warning and remain drawable', () => {
+  it('冲突的自定义弯曲会发出源定位警告并保持可绘制', () => {
     const provider = {
       ...LayeredFlowLayoutDefinition,
       name: 'fixed-bend',
@@ -577,7 +577,7 @@ describe('Flow bend routing', () => {
     ).toBe(true);
   });
 
-  it('bend overflow preserves the Core cause and offending relation path', () => {
+  it('弯曲溢出保留 Core 原因和违规关系路径', () => {
     const input = routingInput();
     const overflowing: FlowLayoutInput = {
       ...input,
@@ -607,7 +607,7 @@ describe('Flow bend routing', () => {
     );
   });
 
-  it('auto bend chooses the clear side at the authored angle using off-midpoint obstacles', () => {
+  it('自动弯曲使用中点障碍物以编写的角度选择清晰的一侧', () => {
     const input = routingInput();
     const first = routeFlowRelations(input, routingElements);
 
@@ -619,7 +619,7 @@ describe('Flow bend routing', () => {
     expect(routingElements[0].bounds.x).toBe(-2);
   });
 
-  it('unlabeled parallel routes do not affect selection through overlap or crossings', () => {
+  it('未标记的平行路线不影响通过重叠或交叉进行的选择', () => {
     const input = routingInput();
     const elements = routingElements.map(element =>
       element.id === 'obstacle' ? { ...element, bounds: { ...element.bounds, y: 200 } } : element,
@@ -636,7 +636,7 @@ describe('Flow bend routing', () => {
     ]);
   });
 
-  it('a crossing unlabeled edge does not redirect the chosen bend', () => {
+  it('交叉的未标记边不会重定向所选的弯曲', () => {
     const input = routingInput();
     const elements = [
       ...routingElements.map(element =>
@@ -662,7 +662,7 @@ describe('Flow bend routing', () => {
     expect(routeFlowRelations(crossing, elements)[0].route).toMatchObject({ bendDirection: 'left', bendAngle: 60 });
   });
 
-  it('custom output preserves centers and explicit parameters', () => {
+  it('自定义输出保留中心和显式参数', () => {
     const input = routingInput();
     const explicit = {
       ...input,
@@ -705,7 +705,7 @@ describe('Flow bend routing', () => {
     expect(() => run({ ...valid, bendAngle: 30 })).toThrow('preserve effective input');
   });
 
-  it('coincident reference endpoints are retained for distinct endpoint identities', () => {
+  it('为不同的端点标识保留重合的参考端点', () => {
     const input = routingInput();
     const routes = routeFlowRelations(
       input,
@@ -720,7 +720,7 @@ describe('Flow bend routing', () => {
     ]);
   });
 
-  it('inherits only the active parameter family and supports explicit symmetric exit', () => {
+  it('仅继承活动参数族并支持显式对称退出', () => {
     const root = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, {
       kind: 'bend',
       outAngle: 45,
@@ -740,7 +740,7 @@ describe('Flow bend routing', () => {
     ).toEqual({ kind: 'bend' });
   });
 
-  it('explicit bend lowers to cubic and preserves reference parameters in the artifact', () => {
+  it('显式弯曲下沉到立方并保留产物中的参考参数', () => {
     const source = FlowDiagramSchema.parse({
       namespace: 'diagram',
       type: 'flow',

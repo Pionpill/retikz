@@ -9,8 +9,8 @@ const theme = {
   colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 };
 
-describe('Plot Axis Source rules', () => {
-  it('schema rejects empty or duplicate dimensions and empty visual rules', () => {
+describe('Plot 轴 Source 规则', () => {
+  it('schema 拒绝空或重复的维度以及空的视觉规则', () => {
     for (const rule of [
       { select: { dimension: '' }, axis: { line: false } },
       { select: { dimension: [] }, axis: { line: false } },

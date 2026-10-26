@@ -17,7 +17,7 @@ const scene: Scene = {
   ],
 };
 
-describe('buildSvgDocument performance trace', () => {
+describe('buildSvgDocument 性能跟踪', () => {
   it('每次完整 document build 递归统计 Group 与 child occurrence', () => {
     const records: Array<RenderTraceRecord> = [];
     const trace = { report: (record: RenderTraceRecord) => records.push(record) };

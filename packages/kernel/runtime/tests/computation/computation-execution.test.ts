@@ -21,7 +21,7 @@ const defineCounterSource = (key = 'counter') =>
     },
   });
 
-describe('runtime Computation execution', () => {
+describe('运行时计算执行', () => {
   it('默认 auto 向 Computation 暴露 initial full 与 incremental update execution', () => {
     const owner = defineCounterSource();
     const sources = createRuntimeSourceRegistry([owner]);

@@ -118,7 +118,7 @@ const renderWithValues = (Component: FC, values: Record<string, boolean | number
     </PreviewControlStateContext.Provider>,
   );
 
-describe('Viz Data model controls', () => {
+describe('可视化数据模型控件', () => {
   const localizedPairs = [
     [orderZh, orderEn],
     [sourceBindingZh, sourceBindingEn],
@@ -128,7 +128,7 @@ describe('Viz Data model controls', () => {
     [extensionResolverZh, extensionResolverEn],
   ] as const;
 
-  it('keeps bilingual contracts structurally identical and complete', () => {
+  it('保持双语契约结构相同和完整', () => {
     for (const [zh, en] of localizedPairs) {
       expect(contractShape(zh)).toEqual(contractShape(en));
 
@@ -137,7 +137,7 @@ describe('Viz Data model controls', () => {
     }
   });
 
-  it('uses large previews for data-table controls', () => {
+  it('对数据表控件使用大预览', () => {
     const pagePreviews = [
       ['model/field-types', 0],
       ['model/intake', 5],
@@ -157,7 +157,7 @@ describe('Viz Data model controls', () => {
     }
   });
 
-  it('pins every model bar preview to the value-axis baseline', () => {
+  it('将各模型的柱状预览对齐到数值轴基线', () => {
     const orderPlot = renderDataModelOrderPreview({ orderMode: 'appearance' });
     const validationBoundary = renderValidationPolicyPreview({ dataset: 'clean', policy: 'skip' }, '校验失败');
     const validationPlot = validationBoundary.props.children;
@@ -180,7 +180,7 @@ describe('Viz Data model controls', () => {
     }
   });
 
-  it('pins the Plot provenance bar examples to the value-axis baseline', () => {
+  it('将 Plot 来源追溯条形示例固定到值轴基线', () => {
     const demoSource = readFileSync(
       resolve('src/modules/docs/contents/viz/plot/provenance/plot-lineage.preview.tsx'),
       'utf8',
@@ -196,7 +196,7 @@ describe('Viz Data model controls', () => {
     }
   });
 
-  it('changes category order, source binding, and parsing through canonical controls', () => {
+  it('通过规范控件更改类别顺序、源绑定和解析', () => {
     expect(renderWithValues(OrderDemo, { orderMode: 'appearance' })).not.toBe(
       renderWithValues(OrderDemo, { orderMode: 'business' }),
     );
@@ -204,7 +204,7 @@ describe('Viz Data model controls', () => {
     expect(renderWithValues(ValueParsingDemo, { inputShape: 'report' })).toContain('<svg');
   });
 
-  it('recovers from a real validation error without losing the controlled preview', async () => {
+  it('从真实验证错误中恢复，而不会丢失受控预览', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);

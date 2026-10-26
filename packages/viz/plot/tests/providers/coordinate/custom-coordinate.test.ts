@@ -310,7 +310,7 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
     expect(base.find(entry => entry.x === 5)!.p[1]).toBeLessThan(base.find(entry => entry.x === 0)!.p[1]);
   });
 
-  it('custom_coordinate_maps_xy_roles_to_arbitrary_fields_and_axis', () => {
+  it('自定义坐标将 x、y 角色映射到任意字段及坐标轴', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -346,21 +346,21 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
 });
 
 describe('custom coordinate — 契约 / fail-loud', () => {
-  it('coordinate_frame_preserves_registered_coordinate_type', () => {
+  it('坐标框架保留已注册坐标类型', () => {
     const frame = createCoordinateFrame('bridge', ['x', 'y'], values => [Number(values[0]), Number(values[1])]);
 
     expect(frame.type).toBe('bridge');
   });
 
   // 未注册工厂 → fail-loud
-  it('unknown_factory_fails_loud', () => {
+  it('未知工厂明确报错', () => {
     expect(() => expandOf(sineSpec(), { d: [{ v: 1 }] }, opts([bridgeCoordinate]))).toThrow(
       /coordinate type "sine" is not registered/i,
     );
   });
 
   // 缺必填角色（roles 含 y、mark 缺 y）→ fail-loud（必填角色取 coordinate.roles）
-  it('missing_required_role_fails_loud', () => {
+  it('缺少必需角色时明确报错', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -374,7 +374,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
   });
 
   // 非法 guide 维度：schema 接受任意非空 role 名，坐标系 definition.roles 在 lowering 阶段 fail-loud
-  it('invalid_guide_dimension_rejected_by_coordinate_definition_roles', () => {
+  it('坐标定义角色无效的引导维度拒绝', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -396,7 +396,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
     );
   });
 
-  it('custom_open_path_uses_project_roles', () => {
+  it('自定义打开路径使用项目角色', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -441,7 +441,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
     ['cycle closure', { closure: { kind: 'cycle' } }],
     ['baseline closure', { closure: { kind: 'baseline' } }],
     ['stack closure', { closure: { kind: 'stack' } }],
-  ])('custom_path_%s_remains_fail_loud', (_label, pathShape) => {
+  ])('自定义路径 %s 仍然失败', (_label, pathShape) => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -472,7 +472,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
   });
 
   // 曲线轴：工厂回传 roleScales → <Axis> 沿投影画弯曲轴线（产出轴层 + 至少一条 path）
-  it('custom_axis_guide_lowers_curved_axis', () => {
+  it('自定义轴引导下弯曲轴', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -516,7 +516,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
   });
 
   // custom × categorical color → 分色子 Scope（非位置通道仍工作）
-  it('custom_with_color_groups_into_subscopes', () => {
+  it('自定义颜色组到子范围', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -692,7 +692,7 @@ const labelNodesOf = (layer: IRScope): Array<IRNode> =>
   (layer.children as Array<IRNode>).filter(child => (child as { type?: string }).type === 'node');
 
 describe('custom coordinate — tangentAt 局部标架契约（contract）', () => {
-  it('tangent_at_uses_mapped_parameters_and_rejects_nonfinite_values', () => {
+  it('在使用映射参数和拒绝非有限值处切线', () => {
     // 投影有效时方向有限；不可映射输入不制造有效切向
     const frame = diagonalFrame();
 
@@ -710,7 +710,7 @@ describe('custom coordinate — tangentAt 局部标架契约（contract）', () 
     expect(frame.tangentAt!('x', [NaN])).toBeNull();
   });
 
-  it('tangent_at_tangent_along_axis_curve', () => {
+  it('沿坐标轴曲线求切线', () => {
     // 解析切向方向 ≈ 中心差分方向（归一化后 dot ≈ 1）
     const frame = diagonalFrame();
     const h = 1e-4;
@@ -730,7 +730,7 @@ describe('custom coordinate — tangentAt 局部标架契约（contract）', () 
     expect(a[0] * b[0] + a[1] * b[1]).toBeCloseTo(1, 6);
   });
 
-  it('curved_axis_consumes_tangent_at_tangent', () => {
+  it('弯曲轴消费切线在切线处', () => {
     // tangentAt 回传常量切向 [1,0] → 法向恒 [0,1] → 所有刻度短线竖直（Δx≈0）；数值差分在正弦上做不到
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
     const root = expandOf(sineAxisSpec('sineFramed'), { d: rows }, opts([sineFramedTangentX]));
@@ -742,7 +742,7 @@ describe('custom coordinate — tangentAt 局部标架契约（contract）', () 
     for (const [dx] of segments) expect(Math.abs(dx)).toBeLessThan(1e-6);
   });
 
-  it('tangent_at_absent_falls_back_to_numeric_sampling', () => {
+  it('缺席处的切线退回到数字采样', () => {
     // 不回传 tangentAt → 仍画弯曲轴线（polyline ≥ 4 步）；法向随正弦斜率变化、刻度短线非全竖直
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
     const root = expandOf(sineAxisSpec('sineNumeric'), { d: rows }, opts([sineNumeric]));
@@ -755,7 +755,7 @@ describe('custom coordinate — tangentAt 局部标架契约（contract）', () 
     expect(segments.some(([dx]) => Math.abs(dx) > 1e-6)).toBe(true);
   });
 
-  it('degenerate_tangent_guarded_no_nan', () => {
+  it('简并切线防护无 nan', () => {
     // 零切向 [0,0] → 法向导出有 guard，标签位置仍有限（不出 NaN）
     const rows = Array.from({ length: 5 }, (_unused, i) => ({ v: i }));
     const root = expandOf(sineAxisSpec('degenerate'), { d: rows }, opts([degenerateFramed]));
@@ -771,7 +771,7 @@ describe('custom coordinate — tangentAt 局部标架契约（contract）', () 
     }
   });
 
-  it('curved_axis_normal_uses_axis_tangent_even_when_custom_roles_are_2d', () => {
+  it('即使自定义角色为 2d，曲轴法线也使用轴切线', () => {
     // 2D custom（roles=['x','y']）的 x 轴仍是 1D 曲线：画成弯曲轴线 + 标签沿轴法向偏移、位置有限
     const spec = PlotSchema.parse({
       namespace: 'plot',

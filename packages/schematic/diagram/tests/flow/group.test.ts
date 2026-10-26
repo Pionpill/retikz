@@ -37,8 +37,8 @@ const artifact = (output: ReturnType<typeof compile>) =>
       ?.value,
   );
 
-describe('Flow Group Graph surface', () => {
-  it('round-trips full Graph captions, boundary labels and Scope fields', () => {
+describe('Flow Group Graph 曲面', () => {
+  it('往返完整的 Graph 标题、边界标签和 Scope 字段', () => {
     const caption = GroupCaptionSchema.parse({
       description: { text: ['Description', { text: 'Detail', font: { weight: 700 } }], maxTextWidth: 90 },
       side: 'bottom',
@@ -68,7 +68,7 @@ describe('Flow Group Graph surface', () => {
     { transforms: [{ kind: 'translate', x: 10, y: 0 }] },
     { position: { kind: 'anchor', target: [10, 0] } },
     { localNamespace: true },
-  ])('rejects Group fields that change Flow geometry or identity: %j', field => {
+  ])('拒绝更改 Flow 几何或标识的 Group 字段：%j', field => {
     const parsed = Flow.FlowDiagramSchema.safeParse({
       ...flow({}),
       groups: [{ id: 'group', children: ['item'], ...field }],
@@ -79,7 +79,7 @@ describe('Flow Group Graph surface', () => {
     if (!parsed.success) expect(parsed.error.issues[0].path).toEqual(['groups', 0]);
   });
 
-  it('merges both caption text defaults without creating absent text items', () => {
+  it('合并两个标题文本默认值，而不创建缺失的文本项', () => {
     const source = {
       ...flow({ caption: { description: { text: 'Detail', font: { weight: 700 } } } }),
       defaultFlow: {
@@ -110,7 +110,7 @@ describe('Flow Group Graph surface', () => {
     expect(withoutCaption.graph.caption).toBeUndefined();
   });
 
-  it('projects nested Graph context before measurement while preserving root relation ownership', () => {
+  it('在测量之前项目嵌套 Graph 上下文，同时保留根关系所有权', () => {
     const source: Flow.IRFlowDiagram = {
       ...flow({}),
       graphRules: [{ type: 'entity', selector: { role: 'concept' }, style: { textColor: 'blue' } }],
@@ -157,7 +157,7 @@ describe('Flow Group Graph surface', () => {
     expect(texts.find(value => value.lines.some(line => line.text === 'Outside'))?.fill).toBe('blue');
   });
 
-  it('uses caption side and description size for shell metrics and keeps labels visual-only', () => {
+  it('使用标题侧和描述大小作为 shell 指标，并使标签仅可见', () => {
     const inputs: Array<Flow.FlowLayoutInput> = [];
     const definition = Flow.defineFlowLayout({
       ...Flow.LayeredFlowLayoutDefinition,
@@ -196,7 +196,7 @@ describe('Flow Group Graph surface', () => {
     ).toBe(true);
   });
 
-  it('preserves Group Scope metadata and clipping in the final Scene', () => {
+  it('保留 Group Scope 元数据并在最终的 Scene 中进行裁剪', () => {
     const output = compile(
       flow({
         meta: { owner: 'service' },

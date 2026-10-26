@@ -39,8 +39,8 @@ const plotTheme = definePlotTheme({
   resolve: () => ({}),
 });
 
-describe('Plot React InputEmbed routing', () => {
-  it('standalone Plot passes an InputEmbed to Layout without resolving Core composites', () => {
+describe('Plot React InputEmbed 路由', () => {
+  it('独立的 Plot 将 InputEmbed 传递到 Layout，而不解析 Core 复合组件', () => {
     capturedLayouts.length = 0;
 
     renderToStaticMarkup(
@@ -58,7 +58,7 @@ describe('Plot React InputEmbed routing', () => {
     );
   });
 
-  it('keeps ambient Plot style definitions on the InputEmbed props', () => {
+  it('在 InputEmbed props 上保留环境 Plot 样式定义', () => {
     capturedLayouts.length = 0;
 
     renderToStaticMarkup(
@@ -75,7 +75,7 @@ describe('Plot React InputEmbed routing', () => {
     ).toEqual([plotTheme]);
   });
 
-  it('preserves the React panel identity and authoring props on the InputEmbed', () => {
+  it('保留 InputEmbed 上的 React 面板标识和编写 props', () => {
     capturedLayouts.length = 0;
 
     const namedSpec: IRPlot = { ...spec, id: 'sales' };

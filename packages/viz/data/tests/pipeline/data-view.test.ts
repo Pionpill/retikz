@@ -21,21 +21,21 @@ const sourceView = (): DataView =>
     ],
   );
 
-describe('resolved data view transforms', () => {
+describe('解决了数据视图转换', () => {
   it.each(['appearance', 'ascending'] as const)(
-    'rejects %s category order when observations infer a continuous field',
+    '当观察推断连续场时，拒绝 %s 类别顺序',
     order => {
       expect(() => createDataView([{ value: 1 }], [{ name: 'value', order }])).toThrow(/order.*categorical/);
     },
   );
 
-  it('preserves order when observations infer a categorical field', () => {
+  it('当观察推断分类字段时保留顺序', () => {
     expect(createDataView([{ value: 'M' }], [{ name: 'value', order: ['S', 'M'] }]).model).toEqual([
       { name: 'value', type: 'categorical', order: ['S', 'M'] },
     ]);
   });
 
-  it('preserves input field evidence and adds descriptor-derived output evidence', () => {
+  it('保留输入字段证据并添加描述符导出的输出证据', () => {
     const copyField = defineTransform({
       kind: 'copy-field',
       paramsSchema: strictObject({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
@@ -67,7 +67,7 @@ describe('resolved data view transforms', () => {
     ]);
   });
 
-  it('rebuilds replace output maps without retaining stale input evidence', () => {
+  it('重建替换输出映射而不保留陈旧的输入证据', () => {
     const replaceRows = defineTransform({
       kind: 'replace-rows',
       paramsSchema: strictObject({ as: NonBlankStringSchema }),
@@ -90,7 +90,7 @@ describe('resolved data view transforms', () => {
     expect(result.model).toEqual([{ name: 'value', type: DataFieldType.Continuous }]);
   });
 
-  it('rejects an unresolved descriptor source before executing the operation', () => {
+  it('在执行操作之前拒绝未解析的描述符源', () => {
     let applyCalls = 0;
     const invalidOutput = defineTransform({
       kind: 'invalid-output',
@@ -118,7 +118,7 @@ describe('resolved data view transforms', () => {
     expect(applyCalls).toBe(0);
   });
 
-  it('replaces stale evidence and observes scalar types for explicitly untyped output fields', () => {
+  it('替换陈旧的证据并观察显式非类型化输出字段的标量类型', () => {
     const untypedReplace = defineTransform({
       kind: 'untyped-replace',
       paramsSchema: strictObject({}),
@@ -141,7 +141,7 @@ describe('resolved data view transforms', () => {
     expect(result.model).toEqual([{ name: 'derived', type: 'continuous' }]);
   });
 
-  it('rebuilds summarize fields from group keys and reducer descriptors', () => {
+  it('从组键和归约器描述符重建汇总字段', () => {
     const view = createDataView(
       [
         { month: 'Jan', revenue: 2 },

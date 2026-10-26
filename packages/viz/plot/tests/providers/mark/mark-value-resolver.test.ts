@@ -5,11 +5,11 @@ import { makeMarkValueResolver } from '../../../src/providers';
 import type { IRPlotChannel } from '../../../src/schemas';
 
 describe('makeMarkValueResolver', () => {
-  it('does not create a field resolver when no encoding is declared', () => {
+  it('未声明编码时不创建字段解析器', () => {
     expect(makeMarkValueResolver(undefined, [], { channelName: 'weight', parse: value => value })).toBeUndefined();
   });
 
-  it('resolves_field_mark_value_per_row', () => {
+  it('解析每行字段标记值', () => {
     const value: IRPlotChannel = 'weight';
     const resolver = makeMarkValueResolver<number>(value, [{ name: 'weight', type: DataFieldType.Continuous }], {
       channelName: 'weight',
@@ -23,7 +23,7 @@ describe('makeMarkValueResolver', () => {
     expect(resolver?.resolver({ weight: 'bad' })).toBeUndefined();
   });
 
-  it('rejects_unexpected_field_type', () => {
+  it('拒绝意外字段类型', () => {
     const value: IRPlotChannel = 'group';
 
     expect(() =>

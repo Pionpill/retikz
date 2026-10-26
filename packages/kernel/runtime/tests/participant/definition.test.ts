@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import * as runtime from '../../src';
 import { RetikzRuntimeErrorCode } from '../../src';
 
-describe('runtime commit participant definition', () => {
+describe('运行时提交参与者定义', () => {
   it('从 Runtime 公共入口提供 nominal participant definition helper', () => {
     expect(Reflect.get(runtime, 'defineRuntimeCommitParticipant')).toBeTypeOf('function');
     expect(runtime).not.toHaveProperty('getRuntimeCommitParticipantExecutor');

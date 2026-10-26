@@ -13,8 +13,8 @@ import { describe, expect, it } from 'vitest';
 
 import { synchronousAdapters } from './helpers/synchronous-adapters';
 
-describe('Standard React definition loading', () => {
-  it('keeps JSX components self-registering through their static adapters', () => {
+describe('Standard React 定义加载', () => {
+  it('保持 JSX 组件通过其静态适配器进行自注册', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout width={120} height={80}>
@@ -32,7 +32,7 @@ describe('Standard React definition loading', () => {
     ).not.toThrow();
   });
 
-  it('forwards nested Tier 2 capability loading through the Legend Vanilla adapter', () => {
+  it('通过 Legend Vanilla 适配器转发嵌套的第 2 层功能加载', () => {
     const legend = (
       <Legend kind={LegendContentKind.Items}>
         <LegendItem itemKey="grid" sample={<Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />} />
@@ -63,7 +63,7 @@ describe('Standard React definition loading', () => {
     });
   });
 
-  it('compiles direct Standard IR with explicit definitions', () => {
+  it('编译具有显式定义的直接 Standard IR', () => {
     const ir = {
       type: 'scene' as const,
       version: 1 as const,
@@ -77,7 +77,7 @@ describe('Standard React definition loading', () => {
     expect(svg).toContain('<path');
   });
 
-  it('deduplicates the same explicit definition object and rejects a different object at the same key', () => {
+  it('对相同显式定义对象进行去重，并拒绝同一键上的不同对象', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout extensions={{ composites: [GridDefinition] }} width={120} height={80}>

@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR, PointMark, PathMark, IntervalMark } from '../../src';
 
-describe('mark authoring parity', () => {
-  it.each([false, true])('shares field, constant and edge positions with Vanilla (constant=%s)', constant => {
+describe('标记编写奇偶性', () => {
+  it.each([false, true])('与 Vanilla 共享字段、常数和边缘位置（常数 = %s）', constant => {
     const point: InputPlotPointMark = {
       contributeToDomain: false,
       encodings: { position: { x: constant ? { value: 5 } : { field: 'x' }, y: { value: 2 } } },

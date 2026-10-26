@@ -33,8 +33,8 @@ const inputOf = (
   ...override,
 });
 
-describe('Table span contribution propagation', () => {
-  it('canonicalizes non-span contributions by track index and maximum size', () => {
+describe('Table 跨度贡献传播', () => {
+  it('通过轨道索引和最大大小规范化非跨度贡献', () => {
     const input = inputOf([auto(), fixed(10), fraction()], {
       contributions: [
         { trackIndex: 2, size: 4 },
@@ -59,7 +59,7 @@ describe('Table span contribution propagation', () => {
     expect(Object.isFrozen(result.contributions[0])).toBe(true);
   });
 
-  it('counts fixed natural size and an internal gap before growing auto', () => {
+  it('在自动增长之前计算固定的自然尺寸和内部间隙', () => {
     const input = inputOf([fixed(100), auto()], {
       constraints: [{ cellId: 'wide', startIndex: 0, length: 2, requiredOuterSize: 130 }],
       gap: 10,
@@ -76,7 +76,7 @@ describe('Table span contribution propagation', () => {
     expect(solveTableTracks({ ...input, contributions: result.contributions })).toEqual([100, 20]);
   });
 
-  it('water-fills natural sizes across a fixed-min platform without cap-order bias', () => {
+  it('在固定最小值平台上按水位填充分配自然尺寸且不受上限顺序影响', () => {
     const maximumOrders = [
       [100, 10, 100],
       [10, 100, 100],
@@ -100,7 +100,7 @@ describe('Table span contribution propagation', () => {
     }
   });
 
-  it('crosses a fixed-min contribution plateau in natural-size space', () => {
+  it('跨越自然大小空间中的固定最小贡献平台', () => {
     const input = inputOf([auto(), minmax(fixed(20), fixed(60))], {
       constraints: [{ cellId: 'plateau', startIndex: 0, length: 2, requiredOuterSize: 100 }],
     });
@@ -114,7 +114,7 @@ describe('Table span contribution propagation', () => {
     expect(result.unmet).toEqual([{ cellId: 'plateau', size: 0 }]);
   });
 
-  it('processes shorter constraints first independent of input array order', () => {
+  it('首先独立于输入数组顺序处理较短的约束', () => {
     const constraints = [
       { cellId: 'wide', startIndex: 0, length: 2, requiredOuterSize: 100 },
       { cellId: 'single', startIndex: 0, length: 1, requiredOuterSize: 100 },
@@ -134,7 +134,7 @@ describe('Table span contribution propagation', () => {
     ]);
   });
 
-  it('grows capped non-flex tracks before weighted fraction tracks', () => {
+  it('先增长有上限的非弹性轨道再增长按权重分配的轨道', () => {
     const input = inputOf([minmax(fixed(20), fixed(60)), fraction(2)], {
       constraints: [{ cellId: 'mixed', startIndex: 0, length: 2, requiredOuterSize: 160 }],
     });
@@ -148,7 +148,7 @@ describe('Table span contribution propagation', () => {
     expect(result.unmet).toEqual([{ cellId: 'mixed', size: 0 }]);
   });
 
-  it('lets an auto min grow beyond a smaller fixed max', () => {
+  it('让自动最小值超出较小的固定最大值', () => {
     const input = inputOf([minmax(auto(), fixed(50))], {
       contributions: [{ trackIndex: 0, size: 20 }],
       constraints: [{ cellId: 'auto-min', startIndex: 0, length: 1, requiredOuterSize: 80 }],
@@ -160,7 +160,7 @@ describe('Table span contribution propagation', () => {
     expect(result.unmet).toEqual([{ cellId: 'auto-min', size: 0 }]);
   });
 
-  it('distributes a flex-only deficit by positive weight', () => {
+  it('按正权重分配仅弹性赤字', () => {
     const input = inputOf([fraction(1), fraction(2)], {
       constraints: [{ cellId: 'flex', startIndex: 0, length: 2, requiredOuterSize: 90 }],
     });
@@ -174,7 +174,7 @@ describe('Table span contribution propagation', () => {
     });
   });
 
-  it('keeps fixed-only deficits as per-Cell unmet sizes in canonical constraint order', () => {
+  it('按照规范约束顺序中的 Cell 未满足大小保留仅固定赤字', () => {
     const constraints = [
       { cellId: 'z', startIndex: 0, length: 2, requiredOuterSize: 30 },
       { cellId: 'b', startIndex: 1, length: 1, requiredOuterSize: 10 },
@@ -192,7 +192,7 @@ describe('Table span contribution propagation', () => {
     ]);
   });
 
-  it('uses the highest canonical active track for a representable subnormal residual', () => {
+  it('使用最高规范活动轨迹来表示可表示的次正常残差', () => {
     const input = inputOf([auto(), auto()], {
       constraints: [{ cellId: 'tiny', startIndex: 0, length: 2, requiredOuterSize: Number.MIN_VALUE }],
     });
@@ -222,7 +222,7 @@ describe('Table span contribution propagation', () => {
       /requiredOuterSize/i,
     ],
     [{ constraints: [{ cellId: 'bad', startIndex: 0, length: 1, requiredOuterSize: -1 }] }, /requiredOuterSize/i],
-  ])('rejects invalid span propagation input %#', (override, message) => {
+  ])('拒绝无效的跨度传播输入 %#', (override, message) => {
     expect(() => propagateTableSpanContributions(inputOf([auto(), auto()], override))).toThrow(message);
   });
 });

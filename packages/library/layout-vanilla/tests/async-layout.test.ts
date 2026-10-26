@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 
 import { flexLayout, gridLayout, overlayLayout, LayoutInputEmbedAdapters } from '../src';
 
-describe('Layout async authoring', () => {
-  it('prepares nested children once with synchronous contribution parity', async () => {
+describe('Layout 异步编写', () => {
+  it('嵌套子项仅预处理一次且贡献与同步路径等价', async () => {
     let executed = 0;
     const makeContribution = (): InputEmbedContribution => ({
       node: { type: 'node', position: [0, 0], text: 'prepared-child' },
@@ -42,7 +42,7 @@ describe('Layout async authoring', () => {
     expect(executed).toBe(3);
   });
 
-  it('relocates a nested prepared composite binding to the Layout item Source field', async () => {
+  it('将嵌套准备好的复合绑定重新定位到 Layout 项 Source 字段', async () => {
     const leafDefinition = {
       ...GridLayoutDefinition,
       compile: (

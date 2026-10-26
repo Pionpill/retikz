@@ -27,7 +27,7 @@ const pathOf = (properties: Partial<IRPathBase> = {}): IRPathBase =>
     ...properties,
   });
 
-describe('Scope effective defaults', () => {
+describe('Scope 有效默认值', () => {
   it('按层合并共同样式与通道样式，实例主色在继承完成后展开', () => {
     const parent = resolveScopeDefaults(
       styleScope({
@@ -85,7 +85,7 @@ describe('Scope effective defaults', () => {
     expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style?.fill).toBe('blue');
   });
 
-  it('cuts only the channels named by resetStyle', () => {
+  it('仅剪切 resetStyle 命名的通道', () => {
     expect(cutsStyleChannel(['node'], 'node')).toBe(true);
     expect(cutsStyleChannel(['node'], 'path')).toBe(false);
     expect(cutsStyleChannel(['path'], 'path')).toBe(true);
@@ -94,7 +94,7 @@ describe('Scope effective defaults', () => {
     expect(cutsStyleChannel([], 'path')).toBe(false);
   });
 
-  it('propagates a scope master color to node and path channels', () => {
+  it('将范围主颜色传播到节点和路径通道', () => {
     const frame = resolveScopeDefaults(
       styleScope({
         defaults: { style: { color: 'red' } },
@@ -110,7 +110,7 @@ describe('Scope effective defaults', () => {
     });
   });
 
-  it('applies label font fields by per-field priority', () => {
+  it('按每个字段优先级应用标签字体字段', () => {
     const frame = resolveScopeDefaults(
       styleScope({
         defaults: {
@@ -127,7 +127,7 @@ describe('Scope effective defaults', () => {
     });
   });
 
-  it('applies arrow start and end overrides after shared defaults', () => {
+  it('在共享默认值后应用箭头开始和结束覆盖', () => {
     const frame = resolveScopeDefaults(
       styleScope({
         defaults: {
@@ -155,11 +155,11 @@ describe('Scope effective defaults', () => {
 });
 
 describe('resolveDashPattern', () => {
-  it('uses an explicit dash pattern before dashed and dotted presets', () => {
+  it('在虚线和点线预设之前使用显式虚线图案', () => {
     expect(resolveDashPattern([0, 2], true, true)).toEqual([0, 2]);
   });
 
-  it('uses dashed before dotted and preserves explicit false selectors', () => {
+  it('在点之前使用破折号，并保留显式的错误选择器', () => {
     expect(resolveDashPattern(undefined, true, true)).toEqual([4, 2]);
     expect(resolveDashPattern(undefined, false, true)).toEqual([1, 2]);
     expect(resolveDashPattern(undefined, false, false)).toBeUndefined();
@@ -167,12 +167,12 @@ describe('resolveDashPattern', () => {
 });
 
 describe('resolveDropShadow', () => {
-  it('expands preset strings and preset objects to the same canonical shadow', () => {
+  it('将预设字符串和预设对象扩展为相同的规范阴影', () => {
     expect(resolveDropShadow('md')).toEqual(SHADOW_PRESETS.md);
     expect(resolveDropShadow({ preset: 'md' })).toEqual(SHADOW_PRESETS.md);
   });
 
-  it('applies explicit fields after the preset while preserving falsy values', () => {
+  it('在预设后应用显式字段，同时保留虚假值', () => {
     expect(resolveDropShadow({ preset: 'sm', offsetY: 0, blur: 0, opacity: 0 })).toEqual({
       offsetX: SHADOW_PRESETS.sm!.offsetX,
       offsetY: 0,
@@ -182,7 +182,7 @@ describe('resolveDropShadow', () => {
     });
   });
 
-  it('supplies the default color for explicit offsets and keeps omitted or none absent', () => {
+  it('为显式偏移提供默认颜色，并保持省略或不缺失', () => {
     expect(resolveDropShadow({ offsetX: 0, offsetY: 0 })).toEqual({
       offsetX: 0,
       offsetY: 0,

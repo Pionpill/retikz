@@ -30,15 +30,15 @@ const sceneWithPaint = (paint: IRPaint): IRScene => ({
   ],
 });
 
-describe('resolve/resource paint', () => {
-  it('binds builtin pattern and materializes defaults before compile', () => {
+describe('解析/资源绘制', () => {
+  it('绑定内置模式并在编译前具体化默认值', () => {
     const resolved = resolvePaint({ kind: 'pattern', shape: 'lines' }, patternContext());
 
     expect(typeof resolved).toBe('object');
     expect(resolved).toMatchObject({ kind: 'paint', pattern: { name: 'lines', size: 8 } });
   });
 
-  it('binds custom pattern and applies shape/style priority in resolve', () => {
+  it('绑定自定义模式并在解析中应用形状/样式优先级', () => {
     const custom = definePattern({
       name: 'custom',
       emit: (): Array<ScenePrimitive> => [],
@@ -68,13 +68,13 @@ describe('resolve/resource paint', () => {
     });
   });
 
-  it('reports unknown pattern provider at the resolve boundary', () => {
+  it('报告解析边界处的未知模式提供者', () => {
     expect(() => resolvePaint({ kind: 'pattern', shape: 'missing' }, patternContext())).toThrow(
       /Unknown provider 'missing'/,
     );
   });
 
-  it('preserves dedupe boundary after compile consumes resolved paint', () => {
+  it('在编译消费已解析的绘制后保留去重边界', () => {
     const paint: IRPaint = {
       kind: 'linearGradient',
       stops: [
@@ -101,7 +101,7 @@ describe('resolve/resource paint', () => {
     expect(scene.resources).toHaveLength(1);
   });
 
-  it('emits a deduplicated pattern resource once', () => {
+  it('发出一次去重模式资源', () => {
     const emit = vi.fn((): Array<ScenePrimitive> => []);
     const pattern = definePattern({ name: 'dedupe-pattern', emit });
     const scene = compileToScene(
@@ -129,7 +129,7 @@ describe('resolve/resource paint', () => {
   });
 });
 
-describe('resolve/resource clip', () => {
+describe('解析/资源裁剪', () => {
   const polygonLower = vi.fn((spec: { kind: 'polygon'; params: { points: Array<[number, number]> } }) => ({
     commands: [
       { kind: 'move' as const, to: spec.params.points[0] },
@@ -149,7 +149,7 @@ describe('resolve/resource clip', () => {
     lower: polygonLower,
   });
 
-  it('binds clip definition and parsed params without invoking provider', () => {
+  it('绑定裁剪定义和解析的参数，而不调用提供者', () => {
     const resolved = resolveClip(
       {
         kind: 'polygon',
@@ -178,7 +178,7 @@ describe('resolve/resource clip', () => {
     expect(polygonLower).not.toHaveBeenCalled();
   });
 
-  it('keeps recursive clip resolution in the bound registry closure', () => {
+  it('在绑定的注册表闭包中保留递归裁剪解析', () => {
     const leafLower = vi.fn((spec: { kind: 'leaf'; params: { radius: number } }) => ({
       commands: [
         { kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -254,7 +254,7 @@ describe('resolve/resource clip', () => {
     expect(leafLower).toHaveBeenCalledTimes(1);
   });
 
-  it('reports unknown clip provider at the resolve boundary', () => {
+  it('报告解析边界处未知的裁剪提供者', () => {
     expect(() => resolveClip({ kind: 'missing', params: {} }, { clips: resolveClipRegistry() })).toThrow(
       /Unknown provider 'missing'/,
     );

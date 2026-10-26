@@ -111,8 +111,8 @@ const probeChild = (
   return observed;
 };
 
-describe('Layout Core layout capability gate', () => {
-  it('preserves both axes across minimum, natural, range, exact, zero and unbounded proposals', () => {
+describe('Layout Core 布局能力门', () => {
+  it('保留最小、自然、范围、精确、零和无界提案的两个轴', () => {
     const child = plainNode('aa bb cc');
     const proposals = [
       { x: minimumAxis, y: naturalAxis },
@@ -166,7 +166,7 @@ describe('Layout Core layout capability gate', () => {
     expect(yResults[6].allocationBounds.height).toBeGreaterThan(yResults[6].slotSize.height);
   });
 
-  it('keeps resolved slot, real allocation and visual bounds independent for fixed geometry', () => {
+  it('保持解析槽、实际分配和视觉边界独立于固定几何体', () => {
     const result = probeChild(
       {
         type: 'path',
@@ -189,7 +189,7 @@ describe('Layout Core layout capability gate', () => {
     expect(result.visualBounds.y).toBeLessThan(result.allocationBounds.y);
   });
 
-  it('distinguishes explicit alignment guides from missing guides without child-type inference', () => {
+  it('区分显式对齐参考线和缺失的参考线，而无需子类型推断', () => {
     const explicit = defineComposite({
       namespace: 'layout-core-gate',
       type: 'explicit-guide',
@@ -266,7 +266,7 @@ describe('Layout Core layout capability gate', () => {
     expect(implicitResult?.alignmentGuides).toBeUndefined();
   });
 
-  it('keeps custom providers, TeX, nested Scope and selected artifacts in one probe/replay environment', () => {
+  it('将自定义提供者、TeX、嵌套 Scope 和选定的产物保留在一个探测/回放环境中', () => {
     const customShape = defineShape({
       name: 'layout-core-gate-shape',
       paramsSchema: strictObject({}),
@@ -431,7 +431,7 @@ describe('Layout Core layout capability gate', () => {
     expect(groups).toHaveLength(nestedGroups.length + 1);
   });
 
-  it('isolates discarded failures, preserves raise ownership and rejects duplicate replay', () => {
+  it('隔离丢弃的故障，保留提升所有权并拒绝重复回放', () => {
     const failure = defineComposite({
       namespace: 'layout-core-gate',
       type: 'failure',
@@ -538,7 +538,7 @@ describe('Layout Core layout capability gate', () => {
     ).toThrow(/already replayed|at most once/i);
   });
 
-  it('rejects replay results outside their callback and compile session and rejects forged results', () => {
+  it('拒绝回调和编译会话之外的回放结果，并拒绝伪造结果', () => {
     let retained: LayoutChildResult | undefined;
     const producer = defineComposite({
       namespace: 'layout-core-gate',
@@ -608,7 +608,7 @@ describe('Layout Core layout capability gate', () => {
     ).toThrow(/layout|replay|forged|belong/i);
   });
 
-  it('rejects malformed proposals with occurrence-aware diagnostics', () => {
+  it('通过实例感知诊断拒绝格式错误的提案', () => {
     const invalidProposals = [
       {
         name: 'negative-exact',

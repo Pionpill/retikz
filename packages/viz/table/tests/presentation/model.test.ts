@@ -30,8 +30,8 @@ const formattedModel = () =>
     }),
   );
 
-describe('Presented Table model', () => {
-  it('preserves value/content discriminators, executed names, and default border appearance', () => {
+describe('推出 Table 型号', () => {
+  it('保留值/内容标识符、执行名称和默认边框外观', () => {
     let observed: CellPresentationInput | undefined;
     const inspect = defineCellPresentation({
       name: 'inspect',
@@ -74,7 +74,7 @@ describe('Presented Table model', () => {
     });
   });
 
-  it('accepts detached supplied carriers and passes the same final appearance to presentation', () => {
+  it('接受独立提供的载体并通过相同的最终外观进行演示', () => {
     let observed: CellPresentationInput | undefined;
     const inspect = defineCellPresentation({
       name: 'inspect',
@@ -113,7 +113,7 @@ describe('Presented Table model', () => {
     expect(Object.isFrozen(cells[0])).toBe(false);
   });
 
-  it('fails loud for supplied carrier length, order, identity, and kind mismatches', () => {
+  it('由于提供的载体长度、顺序、身份和种类不匹配而失败', () => {
     const base = [
       {
         kind: 'value' as const,

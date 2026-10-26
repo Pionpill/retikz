@@ -17,8 +17,8 @@ const rectCommands: Array<PathCommand> = [
   { kind: 'close' },
 ];
 
-describe('Core rect Clip definition', () => {
-  it('resolves and lowers rect through the complete builtin definition', () => {
+describe('Core 的 rect 裁剪定义', () => {
+  it('通过完整的内置定义解析并下沉 rect', () => {
     const scene = compileToScene(clippedIr({ kind: 'rect', params: { x: 1, y: 2, width: 3, height: 4 } })).scene;
 
     expect(scene.resources).toEqual([
@@ -30,7 +30,7 @@ describe('Core rect Clip definition', () => {
     ]);
   });
 
-  it('keeps a zero-width rect as a canonical empty clip path', () => {
+  it('保留零宽度矩形作为规范的空裁剪路径', () => {
     const scene = compileToScene(clippedIr({ kind: 'rect', params: { x: 1, y: 2, width: 0, height: 4 } })).scene;
 
     expect(scene.resources).toEqual([

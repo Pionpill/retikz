@@ -124,8 +124,8 @@ const cases: ReadonlyArray<{
   },
 ];
 
-describe('Extension Clip definition public contract', () => {
-  it('publishes five complete definitions and no paired shape definitions', () => {
+describe('扩展裁剪定义公共契约', () => {
+  it('发布了五个完整的定义，没有配对的形状定义', () => {
     expect(ExtensionClipDefinitions).toEqual([
       CircleClipDefinition,
       EllipseClipDefinition,
@@ -144,7 +144,7 @@ describe('Extension Clip definition public contract', () => {
     }
   });
 
-  it.each(cases)('compiles $kind through complete definitions passed only as clips', testCase => {
+  it.each(cases)('通过仅作为裁剪传递的完整定义来编译 $kind', testCase => {
     const scene = compileToScene(sceneOf(testCase.clip), { clips: testCase.definitions }).scene;
 
     expect(scene.resources).toEqual([
@@ -157,7 +157,7 @@ describe('Extension Clip definition public contract', () => {
   });
 });
 
-describe('Extension clip provider graph', () => {
+describe('扩展裁剪提供者图', () => {
   const providers: ReadonlyArray<CoreDependencyProvider> = [
     CircleClipProvider,
     EllipseClipProvider,
@@ -166,7 +166,7 @@ describe('Extension clip provider graph', () => {
     CompoundClipProvider,
   ];
 
-  it('publishes five dependency-free clip providers that each materialize one complete definition', () => {
+  it('发布五个无依赖性裁剪提供者，每个提供者实现一个完整的定义', () => {
     expect(ExtensionClipProviders).toEqual(providers);
     expect(ExtensionClipProviders.map(provider => provider.key)).toEqual([
       { capability: 'clip', name: 'circle' },
@@ -179,7 +179,7 @@ describe('Extension clip provider graph', () => {
     expect(ExtensionClipProviders.map(provider => provider.makeDefinition([]))).toEqual(ExtensionClipDefinitions);
   });
 
-  it('resolves only the requested complete Path definition from the full catalog', () => {
+  it('仅解析完整目录中请求的完整 Path 定义', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [PathClipProvider.key], providers: ExtensionClipProviders }],
     });

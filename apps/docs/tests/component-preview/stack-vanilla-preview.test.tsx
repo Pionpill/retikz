@@ -9,7 +9,7 @@ import { renderStackPreview as renderInputs } from '../../src/modules/docs/conte
 import { renderStackPreview as renderLayout } from '../../src/modules/docs/contents/library/standard/collection/stack/stack-layout.preview';
 import { synchronousInputAdaptersOf } from '../../src/modules/docs/lib';
 
-it('Stack operation arrows toggle independently in SVG and retained updates', () => {
+it('Stack 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
   const input = (incoming: boolean, outgoing: boolean) =>
     createInputScene(
       renderLayout({
@@ -56,7 +56,7 @@ it('Stack operation arrows toggle independently in SVG and retained updates', ()
   }
 });
 
-it('Stack previews render all inputs and empty states through Vanilla adapters', () => {
+it('Stack 预览通过 Vanilla 适配器渲染所有输入和空状态', () => {
   for (const input of ['items', 'data', 'skeleton'] as const) {
     for (const empty of [false, true]) {
       const result = buildVanillaPreview(buildPreviewIR(() => renderInputs({ input, empty, expand: true })));
@@ -67,7 +67,7 @@ it('Stack previews render all inputs and empty states through Vanilla adapters',
   }
 });
 
-it('Stack preview preserves nested Matrix and external cell references', () => {
+it('Stack 预览保留嵌套的 Matrix 和外部单元格引用', () => {
   const result = buildVanillaPreview(
     buildPreviewIR(() => renderComposition({ matrix: true, dashed: true, connect: true })),
   );
@@ -76,7 +76,7 @@ it('Stack preview preserves nested Matrix and external cell references', () => {
   expect(result.code).toContain('selected');
 });
 
-it.each([true, false])('Stack dashed cell toggles in retained updates with matrix=%s', matrix => {
+it.each([true, false])('matrix=%s 时 Stack 虚线单元格在保留模式更新中可切换', matrix => {
   const input = (dashed: boolean) =>
     createInputScene(renderComposition({ matrix, dashed, connect: true }).props.children);
   const first = input(true);

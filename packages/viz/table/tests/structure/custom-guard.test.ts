@@ -88,7 +88,7 @@ const illegalSourceCases: Array<
   ],
 ];
 
-describe('custom Table structure runtime guard', () => {
+describe('自定义 Table 结构运行时防护', () => {
   it.each([
     [
       'duplicate-row',
@@ -121,11 +121,11 @@ describe('custom Table structure runtime guard', () => {
       },
       /duplicate cell/i,
     ],
-  ] as const)('rejects %s owner identity collisions', (kind, output, message) => {
+  ] as const)('拒绝 %s 所属模块身份冲突', (kind, output, message) => {
     expect(() => normalizeCustom(kind, output)).toThrow(message);
   });
 
-  it('rejects location and roles that disagree with the containing row kind', () => {
+  it('拒绝与包含行类型不一致的位置和角色', () => {
     const output: TableStructureOutput = {
       ...validOutput(),
       rows: [{ id: 'row.header', kind: TableRowKind.ColumnHeader }],
@@ -142,11 +142,11 @@ describe('custom Table structure runtime guard', () => {
     expect(() => normalizeCustom('semantic-mismatch', output)).toThrow(/location\/roles/i);
   });
 
-  it.each(illegalSourceCases)('rejects the illegal %s matrix', (kind, output, options, message) => {
+  it.each(illegalSourceCases)('拒绝非法的 %s 矩阵', (kind, output, options, message) => {
     expect(() => normalizeCustom(kind, output, options)).toThrow(message);
   });
 
-  it('passes a definition field transform result directly to build', () => {
+  it('直接将定义字段转换结果传递给构建', () => {
     let observed: unknown;
     const schema = strictObject({
       kind: literal('transformed-option'),
@@ -175,7 +175,7 @@ describe('custom Table structure runtime guard', () => {
     expect(observed).toBe('INPUT');
   });
 
-  it('detaches and freezes provider output, payload, and source aliases', () => {
+  it('分离并冻结提供者输出、有效负载和源别名', () => {
     const payload = { kind: 'value' as const, value: 'before' };
     const source = { kind: 'generated' as const, structureKind: 'extension' };
     const mutableOutput = {

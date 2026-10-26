@@ -20,7 +20,7 @@ const sceneWith = (pathValue: IRPathBase): IRScene => ({
 });
 
 describe('resolvePath', () => {
-  it('resolves effective width and Stroke paint defaults without changing explicit values', () => {
+  it('解决有效宽度和描边绘制默认值，而不更改显式值', () => {
     const resolved = resolvePathWithBuiltinProviders(path(), { irPath: 'children[2].path' });
     expect(resolved.irPath).toBe('children[2].path');
     expect(resolved.path.strokeWidth).toBe(1);
@@ -38,7 +38,7 @@ describe('resolvePath', () => {
     ).toMatchObject({ strokeWidth: 2, fill: 'gold', stroke: 'none' });
   });
 
-  it('expands bend and shape close defaults while preserving explicit values', () => {
+  it('扩展弯曲和形状闭合默认值，同时保留显式值', () => {
     const canonical = resolvePathWithBuiltinProviders(
       path({
         children: [
@@ -57,7 +57,7 @@ describe('resolvePath', () => {
     expect(canonical.path.children![4]).toMatchObject({ kind: 'ellipsePath', closed: 'open' });
   });
 
-  it('expands fold and smooth static defaults without changing geometry inputs', () => {
+  it('在不更改几何输入的情况下扩展折叠和平滑静态默认值', () => {
     const canonical = resolvePathWithBuiltinProviders(
       path({
         children: [
@@ -73,7 +73,7 @@ describe('resolvePath', () => {
     expect(canonical.path.children![0]).toMatchObject({ to: [0, 0] });
   });
 
-  it('canonicalizes every geometry label position, side, and distance', () => {
+  it('规范化每个几何标签位置、边和距离', () => {
     const positions = [
       'at-start',
       'very-near-start',
@@ -115,7 +115,7 @@ describe('resolvePath', () => {
     ).toMatchObject({ label: { position: 0.5, side: 'center', distance: 4 } });
   });
 
-  it('materializes interruption defaults and explicit overrides for host and step labels', () => {
+  it('实现宿主和步骤标签的中断默认值和显式覆盖', () => {
     const canonical = resolvePathWithBuiltinProviders(
       path({
         label: [
@@ -152,7 +152,7 @@ describe('resolvePath', () => {
     ]);
   });
 
-  it('normalizes a host label to an array while preserving explicit falsy values', () => {
+  it('将宿主标签标准化为数组，同时保留显式的虚假值', () => {
     const canonical = resolvePathWithBuiltinProviders(
       path({ label: { text: 'host', position: 'at-end', side: 'bottom', distance: 0, sloped: false } }),
     );
@@ -162,7 +162,7 @@ describe('resolvePath', () => {
     ]);
   });
 
-  it('compiles compact Path forms to the same Scene as their explicit Source IR equivalents', () => {
+  it('将紧凑的 Path 形式编译为与其显式 Source IR 等效项相同的 Scene', () => {
     const compact = path({
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
@@ -200,7 +200,7 @@ describe('resolvePath', () => {
     expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);
   });
 
-  it('compiles compact bend and partial-shape defaults like their explicit forms', () => {
+  it('编译紧凑弯曲和部分形状默认值，就像它们的显式形式一样', () => {
     const compact = path({
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },

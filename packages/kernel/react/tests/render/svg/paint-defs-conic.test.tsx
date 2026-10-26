@@ -11,8 +11,8 @@ const childrenOf = (resources: Array<SceneResource>): Array<AnyEl> => {
   return (frag.props.children as Array<AnyEl>).filter(Boolean);
 };
 
-describe('renderPaintDefs conicGradient', () => {
-  it('materializes a conic gradient as an objectBoundingBox pattern', () => {
+describe('renderPaintDefs 的 conicGradient 渲染', () => {
+  it('将圆锥曲线具体化为 objectBoundingBox 图案', () => {
     const [pattern] = childrenOf([
       {
         kind: 'paint',

@@ -97,7 +97,7 @@ const slopedGroupOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string):
 const pathPrims = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive> =>
   flatten(primitives).filter((primitive): primitive is PathPrimitive => primitive.type === 'path');
 
-describe('Ribbon label schema', () => {
+describe('功能区标签 schema', () => {
   it('仅中心线参数接受标签，数组不能为空', () => {
     expect(RibbonSchema.safeParse({ ...ribbon(), label: { text: 'x' } }).success).toBe(false);
     expect(RibbonSchema.safeParse(ribbon({ label: [] })).success).toBe(false);
@@ -130,7 +130,7 @@ describe('Ribbon label schema', () => {
   });
 });
 
-describe('Ribbon label compile', () => {
+describe('功能区标签编译', () => {
   it('嵌套标签继承宿主位置与字体默认，并逐项覆盖样式和内外位置', () => {
     const compiled = compileToScene(
       scene([

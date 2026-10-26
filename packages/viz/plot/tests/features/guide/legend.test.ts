@@ -297,7 +297,7 @@ const sectorColorLegendSpec = (): IRPlot =>
 
 describe('lowerPlots legend — review 修复回归（sector color / shape glyph / scale 类型）', () => {
   // P1-1：sector（饼/环）的 color 编码同样要喂 color legend——此前 resolveColorLegend 跳过 sector
-  it('sector_color_legend_one_swatch_per_slice', () => {
+  it('扇区颜色图例为每个切片提供一个色块', () => {
     const outer = expandOf(sectorColorLegendSpec(), { d: SECTOR_SHARE });
     const legend = findLegendLayer(outer);
 
@@ -309,7 +309,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
   });
 
   // P1-2：shape legend 的 swatch 应是编码的 glyph 形状，而非清一色矩形
-  it('shape_legend_swatches_use_encoded_glyphs_not_rectangles', () => {
+  it('形状图例样本使用编码字形而不是矩形', () => {
     const outer = expandOf(shapeLegendSpec(), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
 
@@ -322,7 +322,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     expect(shapes.some(shape => shape !== 'rectangle')).toBe(true);
   });
 
-  it('shape_legend_preserves_structured_shape_refs_from_plot_defaults', () => {
+  it('形状图例保留绘图默认值中的结构化形状参考', () => {
     const pentagon = { type: 'polygon', params: { sides: 5, rotate: -90 } } as const;
     const spec = PlotSchema.parse({
       ...shapeLegendSpec(),
@@ -334,7 +334,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     expect(swatchNodesOf(legend as IRScope).map(node => node.shape)).toEqual([pentagon, 'cross', 'circle']);
   });
 
-  it('shape_legend_glyphs_default_to_no_stroke', () => {
+  it('形状图例字形默认不描边', () => {
     const outer = expandOf(shapeLegendSpec(), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
 
@@ -347,7 +347,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     expect(glyphs.every(node => node.style?.strokeWidth === 0)).toBe(true);
   });
 
-  it('shape_legend_glyphs_use_the_mark_fill_color', () => {
+  it('形状图例字形使用标记填充颜色', () => {
     const outer = expandOf(shapeLegendSpec(), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
     const mark = findMarkLayer(outer);
@@ -362,7 +362,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     expect(glyphs.every(node => node.style?.fill === markFill)).toBe(true);
   });
 
-  it('shape_legend_symbol_size_style_controls_glyph_box', () => {
+  it('形状图例符号大小样式控制字形框', () => {
     const outer = expandOf(shapeLegendSpec({ style: { symbolSize: 18 } }), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
 
@@ -375,14 +375,14 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
   });
 
   // P2：color legend 绑到位置 linear scale（非颜色 scale）→ fail-loud，而非落空 ordinal 出空图例
-  it('color_legend_bound_to_non_color_scale_fail_loud', () => {
+  it('颜色图例绑定非颜色比例尺时明确报错', () => {
     expect(() => expandOf(ordinalColorLegendSpec({ scale: 'x' }), { d: ORDINAL_ROWS })).toThrow(/not a color scale/);
   });
 });
 
-describe('lowerPlots legend — happy path（contract）', () => {
+describe('lowerPlots 传奇——幸福之路（契约）', () => {
   // 离散 swatch：每类一块 + 标签
-  it('ordinal_color_legend_one_swatch_per_category', () => {
+  it('序数颜色图例每个类别一个样本', () => {
     const outer = expandOf(ordinalColorLegendSpec(), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
 
@@ -396,7 +396,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
     expect(swatchNodesOf(legend as IRScope).length).toBeGreaterThanOrEqual(3);
   });
 
-  it('ordinal_legend_text_nodes_default_to_no_stroke_or_fill', () => {
+  it('序数图例文本节点默认为无描边或填充', () => {
     const outer = expandOf(ordinalColorLegendSpec({ title: 'Kind' }), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
 
@@ -411,7 +411,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
   });
 
   // 连续 ramp：色带 + nice 刻度
-  it('sequential_color_legend_continuous_ramp', () => {
+  it('顺序颜色图例连续斜坡', () => {
     const outer = expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
 
@@ -424,7 +424,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
     expect(labels.every(n => typeof n.text === 'string')).toBe(true);
   });
 
-  it('ramp_legend_tick_labels_default_to_no_stroke_or_fill', () => {
+  it('斜坡图例刻度标签默认为无描边或填充', () => {
     const outer = expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
 
@@ -439,7 +439,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
   });
 
   // size 梯度符号：几档代表圈 + 值
-  it('size_legend_graduated_symbols', () => {
+  it('尺寸图例毕业符号', () => {
     const outer = expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
 
@@ -451,7 +451,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
     expect(labels.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('size_legend_default_symbols_fit_inside_symbol_box', () => {
+  it('尺寸图例默认符号适合符号框内', () => {
     const outer = expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
     const swatches = swatchNodesOf(legend as IRScope);
@@ -464,7 +464,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
     expect(symbols.every(node => node.style?.strokeWidth === 0)).toBe(true);
   });
 
-  it('size_legend_symbols_use_the_mark_effective_color', () => {
+  it('尺寸图例符号使用标记有效颜色', () => {
     const outer = expandOf(sizeLegendSpec({}, { color: '#d946ef' }), {
       d: CONTINUOUS_ROWS,
     });
@@ -475,7 +475,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
     expect(symbols.every(node => node.style?.fill === '#d946ef')).toBe(true);
   });
 
-  it('size_legend_symbol_size_style_controls_fit_box', () => {
+  it('尺寸图例的 symbolSize 样式控制适配框', () => {
     const outer = expandOf(sizeLegendSpec({ style: { symbolSize: 10 } }), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
     const symbols = sizeSymbolNodesOf(legend as IRScope);
@@ -484,7 +484,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
     expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(10 + DEFAULT_EPSILON);
   });
 
-  it('size_legend_preserve_keeps_descriptor_radius_and_reserves_space', () => {
+  it('大小图例保留保留描述符半径并保留空间', () => {
     const outer = expandOf(sizeLegendSpec({ style: { symbolFit: 'preserve' } }), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
     const symbols = sizeSymbolNodesOf(legend as IRScope);
@@ -502,7 +502,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
     expect(yGap).toBeGreaterThanOrEqual((nodeMinimumSide(first) + nodeMinimumSide(second)) / 2 + 6);
   });
 
-  it('theme_legend_symbol_size_is_overridden_by_local_style', () => {
+  it('主题图例符号大小被本地样式覆盖', () => {
     const themed = PlotSchema.parse({
       ...sizeLegendSpec({ style: { symbolSize: 10 } }),
       defaultPlot: { legend: { symbolSize: 18 } },
@@ -518,7 +518,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
 
 describe('lowerPlots legend — 边界（contract）', () => {
   // 单类别 legend → 一个 swatch
-  it('single_category_legend_one_swatch', () => {
+  it('单类别传奇一个样本', () => {
     const outer = expandOf(ordinalColorLegendSpec(), { d: SINGLE_CATEGORY_ROWS });
     const legend = findLegendLayer(outer);
 
@@ -530,13 +530,13 @@ describe('lowerPlots legend — 边界（contract）', () => {
     expect(labels[0].text).toBe('A');
   });
 
-  it('size_legend_without_scale_rejects_multiple_scale_identities', () => {
+  it('没有比例的尺寸图例拒绝多个比例标识', () => {
     expect(() =>
       expandOf(multiSizeLegendSpec({ firstScale: 'sizeA', secondScale: 'sizeB' }), { d: MULTI_SIZE_ROWS }),
     ).toThrow(/multiple scales/);
   });
 
-  it('size_legend_with_scale_selects_the_exact_identity', () => {
+  it('带刻度的尺寸图例选择准确的标识', () => {
     const outer = expandOf(multiSizeLegendSpec({ firstScale: 'sizeA', secondScale: 'sizeB', guideScale: 'sizeB' }), {
       d: MULTI_SIZE_ROWS,
     });
@@ -547,7 +547,7 @@ describe('lowerPlots legend — 边界（contract）', () => {
   it.each([
     ['implicit selector', undefined],
     ['explicit selector', 'sharedSize'],
-  ])('size_legend_merges_equivalent_duplicate_identity_with_%s', (_label, guideScale) => {
+  ])('尺寸图例将等效的重复标识与 %s 合并', (_label, guideScale) => {
     const outer = expandOf(multiSizeLegendSpec({ guideScale }), { d: MULTI_SIZE_ROWS });
 
     expect(findLegendLayer(outer)).toBeDefined();
@@ -556,14 +556,14 @@ describe('lowerPlots legend — 边界（contract）', () => {
   it.each([
     ['implicit selector', undefined],
     ['explicit selector', 'sharedSize'],
-  ])('size_legend_rejects_conflicting_duplicate_identity_with_%s', (_label, guideScale) => {
+  ])('尺寸图例拒绝与 %s 冲突的重复标识', (_label, guideScale) => {
     expect(() =>
       expandOf(multiSizeLegendSpec({ secondField: 'secondaryPopulation', guideScale }), { d: MULTI_SIZE_ROWS }),
     ).toThrow(/conflicting size descriptors/);
   });
 
   // quantize / quantile 分箱标签：每档一区间标签
-  it('quantile_legend_binned_labels', () => {
+  it('quantile 图例显示分箱标签', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -603,14 +603,14 @@ describe('lowerPlots legend — 边界（contract）', () => {
   });
 
   // 空数据 → legend 不崩（空或退化）
-  it('empty_data_legend_no_crash', () => {
+  it('空数据图例不会崩溃', () => {
     expect(() => expandOf(ordinalColorLegendSpec(), { d: [] })).not.toThrow();
   });
 });
 
 describe('lowerPlots legend — 错误路径（contract）', () => {
   // 多 color scale 未给 scale 消歧 → fail-loud
-  it('ambiguous_multiple_color_scales_fail_loud', () => {
+  it('多个颜色比例尺存在歧义时明确报错', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -646,7 +646,7 @@ describe('lowerPlots legend — 错误路径（contract）', () => {
   });
 
   // legend 绑不存在的 scale name → fail-loud
-  it('legend_unknown_scale_name_fail_loud', () => {
+  it('图例引用未知比例尺名称时明确报错', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -675,7 +675,7 @@ describe('lowerPlots legend — 错误路径（contract）', () => {
 
 describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥）', () => {
   // 修 P1 ⑦：Legend 不抑制默认 axes —— point mark + 只声明 Legend、无显式 Axis → 默认 x/y 轴仍在 + legend
-  it('legend_does_not_suppress_default_axes', () => {
+  it('图例不抑制默认轴', () => {
     // 显式补两条默认 axis + legend，模拟 buildPlotIR by-type 合并后的 spec：legend 与 axis 共存、互不抑制
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -710,7 +710,7 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
   });
 
   // 显式 Axis + Legend 共存
-  it('explicit_axis_and_legend_coexist', () => {
+  it('显式轴和图例共存', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -743,7 +743,7 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
   });
 
   // P2 ⑩ 占位：position='right' → plotArea 右侧收窄、legend 落预留带（非 overlay / 出界）
-  it('legend_right_narrows_plot_area', () => {
+  it('右侧图例缩窄绘图区', () => {
     // 对比：无 legend vs 有 right legend，mark 层的横向跨度应收窄（legend 预留右带）
     const noLegend = expandOf(
       PlotSchema.parse({
@@ -781,7 +781,7 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
 
   // P1 ⑥ descriptor 复用：size resolver 产 descriptor，legend 梯度符号读同一 descriptor
   //   → legend 最大档半径应落在 size resolver 的 range 上界附近（与 mark 实绘半径同源）
-  it('size_legend_reuses_resolver_descriptor', () => {
+  it('大小图例重用解析器描述符', () => {
     const outer = expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
 
@@ -858,7 +858,7 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain', () => {
       guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', ticks: { count: 4 } }],
     });
 
-  it('explicit_domain_ramp_ticks_follow_domain_not_data_extent', () => {
+  it('显式域斜坡刻度遵循域而不是数据范围', () => {
     const outer = expandOf(explicitDomainRampSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
     const labelNumbers = labelsOf(legend as IRScope)
@@ -870,7 +870,7 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain', () => {
     expect(Math.max(...labelNumbers)).toBeGreaterThan(30);
   });
 
-  it('temporal_ramp_explicit_string_ticks_keep_finite_label_positions', () => {
+  it('时间斜坡显​​式字符串刻度保持有限的标签位置', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -944,29 +944,29 @@ describe('lowerPlots legend — core schema 合法性回归（修 PathSchema.min
     expect(result.success).toBe(true);
   };
 
-  it('ordinal_swatch_legend_passes_child_schema', () => {
+  it('序号样本图例传递子 schema', () => {
     assertLegendSchemaValid(expandOf(ordinalColorLegendSpec(), { d: ORDINAL_ROWS }));
   });
 
-  it('single_category_swatch_legend_passes_child_schema', () => {
+  it('单类别样本图例传递子 schema', () => {
     assertLegendSchemaValid(expandOf(ordinalColorLegendSpec(), { d: SINGLE_CATEGORY_ROWS }));
   });
 
-  it('sequential_ramp_legend_passes_child_schema', () => {
+  it('顺序斜坡图例传递子 schema', () => {
     assertLegendSchemaValid(expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS }));
   });
 
-  it('quantile_binned_legend_passes_child_schema', () => {
+  it('quantile 分箱图例通过子项 schema 校验', () => {
     assertLegendSchemaValid(expandOf(quantileColorLegendSpec(), { d: QUANTILE_ROWS }));
   });
 
-  it('size_graduated_legend_passes_child_schema', () => {
+  it('大小分级图例传递子 schema', () => {
     assertLegendSchemaValid(expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS }));
   });
 });
 
-describe('composite categorical legend symbols', () => {
-  it('overlays line and point colors from a bound scale and explicit paint', () => {
+describe('复合分类图例符号', () => {
+  it('覆盖来自绑定比例和显式绘制的线和点颜色', () => {
     const spec = ordinalColorLegendSpec({
       symbols: [
         { kind: 'line', paint: '#112233' },
@@ -988,11 +988,11 @@ describe('composite categorical legend symbols', () => {
     expect(symbols.filter(node => node.shape === 'circle')).toHaveLength(3);
   });
 
-  it('rejects a symbol without a color source at parse', () => {
+  it('拒绝解析时没有颜色源的符号', () => {
     expect(() => ordinalColorLegendSpec({ symbols: [{ kind: 'point' }] })).toThrow();
   });
 
-  it('rejects missing symbol scale and continuous legends', () => {
+  it('拒绝缺失的符号比例和连续的图例', () => {
     expect(() =>
       expandOf(ordinalColorLegendSpec({ symbols: [{ kind: 'line', scale: 'missing' }] }), { d: ORDINAL_ROWS }),
     ).toThrow(/unknown scale/);
@@ -1006,7 +1006,7 @@ describe('composite categorical legend symbols', () => {
   });
 });
 
-it('rejects different ordered category domains in composite symbols', () => {
+it('拒绝复合符号中不同的有序类别域', () => {
   const spec = ordinalColorLegendSpec({ symbols: [{ kind: 'point', scale: 'otherColor' }] });
   spec.scales.push({ type: 'ordinal', name: 'otherColor', domain: ['C', 'B', 'A'] });
   spec.marks.push({
@@ -1020,14 +1020,14 @@ it('rejects different ordered category domains in composite symbols', () => {
   expect(() => expandOf(spec, { d: ORDINAL_ROWS })).toThrow(/same ordered categorical domain/);
 });
 it.each([{ step: 0 }, { step: -1 }, { offset: -1 }, { step: 1.5 }])(
-  'rejects invalid ordinal palette indexing %j',
+  '拒绝无效的序数调色板索引 %j',
   rangeIndex => {
     const spec = ordinalColorLegendSpec();
 
     expect(() => PlotSchema.parse({ ...spec, scales: [{ type: 'ordinal', name: 'bad', rangeIndex }] })).toThrow();
   },
 );
-it('applies ordinal index steps to the effective theme palette', () => {
+it('将序数索引步骤应用于有效主题调色板', () => {
   const spec = ordinalColorLegendSpec();
   spec.scales = spec.scales.map(scale =>
     scale.type === 'ordinal' ? { ...scale, rangeIndex: { step: 2, offset: 1 } } : scale,

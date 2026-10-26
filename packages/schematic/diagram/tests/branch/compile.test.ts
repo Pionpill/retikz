@@ -17,8 +17,8 @@ const compile = (source: Record<string, unknown>) =>
     },
   );
 
-describe('Branch compile', () => {
-  it('compiles shared fork and merge nodes with an assembled reference artifact', () => {
+describe('分支编译', () => {
+  it('使用组装的参考产物编译共享分叉和合并节点', () => {
     const result = compile({
       nodes: ['a', 'b', 'c'].map(id => ({ id, labels: [{ text: `label-${id}` }] })),
       branches: [
@@ -53,9 +53,9 @@ describe('Branch compile', () => {
     },
     { nodes: [{ id: 'a' }, { id: 'b' }], branches: [{ id: 'x', nodes: ['a'] }] },
     { nodes: [{ id: 'a' }], branches: [{ id: 'x', nodes: ['a', 'a'] }] },
-  ])('rejects invalid topology %j', source => expect(() => compile(source)).toThrow());
+  ])('拒绝无效拓扑 %j', source => expect(() => compile(source)).toThrow());
 
-  it('rejects conflicting shared segment appearances', () => {
+  it('拒绝冲突的共享段外观', () => {
     expect(() =>
       compile({
         nodes: [{ id: 'a' }, { id: 'b' }],

@@ -95,8 +95,8 @@ const fullGridInput = (): BuildTableBorderGraphInput => ({
   defaults: { outer: outerCandidates(lineCandidate()), horizontal: lineCandidate(), vertical: lineCandidate() },
 });
 
-describe('Table Border Graph', () => {
-  it('parses detached strict JSON output vocabulary for manifest and Path metadata', () => {
+describe('Table 边框 Graph', () => {
+  it('解析清单和 Path 元数据的分离严格 JSON 输出词汇', () => {
     expect(ResolvedTableBorderLineSchema.parse({ ...line(), color: '#336699', stroke: 0.8 })).toMatchObject({
       color: '#336699',
       stroke: 0.8,
@@ -145,7 +145,7 @@ describe('Table Border Graph', () => {
     ).toThrow();
   });
 
-  it('builds collapse atoms on outer edges and positive-gap midpoints', () => {
+  it('在外边缘和正能隙中点构建塌陷原子', () => {
     const graph = buildTableBorderGraph(fullGridInput());
 
     expect(graph.atoms).toHaveLength(12);
@@ -165,7 +165,7 @@ describe('Table Border Graph', () => {
     });
   });
 
-  it('suppresses boundaries inside spanning Cells while retaining their outer sides', () => {
+  it('抑制跨越单元内部的边界，同时保留其外侧', () => {
     const graph = buildTableBorderGraph({
       rows: [rows[0]],
       columns,
@@ -180,7 +180,7 @@ describe('Table Border Graph', () => {
     );
   });
 
-  it('keeps default grid through Cell/void and void/void without synthetic Cells', () => {
+  it('通过 Cell/void 和 void/void 保持默认网格，无需合成 Cell', () => {
     const graph = buildTableBorderGraph({
       rows: [rows[0]],
       columns: [...columns, track('c2', 2, 60, 10)],
@@ -193,7 +193,7 @@ describe('Table Border Graph', () => {
     expect(graph.atoms.every(atom => atom.contributors.every(item => item.source.kind === 'default'))).toBe(true);
   });
 
-  it('returns an empty graph when either Table dimension is zero', () => {
+  it('当 Table 维度为零时，返回空图', () => {
     expect(
       buildTableBorderGraph({
         rows: [],
@@ -214,7 +214,7 @@ describe('Table Border Graph', () => {
     ).toEqual({ atoms: [], edges: [] });
   });
 
-  it('resolves the full priority, specificity, none, width, owner-side, and source-key tuple', () => {
+  it('解析完整优先级、特异性、无、宽度、所属模块端和源键元组', () => {
     const atomKey = 'c:v:1:0';
     const defaultSource = { kind: 'default', scope: 'vertical', boundaryIndex: 1 } as const;
     const leftSource = { kind: 'cell', cellId: 'renamable-left', row: 0, column: 0, side: 'right' } as const;
@@ -296,7 +296,7 @@ describe('Table Border Graph', () => {
     ).toEqual(lexicalA);
   });
 
-  it('accepts the full finite integer priority range and selects the larger extreme', () => {
+  it('接受完整的有限整数优先级范围并选择较大的极值', () => {
     const atomKey = 'c:v:1:0';
     const low = contribution(
       atomKey,
@@ -323,7 +323,7 @@ describe('Table Border Graph', () => {
     ).toBe(Number.MAX_VALUE);
   });
 
-  it('sorts contributors canonically and rejects duplicate or mismatched keys', () => {
+  it('对贡献者进行规范排序并拒绝重复或不匹配的键', () => {
     const atomKey = 'c:h:1:0';
     const top = contribution(atomKey, { kind: 'cell', cellId: 'bottom', row: 1, column: 0, side: 'top' });
     const bottom = contribution(atomKey, { kind: 'cell', cellId: 'top', row: 0, column: 0, side: 'bottom' });
@@ -364,7 +364,7 @@ describe('Table Border Graph', () => {
         { borderLine: line({ strokeOpacity: 0 }) },
       ),
     ],
-  ])('retains hidden winner provenance without emitting an edge for %#', winner => {
+  ])('保留隐藏的获胜者来源追溯，而不为 %# 发出优势', winner => {
     const atom: TableBorderAtom = {
       key: 'c:h:0:0',
       orientation: 'horizontal',
@@ -378,7 +378,7 @@ describe('Table Border Graph', () => {
     expect(mergeTableBorderAtoms(resolved, 'collapse')).toEqual([]);
   });
 
-  it('merges continuous solid CSS atoms while preserving per-atom provenance', () => {
+  it('合并连续的固体 CSS 原子，同时保留每个原子的来源', () => {
     const firstKey = 'c:h:0:0';
     const secondKey = 'c:h:0:1';
     const first = contribution(firstKey, { kind: 'default', scope: 'outer', side: 'top' });
@@ -404,7 +404,7 @@ describe('Table Border Graph', () => {
     expect(edges[0].atoms.map(atom => atom.key)).toEqual([firstKey, secondKey]);
   });
 
-  it('returns detached frozen edges without freezing caller-owned resolved atoms', () => {
+  it('返回分离的冻结边缘，而不冻结调用者拥有的解析原子', () => {
     const atomKey = 'c:h:0:0';
     const winner = contribution(atomKey, { kind: 'default', scope: 'outer', side: 'top' });
     const atom: ResolvedTableBorderAtom = {
@@ -427,7 +427,7 @@ describe('Table Border Graph', () => {
     expect(Object.isFrozen(edges[0].atoms[0].winner)).toBe(true);
   });
 
-  it('does not merge different masters, dashed, resource-paint, or junction-separated atoms', () => {
+  it('不合并不同的母版、虚线、资源绘制或连接分隔的原子', () => {
     const firstKey = 'c:h:0:0';
     const secondKey = 'c:h:0:1';
     const horizontalAtoms = (borderLine: ResolvedTableBorderLine): ReadonlyArray<TableBorderAtom> => [
@@ -491,7 +491,7 @@ describe('Table Border Graph', () => {
     expect(junctionEdges.map(edge => edge.orientation)).toEqual(['horizontal', 'horizontal', 'vertical']);
   });
 
-  it('keeps separate Cell sides independent and applies defaults only when a side is absent', () => {
+  it('保持单独的 Cell 边独立，并且仅当边不存在时才应用默认值', () => {
     const input: BuildTableBorderGraphInput = {
       rows: [rows[0]],
       columns,
@@ -517,7 +517,7 @@ describe('Table Border Graph', () => {
     expect(graph.edges[0]).toMatchObject({ start: { x: 26, y: 0 }, end: { x: 26, y: 10 } });
   });
 
-  it('never merges separate atoms even when gap zero makes their geometry overlap', () => {
+  it('即使间隙为零使其几何重叠，也永远不会合并单独的原子', () => {
     const graph = buildTableBorderGraph({
       rows: [rows[0]],
       columns: [track('c0', 0, 0, 10), track('c1', 1, 10, 10)],
@@ -534,7 +534,7 @@ describe('Table Border Graph', () => {
     expect(graph.edges.map(edge => edge.atoms[0].key)).toEqual(['s:0:0:right', 's:0:1:left']);
   });
 
-  it('is deterministic, detached, and independent of Cell input order or id rename', () => {
+  it('是确定性的、分离的、独立于 Cell 输入顺序或 id 重命名', () => {
     const base = fullGridInput();
     const input: BuildTableBorderGraphInput = {
       ...base,
@@ -629,7 +629,7 @@ describe('Table Border Graph', () => {
       },
       /priority|-100/i,
     ],
-  ])('rejects invalid graph topology or geometry for %#', (override, message) => {
+  ])('拒绝 %# 的无效图形拓扑或几何图形', (override, message) => {
     expect(() => buildTableBorderGraph({ ...fullGridInput(), ...override })).toThrow(message);
   });
 });

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { DetailTableInput, ManualTableInput } from '../../../src';
 import { createDetailTableIR, createManualTableIR, TABLE_NAMESPACE, TableComposite, TableSchema } from '../../../src';
 
-describe('Table plain authoring', () => {
-  it('normalizes detail string headers and keeps header false', () => {
+describe('Table 简单编写', () => {
+  it('标准化详细字符串头部并保持头部为 false', () => {
     const input: DetailTableInput = {
       id: 'sales',
       dataRef: 'sales-data',
@@ -39,7 +39,7 @@ describe('Table plain authoring', () => {
     });
   });
 
-  it('returns detached JSON-safe specs without modifying detail input', () => {
+  it('返回分离的 JSON 安全规格，而不修改详细输入', () => {
     const columns: DetailTableInput['columns'] = [{ id: 'name', field: 'name', header: 'Name' }];
     const model: NonNullable<DetailTableInput['model']> = [{ name: 'name' }];
     const input: DetailTableInput = { dataRef: 'people', columns, model };
@@ -54,7 +54,7 @@ describe('Table plain authoring', () => {
     expect(TableSchema.parse(spec)).toEqual(spec);
   });
 
-  it('preserves and detaches detail formatter, rules, encodings, and Source defaults', () => {
+  it('保留和分离详细格式化程序、规则、编码和 Source 默认值', () => {
     const formatter = { name: 'number', options: { maximumFractionDigits: 1 } };
     const rules: NonNullable<DetailTableInput['rules']> = [
       {
@@ -110,7 +110,7 @@ describe('Table plain authoring', () => {
     expect(spec.encodings?.[0]?.selector.fields).toEqual(['score']);
   });
 
-  it('assembles a row-major manual structure without modifying its input', () => {
+  it('组装行优先手动结构而不修改其输入', () => {
     const rows: ManualTableInput['rows'] = [
       ['Name', 'Score'],
       ['Ada', { id: 'score', value: 98, location: 'body', roles: ['data'] }],
@@ -139,7 +139,7 @@ describe('Table plain authoring', () => {
     expect(TableSchema.parse(spec)).toEqual(spec);
   });
 
-  it('preserves and detaches manual formatter, rules, encodings, and Source defaults', () => {
+  it('保留和分离手动格式化程序、规则、编码和 Source 默认值', () => {
     const rows: ManualTableInput['rows'] = [
       [{ value: 98, formatter: { name: 'number', options: { maximumFractionDigits: 0 } } }],
     ];
@@ -193,7 +193,7 @@ describe('Table plain authoring', () => {
     expect(spec.encodings?.[0]?.selector.locations).toEqual(['body']);
   });
 
-  it('validates external detail and manual records at the Table schema boundary', () => {
+  it('验证 Table schema 边界处的外部详细信息和手动记录', () => {
     expect(() => TableSchema.parse(createDetailTableIR({ dataRef: '', columns: [] }))).toThrow();
     expect(() => TableSchema.parse(createManualTableIR({ rows: [] }))).toThrow();
     expect(() =>

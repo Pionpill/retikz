@@ -10,12 +10,12 @@ import {
 import { describe, expect, it } from 'vitest';
 
 describe('assertNonEmptyString', () => {
-  it('accepts typed non-empty content without returning a value', () => {
+  it('接受键入的非空内容而不返回值', () => {
     expect(assertNonEmptyString('alpha', 'name')).toBeUndefined();
     expect(() => assertNonEmptyString(' alpha ', 'name')).not.toThrow();
   });
 
-  it.each(['', ' ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])('rejects blank value %j', value => {
+  it.each(['', ' ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])('拒绝空白值 %j', value => {
     expect(NonBlankStringSchema.safeParse(value).success).toBe(false);
 
     let failure: unknown;
@@ -37,11 +37,11 @@ describe('assertNonEmptyString', () => {
     });
   });
 
-  it('preserves the caller label in the structured error message', () => {
+  it('在结构化错误消息中保留调用者标签', () => {
     expect(() => assertNonEmptyString('', 'Theme owner')).toThrowError('Theme owner must be a non-empty string.');
   });
 
-  it('throws the owner error passed for an invalid value', () => {
+  it('抛出因无效值而传递的所属模块错误', () => {
     const ownerError = new RetikzError({
       code: 'OWNER_INVALID',
       message: 'Owner name is invalid.',
@@ -53,13 +53,13 @@ describe('assertNonEmptyString', () => {
 });
 
 describe('assertPositiveNumber', () => {
-  it('accepts positive finite numbers without returning a value', () => {
+  it('接受正有限数而不返回值', () => {
     expect(assertPositiveNumber(Number.MIN_VALUE, 'size')).toBeUndefined();
     expect(assertPositiveNumber(1.5, 'size')).toBeUndefined();
     expect(PositiveNumberSchema.safeParse(1.5).success).toBe(true);
   });
 
-  it.each([-Infinity, -1, -0, 0, Infinity, NaN])('rejects non-positive or non-finite value %j', value => {
+  it.each([-Infinity, -1, -0, 0, Infinity, NaN])('拒绝非正值或非有限值 %j', value => {
     expect(PositiveNumberSchema.safeParse(value).success).toBe(false);
 
     let failure: unknown;
@@ -81,13 +81,13 @@ describe('assertPositiveNumber', () => {
     });
   });
 
-  it('preserves the caller label in the structured error message', () => {
+  it('在结构化错误消息中保留调用者标签', () => {
     expect(() => assertPositiveNumber(0, 'SVG font size')).toThrowError(
       'SVG font size must be a positive finite number.',
     );
   });
 
-  it('throws the owner error passed for an invalid value', () => {
+  it('抛出因无效值而传递的所属模块错误', () => {
     const ownerError = new RetikzError({
       code: 'OWNER_INVALID',
       message: 'Owner size is invalid.',

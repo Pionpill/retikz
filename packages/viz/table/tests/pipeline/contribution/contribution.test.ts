@@ -92,7 +92,7 @@ const tableProviderOf = (contribution: ReturnType<typeof createTableRuntimeContr
       provider.key.type === 'table',
   ) as CoreDependencyProvider<TableProviderParams> | undefined;
 
-describe('Table runtime contribution', () => {
+describe('Table 运行时贡献', () => {
   it('复用同名行数组，拒绝不同引用覆盖同名数据集', () => {
     const rows = [{ value: 1 }];
     const first = createTableRuntimeContribution({ data: { sales: rows } });
@@ -196,7 +196,7 @@ describe('Table runtime contribution', () => {
     });
   });
 
-  it('merges definitions and composites in first-contribution order and deduplicates the same objects', () => {
+  it('按首次贡献顺序合并定义和组合，并对相同对象进行去重', () => {
     const structureA = structureOf('fixture-a');
     const structureB = structureOf('fixture-b');
     const presentationA = presentationOf('fixture-a');
@@ -249,7 +249,7 @@ describe('Table runtime contribution', () => {
     ],
     ['theme', { tableThemeDefinitions: [themeNameOf('same')] }, { tableThemeDefinitions: [themeNameOf('same')] }],
   ] as const)(
-    'fails loud for the same %s key with different definition objects',
+    '对于具有不同定义对象的相同 %s 键，明确报错',
     (_label, firstOptions, secondOptions) => {
       const first = createTableRuntimeContribution({ lowerOptions: firstOptions });
       const second = createTableRuntimeContribution({ lowerOptions: secondOptions });
@@ -258,7 +258,7 @@ describe('Table runtime contribution', () => {
     },
   );
 
-  it('fails loud for the same composite key with different objects', () => {
+  it('对于具有不同对象的相同复合键，明确报错', () => {
     const first = createTableRuntimeContribution({
       composites: [compositeOf('fixture', 'same')],
     });
@@ -269,7 +269,7 @@ describe('Table runtime contribution', () => {
     expect(() => definitionsOf(first, second)).toThrow(/nested definition conflict/i);
   });
 
-  it('requires future non-definition lower options to share the same object identity', () => {
+  it('需要未来的非定义下沉选项来共享相同的对象标识', () => {
     const shared = {};
     const optionsOf = (futureMode: object) => ({ futureMode }) as LowerTablesOptions & { futureMode: object };
     const first = createTableRuntimeContribution({ lowerOptions: optionsOf(shared) });
@@ -280,7 +280,7 @@ describe('Table runtime contribution', () => {
     expect(() => definitionsOf(first, conflict)).toThrow(/lower option.*futureMode/i);
   });
 
-  it('defensively copies formatter definition arrays when creating a contribution', () => {
+  it('创建贡献时防御性地复制格式化程序定义数组', () => {
     const original = formatterOf('original');
     const late = formatterOf('late');
     const formatterDefinitions = [original];
@@ -293,7 +293,7 @@ describe('Table runtime contribution', () => {
     expect(() => definitionsOf(first, second)).not.toThrow();
   });
 
-  it('defensively copies visual scale definition arrays when creating a contribution', () => {
+  it('创建贡献时防御性地复制视觉比例定义数组', () => {
     const original = visualScaleOf('original');
     const late = visualScaleOf('late');
     const visualScaleDefinitions = [original];
@@ -306,7 +306,7 @@ describe('Table runtime contribution', () => {
     expect(() => definitionsOf(first, second)).not.toThrow();
   });
 
-  it('freezes copied runtime containers without cloning or freezing caller definitions', () => {
+  it('冻结复制的运行时容器，而不克隆或冻结调用者定义', () => {
     const structure = structureOf('original-structure');
     const formatter = formatterOf('original-formatter');
     const presentation = presentationOf('original-presentation');

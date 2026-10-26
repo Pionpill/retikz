@@ -53,8 +53,8 @@ const boxNode = (text = ''): IRChild => ({
   layout: { padding: 0, margin: 0, minimumSize: 10 },
 });
 
-describe('Box Layout Composite contract', () => {
-  it('separates constrained allocation, bounded/exact slot size, and visual bounds', () => {
+describe('盒子 Layout 综合契约', () => {
+  it('分离约束分配、有界/精确槽大小和视觉边界', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'slotProbe',
@@ -104,7 +104,7 @@ describe('Box Layout Composite contract', () => {
     });
   });
 
-  it('uses intrinsic allocation dimensions as the intrinsic slot size', () => {
+  it('使用内在分配维度作为内在槽大小', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'intrinsicSlot',
@@ -144,7 +144,7 @@ describe('Box Layout Composite contract', () => {
     });
   });
 
-  it('keeps zero distinct from an indefinite axis', () => {
+  it('保持零与不定轴不同', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'zeroProbe',
@@ -187,7 +187,7 @@ describe('Box Layout Composite contract', () => {
     expect(artifact?.value).toEqual({ exactWidth: 0, boundedHeight: 0, indefiniteHeight: 19.2 });
   });
 
-  it('keeps an overflowing nested child inside explicit allocation and passes exact height without scaling', () => {
+  it('将溢出的嵌套子级保留在显式分配内，并传递精确的高度而不进行缩放', () => {
     const nested = defineComposite({
       namespace: 'test',
       type: 'nestedBox',
@@ -271,7 +271,7 @@ describe('Box Layout Composite contract', () => {
     );
   });
 
-  it('measures an empty composite from its explicit container allocation', () => {
+  it('从其显式容器分配中测量空组合', () => {
     const empty = defineComposite({
       namespace: 'test',
       type: 'emptyBox',
@@ -319,7 +319,7 @@ describe('Box Layout Composite contract', () => {
     expect(result.scene.primitives).toEqual([]);
   });
 
-  it('keeps visible child overflow outside an explicit allocation box', () => {
+  it('将可见子溢出保留在显式分配框之外', () => {
     const leaf = defineComposite({
       namespace: 'test',
       type: 'visibleOverflowLeaf',
@@ -360,7 +360,7 @@ describe('Box Layout Composite contract', () => {
     expect(result.scene.layout).toEqual({ x: 95, y: 95, width: 10, height: 10 });
   });
 
-  it('reports reflowed height separately from an exact-width slot', () => {
+  it('与精确宽度槽分开报告回流高度', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'exactWidthReflow',
@@ -406,7 +406,7 @@ describe('Box Layout Composite contract', () => {
     expect(value.constrainedHeight).toBeGreaterThan(value.intrinsicHeight);
   });
 
-  it('detaches and freezes nested constraints before a provider can corrupt the parent slot', () => {
+  it('在提供者破坏父槽之前分离并冻结嵌套约束', () => {
     let mutationSucceeded = true;
     let receivedFrozenConstraint = false;
     const nested = defineComposite({
@@ -454,7 +454,7 @@ describe('Box Layout Composite contract', () => {
     expect(result.artifacts.find(value => value.kind === 'composite')?.value).toEqual({ slotWidth: 20 });
   });
 
-  it('normalizes negative zero in slot sizes', () => {
+  it('标准化槽大小中的负零', () => {
     let slotWidth = Number.NaN;
     const definition = defineComposite({
       namespace: 'test',
@@ -480,7 +480,7 @@ describe('Box Layout Composite contract', () => {
     expect(Object.is(slotWidth, -0)).toBe(false);
   });
 
-  it('wraps replay roots with canonical transform and clip semantics', () => {
+  it('用规范变换和裁剪语义包装回放根', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'clippedReplay',
@@ -559,7 +559,7 @@ describe('Box Layout Composite contract', () => {
     expect(result.scene.layout).toEqual({ x: 8, y: 18, width: 4, height: 4 });
   });
 
-  it('does not inject origin bounds for empty or fully clipped replay wrappers', () => {
+  it('不为空或完全裁剪的回放包装器注入原点边界', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'invisibleReplayWrappers',
@@ -589,7 +589,7 @@ describe('Box Layout Composite contract', () => {
     expect(result.scene.layout).toEqual({ x: 95, y: 90.4, width: 10, height: 19.2 });
   });
 
-  it('detaches replay wrapper transforms and clip before the callback returns', () => {
+  it('在回调返回之前分离回放包装器变换和裁剪', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'detachedReplayWrapper',
@@ -642,7 +642,7 @@ describe('Box Layout Composite contract', () => {
   it.each([
     ['non-finite transform', { transforms: [{ kind: 'translate', x: Number.NaN, y: 0 }] }],
     ['invalid clip', { clip: { kind: 'rect', params: { x: 0, y: 0, width: -1, height: 10 } } }],
-  ])('rejects invalid replay geometry: %s', (_name, wrapper) => {
+  ])('拒绝无效的回放几何体：%s', (_name, wrapper) => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'invalidReplayWrapper',
@@ -669,7 +669,7 @@ describe('Box Layout Composite contract', () => {
     { x: { kind: 'range', min: 20, max: 10 }, y: { kind: 'intrinsic', mode: 'natural' } },
     { x: { kind: 'exact', value: Number.NaN }, y: { kind: 'intrinsic', mode: 'natural' } },
     { x: { kind: 'intrinsic', mode: 'natural' }, y: { kind: 'range', min: 0, max: Number.POSITIVE_INFINITY } },
-  ])('rejects invalid dual-axis proposal %o with the composite occurrence', proposal => {
+  ])('拒绝复合出现的无效双轴建议 %o', proposal => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'invalidBoxConstraint',
@@ -691,7 +691,7 @@ describe('Box Layout Composite contract', () => {
   it.each([
     { x: 0, y: 0, width: -1, height: 10 },
     { x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 10 },
-  ])('rejects invalid explicit allocation before publishing output: %o', allocationBounds => {
+  ])('在发布输出之前拒绝无效的显式分配：%o', allocationBounds => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'invalidAllocation',
@@ -707,7 +707,7 @@ describe('Box Layout Composite contract', () => {
     ).toThrow(/test\.invalidAllocation.*children\[0\].*allocation/i);
   });
 
-  it('snapshots dynamic explicit allocation fields before validation and publication', () => {
+  it('在验证和发布之前对动态显式分配字段进行快照', () => {
     let widthReads = 0;
     const allocationBounds = new Proxy(
       { x: 0, y: 0, width: 20, height: 10 },
@@ -753,7 +753,7 @@ describe('Box Layout Composite contract', () => {
     expect(widthReads).toBe(1);
   });
 
-  it('uses full fallback for a changed layout-aware composite and matches a fresh compile', () => {
+  it('对更改后的布局感知组合使用完整回退，并匹配新的编译', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'runtimeBox',

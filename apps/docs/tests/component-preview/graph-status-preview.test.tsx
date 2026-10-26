@@ -59,9 +59,9 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-describe('Graph status preview', () => {
+describe('Graph 状态预览', () => {
   it.each([ThemeMode.Light, ThemeMode.Dark])(
-    'updates the default semantic appearance after a status change: %s',
+    '状态更改后更新默认语义外观：%s',
     mode => {
       const container = document.createElement('div');
       document.body.appendChild(container);

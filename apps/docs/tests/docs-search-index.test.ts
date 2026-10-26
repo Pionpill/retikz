@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildSearchEntries } from '../src/modules/docs/components/docs-search/search-engine';
 import { loadSearchIndex } from '../src/modules/docs/components/docs-search/search-index';
 
-describe('docs search index frontmatter', () => {
+describe('文档搜索索引 frontmatter', () => {
   it('链接导航不重复收录原文或生成不存在的正文路径', () => {
     const entries = buildSearchEntries(key => key, {}, 'zh');
     expect(entries.some(entry => entry.path.includes('/compilation-mechanisms'))).toBe(false);

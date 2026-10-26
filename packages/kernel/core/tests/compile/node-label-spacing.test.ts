@@ -61,8 +61,8 @@ const pinLine = (primitives: Array<ScenePrimitive>): PathPrimitive => {
   return primitive;
 };
 
-describe('Node label visual-box spacing', () => {
-  it('attaches a multiline block and terminates its pin at the whole visual box', () => {
+describe('Node 标签视觉框间距', () => {
+  it('附加多行块并将其 pin 终止于整个视觉框', () => {
     const scene = compileToScene(
       sceneWithLabel({ text: ['first', 'second'], position: 'top', distance: 8, pin: true }),
       {
@@ -77,7 +77,7 @@ describe('Node label visual-box spacing', () => {
       { kind: 'line', to: [0, -38] },
     ]);
   });
-  it('uses distance as the right-side gap to the measured visual box', () => {
+  it('使用距离作为与测量的视觉框的右侧间隙', () => {
     const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'right', distance: 8 }), {
       measureText: fixedMeasure,
       padding: 0,
@@ -88,7 +88,7 @@ describe('Node label visual-box spacing', () => {
     expect(visualCenterY(label)).toBeCloseTo(0);
   });
 
-  it('projects the final rotated OBB onto the placement direction', () => {
+  it('将最终旋转的 OBB 投影到放置方向上', () => {
     const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'top', distance: 8, rotate: 90 }), {
       measureText: fixedMeasure,
       padding: 0,
@@ -99,7 +99,7 @@ describe('Node label visual-box spacing', () => {
     expect(visualCenterY(label)).toBeCloseTo(-58);
   });
 
-  it('places an inside label by the same visual extent without clamping', () => {
+  it('在相同的视觉范围内放置内部标签，无需夹紧', () => {
     const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'right', placement: 'inside', distance: 0 }), {
       measureText: fixedMeasure,
       padding: 0,
@@ -108,7 +108,7 @@ describe('Node label visual-box spacing', () => {
     expect(labelText(scene.primitives).x).toBeCloseTo(30);
   });
 
-  it('keeps center placement at the final Node rect center and ignores distance', () => {
+  it('将中心位置保持在最终的 Node 矩形中心并忽略距离', () => {
     const scene = compileToScene(
       sceneWithLabel(
         { text: 'L', position: 'center', distance: 999 },
@@ -124,7 +124,7 @@ describe('Node label visual-box spacing', () => {
     expect(visualCenterY(label)).toBeCloseTo(0);
   });
 
-  it('resolves label geometry after asymmetric padding establishes the final rect', () => {
+  it('在非对称填充建立最终矩形后解析标签几何形状', () => {
     const scene = compileToScene(
       sceneWithLabel(
         { text: 'L', position: 'right', distance: 8 },
@@ -138,7 +138,7 @@ describe('Node label visual-box spacing', () => {
     expect(labelText(scene.primitives).x).toBeCloseTo(48);
   });
 
-  it('keeps centerOffset valid after anchor-position translates the final Node', () => {
+  it('在锚点位置平移最终的 Node 后保持 centerOffset 有效', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -157,7 +157,7 @@ describe('Node label visual-box spacing', () => {
     expect(labelText(scene.primitives).x).toBeCloseTo(178);
   });
 
-  it('keeps Node.scale distance in unscaled user units', () => {
+  it('以未缩放的用户单位保持 Node.scale 距离', () => {
     const scene = compileToScene(
       sceneWithLabel({ text: 'L', position: 'right', distance: 8 }, { scale: { x: 2, y: 1 } }),
       { measureText: fixedMeasure, padding: 0 },
@@ -166,7 +166,7 @@ describe('Node label visual-box spacing', () => {
     expect(labelText(scene.primitives).x).toBeCloseTo(128);
   });
 
-  it('applies a non-uniform Scope scale to the complete resolved geometry', () => {
+  it('将非均匀 Scope 比例应用于完整解析的几何体', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -185,7 +185,7 @@ describe('Node label visual-box spacing', () => {
   });
 });
 
-describe('Node label resolved metrics', () => {
+describe('Node 标签解析指标', () => {
   it.each([
     [
       { width: 40, height: 20 },
@@ -208,13 +208,13 @@ describe('Node label resolved metrics', () => {
       { height: 25, ascent: 15, descent: 10 },
     ],
   ] satisfies Array<[TextMetrics, Pick<TextMetrics, 'height' | 'ascent' | 'descent'>]>)(
-    'normalizes absent, partial, leading, and overflowing baseline metrics',
+    '标准化缺失、部分、领先和溢出的基线指标',
     (metrics, expected) => {
       expect(normalizeTextMetrics(metrics)).toMatchObject(expected);
     },
   );
 
-  it('uses normalized ascent/descent for alphabetic baseline and measuredHeight', () => {
+  it('对字母基线和 measuredHeight 使用归一化上升/下降', () => {
     const metrics: TextMetrics = { width: 40, height: 30, ascent: 8, descent: 2 };
     const measureText = vi.fn<TextMeasurer>(() => metrics);
     const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText, padding: 0 }).scene;
@@ -231,7 +231,7 @@ describe('Node label resolved metrics', () => {
     ['height', { width: 40, height: -1 }],
     ['ascent', { width: 40, height: 20, ascent: Number.POSITIVE_INFINITY }],
     ['descent', { width: 40, height: 20, descent: -1 }],
-  ] satisfies Array<[string, TextMetrics]>)('fails loud for invalid %s metrics', (_field, metrics) => {
+  ] satisfies Array<[string, TextMetrics]>)('因无效的 %s 指标而失败', (_field, metrics) => {
     expect(
       () =>
         compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText: () => metrics, padding: 0 })
@@ -239,7 +239,7 @@ describe('Node label resolved metrics', () => {
     ).toThrow(/normalizeTextMetrics: invalid/);
   });
 
-  it('fails loud when individually finite ascent and descent overflow in aggregate', () => {
+  it('当单独有限的上升和下降合计溢出时，会失败', () => {
     expect(
       () =>
         compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), {
@@ -253,7 +253,7 @@ describe('Node label resolved metrics', () => {
     ).toThrow(/normalizeTextMetrics: invalid/);
   });
 
-  it('rejects invalid metrics for mixed Node labels and mixed Node body text', () => {
+  it('拒绝混合 Node 标签和混合 Node 正文文本的无效指标', () => {
     const invalidHeight: TextMeasurer = () => ({ width: 10, height: -1, ascent: 6, descent: 2 });
     const labelScene = sceneWithLabel({ text: [{ segments: [{ text: 'L' }] }], position: 'center' });
     const nodeTextScene: IRScene = {
@@ -270,7 +270,7 @@ describe('Node label resolved metrics', () => {
     );
   });
 
-  it('rejects malformed LoweredTex on the Node label path', () => {
+  it('拒绝 Node 标签路径上格式错误的 LoweredTex', () => {
     const lowerTex: LowerTex = () => ({
       paths: [],
       width: -1,
@@ -286,7 +286,7 @@ describe('Node label resolved metrics', () => {
     ).toThrow(RetikzCoreError);
   });
 
-  it('keeps lowerTex null as a warning-based absence on the Node label path', () => {
+  it('将 lowerTex 保留为空，作为 Node 标签路径上基于警告的缺失', () => {
     const warnings: Array<CompileWarning> = [];
     const scene = compileToScene(sceneWithLabel({ text: [{ segments: [{ tex: 'x' }] }], position: 'center' }), {
       lowerTex: () => null,
@@ -301,8 +301,8 @@ describe('Node label resolved metrics', () => {
   });
 });
 
-describe('Node label pin and bounds', () => {
-  it('ends the pin at the exact rotated OBB edge without legacy padding', () => {
+describe('Node 标签 pin 和边界', () => {
+  it('在精确旋转的 OBB 边缘处结束 pin，无需传统填充', () => {
     const scene = compileToScene(
       sceneWithLabel({ text: 'L', position: 'right', distance: 10, rotate: 45, pin: true }),
       { measureText: fixedMeasure, padding: 0, precision: 4 },
@@ -318,7 +318,7 @@ describe('Node label pin and bounds', () => {
     }
   });
 
-  it('includes all transformed label corners in automatic Scene bounds', () => {
+  it('包括自动 Scene 边界中的所有变换后的标签角', () => {
     const scene = compileToScene(sceneWithLabel({ text: 'L', position: 'right', distance: 8, rotate: 45 }), {
       measureText: fixedMeasure,
       padding: 0,
@@ -329,7 +329,7 @@ describe('Node label pin and bounds', () => {
     expect(scene.layout.height).toBeCloseTo(60);
   });
 
-  it('keeps label and pin out of a Scope id synthetic bbox', () => {
+  it('将标签和 pin 保留在 Scope id 合成 bbox 之外', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -367,13 +367,13 @@ describe('Node label pin and bounds', () => {
   });
 });
 
-describe('Node label distance contracts', () => {
-  it('describes distance as a visual-box gap', () => {
+describe('Node 标签距离契约', () => {
+  it('将距离描述为视觉盒间隙', () => {
     expect(NodeLabelSchema.shape.distance.description).toMatch(/visual box/i);
     expect(NodeLabelSchema.shape.distance.description).not.toMatch(/label center/i);
   });
 
-  it('validates CompileOptions.labelDistance before any layout', () => {
+  it('在任何布局之前验证 CompileOptions.labelDistance', () => {
     const empty: IRScene = { version: 1, type: 'scene', children: [] };
 
     expect(() => compileToScene(empty, { labelDistance: 0 }).scene).not.toThrow();

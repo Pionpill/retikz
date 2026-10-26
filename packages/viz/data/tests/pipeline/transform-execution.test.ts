@@ -34,7 +34,7 @@ const input = (values: Array<number>): DataTransformStageInput<never> => ({
   result: { rows: values.map(value => ({ value })), model },
 });
 
-it.each([true, false])('passes resolved lineage=%s requirements to an external provider', async enabled => {
+it.each([true, false])('将已解决的 lineage=%s 要求传递给外部提供者', async enabled => {
   const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
   const executor = createDataTransformExecutor({
     dataExecution: { mode: 'external', external: 'engine' },
@@ -80,7 +80,7 @@ it.each([true, false])('passes resolved lineage=%s requirements to an external p
   } else expect(result.lineage).toBeUndefined();
 });
 
-it.each([true, false])('uses lineage=%s for local result inputs and empty plans', async enabled => {
+it.each([true, false])('使用 lineage=%s 作为本地结果输入和空计划', async enabled => {
   for (const declarations of [[], [{ operation: { kind: 'sort', params: { field: 'value' } } }]]) {
     const result = await executeDataTransforms(
       input([2, 1]),
@@ -97,7 +97,7 @@ it.each([true, false])('uses lineage=%s for local result inputs and empty plans'
   }
 });
 
-it.each([true, false])('uses lineage=%s for materialized source inputs and empty plans', async enabled => {
+it.each([true, false])('使用 lineage=%s 来实现具体化源输入和空计划', async enabled => {
   const source = { name: 'warehouse' };
   const executor = createDataTransformExecutor<typeof source>({
     materializeSource: (_source, _model, context) => {
@@ -121,7 +121,7 @@ it.each([true, false])('uses lineage=%s for materialized source inputs and empty
   }
 });
 
-it.each(['preserve', 'inherit'] as const)('keeps refined field evidence through empty local %s results', async mode => {
+it.each(['preserve', 'inherit'] as const)('通过空的本地 %s 结果保留精炼的现场证据', async mode => {
   const definition = defineTransform({
     kind: 'copy-field',
     paramsSchema: strictObject({}),
@@ -176,7 +176,7 @@ it.each(['preserve', 'inherit'] as const)('keeps refined field evidence through 
   expect(resolution.stages[1].outputModel).toEqual([{ name: mode === 'preserve' ? 'value' : 'copy' }]);
 });
 
-it('resolves custom semantics without computation and rejects mismatched local or external Definition identities', async () => {
+it('无需计算即可解析自定义语义，并拒绝不匹配的本地或外部 Definition 身份', async () => {
   const semantic = () =>
     defineTransform({
       kind: 'derive-value',
@@ -248,7 +248,7 @@ it('resolves custom semantics without computation and rejects mismatched local o
   expect(computed).toBe(0);
 });
 
-it('routes only the named provider and rejects duplicate or missing registrations before execution', async () => {
+it('仅路由指定的提供者，并在执行前拒绝重复或缺失的注册', async () => {
   const queried: Array<string> = [];
   const provider = (name: string): DataTransformImplementationProvider<never> => ({
     resolve: () => {
@@ -294,7 +294,7 @@ it('routes only the named provider and rejects duplicate or missing registration
   expect(queried).toEqual(['b']);
 });
 
-it('checks actual native capabilities and provenance requirements without using category order as row order', async () => {
+it('检查实际的本机功能和来源追溯要求，而不使用类别顺序作为行顺序', async () => {
   const nativeModel: DataTransformModel = [{ name: 'label', type: 'categorical', order: ['a', 'b'] }];
   type Native = { stableRows: boolean; provenance: boolean };
   let computed = 0;
@@ -355,8 +355,8 @@ it('checks actual native capabilities and provenance requirements without using 
   expect(computed).toBe(1);
 });
 
-describe('data execution policy and binding', () => {
-  it('preserves independent operation parameters and sparse execution configuration', () => {
+describe('数据执行策略和绑定', () => {
+  it('保留独立的操作参数和稀疏的执行配置', () => {
     const declaration = {
       operation: { kind: 'custom', params: { dataExecution: { algorithm: 'fast' } } },
       dataExecution: { external: 'worker' },
@@ -365,7 +365,7 @@ describe('data execution policy and binding', () => {
     expect(DataTransformDeclarationSchema.parse(JSON.parse(JSON.stringify(declaration)))).toEqual(declaration);
   });
 
-  it('executes local stages with the resolved output model', async () => {
+  it('使用解析的输出模型执行本地阶段', async () => {
     const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
 
     expect(await executeDataTransforms(input([3, 1, 2]), resolution, createDataTransformExecutor())).toEqual({
@@ -374,7 +374,7 @@ describe('data execution policy and binding', () => {
     });
   });
 
-  it('prepares once by model and binds independent actual partitions without rerouting', async () => {
+  it('按模型准备一次，绑定独立的实际分区，无需重新路由', async () => {
     let matched = 0;
     const provider: DataTransformImplementationProvider<never> = {
       resolve: stage => {
@@ -413,7 +413,7 @@ describe('data execution policy and binding', () => {
     expect(() => first.execute()).toThrow(/once|consumed/i);
   });
 
-  it('does not execute any stage when external preflight is unsupported', async () => {
+  it('不支持外部预检时不执行任何阶段', async () => {
     let computed = false;
     const provider: DataTransformImplementationProvider<never> = {
       resolve: (stage, context) =>
@@ -448,7 +448,7 @@ describe('data execution policy and binding', () => {
   });
 });
 
-it('awaits local reducer, selector and regression dependencies before advancing', async () => {
+it('在前进之前等待本地归约器、选择器和回归依赖项', async () => {
   const calls: Array<string> = [];
   const reducer = defineStatisticsReducer({
     schema: strictObject({ kind: literal('async-sum'), as: string() }),
@@ -519,7 +519,7 @@ it('awaits local reducer, selector and regression dependencies before advancing'
   expect(calls).toEqual(['reduce', 'select', 'fit']);
 });
 
-it('isolates asynchronous operator cursors and lineage across bindings of one plan', async () => {
+it('跨一个计划的绑定隔离异步运算符游标和血缘', async () => {
   const sum = defineStatisticsReducer({
     schema: strictObject({ kind: literal('partition-sum') }),
     inputFields: () => ['value'],
@@ -577,7 +577,7 @@ it('isolates asynchronous operator cursors and lineage across bindings of one pl
   expect(first.lineage?.events).not.toBe(second.lineage?.events);
 });
 
-it('isolates cancellation and lineage options between requests on one executor', async () => {
+it('隔离一个执行器上的请求之间的取消和血缘选项', async () => {
   const executor = createDataTransformExecutor();
   const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
   const controller = new AbortController();
@@ -602,7 +602,7 @@ it('isolates cancellation and lineage options between requests on one executor',
   expect(plainResult).toEqual({ rows: [{ value: 6 }, { value: 8 }], model });
 });
 
-it('keeps builtin defaults even with registered external providers, and inherits fields independently', async () => {
+it('即使注册了外部提供者，也保留内置默认值，并独立继承字段', async () => {
   let queried = 0;
   const provider: DataTransformImplementationProvider<never> = {
     resolve: () => {
@@ -639,7 +639,7 @@ it('keeps builtin defaults even with registered external providers, and inherits
   ).rejects.toThrow(/not registered/);
 });
 
-it('does not turn provider exceptions, rejections, cancellation or invalid results into hybrid fallback', async () => {
+it('不会将提供者异常、拒绝、取消或无效结果转变为混合回退', async () => {
   const resolution = resolveDataTransforms([{ operation: { kind: 'sort', params: { field: 'value' } } }], model);
   const cause = new Error('remote failed');
   const provider: DataTransformImplementationProvider<never> = {
@@ -702,7 +702,7 @@ it('does not turn provider exceptions, rejections, cancellation or invalid resul
   ).rejects.toBeInstanceOf(RetikzDataError);
 });
 
-it('rejects model/source drift during binding and consumes execution rights while still awaiting', async () => {
+it('在绑定期间拒绝模型/源漂移，并在等待时消费执行权', async () => {
   let finish: ((result: { rows: Array<{ value: number }>; model: DataTransformModel }) => void) | undefined;
   let executions = 0;
   const provider: DataTransformImplementationProvider<never> = {
@@ -745,7 +745,7 @@ it('rejects model/source drift during binding and consumes execution rights whil
   expect(executions).toBe(1);
 });
 
-it('does not materialize native sources until all stages support the request', async () => {
+it('在所有阶段都支持请求之前，不会具体化本机源', async () => {
   const source = { name: 'database' };
   let materialized = 0;
   const executor = createDataTransformExecutor<typeof source>({
@@ -772,7 +772,7 @@ it('does not materialize native sources until all stages support the request', a
   );
 });
 
-it('preserves actual group provenance and records lineage once under explicit sampling limits', async () => {
+it('在明确的采样限制下保留实际的群体起源并记录血缘', async () => {
   const rows = tagSourceIndex([
     { value: 1, secret: 'a' },
     { value: 3, secret: 'b' },
@@ -795,7 +795,7 @@ it('preserves actual group provenance and records lineage once under explicit sa
   expect(result.lineage?.events.find(event => event.kind === 'rowSample')).toMatchObject({ rows: [{ value: 1 }] });
 });
 
-it('wraps empty-plan materializer errors and stops local computation after materializer cancellation', async () => {
+it('包装空计划物化器错误并在物化器取消后停止本地计算', async () => {
   const source = { name: 'warehouse' };
   const cause = new Error('materializer failed');
   const failure = createDataTransformExecutor<typeof source>({ materializeSource: () => Promise.reject(cause) });
@@ -834,7 +834,7 @@ it('wraps empty-plan materializer errors and stops local computation after mater
   expect(read).toBe(0);
 });
 
-it.each([undefined, false])('retains materialized upstream history when lineage is %s', async lineageOption => {
+it.each([undefined, false])('当血缘为 %s 时，保留具体化的上游历史记录', async lineageOption => {
   const source = { name: 'warehouse' };
   const lineage = { events: [{ kind: 'source' as const, rowCount: 2 }] };
   const executor = createDataTransformExecutor<typeof source>({
@@ -855,7 +855,7 @@ it.each([undefined, false])('retains materialized upstream history when lineage 
   expect(result.lineage).toEqual(lineage);
 });
 
-it('does not treat lineage summaries as row-level provenance evidence', async () => {
+it('不将血缘摘要视为行级来源追溯证据', async () => {
   const executor = createDataTransformExecutor({
     dataExecution: { mode: 'external', external: 'engine' },
     externalProviders: [
@@ -897,7 +897,7 @@ it('does not treat lineage summaries as row-level provenance evidence', async ()
   expect(result.lineage).toEqual(lineage);
 });
 
-it('executes hierarchical sort and bin with async custom metrics and bucket-local provenance', async () => {
+it('使用异步自定义指标和存储聚合入口本地来源执行分层排序和分类', async () => {
   const rows = tagSourceIndex([
     { team: 'B', item: 'x', value: 10 },
     { team: 'A', item: 'x', value: 2 },

@@ -24,7 +24,7 @@ const defineCounterSource = (key = 'counter') =>
     },
   });
 
-describe('runtime runtime participant diagnostics', () => {
+describe('Runtime 运行时参与者诊断', () => {
   it('trace facade 不暴露 drain，Runtime 在 diagnose/callback 后归属 reporter diagnostics', () => {
     const owner = defineCounterSource();
     const sources = createRuntimeSourceRegistry([owner]);

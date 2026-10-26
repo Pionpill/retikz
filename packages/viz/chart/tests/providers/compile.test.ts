@@ -96,8 +96,8 @@ const sceneOf = (source: IRScene['children'][number]): IRScene => ({
   children: [source],
 });
 
-describe('Chart providers through Core compile', () => {
-  it('compiles deterministic Cartesian Strip jitter through the shared Plot placement pipeline', () => {
+describe('Chart 提供者通过 Core 编译', () => {
+  it('通过共享的 Plot 放置管线编译确定性笛卡尔带抖动', () => {
     const stripRows = [
       { category: 'A', value: 2 },
       { category: 'A', value: 3 },
@@ -157,7 +157,7 @@ describe('Chart providers through Core compile', () => {
         y: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
       },
     ],
-  ] as const)('compiles Polar Strip jitter on the discrete %s role', (_role, encodings) => {
+  ] as const)('在离散 %s 角色上编译 Polar Strip 抖动', (_role, encodings) => {
     const stripRows = [
       { category: 'A', value: 2 },
       { category: 'A', value: 4 },
@@ -191,7 +191,7 @@ describe('Chart providers through Core compile', () => {
     expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
   });
 
-  it('allows an empty Strip data view but fails loud without the Strip provider', () => {
+  it('允许空的 Strip 数据视图，但在没有 Strip 提供者的情况下会失败', () => {
     const source = StripChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -221,7 +221,7 @@ describe('Chart providers through Core compile', () => {
     ).toThrow(/strip|recipe|provider/i);
   });
 
-  it('uses the first series palette color for every primitive in an ungrouped Point composite mark', () => {
+  it('对未分组的点复合标记中的每个图元使用第一个系列调色板颜色', () => {
     const defaultColor = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical[0];
     const fixtures: ReadonlyArray<{
       source: IRScene['children'][number];
@@ -290,7 +290,7 @@ describe('Chart providers through Core compile', () => {
     }
   });
 
-  it('uses consecutive series palette colors for ungrouped Regression observations and trend', () => {
+  it('使用连续系列调色板颜色进行未分组的回归观察和趋势', () => {
     const palette = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
     const source = RegressionChartSchema.parse({
       namespace: 'chart',
@@ -327,7 +327,7 @@ describe('Chart providers through Core compile', () => {
     expect(new Set(trendPaths.map(path => path.stroke))).toEqual(new Set([palette[1]]));
   });
 
-  it('compiles shuffled Connected Scatter rows by authored order and bridges invalid observations', () => {
+  it('按编写顺序编译打乱的连接散点行并桥接无效观察', () => {
     const connectedRows = [
       { series: 'A', x: 3, y: 3, order: 3 },
       { series: 'A', x: 1, y: 1, order: 1 },
@@ -369,7 +369,7 @@ describe('Chart providers through Core compile', () => {
     expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
   });
 
-  it('atomically compiles mixed Ranged Dot rows with shared field colors and preserved range direction', () => {
+  it('以原子方式编译具有共享字段颜色和保留范围方向的混合范围点行', () => {
     const rangedRows = [
       { category: 'Forward', start: 1, end: 3, group: 'A' },
       { category: 'Reverse', start: 5, end: 2, group: 'B' },
@@ -424,7 +424,7 @@ describe('Chart providers through Core compile', () => {
     expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
   });
 
-  it('compiles grouped Regression through Point + mark-local Smooth Path with finite Scene output', () => {
+  it('通过 Point + mark-local Smooth Path 编译分组回归，输出有限 Scene', () => {
     const regressionRows = [
       { series: 'A', x: 1, y: 2 },
       { series: 'A', x: 2, y: 4 },
@@ -468,7 +468,7 @@ describe('Chart providers through Core compile', () => {
     expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set(trendPaths.map(path => path.stroke)));
   });
 
-  it('compiles grouped extra methods with unique IDs and exactly one observation layer', () => {
+  it('编译具有唯一 ID 和一个观察层的分组额外方法', () => {
     const regressionRows = [
       { series: 'A', x: 1, y: 2 },
       { series: 'A', x: 2, y: 4 },
@@ -520,7 +520,7 @@ describe('Chart providers through Core compile', () => {
     expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set(trendPaths.map(path => path.stroke)));
   });
 
-  it('aborts the whole Regression compile when one series cannot be fitted', () => {
+  it('当一个系列无法拟合时，中止整个回归编译', () => {
     const source = RegressionChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -547,7 +547,7 @@ describe('Chart providers through Core compile', () => {
     expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/smooth|regression|series.*B|pairs/i);
   });
 
-  it('aborts when an additional method cannot fit otherwise valid observations', () => {
+  it('当附加方法无法适应其他有效观察结果时中止', () => {
     const source = RegressionChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -574,7 +574,7 @@ describe('Chart providers through Core compile', () => {
     expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/smooth|regression|pairs|points/i);
   });
 
-  it('fails loud when Regression Source is compiled without its concrete provider', () => {
+  it('当回归 Source 在没有具体提供者的情况下编译时，会失败', () => {
     const source = RegressionChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -587,7 +587,7 @@ describe('Chart providers through Core compile', () => {
     ).toThrow(/chartType|scatter|regression/i);
   });
 
-  it('keeps Regression facet identity distinct from Scatter and Bubble', () => {
+  it('保持回归方面的身份与散点图和气泡不同', () => {
     const source = RegressionChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -624,7 +624,7 @@ describe('Chart providers through Core compile', () => {
     expect(ids.some(id => id.startsWith('__chart.bubble.composition.facet'))).toBe(false);
   });
 
-  it('compiles Bubble through the shared Point provider and preserves finite scene output', () => {
+  it('通过共享点提供者编译 Bubble 并保留有限场景输出', () => {
     const source = BubbleChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -656,7 +656,7 @@ describe('Chart providers through Core compile', () => {
     expect(bubblePrimitives.every(primitive => primitive.stroke === primitive.fill)).toBe(true);
   });
 
-  it('keeps Bubble facet identity distinct from Scatter', () => {
+  it('保持气泡面标识与散点图不同', () => {
     const source = BubbleChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -676,7 +676,7 @@ describe('Chart providers through Core compile', () => {
     expect(ids.some(id => id.startsWith('__chart.scatter.composition.facet'))).toBe(false);
   });
 
-  it('keeps zero and singleton Bubble size domains finite', () => {
+  it('保持零和单个气泡大小域有限', () => {
     for (const bubbleRows of [
       [
         { x: 1, y: 2, size: 0 },
@@ -706,7 +706,7 @@ describe('Chart providers through Core compile', () => {
     }
   });
 
-  it('rejects negative Bubble size values and named linear size scales', () => {
+  it('拒绝负气泡尺寸值并命名线性尺寸尺度', () => {
     const negativeSource = BubbleChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -744,7 +744,7 @@ describe('Chart providers through Core compile', () => {
     expect(() => compileToScene(sceneOf(linearSource), linearDefinitions)).toThrow(/size|sqrt|linear|scale/i);
   });
 
-  it('fails loud when Bubble Source is compiled with only the Scatter recipe installed', () => {
+  it('当仅安装了 Scatter 配方的情况下编译 Bubble Source 时，会明确报错', () => {
     const source = BubbleChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -761,7 +761,7 @@ describe('Chart providers through Core compile', () => {
     ).toThrow(/chartType|scatter|bubble/i);
   });
 
-  it.each([120, 184, 248, 500])('fits the Plot item or reports insufficient %ipx presentation space', height => {
+  it.each([120, 184, 248, 500])('适合 Plot 项目或报告 %ipx 演示空间不足', height => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -797,7 +797,7 @@ describe('Chart providers through Core compile', () => {
     );
   });
 
-  it('compiles Scatter in one Scene with its provider contribution installed', () => {
+  it('在一个 Scene 中编译 Scatter，并安装其提供者贡献', () => {
     const scene: IRScene = {
       version: 1,
       type: 'scene',
@@ -838,7 +838,7 @@ describe('Chart providers through Core compile', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('parses unknown JSON with the selected Scatter schema before compiling through its provider', () => {
+  it('在通过其提供者进行编译之前，使用所选的 Scatter schema 解析未知的 JSON', () => {
     const unknownJson: unknown = {
       namespace: 'chart',
       type: 'point',
@@ -853,7 +853,7 @@ describe('Chart providers through Core compile', () => {
     expect(sceneIdsOf(result.scene.primitives)).toContain('scatter-json');
   });
 
-  it('keeps Plot panel identity when Scatter encoding facet compiles through the provider chain', () => {
+  it('当 Scatter 编码方面通过提供者链进行编译时，保留 Plot 面板标识', () => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -872,7 +872,7 @@ describe('Chart providers through Core compile', () => {
     expect(ids).toContain('__chart.scatter.composition.facet.panel._.5');
   });
 
-  it('shares custom runtime Definitions between Chart encoding resolution and Plot lowering', () => {
+  it('在 Chart 编码解析结果和 Plot 下沉之间共享自定义运行时定义', () => {
     const copyField = defineTransform({
       kind: 'copy-chart-field',
       paramsSchema: strictObject({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
@@ -921,7 +921,7 @@ describe('Chart providers through Core compile', () => {
     expect(sceneIdsOf(result.scene.primitives)).toContain('scatter-custom-transform');
   });
 
-  it('reports a diagnostic error when the parsed schema and installed chartType provider disagree', () => {
+  it('当解析的 schema 与安装的 chartType 提供者不一致时，报告诊断错误', () => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -945,7 +945,7 @@ describe('Chart providers through Core compile', () => {
     ]);
   });
 
-  it('appends an unmatched override and reports one Chart warning through Core', () => {
+  it('附加不匹配的覆盖并通过 Core 报告一个 Chart 警告', () => {
     const markSchema = strictObject({ kind: literal('annotation'), override: boolean().optional() });
     const sourceSchema = createChartSourceSchema(
       'fixture',
@@ -1020,8 +1020,8 @@ describe('Chart providers through Core compile', () => {
   });
 });
 
-describe('point-aware compile boundaries', () => {
-  it('compiles categorical Strip automatic ends and fully explicit padding', () => {
+describe('点感知编译边界', () => {
+  it('编译分类 Strip 自动结束和完全显式填充', () => {
     const sourceOf = (domainPadding?: number) =>
       StripChartSchema.parse({
         namespace: 'chart',
@@ -1055,7 +1055,7 @@ describe('point-aware compile boundaries', () => {
   });
 });
 
-describe('registered regression compilation', () => {
+describe('注册回归编译', () => {
   const definition = defineRegression({
     schema: strictObject({ kind: literal('custom-polynomial'), degree: number().default(2) }),
   });
@@ -1086,7 +1086,7 @@ describe('registered regression compilation', () => {
     return compileToScene(sceneOf(source), definitions);
   };
 
-  it('uses custom methods for main and extra trends with inherited or overridden curves', () => {
+  it('使用继承或覆盖曲线的主要趋势和额外趋势的自定义方法', () => {
     const result = compile({
       method: { kind: 'custom-polynomial' },
       sampleCount: 6,
@@ -1105,7 +1105,7 @@ describe('registered regression compilation', () => {
     expect(scenePrimitivesOfType(result.scene.primitives, 'ellipse')).toHaveLength(rows.length);
   });
 
-  it('locates exact parameter errors in additional methods', () => {
+  it('准确定位附加方法中的参数错误', () => {
     expect(() => compile({ extraMethods: [{ method: { kind: 'custom-polynomial', unexpected: true } }] })).toThrow(
       /extraMethods/,
     );

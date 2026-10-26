@@ -16,8 +16,8 @@ const formatOf = (name: string) => {
   return definition;
 };
 
-describe('field format provider runtime', () => {
-  it('parses all built-in temporal formats and rejects invalid inputs', () => {
+describe('字段格式提供者运行时', () => {
+  it('解析所有内置时间格式并拒绝无效输入', () => {
     const iso = formatOf(BuiltinDataFieldFormat.Iso);
     const epochSeconds = formatOf(BuiltinDataFieldFormat.EpochSeconds);
     const epochMillis = formatOf(BuiltinDataFieldFormat.EpochMillis);
@@ -37,7 +37,7 @@ describe('field format provider runtime', () => {
     expect(Number.isNaN(slashDate.parse('2023/02/29'))).toBe(true);
   });
 
-  it('parses built-in numeric string and percent formats', () => {
+  it('解析内置数字字符串和百分比格式', () => {
     const numberString = formatOf(BuiltinDataFieldFormat.NumberString);
     const percent = formatOf(BuiltinDataFieldFormat.Percent);
 
@@ -53,7 +53,7 @@ describe('field format provider runtime', () => {
     }
   });
 
-  it('registers custom formats without mutating subsequent registries', () => {
+  it('注册自定义格式而不改变后续注册表', () => {
     const currency = defineFieldFormat({
       name: 'currency',
       impliedType: DataFieldType.Continuous,
@@ -65,7 +65,7 @@ describe('field format provider runtime', () => {
     expect(resolveFormatRegistry().has('currency')).toBe(false);
   });
 
-  it('rejects duplicate format registrations', () => {
+  it('拒绝重复格式注册', () => {
     const duplicateBuiltin = defineFieldFormat({
       name: BuiltinDataFieldFormat.Percent,
       impliedType: DataFieldType.Continuous,
@@ -85,7 +85,7 @@ describe('field format provider runtime', () => {
     );
   });
 
-  it('collects parsers and implied types only for referenced model fields', () => {
+  it('仅收集引用模型字段的解析器和隐含类型', () => {
     const baseTypes: DataFieldTypeMap = new Map([
       ['amount', DataFieldType.Categorical],
       ['createdAt', DataFieldType.Categorical],
@@ -108,7 +108,7 @@ describe('field format provider runtime', () => {
     expect(baseTypes.get('amount')).toBe(DataFieldType.Categorical);
   });
 
-  it('fails loud for unknown formats and explicit type conflicts', () => {
+  it('由于未知格式和显式类型冲突而失败', () => {
     expect(() =>
       collectFormatFields(
         [{ name: 'value', format: 'not-registered' }],

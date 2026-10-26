@@ -19,7 +19,7 @@ const tracePhases = [
   },
 ];
 
-describe('runtime runtime diagnostics', () => {
+describe('Runtime 运行时诊断', () => {
   it('映射 trace diagnostic，并向所有 observer 提供同一 frozen commit-safe prefix', () => {
     const observerCause = new Error('observer failed');
     const owner = defineRuntimeSource<number, number, number, never>({

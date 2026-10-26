@@ -83,8 +83,8 @@ const colocatedObservation = (index: number): CompileObservation => ({
   value: { value: index },
 });
 
-describe('Inspection selection', () => {
-  it('uses schema defaults and transformed output without a resolver on direct registration', () => {
+describe('检查选择', () => {
+  it('使用 schema 默认值和转换后的输出，无需直接注册解析器', () => {
     const rawDefinition = {
       ...key,
       owner,
@@ -107,7 +107,7 @@ describe('Inspection selection', () => {
     }
   });
 
-  it('passes parsed output to a custom resolver with a different consumer shape', () => {
+  it('将解析的输出传递给具有不同消费者形状的自定义解析器', () => {
     const inspector = defineInspector({
       ...key,
       owner,
@@ -125,7 +125,7 @@ describe('Inspection selection', () => {
     expect(requests[0]?.options).toEqual({ label: '2.0' });
   });
 
-  it('isolates merge callback mutations from authored options and later occurrences', () => {
+  it('将合并回调突变与编写选项和后来发生的事件隔离开来', () => {
     const sourceOptions = { label: 'parent' };
     const mutating = defineInspector({
       ...definition,
@@ -155,7 +155,7 @@ describe('Inspection selection', () => {
     expect(sourceOptions).toEqual({ label: 'parent' });
   });
 
-  it('merges three authored layers before transforming effective options', () => {
+  it('在转换有效选项之前合并三个编写的图层', () => {
     const transformed = defineInspector({
       ...key,
       owner,
@@ -193,7 +193,7 @@ describe('Inspection selection', () => {
     expect(resolved[0]?.options).toEqual({ label: 'once!' });
   });
 
-  it.each([true, false])('rejects invalid source rules even when unmatched or overridden: %s', matched => {
+  it.each([true, false])('即使不匹配或被覆盖，也会拒绝无效的源规则：%s', matched => {
     expect(() =>
       resolveSelection({
         ir,
@@ -214,7 +214,7 @@ describe('Inspection selection', () => {
     ).toThrow();
   });
 
-  it('evaluates scene, outer subtree, authored self and allocates appearance after stable sorting', () => {
+  it('评估场景、外子树、编写自身并在稳定排序后分配外观', () => {
     const resolved = resolveSelection({
       ir,
       registry,
@@ -249,7 +249,7 @@ describe('Inspection selection', () => {
     expect(resolved.map(request => request.colorScope)).toEqual([0, 1]);
   });
 
-  it('prevents reopening below a barrier', () => {
+  it('barrier 下方无法重新启用检查', () => {
     const resolved = resolveSelection({
       ir,
       registry,
@@ -271,7 +271,7 @@ describe('Inspection selection', () => {
     expect(resolved).toEqual([]);
   });
 
-  it('allows a false-only self rule without requesting an owner output', () => {
+  it('允许仅错误的自我规则，而不请求所属模块输出', () => {
     expect(
       resolveSelection({
         ir,
@@ -291,7 +291,7 @@ describe('Inspection selection', () => {
     ).toEqual([]);
   });
 
-  it('fails an explicit self owner mismatch but permits scene rules with no matching owner', () => {
+  it('显式自身所属模块不匹配失败，但允许没有匹配所属模块的场景规则', () => {
     const pathDefinition = defineInspector({
       ...key,
       owner: { kind: 'path' as const, name: 'stroke' },
@@ -328,7 +328,7 @@ describe('Inspection selection', () => {
     ).toEqual([]);
   });
 
-  it('selects the matching owner when one authored source publishes multiple owner outputs', () => {
+  it('当一个编写源发布多个所属模块输出时，选择匹配的所属模块', () => {
     const colocatedPath: CompileObservation = {
       ...observation(0),
       owner: { kind: 'path', name: 'stroke' },
@@ -382,7 +382,7 @@ describe('Inspection selection', () => {
     expect(resolved[0]?.occurrence.expansionPath).toEqual([{ kind: 'replay', index: 0 }]);
   });
 
-  it('rejects an authored occurrenceIndex outside the final owner occurrences', () => {
+  it('拒绝最终所属模块出现之外的编写 occurrenceIndex', () => {
     expect(() =>
       resolveSelection({
         ir,
@@ -409,7 +409,7 @@ describe('Inspection selection', () => {
     ).toThrow(/final owner output/i);
   });
 
-  it('supports both scene and self selection for third-party Path Inspectors', () => {
+  it('支持第三方 Path Inspector 的场景和自选', () => {
     const pathKey = { namespace: 'third-party', type: 'path-geometry' };
     const pathDefinition = defineInspector({
       ...pathKey,
@@ -463,7 +463,7 @@ describe('Inspection selection', () => {
     ).toHaveLength(1);
   });
 
-  it('does not let an authored Scope self locator select a Clip application at the same source path', () => {
+  it('不允许编写的 Scope 自定位器选择同一源路径中的裁剪应用程序', () => {
     const clipKey = { namespace: 'test', type: 'clip' };
     const clipDefinition = defineInspector({
       ...clipKey,
@@ -557,7 +557,7 @@ describe('Inspection selection', () => {
         ],
       },
     ],
-  ] as const)('fails admission for %s before resolving callbacks', (_label, selection) => {
+  ] as const)('在解析回调之前，%s 的准入失败', (_label, selection) => {
     expect(() =>
       resolveSelection({
         ir,

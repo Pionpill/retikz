@@ -20,8 +20,8 @@ const input: AxesInput = {
   },
 };
 
-describe('axes()', () => {
-  it('preserves the authored root id and reuses it for the embed', () => {
+describe('轴（）', () => {
+  it('保留编写的根 ID 并将其重新用于嵌入', () => {
     const embed = axes({ ...input, id: 'authored-axes', meta: { source: 'vanilla' } });
     const contribution = AxesInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
@@ -33,7 +33,7 @@ describe('axes()', () => {
     expect(contribution.node).toMatchObject({ id: 'authored-axes', meta: { source: 'vanilla' } });
   });
 
-  it('creates an embed that contributes canonical Axes IR', () => {
+  it('创建一个贡献规范 Axes IR 的嵌入', () => {
     const embed = axes(input);
     const contribution = AxesInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
@@ -48,7 +48,7 @@ describe('axes()', () => {
     expect(AxesProvider.makeDefinition([])).toBe(AxesDefinition);
   });
 
-  it('coexists with Grid and contributes both definitions once', () => {
+  it('与 Grid 共存，并贡献两个定义一次', () => {
     const result = normalizeScene(
       scene({
         children: [grid({ bounds: { start: [-2, -1], end: [2, 1] }, line: { spacing: 1 } }), axes(input)],

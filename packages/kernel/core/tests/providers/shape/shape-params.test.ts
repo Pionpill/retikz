@@ -164,7 +164,7 @@ describe('shape 错误路径', () => {
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
-  it('shape_neither_string_nor_object：shape:42 → schema reject', () => {
+  it('schema 拒绝既非字符串也非对象的 shape:42', () => {
     const node = { type: 'node', id: 'A', position: [0, 0], shape: 42 };
 
     expect(NodeSchema.safeParse(node).success).toBe(false);

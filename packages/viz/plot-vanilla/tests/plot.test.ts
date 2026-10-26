@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { plot } from '../src';
 
-describe('plot', () => {
+describe('情节', () => {
   it('组装 composition、mark 与 guide 为 plain IRPlot', () => {
     const spec = plot({
       data: { reference: 'sales' },
@@ -442,7 +442,7 @@ describe('plot', () => {
   });
 });
 
-it('preserves label shorthand and nested font field bindings', () => {
+it('保留标签简写和嵌套字体字段绑定', () => {
   const spec = plot({
     data: { reference: 'labels' },
     scales: [

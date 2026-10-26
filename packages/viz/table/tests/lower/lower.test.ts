@@ -23,8 +23,8 @@ const manualSpec = (id?: string): IRTable => ({
   },
 });
 
-describe('Table layout-aware lowering', () => {
-  it('registers a compile branch with the public manifest artifact schema', () => {
+describe('Table 布局感知下沉', () => {
+  it('使用公共清单产物 schema 注册编译分支', () => {
     const definition = lowerTables({})[0];
 
     expect(definition).toMatchObject({
@@ -35,7 +35,7 @@ describe('Table layout-aware lowering', () => {
     expect(definition.compile).toBeTypeOf('function');
   });
 
-  it('compiles one canonical root and returns its exact typed artifact value', () => {
+  it('编译一个规范根并返回其精确类型化的产物值', () => {
     const result = compileTable(manualSpec('people'), {}, { compile: { padding: 0 } });
     const tableArtifacts = result.artifacts.filter(artifact => artifact.kind === 'composite');
 
@@ -60,7 +60,7 @@ describe('Table layout-aware lowering', () => {
     expect(result.manifest.cells[0]).not.toHaveProperty('columnId');
   });
 
-  it('uses extra composite definitions in the same Core environment', () => {
+  it('在相同的 Core 环境中使用额外的复合定义', () => {
     const BadgeSchema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
       type: literal('badge'),
@@ -90,7 +90,7 @@ describe('Table layout-aware lowering', () => {
     expect(result.manifest.cells).toHaveLength(1);
   });
 
-  it('keeps empty fixed tracks observable through the allocation sentinel', () => {
+  it('通过分配哨兵保持可观察到的空固定轨道', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -120,7 +120,7 @@ describe('Table layout-aware lowering', () => {
     ['light', '#d6e0eb', '#d6adad', '#c28585'],
     ['dark', '#0a141f', '#3d1414', '#5c1f1f'],
   ] as const)(
-    'resolves Cell and Header contextual colors from their own content masters in %s mode',
+    '在 %s 模式下从其自己的内容母版解析 Cell 和 Header 上下文颜色',
     (mode, cellBackground, headerBackground, headerBorder) => {
       const spec: IRTable = {
         namespace: TABLE_NAMESPACE,
@@ -166,7 +166,7 @@ describe('Table layout-aware lowering', () => {
     },
   );
 
-  it('fails loud for missing data, custom structure, and duplicate composite keys', () => {
+  it('由于丢失数据、自定义结构和重复的复合键而失败', () => {
     const detail: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,

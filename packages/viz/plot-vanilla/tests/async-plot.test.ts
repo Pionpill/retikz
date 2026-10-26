@@ -28,8 +28,8 @@ const spec = () =>
     marks: [{ type: 'point', encodings: { position: { x: { field: 'x' }, y: { field: 'ratio' } } } }],
   });
 
-describe('async Plot authoring', () => {
-  it('updates retained lineage sites while keeping shared-driver instances isolated', async () => {
+describe('异步 Plot 编写', () => {
+  it('更新保留的血缘站点，同时保持共享驱动程序实例隔离', async () => {
     const first = vi.fn();
     const second = vi.fn();
     const replacement = vi.fn();
@@ -62,7 +62,7 @@ describe('async Plot authoring', () => {
     }
   });
 
-  it('notifies committed lineage callbacks independently and never notifies discarded candidates', async () => {
+  it('独立通知已提交的血缘回调，并且从不通知丢弃的候选者', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const first = vi.fn(() => {
       throw new Error('author callback failed');
@@ -91,7 +91,7 @@ describe('async Plot authoring', () => {
     }
   });
 
-  it('preserves builtin SVG parity for rows and canonical results', async () => {
+  it('保留行和规范结果的内置 SVG 等价性', async () => {
     const plot = spec();
     const expected = renderPlot(plot, { rows });
 
@@ -112,7 +112,7 @@ describe('async Plot authoring', () => {
     ).toBe(expected);
   });
 
-  it('uses Promise execution once even when rendering lineage after compilation', async () => {
+  it('即使在编译后渲染血缘时也使用 Promise 执行一次', async () => {
     let executions = 0;
     const provider: DataTransformImplementationProvider<never> = {
       resolve: stage => ({
@@ -150,7 +150,7 @@ describe('async Plot authoring', () => {
     expect(() => renderPlot(plot, { rows })).toThrow(/async/i);
   });
 
-  it('keeps identical anonymous Plot inputs distinct within one preparation tree', async () => {
+  it('在一个准备树中保持相同的匿名 Plot 输入不同', async () => {
     const plot = spec();
     const input = (values: typeof rows) =>
       embed({ kind: 'plot', props: { spec: plot, dataBindings: { rows: { kind: 'rows', rows: values } } } });

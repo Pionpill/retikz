@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 
 import { branchDiagram, BranchDiagramInputEmbedAdapter } from '../src/branch';
 
-it('compiles Branch via the synchronous Vanilla embed', () => {
+it('通过同步 Vanilla 嵌入编译 Branch', () => {
   const result = processToStaticInputResult(
     {
       children: [
@@ -20,7 +20,7 @@ it('compiles Branch via the synchronous Vanilla embed', () => {
   expect(JSON.stringify(result.scene)).toContain('A');
 });
 
-it('updates labels without retaining obsolete presentation content', () => {
+it('更新标签而不保留过时的演示内容', () => {
   const source = (visible: boolean) => ({
     children: [
       branchDiagram({

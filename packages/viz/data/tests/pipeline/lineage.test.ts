@@ -39,8 +39,8 @@ const eventsOf = <TKind extends DataLineageEvent['kind']>(
 ): Array<Extract<DataLineageEvent, { kind: TKind }>> =>
   events.filter((event): event is Extract<DataLineageEvent, { kind: TKind }> => event.kind === kind);
 
-describe('data lineage runtime', () => {
-  it('flattens large nested provenance groups without expanding call arguments', () => {
+describe('数据血缘运行时', () => {
+  it('展平大型嵌套来源组而不扩展调用参数', () => {
     const sourceIndices = Array.from({ length: 1_000_000 }, (_, index) => index);
     const grouped = withGroupProvenance({}, [{ [SOURCE_INDICES]: sourceIndices }]);
     const flattened = readSourceIndices(grouped);
@@ -50,7 +50,7 @@ describe('data lineage runtime', () => {
     expect(flattened?.at(-1)).toBe(999_999);
   });
 
-  it('keeps applyTransforms lineage-free and records capped source plus steps only by default', () => {
+  it('applyTransforms 不包含血缘，默认仅记录受数量限制的源数据及步骤', () => {
     const plain = applyTransforms(tagSourceIndex(SALES), [
       {
         kind: 'summarize',
@@ -97,7 +97,7 @@ describe('data lineage runtime', () => {
     expect(eventsOf(lineageEventsOf(lineage), 'reducerOperation')).toHaveLength(0);
   });
 
-  it('records field flow and reducer operations only when their switches are enabled', () => {
+  it('仅在其开关启用时记录现场流量和减速机操作', () => {
     const { lineage } = applyTransforms(
       SALES,
       [
@@ -137,7 +137,7 @@ describe('data lineage runtime', () => {
     expect(eventsOf(lineageEventsOf(lineage), 'selectorOperation')).toHaveLength(0);
   });
 
-  it('keeps selector operations independent from reducer operations', () => {
+  it('保持选择器操作独立于归约器操作', () => {
     const selectorOnly = applyTransforms(
       SALES,
       [{ kind: 'select', params: { groupBy: ['month'], selector: { kind: 'top', by: 'revenue', n: 1 } } }],
@@ -178,7 +178,7 @@ describe('data lineage runtime', () => {
     expect(eventsOf(lineageEventsOf(reducerOnly.lineage), 'selectorOperation')).toHaveLength(0);
   });
 
-  it('caps row samples and rejects unbounded sample options', () => {
+  it('限制行样本并拒绝无界样本选项', () => {
     const { lineage } = applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
       provenance: true,
       lineage: { rowSamples: { maxRows: 1, fields: ['month', 'revenue'] } },
@@ -211,7 +211,7 @@ describe('data lineage runtime', () => {
     ).toThrow(/rowSamples.fields/);
   });
 
-  it.each([0.5, 1.5, NaN, Infinity])('rejects rowSamples.maxRows=%s', maxRows => {
+  it.each([0.5, 1.5, NaN, Infinity])('拒绝 rowSamples.maxRows=%s', maxRows => {
     expect(() =>
       applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
         provenance: true,
@@ -220,7 +220,7 @@ describe('data lineage runtime', () => {
     ).toThrow(/rowSamples\.maxRows must be a positive integer/);
   });
 
-  it('rejects a fractional calculationDetails.maxRows', () => {
+  it('拒绝小数 calculationDetails.maxRows', () => {
     expect(() =>
       applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
         provenance: true,
@@ -229,7 +229,7 @@ describe('data lineage runtime', () => {
     ).toThrow(/calculationDetails\.maxRows must be a positive integer/);
   });
 
-  it.each([0.5, 1.5, NaN, Infinity])('rejects sourceIdentity.maxIndices=%s', maxIndices => {
+  it.each([0.5, 1.5, NaN, Infinity])('拒绝 sourceIdentity.maxIndices=%s', maxIndices => {
     expect(() =>
       applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
         provenance: true,
@@ -239,7 +239,7 @@ describe('data lineage runtime', () => {
   });
 
   it.each([{ fields: [''], path: 'calculationDetails.fields[0]' }])(
-    'rejects invalid sample field whitelist members at $path',
+    '拒绝 $path 处的无效样本字段白名单成员',
     ({ fields, path }) => {
       const option = path.startsWith('rowSamples') ? 'rowSamples' : 'calculationDetails';
 
@@ -249,7 +249,7 @@ describe('data lineage runtime', () => {
     },
   );
 
-  it('records custom transform steps through the shared registry', () => {
+  it('通过共享注册表记录自定义转换步骤', () => {
     const doubleRevenue = defineTransform({
       kind: 'double-revenue',
       paramsSchema: object({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
@@ -287,7 +287,7 @@ describe('data lineage runtime', () => {
     expect(eventsOf(lineageEventsOf(lineage), 'fieldFlow')).toHaveLength(1);
   });
 
-  it('uses the output model as lineage field-flow authority when it is available', () => {
+  it('使用输出模型作为血缘字段流权限（如果可用）', () => {
     const derive = defineTransform({
       kind: 'derive',
       paramsSchema: object({ as: NonBlankStringSchema }),
@@ -312,7 +312,7 @@ describe('data lineage runtime', () => {
     expect(eventsOf(lineageEventsOf(lineage), 'fieldFlow')[0]?.outputFields).toEqual(['derived']);
   });
 
-  it('records full source identities only when explicitly requested', () => {
+  it('仅在明确请求时记录完整的源身份', () => {
     const operations = [
       {
         kind: 'summarize' as const,
@@ -345,7 +345,7 @@ describe('data lineage runtime', () => {
     });
   });
 
-  it('keeps source identities through chained grouped transforms', () => {
+  it('通过链式分组变换保持源身份', () => {
     const { rows, lineage } = applyTransforms(
       SALES,
       [
@@ -375,7 +375,7 @@ describe('data lineage runtime', () => {
     });
   });
 
-  it('preserves original row identities when a transformed view enters another lineage run', () => {
+  it('当转换后的视图进入另一个血缘运行时，保留原始行标识', () => {
     const tagged = tagSourceIndex([{ value: 30 }, { value: 10 }, { value: 20 }]);
     const sorted = applyTransforms(tagged, [{ kind: 'sort', params: { field: 'value' } }]).rows;
 
@@ -390,7 +390,7 @@ describe('data lineage runtime', () => {
     });
   });
 
-  it('keeps grouped provenance without assigning an intermediate row identity', () => {
+  it('保持分组来源而不分配中间行标识', () => {
     const tagged = tagSourceIndex([{ value: 10 }, { value: 20 }]);
     const grouped = withGroupProvenance({ total: 30 }, tagged);
 
@@ -400,7 +400,7 @@ describe('data lineage runtime', () => {
     expect(readSourceIndices(rows[0])).toEqual([0, 1]);
   });
 
-  it('streams sink events without retaining them unless requested', () => {
+  it('流式传输接收器事件，除非有要求，否则不保留它们', () => {
     const streamed: Array<DataLineageEvent> = [];
 
     const { lineage } = applyTransforms(SALES, [{ kind: 'sort', params: { field: 'revenue' } }], {
@@ -417,7 +417,7 @@ describe('data lineage runtime', () => {
     expect(lineageEventsOf(retained.lineage).length).toBeGreaterThan(0);
   });
 
-  it('uses calculation detail sampling only when explicitly enabled', () => {
+  it('仅在明确启用时才使用计算细节采样', () => {
     const range = defineStatisticsReducer({
       schema: object({
         kind: literal('range'),
@@ -467,7 +467,7 @@ describe('data lineage runtime', () => {
     );
   });
 
-  it('does not produce successful step events when transform lookup fails', () => {
+  it('当转换查找失败时，不会产生成功的步骤事件', () => {
     expect(() =>
       applyTransforms([{ value: 1 }], [{ kind: 'missing', params: { value: 1 } }], { provenance: true, lineage: {} }),
     ).toThrow(/not registered/);

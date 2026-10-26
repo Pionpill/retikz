@@ -14,7 +14,7 @@ const themeOf = (name: string | undefined, mode: ResolvedTheme['mode']): Resolve
   colors: resolveDefaultCoreThemeColors(mode),
 });
 
-describe('Plot defaults resolver', () => {
+describe('Plot 默认解析器', () => {
   it('让 style defaults 高于 Core shared categorical colors，并记录实际来源 layer', () => {
     const style = plot.definePlotTheme({
       name: 'brand',

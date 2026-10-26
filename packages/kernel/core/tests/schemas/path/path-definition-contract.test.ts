@@ -8,8 +8,8 @@ const steps = [
   { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
 ];
 
-describe('Path full-subject contract', () => {
-  it('accepts an open path host with any kind and JSON options', () => {
+describe('Path 全标的契约', () => {
+  it('接受具有任何类型和 JSON 选项的开放路径宿主', () => {
     expect(
       PathSchema.safeParse({
         type: 'path',
@@ -20,7 +20,7 @@ describe('Path full-subject contract', () => {
     ).toBe(true);
   });
 
-  it('rejects the removed top-level ribbon field', () => {
+  it('拒绝删除的顶级功能区字段', () => {
     expect(
       PathSchema.safeParse({
         type: 'path',
@@ -31,7 +31,7 @@ describe('Path full-subject contract', () => {
     ).toBe(false);
   });
 
-  it('keeps stroke full-subject rules in the built-in stroke schema', () => {
+  it('在内置描边 schema 中保留描边完整主题规则', () => {
     expect(PathSchema.safeParse({ type: 'path', kind: 'stroke' }).success).toBe(true);
     expect(PathSchema.safeParse({ type: 'path', kind: 'stroke', kindOptions: {} }).success).toBe(true);
     expect(StrokePathSchema.safeParse({ type: 'path', children: steps }).success).toBe(true);
@@ -39,7 +39,7 @@ describe('Path full-subject contract', () => {
     expect(StrokePathSchema.safeParse({ type: 'path', kind: 'stroke' }).success).toBe(false);
   });
 
-  it('parses the selected full subject schema during compile lookup', () => {
+  it('在编译查找期间解析选定的完整主题 schema', () => {
     expect(() =>
       compileToScene({
         version: 1,
@@ -49,7 +49,7 @@ describe('Path full-subject contract', () => {
     ).toThrow(/Stroke paths require `children` steps/);
   });
 
-  it('exposes only domain-neutral path services to a custom kind', () => {
+  it('仅向自定义类型公开域中立路径服务', () => {
     let observed = false;
     const custom = definePath({
       name: 'service-probe',
@@ -95,7 +95,7 @@ describe('Path full-subject contract', () => {
     expect(observed).toBe(true);
   });
 
-  it('keeps effective color for a built-in stroke until stroke emission', () => {
+  it('保持内置描边的有效颜色，直到描边发射', () => {
     const compiled = compileToScene({
       version: 1,
       type: 'scene',
@@ -112,7 +112,7 @@ describe('Path full-subject contract', () => {
     expect(primitive).toMatchObject({ type: 'path', stroke: 'crimson' });
   });
 
-  it('uses definition.name as the registry key independently of schema shape', () => {
+  it('使用 definition.name 作为独立于 schema 形状的注册表项', () => {
     const definition = definePath({
       name: 'named-key',
       schema: PathSchema.extend({ kind: literal('custom') }),

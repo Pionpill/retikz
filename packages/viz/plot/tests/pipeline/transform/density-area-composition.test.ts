@@ -23,7 +23,7 @@ const firstLayer = (
   options?: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
-describe('density area composition (contract)', () => {
+describe('密度区域组成（契约）', () => {
   const samples = [
     { group: 'A', value: 0 },
     { group: 'A', value: 4 },
@@ -31,7 +31,7 @@ describe('density area composition (contract)', () => {
     { group: 'B', value: 14 },
   ];
 
-  it('density rows can be consumed by PathMark baseline area without DensityMark', () => {
+  it('密度行可以被 PathMark 基线区域消费，无需 DensityMark', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -85,7 +85,7 @@ describe('density area composition (contract)', () => {
     }
   });
 
-  it('density mark-local transform only affects the path layer that declares it', () => {
+  it('密度标记局部变换仅影响声明它的路径层', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

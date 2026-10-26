@@ -17,8 +17,8 @@ const resolve = (name: string, options: JsonObject, values: ReadonlyArray<string
     registry: resolveCellVisualScaleRegistry(),
   });
 
-describe('built-in Cell visual scales', () => {
-  it('uses first occurrence ordinal domains and rejects insufficient ranges', () => {
+describe('内置 Cell 视觉标尺', () => {
+  it('使用首次出现的序数域并拒绝不足的范围', () => {
     const scale = resolve('ordinal-color', {}, ['b', 'a', 'b']);
 
     expect(scale).toMatchObject({ legendForm: 'swatch', domain: ['b', 'a'], range: ['red', 'green'] });
@@ -31,7 +31,7 @@ describe('built-in Cell visual scales', () => {
     );
   });
 
-  it('validates explicit ordinal domains and truncates extra colors', () => {
+  it('验证显式序数域并截断多余的颜色', () => {
     expect(resolve('ordinal-color', { domain: ['a'], range: ['red', 'green'] }, [])).toMatchObject({
       domain: ['a'],
       range: ['red'],
@@ -41,7 +41,7 @@ describe('built-in Cell visual scales', () => {
     expect(() => resolve('ordinal-color', { domain: [null] }, [])).toThrow(/domain/i);
   });
 
-  it('uses numeric extent, clamps, and maps equal sequential domains to the interpolated midpoint', () => {
+  it('使用数字范围、钳位并将相等的连续域映射到插值中点', () => {
     const extent = resolve('sequential-color', {}, [10, -5, 20]);
 
     expect(extent).toMatchObject({ legendForm: 'ramp', domain: [-5, 20], range: ['#ffffff', '#000000'] });
@@ -58,7 +58,7 @@ describe('built-in Cell visual scales', () => {
     );
   });
 
-  it('uses d3 threshold endpoint semantics and token fallback', () => {
+  it('使用 d3 阈值端点语义和令牌回退', () => {
     const scale = resolve('threshold-color', { thresholds: [10, 20] }, [9, 10, 20]);
 
     expect(scale).toMatchObject({
@@ -76,7 +76,7 @@ describe('built-in Cell visual scales', () => {
     );
   });
 
-  it('returns undefined only for empty automatic domains', () => {
+  it('仅对于空自动域返回 undefined', () => {
     expect(resolve('ordinal-color', {}, [])).toBeUndefined();
     expect(resolve('sequential-color', {}, [])).toBeUndefined();
     expect(resolve('ordinal-color', { domain: ['known'] }, [])).toBeDefined();

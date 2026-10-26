@@ -40,7 +40,7 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
   }).layout;
 };
 
-describe('NodeLayout boundary / shapes', () => {
+describe('NodeLayout 边界/形状', () => {
   it('连接面消费上下文在布局投影和引用视图间共享缓存，并区分几何位置', () => {
     const shapes = new Map(resolveShapeRegistry());
     const rectangle = shapes.get('rectangle')!;
@@ -108,7 +108,7 @@ describe('NodeLayout boundary / shapes', () => {
     expect(layout.shape.definition).toBe(customShapes.get('rectangle'));
   });
 
-  it('resolved default boundary drives anchors and clipping without a layout resolver', () => {
+  it('解析后的默认边界直接驱动锚点及裁剪，无需布局解析器', () => {
     const layout = layoutOf({
       type: 'node',
       id: 'circle-boundary',

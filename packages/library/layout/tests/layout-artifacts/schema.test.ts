@@ -45,8 +45,8 @@ const item = (key: string, sourceIndex: number) =>
     },
   }) satisfies LayoutArtifactItemBase;
 
-describe('layout artifact schemas', () => {
-  it('parses strict shared JSON payloads and preserves null visibility', () => {
+describe('布局产物 schema', () => {
+  it('解析严格共享的 JSON 有效负载并保留空可见性', () => {
     expect(LayoutArtifactContainerSchema.parse({ ...container, visibleBounds: null })).toEqual({
       ...container,
       visibleBounds: null,
@@ -60,7 +60,7 @@ describe('layout artifact schemas', () => {
     expect(() => LayoutArtifactItemBaseSchema.parse({ ...item('a', 0), slotBounds: rect(0, 0, -1, 1) })).toThrow();
   });
 
-  it('validates strict JSON-safe spacing segments and positive main-axis length', () => {
+  it('验证严格的 JSON 安全间距段和正主轴长度', () => {
     const values: Array<LayoutSpacingArtifact> = [
       { kind: 'gap', axis: 'x', bounds: rect(10, 5, 8, 0) },
       { kind: 'distributed', axis: 'y', bounds: rect(10, 5, 0, 8) },
@@ -74,7 +74,7 @@ describe('layout artifact schemas', () => {
     expect(() => LayoutSpacingArtifactSchema.parse({ ...values[0], extra: true })).toThrow();
   });
 
-  it('validates Flex line partition in both directions', () => {
+  it('在两个方向上验证 Flex 线分区', () => {
     const value = {
       kind: 'flex',
       container,
@@ -99,7 +99,7 @@ describe('layout artifact schemas', () => {
     ).toThrow();
   });
 
-  it('validates Grid track continuity, physical order and resolved spans', () => {
+  it('验证 Grid 轨道连续性、物理顺序和解析的跨度', () => {
     const value = {
       kind: 'grid',
       container,
@@ -124,7 +124,7 @@ describe('layout artifact schemas', () => {
     expect(() => GridLayoutArtifactSchema.parse({ ...value, items: [{ ...value.items[0], columnSpan: 3 }] })).toThrow();
   });
 
-  it('validates Overlay paint order as the exact zIndex and sourceIndex permutation', () => {
+  it('将覆盖绘制顺序验证为精确的 zIndex 和 sourceIndex 排列', () => {
     const value = {
       kind: 'overlay',
       container,
@@ -169,7 +169,7 @@ describe('layout artifact schemas', () => {
     ).toThrow();
   });
 
-  it('provides one discriminated public union for all layout payloads', () => {
+  it('为所有布局有效负载提供一个有区别的公共联盟', () => {
     const emptyContainer = { ...container, visualBounds: rect(0, 0, 0, 0), visibleBounds: null };
     const values: Array<LayoutArtifact> = [
       { kind: 'flex', container: emptyContainer, items: [], lines: [], spacing: [] },

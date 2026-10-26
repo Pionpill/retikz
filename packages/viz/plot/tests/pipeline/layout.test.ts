@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { computePlotArea } from '../../src/providers';
 import { measureLabel } from '../helpers/text-measurement';
 
-describe('computePlotArea (contract)', () => {
+describe('computePlotArea（契约）', () => {
   // Happy path
-  it('area_no_axis_is_full', () => {
+  it('区域无轴已满', () => {
     const { margins, plotArea } = computePlotArea({
       size: { width: 480, height: 300 },
       axes: [],
@@ -16,7 +16,7 @@ describe('computePlotArea (contract)', () => {
     expect(plotArea).toEqual({ x: 0, y: 0, width: 480, height: 300 });
   });
 
-  it('area_xy_axis_insets', () => {
+  it('绘图区为 x、y 轴预留内缩空间', () => {
     const { plotArea } = computePlotArea({
       size: { width: 480, height: 300 },
       axes: [
@@ -34,7 +34,7 @@ describe('computePlotArea (contract)', () => {
   });
 
   // 边界
-  it('area_y_label_width_scales', () => {
+  it('绘图区随 y 轴标签宽度调整', () => {
     const short = computePlotArea({
       size: { width: 480, height: 300 },
       axes: [{ guide: { type: 'axis', dimension: 'y' }, ticks: { values: ['1'], labels: ['1'] } }],
@@ -50,7 +50,7 @@ describe('computePlotArea (contract)', () => {
     expect(long.margins.left).toBeGreaterThan(short.margins.left);
   });
 
-  it('area_only_x_axis', () => {
+  it('绘图区仅包含 x 轴', () => {
     const { margins } = computePlotArea({
       size: { width: 480, height: 300 },
       axes: [{ guide: { type: 'axis', dimension: 'x' }, ticks: { values: ['0', '2'], labels: ['0', '2'] } }],
@@ -61,7 +61,7 @@ describe('computePlotArea (contract)', () => {
     expect(margins.left).toBe(0);
   });
 
-  it('area_font_size_affects', () => {
+  it('区域字体大小影响', () => {
     const small = computePlotArea({
       size: { width: 480, height: 300 },
       axes: [{ guide: { type: 'axis', dimension: 'x' }, ticks: { values: ['0'], labels: ['0'] } }],
@@ -77,7 +77,7 @@ describe('computePlotArea (contract)', () => {
   });
 
   // 错误路径 / 退化
-  it('area_margin_override_wins', () => {
+  it('区域边距覆盖获胜', () => {
     const { margins } = computePlotArea({
       size: { width: 480, height: 300 },
       axes: [{ guide: { type: 'axis', dimension: 'y' }, ticks: { values: ['1'], labels: ['1'] } }],
@@ -101,7 +101,7 @@ describe('computePlotArea (contract)', () => {
     expect(plotArea).toEqual({ x: 50, y: 10, width: 390, height: 270 });
   });
 
-  it('area_oversized_margin_throws', () => {
+  it('区域过大的边距抛出', () => {
     expect(() =>
       computePlotArea({
         size: { width: 480, height: 300 },
@@ -120,7 +120,7 @@ describe('computePlotArea (contract)', () => {
     ).toThrow();
   });
 
-  it('area_nan_margin_throws', () => {
+  it('绘图区 margin 为 NaN 时抛出错误', () => {
     // NaN <= 0 为 false，旧 plotArea 守卫漏过——须逐边校验有限非负
     expect(() =>
       computePlotArea({
@@ -132,7 +132,7 @@ describe('computePlotArea (contract)', () => {
     ).toThrow(/margin/);
   });
 
-  it('area_negative_margin_throws', () => {
+  it('区域负边距抛出', () => {
     // 负 margin 会让 plot area 比画布还宽、图元跑到画布外
     expect(() =>
       computePlotArea({

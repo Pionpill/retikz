@@ -69,7 +69,7 @@ const collectLayouts = (
 };
 
 describe('CompileOptions.artifacts.nodeLayouts', () => {
-  it('reports plain node content size from text metrics', () => {
+  it('根据文本指标报告纯节点内容大小', () => {
     const { layouts, textPrims } = collectLayouts(
       scene([
         {
@@ -93,7 +93,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(layouts[0].content.size.height).toBe(textPrims[0].measuredHeight);
   });
 
-  it('uses the widest line and accumulated line height for multi-line content', () => {
+  it('对多行内容使用最宽的行和累积行高', () => {
     const { layouts } = collectLayouts(
       scene([
         {
@@ -110,7 +110,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(layouts[0].text.lineCount).toBe(2);
   });
 
-  it('adds text and lowered TeX widths on mixed lines', () => {
+  it('累加混合行中文本及已下沉 TeX 的宽度', () => {
     const { layouts, warnings } = collectLayouts(
       scene([
         {
@@ -129,7 +129,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(layouts[0].text).toEqual({ hasInlineTex: true, lineCount: 1 });
   });
 
-  it('measures string TeX sugar literally when lowerTex is missing', () => {
+  it('当 lowerTex 缺失时，按字面意思测量字符串 TeX 糖', () => {
     const { layouts, warnings } = collectLayouts(
       scene([
         {
@@ -147,7 +147,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('skips explicit math segments and warns when lowerTex is missing', () => {
+  it('跳过显式数学段并在 lowerTex 丢失时发出警告', () => {
     const { layouts, warnings } = collectLayouts(
       scene([
         {
@@ -165,7 +165,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(warnings.some(warning => warning.code === BuiltinCompileWarningCode.TexLowererMissing)).toBe(true);
   });
 
-  it('skips invalid TeX runs and preserves warnings', () => {
+  it('跳过无效的 TeX 运行并保留警告', () => {
     const { layouts, warnings } = collectLayouts(
       scene([
         {
@@ -184,7 +184,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(warnings.some(warning => warning.code === BuiltinCompileWarningCode.TexInvalid)).toBe(true);
   });
 
-  it('locates anonymous nodes in the artifact envelope', () => {
+  it('在产物信封中定位匿名节点', () => {
     const result = compileToScene(scene([{ type: 'node', position: [0, 0], text: 'x' }]), {
       artifacts: { nodeLayouts: true },
     });
@@ -197,7 +197,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     });
   });
 
-  it('keeps content.size on node axes and projects scope scale into content.bounds', () => {
+  it('将 content.size 保留在节点轴上，并将范围比例投影到 content.bounds 中', () => {
     const { layouts } = collectLayouts(
       scene([
         {
@@ -221,7 +221,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(layouts[0].content.bounds).toEqual({ x: 0, y: -18, width: 40, height: 36 });
   });
 
-  it('projects rotated scope content corners into a global AABB', () => {
+  it('项目将范围内容角旋转到全局 AABB', () => {
     const { layouts } = collectLayouts(
       scene([
         {
@@ -248,7 +248,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(layouts[0].content.bounds.height).toBeCloseTo(20, 6);
   });
 
-  it('keeps asymmetric padding out of content size but shifts the visual rect', () => {
+  it('非对称内边距不计入内容尺寸但会偏移视觉矩形', () => {
     const { layouts } = collectLayouts(
       scene([
         {
@@ -268,7 +268,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(layouts[0].rect.width).toBeGreaterThan(layouts[0].content.size.width);
   });
 
-  it('does not include node labels in content size', () => {
+  it('内容大小中不包括节点标签', () => {
     const base = collectLayouts(
       scene([
         {
@@ -296,7 +296,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
     expect(withLabel.layouts[0].content.size).toEqual(base.layouts[0].content.size);
   });
 
-  it('keeps observer measurements at double precision when Scene output is rounded', () => {
+  it('当 Scene 输出四舍五入时，使观察者测量保持双精度', () => {
     const { layouts, textPrims } = collectLayouts(
       scene([
         {

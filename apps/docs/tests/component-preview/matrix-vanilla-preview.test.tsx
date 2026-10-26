@@ -6,7 +6,7 @@ import { renderMatrixPreview as renderContent } from '../../src/modules/docs/con
 import { renderMatrixPreview as renderReference } from '../../src/modules/docs/contents/library/standard/collection/matrix/matrix-reference.preview';
 import { renderMatrixPreview as renderSkeleton } from '../../src/modules/docs/contents/library/standard/collection/matrix/matrix-skeleton.preview';
 
-it('Matrix preview renders data and nested JSX through real Vanilla adapters', () => {
+it('Matrix 预览通过真实的 Vanilla 适配器渲染数据和嵌套 JSX', () => {
   for (const mode of ['data', 'jsx'] as const) {
     const preview = buildPreviewIR(() => renderContent({ mode, expand: 'all' }));
     const vanilla = buildVanillaPreview(preview);
@@ -17,7 +17,7 @@ it('Matrix preview renders data and nested JSX through real Vanilla adapters', (
     expect(vanilla.code).not.toContain('Failed');
   }
 });
-it('Matrix preview preserves skeletons and generated cell endpoints', () => {
+it('Matrix 预览保留骨架和生成的单元端点', () => {
   const skeleton = buildVanillaPreview(
     buildPreviewIR(() => renderSkeleton({ rows: 2, columns: 3, mode: 'symbols', index: 'auto' })),
   );

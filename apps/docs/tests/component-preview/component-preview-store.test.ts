@@ -19,7 +19,7 @@ afterEach(() => {
   useComponentPreviewStore.getState().setRangePlaybackDuration(originalRangePlaybackDuration);
 });
 
-describe('ComponentPreview store controls panel preference', () => {
+describe('ComponentPreview 状态仓库保存控件面板偏好', () => {
   it('设置并切换默认打开状态', () => {
     useComponentPreviewStore.getState().setControlPanelDefaultOpen(true);
 
@@ -46,7 +46,7 @@ describe('ComponentPreview store controls panel preference', () => {
     expect(state).toHaveProperty('toggleControlsLocked');
   });
 
-  it('stores the default range playback duration', () => {
+  it('保存数值范围控件的默认播放时长', () => {
     expect(useComponentPreviewStore.getState().rangePlaybackDuration).toBe(2000);
 
     useComponentPreviewStore.getState().setRangePlaybackDuration(500);
@@ -54,7 +54,7 @@ describe('ComponentPreview store controls panel preference', () => {
     expect(useComponentPreviewStore.getState().rangePlaybackDuration).toBe(500);
   });
 
-  it('stores the global preview Theme', () => {
+  it('存储全局预览主题', () => {
     expect(useComponentPreviewStore.getState().themeName).toBe(PreviewTheme.Default);
 
     useComponentPreviewStore.getState().setTheme(PreviewTheme.Academic);

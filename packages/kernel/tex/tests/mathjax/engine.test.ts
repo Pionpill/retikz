@@ -11,7 +11,7 @@ vi.mock('mathjax-full/js/mathjax.js', () => {
   throw initializationFailure;
 });
 
-describe('[mathjax-engine] initialization failure', () => {
+describe('[mathjax-engine]初始化失败', () => {
   it('统一包装为 RetikzTexError，并保留原始 cause 与通用诊断', async () => {
     try {
       await createMathJaxEngine();

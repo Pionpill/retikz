@@ -6,7 +6,7 @@ import { createRuntime } from '../../src/runtime';
 import { defineRuntimeSource } from '../../src/source';
 import { createRuntimeSourceInput, createRuntimeSourceUpdate } from '../../src/transaction';
 
-describe('runtime runtime ownership', () => {
+describe('Runtime 运行时所有权', () => {
   it('equal candidate、已替换 current 与最终 current 均 exactly-once dispose', () => {
     const capturedSources: Array<Readonly<{ value: number }>> = [];
     const capturedResults: Array<Readonly<{ value: number }>> = [];

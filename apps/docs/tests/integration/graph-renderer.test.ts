@@ -123,7 +123,7 @@ const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
     },
   ) as CanvasRenderingContext2D;
 
-describe('Graph renderer integration', () => {
+describe('Graph 渲染器集成', () => {
   it('让 direct、React 与 Vanilla 产生同一个 IRGraph root', () => {
     const direct = normalizeGraph(graphInput);
     const react = buildPreviewIR(ReactGraph).ir.children[0];

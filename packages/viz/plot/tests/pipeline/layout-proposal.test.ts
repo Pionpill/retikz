@@ -83,8 +83,8 @@ const compileWithProposal = (
   return observations[0];
 };
 
-describe('Plot layout proposal contract', () => {
-  it('uses an exact x proposal without changing the intrinsic y fallback', () => {
+describe('Plot 布局建议契约', () => {
+  it('使用精确的 x 建议，而不更改内在的 y 回退', () => {
     const result = compileWithProposal(
       {
         x: { kind: LayoutAxisProposalKind.Exact, value: 240 },
@@ -98,7 +98,7 @@ describe('Plot layout proposal contract', () => {
     expect(result.slotSize).toEqual({ width: 240, height: 420 });
   });
 
-  it('uses an exact y proposal without changing the intrinsic x fallback', () => {
+  it('使用精确的 y 建议，而不更改内在的 x 回退', () => {
     const result = compileWithProposal(
       {
         x: naturalX,
@@ -112,7 +112,7 @@ describe('Plot layout proposal contract', () => {
     expect(result.slotSize).toEqual({ width: 640, height: 180 });
   });
 
-  it('uses exact proposals on both axes', () => {
+  it('在两个轴上使用精确建议', () => {
     const result = compileWithProposal({
       x: { kind: LayoutAxisProposalKind.Exact, value: 320 },
       y: { kind: LayoutAxisProposalKind.Exact, value: 160 },
@@ -122,21 +122,21 @@ describe('Plot layout proposal contract', () => {
     expect(result.slotSize).toEqual({ width: 320, height: 160 });
   });
 
-  it('keeps node, lower option, and default dimensions for intrinsic proposals', () => {
+  it('保留节点、下沉选项和内在提案的默认维度', () => {
     const result = compileWithProposal(NaturalLayoutProposal);
 
     expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 480, height: 300 });
     expect(result.slotSize).toEqual({ width: 480, height: 300 });
   });
 
-  it('uses lower options when intrinsic node dimensions are omitted', () => {
+  it('当省略固有节点尺寸时，使用下沉的选项', () => {
     const result = compileWithProposal(NaturalLayoutProposal, plot(), { layout: { width: 360, height: 220 } });
 
     expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 360, height: 220 });
     expect(result.slotSize).toEqual({ width: 360, height: 220 });
   });
 
-  it('uses node dimensions before lower options for intrinsic proposals', () => {
+  it('在内部提案的下沉选项之前使用节点维度', () => {
     const result = compileWithProposal(
       NaturalLayoutProposal,
       PlotSchema.parse({ ...plot(), width: 420, height: 260 }),
@@ -147,7 +147,7 @@ describe('Plot layout proposal contract', () => {
     expect(result.slotSize).toEqual({ width: 420, height: 260 });
   });
 
-  it('clamps intrinsic dimensions to a range before lowering geometry', () => {
+  it('在下沉几何形状之前将固有尺寸限制在一定范围内', () => {
     const result = compileWithProposal({
       x: { kind: LayoutAxisProposalKind.Range, min: 120, max: 240 },
       y: { kind: LayoutAxisProposalKind.Range, min: 100, max: 180 },
@@ -160,7 +160,7 @@ describe('Plot layout proposal contract', () => {
   it.each([
     ['width', { x: { kind: LayoutAxisProposalKind.Exact, value: 0 }, y: naturalY }],
     ['height', { x: naturalX, y: { kind: LayoutAxisProposalKind.Exact, value: 0 } }],
-  ] as const)('fails loudly for a non-positive exact %s allocation', (_axis, proposal) => {
+  ] as const)('对于非正的精确 %s 分配，明确报错', (_axis, proposal) => {
     expect(() => compileWithProposal(proposal)).toThrow(/must be a positive finite number/);
   });
 });

@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 
 import { grid, GridInputEmbedAdapter } from '../src/presentation';
 
-describe('grid()', () => {
-  it('preserves the authored root id and reuses it for the embed', () => {
+describe('网格（）', () => {
+  it('保留编写的根 ID 并将其重新用于嵌入', () => {
     const embed = grid({
       id: 'authored-grid',
       meta: { source: 'vanilla' },
@@ -23,7 +23,7 @@ describe('grid()', () => {
     expect(contribution.node).toMatchObject({ id: 'authored-grid', meta: { source: 'vanilla' } });
   });
 
-  it('creates an embed whose adapter lowers to the same Standard Grid IR', () => {
+  it('创建一个嵌入件，其适配器下沉到相同的 Standard Grid IR', () => {
     const embed = grid({
       bounds: { start: [0, 0], end: [20, 10] },
       line: { spacing: 10 },
@@ -41,7 +41,7 @@ describe('grid()', () => {
     expect(GridProvider.makeDefinition([])).toBe(GridDefinition);
   });
 
-  it('merges multiple Grid embeds through one stable definition maker', () => {
+  it('通过一个稳定的定义生成器合并多个 Grid 嵌入', () => {
     const result = normalizeScene(
       scene({
         children: [
@@ -55,7 +55,7 @@ describe('grid()', () => {
     expect(result.contributions).toHaveLength(2);
   });
 
-  it('accepts a center-form Cartesian position through the shared Grid input', () => {
+  it('通过共享 Grid 输入接受中心形式笛卡尔位置', () => {
     const input: GridInput = {
       bounds: { position: [20, 10], width: 40, height: 20 },
       line: { spacing: 10 },
@@ -71,7 +71,7 @@ describe('grid()', () => {
     expect(contribution.node).toEqual(createGrid(input));
   });
 
-  it('accepts a PolarPosition center through the shared Grid input', () => {
+  it('通过共享 Grid 输入接受 PolarPosition 中心', () => {
     const input: GridInput = {
       bounds: {
         position: { origin: [10, 5], angle: 90, radius: 20 },

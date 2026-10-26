@@ -20,8 +20,8 @@ const TicketClipSchema: ZodType<TicketClip> = strictObject({
   }),
 });
 
-describe('Clip definition contract', () => {
-  it('keeps spec parsing and typed lowering on one typed definition', () => {
+describe('裁剪定义契约', () => {
+  it('在一种类型定义上保持规范解析和类型下沉', () => {
     const definition = defineClip<TicketClip>({
       kind: 'ticket',
       schema: TicketClipSchema,
@@ -57,7 +57,7 @@ describe('Clip definition contract', () => {
     });
   });
 
-  it('compiles a clip directly from parsed parameters', () => {
+  it('直接从解析的参数编译裁剪', () => {
     const definition = defineClip({
       kind: 'ticket',
       schema: TicketClipSchema,

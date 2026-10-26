@@ -32,8 +32,8 @@ const layers: ReadonlyArray<RenderReadonlyLayer> = [
   { key: 'second', scene: layerScene('#dc2626'), transform: [1, 0, 0, 1, -4, 6] },
 ];
 
-describe('SVG static readonly layers', () => {
-  it('keeps the primary viewport and appends ordinary layer Scenes in input order', () => {
+describe('SVG 静态只读层', () => {
+  it('保留主视口并按输入顺序附加普通图层场景', () => {
     const document = buildSvgFrameDocument({ primary, layers }, { idPrefix: 'frame' });
     const children = document.children ?? [];
     const primaryIndex = children.findIndex(
@@ -59,7 +59,7 @@ describe('SVG static readonly layers', () => {
     });
   });
 
-  it('isolates same-named resources between primary and every layer namespace', () => {
+  it('隔离主命名空间和各层命名空间之间的同名资源', () => {
     const primaryWithResource = layerScene('#111111');
     const output = renderFrameToSvgString({ primary: primaryWithResource, layers }, { idPrefix: 'resource-frame' });
 
@@ -73,7 +73,7 @@ describe('SVG static readonly layers', () => {
     });
   });
 
-  it('Scene-only API is equivalent to a frame with frozen empty layers', () => {
+  it('仅 Scene API 相当于具有冻结空层的帧', () => {
     expect(buildSvgDocument(primary, { idPrefix: 'scene-only' })).toEqual(
       buildSvgFrameDocument({ primary, layers: Object.freeze([]) }, { idPrefix: 'scene-only' }),
     );

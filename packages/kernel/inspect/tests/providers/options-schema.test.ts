@@ -39,15 +39,15 @@ const schemas = [
   ],
 ] as const;
 
-describe('builtin Inspector options schemas', () => {
-  it.each(schemas)('materializes %s defaults and survives JSON round-trip', (_name, schema, expected) => {
+describe('内置 Inspector 选项 schema', () => {
+  it.each(schemas)('实现 %s 默认值并在 JSON 往返中保留', (_name, schema, expected) => {
     const parsed = schema.parse({});
 
     expect(parsed).toEqual(expected);
     expect(schema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(expected);
   });
 
-  it.each(schemas)('rejects unknown fields for %s', (_name, schema) => {
+  it.each(schemas)('拒绝 %s 的未知字段', (_name, schema) => {
     expect(() => schema.parse({ unknown: true })).toThrow();
   });
 });

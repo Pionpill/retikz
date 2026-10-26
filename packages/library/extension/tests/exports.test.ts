@@ -12,8 +12,8 @@ type PackageManifest = {
 
 const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as PackageManifest;
 
-describe('Extension public entry', () => {
-  it('exports each optional capability from one root', () => {
+describe('扩展公共条目', () => {
+  it('从一个根导出每个可选功能', () => {
     for (const name of [
       'CrossShapeDefinition',
       'TrapezoidShapeDefinition',
@@ -38,7 +38,7 @@ describe('Extension public entry', () => {
     expect(extension).not.toHaveProperty('SurfaceDefinition');
   });
 
-  it('has one source and published entry and no Tier 2 or host dependencies', () => {
+  it('具有一个源和已发布的条目，没有第 2 层或宿主依赖性', () => {
     expect(Object.keys(manifest.exports)).toEqual(['.']);
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);
     expect(manifest.sideEffects).toBe(false);

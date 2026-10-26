@@ -38,8 +38,8 @@ const nodeLayoutsById = (result: ReturnType<typeof compileFrameScene>): Map<stri
 
 const body = { type: 'node' as const, position: [40, 50] as [number, number], text: 'Body' };
 
-describe('Frame layout compile', () => {
-  it('compiles an anonymous Frame without synthesizing root, body, or header ids', () => {
+describe('框架布局编译', () => {
+  it('编译匿名框架而不合成根、主体或头部 ID', () => {
     const result = compileFrameScene(
       { title: { text: 'Title' }, description: { text: 'Description' }, children: [body] },
       true,
@@ -52,7 +52,7 @@ describe('Frame layout compile', () => {
     expect(JSON.stringify(result.scene)).not.toMatch(/\/content|\/title|\/description/);
   });
 
-  it('preserves explicit root, body, and header ids without deriving structural suffixes', () => {
+  it('保留显式的根、主体和头部 ID，而不派生结构后缀', () => {
     const result = compileFrameScene(
       {
         id: 'frame-root',
@@ -71,7 +71,7 @@ describe('Frame layout compile', () => {
     expect([...nodeLayoutsById(result).keys()]).toEqual(expect.arrayContaining(['body', 'heading', 'summary']));
   });
 
-  it('keeps authored Scope properties on the root and border style on the border Path', () => {
+  it('保留根上编写的 Scope 属性和边框 Path 上的边框样式', () => {
     const result = compileFrameScene({
       ...fullScopeProps,
       id: 'frame-root',
@@ -89,7 +89,7 @@ describe('Frame layout compile', () => {
     expect(border.commands.some(command => command.kind === 'arc')).toBe(true);
   });
 
-  it('places horizontal headers above the body from actual Node layouts', () => {
+  it('将水平标题放置在实际 Node 布局的正文上方', () => {
     const result = compileFrameScene(
       {
         gap: 5,
@@ -121,7 +121,7 @@ describe('Frame layout compile', () => {
     expect(descriptionBottomLeft[1]).toBeCloseTo(titleBottomRight[1], 8);
   });
 
-  it('places vertical headers in title, description, body reading order', () => {
+  it('按标题、描述、正文阅读顺序放置垂直标题', () => {
     const result = compileFrameScene(
       {
         gap: 6,
@@ -147,7 +147,7 @@ describe('Frame layout compile', () => {
     expect(titleBottomLeft).toEqual([descriptionTopLeft[0], descriptionTopLeft[1] - 6]);
   });
 
-  it('merges header defaults with explicit Node fields while preserving explicit ids', () => {
+  it('将头部默认值与显式 Node 字段合并，同时保留显式 id', () => {
     const result = compileFrameScene({
       title: {
         id: 'custom-title',
@@ -168,7 +168,7 @@ describe('Frame layout compile', () => {
     if (titleText?.type === 'text') expect(titleText.lines[0]?.text).toBe('Contract');
   });
 
-  it('adds resolved padding to allocation and emits corner arcs only for a positive radius', () => {
+  it('将解析的填充添加到分配中，并仅针对正半径发出角弧', () => {
     const plain = compileFrameScene({ padding: 0, children: [body] });
     const padded = compileFrameScene({
       padding: { default: 3, x: 4, y: 5, left: 6, bottom: 7 },
@@ -183,7 +183,7 @@ describe('Frame layout compile', () => {
     expect(pathsOf(sharp.scene.primitives)[0]?.commands.some(command => command.kind === 'arc')).toBe(false);
   });
 
-  it('supports one optional header without creating an empty peer or generated identity', () => {
+  it('支持一个可选头部，无需创建空对等体或生成的身份', () => {
     const titleOnly = compileFrameScene({ title: { id: 'title', text: 'Title' }, children: [body] });
     const descriptionOnly = compileFrameScene({
       description: { id: 'description', text: 'Description' },
@@ -194,7 +194,7 @@ describe('Frame layout compile', () => {
     expect(groupsOf(descriptionOnly.scene.primitives).flatMap(group => group.id ?? [])).toEqual(['description']);
   });
 
-  it('preserves the missing-definition diagnostic for direct Frame IR', () => {
+  it('保留直接帧 IR 的缺失定义诊断', () => {
     const warnings: Array<string> = [];
     compileToScene(
       { type: 'scene', version: 1, children: [createFrame({ id: 'group', children: [body] })] },

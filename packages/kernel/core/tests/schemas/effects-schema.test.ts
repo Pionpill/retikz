@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { BlendMode, DropShadowSchema, SHADOW_PRESETS, ShadowPreset } from '../../src/schemas';
 
-describe('[effects] DropShadowSchema accept/reject', () => {
+describe('[效果] DropShadowSchema 接受/拒绝', () => {
   it('preset-only：{preset:"md"} → 过', () => {
     expect(DropShadowSchema.safeParse({ preset: 'md' }).success).toBe(true);
   });
