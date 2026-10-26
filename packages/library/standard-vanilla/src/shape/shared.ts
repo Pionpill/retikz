@@ -1,5 +1,6 @@
 import type { IRTarget } from '@retikz/core';
 import { parseTargetSugar } from '@retikz/core';
+import type { IRPath } from '@retikz/core';
 import type { InputPath } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
 import type { InputTarget } from '@retikz/vanilla';
@@ -10,10 +11,9 @@ import type { InputTarget } from '@retikz/vanilla';
  */
 export type InputShape<TSource> = TSource extends object
   ? {
-      [TKey in keyof TSource as TKey extends 'type' | 'namespace' ? never : TKey]: TKey extends
-        | 'center'
-        | 'corner1'
-        | 'corner2'
+      [
+        TKey in keyof TSource as TKey extends 'type' | 'namespace' | keyof InputShapeProperties ? never : TKey
+      ]: TKey extends 'center' | 'corner1' | 'corner2'
         ? IRTarget extends TSource[TKey]
           ? InputTarget
           : TSource[TKey]
@@ -42,10 +42,10 @@ export const normalizeShapeInput = <TSource>(
 };
 
 /** 路径作者简写，由 Kernel Vanilla 统一解释 */
-export type InputShapeProperties = Pick<InputPath, 'arrow' | 'arrowDetail' | 'arrowPlacement'>;
+export type InputShapeProperties = Pick<InputPath, 'arrow'>;
 
 type NormalizedShapeProperties<TInput> = TInput extends object
-  ? Omit<TInput, keyof InputShapeProperties> & Pick<InputPath, 'style' | 'marks'>
+  ? Omit<TInput, keyof InputShapeProperties> & Pick<IRPath, 'arrow' | 'style' | 'marks'>
   : never;
 
 /**

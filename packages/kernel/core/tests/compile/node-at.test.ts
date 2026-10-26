@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { RectPrim, ScenePrimitive } from '../../src/contract';
+import type { RectPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { AtPositionSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
-/** 取所有 RectPrim（节点 shape=rectangle 默认走 RectPrim；带文本节点包 group，flatten 穿透） */
-const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
-  flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
+/** 取所有 RectPrimitive（节点 shape=rectangle 默认走 RectPrimitive；带文本节点包 group，flatten 穿透） */
+const rects = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
+  flattenPrims(prims).filter((p): p is RectPrimitive => p.type === 'rect');
 
 /** 给定一组 IR Node + at，编译后取每个 rect 的几何中心 [cx, cy] */
 const centers = (ir: IRScene): Array<[number, number]> =>

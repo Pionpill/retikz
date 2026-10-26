@@ -2,47 +2,45 @@ import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
 import { literal, number, strictObject } from 'zod';
 
-import type { ClipShape, IRScene } from '../../src';
+import type { IRScene } from '../../src';
 import { compileToScene, defineClip } from '../../src';
 
 type TicketClip = {
   kind: 'ticket';
-  size: number;
-};
-
-type TicketClipShape = ClipShape & {
-  kind: 'ticket';
-  size: number;
+  /** 裁剪参数 */
+  params: {
+    size: number;
+  };
 };
 
 const TicketClipSchema: ZodType<TicketClip> = strictObject({
   kind: literal('ticket'),
-  size: number().positive(),
-});
-
-const TicketClipShapeSchema: ZodType<TicketClipShape> = strictObject({
-  kind: literal('ticket'),
-  size: number().positive(),
+  params: strictObject({
+    size: number().positive(),
+  }),
 });
 
 describe('Clip definition contract', () => {
-  it('keeps spec parsing, typed resolve, and lower on one typed definition', () => {
-    const definition = defineClip<TicketClip, TicketClipShape>({
+  it('keeps spec parsing and typed lowering on one typed definition', () => {
+    const definition = defineClip<TicketClip>({
       kind: 'ticket',
       schema: TicketClipSchema,
-      resolve: spec => ({ kind: 'ticket', size: spec.size }),
-      lower: shape => ({
-        commands: [
-          { kind: 'move', to: [0, 0] },
-          { kind: 'line', to: [shape.size, shape.size] },
-        ],
-        fillRule: 'nonzero',
-      }),
+
+      lower: spec => {
+        const params = { size: spec.params.size };
+        return {
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [params.size, params.size] },
+          ],
+          fillRule: 'nonzero',
+        };
+      },
     });
 
     expect(
       definition.lower(
-        { kind: 'ticket', size: 4 },
+        { kind: 'ticket', params: { size: 4 } },
         {
           round: value => value,
           lower: () => {
@@ -59,21 +57,22 @@ describe('Clip definition contract', () => {
     });
   });
 
-  it('derives identity resolve from a ClipShape schema', () => {
+  it('compiles a clip directly from parsed parameters', () => {
     const definition = defineClip({
       kind: 'ticket',
-      schema: TicketClipShapeSchema,
-      lower: shape => ({
-        commands: [
-          { kind: 'move', to: [0, 0] },
-          { kind: 'line', to: [shape.size, shape.size] },
-        ],
-        fillRule: 'nonzero',
-      }),
-    });
-    const spec = { kind: 'ticket', size: 4 } as const;
+      schema: TicketClipSchema,
 
-    expect(definition.resolve(spec, { round: value => value, resolve: () => spec })).toBe(spec);
+      lower: spec => {
+        return {
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [spec.params.size, spec.params.size] },
+          ],
+          fillRule: 'nonzero',
+        };
+      },
+    });
+    const spec = { kind: 'ticket', params: { size: 4 } } as const;
 
     const scene: IRScene = {
       version: 1,

@@ -1,0 +1,166 @@
+---
+title: 自定义标记
+description: 用 defineMark 定义局部图元，注册后通过 shape 和 params 在路径上引用
+---
+
+## 适用边界
+
+先阅读 [mark · 标记](/kernel/components/path/mark)。只需叉号、加号、对勾、星形或已注册箭头时，直接使用已有 `shape`；需要新的轮廓或参数化内容时，使用 `defineMark`。
+
+普通标记不提供端点截断几何。如果同一造型还要作为端点箭头，请使用[自定义箭头](/kernel/components/path/custom-arrow)，注册后也能作为 mark 使用。
+
+## 定义能力
+
+下面定义一个 `ring` 圆环：`baseSize: 10` 表示局部基准正方形边长，`anchor: [5, 5]` 把圆心对准路径采样点。这两项恰好也是默认值，示例显式写出以说明坐标关系。`hollow: true` 让外观解析提供描边主色与线宽。
+
+`emit(context)` 返回 `Iterable<ScenePrimitive>`，示例用一个椭圆图元绘制圆环。拖动局部半径可观察 `params.radius` 如何改变定义输出；整体缩放则作用于完整标记。
+
+<ComponentPreview
+  files={['custom-mark', 'custom-mark.preview.tsx', 'ring-mark.ts']}
+  defaultSourceFile="ring-mark.ts"
+  size="sm"
+  caption="圆环始终以圆心定位，穿过圆环的主线保持完整。示例使用 scale: 2 放大输出。"
+/>
+
+名称必须在合并后的标记注册表中唯一。`params` 是 JSON 对象，省略时上下文收到空对象；其字段含义与约束由定义负责。示例只接受大于 0 且不超过 5 的有限半径，其他值会产生领域错误。
+
+上下文还提供已解析的 `stroke`、`fill`、`lineWidth`、描边端帽、连接、虚线参数与坐标精度函数 `round`。定义主动把需要的样式写入图元，固定颜色也可保留。透明度由标记容器应用，不要再次乘到每个子图元。实心标记通常使用 `fill`；线条标记使用 `hollow: true`，输出 `fill: 'none'`。
+
+## 注入与使用
+
+上面的预览同时展示了 React 注册与引用。将 `ring-mark.ts` 中的 `ringMark` 定义放在宿主代码外，按使用方式注入一次，再通过 `shape: 'ring'` 引用。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Draw, Layout } from '@retikz/react';
+import { ringMark } from './ring-mark';
+
+<Layout extensions={{ marks: [ringMark] }}>
+  <Draw
+    way={[
+      [0, 0],
+      [120, 0],
+    ]}
+    marks={[{ pos: 0.5, shape: 'ring', params: { radius: 4 } }]}
+  />
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+HTML 中先准备 `<div id="diagram"></div>`，将定义放入 `mount` 的 `compile.marks`。
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+import { ringMark } from './ring-mark';
+
+const input = scene({
+  children: [
+    path({
+      way: [
+        [0, 0],
+        [120, 0],
+      ],
+      marks: [{ pos: 0.5, shape: 'ring', params: { radius: 4 } }],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  compile: { marks: [ringMark] },
+});
+// 移除宿主时调用 view.dispose()
+```
+
+</DocTab>
+<DocTab value="ir" label="IR / Core">
+
+IR 只保存名称和 JSON 参数，定义函数通过编译选项传入。下面的 `scene` 可交给 SVG 或 Canvas renderer。
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { ringMark } from './ring-mark';
+
+const { scene } = compileToScene(
+  {
+    version: 1,
+    type: 'scene',
+    children: [
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [120, 0] },
+        ],
+        marks: [{ pos: 0.5, shape: 'ring', params: { radius: 4 } }],
+      },
+    ],
+  },
+  { marks: [ringMark] },
+);
+```
+
+</DocTab>
+</DocTabs>
+
+## 错误与限制
+
+| 情况                                      | 结果                            |
+| ----------------------------------------- | ------------------------------- |
+| 与内置 mark、已注册箭头或另一个 mark 重名 | 注册时报错，不覆盖已有定义      |
+| 引用未注册的 `shape`                      | 编译报告标记位置与可用名称      |
+| 把普通 mark 用在 `arrow.start` / `end`    | 箭头注册表无法解析该名称        |
+| `emit` 抛出异常                           | Core 包装错误并保留原始 `cause` |
+| 路径没有可定位长度，或输出引用缺失资源    | 编译拒绝无效结果                |
+
+定义输出基础 Scene 图元，不返回 DOM、ReactNode 或未度量的文本。可以引用场景已有绘制与裁剪资源，不能凭空引用未提供的资源。定义本身不进入 IR；多个实例应各自生成内容，避免共享可变图元。
+
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineMark',
+      kind: 'function',
+      type: '(definition: MarkDefinition) => MarkDefinition',
+      description: '声明可注册的标记定义。',
+    },
+    {
+      name: 'MarkDefinition',
+      kind: 'type',
+      type: 'MarkDefinition',
+      description: '形状名称、局部基准尺寸、锚点、空心状态和图元生成函数。',
+    },
+    {
+      name: 'MarkEmitContext',
+      kind: 'type',
+      type: 'MarkEmitContext',
+      description: '自定义参数、已解析样式与坐标精度函数。',
+    },
+    {
+      name: 'Layout.extensions.marks',
+      kind: 'property',
+      type: 'ReadonlyArray<MarkDefinition>',
+      description: 'React 宿主注册入口；Core 使用 CompileOptions.marks，Vanilla mount 使用 compile.marks。',
+    },
+    {
+      name: 'Draw.marks',
+      kind: 'property',
+      type: "DrawProps['marks']",
+      description: '通过 shape 引用名称，通过 params 传入自有参数。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'mark · 标记', description: '内置形状、位置、尺寸与方向', url: '/kernel/components/path/mark' },
+    { title: '自定义箭头', description: '需要端点截断时定义箭头几何', url: '/kernel/components/path/custom-arrow' },
+    { title: 'API 参考', description: '查询完整定义与输入契约', url: '/kernel/components/path/reference' },
+  ]}
+/>

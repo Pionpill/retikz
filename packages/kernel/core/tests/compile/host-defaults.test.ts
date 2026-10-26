@@ -65,16 +65,18 @@ describe('host-owned defaults', () => {
 
   it('applies path and step label defaults and arrow endpoints equivalently to explicit fields', () => {
     const arrow = { shape: 'stealth', scale: 1.4, end: { fill: 'red' } };
-    const marks = [{ pos: 1, mark: { kind: 'arrow' } }];
+    const endpointArrow = { end: {} };
     expect(
-      render({ path: { label: pathLabel, arrow } }, [{ type: 'path', children: steps, label: { text: 'p' }, marks }]),
+      render({ path: { label: pathLabel, arrow } }, [
+        { type: 'path', children: steps, label: { text: 'p' }, arrow: endpointArrow },
+      ]),
     ).toEqual(
       render({}, [
         {
           type: 'path',
           children: steps,
           label: { ...pathLabel, text: 'p' },
-          marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', scale: 1.4, fill: 'red' } }],
+          arrow: { end: { shape: 'stealth', scale: 1.4, fill: 'red' } },
         },
       ]),
     );
@@ -144,7 +146,7 @@ describe('host-owned defaults', () => {
 it('host reset clears its decorations without affecting siblings or the other host', () => {
   const leaf = [
     { type: 'node', label: { text: 'node' } },
-    { type: 'path', children: steps, label: { text: 'path' }, marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
+    { type: 'path', children: steps, label: { text: 'path' }, arrow: { end: {} } },
   ];
   const inherited = {
     style: { stroke: 'red' },
@@ -166,7 +168,7 @@ it('host reset clears its decorations without affecting siblings or the other ho
         style: { stroke: 'red' },
         children: steps,
         label: { ...pathLabel, text: 'path' },
-        marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', scale: 2 } }],
+        arrow: { end: { shape: 'stealth', scale: 2 } },
       },
     ],
   };
@@ -177,7 +179,7 @@ it('host reset clears its decorations without affecting siblings or the other ho
       style: { stroke: 'red' },
       children: steps,
       label: { ...pathLabel, text: 'path' },
-      marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', scale: 2 } }],
+      arrow: { end: { shape: 'stealth', scale: 2 } },
     },
   ];
   expect(output).toEqual(render({}, [expectedCleared, ...expectedSibling]));

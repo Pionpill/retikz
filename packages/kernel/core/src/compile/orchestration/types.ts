@@ -2,19 +2,19 @@ import type { JsonValue } from '@retikz/foundation';
 import type { AxisAlignedBounds } from '@retikz/math';
 
 import type {
-  ClipShape,
   CompileObservationAncestor,
   CompileObservationOwner,
   CompileOccurrenceLocator,
-  CompositeCompileChild,
   CompositeBoundChild,
+  CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplay,
   CompositeReplayWrapper,
   LayoutAlignmentGuide,
-  LayoutProposal,
   LayoutContribution,
   LayoutMeasurementAxis,
+  LayoutProposal,
+  SceneClipPath,
   ScenePrimitive,
   SceneResource,
   SpatialHandleDeclaration,
@@ -314,8 +314,8 @@ export type TraversalContext = Pick<
   | 'patterns'
   | 'clips'
   | 'arrows'
-  | 'pathGenerators'
-  | 'pathKinds'
+  | 'marks'
+  | 'paths'
   | 'paint'
   | 'clip'
   | 'composites'
@@ -450,8 +450,8 @@ export type EmitScopeGroupContext = {
   scopePrimitiveSink: Array<InternalScenePrimitive>;
   /** 接收作用域输出和布局贡献的父遍历帧 */
   frame: TraversalFrame;
-  /** runtime Scope 预检阶段已解析且尚未登记的 clip */
-  resolvedClipShape?: ClipShape;
+  /** runtime Scope 预检阶段已生成且尚未登记的裁剪路径 */
+  resolvedClipPath?: SceneClipPath;
   /** Scope child 的 semantic owner */
   semanticOwner?: CompileSemanticOwner;
 };
@@ -461,7 +461,7 @@ export type LayoutBoundsContribution = {
   /** 包络装饰的可见范围，需要沿祖先裁剪收敛 */
   decoration?: true;
   /** 当前 frame 中的几何点 */
-  points: Array<IRPosition>;
+  boundsPoints: Array<IRPosition>;
   /** 与该点集关联的阴影外溢 */
   shadow?: ResolvedDropShadow;
   /** 位于该显式 composite allocation boundary 内时不直接贡献到外层 */

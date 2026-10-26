@@ -12,7 +12,7 @@ import {
   BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineComposite,
-  definePathKind,
+  definePath,
   LayoutChildProbeKind,
   NaturalLayoutProposal,
   PathSchema,
@@ -100,7 +100,7 @@ describe('Core canonical Runtime topology', () => {
       width: 10,
       height: 10,
     };
-    const repeated = definePathKind({
+    const repeated = definePath({
       name: 'repeated',
       schema: PathSchema.extend({ kind: literal('repeated') }),
       compile: () => ({
@@ -127,7 +127,7 @@ describe('Core canonical Runtime topology', () => {
           },
         ] as IRScene['children'],
       },
-      { pathKinds: [repeated] },
+      { paths: [repeated] },
       { candidateRevision: runtimeRevision },
     );
     const [first, second] = compiled.result.scene.primitives;

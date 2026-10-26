@@ -226,11 +226,11 @@ describe('ComponentPreview Vanilla source', () => {
 
   it('自动 Core Vanilla view 使用真实 SVG 并固定 renderer', async () => {
     const props = await renderPreview(
-      ['kernel', 'visual', 'animation', 'custom-animation'],
-      <ComponentPreview files="custom-property" />,
+      ['kernel', 'visual', 'animation', 'usage'],
+      <ComponentPreview files="handwritten-track" />,
     );
 
-    expect(props.source?.vanilla?.files[0].filename).toBe('custom-property.vanilla.ts');
+    expect(props.source?.vanilla?.files[0].filename).toBe('handwritten-track.vanilla.ts');
     expect(props.source?.vanilla?.render).toBeTypeOf('function');
     expect(props.source?.vanilla?.rendererMode).toBe('svg');
   });

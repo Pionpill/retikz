@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { strictObject } from 'zod';
 
 import type { CompileWarning, IRPosition, IRScene, IRStep, ScenePrimitive } from '../../../src';
-import { compileToScene, BuiltinCompileWarningCode, definePathGenerator } from '../../../src';
-import { arrowMarks } from '../../helpers/arrow-marks';
+import { BuiltinCompileWarningCode, compileToScene } from '../../../src';
 import { flattenPrims } from '../../helpers/flatten';
+import { pathArrows } from '../../helpers/path-arrows';
 import { line, move } from '../../helpers/path-command-factory';
 import { findPathPrim, pathCommands } from './helpers';
 
@@ -67,7 +66,7 @@ describe('compile path: axis-line', () => {
             { type: 'node', id: 'target', position: [100, 0] },
             {
               type: 'path',
-              marks: arrowMarks('->', { shape: 'stealth' }),
+              arrow: pathArrows('->', { shape: 'stealth' }),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'axis-line', axis: 'horizontal', to },
@@ -224,126 +223,6 @@ describe('compile path: axis-line', () => {
         { type: 'step', kind: 'line', to: { relative: [5, 5] } },
       ]),
     ).toEqual([move([10, 20]), line([50, 20]), line([100, 100]), line([105, 105])]);
-  });
-
-  it('紧随 generator 时使用最后命令 pen override，并同步后续 relative baseline', () => {
-    const generator = definePathGenerator({
-      name: 'axis-probe',
-      paramsSchema: strictObject({}),
-      generate: ({ from }) => [{ kind: 'line', to: [from[0] + 30, from[1] + 15] }],
-    });
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'generator', name: 'axis-probe', params: {} },
-            { type: 'step', kind: 'axis-line', axis: 'vertical', to: [100, 50] },
-            { type: 'step', kind: 'line', to: { relative: [5, 5] } },
-          ],
-        },
-      ],
-    };
-
-    expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands).toEqual([
-      move([0, 0]),
-      line([30, 15]),
-      line([30, 50]),
-      line([35, 55]),
-    ]);
-  });
-
-  it('动态 pen → axis-line 后，smooth relative points 使用 projected baseline', () => {
-    const generator = definePathGenerator({
-      name: 'axis-smooth-probe',
-      paramsSchema: strictObject({}),
-      generate: ({ from }) => [{ kind: 'line', to: [from[0] + 30, from[1] + 15] }],
-    });
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'generator', name: 'axis-smooth-probe', params: {} },
-            { type: 'step', kind: 'axis-line', axis: 'vertical', to: [100, 50] },
-            { type: 'step', kind: 'smooth', points: [{ relative: [5, 5] }] },
-          ],
-        },
-      ],
-    };
-    const commands = findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands;
-    const last = commands[commands.length - 1];
-
-    expect(last).toMatchObject({ kind: 'cubic', to: [35, 55] });
-  });
-
-  it('axis-line → generator absolute to 后，relative 使用 generator target baseline', () => {
-    const generator = definePathGenerator({
-      name: 'axis-generator-target-probe',
-      paramsSchema: strictObject({}),
-      generate: ({ from, to }) => [{ kind: 'line', to: to ?? from }],
-    });
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [0, 10] },
-            { type: 'step', kind: 'axis-line', axis: 'horizontal', to: [20, 80] },
-            { type: 'step', kind: 'generator', name: 'axis-generator-target-probe', params: {}, to: [60, 40] },
-            { type: 'step', kind: 'line', to: { relative: [5, 5] } },
-          ],
-        },
-      ],
-    };
-
-    expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands).toEqual([
-      move([0, 10]),
-      line([20, 10]),
-      line([60, 40]),
-      line([65, 45]),
-    ]);
-  });
-
-  it('动态 pen → axis-line → implicit arc 后，relative 使用 arc endpoint baseline', () => {
-    const generator = definePathGenerator({
-      name: 'axis-arc-probe',
-      paramsSchema: strictObject({}),
-      generate: ({ from }) => [{ kind: 'line', to: [from[0] + 30, from[1] + 15] }],
-    });
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'generator', name: 'axis-arc-probe', params: {} },
-            { type: 'step', kind: 'axis-line', axis: 'vertical', to: [100, 50] },
-            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
-            { type: 'step', kind: 'line', to: { relative: [5, 0] } },
-          ],
-        },
-      ],
-    };
-
-    expect(findPathPrim(compileToScene(ir, { pathGenerators: [generator] }).scene.primitives).commands).toEqual([
-      move([0, 0]),
-      line([30, 15]),
-      line([30, 50]),
-      move([40, 50]),
-      { kind: 'arc', center: [30, 50], radius: 10, startAngle: 0, endAngle: 90 },
-      line([35, 60]),
-    ]);
   });
 
   const penOverrideCases: Array<[string, Array<IRStep>, IRPosition]> = [
@@ -532,7 +411,7 @@ describe('compile path: axis-line', () => {
       children: [
         {
           type: 'path',
-          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
+          marks: [{ pos: 0.5, shape: 'stealth' }],
           children: [
             { type: 'step', kind: 'move', to: [10, 20] },
             { type: 'step', kind: 'axis-line', axis: 'horizontal', to: [90, 80] },

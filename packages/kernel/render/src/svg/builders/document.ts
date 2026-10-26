@@ -1,9 +1,8 @@
 import type { PaintValue, Scene, ScenePrimitive } from '@retikz/core';
 
-import type { EasingRegistry } from '../../animation';
 import type { StaticRenderFrame } from '../../runtime';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
-import { validateSceneContent } from '../../shared';
+import { resolveSceneResourceMap } from '../../shared';
 import { countScenePrimitiveOccurrences, startArrowPlacement, endArrowPlacement } from '../../shared';
 import type { RenderTraceReporter } from '../../trace';
 import { RenderTracePhase, RenderTraceUnit } from '../../trace';
@@ -33,8 +32,6 @@ export type BuildDocumentOptions = {
    * @description runtime 据 `{animate:false}` / `prefers-reduced-motion` 走静态路径时传 false
    */
   animate?: boolean;
-  /** 自定义 easing 注册表（名 → cubic-bezier 四元组进 CSS / 函数仅 JS） */
-  easings?: EasingRegistry;
   /** 动画降级诊断告警（pathDraw 无描边 / 自定义 property 无映射 / 自定义 easing 未注册）；缺省 console.warn */
   onAnimationWarn?: (message: string) => void;
   /**
@@ -52,14 +49,14 @@ export type BuildDocumentOptions = {
  */
 export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): Array<SvgNode> => {
   const safeIdPrefix = toSafeSvgToken(options.idPrefix);
-  validateSceneContent(scene);
+  const resources = resolveSceneResourceMap(scene);
 
   // 截帧（snapshotAt 给定）→ 烘焙静态帧的收集器；否则按 animate 决定动画收集器 / 无（base）
   const collector =
     options.snapshotAt !== undefined
       ? createSvgAnimationCollector({
           idPrefix: safeIdPrefix,
-          easings: options.easings,
+
           onWarn: options.onAnimationWarn,
           snapshotAt: options.snapshotAt,
         })
@@ -67,20 +64,19 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
         ? undefined
         : createSvgAnimationCollector({
             idPrefix: safeIdPrefix,
-            easings: options.easings,
+
             onWarn: options.onAnimationWarn,
           });
   const definitions = new Map<string, () => SvgNode>();
-  const resources = new Map((scene.resources ?? []).map(resource => [resource.id, resource]));
   const clipIdFor = (id: string): string => `retikz-clip-${safeIdPrefix}-${id}`;
-  const contextFor = (hostId?: string, resourceContent = false, contextStroke?: PaintValue): BuildContext => {
+  const contextFor = (hostId?: string, isResourceContent = false, contextStroke?: PaintValue): BuildContext => {
     const suffix = hostId === undefined ? '' : `-host-${toSafeSvgToken(hostId)}`;
     const resourceContext = (): BuildContext => contextFor(hostId, true, 'currentColor');
     return {
       hostId,
       contextStroke,
-      resourceContent,
-      forPrimitive: resourceContent ? undefined : primitive => contextFor(primitive.id ?? hostId),
+      isResourceContent,
+      forPrimitive: isResourceContent ? undefined : primitive => contextFor(primitive.id ?? hostId),
       decorate: collector?.decorate,
       clipRefUrl: id => `url(#${clipIdFor(id)})`,
       arrowContentFor: primitive => {
@@ -108,7 +104,7 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
       },
       paintRefUrl: resourceId => {
         const resource = resources.get(resourceId);
-        const id = `retikz-paint-${safeIdPrefix}-${resourceId}${resource?.kind === 'paint' && resource.tile ? suffix : ''}`;
+        const id = `retikz-paint-${safeIdPrefix}-${resourceId}${resource?.kind === 'paint' && 'tile' in resource ? suffix : ''}`;
         if (resource?.kind === 'paint' && !definitions.has(id)) {
           definitions.set(id, () => buildPaintDef(resource, id, resourceContext()));
         }

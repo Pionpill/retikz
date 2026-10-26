@@ -5,7 +5,7 @@ import type { CanonicalPathLabel, CanonicalStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { LowerTex, TextMeasurer } from '../../text';
 import { emitLabelPrimitive } from '../host';
-import { sampleStrokePathGeometry, sampleStrokeStepGeometry, sampleStrokeStepParameterGeometry } from './interruption';
+import { sampleStrokePathGeometry, sampleStrokeStepParameterGeometry } from './interruption';
 import { sampleRoundedCommands } from './rounded-corners';
 
 /** stroke step 的几何采样函数 */
@@ -54,14 +54,14 @@ export type StrokeSamplingCollector = {
   /** 设置后续 collect 所属的 Source Path step */
   beginStep: (sourceStepIndex: number, stepKind: CanonicalStep['kind']) => void;
   /** 登记采样器并按需延迟记录 step label */
-  collect: (step: CanonicalStep, sampleAt: StrokeSegmentSampler) => void;
+  collect: (step: CanonicalStep, sampleAt: StrokeSegmentSampler, segmentCount?: number) => void;
   /** 在最终 command geometry 上 materialize 已登记的 step label */
   materializeStepLabels: (
-    geometry: Parameters<typeof sampleStrokeStepGeometry>[0],
+    geometry: Parameters<typeof sampleStrokeStepParameterGeometry>[0],
   ) => Array<StrokeLabelMaterialization>;
   /** 取得 host label 的视觉 sample 与稳定的逻辑距离 sample */
   sampleHostLabel: (
-    geometry: Parameters<typeof sampleStrokeStepGeometry>[0],
+    geometry: Parameters<typeof sampleStrokeStepParameterGeometry>[0],
     position: number,
     usesRoundedGeometry: boolean,
   ) => StrokeHostLabelSample | undefined;
@@ -76,7 +76,7 @@ export type StrokeLabelMaterialization = {
   /** label 的 layout 候选点，同时作为 interruption 视觉投影范围 */
   boundsPoints: Array<IRPosition>;
   /** 原始逻辑路径上的 sample */
-  sample: NonNullable<ReturnType<typeof sampleStrokeStepGeometry>>;
+  sample: NonNullable<ReturnType<typeof sampleStrokeStepParameterGeometry>>;
 };
 
 /** host label 的视觉与逻辑采样对 */
@@ -84,16 +84,15 @@ export type StrokeHostLabelSample = {
   /** 用于文字定位的视觉 sample。圆角路径直接使用最终逻辑几何 */
   visualSample: CurveSegmentSample;
   /** 对应真实 command occurrence 的逻辑距离 sample */
-  logicalSample: NonNullable<ReturnType<typeof sampleStrokeStepGeometry>>;
+  logicalSample: NonNullable<ReturnType<typeof sampleStrokeStepParameterGeometry>>;
 };
-
-type StrokeSamplingMode = 'distance' | 'parameter';
 
 type StrokeSamplerRecord = {
   sourceStepIndex: number;
   stepKind: CanonicalStep['kind'];
-  mode: StrokeSamplingMode;
   sampleAt: StrokeSegmentSampler;
+  /** 当前绘制段在源 step 参数区间中的起止位置 */
+  parameterRange: readonly [number, number];
 };
 
 const parameterBoundaryOwnerOfStep = (stepKind: CanonicalStep['kind']): 'previous' | 'next' =>
@@ -137,11 +136,9 @@ export const createStrokeSamplingCollector = ({
     label: CanonicalPathLabel;
     sourceStepIndex: number;
     stepKind: CanonicalStep['kind'];
-    mode: StrokeSamplingMode;
   }> = [];
   let activeStepIndex = -1;
   let activeStepKind: CanonicalStep['kind'] = 'move';
-  let activeSamplingMode: StrokeSamplingMode = 'parameter';
 
   const emitLegacyLabel = (label: CanonicalPathLabel, sample: CurveSegmentSample): void => {
     const result = emitLabelPrimitive(label, sample, {
@@ -159,24 +156,27 @@ export const createStrokeSamplingCollector = ({
     boundsPoints.push(...result.boundsPoints);
   };
 
-  const addSampler = (sampleAt: StrokeSegmentSampler): void => {
+  const addSampler = (sampleAt: StrokeSegmentSampler, parameterRange: readonly [number, number] = [0, 1]): void => {
     segmentSamplers.push(sampleAt);
     samplerRecords.push({
       sourceStepIndex: activeStepIndex,
       stepKind: activeStepKind,
-      mode: activeSamplingMode,
       sampleAt,
+      parameterRange,
     });
   };
 
   const beginStep = (sourceStepIndex: number, stepKind: CanonicalStep['kind']): void => {
     activeStepIndex = sourceStepIndex;
     activeStepKind = stepKind;
-    activeSamplingMode = stepKind === 'generator' ? 'distance' : 'parameter';
   };
 
-  const collect = (step: CanonicalStep, sampleAt: StrokeSegmentSampler): void => {
-    addSampler(sampleAt);
+  const collect = (step: CanonicalStep, sampleAt: StrokeSegmentSampler, segmentCount = 1): void => {
+    for (let index = 0; index < segmentCount; index += 1) {
+      const start = index / segmentCount;
+      const end = (index + 1) / segmentCount;
+      addSampler(t => sampleAt(start + t * (end - start)), [start, end]);
+    }
     if (step.kind === 'move' || step.kind === 'cycle' || !('label' in step) || !step.label) return;
     if (!step.label.interrupt) {
       emitLegacyLabel(step.label, sampleAt(step.label.position));
@@ -187,25 +187,21 @@ export const createStrokeSamplingCollector = ({
       label: step.label,
       sourceStepIndex: activeStepIndex,
       stepKind: activeStepKind,
-      mode: activeSamplingMode,
     });
   };
 
   const materializeStepLabels = (
-    geometry: Parameters<typeof sampleStrokeStepGeometry>[0],
+    geometry: Parameters<typeof sampleStrokeStepParameterGeometry>[0],
   ): Array<StrokeLabelMaterialization> => {
     const materialized: Array<StrokeLabelMaterialization> = [];
 
     for (const request of labelRequests) {
-      const sample =
-        request.mode === 'distance'
-          ? sampleStrokeStepGeometry(geometry, request.sourceStepIndex, request.label.position)
-          : sampleStrokeStepParameterGeometry(
-              geometry,
-              request.sourceStepIndex,
-              request.label.position,
-              parameterBoundaryOwnerOfStep(request.stepKind),
-            );
+      const sample = sampleStrokeStepParameterGeometry(
+        geometry,
+        request.sourceStepIndex,
+        request.label.position,
+        parameterBoundaryOwnerOfStep(request.stepKind),
+      );
       if (sample === undefined) continue;
 
       const result = emitLabelPrimitive(request.label, sample.sample, {
@@ -233,7 +229,7 @@ export const createStrokeSamplingCollector = ({
   };
 
   const sampleHostLabel = (
-    geometry: Parameters<typeof sampleStrokeStepGeometry>[0],
+    geometry: Parameters<typeof sampleStrokeStepParameterGeometry>[0],
     position: number,
     usesRoundedGeometry: boolean,
   ): StrokeHostLabelSample | undefined => {
@@ -249,19 +245,18 @@ export const createStrokeSamplingCollector = ({
     const samplerIndex = Math.min(Math.floor(scaled), samplerRecords.length - 1);
     const localPosition = position === 1 ? 1 : scaled - samplerIndex;
     const record = samplerRecords[samplerIndex];
-    const logicalSample =
-      record.mode === 'distance'
-        ? sampleStrokeStepGeometry(geometry, record.sourceStepIndex, localPosition)
-        : sampleStrokeStepParameterGeometry(
-            geometry,
-            record.sourceStepIndex,
-            localPosition,
-            parameterBoundaryOwnerOfStep(record.stepKind),
-          );
+    const stepPosition =
+      record.parameterRange[0] + localPosition * (record.parameterRange[1] - record.parameterRange[0]);
+    const logicalSample = sampleStrokeStepParameterGeometry(
+      geometry,
+      record.sourceStepIndex,
+      stepPosition,
+      parameterBoundaryOwnerOfStep(record.stepKind),
+    );
     if (logicalSample === undefined) return undefined;
 
     return {
-      visualSample: record.mode === 'distance' ? logicalSample.sample : record.sampleAt(localPosition),
+      visualSample: record.sampleAt(localPosition),
       logicalSample,
     };
   };

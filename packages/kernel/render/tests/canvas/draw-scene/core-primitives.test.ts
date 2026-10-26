@@ -103,8 +103,8 @@ describe('drawScene 规格', () => {
             { kind: 'line', to: [20, 0] },
           ],
           stroke: '#111',
-          strokeLinecap: 'round',
-          strokeLinejoin: 'bevel',
+          lineCap: 'round',
+          lineJoin: 'bevel',
         },
         {
           type: 'path',

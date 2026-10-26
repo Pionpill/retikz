@@ -33,7 +33,7 @@ export type PathResolution = Readonly<{
   irPath: string;
   path: CanonicalPath;
   targets: ReadonlyMap<string, TargetResolution>;
-  kind: PathKindResolution;
+  kind: PathDefinitionResolution;
 }>;
 ```
 
@@ -56,17 +56,17 @@ Definition 保存一种能力的实现与参数契约。IR 中的 `shape: 'recta
 
 `createCompileContext` 按能力建立各自的注册表，先加入内置定义，再加入 `CompileOptions` 提供的外部定义。同一个注册表中的名称必须唯一，外部定义与内置定义重名也会报错。
 
-| 注册表                                    | 提供的能力             | 何时消费                        |
-| ----------------------------------------- | ---------------------- | ------------------------------- |
-| `shapes` / `boundaries`                   | 节点形状与连接边界     | 节点配置解析                    |
-| `patterns` / `clips`                      | 图案填充与裁剪         | 对应 paint 或 clip 的解析与编译 |
-| `pathKinds` / `pathGenerators` / `arrows` | 路径类型、生成器与箭头 | 对应路径及箭头处理              |
-| `themeDefinitions`                        | 主题风格               | 根主题或局部主题解析            |
-| `composites`                              | 复合项的编译能力       | 遍历遇到复合项                  |
+| 注册表                  | 提供的能力         | 何时消费                        |
+| ----------------------- | ------------------ | ------------------------------- |
+| `shapes` / `boundaries` | 节点形状与连接边界 | 节点配置解析                    |
+| `patterns` / `clips`    | 图案填充与裁剪     | 对应 paint 或 clip 的解析与编译 |
+| `paths` / `arrows`      | 路径类型与箭头     | 对应路径及箭头处理              |
+| `themeDefinitions`      | 主题风格           | 根主题或局部主题解析            |
+| `composites`            | 复合项的编译能力   | 遍历遇到复合项                  |
 
 Node 在样式与默认值合并后，由 `resolveNodeShape` 按有效的 `shape` 查找定义，通过该 Definition 的 `paramsSchema` 解析参数，返回 `{ name, definition, params }`。未指定形状时选择 `rectangle`；`circle` 则先展开为 `ellipse` 和等宽高参数，再查询定义。
 
-Path 按 `kind` 查找路径类型，省略该字段时使用内置 `stroke`。路径生成器与箭头也从各自注册表查询；它们的绑定时机见后面的 Path 分支。
+Path 按 `kind` 查找路径类型，省略该字段时使用内置 `stroke`。箭头也从注册表查询；它们的绑定时机见后面的 Path 分支。
 
 Node 的连接边界随后通过 `resolveBoundaryReference` 解析。它可以使用视觉形状，也可以绑定独立边界。布局拿到这些结果后，直接调用已选定的能力。未注册的名称或不符合定义契约的参数会使本次编译失败。
 
@@ -243,7 +243,7 @@ Node 与 Path 都将稀疏声明整理为后续编译可用的结果，但它们
 
 ### Path
 
-`resolvePath` 先取得有效样式并确定 Path、Label、Arrow 的上下文颜色，再由 `resolvePathKind` 按 `kind` 查询定义。省略 `kind` 时使用内置 `stroke`。与形状只解析 `params` 不同，路径类型的 Definition 用自己的 `schema` 解析完整路径声明。
+`resolvePath` 先取得有效样式并确定 Path、Label、Arrow 的上下文颜色，再由 `resolvePathDefinition` 按 `kind` 查询定义。省略 `kind` 时使用内置 `stroke`。与形状只解析 `params` 不同，路径类型的 Definition 用自己的 `schema` 解析完整路径声明。
 
 定义的 schema 可能补充字段，因此返回后会再次确定上下文颜色，再由 `canonicalizePath` 展开路径字段：将 `style` 字段合入路径、标签统一为数组，并补齐标签位置、距离及 bend、smooth 等步骤的静态默认值。它尚不是最终的路径指令。
 
@@ -271,12 +271,12 @@ Node 与 Path 都将稀疏声明整理为后续编译可用的结果，但它们
 
 Path 的 paint 解析结果同样保存在 Canonical 对象中，对应 `path.fill` 与 `path.stroke`。
 
-Label 的默认外观来自 Label 通道，标签位置等静态配置在路径确定化时补齐。Arrow 的默认配置来自 Arrow 通道，先确定箭头主色，再以该主色解析填充。内置 Stroke 输出链随后调用 `resolveStrokePathProviders`，将缺省填充与描边分别补为 `none` 和 `currentColor`，为实际消费的 generator 步骤和 arrow marks 绑定 Definition，得到带 `generators`、`arrows` 映射的 `StrokePathResolution`。这些绑定不在基础 `resolvePath` 的返回值中；本例没有生成器或箭头，两张映射为空。
+Label 的默认外观来自 Label 通道，标签位置等静态配置在路径确定化时补齐。Arrow 的默认配置来自 Arrow 通道，先确定箭头主色，再以该主色解析填充。内置 Stroke 输出链随后调用 `resolveStrokePathProviders`，将缺省填充与描边分别补为 `none` 和 `currentColor`，为实际消费的 arrow marks 绑定 Definition，得到带 `arrows` 映射的 `StrokePathResolution`。这些绑定不在基础 `resolvePath` 的返回值中；本例没有箭头，该映射为空。
 
 <SourceLinks
   sources={[
     { label: 'Path 样式、颜色与确定化', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: '路径类型、生成器与箭头绑定', path: 'packages/kernel/core/src/resolve/path/provider.ts' },
+    { label: '路径类型与箭头绑定', path: 'packages/kernel/core/src/resolve/path/provider.ts' },
     { label: 'PathResolution / StrokePathResolution', path: 'packages/kernel/core/src/resolve/path/types.ts' },
   ]}
 />

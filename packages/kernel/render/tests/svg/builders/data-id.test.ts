@@ -1,4 +1,4 @@
-import type { GroupPrim, PathPrim, RectPrim, Scene } from '@retikz/core';
+import type { GroupPrimitive, PathPrimitive, RectPrimitive, Scene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { buildSvgFragment } from '../../../src/svg/builders/document';
@@ -14,14 +14,14 @@ const layout = { x: 0, y: 0, width: 100, height: 100 };
 
 describe('SVG emit data-retikz-id', () => {
   it('rect-with-id：带 id 的 rect 图元 → data-retikz-id 等于该 id', () => {
-    const rect: RectPrim = { type: 'rect', id: 'a', x: 0, y: 0, width: 10, height: 10, fill: '#f00' };
+    const rect: RectPrimitive = { type: 'rect', id: 'a', x: 0, y: 0, width: 10, height: 10, fill: '#f00' };
     const node = buildPrim(rect);
 
     expect(node.attrs['data-retikz-id']).toBe('a');
   });
 
   it('path-with-id：带 id 的 path 图元 → data-retikz-id 等于该 id', () => {
-    const path: PathPrim = {
+    const path: PathPrimitive = {
       type: 'path',
       id: 'edge1',
       commands: [
@@ -36,7 +36,7 @@ describe('SVG emit data-retikz-id', () => {
   });
 
   it('group-with-id：带 id 的 group 图元 → data-retikz-id 等于该 id', () => {
-    const group: GroupPrim = {
+    const group: GroupPrimitive = {
       type: 'group',
       id: 'sc',
       children: [{ type: 'rect', x: 0, y: 0, width: 5, height: 5, stroke: '#444' }],
@@ -47,7 +47,7 @@ describe('SVG emit data-retikz-id', () => {
   });
 
   it('no-id-omits-attr：无 id 的图元 → attrs 不含 data-retikz-id', () => {
-    const rect: RectPrim = { type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00' };
+    const rect: RectPrimitive = { type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00' };
     const node = buildPrim(rect);
 
     expect('data-retikz-id' in node.attrs).toBe(false);

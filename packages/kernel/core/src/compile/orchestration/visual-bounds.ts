@@ -2,7 +2,14 @@ import { DEG_TO_RAD, boundsOf, boundsToRect } from '@retikz/math';
 import type { BoundsRect } from '@retikz/math';
 
 import { computeSceneTextBounds } from '../../contract';
-import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, SceneResource, Transform } from '../../contract';
+import type {
+  GroupPrimitive,
+  PathCommand,
+  PathPrimitive,
+  ScenePrimitive,
+  SceneResource,
+  Transform,
+} from '../../contract';
 import type { IRPosition, ResolvedDropShadow } from '../../schemas';
 import { CANONICAL_STROKE_MITER_LIMIT } from '../constants';
 import { buildMarkMarkerGroup } from '../path';
@@ -218,7 +225,7 @@ const endpointSamples = (
   return { start, end };
 };
 
-const markerBounds = (path: PathPrim, resources: ReadonlyMap<string, SceneResource>): BoundsRect | undefined => {
+const markerBounds = (path: PathPrimitive, resources: ReadonlyMap<string, SceneResource>): BoundsRect | undefined => {
   const samples = endpointSamples(path.commands);
   const strokeWidth = path.strokeWidth ?? 1;
   const contextStroke = typeof path.stroke === 'string' ? path.stroke : 'currentColor';
@@ -255,7 +262,7 @@ const markerBounds = (path: PathPrim, resources: ReadonlyMap<string, SceneResour
 };
 
 const styledGeometryBounds = (
-  primitive: Exclude<ScenePrimitive, GroupPrim | { type: 'text' }>,
+  primitive: Exclude<ScenePrimitive, GroupPrimitive | { type: 'text' }>,
 ): BoundsRect | undefined => {
   if (primitive.opacity === 0) return undefined;
 
@@ -275,7 +282,7 @@ const styledGeometryBounds = (
     ? expandStroke(
         geometry,
         primitive.strokeWidth,
-        primitive.type === 'path' && (primitive.strokeLinejoin ?? 'miter') === 'miter',
+        primitive.type === 'path' && (primitive.lineJoin ?? 'miter') === 'miter',
       )
     : geometry;
 

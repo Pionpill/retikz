@@ -1,4 +1,4 @@
-import type { AnyPathKindDefinition, CoreProviderContribution, IRScene } from '@retikz/core';
+import type { AnyPathDefinition, CoreProviderContribution, IRScene } from '@retikz/core';
 import { createInputScene, isEmbeddableMarked, Layout, wrapRootScope } from '@retikz/react';
 import type { LayoutProps } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
@@ -52,7 +52,7 @@ export type PreviewIR = {
   contributions: Array<CoreProviderContribution>;
   width?: number | string;
   height?: number | string;
-  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
+  paths?: ReadonlyArray<AnyPathDefinition>;
   /** 宿主注册的形状定义，不进入 JSON IR */
   shapes?: NonNullable<LayoutProps['extensions']>['shapes'];
 };
@@ -109,14 +109,14 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
 
   const hostDimensions =
     rootElement !== null && (isLayout || isEmbeddableRoot) ? previewHostDimensionsOf(rootElement.type, props) : {};
-  const pathKinds = isLayout ? props.extensions?.pathKinds : undefined;
+  const paths = isLayout ? props.extensions?.paths : undefined;
 
   return {
     ir,
     sourceIr,
     contributions: [...normalized.contributions],
     ...hostDimensions,
-    pathKinds,
+    paths,
     shapes: isLayout ? props.extensions?.shapes : undefined,
   };
 };

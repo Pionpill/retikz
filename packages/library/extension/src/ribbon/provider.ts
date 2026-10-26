@@ -4,11 +4,11 @@ import { BUILTIN_RIBBON_WIDTH_PROFILES } from './bulge';
 import { ExtensionRibbonCapDefinitions } from './cap';
 import { resolveRibbonCapRegistry } from './cap-registry';
 import type { RibbonCapDefinition } from './cap-types';
-import { createRibbonPathKindDefinition } from './definition';
+import { createRibbonPathDefinition } from './definition';
 import { resolveRibbonWidthProfileRegistry } from './profile-registry';
 import type { RibbonWidthProfileDefinition } from './profile-types';
 
-const ribbonKey: CoreProviderKey = { capability: 'pathKind', name: 'ribbon' };
+const ribbonKey: CoreProviderKey = { capability: 'path', name: 'ribbon' };
 
 const makeRibbonDefinition: CoreDependencyProvider['makeDefinition'] = datasets => {
   const profiles: Array<RibbonWidthProfileDefinition> = [];
@@ -19,11 +19,11 @@ const makeRibbonDefinition: CoreDependencyProvider['makeDefinition'] = datasets 
     else caps.push(value as RibbonCapDefinition);
   }
 
-  return createRibbonPathKindDefinition({ profiles, caps });
+  return createRibbonPathDefinition({ profiles, caps });
 };
 
 /**
- * 创建供 Core 依赖解析器装配 Ribbon Path kind 的贡献项
+ * 创建供 Core 依赖解析器装配 Ribbon Path 的贡献项
  * @description 包含 ribbon 根依赖与内置定义，调用方可追加宽度函数和端帽；不自动注入编译器
  * @param options 扩展注册项，默认 {}；profiles 与 caps 默认 []，仍保留全部内置定义
  * @returns 包含 ribbon 根依赖及对应 provider 的贡献项，交给 resolveCoreProviderDependencies 装配

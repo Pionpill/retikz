@@ -1,4 +1,4 @@
-import type { GroupPrim, ScenePrimitive, PaintResource, RectPrim, TextPrim } from '@retikz/core';
+import type { GroupPrimitive, ScenePrimitive, PaintResource, RectPrimitive, TextPrimitive } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { collectArrowEnds } from '../../../src/svg/builders/arrow-collect';
@@ -7,7 +7,7 @@ import { buildPrim } from '../../../src/svg/builders/prim';
 
 describe('buildPrim —— primitive → SvgNode', () => {
   it('prim-rect-to-node：rect → tag/kebab/SVG 真名属性，无 React camelCase', () => {
-    const rect: RectPrim = {
+    const rect: RectPrimitive = {
       type: 'rect',
       x: 1,
       y: 2,
@@ -33,7 +33,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
   });
 
   it('prim-text-multiline：3 行 + baseline middle → 3 个 tspan，首行 dy = -(n-1)/2 × lineHeight', () => {
-    const text: TextPrim = {
+    const text: TextPrimitive = {
       type: 'text',
       x: 0,
       y: 0,
@@ -62,7 +62,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
   });
 
   it('prim-text-line-opacity：行级透明度落到 tspan 的 fill-opacity（非 opacity，浏览器对 tspan 不应用 opacity）', () => {
-    const text: TextPrim = {
+    const text: TextPrimitive = {
       type: 'text',
       x: 0,
       y: 0,
@@ -82,7 +82,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
   });
 
   it.each(['#000000', '#ffffff'])('Core 已解析的 auto-contrast 颜色 %s 原样进入 SVG', fill => {
-    const text: TextPrim = {
+    const text: TextPrimitive = {
       type: 'text',
       x: 0,
       y: 0,
@@ -100,7 +100,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
   });
 
   it('prim-group-transform-clip：group → g + transform + clip-path（url 经 clipRefUrl）', () => {
-    const group: GroupPrim = {
+    const group: GroupPrimitive = {
       type: 'group',
       transforms: [{ kind: 'translate', x: 5, y: 6 }],
       clipRef: 'c1',
@@ -116,7 +116,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
   });
 
   it('paint-var-to-style：fill = var(--brand) → 落 style.fill、不落 attrs.fill', () => {
-    const rect: RectPrim = { type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: 'var(--brand)' };
+    const rect: RectPrimitive = { type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: 'var(--brand)' };
     const node = buildPrim(rect);
 
     expect(node.attrs.fill).toBeUndefined();
@@ -124,7 +124,7 @@ describe('buildPrim —— primitive → SvgNode', () => {
   });
 
   it('group-undefined-child：group.children 含 undefined 槽位 → builder noop 跳过、不抛', () => {
-    const group: GroupPrim = {
+    const group: GroupPrimitive = {
       type: 'group',
       children: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1 }, undefined as unknown as ScenePrimitive],
     };
@@ -168,12 +168,13 @@ describe('buildPrim —— marker primitive → SvgNode', () => {
   });
 });
 
-describe('buildPaintDef —— 错误路径兜底', () => {
-  it('pattern-missing-tile：pattern 资源缺 tile（compile bug）→ 产空 <pattern id>、不抛', () => {
+describe('buildPaintDef —— 图案资源', () => {
+  it('空 motif 保留图案周期和资源标识', () => {
     const resource: PaintResource = {
       kind: 'paint',
       id: 'p1',
       spec: { kind: 'pattern', shape: 'dots' },
+      tile: { size: 8, motif: [] },
     };
 
     expect(() => buildPaintDef(resource, 'rid')).not.toThrow();
@@ -182,6 +183,8 @@ describe('buildPaintDef —— 错误路径兜底', () => {
 
     expect(node.tag).toBe('pattern');
     expect(node.attrs.id).toBe('rid');
+    expect(node.attrs.width).toBe(8);
+    expect(node.attrs.height).toBe(8);
     expect(node.children ?? []).toHaveLength(0);
   });
 });

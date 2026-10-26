@@ -35,13 +35,12 @@ export const directFieldsOf = (value: unknown): ReadonlyArray<string> => {
 };
 
 /** 判断 exact mapping 的执行种类 */
-export const mappingKindOf = (value: unknown): 'direct' | 'aggregate' | 'derived' | undefined => {
+export const mappingKindOf = (value: unknown): 'direct' | 'aggregate' | undefined => {
   if (typeof value === 'string') return 'direct';
 
   const object = objectValueOf(value);
   if (object === undefined) return undefined;
   if (Object.hasOwn(object, 'aggregate')) return 'aggregate';
-  if (Object.hasOwn(object, 'transform')) return 'derived';
   if (Object.hasOwn(object, 'field')) return 'direct';
 
   return undefined;

@@ -304,7 +304,7 @@ describe('Canvas hitTest', () => {
     expect(hitTest(scene, { x: 50, y: 54 }, { context2d: ctx(), strokeTolerance: 5 })).toBe('line');
   });
 
-  it('nested-group-id：命中 GroupPrim 子图元 → 返回最近 id-bearing 祖先（group）id', () => {
+  it('nested-group-id：命中 GroupPrimitive 子图元 → 返回最近 id-bearing 祖先（group）id', () => {
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },
       primitives: [
@@ -383,13 +383,7 @@ describe('Canvas hitTest', () => {
             {
               type: 'path',
               id: 'edge',
-              marks: [
-                {
-                  pos: 1,
-                  endpointOverlap,
-                  mark: { kind: 'arrow', shape: 'empty-overlap-probe', length: 10, width: 10, scale: 2 },
-                },
-              ],
+              arrow: { end: { shape: 'empty-overlap-probe', length: 10, width: 10, scale: 2, endpointOverlap } },
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [100, 0] },
@@ -415,11 +409,11 @@ describe('Scene 禁用命中', () => {
         {
           type: 'group',
           id: 'scope',
-          children: [{ type: 'rect', hitTest: false, x: 0, y: 0, width: 100, height: 100, fill: 'blue' }],
+          children: [{ type: 'rect', pointerEvents: 'none', x: 0, y: 0, width: 100, height: 100, fill: 'blue' }],
         },
         {
           type: 'group',
-          hitTest: false,
+          pointerEvents: 'none',
           children: [{ type: 'rect', id: 'hidden-target', x: 0, y: 0, width: 100, height: 100, fill: 'green' }],
         },
       ],
@@ -469,9 +463,53 @@ it.each<ScenePrimitive>([
     primitive.type === 'path' && primitive.arrowEnd
       ? {
           ...primitive,
-          arrowEnd: { ...primitive.arrowEnd, marker: [{ ...content, hitTest: false }] },
+          arrowEnd: { ...primitive.arrowEnd, marker: [{ ...content, pointerEvents: 'none' }] },
         }
       : primitive,
   );
   expect(hitTest(scene, { x: 25, y: 23 }, options)).toBeNull();
+});
+
+it('普通标记命中宿主，局部 id 不创建独立目标，禁用内容可穿透', () => {
+  const compile = (disabled: boolean) =>
+    compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          {
+            type: 'path',
+            id: 'edge',
+            style: { stroke: 'none' },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0] },
+            ],
+            marks: [{ pos: 0.5, shape: 'box' }],
+          },
+        ],
+      },
+      {
+        marks: [
+          {
+            name: 'box',
+            anchor: [0, 0],
+            emit: () => [
+              {
+                type: 'rect',
+                id: 'local',
+                x: -5,
+                y: -5,
+                width: 10,
+                height: 10,
+                fill: 'red',
+                ...(disabled ? { pointerEvents: 'none' } : {}),
+              },
+            ],
+          },
+        ],
+      },
+    ).scene;
+  expect(hitTest(compile(false), { x: 50, y: 3 }, { context2d: createGeometryContext() })).toBe('edge');
+  expect(hitTest(compile(true), { x: 50, y: 3 }, { context2d: createGeometryContext() })).toBeNull();
 });

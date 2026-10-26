@@ -1,5 +1,5 @@
 import type { ScenePrimitive } from '@retikz/core';
-import { definePathKind, PathSchema } from '@retikz/core';
+import { definePath, PathSchema } from '@retikz/core';
 import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 import { z } from 'zod';
@@ -16,7 +16,7 @@ const HighlightPathSchema = PathSchema.extend({
 
 type HighlightPath = z.infer<typeof HighlightPathSchema>;
 
-const highlight = definePathKind<HighlightPath>({
+const highlight = definePath<HighlightPath>({
   name: 'highlight',
   schema: HighlightPathSchema,
   compile: context => {
@@ -35,7 +35,7 @@ const highlight = definePathKind<HighlightPath>({
 
     return {
       ...base,
-      primitives: base.primitives.flatMap<ScenePrimitive>(primitive =>
+      primitives: Array.from(base.primitives).flatMap<ScenePrimitive>(primitive =>
         primitive.type === 'path'
           ? [
               {
@@ -51,7 +51,7 @@ const highlight = definePathKind<HighlightPath>({
 });
 
 const Demo: FC = () => (
-  <Layout extensions={{ pathKinds: [highlight] }}>
+  <Layout extensions={{ paths: [highlight] }}>
     <Path kind="highlight" kindOptions={{ stroke: '#facc15', strokeWidth: 14 }} zIndex={-1}>
       <Step kind="move" to="api" />
       <Step kind="line" to="core" />

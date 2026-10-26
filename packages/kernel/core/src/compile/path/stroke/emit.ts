@@ -2,19 +2,20 @@ import { isFinitePoint } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalStep, PathTargetView, StrokePathResolution } from '../../../resolve';
+import type { CanonicalStep, PathTargetView, PathResolution, StrokePathResolution } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { cloneAndFreezeJson } from '../../../shared/json';
 import { BuiltinCompileWarningCode } from '../../constants';
+import { optionalVisualBoundsOfPrimitives } from '../../orchestration';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import { fallbackMeasurer } from '../../text';
 import { emitLabelPrimitive, pointOfTarget } from '../host';
-import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
+import type { PathEmitOptions } from '../types';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
-import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrows } from './decorations';
+import { emitPathMarks, emitPathEndpointArrows, pathEndpointArrows } from './decorations';
 import type { StrokeInterruptionProtectedRange } from './interruption';
 import {
   createStrokeInterruptionIntervals,
@@ -42,17 +43,10 @@ export type EmitPathPrimitiveContext = {
   options?: PathEmitOptions;
 };
 
-/**
- * 将 IR Path 输出为 PathPrim
- * @description 解析失败返回 null，并通过 `PathEmitOptions.onWarn` 报告 warning
- */
-const emitCanonicalPathPrimitive = (
-  resolution: StrokePathResolution,
-  context: EmitPathPrimitiveContext,
-): PathPrimitiveEmitResult | null => {
+/** 将路径步骤转换为共享的几何命令与采样数据 */
+export const lowerStrokePathGeometry = (resolution: PathResolution, context: EmitPathPrimitiveContext) => {
   const { targetView, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
   const { path } = resolution;
-  const canonicalPath = path;
   const canonicalSteps = path.children ?? [];
   const irPath = resolution.irPath;
 
@@ -62,16 +56,14 @@ const emitCanonicalPathPrimitive = (
 
   const scopeChain = pathEmitOptions.scopeChain ?? [];
 
-  // paint 解析：有 registry 走去重派 id；无 registry 时纯色透传、IRPaint 退化为 undefined
-  const resolvePaint: PaintResolver =
-    pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
-
   // relative/relativeAccumulate target 已由 resolving 阶段绑定为当前 scope 的局部坐标
   const steps = [...canonicalSteps];
 
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；其余 step 至少需要起点和一段绘制
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
   if (steps.length < 2 && !soloSelfContained) {
+    if (path.marks?.length)
+      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Cannot locate marks on an empty path at ${irPath}.marks`);
     warn(
       BuiltinCompileWarningCode.PathTooShort,
       `Path requires at least 2 steps (got ${steps.length}); the entire path is skipped`,
@@ -105,7 +97,6 @@ const emitCanonicalPathPrimitive = (
     lowerTex: pathEmitOptions.lowerTex,
     warn,
   });
-  const { labelPrimitives: labelPrims, segmentSamplers } = sampling;
 
   for (let i = 0; i < steps.length; i++) {
     cursor.advance(i);
@@ -148,39 +139,6 @@ const emitCanonicalPathPrimitive = (
     ) {
       const absoluteAnchor = cursor.anchorAt(i);
       if (absoluteAnchor) cursor.relativeBaseline = absoluteAnchor;
-    }
-
-    if (
-      cursor.relativeBaseline &&
-      step.kind === 'generator' &&
-      originalStep.kind === 'generator' &&
-      originalStep.to !== undefined
-    ) {
-      let generatorTarget: IRPosition | null;
-      let updatesBaseline = true;
-      if (isRelativeTargetLike(originalStep.to)) {
-        generatorTarget = [
-          cursor.relativeBaseline[0] + originalStep.to.relative[0],
-          cursor.relativeBaseline[1] + originalStep.to.relative[1],
-        ];
-        updatesBaseline = false;
-      } else if (isRelativeAccumulateTargetLike(originalStep.to)) {
-        generatorTarget = [
-          cursor.relativeBaseline[0] + originalStep.to.relativeAccumulate[0],
-          cursor.relativeBaseline[1] + originalStep.to.relativeAccumulate[1],
-        ];
-      } else {
-        generatorTarget = pointOfTarget(originalStep.to, targetView, scopeChain);
-      }
-
-      if (generatorTarget) {
-        if (!isFinitePoint(generatorTarget)) {
-          throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Generator target produced a non-finite endpoint.');
-        }
-
-        step = { ...step, to: generatorTarget };
-        if (updatesBaseline) cursor.relativeBaseline = generatorTarget;
-      }
     }
 
     if (cursor.relativeBaseline && step.kind === 'smooth' && originalStep.kind === 'smooth') {
@@ -235,7 +193,7 @@ const emitCanonicalPathPrimitive = (
     }
 
     // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用
-    // 显式 move 开启新游标，必须切断 arc/circle/ellipse/rectangle/generator 留给下一绘制段的 penOverride
+    // 显式 move 开启新游标，必须切断 arc/circle/ellipse/rectangle 留给下一绘制段的 penOverride
     if (step.kind === 'move') {
       cursor.clearPenOverride();
       continue;
@@ -245,8 +203,6 @@ const emitCanonicalPathPrimitive = (
       const lowered = lowerShapeStep(step, i, {
         targetView,
         scopeChain,
-        round,
-        generatorResolution: originalStep.kind === 'generator' ? resolution.generators.get(originalStep) : undefined,
         warn,
         commandEmitter,
         cursor,
@@ -340,7 +296,24 @@ const emitCanonicalPathPrimitive = (
     }
   }
 
-  const baseProps = emitPathBaseProps(canonicalPath, {
+  return { commands, stepIndexes, boundsPoints, endpointSource, sampling, roundedCommands };
+};
+
+/** 将标准描边几何编译为场景图元 */
+const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: EmitPathPrimitiveContext) => {
+  const { round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
+  const { path, irPath } = resolution;
+  const geometry = lowerStrokePathGeometry(resolution, context);
+  if (geometry === null) return null;
+  const { commands, stepIndexes, boundsPoints, endpointSource, sampling, roundedCommands } = geometry;
+  const { labelPrimitives: labelPrims } = sampling;
+  const warn = (code: string, message: string, subPath = ''): void => {
+    pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
+  };
+  const resolvePaint: PaintResolver =
+    pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
+
+  const baseProps = emitPathBaseProps(path, {
     resolvePaint,
   });
   const strokeWidth = baseProps.strokeWidth;
@@ -368,7 +341,7 @@ const emitCanonicalPathPrimitive = (
     ];
   });
 
-  const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
+  const arrows = emitPathEndpointArrows(path, {
     resolvePaint,
     arrowResolutions: resolution.arrows,
     round,
@@ -415,17 +388,26 @@ const emitCanonicalPathPrimitive = (
     endpointProtections,
   );
 
-  const marks = emitInlineMarkPrimitives({
-    commands,
-    inlineMarks,
-    segmentSamplers,
-    roundedCommands,
+  const marks = emitPathMarks({
+    resources: pathEmitOptions.resources,
+    geometry: logicalGeometry,
+    placements: path.marks ?? [],
+    markResolutions: resolution.marks,
+    irPath,
     resolvePaint,
-    arrowResolutions: resolution.arrows,
     baseProps,
     round,
   });
   boundsPoints.push(...marks.boundsPoints);
+  const markBounds =
+    marks.primitives.length === 0
+      ? undefined
+      : optionalVisualBoundsOfPrimitives(marks.primitives, pathEmitOptions.resources?.() ?? []);
+  if (markBounds !== undefined)
+    boundsPoints.push(
+      [markBounds.x, markBounds.y],
+      [markBounds.x + markBounds.width, markBounds.y + markBounds.height],
+    );
 
   let endpointSpecs = pathEndpointArrows(arrows);
   const fragments = splitStrokePathAtInterruptions(logicalGeometry, interruptionIntervals, round, {
@@ -497,16 +479,14 @@ const emitCanonicalPathPrimitive = (
 
   const bodyPrims: Array<ScenePrimitive> = [
     primitive,
+    ...marks.primitives,
     ...labelPrims,
     ...hostLabels.map(label => label.primitive),
-    ...marks.primitives,
   ];
 
   return wrapPathPrimitiveOutput({ path, primitive, bodyPrims, boundsPoints, round });
 };
 
 /** 将已解析的 path 输出为路径图元 */
-export const emitPathPrimitive = (
-  resolution: StrokePathResolution,
-  context: EmitPathPrimitiveContext,
-): PathPrimitiveEmitResult | null => emitCanonicalPathPrimitive(resolution, context);
+export const emitPathPrimitive = (resolution: StrokePathResolution, context: EmitPathPrimitiveContext) =>
+  emitCanonicalPathPrimitive(resolution, context);

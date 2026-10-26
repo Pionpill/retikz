@@ -8,10 +8,10 @@ import type {
   ResolvedPatternTile,
   Scene,
   SceneResource,
-  TextPrim,
+  TextPrimitive,
 } from '@retikz/core';
 
-import { validateSceneContent } from '../shared';
+import { resolveSceneResourceMap } from '../shared';
 import {
   countScenePrimitiveOccurrences,
   startArrowPlacement,
@@ -30,7 +30,7 @@ import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './typ
 /** 资源内容继承的绘制上下文，不创建独立 authoring 节点 */
 type SceneDrawOptions = DrawOptions & {
   hostId?: string;
-  resourceContent?: boolean;
+  isResourceContent?: boolean;
   contextStroke?: PaintValue;
 };
 
@@ -232,8 +232,7 @@ const resolvePaintStyle = (
 
   const resource = resources.get(paint.id);
   if (resource !== undefined && resource.kind === 'paint') {
-    const spec = resource.spec;
-    if (spec.kind === 'pattern' && resource.tile !== undefined) {
+    if ('tile' in resource) {
       const pattern = buildPattern(ctx, resource.tile, options, resources);
       if (pattern !== undefined) return pattern;
     }
@@ -421,7 +420,7 @@ const buildFont = (
     .filter(part => part !== undefined && part !== '')
     .join(' ');
 
-const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: SceneDrawOptions): void => {
+const drawText = (ctx: CanvasRenderingContext2D, p: TextPrimitive, options: SceneDrawOptions): void => {
   ctx.font = buildFont(p.fontSize, p.fontFamily, p.fontWeight, p.fontStyle, options);
   ctx.textAlign = p.align === 'middle' ? 'center' : p.align;
   ctx.textBaseline = p.baseline;
@@ -489,7 +488,7 @@ const buildPattern = (
   const motifColor = options.currentColor ?? '#000';
 
   for (const prim of tile.motif)
-    drawPrim(off, prim, { ...options, resourceContent: true, contextStroke: motifColor }, resources, {
+    drawPrim(off, prim, { ...options, isResourceContent: true, contextStroke: motifColor }, resources, {
       gradientPatterns: new Map(),
     });
   const pattern = ctx.createPattern(off.canvas, 'repeat');
@@ -530,7 +529,7 @@ const drawArrowMarker = (
   ctx.translate(-spec.refX, -spec.baseSize / 2);
 
   for (const prim of spec.marker)
-    drawPrim(ctx, prim, { ...options, resourceContent: true, contextStroke: pathStroke }, resources, state);
+    drawPrim(ctx, prim, { ...options, isResourceContent: true, contextStroke: pathStroke }, resources, state);
   ctx.restore();
 };
 
@@ -541,7 +540,7 @@ const drawPrim = (
   resources: ResourceMap,
   state: DrawState,
 ): void => {
-  options = { ...options, hostId: options.resourceContent ? options.hostId : (p.id ?? options.hostId) };
+  options = { ...options, hostId: options.isResourceContent ? options.hostId : (p.id ?? options.hostId) };
   if (p.type !== 'group' && p.type !== 'text') {
     const bindPaint = (paint: PaintValue | undefined): PaintValue | undefined =>
       typeof paint === 'object' && paint.kind === 'contextStroke'
@@ -558,8 +557,6 @@ const drawPrim = (
     const primTime = resolution?.mode === 'at' ? resolution.time : options.time;
     if (resolution?.mode !== 'skip' && primTime !== undefined) {
       p = applyPrimAnimations(ctx, p, primTime, {
-        easings: options.easings,
-        animationProperties: options.animationProperties,
         warn: message => warnUnsupported(options, 'animation', message),
         includeNonAutoplay: resolution?.mode === 'at' ? resolution.includeNonAutoplay : false,
       });
@@ -568,8 +565,8 @@ const drawPrim = (
 
   switch (p.type) {
     case 'rect':
-      ctx.lineCap = p.strokeLinecap ?? 'butt';
-      ctx.lineJoin = p.strokeLinejoin ?? 'miter';
+      ctx.lineCap = p.lineCap ?? 'butt';
+      ctx.lineJoin = p.lineJoin ?? 'miter';
       withBlend(ctx, p.blendMode, () =>
         withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
@@ -602,8 +599,8 @@ const drawPrim = (
       );
       break;
     case 'ellipse':
-      ctx.lineCap = p.strokeLinecap ?? 'butt';
-      ctx.lineJoin = p.strokeLinejoin ?? 'miter';
+      ctx.lineCap = p.lineCap ?? 'butt';
+      ctx.lineJoin = p.lineJoin ?? 'miter';
       withBlend(ctx, p.blendMode, () =>
         withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
@@ -650,8 +647,8 @@ const drawPrim = (
         withShadow(ctx, p.shadow, options.resolveCssColor, () =>
           withOpacity(ctx, p.opacity, () => {
             buildPath(ctx, p.commands);
-            if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
-            if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
+            if (p.lineCap !== undefined) ctx.lineCap = p.lineCap;
+            if (p.lineJoin !== undefined) ctx.lineJoin = p.lineJoin;
 
             const bbox = pathBounds(p.commands);
             fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, bbox);
@@ -734,8 +731,7 @@ const drawPrim = (
 
 /** 绘制已编译 Scene 到 Canvas 2D context */
 export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: DrawOptions = {}): void => {
-  validateSceneContent(scene);
-  const resources: ResourceMap = new Map((scene.resources ?? []).map(r => [r.id, r]));
+  const resources = resolveSceneResourceMap(scene);
   const state: DrawState = { gradientPatterns: new Map() };
 
   // 镜头：给定 time 且 scene 根有 viewBox track 时，先叠一层取景变换（包住全部 prim）
@@ -743,7 +739,7 @@ export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: 
   const hasCamera = rootAnimationTime !== undefined && (scene.animations ?? []).some(t => t.property === 'viewBox');
   if (hasCamera) {
     ctx.save();
-    applySceneCamera(ctx, scene, rootAnimationTime, options.easings);
+    applySceneCamera(ctx, scene, rootAnimationTime);
   }
 
   for (const primitive of scene.primitives) drawPrim(ctx, primitive, options, resources, state);

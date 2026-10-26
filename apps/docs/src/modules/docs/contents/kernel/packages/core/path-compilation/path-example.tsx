@@ -30,7 +30,10 @@ const PathExample: FC<PathExampleProps> = props => {
           >
             B
           </Node>
-          <Path arrow={i === 1 ? '->' : undefined} style={{ stroke: i === 1 ? 'dodgerblue' : 'gray', strokeWidth: 2 }}>
+          <Path
+            arrow={i === 1 ? { end: {} } : undefined}
+            style={{ stroke: i === 1 ? 'dodgerblue' : 'gray', strokeWidth: 2 }}
+          >
             <Step kind="move" to={i === 1 ? 'a' : [0, 0]} />
             <Step
               kind="line"

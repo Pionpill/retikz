@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { ScenePrimitive, TextPrim } from '../../src/contract';
+import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';
 import { NodeLabelSchema, SceneSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const silent = { onWarn: () => {} };
 
-const visualMiddle = (t: TextPrim): number => t.y;
+const visualMiddle = (t: TextPrimitive): number => t.y;
 
-const labelText = (prims: Array<ScenePrimitive>, text: string): TextPrim | undefined =>
+const labelText = (prims: Array<ScenePrimitive>, text: string): TextPrimitive | undefined =>
   flattenPrims(prims).find(
-    (p): p is TextPrim => p.type === 'text' && p.lines.some(l => (typeof l === 'string' ? l : l.text) === text),
+    (p): p is TextPrimitive => p.type === 'text' && p.lines.some(l => (typeof l === 'string' ? l : l.text) === text),
   );
 
 const sceneWithLabel = (label: IRNodeLabel, shape: IRNode['shape'] = 'rectangle'): IRScene => ({

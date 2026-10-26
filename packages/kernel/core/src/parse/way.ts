@@ -72,15 +72,15 @@ export type WayRelativeItem = {
 };
 
 /** 二次贝塞尔算子（infix）：把"上一项→下一项"段改成 curve step，curve 字段携控制点 */
-export type WayCurveOp = {
+export type WayCurveOp<TControl = IRControlPoint> = {
   /** 上一目标与下一目标之间的二次贝塞尔控制点 */
-  curve: IRControlPoint;
+  curve: TControl;
 };
 
 /** 三次贝塞尔算子（infix）：cubic step；cubic 字段携两个控制点 */
-export type WayCubicOp = {
+export type WayCubicOp<TControl = IRControlPoint> = {
   /** 从上一目标到下一目标依次使用的两个三次贝塞尔控制点 */
-  cubic: [IRControlPoint, IRControlPoint];
+  cubic: [TControl, TControl];
 };
 
 /** 弧形简记算子（infix）：bend step；bend=方向，angle 可选缺省 30° */
@@ -141,114 +141,42 @@ export type WayLabelOp = {
 };
 
 /** 单轴连接算子：把目标投影到当前 host 的水平或垂直轴 */
-export type WayAxisLineOp =
+export type WayAxisLineOp<TAxisTarget = IRAxisLineTarget> =
   | {
       /** 提供水平连接终点横坐标的目标 */
-      horizontalTo: IRAxisLineTarget | string;
+      horizontalTo: TAxisTarget | string;
     }
   | {
       /** 提供垂直连接终点纵坐标的目标 */
-      verticalTo: IRAxisLineTarget | string;
+      verticalTo: TAxisTarget | string;
     };
 
 /**
  * Sugar 层 way 数组 DSL 元素
  * @description 节点 id 字符串/笛卡尔/极坐标 → line（首项 move）；`{position,type}` 相对偏移对象 → IR relative/relativeAccumulate；horizontalTo/verticalTo → axis-line；四种裸 via 或 `{via,fraction}` 与下一项合并 fold；DrawWay.Cycle → cycle；curve/cubic/bend infix 与下一项合并；arc/circle/ellipse infix 以上一项为圆心不消耗下一项。Cycle/Relative/Accumulate 底层字符串刻意写丑避节点 id 撞结构
  */
-export type WayItem =
-  | IRTarget
+export type WayItem<TTarget = IRTarget, TControl = IRControlPoint, TAxisTarget = IRAxisLineTarget> =
+  | TTarget
   // 节点 id / anchor / 角度 / 相对偏移字符串 shorthand（React DSL 层）——core IRTarget 已对象化，way 仍接受字符串、parseTargetSugar eager 转对象
   | string
   | WayRelativeItem
   | WayVia
   | WayFoldOp
   | WayCycle
-  | WayCurveOp
-  | WayCubicOp
+  | WayCurveOp<TControl>
+  | WayCubicOp<TControl>
   | WayBendOp
   | WayArcOp
   | WayCircleOp
   | WayEllipseOp
   | WayLabelOp
-  | WayAxisLineOp;
+  | WayAxisLineOp<TAxisTarget>;
 
 /** way DSL 数组：sugar `<Draw way={...}>` 输入形态 */
-export type WayDSL = Array<WayItem>;
+export type WayDSL<TTarget = IRTarget, TControl = IRControlPoint, TAxisTarget = IRAxisLineTarget> = Array<
+  WayItem<TTarget, TControl, TAxisTarget>
+>;
 
-const isWayCycle = (item: WayItem): item is WayCycle => item === DrawWay.Cycle;
-
-const isWayVia = (item: WayItem): item is WayVia =>
-  item === DrawWay.Hv || item === DrawWay.Vh || item === DrawWay.Hvh || item === DrawWay.Vhv;
-
-const isPlainObject = (item: unknown): item is Record<string, unknown> =>
-  typeof item === 'object' && item !== null && !Array.isArray(item);
-
-const isWayRelativeItem = (item: WayItem): item is WayRelativeItem =>
-  isPlainObject(item) && 'position' in item && 'type' in item;
-
-const isWayCurveOp = (item: WayItem): item is WayCurveOp => isPlainObject(item) && 'curve' in item;
-
-const isWayCubicOp = (item: WayItem): item is WayCubicOp => isPlainObject(item) && 'cubic' in item;
-
-const isWayBendOp = (item: WayItem): item is WayBendOp => isPlainObject(item) && 'bend' in item;
-
-const isWayCurveLike = (item: WayItem): item is WayCurveOp | WayCubicOp | WayBendOp =>
-  isWayCurveOp(item) || isWayCubicOp(item) || isWayBendOp(item);
-
-const isWayArcOp = (item: WayItem): item is WayArcOp => isPlainObject(item) && 'arc' in item;
-
-const isWayCircleOp = (item: WayItem): item is WayCircleOp => isPlainObject(item) && 'circle' in item;
-
-const isWayEllipseOp = (item: WayItem): item is WayEllipseOp => isPlainObject(item) && 'ellipse' in item;
-
-const isWayShapeOp = (item: WayItem): item is WayArcOp | WayCircleOp | WayEllipseOp =>
-  isWayArcOp(item) || isWayCircleOp(item) || isWayEllipseOp(item);
-
-const isWayLabelOp = (item: WayItem): item is WayLabelOp => isPlainObject(item) && 'label' in item;
-
-const isWayAxisLineOp = (item: WayItem): item is WayAxisLineOp =>
-  isPlainObject(item) && ('horizontalTo' in item || 'verticalTo' in item);
-
-type WayFoldOpInput = Record<string, unknown> & { via: unknown };
-
-const isWayFoldOpInput = (item: unknown): item is WayFoldOpInput => isPlainObject(item) && 'via' in item;
-
-const WayFoldOpSchema = strictObject({
-  via: zodEnum([FoldStepVia.HorizontalVerticalHorizontal, FoldStepVia.VerticalHorizontalVertical]),
-  fraction: NormalizedFractionSchema.optional(),
-});
-
-const wayOperatorNamesOf = (item: WayItem): Array<string> => {
-  if (!isPlainObject(item)) return [];
-
-  const names = [
-    'horizontalTo',
-    'verticalTo',
-    'via',
-    'label',
-    'curve',
-    'cubic',
-    'bend',
-    'arc',
-    'circle',
-    'ellipse',
-  ].filter(key => key in item);
-  if ('position' in item && 'type' in item) names.push('relative');
-
-  return names;
-};
-
-const assertSingleWayOperator = (item: WayItem): void => {
-  const names = wayOperatorNamesOf(item);
-  if (names.length > 1) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Parse,
-      `parseWay: object contains multiple Way operators: ${names.join(', ')}`,
-    );
-  }
-};
-
-/** sugar 字符串/对象 → IR step.label（字符串 = `{text:s}`） */
 const normalizeLabel = (l: WayLabel): IRStepLabel => {
   if (typeof l === 'string') return { text: l };
 
@@ -267,331 +195,178 @@ const normalizeLabel = (l: WayLabel): IRStepLabel => {
   return out;
 };
 
-/** sugar `{position,type}` → IR `{relative}|{relativeAccumulate}`；其它形态原样返回 */
-const desugarRelativeItem = (item: WayItem): WayItem => {
-  if (!isWayRelativeItem(item)) return item;
-  if (item.type === DrawWay.Accumulate) {
-    return { relativeAccumulate: item.position };
-  }
-
-  return { relative: item.position };
+/** 统一路径语法的位置适配契约；适配器不执行几何或数据求值 */
+export type WayTargetAdapter<TTarget, TControl, TAxisTarget> = {
+  /** 普通目标与目标简写 */
+  target: (value: TTarget | string | WayRelativeItem) => TTarget;
+  /** 贝塞尔绝对控制点 */
+  control: (value: TControl) => TControl;
+  /** 单轴步骤目标 */
+  axisTarget: (value: TAxisTarget | string) => TAxisTarget;
 };
 
-type ClassifiedWayItem =
-  | { kind: 'label'; item: WayLabelOp }
-  | { kind: 'axis'; item: WayAxisLineOp }
-  | { kind: 'cycle'; item: WayCycle }
-  | { kind: 'via'; item: WayVia | WayFoldOpInput }
-  | { kind: 'curve'; item: WayCurveOp | WayCubicOp | WayBendOp }
-  | { kind: 'shape'; item: WayArcOp | WayCircleOp | WayEllipseOp }
-  | { kind: 'target'; item: WayItem };
-
-const classifyWayItem = (item: WayItem): ClassifiedWayItem => {
-  assertSingleWayOperator(item);
-  if (isWayLabelOp(item)) return { kind: 'label', item };
-  if (isWayAxisLineOp(item)) return { kind: 'axis', item };
-  if (isWayCycle(item)) return { kind: 'cycle', item };
-  if (isWayVia(item)) return { kind: 'via', item };
-  if (isWayFoldOpInput(item)) return { kind: 'via', item };
-  if (isWayCurveLike(item)) return { kind: 'curve', item };
-  if (isWayShapeOp(item)) return { kind: 'shape', item };
-
-  return { kind: 'target', item };
-};
-
-const isWayOperator = (item: WayItem): boolean => classifyWayItem(item).kind !== 'target';
-
-/** WayItem 归约为"目标点"，算子/关键字返回 null */
-const targetOf = (item: WayItem): IRTarget | null => {
-  if (isWayOperator(item)) return null;
-  return desugarRelativeItem(item) as IRTarget;
-};
-
-type LabelAttachableStep =
+/** 语法产物沿用 Core 步骤字段，只替换位置槽 */
+export type WayParsedStep<TTarget, TControl, TAxisTarget> =
+  | (Omit<IRMoveStep, 'to'> & { to: TTarget })
+  | (Omit<IRLineStep, 'to'> & { to: TTarget })
+  | (Omit<IRAxisLineStep, 'to'> & { to: TAxisTarget })
+  | (Omit<Extract<IRFoldStep, { via: '-|' | '|-' }>, 'to'> & { to: TTarget })
+  | (Omit<Extract<IRFoldStep, { via: '-|-' | '|-|' }>, 'to'> & { to: TTarget })
+  | (Omit<IRCurveStep, 'to' | 'control'> & { to: TTarget; control: TControl })
+  | (Omit<IRCubicStep, 'to' | 'control1' | 'control2'> & { to: TTarget; control1: TControl; control2: TControl })
+  | (Omit<IRBendStep, 'to'> & { to: TTarget })
   | IRArcStep
-  | IRAxisLineStep
-  | IRBendStep
   | IRCirclePathStep
-  | IRCubicStep
-  | IRCurveStep
   | IREllipsePathStep
-  | IRFoldStep
-  | IRLineStep;
+  | Extract<IRStep, { kind: 'cycle' }>;
 
-const attachLabel = <TStep extends LabelAttachableStep>(step: TStep, label: IRStepLabel | undefined): TStep => {
-  if (label) step.label = label;
-  return step;
-};
-
-const parseFollowingTarget = (
-  way: WayDSL,
-  index: number,
-  endError: string,
-  nextError: (next: WayItem) => string,
-): IRTarget => {
-  if (index + 1 >= way.length) throw new RetikzCoreError(RetikzCoreErrorCode.Parse, endError);
-
-  const next = way[index + 1];
-  if (isWayOperator(next)) throw new RetikzCoreError(RetikzCoreErrorCode.Parse, nextError(next));
-
-  return parseTargetSugar(desugarRelativeItem(next));
-};
-
-const buildViaStep = (
-  way: WayDSL,
-  index: number,
-  item: WayVia | WayFoldOpInput,
-  label: IRStepLabel | undefined,
-): IRFoldStep => {
-  const parsed =
-    typeof item === 'string'
-      ? { via: item }
-      : (() => {
-          const result = WayFoldOpSchema.safeParse(item);
-          if (!result.success) {
-            throw new RetikzCoreError(
-              RetikzCoreErrorCode.Parse,
-              `parseWay: invalid fold operator: ${result.error.issues[0]?.message ?? 'invalid object'}`,
-            );
-          }
-
-          return result.data;
-        })();
-  return attachLabel(
-    {
-      type: 'step',
-      kind: 'fold',
-      via: parsed.via,
-      ...('fraction' in parsed && parsed.fraction !== undefined && { fraction: parsed.fraction }),
-      to: parseFollowingTarget(
-        way,
-        index,
-        `parseWay: via operator '${parsed.via}' at end of way must be followed by a target`,
-        next => `parseWay: via operator '${parsed.via}' must be followed by a target, got '${String(next)}'`,
-      ),
-    },
-    label,
-  );
-};
-
-const buildCurveLikeStep = (
-  way: WayDSL,
-  index: number,
-  item: WayCurveOp | WayCubicOp | WayBendOp,
-  label: IRStepLabel | undefined,
-): IRCurveStep | IRCubicStep | IRBendStep => {
-  const target = parseFollowingTarget(
-    way,
-    index,
-    'parseWay: curve operator at end of way must be followed by a target',
-    () => 'parseWay: curve operator must be followed by a target, got operator/keyword',
-  );
-  if (isWayCurveOp(item)) {
-    return attachLabel(
-      {
-        type: 'step',
-        kind: 'curve',
-        to: target,
-        control: item.curve,
-      },
-      label,
-    );
-  }
-
-  if (isWayCubicOp(item)) {
-    return attachLabel(
-      {
-        type: 'step',
-        kind: 'cubic',
-        to: target,
-        control1: item.cubic[0],
-        control2: item.cubic[1],
-      },
-      label,
-    );
-  }
-
-  const bend: IRBendStep = {
-    type: 'step',
-    kind: 'bend',
-    to: target,
-    bendDirection: item.bend,
-  };
-  if (item.angle !== undefined) bend.bendAngle = item.angle;
-
-  return attachLabel(bend, label);
-};
-
-const buildShapeStep = (
-  item: WayArcOp | WayCircleOp | WayEllipseOp,
-  label: IRStepLabel | undefined,
-): IRArcStep | IRCirclePathStep | IREllipsePathStep => {
-  if (isWayArcOp(item)) {
-    return attachLabel(
-      {
-        type: 'step',
-        kind: 'arc',
-        startAngle: item.arc.startAngle,
-        endAngle: item.arc.endAngle,
-        radius: item.arc.radius,
-      },
-      label,
-    );
-  }
-
-  if (isWayCircleOp(item)) {
-    return attachLabel(
-      {
-        type: 'step',
-        kind: 'circlePath',
-        radius: item.circle.radius,
-      },
-      label,
-    );
-  }
-
-  return attachLabel(
-    {
-      type: 'step',
-      kind: 'ellipsePath',
-      radius: item.ellipse.radius,
-    },
-    label,
-  );
-};
-
-const buildLineStep = (item: WayItem, label: IRStepLabel | undefined): IRLineStep =>
-  attachLabel(
-    {
-      type: 'step',
-      kind: 'line',
-      to: parseTargetSugar(desugarRelativeItem(item)),
-    },
-    label,
-  );
-
-const axisLineTargetOf = (item: WayAxisLineOp): IRAxisLineTarget => {
-  const raw = 'horizontalTo' in item ? item.horizontalTo : item.verticalTo;
-  const parsed = parseTargetSugar(raw);
-  const result = AxisLineTargetSchema.safeParse(parsed);
-  if (!result.success) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Parse,
-      'parseWay: axis-line target must resolve to a Cartesian position or NodeTarget; polar, relative, offset, and between targets are not supported',
-      { cause: result.error },
-    );
-  }
-
-  return result.data;
-};
-
-const buildAxisLineStep = (item: WayAxisLineOp, label: IRStepLabel | undefined): IRAxisLineStep =>
-  attachLabel(
-    {
-      type: 'step',
-      kind: 'axis-line',
-      axis: 'horizontalTo' in item ? 'horizontal' : 'vertical',
-      to: axisLineTargetOf(item),
-    },
-    label,
-  );
+const WayFoldOpSchema = strictObject({
+  via: zodEnum([FoldStepVia.HorizontalVerticalHorizontal, FoldStepVia.VerticalHorizontalVertical]),
+  fraction: NormalizedFractionSchema.optional(),
+});
 
 /**
- * way 数组 → IRStep 序列
- * @description 首元素必须是 move 目标（way[0] 是算子 / label 算子时抛错，不降级）；后续元素按各自规则：target/RelItem→line；Cycle→cycle；两段 / 三段 via 与下一项合并 fold；curve/cubic/bend 与下一项合并；arc/circle/ellipse 单独成 step；label 算子修饰下一段。连续 label/末尾 label/cycle 上的 label 抛错。纯函数，各框架 adapter Sugar 组件复用
+ * 将同一套 way 算子语法归约为保留领域位置的步骤
+ * @description 领域目标不能使用保留算子字段；目标适配不改变算子顺序与标签消费规则
  */
-export const parseWay = (way: WayDSL): Array<IRStep> => {
-  if (way.length < 2) {
-    throw new RetikzCoreError(RetikzCoreErrorCode.Parse, 'parseWay: way must contain at least 2 items');
-  }
-
-  const out: Array<IRStep> = [];
-
-  /** 当前未消费的 label 算子结果，下一个产生段的 way item 消耗 */
-  let pendingLabel: IRStepLabel | undefined;
-
-  const consumeLabel = (): IRStepLabel | undefined => {
-    const l = pendingLabel;
-    pendingLabel = undefined;
-    return l;
+export const parseWayWithTargets = <TTarget, TControl, TAxisTarget>(
+  way: WayDSL<TTarget, TControl, TAxisTarget>,
+  adapter: WayTargetAdapter<TTarget, TControl, TAxisTarget>,
+): Array<WayParsedStep<TTarget, TControl, TAxisTarget>> => {
+  type Item = WayItem<TTarget, TControl, TAxisTarget>;
+  const fail = (message: string): never => {
+    throw new RetikzCoreError(RetikzCoreErrorCode.Parse, `parseWay: ${message}`);
   };
-
-  if (isWayLabelOp(way[0])) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Parse,
-      `parseWay: way[0] must be a target (move start), got label operator`,
-    );
-  }
-
-  const rawMove = targetOf(way[0]);
-  if (rawMove === null) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Parse,
-      `parseWay: way[0] must be a target (move start), got operator`,
-    );
-  }
-
-  const moveTarget: IRTarget = parseTargetSugar(rawMove);
-  const moveStep: IRMoveStep = { type: 'step', kind: 'move', to: moveTarget };
-  out.push(moveStep);
-  let index = 1;
-
-  while (index < way.length) {
-    const classified = classifyWayItem(way[index]);
-
-    switch (classified.kind) {
-      case 'label':
-        if (pendingLabel) {
-          throw new RetikzCoreError(
-            RetikzCoreErrorCode.Parse,
-            `parseWay: label operator at index ${index} cannot directly follow another label operator`,
-          );
-        }
-
-        pendingLabel = normalizeLabel(classified.item.label);
-        index += 1;
-        break;
-      case 'axis':
-        out.push(buildAxisLineStep(classified.item, consumeLabel()));
-        index += 1;
-        break;
-      case 'cycle':
-        if (pendingLabel) {
-          throw new RetikzCoreError(
-            RetikzCoreErrorCode.Parse,
-            `parseWay: cycle step cannot carry a label (label operator at index ${index - 1})`,
-          );
-        }
-
-        out.push({ type: 'step', kind: 'cycle' });
-        index += 1;
-        break;
-      case 'via':
-        out.push(buildViaStep(way, index, classified.item, consumeLabel()));
-        index += 2;
-        break;
-      case 'curve':
-        out.push(buildCurveLikeStep(way, index, classified.item, consumeLabel()));
-        index += 2;
-        break;
-      case 'shape':
-        // 形状算子（arc/circle/ellipse）以上一项为圆心，不消耗下一项
-        out.push(buildShapeStep(classified.item, consumeLabel()));
-        index += 1;
-        break;
-      case 'target':
-        out.push(buildLineStep(classified.item, consumeLabel()));
-        index += 1;
-        break;
+  const operator = (item: Item): string | undefined => {
+    if (item === DrawWay.Cycle) return 'cycle';
+    if (item === DrawWay.Hv || item === DrawWay.Vh || item === DrawWay.Hvh || item === DrawWay.Vhv) return 'via';
+    if (typeof item !== 'object' || item === null || Array.isArray(item)) return undefined;
+    const names = [
+      'horizontalTo',
+      'verticalTo',
+      'via',
+      'label',
+      'curve',
+      'cubic',
+      'bend',
+      'arc',
+      'circle',
+      'ellipse',
+    ].filter(key => key in item);
+    if ('position' in item && 'type' in item && names.length > 0) names.push('relative');
+    if (names.length > 1) fail(`object contains multiple Way operators: ${names.join(', ')}`);
+    return names[0];
+  };
+  const target = (item: Item): TTarget => adapter.target(item as TTarget | string | WayRelativeItem);
+  if (way.length < 2) fail('way must contain at least 2 items');
+  if (operator(way[0]) !== undefined) fail('way[0] must be a target (move start), got operator');
+  const output: Array<WayParsedStep<TTarget, TControl, TAxisTarget>> = [
+    { type: 'step', kind: 'move', to: target(way[0]) },
+  ];
+  let pendingLabel: IRStepLabel | undefined;
+  for (let index = 1; index < way.length; index += 1) {
+    const item = way[index];
+    const operation = operator(item);
+    if (operation === 'label') {
+      if (pendingLabel !== undefined)
+        fail(`label operator at index ${index} cannot directly follow another label operator`);
+      pendingLabel = normalizeLabel((item as WayLabelOp).label);
+      continue;
     }
+    const label = pendingLabel === undefined ? {} : { label: pendingLabel };
+    if (operation === 'cycle') {
+      if (pendingLabel !== undefined) fail(`cycle step cannot carry a label (label operator at index ${index - 1})`);
+      output.push({ type: 'step', kind: 'cycle' });
+    } else if (operation === 'via' || operation === 'curve' || operation === 'cubic' || operation === 'bend') {
+      const operationName =
+        operation === 'via'
+          ? `via operator '${typeof item === 'string' ? item : (item as WayFoldOp).via}'`
+          : 'curve operator';
+      if (index + 1 >= way.length) fail(`${operationName} at end of way must be followed by a target`);
+      if (operator(way[index + 1]) !== undefined)
+        fail(`${operationName} must be followed by a target, got operator/keyword`);
+      const to = target(way[++index]);
+      if (operation === 'via') {
+        if (typeof item === 'string') {
+          output.push({ type: 'step', kind: 'fold', via: item as WayVia, to, ...label });
+        } else {
+          const parsed = WayFoldOpSchema.safeParse(item);
+          if (!parsed.success) fail(`invalid fold operator: ${parsed.error.issues[0]?.message ?? 'invalid object'}`);
+          output.push({ type: 'step', kind: 'fold', ...parsed.data!, to, ...label });
+        }
+      } else if (operation === 'curve') {
+        output.push({
+          type: 'step',
+          kind: 'curve',
+          to,
+          control: adapter.control((item as WayCurveOp<TControl>).curve),
+          ...label,
+        });
+      } else if (operation === 'cubic') {
+        const controls = (item as WayCubicOp<TControl>).cubic;
+        output.push({
+          type: 'step',
+          kind: 'cubic',
+          to,
+          control1: adapter.control(controls[0]),
+          control2: adapter.control(controls[1]),
+          ...label,
+        });
+      } else {
+        const bend = item as WayBendOp;
+        output.push({
+          type: 'step',
+          kind: 'bend',
+          to,
+          bendDirection: bend.bend,
+          ...(bend.angle === undefined ? {} : { bendAngle: bend.angle }),
+          ...label,
+        });
+      }
+    } else if (operation === 'horizontalTo' || operation === 'verticalTo') {
+      const axis = item as WayAxisLineOp<TAxisTarget>;
+      output.push({
+        type: 'step',
+        kind: 'axis-line',
+        axis: operation === 'horizontalTo' ? 'horizontal' : 'vertical',
+        to: adapter.axisTarget('horizontalTo' in axis ? axis.horizontalTo : axis.verticalTo),
+        ...label,
+      });
+    } else if (operation === 'arc') {
+      output.push({ type: 'step', kind: 'arc', ...(item as WayArcOp).arc, ...label });
+    } else if (operation === 'circle') {
+      output.push({ type: 'step', kind: 'circlePath', ...(item as WayCircleOp).circle, ...label });
+    } else if (operation === 'ellipse') {
+      output.push({ type: 'step', kind: 'ellipsePath', ...(item as WayEllipseOp).ellipse, ...label });
+    } else {
+      output.push({ type: 'step', kind: 'line', to: target(item), ...label });
+    }
+    pendingLabel = undefined;
   }
-
-  if (pendingLabel) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Parse,
-      `parseWay: label operator at end of way must be followed by a step`,
-    );
-  }
-
-  return out;
+  if (pendingLabel !== undefined) fail('label operator at end of way must be followed by a step');
+  return output;
 };
+
+/** 将 way 简写解析为 Core 步骤；各领域复用同一语法归约过程 */
+export const parseWay = (way: WayDSL): Array<IRStep> =>
+  parseWayWithTargets(way, {
+    target: value => {
+      if (typeof value === 'object' && 'type' in value && 'position' in value) {
+        return value.type === DrawWay.Accumulate
+          ? { relativeAccumulate: value.position }
+          : { relative: value.position };
+      }
+      return parseTargetSugar(value);
+    },
+    control: value => value,
+    axisTarget: value => {
+      const result = AxisLineTargetSchema.safeParse(parseTargetSugar(value));
+      if (!result.success)
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Parse,
+          'parseWay: axis-line target must resolve to a Cartesian position or NodeTarget; polar, relative, offset, and between targets are not supported',
+          { cause: result.error },
+        );
+      return result.data;
+    },
+  });

@@ -9,7 +9,7 @@ Ribbon 复用 Path 的路径指令、样式、中心线标签与变换，通用�
 
 ## 接入方式
 
-当连接需要沿路径改变厚度或放置内部标签时，显式装配 `RibbonPathKindDefinition`，再为 Path 设置 `kind="ribbon"`。下图使用一条开放中心线与起终点宽度。导入 Definition 不会全局注册。
+当连接需要沿路径改变厚度或放置内部标签时，显式装配 `RibbonPathDefinition`，再为 Path 设置 `kind="ribbon"`。下图使用一条开放中心线与起终点宽度。导入 Definition 不会全局注册。
 
 <ComponentPreview files="ribbon-basic" hideCode size="xs" />
 
@@ -27,11 +27,11 @@ Layout
 
 ```tsx
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { Layout, Path, Step } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ pathKinds: [RibbonPathKindDefinition] }}>
+  <Layout extensions={{ paths: [RibbonPathDefinition] }}>
     <Path
       kind="ribbon"
       kindOptions={{ width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions}
@@ -50,7 +50,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { Layout } from '@retikz/react';
 
 const ir: IRScene = {
@@ -70,7 +70,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ pathKinds: [RibbonPathKindDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ paths: [RibbonPathDefinition] }} />;
 ```
 
 </DocTab>
@@ -78,7 +78,7 @@ export const Example = () => <Layout ir={ir} extensions={{ pathKinds: [RibbonPat
 
 ```ts
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { path, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
@@ -95,7 +95,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { compile: { pathKinds: [RibbonPathKindDefinition] } }));
+console.log(renderToSvgString(input, { compile: { paths: [RibbonPathDefinition] } }));
 ```
 
 </DocTab>
@@ -104,7 +104,7 @@ console.log(renderToSvgString(input, { compile: { pathKinds: [RibbonPathKindDefi
 ```ts
 import type { IRScene } from '@retikz/core';
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -124,7 +124,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { pathKinds: [RibbonPathKindDefinition] } }));
+console.log(renderToSvgString(ir, { compile: { paths: [RibbonPathDefinition] } }));
 ```
 
 </DocTab>
@@ -257,7 +257,7 @@ const profile = { kind: 'profile', name: 'bulge', params: { base: 16, peak: 58 }
       name: 'Path.kind',
       kind: 'property',
       type: "'ribbon'",
-      description: '选择已在当前图装配的 Ribbon Path kind',
+      description: '选择已在当前图装配的 Ribbon Path',
     },
     {
       name: 'Path.kindOptions.width',

@@ -4,6 +4,7 @@ import { resolveFieldPath } from '@retikz/data';
 import { RetikzPlotError } from '../error';
 import type { IRPlotPositionInput, IRPlotMark } from '../schemas';
 import { BuiltinPlotMark } from '../schemas';
+import { pathStepTargets } from './path-step';
 import type { PositionScale } from './scale';
 
 /** 从位置输入提取真正的数据字段依赖 */
@@ -30,6 +31,11 @@ export const mapPositionInput = (
 
 /** 按几何结构枚举实际消费的位置，不扫描任意属性中的 field */
 export const markPositionInputs = (mark: IRPlotMark): Array<Partial<Record<string, IRPlotPositionInput>>> => {
+  if (mark.type === 'path' && mark.encodings.steps !== undefined) {
+    return mark.encodings.steps.flatMap(step =>
+      pathStepTargets(step).flatMap(({ target }) => ('x' in target ? [target] : [])),
+    );
+  }
   if (mark.type === BuiltinPlotMark.Relation) {
     const refs = [mark.encodings?.source, mark.encodings?.target];
     if (mark.properties.geometry.kind === 'path') {
@@ -37,6 +43,12 @@ export const markPositionInputs = (mark: IRPlotMark): Array<Partial<Record<strin
       for (const step of mark.encodings?.geometry?.route ?? []) refs.push(step.to);
     }
     return refs.flatMap(ref => (ref?.position === undefined ? [] : [ref.position]));
+  }
+  if (mark.type === 'path' && mark.encodings.from !== undefined) {
+    const positions: Array<Partial<Record<string, IRPlotPositionInput>>> = [];
+    for (const endpoint of [mark.encodings.from, mark.encodings.to])
+      if (!('mark' in endpoint)) positions.push(endpoint);
+    return positions;
   }
   const encodings = mark.encodings as
     | {
@@ -46,7 +58,6 @@ export const markPositionInputs = (mark: IRPlotMark): Array<Partial<Record<strin
         bounds?: Partial<Record<string, { from?: IRPlotPositionInput; to?: IRPlotPositionInput }>>;
       }
     | undefined;
-  if (mark.type === 'path' && encodings?.from !== undefined) return [encodings.from, encodings.to ?? {}];
   if (mark.type === 'interval') {
     const positions = [encodings?.position ?? {}];
     for (const endpoint of ['from', 'to'] as const) {

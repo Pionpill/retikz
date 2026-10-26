@@ -1,17 +1,17 @@
 /**
  * 共享插值引擎：给绝对时间求一条 track 当下值（renderer 无关、纯数学、无 DOM）
  * @description Canvas 逐帧、SVG 静态截帧 `{at:t}`、WAAPI JS fallback 都「给 t 求值」——一份引擎三处复用，
- *   避免漂移。处理 delay / iteration / direction / fill / easing（具名 / cubic-bezier / 注册函数）/ 段插值
- *   （数值线性、颜色 oklch 真 lerp、viewBox 4 元组分量线性、自定义经注入插值器）
+ *   避免漂移。处理 delay / iteration / direction / fill / easing（预设 / cubic-bezier）/ 段插值
+ *   （数值线性、颜色 oklch 真 lerp、viewBox 4 元组分量线性）
  */
-import type { IRAnimationTrack } from '@retikz/core';
+import type { IRAnimationTrack, IRKeyframe } from '@retikz/core';
 
 import { lerpColorOklch } from './oklch';
-import type { CubicBezier, EasingFn, EasingRegistry } from './types';
+import type { CubicBezier, EasingFn } from './types';
 
 const LINEAR: EasingFn = t => t;
 
-const NAMED_BEZIER: Record<string, CubicBezier | undefined> = {
+const NAMED_BEZIER: Record<Exclude<NonNullable<IRAnimationTrack['easing']>, CubicBezier | 'linear'>, CubicBezier> = {
   ease: [0.25, 0.1, 0.25, 1],
   'ease-in': [0.42, 0, 1, 1],
   'ease-out': [0, 0, 0.58, 1],
@@ -60,76 +60,99 @@ const cubicBezier = (x1: number, y1: number, x2: number, y2: number): EasingFn =
   return x => (x <= 0 ? 0 : x >= 1 ? 1 : sampleY(solveX(x)));
 };
 
-/** easing（具名 / cubic-bezier / 自定义注册名）→ 缓动函数；未知 → linear */
-const resolveEasingFn = (easing: string | CubicBezier | undefined, registry: EasingRegistry | undefined): EasingFn => {
+/** 将缓动预设或贝塞尔控制点转换为缓动函数 */
+const resolveEasingFn = (easing: IRAnimationTrack['easing']): EasingFn => {
   if (easing === undefined || easing === 'linear') return LINEAR;
   if (Array.isArray(easing)) return cubicBezier(easing[0], easing[1], easing[2], easing[3]);
-
-  const named = Object.hasOwn(NAMED_BEZIER, easing) ? NAMED_BEZIER[easing] : undefined;
-  if (named) return cubicBezier(named[0], named[1], named[2], named[3]);
-
-  const custom = registry !== undefined && Object.hasOwn(registry, easing) ? registry[easing] : undefined;
-  if (Array.isArray(custom)) return cubicBezier(custom[0], custom[1], custom[2], custom[3]);
-  if (typeof custom === 'function') return custom;
-
-  return LINEAR;
+  const named = NAMED_BEZIER[easing];
+  return cubicBezier(named[0], named[1], named[2], named[3]);
 };
 
-/** evaluateTrack 选项：自定义 easing 注册表 + 自定义 property 插值器（内置类型不需要） */
-export type EvaluateTrackOptions = {
-  /** 自定义 easing 注册表 */
-  easings?: EasingRegistry;
-  /** 自定义 property 的插值器（内置数值 / 颜色 / 数组以外的值类型用） */
-  interpolateCustom?: (from: unknown, to: unknown, t: number) => unknown;
-};
+/** 将受限动画进度约束到有效区间 */
+const clampProgress = (value: number): number => Math.max(0, Math.min(1, value));
 
-/** 按值类型插值：数值线性 / 颜色 oklch / 数组分量 / 自定义经注入器（缺省 step） */
-const interpolateValue = (
-  from: unknown,
-  to: unknown,
-  t: number,
-  interpolateCustom: EvaluateTrackOptions['interpolateCustom'],
-): unknown => {
-  if (typeof from === 'number' && typeof to === 'number') return from + (to - from) * t;
-  if (typeof from === 'string' && typeof to === 'string') return lerpColorOklch(from, to, t);
-  if (Array.isArray(from) && Array.isArray(to)) {
-    return from.map((a, i) => (typeof a === 'number' && typeof to[i] === 'number' ? a + (to[i] - a) * t : a));
+/** 按属性约束和段缓动计算相邻关键帧之间的值 */
+const interpolateTrackSegment = (track: IRAnimationTrack, index: number, progress: number): IRKeyframe['value'] => {
+  const eased = resolveEasingFn(track.keyframes[index].easing ?? track.easing)(progress);
+  switch (track.property) {
+    case 'fill':
+    case 'stroke': {
+      return lerpColorOklch(track.keyframes[index].value, track.keyframes[index + 1].value, eased);
+    }
+    case 'viewBox': {
+      const from = track.keyframes[index].value;
+      const to = track.keyframes[index + 1].value;
+      const t = clampProgress(eased);
+      return [
+        from[0] + (to[0] - from[0]) * t,
+        from[1] + (to[1] - from[1]) * t,
+        from[2] + (to[2] - from[2]) * t,
+        from[3] + (to[3] - from[3]) * t,
+      ];
+    }
+    default: {
+      const from = track.keyframes[index].value;
+      const to = track.keyframes[index + 1].value;
+      const value = from + (to - from) * eased;
+      switch (track.property) {
+        case 'opacity':
+        case 'fillOpacity':
+        case 'strokeOpacity':
+        case 'pathDraw':
+          return clampProgress(value);
+        case 'strokeWidth':
+          return Math.max(0, value);
+        default:
+          return value;
+      }
+    }
   }
-
-  if (interpolateCustom) return interpolateCustom(from, to, t);
-
-  return t < 1 ? from : to;
 };
 
-/** 在归一化进度 p 处定位 keyframe 段并插值（段内按 easing 映射） */
-const valueAtProgress = (track: IRAnimationTrack, p: number, options: EvaluateTrackOptions): unknown => {
+/** 在一次迭代的归一化进度上读取轨道值 */
+const valueAtProgress = (track: IRAnimationTrack, p: number): IRKeyframe['value'] => {
   const frames = track.keyframes;
-  if (p <= frames[0].at) return frames[0].value;
-
+  if (p < frames[0].at) return frames[0].value;
   const last = frames[frames.length - 1];
   if (p >= last.at) return last.value;
-
   let i = 0;
+  while (i < frames.length - 1 && p >= frames[i + 1].at) i++;
+  const span = frames[i + 1].at - frames[i].at;
+  return interpolateTrackSegment(track, i, span > 0 ? (p - frames[i].at) / span : 0);
+};
 
-  while (i < frames.length - 1 && !(p >= frames[i].at && p <= frames[i + 1].at)) i++;
-  const a = frames[i];
-  const b = frames[i + 1];
-  const span = b.at - a.at;
-  const u = span > 0 ? (p - a.at) / span : 0;
-  const eased = resolveEasingFn(a.easing ?? track.easing, options.easings)(u);
-
-  return interpolateValue(a.value, b.value, eased, options.interpolateCustom);
+/** 按段采样缓动后的值，供 SVG 在样本之间线性插值 */
+export const sampleAnimationTrack = (
+  track: IRAnimationTrack,
+): Array<{ offset: number; value: IRKeyframe['value'] }> => {
+  const first = track.keyframes[0];
+  const samples = [{ offset: 0, value: first.value }];
+  if (first.at > 0) samples.push({ offset: first.at, value: first.value });
+  for (let index = 0; index < track.keyframes.length - 1; index++) {
+    const from = track.keyframes[index];
+    const to = track.keyframes[index + 1];
+    if (to.at === from.at) {
+      samples.push({ offset: to.at, value: to.value });
+      continue;
+    }
+    for (let step = 1; step <= 32; step++) {
+      const progress = step / 32;
+      samples.push({
+        offset: from.at + (to.at - from.at) * progress,
+        value: interpolateTrackSegment(track, index, progress),
+      });
+    }
+  }
+  const last = track.keyframes[track.keyframes.length - 1];
+  if (last.at < 1) samples.push({ offset: 1, value: last.value });
+  return samples;
 };
 
 /**
  * 给绝对时间 timeMs 求 track 当下值；返回 `null` 表示该时刻 track 不活动（caller 用 base、不施加）
  * @description 减 delay → 算迭代次序 + 迭代内进度 → 按 fill 处理活动区间外 → 按 direction 翻转 → 段插值
  */
-export const evaluateTrack = (
-  track: IRAnimationTrack,
-  timeMs: number,
-  options: EvaluateTrackOptions = {},
-): { value: unknown } | null => {
+export const evaluateTrack = (track: IRAnimationTrack, timeMs: number): { value: IRKeyframe['value'] } | null => {
   const dur = track.duration;
   const iterCount = track.iterations === 'infinite' ? Infinity : (track.iterations ?? 1);
   const fill = track.fill ?? 'forwards';
@@ -170,5 +193,5 @@ export const evaluateTrack = (
     (direction === 'alternate-reverse' && iterationIndex % 2 === 0);
   const p = reverse ? 1 - progress : progress;
 
-  return { value: valueAtProgress(track, p, options) };
+  return { value: valueAtProgress(track, p) };
 };

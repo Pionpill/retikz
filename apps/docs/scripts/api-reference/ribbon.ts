@@ -24,8 +24,8 @@ export const writeRibbonApiReferenceMdx = async (outputDirectory: string): Promi
             source: path.resolve(repositoryRoot, packageDirectory, 'src/index.ts'),
             title: { zh: '`@retikz/extension` · Ribbon', en: '`@retikz/extension` · Ribbon' },
             symbols: [
-              'RibbonPathKindDefinition',
-              'createRibbonPathKindDefinition',
+              'RibbonPathDefinition',
+              'createRibbonPathDefinition',
               'defineRibbonWidthProfile',
               'defineRibbonCap',
               'RibbonCapDefinition',

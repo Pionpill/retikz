@@ -71,13 +71,13 @@ it('逐边覆盖可以重新开启、清空箭头', () => {
   const enabled = compile({
     ...base,
     defaultConnection: false,
-    root: { children: [{ content: 'a', connection: { path: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] } } }, 'b'] },
+    root: { children: [{ content: 'a', connection: { path: { arrow: { end: {} } } } }, 'b'] },
   });
   expect(flat(enabled.scene.primitives).filter(n => n.type === 'path' && n.arrowEnd !== undefined)).toHaveLength(1);
   const cleared = compile({
     ...base,
-    defaultConnection: { path: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] } },
-    root: { children: [{ connection: { path: { marks: [] } } }] },
+    defaultConnection: { path: { arrow: { end: {} } } },
+    root: { children: [{ connection: { path: { arrow: {} } } }] },
   });
   expect(flat(cleared.scene.primitives).filter(n => n.type === 'path' && n.arrowEnd !== undefined)).toHaveLength(0);
 });

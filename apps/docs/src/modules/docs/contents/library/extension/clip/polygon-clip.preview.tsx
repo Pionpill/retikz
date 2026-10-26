@@ -17,7 +17,7 @@ export const renderPolygonClipPreview = (values: PolygonClipPreviewValues) => (
       style={{ fill: 'none', stroke: 'lightgray', strokeWidth: 1, dashPattern: [6, 4] }}
       layout={{ minimumSize: { width: 192, height: 180 } }}
     />
-    <Scope clip={{ kind: 'polygon', points: [values.top, values.right, values.left] }}>
+    <Scope clip={{ kind: 'polygon', params: { points: [values.top, values.right, values.left] } }}>
       <Node
         position={[100, 100]}
         shape="rectangle"

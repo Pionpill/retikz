@@ -1,4 +1,4 @@
-import type { GroupPrim, PathPrim, ScenePrimitive, TextPrim } from '../../contract';
+import type { GroupPrimitive, PathPrimitive, ScenePrimitive, TextPrimitive } from '../../contract';
 import type { CanonicalInlineSegment } from '../../resolve';
 import { BuiltinCompileWarningCode } from '../constants';
 import type { CompileWarningCode } from '../constants';
@@ -64,7 +64,7 @@ export type InlineLineLayout = {
   ascent: number;
   /** 基线之下最大下伸（文字 descent / 公式 depth） */
   descent: number;
-  /** 无 math segment（纯文本，可与既有 TextPrim 路径等价） */
+  /** 无 math segment（纯文本，可与既有 TextPrimitive 路径等价） */
   isPlain: boolean;
   /** 按原始 segment 索引定位外观的纯数据片段 */
   pieces: Array<Piece>;
@@ -190,7 +190,7 @@ export const emitInlineLine = (
   for (const p of layout.pieces) {
     const segmentPaint = paint.segments[p.segmentIndex];
     if (p.kind === 'text') {
-      const tp: TextPrim = {
+      const tp: TextPrimitive = {
         type: 'text',
         x: round(originX + p.x),
         y: round(baselineY),
@@ -211,8 +211,8 @@ export const emitInlineLine = (
       out.push(tp);
     } else {
       const hostColor = segmentPaint.fill ?? paint.color;
-      const children = p.paths.map((path): PathPrim => {
-        const glyph: PathPrim = {
+      const children = p.paths.map((path): PathPrimitive => {
+        const glyph: PathPrimitive = {
           type: 'path',
           commands: path.commands,
           fillRule: path.fillRule ?? 'evenodd',
@@ -237,7 +237,7 @@ export const emitInlineLine = (
         return glyph;
       });
 
-      const group: GroupPrim = {
+      const group: GroupPrimitive = {
         type: 'group',
         transforms: [{ kind: 'translate', x: round(originX + p.x), y: round(baselineY - (p.height - p.depth)) }],
         children,

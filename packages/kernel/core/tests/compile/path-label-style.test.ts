@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { ScenePrimitive, TextPrim } from '../../src/contract';
+import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
@@ -15,9 +15,9 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   return out;
 };
 
-/** 取首个 step label TextPrim（拍平 group，找 text） */
-const labelOf = (ir: IRScene): TextPrim | undefined =>
-  flatten(compileToScene(ir).scene.primitives).find((p): p is TextPrim => p.type === 'text');
+/** 取首个 step label TextPrimitive（拍平 group，找 text） */
+const labelOf = (ir: IRScene): TextPrimitive | undefined =>
+  flatten(compileToScene(ir).scene.primitives).find((p): p is TextPrimitive => p.type === 'text');
 
 /** 构造单 line 段 path（可选 path 级字段 + label 字段） */
 const pathWithLabel = (pathProps: Record<string, unknown>, label: Record<string, unknown>): IRScene => ({
@@ -57,7 +57,7 @@ describe('Happy: StepLabel 样式字段落地', () => {
     expect(label?.opacity).toBeCloseTo(0.1);
   });
 
-  it('step_label_text_color_applies：textColor=red → TextPrim.fill=red', () => {
+  it('step_label_text_color_applies：textColor=red → TextPrimitive.fill=red', () => {
     expect(labelOf(pathWithLabel({}, { textColor: 'red' }))?.fill).toBe('red');
   });
 

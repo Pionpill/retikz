@@ -1,4 +1,4 @@
-import type { GroupPrim, PathPrim, RectPrim, Scene } from '@retikz/core';
+import type { GroupPrimitive, PathPrimitive, RectPrimitive, Scene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { renderToSvgString } from '../../../src/svg';
@@ -11,15 +11,15 @@ import { buildPrim } from '../../../src/svg/builders/prim';
  */
 describe('SVG renderer 忽略 meta', () => {
   it('rect-meta-ignored：带 meta 的 rect 与不带 meta 产出相同 SvgNode（无 meta 派生 attr）', () => {
-    const base: RectPrim = { type: 'rect', id: 'a', x: 0, y: 0, width: 10, height: 10, fill: '#f00' };
-    const withMeta: RectPrim = { ...base, meta: { source: 'plot', datum: 3 } };
+    const base: RectPrimitive = { type: 'rect', id: 'a', x: 0, y: 0, width: 10, height: 10, fill: '#f00' };
+    const withMeta: RectPrimitive = { ...base, meta: { source: 'plot', datum: 3 } };
 
     expect(buildPrim(withMeta)).toEqual(buildPrim(base));
     expect('meta' in buildPrim(withMeta).attrs).toBe(false);
   });
 
   it('path-meta-ignored：带 meta 的 path 产出与不带一致', () => {
-    const base: PathPrim = {
+    const base: PathPrimitive = {
       type: 'path',
       id: 'edge1',
       commands: [
@@ -33,7 +33,7 @@ describe('SVG renderer 忽略 meta', () => {
   });
 
   it('group-meta-ignored：带 meta 的 group 产出与不带一致', () => {
-    const base: GroupPrim = {
+    const base: GroupPrimitive = {
       type: 'group',
       id: 'sc',
       children: [{ type: 'rect', x: 0, y: 0, width: 5, height: 5, stroke: '#444' }],

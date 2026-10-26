@@ -576,7 +576,7 @@ it.each([
   ['infinite zIndex', { zIndex: Infinity }],
   ['invalid boundingShape', { boundingShape: 'triangle' }],
   ['non-json meta', { meta: { bad: undefined } }],
-  ['invalid clip', { clip: { kind: 'rect', x: 0, y: 0, width: -1, height: 10 } }],
+  ['invalid clip', { clip: { kind: 'rect', params: { x: 0, y: 0, width: -1, height: 10 } } }],
   ['invalid animations', { animations: [{}] }],
   ['malformed transform', { transforms: [{ kind: 'translate', x: 0 }] }],
   ['non-finite transform', { transforms: [{ kind: 'scale', x: NaN }] }],

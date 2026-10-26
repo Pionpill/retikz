@@ -8,22 +8,20 @@ import {
 } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalStep, PathGeneratorResolution, PathTargetView } from '../../../resolve';
+import type { CanonicalStep, PathTargetView } from '../../../resolve';
 import { nodeIdFromResolvableTarget } from '../../../resolve/position';
-import type { IRPosition, IRTarget } from '../../../schemas';
+import type { IRPosition } from '../../../schemas';
 import { rectPerimeterSample } from '../../../shared/geometry';
 import { BuiltinCompileWarningCode } from '../../constants';
 import { clipTarget, isAutoBoundaryTarget, pointOfTarget, samePoint } from '../host';
 import type { PathCommandEmitter } from './commands';
 import type { StrokeCursor } from './cursor';
-import { lowerGeneratorStepToCommands } from './lower';
 import type { StrokeSamplingCollector } from './sampling';
 
-/** 由几何形状或生成器产生路径命令的 shape step */
+/** 由几何形状产生路径命令的 shape step */
 export type StrokeShapeStep = Extract<
   CanonicalStep,
-  { kind: 'generator' | 'cycle' | 'rectangle' | 'arc' | 'circlePath' | 'ellipsePath' | 'smooth' }
+  { kind: 'cycle' | 'rectangle' | 'arc' | 'circlePath' | 'ellipsePath' | 'smooth' }
 >;
 
 /** shape step 降级所需的共享上下文 */
@@ -32,10 +30,6 @@ export type LowerShapeStepContext = {
   targetView: PathTargetView;
   /** 当前 scope 的累计变换链 */
   scopeChain: ReadonlyArray<Transform>;
-  /** 坐标取整函数 */
-  round: (value: number) => number;
-  /** 当前 generator step 在 resolving 阶段绑定的 provider resolution */
-  generatorResolution?: PathGeneratorResolution;
   /** path warning 回调 */
   warn: (code: string, message: string, subPath?: string) => void;
   /** path command 写入器 */
@@ -48,7 +42,6 @@ export type LowerShapeStepContext = {
 
 /** 判断 step 是否属于 shape family */
 export const isStrokeShapeStep = (step: CanonicalStep): step is StrokeShapeStep =>
-  step.kind === 'generator' ||
   step.kind === 'cycle' ||
   step.kind === 'rectangle' ||
   step.kind === 'arc' ||
@@ -80,75 +73,9 @@ const resolvePartialClosed = (
  * @returns `false` 表示 target clipping 或 provider 解析失败，调用方应跳过整个 path
  */
 export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: LowerShapeStepContext): boolean => {
-  const { targetView, scopeChain, round, generatorResolution, warn, commandEmitter, cursor, sampling } = context;
-  const { boundsPoints, emitMove, emitLine, emitClose, emitQuad, emitCubic, emitArc, emitEllipseArc, startSegment } =
+  const { targetView, scopeChain, warn, commandEmitter, cursor, sampling } = context;
+  const { boundsPoints, emitMove, emitLine, emitClose, emitCubic, emitArc, emitEllipseArc, startSegment } =
     commandEmitter;
-
-  if (step.kind === 'generator') {
-    const previous = cursor.previous();
-    const from: IRPosition = commandEmitter.getLastEnd() ?? (previous ? previous.anchor : [0, 0]);
-    const resolvedTo = step.to !== undefined ? pointOfTarget(step.to, targetView, scopeChain) : null;
-    const to = resolvedTo ?? undefined;
-    const generated = lowerGeneratorStepToCommands({
-      resolution:
-        generatorResolution ??
-        (() => {
-          throw new RetikzCoreError(
-            RetikzCoreErrorCode.Compile,
-            `Path generator '${step.name}' has no resolving-phase provider binding.`,
-          );
-        })(),
-      from,
-      ...(to !== undefined ? { to } : {}),
-      round,
-      resolveTargetParam: value => pointOfTarget(value as IRTarget, targetView, scopeChain) ?? undefined,
-    });
-
-    startSegment(from);
-
-    for (const command of generated) {
-      switch (command.kind) {
-        case 'move':
-          startSegment(command.to);
-          break;
-        case 'line':
-          emitLine(command.to);
-          break;
-        case 'quad':
-          emitQuad(command.control, command.to);
-          break;
-        case 'cubic':
-          emitCubic({ control1: command.control1, control2: command.control2, to: command.to });
-          break;
-        case 'arc':
-          emitArc({
-            center: command.center,
-            radius: command.radius,
-            startAngle: command.startAngle,
-            endAngle: command.endAngle,
-          });
-          break;
-        case 'ellipseArc':
-          emitEllipseArc({
-            center: command.center,
-            radiusX: command.radiusX,
-            radiusY: command.radiusY,
-            startAngle: command.startAngle,
-            endAngle: command.endAngle,
-          });
-          break;
-        case 'close':
-          emitClose();
-          break;
-      }
-    }
-
-    const end = commandEmitter.getLastEnd() ?? from;
-    sampling.collect(step, t => curve.sampleAt({ kind: 'line', from, to: end }, t));
-    cursor.setPenOverride(commandEmitter.getLastEnd());
-
-    return true;
-  }
 
   if (step.kind === 'cycle') {
     const usedOverride = cursor.takePenOverride();

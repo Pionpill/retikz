@@ -331,12 +331,7 @@ describe('@retikz/vanilla InputScene', () => {
         [0, 0],
         [24, 0],
       ] as const,
-      arrow: '<->' as const,
-      arrowDetail: {
-        shape: 'stealth',
-        color: '#2563eb',
-        start: { color: '#dc2626' },
-      },
+      arrow: { start: { shape: 'stealth', color: '#dc2626' }, end: { shape: 'stealth', color: '#2563eb' } },
     };
 
     expect(normalizeScene(scene([arrowPath])).ir.children).toEqual([
@@ -347,10 +342,7 @@ describe('@retikz/vanilla InputScene', () => {
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [24, 0] },
         ],
-        marks: [
-          { pos: 0, mark: { kind: 'arrow', shape: 'stealth', color: '#dc2626' } },
-          { pos: 1, mark: { kind: 'arrow', shape: 'stealth', color: '#2563eb' } },
-        ],
+        arrow: { start: { shape: 'stealth', color: '#dc2626' }, end: { shape: 'stealth', color: '#2563eb' } },
       },
     ]);
   });

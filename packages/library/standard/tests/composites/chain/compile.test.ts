@@ -1,5 +1,5 @@
 import type { ScenePrimitive } from '@retikz/core';
-import type { LayoutProposal, PathPrim } from '@retikz/core';
+import type { LayoutProposal, PathPrimitive } from '@retikz/core';
 import {
   ChildSchema,
   CompositeBaseSchema,
@@ -209,11 +209,13 @@ const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? flat(node.children) : [node]));
 
 const connections = (result: ReturnType<typeof compile>) =>
-  flat(result.scene.primitives).filter((p): p is PathPrim => p.type === 'path' && p.meta?.chainConnection === true);
+  flat(result.scene.primitives).filter(
+    (p): p is PathPrimitive => p.type === 'path' && p.meta?.chainConnection === true,
+  );
 it('正交通道在完整分支之外，纵向与横向互为转置', () => {
   const source = {
     ...base,
-    defaultConnection: { path: { marks: [], meta: { chainConnection: true } } },
+    defaultConnection: { path: { arrow: {}, meta: { chainConnection: true } } },
     items: [
       { kind: 'cell' as const, id: 'a' },
       {
@@ -262,7 +264,7 @@ it('局部连接覆盖保留样式字段并显式移除箭头', () => {
       'A',
       {
         kind: 'parallel',
-        defaultConnection: { route: 'straight', path: { marks: [], style: { stroke: 'red' } } },
+        defaultConnection: { route: 'straight', path: { arrow: {}, style: { stroke: 'red' } } },
         branches: [{ items: ['B', 'C'] }, { items: ['D'] }],
       },
       'E',
@@ -482,7 +484,7 @@ it.each([
 ])('显式 $route 在 $direction 排列中保持物理方向并继承中段比例', ({ direction, route, points }) => {
   const result = compile({
     ...base,
-    defaultConnection: { route, fraction: 0.25, path: { marks: [], meta: { chainConnection: true } } },
+    defaultConnection: { route, fraction: 0.25, path: { arrow: {}, meta: { chainConnection: true } } },
     items: [
       'A',
       { kind: 'parallel', defaultConnection: { route }, branches: [{ items: ['B', 'C'] }, { items: ['D'] }] },
@@ -503,7 +505,7 @@ it('三段折线缺省使用中点，局部零比例覆盖继承值', () => {
       defaultConnection: {
         route: '-|-',
         fraction: fraction === undefined ? undefined : 0.75,
-        path: { marks: [], meta: { chainConnection: true } },
+        path: { arrow: {}, meta: { chainConnection: true } },
       },
       items: [
         'A',
@@ -527,7 +529,7 @@ it('嵌套不等宽分支平移后，连接仍贴合最终单元边界', () => {
   for (const direction of ['right', 'down'] as const) {
     const result = compile({
       ...base,
-      defaultConnection: { path: { marks: [], meta: { chainConnection: true } } },
+      defaultConnection: { path: { arrow: {}, meta: { chainConnection: true } } },
       items: [
         { kind: 'cell', id: 'a' },
         {
@@ -583,7 +585,7 @@ it('样式覆盖继承原路由，切换路由不继承旧折转比例', () => {
   for (const route of [undefined, 'straight', '|-|'] as const) {
     const result = compile({
       ...base,
-      defaultConnection: { route: '-|-', fraction: 0.25, path: { marks: [], meta: { chainConnection: true } } },
+      defaultConnection: { route: '-|-', fraction: 0.25, path: { arrow: {}, meta: { chainConnection: true } } },
       items: [
         'A',
         {
@@ -658,7 +660,7 @@ it.each([
 ])('两段 $route 在 $direction 排列中按路径方向连接整个单元边界', ({ direction, route, points }) => {
   const result = compile({
     ...base,
-    defaultConnection: { route, path: { marks: [], meta: { chainConnection: true } } },
+    defaultConnection: { route, path: { arrow: {}, meta: { chainConnection: true } } },
     items: ['A', { kind: 'parallel', branches: [{ items: ['B'] }, { items: ['C'] }] }, 'D'],
     layout: { direction, gap: 10, branchGap: 10 },
     defaultCell: { layout: { width: 20, height: 20 } },

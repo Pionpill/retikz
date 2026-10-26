@@ -1,4 +1,4 @@
-import type { IRClip, IRPathBase, IRKernelScene } from '@retikz/core';
+import type { IRClip, IRKernelScene, IRPathBase } from '@retikz/core';
 import { CURRENT_IR_VERSION, NodeTextColor, SceneSchema } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { isValidElement } from 'react';
@@ -331,14 +331,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it("path-level arrow round-trip：'->'/'<-'/'<->' 字段透传保留", () => {
-    const cases: Array<NonNullable<IRPathBase['marks']>> = [
-      [{ pos: 1, mark: { kind: 'arrow' } }],
-      [{ pos: 0, mark: { kind: 'arrow' } }],
-      [
-        { pos: 0, mark: { kind: 'arrow' } },
-        { pos: 1, mark: { kind: 'arrow' } },
-      ],
-    ];
+    const cases: Array<NonNullable<IRPathBase['marks']>> = [[{ pos: 1 }], [{ pos: 0 }], [{ pos: 0 }, { pos: 1 }]];
 
     for (const marks of cases) {
       const ir: IRKernelScene = {
@@ -824,16 +817,10 @@ describe('convertIRToReactNode', () => {
         children: [
           {
             type: 'path',
-            marks: [
-              {
-                pos: 0,
-                mark: { kind: 'arrow', shape: 'open', color: '#dc2626', opacity: 0.7 },
-              },
-              {
-                pos: 1,
-                mark: { kind: 'arrow', shape: 'stealth', color: '#1f2937', opacity: 0.7, scale: 1.5, fill: '#fde68a' },
-              },
-            ],
+            arrow: {
+              start: { shape: 'open', color: '#dc2626', opacity: 0.7 },
+              end: { shape: 'stealth', color: '#1f2937', opacity: 0.7, scale: 1.5, fill: '#fde68a' },
+            },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
@@ -1190,16 +1177,18 @@ describe('convertIRToReactNode', () => {
 
     it('round-trips Scope.clip：circle / rect / ellipse / polygon', () => {
       const clips: Array<IRClip> = [
-        { kind: 'circle' as const, cx: 0, cy: 0, r: 80 },
-        { kind: 'rect' as const, x: -10, y: -10, width: 40, height: 30 },
-        { kind: 'ellipse' as const, cx: 0, cy: 0, rx: 30, ry: 20 },
+        { kind: 'circle' as const, params: { cx: 0, cy: 0, r: 80 } },
+        { kind: 'rect' as const, params: { x: -10, y: -10, width: 40, height: 30 } },
+        { kind: 'ellipse' as const, params: { cx: 0, cy: 0, rx: 30, ry: 20 } },
         {
           kind: 'polygon',
-          points: [
-            [0, 0],
-            [40, 0],
-            [20, 40],
-          ],
+          params: {
+            points: [
+              [0, 0],
+              [40, 0],
+              [20, 40],
+            ],
+          },
         },
       ];
 
@@ -1255,7 +1244,7 @@ describe('convertIRToReactNode', () => {
             type: 'path',
             rotate: 30,
             scale: { x: 2, y: 1.5 },
-            marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth', scale: 1.2 } }],
+            marks: [{ pos: 0.5, shape: 'stealth', scale: 1.2 }],
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
@@ -1285,31 +1274,6 @@ describe('convertIRToReactNode', () => {
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'bend', to: [100, 0], outAngle: 30, inAngle: 150, looseness: 1.2 },
-            ],
-          },
-        ],
-      };
-
-      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
-    });
-
-    it('round-trips generator step：name / to / params / label', () => {
-      const ir: IRKernelScene = {
-        version: CURRENT_IR_VERSION,
-        type: 'scene',
-        children: [
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              {
-                type: 'step',
-                kind: 'generator',
-                name: 'parabola',
-                to: [160, 0],
-                params: { control: [80, -70] },
-                label: { text: 'p', position: 'near-end' },
-              },
             ],
           },
         ],

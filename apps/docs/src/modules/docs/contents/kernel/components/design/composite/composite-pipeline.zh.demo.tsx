@@ -27,7 +27,7 @@ const pipeline = defineComposite({
     }));
     const edges = node.stages.slice(1).map((_label, i) => ({
       type: 'path' as const,
-      marks: [{ pos: 1, mark: { kind: 'arrow' as const } }],
+      arrow: { end: {} },
       children: [
         { type: 'step' as const, kind: 'move' as const, to: { id: `stage-${i}` } },
         {

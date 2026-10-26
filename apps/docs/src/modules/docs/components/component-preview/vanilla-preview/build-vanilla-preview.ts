@@ -278,13 +278,13 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
   });
   const svg = renderToSvgString(input, {
     output: outputSize(preview),
-    ...(preview.pathKinds === undefined && preview.shapes === undefined && options.measureText === undefined
+    ...(preview.paths === undefined && preview.shapes === undefined && options.measureText === undefined
       ? {}
-      : { compile: { pathKinds: preview.pathKinds, shapes: preview.shapes, measureText: options.measureText } }),
+      : { compile: { paths: preview.paths, shapes: preview.shapes, measureText: options.measureText } }),
   });
 
   try {
-    return { code: irToVanillaCode(preview.sourceIr, { pathKinds: preview.pathKinds, shapes: preview.shapes }), svg };
+    return { code: irToVanillaCode(preview.sourceIr, { paths: preview.paths, shapes: preview.shapes }), svg };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { ...diagnostic(message), svg };

@@ -92,12 +92,12 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(result.spec).toEqual(spec);
     expect(result.contribution.roots).toEqual([
       { capability: 'composite', namespace: 'plot', type: 'plot' },
-      { capability: 'pathKind', name: 'ribbon' },
+      { capability: 'path', name: 'ribbon' },
     ]);
     expect(result.contribution.providers.map(item => item.key)).toEqual([
       { capability: 'shape', name: 'sector' },
       { capability: 'shape', name: 'contour' },
-      { capability: 'pathKind', name: 'ribbon' },
+      { capability: 'path', name: 'ribbon' },
       { capability: 'composite', namespace: 'plot', type: 'plot' },
     ]);
     expect(result.contribution.providers).toHaveLength(4);
@@ -183,12 +183,12 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(first).not.toHaveProperty('makeComposites');
     expect(first.providerDependencies.roots).toEqual([
       { capability: 'composite', namespace: 'plot', type: 'plot' },
-      { capability: 'pathKind', name: 'ribbon' },
+      { capability: 'path', name: 'ribbon' },
     ]);
     expect(first.providerDependencies.providers.map(provider => provider.key)).toEqual([
       { capability: 'shape', name: 'sector' },
       { capability: 'shape', name: 'contour' },
-      { capability: 'pathKind', name: 'ribbon' },
+      { capability: 'path', name: 'ribbon' },
       { capability: 'composite', namespace: 'plot', type: 'plot' },
     ]);
     expect(first.providerDependencies.providers).toHaveLength(4);

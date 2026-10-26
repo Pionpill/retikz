@@ -23,7 +23,7 @@ const input = scene({
       style: { fill: 'none' },
       layout: { minimumSize: { width: 76, height: 96 } },
     }),
-    path({ way: ['ir-file', 'scene-file'], arrow: '->' }),
+    path({ way: ['ir-file', 'scene-file'], arrow: { end: {} } }),
   ],
 });
 

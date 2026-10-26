@@ -1,6 +1,6 @@
 import type {
   CompileWarning,
-  GroupPrim,
+  GroupPrimitive,
   IRChild,
   LayoutChildResult,
   LayoutProposal,
@@ -200,7 +200,7 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePathPrim
     primitive.type === 'path' ? [primitive] : primitive.type === 'group' ? pathsOf(primitive.children) : [],
   );
 
-const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrim> =>
+const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
   primitives.flatMap(primitive => (primitive.type === 'group' ? [primitive, ...groupsOf(primitive.children)] : []));
 
 describe('Legend items compile contract', () => {

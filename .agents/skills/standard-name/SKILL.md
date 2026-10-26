@@ -9,6 +9,8 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 
 ## 通用形式
 
+- 错误码 const object enum 的成员名使用 PascalCase，字符串值使用 UPPER_SNAKE_CASE，并包含明确的包或领域前缀
+
 - 泛型参数使用 `T` 或 `T` 开头的 PascalCase 语义名，匹配 `^(T|T[A-Z][A-Za-z]+)$`，禁止首尾下划线；由 LLM 自审
 - 同组 re-export 按来源路径排序，具名导出成员按名称排序；存在初始化副作用依赖时保留执行次序，不为排序改变语义；由 LLM 自审
 
@@ -27,6 +29,7 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 - 名称必须语义自解释；只看变量、参数、属性或函数名，就应能推断其作用、数据类别和适用范围。避免无上下文的 `data`、`value`、`item`、`base`、`target`、`result`、`key` 等泛化名称；只有在类型或局部上下文已经明确职责时才可简化
 - 函数通常采用动宾短语：前面的动词表达动作，后面的名词表达对象或细节，如 `resolvePath`、`formatName`、`isKeyEqual`；不要使用 `keyEqual` 这类缺少动作的名称。导出函数使用完整领域语义，如 `admitInspectionSelection`；仅内部使用且上下文已明确时可简化为 `admitSelection`
 - 变量、参数和属性通常采用“形容词或分类限定词 + 类别名”结构，最后一个单词表示其类别，如 `nodeSchema`、`basePath`。布尔值使用可读的谓词形式，如 `isKeyEqual` 或 `hasSelection`
+- 函数内部的变量、集合与 helper 同样要求语义自解释；集合名体现元素与容器角色，重要集合声明补 JSDoc，具体规则见[变量与角色](references/variables.md)
 - namespace、registry、builder 等成员按完整调用表达式判断，如 `vector2.add()`、`registry.get()`；owner 已表达的领域词不在成员名中重复，脱离 owner 的顶层函数必须补足
 
 通用可读性参考 [Google TypeScript](https://google.github.io/styleguide/tsguide.html#identifiers)、[Microsoft TypeScript](https://github.com/microsoft/TypeScript/wiki/Coding-guidelines#names)、[Airbnb JavaScript](https://github.com/airbnb/javascript#naming-conventions)、[Angular](https://angular.dev/style-guide) 与 [typescript-eslint](https://typescript-eslint.io/rules/naming-convention/)；具体动词、阶段和角色以本规范为准

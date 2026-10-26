@@ -126,133 +126,44 @@ describe('Scatter Chart encoding resolution', () => {
     ]);
   });
 
-  it('schedules extension transforms first and encoding transforms by phase then slot order', () => {
-    const result = resolveScatter(
-      {
-        encodings: {
-          y: {
-            transform: { operation: { kind: 'jitter', params: { axis: 'y', yField: 'margin', amount: 0.5 } } },
-            output: 'margin',
-          },
-          x: {
-            transform: { operation: { kind: 'normalize', params: { field: 'amount', as: 'amountShare' } } },
-            output: 'amountShare',
-          },
-        },
-      },
-      { transform: [{ operation: { kind: 'sort', params: { field: 'time', order: 'descending' } } }] },
-    );
-
-    expect(result.plot.transform).toEqual([
-      { operation: { kind: 'sort', params: { field: 'time', order: 'descending' } } },
+  it('preserves authored Data transform order and binds output fields', () => {
+    const transform = [
       { operation: { kind: 'normalize', params: { field: 'amount', as: 'amountShare' } } },
       { operation: { kind: 'jitter', params: { axis: 'y', yField: 'margin', amount: 0.5 } } },
-    ]);
+    ] as const;
+    const result = resolveScatter({ encodings: { x: 'amountShare', y: 'margin' } }, { transform: [...transform] });
+    expect(result.plot.transform).toEqual(transform);
     expect(result.plot.marks[0]).toMatchObject({
       encodings: { position: { x: { field: 'amountShare' }, y: { field: 'margin' } } },
     });
   });
 
-  it('rejects an encoding transform already declared by plotExtension', () => {
-    const operation = { kind: 'normalize', params: { field: 'amount', as: 'amountShare' } };
+  it('rejects sibling aggregate dependencies', () => {
+    expect(() =>
+      resolveScatter({
+        encodings: {
+          x: { aggregate: { kind: 'sum', field: 'totalMargin', as: 'totalAmount' } },
+          y: { aggregate: { kind: 'sum', field: 'margin', as: 'totalMargin' } },
+        },
+      }),
+    ).toThrow(/sibling aggregate output/);
+  });
 
+  it('rejects aggregate outputs already produced by the explicit Data chain', () => {
     expect(() =>
       resolveScatter(
         {
           encodings: {
-            x: { transform: { operation }, output: 'amountShare' },
-            y: 'margin',
+            x: 'group',
+            y: { aggregate: { kind: 'sum', field: 'amount', as: 'totalAmount' } },
           },
         },
-        { transform: [{ operation }] },
+        { transform: [{ operation: { kind: 'normalize', params: { field: 'amount', as: 'totalAmount' } } }] },
       ),
     ).toThrowError(
       expect.objectContaining({
-        details: expect.objectContaining({ path: ['recipe', 'encodings', 'x', 'transform'] }),
+        details: expect.objectContaining({ path: ['recipe', 'encodings', 'y', 'aggregate'] }),
       }),
-    );
-  });
-
-  it('rejects an encoding output already produced by plotExtension', () => {
-    expect(() =>
-      resolveScatter(
-        {
-          encodings: {
-            x: {
-              transform: { operation: { kind: 'normalize', params: { field: 'amount', as: 'amountShare' } } },
-              output: 'amountShare',
-            },
-            y: 'margin',
-          },
-        },
-        { transform: [{ operation: { kind: 'normalize', params: { field: 'weight', as: 'amountShare' } } }] },
-      ),
-    ).toThrowError(
-      expect.objectContaining({
-        details: expect.objectContaining({ path: ['recipe', 'encodings', 'x', 'transform'] }),
-      }),
-    );
-  });
-
-  it('rejects an encoding transform that reads an output from a later scheduler phase', () => {
-    expect(() =>
-      resolveScatter({
-        encodings: {
-          x: {
-            transform: { operation: { kind: 'jitter', params: { axis: 'x', xField: 'amount', amount: 0.5 } } },
-            output: 'amount',
-          },
-          y: {
-            transform: { operation: { kind: 'normalize', params: { field: 'amount', as: 'normalizedAmount' } } },
-            output: 'normalizedAmount',
-          },
-        },
-      }),
-    ).toThrowError(
-      expect.objectContaining({ details: expect.objectContaining({ path: ['recipe', 'encodings', 'y'] }) }),
-    );
-  });
-
-  it('rejects row-shaping combinations that remove later inputs or final bindings', () => {
-    expect(() =>
-      resolveScatter({
-        encodings: {
-          x: {
-            transform: {
-              operation: { kind: 'bin', params: { field: 'amount', startField: 'binStart', endField: 'binEnd' } },
-            },
-            output: 'binStart',
-          },
-          y: 'margin',
-          color: { aggregate: { kind: 'max', field: 'intensity', as: 'maxIntensity' } },
-        },
-      }),
-    ).toThrowError(
-      expect.objectContaining({ details: expect.objectContaining({ path: ['recipe', 'encodings', 'color'] }) }),
-    );
-
-    expect(() =>
-      resolveScatter({
-        encodings: {
-          x: { aggregate: { kind: 'sum', field: 'amount', as: 'totalAmount' } },
-          y: {
-            transform: {
-              operation: {
-                kind: 'bin',
-                params: {
-                  field: 'totalMargin',
-                  startField: 'binStart',
-                  endField: 'binEnd',
-                },
-              },
-            },
-            output: 'binStart',
-          },
-          color: { aggregate: { kind: 'sum', field: 'margin', as: 'totalMargin' } },
-        },
-      }),
-    ).toThrowError(
-      expect.objectContaining({ details: expect.objectContaining({ path: ['recipe', 'encodings', 'x'] }) }),
     );
   });
 
@@ -496,10 +407,7 @@ describe('Scatter Chart encoding resolution', () => {
     const transformed = resolveScatter(
       {
         encodings: {
-          x: {
-            transform: { operation: { kind: 'copy-chart-field', params: { field: 'amount', as: 'copiedAmount' } } },
-            output: 'copiedAmount',
-          },
+          x: 'copiedAmount',
           y: 'margin',
           color: {
             field: 'group',
@@ -507,7 +415,7 @@ describe('Scatter Chart encoding resolution', () => {
           },
         },
       },
-      undefined,
+      { transform: [{ operation: { kind: 'copy-chart-field', params: { field: 'amount', as: 'copiedAmount' } } }] },
       customRegistry.runtime,
     );
 
@@ -611,18 +519,6 @@ describe('Scatter Chart encoding resolution', () => {
   });
 
   it('locates unregistered custom operations at the concrete encoding mapping', () => {
-    expect(() =>
-      resolveScatter({
-        encodings: {
-          x: { transform: { operation: { kind: 'missing-transform', params: {} } }, output: 'x' },
-          y: 'margin',
-        },
-      }),
-    ).toThrowError(
-      expect.objectContaining({
-        details: expect.objectContaining({ path: ['recipe', 'encodings', 'x', 'transform'] }),
-      }),
-    );
     expect(() =>
       resolveScatter({
         encodings: {

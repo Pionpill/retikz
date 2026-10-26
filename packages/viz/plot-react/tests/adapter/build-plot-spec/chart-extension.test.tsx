@@ -57,7 +57,7 @@ describe('Plot chart-extension declaration normalization', () => {
     const conflictingPath = ['props', 'guides'] as const;
     const error = new RetikzPlotVanillaError({
       code: RetikzPlotVanillaErrorCode.DuplicateDeclarationSource,
-      message: 'Plot declaration duplicate-declaration-source at ["children",0]',
+      message: 'Plot declaration PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE at ["children",0]',
       details: { path, conflictingPath },
     });
 
@@ -65,7 +65,7 @@ describe('Plot chart-extension declaration normalization', () => {
     expect(error).toBeInstanceOf(RetikzError);
     expect(isRetikzError(error)).toBe(true);
     expect(error.name).toBe('RetikzPlotVanillaError');
-    expect(error.message).toBe('Plot declaration duplicate-declaration-source at ["children",0]');
+    expect(error.message).toBe('Plot declaration PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE at ["children",0]');
     expect(error.code).toBe(RetikzPlotVanillaErrorCode.DuplicateDeclarationSource);
     expect(error.details).toEqual({ path, conflictingPath });
     expect(error.details.path).toBe(path);
@@ -181,7 +181,7 @@ describe('Plot chart-extension declaration normalization', () => {
         normalizeExtension(<PointMark encodings={{ position: { x: { field: 'amount' }, y: { field: 'margin' } } }} />, {
           marks,
         }),
-      'duplicate-declaration-source',
+      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
       ['children', 0],
       ['props', 'marks'],
     );
@@ -191,7 +191,7 @@ describe('Plot chart-extension declaration normalization', () => {
     {
       name: 'raw function child',
       children: (() => 'runtime') as unknown as ReactNode,
-      code: 'non-serializable-extension' as const,
+      code: 'PLOT_VANILLA_NON_SERIALIZABLE_EXTENSION' as const,
       path: ['children', 0] as const,
     },
     {
@@ -208,19 +208,19 @@ describe('Plot chart-extension declaration normalization', () => {
           data={{ nested: [] }}
         />
       ),
-      code: 'unsupported-chart-child' as const,
+      code: 'PLOT_VANILLA_UNSUPPORTED_CHART_CHILD' as const,
       path: ['children', 0] as const,
     },
     {
       name: 'string child',
       children: 'caption',
-      code: 'unsupported-chart-child' as const,
+      code: 'PLOT_VANILLA_UNSUPPORTED_CHART_CHILD' as const,
       path: ['children', 0] as const,
     },
     {
       name: 'number child',
       children: 42,
-      code: 'unsupported-chart-child' as const,
+      code: 'PLOT_VANILLA_UNSUPPORTED_CHART_CHILD' as const,
       path: ['children', 0] as const,
     },
   ])('rejects $name with a canonical code and raw path', ({ children, code, path }) => {
@@ -249,7 +249,7 @@ describe('Plot chart-extension declaration normalization', () => {
             path: ['props', 'composition'],
           },
         }),
-      'duplicate-declaration-source',
+      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
       ['children', 1, 'children', 1],
       ['props', 'composition'],
     );
@@ -269,7 +269,7 @@ describe('Plot chart-extension declaration normalization', () => {
             },
           },
         ),
-      'duplicate-declaration-source',
+      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
       ['children', 0],
       ['props', 'coordinate'],
     );
@@ -284,7 +284,7 @@ describe('Plot chart-extension declaration normalization', () => {
             path: ['spec', 'guides'],
           },
         }),
-      'duplicate-declaration-source',
+      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
       ['children', 0],
       ['spec', 'guides'],
     );
@@ -297,7 +297,7 @@ describe('Plot chart-extension declaration normalization', () => {
             path: ['props', 'scales'],
           },
         }),
-      'duplicate-declaration-source',
+      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
       ['children', 0],
       ['props', 'scales'],
     );
@@ -310,7 +310,7 @@ describe('Plot chart-extension declaration normalization', () => {
             path: ['spec', 'scales'],
           },
         }),
-      'duplicate-declaration-source',
+      'PLOT_VANILLA_DUPLICATE_DECLARATION_SOURCE',
       ['children', 0],
       ['spec', 'scales'],
     );

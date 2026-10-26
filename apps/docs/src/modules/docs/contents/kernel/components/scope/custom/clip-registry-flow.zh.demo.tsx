@@ -21,12 +21,12 @@ const Demo: FC = () => (
       Clip Registry
     </Node>
     <Node
-      id="resolve"
+      id="schema"
       position={[20, 0]}
       cornerRadius={4}
       style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
     >
-      schema + resolve
+      schema
     </Node>
     <Node
       id="lower"
@@ -34,7 +34,7 @@ const Demo: FC = () => (
       cornerRadius={4}
       style={{ stroke: 'dimgray', fill: 'dimgray', opacity: { fill: 0.08 } }}
     >
-      typed shape → lower
+      parsed spec → lower
     </Node>
     <Node
       id="path"
@@ -45,7 +45,7 @@ const Demo: FC = () => (
       SceneClipPath
     </Node>
 
-    <Draw way={['operations', 'clip-registry', 'resolve', 'lower', 'path']} arrow="->" />
+    <Draw way={['operations', 'clip-registry', 'schema', 'lower', 'path']} arrow="->" />
   </Layout>
 );
 

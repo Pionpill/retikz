@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRClip, IRScene } from '../../src';
-import { BUILTIN_ARROWS, BUILTIN_CLIPS, BUILTIN_PATH_GENERATORS, BUILTIN_SHAPES, compileToScene } from '../../src';
+import { BUILTIN_ARROWS, BUILTIN_CLIPS, BUILTIN_SHAPES, compileToScene } from '../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 describe('Core minimal builtin providers', () => {
-  it('keeps only the base shape, arrow, clip, and path-generator collections', () => {
+  it('keeps only the base shape, arrow, and clip collections', () => {
     expect([...BUILTIN_SHAPES.values()].map(definition => definition.name)).toEqual([
       'rectangle',
       'ellipse',
@@ -25,11 +25,9 @@ describe('Core minimal builtin providers', () => {
       expect.objectContaining({
         kind: 'rect',
         schema: expect.anything(),
-        resolve: expect.any(Function),
         lower: expect.any(Function),
       }),
     );
-    expect(BUILTIN_PATH_GENERATORS.size).toBe(0);
   });
 
   it('requires optional Standard definitions when IR names an optional provider', () => {
@@ -42,7 +40,7 @@ describe('Core minimal builtin providers', () => {
         scene([
           {
             type: 'scope',
-            clip: { kind: 'compound', children: [{ kind: 'circle', cx: 0, cy: 0, r: 10 }] },
+            clip: { kind: 'compound', params: { children: [{ kind: 'circle', params: { cx: 0, cy: 0, r: 10 } }] } },
             children: [],
           },
         ]),
@@ -50,42 +48,30 @@ describe('Core minimal builtin providers', () => {
       ),
     ).toThrow(/Unknown provider 'compound'.*available:/i);
 
-    const optionalClips: Array<{ kind: string; points?: Array<[number, number]>; commands?: Array<unknown> }> = [
+    const optionalClips: Array<IRClip> = [
       {
         kind: 'polygon',
-        points: [
-          [0, 0],
-          [10, 0],
-          [5, 10],
-        ],
+        params: {
+          points: [
+            [0, 0],
+            [10, 0],
+            [5, 10],
+          ],
+        },
       },
-      { kind: 'path', commands: [{ kind: 'move', to: [0, 0] }] },
+      { kind: 'path', params: { commands: [{ kind: 'move', to: [0, 0] }] } },
     ];
 
     for (const clip of optionalClips) {
-      expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] } as never]), { padding: 0 })).toThrow(
+      expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] }]), { padding: 0 })).toThrow(
         new RegExp(`Unknown provider '${clip.kind}'.*available:`, 'i'),
       );
     }
-
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'generator', name: 'parabola', to: [10, 0], params: { control: [5, -5] } },
-            ],
-          },
-        ]),
-        { padding: 0 },
-      ),
-    ).toThrow(/Unknown provider 'parabola'.*available:/i);
   });
 
   it.each(['circle', 'ellipse'])('requires an optional definition for the %s clip operation', kind => {
-    const clip: IRClip = kind === 'circle' ? { kind, cx: 0, cy: 0, r: 10 } : { kind, cx: 0, cy: 0, rx: 10, ry: 5 };
+    const clip: IRClip =
+      kind === 'circle' ? { kind, params: { cx: 0, cy: 0, r: 10 } } : { kind, params: { cx: 0, cy: 0, rx: 10, ry: 5 } };
 
     expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] }]), { padding: 0 })).toThrow(
       new RegExp(`Unknown provider '${kind}'.*available:`, 'i'),
@@ -98,7 +84,7 @@ describe('Core minimal builtin providers', () => {
         scene([
           {
             type: 'path',
-            marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'openStealth' } }],
+            arrow: { end: { shape: 'openStealth' } },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
@@ -116,7 +102,7 @@ describe('Core minimal builtin providers', () => {
         scene([
           {
             type: 'path',
-            marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'open' } }],
+            arrow: { end: { shape: 'open' } },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
@@ -134,10 +120,7 @@ describe('Core minimal builtin providers', () => {
         scene([
           {
             type: 'path',
-            marks: [
-              { pos: 0, mark: { kind: 'arrow', shape: 'circle' } },
-              { pos: 1, mark: { kind: 'arrow', shape: 'openCircle' } },
-            ],
+            arrow: { start: { shape: 'circle' }, end: { shape: 'openCircle' } },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },

@@ -5,11 +5,5 @@ export * from './draw-scene';
 export * from './hit-test';
 export * from './render-to-canvas';
 export * from './types';
-// 动画自定义扩展类型（构造 DrawOptions.animationProperties / easings 用）
-export type {
-  AnimationPropertyDefinition,
-  AnimationPropertyRegistry,
-  CubicBezier,
-  EasingFn,
-  EasingRegistry,
-} from '../animation';
+// 动画缓动基础类型
+export type { CubicBezier, EasingFn } from '../animation';

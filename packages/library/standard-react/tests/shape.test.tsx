@@ -45,7 +45,7 @@ it('keeps the complete family equivalent across adapters with Path authoring con
   expect(react.contributions).toEqual(vanilla.contributions);
   expect(react.ir.children[0]).toMatchObject({
     style: { strokeWidth: 2 },
-    marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+    arrow: { end: {} },
   });
 });
 

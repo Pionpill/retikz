@@ -3,15 +3,15 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import { SceneSchema } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import type { RectPrim } from '../../src/contract';
+import type { RectPrimitive } from '../../src/contract';
 import { flattenPrims } from '../helpers/flatten';
 
-/** 取所有 RectPrim（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
-const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
-  flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
+/** 取所有 RectPrimitive（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
+const rects = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
+  flattenPrims(prims).filter((p): p is RectPrimitive => p.type === 'rect');
 
 /** rect 几何中心 [cx, cy] */
-const rectCenter = (r: RectPrim): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
+const rectCenter = (r: RectPrimitive): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
 
 /** 取顶层 path primitive */
 const topPath = (prims: ReadonlyArray<ScenePrimitive>): ScenePrimitive | undefined =>

@@ -1,10 +1,7 @@
-import type { BoundsInsets } from '@retikz/math';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type {
   IRAxisScale,
   IRBoxSize,
-  IRBoxSpacing,
   IRLine,
   IRMathSegment,
   IRNode,
@@ -15,9 +12,10 @@ import type {
 import { NodeSchema } from '../../schemas';
 import type { IRNodeLabelDefault } from '../../schemas';
 import { resolvePaint } from '../resource';
+import { resolveBoxSpacing } from '../spacing';
 import { resolveGraphicOpacity, mergeNodeLabelDefaults } from '../style';
 import { resolveContextualColor, resolveDashPattern, resolveDropShadow, resolveEffectiveNodeStyle } from '../style';
-import type { ResolvedInlineSourceSegment, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
+import type { ResolvedInlineSourceSegment, ResolvedTextLine } from '../text';
 import { resolveBoundaryReference } from './boundary';
 import { resolveNodeShape } from './shape';
 import { resolveNodeTextColor } from './text-color';
@@ -33,28 +31,6 @@ import type {
 
 /** Node 缺省内边距 */
 const DEFAULT_NODE_PADDING = 8;
-
-/** 将单值构造成完整四边间距 */
-const boxInsets = (value: number): BoundsInsets => ({
-  top: value,
-  right: value,
-  bottom: value,
-  left: value,
-});
-
-/** 展开 Node 的单值或 CSS-like 四边间距 */
-const expandBoxSpacing = (value: number | IRBoxSpacing | undefined, fallback: number): BoundsInsets => {
-  if (typeof value === 'number') return boxInsets(value);
-
-  const base = value?.default ?? fallback;
-
-  return {
-    top: value?.top ?? value?.y ?? base,
-    right: value?.right ?? value?.x ?? base,
-    bottom: value?.bottom ?? value?.y ?? base,
-    left: value?.left ?? value?.x ?? base,
-  };
-};
 
 /** 展开 Node 的单值或轴向缩放 */
 const expandAxisScale = (value: number | IRAxisScale | undefined): CanonicalNode['scale'] => {
@@ -152,8 +128,8 @@ const expandNodeFields = (
   return {
     ...source,
     position: source.position ?? NodeSchema.shape.position.parse(undefined),
-    padding: expandBoxSpacing(source.padding, DEFAULT_NODE_PADDING),
-    margin: expandBoxSpacing(source.margin, 0),
+    padding: resolveBoxSpacing(source.padding, DEFAULT_NODE_PADDING),
+    margin: resolveBoxSpacing(source.margin, 0),
     minimumSize: expandBoxSize(source.minimumSize),
     scale: expandAxisScale(node.scale),
     text: expandNodeText(node.text),
@@ -259,26 +235,6 @@ const resolveNodeLineColors = (
   };
 };
 
-/** 确定 label 单行内容中各 segment 的派生颜色 */
-const resolveLabelTextColors = (
-  text: IRNodeLabel['text'],
-  masterColor: string | undefined,
-  mode: NodeResolveContext['mode'],
-  fieldPath: string,
-): ResolvedLabelTextContent =>
-  typeof text === 'string'
-    ? text
-    : {
-        ...text,
-        fill:
-          text.fill === undefined
-            ? undefined
-            : resolveContextualColor(text.fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }),
-        segments: text.segments.map((segment, index) =>
-          resolveInlineSegmentColor(segment, masterColor, mode, `${fieldPath}.segments[${index}]`),
-        ),
-      };
-
 /** 确定 Node label 的文字主色、segment 与 pin 颜色 */
 const resolveNodeLabelColors = (
   label: MaterializedNodeLabel,
@@ -324,7 +280,12 @@ const resolveNodeLabelColors = (
   return {
     ...source,
     ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
-    text: resolveLabelTextColors(text, textMaster, context.mode, `${fieldPath}.text`),
+    text:
+      typeof text === 'string'
+        ? text
+        : text.map((line, index) =>
+            resolveNodeLineColors(line, textMaster, context.mode, `${fieldPath}.text[${index}]`),
+          ),
     ...(resolvedPin === undefined ? {} : { pin: resolvedPin }),
   };
 };

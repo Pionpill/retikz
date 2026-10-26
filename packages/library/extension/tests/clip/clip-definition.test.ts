@@ -32,7 +32,7 @@ const cases: ReadonlyArray<{
 }> = [
   {
     kind: 'circle',
-    clip: { kind: 'circle', cx: 2, cy: 3, r: 4 },
+    clip: { kind: 'circle', params: { cx: 2, cy: 3, r: 4 } },
     definitions: [CircleClipDefinition],
     commands: [
       { kind: 'move', to: [6, 3] },
@@ -43,7 +43,7 @@ const cases: ReadonlyArray<{
   },
   {
     kind: 'ellipse',
-    clip: { kind: 'ellipse', cx: 2, cy: 3, rx: 4, ry: 5 },
+    clip: { kind: 'ellipse', params: { cx: 2, cy: 3, rx: 4, ry: 5 } },
     definitions: [EllipseClipDefinition],
     commands: [
       { kind: 'move', to: [6, 3] },
@@ -56,11 +56,13 @@ const cases: ReadonlyArray<{
     kind: 'polygon',
     clip: {
       kind: 'polygon',
-      points: [
-        [0, 0],
-        [4, 0],
-        [2, 3],
-      ],
+      params: {
+        points: [
+          [0, 0],
+          [4, 0],
+          [2, 3],
+        ],
+      },
     },
     definitions: [PolygonClipDefinition],
     commands: [
@@ -75,11 +77,13 @@ const cases: ReadonlyArray<{
     kind: 'path',
     clip: {
       kind: 'path',
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [3, 2] },
-      ],
-      fillRule: 'evenodd',
+      params: {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [3, 2] },
+        ],
+        fillRule: 'evenodd',
+      },
     },
     definitions: [PathClipDefinition],
     commands: [
@@ -92,17 +96,21 @@ const cases: ReadonlyArray<{
     kind: 'compound',
     clip: {
       kind: 'compound',
-      children: [
-        { kind: 'circle', cx: 2, cy: 3, r: 4 },
-        {
-          kind: 'path',
-          commands: [
-            { kind: 'move', to: [8, 8] },
-            { kind: 'line', to: [9, 9] },
-          ],
-        },
-      ],
-      fillRule: 'evenodd',
+      params: {
+        children: [
+          { kind: 'circle', params: { cx: 2, cy: 3, r: 4 } },
+          {
+            kind: 'path',
+            params: {
+              commands: [
+                { kind: 'move', to: [8, 8] },
+                { kind: 'line', to: [9, 9] },
+              ],
+            },
+          },
+        ],
+        fillRule: 'evenodd',
+      },
     },
     definitions: [CompoundClipDefinition, CircleClipDefinition, PathClipDefinition],
     commands: [
@@ -130,7 +138,6 @@ describe('Extension Clip definition public contract', () => {
       expect(definition).toEqual(
         expect.objectContaining({
           schema: expect.anything(),
-          resolve: expect.any(Function),
           lower: expect.any(Function),
         }),
       );

@@ -1,4 +1,4 @@
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import type { IRRibbonLabel } from '@retikz/extension';
 import { Layout, Path, Step } from '@retikz/react';
 
@@ -18,10 +18,7 @@ export const renderRibbonLabelPreview = (values: RibbonLabelPreviewValues, lang:
       : ({ placement: 'outside', side: values.side } as const);
 
   return (
-    <Layout
-      viewBox={{ x: -280, y: -130, width: 560, height: 260 }}
-      extensions={{ pathKinds: [RibbonPathKindDefinition] }}
-    >
+    <Layout viewBox={{ x: -280, y: -130, width: 560, height: 260 }} extensions={{ paths: [RibbonPathDefinition] }}>
       <Path
         kind="ribbon"
         kindOptions={{

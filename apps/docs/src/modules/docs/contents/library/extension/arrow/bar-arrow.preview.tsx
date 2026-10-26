@@ -17,8 +17,7 @@ export const renderBarArrowPreview = (values: BarArrowPreviewValues) => (
         [-120, 0],
         [120, 0],
       ]}
-      arrow="->"
-      arrowDetail={{
+      arrow={{
         end: {
           shape: 'bar',
           length: values.length,
@@ -27,6 +26,7 @@ export const renderBarArrowPreview = (values: BarArrowPreviewValues) => (
           color: values.color,
         },
       }}
+
       style={{ stroke: '#64748b', strokeWidth: 2 }}
     />
   </Layout>

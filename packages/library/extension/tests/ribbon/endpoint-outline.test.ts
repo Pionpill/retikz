@@ -1,20 +1,17 @@
-import type { AnyPathKindDefinition, IRPathBase, IRPosition } from '@retikz/core';
+import type { AnyPathDefinition, IRPathBase, IRPosition } from '@retikz/core';
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import {
-  createRibbonPathKindDefinition,
+  createRibbonPathDefinition,
   createRibbonProviderContribution,
   defineRibbonCap,
-  RibbonPathKindDefinition,
+  RibbonPathDefinition,
   RibbonPathOptionsSchema,
 } from '../../src/ribbon';
 
-const compile = (
-  kindOptions: IRPathBase['kindOptions'],
-  definition: AnyPathKindDefinition = RibbonPathKindDefinition,
-) => {
+const compile = (kindOptions: IRPathBase['kindOptions'], definition: AnyPathDefinition = RibbonPathDefinition) => {
   const scene = compileToScene(
     {
       version: 1,
@@ -31,7 +28,7 @@ const compile = (
         },
       ],
     },
-    { pathKinds: [definition], padding: 0 },
+    { paths: [definition], padding: 0 },
   ).scene;
   const path = scene.primitives.find(primitive => primitive.type === 'path');
   if (path?.type !== 'path') throw new Error('Expected ribbon path');
@@ -88,12 +85,12 @@ describe('Ribbon endpoint outline contract', () => {
       start: { direction: 0, cap: { name: cap.name } },
       end: { direction: 0, cap: { name: cap.name } },
     };
-    const direct = compile(options, createRibbonPathKindDefinition({ caps: [cap] }));
+    const direct = compile(options, createRibbonPathDefinition({ caps: [cap] }));
     const definitions = resolveCoreProviderDependencies({
       contributions: [createRibbonProviderContribution({ caps: [cap] })],
     });
 
-    expect(compile(options, definitions.pathKinds?.[0]).commands).toEqual(direct.commands);
+    expect(compile(options, definitions.paths?.[0]).commands).toEqual(direct.commands);
     expect(direct.commands).toContainEqual({ kind: 'line', to: [0, -30] });
     expect(direct.commands).toContainEqual({ kind: 'line', to: [100, 130] });
   });
@@ -116,7 +113,7 @@ describe('Ribbon endpoint outline contract', () => {
           },
         ],
       },
-      { pathKinds: [RibbonPathKindDefinition] },
+      { paths: [RibbonPathDefinition] },
     ).scene;
     const path = scene.primitives.find(primitive => primitive.type === 'path');
     if (path?.type !== 'path') throw new Error('Expected ribbon path');
@@ -163,7 +160,7 @@ describe('Ribbon endpoint outline contract', () => {
         throw failure;
       },
     });
-    const definition = createRibbonPathKindDefinition({ caps: [cap] });
+    const definition = createRibbonPathDefinition({ caps: [cap] });
     let caught: unknown;
 
     try {
@@ -202,7 +199,7 @@ describe('Ribbon endpoint outline contract', () => {
           },
         ],
       },
-      { pathKinds: [RibbonPathKindDefinition], padding: 0 },
+      { paths: [RibbonPathDefinition], padding: 0 },
     ).scene;
 
     expect(scene.layout.x + scene.layout.width).toBeGreaterThanOrEqual(110);
@@ -261,7 +258,7 @@ describe('Ribbon endpoint outline contract', () => {
     expect(() =>
       compile(
         { width: { kind: 'fixed', value: 10 }, start: { cap: { name: cap.name } } },
-        createRibbonPathKindDefinition({ caps: [cap] }),
+        createRibbonPathDefinition({ caps: [cap] }),
       ),
     ).toThrow(/side points/);
   });
@@ -273,7 +270,7 @@ describe('Ribbon endpoint outline contract', () => {
       resolve: () => ({ extension: 0, commands: [] }),
     });
 
-    expect(() => createRibbonPathKindDefinition({ caps: [cap] })).toThrow(/defined more than once/);
+    expect(() => createRibbonPathDefinition({ caps: [cap] })).toThrow(/defined more than once/);
   });
 
   it('keeps authored boundary curves and reverses cubic control order', () => {
@@ -299,7 +296,7 @@ describe('Ribbon endpoint outline contract', () => {
           },
         ],
       },
-      { pathKinds: [RibbonPathKindDefinition] },
+      { paths: [RibbonPathDefinition] },
     ).scene;
     const path = scene.primitives.find(primitive => primitive.type === 'path');
 

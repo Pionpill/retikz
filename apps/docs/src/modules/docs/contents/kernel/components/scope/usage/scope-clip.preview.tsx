@@ -9,42 +9,48 @@ import {
 import { Layout, Node, Scope } from '@retikz/react';
 
 const CLIP_BY_KIND: Record<ScopeClipPreviewValues['clipKind'], IRClip> = {
-  rect: { kind: 'rect', x: -58, y: -40, width: 116, height: 80 },
-  circle: { kind: 'circle', cx: 0, cy: 0, r: 52 },
-  ellipse: { kind: 'ellipse', cx: 0, cy: 0, rx: 62, ry: 38 },
+  rect: { kind: 'rect', params: { x: -58, y: -40, width: 116, height: 80 } },
+  circle: { kind: 'circle', params: { cx: 0, cy: 0, r: 52 } },
+  ellipse: { kind: 'ellipse', params: { cx: 0, cy: 0, rx: 62, ry: 38 } },
   polygon: {
     kind: 'polygon',
-    points: [
-      [-60, 0],
-      [-34, -44],
-      [34, -44],
-      [60, 0],
-      [34, 44],
-      [-34, 44],
-    ],
+    params: {
+      points: [
+        [-60, 0],
+        [-34, -44],
+        [34, -44],
+        [60, 0],
+        [34, 44],
+        [-34, 44],
+      ],
+    },
   },
   path: {
     kind: 'path',
-    commands: [
-      { kind: 'move', to: [0, -52] },
-      { kind: 'line', to: [14, -17] },
-      { kind: 'line', to: [58, -17] },
-      { kind: 'line', to: [23, 7] },
-      { kind: 'line', to: [36, 45] },
-      { kind: 'line', to: [0, 23] },
-      { kind: 'line', to: [-36, 45] },
-      { kind: 'line', to: [-23, 7] },
-      { kind: 'line', to: [-58, -17] },
-      { kind: 'line', to: [-14, -17] },
-      { kind: 'close' },
-    ],
+    params: {
+      commands: [
+        { kind: 'move', to: [0, -52] },
+        { kind: 'line', to: [14, -17] },
+        { kind: 'line', to: [58, -17] },
+        { kind: 'line', to: [23, 7] },
+        { kind: 'line', to: [36, 45] },
+        { kind: 'line', to: [0, 23] },
+        { kind: 'line', to: [-36, 45] },
+        { kind: 'line', to: [-23, 7] },
+        { kind: 'line', to: [-58, -17] },
+        { kind: 'line', to: [-14, -17] },
+        { kind: 'close' },
+      ],
+    },
   },
   compound: {
     kind: 'compound',
-    children: [
-      { kind: 'circle', cx: -24, cy: 0, r: 38 },
-      { kind: 'circle', cx: 24, cy: 0, r: 38 },
-    ],
+    params: {
+      children: [
+        { kind: 'circle', params: { cx: -24, cy: 0, r: 38 } },
+        { kind: 'circle', params: { cx: 24, cy: 0, r: 38 } },
+      ],
+    },
   },
 };
 

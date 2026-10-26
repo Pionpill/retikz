@@ -24,7 +24,7 @@ export const renderToSvgString = (input: RenderInput, options: RenderToStringOpt
       defaultFontFamily: options.defaultFontFamily,
       animate,
       snapshotAt: animation.snapshotAt,
-      easings: animation.easings,
+
       width: output.width,
       height: output.height,
     },

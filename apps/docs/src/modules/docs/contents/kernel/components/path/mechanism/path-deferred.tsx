@@ -72,7 +72,7 @@ const PathDeferred: FC<PathDeferredProps> = props => {
         position={[0, 385]}
         label={{ text: t.after, opacity: 0.8, font: { size: 12 } }}
         items={[
-          { id: 'output', content: 'PathPrim(a → b)', style: { fill: 'dodgerblue' } },
+          { id: 'output', content: 'PathPrimitive(a → b)', style: { fill: 'dodgerblue' } },
           { content: 'Node a …' },
           { content: 'Node b …' },
         ]}

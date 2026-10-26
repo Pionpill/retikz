@@ -154,6 +154,32 @@ A Node with text or rotation attaches animations to its wrapper group, so its te
 
 One track describes one property. Keyframe at values range from 0 to 1 in nondecreasing order; value is absolute. Duration must be positive. Easing can be set on the track or a keyframe, where it applies to the segment leading to the next frame.
 
+Property names are limited to supported animation properties. Easing accepts `linear`, `ease`, `ease-in`, `ease-out`, or `ease-in-out`. You can also pass a cubic-bezier tuple directly, such as `easing: [0.34, 1.56, 0.64, 1]`, without registering a name.
+
+Rectangles, ellipses, and paths also support `fillOpacity`, `strokeOpacity`, and `dashOffset`. For example, animate a moving dash pattern:
+
+```ts
+import type { IRAnimationTrack } from '@retikz/core';
+
+const movingDash = {
+  property: 'dashOffset',
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: 1, value: 12 },
+  ],
+  duration: 1000,
+  iterations: 'infinite',
+} satisfies IRAnimationTrack;
+```
+
+<ComponentPreview files="visual-properties" size="sm" controls={{ animation: true }} />
+
+Give the primitive a static dash pattern such as `dashPattern: [8, 4]`. Fill and stroke opacity multiply overall opacity. Text supports fill color, overall opacity, and transforms; groups support overall opacity and transforms. Inapplicable tracks warn and are skipped.
+
+These targets refer to compiled Scene primitives. Nodes with text or rotation, and Paths with whole-path rotation or scale, may attach their tracks to a group and therefore follow the group's support limits.
+
+`pathDraw` controls the dash pattern and offset. If the same primitive also declares a `dashOffset` animation, `pathDraw` takes priority and the offset track is skipped with a warning, regardless of declaration order.
+
 <ComponentPreview files="handwritten-track" size="sm" controls={{ animation: true }} />
 
 ## Parameter playground

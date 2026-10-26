@@ -75,8 +75,8 @@ export const kernelV03: Release = {
           version: 'alpha.4',
           date: '2026-06-07',
           summary: {
-            zh: '无源码改动：新形状（polygon / star / arc / sector）与圆角经 compile emit 出既有 `PathPrim` / `RectPrim` / `EllipsePrim`，renderer 消费同一 Scene 不变；`meta` 被忽略（不进 DOM）。补 meta 对照测试，随四包 version lockstep 对齐。',
-            en: 'No source change: new shapes (polygon / star / arc / sector) and corner rounding emit existing `PathPrim` / `RectPrim` / `EllipsePrim` at compile time, so renderers consume the same Scene unchanged; `meta` is ignored (never reaches the DOM). A meta parity test is added, aligned under the four-package version lockstep.',
+            zh: '无源码改动：新形状（polygon / star / arc / sector）与圆角经 compile emit 出既有 `PathPrimitive` / `RectPrimitive` / `EllipsePrimitive`，renderer 消费同一 Scene 不变；`meta` 被忽略（不进 DOM）。补 meta 对照测试，随四包 version lockstep 对齐。',
+            en: 'No source change: new shapes (polygon / star / arc / sector) and corner rounding emit existing `PathPrimitive` / `RectPrimitive` / `EllipsePrimitive` at compile time, so renderers consume the same Scene unchanged; `meta` is ignored (never reaches the DOM). A meta parity test is added, aligned under the four-package version lockstep.',
           },
           items: [],
         },

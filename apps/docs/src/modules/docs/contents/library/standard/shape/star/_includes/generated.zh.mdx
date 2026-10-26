@@ -8,33 +8,31 @@
 
 <ApiTable>
 
-| 成员              | 类型                                  | 默认值 | 说明                                                                                         |
-| ----------------- | ------------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
-| `animations?`     | `InputStar['animations']`             | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承                                           |
-| `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                                                               |
-| `arrowDetail?`    | `IRArrowDetail`                       | —      | 箭头的顶层默认与端点覆盖配置                                                                 |
-| `arrowPlacement?` | `InputPathArrowPlacement`             | —      | 箭头端点的共享与逐端放置配置                                                                 |
-| `center`          | `[number, number]`                    | —      | 形状中心，坐标形式由几何分支决定                                                             |
-| `cornerRadius?`   | `number`                              | —      | 几何圆角半径；矩形按短边长度的一半限制，折线按相邻线段长度限制                               |
-| `id?`             | `string`                              | —      | 显式路径身份                                                                                 |
-| `label?`          | `InputStar['label']`                  | —      | 附着于路径的标签                                                                             |
-| `marks?`          | `InputStar['marks']`                  | —      | 沿路径按归一化位置放置的标记                                                                 |
-| `meta?`           | `Record<string, JsonValue>`           | —      | 透传至 Scene 的 JSON 元数据，编译器不解释其内容                                              |
-| `onClick?`        | `HydrationHandler`                    | —      | 单击该图元（DOM `click`）                                                                    |
-| `onDoubleClick?`  | `HydrationHandler`                    | —      | 双击该图元（DOM `dblclick`）                                                                 |
-| `onPointerDown?`  | `HydrationHandler`                    | —      | 指针在该图元上按下（DOM `pointerdown`）                                                      |
-| `onPointerEnter?` | `HydrationHandler`                    | —      | 指针进入该图元（由 `pointermove` + 命中 id 状态机合成，跨子元素不重复触发）                  |
-| `onPointerLeave?` | `HydrationHandler`                    | —      | 指针离开该图元（由 `pointermove` + 命中 id 状态机合成）                                      |
-| `onPointerMove?`  | `HydrationHandler`                    | —      | 指针在该图元上移动（DOM `pointermove`）                                                      |
-| `onPointerUp?`    | `HydrationHandler`                    | —      | 指针在该图元上抬起（DOM `pointerup`）                                                        |
-| `onRightClick?`   | `HydrationHandler`                    | —      | 右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()` |
-| `onWheel?`        | `HydrationHandler`                    | —      | 在该图元上滚轮（DOM `wheel`）                                                                |
-| `outerRadius`     | `number`                              | —      | 外半径                                                                                       |
-| `points`          | `number`                              | —      | 星形外顶点数量，至少为 2                                                                     |
-| `rotate?`         | `number`                              | `-90`  | 首个外顶点的角度，单位为度                                                                   |
-| `scale?`          | `number \| { x: number; y: number; }` | —      | 绕图形包络中心缩放                                                                           |
-| `style?`          | `InputStar['style']`                  | —      | 路径的稀疏视觉覆盖                                                                           |
-| `zIndex?`         | `number`                              | —      | 同级图形的绘制层级，数值越大越靠上                                                           |
+| 成员              | 类型                                       | 默认值 | 说明                                                                                         |
+| ----------------- | ------------------------------------------ | ------ | -------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputStar['animations']`                  | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承                                           |
+| `arrow?`          | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —      | 起末端箭头配置                                                                               |
+| `center`          | `[number, number]`                         | —      | 形状中心，坐标形式由几何分支决定                                                             |
+| `cornerRadius?`   | `number`                                   | —      | 几何圆角半径；矩形按短边长度的一半限制，折线按相邻线段长度限制                               |
+| `id?`             | `string`                                   | —      | 显式路径身份                                                                                 |
+| `label?`          | `InputStar['label']`                       | —      | 附着于路径的标签                                                                             |
+| `marks?`          | `InputStar['marks']`                       | —      | 沿路径按归一化位置放置的标记                                                                 |
+| `meta?`           | `Record<string, JsonValue>`                | —      | 透传至 Scene 的 JSON 元数据，编译器不解释其内容                                              |
+| `onClick?`        | `HydrationHandler`                         | —      | 单击该图元（DOM `click`）                                                                    |
+| `onDoubleClick?`  | `HydrationHandler`                         | —      | 双击该图元（DOM `dblclick`）                                                                 |
+| `onPointerDown?`  | `HydrationHandler`                         | —      | 指针在该图元上按下（DOM `pointerdown`）                                                      |
+| `onPointerEnter?` | `HydrationHandler`                         | —      | 指针进入该图元（由 `pointermove` + 命中 id 状态机合成，跨子元素不重复触发）                  |
+| `onPointerLeave?` | `HydrationHandler`                         | —      | 指针离开该图元（由 `pointermove` + 命中 id 状态机合成）                                      |
+| `onPointerMove?`  | `HydrationHandler`                         | —      | 指针在该图元上移动（DOM `pointermove`）                                                      |
+| `onPointerUp?`    | `HydrationHandler`                         | —      | 指针在该图元上抬起（DOM `pointerup`）                                                        |
+| `onRightClick?`   | `HydrationHandler`                         | —      | 右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()` |
+| `onWheel?`        | `HydrationHandler`                         | —      | 在该图元上滚轮（DOM `wheel`）                                                                |
+| `outerRadius`     | `number`                                   | —      | 外半径                                                                                       |
+| `points`          | `number`                                   | —      | 星形外顶点数量，至少为 2                                                                     |
+| `rotate?`         | `number`                                   | `-90`  | 首个外顶点的角度，单位为度                                                                   |
+| `scale?`          | `number \| { x: number; y: number; }`      | —      | 绕图形包络中心缩放                                                                           |
+| `style?`          | `InputStar['style']`                       | —      | 路径的稀疏视觉覆盖                                                                           |
+| `zIndex?`         | `number`                                   | —      | 同级图形的绘制层级，数值越大越靠上                                                           |
 
 </ApiTable>
 
@@ -91,24 +89,22 @@ export type StarProps = InputStar &
 
 <ApiTable>
 
-| 成员              | 类型                                  | 默认值 | 说明                                                           |
-| ----------------- | ------------------------------------- | ------ | -------------------------------------------------------------- |
-| `animations?`     | `InputStar["animations"]`             | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承             |
-| `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                                 |
-| `arrowDetail?`    | `IRArrowDetail`                       | —      | 箭头的顶层默认与端点覆盖配置                                   |
-| `arrowPlacement?` | `InputPathArrowPlacement`             | —      | 箭头端点的共享与逐端放置配置                                   |
-| `center`          | `[number, number]`                    | —      | 形状中心，坐标形式由几何分支决定                               |
-| `cornerRadius?`   | `number`                              | —      | 几何圆角半径；矩形按短边长度的一半限制，折线按相邻线段长度限制 |
-| `id?`             | `string`                              | —      | 图形的可选引用身份                                             |
-| `label?`          | `InputStar["label"]`                  | —      | 附着于路径的标签                                               |
-| `marks?`          | `InputStar["marks"]`                  | —      | 沿路径按归一化位置放置的标记                                   |
-| `meta?`           | `Record<string, JsonValue>`           | —      | 透传至 Scene 的 JSON 元数据，编译器不解释其内容                |
-| `outerRadius`     | `number`                              | —      | 外半径                                                         |
-| `points`          | `number`                              | —      | 星形外顶点数量，至少为 2                                       |
-| `rotate?`         | `number`                              | `-90`  | 首个外顶点的角度，单位为度                                     |
-| `scale?`          | `number \| { x: number; y: number; }` | —      | 绕图形包络中心缩放                                             |
-| `style?`          | `InputStar["style"]`                  | —      | 路径的稀疏视觉覆盖                                             |
-| `zIndex?`         | `number`                              | —      | 同级图形的绘制层级，数值越大越靠上                             |
+| 成员            | 类型                                       | 默认值 | 说明                                                           |
+| --------------- | ------------------------------------------ | ------ | -------------------------------------------------------------- |
+| `animations?`   | `InputStar["animations"]`                  | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承             |
+| `arrow?`        | `IRPath['arrow'] \| '->' \| '<-' \| '<->'` | —      | 起末端箭头配置                                                 |
+| `center`        | `[number, number]`                         | —      | 形状中心，坐标形式由几何分支决定                               |
+| `cornerRadius?` | `number`                                   | —      | 几何圆角半径；矩形按短边长度的一半限制，折线按相邻线段长度限制 |
+| `id?`           | `string`                                   | —      | 图形的可选引用身份                                             |
+| `label?`        | `InputStar["label"]`                       | —      | 附着于路径的标签                                               |
+| `marks?`        | `InputStar["marks"]`                       | —      | 沿路径按归一化位置放置的标记                                   |
+| `meta?`         | `Record<string, JsonValue>`                | —      | 透传至 Scene 的 JSON 元数据，编译器不解释其内容                |
+| `outerRadius`   | `number`                                   | —      | 外半径                                                         |
+| `points`        | `number`                                   | —      | 星形外顶点数量，至少为 2                                       |
+| `rotate?`       | `number`                                   | `-90`  | 首个外顶点的角度，单位为度                                     |
+| `scale?`        | `number \| { x: number; y: number; }`      | —      | 绕图形包络中心缩放                                             |
+| `style?`        | `InputStar["style"]`                       | —      | 路径的稀疏视觉覆盖                                             |
+| `zIndex?`       | `number`                                   | —      | 同级图形的绘制层级，数值越大越靠上                             |
 
 </ApiTable>
 
@@ -167,6 +163,7 @@ export declare const StarInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSt
 | 成员            | 类型                                  | 默认值 | 说明                                                           |
 | --------------- | ------------------------------------- | ------ | -------------------------------------------------------------- |
 | `animations?`   | `IRStar["animations"]`                | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承             |
+| `arrow?`        | `IRStar["arrow"]`                     | —      | 起末端箭头配置                                                 |
 | `center`        | `[number, number]`                    | —      | 形状中心，坐标形式由几何分支决定                               |
 | `cornerRadius?` | `number`                              | —      | 几何圆角半径；矩形按短边长度的一半限制，折线按相邻线段长度限制 |
 | `id?`           | `string`                              | —      | 图形的可选引用身份                                             |

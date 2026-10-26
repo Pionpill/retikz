@@ -14,7 +14,6 @@ export type StrokeTargetStep = Exclude<
   | { kind: 'ellipsePath' }
   | { kind: 'rectangle' }
   | { kind: 'smooth' }
-  | { kind: 'generator' }
 >;
 
 /** 最近一个可用 path step 及其预解析 anchor */
@@ -69,8 +68,7 @@ export const isStrokeTargetStep = (step: CanonicalStep): step is StrokeTargetSte
   step.kind !== 'circlePath' &&
   step.kind !== 'ellipsePath' &&
   step.kind !== 'rectangle' &&
-  step.kind !== 'smooth' &&
-  step.kind !== 'generator';
+  step.kind !== 'smooth';
 
 /**
  * 创建 path stroke step 游标

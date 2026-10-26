@@ -10,6 +10,8 @@ import type {
   IRPlotScaleOperation,
 } from '@retikz/plot';
 
+import type { InputPlotPathMark } from './input-marks';
+
 type PlotComposition = NonNullable<IRPlot['composition']>;
 
 type PlotArrangement = NonNullable<PlotComposition['arrangements']>[number];
@@ -45,7 +47,8 @@ type PlotForbiddenAxisBindings = {
 
 /** Plot mark 的 framework-neutral authoring 输入 */
 export type InputPlotMark =
-  | (PlotAxisBindableMark & PlotTopologyBindings & PlotAxisBindings)
+  | (Exclude<PlotAxisBindableMark, IRPlotPathMark> & PlotTopologyBindings & PlotAxisBindings)
+  | (InputPlotPathMark & { type: 'path' })
   | (Exclude<IRPlotMark, PlotAxisBindableMark> & PlotTopologyBindings & PlotForbiddenAxisBindings);
 
 /** Plot guide 的 framework-neutral authoring 输入 */

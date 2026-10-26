@@ -66,7 +66,7 @@ const IntervalProjection: FC<IntervalProjectionProps> = props => {
                 {caption(index === 0 ? 'x₀' : 'x₁', [left + x, 214], true)}
                 <Path
                   style={{ stroke: stage === 0 ? 'darkorange' : 'currentColor' }}
-                  arrow={stage === 0 ? '->' : undefined}
+                  arrow={stage === 0 ? { end: {} } : undefined}
                 >
                   <Step kind="move" to={[left + x, 200]} />
                   <Step to={[left + x, stage === 0 ? 173 : 196]} />
@@ -78,7 +78,7 @@ const IntervalProjection: FC<IntervalProjectionProps> = props => {
                 {caption(index === 0 ? 'y₁' : 'y₀', [left + 5, y], true)}
                 <Path
                   style={{ stroke: stage === 0 ? 'dodgerblue' : 'currentColor' }}
-                  arrow={stage === 0 ? '->' : undefined}
+                  arrow={stage === 0 ? { end: {} } : undefined}
                 >
                   <Step kind="move" to={[left + 20, y]} />
                   <Step to={[left + (stage === 0 ? 47 : 24), y]} />
@@ -131,7 +131,7 @@ const IntervalProjection: FC<IntervalProjectionProps> = props => {
                 {caption(index === 0 ? 'θ₀' : 'θ₁', pointAtArcAngle(center, 125, angle), true)}
                 <Path
                   style={{ stroke: stage === 0 ? 'darkorange' : 'currentColor' }}
-                  arrow={stage === 0 ? '->' : undefined}
+                  arrow={stage === 0 ? { end: {} } : undefined}
                 >
                   <Step kind="move" to={pointAtArcAngle(center, 110, angle)} />
                   <Step to={pointAtArcAngle(center, stage === 0 ? 85 : 106, angle)} />
@@ -143,7 +143,7 @@ const IntervalProjection: FC<IntervalProjectionProps> = props => {
                 {caption(index === 0 ? 'r₀' : 'r₁', [center[0] + radius, center[1] + 15], true)}
                 <Path
                   style={{ stroke: stage === 0 ? 'dodgerblue' : 'currentColor' }}
-                  arrow={stage === 0 ? '->' : undefined}
+                  arrow={stage === 0 ? { end: {} } : undefined}
                 >
                   <Step kind="move" to={[center[0] + radius, center[1]]} />
                   <Step to={[center[0] + radius, center[1] - (stage === 0 ? 25 : 4)]} />

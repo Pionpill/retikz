@@ -15,7 +15,7 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <ComponentPreview files="path-example" size="sm" hideCode type="illustration" />
 
-本页以内置描边路径为主线。自定义 Path kind 通过自己的 Definition 输出图元；路径生成器则在这条主线中提供一组几何命令。
+本页以内置描边路径为主线。自定义 Path 通过自己的 Definition 输出图元。
 
 <SourceLinks
   sources={[
@@ -57,7 +57,7 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <ComponentPreview files="path-relative" size="md" hideCode type="illustration" />
 
-能提前确定的相对目标在解析阶段转为局部坐标；依赖 axis-line 投影等运行结果的后续目标，在消费步骤时继续计算。`move` 开启新的笔位，普通直线、折线和曲线逐段转为命令；圆弧、闭合形状、平滑曲线及生成器由各自分支处理，并交接后续笔位。
+能提前确定的相对目标在解析阶段转为局部坐标；依赖 axis-line 投影等运行结果的后续目标，在消费步骤时继续计算。`move` 开启新的笔位，普通直线、折线和曲线逐段转为命令；圆弧、闭合形状、平滑曲线由各自分支处理，并交接后续笔位。
 
 | 输入步骤                                   | 几何变化                                             |
 | ------------------------------------------ | ---------------------------------------------------- |
@@ -65,7 +65,7 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 | fold                                       | 根据方向生成正交折点，再连接成折线                   |
 | curve / cubic / bend                       | 使用给定或计算得到的控制点，生成二次或三次贝塞尔曲线 |
 | arc / circlePath / ellipsePath / rectangle | 生成对应形状命令，并维护后续笔位                     |
-| smooth / generator                         | 生成连续曲线或 Definition 提供的命令序列             |
+| smooth                                     | 生成过点平滑曲线                                     |
 | cycle                                      | 回到最近一次 move 的目标，闭合当前子路径             |
 
 <SourceLinks
@@ -73,7 +73,6 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
     { label: '游标状态与推进', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts' },
     { label: '直线、折线与曲线', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
     { label: '形状步骤与笔位交接', path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts' },
-    { label: '生成器命令输出', path: 'packages/kernel/core/src/compile/path/stroke/lower.ts' },
   ]}
 />
 
@@ -174,7 +173,7 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 输出可能包含多段线条、标签文字和装饰图元，路径自己的旋转与缩放由输出分组承载。Scope 变换继续由外层分组表达，renderer 消费这些结构化结果。
 
-普通目标未解析或缺少必要前驱时，相关分支会报告警告并跳过整条路径；部分无可绘制内容的步骤可以不产生命令。生成器输出违反契约等错误会抛出异常，不能把所有失败都理解成跳过单段。
+普通目标未解析或缺少必要前驱时，相关分支会报告警告并跳过整条路径；部分无可绘制内容的步骤可以不产生命令。违反路径几何约束等错误会抛出异常，不能把所有失败都理解成跳过单段。
 
 <SourceLinks
   sources={[

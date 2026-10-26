@@ -24,7 +24,7 @@ describe('Core Path owner output', () => {
   it('requests and publishes a typed output exactly once for a non-empty Path', () => {
     let requested = false;
     let publishCount = 0;
-    const kind = core.definePathKind<core.IRPathBase, { label: string }>({
+    const kind = core.definePath<core.IRPathBase, { label: string }>({
       name: 'owner-output',
       schema: core.PathSchema.extend({ kind: literal('owner-output') }),
       ownerOutput: true,
@@ -58,7 +58,7 @@ describe('Core Path owner output', () => {
 
     const result = compile(
       scene([{ type: 'path', kind: 'owner-output', children: steps }]),
-      { pathKinds: [kind], padding: 0 },
+      { paths: [kind], padding: 0 },
       [observe()],
     );
 
@@ -70,7 +70,7 @@ describe('Core Path owner output', () => {
   it('keeps owner output lazy for an ordinary compile', () => {
     let requested = true;
     let published = 0;
-    const kind = core.definePathKind({
+    const kind = core.definePath({
       name: 'lazy-owner-output',
       schema: core.PathSchema.extend({ kind: literal('lazy-owner-output') }),
       ownerOutput: true,
@@ -86,7 +86,7 @@ describe('Core Path owner output', () => {
     });
 
     const result = core.compileToScene(scene([{ type: 'path', kind: 'lazy-owner-output', children: steps }]), {
-      pathKinds: [kind],
+      paths: [kind],
       padding: 0,
     });
 
@@ -105,7 +105,7 @@ describe('Core Path owner output', () => {
       },
     ],
   ])('fails loudly when a requested non-empty Path has %s', (_label, publishOutput) => {
-    const kind = core.definePathKind({
+    const kind = core.definePath({
       name: `bad-owner-output-${_label.replace(' ', '-')}`,
       schema: core.PathSchema.extend({ kind: literal(`bad-owner-output-${_label.replace(' ', '-')}`) }),
       ownerOutput: true,
@@ -133,14 +133,12 @@ describe('Core Path owner output', () => {
     if (compile === undefined) throw new Error('observeCompileToScene is not available');
 
     expect(() =>
-      compile(scene([{ type: 'path', kind: kind.name, children: steps }]), { pathKinds: [kind], padding: 0 }, [
-        observe(),
-      ]),
+      compile(scene([{ type: 'path', kind: kind.name, children: steps }]), { paths: [kind], padding: 0 }, [observe()]),
     ).toThrow(/owner output|publish/i);
   });
 
-  it('rejects owner output when a Path kind returns null', () => {
-    const kind = core.definePathKind({
+  it('rejects owner output when a Path returns null', () => {
+    const kind = core.definePath({
       name: 'null-owner-output',
       schema: core.PathSchema.extend({ kind: literal('null-owner-output') }),
       ownerOutput: true,
@@ -162,11 +160,9 @@ describe('Core Path owner output', () => {
     if (compile === undefined) throw new Error('observeCompileToScene is not available');
 
     expect(() =>
-      compile(
-        scene([{ type: 'path', kind: 'null-owner-output', children: steps }]),
-        { pathKinds: [kind], padding: 0 },
-        [observe()],
-      ),
+      compile(scene([{ type: 'path', kind: 'null-owner-output', children: steps }]), { paths: [kind], padding: 0 }, [
+        observe(),
+      ]),
     ).toThrow(/owner output|publish/i);
   });
 });

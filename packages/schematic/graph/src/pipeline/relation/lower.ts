@@ -1,4 +1,4 @@
-import type { IRArrowMark, IRPathBase, IRPathStyle } from '@retikz/core';
+import type { IRArrowStyle, IRPathBase, IRPathStyle } from '@retikz/core';
 
 import type { CanonicalRelation, EffectiveRelationAppearance, EffectiveRelationStructure } from '../../resolve';
 import type { IRGraphRelation, IRGraphRelationMarkerAppearance, IRGraphRelationMarkerRecipe } from '../../schemas';
@@ -6,7 +6,7 @@ import type { IRGraphRelation, IRGraphRelationMarkerAppearance, IRGraphRelationM
 const marker = (
   recipe: false | IRGraphRelationMarkerRecipe,
   appearance: IRGraphRelationMarkerAppearance | undefined,
-): IRArrowMark | undefined => (recipe === false ? undefined : { kind: 'arrow', ...recipe, ...appearance });
+): IRArrowStyle | undefined => (recipe === false ? undefined : { ...recipe, ...appearance });
 
 const RELATION_ONLY_FIELDS = new Set<keyof IRGraphRelation>([
   'namespace',
@@ -54,10 +54,10 @@ export const lowerRelation = (
 
   const sourceMarker = marker(structure.sourceMarker, appearance.sourceMarker);
   const targetMarker = marker(structure.targetMarker, appearance.targetMarker);
-  const marks: NonNullable<IRPathBase['marks']> = [
-    ...(sourceMarker === undefined ? [] : [{ pos: 0 as const, mark: sourceMarker }]),
-    ...(targetMarker === undefined ? [] : [{ pos: 1 as const, mark: targetMarker }]),
-  ];
+  const arrow: IRPathBase['arrow'] = {
+    ...(sourceMarker === undefined ? {} : { start: sourceMarker }),
+    ...(targetMarker === undefined ? {} : { end: targetMarker }),
+  };
 
   const labels = source.labels?.map(label => {
     const textColor = label.textColor ?? appearance.labelTextForeground;
@@ -98,7 +98,7 @@ export const lowerRelation = (
       ...(dashPattern === false ? {} : { dashPattern }),
     },
     children: route,
-    ...(marks.length === 0 ? {} : { marks }),
+    arrow,
     ...(labels === undefined || labels.length === 0 ? {} : { label: labels.length === 1 ? labels[0] : labels }),
   };
 };

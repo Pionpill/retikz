@@ -5,7 +5,7 @@ import type { IRScene } from '../../../src/schemas';
 import { findPathPrim } from './helpers';
 
 describe('lineCap / lineJoin', () => {
-  it('lineCap 透传到 PathPrim.strokeLinecap', () => {
+  it('lineCap 透传到 PathPrimitive.lineCap', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -21,10 +21,10 @@ describe('lineCap / lineJoin', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).strokeLinecap).toBe('round');
+    expect(findPathPrim(compileToScene(ir).scene.primitives).lineCap).toBe('round');
   });
 
-  it('lineJoin 透传到 PathPrim.strokeLinejoin', () => {
+  it('lineJoin 透传到 PathPrimitive.lineJoin', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -41,10 +41,10 @@ describe('lineCap / lineJoin', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).strokeLinejoin).toBe('bevel');
+    expect(findPathPrim(compileToScene(ir).scene.primitives).lineJoin).toBe('bevel');
   });
 
-  it('未指定时 PathPrim 字段为 undefined（不写 SVG 默认值）', () => {
+  it('未指定时 PathPrimitive 字段为 undefined（不写 SVG 默认值）', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -60,7 +60,7 @@ describe('lineCap / lineJoin', () => {
     };
     const p = findPathPrim(compileToScene(ir).scene.primitives);
 
-    expect(p.strokeLinecap).toBeUndefined();
-    expect(p.strokeLinejoin).toBeUndefined();
+    expect(p.lineCap).toBeUndefined();
+    expect(p.lineJoin).toBeUndefined();
   });
 });

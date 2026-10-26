@@ -200,7 +200,7 @@ describe('Flow Group Graph surface', () => {
     const output = compile(
       flow({
         meta: { owner: 'service' },
-        clip: { kind: 'rect', x: 0, y: 0, width: 200, height: 100 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 200, height: 100 } },
         defaults: { style: { opacity: 0.8 } },
         padding: 5,
         border: { stroke: 'red' },

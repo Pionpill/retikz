@@ -6,7 +6,7 @@ Core IR 只保存声明式动画数据：属性名、关键帧、时间参数和
   name="AnimationTrackSchema"
   description="单属性动画 track：JSON 安全的关键帧、时间参数与触发方式。"
   descriptions={{
-    property: '动画属性名；内置属性会校验 keyframe value，自定义属性接受任意 JSON value',
+    property: '动画属性枚举；根据属性校验 keyframe value',
     keyframes: '按 at 升序排列的关键帧；value 是绝对值，最后一帧应表达 settled 状态',
     duration: '一次迭代的时长（ms），必须为正数',
     delay: '播放前延迟（ms），必须为非负数',
@@ -19,7 +19,14 @@ Core IR 只保存声明式动画数据：属性名、关键帧、时间参数和
   }}
 />
 
-内置属性对 `value` 有额外约束：opacity、strokeWidth、位移、旋转、缩放与 pathDraw 使用 number；fill / stroke 使用 color string；scene 根的 viewBox 使用 `[x, y, width, height]`。自定义属性由 renderer 注册的插值器解释。
+轨道以 `property` 区分关键帧值类型，TypeScript 类型与运行时校验保持一致：
+
+- `opacity`、`fillOpacity`、`strokeOpacity`、`pathDraw`：0..1
+- `strokeWidth`：非负数值；`dashOffset`、位移、旋转与缩放：有限数值
+- `fill`、`stroke`：非空颜色字符串，不接受渐变或图像资源对象
+- Scene 根的 `viewBox`：`[x, y, width, height]` 数值四元组，宽高必须为正数
+
+属性名使用 `AnimationProperty`，缓动预设使用 `AnimationEasing`。未知名称在 schema 入口被拒绝。
 
 ## KeyframeSchema
 
@@ -28,14 +35,16 @@ Core IR 只保存声明式动画数据：属性名、关键帧、时间参数和
   description="归一化时间点、绝对属性值与可选分段缓动。"
   descriptions={{
     at: '归一化时间 0..1；同一 track 内必须升序排列',
-    value: '该时间点的绝对属性值；必须是 JSON value',
+    value: '数值、非空颜色字符串或镜头四元组；所属轨道进一步限定属性值域',
     easing: '从本帧到下一帧的缓动；覆盖 track 级 easing',
   }}
 />
 
 ## EasingSchema
 
-`EasingSchema` 接受内置 / 自定义缓动名称，或 cubic-bezier 四元组 `[x1, y1, x2, y2]`。
+`EasingSchema` 接受内置缓动名称，或 cubic-bezier 四元组 `[x1, y1, x2, y2]`。
+
+`x1`、`x2` 必须在 0..1，`y1`、`y2` 可以越界，以表达回弹。
 
 <ZodSchema name="EasingSchema" description="缓动名称或 cubic-bezier 四元组。" />
 
@@ -61,4 +70,4 @@ Core IR 只保存声明式动画数据：属性名、关键帧、时间参数和
 
 <ZodSchema name="OriginSchema" description="变换类动画的 anchor 名或局部坐标原点。" />
 
-组件层的 preset、触发与降级行为见 [动画](/kernel/visual/animation/usage)；自定义属性、插值器与 renderer registry 见 [自定义动画](/kernel/visual/animation/custom-animation)。
+组件层的 preset、触发与降级行为见 [动画](/kernel/visual/animation/usage)。

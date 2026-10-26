@@ -6,23 +6,23 @@ export const RetikzChartErrorCode = {
   /** 未被更精确分类覆盖的 Chart 错误 */
   Default: 'CHART_ERROR',
   /** Chart type 未知 */
-  UnknownType: 'unknown-type',
+  UnknownType: 'CHART_UNKNOWN_TYPE',
   /** Chart Source IR 无效 */
-  InvalidChartIR: 'invalid-chart-ir',
+  InvalidChartIR: 'CHART_INVALID_CHART_IR',
   /** Chart 解析后的 Plot 无效 */
-  InvalidResolvedPlot: 'invalid-resolved-plot',
+  InvalidResolvedPlot: 'CHART_INVALID_RESOLVED_PLOT',
   /** Chart family / chartType / mark Definition registry 冲突 */
-  InvalidRegistry: 'invalid-registry',
+  InvalidRegistry: 'CHART_INVALID_REGISTRY',
   /** Definition key 重复 */
-  DuplicateDefinition: 'duplicate-definition',
+  DuplicateDefinition: 'CHART_DUPLICATE_DEFINITION',
   /** Definition 依赖缺失 */
-  MissingDependency: 'missing-dependency',
+  MissingDependency: 'CHART_MISSING_DEPENDENCY',
   /** Theme base 继承环 */
-  ThemeCycle: 'theme-cycle',
+  ThemeCycle: 'CHART_THEME_CYCLE',
   /** Source family 与 recipe family 不匹配 */
-  FamilyMismatch: 'family-mismatch',
+  FamilyMismatch: 'CHART_FAMILY_MISMATCH',
   /** Source 中未知 recipe / mark / theme key */
-  UnknownDefinition: 'unknown-definition',
+  UnknownDefinition: 'CHART_UNKNOWN_DEFINITION',
 } as const;
 
 /** Chart 包稳定错误码取值 */

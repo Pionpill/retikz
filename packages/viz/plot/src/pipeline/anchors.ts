@@ -1,7 +1,7 @@
 import type { IRCoordinate } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
 
-import type { MarkInstance, AnchorIdGenerator, AnchorOwner, AnchorRegistry } from '../contract';
+import type { MarkInstance, AnchorIdGenerator, AnchorOwner, AnchorRegistry, MarkAnchorIdentity } from '../contract';
 import { slug } from '../contract';
 import { RetikzPlotError } from '../error';
 import type { IRPlotAnchorId } from '../schemas';
@@ -54,7 +54,12 @@ export const createAnchorRegistry = (options: {
     return options.plotId === undefined ? scoped : `${options.plotId}.${scoped}`;
   };
 
-  const makeId = (spec: IRPlotAnchorId, instance: MarkInstance, owner: AnchorOwner, field?: string): string => {
+  const identify = (
+    spec: IRPlotAnchorId,
+    instance: MarkInstance,
+    owner: AnchorOwner,
+    field?: string,
+  ): MarkAnchorIdentity => {
     const prefix = spec.prefix ?? defaultPrefix(owner);
     if (field !== undefined) {
       if (instance.kind === 'single') throw new RetikzPlotError('Anchor field requires a row instance');
@@ -63,7 +68,7 @@ export const createAnchorRegistry = (options: {
         throw new RetikzPlotError(`lowerPlots: anchorId field "${field}" missing for ${ownerText(owner)}`);
       }
 
-      return makeScopedId(prefix, raw);
+      return { id: makeScopedId(prefix, raw), key: raw };
     }
 
     if (spec.template !== undefined) {
@@ -72,7 +77,10 @@ export const createAnchorRegistry = (options: {
         throw new RetikzPlotError(`lowerPlots: anchorId template produced an empty id for ${ownerText(owner)}`);
       }
 
-      return rendered.includes('.') || options.plotId === undefined ? rendered : `${options.plotId}.${rendered}`;
+      return {
+        id: rendered.includes('.') || options.plotId === undefined ? rendered : `${options.plotId}.${rendered}`,
+        key: rendered,
+      };
     }
 
     if (spec.generator !== undefined) {
@@ -83,20 +91,28 @@ export const createAnchorRegistry = (options: {
         );
       }
 
-      const generated = generator(instance, {
-        plotId: options.plotId,
-        markId: owner.markId,
-        markIndex: owner.markIndex,
-        prefix,
-        role: owner.role,
-      });
+      let generated: string;
+      try {
+        generated = generator(instance, {
+          plotId: options.plotId,
+          markId: owner.markId,
+          markIndex: owner.markIndex,
+          prefix,
+          role: owner.role,
+        });
+      } catch (cause) {
+        throw new RetikzPlotError(`Anchor generator "${spec.generator}" failed for ${ownerText(owner)}`, { cause });
+      }
       if (generated.length === 0) {
         throw new RetikzPlotError(
           `lowerPlots: anchorId generator "${spec.generator}" produced an empty id for ${ownerText(owner)}`,
         );
       }
 
-      return generated.includes('.') || options.plotId === undefined ? generated : `${options.plotId}.${generated}`;
+      return {
+        id: generated.includes('.') || options.plotId === undefined ? generated : `${options.plotId}.${generated}`,
+        key: generated,
+      };
     }
 
     throw new RetikzPlotError(`lowerPlots: anchorId requires field, template, or generator for ${ownerText(owner)}`);
@@ -114,7 +130,8 @@ export const createAnchorRegistry = (options: {
   };
 
   return {
-    makeId,
+    identify,
+    makeId: (spec, instance, owner, field) => identify(spec, instance, owner, field).id,
     register,
     reference: (id, owner) => {
       pending.push({ id, owner });

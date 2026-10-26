@@ -76,7 +76,7 @@ These 12 are the result of repeated trimming — TikZ has dozens of native path 
 
 Why two passes? Because nodes and paths reference each other — a node's position may depend on another node's anchor, and a path endpoint may reference some node's compass direction. Lay out all nodes first, and paths can consume the result without hitting undefined references.
 
-The compile output `CompileResult` contains both `scene` and immutable `artifacts`. Its `Scene` consists of 5 primitive types: `RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim`, plus a render-target-agnostic resource table that adapters materialize. That's the greatest-common subset of vector graphics — SVG, Canvas, PDF, and native drawing can all consume it directly. Text measurement completes at this stage (`measuredWidth` / `measuredHeight` already filled), and artifacts come from the same canonical compile rather than a second traversal.
+The compile output `CompileResult` contains both `scene` and immutable `artifacts`. Its `Scene` consists of 5 primitive types: `RectPrimitive` / `EllipsePrimitive` / `TextPrimitive` / `PathPrimitive` / `GroupPrimitive`, plus a render-target-agnostic resource table that adapters materialize. That's the greatest-common subset of vector graphics — SVG, Canvas, PDF, and native drawing can all consume it directly. Text measurement completes at this stage (`measuredWidth` / `measuredHeight` already filled), and artifacts come from the same canonical compile rather than a second traversal.
 
 ```text
 IR (JSON)

@@ -1,4 +1,11 @@
-import type { BlendMode, IRDropShadow, PaintValue, PathPrim, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
+import type {
+  BlendMode,
+  IRDropShadow,
+  PaintValue,
+  PathPrimitive,
+  ResolvedArrowEnd,
+  ScenePrimitive,
+} from '@retikz/core';
 
 import { firstLineDy } from '../../shared';
 import { buildPathD } from '../path-d-builder';
@@ -15,20 +22,20 @@ type DominantBaseline = 'text-before-edge' | 'central' | 'text-after-edge' | 'al
  */
 export type BuildContext = {
   /** 文档容器定位箭头后，复用普通图元绘制内容 */
-  arrowContentFor?: (primitive: PathPrim) => Array<SvgNode>;
+  arrowContentFor?: (primitive: PathPrimitive) => Array<SvgNode>;
   /** 资源局部绘制上下文中最近路径的描边 */
   contextStroke?: PaintValue;
   /** 解析主树图元所属的宿主上下文 */
   forPrimitive?: (primitive: ScenePrimitive) => BuildContext;
   /** 资源内容不将局部身份写入宿主 DOM 索引 */
-  resourceContent?: boolean;
+  isResourceContent?: boolean;
   /** 资源使用处继承的播放宿主 */
   hostId?: string;
   /** 按 arrow 端点 spec 查 `<marker id>` id 的回调（按 detail hash 区分起末异形 / 异色） */
   arrowMarkerIdFor?: (spec: ResolvedArrowEnd) => string;
   /** paint 资源 id → `url(#...)` 引用（加实例前缀避免跨实例撞）；缺省 `url(#id)` */
   paintRefUrl?: (id: string) => string;
-  /** clip 资源 id → `url(#...)` 引用（GroupPrim.clipRef 物化用）；缺省 `url(#id)` */
+  /** clip 资源 id → `url(#...)` 引用（GroupPrimitive.clipRef 物化用）；缺省 `url(#id)` */
   clipRefUrl?: (id: string) => string;
   /** 按已解析 IRDropShadow 查去重注册的 `<filter>` id（emit `filter="url(#id)"`）；缺省裸 hash id */
   shadowIdFor?: (shadow: IRDropShadow) => string;
@@ -148,8 +155,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
             'stroke-dashoffset': p.dashOffset,
-            'stroke-linecap': p.strokeLinecap,
-            'stroke-linejoin': p.strokeLinejoin,
+            'stroke-linecap': p.lineCap,
+            'stroke-linejoin': p.lineJoin,
             rx: p.cornerRadius,
             ry: p.cornerRadius,
             opacity: p.opacity,
@@ -181,8 +188,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
             'stroke-dashoffset': p.dashOffset,
-            'stroke-linecap': p.strokeLinecap,
-            'stroke-linejoin': p.strokeLinejoin,
+            'stroke-linecap': p.lineCap,
+            'stroke-linejoin': p.lineJoin,
             opacity: p.opacity,
             filter: shadowFilterRef(p.shadow, context.shadowIdFor),
           }),
@@ -255,8 +262,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
             'stroke-width': p.strokeWidth,
             'stroke-dasharray': p.dashPattern?.join(' '),
             'stroke-dashoffset': p.dashOffset,
-            'stroke-linecap': p.strokeLinecap,
-            'stroke-linejoin': p.strokeLinejoin,
+            'stroke-linecap': p.lineCap,
+            'stroke-linejoin': p.lineJoin,
             'marker-start': startId ? `url(#${startId})` : undefined,
             'marker-end': endId ? `url(#${endId})` : undefined,
             opacity: p.opacity,
@@ -305,25 +312,29 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
     delete node.attrs['data-retikz-id'];
     delete node.attrs.opacity;
     delete node.attrs.filter;
-    if (context.resourceContent && pathTracks?.length && context.hostId !== undefined) {
+    if (pathTracks?.length && context.hostId !== undefined && (context.isResourceContent || p.id === undefined)) {
       node.attrs['data-retikz-animation-owner'] = context.hostId;
     }
     const pathNode =
       context.decorate && pathTracks?.length
-        ? context.decorate(node, { ...p, id: context.resourceContent ? context.hostId : p.id, animations: pathTracks })
+        ? context.decorate(node, {
+            ...p,
+            id: context.isResourceContent ? context.hostId : (p.id ?? context.hostId),
+            animations: pathTracks,
+          })
         : node;
     node = { tag: 'g', attrs, children: [pathNode, ...arrows] };
     p = { ...p, animations: p.animations?.filter(track => track.property !== 'pathDraw') };
   }
-  if (context.resourceContent) {
+  if (context.isResourceContent) {
     delete node.attrs['data-retikz-id'];
-    if (p.animations?.length && context.hostId !== undefined) {
-      node.attrs['data-retikz-animation-owner'] = context.hostId;
-    }
   }
-  const animationPrimitive = context.resourceContent ? { ...p, id: context.hostId } : p;
+  if (p.animations?.length && context.hostId !== undefined && (context.isResourceContent || p.id === undefined)) {
+    node.attrs['data-retikz-animation-owner'] = context.hostId;
+  }
+  const animationPrimitive = context.isResourceContent || p.id === undefined ? { ...p, id: context.hostId } : p;
   const decorated = context.decorate ? context.decorate(node, animationPrimitive) : node;
-  if (p.hitTest === false) decorated.attrs['pointer-events'] = 'none';
+  if (p.pointerEvents === 'none') decorated.attrs['pointer-events'] = 'none';
 
   return decorated;
 };

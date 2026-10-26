@@ -28,7 +28,6 @@ Keyframes specify the change, Scope specifies which elements change together, an
 | Basic usage           | Introduce presets and keyframe tracks                        | Create your first animation                               |
 | Component integration | Distinguish Node, Path, Scope, and Layout targets            | Animate an element, a group, or the camera                |
 | Extended usage        | Combine triggers, playback, camera tracks, and static output | Control interaction, coordinate timing, or export a frame |
-| Custom animation      | Extend easing and Canvas property channels                   | Go beyond built-in interpolation or properties            |
 | Implementation        | Explain track compilation and runtime evaluation             | Understand targets and backend differences                |
 | API reference         | Document presets, controls, and extension types              | Write precise calls                                       |
 | Schema reference      | Document tracks, keyframes, and triggers                     | Construct or save declarative animation                   |
@@ -37,7 +36,7 @@ Keyframes specify the change, Scope specifies which elements change together, an
 
 Start with presets for common entrances or emphasis. Write keyframes when you need precise timing and values. Use Scope to animate several independent elements together; consult component integration for the target boundaries of individual Node and Path animations.
 
-Tracks are serializable data, while playback handles and custom functions belong to the runtime. Animation does not rerun automatic layout. Static output and reduced-motion policies also need consideration. A custom Canvas property channel does not automatically provide equivalent SVG support; check backend capabilities before extending it.
+Tracks are serializable data, while playback handles belong to the runtime. Property names and easing names use fixed enums; cubic-bezier control points can also be supplied directly. Animation does not rerun automatic layout. Static output and reduced-motion policies also need consideration.
 
 ## Contents
 
@@ -57,11 +56,6 @@ Tracks are serializable data, while playback handles and custom functions belong
       title: 'Extended usage',
       description: 'Combine triggers, playback, camera tracks, and static output',
       url: '/kernel/visual/animation/extended-usage',
-    },
-    {
-      title: 'Custom animation',
-      description: 'Extend easing and Canvas property channels',
-      url: '/kernel/visual/animation/custom-animation',
     },
     {
       title: 'Implementation',

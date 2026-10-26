@@ -29,7 +29,7 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
     { id: 'dependencies', name: 'CompileContext', detail: text.dependencies },
     { id: 'layouts', name: 'NodeLayout', detail: text.layouts },
     { id: 'pending', name: 'PendingPathEmission', detail: text.pending },
-    { id: 'paths', name: 'PathPrim / GroupPrim', detail: text.paths },
+    { id: 'paths', name: 'PathPrimitive / GroupPrimitive', detail: text.paths },
     { id: 'primitives', name: 'ScenePrimitive[]', detail: text.primitives },
     { id: 'scene', name: 'Scene', detail: text.scene },
     { id: 'extras', name: 'artifacts / spatialHandles', detail: text.extras },

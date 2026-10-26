@@ -86,10 +86,10 @@ type LowerTex = (content: { tex: string; displayMode?: boolean }, style: { fontS
 
 `layoutInlineLine()` 校验并冻结 lowering 结果，将 `height - depth` 作为基线上方高度，并将 `depth` 纳入基线下方空间。例子中的上标因此参与整行布局，而不是在 renderer 中额外定位。
 
-Core 把每条字形路径发为 `PathPrim`，用带基线平移的 `GroupPrim` 放入文本行。公式颜色等 paint 在这个边界结合宿主样式处理；renderer 最终只看到普通 Scene 图元，无需理解 TeX、MathJax 或 SVG。
+Core 把每条字形路径发为 `PathPrimitive`，用带基线平移的 `GroupPrimitive` 放入文本行。公式颜色等 paint 在这个边界结合宿主样式处理；renderer 最终只看到普通 Scene 图元，无需理解 TeX、MathJax 或 SVG。
 
 <SourceLinks
-  sources={[{ label: '基线度量与 PathPrim 发出', path: 'packages/kernel/core/src/compile/text/layout.ts' }]}
+  sources={[{ label: '基线度量与 PathPrimitive 发出', path: 'packages/kernel/core/src/compile/text/layout.ts' }]}
 />
 
 ## 缓存、失败与重试

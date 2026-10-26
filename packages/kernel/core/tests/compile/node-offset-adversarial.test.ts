@@ -1,20 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';
+import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { OffsetPositionSchema, PolarPositionSchema, TargetSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
-const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
-  flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
+const rects = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
+  flattenPrims(prims).filter((p): p is RectPrimitive => p.type === 'rect');
 
-const rectCenter = (r: RectPrim): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
+const rectCenter = (r: RectPrimitive): [number, number] => [r.x + r.width / 2, r.y + r.height / 2];
 
-const findPath = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
-  prims.find((x): x is PathPrim => x.type === 'path');
+const findPath = (prims: Array<ScenePrimitive>): PathPrimitive | undefined =>
+  prims.find((x): x is PathPrimitive => x.type === 'path');
 
-const lastLineEnd = (prim: PathPrim): [number, number] => {
+const lastLineEnd = (prim: PathPrimitive): [number, number] => {
   for (let i = prim.commands.length - 1; i >= 0; i--) {
     const cmd = prim.commands[i];
     if (cmd.kind === 'line') return [cmd.to[0], cmd.to[1]];
@@ -236,7 +236,7 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
     expect(ey).toBeCloseTo(30);
   });
 
-  it('step.to OffsetPosition.of=未定义 id → emitPathPrimitive 返回 null，整个 path 不产 PathPrim', () => {
+  it('step.to OffsetPosition.of=未定义 id → emitPathPrimitive 返回 null，整个 path 不产 PathPrimitive', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

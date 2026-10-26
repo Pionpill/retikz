@@ -1,7 +1,8 @@
 import type {
   AnyCompositeDefinition,
-  AnyPathKindDefinition,
+  AnyPathDefinition,
   ArrowDefinition,
+  MarkDefinition,
   BoundaryDefinition,
   ClipDefinition,
   CompileArtifact,
@@ -12,17 +13,19 @@ import type {
   IRScene,
   IRViewBox,
   LowerTex,
-  PathGeneratorDefinition,
   PatternDefinition,
   ShapeDefinition,
   TextMeasurer,
   ThemeDefinition,
 } from '@retikz/core';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
-import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
+import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type {
+  AnyInputEmbedAdapter,
+  AsyncProcessingController,
+  AsyncProcessingOptions,
   InputScene,
   InputScope,
   ProcessingController,
@@ -30,9 +33,6 @@ import type {
   ProcessingResult,
   ProcessingSource,
   VanillaCompileDriver,
-  AsyncProcessingController,
-  AsyncProcessingOptions,
-  AnyInputEmbedAdapter,
 } from '@retikz/vanilla';
 import { createProcessingController, prepareStaticProcessing } from '@retikz/vanilla';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
@@ -199,21 +199,18 @@ export type LayoutExtensions = Readonly<{
    * @default BUILTIN_ARROWS
    */
   arrows?: ReadonlyArray<ArrowDefinition>;
+  /** 沿路径放置的标记定义 */
+  marks?: ReadonlyArray<MarkDefinition>;
   /**
    * 图案定义
    * @default BUILTIN_PATTERNS
    */
   patterns?: ReadonlyArray<PatternDefinition>;
   /**
-   * 路径生成器定义
-   * @default BUILTIN_PATH_GENERATORS
+   * 路径定义
+   * @default BUILTIN_PATHS
    */
-  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
-  /**
-   * 路径种类定义
-   * @default BUILTIN_PATH_KINDS
-   */
-  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
+  paths?: ReadonlyArray<AnyPathDefinition>;
   /**
    * Tier 2 composite 展开逻辑
    * @default []
@@ -281,10 +278,6 @@ export type LayoutProps = {
   animationRef?: Ref<AnimationControls | null>;
   /** Scene 根动画 */
   animations?: ReadonlyArray<IRAnimationTrack>;
-  /** 动画缓动函数注册表 */
-  easings?: EasingRegistry;
-  /** 可动画属性注册表 */
-  animationProperties?: AnimationPropertyRegistry;
   /**
    * SVG 资源 id 前缀；省略时由 React useId 生成
    * @default useId
@@ -430,8 +423,7 @@ export const Layout: FC<LayoutProps> = props => {
     snapshotAt,
     animationRef,
     animations: rootAnimations,
-    easings,
-    animationProperties,
+
     idPrefix,
     nodeDistance,
     fontSize,
@@ -443,8 +435,7 @@ export const Layout: FC<LayoutProps> = props => {
     rootScope,
   } = props;
 
-  const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeDefinitions } =
-    extensions ?? {};
+  const { shapes, boundaries, clips, arrows, marks, patterns, paths, composites, themeDefinitions } = extensions ?? {};
   const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
   const isClientRendering = useSyncExternalStore(
     subscribeClientRendering,
@@ -457,9 +448,9 @@ export const Layout: FC<LayoutProps> = props => {
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);
   const stableClips = canonicalizeDefinitionArray(clips);
   const stableArrows = canonicalizeDefinitionArray(arrows);
+  const stableMarks = canonicalizeDefinitionArray(marks);
   const stablePatterns = canonicalizeDefinitionArray(patterns);
-  const stablePathGenerators = canonicalizeDefinitionArray(pathGenerators);
-  const stablePathKinds = canonicalizeDefinitionArray(pathKinds);
+  const stablePaths = canonicalizeDefinitionArray(paths);
   const stableComposites = canonicalizeDefinitionArray(composites);
   const ambientThemeDefinitions = useThemeDefinitions();
   const stableThemeDefinitions = canonicalizeDefinitionArray(
@@ -539,9 +530,9 @@ export const Layout: FC<LayoutProps> = props => {
         boundaries: stableBoundaries,
         clips: stableClips,
         arrows: stableArrows,
+        marks: stableMarks,
         patterns: stablePatterns,
-        pathGenerators: stablePathGenerators,
-        pathKinds: stablePathKinds,
+        paths: stablePaths,
         composites: stableComposites,
         themeDefinitions: stableThemeDefinitions,
         lowerTex,
@@ -562,9 +553,9 @@ export const Layout: FC<LayoutProps> = props => {
       stableBoundaries,
       stableClips,
       stableArrows,
+      stableMarks,
       stablePatterns,
-      stablePathGenerators,
-      stablePathKinds,
+      stablePaths,
       stableComposites,
       stableThemeDefinitions,
       lowerTex,
@@ -593,8 +584,7 @@ export const Layout: FC<LayoutProps> = props => {
     animate,
     snapshotAt,
     animationRef,
-    easings,
-    animationProperties,
+
     idPrefix: resolvedIdPrefix,
     onArtifacts,
     onCompileResult,

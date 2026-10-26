@@ -279,44 +279,31 @@ describe('captureRuntimeConfig', () => {
   });
 
   it('在读取前递归拒绝 config accessor 与非标准数组属性', () => {
-    const getter = vi.fn(() => [0, 0, 1, 1]);
-    const easings = Object.defineProperty({}, 'custom', {
+    const getter = vi.fn(() => 100);
+    const animation = Object.defineProperty({}, 'snapshotAt', {
       enumerable: true,
       get: getter,
     });
 
-    expect(() => captureRuntimeConfig({ animation: { easings } })).toThrow(
+    expect(() => captureRuntimeConfig({ animation })).toThrow(
       expect.objectContaining({
         code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
       }),
     );
     expect(getter).not.toHaveBeenCalled();
 
-    const tuple = [0, 0, 1, 1];
-    Object.defineProperty(tuple, Symbol('hidden'), { enumerable: true, value: true });
+    const contributions = [{ registration: 0, handlers: {} }];
+    Object.defineProperty(contributions, Symbol('hidden'), { enumerable: true, value: true });
 
     expect(() =>
       captureRuntimeConfig({
-        animation: { easings: { custom: tuple } },
-      } as never),
+        handlerContributions: contributions,
+      }),
     ).toThrow(
       expect.objectContaining({
         code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
       }),
     );
-
-    const everyGetter = vi.fn(() => Array.prototype.every);
-    const tuplePrototype = Object.create(Array.prototype) as object;
-    Object.defineProperty(tuplePrototype, 'every', { configurable: true, get: everyGetter });
-    const inheritedTuple: [number, number, number, number] = [0, 0, 1, 1];
-    Object.setPrototypeOf(inheritedTuple, tuplePrototype);
-
-    expect(() =>
-      captureRuntimeConfig({
-        animation: { easings: { custom: inheritedTuple } },
-      }),
-    ).not.toThrow();
-    expect(everyGetter).not.toHaveBeenCalled();
 
     const mapGetter = vi.fn(() => Array.prototype.map);
     const contributionPrototype = Object.create(Array.prototype) as object;

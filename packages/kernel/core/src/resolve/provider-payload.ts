@@ -37,9 +37,9 @@ const formatIssuePath = (path: ReadonlyArray<PropertyKey>): string => {
   return formatted;
 };
 
-/** 为 path kind 的完整 subject schema 失败补充 schema 内字段定位 */
-const appendPathKindIssuePath = (capability: string, payloadName: string, irPath: string, error: unknown): string => {
-  if (capability !== 'path kind' || payloadName !== 'path' || !(error instanceof ZodError)) return irPath;
+/** 为 path 的完整 subject schema 失败补充 schema 内字段定位 */
+const appendPathIssuePath = (capability: string, payloadName: string, irPath: string, error: unknown): string => {
+  if (capability !== 'path' || payloadName !== 'path' || !(error instanceof ZodError)) return irPath;
 
   const issuePath = formatIssuePath(error.issues[0]?.path ?? []);
   if (issuePath.length === 0) return irPath;
@@ -63,7 +63,7 @@ export const parseProviderPayload = <TOutput>({
     return schema.parse(value);
   } catch (error) {
     const message = safeThrownDetail(error);
-    const locator = appendPathKindIssuePath(capability, payloadName, irPath, error);
+    const locator = appendPathIssuePath(capability, payloadName, irPath, error);
     throw createLayoutProbeRecoverableError(
       `${capability} '${providerName}' failed ${payloadName} validation at ${locator}: ${message}`,
       { cause: error, providerKey: providerName },

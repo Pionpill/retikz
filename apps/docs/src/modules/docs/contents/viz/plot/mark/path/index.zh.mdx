@@ -1,4 +1,4 @@
----
+﻿---
 title: PathMark · 路径图元
 description: 用 PathMark 按顺序连接数据位置，绘制折线、多系列路径、极坐标轮廓和闭合区域。
 ---
@@ -148,17 +148,19 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 ## 基础用法
 
-### 位置与顺序
+### 位置
 
-`x`、`y` 是位置字段，`order` 是排序字段。例如 `x="month"`、`y="revenue"`、`order="month"` 表示按月份连接营收位置。省略 `order` 时沿用数据数组顺序，PathMark 不会自动按横坐标排序。
+#### 顶点位置与顺序
+
+`encodings.position` 指定每个顶点的位置，`encodings.order` 指定连接顺序。例如 x 绑定月份、y 绑定营收、order 绑定月份，就会按月份连接营收位置。省略 `order` 时沿用数据数组顺序，PathMark 不会自动按横坐标排序。
 
 示例故意打乱月份行。切换“连接顺序”，比较折返的路径与按月排列的路径；坐标切换后，极坐标中的 `x` 表示角向、`y` 表示径向。
 
-| 属性              | 含义     | 说明                                                                 |
-| ----------------- | -------- | -------------------------------------------------------------------- |
-| `x`、`y`          | 位置字段 | 指定字段名或字段路径；笛卡尔坐标对应横向和纵向，极坐标对应角向和径向 |
-| `order`           | 连接顺序 | 按字段排序后连线；省略时保留数据数组顺序                             |
-| `Plot.coordinate` | 坐标系   | 决定位置含义；示例在 `cartesian2D` 与 `polar2D` 之间切换             |
+| 属性                 | 含义     | 说明                                                                           |
+| -------------------- | -------- | ------------------------------------------------------------------------------ |
+| `encodings.position` | 顶点位置 | 各角色支持字段、常量或范围边界；笛卡尔坐标对应横向和纵向，极坐标对应角向和径向 |
+| `order`              | 连接顺序 | 按字段排序后连线；省略时保留数据数组顺序                                       |
+| `Plot.coordinate`    | 坐标系   | 决定位置含义；示例在 `cartesian2D` 与 `polar2D` 之间切换                       |
 
 <ComponentPreview
   mode="showcase"
@@ -167,6 +169,34 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
   size="lg"
   caption="切换坐标系、位置字段和连接顺序，观察同一组有序点如何形成轨迹。"
   defaultSourceFile="line-basic.preview.tsx"
+/>
+
+#### 端点位置
+
+通过 `encodings.from`、`encodings.to` 指定两个完整位置，每个角色可绑定字段、常量或视图边界。端点形式与 `encodings.position` 顶点形式互斥。`properties.connection` 选择沿坐标系连接或投影后的直线连接；切换极坐标，观察圆弧与弦的区别。
+
+<ComponentPreview
+  mode="showcase"
+  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
+  defaultSourceFile="reference-path.preview.tsx"
+  controls={{ name: 'reference-path' }}
+  size="md"
+/>
+
+#### 统计结果位置
+
+下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换平均值 / 中位数或分组，观察每个结果行产生的独立参考图元；小点保留原始观测。
+
+<ComponentPreview
+  mode="showcase"
+  files={[
+    'reference-data-path',
+    '/viz/plot/mark/shared/reference-data.preview.tsx',
+    '/viz/plot/mark/shared/reference-data.data.ts',
+  ]}
+  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
+  controls={{ name: 'reference-data-path' }}
+  size="md"
 />
 
 ### 系列与标签
@@ -295,6 +325,86 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
   defaultSourceFile="line-radar.preview.tsx"
 />
 
+## 关系用法
+
+用 `PathMark` 绘制关系连接时，端点可以来自数据坐标，也可以引用已声明的图元。先指定连接目标，再通过路径步骤控制连接路线。
+
+### 图元目标
+
+端点也可以连接已生成的图元：`mark` 指定目标 Mark 的 `id`，`key` 指定它暴露的实例身份。先声明目标，再声明连线；目标 Mark 用 `encodings.anchorId` 指定身份字段，连线用 `key.field` 读取当前行，或用 `key.value` 指定固定身份。
+
+<ComponentPreview mode="showcase" files={['mark-target']} size="md" />
+
+坐标端点与图元引用可以混用。引用节点时可设置 `anchor`、`boundary` 和 `offset`，由目标的实际几何确定连接位置。涉及图元引用时默认直连，不支持 `connection: 'coordinate'`。
+
+| 字段       | 含义                                                         |
+| ---------- | ------------------------------------------------------------ |
+| `mark`     | 同一视图内、先于当前连线声明的目标 Mark ID                   |
+| `key`      | `{ field: 'sourceId' }` 或 `{ value: 'A' }`；不经过比例尺    |
+| `anchor`   | 目标节点的锚点，可省略以使用自动连接                         |
+| `boundary` | 可选连接面覆盖；省略时沿用目标节点配置，默认使用自身形状边界 |
+| `offset`   | 锚点解析后的绘图空间偏移 `[dx, dy]`                          |
+
+Point 与 Interval 引用单个节点或区域；顶点型 Path 引用数据顶点，只支持位置与偏移，不能把整条路径作为目标。引用不会跨分面查找；声明顺序错误、身份重复或目标未生成都会报错。
+
+### 路径构造
+
+需要折角、弯曲连接或多段路线时，用 `encodings.steps` 声明完整步骤。字段绑定会让每条结果数据生成一条路径；全部位置与外观都是常量时，只生成一条路径。
+
+React 可以把步骤写成 `PlotPathStep` 子组件，Vanilla 的 `normalizePlot` 则接受路径图元的 `way` 或 `encodings.steps`。三种写法最终保存为相同的步骤结构。
+
+```text
+Plot
+└── PathMark
+    ├── PlotPathStep
+    └── PlotPathStep
+```
+
+下面连接每组柱子的前后值，并标出差值。切换路径类型，对比直线、弯曲与经过柱顶上方的折线：
+
+<ComponentPreview
+  mode="showcase"
+  files={['path-construction', 'path-construction.preview.tsx', 'path-construction.data.ts']}
+  defaultSourceFile="path-construction.preview.tsx"
+  size="lg"
+/>
+
+常见路线可用 `way` 简写：首个目标是起点，后续目标默认直线连接；在目标之间插入折线、曲线或弯曲算子，可以改变这一段的构造。下面将相同关系改成三段折线：
+
+```tsx
+<PathMark
+  way={[
+    { mark: 'bars', key: { field: 'sourceId' }, anchor: 'top' },
+    '-|-',
+    { mark: 'bars', key: { field: 'targetId' }, anchor: 'top' },
+  ]}
+  arrow="->"
+  properties={{ cornerRadius: 5 }}
+/>
+```
+
+| 输入                         | 用途                                         |
+| ---------------------------- | -------------------------------------------- |
+| `position`                   | 多行顶点，支持排序、分组、曲线插值与缺值处理 |
+| `from` / `to`                | 每条数据的一次简单连接                       |
+| `steps` / `way` / 步骤子组件 | 每条数据的一条完整构造路径；各入口互斥       |
+
+完整步骤支持 `move`、`line`、`axis-line`、`fold`、`cycle`、`curve`、`cubic`、`bend`、`arc`、`circlePath`、`ellipsePath`、`rectangle` 和 `smooth`，参数与底层 [Path 步骤](/kernel/components/path/step) 一致。`way` 覆盖常见简写，完整控制参数使用步骤形式。`arrow` 沿用底层方向简写或端点对象；尺寸、样式与重叠量配置在 `arrow.start` / `arrow.end` 中。
+
+数据位置 `{ x: { field: 'x' }, y: { field: 'y' } }` 先经过比例尺和坐标投影，再构造路线；控制点也遵循这个顺序。`[x, y]`、半径、相对偏移和角度使用 Core 绘图空间单位。单轴步骤始终沿投影后的水平或垂直方向。
+
+步骤中的数据位置参与 domain 推导，图元身份与固定绘图坐标不参与。显式步骤不使用 `series`、`order`、`curve`、`closure`、`closed`、`connectNulls`、`interpolation` 或 `connection`；闭合由 `cycle` 等步骤表达。某个数据位置无效时会报错，不会删掉该步骤后继续连接。
+
+### 路径类型
+
+路径的底层机制支持自定义路径类型，当前 PathMark 接入了 `stroke` 和 `ribbon`。下面以扩展包的[流带](/library/extension/ribbon)为例，实现一个最小桑基图。将 `properties.kind` 设为 `ribbon`，同一条中心线就能绘制成带状连接；带宽通过 `encodings.ribbon.width` 绑定字段，固定规则写在 `properties.ribbon.width`。
+
+两个 PathMark 共享一个 Plot 和一份端点数据，分别按节点 ID、流带 ID 去重，绘制矩形节点和流带。数据已分配节点位置和连接槽位；改变曲率调整中心线，缩小带宽倍率可观察每条流带占据的范围。
+
+<ComponentPreview mode="showcase" files={['path-ribbon', 'path-ribbon.data.ts']} size="lg" />
+
+桑基布局与绘制分开处理。宽度字段未绑定比例尺时使用绘图单位，不参与位置定义域；宽度不等同于描边线宽。
+
 ## 错误与限制
 
 - 内置二维笛卡尔与极坐标支持路径及闭合区域；通用坐标帧只支持未设置 `closure` 且 `closed` 不为 `true` 的开放路径。
@@ -365,33 +475,11 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 
 这是根据角度尺度选择的默认策略，不是坐标系的强制限制。可以通过 `interpolation` 显式选择 `chord` 或 `polar`；采样后的点如何连接，仍由 `curve` 决定。
 
-## 端点路径与参考线
-
-通过 `encodings.from`、`encodings.to` 指定两个完整位置，每个角色可绑定字段、常量或视图边界。端点形式与 `encodings.position` 顶点形式互斥。`properties.connection` 选择沿坐标系连接或投影后的直线连接；切换极坐标，观察圆弧与弦的区别。
-
-以下参考图元显式设置 `contributeToDomain={false}`，不扩大主体数据的定义域。使用控件切换坐标系、位置、几何与标签。
-
-<ComponentPreview
-  files={['reference-path', 'reference-path.preview.tsx', '/viz/plot/mark/shared/reference-coordinate.ts']}
-  defaultSourceFile="reference-path.preview.tsx"
-  controls={{ name: 'reference-path' }}
-  size="md"
-/>
-
-下面通过局部 `summarize` 变换计算统计字段，再绑定到同一类 Mark。切换平均值 / 中位数或分组，观察每个结果行产生的独立参考图元；小点保留原始观测。
-
-<ComponentPreview
-  files={[
-    'reference-data-path',
-    '/viz/plot/mark/shared/reference-data.preview.tsx',
-    '/viz/plot/mark/shared/reference-data.data.ts',
-  ]}
-  defaultSourceFile="/viz/plot/mark/shared/reference-data.preview.tsx"
-  controls={{ name: 'reference-data-path' }}
-  size="md"
-/>
-
 ## API 参考
+
+`properties.ribbon.width` 支持固定、首尾渐变、多控制点及注册 profile 规则。`encodings.ribbon.width` / `endWidth` 绑定字段，可使用显式数值比例尺。对齐、端帽与采样写在 `properties.ribbon` 中。
+
+Ribbon 不接受闭合、缺值桥接、圆角、箭头、路径标记或步骤标签。整条流带标签仍写 `properties.label` / `encodings.label`，可用 `placement="inside"` 放入带内，不支持描边断口。
 
 标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/reference/encoding#labelencodingschema)。
 

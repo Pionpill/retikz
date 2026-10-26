@@ -39,19 +39,19 @@ describe('Core registry-backed open string schemas', () => {
 
   it('uses open built-in hints in nested provider-backed fields', () => {
     expect(BoundarySchema.parse('custom.boundary')).toBe('custom.boundary');
-    expect(EasingSchema.parse('custom.easing')).toBe('custom.easing');
+    expect(() => EasingSchema.parse('custom.easing')).toThrow();
     expect(AnchorRefSchema.parse('custom.anchor')).toBe('custom.anchor');
-    expect(PathStructureSchema.parse({ type: 'path', kind: 'custom.path-kind' })).toEqual({
+    expect(PathStructureSchema.parse({ type: 'path', kind: 'custom.path-definition' })).toEqual({
       type: 'path',
-      kind: 'custom.path-kind',
+      kind: 'custom.path-definition',
     });
-    expect(
+    expect(() =>
       AnimationTrackSchema.parse({
         property: 'custom.property',
         keyframes: [{ at: 0, value: { enabled: true } }],
         duration: 100,
       }),
-    ).toMatchObject({ property: 'custom.property' });
+    ).toThrow();
 
     expect(() => BoundarySchema.parse('   ')).toThrow();
     expect(() => EasingSchema.parse('   ')).toThrow();

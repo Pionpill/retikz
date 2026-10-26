@@ -75,12 +75,12 @@ describe('Scope effective defaults', () => {
     expect(child.node?.label).toBeUndefined();
     expect(child.path?.label).toEqual({});
     expect(child.path?.arrow).toEqual({});
-    const marks = [{ pos: 1, mark: { kind: 'arrow' as const } }];
-    expect(resolveEffectivePath(pathOf({ style: { color: 'gold' }, marks }), parent).marks?.[0]?.mark).toMatchObject({
+    const arrow = { end: {} };
+    expect(resolveEffectivePath(pathOf({ style: { color: 'gold' }, arrow }), parent).arrow?.end).toMatchObject({
       color: 'gold',
       scale: 2,
     });
-    expect(resolveEffectivePath(pathOf({ marks }), parent).marks?.[0]?.mark).toMatchObject({ color: 'red', scale: 2 });
+    expect(resolveEffectivePath(pathOf({ arrow }), parent).arrow?.end).toMatchObject({ color: 'red', scale: 2 });
     expect(parent.path?.arrow).toEqual({ color: 'purple', end: { color: 'green', scale: 2 } });
     expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style?.fill).toBe('blue');
   });
@@ -144,16 +144,13 @@ describe('Scope effective defaults', () => {
     );
     const resolved = resolveEffectivePath(
       pathOf({
-        marks: [
-          { pos: 0, mark: { kind: 'arrow' } },
-          { pos: 1, mark: { kind: 'arrow', scale: 3 } },
-        ],
+        arrow: { start: {}, end: { scale: 3 } },
       }),
       frame,
     );
 
-    expect(resolved.marks?.[0]?.mark).toMatchObject({ shape: 'triangle', scale: 2 });
-    expect(resolved.marks?.[1]?.mark).toMatchObject({ shape: 'circle', scale: 3 });
+    expect(resolved.arrow?.start).toMatchObject({ shape: 'triangle', scale: 2 });
+    expect(resolved.arrow?.end).toMatchObject({ shape: 'circle', scale: 3 });
   });
 });
 

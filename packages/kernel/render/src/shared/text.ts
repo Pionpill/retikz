@@ -1,7 +1,7 @@
 /**
  * 多行文本几何（renderer 无关纯函数）
  */
-import type { TextPrim } from '@retikz/core';
+import type { TextPrimitive } from '@retikz/core';
 
 /**
  * 多行文本块的首行纵向偏移（dy；SVG tspan dy 与 Canvas 首行下移共用口径）
@@ -10,7 +10,7 @@ import type { TextPrim } from '@retikz/core';
  *   top / alphabetic（块顶对齐）→ 0。SVG 与 Canvas 两端共用此式，钉死多行垂直对齐口径不漂移
  */
 export const firstLineDy = (
-  text: Pick<TextPrim, 'baseline' | 'lineHeight'> & { lines: { length: number } },
+  text: Pick<TextPrimitive, 'baseline' | 'lineHeight'> & { lines: { length: number } },
 ): number => {
   const n = text.lines.length;
   if (text.baseline === 'middle') return (-(n - 1) / 2) * text.lineHeight;

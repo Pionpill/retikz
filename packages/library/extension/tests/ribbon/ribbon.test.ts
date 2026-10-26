@@ -1,12 +1,12 @@
-import type { IRPathBase, IRScene, IRStep, PathPrim, ScenePrimitive } from '@retikz/core';
+import type { IRPathBase, IRScene, IRStep, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { compileToScene as compileCoreToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { IRRibbonPathOptions } from '../../src/ribbon';
 import {
-  createRibbonPathKindDefinition,
+  createRibbonPathDefinition,
   defineRibbonWidthProfile,
-  RibbonPathKindDefinition,
+  RibbonPathDefinition,
   RibbonPathSchema,
 } from '../../src/ribbon';
 
@@ -16,17 +16,17 @@ const scene = (children: IRScene['children']): IRScene => ({
   children,
 });
 
-const pathPrim = (primitive: ScenePrimitive): PathPrim => {
+const pathPrim = (primitive: ScenePrimitive): PathPrimitive => {
   expect(primitive.type).toBe('path');
-  return primitive as PathPrim;
+  return primitive as PathPrimitive;
 };
 
-const commandPoint = (command: PathPrim['commands'][number]): [number, number] => {
+const commandPoint = (command: PathPrimitive['commands'][number]): [number, number] => {
   if (!('to' in command)) throw new Error(`Expected a point command, got ${command.kind}.`);
   return command.to;
 };
 
-const ribbonCenterAt = (prim: PathPrim, sampleCount: number, sampleIndex: number): [number, number] => {
+const ribbonCenterAt = (prim: PathPrimitive, sampleCount: number, sampleIndex: number): [number, number] => {
   const left = commandPoint(prim.commands[sampleIndex]);
   const right = commandPoint(prim.commands[sampleCount * 2 - 1 - sampleIndex]);
   return [(left[0] + right[0]) / 2, (left[1] + right[1]) / 2];
@@ -75,12 +75,12 @@ const ribbonWithDefaultSampling = (overrides: Record<string, unknown> = {}): IRP
 };
 
 const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
-  const supplied = options.pathKinds ?? [];
-  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathKindDefinition;
+  const supplied = options.paths ?? [];
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathDefinition;
 
   return compileCoreToScene(input, {
     ...options,
-    pathKinds: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
+    paths: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
   });
 };
 
@@ -591,7 +591,7 @@ describe('compile ribbon', () => {
           sampling: { kind: 'fixed', samples: 2 },
         }),
       ]),
-      { pathKinds: [createRibbonPathKindDefinition({ profiles: [taper] })], padding: 0 },
+      { paths: [createRibbonPathDefinition({ profiles: [taper] })], padding: 0 },
     ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
@@ -616,7 +616,7 @@ describe('compile ribbon', () => {
       expect(
         () =>
           compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
-            pathKinds: [createRibbonPathKindDefinition({ profiles: [bad] })],
+            paths: [createRibbonPathDefinition({ profiles: [bad] })],
           }).scene,
       ).toThrow(/profile "bad"/);
     },

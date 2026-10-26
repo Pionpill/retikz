@@ -33,8 +33,6 @@ export type GraphLayoutHostProps = Pick<
   | 'animate'
   | 'snapshotAt'
   | 'animationRef'
-  | 'easings'
-  | 'animationProperties'
   | 'idPrefix'
   | 'nodeDistance'
   | 'fontSize'
@@ -43,8 +41,7 @@ export type GraphLayoutHostProps = Pick<
   | 'clips'
   | 'arrows'
   | 'patterns'
-  | 'pathGenerators'
-  | 'pathKinds'
+  | 'paths'
   | 'composites'
   | 'themeDefinitions'
   | 'lowerTex'
@@ -67,8 +64,7 @@ export const graphLayoutHostPropKeys = [
   'animate',
   'snapshotAt',
   'animationRef',
-  'easings',
-  'animationProperties',
+
   'idPrefix',
   'nodeDistance',
   'fontSize',
@@ -77,8 +73,7 @@ export const graphLayoutHostPropKeys = [
   'clips',
   'arrows',
   'patterns',
-  'pathGenerators',
-  'pathKinds',
+  'paths',
   'composites',
   'themeDefinitions',
   'lowerTex',

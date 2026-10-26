@@ -4,7 +4,7 @@ import type { CompileOptions } from '../../../src/compile/compile';
 import { compileToScene } from '../../../src/compile/compile';
 import type {
   ScenePrimitive,
-  PaintResource,
+  PatternResource,
   PatternDefinition,
   ResolvedPatternTile,
   SceneResource,
@@ -46,8 +46,8 @@ const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
   ],
 });
 
-const firstPatternResource = (resources: Array<SceneResource> | undefined): PaintResource | undefined =>
-  (resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern');
+const firstPatternResource = (resources: Array<SceneResource> | undefined): PatternResource | undefined =>
+  (resources ?? []).find((r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern');
 
 const tileOf = (spec: IRPaint, opts?: CompileOptions): ResolvedPatternTile | undefined =>
   firstPatternResource(compileToScene(patternNodeIR(spec), opts).scene.resources)?.tile;
@@ -266,11 +266,11 @@ describe('ADV — dedup / override / 交叉', () => {
       patternNodeIR({ kind: 'pattern', shape: 'lines', size: 6 }, { kind: 'pattern', shape: 'lines', size: 10 }),
     ).scene;
     const pats = (scene.resources ?? []).filter(
-      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
+      (r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern',
     );
 
     expect(pats).toHaveLength(2);
-    expect(pats.map(p => p.tile?.size).sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual([6, 10]);
+    expect(pats.map(p => p.tile.size).sort((a, b) => a - b)).toEqual([6, 10]);
   });
 
   it('override_geometry_takes_effect：覆盖内置 lines 几何 → tile 真按覆盖 def 变（内置名走注册表）', () => {
@@ -337,9 +337,7 @@ describe('ADV — dedup / override / 交叉', () => {
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBe(3);
 
-    const withTile = (scene.resources ?? []).filter(
-      (r): r is PaintResource => r.kind === 'paint' && r.tile !== undefined,
-    );
+    const withTile = (scene.resources ?? []).filter((r): r is PatternResource => r.kind === 'paint' && 'tile' in r);
 
     expect(withTile).toHaveLength(1);
     expect(withTile[0].spec.kind).toBe('pattern');

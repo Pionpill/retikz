@@ -1,4 +1,5 @@
 import {
+  BoxSpacingSchema,
   ShapeValueSchema,
   NodeLayoutSchema,
   NodeSchema,
@@ -18,9 +19,24 @@ import type { infer as ZodInfer } from 'zod';
 import { ChannelSchema, NodeEncodingSchema, PositionEncodingSchema } from '../encoding';
 import { MarkPlacementSchema } from '../position-adjustment';
 import { AnchorIdSchema, hasValidAnchorSource } from './anchor';
-import { PointAutoPaddingSchema } from './auto-padding';
 import { BuiltinPlotMark, markBase } from './base';
 import { MarkNodeLabelListSchema } from './label';
+
+const AutoPaddingKindSchema = zodEnum(['max-radius', 'point-aware']);
+
+/** 点及关系端点的自动留白策略；false 关闭当前图元的隐式贡献 */
+export const PointAutoPaddingSchema = union([
+  literal(false),
+  AutoPaddingKindSchema,
+  strictObject({
+    kind: AutoPaddingKindSchema.describe('Automatic padding strategy'),
+    clearance: union([NonNegativeNumberSchema, BoxSpacingSchema])
+      .optional()
+      .describe('Nonnegative edge clearance in drawing units; omitted means zero'),
+  }),
+]).describe('Automatic point padding strategy; false disables implicit contributions from this mark');
+
+export type IRPlotPointAutoPadding = ZodInfer<typeof PointAutoPaddingSchema>;
 
 /** 校验节点相对屏幕或坐标角色的方向意图 */
 export const MarkOrientationSchema = union([

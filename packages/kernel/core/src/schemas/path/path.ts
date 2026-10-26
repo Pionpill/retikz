@@ -1,7 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
 import {
   PositiveNumberSchema,
-  NormalizedFractionSchema,
   NonNegativeNumberSchema,
   createOpenStringSchema,
   JsonObjectSchema,
@@ -12,14 +11,14 @@ import type { infer as ZodInfer } from 'zod';
 import { DrawableInstanceSchema } from '../scene/drawable';
 import {
   GraphicStrokeSchema,
-  StrokeCapJoinSchema,
   GraphicColorSchema,
   GraphicFillSchema,
   GraphicOpacitySchema,
   GraphicEffectsSchema,
 } from '../style/graphic';
-import { ArrowStyleSchema } from './arrow';
+import { PathArrowSchema } from './arrow';
 import { PathLabelSchema } from './label';
+import { PathMarkPlacementSchema } from './mark';
 import { StepSchema } from './step';
 
 /** 路径填充规则关键字 */
@@ -31,7 +30,7 @@ export const PathFillRule = {
 } as const;
 
 /** 路径编译 kind 关键字 */
-export const BuiltinPathKind = {
+export const BuiltinPath = {
   /** 标准描边路径 */
   Stroke: 'stroke',
 } as const;
@@ -40,7 +39,7 @@ export const BuiltinPathKind = {
 export type PathFillRule = ValueOf<typeof PathFillRule>;
 
 /** 路径编译 kind 关键字类型 */
-export type BuiltinPathKind = ValueOf<typeof BuiltinPathKind>;
+export type BuiltinPath = ValueOf<typeof BuiltinPath>;
 
 /** 校验路径内部区域的填充规则 */
 export const PathFillRuleSchema = zodEnum(PathFillRule).describe('Path fill rule keyword.');
@@ -57,30 +56,7 @@ export const PathScaleSchema = union([PositiveNumberSchema, PathAnisotropicScale
 /** 校验路径描边颜色、线宽、虚线、端点线帽与拐角样式 */
 export const PathStrokeSchema = strictObject({
   ...GraphicStrokeSchema.shape,
-  ...StrokeCapJoinSchema.shape,
 }).describe('Path stroke fields combining shared stroke style with path endpoint and join options.');
-
-/** 校验沿路径切线定向的箭头标记，shape 指定能力名称而非方向 */
-export const ArrowMarkSchema = ArrowStyleSchema.extend({
-  kind: literal('arrow').describe('Discriminator marking this mark as an arrow tip.'),
-})
-  .strict()
-  .describe(
-    'Arrow mark placed along the path. Direction follows the path tangent; `shape` is an arrow provider name, not a direction token.',
-  );
-
-/** 校验路径上的单个标记位置与端点重叠策略 */
-export const PathMarkPlacementSchema = strictObject({
-  pos: NormalizedFractionSchema.describe(
-    'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
-  ),
-  endpointOverlap: NormalizedFractionSchema.optional().describe(
-    "Normalized interpolation from an endpoint arrow's default placement to final visual-back alignment with the logical endpoint. Only valid for the selected start or end arrow on a built-in Stroke path.",
-  ),
-  mark: ArrowMarkSchema.describe(
-    'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
-  ),
-}).describe('One mark placement along the path.');
 
 /** 校验路径填充区域的环绕判定字段 */
 export const PathFillSchema = strictObject({
@@ -115,6 +91,7 @@ export const PathGeometrySchema = strictObject({
 
 /** 校验附着于路径宿主的标签与沿路径标记 */
 export const PathDecorationSchema = strictObject({
+  arrow: PathArrowSchema.optional().describe('Endpoint arrows responsible for path shortening.'),
   label: union([PathLabelSchema, array(PathLabelSchema).min(1)])
     .optional()
     .describe('Host label attached to this path-like relation.'),
@@ -123,16 +100,12 @@ export const PathDecorationSchema = strictObject({
     .describe('Marks placed along the path at normalized positions; direction follows the path tangent.'),
 }).describe('Path decoration fields for host labels and along-path marks.');
 
-/** 校验开放路径种类的判别字段和能力选项 */
+/** 校验开放路径定义的判别字段和能力选项 */
 export const PathStructureSchema = strictObject({
   type: literal('path').describe('Discriminator marking this child as a path.'),
-  kind: createOpenStringSchema(BuiltinPathKind)
-    .optional()
-    .describe('Path kind provider name. Omitted means built-in `stroke`.'),
-  kindOptions: JsonObjectSchema.optional().describe(
-    'JSON-safe option object consumed by the selected path kind provider.',
-  ),
-}).describe('Path structure fields selecting an open path kind provider.');
+  kind: createOpenStringSchema(BuiltinPath).optional().describe('Path provider name. Omitted means built-in `stroke`.'),
+  kindOptions: JsonObjectSchema.optional().describe('JSON-safe option object consumed by the selected path provider.'),
+}).describe('Path structure fields selecting an open path provider.');
 
 /** 路径实例视觉覆盖 */
 export const PathStyleSchema = strictObject({
@@ -157,26 +130,23 @@ export const PathSchema = strictObject({
 
 /** 校验内置描边路径的观察对象，包含完整宿主约束 */
 export const StrokePathSchema = PathSchema.extend({
-  kind: literal(BuiltinPathKind.Stroke).optional().describe('Built-in stroke path kind. May be omitted.'),
+  kind: literal(BuiltinPath.Stroke).optional().describe('Built-in stroke path. May be omitted.'),
   /** 步骤数据留到编译时检查，由描边编译逻辑校验几何有效性并报告警告或错误 */
   children: array(unknown(), { error: 'Stroke paths require `children` steps.' }).describe(
     'Sequence of source step actions for the stroke path.',
   ),
-  kindOptions: never({ error: '`kindOptions` is not valid for the built-in `stroke` path kind.' })
+  kindOptions: never({ error: '`kindOptions` is not valid for the built-in `stroke` path.' })
     .optional()
-    .describe('Not accepted by the built-in stroke path kind.'),
+    .describe('Not accepted by the built-in stroke path.'),
 })
   .transform(path => path as ZodInfer<typeof PathSchema>)
-  .describe('Complete source subject schema for the built-in stroke path kind.');
+  .describe('Complete source subject schema for the built-in stroke path.');
 
 /** 路径整条缩放类型：number（等比）或 {x,y}（非等比） */
 export type IRPathScale = ZodInfer<typeof PathScaleSchema>;
 
 /** 路径描边片段类型 */
 export type IRPathStroke = ZodInfer<typeof PathStrokeSchema>;
-
-/** 路径中段箭头标记类型 */
-export type IRArrowMark = ZodInfer<typeof ArrowMarkSchema>;
 
 /** Path schema 的原始输出类型：供 kind 派生与特殊形态使用 */
 export type IRPathBase = ZodInfer<typeof PathSchema>;

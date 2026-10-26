@@ -18,6 +18,16 @@ const scatter = {
 } as const;
 
 describe('Scatter Chart exact Source schema', () => {
+  it('rejects inline data transforms in encoding mappings', () => {
+    for (const kind of ['normalize', 'jitter', 'custom.shift']) {
+      const result = ScatterChartEncodingsSchema.safeParse({
+        x: { transform: { operation: { kind, params: { field: 'amount', as: 'output' } } }, output: 'output' },
+        y: 'margin',
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0]?.path[0]).toBe('x');
+    }
+  });
   it('parses nested family and recipe envelope and round-trips JSON', () => {
     const parsed = ScatterChartSchema.parse(scatter);
 
@@ -25,7 +35,7 @@ describe('Scatter Chart exact Source schema', () => {
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
   });
 
-  it('accepts direct, aggregate, derived, scale, and facet mappings in the exact encoding slots', () => {
+  it('accepts direct, aggregate, scale, and facet mappings in the exact encoding slots', () => {
     const parsed = ScatterChartSchema.parse({
       ...scatter,
       recipe: {
@@ -43,8 +53,7 @@ describe('Scatter Chart exact Source schema', () => {
             scale: { operation: { type: 'ordinal', name: 'groupColorScale' } },
           },
           size: {
-            transform: { operation: { kind: 'normalize', params: { field: 'weight', as: 'weightShare' } } },
-            output: 'weightShare',
+            field: 'weightShare',
             scale: { operation: { type: 'sqrt', name: 'weightSizeScale' } },
           },
           opacity: {
@@ -164,8 +173,7 @@ describe('Scatter Chart exact Source schema', () => {
     expect(
       ScatterChartEncodingsSchema.safeParse({
         x: {
-          transform: { operation: { kind: 'custom.shift', params: { field: 'amount', as: 'shiftedAmount' } } },
-          output: 'shiftedAmount',
+          field: 'shiftedAmount',
           scale: { operation: { type: 'custom.position', name: 'shiftedScale' } },
         },
         y: 'margin',
@@ -183,26 +191,6 @@ describe('Scatter Chart exact Source schema', () => {
       { x: 'amount', y: { aggregate: { kind: 'mean' } } },
     ]) {
       expect(ScatterChartEncodingsSchema.safeParse(encodings).success).toBe(false);
-    }
-  });
-
-  it('restricts encoding jitter to the mapped position role', () => {
-    expect(
-      ScatterChartEncodingsSchema.safeParse({
-        x: { transform: { operation: { kind: 'jitter', params: { axis: 'x', xField: 'amount' } } }, output: 'amount' },
-        y: { transform: { operation: { kind: 'jitter', params: { axis: 'y', yField: 'margin' } } }, output: 'margin' },
-      }).success,
-    ).toBe(true);
-
-    for (const x of [
-      {
-        transform: { operation: { kind: 'jitter', params: { axis: 'both', xField: 'amount', yField: 'margin' } } },
-        output: 'amount',
-      },
-      { transform: { operation: { kind: 'jitter', params: { axis: 'y', yField: 'margin' } } }, output: 'margin' },
-      { transform: { operation: { kind: 'jitter', params: { axis: 'x', xField: 'amount' } } }, output: 'other' },
-    ]) {
-      expect(ScatterChartEncodingsSchema.safeParse({ x, y: 'margin' }).success).toBe(false);
     }
   });
 

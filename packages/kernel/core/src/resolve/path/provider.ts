@@ -1,21 +1,19 @@
 import type { ArrowDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { providerDefinitionOf } from '../../providers';
-import type { IRArrowMark, IRPathBase } from '../../schemas';
-import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
+import type { IRArrowStyle, IRPathBase } from '../../schemas';
+import { DEFAULT_ARROW_SHAPE } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
-import { resolvePaint } from '../resource';
+import { resolveMarkStyle } from './mark';
 import type {
   ArrowMarkGeometry,
   ArrowMarkResolution,
-  ArrowMarkVisual,
-  CanonicalStep,
-  PathGeneratorResolution,
-  PathKindResolution,
+  MarkResolution,
+  PathDefinitionResolution,
   PathResolution,
   PathResolveContext,
-  ResolvedArrowMark,
+  ResolvedMarkStyle,
   ResolvedPathSource,
   StrokePathResolution,
 } from './types';
@@ -25,16 +23,16 @@ const ARROW_GEOMETRY_BASE_SIZE = 10;
 /** 主路径进入 marker 接触边的描边宽度比例 */
 const ARROW_PATH_CONTACT_OVERLAP = 0.5;
 
-/** 解析 path kind provider */
-export const resolvePathKind = (
+/** 解析 path provider */
+export const resolvePathDefinition = (
   path: ResolvedPathSource,
   context: PathResolveContext,
   irPath: string,
-): PathKindResolution => {
+): PathDefinitionResolution => {
   const kind = path.kind ?? 'stroke';
-  const definition = providerDefinitionOf(context.pathKinds, kind);
+  const definition = providerDefinitionOf(context.paths, kind);
   const parsed = parseProviderPayload({
-    capability: 'path kind',
+    capability: 'path',
     providerName: kind,
     irPath,
     payloadName: 'path',
@@ -43,27 +41,6 @@ export const resolvePathKind = (
   });
 
   return { name: kind, definition, path: parsed as IRPathBase };
-};
-
-/** 解析 generator step 的 provider 与 params */
-export const resolvePathGenerator = (
-  step: Extract<CanonicalStep, { kind: 'generator' }>,
-  stepIndex: number,
-  context: PathResolveContext,
-  irPath: string,
-): PathGeneratorResolution => {
-  const definition = providerDefinitionOf(context.pathGenerators, step.name);
-  const paramsPath = `${irPath}.params`;
-  const params = parseProviderPayload({
-    capability: 'path generator',
-    providerName: step.name,
-    irPath: paramsPath,
-    payloadName: 'params',
-    schema: definition.paramsSchema,
-    value: step.params,
-  });
-
-  return { stepIndex, name: step.name, definition, params, irPath };
 };
 
 const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): void => {
@@ -106,39 +83,18 @@ const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): 
 };
 
 /** 解析 arrow mark 的有效视觉属性与几何输入 */
-export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveContext): ArrowMarkResolution => {
+export const resolveArrowMark = (mark: ResolvedMarkStyle, context: PathResolveContext): ArrowMarkResolution => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const definition = providerDefinitionOf(context.arrows, shape);
   assertFiniteArrowGeometry(shape, definition);
-  const visual: ArrowMarkVisual = {
-    shape,
-    scale: mark.scale ?? 1,
-    length: mark.length ?? definition.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE,
-    width: mark.width ?? definition.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE,
-    ...(definition.hollow ? {} : { fill: resolvePaint(mark.fill ?? mark.color, context) }),
-    ...(mark.opacity === undefined ? {} : { opacity: mark.opacity }),
-    stroke: resolvePaint(mark.stroke ?? (definition.hollow ? mark.color : 'none'), context),
-    dashPattern: mark.dashPattern,
-    dashOffset: mark.dashOffset,
-    lineCap: mark.lineCap,
-    lineJoin: mark.lineJoin,
-    lineWidth: mark.lineWidth ?? ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
-  };
-  const baseSize = definition.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;
+  const shared = resolveMarkStyle(mark, definition, context);
+  const { visual } = shared;
+  const { baseSize, resolvedLength, resolvedWidth } = shared.geometry;
   const tipX = definition.tipX ?? baseSize;
   const contactX = definition.hollow ? definition.lineContactX - visual.lineWidth / 2 : definition.lineContactX;
-  const resolvedLength = visual.length * visual.scale;
-  const resolvedWidth = visual.width * visual.scale;
   const rawOuterInset = definition.outerInset ?? (definition.hollow ? visual.lineWidth / 2 : 0);
   const visualBackX = definition.backX - rawOuterInset;
   const boundaryOuterInset = (rawOuterInset * resolvedLength) / baseSize;
-  if (!Number.isFinite(resolvedLength) || !Number.isFinite(resolvedWidth)) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Resolve,
-      `Arrow '${shape}' resolved length/width is non-finite (length × scale overflowed); use smaller length / scale values.`,
-    );
-  }
-
   if (!Number.isFinite(boundaryOuterInset)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
@@ -173,33 +129,19 @@ export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveCo
   return { mark, definition, visual, geometry };
 };
 
-/** 为 path marks 解析全部 arrow provider */
-export const resolveArrowMarks = (
-  marks: ReadonlyArray<{ mark: ResolvedArrowMark }> | undefined,
+/** 解析显式端点箭头定义 */
+const resolveEndpointArrowProviders = (
+  arrow: ResolvedPathSource['arrow'],
   context: PathResolveContext,
-): ReadonlyMap<IRArrowMark, ArrowMarkResolution> => {
-  const resolutions = new Map<IRArrowMark, ArrowMarkResolution>();
-  for (const item of marks ?? []) resolutions.set(item.mark, resolveArrowMark(item.mark, context));
-  return resolutions;
+): ReadonlyMap<IRArrowStyle, ArrowMarkResolution> => {
+  /** 按端点声明索引的箭头解析结果 Map */
+  const resolutionMap = new Map<IRArrowStyle, ArrowMarkResolution>();
+  for (const endpoint of [arrow?.start, arrow?.end])
+    if (endpoint !== undefined) resolutionMap.set(endpoint, resolveArrowMark(endpoint, context));
+  return resolutionMap;
 };
 
-/** 按 canonical step 对象绑定 path generator provider */
-export const resolvePathGenerators = (
-  steps: ReadonlyArray<CanonicalStep>,
-  context: PathResolveContext,
-  prefix: string,
-): ReadonlyMap<CanonicalStep, PathGeneratorResolution> => {
-  const resolutions = new Map<CanonicalStep, PathGeneratorResolution>();
-
-  for (const [index, step] of steps.entries()) {
-    if (step.kind !== 'generator') continue;
-    resolutions.set(step, resolvePathGenerator(step, index, context, `${prefix}.children[${index}]`));
-  }
-
-  return resolutions;
-};
-
-/** 为 stroke emitter 绑定实际会消费的 generator 与 arrow provider */
+/** 为 stroke emitter 绑定实际会消费的 arrow provider */
 export const resolveStrokePathProviders = (
   resolution: PathResolution,
   context: PathResolveContext,
@@ -212,13 +154,25 @@ export const resolveStrokePathProviders = (
   const children = path.children;
   const strokeTooShort = children === undefined || (children.length < 2 && children[0]?.kind !== 'rectangle');
   if (strokeTooShort) {
-    return { ...resolution, path, generators: new Map(), arrows: new Map() };
+    return { ...resolution, path, arrows: new Map(), marks: new Map() };
   }
 
+  /** 按标记声明索引的解析结果 Map */
+  const marks = new Map<NonNullable<typeof path.marks>[number], MarkResolution>();
+  for (const [index, placement] of (path.marks ?? []).entries()) {
+    const shape = placement.shape ?? DEFAULT_ARROW_SHAPE;
+    const definition = context.marks?.get(shape);
+    if (definition === undefined)
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Provider,
+        `Unknown provider '${shape}' at ${context.irPath}.marks[${index}].shape; available: ${[...(context.marks?.keys() ?? [])].sort().join(', ') || '(none registered)'}.`,
+      );
+    marks.set(placement, resolveMarkStyle(placement, definition, context));
+  }
   return {
     ...resolution,
     path,
-    generators: resolvePathGenerators(children, context, resolution.irPath),
-    arrows: resolveArrowMarks(resolution.path.marks, context),
+    arrows: resolveEndpointArrowProviders(path.arrow, context),
+    marks,
   };
 };

@@ -38,7 +38,7 @@ import {
   resolveChannelRegistry,
   createFieldCollector,
 } from '../../providers';
-import { isSingleMark, resolveMarkInstances } from '../../resolve';
+import { isSingleMark, resolveMarkInstances, resolveMarkTargets } from '../../resolve';
 import { resolvePlotDataExecution } from '../../resolve';
 import type { ChannelResolveContext } from '../../resolve/channel';
 import { resolveMarkChannels } from '../../resolve/channel';
@@ -1348,6 +1348,8 @@ export const lowerPlotWithDataArtifact = (
           resolvedTheme.typography.textColor ?? 'currentColor',
         );
 
+        const panelAnchors = createAnchorRegistry({ plotId: node.id, generators: options.anchorIdGenerators });
+        const panelTargets = resolveMarkTargets(node.marks);
         const markLayers: Array<IRChild> = node.marks
           .map((mark, markIndex) => {
             const markDataView = panelMarkDataViews[markIndex]?.dataView ?? panelDataView;
@@ -1381,7 +1383,8 @@ export const lowerPlotWithDataArtifact = (
                 ...(provenance !== undefined
                   ? { provenance: { context: provenance, markIndex, registerDatumId } }
                   : {}),
-                anchors: anchorRegistry,
+                anchors: panelAnchors,
+                targets: panelTargets,
                 ...(positions !== undefined ? { positions } : {}),
               },
             );
@@ -1390,6 +1393,7 @@ export const lowerPlotWithDataArtifact = (
           })
           .filter((layer): layer is IRChild => layer !== null);
 
+        panelAnchors.assertResolved();
         const meta: JsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
         if (panel.row !== undefined) meta.row = panel.row;
         if (panel.column !== undefined) meta.column = panel.column;
@@ -1462,6 +1466,15 @@ export const lowerPlotWithDataArtifact = (
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const scopeOrderById = new Map(coordinateScopes.scopes.map((scope, index) => [scope.id, index] as const));
+  const targetsByScope = new Map(
+    coordinateScopes.scopes.map(scope => [
+      scope.id,
+      resolveMarkTargets(
+        node.marks.filter(mark => coordinateScopeIdOf(mark, coordinateScopes.defaultScope) === scope.id),
+        node.marks,
+      ),
+    ]),
+  );
   const markLayerEntries = markDataViews
     .map(view => {
       const { dataView, mark, markIndex } = view;
@@ -1500,6 +1513,7 @@ export const lowerPlotWithDataArtifact = (
           plotId: node.id,
           ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
           anchors: anchorRegistry,
+          targets: targetsByScope.get(coordinateScopeId),
           ...(positions !== undefined ? { positions } : {}),
         },
       );

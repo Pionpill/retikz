@@ -247,7 +247,7 @@ const accumulateSubtree = (prim: ScenePrimitive, matrix: AffineMatrix, bbox: BBo
 /**
  * 同 id 全部图元的并集几何（scene user units）
  * @description 走 scene 树（累积 group transform），命中 id 的图元（叶子或 group）取其整棵子树叶子角点并集——
- *   覆盖「纯几何 Node 多平铺 shape 共享 id」与「文本 / rotate Node 单 GroupPrim 持 id」两种 stamp 形态。
+ *   覆盖「纯几何 Node 多平铺 shape 共享 id」与「文本 / rotate Node 单 GroupPrimitive 持 id」两种 stamp 形态。
  *   无匹配 / 无可解析几何 → undefined
  */
 export const geometryOf = (scene: Scene, id: string): HydrationGeometry | undefined => {

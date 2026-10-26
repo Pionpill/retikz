@@ -9,29 +9,31 @@ description: 定义并注册整条 Path 的输出方式，复用公开的描边�
 
 先判断扩展发生在“一个段”还是“整条路径”：
 
-| 需求                                 | 选择                                                        |
-| ------------------------------------ | ----------------------------------------------------------- |
-| 新增一种参数化曲线段                 | [路径生成器](/kernel/components/path/custom-path-generator) |
-| 改变整条 Path 的图元、轮廓或组合方式 | 自定义 Path kind                                            |
-| 只增加新的端点造型                   | [自定义箭头](/kernel/components/path/custom-arrow)          |
+| 需求                                 | 选择                                               |
+| ------------------------------------ | -------------------------------------------------- |
+| 新增一种参数化曲线段                 | 函数或组件封装已有路径步骤                         |
+| 改变整条 Path 的图元、轮廓或组合方式 | 自定义 Path                                        |
+| 只增加新的端点造型                   | [自定义箭头](/kernel/components/path/custom-arrow) |
 
 如果只是换描边色、线宽、虚线或箭头，直接使用现有 Path props；不要为样式组合创建新的 kind。需要填充式 Ribbon 路径时，见可选的 [Extension Ribbon](/library/extension/ribbon) definition。
 
 ## 最小结果
 
-自定义 Path kind 扩展的是**整条路径如何输出**。IR 只保存开放的 `kind` 与 JSON-safe `kindOptions`；宿主注入 `PathKindDefinition` 后，core 从统一 registry 找到 provider，并由它生成 Scene 图元。
+`compile` 返回的 `primitives` 和 `boundsPoints` 均接受 `Iterable`，可以提供数组或一次性迭代器。Core 消费输出时会将它们物化为数组。`emitStroke` 和 `wrapOutput` 也使用同一个 `PathCompileResult` 契约；需要使用 `map`、`flatMap` 等数组方法时，先用 `Array.from` 转换。
 
-下面的 `highlight` kind 复用 Core 描边编译器，把一条路径输出为宽底线与细中心线两层图元。definition、`<Layout extensions={{ pathKinds }}>` 注入和使用方式都包含在同一个示例中。
+自定义 Path 扩展的是**整条路径如何输出**。IR 只保存开放的 `kind` 与 JSON-safe `kindOptions`；宿主注入 `PathDefinition` 后，core 从统一 registry 找到 provider，并由它生成 Scene 图元。
+
+下面的 `highlight` kind 复用 Core 描边编译器，把一条路径输出为宽底线与细中心线两层图元。definition、`<Layout extensions={{ paths }}>` 注入和使用方式都包含在同一个示例中。
 
 <ComponentPreview files="custom-path-highlight" size="xs" />
 
 ## 定义能力
 
-用 `definePathKind` 声明一个显式 registry key、完整 Path subject schema，以及整条路径的 compile 函数。schema 应在开放的 `PathSchema` 上组合该 kind 的 literal 与 `kindOptions`，从而让 definition 自己拥有完整的 payload 约束。
+用 `definePath` 声明一个显式 registry key、完整 Path subject schema，以及整条路径的 compile 函数。schema 应在开放的 `PathSchema` 上组合该 kind 的 literal 与 `kindOptions`，从而让 definition 自己拥有完整的 payload 约束。
 
 ```tsx
 import type { ScenePrimitive } from '@retikz/core';
-import { definePathKind, PathSchema } from '@retikz/core';
+import { definePath, PathSchema } from '@retikz/core';
 import { z } from 'zod';
 
 const HighlightOptionsSchema = z.strictObject({
@@ -43,7 +45,7 @@ const HighlightPathSchema = PathSchema.extend({
 });
 type HighlightPath = z.infer<typeof HighlightPathSchema>;
 
-const highlight = definePathKind<HighlightPath>({
+const highlight = definePath<HighlightPath>({
   name: 'highlight',
   schema: HighlightPathSchema,
   compile: context => {
@@ -56,7 +58,7 @@ const highlight = definePathKind<HighlightPath>({
     if (base === null) return null;
     return {
       ...base,
-      primitives: base.primitives.flatMap<ScenePrimitive>(primitive =>
+      primitives: Array.from(base.primitives).flatMap<ScenePrimitive>(primitive =>
         primitive.type === 'path'
           ? [
               { ...primitive, stroke: '#facc15' },
@@ -75,7 +77,7 @@ const highlight = definePathKind<HighlightPath>({
 
 ## 注入与使用
 
-React 通过 `<Layout extensions={{ pathKinds }}>` 注入；直接调用 core 时使用 `CompileOptions.pathKinds`。Path 只引用注册名与实例配置。
+React 通过 `<Layout extensions={{ paths }}>` 注入；直接调用 core 时使用 `CompileOptions.paths`。Path 只引用注册名与实例配置。
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -83,7 +85,7 @@ React 通过 `<Layout extensions={{ pathKinds }}>` 注入；直接调用 core �
 ```tsx
 import { Layout, Path, Step } from '@retikz/react';
 
-<Layout extensions={{ pathKinds: [highlight] }}>
+<Layout extensions={{ paths: [highlight] }}>
   <Path kind="highlight" kindOptions={{ strokeWidth: 12 }}>
     <Step kind="move" to={[0, 0]} />
     <Step kind="line" to={[120, 0]} />
@@ -113,7 +115,7 @@ const input = scene({
   ],
 });
 const view = mount(document.getElementById('diagram')!, input, {
-  compile: { pathKinds: [highlight] },
+  compile: { paths: [highlight] },
 });
 // Dispose when the host is removed.
 // view.dispose();
@@ -124,43 +126,43 @@ const view = mount(document.getElementById('diagram')!, input, {
 
 ## 错误与限制
 
-| 情况                                            | 结果                                            |
-| ----------------------------------------------- | ----------------------------------------------- |
-| definition `name` 为空或不是字符串              | `definePathKind` 立即拒绝                       |
-| 与 `stroke` 或自定义项重名                      | registry 合并时报重复注册                       |
-| Path 引用未注册 kind                            | 编译列出可用名称与 `options.pathKinds` 注入提示 |
-| 选定 definition schema 拒绝 Path                | 错误包含 kind 名和对应 IR 路径                  |
-| provider 返回 `null`                            | 该 Path 不产生图元                              |
-| 已请求的非空结果未发布 owner output             | Core 的观察结果契约明确报错                     |
-| owner output 或 Inspector subject 不符合 schema | 对应校验阶段明确报错                            |
-| Inspector 返回非法 Core child                   | 错误携 owner、occurrence 与 output index        |
-| `boundsPoints` 不覆盖真实输出边界               | 自动布局与 Path 级 rotate / scale 依据会失真    |
+| 情况                                            | 结果                                         |
+| ----------------------------------------------- | -------------------------------------------- |
+| definition `name` 为空或不是字符串              | `definePath` 立即拒绝                        |
+| 与 `stroke` 或自定义项重名                      | registry 合并时报重复注册                    |
+| Path 引用未注册 kind                            | 编译列出可用名称与 `options.paths` 注入提示  |
+| 选定 definition schema 拒绝 Path                | 错误包含 kind 名和对应 IR 路径               |
+| provider 返回 `null`                            | 该 Path 不产生图元                           |
+| 已请求的非空结果未发布 owner output             | Core 的观察结果契约明确报错                  |
+| owner output 或 Inspector subject 不符合 schema | 对应校验阶段明确报错                         |
+| Inspector 返回非法 Core child                   | 错误携 owner、occurrence 与 output index     |
+| `boundsPoints` 不覆盖真实输出边界               | 自动布局与 Path 级 rotate / scale 依据会失真 |
 
 自定义 kind 返回的是后端中立 Scene primitive，不能把 SVG element、Canvas 实例、ReactNode 或函数塞进结果，也不能要求 renderer 识别自定义 `kind`。
 
 ## 相关属性
 
-以下列出定义、注入与引用自定义 Path kind 时最常用的成员；完整字段见 [API 参考](/kernel/components/path/reference)。
+以下列出定义、注入与引用自定义 Path 时最常用的成员；完整字段见 [API 参考](/kernel/components/path/reference)。
 
 <ComponentProps
   items={[
     {
-      name: 'definePathKind',
+      name: 'definePath',
       kind: 'function',
-      type: '<TPath, TOwnerOutput>(definition: PathKindDefinition<TPath, TOwnerOutput>) => PathKindDefinition<TPath, TOwnerOutput>',
+      type: '<TPath, TOwnerOutput>(definition: PathDefinition<TPath, TOwnerOutput>) => PathDefinition<TPath, TOwnerOutput>',
       description: '创建可注册的整条 Path provider，并校验名称与 schema 的基础契约。',
     },
     {
-      name: 'PathKindDefinition',
+      name: 'PathDefinition',
       kind: 'type',
-      type: 'PathKindDefinition<TPath, TOwnerOutput>',
+      type: 'PathDefinition<TPath, TOwnerOutput>',
       description: '声明 kind 名、完整 Path schema 与输出 Scene 图元的编译函数。',
     },
     {
-      name: 'Layout.extensions.pathKinds',
+      name: 'Layout.extensions.paths',
       kind: 'property',
-      type: 'ReadonlyArray<AnyPathKindDefinition>',
-      description: '在 React Layout 中注入 Path kind 定义。',
+      type: 'ReadonlyArray<AnyPathDefinition>',
+      description: '在 React Layout 中注入 Path 定义。',
     },
     {
       name: 'Path.kind',
@@ -201,6 +203,8 @@ const view = mount(document.getElementById('diagram')!, input, {
 
 ## 自行生成几何时的输出包装
 
-通过 `materializePath` 获取局部几何并自行生成 Scene 图元时，在全部 `emitHostLabels` / `emitBoundaryLabels` 调用之后，用 `context.wrapOutput({ primitives, boundsPoints })` 包装完整输出并直接返回。Core 会把宿主标签的布局边界加入 `boundsPoints`，以完整边界的中心应用 Path `rotate` / `scale`，并处理宿主 `id`、`meta` 和动画。
+`context.appearance` 提供宿主的已解析外观。它与 `PathPrimitive` 共用 `PathPrimitiveAppearance`：由 `ScenePrimitiveFill`、`ScenePrimitiveStroke`、`ScenePrimitiveOpacity`、`ScenePrimitiveEffects` 和路径填充规则组成，宿主外观另外提供 `color`。路径命令、箭头和图元标识不属于这份外观契约。
+
+`materializePath` 直接返回局部坐标系中的路径命令集合，不生成图元或标签。用这些命令自行生成 Scene 图元时，根据最终几何提供 `boundsPoints`，并在全部 `emitHostLabels` / `emitBoundaryLabels` 调用之后，用 `context.wrapOutput({ primitives, boundsPoints })` 包装完整输出并直接返回。Core 会把宿主标签的布局边界加入 `boundsPoints`，以完整边界的中心应用 Path `rotate` / `scale`，并处理宿主 `id`、`meta` 和动画。
 
 `emitStroke` 返回的结果已经完成这些包装，直接使用它的结果，不再次调用 `wrapOutput`。自定义图元的 `boundsPoints` 必须与图元使用同一局部坐标系；调用包装后不要继续添加未变换的图元或边界点。

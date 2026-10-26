@@ -31,7 +31,7 @@ describe('Happy path：三载体 meta stamp 落点', () => {
     }
   });
 
-  it('text_node_meta_on_group：文本 Node 带 meta → 单层 GroupPrim 带 meta，子图元不带', () => {
+  it('text_node_meta_on_group：文本 Node 带 meta → 单层 GroupPrimitive 带 meta，子图元不带', () => {
     const ir = scene([{ type: 'node', id: 'n', position: [0, 0], text: 'A', meta: { ...PROV } }]);
     const prims = compileToScene(ir, silent).scene.primitives;
 
@@ -47,7 +47,7 @@ describe('Happy path：三载体 meta stamp 落点', () => {
     }
   });
 
-  it('path_meta_on_pathprim：Path 带 meta → PathPrim 带 meta', () => {
+  it('path_meta_on_pathprim：Path 带 meta → PathPrimitive 带 meta', () => {
     const ir = scene([
       {
         type: 'path',
@@ -69,7 +69,7 @@ describe('Happy path：三载体 meta stamp 落点', () => {
     }
   });
 
-  it('scope_meta_on_groupprim：Scope 带 meta → GroupPrim 带 meta，子元素不继承', () => {
+  it('scope_meta_on_groupprim：Scope 带 meta → GroupPrimitive 带 meta，子元素不继承', () => {
     const ir = scene([
       {
         type: 'scope',

@@ -14,7 +14,7 @@ const findByType = <T extends ScenePrimitive['type']>(
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
 describe('Node shape multimorphism', () => {
-  it('默认 shape = rectangle，emit RectPrim', () => {
+  it('默认 shape = rectangle，emit RectPrimitive', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -26,7 +26,7 @@ describe('Node shape multimorphism', () => {
     expect(findByType(scene.primitives, 'ellipse')).toBeUndefined();
   });
 
-  it("shape='circle' emit EllipsePrim 且 rx == ry（外接圆）", () => {
+  it("shape='circle' emit EllipsePrimitive 且 rx == ry（外接圆）", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -39,7 +39,7 @@ describe('Node shape multimorphism', () => {
     expect(el!.rx).toBe(el!.ry); // 圆形 rx = ry
   });
 
-  it("shape='ellipse' emit EllipsePrim 且 rx ≠ ry（外接椭圆）", () => {
+  it("shape='ellipse' emit EllipsePrimitive 且 rx ≠ ry（外接椭圆）", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -55,7 +55,7 @@ describe('Node shape multimorphism', () => {
     expect(el!.rx).toBeGreaterThan(el!.ry);
   });
 
-  it("shape='diamond' emit PathPrim（4 顶点 + Z）", () => {
+  it("shape='diamond' emit PathPrimitive（4 顶点 + Z）", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -254,7 +254,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
     expect(compileToScene(bareIr).scene.primitives).toEqual(compileToScene(explicitIr).scene.primitives);
   });
 
-  it('circle_emit_equivalent：circle 解析后 emit EllipsePrim 且 rx == ry（等轴）', () => {
+  it('circle_emit_equivalent：circle 解析后 emit EllipsePrimitive 且 rx == ry（等轴）', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -446,7 +446,7 @@ describe('Node shape boundary clip 在 path 端点贴边时按 shape 多态', ()
     };
     const scene = compileToScene(ir).scene;
 
-    // circle 走 EllipsePrim，不会和 line PathPrim 撞；直接拿 path
+    // circle 走 EllipsePrimitive，不会和 line PathPrimitive 撞；直接拿 path
     const linePath = scene.primitives.find(p => p.type === 'path');
 
     expect(linePath).toBeDefined();
@@ -460,7 +460,7 @@ describe('Node shape boundary clip 在 path 端点贴边时按 shape 多态', ()
 
   it('diamond 节点 path 端点贴菱形边（满足 |x|/halfA + |y|/halfB = 1）', () => {
     // A=(0,0) diamond + B=(100,100); line A→B 沿 (1,1) 方向
-    // diamond 自身也是 PathPrim（"M ... Z"）；连接 line 是不带 Z 的 PathPrim
+    // diamond 自身也是 PathPrimitive（"M ... Z"）；连接 line 是不带 Z 的 PathPrimitive
     const ir: IRScene = {
       version: 1,
       type: 'scene',

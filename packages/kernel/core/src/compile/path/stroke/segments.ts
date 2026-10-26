@@ -171,10 +171,13 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
   for (let index = 1; index < points.length; index += 1) {
     emitLine(points[index], index === points.length - 1 && targetAutoBoundary);
   }
-  sampling.collect(step, t =>
-    points.length === 2
-      ? curve.sampleAt({ kind: 'line', from: points[0], to: points[1] }, t)
-      : foldSegmentSample(points[0], points.slice(1, -1), points.at(-1)!, t),
+  sampling.collect(
+    step,
+    t =>
+      points.length === 2
+        ? curve.sampleAt({ kind: 'line', from: points[0], to: points[1] }, t)
+        : foldSegmentSample(points[0], points.slice(1, -1), points.at(-1)!, t),
+    points.length - 1,
   );
 
   return true;

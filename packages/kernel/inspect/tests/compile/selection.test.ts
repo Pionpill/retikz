@@ -467,7 +467,9 @@ describe('Inspection selection', () => {
     const clipIr: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'scope', clip: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 }, children: [] }],
+      children: [
+        { type: 'scope', clip: { kind: 'rect', params: { x: 0, y: 0, width: 10, height: 10 } }, children: [] },
+      ],
     };
 
     try {

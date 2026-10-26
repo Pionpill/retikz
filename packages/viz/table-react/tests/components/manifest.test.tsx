@@ -256,9 +256,14 @@ describe('Table React manifest observation', () => {
                   style: expect.objectContaining({
                     font: expect.objectContaining({ family: 'sans-serif', weight: 400 }),
                   }),
+                  label: expect.objectContaining({
+                    font: expect.objectContaining({ family: 'sans-serif', weight: 400 }),
+                  }),
                 }),
-                label: expect.objectContaining({
-                  font: expect.objectContaining({ family: 'sans-serif', weight: 400 }),
+                path: expect.objectContaining({
+                  label: expect.objectContaining({
+                    font: expect.objectContaining({ family: 'sans-serif', weight: 400 }),
+                  }),
                 }),
               }),
             }),

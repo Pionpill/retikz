@@ -4,6 +4,7 @@ export type {
   DatumLabelProps,
   IntervalMarkProps,
   PathMarkProps,
+  PlotPathStepProps,
   PlotAxisProps,
   PlotFacetProps,
   PlotLegendProps,
@@ -17,6 +18,7 @@ export type {
 export {
   IntervalMark,
   PathMark,
+  PlotPathStep,
   PlotAxis,
   PlotFacet,
   PlotLegend,

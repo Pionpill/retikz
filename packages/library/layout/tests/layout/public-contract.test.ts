@@ -47,7 +47,10 @@ describe('Layout public layout composition contract', () => {
         'center',
       ),
     ).toBe(115);
-    expect(layoutClipOf({ width: 0, height: 10 })).toEqual({ kind: 'rect', x: 0, y: 0, width: 0, height: 10 });
+    expect(layoutClipOf({ width: 0, height: 10 })).toEqual({
+      kind: 'rect',
+      params: { x: 0, y: 0, width: 0, height: 10 },
+    });
     expect(unionLayoutArtifactRects([])).toEqual({ x: 0, y: 0, width: 0, height: 0 });
     expect(() =>
       resolveLayoutAxisSize({

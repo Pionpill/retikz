@@ -692,7 +692,7 @@ describe('@retikz/vanilla retained mount', () => {
     const container = document.createElement('div');
     const view = mountCanvas(container, source('#ef4444'));
 
-    expect(() => view.update(source('#22c55e'), { canvas: { devicePixelRatio: 2 } } as never)).toThrow(
+    expect(() => view.update(source('#22c55e'), { canvas: { devicePixelRatio: 2 } })).toThrow(
       expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
   });
@@ -701,23 +701,17 @@ describe('@retikz/vanilla retained mount', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'));
     const committedHtml = view.root.innerHTML;
-    const registryGetter = vi.fn(() => [0, 0, 1, 1]);
-    const easings = Object.defineProperty({}, 'custom', {
+    const configGetter = vi.fn(() => 100);
+    const animation = Object.defineProperty({}, 'snapshotAt', {
       enumerable: true,
-      get: registryGetter,
+      get: configGetter,
     });
 
-    expect(() => view.update(source('#22c55e'), { animation: { easings } })).toThrow(
+    expect(() => view.update(source('#22c55e'), { animation })).toThrow(
       expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
-    expect(registryGetter).not.toHaveBeenCalled();
+    expect(configGetter).not.toHaveBeenCalled();
 
-    const tuple = [0, 0, 1, 1];
-    Object.defineProperty(tuple, Symbol('hidden'), { enumerable: true, value: true });
-
-    expect(() => view.update(source('#22c55e'), { animation: { easings: { custom: tuple } } } as never)).toThrow(
-      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
-    );
     expect(view.root.innerHTML).toBe(committedHtml);
   });
 

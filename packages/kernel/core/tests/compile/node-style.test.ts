@@ -1,28 +1,28 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { EllipsePrim, PathPrim, RectPrim, TextPrim } from '../../src/contract';
+import type { EllipsePrimitive, PathPrimitive, RectPrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { NodeSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 import { line, move } from '../helpers/path-command-factory';
 
-const findRect = (ir: IRScene): RectPrim | undefined =>
-  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is RectPrim => p.type === 'rect');
+const findRect = (ir: IRScene): RectPrimitive | undefined =>
+  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is RectPrimitive => p.type === 'rect');
 
-const findEllipse = (ir: IRScene): EllipsePrim | undefined =>
-  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is EllipsePrim => p.type === 'ellipse');
+const findEllipse = (ir: IRScene): EllipsePrimitive | undefined =>
+  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is EllipsePrimitive => p.type === 'ellipse');
 
-const findShapePath = (ir: IRScene): PathPrim | undefined =>
+const findShapePath = (ir: IRScene): PathPrimitive | undefined =>
   flattenPrims(compileToScene(ir).scene.primitives).find(
-    (p): p is PathPrim => p.type === 'path' && p.commands.some(c => c.kind === 'close'),
+    (p): p is PathPrimitive => p.type === 'path' && p.commands.some(c => c.kind === 'close'),
   );
 
-const findText = (ir: IRScene): TextPrim | undefined =>
-  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is TextPrim => p.type === 'text');
+const findText = (ir: IRScene): TextPrimitive | undefined =>
+  flattenPrims(compileToScene(ir).scene.primitives).find((p): p is TextPrimitive => p.type === 'text');
 
 describe('Node 颜色 / 不透明度', () => {
-  it('textColor 透传到 TextPrim.fill', () => {
+  it('textColor 透传到 TextPrimitive.fill', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -39,7 +39,7 @@ describe('Node 颜色 / 不透明度', () => {
     expect(findText(ir)?.fill).toBe('red');
   });
 
-  it('未设 textColor 时 TextPrim.fill = currentColor', () => {
+  it('未设 textColor 时 TextPrimitive.fill = currentColor', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -197,7 +197,7 @@ describe('Node 描边样式', () => {
 });
 
 describe('Node 尺寸约束', () => {
-  it('cornerRadius → RectPrim.cornerRadius', () => {
+  it('cornerRadius → RectPrimitive.cornerRadius', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

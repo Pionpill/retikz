@@ -6,7 +6,7 @@ import {
   CompoundClipDefinition,
   CrossShapeDefinition,
   createRibbonProviderContribution,
-  RibbonPathKindDefinition,
+  RibbonPathDefinition,
 } from '@retikz/extension';
 import { Layout } from '@retikz/react';
 import { renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
@@ -21,13 +21,15 @@ const source: IRScene = {
       type: 'scope',
       clip: {
         kind: 'compound',
-        children: [{ kind: 'circle', cx: 0, cy: 0, r: 36 }],
+        params: {
+          children: [{ kind: 'circle', params: { cx: 0, cy: 0, r: 36 } }],
+        },
       },
       children: [{ type: 'node', position: [0, 0], shape: 'cross', text: 'optional shape' }],
     },
     {
       type: 'path',
-      marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'diamond' } }],
+      arrow: { end: { shape: 'diamond' } },
       children: [
         { type: 'step', kind: 'move', to: [60, 0] },
         { type: 'step', kind: 'line', to: [120, 0] },
@@ -54,7 +56,7 @@ const definitions = {
   shapes: [CrossShapeDefinition],
   arrows: [DiamondArrowDefinition],
   clips: [CompoundClipDefinition, CircleClipDefinition],
-  pathKinds: [RibbonPathKindDefinition],
+  paths: [RibbonPathDefinition],
 } as const;
 
 describe('Extension root entry integration', () => {
@@ -91,7 +93,7 @@ describe('Extension root entry integration', () => {
     expect(svg).toContain('Source endpoint');
     expect(svg).toContain('Target endpoint');
     expect(svg).toContain('<clipPath');
-    expect(svg).toContain('<marker');
+    expect(svg).toContain('d="M 0 5 L 5 0 L 10 5 L 5 10 Z"');
     expect(direct.scene.primitives.filter(primitive => primitive.type === 'path').length).toBeGreaterThan(1);
   });
 
@@ -105,7 +107,7 @@ describe('Extension root entry integration', () => {
     expect(markup).toContain('Source endpoint');
     expect(markup).toContain('Target endpoint');
     expect(markup).toContain('<clipPath');
-    expect(markup).toContain('<marker');
+    expect(markup).toContain('d="M 0 5 L 5 0 L 10 5 L 5 10 Z"');
   });
 
   it('resolves the Extension Ribbon provider contribution into the same compile entry', () => {

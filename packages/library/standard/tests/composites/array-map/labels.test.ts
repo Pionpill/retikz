@@ -160,7 +160,7 @@ describe('Array / Map container labels', () => {
           ...source,
           label: { text: 'label outside' },
           transforms: [{ kind: 'translate', x: 10, y: 20 }],
-          clip: { kind: 'rect', x: 0, y: -30, width: 100, height: 80 },
+          clip: { kind: 'rect', params: { x: 0, y: -30, width: 100, height: 80 } },
         },
       ]);
       const root = result.scene.primitives[0];

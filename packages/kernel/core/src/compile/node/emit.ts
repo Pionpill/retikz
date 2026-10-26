@@ -1,7 +1,7 @@
 import { RAD_TO_DEG } from '@retikz/math';
 import type { CenteredBox } from '@retikz/math';
 
-import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive, TextLine } from '../../contract';
+import type { GroupPrimitive, ResolvedShapeStyle, ScenePrimitive, TextLine } from '../../contract';
 import type { CanonicalNode } from '../../resolve';
 import {
   createLayoutProbeRecoverableError,
@@ -43,7 +43,7 @@ type NodeShapeProperties = Pick<
 type Round = (n: number) => number;
 
 type NodeBaselineYs = Readonly<{
-  /** 传给 TextPrim / emitInlineLine 的原始 baseline y */
+  /** 传给 TextPrimitive / emitInlineLine 的原始 baseline y */
   emitted: Array<number>;
   /** 与已 emit 的物理行对应、已按 Scene precision 圆整的 baseline y */
   observed: Array<number>;
@@ -91,8 +91,8 @@ const toShapeStyle = (properties: NodeShapeProperties, resolvePaint: PaintResolv
   strokeWidth: properties.strokeWidth,
   dashPattern: properties.dashPattern,
   dashOffset: properties.dashOffset,
-  strokeLinecap: properties.lineCap,
-  strokeLinejoin: properties.lineJoin,
+  lineCap: properties.lineCap,
+  lineJoin: properties.lineJoin,
   cornerRadius: properties.cornerRadius,
   opacity: properties.opacity,
   shadow: properties.shadow,
@@ -166,7 +166,7 @@ const emitNodeContentPrimitives = (
   const lineHeight = round(text.lineHeight);
   const baselineYs = nodeBaselineYsOf(layout, round).emitted;
 
-  /** 用现有 grouped TextPrim 合同发出 authoritative physical-line baselines */
+  /** 用现有 grouped TextPrimitive 合同发出 authoritative physical-line baselines */
   const textPrimitive = (lines: Array<TextLine>, baselineY: number, measuredHeight: number): ScenePrimitive => ({
     type: 'text',
     x: round(layout.geometry.contentCenter[0] + xOffset),
@@ -231,8 +231,8 @@ const emitNodeLabelPinPrimitive = (
     strokeWidth: style?.strokeWidth ?? 1,
     dashPattern: style?.dashPattern,
     dashOffset: style?.dashOffset,
-    strokeLinecap: style?.lineCap,
-    strokeLinejoin: style?.lineJoin,
+    lineCap: style?.lineCap,
+    lineJoin: style?.lineJoin,
     opacity: style?.opacity ?? labelProperties.opacity ?? properties.opacity,
   };
 };
@@ -248,23 +248,29 @@ const emitNodeLabelContentPrimitive = (
 ): ScenePrimitive => {
   const [lx, ly] = labelCenterPosition;
   if (label.laid) {
-    const laid = label.laid;
-    const originX = lx - laid.width / 2;
-    const baselineY = ly + (laid.ascent - laid.descent) / 2;
-
+    let offset = 0;
     return {
       type: 'group',
-      children: emitInlineLine(
-        laid,
-        {
-          color: labelProperties.textColor,
-          opacity: labelProperties.opacity ?? properties.opacity,
-          segments: inlineSegmentPaintsOf(labelProperties.text.segments),
-        },
-        originX,
-        baselineY,
-        round,
-      ),
+      children: label.laid.flatMap((laid, index) => {
+        const height =
+          label.laid!.length > 1
+            ? Math.max(labelProperties.font.size * DEFAULT_LINE_HEIGHT_FACTOR, laid.ascent + laid.descent)
+            : laid.ascent + laid.descent;
+        const baselineY =
+          ly - label.measuredHeight / 2 + offset + (height - laid.ascent - laid.descent) / 2 + laid.ascent;
+        offset += height;
+        return emitInlineLine(
+          laid,
+          {
+            color: labelProperties.textColor,
+            opacity: labelProperties.opacity ?? properties.opacity,
+            segments: inlineSegmentPaintsOf(labelProperties.text[index].segments),
+          },
+          lx - laid.width / 2,
+          baselineY,
+          round,
+        );
+      }),
     };
   }
 
@@ -274,7 +280,7 @@ const emitNodeLabelContentPrimitive = (
     type: 'text',
     x: round(lx),
     y: round(ly + (label.ascent - label.descent) / 2),
-    lines: [{ text: labelProperties.text.plainText }],
+    lines: [{ text: labelProperties.text[0].plainText }],
     fontSize: labelProperties.font.size,
     fontFamily: labelProperties.font.family,
     fontWeight: labelProperties.font.weight,
@@ -358,8 +364,8 @@ const wrapNodeGroupPrimitive = (
   metadata: Pick<CanonicalNode, 'id' | 'meta' | 'animations'>,
   children: Array<ScenePrimitive>,
   round: Round,
-): GroupPrim => {
-  const group: GroupPrim = { type: 'group', children };
+): GroupPrimitive => {
+  const group: GroupPrimitive = { type: 'group', children };
   if (metadata.id !== undefined) group.id = metadata.id;
   if (metadata.meta !== undefined) group.meta = metadata.meta;
   if (metadata.animations !== undefined) group.animations = metadata.animations;

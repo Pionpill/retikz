@@ -2,14 +2,14 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
-import { annotationCoordinateI18n } from './reference-coordinate.i18n';
-import { annotationRows } from './reference-data.data';
-import { annotationDataI18n } from './reference-data.i18n';
+import { referenceCoordinateI18n } from './reference-coordinate.i18n';
+import { referenceRows } from './reference-data.data';
+import { referenceDataI18n } from './reference-data.i18n';
 
 /** 同一数据集上的几何类型分别展示相关聚合与位置控件 */
-export const createAnnotationDataControls = (geometry: 'point' | 'path' | 'interval', lang: Lang = 'zh') => {
-  const text = annotationDataI18n[lang];
-  const coordinateText = annotationCoordinateI18n[lang];
+export const createReferenceDataControls = (geometry: 'point' | 'path' | 'interval', lang: Lang = 'zh') => {
+  const text = referenceDataI18n[lang];
+  const coordinateText = referenceCoordinateI18n[lang];
   return {
     controls: definePreviewControls({
       presentation: 'panel',
@@ -22,7 +22,7 @@ export const createAnnotationDataControls = (geometry: 'point' | 'path' | 'inter
               kind: 'table',
               id: 'observations',
               label: text.observations,
-              rows: annotationRows,
+              rows: referenceRows,
               columns: [{ key: 'group' }, { key: 'x' }, { key: 'y' }],
             },
           ],
@@ -41,6 +41,9 @@ export const createAnnotationDataControls = (geometry: 'point' | 'path' | 'inter
               ],
             },
             { kind: 'switch', id: 'grouped', label: text.grouped, defaultValue: false },
+            ...(geometry === 'interval'
+              ? [{ kind: 'switch' as const, id: 'fullY' as const, label: text.fullY, defaultValue: false }]
+              : []),
             ...(geometry === 'interval'
               ? []
               : [
@@ -72,6 +75,7 @@ export const createAnnotationDataControls = (geometry: 'point' | 'path' | 'inter
     canonicalValues: {
       coordinate: 'cartesian',
       grouped: false,
+      ...(geometry === 'interval' ? { fullY: false } : {}),
       ...(geometry === 'interval' ? {} : { statistic: 'mean' }),
       ...(geometry === 'point' ? {} : { fullX: false }),
     },

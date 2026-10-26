@@ -162,7 +162,7 @@ export const resolveNodeLabelGeometry = (
 
   const placed = placeBoundaryLabelBox({
     label: {
-      text: properties.text.plainText,
+      text: properties.text.map(line => line.plainText).join('\n'),
       rotate: properties.rotate,
       keepUpright: properties.keepUpright,
       placement: properties.placement,

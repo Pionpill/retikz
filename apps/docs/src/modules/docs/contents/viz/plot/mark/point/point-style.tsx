@@ -21,6 +21,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     strokeOpacity: values[POINT_STYLE_CONTROL_IDS.strokeOpacity],
     opacity: values[POINT_STYLE_CONTROL_IDS.opacity],
     size: values[POINT_STYLE_CONTROL_IDS.size],
+    sizeMode: values[POINT_STYLE_CONTROL_IDS.sizeMode],
+    minimumSize: values[POINT_STYLE_CONTROL_IDS.minimumSize],
     dashed: values[POINT_STYLE_CONTROL_IDS.dashed],
     shadow: values[POINT_STYLE_CONTROL_IDS.shadow],
     dotted: values[POINT_STYLE_CONTROL_IDS.dotted],

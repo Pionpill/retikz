@@ -284,8 +284,6 @@ const translations: Record<string, string> = {
     'Top-level defaults are merged field by field with optional `start` and `end` overrides. For open shapes (open, openStealth, openDiamond, openCircle), `fill` silently has no effect',
   '`overlap` 为实际端点共享值，`start` / `end` 可逐端覆盖；比例从默认位置插值到最终视觉后缘与逻辑端点对齐的位置':
     '`overlap` is shared by the active endpoints, with per-end `start` and `end` overrides; the ratio interpolates from the default position to the position where the final visual rear edge aligns with the logical endpoint',
-  "每个 `{ pos, mark }`：`pos∈[0,1]`，`mark.kind:'arrow'` + 视觉子集（shape 为已注册箭头名，方向随路径切线）":
-    "Each `{ pos, mark }` has `pos` in [0, 1] and `mark.kind: 'arrow'` with a subset of visual options; shape is a registered arrow name, and direction follows the path tangent",
   '等价把 path 包一层绕其包围盒中心旋转的 Scope；端点先在当前 scope resolve 再整体旋转':
     'Equivalent to wrapping the path in a Scope rotated around its bounds center; endpoints are resolved in the current scope before the whole path rotates',
   '对每个 line↔line 接缝插切圆弧、改路径几何（区别于 lineJoin 仅描边）；curve / arc / bezier / fold 接缝保持尖；按相邻段长 clamp；省略 = 尖角':

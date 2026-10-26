@@ -85,7 +85,7 @@ export type NodeResolvedProperties = Omit<CanonicalNode, 'text' | 'label'> & {
 /** 字体及行内内容已确定化的标签属性 */
 export type NodeLabelResolution = Omit<CanonicalNodeLabel, 'text' | 'font'> & {
   /** 已解析的正文内容 */
-  text: TextLineResolution;
+  text: Array<TextLineResolution>;
   /** 完成缩放后的有效字体 */
   font: CanonicalFont;
 };
@@ -152,7 +152,7 @@ export type NodeLayout = {
 /** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */
 export type MeasuredNodeLabel = {
   /** 混排计算结果 */
-  laid?: InlineLineLayout;
+  laid?: Array<InlineLineLayout>;
   /** 测量宽度 */
   measuredWidth: number;
   /** 测量高度 */

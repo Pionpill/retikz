@@ -10,6 +10,7 @@ import type {
 } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { readSourceIndex, readSourceIndices } from '@retikz/data';
+import type { IRRibbonWidth } from '@retikz/extension';
 
 import type {
   AnchorOwner,
@@ -31,6 +32,7 @@ import {
   markProperty,
   positionField,
   markPositionInputs,
+  pathStepTargets,
   markChannelEncoding,
 } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
@@ -226,7 +228,7 @@ export const resolveGeometryMarkLabels = (
   ).flatMap((label, index): Array<IRPathLabel> => {
     const text = textForLabel(label, row, labelResolver, index, bindings[index]?.text);
     if (text === undefined) return [];
-    const output: IRPathLabel = { ...omitDisplayFormat(label), text: typeof text === 'string' ? text : [text] };
+    const output: IRPathLabel = { ...omitDisplayFormat(label), text };
     if (row !== undefined)
       for (const delivery of channels?.labelDeliveries ?? []) if (delivery.index === index) delivery.apply(output, row);
 
@@ -280,10 +282,29 @@ export const applyPathChannelDeliveries = (
   row: ExternalRow | undefined,
   channels: MarkChannels,
 ): IRPath => {
-  if (row === undefined) return path;
-  for (const entry of channels.pathDeliveries ?? []) {
-    const value = entry.resolver(row);
-    if (value !== undefined) entry.deliver(path, value, { mark, row });
+  if (row !== undefined)
+    for (const entry of channels.pathDeliveries ?? []) {
+      const value = entry.resolver(row);
+      if (value !== undefined) entry.deliver(path, value, { mark, row });
+    }
+
+  if (mark.type === 'path' && mark.properties?.kind === 'ribbon') {
+    const options = mark.properties.ribbon;
+    const sourceWidth = options?.width;
+    const widthValue = row === undefined ? undefined : channelValueOf<number>(channels, 'ribbon.width')?.(row);
+    const endValue = row === undefined ? undefined : channelValueOf<number>(channels, 'ribbon.endWidth')?.(row);
+    let width: IRRibbonWidth;
+    if (sourceWidth?.kind === 'taper') {
+      width = { ...sourceWidth, start: widthValue ?? sourceWidth.start, end: endValue ?? sourceWidth.end };
+    } else if (sourceWidth?.kind === 'profile' || sourceWidth?.kind === 'stops') {
+      width = sourceWidth;
+    } else {
+      const start = widthValue ?? sourceWidth?.value;
+      if (start === undefined) throw new RetikzPlotError(`Path ${mark.id ?? ''} ribbon width did not resolve`);
+      width = endValue === undefined ? { kind: 'fixed', value: start } : { kind: 'taper', start, end: endValue };
+    }
+    const { label, ...host } = path;
+    return { ...host, kind: 'ribbon', kindOptions: { ...options, width, ...(label === undefined ? {} : { label }) } };
   }
 
   return path;
@@ -339,9 +360,10 @@ export const attachMarkAnchor = <T extends IRNode | IRPath>(
     role,
     ...(instance.kind === 'single' ? { kind: 'single' } : { kind: 'row', transformedIndex: instance.transformedIndex }),
   };
-  const id = ctx.anchors.makeId(mark.properties?.anchorId ?? {}, instance, owner, mark.encodings?.anchorId);
-  ctx.anchors.register(id, owner);
-  return { ...node, id };
+  const identity = ctx.anchors.identify(mark.properties?.anchorId ?? {}, instance, owner, mark.encodings?.anchorId);
+  ctx.anchors.register(identity.id, owner);
+  if (node.type === 'node') ctx.targets?.register(identity, owner, 'node');
+  return { ...node, id: identity.id };
 };
 
 /** 收集坐标角色字段 */
@@ -353,7 +375,14 @@ export const collectPositionRoleFields = (mark: PositionEncodedMark, fields: Fie
 /** 收集注册的直接视觉字段目标，结构目标由其宿主收集 */
 export const collectEncodingChannelFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
   for (const [target, binding] of Object.entries(mark.encodings ?? {})) {
-    if (['position', 'from', 'to', 'opacity', 'label', 'bounds', 'closure'].includes(target)) continue;
+    if (target === 'ribbon') {
+      if (mark.type === 'path') {
+        fields.addChannel(mark.encodings.ribbon?.width);
+        fields.addChannel(mark.encodings.ribbon?.endWidth);
+      }
+      continue;
+    }
+    if (['position', 'from', 'to', 'steps', 'opacity', 'label', 'bounds', 'closure'].includes(target)) continue;
     fields.addChannel(binding as IRPlotChannel | undefined);
   }
 };
@@ -388,6 +417,13 @@ export const collectAnchorIdFields = (anchorId: IRPlotAnchorId | undefined, fiel
  * @description point / path / interval 共用 shared encoding；具体样式字段再由 node/path channel definition 派生收集
  */
 export const collectCommonEncodingFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
+  if (mark.type === 'path' && mark.encodings.steps !== undefined)
+    for (const step of mark.encodings.steps)
+      for (const { target } of pathStepTargets(step))
+        if ('mark' in target && 'field' in target.key) fields.addField(target.key.field);
+  if (mark.type === 'path' && mark.encodings.from !== undefined)
+    for (const endpoint of [mark.encodings.from, mark.encodings.to])
+      if ('mark' in endpoint && 'field' in endpoint.key) fields.addField(endpoint.key.field);
   collectPositionRoleFields(mark, fields);
   collectEncodingChannelFields(mark, fields);
   collectDatumLabelFields(mark, fields);

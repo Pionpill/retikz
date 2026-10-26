@@ -1,13 +1,10 @@
 import type { ValueOf } from '@retikz/foundation';
 
-import type { ArrowDefinition } from '../arrow';
-import type { BoundaryDefinition } from '../boundary';
-import type { ClipDefinition } from '../clip';
 import type { AnyCompositeDefinition } from '../composite';
-import type { PathGeneratorDefinition } from '../path-generator';
-import type { AnyPathKindDefinition } from '../path-kind';
-import type { PatternDefinition } from '../pattern';
-import type { ShapeDefinition } from '../shape';
+import type { BoundaryDefinition, ShapeDefinition } from '../node';
+import type { AnyPathDefinition, ArrowDefinition, MarkDefinition } from '../path';
+import type { ClipDefinition } from '../scope';
+import type { PatternDefinition } from '../style';
 
 /** Core 提供者能力的稳定判别值 */
 export const CoreProviderCapability = {
@@ -15,9 +12,9 @@ export const CoreProviderCapability = {
   Boundary: 'boundary',
   Clip: 'clip',
   Arrow: 'arrow',
+  Mark: 'mark',
   Pattern: 'pattern',
-  PathGenerator: 'pathGenerator',
-  BuiltinPathKind: 'pathKind',
+  Path: 'path',
   Composite: 'composite',
 } as const;
 
@@ -51,9 +48,9 @@ export type AnyCoreProviderDefinition =
   | BoundaryDefinition
   | ClipDefinition
   | ArrowDefinition
+  | MarkDefinition
   | PatternDefinition
-  | PathGeneratorDefinition
-  | AnyPathKindDefinition
+  | AnyPathDefinition
   | AnyCompositeDefinition;
 
 /** 按 Core 编译选项分类的提供者定义 */
@@ -66,12 +63,12 @@ export type CoreProviderDefinitions = Readonly<{
   clips?: ReadonlyArray<ClipDefinition>;
   /** 箭头定义 */
   arrows?: ReadonlyArray<ArrowDefinition>;
+  /** 普通路径标记定义 */
+  marks?: ReadonlyArray<MarkDefinition>;
   /** 图案定义 */
   patterns?: ReadonlyArray<PatternDefinition>;
-  /** 路径生成器定义 */
-  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
-  /** 路径种类定义 */
-  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
+  /** 路径定义 */
+  paths?: ReadonlyArray<AnyPathDefinition>;
   /** 复合定义 */
   composites?: ReadonlyArray<AnyCompositeDefinition>;
 }>;

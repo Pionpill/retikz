@@ -19,7 +19,7 @@ describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
         transforms: [{ kind: 'translate', x: 10, y: 20 }],
         position: { kind: 'anchor', target: [30, 40], selfAnchor: 'center' },
         zIndex: 2,
-        clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 10 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 20, height: 10 } },
         boundingShape: 'circle',
         meta: { role: 'wrapper' },
         animations: [],

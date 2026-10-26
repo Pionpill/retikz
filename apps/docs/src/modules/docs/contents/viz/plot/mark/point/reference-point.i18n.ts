@@ -1,5 +1,5 @@
-/** 标注试验场的双语控件文案 */
-export const annotationI18n = {
+/** 图元位置试验场的双语控件文案 */
+export const referencePointI18n = {
   zh: {
     orientation: '方向对齐',
     screen: '屏幕方向',
@@ -11,7 +11,7 @@ export const annotationI18n = {
     geometry: '几何形状',
     text: '纯文本',
     fontSize: '字号',
-    title: '点标注',
+    title: '点位置',
     x: '横向位置',
     y: '纵向位置',
     shape: '形状',
@@ -37,7 +37,7 @@ export const annotationI18n = {
     geometry: 'Geometry',
     text: 'Text only',
     fontSize: 'Font size',
-    title: 'Point annotation',
+    title: 'Point positions',
     x: 'X position',
     y: 'Y position',
     shape: 'Shape',

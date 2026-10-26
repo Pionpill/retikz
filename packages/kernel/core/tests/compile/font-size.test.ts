@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { ScenePrimitive, TextLine, TextPrim } from '../../src/contract';
+import type { ScenePrimitive, TextLine, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
-const collectTexts = (primitives: Array<ScenePrimitive>): Array<TextPrim> => {
-  const texts: Array<TextPrim> = [];
+const collectTexts = (primitives: Array<ScenePrimitive>): Array<TextPrimitive> => {
+  const texts: Array<TextPrimitive> = [];
 
   for (const primitive of primitives) {
     if (primitive.type === 'text') texts.push(primitive);
@@ -17,7 +17,7 @@ const collectTexts = (primitives: Array<ScenePrimitive>): Array<TextPrim> => {
 
 const lineText = (line: string | TextLine): string => (typeof line === 'string' ? line : line.text);
 
-const findText = (scene: ReturnType<typeof compileToScene>['scene'], text: string): TextPrim => {
+const findText = (scene: ReturnType<typeof compileToScene>['scene'], text: string): TextPrimitive => {
   const primitive = collectTexts(scene.primitives).find(candidate =>
     candidate.lines.some(line => lineText(line) === text),
   );

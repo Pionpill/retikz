@@ -2,7 +2,7 @@ import type { RibbonCapContext } from '@retikz/extension';
 import {
   ArcRibbonCapDefinition,
   ButtRibbonCapDefinition,
-  RibbonPathKindDefinition,
+  RibbonPathDefinition,
   RoundRibbonCapDefinition,
   SquareRibbonCapDefinition,
 } from '@retikz/extension';
@@ -82,7 +82,7 @@ export const renderRibbonLabelSupportPreview = (values: RibbonLabelSupportPrevie
       height={180}
       viewBox={{ x: -220, y: -90, width: 440, height: 180 }}
       style={{ maxWidth: '100%', height: 'auto' }}
-      extensions={{ pathKinds: [RibbonPathKindDefinition] }}
+      extensions={{ paths: [RibbonPathDefinition] }}
     >
       <Path
         kind="ribbon"

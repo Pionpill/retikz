@@ -86,7 +86,7 @@ export const SCOPE_INSPECTOR = defineInspector({
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: endpoint },
           ],
-          marks: [{ pos: 1, mark: { kind: 'arrow', length: 6, width: 5 } }],
+          arrow: { end: { length: 6, width: 5 } },
           style: pathStyle(color, { dashPattern: [2, 2] }),
         });
       }

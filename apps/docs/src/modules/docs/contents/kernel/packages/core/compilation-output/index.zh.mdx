@@ -63,14 +63,14 @@ type Scene = {
 `Scene.primitives` 是按绘制顺序排列的图元数组。矩形、椭圆、文字和路径描述已确定的几何；分组图元保存子图元，并可携带变换、裁剪引用等共同属性。
 
 ```ts
-type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
+type ScenePrimitive = RectPrimitive | EllipsePrimitive | TextPrimitive | PathPrimitive | GroupPrimitive;
 ```
 
 按职责可以分为三类：
 
-- 几何图元（`RectPrim`、`EllipsePrim`、`PathPrim`）：描述矩形、椭圆和路径。
-- 文本图元（`TextPrim`）：描述文本及其排版、样式。
-- 分组图元（`GroupPrim`）：组织子图元，统一应用变换和裁剪。
+- 几何图元（`RectPrimitive`、`EllipsePrimitive`、`PathPrimitive`）：描述矩形、椭圆和路径。
+- 文本图元（`TextPrimitive`）：描述文本及其排版、样式。
+- 分组图元（`GroupPrimitive`）：组织子图元，统一应用变换和裁剪。
 
 <ComponentAlert
   type="tip"
@@ -90,7 +90,7 @@ type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
         <tbody>
           <tr>
             <td>
-              <code>RectPrim</code>
+              <code>RectPrimitive</code>
             </td>
             <td>
               <code>{'<rect>'}</code>
@@ -101,7 +101,7 @@ type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
           </tr>
           <tr>
             <td>
-              <code>EllipsePrim</code>
+              <code>EllipsePrimitive</code>
             </td>
             <td>
               <code>{'<ellipse>'}</code>
@@ -112,7 +112,7 @@ type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
           </tr>
           <tr>
             <td>
-              <code>TextPrim</code>
+              <code>TextPrimitive</code>
             </td>
             <td>
               <code>{'<text>'}</code>, <code>{'<tspan>'}</code>
@@ -123,7 +123,7 @@ type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
           </tr>
           <tr>
             <td>
-              <code>PathPrim</code>
+              <code>PathPrimitive</code>
             </td>
             <td>
               <code>{'<path>'}</code>
@@ -135,7 +135,7 @@ type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
           </tr>
           <tr>
             <td>
-              <code>GroupPrim</code>
+              <code>GroupPrimitive</code>
             </td>
             <td>
               <code>{'<g>'}</code>
@@ -183,11 +183,25 @@ type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
 ```ts
 type SceneResource = PaintResource | ClipResource;
 
-type PaintResource = {
+type PaintResource = GradientResource | PatternResource | ImageResource;
+
+type GradientResource = {
   kind: 'paint';
   id: string;
-  spec: IRPaint;
-  tile?: ResolvedPatternTile;
+  spec: Extract<IRPaint, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
+};
+
+type PatternResource = {
+  kind: 'paint';
+  id: string;
+  spec: Extract<IRPaint, { kind: 'pattern' }>;
+  tile: ResolvedPatternTile;
+};
+
+type ImageResource = {
+  kind: 'paint';
+  id: string;
+  spec: Extract<IRPaint, { kind: 'image' }>;
 };
 
 type ClipResource = {

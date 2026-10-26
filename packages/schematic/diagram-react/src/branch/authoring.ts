@@ -1,7 +1,7 @@
 import type {
   BranchDiagramInputEmbedProps,
-  InputBranchDiagram,
   InputBranch,
+  InputBranchDiagram,
   InputBranchNode,
 } from '@retikz/diagram-vanilla/branch';
 import type { BranchDiagramDefinitionOptions } from '@retikz/diagram/branch';
@@ -28,8 +28,6 @@ export type BranchDiagramLayoutHostProps = Pick<
   | 'animate'
   | 'snapshotAt'
   | 'animationRef'
-  | 'easings'
-  | 'animationProperties'
   | 'idPrefix'
   | 'nodeDistance'
   | 'fontSize'
@@ -38,8 +36,7 @@ export type BranchDiagramLayoutHostProps = Pick<
   | 'clips'
   | 'arrows'
   | 'patterns'
-  | 'pathGenerators'
-  | 'pathKinds'
+  | 'paths'
   | 'composites'
   | 'themeDefinitions'
   | 'lowerTex'
@@ -63,8 +60,7 @@ export const branchDiagramLayoutHostPropKeys = [
   'animate',
   'snapshotAt',
   'animationRef',
-  'easings',
-  'animationProperties',
+
   'idPrefix',
   'nodeDistance',
   'fontSize',
@@ -73,8 +69,7 @@ export const branchDiagramLayoutHostPropKeys = [
   'clips',
   'arrows',
   'patterns',
-  'pathGenerators',
-  'pathKinds',
+  'paths',
   'composites',
   'themeDefinitions',
   'lowerTex',
@@ -140,8 +135,7 @@ export const collectBranchDiagramInput = (
     animate: _animate,
     snapshotAt: _snapshotAt,
     animationRef: _animationRef,
-    easings: _easings,
-    animationProperties: _animationProperties,
+
     idPrefix: _idPrefix,
     nodeDistance: _nodeDistance,
     fontSize: _fontSize,
@@ -150,8 +144,7 @@ export const collectBranchDiagramInput = (
     clips: _clips,
     arrows: _arrows,
     patterns: _patterns,
-    pathGenerators: _pathGenerators,
-    pathKinds: _pathKinds,
+    paths: _paths,
     composites: _composites,
     themeDefinitions: _themeDefinitions,
     lowerTex: _lowerTex,
@@ -173,8 +166,7 @@ export const collectBranchDiagramInput = (
   void _animate;
   void _snapshotAt;
   void _animationRef;
-  void _easings;
-  void _animationProperties;
+
   void _idPrefix;
   void _nodeDistance;
   void _fontSize;
@@ -183,8 +175,7 @@ export const collectBranchDiagramInput = (
   void _clips;
   void _arrows;
   void _patterns;
-  void _pathGenerators;
-  void _pathKinds;
+  void _paths;
   void _composites;
   void _themeDefinitions;
   void _lowerTex;

@@ -85,7 +85,7 @@ describe('layout alignment guide propagation', () => {
         {
           type: 'scope',
           transforms: [{ kind: 'translate', x: 10, y: 20 }],
-          clip: { kind: 'rect', x: -100, y: -100, width: 200, height: 200 },
+          clip: { kind: 'rect', params: { x: -100, y: -100, width: 200, height: 200 } },
           children: [explicitGuideChild],
         },
         [explicit],
