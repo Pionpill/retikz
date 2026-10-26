@@ -78,7 +78,7 @@ const createTestDiagramFoundationProvider = (
   return Object.freeze({
     key: TestDiagramFoundationProviderKey,
     dependencies: Object.freeze([FlexLayoutProvider.key, SurfaceProvider.key, LegendProvider.key]),
-    datasets: Object.freeze({}),
+    params: undefined,
     makeDefinition: () => createTestDiagramFoundationDefinition(resolved, proposal),
   });
 };
