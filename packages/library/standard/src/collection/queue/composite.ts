@@ -21,6 +21,5 @@ export const createQueue = (input: IRQueue): IRQueue => ({ ...input });
 export const QueueProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'standard', type: 'queue' },
   dependencies: [PathClipProvider.key],
-  datasets: {},
   makeDefinition: () => QueueDefinition,
 };

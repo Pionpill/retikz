@@ -48,7 +48,7 @@ describe('<Axes>', () => {
     expect(first.ir.children[0]).toEqual(createAxes(input));
     expect(first.contributions[0]).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
     expect(second.contributions[0]?.providers[0]).toBe(AxesProvider);
-    expect(AxesProvider.makeDefinition({})).toBe(AxesDefinition);
+    expect(AxesProvider.makeDefinition([])).toBe(AxesDefinition);
   });
 
   it('coexists with Grid under distinct qualified provider keys', () => {

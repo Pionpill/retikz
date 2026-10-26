@@ -24,6 +24,5 @@ export const createSurface = (input: SurfaceInput): IRSurface => ({ ...input });
 export const SurfaceProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: SurfaceDefinition.namespace, type: SurfaceDefinition.type }),
   dependencies: Object.freeze([PathClipProvider.key]),
-  datasets: Object.freeze({}),
   makeDefinition: () => SurfaceDefinition,
 });

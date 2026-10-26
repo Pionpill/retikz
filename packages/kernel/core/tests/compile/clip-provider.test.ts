@@ -148,8 +148,6 @@ describe('clip providers', () => {
             providers: [
               {
                 key: { capability: 'clip', name: 'roundedRect' },
-                dependencies: [],
-                datasets: {},
                 makeDefinition: () => definition,
               },
             ],

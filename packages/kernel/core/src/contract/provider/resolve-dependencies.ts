@@ -5,8 +5,9 @@ import type { AnyPathDefinition, ArrowDefinition, MarkDefinition } from '../path
 import type { ClipDefinition } from '../scope';
 import type { PatternDefinition } from '../style';
 import type {
-  AnyCoreProviderDefinition,
+  AnyCoreDependencyProvider,
   CoreDependencyProvider,
+  CoreProviderDefinition,
   CoreProviderDefinitions,
   CoreProviderKey,
   ResolveCoreProviderDependenciesOptions,
@@ -16,8 +17,8 @@ import { CoreProviderCapability } from './dependency-provider';
 type ProviderEntry = {
   key: CoreProviderKey;
   dependencies: ReadonlyArray<CoreProviderKey>;
-  datasets: Map<string, unknown>;
-  makeDefinition: CoreDependencyProvider['makeDefinition'];
+  params: Array<unknown>;
+  makeDefinition: AnyCoreDependencyProvider['makeDefinition'];
 };
 
 type NamedProviderCapability = Exclude<CoreProviderCapability, typeof CoreProviderCapability.Composite>;
@@ -40,11 +41,11 @@ type MutableCoreProviderDefinitions = {
 };
 
 type DefinitionIndex = Readonly<{
-  named: Map<NamedProviderCapability, Map<string, AnyCoreProviderDefinition>>;
-  composites: Map<string, Map<string, AnyCoreProviderDefinition>>;
+  named: Map<NamedProviderCapability, Map<string, CoreProviderDefinition>>;
+  composites: Map<string, Map<string, CoreProviderDefinition>>;
 }>;
 
-type CoreDefinitionCollection = ReadonlyArray<AnyCoreProviderDefinition> | undefined;
+type CoreDefinitionCollection = ReadonlyArray<CoreProviderDefinition> | undefined;
 
 /** 把完整 key 格式化为面向作者的诊断名称 */
 const formatProviderKey = (key: CoreProviderKey): string =>
@@ -104,24 +105,7 @@ const isProviderDependencyListEqual = (
     return candidate.capability !== CoreProviderCapability.Composite && dependency.name === candidate.name;
   });
 
-/** 合并同一提供者键的数据集引用 */
-const mergeDatasets = (entry: ProviderEntry, provider: CoreDependencyProvider): void => {
-  for (const [reference, value] of Object.entries(provider.datasets)) {
-    if (!entry.datasets.has(reference)) {
-      entry.datasets.set(reference, value);
-      continue;
-    }
-
-    if (!Object.is(entry.datasets.get(reference), value)) {
-      throw new RetikzCoreError(
-        RetikzCoreErrorCode.Contract,
-        `resolveCoreProviderDependencies: provider ${formatProviderKey(entry.key)} dataset "${reference}" conflicts by identity`,
-      );
-    }
-  }
-};
-
-/** 建立完整提供者索引，并在创建函数执行前完成声明与数据集合并 */
+/** 建立完整提供者索引，并在创建函数执行前完成声明检查与参数收集 */
 const buildProviderIndex = (
   options: ResolveCoreProviderDependenciesOptions,
 ): { index: ProviderIndex; roots: Array<CoreProviderKey>; definitions: CoreProviderDefinitions } => {
@@ -135,16 +119,15 @@ const buildProviderIndex = (
     roots.push(...contribution.roots);
 
     for (const provider of contribution.providers) {
-      const dependencies = [...provider.dependencies];
+      const dependencies = [...(provider.dependencies ?? [])];
       const existing = findProvider(index, provider.key);
       if (existing === undefined) {
         const entry: ProviderEntry = {
           key: provider.key,
           dependencies,
-          datasets: new Map(),
+          params: provider.params === undefined ? [] : [provider.params],
           makeDefinition: provider.makeDefinition,
         };
-        mergeDatasets(entry, provider);
         setProvider(index, entry);
         continue;
       }
@@ -163,7 +146,7 @@ const buildProviderIndex = (
         );
       }
 
-      mergeDatasets(existing, provider);
+      if (provider.params !== undefined) existing.params.push(provider.params);
     }
   }
 
@@ -242,7 +225,7 @@ type DefinitionIdentity =
 
 /** 在接受创建函数输出前推断被擦除定义所属的能力 */
 const resolveDefinitionCapability = (
-  definition: AnyCoreProviderDefinition,
+  definition: CoreProviderDefinition,
   expected: CoreProviderCapability,
 ): CoreProviderCapability => {
   if ('namespace' in definition && 'type' in definition) return CoreProviderCapability.Composite;
@@ -265,7 +248,7 @@ const resolveDefinitionCapability = (
 /** 从定义读取指定能力的注册表标识 */
 const resolveDefinitionIdentity = (
   capability: CoreProviderCapability,
-  definition: AnyCoreProviderDefinition,
+  definition: CoreProviderDefinition,
 ): DefinitionIdentity => {
   if (resolveDefinitionCapability(definition, capability) !== capability) {
     throw new RetikzCoreError(
@@ -297,7 +280,7 @@ const resolveDefinitionIdentity = (
 };
 
 /** 判断定义标识是否与提供者键相同 */
-const doesDefinitionMatchKey = (key: CoreProviderKey, definition: AnyCoreProviderDefinition): boolean => {
+const doesDefinitionMatchKey = (key: CoreProviderKey, definition: CoreProviderDefinition): boolean => {
   const identity = resolveDefinitionIdentity(key.capability, definition);
   return key.capability === CoreProviderCapability.Composite
     ? identity.capability === CoreProviderCapability.Composite &&
@@ -310,7 +293,7 @@ const doesDefinitionMatchKey = (key: CoreProviderKey, definition: AnyCoreProvide
 const appendByCapability = (
   definitions: MutableCoreProviderDefinitions,
   capability: CoreProviderCapability,
-  definition: AnyCoreProviderDefinition,
+  definition: CoreProviderDefinition,
 ): void => {
   switch (capability) {
     case CoreProviderCapability.Shape:
@@ -344,7 +327,7 @@ const appendDefinition = (
   definitions: MutableCoreProviderDefinitions,
   definitionIndex: DefinitionIndex,
   capability: CoreProviderCapability,
-  definition: AnyCoreProviderDefinition,
+  definition: CoreProviderDefinition,
 ): void => {
   const identity = resolveDefinitionIdentity(capability, definition);
   const existing =
@@ -426,7 +409,7 @@ const freezeResolvedDefinitions = (definitions: MutableCoreProviderDefinitions):
 
 /**
  * 解析 Core 提供者贡献的可达定义闭包
- * @description 在调用任何创建函数前完成提供者、数据集、缺失依赖与环路预检，再按依赖优先顺序物化并追加显式定义
+ * @description 在调用任何创建函数前完成提供者、缺失依赖与环路预检，再按依赖优先顺序把同键参数交给所属方物化定义
  */
 export const resolveCoreProviderDependencies = (
   options: ResolveCoreProviderDependenciesOptions,
@@ -449,8 +432,9 @@ export const resolveCoreProviderDependencies = (
   };
 
   for (const provider of orderedProviders) {
-    const datasets = Object.freeze(Object.fromEntries(provider.datasets));
-    const definition = provider.makeDefinition(datasets);
+    // 同键声明已验证工厂引用一致；此处集中恢复工厂与其参数的关联
+    const makeDefinition = provider.makeDefinition as CoreDependencyProvider<unknown>['makeDefinition'];
+    const definition = makeDefinition(Object.freeze(provider.params));
     if (!doesDefinitionMatchKey(provider.key, definition)) {
       const returnedIdentity = resolveDefinitionIdentity(provider.key.capability, definition);
       throw new RetikzCoreError(

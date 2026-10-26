@@ -137,14 +137,14 @@ describe('Extension extension collections', () => {
       expect(providers).toHaveLength(definitions.length);
 
       providers.forEach((provider, index) => {
-        expect(provider.makeDefinition({})).toBe(definitions[index]);
+        expect(provider.makeDefinition([])).toBe(definitions[index]);
       });
     }
 
     expect(ExtensionClipProviders).toHaveLength(ExtensionClipDefinitions.length);
 
     ExtensionClipProviders.forEach((provider, index) => {
-      expect(provider.makeDefinition({})).toBe(ExtensionClipDefinitions[index]);
+      expect(provider.makeDefinition([])).toBe(ExtensionClipDefinitions[index]);
     });
   });
 });

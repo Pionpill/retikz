@@ -22,8 +22,6 @@ export const SquareArrowDefinition = defineArrow({
 /** Square 箭头的静态 Core provider */
 export const SquareArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: SquareArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => SquareArrowDefinition,
 });
 
@@ -51,7 +49,5 @@ export const OpenSquareArrowDefinition = defineArrow({
 /** OpenSquare 箭头的静态 Core provider */
 export const OpenSquareArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: OpenSquareArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => OpenSquareArrowDefinition,
 });

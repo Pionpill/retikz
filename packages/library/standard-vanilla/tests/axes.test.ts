@@ -45,7 +45,7 @@ describe('axes()', () => {
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.axes' });
     expect(contribution.node).toEqual(createAxes(input));
     expect(contribution.providerDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
-    expect(AxesProvider.makeDefinition({})).toBe(AxesDefinition);
+    expect(AxesProvider.makeDefinition([])).toBe(AxesDefinition);
   });
 
   it('coexists with Grid and contributes both definitions once', () => {

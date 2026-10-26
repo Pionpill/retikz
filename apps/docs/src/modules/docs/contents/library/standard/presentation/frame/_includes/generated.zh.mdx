@@ -88,7 +88,7 @@ export type InputFrame = Omit<FrameInput, 'id' | 'children'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FrameInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={63}>FrameInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"FrameInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={54}>FrameInputEmbedAdapter</ApiSourceLink>
 
 ```ts
 export declare const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame>;
@@ -123,7 +123,7 @@ export declare const frame: (input: InputFrame) => InputEmbed<InputFrame>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameDescription"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={60}>frameDescription</ApiSourceLink>
+#### <ApiSourceLink label={"frameDescription"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={51}>frameDescription</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -150,7 +150,7 @@ export declare const frameDescription: (input: FrameDescriptionInput) => IRFrame
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameTitle"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={57}>frameTitle</ApiSourceLink>
+#### <ApiSourceLink label={"frameTitle"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={48}>frameTitle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -358,8 +358,6 @@ export const FrameDefinition: CompositeDefinition<IRFrame, typeof STANDARD_NAMES
 ```ts
 export const FrameProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: FrameDefinition.namespace, type: FrameDefinition.type }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => FrameDefinition,
 });
 ```

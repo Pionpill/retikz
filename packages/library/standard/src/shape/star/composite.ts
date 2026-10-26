@@ -24,7 +24,5 @@ export const createStar = (input: ShapeProperties<IRStar>): IRStar => ({
 /** Star 的按需依赖贡献 */
 export const StarProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'star' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => StarDefinition,
 });

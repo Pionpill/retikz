@@ -74,9 +74,7 @@ export const HexagonShapeDefinition = defineShape<HexagonShapeParams>({
 });
 
 /** Hexagon 的静态 Core provider */
-export const HexagonShapeProvider: CoreDependencyProvider = Object.freeze({
+export const HexagonShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
   key: { capability: 'shape', name: HexagonShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
   makeDefinition: () => HexagonShapeDefinition,
 });

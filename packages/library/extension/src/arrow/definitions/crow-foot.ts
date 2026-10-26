@@ -23,7 +23,5 @@ export const CrowFootArrowDefinition = defineArrow({
 /** CrowFoot 箭头的静态 Core provider */
 export const CrowFootArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: CrowFootArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => CrowFootArrowDefinition,
 });

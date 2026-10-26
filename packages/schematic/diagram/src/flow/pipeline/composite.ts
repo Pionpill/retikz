@@ -7,11 +7,7 @@ import { LegendProvider } from '@retikz/standard/presentation';
 import { DIAGRAM_NAMESPACE } from '../../_diagram';
 import type { FlowDiagramDefinitionOptions } from '../contract';
 import type { ResolvedFlowDiagramDefinitionOptions } from '../providers';
-import {
-  createFlowDiagramRuntimeDatasets,
-  resolveFlowDiagramDefinitionOptions,
-  resolveFlowDiagramRuntimeOptions,
-} from '../providers';
+import { resolveFlowDiagramDefinitionOptions } from '../providers';
 import type { FlowDiagramArtifact, IRFlowDiagram } from '../schemas';
 import { FlowDiagramArtifactSchema, FlowDiagramSchema } from '../schemas';
 import { FLOW_TYPE } from '../shared';
@@ -44,14 +40,16 @@ export const FlowDiagramProviderKey: CompositeCoreProviderKey = Object.freeze({
   type: FLOW_TYPE,
 });
 
-const makeFlowDiagramDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
-  createFlowDiagramDefinitionFromOptions(resolveFlowDiagramRuntimeOptions(datasets));
+const makeFlowDiagramDefinition: CoreDependencyProvider<FlowDiagramDefinitionOptions>['makeDefinition'] =
+  contributions => createFlowDiagramDefinitionFromOptions(resolveFlowDiagramDefinitionOptions(contributions));
 
 /** 创建携带当前 Flow、Diagram 与 Graph definitions 的 provider */
-export const createFlowDiagramProvider = (options: FlowDiagramDefinitionOptions = {}): CoreDependencyProvider =>
+export const createFlowDiagramProvider = (
+  options: FlowDiagramDefinitionOptions = {},
+): CoreDependencyProvider<FlowDiagramDefinitionOptions> =>
   Object.freeze({
     key: FlowDiagramProviderKey,
     dependencies: Object.freeze([GraphProviderKey, FlexLayoutProvider.key, GridLayoutProvider.key, LegendProvider.key]),
-    datasets: createFlowDiagramRuntimeDatasets(options),
+    params: options,
     makeDefinition: makeFlowDiagramDefinition,
   });

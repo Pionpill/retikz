@@ -44,8 +44,6 @@ export const GroupBodyAllocationProviderKey: CompositeCoreProviderKey = Object.f
 /** 为 Group 提供不依赖其它 provider 的正文分配边界组件 */
 export const GroupBodyAllocationProvider: CoreDependencyProvider = Object.freeze({
   key: GroupBodyAllocationProviderKey,
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => GroupBodyAllocationDefinition,
 });
 

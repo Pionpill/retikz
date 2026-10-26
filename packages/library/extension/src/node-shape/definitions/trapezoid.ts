@@ -99,9 +99,7 @@ export const TrapezoidShapeDefinition = defineShape<TrapezoidShapeParams>({
 });
 
 /** Trapezoid 的静态 Core provider */
-export const TrapezoidShapeProvider: CoreDependencyProvider = Object.freeze({
+export const TrapezoidShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
   key: { capability: 'shape', name: TrapezoidShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
   makeDefinition: () => TrapezoidShapeDefinition,
 });

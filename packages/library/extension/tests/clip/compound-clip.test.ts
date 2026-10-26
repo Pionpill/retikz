@@ -112,8 +112,8 @@ describe('Extension compound clip definition', () => {
   });
 
   it('materializes one complete compound definition without shape dependencies', () => {
-    expect(CompoundClipProvider.makeDefinition({})).toBe(CompoundClipDefinition);
-    expect(CompoundClipProvider.dependencies).toEqual([]);
+    expect(CompoundClipProvider.makeDefinition([])).toBe(CompoundClipDefinition);
+    expect(CompoundClipProvider.dependencies ?? []).toEqual([]);
   });
 
   it('requires a third-party child definition to be present in the active clips registry', () => {

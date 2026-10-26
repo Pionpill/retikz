@@ -24,7 +24,5 @@ export const createGrid = (input: GridInput): IRGrid => ({
 /** Grid 的 Core Composite dependency provider */
 export const GridProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: GridDefinition.namespace, type: GridDefinition.type }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => GridDefinition,
 });

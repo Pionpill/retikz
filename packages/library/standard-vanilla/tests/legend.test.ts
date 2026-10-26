@@ -46,7 +46,7 @@ describe('legend()', () => {
       compile: { composites: [LegendDefinition] },
     });
 
-    expect(LegendProvider.makeDefinition({})).toBe(LegendDefinition);
+    expect(LegendProvider.makeDefinition([])).toBe(LegendDefinition);
     expect(vanillaOutput).toBe(directOutput);
   });
 });

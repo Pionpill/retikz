@@ -21,6 +21,5 @@ export const createStack = (input: IRStack): IRStack => ({ ...input });
 export const StackProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'standard', type: 'stack' },
   dependencies: [PathClipProvider.key],
-  datasets: {},
   makeDefinition: () => StackDefinition,
 };

@@ -184,6 +184,7 @@ export type {
   DataSourceIdentityOptions,
   DataValueSampleOptions,
 } from './provenance';
+export { mergeExternalDatasets } from './shared';
 export type { ExternalDatasets, ExternalRow } from './shared';
 export {
   AnnotateParamsSchema,

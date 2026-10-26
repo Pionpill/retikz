@@ -93,9 +93,7 @@ export const ParallelogramShapeDefinition = defineShape<ParallelogramShapeParams
 });
 
 /** Parallelogram 的静态 Core provider */
-export const ParallelogramShapeProvider: CoreDependencyProvider = Object.freeze({
+export const ParallelogramShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
   key: { capability: 'shape', name: ParallelogramShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
   makeDefinition: () => ParallelogramShapeDefinition,
 });

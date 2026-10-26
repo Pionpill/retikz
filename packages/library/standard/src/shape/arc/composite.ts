@@ -24,7 +24,5 @@ export const createArc = (input: ShapeProperties<IRArc>): IRArc => ({
 /** Arc 的按需依赖贡献 */
 export const ArcProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'arc' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => ArcDefinition,
 });

@@ -36,7 +36,7 @@ describe('Extension Ribbon provider contribution', () => {
     const secondProvider = second.providers[0];
 
     expect(firstProvider.makeDefinition).toBe(secondProvider.makeDefinition);
-    expect(firstProvider.datasets['profile:bulge']).toBe(BUILTIN_RIBBON_WIDTH_PROFILES[0]);
+    expect(firstProvider.params).toMatchObject({ profiles: [BUILTIN_RIBBON_WIDTH_PROFILES[0]] });
 
     const definitions = resolveCoreProviderDependencies({ contributions: [first] });
 
@@ -64,7 +64,7 @@ describe('Extension Ribbon provider contribution', () => {
     const second = createRibbonProviderContribution({ profiles: [profile('custom', 12)] });
 
     expect(() => resolveCoreProviderDependencies({ contributions: [first, second] })).toThrow(
-      /dataset "profile:custom" conflicts by identity/i,
+      /profile 'custom'.*more than once/i,
     );
   });
 
@@ -73,8 +73,7 @@ describe('Extension Ribbon provider contribution', () => {
     const contribution = createRibbonProviderContribution({ profiles: [custom] });
     const provider = contribution.providers[0];
 
-    expect(Object.hasOwn(provider.datasets, 'profile:__proto__')).toBe(true);
-    expect(provider.datasets['profile:__proto__']).toBe(custom);
+    expect(provider.params).toMatchObject({ profiles: expect.arrayContaining([custom]) });
 
     const definitions = resolveCoreProviderDependencies({ contributions: [contribution] });
 
@@ -91,7 +90,7 @@ describe('Extension Ribbon provider contribution', () => {
     const second = createRibbonProviderContribution({ profiles: [profile('__proto__', 12)] });
 
     expect(() => resolveCoreProviderDependencies({ contributions: [first, second] })).toThrow(
-      /dataset "profile:__proto__" conflicts by identity/i,
+      /profile '__proto__'.*more than once/i,
     );
   });
 });

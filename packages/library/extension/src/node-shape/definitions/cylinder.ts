@@ -41,9 +41,7 @@ export const CylinderShapeDefinition = defineShape<CylinderShapeParams>({
 });
 
 /** Cylinder 的静态 Core provider */
-export const CylinderShapeProvider: CoreDependencyProvider = Object.freeze({
+export const CylinderShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
   key: { capability: 'shape', name: CylinderShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
   makeDefinition: () => CylinderShapeDefinition,
 });

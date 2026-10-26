@@ -721,8 +721,6 @@ export const CircleDefinition = defineComposite({
 ```ts
 export const CircleProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'circle' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => CircleDefinition,
 });
 ```
@@ -766,8 +764,6 @@ export const EllipseDefinition = defineComposite({
 ```ts
 export const EllipseProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'ellipse' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => EllipseDefinition,
 });
 ```

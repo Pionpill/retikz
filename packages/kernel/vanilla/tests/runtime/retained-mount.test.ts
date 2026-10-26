@@ -139,7 +139,7 @@ const datasetCompositeSchema = CompositeBaseSchema.extend({
   type: literal('datasetBox'),
 });
 
-const makeDatasetDefinition = (datasets: Readonly<Record<string, unknown>>): AnyCompositeDefinition =>
+const makeDatasetDefinition = (contributions: ReadonlyArray<{ color: string }>): AnyCompositeDefinition =>
   defineComposite({
     namespace: 'fixture',
     type: 'datasetBox',
@@ -151,7 +151,7 @@ const makeDatasetDefinition = (datasets: Readonly<Record<string, unknown>>): Any
           id: 'dataset-box',
           position: [0, 0],
           shape: 'rectangle',
-          style: { fill: string().parse(datasets.color) },
+          style: { fill: string().parse(contributions[0].color) },
         },
       ],
     }),
@@ -166,8 +166,7 @@ const datasetAdapter: InputEmbedAdapter<{ color: string }> = {
       providers: [
         {
           key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
-          dependencies: [],
-          datasets: { color: props.color },
+          params: { color: props.color },
           makeDefinition: makeDatasetDefinition,
         },
       ],
@@ -310,8 +309,8 @@ describe('@retikz/vanilla retained mount', () => {
   });
 
   it('composite candidate rollback 后稳定代理恢复旧 callback', () => {
-    const initial = makeDatasetDefinition({ color: '#ef4444' });
-    const candidate = makeDatasetDefinition({ color: '#22c55e' });
+    const initial = makeDatasetDefinition([{ color: '#ef4444' }]);
+    const candidate = makeDatasetDefinition([{ color: '#22c55e' }]);
     const retained = createRetainedCompositeDefinitions([initial]);
 
     const sceneInput: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'fixture', type: 'datasetBox' }] };
@@ -399,8 +398,8 @@ describe('@retikz/vanilla retained mount', () => {
         compile: greenCompile,
       }),
     } as const;
-    const makeDefinition = (datasets: Readonly<Record<string, unknown>>): AnyCompositeDefinition =>
-      definitions[zodEnum(['#ef4444', '#22c55e']).parse(datasets.color)];
+    const makeDefinition = (contributions: ReadonlyArray<{ color: string }>): AnyCompositeDefinition =>
+      definitions[zodEnum(['#ef4444', '#22c55e']).parse(contributions[0].color)];
     const adapter: InputEmbedAdapter<{ color: string }> = {
       kind: 'fixture-cached-dataset',
       lower: props => ({
@@ -410,8 +409,7 @@ describe('@retikz/vanilla retained mount', () => {
           providers: [
             {
               key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
-              dependencies: [],
-              datasets: { color: props.color },
+              params: { color: props.color },
               makeDefinition,
             },
           ],
@@ -591,8 +589,7 @@ describe('@retikz/vanilla retained mount', () => {
         providers: [
           {
             key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
-            dependencies: [],
-            datasets: { color: '#22c55e' },
+            params: { color: '#22c55e' },
             makeDefinition: makeDatasetDefinition,
           },
         ],

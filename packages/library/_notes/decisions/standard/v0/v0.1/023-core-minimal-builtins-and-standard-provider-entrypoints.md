@@ -57,7 +57,7 @@ import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
 ```
 
-每个子入口只导出该能力族的稳定定义、名称常量、定义参数类型、单项 Definition，以及需要传递依赖或合并 owner-local datasets 时使用的静态 provider。它不创建跨能力的 Standard registry，不改变 Core definition 类型，也不暴露私有几何 helper。
+每个子入口只导出该能力族的稳定定义、名称常量、定义参数类型、单项 Definition，以及需要传递依赖或聚合所属方参数时使用的 provider。它不创建跨能力的 Standard registry，不改变 Core definition 类型，也不暴露私有几何 helper。
 
 这些 provider extensions 不从 `@retikz/standard` 根入口、`@retikz/standard-react` 根入口或 `@retikz/standard-vanilla` 根入口转发。Standard 已有 composites 仍可按其既有根入口契约导出；本决策只禁止把迁入的 Core provider extensions 重新聚合成另一个隐式全集。各子入口是明确的 package exports，并具有独立构建入口；包保持 `sideEffects: false`，未导入的子入口不得执行注册或进入调用方模块图。
 
@@ -82,16 +82,16 @@ type CoreProviderKey =
       type: string;
     }>;
 
-type CoreDependencyProvider = Readonly<{
+type CoreDependencyProvider<TParams = void> = Readonly<{
   key: CoreProviderKey;
   dependencies: ReadonlyArray<CoreProviderKey>;
-  datasets: Readonly<Record<string, unknown>>;
-  makeDefinition: (mergedDatasets: Readonly<Record<string, unknown>>) => AnyCoreProviderDefinition;
+  params: TParams;
+  makeDefinition: (contributions: ReadonlyArray<TParams>) => CoreProviderDefinition;
 }>;
 
 type CoreProviderContribution = Readonly<{
   roots: ReadonlyArray<CoreProviderKey>;
-  providers: ReadonlyArray<CoreDependencyProvider>;
+  providers: ReadonlyArray<AnyCoreDependencyProvider>;
 }>;
 
 declare const resolveCoreProviderDependencies: (
@@ -102,7 +102,7 @@ declare const resolveCoreProviderDependencies: (
 
 这是等价的最小跨层形状；最终公开命名应复用既有 Composite graph vocabulary，但不得拆成 adapter 私有协议。`capability + name` 是普通 provider 的完整 identity；Composite 继续使用独立的 `namespace + type` identity，不能编码进字符串或退化成 owner namespace、数组位置。resolver 最终按 `CompileProviderOptions` 的能力复数名返回分组 definitions。
 
-`datasets` 是 provider owner 合并同一 key 多次 authored contribution 的唯一扩展槽；每个 owner 用自身稳定的数据项 key 写入独立值。Core 只提供按数据项 key 与 reference identity 的确定性合并和冲突检查，不解释 Composite runtime data 或其它 owner-local 内容。没有 datasets 的普通单项 definition 使用空表和固定 maker；Ribbon 与 Width Profile 的数据模型不由本 ADR 冻结。
+`params` 的类型由 provider owner 定义；Core 按贡献顺序收集同一 key 的参数引用，并将只读数组交给固定 maker。参数合并、去重与领域冲突由 owner 处理，Core 不解释数据集、运行选项或其它领域内容。无参数的静态 definition 使用 `CoreDependencyProvider<void>` 与 `params: undefined`。`AnyCoreDependencyProvider` 是异构目录的参数擦除视图，具体提供者保持精确参数类型。依赖只决定能力装配顺序，不建立共享数据容器；Ribbon 与 Width Profile 的数据模型不由本 ADR 冻结。
 
 Theme Style 不进入本次 dependency graph。它是完整 compile environment 的显式主题解析配置，不由 authored child 自动要求；调用方继续通过 `CompileOptions.themeStyles` 提供。若未来出现跨包传递 Theme Style 依赖，必须用独立 ADR 验证其生命周期和冲突语义，不能借本次 provider 内容迁移顺带扩张。
 
@@ -110,9 +110,9 @@ assembly 遵循以下确定性规则：
 
 - contributions 按 authored 顺序解析；resolver 只物化从 roots 可达的稳定闭包，不把 provider catalog 当成全量 preset
 - 同一 key 重复携带时，必须使用相同 maker 引用和相同有序 dependencies；否则在执行 maker 前 fail-loud
-- 同一 key 的 dataset 属性按名称合并；重复属性只有在 `Object.is(existing, incoming)` 时允许去重，否则 fail-loud
+- 同一 key 的参数按贡献顺序保留引用，不由 Core 克隆、合并或去重；领域冲突由 maker 诊断
 - 缺失 dependency、cycle、maker 输出 capability/key 不匹配或 maker 抛错都在 dispatch 前 fail-loud；依赖先于消费者，首次可达顺序作为稳定 tie-break
-- Composite 继续复用既有完整 key、datasets 与拓扑语义；泛化不得弱化现有 Composite graph 的闭包和冲突契约
+- Composite 继续复用完整 key、参数聚合与拓扑语义；泛化不得弱化 Composite graph 的闭包和提供者身份冲突契约
 - 调用方显式传入的 compile definitions 与 provider graph 结果在同一 Core resolver 中合并；相同引用允许去重，同 key 不同定义继续 fail-loud
 - resolver 返回普通 `CompileOptions` 可消费的 definitions，不创建长期全局 registry、module identity、版本 catalog 或 runtime loader
 - 所有冲突必须在 compile dispatch 前报告 capability、冲突 key 与来源；缺少已被 IR 引用的 definition 仍由对应 Core registry / lookup fail-loud，并列出当前可用项

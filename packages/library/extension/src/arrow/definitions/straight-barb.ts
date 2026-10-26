@@ -28,7 +28,5 @@ export const StraightBarbArrowDefinition = defineArrow({
 /** StraightBarb 箭头的静态 Core provider */
 export const StraightBarbArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: StraightBarbArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => StraightBarbArrowDefinition,
 });

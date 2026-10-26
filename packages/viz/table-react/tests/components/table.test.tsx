@@ -221,9 +221,7 @@ describe('Table React components', () => {
     expect(tableContribution.node).toMatchObject({ id: 'generic' });
     expect(detailContribution.node).toMatchObject({ id: 'detail' });
     expect(manualContribution.node).toMatchObject({ id: 'manual' });
-    expect(Object.keys(detailContribution.providerDependencies.providers[0]?.datasets ?? {})).toContain(
-      '@@retikz/table/runtime/detail',
-    );
+    expect(detailContribution.providerDependencies.providers[0]?.params).toHaveProperty('lowerOptions');
     expect(tableContribution.providerDependencies.providers[0]?.makeDefinition).toBe(
       detailContribution.providerDependencies.providers[0]?.makeDefinition,
     );
@@ -269,14 +267,18 @@ describe('Table React components', () => {
       );
 
     expect(renderBlankId).toThrow(/failed payload validation/i);
-    expect(() =>
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
       renderToStaticMarkup(
         <Layout>
           <ManualTable id="same" rows={[[null]]} />
           <ManualTable id="same" rows={[[null]]} />
         </Layout>,
-      ),
-    ).toThrow(/dataset .*same.* conflicts by identity/);
+      );
+      expect(warning.mock.calls.flat().join(' ')).toContain('DUPLICATE_NODE_ID');
+    } finally {
+      warning.mockRestore();
+    }
     expect(() =>
       renderToStaticMarkup(
         <Layout>

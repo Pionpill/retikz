@@ -9,6 +9,8 @@ keywords: 'Tier、Layout'
 - 决策日期：2026-06-13
 - 关联：[v0.3 Tier 2 支撑](../v0.3/006-tier2-support.md) · [ADR-005 scope bbox](./005-scope-polymorphic-bbox.md)
 
+本文的静态组件发现原则继续适用；贡献装配契约以 [Core provider graph](../v0.5/027-composite-dependency-provider-graph.md) 为准。
+
 ## 背景
 
 已有 composite lowering，但 buildIR 只识别 Kernel 元素；把 Plot 等 Tier 2 组件写入 Layout children 会被当作普通 Sugar 调用，可能执行 hooks。Layout 也缺少收集多个领域组件的数据集和 composite 工厂的通道。这是 core-react 的通用底座，不应由 plot 建立平行容器。
@@ -17,9 +19,9 @@ keywords: 'Tier、Layout'
 
 可嵌入 Tier 2 组件通过静态 adapter 贡献 IR 和 lowering 资源，Layout 汇总后传入 compile：
 
-- EmbeddableTier2Adapter 包含 displayName、namespace 和纯 contribute(props)。贡献为 node、datasets、makeComposites(mergedDatasets)
+- 静态 adapter 返回 node 与 `CoreProviderContribution`，后者显式携带 roots / providers；提供者通过泛型 params 携带所属方运行时输入
 - 组件声明 isTier2Embeddable = true 与 embeddableAdapter；Layout 的 embeddables prop 可显式注入并覆盖静态 adapter。标记组件找不到合法 adapter 时 fail-loud，不能退化为 Sugar；普通无标记函数组件仍按原 Sugar 规则
-- readSceneChildren 和 handler 收集使用同一静态识别，均不调用可嵌入组件，不执行 hooks。Layout 按 namespace 合并 contributions；同一 reference 必须是同一对象引用，冲突直接报错
+- readSceneChildren 和 handler 收集使用同一静态识别，均不调用可嵌入组件，不执行 hooks。宿主按编写顺序收集 contributions，Core 按完整提供者 key 聚合参数并解析依赖；参数内容合并与领域冲突由所属方工厂处理
 - 公开 buildIR/convertReactNodeToIR 仍返回 IR；贡献通过内部 side channel 汇总，不能改变公开返回值。Standalone 组件仍执行自身逻辑，嵌入态由 Layout 处理
 - core 不识别 plot 等具体 domain；Vanilla 继续直接构造同一 core IR 并显式提供 composites/datasets
 

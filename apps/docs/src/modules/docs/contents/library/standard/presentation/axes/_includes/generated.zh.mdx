@@ -145,8 +145,6 @@ export const AxesDefinition = defineComposite({
 ```ts
 export const AxesProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: AxesDefinition.namespace, type: AxesDefinition.type }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => AxesDefinition,
 });
 ```

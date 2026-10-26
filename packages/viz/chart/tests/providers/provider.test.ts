@@ -14,11 +14,13 @@ describe('concrete Chart provider contributions', () => {
     expect(provider?.key).toEqual({ capability: 'composite', namespace: 'chart', type: 'point' });
   });
 
-  it('gives every concrete contribution a unique runtime dataset reference', () => {
+  it('在其提供者参数中保留每个具体配方', () => {
     const first = createScatterChartProviderContribution().providers.at(-1);
     const second = createScatterChartProviderContribution().providers.at(-1);
 
-    expect(Object.keys(first?.datasets ?? {})).not.toEqual(Object.keys(second?.datasets ?? {}));
+    expect(first?.params).toMatchObject({ family: 'point', recipe: { chartType: 'scatter' } });
+    expect(second?.params).toEqual(first?.params);
+    expect(first?.makeDefinition).toBe(second?.makeDefinition);
   });
 
   it('accepts Plot lowering runtime Definitions as the second factory argument', () => {

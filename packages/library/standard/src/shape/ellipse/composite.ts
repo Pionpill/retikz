@@ -24,7 +24,5 @@ export const createEllipse = (input: ShapeProperties<IREllipse>): IREllipse => (
 /** Ellipse 的按需依赖贡献 */
 export const EllipseProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'ellipse' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => EllipseDefinition,
 });

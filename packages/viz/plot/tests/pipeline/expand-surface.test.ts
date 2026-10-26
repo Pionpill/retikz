@@ -10,6 +10,18 @@ import { coordinateScopeIdOf, resolveCoordinateScopeRegistry } from '../../src/r
 import { resolveCoordinateFrame } from '../../src/resolve/coordinate';
 
 describe('expand pipeline stable surface', () => {
+  it('复用同名行数组，拒绝不同引用覆盖同名数据集', () => {
+    const rows = [{ value: 1 }];
+    const first = createPlotProviderContribution({ sales: rows });
+    const shared = createPlotProviderContribution({ sales: rows });
+    const conflict = createPlotProviderContribution({ sales: [...rows] });
+
+    expect(resolveCoreProviderDependencies({ contributions: [first, shared] }).composites).toHaveLength(1);
+    expect(() => resolveCoreProviderDependencies({ contributions: [first, conflict] })).toThrow(
+      /sales.*conflicts by identity/,
+    );
+  });
+
   it('合并不同分组对象中的相同共享字段，允许各 Plot 使用不同尺寸', () => {
     const channels: PlotDefinitions['channels'] = [];
     const transforms: PlotImplementations['transforms'] = [];
@@ -67,7 +79,7 @@ describe('expand pipeline stable surface', () => {
     );
 
     expect(ribbonProvider).toBeDefined();
-    expect(ribbonProvider?.datasets['profile:bulge']).toBe(BUILTIN_RIBBON_WIDTH_PROFILES[0]);
+    expect(ribbonProvider?.params).toMatchObject({ profiles: [BUILTIN_RIBBON_WIDTH_PROFILES[0]] });
 
     const definitions = resolveCoreProviderDependencies({ contributions: [contribution] });
     const ribbonDefinitions = definitions.paths?.filter(definition => definition.name === 'ribbon') ?? [];

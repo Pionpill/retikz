@@ -293,11 +293,11 @@ describe('Extension optional shape definitions', () => {
   });
 
   it('exports each shape through an independent static Core provider', () => {
-    expect(CrossShapeProvider.makeDefinition({})).toBe(CrossShapeDefinition);
-    expect(SectorShapeProvider.makeDefinition({})).toBe(SectorShapeDefinition);
-    expect(StarShapeProvider.makeDefinition({})).toBe(StarShapeDefinition);
-    expect(ContourShapeProvider.makeDefinition({})).toBe(ContourShapeDefinition);
-    expect(EllipticCapsuleShapeProvider.makeDefinition({})).toBe(EllipticCapsuleShapeDefinition);
+    expect(CrossShapeProvider.makeDefinition([])).toBe(CrossShapeDefinition);
+    expect(SectorShapeProvider.makeDefinition([])).toBe(SectorShapeDefinition);
+    expect(StarShapeProvider.makeDefinition([])).toBe(StarShapeDefinition);
+    expect(ContourShapeProvider.makeDefinition([])).toBe(ContourShapeDefinition);
+    expect(EllipticCapsuleShapeProvider.makeDefinition([])).toBe(EllipticCapsuleShapeDefinition);
     expect(EllipticCapsuleShapeDefinition.name).toBe(BuiltinExtensionShapeName.EllipticCapsule);
     expect(ExtensionShapeDefinitions).toContain(EllipticCapsuleShapeDefinition);
     expect(ExtensionShapeProviders).toContain(EllipticCapsuleShapeProvider);

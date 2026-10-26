@@ -25,6 +25,5 @@ export const createArray = (input: IRArray): IRArray => ({ ...input });
 export const ArrayProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'standard', type: 'array' },
   dependencies: [PathClipProvider.key],
-  datasets: {},
   makeDefinition: () => ArrayDefinition,
 };

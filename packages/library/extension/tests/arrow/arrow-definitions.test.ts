@@ -449,7 +449,7 @@ describe('Extension optional arrow definitions', () => {
 
     if (definition === undefined || provider === undefined) return;
 
-    expect(provider.makeDefinition({})).toBe(definition);
+    expect(provider.makeDefinition([])).toBe(definition);
   });
 
   it('uses Core marker placement for visual overrides, reverse routes, and double endpoints', () => {
@@ -568,14 +568,14 @@ describe('Extension optional arrow definitions', () => {
       'square',
       'openSquare',
     ]);
-    expect(DiamondArrowProvider.makeDefinition({})).toBe(DiamondArrowDefinition);
-    expect(OpenDiamondArrowProvider.makeDefinition({})).toBe(OpenDiamondArrowDefinition);
-    expect(BarArrowProvider.makeDefinition({})).toBe(BarArrowDefinition);
-    expect(CrowFootArrowProvider.makeDefinition({})).toBe(CrowFootArrowDefinition);
-    expect(StraightBarbArrowProvider.makeDefinition({})).toBe(StraightBarbArrowDefinition);
-    expect(KiteArrowProvider.makeDefinition({})).toBe(KiteArrowDefinition);
-    expect(OpenKiteArrowProvider.makeDefinition({})).toBe(OpenKiteArrowDefinition);
-    expect(SquareArrowProvider.makeDefinition({})).toBe(SquareArrowDefinition);
-    expect(OpenSquareArrowProvider.makeDefinition({})).toBe(OpenSquareArrowDefinition);
+    expect(DiamondArrowProvider.makeDefinition([])).toBe(DiamondArrowDefinition);
+    expect(OpenDiamondArrowProvider.makeDefinition([])).toBe(OpenDiamondArrowDefinition);
+    expect(BarArrowProvider.makeDefinition([])).toBe(BarArrowDefinition);
+    expect(CrowFootArrowProvider.makeDefinition([])).toBe(CrowFootArrowDefinition);
+    expect(StraightBarbArrowProvider.makeDefinition([])).toBe(StraightBarbArrowDefinition);
+    expect(KiteArrowProvider.makeDefinition([])).toBe(KiteArrowDefinition);
+    expect(OpenKiteArrowProvider.makeDefinition([])).toBe(OpenKiteArrowDefinition);
+    expect(SquareArrowProvider.makeDefinition([])).toBe(SquareArrowDefinition);
+    expect(OpenSquareArrowProvider.makeDefinition([])).toBe(OpenSquareArrowDefinition);
   });
 });

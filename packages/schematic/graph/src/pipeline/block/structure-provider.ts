@@ -39,7 +39,6 @@ export const BlockRowProviderKey: CompositeCoreProviderKey = Object.freeze({
 export const BlockHeaderProvider: CoreDependencyProvider = Object.freeze({
   key: BlockHeaderProviderKey,
   dependencies: STRUCTURE_DEPENDENCIES,
-  datasets: Object.freeze({}),
   makeDefinition: () => BlockHeaderDefinition,
 });
 
@@ -47,7 +46,6 @@ export const BlockHeaderProvider: CoreDependencyProvider = Object.freeze({
 export const BlockSectionProvider: CoreDependencyProvider = Object.freeze({
   key: BlockSectionProviderKey,
   dependencies: STRUCTURE_DEPENDENCIES,
-  datasets: Object.freeze({}),
   makeDefinition: () => BlockSectionDefinition,
 });
 
@@ -55,6 +53,5 @@ export const BlockSectionProvider: CoreDependencyProvider = Object.freeze({
 export const BlockRowProvider: CoreDependencyProvider = Object.freeze({
   key: BlockRowProviderKey,
   dependencies: STRUCTURE_DEPENDENCIES,
-  datasets: Object.freeze({}),
   makeDefinition: () => BlockRowDefinition,
 });

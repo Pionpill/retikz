@@ -33,8 +33,6 @@ describe('Vanilla processing', () => {
           providers: [
             {
               key: { capability: 'composite', namespace: 'fixture', type: 'box' },
-              dependencies: [],
-              datasets: {},
               makeDefinition,
             },
           ],
@@ -164,8 +162,6 @@ describe('Vanilla processing', () => {
           providers: [
             {
               key: { capability: 'composite', namespace: 'fixture', type: 'box' },
-              dependencies: [],
-              datasets: {},
               makeDefinition: () => definition,
             },
           ],
@@ -213,8 +209,6 @@ describe('Vanilla processing', () => {
           providers: [
             {
               key: { capability: 'composite', namespace: 'fixture', type: 'broken' },
-              dependencies: [],
-              datasets: {},
               makeDefinition: () => definition,
             },
           ],

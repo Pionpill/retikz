@@ -56,7 +56,6 @@ describe('Block provider closure', () => {
     const provider: CoreDependencyProvider = Object.freeze({
       key: Object.freeze({ capability: 'composite', namespace: 'test', type: 'serviceBlock' }),
       dependencies: Object.freeze([Graph.BlockProviderKey]),
-      datasets: Object.freeze({}),
       makeDefinition: () => definition,
     });
     const definitions = resolveCoreProviderDependencies({

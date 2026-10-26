@@ -183,8 +183,6 @@ export const GridDefinition = defineComposite({
 ```ts
 export const GridProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: GridDefinition.namespace, type: GridDefinition.type }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => GridDefinition,
 });
 ```

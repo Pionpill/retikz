@@ -24,8 +24,6 @@ export const KiteArrowDefinition = defineArrow({
 /** Kite 箭头的静态 Core provider */
 export const KiteArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: KiteArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => KiteArrowDefinition,
 });
 
@@ -55,7 +53,5 @@ export const OpenKiteArrowDefinition = defineArrow({
 /** OpenKite 箭头的静态 Core provider */
 export const OpenKiteArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: OpenKiteArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => OpenKiteArrowDefinition,
 });

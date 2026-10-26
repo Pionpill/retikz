@@ -12,8 +12,6 @@ import {
 const clipProviderOf = (definition: ClipDefinition): CoreDependencyProvider =>
   Object.freeze({
     key: Object.freeze({ capability: CoreProviderCapability.Clip, name: definition.kind }),
-    dependencies: Object.freeze([]),
-    datasets: Object.freeze({}),
     makeDefinition: () => definition,
   });
 

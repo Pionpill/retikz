@@ -24,8 +24,6 @@ export const DiamondArrowDefinition = defineArrow({
 /** Diamond 箭头的静态 Core provider */
 export const DiamondArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: DiamondArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => DiamondArrowDefinition,
 });
 
@@ -55,7 +53,5 @@ export const OpenDiamondArrowDefinition = defineArrow({
 /** OpenDiamond 箭头的静态 Core provider */
 export const OpenDiamondArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: OpenDiamondArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => OpenDiamondArrowDefinition,
 });

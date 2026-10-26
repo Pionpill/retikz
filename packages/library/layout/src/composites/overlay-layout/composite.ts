@@ -42,7 +42,5 @@ export const OverlayLayoutProvider: CoreDependencyProvider = Object.freeze({
     namespace: OverlayLayoutDefinition.namespace,
     type: OverlayLayoutDefinition.type,
   }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: makeOverlayLayoutDefinition,
 });

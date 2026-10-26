@@ -16,16 +16,7 @@ export const BranchDiagramProviderKey: CompositeCoreProviderKey = Object.freeze(
   type: 'branch',
 });
 
-const optionsKey = Symbol('branch-options');
-
-let sequence = 0;
-
-const makeDefinition: CoreDependencyProvider['makeDefinition'] = datasets => {
-  const optionSets = Object.values(datasets).flatMap(value =>
-    value !== null && typeof value === 'object' && optionsKey in value
-      ? [(value as { [optionsKey]: BranchDiagramDefinitionOptions })[optionsKey]]
-      : [],
-  );
+const makeDefinition: CoreDependencyProvider<BranchDiagramDefinitionOptions>['makeDefinition'] = optionSets => {
   const { definition, options } = resolveBranchDefinitionOptions(optionSets);
 
   return defineComposite({
@@ -38,10 +29,12 @@ const makeDefinition: CoreDependencyProvider['makeDefinition'] = datasets => {
 };
 
 /** 携带布局和主题定义的 Branch provider */
-export const createBranchDiagramProvider = (options: BranchDiagramDefinitionOptions = {}): CoreDependencyProvider => ({
+export const createBranchDiagramProvider = (
+  options: BranchDiagramDefinitionOptions = {},
+): CoreDependencyProvider<BranchDiagramDefinitionOptions> => ({
   key: BranchDiagramProviderKey,
   dependencies: [GraphProviderKey, OverlayLayoutProvider.key, FlexLayoutProvider.key, LegendProvider.key],
-  datasets: { [`@@retikz/diagram/branch/${sequence++}`]: { [optionsKey]: options } },
+  params: options,
   makeDefinition,
 });
 

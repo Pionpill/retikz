@@ -54,8 +54,7 @@ const hookedCompositeDependencies = {
   providers: [
     {
       key: hookedProviderKey,
-      dependencies: [],
-      datasets: hookedDatasets,
+      params: hookedDatasets,
       makeDefinition: () => {
         throw new Error('Preview IR collection must not materialize providers');
       },

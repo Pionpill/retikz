@@ -42,7 +42,7 @@ import {
 } from '@retikz/chart/point';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import { fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
+import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { InputBranchDiagram } from '@retikz/diagram-vanilla/branch';
 import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
@@ -106,7 +106,7 @@ import {
   overlayLayout,
   OverlayLayoutInputEmbedAdapter,
 } from '@retikz/layout-vanilla';
-import type { IRPlot } from '@retikz/plot';
+import type { IRPlot, PlotProviderParams } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
 import {
@@ -183,7 +183,7 @@ import {
   SectorSchema,
   SectorDefinition,
 } from '@retikz/standard/shape';
-import type { IRTable } from '@retikz/table';
+import type { IRTable, TableProviderParams } from '@retikz/table';
 import { TableSchema, TableStructureKind } from '@retikz/table';
 import { embedTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { SynchronousInputEmbedAdapter, InputChild } from '@retikz/vanilla';
@@ -969,36 +969,38 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   };
 };
 
-/** 从已收集的提供器依赖图贡献中读取一个归属方数据集 */
+/** 从 Plot 或 Table 提供者的具名参数中读取预览数据集 */
 const findProviderDataset = (
   preview: PreviewIR,
-  namespace: string,
+  namespace: 'plot' | 'table',
   reference: string,
   label: string,
 ): ExternalDatasets | null => {
-  let dataset: unknown;
-  let found = false;
+  let dataset: Array<ExternalRow> | undefined;
 
   for (const contribution of preview.contributions) {
     for (const provider of contribution.providers) {
       if (
         provider.key.capability !== 'composite' ||
         provider.key.namespace !== namespace ||
-        !Object.hasOwn(provider.datasets, reference)
+        provider.key.type !== namespace ||
+        provider.params === undefined
       )
         continue;
 
-      const candidate = provider.datasets[reference];
-      if (found && dataset !== candidate) {
+      // 官方完整 key 对应各自公开的参数契约；通用 Core 目录仅保存擦除视图
+      const { datasets } = provider.params as PlotProviderParams | TableProviderParams;
+      if (!Object.hasOwn(datasets, reference)) continue;
+      const candidate = datasets[reference];
+      if (dataset !== undefined && dataset !== candidate) {
         throw new Error(`${label} dataset reference "${reference}" resolves to different values.`);
       }
 
       dataset = candidate;
-      found = true;
     }
   }
 
-  return found ? ({ [reference]: dataset } as ExternalDatasets) : null;
+  return dataset === undefined ? null : { [reference]: dataset };
 };
 
 /** 读取 Plot 提供器的本地数据集 */

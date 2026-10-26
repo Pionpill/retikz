@@ -37,9 +37,9 @@ describe('Layout Vanilla family', () => {
       { roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] },
       { roots: [OverlayLayoutProvider.key], providers: [OverlayLayoutProvider] },
     ]);
-    expect(FlexLayoutProvider.makeDefinition({})).toBe(FlexLayoutDefinition);
-    expect(GridLayoutProvider.makeDefinition({})).toBe(GridLayoutDefinition);
-    expect(OverlayLayoutProvider.makeDefinition({})).toBe(OverlayLayoutDefinition);
+    expect(FlexLayoutProvider.makeDefinition([])).toBe(FlexLayoutDefinition);
+    expect(GridLayoutProvider.makeDefinition([])).toBe(GridLayoutDefinition);
+    expect(OverlayLayoutProvider.makeDefinition([])).toBe(OverlayLayoutDefinition);
   });
 
   it('builds exact embed specs and normalizes the family definitions once', () => {

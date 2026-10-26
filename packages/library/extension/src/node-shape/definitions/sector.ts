@@ -295,9 +295,7 @@ export const SectorShapeDefinition = defineShape<SectorShapeParams>({
 });
 
 /** Sector 的静态 Core provider */
-export const SectorShapeProvider: CoreDependencyProvider = Object.freeze({
+export const SectorShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
   key: { capability: 'shape', name: SectorShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
   makeDefinition: () => SectorShapeDefinition,
 });

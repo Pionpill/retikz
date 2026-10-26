@@ -106,9 +106,9 @@ describe('Layout React layout family', () => {
       OverlayLayoutProvider.key,
     ]);
     expect(result.contributions[0]?.providers).toEqual([FlexLayoutProvider, GridLayoutProvider, OverlayLayoutProvider]);
-    expect(FlexLayoutProvider.makeDefinition({})).toBe(FlexLayoutDefinition);
-    expect(GridLayoutProvider.makeDefinition({})).toBe(GridLayoutDefinition);
-    expect(OverlayLayoutProvider.makeDefinition({})).toBe(OverlayLayoutDefinition);
+    expect(FlexLayoutProvider.makeDefinition([])).toBe(FlexLayoutDefinition);
+    expect(GridLayoutProvider.makeDefinition([])).toBe(GridLayoutDefinition);
+    expect(OverlayLayoutProvider.makeDefinition([])).toBe(OverlayLayoutDefinition);
   });
 
   it('uses itemKey instead of the reserved React key and accepts explicit IR as the sole child source', () => {

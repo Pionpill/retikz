@@ -37,7 +37,7 @@ describe('<Grid>', () => {
     expect(first.ir.children[0]).toMatchObject({ namespace: 'standard', type: 'grid' });
     expect(first.contributions[0]).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
     expect(second.contributions[0]?.providers[0]).toBe(GridProvider);
-    expect(GridProvider.makeDefinition({})).toBe(GridDefinition);
+    expect(GridProvider.makeDefinition([])).toBe(GridDefinition);
   });
 
   it('accepts a center-form Cartesian position through the shared Grid input', () => {

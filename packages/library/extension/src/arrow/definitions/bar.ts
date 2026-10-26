@@ -24,7 +24,5 @@ export const BarArrowDefinition = defineArrow({
 /** Bar 箭头的静态 Core provider */
 export const BarArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: BarArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => BarArrowDefinition,
 });

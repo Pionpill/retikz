@@ -9,13 +9,12 @@ import { normalizeTable } from '../normalize/table';
 export const TableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unknown>> &
   Required<Pick<SynchronousInputEmbedAdapter<InputTable<unknown>>, 'prepare'>> = {
   kind: TABLE_NAMESPACE,
-  lower: (props, context) => {
+  lower: props => {
     if (props.dataBindings !== undefined || props.dataTransformExecutor !== undefined || props.signal !== undefined)
       throw new RetikzTableVanillaError('Table bindings, executor or signal require async processing');
 
     const spec = normalizeTable(props.table);
     const contribution = createTableRuntimeContribution({
-      reference: context.id,
       data: props.data,
       lowerOptions: props.lowerOptions,
       composites: props.composites,
@@ -43,7 +42,6 @@ export const TableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unk
       props.lowerOptions,
     );
     const providerDependencies = createTableRuntimeContribution({
-      reference: context.id,
       lowerOptions: props.lowerOptions,
       composites: props.composites,
     });

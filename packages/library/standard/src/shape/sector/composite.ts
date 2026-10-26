@@ -24,7 +24,5 @@ export const createSector = (input: ShapeProperties<IRSector>): IRSector => ({
 /** Sector 的按需依赖贡献 */
 export const SectorProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'sector' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => SectorDefinition,
 });

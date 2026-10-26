@@ -91,9 +91,7 @@ export const ContourShapeDefinition = defineShape<ContourShapeParams>({
 });
 
 /** Contour 的静态 Core provider */
-export const ContourShapeProvider: CoreDependencyProvider = Object.freeze({
+export const ContourShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
   key: { capability: 'shape', name: ContourShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
   makeDefinition: () => ContourShapeDefinition,
 });

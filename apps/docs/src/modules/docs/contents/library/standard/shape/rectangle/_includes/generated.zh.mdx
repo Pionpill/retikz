@@ -345,8 +345,6 @@ export const RectangleDefinition = defineComposite({
 ```ts
 export const RectangleProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'rectangle' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => RectangleDefinition,
 });
 ```

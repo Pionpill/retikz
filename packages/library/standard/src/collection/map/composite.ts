@@ -21,6 +21,5 @@ export const createMap = (input: IRMap): IRMap => ({ ...input });
 export const MapProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'standard', type: 'map' },
   dependencies: [PathClipProvider.key],
-  datasets: {},
   makeDefinition: () => MapDefinition,
 };

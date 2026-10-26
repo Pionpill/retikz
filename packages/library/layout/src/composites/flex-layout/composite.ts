@@ -42,7 +42,5 @@ export const FlexLayoutProvider: CoreDependencyProvider = Object.freeze({
     namespace: FlexLayoutDefinition.namespace,
     type: FlexLayoutDefinition.type,
   }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: makeFlexLayoutDefinition,
 });

@@ -108,8 +108,8 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
     {
       label: 'Runtime contribution merge and frozen copied containers',
       path: 'packages/viz/table/src/pipeline/contribution/contribution.ts',
-      startLine: 18,
-      endLine: 64,
+      startLine: 5,
+      endLine: 44,
     },
   ]}
 />
@@ -141,7 +141,7 @@ The two `ManualTable` authoring modes are mutually exclusive. Props mode forward
 
 The standalone runtime builds a canonical `children[0]` Scene. From `Layout.onArtifacts` it selects exactly one artifact with definition key `table.table`, `sourcePath: 'children[0]'`, and `expansionPath: []`. Notifications are deduplicated by serialized manifest content, and SSR render causes no callback side effect.
 
-The five definition categories and composites merge by stable key and object identity when entering a runtime contribution. Runtime stores copied frozen arrays, `lowerOptions`, and envelope, so later caller `push` operations cannot mutate an existing contribution. Definition and composite objects remain caller-owned and are neither cloned nor frozen.
+The owner factories merge the five definition categories and composites by stable key and object identity. Table provider `params` carries `datasets` and `lowerOptions`, without a separate runtime reference. Contribution creation copies and freezes definition arrays and option containers, so later caller `push` operations cannot mutate an existing contribution. Definition and composite objects, along with row arrays, remain caller-owned and are neither cloned nor frozen. Datasets with the same name must reference the same row array; the host Core compiler handles duplicate drawing IDs.
 
 ### Theme inputs
 

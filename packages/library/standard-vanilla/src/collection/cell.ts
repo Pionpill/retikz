@@ -1,4 +1,4 @@
-import type { CoreDependencyProvider, IRChild } from '@retikz/core';
+import type { AnyCoreDependencyProvider, IRChild } from '@retikz/core';
 import { PathClipProvider } from '@retikz/extension';
 import type { IRCell } from '@retikz/standard/collection';
 import { ArrayProvider, MapProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/collection';
@@ -31,7 +31,7 @@ export const dataCellDependencies = {
 export const normalizeCells = <TCell extends { content?: string | InputChild }>(
   cells: Array<TCell>,
   context: Parameters<SynchronousInputEmbedAdapter<unknown>['lower']>[1],
-  provider: CoreDependencyProvider,
+  provider: AnyCoreDependencyProvider,
 ) => {
   const normalizeChildren = context.normalizeChildren;
   if (normalizeChildren === undefined)
@@ -82,7 +82,7 @@ export const normalizeCells = <TCell extends { content?: string | InputChild }>(
 export const normalizeCellItems = <TCell extends { content?: string | InputChild }>(
   items: Array<string | TCell>,
   context: Parameters<SynchronousInputEmbedAdapter<unknown>['lower']>[1],
-  provider: CoreDependencyProvider,
+  provider: AnyCoreDependencyProvider,
 ) => {
   const normalized = normalizeCells(
     items.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),

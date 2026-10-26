@@ -42,7 +42,5 @@ export const GridLayoutProvider: CoreDependencyProvider = Object.freeze({
     namespace: GridLayoutDefinition.namespace,
     type: GridLayoutDefinition.type,
   }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: makeGridLayoutDefinition,
 });

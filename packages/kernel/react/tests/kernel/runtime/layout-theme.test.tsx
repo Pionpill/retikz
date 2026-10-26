@@ -49,8 +49,6 @@ const themedBoxAdapter: InputEmbedAdapter = {
       providers: [
         {
           key: { capability: 'composite', namespace: 'theme-test', type: 'box' },
-          dependencies: [],
-          datasets: {},
           makeDefinition: makeThemedBoxDefinition,
         },
       ],

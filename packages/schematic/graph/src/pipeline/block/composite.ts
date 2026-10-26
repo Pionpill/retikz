@@ -5,7 +5,7 @@ import { SurfaceProvider } from '@retikz/standard/presentation';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import { resolveGraphDefinitionOptions, createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
+import { resolveGraphDefinitionOptions, resolveGraphRuntimeOptions } from '../../providers';
 import type { IRBlock } from '../../schemas';
 import { BlockSchema } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
@@ -42,11 +42,13 @@ export const BlockProviderKey: CompositeCoreProviderKey = Object.freeze({
   type: GraphType.Block,
 });
 
-const makeBlockDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
-  createBlockDefinitionFromOptions(resolveGraphRuntimeOptions(datasets));
+const makeBlockDefinition: CoreDependencyProvider<GraphDefinitionOptions>['makeDefinition'] = contributions =>
+  createBlockDefinitionFromOptions(resolveGraphRuntimeOptions(contributions));
 
 /** 创建携带当前 Graph definition options 的 Block provider */
-export const createBlockProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
+export const createBlockProvider = (
+  options: GraphDefinitionOptions = {},
+): CoreDependencyProvider<GraphDefinitionOptions> =>
   Object.freeze({
     key: BlockProviderKey,
     dependencies: Object.freeze([
@@ -58,7 +60,7 @@ export const createBlockProvider = (options: GraphDefinitionOptions = {}): CoreD
       FlexLayoutProvider.key,
       SurfaceProvider.key,
     ]),
-    datasets: createGraphRuntimeDatasets(options),
+    params: options,
     makeDefinition: makeBlockDefinition,
   });
 

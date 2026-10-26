@@ -2,6 +2,7 @@ export * from './contract';
 export * from './error';
 export type {
   LowerPlotsOptions,
+  PlotProviderParams,
   PlotCompileEnvironment,
   PlotDefinitions,
   PlotImplementations,

@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
+import type { AnyCompositeDefinition, AnyCoreDependencyProvider } from '@retikz/core';
 import { FlexLayoutDefinition } from '@retikz/layout';
 import { SurfaceDefinition } from '@retikz/standard/presentation';
 
@@ -41,5 +41,5 @@ export const createGraphDefinitions = (options: GraphDefinitionOptions = {}): Ar
  * @param options 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配
  * @returns 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖
  */
-export const createGraphProviders = (options?: GraphDefinitionOptions): ReadonlyArray<CoreDependencyProvider> =>
+export const createGraphProviders = (options?: GraphDefinitionOptions): ReadonlyArray<AnyCoreDependencyProvider> =>
   createBaseGraphProviders(options);

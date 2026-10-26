@@ -21,6 +21,5 @@ export const createChain = (input: IRChain): IRChain => ({ ...input });
 export const ChainProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'standard', type: 'chain' },
   dependencies: [PathClipProvider.key],
-  datasets: {},
   makeDefinition: () => ChainDefinition,
 };

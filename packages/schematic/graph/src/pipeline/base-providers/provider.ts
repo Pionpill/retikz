@@ -1,4 +1,4 @@
-import type { CoreDependencyProvider } from '@retikz/core';
+import type { AnyCoreDependencyProvider } from '@retikz/core';
 import {
   DiamondArrowProvider,
   OpenDiamondArrowProvider,
@@ -20,7 +20,7 @@ import { GroupBodyAllocationProvider } from '../group';
 import { createGroupProvider, GroupProvider } from '../group';
 import { createRelationProvider, RelationProvider } from '../relation';
 
-const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<CoreDependencyProvider> = Object.freeze([
+const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<AnyCoreDependencyProvider> = Object.freeze([
   GraphProvider,
   EntityProvider,
   RelationProvider,
@@ -42,7 +42,9 @@ const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<CoreDependencyProvider> = Object.fr
 ]);
 
 /** 创建当前 Graph 包族的完整 composite dependency provider 集合 */
-export const createBaseGraphProviders = (options?: GraphDefinitionOptions): ReadonlyArray<CoreDependencyProvider> => {
+export const createBaseGraphProviders = (
+  options?: GraphDefinitionOptions,
+): ReadonlyArray<AnyCoreDependencyProvider> => {
   if (options === undefined) return DEFAULT_GRAPH_PROVIDERS;
 
   return Object.freeze([

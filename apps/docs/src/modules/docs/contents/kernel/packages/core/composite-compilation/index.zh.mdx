@@ -50,7 +50,9 @@ Definition 统一提供 `compile(node, context)`。`node` 是 schema 解析后�
 
 装配时先准备 FlexLayout Definition，再准备 Chart Definition。编译图表时，Chart 根据标题配置生成文字节点，将它放在纵向 FlexLayout 的 Plot 前面；布局编译负责测量并放置这些子项，文字节点的绘制由 Core 完成。Chart 还依赖 Surface 和 Plot，下图只节选 FlexLayout 这一支。
 
-`resolveCoreProviderDependencies` 合并提供者声明及数据集，从根依赖检查可达依赖图，再按依赖在先的顺序调用 `makeDefinition`，输出各类 Definition 集合。缺失依赖、循环依赖或冲突会报错。Vanilla 的准备阶段调用这项能力；直接调用 Core 时，也可以直接传入已经备好的定义。
+`CoreDependencyProvider<TParams>` 用可选的 `params` 携带所属模块的运行时参数。`resolveCoreProviderDependencies` 按提供者 key 收集参数，检查根依赖的可达依赖图，再按依赖在先的顺序调用 `makeDefinition`。工厂收到按贡献顺序排列的只读参数数组，自行合并并诊断领域冲突；Core 不解释数据集或编译选项。省略 `dependencies` 表示没有依赖；省略 `params` 或传入 `undefined` 不产生参数贡献。无参数的静态提供者使用默认的 `void`，只需声明 `key` 和 `makeDefinition`；工厂收到空数组，仍须返回定义。
+
+`makeDefinition` 返回的 `CoreProviderDefinition` 是各类能力定义的联合类型。异构提供者目录使用 `AnyCoreDependencyProvider` 收纳；同 key 必须使用同一工厂及参数契约。缺失依赖、循环依赖或工厂身份冲突会报错。依赖只决定装配顺序，不注入数据或依赖的返回值；Table 与 Plot 可以通过参数引用同一份行数据，各自再按 `data.reference` 查找。两者复用 Data 的 `mergeExternalDatasets` 合并具名数据：同名条目必须引用同一行数组，合并不复制行数据。Vanilla 的准备阶段调用依赖解析器；直接调用 Core 时，也可以直接传入已经备好的定义。
 
 下图从根依赖 `chart.point` 追踪到 `layout.flexLayout`。右侧注册表准备好后，遍历器按图表声明的 `namespace: chart` 与 `type: point` 找到 Chart Definition。
 

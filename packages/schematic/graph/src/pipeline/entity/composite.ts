@@ -4,7 +4,7 @@ import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/exte
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import { resolveGraphDefinitionOptions, createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
+import { resolveGraphDefinitionOptions, resolveGraphRuntimeOptions } from '../../providers';
 import { resolveEntity, resolveEntityAppearance } from '../../resolve';
 import type { IRGraphEntity } from '../../schemas';
 import { EntitySchema } from '../../schemas';
@@ -42,16 +42,18 @@ export const EntityProviderKey: CompositeCoreProviderKey = Object.freeze({
   type: GraphType.Entity,
 });
 
-/** 使用当前 provider key 已合并的 runtime datasets 创建唯一 Entity Definition */
-const makeEntityDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
-  createEntityDefinitionFromOptions(resolveGraphRuntimeOptions(datasets));
+/** 合并 Entity 提供者参数并创建唯一定义 */
+const makeEntityDefinition: CoreDependencyProvider<GraphDefinitionOptions>['makeDefinition'] = contributions =>
+  createEntityDefinitionFromOptions(resolveGraphRuntimeOptions(contributions));
 
 /** 创建携带当前 Graph definition options 的 Entity provider */
-export const createEntityProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
+export const createEntityProvider = (
+  options: GraphDefinitionOptions = {},
+): CoreDependencyProvider<GraphDefinitionOptions> =>
   Object.freeze({
     key: EntityProviderKey,
     dependencies: Object.freeze([HexagonShapeProvider.key, EllipticCapsuleShapeProvider.key]),
-    datasets: createGraphRuntimeDatasets(options),
+    params: options,
     makeDefinition: makeEntityDefinition,
   });
 

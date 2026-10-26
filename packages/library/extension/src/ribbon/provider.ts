@@ -10,16 +10,23 @@ import type { RibbonWidthProfileDefinition } from './profile-types';
 
 const ribbonKey: CoreProviderKey = { capability: 'path', name: 'ribbon' };
 
-const makeRibbonDefinition: CoreDependencyProvider['makeDefinition'] = datasets => {
-  const profiles: Array<RibbonWidthProfileDefinition> = [];
-  const caps: Array<RibbonCapDefinition> = [];
+/** Ribbon 提供者的注册参数 */
+export type RibbonProviderParams = Readonly<{
+  /** 宽度函数定义 */
+  profiles: ReadonlyArray<RibbonWidthProfileDefinition>;
+  /** 自定义端帽定义 */
+  caps: ReadonlyArray<RibbonCapDefinition>;
+}>;
 
-  for (const [key, value] of Object.entries(datasets)) {
-    if (key.startsWith('profile:')) profiles.push(value as RibbonWidthProfileDefinition);
-    else caps.push(value as RibbonCapDefinition);
+/** 去重相同定义引用后，交给 Ribbon 注册表诊断同名定义冲突 */
+const makeRibbonDefinition: CoreDependencyProvider<RibbonProviderParams>['makeDefinition'] = contributions => {
+  const profiles = new Set<RibbonWidthProfileDefinition>();
+  const caps = new Set<RibbonCapDefinition>();
+  for (const params of contributions) {
+    for (const profile of params.profiles) profiles.add(profile);
+    for (const cap of params.caps) caps.add(cap);
   }
-
-  return createRibbonPathDefinition({ profiles, caps });
+  return createRibbonPathDefinition({ profiles: [...profiles], caps: [...caps] });
 };
 
 /**
@@ -47,14 +54,13 @@ export const createRibbonProviderContribution = (
   const caps = options.caps ?? [];
   resolveRibbonWidthProfileRegistry(BUILTIN_RIBBON_WIDTH_PROFILES, profiles);
   resolveRibbonCapRegistry(ExtensionRibbonCapDefinitions, caps);
-  const datasets: Record<string, RibbonWidthProfileDefinition | RibbonCapDefinition> = Object.create(null);
-
-  for (const profile of [...BUILTIN_RIBBON_WIDTH_PROFILES, ...profiles]) datasets[`profile:${profile.name}`] = profile;
-
-  for (const cap of caps) datasets[`cap:${cap.name}`] = cap;
+  const params: RibbonProviderParams = Object.freeze({
+    profiles: Object.freeze([...BUILTIN_RIBBON_WIDTH_PROFILES, ...profiles]),
+    caps: Object.freeze([...caps]),
+  });
 
   return {
     roots: [ribbonKey],
-    providers: [{ key: ribbonKey, dependencies: [], datasets, makeDefinition: makeRibbonDefinition }],
+    providers: [{ key: ribbonKey, params, makeDefinition: makeRibbonDefinition }],
   };
 };

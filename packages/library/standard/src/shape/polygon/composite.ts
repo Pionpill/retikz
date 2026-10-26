@@ -24,7 +24,5 @@ export const createPolygon = (input: ShapeProperties<IRPolygon>): IRPolygon => (
 /** Polygon 的按需依赖贡献 */
 export const PolygonProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'polygon' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => PolygonDefinition,
 });

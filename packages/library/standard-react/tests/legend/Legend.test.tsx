@@ -142,7 +142,7 @@ describe('<Legend>', () => {
       providers: [LegendProvider],
     });
     expect(contribute(rampProps).providerDependencies.providers[0]).toBe(LegendProvider);
-    expect(LegendProvider.makeDefinition({})).toBe(LegendDefinition);
+    expect(LegendProvider.makeDefinition([])).toBe(LegendDefinition);
   });
 
   it('preserves authored marker order through arrays and Fragments', () => {

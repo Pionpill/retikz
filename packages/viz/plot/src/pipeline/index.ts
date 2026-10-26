@@ -1,3 +1,4 @@
+export type { PlotProviderParams } from './expand/composite';
 export { PlotProviderKey, createPlotProvider, createPlotProviderContribution } from './expand/composite';
 export { lowerPlots } from './expand/lower';
 export { preparePlotData } from './expand/preparation';

@@ -66,8 +66,6 @@ describe('Vanilla Clip processing parity', () => {
           providers: [
             {
               key: { capability: 'clip', name: 'ticketClip' },
-              dependencies: [],
-              datasets: {},
               makeDefinition: () => contributed,
             },
           ],

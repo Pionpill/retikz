@@ -38,7 +38,7 @@ describe('grid()', () => {
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.grid' });
     expect(contribution.node).toMatchObject({ namespace: 'standard', type: 'grid' });
     expect(contribution.providerDependencies).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
-    expect(GridProvider.makeDefinition({})).toBe(GridDefinition);
+    expect(GridProvider.makeDefinition([])).toBe(GridDefinition);
   });
 
   it('merges multiple Grid embeds through one stable definition maker', () => {

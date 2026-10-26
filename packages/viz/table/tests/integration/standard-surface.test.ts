@@ -14,7 +14,7 @@ describe('Table inside Standard Surface', () => {
       id: 'people',
       structure: { kind: 'manual', rows: [['Ada']] },
     };
-    const tableContribution = createTableRuntimeContribution({ reference: 'surface-table' });
+    const tableContribution = createTableRuntimeContribution({});
     const providerDefinitions = resolveCoreProviderDependencies({
       contributions: [
         {

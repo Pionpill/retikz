@@ -175,8 +175,8 @@ describe('Extension clip provider graph', () => {
       { capability: 'clip', name: 'path' },
       { capability: 'clip', name: 'compound' },
     ]);
-    expect(ExtensionClipProviders.every(provider => provider.dependencies.length === 0)).toBe(true);
-    expect(ExtensionClipProviders.map(provider => provider.makeDefinition({}))).toEqual(ExtensionClipDefinitions);
+    expect(ExtensionClipProviders.every(provider => (provider.dependencies ?? []).length === 0)).toBe(true);
+    expect(ExtensionClipProviders.map(provider => provider.makeDefinition([]))).toEqual(ExtensionClipDefinitions);
   });
 
   it('resolves only the requested complete Path definition from the full catalog', () => {

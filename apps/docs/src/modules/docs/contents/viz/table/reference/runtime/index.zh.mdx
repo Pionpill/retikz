@@ -108,8 +108,8 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
     {
       label: 'runtime contribution 合并并冻结复制后的容器',
       path: 'packages/viz/table/src/pipeline/contribution/contribution.ts',
-      startLine: 18,
-      endLine: 64,
+      startLine: 5,
+      endLine: 44,
     },
   ]}
 />
@@ -141,7 +141,7 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
 
 standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onArtifacts` 只选择 definition key 为 `table.table`、`sourcePath: 'children[0]'`、`expansionPath: []` 的 artifact。回调按 manifest 的序列化内容去重；SSR render 不触发副作用。
 
-五类 definitions 与 composites 进入 runtime contribution 时按稳定 key 和对象 identity 合并。runtime 保存复制后冻结的 arrays、`lowerOptions` 与 envelope，调用方后续 `push` 不会改变已创建 contribution；definition/composite 对象本身仍由调用方拥有，不会被 clone 或 freeze。
+五类 definitions 与 composites 由所属方工厂按稳定 key 和对象 identity 合并。Table provider 的 `params` 携带 `datasets` 与 `lowerOptions`，不再需要单独的 runtime reference。创建 contribution 时复制并冻结 definitions 数组与选项容器，调用方后续 `push` 不会改变已创建的贡献；definition/composite 对象与行数组仍由调用方拥有，不会被 clone 或 freeze。同名数据集必须引用同一行数组；图元 ID 的重复诊断由宿主 Core 编译器负责。
 
 ### Theme 输入
 

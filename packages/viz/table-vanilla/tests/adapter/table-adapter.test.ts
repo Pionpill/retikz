@@ -1,8 +1,8 @@
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { IRDetailTable } from '@retikz/table';
-import { createManualTableIR, RetikzTableError, TableSchema } from '@retikz/table';
+import { createManualTableIR, TableSchema } from '@retikz/table';
 import type { InputEmbedContext } from '@retikz/vanilla';
-import { embed, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -33,12 +33,6 @@ describe('Table Vanilla adapter', () => {
     expect(TableInputEmbedAdapter.lower({ table: inputTableFromIR(named) }, contextOf('panel')).node).toMatchObject({
       id: 'scores',
     });
-    expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrowError(
-      RetikzTableError,
-    );
-    expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrow(
-      'table runtime contribution reference must be a non-empty string.',
-    );
   });
 
   it('preserves explicit Table identity and all root authoring fields', () => {
@@ -88,9 +82,7 @@ describe('Table Vanilla adapter', () => {
     expect(first.providerDependencies.providers[0]?.makeDefinition).toBe(
       second.providerDependencies.providers[0]?.makeDefinition,
     );
-    expect(Object.keys(first.providerDependencies.providers[0]?.datasets ?? {})).toContain(
-      '@@retikz/table/runtime/first',
-    );
+    expect(first.providerDependencies.providers[0]?.params).toHaveProperty('lowerOptions');
   });
 
   it('enters scene/layer SSR and reads each embed runtime data', () => {
@@ -140,15 +132,6 @@ describe('Table Vanilla adapter', () => {
 
   it('rejects handwritten empty ids and keeps repeated anonymous embeds anonymous in Source', () => {
     const spec = createManualTableIR({ rows: [[null]] });
-    const handwritten = embed({ kind: 'table', id: '', props: { table: inputTableFromIR(spec) } });
-
-    expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrowError(
-      RetikzTableError,
-    );
-    expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrow(
-      'table runtime contribution reference must be a non-empty string.',
-    );
-
     const normalized = normalizeScene(scene([embedTable(spec), embedTable(spec)]), {
       adapters: [TableInputEmbedAdapter],
     });

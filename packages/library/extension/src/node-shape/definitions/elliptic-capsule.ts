@@ -41,9 +41,7 @@ export const EllipticCapsuleShapeDefinition = defineShape<EllipticCapsuleShapePa
 });
 
 /** Elliptic Capsule 的静态 Core provider */
-export const EllipticCapsuleShapeProvider: CoreDependencyProvider = Object.freeze({
+export const EllipticCapsuleShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
   key: { capability: 'shape', name: EllipticCapsuleShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
   makeDefinition: () => EllipticCapsuleShapeDefinition,
 });

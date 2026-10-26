@@ -3,7 +3,7 @@ import { defineComposite } from '@retikz/core';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import { resolveGraphDefinitionOptions, createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
+import { resolveGraphDefinitionOptions, resolveGraphRuntimeOptions } from '../../providers';
 import type { IRGraph } from '../../schemas';
 import { GraphSchema } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
@@ -41,16 +41,18 @@ export const GraphProviderKey: CompositeCoreProviderKey = Object.freeze({
   type: GraphType.Graph,
 });
 
-/** 使用 Core 已合并的 runtime envelopes 创建唯一 Graph Definition */
-const makeGraphDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
-  createGraphDefinitionFromOptions(resolveGraphRuntimeOptions(datasets));
+/** 合并 Graph 提供者参数并创建唯一定义 */
+const makeGraphDefinition: CoreDependencyProvider<GraphDefinitionOptions>['makeDefinition'] = contributions =>
+  createGraphDefinitionFromOptions(resolveGraphRuntimeOptions(contributions));
 
 /** 创建携带当前 Graph definition options 的 Graph provider */
-export const createGraphProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
+export const createGraphProvider = (
+  options: GraphDefinitionOptions = {},
+): CoreDependencyProvider<GraphDefinitionOptions> =>
   Object.freeze({
     key: GraphProviderKey,
     dependencies: Object.freeze([EntityProviderKey, RelationProviderKey, GroupProviderKey, BlockProviderKey]),
-    datasets: createGraphRuntimeDatasets(options),
+    params: options,
     makeDefinition: makeGraphDefinition,
   });
 

@@ -43,7 +43,7 @@ export type CompositeCoreProviderKey = Readonly<{
 export type CoreProviderKey = NamedCoreProviderKey | CompositeCoreProviderKey;
 
 /** 所有可由 Core 提供者图物化的定义 */
-export type AnyCoreProviderDefinition =
+export type CoreProviderDefinition =
   | ShapeDefinition
   | BoundaryDefinition
   | ClipDefinition
@@ -73,24 +73,37 @@ export type CoreProviderDefinitions = Readonly<{
   composites?: ReadonlyArray<AnyCompositeDefinition>;
 }>;
 
-/** 单个提供者的可达依赖和所属方局部数据 */
-export type CoreDependencyProvider = Readonly<{
+/**
+ * 单个提供者的可达依赖与所属方参数
+ * @template TParams 所属方解释的运行时参数；无参数的静态提供者使用 void
+ */
+export type CoreDependencyProvider<TParams = void> = Readonly<{
   /** 此提供者唯一生成的 Core 提供者键 */
   key: CoreProviderKey;
-  /** 此定义需要的有序直接依赖 */
-  dependencies: ReadonlyArray<CoreProviderKey>;
-  /** 同键多个编写实例需要合并的所属方局部数据 */
-  datasets: Readonly<Record<string, unknown>>;
-  /** 使用当前键的完整合并数据创建唯一的定义 */
-  makeDefinition: (mergedDatasets: Readonly<Record<string, unknown>>) => AnyCoreProviderDefinition;
+  /** 此定义需要的有序直接依赖；省略时无依赖 */
+  dependencies?: ReadonlyArray<CoreProviderKey>;
+  /** 当前编写实例的参数；省略或为 undefined 时不贡献参数，Core 保留已提供参数的引用 */
+  params?: TParams;
+  /** 按贡献顺序接收同键已提供的参数，由所属方合并并创建唯一定义；无参数时接收空数组 */
+  makeDefinition: (contributions: ReadonlyArray<TParams>) => CoreProviderDefinition;
 }>;
+
+/**
+ * 异构提供者集合的参数擦除视图
+ * @remarks 工厂仅由依赖解析器在同键、同工厂聚合后调用；提供者作者应使用带精确参数的 CoreDependencyProvider
+ */
+export type AnyCoreDependencyProvider = Omit<CoreDependencyProvider<unknown>, 'makeDefinition'> &
+  Readonly<{
+    /** 保留工厂身份，不允许通过擦除视图传入未经关联的参数 */
+    makeDefinition: (contributions: ReadonlyArray<never>) => CoreProviderDefinition;
+  }>;
 
 /** 一次编写贡献要求的根节点与可用提供者目录 */
 export type CoreProviderContribution = Readonly<{
   /** 当前编写节点实际要求的有序根节点 */
   roots: ReadonlyArray<CoreProviderKey>;
   /** 此贡献显式携带的提供者 */
-  providers: ReadonlyArray<CoreDependencyProvider>;
+  providers: ReadonlyArray<AnyCoreDependencyProvider>;
 }>;
 
 /** Core 提供者图的纯解析输入 */

@@ -9,7 +9,7 @@ import {
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import { resolveGraphDefinitionOptions, createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
+import { resolveGraphDefinitionOptions, resolveGraphRuntimeOptions } from '../../providers';
 import { resolveRelation, resolveRelationAppearance, resolveRelationStructure } from '../../resolve';
 import type { IRGraphRelation } from '../../schemas';
 import { RelationSchema } from '../../schemas';
@@ -49,12 +49,14 @@ export const RelationProviderKey: CompositeCoreProviderKey = Object.freeze({
   type: GraphType.Relation,
 });
 
-/** 使用当前 provider key 已合并的 runtime datasets 创建唯一 Relation Definition */
-const makeRelationDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
-  createRelationDefinitionFromOptions(resolveGraphRuntimeOptions(datasets));
+/** 合并 Relation 提供者参数并创建唯一定义 */
+const makeRelationDefinition: CoreDependencyProvider<GraphDefinitionOptions>['makeDefinition'] = contributions =>
+  createRelationDefinitionFromOptions(resolveGraphRuntimeOptions(contributions));
 
 /** 创建携带当前 Graph definition options 的 Relation provider */
-export const createRelationProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
+export const createRelationProvider = (
+  options: GraphDefinitionOptions = {},
+): CoreDependencyProvider<GraphDefinitionOptions> =>
   Object.freeze({
     key: RelationProviderKey,
     dependencies: Object.freeze([
@@ -63,7 +65,7 @@ export const createRelationProvider = (options: GraphDefinitionOptions = {}): Co
       DiamondArrowProvider.key,
       OpenDiamondArrowProvider.key,
     ]),
-    datasets: createGraphRuntimeDatasets(options),
+    params: options,
     makeDefinition: makeRelationDefinition,
   });
 

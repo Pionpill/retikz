@@ -25,6 +25,5 @@ export const createMatrix = (input: IRMatrix): IRMatrix => ({ ...input });
 export const MatrixProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'standard', type: 'matrix' },
   dependencies: [PathClipProvider.key],
-  datasets: {},
   makeDefinition: () => MatrixDefinition,
 };

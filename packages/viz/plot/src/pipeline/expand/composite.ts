@@ -1,5 +1,6 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import { mergeExternalDatasets } from '@retikz/data';
 import { ContourShapeProvider, SectorShapeProvider, createRibbonProviderContribution } from '@retikz/extension';
 
 import { RetikzPlotError } from '../../error';
@@ -7,17 +8,15 @@ import { PLOT_NAMESPACE } from '../../schemas';
 import { lowerPlots } from './lower';
 import type { LowerPlotsOptions } from './types';
 
-const PlotRuntimeOptions = Symbol('retikz.plot.runtimeOptions');
-
-const PlotRuntimeReferencePrefix = '@@retikz/plot/runtime/';
-
 const LocalLowerOptionKeys = new Set(['layout', 'definitions', 'implementations', 'datasetFieldMaps', 'resolveLabel']);
 
-type PlotRuntimeEnvelope = {
-  [PlotRuntimeOptions]: LowerPlotsOptions;
-};
-
-let plotRuntimeReferenceSeed = 0;
+/** Plot 提供者的运行时参数 */
+export type PlotProviderParams = Readonly<{
+  /** 按引用名索引的行数据集 */
+  datasets: ExternalDatasets;
+  /** Plot 编译选项 */
+  lowerOptions: LowerPlotsOptions;
+}>;
 
 /** Plot Composite provider 的公开完整 key */
 export const PlotProviderKey: CompositeCoreProviderKey = Object.freeze({
@@ -25,12 +24,6 @@ export const PlotProviderKey: CompositeCoreProviderKey = Object.freeze({
   namespace: PLOT_NAMESPACE,
   type: 'plot',
 });
-
-/** 识别 provider-local lowering options envelope */
-const runtimeOptionsOf = (value: unknown): LowerPlotsOptions | undefined => {
-  if (value === null || typeof value !== 'object' || !(PlotRuntimeOptions in value)) return undefined;
-  return (value as PlotRuntimeEnvelope)[PlotRuntimeOptions];
-};
 
 /** 合并多个 Plot contribution 的 field map */
 const mergeDatasetFieldMaps = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOptions['datasetFieldMaps'] => {
@@ -117,41 +110,24 @@ const mergeLowerOptions = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOpti
   };
 };
 
-/** 使用 Core 已合并的 datasets 与 runtime envelopes 生成唯一 Plot definition */
-const makePlotDefinition: CoreDependencyProvider['makeDefinition'] = mergedDatasets => {
-  const optionSets: Array<LowerPlotsOptions> = [];
-  const datasetEntries: Array<[string, unknown]> = [];
+/** 合并 Plot 所属参数并物化唯一定义 */
+const makePlotDefinition: CoreDependencyProvider<PlotProviderParams>['makeDefinition'] = contributions =>
+  lowerPlots(
+    mergeExternalDatasets(contributions.map(params => params.datasets)),
+    mergeLowerOptions(contributions.map(params => params.lowerOptions)),
+  )[0];
 
-  for (const [reference, value] of Object.entries(mergedDatasets)) {
-    const lowerOptions = runtimeOptionsOf(value);
-    if (lowerOptions === undefined) datasetEntries.push([reference, value]);
-    else optionSets.push(lowerOptions);
-  }
-
-  return lowerPlots(Object.fromEntries(datasetEntries) as ExternalDatasets, mergeLowerOptions(optionSets))[0];
-};
-
-/** 创建携带当前 Plot datasets 与 lowering options 的 Core dependency provider */
+/** 创建携带数据集与编译选项的 Plot 提供者 */
 export const createPlotProvider = (
   datasets: ExternalDatasets,
   lowerOptions: LowerPlotsOptions = {},
-): CoreDependencyProvider => {
-  let runtimeReference: string;
-
-  do {
-    runtimeReference = `${PlotRuntimeReferencePrefix}${plotRuntimeReferenceSeed}`;
-    plotRuntimeReferenceSeed += 1;
-  } while (Object.hasOwn(datasets, runtimeReference));
-
-  const runtimeEnvelope: PlotRuntimeEnvelope = { [PlotRuntimeOptions]: lowerOptions };
-
-  return Object.freeze({
+): CoreDependencyProvider<PlotProviderParams> =>
+  Object.freeze({
     key: PlotProviderKey,
     dependencies: Object.freeze([SectorShapeProvider.key, ContourShapeProvider.key]),
-    datasets: Object.freeze({ ...datasets, [runtimeReference]: runtimeEnvelope }),
+    params: Object.freeze({ datasets: Object.freeze({ ...datasets }), lowerOptions }),
     makeDefinition: makePlotDefinition,
   });
-};
 
 /** 创建 Plot 及其 Standard Shape 静态依赖的完整 Core provider contribution */
 export const createPlotProviderContribution = (

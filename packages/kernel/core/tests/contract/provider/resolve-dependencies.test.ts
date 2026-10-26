@@ -3,9 +3,10 @@ import { literal, strictObject } from 'zod';
 
 import type {
   AnyCompositeDefinition,
-  AnyCoreProviderDefinition,
+  AnyCoreDependencyProvider,
   CoreDependencyProvider,
   CoreProviderContribution,
+  CoreProviderDefinition,
   CoreProviderKey,
 } from '../../../src';
 import { defineArrow, defineClip, defineComposite, defineShape, resolveCoreProviderDependencies } from '../../../src';
@@ -65,7 +66,7 @@ const clipDefinitionOf = (name: string) =>
     },
   });
 
-const definitionOf = (key: CoreProviderKey): AnyCoreProviderDefinition => {
+const definitionOf = (key: CoreProviderKey): CoreProviderDefinition => {
   if (key.capability === 'composite') return compositeDefinitionOf(key.namespace, key.type);
   if (key.capability === 'shape') return shapeDefinitionOf(key.name);
   if (key.capability === 'arrow') return arrowDefinitionOf(key.name);
@@ -78,25 +79,71 @@ const providerOf = (
   key: CoreProviderKey,
   options: Readonly<{
     dependencies?: ReadonlyArray<CoreProviderKey>;
-    datasets?: Readonly<Record<string, unknown>>;
-    makeDefinition?: CoreDependencyProvider['makeDefinition'];
+    params?: Readonly<Record<string, unknown>>;
+    makeDefinition?: CoreDependencyProvider<Readonly<Record<string, unknown>>>['makeDefinition'];
   }> = {},
-): CoreDependencyProvider => ({
+): CoreDependencyProvider<Readonly<Record<string, unknown>>> => ({
   key,
-  dependencies: options.dependencies ?? [],
-  datasets: options.datasets ?? {},
+  dependencies: options.dependencies,
+  params: options.params,
   makeDefinition: options.makeDefinition ?? (() => definitionOf(key)),
 });
 
 const contributionOf = (
   roots: ReadonlyArray<CoreProviderKey>,
-  providers: ReadonlyArray<CoreDependencyProvider>,
+  providers: ReadonlyArray<AnyCoreDependencyProvider>,
 ): CoreProviderContribution => ({ roots, providers });
 
 const compositeNamesOf = (definitions: ReadonlyArray<AnyCompositeDefinition>): Array<string> =>
   definitions.map(definition => `${definition.namespace}/${definition.type}`);
 
 describe('resolveCoreProviderDependencies', () => {
+  it('省略依赖与参数时仍物化定义，且与显式空依赖等价', () => {
+    const key = shapeKey('optional');
+    const definition = definitionOf(key);
+    const makeDefinition = vi.fn((params: ReadonlyArray<void>) => {
+      expect(params).toEqual([]);
+      expect(Object.isFrozen(params)).toBe(true);
+      return definition;
+    });
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [
+        contributionOf(
+          [key],
+          [
+            { key, makeDefinition },
+            { key, dependencies: [], params: undefined, makeDefinition },
+          ],
+        ),
+      ],
+    });
+
+    expect(resolved.shapes).toEqual([definition]);
+    expect(makeDefinition).toHaveBeenCalledTimes(1);
+  });
+
+  it('跳过缺省参数，保留 null、false、零与空字符串的贡献顺序', () => {
+    const key = shapeKey('values');
+    const definition = definitionOf(key);
+    const makeDefinition = (params: ReadonlyArray<unknown>) => {
+      expect(params).toEqual([null, false, 0, '']);
+      return definition;
+    };
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [
+        contributionOf(
+          [key],
+          [
+            { key, makeDefinition },
+            ...[null, undefined, false, 0, ''].map(params => ({ key, params, makeDefinition })),
+          ],
+        ),
+      ],
+    });
+
+    expect(resolved.shapes).toEqual([definition]);
+  });
+
   it('keeps delimiter-bearing namespace and type fields as distinct qualified identities', () => {
     const left = compositeKey('a.b', 'c');
     const right = compositeKey('a', 'b.c');
@@ -147,49 +194,53 @@ describe('resolveCoreProviderDependencies', () => {
     expect(Object.isFrozen(resolved)).toBe(true);
   });
 
-  it('merges same-key datasets only when duplicate references are Object.is-identical', () => {
-    const key = compositeKey('plot', 'plot');
-    const rows = [{ value: 1 }];
-    const makeDefinition = vi.fn((datasets: Readonly<Record<string, unknown>>) => {
-      expect(datasets).toEqual({ rows, labels: ['A'] });
-      expect(datasets.rows).toBe(rows);
-      return compositeDefinitionOf('plot', 'plot');
+  it('按贡献顺序传递每个相同键的参数，而不进行合并或克隆', () => {
+    const key = compositeKey('demo', 'panel');
+    const first = { label: 'first' };
+    const second = { label: 'second' };
+    const makeDefinition = vi.fn((params: ReadonlyArray<Readonly<Record<string, unknown>>>) => {
+      expect(params).toEqual([first, second, first]);
+      expect(params[0]).toBe(first);
+      expect(params[1]).toBe(second);
+      expect(params[2]).toBe(first);
+      expect(Object.isFrozen(params)).toBe(true);
+      expect(Object.isFrozen(first)).toBe(false);
+      return compositeDefinitionOf('demo', 'panel');
     });
-
     const resolved = resolveCoreProviderDependencies({
       contributions: [
-        contributionOf([key], [providerOf(key, { datasets: { rows }, makeDefinition })]),
-        contributionOf([key], [providerOf(key, { datasets: { rows, labels: ['A'] }, makeDefinition })]),
+        contributionOf([key], [providerOf(key, { params: first, makeDefinition })]),
+        contributionOf([key], [providerOf(key, { params: second, makeDefinition })]),
+        contributionOf([key], [providerOf(key, { params: first, makeDefinition })]),
       ],
     });
-
-    expect(compositeNamesOf(resolved.composites ?? [])).toEqual(['plot/plot']);
+    expect(compositeNamesOf(resolved.composites ?? [])).toEqual(['demo/panel']);
     expect(makeDefinition).toHaveBeenCalledTimes(1);
-
-    expect(() =>
-      resolveCoreProviderDependencies({
-        contributions: [
-          contributionOf([key], [providerOf(key, { datasets: { rows }, makeDefinition })]),
-          contributionOf([key], [providerOf(key, { datasets: { rows: [...rows] }, makeDefinition })]),
-        ],
-      }),
-    ).toThrow(/plot\.plot.*dataset.*rows/i);
   });
 
-  it('allows different provider keys to reuse one dataset reference name', () => {
+  it('通过提供者键保持异构参数隔离', () => {
     const left = shapeKey('left');
     const right = shapeKey('right');
-
-    expect(() =>
-      resolveCoreProviderDependencies({
-        contributions: [
-          contributionOf(
-            [left, right],
-            [providerOf(left, { datasets: { rows: [1] } }), providerOf(right, { datasets: { rows: [2] } })],
-          ),
-        ],
-      }),
-    ).not.toThrow();
+    const leftProvider: CoreDependencyProvider<string> = {
+      key: left,
+      params: 'left-value',
+      makeDefinition: params => {
+        expect(params).toEqual(['left-value']);
+        return definitionOf(left);
+      },
+    };
+    const rightProvider: CoreDependencyProvider<number> = {
+      key: right,
+      params: 42,
+      makeDefinition: params => {
+        expect(params).toEqual([42]);
+        return definitionOf(right);
+      },
+    };
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [contributionOf([left, right], [leftProvider, rightProvider])],
+    });
+    expect(resolved.shapes?.map(definition => definition.name)).toEqual(['left', 'right']);
   });
 
   it('keeps same-name providers separate across capabilities', () => {

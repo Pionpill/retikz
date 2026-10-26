@@ -575,8 +575,6 @@ export const LegendDefinition: CompositeDefinition<IRLegend, typeof STANDARD_NAM
 ```ts
 export const LegendProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: LegendDefinition.namespace, type: LegendDefinition.type }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
   makeDefinition: () => LegendDefinition,
 });
 ```

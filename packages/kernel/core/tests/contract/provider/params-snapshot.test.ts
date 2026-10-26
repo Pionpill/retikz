@@ -16,27 +16,30 @@ const makeDefinition = () =>
     resolveAnchor: () => undefined,
   });
 
-const provider = (make: CoreDependencyProvider['makeDefinition']): CoreDependencyProvider => ({
+const provider = (
+  make: CoreDependencyProvider<{ profile: Readonly<{ label: string }> }>['makeDefinition'],
+): CoreDependencyProvider<{ profile: Readonly<{ label: string }> }> => ({
   key,
-  dependencies: [],
-  datasets: { profile: Object.freeze({ label: 'immutable' }) },
+  params: { profile: Object.freeze({ label: 'immutable' }) },
   makeDefinition: make,
 });
 
-const contribution = (entry: CoreDependencyProvider): CoreProviderContribution => ({
+const contribution = (
+  entry: CoreDependencyProvider<{ profile: Readonly<{ label: string }> }>,
+): CoreProviderContribution => ({
   roots: [key],
   providers: [entry],
 });
 
-describe('Core provider dataset snapshot', () => {
-  it('exposes an immutable dataset record to the provider maker', () => {
+describe('Core 提供者参数快照', () => {
+  it('向提供者工厂提供不可变的参数列表', () => {
     const result = resolveCoreProviderDependencies({
       contributions: [
         contribution(
-          provider(datasets => {
-            expect(Object.isFrozen(datasets)).toBe(true);
-            expect(Reflect.set(datasets, 'other', {})).toBe(false);
-            expect(datasets).not.toHaveProperty('other');
+          provider(params => {
+            expect(Object.isFrozen(params)).toBe(true);
+            expect(Reflect.set(params, '1', {})).toBe(false);
+            expect(params).not.toHaveProperty('other');
 
             return makeDefinition();
           }),

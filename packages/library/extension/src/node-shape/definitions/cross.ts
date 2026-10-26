@@ -153,9 +153,7 @@ export const CrossShapeDefinition = defineShape<CrossShapeParams>({
 });
 
 /** Cross 的静态 Core provider */
-export const CrossShapeProvider: CoreDependencyProvider = Object.freeze({
+export const CrossShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
   key: { capability: 'shape', name: CrossShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
   makeDefinition: () => CrossShapeDefinition,
 });

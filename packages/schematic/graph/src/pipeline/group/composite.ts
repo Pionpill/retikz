@@ -5,7 +5,7 @@ import { SurfaceProvider } from '@retikz/standard/presentation';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import { resolveGraphDefinitionOptions, createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
+import { resolveGraphDefinitionOptions, resolveGraphRuntimeOptions } from '../../providers';
 import type { IRGroup } from '../../schemas';
 import { GroupSchema } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
@@ -43,11 +43,13 @@ export const GroupProviderKey: CompositeCoreProviderKey = Object.freeze({
   type: GraphType.Group,
 });
 
-const makeGroupDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
-  createGroupDefinitionFromOptions(resolveGraphRuntimeOptions(datasets));
+const makeGroupDefinition: CoreDependencyProvider<GraphDefinitionOptions>['makeDefinition'] = contributions =>
+  createGroupDefinitionFromOptions(resolveGraphRuntimeOptions(contributions));
 
 /** 创建携带当前 Graph definition options 的 Group provider */
-export const createGroupProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
+export const createGroupProvider = (
+  options: GraphDefinitionOptions = {},
+): CoreDependencyProvider<GraphDefinitionOptions> =>
   Object.freeze({
     key: GroupProviderKey,
     dependencies: Object.freeze([
@@ -58,7 +60,7 @@ export const createGroupProvider = (options: GraphDefinitionOptions = {}): CoreD
       FlexLayoutProvider.key,
       SurfaceProvider.key,
     ]),
-    datasets: createGraphRuntimeDatasets(options),
+    params: options,
     makeDefinition: makeGroupDefinition,
   });
 
