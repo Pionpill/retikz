@@ -21,7 +21,7 @@ const radialShape = (): ShapeDefinition =>
   defineShape({
     name: 'hexagon',
     paramsSchema: strictObject({}),
-    computeCircumscribedHalfAxes: (hw, hh) => {
+    computeCircumscribedGeometry: (hw, hh) => {
       const r = Math.hypot(hw, hh);
       return { halfWidth: r, halfHeight: r };
     },
@@ -52,7 +52,7 @@ const chipShape = (): ShapeDefinition =>
   defineShape({
     name: 'chip',
     paramsSchema: strictObject({}),
-    computeCircumscribedHalfAxes: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+    computeCircumscribedGeometry: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
     computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
     resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
     *emit(rect): Iterable<ScenePrimitive> {
@@ -88,6 +88,48 @@ const chipShape = (): ShapeDefinition =>
   });
 
 describe('Shape registry — injection (happy path)', () => {
+  it('固定宽度折行后使用与最终内容尺寸一致的包围偏移', () => {
+    const rectangle = BUILTIN_SHAPES.get('rectangle')!;
+    const shape = defineShape({
+      name: 'contentOffset',
+      paramsSchema: strictObject({}),
+      computeCircumscribedGeometry: (halfWidth, halfHeight) => ({
+        halfWidth,
+        halfHeight,
+        offset: [halfWidth, halfHeight],
+      }),
+      computeBoundaryPoint: rectangle.computeBoundaryPoint,
+      resolveAnchor: rectangle.resolveAnchor,
+      emit: rectangle.emit,
+    });
+    const result = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            position: [10, 20],
+            shape: 'contentOffset',
+            text: 'aa aa aa',
+            layout: { width: 40, padding: 0, margin: 0, lineHeight: 10 },
+            style: { font: { size: 10 } },
+          },
+        ],
+      },
+      {
+        shapes: [shape],
+        measureText: text => ({ width: text.length * 10, height: 10, ascent: 8, descent: 2 }),
+      },
+    );
+    const rect = findByType(result.scene.primitives, 'rect');
+    expect(rect).toBeDefined();
+    expect(rect!.x + rect!.width / 2).toBe(20);
+    expect(rect!.y).toBe(20);
+    expect(rect!.width).toBe(40);
+    expect(rect!.height).toBeGreaterThan(10);
+  });
+
   it('inject_custom_shape_compiles: shapes:{hexagon} + node.shape=hexagon → emits custom prim', () => {
     const ir: IRScene = {
       version: 1,
@@ -287,7 +329,7 @@ describe('Shape registry — error path', () => {
     const strictShape = defineShape({
       name: 'scaledBox',
       paramsSchema: strictObject({ scale: number().positive() }),
-      computeCircumscribedHalfAxes: (hw, hh, params) => ({
+      computeCircumscribedGeometry: (hw, hh, params) => ({
         halfWidth: hw * params.scale,
         halfHeight: hh * params.scale,
       }),

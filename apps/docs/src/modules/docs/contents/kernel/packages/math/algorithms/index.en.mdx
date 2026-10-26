@@ -22,6 +22,8 @@ const crossing = intersect.segmentSegment({
 
 ## Rounded contours
 
+Import `verticesToSegments(vertices)` from `@retikz/math` to convert ordered vertices into a closed ring of line segments for contour algorithms. It preserves vertex order and repeated vertices, and endpoints reuse the input coordinates. Empty input returns an empty array, one vertex produces a self-connected segment, and two vertices produce two opposite segments. It does not repair degenerate contours.
+
 Describe connected lines and circular arcs with `ContourSegment`, then solve their corner fillets with `solveContourFillets`. `buildContourCommands` converts the contour and fillets into neutral commands; `intersectContourRay` finds the nearest intersection along a ray from an origin toward a target. These functions do not create Core IR or Scene data.
 
 ```ts

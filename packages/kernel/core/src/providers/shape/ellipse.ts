@@ -62,7 +62,7 @@ const ellipseKeyPoints = (bounds: CenteredBox) => {
 export const ellipseShape = defineShape<EllipseParams>({
   name: BuiltinShape.Ellipse,
   paramsSchema: ellipseParamsSchema,
-  computeCircumscribedHalfAxes: (hw, hh, params) =>
+  computeCircumscribedGeometry: (hw, hh, params) =>
     mathEllipse.circumscribedHalfAxes({ halfWidth: hw, halfHeight: hh }, params.circumscribe),
   computeBoundaryPoint: (r, toward) => mathEllipse.boundaryPoint(mathEllipse.inscribedInBox(r), toward),
   resolveAnchor: (r, name) => {

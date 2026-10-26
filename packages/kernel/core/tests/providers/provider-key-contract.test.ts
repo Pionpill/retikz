@@ -25,7 +25,7 @@ describe('provider key contract', () => {
     const ring = defineShape({
       name: 'ring',
       paramsSchema: object({}),
-      computeCircumscribedHalfAxes: () => ({ halfWidth: 10, halfHeight: 10 }),
+      computeCircumscribedGeometry: () => ({ halfWidth: 10, halfHeight: 10 }),
       computeBoundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
       resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
       emit: () => [{ type: 'ellipse', cx: 0, cy: 0, rx: 10, ry: 10 }],
@@ -43,7 +43,7 @@ describe('provider key contract', () => {
     const rectangle = defineShape({
       name: 'rectangle',
       paramsSchema: object({}),
-      computeCircumscribedHalfAxes: () => ({ halfWidth: 1, halfHeight: 1 }),
+      computeCircumscribedGeometry: () => ({ halfWidth: 1, halfHeight: 1 }),
       computeBoundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
       resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
       emit: () => [],

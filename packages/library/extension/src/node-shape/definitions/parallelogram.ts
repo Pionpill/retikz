@@ -65,7 +65,7 @@ const parallelogramVertices =
 export const ParallelogramShapeDefinition = defineShape<ParallelogramShapeParams>({
   name: BuiltinExtensionShapeName.Parallelogram,
   paramsSchema: ParallelogramShapeParamsSchema,
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight, params) => {
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight, params) => {
     const sharp = {
       halfWidth: innerHalfWidth + Math.abs(slantOffset(innerHalfHeight, params)),
       halfHeight: innerHalfHeight,

@@ -49,7 +49,7 @@ const hexagonVertices =
 export const HexagonShapeDefinition = defineShape<HexagonShapeParams>({
   name: BuiltinExtensionShapeName.Hexagon,
   paramsSchema: HexagonShapeParamsSchema,
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight, params) => {
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight, params) => {
     const sharp = { halfWidth: innerHalfWidth + shoulderDepthOf(params), halfHeight: innerHalfHeight };
     return circumscribeRoundedPolygon(
       BuiltinExtensionShapeName.Hexagon,

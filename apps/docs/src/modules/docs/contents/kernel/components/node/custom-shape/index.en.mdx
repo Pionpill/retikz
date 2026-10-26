@@ -26,6 +26,8 @@ Core-default `rectangle` / `ellipse` / `polygon` definitions and custom definiti
 
 ## Define the capability
 
+`computeCircumscribedGeometry` receives the content half-width and half-height including padding, plus the shape parameters, and returns `{ halfWidth, halfHeight, offset? }` together. The half-axes describe the unrotated bounding box; `offset` is its local center offset relative to the node position and defaults to `[0, 0]`. When width constraints require multiple trials, the final layout uses the complete geometry of the selected candidate.
+
 Use `defineShape()` to declare the registry name, parameter schema, and geometry responsibilities. Registry names have type `string`; use `ShapeDefinition['name']` when annotating a name instead of maintaining a separate union of built-in names. Parameterless shapes use `z.strictObject({})`. This minimal definition reuses rectangle geometry while changing the registry name and layout footprint.
 
 ```ts
@@ -35,7 +37,7 @@ import { z } from 'zod';
 const badge = defineShape({
   name: 'badge',
   paramsSchema: z.strictObject({}),
-  computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({
+  computeCircumscribedGeometry: (halfWidth, halfHeight) => ({
     halfWidth: halfWidth + 8,
     halfHeight: halfHeight + 4,
   }),

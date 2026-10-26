@@ -16,7 +16,7 @@ const radialShape = (): ShapeDefinition =>
   defineShape({
     name: 'hexagon',
     paramsSchema: strictObject({}),
-    computeCircumscribedHalfAxes: (hw, hh) => {
+    computeCircumscribedGeometry: (hw, hh) => {
       const r = Math.hypot(hw, hh);
       return { halfWidth: r, halfHeight: r };
     },

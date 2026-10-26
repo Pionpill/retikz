@@ -194,8 +194,8 @@ describe('polygon cornerRadius — scaleParams', () => {
 
 describe('polygon cornerRadius — circumscribe unchanged', () => {
   it('polygon_circumscribe_unchanged：cornerRadius 变化不改 circumscribe AABB', () => {
-    const noCorner = polygon.computeCircumscribedHalfAxes(40, 30, { sides: 6 });
-    const withCorner = polygon.computeCircumscribedHalfAxes(40, 30, { sides: 6, cornerRadius: 12 });
+    const noCorner = polygon.computeCircumscribedGeometry(40, 30, { sides: 6 });
+    const withCorner = polygon.computeCircumscribedGeometry(40, 30, { sides: 6, cornerRadius: 12 });
 
     expect(withCorner).toEqual(noCorner);
   });
@@ -203,13 +203,13 @@ describe('polygon cornerRadius — circumscribe unchanged', () => {
 
 describe('polygon diamond aspectRatio', () => {
   it('aspectRatio=1 preserves the existing diamond dimensions', () => {
-    expect(polygon.computeCircumscribedHalfAxes(40, 30, { sides: 4 })).toEqual(
-      polygon.computeCircumscribedHalfAxes(40, 30, { sides: 4, aspectRatio: 1 }),
+    expect(polygon.computeCircumscribedGeometry(40, 30, { sides: 4 })).toEqual(
+      polygon.computeCircumscribedGeometry(40, 30, { sides: 4, aspectRatio: 1 }),
     );
   });
 
   it('aspectRatio controls the four-sided diamond width-to-height ratio', () => {
-    const result = polygon.computeCircumscribedHalfAxes(40, 30, { sides: 4, aspectRatio: 1.8 });
+    const result = polygon.computeCircumscribedGeometry(40, 30, { sides: 4, aspectRatio: 1.8 });
 
     expect(result.halfWidth / result.halfHeight).toBeCloseTo(1.8, 10);
     expect(result.halfWidth).toBeCloseTo(94, 10);

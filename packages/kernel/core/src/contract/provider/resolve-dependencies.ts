@@ -246,7 +246,7 @@ const resolveDefinitionCapability = (
   expected: CoreProviderCapability,
 ): CoreProviderCapability => {
   if ('namespace' in definition && 'type' in definition) return CoreProviderCapability.Composite;
-  if ('computeCircumscribedHalfAxes' in definition && 'computeBoundaryPoint' in definition)
+  if ('computeCircumscribedGeometry' in definition && 'computeBoundaryPoint' in definition)
     return CoreProviderCapability.Shape;
   if ('lineContactX' in definition && 'emit' in definition) return CoreProviderCapability.Arrow;
   if ('name' in definition && 'emit' in definition)

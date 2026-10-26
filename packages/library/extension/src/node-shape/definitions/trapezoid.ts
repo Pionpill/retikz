@@ -69,7 +69,7 @@ const trapezoidVertices =
 export const TrapezoidShapeDefinition = defineShape<TrapezoidShapeParams>({
   name: BuiltinExtensionShapeName.Trapezoid,
   paramsSchema: TrapezoidShapeParamsSchema,
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight, params) => {
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight, params) => {
     const ratio = shortSideRatioOf(params);
     const sharp =
       shortSideOf(params) === 'top' || shortSideOf(params) === 'bottom'

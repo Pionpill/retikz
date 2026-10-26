@@ -6,10 +6,9 @@ import {
   contourToPathPrimitive,
   defineShape,
   pointsConnectionEnvelope,
-  verticesToSegments,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { DEG_TO_RAD, localToWorld } from '@retikz/math';
+import { DEG_TO_RAD, localToWorld, verticesToSegments } from '@retikz/math';
 import type { CenteredBox, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
@@ -77,7 +76,7 @@ const worldVertices = (rect: CenteredBox, geometry: StarGeometry): Array<Positio
 export const StarShapeDefinition = defineShape<StarShapeParams>({
   name: BuiltinExtensionShapeName.Star,
   paramsSchema: StarShapeParamsSchema,
-  computeCircumscribedHalfAxes: (_halfWidth, _halfHeight, params) => starGeometry(params).aabbHalfAxes,
+  computeCircumscribedGeometry: (_halfWidth, _halfHeight, params) => starGeometry(params).aabbHalfAxes,
   computeBoundaryPoint: (rect, toward, params) => {
     const vertices = worldVertices(rect, starGeometry(params));
     const center = localToWorld(rect, [0, 0]);

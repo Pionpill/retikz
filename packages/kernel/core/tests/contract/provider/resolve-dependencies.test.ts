@@ -26,7 +26,7 @@ const shapeDefinitionOf = (name: string) =>
   defineShape({
     name,
     paramsSchema: strictObject({}),
-    computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
+    computeCircumscribedGeometry: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
     computeBoundaryPoint: (_rect, toward) => toward,
     emit: () => [],
     resolveAnchor: () => undefined,

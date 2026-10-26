@@ -72,6 +72,7 @@ const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'so
       'defineShape',
       'ShapeDefinition',
       'ShapeDefinitionInput',
+      'ShapeCircumscribedGeometry',
       'BUILTIN_SHAPES',
       'defineBoundary',
       'BoundaryDefinition',

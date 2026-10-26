@@ -270,7 +270,7 @@ describe('Layout Core layout capability gate', () => {
     const customShape = defineShape({
       name: 'layout-core-gate-shape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: () => ({ halfWidth: 10, halfHeight: 5 }),
+      computeCircumscribedGeometry: () => ({ halfWidth: 10, halfHeight: 5 }),
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       *emit(): Iterable<ScenePrimitive> {

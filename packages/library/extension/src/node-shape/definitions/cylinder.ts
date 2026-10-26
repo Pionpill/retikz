@@ -26,7 +26,7 @@ export type CylinderShapeParams = EllipticCapShapeParams;
 export const CylinderShapeDefinition = defineShape<CylinderShapeParams>({
   name: BuiltinExtensionShapeName.Cylinder,
   paramsSchema: EllipticCapShapeParamsSchema,
-  computeCircumscribedHalfAxes: circumscribeEllipticCaps,
+  computeCircumscribedGeometry: circumscribeEllipticCaps,
   computeBoundaryPoint: (bounds, toward, params) =>
     localToWorld(bounds, ellipticCapLocalBoundary(bounds, toward, params)),
   resolveAnchor: (bounds, name) => {

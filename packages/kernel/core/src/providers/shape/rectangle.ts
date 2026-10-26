@@ -1,11 +1,11 @@
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { localToWorld } from '@retikz/math';
+import { DEG_TO_RAD, localToWorld, rectOutline, verticesToSegments } from '@retikz/math';
 import type { CenteredBox, ContourSegment, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
-import type { ScenePrimitive } from '../../contract';
-import { defineShape, computeRectangleOutlinePathCommands, verticesToSegments } from '../../contract';
+import type { PathCommand, ScenePrimitive } from '../../contract';
+import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
 import { CenterAnchor, boundaryFromContour, boundsConnectionEnvelope, isDirectionalAnchor, rect } from '../../shared';
 import { rectPrimitiveStyle } from './style';
@@ -31,6 +31,39 @@ const rectVertices = (bounds: CenteredBox): Array<Position> => {
   ];
 };
 
+/** 把带旋转的矩形轮廓算子转换为结构化 PathCommand */
+const computeRectangleOutlinePathCommands = (
+  bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotate?: number;
+  },
+  cornerRadius?: number,
+): Array<PathCommand> => {
+  const from: Position = [bounds.x - bounds.width / 2, bounds.y - bounds.height / 2];
+  const to: Position = [bounds.x + bounds.width / 2, bounds.y + bounds.height / 2];
+  const rotation = (bounds.rotate ?? 0) / DEG_TO_RAD;
+  const toWorld = (point: Position): Position => localToWorld(bounds, [point[0] - bounds.x, point[1] - bounds.y]);
+
+  return rectOutline(from, to, cornerRadius).map(operation => {
+    if (operation.kind === 'move') return { kind: 'move', to: toWorld(operation.to) };
+    if (operation.kind === 'line') return { kind: 'line', to: toWorld(operation.to) };
+    if (operation.kind === 'close') return { kind: 'close' };
+
+    return {
+      kind: 'ellipseArc',
+      center: toWorld(operation.center),
+      radiusX: operation.radius,
+      radiusY: operation.radius,
+      startAngle: operation.startAngle,
+      endAngle: operation.endAngle,
+      ...(rotation === 0 ? {} : { rotation }),
+    };
+  });
+};
+
 /**
  * rectangle 注册项：文本容器矩形
  * @description anchor / edgePoint 走 rect 几何；cornerRadius 影响 boundaryPoint 和 emit。
@@ -39,7 +72,7 @@ const rectVertices = (bounds: CenteredBox): Array<Position> => {
 export const rectangle = defineShape<RectangleParams>({
   name: BuiltinShape.Rectangle,
   paramsSchema: rectangleParamsSchema,
-  computeCircumscribedHalfAxes: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+  computeCircumscribedGeometry: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
   computeBoundaryPoint: (bounds: CenteredBox, toward: Position, params): Position => {
     const verts = rectVertices(bounds);
     const segments: Array<ContourSegment> = verticesToSegments(verts);

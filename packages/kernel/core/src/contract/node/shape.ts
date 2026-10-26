@@ -1,4 +1,4 @@
-import type { JsonObject } from '@retikz/foundation';
+import type { JsonObject, OpenString } from '@retikz/foundation';
 import type { CenteredBox, Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
@@ -14,7 +14,7 @@ type ResolvedShapeStyleFields = Pick<IRGraphicStyle, 'strokeWidth' | 'blendMode'
 };
 
 /** Shape provider 接收到的命名 anchor：标准方位名或 shape 自定义扩展名 */
-export type ShapeAnchorName = Anchor | (string & {});
+export type ShapeAnchorName = OpenString<Anchor>;
 
 /** Shape 可为之提供安全包络的规则连接面种类 */
 export type ConnectionEnvelopeKind = 'circle' | 'ellipse' | 'rectangle';
@@ -102,6 +102,19 @@ export type ResolvedShapeStyle = {
   blendMode?: ResolvedShapeStyleFields['blendMode'];
 };
 
+/** 形状包围内容所需的未旋转外接盒几何 */
+export type ShapeCircumscribedGeometry = {
+  /** 外接盒的局部 x 轴半宽，须为有限非负数 */
+  halfWidth: number;
+  /** 外接盒的局部 y 轴半高，须为有限非负数 */
+  halfHeight: number;
+  /**
+   * 外接盒中心相对 node position 的未旋转局部偏移
+   * @default [0, 0]
+   */
+  offset?: Position;
+};
+
 /**
  * 可注册的 shape 定义
  * @description 描述第三方作者和内置 shape 共同实现的运行时能力契约；定义本身不进入 IR。
@@ -117,18 +130,13 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
    */
   paramsSchema: ZodType<TParams>;
   /**
-   * 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴
+   * 根据包含 padding 的内容半轴和 params，计算完整形状的未旋转外接盒半轴及中心偏移
    */
-  computeCircumscribedHalfAxes: (
+  computeCircumscribedGeometry: (
     innerHalfWidth: number,
     innerHalfHeight: number,
     params: TParams,
-  ) => { halfWidth: number; halfHeight: number };
-  /**
-   * 外接 AABB 中心相对 node `position` 的未旋转局部偏移
-   * @default [0, 0]
-   */
-  computeCircumscribedOffset?: (params: TParams) => Position;
+  ) => ShapeCircumscribedGeometry;
   /**
    * 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点
    * @description `rect` 可包含旋转；实现需要按需转换坐标
@@ -148,6 +156,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
     kind: ConnectionEnvelopeKind,
     params: TParams,
   ) => ConnectionEnvelope | undefined;
+  // TODO: 随 Inspect 与所属者产物契约调整，统一评估轮廓和关键点的归属及按需计算
   /** 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何 */
   computeOutline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
   /** 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一 */

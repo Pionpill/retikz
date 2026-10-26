@@ -54,7 +54,7 @@ Three bounds serve different purposes:
 - **Visual shape**: the outline that contains the content box plus padding, subject to size constraints.
 - **Layout allocation**: the space reserved by the parent layout, accounting for margin and rotation around the node's outer box.
 
-The shape's `computeCircumscribedHalfAxes` receives content half-width and half-height and returns an outer box that can contain them. A rectangle usually encloses the content directly; a circle needs a larger diameter to contain the same rectangular content area.
+The shape's `computeCircumscribedGeometry` receives content half-width and half-height and returns an outer box that can contain them. A rectangle usually encloses the content directly; a circle needs a larger diameter to contain the same rectangular content area.
 
 The diagram assumes an already measured content box of `40 × 24`, an unrotated rectangle, `padding = 8` on all sides, `minimumSize = { width: 80, height: 48 }`, and `margin = 6`, with no fixed `width`. Geometry is enlarged uniformly for readability. Gray dotted lines show calculated bounds, not additional node borders.
 

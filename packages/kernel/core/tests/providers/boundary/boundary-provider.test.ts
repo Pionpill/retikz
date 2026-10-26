@@ -100,7 +100,7 @@ describe('Boundary provider contract', () => {
     const shapeBoundary = defineShape({
       name: 'shape-surface',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: () => ({ halfWidth: 20, halfHeight: 20 }),
+      computeCircumscribedGeometry: () => ({ halfWidth: 20, halfHeight: 20 }),
       computeBoundaryPoint: rect => [rect.x + 13, rect.y],
       resolveAnchor: () => undefined,
       *emit(): Iterable<ScenePrimitive> {},
@@ -113,7 +113,7 @@ describe('Boundary provider contract', () => {
     const sameNameShape = defineShape({
       name: 'same',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: () => ({ halfWidth: 20, halfHeight: 20 }),
+      computeCircumscribedGeometry: () => ({ halfWidth: 20, halfHeight: 20 }),
       computeBoundaryPoint: rect => [rect.x + 17, rect.y],
       resolveAnchor: () => undefined,
       *emit(): Iterable<ScenePrimitive> {},

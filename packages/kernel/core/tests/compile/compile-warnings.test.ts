@@ -184,7 +184,7 @@ describe('CompileOptions.onWarn', () => {
     const customShape = defineShape({
       name: 'custom-without-envelope',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: BUILTIN_SHAPES.get('rectangle')!.emit,

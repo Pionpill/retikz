@@ -1,11 +1,11 @@
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { DEG_TO_RAD, localToWorld } from '@retikz/math';
+import { DEG_TO_RAD, localToWorld, verticesToSegments } from '@retikz/math';
 import type { CenteredBox, ContourSegment, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
-import { contourToPathCommands, contourToPathPrimitive, defineShape, verticesToSegments } from '../../contract';
+import { contourToPathCommands, contourToPathPrimitive, defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
 import {
   CenterAnchor,
@@ -150,7 +150,7 @@ const polygonVertices = (bounds: CenteredBox, params: PolygonParams): Array<Posi
 export const polygon = defineShape<PolygonParams>({
   name: BuiltinShape.Polygon,
   paramsSchema: polygonParamsSchema,
-  computeCircumscribedHalfAxes: (hw, hh, params) => {
+  computeCircumscribedGeometry: (hw, hh, params) => {
     if (isAspectRatioDiamond(params)) return diamondHalfAxesFor(hw, hh, params.aspectRatio);
 
     const radius = circumradiusFor(hw, hh, params);

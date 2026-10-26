@@ -6,10 +6,9 @@ import {
   contourToPathPrimitive,
   defineShape,
   pointsConnectionEnvelope,
-  verticesToSegments,
 } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { boundsOf, centerOfBounds, halfAxesOfBounds, localToWorld, vector2 } from '@retikz/math';
+import { boundsOf, centerOfBounds, halfAxesOfBounds, localToWorld, vector2, verticesToSegments } from '@retikz/math';
 import type { CenteredBox, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { array, number, strictObject, tuple } from 'zod';
@@ -57,7 +56,7 @@ const worldVertices = (rect: CenteredBox, params: ContourShapeParams): Array<Pos
 export const ContourShapeDefinition = defineShape<ContourShapeParams>({
   name: BuiltinExtensionShapeName.Contour,
   paramsSchema: ContourShapeParamsSchema,
-  computeCircumscribedHalfAxes: (_halfWidth, _halfHeight, params) => {
+  computeCircumscribedGeometry: (_halfWidth, _halfHeight, params) => {
     const bounds = boundsOf(params.points);
     if (bounds === undefined) {
       throw new RetikzExtensionError({
@@ -69,7 +68,6 @@ export const ContourShapeDefinition = defineShape<ContourShapeParams>({
 
     return halfAxesOfBounds(bounds);
   },
-  computeCircumscribedOffset: () => [0, 0],
   computeBoundaryPoint: (rect, toward, params) => {
     const center: Position = [rect.x, rect.y];
     return (

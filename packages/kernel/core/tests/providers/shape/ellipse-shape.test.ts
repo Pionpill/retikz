@@ -16,30 +16,30 @@ const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: '
 
 describe('ellipse shape — circumscribe 策略', () => {
   it('ellipse_proportional_default：无 params → 各轴 ×√2（现状）', () => {
-    expect(ellipseShape.computeCircumscribedHalfAxes(10, 4, {})).toEqual({
+    expect(ellipseShape.computeCircumscribedGeometry(10, 4, {})).toEqual({
       halfWidth: 10 * Math.SQRT2,
       halfHeight: 4 * Math.SQRT2,
     });
   });
 
   it('ellipse_proportional_default：显式 proportional 与无 params 一致', () => {
-    expect(ellipseShape.computeCircumscribedHalfAxes(10, 4, { circumscribe: 'proportional' })).toEqual(
-      ellipseShape.computeCircumscribedHalfAxes(10, 4, {}),
+    expect(ellipseShape.computeCircumscribedGeometry(10, 4, { circumscribe: 'proportional' })).toEqual(
+      ellipseShape.computeCircumscribedGeometry(10, 4, {}),
     );
   });
 
   it('ellipse_equal_isotropic：equal → halfWidth = halfHeight = √(hw²+hh²)', () => {
     const r = Math.hypot(10, 4);
 
-    expect(ellipseShape.computeCircumscribedHalfAxes(10, 4, { circumscribe: 'equal' })).toEqual({
+    expect(ellipseShape.computeCircumscribedGeometry(10, 4, { circumscribe: 'equal' })).toEqual({
       halfWidth: r,
       halfHeight: r,
     });
   });
 
   it('square_inner_box_equal_equals_proportional_point：正方内框（hw=hh）下 equal 与 proportional 半轴重合（均 = √2·hw）', () => {
-    const prop = ellipseShape.computeCircumscribedHalfAxes(8, 8, { circumscribe: 'proportional' });
-    const equal = ellipseShape.computeCircumscribedHalfAxes(8, 8, { circumscribe: 'equal' });
+    const prop = ellipseShape.computeCircumscribedGeometry(8, 8, { circumscribe: 'proportional' });
+    const equal = ellipseShape.computeCircumscribedGeometry(8, 8, { circumscribe: 'equal' });
 
     // proportional: 8·√2；equal: √(8²+8²) = 8·√2 —— 数值重合
     expect(prop.halfWidth).toBeCloseTo(8 * Math.SQRT2);
@@ -48,7 +48,7 @@ describe('ellipse shape — circumscribe 策略', () => {
   });
 
   it('flat_inner_box_equal_uses_diagonal：极扁内框 equal → 半径取对角线半长（不退化为某轴）', () => {
-    const { halfWidth, halfHeight } = ellipseShape.computeCircumscribedHalfAxes(100, 1, { circumscribe: 'equal' });
+    const { halfWidth, halfHeight } = ellipseShape.computeCircumscribedGeometry(100, 1, { circumscribe: 'equal' });
     const diagonal = Math.hypot(100, 1);
 
     expect(halfWidth).toBe(halfHeight); // 等轴

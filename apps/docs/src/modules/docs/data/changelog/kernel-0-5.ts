@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：Shape 包围几何统一入口', en: 'BREAKING: unified Shape circumscribed geometry' },
+          content: {
+            zh: '自定义 Shape 将 computeCircumscribedHalfAxes 和 computeCircumscribedOffset 合并为 computeCircumscribedGeometry，统一返回 { halfWidth, halfHeight, offset? }；省略 offset 表示居中。删除旧回调，尺寸和偏移随同一布局候选消费，已有形状的绘制与定位行为保持不变。',
+            en: 'Custom Shapes replace computeCircumscribedHalfAxes and computeCircumscribedOffset with computeCircumscribedGeometry, returning { halfWidth, halfHeight, offset? } together. Omitting offset means a centered box. The old callbacks are removed; sizing and offset belong to the same layout candidate, preserving existing drawing and positioning behavior.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：端点箭头与沿线标记分离', en: 'BREAKING: separate endpoint arrows and path marks' },
           content: {
             zh: '端点箭头统一使用 arrow.start / arrow.end，并负责接触与截断；marks 按截断前整条路径的弧长放置图元，包括首尾位置，且不截断主线。marks 每项直接组合 pos、shape、尺寸和样式，自定义参数放入 params；删除 kind 与内层 mark。内置 times、plus、check、star 四种普通标记，补充[标记用法](/kernel/components/path/mark)与[自定义标记](/kernel/components/path/custom-mark)文档。普通标记通过 defineMark 注册，与箭头共享 MarkEmitContext、尺寸和图元生成能力；已注册箭头自动可作为标记使用，名称冲突报错。React、Vanilla 保留 ->、<-、<-> 方向简写，由 Vanilla 归一化为端点对象；JSON IR 只使用对象。arrowDetail、arrowPlacement 内容并入端点对象，原先承担端点箭头的 marks 需迁入 arrow。',

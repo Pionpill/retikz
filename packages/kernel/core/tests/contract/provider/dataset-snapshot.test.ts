@@ -10,7 +10,7 @@ const makeDefinition = () =>
   defineShape({
     name: 'cross',
     paramsSchema: strictObject({}),
-    computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
+    computeCircumscribedGeometry: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
     computeBoundaryPoint: (_bounds, toward) => toward,
     emit: () => [],
     resolveAnchor: () => undefined,

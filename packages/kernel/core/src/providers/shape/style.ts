@@ -1,22 +1,6 @@
-import type { EllipsePrimitive, PathPrimitive, RectPrimitive, ResolvedShapeStyle } from '../../contract';
+import type { EllipsePrimitive, RectPrimitive, ResolvedShapeStyle } from '../../contract';
 
 type ShapeStylePassthrough = Omit<ResolvedShapeStyle, 'fill' | 'stroke' | 'strokeWidth'>;
-
-type PathPrimitiveStyle = Pick<
-  PathPrimitive,
-  | 'fill'
-  | 'fillOpacity'
-  | 'stroke'
-  | 'strokeOpacity'
-  | 'strokeWidth'
-  | 'dashPattern'
-  | 'dashOffset'
-  | 'lineCap'
-  | 'lineJoin'
-  | 'opacity'
-  | 'shadow'
-  | 'blendMode'
->;
 
 type EllipsePrimitiveStyle = Pick<
   EllipsePrimitive,
@@ -55,20 +39,6 @@ const withoutCornerRadius = (style: ShapeStylePassthrough): Omit<ShapeStylePasst
   const passthroughStyle = { ...style };
   delete passthroughStyle.cornerRadius;
   return passthroughStyle;
-};
-
-/** 将 shape style 落到 path primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth */
-export const buildPathPrimitiveStyle = (
-  style: ResolvedShapeStyle,
-  options?: { fill?: PathPrimitive['fill'] },
-): PathPrimitiveStyle => {
-  const { fill, stroke, strokeWidth, ...passthroughStyle } = style;
-  return {
-    ...withoutCornerRadius(passthroughStyle),
-    fill: options?.fill ?? fill ?? 'transparent',
-    stroke: stroke ?? 'currentColor',
-    strokeWidth: strokeWidth ?? 1,
-  };
 };
 
 /** 将 shape style 落到 ellipse primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth */

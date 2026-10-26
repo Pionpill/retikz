@@ -8,9 +8,8 @@ import {
   isDirectionalAnchor,
   pointsConnectionEnvelope,
   rect,
-  verticesToSegments,
 } from '@retikz/core';
-import { localToWorld } from '@retikz/math';
+import { localToWorld, verticesToSegments } from '@retikz/math';
 import type { CenteredBox, Position } from '@retikz/math';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';

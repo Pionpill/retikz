@@ -186,3 +186,5 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 - Scope 不再绘制外框，保留包络与引用：[068](./068-remove-scope-frame.md)
 
 - 主题名称与定义入口统一命名：[069](./069-theme-naming.md)
+
+- Shape 内容包围尺寸与中心偏移统一返回，保持布局和定位行为：[076](./076-shape-circumscribed-geometry.md)

@@ -21,7 +21,7 @@ const pathOf = (definition: ShapeDefinition, rect: CenteredBox, params: JsonObje
 
 describe('Extension container shape geometry', () => {
   it('circumscribes and emits a trapezoid from the selected short side', () => {
-    expect(TrapezoidShapeDefinition.computeCircumscribedHalfAxes(36, 20, {})).toEqual({
+    expect(TrapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, {})).toEqual({
       halfWidth: 50,
       halfHeight: 20,
     });
@@ -35,7 +35,7 @@ describe('Extension container shape geometry', () => {
 
     const rightParams = { shortSide: 'right', shortSideRatio: 0.5 } as const;
 
-    expect(TrapezoidShapeDefinition.computeCircumscribedHalfAxes(20, 10, rightParams)).toEqual({
+    expect(TrapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, rightParams)).toEqual({
       halfWidth: 20,
       halfHeight: 20,
     });
@@ -47,18 +47,18 @@ describe('Extension container shape geometry', () => {
       { kind: 'close' },
     ]);
     expect(
-      TrapezoidShapeDefinition.computeCircumscribedHalfAxes(20, 10, { shortSide: 'bottom', shortSideRatio: 0.5 }),
+      TrapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, { shortSide: 'bottom', shortSideRatio: 0.5 }),
     ).toEqual({
       halfWidth: 40,
       halfHeight: 10,
     });
     expect(
-      TrapezoidShapeDefinition.computeCircumscribedHalfAxes(20, 10, { shortSide: 'left', shortSideRatio: 0.5 }),
+      TrapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, { shortSide: 'left', shortSideRatio: 0.5 }),
     ).toEqual({
       halfWidth: 20,
       halfHeight: 20,
     });
-    expect(TrapezoidShapeDefinition.computeCircumscribedHalfAxes(20, 10, { shortSideRatio: 1 })).toEqual({
+    expect(TrapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, { shortSideRatio: 1 })).toEqual({
       halfWidth: 20,
       halfHeight: 10,
     });
@@ -68,7 +68,7 @@ describe('Extension container shape geometry', () => {
     const right = { slantAngle: 45, slantDirection: 'right' } as const;
     const left = { slantAngle: 45, slantDirection: 'left' } as const;
 
-    expect(ParallelogramShapeDefinition.computeCircumscribedHalfAxes(20, 10, right)).toEqual({
+    expect(ParallelogramShapeDefinition.computeCircumscribedGeometry(20, 10, right)).toEqual({
       halfWidth: 40,
       halfHeight: 10,
     });
@@ -86,18 +86,18 @@ describe('Extension container shape geometry', () => {
       { kind: 'line', to: [-20, 10] },
       { kind: 'close' },
     ]);
-    expect(ParallelogramShapeDefinition.computeCircumscribedHalfAxes(20, 10, { slantAngle: 90 })).toEqual({
+    expect(ParallelogramShapeDefinition.computeCircumscribedGeometry(20, 10, { slantAngle: 90 })).toEqual({
       halfWidth: 20,
       halfHeight: 10,
     });
   });
 
   it('uses a fixed 12-unit shoulder depth independent of the elongated hexagon width', () => {
-    expect(HexagonShapeDefinition.computeCircumscribedHalfAxes(20, 10, {})).toEqual({
+    expect(HexagonShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({
       halfWidth: 32,
       halfHeight: 10,
     });
-    expect(HexagonShapeDefinition.computeCircumscribedHalfAxes(20, 10, { shoulderDepth: 8 })).toEqual({
+    expect(HexagonShapeDefinition.computeCircumscribedGeometry(20, 10, { shoulderDepth: 8 })).toEqual({
       halfWidth: 28,
       halfHeight: 10,
     });
@@ -124,7 +124,7 @@ describe('Extension container shape geometry', () => {
   });
 
   it('emits a vertical cylinder as one outer contour plus one cap divider subpath', () => {
-    expect(CylinderShapeDefinition.computeCircumscribedHalfAxes(20, 10, {})).toEqual({ halfWidth: 20, halfHeight: 18 });
+    expect(CylinderShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({ halfWidth: 20, halfHeight: 18 });
     expect(pathOf(CylinderShapeDefinition, { x: 0, y: 0, width: 40, height: 36 }, {}).commands).toEqual([
       { kind: 'move', to: [-20, -10] },
       { kind: 'ellipseArc', center: [0, -10], radiusX: 20, radiusY: 8, startAngle: 180, endAngle: 360 },
@@ -146,7 +146,7 @@ describe('Extension container shape geometry', () => {
   it('transposes cylinder geometry for a horizontal axis and clamps only the emitted cap depth', () => {
     const params = { axis: 'horizontal', capDepth: 8 } as const;
 
-    expect(CylinderShapeDefinition.computeCircumscribedHalfAxes(20, 10, params)).toEqual({
+    expect(CylinderShapeDefinition.computeCircumscribedGeometry(20, 10, params)).toEqual({
       halfWidth: 28,
       halfHeight: 10,
     });
@@ -195,7 +195,7 @@ describe('Extension container shape geometry', () => {
   });
 
   it('emits a vertical elliptic capsule as one closed outer contour without a cap divider', () => {
-    expect(EllipticCapsuleShapeDefinition.computeCircumscribedHalfAxes(20, 10, {})).toEqual({
+    expect(EllipticCapsuleShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({
       halfWidth: 20,
       halfHeight: 18,
     });
@@ -211,7 +211,7 @@ describe('Extension container shape geometry', () => {
   it('transposes the elliptic capsule and degenerates zero cap depth to a rectangle', () => {
     const horizontal = { axis: 'horizontal', capDepth: 8 } as const;
 
-    expect(EllipticCapsuleShapeDefinition.computeCircumscribedHalfAxes(20, 10, horizontal)).toEqual({
+    expect(EllipticCapsuleShapeDefinition.computeCircumscribedGeometry(20, 10, horizontal)).toEqual({
       halfWidth: 28,
       halfHeight: 10,
     });
@@ -250,9 +250,9 @@ describe('Extension container shape geometry', () => {
   });
 
   it('expands rounded polygonal shapes until their content corners remain inside the final contour', () => {
-    const sharp = TrapezoidShapeDefinition.computeCircumscribedHalfAxes(36, 20, {});
+    const sharp = TrapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, {});
     const roundedParams = { cornerRadius: 10 };
-    const rounded = TrapezoidShapeDefinition.computeCircumscribedHalfAxes(36, 20, roundedParams);
+    const rounded = TrapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, roundedParams);
 
     expect(rounded.halfWidth).toBeGreaterThan(sharp.halfWidth);
     expect(rounded.halfHeight).toBeGreaterThan(sharp.halfHeight);
@@ -342,10 +342,10 @@ describe('Extension container shape geometry', () => {
     expect(() => EllipticCapsuleShapeDefinition.paramsSchema.parse({ unknown: true })).toThrow();
     expect(() => TrapezoidShapeDefinition.paramsSchema.parse({ unknown: true })).toThrow();
     expect(() =>
-      TrapezoidShapeDefinition.computeCircumscribedHalfAxes(10, 10, { shortSideRatio: Number.MIN_VALUE }),
+      TrapezoidShapeDefinition.computeCircumscribedGeometry(10, 10, { shortSideRatio: Number.MIN_VALUE }),
     ).toThrowError(expect.objectContaining({ code: 'EXTENSION_GEOMETRY_INVALID' }));
     expect(() =>
-      ParallelogramShapeDefinition.computeCircumscribedHalfAxes(10, 10, { slantAngle: Number.MIN_VALUE }),
+      ParallelogramShapeDefinition.computeCircumscribedGeometry(10, 10, { slantAngle: Number.MIN_VALUE }),
     ).toThrowError(expect.objectContaining({ code: 'EXTENSION_GEOMETRY_INVALID' }));
   });
 });

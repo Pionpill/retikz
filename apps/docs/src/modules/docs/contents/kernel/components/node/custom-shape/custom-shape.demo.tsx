@@ -50,7 +50,7 @@ const createHexagon = (): ShapeDefinition =>
   defineShape({
     name: 'hexagon',
     paramsSchema: z.strictObject({}),
-    computeCircumscribedHalfAxes: (hw, hh) => {
+    computeCircumscribedGeometry: (hw, hh) => {
       const corners: Array<Position> = [
         [hw, hh],
         [hw, -hh],

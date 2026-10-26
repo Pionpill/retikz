@@ -215,6 +215,7 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
         'BoundaryDefinitionInput',
         'ShapeDefinition',
         'ShapeDefinitionInput',
+        'ShapeCircumscribedGeometry',
         'BUILTIN_BOUNDARIES',
         'BUILTIN_SHAPES',
         'defineBoundary',

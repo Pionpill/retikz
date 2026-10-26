@@ -103,13 +103,9 @@ const guideRect = (
 export const primitiveModelBoundaryGuideShape = defineShape<BoundaryGuideParams>({
   name: 'primitive-model-boundary-guide',
   paramsSchema: boundaryGuideParamsSchema,
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight, params) => {
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight, params) => {
     const visual = visualShapeOf(params.shape);
-    return visual.definition.computeCircumscribedHalfAxes(innerHalfWidth, innerHalfHeight, visual.params);
-  },
-  computeCircumscribedOffset: params => {
-    const visual = visualShapeOf(params.shape);
-    return visual.definition.computeCircumscribedOffset?.(visual.params) ?? [0, 0];
+    return visual.definition.computeCircumscribedGeometry(innerHalfWidth, innerHalfHeight, visual.params);
   },
   computeBoundaryPoint: rect => [rect.x, rect.y],
   resolveAnchor: () => undefined,

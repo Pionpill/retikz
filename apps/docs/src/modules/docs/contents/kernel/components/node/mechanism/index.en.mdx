@@ -462,7 +462,7 @@ The execution order is:
 1. Resolve `node.shape`; normalize `circle` / `diamond` presets to real provider names and params
 2. Look up the definition in one shape registry; built-ins and custom definitions do not fork into separate consumption paths
 3. Validate through the JSON-object guard and the definition's `paramsSchema`
-4. Call `computeCircumscribedHalfAxes` for Node layout, geometry hooks for connections and anchors, `computeConnectionEnvelope` for regular tight-fit surfaces, and `emit` for drawing
+4. Call `computeCircumscribedGeometry` for Node layout, geometry hooks for connections and anchors, `computeConnectionEnvelope` for regular tight-fit surfaces, and `emit` for drawing
 
 <SourceLinks
   sources={[

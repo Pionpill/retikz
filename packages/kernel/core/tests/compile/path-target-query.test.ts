@@ -312,7 +312,7 @@ it('queries registered shape anchors rather than rectangle approximations', () =
   const shape = defineShape({
     name: 'query-shape',
     paramsSchema: strictObject({}),
-    computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
+    computeCircumscribedGeometry: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
     computeBoundaryPoint: rect => [rect.x + 3, rect.y + 7],
     resolveAnchor: (rect, name) => (name === 'tip' ? [rect.x + 3, rect.y + 7] : undefined),
     *emit() {},

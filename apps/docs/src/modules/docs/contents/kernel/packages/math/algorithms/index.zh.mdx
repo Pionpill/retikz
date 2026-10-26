@@ -22,6 +22,8 @@ const crossing = intersect.segmentSegment({
 
 ## 圆角轮廓
 
+从 `@retikz/math` 导入 `verticesToSegments(vertices)`，可将有序顶点转换为闭合直线段环，再交给轮廓算法处理。它保留顶点顺序与重复顶点，端点复用输入坐标；空输入返回空数组，单顶点产生自连接线段，双顶点产生方向相反的两段，不自动修复退化轮廓。
+
 用 `ContourSegment` 描述连续的直线和圆弧，再用 `solveContourFillets` 求接缝圆角。`buildContourCommands` 将轮廓和圆角转成中立命令，`intersectContourRay` 求从指定原点朝目标点发出的射线与轮廓的最近交点。它们不生成 Core IR 或 Scene。
 
 ```ts

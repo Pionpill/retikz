@@ -22,7 +22,7 @@ const DIAMOND_PARAMS = { sides: 4, rotate: 0 } as const;
 
 describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   it('rectangle is identity', () => {
-    expect(BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes(10, 6, NO_PARAMS)).toEqual({
+    expect(BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry(10, 6, NO_PARAMS)).toEqual({
       halfWidth: 10,
       halfHeight: 6,
     });
@@ -31,14 +31,14 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   it('circle (= ellipse equal) = √(hw²+hh²) on both axes', () => {
     const r = Math.hypot(10, 6);
 
-    expect(BUILTIN_SHAPES.get('ellipse')!.computeCircumscribedHalfAxes(10, 6, EQUAL_PARAMS)).toEqual({
+    expect(BUILTIN_SHAPES.get('ellipse')!.computeCircumscribedGeometry(10, 6, EQUAL_PARAMS)).toEqual({
       halfWidth: r,
       halfHeight: r,
     });
   });
 
   it('ellipse = inner × √2', () => {
-    expect(BUILTIN_SHAPES.get('ellipse')!.computeCircumscribedHalfAxes(10, 6, NO_PARAMS)).toEqual({
+    expect(BUILTIN_SHAPES.get('ellipse')!.computeCircumscribedGeometry(10, 6, NO_PARAMS)).toEqual({
       halfWidth: 10 * SQRT2,
       halfHeight: 6 * SQRT2,
     });
@@ -46,7 +46,7 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
 
   it('diamond (= polygon 4/0) 外接 AABB：顶点在坐标轴上，AABB 半轴相等', () => {
     // polygon{4,0} 是视觉菱形：外接圆 R = (hw + hh)，顶点在东西南北方向。
-    const r = BUILTIN_SHAPES.get('polygon')!.computeCircumscribedHalfAxes(10, 6, DIAMOND_PARAMS);
+    const r = BUILTIN_SHAPES.get('polygon')!.computeCircumscribedGeometry(10, 6, DIAMOND_PARAMS);
 
     expect(r.halfWidth).toBeCloseTo(16, 6);
     expect(r.halfHeight).toBeCloseTo(16, 6);
@@ -132,7 +132,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
     defineShape({
       name: 'customPolygon',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: (hw, hh) => {
+      computeCircumscribedGeometry: (hw, hh) => {
         const r = Math.sqrt(hw * hw + hh * hh);
         return { halfWidth: r, halfHeight: r };
       },
@@ -166,7 +166,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
   it('a returned plain object satisfies ShapeDefinition', () => {
     const poly = createPolygonShape();
 
-    expect(poly.computeCircumscribedHalfAxes(3, 4, NO_PARAMS)).toEqual({ halfWidth: 5, halfHeight: 5 });
+    expect(poly.computeCircumscribedGeometry(3, 4, NO_PARAMS)).toEqual({ halfWidth: 5, halfHeight: 5 });
     expect(poly.resolveAnchor({ x: 0, y: 0, width: 10, height: 10 }, 'origin', NO_PARAMS)).toEqual([0, 0]);
     expect(poly.resolveAnchor({ x: 0, y: 0, width: 10, height: 10 }, 'top', NO_PARAMS)).toBeUndefined();
 

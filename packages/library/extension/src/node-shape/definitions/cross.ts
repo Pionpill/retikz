@@ -9,10 +9,9 @@ import {
   isDirectionalAnchor,
   pointsConnectionEnvelope,
   rect,
-  verticesToSegments,
 } from '@retikz/core';
 import { PositiveNumberSchema } from '@retikz/foundation';
-import { localToWorld } from '@retikz/math';
+import { localToWorld, verticesToSegments } from '@retikz/math';
 import type { CenteredBox, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { strictObject, union } from 'zod';
@@ -129,11 +128,14 @@ const circumscribeCross = (halfWidth: number, halfHeight: number, params: CrossS
 export const CrossShapeDefinition = defineShape<CrossShapeParams>({
   name: BuiltinExtensionShapeName.Cross,
   paramsSchema: CrossShapeParamsSchema,
-  computeCircumscribedHalfAxes: (halfWidth, halfHeight, params) => {
+  computeCircumscribedGeometry: (halfWidth, halfHeight, params) => {
     const geometry = circumscribeCross(halfWidth, halfHeight, params);
-    return { halfWidth: geometry.halfWidth, halfHeight: geometry.halfHeight };
+    return {
+      halfWidth: geometry.halfWidth,
+      halfHeight: geometry.halfHeight,
+      offset: circumscribeCross(0, 0, params).offset,
+    };
   },
-  computeCircumscribedOffset: params => circumscribeCross(0, 0, params).offset,
   computeBoundaryPoint: (bounds, toward, params) => {
     const center: Position = [bounds.x, bounds.y];
     return boundaryFromContour(verticesToSegments(crossVertices(bounds, params)), undefined, center, toward) ?? center;

@@ -212,10 +212,9 @@ const openSectorBoundaryPoint = (rect: CenteredBox, toward: Position, params: Se
 export const SectorShapeDefinition = defineShape<SectorShapeParams>({
   name: BuiltinExtensionShapeName.Sector,
   paramsSchema: SectorShapeParamsSchema,
-  computeCircumscribedHalfAxes: (_halfWidth, _halfHeight, params) => computeSectorGeometry(params).aabbHalfAxes,
-  computeCircumscribedOffset: params => {
-    const { apexOffset } = computeSectorGeometry(params);
-    return [-apexOffset[0], -apexOffset[1]];
+  computeCircumscribedGeometry: (_halfWidth, _halfHeight, params) => {
+    const { aabbHalfAxes, apexOffset } = computeSectorGeometry(params);
+    return { ...aabbHalfAxes, offset: [-apexOffset[0], -apexOffset[1]] };
   },
   computeBoundaryPoint: (rect, toward, params) => {
     if (params.innerRadius === params.outerRadius) return openSectorBoundaryPoint(rect, toward, params);

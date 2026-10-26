@@ -1426,7 +1426,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const malformedShape = defineShape({
       name: 'malformedProbeShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: () => ({ halfWidth: Number.NaN, halfHeight: 1 }),
+      computeCircumscribedGeometry: () => ({ halfWidth: Number.NaN, halfHeight: 1 }),
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: BUILTIN_SHAPES.get('rectangle')!.emit,
@@ -1653,7 +1653,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const hostileShape = defineShape({
       name: 'hostileCircumscribeShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: () =>
+      computeCircumscribedGeometry: () =>
         new Proxy(
           { halfWidth: 10, halfHeight: 10 },
           {
@@ -1705,7 +1705,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const hostileShape = defineShape({
       name: 'hostilePointShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeBoundaryPoint:
         variant === 'boundaryPoint' ? hostilePoint : BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: variant === 'shapeAnchor' ? hostilePoint : BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
@@ -1779,7 +1779,7 @@ describe('layout-aware composite constraints and bounds', () => {
             },
           },
         ),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: BUILTIN_SHAPES.get('rectangle')!.emit,
@@ -1820,7 +1820,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const hostileEnvelopeShape = defineShape({
       name: 'hostileEnvelopeShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeConnectionEnvelope: () =>
         new Proxy(
           { halfWidth: 10, halfHeight: 10 },
@@ -2033,7 +2033,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const badShape = defineShape({
       name: 'badEmitShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: (() => [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }]) as unknown as () => Iterable<ScenePrimitive>,
@@ -2152,7 +2152,7 @@ describe('layout-aware composite constraints and bounds', () => {
       defineShape({
         name,
         paramsSchema: strictObject({}),
-        computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+        computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
         computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
         resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
         emit: () => [primitive],
@@ -2278,7 +2278,7 @@ describe('layout-aware composite constraints and bounds', () => {
       defineShape({
         name,
         paramsSchema: strictObject({}),
-        computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+        computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
         computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
         resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
         emit: () => [primitive],
@@ -2383,7 +2383,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const proxyShape = defineShape({
       name: 'proxyTrapShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: () => [sceneProxy as unknown as ScenePrimitive],
@@ -2464,7 +2464,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const dynamicShape = defineShape({
       name: 'dynamicScenePrimitiveShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: () => [dynamicRect],
@@ -2484,7 +2484,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const farShape = defineShape({
       name: 'nonFiniteVisualBoundsShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: () => [{ type: 'rect', x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 10, fill: '#000' }],
@@ -2592,7 +2592,13 @@ describe('layout-aware composite constraints and bounds', () => {
     let halfWidthReads = 0;
     let offsetXReads = 0;
     const circumscribed = new Proxy(
-      { halfWidth: 10, halfHeight: 5 },
+      {
+        halfWidth: 10,
+        halfHeight: 5,
+        get offset() {
+          return offset;
+        },
+      },
       {
         get: (target, property, receiver) => {
           if (property === 'halfWidth') {
@@ -2617,8 +2623,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const dynamicShape = defineShape({
       name: 'dynamicLayoutGeometryShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: () => circumscribed,
-      computeCircumscribedOffset: () => offset,
+      computeCircumscribedGeometry: () => circumscribed,
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: BUILTIN_SHAPES.get('rectangle')!.emit,
@@ -2661,7 +2666,7 @@ describe('layout-aware composite constraints and bounds', () => {
       defineShape({
         name,
         paramsSchema: strictObject({}),
-        computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+        computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
         computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
         resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
         emit: () => [primitive],
@@ -2692,7 +2697,7 @@ describe('layout-aware composite constraints and bounds', () => {
       const shape = defineShape({
         name: `lossySceneArrayShape${index}`,
         paramsSchema: strictObject({}),
-        computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+        computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
         computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
         resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
         emit: () => [{ type: 'group', children } as unknown as ScenePrimitive],
@@ -2731,7 +2736,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const throwingShape = defineShape({
       name: 'throwingHostileProxyShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: () => {
@@ -2799,7 +2804,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const throwingShape = defineShape({
       name: 'throwingSelfPrototypeProxyShape',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: () => {

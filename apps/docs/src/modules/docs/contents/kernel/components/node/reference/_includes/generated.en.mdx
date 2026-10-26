@@ -459,7 +459,7 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={183}>ShapeDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={192}>ShapeDefinition</ApiSourceLink>
 
 All functions receive `JsonObject`; `paramsSchema.parse` guarantees the concrete type during compilation. The registry is homogeneous and non-generic to avoid variance issues or any. Use `defineShape<TParams>` for type safety at the definition site.
 
@@ -472,8 +472,7 @@ All functions receive `JsonObject`; `paramsSchema.parse` guarantees the concrete
 | Member                         | Type                                                                                                                                          | Default                  | Description                                                                                                                                                                                                                                                                               |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `computeBoundaryPoint`         | `(rect: CenteredBox, toward: Position, params: Record<string, JsonValue>) => Position`                                                        | —                        | Return the intersection of the shape boundary with a ray from the rect center toward `toward`<br />`rect` may include rotation; transform coordinates as needed                                                                                                                           |
-| `computeCircumscribedHalfAxes` | `(innerHalfWidth: number, innerHalfHeight: number, params: Record<string, JsonValue>) => { halfWidth: number; halfHeight: number; }`          | —                        | Compute the complete shape AABB half-axes from content half-axes and params                                                                                                                                                                                                               |
-| `computeCircumscribedOffset?`  | `(params: Record<string, JsonValue>) => Position`                                                                                             | `[0, 0]`                 | Unrotated local offset of the AABB center relative to the node `position`                                                                                                                                                                                                                 |
+| `computeCircumscribedGeometry` | `(innerHalfWidth: number, innerHalfHeight: number, params: Record<string, JsonValue>) => ShapeCircumscribedGeometry`                          | —                        | Compute the unrotated bounding-box half-axes and center offset of the complete shape from the content half-axes including padding and the shape parameters                                                                                                                                |
 | `computeConnectionEnvelope?`   | `(rect: CenteredBox, kind: ConnectionEnvelopeKind, params: Record<string, JsonValue>) => ConnectionEnvelope \| undefined`                     | `undefined`              | Return regular connection-envelope half-axes that safely contain the visual outline<br />The result shares the center and rotation of `rect`, excluding visual expansion from strokes, shadows, filters, or labels. When omitted, tight boundaries fall back to bounds and emit a warning |
 | `computeEdgePoint?`            | `(rect: CenteredBox, side: Side, t: number, params: Record<string, JsonValue>) => Position`                                                   | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
 | `computeKeyPoints?`            | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                        | Return stable provider-named structural key points; names must be unique within an instance                                                                                                                                                                                               |
@@ -498,7 +497,7 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinitionInput"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={111}>ShapeDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeDefinitionInput"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={124}>ShapeDefinitionInput</ApiSourceLink>
 
 Runtime capability contract shared by third-party and built-in shapes; the definition itself is not stored in IR. Each capability function receives instance-level `params` as its last argument.
 
@@ -508,21 +507,20 @@ Runtime capability contract shared by third-party and built-in shapes; the defin
 
 <ApiTable>
 
-| Member                         | Type                                                                                                                                    | Default                  | Description                                                                                                                                                                                                                                                                               |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TParams` (Type parameter)     | `extends JsonObject`                                                                                                                    | —                        | JSON object type parsed by paramsSchema and shared by all shape callbacks                                                                                                                                                                                                                 |
-| `computeBoundaryPoint`         | `(rect: CenteredBox, toward: Position, params: TParams) => Position`                                                                    | —                        | Return the intersection of the shape boundary with a ray from the rect center toward `toward`<br />`rect` may include rotation; transform coordinates as needed                                                                                                                           |
-| `computeCircumscribedHalfAxes` | `(innerHalfWidth: number, innerHalfHeight: number, params: TParams) => {`<br />`halfWidth: number;`<br />`halfHeight: number;`<br />`}` | —                        | Compute the complete shape AABB half-axes from content half-axes and params                                                                                                                                                                                                               |
-| `computeCircumscribedOffset?`  | `(params: TParams) => Position`                                                                                                         | `[0, 0]`                 | Unrotated local offset of the AABB center relative to the node `position`                                                                                                                                                                                                                 |
-| `computeConnectionEnvelope?`   | `(rect: CenteredBox, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                                 | `undefined`              | Return regular connection-envelope half-axes that safely contain the visual outline<br />The result shares the center and rotation of `rect`, excluding visual expansion from strokes, shadows, filters, or labels. When omitted, tight boundaries fall back to bounds and emit a warning |
-| `computeEdgePoint?`            | `(rect: CenteredBox, side: Side, t: number, params: TParams) => Position`                                                               | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
-| `computeKeyPoints?`            | `(rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                               | —                        | Return stable provider-named structural key points; names must be unique within an instance                                                                                                                                                                                               |
-| `computeOutline?`              | `(rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>`                                                                    | —                        | Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry                                                                                                                                                                   |
-| `emit`                         | `(rect: CenteredBox, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>`             | —                        | Emit visual primitives inside an axis-aligned rect                                                                                                                                                                                                                                        |
-| `name`                         | `string`                                                                                                                                | —                        | Shape name referenced by IR `node.shape`                                                                                                                                                                                                                                                  |
-| `paramsSchema`                 | `ZodType<TParams>`                                                                                                                      | —                        | Instance parameter schema<br />The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters                                                                                                                                                           |
-| `resolveAnchor`                | `(rect: CenteredBox, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                                  | —                        | Resolve a named anchor in world coordinates; return `undefined` when unsupported                                                                                                                                                                                                          |
-| `scaleParams?`                 | `(params: TParams, sx: number, sy: number) => TParams`                                                                                  | `scaleJsonObjectNumbers` | Return params after applying node scale<br />Use for shapes whose params contain non-length fields such as angles; when omitted, numeric leaves in params are recursively scaled by Math.sqrt(sx \* sy)                                                                                   |
+| Member                         | Type                                                                                                                        | Default                  | Description                                                                                                                                                                                                                                                                               |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TParams` (Type parameter)     | `extends JsonObject`                                                                                                        | —                        | JSON object type parsed by paramsSchema and shared by all shape callbacks                                                                                                                                                                                                                 |
+| `computeBoundaryPoint`         | `(rect: CenteredBox, toward: Position, params: TParams) => Position`                                                        | —                        | Return the intersection of the shape boundary with a ray from the rect center toward `toward`<br />`rect` may include rotation; transform coordinates as needed                                                                                                                           |
+| `computeCircumscribedGeometry` | `(innerHalfWidth: number, innerHalfHeight: number, params: TParams) => ShapeCircumscribedGeometry`                          | —                        | Compute the unrotated bounding-box half-axes and center offset of the complete shape from the content half-axes including padding and the shape parameters                                                                                                                                |
+| `computeConnectionEnvelope?`   | `(rect: CenteredBox, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                     | `undefined`              | Return regular connection-envelope half-axes that safely contain the visual outline<br />The result shares the center and rotation of `rect`, excluding visual expansion from strokes, shadows, filters, or labels. When omitted, tight boundaries fall back to bounds and emit a warning |
+| `computeEdgePoint?`            | `(rect: CenteredBox, side: Side, t: number, params: TParams) => Position`                                                   | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
+| `computeKeyPoints?`            | `(rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                   | —                        | Return stable provider-named structural key points; names must be unique within an instance                                                                                                                                                                                               |
+| `computeOutline?`              | `(rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>`                                                        | —                        | Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry                                                                                                                                                                   |
+| `emit`                         | `(rect: CenteredBox, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>` | —                        | Emit visual primitives inside an axis-aligned rect                                                                                                                                                                                                                                        |
+| `name`                         | `string`                                                                                                                    | —                        | Shape name referenced by IR `node.shape`                                                                                                                                                                                                                                                  |
+| `paramsSchema`                 | `ZodType<TParams>`                                                                                                          | —                        | Instance parameter schema<br />The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters                                                                                                                                                           |
+| `resolveAnchor`                | `(rect: CenteredBox, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                      | —                        | Resolve a named anchor in world coordinates; return `undefined` when unsupported                                                                                                                                                                                                          |
+| `scaleParams?`                 | `(params: TParams, sx: number, sy: number) => TParams`                                                                      | `scaleJsonObjectNumbers` | Return params after applying node scale<br />Use for shapes whose params contain non-length fields such as angles; when omitted, numeric leaves in params are recursively scaled by Math.sqrt(sx \* sy)                                                                                   |
 
 </ApiTable>
 
@@ -534,15 +532,11 @@ Runtime capability contract shared by third-party and built-in shapes; the defin
 export type ShapeDefinitionInput<TParams extends JsonObject> = {
   name: string;
   paramsSchema: ZodType<TParams>;
-  computeCircumscribedHalfAxes: (
+  computeCircumscribedGeometry: (
     innerHalfWidth: number,
     innerHalfHeight: number,
     params: TParams,
-  ) => {
-    halfWidth: number;
-    halfHeight: number;
-  };
-  computeCircumscribedOffset?: (params: TParams) => Position;
+  ) => ShapeCircumscribedGeometry;
   computeBoundaryPoint: (rect: CenteredBox, toward: Position, params: TParams) => Position;
   resolveAnchor: (rect: CenteredBox, name: ShapeAnchorName, params: TParams) => Position | undefined;
   computeConnectionEnvelope?: (
@@ -560,6 +554,38 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
     params: TParams,
   ) => Iterable<ScenePrimitive>;
   scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ShapeCircumscribedGeometry"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={106}>ShapeCircumscribedGeometry</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member       | Type       | Default  | Description                                                                      |
+| ------------ | ---------- | -------- | -------------------------------------------------------------------------------- |
+| `halfHeight` | `number`   | —        | Bounding-box half-height along the local y axis; must be finite and non-negative |
+| `halfWidth`  | `number`   | —        | Bounding-box half-width along the local x axis; must be finite and non-negative  |
+| `offset?`    | `Position` | `[0, 0]` | Unrotated local offset of the bounding-box center relative to the node position  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ShapeCircumscribedGeometry = {
+  halfWidth: number;
+  halfHeight: number;
+  offset?: Position;
 };
 ```
 
@@ -619,7 +645,7 @@ export declare const defineBoundary: <TParams extends JsonObject>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={192}>defineShape</ApiSourceLink>
+#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={201}>defineShape</ApiSourceLink>
 
 Add the result to CompileOptions.shapes so nodes can reference its name through shape. This function does not register the shape or parse instance parameters
 

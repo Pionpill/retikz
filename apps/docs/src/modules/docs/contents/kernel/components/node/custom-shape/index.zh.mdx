@@ -26,6 +26,8 @@ Core 默认 `rectangle` / `ellipse` / `polygon` 与自定义项经过同一套 r
 
 ## 定义能力
 
+`computeCircumscribedGeometry` 接收包含 padding 的内容半宽、半高和形状参数，一次返回 `{ halfWidth, halfHeight, offset? }`。半轴描述形状的未旋转外接盒；`offset` 是盒中心相对节点位置的局部偏移，省略时为 `[0, 0]`。宽度约束触发多次试算时，最终布局使用选中候选的完整几何结果。
+
 用 `defineShape()` 声明注册名、参数 schema 和几何职责。注册名使用开放的 `string`；需要标注名称类型时，可直接使用 `ShapeDefinition['name']`，无需另建内置名称联合类型。无参形状使用 `z.strictObject({})`；下面的最小定义复用矩形几何，只改变注册名和占位大小。
 
 ```ts
@@ -35,7 +37,7 @@ import { z } from 'zod';
 const badge = defineShape({
   name: 'badge',
   paramsSchema: z.strictObject({}),
-  computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({
+  computeCircumscribedGeometry: (halfWidth, halfHeight) => ({
     halfWidth: halfWidth + 8,
     halfHeight: halfHeight + 4,
   }),

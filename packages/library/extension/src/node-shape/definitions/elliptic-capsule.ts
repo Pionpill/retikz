@@ -26,7 +26,7 @@ export type EllipticCapsuleShapeParams = EllipticCapShapeParams;
 export const EllipticCapsuleShapeDefinition = defineShape<EllipticCapsuleShapeParams>({
   name: BuiltinExtensionShapeName.EllipticCapsule,
   paramsSchema: EllipticCapShapeParamsSchema,
-  computeCircumscribedHalfAxes: circumscribeEllipticCaps,
+  computeCircumscribedGeometry: circumscribeEllipticCaps,
   computeBoundaryPoint: (bounds, toward, params) =>
     localToWorld(bounds, ellipticCapLocalBoundary(bounds, toward, params)),
   resolveAnchor: (bounds, name) => {

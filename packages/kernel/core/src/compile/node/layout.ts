@@ -231,7 +231,7 @@ export const compileResolvedNode = (resolution: NodeResolution, context: LayoutN
     let raw: unknown;
 
     try {
-      raw = shapeDef.computeCircumscribedHalfAxes(
+      raw = shapeDef.computeCircumscribedGeometry(
         (textWidth + paddingLeft + paddingRight) / 2,
         (textHeight + paddingTop + paddingBottom) / 2,
         shapeParams,
@@ -267,7 +267,13 @@ export const compileResolvedNode = (resolution: NodeResolution, context: LayoutN
         );
       }
 
-      return { halfWidth, halfHeight };
+      const rawOffset = 'offset' in raw ? raw.offset : undefined;
+      const offset =
+        rawOffset === undefined
+          ? undefined
+          : snapshotProviderPosition(`Shape '${shapeDef.name}' computeCircumscribedGeometry.offset`, rawOffset);
+
+      return { halfWidth, halfHeight, offset };
     });
   };
 
@@ -358,11 +364,7 @@ export const compileResolvedNode = (resolution: NodeResolution, context: LayoutN
   }
 
   // shape 可声明 AABB 中心相对 position 的偏移。
-  const rawAabbOffset: unknown = shapeDef.computeCircumscribedOffset?.(shapeParams);
-  const aabbOffset =
-    rawAabbOffset === undefined
-      ? undefined
-      : snapshotProviderPosition(`Shape '${shapeDef.name}' computeCircumscribedOffset`, rawAabbOffset);
+  const aabbOffset = circumscribed.offset;
   const rectCenterX = center[0] + paddingOffsetX + (aabbOffset?.[0] ?? 0);
   const rectCenterY = center[1] + paddingOffsetY + (aabbOffset?.[1] ?? 0);
   const contentCenter: [number, number] = [rectCenterX - paddingOffsetX, rectCenterY - paddingOffsetY];
