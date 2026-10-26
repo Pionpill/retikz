@@ -466,12 +466,9 @@ describe('已注册的类别排序', () => {
     expect(() => firstLayer(specOf('length'), { d: rows })).toThrow(/unknown order/);
   });
 
-  it.each([{ values: [] }, { values: [rows[0]] }])(
-    '观测值不足时仍拒绝未知排序',
-    ({ values }) => {
-      expect(() => firstLayer(specOf('missing'), { d: values })).toThrow(/unknown order/);
-    },
-  );
+  it.each([{ values: [] }, { values: [rows[0]] }])('观测值不足时仍拒绝未知排序', ({ values }) => {
+    expect(() => firstLayer(specOf('missing'), { d: values })).toThrow(/unknown order/);
+  });
 
   it('即使显式视觉域获胜，也会验证注册', () => {
     const spec = specOf('missing');

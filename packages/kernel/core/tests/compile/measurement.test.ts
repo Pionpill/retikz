@@ -112,80 +112,77 @@ describe('孤立的大小贡献', () => {
   });
 });
 
-it.each(['source', 'generated', 'bound'])(
-  '仅重用跨祖先探测的稳定编写贡献：%s',
-  mode => {
-    let queries = 0;
-    let full = 0;
-    const seen: Array<number> = [];
-    const leaf = defineComposite({
-      namespace: 'measurement-test',
-      type: 'cached-leaf',
-      schema: schema('cached-leaf'),
-      compile: (_node, context): CompositeEvaluationResult => {
-        if (context.evaluation.kind === 'contribution') {
-          queries++;
-          return { kind: 'contribution', contribution: { axis: 'x', width: 37 } };
-        }
-        full++;
-        return { children: [], allocationBounds: { x: 0, y: 0, width: 37, height: 9 } };
-      },
-    });
-    const inner = defineComposite({
-      namespace: 'measurement-test',
-      type: 'inner',
-      schema: schema('inner').extend({ child: ChildSchema }),
-      compile: (_node, context) => {
-        const generated = { namespace: 'measurement-test', type: 'cached-leaf' };
-        const candidate =
-          mode === 'source'
-            ? context.selectSourceChild(['child'])
-            : mode === 'bound'
-              ? context.bindChild(generated, [{ path: [], input: 'ready' }])
-              : generated;
-        const probe = context.measureChild(candidate, NaturalLayoutProposal, 'x');
-        if (probe.kind === 'failed') return context.raise(probe.failure);
-        if (probe.result.axis === 'x') seen.push(probe.result.width);
-        return { children: [context.selectSourceChild(['child'])] };
-      },
-    });
-    const outer = defineComposite({
-      namespace: 'measurement-test',
-      type: 'outer',
-      schema: schema('outer').extend({ child: ChildSchema }),
-      compile: (_node, context) => {
-        const child = context.selectSourceChild(['child']);
-        const first = context.layoutChild(child, NaturalLayoutProposal);
-        if (first.kind === 'failed') return context.raise(first.failure);
-        const second = context.layoutChild(child, { x: { kind: 'exact', value: 50 }, y: NaturalLayoutProposal.y });
-        if (second.kind === 'failed') return context.raise(second.failure);
-        expect(second.result.slotSize.width).toBe(50);
-        return { children: [context.replay(second.result)] };
-      },
-    });
-    const ir = {
-      version: 1 as const,
-      type: 'scene' as const,
-      children: [
-        {
+it.each(['source', 'generated', 'bound'])('仅重用跨祖先探测的稳定编写贡献：%s', mode => {
+  let queries = 0;
+  let full = 0;
+  const seen: Array<number> = [];
+  const leaf = defineComposite({
+    namespace: 'measurement-test',
+    type: 'cached-leaf',
+    schema: schema('cached-leaf'),
+    compile: (_node, context): CompositeEvaluationResult => {
+      if (context.evaluation.kind === 'contribution') {
+        queries++;
+        return { kind: 'contribution', contribution: { axis: 'x', width: 37 } };
+      }
+      full++;
+      return { children: [], allocationBounds: { x: 0, y: 0, width: 37, height: 9 } };
+    },
+  });
+  const inner = defineComposite({
+    namespace: 'measurement-test',
+    type: 'inner',
+    schema: schema('inner').extend({ child: ChildSchema }),
+    compile: (_node, context) => {
+      const generated = { namespace: 'measurement-test', type: 'cached-leaf' };
+      const candidate =
+        mode === 'source'
+          ? context.selectSourceChild(['child'])
+          : mode === 'bound'
+            ? context.bindChild(generated, [{ path: [], input: 'ready' }])
+            : generated;
+      const probe = context.measureChild(candidate, NaturalLayoutProposal, 'x');
+      if (probe.kind === 'failed') return context.raise(probe.failure);
+      if (probe.result.axis === 'x') seen.push(probe.result.width);
+      return { children: [context.selectSourceChild(['child'])] };
+    },
+  });
+  const outer = defineComposite({
+    namespace: 'measurement-test',
+    type: 'outer',
+    schema: schema('outer').extend({ child: ChildSchema }),
+    compile: (_node, context) => {
+      const child = context.selectSourceChild(['child']);
+      const first = context.layoutChild(child, NaturalLayoutProposal);
+      if (first.kind === 'failed') return context.raise(first.failure);
+      const second = context.layoutChild(child, { x: { kind: 'exact', value: 50 }, y: NaturalLayoutProposal.y });
+      if (second.kind === 'failed') return context.raise(second.failure);
+      expect(second.result.slotSize.width).toBe(50);
+      return { children: [context.replay(second.result)] };
+    },
+  });
+  const ir = {
+    version: 1 as const,
+    type: 'scene' as const,
+    children: [
+      {
+        namespace: 'measurement-test',
+        type: 'outer',
+        child: {
           namespace: 'measurement-test',
-          type: 'outer',
-          child: {
-            namespace: 'measurement-test',
-            type: 'inner',
-            child: { namespace: 'measurement-test', type: 'cached-leaf' },
-          },
+          type: 'inner',
+          child: { namespace: 'measurement-test', type: 'cached-leaf' },
         },
-      ],
-    };
-    compileToScene(ir, { composites: [leaf, inner, outer] });
-    expect(seen).toEqual([37, 37]);
-    expect(queries).toBe(mode === 'source' ? 1 : 2);
-    expect(full).toBe(2);
-    compileToScene(ir, { composites: [leaf, inner, outer] });
-    expect(queries).toBe(mode === 'source' ? 2 : 4);
-  },
-);
+      },
+    ],
+  };
+  compileToScene(ir, { composites: [leaf, inner, outer] });
+  expect(seen).toEqual([37, 37]);
+  expect(queries).toBe(mode === 'source' ? 1 : 2);
+  expect(full).toBe(2);
+  compileToScene(ir, { composites: [leaf, inner, outer] });
+  expect(queries).toBe(mode === 'source' ? 2 : 4);
+});
 
 it('不缓存可恢复的故障或发布来自仅大小候选者的警告', () => {
   let attempts = 0;
@@ -293,59 +290,56 @@ it.each([
   ).toThrow();
 });
 
-it.each([false, true])(
-  '保持不同源位置的相同编写对象独立：nested=%s',
-  nested => {
-    let calls = 0;
-    const leaf = defineComposite({
-      namespace: 'measurement-test',
-      type: 'position-leaf',
-      schema: schema('position-leaf'),
-      compile: (): CompositeEvaluationResult => {
-        calls++;
-        return { kind: 'contribution', contribution: { axis: 'x', width: 12 } };
-      },
-    });
-    const wrapper = defineComposite({
-      namespace: 'measurement-test',
-      type: 'position-wrapper',
-      schema: schema('position-wrapper').extend({ child: ChildSchema }),
-      compile: (_node, context): CompositeEvaluationResult => {
-        const measured = context.measureChild(context.selectSourceChild(['child']), NaturalLayoutProposal, 'x');
-        if (measured.kind === 'failed') return context.raise(measured.failure);
-        return { kind: 'contribution', contribution: measured.result };
-      },
-    });
-    const host = defineComposite({
-      namespace: 'measurement-test',
-      type: 'position-host',
-      schema: schema('position-host').extend({ first: ChildSchema, second: ChildSchema }),
-      compile: (_node, context) => {
-        for (const key of ['first', 'second']) {
-          const child = context.selectSourceChild([key]);
-          for (let i = 0; i < 2; i++) {
-            expect(context.measureChild(child, NaturalLayoutProposal, 'x')).toEqual({
-              kind: 'resolved',
-              result: { axis: 'x', width: 12 },
-            });
-          }
+it.each([false, true])('保持不同源位置的相同编写对象独立：nested=%s', nested => {
+  let calls = 0;
+  const leaf = defineComposite({
+    namespace: 'measurement-test',
+    type: 'position-leaf',
+    schema: schema('position-leaf'),
+    compile: (): CompositeEvaluationResult => {
+      calls++;
+      return { kind: 'contribution', contribution: { axis: 'x', width: 12 } };
+    },
+  });
+  const wrapper = defineComposite({
+    namespace: 'measurement-test',
+    type: 'position-wrapper',
+    schema: schema('position-wrapper').extend({ child: ChildSchema }),
+    compile: (_node, context): CompositeEvaluationResult => {
+      const measured = context.measureChild(context.selectSourceChild(['child']), NaturalLayoutProposal, 'x');
+      if (measured.kind === 'failed') return context.raise(measured.failure);
+      return { kind: 'contribution', contribution: measured.result };
+    },
+  });
+  const host = defineComposite({
+    namespace: 'measurement-test',
+    type: 'position-host',
+    schema: schema('position-host').extend({ first: ChildSchema, second: ChildSchema }),
+    compile: (_node, context) => {
+      for (const key of ['first', 'second']) {
+        const child = context.selectSourceChild([key]);
+        for (let i = 0; i < 2; i++) {
+          expect(context.measureChild(child, NaturalLayoutProposal, 'x')).toEqual({
+            kind: 'resolved',
+            result: { axis: 'x', width: 12 },
+          });
         }
-        return { children: [] };
-      },
-    });
-    const leafSource = { namespace: 'measurement-test', type: 'position-leaf' };
-    const child = nested ? { namespace: 'measurement-test', type: 'position-wrapper', child: leafSource } : leafSource;
-    compileToScene(
-      {
-        version: 1,
-        type: 'scene',
-        children: [{ namespace: 'measurement-test', type: 'position-host', first: child, second: child }],
-      },
-      { composites: [host, leaf, wrapper] },
-    );
-    expect(calls).toBe(2);
-  },
-);
+      }
+      return { children: [] };
+    },
+  });
+  const leafSource = { namespace: 'measurement-test', type: 'position-leaf' };
+  const child = nested ? { namespace: 'measurement-test', type: 'position-wrapper', child: leafSource } : leafSource;
+  compileToScene(
+    {
+      version: 1,
+      type: 'scene',
+      children: [{ namespace: 'measurement-test', type: 'position-host', first: child, second: child }],
+    },
+    { composites: [host, leaf, wrapper] },
+  );
+  expect(calls).toBe(2);
+});
 
 it('隔离完整的回退候选者并仅发布独立的最终回放', () => {
   let calls = 0;

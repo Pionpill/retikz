@@ -425,25 +425,22 @@ describe('Path 输出环绕', () => {
     {
       children: [steps[0], { type: 'step', kind: 'rectangle', from: [10, 20], to: [80, 60] }],
     },
-  ] satisfies Array<Pick<IRPathBase, 'children' | 'cornerRadius'>>)(
-    '实现与未修饰描边相同的几何形状：%j',
-    input => {
-      let commands: ReadonlyArray<PathCommand> = [];
-      const custom = definePath({
-        name: 'geometry-probe',
-        schema: customPathSchema('geometry-probe'),
-        compile: context => {
-          commands = context.materializePath();
-          return null;
-        },
-      });
-      compileToScene(scene([{ ...input, type: 'path', kind: custom.name }]), { paths: [custom] });
-      const output = compileToScene(scene([{ ...input, type: 'path' }])).scene;
-      const primitive = flatten(output.primitives).find(item => item.type === 'path');
-      expect(primitive).toBeDefined();
-      expect(commands).toEqual(primitive?.commands);
-    },
-  );
+  ] satisfies Array<Pick<IRPathBase, 'children' | 'cornerRadius'>>)('实现与未修饰描边相同的几何形状：%j', input => {
+    let commands: ReadonlyArray<PathCommand> = [];
+    const custom = definePath({
+      name: 'geometry-probe',
+      schema: customPathSchema('geometry-probe'),
+      compile: context => {
+        commands = context.materializePath();
+        return null;
+      },
+    });
+    compileToScene(scene([{ ...input, type: 'path', kind: custom.name }]), { paths: [custom] });
+    const output = compileToScene(scene([{ ...input, type: 'path' }])).scene;
+    const primitive = flatten(output.primitives).find(item => item.type === 'path');
+    expect(primitive).toBeDefined();
+    expect(commands).toEqual(primitive?.commands);
+  });
 
   it('在不测量标签或解析标记的情况下具体化几何形状', () => {
     let measurements = 0;

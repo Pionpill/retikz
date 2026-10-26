@@ -217,12 +217,9 @@ describe('resolvePositionScale 域填充单元', () => {
       'non-integer pow',
       { type: 'pow', name: 'x', domain: [0, 9], exponent: 0.5, domainPadding: { kind: 'range', lower: 10 } },
     ],
-  ] satisfies Array<[string, IRPlotScaleOperation]>)(
-    '当范围填充需要负域时，%s 会失败',
-    (_name, operation) => {
-      expect(() => resolvePositionScale(operation, [], [0, 100])).toThrow(/non-negative/i);
-    },
-  );
+  ] satisfies Array<[string, IRPlotScaleOperation]>)('当范围填充需要负域时，%s 会失败', (_name, operation) => {
+    expect(() => resolvePositionScale(operation, [], [0, 100])).toThrow(/non-negative/i);
+  });
 
   it('在应用范围填充之前扩展单值域', () => {
     const scale = resolvePositionScale(

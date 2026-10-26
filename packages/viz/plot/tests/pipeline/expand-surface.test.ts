@@ -69,7 +69,7 @@ describe('扩大管线稳定面', () => {
     expect(expand).not.toHaveProperty('resolveCoordinateScopeRegistry');
   });
 
-  it('contributes the Standard Ribbon path and its profile dataset explicitly', () => {
+  it('明确贡献 Standard 色带路径及其配置参数', () => {
     const contribution = createPlotProviderContribution({});
 
     expect(contribution.roots).toContainEqual({ capability: 'path', name: 'ribbon' });

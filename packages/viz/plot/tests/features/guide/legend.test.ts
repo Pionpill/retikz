@@ -1019,14 +1019,11 @@ it('拒绝复合符号中不同的有序类别域', () => {
 
   expect(() => expandOf(spec, { d: ORDINAL_ROWS })).toThrow(/same ordered categorical domain/);
 });
-it.each([{ step: 0 }, { step: -1 }, { offset: -1 }, { step: 1.5 }])(
-  '拒绝无效的序数调色板索引 %j',
-  rangeIndex => {
-    const spec = ordinalColorLegendSpec();
+it.each([{ step: 0 }, { step: -1 }, { offset: -1 }, { step: 1.5 }])('拒绝无效的序数调色板索引 %j', rangeIndex => {
+  const spec = ordinalColorLegendSpec();
 
-    expect(() => PlotSchema.parse({ ...spec, scales: [{ type: 'ordinal', name: 'bad', rangeIndex }] })).toThrow();
-  },
-);
+  expect(() => PlotSchema.parse({ ...spec, scales: [{ type: 'ordinal', name: 'bad', rangeIndex }] })).toThrow();
+});
 it('将序数索引步骤应用于有效主题调色板', () => {
   const spec = ordinalColorLegendSpec();
   spec.scales = spec.scales.map(scale =>

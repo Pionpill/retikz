@@ -57,34 +57,31 @@ describe('标记字段和属性下沉', () => {
     ]);
     expect(point).toMatchObject({ position: annotation.type === 'node' ? annotation.position : undefined });
   });
-  it.each([undefined, { kind: 'baseline', baseline: 0 }])(
-    '在相同的最终范围上投影路径边缘和闭合：%j',
-    closure => {
-      const rows = [{ y: 2 }, { y: 8 }];
-      const [path] = render(
-        [
-          {
-            type: 'path',
-            encodings: { position: { x: { edge: 'end' }, y: { field: 'y' } } },
-            properties: { ...(closure === undefined ? {} : { closure }) },
-          },
-        ],
-        rows,
-      );
-      const [expected] = render(
-        [
-          {
-            type: 'path',
-            encodings: { position: { x: { value: 10 }, y: { field: 'y' } } },
-            properties: { ...(closure === undefined ? {} : { closure }) },
-          },
-        ],
-        rows,
-      );
-      expect(path).toBeDefined();
-      expect(path).toEqual(expected);
-    },
-  );
+  it.each([undefined, { kind: 'baseline', baseline: 0 }])('在相同的最终范围上投影路径边缘和闭合：%j', closure => {
+    const rows = [{ y: 2 }, { y: 8 }];
+    const [path] = render(
+      [
+        {
+          type: 'path',
+          encodings: { position: { x: { edge: 'end' }, y: { field: 'y' } } },
+          properties: { ...(closure === undefined ? {} : { closure }) },
+        },
+      ],
+      rows,
+    );
+    const [expected] = render(
+      [
+        {
+          type: 'path',
+          encodings: { position: { x: { value: 10 }, y: { field: 'y' } } },
+          properties: { ...(closure === undefined ? {} : { closure }) },
+        },
+      ],
+      rows,
+    );
+    expect(path).toBeDefined();
+    expect(path).toEqual(expected);
+  });
   it('通过最终坐标范围投影固定关系目标边', () => {
     const relation = (x: { value: number } | { edge: 'end' }) => ({
       type: 'relation',

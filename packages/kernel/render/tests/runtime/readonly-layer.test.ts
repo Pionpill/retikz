@@ -53,12 +53,9 @@ describe('只读渲染层契约', () => {
     expect(() => validateReadonlyLayers([makeLayer(), makeLayer()])).toThrow();
   });
 
-  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
-    '拒绝非有限变换分量 %s',
-    value => {
-      expect(() => validateReadonlyLayers([makeLayer({ transform: [1, 0, 0, 1, value, 0] })])).toThrow();
-    },
-  );
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])('拒绝非有限变换分量 %s', value => {
+    expect(() => validateReadonlyLayers([makeLayer({ transform: [1, 0, 0, 1, value, 0] })])).toThrow();
+  });
 
   it('拒绝层场景中的公共原始标识和元数据', () => {
     const withId = makeScene({

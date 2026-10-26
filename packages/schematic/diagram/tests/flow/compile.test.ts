@@ -798,75 +798,72 @@ describe('Flow Diagram 编译事务', () => {
     expect(route.points).toHaveLength(2);
   });
 
-  it.each(['top', 'right', 'bottom', 'left'] as const)(
-    '按物理顺序投影精确建议图和 %s Legend 区域',
-    legendPosition => {
-      const definitions = resolveCoreProviderDependencies({
-        contributions: [Flow.createFlowDiagramProviderContribution()],
-      });
-      const legend = LegendSchema.parse({
-        namespace: 'standard',
-        type: 'legend',
-        content: {
-          kind: 'items',
-          items: [
-            {
-              key: 'active',
-              sample: {
-                type: 'node',
-                position: [0, 0],
-                style: { fill: '#2563eb' },
-                layout: { minimumSize: 10 },
-              },
-              label: { type: 'node', position: [0, 0], text: 'Active' },
+  it.each(['top', 'right', 'bottom', 'left'] as const)('按物理顺序投影精确建议图和 %s Legend 区域', legendPosition => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [Flow.createFlowDiagramProviderContribution()],
+    });
+    const legend = LegendSchema.parse({
+      namespace: 'standard',
+      type: 'legend',
+      content: {
+        kind: 'items',
+        items: [
+          {
+            key: 'active',
+            sample: {
+              type: 'node',
+              position: [0, 0],
+              style: { fill: '#2563eb' },
+              layout: { minimumSize: 10 },
             },
-          ],
-        },
-      });
-      const source: IRChild = parseTestFlowDiagram({
-        namespace: 'diagram',
-        type: 'flow',
-        presentation: { title: { text: 'Architecture' }, legend },
-        frame: { padding: 12, legendPosition, legendAlign: 'center', drawingLegendGap: 9 },
-        entities: [{ id: 'only', text: 'Only' }],
-        groups: [],
-        layouts: [],
-        children: ['only'],
-      });
-      const result = compileToScene(
-        {
-          type: 'scene',
-          version: 1,
-          children: [
-            createFlexLayout({
-              size: { x: { kind: 'fixed', value: 420 }, y: { kind: 'fixed', value: 260 } },
-              children: [{ kind: LayoutItemKind.Flex, child: source, grow: 1 }],
-            }),
-          ],
-        },
-        {
-          ...definitions,
-          padding: 0,
-          measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
-        },
-      );
-      const artifactEnvelope = result.artifacts.find(
-        artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
-      );
-      const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
-      const drawing = artifact.regions.drawing.allocationBounds;
-      const legendBounds = artifact.regions.legend?.allocationBounds;
+            label: { type: 'node', position: [0, 0], text: 'Active' },
+          },
+        ],
+      },
+    });
+    const source: IRChild = parseTestFlowDiagram({
+      namespace: 'diagram',
+      type: 'flow',
+      presentation: { title: { text: 'Architecture' }, legend },
+      frame: { padding: 12, legendPosition, legendAlign: 'center', drawingLegendGap: 9 },
+      entities: [{ id: 'only', text: 'Only' }],
+      groups: [],
+      layouts: [],
+      children: ['only'],
+    });
+    const result = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          createFlexLayout({
+            size: { x: { kind: 'fixed', value: 420 }, y: { kind: 'fixed', value: 260 } },
+            children: [{ kind: LayoutItemKind.Flex, child: source, grow: 1 }],
+          }),
+        ],
+      },
+      {
+        ...definitions,
+        padding: 0,
+        measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
+      },
+    );
+    const artifactEnvelope = result.artifacts.find(
+      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+    );
+    const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
+    const drawing = artifact.regions.drawing.allocationBounds;
+    const legendBounds = artifact.regions.legend?.allocationBounds;
 
-      expect(artifact.frame.allocationBounds).toMatchObject({ width: 420, height: 260 });
-      expect(legendBounds).toBeDefined();
+    expect(artifact.frame.allocationBounds).toMatchObject({ width: 420, height: 260 });
+    expect(legendBounds).toBeDefined();
 
-      if (legendBounds === undefined) return;
-      if (legendPosition === 'top') expect(legendBounds.y + legendBounds.height + 9).toBe(drawing.y);
-      if (legendPosition === 'bottom') expect(drawing.y + drawing.height + 9).toBe(legendBounds.y);
-      if (legendPosition === 'left') expect(legendBounds.x + legendBounds.width + 9).toBe(drawing.x);
-      if (legendPosition === 'right') expect(drawing.x + drawing.width + 9).toBe(legendBounds.x);
-    },
-  );
+    if (legendBounds === undefined) return;
+    if (legendPosition === 'top') expect(legendBounds.y + legendBounds.height + 9).toBe(drawing.y);
+    if (legendPosition === 'bottom') expect(drawing.y + drawing.height + 9).toBe(legendBounds.y);
+    if (legendPosition === 'left') expect(legendBounds.x + legendBounds.width + 9).toBe(drawing.x);
+    if (legendPosition === 'right') expect(drawing.x + drawing.width + 9).toBe(legendBounds.x);
+  });
 
   it.each([
     { legendPosition: 'top', legendAlign: 'center' },

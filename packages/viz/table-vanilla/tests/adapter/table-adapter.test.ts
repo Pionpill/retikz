@@ -130,7 +130,7 @@ describe('Table Vanilla 适配器', () => {
     expect(renderToSvgString(inputScene, { adapters: [TableInputEmbedAdapter] })).toContain('Nested');
   });
 
-  it('rejects handwritten empty ids and keeps repeated anonymous embeds anonymous in Source', () => {
+  it('重复的匿名嵌入在 Source 中仍保持匿名', () => {
     const spec = createManualTableIR({ rows: [[null]] });
     const normalized = normalizeScene(scene([embedTable(spec), embedTable(spec)]), {
       adapters: [TableInputEmbedAdapter],

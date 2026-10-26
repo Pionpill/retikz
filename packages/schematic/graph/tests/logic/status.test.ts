@@ -35,13 +35,10 @@ describe('Graph 语义状态', () => {
     expect(relation()).not.toHaveProperty('status');
   });
 
-  it.each(['', 'pending', ['error'], { value: 'error' }] as const)(
-    '拒绝 Source schema 边界处的无效状态',
-    status => {
-      expect(() => entity(status as string)).toThrow();
-      expect(() => relation(status as string)).toThrow();
-    },
-  );
+  it.each(['', 'pending', ['error'], { value: 'error' }] as const)('拒绝 Source schema 边界处的无效状态', status => {
+    expect(() => entity(status as string)).toThrow();
+    expect(() => relation(status as string)).toThrow();
+  });
 
   it('按状态匹配主题选择器，无需注册表定义', () => {
     const selector = Graph.GraphEntityThemeSelectorSchema.parse({ status: ['warning', 'error'] });

@@ -252,37 +252,34 @@ it.each([
       [18, 58],
     ],
   ],
-] as const)(
-  '%s 操作路径与手动 Core 几何形状匹配并保留分配',
-  (direction, incoming, outgoing) => {
-    const source = {
-      ...base,
-      items: [{ id: 'cell' }],
-      layout: { direction },
-      defaultCell: { layout: { width: 20, height: 10 } },
-    };
-    const actual = compile({ ...source, arrow: { input: true, output: true } });
-    const disabled = compile({ ...source, arrow: { input: false, output: false } });
-    const path = (points: ReadonlyArray<readonly [number, number]>) => ({
-      type: 'path' as const,
-      style: { stroke: 'currentColor', strokeWidth: 1, fill: 'none' },
-      arrow: { end: {} },
-      children: points.map((point, index) => ({
-        type: 'step' as const,
-        kind: index === 0 ? ('move' as const) : ('line' as const),
-        to: [point[0], point[1]] as [number, number],
-      })),
-    });
-    const expected = compile({
-      type: 'scope',
-      children: [{ ...source, arrow: { input: false, output: false } }, path(incoming), path(outgoing)],
-    });
-    expect(flat(actual.scene.primitives).filter(p => p.type === 'path')).toEqual(
-      flat(expected.scene.primitives).filter(p => p.type === 'path'),
-    );
-    expect(bounds(actual, 'container')).toEqual(bounds(disabled, 'container'));
-  },
-);
+] as const)('%s 操作路径与手动 Core 几何形状匹配并保留分配', (direction, incoming, outgoing) => {
+  const source = {
+    ...base,
+    items: [{ id: 'cell' }],
+    layout: { direction },
+    defaultCell: { layout: { width: 20, height: 10 } },
+  };
+  const actual = compile({ ...source, arrow: { input: true, output: true } });
+  const disabled = compile({ ...source, arrow: { input: false, output: false } });
+  const path = (points: ReadonlyArray<readonly [number, number]>) => ({
+    type: 'path' as const,
+    style: { stroke: 'currentColor', strokeWidth: 1, fill: 'none' },
+    arrow: { end: {} },
+    children: points.map((point, index) => ({
+      type: 'step' as const,
+      kind: index === 0 ? ('move' as const) : ('line' as const),
+      to: [point[0], point[1]] as [number, number],
+    })),
+  });
+  const expected = compile({
+    type: 'scope',
+    children: [{ ...source, arrow: { input: false, output: false } }, path(incoming), path(outgoing)],
+  });
+  expect(flat(actual.scene.primitives).filter(p => p.type === 'path')).toEqual(
+    flat(expected.scene.primitives).filter(p => p.type === 'path'),
+  );
+  expect(bounds(actual, 'container')).toEqual(bounds(disabled, 'container'));
+});
 it('空集合抑制箭头，每个自定义箭头可以独立禁用', () => {
   const props = {
     ...base,

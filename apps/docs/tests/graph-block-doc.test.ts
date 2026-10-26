@@ -572,38 +572,35 @@ describe('Graph Block 文档', () => {
   it.each([
     ['zh', blockConnectionPreviewSource],
     ['en', blockConnectionPreviewSourceEn],
-  ] as const)(
-    '%s 通过折线路径将两个 Entity 连接至整个 Block 和一个 Section',
-    (_lang, previewSource) => {
-      const preview = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null);
-      const source = JSON.stringify(preview.sourceIr);
-      const graph = GraphSchema.parse(preview.sourceIr.children[0]);
-      const children = graph.children ?? [];
-      const caller = children.find(child => child.type === 'entity' && child.id === 'caller');
-      const validator = children.find(child => child.type === 'entity' && child.id === 'validator');
+  ] as const)('%s 通过折线路径将两个 Entity 连接至整个 Block 和一个 Section', (_lang, previewSource) => {
+    const preview = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null);
+    const source = JSON.stringify(preview.sourceIr);
+    const graph = GraphSchema.parse(preview.sourceIr.children[0]);
+    const children = graph.children ?? [];
+    const caller = children.find(child => child.type === 'entity' && child.id === 'caller');
+    const validator = children.find(child => child.type === 'entity' && child.id === 'validator');
 
-      expect(source.match(/"type":"entity"/g)).toHaveLength(2);
-      expect(source.match(/"type":"relation"/g)).toHaveLength(2);
-      expect(source).toContain('"width":240');
-      expect(caller).toMatchObject({
-        position: [-150, 57.6],
-      });
-      expect(validator).toMatchObject({
-        position: [430, 57.6],
-      });
-      expect(source).toContain('"source":{"id":"caller","anchor":"right"}');
-      expect(source).toContain(
-        '"target":{"id":"user","anchor":"left","boundary":{"type":"rectangle","params":{"fit":"tight","gap":8.5}}}',
-      );
-      expect(source).toContain('"source":{"id":"validator","anchor":"left"}');
-      expect(source).toContain(
-        '"target":{"id":"user.fields","anchor":"right","boundary":{"type":"rectangle","params":{"fit":"tight","gap":8.5}}}',
-      );
-      expect(source.match(/"type":"rectangle","params":\{"fit":"tight","gap":8.5\}/g)).toHaveLength(3);
-      expect(source.match(/"kind":"fold"/g)).toHaveLength(2);
-      expect(source.match(/"via":"-\|-"/g)).toHaveLength(2);
-    },
-  );
+    expect(source.match(/"type":"entity"/g)).toHaveLength(2);
+    expect(source.match(/"type":"relation"/g)).toHaveLength(2);
+    expect(source).toContain('"width":240');
+    expect(caller).toMatchObject({
+      position: [-150, 57.6],
+    });
+    expect(validator).toMatchObject({
+      position: [430, 57.6],
+    });
+    expect(source).toContain('"source":{"id":"caller","anchor":"right"}');
+    expect(source).toContain(
+      '"target":{"id":"user","anchor":"left","boundary":{"type":"rectangle","params":{"fit":"tight","gap":8.5}}}',
+    );
+    expect(source).toContain('"source":{"id":"validator","anchor":"left"}');
+    expect(source).toContain(
+      '"target":{"id":"user.fields","anchor":"right","boundary":{"type":"rectangle","params":{"fit":"tight","gap":8.5}}}',
+    );
+    expect(source.match(/"type":"rectangle","params":\{"fit":"tight","gap":8.5\}/g)).toHaveLength(3);
+    expect(source.match(/"kind":"fold"/g)).toHaveLength(2);
+    expect(source.match(/"via":"-\|-"/g)).toHaveLength(2);
+  });
 
   it.each([
     ['zh', blockConnectionPreviewSource],

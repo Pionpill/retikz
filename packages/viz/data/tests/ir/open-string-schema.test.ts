@@ -57,20 +57,17 @@ describe('数据注册表支持的开放字符串 schema', () => {
       Object.values(BuiltinSelectorOperationKind),
       { kind: 'first' },
     ],
-  ] as const)(
-    '通过完整 schema 验证内置和自定义 %s 操作',
-    (_label, schema, externalSchema, builtins, builtin) => {
-      expect(toJSONSchema(externalSchema).properties?.kind).toMatchObject({
-        anyOf: [
-          { type: 'string', enum: [...builtins] },
-          { type: 'string', minLength: 1 },
-        ],
-      });
-      const custom = { kind: 'custom.operation', parameter: 2 };
-      expect(schema.parse(custom)).toEqual(custom);
-      expect(schema.parse(builtin)).toMatchObject(builtin);
-      expect(() => schema.parse({ kind: '   ' })).toThrow();
-      expect(() => externalSchema.parse(builtin)).toThrow();
-    },
-  );
+  ] as const)('通过完整 schema 验证内置和自定义 %s 操作', (_label, schema, externalSchema, builtins, builtin) => {
+    expect(toJSONSchema(externalSchema).properties?.kind).toMatchObject({
+      anyOf: [
+        { type: 'string', enum: [...builtins] },
+        { type: 'string', minLength: 1 },
+      ],
+    });
+    const custom = { kind: 'custom.operation', parameter: 2 };
+    expect(schema.parse(custom)).toEqual(custom);
+    expect(schema.parse(builtin)).toMatchObject(builtin);
+    expect(() => schema.parse({ kind: '   ' })).toThrow();
+    expect(() => externalSchema.parse(builtin)).toThrow();
+  });
 });

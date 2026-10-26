@@ -85,12 +85,9 @@ describe('规范的 SceneClipPath', () => {
   it.each([
     { name: 'move only', commands: [{ kind: 'move', to: [0, 0] }] },
     { name: 'move then close only', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'close' }] },
-  ] satisfies Array<{ name: string; commands: Array<PathCommand> }>)(
-    '拒绝没有绘图段的路径：$name',
-    ({ commands }) => {
-      expect(() => compilePath(commands)).toThrow(/drawing segment/i);
-    },
-  );
+  ] satisfies Array<{ name: string; commands: Array<PathCommand> }>)('拒绝没有绘图段的路径：$name', ({ commands }) => {
+    expect(() => compilePath(commands)).toThrow(/drawing segment/i);
+  });
 
   it.each([
     { name: 'line', commands: [{ kind: 'line', to: [1, 1] }] },
@@ -109,12 +106,9 @@ describe('规范的 SceneClipPath', () => {
         { kind: 'line', to: [2, 2] },
       ],
     },
-  ] satisfies Array<{ name: string; commands: Array<PathCommand> }>)(
-    '拒绝没有活动子路径的 $name',
-    ({ commands }) => {
-      expect(() => compilePath(commands)).toThrow(/active subpath/i);
-    },
-  );
+  ] satisfies Array<{ name: string; commands: Array<PathCommand> }>)('拒绝没有活动子路径的 $name', ({ commands }) => {
+    expect(() => compilePath(commands)).toThrow(/active subpath/i);
+  });
 
   it('允许弧建立子路径并保留合法的开放路径', () => {
     const path = compilePath([

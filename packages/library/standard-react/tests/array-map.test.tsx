@@ -323,29 +323,26 @@ it('通过 React 和 Vanilla 传递混合的 JSON 数据，具有相同的贡献
   );
 });
 
-it.each([false, [], ['map'], ['array']] as const)(
-  '保留数据扩展 %j 到 React 和 Vanilla',
-  selection => {
-    const dataExpand = typeof selection === 'boolean' ? selection : [...selection];
-    const data = [{ a: 1 }, [{ b: true }]];
-    const reactInput = createInputScene(
-      <>
-        <Array data={data} dataExpand={dataExpand} />
-        <Map data={{ value: data }} dataExpand={dataExpand} />
-      </>,
-    );
-    const vanillaInput = scene({ children: [array({ data, dataExpand }), map({ data: { value: data }, dataExpand })] });
-    const react = normalizeScene(reactInput.scene, { adapters: synchronousAdapters(reactInput.adapters) });
-    const vanilla = normalizeScene(vanillaInput, { adapters: StandardInputEmbedAdapters });
+it.each([false, [], ['map'], ['array']] as const)('保留数据扩展 %j 到 React 和 Vanilla', selection => {
+  const dataExpand = typeof selection === 'boolean' ? selection : [...selection];
+  const data = [{ a: 1 }, [{ b: true }]];
+  const reactInput = createInputScene(
+    <>
+      <Array data={data} dataExpand={dataExpand} />
+      <Map data={{ value: data }} dataExpand={dataExpand} />
+    </>,
+  );
+  const vanillaInput = scene({ children: [array({ data, dataExpand }), map({ data: { value: data }, dataExpand })] });
+  const react = normalizeScene(reactInput.scene, { adapters: synchronousAdapters(reactInput.adapters) });
+  const vanilla = normalizeScene(vanillaInput, { adapters: StandardInputEmbedAdapters });
 
-    expect(react.ir).toEqual(vanilla.ir);
-    expect(react.ir.children[0]).toMatchObject({ data, dataExpand });
-    expect(react.ir.children[1]).toMatchObject({ data: { value: data }, dataExpand });
-    expect(renderToSvgString(reactInput.scene, { adapters: synchronousAdapters(reactInput.adapters) })).toEqual(
-      renderToSvgString(vanillaInput, { adapters: StandardInputEmbedAdapters }),
-    );
-  },
-);
+  expect(react.ir).toEqual(vanilla.ir);
+  expect(react.ir.children[0]).toMatchObject({ data, dataExpand });
+  expect(react.ir.children[1]).toMatchObject({ data: { value: data }, dataExpand });
+  expect(renderToSvgString(reactInput.scene, { adapters: synchronousAdapters(reactInput.adapters) })).toEqual(
+    renderToSvgString(vanillaInput, { adapters: StandardInputEmbedAdapters }),
+  );
+});
 
 it('保留数据和标记输入中的容器标签以及匹配的 Vanilla 输出', () => {
   const label = { text: 'Container title' };

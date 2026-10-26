@@ -248,15 +248,12 @@ describe('Table 运行时贡献', () => {
       { visualScaleDefinitions: [visualScaleOf('same')] },
     ],
     ['theme', { tableThemeDefinitions: [themeNameOf('same')] }, { tableThemeDefinitions: [themeNameOf('same')] }],
-  ] as const)(
-    '对于具有不同定义对象的相同 %s 键，明确报错',
-    (_label, firstOptions, secondOptions) => {
-      const first = createTableRuntimeContribution({ lowerOptions: firstOptions });
-      const second = createTableRuntimeContribution({ lowerOptions: secondOptions });
+  ] as const)('对于具有不同定义对象的相同 %s 键，明确报错', (_label, firstOptions, secondOptions) => {
+    const first = createTableRuntimeContribution({ lowerOptions: firstOptions });
+    const second = createTableRuntimeContribution({ lowerOptions: secondOptions });
 
-      expect(() => definitionsOf(first, second)).toThrow(/conflict/i);
-    },
-  );
+    expect(() => definitionsOf(first, second)).toThrow(/conflict/i);
+  });
 
   it('对于具有不同对象的相同复合键，明确报错', () => {
     const first = createTableRuntimeContribution({

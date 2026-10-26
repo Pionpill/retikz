@@ -150,14 +150,11 @@ describe('cloneAndFreezeJson', () => {
     expect(cloneAndFreezeJson({ items: [null, true, 'text', 0] })).toEqual({ items: [null, true, 'text', 0] });
   });
 
-  it.each([undefined, () => true, BigInt(1), Symbol('value'), NaN])(
-    '拒绝数组和对象中无效的嵌套叶',
-    value => {
-      for (const input of [[value], { value }]) {
-        expect(() => cloneAndFreezeJson(input, 'payload')).toThrowError(RetikzFoundationError);
-      }
-    },
-  );
+  it.each([undefined, () => true, BigInt(1), Symbol('value'), NaN])('拒绝数组和对象中无效的嵌套叶', value => {
+    for (const input of [[value], { value }]) {
+      expect(() => cloneAndFreezeJson(input, 'payload')).toThrowError(RetikzFoundationError);
+    }
+  });
 
   it('拒绝嵌套访问器而不评估它们并保留描述符错误路径', () => {
     let reads = 0;

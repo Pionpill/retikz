@@ -605,22 +605,19 @@ describe('编译功能区', () => {
     );
   });
 
-  it.each([Number.NaN, Number.POSITIVE_INFINITY, -1])(
-    '当注册的宽度配置返回无效宽度（%s）时抛出',
-    invalidWidth => {
-      const bad = defineRibbonWidthProfile({
-        name: 'bad',
-        widthAt: () => invalidWidth,
-      });
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, -1])('当注册的宽度配置返回无效宽度（%s）时抛出', invalidWidth => {
+    const bad = defineRibbonWidthProfile({
+      name: 'bad',
+      widthAt: () => invalidWidth,
+    });
 
-      expect(
-        () =>
-          compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
-            paths: [createRibbonPathDefinition({ profiles: [bad] })],
-          }).scene,
-      ).toThrow(/profile "bad"/);
-    },
-  );
+    expect(
+      () =>
+        compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
+          paths: [createRibbonPathDefinition({ profiles: [bad] })],
+        }).scene,
+    ).toThrow(/profile "bad"/);
+  });
 
   it('从上下两条开放路径下沉显式边界 Ribbon', () => {
     const boundary = ribbon({

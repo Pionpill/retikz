@@ -71,24 +71,21 @@ const compile = (
 };
 
 describe('Flow 网格布局', () => {
-  it.each(['right', 'left', 'up', 'down'])(
-    '在 %s 下保留测量的标签宽度和高度，而不丢失共享中心',
-    direction => {
-      const horizontal = compile(layout, direction, 17, {}, [
-        { source: 'a', target: 'b', label: 'A very long relation label' },
-      ]);
-      const vertical = compile(layout, 'right', 0, {}, [{ source: 'a', target: 'c', label: 'Vertical' }]);
-      const [a, b, c, d] = horizontal.children.map(child => child.bounds);
+  it.each(['right', 'left', 'up', 'down'])('在 %s 下保留测量的标签宽度和高度，而不丢失共享中心', direction => {
+    const horizontal = compile(layout, direction, 17, {}, [
+      { source: 'a', target: 'b', label: 'A very long relation label' },
+    ]);
+    const vertical = compile(layout, 'right', 0, {}, [{ source: 'a', target: 'c', label: 'Vertical' }]);
+    const [a, b, c, d] = horizontal.children.map(child => child.bounds);
 
-      expect(b.x - a.x - a.width).toBeGreaterThanOrEqual(25 * 8 + 17);
-      expect(a.x + a.width / 2).toBeCloseTo(c.x + c.width / 2, 8);
-      expect(b.x + b.width / 2).toBeCloseTo(d.x + d.width / 2, 8);
+    expect(b.x - a.x - a.width).toBeGreaterThanOrEqual(25 * 8 + 17);
+    expect(a.x + a.width / 2).toBeCloseTo(c.x + c.width / 2, 8);
+    expect(b.x + b.width / 2).toBeCloseTo(d.x + d.width / 2, 8);
 
-      const [top, , bottom] = vertical.children.map(child => child.bounds);
+    const [top, , bottom] = vertical.children.map(child => child.bounds);
 
-      expect(bottom.y - top.y - top.height).toBeGreaterThanOrEqual(12);
-    },
-  );
+    expect(bottom.y - top.y - top.height).toBeGreaterThanOrEqual(12);
+  });
 
   it('对自定义提供者应用相同的测量标签约束', () => {
     const provider = defineFlowLayout({ ...LayeredFlowLayoutDefinition, name: 'custom-labels' });
@@ -370,22 +367,19 @@ describe('Flow 网格布局', () => {
     if (!parsed.success) expect(parsed.error.issues.map(issue => issue.path)).toContainEqual(['placements']);
   });
 
-  it.each(['right', 'left', 'up', 'down'])(
-    '在 %s 路由下共享物理中心，边缘不对称',
-    direction => {
-      const { children } = compile(layout, direction);
-      const [a, b, c, d] = children.map(child => child.bounds);
+  it.each(['right', 'left', 'up', 'down'])('在 %s 路由下共享物理中心，边缘不对称', direction => {
+    const { children } = compile(layout, direction);
+    const [a, b, c, d] = children.map(child => child.bounds);
 
-      expect(a.x + a.width / 2).toBeCloseTo(c.x + c.width / 2, 8);
-      expect(b.x + b.width / 2).toBeCloseTo(d.x + d.width / 2, 8);
-      expect(a.y + a.height / 2).toBeCloseTo(b.y + b.height / 2, 8);
-      expect(c.y + c.height / 2).toBeCloseTo(d.y + d.height / 2, 8);
-      expect(a.width).not.toBe(b.width);
-      expect(a.height).not.toBe(c.height);
-      expect(b.x).toBeGreaterThan(a.x);
-      expect(c.y).toBeGreaterThan(a.y);
-    },
-  );
+    expect(a.x + a.width / 2).toBeCloseTo(c.x + c.width / 2, 8);
+    expect(b.x + b.width / 2).toBeCloseTo(d.x + d.width / 2, 8);
+    expect(a.y + a.height / 2).toBeCloseTo(b.y + b.height / 2, 8);
+    expect(c.y + c.height / 2).toBeCloseTo(d.y + d.height / 2, 8);
+    expect(a.width).not.toBe(b.width);
+    expect(a.height).not.toBe(c.height);
+    expect(b.x).toBeGreaterThan(a.x);
+    expect(c.y).toBeGreaterThan(a.y);
+  });
 
   it('两个轴独立使用 nodeGap 并遵循显式零', () => {
     const implicit = compile().grid.bounds;

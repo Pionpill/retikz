@@ -22,12 +22,9 @@ const sourceView = (): DataView =>
   );
 
 describe('解决了数据视图转换', () => {
-  it.each(['appearance', 'ascending'] as const)(
-    '当观察推断连续场时，拒绝 %s 类别顺序',
-    order => {
-      expect(() => createDataView([{ value: 1 }], [{ name: 'value', order }])).toThrow(/order.*categorical/);
-    },
-  );
+  it.each(['appearance', 'ascending'] as const)('当观察推断连续场时，拒绝 %s 类别顺序', order => {
+    expect(() => createDataView([{ value: 1 }], [{ name: 'value', order }])).toThrow(/order.*categorical/);
+  });
 
   it('当观察推断分类字段时保留顺序', () => {
     expect(createDataView([{ value: 'M' }], [{ name: 'value', order: ['S', 'M'] }]).model).toEqual([

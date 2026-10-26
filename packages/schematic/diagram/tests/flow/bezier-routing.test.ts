@@ -222,32 +222,29 @@ const compileBezier = (
   return { result, artifact, warnings };
 };
 
-it.each(['forward', 'reverse', 'both', 'none'] as const)(
-  '保留显式立方控件并平移所有坐标一次：%s',
-  direction => {
-    const routing = {
-      kind: 'cubic' as const,
-      control1: [-40, -90] as [number, number],
-      control2: [180, 70] as [number, number],
-    };
-    const { artifact, result } = compileBezier(routing, undefined, direction);
-    const route = artifact.relations[0].route;
-    if (route.kind !== 'cubic') throw new Error('expected cubic artifact');
+it.each(['forward', 'reverse', 'both', 'none'] as const)('保留显式立方控件并平移所有坐标一次：%s', direction => {
+  const routing = {
+    kind: 'cubic' as const,
+    control1: [-40, -90] as [number, number],
+    control2: [180, 70] as [number, number],
+  };
+  const { artifact, result } = compileBezier(routing, undefined, direction);
+  const route = artifact.relations[0].route;
+  if (route.kind !== 'cubic') throw new Error('expected cubic artifact');
 
-    const origin = artifact.regions.drawing.origin;
+  const origin = artifact.regions.drawing.origin;
 
-    expect(route.control1.map((value, index) => value - origin[index])).toEqual(routing.control1);
-    expect(route.control2.map((value, index) => value - origin[index])).toEqual(routing.control2);
-    expect(origin[1]).not.toBe(0);
-    expect(artifact.relations[0].labelReservation).toBeDefined();
-    expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
-    expect(
-      flatten(result.scene.primitives).some(
-        item => item.type === 'path' && item.commands.some(command => command.kind === 'cubic'),
-      ),
-    ).toBe(true);
-  },
-);
+  expect(route.control1.map((value, index) => value - origin[index])).toEqual(routing.control1);
+  expect(route.control2.map((value, index) => value - origin[index])).toEqual(routing.control2);
+  expect(origin[1]).not.toBe(0);
+  expect(artifact.relations[0].labelReservation).toBeDefined();
+  expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
+  expect(
+    flatten(result.scene.primitives).some(
+      item => item.type === 'path' && item.commands.some(command => command.kind === 'cubic'),
+    ),
+  ).toBe(true);
+});
 it('将显式二次曲线下沉为原生 quad 并通过 origin 往返还原产物控制点', () => {
   const first = compileBezier({ kind: 'curve', control: [100, -90] });
   const route = first.artifact.relations[0].route;
@@ -320,39 +317,36 @@ it('保留冲突的显式控制并区分自动冲突警告', () => {
   expect(automatic.warnings.some(warning => warning.code === 'FlowBezierSearchExhausted')).toBe(true);
 });
 
-it.each(['curve', 'cubic'] as const)(
-  '在直角回转、平移和反转端点下保留回避：%s',
-  kind => {
-    const scenarios = [
-      elements,
-      elements.map(element => ({
-        ...element,
-        bounds: {
-          x: 300 - element.bounds.y - element.bounds.height,
-          y: 50 + element.bounds.x,
-          width: element.bounds.height,
-          height: element.bounds.width,
-        },
-      })),
-    ];
+it.each(['curve', 'cubic'] as const)('在直角回转、平移和反转端点下保留回避：%s', kind => {
+  const scenarios = [
+    elements,
+    elements.map(element => ({
+      ...element,
+      bounds: {
+        x: 300 - element.bounds.y - element.bounds.height,
+        y: 50 + element.bounds.x,
+        width: element.bounds.height,
+        height: element.bounds.width,
+      },
+    })),
+  ];
 
-    for (const output of scenarios)
-      for (const reverse of [false, true]) {
-        const input = inputFor(kind === 'curve' ? { kind } : { kind });
-        const relation = {
-          ...input.relations[0],
-          source: { id: reverse ? 'b' : 'a', overlap: 'allow' as const },
-          target: { id: reverse ? 'a' : 'b', overlap: 'allow' as const },
-        };
-        const route = routeFlowRelations({ ...input, relations: [relation] }, output)[0].route;
-        if (route.kind !== 'curve' && route.kind !== 'cubic') throw new Error('Bezier expected');
+  for (const output of scenarios)
+    for (const reverse of [false, true]) {
+      const input = inputFor(kind === 'curve' ? { kind } : { kind });
+      const relation = {
+        ...input.relations[0],
+        source: { id: reverse ? 'b' : 'a', overlap: 'allow' as const },
+        target: { id: reverse ? 'a' : 'b', overlap: 'allow' as const },
+      };
+      const route = routeFlowRelations({ ...input, relations: [relation] }, output)[0].route;
+      if (route.kind !== 'curve' && route.kind !== 'cubic') throw new Error('Bezier expected');
 
-        expect(
-          evaluateFlowBezierConflicts(route, relation, [{ id: 'obstacle', bounds: output[2].bounds }], []).nodes,
-        ).toBe(0);
-      }
-  },
-);
+      expect(
+        evaluateFlowBezierConflicts(route, relation, [{ id: 'obstacle', bounds: output[2].bounds }], []).nodes,
+      ).toBe(0);
+    }
+});
 it('清除时返回共线基线并针对保留标签进行扩展', () => {
   const input = inputFor({ kind: 'curve' });
   const clear = elements.map(element =>

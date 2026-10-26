@@ -484,14 +484,11 @@ describe('类型化点 Chart React 声明', () => {
     expect(embeddedInput.source.layout).toEqual({ width: 640, height: 360 });
   });
 
-  it.each(coordinateRootPropCases)(
-    '通过 Vanilla 标准化映射 $name 坐标根 props',
-    ({ createInput }) => {
-      expect(createInput().source.coordinate).toEqual({
-        type: 'polar2D',
-      });
-    },
-  );
+  it.each(coordinateRootPropCases)('通过 Vanilla 标准化映射 $name 坐标根 props', ({ createInput }) => {
+    expect(createInput().source.coordinate).toEqual({
+      type: 'polar2D',
+    });
+  });
 
   it('保留具体 Chart 根 prop 中配置的坐标对象', () => {
     const input = inputFromProps(ScatterChart, {
@@ -1188,25 +1185,22 @@ describe('类型化点 Chart React 声明', () => {
     ).toThrow(/direct Chart child/i);
   });
 
-  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
-    '拒绝非正或非有限独立 ChartLayout 宽度 %s',
-    width => {
-      expect(() =>
-        renderToStaticMarkup(
-          <ScatterChart>
-            {requiredDeclarations}
-            <ChartLayout width={width} height={100} />
-          </ScatterChart>,
-        ),
-      ).toThrowError(
-        expect.objectContaining({
-          name: 'RetikzChartReactError',
-          code: RetikzChartReactErrorCode.Default,
-          message: expect.stringMatching(/ChartLayout.*width.*positive finite/i),
-        }),
-      );
-    },
-  );
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('拒绝非正或非有限独立 ChartLayout 宽度 %s', width => {
+    expect(() =>
+      renderToStaticMarkup(
+        <ScatterChart>
+          {requiredDeclarations}
+          <ChartLayout width={width} height={100} />
+        </ScatterChart>,
+      ),
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'RetikzChartReactError',
+        code: RetikzChartReactErrorCode.Default,
+        message: expect.stringMatching(/ChartLayout.*width.*positive finite/i),
+      }),
+    );
+  });
 
   it('除非存在显式布局，否则将独立尺寸镜像到 Source 布局中', () => {
     const mirrored = renderToStaticMarkup(

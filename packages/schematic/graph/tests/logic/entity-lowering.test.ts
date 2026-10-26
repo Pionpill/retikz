@@ -104,23 +104,20 @@ describe('Entity 下降', () => {
     { status: 'success', color: theme.colors.semantic.success, dashPattern: undefined },
     { status: 'warning', color: theme.colors.semantic.warning, dashPattern: undefined },
     { status: 'disabled', color: theme.colors.semantic.guide, dashPattern: [6, 4] },
-  ] as const)(
-    '将中性 $status 状态解析为 Core 语义 Entity 外观系列',
-    ({ status, color, dashPattern }) => {
-      const options = Graph.resolveGraphDefinitionOptions();
-      const canonical = Graph.resolveEntity(entity({ status }), options);
+  ] as const)('将中性 $status 状态解析为 Core 语义 Entity 外观系列', ({ status, color, dashPattern }) => {
+    const options = Graph.resolveGraphDefinitionOptions();
+    const canonical = Graph.resolveEntity(entity({ status }), options);
 
-      const appearance = Graph.resolveEntityAppearance(canonical, { ...options, theme });
+    const appearance = Graph.resolveEntityAppearance(canonical, { ...options, theme });
 
-      expect(appearance).toMatchObject({ style: { color } });
-      expect(appearance.style?.dashPattern).toEqual(dashPattern);
+    expect(appearance).toMatchObject({ style: { color } });
+    expect(appearance.style?.dashPattern).toEqual(dashPattern);
 
-      const lowered = Graph.lowerEntity(canonical, appearance);
+    const lowered = Graph.lowerEntity(canonical, appearance);
 
-      expect(lowered.style?.dashPattern).toEqual(dashPattern);
-      expect(lowered).not.toHaveProperty('status');
-    },
-  );
+    expect(lowered.style?.dashPattern).toEqual(dashPattern);
+    expect(lowered).not.toHaveProperty('status');
+  });
 
   it('让 Graph 作者默认优先生成的语义状态颜色', () => {
     const definitions = resolveCoreProviderDependencies({

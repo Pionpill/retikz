@@ -273,21 +273,18 @@ describe('Diagram Foundation 下沉', () => {
     { side: 'right' as const, direction: FlexLayoutDirection.Row, legendIndex: 1, drawingIndex: 0 },
     { side: 'bottom' as const, direction: FlexLayoutDirection.Column, legendIndex: 1, drawingIndex: 0 },
     { side: 'left' as const, direction: FlexLayoutDirection.Row, legendIndex: 0, drawingIndex: 1 },
-  ])(
-    '将 Legend 对接在 $side 上，而不改变其内部布局',
-    ({ side, direction, legendIndex, drawingIndex }) => {
-      const presentation = DiagramPresentationSchema.parse({ legend });
-      const frame = DiagramFrameSchema.parse({ legendPosition: side, legendAlign: 'center', drawingLegendGap: 9 });
-      const main = flexOf(lowerDiagramFoundation(resolveFoundation({ presentation, frame }), drawing).child);
+  ])('将 Legend 对接在 $side 上，而不改变其内部布局', ({ side, direction, legendIndex, drawingIndex }) => {
+    const presentation = DiagramPresentationSchema.parse({ legend });
+    const frame = DiagramFrameSchema.parse({ legendPosition: side, legendAlign: 'center', drawingLegendGap: 9 });
+    const main = flexOf(lowerDiagramFoundation(resolveFoundation({ presentation, frame }), drawing).child);
 
-      expect(main.direction).toBe(direction);
-      expect(main.gap).toBe(9);
-      expect(main.children?.[legendIndex]).toMatchObject({ alignSelf: LayoutAlignment.Center, child: legend });
-      expect(main.children?.[drawingIndex]).toMatchObject({ alignSelf: LayoutAlignment.Stretch, child: drawing });
-      expect(main.children?.[legendIndex]?.child).toEqual(legend);
-      expect(main.children?.[legendIndex]?.child).not.toHaveProperty('direction');
-    },
-  );
+    expect(main.direction).toBe(direction);
+    expect(main.gap).toBe(9);
+    expect(main.children?.[legendIndex]).toMatchObject({ alignSelf: LayoutAlignment.Center, child: legend });
+    expect(main.children?.[drawingIndex]).toMatchObject({ alignSelf: LayoutAlignment.Stretch, child: drawing });
+    expect(main.children?.[legendIndex]?.child).toEqual(legend);
+    expect(main.children?.[legendIndex]?.child).not.toHaveProperty('direction');
+  });
 
   it('保留非默认渐变 Legend 及其编写的刻度键', () => {
     const presentation = DiagramPresentationSchema.parse({ legend: rampLegend });

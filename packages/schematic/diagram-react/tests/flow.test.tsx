@@ -216,50 +216,47 @@ describe('@retikz/diagram-react/flow', () => {
         b: { row: 1, column: 1 },
       },
     },
-  ])(
-    '通过键入 React、Vanilla 和 Group 内的直接 Source 保留 $form Grid 放置',
-    ({ placements }) => {
-      const grid = {
-        kind: 'grid' as const,
-        id: 'grid',
-        gap: { row: 0, column: 24 },
-        placements,
-      };
-      const entities = [
-        { id: 'a', text: 'A' },
-        { id: 'b', text: 'B' },
-      ];
-      const source = {
-        entities,
-        groups: [{ id: 'group', children: ['grid'] }],
-        layouts: [{ ...grid, children: ['a', 'b'] }],
-        children: ['group'],
-      };
-      const direct = FlowDiagramSchema.parse({ namespace: 'diagram', type: 'flow', ...source });
-      const input = createInputScene(
+  ])('通过键入 React、Vanilla 和 Group 内的直接 Source 保留 $form Grid 放置', ({ placements }) => {
+    const grid = {
+      kind: 'grid' as const,
+      id: 'grid',
+      gap: { row: 0, column: 24 },
+      placements,
+    };
+    const entities = [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ];
+    const source = {
+      entities,
+      groups: [{ id: 'group', children: ['grid'] }],
+      layouts: [{ ...grid, children: ['a', 'b'] }],
+      children: ['group'],
+    };
+    const direct = FlowDiagramSchema.parse({ namespace: 'diagram', type: 'flow', ...source });
+    const input = createInputScene(
+      createElement(
+        FlowReact.FlowDiagram,
+        null,
         createElement(
-          FlowReact.FlowDiagram,
-          null,
-          createElement(
-            FlowReact.FlowGroup,
-            { id: 'group' },
-            createElement(FlowReact.FlowLayout, grid, createElement(FlowReact.FlowEntities, { items: entities })),
-          ),
+          FlowReact.FlowGroup,
+          { id: 'group' },
+          createElement(FlowReact.FlowLayout, grid, createElement(FlowReact.FlowEntities, { items: entities })),
         ),
-      );
-      const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir.children[0];
+      ),
+    );
+    const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir.children[0];
 
-      expect(FlowDiagramSchema.parse(react)).toEqual(direct);
-      expect(FlowDiagramSchema.parse(normalizeFlowDiagram(source))).toEqual(direct);
+    expect(FlowDiagramSchema.parse(react)).toEqual(direct);
+    expect(FlowDiagramSchema.parse(normalizeFlowDiagram(source))).toEqual(direct);
 
-      const result = processToStaticInputResult(input.scene, {
-        adapters: synchronousAdapters(input.adapters),
-        compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
-      });
+    const result = processToStaticInputResult(input.scene, {
+      adapters: synchronousAdapters(input.adapters),
+      compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
+    });
 
-      expect(JSON.stringify(result)).toContain('A');
-    },
-  );
+    expect(JSON.stringify(result)).toContain('A');
+  });
 
   it('通过类型化的 React 和 Vanilla 编写保留 Source 形状的默认值和实例路径', () => {
     const props = {
@@ -372,59 +369,56 @@ describe('@retikz/diagram-react/flow', () => {
     });
   });
 
-  it.each(['entities', 'relations'] as const)(
-    '拒绝任何同一所属模块声明旁边的完整 %s 标记',
-    declarationKind => {
-      const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
+  it.each(['entities', 'relations'] as const)('拒绝任何同一所属模块声明旁边的完整 %s 标记', declarationKind => {
+    const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
 
-      expect(FlowDiagram).toBeDefined();
-      expect(FlowEntities).toBeDefined();
-      expect(FlowEntity).toBeDefined();
-      expect(FlowRelations).toBeDefined();
-      expect(FlowRelation).toBeDefined();
+    expect(FlowDiagram).toBeDefined();
+    expect(FlowEntities).toBeDefined();
+    expect(FlowEntity).toBeDefined();
+    expect(FlowRelations).toBeDefined();
+    expect(FlowRelation).toBeDefined();
 
-      if (
-        FlowDiagram === undefined ||
-        FlowEntities === undefined ||
-        FlowEntity === undefined ||
-        FlowRelations === undefined ||
-        FlowRelation === undefined
-      )
-        return;
+    if (
+      FlowDiagram === undefined ||
+      FlowEntities === undefined ||
+      FlowEntity === undefined ||
+      FlowRelations === undefined ||
+      FlowRelation === undefined
+    )
+      return;
 
-      const completeMarker =
-        declarationKind === 'entities'
-          ? createElement(FlowEntities, { items: ['only'], complete: true })
-          : createElement(FlowRelations, { items: [['source', 'target']], complete: true });
-      const singleMarker =
-        declarationKind === 'entities'
-          ? createElement(FlowEntity, { id: 'extra', text: 'Extra' })
-          : createElement(FlowRelation, { source: 'target', target: 'source' });
-      const emptyBatchMarker =
-        declarationKind === 'entities'
-          ? createElement(FlowEntities, { items: [] })
-          : createElement(FlowRelations, { items: [] });
-      const secondCompleteMarker =
-        declarationKind === 'entities'
-          ? createElement(FlowEntities, { items: ['other'], complete: true })
-          : createElement(FlowRelations, { items: [['target', 'source']], complete: true });
-      const reason = declarationKind === 'entities' ? 'complete-entities-conflict' : 'complete-relations-conflict';
+    const completeMarker =
+      declarationKind === 'entities'
+        ? createElement(FlowEntities, { items: ['only'], complete: true })
+        : createElement(FlowRelations, { items: [['source', 'target']], complete: true });
+    const singleMarker =
+      declarationKind === 'entities'
+        ? createElement(FlowEntity, { id: 'extra', text: 'Extra' })
+        : createElement(FlowRelation, { source: 'target', target: 'source' });
+    const emptyBatchMarker =
+      declarationKind === 'entities'
+        ? createElement(FlowEntities, { items: [] })
+        : createElement(FlowRelations, { items: [] });
+    const secondCompleteMarker =
+      declarationKind === 'entities'
+        ? createElement(FlowEntities, { items: ['other'], complete: true })
+        : createElement(FlowRelations, { items: [['target', 'source']], complete: true });
+    const reason = declarationKind === 'entities' ? 'complete-entities-conflict' : 'complete-relations-conflict';
 
-      for (const declarations of [
-        [completeMarker, singleMarker],
-        [singleMarker, completeMarker],
-        [completeMarker, emptyBatchMarker],
-        [completeMarker, secondCompleteMarker],
-      ]) {
-        expect(() => createInputScene(createElement(FlowDiagram, null, ...declarations))).toThrowError(
-          expect.objectContaining({
-            code: 'DIAGRAM_REACT_FLOW_CHILD_INVALID',
-            details: expect.objectContaining({ reason }),
-          }),
-        );
-      }
-    },
-  );
+    for (const declarations of [
+      [completeMarker, singleMarker],
+      [singleMarker, completeMarker],
+      [completeMarker, emptyBatchMarker],
+      [completeMarker, secondCompleteMarker],
+    ]) {
+      expect(() => createInputScene(createElement(FlowDiagram, null, ...declarations))).toThrowError(
+        expect.objectContaining({
+          code: 'DIAGRAM_REACT_FLOW_CHILD_INVALID',
+          details: expect.objectContaining({ reason }),
+        }),
+      );
+    }
+  });
 
   it('将完整的 Entity 列表范围扩展到其直接 Flow、Group 或 Layout 所属模块', () => {
     const { FlowDiagram, FlowEntities, FlowGroup, FlowLayout } = components();

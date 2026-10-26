@@ -97,40 +97,37 @@ it.each(invalidOutputs)('拒绝自定义布局输出：$name', ({ change }) => {
   expect(() => compile(source, { branchLayouts: [definition], defaultBranchLayout: definition.name })).toThrow();
 });
 
-it.each(['right', 'left', 'up', 'down'])(
-  '将共享标记几何体与 %s 方向上组装的 Scene 对齐',
-  direction => {
-    const result = compile({
-      ...source,
-      layout: { direction },
-      presentation: { title: { text: 'Title' }, description: { text: 'Caption' } },
-      frame: { padding: 16 },
-    });
-    const envelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'branch',
-    );
-    const artifact = BranchDiagramArtifactSchema.parse(envelope?.value);
+it.each(['right', 'left', 'up', 'down'])('将共享标记几何体与 %s 方向上组装的 Scene 对齐', direction => {
+  const result = compile({
+    ...source,
+    layout: { direction },
+    presentation: { title: { text: 'Title' }, description: { text: 'Caption' } },
+    frame: { padding: 16 },
+  });
+  const envelope = result.artifacts.find(
+    artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'branch',
+  );
+  const artifact = BranchDiagramArtifactSchema.parse(envelope?.value);
 
-    expect(artifact.nodes).toHaveLength(3);
-    expect(artifact.segments).toHaveLength(3);
-    expect(artifact.nodes.find(node => node.id === 'a')?.lane).toBe(artifact.nodes.find(node => node.id === 'c')?.lane);
+  expect(artifact.nodes).toHaveLength(3);
+  expect(artifact.segments).toHaveLength(3);
+  expect(artifact.nodes.find(node => node.id === 'a')?.lane).toBe(artifact.nodes.find(node => node.id === 'c')?.lane);
 
-    for (const node of artifact.nodes) {
-      expect(node.markerBounds.width).toBe(10);
-      expect(node.visualBounds.width).toBeGreaterThan(10);
+  for (const node of artifact.nodes) {
+    expect(node.markerBounds.width).toBe(10);
+    expect(node.visualBounds.width).toBeGreaterThan(10);
 
-      const observations = result.artifacts.filter(value => value.kind === 'nodeLayout' && value.value.id === node.id);
+    const observations = result.artifacts.filter(value => value.kind === 'nodeLayout' && value.value.id === node.id);
 
-      expect(observations).toHaveLength(1);
+    expect(observations).toHaveLength(1);
 
-      const observed = observations[0];
-      if (observed.kind !== 'nodeLayout') throw new Error('Expected node layout');
+    const observed = observations[0];
+    if (observed.kind !== 'nodeLayout') throw new Error('Expected node layout');
 
-      expect(observed.value.rect.x).toBeCloseTo(node.position[0]);
-      expect(observed.value.rect.y).toBeCloseTo(node.position[1]);
-    }
-  },
-);
+    expect(observed.value.rect.x).toBeCloseTo(node.position[0]);
+    expect(observed.value.rect.y).toBeCloseTo(node.position[1]);
+  }
+});
 
 it('合并相同的有向线段，同时保留两个分支对应关系', () => {
   const result = compile({

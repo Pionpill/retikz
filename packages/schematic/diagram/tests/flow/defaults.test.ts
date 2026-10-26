@@ -49,95 +49,89 @@ const baseFlow = {
 };
 
 describe('Flow 默认值和正式的 Source 片段', () => {
-  it.each([undefined, 0, 48])(
-    '使用低于自动范围的自定义轴默认值，但继承编写的父间隙：%s',
-    gap => {
-      const inputs: Array<Flow.FlowLayoutInput> = [];
-      const definition = Flow.defineFlowLayout({
-        ...Flow.LayeredFlowLayoutDefinition,
-        name: 'custom-axis-spacing',
-        defaults: { ...Flow.LayeredFlowLayoutDefinition.defaults, placementGap: { horizontal: 60, vertical: 24 } },
-        layout: (input, context) => {
-          inputs.push(input);
-          return Flow.LayeredFlowLayoutDefinition.layout(input, context);
-        },
-      });
-      compileFlow(
-        {
-          ...baseFlow,
-          entities: [
-            { id: 'a', text: 'A' },
-            { id: 'b', text: 'B' },
-          ],
-          groups: [{ id: 'group', children: ['grid'] }],
-          layouts: [
-            { kind: 'linear', id: 'outer', direction: 'right', gap, children: ['group'] },
-            {
-              kind: 'grid',
-              id: 'grid',
-              gap: gap === undefined ? undefined : { row: 0, column: gap },
-              children: ['a', 'b'],
-              placements: [['a', 'b']],
-            },
-          ],
-          children: ['outer'],
-        },
-        { flowLayouts: [definition], defaultFlowLayout: definition.name },
-      );
-      const outer = inputs[0].elements[0];
-      if (outer.kind !== 'layout') throw new Error('Expected Layout');
+  it.each([undefined, 0, 48])('使用低于自动范围的自定义轴默认值，但继承编写的父间隙：%s', gap => {
+    const inputs: Array<Flow.FlowLayoutInput> = [];
+    const definition = Flow.defineFlowLayout({
+      ...Flow.LayeredFlowLayoutDefinition,
+      name: 'custom-axis-spacing',
+      defaults: { ...Flow.LayeredFlowLayoutDefinition.defaults, placementGap: { horizontal: 60, vertical: 24 } },
+      layout: (input, context) => {
+        inputs.push(input);
+        return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+      },
+    });
+    compileFlow(
+      {
+        ...baseFlow,
+        entities: [
+          { id: 'a', text: 'A' },
+          { id: 'b', text: 'B' },
+        ],
+        groups: [{ id: 'group', children: ['grid'] }],
+        layouts: [
+          { kind: 'linear', id: 'outer', direction: 'right', gap, children: ['group'] },
+          {
+            kind: 'grid',
+            id: 'grid',
+            gap: gap === undefined ? undefined : { row: 0, column: gap },
+            children: ['a', 'b'],
+            placements: [['a', 'b']],
+          },
+        ],
+        children: ['outer'],
+      },
+      { flowLayouts: [definition], defaultFlowLayout: definition.name },
+    );
+    const outer = inputs[0].elements[0];
+    if (outer.kind !== 'layout') throw new Error('Expected Layout');
 
-      expect(outer.placement).toMatchObject({ gap: gap ?? 60 });
+    expect(outer.placement).toMatchObject({ gap: gap ?? 60 });
 
-      const group = outer.elements[0];
-      if (group.kind !== 'group') throw new Error('Expected Group');
+    const group = outer.elements[0];
+    if (group.kind !== 'group') throw new Error('Expected Group');
 
-      const grid = group.elements[0];
-      if (grid.kind !== 'layout') throw new Error('Expected Grid');
+    const grid = group.elements[0];
+    if (grid.kind !== 'layout') throw new Error('Expected Grid');
 
-      expect(grid.placement).toMatchObject({ gap: { row: gap === undefined ? 24 : 0, column: gap ?? 60 } });
-    },
-  );
+    expect(grid.placement).toMatchObject({ gap: { row: gap === undefined ? 24 : 0, column: gap ?? 60 } });
+  });
 
-  it.each(['right', 'left', 'down', 'up'] as const)(
-    '使用物理轴默认值进行 %s 放置，而不更改自动布局',
-    direction => {
-      const inputs: Array<Flow.FlowLayoutInput> = [];
-      const definition = Flow.defineFlowLayout({
-        ...Flow.LayeredFlowLayoutDefinition,
-        name: 'observe-axis-defaults',
-        layout: (input, context) => {
-          inputs.push(input);
-          return Flow.LayeredFlowLayoutDefinition.layout(input, context);
-        },
-      });
-      compileFlow(
-        {
-          ...baseFlow,
-          entities: [
-            { id: 'a', text: 'A' },
-            { id: 'b', text: 'B' },
-          ],
-          groups: [{ id: 'outer', children: ['lane'] }],
-          layouts: [{ kind: 'linear', id: 'lane', direction, children: ['a', 'b'] }],
-          children: ['outer'],
-        },
-        { flowLayouts: [definition], defaultFlowLayout: definition.name },
-      );
+  it.each(['right', 'left', 'down', 'up'] as const)('使用物理轴默认值进行 %s 放置，而不更改自动布局', direction => {
+    const inputs: Array<Flow.FlowLayoutInput> = [];
+    const definition = Flow.defineFlowLayout({
+      ...Flow.LayeredFlowLayoutDefinition,
+      name: 'observe-axis-defaults',
+      layout: (input, context) => {
+        inputs.push(input);
+        return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+      },
+    });
+    compileFlow(
+      {
+        ...baseFlow,
+        entities: [
+          { id: 'a', text: 'A' },
+          { id: 'b', text: 'B' },
+        ],
+        groups: [{ id: 'outer', children: ['lane'] }],
+        layouts: [{ kind: 'linear', id: 'lane', direction, children: ['a', 'b'] }],
+        children: ['outer'],
+      },
+      { flowLayouts: [definition], defaultFlowLayout: definition.name },
+    );
 
-      expect(inputs[0].layout).toMatchObject({ nodeGap: 48, rankGap: 48 });
+    expect(inputs[0].layout).toMatchObject({ nodeGap: 48, rankGap: 48 });
 
-      const outer = inputs[0].elements[0];
-      if (outer.kind !== 'group') throw new Error('Expected Group');
+    const outer = inputs[0].elements[0];
+    if (outer.kind !== 'group') throw new Error('Expected Group');
 
-      expect(outer.layout).toMatchObject({ nodeGap: 48, rankGap: 48 });
+    expect(outer.layout).toMatchObject({ nodeGap: 48, rankGap: 48 });
 
-      const lane = outer.elements[0];
-      if (lane.kind !== 'layout') throw new Error('Expected Layout');
+    const lane = outer.elements[0];
+    if (lane.kind !== 'layout') throw new Error('Expected Layout');
 
-      expect(lane.placement).toMatchObject({ gap: direction === 'down' || direction === 'up' ? 32 : 48 });
-    },
-  );
+    expect(lane.placement).toMatchObject({ gap: direction === 'down' || direction === 'up' ? 32 : 48 });
+  });
 
   it.each([undefined, 0, 48, 19])('通过嵌套布局：%s，仅将编写的 nodeGap 继承到 Grid 中', nodeGap => {
     const inputs: Array<Flow.FlowLayoutInput> = [];

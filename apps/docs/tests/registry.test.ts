@@ -120,32 +120,29 @@ describe('SCHEMA_REGISTRY', () => {
     }
   });
 
-  it.each(['data', 'table', 'plot'] as const)(
-    '将每个 Viz %s 契约注册表 URL 保留在记录的英文标题上',
-    async moduleId => {
-      const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
-        entry.url?.startsWith(`/viz/${moduleId}/reference/`),
+  it.each(['data', 'table', 'plot'] as const)('将每个 Viz %s 契约注册表 URL 保留在记录的英文标题上', async moduleId => {
+    const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
+      entry.url?.startsWith(`/viz/${moduleId}/reference/`),
+    );
+
+    for (const [name, entry] of entries) {
+      const [route, anchor] = entry.url!.split('#');
+
+      expect(anchor, name).toBeTruthy();
+
+      const source = readFileSync(
+        resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),
+        'utf8',
+      );
+      const slugger = new GithubSlugger();
+      const expanded = await expandMdxIncludes(source, 'en');
+      const headingAnchors = Array.from(expanded.matchAll(/^#{2,6}\s+(.+)$/gm), match =>
+        slugger.slug(match[1].replaceAll(/<[^>]+>/g, '').replaceAll('`', '')),
       );
 
-      for (const [name, entry] of entries) {
-        const [route, anchor] = entry.url!.split('#');
-
-        expect(anchor, name).toBeTruthy();
-
-        const source = readFileSync(
-          resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),
-          'utf8',
-        );
-        const slugger = new GithubSlugger();
-        const expanded = await expandMdxIncludes(source, 'en');
-        const headingAnchors = Array.from(expanded.matchAll(/^#{2,6}\s+(.+)$/gm), match =>
-          slugger.slug(match[1].replaceAll(/<[^>]+>/g, '').replaceAll('`', '')),
-        );
-
-        expect(headingAnchors, `${name} -> ${entry.url}`).toContain(anchor);
-      }
-    },
-  );
+      expect(headingAnchors, `${name} -> ${entry.url}`).toContain(anchor);
+    }
+  });
 
   it('将每个 Standard 复合注册表 URL 保留在记录的英文标题上', async () => {
     const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>

@@ -282,56 +282,53 @@ describe('Legend 项目编译契约', () => {
     [LayoutAlignment.Start, 0, 0],
     [LayoutAlignment.Center, 40, 30],
     [LayoutAlignment.End, 80, 60],
-  ] as const)(
-    'contentAlign=%s 时标题和项目独立对齐，包括仅标题和仅项目',
-    (contentAlign, titleX, bodyX) => {
-      const both = legendArtifactOf(
-        compileLegend(
-          createLegend({
-            title: leaf('title', 20, 10),
-            contentAlign,
-            size: { x: { kind: 'fixed', value: 100 } },
-            content: {
-              kind: LegendContentKind.Items,
-              items: [{ key: 'item', sample: leaf('sample', 40, 10) }],
-            },
-          }),
-        ).output,
-      );
-      const titleOnly = legendArtifactOf(
-        compileLegend(
-          createLegend({
-            title: leaf('title-only', 20, 10),
-            contentAlign,
-            size: { x: { kind: 'fixed', value: 100 } },
-            content: { kind: LegendContentKind.Items, items: [] },
-          }),
-        ).output,
-      );
-      const itemsOnly = legendArtifactOf(
-        compileLegend(
-          createLegend({
-            contentAlign,
-            size: { x: { kind: 'fixed', value: 100 } },
-            content: {
-              kind: LegendContentKind.Items,
-              direction: LegendDirection.Horizontal,
-              sampleGap: 5,
-              items: [{ key: 'item', sample: leaf('sample-only', 10, 10), label: leaf('label-only', 20, 10) }],
-            },
-          }),
-        ).output,
-      );
+  ] as const)('contentAlign=%s 时标题和项目独立对齐，包括仅标题和仅项目', (contentAlign, titleX, bodyX) => {
+    const both = legendArtifactOf(
+      compileLegend(
+        createLegend({
+          title: leaf('title', 20, 10),
+          contentAlign,
+          size: { x: { kind: 'fixed', value: 100 } },
+          content: {
+            kind: LegendContentKind.Items,
+            items: [{ key: 'item', sample: leaf('sample', 40, 10) }],
+          },
+        }),
+      ).output,
+    );
+    const titleOnly = legendArtifactOf(
+      compileLegend(
+        createLegend({
+          title: leaf('title-only', 20, 10),
+          contentAlign,
+          size: { x: { kind: 'fixed', value: 100 } },
+          content: { kind: LegendContentKind.Items, items: [] },
+        }),
+      ).output,
+    );
+    const itemsOnly = legendArtifactOf(
+      compileLegend(
+        createLegend({
+          contentAlign,
+          size: { x: { kind: 'fixed', value: 100 } },
+          content: {
+            kind: LegendContentKind.Items,
+            direction: LegendDirection.Horizontal,
+            sampleGap: 5,
+            items: [{ key: 'item', sample: leaf('sample-only', 10, 10), label: leaf('label-only', 20, 10) }],
+          },
+        }),
+      ).output,
+    );
 
-      expect(both.title?.slotBounds.x).toBe(titleX);
-      expect(both.items[0]?.sample.slotBounds.x).toBe(bodyX);
-      expect(titleOnly.title?.slotBounds.x).toBe(titleX);
-      expect(itemsOnly.items[0]?.sample.slotBounds.x).toBe(
-        contentAlign === LayoutAlignment.Start ? 0 : contentAlign === LayoutAlignment.Center ? 32.5 : 65,
-      );
-      expect((itemsOnly.items[0]?.label?.slotBounds.x ?? 0) - (itemsOnly.items[0]?.sample.slotBounds.x ?? 0)).toBe(15);
-    },
-  );
+    expect(both.title?.slotBounds.x).toBe(titleX);
+    expect(both.items[0]?.sample.slotBounds.x).toBe(bodyX);
+    expect(titleOnly.title?.slotBounds.x).toBe(titleX);
+    expect(itemsOnly.items[0]?.sample.slotBounds.x).toBe(
+      contentAlign === LayoutAlignment.Start ? 0 : contentAlign === LayoutAlignment.Center ? 32.5 : 65,
+    );
+    expect((itemsOnly.items[0]?.label?.slotBounds.x ?? 0) - (itemsOnly.items[0]?.sample.slotBounds.x ?? 0)).toBe(15);
+  });
 
   it.each([
     [LayoutAlignment.Start, 0],

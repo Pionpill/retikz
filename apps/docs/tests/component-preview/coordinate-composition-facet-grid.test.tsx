@@ -225,12 +225,9 @@ describe('坐标组合网格', () => {
     ['multi-level facet', multilevelPreviewSource, { x: [true], y: [true] }],
     ['cartesian tracks', tracksPreviewSource, { x: [true], y: [true, true, true] }],
     ['polar tracks', polarTracksPreviewSource, { x: [true], y: [true, true] }],
-  ] as const)(
-    '%s 从其规范网格值驱动每个可见的默认轴',
-    (_name, previewSource, expected) => {
-      expect(defaultAxisGrids(previewSource.canonicalRender?.())).toEqual(expected);
-    },
-  );
+  ] as const)('%s 从其规范网格值驱动每个可见的默认轴', (_name, previewSource, expected) => {
+    expect(defaultAxisGrids(previewSource.canonicalRender?.())).toEqual(expected);
+  });
 
   it.each([
     ['dual y axes', ScopesPreview, 'cartesian'],

@@ -153,7 +153,7 @@ describe('<Layout> 复合提供者图', () => {
     expect(svg).toContain('data-retikz-id="user-manual"');
   });
 
-  it('forwards Core missing-provider, cycle, dataset, and explicit-definition conflict diagnostics', () => {
+  it('转发 Core 缺少提供者、循环和显式定义冲突诊断', () => {
     const key = { capability: 'composite' as const, namespace: 'demo', type: 'panel' } as const;
     const dependency = { capability: 'composite' as const, namespace: 'standard', type: 'frame' } as const;
     const makeDefinition = vi.fn(() => definitionOf(key));

@@ -68,7 +68,7 @@ describe('扩展功能区提供者的贡献', () => {
     );
   });
 
-  it('supports __proto__ as a profile name and compiles it through the merged dataset', () => {
+  it('支持 __proto__ 作为配置名称，并通过提供者参数进行编译', () => {
     const custom = profile('__proto__', 8);
     const contribution = createRibbonProviderContribution({ profiles: [custom] });
     const provider = contribution.providers[0];

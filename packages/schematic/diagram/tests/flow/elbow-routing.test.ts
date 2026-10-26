@@ -44,77 +44,74 @@ const flatten = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
 
 describe('Flow 单弯头铣削', () => {
-  it.each(['-|', '|-'] as const)(
-    '通过 Group 范围继承 %s，并拒绝布局前未声明的功能',
-    kind => {
-      const source = FlowDiagramSchema.parse({
-        namespace: 'diagram',
-        type: 'flow',
-        entities: [
-          { id: 'a', text: 'A' },
-          { id: 'b', text: 'B' },
-        ],
-        groups: [{ id: 'g', children: ['a', 'b'], routing: { kind } }],
-        layouts: [],
-        children: ['g'],
-        routing: { kind: 'orthogonal', cornerRadius: 13 },
-        relations: [
-          { source: 'a', target: 'b' },
-          { source: 'a', target: 'b', routing: { kind, cornerRadius: 0 } },
-        ],
-      });
-      let calls = 0;
-      const provider = {
-        ...LayeredFlowLayoutDefinition,
-        name: 'observe-elbow',
-        layout: (...args: Parameters<typeof LayeredFlowLayoutDefinition.layout>) => {
-          calls += 1;
-          return LayeredFlowLayoutDefinition.layout(...args);
+  it.each(['-|', '|-'] as const)('通过 Group 范围继承 %s，并拒绝布局前未声明的功能', kind => {
+    const source = FlowDiagramSchema.parse({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'a', text: 'A' },
+        { id: 'b', text: 'B' },
+      ],
+      groups: [{ id: 'g', children: ['a', 'b'], routing: { kind } }],
+      layouts: [],
+      children: ['g'],
+      routing: { kind: 'orthogonal', cornerRadius: 13 },
+      relations: [
+        { source: 'a', target: 'b' },
+        { source: 'a', target: 'b', routing: { kind, cornerRadius: 0 } },
+      ],
+    });
+    let calls = 0;
+    const provider = {
+      ...LayeredFlowLayoutDefinition,
+      name: 'observe-elbow',
+      layout: (...args: Parameters<typeof LayeredFlowLayoutDefinition.layout>) => {
+        calls += 1;
+        return LayeredFlowLayoutDefinition.layout(...args);
+      },
+    };
+    const compile = (definition: typeof provider) =>
+      compileToScene(
+        { type: 'scene', version: 1, children: [source] },
+        resolveCoreProviderDependencies({
+          contributions: [
+            createFlowDiagramProviderContribution({ flowLayouts: [definition], defaultFlowLayout: definition.name }),
+          ],
+        }),
+      );
+    const result = compile(provider);
+    const artifact = FlowDiagramArtifactSchema.parse(
+      result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
+        ?.value,
+    );
+
+    expect(
+      artifact.relations.map(relation => ({
+        kind: relation.route.kind,
+        cornerRadius: 'cornerRadius' in relation.route ? relation.route.cornerRadius : undefined,
+      })),
+    ).toEqual([
+      { kind, cornerRadius: 13 },
+      { kind, cornerRadius: 0 },
+    ]);
+
+    const priorCalls = calls;
+
+    expect(() =>
+      compile({
+        ...provider,
+        capabilities: {
+          ...provider.capabilities,
+          routing: [{ kind: 'straight' }, { kind: 'orthogonal' }, { kind: 'bend' }],
         },
-      };
-      const compile = (definition: typeof provider) =>
-        compileToScene(
-          { type: 'scene', version: 1, children: [source] },
-          resolveCoreProviderDependencies({
-            contributions: [
-              createFlowDiagramProviderContribution({ flowLayouts: [definition], defaultFlowLayout: definition.name }),
-            ],
-          }),
-        );
-      const result = compile(provider);
-      const artifact = FlowDiagramArtifactSchema.parse(
-        result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-          ?.value,
-      );
-
-      expect(
-        artifact.relations.map(relation => ({
-          kind: relation.route.kind,
-          cornerRadius: 'cornerRadius' in relation.route ? relation.route.cornerRadius : undefined,
-        })),
-      ).toEqual([
-        { kind, cornerRadius: 13 },
-        { kind, cornerRadius: 0 },
-      ]);
-
-      const priorCalls = calls;
-
-      expect(() =>
-        compile({
-          ...provider,
-          capabilities: {
-            ...provider.capabilities,
-            routing: [{ kind: 'straight' }, { kind: 'orthogonal' }, { kind: 'bend' }],
-          },
-        }),
-      ).toThrow(
-        expect.objectContaining({
-          cause: expect.objectContaining({ code: RetikzDiagramErrorCode.FlowLayoutCapabilityUnsupported }),
-        }),
-      );
-      expect(calls).toBe(priorCalls);
-    },
-  );
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        cause: expect.objectContaining({ code: RetikzDiagramErrorCode.FlowLayoutCapabilityUnsupported }),
+      }),
+    );
+    expect(calls).toBe(priorCalls);
+  });
 
   it.each(['-|', '|-'] as const)('将 %s 编译为剪切路径并保留圆角几何形状', kind => {
     for (const group of [false, true]) {
@@ -322,24 +319,21 @@ describe('Flow 单弯头铣削', () => {
         [0, 80],
       ],
     ],
-  ] satisfies Array<['-|' | '|-', Position, Array<Position>]>)(
-    '%s 按编写的顺序路由到 %j',
-    (kind, target, expected) => {
-      const input = inputFor(kind);
-      const elements = elementsAt(target);
-      const relations = routeFlowRelations(input, elements);
+  ] satisfies Array<['-|' | '|-', Position, Array<Position>]>)('%s 按编写的顺序路由到 %j', (kind, target, expected) => {
+    const input = inputFor(kind);
+    const elements = elementsAt(target);
+    const relations = routeFlowRelations(input, elements);
 
-      expect(relations[0].route.points).toEqual(expected);
-      expect(
-        executeFlowLayout({ ...LayeredFlowLayoutDefinition, layout: () => ({ elements, relations }) }, input)
-          .relations[0].route.points,
-      ).toEqual(expected);
-      expect(
-        routeFlowRelations({ ...input, relations: [{ ...input.relations[0], direction: 'reverse' }] }, elements)[0]
-          .route.points,
-      ).toEqual(expected);
-    },
-  );
+    expect(relations[0].route.points).toEqual(expected);
+    expect(
+      executeFlowLayout({ ...LayeredFlowLayoutDefinition, layout: () => ({ elements, relations }) }, input).relations[0]
+        .route.points,
+    ).toEqual(expected);
+    expect(
+      routeFlowRelations({ ...input, relations: [{ ...input.relations[0], direction: 'reverse' }] }, elements)[0].route
+        .points,
+    ).toEqual(expected);
+  });
 
   it.each(['-|', '|-'] as const)('拒绝无效的 %s 提供者点链', kind => {
     for (const points of [

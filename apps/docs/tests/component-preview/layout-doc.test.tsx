@@ -223,25 +223,22 @@ describe('Layout 文档演示', () => {
   it.each([
     ['zh', ScopeInspectionZhDemo, ScopeInspectionZhCanonical],
     ['en', ScopeInspectionEnDemo, ScopeInspectionEnCanonical],
-  ])(
-    '渲染可选的 Scope 检查 %s 演示，同时保持预览 IR 纯净',
-    (_language, Component, Canonical) => {
-      const preview = buildPreviewIR(Canonical);
-      const vanilla = buildVanillaPreview(preview);
-      const html = renderToString(<Component />);
+  ])('渲染可选的 Scope 检查 %s 演示，同时保持预览 IR 纯净', (_language, Component, Canonical) => {
+    const preview = buildPreviewIR(Canonical);
+    const vanilla = buildVanillaPreview(preview);
+    const html = renderToString(<Component />);
 
-      expect(preview).not.toHaveProperty('inspectionRoots');
-      expect(preview).not.toHaveProperty('inspect');
-      expect(vanilla.code).toContain('flexLayout({');
-      expect(vanilla.code).not.toMatch(/\binspect\b/);
-      expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
-      expect(html).toContain('data-retikz-readonly-layer');
+    expect(preview).not.toHaveProperty('inspectionRoots');
+    expect(preview).not.toHaveProperty('inspect');
+    expect(vanilla.code).toContain('flexLayout({');
+    expect(vanilla.code).not.toMatch(/\binspect\b/);
+    expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
+    expect(html).toContain('data-retikz-readonly-layer');
 
-      for (const label of ['A1', 'A2', 'B1', 'B2']) expect(vanilla.svg).toContain(label);
+    for (const label of ['A1', 'A2', 'B1', 'B2']) expect(vanilla.svg).toContain(label);
 
-      for (const color of ['#dbeafe', '#2563eb', '#dcfce7', '#16a34a']) expect(vanilla.svg).toContain(color);
-    },
-  );
+    for (const color of ['#dbeafe', '#2563eb', '#dcfce7', '#16a34a']) expect(vanilla.svg).toContain(color);
+  });
 
   it('显式 Vanilla Scope 演示与对应 React 演示等价', () => {
     expect(scopeInspectionVanillaSource).toContain('createLayoutInspectionBarrier()');

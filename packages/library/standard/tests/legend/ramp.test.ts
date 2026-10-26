@@ -136,35 +136,32 @@ describe('Legend 斜坡编译契约', () => {
     [LayoutAlignment.Start, 0, 0],
     [LayoutAlignment.Center, 70, 20],
     [LayoutAlignment.End, 140, 40],
-  ] as const)(
-    '独立对齐标题和完整的斜坡结构，contentAlign=%s',
-    (contentAlign, titleX, bodyX) => {
-      const { artifact } = compileRamp(
-        createLegend({
-          title: leaf('title', 20, 10),
-          contentAlign,
-          size: { x: { kind: 'fixed', value: 160 } },
-          content: {
-            kind: LegendContentKind.Ramp,
-            direction: LegendDirection.Horizontal,
-            sample: leaf('sample', 100, 10),
-            sampleGap: 5,
-            ticks: [
-              { key: 'low', offset: 0, label: leaf('low', 20, 4) },
-              { key: 'high', offset: 1, label: leaf('high', 20, 4) },
-            ],
-          },
-        }),
-      );
-      if (artifact.kind !== 'ramp') throw new Error('Expected ramp artifact');
+  ] as const)('独立对齐标题和完整的斜坡结构，contentAlign=%s', (contentAlign, titleX, bodyX) => {
+    const { artifact } = compileRamp(
+      createLegend({
+        title: leaf('title', 20, 10),
+        contentAlign,
+        size: { x: { kind: 'fixed', value: 160 } },
+        content: {
+          kind: LegendContentKind.Ramp,
+          direction: LegendDirection.Horizontal,
+          sample: leaf('sample', 100, 10),
+          sampleGap: 5,
+          ticks: [
+            { key: 'low', offset: 0, label: leaf('low', 20, 4) },
+            { key: 'high', offset: 1, label: leaf('high', 20, 4) },
+          ],
+        },
+      }),
+    );
+    if (artifact.kind !== 'ramp') throw new Error('Expected ramp artifact');
 
-      expect(artifact.title?.slotBounds.x).toBe(titleX);
-      expect(artifact.bodyBounds.x).toBe(bodyX);
-      expect(artifact.sample.slotBounds.x).toBe(bodyX + 10);
-      expect(artifact.ticks.map(tick => tick.anchor.x)).toEqual([bodyX + 10, bodyX + 110]);
-      expect(artifact.ticks[0]?.label?.slotBounds.x).toBe(bodyX);
-    },
-  );
+    expect(artifact.title?.slotBounds.x).toBe(titleX);
+    expect(artifact.bodyBounds.x).toBe(bodyX);
+    expect(artifact.sample.slotBounds.x).toBe(bodyX + 10);
+    expect(artifact.ticks.map(tick => tick.anchor.x)).toEqual([bodyX + 10, bodyX + 110]);
+    expect(artifact.ticks[0]?.label?.slotBounds.x).toBe(bodyX);
+  });
 
   it.each([
     [LayoutAlignment.Start, 0],

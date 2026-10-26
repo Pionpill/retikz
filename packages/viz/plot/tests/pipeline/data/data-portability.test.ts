@@ -223,16 +223,13 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
     ).not.toBeNull();
   });
 
-  it.each(['constructor', 'toString', '__proto__'])(
-    '自己的 datasetFieldMaps 键 %s 无法定位继承的数据集',
-    reference => {
-      const datasetFieldMaps = ownRecord(reference, { month: 'period' });
+  it.each(['constructor', 'toString', '__proto__'])('自己的 datasetFieldMaps 键 %s 无法定位继承的数据集', reference => {
+    const datasetFieldMaps = ownRecord(reference, { month: 'period' });
 
-      expect(() =>
-        compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { datasetFieldMaps }),
-      ).toThrow(`lowerPlots: datasetFieldMaps references unknown dataset "${reference}"`);
-    },
-  );
+    expect(() => compile(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { datasetFieldMaps })).toThrow(
+      `lowerPlots: datasetFieldMaps references unknown dataset "${reference}"`,
+    );
+  });
 
   it.each(['constructor', 'toString', '__proto__'])('自己的 datasetFieldMaps 键 %s 仍然可用', reference => {
     const datasets = ownRecord(reference, [{ period: '2024-01-01', amount: 1 }]);

@@ -137,22 +137,19 @@ describe('分组数据转换文档演示', () => {
         .sort(),
     );
   });
-  it.each(demos)(
-    '$name 通过实际受控入口渲染结果表',
-    ({ Demo, contractOf, values, field }) => {
-      for (const lang of ['zh', 'en'] as const) {
-        const contract = contractOf(lang);
-        const baseline = renderDemo(Demo, contract, {}, lang);
-        const changed = renderDemo(Demo, contract, values, lang);
-        expect(baseline).toContain('data-retikz-id="source"');
-        expect(changed).toContain('data-retikz-id="result"');
-        expect(changed).toContain(`>${field}</tspan>`);
-        expect(changed).toContain(lang === 'zh' ? '变换结果' : 'Transformed rows');
-        // 比较可见文本，排除每次渲染生成的 marker id
-        const textOf = (svg: string): string =>
-          [...svg.matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map(match => match[1]).join('|');
-        expect(textOf(changed)).not.toBe(textOf(baseline));
-      }
-    },
-  );
+  it.each(demos)('$name 通过实际受控入口渲染结果表', ({ Demo, contractOf, values, field }) => {
+    for (const lang of ['zh', 'en'] as const) {
+      const contract = contractOf(lang);
+      const baseline = renderDemo(Demo, contract, {}, lang);
+      const changed = renderDemo(Demo, contract, values, lang);
+      expect(baseline).toContain('data-retikz-id="source"');
+      expect(changed).toContain('data-retikz-id="result"');
+      expect(changed).toContain(`>${field}</tspan>`);
+      expect(changed).toContain(lang === 'zh' ? '变换结果' : 'Transformed rows');
+      // 比较可见文本，排除每次渲染生成的 marker id
+      const textOf = (svg: string): string =>
+        [...svg.matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map(match => match[1]).join('|');
+      expect(textOf(changed)).not.toBe(textOf(baseline));
+    }
+  });
 });

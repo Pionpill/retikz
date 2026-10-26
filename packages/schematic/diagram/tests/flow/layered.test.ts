@@ -121,22 +121,19 @@ describe('分层 Flow 布局', () => {
     expect(output.relations).toHaveLength(1);
   });
 
-  it.each(['right', 'left', 'down', 'up'] as const)(
-    '当主方向为 %s 时，保留非方形测量的叶子尺寸',
-    direction => {
-      const output = executeFlowLayout(
-        LayeredFlowLayoutDefinition,
-        {
-          layout: layout(direction),
-          elements: [leaf('measured', undefined, { width: 100.546875, height: 35.2 })],
-          relations: [],
-        },
-        noLayoutContext,
-      );
+  it.each(['right', 'left', 'down', 'up'] as const)('当主方向为 %s 时，保留非方形测量的叶子尺寸', direction => {
+    const output = executeFlowLayout(
+      LayeredFlowLayoutDefinition,
+      {
+        layout: layout(direction),
+        elements: [leaf('measured', undefined, { width: 100.546875, height: 35.2 })],
+        relations: [],
+      },
+      noLayoutContext,
+    );
 
-      expect(boundsOf(output, 'measured')).toMatchObject({ width: 100.546875, height: 35.2 });
-    },
-  );
+    expect(boundsOf(output, 'measured')).toMatchObject({ width: 100.546875, height: 35.2 });
+  });
 
   it('将不同高度的单列居中，以便前向路线保持在一条线上', () => {
     const output = run({
@@ -160,55 +157,49 @@ describe('分层 Flow 布局', () => {
     }
   });
 
-  it.each(['right', 'left', 'down', 'up'] as const)(
-    '当方向为 %s 时，尽管尺寸不同，但仍保持对齐端点笔直',
-    direction => {
-      const horizontal = direction === 'right' || direction === 'left';
-      const output = run({
+  it.each(['right', 'left', 'down', 'up'] as const)('当方向为 %s 时，尽管尺寸不同，但仍保持对齐端点笔直', direction => {
+    const horizontal = direction === 'right' || direction === 'left';
+    const output = run({
+      layout: layout(direction),
+      elements: [
+        leaf('source', undefined, { width: 40, height: 40 }),
+        leaf('target', undefined, horizontal ? { width: 200, height: 40 } : { width: 40, height: 200 }),
+      ],
+      relations: [relation('source', 'target')],
+    });
+
+    expect(output.relations[0]?.route.points).toEqual([
+      [
+        boundsOf(output, 'source').x + boundsOf(output, 'source').width / 2,
+        boundsOf(output, 'source').y + boundsOf(output, 'source').height / 2,
+      ],
+      [
+        boundsOf(output, 'target').x + boundsOf(output, 'target').width / 2,
+        boundsOf(output, 'target').y + boundsOf(output, 'target').height / 2,
+      ],
+    ]);
+  });
+
+  it.each(['down', 'up'] as const)('当主方向为 %s 时，映射不对称的物理边距而不重叠同级', direction => {
+    const firstMargin = { top: 2, right: 11, bottom: 5, left: 3 };
+    const secondMargin = { top: 13, right: 7, bottom: 17, left: 19 };
+    const output = executeFlowLayout(
+      LayeredFlowLayoutDefinition,
+      {
         layout: layout(direction),
         elements: [
-          leaf('source', undefined, { width: 40, height: 40 }),
-          leaf('target', undefined, horizontal ? { width: 200, height: 40 } : { width: 40, height: 200 }),
+          leaf('first', undefined, { width: 90, height: 30 }, firstMargin),
+          leaf('second', undefined, { width: 70, height: 45 }, secondMargin),
         ],
-        relations: [relation('source', 'target')],
-      });
+        relations: [],
+      },
+      noLayoutContext,
+    );
+    const first = boundsOf(output, 'first');
+    const second = boundsOf(output, 'second');
 
-      expect(output.relations[0]?.route.points).toEqual([
-        [
-          boundsOf(output, 'source').x + boundsOf(output, 'source').width / 2,
-          boundsOf(output, 'source').y + boundsOf(output, 'source').height / 2,
-        ],
-        [
-          boundsOf(output, 'target').x + boundsOf(output, 'target').width / 2,
-          boundsOf(output, 'target').y + boundsOf(output, 'target').height / 2,
-        ],
-      ]);
-    },
-  );
-
-  it.each(['down', 'up'] as const)(
-    '当主方向为 %s 时，映射不对称的物理边距而不重叠同级',
-    direction => {
-      const firstMargin = { top: 2, right: 11, bottom: 5, left: 3 };
-      const secondMargin = { top: 13, right: 7, bottom: 17, left: 19 };
-      const output = executeFlowLayout(
-        LayeredFlowLayoutDefinition,
-        {
-          layout: layout(direction),
-          elements: [
-            leaf('first', undefined, { width: 90, height: 30 }, firstMargin),
-            leaf('second', undefined, { width: 70, height: 45 }, secondMargin),
-          ],
-          relations: [],
-        },
-        noLayoutContext,
-      );
-      const first = boundsOf(output, 'first');
-      const second = boundsOf(output, 'second');
-
-      expect(first.x + first.width + firstMargin.right + 20 + secondMargin.left).toBeLessThanOrEqual(second.x);
-    },
-  );
+    expect(first.x + first.width + firstMargin.right + 20 + secondMargin.left).toBeLessThanOrEqual(second.x);
+  });
 
   it('确定性地路由循环和并行关系并保留测量标签', () => {
     const input: FlowLayoutInput = {
@@ -280,74 +271,71 @@ describe('分层 Flow 布局', () => {
     expect(target.y - (labelBounds.y + labelBounds.height)).toBeGreaterThanOrEqual(20);
   });
 
-  it.each(['right', 'left', 'down', 'up'] as const)(
-    '仅保留面向 %s 的共享编写 Layout 一侧的最大标签范围',
-    direction => {
-      const horizontal = direction === 'right' || direction === 'left';
-      let placementInput: FlowLayoutPlacementOutput | undefined;
-      let receivedMargins: ReadonlyArray<unknown> = [];
-      LayeredFlowLayoutDefinition.layout(
-        {
-          layout: layout(),
-          elements: [
-            {
-              kind: 'layout',
-              id: 'lane',
-              layout: layout(direction),
-              placement: { kind: 'linear', direction, gap: 20, align: 'center' },
-              elements: [
-                leaf('source', undefined, { width: 40, height: 40 }),
-                leaf('target', undefined, { width: 40, height: 40 }),
-              ],
-            },
-          ],
-          relations: [120, 40, 80].map(extent =>
-            relation('source', 'target', {
-              labelSize: horizontal ? { width: extent, height: 12 } : { width: 12, height: extent },
-            }),
-          ),
+  it.each(['right', 'left', 'down', 'up'] as const)('仅保留面向 %s 的共享编写 Layout 一侧的最大标签范围', direction => {
+    const horizontal = direction === 'right' || direction === 'left';
+    let placementInput: FlowLayoutPlacementOutput | undefined;
+    let receivedMargins: ReadonlyArray<unknown> = [];
+    LayeredFlowLayoutDefinition.layout(
+      {
+        layout: layout(),
+        elements: [
+          {
+            kind: 'layout',
+            id: 'lane',
+            layout: layout(direction),
+            placement: { kind: 'linear', direction, gap: 20, align: 'center' },
+            elements: [
+              leaf('source', undefined, { width: 40, height: 40 }),
+              leaf('target', undefined, { width: 40, height: 40 }),
+            ],
+          },
+        ],
+        relations: [120, 40, 80].map(extent =>
+          relation('source', 'target', {
+            labelSize: horizontal ? { width: extent, height: 12 } : { width: 12, height: extent },
+          }),
+        ),
+      },
+      {
+        resolveEndpoint: () => {
+          throw new Error('Unexpected endpoint query');
         },
-        {
-          resolveEndpoint: () => {
-            throw new Error('Unexpected endpoint query');
-          },
-          resolveRoutePoints: () => {
-            throw new Error('Unexpected waypoint query');
-          },
-          placeLayout: input => {
-            receivedMargins = input.elements;
-            placementInput = {
-              bounds: { x: 0, y: 0, width: 40, height: 40 },
-              elements: [
-                { id: 'source', bounds: { x: 0, y: 0, width: 40, height: 40 } },
-                { id: 'target', bounds: { x: 0, y: 0, width: 40, height: 40 } },
-              ],
-            };
+        resolveRoutePoints: () => {
+          throw new Error('Unexpected waypoint query');
+        },
+        placeLayout: input => {
+          receivedMargins = input.elements;
+          placementInput = {
+            bounds: { x: 0, y: 0, width: 40, height: 40 },
+            elements: [
+              { id: 'source', bounds: { x: 0, y: 0, width: 40, height: 40 } },
+              { id: 'target', bounds: { x: 0, y: 0, width: 40, height: 40 } },
+            ],
+          };
 
-            return placementInput;
-          },
+          return placementInput;
         },
-      );
+      },
+    );
 
-      expect(placementInput).toBeDefined();
-      expect(receivedMargins).toMatchObject([
-        {
-          id: 'source',
-          margin: {
-            [direction === 'right' ? 'right' : direction === 'left' ? 'left' : direction === 'down' ? 'bottom' : 'top']:
-              60,
-          },
+    expect(placementInput).toBeDefined();
+    expect(receivedMargins).toMatchObject([
+      {
+        id: 'source',
+        margin: {
+          [direction === 'right' ? 'right' : direction === 'left' ? 'left' : direction === 'down' ? 'bottom' : 'top']:
+            60,
         },
-        {
-          id: 'target',
-          margin: {
-            [direction === 'right' ? 'left' : direction === 'left' ? 'right' : direction === 'down' ? 'top' : 'bottom']:
-              60,
-          },
+      },
+      {
+        id: 'target',
+        margin: {
+          [direction === 'right' ? 'left' : direction === 'left' ? 'right' : direction === 'down' ? 'top' : 'bottom']:
+            60,
         },
-      ]);
-    },
-  );
+      },
+    ]);
+  });
 
   it('当嵌套 Group 子级的最小交叉大小超过子级范围时，将其居中', () => {
     const output = run({
