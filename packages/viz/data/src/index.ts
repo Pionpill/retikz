@@ -31,13 +31,7 @@ export type {
   DataTransformStageInput,
   DataTransformStageSupport,
 } from './execution';
-export {
-  BUILTIN_FORMATS,
-  BUILTIN_FORMAT_DEFINITIONS_BY_NAME,
-  collectFormatFields,
-  defineFieldFormat,
-  resolveFormatRegistry,
-} from './format';
+export { BUILTIN_FORMATS, collectFormatFields, defineFieldFormat, resolveFormatRegistry } from './format';
 export type { FieldFormatDefinition } from './format';
 export {
   BuiltinDataFieldFormat,
@@ -196,7 +190,6 @@ export {
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
   BUILTIN_TRANSFORMS,
-  BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND,
   BUILTIN_TRANSFORM_IMPLEMENTATIONS,
   BinParamsSchema,
   BinTransformSchema,

@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { DiagramThemeDefinition } from '../src/_diagram';
 import {
-  defineDiagramTheme,
   DiagramDefaultsSchema,
   getDefaultDiagramTheme,
   resolveDiagramDefinitionOptions,
@@ -23,20 +22,11 @@ const registryOf = (
 ): ReadonlyMap<string, DiagramThemeDefinition> => resolveDiagramThemeRegistry(definitions);
 
 describe('Diagram Theme Definition and registry', () => {
-  it('keeps the exact Definition object as a typed identity', () => {
-    const definition: DiagramThemeDefinition = {
-      name: 'brand',
-      resolve: () => ({ presentation: { title: { style: { textColor: '#123456' } } } }),
-    };
-
-    expect(defineDiagramTheme(definition)).toBe(definition);
-  });
-
   it('resolves Definition options once into the shared read-only style registry', () => {
-    const definition = defineDiagramTheme({
+    const definition = {
       name: 'brand',
       resolve: () => ({ presentation: { title: { style: { textColor: '#123456' } } } }),
-    });
+    } satisfies DiagramThemeDefinition;
 
     const resolved = resolveDiagramDefinitionOptions({ diagramThemeDefinitions: [definition] });
 
@@ -46,14 +36,14 @@ describe('Diagram Theme Definition and registry', () => {
   });
 
   it('rejects duplicate Definition names with Diagram-owned diagnostics', () => {
-    const first = defineDiagramTheme({
+    const first = {
       name: 'brand',
       resolve: () => ({ presentation: { title: { style: { opacity: 1 } } } }),
-    });
-    const second = defineDiagramTheme({
+    } satisfies DiagramThemeDefinition;
+    const second = {
       name: 'brand',
       resolve: () => ({ presentation: { description: { style: { opacity: 1 } } } }),
-    });
+    } satisfies DiagramThemeDefinition;
 
     for (const run of [() => resolveDiagramThemeRegistry([first, second])]) {
       try {
@@ -124,7 +114,7 @@ describe('Diagram Neutral Theme', () => {
 
 describe('Diagram Theme cascade', () => {
   it('applies named defaults then author defaults with whole-font replacement', () => {
-    const definition = defineDiagramTheme({
+    const definition = {
       name: 'brand',
       resolve: theme => ({
         frame: {
@@ -136,7 +126,7 @@ describe('Diagram Theme cascade', () => {
           title: { style: { textColor: '#1d4ed8', font: { family: 'Inter', weight: 700, style: 'italic' } } },
         },
       }),
-    });
+    } satisfies DiagramThemeDefinition;
     const inline = DiagramDefaultsSchema.parse({
       frame: {
         background: { fill: '#f8fafc', opacity: { fill: 0.8 } },
@@ -158,13 +148,13 @@ describe('Diagram Theme cascade', () => {
   });
 
   it('ignores empty and undefined author groups without discarding the named defaults', () => {
-    const definition = defineDiagramTheme({
+    const definition = {
       name: 'paper',
       resolve: () => ({
         frame: { padding: 12 },
         presentation: { title: { style: { font: { family: 'serif', size: 24 } } } },
       }),
-    });
+    } satisfies DiagramThemeDefinition;
     const theme = themeWith({ name: 'paper' });
     const baseline = resolveDiagramTheme(theme, registryOf(definition));
     const empty = resolveDiagramTheme(theme, registryOf(definition), {
@@ -194,12 +184,12 @@ describe('Diagram Theme cascade', () => {
 
   it('preserves callback exceptions as the cause of a Diagram error', () => {
     const cause = new Error('external callback failed');
-    const definition = defineDiagramTheme({
+    const definition = {
       name: 'broken',
       resolve: () => {
         throw cause;
       },
-    });
+    } satisfies DiagramThemeDefinition;
 
     try {
       resolveDiagramTheme(themeWith({ name: 'broken' }), registryOf(definition));
@@ -214,7 +204,7 @@ describe('Diagram Theme cascade', () => {
   });
 
   it('accepts empty Definition defaults as a no-op', () => {
-    const definition = defineDiagramTheme({ name: 'empty', resolve: () => ({}) });
+    const definition = { name: 'empty', resolve: () => ({}) } satisfies DiagramThemeDefinition;
 
     expect(resolveDiagramTheme(themeWith({ name: 'empty' }), registryOf(definition))).toEqual(
       resolveDiagramTheme(themeWith({}), registryOf()),

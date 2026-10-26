@@ -5,7 +5,7 @@ import { createFlexLayout, FlexLayoutArtifactSchema, LayoutItemKind } from '@ret
 import { LegendSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
-import { defineDiagramTheme } from '../../src/_diagram';
+import type { DiagramThemeDefinition } from '../../src/_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type {
   FlowLayoutDefinition,
@@ -612,7 +612,10 @@ describe('Flow Diagram compile transaction', () => {
       contributions: [
         Flow.createFlowDiagramProviderContribution({
           diagramThemeDefinitions: [
-            defineDiagramTheme({ name: styleName, resolve: () => ({ frame: { background: { fill: 'none' } } }) }),
+            {
+              name: styleName,
+              resolve: () => ({ frame: { background: { fill: 'none' } } }),
+            } satisfies DiagramThemeDefinition,
           ],
           flowThemeDefinitions: [Flow.defineFlowTheme({ name: styleName, resolve: () => ({}) })],
           graphThemeDefinitions: [

@@ -2,12 +2,12 @@ import type { GroupPrimitive, SceneClipPath, SceneResource } from '@retikz/core'
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { ClipDefs, renderPrim } from '../../../src/render/svg';
+import { renderClipDefs, renderPrim } from './helpers';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
 const clipPathsOf = (resources: Array<SceneResource>): Array<AnyEl> => {
-  const fragment = ClipDefs({ resources, idFor: (id: string) => `c-${id}` }) as AnyEl;
+  const fragment = renderClipDefs({ resources, idFor: (id: string) => `c-${id}` }) as AnyEl;
   return (fragment.props.children as Array<AnyEl>).filter(Boolean);
 };
 
@@ -24,7 +24,7 @@ const rectPath = (width: number, height: number): SceneClipPath => ({
   fillRule: 'nonzero',
 });
 
-describe('ClipDefs — canonical SceneClipPath 物化', () => {
+describe('renderClipDefs — canonical SceneClipPath 物化', () => {
   it('每个 clip resource 固定物化为一个 <clipPath><path/></clipPath>', () => {
     const [clipPath] = clipPathsOf([
       clipResource('clip-1', {

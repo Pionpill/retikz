@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  BUILTIN_FORMAT_DEFINITIONS_BY_NAME,
   BUILTIN_FORMATS,
   BUILTIN_ROW_SELECTORS,
   BUILTIN_STATISTICS_REDUCERS,
-  BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND,
   BUILTIN_TRANSFORMS,
   DEFAULT_TRANSFORM_CONTEXT,
   resolveFormatRegistry,
@@ -30,22 +28,6 @@ const expectFrozenDefinitionList = (definitions: ReadonlyArray<object>, resolveF
   }
 };
 
-/** 断言公开 Map 视图不暴露写方法，且 forEach 不泄漏底层可写 Map */
-const expectReadonlyMapView = <TValue>(registry: ReadonlyMap<string, TValue>): void => {
-  let callbackOwner: ReadonlyMap<string, TValue> | undefined;
-  registry.forEach((_definition, _key, owner) => {
-    callbackOwner = owner;
-  });
-
-  expect(Object.isFrozen(registry)).toBe(true);
-  expect(Reflect.get(registry, 'set')).toBeUndefined();
-  expect(Reflect.get(registry, 'delete')).toBeUndefined();
-  expect(Reflect.get(registry, 'clear')).toBeUndefined();
-  expect(callbackOwner).toBe(registry);
-  expect(Reflect.get(callbackOwner as object, 'set')).toBeUndefined();
-  expect(Array.from(registry)).toHaveLength(registry.size);
-};
-
 describe('data public default state', () => {
   it('keeps the default transform context immutable at runtime', () => {
     const original = DEFAULT_TRANSFORM_CONTEXT.readSourceIndex;
@@ -65,10 +47,5 @@ describe('data public default state', () => {
     expectFrozenDefinitionList(BUILTIN_FORMATS, () => resolveFormatRegistry().get('iso'));
     expectFrozenDefinitionList(BUILTIN_STATISTICS_REDUCERS, () => resolveStatisticsReducerRegistry().get('count'));
     expectFrozenDefinitionList(BUILTIN_ROW_SELECTORS, () => resolveRowSelectorRegistry().get('min'));
-  });
-
-  it('does not expose Map mutators or a writable forEach owner', () => {
-    expectReadonlyMapView(BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND);
-    expectReadonlyMapView(BUILTIN_FORMAT_DEFINITIONS_BY_NAME);
   });
 });

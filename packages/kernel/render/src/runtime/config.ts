@@ -5,9 +5,6 @@ import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '.
 import type { HydrationHandlers } from '../hydration';
 import { cloneAndFreezeRuntimeValue } from './shared';
 
-/** Render runtime config 的固定 owner key */
-export const RENDER_RUNTIME_SOURCE_KEY = '@retikz/render:runtime-config' as const;
-
 /** Retained renderer layer cache 策略 */
 export const RenderCachePolicy = {
   Auto: 'auto',

@@ -6,7 +6,7 @@ import { BuiltinPlotMark } from '@retikz/plot';
 
 import type { ChartMarkResolveContext } from '../../_chart/contract/mark';
 import { pointFieldMappingOf, requiredFieldOf } from './encoding';
-import type { IRPointEncoding, IRPointProperties } from './schema';
+import type { IRPointProperties } from './schema';
 
 /** 将 Chart 字段映射下沉为 Plot 字段简写或具名尺度绑定 */
 export const markEncodingOf = (
@@ -70,9 +70,6 @@ const pointRawPropertySlots: ReadonlyArray<keyof IRPointProperties> = ['dx', 'dy
 
 const isJsonObject = (value: JsonValue): value is JsonObject =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
-
-/** Plot Point mark resolver 实际读取的 encoding slots */
-export const pointEncodingSlots: ReadonlyArray<keyof IRPointEncoding> = ['x', 'y', ...pointVisualSlots];
 
 /** Plot Point mark resolver 实际读取的 property slots */
 export const pointPropertySlots: ReadonlyArray<keyof IRPointProperties> = [

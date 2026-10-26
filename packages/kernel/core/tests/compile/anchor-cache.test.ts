@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { NodeLayout } from '../../src/compile/node';
-import { boxInsets } from '../../src/compile/node';
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
 import type { ShapeDefinition } from '../../src/contract';
 import { defineShape } from '../../src/contract';
@@ -34,7 +33,7 @@ const makeLayout = (
     geometry: {
       rect: { x: cx, y: cy, width, height, rotate },
       contentCenter: [cx, cy],
-      margin: boxInsets(0),
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
       contentSize: { width: 0, height: 0 },
     },
     boundary: {
@@ -216,7 +215,7 @@ describe('resolveEdgePoint 边上比例点', () => {
       geometry: {
         rect: { x: 0, y: 0, width: 20, height: 10, rotate: 0 },
         contentCenter: [0, 0],
-        margin: boxInsets(0),
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
         contentSize: { width: 0, height: 0 },
       },
       boundary: { name: noEdge.name, definition: noEdge, params: {}, isShape: true },

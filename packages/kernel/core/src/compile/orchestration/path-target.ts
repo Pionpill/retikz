@@ -1,14 +1,11 @@
-import { point } from '@retikz/math';
-
 import type { Transform } from '../../contract';
 import type { NodeReferenceView, PathTargetView, TargetResolution } from '../../resolve';
 import type { PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePositionTarget } from '../../resolve/position';
 import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
-import { FoldStepVia } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
-import { boundaryPointOf, clipNodePolyline, createNodeGeometryContext } from '../node';
 import type { NodeGeometryContext } from '../node';
+import { boundaryPointOf, clipNodePolyline, createNodeGeometryContext } from '../node';
 import { resolveAnchorRef } from '../reference';
 import type { EffectiveScopeTransform } from '../transform';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../transform';
@@ -27,75 +24,6 @@ const isRelative = (t: IRTarget): t is IRRelativeTarget | IRRelativeAccumulateTa
 /** 在世界坐标系叠加节点目标的 offset */
 const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition =>
   offset ? [base[0] + offset[0], base[1] + offset[1]] : base;
-
-/**
- * 根据 fold step 的方向计算正交折角点
- * @description 两段 fold 返回一个角点；三段 fold 返回两个共享中间轴的角点
- */
-export const foldCornersOf = (
-  prev: IRPosition,
-  curr: IRPosition,
-  via: FoldStepVia,
-  fraction = 0.5,
-): Array<IRPosition> => {
-  if (via === FoldStepVia.HorizontalThenVertical) return [[curr[0], prev[1]]];
-  if (via === FoldStepVia.VerticalThenHorizontal) return [[prev[0], curr[1]]];
-  if (via === FoldStepVia.HorizontalVerticalHorizontal) {
-    const x = prev[0] + (curr[0] - prev[0]) * fraction;
-    return [
-      [x, prev[1]],
-      [x, curr[1]],
-    ];
-  }
-
-  const y = prev[1] + (curr[1] - prev[1]) * fraction;
-
-  return [
-    [prev[0], y],
-    [curr[0], y],
-  ];
-};
-
-/** target 裁剪解析所需上下文 */
-export type ClipForTargetContext = {
-  /** 当前 Path 所在 Scope 的 position resolver context */
-  positionContext: PositionTargetResolveContext;
-};
-
-/**
- * 解析 target 在 toward 方向上的实际绘制端点
- * @description 未指定 anchor 的 NodeTarget 会按连接面裁剪到节点边界；显式 anchor、between 和普通坐标目标
- * 解析为固定点
- */
-export const clipForTarget = (
-  target: IRTarget,
-  toward: IRPosition,
-  context: ClipForTargetContext,
-): IRPosition | null => {
-  const { positionContext } = context;
-
-  // NodeTarget 的裁剪端点可能随 toward 落在不同连接面位置。
-  if (isNodeTarget(target)) {
-    const resolution = resolvePositionTarget(target, positionContext);
-    const node = resolution.reference?.node;
-    if (node === undefined) return null;
-
-    const boundary = target.boundary ?? node.boundary;
-    const towardGlobal = positionContext.toWorld(toward);
-    const base =
-      target.anchor === undefined
-        ? boundaryPointOf(node, towardGlobal, boundary, resolution.boundaryResolution)
-        : resolveAnchorRef(node, target.anchor, boundary, resolution.boundaryResolution);
-    const global = addOffset(base, target.offset);
-
-    return positionContext.toLocal(global);
-  }
-
-  // relative 目标应已在进入 path emit 前预解析。
-  if (isRelative(target)) return null;
-
-  return resolvePositionTarget(target, positionContext).point;
-};
 
 /** 在 resolving 阶段绑定 Path target，并压缩为既有公开 TargetResolution */
 export const bindPathTarget = (target: IRTarget, context: PositionTargetResolveContext): TargetResolution | null => {
@@ -196,6 +124,3 @@ export const pathTargetViewOf = (
     },
   };
 };
-
-/** 判断两个已解析坐标是否逐分量精确相等 */
-export const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean => !!a && !!b && point.isEqual(a, b);

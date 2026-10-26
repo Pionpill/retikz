@@ -178,11 +178,6 @@ export class NamespaceStack {
     return this.frames.length;
   }
 
-  /** 当前阶段 */
-  get phase(): NamespacePhase {
-    return this.currentPhase;
-  }
-
   /** 推入新 frame；通常对应 `<Scope localNamespace>` 入场 */
   pushFrame(): void {
     this.snapshotIdentity = {};
@@ -319,11 +314,6 @@ export class NamespaceStack {
       throw error;
     }
     return entry;
-  }
-
-  /** 按 inside-out 规则查找 id 对应的 layout */
-  lookup(id: string): NodeLayout | undefined {
-    return this.lookupEntry(id)?.layout;
   }
 
   /** 按 inside-out 规则查找 id 对应的 layout 与生命周期状态 */

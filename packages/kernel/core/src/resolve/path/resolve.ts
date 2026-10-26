@@ -3,8 +3,8 @@ import { pointAtArcAngle } from '@retikz/math';
 import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type {
-  IRMarkStyle,
   IRLine,
+  IRMarkStyle,
   IRMathSegment,
   IRPaintValue,
   IRPathBase,
@@ -15,16 +15,7 @@ import type {
   IRTextSegment,
 } from '../../schemas';
 import { BendAngleSchema, BuiltinPath, SmoothTensionSchema } from '../../schemas';
-import {
-  isAtPositionLike,
-  isBetweenPositionLike,
-  isNodeTargetLike,
-  isOffsetPositionLike,
-  isPolarPositionLike,
-  isPositionTuple,
-  isRelativeAccumulateTargetLike,
-  isRelativeTargetLike,
-} from '../../shared';
+import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import { resolvePaint } from '../resource';
 import { resolveContextualColor, resolveDropShadow, resolveEffectivePath, resolveGraphicOpacity } from '../style';
 import type { ResolvedInlineSourceSegment, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
@@ -480,29 +471,6 @@ const resolveSteps = (
     targets.set(key, bindTarget(value, context, scopeChain));
 
     return value;
-  };
-
-  const bindNestedTargets = (value: unknown, key: string): void => {
-    const targetLike =
-      typeof value === 'string' ||
-      isPositionTuple(value) ||
-      isAtPositionLike(value) ||
-      isBetweenPositionLike(value) ||
-      isOffsetPositionLike(value) ||
-      isNodeTargetLike(value) ||
-      isPolarPositionLike(value) ||
-      isRelativeTargetLike(value) ||
-      isRelativeAccumulateTargetLike(value);
-    if (targetLike) {
-      targets.set(key, bindTarget(value as IRTarget, context, scopeChain));
-      return;
-    }
-
-    if (value !== null && typeof value === 'object') {
-      for (const [childKey, childValue] of Object.entries(value as Record<string, unknown>)) {
-        bindNestedTargets(childValue, `${key}.${childKey}`);
-      }
-    }
   };
 
   for (let index = 0; index < steps.length; index += 1) {

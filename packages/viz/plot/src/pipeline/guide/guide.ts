@@ -1,8 +1,6 @@
-import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
-import type { IRShapeValue } from '@retikz/core';
+import type { IRGradientStop, IRNode, IRPath, IRScope, IRShapeValue, IRStep } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
-import type { BoundsRect } from '@retikz/math';
-import type { Position } from '@retikz/math';
+import type { BoundsRect, Position } from '@retikz/math';
 import { pointAtArcAngle } from '@retikz/math';
 
 import type {
@@ -12,9 +10,9 @@ import type {
   LoweredGuide,
   PolarCoordinateFrame,
   PositionScale,
+  ProvenanceContext,
   TickSet,
 } from '../../contract';
-import type { ProvenanceContext } from '../../contract';
 import { guideLayerId, guideLayerMeta } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { defaultOriginAxisTickSideOf, layoutPolarAngularLabel, polarFixedRadiusSteps } from '../../providers';
@@ -1833,26 +1831,6 @@ export const lowerGuide = (guide: IRPlotAxisGuide, ctx: GuideContext, context?: 
 
   return lowerCartesianGuide(guide, ctx, context);
 };
-
-// ── legend ─────────────────────────────────────────────────────
-
-/** legend swatch 边长（user units）；离散色块 / 形状框 / size 符号格的基准格尺寸 */
-export const LEGEND_SWATCH_SIZE = 14;
-
-/** legend swatch 到标签的水平间距（user units） */
-export const LEGEND_LABEL_GAP = 6;
-
-/** legend 条目间的行 / 列距（user units） */
-export const LEGEND_ENTRY_GAP = 6;
-
-/** legend 标题到首条目的间距（user units） */
-export const LEGEND_TITLE_GAP = 6;
-
-/** 连续色带 ramp 的长边长度（user units） */
-export const LEGEND_RAMP_LENGTH = 100;
-
-/** 连续色带 ramp 的短边宽度（user units） */
-export const LEGEND_RAMP_THICKNESS = 12;
 
 /**
  * 一个离散 legend 条目：swatch 视觉量 + 标签

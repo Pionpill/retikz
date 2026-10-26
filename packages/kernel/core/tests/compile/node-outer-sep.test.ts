@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
 import type { NodeLayout } from '../../src/compile/node';
-import { boxInsets } from '../../src/compile/node';
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
 import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
@@ -16,7 +15,7 @@ const mkLayout = (margin: number, rotate = 0): NodeLayout => ({
   geometry: {
     rect: { x: 0, y: 0, width: 40, height: 30, rotate },
     contentCenter: [0, 0],
-    margin: boxInsets(margin),
+    margin: { top: margin, right: margin, bottom: margin, left: margin },
     contentSize: { width: 0, height: 0 },
   },
   boundary: {

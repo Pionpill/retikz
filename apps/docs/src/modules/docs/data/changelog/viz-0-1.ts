@@ -190,6 +190,13 @@ export const vizV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING Chart locator API', en: 'Unreleased: BREAKING Chart locator API' },
+          content: {
+            zh: 'Point 入口移除 qualifyBubbleChartLocatorOptions、qualifyConnectedScatterChartLocatorOptions、qualifyRangedDotChartLocatorOptions、qualifyRegressionChartLocatorOptions 和 qualifyScatterChartLocatorOptions。具体图表的精确 schema 与 provider contribution 入口保持。',
+            en: 'The Point entry removes qualifyBubbleChartLocatorOptions, qualifyConnectedScatterChartLocatorOptions, qualifyRangedDotChartLocatorOptions, qualifyRegressionChartLocatorOptions, and qualifyScatterChartLocatorOptions. Concrete chart schemas and provider contribution entries remain available.',
+          },
+        },
+        {
           label: { zh: '未发布 · Source 字段组合', en: 'Unreleased · Source field composition' },
           content: {
             zh: 'Chart 公共根字段由单一 schema 片段提供，精确 recipe schema 与类型共用真源；公开 ChartSourceShape 泛型供 schema factory 的返回类型引用，已有配置、默认和约束保持不变。',

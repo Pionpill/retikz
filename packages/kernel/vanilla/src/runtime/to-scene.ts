@@ -1,27 +1,15 @@
-import type { CompileArtifact, CompileOptions, CompileResult, IRScene, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileResult, Scene } from '@retikz/core';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import type { InputAuthoringSite, InputRuntimeMeta } from '../normalize';
+import type { InputRuntimeMeta } from '../normalize';
 import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
-import { prepareProcessingInput, processToStaticInputResult } from '../processing';
+import { processToStaticInputResult } from '../processing';
 import type { CommonOptions, RenderInput } from './types';
 
 /** 为非 InputScene 输入创建独立的空 runtime metadata */
 export const createEmptyRuntimeMeta = (): InputRuntimeMeta => createEmptyInputRuntimeMetaSnapshot();
-
-/** 一份未编译输入归一后的领域中立编译材料 */
-export type PreparedVanillaCompileInput = Readonly<{
-  /** 可交给 Core 编译的 IR */
-  source: IRScene;
-  /** 本次编译使用的 Core options */
-  coreOptions: CompileOptions;
-  /** InputScene normalizer 报告的 authored sites */
-  authoringSites: ReadonlyArray<InputAuthoringSite>;
-  /** InputScene 运行时元数据 */
-  runtimeMeta: InputRuntimeMeta;
-}>;
 
 /** Render input 归一结果 */
 export type SceneResult = {
@@ -42,20 +30,6 @@ export type SceneResult = {
 const EMPTY_ARTIFACTS: ReadonlyArray<CompileArtifact> = Object.freeze([]);
 
 const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
-
-/** 把 IR 或 InputScene 归一成通用编译驱动输入 */
-export const prepareVanillaCompileInput = (
-  input: Exclude<RenderInput, Scene>,
-  options: CommonOptions,
-): PreparedVanillaCompileInput => {
-  const prepared = prepareProcessingInput(input, options);
-  return Object.freeze({
-    source: prepared.source,
-    coreOptions: prepared.coreOptions,
-    authoringSites: prepared.authoringSites,
-    runtimeMeta: prepared.runtimeMeta,
-  });
-};
 
 /**
  * 入参归一成 `Scene`

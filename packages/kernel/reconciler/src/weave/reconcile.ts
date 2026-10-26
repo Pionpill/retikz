@@ -1,3 +1,21 @@
+import type {
+  CompileCompositeOptions,
+  CompileNamespaceRegistry,
+  CompileOccurrenceLocator,
+  CompileOptions,
+  CompileOutput,
+  CompileOwnerKey,
+  CompileWarning,
+  ElementCompileOptions,
+  ElementCompileResult,
+  IRChild,
+  IRScene,
+  IRScope,
+  NodeLayout,
+  PreparedSceneCompilation,
+  SceneCompilationPreparationOptions,
+  Transform,
+} from '@retikz/core';
 import {
   assembleSceneCompilation,
   assembleScopeOutput,
@@ -16,24 +34,6 @@ import {
   projectScopeCompileLayouts,
   resolveScopeContext,
 } from '@retikz/core';
-import type {
-  CompileNamespaceRegistry,
-  CompileWarning,
-  CompileOutput,
-  CompileOptions,
-  CompileOwnerKey,
-  ElementCompileOptions,
-  ElementCompileResult,
-  IRChild,
-  IRScene,
-  IRScope,
-  CompileOccurrenceLocator,
-  NodeLayout,
-  SceneCompilationPreparationOptions,
-  Transform,
-  CompileCompositeOptions,
-  PreparedSceneCompilation,
-} from '@retikz/core';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
@@ -41,13 +41,13 @@ import { WeaveEditor } from './editor';
 import { WeaveTracker } from './tracker';
 import { WeaveTransaction } from './transaction';
 import type {
+  WeaveBatch,
+  WeaveCoordinateNode,
   WeaveNode,
+  WeavePathNode,
   WeaveRoot,
   WeaveScopeNode,
-  WeavePathNode,
   WeaveShapeNode,
-  WeaveCoordinateNode,
-  WeaveBatch,
 } from './types';
 
 /** 本次完整基础树准备结果 */
@@ -661,10 +661,3 @@ export class WeaveReconciler {
     };
   }
 }
-
-/** 编译基础声明树；所有可变状态属于本次候选，失败时由调用方放弃 */
-export const prepareWeaveCompilation = (
-  source: IRScene,
-  options: Omit<CompileOptions, keyof CompileCompositeOptions> = {},
-  execution: SceneCompilationPreparationOptions = {},
-): WeaveCompilation => new WeaveReconciler(source, options, execution).mount();

@@ -1,7 +1,6 @@
-import type { GroupPrimitive, ScenePrimitive, PaintResource, RectPrimitive, TextPrimitive } from '@retikz/core';
+import type { GroupPrimitive, PaintResource, RectPrimitive, ScenePrimitive, TextPrimitive } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { collectArrowEnds } from '../../../src/svg/builders/arrow-collect';
 import { buildPaintDef } from '../../../src/svg/builders/paint-defs';
 import { buildPrim } from '../../../src/svg/builders/prim';
 
@@ -186,19 +185,5 @@ describe('buildPaintDef —— 图案资源', () => {
     expect(node.attrs.width).toBe(8);
     expect(node.attrs.height).toBe(8);
     expect(node.children ?? []).toHaveLength(0);
-  });
-});
-
-describe('collectArrowEnds —— 防御', () => {
-  it('group-undefined-child：嵌套 group 含 undefined 槽位 → 跳过、不抛', () => {
-    const prims: Array<ScenePrimitive> = [
-      {
-        type: 'group',
-        children: [undefined as unknown as ScenePrimitive],
-      },
-    ];
-
-    expect(() => collectArrowEnds(prims)).not.toThrow();
-    expect(collectArrowEnds(prims)).toEqual([]);
   });
 });

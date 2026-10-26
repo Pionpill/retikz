@@ -19,6 +19,3 @@ export type LayoutAuthoringSite = Readonly<{
   /** 由可选包装组件写入且基础适配器不解释的属性 */
   props: Readonly<Record<string, unknown>>;
 }>;
-
-/** 构造冻结的领域中立声明位置 */
-export const createLayoutAuthoringSite = (site: LayoutAuthoringSite): LayoutAuthoringSite => Object.freeze(site);

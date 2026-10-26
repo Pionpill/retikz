@@ -2,8 +2,27 @@ import type { CompileObservation, IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { strictObject, string } from 'zod';
 
+import type { InspectionSelection, InspectorRegistry } from '../../src';
 import { createInspectorRegistry, defineInspector, RetikzInspectError } from '../../src';
-import { resolveInspectionSelection } from '../../src/compile/selection';
+import { admitInspectionSelection, resolveAdmittedInspectionSelection } from '../../src/compile/selection';
+
+/** 按真实 admission 与最终 observation 两阶段解析测试请求 */
+const resolveSelection = ({
+  ir,
+  registry,
+  selection,
+  observations,
+}: {
+  ir: IRScene;
+  registry: InspectorRegistry;
+  selection: InspectionSelection;
+  observations: ReadonlyArray<CompileObservation>;
+}) =>
+  resolveAdmittedInspectionSelection({
+    registry,
+    admittedRules: admitInspectionSelection(ir, registry, selection),
+    observations,
+  });
 
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'box' };
 
@@ -77,7 +96,7 @@ describe('Inspection selection', () => {
       [true, 2],
       [{ count: '5' }, 5],
     ] as const) {
-      const requests = resolveInspectionSelection({
+      const requests = resolveSelection({
         ir,
         registry: createInspectorRegistry([rawDefinition]),
         observations: [observation(0)],
@@ -96,7 +115,7 @@ describe('Inspection selection', () => {
       resolveOptions: options => ({ label: options.count.toFixed(1) }),
       inspect: (_subject, context) => ({ type: 'node', position: [0, 0], content: context.options.label }),
     });
-    const requests = resolveInspectionSelection({
+    const requests = resolveSelection({
       ir,
       registry: createInspectorRegistry([inspector]),
       observations: [observation(0)],
@@ -115,7 +134,7 @@ describe('Inspection selection', () => {
         return inherited;
       },
     });
-    const resolved = resolveInspectionSelection({
+    const resolved = resolveSelection({
       ir,
       registry: createInspectorRegistry([mutating]),
       observations: [observation(0), observation(1)],
@@ -148,7 +167,7 @@ describe('Inspection selection', () => {
       }),
       mergeOptionsInput: (inherited, local) => ({ ...inherited, ...local }),
     });
-    const resolved = resolveInspectionSelection({
+    const resolved = resolveSelection({
       ir,
       registry: createInspectorRegistry([transformed]),
       observations: [observation(0)],
@@ -176,7 +195,7 @@ describe('Inspection selection', () => {
 
   it.each([true, false])('rejects invalid source rules even when unmatched or overridden: %s', matched => {
     expect(() =>
-      resolveInspectionSelection({
+      resolveSelection({
         ir,
         registry,
         observations: matched ? [observation(0)] : [],
@@ -196,7 +215,7 @@ describe('Inspection selection', () => {
   });
 
   it('evaluates scene, outer subtree, authored self and allocates appearance after stable sorting', () => {
-    const resolved = resolveInspectionSelection({
+    const resolved = resolveSelection({
       ir,
       registry,
       observations: [observation(1), observation(0)],
@@ -231,7 +250,7 @@ describe('Inspection selection', () => {
   });
 
   it('prevents reopening below a barrier', () => {
-    const resolved = resolveInspectionSelection({
+    const resolved = resolveSelection({
       ir,
       registry,
       observations: [observation(0)],
@@ -254,7 +273,7 @@ describe('Inspection selection', () => {
 
   it('allows a false-only self rule without requesting an owner output', () => {
     expect(
-      resolveInspectionSelection({
+      resolveSelection({
         ir,
         registry,
         observations: [],
@@ -283,7 +302,7 @@ describe('Inspection selection', () => {
     const pathRegistry = createInspectorRegistry([pathDefinition]);
 
     expect(() =>
-      resolveInspectionSelection({
+      resolveSelection({
         ir,
         registry: pathRegistry,
         observations: [observation(0)],
@@ -300,7 +319,7 @@ describe('Inspection selection', () => {
       }),
     ).toThrow(/owner/i);
     expect(
-      resolveInspectionSelection({
+      resolveSelection({
         ir,
         registry: pathRegistry,
         observations: [observation(0)],
@@ -315,7 +334,7 @@ describe('Inspection selection', () => {
       owner: { kind: 'path', name: 'stroke' },
     };
 
-    const resolved = resolveInspectionSelection({
+    const resolved = resolveSelection({
       ir,
       registry,
       observations: [colocatedPath, observation(0)],
@@ -336,7 +355,7 @@ describe('Inspection selection', () => {
   });
 
   it('按 occurrenceIndex 区分同 source path 与 owner 的嵌套 occurrence', () => {
-    const resolved = resolveInspectionSelection({
+    const resolved = resolveSelection({
       ir,
       registry,
       observations: [colocatedObservation(1), colocatedObservation(0)],
@@ -365,7 +384,7 @@ describe('Inspection selection', () => {
 
   it('rejects an authored occurrenceIndex outside the final owner occurrences', () => {
     expect(() =>
-      resolveInspectionSelection({
+      resolveSelection({
         ir,
         registry,
         observations: [colocatedObservation(0), colocatedObservation(1)],
@@ -418,7 +437,7 @@ describe('Inspection selection', () => {
     };
 
     expect(
-      resolveInspectionSelection({
+      resolveSelection({
         ir: pathIr,
         registry: pathRegistry,
         observations: [pathObservation],
@@ -426,7 +445,7 @@ describe('Inspection selection', () => {
       }),
     ).toHaveLength(1);
     expect(
-      resolveInspectionSelection({
+      resolveSelection({
         ir: pathIr,
         registry: pathRegistry,
         observations: [pathObservation],
@@ -473,7 +492,7 @@ describe('Inspection selection', () => {
     };
 
     try {
-      resolveInspectionSelection({
+      resolveSelection({
         ir: clipIr,
         registry: createInspectorRegistry([clipDefinition]),
         observations: [clipObservation],
@@ -540,7 +559,7 @@ describe('Inspection selection', () => {
     ],
   ] as const)('fails admission for %s before resolving callbacks', (_label, selection) => {
     expect(() =>
-      resolveInspectionSelection({
+      resolveSelection({
         ir,
         registry,
         observations: [observation(0)],

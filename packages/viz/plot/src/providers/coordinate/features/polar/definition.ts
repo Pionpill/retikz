@@ -686,23 +686,6 @@ export type PolarVertex = {
 };
 
 /**
- * 把一行的角向 / 径向原始值映射成 PolarVertex
- * @description PolarVertex 保留的是 scale 输出空间的 θ（度）和 r（user units），还不是屏幕点；
- *   path 会先收集顶点，再决定是否按连续角轴 densify 成弧线。非有限值返回 null
- */
-export const toPolarVertex = (
-  frame: PolarCoordinateFrame,
-  angleValue: unknown,
-  radiusValue: unknown,
-): PolarVertex | null => {
-  const theta = frame.primary.coordinate(angleValue);
-  const radius = frame.secondary.coordinate(radiusValue);
-  if (!isFiniteNumber(theta) || !isFiniteNumber(radius)) return null;
-
-  return { theta, radius };
-};
-
-/**
  * 连续角轴段内采样：在 [θ, r] scale 输出空间线性插值，逐点反投影成屏幕弧点
  * @description 相邻顶点间插 RETIKZ_POLAR_SEGMENT_SAMPLES 个中间点（在度 + 半径空间线性，非原始数据空间），
  *   使数据空间「常半径变角」的直边在屏幕弯成弧。顶点数 < 2 时直接返回各顶点投影点（不采样）。

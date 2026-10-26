@@ -107,13 +107,3 @@ export const resolvePlotTheme = (
     },
   };
 };
-
-/** 仅供 Chart 在不复制 Plot 级联语义时构造其转发 defaults 输入 */
-export type PlotDefaultsLayer = Readonly<{
-  /** Chart forwarding 在 inspection 中的稳定路径 */
-  path: string;
-  /** Chart forwarding 的 Plot-owned sparse defaults */
-  defaults?: IRPlotDefaults;
-  /** Chart forwarding 的 Plot-owned Axis rules */
-  rules?: ReadonlyArray<IRPlotAxisRule>;
-}>;

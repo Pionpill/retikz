@@ -1,5 +1,3 @@
-import { createReadonlyMap } from '@retikz/foundation';
-
 import { RetikzDataError } from '../error';
 import { DataFieldType } from '../model';
 import { reducerInputFields, reducerOutputDescriptors, resolveReducerDependency } from '../operators/reducer';
@@ -520,13 +518,6 @@ export const BUILTIN_TRANSFORMS: ReadonlyArray<AnyTransformDefinition> = freezeD
 const BUILTIN_TRANSFORM_REGISTRY = new Map(
   BUILTIN_TRANSFORMS.map(def => [extractTransformKind(def.schema), def] as const),
 );
-
-/**
- * 按 kind 索引的内置 transform definition
- * @description 主要供诊断与测试确认内置覆盖；自定义 definition 不写入此表，而是在每次 lowering 时合并
- */
-export const BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND: ReadonlyMap<string, AnyTransformDefinition> =
-  createReadonlyMap(BUILTIN_TRANSFORM_REGISTRY);
 
 /**
  * 解析 transform registry

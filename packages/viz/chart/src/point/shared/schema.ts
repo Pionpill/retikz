@@ -2,10 +2,10 @@ import {
   BoxSpacingSchema,
   CssColorSchema,
   GraphicOpacityValueSchema,
-  StrokeWidthSchema,
+  ShapeNameSchema,
   StrokeDashPatternSchema,
+  StrokeWidthSchema,
 } from '@retikz/core';
-import { ShapeNameSchema } from '@retikz/core';
 import {
   JsonObjectSchema,
   NonBlankStringSchema,
@@ -13,9 +13,8 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import { MarkNodeLabelListSchema, PlotDomainPaddingKind, PointAutoPaddingSchema } from '@retikz/plot';
-import type { infer as ZodInfer } from 'zod';
-import type { ZodType } from 'zod';
-import { boolean, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
+import type { infer as ZodInfer, ZodType } from 'zod';
+import { boolean, discriminatedUnion, literal, number, strictObject, union, enum as zodEnum } from 'zod';
 
 export { PointAutoPaddingSchema } from '@retikz/plot';
 
@@ -164,8 +163,6 @@ export const createPointChartMarkSchema = <
   });
 
 export type IRPointEncoding = ZodInfer<typeof PointEncodingSchema>;
-
-export type IRPointMarkEncoding = ZodInfer<typeof PointMarkEncodingSchema>;
 
 export type IRPointProperties = ZodInfer<typeof PointPropertiesSchema>;
 

@@ -1,8 +1,8 @@
-import type { ScenePrimitive, PathPrimitive, ResolvedArrowEnd } from '@retikz/core';
+import type { PathPrimitive, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { renderPrim } from '../../../src/render/svg';
+import { renderPrim } from './helpers';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 

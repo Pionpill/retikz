@@ -33,30 +33,6 @@ export const BuiltinSelectorOperationKind = {
   OutsideQuantileBand: 'outside-quantile-band',
 } as const;
 
-/** 按数值字段取极值的 row selector operation kind 子集 */
-export const BuiltinMinMaxSelectorOperationKind = {
-  /** 选择排序字段最小的行 */
-  Min: BuiltinSelectorOperationKind.Min,
-  /** 选择排序字段最大的行 */
-  Max: BuiltinSelectorOperationKind.Max,
-} as const;
-
-/** 按现有顺序或显式排序取行的 row selector operation kind 子集 */
-export const BuiltinFirstLastSelectorOperationKind = {
-  /** 选择当前顺序或显式排序后的第一行 */
-  First: BuiltinSelectorOperationKind.First,
-  /** 选择当前顺序或显式排序后的最后一行 */
-  Last: BuiltinSelectorOperationKind.Last,
-} as const;
-
-/** 按排序名次取行的 row selector operation kind 子集 */
-export const BuiltinTopBottomSelectorOperationKind = {
-  /** 选择排序字段最高名次的行 */
-  Top: BuiltinSelectorOperationKind.Top,
-  /** 选择排序字段最低名次的行 */
-  Bottom: BuiltinSelectorOperationKind.Bottom,
-} as const;
-
 /** row selector 平局处理策略 */
 export const RowSelectorTie = {
   /** 平局时只保留第一行 */
@@ -74,15 +50,6 @@ export const RESERVED_SELECTOR_OPERATION_KINDS: ReadonlySet<string> = new Set(
 
 /** 内置 row selector operation kind 取值 */
 export type BuiltinSelectorOperationKind = ValueOf<typeof BuiltinSelectorOperationKind>;
-
-/** 按数值字段取极值的 row selector operation kind 取值 */
-export type BuiltinMinMaxSelectorOperationKind = ValueOf<typeof BuiltinMinMaxSelectorOperationKind>;
-
-/** 按现有顺序或显式排序取行的 row selector operation kind 取值 */
-export type BuiltinFirstLastSelectorOperationKind = ValueOf<typeof BuiltinFirstLastSelectorOperationKind>;
-
-/** 按排序名次取行的 row selector operation kind 取值 */
-export type BuiltinTopBottomSelectorOperationKind = ValueOf<typeof BuiltinTopBottomSelectorOperationKind>;
 
 /** row selector 平局处理策略值 */
 export type RowSelectorTie = ValueOf<typeof RowSelectorTie>;

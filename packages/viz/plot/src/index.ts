@@ -55,7 +55,6 @@ export {
   SIZE_MAX_RADIUS,
   applyNodeChannelDeliveries,
   applyPathChannelDeliveries,
-  assertUniqueAxisDimension,
   assertUniqueAxisPlacement,
   attachMarkAnchor,
   attachDatumLabel,
@@ -69,7 +68,6 @@ export {
   builtinColorSchemeInterpolator,
   cellAnchor,
   channelDefaultOf,
-  channelForRole,
   channelValue,
   channelValueOf,
   collectAnchorIdFields,
@@ -152,7 +150,6 @@ export {
   timePositionScale,
   timeTicks,
   toHexColor,
-  toPolarVertex,
 } from './providers';
 export type { PlotFacetCompositionResolveContext } from './resolve';
 export { mergePlotDefaults, resolvePlotFacetComposition, resolvePlotTheme } from './resolve';

@@ -2,8 +2,7 @@ import type { PathPrimitive, RectPrimitive, SceneResource } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { PaintDefs } from '../../../src/render/svg';
-import { renderPrim } from '../../../src/render/svg';
+import { renderPaintDefs, renderPrim } from './helpers';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
@@ -77,9 +76,9 @@ describe('renderPrim — PaintValue stroke 分派', () => {
   });
 });
 
-describe('PaintDefs — 渐变物化', () => {
+describe('renderPaintDefs — 渐变物化', () => {
   const childrenOf = (resources: Array<SceneResource>): Array<AnyEl> => {
-    const frag = PaintDefs({ resources, idFor: id => `g-${id}` }) as AnyEl;
+    const frag = renderPaintDefs({ resources, idFor: id => `g-${id}` }) as AnyEl;
     return (frag.props.children as Array<AnyEl>).filter(Boolean);
   };
 

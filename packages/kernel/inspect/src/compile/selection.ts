@@ -167,25 +167,6 @@ const doesBarrierContainSourcePath = (
 ): boolean =>
   target.kind === 'scene' || sourcePath === target.sourcePath || sourcePath.startsWith(`${target.sourcePath}.`);
 
-/** 根据最终观察结果解析选择规则，并分配连续的外观颜色序号 */
-export const resolveInspectionSelection = ({
-  ir,
-  registry,
-  selection,
-  observations,
-}: Readonly<{
-  ir: IRScene;
-  registry: InspectorRegistry;
-  selection: InspectionSelection;
-  observations: ReadonlyArray<CompileObservation>;
-}>): ReadonlyArray<ResolvedInspectionRequest> => {
-  return resolveAdmittedInspectionSelection({
-    registry,
-    admittedRules: admitInspectionSelection(ir, registry, selection),
-    observations,
-  });
-};
-
 /**
  * 将已准入的选择规则解析为本次最终实例的 Inspector 请求
  *

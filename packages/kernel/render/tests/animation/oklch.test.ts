@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { lerpColorOklch, sampleColorOklch } from '../../src/animation/oklch';
+import { lerpColorOklch } from '../../src/animation/oklch';
 
 /*
  * oklch 颜色插值（fill / stroke 动画核心数学）锁定测试：
@@ -15,7 +15,7 @@ const rgbOf = (hex: string): [number, number, number] => {
 
 describe('颜色解析等价', () => {
   it('hex3 与 hex6 解析一致', () => {
-    expect(sampleColorOklch('#f00', '#00f', 4)).toEqual(sampleColorOklch('#ff0000', '#0000ff', 4));
+    expect(lerpColorOklch('#f00', '#00f', 0.5)).toEqual(lerpColorOklch('#ff0000', '#0000ff', 0.5));
   });
 
   it('rgb() 与 hex 解析一致', () => {
@@ -86,29 +86,5 @@ describe('alpha 通道', () => {
 
     expect(out).toMatch(/^#[0-9a-f]{8}$/);
     expect(out.slice(7, 9)).toBe('66'); // 0.4 × 255 ≈ 0x66
-  });
-
-  it('预采样同样保留并插值 alpha', () => {
-    const samples = sampleColorOklch('rgba(0,0,0,0)', 'rgba(0,0,0,1)', 4);
-
-    expect(samples[0].slice(7, 9)).toBe('00');
-    expect(samples[4]).toMatch(/^#[0-9a-f]{6}$/); // alpha=1 退回 6 位
-  });
-});
-
-describe('sampleColorOklch 预采样', () => {
-  it('返回 segments+1 个采样，首项为 from', () => {
-    const samples = sampleColorOklch('#000000', '#ffffff', 8);
-
-    expect(samples).toHaveLength(9);
-    expect(samples[0]).toBe('#000000');
-  });
-
-  it('segments<1 退化为 [from, to]', () => {
-    expect(sampleColorOklch('#000000', '#ffffff', 0)).toEqual(['#000000', '#ffffff']);
-  });
-
-  it('端点无法解析时退化为 [from, to]', () => {
-    expect(sampleColorOklch('red', 'blue', 8)).toEqual(['red', 'blue']);
   });
 });

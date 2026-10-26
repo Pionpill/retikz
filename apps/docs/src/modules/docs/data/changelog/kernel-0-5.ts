@@ -378,6 +378,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          content: {
+            zh: '删除无生产消费者的内部 helper 和测试专用入口；Reconciler 同步移除 createSceneRevision，SceneRevision 类型及编译 revision 语义保持。',
+            en: 'Removes unused internal helpers and test-only entry points. Reconciler also removes createSceneRevision; the SceneRevision type and compilation revision semantics remain unchanged.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：Shape 包围几何统一入口', en: 'BREAKING: unified Shape circumscribed geometry' },
           content: {
             zh: '自定义 Shape 将 computeCircumscribedHalfAxes 和 computeCircumscribedOffset 合并为 computeCircumscribedGeometry，统一返回 { halfWidth, halfHeight, offset? }；省略 offset 表示居中。删除旧回调，尺寸和偏移随同一布局候选消费，已有形状的绘制与定位行为保持不变。',
@@ -1042,6 +1049,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          content: {
+            zh: '移除 sampleColorOklch 与 RENDER_RUNTIME_SOURCE_KEY；颜色动画继续通过 lerpColorOklch 求值，SVG 资源仍由正式 builder 物化。',
+            en: 'Removes sampleColorOklch and RENDER_RUNTIME_SOURCE_KEY. Color animation continues through lerpColorOklch and SVG resources through the active builders.',
+          },
+        },
+        {
           label: { zh: '视觉样式完整消费', en: 'Complete visual style support' },
           content: {
             zh: 'SVG 与 Canvas 统一执行矩形、椭圆和箭头的端帽、连接样式与 paint；SVG 箭头资源使用实例隔离的引用。',
@@ -1165,6 +1179,13 @@ export const kernelV05: Release = {
         en: 'React exposes new placement, path, and label capabilities. Layout manages ongoing updates by default, offers full static rendering, and can notify applications of compile artifacts.',
       },
       highlights: [
+        {
+          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          content: {
+            zh: '移除 createLayoutAuthoringSite 冻结包装函数及未被 Layout 消费的内部 SVG 包装组件；LayoutAuthoringSite 类型与 Layout 渲染行为保持。',
+            en: 'Removes the createLayoutAuthoringSite freeze wrapper and internal SVG wrappers unused by Layout. LayoutAuthoringSite and Layout rendering behavior remain unchanged.',
+          },
+        },
         {
           label: { zh: 'Layout 异步准备桥接', en: 'Layout async preparation bridge' },
           content: {

@@ -2,7 +2,7 @@ import type { InputEmbedContext } from '@retikz/vanilla';
 import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { createPlotProvider, embedPlot, plot, PlotInputEmbedAdapter, plotIROf, resolvePlotContribution } from '../src';
+import { embedPlot, plot, PlotInputEmbedAdapter, plotIROf } from '../src';
 
 const contextOf = (id: string): InputEmbedContext => ({
   id,
@@ -86,29 +86,30 @@ describe('Plot Vanilla Tier2 adapter', () => {
 
   it('exposes one Plot-owned contribution builder for complete IRPlot inputs', () => {
     const spec = salesSpec('sales');
-    const result = resolvePlotContribution({ spec, datasets, lowerOptions: { layout: { width: 360, height: 200 } } });
-    const provider = createPlotProvider({ datasets, lowerOptions: { layout: { width: 360, height: 200 } } });
+    const result = PlotInputEmbedAdapter.lower(
+      { spec, datasets, lowerOptions: { layout: { width: 360, height: 200 } } },
+      contextOf('panel'),
+    );
 
-    expect(result.spec).toEqual(spec);
-    expect(result.contribution.roots).toEqual([
+    expect(result.node).toEqual(spec);
+    expect(result.providerDependencies.roots).toEqual([
       { capability: 'composite', namespace: 'plot', type: 'plot' },
       { capability: 'path', name: 'ribbon' },
     ]);
-    expect(result.contribution.providers.map(item => item.key)).toEqual([
+    expect(result.providerDependencies.providers.map(item => item.key)).toEqual([
       { capability: 'shape', name: 'sector' },
       { capability: 'shape', name: 'contour' },
       { capability: 'path', name: 'ribbon' },
       { capability: 'composite', namespace: 'plot', type: 'plot' },
     ]);
-    expect(result.contribution.providers).toHaveLength(4);
-    expect(result.contribution.providers[3]).toMatchObject({
-      key: provider.key,
+    expect(result.providerDependencies.providers).toHaveLength(4);
+    expect(result.providerDependencies.providers[3]).toMatchObject({
+      key: { capability: 'composite', namespace: 'plot', type: 'plot' },
       dependencies: [
         { capability: 'shape', name: 'sector' },
         { capability: 'shape', name: 'contour' },
       ],
     });
-    expect(result.contribution.providers[3]?.makeDefinition).toBe(provider.makeDefinition);
   });
 
   it('经 scene/layer runtime 渲染 Plot embed', () => {

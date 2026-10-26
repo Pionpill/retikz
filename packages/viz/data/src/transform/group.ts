@@ -5,7 +5,7 @@ import { RetikzDataError } from '../error';
 import { resolveFieldPath } from '../model';
 import { finiteFieldValuesOf } from '../operators';
 import type { IRDataReducerOperation } from '../operators/reducer';
-import { resolveReducerComputation, BuiltinReducerOperationKind, reducerOutputFields } from '../operators/reducer';
+import { BuiltinReducerOperationKind, reducerOutputFields, resolveReducerComputation } from '../operators/reducer';
 import type { IRDataSelectorOperation, RowSelection } from '../operators/selector';
 import { resolveSelectorComputation } from '../operators/selector';
 import type { ExternalRow } from '../shared';
@@ -102,17 +102,6 @@ function* computeReducerMetrics(
 
   return out;
 }
-
-/** 同步执行分组统计，保持所有调用方的同步返回 */
-export const applyReducerMetrics = (
-  rows: Array<ExternalRow>,
-  metrics: ReadonlyArray<IRDataReducerOperation>,
-  context: TransformContext,
-  constraints: ReducerOutputConstraints = {},
-): ExternalRow => {
-  validateReducerMetrics(metrics, context, constraints);
-  return runTransformComputation(computeReducerMetrics(rows, metrics, context));
-};
 
 /** 从 selector operation 中取出可回填的数值字段；rank-only selector 返回 undefined */
 const selectorValueFieldOf = (selector: IRDataAnnotateSelector['selector']): string | undefined => {

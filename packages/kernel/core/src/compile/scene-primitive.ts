@@ -327,47 +327,6 @@ export const assertProviderOutputPathEnums = (owner: string, value: Record<strin
   }
 };
 
-/** 递归校验 provider value 是无函数、finite、无循环且无隐藏结构的 JSON 数据 */
-const assertProviderOutputJsonValueWithActive = (
-  owner: string,
-  value: unknown,
-  path: string,
-  active: WeakSet<object>,
-): void => {
-  if (value === null || typeof value === 'string' || typeof value === 'boolean') return;
-  if (typeof value === 'number') {
-    assertProviderOutputFinite(owner, value, path);
-    return;
-  }
-
-  if (typeof value !== 'object') failProviderOutput(owner, `a non-JSON ${path}`);
-  const objectValue = value as object;
-  if (active.has(objectValue)) failProviderOutput(owner, `a cyclic ${path}`);
-  active.add(objectValue);
-
-  try {
-    if (Array.isArray(value)) {
-      providerOutputArray(owner, value, path).forEach((entry, index) =>
-        assertProviderOutputJsonValueWithActive(owner, entry, `${path}[${index}]`, active),
-      );
-      return;
-    }
-
-    const record = providerOutputRecord(owner, value, path);
-
-    for (const key of providerOutputOwnStringKeys(owner, record, path)) {
-      assertProviderOutputJsonValueWithActive(owner, record[key], `${path}.${key}`, active);
-    }
-  } finally {
-    active.delete(objectValue);
-  }
-};
-
-/** 校验 provider value 是可无损保留的 plain JSON object graph */
-export const assertProviderOutputJsonValue = (owner: string, value: unknown, path: string): void => {
-  assertProviderOutputJsonValueWithActive(owner, value, path, new WeakSet());
-};
-
 /** 校验 Scene geometry primitive 的共享 paint/style 字段 */
 const assertSceneStyle = (owner: string, value: Record<string, unknown>, scenePath: string): void => {
   /** 校验 Scene resolved shadow 的 required 字段与范围 */

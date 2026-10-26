@@ -128,7 +128,7 @@ This diagram follows synchronous grouped hosts. Selection and reduction are alte
 
 <ComponentPreview files="statistics-execution" hideCode type="flow" size="lg" />
 
-Read `computeSelect` or `computeSummarize` for input boundaries and output assembly, then `applySelectorOperation` or `applyReducerOperation` for definition parsing and dispatch. Finally read the implementation's `select` or `reduce`. This separates the statistical algorithm from the table semantics supplied by its host.
+Read `computeSelect` or `computeSummarize` for input boundaries and output assembly, then `resolveSelectorComputation` or `resolveReducerComputation` for definition parsing and dispatch. Finally read the implementation's `select` or `reduce`. This separates the statistical algorithm from the table semantics supplied by its host.
 
 ## Related props
 

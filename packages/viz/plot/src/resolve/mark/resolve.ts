@@ -1,10 +1,10 @@
 import type { ExternalRow } from '@retikz/data';
 
-import type { MarkInstanceInput, MarkInstance, CoordinateFrame, FieldCollector, IntervalContext } from '../../contract';
+import type { CoordinateFrame, FieldCollector, IntervalContext, MarkInstance, MarkInstanceInput } from '../../contract';
 import { cellGeometryAnchor } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { AnyMarkDefinition } from '../../providers';
-import { createFieldCollector, cellAnchor, intervalCellGeometry, roleAnchor } from '../../providers';
+import { cellAnchor, createFieldCollector, intervalCellGeometry, roleAnchor } from '../../providers';
 import type { IRPlotMark } from '../../schemas';
 import { BuiltinPlotMark } from '../../schemas';
 import type { MarkOperationResolution, MarkResolveContext } from './types';
@@ -23,15 +23,6 @@ export const resolveMarkOperation = (mark: IRPlotMark, context: MarkResolveConte
 export const collectMarkFields = (mark: IRPlotMark, fields: FieldCollector, context: MarkResolveContext): void => {
   const { definition, operation } = resolveMarkOperation(mark, context);
   definition.collectFields?.(operation as never, fields);
-};
-
-/** 返回已解析 mark definition 声明的可消费通道类型 */
-export const channelKindsForMark = (
-  mark: IRPlotMark,
-  context: MarkResolveContext,
-): ReturnType<NonNullable<AnyMarkDefinition['channelKinds']>> | undefined => {
-  const { definition, operation } = resolveMarkOperation(mark, context);
-  return definition.channelKinds?.(operation as never);
 };
 
 /** 解析 datum 锚点所需的 mark capability，并复用 provider 提供的 cell / role 几何投影 */

@@ -18,12 +18,12 @@ import {
   SelectorOperationSchema,
 } from '../../src';
 import {
-  applyReducerOperation,
   BuiltinReducerOperationSchemas,
   reducerOutputDescriptors,
   reducerOutputFields,
+  resolveReducerComputation,
 } from '../../src/operators/reducer';
-import { applySelectorOperation, BuiltinSelectorOperationSchemas } from '../../src/operators/selector';
+import { BuiltinSelectorOperationSchemas, resolveSelectorComputation } from '../../src/operators/selector';
 
 describe('statistics provider schema boundaries', () => {
   it('uses the schema owner instances for every built-in definition', () => {
@@ -61,9 +61,9 @@ describe('statistics provider schema boundaries', () => {
     const selector = { kind: BuiltinSelectorOperationKind.Min, by: 'value', typo: true } as const;
 
     expect(ReducerOperationSchema.safeParse(reducer).success).toBe(false);
-    expect(() => applyReducerOperation([{ value: 2 }], reducer, DEFAULT_TRANSFORM_CONTEXT)).toThrow();
+    expect(() => resolveReducerComputation(reducer, DEFAULT_TRANSFORM_CONTEXT)([{ value: 2 }])).toThrow();
     expect(SelectorOperationSchema.safeParse(selector).success).toBe(false);
-    expect(() => applySelectorOperation([{ value: 2 }], selector, DEFAULT_TRANSFORM_CONTEXT)).toThrow();
+    expect(() => resolveSelectorComputation(selector, DEFAULT_TRANSFORM_CONTEXT)([{ value: 2 }])).toThrow();
   });
 
   it('exposes continuous output descriptors for scalar reducers and both extent endpoints', () => {
@@ -125,7 +125,7 @@ describe('statistics provider schema boundaries', () => {
     };
     const operation = { kind: 'unsafe-output', stamp: '2026-07-11T00:00:00.000Z' } as const;
 
-    expect(applyReducerOperation([], operation, context)).toEqual({});
+    expect(resolveReducerComputation(operation, context)([])).toEqual({});
     expect(observed).toEqual(new Date('2026-07-11T00:00:00.000Z'));
   });
 
@@ -154,7 +154,7 @@ describe('statistics provider schema boundaries', () => {
     };
     const operation = { kind: 'unsafe-selector-output', stamp: '2026-07-11T00:00:00.000Z' } as const;
 
-    expect(applySelectorOperation([], operation, context)).toEqual([]);
+    expect(resolveSelectorComputation(operation, context)([])).toEqual([]);
     expect(observed).toEqual(new Date('2026-07-11T00:00:00.000Z'));
   });
 });

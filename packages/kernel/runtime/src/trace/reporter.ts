@@ -1,6 +1,6 @@
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import { PerformanceTraceOutcome } from './constants';
-import { notifyRuntimeTraceReporterDiagnostic, recordRuntimeTraceReporterDiagnosticDrain } from './internal';
+import { notifyRuntimeTraceReporterDiagnostic } from './internal';
 import type {
   CreateRuntimeTraceReporterInput,
   PerformanceTraceDiagnostic,
@@ -117,7 +117,6 @@ export const createRuntimeTraceReporter = <const TOwner extends string>(
   };
 
   const drainDiagnostics = (): ReadonlyArray<PerformanceTraceDiagnostic> => {
-    recordRuntimeTraceReporterDiagnosticDrain(report);
     const output = Object.freeze([...diagnostics]);
     diagnostics = [];
 

@@ -3,10 +3,14 @@ import { compileToScene, defineTheme, resolveCoreProviderDependencies } from '@r
 import { defineGraphTheme } from '@retikz/graph';
 import { describe, expect, it } from 'vitest';
 
-import { defineDiagramTheme } from '../../src/_diagram';
+import type { DiagramThemeDefinition } from '../../src/_diagram';
 import type { FlowLayoutDefinition } from '../../src/flow';
-import { defineFlowTheme, LayeredFlowLayoutDefinition } from '../../src/flow';
-import { FlowDiagramSchema, FlowDiagramArtifactSchema, createFlowDiagramProviderContribution } from '../../src/flow';
+import {
+  createFlowDiagramProviderContribution,
+  FlowDiagramArtifactSchema,
+  FlowDiagramSchema,
+  LayeredFlowLayoutDefinition,
+} from '../../src/flow';
 
 const source = (fill = true, fixed = false) => ({
   namespace: 'diagram',
@@ -86,8 +90,8 @@ describe('Flow 容器宽度', () => {
                   resolve: () => ({ defaults: { entity: { style: { font: { size: 14 } } } } }),
                 }),
               ],
-              flowThemeDefinitions: [defineFlowTheme({ name, resolve: () => ({}) })],
-              diagramThemeDefinitions: [defineDiagramTheme({ name, resolve: () => ({}) })],
+              flowThemeDefinitions: [{ name, resolve: () => ({}) } satisfies DiagramThemeDefinition],
+              diagramThemeDefinitions: [{ name, resolve: () => ({}) } satisfies DiagramThemeDefinition],
             }),
           ],
         }),

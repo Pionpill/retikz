@@ -5,8 +5,8 @@ import { FlexLayoutArtifactSchema, FlexLayoutDirection, FlexLayoutSchema, Layout
 import { LegendArtifactSchema, LegendSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
+import type { DiagramThemeDefinition } from '../src/_diagram';
 import {
-  defineDiagramTheme,
   DiagramDefaultsSchema,
   DiagramFrameSchema,
   DiagramPresentationSchema,
@@ -300,13 +300,13 @@ describe('Diagram Foundation lowering', () => {
 describe('Diagram Foundation provider integration', () => {
   it('observes the effective Core Scope Theme before resolving the named Diagram style', () => {
     const observed: Array<ResolvedTheme> = [];
-    const diagramStyle = defineDiagramTheme({
+    const diagramStyle = {
       name: 'brand',
       resolve: theme => {
         observed.push(theme);
         return { presentation: { title: { style: { textColor: '#f97316' } } } };
       },
-    });
+    } satisfies DiagramThemeDefinition;
     const coreStyle = defineTheme({
       name: 'brand',
       resolve: () => ({ semantic: { guide: '#94a3b8' } }),

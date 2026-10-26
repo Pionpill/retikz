@@ -61,7 +61,7 @@ The model and transform operations are serializable. `rows`, custom parser funct
 | Data contracts   | `DataReferenceSchema`, `DataModelSchema`, `DataFieldType`, and schema-derived `IRDataXxx` types                      |
 | Field processing | `resolveFieldTypes`, `collectFormatFields`, `applyFieldResolver`, `normalizeRows`, `validateBoundData`               |
 | Data transforms  | `applyTransforms`, `applyTransformsToDataView`, `TransformSchema`                                                    |
-| Statistics       | reducer and selector schemas, `applyReducerOperation`, `applySelectorOperation`                                      |
+| Statistics       | reducer and selector schemas, `defineStatisticsReducer`, `defineRowSelector`                                         |
 | Extensions       | `defineFieldFormat`, `defineStatisticsReducer`, `defineRowSelector`, `defineTransform`, and their registry resolvers |
 
 ## Extending registries

@@ -12,9 +12,9 @@ import { defineScale } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
+import { qualifyChartLocatorOptions } from '../../src/_chart/contract';
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveChartEncodingMappings, resolveSelectedChart } from '../../src/_chart/resolve';
-import { qualifyScatterChartLocatorOptions } from '../../src/point/scatter/locator';
 import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
 
@@ -346,7 +346,12 @@ describe('Scatter Chart encoding resolution', () => {
   });
 
   it('qualifies Chart-facing facet locators with fixed Scatter identity', () => {
-    expect(qualifyScatterChartLocatorOptions({ facet: { row: 'north', column: [2025, 2026] } })).toEqual({
+    expect(
+      qualifyChartLocatorOptions(
+        { facet: { row: 'north', column: [2025, 2026] } },
+        { facet: '__chart.scatter.composition.facet' },
+      ),
+    ).toEqual({
       facet: {
         id: '__chart.scatter.composition.facet',
         row: 'north',

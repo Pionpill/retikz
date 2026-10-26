@@ -1,9 +1,4 @@
-import type {
-  CompositeCoreProviderKey,
-  CoreDependencyProvider,
-  CoreProviderContribution,
-  ResolvedTheme,
-} from '@retikz/core';
+import type { CoreDependencyProvider, CoreProviderContribution, ResolvedTheme } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
 import type { LowerPlotsOptions, PlotDataPreparationOptions } from '@retikz/plot';
@@ -121,9 +116,6 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
     providers: Object.freeze([SurfaceProvider, FlexLayoutProvider, provider]),
   });
 };
-
-/** 公开给具体 recipe provider 使用的 Core key 工厂 */
-export const chartProviderKeyOfFamily = (family: string): CompositeCoreProviderKey => chartProviderKeyOf(family);
 
 /**
  * 复用具体 Chart provider 的精确语义与 Theme，先准备生成 Plot 的全部数据作用域

@@ -598,7 +598,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(clipLowerCalls).toBe(1);
     expect(context.paint.resources()).toEqual([]);
     expect(context.clip.resources()).toEqual([]);
-    expect(namespaceStack.lookup('same')).toBeUndefined();
+    expect(namespaceStack.lookupEntry('same')?.layout).toBeUndefined();
     expect(provenanceTracker.rootIdentityRegistrations()).toEqual([]);
     expect(session.outputChildren.get(replayHandle!)).toMatchObject({ used: false });
     expect(session.outputChildren.get(scopeHandle!)).toMatchObject({ used: false });

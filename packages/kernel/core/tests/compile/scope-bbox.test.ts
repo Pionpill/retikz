@@ -4,7 +4,6 @@ import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { NodeLayout } from '../../src/compile/node';
-import { boxInsets } from '../../src/compile/node';
 import { createScopeRectangleLayout } from '../../src/compile/node';
 import { computeScopeBoundingBox } from '../../src/compile/scope';
 import type { TextMeasurer } from '../../src/compile/text';
@@ -35,7 +34,7 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
   geometry: {
     rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
     contentCenter: [cx, cy],
-    margin: boxInsets(0),
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
     contentSize: { width: w, height: h },
   },
   boundary: {
@@ -83,7 +82,7 @@ describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', ()
     expect(layout.geometry.rect.width).toBe(0);
     expect(layout.geometry.rect.height).toBe(0);
     expect(layout.geometry.rect.rotate).toBe(0);
-    expect(layout.geometry.margin).toEqual(boxInsets(0));
+    expect(layout.geometry.margin).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
     expect(layout.text).toBeUndefined();
   });
 

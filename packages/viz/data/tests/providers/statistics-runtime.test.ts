@@ -13,64 +13,60 @@ import {
   resolveStatisticsReducerRegistry,
   RowSelectorTie,
 } from '../../src';
-import { applyReducerOperation, reducerInputFields, reducerOutputFields } from '../../src/operators/reducer';
-import { applySelectorOperation, selectorInputFields } from '../../src/operators/selector';
+import { reducerInputFields, reducerOutputFields, resolveReducerComputation } from '../../src/operators/reducer';
+import { resolveSelectorComputation, selectorInputFields } from '../../src/operators/selector';
 
 describe('statistics provider runtime', () => {
   it('computes scalar reducers and extent endpoints from finite field values', () => {
     const rows = [{ value: 1 }, { value: 4 }, { value: 9 }, { value: Number.NaN }, { value: Infinity }, {}];
 
     expect(
-      applyReducerOperation(rows, { kind: BuiltinReducerOperationKind.Count, as: 'result' }, DEFAULT_TRANSFORM_CONTEXT),
+      resolveReducerComputation(
+        { kind: BuiltinReducerOperationKind.Count, as: 'result' },
+        DEFAULT_TRANSFORM_CONTEXT,
+      )(rows),
     ).toEqual({ result: 6 });
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         { kind: BuiltinReducerOperationKind.Sum, field: 'value', as: 'result' },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual({ result: 14 });
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         { kind: BuiltinReducerOperationKind.Mean, field: 'value', as: 'result' },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual({ result: 14 / 3 });
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         { kind: BuiltinReducerOperationKind.Median, field: 'value', as: 'result' },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual({ result: 4 });
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         { kind: BuiltinReducerOperationKind.Min, field: 'value', as: 'result' },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual({ result: 1 });
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         { kind: BuiltinReducerOperationKind.Max, field: 'value', as: 'result' },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual({ result: 9 });
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         { kind: BuiltinReducerOperationKind.Extent, field: 'value', as: { min: 'low', max: 'high' } },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual({ low: 1, high: 9 });
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         { kind: BuiltinReducerOperationKind.Quantile, field: 'value', p: 0.25, as: 'result' },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual({ result: 2.5 });
   });
 
@@ -79,11 +75,10 @@ describe('statistics provider runtime', () => {
       values: Array<number>,
       kind: typeof BuiltinReducerOperationKind.Mean | typeof BuiltinReducerOperationKind.Median,
     ) =>
-      applyReducerOperation(
-        values.map(value => ({ value })),
+      resolveReducerComputation(
         { kind, field: 'value', as: 'result' },
         DEFAULT_TRANSFORM_CONTEXT,
-      ).result;
+      )(values.map(value => ({ value }))).result;
 
     expect(reduce([1e308, 1e308], BuiltinReducerOperationKind.Mean)).toBe(1e308);
     expect(reduce([1e308, -1e308], BuiltinReducerOperationKind.Mean)).toBe(0);
@@ -95,29 +90,25 @@ describe('statistics provider runtime', () => {
     const rows = Array.from({ length: 1_000_000 }, (_, index) => ({ value: index + 1 }));
 
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         { kind: BuiltinReducerOperationKind.Min, field: 'value', as: 'result' },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual({ result: 1 });
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         { kind: BuiltinReducerOperationKind.Max, field: 'value', as: 'result' },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual({ result: 1_000_000 });
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         { kind: BuiltinReducerOperationKind.Extent, field: 'value', as: { min: 'low', max: 'high' } },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual({ low: 1, high: 1_000_000 });
     expect(
-      applyReducerOperation(
-        rows,
+      resolveReducerComputation(
         {
           kind: BuiltinReducerOperationKind.QuantileBand,
           field: 'value',
@@ -126,7 +117,7 @@ describe('statistics provider runtime', () => {
           outputs: { lower: 'lower', upper: 'upper', min: 'min', max: 'max' },
         },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toMatchObject({ min: 1, max: 1_000_000 });
   });
 
@@ -144,26 +135,24 @@ describe('statistics provider runtime', () => {
     ];
 
     for (const operation of identityOperations) {
-      expect(applyReducerOperation([], operation, DEFAULT_TRANSFORM_CONTEXT)).toEqual({ result: 0 });
+      expect(resolveReducerComputation(operation, DEFAULT_TRANSFORM_CONTEXT)([])).toEqual({ result: 0 });
     }
 
     for (const operation of undefinedScalarOperations) {
-      const out = applyReducerOperation([], operation, DEFAULT_TRANSFORM_CONTEXT);
+      const out = resolveReducerComputation(operation, DEFAULT_TRANSFORM_CONTEXT)([]);
 
       expect(Number.isNaN(out.result)).toBe(true);
     }
 
-    const extent = applyReducerOperation(
-      [],
+    const extent = resolveReducerComputation(
       { kind: BuiltinReducerOperationKind.Extent, field: 'value', as: { min: 'low', max: 'high' } },
       DEFAULT_TRANSFORM_CONTEXT,
-    );
+    )([]);
 
     expect(Number.isNaN(extent.low)).toBe(true);
     expect(Number.isNaN(extent.high)).toBe(true);
 
-    const band = applyReducerOperation(
-      [],
+    const band = resolveReducerComputation(
       {
         kind: BuiltinReducerOperationKind.QuantileBand,
         field: 'value',
@@ -185,7 +174,7 @@ describe('statistics provider runtime', () => {
         whisker: { kind: 'spread' },
       },
       DEFAULT_TRANSFORM_CONTEXT,
-    );
+    )([]);
 
     expect(band.count).toBe(0);
 
@@ -219,11 +208,10 @@ describe('statistics provider runtime', () => {
     };
 
     expect(
-      applyReducerOperation(
-        [{ value: 0 }, { value: 1 }, { value: 2 }, { value: 3 }, { value: 100 }],
+      resolveReducerComputation(
         operation,
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )([{ value: 0 }, { value: 1 }, { value: 2 }, { value: 3 }, { value: 100 }]),
     ).toEqual({
       lower: 1,
       upper: 3,
@@ -239,8 +227,7 @@ describe('statistics provider runtime', () => {
     });
 
     expect(
-      applyReducerOperation(
-        [{ value: 0 }, { value: 1 }, { value: 2 }, { value: 3 }, { value: 100 }],
+      resolveReducerComputation(
         {
           kind: BuiltinReducerOperationKind.QuantileBand,
           field: 'value',
@@ -250,7 +237,7 @@ describe('statistics provider runtime', () => {
           whisker: { kind: 'minMax' },
         },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )([{ value: 0 }, { value: 1 }, { value: 2 }, { value: 3 }, { value: 100 }]),
     ).toEqual({ lower: 1, upper: 3, whiskerMin: 0, whiskerMax: 100 });
   });
 
@@ -277,7 +264,7 @@ describe('statistics provider runtime', () => {
       { id: 'invalid', value: Number.NaN },
     ];
     const selectIds = (operation: IRDataSelectorOperation) =>
-      applySelectorOperation(rows, operation, DEFAULT_TRANSFORM_CONTEXT).map(selection => selection.row.id);
+      resolveSelectorComputation(operation, DEFAULT_TRANSFORM_CONTEXT)(rows).map(selection => selection.row.id);
 
     expect(selectIds({ kind: BuiltinSelectorOperationKind.Min, by: 'value' })).toEqual(['first-min']);
     expect(selectIds({ kind: BuiltinSelectorOperationKind.Min, by: 'value', tie: RowSelectorTie.Last })).toEqual([
@@ -299,24 +286,25 @@ describe('statistics provider runtime', () => {
     const orderBy = [{ field: 'order', order: DataSortOrder.Ascending }];
 
     expect(
-      applySelectorOperation(rows, { kind: BuiltinSelectorOperationKind.First, orderBy }, DEFAULT_TRANSFORM_CONTEXT),
+      resolveSelectorComputation(
+        { kind: BuiltinSelectorOperationKind.First, orderBy },
+        DEFAULT_TRANSFORM_CONTEXT,
+      )(rows),
     ).toEqual([{ row: rows[1], rank: 1 }]);
     expect(
-      applySelectorOperation(rows, { kind: BuiltinSelectorOperationKind.Last, orderBy }, DEFAULT_TRANSFORM_CONTEXT),
+      resolveSelectorComputation({ kind: BuiltinSelectorOperationKind.Last, orderBy }, DEFAULT_TRANSFORM_CONTEXT)(rows),
     ).toEqual([{ row: rows[0], rank: 1 }]);
     expect(
-      applySelectorOperation(
-        rows,
+      resolveSelectorComputation(
         { kind: BuiltinSelectorOperationKind.Nth, orderBy, index: 1 },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual([{ row: rows[2], rank: 2 }]);
     expect(
-      applySelectorOperation(
-        rows,
+      resolveSelectorComputation(
         { kind: BuiltinSelectorOperationKind.Nth, orderBy, index: 3 },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )(rows),
     ).toEqual([]);
   });
 
@@ -329,25 +317,23 @@ describe('statistics provider runtime', () => {
     ];
 
     expect(
-      applySelectorOperation(
-        rows,
+      resolveSelectorComputation(
         { kind: BuiltinSelectorOperationKind.Top, by: 'value', n: 2, tie: RowSelectorTie.All },
         DEFAULT_TRANSFORM_CONTEXT,
-      ).map(selection => selection.row.id),
+      )(rows).map(selection => selection.row.id),
     ).toEqual(['high', 'tie-first', 'tie-last']);
     expect(
-      applySelectorOperation(
-        rows,
+      resolveSelectorComputation(
         { kind: BuiltinSelectorOperationKind.Bottom, by: 'value', n: 2, tie: RowSelectorTie.Last },
         DEFAULT_TRANSFORM_CONTEXT,
-      ).map(selection => selection.row.id),
+      )(rows).map(selection => selection.row.id),
     ).toEqual(['low', 'tie-last']);
   });
 
   it('selects rows outside quantile bands and spread fences', () => {
     const rows = [{ value: 0 }, { value: 1 }, { value: 2 }, { value: 3 }, { value: 100 }];
     const selectValues = (operation: IRDataSelectorOperation) =>
-      applySelectorOperation(rows, operation, DEFAULT_TRANSFORM_CONTEXT).map(selection => selection.row.value);
+      resolveSelectorComputation(operation, DEFAULT_TRANSFORM_CONTEXT)(rows).map(selection => selection.row.value);
     const base = {
       kind: BuiltinSelectorOperationKind.OutsideQuantileBand,
       field: 'value',
@@ -377,15 +363,14 @@ describe('statistics provider runtime', () => {
     ];
 
     for (const operation of operations) {
-      expect(applySelectorOperation([], operation, DEFAULT_TRANSFORM_CONTEXT)).toEqual([]);
+      expect(resolveSelectorComputation(operation, DEFAULT_TRANSFORM_CONTEXT)([])).toEqual([]);
     }
 
     expect(
-      applySelectorOperation(
-        [{ value: Number.NaN }, { value: Infinity }],
+      resolveSelectorComputation(
         { kind: BuiltinSelectorOperationKind.Min, by: 'value' },
         DEFAULT_TRANSFORM_CONTEXT,
-      ),
+      )([{ value: Number.NaN }, { value: Infinity }]),
     ).toEqual([]);
   });
 

@@ -1,4 +1,4 @@
-import type { CompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
+import type { CompositeCoreProviderKey, CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import { GraphProviderKey } from '@retikz/graph';
 import { FlexLayoutProvider, GridLayoutProvider } from '@retikz/layout';
@@ -8,8 +8,8 @@ import { DIAGRAM_NAMESPACE } from '../../_diagram';
 import type { FlowDiagramDefinitionOptions } from '../contract';
 import type { ResolvedFlowDiagramDefinitionOptions } from '../providers';
 import {
-  resolveFlowDiagramDefinitionOptions,
   createFlowDiagramRuntimeDatasets,
+  resolveFlowDiagramDefinitionOptions,
   resolveFlowDiagramRuntimeOptions,
 } from '../providers';
 import type { FlowDiagramArtifact, IRFlowDiagram } from '../schemas';
@@ -55,6 +55,3 @@ export const createFlowDiagramProvider = (options: FlowDiagramDefinitionOptions 
     datasets: createFlowDiagramRuntimeDatasets(options),
     makeDefinition: makeFlowDiagramDefinition,
   });
-
-/** 使用内置 registries 的默认 Flow Diagram provider */
-export const FlowDiagramProvider = createFlowDiagramProvider();

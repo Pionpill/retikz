@@ -1,8 +1,13 @@
 import type { FieldFormatDefinition } from '@retikz/data';
 import * as DataPublic from '@retikz/data';
-import { BuiltinDataFieldFormat, defineFieldFormat, resolveFormatRegistry } from '@retikz/data';
-import { DataModelSchema, FieldDefinitionSchema } from '@retikz/data';
-import { tagSourceIndex } from '@retikz/data';
+import {
+  BuiltinDataFieldFormat,
+  DataModelSchema,
+  defineFieldFormat,
+  FieldDefinitionSchema,
+  resolveFormatRegistry,
+  tagSourceIndex,
+} from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -220,7 +225,7 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
     expect(typeof DataPublic.collectFormatFields).toBe('function');
     expect(DataPublic.BuiltinDataFieldFormat.Percent).toBe('percent');
     expect(DataPublic.BUILTIN_FORMATS.length).toBe(6);
-    expect(DataPublic.BUILTIN_FORMAT_DEFINITIONS_BY_NAME.get('iso')?.impliedType).toBe('temporal');
+    expect(DataPublic.resolveFormatRegistry().get('iso')?.impliedType).toBe('temporal');
   });
 });
 

@@ -136,12 +136,3 @@ export const splitPresentationMarkers = (children: ReactNode): ChartPresentation
 
   return { presentation, chartChildren: visit(children) };
 };
-
-/** 判断处理 presentation marker 后是否仍包含未消费的 children */
-export const hasPlotChild = (value: ReactNode): boolean => {
-  if (value === null || value === undefined || typeof value === 'boolean') return false;
-  if (Array.isArray(value)) return value.some(hasPlotChild);
-  if (isValidElement(value) && value.type === Fragment) return hasPlotChild(value.props.children as ReactNode);
-
-  return true;
-};

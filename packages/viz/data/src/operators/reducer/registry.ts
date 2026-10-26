@@ -149,10 +149,3 @@ export const resolveReducerComputation = (
     return out;
   };
 };
-
-/** 独立调用时解析参数后执行一次计算 */
-export const applyReducerOperation = (
-  rows: Array<ExternalRow>,
-  operation: IRDataReducerOperation,
-  context: TransformContext,
-): ExternalRow => resolveReducerComputation(operation, context)(rows);

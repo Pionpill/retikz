@@ -1,18 +1,18 @@
-import type { ScenePrimitive, PathCommand, ResolvedArrowEnd } from '@retikz/core';
+import type { PathCommand, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { ArrowMarker } from '../../../src/render/svg';
+import { renderArrowMarker } from './helpers';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
 /*
- * ArrowMarker 物化测试（emit-in-compile 契约）
- * @description ArrowMarker 不再 switch shape / 算几何——只**物化**已解析的 `ResolvedArrowEnd`：
+ * renderArrowMarker 物化测试（emit-in-compile 契约）
+ * @description renderArrowMarker 不再 switch shape / 算几何——只**物化**已解析的 `ResolvedArrowEnd`：
  *   wrapper 参数（viewBox `0 0 baseSize baseSize` / refX / refY=baseSize/2 / markerWidth / markerHeight）来自
  *   spec，内部元素来自 `spec.marker`（`ScenePrimitive[]`，core 已产）。内置 8 的 d-string 回归改成：给定
  *   resolved marker 几何 → 物化的 path d 等价旧值。
- *   ArrowMarker 是 FC——直接调函数拿 ReactElement 检查
+ *   renderArrowMarker 是 FC——直接调函数拿 ReactElement 检查
  */
 
 /** 构造一个已解析 ResolvedArrowEnd（wrapper 参数 + marker 几何） */
@@ -26,7 +26,7 @@ const spec = (overrides: Partial<ResolvedArrowEnd> = {}): ResolvedArrowEnd => ({
   ...overrides,
 });
 
-const render = (s: ResolvedArrowEnd, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as AnyEl;
+const render = (s: ResolvedArrowEnd, id = 'mk'): AnyEl => renderArrowMarker({ id, spec: s }) as AnyEl;
 
 /** 取物化 marker 的 children（数组形态） */
 const innerEls = (el: AnyEl): Array<AnyEl> => {
@@ -34,7 +34,7 @@ const innerEls = (el: AnyEl): Array<AnyEl> => {
   return (Array.isArray(c) ? c : [c]).filter(Boolean) as Array<AnyEl>;
 };
 
-describe('ArrowMarker: wrapper 参数物化自 spec（不再 switch / 不算几何）', () => {
+describe('renderArrowMarker: wrapper 参数物化自 spec（不再 switch / 不算几何）', () => {
   it('viewBox / refY / markerUnits / orient / id 来自 spec', () => {
     const el = render(spec({ baseSize: 10, refX: 3, markerWidth: 6, markerHeight: 6 }), 'arrow-x');
 
@@ -74,7 +74,7 @@ describe('ArrowMarker: wrapper 参数物化自 spec（不再 switch / 不算几�
   });
 });
 
-describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () => {
+describe('renderArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () => {
   it('单 path marker → 物化出一个 <path>，d 等价 commands', () => {
     const marker: Array<ScenePrimitive> = [
       {
@@ -139,7 +139,7 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
  * @description 给定 resolved marker 几何（compile 产物的 commands / ellipse 参数）→ 物化的 path d / ellipse
  *   参数等价旧 switch。几何已在 compile，react 只翻成 SVG
  */
-describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）', () => {
+describe('renderArrowMarker: 内置 8 resolved 几何物化回归（golden master）', () => {
   const pathMarker = (commands: Array<PathCommand>): ResolvedArrowEnd => spec({ marker: [{ type: 'path', commands }] });
 
   it('normal: 实心三角 d="M 0 0 L 10 5 L 0 10 Z"', () => {
