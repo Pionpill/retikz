@@ -4,6 +4,18 @@ import { normalizePlot, normalizePlotPathMark } from '../../../src';
 import type { InputPlotPathMark } from '../../../src';
 
 describe('Plain path construction', () => {
+  it('rejects arrow shorthand for ribbon instead of losing it during lowering', () => {
+    expect(() =>
+      normalizePlotPathMark({
+        way: [
+          [0, 0],
+          [100, 0],
+        ],
+        properties: { kind: 'ribbon', ribbon: { width: { kind: 'fixed', value: 8 } } },
+        arrow: '->',
+      }),
+    ).toThrow(/Ribbon/);
+  });
   it('normalizes way on plain Plot marks without retaining authoring fields', () => {
     const plot = normalizePlot({
       data: { reference: 'data' },

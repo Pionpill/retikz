@@ -10,6 +10,7 @@ import type {
 } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { readSourceIndex, readSourceIndices } from '@retikz/data';
+import type { IRRibbonWidth } from '@retikz/extension';
 
 import type {
   AnchorOwner,
@@ -281,10 +282,29 @@ export const applyPathChannelDeliveries = (
   row: ExternalRow | undefined,
   channels: MarkChannels,
 ): IRPath => {
-  if (row === undefined) return path;
-  for (const entry of channels.pathDeliveries ?? []) {
-    const value = entry.resolver(row);
-    if (value !== undefined) entry.deliver(path, value, { mark, row });
+  if (row !== undefined)
+    for (const entry of channels.pathDeliveries ?? []) {
+      const value = entry.resolver(row);
+      if (value !== undefined) entry.deliver(path, value, { mark, row });
+    }
+
+  if (mark.type === 'path' && mark.properties?.kind === 'ribbon') {
+    const options = mark.properties.ribbon;
+    const sourceWidth = options?.width;
+    const widthValue = row === undefined ? undefined : channelValueOf<number>(channels, 'ribbon.width')?.(row);
+    const endValue = row === undefined ? undefined : channelValueOf<number>(channels, 'ribbon.endWidth')?.(row);
+    let width: IRRibbonWidth;
+    if (sourceWidth?.kind === 'taper') {
+      width = { ...sourceWidth, start: widthValue ?? sourceWidth.start, end: endValue ?? sourceWidth.end };
+    } else if (sourceWidth?.kind === 'profile' || sourceWidth?.kind === 'stops') {
+      width = sourceWidth;
+    } else {
+      const start = widthValue ?? sourceWidth?.value;
+      if (start === undefined) throw new RetikzPlotError(`Path ${mark.id ?? ''} ribbon width did not resolve`);
+      width = endValue === undefined ? { kind: 'fixed', value: start } : { kind: 'taper', start, end: endValue };
+    }
+    const { label, ...host } = path;
+    return { ...host, kind: 'ribbon', kindOptions: { ...options, width, ...(label === undefined ? {} : { label }) } };
   }
 
   return path;
@@ -355,6 +375,13 @@ export const collectPositionRoleFields = (mark: PositionEncodedMark, fields: Fie
 /** 收集注册的直接视觉字段目标，结构目标由其宿主收集 */
 export const collectEncodingChannelFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
   for (const [target, binding] of Object.entries(mark.encodings ?? {})) {
+    if (target === 'ribbon') {
+      if (mark.type === 'path') {
+        fields.addChannel(mark.encodings.ribbon?.width);
+        fields.addChannel(mark.encodings.ribbon?.endWidth);
+      }
+      continue;
+    }
     if (['position', 'from', 'to', 'steps', 'opacity', 'label', 'bounds', 'closure'].includes(target)) continue;
     fields.addChannel(binding as IRPlotChannel | undefined);
   }

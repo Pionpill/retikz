@@ -395,6 +395,16 @@ Plot
 
 步骤中的数据位置参与 domain 推导，图元身份与固定绘图坐标不参与。显式步骤不使用 `series`、`order`、`curve`、`closure`、`closed`、`connectNulls`、`interpolation` 或 `connection`；闭合由 `cycle` 等步骤表达。某个数据位置无效时会报错，不会删掉该步骤后继续连接。
 
+### 路径类型
+
+路径的底层机制支持自定义路径类型，当前 PathMark 接入了 `stroke` 和 `ribbon`。下面以扩展包的[流带](/library/extension/ribbon)为例，实现一个最小桑基图。将 `properties.kind` 设为 `ribbon`，同一条中心线就能绘制成带状连接；带宽通过 `encodings.ribbon.width` 绑定字段，固定规则写在 `properties.ribbon.width`。
+
+两个 PathMark 共享一个 Plot 和一份端点数据，分别按节点 ID、流带 ID 去重，绘制矩形节点和流带。数据已分配节点位置和连接槽位；改变曲率调整中心线，缩小带宽倍率可观察每条流带占据的范围。
+
+<ComponentPreview mode="showcase" files={['path-ribbon', 'path-ribbon.data.ts']} size="lg" />
+
+桑基布局与绘制分开处理。宽度字段未绑定比例尺时使用绘图单位，不参与位置定义域；宽度不等同于描边线宽。
+
 ## 错误与限制
 
 - 内置二维笛卡尔与极坐标支持路径及闭合区域；通用坐标帧只支持未设置 `closure` 且 `closed` 不为 `true` 的开放路径。
@@ -466,6 +476,10 @@ Plot
 这是根据角度尺度选择的默认策略，不是坐标系的强制限制。可以通过 `interpolation` 显式选择 `chord` 或 `polar`；采样后的点如何连接，仍由 `curve` 决定。
 
 ## API 参考
+
+`properties.ribbon.width` 支持固定、首尾渐变、多控制点及注册 profile 规则。`encodings.ribbon.width` / `endWidth` 绑定字段，可使用显式数值比例尺。对齐、端帽与采样写在 `properties.ribbon` 中。
+
+Ribbon 不接受闭合、缺值桥接、圆角、箭头、路径标记或步骤标签。整条流带标签仍写 `properties.label` / `encodings.label`，可用 `placement="inside"` 放入带内，不支持描边断口。
 
 标签内容可简写为 `encodings.label: 'name'`，固定文字写 `properties.label: '重点'`。对象形式支持 `font.size`、`font.weight`、`textColor` 等字段编码，多标签数组按索引配对；未编码的字体叶子继续继承。详见[标签编码](/viz/plot/reference/encoding#labelencodingschema)。
 

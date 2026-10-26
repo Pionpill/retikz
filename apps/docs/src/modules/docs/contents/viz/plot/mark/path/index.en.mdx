@@ -396,6 +396,16 @@ Data positions such as `{ x: { field: 'x' }, y: { field: 'y' } }`, including con
 
 Data positions contribute to domains; target identities and fixed drawing coordinates do not. Explicit steps do not use `series`, `order`, `curve`, `closure`, `closed`, `connectNulls`, `interpolation`, or `connection`. Use steps such as `cycle` to close a path. An invalid data position fails the instance instead of dropping a step and reconnecting the remaining points.
 
+### Path types
+
+The underlying path mechanism supports custom path types; PathMark currently integrates `stroke` and `ribbon`. This minimal Sankey example uses the extension package's [ribbon](/library/extension/ribbon). Set `properties.kind` to `ribbon` to draw a band along the same centerline. Bind its width with `encodings.ribbon.width`, or declare a fixed rule in `properties.ribbon.width`.
+
+Two PathMarks share one Plot and one endpoint table. Each selects one row per node ID or flow ID to draw the rectangular nodes and ribbons without duplicates. The data already assigns node positions and connection slots. Adjust curvature to change the centerlines, or reduce the width factor to see the space occupied by each flow.
+
+<ComponentPreview mode="showcase" files={['path-ribbon', 'path-ribbon.data.ts']} size="lg" />
+
+Sankey layout is separate from rendering. Without an explicit scale, width fields use drawing units and do not contribute to position domains. Band width is independent of stroke width.
+
 ## Errors and limitations
 
 - Built-in Cartesian 2D and polar 2D coordinates support paths and closed regions. Generic coordinate frames support open paths with no `closure` and `closed` other than `true`.
@@ -470,6 +480,10 @@ The default polar connection depends on what the angle axis represents:
 These are defaults chosen from the angle scale, not restrictions imposed by the coordinate system. Set `interpolation` explicitly to choose `chord` or `polar`. The `curve` option still determines how the resulting samples are connected.
 
 ## API Reference
+
+`properties.ribbon.width` accepts fixed, tapered, stop-based, and registered profile rules. Use `encodings.ribbon.width` / `endWidth` for field bindings with optional numeric scales. Alignment, endpoint caps, and sampling belong to `properties.ribbon`.
+
+Ribbons reject closure, gap bridging, corner rounding, arrows, path markers, and step labels. Host labels use `properties.label` / `encodings.label`; `placement="inside"` places them inside the band. Stroke interruption is not supported.
 
 Use `encodings.label: 'name'` for a content field or `properties.label: 'Highlight'` for fixed text. Object labels support field bindings for `font.size`, `font.weight`, `textColor` and other targets. Label arrays match by index; unencoded font leaves retain inheritance. See [label encodings](/viz/plot/reference/encoding#labelencodingschema).
 

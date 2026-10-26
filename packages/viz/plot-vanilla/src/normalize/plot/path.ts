@@ -18,6 +18,11 @@ export const normalizePlotPathMark = (input: InputPlotPathMark): Omit<IRPlotPath
     resolveLabel: _resolveLabel,
     ...rest
   } = input;
+  if (
+    properties?.kind === 'ribbon' &&
+    (arrow !== undefined || arrowDetail !== undefined || arrowPlacement !== undefined)
+  )
+    throw new RetikzPlotVanillaError('Ribbon paths cannot use arrow shorthand');
   const hasSourceGeometry =
     encodings !== undefined && ['steps', 'position', 'from', 'to'].some(key => key in encodings);
   if (Number(way !== undefined) + Number(children !== undefined) + Number(hasSourceGeometry) !== 1)

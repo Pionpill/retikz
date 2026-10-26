@@ -50,6 +50,7 @@ export const resolveMarkChannels = (mark: IRPlotMark, context: ChannelResolveCon
     'source',
     'target',
     'geometry',
+    'ribbon',
     'label',
     'opacity',
     'anchorId',

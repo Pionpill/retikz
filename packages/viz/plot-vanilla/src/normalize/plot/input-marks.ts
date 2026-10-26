@@ -13,7 +13,7 @@ import type {
   IRPlotRelationStepLabel,
   IRPlotPathStep,
   IRPlotPathStepTarget,
-  PathEncodingSchema,
+  PathMarkAppearanceEncodingSchema,
 } from '@retikz/plot';
 import type { InputPath } from '@retikz/vanilla';
 import type { infer as ZodInfer } from 'zod';
@@ -43,7 +43,7 @@ export type InputPlotPathWay = WayDSL<
   Extract<IRPlotPathStep, { kind: 'axis-line' }>['to']
 >;
 
-type PlotPathAppearanceEncoding = ZodInfer<typeof PathEncodingSchema> & {
+type PlotPathAppearanceEncoding = ZodInfer<typeof PathMarkAppearanceEncodingSchema> & {
   steps?: never;
   position?: never;
   from?: never;

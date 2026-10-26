@@ -1,4 +1,4 @@
-import type { IRChild, IRPath, IRStep, IRTarget } from '@retikz/core';
+import type { IRChild, IRPath, IRStep, IRTarget, IRPaintValue } from '@retikz/core';
 
 import type { CoordinateFrame, MarkChannels, MarkInstanceInput, MarkLoweringContext } from '../../../contract';
 import { mapPositionInput, markInstances, unencodedMarkProperties } from '../../../contract';
@@ -53,6 +53,8 @@ export const lowerPathInstances = (
       closed: _closed,
       connectNulls: _connectNulls,
       interpolation: _interpolation,
+      kind: _kind,
+      ribbon: _ribbon,
       ...style
     } = properties;
     let steps: Array<IRStep>;
@@ -106,6 +108,13 @@ export const lowerPathInstances = (
       channelDefaultOf<string>(channels, 'color') ??
       DEFAULT_FILL;
     const resolvedLabels = resolveGeometryMarkLabels(label, row, undefined, mark.encodings.label, channels);
+    const fill =
+      (row === undefined ? undefined : channelValueOf<IRPaintValue>(channels, 'fill')?.(row)) ??
+      channelDefaultOf<IRPaintValue>(channels, 'fill');
+    const stroke =
+      (row === undefined ? undefined : channelValueOf<IRPaintValue>(channels, 'stroke')?.(row)) ??
+      channelDefaultOf<IRPaintValue>(channels, 'stroke') ??
+      color;
     let child: IRPath = {
       type: 'path',
       ...(rotate === undefined ? {} : { rotate }),
@@ -114,11 +123,11 @@ export const lowerPathInstances = (
       ...(marks === undefined ? {} : { marks }),
       ...(zIndex === undefined ? {} : { zIndex }),
       ...(resolvedLabels === undefined ? {} : { label: resolvedLabels }),
-      style: { stroke: color, strokeWidth: LINE_STROKE_WIDTH, ...style },
+      style: { stroke, ...(fill === undefined ? {} : { fill }), strokeWidth: LINE_STROKE_WIDTH, ...style },
       children: steps,
     };
+    child = applyPathChannelDeliveries(child, mark, row, channels);
     if (instance.kind === 'row') {
-      applyPathChannelDeliveries(child, mark, instance.row, channels);
       child = decorateDatum(child, instance.row, instance.transformedIndex, mark.type, context?.provenance, undefined);
     }
     children.push(attachMarkAnchor(child, mark, instance, context));

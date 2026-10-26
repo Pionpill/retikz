@@ -762,7 +762,7 @@ const lowerPath = (
   }
 
   const closure = pathClosureOf(mark);
-  const closed = mark.properties?.closed ?? isPolarCoordinateFrame(frame);
+  const closed = mark.properties?.closed ?? (mark.properties?.kind !== 'ribbon' && isPolarCoordinateFrame(frame));
   const seriesField = pathSeriesField(mark, rows);
   const defaultStroke = markPaintOf(mark, channels, 'stroke', rows, defaultColor ?? DEFAULT_FILL) ?? DEFAULT_FILL;
   const defaultFill = markPaintOf(mark, channels, 'fill', rows, undefined);

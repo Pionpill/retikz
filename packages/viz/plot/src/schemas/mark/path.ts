@@ -10,17 +10,49 @@ import {
   GraphicStrokeSchema,
   PathFillSchema,
 } from '@retikz/core';
+import { CenterlineRibbonPathOptionsSchema, RibbonLabelSchema } from '@retikz/extension';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import type { ValueOf } from '@retikz/foundation';
-import { array, boolean, discriminatedUnion, enum as zodEnum, literal, never, number, strictObject, union } from 'zod';
+import {
+  array,
+  boolean,
+  discriminatedUnion,
+  enum as zodEnum,
+  literal,
+  never,
+  number,
+  strictObject,
+  union,
+  string,
+} from 'zod';
 import type { infer as ZodInfer } from 'zod';
 
 import { CoordinateConnection, PolarInterpolation } from '../coordinate';
-import { PathEncodingSchema, PositionEncodingSchema } from '../encoding';
+import { PathEncodingSchema, PositionEncodingSchema, ChannelSchema } from '../encoding';
 import { AnchorIdSchema, hasValidAnchorSource, PathEndpointSchema } from './anchor';
 import { BuiltinPlotMark, markBase } from './base';
 import { MarkPathLabelListSchema } from './label';
 import { PlotPathStepSchema } from './path-step';
+
+/** 数据路径的中心线带状选项；宽度也可由通道提供 */
+export const PlotPathRibbonSchema = CenterlineRibbonPathOptionsSchema.omit({ mode: true, label: true }).partial();
+
+/** PathMark 支持的路径几何种类 */
+export const PathMarkKind = { Stroke: 'stroke', Ribbon: 'ribbon' } as const;
+export type PathMarkKind = ValueOf<typeof PathMarkKind>;
+
+const ribbonLabel = RibbonLabelSchema.extend({
+  text: RibbonLabelSchema.shape.text.optional(),
+  displayFormat: NonBlankStringSchema.optional(),
+});
+const ribbonLabels = union([string(), ribbonLabel, array(union([string(), ribbonLabel])).min(1)]);
+
+/** PathMark 外观绑定，附加中心线带宽通道 */
+export const PathMarkAppearanceEncodingSchema = PathEncodingSchema.extend({
+  ribbon: strictObject({ width: ChannelSchema.optional(), endWidth: ChannelSchema.optional() })
+    .optional()
+    .describe('Ribbon widths in drawing units after optional channel scaling'),
+});
 
 /** 开放轨迹跨缺值连接段的常量描边覆盖 */
 export const PlotPathConnectNullsStyleSchema = PathStrokeSchema.extend({
@@ -109,6 +141,8 @@ export const PathClosureSchema = discriminatedUnion('kind', [
 
 /** 校验按记录顺序连接为一维轨迹的路径标记 */
 export const PathPropertiesSchema = strictObject({
+  kind: zodEnum(PathMarkKind).optional().describe('Path geometry kind; omitted means stroke'),
+  ribbon: PlotPathRibbonSchema.optional(),
   ...PathTransformSchema.shape,
   ...PathDecorationSchema.shape,
   ...GraphicFillSchema.shape,
@@ -146,12 +180,14 @@ export const PathPropertiesSchema = strictObject({
   anchorId: AnchorIdSchema.optional().describe(
     'Stable id rule for generated per-datum core Coordinates along this path',
   ),
-  label: MarkPathLabelListSchema.optional().describe('Path-host label: lowered onto the generated core Path.label'),
+  label: union([MarkPathLabelListSchema, ribbonLabels])
+    .optional()
+    .describe('Host labels using the selected path kind contract'),
 }).describe('Fixed data path properties and construction rules');
 
 /** 校验按顶点组织的路径或逐实例完整端点，输入形态互斥 */
 export const PathMarkEncodingSchema = union([
-  PathEncodingSchema.extend({
+  PathMarkAppearanceEncodingSchema.extend({
     anchorId: NonBlankStringSchema.optional(),
     position: PositionEncodingSchema,
     steps: never().optional(),
@@ -161,7 +197,7 @@ export const PathMarkEncodingSchema = union([
     order: NonBlankStringSchema.optional(),
     closure: strictObject({ baseline: NonBlankStringSchema }).optional(),
   }),
-  PathEncodingSchema.extend({
+  PathMarkAppearanceEncodingSchema.extend({
     anchorId: NonBlankStringSchema.optional(),
     from: PathEndpointSchema,
     steps: never().optional(),
@@ -171,7 +207,7 @@ export const PathMarkEncodingSchema = union([
     order: never().optional(),
     closure: never().optional(),
   }),
-  PathEncodingSchema.extend({
+  PathMarkAppearanceEncodingSchema.extend({
     anchorId: NonBlankStringSchema.optional(),
     steps: array(PlotPathStepSchema).min(2),
     from: never().optional(),
@@ -195,6 +231,39 @@ export const PathMarkSchema = strictObject({
     message: 'anchorId requires exactly one of field, template, or generator',
   })
   .superRefine((mark, context) => {
+    const properties = mark.properties;
+    const binding = mark.encodings.ribbon;
+    const issue = (path: Array<string | number>, message: string) =>
+      context.addIssue({ code: 'custom', path, message });
+    const labels =
+      properties?.label === undefined ? [] : Array.isArray(properties.label) ? properties.label : [properties.label];
+    if (properties?.kind !== 'ribbon') {
+      if (properties?.ribbon !== undefined) issue(['properties', 'ribbon'], 'Ribbon options require kind=ribbon');
+      if (binding !== undefined) issue(['encodings', 'ribbon'], 'Ribbon channels require kind=ribbon');
+      for (const label of labels)
+        if (typeof label !== 'string' && 'placement' in label)
+          issue(['properties', 'label'], 'Ribbon placement requires kind=ribbon');
+    } else {
+      const width = properties.ribbon?.width;
+      if (width === undefined && binding?.width === undefined)
+        issue(['properties', 'ribbon', 'width'], 'Ribbon requires a width rule or width binding');
+      if (binding !== undefined && (width?.kind === 'profile' || width?.kind === 'stops'))
+        issue(['encodings', 'ribbon'], 'Width bindings cannot override profile or stops');
+      if (binding?.endWidth !== undefined && width !== undefined && width.kind !== 'taper')
+        issue(['encodings', 'ribbon', 'endWidth'], 'endWidth requires a taper width rule');
+      for (const field of ['closed', 'closure', 'connectNulls', 'cornerRadius', 'marks'] as const) {
+        if (properties[field] !== undefined) issue(['properties', field], `Ribbon cannot use ${field}`);
+      }
+      if (mark.encodings.cornerRadius !== undefined)
+        issue(['encodings', 'cornerRadius'], 'Ribbon cannot use cornerRadius');
+      for (const label of labels)
+        if (typeof label !== 'string' && ('interrupt' in label || 'gap' in label))
+          issue(['properties', 'label'], 'Ribbon labels cannot interrupt the path');
+      mark.encodings.steps?.forEach((step, index) => {
+        if ('label' in step && step.label !== undefined)
+          issue(['encodings', 'steps', index, 'label'], 'Ribbon cannot use step labels');
+      });
+    }
     if (mark.encodings.steps === undefined) return;
     for (const field of ['curve', 'closure', 'closed', 'connectNulls', 'interpolation', 'connection'] as const) {
       if (mark.properties?.[field] !== undefined)

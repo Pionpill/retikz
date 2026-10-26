@@ -163,7 +163,7 @@ Plot 生成流程具有清晰的阶段边界，布局后的位置调整与数据
 
 ### RelationMark 的替代与移除（待设计）
 
-相关 ADR：[026](./026-mark-target-endpoints.md)、[027](./027-path-step-construction.md)。
+相关 ADR：[026](./026-mark-target-endpoints.md)、[027](./027-path-step-construction.md)、[028](./028-path-ribbon.md)。
 
 主要场景：
 

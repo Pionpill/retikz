@@ -5,6 +5,26 @@ import { describe, expect, it } from 'vitest';
 import { buildPlotIR, PathMark, PlotPathStep } from '../../src';
 
 describe('Path authoring parity', () => {
+  it('preserves ribbon fields and options through Vanilla way and JSX steps', () => {
+    const properties = { kind: 'ribbon' as const, ribbon: { align: 'center' as const } };
+    const encodings = { ribbon: { width: 'flow' } };
+    const plain = normalizePlotPathMark({
+      way: [
+        [0, 0],
+        [100, 50],
+      ],
+      properties,
+      encodings,
+    });
+    const react = buildPlotIR(
+      <PathMark properties={properties} encodings={encodings}>
+        <PlotPathStep kind="move" to={[0, 0]} />
+        <PlotPathStep kind="line" to={[100, 50]} />
+      </PathMark>,
+      'data',
+    );
+    expect(react.marks[0]).toMatchObject({ type: 'path', ...plain });
+  });
   it('preserves field targets and yields equivalent Vanilla, way and JSX steps', () => {
     const from = { mark: 'nodes', key: { field: 'source' } };
     const to = { mark: 'nodes', key: { field: 'target' } };
