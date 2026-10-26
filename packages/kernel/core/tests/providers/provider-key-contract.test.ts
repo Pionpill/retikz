@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import type { ZodType } from 'zod';
 import { literal, number, object, string, union } from 'zod';
 
 import type { IRScene } from '../../src';
@@ -81,20 +80,34 @@ describe('provider key contract', () => {
     expect(() => compileToScene(ir, { composites: [badge] }).scene).not.toThrow();
   });
 
-  it('composite_schema_literal_must_match_declared_provider_key', () => {
-    const schema = CompositeBaseSchema.extend({
-      namespace: literal('actual'),
-      type: literal('badge'),
+  it('在解析组件输入时执行 schema 转换并编译转换结果', () => {
+    const badge = defineComposite({
+      namespace: 'demo',
+      type: 'badge',
+      schema: CompositeBaseSchema.extend({
+        namespace: literal('demo'),
+        type: literal('badge'),
+        text: string(),
+      }).transform(node => ({ ...node, text: node.text.toUpperCase() })),
+      compile: node => ({ children: [{ type: 'node', position: [0, 0], text: node.text }] }),
     });
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge', text: 'hello' }] },
+      { composites: [badge] },
+    ).scene;
+    const expected = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', position: [0, 0], text: 'HELLO' }],
+    }).scene;
 
+    expect(scene).toEqual(expected);
     expect(() =>
-      defineComposite({
-        namespace: 'declared',
-        type: 'badge',
-        schema,
-        compile: () => ({ children: [] }),
-      }),
-    ).toThrow(/namespace.*declared.*actual/s);
+      compileToScene(
+        { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge', text: 123 }] },
+        { composites: [badge] },
+      ),
+    ).toThrow(/payload validation/);
   });
 
   it('composite_object_union_declares_one_shared_provider_key', () => {
@@ -136,53 +149,5 @@ describe('provider key contract', () => {
     };
 
     expect(() => compileToScene(ir, { composites: [badge] }).scene).not.toThrow();
-  });
-
-  it('composite_object_union_rejects_unreadable_or_mixed_provider_keys', () => {
-    const base = CompositeBaseSchema.extend({
-      namespace: literal('demo'),
-      type: literal('badge'),
-      variant: literal('base'),
-    });
-    const definitionOf = (schema: ZodType) =>
-      defineComposite({ namespace: 'demo', type: 'badge', schema, compile: () => ({ children: [] }) });
-
-    expect(() => definitionOf(union([base, string()]))).toThrow(/union option 1.*ZodObject/i);
-    expect(() =>
-      definitionOf(
-        union([
-          base,
-          CompositeBaseSchema.extend({
-            namespace: string(),
-            type: literal('badge'),
-            variant: literal('dynamicNamespace'),
-          }),
-        ]),
-      ),
-    ).toThrow(/union option 1.*namespace.*literal/i);
-    expect(() =>
-      definitionOf(
-        union([
-          base,
-          CompositeBaseSchema.extend({
-            namespace: literal('other'),
-            type: literal('badge'),
-            variant: literal('otherNamespace'),
-          }),
-        ]),
-      ),
-    ).toThrow(/union option 1.*namespace.*demo.*other|union option 1.*namespace.*other.*demo/i);
-    expect(() =>
-      definitionOf(
-        union([
-          base,
-          CompositeBaseSchema.extend({
-            namespace: literal('demo'),
-            type: literal('panel'),
-            variant: literal('otherType'),
-          }),
-        ]),
-      ),
-    ).toThrow(/union option 1.*type.*badge.*panel|union option 1.*type.*panel.*badge/i);
   });
 });

@@ -11,7 +11,7 @@ import {
 } from '../../src';
 import type { CompositeEvaluationResult, LayoutContribution } from '../../src';
 
-const schema = (type: string) =>
+const schema = <const TType extends string>(type: TType) =>
   CompositeBaseSchema.extend({ namespace: literal('measurement-test'), type: literal(type) });
 
 describe('isolated size contributions', () => {

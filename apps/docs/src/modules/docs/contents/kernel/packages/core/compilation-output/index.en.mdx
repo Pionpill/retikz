@@ -774,8 +774,6 @@ Call `prepareSceneCompilation(ir, options, execution)` from `@retikz/core` when 
 
 Provenance collection is off by default. With `execution.captureProvenance: true`, the returned `provenance` records entity origins, namespace registrations and final primitive emissions. Its opaque keys are valid only within that result. Reconciler uses these facts to construct cross-revision identities and Scene Patches; Core retains no incremental state.
 
-The companion `assertCompositeInputBindings(ir, bindings)` checks that Composite input bindings belong to the complete IR without compiling it. Missing bindings pass; mismatched bindings throw Core's `CompositeContractViolation` error.
-
 <SourceLinks
   sources={[
     { label: 'Compilation preparation', path: 'packages/kernel/core/src/compile/compile.ts' },

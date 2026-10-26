@@ -77,6 +77,8 @@ The diagram follows root `chart.point` to `layout.flexLayout`. Once the registry
 
 ### One compile callback
 
+`defineComposite` preserves the definition and its inferred types without inspecting the schema structure at runtime. TypeScript requires the schema output's `namespace` and `type` to match the definition's registration keys. Schemas may include transforms as long as their output satisfies this constraint. Actual component data is validated against that schema during compilation, and the parsed result is passed to `compile`.
+
 For full layout evaluation, `CompositeDefinition` provides a `compile` callback that returns `CompositeCompileResult`. The callback can generate child declarations directly. When placement depends on child dimensions, it can first call the layout methods on `CompositeCompileContext`, then output the selected results. The table distinguishes these uses; the example starts with direct composition.
 
 | Usage              | Callback responsibility                                     | Core continuation                                               |

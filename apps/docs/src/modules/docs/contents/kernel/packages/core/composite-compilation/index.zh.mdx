@@ -74,6 +74,8 @@ Definition 统一提供 `compile(node, context)`。`node` 是 schema 解析后�
 
 ### 统一编译回调
 
+`defineComposite` 保留定义及其类型推断，不在运行时检查 schema 的内部结构。TypeScript 约束 schema 输出中的 `namespace`、`type` 与定义的注册键一致；schema 可以包含转换，只要输出满足该约束。实际组件数据在编译解析入口按该 schema 校验，解析结果再传给 `compile`。
+
 完整布局时，`CompositeDefinition` 通过 `compile` 回调返回 `CompositeCompileResult`。回调可以直接生成子声明；如果需要根据子图尺寸决定如何排布，也可以先调用 `CompositeCompileContext` 中的布局方法，再输出选中的结果。下面先说明两种用法的区别，再从直接组合开始。
 
 | 用法     | 回调做什么                           | Core 如何继续                  |

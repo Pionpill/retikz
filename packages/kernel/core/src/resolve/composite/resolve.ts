@@ -1,23 +1,12 @@
-import type { JsonValue } from '@retikz/foundation';
-import type { ZodType } from 'zod';
-
-import type { CompositeCompileContext, CompositeEvaluationResult } from '../../contract';
 import type { IRComposite } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 import type { CompositeBinding, CompositeRegistry, CompositeResolution, RegisteredCompositeBinding } from './types';
-
-type CallableComposite = Readonly<{
-  schema: ZodType;
-  compile: (node: unknown, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
-  artifactSchema?: ZodType<JsonValue>;
-}>;
 
 /** 绑定 composite provider key、definition 与可执行分支 */
 export const bindComposite = (source: IRComposite, composites: CompositeRegistry): CompositeBinding => {
   const key = `${source.namespace}.${source.type}`;
   const definition = composites.get(key);
   if (definition === undefined) return { kind: 'unregistered', key };
-  const callable = definition as unknown as CallableComposite;
 
   return {
     kind: 'compile',
@@ -25,9 +14,10 @@ export const bindComposite = (source: IRComposite, composites: CompositeRegistry
     namespace: definition.namespace,
     type: definition.type,
     source,
-    schema: callable.schema,
-    compile: callable.compile,
-    ...(callable.artifactSchema === undefined ? {} : { artifactSchema: callable.artifactSchema }),
+    schema: definition.schema,
+    // resolveComposite 使用同一定义的 schema 解析节点后，才交给此回调
+    compile: definition.compile as RegisteredCompositeBinding['compile'],
+    ...(definition.artifactSchema === undefined ? {} : { artifactSchema: definition.artifactSchema }),
   };
 };
 

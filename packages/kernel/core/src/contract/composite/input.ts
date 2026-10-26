@@ -142,8 +142,3 @@ export const createCompositeInputBindings = (
 
   return handle;
 };
-
-/** 校验运行时绑定属于指定 Source，不执行编译或派发诊断 */
-export const assertCompositeInputBindings = (source: IRScene, inputs: CompositeInputBindings | undefined): void => {
-  if (inputs !== undefined) resolveCompositeInputScope(source, inputs);
-};
