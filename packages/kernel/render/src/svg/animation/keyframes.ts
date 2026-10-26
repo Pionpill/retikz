@@ -4,21 +4,20 @@
  *   transform 通道各包一层 `<g>`（避免同元素多个 transform 动画在 CSS 上冲突，且天然支持支点 transform-origin）
  */
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
-import { BuiltinAnimationProperty } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 
-import type { EasingRegistry } from '../../animation';
 import {
   classifyProperty,
   evaluateTrack,
   isAutoplayTrigger,
-  primHasStroke,
+  animationSkipReason,
+  sampleAnimationTrack,
   resolveTransformOrigin,
 } from '../../animation';
 import { toSafeSvgToken } from '../safe-token';
 import type { SvgAttrs, SvgNode, SvgStyle } from '../types';
 import type { ExpandedTrack } from './shared';
-import { easingToCss, expandTrack, iterationsToCss, transformValue } from './shared';
+import { expandTrack, iterationsToCss, transformValue } from './shared';
 import type { WaapiDescriptor } from './waapi';
 import { buildWaapiDescriptor } from './waapi';
 
@@ -40,14 +39,10 @@ const buildKeyframesRule = (name: string, expanded: ExpandedTrack): string => {
 };
 
 /** track timing → CSS `animation` shorthand（不含 name；name duration easing delay iter dir fill） */
-const shorthandTiming = (
-  track: IRAnimationTrack,
-  registry: EasingRegistry | undefined,
-  onWarn: (message: string) => void,
-): string =>
+const shorthandTiming = (track: IRAnimationTrack): string =>
   [
     `${track.duration}ms`,
-    easingToCss(track.easing, registry, onWarn),
+    'linear',
     `${track.delay ?? 0}ms`,
     iterationsToCss(track.iterations),
     track.direction ?? 'normal',
@@ -56,14 +51,14 @@ const shorthandTiming = (
 
 /** scene 根 viewBox track + 静态 layout → transform 帧（把取景 [x,y,w,h] 折算成 group transform） */
 const expandCameraTrack = (track: IRAnimationTrack, layout: Scene['layout']): ExpandedTrack => {
-  const frames = track.keyframes.map(kf => {
+  const frames = sampleAnimationTrack(track).map(kf => {
     const [vx, vy, vw, vh] = kf.value as Array<number>;
     const sx = layout.width / vw;
     const sy = layout.height / vh;
     const tx = layout.x - sx * vx;
     const ty = layout.y - sy * vy;
 
-    return { offset: kf.at, value: `translate(${tx}px, ${ty}px) scale(${sx}, ${sy})` };
+    return { offset: kf.offset, value: `translate(${tx}px, ${ty}px) scale(${sx}, ${sy})`, easing: 'linear' };
   });
   return { cssProperty: 'transform', frames, transformOrigin: '0px 0px' };
 };
@@ -84,8 +79,6 @@ const addAttrs = (node: SvgNode, attrs: SvgAttrs): SvgNode => {
 export type SvgAnimationOptions = {
   /** 资源 id 前缀（keyframes / class 名共用，确保确定性 + 多实例隔离） */
   idPrefix: string;
-  /** 自定义 easing 注册表 */
-  easings?: EasingRegistry;
   /** 降级诊断告警；缺省 console.warn */
   onWarn?: (message: string) => void;
   /**
@@ -132,12 +125,12 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
       const originRule = expanded.transformOrigin
         ? `transform-box:view-box;transform-origin:${expanded.transformOrigin};`
         : '';
-      rules.push(`.${cls}{${originRule}animation:${kf} ${shorthandTiming(track, options.easings, onWarn)}}`);
+      rules.push(`.${cls}{${originRule}animation:${kf} ${shorthandTiming(track)}}`);
 
       return { tag: 'g', attrs: { class: cls, ...owner }, children: [current] };
     }
 
-    const descriptor = buildWaapiDescriptor(expanded, track, options.easings, onWarn);
+    const descriptor = buildWaapiDescriptor(expanded, track);
 
     return { tag: 'g', attrs: { 'data-retikz-anim': JSON.stringify([descriptor]), ...owner }, children: [current] };
   };
@@ -156,7 +149,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
     for (const track of tracks) {
       if (classifyProperty(track.property) === 'transform') continue;
 
-      const expanded = expandTrack(track, prim, options.easings, onWarn);
+      const expanded = expandTrack(track, prim);
       if ('skip' in expanded) {
         onWarn(`SVG animation: skipped track on "${track.property}" (${expanded.skip}); rendering base.`);
         continue;
@@ -166,9 +159,9 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
       if (isLoadTrigger(track)) {
         const kf = nextName('k');
         rules.push(buildKeyframesRule(kf, expanded));
-        loadEntries.push(`${kf} ${shorthandTiming(track, options.easings, onWarn)}`);
+        loadEntries.push(`${kf} ${shorthandTiming(track)}`);
       } else {
-        descriptors.push(buildWaapiDescriptor(expanded, track, options.easings, onWarn));
+        descriptors.push(buildWaapiDescriptor(expanded, track));
       }
     }
 
@@ -186,7 +179,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
     for (const track of tracks) {
       if (classifyProperty(track.property) !== 'transform') continue;
 
-      const expanded = expandTrack(track, prim, options.easings, onWarn);
+      const expanded = expandTrack(track, prim);
       if ('skip' in expanded) {
         onWarn(`SVG animation: skipped track on "${track.property}" (${expanded.skip}); rendering base.`);
         continue;
@@ -212,12 +205,10 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
         const kf = nextName('k');
         rules.push(buildKeyframesRule(kf, expanded));
         const cls = nextName('c');
-        rules.push(
-          `.${cls}{transform-box:view-box;transform-origin:0 0;animation:${kf} ${shorthandTiming(track, options.easings, onWarn)}}`,
-        );
+        rules.push(`.${cls}{transform-box:view-box;transform-origin:0 0;animation:${kf} ${shorthandTiming(track)}}`);
         current = [{ tag: 'g', attrs: { class: cls }, children: current }];
       } else {
-        const descriptor = buildWaapiDescriptor(expanded, track, options.easings, onWarn);
+        const descriptor = buildWaapiDescriptor(expanded, track);
         current = [{ tag: 'g', attrs: { 'data-retikz-anim': JSON.stringify([descriptor]) }, children: current }];
       }
     }
@@ -254,24 +245,37 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
 
       const cls = classifyProperty(track.property);
       if (cls === 'transform' || cls === 'viewBox') continue;
-      if (cls === 'custom') {
-        onWarn(`SVG snapshot: custom property "${track.property}" has no built-in mapping; rendering base.`);
+
+      const reason = animationSkipReason(prim, track);
+      if (reason !== undefined) {
+        onWarn(`SVG snapshot: ${reason}; rendering base.`);
         continue;
       }
 
-      if (cls === 'pathDraw' && !primHasStroke(prim)) {
-        onWarn('SVG snapshot: pathDraw requires a stroked element; rendering base.');
-        continue;
-      }
-
-      const result = evaluateTrack(track, snapshotAt, { easings: options.easings });
+      const result = evaluateTrack(track, snapshotAt);
       if (!result) continue; // 该时刻 track 不活动 → 用 base
       if (cls === 'css') {
-        if (track.property === BuiltinAnimationProperty.Opacity) staticAttrs.opacity = Number(result.value);
-        else if (track.property === BuiltinAnimationProperty.Fill) staticAttrs.fill = String(result.value);
-        else if (track.property === BuiltinAnimationProperty.Stroke) staticAttrs.stroke = String(result.value);
-        else if (track.property === BuiltinAnimationProperty.StrokeWidth)
-          staticAttrs['stroke-width'] = Number(result.value);
+        switch (track.property) {
+          case 'fill':
+          case 'stroke':
+            staticAttrs[track.property] = String(result.value);
+            break;
+          case 'opacity':
+            staticAttrs.opacity = Number(result.value);
+            break;
+          case 'fillOpacity':
+            staticAttrs['fill-opacity'] = Number(result.value);
+            break;
+          case 'strokeOpacity':
+            staticAttrs['stroke-opacity'] = Number(result.value);
+            break;
+          case 'strokeWidth':
+            staticAttrs['stroke-width'] = Number(result.value);
+            break;
+          case 'dashOffset':
+            staticAttrs['stroke-dashoffset'] = Number(result.value);
+            break;
+        }
       } else {
         // pathDraw：value 0..1 → stroke-dashoffset 1−value（pathLength=1 归一化）
         staticAttrs.pathLength = 1;
@@ -287,7 +291,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
       if (!isAutoplayTrigger(track)) continue;
       if (classifyProperty(track.property) !== 'transform') continue;
 
-      const result = evaluateTrack(track, snapshotAt, { easings: options.easings });
+      const result = evaluateTrack(track, snapshotAt);
       if (!result) continue;
 
       current = {
@@ -310,7 +314,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
     for (const track of tracks) {
       if (track.property !== 'viewBox' || !isAutoplayTrigger(track)) continue;
 
-      const result = evaluateTrack(track, snapshotAt, { easings: options.easings });
+      const result = evaluateTrack(track, snapshotAt);
       if (!result) continue;
 
       const [vx, vy, vw, vh] = result.value as Array<number>;

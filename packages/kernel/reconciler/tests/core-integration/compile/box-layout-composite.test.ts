@@ -494,7 +494,7 @@ describe('Box Layout Composite contract', () => {
           children: [
             context.replay(laid, {
               transforms: [{ kind: 'translate', x: 10, y: 20 }],
-              clip: { kind: 'rect', x: 8, y: 18, width: 4, height: 4 },
+              clip: { kind: 'rect', params: { x: 8, y: 18, width: 4, height: 4 } },
             }),
           ],
         };
@@ -573,8 +573,8 @@ describe('Box Layout Composite contract', () => {
 
         return {
           children: [
-            context.replay(empty, { clip: { kind: 'rect', x: -10, y: -10, width: 5, height: 5 } }),
-            context.replay(clipped, { clip: { kind: 'rect', x: 20, y: 20, width: 5, height: 5 } }),
+            context.replay(empty, { clip: { kind: 'rect', params: { x: -10, y: -10, width: 5, height: 5 } } }),
+            context.replay(clipped, { clip: { kind: 'rect', params: { x: 20, y: 20, width: 5, height: 5 } } }),
             { ...boxNode(), position: [100, 100] },
           ],
         };
@@ -600,10 +600,10 @@ describe('Box Layout Composite contract', () => {
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, boxNode());
         const transforms = [{ kind: 'translate' as const, x: 5, y: 6 }];
-        const clip = { kind: 'rect' as const, x: -2, y: -2, width: 4, height: 4 };
+        const clip = { kind: 'rect' as const, params: { x: -2, y: -2, width: 4, height: 4 } };
         const replay = context.replay(laid, { transforms, clip });
         transforms[0].x = 99;
-        clip.width = 99;
+        clip.params.width = 99;
 
         return { children: [replay] };
       },
@@ -640,10 +640,9 @@ describe('Box Layout Composite contract', () => {
   });
 
   it.each([
-    ['unknown field', { unknown: true }],
     ['non-finite transform', { transforms: [{ kind: 'translate', x: Number.NaN, y: 0 }] }],
-    ['invalid clip', { clip: { kind: 'rect', x: 0, y: 0, width: -1, height: 10 } }],
-  ])('rejects an invalid replay wrapper with occurrence context: %s', (_name, wrapper) => {
+    ['invalid clip', { clip: { kind: 'rect', params: { x: 0, y: 0, width: -1, height: 10 } } }],
+  ])('rejects invalid replay geometry: %s', (_name, wrapper) => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'invalidReplayWrapper',
@@ -661,30 +660,7 @@ describe('Box Layout Composite contract', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'invalidReplayWrapper' }), {
         composites: [definition],
       }),
-    ).toThrow(/test\.invalidReplayWrapper.*children\[0\].*(wrapper|transform|clip|unsupported|finite)/i);
-  });
-
-  it('keeps a replay token unused when wrapper builder validation is caught', () => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'replayAfterInvalidWrapper',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('replayAfterInvalidWrapper'),
-      }),
-      compile: (_node, context) => {
-        const laid = resolvedResultOf(context, boxNode());
-
-        expect(() => context.replay(laid, { unknown: true } as never)).toThrow(/unsupported.*wrapper/i);
-        return { children: [context.replay(laid)] };
-      },
-    });
-
-    expect(
-      compileToScene(sceneOf({ namespace: 'test', type: 'replayAfterInvalidWrapper' }), {
-        composites: [definition],
-      }).scene.primitives,
-    ).not.toHaveLength(0);
+    ).toThrow(/(non-finite bounds|clip.*failed schema validation)/i);
   });
 
   it.each([

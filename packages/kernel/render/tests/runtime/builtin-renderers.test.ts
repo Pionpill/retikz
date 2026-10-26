@@ -295,7 +295,7 @@ it('共享 Pattern 文本在 retained 提交与回滚时对所有宿主原子生
     scene: {
       ...snapshot.scene,
       resources: snapshot.scene.resources.map(resource =>
-        resource.kind === 'paint' && resource.tile
+        resource.kind === 'paint' && 'tile' in resource
           ? {
               ...resource,
               tile: {
@@ -547,7 +547,7 @@ describe('builtin retained renderers', () => {
         children: [
           {
             type: 'scope',
-            clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 },
+            clip: { kind: 'rect', params: { x: -20, y: -20, width: 40, height: 40 } },
             children: [
               {
                 type: 'scope',
@@ -4604,7 +4604,7 @@ describe('builtin retained renderers', () => {
       ],
       stroke: '#ef4444',
       strokeWidth: 10,
-      strokeLinejoin: 'miter',
+      lineJoin: 'miter',
     };
     const currentText: Extract<RuntimeScenePrimitive, Readonly<{ type: 'text' }>> = {
       type: 'text',

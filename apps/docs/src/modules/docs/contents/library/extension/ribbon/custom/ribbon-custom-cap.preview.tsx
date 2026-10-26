@@ -1,5 +1,5 @@
 import type { IRPosition } from '@retikz/core';
-import { createRibbonPathKindDefinition, defineRibbonCap } from '@retikz/extension';
+import { createRibbonPathDefinition, defineRibbonCap } from '@retikz/extension';
 import { Layout, Path, Step } from '@retikz/react';
 import { number, strictObject } from 'zod';
 
@@ -24,11 +24,11 @@ const pointedCap = defineRibbonCap({
   },
 });
 
-const ribbonDefinition = createRibbonPathKindDefinition({ caps: [pointedCap] });
+const ribbonDefinition = createRibbonPathDefinition({ caps: [pointedCap] });
 
 /** 自定义端帽复用首尾端面基底 */
 export const renderRibbonCustomCapPreview = (values: { depth: number }) => (
-  <Layout viewBox={{ x: -230, y: -100, width: 460, height: 200 }} extensions={{ pathKinds: [ribbonDefinition] }}>
+  <Layout viewBox={{ x: -230, y: -100, width: 460, height: 200 }} extensions={{ paths: [ribbonDefinition] }}>
     <Path
       kind="ribbon"
       kindOptions={{

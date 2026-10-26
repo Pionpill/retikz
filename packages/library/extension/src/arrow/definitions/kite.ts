@@ -47,7 +47,7 @@ export const OpenKiteArrowDefinition = defineArrow({
         [9, 5],
         [3, 9],
       ],
-      { strokeLinejoin: 'round' },
+      { lineJoin: 'round' },
     ),
   ],
 });

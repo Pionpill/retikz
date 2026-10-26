@@ -1,5 +1,5 @@
 import type { IRPosition } from '@retikz/core';
-import { createRibbonPathKindDefinition, defineRibbonCap } from '@retikz/extension';
+import { createRibbonPathDefinition, defineRibbonCap } from '@retikz/extension';
 import { path, scene, renderToSvgString } from '@retikz/vanilla';
 import { number, strictObject } from 'zod';
 
@@ -24,7 +24,7 @@ const pointedCap = defineRibbonCap({
   },
 });
 
-const ribbonDefinition = createRibbonPathKindDefinition({ caps: [pointedCap] });
+const ribbonDefinition = createRibbonPathDefinition({ caps: [pointedCap] });
 
 const input = scene({
   viewBox: { x: -230, y: -100, width: 460, height: 200 },
@@ -45,4 +45,4 @@ const input = scene({
   ],
 });
 
-export const svg = renderToSvgString(input, { compile: { pathKinds: [ribbonDefinition] } });
+export const svg = renderToSvgString(input, { compile: { paths: [ribbonDefinition] } });

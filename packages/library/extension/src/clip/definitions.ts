@@ -1,28 +1,20 @@
 import { defineClip } from '@retikz/core';
 
 import { CircleClipSchema, CompoundClipSchema, EllipseClipSchema, PathClipSchema, PolygonClipSchema } from './schema';
-import type {
-  CircleClipShape,
-  CompoundClipShape,
-  EllipseClipShape,
-  IRCircleClip,
-  IRCompoundClip,
-  IREllipseClip,
-  IRPathClip,
-  IRPolygonClip,
-  PathClipShape,
-  PolygonClipShape,
-} from './types';
+import type { IRCircleClip, IRCompoundClip, IREllipseClip, IRPathClip, IRPolygonClip } from './types';
 
 /** Extension 提供的完整圆形裁剪 Definition */
-export const CircleClipDefinition = defineClip<IRCircleClip, CircleClipShape>({
+export const CircleClipDefinition = defineClip<IRCircleClip>({
   kind: 'circle',
   schema: CircleClipSchema,
-  resolve: spec => ({ kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.r }),
+
   lower: (shape, context) => ({
     commands: [
-      { kind: 'move', to: [context.round(shape.cx) + context.round(shape.r), context.round(shape.cy)] },
-      { kind: 'arc', center: [shape.cx, shape.cy], radius: shape.r, startAngle: 0, endAngle: 360 },
+      {
+        kind: 'move',
+        to: [context.round(shape.params.cx) + context.round(shape.params.r), context.round(shape.params.cy)],
+      },
+      { kind: 'arc', center: [shape.params.cx, shape.params.cy], radius: shape.params.r, startAngle: 0, endAngle: 360 },
       { kind: 'close' },
     ],
     fillRule: 'nonzero',
@@ -30,18 +22,21 @@ export const CircleClipDefinition = defineClip<IRCircleClip, CircleClipShape>({
 });
 
 /** Extension 提供的完整椭圆裁剪 Definition */
-export const EllipseClipDefinition = defineClip<IREllipseClip, EllipseClipShape>({
+export const EllipseClipDefinition = defineClip<IREllipseClip>({
   kind: 'ellipse',
   schema: EllipseClipSchema,
-  resolve: spec => ({ kind: 'ellipse', cx: spec.cx, cy: spec.cy, rx: spec.rx, ry: spec.ry }),
+
   lower: (shape, context) => ({
     commands: [
-      { kind: 'move', to: [context.round(shape.cx) + context.round(shape.rx), context.round(shape.cy)] },
+      {
+        kind: 'move',
+        to: [context.round(shape.params.cx) + context.round(shape.params.rx), context.round(shape.params.cy)],
+      },
       {
         kind: 'ellipseArc',
-        center: [shape.cx, shape.cy],
-        radiusX: shape.rx,
-        radiusY: shape.ry,
+        center: [shape.params.cx, shape.params.cy],
+        radiusX: shape.params.rx,
+        radiusY: shape.params.ry,
         startAngle: 0,
         endAngle: 360,
       },
@@ -52,14 +47,14 @@ export const EllipseClipDefinition = defineClip<IREllipseClip, EllipseClipShape>
 });
 
 /** Extension 提供的完整多边形裁剪 Definition */
-export const PolygonClipDefinition = defineClip<IRPolygonClip, PolygonClipShape>({
+export const PolygonClipDefinition = defineClip<IRPolygonClip>({
   kind: 'polygon',
   schema: PolygonClipSchema,
-  resolve: spec => ({ kind: 'polygon', points: spec.points }),
+
   lower: shape => ({
     commands: [
-      { kind: 'move', to: shape.points[0] },
-      ...shape.points.slice(1).map(to => ({ kind: 'line' as const, to })),
+      { kind: 'move', to: shape.params.points[0] },
+      ...shape.params.points.slice(1).map(to => ({ kind: 'line' as const, to })),
       { kind: 'close' },
     ],
     fillRule: 'nonzero',
@@ -67,28 +62,20 @@ export const PolygonClipDefinition = defineClip<IRPolygonClip, PolygonClipShape>
 });
 
 /** Extension 提供的完整路径裁剪 Definition */
-export const PathClipDefinition = defineClip<IRPathClip, PathClipShape>({
+export const PathClipDefinition = defineClip<IRPathClip>({
   kind: 'path',
   schema: PathClipSchema,
-  resolve: spec => ({
-    kind: 'path',
-    commands: spec.commands,
-    ...(spec.fillRule === undefined ? {} : { fillRule: spec.fillRule }),
-  }),
-  lower: shape => ({ commands: shape.commands, fillRule: shape.fillRule ?? 'nonzero' }),
+
+  lower: shape => ({ commands: shape.params.commands, fillRule: shape.params.fillRule ?? 'nonzero' }),
 });
 
 /** Extension 提供的完整复合裁剪 Definition */
-export const CompoundClipDefinition = defineClip<IRCompoundClip, CompoundClipShape>({
+export const CompoundClipDefinition = defineClip<IRCompoundClip>({
   kind: 'compound',
   schema: CompoundClipSchema,
-  resolve: (spec, context) => ({
-    kind: 'compound',
-    children: spec.children.map(child => context.resolve(child)),
-    ...(spec.fillRule === undefined ? {} : { fillRule: spec.fillRule }),
-  }),
+
   lower: (shape, context) => ({
-    commands: shape.children.flatMap(child => context.lower(child).commands),
-    fillRule: shape.fillRule ?? 'nonzero',
+    commands: shape.params.children.flatMap(child => context.lower(child).commands),
+    fillRule: shape.params.fillRule ?? 'nonzero',
   }),
 });

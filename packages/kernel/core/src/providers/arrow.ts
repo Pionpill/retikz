@@ -1,10 +1,10 @@
-import type { ArrowDefinition, ArrowEmitContext, ScenePrimitive } from '../contract';
+import type { ArrowDefinition, MarkEmitContext, ScenePrimitive } from '../contract';
 import { defineArrow } from '../contract';
 import { BuiltinArrowShape } from '../schemas';
 import { createProviderRegistry } from './registry';
 
 /** 实心闭合三角 / V 形的 path 工厂：填充走 context.fill（无 override = contextStroke） */
-const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
+const filledPath = (context: MarkEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: points[0] },
@@ -15,8 +15,8 @@ const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, nu
   stroke: context.stroke,
   dashPattern: context.dashPattern,
   dashOffset: context.dashOffset,
-  strokeLinecap: context.lineCap,
-  strokeLinejoin: context.lineJoin,
+  lineCap: context.lineCap,
+  lineJoin: context.lineJoin,
 });
 
 /** 实心三角箭头：基础线接触点在 marker 左边界 */
@@ -65,7 +65,7 @@ const stealthArrow = defineArrow({
 });
 
 /** 构造空心箭头轮廓，描边继承当前路径的颜色与宽度 */
-const hollowPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
+const hollowPath = (context: MarkEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: points[0] },
@@ -75,10 +75,10 @@ const hollowPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, nu
   fill: 'none',
   stroke: context.stroke,
   strokeWidth: context.lineWidth,
-  strokeLinejoin: context.lineJoin ?? 'miter',
+  lineJoin: context.lineJoin ?? 'miter',
   dashPattern: context.dashPattern,
   dashOffset: context.dashOffset,
-  strokeLinecap: context.lineCap,
+  lineCap: context.lineCap,
 });
 
 /** Core 内置空心 stealth 箭头，保留实心 stealth 的倒钩轮廓 */
@@ -114,8 +114,8 @@ const circleArrow = defineArrow({
       stroke: context.stroke,
       dashPattern: context.dashPattern,
       dashOffset: context.dashOffset,
-      strokeLinecap: context.lineCap,
-      strokeLinejoin: context.lineJoin,
+      lineCap: context.lineCap,
+      lineJoin: context.lineJoin,
     },
   ],
 });
@@ -138,8 +138,8 @@ const openCircleArrow = defineArrow({
       strokeWidth: context.lineWidth,
       dashPattern: context.dashPattern,
       dashOffset: context.dashOffset,
-      strokeLinecap: context.lineCap,
-      strokeLinejoin: context.lineJoin,
+      lineCap: context.lineCap,
+      lineJoin: context.lineJoin,
     },
   ],
 });

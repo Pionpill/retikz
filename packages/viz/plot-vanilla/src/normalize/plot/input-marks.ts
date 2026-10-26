@@ -56,7 +56,7 @@ type PlotPathAppearanceEncoding = ZodInfer<typeof PathMarkAppearanceEncodingSche
 export type InputPlotPathMark = Omit<IRPlotPathMark, 'type' | 'encodings'> &
   InputPlotCoordinateScope &
   InputPlotDatumLabel &
-  Pick<InputPath, 'arrow' | 'arrowDetail' | 'arrowPlacement'> &
+  Pick<InputPath, 'arrow'> &
   (
     | { encodings: IRPlotPathMark['encodings']; way?: never; children?: never }
     | { way: InputPlotPathWay; encodings?: PlotPathAppearanceEncoding; children?: never }

@@ -1,11 +1,11 @@
 import type {
   AnyCompositeDefinition,
-  AnyPathKindDefinition,
+  AnyPathDefinition,
   ArrowDefinition,
+  MarkDefinition,
   BoundaryDefinition,
   ClipDefinition,
   CoreProviderDefinitions,
-  PathGeneratorDefinition,
   PatternDefinition,
   ShapeDefinition,
 } from '@retikz/core';
@@ -16,9 +16,9 @@ type ProviderDefinition =
   | BoundaryDefinition
   | ClipDefinition
   | ArrowDefinition
+  | MarkDefinition
   | PatternDefinition
-  | PathGeneratorDefinition
-  | AnyPathKindDefinition
+  | AnyPathDefinition
   | AnyCompositeDefinition;
 
 type ProviderSlot = { current: ProviderDefinition };
@@ -71,9 +71,8 @@ export const captureCoreProviderDefinitions = (
 const definitionKey = (definition: ProviderDefinition): string => {
   if ('namespace' in definition && 'type' in definition)
     return `composite:${definition.namespace}\u0000${definition.type}`;
-  if ('name' in definition && 'schema' in definition && 'compile' in definition) return `pathKind:${definition.name}`;
-  if ('kind' in definition && 'schema' in definition && 'resolve' in definition && 'lower' in definition)
-    return `clip:${definition.kind}`;
+  if ('name' in definition && 'schema' in definition && 'compile' in definition) return `path:${definition.name}`;
+  if ('kind' in definition && 'schema' in definition && 'lower' in definition) return `clip:${definition.kind}`;
 
   if ('kind' in definition) return invalidDefinitions(definition);
 
@@ -131,9 +130,9 @@ const providerCollections = [
   'boundaries',
   'clips',
   'arrows',
+  'marks',
   'patterns',
-  'pathGenerators',
-  'pathKinds',
+  'paths',
   'composites',
 ] as const satisfies ReadonlyArray<keyof CoreProviderDefinitions>;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, GroupPrim, IRScene, ScenePrimitive, Transform } from '../../src';
+import type { CompileWarning, GroupPrimitive, IRScene, ScenePrimitive, Transform } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
@@ -11,8 +11,8 @@ const scene = (children: IRScene['children']): IRScene => ({
   children,
 });
 
-/** 第一层 GroupPrim（顶层第一个 scope 对应的 group），便于断言其 transforms */
-const findTopScopeGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined => {
+/** 第一层 GroupPrimitive（顶层第一个 scope 对应的 group），便于断言其 transforms */
+const findTopScopeGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive | undefined => {
   for (const p of primitives) {
     if (p.type === 'group') return p;
   }
@@ -20,11 +20,11 @@ const findTopScopeGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim
   return undefined;
 };
 
-/** 判断 GroupPrim 是 "scope 产生的" vs "node rotate 产生的"：node rotate group 的 transforms 一定是 rotate；这里只选 translate/scale */
+/** 判断 GroupPrimitive 是 "scope 产生的" vs "node rotate 产生的"：node rotate group 的 transforms 一定是 rotate；这里只选 translate/scale */
 const findScopeStyleGroup = (
   primitives: ReadonlyArray<ScenePrimitive>,
   predicate: (transforms: ReadonlyArray<Transform>) => boolean,
-): GroupPrim | undefined => {
+): GroupPrimitive | undefined => {
   for (const p of primitives) {
     if (p.type === 'group' && p.transforms && predicate(p.transforms)) {
       return p;
@@ -34,7 +34,7 @@ const findScopeStyleGroup = (
   return undefined;
 };
 
-describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms 正确', () => {
+describe('scope.transforms lower 后生成 GroupPrimitive 的 Cartesian transforms 正确', () => {
   it('translate 直接透传到 group.transforms', () => {
     const ir = scene([
       {
@@ -179,7 +179,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 50, y: 20 });
   });
 
-  it('scope rotate 透传到 GroupPrim.transforms', () => {
+  it('scope rotate 透传到 GroupPrimitive.transforms', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -193,7 +193,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     expect(group?.transforms).toEqual([{ kind: 'rotate', degrees: 45 }]);
   });
 
-  it('scope scale 透传到 GroupPrim.transforms', () => {
+  it('scope scale 透传到 GroupPrimitive.transforms', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -209,7 +209,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
 });
 
 describe('scope nested compose', () => {
-  it('嵌套 scope translate 复合：外 translate + 内 translate 各自一层 GroupPrim', () => {
+  it('嵌套 scope translate 复合：外 translate + 内 translate 各自一层 GroupPrimitive', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -237,7 +237,7 @@ describe('scope nested compose', () => {
     }
   });
 
-  it('3 层 scope translate 嵌套各自 emit 一层 GroupPrim', () => {
+  it('3 层 scope translate 嵌套各自 emit 一层 GroupPrimitive', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -314,7 +314,7 @@ describe('scope nested compose', () => {
   });
 });
 
-describe('scope GroupPrim emit 形态', () => {
+describe('scope GroupPrimitive emit 形态', () => {
   it('单层 scope 顶层 primitive 含一个 group + 子 primitives 嵌在内', () => {
     const ir = scene([
       {
@@ -336,7 +336,7 @@ describe('scope GroupPrim emit 形态', () => {
     expect(rects.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('scope 内 path 保持局部坐标并留在 scope 的 GroupPrim', () => {
+  it('scope 内 path 保持局部坐标并留在 scope 的 GroupPrimitive', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -382,7 +382,7 @@ describe('scope GroupPrim emit 形态', () => {
     }
   });
 
-  it('scope 内 node primitive 用 局部 坐标 + GroupPrim transform 链', () => {
+  it('scope 内 node primitive 用 局部 坐标 + GroupPrimitive transform 链', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -452,7 +452,7 @@ describe('scope GroupPrim emit 形态', () => {
       const moveCmd = path.commands.find(c => c.kind === 'move');
       const lineCmd = path.commands.find(c => c.kind === 'line');
 
-      // PathPrim 使用 scope 局部坐标；GroupPrim scale 负责映射到视觉坐标
+      // PathPrimitive 使用 scope 局部坐标；GroupPrimitive scale 负责映射到视觉坐标
       if (moveCmd?.kind === 'move' && lineCmd?.kind === 'line') {
         expect(moveCmd.to[0]).toBeGreaterThan(0);
         expect(lineCmd.to[0]).toBeLessThan(100);
@@ -469,7 +469,7 @@ describe('scope GroupPrim emit 形态', () => {
     //   rotate(90)·(10, 0) = (0, 10)
     //   translate(100, 0)·(0, 10) = (100, 10)
     // 外层 path 引用 inner，端点应取 (100, 10) ± boundary clip——验证 nodeIndex 全局坐标和 SVG 渲染口径一致，
-    // 防止 path（顶层走 nodeIndex）与 node（GroupPrim 包局部坐标交给 SVG 渲染）之间漂移
+    // 防止 path（顶层走 nodeIndex）与 node（GroupPrimitive 包局部坐标交给 SVG 渲染）之间漂移
     const ir = scene([
       {
         type: 'scope',
@@ -566,7 +566,7 @@ describe('scope 跨 scope path 引用', () => {
 });
 
 describe('scope empty / prune 行为', () => {
-  it('空 scope（无 children / 无 transforms / 无 id）不 emit GroupPrim', () => {
+  it('空 scope（无 children / 无 transforms / 无 id）不 emit GroupPrimitive', () => {
     const ir = scene([
       { type: 'scope', children: [] },
       // 纯几何节点（无文本、无 rotate）不外裹 group——隔离出"空 scope 是否产 group"的判定
@@ -579,7 +579,7 @@ describe('scope empty / prune 行为', () => {
     expect(groups).toHaveLength(0);
   });
 
-  it('空 children + 非空 transforms → 仍 emit GroupPrim（保留 transform 语义）', () => {
+  it('空 children + 非空 transforms → 仍 emit GroupPrimitive（保留 transform 语义）', () => {
     const ir = scene([
       {
         type: 'scope',

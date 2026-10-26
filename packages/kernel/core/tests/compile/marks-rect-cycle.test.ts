@@ -42,14 +42,14 @@ describe('rectPerimeterSample（矩形周长采样，CW from 左上）', () => {
 });
 
 describe('C7：cycle 闭合段可承载 mark', () => {
-  it('三角形闭合路径，pos=5/6 落在闭合段中点 (2.5, 4)', () => {
+  it('三角形闭合路径，按累计弧长落在闭合段中点 (2.5, 4)', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
         {
           type: 'path',
-          marks: [{ pos: 5 / 6, mark: { kind: 'arrow', shape: 'stealth' } }],
+          marks: [{ pos: (10 + 1.5 * Math.hypot(5, 8)) / (10 + 2 * Math.hypot(5, 8)), shape: 'stealth' }],
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
@@ -60,7 +60,7 @@ describe('C7：cycle 闭合段可承载 mark', () => {
       ],
     };
 
-    // 3 个采样段（line, line, cycle）；pos=5/6 → segIdx=2(cycle) localT=0.5
+    // 已走过前两段，加上闭合段的一半，再除以总弧长
     // → 闭合段 (5,8)→(0,0) 中点 (2.5, 4)
     const pt = findMarkPoint(compileToScene(ir).scene.primitives);
 
@@ -77,7 +77,7 @@ describe('C7：rectangle 段计入段数并可承载 mark', () => {
     children: [
       {
         type: 'path',
-        marks: [{ pos, mark: { kind: 'arrow', shape: 'stealth' } }],
+        marks: [{ pos, shape: 'stealth' }],
         children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [40, 20] }],
       },
     ],
@@ -92,7 +92,7 @@ describe('C7：rectangle 段计入段数并可承载 mark', () => {
   });
 
   it('pos=0.25 → 矩形周长右上角 (40, 0)', () => {
-    const pt = findMarkPoint(compileToScene(rectPath(0.25)).scene.primitives);
+    const pt = findMarkPoint(compileToScene(rectPath(1 / 3)).scene.primitives);
 
     expect(pt).toBeDefined();
     expect(pt![0]).toBeCloseTo(40, 5);

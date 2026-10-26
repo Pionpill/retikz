@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { RectPrim, ScenePrimitive } from '../../src/contract';
+import type { RectPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRPaint, IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -16,8 +16,8 @@ const conicGrad: IRPaint = {
   ],
 };
 
-const rectsOf = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
-  flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
+const rectsOf = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
+  flattenPrims(prims).filter((p): p is RectPrimitive => p.type === 'rect');
 
 describe('conicGradient IRPaint compile', () => {
   it('node fill becomes resourceRef and keeps the conic spec in resources', () => {

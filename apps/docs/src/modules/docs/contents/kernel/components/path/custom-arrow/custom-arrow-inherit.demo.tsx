@@ -38,8 +38,8 @@ const Demo: FC = () => (
         [0, 0],
         [140, 0],
       ]}
-      arrow="->"
-      arrowDetail={{ shape: 'bracket' }}
+      arrow={{ end: { shape: 'bracket' } }}
+
       style={{ stroke: 'red', strokeWidth: 1.5 }}
     />
     <Draw
@@ -47,8 +47,8 @@ const Demo: FC = () => (
         [0, 40],
         [140, 40],
       ]}
-      arrow="->"
-      arrowDetail={{ shape: 'bracket' }}
+      arrow={{ end: { shape: 'bracket' } }}
+
       style={{ stroke: 'green', strokeWidth: 1.5 }}
     />
   </Layout>

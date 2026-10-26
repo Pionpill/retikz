@@ -1,6 +1,5 @@
-import type { JsonObject } from '@retikz/foundation';
-
-import type { ClipFillRule, IRAnimationTrack } from '../../schemas';
+import type { ClipFillRule } from '../../schemas';
+import type { ScenePrimitiveBase } from './base';
 import type { PathCommand } from './path';
 import type { ScenePrimitive } from './scene';
 
@@ -59,7 +58,7 @@ export type SceneClipPath = {
   fillRule: ClipFillRule;
 };
 
-/** 由 GroupPrim 引用的具名 Scene 裁剪资源 */
+/** 由 GroupPrimitive 引用的具名 Scene 裁剪资源 */
 export type ClipResource = {
   /** 标识场景裁剪资源 */
   kind: 'clip';
@@ -69,18 +68,8 @@ export type ClipResource = {
   path: SceneClipPath;
 };
 
-/** 编组：把若干 primitive 用结构化 transforms 包起来 */
-export type GroupPrim = {
-  /** 类型判别符 */
-  type: 'group';
-  /** 禁用该图元及其子树的指针命中；省略时保持正常命中 */
-  hitTest?: false;
-  /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
-  id?: string;
-  /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
-  meta?: JsonObject;
-  /** 时间轴动画 tracks：compile 从 IR 元素的 animations 原样 stamp；renderer 能播则播、不能则渲染 settled 静态态并 warn（不丢图） */
-  animations?: Array<IRAnimationTrack>;
+/** 分组图元的子图元、变换与裁剪引用 */
+export type GroupPrimitiveContent = {
   /**
    * 结构化变换序列，按数组顺序应用；undefined / 空数组表示无变换
    * @default []
@@ -96,3 +85,10 @@ export type GroupPrim = {
   /** 组内子原语 */
   children: Array<ScenePrimitive>;
 };
+
+/** 编组：把若干 primitive 用结构化 transforms 包起来 */
+export type GroupPrimitive = ScenePrimitiveBase &
+  GroupPrimitiveContent & {
+    /** 类型判别符 */
+    type: 'group';
+  };

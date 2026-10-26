@@ -1,8 +1,5 @@
-import type { JsonObject } from '@retikz/foundation';
-
 import type {
   ClipDefinition,
-  ClipShape,
   PatternDefinition,
   ResolvedPatternLineStyle,
   ResolvedPatternLineStyleCycle,
@@ -36,14 +33,22 @@ export type PatternResolution = Readonly<{
 }>;
 
 /** 已在 resolve 阶段确定的 paint resource 输入 */
-export type PaintResolution = Readonly<{
-  /** 内部 discriminator，不属于持久化 IR */
-  kind: 'paint';
-  /** 原始 paint spec */
-  spec: IRPaint;
-  /** pattern paint 的 provider 和样式解析结果 */
-  pattern?: PatternResolution;
-}>;
+export type PaintResolution = Readonly<
+  | {
+      /** 内部 discriminator，不属于持久化 IR */
+      kind: 'paint';
+      /** 原始 paint spec */
+      spec: Exclude<IRPaint, { kind: 'pattern' }>;
+    }
+  | {
+      /** 内部绘制资源分类 */
+      kind: 'paint';
+      /** 原始图案声明 */
+      spec: IRPatternPaint;
+      /** pattern paint 的 provider 和样式解析结果 */
+      pattern: PatternResolution;
+    }
+>;
 
 /** resolve 阶段可以产生的 paint 值 */
 export type PaintResolutionInput = string | PaintResolution;
@@ -56,20 +61,8 @@ export type ClipResolution = Readonly<{
   kind: string;
   /** 已绑定的 clip provider */
   definition: ClipDefinition;
-  /** provider schema parse 后的 JSON params */
-  params: JsonObject;
+  /** provider schema 解析后的完整 spec，保留转换后的参数类型 */
+  params: IRClip;
   /** 递归解析嵌套 clip，闭包捕获同一有效 registry */
   resolve: (clip: IRClip) => ClipResolution;
-}>;
-
-/** 已通过同 kind Clip Definition 完成 shape schema snapshot 解析的裁剪形状 */
-export type ClipShapeResolution = Readonly<{
-  /** definition 解析前的完整 shape snapshot */
-  spec: ClipShape;
-  /** 实际绑定的 Clip provider key */
-  kind: string;
-  /** 已绑定的完整 Clip Definition */
-  definition: ClipDefinition;
-  /** 已解析的 JSON shape */
-  params: ClipShape;
 }>;

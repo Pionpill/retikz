@@ -38,11 +38,7 @@ const createElementWorkspace = (options: ElementCompileOptions) => {
   const scopeChain = options.transforms ?? [];
   const effectiveTransform = composeScopeTransform(scopeChain);
   const paint = createPaintRegistry(options.environment.round);
-  const clip = createClipRegistry(
-    options.environment.round,
-    options.environment.clips,
-    options.environment.maxClipDepth,
-  );
+  const clip = createClipRegistry(options.environment.round, options.environment.maxClipDepth);
   const onWarn = (warning: CompileWarningInput): void => {
     diagnostics.push(warning);
   };

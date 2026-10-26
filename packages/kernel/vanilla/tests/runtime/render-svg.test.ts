@@ -66,29 +66,45 @@ const circleFrameClip = (): ClipDefinition =>
     kind: 'circleFrame',
     schema: strictObject({
       kind: literal('circleFrame'),
-      cx: number(),
-      cy: number(),
-      outer: number().positive(),
-      inner: number().positive(),
+      params: strictObject({
+        cx: number(),
+        cy: number(),
+        outer: number().positive(),
+        inner: number().positive(),
+      }),
     }),
-    resolve: spec => ({
-      kind: 'circleFrame',
-      cx: spec.cx,
-      cy: spec.cy,
-      outer: spec.outer,
-      inner: spec.inner,
-    }),
-    lower: shape => ({
-      commands: [
-        { kind: 'move', to: [shape.cx + shape.outer, shape.cy] },
-        { kind: 'arc', center: [shape.cx, shape.cy], radius: shape.outer, startAngle: 0, endAngle: 360 },
-        { kind: 'close' },
-        { kind: 'move', to: [shape.cx + shape.inner, shape.cy] },
-        { kind: 'arc', center: [shape.cx, shape.cy], radius: shape.inner, startAngle: 0, endAngle: 360 },
-        { kind: 'close' },
-      ],
-      fillRule: 'evenodd',
-    }),
+
+    lower: spec => {
+      const params = {
+        cx: spec.params.cx,
+        cy: spec.params.cy,
+        outer: spec.params.outer,
+        inner: spec.params.inner,
+      };
+      return {
+        commands: [
+          { kind: 'move', to: [params.cx + params.outer, params.cy] },
+          {
+            kind: 'arc',
+            center: [params.cx, params.cy],
+            radius: params.outer,
+            startAngle: 0,
+            endAngle: 360,
+          },
+          { kind: 'close' },
+          { kind: 'move', to: [params.cx + params.inner, params.cy] },
+          {
+            kind: 'arc',
+            center: [params.cx, params.cy],
+            radius: params.inner,
+            startAngle: 0,
+            endAngle: 360,
+          },
+          { kind: 'close' },
+        ],
+        fillRule: 'evenodd',
+      };
+    },
   });
 
 const clipIr: IRScene = {
@@ -97,7 +113,7 @@ const clipIr: IRScene = {
   children: [
     {
       type: 'scope',
-      clip: { kind: 'circleFrame', cx: 0, cy: 0, outer: 40, inner: 20 },
+      clip: { kind: 'circleFrame', params: { cx: 0, cy: 0, outer: 40, inner: 20 } },
       children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A' }],
     },
   ],

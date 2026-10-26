@@ -912,6 +912,16 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathMarkPlacement',
     url: '/kernel/components/path/reference#pathmarkplacementschema',
   },
+  PathArrowSchema: {
+    schema: IR.PathArrowSchema,
+    label: 'PathArrow',
+    url: '/kernel/components/path/reference#patharrowschema',
+  },
+  PathArrowEndSchema: {
+    schema: IR.PathArrowEndSchema,
+    label: 'PathArrowEnd',
+    url: '/kernel/components/path/reference#patharrowendschema',
+  },
   StepSchema: { schema: IR.StepSchema, label: 'Step', url: '/kernel/components/path/reference#stepschema' },
   PathLabelSchema: {
     schema: IR.PathLabelSchema,
@@ -1156,11 +1166,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'SmoothStep',
     url: '/kernel/components/path/reference#smoothstepschema',
   },
-  GeneratorStepSchema: {
-    schema: IR.GeneratorStepSchema,
-    label: 'GeneratorStep',
-    url: '/kernel/components/path/reference#generatorstepschema',
-  },
 
   RelativeTargetSchema: {
     schema: IR.RelativeTargetSchema,
@@ -1171,10 +1176,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'RelativeAccumulateTarget',
   },
 
-  ArrowMarkSchema: {
-    schema: IR.ArrowMarkSchema,
-    label: 'ArrowMark',
-    url: '/kernel/components/path/reference#arrowmarkschema',
+  MarkStyleSchema: {
+    schema: IR.MarkStyleSchema,
+    label: 'MarkStyle',
+    url: '/kernel/components/path/reference#markstyleschema',
   },
   ArrowDetailSchema: {
     schema: IR.ArrowDetailSchema,

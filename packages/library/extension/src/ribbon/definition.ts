@@ -1,5 +1,5 @@
-import type { PathKindDefinition } from '@retikz/core';
-import { definePathKind } from '@retikz/core';
+import type { PathDefinition } from '@retikz/core';
+import { definePath } from '@retikz/core';
 
 import { BUILTIN_RIBBON_WIDTH_PROFILES } from './bulge';
 import { ExtensionRibbonCapDefinitions } from './cap';
@@ -14,11 +14,11 @@ import type { IRRibbonPath } from './types';
 const createDefinition = (
   profiles: ReadonlyArray<RibbonWidthProfileDefinition>,
   caps: ReadonlyArray<RibbonCapDefinition>,
-): PathKindDefinition<IRRibbonPath> => {
+): PathDefinition<IRRibbonPath> => {
   const capRegistry = resolveRibbonCapRegistry(ExtensionRibbonCapDefinitions, caps);
   const profileRegistry = resolveRibbonWidthProfileRegistry(BUILTIN_RIBBON_WIDTH_PROFILES, profiles);
 
-  return definePathKind<IRRibbonPath>({
+  return definePath<IRRibbonPath>({
     name: 'ribbon',
     schema: RibbonPathSchema,
     compile: context => {
@@ -41,18 +41,18 @@ const createDefinition = (
 };
 
 /**
- * 使用内置 bulge 宽度函数与 butt、square、round、arc 端帽的 Ribbon Path kind
- * @description 需要在当前图的 pathKinds 中显式装配，不自动注册
+ * 使用内置 bulge 宽度函数与 butt、square、round、arc 端帽的 Ribbon Path
+ * @description 需要在当前图的 paths 中显式装配，不自动注册
  */
-export const RibbonPathKindDefinition = createDefinition([], []);
+export const RibbonPathDefinition = createDefinition([], []);
 
 /**
- * 创建包含内置与自定义宽度函数、端帽的 Ribbon Path kind
+ * 创建包含内置与自定义宽度函数、端帽的 Ribbon Path
  * @param options 扩展注册项，默认 {}；profiles 与 caps 默认 []，仍保留全部内置定义
- * @returns 名称为 ribbon 的 Path kind，供当前图的 pathKinds 显式装配
+ * @returns 名称为 ribbon 的 Path，供当前图的 paths 显式装配
  * @throws RetikzExtensionError：注册名为空或全空白、不同宽度函数定义同名，或端帽注册名重复时
  */
-export const createRibbonPathKindDefinition = (
+export const createRibbonPathDefinition = (
   options: Readonly<{
     /**
      * 追加的宽度函数定义；不能以不同定义覆盖内置或已注册名称
@@ -65,4 +65,4 @@ export const createRibbonPathKindDefinition = (
      */
     caps?: ReadonlyArray<RibbonCapDefinition>;
   }> = {},
-): PathKindDefinition<IRRibbonPath> => createDefinition(options.profiles ?? [], options.caps ?? []);
+): PathDefinition<IRRibbonPath> => createDefinition(options.profiles ?? [], options.caps ?? []);

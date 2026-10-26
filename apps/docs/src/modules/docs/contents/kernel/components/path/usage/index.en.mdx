@@ -215,15 +215,14 @@ These are the props most relevant to this page. See the [API reference](/kernel/
     {
       name: 'arrow',
       kind: 'property',
-      type: "'none' | '->' | '<-' | '<->'",
-      description: 'Sets the start, end, or both endpoint arrows',
+      type: "InputPath['arrow']",
+      description: 'Supports ->, <-, <-> shorthands, or start / end objects with appearance and endpointOverlap',
     },
     {
-      name: 'arrowDetail',
+      name: 'marks',
       kind: 'property',
-      type: 'IRArrowDetail',
-      description:
-        'Shared appearance: `{ shape?: string; scale?: number; length?: number; width?: number; color?: string; fill?: string; opacity?: number; lineWidth?: number }`. `start` / `end` override individual endpoints with the same fields; see `arrowPlacement` for overlap',
+      type: "IRPath['marks']",
+      description: 'Marks positioned by normalized arc length without shortening the host stroke',
     },
     {
       name: 'cornerRadius',

@@ -100,24 +100,16 @@ const assertNoCartesianOnlyAxisLineGeometry = (guide: IRPlotAxisGuide): void => 
   }
 };
 
-const axisArrowMarkOf = (
-  arrow: NonNullable<AxisLineToken['arrow']>['negative'] | NonNullable<AxisLineToken['arrow']>['positive'],
-): NonNullable<IRPath['marks']>[number] | null => {
-  if (arrow === undefined || arrow === false) return null;
-  return { pos: 0, mark: arrow === true ? { kind: 'arrow' } : { kind: 'arrow', ...arrow } };
-};
-
-const axisLineMarksOf = (guide: IRPlotAxisGuide): IRPath['marks'] | undefined => {
-  const arrow = axisLineTokenOf(guide)?.arrow;
-  if (arrow === undefined) return undefined;
-
-  const negative = axisArrowMarkOf(arrow.negative);
-  const positive = axisArrowMarkOf(arrow.positive);
-  const marks: NonNullable<IRPath['marks']> = [];
-  if (negative !== null) marks.push(negative);
-  if (positive !== null) marks.push({ ...positive, pos: 1 });
-
-  return marks.length > 0 ? marks : undefined;
+/** 将显式启用的坐标轴端点转换为 Core 箭头 */
+const axisLineArrowsOf = (guide: IRPlotAxisGuide): IRPath['arrow'] => {
+  const source = axisLineTokenOf(guide)?.arrow;
+  if (source === undefined) return undefined;
+  const arrow: NonNullable<IRPath['arrow']> = {};
+  if (source.negative !== undefined && source.negative !== false)
+    arrow.start = source.negative === true ? {} : source.negative;
+  if (source.positive !== undefined && source.positive !== false)
+    arrow.end = source.positive === true ? {} : source.positive;
+  return arrow;
 };
 
 type AxisTicksToken = NonNullable<IRPlotAxisGuide['ticks']>;
@@ -1017,8 +1009,8 @@ const lowerCartesianGuide = (
       ? null
       : (() => {
           const path = segmentsToPath([axisLine], axisLineStyle);
-          const marks = axisLineMarksOf(guide);
-          return path !== null && marks !== undefined ? { ...path, marks } : path;
+          const arrow = axisLineArrowsOf(guide);
+          return path !== null && arrow !== undefined ? { ...path, arrow } : path;
         })();
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);

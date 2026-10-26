@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { ScenePrimitive, TextPrim } from '../../src/contract';
+import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 // fallback measurer 不提供 ascent / descent，Node label 规范化为上下对称视觉盒
-const visualMiddle = (t: TextPrim): number => t.y;
+const visualMiddle = (t: TextPrimitive): number => t.y;
 
-/** 收集 scene 里所有 TextPrim（包括 group 嵌套里的） */
-const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
-  const out: Array<TextPrim> = [];
+/** 收集 scene 里所有 TextPrimitive（包括 group 嵌套里的） */
+const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrimitive> => {
+  const out: Array<TextPrimitive> = [];
 
   for (const p of prims) {
     if (p.type === 'text') out.push(p);
@@ -19,7 +19,7 @@ const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   return out;
 };
 
-const findLabel = (prims: Array<ScenePrimitive>, text: string): TextPrim | undefined =>
+const findLabel = (prims: Array<ScenePrimitive>, text: string): TextPrimitive | undefined =>
   collectTexts(prims).find(t => t.lines.some(l => (typeof l === 'string' ? l : l.text) === text));
 
 describe('Node label', () => {
@@ -93,7 +93,7 @@ describe('Node label', () => {
   });
 
   describe('基本生成', () => {
-    it('单对象 label → 一个 TextPrim', () => {
+    it('单对象 label → 一个 TextPrimitive', () => {
       const ir: IRScene = {
         version: 1,
         type: 'scene',
@@ -113,7 +113,7 @@ describe('Node label', () => {
       expect(labelText).toBeDefined();
     });
 
-    it('数组 label → 多个 TextPrim', () => {
+    it('数组 label → 多个 TextPrimitive', () => {
       const ir: IRScene = {
         version: 1,
         type: 'scene',
@@ -356,7 +356,7 @@ describe('Node label', () => {
       expect(labelText.fontFamily).toBe('Inter');
     });
 
-    it('label TextPrim 写入真实 measuredWidth', () => {
+    it('label TextPrimitive 写入真实 measuredWidth', () => {
       const ir: IRScene = {
         version: 1,
         type: 'scene',

@@ -71,7 +71,7 @@ Core 先确定文字的有效字体，再请求测量。返回的 `width` 用于
 
 将 A 的正文换成文字与公式混排时，普通文字仍交给测量器，公式片段则交给 `lowerTex`。`@retikz/tex` 的 MathJax 接入先异步初始化引擎，再提供同步下沉函数；Core 的这次排版不会等待公式引擎加载。
 
-公式的转换链路是 TeX → MathJax SVG → `LoweredTex` 路径与度量 → Core `PathPrim` → Render。公式尺寸随 SVG 下沉得到，不走 Canvas 文字测量；SVG 与 Canvas 后端最终消费同一份路径图元。具体转换过程见 [TeX 实现原理](/kernel/packages/tex/mechanism)。
+公式的转换链路是 TeX → MathJax SVG → `LoweredTex` 路径与度量 → Core `PathPrimitive` → Render。公式尺寸随 SVG 下沉得到，不走 Canvas 文字测量；SVG 与 Canvas 后端最终消费同一份路径图元。具体转换过程见 [TeX 实现原理](/kernel/packages/tex/mechanism)。
 
 下沉结果的 `width` 决定公式占用的横向空间，`height - depth` 是基线上方高度，`depth` 是基线下方深度。Core 把各片段宽度相加，并分别取最大的上伸和下伸，得到这一行的基线盒。混排行的行槽高度取配置行高与基线盒高度中的较大值，避免较高的公式挤到邻行。
 

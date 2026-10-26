@@ -1,0 +1,107 @@
+---
+title: mark · 标记
+description: 在路径任意弧长位置放置叉号、加号、对勾、星形或已注册的箭头
+---
+
+在 `Draw` 或 `Path` 的 `marks` 中声明形状和位置，就能给连线补上状态、重点或方向标记。每项直接写 `pos`、`shape` 和外观字段；自定义参数放在 `params` 中。首次绘图请先读[基础用法](/kernel/components/path/usage)。
+
+<ComponentAlert
+  type="tip"
+  title="标记与箭头共享绘图能力"
+  description={
+    <>
+      标记的绘图能力与箭头一致，放置和路径处理的区别是：
+      <br />
+      · arrow 只允许放在路径首尾，mark 可以放在路径任意位置。
+      <br />
+      · arrow 会截断路径，mark 不会。
+      <br />
+      因此，本文及后续的自定义标记文档只简要介绍标记相关用法。共享能力的详细说明请参考
+      <a className="underline underline-offset-4" href="/kernel/components/path/arrow">
+        箭头
+      </a>
+      和
+      <a className="underline underline-offset-4" href="/kernel/components/path/custom-arrow">
+        自定义箭头
+      </a>
+      文档。
+    </>
+  }
+/>
+
+## 接入方式
+
+四种普通标记已内置，无需注册。下面从左到右是叉号、加号、对勾和五角星；示例用 `scale: 1.5` 放大标记。
+
+<ComponentPreview files="mark-basic" />
+
+React 的 `Draw` / `Path`、Vanilla 的 `path({ marks })` 和 JSON IR 的路径 `marks` 使用相同的放置列表。源码面板可以切换对应写法。
+
+## 形状与放置
+
+| `shape` | 外观 | 可表达的含义           |
+| ------- | ---- | ---------------------- |
+| `times` | ×    | 错误、无效位置、交点   |
+| `plus`  | +    | 新增、正向作用、采样点 |
+| `check` | ✓    | 完成、正确、通过验证   |
+| `star`  | ★    | 重点、特殊事件         |
+
+名称只表示形状，不绑定状态或颜色。四种普通标记以局部基准正方形中心为锚点。已注册的箭头也能直接用作 `shape`，例如 `stealth`，它以尖端为锚点。
+
+`pos` 是整条路径累计弧长的比例，范围为 0～1：0 在起点，0.5 在半程，1 在终点。定位在端点箭头截断和标签断线之前完成，因此改变箭头大小或标签间隙不会移动标记。
+
+<ComponentPreview
+  files={['mark-placement', 'mark-placement.preview.tsx']}
+  defaultSourceFile="mark-placement.preview.tsx"
+  size="lg"
+  caption="改变位置观察标记沿线移动；切换箭头形状可比较尖端锚点。示例将缩放设为 2，并用固定角度 0 保持对勾朝向。"
+/>
+
+`rotate` 省略或为 `'auto'` 时沿路径切线旋转；数值表示路径局部坐标中的固定角度，单位为度。状态对勾可用 `rotate: 0` 保持朝向，之后仍随整条路径或 Scope 的变换一起变化。
+
+`scale` 同时缩放长度与宽度，默认 1。`length` / `width` 默认来自定义，未指定时为 8；实际尺寸还乘以宿主路径线宽，并按定义的 `baseSize` 缩放局部坐标。`times`、`plus`、`check` 使用 `stroke` 和 `lineWidth` 绘制线条，`star` 使用 `fill` 绘制闭合轮廓。未覆盖颜色时跟随宿主描边；具体 `stroke` / `fill` 可单独覆盖。宿主透明度与标记 `opacity` 相乘。
+
+`defaults.path.arrow` 的公共外观也适用于显式声明的标记，`start` / `end` 分支只服务端点箭头。默认值不会创建标记。
+
+标记只叠放图元，不缩短路径、不挖洞，也不自动避让标签。即使 `pos` 为 0 或 1，规则也相同。需要端点接合与截断时使用 [arrow · 箭头](/kernel/components/path/arrow)。上面的试验场保留一个末端箭头，可以把标记拖到两端比较。
+
+主线和端点箭头先绘制，标记按列表顺序绘制，路径标签最后绘制。标记内容计入可视边界，命中归属宿主路径。`move` 的跳跃不计长度，闭合段计长度；整条路径没有非零长度时，非空标记列表会报错。
+
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'Draw.marks',
+      kind: 'property',
+      type: "DrawProps['marks']",
+      description: '沿路径放置的标记列表，Path 与 Vanilla path 使用相同配置。',
+    },
+    {
+      name: 'IRPathMark',
+      kind: 'type',
+      type: 'IRPathMark',
+      description: '包含 pos、shape、rotate、尺寸、外观及可选 params 的放置项。',
+    },
+    {
+      name: 'BuiltinMarkShape',
+      kind: 'type',
+      type: 'BuiltinMarkShape',
+      description: '四种内置普通标记名称；shape 同时接受已注册箭头和自定义名称。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '自定义标记',
+      description: '定义轮廓、锚点和自有参数，并注入运行时',
+      url: '/kernel/components/path/custom-mark',
+    },
+    { title: 'arrow · 箭头', description: '设置端点箭头及路径接合', url: '/kernel/components/path/arrow' },
+    { title: 'API 参考', description: '查询路径配置与标记契约', url: '/kernel/components/path/reference' },
+  ]}
+/>

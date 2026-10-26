@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type { CompileOptions } from '../../../src/compile/compile';
 import { compileToScene } from '../../../src/compile/compile';
 import type {
-  EllipsePrim,
-  PathPrim,
+  EllipsePrimitive,
+  PathPrimitive,
   ScenePrimitive,
-  PaintResource,
+  PatternResource,
+  GradientResource,
   PatternDefinition,
   PatternEmitContext,
   ResolvedPatternTile,
@@ -44,27 +45,27 @@ const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
 });
 
 /** 从 Scene.resources 取首个 pattern 资源（spec.kind === 'pattern'） */
-const firstPatternResource = (resources: Array<SceneResource> | undefined): PaintResource | undefined =>
-  (resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern');
+const firstPatternResource = (resources: Array<SceneResource> | undefined): PatternResource | undefined =>
+  (resources ?? []).find((r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern');
 
 /** 从 Scene.resources 取首个 pattern 资源的 tile（已解析 motif） */
 const tileOf = (spec: IRPaint, opts?: CompileOptions): ResolvedPatternTile | undefined =>
   firstPatternResource(compileToScene(patternNodeIR(spec), opts).scene.resources)?.tile;
 
 /** 取 tile.motif 里首个 path 原语 */
-const firstMotifPath = (tile: ResolvedPatternTile | undefined): PathPrim | undefined =>
-  (tile?.motif ?? []).find((m): m is PathPrim => m.type === 'path');
+const firstMotifPath = (tile: ResolvedPatternTile | undefined): PathPrimitive | undefined =>
+  (tile?.motif ?? []).find((m): m is PathPrimitive => m.type === 'path');
 
 /** 取 tile.motif 中的全部 path 原语 */
-const motifPaths = (tile: ResolvedPatternTile | undefined): Array<PathPrim> =>
-  (tile?.motif ?? []).filter((motif): motif is PathPrim => motif.type === 'path');
+const motifPaths = (tile: ResolvedPatternTile | undefined): Array<PathPrimitive> =>
+  (tile?.motif ?? []).filter((motif): motif is PathPrimitive => motif.type === 'path');
 
 /** 取 tile.motif 里首个 ellipse 原语 */
-const firstMotifEllipse = (tile: ResolvedPatternTile | undefined): EllipsePrim | undefined =>
-  (tile?.motif ?? []).find((m): m is EllipsePrim => m.type === 'ellipse');
+const firstMotifEllipse = (tile: ResolvedPatternTile | undefined): EllipsePrimitive | undefined =>
+  (tile?.motif ?? []).find((m): m is EllipsePrimitive => m.type === 'ellipse');
 
 /** 把 motif path 命令序列拍成紧凑 d 串（move/line/close，golden 对比用） */
-const pathD = (prim: PathPrim): string =>
+const pathD = (prim: PathPrimitive): string =>
   prim.commands
     .map(c => {
       if (c.kind === 'move') return `M${c.to[0]},${c.to[1]}`;
@@ -159,7 +160,7 @@ describe('Pattern registry — happy path', () => {
     const spec: IRPaint = { kind: 'pattern', shape: 'lines', size: 6 };
     const scene = compileToScene(patternNodeIR(spec, spec)).scene;
     const patternResources = (scene.resources ?? []).filter(
-      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
+      (r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern',
     );
 
     expect(patternResources).toHaveLength(1);
@@ -208,8 +209,8 @@ describe('Pattern registry — boundary', () => {
     expect(path).toMatchObject({
       dashPattern: [6, 3],
       dashOffset: 2,
-      strokeLinecap: 'round',
-      strokeLinejoin: 'bevel',
+      lineCap: 'round',
+      lineJoin: 'bevel',
     });
   });
 
@@ -238,14 +239,14 @@ describe('Pattern registry — boundary', () => {
       stroke: '#2563eb',
       strokeWidth: 1,
       dashPattern: [1, 2],
-      strokeLinecap: 'round',
+      lineCap: 'round',
     });
     expect(vertical).toMatchObject({
       stroke: '#dc2626',
       strokeWidth: 2,
       dashPattern: [6, 2],
     });
-    expect(vertical.strokeLinecap).toBeUndefined();
+    expect(vertical.lineCap).toBeUndefined();
   });
 
   it('line_style_cycle_every_n：每 5 条主线扩展 tile，稀疏位置继承基础样式', () => {
@@ -353,8 +354,8 @@ describe('Pattern registry — boundary', () => {
           stroke: context.color,
           dashPattern: context.dashPattern,
           dashOffset: context.dashOffset,
-          strokeLinecap: context.lineCap,
-          strokeLinejoin: context.lineJoin,
+          lineCap: context.lineCap,
+          lineJoin: context.lineJoin,
         },
       ],
     });
@@ -375,8 +376,8 @@ describe('Pattern registry — boundary', () => {
     expect(path).toMatchObject({
       dashPattern: [1, 2],
       dashOffset: -1,
-      strokeLinecap: 'round',
-      strokeLinejoin: 'bevel',
+      lineCap: 'round',
+      lineJoin: 'bevel',
     });
   });
 
@@ -470,13 +471,13 @@ describe('Pattern registry — boundary', () => {
 
     // gradient 资源无 tile、pattern 资源有 tile
     const gradRes = (scene.resources ?? []).find(
-      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'linearGradient',
+      (r): r is GradientResource => r.kind === 'paint' && r.spec.kind === 'linearGradient',
     );
     const patRes = (scene.resources ?? []).find(
-      (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
+      (r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern',
     );
 
-    expect(gradRes?.tile).toBeUndefined();
+    expect(gradRes).not.toHaveProperty('tile');
     expect(patRes?.tile).toBeDefined();
   });
 });

@@ -331,7 +331,7 @@ describe('Layout Core layout capability gate', () => {
           {
             type: 'scope',
             transforms: [{ kind: 'translate', x: 7, y: 11 }],
-            clip: { kind: 'rect', x: -50, y: -50, width: 100, height: 100 },
+            clip: { kind: 'rect', params: { x: -50, y: -50, width: 100, height: 100 } },
             children: [
               {
                 type: 'node',

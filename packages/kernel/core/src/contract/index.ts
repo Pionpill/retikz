@@ -1,7 +1,3 @@
-export * from './arrow';
-export * from './boundary';
-export * from './box-spacing';
-export * from './clip';
 export * from './composite/definition';
 export { assertCompositeInputBindings, createCompositeInputBindings } from './composite/input';
 export type {
@@ -12,13 +8,13 @@ export type {
   CompositeRuntimeInputContext,
 } from './composite/input';
 export * from './composite/layout';
+export * from './node';
 export * from './observation';
 export * from './occurrence';
-export * from './path-generator';
-export * from './path-kind';
-export * from './pattern';
+export * from './path';
 export * from './provider';
 export * from './scene';
-export * from './shape';
+export * from './scope';
 export * from './spatial-handle';
+export * from './style';
 export * from './theme';

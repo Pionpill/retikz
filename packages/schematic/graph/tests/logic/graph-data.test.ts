@@ -53,7 +53,7 @@ const graph = {
   transforms: [{ kind: 'translate', x: 10, y: 20 }],
   position: { kind: 'anchor', target: [30, 40], selfAnchor: 'center' },
   zIndex: 2,
-  clip: { kind: 'rect', x: 0, y: 0, width: 220, height: 120 },
+  clip: { kind: 'rect', params: { x: 0, y: 0, width: 220, height: 120 } },
   boundingShape: 'circle',
   animations: [],
   children: [

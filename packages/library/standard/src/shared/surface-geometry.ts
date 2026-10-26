@@ -24,5 +24,7 @@ export const surfaceBoundaryPath = (
 /** 构造与 Surface rounded boundary 一致的 content clip */
 export const surfaceClip = (width: number, height: number, cornerRadius: number): IRClip => ({
   kind: 'path',
-  commands: rectOutline([0, 0], [width, height], cornerRadius),
+  params: {
+    commands: rectOutline([0, 0], [width, height], cornerRadius),
+  },
 });

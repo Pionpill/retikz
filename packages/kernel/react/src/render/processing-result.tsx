@@ -1,4 +1,4 @@
-import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
+import type { AnimationControls } from '@retikz/render/animation';
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import {
@@ -38,10 +38,6 @@ export type ProcessingResultHostProps = Readonly<{
   animate: boolean;
   /** 静态动画采样时刻 */
   snapshotAt?: number;
-  /** 缓动能力注册表 */
-  easings?: EasingRegistry;
-  /** 动画属性能力注册表 */
-  animationProperties?: AnimationPropertyRegistry;
   /** 动画控制器出口 */
   animationRef?: Ref<AnimationControls | null>;
   /** 资源 id 前缀 */
@@ -115,8 +111,7 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
     style,
     animate,
     snapshotAt,
-    easings,
-    animationProperties,
+
     animationRef,
     idPrefix,
     onArtifacts,
@@ -132,9 +127,8 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
             idPrefix,
             animate,
             snapshotAt,
-            easings,
           }),
-    [backend, frame, idPrefix, animate, snapshotAt, easings],
+    [backend, frame, idPrefix, animate, snapshotAt],
   );
 
   const hasAnimations = backend === 'svg' && animate && sceneHasAnimations(result.scene);
@@ -179,8 +173,6 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
         animate={animate}
         snapshotAt={snapshotAt}
         animationRef={animationRef}
-        easings={easings}
-        animationProperties={animationProperties}
       />
     );
   }

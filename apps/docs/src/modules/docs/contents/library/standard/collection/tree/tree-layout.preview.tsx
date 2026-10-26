@@ -30,7 +30,7 @@ export const renderTreePreview = (values: TreePreviewValues) => {
         {...(values.styled ? { defaultNode: { style: { stroke: 'dodgerblue', strokeWidth: 2 } } } : {})}
         defaultConnection={{
           path: {
-            marks: values.arrows ? [{ pos: 1, mark: { kind: 'arrow' } }] : [],
+            marks: values.arrows ? [{ pos: 1 }] : [],
             ...(values.styled ? { style: { stroke: 'darkorange', dashPattern: [4, 3] } } : {}),
           },
         }}

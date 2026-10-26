@@ -1,4 +1,5 @@
 import { createProcessingController, normalizeScene, scene } from '@retikz/vanilla';
+import type { InputPath } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { StandardInputEmbedAdapters } from '../src';
@@ -45,13 +46,20 @@ it('三入口和嵌套内容进入 retained 时保持 JSON-safe', () => {
     controller.dispose();
   }
 });
-it('箭头简写由 Kernel 转换，none 和空 marks 都保留空数组', () => {
-  for (const path of [{ arrow: 'none' as const }, { marks: [] }]) {
+it('显式空箭头与空 marks 均被保留', () => {
+  for (const path of [{ arrow: {} }, { arrow: {}, marks: [] }]) {
     const result = normalizeScene(scene({ children: [chain({ items: ['a', 'b'], defaultConnection: { path } })] }), {
       adapters: StandardInputEmbedAdapters,
     });
 
-    expect(JSON.stringify(result.ir)).toContain('"marks":[]');
-    expect(JSON.stringify(result.ir)).not.toContain('"arrow"');
+    expect(JSON.stringify(result.ir)).toContain('"arrow":{}');
   }
+});
+
+it('连接箭头方向简写与端点对象经 Kernel 归一化后等价', () => {
+  const normalize = (arrow: InputPath['arrow']) =>
+    normalizeScene(scene({ children: [chain({ items: ['a', 'b'], defaultConnection: { path: { arrow } } })] }), {
+      adapters: StandardInputEmbedAdapters,
+    }).ir;
+  expect(normalize('->')).toEqual(normalize({ end: {} }));
 });

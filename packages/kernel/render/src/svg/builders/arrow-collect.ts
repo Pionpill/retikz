@@ -1,7 +1,7 @@
 import type { ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
 import type { AssertEqual } from '@retikz/foundation';
 
-/** 递归收集 scene 里所有 PathPrim 用到的 arrow 端点 spec —— 按需注入 marker defs */
+/** 递归收集 scene 里所有 PathPrimitive 用到的 arrow 端点 spec —— 按需注入 marker defs */
 export const collectArrowEnds = (prims: ReadonlyArray<ScenePrimitive>): Array<ResolvedArrowEnd> => {
   const out: Array<ResolvedArrowEnd> = [];
 

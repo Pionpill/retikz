@@ -1,4 +1,4 @@
-import type { GroupPrim, IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
+import type { GroupPrimitive, IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
 import {
   ChildSchema,
   compileToScene,
@@ -93,7 +93,7 @@ const compileRamp = (child: IRChild, proposal?: LayoutProposal) => {
   return { observed, output, artifact: envelope.value };
 };
 
-const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrim> =>
+const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
   primitives.flatMap(primitive => (primitive.type === 'group' ? [primitive, ...groupsOf(primitive.children)] : []));
 
 describe('Legend ramp compile contract', () => {

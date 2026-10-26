@@ -1,4 +1,4 @@
-import type { IRScene } from '@retikz/core';
+import type { IRScene, IRPath } from '@retikz/core';
 import { compileToScene, SceneSchema } from '@retikz/core';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -9,6 +9,42 @@ import { convertIRToReactNode } from '../../../src/kernel/adapter/unbuilder';
 import { Draw, EdgeLabel } from '../../../src/sugar';
 
 describe('React JSX Input 场景', () => {
+  it.each(['->', '<-', '<->'] as const)('Path 与 Draw 的 %s 简写统一由 Vanilla 转换', arrow => {
+    const endpoints = arrow === '->' ? { end: {} } : arrow === '<-' ? { start: {} } : { start: {}, end: {} };
+    const fromPath = normalizeScene(
+      createInputScene(
+        <Path arrow={arrow}>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="line" to={[100, 0]} />
+        </Path>,
+      ).scene,
+    ).ir;
+    const fromDraw = normalizeScene(
+      createInputScene(
+        <Draw
+          arrow={arrow}
+          way={[
+            [0, 0],
+            [100, 0],
+          ]}
+        />,
+      ).scene,
+    ).ir;
+    const explicit = normalizeScene(
+      createInputScene(
+        <Draw
+          arrow={endpoints}
+          way={[
+            [0, 0],
+            [100, 0],
+          ]}
+        />,
+      ).scene,
+    ).ir;
+    expect(fromPath).toEqual(explicit);
+    expect(fromDraw).toEqual(explicit);
+    expect(compileToScene(fromDraw).scene).toEqual(compileToScene(explicit).scene);
+  });
   it('preserves multiline node labels through JSX, Vanilla and IR round-trip', () => {
     const text = ['first', { text: 'second', fill: '#ff0000' }];
     const input = createInputScene(<Node label={{ text }} />);
@@ -75,8 +111,7 @@ describe('React JSX Input 场景', () => {
 
   it('把 Path 的 arrowPlacement 原样交给 Vanilla 并生成端点重叠 IR', () => {
     const props = {
-      arrow: '->' as const,
-      arrowPlacement: { end: { overlap: 0.5 } },
+      arrow: { end: { endpointOverlap: 0.5 } },
     };
     const input = createInputScene(
       <Path {...props}>
@@ -88,7 +123,7 @@ describe('React JSX Input 场景', () => {
     expect(normalizeScene(input.scene).ir.children).toMatchObject([
       {
         type: 'path',
-        marks: [{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow' } }],
+        arrow: { end: { endpointOverlap: 0.5 } },
       },
     ]);
   });
@@ -191,4 +226,39 @@ it('Scope 包络在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
   const restored = normalizeScene(createInputScene(convertIRToReactNode(kernel)).scene).ir;
 
   expect(compileToScene(restored).scene).toEqual(compileToScene(ir).scene);
+});
+
+it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
+  const arrow = { end: { shape: 'circle', endpointOverlap: 0.5 } };
+  const marks: NonNullable<IRPath['marks']> = [{ pos: 0, rotate: 45, scale: 2, shape: 'dot', params: { radius: 3 } }];
+  const jsx = normalizeScene(
+    createInputScene(
+      <Draw
+        way={[
+          [0, 0],
+          [100, 0],
+        ]}
+        arrow={arrow}
+        marks={marks}
+      />,
+    ).scene,
+  ).ir;
+  const vanilla = normalizeScene({
+    children: [
+      {
+        type: 'path',
+        way: [
+          [0, 0],
+          [100, 0],
+        ],
+        arrow,
+        marks,
+      },
+    ],
+  }).ir;
+  expect(jsx).toEqual(vanilla);
+  const child = jsx.children[0];
+  if ('namespace' in child || child.type !== 'path') throw new Error('expected path');
+  expect(normalizeScene(createInputScene(convertIRToReactNode({ ...jsx, children: [child] })).scene).ir).toEqual(jsx);
+  expect(jsx.children[0]).toMatchObject({ arrow, marks });
 });

@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { PathPrim, ScenePrimitive } from '../../src/contract';
+import type { PathPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { BlendMode, PathSchema } from '../../src/schemas';
-import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
+import { pathArrows } from '../helpers/path-arrows';
 
 const silent = { onWarn: () => {} };
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
-const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
-  const p = flattenPrims(prims).find((x): x is PathPrim => x.type === 'path');
-  if (!p) throw new Error('expected a PathPrim in scene');
+const findPathPrim = (prims: Array<ScenePrimitive>): PathPrimitive => {
+  const p = flattenPrims(prims).find((x): x is PathPrimitive => x.type === 'path');
+  if (!p) throw new Error('expected a PathPrimitive in scene');
   return p;
 };
 
@@ -27,7 +27,7 @@ const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileT
 // ════════════════ Happy ════════════════
 
 describe('[path-blend] Happy', () => {
-  it('path-blend：Path + blendMode="screen" → 主 PathPrim 带 blendMode', () => {
+  it('path-blend：Path + blendMode="screen" → 主 PathPrimitive 带 blendMode', () => {
     const prim = findPathPrim(
       compilePath({
         style: { stroke: 'cyan', blendMode: 'screen' },
@@ -53,7 +53,7 @@ describe('[path-blend] Happy', () => {
 // ════════════════ 边界 ════════════════
 
 describe('[path-blend] 边界', () => {
-  it('blend-omitted-noop：不设 → PathPrim 无 blendMode', () => {
+  it('blend-omitted-noop：不设 → PathPrimitive 无 blendMode', () => {
     expect(findPathPrim(compilePath({}).primitives).blendMode).toBeUndefined();
   });
 
@@ -94,7 +94,7 @@ describe('[path-blend] 交互', () => {
   it('blend-text-not-inherited（path 类比）：带 arrow 的 path + blendMode → arrow spec 不带 blendMode', () => {
     const prim = findPathPrim(
       compilePath({
-        marks: arrowMarks('->'),
+        arrow: pathArrows('->'),
         style: { stroke: 'cyan', blendMode: 'multiply' },
       }).primitives,
     );

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, IRScene, ScenePrimitive } from '../../src';
+import type { GroupPrimitive, IRScene, ScenePrimitive } from '../../src';
 import { compileToScene, isNodeLayoutCompileArtifact } from '../../src';
 import { applyTransformChain } from '../../src/compile/transform';
 
@@ -10,8 +10,8 @@ const scene = (children: IRScene['children']): IRScene => ({
   children,
 });
 
-const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim => {
-  const group = primitives.find((primitive): primitive is GroupPrim => primitive.type === 'group');
+const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive => {
+  const group = primitives.find((primitive): primitive is GroupPrimitive => primitive.type === 'group');
   if (group === undefined) throw new Error('expected scope group');
   return group;
 };
@@ -89,7 +89,7 @@ describe('Scope anchor position 两阶段布局', () => {
         },
       ]),
     ).scene;
-    const groups = compiled.primitives.filter((primitive): primitive is GroupPrim => primitive.type === 'group');
+    const groups = compiled.primitives.filter((primitive): primitive is GroupPrimitive => primitive.type === 'group');
 
     expect(groups[0]?.transforms).toEqual([{ kind: 'translate', x: 50, y: 10 }]);
     expect(groups[2]?.transforms).toEqual([{ kind: 'translate', x: 90, y: 20 }]);

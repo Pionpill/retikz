@@ -251,7 +251,7 @@ export const PathMarkSchema = strictObject({
         issue(['encodings', 'ribbon'], 'Width bindings cannot override profile or stops');
       if (binding?.endWidth !== undefined && width !== undefined && width.kind !== 'taper')
         issue(['encodings', 'ribbon', 'endWidth'], 'endWidth requires a taper width rule');
-      for (const field of ['closed', 'closure', 'connectNulls', 'cornerRadius', 'marks'] as const) {
+      for (const field of ['closed', 'closure', 'connectNulls', 'cornerRadius', 'marks', 'arrow'] as const) {
         if (properties[field] !== undefined) issue(['properties', field], `Ribbon cannot use ${field}`);
       }
       if (mark.encodings.cornerRadius !== undefined)

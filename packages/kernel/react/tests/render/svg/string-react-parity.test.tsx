@@ -129,12 +129,11 @@ describe('string-react-parity', () => {
 
     const defs = findChild(svgElement, 'defs');
     const defsChildren = elementChildren(defs);
-    const marker = defsChildren.find(c => c.type === 'marker');
     const gradient = defsChildren.find(c => c.type === 'linearGradient');
     const clipPath = defsChildren.find(c => c.type === 'clipPath');
     const filter = defsChildren.find(c => c.type === 'filter');
 
-    expect(marker).toBeDefined();
+    expect(svgString).toContain('scale(');
     expect(gradient?.props.id).toBe('retikz-paint-parity-paint-1');
     expect(clipPath?.props.id).toBe('retikz-clip-parity-clip-1');
     expect(filter).toBeDefined();
@@ -159,12 +158,13 @@ describe('string-react-parity', () => {
     expect(paintedRect.props.fill).toBe('url(#retikz-paint-parity-paint-1)');
     expect(svgString).toContain('fill="url(#retikz-paint-parity-paint-1)"');
 
-    const path = findChild(svgElement, 'path');
-    const markerUrl = `url(#${String(marker?.props.id)})`;
-
-    expect(path.props.markerStart).toBe(markerUrl);
-    expect(path.props.markerEnd).toBe(markerUrl);
-    expect(svgString).toContain(`marker-start="${markerUrl}"`);
-    expect(svgString).toContain(`marker-end="${markerUrl}"`);
+    const collectPaths = (element: AnyElement): Array<AnyElement> => [
+      ...(element.type === 'path' ? [element] : []),
+      ...elementChildren(element).flatMap(collectPaths),
+    ];
+    const arrows = collectPaths(svgElement).filter(path => path.props.d === 'M 0 0 L 10 5 L 0 10 Z');
+    expect(arrows).toHaveLength(2);
+    expect(arrows.map(path => path.props.fill)).toEqual(['#000', '#000']);
+    expect(svgString.match(/d="M 0 0 L 10 5 L 0 10 Z"/g)).toHaveLength(2);
   });
 });

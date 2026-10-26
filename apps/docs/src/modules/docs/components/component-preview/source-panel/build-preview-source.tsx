@@ -224,7 +224,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
                     <Layout
                       ir={previewIr.ir}
                       renderer={mode}
-                      extensions={{ pathKinds: previewIr.pathKinds, shapes: previewIr.shapes }}
+                      extensions={{ paths: previewIr.paths, shapes: previewIr.shapes }}
                     />
                   )
                 : undefined,

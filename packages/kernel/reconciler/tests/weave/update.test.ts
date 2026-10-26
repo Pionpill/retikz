@@ -1,5 +1,6 @@
 import { compileToScene, prepareSceneCompilation } from '@retikz/core';
-import type { IRScene, CompileObservation, CompileObserverDefinition } from '@retikz/core';
+import type { IRPath, ScenePrimitive, IRScene, CompileObservation, CompileObserverDefinition } from '@retikz/core';
+import type { MarkEmitContext } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
@@ -402,7 +403,7 @@ it('宿主装饰默认更新与完整编译一致，并保留提交前结果', (
         { type: 'step', kind: 'line', to: [100, 30] },
       ],
       label: { text: 'path' },
-      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      arrow: { end: {} },
     },
   ];
   const input: IRScene = { type: 'scene', version: 1, children: [{ type: 'scope', id: 'host', children }] };
@@ -425,4 +426,47 @@ it('宿主装饰默认更新与完整编译一致，并保留提交前结果', (
   expect(updated.compilation.result).toEqual(compileToScene({ ...input, children: [{ ...properties, children }] }));
   expect(mounted.compilation.result).toEqual(before);
   updated.commit();
+});
+
+it('普通标记参数和路径更新与完整编译保持一致', () => {
+  const definition = {
+    name: 'dot',
+    emit: ({ params }: MarkEmitContext): Array<ScenePrimitive> => [
+      { type: 'ellipse', cx: 0, cy: 0, rx: Number(params.radius), ry: 3, fill: 'red' },
+    ],
+  };
+  const input: IRScene = {
+    type: 'scene',
+    version: 1,
+    children: [
+      {
+        type: 'path',
+        id: 'host',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [100, 0] },
+        ],
+        marks: [{ pos: 0.5, shape: 'dot', params: { radius: 2 } }],
+      },
+    ],
+  };
+  const options = { marks: [definition] };
+  const session = new WeaveReconciler(input, options);
+  const mounted = session.mount();
+  const before = structuredClone(mounted.compilation.result);
+  const path: IRPath = {
+    type: 'path',
+    id: 'host',
+    children: [
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'line', to: [200, 0] },
+    ],
+    marks: [{ pos: 0.75, shape: 'dot', params: { radius: 6 } }],
+  };
+  const update = session.update({
+    operations: [{ kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'host' }, input: path }],
+  });
+  expect(update.compilation.result).toEqual(compileToScene({ ...input, children: [path] }, options));
+  expect(mounted.compilation.result).toEqual(before);
+  update.commit();
 });

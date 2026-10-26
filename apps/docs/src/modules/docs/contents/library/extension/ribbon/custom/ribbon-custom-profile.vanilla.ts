@@ -1,4 +1,4 @@
-import { createRibbonPathKindDefinition, defineRibbonWidthProfile } from '@retikz/extension';
+import { createRibbonPathDefinition, defineRibbonWidthProfile } from '@retikz/extension';
 import { path, renderToSvgString, scene } from '@retikz/vanilla';
 import { z } from 'zod';
 
@@ -8,7 +8,7 @@ const pulseProfile = defineRibbonWidthProfile({
   widthAt: ({ offset, params }) => params.base + (params.peak - params.base) * Math.sin(Math.PI * offset),
 });
 
-const pulseRibbonDefinition = createRibbonPathKindDefinition({ profiles: [pulseProfile] });
+const pulseRibbonDefinition = createRibbonPathDefinition({ profiles: [pulseProfile] });
 
 const input = scene({
   viewBox: { x: -260, y: -130, width: 520, height: 260 },
@@ -28,4 +28,4 @@ const input = scene({
   ],
 });
 
-export const svg = renderToSvgString(input, { compile: { pathKinds: [pulseRibbonDefinition] } });
+export const svg = renderToSvgString(input, { compile: { paths: [pulseRibbonDefinition] } });

@@ -58,7 +58,7 @@ steps 是至少包含两个步骤的数组。每项只声明 kind 和该种类�
 
 ### 步骤与位置
 
-完整步骤覆盖 Core 的 move、line、axis-line、fold、cycle、curve、cubic、bend、arc、circlePath、ellipsePath、rectangle、smooth、generator。fold 保留两段和三段结构及 fraction；bend 保留对称弯与出入切线模式；smooth 保留 points 与 tension；generator 使用现有注册生成器的 name 与 JSON params。
+完整步骤覆盖 Core 的 move、line、axis-line、fold、cycle、curve、cubic、bend、arc、circlePath、ellipsePath、rectangle、smooth。fold 保留两段和三段结构及 fraction；bend 保留对称弯与出入切线模式；smooth 保留 points 与 tension。步骤种类跟随 Core 的公开契约，不保留已移除的 generator 步骤。
 
 | 位置形式                                              | 语义                                                       |
 | ----------------------------------------------------- | ---------------------------------------------------------- |
@@ -79,7 +79,7 @@ Plot 的数据角色位置和 Core 绘图位置是明确不同的对象分支；
 
 数据位置先投影为 Core 坐标，再执行步骤。极坐标中，带数据控制点的 cubic 是投影后构造的贝塞尔曲线，不是在数据空间构造后整体投影。沿坐标系插值继续由原有顶点和 from/to 入口表达。
 
-步骤的 kind、数组拓扑、构造参数和 generator.params 为固定声明；本决策不增加任意属性字段求值语言，不递归猜测 params 中名为 field 的对象。后续数据转属性能力应复用统一属性契约。
+步骤的 kind、数组拓扑和构造参数为固定声明；本决策不增加任意属性字段求值语言。后续数据转属性能力应复用统一属性契约。
 
 步骤 label 使用 Core 路径标签契约，表示当前步骤的固定标签；整条路径的字段标签继续使用现有 encodings.label。逐步骤标签字段绑定不通过把字符串猜成字段名实现。
 
@@ -87,7 +87,7 @@ Plot 的数据角色位置和 Core 绘图位置是明确不同的对象分支；
 
 steps 中所有数据位置和 key.field 都参与字段依赖收集，与现有外观及标签字段共同决定实例来源。存在有效字段依赖时，每个最终结果行生成一条完整路径；结果为空则零实例。全部为常量且无其它字段依赖时生成一个实例，不为步骤各自产生数据行。
 
-所有数据空间绝对位置，包括控制点和 smooth.points，按 contributeToDomain 参与相应位置域推导；edge、图元身份、Core 绘图位置、相对偏移及半径不贡献位置 domain。不从生成器输出或曲线极值反推尺度，也不重复纳入目标图元的位置。
+所有数据空间绝对位置，包括控制点和 smooth.points，按 contributeToDomain 参与相应位置域推导；edge、图元身份、Core 绘图位置、相对偏移及半径不贡献位置 domain。不从曲线极值反推尺度，也不重复纳入目标图元的位置。
 
 目标引用沿用 026：被引用 Mark 必须先声明，作用域限定为当前实际视图，目标必须已生成。steps 路径本体不因新增构造方式而成为 NodeTarget；现有顶点 Path 暴露的 Coordinate 能力保持不变。
 
@@ -130,14 +130,14 @@ React PathMark 的步骤子组件统一命名 PlotPathStep，以 kind 区分动�
 
 way、PlotPathStep children、显式 steps、position 和 from/to 是互斥入口，不设优先级。React 只收集步骤并调度 Plot Vanilla 归一；Vanilla 与 React 都产出相同 Source，保留字段绑定直到 Plot 消费数据。
 
-arrow、arrowDetail、arrowPlacement 复用 Vanilla 路径箭头简写，支持 none、->、<-、<->，默认、覆盖与显式 marks 的组合遵循既有 Vanilla 契约，最终写为 properties.marks；不新增 Plot 箭头结构。源码展示不能把 way 无法表达的步骤近似成另一种路线，应保留完整 steps。
+arrow 复用 Vanilla 路径箭头输入，支持 none、->、<-、<-> 及端点对象，最终写为 properties.arrow；尺寸、样式与 endpointOverlap 位于 start / end 端点对象，沿线 marks 独立保留，不新增 Plot 箭头结构。源码展示不能把 way 无法表达的步骤近似成另一种路线，应保留完整 steps。
 
 ## 行为、失败语义与兼容性
 
 - JSON Source 仅接受明确的步骤结构；way 和 React 节点属于 authoring 输入，不能持久化为 Source 字段
 - 输入分支混用、未知步骤、非法位置种类、缺少必填控制点、非法构造参数和无效 way 顺序明确报错，不静默忽略不适用字段
 - 显式步骤的位置缺失、无法投影或目标解析失败时，整条实例失败，不跳过单步形成另一条路径；诊断保留 Mark、结果行和步骤位置，以及底层错误原因
-- 新能力复用 Core 的自定义路径生成器注册链路；未知生成器及非法参数由对应能力诊断，Plot 不维护内置白名单或平行生成器 registry
+- 路径扩展复用 Core 的 Path Definition 能力，Plot 不恢复已移除的生成器步骤或建立平行生成器 registry
 - 既有 position 和 from/to 行为不变，不将 steps 的几何规则反向套到已有曲线插值和数据缺值策略
 - 保留路径宿主样式、分段标签和路径标记的 Core 语义；实例 provenance 仍来自当前路径行，不被目标行替换
 - Ribbon 是由中心线生成带状几何的 Path kind 能力，不能用普通描边步骤或 strokeWidth 冒充。本决策不改变 Ribbon 契约；其接入、关系端点图形和剩余关系消费方迁移需独立决策，完成整体替代前不移除 RelationMark

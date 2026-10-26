@@ -14,24 +14,26 @@ import {
 const customClip = (): ClipDefinition =>
   defineClip({
     kind: 'ticketClip',
-    schema: strictObject({ kind: literal('ticketClip') }),
-    resolve: () => ({ kind: 'ticketClip' }),
-    lower: () => ({
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [20, 0] },
-        { kind: 'line', to: [10, 10] },
-        { kind: 'close' },
-      ],
-      fillRule: 'nonzero',
-    }),
+    schema: strictObject({ kind: literal('ticketClip'), params: strictObject({}) }),
+
+    lower: () => {
+      return {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [20, 0] },
+          { kind: 'line', to: [10, 10] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      };
+    },
   });
 
 const input: InputScene = {
   children: [
     {
       type: 'scope',
-      clip: { kind: 'ticketClip' },
+      clip: { kind: 'ticketClip', params: {} },
       children: [{ id: 'ticket', position: [10, 5], text: 'A' }],
     },
   ],

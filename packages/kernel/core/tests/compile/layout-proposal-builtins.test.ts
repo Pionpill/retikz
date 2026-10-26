@@ -10,7 +10,7 @@ import type {
   LayoutProposal,
   ScenePrimitive,
   TextMeasurer,
-  TextPrim,
+  TextPrimitive,
 } from '../../src';
 import {
   BUILTIN_SHAPES,
@@ -55,7 +55,7 @@ const probeChild = (
   options: Pick<CompileOptions, 'lowerTex' | 'shapes'> = {},
 ): {
   result: LayoutChildResult;
-  textPrimitives: Array<TextPrim>;
+  textPrimitives: Array<TextPrimitive>;
 } => {
   let observed: LayoutChildResult | undefined;
   const definition = defineComposite({
@@ -91,7 +91,7 @@ const probeChild = (
   return {
     result: observed,
     textPrimitives: flattenPrims(compiled.scene.primitives).filter(
-      (primitive): primitive is TextPrim => primitive.type === 'text',
+      (primitive): primitive is TextPrimitive => primitive.type === 'text',
     ),
   };
 };

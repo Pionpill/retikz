@@ -1,0 +1,116 @@
+---
+title: mark · Marks
+description: Place a cross, plus, check, star, or registered arrow at any arc-length position on a path
+---
+
+Declare shapes and positions in `Draw` or `Path` through `marks` to add status, emphasis, or direction to a connection. Each entry directly contains `pos`, `shape`, and appearance fields; custom parameters go in `params`. Start with [Basic usage](/kernel/components/path/usage) if this is your first drawing.
+
+<ComponentAlert
+  type="tip"
+  title="Marks and arrows share drawing capabilities"
+  description={
+    <>
+      Marks have the same drawing capabilities as arrows. Their placement and path handling differ in two ways:
+      <br />
+      · Arrows can only be placed at path endpoints; marks can be placed anywhere along a path.
+      <br />
+      · Arrows shorten the path; marks do not.
+      <br />
+      This page and the following custom marks guide therefore focus briefly on mark-specific usage. For details of the
+      shared capabilities, see the{' '}
+      <a className="underline underline-offset-4" href="/kernel/components/path/arrow">
+        arrows
+      </a>{' '}
+      and{' '}
+      <a className="underline underline-offset-4" href="/kernel/components/path/custom-arrow">
+        custom arrows
+      </a>{' '}
+      guides.
+    </>
+  }
+/>
+
+## Integration
+
+The four ordinary marks are built in and need no registration. From left to right, this example shows times, plus, check, and star. It uses `scale: 1.5` to enlarge them.
+
+<ComponentPreview files="mark-basic" />
+
+React `Draw` / `Path`, Vanilla `path({ marks })`, and the JSON IR path `marks` field accept the same placement list. Switch source tabs to see the corresponding syntax.
+
+## Shape and placement
+
+| `shape` | Appearance | Possible uses                            |
+| ------- | ---------- | ---------------------------------------- |
+| `times` | ×          | Errors, invalid positions, intersections |
+| `plus`  | +          | Additions, positive effects, samples     |
+| `check` | ✓          | Completion, correctness, validation      |
+| `star`  | ★          | Emphasis, special events                 |
+
+Names identify shapes without assigning a status or color. The four ordinary marks anchor at the center of their local reference square. Registered arrows also work as `shape`, including `stealth`; they anchor at their tip.
+
+`pos` is a fraction of the entire path's accumulated arc length, from 0 to 1: 0 is the start, 0.5 is halfway along, and 1 is the end. Sampling happens before endpoint shortening and label interruption, so changing arrow size or a label gap does not move a mark.
+
+<ComponentPreview
+  files={['mark-placement', 'mark-placement.preview.tsx']}
+  defaultSourceFile="mark-placement.preview.tsx"
+  size="lg"
+  caption="Change the position to move the mark along the path. Select the arrow shape to compare tip anchoring. The example uses scale 2 and a fixed angle of 0 to keep the check upright."
+/>
+
+Omit `rotate`, or use `'auto'`, to follow the path tangent. A number sets a fixed angle in degrees within the path's local coordinates. Use `rotate: 0` for an upright status check; whole-path and Scope transforms still apply.
+
+`scale` scales length and width together and defaults to 1. `length` / `width` come from the definition, falling back to 8. Actual dimensions also scale with the host stroke width, mapping local coordinates through the definition's `baseSize`. `times`, `plus`, and `check` draw lines using `stroke` and `lineWidth`; `star` draws a closed shape using `fill`. Colors follow the host stroke unless overridden; explicit `stroke` / `fill` take precedence. Host opacity multiplies mark `opacity`.
+
+Shared appearance in `defaults.path.arrow` also applies to explicitly declared marks. Its `start` / `end` branches apply only to endpoint arrows. Defaults never create marks.
+
+Marks overlay primitives without shortening the path, cutting a gap, or avoiding labels. This also applies at `pos: 0` and `pos: 1`. Use [arrow · Arrows](/kernel/components/path/arrow) for endpoint contact and shortening. The playground above keeps an end arrow so you can move the mark to either endpoint and compare.
+
+The main stroke and endpoint arrows render first, marks render in list order, and path labels render last. Mark content contributes to visual bounds and hits belong to its host path. A `move` jump adds no length; a closing segment does. A nonempty mark list on a path with no nonzero length produces an error.
+
+## Related properties
+
+<ComponentProps
+  items={[
+    {
+      name: 'Draw.marks',
+      kind: 'property',
+      type: "DrawProps['marks']",
+      description: 'Marks placed along a path. Path and Vanilla path accept the same configuration.',
+    },
+    {
+      name: 'IRPathMark',
+      kind: 'type',
+      type: 'IRPathMark',
+      description: 'A placement entry with pos, shape, rotate, dimensions, appearance, and optional params.',
+    },
+    {
+      name: 'BuiltinMarkShape',
+      kind: 'type',
+      type: 'BuiltinMarkShape',
+      description: 'The four built-in ordinary mark names. shape also accepts registered arrows and custom names.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Custom marks',
+      description: 'Define outlines, anchors, and parameters, then register them at runtime',
+      url: '/kernel/components/path/custom-mark',
+    },
+    {
+      title: 'arrow · Arrows',
+      description: 'Configure endpoint arrows and path contact',
+      url: '/kernel/components/path/arrow',
+    },
+    {
+      title: 'API Reference',
+      description: 'Look up path configuration and mark contracts',
+      url: '/kernel/components/path/reference',
+    },
+  ]}
+/>

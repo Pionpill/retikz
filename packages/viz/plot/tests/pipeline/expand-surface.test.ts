@@ -1,6 +1,6 @@
 import type { IRScene } from '@retikz/core';
 import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies } from '@retikz/core';
-import { BUILTIN_RIBBON_WIDTH_PROFILES, RibbonPathKindDefinition } from '@retikz/extension';
+import { BUILTIN_RIBBON_WIDTH_PROFILES, RibbonPathDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
 import * as expand from '../../src/pipeline/expand';
@@ -57,23 +57,23 @@ describe('expand pipeline stable surface', () => {
     expect(expand).not.toHaveProperty('resolveCoordinateScopeRegistry');
   });
 
-  it('contributes the Standard Ribbon path kind and its profile dataset explicitly', () => {
+  it('contributes the Standard Ribbon path and its profile dataset explicitly', () => {
     const contribution = createPlotProviderContribution({});
 
-    expect(contribution.roots).toContainEqual({ capability: 'pathKind', name: 'ribbon' });
+    expect(contribution.roots).toContainEqual({ capability: 'path', name: 'ribbon' });
 
     const ribbonProvider = contribution.providers.find(
-      provider => provider.key.capability === 'pathKind' && provider.key.name === 'ribbon',
+      provider => provider.key.capability === 'path' && provider.key.name === 'ribbon',
     );
 
     expect(ribbonProvider).toBeDefined();
     expect(ribbonProvider?.datasets['profile:bulge']).toBe(BUILTIN_RIBBON_WIDTH_PROFILES[0]);
 
     const definitions = resolveCoreProviderDependencies({ contributions: [contribution] });
-    const ribbonDefinitions = definitions.pathKinds?.filter(definition => definition.name === 'ribbon') ?? [];
+    const ribbonDefinitions = definitions.paths?.filter(definition => definition.name === 'ribbon') ?? [];
 
     expect(ribbonDefinitions).toHaveLength(1);
-    expect(ribbonDefinitions[0]?.schema).toBe(RibbonPathKindDefinition.schema);
+    expect(ribbonDefinitions[0]?.schema).toBe(RibbonPathDefinition.schema);
 
     const ir: IRScene = {
       version: CURRENT_IR_VERSION,

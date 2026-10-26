@@ -1,5 +1,7 @@
 /** 路径公开属性的人工审阅英文说明 */
 const translations: Partial<Record<string, string>> = {
+  '端点箭头配置，或用方向字符串快捷启用起点、终点或两端箭头':
+    'Endpoint arrow configuration, or direction shorthand enabling start, end, or both arrows',
   路径级箭头方向: 'Path arrow direction',
   箭头的顶层默认与端点覆盖配置: 'Shared arrow defaults and endpoint overrides',
   箭头端点的共享与逐端放置配置: 'Shared and per-endpoint arrow placement',

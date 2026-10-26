@@ -1,9 +1,9 @@
-import type { EllipsePrim, PathPrim, RectPrim, ResolvedShapeStyle } from '../../contract';
+import type { EllipsePrimitive, PathPrimitive, RectPrimitive, ResolvedShapeStyle } from '../../contract';
 
 type ShapeStylePassthrough = Omit<ResolvedShapeStyle, 'fill' | 'stroke' | 'strokeWidth'>;
 
 type PathPrimitiveStyle = Pick<
-  PathPrim,
+  PathPrimitive,
   | 'fill'
   | 'fillOpacity'
   | 'stroke'
@@ -11,15 +11,15 @@ type PathPrimitiveStyle = Pick<
   | 'strokeWidth'
   | 'dashPattern'
   | 'dashOffset'
-  | 'strokeLinecap'
-  | 'strokeLinejoin'
+  | 'lineCap'
+  | 'lineJoin'
   | 'opacity'
   | 'shadow'
   | 'blendMode'
 >;
 
 type EllipsePrimitiveStyle = Pick<
-  EllipsePrim,
+  EllipsePrimitive,
   | 'fill'
   | 'fillOpacity'
   | 'stroke'
@@ -27,15 +27,15 @@ type EllipsePrimitiveStyle = Pick<
   | 'strokeWidth'
   | 'dashPattern'
   | 'dashOffset'
-  | 'strokeLinecap'
-  | 'strokeLinejoin'
+  | 'lineCap'
+  | 'lineJoin'
   | 'opacity'
   | 'shadow'
   | 'blendMode'
 >;
 
 type RectPrimitiveStyle = Pick<
-  RectPrim,
+  RectPrimitive,
   | 'fill'
   | 'fillOpacity'
   | 'stroke'
@@ -43,8 +43,8 @@ type RectPrimitiveStyle = Pick<
   | 'strokeWidth'
   | 'dashPattern'
   | 'dashOffset'
-  | 'strokeLinecap'
-  | 'strokeLinejoin'
+  | 'lineCap'
+  | 'lineJoin'
   | 'cornerRadius'
   | 'opacity'
   | 'shadow'
@@ -60,7 +60,7 @@ const withoutCornerRadius = (style: ShapeStylePassthrough): Omit<ShapeStylePasst
 /** 将 shape style 落到 path primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth */
 export const buildPathPrimitiveStyle = (
   style: ResolvedShapeStyle,
-  options?: { fill?: PathPrim['fill'] },
+  options?: { fill?: PathPrimitive['fill'] },
 ): PathPrimitiveStyle => {
   const { fill, stroke, strokeWidth, ...passthroughStyle } = style;
   return {
@@ -85,7 +85,7 @@ export const ellipsePrimitiveStyle = (style: ResolvedShapeStyle): EllipsePrimiti
 /** 将 shape style 落到 rect primitive；用调用方圆角覆盖 style.cornerRadius */
 export const rectPrimitiveStyle = (
   style: ResolvedShapeStyle,
-  cornerRadius: RectPrim['cornerRadius'],
+  cornerRadius: RectPrimitive['cornerRadius'],
 ): RectPrimitiveStyle => {
   const { fill, stroke, strokeWidth, ...passthroughStyle } = style;
   return {

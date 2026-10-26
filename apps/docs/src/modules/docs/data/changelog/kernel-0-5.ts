@@ -378,6 +378,27 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：端点箭头与沿线标记分离', en: 'BREAKING: separate endpoint arrows and path marks' },
+          content: {
+            zh: '端点箭头统一使用 arrow.start / arrow.end，并负责接触与截断；marks 按截断前整条路径的弧长放置图元，包括首尾位置，且不截断主线。marks 每项直接组合 pos、shape、尺寸和样式，自定义参数放入 params；删除 kind 与内层 mark。内置 times、plus、check、star 四种普通标记，补充[标记用法](/kernel/components/path/mark)与[自定义标记](/kernel/components/path/custom-mark)文档。普通标记通过 defineMark 注册，与箭头共享 MarkEmitContext、尺寸和图元生成能力；已注册箭头自动可作为标记使用，名称冲突报错。React、Vanilla 保留 ->、<-、<-> 方向简写，由 Vanilla 归一化为端点对象；JSON IR 只使用对象。arrowDetail、arrowPlacement 内容并入端点对象，原先承担端点箭头的 marks 需迁入 arrow。',
+            en: 'Endpoint arrows use arrow.start / arrow.end and own contact and shortening. Marks place primitives by arc length along the complete, unshortened path, including its endpoints, without shortening the stroke. Each marks entry combines pos, shape, dimensions, and style directly, with custom parameters in params; kind and the nested mark object are removed. Adds built-in times, plus, check, and star marks with [usage](/kernel/components/path/mark) and [custom mark](/kernel/components/path/custom-mark) guides. Register marks through defineMark; marks and arrows share MarkEmitContext, sizing, and primitive generation. Registered arrows are automatically usable as marks, and name collisions are rejected. React and Vanilla retain ->, <-, and <-> shorthands, normalized by Vanilla into endpoint objects; JSON IR uses objects only. Move arrowDetail and arrowPlacement settings into endpoint objects, and former endpoint-arrow marks into arrow.',
+          },
+        },
+        {
+          label: { zh: '动画属性与关键帧值契约', en: 'Animation property and keyframe contracts' },
+          content: {
+            zh: '动画属性与缓动采用闭合枚举 AnimationProperty / AnimationEasing，移除自定义属性和具名缓动注册。轨道按属性约束关键帧类型与范围，新增 fillOpacity、strokeOpacity、dashOffset；SVG 采样与 Canvas 复用段缓动求值，pathDraw 优先于虚线偏移动画。',
+            en: 'AnimationProperty and AnimationEasing are closed enums, replacing custom property and named-easing registries. Tracks constrain keyframe types and ranges by property and add fillOpacity, strokeOpacity, and dashOffset. SVG sampling and Canvas share segment easing; pathDraw takes precedence over animated dash offsets.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：裁剪参数收口到 params', en: 'BREAKING: clip parameters move into params' },
+          content: {
+            zh: 'Clip 输入与解析后形状统一使用 { kind, params }。矩形、官方扩展和自定义裁剪均把几何字段放入必填 params；resolve/lower 分别读取 spec.params 和 shape.params。移除平铺参数写法，Scene 路径与渲染行为不变。',
+            en: 'Clip specs and resolved shapes now use { kind, params }. Built-in, official extension, and custom clips put geometry fields in the required params object; resolve/lower read spec.params and shape.params. Flat parameter fields are removed; Scene paths and rendering behavior are unchanged.',
+          },
+        },
+        {
           label: { zh: '待发布：BREAKING 标签统一多行文本块', en: 'Unreleased: BREAKING unified multiline labels' },
           content: {
             zh: '节点与路径标签统一使用 TextBlock，支持换行字符串、非空行数组及逐行样式；附着、旋转和引线按整个文本块计算。移除 LabelTextContentSchema；旧 text: { segments: [...] } 改为 text: [{ segments: [...] }]。React、Vanilla 和 Plot 使用同一文本契约。',
@@ -673,8 +694,8 @@ export const kernelV05: Release = {
           version: 'alpha.5',
           date: '2026-09-22',
           summary: {
-            zh: '新增 Scope.frame 外框与 Scene hitTest: false；spec 已是完整 ClipShape 时，defineClip 可只传 kind、schema、lower。BREAKING：grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项改从 @retikz/extension 导入；基础预设、轨道 JSON 与播放机制不变。',
-            en: 'Adds Scope.frame and Scene hitTest: false. When a spec is already a complete ClipShape, defineClip accepts only kind, schema, and lower. BREAKING: import grow, growUp, pulse, spin, flash, blink, wiggle and their options from @retikz/extension. Basic presets, saved track JSON, and playback are unchanged.',
+            zh: '新增 Scope.frame 外框与 Scene pointerEvents: "none"；spec 已是完整 ClipShape 时，defineClip 可只传 kind、schema、lower。BREAKING：grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项改从 @retikz/extension 导入；基础预设、轨道 JSON 与播放机制不变。',
+            en: 'Adds Scope.frame and Scene pointerEvents: "none". When a spec is already a complete ClipShape, defineClip accepts only kind, schema, and lower. BREAKING: import grow, growUp, pulse, spin, flash, blink, wiggle and their options from @retikz/extension. Basic presets, saved track JSON, and playback are unchanged.',
           },
           items: [],
         },
@@ -1070,8 +1091,8 @@ export const kernelV05: Release = {
           version: 'alpha.5',
           date: '2026-09-22',
           summary: {
-            zh: 'SVG 与 Canvas 支持 Scene 的 hitTest: false，排除装饰图元或整个子树的指针命中，保留绘制和 retained 更新。',
-            en: 'SVG and Canvas honor Scene hitTest: false, excluding decorative primitives or entire subtrees from pointer hits while preserving rendering and retained updates.',
+            zh: 'SVG 与 Canvas 支持 Scene 的 pointerEvents: "none"，排除装饰图元或整个子树的指针命中，保留绘制和 retained 更新。',
+            en: 'SVG and Canvas honor Scene pointerEvents: "none", excluding decorative primitives or entire subtrees from pointer hits while preserving rendering and retained updates.',
           },
           items: [],
         },
@@ -1122,8 +1143,8 @@ export const kernelV05: Release = {
           version: 'alpha.1',
           date: '2026-07-26',
           summary: {
-            zh: '公开 renderer API 与 Scene primitive 不变；补齐多 `PathPrim` 的 fill / stroke / opacity 跨后端对照。',
-            en: 'Public renderer APIs and Scene primitives remain unchanged, with cross-backend coverage for fill, stroke, and opacity across multiple `PathPrim` values.',
+            zh: '公开 renderer API 与 Scene primitive 不变；补齐多 `PathPrimitive` 的 fill / stroke / opacity 跨后端对照。',
+            en: 'Public renderer APIs and Scene primitives remain unchanged, with cross-backend coverage for fill, stroke, and opacity across multiple `PathPrimitive` values.',
           },
           items: [],
         },

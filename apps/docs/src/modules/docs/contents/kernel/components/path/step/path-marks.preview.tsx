@@ -12,8 +12,8 @@ export const PathMarksPreview = (values: PathMarksPreviewValues) => {
     <Layout viewBox={{ x: -180, y: -80, width: 360, height: 160 }}>
       <Path
         marks={[
-          { pos: values.firstPosition, mark: { kind: 'arrow', shape: 'stealth' } },
-          { pos: values.secondPosition, mark: { kind: 'arrow', shape: 'stealth' } },
+          { pos: values.firstPosition, shape: 'stealth' },
+          { pos: values.secondPosition, shape: 'stealth' },
         ]}
         style={{ stroke: 'currentColor', strokeWidth: 1.5 }}
       >

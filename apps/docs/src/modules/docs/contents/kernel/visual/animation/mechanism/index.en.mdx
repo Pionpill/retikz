@@ -74,7 +74,11 @@ With multiple keyframes, evaluation finds the surrounding pair and normalizes pr
 
 Easing transforms segment progress. The starting keyframe's easing overrides track easing; the default is linear. Cubic-bezier solves for its curve parameter from input progress before reading the vertical coordinate. Progress is not directly the curve parameter.
 
-Interpolation happens afterward: numbers interpolate linearly, colors in Oklch, and numeric viewBox components independently. Registered interpolators can handle custom properties. Half the elapsed time therefore need not mean halfway color channels or visible movement.
+Interpolation happens afterward: numbers interpolate linearly, colors in Oklch, and numeric viewBox components independently. Half the elapsed time therefore need not mean halfway color channels or visible movement.
+
+Opacity and path-drawing progress are clamped to 0..1 after evaluation, while stroke width is clamped to nonnegative values. Translation, rotation, and scale retain overshoot. Camera segments clamp their eased progress to 0..1 to keep width and height positive. At a shared keyframe time, the last declared frame wins.
+
+SVG color, bounded numeric, and camera animations sample the shared evaluator and interpolate linearly between samples, applying segment easing once. Sample points match Canvas and static snapshots; values between them are approximations. Canvas group opacity multiplies descendant drawing alpha; overlapping children can still differ from SVG isolated group compositing.
 
 <SourceLinks
   sources={[
@@ -101,7 +105,7 @@ Scene retains tracks; backend and output mode determine execution. This figure s
 
 Shared semantics do not mean CSS calls evaluateTrack every frame. The evaluator serves Canvas, static sampling, and paths needing JavaScript evaluation. Native SVG animation runs in the browser.
 
-Snapshots do not replay interactions. Untriggered interaction tracks keep the base state. SVG custom properties without a built-in static mapping warn and retain base output. Registering a property does not automatically make it exportable as CSS.
+Snapshots do not replay interactions. Untriggered interaction tracks keep the base state.
 
 <SourceLinks
   sources={[

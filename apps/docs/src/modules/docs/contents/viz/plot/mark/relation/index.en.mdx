@@ -26,7 +26,7 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
   <RelationMark
     source={{ anchorId: { prefix: 'node', field: 'sourceId' } }}
     target={{ anchorId: { prefix: 'node', field: 'targetId' } }}
-    path={{ options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] } }}
+    path={{ options: { arrow: { end: {} } } }}
   />
 </Plot>
 ```

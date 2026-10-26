@@ -9,7 +9,7 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 `<Draw way={['a', '-|', 'b']}>` 与先移动到 a、再折角连接 b 的两个 Step 表达同一条路线。React 的 Draw 只把输入交给 Path；Vanilla 的 `normalizePath` 再调用 `parseWay`，统一生成有序步骤。
 
-- 作者输入：为了便于编写而提供的 `way`、字符串目标与箭头简写
+- 作者输入：为了便于编写而提供的 `way` 与字符串目标
 - Source IR：可保存为 JSON 的 Path、Step 与 marks；仍保留节点引用
 - 路径命令：引用求值后得到的具体移动、直线、曲线与圆弧几何
 
@@ -17,7 +17,7 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 <ComponentPreview files="draw-compilation" size="sm" hideCode type="flow" />
 
-`arrow="->"` 在这一入口转换成 `pos: 1` 的箭头 mark；`arrowDetail` 的端点覆盖与 `arrowPlacement` 的重叠值一并进入该 mark。因此直接编写 IR 时应使用 `marks`，不复制 React 的箭头简写字段。
+`arrow.start` / `arrow.end` 与 `marks` 在 React、Vanilla 和 IR 中保持相同结构。端点箭头按接触几何截断主线；标记按整条路径弧长定位，只放置内容。标记即使位于首尾，也不转成端点箭头。
 
 <SourceLinks
   sources={[
@@ -25,9 +25,9 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
     {
       label: 'way、步骤与箭头的统一入口',
       path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
-      startLine: 186,
+      startLine: 88,
     },
-    { label: '箭头简写转换为 marks', path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts', startLine: 43 },
+    { label: '路径输入归一化', path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts', startLine: 88 },
   ]}
 />
 
@@ -43,13 +43,12 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 执行第二次 move 后，笔位和子路径起点都变为 C，A → B 的线条保持不变，B 与 C 之间没有连线。随后 line 到 D，cycle 沿同一水平线返回 C，因此末幅 C → D 与 D → C 重合；它不会回到 A。源码通过最近的 move 目标记录闭合起点，不需要从整条路径的首个步骤重新推断。
 
-生成器也是一个步骤：它收到当前局部游标和已解析的目标，返回命令后交回宿主 Path。它不拥有整条路径的箭头、描边或最终外层变换。具体写法见[Step · 路径组合](/kernel/components/path/step)与[自定义生成器](/kernel/components/path/custom-path-generator)。
+可复用的曲线段可通过函数或组件封装展开为现有路径步骤，具体写法见 [Step · 路径组合](/kernel/components/path/step)。
 
 <SourceLinks
   sources={[
     { label: '游标与最近 move 目标', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts', startLine: 88 },
     { label: '逐步生成路径命令', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts', startLine: 60 },
-    { label: '生成器参数与输出校验', path: 'packages/kernel/core/src/compile/path/stroke/lower.ts', startLine: 102 },
   ]}
 />
 
@@ -140,7 +139,7 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 三次贝塞尔、圆弧和椭圆弧也保留各自的命令类型。断口跨过多条命令时，分别保留各段未被移除的范围，再把同一子路径内相接的部分组合起来。取点、距离反查和保形切片的具体算法见 [Math · 曲线切片](/kernel/packages/math/algorithms#曲线切片)。
 
-无填充的内置 Stroke 路径上，居中标签默认留断口；`interrupt: false` 可关闭。填充路径及其它 Path kind 的适用条件见 [label · 标签](/kernel/components/path/label)。
+无填充的内置 Stroke 路径上，居中标签默认留断口；`interrupt: false` 可关闭。填充路径及其它 Path 的适用条件见 [label · 标签](/kernel/components/path/label)。
 
 <SourceLinks
   sources={[

@@ -1,13 +1,10 @@
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Layout
-    extensions={{ pathKinds: [RibbonPathKindDefinition] }}
-    rootScope={{ defaults: { style: { color: '#172033' } } }}
-  >
+  <Layout extensions={{ paths: [RibbonPathDefinition] }} rootScope={{ defaults: { style: { color: '#172033' } } }}>
     <Path
       kind="ribbon"
       kindOptions={

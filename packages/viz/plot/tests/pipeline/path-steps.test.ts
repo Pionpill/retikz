@@ -1,7 +1,6 @@
 import type { IRChild, IRPath, IRScope } from '@retikz/core';
-import { compileToScene, definePathGenerator } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { strictObject, string } from 'zod';
 
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
@@ -33,6 +32,36 @@ const lower = (
   );
 
 describe('Projected path construction', () => {
+  it('保留构造路径的端点箭头并生成 Scene 箭头', () => {
+    const output = lowerPlot(
+      PlotSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'data' },
+        coordinate: { type: 'cartesian2D' },
+        scales: [],
+        marks: [
+          {
+            type: 'path',
+            encodings: {
+              steps: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [100, 0] },
+              ],
+            },
+            properties: { arrow: { end: { length: 7 } } },
+          },
+        ],
+      }),
+      { data: [] },
+      { textMeasurer: measureLabel },
+    );
+    const path = paths(output)[0];
+    expect(path.arrow).toEqual({ end: { length: 7 } });
+    const scene = compileToScene({ type: 'scene', version: 1, children: [path] }).scene;
+    expect(scene.primitives[0]).toMatchObject({ type: 'path', arrowEnd: { markerWidth: 7 } });
+  });
+
   it('includes data control points in inferred domains while drawing coordinates stay fixed', () => {
     const compile = (maximum: number, domain?: [number, number]) =>
       lowerPlot(
@@ -96,25 +125,6 @@ describe('Projected path construction', () => {
     if (start.kind !== 'move' || curve.kind !== 'cubic') throw new Error('Expected move/cubic');
     expect(curve.control1).toEqual(start.to);
     expect(curve.control2).toEqual([10, 20]);
-  });
-  it('passes opaque parameters through the existing custom generator registry', () => {
-    const result = lower([
-      { kind: 'move', to: [0, 0] },
-      { kind: 'generator', name: 'custom', params: { field: 'opaque' }, to: [20, 30] },
-    ]);
-    const generator = definePathGenerator({
-      name: 'custom',
-      paramsSchema: strictObject({ field: string() }),
-      generate: ({ to, params }) => {
-        expect(params.field).toBe('opaque');
-        return [{ kind: 'line', to: to ?? [0, 0] }];
-      },
-    });
-    expect(paths(result)).toHaveLength(1);
-    expect(() =>
-      compileToScene({ version: 1, type: 'scene', children: [result] }, { pathGenerators: [generator] }),
-    ).not.toThrow();
-    expect(() => compileToScene({ version: 1, type: 'scene', children: [result] })).toThrow();
   });
   it('projects each row and preserves local offsets', () => {
     const result = lower([

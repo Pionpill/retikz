@@ -390,7 +390,7 @@ For common routes, `way` starts at its first target and connects subsequent targ
 | `from` / `to`                   | One simple connection per row                                                          |
 | `steps` / `way` / step children | One complete constructed path per row; these inputs are mutually exclusive             |
 
-Full steps support `move`, `line`, `axis-line`, `fold`, `cycle`, `curve`, `cubic`, `bend`, `arc`, `circlePath`, `ellipsePath`, `rectangle`, `smooth`, and `generator`, with the same parameters as Core [Path steps](/kernel/components/path/step). `way` covers common shorthand; use explicit steps for full control. `arrow`, `arrowDetail`, and `arrowPlacement` follow the Core authoring shorthand.
+Full steps support `move`, `line`, `axis-line`, `fold`, `cycle`, `curve`, `cubic`, `bend`, `arc`, `circlePath`, `ellipsePath`, `rectangle`, and `smooth`, with the same parameters as Core [Path steps](/kernel/components/path/step). `way` covers common shorthand; use explicit steps for full control. `arrow` accepts Core direction shorthand or endpoint objects; configure dimensions, styles, and overlap in `arrow.start` / `arrow.end`.
 
 Data positions such as `{ x: { field: 'x' }, y: { field: 'y' } }`, including control points, pass through scales and coordinate projection before constructing the route. Tuples, radii, relative offsets and angles retain Core drawing-space units. Axis-line steps remain horizontal or vertical after projection.
 

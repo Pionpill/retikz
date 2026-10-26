@@ -372,25 +372,12 @@ const inputStepFromProps = (props: StepProps): InputStep => {
     };
   }
 
-  if (kind === 'smooth') {
-    const step = props as Extract<StepProps, { kind: 'smooth' }>;
-    return {
-      type: 'step',
-      kind: 'smooth',
-      points: step.points,
-      ...(step.tension === undefined ? {} : { tension: step.tension }),
-      ...(label === undefined ? {} : { label }),
-    };
-  }
-
-  const step = props as Extract<StepProps, { kind: 'generator' }>;
-
+  const step = props as Extract<StepProps, { kind: 'smooth' }>;
   return {
     type: 'step',
-    kind: 'generator',
-    name: step.name,
-    params: step.params,
-    ...(step.to === undefined ? {} : { to: step.to }),
+    kind: 'smooth',
+    points: step.points,
+    ...(step.tension === undefined ? {} : { tension: step.tension }),
     ...(label === undefined ? {} : { label }),
   };
 };
@@ -436,20 +423,11 @@ const inputNodeFromProps = (props: NodeProps): InputNode => {
 
 /** 把 <Path> props 组装为 Vanilla InputPath */
 const inputPathFromProps = (props: PathProps): InputPath => {
-  const isDirectPath =
-    props.authoring === undefined &&
-    props.arrow === undefined &&
-    props.arrowDetail === undefined &&
-    props.arrowPlacement === undefined &&
-    props.way === undefined &&
-    props.children === undefined;
+  const isDirectPath = props.authoring === undefined && props.way === undefined && props.children === undefined;
   return {
     ...(isDirectPath ? { type: 'path' as const } : {}),
     ...pickDefined(props, PATH_FIELDS),
     ...(props.authoring === undefined ? {} : { authoring: props.authoring }),
-    ...(props.arrow === undefined ? {} : { arrow: props.arrow }),
-    ...(props.arrowDetail === undefined ? {} : { arrowDetail: props.arrowDetail }),
-    ...(props.arrowPlacement === undefined ? {} : { arrowPlacement: props.arrowPlacement }),
     ...(props.way === undefined ? {} : { way: props.way }),
     ...(props.children === undefined ? {} : { children: readPathChildren(props.children) }),
   };

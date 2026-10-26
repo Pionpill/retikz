@@ -86,7 +86,7 @@ describe('<Frame>', () => {
   it('preserves JSON-safe Node fields on FrameTitle and FrameDescription', () => {
     const animations = [
       {
-        property: 'opacity',
+        property: 'opacity' as const,
         duration: 200,
         keyframes: [
           { at: 0, value: 0 },

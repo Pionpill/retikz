@@ -39,8 +39,8 @@ export const visualApiSymbols = {
     'IRAnimationTrack',
     'IRKeyframe',
     'AnimationPresetOptions',
-    'BuiltinAnimationProperty',
-    'BuiltinAnimationEasing',
+    'AnimationProperty',
+    'AnimationEasing',
     'AnimationDirection',
     'AnimationFill',
     'AnimationTrigger',
@@ -93,10 +93,7 @@ export const createVisualApiConfig = (
 export const createAnimationApiConfigs = (): Array<ApiReferencePackageConfig> => [
   createVisualApiConfig(visualApiSymbols.animation.filter(symbol => !animationPresetSymbols.has(symbol))),
   createVisualApiConfig(visualApiSymbols.animation.filter(symbol => animationPresetSymbols.has(symbol))),
-  createVisualApiConfig(
-    ['AnimationControls', 'EasingRegistry', 'AnimationPropertyDefinition', 'AnimationPropertyRegistry'],
-    true,
-  ),
+  createVisualApiConfig(['AnimationControls'], true),
 ];
 
 /** 从真实公开入口生成四组视觉 API 参考 */

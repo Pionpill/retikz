@@ -1,6 +1,6 @@
 ---
-description: 以 Core provider graph 聚合可复用绘图能力依赖；背景：Tier 2 能力会同时依赖自身与其它 owner 的 Composite、Shape、Arrow、Clip 或 Path Generator definition
-keywords: 'Core、provider、graph、shapes、arrows、clips、pathGenerators'
+description: 以 Core provider graph 聚合可复用绘图能力依赖；背景：Tier 2 能力会同时依赖自身与其它 owner 的 Composite、Shape、Arrow 或 Clip definition
+keywords: 'Core、provider、graph、shapes、arrows、clips'
 ---
 
 # ADR-027：以 Core provider graph 聚合可复用绘图能力依赖
@@ -11,15 +11,14 @@ keywords: 'Core、provider、graph、shapes、arrows、clips、pathGenerators'
 
 ## 背景与目标
 
-Tier 2 能力会同时依赖自身与其它 owner 的 Composite、Shape、Arrow、Clip 或 Path Generator definition。若由每个 adapter 私下拼装 definitions，React、Vanilla、SSR 与直接工具链会各自拥有去重、dataset 合并和冲突诊断，且无法按实际 authored 能力装配传递依赖。
+Tier 2 能力会同时依赖自身与其它 owner 的 Composite、Shape、Arrow 或 Clip definition。若由每个 adapter 私下拼装 definitions，React、Vanilla、SSR 与直接工具链会各自拥有去重、dataset 合并和冲突诊断，且无法按实际 authored 能力装配传递依赖。
 
 Core 已拥有各 provider 的 Definition、registry 与最终 compile 语义，但需要一个 adapter-neutral 的纯装配协议：由 owner 静态携带 provider，由当前 authoring contribution 声明 roots，Core 解析本次调用所需的闭包并产出普通 compile options。
 
 ## 决策：Core 提供通用 provider graph
 
 ```ts
-type CoreProviderCapability =
-  'shape' | 'boundary' | 'clip' | 'arrow' | 'pattern' | 'pathGenerator' | 'pathKind' | 'composite';
+type CoreProviderCapability = 'shape' | 'boundary' | 'clip' | 'arrow' | 'pattern' | 'path' | 'composite';
 
 type CoreProviderKey =
   | Readonly<{
@@ -49,7 +48,7 @@ declare const resolveCoreProviderDependencies: (
 ) => CoreProviderDefinitions;
 ```
 
-普通 provider 以 `capability + name` 为 identity；Composite 保持 `namespace + type` identity。一个 provider 只物化一个与 key 完全匹配的 Definition。解析结果按 capability 分组为 `shapes`、`arrows`、`clips`、`pathGenerators`、`pathKinds`、`composites` 等普通 compile options，而不是另一套长期 registry。
+普通 provider 以 `capability + name` 为 identity；Composite 保持 `namespace + type` identity。一个 provider 只物化一个与 key 完全匹配的 Definition。解析结果按 capability 分组为 `shapes`、`arrows`、`clips`、`paths`、`composites` 等普通 compile options，而不是另一套长期 registry。
 
 `roots` 表示当前 authoring 实际需要的能力。resolver 只物化从 roots 可达的稳定闭包，不把 provider catalog 视作全量 preset；provider、maker 和 dataset 仅存在于本次 authoring / compile assembly，不进入 IR、Scene、artifact 或持久化 JSON。
 

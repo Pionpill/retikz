@@ -23,7 +23,10 @@ export const DrawStylePreview = (values: DrawStylePreviewValues) => {
       <Draw
         way={['A', [120, -50], [120, 50], [240, 50], [240, -50], 'B']}
         cornerRadius={values.cornerRadius}
-        arrow={values.arrow}
+        arrow={{
+          ...(values.arrow === '<->' || values.arrow === '<-' ? { start: {} } : {}),
+          ...(values.arrow === '->' || values.arrow === '<->' ? { end: {} } : {}),
+        }}
         style={{
           stroke: values.stroke,
           strokeWidth: values.strokeWidth,

@@ -70,6 +70,7 @@ describe('PathSchema: arrow sugar is outside core IR', () => {
       type: 'path',
       arrow: '->',
       arrowDetail: { shape: 'stealth' },
+
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [10, 0] },
@@ -142,7 +143,7 @@ describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
   it('PathSchema 接受 arrowDetail', () => {
     const ok = PathSchema.safeParse({
       type: 'path',
-      marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', scale: 1.5 } }],
+      arrow: { end: { shape: 'stealth', scale: 1.5 } },
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [10, 0] },

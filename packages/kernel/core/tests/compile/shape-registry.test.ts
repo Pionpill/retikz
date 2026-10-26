@@ -185,7 +185,7 @@ describe('Shape registry — boundary', () => {
     expect(compileToScene(ir, { shapes: [] }).scene).toEqual(compileToScene(ir).scene);
   });
 
-  it('default_rectangle_when_shape_absent: no shape → RectPrim', () => {
+  it('default_rectangle_when_shape_absent: no shape → RectPrimitive', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

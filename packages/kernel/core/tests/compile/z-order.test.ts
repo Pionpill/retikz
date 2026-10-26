@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import type { GroupPrim, ScenePrimitive } from '../../src/contract';
+import type { GroupPrimitive, ScenePrimitive } from '../../src/contract';
 
 // ---------------------------------------------------------------------------
 // helpers：构造测试 IR
@@ -11,10 +11,10 @@ import type { GroupPrim, ScenePrimitive } from '../../src/contract';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
-/** 文本性 node（无 text、默认 rectangle、无 rotate）→ emit 恰好 1 个 RectPrim */
+/** 文本性 node（无 text、默认 rectangle、无 rotate）→ emit 恰好 1 个 RectPrimitive */
 const node = (position: [number, number]): IRScene['children'][number] => ({ type: 'node', position });
 
-/** 直线 path（move [0,0] → line to）→ emit 1 个 PathPrim */
+/** 直线 path（move [0,0] → line to）→ emit 1 个 PathPrimitive */
 const line = (to: [number, number]): IRScene['children'][number] => ({
   type: 'path',
   children: [
@@ -23,14 +23,14 @@ const line = (to: [number, number]): IRScene['children'][number] => ({
   ],
 });
 
-/** 取顶层第一个 GroupPrim（断言用）；找不到则失败 */
-const firstGroup = (result: { primitives: Array<ScenePrimitive> }): GroupPrim => {
-  const group = result.primitives.find((p): p is GroupPrim => p.type === 'group');
-  if (!group) throw new Error('expected a top-level GroupPrim but found none');
+/** 取顶层第一个 GroupPrimitive（断言用）；找不到则失败 */
+const firstGroup = (result: { primitives: Array<ScenePrimitive> }): GroupPrimitive => {
+  const group = result.primitives.find((p): p is GroupPrimitive => p.type === 'group');
+  if (!group) throw new Error('expected a top-level GroupPrimitive but found none');
   return group;
 };
 
-/** 递归收集所有 primitive 的 type（含每个 GroupPrim.children），用于占位泄漏检查 */
+/** 递归收集所有 primitive 的 type（含每个 GroupPrimitive.children），用于占位泄漏检查 */
 const collectTypes = (primitives: Array<ScenePrimitive>): Array<string> => {
   const types: Array<string> = [];
 
@@ -92,7 +92,7 @@ describe('compile 占位回填的边界场景', () => {
     const ir = scene([{ type: 'scope', children: [line([10, 0])] }]);
     const result = compileToScene(ir, silent).scene;
 
-    // scope 未被 prune：顶层仍得到一个 GroupPrim
+    // scope 未被 prune：顶层仍得到一个 GroupPrimitive
     expect(result.primitives.filter(p => p.type === 'group')).toHaveLength(1);
 
     const group = firstGroup(result);
@@ -120,8 +120,8 @@ describe('compile 占位回填的边界场景', () => {
     // 外层：node、内层 scope（group）、path → ['rect', 'group', 'path']
     expect(outer.children.map(p => p.type)).toEqual(['rect', 'group', 'path']);
 
-    const inner = outer.children.find((p): p is GroupPrim => p.type === 'group');
-    if (!inner) throw new Error('expected a nested GroupPrim');
+    const inner = outer.children.find((p): p is GroupPrimitive => p.type === 'group');
+    if (!inner) throw new Error('expected a nested GroupPrimitive');
 
     // 内层：node、path、node → 声明序保住
     expect(inner.children.map(p => p.type)).toEqual(['rect', 'path', 'rect']);

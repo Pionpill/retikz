@@ -1,24 +1,18 @@
 import type { ValueOf } from '@retikz/foundation';
-import {
-  NormalizedFractionSchema,
-  PositiveNumberSchema,
-  NonNegativeNumberSchema,
-  NonBlankStringSchema,
-  JsonObjectSchema,
-} from '@retikz/foundation';
-import { strictObject, literal, union, enum as zodEnum, discriminatedUnion, number, array } from 'zod';
+import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
 import type { RefinementCtx, ZodType, infer as ZodInfer } from 'zod';
+import { array, discriminatedUnion, literal, number, strictObject, union, enum as zodEnum } from 'zod';
 
 import {
   DEFAULT_BEND_ANGLE,
-  DEFAULT_BEND_OUT_ANGLE,
   DEFAULT_BEND_IN_ANGLE,
   DEFAULT_BEND_LOOSENESS,
+  DEFAULT_BEND_OUT_ANGLE,
 } from '../../shared/geometry';
 import { PositionSchema } from '../position/position';
 import { NodeTargetSchema } from '../position/target';
-import { PathLabelSchema } from './label';
 import type { IRPathLabel } from './label';
+import { PathLabelSchema } from './label';
 import { TargetSchema } from './target';
 
 /** 折线路径采用的水平与垂直分段顺序 */
@@ -332,24 +326,6 @@ export const SmoothStepSchema = strictObject({
   ),
 }).describe('Smooth action: a curve passing through the cursor and the given points, compiled to cubic Beziers.');
 
-/** 校验调用内置或注册生成器产出子路径的动作 */
-export const GeneratorStepSchema = strictObject({
-  type: literal('step').describe('Discriminator marking this as a path step node'),
-  kind: literal('generator').describe(
-    'Registered path generator segment. `name` selects a built-in or CompileOptions.pathGenerators provider; `params` is JSON input.',
-  ),
-  name: NonBlankStringSchema.describe(
-    'Path generator provider name. Built-ins and custom CompileOptions.pathGenerators names are accepted.',
-  ),
-  to: TargetSchema.optional().describe('Optional destination point passed to the generator as the segment end.'),
-  params: JsonObjectSchema.describe(
-    'JSON parameter object passed to the generator. The registered generator validates its own parameter fields.',
-  ),
-  label: PathLabelSchema.optional().describe(
-    'Edge label attached to the generated segment; positioned along the produced commands.',
-  ),
-}).describe('Generator action: produce a sub-path by invoking a built-in or registered path generator.');
-
 /** 校验按 kind 区分的单个路径动作 */
 export const StepSchema = discriminatedUnion('kind', [
   MoveStepSchema,
@@ -365,7 +341,6 @@ export const StepSchema = discriminatedUnion('kind', [
   EllipsePathStepBaseSchema,
   RectangleStepSchema,
   SmoothStepSchema,
-  GeneratorStepSchema,
 ])
   .superRefine((step, ctx) => {
     if (step.kind === 'circlePath') {
@@ -409,7 +384,6 @@ export const createPathStepSchema = <TTarget extends ZodType, TControl extends Z
     ),
     RectangleStepSchema.omit({ type: true }).extend({ from: target, to: target }),
     SmoothStepSchema.omit({ type: true }).extend({ points: array(target).min(1) }),
-    GeneratorStepSchema.omit({ type: true }).extend({ to: target.optional() }),
   ]);
 
 /** 路径步骤附属标签的 IR 类型 */
@@ -456,9 +430,6 @@ export type IRCirclePathStep = ZodInfer<typeof CirclePathStepSchema>;
 
 /** EllipsePath step：以游标为圆心的整椭圆 */
 export type IREllipsePathStep = ZodInfer<typeof EllipsePathStepSchema>;
-
-/** Generator step：按 name 调注册的 path generator 产 sub-path（params 为 JSON 对象） */
-export type IRGeneratorStep = ZodInfer<typeof GeneratorStepSchema>;
 
 /** 路径中的一个绘制或游标移动动作 */
 export type IRStep = ZodInfer<typeof StepSchema>;

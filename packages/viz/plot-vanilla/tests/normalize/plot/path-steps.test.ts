@@ -28,9 +28,7 @@ describe('Plain path construction', () => {
             [0, 0],
             [10, 20],
           ],
-          arrow: '<->',
-          arrowDetail: { length: 7 },
-          arrowPlacement: { overlap: 2 },
+          arrow: { start: { length: 7, endpointOverlap: 0.5 }, end: { length: 7, endpointOverlap: 0.5 } },
         },
       ],
     });
@@ -43,10 +41,7 @@ describe('Plain path construction', () => {
         ],
       },
       properties: {
-        marks: [
-          { pos: 0, endpointOverlap: 2, mark: { kind: 'arrow', length: 7 } },
-          { pos: 1, endpointOverlap: 2, mark: { kind: 'arrow', length: 7 } },
-        ],
+        arrow: { start: { length: 7, endpointOverlap: 0.5 }, end: { length: 7, endpointOverlap: 0.5 } },
       },
     });
     expect(plot.marks[0]).not.toHaveProperty('way');

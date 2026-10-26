@@ -24,7 +24,7 @@ describe('Extension public entry', () => {
       'OpenSquareArrowProvider',
       'CompoundClipDefinition',
       'PathClipProvider',
-      'RibbonPathKindDefinition',
+      'RibbonPathDefinition',
       'ExtensionShapeDefinitions',
       'ExtensionArrowProviders',
       'ExtensionClipDefinitions',

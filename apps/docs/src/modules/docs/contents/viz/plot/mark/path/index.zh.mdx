@@ -389,7 +389,7 @@ Plot
 | `from` / `to`                | 每条数据的一次简单连接                       |
 | `steps` / `way` / 步骤子组件 | 每条数据的一条完整构造路径；各入口互斥       |
 
-完整步骤支持 `move`、`line`、`axis-line`、`fold`、`cycle`、`curve`、`cubic`、`bend`、`arc`、`circlePath`、`ellipsePath`、`rectangle`、`smooth` 和 `generator`，参数与底层 [Path 步骤](/kernel/components/path/step) 一致。`way` 覆盖常见简写，完整控制参数使用步骤形式。`arrow`、`arrowDetail` 和 `arrowPlacement` 沿用底层箭头简写。
+完整步骤支持 `move`、`line`、`axis-line`、`fold`、`cycle`、`curve`、`cubic`、`bend`、`arc`、`circlePath`、`ellipsePath`、`rectangle` 和 `smooth`，参数与底层 [Path 步骤](/kernel/components/path/step) 一致。`way` 覆盖常见简写，完整控制参数使用步骤形式。`arrow` 沿用底层方向简写或端点对象；尺寸、样式与重叠量配置在 `arrow.start` / `arrow.end` 中。
 
 数据位置 `{ x: { field: 'x' }, y: { field: 'y' } }` 先经过比例尺和坐标投影，再构造路线；控制点也遵循这个顺序。`[x, y]`、半径、相对偏移和角度使用 Core 绘图空间单位。单轴步骤始终沿投影后的水平或垂直方向。
 

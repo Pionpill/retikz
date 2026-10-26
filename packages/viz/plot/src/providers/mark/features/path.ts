@@ -615,8 +615,10 @@ export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathSt
 /** path child 的可变形态（series 多段时按需补 segment id），直接复用 core IRPath 属性面 */
 type IRPathChild = IRPath;
 
-const pathMarkOptions = (mark: IRPlotPathMark): Partial<Pick<IRPath, 'marks'>> =>
-  mark.properties?.marks === undefined ? {} : { marks: mark.properties.marks };
+const pathMarkOptions = (mark: IRPlotPathMark): Partial<Pick<IRPath, 'marks' | 'arrow'>> => ({
+  ...(mark.properties?.marks === undefined ? {} : { marks: mark.properties.marks }),
+  ...(mark.properties?.arrow === undefined ? {} : { arrow: mark.properties.arrow }),
+});
 
 /** 按 series 分组并构造独立 scope owner */
 export const buildSeriesPathScopes = (

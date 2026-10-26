@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ClipResource, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
+import type { ClipResource, GroupPrimitive, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -9,9 +9,9 @@ const scene = (children: IRScene['children']): IRScene => ({
   children,
 });
 
-/** 顶层第一个 GroupPrim（scope 对应的 group） */
-const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim | undefined =>
-  primitives.find((p): p is GroupPrim => p.type === 'group');
+/** 顶层第一个 GroupPrimitive（scope 对应的 group） */
+const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive | undefined =>
+  primitives.find((p): p is GroupPrimitive => p.type === 'group');
 
 /** 从 Scene.resources 取所有 clip 资源 */
 const clipResources = (resources: Array<SceneResource> | undefined): Array<ClipResource> =>
@@ -26,12 +26,12 @@ const grad: IRPaint = {
   ],
 };
 
-describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
-  it('rect clip → resources 含 canonical path，scope GroupPrim.clipRef 指向它', () => {
+describe('clip 资源生成 + GroupPrimitive.clipRef 挂载', () => {
+  it('rect clip → resources 含 canonical path，scope GroupPrimitive.clipRef 指向它', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 40, height: 30 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 30 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -62,7 +62,7 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 10, height: 10 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -73,8 +73,8 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
 });
 
 describe('clip 去重 / 不同 clip 各自资源', () => {
-  it('两 scope 用结构相同 clip → 1 条 clip 资源、两 GroupPrim 同 clipRef', () => {
-    const sameClip = { kind: 'rect', x: 0, y: 0, width: 40, height: 30 } as const;
+  it('两 scope 用结构相同 clip → 1 条 clip 资源、两 GroupPrimitive 同 clipRef', () => {
+    const sameClip = { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 30 } } as const;
     const ir = scene([
       {
         type: 'scope',
@@ -92,7 +92,7 @@ describe('clip 去重 / 不同 clip 各自资源', () => {
 
     expect(clips).toHaveLength(1);
 
-    const groups = compiled.primitives.filter((p): p is GroupPrim => p.type === 'group');
+    const groups = compiled.primitives.filter((p): p is GroupPrimitive => p.type === 'group');
 
     expect(groups).toHaveLength(2);
     expect(groups[0].clipRef).toBe(clips[0].id);
@@ -103,12 +103,12 @@ describe('clip 去重 / 不同 clip 各自资源', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 40, height: 30 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 30 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 5, y: 5, width: 20, height: 15 },
+        clip: { kind: 'rect', params: { x: 5, y: 5, width: 20, height: 15 } },
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
@@ -118,18 +118,18 @@ describe('clip 去重 / 不同 clip 各自资源', () => {
     expect(clips).toHaveLength(2);
     expect(new Set(clips.map(c => c.id)).size).toBe(2);
 
-    const groups = compiled.primitives.filter((p): p is GroupPrim => p.type === 'group');
+    const groups = compiled.primitives.filter((p): p is GroupPrimitive => p.type === 'group');
 
     expect(groups[0].clipRef).not.toBe(groups[1].clipRef);
   });
 });
 
 describe('带 clip 的 scope 不被 prune', () => {
-  it('无 transforms / 无 id 但带 clip 的 scope 仍产 GroupPrim 且携 clipRef', () => {
+  it('无 transforms / 无 id 但带 clip 的 scope 仍产 GroupPrimitive 且携 clipRef', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 60, height: 60 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 60, height: 60 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -141,11 +141,11 @@ describe('带 clip 的 scope 不被 prune', () => {
     expect(group?.clipRef).toBe(clipResources(compiled.resources)[0].id);
   });
 
-  it('空 children 但带 clip 的 scope 仍产 GroupPrim（保留 clip 语义）', () => {
+  it('空 children 但带 clip 的 scope 仍产 GroupPrimitive（保留 clip 语义）', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 20 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 20, height: 20 } },
         children: [],
       },
     ]);
@@ -169,7 +169,7 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
       },
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 40, height: 30 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 40, height: 30 } },
         children: [{ type: 'node', id: 'A', position: [80, 0], text: 'A' }],
       },
     ]);
@@ -187,11 +187,11 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
     expect(new Set(allIds).size).toBe(allIds.length);
   });
 
-  it('带 transforms 的 scope 内 path 留在该 scope GroupPrim 并受 clip 约束', () => {
+  it('带 transforms 的 scope 内 path 留在该 scope GroupPrimitive 并受 clip 约束', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 100, height: 100 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 100, height: 100 } },
         transforms: [{ kind: 'translate', x: 10, y: 0 }],
         children: [
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
@@ -220,11 +220,11 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
     expect(innerPath).toBeDefined();
   });
 
-  it('无 transforms 的 scope 内 path 留在 GroupPrim 内（正常被裁）', () => {
+  it('无 transforms 的 scope 内 path 留在 GroupPrimitive 内（正常被裁）', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 100, height: 100 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 100, height: 100 } },
         children: [
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
           { type: 'node', id: 'B', position: [30, 0], text: 'B' },
@@ -255,7 +255,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: Infinity, height: 10 },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: Infinity, height: 10 } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -267,7 +267,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'rect', x: 0, y: 0, width: 10, height: NaN },
+        clip: { kind: 'rect', params: { x: 0, y: 0, width: 10, height: NaN } },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -281,10 +281,12 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
         type: 'scope',
         clip: {
           kind: 'polygon',
-          points: [
-            [0, 0],
-            [10, 0],
-          ],
+          params: {
+            points: [
+              [0, 0],
+              [10, 0],
+            ],
+          },
         },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },

@@ -1,5 +1,5 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { ExternalDatasets, ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
+import type { DataInputBindings, DataTransformExecutor, ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { AssertEqual, ValueOf } from '@retikz/foundation';
 import type { LayoutProps } from '@retikz/react';
 import type { LowerTablesOptions, ManualTableInput, TableDetailColumnInput, TableLayoutManifest } from '@retikz/table';
@@ -41,8 +41,7 @@ export const TABLE_LAYOUT_HOST_PROP_KEYS = [
   'snapshotAt',
   'animationRef',
   'animations',
-  'easings',
-  'animationProperties',
+
   'idPrefix',
   'nodeDistance',
   'fontSize',
@@ -51,8 +50,7 @@ export const TABLE_LAYOUT_HOST_PROP_KEYS = [
   'clips',
   'arrows',
   'patterns',
-  'pathGenerators',
-  'pathKinds',
+  'paths',
   'lowerTex',
 ] as const satisfies ReadonlyArray<keyof TableLayoutHostProps>;
 

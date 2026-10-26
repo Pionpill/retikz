@@ -1,20 +1,14 @@
-import {
-  resolveArrowRegistry,
-  resolvePathGeneratorRegistry,
-  resolvePathKindRegistry,
-  resolvePatternRegistry,
-} from '../../src';
+import { resolveArrowRegistry, resolvePathRegistry, resolvePatternRegistry } from '../../src';
 import type { PathResolution, PathResolveContext, StrokePathResolution } from '../../src/resolve/path';
 import { resolvePath, resolveStrokePathProviders } from '../../src/resolve/path';
 import type { IRPathBase } from '../../src/schemas';
 
-type BuiltinProviderContext = Omit<Partial<PathResolveContext>, 'pathKinds' | 'pathGenerators' | 'arrows'> &
-  Partial<Pick<PathResolveContext, 'pathKinds' | 'pathGenerators' | 'arrows' | 'patterns' | 'round'>>;
+type BuiltinProviderContext = Omit<Partial<PathResolveContext>, 'paths' | 'arrows'> &
+  Partial<Pick<PathResolveContext, 'paths' | 'arrows' | 'patterns' | 'round'>>;
 
 const contextWithBuiltinProviders = (context: BuiltinProviderContext): PathResolveContext => ({
   mode: 'light',
-  pathKinds: resolvePathKindRegistry(),
-  pathGenerators: resolvePathGeneratorRegistry(),
+  paths: resolvePathRegistry(),
   arrows: resolveArrowRegistry(),
   patterns: resolvePatternRegistry(),
   round: value => value,

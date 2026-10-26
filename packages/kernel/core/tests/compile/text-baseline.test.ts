@@ -8,7 +8,7 @@ import type {
   LayoutChildResult,
   ScenePrimitive,
   TextMeasurer,
-  TextPrim,
+  TextPrimitive,
 } from '../../src';
 import {
   compileToScene,
@@ -94,8 +94,8 @@ const probeEmissionOf = (child: IRChild, measureText: TextMeasurer, precision?: 
   return { guides, allocationHeight, visualBounds, primitives: result.scene.primitives };
 };
 
-const emittedTextPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<TextPrim> => {
-  const textPrimitives: Array<TextPrim> = [];
+const emittedTextPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<TextPrimitive> => {
+  const textPrimitives: Array<TextPrimitive> = [];
 
   const visit = (primitive: ScenePrimitive): void => {
     if (primitive.type === 'group') {
@@ -302,7 +302,7 @@ describe('Node layout alignment baselines', () => {
     expect(emittedPhysicalBaselines(output.primitives)).toEqual([4, 24]);
   });
 
-  it('keeps one grouped multiline TextPrim and fixed visual bounds when authored line metrics differ', () => {
+  it('keeps one grouped multiline TextPrimitive and fixed visual bounds when authored line metrics differ', () => {
     const output = probeEmissionOf(
       {
         type: 'node',
@@ -329,7 +329,7 @@ describe('Node layout alignment baselines', () => {
     expect(output.visualBounds).toEqual({ x: -1, y: -17, width: 10, height: 40 });
   });
 
-  it('rounds guides with the same precision as grouped TextPrim physical baselines', () => {
+  it('rounds guides with the same precision as grouped TextPrimitive physical baselines', () => {
     const output = probeEmissionOf(
       {
         type: 'node',

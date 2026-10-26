@@ -50,7 +50,7 @@ describe('Drawable shared schema', () => {
     });
   });
 
-  it('accepts shared drawable style and instance fields on a custom path kind', () => {
+  it('accepts shared drawable style and instance fields on a custom path', () => {
     const parsed = PathSchema.parse(
       path({
         kind: 'custom',

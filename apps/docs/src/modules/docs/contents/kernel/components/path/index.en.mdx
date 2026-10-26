@@ -28,12 +28,14 @@ Read Basic usage first, then choose syntax, composition, arrows, or labels for y
 
 [Nodes](/kernel/components/node) own shape and positioning; [Scope](/kernel/components/scope) owns group transforms and clipping. Use [Extension Ribbon](/library/extension/ribbon) for variable-width bands and domain components for automatic layout.
 
-Changing color, width, or an existing arrow requires no extension. A generator adds a segment, a custom path changes whole-path output, and a custom arrow adds endpoint geometry. Each tutorial covers definition, registration, and use; internal processing is explained separately.
+Changing color, width, or an existing arrow requires no extension. Reusable curve segments can be expanded into existing steps by functions or components. A custom path changes whole-path output, and a custom arrow adds endpoint geometry. Each tutorial covers definition, registration, and use; internal processing is explained separately.
 
 ## Contents
 
 <LinkedSections
   items={[
+    { title: 'mark · Marks', description: 'Place shapes anywhere along a path', url: '/kernel/components/path/mark' },
+    { title: 'Custom marks', description: 'Define local primitives and parameters', url: '/kernel/components/path/custom-mark' },
 
     {
       title: 'Basic usage',
@@ -56,11 +58,6 @@ Changing color, width, or an existing arrow requires no extension. A generator a
       title: 'Path labels',
       description: 'Scope, position, orientation, and stroke gaps',
       url: '/kernel/components/path/label',
-    },
-    {
-      title: 'Custom generators',
-      description: 'Define and register a curve segment',
-      url: '/kernel/components/path/custom-path-generator',
     },
     { title: 'Custom paths', description: 'Define whole-path output', url: '/kernel/components/path/custom-path' },
     { title: 'Custom arrows', description: 'Define endpoint geometry', url: '/kernel/components/path/custom-arrow' },

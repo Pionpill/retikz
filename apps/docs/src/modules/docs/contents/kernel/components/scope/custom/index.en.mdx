@@ -3,7 +3,13 @@ title: Custom clipping
 description: Define a JSON-safe clip shape for Scope, then register and use it from a React or Vanilla host
 ---
 
-When Core's built-in `rect` and Standard's circle / ellipse / polygon / path / compound clips do not fit, define a new shape with one `ClipDefinition`. The Definition stays out of IR; IR stores only a `kind` and serializable parameters, while renderers, visual bounds, and hit testing share the same lowered result.
+When Core's built-in `rect` and Extension's circle / ellipse / polygon / path / compound clips do not fit, define a new shape with one `ClipDefinition`. The Definition stays out of IR; IR stores only a `kind` and serializable parameters, while renderers, visual bounds, and hit testing share the same lowered result.
+
+A clip spec uses `{ kind, params }`: `kind` selects the registered definition and `params` holds JSON parameters. Use `{}` when there are no parameters. `schema` validates the complete spec, and `lower` consumes the parsed parameters and returns a `SceneClipPath` directly.
+
+For compound clips, call `context.lower(child)` inside `lower` to generate child paths and combine their commands. Keep temporary functions and class instances inside the callback; return only structured path commands and a fill rule.
+
+The built-in rectangle uses `IRRectClip`, derived from `RectClipSchema`, and generates its path through the same `lower` callback.
 
 ## Applicability boundary
 
@@ -28,7 +34,7 @@ The rounded rectangle below clips two circular nodes. The code panel initially s
 
 ## Define the capability
 
-Keep the Definition in a reusable module, such as `rounded-rect-clip.ts`. When the spec already is the complete shape, provide only `schema` and `lower`: `defineClip` derives `resolve: spec => spec`. Supply `resolve` explicitly only when shorthand, references, or configuration resolve to another shape. The intermediate shape follows a TypeScript contract without repeated parsing. `lower` returns a structured path, never an SVG string or Canvas callback.
+Keep the Definition in a reusable module, such as `rounded-rect-clip.ts`. Each definition provides `kind`, `schema`, and `lower`; `lower` returns a structured path.
 
 ```ts
 import type { PathCommand } from '@retikz/core';
@@ -37,29 +43,32 @@ import { z } from 'zod';
 
 const roundedRectClipSchema = z.strictObject({
   kind: z.literal('rounded-rect'),
-  x: z.number(),
-  y: z.number(),
-  width: z.number().positive(),
-  height: z.number().positive(),
-  radius: z.number().nonnegative(),
+  params: z.strictObject({
+    x: z.number(),
+    y: z.number(),
+    width: z.number().positive(),
+    height: z.number().positive(),
+    radius: z.number().nonnegative(),
+  }),
 });
 export const roundedRectClip = defineClip({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
+
   lower: shape => {
-    const right = shape.x + shape.width;
-    const bottom = shape.y + shape.height;
-    const radius = Math.min(shape.radius, shape.width / 2, shape.height / 2);
+    const right = shape.params.x + shape.params.width;
+    const bottom = shape.params.y + shape.params.height;
+    const radius = Math.min(shape.params.radius, shape.params.width / 2, shape.params.height / 2);
     const commands: Array<PathCommand> = [
-      { kind: 'move', to: [shape.x + radius, shape.y] },
-      { kind: 'line', to: [right - radius, shape.y] },
-      { kind: 'quad', control: [right, shape.y], to: [right, shape.y + radius] },
+      { kind: 'move', to: [shape.params.x + radius, shape.params.y] },
+      { kind: 'line', to: [right - radius, shape.params.y] },
+      { kind: 'quad', control: [right, shape.params.y], to: [right, shape.params.y + radius] },
       { kind: 'line', to: [right, bottom - radius] },
       { kind: 'quad', control: [right, bottom], to: [right - radius, bottom] },
-      { kind: 'line', to: [shape.x + radius, bottom] },
-      { kind: 'quad', control: [shape.x, bottom], to: [shape.x, bottom - radius] },
-      { kind: 'line', to: [shape.x, shape.y + radius] },
-      { kind: 'quad', control: [shape.x, shape.y], to: [shape.x + radius, shape.y] },
+      { kind: 'line', to: [shape.params.x + radius, bottom] },
+      { kind: 'quad', control: [shape.params.x, bottom], to: [shape.params.x, bottom - radius] },
+      { kind: 'line', to: [shape.params.x, shape.params.y + radius] },
+      { kind: 'quad', control: [shape.params.x, shape.params.y], to: [shape.params.x + radius, shape.params.y] },
       { kind: 'close' },
     ];
     return { commands, fillRule: 'nonzero' };
@@ -82,7 +91,7 @@ import { roundedRectClip } from './rounded-rect-clip';
 
 const Demo = () => (
   <Layout extensions={{ clips: [roundedRectClip] }}>
-    <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
+    <Scope clip={{ kind: 'rounded-rect', params: { x: -150, y: -72, width: 300, height: 144, radius: 36 } }}>
       <Node
         position={[-88, -8]}
         shape="circle"
@@ -128,11 +137,13 @@ const input: InputScene = {
       type: 'scope',
       clip: {
         kind: 'rounded-rect',
-        x: -150,
-        y: -72,
-        width: 300,
-        height: 144,
-        radius: 36,
+        params: {
+          x: -150,
+          y: -72,
+          width: 300,
+          height: 144,
+          radius: 36,
+        },
       },
       children: [
         {
@@ -185,17 +196,17 @@ A `{ capability: 'clip', name: kind }` provider in a provider graph likewise cre
 
 ## Errors and limits
 
-| Case                                   | Result                                                                                                   |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Duplicate kind                         | The registry reports a definition conflict and never overwrites it                                       |
-| Unknown `clip.kind`                    | Reports the kind and suggests Core `options.clips`, React `extensions.clips`, or Vanilla `compile.clips` |
-| Definition / spec / shape kind differs | Fails as a provider contract violation before `lower`                                                    |
-| Spec or shape fails its schema         | Reports the provider key, schema phase, and validation cause                                             |
-| Recursion exceeds `maxClipDepth`       | Fails; `resolve` / `lower` share a 32-edge budget by default                                             |
+| Case                             | Result                                                                                                   |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Duplicate kind                   | The registry reports a definition conflict and never overwrites it                                       |
+| Unknown `clip.kind`              | Reports the kind and suggests Core `options.clips`, React `extensions.clips`, or Vanilla `compile.clips` |
+| Definition / spec kind differs   | Fails as a provider contract violation before `lower`                                                    |
+| Spec fails its schema            | Reports the provider key, schema phase, and validation cause                                             |
+| Recursion exceeds `maxClipDepth` | Fails; the root and recursive children share a budget of 32 conversions, one per invocation              |
 
 A compound shape appends child commands in authored order and applies its outer `fillRule`; it is not a geometric intersection. Use nested `<Scope clip>` elements for intersection.
 
-For registry resolution, shape snapshots, path canonicalization, and resource deduplication, see the [Scope mechanism](/kernel/components/scope/mechanism).
+For registry resolution, path snapshots, path canonicalization, and resource deduplication, see the [Scope mechanism](/kernel/components/scope/mechanism).
 
 ## Related props
 
@@ -206,26 +217,21 @@ These are the members most often used to define, inject, and reference a custom 
     {
       name: 'defineClip',
       kind: 'function',
-      type: 'DefineClip',
-      description: 'Creates a registrable clipping capability. Omit `resolve` when the input already is the full shape',
+      type: 'typeof defineClip',
+      description: 'Creates a registrable clipping capability with schema and lower',
     },
     {
       name: 'ClipDefinition',
       kind: 'type',
-      type: 'ClipDefinition<TClip, TShape>',
-      description: 'The registrable clip definition returned by `defineClip`',
-    },
-    {
-      name: 'ClipResolveContext',
-      kind: 'type',
-      type: 'ClipResolveContext',
-      description: 'Provides precision rounding and child-clip resolution',
+      type: 'ClipDefinition<TClip>',
+      description:
+        'Describes the clip name, input validation, and path generation; the generic specifies the input type',
     },
     {
       name: 'ClipLowerContext',
       kind: 'type',
       type: 'ClipLowerContext',
-      description: 'Provides precision rounding and child-shape path lowering',
+      description: 'Provides precision rounding and child-clip path generation',
     },
     {
       name: 'Layout.extensions.clips',

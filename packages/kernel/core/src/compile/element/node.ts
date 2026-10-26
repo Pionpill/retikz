@@ -45,12 +45,12 @@ export const compileNode = (input: IRNode, context: NodeCompileContext): Element
         ),
         bounds: [
           {
-            points: [Anchor.TopLeft, Anchor.TopRight, Anchor.BottomLeft, Anchor.BottomRight].map(anchor =>
+            boundsPoints: [Anchor.TopLeft, Anchor.TopRight, Anchor.BottomLeft, Anchor.BottomRight].map(anchor =>
               rect.anchor(outer, anchor),
             ),
             shadow: properties.shadow,
           },
-          { points: labelExtentPoints(layout) },
+          { boundsPoints: labelExtentPoints(layout) },
         ],
       }),
     });

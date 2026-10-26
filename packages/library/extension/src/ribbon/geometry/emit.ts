@@ -1,4 +1,4 @@
-import type { PathCommand, PathKindCompileResult, PathKindLabel, ScenePrimitive } from '@retikz/core';
+import type { PathCommand, PathCompileResult, PathLabel, ScenePrimitive } from '@retikz/core';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
 import type { RibbonCapDefinition } from '../cap-types';
@@ -29,7 +29,7 @@ const LABEL_POSITION: Record<string, number> = {
   'at-end': 1,
 };
 
-type ResolvedRibbonLabel = PathKindLabel & Pick<IRRibbonLabel, 'placement'>;
+type ResolvedRibbonLabel = PathLabel & Pick<IRRibbonLabel, 'placement'>;
 
 const canonicalizeLabel = (label: IRRibbonLabel): ResolvedRibbonLabel => ({
   ...label,
@@ -99,9 +99,9 @@ const resultOf = (
   ribbon: RibbonLike,
   outline: { commands: Array<PathCommand>; points: Array<[number, number]> },
   context: EmitRibbonPrimitiveContext,
-  labels: ReadonlyArray<PathKindLabel> = [],
+  labels: ReadonlyArray<PathLabel> = [],
   samples: ReadonlyArray<Readonly<{ point: [number, number]; tangent: [number, number]; sideOffset?: number }>> = [],
-): PathKindCompileResult => {
+): PathCompileResult => {
   const labelPrimitives: ReadonlyArray<ScenePrimitive> =
     labels.length === 0 ? [] : context.emitHostLabels({ labels, samples, sourcePath: 'kindOptions.label' });
   return {
@@ -111,7 +111,7 @@ const resultOf = (
 };
 
 /**
- * 将带状路径 IR 转换为扩展路径种类的编译结果
+ * 将带状路径 IR 转换为扩展路径定义的编译结果
  * @description boundary 模式保留 upper/lower 两条曲线并闭合轮廓；centerline 模式复用 Core materializePath 的已结算 commands，再按宽度函数生成左右边界
  */
 export const emitRibbonPrimitive = (
@@ -119,14 +119,14 @@ export const emitRibbonPrimitive = (
   context: EmitRibbonPrimitiveContext,
   profileRegistry: ReadonlyMap<string, RibbonWidthProfileDefinition>,
   capRegistry: ReadonlyMap<string, RibbonCapDefinition>,
-): PathKindCompileResult | null => {
+): PathCompileResult | null => {
   const options = resolveRibbonOptions(path.kindOptions);
   const ribbon: RibbonLike = { ...path, ...options };
 
   if (ribbon.mode === 'boundary') {
     const outline = boundaryOutlineCommands({
-      upper: context.materializePath({ children: ribbon.upper }).commands,
-      lower: context.materializePath({ children: ribbon.lower }).commands,
+      upper: context.materializePath({ children: ribbon.upper }),
+      lower: context.materializePath({ children: ribbon.lower }),
     });
 
     return resultOf(ribbon, outline, context);
@@ -140,8 +140,8 @@ export const emitRibbonPrimitive = (
     });
   }
 
-  const materialized = context.materializePath({ children: ribbon.children });
-  const segmentInputs = commandsToSegmentInputs(materialized.commands, 'centerline');
+  const commands = context.materializePath({ children: ribbon.children });
+  const segmentInputs = commandsToSegmentInputs(commands, 'centerline');
   const rawSegments = segmentInputsToSegments(segmentInputs);
   const rawTotalLength = rawSegments.reduce((sum, segment) => sum + segment.length, 0);
   if (!Number.isFinite(rawTotalLength) || rawTotalLength <= 0) {

@@ -21,7 +21,6 @@ describe('Explicit path steps', () => {
     { kind: 'ellipsePath', radius: { x: 10, y: 20 } },
     { kind: 'rectangle', from: dataPosition, to: [10, 20] },
     { kind: 'smooth', points: [dataPosition, { relative: [10, 20] }] },
-    { kind: 'generator', name: 'custom', params: { field: 'opaque' }, to: dataPosition },
   ])('round trips $kind with its own construction fields', step => {
     const source = mark(step);
     const parsed = PathMarkSchema.parse(source);

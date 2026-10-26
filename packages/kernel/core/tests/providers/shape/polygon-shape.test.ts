@@ -169,7 +169,7 @@ describe('polygon — 错误路径（paramsSchema 拒绝）', () => {
 
 describe('polygon — 交互（self-rotate + Node.rotate）', () => {
   it('polygon_self_rotate_plus_node_rotate：params.rotate:30 + Node rotate:15 → 顶点叠加旋转 45°', () => {
-    // self-rotate 进 emit 顶点角度；Node.rotate 走外层 GroupPrim 的 rotate transform。
+    // self-rotate 进 emit 顶点角度；Node.rotate 走外层 GroupPrimitive 的 rotate transform。
     // 两者叠加 = 视觉上首顶点方向为 30+15=45°。此处验证：
     //   ① 外层 group 带 rotate 15° transform；
     //   ② emit 顶点（轴对齐空间，未含 group rotate）已含 self-rotate 30°——

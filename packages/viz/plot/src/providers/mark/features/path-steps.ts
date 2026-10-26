@@ -68,10 +68,6 @@ export const lowerPathSteps = (
             ...(center === undefined ? {} : { center: target(center, 'center') }),
           };
         }
-        case 'generator': {
-          const { to, ...generator } = step;
-          return { type: 'step', ...generator, ...(to === undefined ? {} : { to: target(to, 'to') }) };
-        }
         case 'rectangle':
           return { type: 'step', ...step, from: target(step.from, 'from'), to: target(step.to, 'to') };
         case 'smooth':

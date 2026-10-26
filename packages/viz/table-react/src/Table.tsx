@@ -1,9 +1,9 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type {
-  ExternalDatasets,
-  ExternalRow,
   DataInputBindings,
   DataTransformExecutor,
+  ExternalDatasets,
+  ExternalRow,
   IRDataExecution,
 } from '@retikz/data';
 import type { LayoutExtensions, LayoutProps } from '@retikz/react';
@@ -31,8 +31,6 @@ export type TableLayoutHostProps = Pick<
   | 'snapshotAt'
   | 'animationRef'
   | 'animations'
-  | 'easings'
-  | 'animationProperties'
   | 'idPrefix'
   | 'nodeDistance'
   | 'fontSize'
@@ -41,8 +39,7 @@ export type TableLayoutHostProps = Pick<
   | 'clips'
   | 'arrows'
   | 'patterns'
-  | 'pathGenerators'
-  | 'pathKinds'
+  | 'paths'
   | 'lowerTex'
 > & {
   /** standalone Layout 宿主容器的 CSS 样式 */

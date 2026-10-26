@@ -1,8 +1,8 @@
 import type { CompileArtifact, CompileOptions, CompileResult, IRScene, Scene } from '@retikz/core';
-import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
+import type { ReconcilerDiagnostic, ReconcilerUpdateStrategy } from '@retikz/reconciler';
+import type { AnimationControls } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
-import type { ReconcilerDiagnostic, ReconcilerUpdateStrategy } from '@retikz/reconciler';
 
 import type { SynchronousInputEmbedAdapter, InputRuntimeMeta, InputScene } from '../normalize';
 import type { ProcessingOptions } from '../processing';
@@ -40,16 +40,12 @@ export type VanillaAnimationOptions = {
    * @description SVG 后端把各 track 在该时刻的值烘焙成静态属性 / transform（复用 `evaluateTrack`）；覆盖 `enabled`
    */
   snapshotAt?: number;
-  /** 自定义 easing 注册表（透传 renderer / runtime） */
-  easings?: EasingRegistry;
 };
 
 /** Canvas 专属 runtime 选项 */
 export type VanillaCanvasOptions = {
   /** 设备像素比；缺省读 `globalThis.devicePixelRatio`、再回退 1（镜像 react CanvasHost） */
   devicePixelRatio?: number;
-  /** 自定义 property 插值器注册表（透传 drawScene；自定义动画通道用） */
-  animationProperties?: AnimationPropertyRegistry;
 };
 
 /** Retained view update 可变的 Canvas 配置；DPR 固定在 mount 生命周期 */

@@ -1,27 +1,14 @@
-import type { JsonObject } from '@retikz/foundation';
-
+import type { IRNode } from '../../schemas';
 import type {
-  BlendMode,
-  IRAnimationTrack,
-  IRGraphicStyle,
-  IRNode,
-  IRPathBase,
-  ResolvedDropShadow,
-} from '../../schemas';
-import type { PaintValue } from './paint';
+  ScenePrimitiveBase,
+  ScenePrimitiveFill,
+  ScenePrimitiveStroke,
+  ScenePrimitiveOpacity,
+  ScenePrimitiveEffects,
+} from './base';
 
-/** 矩形原语 */
-export type RectPrim = {
-  /** 类型判别符 */
-  type: 'rect';
-  /** 禁用该图元及其子树的指针命中；省略时保持正常命中 */
-  hitTest?: false;
-  /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
-  id?: string;
-  /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
-  meta?: JsonObject;
-  /** 时间轴动画 tracks：compile 从 IR 元素的 animations 原样 stamp；renderer 能播则播、不能则渲染 settled 静态态并 warn（不丢图） */
-  animations?: Array<IRAnimationTrack>;
+/** 矩形图元的位置、尺寸与圆角 */
+export type RectPrimitiveGeometry = {
   /** 左上角横坐标 */
   x: number;
   /** 左上角纵坐标 */
@@ -30,45 +17,20 @@ export type RectPrim = {
   width: number;
   /** 矩形高度 */
   height: number;
-  /** 填充：纯色 CSS 串、或指向资源表的 paint server（gradient）、或 contextStroke */
-  fill?: PaintValue;
-  /**
-   * 填充透明度 0~1
-   * @default 1
-   */
-  fillOpacity?: number;
-  /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
-  stroke?: PaintValue;
-  /**
-   * 描边透明度 0~1
-   * @default 1
-   */
-  strokeOpacity?: number;
-  /** 描边宽度 */
-  strokeWidth?: IRGraphicStyle['strokeWidth'];
-  /** 描边 dash pattern（如 [4, 2]） */
-  dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
-  /** 描边线帽 */
-  strokeLinecap?: NonNullable<IRPathBase['style']>['lineCap'];
-  /** 描边连接 */
-  strokeLinejoin?: NonNullable<IRPathBase['style']>['lineJoin'];
-  /** 描边 dash offset */
-  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**
    * 圆角半径（同时作用于 rx/ry）
    * @default 0
    */
   cornerRadius?: IRNode['cornerRadius'];
-  /**
-   * 整体透明度 0~1
-   * @default 1
-   */
-  opacity?: number;
-  /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
-  shadow?: ResolvedDropShadow;
-  /**
-   * 混合模式：解析后值；undefined / normal = 普通 source-over
-   * @default 'normal'
-   */
-  blendMode?: BlendMode;
 };
+
+/** 矩形原语 */
+export type RectPrimitive = ScenePrimitiveBase &
+  ScenePrimitiveFill &
+  ScenePrimitiveStroke &
+  ScenePrimitiveOpacity &
+  ScenePrimitiveEffects &
+  RectPrimitiveGeometry & {
+    /** 类型判别符 */
+    type: 'rect';
+  };

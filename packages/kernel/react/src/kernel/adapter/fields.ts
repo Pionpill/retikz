@@ -47,6 +47,7 @@ export const PATH_FIELDS = [
   'rotate',
   'scale',
   'marks',
+  'arrow',
   'style',
 ] as const satisfies ReadonlyArray<keyof IRPath>;
 

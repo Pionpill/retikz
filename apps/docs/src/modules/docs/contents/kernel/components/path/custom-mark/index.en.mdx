@@ -1,0 +1,178 @@
+---
+title: Custom marks
+description: Define local primitives with defineMark, register them, and reference them on a path with shape and params
+---
+
+## Scope
+
+Read [mark · Marks](/kernel/components/path/mark) first. Use an existing `shape` for times, plus, check, star, or a registered arrow. Use `defineMark` when you need a new outline or parameterized content.
+
+Ordinary marks provide no endpoint shortening geometry. If the same shape must also work as an endpoint arrow, define a [custom arrow](/kernel/components/path/custom-arrow); it can then be used as a mark too.
+
+## Define the capability
+
+This example defines a `ring`: `baseSize: 10` sets the side length of the local reference square, and `anchor: [5, 5]` aligns its center with the sampled path position. These are also the defaults, written explicitly here to explain the coordinates. `hollow: true` requests the resolved stroke color and outline width.
+
+`emit(context)` returns `Iterable<ScenePrimitive>`. The example emits an ellipse for the ring. Change the local radius to see how `params.radius` changes the output; overall scale applies to the entire mark.
+
+<ComponentPreview
+  files={['custom-mark', 'custom-mark.preview.tsx', 'ring-mark.ts']}
+  defaultSourceFile="ring-mark.ts"
+  size="sm"
+  caption="The ring stays anchored at its center, and the main stroke remains intact through it. The example uses scale: 2 to enlarge the output."
+/>
+
+Names must be unique across the combined mark registry. `params` is a JSON object and defaults to an empty object in the context. The definition owns its field meanings and constraints. This example accepts only a finite radius greater than 0 and at most 5; other values produce a domain error.
+
+The context also provides resolved `stroke`, `fill`, `lineWidth`, line caps, joins, dash settings, and the coordinate precision function `round`. Copy the styles you need into the emitted primitives; fixed colors are also allowed. The mark container applies opacity, so do not multiply it into each child again. Solid marks typically use `fill`; line marks use `hollow: true` and emit `fill: 'none'`.
+
+## Register and use
+
+The preview above includes React registration and use. Keep the `ringMark` definition from `ring-mark.ts` outside the host code, register it once for that host, and reference it with `shape: 'ring'`.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Draw, Layout } from '@retikz/react';
+import { ringMark } from './ring-mark';
+
+<Layout extensions={{ marks: [ringMark] }}>
+  <Draw
+    way={[
+      [0, 0],
+      [120, 0],
+    ]}
+    marks={[{ pos: 0.5, shape: 'ring', params: { radius: 4 } }]}
+  />
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Prepare `<div id="diagram"></div>` in HTML and register the definition in `mount` through `compile.marks`.
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+import { ringMark } from './ring-mark';
+
+const input = scene({
+  children: [
+    path({
+      way: [
+        [0, 0],
+        [120, 0],
+      ],
+      marks: [{ pos: 0.5, shape: 'ring', params: { radius: 4 } }],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  compile: { marks: [ringMark] },
+});
+// Call view.dispose() when removing the host
+```
+
+</DocTab>
+<DocTab value="ir" label="IR / Core">
+
+IR stores only names and JSON parameters. Pass the definition function through compile options. The resulting `scene` can be consumed by an SVG or Canvas renderer.
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { ringMark } from './ring-mark';
+
+const { scene } = compileToScene(
+  {
+    version: 1,
+    type: 'scene',
+    children: [
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [120, 0] },
+        ],
+        marks: [{ pos: 0.5, shape: 'ring', params: { radius: 4 } }],
+      },
+    ],
+  },
+  { marks: [ringMark] },
+);
+```
+
+</DocTab>
+</DocTabs>
+
+## Errors and limits
+
+| Situation                                                                | Result                                                    |
+| ------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Name collides with a built-in mark, registered arrow, or another mark    | Registration fails without overriding the definition      |
+| An unregistered `shape` is referenced                                    | Compilation reports the mark location and available names |
+| An ordinary mark is used in `arrow.start` / `end`                        | The arrow registry cannot resolve its name                |
+| `emit` throws                                                            | Core wraps the error and preserves its original `cause`   |
+| The path has no locatable length, or output references missing resources | Compilation rejects the invalid result                    |
+
+Emit basic Scene primitives, not DOM, ReactNode, or unmeasured text. Existing scene paints and clipping resources may be referenced, but references must resolve to provided resources. Definitions stay outside IR. Generate content for each instance to avoid sharing mutable primitives.
+
+## Related properties
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineMark',
+      kind: 'function',
+      type: '(definition: MarkDefinition) => MarkDefinition',
+      description: 'Declare a registrable mark definition.',
+    },
+    {
+      name: 'MarkDefinition',
+      kind: 'type',
+      type: 'MarkDefinition',
+      description: 'The shape name, local reference size, anchor, hollow mode, and primitive generator.',
+    },
+    {
+      name: 'MarkEmitContext',
+      kind: 'type',
+      type: 'MarkEmitContext',
+      description: 'Custom parameters, resolved styles, and a coordinate precision function.',
+    },
+    {
+      name: 'Layout.extensions.marks',
+      kind: 'property',
+      type: 'ReadonlyArray<MarkDefinition>',
+      description: 'The React registration entry. Core uses CompileOptions.marks; Vanilla mount uses compile.marks.',
+    },
+    {
+      name: 'Draw.marks',
+      kind: 'property',
+      type: "DrawProps['marks']",
+      description: 'Reference a definition by shape and pass custom parameters through params.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'mark · Marks',
+      description: 'Built-in shapes, position, size, and orientation',
+      url: '/kernel/components/path/mark',
+    },
+    {
+      title: 'Custom arrows',
+      description: 'Define endpoint geometry when shortening is needed',
+      url: '/kernel/components/path/custom-arrow',
+    },
+    {
+      title: 'API Reference',
+      description: 'Look up complete definition and input contracts',
+      url: '/kernel/components/path/reference',
+    },
+  ]}
+/>

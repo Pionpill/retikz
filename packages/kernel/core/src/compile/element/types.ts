@@ -1,7 +1,7 @@
 import type {
   CompileObservationAncestor,
   CompileOccurrenceLocator,
-  GroupPrim,
+  GroupPrimitive,
   LayoutProposal,
   ScenePrimitive,
   SceneResource,
@@ -85,7 +85,7 @@ export type ElementCompileOptions = Readonly<{
 /** 元素本地可见边界的一项贡献，独立保留阴影语义 */
 export type CompileBounds = Readonly<{
   /** 本地边界点 */
-  points: ReadonlyArray<IRPosition>;
+  boundsPoints: ReadonlyArray<IRPosition>;
   /** 本项阴影 */
   shadow?: ResolvedDropShadow;
   /** 外框等装饰边界，祖先 clip 可裁减其可见范围 */
@@ -128,7 +128,7 @@ export type CompiledCoordinate = Readonly<{
   output?: CompileOutput;
 }>;
 
-/** Path 完整编译状态，自定义 kind 不要求具有单一中心线 */
+/** Path 完整编译状态，自定义路径不要求具有单一中心线 */
 export type CompiledPath = Readonly<{
   /** 元素在 IR 树中的来源路径 */
   irPath: string;
@@ -153,7 +153,7 @@ export type CompiledScope = Readonly<{
   /** 局部内容包络，包含空内容时的既有退化布局 */
   envelope: NodeLayout;
   /** Scope 输出的包装属性，不包含 children */
-  group: Omit<GroupPrim, 'children'>;
+  group: Omit<GroupPrimitive, 'children'>;
   /** 自身装饰及其资源，不重复持有子输出 */
   output: CompileOutput;
 }>;

@@ -4,12 +4,11 @@ import { literal, number, object, string, union } from 'zod';
 
 import type { IRScene } from '../../src';
 import {
-  BUILTIN_PATH_KINDS,
+  BUILTIN_PATHS,
   BUILTIN_SHAPES,
   compileToScene,
   CompositeBaseSchema,
   defineComposite,
-  definePathGenerator,
   defineShape,
 } from '../../src';
 
@@ -60,33 +59,10 @@ describe('provider key contract', () => {
     );
   });
 
-  it('path_generator_definition_declares_name_and_compiles_from_array_options', () => {
-    const segment = definePathGenerator({
-      name: 'segment',
-      paramsSchema: object({}),
-      generate: ({ from }) => [{ kind: 'line', to: [from[0] + 10, from[1]] }],
-    });
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'generator', name: 'segment', params: {} },
-          ],
-        },
-      ],
-    };
-
-    expect(() => compileToScene(ir, { pathGenerators: [segment] }).scene).not.toThrow();
-  });
-
   it('path_kind_definitions_are_keyed_by_definition_name', () => {
-    const pathKindNames = [...BUILTIN_PATH_KINDS.values()].map(def => def.name).sort();
+    const pathNames = [...BUILTIN_PATHS.values()].map(def => def.name).sort();
 
-    expect(pathKindNames).toEqual(['stroke']);
+    expect(pathNames).toEqual(['stroke']);
   });
 
   it('composite_definition_declares_namespace_and_type_as_provider_key', () => {

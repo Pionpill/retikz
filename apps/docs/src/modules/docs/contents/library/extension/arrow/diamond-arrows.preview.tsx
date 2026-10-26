@@ -21,8 +21,8 @@ export const renderDiamondArrowsPreview = (values: DiamondArrowsPreviewValues) =
           [-140, 10],
           [-20, 10],
         ]}
-        arrow="->"
-        arrowDetail={{ ...detail, end: { ...detail, shape: 'diamond' } }}
+        arrow={{ end: { ...detail, ...detail, shape: 'diamond' } }}
+
         style={{ stroke: '#94a3b8', strokeWidth: 2 }}
       />
       <Draw
@@ -30,8 +30,8 @@ export const renderDiamondArrowsPreview = (values: DiamondArrowsPreviewValues) =
           [20, 10],
           [140, 10],
         ]}
-        arrow="->"
-        arrowDetail={{ ...detail, end: { ...detail, shape: 'openDiamond' } }}
+        arrow={{ end: { ...detail, ...detail, shape: 'openDiamond' } }}
+
         style={{ stroke: '#94a3b8', strokeWidth: 2 }}
       />
       <Node position={[-80, -35]} style={{ fill: 'none', stroke: 'none', font: { size: 12 }, textColor: 'gray' }}>

@@ -13,12 +13,12 @@ The complete example below defines and injects `hexagon`. The nodes connect by i
 
 A custom shape owns a node's layout footprint, visible contour, and default connection geometry together. Use `ShapeDefinition` only when those responsibilities belong to the same graphic.
 
-| Need                                                        | Choose                                                                |
-| ----------------------------------------------------------- | --------------------------------------------------------------------- |
-| A built-in shape already expresses it                       | Use [Node](/kernel/components/node/usage) directly                    |
-| A reusable path only, without a node id or anchors          | Use a [Path Generator](/kernel/components/path/custom-path-generator) |
-| Keep the visual shape but change where connections land     | Use a [Custom Boundary](/kernel/components/node/custom)               |
-| Add a complete layoutable, drawable, connectable node shape | Use `ShapeDefinition` from this page                                  |
+| Need                                                        | Choose                                                        |
+| ----------------------------------------------------------- | ------------------------------------------------------------- |
+| A built-in shape already expresses it                       | Use [Node](/kernel/components/node/usage) directly            |
+| A reusable path only, without a node id or anchors          | Use a function or component that produces existing path steps |
+| Keep the visual shape but change where connections land     | Use a [Custom Boundary](/kernel/components/node/custom)       |
+| Add a complete layoutable, drawable, connectable node shape | Use `ShapeDefinition` from this page                          |
 
 `node.shape` may be a string or `{ type, params }`. Both forms must remain 100% JSON-serializable. A `ShapeDefinition` contains functions, so it cannot enter the IR or be reconstructed from JSON.
 

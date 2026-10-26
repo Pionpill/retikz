@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { PathPrim, ScenePrimitive } from '../../src/contract';
+import type { PathPrimitive, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
-const findPaths = (prims: Array<ScenePrimitive>): Array<PathPrim> =>
-  flattenPrims(prims).filter((p): p is PathPrim => p.type === 'path');
+const findPaths = (prims: Array<ScenePrimitive>): Array<PathPrimitive> =>
+  flattenPrims(prims).filter((p): p is PathPrimitive => p.type === 'path');
 
-const compileNode = (label: unknown): Array<PathPrim> => {
+const compileNode = (label: unknown): Array<PathPrimitive> => {
   const ir: IRScene = {
     version: 1,
     type: 'scene',
@@ -17,7 +17,7 @@ const compileNode = (label: unknown): Array<PathPrim> => {
   return findPaths(compileToScene(ir).scene.primitives);
 };
 
-const lineEnds = (p: PathPrim): { from: [number, number]; to: [number, number] } => {
+const lineEnds = (p: PathPrimitive): { from: [number, number]; to: [number, number] } => {
   const move = p.commands.find(c => c.kind === 'move');
   const line = p.commands.find(c => c.kind === 'line');
   if (move?.kind !== 'move' || line?.kind !== 'line') throw new Error('expected move + line');
@@ -26,7 +26,7 @@ const lineEnds = (p: PathPrim): { from: [number, number]; to: [number, number] }
 };
 
 describe('pin 引线产出', () => {
-  it('pin:true → 恰好 1 条 leader PathPrim（move + line）', () => {
+  it('pin:true → 恰好 1 条 leader PathPrimitive（move + line）', () => {
     const paths = compileNode({ text: 'x', position: 'top', pin: true });
 
     expect(paths).toHaveLength(1);

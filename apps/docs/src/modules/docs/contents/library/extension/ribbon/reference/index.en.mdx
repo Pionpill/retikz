@@ -13,7 +13,7 @@ Ribbon uses the shared Core `Path` component with `kind="ribbon"` and `kindOptio
 
 | Entry    | Use with Ribbon                                                                                               | Reference                                         |
 | -------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `Layout` | Inject `RibbonPathKindDefinition` or a custom Ribbon Definition through `extensions.pathKinds`                | [Layout API](/kernel/components/layout/reference) |
+| `Layout` | Inject `RibbonPathDefinition` or a custom Ribbon Definition through `extensions.paths`                        | [Layout API](/kernel/components/layout/reference) |
 | `Path`   | Set `kind="ribbon"` and configure widths and caps through `kindOptions`; use shared `label` and `style` props | [Path API](/kernel/components/path/reference)     |
 | `Step`   | Describe the open centerline as children of `Path`                                                            | [Path steps](/kernel/components/path/step)        |
 
@@ -21,10 +21,10 @@ Ribbon uses the shared Core `Path` component with `kind="ribbon"` and `kindOptio
 
 Vanilla builds the same input with shared `path()`; there is no separate `ribbon()` function. Inject the Definition explicitly when compiling or rendering. See [Basic usage](/library/extension/ribbon/usage) for all four complete entry examples.
 
-| Entry                 | Use with Ribbon                                                                         | Reference                                            |
-| --------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `path()`              | Set `kind: 'ribbon'`, `kindOptions`, and centerline `children`                          | [Path API](/kernel/components/path/reference)        |
-| `scene()`             | Place the Ribbon Path in a scene                                                        | [Layout API](/kernel/components/layout/reference)    |
-| `renderToSvgString()` | Inject the Definition through `compile.pathKinds` and render the scene as an SVG string | [SVG usage example](/library/extension/ribbon/usage) |
+| Entry                 | Use with Ribbon                                                                     | Reference                                            |
+| --------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `path()`              | Set `kind: 'ribbon'`, `kindOptions`, and centerline `children`                      | [Path API](/kernel/components/path/reference)        |
+| `scene()`             | Place the Ribbon Path in a scene                                                    | [Layout API](/kernel/components/layout/reference)    |
+| `renderToSvgString()` | Inject the Definition through `compile.paths` and render the scene as an SVG string | [SVG usage example](/library/extension/ribbon/usage) |
 
 {/* @include library/extension/ribbon/reference/generated */}

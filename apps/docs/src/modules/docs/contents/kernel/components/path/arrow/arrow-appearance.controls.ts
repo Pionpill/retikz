@@ -112,7 +112,7 @@ export const createPreviewControlContract = (lang: Lang) =>
       length: 10,
       width: 8,
     },
-    relatedApis: ['Draw.arrow', 'Draw.arrowDetail', 'Path.arrow', 'Path.arrowDetail'],
+    relatedApis: ['Draw.arrow', 'Path.arrow'],
   }) satisfies PreviewControlContract;
 
 /** 默认中文预览契约 */

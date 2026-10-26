@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
 import { DEFAULT_LABEL_DISTANCE } from '../../src/compile/constants';
-import type { ScenePrimitive, TextPrim } from '../../src/contract';
+import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
-const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
-  const out: Array<TextPrim> = [];
+const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrimitive> => {
+  const out: Array<TextPrimitive> = [];
 
   for (const p of prims) {
     if (p.type === 'text') out.push(p);
@@ -16,7 +16,7 @@ const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   return out;
 };
 
-const visualMiddle = (t: TextPrim): number => t.y;
+const visualMiddle = (t: TextPrimitive): number => t.y;
 
 describe('Node label position center', () => {
   it('draws the label at the node center', () => {

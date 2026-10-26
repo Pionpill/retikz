@@ -1,4 +1,4 @@
-import type { GroupPrim, SceneClipPath, SceneResource } from '@retikz/core';
+import type { GroupPrimitive, SceneClipPath, SceneResource } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -97,7 +97,7 @@ describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
 
 describe('renderPrim group clipRef 对抗：指向不存在资源', () => {
   it('clipRef 指向 Scene 没有的资源 id → 仍产 url(#...) 引用（adapter 不校验存在性）', () => {
-    const group: GroupPrim = {
+    const group: GroupPrimitive = {
       type: 'group',
       clipRef: 'clip-ghost',
       children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: 'red' }],
@@ -110,7 +110,7 @@ describe('renderPrim group clipRef 对抗：指向不存在资源', () => {
   });
 
   it('clipRef 为空字符串 → 仍走 clipRefUrl（空 id），不当作 undefined', () => {
-    const group: GroupPrim = {
+    const group: GroupPrimitive = {
       type: 'group',
       clipRef: '',
       children: [],
@@ -122,12 +122,12 @@ describe('renderPrim group clipRef 对抗：指向不存在资源', () => {
   });
 
   it('嵌套 group 各带 clipRef → 各自物化 clip-path', () => {
-    const inner: GroupPrim = {
+    const inner: GroupPrimitive = {
       type: 'group',
       clipRef: 'clip-2',
       children: [{ type: 'rect', x: 0, y: 0, width: 5, height: 5, fill: 'blue' }],
     };
-    const outer: GroupPrim = {
+    const outer: GroupPrimitive = {
       type: 'group',
       clipRef: 'clip-1',
       children: [inner],

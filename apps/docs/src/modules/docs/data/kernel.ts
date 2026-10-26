@@ -336,28 +336,34 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'guide', audience: 'user' },
           },
           {
+            id: 'mark',
+            label: 'kernel.pathMark',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
             id: 'label',
             label: 'kernel.pathLabel',
             difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'guide', audience: 'user' },
           },
           {
-            id: 'custom-path-generator',
-            label: 'kernel.pathGenerator',
-            difficulty: DocDifficulty.Advanced,
-            meta: extensionGuide('kernel.path-generator'),
-          },
-          {
             id: 'custom-path',
             label: 'kernel.pathCustomPath',
             difficulty: DocDifficulty.Advanced,
-            meta: extensionGuide('kernel.path-kind'),
+            meta: extensionGuide('kernel.path-definition'),
           },
           {
             id: 'custom-arrow',
             label: 'kernel.pathCustomArrow',
             difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.arrow'),
+          },
+          {
+            id: 'custom-mark',
+            label: 'kernel.pathCustomMark',
+            difficulty: DocDifficulty.Advanced,
+            meta: extensionGuide('kernel.mark'),
           },
           { id: 'mechanism', label: 'kernel.pathMechanism', difficulty: DocDifficulty.Internals },
           {
@@ -489,12 +495,6 @@ export const kernelSection: Array<Section> = [
             label: 'kernel.visualExtendedUsage',
             difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'custom-animation',
-            label: 'kernel.visualCustomAnimation',
-            difficulty: DocDifficulty.Advanced,
-            meta: extensionGuide('kernel.animation'),
           },
           {
             id: 'mechanism',

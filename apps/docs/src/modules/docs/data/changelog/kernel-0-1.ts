@@ -266,8 +266,8 @@ export const kernelV01: Release = {
           version: 'alpha.1',
           date: '2026-05-09',
           summary: {
-            zh: '透传节点形状 / path 视觉新字段,TikZ 容器按需注入 SVG marker,renderer 加 ellipse 与 GroupPrim 支持。',
-            en: 'Forward node-shape / path-visual fields, inject SVG markers on demand, and add ellipse / GroupPrim support to the renderer.',
+            zh: '透传节点形状 / path 视觉新字段,TikZ 容器按需注入 SVG marker,renderer 加 ellipse 与 GroupPrimitive 支持。',
+            en: 'Forward node-shape / path-visual fields, inject SVG markers on demand, and add ellipse / GroupPrimitive support to the renderer.',
           },
           items: [],
         },

@@ -1,4 +1,4 @@
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { Draw, Layout, Node, Path, Scope, Step } from '@retikz/react';
 
 /** 三个宽度节点及其插值方式 */
@@ -32,7 +32,7 @@ export const renderRibbonNonlinearWidthPreview = (values: RibbonNonlinearWidthPr
       height={190}
       viewBox={{ x: -55, y: -80, width: 470, height: 190 }}
       style={{ maxWidth: '100%', height: 'auto' }}
-      extensions={{ pathKinds: [RibbonPathKindDefinition] }}
+      extensions={{ paths: [RibbonPathDefinition] }}
     >
       <Path
         kind="ribbon"

@@ -6,7 +6,7 @@ import { BuiltinCompileWarningCode } from '../../src/compile/constants';
 import type { LowerTex, TextMeasurer, TextMetrics } from '../../src/compile/text';
 import { normalizeTextMetrics } from '../../src/compile/text';
 import type { CompileWarning } from '../../src/compile/warning';
-import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
+import type { PathPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import { RetikzCoreError } from '../../src/error';
 import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';
 import { NodeLabelSchema } from '../../src/schemas';
@@ -35,21 +35,22 @@ const sceneWithLabel = (label: IRNodeLabel, node: Partial<IRNode> = {}): IRScene
   ],
 });
 
-const labelText = (primitives: Array<ScenePrimitive>, text = 'L'): TextPrim => {
+const labelText = (primitives: Array<ScenePrimitive>, text = 'L'): TextPrimitive => {
   const primitive = flattenPrims(primitives).find(
-    (candidate): candidate is TextPrim => candidate.type === 'text' && candidate.lines.some(line => line.text === text),
+    (candidate): candidate is TextPrimitive =>
+      candidate.type === 'text' && candidate.lines.some(line => line.text === text),
   );
   if (primitive === undefined) throw new Error(`missing label text '${text}'`);
 
   return primitive;
 };
 
-const visualCenterY = (primitive: TextPrim, metrics = LABEL_METRICS): number =>
+const visualCenterY = (primitive: TextPrimitive, metrics = LABEL_METRICS): number =>
   primitive.y - ((metrics.ascent ?? 0) - (metrics.descent ?? 0)) / 2;
 
-const pinLine = (primitives: Array<ScenePrimitive>): PathPrim => {
+const pinLine = (primitives: Array<ScenePrimitive>): PathPrimitive => {
   const primitive = flattenPrims(primitives).find(
-    (candidate): candidate is PathPrim =>
+    (candidate): candidate is PathPrimitive =>
       candidate.type === 'path' &&
       candidate.commands.length === 2 &&
       candidate.commands[0]?.kind === 'move' &&

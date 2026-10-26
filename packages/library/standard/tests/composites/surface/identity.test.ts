@@ -1,4 +1,4 @@
-import type { GroupPrim, IRChild, PathPrim, ScenePrimitive } from '@retikz/core';
+import type { GroupPrimitive, IRChild, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite, resolveCoreProviderDependencies } from '@retikz/core';
 import { PathClipDefinition, PathClipProvider } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
@@ -14,10 +14,10 @@ const node: IRChild = {
   layout: { minimumSize: { width: 20, height: 10 }, padding: 0, margin: 0 },
 };
 
-const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrim> =>
+const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
   primitives.flatMap(primitive => (primitive.type === 'group' ? [primitive, ...groupsOf(primitive.children)] : []));
 
-const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrim> =>
+const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive> =>
   primitives.flatMap(primitive =>
     primitive.type === 'group' ? pathsOf(primitive.children) : primitive.type === 'path' ? [primitive] : [],
   );
@@ -89,7 +89,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       cornerRadius: 4,
       background: { fill: '#fff' },
       border: { stroke: '#000' },
-      clip: { kind: 'rect', x: 1, y: 1, width: 18, height: 8 },
+      clip: { kind: 'rect', params: { x: 1, y: 1, width: 18, height: 8 } },
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
@@ -100,7 +100,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       },
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'clipped-surface');
-    const content = root?.children.find((child): child is GroupPrim => child.type === 'group');
+    const content = root?.children.find((child): child is GroupPrimitive => child.type === 'group');
     const clipResources = (result.scene.resources ?? []).filter(resource => resource.kind === 'clip');
 
     expect(root?.clipRef).toBeDefined();

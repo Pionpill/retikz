@@ -11,12 +11,12 @@ Core provides the `normal`, `open`, `stealth`, `openStealth`, `circle`, and `ope
 
 | Need                                        | Choose                                              |
 | ------------------------------------------- | --------------------------------------------------- |
-| Resize or recolor an existing arrow         | `arrowDetail`                                       |
-| Use different registered shapes at each end | `arrowDetail.start` / `end`                         |
+| Resize or recolor an existing arrow         | `arrow.start` / `arrow.end`                         |
+| Use different registered shapes at each end | `arrow.start` / `end`                               |
 | Add a new endpoint outline                  | Custom Arrow                                        |
 | Change the output of the whole relation     | [Custom Paths](/kernel/components/path/custom-path) |
 
-An ArrowDefinition serves both Path endpoints and `marks[].mark.shape`. It does not own arrow direction, mark position, path stroke, or renderer instances.
+An ArrowDefinition serves both Path endpoints and `marks[].shape`. It does not own arrow direction, mark position, path stroke, or renderer instances.
 
 ## Minimal result
 
@@ -68,11 +68,11 @@ An arrow definition supplies three distinct positions: `backX` is its back edge,
 
 The effective Path `color` overrides the arrow's own `color`; explicit arrow `stroke` / `fill` takes precedence over either master color. Filled definitions default to `stroke: 'none'` and use `fill` for the master color; custom filled content can also use context `fill` to draw lines in that color. Hollow definitions use `stroke` for color and emit `fill: 'none'`. When a color is needed and both master colors are absent, `contextStroke` binds to the nearest host path stroke, including Scene paint resources.
 
-`emit` receives resolved `stroke`, `fill`, and `lineWidth`, plus optional `dashPattern`, `dashOffset`, `lineCap`, and `lineJoin`. Primitives that respond to these options must read the context; map caps and joins to primitive `strokeLinecap` and `strokeLinejoin`. Core no longer recursively overrides emitted styles, so fixed multicolor details remain intact. Built-in and custom definitions follow the same rule. Arrow opacity is still applied by the container; do not multiply it into each child primitive again.
+`emit` receives resolved `stroke`, `fill`, and `lineWidth`, plus optional `dashPattern`, `dashOffset`, `lineCap`, and `lineJoin`. Primitives that respond to these options must read the context; map caps and joins to primitive `lineCap` and `lineJoin`. Core no longer recursively overrides emitted styles, so fixed multicolor details remain intact. Built-in and custom definitions follow the same rule. Arrow opacity is still applied by the container; do not multiply it into each child primitive again.
 
 <SourceLinks
   sources={[
-    { label: 'Arrow geometry contract', path: 'packages/kernel/core/src/contract/arrow.ts' },
+    { label: 'Arrow geometry contract', path: 'packages/kernel/core/src/contract/path/arrow.ts' },
     {
       label: 'Inherited color and marker materialization',
       path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
@@ -97,8 +97,7 @@ import { Draw, Layout } from '@retikz/react';
       [0, 0],
       [120, 0],
     ]}
-    arrow="->"
-    arrowDetail={{ shape: 'bracket' }}
+    arrow={{ end: { shape: 'bracket' } }}
   />
 </Layout>;
 ```
@@ -121,8 +120,7 @@ const input = scene({
         [0, 0],
         [120, 0],
       ],
-      arrow: '->',
-      arrowDetail: { shape: 'bracket' },
+      arrow: { end: { shape: 'bracket' } },
     }),
   ],
 });
@@ -146,12 +144,12 @@ Without a fixed color, the same arrow definition follows each path stroke. Compa
 | ------------------------------------------------------- | -------------------------------------------------- |
 | Empty name                                              | Registry rejects the non-empty key contract        |
 | Duplicate Core, Standard, or custom name                | Registry merge reports a duplicate registration    |
-| Unknown `arrowDetail.shape`                             | Compile lists available names and `options.arrows` |
+| Unknown `arrow.end.shape`                               | Compile lists available names and `options.arrows` |
 | Invalid `baseSize`, back / contact / tip, or dimensions | Compile rejects invalid marker geometry            |
 
 `emit` returns `Iterable<ScenePrimitive>` with the full path, ellipse, rect, text, and group contracts. Text must already be measured. Paint and clip references must exist in the same Scene; missing, wrong-kind, or cyclic references fail. Finite nested arrows and Patterns are supported. Definition-side wrappers may derive from basic primitives and must be converted before returning. Set `fill: 'none'` explicitly for hollow content; defaults match ordinary primitives.
 
-Content animations share the scene clock with independent playback origins per host: triggering A does not restart B. Local `id` and `meta` do not create independent update nodes. Arrow hits belong to the host; `hitTest: false` excludes the corresponding subtree.
+Content animations share the scene clock with independent playback origins per host: triggering A does not restart B. Local `id` and `meta` do not create independent update nodes. Arrow hits belong to the host; `pointerEvents: "none"` excludes the corresponding subtree.
 
 ## Related props
 
@@ -179,9 +177,9 @@ These are the members most often used to define, inject, and reference a custom 
       description: 'Inject arrow definitions into a React Layout so Path and Draw can resolve them by name.',
     },
     {
-      name: 'Draw.arrowDetail',
+      name: 'Draw.arrow',
       kind: 'property',
-      type: "DrawProps['arrowDetail']",
+      type: "DrawProps['arrow']",
       description: 'Choose a registered endpoint `shape` and override visual details such as color and size.',
     },
   ]}

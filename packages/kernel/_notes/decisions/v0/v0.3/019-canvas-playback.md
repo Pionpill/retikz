@@ -5,7 +5,7 @@ keywords: 'Canvas'
 
 # ADR-019：Canvas 动画播放与共享插值引擎
 
-- 状态：Accepted
+- 状态：Accepted（动画属性与求值契约由 [074](../v0.5/074-animation-property-contract.md) 部分替代）
 - 决策日期：2026-06-07
 - 关联：[ADR-017 动画 IR](./017-timeline-animation-ir.md) · [ADR-018 SVG 播放](./018-svg-playback.md) · [ADR-020 runtime 控制](./020-runtime-control.md)
 

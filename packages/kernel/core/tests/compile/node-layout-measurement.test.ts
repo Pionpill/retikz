@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { NodeLayoutObservation, LowerTex, TextMeasurer } from '../../src/compile';
 import { compileToScene, BuiltinCompileWarningCode, isNodeLayoutCompileArtifact } from '../../src/compile';
 import type { CompileWarning } from '../../src/compile/warning';
-import type { TextPrim } from '../../src/contract';
+import type { TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -52,7 +52,7 @@ const collectLayouts = (
     measurer?: TextMeasurer;
     precision?: number;
   } = {},
-): { layouts: Array<NodeLayoutObservation>; warnings: Array<CompileWarning>; textPrims: Array<TextPrim> } => {
+): { layouts: Array<NodeLayoutObservation>; warnings: Array<CompileWarning>; textPrims: Array<TextPrimitive> } => {
   const warnings: Array<CompileWarning> = [];
   const result = compileToScene(ir, {
     measureText: options.measurer ?? measureText,
@@ -63,7 +63,7 @@ const collectLayouts = (
   });
   const out = result.scene;
   const layouts = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
-  const textPrims = flattenPrims(out.primitives).filter((prim): prim is TextPrim => prim.type === 'text');
+  const textPrims = flattenPrims(out.primitives).filter((prim): prim is TextPrimitive => prim.type === 'text');
 
   return { layouts, warnings, textPrims };
 };

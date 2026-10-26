@@ -25,6 +25,7 @@ import {
   createSvgAnimationControls,
   resolvePointViaLayout,
 } from '../hydration';
+import { prepareRuntimeSceneContent } from '../shared';
 import type { SvgNode } from '../svg';
 import { buildSvgDocument, buildSvgFragment, buildSvgReadonlyLayer } from '../svg';
 import type { RenderRuntimeConfig } from './config';
@@ -35,11 +36,7 @@ import { validateReadonlyLayers } from './readonly-layer';
 import type { RetainedSvgRenderer, RetainedSvgRendererImmutableOptions } from './renderer';
 import { defineRetainedRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
-import {
-  diffSceneAnimationDescriptors,
-  materializeEasingRegistry,
-  SceneAnimationOccurrenceChangeKind,
-} from './runtime-options';
+import { diffSceneAnimationDescriptors, SceneAnimationOccurrenceChangeKind } from './runtime-options';
 import type { SceneIdentityMap } from './shared';
 import {
   createHydrationCleanupQueue,
@@ -519,10 +516,7 @@ const animationWrapperCount = (
   const candidates = tracks?.map(track => track as unknown as IRAnimationTrack).filter(matches) ?? [];
   const snapshotAt = config.animation?.snapshotAt;
   if (snapshotAt !== undefined) {
-    const easings = materializeEasingRegistry(config);
-    return candidates.filter(
-      track => isAutoplayTrigger(track) && evaluateTrack(track, snapshotAt, { easings }) !== null,
-    ).length;
+    return candidates.filter(track => isAutoplayTrigger(track) && evaluateTrack(track, snapshotAt) !== null).length;
   }
 
   return config.animation?.enabled === false ? 0 : candidates.length;
@@ -637,7 +631,6 @@ const buildSubtreeDescriptor = (
       idPrefix: options.idPrefix,
       animate: config.animation?.enabled,
       snapshotAt: config.animation?.snapshotAt,
-      easings: materializeEasingRegistry(config),
     },
   );
   const child = descriptor.children?.at(-1);
@@ -1259,11 +1252,10 @@ const buildDescriptor = (
   config: RenderRuntimeConfig,
   options: RetainedSvgRendererImmutableOptions,
 ): SvgNode =>
-  buildSvgDocument(snapshot.scene as unknown as Scene, {
+  buildSvgDocument(prepareRuntimeSceneContent(snapshot.scene as unknown as Scene), {
     idPrefix: options.idPrefix,
     animate: config.animation?.enabled,
     snapshotAt: config.animation?.snapshotAt,
-    easings: materializeEasingRegistry(config),
   });
 
 /** 创建内置 SVG retained renderer */

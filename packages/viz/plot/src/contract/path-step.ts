@@ -1,6 +1,6 @@
 import type { IRPlotPathStep, IRPlotPathStepTarget } from '../schemas';
 
-/** 枚举步骤实际消费的位置槽，不读取生成器参数或标签 */
+/** 枚举步骤实际消费的位置槽，不读取标签 */
 export const pathStepTargets = (step: IRPlotPathStep): Array<{ role: string; target: IRPlotPathStepTarget }> => {
   switch (step.kind) {
     case 'cycle':
@@ -9,8 +9,6 @@ export const pathStepTargets = (step: IRPlotPathStep): Array<{ role: string; tar
       return [];
     case 'arc':
       return step.center === undefined ? [] : [{ role: 'center', target: step.center }];
-    case 'generator':
-      return step.to === undefined ? [] : [{ role: 'to', target: step.to }];
     case 'smooth':
       return step.points.map((target, index) => ({ role: `points.${index}`, target }));
     case 'curve':

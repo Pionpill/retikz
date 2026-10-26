@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import type { CompileBinding, CompileOutput, IRPathBase } from '../../src';
-import { definePathKind, PathSchema } from '../../src';
+import { definePath, PathSchema } from '../../src';
 import { BUILTIN_SHAPES } from '../../src';
 import type { IRScope, ShapeDefinition } from '../../src';
 import { createCompileObservationRuntime, observeCompileToScene, projectCompileReference } from '../../src';
@@ -80,7 +80,7 @@ describe('独立元素编译', () => {
       }),
     };
     let calls = 0;
-    const kind = definePathKind({
+    const kind = definePath({
       name: 'cached-path',
       schema: PathSchema.extend({ kind: literal('cached-path') }),
       ownerOutput: true,
@@ -96,7 +96,7 @@ describe('独立元素编译', () => {
         };
       },
     });
-    const environment = createCompileEnvironment({ pathKinds: [kind] });
+    const environment = createCompileEnvironment({ paths: [kind] });
     const observation = createCompileObservationRuntime([observer]);
     const result = compilePath(
       {
@@ -137,7 +137,7 @@ describe('独立元素编译', () => {
           },
         ],
       },
-      { pathKinds: [kind] },
+      { paths: [kind] },
       [observer],
     );
     expect(isolated).toEqual(seen);
@@ -182,7 +182,7 @@ describe('独立元素编译', () => {
       type: 'scope',
       id: 'outer',
       position: [20, 30],
-      clip: { kind: 'rect', x: -10, y: -10, width: 20, height: 20 },
+      clip: { kind: 'rect', params: { x: -10, y: -10, width: 20, height: 20 } },
     };
     const inner: Omit<IRScope, 'children'> = { type: 'scope', id: 'inner', position: [5, 8] };
     const input: IRNode = { type: 'node', position: [0, 0], text: 'A' };

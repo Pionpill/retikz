@@ -21,8 +21,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           [-110, 0],
           [110, 0],
         ]}
-        arrow="->"
-        arrowDetail={{ end: { ...detail, shape: 'straightBarb' } }}
+        arrow={{ end: { ...detail, shape: 'straightBarb' } }}
+
         style={{ stroke: '#94a3b8', strokeWidth: 2 }}
       />
     </Layout>

@@ -11,13 +11,13 @@ This package is for developers building domain components, extending drawing cap
 
 Consider two nodes, A and B, joined by a line. The input records their positions, text and connection targets. Core computes node boundaries and connection endpoints, then emits drawable primitives.
 
-| Object                | Responsibility                                                             | Two-node example                                                |
-| --------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| IR                    | Store serializable drawing declarations                                    | Declare A, B and a path referencing them                        |
-| Definition / registry | Define and bind shapes, path kinds, composites and other capabilities      | Look up the node shape and path processing capabilities         |
-| Compiler              | Resolve configuration, layout, coordinates and paths                       | Determine endpoints from node boundaries                        |
-| Scene                 | Store resolved primitives, resources, canvas and other drawing information | Drawing data for rectangles, text and the connecting line       |
-| CompileResult         | Collect the Scene, artifacts and spatial handles                           | Deliver the Scene to a renderer and other data to its consumers |
+| Object                | Responsibility                                                              | Two-node example                                                |
+| --------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| IR                    | Store serializable drawing declarations                                     | Declare A, B and a path referencing them                        |
+| Definition / registry | Define and bind shapes, path definitions, composites and other capabilities | Look up the node shape and path processing capabilities         |
+| Compiler              | Resolve configuration, layout, coordinates and paths                        | Determine endpoints from node boundaries                        |
+| Scene                 | Store resolved primitives, resources, canvas and other drawing information  | Drawing data for rectangles, text and the connecting line       |
+| CompileResult         | Collect the Scene, artifacts and spatial handles                            | Deliver the Scene to a renderer and other data to its consumers |
 
 IR describes what the author wants to draw; Scene records how to draw the compiled result. A Definition describes a capability, and a registry looks up definitions by name. Built-in and custom capabilities participate in compilation through their respective contracts.
 

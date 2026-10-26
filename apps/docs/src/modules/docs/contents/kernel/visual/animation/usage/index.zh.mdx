@@ -154,6 +154,32 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 一条轨道描述一个 property。keyframes 的 at 为 0..1 且按非递减顺序排列；value 是绝对值。duration 必须大于 0。easing 可以放在轨道或某个关键帧上，关键帧的 easing 作用于到下一帧的区间。
 
+属性名仅接受支持的动画属性。缓动可以使用 `linear`、`ease`、`ease-in`、`ease-out`、`ease-in-out`，也可以直接传入贝塞尔四元组，例如 `easing: [0.34, 1.56, 0.64, 1]`，无需注册名称。
+
+矩形、椭圆和路径还支持 `fillOpacity`、`strokeOpacity` 和 `dashOffset`。例如，让虚线连续移动：
+
+```ts
+import type { IRAnimationTrack } from '@retikz/core';
+
+const movingDash = {
+  property: 'dashOffset',
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: 1, value: 12 },
+  ],
+  duration: 1000,
+  iterations: 'infinite',
+} satisfies IRAnimationTrack;
+```
+
+<ComponentPreview files="visual-properties" size="sm" controls={{ animation: true }} />
+
+图元需同时设置静态虚线样式，例如 `dashPattern: [8, 4]`。填充／描边透明度与整体透明度相乘。文本支持文字填充、整体透明度与变换，编组支持整体透明度与变换；不适用的轨道会告警并跳过。
+
+这些目标指编译后的 Scene 图元。带正文或旋转的 Node、带整体旋转或缩放的 Path 可能把轨道挂到编组上，此时按编组的支持范围处理。
+
+`pathDraw` 会占用虚线模式和偏移。同一图元同时声明 `dashOffset` 动画时，优先使用 `pathDraw`，跳过偏移动画并告警，结果与轨道声明顺序无关。
+
 <ComponentPreview files="handwritten-track" size="sm" controls={{ animation: true }} />
 
 ## 参数试验场

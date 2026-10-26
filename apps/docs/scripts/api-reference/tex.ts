@@ -2311,7 +2311,7 @@ export const createApiReferenceMdx = async (
                 }));
               }
 
-              if (!symbol.overloads) {
+              {
                 const checker = program.getTypeChecker();
                 const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
                 let exportedSymbol =
@@ -2327,165 +2327,190 @@ export const createApiReferenceMdx = async (
                         ts.SignatureKind.Call,
                       )
                     : [];
-                if (
-                  declaration &&
-                  (ts.isTypeAliasDeclaration(declaration) ||
-                    ts.isInterfaceDeclaration(declaration) ||
-                    ts.isClassDeclaration(declaration))
-                ) {
-                  symbol.typeParameters = symbol.typeParameters.map(parameter => {
-                    const source = declaration.typeParameters?.find(item => item.name.text === parameter.name);
-                    return source
-                      ? {
-                          ...parameter,
-                          type: [
-                            source.constraint ? `extends ${source.constraint.getText()}` : '',
-                            source.default ? `= ${source.default.getText()}` : '',
-                          ]
-                            .filter(Boolean)
-                            .join(' '),
-                        }
-                      : parameter;
+                if (symbol.overloads) {
+                  // 保留源码中的泛型别名，避免将约束展开为完整结构
+                  symbol.overloads = symbol.overloads.map((overload, overloadIndex) => {
+                    const sourceParameters = signatures[overloadIndex]?.getDeclaration().typeParameters;
+                    return {
+                      ...overload,
+                      typeParameters: overload.typeParameters.map(parameter => {
+                        const source = sourceParameters?.find(item => item.name.text === parameter.name);
+                        return source
+                          ? {
+                              ...parameter,
+                              type: [
+                                source.constraint ? `extends ${source.constraint.getText()}` : '',
+                                source.default ? `= ${source.default.getText()}` : '',
+                              ]
+                                .filter(Boolean)
+                                .join(' '),
+                            }
+                          : parameter;
+                      }),
+                    };
                   });
-                }
-
-                symbol.callable ||= signatures.length > 0;
-                const primarySignature = signatures[0];
-                if (signatures.length > 0) {
-                  const signatureDeclaration = primarySignature.getDeclaration();
+                } else {
                   if (
-                    ts.isArrowFunction(signatureDeclaration) ||
-                    ts.isFunctionDeclaration(signatureDeclaration) ||
-                    ts.isFunctionExpression(signatureDeclaration)
+                    declaration &&
+                    (ts.isTypeAliasDeclaration(declaration) ||
+                      ts.isInterfaceDeclaration(declaration) ||
+                      ts.isClassDeclaration(declaration))
                   ) {
-                    symbol.parameters = symbol.parameters.map((parameter, parameterIndex) => {
-                      const source = signatureDeclaration.parameters.at(parameterIndex);
+                    symbol.typeParameters = symbol.typeParameters.map(parameter => {
+                      const source = declaration.typeParameters?.find(item => item.name.text === parameter.name);
                       return source
                         ? {
                             ...parameter,
-                            name: `${source.dotDotDotToken ? '...' : ''}${source.name.getText()}${source.questionToken || source.initializer ? '?' : ''}`,
-                            type: source.type
-                              ? ts
-                                  .createPrinter({ removeComments: true })
-                                  .printNode(ts.EmitHint.Unspecified, source.type, source.getSourceFile())
-                              : parameter.type,
+                            type: [
+                              source.constraint ? `extends ${source.constraint.getText()}` : '',
+                              source.default ? `= ${source.default.getText()}` : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' '),
                           }
                         : parameter;
                     });
                   }
 
-                  symbol.typeParameters = symbol.typeParameters.map(parameter => {
-                    const source = signatureDeclaration.typeParameters?.find(item => item.name.text === parameter.name);
-                    return source
-                      ? {
-                          ...parameter,
-                          type: [
-                            source.constraint ? `extends ${source.constraint.getText()}` : '',
-                            source.default ? `= ${source.default.getText()}` : '',
-                          ]
-                            .filter(Boolean)
-                            .join(' '),
-                        }
-                      : parameter;
-                  });
-                  symbol.returnType =
-                    signatureDeclaration.type?.getText() ||
-                    symbol.returnType ||
-                    checker.typeToString(
-                      primarySignature.getReturnType(),
-                      signatureDeclaration,
-                      ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.WriteArrayAsGenericType,
-                    );
+                  symbol.callable ||= signatures.length > 0;
+                  const primarySignature = signatures[0];
+                  if (signatures.length > 0) {
+                    const signatureDeclaration = primarySignature.getDeclaration();
+                    if (
+                      ts.isArrowFunction(signatureDeclaration) ||
+                      ts.isFunctionDeclaration(signatureDeclaration) ||
+                      ts.isFunctionExpression(signatureDeclaration)
+                    ) {
+                      symbol.parameters = symbol.parameters.map((parameter, parameterIndex) => {
+                        const source = signatureDeclaration.parameters.at(parameterIndex);
+                        return source
+                          ? {
+                              ...parameter,
+                              name: `${source.dotDotDotToken ? '...' : ''}${source.name.getText()}${source.questionToken || source.initializer ? '?' : ''}`,
+                              type: source.type
+                                ? ts
+                                    .createPrinter({ removeComments: true })
+                                    .printNode(ts.EmitHint.Unspecified, source.type, source.getSourceFile())
+                                : parameter.type,
+                            }
+                          : parameter;
+                      });
+                    }
+
+                    symbol.typeParameters = symbol.typeParameters.map(parameter => {
+                      const source = signatureDeclaration.typeParameters?.find(
+                        item => item.name.text === parameter.name,
+                      );
+                      return source
+                        ? {
+                            ...parameter,
+                            type: [
+                              source.constraint ? `extends ${source.constraint.getText()}` : '',
+                              source.default ? `= ${source.default.getText()}` : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' '),
+                          }
+                        : parameter;
+                    });
+                    symbol.returnType =
+                      signatureDeclaration.type?.getText() ||
+                      symbol.returnType ||
+                      checker.typeToString(
+                        primarySignature.getReturnType(),
+                        signatureDeclaration,
+                        ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.WriteArrayAsGenericType,
+                      );
+                  }
+
+                  if (signatures.length > 1 && declaration)
+                    symbol.overloads = signatures.map(signature => {
+                      const overloadDeclaration = signature.getDeclaration();
+                      const tags = signature.getJsDocTags();
+                      const tag = (name: string): string =>
+                        tags
+                          .filter(item => item.name === name)
+                          .map(item => ts.displayPartsToString(item.text))
+                          .join('\n\n');
+
+                      return {
+                        ...symbol,
+                        overloads: undefined,
+                        signature: ts
+                          .createPrinter({ removeComments: true })
+                          .printNode(
+                            ts.EmitHint.Unspecified,
+                            signature.getDeclaration(),
+                            signature.getDeclaration().getSourceFile(),
+                          ),
+                        description: ts.displayPartsToString(signature.getDocumentationComment(checker)),
+                        details: tag('description'),
+                        remarks: tag('remarks'),
+                        returns: tag('returns') || tag('return'),
+                        returnType:
+                          overloadDeclaration.type?.getText() ??
+                          checker.typeToString(
+                            signature.getReturnType(),
+                            declaration,
+                            ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.WriteArrayAsGenericType,
+                          ),
+                        throws: tags
+                          .filter(item => item.name === 'throws' || item.name === 'exception')
+                          .map(item => ts.displayPartsToString(item.text)),
+                        deprecated: tag('deprecated'),
+                        since: tag('since'),
+                        examples: tags
+                          .filter(item => item.name === 'example')
+                          .map(item => ts.displayPartsToString(item.text).trim()),
+                        parameters: signature.parameters.map((parameter, parameterIndex) => {
+                          const source = overloadDeclaration.parameters.at(parameterIndex);
+                          return {
+                            name: source
+                              ? `${source.dotDotDotToken ? '...' : ''}${source.name.getText()}${source.questionToken || source.initializer ? '?' : ''}`
+                              : parameter.name,
+                            type:
+                              source?.type?.getText() ??
+                              checker.typeToString(
+                                checker.getTypeOfSymbolAtLocation(parameter, declaration),
+                                declaration,
+                                ts.TypeFormatFlags.NoTruncation,
+                              ),
+                            description: ts.displayPartsToString(parameter.getDocumentationComment(checker)),
+                          };
+                        }),
+                        typeParameters: (signature.typeParameters ?? []).map((parameter, parameterIndex) => {
+                          const source = overloadDeclaration.typeParameters?.at(parameterIndex);
+                          const constraint =
+                            source?.constraint?.getText() ??
+                            (parameter.getConstraint()
+                              ? checker.typeToString(
+                                  parameter.getConstraint()!,
+                                  declaration,
+                                  ts.TypeFormatFlags.NoTruncation,
+                                )
+                              : '');
+                          const defaultType =
+                            source?.default?.getText() ??
+                            (parameter.getDefault()
+                              ? checker.typeToString(
+                                  parameter.getDefault()!,
+                                  declaration,
+                                  ts.TypeFormatFlags.NoTruncation,
+                                )
+                              : '');
+
+                          return {
+                            name: parameter.symbol.name,
+                            type: [constraint ? `extends ${constraint}` : '', defaultType ? `= ${defaultType}` : '']
+                              .filter(Boolean)
+                              .join(' '),
+                            description: ts.displayPartsToString(parameter.symbol.getDocumentationComment(checker)),
+                          };
+                        }),
+                      };
+                    });
                 }
-
-                if (signatures.length > 1 && declaration)
-                  symbol.overloads = signatures.map(signature => {
-                    const overloadDeclaration = signature.getDeclaration();
-                    const tags = signature.getJsDocTags();
-                    const tag = (name: string): string =>
-                      tags
-                        .filter(item => item.name === name)
-                        .map(item => ts.displayPartsToString(item.text))
-                        .join('\n\n');
-
-                    return {
-                      ...symbol,
-                      overloads: undefined,
-                      signature: ts
-                        .createPrinter({ removeComments: true })
-                        .printNode(
-                          ts.EmitHint.Unspecified,
-                          signature.getDeclaration(),
-                          signature.getDeclaration().getSourceFile(),
-                        ),
-                      description: ts.displayPartsToString(signature.getDocumentationComment(checker)),
-                      details: tag('description'),
-                      remarks: tag('remarks'),
-                      returns: tag('returns') || tag('return'),
-                      returnType:
-                        overloadDeclaration.type?.getText() ??
-                        checker.typeToString(
-                          signature.getReturnType(),
-                          declaration,
-                          ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.WriteArrayAsGenericType,
-                        ),
-                      throws: tags
-                        .filter(item => item.name === 'throws' || item.name === 'exception')
-                        .map(item => ts.displayPartsToString(item.text)),
-                      deprecated: tag('deprecated'),
-                      since: tag('since'),
-                      examples: tags
-                        .filter(item => item.name === 'example')
-                        .map(item => ts.displayPartsToString(item.text).trim()),
-                      parameters: signature.parameters.map((parameter, parameterIndex) => {
-                        const source = overloadDeclaration.parameters.at(parameterIndex);
-                        return {
-                          name: source
-                            ? `${source.dotDotDotToken ? '...' : ''}${source.name.getText()}${source.questionToken || source.initializer ? '?' : ''}`
-                            : parameter.name,
-                          type:
-                            source?.type?.getText() ??
-                            checker.typeToString(
-                              checker.getTypeOfSymbolAtLocation(parameter, declaration),
-                              declaration,
-                              ts.TypeFormatFlags.NoTruncation,
-                            ),
-                          description: ts.displayPartsToString(parameter.getDocumentationComment(checker)),
-                        };
-                      }),
-                      typeParameters: (signature.typeParameters ?? []).map((parameter, parameterIndex) => {
-                        const source = overloadDeclaration.typeParameters?.at(parameterIndex);
-                        const constraint =
-                          source?.constraint?.getText() ??
-                          (parameter.getConstraint()
-                            ? checker.typeToString(
-                                parameter.getConstraint()!,
-                                declaration,
-                                ts.TypeFormatFlags.NoTruncation,
-                              )
-                            : '');
-                        const defaultType =
-                          source?.default?.getText() ??
-                          (parameter.getDefault()
-                            ? checker.typeToString(
-                                parameter.getDefault()!,
-                                declaration,
-                                ts.TypeFormatFlags.NoTruncation,
-                              )
-                            : '');
-
-                        return {
-                          name: parameter.symbol.name,
-                          type: [constraint ? `extends ${constraint}` : '', defaultType ? `= ${defaultType}` : '']
-                            .filter(Boolean)
-                            .join(' '),
-                          description: ts.displayPartsToString(parameter.symbol.getDocumentationComment(checker)),
-                        };
-                      }),
-                    };
-                  });
               }
-
               if (sourceSignature) symbol.signature = sourceSignature;
               symbol.members = declarationOnly ? [] : compactMemberTypes(program, sourceFile, symbol, symbol.members);
               if (declarationOnly) {

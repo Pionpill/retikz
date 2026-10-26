@@ -10,12 +10,12 @@ import type {
   IRScene,
   IRScope,
   IRStep,
-  AnyPathKindDefinition,
+  AnyPathDefinition,
 } from '@retikz/core';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import {
-  RibbonPathKindDefinition,
+  RibbonPathDefinition,
   ContourShapeDefinition,
   CrossShapeDefinition,
   CylinderShapeDefinition,
@@ -146,8 +146,8 @@ type Ctx = {
 export type IrToVanillaCodeOptions = Readonly<{
   /** 当前 ComponentPreview 选中的 Core Theme selector */
   theme?: IRScene['theme'];
-  /** 当前图显式装配的 Path kind Definition */
-  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
+  /** 当前图显式装配的 Path Definition */
+  paths?: ReadonlyArray<AnyPathDefinition>;
   /** 当前图显式装配的形状定义 */
   shapes?: NonNullable<LayoutProps['extensions']>['shapes'];
 }>;
@@ -285,7 +285,6 @@ const isWayRepresentableStep = (step: IRStep): boolean => {
       return isWayEllipsePathStep(step);
     case 'smooth':
     case 'rectangle':
-    case 'generator':
       return false;
   }
 };
@@ -1052,11 +1051,9 @@ const HELPER_ORDER: ReadonlyArray<string> = ['scene', 'node', 'path', 'coordinat
 
 /** 从纯 IR 生成不含运行时 authoring sidecar 的 Vanilla 示例代码 */
 export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {}): string => {
-  const unsupportedPathKind = options.pathKinds?.find(definition => definition !== RibbonPathKindDefinition);
-  if (unsupportedPathKind !== undefined) {
-    throw new Error(
-      `Cannot generate Vanilla source for Path kind "${unsupportedPathKind.name}" without its Definition source.`,
-    );
+  const unsupportedPath = options.paths?.find(definition => definition !== RibbonPathDefinition);
+  if (unsupportedPath !== undefined) {
+    throw new Error(`Cannot generate Vanilla source for Path "${unsupportedPath.name}" without its Definition source.`);
   }
 
   const shapeImports = [
@@ -1071,7 +1068,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
       }),
     ),
   ];
-  const usesRibbon = options.pathKinds?.includes(RibbonPathKindDefinition) ?? false;
+  const usesRibbon = options.paths?.includes(RibbonPathDefinition) ?? false;
   const ctx: Ctx = {
     used: new Set(['scene']),
     usesDrawWay: false,
@@ -1115,7 +1112,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     ...(hasStandaloneGraphMembers ? ['resolveCoreProviderDependencies'] : []),
   ];
   if (coreImports.length > 0) imports.push(`import { ${coreImports.join(', ')} } from '@retikz/core';`);
-  const extensionImports = [...shapeImports, ...(usesRibbon ? ['RibbonPathKindDefinition'] : [])];
+  const extensionImports = [...shapeImports, ...(usesRibbon ? ['RibbonPathDefinition'] : [])];
   if (extensionImports.length > 0) imports.push(`import { ${extensionImports.join(', ')} } from '@retikz/extension';`);
 
   const definitions = collectPreviewDefinitions(
@@ -1227,7 +1224,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     : '';
   const compileEntries = [
     ...(shapeImports.length ? [`shapes: [${shapeImports.join(', ')}]`] : []),
-    ...(usesRibbon ? ['pathKinds: [RibbonPathKindDefinition]'] : []),
+    ...(usesRibbon ? ['paths: [RibbonPathDefinition]'] : []),
     ...(graphHelpers.length > 0 || ctx.flowCount > 0 ? ['themeDefinitions: PreviewThemeDefinitionBundle.core'] : []),
     ...(hasStandaloneGraphMembers
       ? ['...definitions']

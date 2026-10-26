@@ -1,5 +1,5 @@
 import { compileToScene } from '@retikz/core';
-import { RibbonPathKindDefinition } from '@retikz/extension';
+import { RibbonPathDefinition } from '@retikz/extension';
 import { normalizeScene, path, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -46,7 +46,7 @@ describe('Ribbon Vanilla preview', () => {
       ],
     });
     const compile = (ir: typeof preview.ir) =>
-      compileToScene(ir, { pathKinds: [RibbonPathKindDefinition] }).scene.primitives.find(p => p.type === 'path');
+      compileToScene(ir, { paths: [RibbonPathDefinition] }).scene.primitives.find(p => p.type === 'path');
     const reactPath = compile(preview.ir);
 
     expect(reactPath?.type).toBe('path');
@@ -75,15 +75,15 @@ describe('Ribbon Vanilla preview', () => {
     expect(customCapSvg).toContain('-174');
   });
 
-  it('carries the React demo Path kind into both generated source and SVG rendering', () => {
+  it('carries the React demo Path into both generated source and SVG rendering', () => {
     const preview = buildPreviewIR(RibbonBasicDemo);
 
-    expect(preview.pathKinds).toEqual([RibbonPathKindDefinition]);
+    expect(preview.paths).toEqual([RibbonPathDefinition]);
 
     const vanilla = buildVanillaPreview(preview);
 
-    expect(vanilla.code).toContain("import { RibbonPathKindDefinition } from '@retikz/extension';");
-    expect(vanilla.code).toContain('pathKinds: [RibbonPathKindDefinition]');
+    expect(vanilla.code).toContain("import { RibbonPathDefinition } from '@retikz/extension';");
+    expect(vanilla.code).toContain('paths: [RibbonPathDefinition]');
     expect(vanilla.code).not.toContain('Failed to generate Vanilla preview');
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('<path');
@@ -98,6 +98,6 @@ describe('Ribbon Vanilla preview', () => {
     );
 
     expect(automatic.svg).toContain('<svg');
-    expect(automatic.code).toContain('Cannot generate Vanilla source for Path kind "ribbon"');
+    expect(automatic.code).toContain('Cannot generate Vanilla source for Path "ribbon"');
   });
 });

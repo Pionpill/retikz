@@ -1,12 +1,9 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { ArrowDefinition } from '../arrow';
-import type { BoundaryDefinition } from '../boundary';
-import type { ClipDefinition } from '../clip';
 import type { AnyCompositeDefinition } from '../composite';
-import type { PathGeneratorDefinition } from '../path-generator';
-import type { AnyPathKindDefinition } from '../path-kind';
-import type { PatternDefinition } from '../pattern';
-import type { ShapeDefinition } from '../shape';
+import type { BoundaryDefinition, ShapeDefinition } from '../node';
+import type { AnyPathDefinition, ArrowDefinition, MarkDefinition } from '../path';
+import type { ClipDefinition } from '../scope';
+import type { PatternDefinition } from '../style';
 import type {
   AnyCoreProviderDefinition,
   CoreDependencyProvider,
@@ -36,9 +33,9 @@ type MutableCoreProviderDefinitions = {
   boundaries: Array<BoundaryDefinition>;
   clips: Array<ClipDefinition>;
   arrows: Array<ArrowDefinition>;
+  marks: Array<MarkDefinition>;
   patterns: Array<PatternDefinition>;
-  pathGenerators: Array<PathGeneratorDefinition>;
-  pathKinds: Array<AnyPathKindDefinition>;
+  paths: Array<AnyPathDefinition>;
   composites: Array<AnyCompositeDefinition>;
 };
 
@@ -179,9 +176,9 @@ const buildProviderIndex = (
           ...(explicit.boundaries === undefined ? {} : { boundaries: [...explicit.boundaries] }),
           ...(explicit.clips === undefined ? {} : { clips: [...explicit.clips] }),
           ...(explicit.arrows === undefined ? {} : { arrows: [...explicit.arrows] }),
+          ...(explicit.marks === undefined ? {} : { marks: [...explicit.marks] }),
           ...(explicit.patterns === undefined ? {} : { patterns: [...explicit.patterns] }),
-          ...(explicit.pathGenerators === undefined ? {} : { pathGenerators: [...explicit.pathGenerators] }),
-          ...(explicit.pathKinds === undefined ? {} : { pathKinds: [...explicit.pathKinds] }),
+          ...(explicit.paths === undefined ? {} : { paths: [...explicit.paths] }),
           ...(explicit.composites === undefined ? {} : { composites: [...explicit.composites] }),
         };
 
@@ -236,26 +233,28 @@ const collectReachableProviders = (
   return ordered;
 };
 
-/** 从路径种类 schema 读取提供者键 */
-const pathKindNameOf = (definition: AnyPathKindDefinition): string => definition.name;
+/** 从路径定义 schema 读取提供者键 */
+const pathNameOf = (definition: AnyPathDefinition): string => definition.name;
 
 type DefinitionIdentity =
   | Readonly<{ capability: NamedProviderCapability; name: string }>
   | Readonly<{ capability: typeof CoreProviderCapability.Composite; namespace: string; type: string }>;
 
 /** 在接受创建函数输出前推断被擦除定义所属的能力 */
-const resolveDefinitionCapability = (definition: AnyCoreProviderDefinition): CoreProviderCapability => {
+const resolveDefinitionCapability = (
+  definition: AnyCoreProviderDefinition,
+  expected: CoreProviderCapability,
+): CoreProviderCapability => {
   if ('namespace' in definition && 'type' in definition) return CoreProviderCapability.Composite;
   if ('computeCircumscribedHalfAxes' in definition && 'computeBoundaryPoint' in definition)
     return CoreProviderCapability.Shape;
   if ('lineContactX' in definition && 'emit' in definition) return CoreProviderCapability.Arrow;
-  if ('name' in definition && 'emit' in definition) return CoreProviderCapability.Pattern;
-  if ('paramsSchema' in definition && 'generate' in definition) return CoreProviderCapability.PathGenerator;
-  if ('kind' in definition && 'schema' in definition && 'resolve' in definition && 'lower' in definition)
-    return CoreProviderCapability.Clip;
+  if ('name' in definition && 'emit' in definition)
+    return expected === CoreProviderCapability.Mark ? CoreProviderCapability.Mark : CoreProviderCapability.Pattern;
+  if ('kind' in definition && 'schema' in definition && 'lower' in definition) return CoreProviderCapability.Clip;
 
   if ('paramsSchema' in definition && 'computeBoundaryPoint' in definition) return CoreProviderCapability.Boundary;
-  if ('compile' in definition && 'schema' in definition) return CoreProviderCapability.BuiltinPathKind;
+  if ('compile' in definition && 'schema' in definition) return CoreProviderCapability.Path;
 
   throw new RetikzCoreError(
     RetikzCoreErrorCode.Contract,
@@ -268,10 +267,10 @@ const resolveDefinitionIdentity = (
   capability: CoreProviderCapability,
   definition: AnyCoreProviderDefinition,
 ): DefinitionIdentity => {
-  if (resolveDefinitionCapability(definition) !== capability) {
+  if (resolveDefinitionCapability(definition, capability) !== capability) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
-      `resolveCoreProviderDependencies: expected ${capability} definition but received ${resolveDefinitionCapability(definition)}`,
+      `resolveCoreProviderDependencies: expected ${capability} definition but received ${resolveDefinitionCapability(definition, capability)}`,
     );
   }
 
@@ -282,14 +281,14 @@ const resolveDefinitionIdentity = (
       return { capability, name: (definition as BoundaryDefinition).name };
     case CoreProviderCapability.Clip:
       return { capability, name: (definition as ClipDefinition).kind };
+    case CoreProviderCapability.Mark:
+      return { capability, name: (definition as MarkDefinition).name };
     case CoreProviderCapability.Arrow:
       return { capability, name: (definition as ArrowDefinition).name };
     case CoreProviderCapability.Pattern:
       return { capability, name: (definition as PatternDefinition).name };
-    case CoreProviderCapability.PathGenerator:
-      return { capability, name: (definition as PathGeneratorDefinition).name };
-    case CoreProviderCapability.BuiltinPathKind:
-      return { capability, name: pathKindNameOf(definition as AnyPathKindDefinition) };
+    case CoreProviderCapability.Path:
+      return { capability, name: pathNameOf(definition as AnyPathDefinition) };
     case CoreProviderCapability.Composite: {
       const composite = definition as AnyCompositeDefinition;
       return { capability, namespace: composite.namespace, type: composite.type };
@@ -323,17 +322,17 @@ const appendByCapability = (
     case CoreProviderCapability.Clip:
       definitions.clips.push(definition as ClipDefinition);
       return;
+    case CoreProviderCapability.Mark:
+      definitions.marks.push(definition as MarkDefinition);
+      return;
     case CoreProviderCapability.Arrow:
       definitions.arrows.push(definition as ArrowDefinition);
       return;
     case CoreProviderCapability.Pattern:
       definitions.patterns.push(definition as PatternDefinition);
       return;
-    case CoreProviderCapability.PathGenerator:
-      definitions.pathGenerators.push(definition as PathGeneratorDefinition);
-      return;
-    case CoreProviderCapability.BuiltinPathKind:
-      definitions.pathKinds.push(definition as AnyPathKindDefinition);
+    case CoreProviderCapability.Path:
+      definitions.paths.push(definition as AnyPathDefinition);
       return;
     case CoreProviderCapability.Composite:
       definitions.composites.push(definition as AnyCompositeDefinition);
@@ -399,9 +398,9 @@ const appendExplicitDefinitions = (
     [CoreProviderCapability.Boundary, explicit.boundaries],
     [CoreProviderCapability.Clip, explicit.clips],
     [CoreProviderCapability.Arrow, explicit.arrows],
+    [CoreProviderCapability.Mark, explicit.marks],
     [CoreProviderCapability.Pattern, explicit.patterns],
-    [CoreProviderCapability.PathGenerator, explicit.pathGenerators],
-    [CoreProviderCapability.BuiltinPathKind, explicit.pathKinds],
+    [CoreProviderCapability.Path, explicit.paths],
     [CoreProviderCapability.Composite, explicit.composites],
   ];
 
@@ -417,9 +416,9 @@ const freezeResolvedDefinitions = (definitions: MutableCoreProviderDefinitions):
     ...(definitions.boundaries.length > 0 ? { boundaries: Object.freeze(definitions.boundaries) } : {}),
     ...(definitions.clips.length > 0 ? { clips: Object.freeze(definitions.clips) } : {}),
     ...(definitions.arrows.length > 0 ? { arrows: Object.freeze(definitions.arrows) } : {}),
+    ...(definitions.marks.length > 0 ? { marks: Object.freeze(definitions.marks) } : {}),
     ...(definitions.patterns.length > 0 ? { patterns: Object.freeze(definitions.patterns) } : {}),
-    ...(definitions.pathGenerators.length > 0 ? { pathGenerators: Object.freeze(definitions.pathGenerators) } : {}),
-    ...(definitions.pathKinds.length > 0 ? { pathKinds: Object.freeze(definitions.pathKinds) } : {}),
+    ...(definitions.paths.length > 0 ? { paths: Object.freeze(definitions.paths) } : {}),
     ...(definitions.composites.length > 0 ? { composites: Object.freeze(definitions.composites) } : {}),
   };
   return Object.freeze(result);
@@ -439,9 +438,9 @@ export const resolveCoreProviderDependencies = (
     boundaries: [],
     clips: [],
     arrows: [],
+    marks: [],
     patterns: [],
-    pathGenerators: [],
-    pathKinds: [],
+    paths: [],
     composites: [],
   };
   const definitionIndex: DefinitionIndex = {
