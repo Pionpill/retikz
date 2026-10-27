@@ -505,24 +505,20 @@ describe('parseWay', () => {
     });
 
     it('label 完整字段透传：position + side', () => {
-      expect(parseWay(['A', { label: { text: 'q', position: 'near-end', side: 'sloped' } as never }, 'B'])).toEqual([
+      expect(parseWay(['A', { label: { text: 'q', position: 'near-end', side: 'top', sloped: true } }, 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
           kind: 'line',
           to: { id: 'B' },
-          label: { text: 'q', position: 'near-end', sloped: true },
+          label: { text: 'q', position: 'near-end', side: 'top', sloped: true },
         },
       ]);
     });
 
-    it('标签侧接受指南针和 TikZ 别名并发出边缘标签规范值', () => {
-      expect(parseWay(['A', { label: { text: 'q', side: 'north' } as never }, 'B'])[1]).toMatchObject({
-        label: { text: 'q', side: 'top' },
-      });
-      expect(parseWay(['A', { label: { text: 'q', side: 'above' } as never }, 'B'])[1]).toMatchObject({
-        label: { text: 'q', side: 'top' },
-      });
+    it('路径目标拒绝 compass 与 TikZ 方位别名', () => {
+      expect(() => parseWay(['A.north', 'B'])).toThrow(/unknown anchor/);
+      expect(() => parseWay(['A', 'B.above-left'])).toThrow(/unknown anchor/);
     });
 
     it('折角段（-|）也接受前置 label', () => {

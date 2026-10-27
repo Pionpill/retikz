@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseTargetSugar } from '../../src/parse/target-sugar';
+import { parseTargetSugar } from '../../src/parse/target';
 
 describe('parseTargetSugar', () => {
   it("'+1,0' 解析为 relative", () => {
@@ -26,10 +26,14 @@ describe('parseTargetSugar', () => {
   it('节点 id 类字符串解析为 NodeTarget 对象', () => {
     expect(parseTargetSugar('A')).toEqual({ id: 'A' });
     expect(parseTargetSugar('A.top')).toEqual({ id: 'A', anchor: 'top' });
-    expect(parseTargetSugar('A.north')).toEqual({ id: 'A', anchor: 'top' });
-    expect(parseTargetSugar('A.above-left')).toEqual({ id: 'A', anchor: 'top-left' });
+    expect(parseTargetSugar('A.top-left')).toEqual({ id: 'A', anchor: 'top-left' });
     expect(parseTargetSugar('A.30')).toEqual({ id: 'A', anchor: 30 });
     expect(parseTargetSugar('node-1')).toEqual({ id: 'node-1' });
+  });
+
+  it('节点引用中的方位别名抛错', () => {
+    expect(() => parseTargetSugar('A.north')).toThrow(/unknown anchor/);
+    expect(() => parseTargetSugar('A.above-left')).toThrow(/unknown anchor/);
   });
 
   it('非字符串原样返回', () => {

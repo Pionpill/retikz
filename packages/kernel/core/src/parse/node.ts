@@ -1,6 +1,6 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRNodeTarget } from '../schemas';
-import { parseAnchorAlias, SupportedAnchorSugarNames } from './anchor-alias';
+import { Anchor, CenterAnchor, isAnchor } from '../shared';
 
 /** 纯数字识别 `A.30` / `A.-45` / `A.180.5` */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
@@ -32,13 +32,12 @@ export const parseNodeTarget = (s: string): IRNodeTarget => {
     return { id, anchor: Number(tail) };
   }
 
-  const anchor = parseAnchorAlias(tail);
-  if (anchor === undefined) {
+  if (!isAnchor(tail)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Parse,
-      `parseNodeTarget: unknown anchor '${tail}' in '${s}' (supports: ${SupportedAnchorSugarNames.join(', ')}); for ids containing '.' or shape-specific anchors, use the object form { id, anchor }`,
+      `parseNodeTarget: unknown anchor '${tail}' in '${s}' (supports: ${[CenterAnchor.Center, ...Object.values(Anchor)].join(', ')}); for ids containing '.' or shape-specific anchors, use the object form { id, anchor }`,
     );
   }
 
-  return { id, anchor };
+  return { id, anchor: tail };
 };

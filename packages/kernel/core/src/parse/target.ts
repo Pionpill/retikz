@@ -1,6 +1,6 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRTarget } from '../schemas';
-import { parseNodeTarget } from './node-target';
+import { parseNodeTarget } from './node';
 
 /** TikZ 风格相对偏移字面量正则：捕获 `+` / `++` 前缀 + dx / dy 数值 */
 const RELATIVE_NUMBER = '-?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?';

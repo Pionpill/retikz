@@ -22,8 +22,7 @@ import type {
   IRTarget,
 } from '../schemas';
 import { AxisLineTargetSchema, FoldStepVia } from '../schemas';
-import { parseSideAlias } from './anchor-alias';
-import { parseTargetSugar } from './target-sugar';
+import { parseTargetSugar } from './target';
 
 /**
  * Sugar 层 way 数组的关键字常量
@@ -177,23 +176,7 @@ export type WayDSL<TTarget = IRTarget, TControl = IRControlPoint, TAxisTarget = 
   WayItem<TTarget, TControl, TAxisTarget>
 >;
 
-const normalizeLabel = (l: WayLabel): IRStepLabel => {
-  if (typeof l === 'string') return { text: l };
-
-  const { side, ...rest } = l;
-  const rawSide = side as string | undefined;
-  const out: IRStepLabel = { ...rest, text: l.text };
-  if (rawSide !== undefined) {
-    if (rawSide === 'sloped') {
-      out.sloped = true;
-    } else {
-      const normalizedSide = parseSideAlias(rawSide);
-      if (normalizedSide !== undefined) out.side = normalizedSide;
-    }
-  }
-
-  return out;
-};
+const normalizeLabel = (label: WayLabel): IRStepLabel => (typeof label === 'string' ? { text: label } : label);
 
 /** 统一路径语法的位置适配契约；适配器不执行几何或数据求值 */
 export type WayTargetAdapter<TTarget, TControl, TAxisTarget> = {

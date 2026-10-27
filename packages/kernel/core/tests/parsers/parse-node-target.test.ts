@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseNodeTarget } from '../../src/parse/node-target';
+import { parseNodeTarget } from '../../src/parse/node';
 
 describe('parseNodeTarget node 模式（无 .）', () => {
   it('简单 id → { id }', () => {
@@ -34,13 +34,21 @@ describe('parseNodeTarget 命名 anchor 模式（id.<name>）', () => {
     expect(parseNodeTarget('my-node.right')).toEqual({ id: 'my-node', anchor: 'right' });
   });
 
-  it('compass / TikZ 风格 anchor alias 归一到 canonical anchor', () => {
-    expect(parseNodeTarget('A.north')).toEqual({ id: 'A', anchor: 'top' });
-    expect(parseNodeTarget('A.north-west')).toEqual({ id: 'A', anchor: 'top-left' });
-    expect(parseNodeTarget('A.south-east')).toEqual({ id: 'A', anchor: 'bottom-right' });
-    expect(parseNodeTarget('A.above')).toEqual({ id: 'A', anchor: 'top' });
-    expect(parseNodeTarget('A.above-left')).toEqual({ id: 'A', anchor: 'top-left' });
-    expect(parseNodeTarget('A.below-right')).toEqual({ id: 'A', anchor: 'bottom-right' });
+  it('拒绝 compass 与 TikZ 方位别名', () => {
+    for (const name of [
+      'north',
+      'south',
+      'east',
+      'west',
+      'north-west',
+      'south-east',
+      'above',
+      'below',
+      'above-left',
+      'below-right',
+    ]) {
+      expect(() => parseNodeTarget(`A.${name}`)).toThrow(/unknown anchor/);
+    }
   });
 
   it('未知 anchor 名抛错', () => {
