@@ -1,23 +1,27 @@
 import { mergeProperties } from '@retikz/foundation';
 
-import type { IRArrowDetail, IRMarkStyle, IRPathArrow, IRPathBase } from '../../schemas';
+import type { IRArrowDetail, IRMarkStyle, IRPathArrowEnd, IRPathBase } from '../../schemas';
 import type { EffectiveScopeDefaults } from './types';
 
 /** 合并单侧箭头样式：下层只覆盖已声明字段，其余继承上层默认值 */
-const mergeArrowEnd = (a: IRPathArrow['start'], b: IRPathArrow['start']): IRPathArrow['start'] => {
-  if (a === undefined) return b === undefined ? undefined : { ...b };
-  if (b === undefined) return { ...a };
-  return { ...a, ...mergeProperties([b], { shouldOverride: value => value !== undefined }) };
+const mergeArrowEnd = (
+  parent: IRPathArrowEnd | undefined,
+  own: IRPathArrowEnd | undefined,
+): IRPathArrowEnd | undefined => {
+  if (parent === undefined && own === undefined) return undefined;
+  return mergeProperties([parent, own], { shouldOverride: value => value !== undefined });
 };
 
-/** 合并路径箭头默认值：b 中非 undefined 的字段覆盖 a，start / end 各自逐字段合并 */
-export const mergeArrowDefaults = (a: IRArrowDetail, b: IRArrowDetail): IRArrowDetail => {
-  const { start: aStart, end: aEnd, ...aTop } = a;
-  const { start: bStart, end: bEnd, ...bTop } = b;
-  const out: IRArrowDetail = { ...aTop, ...mergeProperties([bTop], { shouldOverride: value => value !== undefined }) };
-  const start = mergeArrowEnd(aStart, bStart);
+/** 合并路径箭头默认值：own 中非 undefined 的字段覆盖 parent，start / end 各自逐字段合并 */
+export const mergeArrowDefaults = (parent: IRArrowDetail, own: IRArrowDetail): IRArrowDetail => {
+  const { start: parentStart, end: parentEnd, ...parentStyle } = parent;
+  const { start: ownStart, end: ownEnd, ...ownStyle } = own;
+  const out: IRArrowDetail = mergeProperties([parentStyle, ownStyle], {
+    shouldOverride: value => value !== undefined,
+  });
+  const start = mergeArrowEnd(parentStart, ownStart);
   if (start !== undefined) out.start = start;
-  const end = mergeArrowEnd(aEnd, bEnd);
+  const end = mergeArrowEnd(parentEnd, ownEnd);
   if (end !== undefined) out.end = end;
 
   return out;

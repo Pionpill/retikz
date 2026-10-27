@@ -64,10 +64,8 @@ export const SCOPE_INSPECTOR = defineInspector({
   ...SCOPE_INSPECTOR_KEY,
   owner: { kind: 'scope' },
   optionsSchema: ScopeInspectOptionsSchema,
-  mergeOptionsInput: (inherited, local) => ({
-    ...inherited,
-    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
-  }),
+  mergeOptionsInput: (inherited, local) =>
+    mergeProperties([inherited, local], { shouldOverride: value => value !== undefined }),
   inspect: (subject: ScopeOwnerOutput, context: InspectorContext<ScopeInspectorOptions>): Array<IRChild> => {
     const color = context.appearance.scopeColor;
     const output: Array<IRChild> = [];

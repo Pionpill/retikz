@@ -40,8 +40,7 @@ export const resolveEffectivePath = (path: IRPathBase, scopeDefaults: EffectiveS
   const style = mergeGraphicStyle<IRPathStyle>(defaults?.style, path.style);
   const masterColor = style.color;
   const effective: IRPathBase = {
-    ...defaults?.geometry,
-    ...mergeProperties([path], { shouldOverride: value => value !== undefined }),
+    ...mergeProperties([defaults?.geometry, path], { shouldOverride: value => value !== undefined }),
     type: path.type,
     style,
   };

@@ -34,20 +34,20 @@ export const resolveScopeDefaults = <TScope extends Pick<IRScope, 'defaults'>>(
   if (style !== undefined || defaults.node !== undefined) {
     const { style: nodeStyle, layout, label, ...geometry } = defaults.node ?? {};
     node = {
-      geometry: { ...node?.geometry, ...mergeProperties([geometry], { shouldOverride }) },
+      geometry: mergeProperties([node?.geometry, geometry], { shouldOverride }),
       style: {
         ...mergeGraphicStyle(node?.style, style, nodeStyle),
         font: mergeFont(node?.style.font, nodeStyle?.font),
       },
       label: mergeNodeLabelDefaults(node?.label, label),
-      layout: { ...node?.layout, ...mergeProperties([layout], { shouldOverride }) },
+      layout: mergeProperties([node?.layout, layout], { shouldOverride }),
     };
   }
 
   if (style !== undefined || defaults.path !== undefined) {
     const { style: pathStyle, label, arrow, ...geometry } = defaults.path ?? {};
     path = {
-      geometry: { ...path?.geometry, ...mergeProperties([geometry], { shouldOverride }) },
+      geometry: mergeProperties([path?.geometry, geometry], { shouldOverride }),
       style: mergeGraphicStyle(path?.style, style, pathStyle),
       label: mergePathLabelDefaults(path?.label, label),
       arrow: arrow === undefined ? path?.arrow : mergeArrowDefaults(path?.arrow ?? {}, arrow),

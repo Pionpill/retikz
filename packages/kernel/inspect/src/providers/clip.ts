@@ -44,10 +44,8 @@ export const CLIP_INSPECTOR = defineInspector({
   ...CLIP_INSPECTOR_KEY,
   owner: { kind: 'clip' },
   optionsSchema: ClipInspectOptionsSchema,
-  mergeOptionsInput: (inherited, local) => ({
-    ...inherited,
-    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
-  }),
+  mergeOptionsInput: (inherited, local) =>
+    mergeProperties([inherited, local], { shouldOverride: value => value !== undefined }),
   inspect: (subject: ClipOwnerOutput, context: InspectorContext<ClipInspectorOptions>): Array<IRChild> => {
     const output: Array<IRChild> = [];
     if (context.options.outline) {

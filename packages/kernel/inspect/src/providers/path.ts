@@ -245,10 +245,8 @@ export const PATH_INSPECTOR = defineInspector({
   ...PATH_INSPECTOR_KEY,
   owner: { kind: 'path', name: 'stroke' },
   optionsSchema: PathInspectOptionsSchema,
-  mergeOptionsInput: (inherited, local) => ({
-    ...inherited,
-    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
-  }),
+  mergeOptionsInput: (inherited, local) =>
+    mergeProperties([inherited, local], { shouldOverride: value => value !== undefined }),
   inspect: (subject: StrokePathOwnerOutput, context) => {
     const output = inspectionChildrenOf(subject, context.options, context.appearance.scopeColor, context.round);
     return output.map(child => ({

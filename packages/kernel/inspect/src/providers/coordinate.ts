@@ -17,10 +17,8 @@ export const COORDINATE_INSPECTOR = defineInspector({
   ...COORDINATE_INSPECTOR_KEY,
   owner: { kind: 'coordinate' },
   optionsSchema: CoordinateInspectOptionsSchema,
-  mergeOptionsInput: (inherited, local) => ({
-    ...inherited,
-    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
-  }),
+  mergeOptionsInput: (inherited, local) =>
+    mergeProperties([inherited, local], { shouldOverride: value => value !== undefined }),
   inspect: (subject: CoordinateOwnerOutput, context: InspectorContext<CoordinateInspectorOptions>): Array<IRChild> => {
     const color = context.appearance.scopeColor;
     const output: Array<IRChild> = [markerNode(subject.position, color, 5)];

@@ -146,9 +146,7 @@ export const NODE_INSPECTOR = defineInspector({
   ...NODE_INSPECTOR_KEY,
   owner: { kind: 'node' },
   optionsSchema: NodeInspectOptionsSchema,
-  mergeOptionsInput: (inherited, local) => ({
-    ...inherited,
-    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
-  }),
+  mergeOptionsInput: (inherited, local) =>
+    mergeProperties([inherited, local], { shouldOverride: value => value !== undefined }),
   inspect: inspectNodeGeometry,
 });

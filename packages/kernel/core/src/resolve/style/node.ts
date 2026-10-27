@@ -11,10 +11,7 @@ export const resolveEffectiveNodeStyle = (node: IRNode, scopeDefaults: Effective
   const style = mergeGraphicStyle<IRNodeStyle>(defaults?.style, node.style);
   const font = mergeFont(defaults?.style.font, node.style?.font);
   if (font !== undefined) style.font = font;
-  const layout = {
-    ...defaults?.layout,
-    ...mergeProperties([node.layout ?? {}], { shouldOverride: value => value !== undefined }),
-  };
+  const layout = mergeProperties([defaults?.layout, node.layout], { shouldOverride: value => value !== undefined });
   if (style.color !== undefined) {
     style.stroke ??= style.color;
     style.fill ??= style.color;
@@ -22,8 +19,7 @@ export const resolveEffectiveNodeStyle = (node: IRNode, scopeDefaults: Effective
   }
 
   return {
-    ...defaults?.geometry,
-    ...mergeProperties([node], { shouldOverride: value => value !== undefined }),
+    ...mergeProperties([defaults?.geometry, node], { shouldOverride: value => value !== undefined }),
     type: node.type,
     position: node.position,
     style,
