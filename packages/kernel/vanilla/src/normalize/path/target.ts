@@ -1,6 +1,8 @@
-import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
-import type { IRTarget } from '../schemas';
+import type { IRTarget } from '@retikz/core';
+
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import { parseNodeTarget } from './node';
+import type { InputTarget } from './types';
 
 /** TikZ 风格相对偏移字面量正则：捕获 `+` / `++` 前缀 + dx / dy 数值 */
 const RELATIVE_NUMBER = '-?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?';
@@ -15,14 +17,14 @@ const RELATIVE_LIKE_RE = /^\+.*,/;
  *   其余字符串作节点 ref 经 `parseNodeTarget` 转 `{ id, anchor? }`（`'A'` / `'A.top'` / `'A.30'`）；非字符串（笛卡尔 / 极坐标 / 已是对象）原样返回。
  *   纯函数无 nodeIndex 依赖，react adapter 与 Draw DSL 共用。core schema 已无字符串 target 分支——eager 解析后才入 IR
  */
-export const parseTargetSugar = (input: unknown): IRTarget => {
-  if (typeof input !== 'string') return input as IRTarget;
+export const parseTargetSugar = (input: InputTarget): IRTarget => {
+  if (typeof input !== 'string') return input;
 
   const match = input.match(RELATIVE_OFFSET_RE);
   if (!match) {
     if (RELATIVE_LIKE_RE.test(input)) {
-      throw new RetikzCoreError(
-        RetikzCoreErrorCode.Parse,
+      throw new RetikzVanillaError(
+        RetikzVanillaErrorCode.Normalize,
         `parseTargetSugar: invalid relative offset '${input}'; expected '+x,y' or '++x,y'`,
       );
     }

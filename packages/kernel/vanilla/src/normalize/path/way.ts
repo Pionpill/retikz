@@ -1,7 +1,3 @@
-import { NormalizedFractionSchema } from '@retikz/foundation';
-import { enum as zodEnum, strictObject } from 'zod';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type {
   IRArcStep,
   IRAxisLineStep,
@@ -20,8 +16,12 @@ import type {
   IRStepLabel,
   IRStepRadius,
   IRTarget,
-} from '../schemas';
-import { AxisLineTargetSchema, FoldStepVia } from '../schemas';
+} from '@retikz/core';
+import { AxisLineTargetSchema, FoldStepVia } from '@retikz/core';
+import { NormalizedFractionSchema } from '@retikz/foundation';
+import { enum as zodEnum, strictObject } from 'zod';
+
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import { parseTargetSugar } from './target';
 
 /**
@@ -218,7 +218,7 @@ export const parseWayWithTargets = <TTarget, TControl, TAxisTarget>(
 ): Array<WayParsedStep<TTarget, TControl, TAxisTarget>> => {
   type Item = WayItem<TTarget, TControl, TAxisTarget>;
   const fail = (message: string): never => {
-    throw new RetikzCoreError(RetikzCoreErrorCode.Parse, `parseWay: ${message}`);
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, `parseWay: ${message}`);
   };
   const operator = (item: Item): string | undefined => {
     if (item === DrawWay.Cycle) return 'cycle';
@@ -345,8 +345,8 @@ export const parseWay = (way: WayDSL): Array<IRStep> =>
     axisTarget: value => {
       const result = AxisLineTargetSchema.safeParse(parseTargetSugar(value));
       if (!result.success)
-        throw new RetikzCoreError(
-          RetikzCoreErrorCode.Parse,
+        throw new RetikzVanillaError(
+          RetikzVanillaErrorCode.Normalize,
           'parseWay: axis-line target must resolve to a Cartesian position or NodeTarget; polar, relative, offset, and between targets are not supported',
           { cause: result.error },
         );

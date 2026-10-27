@@ -1,7 +1,7 @@
+import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { parseWay } from '../../src/parse/way';
-import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema } from '../../src/schemas';
+import { parseWay } from '../../src/normalize/path/way';
 
 describe('parseWay 形状算子边界', () => {
   it('正常路径：target → arc 算子（以前 target 为圆心，不消耗下一项）', () => {

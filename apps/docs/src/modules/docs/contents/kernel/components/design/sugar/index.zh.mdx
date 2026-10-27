@@ -41,7 +41,7 @@ Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` 
 
 <ComponentPreview files="sugar-flow" size="xs" hideCode />
 
-图中的“解析 / 展开”发生在构建 IR 时：例如 `Draw` 的 `way` 由 Vanilla 的 `normalizePath` 调用 Core 的 `parseWay`，解析为基础 Step。基础 IR 随后才进入编译阶段。
+图中的“解析 / 展开”发生在构建 IR 时：例如 `Draw` 的 `way` 由 Vanilla 的 `normalizePath` 调用同属 Vanilla 的 `parseWay`，解析为基础 Step。基础 IR 随后才进入编译阶段。
 
 ## 选择建议
 

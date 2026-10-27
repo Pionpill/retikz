@@ -6,7 +6,7 @@ Vanilla normalizes `way` into steps. `arrow` and `marks` share the same structur
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={68}>Path</ApiSourceLink> / <ApiSourceLink label={"PathProps"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={9}>PathProps</ApiSourceLink>
+#### <ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={69}>Path</ApiSourceLink> / <ApiSourceLink label={"PathProps"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={10}>PathProps</ApiSourceLink>
 
 This component does not render DOM itself; `<Layout>` produces the final path from steps, styles, arrows, and marks
 
@@ -77,7 +77,7 @@ export type PathProps = HydrationEventProps & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"Draw"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={28}>Draw</ApiSourceLink> / <ApiSourceLink label={"DrawProps"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={9}>DrawProps</ApiSourceLink>
+#### <ApiSourceLink label={"Draw"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={29}>Draw</ApiSourceLink> / <ApiSourceLink label={"DrawProps"} path={"packages/kernel/react/src/sugar/path/Draw.tsx"} startLine={10}>DrawProps</ApiSourceLink>
 
 React only provides JSX sugar; `normalizePath` is the sole parser dispatch point for `way`
 
@@ -842,35 +842,81 @@ export type PathCompileResult = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"WayDSL"} path={"packages/kernel/core/src/parse/way.ts"} startLine={176}>WayDSL</ApiSourceLink>
+#### <ApiSourceLink label={"WayDSL"} path={"packages/kernel/vanilla/src/normalize/path/way.ts"} startLine={175}>WayDSL</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                         | Type                 | Default | Description |
+| ------------------------------ | -------------------- | ------- | ----------- |
+| `TTarget` (Type parameter)     | `= IRTarget`         | —       | —           |
+| `TControl` (Type parameter)    | `= IRControlPoint`   | —       | —           |
+| `TAxisTarget` (Type parameter) | `= IRAxisLineTarget` | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
-export type WayDSL = Array<WayItem>;
+export type WayDSL<TTarget = IRTarget, TControl = IRControlPoint, TAxisTarget = IRAxisLineTarget> = Array<
+  WayItem<TTarget, TControl, TAxisTarget>
+>;
 ```
 
-#### <ApiSourceLink label={"WayItem"} path={"packages/kernel/core/src/parse/way.ts"} startLine={158}>WayItem</ApiSourceLink>
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"WayItem"} path={"packages/kernel/vanilla/src/normalize/path/way.ts"} startLine={157}>WayItem</ApiSourceLink>
 
 Node-id strings, Cartesian points, and polar points become line steps (the first becomes move). Relative objects become IR relative/relativeAccumulate targets. horizontalTo/verticalTo become axis-line. A bare via or `{via,fraction}` combines with the next target into a fold. DrawWay.Cycle closes the subpath. curve/cubic/bend consume the next target, while arc/circle/ellipse use the previous position as center without consuming the next item. Internal Cycle/Relative/Accumulate strings avoid collisions with node ids
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                         | Type                 | Default | Description |
+| ------------------------------ | -------------------- | ------- | ----------- |
+| `TTarget` (Type parameter)     | `= IRTarget`         | —       | —           |
+| `TControl` (Type parameter)    | `= IRControlPoint`   | —       | —           |
+| `TAxisTarget` (Type parameter) | `= IRAxisLineTarget` | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export type WayItem =
-  | IRTarget
+export type WayItem<TTarget = IRTarget, TControl = IRControlPoint, TAxisTarget = IRAxisLineTarget> =
+  | TTarget
   | string
   | WayRelativeItem
   | WayVia
   | WayFoldOp
   | WayCycle
-  | WayCurveOp
-  | WayCubicOp
+  | WayCurveOp<TControl>
+  | WayCubicOp<TControl>
   | WayBendOp
   | WayArcOp
   | WayCircleOp
   | WayEllipseOp
   | WayLabelOp
-  | WayAxisLineOp;
+  | WayAxisLineOp<TAxisTarget>;
 ```
 
-#### <ApiSourceLink label={"DrawWay"} path={"packages/kernel/core/src/parse/way.ts"} startLine={32}>DrawWay</ApiSourceLink>
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"DrawWay"} path={"packages/kernel/vanilla/src/normalize/path/way.ts"} startLine={31}>DrawWay</ApiSourceLink>
 
 Cycle closes to the way start and must be referenced through DrawWay.Cycle. Hv/Vh/Hvh/Vhv describe two- or three-segment folds. Relative/Accumulate discriminate relative-offset items: Relative preserves prevEnd, while Accumulate updates it cumulatively. A const object with as const avoids TypeScript enum reverse mappings and literal incompatibility
 
@@ -886,7 +932,7 @@ export const DrawWay = {
 } as const;
 ```
 
-#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={118}>resolvePathLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={109}>resolvePathLabelPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -954,7 +1000,7 @@ export declare const samplePathRoute: (
 
 ## Direct calls
 
-#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={131}>InputPath</ApiSourceLink>
+#### <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>path</ApiSourceLink> / <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={133}>InputPath</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1000,7 +1046,7 @@ export type InputPath = InputPathBase & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={103}>InputStep</ApiSourceLink>
+#### <ApiSourceLink label={"InputStep"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={105}>InputStep</ApiSourceLink>
 
 ```ts
 export type InputStep =
@@ -1034,18 +1080,18 @@ export type InputStep =
 
 <ApiTable>
 
-| Member           | Type                                                     | Default | Description                                                                                 |
-| ---------------- | -------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
-| `backX`          | `number`                                                 | —       | Back edge along the arrow axis; must not exceed the line contact coordinate                 |
-| `baseSize?`      | `number`                                                 | —       | Local base-square size; defaults to 10                                                      |
-| `defaultLength?` | `number`                                                 | —       | Default length parameter; defaults to 8                                                     |
-| `defaultWidth?`  | `number`                                                 | —       | Default width parameter; defaults to 8                                                      |
-| `emit`           | `(context: MarkEmitContext) => Iterable<ScenePrimitive>` | —       | Generate local primitives from resolved styles and parameters                               |
-| `hollow?`        | `boolean`                                                | —       | Whether stroke draws a hollow outline; defaults to false                                    |
-| `lineContactX`   | `number`                                                 | —       | Line contact coordinate for path shortening and endpoint placement                          |
-| `name`           | `string`                                                 | —       | Registered name                                                                             |
-| `outerInset?`    | `number`                                                 | —       | Outline inset; defaults to lineWidth / 2 for hollow definitions and 0 for solid definitions |
-| `tipX?`          | `number`                                                 | —       | Tip x-coordinate; defaults to baseSize and serves as the along-path anchor                  |
+| Member           | Type                                                     | Default                     | Description                                                                                                               |
+| ---------------- | -------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `backX`          | `number`                                                 | —                           | Back edge along the arrow axis; must not exceed the line contact coordinate                                               |
+| `baseSize?`      | `number`                                                 | `10`                        | Side length of the local reference square                                                                                 |
+| `defaultLength?` | `number`                                                 | `ARROW_MARKER_DEFAULT_SIZE` | Default length when the instance does not specify one                                                                     |
+| `defaultWidth?`  | `number`                                                 | `ARROW_MARKER_DEFAULT_SIZE` | Default width when the instance does not specify one                                                                      |
+| `emit`           | `(context: MarkEmitContext) => Iterable<ScenePrimitive>` | —                           | Generate local primitives from resolved styles and parameters                                                             |
+| `hollow?`        | `boolean`                                                | `false`                     | Whether a stroke represents the hollow outline                                                                            |
+| `lineContactX`   | `number`                                                 | —                           | Line contact coordinate for path shortening and endpoint placement                                                        |
+| `name`           | `string`                                                 | —                           | Registered name                                                                                                           |
+| `outerInset?`    | `number`                                                 | `resolveArrowMark`          | Outer outline compensation; defaults to half the resolved stroke width for hollow definitions and 0 for solid definitions |
+| `tipX?`          | `number`                                                 | `resolveArrowMark`          | Tip x coordinate; defaults to the resolved baseSize, with the tip as the anchor for placement along a line                |
 
 </ApiTable>
 
@@ -1074,15 +1120,15 @@ export type ArrowDefinition = Omit<MarkDefinition, 'anchor'> & {
 
 <ApiTable>
 
-| Member           | Type                                                     | Default | Description                                                   |
-| ---------------- | -------------------------------------------------------- | ------- | ------------------------------------------------------------- |
-| `anchor?`        | `IRPosition`                                             | —       | Local placement anchor; defaults to the base-square center    |
-| `baseSize?`      | `number`                                                 | —       | Local base-square size; defaults to 10                        |
-| `defaultLength?` | `number`                                                 | —       | Default length parameter; defaults to 8                       |
-| `defaultWidth?`  | `number`                                                 | —       | Default width parameter; defaults to 8                        |
-| `emit`           | `(context: MarkEmitContext) => Iterable<ScenePrimitive>` | —       | Generate local primitives from resolved styles and parameters |
-| `hollow?`        | `boolean`                                                | —       | Whether stroke draws a hollow outline; defaults to false      |
-| `name`           | `string`                                                 | —       | Registered name                                               |
+| Member           | Type                                                     | Default                     | Description                                                            |
+| ---------------- | -------------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------- |
+| `anchor?`        | `IRPosition`                                             | `resolveMarkStyle`          | Local placement anchor; defaults to the center of the reference square |
+| `baseSize?`      | `number`                                                 | `10`                        | Side length of the local reference square                              |
+| `defaultLength?` | `number`                                                 | `ARROW_MARKER_DEFAULT_SIZE` | Default length when the instance does not specify one                  |
+| `defaultWidth?`  | `number`                                                 | `ARROW_MARKER_DEFAULT_SIZE` | Default width when the instance does not specify one                   |
+| `emit`           | `(context: MarkEmitContext) => Iterable<ScenePrimitive>` | —                           | Generate local primitives from resolved styles and parameters          |
+| `hollow?`        | `boolean`                                                | `false`                     | Whether a stroke represents the hollow outline                         |
+| `name`           | `string`                                                 | —                           | Registered name                                                        |
 
 </ApiTable>
 
@@ -1240,7 +1286,7 @@ Define a path that publishes owner output
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineArrow"} path={"packages/kernel/core/src/contract/path/arrow.ts"} startLine={16}>defineArrow</ApiSourceLink>
+#### <ApiSourceLink label={"defineArrow"} path={"packages/kernel/core/src/contract/path/arrow.ts"} startLine={22}>defineArrow</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1267,7 +1313,7 @@ export declare const defineArrow: (definition: ArrowDefinition) => ArrowDefiniti
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineMark"} path={"packages/kernel/core/src/contract/path/mark.ts"} startLine={47}>defineMark</ApiSourceLink>
+#### <ApiSourceLink label={"defineMark"} path={"packages/kernel/core/src/contract/path/mark.ts"} startLine={62}>defineMark</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1370,11 +1416,11 @@ Either tangent angle selects tangent mode; the omitted outgoing/incoming angle d
 
 <ZodSchema shallow name="PathArrowEndSchema" />
 
-#### <ApiSourceLink label={"MarkStyleSchema"} path={"packages/kernel/core/src/schemas/path/mark.ts"} startLine={14}>MarkStyleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"MarkStyleSchema"} path={"packages/kernel/core/src/schemas/path/mark.ts"} startLine={26}>MarkStyleSchema</ApiSourceLink>
 
 <ZodSchema shallow name="MarkStyleSchema" />
 
-#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/mark.ts"} startLine={42}>PathMarkPlacementSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathMarkPlacementSchema"} path={"packages/kernel/core/src/schemas/path/mark.ts"} startLine={54}>PathMarkPlacementSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathMarkPlacementSchema" />
 

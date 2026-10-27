@@ -1,5 +1,14 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  局部基准正方形边长: 'Side length of the local reference square',
+  实例未指定长度时使用的默认长度: 'Default length when the instance does not specify one',
+  实例未指定宽度时使用的默认宽度: 'Default width when the instance does not specify one',
+  是否通过描边表达空心轮廓: 'Whether a stroke represents the hollow outline',
+  '外轮廓补偿量；省略时空心定义使用已解析线宽的一半，实心定义使用 0':
+    'Outer outline compensation; defaults to half the resolved stroke width for hollow definitions and 0 for solid definitions',
+  '尖端横坐标；省略时使用已解析的 baseSize，沿线放置时以尖端为锚点':
+    'Tip x coordinate; defaults to the resolved baseSize, with the tip as the anchor for placement along a line',
+  '局部放置锚点，省略时使用基准正方形中心': 'Local placement anchor; defaults to the center of the reference square',
   标记图元生成上下文: 'Context for generating mark primitives',
   自定义形状参数: 'Custom shape parameters',
   已解析的描边: 'Resolved stroke',

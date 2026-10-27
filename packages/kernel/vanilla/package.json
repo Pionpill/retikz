@@ -79,14 +79,14 @@
     "@retikz/core": "workspace:*",
     "@retikz/foundation": "workspace:*",
     "@retikz/render": "workspace:*",
-    "@retikz/reconciler": "workspace:*"
+    "@retikz/reconciler": "workspace:*",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vitest": "catalog:",
-    "zod": "catalog:"
+    "vitest": "catalog:"
   }
 }

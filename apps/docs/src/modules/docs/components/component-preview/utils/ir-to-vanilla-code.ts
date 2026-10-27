@@ -1105,12 +1105,9 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   const hasStandaloneGraphMembers = graphHelpers.length > 0 && !ctx.graphCounts.has('graph');
 
   const imports = [
-    `import { ${[...helpers, ...(hasStandaloneGraphMembers ? ['normalizeScene'] : [])].join(', ')} } from '@retikz/vanilla';`,
+    `import { ${[...helpers, ...(ctx.usesDrawWay ? ['DrawWay'] : []), ...(hasStandaloneGraphMembers ? ['normalizeScene'] : [])].join(', ')} } from '@retikz/vanilla';`,
   ];
-  const coreImports = [
-    ...(ctx.usesDrawWay ? ['DrawWay'] : []),
-    ...(hasStandaloneGraphMembers ? ['resolveCoreProviderDependencies'] : []),
-  ];
+  const coreImports = [...(hasStandaloneGraphMembers ? ['resolveCoreProviderDependencies'] : [])];
   if (coreImports.length > 0) imports.push(`import { ${coreImports.join(', ')} } from '@retikz/core';`);
   const extensionImports = [...shapeImports, ...(usesRibbon ? ['RibbonPathDefinition'] : [])];
   if (extensionImports.length > 0) imports.push(`import { ${extensionImports.join(', ')} } from '@retikz/extension';`);

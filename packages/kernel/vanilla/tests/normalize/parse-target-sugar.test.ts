@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseTargetSugar } from '../../src/parse/target';
+import type { InputTarget } from '../../src/normalize/path';
+import { parseTargetSugar } from '../../src/normalize/path/target';
 
 describe('parseTargetSugar', () => {
   it("'+1,0' 解析为 relative", () => {
@@ -43,11 +44,11 @@ describe('parseTargetSugar', () => {
 
     expect(parseTargetSugar(polar)).toEqual(polar);
 
-    const relative = { relative: [3, 4] };
+    const relative: InputTarget = { relative: [3, 4] };
 
     expect(parseTargetSugar(relative)).toEqual(relative);
 
-    const nodeTarget = { id: 'A', anchor: { side: 'top', fraction: 0.5 } };
+    const nodeTarget: InputTarget = { id: 'A', anchor: { side: 'top', fraction: 0.5 } };
 
     expect(parseTargetSugar(nodeTarget)).toEqual(nodeTarget);
   });

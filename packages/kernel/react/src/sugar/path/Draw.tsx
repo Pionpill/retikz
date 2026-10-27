@@ -1,4 +1,5 @@
-import type { IRPath, WayDSL } from '@retikz/core';
+import type { IRPath } from '@retikz/core';
+import type { WayDSL } from '@retikz/vanilla';
 import type { InputPath } from '@retikz/vanilla';
 import type { FC } from 'react';
 

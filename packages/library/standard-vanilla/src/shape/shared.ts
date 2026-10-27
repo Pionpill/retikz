@@ -1,6 +1,6 @@
 import type { IRTarget } from '@retikz/core';
-import { parseTargetSugar } from '@retikz/core';
 import type { IRPath } from '@retikz/core';
+import { parseTargetSugar } from '@retikz/vanilla';
 import type { InputPath } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
 import type { InputTarget } from '@retikz/vanilla';

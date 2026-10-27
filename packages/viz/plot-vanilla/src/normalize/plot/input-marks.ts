@@ -1,4 +1,4 @@
-import type { IRGraphicStyle, WayDSL } from '@retikz/core';
+import type { IRGraphicStyle } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type {
   IRPlotPointMark,
@@ -15,6 +15,7 @@ import type {
   IRPlotPathStepTarget,
   PathMarkAppearanceEncodingSchema,
 } from '@retikz/plot';
+import type { WayDSL } from '@retikz/vanilla';
 import type { InputPath } from '@retikz/vanilla';
 import type { infer as ZodInfer } from 'zod';
 

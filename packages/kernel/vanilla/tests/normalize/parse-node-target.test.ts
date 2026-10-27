@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseNodeTarget } from '../../src/parse/node';
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../src/error';
+import { parseNodeTarget } from '../../src/normalize/path/node';
 
 describe('parseNodeTarget node 模式（无 .）', () => {
   it('简单 id → { id }', () => {
@@ -52,6 +53,10 @@ describe('parseNodeTarget 命名 anchor 模式（id.<name>）', () => {
   });
 
   it('未知 anchor 名抛错', () => {
+    expect(() => parseNodeTarget('A.unknown')).toThrow(RetikzVanillaError);
+    expect(() => parseNodeTarget('A.unknown')).toThrow(
+      expect.objectContaining({ code: RetikzVanillaErrorCode.Normalize }),
+    );
     expect(() => parseNodeTarget('A.unknown')).toThrow(/unknown anchor 'unknown'/);
     expect(() => parseNodeTarget('A.text')).toThrow(/unknown anchor 'text'/);
   });

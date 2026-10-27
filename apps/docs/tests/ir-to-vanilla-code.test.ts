@@ -1,5 +1,4 @@
 import type { IRScene } from '@retikz/core';
-import { parseWay } from '@retikz/core';
 import {
   BlockHeaderSchema,
   BlockRowSchema,
@@ -8,6 +7,7 @@ import {
   GraphSchema,
   GroupSchema,
 } from '@retikz/graph';
+import { parseWay } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
@@ -166,7 +166,7 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("path({ way: [[0, 0], [50, 50]], arrow: '->' })");
   });
 
-  it('draw-way-fold-cycle：fold(-|) + cycle → 字面量 + DrawWay.Cycle + core import', () => {
+  it('draw-way-fold-cycle：fold(-|) + cycle → 字面量 + DrawWay.Cycle + vanilla import', () => {
     const code = irToVanillaCode(
       ir([
         {
@@ -182,7 +182,8 @@ describe('irToVanillaCode', () => {
 
     expect(code).toContain("'-|'");
     expect(code).toContain('DrawWay.Cycle');
-    expect(code).toContain("import { DrawWay } from '@retikz/core'");
+    expect(code).toMatch(/import \{[^}]*DrawWay[^}]*\} from '@retikz\/vanilla'/);
+    expect(code).not.toMatch(/import \{[^}]*DrawWay[^}]*\} from '@retikz\/core'/);
   });
 
   it('draw-way-three-leg-fold：默认用裸 token，显式 fraction 用 strict 对象且可还原', () => {

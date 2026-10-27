@@ -1,5 +1,5 @@
-import { DrawWay } from '@retikz/core';
 import { normalizePlotPathMark } from '@retikz/plot-vanilla';
+import { DrawWay } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR, PathMark, PlotPathStep } from '../../src';
