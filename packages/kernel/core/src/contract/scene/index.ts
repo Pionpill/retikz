@@ -1,4 +1,5 @@
 export * from './base';
+export * from './content';
 export * from './ellipse';
 export * from './group';
 export * from './paint';
@@ -6,4 +7,3 @@ export * from './path';
 export * from './rect';
 export * from './scene';
 export * from './text';
-export * from './content';

@@ -76,44 +76,44 @@ export type BuiltinLayoutAlignmentGuideName = ValueOf<typeof BuiltinLayoutAlignm
 /** child probe 的结果判别值 */
 export type LayoutChildProbeKind = ValueOf<typeof LayoutChildProbeKind>;
 
-/** 父布局传给 child 单轴的上下文化尺寸 proposal */
+/** 父布局传给子项的单轴尺寸提案 */
 export type LayoutAxisProposal =
   | Readonly<{
-      /** 查询 child 的 intrinsic contribution */
+      /** 查询子项的内在尺寸贡献 */
       kind: typeof LayoutAxisProposalKind.Intrinsic;
-      /** 查询最小或自然 contribution */
+      /** 查询最小或自然尺寸贡献 */
       mode: LayoutIntrinsicMode;
     }>
   | Readonly<{
-      /** 在可用区间内解析 allocation slot */
+      /** 在可用区间内确定布局槽位 */
       kind: typeof LayoutAxisProposalKind.Range;
-      /** slot 的有限非负最小尺寸 */
+      /** 布局槽位的有限非负最小尺寸 */
       min: number;
-      /** slot 的有限非负最大尺寸；省略表示无上限 */
+      /** 布局槽位的有限非负最大尺寸；省略表示无上限 */
       max?: number;
     }>
   | Readonly<{
-      /** 父布局已要求固定 allocation slot */
+      /** 父布局要求固定大小的布局槽位 */
       kind: typeof LayoutAxisProposalKind.Exact;
-      /** slot 的有限非负固定尺寸 */
+      /** 布局槽位的有限非负固定尺寸 */
       value: number;
     }>;
 
-/** 父布局传给任意 child 的完整双轴 proposal */
+/** 父布局传给任意子项的双轴尺寸提案 */
 export type LayoutProposal = Readonly<{
-  /** 水平轴 proposal */
+  /** 水平轴尺寸提案 */
   x: LayoutAxisProposal;
-  /** 垂直轴 proposal */
+  /** 垂直轴尺寸提案 */
   y: LayoutAxisProposal;
 }>;
 
-/** child-local allocation coordinate 中的一维 alignment guide */
+/** 子项局部布局坐标中的一维对齐参考线 */
 export type LayoutAlignmentGuide = Readonly<{
-  /** 开放的 guide 名称 */
+  /** 开放的对齐线名称 */
   name: string;
-  /** guide 所属的一维坐标轴 */
+  /** 对齐线所属的一维坐标轴 */
   dimension: LayoutAlignmentGuideDimension;
-  /** child-local allocation coordinate 中的有限位置 */
+  /** 子项局部布局坐标中的有限位置 */
   position: number;
 }>;
 
@@ -127,51 +127,51 @@ export type CompositeReplay = Readonly<{
   [replayBrand]: never;
 }>;
 
-/** 已完成一次真实子布局、可供父 composite 选择的结果 */
+/** 已完成一次真实子布局、可供父复合组件选择的结果 */
 export type LayoutChildResult = Readonly<{
-  /** 本次 proposal 求值后的无原点 allocation slot */
+  /** 本次尺寸提案求值后不含原点位置的布局槽位 */
   slotSize: Readonly<{
-    /** slot 宽度 */
+    /** 槽位宽度 */
     width: number;
-    /** slot 高度 */
+    /** 槽位高度 */
     height: number;
   }>;
   /** child 在自身局部坐标中的真实布局占用 */
   allocationBounds: Readonly<BoundsRect>;
   /** 最终静态 primitive tree 的保守局部视觉包络 */
   visualBounds: Readonly<BoundsRect>;
-  /** child-local allocation coordinate 中分离并冻结的 alignment guides */
+  /** 子项局部布局坐标中已分离并冻结的对齐线 */
   alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
-  /** 对应本次布局结果的 opaque replay token */
+  /** 对应本次布局结果的不透明重放令牌 */
   replay: CompositeReplay;
 }>;
 
 declare const layoutChildFailureBrand: unique symbol;
 
-/** callback-local、compile-local 的 opaque child probe failure */
+/** 仅限当前编译回调使用的不透明子项试算失败句柄 */
 export type LayoutChildFailure = Readonly<{
   [layoutChildFailureBrand]: never;
 }>;
 
-/** layoutChild 的 resolved 或 failed outcome */
+/** 子项布局试算的成功结果或失败句柄 */
 export type LayoutChildProbe =
   | Readonly<{
-      /** probe 已解析为可 replay 的结果 */
+      /** 试算已得到可重放结果 */
       kind: typeof LayoutChildProbeKind.Resolved;
-      /** 当前 callback 拥有的布局结果 */
+      /** 当前回调拥有的布局结果 */
       result: LayoutChildResult;
     }>
   | Readonly<{
-      /** probe 形成可丢弃或显式提升的失败 */
+      /** 试算失败，可舍弃或显式抛出 */
       kind: typeof LayoutChildProbeKind.Failed;
-      /** 当前 callback 拥有的 opaque failure */
+      /** 当前回调拥有的不透明失败句柄 */
       failure: LayoutChildFailure;
     }>;
 
 declare const compositeCompileChildBrand: unique symbol;
 
 /**
- * 复合组件的 compile-local 输出 child
+ * 仅限当前编译回调使用的复合组件输出子项
  * @description 只能由当前 composite callback 的 `replay()` 或 `createScope()` 创建，不能读取、伪造、序列化、跨 callback 或跨 compile 使用
  */
 export type CompositeCompileChild = Readonly<{
@@ -228,11 +228,11 @@ export type CompositeEvaluation =
   | Readonly<{ kind: 'layout' }>
   | Readonly<{ kind: 'contribution'; axis: LayoutMeasurementAxis }>;
 
-/** 组件按需返回的真实 allocation 尺寸，由 Core 投影成提案槽位 */
+/** 组件按需返回的真实布局占用尺寸，由 Core 投影成提案槽位 */
 export type CompositeContributionResult = Readonly<{
   /** 仅用于尺寸贡献求值 */
   kind: 'contribution';
-  /** 与当前请求轴完全对应的 allocation 尺寸 */
+  /** 与当前请求轴完全对应的布局占用尺寸 */
   contribution: LayoutContribution;
 }>;
 
@@ -241,7 +241,10 @@ export type LayoutMeasurementProbe =
   | Readonly<{ kind: 'resolved'; result: LayoutContribution }>
   | Readonly<{ kind: 'failed'; failure: LayoutChildFailure }>;
 
-/** 同一 Definition 的完整输出或按需贡献 */
+/**
+ * 复合组件返回的完整布局结果或按需尺寸贡献
+ * @template TArtifact 完整布局结果可携带的 JSON 产物类型，默认 never 表示不声明产物
+ */
 export type CompositeEvaluationResult<TArtifact extends JsonValue = never> =
   | CompositeCompileResult<TArtifact>
   | CompositeContributionResult;
@@ -249,9 +252,9 @@ export type CompositeEvaluationResult<TArtifact extends JsonValue = never> =
 /** 复合组件可见的受限编译上下文 */
 export type CompositeCompileContext = CompositeRuntimeInputContext &
   Readonly<{
-    /** 当前 composite 位置完整、只读的有效 Theme */
+    /** 当前复合组件位置完整、只读的有效主题 */
     theme: ResolvedTheme;
-    /** 当前求值需要完整布局或指定轴的 allocation 贡献 */
+    /** 当前求值需要完整布局或指定轴的布局尺寸贡献 */
     evaluation: CompositeEvaluation;
     /** 隔离查询尺寸贡献；结果不可重放 */
     measureChild: (
@@ -259,7 +262,7 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
       proposal: LayoutProposal,
       axis: LayoutMeasurementAxis,
     ) => LayoutMeasurementProbe;
-    /** 当前 composite occurrence 从父级收到的完整双轴 proposal */
+    /** 当前复合组件实例从父级收到的完整双轴尺寸提案 */
     proposal: LayoutProposal;
     /**
      * 创建使用局部 Theme 的编译上下文，复用当前 callback 的 probe、replay 与输入所有权
@@ -273,19 +276,19 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
      * @param subPath 相对当前 composite Source occurrence 的可选 jq-like 路径
      */
     warn: (code: string, message: string, subPath?: string) => void;
-    /** 在完整 compile 环境中 probe 任意 child */
+    /** 在完整编译环境中试算任意子项的布局 */
     layoutChild: (child: IRChild | CompositeBoundChild, proposal: LayoutProposal) => LayoutChildProbe;
     /** 隔离绑定真实 child 后查询有序目标，不提交 probe 绘图或修改作者点列 */
     resolvePathTargets: (query: PathTargetQuery) => PathTargetQueryResult;
     /**
-     * 把当前 callback 的一次布局结果转为 one-use output child
-     * @param result 当前 callback 的 resolved probe result
+     * 把当前回调的一次布局结果转为只能放置一次的输出子项
+     * @param result 当前回调中试算成功的布局结果
      * @param wrapper replay 提交时应用的数值变换与裁剪外壳
      */
     replay: (result: LayoutChildResult, wrapper?: CompositeReplayWrapper) => CompositeCompileChild;
     /**
-     * 提升当前 callback 创建的 child probe failure
-     * @param failure 当前 callback 的 failed probe failure
+     * 抛出当前回调创建的子项试算失败
+     * @param failure 当前回调中试算失败的句柄
      */
     raise: (failure: LayoutChildFailure) => never;
     /**
@@ -302,7 +305,10 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
     ) => CompositeCompileChild;
   }>;
 
-/** 复合组件的编译输出 */
+/**
+ * 复合组件的编译输出
+ * @template TArtifact 可选 JSON 产物的类型，默认 never 表示不声明产物
+ */
 export type CompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
   /** 普通 IR、绑定子项或当前回调创建的运行时输出 */
   children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;

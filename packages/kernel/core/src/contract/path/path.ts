@@ -123,7 +123,7 @@ export type PathDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput e
   compile: (context: PathCompileContext<TPath, TOwnerOutput>) => PathCompileResult | null;
 } & ([TOwnerOutput] extends [never] ? Readonly<{ ownerOutput?: never }> : Readonly<{ ownerOutput: true }>);
 
-/** registry 中擦除 subject 与 options 泛型后的 Path 定义 */
+/** 注册表中擦除路径声明与所属者产物泛型后的路径定义 */
 export type AnyPathDefinition = Readonly<{
   /** 非空 path registry key */
   name: string;

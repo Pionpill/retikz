@@ -44,8 +44,6 @@ export const contourToPathCommands = (
   return output;
 };
 
-type ShapeStylePassthrough = Omit<ResolvedShapeStyle, 'fill' | 'stroke' | 'strokeWidth'>;
-
 type PathPrimitiveStyle = Pick<
   PathPrimitive,
   | 'fill'
@@ -71,7 +69,7 @@ export const buildPathPrimitiveStyle = (
   void _cornerRadius;
 
   return {
-    ...(passthroughStyle as ShapeStylePassthrough),
+    ...passthroughStyle,
     fill: options?.fill ?? fill ?? 'transparent',
     stroke: stroke ?? 'currentColor',
     strokeWidth: strokeWidth ?? 1,
