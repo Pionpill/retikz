@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import type { NodeLayout } from '../../src/compile/node';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { resolveAnchor, resolveAnchorRef } from '../../src/compile/reference';
 import type { ShapeDefinition } from '../../src/contract';
 import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import type { BuiltinShape } from '../../src/schemas';
 
-/** 构造一个最简 NodeLayout，rect 已是全局坐标 */
+/** 构造一个最简 CompiledNodeLayout，rect 已是全局坐标 */
 const makeLayout = (
   shape: BuiltinShape = 'rectangle',
   width = 40,
@@ -16,7 +16,7 @@ const makeLayout = (
   cx = 0,
   cy = 0,
   rotate = 0,
-): NodeLayout => {
+): CompiledNodeLayout => {
   // circle / diamond 是内置 shape preset：circle → ellipse 等轴、diamond → polygon 4/0。
   const def =
     shape === 'circle'
@@ -210,7 +210,7 @@ describe('resolveAnchorRef 边上比例点', () => {
       resolveAnchor: (r, name) => (name === 'center' ? [r.x, r.y] : undefined),
       *emit() {},
     });
-    const layout: NodeLayout = {
+    const layout: CompiledNodeLayout = {
       shape: { name: 'custom', definition: noEdge, params: {} },
       geometry: {
         rect: { x: 0, y: 0, width: 20, height: 10, rotate: 0 },

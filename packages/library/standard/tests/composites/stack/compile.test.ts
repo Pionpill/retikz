@@ -1,17 +1,17 @@
 import type { IRChild, ScenePrimitive, LayoutChildResult, LayoutProposal } from '@retikz/core';
 import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { ArrayDefinition, MapDefinition } from '../../../src/collection';
-import { StackDefinition } from '../../../src/collection/stack';
+import { arrayDefinition, mapDefinition } from '../../../src/collection';
+import { stackDefinition } from '../../../src/collection/stack';
 
 const base = { namespace: 'standard', type: 'stack' } as const;
 const compile = (child: IRChild) =>
   compileToScene(
     { type: 'scene', version: 1, children: [child] },
-    { composites: [StackDefinition, ArrayDefinition, MapDefinition], clips: [PathClipDefinition], padding: 0 },
+    { composites: [stackDefinition, arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
   );
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(n => (n.type === 'group' ? flat(n.children) : [n]));
@@ -53,7 +53,7 @@ it('父布局额外空间不拉伸单元或开放边框，过小的proposal失�
           },
         ],
       },
-      { composites: [harness, StackDefinition], clips: [PathClipDefinition], padding: 0 },
+      { composites: [harness, stackDefinition], clips: [pathClipDefinition], padding: 0 },
     );
     return { result, observed };
   };

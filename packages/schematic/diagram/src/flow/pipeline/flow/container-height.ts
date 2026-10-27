@@ -1,7 +1,7 @@
 import type { CompositeCompileContext } from '@retikz/core';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { FlowLayoutElementInput, FlowLayoutInput } from '../../contract';
+import type { InputFlowLayoutElement, InputFlowLayoutComputation } from '../../contract';
 import { measureFlowLayoutElement } from '../../providers';
 import type { CanonicalFlowDiagram, CanonicalFlowElement } from '../../resolve';
 import { createFlowLayoutExecutionContext } from './layout-placement';
@@ -9,12 +9,12 @@ import { createFlowLayoutExecutionContext } from './layout-placement';
 /** 自内向外统一分组高度，并把纵向线性内容的剩余空间分配到间隙 */
 export const allocateFlowGroupHeights = (
   diagram: CanonicalFlowDiagram,
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   context: CompositeCompileContext,
-): FlowLayoutInput => {
+): InputFlowLayoutComputation => {
   const placement = createFlowLayoutExecutionContext(context, input);
   /** 沿单子项透明容器传递内容高度，仅扩展纵向线性布局的间隙 */
-  const distributeHeight = (element: FlowLayoutElementInput, height: number): FlowLayoutElementInput => {
+  const distributeHeight = (element: InputFlowLayoutElement, height: number): InputFlowLayoutElement => {
     if (element.kind !== 'layout' || element.placement.kind !== 'linear' || element.placement.excludeFromBounds?.length)
       return element;
 
@@ -36,9 +36,9 @@ export const allocateFlowGroupHeights = (
   };
 
   const visit = (
-    elements: ReadonlyArray<FlowLayoutElementInput>,
+    elements: ReadonlyArray<InputFlowLayoutElement>,
     sources: ReadonlyArray<CanonicalFlowElement>,
-  ): ReadonlyArray<FlowLayoutElementInput> =>
+  ): ReadonlyArray<InputFlowLayoutElement> =>
     elements.map((element, index) => {
       const owner = sources[index];
       if (element.kind === 'leaf' || owner.type === 'entity') return element;

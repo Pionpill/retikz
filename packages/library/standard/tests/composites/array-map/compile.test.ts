@@ -1,11 +1,11 @@
 import type { AnyCompositeDefinition, IRChild, LayoutChildResult, LayoutProposal } from '@retikz/core';
 import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { intrinsicLayoutProposal } from '@retikz/layout/compose';
 import { describe, expect, it } from 'vitest';
 import { literal, boolean } from 'zod';
 
-import { ArrayDefinition, MapDefinition } from '../../../src/collection';
+import { arrayDefinition, mapDefinition } from '../../../src/collection';
 
 const cell = (id: string, width: number, height: number) => ({
   id,
@@ -21,7 +21,7 @@ const compile = (
   child: IRChild,
   proposal: LayoutProposal = intrinsicLayoutProposal('natural'),
   extra: Array<AnyCompositeDefinition> = [],
-  arrayDefinition = ArrayDefinition,
+  customArrayDefinition = arrayDefinition,
 ) => {
   let observed: LayoutChildResult | undefined;
   const harness = defineComposite({
@@ -44,8 +44,8 @@ const compile = (
   const scene = compileToScene(
     { type: 'scene', version: 1, children: [{ namespace: 'cell-test', type: 'harness', child }] },
     {
-      composites: [harness, arrayDefinition, MapDefinition, ...extra],
-      clips: [PathClipDefinition],
+      composites: [harness, customArrayDefinition, mapDefinition, ...extra],
+      clips: [pathClipDefinition],
       padding: 0,
     },
   );
@@ -399,11 +399,11 @@ it('将固定槽几何形状保持在有限范围范围内', () => {
 it('每个 Array 回调测量一次每个固定单元内容，包括更改后的默认值下的回放', () => {
   let calls = 0;
   const callsPerArray: Array<number> = [];
-  const arrayDefinition: typeof ArrayDefinition = {
-    ...ArrayDefinition,
+  const customArrayDefinition: typeof arrayDefinition = {
+    ...arrayDefinition,
     compile: (node, context) => {
       const before = calls;
-      const result = ArrayDefinition.compile(node, context);
+      const result = arrayDefinition.compile(node, context);
       callsPerArray.push(calls - before);
       return result;
     },
@@ -430,7 +430,7 @@ it('每个 Array 回调测量一次每个固定单元内容，包括更改后的
     },
     intrinsicLayoutProposal('natural'),
     [measured],
-    arrayDefinition,
+    customArrayDefinition,
   );
 
   expect(calls).toBeGreaterThan(0);

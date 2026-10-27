@@ -2,13 +2,13 @@ import {
   createFlexLayout,
   createGridLayout,
   createOverlayLayout,
-  FlexLayoutDefinition,
-  FlexLayoutProvider,
-  GridLayoutDefinition,
-  GridLayoutProvider,
+  flexLayoutDefinition,
+  flexLayoutProvider,
+  gridLayoutDefinition,
+  gridLayoutProvider,
   LayoutItemKind,
-  OverlayLayoutDefinition,
-  OverlayLayoutProvider,
+  overlayLayoutDefinition,
+  overlayLayoutProvider,
 } from '@retikz/layout';
 import {
   FlexLayout,
@@ -101,14 +101,14 @@ describe('Layout React 布局系列', () => {
     ]);
     expect(result.contributions).toHaveLength(1);
     expect(result.contributions[0]?.roots).toEqual([
-      FlexLayoutProvider.key,
-      GridLayoutProvider.key,
-      OverlayLayoutProvider.key,
+      flexLayoutProvider.key,
+      gridLayoutProvider.key,
+      overlayLayoutProvider.key,
     ]);
-    expect(result.contributions[0]?.providers).toEqual([FlexLayoutProvider, GridLayoutProvider, OverlayLayoutProvider]);
-    expect(FlexLayoutProvider.makeDefinition([])).toBe(FlexLayoutDefinition);
-    expect(GridLayoutProvider.makeDefinition([])).toBe(GridLayoutDefinition);
-    expect(OverlayLayoutProvider.makeDefinition([])).toBe(OverlayLayoutDefinition);
+    expect(result.contributions[0]?.providers).toEqual([flexLayoutProvider, gridLayoutProvider, overlayLayoutProvider]);
+    expect(flexLayoutProvider.makeDefinition([])).toBe(flexLayoutDefinition);
+    expect(gridLayoutProvider.makeDefinition([])).toBe(gridLayoutDefinition);
+    expect(overlayLayoutProvider.makeDefinition([])).toBe(overlayLayoutDefinition);
   });
 
   it('使用 itemKey 而不是保留的 React 键，并接受显式 IR 作为唯一子源', () => {
@@ -145,13 +145,13 @@ describe('Layout React 布局系列', () => {
     const grid = normalizeReactInput(<GridLayout columns={[{ kind: 'fixed', value: 10 }]} />);
     const overlay = normalizeReactInput(<OverlayLayout />);
 
-    expect(flex.contributions[0]).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
-    expect(grid.contributions[0]).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
+    expect(flex.contributions[0]).toEqual({ roots: [flexLayoutProvider.key], providers: [flexLayoutProvider] });
+    expect(grid.contributions[0]).toEqual({ roots: [gridLayoutProvider.key], providers: [gridLayoutProvider] });
     expect(overlay.contributions[0]).toEqual({
-      roots: [OverlayLayoutProvider.key],
-      providers: [OverlayLayoutProvider],
+      roots: [overlayLayoutProvider.key],
+      providers: [overlayLayoutProvider],
     });
-    expect(normalizeReactInput(<FlexLayout />).contributions[0]?.providers[0]).toBe(FlexLayoutProvider);
+    expect(normalizeReactInput(<FlexLayout />).contributions[0]?.providers[0]).toBe(flexLayoutProvider);
   });
 
   it('对于独立、普通直接、不匹配和多个孩子来说，明确报错', () => {

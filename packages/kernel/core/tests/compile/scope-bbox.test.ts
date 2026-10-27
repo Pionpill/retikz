@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import type { NodeLayout } from '../../src/compile/node';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { createScopeRectangleLayout } from '../../src/compile/node';
 import { computeScopeBoundingBox } from '../../src/compile/scope';
 import type { TextMeasurer } from '../../src/compile/text';
@@ -29,7 +29,7 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 };
 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout，供 computeScopeBoundingBox 单元测试 */
-const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => ({
+const layoutAt = (cx: number, cy: number, w: number, h: number): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },

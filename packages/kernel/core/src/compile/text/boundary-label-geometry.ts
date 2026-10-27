@@ -34,7 +34,7 @@ const labelProjectedHalfExtent = (vector: Position, width: number, height: numbe
 };
 
 /** 共享边界标签布局输入，向量均为宿主局部单位轴 */
-type BoundaryLabelBoxInput = {
+type InputBoundaryLabelBox = {
   /** 决定内外放置、对齐及旋转的边界标签配置 */
   label: IRBoundaryLabel;
   /** 宿主局部坐标中的边界采样点 */
@@ -60,7 +60,7 @@ export const placeBoundaryLabelBox = ({
   width,
   height,
   distance,
-}: BoundaryLabelBoxInput): { center: Position; rotateDeg: number } => {
+}: InputBoundaryLabelBox): { center: Position; rotateDeg: number } => {
   const rotateDeg = resolveBoundaryLabelRotation(label.rotate, label.keepUpright, outward);
   const extent = labelProjectedHalfExtent(outward, width, height, rotateDeg);
   const offset = (label.placement === 'inside' ? -1 : 1) * (distance + extent);

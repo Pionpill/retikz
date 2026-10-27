@@ -10,7 +10,7 @@ import type {
   GradientResource,
   PatternDefinition,
   PatternEmitContext,
-  ResolvedPatternTile,
+  CompiledPatternTile,
   SceneResource,
 } from '../../../src/contract';
 import { definePattern } from '../../../src/contract';
@@ -49,19 +49,19 @@ const firstPatternResource = (resources: Array<SceneResource> | undefined): Patt
   (resources ?? []).find((r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern');
 
 /** 从 Scene.resources 取首个 pattern 资源的 tile（已解析 motif） */
-const tileOf = (spec: IRPaint, opts?: CompileOptions): ResolvedPatternTile | undefined =>
+const tileOf = (spec: IRPaint, opts?: CompileOptions): CompiledPatternTile | undefined =>
   firstPatternResource(compileToScene(patternNodeIR(spec), opts).scene.resources)?.tile;
 
 /** 取 tile.motif 里首个 path 原语 */
-const firstMotifPath = (tile: ResolvedPatternTile | undefined): PathPrimitive | undefined =>
+const firstMotifPath = (tile: CompiledPatternTile | undefined): PathPrimitive | undefined =>
   (tile?.motif ?? []).find((m): m is PathPrimitive => m.type === 'path');
 
 /** 取 tile.motif 中的全部 path 原语 */
-const motifPaths = (tile: ResolvedPatternTile | undefined): Array<PathPrimitive> =>
+const motifPaths = (tile: CompiledPatternTile | undefined): Array<PathPrimitive> =>
   (tile?.motif ?? []).filter((motif): motif is PathPrimitive => motif.type === 'path');
 
 /** 取 tile.motif 里首个 ellipse 原语 */
-const firstMotifEllipse = (tile: ResolvedPatternTile | undefined): EllipsePrimitive | undefined =>
+const firstMotifEllipse = (tile: CompiledPatternTile | undefined): EllipsePrimitive | undefined =>
   (tile?.motif ?? []).find((m): m is EllipsePrimitive => m.type === 'ellipse');
 
 /** 把 motif path 命令序列拍成紧凑 d 串（move/line/close，golden 对比用） */

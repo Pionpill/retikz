@@ -3,18 +3,18 @@ import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import {
-  CircleClipDefinition,
-  CircleClipProvider,
-  CompoundClipDefinition,
-  CompoundClipProvider,
-  EllipseClipDefinition,
-  EllipseClipProvider,
-  PathClipDefinition,
-  PathClipProvider,
-  PolygonClipDefinition,
-  PolygonClipProvider,
-  ExtensionClipDefinitions,
-  ExtensionClipProviders,
+  circleClipDefinition,
+  circleClipProvider,
+  compoundClipDefinition,
+  compoundClipProvider,
+  ellipseClipDefinition,
+  ellipseClipProvider,
+  pathClipDefinition,
+  pathClipProvider,
+  polygonClipDefinition,
+  polygonClipProvider,
+  extensionClipDefinitions,
+  extensionClipProviders,
 } from '../../src/clip';
 
 const sceneOf = (clip: IRClip): IRScene => ({
@@ -33,7 +33,7 @@ const cases: ReadonlyArray<{
   {
     kind: 'circle',
     clip: { kind: 'circle', params: { cx: 2, cy: 3, r: 4 } },
-    definitions: [CircleClipDefinition],
+    definitions: [circleClipDefinition],
     commands: [
       { kind: 'move', to: [6, 3] },
       { kind: 'arc', center: [2, 3], radius: 4, startAngle: 0, endAngle: 360 },
@@ -44,7 +44,7 @@ const cases: ReadonlyArray<{
   {
     kind: 'ellipse',
     clip: { kind: 'ellipse', params: { cx: 2, cy: 3, rx: 4, ry: 5 } },
-    definitions: [EllipseClipDefinition],
+    definitions: [ellipseClipDefinition],
     commands: [
       { kind: 'move', to: [6, 3] },
       { kind: 'ellipseArc', center: [2, 3], radiusX: 4, radiusY: 5, startAngle: 0, endAngle: 360 },
@@ -64,7 +64,7 @@ const cases: ReadonlyArray<{
         ],
       },
     },
-    definitions: [PolygonClipDefinition],
+    definitions: [polygonClipDefinition],
     commands: [
       { kind: 'move', to: [0, 0] },
       { kind: 'line', to: [4, 0] },
@@ -85,7 +85,7 @@ const cases: ReadonlyArray<{
         fillRule: 'evenodd',
       },
     },
-    definitions: [PathClipDefinition],
+    definitions: [pathClipDefinition],
     commands: [
       { kind: 'move', to: [0, 0] },
       { kind: 'line', to: [3, 2] },
@@ -112,7 +112,7 @@ const cases: ReadonlyArray<{
         fillRule: 'evenodd',
       },
     },
-    definitions: [CompoundClipDefinition, CircleClipDefinition, PathClipDefinition],
+    definitions: [compoundClipDefinition, circleClipDefinition, pathClipDefinition],
     commands: [
       { kind: 'move', to: [6, 3] },
       { kind: 'arc', center: [2, 3], radius: 4, startAngle: 0, endAngle: 360 },
@@ -126,15 +126,15 @@ const cases: ReadonlyArray<{
 
 describe('扩展裁剪定义公共契约', () => {
   it('发布了五个完整的定义，没有配对的形状定义', () => {
-    expect(ExtensionClipDefinitions).toEqual([
-      CircleClipDefinition,
-      EllipseClipDefinition,
-      PolygonClipDefinition,
-      PathClipDefinition,
-      CompoundClipDefinition,
+    expect(extensionClipDefinitions).toEqual([
+      circleClipDefinition,
+      ellipseClipDefinition,
+      polygonClipDefinition,
+      pathClipDefinition,
+      compoundClipDefinition,
     ]);
 
-    for (const definition of ExtensionClipDefinitions) {
+    for (const definition of extensionClipDefinitions) {
       expect(definition).toEqual(
         expect.objectContaining({
           schema: expect.anything(),
@@ -159,31 +159,31 @@ describe('扩展裁剪定义公共契约', () => {
 
 describe('扩展裁剪提供者图', () => {
   const providers: ReadonlyArray<CoreDependencyProvider> = [
-    CircleClipProvider,
-    EllipseClipProvider,
-    PolygonClipProvider,
-    PathClipProvider,
-    CompoundClipProvider,
+    circleClipProvider,
+    ellipseClipProvider,
+    polygonClipProvider,
+    pathClipProvider,
+    compoundClipProvider,
   ];
 
   it('发布五个无依赖性裁剪提供者，每个提供者实现一个完整的定义', () => {
-    expect(ExtensionClipProviders).toEqual(providers);
-    expect(ExtensionClipProviders.map(provider => provider.key)).toEqual([
+    expect(extensionClipProviders).toEqual(providers);
+    expect(extensionClipProviders.map(provider => provider.key)).toEqual([
       { capability: 'clip', name: 'circle' },
       { capability: 'clip', name: 'ellipse' },
       { capability: 'clip', name: 'polygon' },
       { capability: 'clip', name: 'path' },
       { capability: 'clip', name: 'compound' },
     ]);
-    expect(ExtensionClipProviders.every(provider => (provider.dependencies ?? []).length === 0)).toBe(true);
-    expect(ExtensionClipProviders.map(provider => provider.makeDefinition([]))).toEqual(ExtensionClipDefinitions);
+    expect(extensionClipProviders.every(provider => (provider.dependencies ?? []).length === 0)).toBe(true);
+    expect(extensionClipProviders.map(provider => provider.makeDefinition([]))).toEqual(extensionClipDefinitions);
   });
 
   it('仅解析完整目录中请求的完整 Path 定义', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [PathClipProvider.key], providers: ExtensionClipProviders }],
+      contributions: [{ roots: [pathClipProvider.key], providers: extensionClipProviders }],
     });
 
-    expect(definitions).toEqual({ clips: [PathClipDefinition] });
+    expect(definitions).toEqual({ clips: [pathClipDefinition] });
   });
 });

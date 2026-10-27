@@ -2,7 +2,7 @@ import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../../src';
-import type { IRScene, IRStep, PathPrimitive, ResolvedArrowEnd } from '../../../src';
+import type { IRScene, IRStep, PathPrimitive, CompiledArrowEnd } from '../../../src';
 import { createStrokePathGeometry, curveSegmentOfOccurrence } from '../../../src/compile/path/stroke/interruption';
 import { applyTransformChain } from '../../../src/compile/transform';
 import { flattenPrims } from '../../helpers/flatten';
@@ -73,7 +73,7 @@ describe('端点箭头触点', () => {
 
 /** 按 SVG / Canvas 的 marker 变换契约计算局部点的实际场景位置 */
 const markerPoint = (
-  spec: ResolvedArrowEnd,
+  spec: CompiledArrowEnd,
   local: [number, number],
   position: [number, number],
   tangent: [number, number],

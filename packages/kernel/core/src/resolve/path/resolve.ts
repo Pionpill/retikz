@@ -17,8 +17,8 @@ import type {
 import { BendAngleSchema, BuiltinPath, SmoothTensionSchema } from '../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import { resolvePaint } from '../resource';
-import { resolveContextualColor, resolveDropShadow, resolveEffectivePath, resolveGraphicOpacity } from '../style';
-import type { ResolvedInlineSourceSegment, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
+import { resolveContextualColor, resolveDropShadow, mergePathStyle, resolveGraphicOpacity } from '../style';
+import type { InlineSegmentColorSource, LabelTextColorSource, TextLineColorSource } from '../text';
 import { resolvePathDefinition } from './provider';
 import type {
   CanonicalPath,
@@ -29,10 +29,10 @@ import type {
   PathResolution,
   PathResolveContext,
   PathTargetResolver,
-  ResolvedMarkStyle,
-  ResolvedPathLabel,
-  ResolvedPathSource,
-  ResolvedStepSource,
+  MarkColorSource,
+  PathLabelColorSource,
+  PathColorSource,
+  StepColorSource,
   TargetResolution,
 } from './types';
 
@@ -47,15 +47,15 @@ const LABEL_POSITION: Record<string, number> = {
 };
 
 /** 判断 Path 是否为内置 Stroke 宿主 */
-const isBuiltinStrokePath = (path: ResolvedPathSource): boolean =>
+const isBuiltinStrokePath = (path: PathColorSource): boolean =>
   (path.kind ?? BuiltinPath.Stroke) === BuiltinPath.Stroke;
 
 /** 判断 Path 是否没有有效填充 */
-const hasNoEffectivePathFill = (path: ResolvedPathSource): boolean =>
+const hasNoEffectivePathFill = (path: PathColorSource): boolean =>
   path.style?.fill === undefined || path.style.fill === 'none';
 
 /** 检查标签断线配置：显式设置仅限内置 Stroke 路径，开启时要求路径无填充 */
-const assertPathLabelInterruption = (label: ResolvedPathLabel, path: ResolvedPathSource, labelPath: string): void => {
+const assertPathLabelInterruption = (label: PathLabelColorSource, path: PathColorSource, labelPath: string): void => {
   if (label.interrupt === undefined) return;
   if (!isBuiltinStrokePath(path)) {
     throw new RetikzCoreError(
@@ -73,7 +73,7 @@ const assertPathLabelInterruption = (label: ResolvedPathLabel, path: ResolvedPat
 };
 
 /** 检查路径和步骤标签是否满足断线条件 */
-const assertPathLabelInterruptionPolicy = (path: ResolvedPathSource, irPath: string): void => {
+const assertPathLabelInterruptionPolicy = (path: PathColorSource, irPath: string): void => {
   if (path.label !== undefined) {
     if (Array.isArray(path.label)) {
       for (const [index, label] of path.label.entries()) {
@@ -92,7 +92,7 @@ const assertPathLabelInterruptionPolicy = (path: ResolvedPathSource, irPath: str
 };
 
 /** 检查端点箭头重叠配置是否用于内置 Stroke 路径 */
-const assertPathEndpointOverlapHost = (path: ResolvedPathSource, irPath: string): void => {
+const assertPathEndpointOverlapHost = (path: PathColorSource, irPath: string): void => {
   if (isBuiltinStrokePath(path)) return;
 
   for (const [index, placement] of Object.entries(path.arrow ?? {})) {
@@ -131,13 +131,13 @@ export const resolvePathLabelPlacement = (
 };
 
 /** 为已解析颜色的标签补齐放置与断线默认值 */
-const canonicalizeLabel = (label: ResolvedPathLabel, canAutomaticallyInterrupt: boolean): CanonicalPathLabel => ({
+const canonicalizeLabel = (label: PathLabelColorSource, canAutomaticallyInterrupt: boolean): CanonicalPathLabel => ({
   ...label,
   ...resolvePathLabelPlacement(label, canAutomaticallyInterrupt),
 });
 
 /** 为路径步骤及其标签补齐静态默认值，保留目标引用供后续解析 */
-const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: boolean): CanonicalStep => {
+const canonicalizeStep = (step: StepColorSource, canAutomaticallyInterrupt: boolean): CanonicalStep => {
   if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
 
   const label = step.label === undefined ? undefined : canonicalizeLabel(step.label, canAutomaticallyInterrupt);
@@ -171,16 +171,16 @@ const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: b
 
 /** 按原顺序补齐每个路径步骤的默认值 */
 const canonicalizeSteps = (
-  steps: ReadonlyArray<ResolvedStepSource> | undefined,
+  steps: ReadonlyArray<StepColorSource> | undefined,
   canAutomaticallyInterrupt: boolean,
 ): Array<CanonicalStep> | undefined => steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt));
 
 /** 合入路径样式并展开步骤、标签与阴影默认值，填充和描边资源随后解析 */
 const canonicalizePath = (
-  path: ResolvedPathSource,
+  path: PathColorSource,
   canAutomaticallyInterrupt: boolean,
 ): Omit<CanonicalPath, 'fill' | 'stroke' | 'strokeWidth'> &
-  Pick<NonNullable<ResolvedPathSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
+  Pick<NonNullable<PathColorSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
   const { style, ...source } = path;
   const { opacity, ...visual } = style ?? {};
   return {
@@ -213,7 +213,7 @@ const resolveLabelSegmentColor = (
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
-): ResolvedInlineSourceSegment => {
+): InlineSegmentColorSource => {
   const { fill, ...source } = segment;
   return {
     ...source,
@@ -235,7 +235,7 @@ const resolvePathLabelTextLine = (
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
-): ResolvedTextLine => {
+): TextLineColorSource => {
   if (typeof text === 'string') return text;
   if ('segments' in text) {
     return {
@@ -266,7 +266,7 @@ const resolvePathLabelText = (
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
-): ResolvedLabelTextBlock =>
+): LabelTextColorSource =>
   Array.isArray(text)
     ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, context, `${fieldPath}[${index}]`))
     : text;
@@ -277,7 +277,7 @@ export const resolvePathLabelColors = (
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
-): ResolvedPathLabel => {
+): PathLabelColorSource => {
   const { textColor, text, ...source } = label;
   const resolvedTextColor =
     textColor === undefined
@@ -302,8 +302,8 @@ const resolveStepLabelColors = (
   masterColor: string | undefined,
   context: PathResolveContext,
   fieldPath: string,
-): ResolvedStepSource => {
-  if (!('label' in step)) return step as ResolvedStepSource;
+): StepColorSource => {
+  if (!('label' in step)) return step as StepColorSource;
 
   const { label, ...source } = step;
   if (label === undefined) return source;
@@ -320,7 +320,7 @@ const resolveMarkColors = (
   masterColor: string | undefined,
   context: PathResolveContext,
   fieldPath: string,
-): ResolvedMarkStyle => {
+): MarkColorSource => {
   const { color, fill, stroke, ...source } = mark;
   const resolvedColor =
     color === undefined
@@ -367,7 +367,7 @@ const resolvePathContextualColors = (
   context: PathResolveContext,
   irPath: string,
   labelMasterColor: string | undefined,
-): ResolvedPathSource => {
+): PathColorSource => {
   const { style, children, label, marks, arrow, ...source } = path;
   const { fill, stroke, ...visual } = style ?? {};
   const masterColor = path.style?.color;
@@ -558,7 +558,7 @@ const resolveSteps = (
  * @description 补齐静态默认值并绑定可确定的目标；箭头与沿线标记定义在实际编译 Stroke 时另行解析
  */
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
-  const styled = context.scopeDefaults === undefined ? path : resolveEffectivePath(path, context.scopeDefaults);
+  const styled = context.scopeDefaults === undefined ? path : mergePathStyle(path, context.scopeDefaults);
   const irPath = context.irPath ?? 'path';
   const labelDefault = context.scopeDefaults?.path?.label ?? {};
   const labelMasterColor = labelDefault.color ?? styled.style?.color;

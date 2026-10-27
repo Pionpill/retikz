@@ -1,6 +1,6 @@
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import { createInputScene, Node } from '@retikz/react';
-import { createSurface, FrameProvider, SurfaceProvider } from '@retikz/standard/presentation';
+import { createSurface, frameProvider, surfaceProvider } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -37,8 +37,8 @@ describe('<Surface>', () => {
       }),
     );
     expect(contribution.providerDependencies).toEqual({
-      roots: [SurfaceProvider.key],
-      providers: [SurfaceProvider, PathClipProvider],
+      roots: [surfaceProvider.key],
+      providers: [surfaceProvider, pathClipProvider],
     });
   });
 
@@ -54,8 +54,8 @@ describe('<Surface>', () => {
 
     expect(result.ir.children).toHaveLength(1);
     expect(result.contributions).toHaveLength(1);
-    expect(result.contributions[0]?.roots).toEqual([SurfaceProvider.key, FrameProvider.key]);
-    expect(result.contributions[0]?.providers).toEqual([SurfaceProvider, PathClipProvider, FrameProvider]);
+    expect(result.contributions[0]?.roots).toEqual([surfaceProvider.key, frameProvider.key]);
+    expect(result.contributions[0]?.providers).toEqual([surfaceProvider, pathClipProvider, frameProvider]);
     expect(result.ir.children[0]).toMatchObject({
       namespace: 'standard',
       type: 'surface',

@@ -2,7 +2,7 @@ import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
 import type { ScenePrimitive } from '../scene';
 
 /** Pattern definition 消费的已解析线条样式 */
-export type ResolvedPatternLineStyle = {
+export type CanonicalPatternLineStyle = {
   /** motif 描边颜色 */
   color: string;
   /** motif 描边宽度 */
@@ -18,11 +18,11 @@ export type ResolvedPatternLineStyle = {
 };
 
 /** Pattern definition 消费的完整线条样式周期 */
-export type ResolvedPatternLineStyleCycle = {
+export type CanonicalPatternLineStyleCycle = {
   /** 一个周期包含的相邻线条数量 */
   period: number;
   /** 按零基 index 展开的完整样式数组 */
-  styles: ReadonlyArray<ResolvedPatternLineStyle>;
+  styles: ReadonlyArray<CanonicalPatternLineStyle>;
 };
 
 /**
@@ -54,11 +54,11 @@ export type PatternEmitContext = {
   /** 描边拐角连接 */
   lineJoin?: IRPatternPaint['lineJoin'];
   /** 已继承基础字段并解析 preset 的横向线条样式 */
-  horizontalStyle?: ResolvedPatternLineStyle;
+  horizontalStyle?: CanonicalPatternLineStyle;
   /** 已继承基础字段并解析 preset 的纵向线条样式 */
-  verticalStyle?: ResolvedPatternLineStyle;
+  verticalStyle?: CanonicalPatternLineStyle;
   /** 已按 index 展开并解析继承关系的线条样式周期 */
-  lineStyleCycle?: ResolvedPatternLineStyleCycle;
+  lineStyleCycle?: CanonicalPatternLineStyleCycle;
   /** 精度取整函数（与 compile/render 同一 round，保几何一致） */
   round: (n: number) => number;
 };

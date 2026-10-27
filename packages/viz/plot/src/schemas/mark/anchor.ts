@@ -35,7 +35,7 @@ export const AnchorIdSchema = strictObject({
     'JSON-safe id template supporting {plotId}, {markId}, {markIndex}, {index}, and {field:name} placeholders',
   ),
   generator: NonBlankStringSchema.optional().describe(
-    'Runtime generator key resolved from LowerPlotsOptions.anchorIdGenerators; the function itself is not stored in the IRPlot',
+    'Runtime generator key resolved from PlotsLoweringOptions.anchorIdGenerators; the function itself is not stored in the IRPlot',
   ),
 })
   .superRefine((spec, ctx) => {

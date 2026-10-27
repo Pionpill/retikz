@@ -1,5 +1,5 @@
 import { compileToScene } from '@retikz/core';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { normalizeScene, path, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -46,7 +46,7 @@ describe('Ribbon 的 Vanilla 预览', () => {
       ],
     });
     const compile = (ir: typeof preview.ir) =>
-      compileToScene(ir, { paths: [RibbonPathDefinition] }).scene.primitives.find(p => p.type === 'path');
+      compileToScene(ir, { paths: [ribbonPathDefinition] }).scene.primitives.find(p => p.type === 'path');
     const reactPath = compile(preview.ir);
 
     expect(reactPath?.type).toBe('path');
@@ -78,12 +78,12 @@ describe('Ribbon 的 Vanilla 预览', () => {
   it('将 React 演示 Path 携带到生成的源和 SVG 渲染中', () => {
     const preview = buildPreviewIR(RibbonBasicDemo);
 
-    expect(preview.paths).toEqual([RibbonPathDefinition]);
+    expect(preview.paths).toEqual([ribbonPathDefinition]);
 
     const vanilla = buildVanillaPreview(preview);
 
-    expect(vanilla.code).toContain("import { RibbonPathDefinition } from '@retikz/extension';");
-    expect(vanilla.code).toContain('paths: [RibbonPathDefinition]');
+    expect(vanilla.code).toContain("import { ribbonPathDefinition } from '@retikz/extension';");
+    expect(vanilla.code).toContain('paths: [ribbonPathDefinition]');
     expect(vanilla.code).not.toContain('Failed to generate Vanilla preview');
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('<path');

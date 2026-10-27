@@ -26,7 +26,7 @@ const entity = (input: Record<string, unknown> = {}) =>
 describe('Entity 下降', () => {
   it.each(['IR', 'Source IR\nCanonical IR'])('%s 的资源端帽与活动边界保持对齐', text => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
     const boundsOf = (role: string) =>
       compileToScene({ type: 'scene', version: 1, children: [entity({ role, text })] }, { ...definitions, padding: 0 })
@@ -86,7 +86,7 @@ describe('Entity 下降', () => {
 
   it('编译直接 Entity Scene 子级并保留省略的 id', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
     const output = compileToScene(
       { type: 'scene', version: 1, children: [entity({ role: 'activity', text: 'work' })] },
@@ -195,7 +195,7 @@ describe('Entity 下降', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [
         {
-          roots: [Graph.EntityProviderKey],
+          roots: [Graph.entityProviderKey],
           providers: Graph.createGraphProviders({ entityRoles: [customRole] }),
         },
       ],

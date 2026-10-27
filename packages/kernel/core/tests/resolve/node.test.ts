@@ -7,7 +7,7 @@ import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveShapeRegistry } from '../../src/providers/shape';
 import { resolveNode } from '../../src/resolve/node';
-import type { EffectiveScopeDefaults } from '../../src/resolve/style';
+import type { MergedScopeDefaults } from '../../src/resolve/style';
 import { resolveScopeDefaults } from '../../src/resolve/style';
 import type { IRNode, IRScene } from '../../src/schemas';
 
@@ -23,7 +23,7 @@ const sceneWith = (child: IRNode): IRScene => ({
   children: [child],
 });
 
-const resolve = (source: IRNode, scopeDefaults: EffectiveScopeDefaults = {}) =>
+const resolve = (source: IRNode, scopeDefaults: MergedScopeDefaults = {}) =>
   resolveNode(source, {
     scopeDefaults,
     mode: 'light',

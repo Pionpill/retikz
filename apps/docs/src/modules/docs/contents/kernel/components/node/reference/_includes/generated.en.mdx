@@ -413,14 +413,14 @@ export type NodeTextColor = ValueOf<typeof NodeTextColor>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
+export type BoundaryDefinition = InputBoundaryDefinition<JsonObject>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BoundaryDefinitionInput"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={21}>BoundaryDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputBoundaryDefinition"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={21}>InputBoundaryDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -445,7 +445,7 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type BoundaryDefinitionInput<TParams extends JsonObject> = {
+export type InputBoundaryDefinition<TParams extends JsonObject> = {
   name: string;
   paramsSchema: ZodType<TParams>;
   resolveRect?: (context: BoundaryFitContext, params: TParams) => CenteredBox;
@@ -477,7 +477,7 @@ All functions receive `JsonObject`; `paramsSchema.parse` guarantees the concrete
 | `computeEdgePoint?`            | `(rect: CenteredBox, side: Side, t: number, params: Record<string, JsonValue>) => Position`                                                   | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
 | `computeKeyPoints?`            | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                        | Return stable provider-named structural key points; names must be unique within an instance                                                                                                                                                                                               |
 | `computeOutline?`              | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                                                        | —                        | Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry                                                                                                                                                                   |
-| `emit`                         | `(rect: CenteredBox, style: ResolvedShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                        | Emit visual primitives inside an axis-aligned rect                                                                                                                                                                                                                                        |
+| `emit`                         | `(rect: CenteredBox, style: CompiledShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                        | Emit visual primitives inside an axis-aligned rect                                                                                                                                                                                                                                        |
 | `name`                         | `string`                                                                                                                                      | —                        | Shape name referenced by IR `node.shape`                                                                                                                                                                                                                                                  |
 | `paramsSchema`                 | `ShapeDefinition["paramsSchema"]`                                                                                                             | —                        | Instance parameter schema<br />The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters                                                                                                                                                           |
 | `resolveAnchor`                | `(rect: CenteredBox, name: ShapeAnchorName, params: Record<string, JsonValue>) => Position \| undefined`                                      | —                        | Resolve a named anchor in world coordinates; return `undefined` when unsupported                                                                                                                                                                                                          |
@@ -490,14 +490,14 @@ All functions receive `JsonObject`; `paramsSchema.parse` guarantees the concrete
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
+export type ShapeDefinition = InputShapeDefinition<JsonObject>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinitionInput"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={124}>ShapeDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={124}>InputShapeDefinition</ApiSourceLink>
 
 Runtime capability contract shared by third-party and built-in shapes; the definition itself is not stored in IR. Each capability function receives instance-level `params` as its last argument.
 
@@ -516,7 +516,7 @@ Runtime capability contract shared by third-party and built-in shapes; the defin
 | `computeEdgePoint?`            | `(rect: CenteredBox, side: Side, t: number, params: TParams) => Position`                                                   | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
 | `computeKeyPoints?`            | `(rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                   | —                        | Return stable provider-named structural key points; names must be unique within an instance                                                                                                                                                                                               |
 | `computeOutline?`              | `(rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>`                                                        | —                        | Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry                                                                                                                                                                   |
-| `emit`                         | `(rect: CenteredBox, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>` | —                        | Emit visual primitives inside an axis-aligned rect                                                                                                                                                                                                                                        |
+| `emit`                         | `(rect: CenteredBox, style: CompiledShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>` | —                        | Emit visual primitives inside an axis-aligned rect                                                                                                                                                                                                                                        |
 | `name`                         | `string`                                                                                                                    | —                        | Shape name referenced by IR `node.shape`                                                                                                                                                                                                                                                  |
 | `paramsSchema`                 | `ZodType<TParams>`                                                                                                          | —                        | Instance parameter schema<br />The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters                                                                                                                                                           |
 | `resolveAnchor`                | `(rect: CenteredBox, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                      | —                        | Resolve a named anchor in world coordinates; return `undefined` when unsupported                                                                                                                                                                                                          |
@@ -529,7 +529,7 @@ Runtime capability contract shared by third-party and built-in shapes; the defin
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type ShapeDefinitionInput<TParams extends JsonObject> = {
+export type InputShapeDefinition<TParams extends JsonObject> = {
   name: string;
   paramsSchema: ZodType<TParams>;
   computeCircumscribedGeometry: (
@@ -549,7 +549,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   computeEdgePoint?: (rect: CenteredBox, side: Side, t: number, params: TParams) => Position;
   emit: (
     rect: CenteredBox,
-    style: ResolvedShapeStyle,
+    style: CompiledShapeStyle,
     round: (n: number) => number,
     params: TParams,
   ) => Iterable<ScenePrimitive>;
@@ -626,7 +626,7 @@ Add the result to CompileOptions.boundaries so nodes or path endpoints can refer
 | Category        | Name      | Type / signature                   | Description                                                                                                        |
 | --------------- | --------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Type parameters | `TParams` | `extends JsonObject`               | JSON object type parsed by paramsSchema and shared by all boundary callbacks                                       |
-| Parameters      | `def`     | `BoundaryDefinitionInput<TParams>` | Boundary name, parameter schema, and connection geometry callbacks                                                 |
+| Parameters      | `def`     | `InputBoundaryDefinition<TParams>` | Boundary name, parameter schema, and connection geometry callbacks                                                 |
 | Returns         | —         | `BoundaryDefinition`               | The original definition typed as BoundaryDefinition for registry storage; the input is neither copied nor modified |
 
 </ApiTable>
@@ -637,7 +637,7 @@ Add the result to CompileOptions.boundaries so nodes or path endpoints can refer
 
 ```ts
 export declare const defineBoundary: <TParams extends JsonObject>(
-  def: BoundaryDefinitionInput<TParams>,
+  def: InputBoundaryDefinition<TParams>,
 ) => BoundaryDefinition;
 ```
 
@@ -658,7 +658,7 @@ Add the result to CompileOptions.shapes so nodes can reference its name through 
 | Category        | Name      | Type / signature                | Description                                                                                                     |
 | --------------- | --------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Type parameters | `TParams` | `extends JsonObject`            | JSON object type parsed by paramsSchema and shared by all shape callbacks                                       |
-| Parameters      | `def`     | `ShapeDefinitionInput<TParams>` | Shape name, parameter schema, and geometry and drawing callbacks                                                |
+| Parameters      | `def`     | `InputShapeDefinition<TParams>` | Shape name, parameter schema, and geometry and drawing callbacks                                                |
 | Returns         | —         | `ShapeDefinition`               | The original definition typed as ShapeDefinition for registry storage; the input is neither copied nor modified |
 
 </ApiTable>
@@ -668,7 +668,7 @@ Add the result to CompileOptions.shapes so nodes can reference its name through 
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const defineShape: <TParams extends JsonObject>(def: ShapeDefinitionInput<TParams>) => ShapeDefinition;
+export declare const defineShape: <TParams extends JsonObject>(def: InputShapeDefinition<TParams>) => ShapeDefinition;
 ```
 
 </DocTab>

@@ -14,7 +14,7 @@ import {
   defineComposite,
   definePath,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
   PathSchema,
 } from '@retikz/core';
 import { prepareSceneCompilation } from '@retikz/core';
@@ -71,7 +71,7 @@ const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<Sce
 const resolvedResultOf = (
   context: CompositeCompileContext,
   child: IRChild,
-  proposal: LayoutProposal = NaturalLayoutProposal,
+  proposal: LayoutProposal = naturalLayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
@@ -309,7 +309,7 @@ describe('Core 规范 Runtime 拓扑', () => {
         type: literal('topologyReplay'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ type: 'node', position: [-100, 0] }, NaturalLayoutProposal);
+        context.layoutChild({ type: 'node', position: [-100, 0] }, naturalLayoutProposal);
         const selected = resolvedResultOf(context, { type: 'node', position: [0, 0] });
 
         return {

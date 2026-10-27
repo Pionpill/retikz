@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -6,7 +6,7 @@ import { definePlotTheme, resolvePlotTheme } from '../../src';
 
 describe('Plot 主题定义关闭', () => {
   it('自定义接收有效的 Core 主题并贡献 Source 默认/规则', () => {
-    let received: ResolvedTheme | undefined;
+    let received: CanonicalTheme | undefined;
     const style = definePlotTheme({
       name: 'definition-defaults',
       resolve: theme => {
@@ -17,7 +17,7 @@ describe('Plot 主题定义关闭', () => {
         };
       },
     });
-    const theme: ResolvedTheme = {
+    const theme: CanonicalTheme = {
       name: style.name,
       mode: ThemeMode.Dark,
       colors: {

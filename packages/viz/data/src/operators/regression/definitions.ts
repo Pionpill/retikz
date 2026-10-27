@@ -3,10 +3,10 @@ import type { AnyRegressionDefinition, AnySynchronousRegressionImplementation, R
 import { defineRegression, defineRegressionImplementation } from './contract';
 import { assertPositiveDomain, fitPolynomial, linearModel } from './models';
 import type { IRRegressionMethod } from './schema';
-import { BuiltinRegressionMethodSchemas } from './schema';
+import { BUILTIN_REGRESSION_METHOD_SCHEMAS } from './schema';
 
 /** 正自变量方法共用的预测域约束 */
-const validatePositiveExtent = (_operation: IRRegressionMethod, extent: readonly [number, number]): void => {
+const assertPositiveExtent = (_operation: IRRegressionMethod, extent: readonly [number, number]): void => {
   if (extent[0] <= 0) throw new RetikzDataError('data: regression sampling extent requires positive x values');
 };
 
@@ -15,7 +15,7 @@ const logarithmicPairs = (pairs: ReadonlyArray<RegressionPair>) =>
   pairs.map(pair => ({ x: Math.log(pair.x), y: pair.y }));
 
 /** Linear 拟合的纯语义定义 */
-const linearRegressionDefinition = defineRegression({ schema: BuiltinRegressionMethodSchemas.Linear });
+const linearRegressionDefinition = defineRegression({ schema: BUILTIN_REGRESSION_METHOD_SCHEMAS.Linear });
 
 /** Linear 的内置计算 */
 const linearRegressionImplementation = defineRegressionImplementation({
@@ -24,7 +24,7 @@ const linearRegressionImplementation = defineRegressionImplementation({
 });
 
 /** Quadratic 拟合的纯语义定义 */
-const quadraticRegressionDefinition = defineRegression({ schema: BuiltinRegressionMethodSchemas.Quadratic });
+const quadraticRegressionDefinition = defineRegression({ schema: BUILTIN_REGRESSION_METHOD_SCHEMAS.Quadratic });
 
 /** Quadratic 的内置计算 */
 const quadraticRegressionImplementation = defineRegressionImplementation({
@@ -33,7 +33,7 @@ const quadraticRegressionImplementation = defineRegressionImplementation({
 });
 
 /** Polynomial 拟合的纯语义定义 */
-const polynomialRegressionDefinition = defineRegression({ schema: BuiltinRegressionMethodSchemas.Polynomial });
+const polynomialRegressionDefinition = defineRegression({ schema: BUILTIN_REGRESSION_METHOD_SCHEMAS.Polynomial });
 
 /** Polynomial 的内置计算 */
 const polynomialRegressionImplementation = defineRegressionImplementation({
@@ -43,8 +43,8 @@ const polynomialRegressionImplementation = defineRegressionImplementation({
 
 /** Logarithmic 拟合的纯语义定义 */
 const logarithmicRegressionDefinition = defineRegression({
-  schema: BuiltinRegressionMethodSchemas.Logarithmic,
-  validateExtent: validatePositiveExtent,
+  schema: BUILTIN_REGRESSION_METHOD_SCHEMAS.Logarithmic,
+  validateExtent: assertPositiveExtent,
 });
 
 /** Logarithmic 的内置计算 */
@@ -57,7 +57,7 @@ const logarithmicRegressionImplementation = defineRegressionImplementation({
 });
 
 /** Exponential 拟合的纯语义定义 */
-const exponentialRegressionDefinition = defineRegression({ schema: BuiltinRegressionMethodSchemas.Exponential });
+const exponentialRegressionDefinition = defineRegression({ schema: BUILTIN_REGRESSION_METHOD_SCHEMAS.Exponential });
 
 /** Exponential 的内置计算 */
 const exponentialRegressionImplementation = defineRegressionImplementation({
@@ -74,8 +74,8 @@ const exponentialRegressionImplementation = defineRegressionImplementation({
 
 /** Power 拟合的纯语义定义 */
 const powerRegressionDefinition = defineRegression({
-  schema: BuiltinRegressionMethodSchemas.Power,
-  validateExtent: validatePositiveExtent,
+  schema: BUILTIN_REGRESSION_METHOD_SCHEMAS.Power,
+  validateExtent: assertPositiveExtent,
 });
 
 /** Power 的内置计算 */

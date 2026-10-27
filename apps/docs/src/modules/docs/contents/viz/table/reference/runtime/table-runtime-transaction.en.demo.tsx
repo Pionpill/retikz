@@ -57,7 +57,7 @@ const Demo: FC = () => (
           >
             <Text font={{ size: 14, weight: 'bold' }}>Natural probes</Text>
             <Text fill="gray" font={{ size: 11 }}>
-              NaturalLayoutProposal
+              naturalLayoutProposal
             </Text>
           </Node>
           <Node
@@ -174,7 +174,7 @@ const Demo: FC = () => (
             id: 'mobile-intrinsic',
             position: [-40, -85],
             title: 'Natural probes',
-            detail: 'NaturalLayoutProposal',
+            detail: 'naturalLayoutProposal',
             width: 200,
             color: 'dodgerblue',
           })}

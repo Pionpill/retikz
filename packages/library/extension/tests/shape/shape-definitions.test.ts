@@ -3,19 +3,19 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import {
-  ContourShapeDefinition,
-  ContourShapeProvider,
-  CrossShapeDefinition,
-  CrossShapeProvider,
-  EllipticCapsuleShapeDefinition,
-  EllipticCapsuleShapeProvider,
-  SectorShapeDefinition,
-  SectorShapeProvider,
-  ExtensionShapeDefinitions,
+  contourShapeDefinition,
+  contourShapeProvider,
+  crossShapeDefinition,
+  crossShapeProvider,
+  ellipticCapsuleShapeDefinition,
+  ellipticCapsuleShapeProvider,
+  sectorShapeDefinition,
+  sectorShapeProvider,
+  extensionShapeDefinitions,
   BuiltinExtensionShapeName,
-  ExtensionShapeProviders,
-  StarShapeDefinition,
-  StarShapeProvider,
+  extensionShapeProviders,
+  starShapeDefinition,
+  starShapeProvider,
 } from '../../src/node-shape';
 
 const scene = (children: IRScene['children']): IRScene => ({ type: 'scene', version: 1, children });
@@ -55,7 +55,7 @@ describe('扩展可选形状定义', () => {
           },
         },
       ]),
-      { padding: 0, shapes: [CrossShapeDefinition] },
+      { padding: 0, shapes: [crossShapeDefinition] },
     ).scene;
 
     const path = firstPath(compiled.primitives);
@@ -86,7 +86,7 @@ describe('扩展可选形状定义', () => {
           shape: { type: 'cross', params: { width: 6, height: 10 } },
         },
       ]),
-      { padding: 0, shapes: [CrossShapeDefinition] },
+      { padding: 0, shapes: [crossShapeDefinition] },
     ).scene;
 
     const path = firstPath(compiled.primitives);
@@ -123,7 +123,7 @@ describe('扩展可选形状定义', () => {
           },
         },
       ]),
-      { padding: 0, shapes: [CrossShapeDefinition] },
+      { padding: 0, shapes: [crossShapeDefinition] },
     ).scene;
 
     const path = firstPath(compiled.primitives);
@@ -154,7 +154,7 @@ describe('扩展可选形状定义', () => {
           shape: { type: 'sector', params: { innerRadius: 20, outerRadius: 20, startAngle: 0, endAngle: 90 } },
         },
       ]),
-      { padding: 0, shapes: [SectorShapeDefinition] },
+      { padding: 0, shapes: [sectorShapeDefinition] },
     ).scene;
 
     const path = firstPath(compiled.primitives);
@@ -177,7 +177,7 @@ describe('扩展可选形状定义', () => {
             shape: { type: 'sector', params: { innerRadius: 21, outerRadius: 20, startAngle: 0, endAngle: 90 } },
           },
         ]),
-        { padding: 0, shapes: [SectorShapeDefinition] },
+        { padding: 0, shapes: [sectorShapeDefinition] },
       ),
     ).toThrow('outerRadius must be greater than or equal to innerRadius');
   });
@@ -213,7 +213,7 @@ describe('扩展可选形状定义', () => {
       ]),
       {
         padding: 0,
-        shapes: [CrossShapeDefinition, SectorShapeDefinition, StarShapeDefinition, ContourShapeDefinition],
+        shapes: [crossShapeDefinition, sectorShapeDefinition, starShapeDefinition, contourShapeDefinition],
       },
     ).scene;
 
@@ -256,7 +256,7 @@ describe('扩展可选形状定义', () => {
       ]),
       {
         padding: 0,
-        shapes: [CrossShapeDefinition, SectorShapeDefinition, StarShapeDefinition, ContourShapeDefinition],
+        shapes: [crossShapeDefinition, sectorShapeDefinition, starShapeDefinition, contourShapeDefinition],
       },
     ).scene;
     const paths = pathsOf(compiled.primitives);
@@ -293,13 +293,13 @@ describe('扩展可选形状定义', () => {
   });
 
   it('通过独立的静态 Core 提供者导出每个形状', () => {
-    expect(CrossShapeProvider.makeDefinition([])).toBe(CrossShapeDefinition);
-    expect(SectorShapeProvider.makeDefinition([])).toBe(SectorShapeDefinition);
-    expect(StarShapeProvider.makeDefinition([])).toBe(StarShapeDefinition);
-    expect(ContourShapeProvider.makeDefinition([])).toBe(ContourShapeDefinition);
-    expect(EllipticCapsuleShapeProvider.makeDefinition([])).toBe(EllipticCapsuleShapeDefinition);
-    expect(EllipticCapsuleShapeDefinition.name).toBe(BuiltinExtensionShapeName.EllipticCapsule);
-    expect(ExtensionShapeDefinitions).toContain(EllipticCapsuleShapeDefinition);
-    expect(ExtensionShapeProviders).toContain(EllipticCapsuleShapeProvider);
+    expect(crossShapeProvider.makeDefinition([])).toBe(crossShapeDefinition);
+    expect(sectorShapeProvider.makeDefinition([])).toBe(sectorShapeDefinition);
+    expect(starShapeProvider.makeDefinition([])).toBe(starShapeDefinition);
+    expect(contourShapeProvider.makeDefinition([])).toBe(contourShapeDefinition);
+    expect(ellipticCapsuleShapeProvider.makeDefinition([])).toBe(ellipticCapsuleShapeDefinition);
+    expect(ellipticCapsuleShapeDefinition.name).toBe(BuiltinExtensionShapeName.EllipticCapsule);
+    expect(extensionShapeDefinitions).toContain(ellipticCapsuleShapeDefinition);
+    expect(extensionShapeProviders).toContain(ellipticCapsuleShapeProvider);
   });
 });

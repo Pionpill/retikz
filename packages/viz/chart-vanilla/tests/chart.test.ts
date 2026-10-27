@@ -19,12 +19,12 @@ import { literal, strictObject } from 'zod';
 
 import { renderChart } from '../src';
 import {
-  ScatterChartInputEmbedAdapter,
-  BubbleChartInputEmbedAdapter,
-  ConnectedScatterChartInputEmbedAdapter,
-  RangedDotChartInputEmbedAdapter,
-  RegressionChartInputEmbedAdapter,
-  StripChartInputEmbedAdapter,
+  scatterChartInputEmbedAdapter,
+  bubbleChartInputEmbedAdapter,
+  connectedScatterChartInputEmbedAdapter,
+  rangedDotChartInputEmbedAdapter,
+  regressionChartInputEmbedAdapter,
+  stripChartInputEmbedAdapter,
 } from '../src/point';
 import {
   bubbleChart,
@@ -36,12 +36,12 @@ import {
 } from '../src/point';
 
 const adapters = [
-  ScatterChartInputEmbedAdapter,
-  BubbleChartInputEmbedAdapter,
-  ConnectedScatterChartInputEmbedAdapter,
-  RangedDotChartInputEmbedAdapter,
-  RegressionChartInputEmbedAdapter,
-  StripChartInputEmbedAdapter,
+  scatterChartInputEmbedAdapter,
+  bubbleChartInputEmbedAdapter,
+  connectedScatterChartInputEmbedAdapter,
+  rangedDotChartInputEmbedAdapter,
+  regressionChartInputEmbedAdapter,
+  stripChartInputEmbedAdapter,
 ];
 
 const sourceOf = (chart: AnyInputEmbed): IRChartSource =>

@@ -448,16 +448,16 @@ export type InputEllipse = InputShape<IREllipse>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CircleInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/circle.ts"} startLine={12}>CircleInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"circleInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/circle.ts"} startLine={12}>circleInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const CircleInputEmbedAdapter: SynchronousInputEmbedAdapter<InputCircle & { id?: string }>;
+export declare const circleInputEmbedAdapter: SynchronousInputEmbedAdapter<InputCircle & { id?: string }>;
 ```
 
-#### <ApiSourceLink label={"EllipseInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/ellipse.ts"} startLine={12}>EllipseInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"ellipseInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/ellipse.ts"} startLine={12}>ellipseInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const EllipseInputEmbedAdapter: SynchronousInputEmbedAdapter<InputEllipse & { id?: string }>;
+export declare const ellipseInputEmbedAdapter: SynchronousInputEmbedAdapter<InputEllipse & { id?: string }>;
 ```
 
 **Persistent configuration**
@@ -682,7 +682,7 @@ export type IREllipse = ShapeSource<ZodInput<typeof EllipseSchema>>;
 
 **Extension definitions and registration**
 
-#### <ApiSourceLink label={"CircleDefinition"} path={"packages/library/standard/src/shape/circle/composite.ts"} startLine={10}>CircleDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"circleDefinition"} path={"packages/library/standard/src/shape/circle/composite.ts"} startLine={10}>circleDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -704,7 +704,7 @@ export type IREllipse = ShapeSource<ZodInput<typeof EllipseSchema>>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export const CircleDefinition = defineComposite({
+export const circleDefinition = defineComposite({
   namespace: 'standard',
   type: 'circle',
   schema: CircleSchema,
@@ -716,16 +716,16 @@ export const CircleDefinition = defineComposite({
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CircleProvider"} path={"packages/library/standard/src/shape/circle/composite.ts"} startLine={25}>CircleProvider</ApiSourceLink>
+#### <ApiSourceLink label={"circleProvider"} path={"packages/library/standard/src/shape/circle/composite.ts"} startLine={25}>circleProvider</ApiSourceLink>
 
 ```ts
-export const CircleProvider: CoreDependencyProvider = Object.freeze({
+export const circleProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'circle' }),
-  makeDefinition: () => CircleDefinition,
+  makeDefinition: () => circleDefinition,
 });
 ```
 
-#### <ApiSourceLink label={"EllipseDefinition"} path={"packages/library/standard/src/shape/ellipse/composite.ts"} startLine={10}>EllipseDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ellipseDefinition"} path={"packages/library/standard/src/shape/ellipse/composite.ts"} startLine={10}>ellipseDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -747,7 +747,7 @@ export const CircleProvider: CoreDependencyProvider = Object.freeze({
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export const EllipseDefinition = defineComposite({
+export const ellipseDefinition = defineComposite({
   namespace: 'standard',
   type: 'ellipse',
   schema: EllipseSchema,
@@ -759,12 +759,12 @@ export const EllipseDefinition = defineComposite({
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipseProvider"} path={"packages/library/standard/src/shape/ellipse/composite.ts"} startLine={25}>EllipseProvider</ApiSourceLink>
+#### <ApiSourceLink label={"ellipseProvider"} path={"packages/library/standard/src/shape/ellipse/composite.ts"} startLine={25}>ellipseProvider</ApiSourceLink>
 
 ```ts
-export const EllipseProvider: CoreDependencyProvider = Object.freeze({
+export const ellipseProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'ellipse' }),
-  makeDefinition: () => EllipseDefinition,
+  makeDefinition: () => ellipseDefinition,
 });
 ```
 

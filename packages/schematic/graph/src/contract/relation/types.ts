@@ -41,7 +41,7 @@ export type RelationKindDefinition = Readonly<{
  * Relation predicate 作者侧的类型安全定义
  * @template TSchema 校验 predicate 参数的 JSON 对象 schema，其输出类型传给结构解析回调
  */
-export type RelationPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
+export type InputRelationPredicateDefinition<TSchema extends ZodType<JsonObject>> = Readonly<{
   /** 全局唯一的 predicate definition name */
   name: string;
   /** predicate 所属的 Relation role */
@@ -57,4 +57,4 @@ export type RelationPredicateDefinitionInput<TSchema extends ZodType<JsonObject>
 }>;
 
 /** Relation predicate registry 保存的参数擦除定义 */
-export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodType<JsonObject>>;
+export type RelationPredicateDefinition = InputRelationPredicateDefinition<ZodType<JsonObject>>;

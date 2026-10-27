@@ -10,7 +10,7 @@ import {
 } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
-import { PlotInputEmbedAdapter, createPlotLineageCompileDriver, renderPlot, renderPlotAsync } from '../src';
+import { plotInputEmbedAdapter, createPlotLineageCompileDriver, renderPlot, renderPlotAsync } from '../src';
 
 const rows = [
   { x: 1, y: 2 },
@@ -42,7 +42,7 @@ describe('异步 Plot 编写', () => {
           }),
         ],
       });
-    const options = { adapters: [PlotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
+    const options = { adapters: [plotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
     const a = await createProcessingControllerAsync(input(first), options);
     const b = await createProcessingControllerAsync(input(second), options);
 
@@ -71,7 +71,7 @@ describe('异步 Plot 编写', () => {
     const input = (onLineage: typeof second) =>
       embed({ kind: 'plot', props: { spec: spec(), datasets: { rows }, onLineage } });
     const source = scene({ children: [input(first), input(second)] });
-    const options = { adapters: [PlotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
+    const options = { adapters: [plotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
 
     try {
       const discarded = await prepareStaticProcessingAsync(source, options);
@@ -155,7 +155,7 @@ describe('异步 Plot 编写', () => {
     const input = (values: typeof rows) =>
       embed({ kind: 'plot', props: { spec: plot, dataBindings: { rows: { kind: 'rows', rows: values } } } });
     const result = await processToStaticInputResultAsync(scene({ children: [input(rows), input([{ x: 3, y: 1 }])] }), {
-      adapters: [PlotInputEmbedAdapter],
+      adapters: [plotInputEmbedAdapter],
     });
 
     expect(result.scene.primitives).toHaveLength(2);

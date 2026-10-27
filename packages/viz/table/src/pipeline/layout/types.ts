@@ -9,7 +9,7 @@ import type {
 } from '../../schemas';
 
 /** 已物化运行时默认值的弹性轨道尺寸 */
-type ResolvedTableFractionTrackSize = Readonly<
+type CanonicalTableFractionTrackSize = Readonly<
   Omit<IRTableFractionTrackSize, 'weight'> & {
     /** 有限正弹性权重 */
     weight: number;
@@ -17,21 +17,21 @@ type ResolvedTableFractionTrackSize = Readonly<
 >;
 
 /** 已物化运行时默认值的 minmax 轨道尺寸 */
-type ResolvedTableMinmaxTrackSize = Readonly<{
+type CanonicalTableMinmaxTrackSize = Readonly<{
   /** minmax 判别值 */
   kind: 'minmax';
   /** 固定或内容自然下界 */
   min: IRTableFixedTrackSize | IRTableAutoTrackSize;
   /** 固定、内容自然或已解析弹性上界 */
-  max: IRTableFixedTrackSize | IRTableAutoTrackSize | ResolvedTableFractionTrackSize;
+  max: IRTableFixedTrackSize | IRTableAutoTrackSize | CanonicalTableFractionTrackSize;
 }>;
 
 /** numeric solver 消费的轨道尺寸 */
-export type ResolvedTableTrackSize =
+export type CanonicalTableTrackSize =
   | IRTableFixedTrackSize
   | IRTableAutoTrackSize
-  | ResolvedTableFractionTrackSize
-  | ResolvedTableMinmaxTrackSize;
+  | CanonicalTableFractionTrackSize
+  | CanonicalTableMinmaxTrackSize;
 
 /** 单个 canonical 轨道的外部分配尺寸贡献 */
 export type TableTrackContribution = Readonly<{
@@ -42,9 +42,9 @@ export type TableTrackContribution = Readonly<{
 }>;
 
 /** 单轴 Table 轨道求解输入 */
-export type SolveTableTracksInput = Readonly<{
+export type InputTableTrackSizing = Readonly<{
   /** 与 canonical 轨道同序的 resolved size */
-  tracks: ReadonlyArray<ResolvedTableTrackSize>;
+  tracks: ReadonlyArray<CanonicalTableTrackSize>;
   /** 与内容类型无关的数值贡献 */
   contributions: ReadonlyArray<TableTrackContribution>;
   /** 相邻轨道间 finite nonnegative gap */
@@ -54,13 +54,13 @@ export type SolveTableTracksInput = Readonly<{
 }>;
 
 /** 已物化默认值的 Table layout 配置 */
-export type ResolvedTableLayout = Readonly<{
+export type CanonicalTableLayout = Readonly<{
   /** 默认 column 轨道尺寸 */
-  columnSize: ResolvedTableTrackSize;
+  columnSize: CanonicalTableTrackSize;
   /** 默认 body row 轨道尺寸 */
-  rowSize: ResolvedTableTrackSize;
+  rowSize: CanonicalTableTrackSize;
   /** 默认 columnHeader row 轨道尺寸 */
-  headerRowSize: ResolvedTableTrackSize;
+  headerRowSize: CanonicalTableTrackSize;
   /** canonical column 覆盖 */
   columns: ReadonlyArray<IRTableTrackOverride>;
   /** canonical row 覆盖 */
@@ -74,7 +74,7 @@ export type ResolvedTableLayout = Readonly<{
 }>;
 
 /** canonical row 或 column 的已求解轨道几何 */
-export type TableTrackLayout = Readonly<{
+export type CompiledTableTrackLayout = Readonly<{
   /** 可选的轨道语义标识 */
   id?: string;
   /** canonical 声明顺序 */
@@ -86,7 +86,7 @@ export type TableTrackLayout = Readonly<{
 }>;
 
 /** 单个 Cell 的完整布局几何 */
-export type TableCellLayout = Readonly<{
+export type CompiledTableCellLayout = Readonly<{
   /** 可选的单元格语义标识 */
   cellId?: string;
   /** Cell 左上角 bounds */
@@ -104,15 +104,15 @@ export type TableCellLayout = Readonly<{
 }>;
 
 /** Table 完整轨道与 Cell 布局结果 */
-export type TableLayout = Readonly<{
+export type CompiledTableLayout = Readonly<{
   /** tracks + gaps 的 Table allocation bounds */
   allocationBounds: BoundsRect;
   /** 可见 Cell / border 的 Table-local union */
   visualOverflowBounds: BoundsRect;
   /** 与 semantic rows 同序的轨道 */
-  rows: ReadonlyArray<TableTrackLayout>;
+  rows: ReadonlyArray<CompiledTableTrackLayout>;
   /** 与 semantic columns 同序的轨道 */
-  columns: ReadonlyArray<TableTrackLayout>;
+  columns: ReadonlyArray<CompiledTableTrackLayout>;
   /** 与 semantic Cells 同序的几何 */
-  cells: ReadonlyArray<TableCellLayout>;
+  cells: ReadonlyArray<CompiledTableCellLayout>;
 }>;

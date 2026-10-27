@@ -1,5 +1,5 @@
 import { createCanvas } from '@napi-rs/canvas';
-import type { PathPrimitive, RectPrimitive, ResolvedArrowEnd, Scene } from '@retikz/core';
+import type { PathPrimitive, RectPrimitive, CompiledArrowEnd, Scene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -49,7 +49,7 @@ it('编译后的中段mark在SVG和Canvas中保留透明度乘积', () => {
 });
 
 /** 最小可绘制的端点箭头规格（验证箭头随主路径一起进 shadow / blend 状态绘制） */
-const arrowEndSpec: ResolvedArrowEnd = {
+const arrowEndSpec: CompiledArrowEnd = {
   shape: 'stealth',
   baseSize: 10,
   refX: 0,

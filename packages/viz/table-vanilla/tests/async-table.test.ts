@@ -2,7 +2,7 @@ import { createDataTransformExecutor } from '@retikz/data';
 import { processToStaticInputResultAsync, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { TableInputEmbedAdapter, detailTable, embedTable, renderTable, renderTableAsync } from '../src';
+import { tableInputEmbedAdapter, detailTable, embedTable, renderTable, renderTableAsync } from '../src';
 
 const table = () =>
   detailTable({
@@ -56,7 +56,7 @@ describe('异步 Table 编写', () => {
     const input = (values: Array<number>) =>
       embedTable(spec, { dataBindings: { rows: { kind: 'source', source: { values } } }, dataTransformExecutor });
     const result = await processToStaticInputResultAsync(scene({ children: [input([2, 6]), input([4])] }), {
-      adapters: [TableInputEmbedAdapter],
+      adapters: [tableInputEmbedAdapter],
     });
     const svg = renderToSvgString(result.scene);
 

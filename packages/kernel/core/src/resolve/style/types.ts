@@ -10,7 +10,7 @@ import type {
 } from '../../schemas';
 
 /** 当前作用域合并后的默认配置，子元素解析时不得修改这份共享数据 */
-export type EffectiveScopeDefaults = Readonly<{
+export type MergedScopeDefaults = Readonly<{
   /** 节点默认配置，已合入各层共同样式，颜色将在元素解析时确定 */
   node?: Readonly<{
     /** 形状、边界与变换等几何默认值 */

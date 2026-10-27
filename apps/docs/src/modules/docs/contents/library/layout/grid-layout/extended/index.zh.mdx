@@ -58,7 +58,7 @@ demo 关闭重叠时让第二项位于相邻列，开启时设置 `allow` 并将
     {
       name: 'columns',
       kind: 'property',
-      type: 'Array<GridTrackInput>',
+      type: 'Array<InputGridTrack>',
       description:
         '内容贡献与有界轨道 `content` 用 `mode: "minimum" / "natural"` 选择贡献；`minmax` 用 `min` / `max` 指定上下界，下界不能是份额。',
       required: true,
@@ -66,7 +66,7 @@ demo 关闭重叠时让第二项位于相邻列，开启时设置 `allow` 并将
     {
       name: 'size',
       kind: 'property',
-      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      type: '{ x?: InputLayoutAxisSize; y?: InputLayoutAxisSize }',
       description:
         '有限空间约束 每个轴支持 `{ kind: "content", min?, max? }` 内容策略、`{ kind: "fixed", value }` 固定尺寸或 `{ kind: "fill", min?, max? }` 填充父级有限空间。',
       defaultValue: 'content / content',
@@ -74,14 +74,14 @@ demo 关闭重叠时让第二项位于相邻列，开启时设置 `allow` 并将
     {
       name: 'implicitRow',
       kind: 'property',
-      type: 'GridTrackInput',
+      type: 'InputGridTrack',
       description: '显式行不足时补齐行轨道；本页使用 `{ kind: "fixed", value }` 固定隐式行高',
       defaultValue: '{ kind: "content", mode: "natural" }',
     },
     {
       name: 'implicitColumn',
       kind: 'property',
-      type: 'GridTrackInput',
+      type: 'InputGridTrack',
       description: '显式列不足时补齐列轨道，接受与 columns 相同的轨道定义',
       defaultValue: '{ kind: "content", mode: "natural" }',
     },

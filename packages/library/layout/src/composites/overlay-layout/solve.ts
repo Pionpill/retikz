@@ -57,7 +57,7 @@ type OverlayProfile = Readonly<{
 }>;
 
 /** Overlay item placement 的纯求解输入 */
-type PlaceOverlayItemInput = Readonly<{
+type InputOverlayItemPlacement = Readonly<{
   /** 已解析的对齐式或坐标式放置策略 */
   placement: CanonicalOverlayPlacement;
   /** 容器中可用于放置子项的内容矩形 */
@@ -190,7 +190,7 @@ export const resolveOverlayProfile = (items: ReadonlyArray<OverlayProfileItem>):
 };
 
 /** 求解 aligned content slot 或 positioned anchored slot 的真实 allocation translation */
-export const placeOverlayItem = (input: PlaceOverlayItemInput): PlacedOverlayGeometry => {
+export const placeOverlayItem = (input: InputOverlayItemPlacement): PlacedOverlayGeometry => {
   const slot: LayoutRect =
     input.placement.kind === OverlayPlacementKind.Aligned
       ? Object.freeze({

@@ -1,7 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
-import type { DataTransformImplementationProvider, DataTransformModel, DataTransformStageInput } from '../../src';
+import type { DataTransformImplementationProvider, DataTransformModel, InputDataTransformStage } from '../../src';
 import {
   createDataTransformExecutor,
   createDataLineageRecorder,
@@ -29,7 +29,7 @@ import {
 
 const model: DataTransformModel = [{ name: 'value', type: 'continuous' }];
 
-const input = (values: Array<number>): DataTransformStageInput<never> => ({
+const input = (values: Array<number>): InputDataTransformStage<never> => ({
   kind: 'result',
   result: { rows: values.map(value => ({ value })), model },
 });

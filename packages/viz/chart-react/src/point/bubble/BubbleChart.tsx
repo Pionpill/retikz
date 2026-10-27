@@ -1,5 +1,5 @@
 import type { BubbleChartInputEmbedProps } from '@retikz/chart-vanilla/point';
-import { bubbleChart, BubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { bubbleChart, bubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import type { IRBubbleChart } from '@retikz/chart/point';
 
 import type { TypedChartCommonProps } from '../shared';
@@ -26,5 +26,5 @@ export const BubbleChart = createTypedChartComponent<
       input => bubbleChart(input),
       'BubbleEncodings',
     ),
-  BubbleChartInputEmbedAdapter,
+  bubbleChartInputEmbedAdapter,
 );

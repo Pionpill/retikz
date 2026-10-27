@@ -12,19 +12,19 @@
 
 | 成员              | 类型                                                                                                                                          | 默认值                             | 说明                                                                                          |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------- |
-| `animations?`     | `AxesInput['animations']`                                                                                                                     | —                                  | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                       |
+| `animations?`     | `InputAxes['animations']`                                                                                                                     | —                                  | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                       |
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                     | —                                  | 给 scope id 生成的合成引用边界：rectangle 或 circle                                           |
 | `clip?`           | `{ kind: string; params: Record<string, JsonValue>; } \| { kind: "rect"; params: { x: number; y: number; width: number; height: number; }; }` | —                                  | 以 scope 局部坐标描述的裁剪区域                                                               |
-| `defaults?`       | `AxesInput['defaults']`                                                                                                                       | —                                  | 后代默认值通道及继承屏障                                                                      |
+| `defaults?`       | `InputAxes['defaults']`                                                                                                                       | —                                  | 后代默认值通道及继承屏障                                                                      |
 | `id?`             | `string`                                                                                                                                      | —                                  | 可选引用 id；始终注册到父级命名空间                                                           |
 | `localNamespace?` | `false \| true`                                                                                                                               | —                                  | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级             |
 | `meta?`           | `Record<string, JsonValue>`                                                                                                                   | —                                  | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                |
-| `origin?`         | `AxesInput['origin']`                                                                                                                         | `{"position":[0,0],"label":false}` | 坐标轴、网格、刻度与文字共用的原点                                                            |
+| `origin?`         | `InputAxes['origin']`                                                                                                                         | `{"position":[0,0],"label":false}` | 坐标轴、网格、刻度与文字共用的原点                                                            |
 | `position?`       | `IRScopePosition`                                                                                                                             | —                                  | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                  |
 | `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                      | —                                  | 当前子树的稀疏 Theme 覆盖；name 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
-| `transforms?`     | `AxesInput['transforms']`                                                                                                                     | —                                  | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析          |
-| `x`               | `AxesInput['x']`                                                                                                                              | —                                  | 水平轴与垂直网格配置                                                                          |
-| `y`               | `AxesInput['y']`                                                                                                                              | —                                  | 垂直轴与水平网格配置                                                                          |
+| `transforms?`     | `InputAxes['transforms']`                                                                                                                     | —                                  | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析          |
+| `x`               | `InputAxes['x']`                                                                                                                              | —                                  | 水平轴与垂直网格配置                                                                          |
+| `y`               | `InputAxes['y']`                                                                                                                              | —                                  | 垂直轴与水平网格配置                                                                          |
 | `zIndex?`         | `number`                                                                                                                                      | —                                  | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                   |
 
 </ApiTable>
@@ -35,10 +35,10 @@
 
 ```ts
 export declare const Axes: {
-  (props: AxesInput, context?: any): React.ReactNode;
+  (props: InputAxes, context?: any): React.ReactNode;
 };
 
-export type AxesProps = AxesInput;
+export type AxesProps = InputAxes;
 ```
 
 </DocTab>
@@ -47,10 +47,10 @@ export type AxesProps = AxesInput;
 
 **直接调用**
 
-#### <ApiSourceLink label={"AxesInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/axes.ts"} startLine={8}>AxesInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"axesInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/axes.ts"} startLine={8}>axesInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const AxesInputEmbedAdapter: SynchronousInputEmbedAdapter<AxesInput>;
+export declare const axesInputEmbedAdapter: SynchronousInputEmbedAdapter<InputAxes>;
 ```
 
 **执行与辅助契约**
@@ -65,8 +65,8 @@ export declare const AxesInputEmbedAdapter: SynchronousInputEmbedAdapter<AxesInp
 
 | 类别   | 名称    | 类型 / 签名             | 说明 |
 | ------ | ------- | ----------------------- | ---- |
-| 参数   | `input` | `AxesInput`             | —    |
-| 返回值 | —       | `InputEmbed<AxesInput>` | —    |
+| 参数   | `input` | `InputAxes`             | —    |
+| 返回值 | —       | `InputEmbed<InputAxes>` | —    |
 
 </ApiTable>
 
@@ -75,17 +75,17 @@ export declare const AxesInputEmbedAdapter: SynchronousInputEmbedAdapter<AxesInp
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const axes: (input: AxesInput) => InputEmbed<AxesInput>;
+export declare const axes: (input: InputAxes) => InputEmbed<InputAxes>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AxesInput"} path={"packages/library/standard/src/presentation/axes/types.ts"} startLine={10}>AxesInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputAxes"} path={"packages/library/standard/src/presentation/axes/types.ts"} startLine={10}>InputAxes</ApiSourceLink>
 
 ```ts
-export type AxesInput = Omit<IRAxes, 'namespace' | 'type'>;
+export type InputAxes = Omit<IRAxes, 'namespace' | 'type'>;
 ```
 
 #### <ApiSourceLink label={"createAxes"} path={"packages/library/standard/src/presentation/axes/composite.ts"} startLine={18}>createAxes</ApiSourceLink>
@@ -98,7 +98,7 @@ export type AxesInput = Omit<IRAxes, 'namespace' | 'type'>;
 
 | 类别   | 名称    | 类型 / 签名 | 说明 |
 | ------ | ------- | ----------- | ---- |
-| 参数   | `input` | `AxesInput` | —    |
+| 参数   | `input` | `InputAxes` | —    |
 | 返回值 | —       | `IRAxes`    | —    |
 
 </ApiTable>
@@ -108,7 +108,7 @@ export type AxesInput = Omit<IRAxes, 'namespace' | 'type'>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createAxes: (input: AxesInput) => IRAxes;
+export declare const createAxes: (input: InputAxes) => IRAxes;
 ```
 
 </DocTab>
@@ -129,10 +129,10 @@ export type IRAxes = Omit<ZodInput<typeof AxesSchema>, keyof IRScopeProps> & IRS
 
 **扩展定义与注册**
 
-#### <ApiSourceLink label={"AxesDefinition"} path={"packages/library/standard/src/presentation/axes/composite.ts"} startLine={10}>AxesDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"axesDefinition"} path={"packages/library/standard/src/presentation/axes/composite.ts"} startLine={10}>axesDefinition</ApiSourceLink>
 
 ```ts
-export const AxesDefinition = defineComposite({
+export const axesDefinition = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'axes',
   schema: AxesSchema,
@@ -140,11 +140,11 @@ export const AxesDefinition = defineComposite({
 } satisfies CompositeDefinition<IRAxes, typeof STANDARD_NAMESPACE, 'axes'>);
 ```
 
-#### <ApiSourceLink label={"AxesProvider"} path={"packages/library/standard/src/presentation/axes/composite.ts"} startLine={25}>AxesProvider</ApiSourceLink>
+#### <ApiSourceLink label={"axesProvider"} path={"packages/library/standard/src/presentation/axes/composite.ts"} startLine={25}>axesProvider</ApiSourceLink>
 
 ```ts
-export const AxesProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'composite', namespace: AxesDefinition.namespace, type: AxesDefinition.type }),
-  makeDefinition: () => AxesDefinition,
+export const axesProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'composite', namespace: axesDefinition.namespace, type: axesDefinition.type }),
+  makeDefinition: () => axesDefinition,
 });
 ```

@@ -13,8 +13,8 @@ import type {
   PathDefinitionResolution,
   PathResolution,
   PathResolveContext,
-  ResolvedMarkStyle,
-  ResolvedPathSource,
+  MarkColorSource,
+  PathColorSource,
   StrokePathResolution,
 } from './types';
 
@@ -25,7 +25,7 @@ const ARROW_PATH_CONTACT_OVERLAP = 0.5;
 
 /** 查找路径定义，并用其完整 schema 解析路径输入 */
 export const resolvePathDefinition = (
-  path: ResolvedPathSource,
+  path: PathColorSource,
   context: PathResolveContext,
   irPath: string,
 ): PathDefinitionResolution => {
@@ -84,7 +84,7 @@ const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): 
 };
 
 /** 绑定箭头定义，确定外观、有效尺寸及端点接触与收缩参数 */
-export const resolveArrowMark = (mark: ResolvedMarkStyle, context: PathResolveContext): ArrowMarkResolution => {
+export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): ArrowMarkResolution => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const definition = providerDefinitionOf(context.arrows, shape);
   assertFiniteArrowGeometry(shape, definition);
@@ -132,7 +132,7 @@ export const resolveArrowMark = (mark: ResolvedMarkStyle, context: PathResolveCo
 
 /** 解析已声明的起点、终点箭头，并以声明对象为键保存结果 */
 const resolveEndpointArrowProviders = (
-  arrow: ResolvedPathSource['arrow'],
+  arrow: PathColorSource['arrow'],
   context: PathResolveContext,
 ): ReadonlyMap<IRArrowStyle, ArrowMarkResolution> => {
   /** 按端点声明对象索引的箭头解析结果 */

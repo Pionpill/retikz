@@ -9,7 +9,7 @@ import {
 } from '@retikz/chart-react/point';
 import type { IRScene } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
-import { SectorShapeDefinition } from '@retikz/extension';
+import { sectorShapeDefinition } from '@retikz/extension';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { createInputScene, Layout, Node, Scope } from '@retikz/react';
@@ -180,7 +180,7 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
 describe('buildPreviewSource', () => {
   it('形状扩展贯穿 IR 预览、Vanilla 渲染与生成源码，Definition 不进入 JSON', () => {
     const Demo: FC = () => (
-      <Layout extensions={{ shapes: [SectorShapeDefinition] }}>
+      <Layout extensions={{ shapes: [sectorShapeDefinition] }}>
         <Node
           position={[0, 0]}
           shape={{
@@ -198,10 +198,10 @@ describe('buildPreviewSource', () => {
     );
     const result = buildPreviewSource(createInput({ Component: Demo }));
     const code = result.source?.vanilla?.files[0]?.code;
-    expect(code).toContain("import { SectorShapeDefinition } from '@retikz/extension'");
-    expect(code).toContain('shapes: [SectorShapeDefinition]');
+    expect(code).toContain("import { sectorShapeDefinition } from '@retikz/extension'");
+    expect(code).toContain('shapes: [sectorShapeDefinition]');
     expect(result.source?.ir?.files[0]?.code).toContain('"sector"');
-    expect(result.source?.ir?.files[0]?.code).not.toContain('SectorShapeDefinition');
+    expect(result.source?.ir?.files[0]?.code).not.toContain('sectorShapeDefinition');
     for (const source of [result.source?.ir, result.source?.vanilla]) {
       const svg = renderToStaticMarkup(source?.render?.('svg'));
       expect(svg).toContain('<path');
@@ -283,9 +283,9 @@ describe('buildPreviewSource', () => {
     expect(result.source?.vanilla?.files[0]?.code).toContain("description: { text: 'Preview source' }");
     expect(result.source?.vanilla?.files[0]?.code).toContain('padding: { x: 8, y: 10 }');
     expect(result.source?.vanilla?.files[0]?.code).toContain("headerDirection: 'vertical'");
-    expect(result.source?.vanilla?.files[0]?.code).toContain('GridInputEmbedAdapter');
-    expect(result.source?.vanilla?.files[0]?.code).toContain('AxesInputEmbedAdapter');
-    expect(result.source?.vanilla?.files[0]?.code).toContain('FrameInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).toContain('gridInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).toContain('axesInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).toContain('frameInputEmbedAdapter');
     expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
   });
 
@@ -350,7 +350,7 @@ describe('buildPreviewSource', () => {
     expect(ir?.files[0]?.code).not.toContain('__chart.scatter.guide');
     expect(vanilla?.files[0]?.code).toContain("import { renderChart } from '@retikz/chart-vanilla'");
     expect(vanilla?.files[0]?.code).toContain(
-      "import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
+      "import { scatterChart, scatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
     );
     expect(vanilla?.files[0]?.code).not.toContain("import { createChart, renderChart } from '@retikz/chart-vanilla'");
     expect(vanilla?.files[0]?.code).toContain("title: { text: 'Income and life expectancy' }");
@@ -381,7 +381,7 @@ describe('buildPreviewSource', () => {
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "bubble"');
     expect(vanilla?.files[0]?.code).toContain(
-      "import { bubbleChart, BubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
+      "import { bubbleChart, bubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
     );
     expect(vanilla?.files[0]?.code).toContain("size: 'population'");
     expect(vanilla?.render).toBeTypeOf('function');
@@ -405,7 +405,7 @@ describe('buildPreviewSource', () => {
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "strip"');
     expect(vanilla?.files[0]?.code).toContain(
-      "import { stripChart, StripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
+      "import { stripChart, stripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
     );
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
@@ -418,7 +418,7 @@ describe('buildPreviewSource', () => {
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
     expect(vanilla?.files[0]?.code).toContain('embedTable(spec');
-    expect(vanilla?.files[0]?.code).toContain('TableInputEmbedAdapter');
+    expect(vanilla?.files[0]?.code).toContain('tableInputEmbedAdapter');
     expect(vanilla?.files[0]?.code).toContain("category: 'A'");
     expect(vanilla?.render).toBeUndefined();
     expect(buildVanillaPreview(preview).svg).toContain('<svg');
@@ -431,7 +431,7 @@ describe('buildPreviewSource', () => {
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
     expect(vanilla?.files[0]?.code).toContain('embedTable(spec');
-    expect(vanilla?.files[0]?.code).toContain('TableInputEmbedAdapter');
+    expect(vanilla?.files[0]?.code).toContain('tableInputEmbedAdapter');
     expect(vanilla?.files[0]?.code).not.toContain('const datasets =');
     expect(vanilla?.render).toBeUndefined();
     expect(buildVanillaPreview(preview).svg).toContain('<svg');

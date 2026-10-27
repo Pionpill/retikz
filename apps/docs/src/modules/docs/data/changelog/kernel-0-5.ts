@@ -855,8 +855,8 @@ export const kernelV05: Release = {
             {
               label: { zh: 'Theme Composite 上下文', en: 'Theme composite context' },
               content: {
-                zh: '`Theme` / `ThemeMode`、严格 `ThemeSchema` 与 `ResolvedTheme` 成为 Core 公共契约；Theme 变化进入 retained compile input，无法证明更窄依赖时保守 full fallback，并保持与 fresh compile 等价。',
-                en: '`Theme`, `ThemeMode`, strict `ThemeSchema`, and `ResolvedTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
+                zh: '`Theme` / `ThemeMode`、严格 `ThemeSchema` 与 `CanonicalTheme` 成为 Core 公共契约；Theme 变化进入 retained compile input，无法证明更窄依赖时保守 full fallback，并保持与 fresh compile 等价。',
+                en: '`Theme`, `ThemeMode`, strict `ThemeSchema`, and `CanonicalTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
               },
             },
             {
@@ -865,8 +865,8 @@ export const kernelV05: Release = {
                 en: 'BREAKING: Lightweight Theme selectors and shared colors',
               },
               content: {
-                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。省略 `style` 时使用默认基线；`defineTheme` 与 `themeDefinitions` 注册 Core runtime resolver，应用 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
-                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. Omitting `style` selects the default baseline; `defineTheme` and `themeDefinitions` register Core runtime resolvers, and each application style must provide a same-named resolver for every consuming owner such as Plot or Chart. Missing entries fail loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
+                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`CanonicalTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。省略 `style` 时使用默认基线；`defineTheme` 与 `themeDefinitions` 注册 Core runtime resolver，应用 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
+                en: '`Theme` now persists only sparse `style / mode`; `CanonicalTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. Omitting `style` selects the default baseline; `defineTheme` and `themeDefinitions` register Core runtime resolvers, and each application style must provide a same-named resolver for every consuming owner such as Plot or Chart. Missing entries fail loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
               },
             },
             {

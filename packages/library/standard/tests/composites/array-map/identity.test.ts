@@ -1,9 +1,9 @@
 import type { IRChild } from '@retikz/core';
 import { compileToScene, resolveSpatialHandle, selectSpatialHandles } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { getArrayCellId, ArrayDefinition, ArraySchema, MapDefinition } from '../../../src/collection';
+import { getArrayCellId, arrayDefinition, ArraySchema, mapDefinition } from '../../../src/collection';
 import { RetikzStandardError } from '../../../src/shared/errors';
 
 const base = { namespace: 'standard', type: 'array', id: 'array', cellIdMode: 'index' };
@@ -11,7 +11,7 @@ const base = { namespace: 'standard', type: 'array', id: 'array', cellIdMode: 'i
 const compile = (children: Array<IRChild>) =>
   compileToScene(
     { type: 'scene', version: 1, children },
-    { composites: [ArrayDefinition, MapDefinition], clips: [PathClipDefinition] },
+    { composites: [arrayDefinition, mapDefinition], clips: [pathClipDefinition] },
   );
 
 const path = (id: string): IRChild => ({

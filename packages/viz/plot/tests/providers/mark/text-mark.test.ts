@@ -1,7 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
@@ -23,7 +23,7 @@ const HEIGHT = 300;
 const expandOf = (
   spec: IRPlot,
   datasets: Datasets,
-  options: LowerPlotsOptions = { layout: { width: WIDTH, height: HEIGHT } },
+  options: PlotsLoweringOptions = { layout: { width: WIDTH, height: HEIGHT } },
 ): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };

@@ -2,7 +2,7 @@ import type {
   GroupPrimitive,
   PathPrimitive,
   RectPrimitive,
-  ResolvedArrowEnd,
+  CompiledArrowEnd,
   ScenePrimitive,
   TextPrimitive,
 } from '@retikz/core';
@@ -14,8 +14,8 @@ import { renderPrim } from './helpers';
 /** 测试在 node env 跑，不实际挂载——只检查返回的 React element 类型 / props 是否正确 */
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
-/** 构造一个已解析 ResolvedArrowEnd（emit-in-compile 后的 PathPrimitive.arrowStart / arrowEnd 形态） */
-const resolvedSpec = (shape: string): ResolvedArrowEnd => ({
+/** 构造一个已解析 CompiledArrowEnd（emit-in-compile 后的 PathPrimitive.arrowStart / arrowEnd 形态） */
+const resolvedSpec = (shape: string): CompiledArrowEnd => ({
   shape,
   baseSize: 10,
   refX: 0,

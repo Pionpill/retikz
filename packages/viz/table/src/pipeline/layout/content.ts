@@ -11,7 +11,7 @@ import { computeTableCellFitScale, projectTableCellBounds } from './fit';
 export type TableCellOverflow = 'visible' | 'clip';
 
 /** Cell 内容 fit、alignment 与 overflow 的纯几何输入 */
-type ComputeTableCellContentPlacementInput = Readonly<{
+type InputTableCellContentPlacement = Readonly<{
   /** replay-root local 的 fit 前 allocation bounds */
   sourceAllocationBounds: BoundsRect;
   /** replay-root local 的 fit 前 visual overflow bounds */
@@ -48,9 +48,7 @@ type TableCellContentPlacement = Readonly<{
 const isTableCellOverflow = (value: unknown): value is TableCellOverflow => value === 'visible' || value === 'clip';
 
 /** 计算 Cell 内容的 fit、对齐与 overflow 放置结果 */
-export const computeTableCellContentPlacement = (
-  input: ComputeTableCellContentPlacementInput,
-): TableCellContentPlacement => {
+export const computeTableCellContentPlacement = (input: InputTableCellContentPlacement): TableCellContentPlacement => {
   if (!isTableCellOverflow(input.overflow)) {
     throw new RetikzTableError('table: Cell overflow must be visible or clip');
   }

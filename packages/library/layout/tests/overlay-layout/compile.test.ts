@@ -18,7 +18,7 @@ import {
   LayoutItemKind,
   LayoutOverflow,
   LayoutSizeParticipation,
-  OverlayLayoutDefinition,
+  overlayLayoutDefinition,
   OverlayPlacementKind,
 } from '../../src';
 
@@ -147,7 +147,7 @@ const compileOverlay = (child: IRChild, proposal: LayoutProposal) => {
       children: [{ namespace: 'overlay-test', type: 'harness', child }],
     },
     {
-      composites: [OverlayLayoutDefinition, createLeafDefinition(logs), harness],
+      composites: [overlayLayoutDefinition, createLeafDefinition(logs), harness],
       padding: 0,
     },
   );

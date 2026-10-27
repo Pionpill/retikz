@@ -3,16 +3,16 @@ import type { Position } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
-import { AnchorUnitVectorByAnchor } from '../../../shared';
+import { anchorUnitVectorByAnchor } from '../../../shared';
 import { placeBoundaryLabelBox, resolveBoundaryLabelRotation } from '../../text';
 import { anchorOf, angleBoundaryOf } from '../anchors';
-import type { MeasuredNodeLabel, NodeLabelLayout, NodeLabelResolution, NodeLayout } from '../types';
+import type { MeasuredNodeLabel, NodeLabelLayout, NodeLabelResolution, CompiledNodeLayout } from '../types';
 
 const isLabelBoundaryPosition = (
   position: NodeLabelResolution['position'],
 ): position is CanonicalNodeLabelBoundaryPosition => typeof position === 'object';
 
-const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
+const assertBoxLikeLabelBoundary = (layout: CompiledNodeLayout): void => {
   if (layout.shape.name !== 'rectangle') {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -21,8 +21,8 @@ const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
   }
 };
 
-const labelBoundaryPoint = (layout: NodeLayout, position: CanonicalNodeLabelBoundaryPosition): Position => {
-  ensureBoxLikeLabelBoundary(layout);
+const labelBoundaryPoint = (layout: CompiledNodeLayout, position: CanonicalNodeLabelBoundaryPosition): Position => {
+  assertBoxLikeLabelBoundary(layout);
   const fraction = position.fraction;
   const left = layout.geometry.rect.x - layout.geometry.rect.width / 2;
   const right = layout.geometry.rect.x + layout.geometry.rect.width / 2;
@@ -52,7 +52,7 @@ const labelPlacementVector = (position: NodeLabelResolution['position']): Positi
     return [Math.cos(rad), Math.sin(rad)];
   }
 
-  return AnchorUnitVectorByAnchor[position];
+  return anchorUnitVectorByAnchor[position];
 };
 
 /** 从 label 附着方向取得稳定的切线正向 */
@@ -72,10 +72,13 @@ const labelTangentVector = (position: NodeLabelResolution['position']): Position
 };
 
 /** label 在 node 边界上的附着点 */
-export const labelBorderPoint = (layout: NodeLayout, label: Pick<NodeLabelResolution, 'position'>): Position => {
+export const labelBorderPoint = (
+  layout: CompiledNodeLayout,
+  label: Pick<NodeLabelResolution, 'position'>,
+): Position => {
   if (label.position === 'center') return [layout.geometry.rect.x, layout.geometry.rect.y];
 
-  const aaLayout: NodeLayout = {
+  const aaLayout: CompiledNodeLayout = {
     ...layout,
     geometry: { ...layout.geometry, rect: { ...layout.geometry.rect, rotate: 0 } },
   };
@@ -91,12 +94,12 @@ export const labelBorderPoint = (layout: NodeLayout, label: Pick<NodeLabelResolu
 };
 
 /** 将标签相对节点中心的偏移换算为当前布局坐标中的中心点 */
-export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
+export const labelCenter = (layout: CompiledNodeLayout, label: NodeLabelLayout): Position => {
   return [layout.geometry.rect.x + label.centerOffset[0], layout.geometry.rect.y + label.centerOffset[1]];
 };
 
 /** 从 label 中心朝 border 方向，求 label 框边界交点 */
-type LabelBoxEdgeTowardInput = {
+type InputLabelBoxEdgeToward = {
   /** 标签视觉盒的中心，与 border 使用同一坐标系 */
   center: Position;
   /** 用于确定从标签中心向外求交方向的目标点 */
@@ -119,7 +122,7 @@ export const labelBoxEdgeToward = ({
   halfWidth,
   halfHeight,
   rotateDeg,
-}: LabelBoxEdgeTowardInput): Position => {
+}: InputLabelBoxEdgeToward): Position => {
   const dx = border[0] - center[0];
   const dy = border[1] - center[1];
   const len = Math.hypot(dx, dy);
@@ -149,7 +152,7 @@ const resolveLabelRotateDeg = (label: Pick<NodeLabelResolution, 'position' | 'ro
 
 /** 把已测量 label 解析为相对最终 Node rect 的局部几何 */
 export const resolveNodeLabelGeometry = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   label: MeasuredNodeLabel,
   properties: NodeLabelResolution,
 ): NodeLabelLayout => {
@@ -185,7 +188,7 @@ export const resolveNodeLabelGeometry = (
  * 节点 label 的外接点
  * @description 用于顶层 bbox / viewBox 计算
  */
-export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
+export const labelExtentPoints = (layout: CompiledNodeLayout): Array<Position> => {
   if (!layout.labels || layout.labels.length === 0) return [];
 
   const cx = layout.geometry.rect.x;

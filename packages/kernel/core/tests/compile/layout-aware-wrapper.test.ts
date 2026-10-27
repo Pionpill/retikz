@@ -24,7 +24,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
 import { NamespaceStack } from '../../src/compile/namespace';
 import { createCompileContext } from '../../src/compile/orchestration/context';
@@ -48,7 +48,7 @@ const node = (id: string, position: readonly [number, number] = [0, 0]): IRChild
 const resolvedResultOf = (
   context: CompositeCompileContext,
   child: IRChild,
-  proposal: LayoutProposal = NaturalLayoutProposal,
+  proposal: LayoutProposal = naturalLayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);

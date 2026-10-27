@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
 import { BuiltinCompileWarningCode } from '../../src/compile/constants';
-import type { LowerTex } from '../../src/compile/text';
+import type { TexLowerer } from '../../src/compile/text';
 import type { CompileWarning } from '../../src/compile/warning';
 import type { PathPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -10,7 +10,7 @@ import { flattenPrims } from '../helpers/flatten';
 
 const lowerTexCalls: Array<{ tex: string; displayMode?: boolean }> = [];
 
-const fakeLowerTex: LowerTex = (content, style) => {
+const fakeLowerTex: TexLowerer = (content, style) => {
   lowerTexCalls.push({ tex: content.tex, displayMode: content.displayMode });
   if (content.tex === 'INVALID') return null;
 

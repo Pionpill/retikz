@@ -1,27 +1,27 @@
 import type { TableBorderContribution, TableBorderSource } from '../../../contract/manifest';
-import { ResolvedTableBorderLineSchema, TableBorderContributionOrigin } from '../../../contract/manifest';
+import { TableBorderLineSchema, TableBorderContributionOrigin } from '../../../contract/manifest';
 import { RetikzTableError } from '../../../error';
 import { deepFreeze } from '../../../shared';
-import type { TableTrackLayout } from '../types';
+import type { CompiledTableTrackLayout } from '../types';
 import { mergeTableBorderAtoms } from './merge';
 import { resolveTableBorderAtoms } from './resolve';
 import type {
-  BuildTableBorderGraphInput,
-  ResolvedTableBorderCandidate,
+  InputTableBorderGraph,
+  TableBorderCandidateResolution,
   TableBorderAtom,
-  TableBorderCellInput,
+  InputTableBorderCell,
   TableBorderGraph,
   TableBorderSide,
   TableBorderVertex,
 } from './types';
 import { tableBorderSourceOrderKey } from './types';
 
-type Occupancy = ReadonlyArray<ReadonlyArray<TableBorderCellInput | undefined>>;
+type Occupancy = ReadonlyArray<ReadonlyArray<InputTableBorderCell | undefined>>;
 
-const SideOrder: ReadonlyArray<TableBorderSide> = ['top', 'right', 'bottom', 'left'];
+const sideOrder: ReadonlyArray<TableBorderSide> = ['top', 'right', 'bottom', 'left'];
 
 /** 验证 canonical track 几何并拒绝重叠或非有限 endpoint */
-const validateTracks = (tracks: ReadonlyArray<TableTrackLayout>, axis: 'row' | 'column'): void => {
+const assertTracks = (tracks: ReadonlyArray<CompiledTableTrackLayout>, axis: 'row' | 'column'): void => {
   tracks.forEach((track, index) => {
     if (track.index !== index) {
       throw new RetikzTableError(`table: ${axis} track ${index} has non-canonical index ${track.index}`);
@@ -51,7 +51,7 @@ const candidateKindOf = (candidate: unknown): unknown =>
   typeof candidate === 'object' && candidate !== null ? Reflect.get(candidate, 'kind') : undefined;
 
 /** 物化 candidate 的有限 priority 与完整 resolved line */
-const validateCandidate = (candidate: ResolvedTableBorderCandidate): ResolvedTableBorderCandidate => {
+const resolveBorderCandidate = (candidate: TableBorderCandidateResolution): TableBorderCandidateResolution => {
   const kind = candidateKindOf(candidate);
   if (kind !== 'none' && kind !== 'line') {
     throw new RetikzTableError('table: Border candidate kind must be none or line');
@@ -76,7 +76,7 @@ const validateCandidate = (candidate: ResolvedTableBorderCandidate): ResolvedTab
   return {
     kind: 'line',
     priority: candidate.priority,
-    line: ResolvedTableBorderLineSchema.parse(candidate.line),
+    line: TableBorderLineSchema.parse(candidate.line),
     ...(candidate.defaults === undefined ? {} : { defaults: structuredClone(candidate.defaults) }),
   };
 };
@@ -85,10 +85,10 @@ const validateCandidate = (candidate: ResolvedTableBorderCandidate): ResolvedTab
 const contributionOf = (
   atomKey: string,
   source: TableBorderSource,
-  candidateInput: ResolvedTableBorderCandidate,
+  candidateInput: TableBorderCandidateResolution,
   ownerSideRank: number,
 ): TableBorderContribution => {
-  const candidate = validateCandidate(candidateInput);
+  const candidate = resolveBorderCandidate(candidateInput);
   const sourceOrderKey = tableBorderSourceOrderKey(source);
   const base = {
     key: `${sourceOrderKey}@${atomKey}`,
@@ -128,9 +128,9 @@ const contributionOf = (
 const buildOccupancy = (
   rowCount: number,
   columnCount: number,
-  cellsInput: ReadonlyArray<TableBorderCellInput>,
-): Readonly<{ cells: ReadonlyArray<TableBorderCellInput>; occupancy: Occupancy }> => {
-  const occupancy: Array<Array<TableBorderCellInput | undefined>> = Array.from({ length: rowCount }, () =>
+  cellsInput: ReadonlyArray<InputTableBorderCell>,
+): Readonly<{ cells: ReadonlyArray<InputTableBorderCell>; occupancy: Occupancy }> => {
+  const occupancy: Array<Array<InputTableBorderCell | undefined>> = Array.from({ length: rowCount }, () =>
     Array.from({ length: columnCount }),
   );
   const cells = [...cellsInput].sort((left, right) => {
@@ -180,7 +180,7 @@ const buildOccupancy = (
 };
 
 /** 计算 collapse logical boundary 坐标 */
-const boundaryCoordinates = (tracks: ReadonlyArray<TableTrackLayout>): ReadonlyArray<number> => {
+const boundaryCoordinates = (tracks: ReadonlyArray<CompiledTableTrackLayout>): ReadonlyArray<number> => {
   if (tracks.length === 0) return [];
 
   const coordinates = [tracks[0].offset];
@@ -198,7 +198,7 @@ const boundaryCoordinates = (tracks: ReadonlyArray<TableTrackLayout>): ReadonlyA
   return coordinates;
 };
 
-const cellSource = (cell: TableBorderCellInput, side: TableBorderSide): TableBorderSource => ({
+const cellSource = (cell: InputTableBorderCell, side: TableBorderSide): TableBorderSource => ({
   kind: 'cell',
   ...(cell.cellId === undefined ? {} : { cellId: cell.cellId }),
   row: cell.rowIndex,
@@ -208,12 +208,12 @@ const cellSource = (cell: TableBorderCellInput, side: TableBorderSide): TableBor
 
 /** 为 collapse atom 收集 default 与相邻真实 Cell side 候选 */
 const collapseContributors = (
-  input: BuildTableBorderGraphInput,
+  input: InputTableBorderGraph,
   atomKey: string,
   orientation: 'horizontal' | 'vertical',
   boundaryIndex: number,
-  before: TableBorderCellInput | undefined,
-  after: TableBorderCellInput | undefined,
+  before: InputTableBorderCell | undefined,
+  after: InputTableBorderCell | undefined,
 ): ReadonlyArray<TableBorderContribution> => {
   const contributors: Array<TableBorderContribution> = [];
   const outer =
@@ -250,10 +250,7 @@ const collapseContributors = (
 };
 
 /** 构造 collapse logical atoms */
-const buildCollapseAtoms = (
-  input: BuildTableBorderGraphInput,
-  occupancy: Occupancy,
-): ReadonlyArray<TableBorderAtom> => {
+const buildCollapseAtoms = (input: InputTableBorderGraph, occupancy: Occupancy): ReadonlyArray<TableBorderAtom> => {
   const rowBoundaries = boundaryCoordinates(input.rows);
   const columnBoundaries = boundaryCoordinates(input.columns);
   const atoms: Array<TableBorderAtom> = [];
@@ -303,10 +300,10 @@ const buildCollapseAtoms = (
 
 /** 返回 separate side 缺省候选及其 canonical source */
 const separateFallback = (
-  input: BuildTableBorderGraphInput,
-  cell: TableBorderCellInput,
+  input: InputTableBorderGraph,
+  cell: InputTableBorderCell,
   side: TableBorderSide,
-): Readonly<{ candidate: ResolvedTableBorderCandidate; source: TableBorderSource }> | undefined => {
+): Readonly<{ candidate: TableBorderCandidateResolution; source: TableBorderSource }> | undefined => {
   const rowEnd = cell.rowIndex + cell.rowSpan;
   const columnEnd = cell.columnIndex + cell.columnSpan;
   const outer =
@@ -338,8 +335,8 @@ const separateFallback = (
 
 /** 计算 spanning Cell 的物理 side segment */
 const separateSegment = (
-  input: BuildTableBorderGraphInput,
-  cell: TableBorderCellInput,
+  input: InputTableBorderGraph,
+  cell: InputTableBorderCell,
   side: TableBorderSide,
 ): Readonly<{ orientation: 'horizontal' | 'vertical'; start: TableBorderVertex; end: TableBorderVertex }> => {
   const firstRow = input.rows[cell.rowIndex];
@@ -365,11 +362,11 @@ const separateSegment = (
 
 /** 构造 separate per-Cell side atoms */
 const buildSeparateAtoms = (
-  input: BuildTableBorderGraphInput,
-  cells: ReadonlyArray<TableBorderCellInput>,
+  input: InputTableBorderGraph,
+  cells: ReadonlyArray<InputTableBorderCell>,
 ): ReadonlyArray<TableBorderAtom> =>
   cells.flatMap(cell =>
-    SideOrder.flatMap(side => {
+    sideOrder.flatMap(side => {
       const explicit = cell.borders?.[side];
       const fallback = explicit === undefined ? separateFallback(input, cell, side) : undefined;
       const candidate = explicit ?? fallback?.candidate;
@@ -390,18 +387,18 @@ const buildSeparateAtoms = (
   );
 
 /** 从 canonical tracks、occupancy 与 border candidates 构造确定 Border Graph */
-export const buildTableBorderGraph = (input: BuildTableBorderGraphInput): TableBorderGraph => {
-  validateTracks(input.rows, 'row');
-  validateTracks(input.columns, 'column');
+export const buildTableBorderGraph = (input: InputTableBorderGraph): TableBorderGraph => {
+  assertTracks(input.rows, 'row');
+  assertTracks(input.columns, 'column');
   if (!isTableBorderMode(input.mode)) {
     throw new RetikzTableError('table: Border Graph mode must be collapse or separate');
   }
 
   const { cells, occupancy } = buildOccupancy(input.rows.length, input.columns.length, input.cells);
-  Object.values(input.defaults.outer ?? {}).forEach(candidate => validateCandidate(candidate));
-  if (input.defaults.horizontal !== undefined) validateCandidate(input.defaults.horizontal);
-  if (input.defaults.vertical !== undefined) validateCandidate(input.defaults.vertical);
-  cells.forEach(cell => Object.values(cell.borders ?? {}).forEach(candidate => validateCandidate(candidate)));
+  Object.values(input.defaults.outer ?? {}).forEach(candidate => resolveBorderCandidate(candidate));
+  if (input.defaults.horizontal !== undefined) resolveBorderCandidate(input.defaults.horizontal);
+  if (input.defaults.vertical !== undefined) resolveBorderCandidate(input.defaults.vertical);
+  cells.forEach(cell => Object.values(cell.borders ?? {}).forEach(candidate => resolveBorderCandidate(candidate)));
   if (input.rows.length === 0 || input.columns.length === 0 || input.cells.length === 0) {
     return deepFreeze({ atoms: [], edges: [] });
   }

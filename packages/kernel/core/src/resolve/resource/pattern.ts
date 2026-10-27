@@ -1,4 +1,4 @@
-import type { ResolvedPatternLineStyle, ResolvedPatternLineStyleCycle } from '../../contract';
+import type { CanonicalPatternLineStyle, CanonicalPatternLineStyleCycle } from '../../contract';
 import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
 import { resolveDashPattern } from '../style';
 import type { PatternStyleResolution } from './types';
@@ -19,10 +19,10 @@ const lineStyleInputOf = (spec: IRPatternPaint): IRPatternLineStyle => ({
 
 /** 在基础线型上应用局部覆盖；显式提供虚线相关字段时重新解析虚线，解析为空则清除继承值 */
 const resolvePatternLineStyle = (
-  base: ResolvedPatternLineStyle,
+  base: CanonicalPatternLineStyle,
   override: IRPatternLineStyle,
-): ResolvedPatternLineStyle => {
-  const resolved: ResolvedPatternLineStyle = {
+): CanonicalPatternLineStyle => {
+  const resolved: CanonicalPatternLineStyle = {
     ...base,
     ...(base.dashPattern === undefined ? {} : { dashPattern: [...base.dashPattern] }),
   };
@@ -45,10 +45,10 @@ export const resolvePatternStyle = (spec: IRPatternPaint, defaultColor: string):
   const baseInput = lineStyleInputOf(spec);
   const base = resolvePatternLineStyle({ color: defaultColor }, baseInput);
   const resolved: {
-    base: ResolvedPatternLineStyle;
-    horizontalStyle?: ResolvedPatternLineStyle;
-    verticalStyle?: ResolvedPatternLineStyle;
-    lineStyleCycle?: ResolvedPatternLineStyleCycle;
+    base: CanonicalPatternLineStyle;
+    horizontalStyle?: CanonicalPatternLineStyle;
+    verticalStyle?: CanonicalPatternLineStyle;
+    lineStyleCycle?: CanonicalPatternLineStyleCycle;
   } = { base };
 
   if (spec.horizontalStyle !== undefined) {

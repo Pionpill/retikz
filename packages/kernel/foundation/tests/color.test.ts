@@ -6,7 +6,7 @@ type ParseStaticCssColor = (input: string) => Readonly<{ r: number; g: number; b
 
 type CompositeOpaqueColor = (foreground: string, backdrop: string, weight: number) => `#${string}`;
 
-type StaticCssNamedColorHexByName = Readonly<Record<string, `#${string}`>>;
+type NamedColorHexLookup = Readonly<Record<string, `#${string}`>>;
 
 const parseStaticCssColor = (input: string): ReturnType<ParseStaticCssColor> => {
   const candidate = (foundation as Record<string, unknown>).parseStaticCssColor;
@@ -22,11 +22,11 @@ const compositeOpaqueColor = (foreground: string, backdrop: string, weight: numb
   return (candidate as CompositeOpaqueColor)(foreground, backdrop, weight);
 };
 
-const staticCssNamedColorHexByName = (): StaticCssNamedColorHexByName => {
-  const candidate = (foundation as Record<string, unknown>).StaticCssNamedColorHexByName;
+const staticCssNamedColorHexByName = (): NamedColorHexLookup => {
+  const candidate = (foundation as Record<string, unknown>).staticCssNamedColorHexByName;
 
   expect(candidate).toEqual(expect.any(Object));
-  return candidate as StaticCssNamedColorHexByName;
+  return candidate as NamedColorHexLookup;
 };
 
 const captureFoundationError = (operation: () => unknown): RetikzFoundationError => {
@@ -61,7 +61,7 @@ describe('parseStaticCssColor', () => {
   );
 });
 
-describe('StaticCssNamedColorHexByName', () => {
+describe('staticCssNamedColorHexByName', () => {
   it('公开从命名颜色解析器源派生的冻结清单', () => {
     const namedColorHexByName = staticCssNamedColorHexByName();
 

@@ -11,7 +11,7 @@ import {
 } from '../../src/presentation/legend/constants';
 import { resolveLegend } from '../../src/presentation/legend/resolve';
 import { LegendSchema } from '../../src/presentation/legend/schema';
-import type { LegendInput } from '../../src/presentation/legend/types';
+import type { InputLegendConfig } from '../../src/presentation/legend/types';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const sample: IRChild = { type: 'node', position: [0, 0], text: 'Sample' };
@@ -56,7 +56,7 @@ describe('Legend schema 和工厂', () => {
         kind: LegendContentKind.Items,
         items: [{ key: 'primary', sample, label }],
       },
-    } satisfies LegendInput;
+    } satisfies InputLegendConfig;
     const source = createLegend(input);
 
     expect(source).toEqual({ namespace: 'standard', type: 'legend', ...input });
@@ -302,7 +302,7 @@ describe('Legend schema 和工厂', () => {
 
   it('拒绝负数或非有限间距以及无效的溢出值', () => {
     const items = { kind: LegendContentKind.Items, items: [] } satisfies Extract<
-      LegendInput['content'],
+      InputLegendConfig['content'],
       { kind: typeof LegendContentKind.Items }
     >;
 

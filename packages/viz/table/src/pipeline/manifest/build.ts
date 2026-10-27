@@ -9,23 +9,23 @@ import type {
   TableLegendDescriptor,
 } from '../../contract';
 import { RetikzTableError } from '../../error';
-import type { TableBorderEdge, TableLayout } from '../layout';
-import type { ResolvedTableCellPlan, ResolvedTableDefaults, ResolvedTableEncoding } from '../rule';
+import type { TableBorderEdge, CompiledTableLayout } from '../layout';
+import type { TableCellPlanResolution, TableDefaultsResolution, TableEncodingResolution } from '../rule';
 
 /** manifest 中的 style、plan 与 encoding lineage 输入 */
-type BuildTableManifestContext = Readonly<{
+type TableManifestBuildContext = Readonly<{
   /** 当前有效 Core Theme 的 style */
   name?: ThemeName;
   /** 当前有效 Core Theme 的 mode */
   themeMode: ThemeMode;
   /** 同次 resolved Table defaults */
-  defaultTable: ResolvedTableDefaults;
+  defaultTable: TableDefaultsResolution;
   /** 同次 presented model */
   presented: PresentedTableModel;
   /** 可选同次 resolved Cell plans */
-  plans?: ReadonlyArray<ResolvedTableCellPlan>;
+  plans?: ReadonlyArray<TableCellPlanResolution>;
   /** 同次 ordered encoding seed */
-  encodings?: ReadonlyArray<ResolvedTableEncoding>;
+  encodings?: ReadonlyArray<TableEncodingResolution>;
   /** 同次 visual scale resolutions 产出的 Legend descriptor seed */
   legendDescriptors: ReadonlyArray<TableLegendDescriptor>;
 }>;
@@ -38,9 +38,9 @@ const alignmentError = (detail: string): never => {
 export const buildTableLayoutManifest = (
   tableId: string | undefined,
   model: SemanticTableModel,
-  layout: TableLayout,
+  layout: CompiledTableLayout,
   borderEdges: ReadonlyArray<TableBorderEdge>,
-  manifestContext: BuildTableManifestContext,
+  manifestContext: TableManifestBuildContext,
 ): ZodOutput<typeof TableLayoutManifestSchema> =>
   ({
     ...(tableId === undefined ? {} : { tableId }),

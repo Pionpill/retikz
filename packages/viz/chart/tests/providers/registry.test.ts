@@ -7,9 +7,9 @@ import { defineChartTheme, RetikzChartErrorCode } from '../../src';
 import { defineChartRecipe, eraseChartRecipeDefinition } from '../../src/_chart/contract';
 import { resolveChartFromProvider, resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
-import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
-import { RegressionChartDefinition } from '../../src/point/regression/recipe';
-import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
+import { bubbleChartDefinition } from '../../src/point/bubble/recipe';
+import { regressionChartDefinition } from '../../src/point/regression/recipe';
+import { scatterChartDefinition } from '../../src/point/scatter/recipe';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
   encodings: context.encodings as JsonObject,
@@ -40,9 +40,9 @@ const recipe = defineChartRecipe({
 describe('活动的 Chart 提供者注册表', () => {
   it('为活动配方构建一个精确的点 schema 联合', () => {
     const registry = resolveChartProviderRegistry([
-      { family: 'point', recipe: eraseChartRecipeDefinition(ScatterChartDefinition), chartThemeDefinitions: [] },
-      { family: 'point', recipe: eraseChartRecipeDefinition(BubbleChartDefinition), chartThemeDefinitions: [] },
-      { family: 'point', recipe: eraseChartRecipeDefinition(RegressionChartDefinition), chartThemeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(scatterChartDefinition), chartThemeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(bubbleChartDefinition), chartThemeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(regressionChartDefinition), chartThemeDefinitions: [] },
     ]);
 
     expect([...registry.recipes.keys()]).toEqual(['scatter', 'bubble', 'regression']);
@@ -93,7 +93,7 @@ describe('活动的 Chart 提供者注册表', () => {
     const registry = resolveChartProviderRegistry([
       {
         family: 'point',
-        recipe: eraseChartRecipeDefinition(ScatterChartDefinition),
+        recipe: eraseChartRecipeDefinition(scatterChartDefinition),
         chartThemeDefinitions: [base, clean],
       },
     ]);

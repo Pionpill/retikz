@@ -3,11 +3,11 @@ import { ChildSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type {
-  GridLayoutInput,
-  GridLayoutItemInput,
-  GridPlacementInput,
-  GridTrackBreadthInput,
-  GridTrackInput,
+  InputGridLayoutConfig,
+  InputGridLayoutItemConfig,
+  InputGridPlacement,
+  InputGridTrackBreadth,
+  InputGridTrack,
 } from '../../src';
 import {
   createGridLayout,
@@ -29,8 +29,8 @@ const parseGridLayout = (input: Record<string, unknown>) =>
 
 describe('GridLayout schema 和工厂', () => {
   it('根据作者输入默认值创建规范的 JSON IR', () => {
-    const item = { kind: LayoutItemKind.Grid, key: 'label', child } satisfies GridLayoutItemInput;
-    const input = { columns: [{ kind: 'fixed', value: 20 }], children: [item] } satisfies GridLayoutInput;
+    const item = { kind: LayoutItemKind.Grid, key: 'label', child } satisfies InputGridLayoutItemConfig;
+    const input = { columns: [{ kind: 'fixed', value: 20 }], children: [item] } satisfies InputGridLayoutConfig;
     const source = createGridLayout(input);
 
     expect(source).toEqual({ namespace: 'layout', type: 'gridLayout', ...input });
@@ -72,9 +72,9 @@ describe('GridLayout schema 和工厂', () => {
   });
 
   it('保持跟踪、放置和项目输入与解析的 schema 输出保持一致', () => {
-    const breadth = { kind: 'content', mode: 'minimum' } satisfies GridTrackBreadthInput;
-    const track = { kind: 'minmax', min: breadth, max: { kind: 'fraction', factor: 2 } } satisfies GridTrackInput;
-    const placement = { start: 0 } satisfies GridPlacementInput;
+    const breadth = { kind: 'content', mode: 'minimum' } satisfies InputGridTrackBreadth;
+    const track = { kind: 'minmax', min: breadth, max: { kind: 'fraction', factor: 2 } } satisfies InputGridTrack;
+    const placement = { start: 0 } satisfies InputGridPlacement;
 
     expect(
       parseGridLayout({ columns: [track], children: [{ kind: 'grid', key: 'a', child, column: placement }] }),
@@ -82,7 +82,7 @@ describe('GridLayout schema 和工厂', () => {
   });
 
   it('接受没有起点的跨度作为自动放置轴', () => {
-    const autoSpan = { span: 2 } satisfies GridPlacementInput;
+    const autoSpan = { span: 2 } satisfies InputGridPlacement;
 
     expect(
       parseGridLayout({
@@ -124,7 +124,7 @@ describe('GridLayout schema 和工厂', () => {
   });
 
   it('拒绝无效的轨道、放置、重复的键和每个嵌套的未知字段', () => {
-    const base = { columns: [{ kind: 'fixed', value: 20 }], children: [] } satisfies GridLayoutInput;
+    const base = { columns: [{ kind: 'fixed', value: 20 }], children: [] } satisfies InputGridLayoutConfig;
     const invalid = [
       { kind: 'fraction', factor: 0 },
       { kind: 'fraction', factor: -1 },

@@ -2,17 +2,17 @@ import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
 import { BuiltinExtensionArrowName } from '../constants';
-import { filledPath, hollowPath } from './_utils';
+import { buildFilledPath, buildHollowPath } from './marker-path';
 
 /** 可选实心菱形箭头 Definition */
-export const DiamondArrowDefinition = defineArrow({
+export const diamondArrowDefinition = defineArrow({
   name: BuiltinExtensionArrowName.Diamond,
   backX: 0,
   lineContactX: 0,
   defaultLength: 11,
   defaultWidth: 6,
   emit: context => [
-    filledPath(context, [
+    buildFilledPath(context, [
       [0, 5],
       [5, 0],
       [10, 5],
@@ -22,13 +22,13 @@ export const DiamondArrowDefinition = defineArrow({
 });
 
 /** Diamond 箭头的静态 Core provider */
-export const DiamondArrowProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'arrow', name: DiamondArrowDefinition.name }),
-  makeDefinition: () => DiamondArrowDefinition,
+export const diamondArrowProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'arrow', name: diamondArrowDefinition.name }),
+  makeDefinition: () => diamondArrowDefinition,
 });
 
 /** 可选空心菱形箭头 Definition */
-export const OpenDiamondArrowDefinition = defineArrow({
+export const openDiamondArrowDefinition = defineArrow({
   name: BuiltinExtensionArrowName.OpenDiamond,
   hollow: true,
   backX: 1,
@@ -37,7 +37,7 @@ export const OpenDiamondArrowDefinition = defineArrow({
   defaultLength: 11,
   defaultWidth: 6,
   emit: context => [
-    hollowPath(
+    buildHollowPath(
       context,
       [
         [1, 5],
@@ -51,7 +51,7 @@ export const OpenDiamondArrowDefinition = defineArrow({
 });
 
 /** OpenDiamond 箭头的静态 Core provider */
-export const OpenDiamondArrowProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'arrow', name: OpenDiamondArrowDefinition.name }),
-  makeDefinition: () => OpenDiamondArrowDefinition,
+export const openDiamondArrowProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'arrow', name: openDiamondArrowDefinition.name }),
+  makeDefinition: () => openDiamondArrowDefinition,
 });

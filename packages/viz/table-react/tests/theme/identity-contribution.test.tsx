@@ -1,6 +1,6 @@
 import type * as RetikzReact from '@retikz/react';
 import { createManualTableIR } from '@retikz/table';
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -39,7 +39,7 @@ describe('Table React 运行时风格契约', () => {
       layerId: 'default',
       identityPath: ['default', 'scores'],
     };
-    const contribution = TableInputEmbedAdapter.lower(input, context);
+    const contribution = tableInputEmbedAdapter.lower(input, context);
 
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
     expect(contribution).not.toHaveProperty('datasets');

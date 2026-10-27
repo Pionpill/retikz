@@ -21,7 +21,7 @@ const connectionEnvelopeCacheKey = (
 ): string => `${kind}:${rect.x}:${rect.y}:${rect.width}:${rect.height}:${rect.rotate ?? 0}`;
 
 /** 校验 Shape definition 返回的安全包络 */
-const validateConnectionEnvelope = (
+const resolveConnectionEnvelope = (
   shapeName: string,
   kind: ConnectionEnvelopeKind,
   envelope: unknown,
@@ -68,7 +68,7 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: BoundaryGeo
     rawOwn === undefined
       ? undefined
       : withProviderOutputValidationBoundary(`Shape '${context.visualDef.name}' connectionEnvelope`, () =>
-          validateConnectionEnvelope(context.visualDef.name, kind, rawOwn, context.irPath),
+          resolveConnectionEnvelope(context.visualDef.name, kind, rawOwn, context.irPath),
         );
   const envelope = own ?? boundsConnectionEnvelope(context.visualRect, kind);
   if (own === undefined && !context.connectionEnvelopeWarnings?.has(kind)) {
@@ -90,7 +90,7 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: BoundaryGeo
 };
 
 /** 校验 Boundary provider 解析出的最终矩形 */
-const validateResolvedRect = (providerName: string, value: unknown, irPath?: string) => {
+const resolveBoundaryRect = (providerName: string, value: unknown, irPath?: string) => {
   if (value === null || typeof value !== 'object') {
     throw createCompositeContractError(
       `Boundary '${providerName}' resolved an invalid rect at ${irPath ?? 'node'}: expected an object`,
@@ -156,7 +156,7 @@ export const resolveBoundary = (
     }
 
     rect = withProviderOutputValidationBoundary(`Boundary '${resolution.name}' resolveRect`, () =>
-      validateResolvedRect(resolution.name, rawRect, context.irPath),
+      resolveBoundaryRect(resolution.name, rawRect, context.irPath),
     );
   }
 

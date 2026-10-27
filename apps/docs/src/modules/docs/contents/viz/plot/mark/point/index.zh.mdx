@@ -275,7 +275,7 @@ document.getElementById('plot')!.innerHTML = renderPlot(spec, { rows }, { layout
 | `margin`       | 连接外边距 | 连接边界外的偏移，影响连接位置，不改变可见填充形状                                                                |
 | `boundary`     | 连接边界   | 指定连接使用的轮廓，支持 `shape`、`circle` 或形状引用；与可见 `shape` 分开设置                                    |
 
-星形由 `@retikz/extension` 的 `StarShapeDefinition` 提供；本例通过 Layout 的 `extensions.shapes` 显式注册。
+星形由 `@retikz/extension` 的 `starShapeDefinition` 提供；本例通过 Layout 的 `extensions.shapes` 显式注册。
 
 示例的起始尺寸为 18，灰色辅助连线由 RelationMark 绘制，用于观察节点外边距（`margin`）对连线接入位置的影响，可通过“显示连线”开关关闭。切换到矩形后比较圆角、内边距与连接外边距；“圆形包络”使用 `fit: 'bounds'`，改变连线接入的位置，不改变可见形状。
 

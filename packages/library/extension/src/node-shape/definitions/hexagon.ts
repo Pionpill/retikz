@@ -12,7 +12,7 @@ import {
   polygonAnchor,
   polygonBoundaryPoint,
   polygonConnectionEnvelope,
-} from './_utils';
+} from './polygon';
 
 const HexagonShapeParamsSchema = strictObject({
   shoulderDepth: NonNegativeNumberSchema.optional().describe('Horizontal depth of each shoulder in user units.'),
@@ -46,7 +46,7 @@ const hexagonVertices =
   };
 
 /** 可选 Hexagon 形状 Definition */
-export const HexagonShapeDefinition = defineShape<HexagonShapeParams>({
+export const hexagonShapeDefinition = defineShape<HexagonShapeParams>({
   name: BuiltinExtensionShapeName.Hexagon,
   paramsSchema: HexagonShapeParamsSchema,
   computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight, params) => {
@@ -74,7 +74,7 @@ export const HexagonShapeDefinition = defineShape<HexagonShapeParams>({
 });
 
 /** Hexagon 的静态 Core provider */
-export const HexagonShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
-  key: { capability: 'shape', name: HexagonShapeDefinition.name },
-  makeDefinition: () => HexagonShapeDefinition,
+export const hexagonShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
+  key: { capability: 'shape', name: hexagonShapeDefinition.name },
+  makeDefinition: () => hexagonShapeDefinition,
 });

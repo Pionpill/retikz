@@ -38,7 +38,7 @@ export type FieldResolution = {
  * @param context 数据集名称、映射后的物理路径及模型显式声明的类型
  * @returns 字段覆盖；返回 undefined 不作覆盖。提供 parse 时必须同时返回 type 或在模型中显式声明类型
  */
-export type ResolveField = (
+export type FieldResolver = (
   field: string,
   context: { dataReference: string; physicalPath: string; declaredType?: DataFieldType },
 ) => FieldResolution | undefined;

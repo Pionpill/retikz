@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import { defineCellVisualScale, resolveTableThemeDefaults } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
 import { cascadeTableCellAppearance } from '../../src/pipeline/rule/cascade';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 
 const defaultTable = resolveTableThemeDefaults();
 
@@ -18,7 +18,7 @@ const scaleContext = {
 
 describe('Table 视觉编码级联', () => {
   it('解析一次，评估规范非 null 一次，并重用一个描述符解析', () => {
-    const model = normalizeTableStructure({
+    const model = resolveTableStructure({
       kind: 'manual',
       rows: [[2], [{ value: null }], [2], [{ content: { type: 'node', position: [0, 0] } }]],
     });
@@ -77,7 +77,7 @@ describe('Table 视觉编码级联', () => {
   });
 
   it('应用样式，排序拥有的通道，然后排序根规则', () => {
-    const model = normalizeTableStructure({ kind: 'manual', rows: [[1]] });
+    const model = resolveTableStructure({ kind: 'manual', rows: [[1]] });
     const result = resolveTableCellPlans(model, {
       defaultTable,
       scaleContext,
@@ -116,7 +116,7 @@ describe('Table 视觉编码级联', () => {
   });
 
   it('将 undefined 的解析结果视为无补丁、跟踪、描述符或求值器调用', () => {
-    const model = normalizeTableStructure({ kind: 'manual', rows: [[{ value: null }]] });
+    const model = resolveTableStructure({ kind: 'manual', rows: [[{ value: null }]] });
     const result = resolveTableCellPlans(model, {
       defaultTable,
       scaleContext,

@@ -144,13 +144,13 @@ compileToScene(ir, { boundaries: [biasedPorts, biasedPorts] });
     {
       name: 'defineBoundary',
       kind: 'function',
-      type: '<TParams extends JsonObject>(definition: BoundaryDefinitionInput<TParams>) => BoundaryDefinition',
+      type: '<TParams extends JsonObject>(definition: InputBoundaryDefinition<TParams>) => BoundaryDefinition',
       description: '创建可注册的连接面定义',
     },
     {
-      name: 'BoundaryDefinitionInput',
+      name: 'InputBoundaryDefinition',
       kind: 'type',
-      type: 'BoundaryDefinitionInput<TParams>',
+      type: 'InputBoundaryDefinition<TParams>',
       description: '作者声明连接面时使用的输入契约',
     },
     {

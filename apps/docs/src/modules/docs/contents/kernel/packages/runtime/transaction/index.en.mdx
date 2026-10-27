@@ -55,7 +55,7 @@ declare const createRuntime: (options: RuntimeOptions) => Runtime;
 type RuntimeOptions = Readonly<{
   sources: RuntimeSourceRegistry;
   computations: RuntimeComputationRegistry;
-  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
+  initialSnapshots: ReadonlyArray<InputRuntimeSource>;
   updateStrategy?: 'auto' | 'full';
   participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
   trace?: PerformanceTraceSink;
@@ -71,7 +71,7 @@ type RuntimeOptions = Readonly<{
 declare const createRuntimeSourceInput: <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,
-) => RuntimeSourceInput;
+) => InputRuntimeSource;
 ```
 
 This complete example defines coordinates and a distance computation, then creates the instance. Subsequent examples reuse these variables:
@@ -382,7 +382,7 @@ Only public members used in this chapter are listed; follow the source links bel
     {
       name: 'createRuntimeSourceInput',
       kind: 'function',
-      type: '<TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>, value: TInput) => RuntimeSourceInput',
+      type: '<TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>, value: TInput) => InputRuntimeSource',
       description: 'Pairs a Source with complete initial input; capture occurs during instance creation.',
     },
     {

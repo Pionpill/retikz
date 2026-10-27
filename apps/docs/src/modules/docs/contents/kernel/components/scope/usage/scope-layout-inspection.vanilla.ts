@@ -1,6 +1,6 @@
 import { createInspectionVanillaAuthoring } from '@retikz/inspect/vanilla';
 import type { InputFlexLayout } from '@retikz/layout-vanilla';
-import { LayoutInputEmbedAdapters } from '@retikz/layout-vanilla';
+import { layoutInputEmbedAdapters } from '@retikz/layout-vanilla';
 import {
   createLayoutInspectionBarrier,
   createLayoutInspectionVanillaDriver,
@@ -54,7 +54,7 @@ const fig = scene({
 });
 
 export const svg = renderToSvgString(fig, {
-  adapters: LayoutInputEmbedAdapters,
+  adapters: layoutInputEmbedAdapters,
   compileDriver: createLayoutInspectionVanillaDriver(),
   output: { width: 520, height: 190 },
 });

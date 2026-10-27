@@ -2,10 +2,10 @@
 
 Framework-neutral bindings for [`@retikz/table`](../table), retikz's renderer-agnostic Tier 2 table package.
 
-`detailTable()` and `manualTable()` create the persisted `IRDetailTable` and `IRManualTable`; `embedTable()` contributes one typed Table embed to a Vanilla scene. `TableInputEmbedAdapter` performs the domain lowering during Vanilla's single scene-normalization traversal. Browser mounting remains in `@retikz/vanilla/dom`.
+`detailTable()` and `manualTable()` create the persisted `IRDetailTable` and `IRManualTable`; `embedTable()` contributes one typed Table embed to a Vanilla scene. `tableInputEmbedAdapter` performs the domain lowering during Vanilla's single scene-normalization traversal. Browser mounting remains in `@retikz/vanilla/dom`.
 
 ```ts
-import { TableInputEmbedAdapter, detailTable, embedTable, renderTable } from '@retikz/table-vanilla';
+import { tableInputEmbedAdapter, detailTable, embedTable, renderTable } from '@retikz/table-vanilla';
 import { renderToSvgString, scene } from '@retikz/vanilla';
 
 const spec = detailTable({
@@ -15,7 +15,7 @@ const spec = detailTable({
 });
 
 const input = scene([embedTable(spec, { data: { scores: rows } })]);
-const svg = renderToSvgString(input, { adapters: [TableInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [tableInputEmbedAdapter] });
 
 const result = renderTable(spec, { data: { scores: rows }, artifacts: true });
 result.svg;

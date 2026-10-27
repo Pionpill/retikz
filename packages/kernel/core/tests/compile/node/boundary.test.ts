@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { NamespaceStack } from '../../../src/compile/namespace';
-import { angleBoundaryOf, boundaryPointOf, compileResolvedNode } from '../../../src/compile/node';
+import { angleBoundaryOf, boundaryPointOf, compileNodeResolution } from '../../../src/compile/node';
 import { createPositionResolveContext } from '../../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../../src/compile/reference';
 import * as core from '../../../src/index';
@@ -80,7 +80,7 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
       labelDistance: 12,
     });
 
-    return compileResolvedNode(resolution, {
+    return compileNodeResolution(resolution, {
       measureText,
       positionContext: createPositionResolveContext({
         lookupReference: id => namespaceStack.lookupReference(id),

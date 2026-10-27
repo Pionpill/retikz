@@ -2,7 +2,7 @@ import type { GroupPrimitive } from '../../contract';
 import { CompileExpansionKind } from '../../contract';
 import { resolveClip } from '../../resolve/resource';
 import { ScopeBoundingShape } from '../../schemas';
-import type { NodeLayout } from '../node';
+import type { CompiledNodeLayout } from '../node';
 import { filterAnimations } from '../orchestration';
 import {
   createIntrinsicScopeLayout,
@@ -10,7 +10,7 @@ import {
   resolvePreliminaryScopeTransforms,
   resolveScopePositionTarget,
 } from '../scope';
-import type { ScopeCompileInput } from '../scope';
+import type { InputScopeCompile } from '../scope';
 import { resolveScopeContext, runElementCompilation } from './context';
 import { collectElementObservation } from './observation';
 import type { CompiledScope, ElementCompileOptions, ElementCompileResult, ScopeCompilationPreparation } from './types';
@@ -20,7 +20,7 @@ export type ScopeCompileContext = ElementCompileOptions;
 
 /** 在子元素计算前解析 Scope 样式、放置目标和可提前确定的变换 */
 export const prepareScopeCompilation = (
-  input: ScopeCompileInput,
+  input: InputScopeCompile,
   context: ScopeCompileContext,
 ): ElementCompileResult<ScopeCompilationPreparation> =>
   runElementCompilation(context, workspace => {
@@ -34,9 +34,9 @@ export const prepareScopeCompilation = (
 
 /** 聚合已完成的局部子布局并生成 Scope 自身输出，不递归编译 children */
 export const compileScope = (
-  input: ScopeCompileInput,
+  input: InputScopeCompile,
   preparation: ScopeCompilationPreparation,
-  layouts: ReadonlyArray<NodeLayout>,
+  layouts: ReadonlyArray<CompiledNodeLayout>,
   context: ScopeCompileContext,
 ): ElementCompileResult<CompiledScope> =>
   runElementCompilation(context, workspace => {

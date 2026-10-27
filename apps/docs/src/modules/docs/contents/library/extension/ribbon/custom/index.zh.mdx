@@ -223,7 +223,7 @@ Provider 只负责把 Definition 和 runtime profile dataset 装配成普通 Cor
     {
       name: 'defineRibbonWidthProfile',
       kind: 'function',
-      type: '<TParams extends JsonObject>(definition: RibbonWidthProfileDefinitionInput<TParams>) => RibbonWidthProfileDefinition',
+      type: '<TParams extends JsonObject>(definition: InputRibbonWidthProfileDefinition<TParams>) => RibbonWidthProfileDefinition',
       description:
         '校验 profile 名称并创建运行时定义；`definition` 提供 `name`、可选的 `paramsSchema` 和返回非负宽度的 `widthAt`',
     },

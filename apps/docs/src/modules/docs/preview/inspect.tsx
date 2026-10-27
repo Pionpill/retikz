@@ -76,7 +76,7 @@ import { browserMeasurer } from '@/modules/docs/components/component-preview/van
 import { renderToSvgString } from '@retikz/vanilla';
 import { createDefaultInspectorRegistry } from '@retikz/inspect';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
-${hasClip ? "import { PathClipDefinition } from '@retikz/extension';\n" : ''}import config from './${name}.config.json';
+${hasClip ? "import { pathClipDefinition } from '@retikz/extension';\n" : ''}import config from './${name}.config.json';
 
 // Restore runtime authoring markers; they are not persisted Core IR fields.
 const input: InputScene = JSON.parse(JSON.stringify(config.input), (key, value) =>
@@ -84,7 +84,7 @@ const input: InputScene = JSON.parse(JSON.stringify(config.input), (key, value) 
 );
 
 export const svg = renderToSvgString(input, {
-  compile: { ${hasClip ? 'clips: [PathClipDefinition], ' : ''}themeDefinitions: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer },
+  compile: { ${hasClip ? 'clips: [pathClipDefinition], ' : ''}themeDefinitions: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer },
   compileDriver: createInspectionVanillaDriver({
     registry: createDefaultInspectorRegistry(),
     selection: config.selection as InspectionSelection,

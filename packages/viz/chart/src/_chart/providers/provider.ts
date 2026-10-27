@@ -1,9 +1,9 @@
-import type { CoreDependencyProvider, CoreProviderContribution, ResolvedTheme } from '@retikz/core';
+import type { CoreDependencyProvider, CoreProviderContribution, CanonicalTheme } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
-import { FlexLayoutProvider } from '@retikz/layout';
-import type { LowerPlotsOptions, PlotDataPreparationOptions } from '@retikz/plot';
-import { PlotProviderKey, preparePlotData } from '@retikz/plot';
-import { SurfaceProvider } from '@retikz/standard/presentation';
+import { flexLayoutProvider } from '@retikz/layout';
+import type { PlotsLoweringOptions, PlotDataPreparationOptions } from '@retikz/plot';
+import { plotProviderKey, preparePlotData } from '@retikz/plot';
+import { surfaceProvider } from '@retikz/standard/presentation';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';
@@ -19,7 +19,7 @@ const makeChartDefinition: CoreDependencyProvider<ChartRecipeProviderContributio
   createChartDefinition(resolveChartProviderRegistry(contributions));
 
 /** 当前 Chart provider 使用的稳定依赖顺序 */
-const chartProviderDependencies = Object.freeze([SurfaceProvider.key, FlexLayoutProvider.key, PlotProviderKey]);
+const chartProviderDependencies = Object.freeze([surfaceProvider.key, flexLayoutProvider.key, plotProviderKey]);
 
 /**
  * 为一个具体 chartType 创建只携带自身 recipe 的 provider contribution
@@ -34,7 +34,7 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
     /** 当前编译边界可见的命名 Theme Definition */
     chartThemeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
     /** 与Plot provider共享的lowering runtime Definition */
-    lowerOptions?: LowerPlotsOptions;
+    lowerOptions?: PlotsLoweringOptions;
   }>,
 ): ChartProviderContribution => {
   if (input.family.length === 0) {
@@ -80,7 +80,7 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
 
   return Object.freeze({
     roots: Object.freeze([provider.key]),
-    providers: Object.freeze([SurfaceProvider, FlexLayoutProvider, provider]),
+    providers: Object.freeze([surfaceProvider, flexLayoutProvider, provider]),
   });
 };
 
@@ -92,8 +92,8 @@ export const prepareChartData = async <TSource = never>(
   source: IRChartSource,
   request: PlotDataPreparationOptions<TSource>,
   contribution: CoreProviderContribution,
-  theme: ResolvedTheme = DEFAULT_RESOLVED_THEME,
-  lowerOptions: LowerPlotsOptions = {},
+  theme: CanonicalTheme = DEFAULT_RESOLVED_THEME,
+  lowerOptions: PlotsLoweringOptions = {},
 ) => {
   const contributions: Array<ChartRecipeProviderContribution> = [];
 

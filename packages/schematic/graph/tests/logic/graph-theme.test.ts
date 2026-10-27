@@ -1,4 +1,4 @@
-import type { CompileWarning, ResolvedTheme } from '@retikz/core';
+import type { CompileWarning, CanonicalTheme } from '@retikz/core';
 import {
   compileToScene,
   DEFAULT_RESOLVED_THEME,
@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
 
-const themeWithName = (name: string): ResolvedTheme => ({ ...DEFAULT_RESOLVED_THEME, name });
+const themeWithName = (name: string): CanonicalTheme => ({ ...DEFAULT_RESOLVED_THEME, name });
 
 const styleRegistry = (definition: Graph.GraphThemeDefinition): ReadonlyMap<string, Graph.GraphThemeDefinition> =>
   new Map([[definition.name, definition]]);
@@ -22,7 +22,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
     { mode: ThemeMode.Light, color: '#777777' },
     { mode: ThemeMode.Dark, color: '#888888' },
   ])('在 $mode 模式下提供完整的模式感知中性 Entity 基线', ({ mode, color }) => {
-    const theme: ResolvedTheme = {
+    const theme: CanonicalTheme = {
       ...DEFAULT_RESOLVED_THEME,
       mode,
       colors: resolveDefaultCoreThemeColors(mode),
@@ -50,7 +50,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
 
   it('将静态 Entity 母版具体化为同色描边、不透明光填充和对比文本', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
     const warnings: Array<CompileWarning> = [];
     const output = compileToScene(
@@ -81,7 +81,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
 
   it('非静态 Entity 母版会明确报错，直到两个上下文绘制通道都被覆盖', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
     const source = {
       namespace: 'graph',
@@ -128,7 +128,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [
         {
-          roots: [Graph.EntityProviderKey],
+          roots: [Graph.entityProviderKey],
           providers: Graph.createGraphProviders({ graphThemeDefinitions: [definition] }),
         },
       ],
@@ -175,7 +175,7 @@ describe('Graph Scope 和 Theme 编译语义', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [
         {
-          roots: [Graph.RelationProviderKey],
+          roots: [Graph.relationProviderKey],
           providers: Graph.createGraphProviders({ graphThemeDefinitions: [definition] }),
         },
       ],

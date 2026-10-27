@@ -1,7 +1,7 @@
 import { ChildSchema, LayoutAxisProposalKind, LayoutIntrinsicMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LayoutAxisSizeInput, LayoutContainerBoxInput, LayoutItemBaseInput, LayoutSizeInput } from '../../src';
+import type { InputLayoutAxisSize, InputLayoutContainerBox, InputLayoutItemBase, InputLayoutSize } from '../../src';
 import {
   LayoutAlignment,
   LayoutAlignmentSchema,
@@ -24,7 +24,7 @@ describe('共享布局 schema', () => {
   });
 
   it('仅在解析或解析作者输入时才具体化 Box 默认值', () => {
-    const input = {} satisfies LayoutContainerBoxInput;
+    const input = {} satisfies InputLayoutContainerBox;
 
     expect(LayoutContainerBoxSchema.parse(input)).toEqual({
       size: { x: { kind: 'content' }, y: { kind: 'content' } },
@@ -46,7 +46,7 @@ describe('共享布局 schema', () => {
       { kind: LayoutAxisSizeKind.Content, min: 10, max: 20 },
       { kind: LayoutAxisSizeKind.Fixed, value: 12 },
       { kind: LayoutAxisSizeKind.Fill, min: 4 },
-    ] satisfies Array<LayoutAxisSizeInput>;
+    ] satisfies Array<InputLayoutAxisSize>;
 
     expect(inputs.map(input => LayoutAxisSizeSchema.parse(input))).toEqual(inputs);
     expect(LayoutAxisSizeSchema.safeParse({ kind: 'fixed' }).success).toBe(false);
@@ -57,7 +57,7 @@ describe('共享布局 schema', () => {
   });
 
   it('解析部分物理尺寸和间距，而不丢失显式零', () => {
-    const sizeInput = { x: { kind: 'fixed', value: 0 } } satisfies LayoutSizeInput;
+    const sizeInput = { x: { kind: 'fixed', value: 0 } } satisfies InputLayoutSize;
 
     expect(LayoutSizeSchema.parse(sizeInput)).toEqual({
       x: { kind: 'fixed', value: 0 },
@@ -81,7 +81,7 @@ describe('共享布局 schema', () => {
       key: 'legend-label',
       margin: { right: 8 },
       child: { type: 'node', position: [0, 0], text: 'Revenue' },
-    } satisfies LayoutItemBaseInput;
+    } satisfies InputLayoutItemBase;
     const parsed = LayoutItemBaseSchema.parse(input);
 
     expect(parsed).toEqual(input);

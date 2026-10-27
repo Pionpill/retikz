@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
@@ -19,11 +19,11 @@ import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 /** 是否为 path 子节点 */
 const isPath = (child: IRChild): child is IRPath => child.type === 'path';

@@ -20,7 +20,7 @@ Declare a logical field model, normalize external rows, then apply JSON-serializ
 ```ts
 import type { ExternalRow, IRDataModel, IRDataTransform } from '@retikz/data';
 
-import { applyTransforms, DataFieldType, normalizeRows, resolveFieldTypes } from '@retikz/data';
+import { applyTransforms, DataFieldType, resolveDataRows, resolveFieldTypes } from '@retikz/data';
 
 const rows: Array<ExternalRow> = [
   { region: 'north', revenue: '12' },
@@ -35,7 +35,7 @@ const model: IRDataModel = [
 
 const sourceFields = new Set(['region', 'revenue']);
 const fieldTypeMap = resolveFieldTypes(model, rows, sourceFields);
-const canonicalRows = normalizeRows(rows, fieldTypeMap);
+const canonicalRows = resolveDataRows(rows, fieldTypeMap);
 
 const transforms: Array<IRDataTransform> = [
   {
@@ -59,7 +59,7 @@ The model and transform operations are serializable. `rows`, custom parser funct
 | Area             | Public entry points                                                                                                  |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
 | Data contracts   | `DataReferenceSchema`, `DataModelSchema`, `DataFieldType`, and schema-derived `IRDataXxx` types                      |
-| Field processing | `resolveFieldTypes`, `collectFormatFields`, `applyFieldResolver`, `normalizeRows`, `validateBoundData`               |
+| Field processing | `resolveFieldTypes`, `collectFormatFields`, `applyFieldResolver`, `resolveDataRows`, `assertBoundData`               |
 | Data transforms  | `applyTransforms`, `applyTransformsToDataView`, `TransformSchema`                                                    |
 | Statistics       | reducer and selector schemas, `defineStatisticsReducer`, `defineRowSelector`                                         |
 | Extensions       | `defineFieldFormat`, `defineStatisticsReducer`, `defineRowSelector`, `defineTransform`, and their registry resolvers |

@@ -13,10 +13,10 @@ import { boundsToRect, mergeBounds, rectToBounds } from '@retikz/math';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
-  FlowLayoutElementInput,
+  InputFlowLayoutElement,
   FlowLayoutExecutionContext,
-  FlowLayoutInput,
-  FlowLayoutPlacementInput,
+  InputFlowLayoutComputation,
+  InputFlowLayoutPlacement,
   FlowLayoutPlacementOutput,
 } from '../../contract';
 import type { FlowDirection, FlowLayoutAlignment } from '../../shared';
@@ -35,7 +35,7 @@ const flexAlignment = (alignment: FlowLayoutAlignment) => {
   return LayoutAlignment.Center;
 };
 
-const placementFailure = (input: FlowLayoutPlacementInput, reason: string, cause?: unknown): never => {
+const placementFailure = (input: InputFlowLayoutPlacement, reason: string, cause?: unknown): never => {
   throw new RetikzDiagramError({
     code: RetikzDiagramErrorCode.FlowMaterializationFailed,
     message: `Flow Layout '${input.layout.id}' could not be placed through Layout ${input.layout.kind}: ${reason}`,
@@ -81,14 +81,14 @@ const gridTrackCount = (
 
 /** 保留完整局部排列，只投影 Layout 对父级贡献的结构边界 */
 const projectPlacementBounds = (
-  input: FlowLayoutPlacementInput,
+  input: InputFlowLayoutPlacement,
   output: FlowLayoutPlacementOutput,
-  flow: FlowLayoutInput,
+  flow: InputFlowLayoutComputation,
 ): FlowLayoutPlacementOutput => {
   const excluded = input.layout.excludeFromBounds;
   if (excluded === undefined || excluded.length === 0) return output;
 
-  const findLayout = (elements: ReadonlyArray<FlowLayoutElementInput>): FlowLayoutElementInput | undefined => {
+  const findLayout = (elements: ReadonlyArray<InputFlowLayoutElement>): InputFlowLayoutElement | undefined => {
     for (const element of elements) {
       if (element.id === input.layout.id) return element;
       if (element.kind !== 'leaf') {
@@ -135,10 +135,10 @@ const projectPlacementBounds = (
 /** 使用公开 Flex/Grid compiler 执行一个无绘制 Flow Layout placement */
 export const createFlowLayoutExecutionContext = (
   context: CompositeCompileContext,
-  flow: FlowLayoutInput,
+  flow: InputFlowLayoutComputation,
 ): Pick<FlowLayoutExecutionContext, 'placeLayout'> => ({
   placeLayout: input => {
-    const findWidth = (elements: ReadonlyArray<FlowLayoutElementInput>): number | undefined => {
+    const findWidth = (elements: ReadonlyArray<InputFlowLayoutElement>): number | undefined => {
       for (const element of elements) {
         if (element.kind === 'leaf') continue;
         if (element.id === input.layout.id) return element.allocatedWidth;
@@ -197,7 +197,7 @@ export const createFlowLayoutExecutionContext = (
         let columnGap = layout.gap.column;
         const ownerById = new Map<string, string>();
 
-        const visit = (elements: ReadonlyArray<FlowLayoutElementInput>, owner?: string): void => {
+        const visit = (elements: ReadonlyArray<InputFlowLayoutElement>, owner?: string): void => {
           for (const element of elements) {
             const directOwner = cellsById.has(element.id) ? element.id : owner;
             if (directOwner !== undefined) ownerById.set(element.id, directOwner);

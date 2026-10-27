@@ -1,9 +1,9 @@
 import type {
   IRPosition,
   PathCompileContext,
-  PathLabelInput,
-  PathBoundaryLabelInput,
-  ResolvedPathAppearance,
+  InputPathLabel,
+  InputPathBoundaryLabel,
+  CompiledPathAppearance,
   ScenePrimitive,
 } from '@retikz/core';
 import type { CurveSegmentSample, Vector2 } from '@retikz/math';
@@ -24,7 +24,7 @@ export type RibbonSegment = {
 };
 
 /** 从 PathCommand 提取出的 ribbon 中心线段输入 */
-export type RibbonSegmentInput =
+export type InputRibbonSegment =
   | {
       /** 当前中心线段的几何类型 */
       kind: 'line';
@@ -105,15 +105,15 @@ export type RibbonCrossSection = {
 /** ribbon 几何阶段的最小附加上下文 */
 export type RibbonEmitOptions = Readonly<{
   /** 共享宿主外观 */
-  appearance: ResolvedPathAppearance;
+  appearance: CompiledPathAppearance;
   /** 当前编译使用的取整函数 */
   round: (value: number) => number;
   /** 当前路径的物化服务 */
   materializePath: PathCompileContext['materializePath'];
   /** 当前路径的宿主标签服务 */
-  emitHostLabels: (input: PathLabelInput) => ReadonlyArray<ScenePrimitive>;
+  emitHostLabels: (input: InputPathLabel) => ReadonlyArray<ScenePrimitive>;
   /** 在几何采样前继承宿主标签配置 */
   resolveHostLabel: PathCompileContext['resolveHostLabel'];
   /** Kernel 共享边界标签服务 */
-  emitBoundaryLabels: (input: ReadonlyArray<PathBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
+  emitBoundaryLabels: (input: ReadonlyArray<InputPathBoundaryLabel>) => ReadonlyArray<ScenePrimitive>;
 }>;

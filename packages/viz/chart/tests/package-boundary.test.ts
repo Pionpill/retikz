@@ -71,7 +71,7 @@ const packageImportsOf = async (relativeDirectoryUrl: string): Promise<Array<str
 };
 
 const publicProviderExportPattern =
-  /export\s*(?:\{[^}]*\b(?:SurfaceProvider|FlexLayoutProvider|ChartProvider|PlotProvider)\b|const\s+(?:SurfaceProvider|FlexLayoutProvider|ChartProvider|PlotProvider)|\*\s+from\s+['"]@retikz\/(?:standard|layout|plot|chart)(?:\/[^'"]+)?['"])/;
+  /export\s*(?:\{[^}]*\b(?:surfaceProvider|flexLayoutProvider|ChartProvider|PlotProvider)\b|const\s+(?:surfaceProvider|flexLayoutProvider|ChartProvider|PlotProvider)|\*\s+from\s+['"]@retikz\/(?:standard|layout|plot|chart)(?:\/[^'"]+)?['"])/;
 
 const publicSourceOf = async (relativeDirectoryUrl: string): Promise<string> => {
   const sourceFiles = await sourceFilesOf(new URL(relativeDirectoryUrl, import.meta.url));

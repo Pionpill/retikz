@@ -19,7 +19,7 @@ import {
   SummarizeTransformSchema,
   TransformSchema,
 } from '../../src';
-import { BuiltinReducerOperationSchemas } from '../../src/operators/reducer';
+import { BUILTIN_REDUCER_OPERATION_SCHEMAS } from '../../src/operators/reducer';
 
 const closedObjectSchemaCases: Array<{
   name: string;
@@ -29,7 +29,7 @@ const closedObjectSchemaCases: Array<{
   { name: 'order-by', schema: OrderBySchema, value: { field: 'month', order: 'ascending' } },
   {
     name: 'extent reducer',
-    schema: BuiltinReducerOperationSchemas.Extent,
+    schema: BUILTIN_REDUCER_OPERATION_SCHEMAS.Extent,
     value: { kind: 'extent', field: 'value', as: { min: 'low', max: 'high' } },
   },
   { name: 'quantile point', schema: QuantileBandPointOutputSchema, value: { p: 0.5, as: 'median' } },
@@ -125,11 +125,13 @@ describe('转换 schema', () => {
     { min: 'same', max: 'same' },
     { min: 'low', max: 'high', extra: true },
   ])('拒绝无效范围输出映射：%j', as => {
-    expect(BuiltinReducerOperationSchemas.Extent.safeParse({ kind: 'extent', field: 'value', as }).success).toBe(false);
+    expect(BUILTIN_REDUCER_OPERATION_SCHEMAS.Extent.safeParse({ kind: 'extent', field: 'value', as }).success).toBe(
+      false,
+    );
   });
 
   it('报告其声明路径上的范围端点冲突', () => {
-    const duplicateEndpoint = BuiltinReducerOperationSchemas.Extent.safeParse({
+    const duplicateEndpoint = BUILTIN_REDUCER_OPERATION_SCHEMAS.Extent.safeParse({
       kind: 'extent',
       field: 'value',
       as: { min: 'same', max: 'same' },

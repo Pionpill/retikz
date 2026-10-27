@@ -1,11 +1,11 @@
 import type { AnyCompositeDefinition, IRChild, LayoutChildResult, LayoutProposal } from '@retikz/core';
 import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { intrinsicLayoutProposal } from '@retikz/layout/compose';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { ArrayDefinition, MapDefinition, MatrixDefinition } from '../../../src/collection';
+import { arrayDefinition, mapDefinition, matrixDefinition } from '../../../src/collection';
 
 const compile = (
   child: IRChild,
@@ -33,8 +33,8 @@ const compile = (
   const scene = compileToScene(
     { type: 'scene', version: 1, children: [{ namespace: 'cell-test', type: 'harness', child }] },
     {
-      composites: [harness, ArrayDefinition, MapDefinition, MatrixDefinition, ...extra],
-      clips: [PathClipDefinition],
+      composites: [harness, arrayDefinition, mapDefinition, matrixDefinition, ...extra],
+      clips: [pathClipDefinition],
       padding: 0,
     },
   );

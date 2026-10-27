@@ -11,7 +11,7 @@ import {
   TableSchema,
 } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
-import { manualTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { manualTable, tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 import { Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -45,14 +45,14 @@ type InputTableComponent = {
 
 /** 读取 React 根组件构造的唯一 Table Vanilla 输入 */
 const inputOf = <TProps,>(component: InputTableComponent, props: TProps): InputTable<unknown> => {
-  if (component.inputEmbedAdapter !== TableInputEmbedAdapter) throw new Error('expected Table Vanilla adapter');
+  if (component.inputEmbedAdapter !== tableInputEmbedAdapter) throw new Error('expected Table Vanilla adapter');
   if (component.createInputEmbedProps === undefined) throw new Error('expected Table Vanilla input factory');
   return component.createInputEmbedProps(props as Readonly<Record<string, unknown>>);
 };
 
 /** 经 Vanilla adapter 取得当前 React authoring 的 Core contribution */
 const contributionOf = <TProps,>(component: InputTableComponent, props: TProps, id: string) =>
-  TableInputEmbedAdapter.lower(inputOf(component, props), contextOf(id));
+  tableInputEmbedAdapter.lower(inputOf(component, props), contextOf(id));
 
 describe('Table React 组成编写收集器', () => {
   it('通过 Fragments、数组和空节点收集有序的 DetailColumn 标记', () => {

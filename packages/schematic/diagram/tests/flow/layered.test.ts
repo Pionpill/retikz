@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type {
-  EffectiveFlowLayout,
-  FlowLayoutElementInput,
-  FlowLayoutInput,
+  CanonicalFlowLayoutOptions,
+  InputFlowLayoutElement,
+  InputFlowLayoutComputation,
   FlowLayoutPlacementOutput,
-  FlowLayoutRelationInput,
+  InputFlowLayoutRelation,
 } from '../../src/flow';
-import { LayeredFlowLayoutDefinition } from '../../src/flow';
+import { layeredFlowLayoutDefinition } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 
-const layout = (direction: EffectiveFlowLayout['direction'] = 'right'): EffectiveFlowLayout => ({
+const layout = (direction: CanonicalFlowLayoutOptions['direction'] = 'right'): CanonicalFlowLayoutOptions => ({
   direction,
   nodeGap: 20,
   rankGap: 40,
@@ -23,13 +23,13 @@ const leaf = (
   rank?: number,
   size: Readonly<{ width: number; height: number }> = { width: 80, height: 40 },
   margin = { top: 0, right: 0, bottom: 0, left: 0 },
-): FlowLayoutElementInput => ({ kind: 'leaf', id, ...(rank === undefined ? {} : { rank }), size, margin });
+): InputFlowLayoutElement => ({ kind: 'leaf', id, ...(rank === undefined ? {} : { rank }), size, margin });
 
 const relation = (
   source: string,
   target: string,
-  overrides: Partial<FlowLayoutRelationInput> = {},
-): FlowLayoutRelationInput => ({
+  overrides: Partial<InputFlowLayoutRelation> = {},
+): InputFlowLayoutRelation => ({
   source: { id: source, overlap: 'allow' },
   target: { id: target, overlap: 'allow' },
   direction: 'forward',
@@ -49,7 +49,7 @@ const noLayoutContext = {
   },
 };
 
-const run = (input: FlowLayoutInput) => LayeredFlowLayoutDefinition.layout(input, noLayoutContext);
+const run = (input: InputFlowLayoutComputation) => layeredFlowLayoutDefinition.layout(input, noLayoutContext);
 
 const boundsOf = (output: ReturnType<typeof run>, id: string) => {
   const bounds = output.elements.find(element => element.id === id)?.bounds;
@@ -123,7 +123,7 @@ describe('分层 Flow 布局', () => {
 
   it.each(['right', 'left', 'down', 'up'] as const)('当主方向为 %s 时，保留非方形测量的叶子尺寸', direction => {
     const output = executeFlowLayout(
-      LayeredFlowLayoutDefinition,
+      layeredFlowLayoutDefinition,
       {
         layout: layout(direction),
         elements: [leaf('measured', undefined, { width: 100.546875, height: 35.2 })],
@@ -184,7 +184,7 @@ describe('分层 Flow 布局', () => {
     const firstMargin = { top: 2, right: 11, bottom: 5, left: 3 };
     const secondMargin = { top: 13, right: 7, bottom: 17, left: 19 };
     const output = executeFlowLayout(
-      LayeredFlowLayoutDefinition,
+      layeredFlowLayoutDefinition,
       {
         layout: layout(direction),
         elements: [
@@ -202,7 +202,7 @@ describe('分层 Flow 布局', () => {
   });
 
   it('确定性地路由循环和并行关系并保留测量标签', () => {
-    const input: FlowLayoutInput = {
+    const input: InputFlowLayoutComputation = {
       layout: layout(),
       elements: [leaf('a'), leaf('b')],
       relations: [relation('a', 'b', { labelSize: { width: 30, height: 12 } }), relation('a', 'b'), relation('b', 'a')],
@@ -275,7 +275,7 @@ describe('分层 Flow 布局', () => {
     const horizontal = direction === 'right' || direction === 'left';
     let placementInput: FlowLayoutPlacementOutput | undefined;
     let receivedMargins: ReadonlyArray<unknown> = [];
-    LayeredFlowLayoutDefinition.layout(
+    layeredFlowLayoutDefinition.layout(
       {
         layout: layout(),
         elements: [
@@ -397,7 +397,7 @@ describe('分层 Flow 布局', () => {
 
   it('仅委托一次显式 Layout 放置且不从关系推导其子项顺序', () => {
     let calls = 0;
-    const output = LayeredFlowLayoutDefinition.layout(
+    const output = layeredFlowLayoutDefinition.layout(
       {
         layout: layout(),
         elements: [

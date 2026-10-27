@@ -21,7 +21,7 @@ import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, strictObject, string } from 'zod';
 
 import type { LegendCompileArtifact } from '../../src/presentation/legend/composite';
-import { LegendDefinition, createLegend } from '../../src/presentation/legend/composite';
+import { legendDefinition, createLegend } from '../../src/presentation/legend/composite';
 import {
   LegendContentKind,
   LegendDirection,
@@ -29,7 +29,7 @@ import {
   LegendWrap,
 } from '../../src/presentation/legend/constants';
 import type { LegendItemsArtifact } from '../../src/presentation/legend/types';
-import type { LegendInput } from '../../src/presentation/legend/types';
+import type { InputLegendConfig } from '../../src/presentation/legend/types';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const LeafSchema = CompositeBaseSchema.extend({
@@ -145,7 +145,7 @@ const compileLegend = (child: IRChild, proposal: LayoutProposal = naturalProposa
       type: 'scene',
       children: [{ namespace: 'legend-test', type: 'harness', child }],
     },
-    { composites: [LegendDefinition, createLeafDefinition(logs), harness], padding: 0 },
+    { composites: [legendDefinition, createLeafDefinition(logs), harness], padding: 0 },
   );
   if (observed === undefined) throw new Error('Expected Legend probe to resolve');
 
@@ -268,7 +268,7 @@ describe('Legend 项目编译契约', () => {
           { type: 'node', id: 'above-legend', position: [20, 0], text: 'above', zIndex: 5 },
         ],
       },
-      { composites: [LegendDefinition], padding: 0 },
+      { composites: [legendDefinition], padding: 0 },
     );
     const groups = groupsOf(output.scene.primitives);
     const legendIndex = groups.findIndex(group => group.id === 'legend-order');
@@ -455,7 +455,7 @@ describe('Legend 项目编译契约', () => {
         { key: 'wide', sample: leaf('wide', 120, 10, { minimumWidth: 60 }) },
         { key: 'narrow', sample: leaf('narrow', 80, 10, { minimumWidth: 40 }) },
       ],
-    } satisfies Extract<LegendInput['content'], { kind: typeof LegendContentKind.Items }>;
+    } satisfies Extract<InputLegendConfig['content'], { kind: typeof LegendContentKind.Items }>;
 
     expect(compileLegend(createLegend({ content }), naturalProposal()).observed.allocationBounds.width).toBe(210);
     expect(compileLegend(createLegend({ content }), minimumProposal()).observed.allocationBounds.width).toBe(60);
@@ -588,7 +588,7 @@ describe('Legend 项目编译契约', () => {
           }),
         ],
       },
-      { composites: [LegendDefinition], padding: 0 },
+      { composites: [legendDefinition], padding: 0 },
     );
     const path = pathsOf(output.scene.primitives).find(primitive => primitive.stroke === '#0f766e');
 
@@ -625,7 +625,7 @@ describe('Legend 项目编译契约', () => {
           }),
         ],
       },
-      { composites: [LegendDefinition], padding: 0 },
+      { composites: [legendDefinition], padding: 0 },
     );
     const sample = legendArtifactOf(output).items[0].sample;
 
@@ -661,7 +661,7 @@ describe('Legend 项目编译契约', () => {
           }),
         ],
       },
-      { composites: [LegendDefinition], padding: 0, onWarn: warning => warnings.push(warning) },
+      { composites: [legendDefinition], padding: 0, onWarn: warning => warnings.push(warning) },
     );
     const line = pathsOf(output.scene.primitives)
       .flatMap(path => path.commands)
@@ -699,7 +699,7 @@ describe('Legend 项目编译契约', () => {
             }),
           ],
         },
-        { composites: [LegendDefinition], padding: 0 },
+        { composites: [legendDefinition], padding: 0 },
       );
     } catch (error) {
       thrown = error;
@@ -739,7 +739,7 @@ describe('Legend 项目编译契约', () => {
           }),
         ],
       },
-      { composites: [LegendDefinition, typedSampleDefinition], padding: 0 },
+      { composites: [legendDefinition, typedSampleDefinition], padding: 0 },
     );
     const compositeArtifacts = output.artifacts.filter(artifact => artifact.kind === 'composite');
     const samplePlacement = legendArtifactOf(output).items[0]?.sample;
@@ -805,7 +805,7 @@ describe('Legend 项目编译契约', () => {
           },
         ],
       },
-      { composites: [LegendDefinition], padding: 0, onWarn: warning => warnings.push(warning) },
+      { composites: [legendDefinition], padding: 0, onWarn: warning => warnings.push(warning) },
     );
     const artifact = legendArtifactOf(output);
     const label = artifact.items[0].label;

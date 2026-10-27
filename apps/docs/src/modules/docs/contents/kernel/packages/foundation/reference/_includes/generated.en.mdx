@@ -740,12 +740,12 @@ export type ParsedCssColor = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"StaticCssNamedColorHexByName"} path={"packages/kernel/foundation/src/color.ts"} startLine={171}>StaticCssNamedColorHexByName</ApiSourceLink>
+#### <ApiSourceLink label={"staticCssNamedColorHexByName"} path={"packages/kernel/foundation/src/color.ts"} startLine={171}>staticCssNamedColorHexByName</ApiSourceLink>
 
 Contains only named colors supported by `parseStaticCssColor()`; excludes transparent, functions, and hexadecimal notation.
 
 ```ts
-export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>> = Object.freeze(
+export const staticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>> = Object.freeze(
   Object.fromEntries(
     Object.entries(CSS_NAMED_COLOR_HEX).map(([name, colorHex]): [string, `#${string}`] => [
       name,
@@ -755,7 +755,7 @@ export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>
 );
 ```
 
-#### <ApiSourceLink label={"compositeOpaqueColor"} path={"packages/kernel/foundation/src/color.ts"} startLine={401}>compositeOpaqueColor</ApiSourceLink>
+#### <ApiSourceLink label={"compositeOpaqueColor"} path={"packages/kernel/foundation/src/color.ts"} startLine={395}>compositeOpaqueColor</ApiSourceLink>
 
 Multiplies the foreground alpha by weight, then uses source-over sRGB compositing to produce a deterministic opaque color.
 

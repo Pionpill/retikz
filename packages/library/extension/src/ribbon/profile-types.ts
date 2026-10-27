@@ -18,7 +18,7 @@ export type RibbonWidthProfileContext<TParams extends JsonObject = JsonObject> =
  * 自定义宽度函数的注册输入，通过 name 在 Ribbon width 中引用
  * @template TParams 宽度函数参数的 JSON 对象类型，关联 paramsSchema 与 widthAt，默认 JsonObject
  */
-export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonObject> = {
+export type InputRibbonWidthProfileDefinition<TParams extends JsonObject = JsonObject> = {
   /** 注册表 key，由 IR `width: { kind: "profile", name }` 引用 */
   name: string;
   /**

@@ -2,7 +2,7 @@ import type { DiagramDefinitionOptions, DiagramThemeDefinition } from '../contra
 import { resolveDiagramThemeRegistry } from './theme';
 
 /** 一次 Diagram definition 装配共享的已解析 registries */
-type ResolvedDiagramDefinitionOptions = Readonly<{
+type DiagramDefinitionRegistries = Readonly<{
   /** 按名称索引的有效 Diagram 主题样式定义 */
   diagramThemeDefinitions: ReadonlyMap<string, DiagramThemeDefinition>;
 }>;
@@ -10,6 +10,6 @@ type ResolvedDiagramDefinitionOptions = Readonly<{
 /** 一次性校验并解析 Diagram definition options */
 export const resolveDiagramDefinitionOptions = (
   options: DiagramDefinitionOptions = {},
-): ResolvedDiagramDefinitionOptions => ({
+): DiagramDefinitionRegistries => ({
   diagramThemeDefinitions: resolveDiagramThemeRegistry(options.diagramThemeDefinitions),
 });

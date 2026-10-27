@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import { defineScale } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { isPolarCoordinateFrame, linearPositionScale, resolveLinearScale } from '../../../src/providers';
 import type { IRPlot } from '../../../src/schemas';
@@ -21,12 +21,12 @@ import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 /** 第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 取一个 point 图层里所有 node 的 position（point 无 color 时为单层 nodeDefault + 裸 node） */
@@ -37,9 +37,13 @@ const isNode = (child: IRChild): child is IRNode => child.type === 'node';
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
-const resolvedInterpolationOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): string | undefined => {
+const resolvedInterpolationOf = (
+  spec: IRPlot,
+  datasets: Datasets,
+  options?: PlotsLoweringOptions,
+): string | undefined => {
   const { dataArtifact } = lowerPlotWithDataArtifact(spec, datasets, {
     ...opts,
     ...options,

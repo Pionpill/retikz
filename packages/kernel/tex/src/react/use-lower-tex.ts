@@ -1,4 +1,4 @@
-import type { LowerTex } from '@retikz/core';
+import type { TexLowerer } from '@retikz/core';
 import { useEffect, useRef, useState } from 'react';
 
 import type { MathJaxLowerTexOptions, TexLoweringDiagnostic } from '../lower';
@@ -25,7 +25,7 @@ export type MathJaxLowerTexState =
       /** 当前配置的 lowerer 已可用 */
       status: 'ready';
       /** 可传给 Layout 的同步公式转换函数；后续公式转换失败通过 onDiagnostic 报告 */
-      lowerTex: LowerTex;
+      lowerTex: TexLowerer;
     }
   | {
       /** 当前配置的引擎初始化失败 */
@@ -34,7 +34,7 @@ export type MathJaxLowerTexState =
       diagnostic: TexLoweringDiagnostic;
     };
 
-type LowerTexStateEntry = {
+type TexLoweringStateEntry = {
   key: string;
   state: MathJaxLowerTexState;
 };
@@ -92,7 +92,7 @@ export const useLowerTex = (options?: MathJaxLowerTexOptions): MathJaxLowerTexSt
   const engineKey = formatEngineCacheKey(extensions);
   const diagnosticRef = useRef(options?.onDiagnostic);
   const requestRef = useRef(0);
-  const [stateEntry, setStateEntry] = useState<LowerTexStateEntry>(() => ({
+  const [stateEntry, setStateEntry] = useState<TexLoweringStateEntry>(() => ({
     key: engineKey,
     state: { status: 'loading' },
   }));

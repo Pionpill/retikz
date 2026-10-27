@@ -81,7 +81,7 @@ export type RetainedRendererDefinitionBase = Readonly<{
 }>;
 
 /** SVG retained renderer 作者输入 */
-export type RetainedSvgRendererDefinitionInput = RetainedRendererDefinitionBase &
+export type InputRetainedSvgRendererDefinition = RetainedRendererDefinitionBase &
   Readonly<{
     /** 标识 SVG 渲染后端 */
     backend: 'svg';
@@ -90,7 +90,7 @@ export type RetainedSvgRendererDefinitionInput = RetainedRendererDefinitionBase 
   }>;
 
 /** Canvas retained renderer 作者输入 */
-export type RetainedCanvasRendererDefinitionInput = RetainedRendererDefinitionBase &
+export type InputRetainedCanvasRendererDefinition = RetainedRendererDefinitionBase &
   Readonly<{
     /** 标识 Canvas 渲染后端 */
     backend: 'canvas';
@@ -99,11 +99,11 @@ export type RetainedCanvasRendererDefinitionInput = RetainedRendererDefinitionBa
   }>;
 
 /** Retained renderer 作者输入 */
-export type RetainedRendererDefinitionInput =
-  | RetainedSvgRendererDefinitionInput
-  | RetainedCanvasRendererDefinitionInput;
+export type InputRetainedRendererDefinition =
+  | InputRetainedSvgRendererDefinition
+  | InputRetainedCanvasRendererDefinition;
 
-declare const RetainedRendererBrand: unique symbol;
+declare const retainedRendererBrand: unique symbol;
 
 /** Retained renderer nominal token 的共享字段 */
 export type RetainedRendererTokenBase = Readonly<{
@@ -112,7 +112,7 @@ export type RetainedRendererTokenBase = Readonly<{
   /** renderer 只读 Scene 图层支持等级 */
   readonlyLayerCapability: RetainedRendererReadonlyLayerCapability;
   /** 用于区分名义类型的不透明标记 */
-  [RetainedRendererBrand]: true;
+  [retainedRendererBrand]: true;
 }>;
 
 /** 保留式 SVG 渲染器的名义类型令牌 */
@@ -137,7 +137,7 @@ export type RetainedCanvasRenderer = RetainedRendererTokenBase &
 export type RetainedRenderer = RetainedSvgRenderer | RetainedCanvasRenderer;
 
 /** Retained renderer factory 的判别输入 */
-export type RetainedRendererFactoryInput =
+export type InputRetainedRendererFactory =
   | Readonly<{
       /** 选择与宿主元素匹配的渲染后端 */
       backend: 'svg';
@@ -158,9 +158,9 @@ export type RetainedRendererFactoryInput =
 /** Adapter 可注入的 retained renderer factory */
 export type RetainedRendererFactory = {
   /** 创建 SVG retained renderer */
-  (input: Extract<RetainedRendererFactoryInput, Readonly<{ backend: 'svg' }>>): RetainedSvgRenderer;
+  (input: Extract<InputRetainedRendererFactory, Readonly<{ backend: 'svg' }>>): RetainedSvgRenderer;
   /** 创建 Canvas retained renderer */
-  (input: Extract<RetainedRendererFactoryInput, Readonly<{ backend: 'canvas' }>>): RetainedCanvasRenderer;
+  (input: Extract<InputRetainedRendererFactory, Readonly<{ backend: 'canvas' }>>): RetainedCanvasRenderer;
 };
 
 /** Render 私有 renderer executor */
@@ -210,12 +210,12 @@ export const isCanvasHost = (value: unknown): value is HTMLCanvasElement => {
 /** nominal retained renderer define helper 的判别重载 */
 export type DefineRetainedRenderer = {
   /** 定义 SVG retained renderer */
-  (input: RetainedSvgRendererDefinitionInput): RetainedSvgRenderer;
+  (input: InputRetainedSvgRendererDefinition): RetainedSvgRenderer;
   /** 定义 Canvas retained renderer */
-  (input: RetainedCanvasRendererDefinitionInput): RetainedCanvasRenderer;
+  (input: InputRetainedCanvasRendererDefinition): RetainedCanvasRenderer;
 };
 
-const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): RetainedRenderer => {
+const defineRetainedRendererUnsafe = (input: InputRetainedRendererDefinition): RetainedRenderer => {
   const { backend, host, capability, readonlyLayerCapability, prepareMount, prepare, read, dispose } = input;
   const runtimeBackend: unknown = backend;
   const validHost = runtimeBackend === 'svg' ? isSvgHost(host) : runtimeBackend === 'canvas' && isCanvasHost(host);
@@ -264,7 +264,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
   return token;
 };
 
-const defineRetainedRendererImplementation = (input: RetainedRendererDefinitionInput): RetainedRenderer => {
+const defineRetainedRendererImplementation = (input: InputRetainedRendererDefinition): RetainedRenderer => {
   try {
     return defineRetainedRendererUnsafe(input);
   } catch (cause) {

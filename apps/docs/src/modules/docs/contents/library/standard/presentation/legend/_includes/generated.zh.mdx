@@ -214,7 +214,7 @@ export type LegendTickProps = Readonly<{
 
 <DocTab value="members" label="直接属性">
 
-其余属性继承自 `LegendInput`，并移除 `'title'`、`'content'`。完整组合关系见“类型定义”
+其余属性继承自 `InputLegendConfig`，并移除 `'title'`、`'content'`。完整组合关系见“类型定义”
 
 <ApiTable>
 
@@ -230,7 +230,7 @@ export type LegendTickProps = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type InputLegend = Omit<LegendInput, 'title' | 'content'> & {
+export type InputLegend = Omit<InputLegendConfig, 'title' | 'content'> & {
   title?: InputLegendChild;
   content: InputLegendItemsContent | InputLegendRampContent;
 };
@@ -240,10 +240,10 @@ export type InputLegend = Omit<LegendInput, 'title' | 'content'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LegendInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/legend.ts"} startLine={85}>LegendInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"legendInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/legend.ts"} startLine={85}>legendInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const LegendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend>;
+export declare const legendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend>;
 ```
 
 **执行与辅助契约**
@@ -354,17 +354,17 @@ export type LegendArtifact = ZodInfer<typeof LegendArtifactSchema>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type LegendCompileArtifact = CompositeArtifactOf<typeof LegendDefinition>;
+export type LegendCompileArtifact = CompositeArtifactOf<typeof legendDefinition>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LegendInput"} path={"packages/library/standard/src/presentation/legend/types.ts"} startLine={42}>LegendInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputLegendConfig"} path={"packages/library/standard/src/presentation/legend/types.ts"} startLine={42}>InputLegendConfig</ApiSourceLink>
 
 ```ts
-export type LegendInput = Omit<IRLegend, 'namespace' | 'type'>;
+export type InputLegendConfig = Omit<IRLegend, 'namespace' | 'type'>;
 ```
 
 #### <ApiSourceLink label={"createLegend"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={23}>createLegend</ApiSourceLink>
@@ -375,10 +375,10 @@ export type LegendInput = Omit<IRLegend, 'namespace' | 'type'>;
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称    | 类型 / 签名   | 说明 |
-| ------ | ------- | ------------- | ---- |
-| 参数   | `input` | `LegendInput` | —    |
-| 返回值 | —       | `IRLegend`    | —    |
+| 类别   | 名称    | 类型 / 签名         | 说明 |
+| ------ | ------- | ------------------- | ---- |
+| 参数   | `input` | `InputLegendConfig` | —    |
+| 返回值 | —       | `IRLegend`          | —    |
 
 </ApiTable>
 
@@ -387,7 +387,7 @@ export type LegendInput = Omit<IRLegend, 'namespace' | 'type'>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createLegend: (input: LegendInput) => IRLegend;
+export declare const createLegend: (input: InputLegendConfig) => IRLegend;
 ```
 
 </DocTab>
@@ -557,10 +557,10 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 
 **扩展定义与注册**
 
-#### <ApiSourceLink label={"LegendDefinition"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={10}>LegendDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"legendDefinition"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={10}>legendDefinition</ApiSourceLink>
 
 ```ts
-export const LegendDefinition: CompositeDefinition<IRLegend, typeof STANDARD_NAMESPACE, 'legend', LegendArtifact> =
+export const legendDefinition: CompositeDefinition<IRLegend, typeof STANDARD_NAMESPACE, 'legend', LegendArtifact> =
   defineComposite({
     namespace: STANDARD_NAMESPACE,
     type: 'legend',
@@ -570,11 +570,11 @@ export const LegendDefinition: CompositeDefinition<IRLegend, typeof STANDARD_NAM
   });
 ```
 
-#### <ApiSourceLink label={"LegendProvider"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={30}>LegendProvider</ApiSourceLink>
+#### <ApiSourceLink label={"legendProvider"} path={"packages/library/standard/src/presentation/legend/composite.ts"} startLine={30}>legendProvider</ApiSourceLink>
 
 ```ts
-export const LegendProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'composite', namespace: LegendDefinition.namespace, type: LegendDefinition.type }),
-  makeDefinition: () => LegendDefinition,
+export const legendProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'composite', namespace: legendDefinition.namespace, type: legendDefinition.type }),
+  makeDefinition: () => legendDefinition,
 });
 ```

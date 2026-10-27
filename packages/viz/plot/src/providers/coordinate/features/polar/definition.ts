@@ -57,7 +57,7 @@ const polarPoint = (center: Position, angleDeg: number, radius: number): Positio
   isFiniteNumber(angleDeg) && isFiniteNumber(radius) ? pointAtArcAngle(center, radius, angleDeg) : null;
 
 /** 创建二维极坐标运行时坐标帧所需的已解析参数 */
-export type PolarCoordinateInput = {
+export type InputPolarCoordinate = {
   /** 圆心（屏幕坐标） */
   center: Position;
   /** 内半径（user units） */
@@ -93,7 +93,7 @@ const polarSegmentAngles = (skeleton: ReadonlyArray<number>, start: number, end:
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]，屏幕 y 向下、0°=+x、90°=+y（与 core polar 约定一致）。
  *   frame 同时提供 projectCell，将 x/y 输出区间闭式投影为 sector，供 interval / reference band 使用
  */
-export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordinateFrame => {
+export const createPolarCoordinate = (input: InputPolarCoordinate): PolarCoordinateFrame => {
   const projectPolar = (thetaDeg: number, radius: number): Position | null =>
     polarPoint(input.center, thetaDeg, radius);
 
@@ -255,7 +255,7 @@ type PolarChordSegment = {
 };
 
 /** 在 angular skeleton 中定位合成角度所属的直弦段 */
-const polarChordSegmentOf = (input: PolarCoordinateInput, thetaDeg: number): PolarChordSegment | null => {
+const polarChordSegmentOf = (input: InputPolarCoordinate, thetaDeg: number): PolarChordSegment | null => {
   if (!Number.isFinite(thetaDeg) || input.angularSkeleton.length < 2) return null;
 
   const sweep = input.endAngle - input.startAngle;
@@ -315,14 +315,14 @@ const polarChordSegmentOf = (input: PolarCoordinateInput, thetaDeg: number): Pol
 };
 
 /** 归一化二维向量；退化向量返回 null */
-const normalizedVector = (vector: readonly [number, number]): readonly [number, number] | null => {
+const normalizePolarVector = (vector: readonly [number, number]): readonly [number, number] | null => {
   const length = Math.hypot(vector[0], vector[1]);
   return length <= DEFAULT_EPSILON ? null : [vector[0] / length, vector[1] / length];
 };
 
 /** 直弦段沿数值角度增加方向的屏幕单位切向 */
 const polarChordTangent = (
-  input: PolarCoordinateInput,
+  input: InputPolarCoordinate,
   segment: PolarChordSegment,
 ): readonly [number, number] | null => {
   const start = polarPoint(input.center, segment.startAngle, 1);
@@ -331,12 +331,12 @@ const polarChordTangent = (
 
   const numericDirection = Math.sign(segment.endAngle - segment.startAngle);
 
-  return normalizedVector([(end[0] - start[0]) * numericDirection, (end[1] - start[1]) * numericDirection]);
+  return normalizePolarVector([(end[0] - start[0]) * numericDirection, (end[1] - start[1]) * numericDirection]);
 };
 
 /** 极坐标投影在映射后参数处的局部切向，尖点不选择任意一侧 */
 const polarTangentAt = (
-  input: PolarCoordinateInput,
+  input: InputPolarCoordinate,
   role: DimensionRole,
   values: ReadonlyArray<number>,
 ): Position | null => {
@@ -373,7 +373,7 @@ const polarTangentAt = (
 
 /** 直弦段背离圆心的屏幕单位法向 */
 const polarChordOutwardNormal = (
-  input: PolarCoordinateInput,
+  input: InputPolarCoordinate,
   segment: PolarChordSegment,
 ): readonly [number, number] | null => {
   const start = polarPoint(input.center, segment.startAngle, 1);
@@ -381,7 +381,7 @@ const polarChordOutwardNormal = (
   if (start === null || end === null) return null;
 
   const edge = [end[0] - start[0], end[1] - start[1]] as const;
-  const candidate = normalizedVector([edge[1], -edge[0]]);
+  const candidate = normalizePolarVector([edge[1], -edge[0]]);
   if (candidate === null) return null;
 
   const midpoint = [(start[0] + end[0]) / 2 - input.center[0], (start[1] + end[1]) / 2 - input.center[1]] as const;
@@ -391,7 +391,7 @@ const polarChordOutwardNormal = (
 };
 
 /** 取得角度顶点两侧可能参与 containment 的直弦段 */
-const polarChordSegmentsAround = (input: PolarCoordinateInput, thetaDeg: number): ReadonlyArray<PolarChordSegment> => {
+const polarChordSegmentsAround = (input: InputPolarCoordinate, thetaDeg: number): ReadonlyArray<PolarChordSegment> => {
   const sampleOffset = Math.max(DEFAULT_EPSILON * 10, Math.abs(input.endAngle - input.startAngle) * 1e-9);
   const segments: Array<PolarChordSegment> = [];
 
@@ -414,7 +414,7 @@ const polarChordSegmentsAround = (input: PolarCoordinateInput, thetaDeg: number)
 
 /** 把 Point 的屏幕法向 extent 保守换算为离散 chord role 单位 */
 const polarChordGlyphExtentInRoleUnits = (
-  input: PolarCoordinateInput,
+  input: InputPolarCoordinate,
   role: DimensionRole,
   mappedRoles: ReadonlyArray<number>,
   screenExtent: number,
@@ -455,7 +455,7 @@ const polarChordGlyphExtentInRoleUnits = (
 };
 
 /** 离散 chord 模式把类别间合成角度投影到相邻结构顶点的屏幕直线 */
-const projectPolarChord = (input: PolarCoordinateInput, thetaDeg: number, radius: number): Position | null => {
+const projectPolarChord = (input: InputPolarCoordinate, thetaDeg: number, radius: number): Position | null => {
   const segment = polarChordSegmentOf(input, thetaDeg);
   if (segment === null) return null;
 
@@ -586,7 +586,7 @@ export type Polar1DCoordinateFrame = {
 };
 
 /** 创建一维极坐标运行时坐标帧所需的已解析参数 */
-export type Polar1DCoordinateInput = {
+export type InputPolar1DCoordinate = {
   /** 圆心（屏幕坐标） */
   center: Position;
   /** 固定圆周半径（user units） */
@@ -606,7 +606,7 @@ export type Polar1DCoordinateInput = {
  * @description 单一 x 角色被解释为角向值，并投影到固定 radius 的圆周上。该 frame 只表达点/路径位置，
  *   不提供 projectCell；需要面积 cell 时必须使用 polar2D 或自定义带 projectCell 的 frame
  */
-export const createPolar1DCoordinate = (input: Polar1DCoordinateInput): Polar1DCoordinateFrame => {
+export const createPolar1DCoordinate = (input: InputPolar1DCoordinate): Polar1DCoordinateFrame => {
   const projectPolar = (thetaDeg: number, radius: number): Position | null =>
     polarPoint(input.center, thetaDeg, radius);
 

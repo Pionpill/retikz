@@ -14,7 +14,7 @@ import type { LayoutInsets, LayoutRect } from './geometry';
 import { outsetLayoutRect } from './geometry';
 
 /** Layout item artifact 基础字段的构造输入 */
-export type CreateLayoutArtifactItemInput = Readonly<{
+export type InputLayoutArtifactItem = Readonly<{
   /** 布局项的稳定身份键 */
   key: string;
   /** 对应作者输入数组的零基索引 */
@@ -207,7 +207,7 @@ export const createLayoutArtifactAlignmentGuide = (
 };
 
 /** 从 final slot、真实 bounds 与 overflow policy 构造共享 item artifact */
-export const createLayoutArtifactItem = (input: CreateLayoutArtifactItemInput): LayoutArtifactItemBase => {
+export const createLayoutArtifactItem = (input: InputLayoutArtifactItem): LayoutArtifactItemBase => {
   const allocationBounds = translateLayoutRect(input.result.allocationBounds, input.translation);
   const visualBounds = translateLayoutRect(input.result.visualBounds, input.translation);
 

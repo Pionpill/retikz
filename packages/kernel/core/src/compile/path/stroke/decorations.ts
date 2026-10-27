@@ -1,4 +1,4 @@
-﻿import type { ResolvedArrowEnd, ScenePrimitive } from '../../../contract';
+﻿import type { CompiledArrowEnd, ScenePrimitive } from '../../../contract';
 import type { SceneResource } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalPath, StrokePathResolution } from '../../../resolve';
@@ -13,9 +13,9 @@ import { emitEndpointArrowMark } from './shrink';
 /** 端点箭头及主线接触调整 */
 type PathEndpointArrows = {
   /** 起点箭头内容 */
-  arrowStart?: ResolvedArrowEnd;
+  arrowStart?: CompiledArrowEnd;
   /** 终点箭头内容 */
-  arrowEnd?: ResolvedArrowEnd;
+  arrowEnd?: CompiledArrowEnd;
   /** 起点接触截短量 */
   shrinkStart: number;
   /** 终点接触截短量 */
@@ -73,7 +73,7 @@ export const emitPathEndpointArrows = (
 };
 
 /** 沿线标记生成上下文 */
-type EmitPathMarksInput = {
+type InputPathMarkEmission = {
   /** 当前编译资源，用于普通标记的引用诊断 */
   resources?: () => ReadonlyArray<SceneResource>;
   /** 截断前路径几何 */
@@ -102,7 +102,7 @@ export const emitPathMarks = ({
   round,
   resolvePaint,
   irPath,
-}: EmitPathMarksInput) => {
+}: InputPathMarkEmission) => {
   const primitives: Array<ScenePrimitive> = [];
   const boundsPoints: Array<IRPosition> = [];
   for (const [index, placement] of placements.entries()) {
@@ -141,7 +141,7 @@ export const emitPathMarks = ({
 /** 提取存在的端点箭头字段 */
 export const pathEndpointArrows = (
   arrows: PathEndpointArrows,
-): { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd } => ({
+): { arrowStart?: CompiledArrowEnd; arrowEnd?: CompiledArrowEnd } => ({
   ...(arrows.arrowStart === undefined ? {} : { arrowStart: arrows.arrowStart }),
   ...(arrows.arrowEnd === undefined ? {} : { arrowEnd: arrows.arrowEnd }),
 });

@@ -1,13 +1,13 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...opts, textMeasurer: measureLabel }).child as IRScope;

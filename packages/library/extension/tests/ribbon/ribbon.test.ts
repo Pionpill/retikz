@@ -6,7 +6,7 @@ import type { IRRibbonPathOptions } from '../../src/ribbon';
 import {
   createRibbonPathDefinition,
   defineRibbonWidthProfile,
-  RibbonPathDefinition,
+  ribbonPathDefinition,
   RibbonPathSchema,
 } from '../../src/ribbon';
 
@@ -76,7 +76,7 @@ const ribbonWithDefaultSampling = (overrides: Record<string, unknown> = {}): IRP
 
 const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
   const supplied = options.paths ?? [];
-  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathDefinition;
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? ribbonPathDefinition;
 
   return compileCoreToScene(input, {
     ...options,

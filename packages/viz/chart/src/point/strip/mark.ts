@@ -33,7 +33,7 @@ export const resolveStripPointMark = (
 };
 
 /** Strip Chart 的 authored mark Definition */
-export const StripMarkDefinition: ChartMarkDefinition = defineChartMark({
+export const stripMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'strip',
   schema: StripChartMarkSchema,
   resolve: context => {

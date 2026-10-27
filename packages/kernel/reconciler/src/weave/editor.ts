@@ -6,10 +6,10 @@ import { readWeaveCurrent } from './transaction';
 import type { WeaveTransaction } from './transaction';
 import type {
   WeaveDependencyKind,
-  WeaveElementInput,
+  InputWeaveElement,
   WeaveNode,
   WeaveOperation,
-  WeaveOwnInput,
+  InputWeaveOwn,
   WeaveRoot,
   WeaveScopeNode,
   WeaveTarget,
@@ -146,7 +146,7 @@ export class WeaveEditor {
   }
 
   /** 序列化候选声明供 Core 组装和来源遍历，不比较新旧完整 IR */
-  serializeNodeDeclaration(node: WeaveNode): WeaveElementInput {
+  serializeNodeDeclaration(node: WeaveNode): InputWeaveElement {
     if (node.type === 'scope') {
       const state = this.transaction.readNode(node);
       return { ...state.input.own, children: state.children.map(child => this.serializeNodeDeclaration(child)) };
@@ -214,7 +214,7 @@ export class WeaveEditor {
   }
 
   /** 按判别类型替换权威输入，不保留被省略的旧覆盖 */
-  private replaceNodeInput(node: WeaveNode, input: WeaveOwnInput): void {
+  private replaceNodeInput(node: WeaveNode, input: InputWeaveOwn): void {
     if (node.type === 'node' && input.type === 'node')
       this.transaction.editNode(node).input = { ...this.transaction.readNode(node).input, own: input };
     else if (node.type === 'coordinate' && input.type === 'coordinate')
@@ -231,7 +231,7 @@ export class WeaveEditor {
 
   /** 创建子树并收集新增节点，初始 context 在正式编译遍历时解析更新 */
   private insertSubtree(
-    input: WeaveElementInput,
+    input: InputWeaveElement,
     parent: WeaveRoot | WeaveScopeNode,
     context: ElementCompileOptions['context'],
     insertedNodes: Array<WeaveNode>,

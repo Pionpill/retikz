@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene, SceneSchema } from '../../src';
-import { resolveScopeDefaults, resolveEffectiveNodeStyle } from '../../src/resolve/style';
+import { resolveScopeDefaults, mergeNodeStyle } from '../../src/resolve/style';
 import { NodeSchema, ScopeSchema } from '../../src/schemas';
 
 describe('分组 Source 解析与编译', () => {
@@ -43,11 +43,11 @@ describe('分组 Source 解析与编译', () => {
       layout: { padding: 0 },
     });
 
-    expect(resolveEffectiveNodeStyle(node, frame)).toMatchObject({
+    expect(mergeNodeStyle(node, frame)).toMatchObject({
       style: { fill: 'red', stroke: 'blue', font: { size: 12 } },
       layout: { padding: 0, minimumSize: 30 },
     });
-    expect(resolveEffectiveNodeStyle(node, frame)).toMatchObject({ style: { font: { family: 'serif', size: 12 } } });
+    expect(mergeNodeStyle(node, frame)).toMatchObject({ style: { font: { family: 'serif', size: 12 } } });
   });
 
   it('空分组不清除继承，JSON 往返保持绘图结果', () => {
@@ -80,7 +80,7 @@ describe('分组 Source 解析与编译', () => {
     );
 
     expect(
-      resolveEffectiveNodeStyle(NodeSchema.parse({ type: 'node', position: [0, 0], style: {}, layout: {} }), frame),
+      mergeNodeStyle(NodeSchema.parse({ type: 'node', position: [0, 0], style: {}, layout: {} }), frame),
     ).toMatchObject({ style: { fill: 'red' } });
   });
 });

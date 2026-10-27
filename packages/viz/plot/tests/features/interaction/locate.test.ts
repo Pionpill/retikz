@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { object } from 'zod';
 
 import { createPlotLocator } from '../../../src/pipeline';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
@@ -21,7 +21,7 @@ import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const doubleDefinition = defineTransform({
   kind: 'double',
@@ -83,12 +83,12 @@ const SALES = [
 // ── lowering 侧 helper（找 lowered datum Node 作 parity 对照）────────────
 
 /** 用 lowerPlots 把 spec 展成外层 plot scope */
-const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（无 guides 时即外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 datum Node（无 color 时直接子；有 color 时藏在子 Scope 里）——渲染序 */
@@ -178,7 +178,7 @@ const PIE_ROWS = [
 ];
 
 /** 正方形画布（sector parity 用，对齐 sector.test.ts：center=[200,200] outerRadius=200） */
-const squareOpts: LowerPlotsOptions = { layout: { width: 400, height: 400 } };
+const squareOpts: PlotsLoweringOptions = { layout: { width: 400, height: 400 } };
 
 // =====================================================================
 // Happy path
@@ -567,7 +567,7 @@ describe('基准定位器——交互', () => {
       { month: 1, revenue: 14, q: 'Q2' },
       { month: 2, revenue: 9, q: 'Q3' },
     ];
-    const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
+    const options: PlotsLoweringOptions = { ...opts, datumIdField: 'q' };
     const spec = barSpec({ id: 'sales' });
     const locator = createPlotLocator(spec, { sales: rows }, { ...options, environment: {} });
 
@@ -623,7 +623,7 @@ describe('数据定位器 - bug 猎人回归', () => {
       marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
     });
     const datasets = { sales: SALES };
-    const options: LowerPlotsOptions = { ...opts, provenance: true, datumProvenance: true };
+    const options: PlotsLoweringOptions = { ...opts, provenance: true, datumProvenance: true };
     const nodes = datumNodes(firstLayer(spec, datasets, options));
     const locator = createPlotLocator(spec, datasets, { ...options, environment: {} });
 
@@ -691,7 +691,7 @@ describe('数据定位器变换注册表等价性', () => {
         { x: 3, y: 4 },
       ],
     };
-    const options: LowerPlotsOptions = {
+    const options: PlotsLoweringOptions = {
       definitions: { transforms: [doubleDefinition] },
       implementations: { transforms: [doubleDefinitionImplementation] },
       ...opts,
@@ -726,7 +726,7 @@ describe('数据定位器变换注册表等价性', () => {
       ],
     });
     const datasets = { sales: SALES };
-    const options: LowerPlotsOptions = { ...opts, provenance: true, datumProvenance: true };
+    const options: PlotsLoweringOptions = { ...opts, provenance: true, datumProvenance: true };
     const nodes = datumNodes(firstLayer(spec, datasets, options));
     const locator = createPlotLocator(spec, datasets, { ...options, environment: {} });
 
@@ -967,7 +967,7 @@ describe('数据项定位器的锚点等价性及明确报错', () => {
         { type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } },
       ],
     });
-    const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
+    const options: PlotsLoweringOptions = { ...opts, datumIdField: 'q' };
 
     expect(() => expandOf(spec, { d: rows }, options)).toThrow();
     expect(() => createPlotLocator(spec, { d: rows }, { ...options, environment: {} })).toThrow();
@@ -980,7 +980,7 @@ describe('数据项定位器的锚点等价性及明确报错', () => {
       { month: 1, revenue: 14 }, // 缺 q
       { month: 2, revenue: 9, q: 'Q3' },
     ];
-    const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
+    const options: PlotsLoweringOptions = { ...opts, datumIdField: 'q' };
 
     expect(() => expandOf(barSpec({ id: 'sales' }), { sales: rows }, options)).toThrow();
     expect(() =>

@@ -5,8 +5,8 @@ import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react/presentation';
 import type { InputLegend } from '@retikz/standard-vanilla/presentation';
-import { legend, LegendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
-import { createLegend, LegendContentKind, LegendDefinition, LegendSchema } from '@retikz/standard/presentation';
+import { legend, legendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { createLegend, LegendContentKind, legendDefinition, LegendSchema } from '@retikz/standard/presentation';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -61,7 +61,7 @@ const compileLegendScene = (): Scene =>
         }),
       ],
     },
-    { composites: [LegendDefinition] },
+    { composites: [legendDefinition] },
   ).scene;
 
 describe('Standard Legend 渲染器边界', () => {
@@ -97,10 +97,10 @@ describe('Standard Legend 渲染器边界', () => {
     );
     const vanillaInput = scene({ children: [legend(input)] });
     const vanilla = LegendSchema.parse(
-      normalizeScene(vanillaInput, { adapters: [LegendInputEmbedAdapter] }).ir.children[0],
+      normalizeScene(vanillaInput, { adapters: [legendInputEmbedAdapter] }).ir.children[0],
     );
     const compile = (node: IRChild) =>
-      compileToScene({ type: 'scene', version: 1, children: [node] }, { composites: [LegendDefinition], padding: 0 });
+      compileToScene({ type: 'scene', version: 1, children: [node] }, { composites: [legendDefinition], padding: 0 });
     const outputs = [compile(direct), compile(react), compile(vanilla)];
 
     expect(react).toEqual(direct);

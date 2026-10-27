@@ -10,7 +10,7 @@ import {
   FlowDiagramSchema,
   FlowLayoutSchema,
   getFlowLayoutCatalog,
-  LayeredFlowLayoutDefinition,
+  layeredFlowLayoutDefinition,
 } from '../../src/flow';
 
 const layout = {
@@ -88,7 +88,7 @@ describe('Flow 网格布局', () => {
   });
 
   it('对自定义提供者应用相同的测量标签约束', () => {
-    const provider = defineFlowLayout({ ...LayeredFlowLayoutDefinition, name: 'custom-labels' });
+    const provider = defineFlowLayout({ ...layeredFlowLayoutDefinition, name: 'custom-labels' });
     const relations = [{ source: 'b', target: 'a', label: 'x'.repeat(40) }];
 
     expect(
@@ -150,12 +150,12 @@ describe('Flow 网格布局', () => {
 
     let calls = 0;
     const linear = defineFlowLayout({
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'linear-only',
-      capabilities: { ...LayeredFlowLayoutDefinition.capabilities, placementKinds: ['linear'] },
+      capabilities: { ...layeredFlowLayoutDefinition.capabilities, placementKinds: ['linear'] },
       layout: (input, context) => {
         calls += 1;
-        return LayeredFlowLayoutDefinition.layout(input, context);
+        return layeredFlowLayoutDefinition.layout(input, context);
       },
     });
 
@@ -167,9 +167,9 @@ describe('Flow 网格布局', () => {
     '拒绝空的或重复的放置能力 %#',
     ({ placementKinds }) => {
       const provider = defineFlowLayout({
-        ...LayeredFlowLayoutDefinition,
+        ...layeredFlowLayoutDefinition,
         name: 'invalid-kinds',
-        capabilities: { ...LayeredFlowLayoutDefinition.capabilities, placementKinds },
+        capabilities: { ...layeredFlowLayoutDefinition.capabilities, placementKinds },
       });
 
       expect(() => getFlowLayoutCatalog({ flowLayouts: [provider] })).toThrow();
@@ -179,10 +179,10 @@ describe('Flow 网格布局', () => {
   it('为自定义提供者提供相同的单次调用 Grid 边界', () => {
     let calls = 0;
     const custom = defineFlowLayout({
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'observe-grid',
       layout: (input, context) =>
-        LayeredFlowLayoutDefinition.layout(input, {
+        layeredFlowLayoutDefinition.layout(input, {
           resolveEndpoint: () => {
             throw new Error('Unexpected endpoint query');
           },
@@ -208,10 +208,10 @@ describe('Flow 网格布局', () => {
 
   it('拒绝提供者对编写单元格和最终相对位置的更改', () => {
     const changedCells = defineFlowLayout({
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'change-cells',
       layout: (input, context) =>
-        LayeredFlowLayoutDefinition.layout(input, {
+        layeredFlowLayoutDefinition.layout(input, {
           resolveEndpoint: () => {
             throw new Error('Unexpected endpoint query');
           },
@@ -237,10 +237,10 @@ describe('Flow 网格布局', () => {
     ).toThrow();
 
     const shifted = defineFlowLayout({
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'shift-child',
       layout: (input, context) => {
-        const output = LayeredFlowLayoutDefinition.layout(input, context);
+        const output = layeredFlowLayoutDefinition.layout(input, context);
         return {
           ...output,
           elements: output.elements.map(element =>

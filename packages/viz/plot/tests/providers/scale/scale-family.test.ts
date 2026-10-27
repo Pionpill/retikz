@@ -1,19 +1,19 @@
 import type { IRPath, IRScope, IRStep } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /** 笛卡尔默认画布：x [0,2]→[0,480]，y range [300,0]（无 axis → plot area = 整图） */
-const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
 ): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
@@ -21,7 +21,7 @@ const expandOf = (
 const firstLayer = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 const collectPaths = (layer: IRScope): Array<IRPath> => {

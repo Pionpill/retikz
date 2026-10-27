@@ -1,7 +1,7 @@
 import { mergeDefinedProperties } from '@retikz/foundation';
 
 import type { IRArrowDetail, IRMarkStyle, IRPathArrowEnd, IRPathBase } from '../../schemas';
-import type { EffectiveScopeDefaults } from './types';
+import type { MergedScopeDefaults } from './types';
 
 /** 合并单侧箭头样式：下层只覆盖已声明字段，其余继承上层默认值 */
 const mergeArrowEnd = (
@@ -26,11 +26,11 @@ export const mergeArrowDefaults = (parent: IRArrowDetail, own: IRArrowDetail): I
 };
 
 /** 标记外观继承所需的端点位置、默认配置与路径主色 */
-type ResolveMarkAppearanceContext = {
+type MarkAppearanceResolveContext = {
   /** 箭头所在端点；沿线标记省略此字段 */
   endpoint?: 'start' | 'end';
   /** 当前作用域的有效默认配置 */
-  scopeDefaults: EffectiveScopeDefaults;
+  scopeDefaults: MergedScopeDefaults;
   /** 路径主色，提供时覆盖标记主色 */
   masterColor: string | undefined;
 };
@@ -38,7 +38,7 @@ type ResolveMarkAppearanceContext = {
 /** 合并共用、端点和标记自身的外观；提供路径主色时以该色覆盖标记主色 */
 const resolveMarkAppearance = (
   mark: IRMarkStyle,
-  { endpoint, scopeDefaults, masterColor }: ResolveMarkAppearanceContext,
+  { endpoint, scopeDefaults, masterColor }: MarkAppearanceResolveContext,
 ): IRMarkStyle => {
   const detail = scopeDefaults.path?.arrow;
   if (detail === undefined) return masterColor === undefined ? mark : { ...mark, color: masterColor };
@@ -57,7 +57,7 @@ const resolveMarkAppearance = (
 /** 为已有沿线标记补齐箭头共用外观，并应用路径主色 */
 export const resolvePathMarks = (
   marks: IRPathBase['marks'] | undefined,
-  scopeDefaults: EffectiveScopeDefaults,
+  scopeDefaults: MergedScopeDefaults,
   masterColor: string | undefined,
 ): IRPathBase['marks'] | undefined => {
   if (marks === undefined) return undefined;
@@ -71,7 +71,7 @@ export const resolvePathMarks = (
 /** 为显式存在的端点箭头应用对应默认，不创建缺省端点 */
 export const resolvePathArrows = (
   arrow: IRPathBase['arrow'],
-  scopeDefaults: EffectiveScopeDefaults,
+  scopeDefaults: MergedScopeDefaults,
   masterColor: string | undefined,
 ): IRPathBase['arrow'] => {
   if (arrow === undefined) return undefined;

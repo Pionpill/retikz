@@ -722,7 +722,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={67}>PathBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputPathBoundaryLabel"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={67}>InputPathBoundaryLabel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -744,7 +744,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type PathBoundaryLabelInput = Readonly<{
+export type InputPathBoundaryLabel = Readonly<{
   label: IRBoundaryLabel;
   point: IRPosition;
   outward: IRPosition;
@@ -770,9 +770,9 @@ A custom kind can take over output completely or reuse standard stroke logic thr
 | ------------------------------- | ------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `TPath` (Type parameter)        | `extends IRPathBase = IRPathBase`                                                                       | —       | Path type parsed by the current path definition schema; determines the structure of the path field and defaults to IRPathBase                                                                                                                                 |
 | `TOwnerOutput` (Type parameter) | `extends JsonValue = never`                                                                             | —       | Type of the JSON output published through ownerOutput.publish; defaults to never, indicating that no owner output is published                                                                                                                                |
-| `appearance`                    | `ResolvedPathAppearance`                                                                                | —       | Resolved renderer-neutral host appearance                                                                                                                                                                                                                     |
-| `emitBoundaryLabels`            | `(input: ReadonlyArray<PathBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>`                       | —       | Compiles positioned boundary labels through shared Kernel layout                                                                                                                                                                                              |
-| `emitHostLabels`                | `(input: PathLabelInput) => ReadonlyArray<ScenePrimitive>`                                              | —       | Compile shared host labels with optional side offsets supplied by the kind                                                                                                                                                                                    |
+| `appearance`                    | `CompiledPathAppearance`                                                                                | —       | Resolved renderer-neutral host appearance                                                                                                                                                                                                                     |
+| `emitBoundaryLabels`            | `(input: ReadonlyArray<InputPathBoundaryLabel>) => ReadonlyArray<ScenePrimitive>`                       | —       | Compiles positioned boundary labels through shared Kernel layout                                                                                                                                                                                              |
+| `emitHostLabels`                | `(input: InputPathLabel) => ReadonlyArray<ScenePrimitive>`                                              | —       | Compile shared host labels with optional side offsets supplied by the kind                                                                                                                                                                                    |
 | `emitStroke`                    | `StrokeEmitter`                                                                                         | —       | Reuse Core's standard stroke compiler; omission uses the current `path`                                                                                                                                                                                       |
 | `materializePath`               | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => ReadonlyArray<PathCommand>` | —       | Materialize selected steps without applying markers, dashes, fill, or custom path geometry                                                                                                                                                                    |
 | `ownerOutput`                   | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                             | —       | Publisher for the final output owned by the current Path                                                                                                                                                                                                      |
@@ -798,10 +798,10 @@ export type PathCompileContext<TPath extends IRPathBase = IRPathBase, TOwnerOutp
   ) => ReadonlyArray<PathCommand>;
   emitStroke: StrokeEmitter;
   resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
-  emitHostLabels: (input: PathLabelInput) => ReadonlyArray<ScenePrimitive>;
-  emitBoundaryLabels: (input: ReadonlyArray<PathBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
+  emitHostLabels: (input: InputPathLabel) => ReadonlyArray<ScenePrimitive>;
+  emitBoundaryLabels: (input: ReadonlyArray<InputPathBoundaryLabel>) => ReadonlyArray<ScenePrimitive>;
   wrapOutput: (output: PathCompileResult) => PathCompileResult;
-  appearance: ResolvedPathAppearance;
+  appearance: CompiledPathAppearance;
   round: (value: number) => number;
 };
 ```
@@ -932,7 +932,9 @@ export const DrawWay = {
 } as const;
 ```
 
-#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={109}>resolvePathLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={113}>resolvePathLabelPlacement</ApiSourceLink>
+
+Position defaults to 0.5; distance and the gap on each side default to 4. If side is omitted, sloped labels are centered and other labels are placed above the path
 
 <DocTabs defaultValue="members">
 
@@ -940,11 +942,11 @@ export const DrawWay = {
 
 <ApiTable variant="parameters">
 
-| Category   | Name                        | Type / signature              | Description |
-| ---------- | --------------------------- | ----------------------------- | ----------- |
-| Parameters | `label`                     | `PathLabelGeometryOptions`    | —           |
-|            | `canAutomaticallyInterrupt` | `boolean`                     | —           |
-| Returns    | —                           | `CanonicalPathLabelPlacement` | —           |
+| Category   | Name                        | Type / signature              | Description                                                                                                                                              |
+| ---------- | --------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `label`                     | `PathLabelGeometryOptions`    | —                                                                                                                                                        |
+|            | `canAutomaticallyInterrupt` | `boolean`                     | Whether the host allows automatic interruption; if true and the label is centered, interrupt defaults to true. An explicit value always takes precedence |
+| Returns    | —                           | `CanonicalPathLabelPlacement` | —                                                                                                                                                        |
 
 </ApiTable>
 
@@ -1408,7 +1410,7 @@ Either tangent angle selects tangent mode; the omitted outgoing/incoming angle d
 
 <ZodSchema shallow name="PathLabelSchema" />
 
-#### <ApiSourceLink label={"PathArrowSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={45}>PathArrowSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathArrowSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={47}>PathArrowSchema</ApiSourceLink>
 
 <ZodSchema shallow name="PathArrowSchema" />
 
@@ -1424,7 +1426,7 @@ Either tangent angle selects tangent mode; the omitted outgoing/incoming angle d
 
 <ZodSchema shallow name="PathMarkPlacementSchema" />
 
-#### <ApiSourceLink label={"ArrowDetailSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={53}>ArrowDetailSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowDetailSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={55}>ArrowDetailSchema</ApiSourceLink>
 
 <ZodSchema shallow name="ArrowDetailSchema" />
 

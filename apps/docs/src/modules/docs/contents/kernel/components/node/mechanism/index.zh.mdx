@@ -122,7 +122,7 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
 
 <ComponentPreview files="namespace-storage" size="xl" type="illustration" hideCode />
 
-Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析的 `NodeLayout`：保存矩形、形状定义、连接面、margin 等几何信息，也包含文字等布局结果。图中用嵌套 Map 展示对象层级：`layout` 是对象，里面的 `rect` 也是对象；`shapeName` 是形状名。图中仅为示意，具体数据结构以代码为准。
+Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析的 `CompiledNodeLayout`：保存矩形、形状定义、连接面、margin 等几何信息，也包含文字等布局结果。图中用嵌套 Map 展示对象层级：`layout` 是对象，里面的 `rect` 也是对象；`shapeName` 是形状名。图中仅为示意，具体数据结构以代码为准。
 
 遍历到 Node 时，编译器完成正文与形状布局及定位，再把布局投影到全局坐标；带 `id` 时才把这一结果写入当前 Map，状态为 `resolved`。Coordinate 使用同一张表，但保存的是零宽高几何记录。命名表是本次编译的运行时状态，不写回可持久化 IR。
 
@@ -130,7 +130,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
   sources={[
     { label: '命名栈与条目结构', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 5, endLine: 83 },
     {
-      label: 'NodeLayout 的几何字段',
+      label: 'CompiledNodeLayout 的几何字段',
       path: 'packages/kernel/core/src/compile/node/types.ts',
       startLine: 74,
       endLine: 119,

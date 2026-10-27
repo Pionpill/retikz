@@ -1,5 +1,5 @@
 import type { IRBoundary } from '@retikz/core';
-import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/extension';
+import { sectorShapeDefinition, starShapeDefinition } from '@retikz/extension';
 import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -68,7 +68,7 @@ export const PrimitiveModelPlaygroundPreview = (values: PrimitiveModelPlayground
   return (
     <Layout
       viewBox={{ x: -175, y: -145, width: 350, height: 290 }}
-      extensions={{ shapes: [primitiveModelBoundaryGuideShape, SectorShapeDefinition, StarShapeDefinition] }}
+      extensions={{ shapes: [primitiveModelBoundaryGuideShape, sectorShapeDefinition, starShapeDefinition] }}
     >
       <Draw
         way={[[0, 0], sourcePosition]}

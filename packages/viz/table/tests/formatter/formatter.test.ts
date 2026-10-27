@@ -15,8 +15,8 @@ import {
   TableCellSourceKind,
   TableRowKind,
 } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 import { formatDefaultTable } from '../utils/stages';
 
 const layout = {
@@ -225,7 +225,7 @@ describe('格式化的 Table 模型', () => {
         return input.value;
       },
     });
-    const semantic = normalizeTableStructure({
+    const semantic = resolveTableStructure({
       kind: 'manual',
       rows: [[{ value: 'ok', formatter: { name: 'anonymous-inspect' } }]],
     });
@@ -243,7 +243,7 @@ describe('格式化的 Table 模型', () => {
   });
 
   it('独立于头部有效负载传播详细正文格式化程序', () => {
-    const semantic = normalizeTableStructure(
+    const semantic = resolveTableStructure(
       {
         kind: 'detail',
         columns: [

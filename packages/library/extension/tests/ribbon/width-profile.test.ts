@@ -6,7 +6,7 @@ import {
   BUILTIN_RIBBON_WIDTH_PROFILES,
   createRibbonPathDefinition,
   defineRibbonWidthProfile,
-  RibbonPathDefinition,
+  ribbonPathDefinition,
 } from '../../src/ribbon';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -33,7 +33,7 @@ const commandPoint = (command: PathPrimitive['commands'][number]): [number, numb
 
 const compileToRibbonScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
   const supplied = options.paths ?? [];
-  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathDefinition;
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? ribbonPathDefinition;
 
   return compileCoreToScene(input, {
     ...options,

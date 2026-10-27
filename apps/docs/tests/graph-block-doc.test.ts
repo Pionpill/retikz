@@ -126,9 +126,9 @@ describe('Graph Block 文档', () => {
       const vanilla = buildVanillaPreview(preview);
 
       expect(vanilla.code).toContain('block({');
-      expect(vanilla.code).toContain('BlockInputEmbedAdapter');
+      expect(vanilla.code).toContain('blockInputEmbedAdapter');
       expect(vanilla.code).toContain('blockHeader({');
-      expect(vanilla.code).toContain('BlockHeaderInputEmbedAdapter');
+      expect(vanilla.code).toContain('blockHeaderInputEmbedAdapter');
       expect(vanilla.code).toContain('blockSection({');
       expect(vanilla.code).toContain('blockRow({');
       expect(vanilla.code).toContain("title: 'User'");

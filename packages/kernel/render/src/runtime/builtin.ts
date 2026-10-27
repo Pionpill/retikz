@@ -1,8 +1,8 @@
 import { createBuiltinCanvasRetainedRenderer } from './canvas-renderer';
-import type { RetainedRenderer, RetainedRendererFactory, RetainedRendererFactoryInput } from './renderer';
+import type { RetainedRenderer, RetainedRendererFactory, InputRetainedRendererFactory } from './renderer';
 import { createBuiltinSvgRetainedRenderer } from './svg-renderer';
 
-const createBuiltinRetainedRenderer = (input: RetainedRendererFactoryInput): RetainedRenderer => {
+const createBuiltinRetainedRenderer = (input: InputRetainedRendererFactory): RetainedRenderer => {
   if (input.backend === 'svg') {
     return createBuiltinSvgRetainedRenderer(input.host, input.immutableOptions);
   }

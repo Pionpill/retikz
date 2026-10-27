@@ -1,9 +1,9 @@
 import type {
   EmitStrokeOwnerOutputOptions,
-  PathBoundaryLabelInput,
+  InputPathBoundaryLabel,
   PathCompileContext,
-  PathLabelInput,
-  ResolvedPathAppearance,
+  InputPathLabel,
+  CompiledPathAppearance,
   ScenePrimitive,
   Transform,
 } from '../../contract';
@@ -24,11 +24,11 @@ import { createOwnerOutputPublisher, freezeOccurrence, pathTargetViewOf } from '
 import type { ClipRegistry, PaintRegistry } from '../resource';
 import {
   snapshotProviderPosition,
-  validateScenePrimitives,
+  snapshotScenePrimitives,
   withProviderOutputValidationBoundary,
 } from '../scene-primitive';
-import type { EffectiveScopeTransform } from '../transform';
-import type { CompileWarningInput } from '../warning';
+import type { ComposedScopeTransform } from '../transform';
+import type { InputCompileWarning } from '../warning';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
 import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';
 
@@ -44,14 +44,14 @@ type PathCompileHost = Pick<
   /** 本次裁剪资源 */
   clip: ClipRegistry;
   /** 本次诊断收集器 */
-  onWarn: (warning: CompileWarningInput) => void;
+  onWarn: (warning: InputCompileWarning) => void;
   /** 本次观察会话 */
   observation: CompileObservationRuntime | undefined;
   /** Core 提供的坐标变换解析 */
-  resolveTransform: (chain: ReadonlyArray<Transform>) => EffectiveScopeTransform;
+  resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform;
 };
 /** 校验并脱离 BuiltinPath provider 返回的 primitive 与 bounds point */
-const validatePathCompileResult = (kind: string, value: unknown) =>
+const assertPathCompileResult = (kind: string, value: unknown) =>
   withProviderOutputValidationBoundary(`Path '${kind}'`, () => {
     if (value === null) return null;
     if (typeof value !== 'object') {
@@ -59,7 +59,7 @@ const validatePathCompileResult = (kind: string, value: unknown) =>
     }
 
     const result = value as Record<string, unknown>;
-    const primitives = validateScenePrimitives(`Path '${kind}'`, result.primitives);
+    const primitives = snapshotScenePrimitives(`Path '${kind}'`, result.primitives);
     const rawBoundsPoints = result.boundsPoints;
     const boundsPoints = Array.from(rawBoundsPoints as Iterable<IRPosition>, (point, index): IRPosition =>
       snapshotProviderPosition(`Path '${kind}' bounds point at index ${index}`, point),
@@ -185,7 +185,7 @@ export const emitDefinedPath = (
   const resolvedFill = resolution.path.fill === undefined ? undefined : emitOptions.resolvePaint(resolution.path.fill);
   const resolvedStroke =
     resolution.path.stroke === undefined ? undefined : emitOptions.resolvePaint(resolution.path.stroke);
-  const appearance: ResolvedPathAppearance = Object.freeze({
+  const appearance: CompiledPathAppearance = Object.freeze({
     ...(resolution.path.color === undefined ? {} : { color: resolution.path.color }),
     ...(resolvedFill === undefined ? {} : { fill: resolvedFill }),
     ...(resolvedStroke === undefined ? {} : { stroke: resolvedStroke }),
@@ -205,7 +205,7 @@ export const emitDefinedPath = (
   const hostLabelBoundsPoints: Array<IRPosition> = [];
   const resolveHostLabel: PathCompileContext['resolveHostLabel'] = label =>
     resolvePathLabel(label, pendingPath.scopeDefaults.path?.label ?? {}, resolution.path.color);
-  const emitHostLabels = (input: PathLabelInput): ReadonlyArray<ScenePrimitive> =>
+  const emitHostLabels = (input: InputPathLabel): ReadonlyArray<ScenePrimitive> =>
     input.labels.flatMap((label, index) => {
       const sample = input.samples[index];
       const labelDefault = pendingPath.scopeDefaults.path?.label ?? {};
@@ -237,7 +237,7 @@ export const emitDefinedPath = (
 
       return [emittedLabel.primitive];
     });
-  const emitBoundaryLabels = (input: ReadonlyArray<PathBoundaryLabelInput>): ReadonlyArray<ScenePrimitive> =>
+  const emitBoundaryLabels = (input: ReadonlyArray<InputPathBoundaryLabel>): ReadonlyArray<ScenePrimitive> =>
     input.map(request => {
       const labelDefault = pendingPath.scopeDefaults.path?.label ?? {};
       const styled = resolvePathLabelColors(
@@ -291,7 +291,7 @@ export const emitDefinedPath = (
     round: context.round,
   });
 
-  const validated = validatePathCompileResult(kind, produced);
+  const validated = assertPathCompileResult(kind, produced);
   if (validated === null) {
     if (ownerOutput.publisher.requested && ownerOutput.hasPublished()) {
       throw createCompositeContractError(

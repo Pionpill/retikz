@@ -1,7 +1,7 @@
 import type { CompositeCompileContext, CompositeCompileResult } from '@retikz/core';
 import { requiredLayoutProbe } from '@retikz/layout/compose';
 
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
 import { resolveGroup } from '../../resolve';
 import type { IRGroup } from '../../schemas';
 import { groupScopeProps, lowerGroupLabelHost } from './lower';
@@ -9,7 +9,7 @@ import { composeGroupShell } from './shell';
 
 /** 创建 Group 的 layout-aware compile callback */
 export const createCompileGroup =
-  (options: ResolvedGraphDefinitionOptions) =>
+  (options: GraphDefinitionRegistries) =>
   (source: IRGroup, context: CompositeCompileContext): CompositeCompileResult => {
     const group = resolveGroup(source, options, context.theme);
     const shell = composeGroupShell(group, context);

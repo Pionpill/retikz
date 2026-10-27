@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { IRChild } from '@retikz/core';
-import type { CellPresentationInput, TableLayoutManifest } from '@retikz/table';
+import type { InputCellPresentation, TableLayoutManifest } from '@retikz/table';
 import { createManualTableIR, defineCellPresentation, defineCellVisualScale } from '@retikz/table';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -133,8 +133,8 @@ describe('Table React 明显观察', () => {
 
   it('仅观察者身份发生变化时不重新编译或重新通知', async () => {
     const content: IRChild = { type: 'node', position: [0, 0], text: 'stable' };
-    const observed: Array<CellPresentationInput> = [];
-    const present = vi.fn((input: CellPresentationInput) => {
+    const observed: Array<InputCellPresentation> = [];
+    const present = vi.fn((input: InputCellPresentation) => {
       observed.push(input);
       return content;
     });
@@ -203,7 +203,7 @@ describe('Table React 明显观察', () => {
   });
 
   it('通过 ManualTable 编写将有序根规则传递到共享管线中', async () => {
-    const observed: Array<CellPresentationInput> = [];
+    const observed: Array<InputCellPresentation> = [];
     const manifests: Array<TableLayoutManifest> = [];
     const inspect = defineCellPresentation({
       name: 'rule-inspect',

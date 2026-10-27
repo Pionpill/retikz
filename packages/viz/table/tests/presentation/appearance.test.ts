@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 import { formatDefaultTable } from '../utils/stages';
 
 const formatted = () =>
   formatDefaultTable(
-    normalizeTableStructure({
+    resolveTableStructure({
       kind: 'manual',
       rows: [
         [

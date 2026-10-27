@@ -7,7 +7,7 @@ import { normalizeBubbleChart } from './normalize';
 import type { BubbleChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 BubbleChart 输入并复用统一数据准备 */
-export const BubbleChartInputEmbedAdapter = createChartInputEmbedAdapter(
+export const bubbleChartInputEmbedAdapter = createChartInputEmbedAdapter(
   'chart.bubble',
   (input: BubbleChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
@@ -39,7 +39,7 @@ export const bubbleChart = <TNative = never>(
   input: BubbleChartInputEmbedProps<TNative>,
 ): InputEmbed<BubbleChartInputEmbedProps<TNative>> => ({
   type: 'embed',
-  kind: BubbleChartInputEmbedAdapter.kind,
+  kind: bubbleChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

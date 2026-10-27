@@ -3,7 +3,7 @@ import type { IRShapeValue } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { PLOT_SHAPE_PALETTE } from '../../../src/providers';
@@ -11,7 +11,7 @@ import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...cartOpts, textMeasurer: measureLabel }).child as IRScope;

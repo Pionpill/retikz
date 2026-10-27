@@ -44,7 +44,7 @@ export const normalizeShapeInput = <TSource>(
 /** 路径作者简写，由 Kernel Vanilla 统一解释 */
 type InputShapeProperties = Pick<InputPath, 'arrow'>;
 
-type NormalizedShapeProperties<TInput> = TInput extends object
+type ShapeNormalizationResult<TInput> = TInput extends object
   ? Omit<TInput, keyof InputShapeProperties> & Pick<IRPath, 'arrow' | 'style' | 'marks'>
   : never;
 
@@ -54,7 +54,7 @@ type NormalizedShapeProperties<TInput> = TInput extends object
  */
 const normalizeShapeProperties = <TInput extends InputShapeProperties>(
   input: TInput,
-): NormalizedShapeProperties<TInput> => {
+): ShapeNormalizationResult<TInput> => {
   const {
     type: _type,
     children: _children,
@@ -69,5 +69,5 @@ const normalizeShapeProperties = <TInput extends InputShapeProperties>(
   void _type;
   void _children;
 
-  return source as NormalizedShapeProperties<TInput>;
+  return source as ShapeNormalizationResult<TInput>;
 };

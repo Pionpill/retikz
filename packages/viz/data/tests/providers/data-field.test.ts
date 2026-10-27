@@ -5,11 +5,11 @@ import {
   coerceValue,
   BuiltinDataFieldFormat,
   DataFieldType,
-  normalizeRows,
+  resolveDataRows,
   resolveFieldPath,
   resolveFieldTypes,
   resolveFormatRegistry,
-  validateBoundData,
+  assertBoundData,
 } from '../../src';
 
 describe('数据字段运行时', () => {
@@ -22,7 +22,7 @@ describe('数据字段运行时', () => {
 
   it('将逻辑字段映射到物理路径，同时规范化行', () => {
     const rows: Array<ExternalRow> = [{ user: { age: '42' }, group: true }];
-    const normalized = normalizeRows(
+    const normalized = resolveDataRows(
       rows,
       new Map([
         ['age', DataFieldType.Continuous],
@@ -45,19 +45,19 @@ describe('数据字段运行时', () => {
   });
 
   it('将自定义解析器输出标准化为声明的规范字段类型', () => {
-    const continuous = normalizeRows(
+    const continuous = resolveDataRows(
       [{ value: 'raw' }],
       new Map([['value', DataFieldType.Continuous]]),
       undefined,
       new Map([['value', () => '12']]),
     );
-    const temporal = normalizeRows(
+    const temporal = resolveDataRows(
       [{ value: 'raw' }],
       new Map([['value', DataFieldType.Temporal]]),
       undefined,
       new Map([['value', () => '2026-07-12']]),
     );
-    const categorical = normalizeRows(
+    const categorical = resolveDataRows(
       [{ value: 'raw' }],
       new Map([['value', DataFieldType.Categorical]]),
       undefined,
@@ -67,7 +67,7 @@ describe('数据字段运行时', () => {
     expect(continuous[0].value).toBeUndefined();
     expect(temporal[0].value).toBeUndefined();
     expect(categorical[0].value).toBeUndefined();
-    expect(() => validateBoundData(continuous, new Map([['value', DataFieldType.Continuous]]), 10)).toThrow(
+    expect(() => assertBoundData(continuous, new Map([['value', DataFieldType.Continuous]]), 10)).toThrow(
       /no valid values/,
     );
   });

@@ -21,7 +21,7 @@ For async SSR, call `renderPlotAsync(spec, dataBindings, options?)` from `@retik
 
 <ComponentPreview files="plot-runtime-architecture" size="xs" hideCode />
 
-React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` bridges its `XxxProps` / children to a Plot Vanilla `InputPlotEmbed` and hands it to the same `PlotInputEmbedAdapter`; `embedPlot()` creates an `InputEmbed` for Vanilla `scene()`, and `PlotInputEmbedAdapter` performs the `InputPlot -> IRPlot` normalization and lowering. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
+React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` bridges its `XxxProps` / children to a Plot Vanilla `InputPlotEmbed` and hands it to the same `plotInputEmbedAdapter`; `embedPlot()` creates an `InputEmbed` for Vanilla `scene()`, and `plotInputEmbedAdapter` performs the `InputPlot -> IRPlot` normalization and lowering. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
 
 `<Plot theme>` is the local Core Scope Theme around the Plot panel: it selects that Plot's `name` and `mode`. It is distinct from Plot-owned `defaultPlot` and `plotRules`, which are persisted Plot Source inputs. Vanilla `renderPlot(spec, data, { theme })` writes `theme` to the root `IRScene.theme` for the compiled Scene; it does not rewrite `spec.defaultPlot` or `spec.plotRules`.
 
@@ -54,7 +54,7 @@ Runtime options are grouped by responsibility. The corresponding `PlotLayoutOver
 
 For example, `renderPlot(spec, data, { layout: { width: 480, height: 300 } })`. React `width` / `height` still declare Plot IR dimensions; `layout` supplies runtime layout defaults. IR dimensions take precedence.
 
-`LowerPlotsOptions.definitions.positionAdjustments` is the shared injection point for placement logic. React `<Plot>` and Vanilla runtimes forward the array unchanged; adapters do not compute step, randomness, coordinate projection, initializers, or glyph containment.
+`PlotsLoweringOptions.definitions.positionAdjustments` is the shared injection point for placement logic. React `<Plot>` and Vanilla runtimes forward the array unchanged; adapters do not compute step, randomness, coordinate projection, initializers, or glyph containment.
 
 ## Lowering and Outputs
 
@@ -76,7 +76,7 @@ Axis and legend measurement uses Node layout in the current Core compile context
 | ------------------- | --------------------------------------------------- | ----------------------------------------------------- |
 | React standalone    | `<Plot>`                                            | SVG / Canvas managed by `<Layout>`                    |
 | React embedded      | `<Layout><Plot /></Layout>`                         | Scene compiled with other Tier 2 IR                   |
-| Vanilla embedded    | `embedPlot()` plus `PlotInputEmbedAdapter`          | Scene inside a Kernel Input Scene / layer             |
+| Vanilla embedded    | `embedPlot()` plus `plotInputEmbedAdapter`          | Scene inside a Kernel Input Scene / layer             |
 | Vanilla / SSR       | `renderPlot(spec, datasets, { theme, ...options })` | SVG string or `{ svg, lineage }` under the root Theme |
 | Custom host         | `lowerPlots(datasets, options)` plus Core compile   | Core IR → Scene                                       |
 | Audit / interaction | `lowerPlotWithLineage()` and `createPlotLocator()`  | Runtime-only lineage / anchor                         |

@@ -10,8 +10,8 @@ import { literal, strictObject } from 'zod';
 import type { GraphDefinitionOptions } from '../../contract';
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { createBaseGraphProviders } from '../../pipeline/base-providers';
-import { BlockProviderKey } from '../../pipeline/block';
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import { blockProviderKey } from '../../pipeline/block';
+import type { GraphDefinitionRegistries } from '../../providers';
 import { resolveGraphRuntimeOptions } from '../../providers';
 import { resolveCodeBlockTokens } from '../../resolve/theme';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
@@ -45,7 +45,7 @@ const createCodeBlockDefinition = <TSource extends IRCodeBlock>(
 const createCodeBlockContentDefinition = <TSource extends IRCodeBlock>(
   definition: CodeBlockDefinition<TSource>,
   key: CompositeCoreProviderKey,
-  options: ResolvedGraphDefinitionOptions,
+  options: GraphDefinitionRegistries,
 ) =>
   defineComposite({
     namespace: key.namespace,
@@ -125,7 +125,7 @@ export const createCodeBlockContribution = <TSource extends IRCodeBlock>(
     roots: [key],
     providers: [
       { key, dependencies: [contentKey], params: options, makeDefinition: pair.root },
-      { key: contentKey, dependencies: [BlockProviderKey], params: options, makeDefinition: pair.content },
+      { key: contentKey, dependencies: [blockProviderKey], params: options, makeDefinition: pair.content },
       ...createBaseGraphProviders(options),
     ],
   };

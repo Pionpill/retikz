@@ -29,7 +29,7 @@ type TableDefaultsLayer = DeepReadonly<{
 }>;
 
 /** 同次 Table compile 使用的完整 defaults resolution */
-export type ResolvedTableDefaults = DeepReadonly<{
+export type TableDefaultsResolution = DeepReadonly<{
   /** 可选 Core style 名称 */
   name?: string;
   /** 有效 Core Theme mode */
@@ -44,7 +44,7 @@ export type ResolvedTableDefaults = DeepReadonly<{
 export type TableCellAppearanceTrace = DeepReadonly<Partial<Record<TableCellAppearanceTracePath, TableCellPlanSource>>>;
 
 /** Rule 解析后交给 formatter、presentation 与后续 manifest 的 Cell plan */
-export type ResolvedTableCellPlan =
+export type TableCellPlanResolution =
   | Readonly<{
       /** value Cell 判别字段 */
       kind: 'value';
@@ -87,7 +87,7 @@ export type ResolvedTableCellPlan =
     }>;
 
 /** package-private Cell plan resolver 选项 */
-export type ResolveTableCellPlansOptions = Readonly<{
+export type TableCellPlansResolveOptions = Readonly<{
   /** 按声明顺序应用的根规则 */
   rules?: ReadonlyArray<IRTableCellRule>;
   /** 按声明顺序应用的视觉编码 */
@@ -97,11 +97,11 @@ export type ResolveTableCellPlansOptions = Readonly<{
   /** 同次 Table theme resolution 产生的 required palette */
   scaleContext: CellVisualScaleResolveContext;
   /** 同次 Table defaults resolution 产生的完整 Cell defaults */
-  defaultTable?: ResolvedTableDefaults;
+  defaultTable?: TableDefaultsResolution;
 }>;
 
 /** manifest 消费的单个 encoding 解析摘要 */
-export type ResolvedTableEncoding = Readonly<{
+export type TableEncodingResolution = Readonly<{
   /** Encoding 稳定 id */
   id: string;
   /** Encoding 拥有的 appearance channel */
@@ -113,11 +113,11 @@ export type ResolvedTableEncoding = Readonly<{
 }>;
 
 /** 同次 plan orchestration 的 Cell、descriptor 与 encoding bundle */
-export type ResolvedTablePlan = Readonly<{
+export type TablePlanResolution = Readonly<{
   /** canonical 单元格计划 */
-  cells: ReadonlyArray<ResolvedTableCellPlan>;
+  cells: ReadonlyArray<TableCellPlanResolution>;
   /** 与实绘同源的 Legend descriptors */
   legendDescriptors: ReadonlyArray<TableLegendDescriptor>;
   /** manifest 使用的 encoding seed */
-  encodings: ReadonlyArray<ResolvedTableEncoding>;
+  encodings: ReadonlyArray<TableEncodingResolution>;
 }>;

@@ -4,13 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import {
-  CircleClipDefinition,
-  CompoundClipDefinition,
-  CompoundClipProvider,
+  circleClipDefinition,
+  compoundClipDefinition,
+  compoundClipProvider,
   CompoundClipSchema,
-  EllipseClipDefinition,
-  PathClipDefinition,
-  PolygonClipDefinition,
+  ellipseClipDefinition,
+  pathClipDefinition,
+  polygonClipDefinition,
 } from '../../src/clip';
 
 const roundedRectClip = (): ClipDefinition =>
@@ -43,8 +43,8 @@ const roundedRectClip = (): ClipDefinition =>
 
 describe('扩展复合裁剪定义', () => {
   it('提供多边形和路径定义作为显式扩展扩展', () => {
-    expect(PolygonClipDefinition.kind).toBe('polygon');
-    expect(PathClipDefinition.kind).toBe('path');
+    expect(polygonClipDefinition.kind).toBe('polygon');
+    expect(pathClipDefinition.kind).toBe('path');
 
     const scene: IRScene = {
       type: 'scene',
@@ -67,7 +67,7 @@ describe('扩展复合裁剪定义', () => {
       ],
     };
 
-    expect(() => compileToScene(scene, { clips: [PolygonClipDefinition] })).not.toThrow();
+    expect(() => compileToScene(scene, { clips: [polygonClipDefinition] })).not.toThrow();
   });
 
   it('解析递归复合子项并将自定义子项委托给 Core 注册表解析', () => {
@@ -89,7 +89,7 @@ describe('扩展复合裁剪定义', () => {
     };
 
     const compiled = compileToScene(scene, {
-      clips: [CompoundClipDefinition, CircleClipDefinition, EllipseClipDefinition, roundedRectClip()],
+      clips: [compoundClipDefinition, circleClipDefinition, ellipseClipDefinition, roundedRectClip()],
     }).scene;
     const resource = compiled.resources?.[0];
 
@@ -112,8 +112,8 @@ describe('扩展复合裁剪定义', () => {
   });
 
   it('具体化一种完整的复合定义，无需形状依赖性', () => {
-    expect(CompoundClipProvider.makeDefinition([])).toBe(CompoundClipDefinition);
-    expect(CompoundClipProvider.dependencies ?? []).toEqual([]);
+    expect(compoundClipProvider.makeDefinition([])).toBe(compoundClipDefinition);
+    expect(compoundClipProvider.dependencies ?? []).toEqual([]);
   });
 
   it('要求活动裁剪注册表中存在第三方子定义', () => {
@@ -136,11 +136,11 @@ describe('扩展复合裁剪定义', () => {
 
     expect(() =>
       compileToScene(scene, {
-        clips: [CompoundClipDefinition, roundedRectClip()],
+        clips: [compoundClipDefinition, roundedRectClip()],
       }),
     ).not.toThrow();
 
-    expect(() => compileToScene(scene, { clips: [CompoundClipDefinition] })).toThrow(
+    expect(() => compileToScene(scene, { clips: [compoundClipDefinition] })).toThrow(
       /Unknown provider 'roundedRect'.*available:/i,
     );
   });

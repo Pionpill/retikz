@@ -1,10 +1,10 @@
 import type {
-  FlexLayoutInput,
-  FlexLayoutItemInput,
-  GridLayoutInput,
-  GridLayoutItemInput,
-  OverlayLayoutInput,
-  OverlayLayoutItemInput,
+  InputFlexLayoutConfig,
+  InputFlexLayoutItemConfig,
+  InputGridLayoutConfig,
+  InputGridLayoutItemConfig,
+  InputOverlayLayoutConfig,
+  InputOverlayLayoutItemConfig,
 } from '@retikz/layout';
 import type { InputChild } from '@retikz/vanilla';
 
@@ -15,16 +15,16 @@ type InputLayoutItem<TItem> = Omit<TItem, 'child'> & {
 };
 
 /** Vanilla FlexLayout item 输入 */
-export type InputFlexLayoutItem = InputLayoutItem<FlexLayoutItemInput>;
+export type InputFlexLayoutItem = InputLayoutItem<InputFlexLayoutItemConfig>;
 
 /** Vanilla GridLayout item 输入 */
-export type InputGridLayoutItem = InputLayoutItem<GridLayoutItemInput>;
+export type InputGridLayoutItem = InputLayoutItem<InputGridLayoutItemConfig>;
 
 /** Vanilla OverlayLayout item 输入 */
-export type InputOverlayLayoutItem = InputLayoutItem<OverlayLayoutItemInput>;
+export type InputOverlayLayoutItem = InputLayoutItem<InputOverlayLayoutItemConfig>;
 
 /** Vanilla FlexLayout authoring 输入 */
-export type InputFlexLayout = Omit<FlexLayoutInput, 'children'> & {
+export type InputFlexLayout = Omit<InputFlexLayoutConfig, 'children'> & {
   /** 作者声明的直属子项，省略时按空列表处理
    * @default []
    */
@@ -32,7 +32,7 @@ export type InputFlexLayout = Omit<FlexLayoutInput, 'children'> & {
 };
 
 /** Vanilla GridLayout authoring 输入 */
-export type InputGridLayout = Omit<GridLayoutInput, 'children'> & {
+export type InputGridLayout = Omit<InputGridLayoutConfig, 'children'> & {
   /** 作者声明的直属子项，省略时按空列表处理
    * @default []
    */
@@ -40,7 +40,7 @@ export type InputGridLayout = Omit<GridLayoutInput, 'children'> & {
 };
 
 /** Vanilla OverlayLayout authoring 输入 */
-export type InputOverlayLayout = Omit<OverlayLayoutInput, 'children'> & {
+export type InputOverlayLayout = Omit<InputOverlayLayoutConfig, 'children'> & {
   /** 作者声明的直属子项，省略时按空列表处理
    * @default []
    */

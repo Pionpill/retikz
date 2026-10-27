@@ -1,6 +1,6 @@
 import type { IRChild, IRPath, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
@@ -59,7 +59,7 @@ describe('PathMark 色带', () => {
       children: actual.children,
     };
     const compile = (path: IRPath) =>
-      compileToScene({ type: 'scene', version: 1, children: [path] }, { paths: [RibbonPathDefinition] }).scene;
+      compileToScene({ type: 'scene', version: 1, children: [path] }, { paths: [ribbonPathDefinition] }).scene;
     expect(compile(actual)).toEqual(compile(direct));
     expect(compile(actual).primitives.length).toBeGreaterThan(0);
   });

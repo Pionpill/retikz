@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { NodeLayoutObservation, LowerTex, TextMeasurer } from '../../src/compile';
+import type { NodeLayoutObservation, TexLowerer, TextMeasurer } from '../../src/compile';
 import { compileToScene, BuiltinCompileWarningCode, isNodeLayoutCompileArtifact } from '../../src/compile';
 import type { CompileWarning } from '../../src/compile/warning';
 import type { TextPrimitive } from '../../src/contract';
@@ -21,7 +21,7 @@ const fractionalMeasureText: TextMeasurer = () => ({
   descent: 1 / 12,
 });
 
-const lowerTex: LowerTex = (content, style) => {
+const lowerTex: TexLowerer = (content, style) => {
   if (content.tex === 'INVALID') return null;
 
   return {

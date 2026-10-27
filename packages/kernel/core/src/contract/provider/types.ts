@@ -110,7 +110,7 @@ export type CoreProviderContribution = Readonly<{
 }>;
 
 /** Core 提供者图的纯解析输入 */
-export type ResolveCoreProviderDependenciesOptions = Readonly<{
+export type CoreProviderDependenciesResolveOptions = Readonly<{
   /** 所有适配器无关的编写贡献 */
   contributions: ReadonlyArray<CoreProviderContribution>;
   /** 在提供者定义之后追加的最终显式定义 */

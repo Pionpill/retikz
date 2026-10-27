@@ -4,11 +4,11 @@ import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import {
-  CylinderShapeDefinition,
-  EllipticCapsuleShapeDefinition,
-  HexagonShapeDefinition,
-  ParallelogramShapeDefinition,
-  TrapezoidShapeDefinition,
+  cylinderShapeDefinition,
+  ellipticCapsuleShapeDefinition,
+  hexagonShapeDefinition,
+  parallelogramShapeDefinition,
+  trapezoidShapeDefinition,
 } from '../../src/node-shape';
 
 const identity = (value: number): number => value;
@@ -21,11 +21,11 @@ const pathOf = (definition: ShapeDefinition, rect: CenteredBox, params: JsonObje
 
 describe('扩展容器形状几何形状', () => {
   it('从选定的短边外接并发射梯形', () => {
-    expect(TrapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, {})).toEqual({
+    expect(trapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, {})).toEqual({
       halfWidth: 50,
       halfHeight: 20,
     });
-    expect(pathOf(TrapezoidShapeDefinition, { x: 0, y: 0, width: 100, height: 40 }, {}).commands).toEqual([
+    expect(pathOf(trapezoidShapeDefinition, { x: 0, y: 0, width: 100, height: 40 }, {}).commands).toEqual([
       { kind: 'move', to: [-36, -20] },
       { kind: 'line', to: [36, -20] },
       { kind: 'line', to: [50, 20] },
@@ -35,11 +35,11 @@ describe('扩展容器形状几何形状', () => {
 
     const rightParams = { shortSide: 'right', shortSideRatio: 0.5 } as const;
 
-    expect(TrapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, rightParams)).toEqual({
+    expect(trapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, rightParams)).toEqual({
       halfWidth: 20,
       halfHeight: 20,
     });
-    expect(pathOf(TrapezoidShapeDefinition, { x: 0, y: 0, width: 40, height: 40 }, rightParams).commands).toEqual([
+    expect(pathOf(trapezoidShapeDefinition, { x: 0, y: 0, width: 40, height: 40 }, rightParams).commands).toEqual([
       { kind: 'move', to: [-20, -20] },
       { kind: 'line', to: [20, -10] },
       { kind: 'line', to: [20, 10] },
@@ -47,18 +47,18 @@ describe('扩展容器形状几何形状', () => {
       { kind: 'close' },
     ]);
     expect(
-      TrapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, { shortSide: 'bottom', shortSideRatio: 0.5 }),
+      trapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, { shortSide: 'bottom', shortSideRatio: 0.5 }),
     ).toEqual({
       halfWidth: 40,
       halfHeight: 10,
     });
     expect(
-      TrapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, { shortSide: 'left', shortSideRatio: 0.5 }),
+      trapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, { shortSide: 'left', shortSideRatio: 0.5 }),
     ).toEqual({
       halfWidth: 20,
       halfHeight: 20,
     });
-    expect(TrapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, { shortSideRatio: 1 })).toEqual({
+    expect(trapezoidShapeDefinition.computeCircumscribedGeometry(20, 10, { shortSideRatio: 1 })).toEqual({
       halfWidth: 20,
       halfHeight: 10,
     });
@@ -68,40 +68,40 @@ describe('扩展容器形状几何形状', () => {
     const right = { slantAngle: 45, slantDirection: 'right' } as const;
     const left = { slantAngle: 45, slantDirection: 'left' } as const;
 
-    expect(ParallelogramShapeDefinition.computeCircumscribedGeometry(20, 10, right)).toEqual({
+    expect(parallelogramShapeDefinition.computeCircumscribedGeometry(20, 10, right)).toEqual({
       halfWidth: 40,
       halfHeight: 10,
     });
-    expect(pathOf(ParallelogramShapeDefinition, { x: 0, y: 0, width: 80, height: 20 }, right).commands).toEqual([
+    expect(pathOf(parallelogramShapeDefinition, { x: 0, y: 0, width: 80, height: 20 }, right).commands).toEqual([
       { kind: 'move', to: [-20, -10] },
       { kind: 'line', to: [40, -10] },
       { kind: 'line', to: [20, 10] },
       { kind: 'line', to: [-40, 10] },
       { kind: 'close' },
     ]);
-    expect(pathOf(ParallelogramShapeDefinition, { x: 0, y: 0, width: 80, height: 20 }, left).commands).toEqual([
+    expect(pathOf(parallelogramShapeDefinition, { x: 0, y: 0, width: 80, height: 20 }, left).commands).toEqual([
       { kind: 'move', to: [-40, -10] },
       { kind: 'line', to: [20, -10] },
       { kind: 'line', to: [40, 10] },
       { kind: 'line', to: [-20, 10] },
       { kind: 'close' },
     ]);
-    expect(ParallelogramShapeDefinition.computeCircumscribedGeometry(20, 10, { slantAngle: 90 })).toEqual({
+    expect(parallelogramShapeDefinition.computeCircumscribedGeometry(20, 10, { slantAngle: 90 })).toEqual({
       halfWidth: 20,
       halfHeight: 10,
     });
   });
 
   it('使用独立于细长六边形宽度的固定 12 单位肩部深度', () => {
-    expect(HexagonShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({
+    expect(hexagonShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({
       halfWidth: 32,
       halfHeight: 10,
     });
-    expect(HexagonShapeDefinition.computeCircumscribedGeometry(20, 10, { shoulderDepth: 8 })).toEqual({
+    expect(hexagonShapeDefinition.computeCircumscribedGeometry(20, 10, { shoulderDepth: 8 })).toEqual({
       halfWidth: 28,
       halfHeight: 10,
     });
-    expect(pathOf(HexagonShapeDefinition, { x: 0, y: 0, width: 120, height: 20 }, {}).commands).toEqual([
+    expect(pathOf(hexagonShapeDefinition, { x: 0, y: 0, width: 120, height: 20 }, {}).commands).toEqual([
       { kind: 'move', to: [-48, -10] },
       { kind: 'line', to: [48, -10] },
       { kind: 'line', to: [60, 0] },
@@ -111,7 +111,7 @@ describe('扩展容器形状几何形状', () => {
       { kind: 'close' },
     ]);
     expect(
-      pathOf(HexagonShapeDefinition, { x: 0, y: 0, width: 20, height: 20 }, { shoulderDepth: 16 }).commands,
+      pathOf(hexagonShapeDefinition, { x: 0, y: 0, width: 20, height: 20 }, { shoulderDepth: 16 }).commands,
     ).toEqual([
       { kind: 'move', to: [0, -10] },
       { kind: 'line', to: [0, -10] },
@@ -124,8 +124,8 @@ describe('扩展容器形状几何形状', () => {
   });
 
   it('发射一个垂直圆柱体作为一个外部轮廓加上一个盖子分隔子路径', () => {
-    expect(CylinderShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({ halfWidth: 20, halfHeight: 18 });
-    expect(pathOf(CylinderShapeDefinition, { x: 0, y: 0, width: 40, height: 36 }, {}).commands).toEqual([
+    expect(cylinderShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({ halfWidth: 20, halfHeight: 18 });
+    expect(pathOf(cylinderShapeDefinition, { x: 0, y: 0, width: 40, height: 36 }, {}).commands).toEqual([
       { kind: 'move', to: [-20, -10] },
       { kind: 'ellipseArc', center: [0, -10], radiusX: 20, radiusY: 8, startAngle: 180, endAngle: 360 },
       { kind: 'line', to: [20, 10] },
@@ -146,11 +146,11 @@ describe('扩展容器形状几何形状', () => {
   it('将圆柱体几何形状转置为水平轴并仅夹紧发射的盖深度', () => {
     const params = { axis: 'horizontal', capDepth: 8 } as const;
 
-    expect(CylinderShapeDefinition.computeCircumscribedGeometry(20, 10, params)).toEqual({
+    expect(cylinderShapeDefinition.computeCircumscribedGeometry(20, 10, params)).toEqual({
       halfWidth: 28,
       halfHeight: 10,
     });
-    expect(pathOf(CylinderShapeDefinition, { x: 0, y: 0, width: 56, height: 20 }, params).commands).toEqual([
+    expect(pathOf(cylinderShapeDefinition, { x: 0, y: 0, width: 56, height: 20 }, params).commands).toEqual([
       { kind: 'move', to: [-20, -10] },
       {
         kind: 'ellipseArc',
@@ -185,7 +185,7 @@ describe('扩展容器形状几何形状', () => {
     ]);
 
     const clamped = pathOf(
-      CylinderShapeDefinition,
+      cylinderShapeDefinition,
       { x: 0, y: 0, width: 10, height: 20 },
       { axis: 'horizontal', capDepth: 20 },
     );
@@ -195,11 +195,11 @@ describe('扩展容器形状几何形状', () => {
   });
 
   it('发射垂直椭圆形胶囊作为一个封闭的外部轮廓，没有盖子分隔器', () => {
-    expect(EllipticCapsuleShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({
+    expect(ellipticCapsuleShapeDefinition.computeCircumscribedGeometry(20, 10, {})).toEqual({
       halfWidth: 20,
       halfHeight: 18,
     });
-    expect(pathOf(EllipticCapsuleShapeDefinition, { x: 0, y: 0, width: 40, height: 36 }, {}).commands).toEqual([
+    expect(pathOf(ellipticCapsuleShapeDefinition, { x: 0, y: 0, width: 40, height: 36 }, {}).commands).toEqual([
       { kind: 'move', to: [-20, -10] },
       { kind: 'ellipseArc', center: [0, -10], radiusX: 20, radiusY: 8, startAngle: 180, endAngle: 360 },
       { kind: 'line', to: [20, 10] },
@@ -211,11 +211,11 @@ describe('扩展容器形状几何形状', () => {
   it('转置椭圆胶囊并将零帽深度退化为矩形', () => {
     const horizontal = { axis: 'horizontal', capDepth: 8 } as const;
 
-    expect(EllipticCapsuleShapeDefinition.computeCircumscribedGeometry(20, 10, horizontal)).toEqual({
+    expect(ellipticCapsuleShapeDefinition.computeCircumscribedGeometry(20, 10, horizontal)).toEqual({
       halfWidth: 28,
       halfHeight: 10,
     });
-    expect(pathOf(EllipticCapsuleShapeDefinition, { x: 0, y: 0, width: 56, height: 20 }, horizontal).commands).toEqual([
+    expect(pathOf(ellipticCapsuleShapeDefinition, { x: 0, y: 0, width: 56, height: 20 }, horizontal).commands).toEqual([
       { kind: 'move', to: [-20, -10] },
       {
         kind: 'ellipseArc',
@@ -239,7 +239,7 @@ describe('扩展容器形状几何形状', () => {
       { kind: 'close' },
     ]);
     expect(
-      pathOf(EllipticCapsuleShapeDefinition, { x: 0, y: 0, width: 40, height: 36 }, { capDepth: 0 }).commands,
+      pathOf(ellipticCapsuleShapeDefinition, { x: 0, y: 0, width: 40, height: 36 }, { capDepth: 0 }).commands,
     ).toEqual([
       { kind: 'move', to: [-20, -18] },
       { kind: 'line', to: [20, -18] },
@@ -250,9 +250,9 @@ describe('扩展容器形状几何形状', () => {
   });
 
   it('扩展圆角多边形形状，直到其内容角保留在最终轮廓内', () => {
-    const sharp = TrapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, {});
+    const sharp = trapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, {});
     const roundedParams = { cornerRadius: 10 };
-    const rounded = TrapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, roundedParams);
+    const rounded = trapezoidShapeDefinition.computeCircumscribedGeometry(36, 20, roundedParams);
 
     expect(rounded.halfWidth).toBeGreaterThan(sharp.halfWidth);
     expect(rounded.halfHeight).toBeGreaterThan(sharp.halfHeight);
@@ -265,42 +265,42 @@ describe('扩展容器形状几何形状', () => {
       [36, 20],
       [-36, 20],
     ] as const) {
-      const hit = TrapezoidShapeDefinition.computeBoundaryPoint(rect, [corner[0], corner[1]], roundedParams);
+      const hit = trapezoidShapeDefinition.computeBoundaryPoint(rect, [corner[0], corner[1]], roundedParams);
 
       expect(Math.hypot(...hit)).toBeGreaterThanOrEqual(Math.hypot(corner[0], corner[1]) - 1e-6);
     }
   });
 
   it('使用最终轮廓作为方向边界点', () => {
-    expect(TrapezoidShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 100, height: 40 }, [100, 0], {})).toEqual(
+    expect(trapezoidShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 100, height: 40 }, [100, 0], {})).toEqual(
       [43, 0],
     );
     expect(
-      ParallelogramShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 80, height: 20 }, [100, 0], {
+      parallelogramShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 80, height: 20 }, [100, 0], {
         slantAngle: 45,
         slantDirection: 'right',
       }),
     ).toEqual([30, 0]);
-    expect(HexagonShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 80, height: 20 }, [100, 0], {})).toEqual([
+    expect(hexagonShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 80, height: 20 }, [100, 0], {})).toEqual([
       40, 0,
     ]);
-    expect(CylinderShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 40, height: 36 }, [0, -100], {})).toEqual([
+    expect(cylinderShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 40, height: 36 }, [0, -100], {})).toEqual([
       0, -18,
     ]);
     expect(
-      EllipticCapsuleShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 40, height: 36 }, [0, -100], {}),
+      ellipticCapsuleShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 40, height: 36 }, [0, -100], {}),
     ).toEqual([0, -18]);
     expect(
-      TrapezoidShapeDefinition.computeConnectionEnvelope?.({ x: 0, y: 0, width: 100, height: 40 }, 'rectangle', {}),
+      trapezoidShapeDefinition.computeConnectionEnvelope?.({ x: 0, y: 0, width: 100, height: 40 }, 'rectangle', {}),
     ).toEqual({ halfWidth: 50, halfHeight: 20 });
     expect(
-      CylinderShapeDefinition.computeConnectionEnvelope?.({ x: 0, y: 0, width: 40, height: 36 }, 'rectangle', {}),
+      cylinderShapeDefinition.computeConnectionEnvelope?.({ x: 0, y: 0, width: 40, height: 36 }, 'rectangle', {}),
     ).toEqual({ halfWidth: 20, halfHeight: 18 });
     expect(
-      CylinderShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 40, height: 36 }, [0, -100], { capDepth: 0 }),
+      cylinderShapeDefinition.computeBoundaryPoint({ x: 0, y: 0, width: 40, height: 36 }, [0, -100], { capDepth: 0 }),
     ).toEqual([0, -18]);
 
-    const rotated = CylinderShapeDefinition.computeBoundaryPoint(
+    const rotated = cylinderShapeDefinition.computeBoundaryPoint(
       { x: 0, y: 0, width: 40, height: 36, rotate: Math.PI / 2 },
       [100, 0],
       {},
@@ -312,40 +312,40 @@ describe('扩展容器形状几何形状', () => {
 
   it('仅缩放编写的用户单位长度', () => {
     expect(
-      TrapezoidShapeDefinition.scaleParams?.({ shortSide: 'left', shortSideRatio: 0.6, cornerRadius: 4 }, 4, 9),
+      trapezoidShapeDefinition.scaleParams?.({ shortSide: 'left', shortSideRatio: 0.6, cornerRadius: 4 }, 4, 9),
     ).toEqual({ shortSide: 'left', shortSideRatio: 0.6, cornerRadius: 24 });
     expect(
-      ParallelogramShapeDefinition.scaleParams?.({ slantDirection: 'right', slantAngle: 70, cornerRadius: 4 }, 4, 9),
+      parallelogramShapeDefinition.scaleParams?.({ slantDirection: 'right', slantAngle: 70, cornerRadius: 4 }, 4, 9),
     ).toEqual({ slantDirection: 'right', slantAngle: 70, cornerRadius: 24 });
-    expect(HexagonShapeDefinition.scaleParams?.({ shoulderDepth: 4, cornerRadius: 4 }, 4, 9)).toEqual({
+    expect(hexagonShapeDefinition.scaleParams?.({ shoulderDepth: 4, cornerRadius: 4 }, 4, 9)).toEqual({
       shoulderDepth: 24,
       cornerRadius: 24,
     });
-    expect(CylinderShapeDefinition.scaleParams?.({ axis: 'horizontal', capDepth: 4 }, 4, 9)).toEqual({
+    expect(cylinderShapeDefinition.scaleParams?.({ axis: 'horizontal', capDepth: 4 }, 4, 9)).toEqual({
       axis: 'horizontal',
       capDepth: 24,
     });
-    expect(EllipticCapsuleShapeDefinition.scaleParams?.({ axis: 'horizontal', capDepth: 4 }, 4, 9)).toEqual({
+    expect(ellipticCapsuleShapeDefinition.scaleParams?.({ axis: 'horizontal', capDepth: 4 }, 4, 9)).toEqual({
       axis: 'horizontal',
       capDepth: 24,
     });
   });
 
   it('拒绝无效参数和非有限导出几何', () => {
-    expect(() => TrapezoidShapeDefinition.paramsSchema.parse({ shortSideRatio: 0 })).toThrow();
-    expect(() => HexagonShapeDefinition.paramsSchema.parse({ shoulderDepth: -1 })).toThrow();
-    expect(() => HexagonShapeDefinition.paramsSchema.parse({ shoulderRatio: 0.2 })).toThrow();
-    expect(() => ParallelogramShapeDefinition.paramsSchema.parse({ slantAngle: 0 })).toThrow();
-    expect(() => CylinderShapeDefinition.paramsSchema.parse({ capDepth: -1 })).toThrow();
-    expect(() => EllipticCapsuleShapeDefinition.paramsSchema.parse({ capDepth: -1 })).toThrow();
-    expect(() => EllipticCapsuleShapeDefinition.paramsSchema.parse({ capDepth: Number.POSITIVE_INFINITY })).toThrow();
-    expect(() => EllipticCapsuleShapeDefinition.paramsSchema.parse({ unknown: true })).toThrow();
-    expect(() => TrapezoidShapeDefinition.paramsSchema.parse({ unknown: true })).toThrow();
+    expect(() => trapezoidShapeDefinition.paramsSchema.parse({ shortSideRatio: 0 })).toThrow();
+    expect(() => hexagonShapeDefinition.paramsSchema.parse({ shoulderDepth: -1 })).toThrow();
+    expect(() => hexagonShapeDefinition.paramsSchema.parse({ shoulderRatio: 0.2 })).toThrow();
+    expect(() => parallelogramShapeDefinition.paramsSchema.parse({ slantAngle: 0 })).toThrow();
+    expect(() => cylinderShapeDefinition.paramsSchema.parse({ capDepth: -1 })).toThrow();
+    expect(() => ellipticCapsuleShapeDefinition.paramsSchema.parse({ capDepth: -1 })).toThrow();
+    expect(() => ellipticCapsuleShapeDefinition.paramsSchema.parse({ capDepth: Number.POSITIVE_INFINITY })).toThrow();
+    expect(() => ellipticCapsuleShapeDefinition.paramsSchema.parse({ unknown: true })).toThrow();
+    expect(() => trapezoidShapeDefinition.paramsSchema.parse({ unknown: true })).toThrow();
     expect(() =>
-      TrapezoidShapeDefinition.computeCircumscribedGeometry(10, 10, { shortSideRatio: Number.MIN_VALUE }),
+      trapezoidShapeDefinition.computeCircumscribedGeometry(10, 10, { shortSideRatio: Number.MIN_VALUE }),
     ).toThrowError(expect.objectContaining({ code: 'EXTENSION_GEOMETRY_INVALID' }));
     expect(() =>
-      ParallelogramShapeDefinition.computeCircumscribedGeometry(10, 10, { slantAngle: Number.MIN_VALUE }),
+      parallelogramShapeDefinition.computeCircumscribedGeometry(10, 10, { slantAngle: Number.MIN_VALUE }),
     ).toThrowError(expect.objectContaining({ code: 'EXTENSION_GEOMETRY_INVALID' }));
   });
 });

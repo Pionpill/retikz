@@ -47,8 +47,8 @@ Definition 统一提供 `compile(node, context)`。`node` 是 schema 解析后�
 | 对象       | 在这个例子中是什么                                                                                                                      |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | 根依赖     | 散点图提供者贡献的 `chart.point`，表示本次需要 Point 图表能力                                                                           |
-| 提供者     | Chart 的提供者声明依赖 `FlexLayoutProvider`，并提供创建 Chart Definition 的工厂；`FlexLayoutProvider` 的工厂返回 `FlexLayoutDefinition` |
-| Definition | Chart Definition 用自己的 schema 校验图表输入，执行编译回调；`FlexLayoutDefinition` 则用布局 schema 与编译回调处理子项测量和排布        |
+| 提供者     | Chart 的提供者声明依赖 `flexLayoutProvider`，并提供创建 Chart Definition 的工厂；`flexLayoutProvider` 的工厂返回 `flexLayoutDefinition` |
+| Definition | Chart Definition 用自己的 schema 校验图表输入，执行编译回调；`flexLayoutDefinition` 则用布局 schema 与编译回调处理子项测量和排布        |
 
 装配时先准备 FlexLayout Definition，再准备 Chart Definition。编译图表时，Chart 根据标题配置生成文字节点，将它放在纵向 FlexLayout 的 Plot 前面；布局编译负责测量并放置这些子项，文字节点的绘制由 Core 完成。Chart 还依赖 Surface 和 Plot，下图只节选 FlexLayout 这一支。
 

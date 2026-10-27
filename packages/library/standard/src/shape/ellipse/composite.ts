@@ -7,7 +7,7 @@ import { EllipseSchema } from './schema';
 import type { IREllipse } from './types';
 
 /** Ellipse 的 Core composite 注册项 */
-export const EllipseDefinition = defineComposite({
+export const ellipseDefinition = defineComposite({
   namespace: 'standard',
   type: 'ellipse',
   schema: EllipseSchema,
@@ -22,7 +22,7 @@ export const createEllipse = (input: ShapeProperties<IREllipse>): IREllipse => (
 });
 
 /** Ellipse 的按需依赖贡献 */
-export const EllipseProvider: CoreDependencyProvider = Object.freeze({
+export const ellipseProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'ellipse' }),
-  makeDefinition: () => EllipseDefinition,
+  makeDefinition: () => ellipseDefinition,
 });

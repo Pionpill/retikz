@@ -1,15 +1,15 @@
 import {
-  BlockHeaderProviderKey,
-  BlockProviderKey,
-  BlockRowProviderKey,
-  BlockSectionProviderKey,
+  blockHeaderProviderKey,
+  blockProviderKey,
+  blockRowProviderKey,
+  blockSectionProviderKey,
   defineEntityRole,
   defineRelationRole,
-  EntityProviderKey,
+  entityProviderKey,
   GraphProviderKey,
   GraphSchema,
-  GroupProviderKey,
-  RelationProviderKey,
+  groupProviderKey,
+  relationProviderKey,
 } from '@retikz/graph';
 import type { InputEmbed, SynchronousInputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
@@ -19,19 +19,19 @@ import type { InputBlock, InputBlockHeader, InputBlockRow, InputBlockSection, In
 import {
   block,
   blockHeader,
-  BlockHeaderInputEmbedAdapter,
-  BlockInputEmbedAdapter,
+  blockHeaderInputEmbedAdapter,
+  blockInputEmbedAdapter,
   blockRow,
-  BlockRowInputEmbedAdapter,
+  blockRowInputEmbedAdapter,
   blockSection,
-  BlockSectionInputEmbedAdapter,
+  blockSectionInputEmbedAdapter,
   createGraphVanillaAdapters,
   entity,
-  EntityInputEmbedAdapter,
+  entityInputEmbedAdapter,
   graph,
-  GraphInputEmbedAdapter,
+  graphInputEmbedAdapter,
   group,
-  GroupInputEmbedAdapter,
+  groupInputEmbedAdapter,
   normalizeBlock,
   normalizeBlockHeader,
   normalizeBlockRow,
@@ -40,7 +40,7 @@ import {
   normalizeGroup,
   normalizeRelation,
   relation,
-  RelationInputEmbedAdapter,
+  relationInputEmbedAdapter,
 } from '../src';
 
 const definitionOptionKeys = [
@@ -66,14 +66,14 @@ describe('@retikz/graph-vanilla 封装边界', () => {
   it('为每个 Graph 语义组合导出一个适配器和构建器', async () => {
     const graphVanilla = await import('../src');
 
-    expect(graphVanilla.GraphInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.BlockInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.BlockHeaderInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.BlockSectionInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.BlockRowInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.EntityInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.GroupInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.RelationInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.graphInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.blockInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.blockHeaderInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.blockSectionInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.blockRowInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.entityInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.groupInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.relationInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.graph).toBeTypeOf('function');
     expect(graphVanilla.block).toBeTypeOf('function');
     expect(graphVanilla.blockHeader).toBeTypeOf('function');
@@ -382,7 +382,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
   it('对 Entity 嵌入和 Source 身份使用一个显式 Graph id', () => {
     const contribution = lower(
       entity({ id: 'client', role: 'participant', position: [0, 0], text: 'Client' }),
-      EntityInputEmbedAdapter,
+      entityInputEmbedAdapter,
     );
 
     expect(contribution.node).toEqual({
@@ -398,7 +398,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
   it('将匿名 Entity 保留在 Graph Source 命名空间之外', () => {
     const contribution = lower(
       entity({ role: 'event', position: [0, 0], text: 'Anonymous event' }),
-      EntityInputEmbedAdapter,
+      entityInputEmbedAdapter,
     );
 
     expect(contribution.node).toEqual({
@@ -411,10 +411,10 @@ describe('Graph Vanilla 嵌入适配器', () => {
   });
 
   it('将每个组合的嵌入身份与可选的编写身份分开', () => {
-    const graphContribution = lower(graph({}), GraphInputEmbedAdapter);
+    const graphContribution = lower(graph({}), graphInputEmbedAdapter);
     const entityContribution = lower(
       entity({ role: 'participant', status: 'success', position: [0, 0] }),
-      EntityInputEmbedAdapter,
+      entityInputEmbedAdapter,
     );
     const relationContribution = lower(
       relation({
@@ -423,13 +423,13 @@ describe('Graph Vanilla 嵌入适配器', () => {
         role: 'association',
         status: 'warning',
       }),
-      RelationInputEmbedAdapter,
+      relationInputEmbedAdapter,
     );
-    const groupContribution = lower(group({}), GroupInputEmbedAdapter);
-    const blockContribution = lower(block({}), BlockInputEmbedAdapter);
-    const headerContribution = lower(blockHeader({ title: { text: 'Block' } }), BlockHeaderInputEmbedAdapter);
-    const sectionContribution = lower(blockSection({}), BlockSectionInputEmbedAdapter);
-    const rowContribution = lower(blockRow({}), BlockRowInputEmbedAdapter);
+    const groupContribution = lower(group({}), groupInputEmbedAdapter);
+    const blockContribution = lower(block({}), blockInputEmbedAdapter);
+    const headerContribution = lower(blockHeader({ title: { text: 'Block' } }), blockHeaderInputEmbedAdapter);
+    const sectionContribution = lower(blockSection({}), blockSectionInputEmbedAdapter);
+    const rowContribution = lower(blockRow({}), blockRowInputEmbedAdapter);
 
     expect(graphContribution.node).toEqual({ namespace: 'graph', type: 'graph' });
     expect(entityContribution.node).toEqual({
@@ -479,7 +479,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
         role: 'dependency',
         way: ['source', { id: 'target' }],
       }),
-      RelationInputEmbedAdapter,
+      relationInputEmbedAdapter,
     );
 
     expect(contribution.node).toEqual({
@@ -620,12 +620,12 @@ describe('Graph Vanilla 嵌入适配器', () => {
     });
     expect(normalized.contributions.flatMap(contribution => contribution.roots)).toEqual(
       expect.arrayContaining([
-        BlockProviderKey,
-        BlockHeaderProviderKey,
-        BlockSectionProviderKey,
-        BlockRowProviderKey,
-        EntityProviderKey,
-        GroupProviderKey,
+        blockProviderKey,
+        blockHeaderProviderKey,
+        blockSectionProviderKey,
+        blockRowProviderKey,
+        entityProviderKey,
+        groupProviderKey,
       ]),
     );
   });
@@ -651,50 +651,50 @@ describe('Graph Vanilla 嵌入适配器', () => {
   });
 
   it('贡献基于匹配语义组合的提供者闭包', () => {
-    const graphContribution = lower(graph({}), GraphInputEmbedAdapter);
-    const entityContribution = lower(entity({ role: 'participant', position: [0, 0] }), EntityInputEmbedAdapter);
+    const graphContribution = lower(graph({}), graphInputEmbedAdapter);
+    const entityContribution = lower(entity({ role: 'participant', position: [0, 0] }), entityInputEmbedAdapter);
     const relationContribution = lower(
       relation({
         source: { id: 'source' },
         target: { id: 'target' },
         role: 'association',
       }),
-      RelationInputEmbedAdapter,
+      relationInputEmbedAdapter,
     );
-    const groupContribution = lower(group({}), GroupInputEmbedAdapter);
-    const blockContribution = lower(block({}), BlockInputEmbedAdapter);
-    const headerContribution = lower(blockHeader({ title: { text: 'Block' } }), BlockHeaderInputEmbedAdapter);
-    const sectionContribution = lower(blockSection({}), BlockSectionInputEmbedAdapter);
-    const rowContribution = lower(blockRow({}), BlockRowInputEmbedAdapter);
+    const groupContribution = lower(group({}), groupInputEmbedAdapter);
+    const blockContribution = lower(block({}), blockInputEmbedAdapter);
+    const headerContribution = lower(blockHeader({ title: { text: 'Block' } }), blockHeaderInputEmbedAdapter);
+    const sectionContribution = lower(blockSection({}), blockSectionInputEmbedAdapter);
+    const rowContribution = lower(blockRow({}), blockRowInputEmbedAdapter);
 
     expect(graphContribution.providerDependencies.roots).toEqual([GraphProviderKey]);
-    expect(entityContribution.providerDependencies.roots).toEqual([EntityProviderKey]);
-    expect(relationContribution.providerDependencies.roots).toEqual([RelationProviderKey]);
-    expect(groupContribution.providerDependencies.roots).toEqual([GroupProviderKey]);
-    expect(blockContribution.providerDependencies.roots).toEqual([BlockProviderKey]);
-    expect(headerContribution.providerDependencies.roots).toEqual([BlockHeaderProviderKey]);
-    expect(sectionContribution.providerDependencies.roots).toEqual([BlockSectionProviderKey]);
-    expect(rowContribution.providerDependencies.roots).toEqual([BlockRowProviderKey]);
+    expect(entityContribution.providerDependencies.roots).toEqual([entityProviderKey]);
+    expect(relationContribution.providerDependencies.roots).toEqual([relationProviderKey]);
+    expect(groupContribution.providerDependencies.roots).toEqual([groupProviderKey]);
+    expect(blockContribution.providerDependencies.roots).toEqual([blockProviderKey]);
+    expect(headerContribution.providerDependencies.roots).toEqual([blockHeaderProviderKey]);
+    expect(sectionContribution.providerDependencies.roots).toEqual([blockSectionProviderKey]);
+    expect(rowContribution.providerDependencies.roots).toEqual([blockRowProviderKey]);
     expect(graphContribution.providerDependencies.providers.map(provider => provider.key)).toEqual(
       expect.arrayContaining([
         GraphProviderKey,
-        GroupProviderKey,
-        BlockProviderKey,
-        EntityProviderKey,
-        RelationProviderKey,
+        groupProviderKey,
+        blockProviderKey,
+        entityProviderKey,
+        relationProviderKey,
       ]),
     );
     expect(groupContribution.providerDependencies.providers.map(provider => provider.key)).toEqual(
-      expect.arrayContaining([GroupProviderKey, BlockProviderKey, EntityProviderKey, RelationProviderKey]),
+      expect.arrayContaining([groupProviderKey, blockProviderKey, entityProviderKey, relationProviderKey]),
     );
     expect(blockContribution.providerDependencies.providers.map(provider => provider.key)).toEqual(
       expect.arrayContaining([
-        BlockProviderKey,
-        BlockHeaderProviderKey,
-        BlockSectionProviderKey,
-        BlockRowProviderKey,
-        EntityProviderKey,
-        RelationProviderKey,
+        blockProviderKey,
+        blockHeaderProviderKey,
+        blockSectionProviderKey,
+        blockRowProviderKey,
+        entityProviderKey,
+        relationProviderKey,
       ]),
     );
     expect(entityContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(3);
@@ -738,14 +738,14 @@ describe('Graph Vanilla 嵌入适配器', () => {
           },
         ],
       }),
-      GraphInputEmbedAdapter,
+      graphInputEmbedAdapter,
     );
     const entityContribution = lower(
       entity({
         role: 'participant',
         position: [0, 100],
       }),
-      EntityInputEmbedAdapter,
+      entityInputEmbedAdapter,
     );
     const relationContribution = lower(
       relation({
@@ -753,7 +753,7 @@ describe('Graph Vanilla 嵌入适配器', () => {
         target: { id: 'direct-target' },
         role: 'association',
       }),
-      RelationInputEmbedAdapter,
+      relationInputEmbedAdapter,
     );
 
     for (const contribution of [graphContribution, entityContribution, relationContribution]) {

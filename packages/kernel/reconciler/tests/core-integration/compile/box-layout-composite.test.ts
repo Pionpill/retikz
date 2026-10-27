@@ -16,7 +16,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '@retikz/core';
 import { ReconcilerSession } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
@@ -38,7 +38,7 @@ const sceneOf = (child: IRChild): IRScene => ({
 const resolvedResultOf = (
   context: CompositeCompileContext,
   child: IRChild,
-  proposal: LayoutProposal = NaturalLayoutProposal,
+  proposal: LayoutProposal = naturalLayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);

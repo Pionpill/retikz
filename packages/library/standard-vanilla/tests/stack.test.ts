@@ -2,7 +2,7 @@ import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
-import { StandardInputEmbedAdapters } from '../src';
+import { standardInputEmbedAdapters } from '../src';
 import { stack, array } from '../src/collection';
 
 it('三入口及嵌套内容自动装配依赖，源输入保持稀疏', () => {
@@ -11,7 +11,7 @@ it('三入口及嵌套内容自动装配依赖，源输入保持稀疏', () => {
     stack({ data: [{ a: [1] }] }),
     stack({ skeleton: { labels: ['A', 'B'] } }),
   ]) {
-    const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });
+    const normalized = normalizeScene(scene({ children: [child] }), { adapters: standardInputEmbedAdapters });
     const result = compileToScene(
       normalized.ir,
       resolveCoreProviderDependencies({ contributions: normalized.contributions }),
@@ -29,7 +29,7 @@ it('直接IR与Vanilla保持相同的开放框及单格空间', () => {
     border: { style: { dashPattern: [3, 2] } },
     padding: 5,
   };
-  const normalized = normalizeScene(scene({ children: [stack(input)] }), { adapters: StandardInputEmbedAdapters });
+  const normalized = normalizeScene(scene({ children: [stack(input)] }), { adapters: standardInputEmbedAdapters });
   const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
   const actual = compileToScene(normalized.ir, options);
   const expected = compileToScene(

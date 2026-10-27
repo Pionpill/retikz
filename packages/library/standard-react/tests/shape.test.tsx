@@ -1,6 +1,6 @@
 import { createInputScene } from '@retikz/react';
 import { Circle, Ellipse, Rectangle, Polygon, Star, Arc, Sector } from '@retikz/standard-react/shape';
-import { StandardInputEmbedAdapters } from '@retikz/standard-vanilla';
+import { standardInputEmbedAdapters } from '@retikz/standard-vanilla';
 import { shape } from '@retikz/standard-vanilla/shape';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
@@ -38,7 +38,7 @@ it('通过 Path 编写便利，在适配器之间保持整个系列的等效性'
         shape.sector({ id: 'w', center: [0, 0], radius: 20, innerRadius: 10, startAngle: 0, endAngle: 90, ...visual }),
       ],
     }),
-    { adapters: StandardInputEmbedAdapters },
+    { adapters: standardInputEmbedAdapters },
   );
 
   expect(react.ir).toEqual(vanilla.ir);
@@ -53,7 +53,7 @@ it('在 React 和 Vanilla 之间共享 Circle Source 和提供者贡献', () => 
   const input = createInputScene(<Circle id="c1" center="origin" radius={20} />);
   const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   const vanilla = normalizeScene(scene({ children: [shape.circle({ id: 'c1', center: 'origin', radius: 20 })] }), {
-    adapters: StandardInputEmbedAdapters,
+    adapters: standardInputEmbedAdapters,
   });
 
   expect(react.ir.children).toEqual(vanilla.ir.children);

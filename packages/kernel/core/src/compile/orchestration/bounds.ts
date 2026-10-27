@@ -1,7 +1,7 @@
 import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
 import { boundsOf, expandBounds, mergeBounds } from '@retikz/math';
 
-import type { IRPosition, ResolvedDropShadow } from '../../schemas';
+import type { IRPosition, CanonicalDropShadow } from '../../schemas';
 
 /** 把 bounds 字段中的负零规范化为稳定的正零 */
 export const canonicalizeBoundsRect = (bounds: Readonly<BoundsRect>): Readonly<BoundsRect> =>
@@ -15,7 +15,7 @@ export const canonicalizeBoundsRect = (bounds: Readonly<BoundsRect>): Readonly<B
 /** 返回 shadow 影响后的外溢 bbox */
 export const expandBoundsForShadow = (
   bounds: AxisAlignedBounds | undefined,
-  shadow: ResolvedDropShadow | undefined,
+  shadow: CanonicalDropShadow | undefined,
 ): AxisAlignedBounds | undefined => {
   if (bounds === undefined || shadow === undefined) return bounds;
 
@@ -35,7 +35,7 @@ export const expandBoundsForShadow = (
 export const collectLayoutBounds = (
   current: AxisAlignedBounds | undefined,
   boundsPoints: ReadonlyArray<IRPosition>,
-  shadow?: ResolvedDropShadow,
+  shadow?: CanonicalDropShadow,
 ): AxisAlignedBounds | undefined => {
   const bounds = boundsOf(boundsPoints);
   return mergeBounds(mergeBounds(current, bounds), expandBoundsForShadow(bounds, shadow));

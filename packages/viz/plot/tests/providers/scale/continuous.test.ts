@@ -3,7 +3,7 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot, IRPlotPathMark } from '../../../src/schemas';
@@ -11,14 +11,14 @@ import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /** 笛卡尔使用默认画布；极坐标使用正方形画布，因此 outerRadius = 200、center = [200, 200] */
-const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
-const polarOpts: LowerPlotsOptions = { layout: { width: 400, height: 400 } };
+const polarOpts: PlotsLoweringOptions = { layout: { width: 400, height: 400 } };
 
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
 ): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
@@ -27,7 +27,7 @@ const expandOf = (
 const firstLayer = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 Path；颜色分组时 Path 可能位于子 Scope */

@@ -21,7 +21,7 @@ describe('@retikz/table 公共 API', () => {
     expect(Table).not.toHaveProperty('TableCellAddressSchema');
     expect(Table).toHaveProperty('TableBorderSchema');
     expect(Table).toHaveProperty('TableLayoutManifestSchema');
-    expect(Table).toHaveProperty('ResolvedTableBorderLineSchema');
+    expect(Table).toHaveProperty('TableBorderLineSchema');
     expect(Table).toHaveProperty('TableBorderContributionSchema');
     expect(Table).toHaveProperty('TableCellBackgroundSchema');
     expect(Table).toHaveProperty('TableCellContentStyleSchema');
@@ -50,7 +50,7 @@ describe('@retikz/table 公共 API', () => {
 
     expect(Table).not.toHaveProperty('emitTable');
     expect(Table).not.toHaveProperty('layoutTable');
-    expect(Table).not.toHaveProperty('normalizeTableStructure');
+    expect(Table).not.toHaveProperty('resolveTableStructure');
     expect(Table).not.toHaveProperty('presentCellPayload');
     expect(Table).not.toHaveProperty('presentTable');
     expect(Table).not.toHaveProperty('resolveTableLayout');

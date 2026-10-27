@@ -1,5 +1,5 @@
 import type { RegressionChartInputEmbedProps } from '@retikz/chart-vanilla/point';
-import { regressionChart, RegressionChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { regressionChart, regressionChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import type { IRRegressionChart } from '@retikz/chart/point';
 
 import type { TypedChartCommonProps } from '../shared';
@@ -26,5 +26,5 @@ export const RegressionChart = createTypedChartComponent<
       input => regressionChart(input),
       'RegressionEncodings',
     ),
-  RegressionChartInputEmbedAdapter,
+  regressionChartInputEmbedAdapter,
 );

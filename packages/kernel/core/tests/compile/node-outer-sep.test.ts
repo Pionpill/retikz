@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { NodeLayout } from '../../src/compile/node';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { resolveAnchor, resolveAnchorRef } from '../../src/compile/reference';
 import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
@@ -9,8 +9,8 @@ import type { IRScene } from '../../src/schemas';
 import { NodeSchema } from '../../src/schemas';
 import { line, move } from '../helpers/path-command-factory';
 
-/** 最简 rectangle NodeLayout（rect 40×30、半轴 20×15、中心原点），margin 可调 */
-const mkLayout = (margin: number, rotate = 0): NodeLayout => ({
+/** 最简 rectangle CompiledNodeLayout（rect 40×30、半轴 20×15、中心原点），margin 可调 */
+const mkLayout = (margin: number, rotate = 0): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: 0, y: 0, width: 40, height: 30, rotate },

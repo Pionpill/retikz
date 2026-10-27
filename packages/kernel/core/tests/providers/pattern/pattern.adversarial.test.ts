@@ -6,7 +6,7 @@ import type {
   ScenePrimitive,
   PatternResource,
   PatternDefinition,
-  ResolvedPatternTile,
+  CompiledPatternTile,
   SceneResource,
 } from '../../../src/contract';
 import type { IRPaint, IRScene } from '../../../src/schemas';
@@ -49,7 +49,7 @@ const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
 const firstPatternResource = (resources: Array<SceneResource> | undefined): PatternResource | undefined =>
   (resources ?? []).find((r): r is PatternResource => r.kind === 'paint' && r.spec.kind === 'pattern');
 
-const tileOf = (spec: IRPaint, opts?: CompileOptions): ResolvedPatternTile | undefined =>
+const tileOf = (spec: IRPaint, opts?: CompileOptions): CompiledPatternTile | undefined =>
   firstPatternResource(compileToScene(patternNodeIR(spec), opts).scene.resources)?.tile;
 
 const compilePattern = (spec: IRPaint, opts?: CompileOptions): void => {

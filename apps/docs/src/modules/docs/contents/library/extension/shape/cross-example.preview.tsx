@@ -1,4 +1,4 @@
-import { CrossShapeDefinition } from '@retikz/extension';
+import { crossShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 /** 图形参数 */
@@ -14,7 +14,7 @@ export type CrossExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderCrossExamplePreview = (values: CrossExamplePreviewValues) => (
-  <Layout viewBox={{ x: -100, y: -80, width: 200, height: 160 }} extensions={{ shapes: [CrossShapeDefinition] }}>
+  <Layout viewBox={{ x: -100, y: -80, width: 200, height: 160 }} extensions={{ shapes: [crossShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{

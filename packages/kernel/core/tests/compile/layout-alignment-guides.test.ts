@@ -13,7 +13,7 @@ import {
   CompositeBaseSchema,
   defineComposite,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
 
 type MutableGuide = {
@@ -40,7 +40,7 @@ const explicitGuideDefinition = (guides: ReadonlyArray<LayoutAlignmentGuide>) =>
   });
 
 const resolvedGuides = (context: CompositeCompileContext, child: IRChild) => {
-  const probe = context.layoutChild(child, NaturalLayoutProposal);
+  const probe = context.layoutChild(child, naturalLayoutProposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
   return probe.result.alignmentGuides;
 };
@@ -265,7 +265,7 @@ describe('布局对齐辅助线所有权', () => {
             text: 'A',
             layout: { padding: 0, margin: 0 },
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (laid.kind === LayoutChildProbeKind.Failed) return context.raise(laid.failure);
 
@@ -290,7 +290,7 @@ describe('布局对齐辅助线所有权', () => {
             text: 'A',
             layout: { padding: 0, margin: 0 },
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (laid.kind === LayoutChildProbeKind.Failed) return context.raise(laid.failure);
 
@@ -357,7 +357,7 @@ describe('布局对齐辅助线所有权', () => {
         type: literal('doubleInspector'),
       }),
       compile: (_node, context) => {
-        firstResult = context.layoutChild(explicitGuideChild, NaturalLayoutProposal);
+        firstResult = context.layoutChild(explicitGuideChild, naturalLayoutProposal);
         if (firstResult.kind === LayoutChildProbeKind.Failed) return context.raise(firstResult.failure);
 
         first = firstResult.result.alignmentGuides;

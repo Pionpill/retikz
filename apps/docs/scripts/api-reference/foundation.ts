@@ -32,7 +32,7 @@ const config = {
         'ValueOf',
         'WithOptionalProperties',
         'WithRequiredProperties',
-        'StaticCssNamedColorHexByName',
+        'staticCssNamedColorHexByName',
         'assertNonEmptyString',
         'assertPlainDataContainers',
         'assertPositiveNumber',

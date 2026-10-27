@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { resolveBoxSpacing } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 
@@ -6,7 +6,7 @@ import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { DiagramThemeDefinition } from '../../contract';
 import { getDefaultDiagramTheme } from '../../providers';
 import type { IRDiagramDefaults, IRDiagramDefaultsPresentationText, IRDiagramPresentationText } from '../../schemas';
-import type { EffectiveDiagramTextAppearance, EffectiveDiagramTheme, EffectiveDiagramThemeFrame } from './types';
+import type { CanonicalDiagramTextAppearance, CanonicalDiagramTheme, CanonicalDiagramThemeFrame } from './types';
 
 type DiagramDefaultsFrame = NonNullable<IRDiagramDefaults['frame']>;
 
@@ -80,7 +80,7 @@ const mergeDiagramDefaults = (
 };
 
 const resolveRegisteredDefaults = (
-  theme: ResolvedTheme,
+  theme: CanonicalTheme,
   registry: ReadonlyMap<string, DiagramThemeDefinition>,
 ): IRDiagramDefaults | undefined => {
   if (theme.name === undefined) return undefined;
@@ -106,7 +106,7 @@ const resolveRegisteredDefaults = (
   }
 };
 
-const completeFrame = (frame: DiagramDefaultsFrame | undefined): EffectiveDiagramThemeFrame => ({
+const completeFrame = (frame: DiagramDefaultsFrame | undefined): CanonicalDiagramThemeFrame => ({
   padding: resolveBoxSpacing(frame?.padding ?? 16, 0),
   titleDescriptionGap: frame?.titleDescriptionGap ?? 6,
   headingMainGap: frame?.headingMainGap ?? 16,
@@ -116,7 +116,7 @@ const completeFrame = (frame: DiagramDefaultsFrame | undefined): EffectiveDiagra
   ...(frame?.border === undefined ? {} : { border: frame.border }),
 });
 
-const completeText = (slice: IRDiagramDefaultsPresentationText | undefined): EffectiveDiagramTextAppearance => ({
+const completeText = (slice: IRDiagramDefaultsPresentationText | undefined): CanonicalDiagramTextAppearance => ({
   textColor: slice?.style?.textColor ?? '#000000',
   opacity: slice?.style?.opacity ?? 1,
   font: slice?.style?.font ?? {},
@@ -127,10 +127,10 @@ const completeText = (slice: IRDiagramDefaultsPresentationText | undefined): Eff
 
 /** 按 Core effective Theme、注册 Definition 与 Source defaults 解析完整 Diagram appearance */
 export const resolveDiagramTheme = (
-  theme: ResolvedTheme,
+  theme: CanonicalTheme,
   styles: ReadonlyMap<string, DiagramThemeDefinition>,
   inline?: IRDiagramDefaults,
-): EffectiveDiagramTheme => {
+): CanonicalDiagramTheme => {
   const neutral = getDefaultDiagramTheme(theme);
   const registered = resolveRegisteredDefaults(theme, styles);
   const source = inline;
@@ -146,9 +146,9 @@ export const resolveDiagramTheme = (
 };
 
 const mergePresentationTextOverride = (
-  base: EffectiveDiagramTextAppearance,
+  base: CanonicalDiagramTextAppearance,
   override: IRDiagramPresentationText,
-): EffectiveDiagramTextAppearance => {
+): CanonicalDiagramTextAppearance => {
   const style = override.style;
   const layout = override.layout;
   const font = mergeFont(base.font, style?.font);
@@ -167,5 +167,5 @@ const mergePresentationTextOverride = (
 /** 将一个已存在的 Presentation 文本区域与当前 defaults 合并为消费态 appearance */
 export const resolveDiagramPresentationTextAppearance = (
   text: IRDiagramPresentationText,
-  appearance: EffectiveDiagramTextAppearance,
-): EffectiveDiagramTextAppearance => mergePresentationTextOverride(appearance, text);
+  appearance: CanonicalDiagramTextAppearance,
+): CanonicalDiagramTextAppearance => mergePresentationTextOverride(appearance, text);

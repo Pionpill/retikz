@@ -1,6 +1,6 @@
 import { compileToScene } from '@retikz/core';
-import type { ParsedFieldValue, ResolveField } from '@retikz/data';
-import { applyFieldResolver, normalizeRows } from '@retikz/data';
+import type { ParsedFieldValue, FieldResolver } from '@retikz/data';
+import { applyFieldResolver, resolveDataRows } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
@@ -89,9 +89,9 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
   });
 });
 
-describe('normalizeRows — 自定义 parser（contract）', () => {
+describe('resolveDataRows — 自定义 parser（contract）', () => {
   it('解析器覆盖内置强制', () => {
-    const out = normalizeRows(
+    const out = resolveDataRows(
       [{ x: '2024/01/01' }],
       new Map([['x', DataFieldType.Temporal]]),
       undefined,
@@ -102,7 +102,7 @@ describe('normalizeRows — 自定义 parser（contract）', () => {
   });
 
   it('解析器返回布尔值或跳过 null', () => {
-    const out = normalizeRows(
+    const out = resolveDataRows(
       [{ a: 'x' }],
       new Map([['a', DataFieldType.Categorical]]),
       undefined,
@@ -113,7 +113,7 @@ describe('normalizeRows — 自定义 parser（contract）', () => {
   });
 
   it('解析器返回 undefined 的跳过', () => {
-    const out = normalizeRows(
+    const out = resolveDataRows(
       [{ a: 'x' }],
       new Map([['a', DataFieldType.Categorical]]),
       undefined,
@@ -227,7 +227,8 @@ describe('prepareRows — resolveField 集成（contract）', () => {
 
 describe('render ⟺ locator parity + scale 兼容', () => {
   const spec = pointSpec([{ name: 'x', type: 'temporal' }, { name: 'y' }]);
-  const resolveField: ResolveField = field => (field === 'x' ? { type: 'temporal', parse: parseSlashDate } : undefined);
+  const resolveField: FieldResolver = field =>
+    field === 'x' ? { type: 'temporal', parse: parseSlashDate } : undefined;
   const datasets = {
     d: [
       { x: '2024/01/01', y: 10 },

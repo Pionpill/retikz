@@ -1,4 +1,8 @@
-import type { FlexLayoutItemInput, GridLayoutItemInput, OverlayLayoutItemInput } from '@retikz/layout';
+import type {
+  InputFlexLayoutItemConfig,
+  InputGridLayoutItemConfig,
+  InputOverlayLayoutItemConfig,
+} from '@retikz/layout';
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import type {
   InputChild,
@@ -6,10 +10,10 @@ import type {
   InputEmbedContribution,
   InputEmbedPreparationContext,
   InputEmbedChildrenPreparation,
-  NormalizedInputEmbedChildren,
+  EmbedChildrenNormalizationResult,
 } from '@retikz/vanilla';
 
-type LayoutItem = FlexLayoutItemInput | GridLayoutItemInput | OverlayLayoutItemInput;
+type LayoutItem = InputFlexLayoutItemConfig | InputGridLayoutItemConfig | InputOverlayLayoutItemConfig;
 
 type CoreProviderContribution = InputEmbedContribution['providerDependencies'];
 
@@ -18,7 +22,7 @@ type InputEmbedAuthoringSites = NonNullable<InputEmbedContribution['authoringSit
 /** 汇合已归一化的 Layout 子项与显式 Source 字段绑定 */
 const collectLayoutItems = <TItem extends LayoutItem>(
   inputs: ReadonlyArray<Omit<TItem, 'child'> & { child: InputChild }>,
-  normalizedChildren: ReadonlyArray<NormalizedInputEmbedChildren>,
+  normalizedChildren: ReadonlyArray<EmbedChildrenNormalizationResult>,
 ): Readonly<{
   items: Array<TItem>;
   providerDependencies: CoreProviderContribution;
@@ -97,7 +101,7 @@ export const prepareLayoutItems = async <TItem extends LayoutItem>(
   for (const input of inputs ?? []) preparations.push(await context.prepareChildren([input.child]));
 
   return async () => {
-    const normalized: Array<NormalizedInputEmbedChildren> = [];
+    const normalized: Array<EmbedChildrenNormalizationResult> = [];
     for (const preparation of preparations) normalized.push(await preparation.execute());
     return collectLayoutItems<TItem>(inputs ?? [], normalized);
   };

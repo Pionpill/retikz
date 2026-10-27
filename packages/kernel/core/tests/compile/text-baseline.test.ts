@@ -15,9 +15,9 @@ import {
   CompositeBaseSchema,
   defineComposite,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
-import type { LowerTex } from '../../src/compile/text';
+import type { TexLowerer } from '../../src/compile/text';
 import { ASCENT_FACTOR, DESCENT_FACTOR, toAlphabeticBaselineY } from '../../src/compile/text';
 
 const fixedMeasurer: TextMeasurer = text => ({
@@ -43,7 +43,7 @@ const probeGuidesOf = (child: IRChild, measureText: TextMeasurer): ReadonlyArray
       type: literal('baselineInspector'),
     }),
     compile: (_node, context) => {
-      const probe = context.layoutChild(child, NaturalLayoutProposal);
+      const probe = context.layoutChild(child, naturalLayoutProposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
 
       guides = probe.result.alignmentGuides;
@@ -61,7 +61,7 @@ const probeGuidesOf = (child: IRChild, measureText: TextMeasurer): ReadonlyArray
   return guides;
 };
 
-const probeEmissionOf = (child: IRChild, measureText: TextMeasurer, precision?: number, lowerTex?: LowerTex) => {
+const probeEmissionOf = (child: IRChild, measureText: TextMeasurer, precision?: number, lowerTex?: TexLowerer) => {
   let guides: ReadonlyArray<LayoutAlignmentGuide> | undefined;
   let allocationHeight: number | undefined;
   let visualBounds: LayoutChildResult['visualBounds'] | undefined;
@@ -73,7 +73,7 @@ const probeEmissionOf = (child: IRChild, measureText: TextMeasurer, precision?: 
       type: literal('baselineEmissionInspector'),
     }),
     compile: (_node, context) => {
-      const probe = context.layoutChild(child, NaturalLayoutProposal);
+      const probe = context.layoutChild(child, naturalLayoutProposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
 
       guides = probe.result.alignmentGuides;
@@ -357,7 +357,7 @@ describe('Node 布局对齐基线', () => {
   });
 
   it('使用每个混合/TeX 线真正的圆形基线，而不是分组的普通 lineHeight 间距', () => {
-    const lowerTex: LowerTex = () => ({ paths: [], width: 1, height: 1, depth: 0 });
+    const lowerTex: TexLowerer = () => ({ paths: [], width: 1, height: 1, depth: 0 });
     const output = probeEmissionOf(
       {
         type: 'node',

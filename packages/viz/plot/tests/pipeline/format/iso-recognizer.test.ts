@@ -3,7 +3,7 @@ import { DataFieldType } from '@retikz/data';
 import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { prepareRows } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
@@ -32,7 +32,7 @@ const specWithField = (field: { name: string } & Record<string, unknown>): IRPlo
 const parseFirst = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = {},
+  options: PlotsLoweringOptions = {},
 ): unknown => {
   const ingested = tagSourceIndex(datasets.d);
   const { normalized } = prepareRows(spec, datasets, options, ingested);

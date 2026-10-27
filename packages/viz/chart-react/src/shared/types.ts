@@ -1,7 +1,7 @@
 import type { ChartThemeDefinition } from '@retikz/chart';
 import type { InputChartPanel } from '@retikz/chart-vanilla';
 import type { DataInputBindings, DataTransformExecutor, ExternalRow } from '@retikz/data';
-import type { LowerPlotsOptions } from '@retikz/plot';
+import type { PlotsLoweringOptions } from '@retikz/plot';
 import type { FC } from 'react';
 
 /** Chart React 的宿主 Scope 输入
@@ -19,7 +19,7 @@ export type ChartThemeDefinitionsProps = Readonly<{
   /** 当前具体 chartType provider 可见的命名 Chart Theme Definition */
   chartThemeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
   /** Plot lowering runtime options；不写入 Chart Source */
-  lowerOptions?: LowerPlotsOptions;
+  lowerOptions?: PlotsLoweringOptions;
 }>;
 
 /**

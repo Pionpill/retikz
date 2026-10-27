@@ -31,25 +31,25 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { AxesDefinition } from '@retikz/standard/presentation';
+import { axesDefinition } from '@retikz/standard/presentation';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [{ namespace: 'standard', type: 'axes', x: { extent: 80 }, y: { extent: 50 } }],
 };
-export const Example = () => <Layout ir={ir} composites={[AxesDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[axesDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { axes, AxesInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { axes, axesInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [axes({ x: { extent: 80 }, y: { extent: 50 } })] });
-const svg = renderToSvgString(input, { adapters: [AxesInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [axesInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -58,7 +58,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { AxesDefinition } from '@retikz/standard/presentation';
+import { axesDefinition } from '@retikz/standard/presentation';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -66,7 +66,7 @@ const ir: IRScene = {
   version: 1,
   children: [{ namespace: 'standard', type: 'axes', x: { extent: 80 }, y: { extent: 50 } }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [AxesDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [axesDefinition] } });
 console.log(svg);
 ```
 
@@ -139,7 +139,7 @@ Both x and y require extent, with at least one positive side per axis. Grid and 
   description="Read it when you work directly with Axes IR, align it with other Core primitives, or investigate compile diagnostics."
 />
 
-Axes IR is not a renderer-specific primitive. After `AxesDefinition` is loaded, lowering normalizes signed extents, converts the y direction, enumerates grids and ticks, and assembles ordinary Core IR in a fixed order.
+Axes IR is not a renderer-specific primitive. After `axesDefinition` is loaded, lowering normalizes signed extents, converts the y direction, enumerates grids and ticks, and assembles ordinary Core IR in a fixed order.
 
 The following figure shows only the conversion chain owned by Axes. Its responsibility ends when the output reaches `Core IR[]`.
 
@@ -147,7 +147,7 @@ The following figure shows only the conversion chain owned by Axes. Its responsi
 
 The y-axis path always runs from its negative endpoint to its positive endpoint. A positive value `v` maps to `originY - v`, so the default positive arrow points upward. This is not a new global coordinate system: neighboring `<Node position>` and `<Step to>` values still use Core's y-down coordinates.
 
-`x.grid` and `y.grid` emit ordinary lines clipped to their corresponding axis extents. The former enumerates x positions and projects them vertically; the latter enumerates y positions and projects them horizontally. Both reuse Path style and do not depend on `GridDefinition`; use standalone [Grid](/library/standard/presentation/grid) for baselines, borders, and a fuller grid contract.
+`x.grid` and `y.grid` emit ordinary lines clipped to their corresponding axis extents. The former enumerates x positions and projects them vertically; the latter enumerates y positions and projects them horizontally. Both reuse Path style and do not depend on `gridDefinition`; use standalone [Grid](/library/standard/presentation/grid) for baselines, borders, and a fuller grid contract.
 
 A hand-written `IRAxes` without its definition is not interpreted silently. Core emits `COMPOSITE_NOT_REGISTERED` and skips it. Renderers see only the lowered `Path` and text `Node` values.
 

@@ -2,7 +2,7 @@ import { createDataTransformExecutor } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { TableSchema, prepareTableData, resolveTableData } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 
 const detail = (transform = true) =>
   TableSchema.parse({
@@ -25,7 +25,7 @@ describe('Table 数据准备', () => {
 
     expect(preparedData).toEqual(synchronous);
 
-    const structure = normalizeTableStructure(spec.structure, { data: spec.data, preparedData });
+    const structure = resolveTableStructure(spec.structure, { data: spec.data, preparedData });
 
     expect(structure.cells.map(cell => cell.payload)).toEqual([
       { kind: 'value', value: 0.25 },
@@ -40,9 +40,9 @@ describe('Table 数据准备', () => {
     const rows = [{ value: false }, { value: null }, { value: '2026-10-03' }];
     const preparation = await prepareTableData(spec, { dataBindings: { rows: { kind: 'rows', rows } } });
     const preparedData = await preparation.execute();
-    const expected = normalizeTableStructure(spec.structure, { data: spec.data, datasets: { rows } });
+    const expected = resolveTableStructure(spec.structure, { data: spec.data, datasets: { rows } });
 
-    expect(normalizeTableStructure(spec.structure, { data: spec.data, preparedData })).toEqual(expected);
+    expect(resolveTableStructure(spec.structure, { data: spec.data, preparedData })).toEqual(expected);
   });
 
   it('通过转换保留格式隐含的时间类型', async () => {
@@ -154,7 +154,7 @@ describe('Table 数据准备', () => {
     const preparedData = await preparation.execute();
 
     expect(() =>
-      normalizeTableStructure(
+      resolveTableStructure(
         { kind: 'detail', header: false, columns: [{ id: 'extra', field: 'extra' }] },
         { data: spec.data, preparedData },
       ),

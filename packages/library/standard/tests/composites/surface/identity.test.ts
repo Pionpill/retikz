@@ -1,10 +1,10 @@
 import type { GroupPrimitive, IRChild, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite, resolveCoreProviderDependencies } from '@retikz/core';
-import { PathClipDefinition, PathClipProvider } from '@retikz/extension';
+import { pathClipDefinition, pathClipProvider } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { createSurface, SurfaceDefinition, SurfaceProvider } from '../../../src/presentation';
+import { createSurface, surfaceDefinition, surfaceProvider } from '../../../src/presentation';
 
 const node: IRChild = {
   type: 'node',
@@ -25,7 +25,7 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive
 describe('Surface 外观、Scope 和空间标识', () => {
   it('通过 Surface 提供者图解决路径裁剪依赖关系', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [SurfaceProvider.key], providers: [SurfaceProvider, PathClipProvider] }],
+      contributions: [{ roots: [surfaceProvider.key], providers: [surfaceProvider, pathClipProvider] }],
     });
     const surface = createSurface({
       namespace: 'standard',
@@ -37,7 +37,7 @@ describe('Surface 外观、Scope 和空间标识', () => {
     });
 
     expect(definitions.clips?.map(definition => definition.kind)).toEqual(['path']);
-    expect(definitions).toEqual({ composites: [SurfaceDefinition], clips: [PathClipDefinition] });
+    expect(definitions).toEqual({ composites: [surfaceDefinition], clips: [pathClipDefinition] });
     expect(() =>
       compileToScene({ type: 'scene', version: 1, children: [surface] }, { ...definitions, padding: 0 }),
     ).not.toThrow();
@@ -57,8 +57,8 @@ describe('Surface 外观、Scope 和空间标识', () => {
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
       {
-        composites: [SurfaceDefinition],
-        clips: [PathClipDefinition],
+        composites: [surfaceDefinition],
+        clips: [pathClipDefinition],
         padding: 0,
       },
     );
@@ -94,8 +94,8 @@ describe('Surface 外观、Scope 和空间标识', () => {
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
       {
-        composites: [SurfaceDefinition],
-        clips: [PathClipDefinition],
+        composites: [surfaceDefinition],
+        clips: [pathClipDefinition],
         padding: 0,
       },
     );
@@ -142,8 +142,8 @@ describe('Surface 外观、Scope 和空间标识', () => {
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
       {
-        composites: [SurfaceDefinition],
-        clips: [PathClipDefinition],
+        composites: [surfaceDefinition],
+        clips: [pathClipDefinition],
         padding: 0,
       },
     );
@@ -197,7 +197,7 @@ describe('Surface 外观、Scope 和空间标识', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition, card], padding: 0 },
+      { composites: [surfaceDefinition, card], padding: 0 },
     );
     const descendant = result.spatialHandles.entries.find(entry => entry.role === 'card');
 
@@ -225,7 +225,7 @@ describe('Surface 外观、Scope 和空间标识', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition], padding: 0 },
+      { composites: [surfaceDefinition], padding: 0 },
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'isolated-surface');
 
@@ -250,8 +250,8 @@ describe('Surface 外观、Scope 和空间标识', () => {
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
       {
-        composites: [SurfaceDefinition],
-        clips: [PathClipDefinition],
+        composites: [surfaceDefinition],
+        clips: [pathClipDefinition],
         padding: 0,
       },
     );

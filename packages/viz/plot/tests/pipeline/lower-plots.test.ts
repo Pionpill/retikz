@@ -2,7 +2,7 @@ import type { IRNode, IRPaint, IRPath, IRScope } from '@retikz/core';
 import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
 import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
@@ -55,7 +55,7 @@ const pointSpec = (): IRPlot =>
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options?: LowerPlotsOptions,
+  options?: PlotsLoweringOptions,
 ): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
@@ -64,7 +64,7 @@ const expandOf = (
 const firstLayer = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options?: LowerPlotsOptions,
+  options?: PlotsLoweringOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 const isScope = (value: unknown): value is IRScope =>
@@ -111,7 +111,7 @@ const nodeHeight = (node: IRNode): number => {
   return size?.height ?? size?.default ?? 0;
 };
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 

@@ -102,7 +102,11 @@ const rotatedEllipseScope = (
 };
 
 /** 确保当前输出 Path 具有一个起点 */
-const ensurePathStart = (steps: Array<IRStep>, current: IRPosition | undefined, fallback: IRPosition): IRPosition => {
+const appendPathStartIfEmpty = (
+  steps: Array<IRStep>,
+  current: IRPosition | undefined,
+  fallback: IRPosition,
+): IRPosition => {
   if (steps.length === 0) {
     const start = current ?? fallback;
     steps.push({ type: 'step', kind: 'move', to: start });
@@ -143,7 +147,7 @@ export const pathCommandsToChildren = (
         if (!splitSubpath) steps.push({ type: 'step', kind: 'cycle' });
       }
     } else {
-      ensurePathStart(steps, current, subpathStart);
+      appendPathStartIfEmpty(steps, current, subpathStart);
       if (steps.length === 1 && steps[0]?.kind === 'move' && samePosition(pathEnd, subpathStart)) {
         steps = [];
       } else if (splitSubpath) {
@@ -175,21 +179,21 @@ export const pathCommandsToChildren = (
     }
 
     if (command.kind === 'line') {
-      ensurePathStart(steps, current, command.to);
+      appendPathStartIfEmpty(steps, current, command.to);
       steps.push({ type: 'step', kind: 'line', to: command.to });
       current = command.to;
       continue;
     }
 
     if (command.kind === 'quad') {
-      ensurePathStart(steps, current, command.to);
+      appendPathStartIfEmpty(steps, current, command.to);
       steps.push({ type: 'step', kind: 'curve', control: command.control, to: command.to });
       current = command.to;
       continue;
     }
 
     if (command.kind === 'cubic') {
-      ensurePathStart(steps, current, command.to);
+      appendPathStartIfEmpty(steps, current, command.to);
       steps.push({
         type: 'step',
         kind: 'cubic',
@@ -206,7 +210,7 @@ export const pathCommandsToChildren = (
     const arcEnd = pointAtArcCommand(command, angles.end);
     if (command.kind === 'ellipseArc' && command.rotation !== undefined && command.rotation !== 0) {
       if (current !== undefined && !samePosition(current, arcStart)) {
-        ensurePathStart(steps, current, arcStart);
+        appendPathStartIfEmpty(steps, current, arcStart);
         steps.push({ type: 'step', kind: 'line', to: arcStart });
       }
 
@@ -218,7 +222,7 @@ export const pathCommandsToChildren = (
       continue;
     }
 
-    ensurePathStart(steps, current, arcStart);
+    appendPathStartIfEmpty(steps, current, arcStart);
     steps.push({
       type: 'step',
       kind: 'arc',

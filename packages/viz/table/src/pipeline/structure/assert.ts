@@ -20,7 +20,7 @@ const assertUniqueIds = (owner: string, values: ReadonlyArray<{ id?: string }>):
 };
 
 /** 验证 Structure Definition output 的 canonical 跨字段矩阵 */
-export const validateTableStructureOutput = (
+export const assertTableStructureOutput = (
   output: TableStructureOutput,
   source: TableStructureValidationSource,
   context: TableStructureContext,

@@ -10,8 +10,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 
-import type { SurfaceInput } from '../../../src/presentation';
-import { createSurface, SurfaceDefinition } from '../../../src/presentation';
+import type { InputSurfaceConfig } from '../../../src/presentation';
+import { createSurface, surfaceDefinition } from '../../../src/presentation';
 
 type ProbeLog = Readonly<{ id: string; proposal: LayoutProposal }>;
 
@@ -81,8 +81,8 @@ const naturalProposal = (): LayoutProposal => ({
 const compileSurface = (
   child: IRChild,
   proposal: LayoutProposal = naturalProposal(),
-  padding: SurfaceInput['padding'] = 0,
-  appearance: Pick<SurfaceInput, 'background' | 'border' | 'cornerRadius' | 'overflow'> = {},
+  padding: InputSurfaceConfig['padding'] = 0,
+  appearance: Pick<InputSurfaceConfig, 'background' | 'border' | 'cornerRadius' | 'overflow'> = {},
 ) => {
   const logs: Array<ProbeLog> = [];
   let observed: LayoutChildResult | undefined;
@@ -116,7 +116,7 @@ const compileSurface = (
       version: 1,
       children: [{ namespace: 'surface-test', type: 'harness', child: surface }],
     },
-    { composites: [SurfaceDefinition, createLeafDefinition(logs), harness], padding: 0 },
+    { composites: [surfaceDefinition, createLeafDefinition(logs), harness], padding: 0 },
   );
   if (observed === undefined) throw new Error('Expected Surface probe to resolve');
 
@@ -217,7 +217,7 @@ describe('Surface 布局编译', () => {
           version: 1,
           children: [{ namespace: 'surface-test', type: 'failure-harness', child: surface }],
         },
-        { composites: [SurfaceDefinition, createLeafDefinition(logs), harness] },
+        { composites: [surfaceDefinition, createLeafDefinition(logs), harness] },
       ),
     ).toThrow(/surface.*x.*padding/i);
     expect(logs).toEqual([]);
@@ -248,7 +248,7 @@ it('Surface 完整 Scope 属性透传独立外框', () => {
   });
   const { scene } = compileToScene(
     { version: 1, type: 'scene', children: [surface] },
-    { composites: [SurfaceDefinition] },
+    { composites: [surfaceDefinition] },
   );
   const serialized = JSON.stringify(scene.primitives);
 

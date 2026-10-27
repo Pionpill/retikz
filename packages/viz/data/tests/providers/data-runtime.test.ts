@@ -9,9 +9,9 @@ import {
   DataFieldType,
   inferCategoryDomain,
   inferFieldType,
-  normalizeRows,
+  resolveDataRows,
   resolveFieldTypes,
-  validateBoundData,
+  assertBoundData,
 } from '../../src';
 
 describe('数据提供者运行时边界', () => {
@@ -116,7 +116,7 @@ describe('数据提供者运行时边界', () => {
 
   it('规范化逻辑字段而不改变源行', () => {
     const source: Array<ExternalRow> = [{ raw: { amount: '$12' }, group: true }];
-    const normalized = normalizeRows(
+    const normalized = resolveDataRows(
       source,
       new Map([
         ['amount', DataFieldType.Continuous],
@@ -134,10 +134,10 @@ describe('数据提供者运行时边界', () => {
     const types: DataFieldTypeMap = new Map([['value', DataFieldType.Continuous]]);
     const rows: Array<ExternalRow> = [{ value: null }, { value: 'bad' }, { value: 3 }];
 
-    expect(() => validateBoundData(rows, types, 2)).toThrow(
+    expect(() => assertBoundData(rows, types, 2)).toThrow(
       'data: field "value" has no valid values in the sampled data: 1/2 invalid, 1/2 missing',
     );
-    expect(() => validateBoundData(rows, types, 3)).not.toThrow();
+    expect(() => assertBoundData(rows, types, 3)).not.toThrow();
   });
 
   it('报告严格模式下第一个无效的规范化行', () => {

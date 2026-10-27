@@ -1,4 +1,4 @@
-import type { IRChild, IRNode, IRScope, LayoutAxisProposal, CompositeDefinition, ResolvedTheme } from '@retikz/core';
+import type { IRChild, IRNode, IRScope, LayoutAxisProposal, CompositeDefinition, CanonicalTheme } from '@retikz/core';
 import {
   categoricalColorAt,
   defineComposite,
@@ -14,7 +14,7 @@ import {
   createDataView,
   tagSourceIndex,
   assertAllValuesValid,
-  validateBoundData,
+  assertBoundData,
   resolveDataExecution,
 } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
@@ -34,7 +34,7 @@ import {
   isPolarCoordinateFrame,
   resolveCoordinateRegistry,
   lowerMark,
-  makeColorSchemeResolver,
+  createColorSchemeResolver,
   resolveChannelRegistry,
   createFieldCollector,
 } from '../../providers';
@@ -117,7 +117,7 @@ import { applyMarkTransforms, preparePlotRegistries, prepareRows } from './data'
 import { resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, legendReserveOf, reserveLegendBands } from './legend';
 import { plotMarkTransformsOf } from './preparation';
-import type { LowerPlotsOptions, PlotLayoutOptions, MarkDataView } from './types';
+import type { PlotsLoweringOptions, PlotLayoutOptions, MarkDataView } from './types';
 
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
@@ -279,7 +279,7 @@ const withFacetGuideContext = (
   return { ...scoped, id: `${plotId}.view.${slug(panelId)}.${localId}` };
 };
 
-const DEFAULT_PLOT_THEME: ResolvedTheme = {
+const DEFAULT_PLOT_THEME: CanonicalTheme = {
   mode: ThemeMode.Light,
   colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 };
@@ -330,7 +330,7 @@ export const lowerPlotWithDataArtifact = (
   node: IRPlot,
   datasets: ExternalDatasets,
   options: PlotLayoutOptions,
-  effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
+  effectiveTheme: CanonicalTheme = DEFAULT_PLOT_THEME,
   lineageOptions?: DataLineageOptions,
   preparedData?: PreparedPlotData,
 ): PlotDataArtifactLowerResult => {
@@ -408,10 +408,10 @@ export const lowerPlotWithDataArtifact = (
   assertFieldOrders(node.data.model, fieldOrderRegistry);
 
   // scheme 解析器：内置 scheme + options.colorSchemes；channel scale 取色 / legend ramp 共用。
-  const resolveColorScheme = makeColorSchemeResolver(options.colorSchemes);
+  const resolveColorScheme = createColorSchemeResolver(options.colorSchemes);
   if (fieldTypeMap !== undefined && options.validateData) {
     const sampleRows = typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100;
-    validateBoundData(normalized, fieldTypeMap, sampleRows);
+    assertBoundData(normalized, fieldTypeMap, sampleRows);
   }
 
   // invalid:'error'：transform 之前对 spec 参与字段（= fieldTypeMap 键）全量校验，遇任一非法 / 缺失 fail-loud；
@@ -924,7 +924,7 @@ export const lowerPlotWithDataArtifact = (
     const panelStrideX = panelWidth + panelGap;
     const panelStrideY = panelHeight + panelGap;
 
-    const makeFacetLabelScope = (
+    const buildFacetLabelScope = (
       facet: FacetGrid,
       dimension: FacetLabelDimension,
       level: number,
@@ -1001,7 +1001,9 @@ export const lowerPlotWithDataArtifact = (
                 width: group.span * panelWidth + Math.max(0, group.span - 1) * panelGap,
                 height: facetLabelBandSize,
               };
-              labels.push(makeFacetLabelScope(facet, 'column', level, group.startIndex, group.span, group.value, rect));
+              labels.push(
+                buildFacetLabelScope(facet, 'column', level, group.startIndex, group.span, group.value, rect),
+              );
             }
           }
 
@@ -1015,7 +1017,7 @@ export const lowerPlotWithDataArtifact = (
                 width: facetLabelBandSize,
                 height: group.span * panelHeight + Math.max(0, group.span - 1) * panelGap,
               };
-              labels.push(makeFacetLabelScope(facet, 'row', level, group.startIndex, group.span, group.value, rect));
+              labels.push(buildFacetLabelScope(facet, 'row', level, group.startIndex, group.span, group.value, rect));
             }
           }
 
@@ -1608,7 +1610,7 @@ const lowerPlot = (
   node: IRPlot,
   datasets: ExternalDatasets,
   options: PlotLayoutOptions,
-  effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
+  effectiveTheme: CanonicalTheme = DEFAULT_PLOT_THEME,
   preparedData?: PreparedPlotData,
 ): IRChild => lowerPlotWithDataArtifact(node, datasets, options, effectiveTheme, undefined, preparedData).child;
 
@@ -1618,7 +1620,7 @@ const lowerPlot = (
  */
 export const lowerPlots = (
   datasets: ExternalDatasets,
-  options: LowerPlotsOptions = {},
+  options: PlotsLoweringOptions = {},
 ): Array<CompositeDefinition<IRPlot, typeof PLOT_NAMESPACE, 'plot'>> => [
   defineComposite({
     namespace: PLOT_NAMESPACE,

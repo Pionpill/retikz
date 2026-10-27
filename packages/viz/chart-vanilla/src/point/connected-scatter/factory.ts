@@ -7,7 +7,7 @@ import { normalizeConnectedScatterChart } from './normalize';
 import type { ConnectedScatterChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 ConnectedScatterChart 输入并复用统一数据准备 */
-export const ConnectedScatterChartInputEmbedAdapter = createChartInputEmbedAdapter(
+export const connectedScatterChartInputEmbedAdapter = createChartInputEmbedAdapter(
   'chart.connected-scatter',
   (input: ConnectedScatterChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
@@ -39,7 +39,7 @@ export const connectedScatterChart = <TNative = never>(
   input: ConnectedScatterChartInputEmbedProps<TNative>,
 ): InputEmbed<ConnectedScatterChartInputEmbedProps<TNative>> => ({
   type: 'embed',
-  kind: ConnectedScatterChartInputEmbedAdapter.kind,
+  kind: connectedScatterChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

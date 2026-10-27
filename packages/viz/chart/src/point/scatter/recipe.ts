@@ -13,27 +13,27 @@ import {
   resolvePointScaleDefaults,
   sizeGuideOf,
 } from '../shared';
-import { ScatterMarkDefinition } from './mark';
+import { scatterMarkDefinition } from './mark';
 import type { IRScatterChart } from './schema';
 import { ScatterChartSchema } from './schema';
 
 /** Scatter exact schema、调度与消费检查共用的encoding顺序 */
-const ScatterChartEncodingSlots = ['x', 'y', 'color', 'size', 'opacity', 'shape', 'row', 'column', 'facet'] as const;
+const scatterChartEncodingSlots = ['x', 'y', 'color', 'size', 'opacity', 'shape', 'row', 'column', 'facet'] as const;
 
 const scatterPropertySlots = [...pointPropertySlots, 'domainPadding'] as const;
 
 /** Scatter Chart 的内建 semantic recipe Definition */
-export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = defineChartRecipe({
+export const scatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = defineChartRecipe({
   chartType: ChartType.Scatter,
-  encodingSlots: ScatterChartEncodingSlots,
+  encodingSlots: scatterChartEncodingSlots,
   schema: ScatterChartSchema,
   consumes: {
-    encodings: ScatterChartEncodingSlots,
+    encodings: scatterChartEncodingSlots,
     properties: scatterPropertySlots,
   },
   marks: [
     {
-      definition: ScatterMarkDefinition,
+      definition: scatterMarkDefinition,
       inherit: {
         encodings: ['x', 'y', 'color', 'size', 'opacity', 'shape'],
         properties: ['autoPadding', 'color', 'size', 'opacity', 'shape'],
@@ -43,7 +43,7 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
   resolveEncodings: context => {
     const resolution = resolveChartEncodingMappings(
       context,
-      ScatterChartEncodingSlots,
+      scatterChartEncodingSlots,
       pointFieldConsumersOf(ChartType.Scatter),
     );
     const spatial = pointSpatialResolutionOf(ChartType.Scatter, context.encodings);

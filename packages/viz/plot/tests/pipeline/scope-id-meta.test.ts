@@ -3,7 +3,7 @@ import { compileToScene } from '@retikz/core';
 import { SOURCE_INDEX } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
 import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
@@ -18,7 +18,7 @@ import { measureLabel } from '../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
@@ -30,7 +30,7 @@ const contentScope = (outer: IRScope): IRScope =>
   outer.id !== undefined && outer.localNamespace !== true ? (outer.children[0] as IRScope) : outer;
 
 /** 取第一个 mark 图层 scope（内容 scope 的第一个子 scope） */
-const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope =>
   contentScope(expandOf(spec, datasets, options)).children[0] as IRScope;
 
 /** 递归收集 IRChild 树里所有带 meta 的元素（id 一并带出，便于断言） */
@@ -73,7 +73,7 @@ const collectSceneMeta = (
   return out;
 };
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const SALES = [
   { month: 0, revenue: 10 },

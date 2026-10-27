@@ -89,8 +89,8 @@ describe('Layout 文档演示', () => {
     const vanilla = buildVanillaPreview(preview);
 
     expect(vanilla.code).toContain('legend({');
-    expect(vanilla.code).toContain('const compile = { composites: [GridDefinition, FlexLayoutDefinition] };');
-    expect(vanilla.code).not.toContain('LegendDefinition');
+    expect(vanilla.code).toContain('const compile = { composites: [gridDefinition, flexLayoutDefinition] };');
+    expect(vanilla.code).not.toContain('legendDefinition');
     expect(vanilla.code).not.toContain('Unsupported Layout composite');
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('Nested');

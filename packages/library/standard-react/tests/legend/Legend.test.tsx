@@ -2,8 +2,8 @@ import { createInputScene, Layout, Node, Path, Step } from '@retikz/react';
 import {
   createLegend,
   LegendContentKind,
-  LegendDefinition,
-  LegendProvider,
+  legendDefinition,
+  legendProvider,
   LegendSchema,
 } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
@@ -138,11 +138,11 @@ describe('<Legend>', () => {
       }),
     );
     expect(contribute(itemsProps).providerDependencies).toEqual({
-      roots: [LegendProvider.key],
-      providers: [LegendProvider],
+      roots: [legendProvider.key],
+      providers: [legendProvider],
     });
-    expect(contribute(rampProps).providerDependencies.providers[0]).toBe(LegendProvider);
-    expect(LegendProvider.makeDefinition([])).toBe(LegendDefinition);
+    expect(contribute(rampProps).providerDependencies.providers[0]).toBe(legendProvider);
+    expect(legendProvider.makeDefinition([])).toBe(legendDefinition);
   });
 
   it('通过数组和片段保留编写的标记顺序', () => {
@@ -347,7 +347,7 @@ describe('<Legend>', () => {
     const directOutput = renderToStaticMarkup(
       <Layout
         ir={{ type: 'scene', version: 1, children: [direct] }}
-        extensions={{ composites: [LegendDefinition] }}
+        extensions={{ composites: [legendDefinition] }}
         width={200}
         height={120}
       />,

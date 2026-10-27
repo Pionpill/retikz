@@ -50,8 +50,8 @@ describe('Graph 提供者关闭', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [
         { roots: [Graph.GraphProviderKey], providers },
-        { roots: [Graph.EntityProviderKey], providers },
-        { roots: [Graph.RelationProviderKey], providers },
+        { roots: [Graph.entityProviderKey], providers },
+        { roots: [Graph.relationProviderKey], providers },
       ],
     });
     const semanticChildren = [

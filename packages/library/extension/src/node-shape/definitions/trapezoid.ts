@@ -1,5 +1,5 @@
 import type { CoreDependencyProvider, Side } from '@retikz/core';
-import { defineShape, SideValues } from '@retikz/core';
+import { defineShape, sideValues } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
@@ -12,10 +12,10 @@ import {
   polygonAnchor,
   polygonBoundaryPoint,
   polygonConnectionEnvelope,
-} from './_utils';
+} from './polygon';
 
 const TrapezoidShapeParamsSchema = strictObject({
-  shortSide: zodEnum(SideValues).optional().describe('Side shorter than its opposite side; defaults to top.'),
+  shortSide: zodEnum(sideValues).optional().describe('Side shorter than its opposite side; defaults to top.'),
   shortSideRatio: PositiveNumberSchema.max(1).optional().describe('Short-side length divided by opposite-side length.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe('Uniform corner radius in user units.'),
 });
@@ -66,7 +66,7 @@ const trapezoidVertices =
   };
 
 /** 可选 Trapezoid 形状 Definition */
-export const TrapezoidShapeDefinition = defineShape<TrapezoidShapeParams>({
+export const trapezoidShapeDefinition = defineShape<TrapezoidShapeParams>({
   name: BuiltinExtensionShapeName.Trapezoid,
   paramsSchema: TrapezoidShapeParamsSchema,
   computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight, params) => {
@@ -99,7 +99,7 @@ export const TrapezoidShapeDefinition = defineShape<TrapezoidShapeParams>({
 });
 
 /** Trapezoid 的静态 Core provider */
-export const TrapezoidShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
-  key: { capability: 'shape', name: TrapezoidShapeDefinition.name },
-  makeDefinition: () => TrapezoidShapeDefinition,
+export const trapezoidShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
+  key: { capability: 'shape', name: trapezoidShapeDefinition.name },
+  makeDefinition: () => trapezoidShapeDefinition,
 });

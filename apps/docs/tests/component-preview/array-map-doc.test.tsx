@@ -92,7 +92,7 @@ describe('Array / Map 文档使用者', () => {
 
     expect(code).toContain("content: 'B1'");
     expect(code).toContain('items:');
-    expect(code).toContain('ArrayInputEmbedAdapter');
+    expect(code).toContain('arrayInputEmbedAdapter');
     expect(code).not.toContain('__CELLS__');
     expect(code).not.toContain('__CELL_CONTENT__');
     expect(code).not.toContain('overlayLayout');
@@ -120,7 +120,7 @@ it('保留复制的 Vanilla 源中的 Array 内容宽度', () => {
   });
 
   expect(code).toContain("width: 'content'");
-  expect(code).toContain('ArrayInputEmbedAdapter');
+  expect(code).toContain('arrayInputEmbedAdapter');
 });
 
 it('在复制的代码和运行时预览中保留紧凑的 JSON 数据', () => {

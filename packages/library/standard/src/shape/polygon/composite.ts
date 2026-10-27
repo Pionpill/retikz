@@ -7,7 +7,7 @@ import { PolygonSchema } from './schema';
 import type { IRPolygon } from './types';
 
 /** Polygon 的 Core composite 注册项 */
-export const PolygonDefinition = defineComposite({
+export const polygonDefinition = defineComposite({
   namespace: 'standard',
   type: 'polygon',
   schema: PolygonSchema,
@@ -22,7 +22,7 @@ export const createPolygon = (input: ShapeProperties<IRPolygon>): IRPolygon => (
 });
 
 /** Polygon 的按需依赖贡献 */
-export const PolygonProvider: CoreDependencyProvider = Object.freeze({
+export const polygonProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'polygon' }),
-  makeDefinition: () => PolygonDefinition,
+  makeDefinition: () => polygonDefinition,
 });

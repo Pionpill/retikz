@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { DetailTableInput, ManualTableInput } from '../../../src';
+import type { InputDetailTableConfig, InputManualTableConfig } from '../../../src';
 import { createDetailTableIR, createManualTableIR, TABLE_NAMESPACE, TableComposite, TableSchema } from '../../../src';
 
 describe('Table 简单编写', () => {
   it('标准化详细字符串头部并保持头部为 false', () => {
-    const input: DetailTableInput = {
+    const input: InputDetailTableConfig = {
       id: 'sales',
       dataRef: 'sales-data',
       model: [{ name: 'score', type: 'continuous' }],
@@ -40,9 +40,9 @@ describe('Table 简单编写', () => {
   });
 
   it('返回分离的 JSON 安全规格，而不修改详细输入', () => {
-    const columns: DetailTableInput['columns'] = [{ id: 'name', field: 'name', header: 'Name' }];
-    const model: NonNullable<DetailTableInput['model']> = [{ name: 'name' }];
-    const input: DetailTableInput = { dataRef: 'people', columns, model };
+    const columns: InputDetailTableConfig['columns'] = [{ id: 'name', field: 'name', header: 'Name' }];
+    const model: NonNullable<InputDetailTableConfig['model']> = [{ name: 'name' }];
+    const input: InputDetailTableConfig = { dataRef: 'people', columns, model };
     const before = structuredClone(input);
     const spec = createDetailTableIR(input);
 
@@ -56,7 +56,7 @@ describe('Table 简单编写', () => {
 
   it('保留和分离详细格式化程序、规则、编码和 Source 默认值', () => {
     const formatter = { name: 'number', options: { maximumFractionDigits: 1 } };
-    const rules: NonNullable<DetailTableInput['rules']> = [
+    const rules: NonNullable<InputDetailTableConfig['rules']> = [
       {
         selector: { fields: ['score'] },
         appearance: {
@@ -66,7 +66,7 @@ describe('Table 简单编写', () => {
         },
       },
     ];
-    const encodings: NonNullable<DetailTableInput['encodings']> = [
+    const encodings: NonNullable<InputDetailTableConfig['encodings']> = [
       {
         id: 'score-color',
         selector: { fields: ['score'] },
@@ -78,7 +78,7 @@ describe('Table 简单编写', () => {
     const defaultTable = {
       defaultAppearance: { body: { content: { defaults: { style: { color: '#27272a' } } } } },
     } as const;
-    const input: DetailTableInput = {
+    const input: InputDetailTableConfig = {
       dataRef: 'scores',
       columns: [{ id: 'score', field: 'score', formatter }],
       rules,
@@ -111,12 +111,12 @@ describe('Table 简单编写', () => {
   });
 
   it('组装行优先手动结构而不修改其输入', () => {
-    const rows: ManualTableInput['rows'] = [
+    const rows: InputManualTableConfig['rows'] = [
       ['Name', 'Score'],
       ['Ada', { id: 'score', value: 98, location: 'body', roles: ['data'] }],
     ];
-    const rowKinds: NonNullable<ManualTableInput['rowKinds']> = ['columnHeader', 'body'];
-    const input: ManualTableInput = {
+    const rowKinds: NonNullable<InputManualTableConfig['rowKinds']> = ['columnHeader', 'body'];
+    const input: InputManualTableConfig = {
       id: 'scores',
       rows,
       rowKinds,
@@ -140,13 +140,13 @@ describe('Table 简单编写', () => {
   });
 
   it('保留和分离手动格式化程序、规则、编码和 Source 默认值', () => {
-    const rows: ManualTableInput['rows'] = [
+    const rows: InputManualTableConfig['rows'] = [
       [{ value: 98, formatter: { name: 'number', options: { maximumFractionDigits: 0 } } }],
     ];
-    const rules: NonNullable<ManualTableInput['rules']> = [
+    const rules: NonNullable<InputManualTableConfig['rules']> = [
       { selector: { cellIds: ['cell.r0.c0'] }, appearance: { background: { fill: '#fef2f2' } } },
     ];
-    const encodings: NonNullable<ManualTableInput['encodings']> = [
+    const encodings: NonNullable<InputManualTableConfig['encodings']> = [
       {
         id: 'score-color',
         selector: { locations: ['body'] },
@@ -156,7 +156,7 @@ describe('Table 简单编写', () => {
       },
     ];
     const defaultTable = { defaultAppearance: { body: { background: { fill: '#18181b' } } } } as const;
-    const input: ManualTableInput = {
+    const input: InputManualTableConfig = {
       rows,
       rules,
       encodings,

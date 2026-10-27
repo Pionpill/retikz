@@ -12,19 +12,19 @@
 
 | 成员              | 类型                                                                                                                                                                                                                                   | 默认值 | 说明                                                                                          |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------- |
-| `animations?`     | `GridInput['animations']`                                                                                                                                                                                                              | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                       |
-| `border?`         | `GridInput['border']`                                                                                                                                                                                                                  | —      | 可选的外扩边框及其绘制顺序                                                                    |
+| `animations?`     | `InputGrid['animations']`                                                                                                                                                                                                              | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                       |
+| `border?`         | `InputGrid['border']`                                                                                                                                                                                                                  | —      | 可选的外扩边框及其绘制顺序                                                                    |
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                                              | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                           |
 | `bounds`          | `{ start: [number, number]; end: [number, number]; } \| { position: [number, number] \| { angle: number; radius: number; origin?: string \| SharedPolarPosition \| [number, number] \| undefined; }; width: number; height: number; }` | —      | 无序笛卡尔角点，或中心位置与非负尺寸                                                          |
 | `clip?`           | `{ kind: string; params: Record<string, JsonValue>; } \| { kind: "rect"; params: { x: number; y: number; width: number; height: number; }; }`                                                                                          | —      | 以 scope 局部坐标描述的裁剪区域                                                               |
-| `defaults?`       | `GridInput['defaults']`                                                                                                                                                                                                                | —      | 后代默认值通道及继承屏障                                                                      |
+| `defaults?`       | `InputGrid['defaults']`                                                                                                                                                                                                                | —      | 后代默认值通道及继承屏障                                                                      |
 | `id?`             | `string`                                                                                                                                                                                                                               | —      | 可选引用 id；始终注册到父级命名空间                                                           |
-| `line?`           | `GridInput['line']`                                                                                                                                                                                                                    | `true` | 关闭、共享或按方向独立配置格线                                                                |
+| `line?`           | `InputGrid['line']`                                                                                                                                                                                                                    | `true` | 关闭、共享或按方向独立配置格线                                                                |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                                        | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级             |
 | `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                                            | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                |
 | `position?`       | `IRScopePosition`                                                                                                                                                                                                                      | —      | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                  |
 | `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                                               | —      | 当前子树的稀疏 Theme 覆盖；name 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
-| `transforms?`     | `GridInput['transforms']`                                                                                                                                                                                                              | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析          |
+| `transforms?`     | `InputGrid['transforms']`                                                                                                                                                                                                              | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析          |
 | `zIndex?`         | `number`                                                                                                                                                                                                                               | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                   |
 
 </ApiTable>
@@ -35,10 +35,10 @@
 
 ```ts
 export declare const Grid: {
-  (props: GridInput, context?: any): React.ReactNode;
+  (props: InputGrid, context?: any): React.ReactNode;
 };
 
-export type GridProps = GridInput;
+export type GridProps = InputGrid;
 ```
 
 </DocTab>
@@ -47,10 +47,10 @@ export type GridProps = GridInput;
 
 **直接调用**
 
-#### <ApiSourceLink label={"GridInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/grid.ts"} startLine={8}>GridInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"gridInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/grid.ts"} startLine={8}>gridInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const GridInputEmbedAdapter: SynchronousInputEmbedAdapter<GridInput>;
+export declare const gridInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGrid>;
 ```
 
 **执行与辅助契约**
@@ -65,8 +65,8 @@ export declare const GridInputEmbedAdapter: SynchronousInputEmbedAdapter<GridInp
 
 | 类别   | 名称    | 类型 / 签名             | 说明 |
 | ------ | ------- | ----------------------- | ---- |
-| 参数   | `input` | `GridInput`             | —    |
-| 返回值 | —       | `InputEmbed<GridInput>` | —    |
+| 参数   | `input` | `InputGrid`             | —    |
+| 返回值 | —       | `InputEmbed<InputGrid>` | —    |
 
 </ApiTable>
 
@@ -75,20 +75,20 @@ export declare const GridInputEmbedAdapter: SynchronousInputEmbedAdapter<GridInp
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const grid: (input: GridInput) => InputEmbed<GridInput>;
+export declare const grid: (input: InputGrid) => InputEmbed<InputGrid>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GridInput"} path={"packages/library/standard/src/presentation/grid/types.ts"} startLine={18}>GridInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputGrid"} path={"packages/library/standard/src/presentation/grid/types.ts"} startLine={18}>InputGrid</ApiSourceLink>
 
 ```ts
-export type GridInput = Omit<IRGrid, 'namespace' | 'type'>;
+export type InputGrid = Omit<IRGrid, 'namespace' | 'type'>;
 ```
 
-#### <ApiSourceLink label={"GridLineInput"} path={"packages/library/standard/src/presentation/grid/types.ts"} startLine={7}>GridLineInput</ApiSourceLink> / <ApiSourceLink label={"GridLineInputSchema"} path={"packages/library/standard/src/presentation/grid/schema.ts"} startLine={36}>GridLineInputSchema</ApiSourceLink>
+#### <ApiSourceLink label={"InputGridLine"} path={"packages/library/standard/src/presentation/grid/types.ts"} startLine={7}>InputGridLine</ApiSourceLink> / <ApiSourceLink label={"GridLineInputSchema"} path={"packages/library/standard/src/presentation/grid/schema.ts"} startLine={36}>GridLineInputSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -111,7 +111,7 @@ export type GridInput = Omit<IRGrid, 'namespace' | 'type'>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type GridLineInput = ZodInput<typeof GridLineInputSchema>;
+export type InputGridLine = ZodInput<typeof GridLineInputSchema>;
 ```
 
 </DocTab>
@@ -134,7 +134,7 @@ export type GridLineInput = ZodInput<typeof GridLineInputSchema>;
 
 | 类别   | 名称    | 类型 / 签名 | 说明 |
 | ------ | ------- | ----------- | ---- |
-| 参数   | `input` | `GridInput` | —    |
+| 参数   | `input` | `InputGrid` | —    |
 | 返回值 | —       | `IRGrid`    | —    |
 
 </ApiTable>
@@ -144,7 +144,7 @@ export type GridLineInput = ZodInput<typeof GridLineInputSchema>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createGrid: (input: GridInput) => IRGrid;
+export declare const createGrid: (input: InputGrid) => IRGrid;
 ```
 
 </DocTab>
@@ -167,10 +167,10 @@ export type IRGrid = Omit<ZodInput<typeof GridSchema>, keyof IRScopeProps | 'bou
 
 **扩展定义与注册**
 
-#### <ApiSourceLink label={"GridDefinition"} path={"packages/library/standard/src/presentation/grid/composite.ts"} startLine={10}>GridDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"gridDefinition"} path={"packages/library/standard/src/presentation/grid/composite.ts"} startLine={10}>gridDefinition</ApiSourceLink>
 
 ```ts
-export const GridDefinition = defineComposite({
+export const gridDefinition = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'grid',
   schema: GridSchema,
@@ -178,11 +178,11 @@ export const GridDefinition = defineComposite({
 } satisfies CompositeDefinition<IRGrid, typeof STANDARD_NAMESPACE, 'grid'>);
 ```
 
-#### <ApiSourceLink label={"GridProvider"} path={"packages/library/standard/src/presentation/grid/composite.ts"} startLine={25}>GridProvider</ApiSourceLink>
+#### <ApiSourceLink label={"gridProvider"} path={"packages/library/standard/src/presentation/grid/composite.ts"} startLine={25}>gridProvider</ApiSourceLink>
 
 ```ts
-export const GridProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'composite', namespace: GridDefinition.namespace, type: GridDefinition.type }),
-  makeDefinition: () => GridDefinition,
+export const gridProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'composite', namespace: gridDefinition.namespace, type: gridDefinition.type }),
+  makeDefinition: () => gridDefinition,
 });
 ```

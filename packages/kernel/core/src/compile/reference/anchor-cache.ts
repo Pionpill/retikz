@@ -4,9 +4,9 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { Side } from '../../shared';
-import type { NodeLayout } from '../node';
+import type { CompiledNodeLayout } from '../node';
 
-type AnchorLayout = NodeLayout | NodeReferenceView;
+type AnchorLayout = CompiledNodeLayout | NodeReferenceView;
 
 import { boundaryKey } from '../../resolve';
 import { isAnchor } from '../../shared';
@@ -14,7 +14,7 @@ import { anchorOf, angleBoundaryOf, nodeReferenceViewOf } from '../node';
 import type { NodeGeometryState } from '../node';
 import { snapshotProviderPosition } from '../scene-primitive';
 
-/** 单个 NodeLayout 生命周期内的 anchor 坐标缓存 */
+/** 单个 CompiledNodeLayout 生命周期内的 anchor 坐标缓存 */
 const cache = new WeakMap<AnchorLayout, Map<string, IRPosition>>();
 
 /** 角度字符串识别规则，与文本 target parser 保持一致 */

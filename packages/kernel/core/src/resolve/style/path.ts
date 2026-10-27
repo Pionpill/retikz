@@ -4,7 +4,7 @@ import type { IRPathLabelDefault, IRPathLabel, IRPathBase, IRPathStyle, IRStep }
 import { resolvePathArrows, resolvePathMarks } from './arrow';
 import { resolvePathLabel } from './label';
 import { mergeGraphicStyle } from './opacity';
-import type { EffectiveScopeDefaults } from './types';
+import type { MergedScopeDefaults } from './types';
 
 /** 为每个步骤已有的标签合入默认配置 */
 const resolveStepLabels = (
@@ -35,27 +35,27 @@ const resolvePathLabelField = (
 };
 
 /** 合并路径几何与外观默认值，并为已有标签、箭头和沿线标记补齐配置 */
-export const resolveEffectivePath = (path: IRPathBase, scopeDefaults: EffectiveScopeDefaults): IRPathBase => {
+export const mergePathStyle = (path: IRPathBase, scopeDefaults: MergedScopeDefaults): IRPathBase => {
   const defaults = scopeDefaults.path;
   const style = mergeGraphicStyle<IRPathStyle>(defaults?.style, path.style);
   const masterColor = style.color;
-  const effective: IRPathBase = {
+  const mergedPath: IRPathBase = {
     ...mergeDefinedProperties([defaults?.geometry, path]),
     type: path.type,
     style,
   };
 
   const labelDefault = scopeDefaults.path?.label ?? {};
-  effective.marks = resolvePathMarks(path.marks, scopeDefaults, masterColor);
-  effective.arrow = resolvePathArrows(path.arrow, scopeDefaults, masterColor);
+  mergedPath.marks = resolvePathMarks(path.marks, scopeDefaults, masterColor);
+  mergedPath.arrow = resolvePathArrows(path.arrow, scopeDefaults, masterColor);
   if (path.children !== undefined) {
-    effective.children = resolveStepLabels(path.children, labelDefault, masterColor);
+    mergedPath.children = resolveStepLabels(path.children, labelDefault, masterColor);
   } else {
-    delete effective.children;
+    delete mergedPath.children;
   }
 
   const label = resolvePathLabelField(path.label, labelDefault, masterColor);
-  if (label !== undefined) effective.label = label;
+  if (label !== undefined) mergedPath.label = label;
 
-  return effective;
+  return mergedPath;
 };

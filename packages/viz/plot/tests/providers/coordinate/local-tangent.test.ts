@@ -8,12 +8,12 @@ import {
   linearPositionScale,
   resolveLinearScale,
 } from '../../../src/providers';
-import type { PolarCoordinateInput } from '../../../src/providers';
+import type { InputPolarCoordinate } from '../../../src/providers';
 
 const scale = linearPositionScale(
   resolveLinearScale({ type: 'linear', name: 'x', domain: [0, 360] }, [0, 360], [0, 360]),
 );
-const polarInput: PolarCoordinateInput = {
+const polarInput: InputPolarCoordinate = {
   center: [0, 0],
   innerRadius: 0,
   outerRadius: 100,

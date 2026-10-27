@@ -1,7 +1,7 @@
 import type { CoreDependencyProvider, CoreProviderContribution, CoreProviderKey } from '@retikz/core';
 
 import { BUILTIN_RIBBON_WIDTH_PROFILES } from './bulge';
-import { ExtensionRibbonCapDefinitions } from './cap';
+import { extensionRibbonCapDefinitions } from './cap';
 import { resolveRibbonCapRegistry } from './cap-registry';
 import type { RibbonCapDefinition } from './cap-types';
 import { createRibbonPathDefinition } from './definition';
@@ -53,7 +53,7 @@ export const createRibbonProviderContribution = (
   const profiles = options.profiles ?? [];
   const caps = options.caps ?? [];
   resolveRibbonWidthProfileRegistry(BUILTIN_RIBBON_WIDTH_PROFILES, profiles);
-  resolveRibbonCapRegistry(ExtensionRibbonCapDefinitions, caps);
+  resolveRibbonCapRegistry(extensionRibbonCapDefinitions, caps);
   const params: RibbonProviderParams = Object.freeze({
     profiles: Object.freeze([...BUILTIN_RIBBON_WIDTH_PROFILES, ...profiles]),
     caps: Object.freeze([...caps]),

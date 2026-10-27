@@ -12,8 +12,8 @@ import { ThemeMode } from '../../shared';
 import { DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE } from '../constants';
 import { fallbackMeasurer } from '../text';
 import { applyTransformChain } from '../transform';
-import { compileResolvedNode } from './layout';
-import type { NodeLayout } from './types';
+import { compileNodeResolution } from './layout';
+import type { CompiledNodeLayout } from './types';
 
 /** synthetic Node 只消费字面量坐标，因此使用无引用的恒等 position context */
 const SYNTHETIC_POSITION_CONTEXT: PositionTargetResolveContext = {
@@ -33,7 +33,7 @@ type SyntheticLayoutRegistryContext = {
 };
 
 /** synthetic rectangle layout 输入 */
-type SyntheticRectangleLayoutInput = {
+type InputSyntheticRectangleLayout = {
   /** 布局对象的标识 */
   id: string;
   /** layout 矩形 */
@@ -41,7 +41,7 @@ type SyntheticRectangleLayoutInput = {
 };
 
 /** synthetic scope rectangle layout 输入 */
-type ScopeRectangleLayoutInput = {
+type InputScopeRectangleLayout = {
   /** 布局对象的标识 */
   id: string;
   /** 已计算的 bbox rect；空 scope 时传 null */
@@ -51,7 +51,7 @@ type ScopeRectangleLayoutInput = {
 };
 
 /** synthetic scope circle layout 输入 */
-type ScopeCircleLayoutInput = {
+type InputScopeCircleLayout = {
   /** 子树外包络角点 */
   cornerPoints: ReadonlyArray<IRPosition>;
   /** 空点集时使用的回退原点 */
@@ -61,7 +61,7 @@ type ScopeCircleLayoutInput = {
 };
 
 const syntheticNode = (
-  input: SyntheticRectangleLayoutInput,
+  input: InputSyntheticRectangleLayout,
   shape: 'rectangle' | 'ellipse',
   shapeParams: JsonObject = {},
 ): IRNode => {
@@ -76,13 +76,13 @@ const syntheticNode = (
   };
 };
 
-/** 通过 resolveNode + compileResolvedNode 构造 synthetic layout */
+/** 通过 resolveNode + compileNodeResolution 构造 synthetic layout */
 const resolveSyntheticLayout = (
-  input: SyntheticRectangleLayoutInput,
+  input: InputSyntheticRectangleLayout,
   shape: 'rectangle' | 'ellipse',
   context: SyntheticLayoutRegistryContext,
   shapeParams: JsonObject = {},
-): NodeLayout => {
+): CompiledNodeLayout => {
   const shapes = context.shapes ?? BUILTIN_SHAPES;
   const boundaries = context.boundaries ?? BUILTIN_BOUNDARIES;
   const node = syntheticNode(input, shape, shapeParams);
@@ -97,7 +97,7 @@ const resolveSyntheticLayout = (
     warn: () => {},
     labelDistance: DEFAULT_LABEL_DISTANCE,
   });
-  const { layout } = compileResolvedNode(resolution, {
+  const { layout } = compileNodeResolution(resolution, {
     measureText: fallbackMeasurer,
     positionContext: SYNTHETIC_POSITION_CONTEXT,
   });
@@ -114,16 +114,16 @@ const resolveSyntheticLayout = (
 
 /** 构造编译期 synthetic rectangle layout */
 export const createSyntheticRectangleLayout = (
-  input: SyntheticRectangleLayoutInput,
+  input: InputSyntheticRectangleLayout,
   context: SyntheticLayoutRegistryContext = {},
-): NodeLayout => resolveSyntheticLayout(input, 'rectangle', context);
+): CompiledNodeLayout => resolveSyntheticLayout(input, 'rectangle', context);
 
 /** 用 scope id 和当前 transform chain 构造临时 0×0 synthetic layout */
 export const createScopePlaceholderLayout = (
   id: string,
   scopeChain: ReadonlyArray<Transform>,
   context: SyntheticLayoutRegistryContext = {},
-): NodeLayout => {
+): CompiledNodeLayout => {
   const globalOrigin: IRPosition = scopeChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], scopeChain);
   return createSyntheticRectangleLayout(
     {
@@ -136,9 +136,9 @@ export const createScopePlaceholderLayout = (
 
 /** 用 scope id 和 bbox 构造可引用的 synthetic rectangle layout */
 export const createScopeRectangleLayout = (
-  input: ScopeRectangleLayoutInput,
+  input: InputScopeRectangleLayout,
   context: SyntheticLayoutRegistryContext = {},
-): NodeLayout => {
+): CompiledNodeLayout => {
   const rect: CenteredBox = input.bbox ?? {
     x: input.fallbackOrigin[0],
     y: input.fallbackOrigin[1],
@@ -151,9 +151,9 @@ export const createScopeRectangleLayout = (
 
 /** 用 scope id 和子树点集构造可引用的 synthetic circle layout */
 export const createScopeCircleLayout = (
-  input: ScopeCircleLayoutInput,
+  input: InputScopeCircleLayout,
   context: SyntheticLayoutRegistryContext = {},
-): NodeLayout => {
+): CompiledNodeLayout => {
   const mec = input.cornerPoints.length > 0 ? circle.minimalEnclosing([...input.cornerPoints]) : null;
   const center: IRPosition = mec ? [mec.center[0], mec.center[1]] : input.fallbackOrigin;
   const diameter = mec ? mec.radius * 2 : 0;

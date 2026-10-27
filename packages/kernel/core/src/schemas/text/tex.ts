@@ -7,5 +7,5 @@ export const TexContentSchema = object({
   displayMode: boolean().optional().describe('Display (block) vs inline TeX metrics; default inline (false).'),
 }).describe('TeX formula payload for lowerTex: source plus inline/display metrics mode.');
 
-/** 公式降解载荷：tex 源 + 行/块级度量模式；编译期经注入 `lowerTex` 渲染成字形路径（`MathSegment` / `LowerTex` 入参同型） */
+/** 公式降解载荷：tex 源 + 行/块级度量模式；编译期经注入 `lowerTex` 渲染成字形路径（`MathSegment` / `TexLowerer` 入参同型） */
 export type IRTexContent = ZodInfer<typeof TexContentSchema>;

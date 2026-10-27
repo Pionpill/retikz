@@ -66,9 +66,9 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("caption: { title: { text: 'Runtime' } }");
     expect(code).toContain("boundary: 'right'");
     expect(code).toContain('entity({');
-    expect(code).toContain('GroupInputEmbedAdapter');
-    expect(code).toContain('EntityInputEmbedAdapter');
-    expect(code).not.toContain('GroupDefinition');
+    expect(code).toContain('groupInputEmbedAdapter');
+    expect(code).toContain('entityInputEmbedAdapter');
+    expect(code).not.toContain('groupDefinition');
   });
 
   it('block-codegen：保留开放 children 与独立 Header / Section / Row composite', () => {
@@ -116,12 +116,12 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("id: 'user.fields'");
     expect(code).toContain("id: 'user.name'");
     expect(code).toContain('entity({');
-    expect(code).toContain('BlockInputEmbedAdapter');
-    expect(code).toContain('BlockHeaderInputEmbedAdapter');
-    expect(code).toContain('BlockSectionInputEmbedAdapter');
-    expect(code).toContain('BlockRowInputEmbedAdapter');
-    expect(code).toContain('EntityInputEmbedAdapter');
-    expect(code).not.toContain('BlockDefinition');
+    expect(code).toContain('blockInputEmbedAdapter');
+    expect(code).toContain('blockHeaderInputEmbedAdapter');
+    expect(code).toContain('blockSectionInputEmbedAdapter');
+    expect(code).toContain('blockRowInputEmbedAdapter');
+    expect(code).toContain('entityInputEmbedAdapter');
+    expect(code).not.toContain('blockDefinition');
   });
 
   it('import-header：恒定 vanilla import + scene 装配', () => {
@@ -447,9 +447,9 @@ describe('irToVanillaCode 回退', () => {
     expect(code).toContain('flexLayout(');
     expect(code).toContain('gridLayout(');
     expect(code).toContain('overlayLayout(');
-    expect(code).toContain('FlexLayoutInputEmbedAdapter');
-    expect(code).toContain('GridLayoutInputEmbedAdapter');
-    expect(code).toContain('OverlayLayoutInputEmbedAdapter');
+    expect(code).toContain('flexLayoutInputEmbedAdapter');
+    expect(code).toContain('gridLayoutInputEmbedAdapter');
+    expect(code).toContain('overlayLayoutInputEmbedAdapter');
   });
 
   it('为 Legend 生成 authoring builder、adapter 与嵌套 Standard / Layout definitions', () => {
@@ -510,9 +510,9 @@ describe('irToVanillaCode 回退', () => {
     );
 
     expect(code).toContain('legend({');
-    expect(code).toContain('LegendInputEmbedAdapter');
-    expect(code).toContain('const compile = { composites: [GridDefinition, FlexLayoutDefinition] };');
-    expect(code).not.toContain('LegendDefinition');
+    expect(code).toContain('legendInputEmbedAdapter');
+    expect(code).toContain('const compile = { composites: [gridDefinition, flexLayoutDefinition] };');
+    expect(code).not.toContain('legendDefinition');
     expect(code).not.toMatch(/\binspect\b/);
   });
 
@@ -549,12 +549,12 @@ describe('irToVanillaCode 回退', () => {
     expect(code).toContain("text: 'Start'");
     expect(code).toContain('position: [0, 0]');
     expect(code).toContain("source: { id: 'start' }");
-    expect(code).toContain('GraphInputEmbedAdapter');
-    expect(code).not.toContain('EntityInputEmbedAdapter');
-    expect(code).not.toContain('RelationInputEmbedAdapter');
+    expect(code).toContain('graphInputEmbedAdapter');
+    expect(code).not.toContain('entityInputEmbedAdapter');
+    expect(code).not.toContain('relationInputEmbedAdapter');
     expect(code).toContain("from '@retikz/graph-vanilla'");
-    expect(code).not.toContain('EntityDefinition');
-    expect(code).not.toContain('RelationDefinition');
+    expect(code).not.toContain('entityDefinition');
+    expect(code).not.toContain('relationDefinition');
   });
 
   it('为 direct Entity、direct Relation 与 nested Graph 生成独立 Vanilla 入口且不合成 authored id', () => {
@@ -587,9 +587,9 @@ describe('irToVanillaCode 回退', () => {
     expect(code).toContain('entity({');
     expect(code).toContain('relation({');
     expect(code.match(/graph\(\{/g)).toHaveLength(2);
-    expect(code).toContain('EntityInputEmbedAdapter');
-    expect(code).toContain('RelationInputEmbedAdapter');
-    expect(code).toContain('GraphInputEmbedAdapter');
+    expect(code).toContain('entityInputEmbedAdapter');
+    expect(code).toContain('relationInputEmbedAdapter');
+    expect(code).toContain('graphInputEmbedAdapter');
     expect(code).not.toContain("id: 'preview-entity-1'");
     expect(code).not.toContain("id: 'preview-relation-1'");
     expect(code).not.toContain("id: 'preview-graph-1'");

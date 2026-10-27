@@ -3,13 +3,13 @@ import { pointAtArcAngle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { createPlotLocator } from '../../../src/pipeline';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { layout: { width: 400, height: 400 } };
+const opts: PlotsLoweringOptions = { layout: { width: 400, height: 400 } };
 
 const share = [
   { label: 'A', value: 25, offset: 0 },
@@ -19,7 +19,7 @@ const share = [
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = opts,
+  options: PlotsLoweringOptions = opts,
 ): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
@@ -27,7 +27,7 @@ const expandOf = (
 const firstLayer = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = opts,
+  options: PlotsLoweringOptions = opts,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 const sectorNodes = (layer: IRScope): Array<IRNode> => {

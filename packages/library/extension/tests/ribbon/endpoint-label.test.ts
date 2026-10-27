@@ -6,7 +6,7 @@ import { strictObject } from 'zod';
 import {
   createRibbonPathDefinition,
   defineRibbonCap,
-  RibbonPathDefinition,
+  ribbonPathDefinition,
   RibbonPathOptionsSchema,
 } from '../../src/ribbon';
 
@@ -52,7 +52,7 @@ describe('功能区端点标签', () => {
           },
         ],
       },
-      { paths: [RibbonPathDefinition] },
+      { paths: [ribbonPathDefinition] },
     ).scene;
 
     expect(textsOf(scene.primitives)).toEqual(expect.arrayContaining(['source', 'target', 'detail', 'flow']));
@@ -62,7 +62,7 @@ describe('功能区端点标签', () => {
 const labeledScene = (
   cap: { name: string; params?: Record<string, number | Array<number>> },
   label: IRBoundaryLabel = { text: 'endpoint' },
-  definition: AnyPathDefinition = RibbonPathDefinition,
+  definition: AnyPathDefinition = ribbonPathDefinition,
 ) =>
   compileToScene(
     {
@@ -175,7 +175,7 @@ it('将两个标签放置在零宽度对接大写处并保留父变换', () => {
   };
   const restored = JSON.parse(JSON.stringify(input));
   const result = compileToScene(restored, {
-    paths: [RibbonPathDefinition],
+    paths: [ribbonPathDefinition],
     padding: 0,
     measureText: () => ({ width: 40, height: 20 }),
   });
@@ -212,7 +212,7 @@ it('继承内核标签字体和颜色，倍增不透明度，并保留宿主元�
       },
     ],
   };
-  const scene = compileToScene(input, { paths: [RibbonPathDefinition] }).scene;
+  const scene = compileToScene(input, { paths: [ribbonPathDefinition] }).scene;
   const primitives = allPrimitives(scene.primitives);
   const text = primitives.find(p => p.type === 'text');
 
@@ -239,7 +239,7 @@ it('使用指定的端点截面进行径向旋转和切线对齐', () => {
         },
       ],
     },
-    { paths: [RibbonPathDefinition] },
+    { paths: [ribbonPathDefinition] },
   ).scene;
   const angles = allPrimitives(scene.primitives).flatMap(p =>
     p.type === 'group' ? (p.transforms?.filter(t => t.kind === 'rotate').map(t => t.degrees) ?? []) : [],
@@ -284,7 +284,7 @@ describe('整个功能区变换', () => {
           },
         ],
       },
-      { paths: [RibbonPathDefinition], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
+      { paths: [ribbonPathDefinition], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
     );
 
     for (const key of ['x', 'y', 'width', 'height'] as const)

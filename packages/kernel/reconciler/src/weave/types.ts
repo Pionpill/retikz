@@ -24,7 +24,7 @@ import type { WeaveChangeKind, WeaveChangeSource } from './constants';
 export type WeaveDependencyKind = null;
 
 /** 节点自身输入与有效继承上下文，不重复保存合并后的输入 */
-type WeaveInput<TInput> = {
+type InputWeave<TInput> = {
   /** Core 定义的自身输入 */
   own: TInput;
   /** Core 负责解析的有效继承上下文 */
@@ -36,9 +36,9 @@ type WeaveNodeStateBase<TInput> = {
   /** 所属声明容器，引用稳定对象 */
   parent: WeaveRoot | WeaveScopeNode;
   /** 自身输入与有效上下文，替换对象而非修改共享内容 */
-  input: Readonly<WeaveInput<TInput>>;
+  input: Readonly<InputWeave<TInput>>;
   /** 本批待处理变化 */
-  pendingInputs: ReadonlyArray<Readonly<WeavePendingInput>>;
+  pendingInputs: ReadonlyArray<Readonly<InputWeavePending>>;
   /** 依赖与读取粒度，值也保持只读 */
   dependencies: ReadonlyMap<WeaveNode, ReadonlyArray<WeaveDependencyKind>>;
   /** 反向消费者 */
@@ -143,16 +143,16 @@ export type WeaveRoot = WeaveNodeVersions<WeaveRootState> & {
 };
 
 /** 基础元素的完整自身输入，Scope 不包含声明子树 */
-export type WeaveOwnInput = IRNode | IRCoordinate | IRPathBase | Omit<IRScope, 'children'>;
+export type InputWeaveOwn = IRNode | IRCoordinate | IRPathBase | Omit<IRScope, 'children'>;
 
 /** 可插入的基础元素声明，递归子树不包含 Composite */
-export type WeaveElementInput =
+export type InputWeaveElement =
   | IRNode
   | IRCoordinate
   | IRPathBase
   | (Omit<IRScope, 'children'> & {
       /** 按声明顺序排列的基础元素 */
-      children: Array<WeaveElementInput>;
+      children: Array<InputWeaveElement>;
     });
 
 /** 通过树内唯一 id 定位 Scope 自身 */
@@ -195,7 +195,7 @@ type WeaveInsertOperation = {
   /** 插入前的位置，等于 children 长度时追加 */
   index: number;
   /** 按顺序插入的完整声明，空数组不产生修改 */
-  elements: Array<WeaveElementInput>;
+  elements: Array<InputWeaveElement>;
 };
 
 /** 完整替换已有元素自身输入，不改变类别或 Scope children */
@@ -205,7 +205,7 @@ type WeaveUpdateOperation = {
   /** 已有元素的地址 */
   target: WeaveTarget;
   /** 类别必须与目标一致，省略旧覆盖字段表示移除覆盖 */
-  input: WeaveOwnInput;
+  input: InputWeaveOwn;
 };
 
 /** 删除元素；Scope 连同其声明子树删除 */
@@ -226,7 +226,7 @@ export type WeaveBatch = {
 };
 
 /** 节点待处理变化，影响范围去重不代表依赖已就绪 */
-type WeavePendingInput =
+type InputWeavePending =
   | {
       /** 自身输入变化 */
       source: typeof WeaveChangeSource.Own;

@@ -8,7 +8,7 @@ import {
   FlowDiagramArtifactSchema,
   FlowDiagramSchema,
   FlowLayoutSchema,
-  LayeredFlowLayoutDefinition,
+  layeredFlowLayoutDefinition,
 } from '../../src/flow';
 
 const compile = (source: unknown, options: FlowDiagramDefinitionOptions = {}) => {
@@ -120,10 +120,10 @@ describe('Flow Layout 边界贡献', () => {
 
   it('拒绝放弃编写排除的自定义提供者', () => {
     const provider = defineFlowLayout({
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'discard-bounds',
       layout: (input, context) =>
-        LayeredFlowLayoutDefinition.layout(input, {
+        layeredFlowLayoutDefinition.layout(input, {
           resolveEndpoint: () => {
             throw new Error('Unexpected endpoint query');
           },
@@ -190,7 +190,7 @@ describe('Flow Layout 边界贡献', () => {
   });
 
   it('使用自定义提供者的共享放置语义', () => {
-    const provider = defineFlowLayout({ ...LayeredFlowLayoutDefinition, name: 'custom-bounds' });
+    const provider = defineFlowLayout({ ...layeredFlowLayoutDefinition, name: 'custom-bounds' });
     const options = { flowLayouts: [provider], defaultFlowLayout: provider.name };
 
     expect(compile(sourceOf(), options).elements).toEqual(compile(sourceOf()).elements);

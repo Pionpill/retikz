@@ -1,4 +1,4 @@
-import type { ResolvedArrowEnd, ScenePrimitive, SceneResource } from '@retikz/core';
+import type { CompiledArrowEnd, ScenePrimitive, SceneResource } from '@retikz/core';
 import { buildArrowMarker, buildClipDef, buildPaintDef, buildPrim } from '@retikz/render/svg';
 import type { Key, ReactElement } from 'react';
 
@@ -9,7 +9,7 @@ export const renderPrim = (primitive: ScenePrimitive, key: Key, context: Paramet
   svgToReact(buildPrim(primitive, context), key) as ReactElement;
 
 /** 验证中立 marker descriptor 到 React 的映射 */
-export const renderArrowMarker = ({ id, spec }: { id: string; spec: ResolvedArrowEnd }) =>
+export const renderArrowMarker = ({ id, spec }: { id: string; spec: CompiledArrowEnd }) =>
   svgToReact(buildArrowMarker(id, spec)) as ReactElement;
 
 /** 将测试资源中的 clip descriptor 映射为 React children */

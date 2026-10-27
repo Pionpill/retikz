@@ -197,7 +197,7 @@ type PatternResource = {
   kind: 'paint';
   id: string;
   spec: Extract<IRPaint, { kind: 'pattern' }>;
-  tile: ResolvedPatternTile;
+  tile: CompiledPatternTile;
 };
 
 type ImageResource = {
@@ -384,7 +384,7 @@ type CompositeCompileArtifact = Readonly<{
 FlexLayout in the Layout package declares its layout artifact through `artifactSchema`.
 
 ```ts
-const FlexLayoutDefinition = defineComposite({
+const flexLayoutDefinition = defineComposite({
   namespace: LAYOUT_NAMESPACE,
   type: 'flexLayout',
   schema: FlexLayoutSchema,
@@ -416,7 +416,7 @@ The following example compiles a FlexLayout containing two nodes and reads its a
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { createFlexLayout, FlexLayoutDefinition } from '@retikz/layout';
+import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
 
 const layout = createFlexLayout({
   gap: 12,
@@ -428,7 +428,7 @@ const layout = createFlexLayout({
 
 const result = compileToScene(
   { type: 'scene', version: 1, children: [layout] },
-  { composites: [FlexLayoutDefinition] },
+  { composites: [flexLayoutDefinition] },
 );
 
 for (const artifact of result.artifacts) {

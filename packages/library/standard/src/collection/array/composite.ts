@@ -1,13 +1,13 @@
 import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 
 import { compileArray } from './pipeline';
 import { ArraySchema } from './schema';
 import type { IRArray } from './schema';
 
 /** Standard Array 的布局感知 Definition */
-export const ArrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> = defineComposite({
+export const arrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> = defineComposite({
   namespace: 'standard',
   type: 'array',
   schema: ArraySchema,
@@ -22,8 +22,8 @@ export const ArrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> 
 export const createArray = (input: IRArray): IRArray => ({ ...input });
 
 /** Array 与单元格 lower target 的按需依赖声明 */
-export const ArrayProvider: CoreDependencyProvider = {
+export const arrayProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'standard', type: 'array' },
-  dependencies: [PathClipProvider.key],
-  makeDefinition: () => ArrayDefinition,
+  dependencies: [pathClipProvider.key],
+  makeDefinition: () => arrayDefinition,
 };

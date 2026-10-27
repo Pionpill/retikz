@@ -25,7 +25,7 @@ export const flowMeasurementI18n: Record<
     height: 'height = 40',
     insets: 'contentInsets',
     labelSize: 'labelSize',
-    input: 'FlowLayoutInput · leaf 字段摘录',
+    input: 'InputFlowLayoutComputation · leaf 字段摘录',
     measure: '尺寸进入布局输入',
   },
   en: {
@@ -37,7 +37,7 @@ export const flowMeasurementI18n: Record<
     height: 'height = 40',
     insets: 'contentInsets',
     labelSize: 'labelSize',
-    input: 'FlowLayoutInput · leaf excerpt',
+    input: 'InputFlowLayoutComputation · leaf excerpt',
     measure: 'Sizes enter layout input',
   },
 };

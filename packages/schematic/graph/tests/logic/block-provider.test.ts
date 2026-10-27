@@ -8,7 +8,7 @@ import * as Graph from '../../src';
 describe('Block 提供者关闭', () => {
   it('解析 Block、公共结构、Entity、Relation、FlexLayout 和 Surface', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.BlockProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.blockProviderKey], providers: Graph.createGraphProviders() }],
     });
     const keys = definitions.composites?.map(definition => `${definition.namespace}.${definition.type}`);
 
@@ -28,7 +28,7 @@ describe('Block 提供者关闭', () => {
   });
 
   it('使结构提供者独立于 Block 和 Group 提供者', () => {
-    for (const root of [Graph.BlockHeaderProviderKey, Graph.BlockSectionProviderKey, Graph.BlockRowProviderKey]) {
+    for (const root of [Graph.blockHeaderProviderKey, Graph.blockSectionProviderKey, Graph.blockRowProviderKey]) {
       const definitions = resolveCoreProviderDependencies({
         contributions: [{ roots: [root], providers: Graph.createGraphProviders() }],
       });
@@ -55,7 +55,7 @@ describe('Block 提供者关闭', () => {
     });
     const provider: CoreDependencyProvider = Object.freeze({
       key: Object.freeze({ capability: 'composite', namespace: 'test', type: 'serviceBlock' }),
-      dependencies: Object.freeze([Graph.BlockProviderKey]),
+      dependencies: Object.freeze([Graph.blockProviderKey]),
       makeDefinition: () => definition,
     });
     const definitions = resolveCoreProviderDependencies({

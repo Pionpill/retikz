@@ -1,4 +1,4 @@
-import type { PathPrimitive, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
+import type { PathPrimitive, CompiledArrowEnd, ScenePrimitive } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -7,13 +7,13 @@ import { renderPrim } from './helpers';
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
 /** spec 转 marker id 的回调（按 detail 区分） */
-const markerIdFor = (spec: ResolvedArrowEnd): string => {
+const markerIdFor = (spec: CompiledArrowEnd): string => {
   // 测试用简化 hash：JSON.stringify
   return `mk-${JSON.stringify(spec)}`;
 };
 
-/** 构造一个已解析 ResolvedArrowEnd（emit-in-compile 后的形态）；marker 颜色用来区分不同 detail */
-const resolvedSpec = (shape: string, fill?: string): ResolvedArrowEnd => {
+/** 构造一个已解析 CompiledArrowEnd（emit-in-compile 后的形态）；marker 颜色用来区分不同 detail */
+const resolvedSpec = (shape: string, fill?: string): CompiledArrowEnd => {
   const path: ScenePrimitive = {
     type: 'path',
     commands: [{ kind: 'move', to: [0, 0] }],
@@ -22,7 +22,7 @@ const resolvedSpec = (shape: string, fill?: string): ResolvedArrowEnd => {
   return { shape, baseSize: 10, refX: 0, markerWidth: 6, markerHeight: 6, marker: [path] };
 };
 
-describe('renderPrim path: arrowStart / arrowEnd 是 ResolvedArrowEnd', () => {
+describe('renderPrim path: arrowStart / arrowEnd 是 CompiledArrowEnd', () => {
   const base: PathPrimitive = {
     type: 'path',
     commands: [
@@ -78,7 +78,7 @@ describe('renderPrim path: arrowEnd 字段顺序不影响 id', () => {
   };
 
   it('renderPrim 把 arrowEnd spec 原样喂给 arrowMarkerIdFor', () => {
-    let captured: ResolvedArrowEnd | undefined;
+    let captured: CompiledArrowEnd | undefined;
     const spec = resolvedSpec('stealth', 'red');
     renderPrim({ ...base, arrowEnd: spec }, 0, {
       arrowMarkerIdFor: s => {

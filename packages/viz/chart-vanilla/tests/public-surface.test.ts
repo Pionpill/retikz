@@ -20,7 +20,7 @@ describe('@retikz/chart-vanilla 公开接口', () => {
     for (const prefix of pointChartCases) {
       expect(point).toHaveProperty(`${prefix[0].toLowerCase()}${prefix.slice(1)}Chart`);
       expect(point).toHaveProperty(`normalize${prefix}Chart`);
-      expect(point).toHaveProperty(`${prefix}ChartInputEmbedAdapter`);
+      expect(point).toHaveProperty(`${prefix[0].toLowerCase()}${prefix.slice(1)}ChartInputEmbedAdapter`);
       expect(point).not.toHaveProperty(`create${prefix}Chart`);
     }
 

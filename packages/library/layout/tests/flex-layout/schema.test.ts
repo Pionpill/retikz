@@ -2,7 +2,7 @@ import type { IRChild } from '@retikz/core';
 import { ChildSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { FlexLayoutInput, FlexLayoutItemInput } from '../../src';
+import type { InputFlexLayoutConfig, InputFlexLayoutItemConfig } from '../../src';
 import {
   createFlexLayout,
   FlexLayoutDirection,
@@ -28,8 +28,8 @@ describe('FlexLayout schema 和工厂', () => {
   });
 
   it('根据作者输入默认值创建规范的 JSON IR', () => {
-    const item = { kind: LayoutItemKind.Flex, key: 'label', child } satisfies FlexLayoutItemInput;
-    const input = { children: [item] } satisfies FlexLayoutInput;
+    const item = { kind: LayoutItemKind.Flex, key: 'label', child } satisfies InputFlexLayoutItemConfig;
+    const input = { children: [item] } satisfies InputFlexLayoutConfig;
     const source = createFlexLayout(input);
 
     expect(source).toEqual({ namespace: 'layout', type: 'flexLayout', ...input });
@@ -84,7 +84,7 @@ describe('FlexLayout schema 和工厂', () => {
   });
 
   it('严格保持每个嵌套对象并拒绝无效的数字约定', () => {
-    const base = { children: [{ kind: 'flex', key: 'label', child }] } satisfies FlexLayoutInput;
+    const base = { children: [{ kind: 'flex', key: 'label', child }] } satisfies InputFlexLayoutConfig;
 
     expect(FlexLayoutSchema.safeParse({ namespace: 'layout', type: 'flexLayout', ...base, extra: true }).success).toBe(
       false,

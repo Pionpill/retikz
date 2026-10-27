@@ -2,7 +2,7 @@ import type { IRScene, ScenePrimitive } from '@retikz/core';
 import { compileToScene, visitSceneContent } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { RibbonPathDefinition } from '../../src/ribbon';
+import { ribbonPathDefinition } from '../../src/ribbon';
 
 const line = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -11,7 +11,7 @@ const line = [
 
 const compile = (path: Record<string, unknown>) =>
   compileToScene({ version: 1, type: 'scene', children: [path] } as unknown as IRScene, {
-    paths: [RibbonPathDefinition],
+    paths: [ribbonPathDefinition],
   }).scene;
 
 describe('扩展功能区定义', () => {

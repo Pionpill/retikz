@@ -6,16 +6,16 @@ import type { RuntimeTracePhaseDefinition, RuntimeTraceReporter } from '../trace
 import type { RuntimeSnapshot } from '../transaction';
 import type { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from './constants';
 
-declare const RuntimeComputationTokenBrand: unique symbol;
+declare const runtimeComputationTokenBrand: unique symbol;
 
-declare const RuntimeComputationType: unique symbol;
+declare const runtimeComputationType: unique symbol;
 
 /** 动态 graph lookup 只暴露的 opaque Computation token */
 export type RuntimeComputationToken = Readonly<{
   /** 计算节点的身份 */
   id: RuntimeComputationId;
   /** 只允许 defineRuntimeComputation() 构造 token */
-  [RuntimeComputationTokenBrand]: true;
+  [runtimeComputationTokenBrand]: true;
 }>;
 
 /**
@@ -33,7 +33,7 @@ export type RuntimeComputationDefinition<
 > = RuntimeComputationToken &
   Readonly<{
     /** phantom 函数只承载泛型关系，不存在于运行时 token */
-    [RuntimeComputationType]: (
+    [runtimeComputationType]: (
       input: TResultInput,
       result: TResult,
       computationRead: TComputationRead,
@@ -42,7 +42,7 @@ export type RuntimeComputationDefinition<
   }>;
 
 /** Computation callback 可提交的无归属 warning 输入 */
-export type RuntimeComputationWarningInput = Readonly<{
+export type InputRuntimeComputationWarning = Readonly<{
   /** 稳定 warning 分类 */
   code: string;
   /** 产生 warning 的领域阶段 */
@@ -61,7 +61,7 @@ export type RuntimeComputationContext = Readonly<{
   /** 固定绑定 Computation Source 的 trace reporter */
   trace: RuntimeComputationTraceReporter;
   /** 追加由 Runtime 统一归属的 commit-safe warning */
-  diagnose: (diagnostic: RuntimeComputationWarningInput) => void;
+  diagnose: (diagnostic: InputRuntimeComputationWarning) => void;
 }>;
 
 /** CandidateView 的 typed Source 与 Computation lookup */
@@ -151,7 +151,7 @@ export type RuntimeUpdateOutcome<TResultInput> =
       /** 放弃增量路径并执行 full run 的判别字段 */
       kind: typeof RuntimeComputationKind.Fallback;
       /** 随成功 full 结果提交的可选 warnings */
-      diagnostics?: ReadonlyArray<RuntimeComputationWarningInput>;
+      diagnostics?: ReadonlyArray<InputRuntimeComputationWarning>;
     }>;
 
 /**
@@ -161,7 +161,7 @@ export type RuntimeUpdateOutcome<TResultInput> =
  * @template TComputationRead 仅供当前计算的 update 读取旧结果的私有视图类型；默认沿用 TResult
  * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开结果视图类型；默认沿用 TResult
  */
-export type RuntimeComputationResultDefinitionInput<
+export type InputRuntimeComputationResultDefinition<
   TResultInput,
   TResult = TResultInput,
   TComputationRead = TResult,
@@ -196,7 +196,7 @@ type RuntimeRequiredResultTransform<TKey extends string, TInput, TOutput> = [TIn
 
 /** 三层转换均可省略时允许省略整个 result 配置 */
 type RuntimeRequiredComputationResult<TResultInput, TResult, TComputationRead, TPublicRead> =
-  Record<never, never> extends RuntimeComputationResultDefinitionInput<
+  Record<never, never> extends InputRuntimeComputationResultDefinition<
     TResultInput,
     TResult,
     TComputationRead,
@@ -204,7 +204,7 @@ type RuntimeRequiredComputationResult<TResultInput, TResult, TComputationRead, T
   >
     ? unknown
     : Readonly<{
-        result: RuntimeComputationResultDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>;
+        result: InputRuntimeComputationResultDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
       }>;
 
 /**
@@ -248,7 +248,7 @@ export type RuntimeCommitEvent<TPublicRead> =
  * @template TComputationRead 仅供当前计算的 update 读取旧结果的私有视图类型；默认沿用 TResult
  * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开结果视图类型；默认沿用 TResult
  */
-export type RuntimeComputationDefinitionInput<
+export type InputRuntimeComputationDefinition<
   TResultInput,
   TResult = TResultInput,
   TComputationRead = TResult,
@@ -269,7 +269,7 @@ export type RuntimeComputationDefinitionInput<
    */
   tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
   /** Computation result 生命周期；三层转换类型相同且无需释放资源时可整体省略 */
-  result?: RuntimeComputationResultDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>;
+  result?: InputRuntimeComputationResultDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
   /** full 执行入口 */
   run: (view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeRunOutcome<TResultInput>;
   /** 可选 incremental 执行入口 */

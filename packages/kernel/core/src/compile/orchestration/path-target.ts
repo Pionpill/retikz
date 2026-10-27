@@ -7,7 +7,7 @@ import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike 
 import type { NodeGeometryContext } from '../node';
 import { boundaryPointOf, clipNodePolyline, createNodeGeometryContext } from '../node';
 import { resolveAnchorRef } from '../reference';
-import type { EffectiveScopeTransform } from '../transform';
+import type { ComposedScopeTransform } from '../transform';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../transform';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
@@ -63,7 +63,7 @@ export const pathTargetViewOf = (
   targets: ReadonlyMap<string, TargetResolution>,
   warn?: (code: string, message: string, node?: NodeReferenceView) => void,
   geometryContext: NodeGeometryContext = createNodeGeometryContext(),
-  resolveTransform: (chain: ReadonlyArray<Transform>) => EffectiveScopeTransform = composeScopeTransform,
+  resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform = composeScopeTransform,
 ): PathTargetView => {
   const byTarget = new Map<string, TargetResolution>();
 

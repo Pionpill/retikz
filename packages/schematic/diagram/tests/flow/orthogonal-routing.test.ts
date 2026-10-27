@@ -3,14 +3,14 @@ import type { CompileWarning } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '../../src/flow';
-import { FlowRoutingSchema, LayeredFlowLayoutDefinition } from '../../src/flow';
-import type { FlowLayoutInput, FlowLayoutOutput } from '../../src/flow';
+import { FlowRoutingSchema, layeredFlowLayoutDefinition } from '../../src/flow';
+import type { InputFlowLayoutComputation, FlowLayoutOutput } from '../../src/flow';
 import { routeFlowRelations } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { evaluateFlowOrthogonalConflicts } from '../../src/flow/providers';
 import { resolveEffectiveFlowLayout } from '../../src/flow/resolve';
 
-const input = (): FlowLayoutInput => ({
+const input = (): InputFlowLayoutComputation => ({
   layout: { direction: 'right', nodeGap: 48, rankGap: 48, routing: { kind: 'orthogonal', cornerRadius: 8 } },
   elements: ['a', 'b', 'obstacle'].map(id => ({
     kind: 'leaf',
@@ -72,7 +72,7 @@ describe('Flow 正交布线', () => {
 
   it('保留显式碰撞中点', () => {
     const source = input();
-    const explicit: FlowLayoutInput = {
+    const explicit: InputFlowLayoutComputation = {
       ...source,
       relations: [{ ...source.relations[0], routing: { kind: 'orthogonal', cornerRadius: 8, turnPosition: 0.5 } }],
     };
@@ -95,20 +95,20 @@ describe('Flow 正交布线', () => {
   });
 
   it('仅在正交路由内继承分数并允许覆盖', () => {
-    const ancestor = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, {
+    const ancestor = resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, undefined, {
       kind: 'orthogonal',
       turnPosition: 0.75,
     });
 
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, ancestor, { kind: 'orthogonal' }).routing,
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, ancestor, { kind: 'orthogonal' }).routing,
     ).toMatchObject({ turnPosition: 0.75 });
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, ancestor, { kind: 'orthogonal', turnPosition: 0.25 })
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, ancestor, { kind: 'orthogonal', turnPosition: 0.25 })
         .routing,
     ).toMatchObject({ turnPosition: 0.25 });
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, ancestor, { kind: '-|' }).routing,
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, ancestor, { kind: '-|' }).routing,
     ).not.toHaveProperty('turnPosition');
   });
 });
@@ -124,7 +124,7 @@ it.each(['right', 'left', 'down', 'up'] as const)('在 %s 布局中使用源相�
 
     return { ...element, bounds: { x: x - 10, y: y - 10, width: 20, height: 20 } };
   });
-  const configured: FlowLayoutInput = {
+  const configured: InputFlowLayoutComputation = {
     ...source,
     layout: { ...source.layout, direction },
     relations: [{ ...source.relations[0], routing: { kind: 'orthogonal', cornerRadius: 0, turnPosition: 0.25 } }],
@@ -135,7 +135,10 @@ it.each(['right', 'left', 'down', 'up'] as const)('在 %s 布局中使用源相�
 });
 it('保留外部反馈通道并跳过对齐的反馈绕路', () => {
   const source = input();
-  const configured: FlowLayoutInput = { ...source, relations: [{ ...source.relations[0], direction: 'reverse' }] };
+  const configured: InputFlowLayoutComputation = {
+    ...source,
+    relations: [{ ...source.relations[0], direction: 'reverse' }],
+  };
   const route = routeFlowRelations(configured, elements)[0].route;
 
   expect(route.points[1][0]).toBeGreaterThan(220);
@@ -147,7 +150,7 @@ it('保留外部反馈通道并跳过对齐的反馈绕路', () => {
 it('两个通道被阻挡时选择剩余的四分之三位置候选', () => {
   const source = input();
   const extra = { ...source.elements[2], id: 'second' };
-  const configured: FlowLayoutInput = { ...source, elements: [...source.elements, extra] };
+  const configured: InputFlowLayoutComputation = { ...source, elements: [...source.elements, extra] };
   const placed = [...elements, { id: 'second', bounds: { x: 55, y: 70, width: 20, height: 20 } }];
 
   expect(routeFlowRelations(configured, placed)[0].route.points[1]).toEqual([155, 10]);
@@ -207,12 +210,12 @@ it('独立对实际穿透、切线和端点重入进行评分', () => {
 });
 it('拒绝回显锁定分数但返回另一通道的提供者', () => {
   const source = input();
-  const configured: FlowLayoutInput = {
+  const configured: InputFlowLayoutComputation = {
     ...source,
     relations: [{ ...source.relations[0], routing: { kind: 'orthogonal', cornerRadius: 8, turnPosition: 0.75 } }],
   };
   const definition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     layout: () => ({
       elements,
       relations: [
@@ -239,9 +242,9 @@ it('拒绝回显锁定分数但返回另一通道的提供者', () => {
 });
 it.each([false, true])('保留可绘制的阻塞路线，并在 aligned=%s 时省略回避警告', aligned => {
   const provider = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'fixed-orthogonal',
-    layout: (source: FlowLayoutInput) => {
+    layout: (source: InputFlowLayoutComputation) => {
       const centers = aligned
         ? [
             [0, 0],

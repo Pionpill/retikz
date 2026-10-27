@@ -20,7 +20,7 @@ import { datumAnchor } from '../../resolve/mark';
 import type { IRPlot, IRPlotMark } from '../../schemas';
 import { BuiltinPlotMark } from '../../schemas';
 import { DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
-import type { LowerPlotsOptions, MarkDataView } from '../expand';
+import type { PlotsLoweringOptions, MarkDataView } from '../expand';
 import type { PlotDataArtifactLowerResult } from '../expand/lower';
 import type { PlotStandaloneOptions } from '../expand/standalone';
 import { lowerStandalonePlot } from '../expand/standalone';
@@ -196,7 +196,7 @@ const contextMatches = (meta: JsonObject, opts: PlotLocatorOptions | undefined):
 /** 从一次Plot lowering的数据artifact构建locator */
 export const buildPlotLocatorFromDataArtifact = (
   spec: IRPlot,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
   lowered: PlotDataArtifactLowerResult,
 ): PlotLocator => {
   const renderEntries = collectRenderDatumEntries(lowered.child);

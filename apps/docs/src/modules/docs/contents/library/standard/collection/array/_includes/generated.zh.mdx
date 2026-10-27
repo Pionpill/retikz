@@ -317,10 +317,10 @@ export type InputArray = Omit<IRArray, 'namespace' | 'type' | 'items' | 'data' |
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArrayInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={41}>ArrayInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"arrayInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={41}>arrayInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray>;
+export declare const arrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray>;
 ```
 
 **持久化配置**
@@ -551,16 +551,16 @@ export type IRArrayIndexStyle = input<typeof ArrayIndexStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArraySchema"} path={"packages/library/standard/src/collection/array/schema/schema.ts"} startLine={71}>ArraySchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArraySchema"} path={"packages/library/standard/src/collection/array/schema/schema.ts"} startLine={73}>ArraySchema</ApiSourceLink>
 
 <ZodSchema name="ArraySchema" description="一维内容的单元格展示，支持显式单元格、JSON 数组或示意骨架" expandNested />
 
 **扩展定义与注册**
 
-#### <ApiSourceLink label={"ArrayDefinition"} path={"packages/library/standard/src/collection/array/composite.ts"} startLine={10}>ArrayDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"arrayDefinition"} path={"packages/library/standard/src/collection/array/composite.ts"} startLine={10}>arrayDefinition</ApiSourceLink>
 
 ```ts
-export const ArrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> = defineComposite({
+export const arrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> = defineComposite({
   namespace: 'standard',
   type: 'array',
   schema: ArraySchema,
@@ -568,10 +568,10 @@ export const ArrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> 
 });
 ```
 
-#### <ApiSourceLink label={"ArrayProvider"} path={"packages/library/standard/src/collection/array/composite.ts"} startLine={25}>ArrayProvider</ApiSourceLink>
+#### <ApiSourceLink label={"arrayProvider"} path={"packages/library/standard/src/collection/array/composite.ts"} startLine={25}>arrayProvider</ApiSourceLink>
 
 ```ts
-export declare const ArrayProvider: CoreDependencyProvider;
+export declare const arrayProvider: CoreDependencyProvider;
 ```
 
 **执行与辅助契约**
@@ -616,7 +616,7 @@ export declare const createArray: (input: IRArray) => IRArray;
 | 参数   | `arrayId` | `string`    | 非空白 Array id                             |
 |        | `index`   | `number`    | 直属单元格的非负整数下标                    |
 | 返回值 | —         | `string`    | 由 arrayId、连字符与零基下标组成的单元格 id |
-| 错误   | —         | —           | 参数非法时抛出 RetikzStandardError          |
+| 错误   | —         | —           | 下标不是非负整数时抛出 RetikzStandardError  |
 
 </ApiTable>
 

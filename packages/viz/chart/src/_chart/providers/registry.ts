@@ -14,11 +14,11 @@ import { CHART_NAMESPACE } from '../constants';
 import type { AnyChartRecipeDefinition, ChartEncodingRuntime, ChartThemeDefinition } from '../contract';
 import { eraseChartRecipeDefinition } from '../contract';
 import type { IRChartSource } from '../schemas';
-import { parseChartThemeDefinition, validateChartThemeBases } from './theme';
+import { parseChartThemeDefinition, assertChartThemeBases } from './theme';
 import type {
   ChartProviderRegistry,
   ChartRecipeProviderContribution,
-  ChartRecipeProviderContributionInput,
+  InputChartRecipeProviderContribution,
   ChartRuntimeDefinitionOptions,
 } from './types';
 
@@ -30,7 +30,7 @@ const invalidRegistry = (message: string, path: ReadonlyArray<string | number>, 
     ...(cause === undefined ? {} : { cause }),
   });
 
-const validateRecipeSchemaIdentity = (
+const assertRecipeSchemaIdentity = (
   recipe: AnyChartRecipeDefinition,
   family: string,
   path: ReadonlyArray<string | number>,
@@ -77,7 +77,7 @@ const validateRecipeSchemaIdentity = (
   }
 };
 
-const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<string | number>): void => {
+const assertSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<string | number>): void => {
   const encodingSlots = new Set<string>();
 
   for (const [slotIndex, slot] of recipe.encodingSlots.entries()) {
@@ -226,14 +226,14 @@ const resolveEncodingRuntime = (definitions: ChartRuntimeDefinitionOptions): Cha
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
 export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
-  contributions: ReadonlyArray<ChartRecipeProviderContributionInput<TSource>>,
+  contributions: ReadonlyArray<InputChartRecipeProviderContribution<TSource>>,
 ): ChartProviderRegistry => {
-  const validateRecipe = (recipe: AnyChartRecipeDefinition, family: string, index: number): void => {
+  const assertRecipe = (recipe: AnyChartRecipeDefinition, family: string, index: number): void => {
     const path = ['recipes', index, recipe.chartType] as const;
     if (recipe.chartType.length === 0) throw invalidRegistry('Chart recipe chartType must be non-empty', path);
 
-    validateRecipeSchemaIdentity(recipe, family, [...path, 'schema']);
-    validateSlots(recipe, [...path]);
+    assertRecipeSchemaIdentity(recipe, family, [...path, 'schema']);
+    assertSlots(recipe, [...path]);
   };
 
   const duplicateDefinition = (label: string, key: string): RetikzChartError =>
@@ -254,7 +254,7 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
   const themeSources = new Map<string, ChartThemeDefinition>();
   const parsedThemes = new Map<ChartThemeDefinition, ChartThemeDefinition>();
   const chartThemeDefinitions: Array<ChartThemeDefinition> = [];
-  const seenContributions = new Set<ChartRecipeProviderContributionInput<TSource>>();
+  const seenContributions = new Set<InputChartRecipeProviderContribution<TSource>>();
 
   for (const [index, contribution] of contributions.entries()) {
     if (seenContributions.has(contribution)) continue;
@@ -265,7 +265,7 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
     }
 
     const recipe = eraseChartRecipeDefinition(contribution.recipe);
-    validateRecipe(recipe, family, index);
+    assertRecipe(recipe, family, index);
     const existingRecipe = recipes.get(recipe.chartType);
     if (existingRecipe !== undefined && existingRecipe !== recipe) {
       throw duplicateDefinition('recipes', recipe.chartType);
@@ -290,7 +290,7 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
     themes.set(parsedTheme.name, parsedTheme);
   }
 
-  validateChartThemeBases(themes);
+  assertChartThemeBases(themes);
 
   const runtime = resolveEncodingRuntime(sharedRuntimeDefinitionsOf([...seenContributions]));
 

@@ -14,11 +14,11 @@ import { literal, strictObject } from 'zod';
 
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveChartEncodingMappings, resolveSelectedChart } from '../../src/_chart/resolve';
-import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
+import { scatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
 
 const registry = resolveChartProviderRegistry([
-  { family: 'point', recipe: ScatterChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: scatterChartDefinition, chartThemeDefinitions: [] },
 ]);
 
 const resolveScatter = (
@@ -35,7 +35,7 @@ const resolveScatter = (
   });
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
-    recipe: ScatterChartDefinition,
+    recipe: scatterChartDefinition,
     chartThemeDefinitions: [],
     runtime,
   });
@@ -387,7 +387,7 @@ describe('分散 Chart 编码解析结果', () => {
     const customRegistry = resolveChartProviderRegistry([
       {
         family: 'point',
-        recipe: ScatterChartDefinition,
+        recipe: scatterChartDefinition,
         chartThemeDefinitions: [],
         runtimeDefinitions: { transforms: [copyField], statisticsReducers: [range], scales: [mono] },
       },
@@ -471,7 +471,7 @@ describe('分散 Chart 编码解析结果', () => {
     const customRegistry = resolveChartProviderRegistry([
       {
         family: 'point',
-        recipe: ScatterChartDefinition,
+        recipe: scatterChartDefinition,
         chartThemeDefinitions: [],
         runtimeDefinitions: { scales: [renamed] },
       },

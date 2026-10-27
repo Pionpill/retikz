@@ -1,5 +1,5 @@
 import { createInputScene, Node, Path, Step } from '@retikz/react';
-import { AxesProvider, createFrame, FrameProvider, GridProvider } from '@retikz/standard/presentation';
+import { axesProvider, createFrame, frameProvider, gridProvider } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -79,8 +79,8 @@ describe('<Frame>', () => {
         children: [{ type: 'node', position: [0, 0], text: 'A' }],
       }),
     );
-    expect(first.providerDependencies.providers[0]).toBe(FrameProvider);
-    expect(second.providerDependencies.providers[0]).toBe(FrameProvider);
+    expect(first.providerDependencies.providers[0]).toBe(frameProvider);
+    expect(second.providerDependencies.providers[0]).toBe(frameProvider);
   });
 
   it('在 FrameTitle 和 FrameDescription 上保留 JSON 安全的 Node 字段', () => {
@@ -189,9 +189,9 @@ describe('<Frame>', () => {
 
     expect(result.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame']);
     expect(result.contributions.map(contribution => contribution.roots[0])).toEqual([
-      GridProvider.key,
-      AxesProvider.key,
-      FrameProvider.key,
+      gridProvider.key,
+      axesProvider.key,
+      frameProvider.key,
     ]);
     expect(result.ir.children[2]).toMatchObject({ id: 'group/frame' });
   });

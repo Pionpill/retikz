@@ -1,6 +1,6 @@
 import { createInputScene } from '@retikz/react';
-import type { GridInput } from '@retikz/standard/presentation';
-import { createGrid, GridDefinition, GridProvider } from '@retikz/standard/presentation';
+import type { InputGrid } from '@retikz/standard/presentation';
+import { createGrid, gridDefinition, gridProvider } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -35,16 +35,16 @@ describe('<Grid>', () => {
     const second = normalizeReactInput(<Grid bounds={{ start: [0, 0], end: [20, 10] }} line={{ spacing: 10 }} />);
 
     expect(first.ir.children[0]).toMatchObject({ namespace: 'standard', type: 'grid' });
-    expect(first.contributions[0]).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
-    expect(second.contributions[0]?.providers[0]).toBe(GridProvider);
-    expect(GridProvider.makeDefinition([])).toBe(GridDefinition);
+    expect(first.contributions[0]).toEqual({ roots: [gridProvider.key], providers: [gridProvider] });
+    expect(second.contributions[0]?.providers[0]).toBe(gridProvider);
+    expect(gridProvider.makeDefinition([])).toBe(gridDefinition);
   });
 
   it('通过共享 Grid 输入接受中心形式笛卡尔位置', () => {
     const input = {
       bounds: { position: [20, 10], width: 40, height: 20 },
       line: { spacing: 10 },
-    } satisfies GridInput;
+    } satisfies InputGrid;
 
     expect(normalizeReactInput(<Grid {...input} />).ir.children[0]).toEqual(createGrid(input));
   });
@@ -57,7 +57,7 @@ describe('<Grid>', () => {
         height: 10,
       },
       line: { spacing: 10 },
-    } satisfies GridInput;
+    } satisfies InputGrid;
 
     expect(normalizeReactInput(<Grid {...input} />).ir.children[0]).toEqual(createGrid(input));
   });

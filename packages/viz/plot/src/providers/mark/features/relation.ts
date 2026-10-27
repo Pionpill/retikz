@@ -16,7 +16,7 @@ import { resolveFieldPath } from '@retikz/data';
 import type {
   AnchorOwner,
   MarkInstance,
-  MarkInstanceInput,
+  InputMarkInstance,
   CoordinateFrame,
   FieldCollector,
   MarkChannels,
@@ -675,7 +675,7 @@ const explicitRoute = (
 /** 把 relation mark 下沉为 path 或 ribbon core IR */
 export const lowerRelation = (
   mark: IRPlotRelationMark,
-  input: MarkInstanceInput,
+  input: InputMarkInstance,
   frame: CoordinateFrame,
   channels: MarkChannels,
   ctx: MarkLoweringContext | undefined,

@@ -144,10 +144,10 @@ export type InputPolygon = InputShape<IRPolygon>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PolygonInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/polygon.ts"} startLine={12}>PolygonInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"polygonInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/polygon.ts"} startLine={12}>polygonInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const PolygonInputEmbedAdapter: SynchronousInputEmbedAdapter<InputPolygon & { id?: string }>;
+export declare const polygonInputEmbedAdapter: SynchronousInputEmbedAdapter<InputPolygon & { id?: string }>;
 ```
 
 **持久化配置**
@@ -222,7 +222,7 @@ export type IRPolygon = ShapeSource<ZodInput<typeof PolygonSchema>>;
 
 **扩展定义与注册**
 
-#### <ApiSourceLink label={"PolygonDefinition"} path={"packages/library/standard/src/shape/polygon/composite.ts"} startLine={10}>PolygonDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"polygonDefinition"} path={"packages/library/standard/src/shape/polygon/composite.ts"} startLine={10}>polygonDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -244,7 +244,7 @@ export type IRPolygon = ShapeSource<ZodInput<typeof PolygonSchema>>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export const PolygonDefinition = defineComposite({
+export const polygonDefinition = defineComposite({
   namespace: 'standard',
   type: 'polygon',
   schema: PolygonSchema,
@@ -256,12 +256,12 @@ export const PolygonDefinition = defineComposite({
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PolygonProvider"} path={"packages/library/standard/src/shape/polygon/composite.ts"} startLine={25}>PolygonProvider</ApiSourceLink>
+#### <ApiSourceLink label={"polygonProvider"} path={"packages/library/standard/src/shape/polygon/composite.ts"} startLine={25}>polygonProvider</ApiSourceLink>
 
 ```ts
-export const PolygonProvider: CoreDependencyProvider = Object.freeze({
+export const polygonProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'polygon' }),
-  makeDefinition: () => PolygonDefinition,
+  makeDefinition: () => polygonDefinition,
 });
 ```
 

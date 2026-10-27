@@ -2,7 +2,7 @@ import { DEG_TO_RAD, normalizeDegrees } from './angle';
 import type { Position } from './point';
 
 /** 圆弧外接候选点参数 */
-export type ArcBoundingCandidatesInput = {
+export type InputArcBoundingCandidates = {
   /** 圆心 */
   center: Position;
   /** 半径 */
@@ -14,7 +14,7 @@ export type ArcBoundingCandidatesInput = {
 };
 
 /** 圆弧角度区间判定参数 */
-export type ArcSweepAngleInput = {
+export type InputArcSweepAngle = {
   /** 起始角度，单位为度 */
   startAngleDeg: number;
   /** 结束角度，单位为度 */
@@ -28,7 +28,7 @@ export type ArcSweepAngleInput = {
 };
 
 /** 椭圆弧参数点参数 */
-export type EllipseArcAnglePointInput = {
+export type InputEllipseArcAnglePoint = {
   /** 椭圆中心 */
   center: Position;
   /** x 方向半轴 */
@@ -40,7 +40,7 @@ export type EllipseArcAnglePointInput = {
 };
 
 /** 椭圆弧外接候选点参数 */
-export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 'angleDeg'> & {
+export type InputEllipseArcBoundingCandidates = Omit<InputEllipseArcAnglePoint, 'angleDeg'> & {
   /** 起始参数角，单位为度 */
   startAngleDeg: number;
   /** 结束参数角，单位为度 */
@@ -92,7 +92,7 @@ export const collectArcBoundingCandidates = ({
   radius,
   startAngleDeg,
   endAngleDeg,
-}: ArcBoundingCandidatesInput): Array<Position> => {
+}: InputArcBoundingCandidates): Array<Position> => {
   const points: Array<Position> = [
     pointAtArcAngle(center, radius, startAngleDeg),
     pointAtArcAngle(center, radius, endAngleDeg),
@@ -122,7 +122,7 @@ export const isAngleWithinArcSweep = ({
   endAngleDeg,
   angleDeg,
   toleranceDeg = 1e-7,
-}: ArcSweepAngleInput): boolean => {
+}: InputArcSweepAngle): boolean => {
   const span = endAngleDeg - startAngleDeg;
   const total = Math.abs(span);
   if (total >= 360 - toleranceDeg) return true; // 整圆
@@ -139,7 +139,7 @@ export const isAngleWithinArcSweep = ({
  * @description 与 pointAtArcAngle 同角度约定；θ 是参数角，不一定等于真实极角
  * @param input 几何输入参数，字段含义见对应类型
  */
-export const pointAtEllipseArcAngle = ({ center, radiusX, radiusY, angleDeg }: EllipseArcAnglePointInput): Position => {
+export const pointAtEllipseArcAngle = ({ center, radiusX, radiusY, angleDeg }: InputEllipseArcAnglePoint): Position => {
   const angleRadians = angleDeg * DEG_TO_RAD;
   return [center[0] + Math.cos(angleRadians) * radiusX, center[1] + Math.sin(angleRadians) * radiusY];
 };
@@ -155,7 +155,7 @@ export const collectEllipseArcBoundingCandidates = ({
   radiusY,
   startAngleDeg,
   endAngleDeg,
-}: EllipseArcBoundingCandidatesInput): Array<Position> => {
+}: InputEllipseArcBoundingCandidates): Array<Position> => {
   const points: Array<Position> = [
     pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: startAngleDeg }),
     pointAtEllipseArcAngle({ center, radiusX, radiusY, angleDeg: endAngleDeg }),

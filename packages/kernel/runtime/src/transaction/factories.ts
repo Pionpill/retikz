@@ -8,7 +8,7 @@ import type {
   RuntimePreparedSourceValue,
   RuntimeRevision,
 } from '../source';
-import type { RuntimeSourceInput, RuntimeSourceUpdate, RuntimeSnapshot } from './types';
+import type { InputRuntimeSource, RuntimeSourceUpdate, RuntimeSnapshot } from './types';
 
 /** command 私有保存的 source 输入与 lifecycle 入口 */
 export type RuntimeSourceCommandExecutor = Readonly<{
@@ -191,8 +191,8 @@ const createRuntimeSourceCommandExecutor = <TInput, TValue, TRead, TChange>(
 export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,
-): RuntimeSourceInput => {
-  const command = Object.freeze({ source, kind: 'initial' as const }) as unknown as RuntimeSourceInput;
+): InputRuntimeSource => {
+  const command = Object.freeze({ source, kind: 'initial' as const }) as unknown as InputRuntimeSource;
   const executor = createRuntimeSourceCommandExecutor(source, value);
   runtimeSourceCommands.add(command);
   runtimeSourceCommandExecutors.set(command, executor);
@@ -236,7 +236,7 @@ export const createRuntimeSourceUpdate = <TInput, TValue, TRead, TChange>(
 
 /** 读取 opaque source command 的私有执行入口 */
 export const getRuntimeSourceCommandExecutor = (
-  command: RuntimeSourceInput | RuntimeSourceUpdate,
+  command: InputRuntimeSource | RuntimeSourceUpdate,
 ): RuntimeSourceCommandExecutor => {
   if (!runtimeSourceCommands.has(command)) {
     throw new RetikzRuntimeError({

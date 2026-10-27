@@ -109,7 +109,7 @@ export const OutsideQuantileBandSelectorOperationSchema = strictObject({
   .describe('Outside quantile-band row selector operation');
 
 /** 内置 selector operation 的 schema 单一真源；aggregate schema 与 provider definition 共用这些实例 */
-export const BuiltinSelectorOperationSchemas = Object.freeze({
+export const BUILTIN_SELECTOR_OPERATION_SCHEMAS = Object.freeze({
   Min: createMinMaxSelectorOperationSchema(BuiltinSelectorOperationKind.Min),
   Max: createMinMaxSelectorOperationSchema(BuiltinSelectorOperationKind.Max),
   First: createFirstLastSelectorOperationSchema(BuiltinSelectorOperationKind.First),
@@ -136,14 +136,14 @@ const ExternalSelectorOperationSchema = ExternalSelectorOperationObjectSchema.ca
 
 /** 内置 row selector operation schema */
 const BuiltinSelectorOperationSchema = union([
-  BuiltinSelectorOperationSchemas.Min,
-  BuiltinSelectorOperationSchemas.Max,
-  BuiltinSelectorOperationSchemas.First,
-  BuiltinSelectorOperationSchemas.Last,
-  BuiltinSelectorOperationSchemas.Top,
-  BuiltinSelectorOperationSchemas.Bottom,
-  BuiltinSelectorOperationSchemas.Nth,
-  BuiltinSelectorOperationSchemas.OutsideQuantileBand,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Min,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Max,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.First,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Last,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Top,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Bottom,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Nth,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.OutsideQuantileBand,
 ]).describe('Built-in row selector operation');
 
 /** row selector operation schema；包含内置 kind 与外部注册 kind 开放配置对象 */

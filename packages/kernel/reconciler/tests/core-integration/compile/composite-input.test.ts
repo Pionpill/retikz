@@ -6,7 +6,7 @@ import {
   createCompositeInputBindings,
   defineComposite,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
   RetikzCoreError,
 } from '@retikz/core';
 import { ReconcilerSession } from '@retikz/reconciler';
@@ -31,7 +31,7 @@ const prepared = defineComposite({
 });
 
 const probe = (context: CompositeCompileContext, child: CompositeBoundChild) => {
-  const result = context.layoutChild(child, NaturalLayoutProposal);
+  const result = context.layoutChild(child, naturalLayoutProposal);
   if (result.kind === LayoutChildProbeKind.Failed) return context.raise(result.failure);
   return result.result;
 };

@@ -5,14 +5,14 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { number, strictObject, string, union } from 'zod';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_NODE_CHANNELS, SIZE_MAX_RADIUS } from '../../../src/providers';
 import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 /** size channel 集成测试使用的派生字段 transform 判别值 */
 const SizeChannelTestTransform = {
@@ -37,7 +37,7 @@ const deriveSizeValueTransformImplementation = defineTransformImplementation({
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
 ): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
@@ -45,7 +45,7 @@ const expandOf = (
 const firstLayer = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 Node；颜色分组时 Node 可能位于子 Scope */
@@ -449,7 +449,7 @@ describe('size channel 错误输入', () => {
       { name: 'y', type: DataFieldType.Continuous },
     ];
     const resolver =
-      (type: DataFieldType): LowerPlotsOptions['resolveField'] =>
+      (type: DataFieldType): PlotsLoweringOptions['resolveField'] =>
       field =>
         field === 'p' ? { type } : undefined;
 
@@ -481,7 +481,7 @@ describe('size channel 错误输入', () => {
     );
     let sizeFieldCalls = 0;
 
-    const resolveField: LowerPlotsOptions['resolveField'] = field => {
+    const resolveField: PlotsLoweringOptions['resolveField'] = field => {
       if (field !== 'p') return undefined;
       sizeFieldCalls += 1;
       return { type: DataFieldType.Continuous };
@@ -525,7 +525,7 @@ describe('size channel 错误输入', () => {
     ['all-missing', [{ x: 0, y: 0, p: undefined }]],
   ])('解析字段类型对于 %s 行仍然具有权威性', (_label, rows) => {
     const spec = pointSpec('p');
-    const resolveField: LowerPlotsOptions['resolveField'] = field =>
+    const resolveField: PlotsLoweringOptions['resolveField'] = field =>
       field === 'p' ? { type: DataFieldType.Categorical } : undefined;
 
     expect(() => expandOf(spec, { d: rows }, { ...cartOpts, resolveField })).toThrow(

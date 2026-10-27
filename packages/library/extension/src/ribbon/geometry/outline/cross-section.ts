@@ -7,7 +7,7 @@ import type { RibbonAlignment } from '../../constants';
 import type { RibbonCrossSection } from '../types';
 
 /** 计算带状路径单个横截面所需的中心线采样、宽度函数与端点轴向 */
-type RibbonCrossSectionInput = {
+type InputRibbonCrossSection = {
   /** 中心线当前位置及单位切向量 */
   sample: CurveSegmentSample;
   /** 沿中心线累计长度归一化后的采样位置，范围为 0 到 1 */
@@ -38,7 +38,7 @@ export const ribbonCrossSection = ({
   endpointAxes,
   align,
   round,
-}: RibbonCrossSectionInput): RibbonCrossSection => {
+}: InputRibbonCrossSection): RibbonCrossSection => {
   const width = widthAt(offset);
   const tangent = sample.tangent;
   const explicit = offset === 0 ? endpointAxes.start : offset === 1 ? endpointAxes.end : undefined;

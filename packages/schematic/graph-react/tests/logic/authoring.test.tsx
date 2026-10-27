@@ -3,10 +3,10 @@ import {
   defineGraphTheme,
   defineRelationKind,
   defineRelationRole,
-  EntityProviderKey,
+  entityProviderKey,
   GraphProviderKey,
   GraphSchema,
-  RelationProviderKey,
+  relationProviderKey,
 } from '@retikz/graph';
 import type { InputGraph } from '@retikz/graph-vanilla';
 import { createGraphVanillaAdapters, graph, normalizeGraph, relation } from '@retikz/graph-vanilla';
@@ -393,8 +393,8 @@ describe('Entity 和 Relation React 编写', () => {
     expect(result.ir.children[2]).not.toHaveProperty('id');
     expect(result.ir.children[3]).not.toHaveProperty('id');
     expect(result.contributions.map(contribution => contribution.roots)).toEqual([
-      [EntityProviderKey],
-      [RelationProviderKey],
+      [entityProviderKey],
+      [relationProviderKey],
     ]);
   });
 
@@ -615,7 +615,7 @@ describe('Graph Source 和儿童编写', () => {
         ],
       },
     ]);
-    expect(result.contributions[0]?.roots).toEqual([GraphProviderKey, EntityProviderKey, RelationProviderKey]);
+    expect(result.contributions[0]?.roots).toEqual([GraphProviderKey, entityProviderKey, relationProviderKey]);
   });
 
   it('嵌入 Graph 时不创建嵌套 Scene', () => {

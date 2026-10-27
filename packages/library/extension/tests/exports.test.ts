@@ -15,27 +15,27 @@ const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.
 describe('扩展公共条目', () => {
   it('从一个根导出每个可选功能', () => {
     for (const name of [
-      'CrossShapeDefinition',
-      'TrapezoidShapeDefinition',
-      'CylinderShapeProvider',
-      'BarArrowDefinition',
-      'CrowFootArrowProvider',
-      'KiteArrowDefinition',
-      'OpenSquareArrowProvider',
-      'CompoundClipDefinition',
-      'PathClipProvider',
-      'RibbonPathDefinition',
-      'ExtensionShapeDefinitions',
-      'ExtensionArrowProviders',
-      'ExtensionClipDefinitions',
+      'crossShapeDefinition',
+      'trapezoidShapeDefinition',
+      'cylinderShapeProvider',
+      'barArrowDefinition',
+      'crowFootArrowProvider',
+      'kiteArrowDefinition',
+      'openSquareArrowProvider',
+      'compoundClipDefinition',
+      'pathClipProvider',
+      'ribbonPathDefinition',
+      'extensionShapeDefinitions',
+      'extensionArrowProviders',
+      'extensionClipDefinitions',
       'RetikzExtensionError',
       'pulse',
     ])
       expect(extension).toHaveProperty(name);
 
-    expect(extension).not.toHaveProperty('CircleDefinition');
-    expect(extension).not.toHaveProperty('GridDefinition');
-    expect(extension).not.toHaveProperty('SurfaceDefinition');
+    expect(extension).not.toHaveProperty('circleDefinition');
+    expect(extension).not.toHaveProperty('gridDefinition');
+    expect(extension).not.toHaveProperty('surfaceDefinition');
   });
 
   it('具有一个源和已发布的条目，没有第 2 层或宿主依赖性', () => {

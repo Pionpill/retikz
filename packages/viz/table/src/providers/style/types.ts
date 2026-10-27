@@ -1,10 +1,10 @@
-import type { ResolvedTheme, ThemeMode } from '@retikz/core';
+import type { CanonicalTheme, ThemeMode } from '@retikz/core';
 
 import type { IRTableDefaults } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 
 /** Table style resolver 使用的 Core effective Theme 形态 */
-export type TableThemeContext = Pick<ResolvedTheme, 'name' | 'mode' | 'colors'>;
+export type TableThemeContext = Pick<CanonicalTheme, 'name' | 'mode' | 'colors'>;
 
 /** Table defaults 来源在 resolver inspection 中的稳定分类 */
 type TableThemeDefaultsLayerKind = 'neutral' | 'style';

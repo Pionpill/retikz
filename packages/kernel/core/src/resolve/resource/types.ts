@@ -1,21 +1,21 @@
 import type {
   ClipDefinition,
   PatternDefinition,
-  ResolvedPatternLineStyle,
-  ResolvedPatternLineStyleCycle,
+  CanonicalPatternLineStyle,
+  CanonicalPatternLineStyleCycle,
 } from '../../contract';
 import type { IRClip, IRPaint, IRPatternPaint } from '../../schemas';
 
 /** 图案的基础线型及各方向、周期的线型解析结果 */
 export type PatternStyleResolution = Readonly<{
   /** 顶层基础线型 */
-  base: ResolvedPatternLineStyle;
+  base: CanonicalPatternLineStyle;
   /** 水平线继承基础线型后的样式 */
-  horizontalStyle?: ResolvedPatternLineStyle;
+  horizontalStyle?: CanonicalPatternLineStyle;
   /** 垂直线继承基础线型后的样式 */
-  verticalStyle?: ResolvedPatternLineStyle;
+  verticalStyle?: CanonicalPatternLineStyle;
   /** 按周期索引补齐的线型序列 */
-  lineStyleCycle?: ResolvedPatternLineStyleCycle;
+  lineStyleCycle?: CanonicalPatternLineStyleCycle;
 }>;
 
 /** 已绑定图案定义并确定尺寸、线型的图案 */
@@ -51,7 +51,7 @@ export type PaintResolution = Readonly<
 >;
 
 /** 解析后的颜色字符串或绘制资源输入 */
-export type PaintResolutionInput = string | PaintResolution;
+export type InputPaintResolution = string | PaintResolution;
 
 /** 已绑定裁剪定义并通过其 schema 解析的裁剪配置 */
 export type ClipResolution = Readonly<{

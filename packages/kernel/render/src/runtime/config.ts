@@ -24,7 +24,7 @@ export type RenderHandlerContribution = Readonly<{
 }>;
 
 /** 可随 Runtime transaction 原子更新的 renderer 配置输入 */
-export type RenderRuntimeConfigInput = Readonly<{
+export type InputRenderRuntimeConfig = Readonly<{
   /** 按 registration 升序执行的 handlers contributions */
   handlerContributions?: ReadonlyArray<RenderHandlerContribution>;
   /** 动画执行配置 */
@@ -46,14 +46,14 @@ export type RenderRuntimeConfigInput = Readonly<{
 }>;
 
 /** Session-owned deeply immutable renderer 配置 */
-export type RenderRuntimeConfig = RuntimeDeepReadonly<RenderRuntimeConfigInput>;
+export type RenderRuntimeConfig = RuntimeDeepReadonly<InputRenderRuntimeConfig>;
 
 const invalidRuntimeInput = (cause: unknown): never => {
   throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid, cause });
 };
 
 /** 捕获一次配置快照，并检查数值范围和本次注册关系 */
-export const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeConfig => {
+export const captureRuntimeConfig = (input: InputRenderRuntimeConfig): RenderRuntimeConfig => {
   try {
     const captured = cloneAndFreezeRuntimeValue(input);
     const registrations = new Set<number>();

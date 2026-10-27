@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type {
   RenderFrameSnapshot,
-  RenderRuntimeConfigInput,
+  InputRenderRuntimeConfig,
   RetainedRendererFactory,
   RetainedRendererRead,
 } from '../../src/runtime';
@@ -86,7 +86,7 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
 
 const createHarness = (capability: 'none' | 'group' | 'entity' = 'entity', initialScene: IRScene = scene('A')) => {
   const renderer = createRendererHarness(capability);
-  let config: RenderRuntimeConfigInput = {};
+  let config: InputRenderRuntimeConfig = {};
   const factory = vi.fn(() => renderer.renderer) as unknown as RetainedRendererFactory;
   const handle = createRetainedRenderTarget({
     backend: 'svg',
@@ -98,7 +98,7 @@ const createHarness = (capability: 'none' | 'group' | 'entity' = 'entity', initi
   const session = Object.assign(
     new ReconcilerSession({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }),
     {
-      updateConfig: (next: RenderRuntimeConfigInput) => {
+      updateConfig: (next: InputRenderRuntimeConfig) => {
         const previous = config;
         config = next;
         try {

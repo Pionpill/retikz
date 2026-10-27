@@ -1,5 +1,5 @@
 import { createInputScene } from '@retikz/react';
-import { queue, QueueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { queue, queueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
@@ -21,10 +21,10 @@ it('JSX与Vanilla的样式、空格、进入箭头和容器配置等价', () => 
   const vanilla = scene({ children: [queue({ ...props, items: [{ content: 'A' }, { id: 'top' }] })] });
   const options = { adapters: synchronousAdapters(jsx.adapters) };
   expect(normalizeScene(jsx.scene, options).ir).toEqual(
-    normalizeScene(vanilla, { adapters: [QueueInputEmbedAdapter] }).ir,
+    normalizeScene(vanilla, { adapters: [queueInputEmbedAdapter] }).ir,
   );
   expect(renderToSvgString(jsx.scene, options)).toEqual(
-    renderToSvgString(vanilla, { adapters: [QueueInputEmbedAdapter] }),
+    renderToSvgString(vanilla, { adapters: [queueInputEmbedAdapter] }),
   );
 });
 it('嵌套Matrix及JSON内容使用相同自动依赖链', () => {

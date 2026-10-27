@@ -52,7 +52,7 @@ type LineRun = {
 };
 
 /** line-step 圆角改写输入 */
-type ApplyRoundedCornersInput = {
+type InputRoundedCorners = {
   /** 需要应用圆角的路径命令序列 */
   commands: Array<PathCommand>;
   /** 与命令对应的生成来源，用于识别可圆角连接 */
@@ -120,7 +120,7 @@ export const applyRoundedCorners = ({
   sourceStepIndexes,
   radius,
   round,
-}: ApplyRoundedCornersInput): RoundedCommandsResult => {
+}: InputRoundedCorners): RoundedCommandsResult => {
   // 收集合格 run：连续 line-step 的 line 命令。move / 非 line step 命令打断 run。
   const out: Array<PathCommand> = [];
   const outStepIndexes: Array<number> = [];

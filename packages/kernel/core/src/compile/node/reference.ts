@@ -1,10 +1,10 @@
 import type { NodeReferenceView } from '../../resolve';
 import type { NodeGeometryContext } from './geometry-context';
-import type { NodeLayout } from './types';
+import type { CompiledNodeLayout } from './types';
 
 /** 将布局结果投影为 resolver 消费的节点引用视图 */
 export const nodeReferenceViewOf = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   context?: NodeGeometryContext,
   id?: string,
   irPath?: string,

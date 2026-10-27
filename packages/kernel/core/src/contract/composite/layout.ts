@@ -2,7 +2,7 @@ import type { ValueOf, JsonValue } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
 import type { IRChild, IRClip, IRPosition, IRScopeProps, IRTarget } from '../../schemas';
-import type { ResolvedTheme } from '../../shared';
+import type { CanonicalTheme } from '../../shared';
 import type { Transform } from '../scene';
 import type { SpatialHandleDeclaration } from '../spatial-handle';
 import type { CompositeBoundChild, CompositeRuntimeInputContext } from './input';
@@ -50,7 +50,7 @@ export const LayoutChildProbeKind = {
 } as const;
 
 /** 根布局感知复合节点使用的深冻结自然尺寸提案 */
-export const NaturalLayoutProposal = Object.freeze({
+export const naturalLayoutProposal = Object.freeze({
   x: Object.freeze({
     kind: LayoutAxisProposalKind.Intrinsic,
     mode: LayoutIntrinsicMode.Natural,
@@ -253,7 +253,7 @@ export type CompositeEvaluationResult<TArtifact extends JsonValue = never> =
 export type CompositeCompileContext = CompositeRuntimeInputContext &
   Readonly<{
     /** 当前复合组件位置完整、只读的有效主题 */
-    theme: ResolvedTheme;
+    theme: CanonicalTheme;
     /** 当前求值需要完整布局或指定轴的布局尺寸贡献 */
     evaluation: CompositeEvaluation;
     /** 隔离查询尺寸贡献；结果不可重放 */

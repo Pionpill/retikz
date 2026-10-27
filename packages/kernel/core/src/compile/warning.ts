@@ -19,7 +19,7 @@ export type CompileWarningOrigin =
     }>;
 
 /** 编译内部创建 warning 时使用的未完成输入 */
-export type CompileWarningInput = {
+export type InputCompileWarning = {
   /** 机器可读 warning code */
   code: CompileWarningCode;
   /** 人类可读消息（英文） */
@@ -31,7 +31,7 @@ export type CompileWarningInput = {
 };
 
 /** 编译期 warning：不影响 Scene 产物，交给调用方收集或展示 */
-export type CompileWarning = Omit<CompileWarningInput, 'origin'> & {
+export type CompileWarning = Omit<InputCompileWarning, 'origin'> & {
   /** warning 所属主 Scene 或 observation 阶段 */
   origin: CompileWarningOrigin;
 };

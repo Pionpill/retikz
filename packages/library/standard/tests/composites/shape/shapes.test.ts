@@ -1,7 +1,7 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { CircleDefinition, CircleSchema, createCircle, lowerCircle } from '../../../src/shape';
+import { circleDefinition, CircleSchema, createCircle, lowerCircle } from '../../../src/shape';
 import {
   EllipseSchema,
   RectangleSchema,
@@ -119,7 +119,7 @@ describe('圆形复合组件', () => {
   it('通过与手写 Core 步骤相同的路径几何进行编译', () => {
     const circle = createCircle({ center: [10, 20], radius: 30, style: { fill: 'red' } });
     const scene = { type: 'scene' as const, version: 1 as const, children: [circle] };
-    const actual = compileToScene(scene, { composites: [CircleDefinition] });
+    const actual = compileToScene(scene, { composites: [circleDefinition] });
     const expected = compileToScene({ type: 'scene', version: 1, children: [lowerCircle(circle)] });
 
     expect(actual.scene).toEqual(expected.scene);

@@ -4,7 +4,7 @@ import {
   CompositeBaseSchema,
   defineComposite,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -81,7 +81,7 @@ describe('协调器编译跟踪', () => {
         type: literal('replay'),
       }),
       compile: (_node, context) => {
-        const child = context.layoutChild({ type: 'node', id: 'replayed', position: [0, 0] }, NaturalLayoutProposal);
+        const child = context.layoutChild({ type: 'node', id: 'replayed', position: [0, 0] }, naturalLayoutProposal);
         if (child.kind === LayoutChildProbeKind.Failed) return context.raise(child.failure);
         return { children: [context.replay(child.result)] };
       },

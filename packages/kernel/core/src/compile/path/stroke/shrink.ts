@@ -1,4 +1,4 @@
-import type { PathCommand, ResolvedArrowEnd } from '../../../contract';
+import type { PathCommand, CompiledArrowEnd } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { ArrowMarkResolution } from '../../../resolve';
 import type { PaintResolver } from '../../resource';
@@ -11,13 +11,13 @@ const emitArrowEnd = (
   resolution: ArrowMarkResolution,
   round: (n: number) => number,
   resolvePaint: PaintResolver,
-): ResolvedArrowEnd => {
+): CompiledArrowEnd => {
   const { visual, geometry } = resolution;
   const marker = emitMarkPrimitives(resolution, round, resolvePaint, {
     label: `Arrow '${visual.shape}'`,
     providerKey: `arrow:${visual.shape}`,
   });
-  const out: ResolvedArrowEnd = {
+  const out: CompiledArrowEnd = {
     shape: visual.shape,
     baseSize: geometry.baseSize,
     refX: geometry.contactX,
@@ -33,7 +33,7 @@ const emitArrowEnd = (
 /** 已解析的端点箭头及对应 path 收缩量 */
 type EndpointArrowMarkEmission = {
   /** 已物化的 Scene 端点箭头描述 */
-  spec: ResolvedArrowEnd;
+  spec: CompiledArrowEnd;
   /** path 本体需要向内收缩的距离（未乘 strokeWidth） */
   shrink: number;
   /** auto boundary 端点为了避开空心箭头外缘需要额外内缩的距离 */

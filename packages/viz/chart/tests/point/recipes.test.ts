@@ -14,48 +14,48 @@ import type {
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveSelectedChart } from '../../src/_chart/resolve';
 import type { IRChartSource } from '../../src/_chart/schemas';
-import { BubbleMarkDefinition } from '../../src/point/bubble/mark';
-import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
+import { bubbleMarkDefinition } from '../../src/point/bubble/mark';
+import { bubbleChartDefinition } from '../../src/point/bubble/recipe';
 import { BubbleChartSchema } from '../../src/point/bubble/schema';
-import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
+import { connectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
 import { ConnectedScatterChartSchema } from '../../src/point/connected-scatter/schema';
-import { RangedDotChartDefinition } from '../../src/point/ranged-dot/recipe';
+import { rangedDotChartDefinition } from '../../src/point/ranged-dot/recipe';
 import { RangedDotChartSchema } from '../../src/point/ranged-dot/schema';
-import { RegressionChartDefinition } from '../../src/point/regression/recipe';
+import { regressionChartDefinition } from '../../src/point/regression/recipe';
 import { RegressionChartSchema } from '../../src/point/regression/schema';
-import { ScatterMarkDefinition } from '../../src/point/scatter/mark';
-import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
+import { scatterMarkDefinition } from '../../src/point/scatter/mark';
+import { scatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
 import {
   pointFieldConsumersOf,
   pointPositionFieldConsumersOf,
   resolvePointScaleDefaults,
 } from '../../src/point/shared';
-import { StripChartDefinition } from '../../src/point/strip/recipe';
+import { stripChartDefinition } from '../../src/point/strip/recipe';
 import { StripChartSchema } from '../../src/point/strip/schema';
 
 const runtime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ScatterChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: scatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const bubbleRuntime = resolveChartProviderRegistry([
-  { family: 'point', recipe: BubbleChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: bubbleChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const regressionRuntime = resolveChartProviderRegistry([
-  { family: 'point', recipe: RegressionChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: regressionChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const connectedScatterRuntime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ConnectedScatterChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: connectedScatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const rangedDotRuntime = resolveChartProviderRegistry([
-  { family: 'point', recipe: RangedDotChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: rangedDotChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const stripRuntime = resolveChartProviderRegistry([
-  { family: 'point', recipe: StripChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: stripChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const resolve = <TSource extends IRChartSource>(
@@ -121,7 +121,7 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    const result = resolveChart(source, StripChartDefinition, stripRuntime);
+    const result = resolveChart(source, stripChartDefinition, stripRuntime);
 
     expect(result.plot.marks).toEqual([
       expect.objectContaining({
@@ -157,14 +157,14 @@ describe('点 Chart 配方定义', () => {
       recipe: { ...horizontal.recipe, guides: { grid: true } },
     });
 
-    expect(resolveChart(horizontal, StripChartDefinition, stripRuntime).plot.guides).toEqual([
+    expect(resolveChart(horizontal, stripChartDefinition, stripRuntime).plot.guides).toEqual([
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: false },
     ]);
-    expect(resolveChart(explicit, StripChartDefinition, stripRuntime).plot.guides).toEqual([
+    expect(resolveChart(explicit, stripChartDefinition, stripRuntime).plot.guides).toEqual([
       { type: 'axis', dimension: 'y', grid: true },
     ]);
-    expect(resolveChart(forcedGrid, StripChartDefinition, stripRuntime).plot.guides).toEqual([
+    expect(resolveChart(forcedGrid, stripChartDefinition, stripRuntime).plot.guides).toEqual([
       { type: 'axis', dimension: 'x', grid: true },
       { type: 'axis', dimension: 'y', grid: false },
     ]);
@@ -202,17 +202,17 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    expect(resolveChart(themed, ScatterChartDefinition, runtime).plot.guides).toEqual([
+    expect(resolveChart(themed, scatterChartDefinition, runtime).plot.guides).toEqual([
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y' },
     ]);
-    expect(resolveChart(forcedGrid, ScatterChartDefinition, runtime).plot.guides).toEqual([
+    expect(resolveChart(forcedGrid, scatterChartDefinition, runtime).plot.guides).toEqual([
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },
     ]);
     expect(hidden.recipe.guides).toEqual({ axis: false, grid: false, legend: false });
-    expect(resolveChart(hidden, ScatterChartDefinition, runtime).plot.guides).toEqual([]);
-    expect(resolveChart(noGridOrLegend, ScatterChartDefinition, runtime).plot.guides).toEqual([
+    expect(resolveChart(hidden, scatterChartDefinition, runtime).plot.guides).toEqual([]);
+    expect(resolveChart(noGridOrLegend, scatterChartDefinition, runtime).plot.guides).toEqual([
       { type: 'axis', dimension: 'x', grid: false },
       { type: 'axis', dimension: 'y', grid: false },
     ]);
@@ -234,7 +234,7 @@ describe('点 Chart 配方定义', () => {
     });
 
     expect(source.recipe.guides).toEqual({ grid: false });
-    expect(resolveChart(source, StripChartDefinition, stripRuntime).plot.guides).toEqual([
+    expect(resolveChart(source, stripChartDefinition, stripRuntime).plot.guides).toEqual([
       { type: 'axis', dimension: 'x', grid: false },
       { type: 'axis', dimension: 'y', grid: false },
     ]);
@@ -255,10 +255,10 @@ describe('点 Chart 配方定义', () => {
         },
       });
 
-    expect(() => resolveChart(sourceWith('linear', 'linear'), StripChartDefinition, stripRuntime)).toThrowError(
+    expect(() => resolveChart(sourceWith('linear', 'linear'), stripChartDefinition, stripRuntime)).toThrowError(
       expect.objectContaining({ details: expect.objectContaining({ path: ['recipe', 'encodings'] }) }),
     );
-    expect(() => resolveChart(sourceWith('point', 'band'), StripChartDefinition, stripRuntime)).toThrowError(
+    expect(() => resolveChart(sourceWith('point', 'band'), stripChartDefinition, stripRuntime)).toThrowError(
       expect.objectContaining({ details: expect.objectContaining({ path: ['recipe', 'encodings'] }) }),
     );
   });
@@ -276,7 +276,7 @@ describe('点 Chart 配方定义', () => {
     const customRuntime = resolveChartProviderRegistry([
       {
         family: 'point',
-        recipe: StripChartDefinition,
+        recipe: stripChartDefinition,
         chartThemeDefinitions: [],
         runtimeDefinitions: { scales: [customDiscreteScale] },
       },
@@ -297,7 +297,7 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    expect(resolveChart(source, StripChartDefinition, customRuntime).plot.guides).toEqual([
+    expect(resolveChart(source, stripChartDefinition, customRuntime).plot.guides).toEqual([
       { type: 'axis', dimension: 'x', grid: false },
       { type: 'axis', dimension: 'y' },
     ]);
@@ -327,7 +327,7 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    const result = resolveChart(source, StripChartDefinition, stripRuntime);
+    const result = resolveChart(source, stripChartDefinition, stripRuntime);
 
     expect(result.plot.marks).toHaveLength(2);
     expect(result.plot.marks[0]).toMatchObject({
@@ -358,7 +358,7 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    expect(resolveChart(source, StripChartDefinition, stripRuntime).plot.scales).toEqual([
+    expect(resolveChart(source, stripChartDefinition, stripRuntime).plot.scales).toEqual([
       { type: 'band', name: 'category' },
       {
         type: 'linear',
@@ -376,7 +376,7 @@ describe('点 Chart 配方定义', () => {
         data: { reference: 'rows' },
         recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' } },
       }),
-      ScatterChartDefinition,
+      scatterChartDefinition,
       runtime,
     );
     const bubble = resolveChart(
@@ -386,7 +386,7 @@ describe('点 Chart 配方定义', () => {
         data: { reference: 'rows' },
         recipe: { chartType: 'bubble', encodings: { x: 'x', y: 'y', size: 'size' } },
       }),
-      BubbleChartDefinition,
+      bubbleChartDefinition,
       bubbleRuntime,
     );
     const regression = resolveChart(
@@ -396,7 +396,7 @@ describe('点 Chart 配方定义', () => {
         data: { reference: 'rows' },
         recipe: { chartType: 'regression', encodings: { x: 'x', y: 'y' } },
       }),
-      RegressionChartDefinition,
+      regressionChartDefinition,
       regressionRuntime,
     );
     const connectedScatter = resolveChart(
@@ -406,7 +406,7 @@ describe('点 Chart 配方定义', () => {
         data: { reference: 'rows' },
         recipe: { chartType: 'connected-scatter', encodings: { x: 'x', y: 'y', order: 'order' } },
       }),
-      ConnectedScatterChartDefinition,
+      connectedScatterChartDefinition,
       connectedScatterRuntime,
     );
     const rangedDot = resolveChart(
@@ -419,7 +419,7 @@ describe('点 Chart 配方定义', () => {
           encodings: { category: 'category', start: 'start', end: 'end' },
         },
       }),
-      RangedDotChartDefinition,
+      rangedDotChartDefinition,
       rangedDotRuntime,
     );
 
@@ -475,7 +475,7 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    const result = resolveChart(source, ScatterChartDefinition, runtime);
+    const result = resolveChart(source, scatterChartDefinition, runtime);
 
     expect(result.plot.marks[0]).toMatchObject({ properties: { autoPadding: 'max-radius' } });
     if (options.properties !== undefined) {
@@ -521,8 +521,8 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    const additionResult = resolveChart(addition, ScatterChartDefinition, runtime);
-    const overrideResult = resolveChart(override, ScatterChartDefinition, runtime);
+    const additionResult = resolveChart(addition, scatterChartDefinition, runtime);
+    const overrideResult = resolveChart(override, scatterChartDefinition, runtime);
 
     expect(additionResult.plot.marks).toMatchObject([
       { properties: { size: 3, autoPadding: 'max-radius' } },
@@ -551,7 +551,7 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    const result = resolveChart(source, ScatterChartDefinition, runtime);
+    const result = resolveChart(source, scatterChartDefinition, runtime);
 
     expect(result.plot.marks[0]).toMatchObject({
       encodings: { size: { field: 'size', scale: 'sizeScale' } },
@@ -572,7 +572,7 @@ describe('点 Chart 配方定义', () => {
           properties: { point: { size: 11 } },
         },
       }),
-      RegressionChartDefinition,
+      regressionChartDefinition,
       regressionRuntime,
     );
     const connected = resolveChart(
@@ -586,7 +586,7 @@ describe('点 Chart 配方定义', () => {
           properties: { point: { size: 14 } },
         },
       }),
-      ConnectedScatterChartDefinition,
+      connectedScatterChartDefinition,
       connectedScatterRuntime,
     );
     const ranged = resolveChart(
@@ -600,7 +600,7 @@ describe('点 Chart 配方定义', () => {
           properties: { point: { size: 6 }, startPoint: { size: 8 }, endPoint: { size: 15 } },
         },
       }),
-      RangedDotChartDefinition,
+      rangedDotChartDefinition,
       rangedDotRuntime,
     );
 
@@ -657,15 +657,15 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    expect(resolveChart(rangeSource, ScatterChartDefinition, runtime).plot.scales.slice(0, 2)).toEqual([
+    expect(resolveChart(rangeSource, scatterChartDefinition, runtime).plot.scales.slice(0, 2)).toEqual([
       expect.objectContaining({ domainPadding: { kind: 'range', lower: 2, upper: 8 } }),
       expect.objectContaining({ domainPadding: { kind: 'range', lower: 7, upper: 3 } }),
     ]);
-    expect(resolveChart(ratioSource, ScatterChartDefinition, runtime).plot.scales.slice(0, 2)).toEqual([
+    expect(resolveChart(ratioSource, scatterChartDefinition, runtime).plot.scales.slice(0, 2)).toEqual([
       expect.objectContaining({ domainPadding: { kind: 'ratio', lower: 0.02, upper: 0.1 } }),
       expect.objectContaining({ domainPadding: { kind: 'ratio', lower: 0, upper: 0 } }),
     ]);
-    expect(resolveChart(reversedSource, ScatterChartDefinition, runtime).plot.scales).toEqual([
+    expect(resolveChart(reversedSource, scatterChartDefinition, runtime).plot.scales).toEqual([
       expect.objectContaining({ name: 'xScale', domainPadding: { kind: 'range', lower: 8, upper: 2 } }),
       expect.objectContaining({ name: 'yScale', domainPadding: { kind: 'range', lower: 3, upper: 9 } }),
     ]);
@@ -691,7 +691,7 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    const result = resolveChart(source, ScatterChartDefinition, runtime);
+    const result = resolveChart(source, scatterChartDefinition, runtime);
 
     expect(result.plot.scales).toEqual([
       { type: 'log', name: '__chart.scatter.scale.y' },
@@ -723,13 +723,13 @@ describe('点 Chart 配方定义', () => {
       },
     });
 
-    const result = resolveChart(axisPadding, ScatterChartDefinition, runtime);
+    const result = resolveChart(axisPadding, scatterChartDefinition, runtime);
 
     expect(result.plot.scales.slice(0, 2)).toEqual([
       expect.objectContaining({ domainPadding: { kind: 'range', lower: 2, upper: 2 } }),
       expect.objectContaining({ domainPadding: { kind: 'range', lower: 3, upper: 3 } }),
     ]);
-    expect(() => resolveChart(sidePadding, ScatterChartDefinition, runtime)).toThrowError(
+    expect(() => resolveChart(sidePadding, scatterChartDefinition, runtime)).toThrowError(
       expect.objectContaining({
         details: expect.objectContaining({ path: ['recipe', 'properties', 'domainPadding', 'left'] }),
       }),
@@ -787,7 +787,7 @@ describe('点 Chart 配方定义', () => {
 
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: ScatterChartDefinition,
+      recipe: scatterChartDefinition,
       chartThemeDefinitions: [],
       runtime,
     });
@@ -800,7 +800,7 @@ describe('点 Chart 配方定义', () => {
 
   it('Connected Scatter 在 Point 之前发出有序的开放 Path', () => {
     const result = resolve(
-      ConnectedScatterChartDefinition,
+      connectedScatterChartDefinition,
       { x: 'x', y: 'y', order: 'year' },
       { point: { size: 4 }, path: { strokeWidth: 2, dashPattern: [4, 2], connectNulls: true } },
     );
@@ -821,7 +821,7 @@ describe('点 Chart 配方定义', () => {
   });
 
   it('连接的 Scatter 系列将 Path 分组，并与 Point 共享一个色标', () => {
-    const result = resolve(ConnectedScatterChartDefinition, { x: 'x', y: 'y', order: 'year', series: 'country' });
+    const result = resolve(connectedScatterChartDefinition, { x: 'x', y: 'y', order: 'year', series: 'country' });
     const [path, point] = result.semanticMarks[0].plotMarks;
 
     expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'color' });
@@ -835,7 +835,7 @@ describe('点 Chart 配方定义', () => {
 
   it('连接散点显式点颜色覆盖继承的系列颜色', () => {
     const result = resolve(
-      ConnectedScatterChartDefinition,
+      connectedScatterChartDefinition,
       { x: 'x', y: 'y', order: 'year', series: 'country' },
       { point: { color: '#dc2626' }, path: { stroke: '#16a34a' } },
     );
@@ -847,7 +847,7 @@ describe('点 Chart 配方定义', () => {
 
   it('远程点发出一个带有端点字形和共享编写角色的投影 Relation', () => {
     const result = resolve(
-      RangedDotChartDefinition,
+      rangedDotChartDefinition,
       { category: 'country', start: 'before', end: 'after' },
       {
         point: { size: 4, strokeWidth: 1 },
@@ -888,7 +888,7 @@ describe('点 Chart 配方定义', () => {
   });
 
   it('范围点在连接器和端点之间共享一种色标', () => {
-    const result = resolve(RangedDotChartDefinition, {
+    const result = resolve(rangedDotChartDefinition, {
       category: 'country',
       start: 'before',
       end: 'after',
@@ -919,7 +919,7 @@ describe('点 Chart 配方定义', () => {
     });
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: RangedDotChartDefinition,
+      recipe: rangedDotChartDefinition,
       chartThemeDefinitions: [],
       runtime: rangedDotRuntime,
     });
@@ -946,7 +946,7 @@ describe('点 Chart 配方定义', () => {
     });
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: RangedDotChartDefinition,
+      recipe: rangedDotChartDefinition,
       chartThemeDefinitions: [],
       runtime: rangedDotRuntime,
     });
@@ -974,7 +974,7 @@ describe('点 Chart 配方定义', () => {
     });
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: RangedDotChartDefinition,
+      recipe: rangedDotChartDefinition,
       chartThemeDefinitions: [],
       runtime: rangedDotRuntime,
     });
@@ -1002,7 +1002,7 @@ describe('点 Chart 配方定义', () => {
   });
 
   it('将点偏移和标签作为原始标记属性转发一次', () => {
-    const result = resolve(ScatterChartDefinition, { x: 'x', y: 'y' }, { dx: 3, dy: -2, label: { text: 'A' } });
+    const result = resolve(scatterChartDefinition, { x: 'x', y: 'y' }, { dx: 3, dy: -2, label: { text: 'A' } });
     const [mark] = result.semanticMarks[0].plotMarks;
 
     expect(mark).toMatchObject({ properties: { dx: 3, dy: -2, label: { text: 'A' } } });
@@ -1010,7 +1010,7 @@ describe('点 Chart 配方定义', () => {
 
   it('回归添加有序拟合，无需重复观察，并继承采样和风格', () => {
     const result = resolve(
-      RegressionChartDefinition,
+      regressionChartDefinition,
       { x: 'x', y: 'y' },
       {
         sampleCount: 12,
@@ -1049,7 +1049,7 @@ describe('点 Chart 配方定义', () => {
 
   it('回归保留系列拟合，而仅显式额外描边覆盖系列颜色', () => {
     const result = resolve(
-      RegressionChartDefinition,
+      regressionChartDefinition,
       { x: 'x', y: 'y', series: 'species' },
       {
         trend: { stroke: '#f00' },
@@ -1095,7 +1095,7 @@ describe('点 Chart 配方定义', () => {
           ],
         },
       });
-      const result = resolveChart(source, RegressionChartDefinition, regressionRuntime);
+      const result = resolveChart(source, regressionChartDefinition, regressionRuntime);
 
       expect(result.plot.marks.map(mark => mark.type)).toEqual(
         extraMethods?.length === 0 ? ['point', 'path'] : ['point', 'path', 'path'],
@@ -1117,7 +1117,7 @@ describe('点 Chart 配方定义', () => {
 
   it('回归创建一个点加上标记局部平滑 Path 语义组', () => {
     const result = resolve(
-      RegressionChartDefinition,
+      regressionChartDefinition,
       { x: 'sepalLength', y: 'petalLength' },
       {
         method: { kind: 'quadratic' },
@@ -1178,7 +1178,7 @@ describe('点 Chart 配方定义', () => {
     });
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: RegressionChartDefinition,
+      recipe: regressionChartDefinition,
       chartThemeDefinitions: [],
       runtime: regressionRuntime,
     });
@@ -1200,7 +1200,7 @@ describe('点 Chart 配方定义', () => {
     });
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: RegressionChartDefinition,
+      recipe: regressionChartDefinition,
       chartThemeDefinitions: [],
       runtime: regressionRuntime,
     });
@@ -1230,7 +1230,7 @@ describe('点 Chart 配方定义', () => {
     });
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: ConnectedScatterChartDefinition,
+      recipe: connectedScatterChartDefinition,
       chartThemeDefinitions: [],
       runtime: connectedScatterRuntime,
     });
@@ -1245,7 +1245,7 @@ describe('点 Chart 配方定义', () => {
 
   it('回归系列驱动一个共享序数标识、Smooth groupBy 和默认图例', () => {
     const scale = '__chart.regression.scale.series';
-    const result = resolve(RegressionChartDefinition, {
+    const result = resolve(regressionChartDefinition, {
       x: 'sepalLength',
       y: 'petalLength',
       series: { field: 'species', scale },
@@ -1297,7 +1297,7 @@ describe('点 Chart 配方定义', () => {
     });
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: RegressionChartDefinition,
+      recipe: regressionChartDefinition,
       chartThemeDefinitions: [],
       runtime: regressionRuntime,
     });
@@ -1346,7 +1346,7 @@ describe('点 Chart 配方定义', () => {
     });
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: RegressionChartDefinition,
+      recipe: regressionChartDefinition,
       chartThemeDefinitions: [],
       runtime: regressionRuntime,
     });
@@ -1361,7 +1361,7 @@ describe('点 Chart 配方定义', () => {
   });
 
   it('Bubble 创建具有继承大小和默认大小图例的 Point 语义标记', () => {
-    const result = resolve(BubbleChartDefinition, {
+    const result = resolve(bubbleChartDefinition, {
       x: 'income',
       y: 'lifeExpectancy',
       size: 'population',
@@ -1416,7 +1416,7 @@ describe('点 Chart 配方定义', () => {
 
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: BubbleChartDefinition,
+      recipe: bubbleChartDefinition,
       chartThemeDefinitions: [],
       runtime: bubbleRuntime,
     });
@@ -1448,7 +1448,7 @@ describe('点 Chart 配方定义', () => {
 
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: BubbleChartDefinition,
+      recipe: bubbleChartDefinition,
       chartThemeDefinitions: [],
       runtime: bubbleRuntime,
     });
@@ -1465,7 +1465,7 @@ describe('点 Chart 配方定义', () => {
   });
 
   it('Scatter 创建点语义标记和笛卡尔支架', () => {
-    const result = resolve(ScatterChartDefinition, { x: 'amount', y: 'margin', size: 'weight' });
+    const result = resolve(scatterChartDefinition, { x: 'amount', y: 'margin', size: 'weight' });
 
     expect(result.semanticMarks).toHaveLength(1);
     expect(result.semanticMarks[0]).toMatchObject({
@@ -1497,7 +1497,7 @@ describe('点 Chart 配方定义', () => {
 
     const result = resolveSelectedChart(source, {
       theme: DEFAULT_RESOLVED_THEME,
-      recipe: ScatterChartDefinition,
+      recipe: scatterChartDefinition,
       chartThemeDefinitions: [],
       runtime,
     });
@@ -1509,7 +1509,7 @@ describe('点 Chart 配方定义', () => {
 
 describe('点 Chart 标记', () => {
   it('当另一个属性显式时，气泡标记继承配方尺寸', () => {
-    const result = BubbleMarkDefinition.resolve({
+    const result = bubbleMarkDefinition.resolve({
       chartType: 'bubble',
       source: { kind: 'bubble', properties: { opacity: 0.5 } },
       inherited: {
@@ -1525,7 +1525,7 @@ describe('点 Chart 标记', () => {
   });
 
   it('气泡标记允许显式外观覆盖其默认值', () => {
-    const result = BubbleMarkDefinition.resolve({
+    const result = bubbleMarkDefinition.resolve({
       chartType: 'bubble',
       source: {
         kind: 'bubble',
@@ -1543,7 +1543,7 @@ describe('点 Chart 标记', () => {
   });
 
   it('散点标记继承 x/y 并让显式属性覆盖继承的值', () => {
-    const result = ScatterMarkDefinition.resolve({
+    const result = scatterMarkDefinition.resolve({
       chartType: 'scatter',
       source: { kind: 'scatter', properties: { opacity: 0 } },
       inherited: {
@@ -1560,7 +1560,7 @@ describe('点 Chart 标记', () => {
   });
 
   it('让显式标记编码覆盖继承的编码和显式属性', () => {
-    const result = ScatterMarkDefinition.resolve({
+    const result = scatterMarkDefinition.resolve({
       chartType: 'scatter',
       source: {
         kind: 'scatter',
@@ -1596,7 +1596,7 @@ describe('点 autoPadding 策略', () => {
         data: { reference: 'rows' },
         recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' }, properties: { size: 10, autoPadding } },
       });
-      const plot = resolveChart(source, ScatterChartDefinition, runtime).plot;
+      const plot = resolveChart(source, scatterChartDefinition, runtime).plot;
       const result = lowerPlotWithLineage(
         { ...plot, width: 200, height: 200, guides: [] },
         { rows: data },
@@ -1616,13 +1616,13 @@ describe('点 autoPadding 策略', () => {
       data: { reference: 'rows' },
       recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' }, properties: { size: 10 } },
     };
-    const original = resolveChart(ScatterChartSchema.parse(source), ScatterChartDefinition, runtime).plot;
+    const original = resolveChart(ScatterChartSchema.parse(source), scatterChartDefinition, runtime).plot;
     const explicit = resolveChart(
       ScatterChartSchema.parse({
         ...source,
         recipe: { ...source.recipe, properties: { size: 10, autoPadding: 'max-radius' } },
       }),
-      ScatterChartDefinition,
+      scatterChartDefinition,
       runtime,
     ).plot;
 
@@ -1633,7 +1633,7 @@ describe('点 autoPadding 策略', () => {
         ...source,
         recipe: { ...source.recipe, properties: { autoPadding: 'point-aware', domainPadding: { left: 0 } } },
       }),
-      ScatterChartDefinition,
+      scatterChartDefinition,
       runtime,
     ).plot;
 
@@ -1653,7 +1653,7 @@ describe('点 autoPadding 策略', () => {
         properties: { autoPadding: 'point-aware', domainPadding: 0 },
       },
     });
-    const result = resolveChart(source, ScatterChartDefinition, runtime).plot;
+    const result = resolveChart(source, scatterChartDefinition, runtime).plot;
 
     expect(result.marks[0].id).toBeUndefined();
     expect(result.scales).toEqual(expect.arrayContaining([expect.objectContaining({ domainPadding: 0 })]));
@@ -1714,7 +1714,7 @@ describe('点感知最终标记选择', () => {
         ],
       },
     });
-    const result = resolveChart(source, ScatterChartDefinition, runtime).plot;
+    const result = resolveChart(source, scatterChartDefinition, runtime).plot;
     const ids = result.marks.map(mark => mark.id);
 
     expect(ids).toEqual([undefined, undefined, '__chart.mark.0']);
@@ -1741,7 +1741,7 @@ describe('点 autoPadding 间隙', () => {
           properties: { size: 10, autoPadding, domainPadding },
         },
       }),
-      ScatterChartDefinition,
+      scatterChartDefinition,
       runtime,
     ).plot;
   it.each(['max-radius', 'point-aware'])('转发 %s 简写和对象策略', kind => {
@@ -1793,7 +1793,7 @@ describe('回归隐藏观测值', () => {
           ],
         },
       }),
-      RegressionChartDefinition,
+      regressionChartDefinition,
       runtime,
     ).plot;
   it('默认情况下以及明确禁用时保留观察结果', () => {
@@ -1816,7 +1816,7 @@ describe('回归隐藏观测值', () => {
 });
 
 it('仅填充标记覆盖保留继承的整体字段', () => {
-  const result = ScatterMarkDefinition.resolve({
+  const result = scatterMarkDefinition.resolve({
     chartType: 'scatter',
     source: { kind: 'scatter', properties: { opacity: { fill: 0 } } },
     inherited: {

@@ -2,7 +2,7 @@ import type { InputEmbedContext } from '@retikz/vanilla';
 import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { embedPlot, plot, PlotInputEmbedAdapter, plotIROf } from '../src';
+import { embedPlot, plot, plotInputEmbedAdapter, plotIROf } from '../src';
 
 const contextOf = (id: string): InputEmbedContext => ({
   id,
@@ -70,7 +70,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
 
     expect(input.input).not.toHaveProperty('namespace');
     expect(input.input).not.toHaveProperty('type');
-    expect(PlotInputEmbedAdapter.lower(input, contextOf('panel')).node).toMatchObject({
+    expect(plotInputEmbedAdapter.lower(input, contextOf('panel')).node).toMatchObject({
       namespace: 'plot',
       type: 'plot',
       id: 'sales',
@@ -79,14 +79,14 @@ describe('Plot Vanilla Tier2 适配器', () => {
 
   it('显式 IRPlot source 直接复用原 IR 对象', () => {
     const spec = salesSpec('sales');
-    const contribution = PlotInputEmbedAdapter.lower({ spec, datasets }, contextOf('panel'));
+    const contribution = plotInputEmbedAdapter.lower({ spec, datasets }, contextOf('panel'));
 
     expect(contribution.node).toBe(spec);
   });
 
   it('公开一个 Plot 拥有的贡献生成器以获取完整的 IRplot 输入', () => {
     const spec = salesSpec('sales');
-    const result = PlotInputEmbedAdapter.lower(
+    const result = plotInputEmbedAdapter.lower(
       { spec, datasets, lowerOptions: { layout: { width: 360, height: 200 } } },
       contextOf('panel'),
     );
@@ -121,39 +121,39 @@ describe('Plot Vanilla Tier2 适配器', () => {
       ],
     });
     const svg = renderToSvgString(inputScene, {
-      adapters: [PlotInputEmbedAdapter],
+      adapters: [plotInputEmbedAdapter],
       output: { width: 360, height: 200 },
     });
 
     expect(svg).toContain('<rect');
     expect(spec).toEqual(input);
-    expect(normalizeScene(inputScene, { adapters: [PlotInputEmbedAdapter] }).runtimeMeta.layers[0].childIds).toEqual([
+    expect(normalizeScene(inputScene, { adapters: [plotInputEmbedAdapter] }).runtimeMeta.layers[0].childIds).toEqual([
       'sales',
     ]);
   });
 
   it('保持 lineage 在 IRPlot、Core IR 与 Scene meta 之外', () => {
     const inputScene = scene([embedPlot({ spec: salesSpec('sales') }, datasets)]);
-    const normalized = normalizeScene(inputScene, { adapters: [PlotInputEmbedAdapter] });
+    const normalized = normalizeScene(inputScene, { adapters: [plotInputEmbedAdapter] });
 
     expect(JSON.stringify(normalized.ir)).not.toContain('lineage');
-    expect(renderToSvgString(inputScene, { adapters: [PlotInputEmbedAdapter] })).not.toContain('lineage');
+    expect(renderToSvgString(inputScene, { adapters: [plotInputEmbedAdapter] })).not.toContain('lineage');
   });
 
   it('保留显式 root identity 且不为匿名 spec 派生 id', () => {
     const named = salesSpec('sales');
     const anonymous = salesSpec();
 
-    expect(PlotInputEmbedAdapter.lower({ spec: named, datasets }, contextOf('panel')).node).toMatchObject({
+    expect(plotInputEmbedAdapter.lower({ spec: named, datasets }, contextOf('panel')).node).toMatchObject({
       id: 'sales',
     });
-    expect(PlotInputEmbedAdapter.lower({ spec: anonymous, datasets }, contextOf('panel')).node).not.toHaveProperty(
+    expect(plotInputEmbedAdapter.lower({ spec: anonymous, datasets }, contextOf('panel')).node).not.toHaveProperty(
       'id',
     );
     expect(named.id).toBe('sales');
     expect(anonymous.id).toBeUndefined();
 
-    const contribution = PlotInputEmbedAdapter.lower(
+    const contribution = plotInputEmbedAdapter.lower(
       {
         spec: salesSpec('sales'),
         datasets,
@@ -177,8 +177,8 @@ describe('Plot Vanilla Tier2 适配器', () => {
 
   it('同一 adapter 的多个 lower 贡献完整依赖闭包并复用稳定 provider maker', () => {
     const spec = salesSpec();
-    const first = PlotInputEmbedAdapter.lower({ spec, datasets }, contextOf('first'));
-    const second = PlotInputEmbedAdapter.lower({ spec, datasets }, contextOf('second'));
+    const first = plotInputEmbedAdapter.lower({ spec, datasets }, contextOf('first'));
+    const second = plotInputEmbedAdapter.lower({ spec, datasets }, contextOf('second'));
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
@@ -210,7 +210,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
   it('缺失 dataset reference 时 fail-loud', () => {
     const inputScene = scene([embedPlot({ spec: salesSpec() }, {})]);
 
-    expect(() => renderToSvgString(inputScene, { adapters: [PlotInputEmbedAdapter] })).toThrow(/sales/i);
+    expect(() => renderToSvgString(inputScene, { adapters: [plotInputEmbedAdapter] })).toThrow(/sales/i);
   });
 
   it('重用 Source id 并保留匿名 Source 而不发明 id', () => {
@@ -219,7 +219,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
 
     expect(embedPlot({ spec: named }, datasets)).toMatchObject({ id: 'sales', props: { spec: named } });
     expect(embedPlot({ spec: anonymous }, datasets)).not.toHaveProperty('id');
-    expect(PlotInputEmbedAdapter.lower({ spec: anonymous, datasets }, contextOf('runtime')).node).not.toHaveProperty(
+    expect(plotInputEmbedAdapter.lower({ spec: anonymous, datasets }, contextOf('runtime')).node).not.toHaveProperty(
       'id',
     );
   });

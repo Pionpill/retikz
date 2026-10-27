@@ -1,12 +1,12 @@
 import type { IRScene } from '@retikz/core';
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import {
-  DiamondArrowDefinition,
-  CircleClipDefinition,
-  CompoundClipDefinition,
-  CrossShapeDefinition,
+  diamondArrowDefinition,
+  circleClipDefinition,
+  compoundClipDefinition,
+  crossShapeDefinition,
   createRibbonProviderContribution,
-  RibbonPathDefinition,
+  ribbonPathDefinition,
 } from '@retikz/extension';
 import { Layout } from '@retikz/react';
 import { renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
@@ -53,10 +53,10 @@ const source: IRScene = {
 };
 
 const definitions = {
-  shapes: [CrossShapeDefinition],
-  arrows: [DiamondArrowDefinition],
-  clips: [CompoundClipDefinition, CircleClipDefinition],
-  paths: [RibbonPathDefinition],
+  shapes: [crossShapeDefinition],
+  arrows: [diamondArrowDefinition],
+  clips: [compoundClipDefinition, circleClipDefinition],
+  paths: [ribbonPathDefinition],
 } as const;
 
 describe('扩展根条目集成', () => {
@@ -75,7 +75,7 @@ describe('扩展根条目集成', () => {
 
     expect(() => renderToSvgString(input)).toThrow(/cross/);
 
-    const svg = renderToSvgString(input, { compile: { shapes: [CrossShapeDefinition] } });
+    const svg = renderToSvgString(input, { compile: { shapes: [crossShapeDefinition] } });
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('#38bdf8');

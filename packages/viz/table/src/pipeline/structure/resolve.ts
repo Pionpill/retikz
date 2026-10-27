@@ -12,15 +12,15 @@ import {
   TableVerticalAlignment,
 } from '../../schemas';
 import { deepFreeze } from '../../shared';
+import { assertTableStructureOutput } from './assert';
 import { createTableStructureContext } from './context';
-import type { NormalizeTableStructureOptions } from './types';
-import { validateTableStructureOutput } from './validate';
+import type { TableStructureResolveOptions } from './types';
 
 const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
 const createSemanticTableModel = (
   output: TableStructureOutput,
-  defaultCellLayout: NormalizeTableStructureOptions['defaultCellLayout'],
+  defaultCellLayout: TableStructureResolveOptions['defaultCellLayout'],
 ): SemanticTableModel =>
   deepFreeze({
     rows: output.rows.map((row, index) => ({ ...row, index })),
@@ -52,9 +52,9 @@ const createSemanticTableModel = (
   });
 
 /** 把任意注册的 structure operation 规范化为 canonical SemanticTableModel */
-export const normalizeTableStructure = (
+export const resolveTableStructure = (
   operation: IRTableStructureOperation,
-  options: NormalizeTableStructureOptions = {},
+  options: TableStructureResolveOptions = {},
 ): SemanticTableModel => {
   const kind = operation.kind;
   const prefix = `table: structure "${kind}"`;
@@ -68,7 +68,7 @@ export const normalizeTableStructure = (
     const output = deepFreeze(structuredClone(providerOutput));
     const manualRows =
       operation.kind === TableStructureKind.Manual ? (operation as IRManualTableStructure).rows : undefined;
-    validateTableStructureOutput(
+    assertTableStructureOutput(
       output,
       {
         kind: preciseOperation.kind,

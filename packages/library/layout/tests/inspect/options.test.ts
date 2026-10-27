@@ -2,7 +2,7 @@ import { compileInspectionToScene, createInspectorRegistry, defineInspector } fr
 import { describe, expect, it, vi } from 'vitest';
 import { toJSONSchema } from 'zod';
 
-import { createFlexLayout, FlexLayoutDefinition, LayoutItemKind } from '../../src';
+import { createFlexLayout, flexLayoutDefinition, LayoutItemKind } from '../../src';
 import {
   createLayoutInspectionSelection,
   FLEX_LAYOUT_INSPECT_PRESETS,
@@ -46,7 +46,7 @@ describe('Layout 检查选项', () => {
       },
       {
         registry: createInspectorRegistry([defineInspector({ ...FLEX_LAYOUT_INSPECTOR, inspect })]),
-        compileOptions: { composites: [FlexLayoutDefinition] },
+        compileOptions: { composites: [flexLayoutDefinition] },
         selection: {
           rules: [
             {

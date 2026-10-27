@@ -7,9 +7,9 @@ import {
   createFlexLayout,
   createGridLayout,
   createOverlayLayout,
-  FlexLayoutDefinition,
-  GridLayoutDefinition,
-  OverlayLayoutDefinition,
+  flexLayoutDefinition,
+  gridLayoutDefinition,
+  overlayLayoutDefinition,
   LayoutItemKind,
 } from '../src';
 
@@ -35,7 +35,7 @@ describe('Layout 准备子输入', () => {
     for (const container of containers) {
       const source: IRScene = { type: 'scene', version: 1, children: [container] };
       const output = compileToScene(source, {
-        composites: [leaf, FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
+        composites: [leaf, flexLayoutDefinition, gridLayoutDefinition, overlayLayoutDefinition],
         compositeInputs: createCompositeInputBindings(source, [
           { path: ['children', 0, 'children', 0, 'child'], input: 'prepared-layout-child' },
         ]),

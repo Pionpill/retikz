@@ -6,10 +6,10 @@ import {
   createFlexLayout,
   createGridLayout,
   createOverlayLayout,
-  FlexLayoutDefinition,
-  GridLayoutDefinition,
+  flexLayoutDefinition,
+  gridLayoutDefinition,
   LayoutItemKind,
-  OverlayLayoutDefinition,
+  overlayLayoutDefinition,
 } from '../../src';
 import {
   FLEX_LAYOUT_INSPECTOR,
@@ -75,7 +75,7 @@ describe('Layout 检查编译集成', () => {
           ],
         },
         compileOptions: {
-          composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
+          composites: [flexLayoutDefinition, gridLayoutDefinition, overlayLayoutDefinition],
           padding: 0,
         },
       },

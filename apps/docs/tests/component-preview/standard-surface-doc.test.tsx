@@ -30,8 +30,8 @@ describe('Standard Surface 文档', () => {
     );
 
     expect(vanilla.code).toContain('surfaceChild(grid(');
-    expect(vanilla.code).toContain('GridInputEmbedAdapter');
-    expect(vanilla.code).toContain('SurfaceInputEmbedAdapter');
+    expect(vanilla.code).toContain('gridInputEmbedAdapter');
+    expect(vanilla.code).toContain('surfaceInputEmbedAdapter');
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('<path');
   });
@@ -55,9 +55,9 @@ describe('Standard Surface 文档', () => {
     for (const source of [readPage('zh'), readPage('en')]) {
       for (const value of [
         'SurfaceSchema',
-        'SurfaceDefinition',
-        'SurfaceProvider',
-        'SurfaceInputEmbedAdapter',
+        'surfaceDefinition',
+        'surfaceProvider',
+        'surfaceInputEmbedAdapter',
         'surfaceChild',
         'surface-basic',
         'surface-overflow',

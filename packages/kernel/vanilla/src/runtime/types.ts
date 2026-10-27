@@ -12,10 +12,10 @@ import type { VanillaViewMode } from './constants';
 export { VanillaViewMode } from './constants';
 
 /** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla InputScene */
-export type RenderInput = Scene | IRScene | InputScene;
+export type InputRender = Scene | IRScene | InputScene;
 
 /** 可进入 retained Runtime 的未编译输入 */
-export type RetainedRenderInput = IRScene | InputScene;
+export type InputRetainedRender = IRScene | InputScene;
 
 /** 输出资源与显示尺寸选项 */
 export type VanillaOutputOptions = {
@@ -177,7 +177,7 @@ export type RetainedSvgView = VanillaViewState<SVGSVGElement> &
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Retained;
     /** 原子提交下一份未编译输入与可变 renderer config */
-    update: (next: RetainedRenderInput, options?: RetainedSvgUpdateOptions) => void;
+    update: (next: InputRetainedRender, options?: RetainedSvgUpdateOptions) => void;
     /** 返回并清空 Runtime diagnostics */
     diagnostics: () => ReadonlyArray<ReconcilerDiagnostic>;
   }>;
@@ -197,7 +197,7 @@ export type StaticRawSvgView = VanillaViewState<SVGSVGElement> &
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Static;
     /** 完整归一化、编译并重绘下一份 IR 或 InputScene */
-    update: (next: RetainedRenderInput) => void;
+    update: (next: InputRetainedRender) => void;
   }>;
 
 /** `mountSvg` 返回的可判别 view */
@@ -251,7 +251,7 @@ export type RetainedCanvasView = CanvasViewState &
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Retained;
     /** 原子提交下一份未编译输入与可变 renderer config */
-    update: (next: RetainedRenderInput, options?: RetainedCanvasUpdateOptions) => void;
+    update: (next: InputRetainedRender, options?: RetainedCanvasUpdateOptions) => void;
     /** 返回并清空 Runtime diagnostics */
     diagnostics: () => ReadonlyArray<ReconcilerDiagnostic>;
   }>;
@@ -271,7 +271,7 @@ export type StaticRawCanvasView = CanvasViewState &
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Static;
     /** 完整归一化、编译并重绘下一份 IR 或 InputScene */
-    update: (next: RetainedRenderInput) => void;
+    update: (next: InputRetainedRender) => void;
   }>;
 
 /** `mountCanvas` 返回的可判别 view */

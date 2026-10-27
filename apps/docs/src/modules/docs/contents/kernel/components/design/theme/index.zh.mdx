@@ -36,13 +36,13 @@ Kernel 通过 Core 提供默认中性配色，支持 `light` 与 `dark` 两种�
 
 ## 数据结构
 
-主题分为两份不同用途的数据：`IRTheme` 保存作者选择，`ResolvedTheme` 是编译当前位置供组合读取的有效环境。
+主题分为两份不同用途的数据：`IRTheme` 保存作者选择，`CanonicalTheme` 是编译当前位置供组合读取的有效环境。
 
-| 数据                  | 字段                      | 含义                       |
-| --------------------- | ------------------------- | -------------------------- |
-| `IRTheme`             | `name?`、`mode?`          | 稀疏选择，省略字段沿用外层 |
-| `ResolvedTheme`       | `name?`、`mode`、`colors` | 继承和风格解析后的只读结果 |
-| `ResolvedThemeColors` | `semantic`、`categorical` | 共享语义色与当前分类色板   |
+| 数据                   | 字段                      | 含义                       |
+| ---------------------- | ------------------------- | -------------------------- |
+| `IRTheme`              | `name?`、`mode?`          | 稀疏选择，省略字段沿用外层 |
+| `CanonicalTheme`       | `name?`、`mode`、`colors` | 继承和风格解析后的只读结果 |
+| `CanonicalThemeColors` | `semantic`、`categorical` | 共享语义色与当前分类色板   |
 
 下面只展示数据形状；`Color` 代表 CSS 颜色字符串，不是新增的公开类型：
 
@@ -51,7 +51,7 @@ IRTheme
   style?: string
   mode?: 'light' | 'dark'
 
-ResolvedTheme
+CanonicalTheme
   style?: string
   mode: 'light' | 'dark'
   colors

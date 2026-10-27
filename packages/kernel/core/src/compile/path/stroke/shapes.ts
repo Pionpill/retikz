@@ -25,7 +25,7 @@ type StrokeShapeStep = Extract<
 >;
 
 /** shape step 降级所需的共享上下文 */
-type LowerShapeStepContext = {
+type ShapeStepLoweringContext = {
   /** resolving 阶段绑定的 target view */
   targetView: PathTargetView;
   /** 当前 scope 的累计变换链 */
@@ -53,7 +53,7 @@ export const isStrokeShapeStep = (step: CanonicalStep): step is StrokeShapeStep 
 const resolvePartialClosed = (
   closed: 'closed' | 'chord' | 'open' | 'sector',
   index: number,
-  warn: LowerShapeStepContext['warn'],
+  warn: ShapeStepLoweringContext['warn'],
 ): 'chord' | 'open' | 'sector' => {
   if (closed === 'open') return 'open';
   if (closed === 'sector') return 'sector';
@@ -72,7 +72,7 @@ const resolvePartialClosed = (
  * 将 shape family step 降级为 path commands
  * @returns `false` 表示 target clipping 或 provider 解析失败，调用方应跳过整个 path
  */
-export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: LowerShapeStepContext): boolean => {
+export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: ShapeStepLoweringContext): boolean => {
   const { targetView, scopeChain, warn, commandEmitter, cursor, sampling } = context;
   const { boundsPoints, emitMove, emitLine, emitClose, emitCubic, emitArc, emitEllipseArc, startSegment } =
     commandEmitter;

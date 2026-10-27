@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -9,7 +9,7 @@ import { resolveFlowThemeRegistry } from '../../src/flow/providers';
 import { resolveFlowDiagram } from '../../src/flow/resolve';
 import { parseTestFlowDiagram } from './fixtures';
 
-const themeWith = (overrides: Partial<ResolvedTheme>): ResolvedTheme => ({
+const themeWith = (overrides: Partial<CanonicalTheme>): CanonicalTheme => ({
   ...DEFAULT_RESOLVED_THEME,
   ...overrides,
 });

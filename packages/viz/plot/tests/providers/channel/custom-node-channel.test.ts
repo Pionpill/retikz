@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { markChannelEncoding, channelField } from '../../../src/contract';
 import type { AnyChannelDefinition } from '../../../src/contract';
 import { ChannelDefinitionKind, defineNodeChannel, definePathChannel, defineScopeChannel } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
@@ -152,7 +152,7 @@ const lineWeightChannel = definePathChannel<number>({
   },
 });
 
-const opts = (defs?: Array<AnyChannelDefinition>): LowerPlotsOptions => ({
+const opts = (defs?: Array<AnyChannelDefinition>): PlotsLoweringOptions => ({
   layout: { width: 480, height: 300 },
   definitions: { channels: defs },
 });
@@ -221,7 +221,7 @@ const scopesOf = (scope: IRScope): Array<IRScope> => {
 const firstLayer = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
 ): IRScope => {
   return (lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope)
     .children[0] as IRScope;
@@ -230,7 +230,7 @@ const firstLayer = (
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
 ): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };

@@ -1,4 +1,4 @@
-import type { IRDropShadow, ResolvedDropShadow, ShadowPreset, StrokeDashPattern } from '../../schemas';
+import type { IRDropShadow, CanonicalDropShadow, ShadowPreset, StrokeDashPattern } from '../../schemas';
 import { SHADOW_PRESETS } from '../../schemas';
 
 /** 虚线预设 */
@@ -11,7 +11,7 @@ const DOTTED_PATTERN: StrokeDashPattern = [1, 2];
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 
 /** 合并阴影预设与显式配置；未提供阴影或合并后缺少任一偏移量时返回 undefined */
-export const resolveDropShadow = (shadow: ShadowPreset | IRDropShadow | undefined): ResolvedDropShadow | undefined => {
+export const resolveDropShadow = (shadow: ShadowPreset | IRDropShadow | undefined): CanonicalDropShadow | undefined => {
   if (shadow === undefined) return undefined;
 
   if (typeof shadow === 'string') {

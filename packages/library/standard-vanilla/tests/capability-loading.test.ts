@@ -1,38 +1,38 @@
-import { StandardInputEmbedAdapters } from '@retikz/standard-vanilla';
+import { standardInputEmbedAdapters } from '@retikz/standard-vanilla';
 import {
-  TreeInputEmbedAdapter,
-  QueueInputEmbedAdapter,
-  StackInputEmbedAdapter,
-  ChainInputEmbedAdapter,
-  MatrixInputEmbedAdapter,
-  ArrayInputEmbedAdapter,
-  MapInputEmbedAdapter,
+  treeInputEmbedAdapter,
+  queueInputEmbedAdapter,
+  stackInputEmbedAdapter,
+  chainInputEmbedAdapter,
+  matrixInputEmbedAdapter,
+  arrayInputEmbedAdapter,
+  mapInputEmbedAdapter,
 } from '@retikz/standard-vanilla/collection';
 import {
   axes,
-  AxesInputEmbedAdapter,
+  axesInputEmbedAdapter,
   frame,
-  FrameInputEmbedAdapter,
+  frameInputEmbedAdapter,
   grid,
-  GridInputEmbedAdapter,
+  gridInputEmbedAdapter,
   legend,
-  LegendInputEmbedAdapter,
+  legendInputEmbedAdapter,
   surface,
   surfaceChild,
-  SurfaceInputEmbedAdapter,
+  surfaceInputEmbedAdapter,
 } from '@retikz/standard-vanilla/presentation';
-import { createGrid, GridDefinition, LegendContentKind } from '@retikz/standard/presentation';
+import { createGrid, gridDefinition, LegendContentKind } from '@retikz/standard/presentation';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import {
-  CircleInputEmbedAdapter,
-  EllipseInputEmbedAdapter,
-  RectangleInputEmbedAdapter,
-  PolygonInputEmbedAdapter,
-  StarInputEmbedAdapter,
-  ArcInputEmbedAdapter,
-  SectorInputEmbedAdapter,
+  circleInputEmbedAdapter,
+  ellipseInputEmbedAdapter,
+  rectangleInputEmbedAdapter,
+  polygonInputEmbedAdapter,
+  starInputEmbedAdapter,
+  arcInputEmbedAdapter,
+  sectorInputEmbedAdapter,
 } from '../src/shape';
 
 const input = scene({
@@ -52,40 +52,40 @@ const input = scene({
 
 describe('Standard Vanilla 定义加载', () => {
   it('以稳定的冻结顺序提供当前适配器目录', () => {
-    expect(StandardInputEmbedAdapters).toEqual([
-      TreeInputEmbedAdapter,
-      QueueInputEmbedAdapter,
-      StackInputEmbedAdapter,
-      ChainInputEmbedAdapter,
-      MatrixInputEmbedAdapter,
-      MapInputEmbedAdapter,
-      ArrayInputEmbedAdapter,
-      GridInputEmbedAdapter,
-      AxesInputEmbedAdapter,
-      FrameInputEmbedAdapter,
-      SurfaceInputEmbedAdapter,
-      LegendInputEmbedAdapter,
-      CircleInputEmbedAdapter,
-      EllipseInputEmbedAdapter,
-      RectangleInputEmbedAdapter,
-      PolygonInputEmbedAdapter,
-      StarInputEmbedAdapter,
-      ArcInputEmbedAdapter,
-      SectorInputEmbedAdapter,
+    expect(standardInputEmbedAdapters).toEqual([
+      treeInputEmbedAdapter,
+      queueInputEmbedAdapter,
+      stackInputEmbedAdapter,
+      chainInputEmbedAdapter,
+      matrixInputEmbedAdapter,
+      mapInputEmbedAdapter,
+      arrayInputEmbedAdapter,
+      gridInputEmbedAdapter,
+      axesInputEmbedAdapter,
+      frameInputEmbedAdapter,
+      surfaceInputEmbedAdapter,
+      legendInputEmbedAdapter,
+      circleInputEmbedAdapter,
+      ellipseInputEmbedAdapter,
+      rectangleInputEmbedAdapter,
+      polygonInputEmbedAdapter,
+      starInputEmbedAdapter,
+      arcInputEmbedAdapter,
+      sectorInputEmbedAdapter,
     ]);
-    expect(Object.isFrozen(StandardInputEmbedAdapters)).toBe(true);
-    expect(Object.isFrozen(GridInputEmbedAdapter)).toBe(false);
+    expect(Object.isFrozen(standardInputEmbedAdapters)).toBe(true);
+    expect(Object.isFrozen(gridInputEmbedAdapter)).toBe(false);
   });
 
   it('使用全适配器预设标准化所有当前嵌入', () => {
-    const normalized = normalizeScene(input, { adapters: StandardInputEmbedAdapters });
+    const normalized = normalizeScene(input, { adapters: standardInputEmbedAdapters });
 
     expect(normalized.contributions).toHaveLength(5);
     expect(normalized.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame', 'surface', 'legend']);
   });
 
   it('保持部分适配器选择显式', () => {
-    expect(() => normalizeScene(input, { adapters: [GridInputEmbedAdapter, FrameInputEmbedAdapter] })).toThrow(
+    expect(() => normalizeScene(input, { adapters: [gridInputEmbedAdapter, frameInputEmbedAdapter] })).toThrow(
       /kind "standard\.axes" but no adapter was provided/i,
     );
   });
@@ -97,7 +97,7 @@ describe('Standard Vanilla 定义加载', () => {
       children: [createGrid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })],
     };
 
-    expect(() => renderToSvgString(ir, { compile: { composites: [GridDefinition] } })).not.toThrow();
+    expect(() => renderToSvgString(ir, { compile: { composites: [gridDefinition] } })).not.toThrow();
   });
 
   it('对相同显式定义对象进行去重，并拒绝同一键上的不同对象', () => {
@@ -105,8 +105,8 @@ describe('Standard Vanilla 定义加载', () => {
       renderToSvgString(
         scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
         {
-          adapters: [GridInputEmbedAdapter],
-          compile: { composites: [GridDefinition] },
+          adapters: [gridInputEmbedAdapter],
+          compile: { composites: [gridDefinition] },
         },
       ),
     ).not.toThrow();
@@ -114,8 +114,8 @@ describe('Standard Vanilla 定义加载', () => {
       renderToSvgString(
         scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
         {
-          adapters: [GridInputEmbedAdapter],
-          compile: { composites: [{ ...GridDefinition }] },
+          adapters: [gridInputEmbedAdapter],
+          compile: { composites: [{ ...gridDefinition }] },
         },
       ),
     ).toThrow(/definition conflict.*standard\.grid/i);

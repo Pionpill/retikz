@@ -94,7 +94,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
           'definePath',
           'PathDefinition',
           'PathCompileContext',
-          'PathBoundaryLabelInput',
+          'InputPathBoundaryLabel',
           'PathCompileResult',
           'defineArrow',
           'ArrowDefinition',

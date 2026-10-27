@@ -7,7 +7,7 @@ import {
   BranchDiagramSchema,
   createBranchDiagramProviderContribution,
   defineBranchLayout,
-  LanesBranchLayoutDefinition,
+  lanesBranchLayoutDefinition,
 } from '../../src/branch';
 import type { BranchDiagramDefinitionOptions, BranchLayoutOutput } from '../../src/branch';
 
@@ -91,7 +91,7 @@ it.each(invalidOutputs)('拒绝自定义布局输出：$name', ({ change }) => {
   const definition = defineBranchLayout({
     name: 'invalid',
     description: 'Invalid geometry fixture',
-    layout: input => change(LanesBranchLayoutDefinition.layout(input)),
+    layout: input => change(lanesBranchLayoutDefinition.layout(input)),
   });
 
   expect(() => compile(source, { branchLayouts: [definition], defaultBranchLayout: definition.name })).toThrow();
@@ -146,7 +146,7 @@ it('合并相同的有向线段，同时保留两个分支对应关系', () => {
 });
 
 it('通过相同的注册表使用自定义布局并拒绝省略的几何图形', () => {
-  const custom = defineBranchLayout({ ...LanesBranchLayoutDefinition, name: 'custom' });
+  const custom = defineBranchLayout({ ...lanesBranchLayoutDefinition, name: 'custom' });
 
   expect(
     compile(source, { branchLayouts: [custom], defaultBranchLayout: custom.name }).scene.primitives.length,

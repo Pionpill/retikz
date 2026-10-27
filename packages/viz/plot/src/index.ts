@@ -1,7 +1,7 @@
 export * from './contract';
 export * from './error';
 export type {
-  LowerPlotsOptions,
+  PlotsLoweringOptions,
   PlotProviderParams,
   PlotCompileEnvironment,
   PlotDefinitions,
@@ -17,7 +17,7 @@ export {
   createPlotProviderContribution,
   lowerPlots,
   lowerPlotWithLineage,
-  PlotProviderKey,
+  plotProviderKey,
   preparePlotData,
 } from './pipeline';
 export type {
@@ -32,8 +32,8 @@ export type {
   MarkValueResolverOptions,
   PlotPaint,
   Polar1DCoordinateFrame,
-  Polar1DCoordinateInput,
-  PolarCoordinateInput,
+  InputPolar1DCoordinate,
+  InputPolarCoordinate,
   PolarVertex,
   SeriesPathBuilder,
 } from './providers';
@@ -108,8 +108,8 @@ export {
   lowerPoint,
   lowerRelation,
   makeColorChannelDefinition,
-  makeColorSchemeResolver,
-  makeMarkValueResolver,
+  createColorSchemeResolver,
+  createMarkValueResolver,
   markCell,
   markPaintOf,
   nodeChannelKinds,

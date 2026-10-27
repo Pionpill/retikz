@@ -3,11 +3,11 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRPosition } from '../../schemas';
 import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH } from '../../schemas';
 import { resolvePaint } from '../resource';
-import type { MarkResolution, PathResolveContext, ResolvedMarkStyle } from './types';
+import type { MarkResolution, PathResolveContext, MarkColorSource } from './types';
 
 /** 解析箭头与沿线标记共用的外观、有效尺寸和锚点；空心定义不保留填充 */
 export const resolveMarkStyle = (
-  mark: ResolvedMarkStyle,
+  mark: MarkColorSource,
   definition: MarkDefinition,
   context: PathResolveContext,
 ): MarkResolution => {

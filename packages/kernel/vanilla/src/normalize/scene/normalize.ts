@@ -14,7 +14,7 @@ import type {
   InputEmbedContext,
   InputEmbedThemeContext,
   InputEmbedContribution,
-  NormalizedInputEmbedChildren,
+  EmbedChildrenNormalizationResult,
 } from '../embed';
 import type { InputNode } from '../node';
 import { normalizeNode } from '../node';
@@ -31,7 +31,7 @@ import type {
   InputNormalizeOptions,
   InputRuntimeMeta,
   InputScene,
-  NormalizedInputScene,
+  SceneNormalizationResult,
 } from './types';
 import { InputLayerCache } from './types';
 
@@ -45,7 +45,7 @@ type ReusedEmbedIdentity = {
 };
 
 /** 规范化过程共享的上下文 */
-type NormalizeContext = {
+type SceneNormalizeContext = {
   runtimePath: CompositeInputPath;
   runtimeInputs: Array<CompositeInputBinding>;
   layerId: string;
@@ -64,7 +64,7 @@ type NormalizeContext = {
 };
 
 /** adapter 输出身份校验需要的额外上下文 */
-type AdapterOutputContext = NormalizeContext & {
+type AdapterOutputContext = SceneNormalizeContext & {
   embedId: string;
 };
 
@@ -85,7 +85,7 @@ type InputChildrenTraversal = Readonly<{
   /** 按归一化遍历顺序收集的待准备嵌入位置 */
   sites: ReadonlyArray<InputEmbedSite>;
   /** 将与 sites 顺序对应的已完成贡献交给同步归一化流程 */
-  normalize: (contributions: ReadonlyArray<InputEmbedContribution>) => NormalizedInputEmbedChildren;
+  normalize: (contributions: ReadonlyArray<InputEmbedContribution>) => EmbedChildrenNormalizationResult;
 }>;
 
 /** 根 traversal 与唯一 Source 归一化的衔接 */
@@ -93,7 +93,7 @@ type InputSceneTraversal = Readonly<{
   /** 整张场景按归一化遍历顺序收集的嵌入位置 */
   sites: ReadonlyArray<InputEmbedSite>;
   /** 将与 sites 顺序对应的已完成贡献组装为唯一场景 Source */
-  normalize: (contributions: ReadonlyArray<InputEmbedContribution>) => NormalizedInputScene;
+  normalize: (contributions: ReadonlyArray<InputEmbedContribution>) => SceneNormalizationResult;
 }>;
 
 /** 判断输入是否为 Scene Input */
@@ -120,7 +120,7 @@ const asLayerStack = (scene: InputScene): Array<InputLayer> => {
 };
 
 /** 注册公开 identity，同一命名空间的后定义覆盖此前定位 */
-const registerIdentity = (id: string | undefined, parentId: string, ctx: NormalizeContext): void => {
+const registerIdentity = (id: string | undefined, parentId: string, ctx: SceneNormalizeContext): void => {
   if (id === undefined) return;
 
   const key = ctx.identityFrame.length === 0 ? id : `${ctx.identityFrame}/${id}`;
@@ -129,7 +129,7 @@ const registerIdentity = (id: string | undefined, parentId: string, ctx: Normali
 };
 
 /** 进入 localNamespace Scope 后创建与 Core NameStack 对齐的 identity frame */
-const nestedIdentityFrame = (ctx: NormalizeContext, identity: string | undefined): string =>
+const nestedIdentityFrame = (ctx: SceneNormalizeContext, identity: string | undefined): string =>
   [ctx.identityFrame, identity ?? ctx.sourcePath].filter(segment => segment.length > 0).join('/');
 
 /** 读取可选 IR identity */
@@ -140,7 +140,7 @@ const readIdentity = (child: object): string | undefined =>
 const isInputEmbed = (child: InputChild): child is AnyInputEmbed => child.type === 'embed';
 
 /** 读取或为匿名 InputEmbed 确定仅运行时可见的稳定身份 */
-const inputEmbedIdentityOf = (input: AnyInputEmbed, context: NormalizeContext): string =>
+const inputEmbedIdentityOf = (input: AnyInputEmbed, context: SceneNormalizeContext): string =>
   input.id ?? `__retikz-embed:${context.layerId}:${context.sourcePath}:${input.kind}`;
 
 /** 读取仅用于作者输入类型分派的 children */
@@ -190,7 +190,7 @@ const isInputNode = (child: InputChild): child is InputNode =>
 const isCoreScope = (child: IRChild): child is IRScope => child.type === 'scope' && !('namespace' in child);
 
 /** 当前父容器中一个 child 的 authoring 路径 */
-const childSourcePath = (context: NormalizeContext, index: number): string =>
+const childSourcePath = (context: SceneNormalizeContext, index: number): string =>
   context.sourcePath.length === 0 ? `children[${index}]` : `${context.sourcePath}.children[${index}]`;
 
 /** 同一嵌入的多个作者 slot 按调用顺序区分；首个 slot 保留正常单槽路径 */
@@ -198,7 +198,11 @@ const embedSlotSourcePath = (sourcePath: string, slotIndex: number): string =>
   slotIndex === 0 ? `${sourcePath}.embed` : `${sourcePath}.embed.slots[${slotIndex}]`;
 
 /** 同步归一化与准备 traversal 共用的 Scope 位置及有效 Theme */
-const scopeContextOf = (input: InputScope, identity: string | undefined, ctx: NormalizeContext): NormalizeContext => {
+const scopeContextOf = (
+  input: InputScope,
+  identity: string | undefined,
+  ctx: SceneNormalizeContext,
+): SceneNormalizeContext => {
   const scopeThemeContext =
     ctx.embedThemeContext === undefined || ctx.resolveEmbedScopeTheme === undefined
       ? undefined
@@ -248,7 +252,7 @@ const completedAdaptersOf = (
 /** 沿唯一作者分派规则读取实际嵌入位置；opaque props 的子项由 adapter 明确登记 */
 const collectChildEmbedSites = (
   children: ReadonlyArray<InputChild>,
-  ctx: NormalizeContext,
+  ctx: SceneNormalizeContext,
   offset = 0,
 ): Array<InputEmbedSite> => {
   const sites: Array<InputEmbedSite> = [];
@@ -323,7 +327,7 @@ export const createInputSceneTraversal = (
       );
 
     layerIds.add(layer.id);
-    const context: NormalizeContext = {
+    const context: SceneNormalizeContext = {
       layerId: layer.id,
       parentId: layer.id,
       path: [layer.id],
@@ -384,13 +388,13 @@ const validateAdapterOutputIdentities = (
 /** 将嵌入 slot 的 Input child 在当前 Scene traversal 中归一化 */
 const normalizeEmbeddedChildren = (
   children: ReadonlyArray<InputChild>,
-  context: NormalizeContext,
+  context: SceneNormalizeContext,
   reusedEmbedIdentity: ReusedEmbedIdentity,
-): NormalizedInputEmbedChildren => {
+): EmbedChildrenNormalizationResult => {
   const contributions: Array<CoreProviderContribution> = [];
   const runtimeInputs: Array<CompositeInputBinding> = [];
   const authoringSites: Array<InputAuthoringSite> = [];
-  const nestedContext: NormalizeContext = {
+  const nestedContext: SceneNormalizeContext = {
     ...context,
     contributions,
     runtimeInputs,
@@ -431,7 +435,7 @@ const normalizeEmbeddedChildren = (
 };
 
 /** 将一个 InputEmbed 下沉为 Core child 并收集 dependency contribution */
-const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: NormalizeContext): IRChild => {
+const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: SceneNormalizeContext): IRChild => {
   const adapter = ctx.adapters?.find(entry => entry.kind === input.kind);
   if (adapter === undefined) {
     throw new RetikzVanillaError(
@@ -513,7 +517,7 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: NormalizeCon
 };
 
 /** 归一化一个 authored child，并同步维护 metadata */
-const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
+const normalizeChild = (input: InputChild, ctx: SceneNormalizeContext): IRChild => {
   if (isInputEmbed(input)) {
     const embedId = inputEmbedIdentityOf(input, ctx);
     const reusedEmbedIdentity = ctx.reusedEmbedIdentity;
@@ -615,7 +619,7 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
 };
 
 /** 将 InputScene 一次性归一为唯一 Source IR、contribution 与 runtime metadata */
-export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions = {}): NormalizedInputScene => {
+export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions = {}): SceneNormalizationResult => {
   const adapterKinds = new Set<string>();
 
   for (const adapter of options.adapters ?? []) {
@@ -649,7 +653,7 @@ export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions
     }
 
     layerIds.add(layer.id);
-    const context: NormalizeContext = {
+    const context: SceneNormalizeContext = {
       layerId: layer.id,
       parentId: layer.id,
       path: [layer.id],

@@ -7,12 +7,12 @@ description: 追踪一次 Flow Source 从语义解析、测量、布局到 Scene
 
 ## 整体流程
 
-| 阶段       | 输入                                        | 交给下一阶段的结果                                 |
-| ---------- | ------------------------------------------- | -------------------------------------------------- |
-| 解析       | Source、Definition、Theme                   | 有效的 Entity、Group、Layout 和 Relation 语义      |
-| 测量       | 已解析语义、Graph 外观                      | 元素尺寸、作用域、关系标签尺寸和 `FlowLayoutInput` |
-| 布局与校验 | `FlowLayoutInput`、选中的 Layout Definition | 已验证且脱离回调对象的 bounds 与 route             |
-| 物化与装配 | 同一份已验证几何                            | Graph 图元与 `FlowDiagramArtifact`                 |
+| 阶段       | 输入                                                   | 交给下一阶段的结果                                            |
+| ---------- | ------------------------------------------------------ | ------------------------------------------------------------- |
+| 解析       | Source、Definition、Theme                              | 有效的 Entity、Group、Layout 和 Relation 语义                 |
+| 测量       | 已解析语义、Graph 外观                                 | 元素尺寸、作用域、关系标签尺寸和 `InputFlowLayoutComputation` |
+| 布局与校验 | `InputFlowLayoutComputation`、选中的 Layout Definition | 已验证且脱离回调对象的 bounds 与 route                        |
+| 物化与装配 | 同一份已验证几何                                       | Graph 图元与 `FlowDiagramArtifact`                            |
 
 Source 中只有声明和引用；测量产生布局输入，Definition 返回的几何经校验后才进入物化和结果装配。下图展示这条主线，后续各节沿同一组“接收 → 校验”元素说明数据如何变化。
 
@@ -85,7 +85,7 @@ Flow Source
 
 Flow 会先测出布局需要的信息：每个图元有多大、周围要留多少空隙、分组内部要留多少空间，以及连线上的文字会占多少空间，再把这些信息和布局、连线配置一起交给布局阶段。
 
-这些信息保存在 `FlowLayoutInput` 中。布局阶段拿到后，只需安排图元的位置和连线的走向，不用再测一遍。例如“校验”的文字变长时，Flow 会先算出它需要的宽度，布局时就能给它留出足够的空间。
+这些信息保存在 `InputFlowLayoutComputation` 中。布局阶段拿到后，只需安排图元的位置和连线的走向，不用再测一遍。例如“校验”的文字变长时，Flow 会先算出它需要的宽度，布局时就能给它留出足够的空间。
 
 下面的示意图展示了图元大小、分组内边距和连线文字的测量结果，以及这些信息如何成为布局输入。
 

@@ -1,44 +1,44 @@
 import type { AnyCoreDependencyProvider } from '@retikz/core';
 import {
-  DiamondArrowProvider,
-  OpenDiamondArrowProvider,
-  SquareArrowProvider,
-  StraightBarbArrowProvider,
-  PathClipProvider,
-  EllipticCapsuleShapeProvider,
-  HexagonShapeProvider,
+  diamondArrowProvider,
+  openDiamondArrowProvider,
+  squareArrowProvider,
+  straightBarbArrowProvider,
+  pathClipProvider,
+  ellipticCapsuleShapeProvider,
+  hexagonShapeProvider,
 } from '@retikz/extension';
-import { FlexLayoutProvider } from '@retikz/layout';
-import { SurfaceProvider } from '@retikz/standard/presentation';
+import { flexLayoutProvider } from '@retikz/layout';
+import { surfaceProvider } from '@retikz/standard/presentation';
 
 import type { GraphDefinitionOptions } from '../../contract';
-import { BlockProvider, createBlockProvider } from '../block';
-import { BlockHeaderProvider, BlockRowProvider, BlockSectionProvider } from '../block';
-import { createEntityProvider, EntityProvider } from '../entity';
+import { blockProvider, createBlockProvider } from '../block';
+import { blockHeaderProvider, blockRowProvider, blockSectionProvider } from '../block';
+import { createEntityProvider, entityProvider } from '../entity';
 import { createGraphProvider, GraphProvider } from '../graph';
-import { GroupBodyAllocationProvider } from '../group';
-import { createGroupProvider, GroupProvider } from '../group';
-import { createRelationProvider, RelationProvider } from '../relation';
+import { groupBodyAllocationProvider } from '../group';
+import { createGroupProvider, groupProvider } from '../group';
+import { createRelationProvider, relationProvider } from '../relation';
 
 const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<AnyCoreDependencyProvider> = Object.freeze([
   GraphProvider,
-  EntityProvider,
-  RelationProvider,
-  GroupProvider,
-  GroupBodyAllocationProvider,
-  BlockProvider,
-  BlockHeaderProvider,
-  BlockSectionProvider,
-  BlockRowProvider,
-  FlexLayoutProvider,
-  SurfaceProvider,
-  PathClipProvider,
-  HexagonShapeProvider,
-  EllipticCapsuleShapeProvider,
-  StraightBarbArrowProvider,
-  SquareArrowProvider,
-  DiamondArrowProvider,
-  OpenDiamondArrowProvider,
+  entityProvider,
+  relationProvider,
+  groupProvider,
+  groupBodyAllocationProvider,
+  blockProvider,
+  blockHeaderProvider,
+  blockSectionProvider,
+  blockRowProvider,
+  flexLayoutProvider,
+  surfaceProvider,
+  pathClipProvider,
+  hexagonShapeProvider,
+  ellipticCapsuleShapeProvider,
+  straightBarbArrowProvider,
+  squareArrowProvider,
+  diamondArrowProvider,
+  openDiamondArrowProvider,
 ]);
 
 /** 创建当前 Graph 包族的完整 composite dependency provider 集合 */
@@ -52,19 +52,19 @@ export const createBaseGraphProviders = (
     createEntityProvider(options),
     createRelationProvider(options),
     createGroupProvider(options),
-    GroupBodyAllocationProvider,
+    groupBodyAllocationProvider,
     createBlockProvider(options),
-    BlockHeaderProvider,
-    BlockSectionProvider,
-    BlockRowProvider,
-    FlexLayoutProvider,
-    SurfaceProvider,
-    PathClipProvider,
-    HexagonShapeProvider,
-    EllipticCapsuleShapeProvider,
-    StraightBarbArrowProvider,
-    SquareArrowProvider,
-    DiamondArrowProvider,
-    OpenDiamondArrowProvider,
+    blockHeaderProvider,
+    blockSectionProvider,
+    blockRowProvider,
+    flexLayoutProvider,
+    surfaceProvider,
+    pathClipProvider,
+    hexagonShapeProvider,
+    ellipticCapsuleShapeProvider,
+    straightBarbArrowProvider,
+    squareArrowProvider,
+    diamondArrowProvider,
+    openDiamondArrowProvider,
   ]);
 };

@@ -1,4 +1,4 @@
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { CLIP_INSPECTOR_KEY, createDefaultInspectorRegistry } from '@retikz/inspect';
 import { InspectLayout } from '@retikz/inspect/react';
 import { Node, Scope } from '@retikz/react';
@@ -20,7 +20,7 @@ const preview = defineControlledBuiltinInspectPreview(
       <InspectLayout
         registry={registry}
         viewBox={{ x: -180, y: -140, width: 360, height: 280 }}
-        extensions={{ clips: [PathClipDefinition] }}
+        extensions={{ clips: [pathClipDefinition] }}
         request={{ inspector: CLIP_INSPECTOR_KEY, options: { outline: values.outline, labels: values.labels } }}
       >
         <Scope

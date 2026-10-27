@@ -339,10 +339,10 @@ export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MatrixInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={38}>MatrixInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"matrixInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={38}>matrixInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix>;
+export declare const matrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix>;
 ```
 
 **持久化配置**
@@ -518,10 +518,10 @@ export type IRMatrixAxisIndex = input<typeof MatrixAxisIndexSchema>;
 
 **扩展定义与注册**
 
-#### <ApiSourceLink label={"MatrixDefinition"} path={"packages/library/standard/src/collection/matrix/composite.ts"} startLine={10}>MatrixDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"matrixDefinition"} path={"packages/library/standard/src/collection/matrix/composite.ts"} startLine={10}>matrixDefinition</ApiSourceLink>
 
 ```ts
-export const MatrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix'> = defineComposite({
+export const matrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix'> = defineComposite({
   namespace: 'standard',
   type: 'matrix',
   schema: MatrixSchema,
@@ -529,10 +529,10 @@ export const MatrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix
 });
 ```
 
-#### <ApiSourceLink label={"MatrixProvider"} path={"packages/library/standard/src/collection/matrix/composite.ts"} startLine={25}>MatrixProvider</ApiSourceLink>
+#### <ApiSourceLink label={"matrixProvider"} path={"packages/library/standard/src/collection/matrix/composite.ts"} startLine={25}>matrixProvider</ApiSourceLink>
 
 ```ts
-export declare const MatrixProvider: CoreDependencyProvider;
+export declare const matrixProvider: CoreDependencyProvider;
 ```
 
 **执行与辅助契约**
@@ -578,7 +578,7 @@ export declare const createMatrix: (input: IRMatrix) => IRMatrix;
 |        | `row`      | `number`    | 非负安全整数行坐标                         |
 |        | `column`   | `number`    | 非负安全整数列坐标                         |
 | 返回值 | —          | `string`    | 由 Matrix id 和零基行列坐标组成的单元格 id |
-| 错误   | —          | —           | 参数非法时抛出 RetikzStandardError         |
+| 错误   | —          | —           | 下标不是非负整数时抛出 RetikzStandardError |
 
 </ApiTable>
 

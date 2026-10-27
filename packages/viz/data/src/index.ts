@@ -28,7 +28,7 @@ export type {
   DataTransformProviderRegistration,
   DataTransformRequestOptions,
   DataTransformStageImplementation,
-  DataTransformStageInput,
+  InputDataTransformStage,
   DataTransformStageSupport,
 } from './execution';
 export { BUILTIN_FORMATS, collectFormatFields, defineFieldFormat, resolveFormatRegistry } from './format';
@@ -49,10 +49,10 @@ export {
   inferCategoryDomain,
   inferFieldType,
   isIsoDateString,
-  normalizeRows,
+  resolveDataRows,
   resolveFieldPath,
   resolveFieldTypes,
-  validateBoundData,
+  assertBoundData,
 } from './model';
 export type {
   DataFieldMap,
@@ -68,7 +68,7 @@ export type {
   IRDataReference,
   IRDataScalarValue,
   ParsedFieldValue,
-  ResolveField,
+  FieldResolver,
 } from './model';
 export { extractStatisticOperation } from './operators';
 export {
@@ -171,15 +171,15 @@ export type {
   DataLineageOptions,
   DataLineageRecorder,
   DataLineageReducerEvent,
-  DataLineageReducerInput,
+  InputDataLineageReducer,
   DataLineageRun,
   DataLineageSampleEvent,
   DataLineageSelectorEvent,
-  DataLineageSelectorInput,
+  InputDataLineageSelector,
   DataLineageSink,
   DataLineageSourceEvent,
   DataLineageTransformStepEvent,
-  DataLineageTransformStepInput,
+  InputDataLineageTransformStep,
   DataSourceIdentity,
   DataSourceIdentityOptions,
   DataValueSampleOptions,
@@ -271,7 +271,7 @@ export type {
   IRDataTransformDeclaration,
   TransformContext,
   TransformDefinition,
-  TransformDefinitionInput,
+  InputTransformDefinition,
   TransformImplementation,
   TransformSemanticContext,
 } from './transform';

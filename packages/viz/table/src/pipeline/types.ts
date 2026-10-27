@@ -21,7 +21,7 @@ import type {
 import type { TABLE_NAMESPACE } from '../schemas';
 
 /** Table lowering 的运行时扩展选项 */
-export type LowerTablesOptions = TableDataOptions &
+export type TablesLoweringOptions = TableDataOptions &
   Readonly<{
     /** 用户自定义 structure definitions */
     structureDefinitions?: ReadonlyArray<AnyTableStructureDefinition>;
@@ -50,7 +50,7 @@ export type CompileTableOptions<TComposites extends ReadonlyArray<AnyCompositeDe
   /** 可选的有效 Core 根 Theme，与独立 Scope 的语义相同 */
   theme?: IRScene['theme'];
   /** Table structure 与 presentation definitions */
-  lower?: LowerTablesOptions;
+  lower?: TablesLoweringOptions;
   /** 其余 Core compile options 与额外 composite definitions */
   compile?: CompileOptions<TComposites>;
 }>;

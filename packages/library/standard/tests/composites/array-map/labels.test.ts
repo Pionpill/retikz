@@ -1,9 +1,9 @@
 import type { IRChild, IRNode, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { ArrayDefinition, ArraySchema, MapDefinition, MapSchema } from '../../../src/collection';
+import { arrayDefinition, ArraySchema, mapDefinition, MapSchema } from '../../../src/collection';
 import type { IRArray, IRMap } from '../../../src/collection';
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
@@ -12,7 +12,7 @@ const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
 const compile = (children: Array<IRChild>) =>
   compileToScene(
     { type: 'scene', version: 1, children },
-    { composites: [ArrayDefinition, MapDefinition], clips: [PathClipDefinition], padding: 0 },
+    { composites: [arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
   );
 
 const labelsOf = (children: Array<IRChild>) =>

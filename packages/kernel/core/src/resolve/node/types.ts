@@ -14,22 +14,22 @@ import type {
   NodeLabelPlacement,
   NodeLabelPosition,
   NodeTextAlign,
-  ResolvedDropShadow,
+  CanonicalDropShadow,
   StrokeDashPattern,
 } from '../../schemas';
 import type { ThemeMode } from '../../shared';
-import type { PaintResolutionInput } from '../resource';
-import type { EffectiveScopeDefaults, GraphicOpacityResolution } from '../style';
-import type { ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
+import type { InputPaintResolution } from '../resource';
+import type { MergedScopeDefaults, GraphicOpacityResolution } from '../style';
+import type { LabelTextColorSource, TextLineColorSource } from '../text';
 
 /** 已解析描边颜色与绘制资源的节点标签引线 */
-export type ResolvedNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
+export type CanonicalNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
   /** 已解析的引线描边，可为颜色或绘制资源 */
-  stroke?: PaintResolutionInput;
+  stroke?: InputPaintResolution;
 };
 
 /** 已解析节点自身数值颜色的中间结果，正文和标签颜色仍待处理 */
-export type PrimaryColorResolvedNode = Omit<IRNode, 'style'> & {
+export type NodePrimaryColorSource = Omit<IRNode, 'style'> & {
   /** 已确定上下文颜色的节点样式 */
   style?: Omit<IRNodeStyle, 'fill' | 'stroke' | 'textColor'> & {
     /** 已确定的节点填充 */
@@ -42,9 +42,9 @@ export type PrimaryColorResolvedNode = Omit<IRNode, 'style'> & {
 };
 
 /** 已解析节点、正文和标签数值颜色的节点输入 */
-export type ResolvedNodeSource = Omit<PrimaryColorResolvedNode, 'text' | 'label'> & {
+export type NodeColorSource = Omit<NodePrimaryColorSource, 'text' | 'label'> & {
   /** 已解析行级与片段颜色的正文 */
-  text?: string | Array<ResolvedTextLine>;
+  text?: string | Array<TextLineColorSource>;
   /** 已解析文字和引线颜色的附属标签 */
   label?: Array<CanonicalNodeLabel>;
 };
@@ -71,14 +71,14 @@ export type CanonicalNodeLabel = Omit<
   /** 已确定的标签文字主色 */
   textColor?: string;
   /** 已解析行级与片段颜色的标签正文 */
-  text: ResolvedLabelTextBlock;
+  text: LabelTextColorSource;
   /** 已解析描边颜色与绘制资源的标签引线 */
-  pin?: boolean | ResolvedNodeLabelPin;
+  pin?: boolean | CanonicalNodeLabelPin;
 };
 
 /** 已展开节点简写、补齐静态默认值并解析绘制资源的待布局节点 */
 export type CanonicalNode = Omit<
-  Omit<ResolvedNodeSource, 'style' | 'layout'> & NonNullable<ResolvedNodeSource['style']> & IRNodeLayout,
+  Omit<NodeColorSource, 'style' | 'layout'> & NonNullable<NodeColorSource['style']> & IRNodeLayout,
   | 'padding'
   | 'position'
   | 'margin'
@@ -98,9 +98,9 @@ export type CanonicalNode = Omit<
 > &
   GraphicOpacityResolution & {
     /** 已解析的节点填充 */
-    fill?: PaintResolutionInput;
+    fill?: InputPaintResolution;
     /** 已解析的节点描边 */
-    stroke?: PaintResolutionInput;
+    stroke?: InputPaintResolution;
     /** 已补齐默认值的位置，非笛卡尔形态交由布局阶段定位 */
     position: NonNullable<IRNode['position']>;
     /** 完整内边距 */
@@ -122,7 +122,7 @@ export type CanonicalNode = Omit<
       y: number;
     };
     /** 多行正文 */
-    text?: Array<ResolvedTextLine>;
+    text?: Array<TextLineColorSource>;
     /** 已按数组形态展开的附属标签 */
     label?: Array<CanonicalNodeLabel>;
     /** 正文对齐 */
@@ -132,7 +132,7 @@ export type CanonicalNode = Omit<
     /** 已解析的边框虚线样式 */
     dashPattern?: StrokeDashPattern;
     /** 已展开预设并补齐颜色的阴影 */
-    shadow?: ResolvedDropShadow;
+    shadow?: CanonicalDropShadow;
   };
 
 /** 已绑定的节点形状定义与实例参数 */
@@ -203,7 +203,7 @@ export type NodeResolution = Readonly<{
 /** 节点解析所需的默认配置、扩展定义与诊断能力 */
 export type NodeResolveContext = {
   /** 当前节点所在作用域的有效默认配置 */
-  scopeDefaults: EffectiveScopeDefaults;
+  scopeDefaults: MergedScopeDefaults;
   /** 当前节点使用的主题明暗模式 */
   mode: ThemeMode;
   /** 形状定义注册表 */

@@ -3,9 +3,9 @@ import { isMathSegment, parseInlineSegments } from './inline';
 import type {
   CanonicalInlineSegment,
   CanonicalFont,
-  ResolvedTextLineStyle,
-  ResolvedTextSegment,
-  SourceInlineSegment,
+  CanonicalTextLineStyle,
+  TextSegmentColorSource,
+  InlineSegmentColorSource,
   TextLineResolution,
   TextLineResolveContext,
   TextLineSource,
@@ -17,7 +17,7 @@ const TEXT_TEX_PARSE_ERROR = 'TEXT_TEX_PARSE_ERROR';
 const resolveExplicitStyle = (
   source: Exclude<TextLineSource, string>,
   context: TextLineResolveContext,
-): ResolvedTextLineStyle => ({
+): CanonicalTextLineStyle => ({
   fill: source.fill,
   opacity: source.opacity,
   fontSize:
@@ -34,7 +34,7 @@ const resolveExplicitStyle = (
 
 /** 让文字或公式片段继承行级字体，并将字号换算为数值 */
 const resolveSegment = (
-  segment: SourceInlineSegment,
+  segment: InlineSegmentColorSource,
   inheritedFont: CanonicalFont,
   context: TextLineResolveContext,
 ): CanonicalInlineSegment => {
@@ -48,7 +48,7 @@ const resolveSegment = (
     };
 
   const sourceFont = segment.font;
-  const resolved: Omit<ResolvedTextSegment, 'font'> & { font: ReturnType<typeof resolveFont> } = {
+  const resolved: Omit<TextSegmentColorSource, 'font'> & { font: ReturnType<typeof resolveFont> } = {
     ...segment,
     font: resolveFont(sourceFont, { ...context, inheritedFont }),
   };

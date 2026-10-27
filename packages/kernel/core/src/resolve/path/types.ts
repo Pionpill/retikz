@@ -10,20 +10,20 @@ import type {
   IRPosition,
   IRStep,
   IRTarget,
-  ResolvedDropShadow,
+  CanonicalDropShadow,
 } from '../../schemas';
 import type { ThemeMode } from '../../shared';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
-import type { PaintResolutionInput } from '../resource';
-import type { EffectiveScopeDefaults, GraphicOpacityResolution } from '../style';
-import type { ResolvedLabelTextBlock } from '../text';
+import type { InputPaintResolution } from '../resource';
+import type { MergedScopeDefaults, GraphicOpacityResolution } from '../style';
+import type { LabelTextColorSource } from '../text';
 
 /** 已解析文字主色与行内片段颜色的路径标签 */
-export type ResolvedPathLabel = Omit<IRPathLabel, 'textColor' | 'text'> & {
+export type PathLabelColorSource = Omit<IRPathLabel, 'textColor' | 'text'> & {
   /** 已确定的标签文字主色 */
   textColor?: string;
   /** 已解析行级与片段颜色的标签正文 */
-  text: ResolvedLabelTextBlock;
+  text: LabelTextColorSource;
 };
 
 /** 标签的几何配置，不含文本和视觉外观 */
@@ -47,7 +47,7 @@ export type CanonicalPathLabelPlacement = Omit<
 };
 
 /** 展开位置、方向与距离默认值后的路径标签 */
-export type CanonicalPathLabel = Omit<ResolvedPathLabel, 'position' | 'side' | 'distance' | 'interrupt' | 'gap'> & {
+export type CanonicalPathLabel = Omit<PathLabelColorSource, 'position' | 'side' | 'distance' | 'interrupt' | 'gap'> & {
   /** 路径上的归一化位置 */
   position: number;
   /** 相对宿主线段的方向 */
@@ -60,17 +60,17 @@ export type CanonicalPathLabel = Omit<ResolvedPathLabel, 'position' | 'side' | '
   gap: number;
 };
 
-type WithResolvedStepLabel<TStep extends IRStep> = TStep extends unknown
+type WithStepLabelColors<TStep extends IRStep> = TStep extends unknown
   ? 'label' extends keyof TStep
-    ? Omit<TStep, 'label'> & { label?: ResolvedPathLabel }
+    ? Omit<TStep, 'label'> & { label?: PathLabelColorSource }
     : TStep
   : never;
 
 /** 已解析标签数值颜色的路径步骤 */
-export type ResolvedStepSource = WithResolvedStepLabel<IRStep>;
+export type StepColorSource = WithStepLabelColors<IRStep>;
 
 /** 已解析上下文颜色的标记外观 */
-export type ResolvedMarkStyle = Omit<IRMarkStyle, 'color' | 'fill' | 'stroke'> & {
+export type MarkColorSource = Omit<IRMarkStyle, 'color' | 'fill' | 'stroke'> & {
   /** 已确定的标记主色 */
   color?: string;
   /** 已确定的标记填充 */
@@ -80,7 +80,7 @@ export type ResolvedMarkStyle = Omit<IRMarkStyle, 'color' | 'fill' | 'stroke'> &
 };
 
 /** 已解析路径、标签、箭头和标记数值颜色的路径输入 */
-export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label' | 'marks' | 'arrow'> & {
+export type PathColorSource = Omit<IRPathBase, 'style' | 'children' | 'label' | 'marks' | 'arrow'> & {
   /** 已确定上下文颜色的路径样式 */
   style?: Omit<IRPathStyle, 'fill' | 'stroke'> & {
     /** 已确定的路径填充 */
@@ -89,27 +89,27 @@ export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label'
     stroke?: string | IRPaint;
   };
   /** 已解析步骤标签颜色的路径步骤 */
-  children?: Array<ResolvedStepSource>;
+  children?: Array<StepColorSource>;
   /** 已确定的宿主标签 */
-  label?: ResolvedPathLabel | Array<ResolvedPathLabel>;
+  label?: PathLabelColorSource | Array<PathLabelColorSource>;
   /** 已解析的端点箭头 */
   arrow?: {
     /** 起点箭头的颜色与端点重叠配置 */
-    start?: ResolvedMarkStyle & { endpointOverlap?: number };
+    start?: MarkColorSource & { endpointOverlap?: number };
     /** 终点箭头的颜色与端点重叠配置 */
-    end?: ResolvedMarkStyle & { endpointOverlap?: number };
+    end?: MarkColorSource & { endpointOverlap?: number };
   };
   /** 已解析颜色并保留位置、旋转配置的沿线标记 */
-  marks?: Array<ResolvedMarkStyle & Pick<IRPathMark, 'pos' | 'rotate'>>;
+  marks?: Array<MarkColorSource & Pick<IRPathMark, 'pos' | 'rotate'>>;
 };
 
-type WithCanonicalStepLabel<TStep extends ResolvedStepSource> = TStep extends unknown
+type WithCanonicalStepLabel<TStep extends StepColorSource> = TStep extends unknown
   ? 'label' extends keyof TStep
     ? Omit<TStep, 'label'> & { label?: CanonicalPathLabel }
     : TStep
   : never;
 
-type CompleteCanonicalStep<TStep extends ResolvedStepSource> = TStep extends {
+type CompleteCanonicalStep<TStep extends StepColorSource> = TStep extends {
   kind: 'fold';
 }
   ? TStep extends { via: '-|-' | '|-|' }
@@ -127,26 +127,26 @@ type CompleteCanonicalStep<TStep extends ResolvedStepSource> = TStep extends {
         : WithCanonicalStepLabel<TStep>;
 
 /** 已补齐路径步骤及其标签静态默认值的结果 */
-export type CanonicalStep = CompleteCanonicalStep<ResolvedStepSource>;
+export type CanonicalStep = CompleteCanonicalStep<StepColorSource>;
 
 /** 已补齐静态默认值并解析绘制资源的待编译路径 */
 export type CanonicalPath = Omit<
-  Omit<ResolvedPathSource, 'style'> & NonNullable<ResolvedPathSource['style']>,
+  Omit<PathColorSource, 'style'> & NonNullable<PathColorSource['style']>,
   'children' | 'label' | 'shadow' | 'fill' | 'stroke' | 'strokeWidth' | 'opacity'
 > &
   GraphicOpacityResolution & {
     /** 已补齐缺省值的描边宽度 */
     strokeWidth: number;
     /** 已解析的路径填充输入 */
-    fill?: PaintResolutionInput;
+    fill?: InputPaintResolution;
     /** 已解析的路径描边输入 */
-    stroke?: PaintResolutionInput;
+    stroke?: InputPaintResolution;
     /** 完整路径步骤 */
     children?: Array<CanonicalStep>;
     /** 统一为数组的宿主标签 */
     label?: Array<CanonicalPathLabel>;
     /** 已展开预设并补齐颜色的阴影 */
-    shadow?: ResolvedDropShadow;
+    shadow?: CanonicalDropShadow;
   };
 
 /** 路径定义及其 schema 解析后的完整路径输入 */
@@ -170,9 +170,9 @@ type MarkVisual = Readonly<{
   /** 应用 scale 前的宽度参数 */
   width: number;
   /** 实心定义的可选填充，空心定义不保留该值 */
-  fill?: PaintResolutionInput;
+  fill?: InputPaintResolution;
   /** 已解析的描边 */
-  stroke?: PaintResolutionInput;
+  stroke?: InputPaintResolution;
   /** 显式虚线序列 */
   dashPattern?: IRMarkStyle['dashPattern'];
   /** 虚线相位偏移 */
@@ -250,7 +250,7 @@ export type PathResolveContext = Readonly<{
   /** 当前作用域的变换链，省略时按无变换处理 */
   scopeChain?: ReadonlyArray<Transform>;
   /** 当前作用域的默认配置，省略时不执行作用域样式合并 */
-  scopeDefaults?: EffectiveScopeDefaults;
+  scopeDefaults?: MergedScopeDefaults;
   /** 当前路径使用的主题明暗模式 */
   mode: ThemeMode;
   /** 目标坐标与引用查询能力；省略时目标绑定中的坐标为空 */

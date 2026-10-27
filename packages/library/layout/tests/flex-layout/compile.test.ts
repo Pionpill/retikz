@@ -15,7 +15,7 @@ import { boolean, literal, number, string } from 'zod';
 import type { FlexLayoutCompileArtifact } from '../../src';
 import {
   createFlexLayout,
-  FlexLayoutDefinition,
+  flexLayoutDefinition,
   FlexLayoutDirection,
   FlexLayoutWrap,
   LayoutAlignment,
@@ -153,7 +153,7 @@ const compileFlex = (child: IRChild, proposal: LayoutProposal) => {
       children: [{ namespace: 'flex-test', type: 'harness', child }],
     },
     {
-      composites: [FlexLayoutDefinition, createLeafDefinition(logs), harness],
+      composites: [flexLayoutDefinition, createLeafDefinition(logs), harness],
       padding: 0,
     },
   );

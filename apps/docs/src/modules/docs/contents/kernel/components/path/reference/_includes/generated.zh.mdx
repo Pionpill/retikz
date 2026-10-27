@@ -724,7 +724,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 
 </DocTabs>
 
-#### <ApiSourceLink label={"PathBoundaryLabelInput"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={67}>PathBoundaryLabelInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputPathBoundaryLabel"} path={"packages/kernel/core/src/contract/path/path.ts"} startLine={67}>InputPathBoundaryLabel</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -746,7 +746,7 @@ export type PathLabelGeometryOptions = Omit<IRPathLabel, 'text' | 'textColor' | 
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type PathBoundaryLabelInput = Readonly<{
+export type InputPathBoundaryLabel = Readonly<{
   label: IRBoundaryLabel;
   point: IRPosition;
   outward: IRPosition;
@@ -772,9 +772,9 @@ export type PathBoundaryLabelInput = Readonly<{
 | --------------------- | ------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `TPath` (泛型)        | `extends IRPathBase = IRPathBase`                                                                       | —      | 经当前路径定义的 schema 解析后的路径类型，决定 path 字段的结构；默认使用 IRPathBase                                                                          |
 | `TOwnerOutput` (泛型) | `extends JsonValue = never`                                                                             | —      | 通过 ownerOutput.publish 发布的 JSON 产物类型；默认 never 表示不发布所属者产物                                                                               |
-| `appearance`          | `ResolvedPathAppearance`                                                                                | —      | 已解析的 renderer-neutral 宿主外观                                                                                                                           |
-| `emitBoundaryLabels`  | `(input: ReadonlyArray<PathBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>`                       | —      | 通过 Kernel 共享布局编译已定位的边界标签                                                                                                                     |
-| `emitHostLabels`      | `(input: PathLabelInput) => ReadonlyArray<ScenePrimitive>`                                              | —      | 编译共享宿主标签，并支持路径定义提供侧向距离                                                                                                                 |
+| `appearance`          | `CompiledPathAppearance`                                                                                | —      | 已解析的 renderer-neutral 宿主外观                                                                                                                           |
+| `emitBoundaryLabels`  | `(input: ReadonlyArray<InputPathBoundaryLabel>) => ReadonlyArray<ScenePrimitive>`                       | —      | 通过 Kernel 共享布局编译已定位的边界标签                                                                                                                     |
+| `emitHostLabels`      | `(input: InputPathLabel) => ReadonlyArray<ScenePrimitive>`                                              | —      | 编译共享宿主标签，并支持路径定义提供侧向距离                                                                                                                 |
 | `emitStroke`          | `StrokeEmitter`                                                                                         | —      | 复用 core 标准描边编译逻辑；不传 path 时使用当前 `path`                                                                                                      |
 | `materializePath`     | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => ReadonlyArray<PathCommand>` | —      | 物化选定 steps，不应用 marker、dash、fill 或 custom path geometry                                                                                            |
 | `ownerOutput`         | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                             | —      | 当前 Path 的最终所属者产物 publisher                                                                                                                         |
@@ -800,10 +800,10 @@ export type PathCompileContext<TPath extends IRPathBase = IRPathBase, TOwnerOutp
   ) => ReadonlyArray<PathCommand>;
   emitStroke: StrokeEmitter;
   resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
-  emitHostLabels: (input: PathLabelInput) => ReadonlyArray<ScenePrimitive>;
-  emitBoundaryLabels: (input: ReadonlyArray<PathBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
+  emitHostLabels: (input: InputPathLabel) => ReadonlyArray<ScenePrimitive>;
+  emitBoundaryLabels: (input: ReadonlyArray<InputPathBoundaryLabel>) => ReadonlyArray<ScenePrimitive>;
   wrapOutput: (output: PathCompileResult) => PathCompileResult;
-  appearance: ResolvedPathAppearance;
+  appearance: CompiledPathAppearance;
   round: (value: number) => number;
 };
 ```
@@ -935,7 +935,9 @@ export const DrawWay = {
 } as const;
 ```
 
-#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={109}>resolvePathLabelPlacement</ApiSourceLink>
+#### <ApiSourceLink label={"resolvePathLabelPlacement"} path={"packages/kernel/core/src/resolve/path/resolve.ts"} startLine={113}>resolvePathLabelPlacement</ApiSourceLink>
+
+默认位置为 0.5，距离和断口每侧留白均为 4；未指定 side 时，随线倾斜的标签居中，其余位于上方
 
 <DocTabs defaultValue="members">
 
@@ -943,11 +945,11 @@ export const DrawWay = {
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称                        | 类型 / 签名                   | 说明 |
-| ------ | --------------------------- | ----------------------------- | ---- |
-| 参数   | `label`                     | `PathLabelGeometryOptions`    | —    |
-|        | `canAutomaticallyInterrupt` | `boolean`                     | —    |
-| 返回值 | —                           | `CanonicalPathLabelPlacement` | —    |
+| 类别   | 名称                        | 类型 / 签名                   | 说明                                                                                 |
+| ------ | --------------------------- | ----------------------------- | ------------------------------------------------------------------------------------ |
+| 参数   | `label`                     | `PathLabelGeometryOptions`    | —                                                                                    |
+|        | `canAutomaticallyInterrupt` | `boolean`                     | 宿主是否允许自动断线；为 true 且标签居中时，缺省的 interrupt 取 true，显式值始终优先 |
+| 返回值 | —                           | `CanonicalPathLabelPlacement` | —                                                                                    |
 
 </ApiTable>
 
@@ -1613,7 +1615,7 @@ export declare const defineMark: (definition: MarkDefinition) => MarkDefinition;
   }}
 />
 
-#### <ApiSourceLink label={"PathArrowSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={45}>PathArrowSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PathArrowSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={47}>PathArrowSchema</ApiSourceLink>
 
 <ZodSchema
   shallow
@@ -1666,7 +1668,7 @@ export declare const defineMark: (definition: MarkDefinition) => MarkDefinition;
   }}
 />
 
-#### <ApiSourceLink label={"ArrowDetailSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={53}>ArrowDetailSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArrowDetailSchema"} path={"packages/kernel/core/src/schemas/path/arrow.ts"} startLine={55}>ArrowDetailSchema</ApiSourceLink>
 
 <ZodSchema
   shallow

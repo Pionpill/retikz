@@ -1,6 +1,6 @@
 import { compileToScene } from '@retikz/core';
 import type { InspectionSelection } from '@retikz/inspect';
-import { OverlayLayoutArtifactSchema, OverlayLayoutDefinition } from '@retikz/layout';
+import { OverlayLayoutArtifactSchema, overlayLayoutDefinition } from '@retikz/layout';
 import type { LayoutProps } from '@retikz/react';
 import { cloneElement } from 'react';
 import type { ReactElement } from 'react';
@@ -25,7 +25,7 @@ export const defineOverlayPreview = <const TDefinition extends PreviewControlsDe
     values => {
       const element = render(values);
       const { ir } = buildPreviewIR(() => element);
-      const output = compileToScene(ir, { composites: [OverlayLayoutDefinition], measureText: browserMeasurer });
+      const output = compileToScene(ir, { composites: [overlayLayoutDefinition], measureText: browserMeasurer });
       const rectangles = [output.scene.layout];
 
       for (const artifact of output.artifacts) {

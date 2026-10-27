@@ -13,7 +13,7 @@ it('Matrix 预览通过真实的 Vanilla 适配器渲染数据和嵌套 JSX', ()
 
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.code).toContain('matrix(');
-    expect(vanilla.code).toContain('MatrixInputEmbedAdapter');
+    expect(vanilla.code).toContain('matrixInputEmbedAdapter');
     expect(vanilla.code).not.toContain('Failed');
   }
 });

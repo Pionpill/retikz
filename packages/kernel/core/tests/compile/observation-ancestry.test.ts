@@ -7,7 +7,7 @@ import {
   CompositeBaseSchema,
   defineComposite,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
   observeCompileToScene,
 } from '../../src';
 
@@ -54,7 +54,7 @@ describe('最终观测树', () => {
       type: 'clip-pair',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('clip-pair') }),
       compile: (_, context) => {
-        const laid = context.layoutChild({ namespace: 'test', type: 'pair' }, NaturalLayoutProposal);
+        const laid = context.layoutChild({ namespace: 'test', type: 'pair' }, naturalLayoutProposal);
         if (laid.kind === LayoutChildProbeKind.Failed) return context.raise(laid.failure);
 
         return {
@@ -226,7 +226,7 @@ describe('最终观测树', () => {
       type: 'replay-tree',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('replay-tree') }),
       compile: (_, context) => {
-        context.layoutChild({ type: 'node', position: [0, 0], text: 'discarded' }, NaturalLayoutProposal);
+        context.layoutChild({ type: 'node', position: [0, 0], text: 'discarded' }, naturalLayoutProposal);
         const selected = context.layoutChild(
           {
             type: 'scope',
@@ -235,7 +235,7 @@ describe('最终观测树', () => {
               { type: 'node', position: [50, 0], text: 'second' },
             ],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (selected.kind === LayoutChildProbeKind.Failed) return context.raise(selected.failure);
 

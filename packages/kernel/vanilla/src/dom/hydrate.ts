@@ -1,4 +1,4 @@
-import type { BuildContext } from '@retikz/render/hydration';
+import type { HydrationContextBuilder } from '@retikz/render/hydration';
 import {
   createContextBuilder,
   createHydrationController,
@@ -15,7 +15,7 @@ import type { HydrateOptions, HydrationHandle } from './types';
 /** 把用户 handler 水合到已挂的根 `<svg>` */
 export const hydrate = (root: SVGSVGElement, options: HydrateOptions): HydrationHandle => {
   const scene = options.scene;
-  const buildContext: BuildContext = createContextBuilder({
+  const buildContext: HydrationContextBuilder = createContextBuilder({
     renderer: 'svg',
     root,
     scene,

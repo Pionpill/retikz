@@ -4,8 +4,8 @@ import { strictObject, string } from 'zod';
 
 import type { AnyCellPresentationDefinition, IRManualTableCell } from '../../src';
 import { defineCellPresentation, resolveCellPresentationRegistry } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 import { formatDefaultTable } from '../utils/stages';
 
 const presentedCellOf = (
@@ -14,7 +14,7 @@ const presentedCellOf = (
 ) => {
   const identifiedCell =
     typeof cell === 'object' ? { ...cell, id: cell.id ?? 'cell.r0.c0' } : { id: 'cell.r0.c0', value: cell };
-  const formatted = formatDefaultTable(normalizeTableStructure({ kind: 'manual', rows: [[identifiedCell]] }));
+  const formatted = formatDefaultTable(resolveTableStructure({ kind: 'manual', rows: [[identifiedCell]] }));
 
   return presentTable(formatted, { presentationDefinitions }).cells[0];
 };
@@ -49,7 +49,7 @@ describe('Cell 表示注册表', () => {
       }),
     });
     const formatted = formatDefaultTable(
-      normalizeTableStructure({
+      resolveTableStructure({
         kind: 'manual',
         rows: [[{ id: 'cell.r0.c0', value: 7, presentation: { name: 'badge', options: { prefix: '#' } } }]],
       }),
@@ -80,7 +80,7 @@ describe('Cell 表示注册表', () => {
       },
     });
     const formatted = formatDefaultTable(
-      normalizeTableStructure({
+      resolveTableStructure({
         kind: 'manual',
         rows: [[{ value: 'ok', presentation: { name: 'anonymous-inspect' } }]],
       }),

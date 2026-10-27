@@ -12,7 +12,7 @@ import type {
   LayoutChildFailure,
   LayoutChildResult,
   LayoutProposal,
-  LowerTex,
+  TexLowerer,
   SceneClipPath,
   ScenePrimitive,
   TextMeasurer,
@@ -33,14 +33,14 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
   PathSchema,
 } from '../../src';
 import { NamespaceStack } from '../../src/compile/namespace';
 import { createCompileContext } from '../../src/compile/orchestration/context';
 import * as compileProvenance from '../../src/compile/orchestration/provenance';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
-import { createCompileInvariantError, normalizeLayoutProbeError } from '../../src/compile/probe-failure';
+import { createCompileInvariantError, wrapLayoutProbeError } from '../../src/compile/probe-failure';
 import { snapshotProviderPosition } from '../../src/compile/scene-primitive';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';
 import { isLayoutProbeRecoverableError } from '../../src/resolve/diagnostics';
@@ -70,7 +70,7 @@ const sceneOf = (...children: Array<IRChild>): IRScene => ({
 const resolvedResultOf = (
   context: CompositeCompileContext,
   child: IRChild,
-  proposal: LayoutProposal = NaturalLayoutProposal,
+  proposal: LayoutProposal = naturalLayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
@@ -96,7 +96,7 @@ const createBoundsProbe = () =>
         context,
         node.child,
         node.maxWidth === undefined
-          ? NaturalLayoutProposal
+          ? naturalLayoutProposal
           : {
               x: { kind: LayoutAxisProposalKind.Range, min: 0, max: node.maxWidth },
               y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
@@ -432,7 +432,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('discardInvalidNestedProposal'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'invalidNestedProposal' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'test', type: 'invalidNestedProposal' }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -453,7 +453,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('hostileNestedProposal'),
       }),
       compile: (_, context) => {
-        const hostileProposal = new Proxy(NaturalLayoutProposal, {
+        const hostileProposal = new Proxy(naturalLayoutProposal, {
           get: () => {
             throw new Error('hostile proposal access');
           },
@@ -471,7 +471,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('discardHostileNestedProposal'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'hostileNestedProposal' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'test', type: 'hostileNestedProposal' }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -526,7 +526,7 @@ describe('布局感知的复契约束和边界', () => {
       compile: (_, context) => {
         const probe = context.layoutChild(
           { type: 'coordinate', id: 'point', position: [0, 0] },
-          { x: guardedAxis, y: NaturalLayoutProposal.y },
+          { x: guardedAxis, y: naturalLayoutProposal.y },
         );
 
         expect(probe.kind).toBe(LayoutChildProbeKind.Resolved);
@@ -612,7 +612,7 @@ describe('布局感知的复契约束和边界', () => {
               { type: 'step', kind: 'line', to: { id: 'later' } },
             ],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
 
@@ -670,8 +670,8 @@ describe('布局感知的复契约束和边界', () => {
       }),
       compile: (_, context) => {
         const probes = [
-          context.layoutChild({ namespace: 'test', type: 'ordinaryFailure' }, NaturalLayoutProposal),
-          context.layoutChild({ namespace: 'test', type: 'nonErrorFailure' }, NaturalLayoutProposal),
+          context.layoutChild({ namespace: 'test', type: 'ordinaryFailure' }, naturalLayoutProposal),
+          context.layoutChild({ namespace: 'test', type: 'nonErrorFailure' }, naturalLayoutProposal),
         ];
 
         for (const probe of probes) {
@@ -717,7 +717,7 @@ describe('布局感知的复契约束和边界', () => {
         const causes: Array<unknown> = [];
 
         for (let index = 0; index < 2; index += 1) {
-          const probe = context.layoutChild({ namespace: 'test', type: 'rawCauseLeaf' }, NaturalLayoutProposal);
+          const probe = context.layoutChild({ namespace: 'test', type: 'rawCauseLeaf' }, naturalLayoutProposal);
           if (probe.kind === LayoutChildProbeKind.Resolved) throw new Error('expected failed probe');
 
           try {
@@ -745,7 +745,7 @@ describe('布局感知的复契约束和边界', () => {
       type: 'unregisteredProbeParent',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('unregisteredProbeParent') }),
       compile: (_, context) => {
-        const probe = context.layoutChild({ namespace: 'missing', type: 'leaf' }, NaturalLayoutProposal);
+        const probe = context.layoutChild({ namespace: 'missing', type: 'leaf' }, naturalLayoutProposal);
 
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
         return { children: [] };
@@ -786,7 +786,7 @@ describe('布局感知的复契约束和边界', () => {
               },
             ],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
 
@@ -825,7 +825,7 @@ describe('布局感知的复契约束和边界', () => {
             type: 'scope',
             children: [{ namespace: 'test', type: 'selectedFailureLeaf' }],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (probe.kind === LayoutChildProbeKind.Failed) context.raise(probe.failure);
 
@@ -866,7 +866,7 @@ describe('布局感知的复契约束和边界', () => {
       compile: (_, context) => {
         run += 1;
         if (run === 1) {
-          const probe = context.layoutChild({ namespace: 'test', type: 'failureOwnerLeaf' }, NaturalLayoutProposal);
+          const probe = context.layoutChild({ namespace: 'test', type: 'failureOwnerLeaf' }, naturalLayoutProposal);
           if (probe.kind === LayoutChildProbeKind.Failed) retained = probe.failure;
           return { children: [] };
         }
@@ -879,7 +879,7 @@ describe('布局感知的复契约束和边界', () => {
       type: 'copiedFailure',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('copiedFailure') }),
       compile: (_, context) => {
-        const probe = context.layoutChild({ namespace: 'test', type: 'failureOwnerLeaf' }, NaturalLayoutProposal);
+        const probe = context.layoutChild({ namespace: 'test', type: 'failureOwnerLeaf' }, naturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Resolved) return { children: [] };
         return context.raise({ ...probe.failure });
       },
@@ -931,7 +931,7 @@ describe('布局感知的复契约束和边界', () => {
       type: 'fatalInvariantParent',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('fatalInvariantParent') }),
       compile: (_, context) => {
-        context.layoutChild({ type: 'coordinate', id: 'invariant', position: [0, 0] }, NaturalLayoutProposal);
+        context.layoutChild({ type: 'coordinate', id: 'invariant', position: [0, 0] }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -952,7 +952,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('compileProvenanceInvariantParent'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ type: 'scope', localNamespace: true, children: [] }, NaturalLayoutProposal);
+        context.layoutChild({ type: 'scope', localNamespace: true, children: [] }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -985,7 +985,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('invalidLayoutChildDiscriminatorParent'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ type: 'invalidLayoutChild' } as IRChild, NaturalLayoutProposal);
+        context.layoutChild({ type: 'invalidLayoutChild' } as IRChild, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1011,7 +1011,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('hostileLayoutChildParent'),
       }),
       compile: (_, context) => {
-        context.layoutChild(hostileChild as IRChild, NaturalLayoutProposal);
+        context.layoutChild(hostileChild as IRChild, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1038,7 +1038,7 @@ describe('布局感知的复契约束和边界', () => {
             transforms: [{ kind: 'scale', x: 2 }],
             children: [{ type: 'coordinate', id: 'far', position: [Number.MAX_VALUE, 0] }],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         return { children: [] };
       },
@@ -1063,7 +1063,7 @@ describe('布局感知的复契约束和边界', () => {
       type: 'malformedProbeParent',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('malformedProbeParent') }),
       compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'malformedProbeChild' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'test', type: 'malformedProbeChild' }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1123,7 +1123,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('sparseProbeChildrenParent'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'sparseProbeChildren' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'test', type: 'sparseProbeChildren' }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1150,7 +1150,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('invalidOutputChildParent'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'invalidOutputChild' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'test', type: 'invalidOutputChild' }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1185,7 +1185,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('hostileCallbackResultParent'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'hostileCallbackResult' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'test', type: 'hostileCallbackResult' }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1203,7 +1203,7 @@ describe('布局感知的复契约束和边界', () => {
       type: 'hostileReplayWrapper',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('hostileReplayWrapper') }),
       compile: (_, context) => {
-        const probe = context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, NaturalLayoutProposal);
+        const probe = context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, naturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
 
         const wrapper = new Proxy(
@@ -1226,7 +1226,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('hostileReplayWrapperParent'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'hostileReplayWrapper' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'test', type: 'hostileReplayWrapper' }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1256,7 +1256,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('dynamicReplayWrapperClipParent'),
       }),
       compile: (_, context) => {
-        const probe = context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, NaturalLayoutProposal);
+        const probe = context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, naturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
         return { children: [context.replay(probe.result, wrapper)] };
       },
@@ -1298,7 +1298,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('hostileRuntimeScopePropsParent'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'hostileRuntimeScopeProps' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'test', type: 'hostileRuntimeScopeProps' }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1328,7 +1328,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal('sparseRuntimeScopeChildrenParent'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ namespace: 'test', type: 'sparseRuntimeScopeChildren' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'test', type: 'sparseRuntimeScopeChildren' }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1409,7 +1409,7 @@ describe('布局感知的复契约束和边界', () => {
           type: literal(`malformedExpand${variant}Parent`),
         }),
         compile: (_, context) => {
-          context.layoutChild({ namespace: 'test', type: `malformedExpand${variant}` }, NaturalLayoutProposal);
+          context.layoutChild({ namespace: 'test', type: `malformedExpand${variant}` }, naturalLayoutProposal);
           return { children: [] };
         },
       });
@@ -1438,7 +1438,7 @@ describe('布局感知的复契约束和边界', () => {
       compile: (_, context) => {
         context.layoutChild(
           { type: 'node', position: [0, 0], shape: { type: 'malformedProbeShape', params: {} } },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         return { children: [] };
       },
@@ -1448,7 +1448,7 @@ describe('布局感知的复契约束和边界', () => {
       type: 'malformedMetricsParent',
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('malformedMetricsParent') }),
       compile: (_, context) => {
-        context.layoutChild({ type: 'node', position: [0, 0], text: 'bad metrics' }, NaturalLayoutProposal);
+        context.layoutChild({ type: 'node', position: [0, 0], text: 'bad metrics' }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1464,7 +1464,7 @@ describe('布局感知的复契约束和边界', () => {
         composites: [metricsParent],
         measureText: () => ({ width: Number.NaN, height: 10 }),
       }),
-    ).toThrow(/normalizeTextMetrics.*width/i);
+    ).toThrow(/resolveTextMetrics.*width/i);
   });
 
   it.each([
@@ -1512,7 +1512,7 @@ describe('布局感知的复契约束和边界', () => {
         type: literal(`hostileMetrics${variant}Parent`),
       }),
       compile: (_, context) => {
-        context.layoutChild(child, NaturalLayoutProposal);
+        context.layoutChild(child, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -1560,13 +1560,13 @@ describe('布局感知的复契约束和边界', () => {
                 position: [0, 0],
                 text: [{ segments: [{ tex: 'x' }] }],
               };
-        context.layoutChild(child, NaturalLayoutProposal);
+        context.layoutChild(child, naturalLayoutProposal);
 
         return { children: [] };
       },
     });
 
-    const lowerTex: LowerTex = () => {
+    const lowerTex: TexLowerer = () => {
       if (variant === 'hostileBodyRoot') {
         return new Proxy(
           { paths: [], width: 10, height: 10, depth: 2 },
@@ -1621,7 +1621,7 @@ describe('布局感知的复契约束和边界', () => {
             position: [0, 0],
             text: provider === 'measureText' ? 'plain' : [{ segments: [{ tex: 'x' }] }],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
 
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
@@ -1676,7 +1676,7 @@ describe('布局感知的复契约束和边界', () => {
       compile: (_, context) => {
         context.layoutChild(
           { type: 'node', position: [0, 0], shape: { type: 'hostileCircumscribeShape', params: {} } },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         return { children: [] };
       },
@@ -1750,7 +1750,7 @@ describe('布局感知的复契约束和边界', () => {
               },
             ],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
 
         return { children: [] };
@@ -1799,7 +1799,7 @@ describe('布局感知的复契约束和边界', () => {
             scale: 2,
             shape: { type: 'hostileScaleParamsShape', params: { radius: 5 } },
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         return { children: [] };
       },
@@ -1874,7 +1874,7 @@ describe('布局感知的复契约束和边界', () => {
               },
             ],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         return { children: [] };
       },
@@ -1922,7 +1922,7 @@ describe('布局感知的复契约束和边界', () => {
               },
             ],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         return { children: [] };
       },
@@ -1967,7 +1967,7 @@ describe('布局感知的复契约束和边界', () => {
               { type: 'step', kind: 'line', to: [10, 0] },
             ],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         return { children: [] };
       },
@@ -2094,7 +2094,7 @@ describe('布局感知的复契约束和边界', () => {
                     clip: { kind: 'badResolvedClip', params: {} } as never,
                     children: [{ type: 'node', position: [0, 0] }],
                   };
-        context.layoutChild(child, NaturalLayoutProposal);
+        context.layoutChild(child, naturalLayoutProposal);
 
         return { children: [] };
       },
@@ -2220,7 +2220,7 @@ describe('布局感知的复契约束和边界', () => {
                   position: [0, 0],
                   shape: { type: value.variant, params: {} },
                 };
-        context.layoutChild(child, NaturalLayoutProposal);
+        context.layoutChild(child, naturalLayoutProposal);
 
         return { children: [] };
       },
@@ -2349,7 +2349,7 @@ describe('布局感知的复契约束和边界', () => {
                   position: [0, 0],
                   shape: { type: value.variant, params: {} },
                 };
-        context.layoutChild(child, NaturalLayoutProposal);
+        context.layoutChild(child, naturalLayoutProposal);
 
         return { children: [] };
       },
@@ -2423,7 +2423,7 @@ describe('布局感知的复契约束和边界', () => {
                   { type: 'step', kind: 'line', to: [10, 0] },
                 ],
               };
-        const probe = context.layoutChild(child, NaturalLayoutProposal);
+        const probe = context.layoutChild(child, naturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
         return { children: [context.replay(probe.result)] };
       },
@@ -2504,7 +2504,7 @@ describe('布局感知的复契约束和边界', () => {
             shape: { type: 'nonFiniteVisualBoundsShape', params: {} },
             style: { fill: '#000' },
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         return { children: [] };
       },
@@ -2754,7 +2754,7 @@ describe('布局感知的复契约束和边界', () => {
       compile: (value, context) => {
         const probe = context.layoutChild(
           { type: 'node', position: [0, 0], shape: { type: 'throwingHostileProxyShape', params: {} } },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
 
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
@@ -2796,7 +2796,7 @@ describe('布局感知的复契约束和边界', () => {
       },
     );
 
-    const normalized = normalizeLayoutProbeError(selfReturningProxy);
+    const normalized = wrapLayoutProbeError(selfReturningProxy);
 
     expect(prototypeTrapCalls).toBe(1);
     expect(normalized.cause).toBe(selfReturningProxy);
@@ -2822,7 +2822,7 @@ describe('布局感知的复契约束和边界', () => {
       compile: (value, context) => {
         const probe = context.layoutChild(
           { type: 'node', position: [0, 0], shape: { type: 'throwingSelfPrototypeProxyShape', params: {} } },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
 
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
@@ -2878,7 +2878,7 @@ describe('布局感知的复契约束和边界', () => {
             clip: { kind: 'ordinaryThrowingClip', params: {} } as never,
             children: [{ type: 'node', position: [0, 0] }],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
 
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);

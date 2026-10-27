@@ -19,7 +19,7 @@ export const groupApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       'group',
       'GroupInputEmbedProps',
       'InputGroup',
-      'GroupInputEmbedAdapter',
+      'groupInputEmbedAdapter',
       'normalizeGroup',
       'createGraphVanillaAdapters',
     ],

@@ -1,7 +1,7 @@
 import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
-import type { GroupPrimitive, PaintValue, ScenePrimitive, ResolvedArrowEnd, Transform } from '../../../contract';
+import type { GroupPrimitive, PaintValue, ScenePrimitive, CompiledArrowEnd, Transform } from '../../../contract';
 import type { SceneResource } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { MarkResolution } from '../../../resolve';
@@ -32,7 +32,7 @@ const resolveMarkerContextFill = (value: PaintValue, contextStroke: PaintValue):
   typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
 
 /** marker 放置所需上下文 */
-type BuildMarkMarkerGroupContext = {
+type MarkMarkerGroupContext = {
   /** 标记的固定角度或切线定向 */
   rotate?: 'auto' | number;
   /** 标记放置缩放 */
@@ -86,9 +86,9 @@ const markerPrimToScene = (
  * @description marker 局部系：viewBox `0 0 baseSize baseSize`，参考点 (refX, baseSize/2)，尖端朝 +x
  */
 export const buildMarkMarkerGroup = (
-  spec: ResolvedArrowEnd,
+  spec: CompiledArrowEnd,
   sample: CurveSegmentSample,
-  context: BuildMarkMarkerGroupContext,
+  context: MarkMarkerGroupContext,
 ): GroupPrimitive => {
   const { strokeWidth, round, contextStroke } = context;
   const angleDeg =
@@ -117,7 +117,7 @@ export const placeMarkPrimitives = (
   primitives: Array<ScenePrimitive>,
   resolution: MarkResolution,
   sample: CurveSegmentSample,
-  context: BuildMarkMarkerGroupContext,
+  context: MarkMarkerGroupContext,
   resources: MarkResourceContext,
 ): GroupPrimitive => ({
   type: 'group',

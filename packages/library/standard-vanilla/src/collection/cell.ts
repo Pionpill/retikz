@@ -1,7 +1,7 @@
 import type { AnyCoreDependencyProvider, IRChild } from '@retikz/core';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import type { IRCell } from '@retikz/standard/collection';
-import { ArrayProvider, MapProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/collection';
+import { arrayProvider, mapProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/collection';
 import type { InputChild, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 /**
@@ -20,8 +20,8 @@ export type InputCell<
 
 /** JSON 数据可交替嵌套两种结构，根入口装配依赖而不使 provider 相互依赖 */
 export const dataCellDependencies = {
-  roots: [ArrayProvider.key, MapProvider.key],
-  providers: [ArrayProvider, MapProvider, PathClipProvider],
+  roots: [arrayProvider.key, mapProvider.key],
+  providers: [arrayProvider, mapProvider, pathClipProvider],
 };
 
 /**
@@ -70,7 +70,7 @@ export const normalizeCells = <TCell extends { content?: string | InputChild }>(
       roots: [provider.key, ...normalized.flatMap(child => child?.providerDependencies.roots ?? [])],
       providers: [
         provider,
-        PathClipProvider,
+        pathClipProvider,
         ...normalized.flatMap(child => child?.providerDependencies.providers ?? []),
       ],
     },

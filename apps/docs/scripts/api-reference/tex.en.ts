@@ -19,10 +19,10 @@ const translations: Readonly<Record<string, string>> = {
   '初始化失败的诊断，source 为空字符串': 'Initialization failure diagnostic with an empty source string',
   'Promise 在引擎初始化完成后兑现为同步 TeX → SVG 引擎':
     'The Promise resolves to a synchronous TeX-to-SVG engine after initialization',
-  'Promise 在引擎初始化完成后兑现为可注入 Core 的同步 LowerTex':
-    'The Promise resolves to a synchronous LowerTex for Core after engine initialization',
-  '同步 LowerTex；转换失败时返回 null 并通知 onDiagnostic，缓存命中的失败也会再次通知':
-    'A synchronous LowerTex; conversion failures return null and notify onDiagnostic, including cached failures',
+  'Promise 在引擎初始化完成后兑现为可注入 Core 的同步 TexLowerer':
+    'The Promise resolves to a synchronous TexLowerer for Core after engine initialization',
+  '同步 TexLowerer；转换失败时返回 null 并通知 onDiagnostic，缓存命中的失败也会再次通知':
+    'A synchronous TexLowerer; conversion failures return null and notify onDiagnostic, including cached failures',
   '引擎加载或初始化失败时 Promise 拒绝；模块加载失败保留原始 cause':
     'The Promise rejects if engine loading or initialization fails; module-loading failures retain the original cause',
   '引擎初始化失败时先通知 onDiagnostic，再拒绝 Promise；此时诊断 source 为空字符串':
@@ -44,8 +44,8 @@ const translations: Readonly<Record<string, string>> = {
     'A constrained string set derived from `MathJaxExtension`, which can be appended after the built-in profile. Configuration resolution deduplicates and loads values in a stable order, so callers do not need to manage package order.',
   '一步创建 MathJax 引擎与 Core lowerer 的配置':
     'Configuration for creating a MathJax engine and Core lowerer in one step',
-  '合并 `MathJaxEngineOptions` 的解析配置与 `LowerTexOptions` 的诊断回调，作为 `createMathJaxLowerTex` 的单一输入。它只描述工厂参数，不保存引擎、缓存或渲染状态':
-    'Combines the resolution configuration from `MathJaxEngineOptions` with the diagnostic callback from `LowerTexOptions` as the single input to `createMathJaxLowerTex`. It describes factory arguments only and stores no engine, cache, or rendering state.',
+  '合并 `MathJaxEngineOptions` 的解析配置与 `TexLoweringOptions` 的诊断回调，作为 `createMathJaxLowerTex` 的单一输入。它只描述工厂参数，不保存引擎、缓存或渲染状态':
+    'Combines the resolution configuration from `MathJaxEngineOptions` with the diagnostic callback from `TexLoweringOptions` as the single input to `createMathJaxLowerTex`. It describes factory arguments only and stores no engine, cache, or rendering state.',
   'MathJax 配置档取值': 'MathJax profile values',
   '由 `MathJaxProfile` 派生的受限字符串集合，用于选择内置扩展组合；它只描述配置值，实际扩展加载由 MathJax 工厂负责':
     'A constrained string set derived from `MathJaxProfile` for selecting a built-in extension set. It describes configuration values only; the MathJax factory performs the actual extension loading.',
@@ -54,22 +54,22 @@ const translations: Readonly<Record<string, string>> = {
     'Defines the minimal engine boundary required by `createLowerTex`: it accepts a TeX string and display option, then returns markup consumable by this package’s SVG lowerer. Callers may use the built-in MathJax factory or inject a compatible implementation; general SVG importing and rendering are outside this interface.',
   '把一段 TeX 和 display 模式转换成受支持的 SVG 标记': 'Converts TeX and display mode into supported SVG markup.',
   'TeX lowering 诊断': 'TeX lowering diagnostic',
-  '描述引擎执行、MathJax 解析或 SVG 降解阶段不能产出公式路径的原因。它只承载可展示或记录的失败事实，不负责错误恢复；调用方可通过 `LowerTexOptions.onDiagnostic` 决定如何提示用户':
-    'Describes why the engine, MathJax parsing, or SVG lowering phase could not produce formula paths. It carries displayable or loggable failure facts only and does not recover errors; callers choose how to notify users through `LowerTexOptions.onDiagnostic`.',
+  '描述引擎执行、MathJax 解析或 SVG 降解阶段不能产出公式路径的原因。它只承载可展示或记录的失败事实，不负责错误恢复；调用方可通过 `TexLoweringOptions.onDiagnostic` 决定如何提示用户':
+    'Describes why the engine, MathJax parsing, or SVG lowering phase could not produce formula paths. It carries displayable or loggable failure facts only and does not recover errors; callers choose how to notify users through `TexLoweringOptions.onDiagnostic`.',
   '可按需加载的 MathJax TeX 扩展': 'MathJax TeX extensions that can be loaded on demand',
   '值与 MathJax configuration 的扩展标识保持一致，并由 profile 解析阶段统一校验、去重和加载。它提供可传给引擎配置的稳定扩展标识':
     'Values match MathJax configuration extension identifiers and are validated, deduplicated, and loaded together during profile resolution. It provides stable extension identifiers for engine configuration.',
   '内置 MathJax 配置档': 'Built-in MathJax profiles',
   '`base` 仅启用基础 TeX 配置，`math` 额外启用常用数学扩展集合。它提供 `createMathJaxEngine` 与 lowerer 工厂可识别的扩展集合选择，不创建引擎，也不改变已创建实例':
     '`base` enables only the base TeX configuration, while `math` additionally enables common math extensions. It selects an extension set recognized by `createMathJaxEngine` and lowerer factories; it neither creates nor changes an engine instance.',
-  '把同步 SVG engine 适配为 Core `LowerTex`，并缓存确定的解析结果':
-    'Adapts a synchronous SVG engine to Core `LowerTex` and caches deterministic results',
+  '把同步 SVG engine 适配为 Core `TexLowerer`，并缓存确定的解析结果':
+    'Adapts a synchronous SVG engine to Core `TexLowerer` and caches deterministic results',
   '接收能输出受支持 SVG 子集的引擎与可选诊断回调，返回可直接注入 Core 文本编译流程的同步 lowerer。该函数负责 TeX → SVG → 路径的降解和结果缓存，不负责初始化引擎或渲染公式':
     'Accepts an engine that emits the supported SVG subset and an optional diagnostic callback, then returns a synchronous lowerer that can be injected directly into Core text compilation. This function performs TeX-to-SVG-to-path lowering and result caching; it does not initialize the engine or render formulas.',
   '提供同步 TeX → SVG 转换能力的引擎': 'An engine that provides synchronous TeX-to-SVG conversion.',
   '控制 lowering 失败诊断的可选配置': 'Optional configuration for lowering-failure diagnostics.',
-  '可注入 Core 文本编译流程的同步 `LowerTex`':
-    'A synchronous `LowerTex` that can be injected into Core text compilation.',
+  '可注入 Core 文本编译流程的同步 `TexLowerer`':
+    'A synchronous `TexLowerer` that can be injected into Core text compilation.',
   '创建基于可选 `mathjax-full` peer 的同步 TeX → SVG 引擎':
     'Creates a synchronous TeX-to-SVG engine from the optional `mathjax-full` peer dependency',
   '异步加载并配置 `mathjax-full`，返回可被 `createLowerTex` 反复同步调用的引擎。输入配置只影响启用的 TeX 扩展；返回值只负责 TeX → SVG，不承担 SVG 路径降解、缓存或 Core 注入':
@@ -82,12 +82,12 @@ const translations: Readonly<Record<string, string>> = {
   "使用字面量 dynamic import 支持打包器分包；`fontCache: 'none'` 让字形以内联路径输出":
     "Uses a literal dynamic import to support bundler code splitting; `fontCache: 'none'` outputs glyphs as inline paths.",
   '创建使用内置 MathJax profile 的 Core lowerer': 'Creates a Core lowerer using a built-in MathJax profile',
-  '异步加载可选的 `mathjax-full`、建立同步 SVG 引擎，并返回可交给 Core 的 `LowerTex`。适合不需要替换引擎实现的场景；如果应用已有兼容引擎，使用 `createLowerTex` 保留引擎所有权':
-    'Asynchronously loads the optional `mathjax-full`, creates a synchronous SVG engine, and returns a `LowerTex` for Core. Use it when the engine implementation does not need to be replaced; when the application already owns a compatible engine, use `createLowerTex` instead.',
+  '异步加载可选的 `mathjax-full`、建立同步 SVG 引擎，并返回可交给 Core 的 `TexLowerer`。适合不需要替换引擎实现的场景；如果应用已有兼容引擎，使用 `createLowerTex` 保留引擎所有权':
+    'Asynchronously loads the optional `mathjax-full`, creates a synchronous SVG engine, and returns a `TexLowerer` for Core. Use it when the engine implementation does not need to be replaced; when the application already owns a compatible engine, use `createLowerTex` instead.',
   '同时控制 MathJax 扩展和 lowering 诊断的可选配置':
     'Optional configuration for both MathJax extensions and lowering diagnostics.',
-  '建立完成后可注入 Core 文本编译流程的 `LowerTex`':
-    'A `LowerTex` that can be injected into Core text compilation after initialization.',
+  '建立完成后可注入 Core 文本编译流程的 `TexLowerer`':
+    'A `TexLowerer` that can be injected into Core text compilation after initialization.',
   'MathJax lowerer 的异步初始化状态': 'Asynchronous initialization state of a MathJax lowerer',
   '表示当前 React 组件对应配置的引擎与 lowerer 是否可用：loading 时尚未完成初始化，ready 提供可传给 `@retikz/react` 的 `lowerTex`，error 提供可展示的诊断。它是 Hook 的输出快照，不保存跨组件的 UI 状态':
     'Indicates whether the engine and lowerer for the current React component configuration are available: loading has not finished initialization, ready provides `lowerTex` for `@retikz/react`, and error provides a displayable diagnostic. It is a Hook output snapshot and stores no UI state across components.',

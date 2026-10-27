@@ -1,6 +1,6 @@
 import type { ConnectionEnvelopeKind, IRNode, ShapeDefinition } from '@retikz/core';
 import { boundsConnectionEnvelope, defineShape, ellipseShape, polygon, rectangle } from '@retikz/core';
-import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/extension';
+import { sectorShapeDefinition, starShapeDefinition } from '@retikz/extension';
 import type { JsonObject } from '@retikz/foundation';
 import type { CenteredBox } from '@retikz/math';
 import { z } from 'zod';
@@ -39,10 +39,10 @@ const visualShapeOf = (shape: ShapeChoice): ResolvedVisualShape => {
     case 'polygon':
       return { definition: polygon, params: { sides: 6, rotate: 30 } };
     case 'star':
-      return { definition: StarShapeDefinition, params: { points: 5, innerRadius: 22, outerRadius: 50 } };
+      return { definition: starShapeDefinition, params: { points: 5, innerRadius: 22, outerRadius: 50 } };
     case 'sector':
       return {
-        definition: SectorShapeDefinition,
+        definition: sectorShapeDefinition,
         params: { innerRadius: 14, outerRadius: 48, startAngle: 25, endAngle: 300 },
       };
   }

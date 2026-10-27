@@ -7,7 +7,7 @@ import {
   compileToScene,
   CompositeBaseSchema,
   defineComposite,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
 import type { CompositeEvaluationResult, LayoutContribution } from '../../src';
 
@@ -57,13 +57,13 @@ describe('孤立的大小贡献', () => {
         for (const axis of ['x', 'y', 'both'] as const) {
           const probe = context.measureChild(
             child,
-            { x: { kind: 'exact', value: 60 }, y: NaturalLayoutProposal.y },
+            { x: { kind: 'exact', value: 60 }, y: naturalLayoutProposal.y },
             axis,
           );
           if (probe.kind === 'failed') context.raise(probe.failure);
           else results.push(probe.result);
         }
-        const probe = context.layoutChild(child, NaturalLayoutProposal);
+        const probe = context.layoutChild(child, naturalLayoutProposal);
         if (probe.kind === 'failed') return context.raise(probe.failure);
         return { children: [context.replay(probe.result)] };
       },
@@ -141,7 +141,7 @@ it.each(['source', 'generated', 'bound'])('仅重用跨祖先探测的稳定编�
           : mode === 'bound'
             ? context.bindChild(generated, [{ path: [], input: 'ready' }])
             : generated;
-      const probe = context.measureChild(candidate, NaturalLayoutProposal, 'x');
+      const probe = context.measureChild(candidate, naturalLayoutProposal, 'x');
       if (probe.kind === 'failed') return context.raise(probe.failure);
       if (probe.result.axis === 'x') seen.push(probe.result.width);
       return { children: [context.selectSourceChild(['child'])] };
@@ -153,9 +153,9 @@ it.each(['source', 'generated', 'bound'])('仅重用跨祖先探测的稳定编�
     schema: schema('outer').extend({ child: ChildSchema }),
     compile: (_node, context) => {
       const child = context.selectSourceChild(['child']);
-      const first = context.layoutChild(child, NaturalLayoutProposal);
+      const first = context.layoutChild(child, naturalLayoutProposal);
       if (first.kind === 'failed') return context.raise(first.failure);
-      const second = context.layoutChild(child, { x: { kind: 'exact', value: 50 }, y: NaturalLayoutProposal.y });
+      const second = context.layoutChild(child, { x: { kind: 'exact', value: 50 }, y: naturalLayoutProposal.y });
       if (second.kind === 'failed') return context.raise(second.failure);
       expect(second.result.slotSize.width).toBe(50);
       return { children: [context.replay(second.result)] };
@@ -204,10 +204,10 @@ it('不缓存可恢复的故障或发布来自仅大小候选者的警告', () =
     schema: schema('retry-parent'),
     compile: (_node, context) => {
       const child = { namespace: 'measurement-test', type: 'retry' };
-      expect(context.measureChild(child, NaturalLayoutProposal, 'x').kind).toBe('failed');
-      const result = context.measureChild(child, NaturalLayoutProposal, 'x');
+      expect(context.measureChild(child, naturalLayoutProposal, 'x').kind).toBe('failed');
+      const result = context.measureChild(child, naturalLayoutProposal, 'x');
       expect(result).toEqual({ kind: 'resolved', result: { axis: 'x', width: 12 } });
-      expect(context.measureChild(child, NaturalLayoutProposal, 'x')).toEqual(result);
+      expect(context.measureChild(child, naturalLayoutProposal, 'x')).toEqual(result);
       return { children: [] };
     },
   });
@@ -237,7 +237,7 @@ it('分隔主题环境并接受非 JSON 运行时绑定', () => {
     compile: (_node, context) => {
       const bound = context.selectSourceChild(['child']);
       for (const themed of [context, context.withTheme({ mode: 'dark' }), context]) {
-        const result = themed.measureChild(bound, NaturalLayoutProposal, 'x');
+        const result = themed.measureChild(bound, naturalLayoutProposal, 'x');
         if (result.kind === 'failed') return themed.raise(result.failure);
         if (result.result.axis === 'x') widths.push(result.result.width);
       }
@@ -278,7 +278,7 @@ it.each([
     type: 'fatal-host',
     schema: schema('fatal-host'),
     compile: (_node, context) => {
-      context.measureChild({ namespace: 'measurement-test', type: 'fatal' }, NaturalLayoutProposal, 'x');
+      context.measureChild({ namespace: 'measurement-test', type: 'fatal' }, naturalLayoutProposal, 'x');
       return { children: [] };
     },
   });
@@ -306,7 +306,7 @@ it.each([false, true])('保持不同源位置的相同编写对象独立：neste
     type: 'position-wrapper',
     schema: schema('position-wrapper').extend({ child: ChildSchema }),
     compile: (_node, context): CompositeEvaluationResult => {
-      const measured = context.measureChild(context.selectSourceChild(['child']), NaturalLayoutProposal, 'x');
+      const measured = context.measureChild(context.selectSourceChild(['child']), naturalLayoutProposal, 'x');
       if (measured.kind === 'failed') return context.raise(measured.failure);
       return { kind: 'contribution', contribution: measured.result };
     },
@@ -319,7 +319,7 @@ it.each([false, true])('保持不同源位置的相同编写对象独立：neste
       for (const key of ['first', 'second']) {
         const child = context.selectSourceChild([key]);
         for (let i = 0; i < 2; i++) {
-          expect(context.measureChild(child, NaturalLayoutProposal, 'x')).toEqual({
+          expect(context.measureChild(child, naturalLayoutProposal, 'x')).toEqual({
             kind: 'resolved',
             result: { axis: 'x', width: 12 },
           });
@@ -376,10 +376,10 @@ it('隔离完整的回退候选者并仅发布独立的最终回放', () => {
     schema: schema('fallback-host').extend({ child: ChildSchema }),
     compile: (_node, context) => {
       const child = context.selectSourceChild(['child']);
-      const first = context.measureChild(child, NaturalLayoutProposal, 'x');
-      expect(context.measureChild(child, NaturalLayoutProposal, 'x')).toEqual(first);
+      const first = context.measureChild(child, naturalLayoutProposal, 'x');
+      expect(context.measureChild(child, naturalLayoutProposal, 'x')).toEqual(first);
       expect(calls).toBe(1);
-      const final = context.layoutChild(child, NaturalLayoutProposal);
+      const final = context.layoutChild(child, naturalLayoutProposal);
       if (final.kind === 'failed') return context.raise(final.failure);
       return { children: [context.replay(final.result)] };
     },
@@ -414,7 +414,7 @@ it('在祖先命名空间更改后重新计算依赖于引用的大小', () => {
     type: 'reference-query',
     schema: schema('reference-query').extend({ child: ChildSchema }),
     compile: (_node, context) => {
-      const result = context.measureChild(context.selectSourceChild(['child']), NaturalLayoutProposal, 'x');
+      const result = context.measureChild(context.selectSourceChild(['child']), naturalLayoutProposal, 'x');
       if (result.kind === 'failed') return context.raise(result.failure);
       if (result.result.axis === 'x') widths.push(result.result.width);
       return { children: [] };
@@ -443,7 +443,7 @@ it('在祖先命名空间更改后重新计算依赖于引用的大小', () => {
       for (const width of [20, 40]) {
         const probe = context.layoutChild(context.selectSourceChild(['child']), {
           x: { kind: 'exact', value: width },
-          y: NaturalLayoutProposal.y,
+          y: naturalLayoutProposal.y,
         });
         if (probe.kind === 'failed') return context.raise(probe.failure);
       }

@@ -34,7 +34,7 @@ const TableBorderVertexSchema = strictObject({
 });
 
 /** 校验最终边框线样式，包括颜色、非负线宽、虚线与固定线帽连接方式 */
-export const ResolvedTableBorderLineSchema = strictObject({
+export const TableBorderLineSchema = strictObject({
   color: CssColorSchema.describe('Master color used to resolve contextual border paint.'),
   stroke: PaintValueSchema.refine(value => value !== 'none', {
     message: 'Resolved border stroke must not be none.',
@@ -77,7 +77,7 @@ export const TableBorderSourceSchema = union([
   TableGridBorderSourceSchema,
 ]);
 
-const TableBorderContributionBaseShape = {
+const tableBorderContributionBaseShape = {
   key: NonBlankStringSchema.describe('Transaction-unique contribution key.'),
   source: TableBorderSourceSchema.describe('Canonical border candidate source.'),
   priority: TableBorderPrioritySchema.describe('Resolved finite conflict priority.'),
@@ -90,13 +90,13 @@ const TableBorderContributionBaseShape = {
 export const TableNoBorderContributionSchema = strictObject({
   kind: literal('none').describe('Discriminator for an explicit hidden border candidate.'),
   origin: literal(TableBorderContributionOrigin.Explicit).describe('Explicit Table, Cell, or rule border origin.'),
-  ...TableBorderContributionBaseShape,
+  ...tableBorderContributionBaseShape,
 });
 
 const TableDefaultsNoBorderContributionSchema = strictObject({
   kind: literal('none').describe('Discriminator for a resolved hidden default border candidate.'),
   origin: literal(TableBorderContributionOrigin.Defaults).describe('Table Source defaults border origin.'),
-  ...TableBorderContributionBaseShape,
+  ...tableBorderContributionBaseShape,
   priority: literal(-100).describe('Closed Source defaults border priority.'),
   defaults: TableDefaultsProvenanceSchema.describe('Required Source defaults provenance.'),
 });
@@ -104,16 +104,16 @@ const TableDefaultsNoBorderContributionSchema = strictObject({
 const TableExplicitLineBorderContributionSchema = strictObject({
   kind: literal('line').describe('Discriminator for a resolved visible-capable line candidate.'),
   origin: literal(TableBorderContributionOrigin.Explicit).describe('Explicit Table, Cell, or rule border origin.'),
-  ...TableBorderContributionBaseShape,
-  line: ResolvedTableBorderLineSchema.describe('Complete resolved Core-compatible line style.'),
+  ...tableBorderContributionBaseShape,
+  line: TableBorderLineSchema.describe('Complete resolved Core-compatible line style.'),
 });
 
 const TableDefaultsLineBorderContributionSchema = strictObject({
   kind: literal('line').describe('Discriminator for a resolved visible-capable line candidate.'),
   origin: literal(TableBorderContributionOrigin.Defaults).describe('Resolved Table Source defaults border origin.'),
-  ...TableBorderContributionBaseShape,
+  ...tableBorderContributionBaseShape,
   priority: literal(-100).describe('Closed Source defaults border priority.'),
-  line: ResolvedTableBorderLineSchema.describe('Complete resolved Core-compatible line style.'),
+  line: TableBorderLineSchema.describe('Complete resolved Core-compatible line style.'),
   defaults: TableDefaultsProvenanceSchema.describe('Required Source defaults provenance.'),
 });
 
@@ -143,7 +143,7 @@ export const TableBorderManifestEntrySchema = strictObject({
   orientation: TableBorderOrientationSchema.describe('Edge orientation.'),
   start: TableBorderVertexSchema.describe('Table-local edge start.'),
   end: TableBorderVertexSchema.describe('Table-local edge end.'),
-  style: ResolvedTableBorderLineSchema.describe('Resolved emitted line style.'),
+  style: TableBorderLineSchema.describe('Resolved emitted line style.'),
   atoms: array(TableBorderManifestAtomSchema).min(1).describe('Canonical atomic provenance in edge order.'),
   pathId: NonBlankStringSchema.optional().describe('Optional emitted Core Path id.'),
 });
@@ -311,7 +311,7 @@ const defaultsPathOfAppearanceTrace = (
 };
 
 /** 校验 Cell defaults trace 指向实际贡献最终叶的来源层 */
-const validateAppearanceDefaultsProvenance = (
+const refineAppearanceDefaultsProvenance = (
   cell: ZodInfer<typeof TableCellManifestEntrySchema>,
   trace: ZodInfer<typeof TableCellManifestEntrySchema>['appearanceTrace'][number],
   style: ManifestStyle,
@@ -334,7 +334,7 @@ const validateAppearanceDefaultsProvenance = (
 };
 
 /** 校验 Source defaults provenance 与有效 defaults layer 严格对应 */
-const validateBorderDefaultsProvenance = (
+const refineBorderDefaultsProvenance = (
   contribution: ManifestContribution,
   cells: ReadonlyArray<ZodInfer<typeof TableCellManifestEntrySchema>>,
   style: ManifestStyle,
@@ -443,7 +443,7 @@ export const TableLayoutManifestSchema: ReturnType<
 
     manifest.cells.forEach((cell, cellIndex) => {
       cell.appearanceTrace.forEach((trace, traceIndex) => {
-        validateAppearanceDefaultsProvenance(cell, trace, manifest.style, context, [
+        refineAppearanceDefaultsProvenance(cell, trace, manifest.style, context, [
           'cells',
           cellIndex,
           'appearanceTrace',
@@ -548,7 +548,7 @@ export const TableLayoutManifestSchema: ReturnType<
           });
         }
 
-        validateBorderDefaultsProvenance(atom.winner, manifest.cells, manifest.style, context, [
+        refineBorderDefaultsProvenance(atom.winner, manifest.cells, manifest.style, context, [
           'borders',
           borderIndex,
           'atoms',
@@ -556,7 +556,7 @@ export const TableLayoutManifestSchema: ReturnType<
           'winner',
         ]);
         atom.contributors.forEach((contribution, contributionIndex) => {
-          validateBorderDefaultsProvenance(contribution, manifest.cells, manifest.style, context, [
+          refineBorderDefaultsProvenance(contribution, manifest.cells, manifest.style, context, [
             'borders',
             borderIndex,
             'atoms',

@@ -15,7 +15,7 @@ import { boolean, literal, number, string } from 'zod';
 import type { GridLayoutCompileArtifact } from '../../src';
 import {
   createGridLayout,
-  GridLayoutDefinition,
+  gridLayoutDefinition,
   LayoutAlignment,
   LayoutDistribution,
   LayoutItemKind,
@@ -141,7 +141,7 @@ const compileGrid = (child: IRChild, proposal: LayoutProposal) => {
       children: [{ namespace: 'grid-test', type: 'harness', child }],
     },
     {
-      composites: [GridLayoutDefinition, createLeafDefinition(logs), harness],
+      composites: [gridLayoutDefinition, createLeafDefinition(logs), harness],
       padding: 0,
     },
   );

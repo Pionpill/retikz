@@ -1,6 +1,6 @@
 import { RetikzTableError } from '../../error';
 import { TableTrackSizeKind } from '../../schemas';
-import type { ResolvedTableTrackSize, SolveTableTracksInput } from './types';
+import type { CanonicalTableTrackSize, InputTableTrackSizing } from './types';
 
 /** 单个轨道在 constrained 求解阶段的数值状态 */
 type TrackState = Readonly<{
@@ -24,7 +24,7 @@ const assertFinitePositive = (value: number, name: string): void => {
   }
 };
 
-const validateResolvedTrack = (track: ResolvedTableTrackSize, index: number): void => {
+const assertResolvedTrack = (track: CanonicalTableTrackSize, index: number): void => {
   switch (track.kind) {
     case TableTrackSizeKind.Fixed:
       assertFiniteNonnegative(track.value, `track ${index} fixed value`);
@@ -69,7 +69,7 @@ const validateResolvedTrack = (track: ResolvedTableTrackSize, index: number): vo
 
 const contributionSizesOf = (
   trackCount: number,
-  contributions: SolveTableTracksInput['contributions'],
+  contributions: InputTableTrackSizing['contributions'],
 ): ReadonlyArray<number> => {
   const sizes = Array.from({ length: trackCount }, () => 0);
 
@@ -91,7 +91,7 @@ const contributionSizesOf = (
   return sizes;
 };
 
-const unconstrainedSizeOf = (track: ResolvedTableTrackSize, contribution: number): number => {
+const unconstrainedSizeOf = (track: CanonicalTableTrackSize, contribution: number): number => {
   switch (track.kind) {
     case TableTrackSizeKind.Fixed:
       return track.value;
@@ -111,7 +111,7 @@ const unconstrainedSizeOf = (track: ResolvedTableTrackSize, contribution: number
   }
 };
 
-const constrainedStateOf = (track: ResolvedTableTrackSize, contribution: number): TrackState => {
+const constrainedStateOf = (track: CanonicalTableTrackSize, contribution: number): TrackState => {
   switch (track.kind) {
     case TableTrackSizeKind.Fixed:
       return { base: track.value, growthLimit: track.value, flexFactor: 0 };
@@ -207,13 +207,13 @@ const growFlexibleTracks = (sizes: Array<number>, states: ReadonlyArray<TrackSta
 };
 
 /** 从数值 contribution 与可选轴约束确定 canonical 轨道尺寸 */
-export const solveTableTracks = (input: SolveTableTracksInput): ReadonlyArray<number> => {
+export const solveTableTracks = (input: InputTableTrackSizing): ReadonlyArray<number> => {
   assertFiniteNonnegative(input.gap, 'gap');
   if (input.availableSize !== undefined) {
     assertFiniteNonnegative(input.availableSize, 'availableSize');
   }
 
-  input.tracks.forEach(validateResolvedTrack);
+  input.tracks.forEach(assertResolvedTrack);
   const contributions = contributionSizesOf(input.tracks.length, input.contributions);
 
   if (input.availableSize === undefined) {

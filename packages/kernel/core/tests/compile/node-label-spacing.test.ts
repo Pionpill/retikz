@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { isNodeLayoutCompileArtifact } from '../../src/compile/artifact';
 import { compileToScene } from '../../src/compile/compile';
 import { BuiltinCompileWarningCode } from '../../src/compile/constants';
-import type { LowerTex, TextMeasurer, TextMetrics } from '../../src/compile/text';
-import { normalizeTextMetrics } from '../../src/compile/text';
+import type { TexLowerer, TextMeasurer, TextMetrics } from '../../src/compile/text';
+import { resolveTextMetrics } from '../../src/compile/text';
 import type { CompileWarning } from '../../src/compile/warning';
 import type { PathPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import { RetikzCoreError } from '../../src/error';
@@ -210,7 +210,7 @@ describe('Node 标签解析指标', () => {
   ] satisfies Array<[TextMetrics, Pick<TextMetrics, 'height' | 'ascent' | 'descent'>]>)(
     '标准化缺失、部分、领先和溢出的基线指标',
     (metrics, expected) => {
-      expect(normalizeTextMetrics(metrics)).toMatchObject(expected);
+      expect(resolveTextMetrics(metrics)).toMatchObject(expected);
     },
   );
 
@@ -236,7 +236,7 @@ describe('Node 标签解析指标', () => {
       () =>
         compileToScene(sceneWithLabel({ text: 'L', position: 'center' }), { measureText: () => metrics, padding: 0 })
           .scene,
-    ).toThrow(/normalizeTextMetrics: invalid/);
+    ).toThrow(/resolveTextMetrics: invalid/);
   });
 
   it('当单独有限的上升和下降合计溢出时，会失败', () => {
@@ -250,7 +250,7 @@ describe('Node 标签解析指标', () => {
             descent: 1e308,
           }),
         }).scene,
-    ).toThrow(/normalizeTextMetrics: invalid/);
+    ).toThrow(/resolveTextMetrics: invalid/);
   });
 
   it('拒绝混合 Node 标签和混合 Node 正文文本的无效指标', () => {
@@ -263,15 +263,15 @@ describe('Node 标签解析指标', () => {
     };
 
     expect(() => compileToScene(labelScene, { measureText: invalidHeight }).scene).toThrow(
-      /normalizeTextMetrics: invalid/,
+      /resolveTextMetrics: invalid/,
     );
     expect(() => compileToScene(nodeTextScene, { measureText: invalidHeight }).scene).toThrow(
-      /normalizeTextMetrics: invalid/,
+      /resolveTextMetrics: invalid/,
     );
   });
 
   it('拒绝 Node 标签路径上格式错误的 LoweredTex', () => {
-    const lowerTex: LowerTex = () => ({
+    const lowerTex: TexLowerer = () => ({
       paths: [],
       width: -1,
       height: 20,

@@ -1,5 +1,5 @@
 import type { IRNode, CompositeCompileContext } from '@retikz/core';
-import { LayoutChildProbeKind, NaturalLayoutProposal } from '@retikz/core';
+import { LayoutChildProbeKind, naturalLayoutProposal } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
 /** 使用当前 Core 编译环境测量标签的未旋转尺寸，保留字体、富文本和换行配置 */
@@ -25,7 +25,7 @@ const textProbeOf = (node: IRNode, fontSize: number): IRNode => ({
 export const createPlotTextMeasurer =
   (context: CompositeCompileContext): PlotLabelMeasure =>
   (node, fontSize) => {
-    const probe = context.layoutChild(textProbeOf(node, fontSize), NaturalLayoutProposal);
+    const probe = context.layoutChild(textProbeOf(node, fontSize), naturalLayoutProposal);
     if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
     return probe.result.visualBounds;
   };

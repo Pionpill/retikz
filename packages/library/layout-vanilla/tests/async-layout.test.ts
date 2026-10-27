@@ -1,9 +1,9 @@
-import { LayoutItemKind, GridLayoutDefinition, createGridLayout } from '@retikz/layout';
+import { LayoutItemKind, gridLayoutDefinition, createGridLayout } from '@retikz/layout';
 import type { InputEmbedAdapter, InputEmbedContribution } from '@retikz/vanilla';
 import { processToStaticInputResult, processToStaticInputResultAsync } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { flexLayout, gridLayout, overlayLayout, LayoutInputEmbedAdapters } from '../src';
+import { flexLayout, gridLayout, overlayLayout, layoutInputEmbedAdapters } from '../src';
 
 describe('Layout 异步编写', () => {
   it('嵌套子项仅预处理一次且贡献与同步路径等价', async () => {
@@ -28,7 +28,7 @@ describe('Layout 异步编写', () => {
       gridLayout({ columns: [{ kind: 'content', mode: 'natural' }], children: [{ kind: LayoutItemKind.Grid, child }] }),
       overlayLayout({ children: [{ kind: LayoutItemKind.Overlay, child }] }),
     ];
-    const options = { adapters: [...LayoutInputEmbedAdapters, adapter] };
+    const options = { adapters: [...layoutInputEmbedAdapters, adapter] };
 
     for (const container of containers) {
       const input = { children: [container] };
@@ -44,10 +44,10 @@ describe('Layout 异步编写', () => {
 
   it('将嵌套准备好的复合绑定重新定位到 Layout 项 Source 字段', async () => {
     const leafDefinition = {
-      ...GridLayoutDefinition,
+      ...gridLayoutDefinition,
       compile: (
-        _node: Parameters<typeof GridLayoutDefinition.compile>[0],
-        context: Parameters<typeof GridLayoutDefinition.compile>[1],
+        _node: Parameters<typeof gridLayoutDefinition.compile>[0],
+        context: Parameters<typeof gridLayoutDefinition.compile>[1],
       ) => ({
         children: [{ type: 'node' as const, position: [0, 0] as [number, number], text: String(context.runtimeInput) }],
       }),
@@ -71,7 +71,7 @@ describe('Layout 异步编写', () => {
         ],
       },
       {
-        adapters: [...LayoutInputEmbedAdapters, adapter],
+        adapters: [...layoutInputEmbedAdapters, adapter],
         compile: { composites: [leafDefinition] },
       },
     );

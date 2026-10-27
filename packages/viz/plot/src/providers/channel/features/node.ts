@@ -48,7 +48,7 @@ import type { IRPlot, IRPlotLinearScale, IRPlotMark, IRPlotChannel, IRPlotSqrtSc
 import { BuiltinPlotScale } from '../../../schemas';
 import { resolveLinearScale, resolveSqrtScale } from '../../scale';
 import { PLOT_SHAPE_PALETTE } from '../../theme';
-import { makeMarkValueResolver, booleanChannelValue } from '../shared';
+import { createMarkValueResolver, booleanChannelValue } from '../shared';
 
 /** opacity 通道连续映射的最小不透明度（range 下界，避免最小值全透明不可见）；契约常量，测试 import 断言 */
 export const OPACITY_MIN = 0.2;
@@ -123,7 +123,7 @@ const defineSimpleNodeChannel = <T extends JsonValue>(
     channel,
     output,
     resolve: (ctx, mark) =>
-      makeMarkValueResolver<T>(markChannelEncoding(mark, channel), ctx.model, {
+      createMarkValueResolver<T>(markChannelEncoding(mark, channel), ctx.model, {
         channelName: channel,
         parse,
       }),
@@ -146,7 +146,7 @@ export const resolveNumericNodeChannel = (
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   if (!channel) return undefined;
 
-  const source = makeMarkValueResolver<number>(channel, model, {
+  const source = createMarkValueResolver<number>(channel, model, {
     channelName,
     expectedFieldType: DataFieldType.Continuous,
     parse: value => (isFiniteNumber(value) ? value : undefined),
@@ -605,7 +605,7 @@ const textColorNodeChannel: NodeChannelDefinition<IRContextualColor> = defineNod
   channel: 'textColor',
   output: { outputKind: 'color' },
   resolve: (ctx, mark) =>
-    makeMarkValueResolver<IRContextualColor>(markChannelEncoding(mark, 'textColor'), ctx.model, {
+    createMarkValueResolver<IRContextualColor>(markChannelEncoding(mark, 'textColor'), ctx.model, {
       channelName: 'textColor',
       parse: value => {
         const parsed = ContextualColorSchema.safeParse(value);

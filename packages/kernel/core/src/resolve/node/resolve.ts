@@ -14,8 +14,8 @@ import type { IRNodeLabelDefault } from '../../schemas';
 import { resolvePaint } from '../resource';
 import { resolveBoxSpacing } from '../spacing';
 import { resolveGraphicOpacity, mergeNodeLabelDefaults } from '../style';
-import { resolveContextualColor, resolveDashPattern, resolveDropShadow, resolveEffectiveNodeStyle } from '../style';
-import type { ResolvedInlineSourceSegment, ResolvedTextLine } from '../text';
+import { resolveContextualColor, resolveDashPattern, resolveDropShadow, mergeNodeStyle } from '../style';
+import type { InlineSegmentColorSource, TextLineColorSource } from '../text';
 import { resolveBoundaryReference } from './boundary';
 import { resolveNodeShape } from './shape';
 import { resolveNodeTextColor } from './text-color';
@@ -24,9 +24,9 @@ import type {
   CanonicalNodeLabel,
   NodeResolution,
   NodeResolveContext,
-  PrimaryColorResolvedNode,
-  ResolvedNodeLabelPin,
-  ResolvedNodeSource,
+  NodePrimaryColorSource,
+  CanonicalNodeLabelPin,
+  NodeColorSource,
 } from './types';
 
 /** 节点缺省内边距 */
@@ -57,7 +57,7 @@ const expandBoxSize = (value: number | IRBoxSize | undefined): CanonicalNode['mi
 };
 
 /** 展开正文单字符串为单行数组 */
-const expandNodeText = (text: ResolvedNodeSource['text']): CanonicalNode['text'] =>
+const expandNodeText = (text: NodeColorSource['text']): CanonicalNode['text'] =>
   text === undefined ? undefined : typeof text === 'string' ? [text] : text;
 
 /** 补齐标签位置：缺省为 top，边界位置对象缺省比例为 0.5 */
@@ -67,19 +67,19 @@ const expandNodeLabelPosition = (position: IRNodeLabel['position']): CanonicalNo
   return position;
 };
 
-type MaterializedNodeLabel = Omit<IRNodeLabel, 'align' | 'position' | 'placement' | 'distance'> & {
+type NodeLabelPlacementSource = Omit<IRNodeLabel, 'align' | 'position' | 'placement' | 'distance'> & {
   align: CanonicalNodeLabel['align'];
   position: CanonicalNodeLabel['position'];
   placement: CanonicalNodeLabel['placement'];
   distance: number;
 };
 
-type MaterializedNodeSource = Omit<IRNode, 'label'> & {
-  label?: Array<MaterializedNodeLabel>;
+type NodeLabelSource = Omit<IRNode, 'label'> & {
+  label?: Array<NodeLabelPlacementSource>;
 };
 
-type PrimaryColorResolvedMaterializedNode = Omit<PrimaryColorResolvedNode, 'label'> & {
-  label?: Array<MaterializedNodeLabel>;
+type NodeLabelPrimaryColorSource = Omit<NodePrimaryColorSource, 'label'> & {
+  label?: Array<NodeLabelPlacementSource>;
 };
 
 /** 用标签默认配置补齐单个标签，并拒绝内部标签使用引线 */
@@ -87,9 +87,9 @@ const expandNodeLabel = (
   label: IRNodeLabel,
   labelDefault: IRNodeLabelDefault,
   labelDistance: number,
-): MaterializedNodeLabel => {
+): NodeLabelPlacementSource => {
   const { color, ...configuration } = mergeNodeLabelDefaults(labelDefault, label);
-  const normalized: MaterializedNodeLabel = {
+  const normalized: NodeLabelPlacementSource = {
     ...configuration,
     text: label.text,
     align: configuration.align ?? 'middle',
@@ -110,7 +110,7 @@ const expandNodeLabels = (
   label: IRNode['label'],
   labelDefault: IRNodeLabelDefault,
   labelDistance: number,
-): Array<MaterializedNodeLabel> | undefined =>
+): Array<NodeLabelPlacementSource> | undefined =>
   label === undefined
     ? undefined
     : Array.isArray(label)
@@ -119,8 +119,8 @@ const expandNodeLabels = (
 
 /** 展开节点简写与默认值，将样式、布局字段合入节点结果，绘制资源随后解析 */
 const expandNodeFields = (
-  node: ResolvedNodeSource,
-): Omit<CanonicalNode, 'fill' | 'stroke'> & Pick<NonNullable<ResolvedNodeSource['style']>, 'fill' | 'stroke'> => {
+  node: NodeColorSource,
+): Omit<CanonicalNode, 'fill' | 'stroke'> & Pick<NonNullable<NodeColorSource['style']>, 'fill' | 'stroke'> => {
   const { style, layout, ...structure } = node;
   const { dashed, dotted, opacity, ...visual } = style ?? {};
   const source = { ...structure, ...visual, ...resolveGraphicOpacity(opacity), ...layout };
@@ -165,10 +165,7 @@ const resolveNodePaint = (
     : value;
 
 /** 先解析节点填充、描边和文字的数值颜色，供后续自动对比色计算使用 */
-const resolveNodePrimaryColors = (
-  node: MaterializedNodeSource,
-  context: NodeColorContext,
-): PrimaryColorResolvedMaterializedNode => {
+const resolveNodePrimaryColors = (node: NodeLabelSource, context: NodeColorContext): NodeLabelPrimaryColorSource => {
   const { style, ...source } = node;
   const { fill, stroke, textColor, ...visual } = style ?? {};
 
@@ -197,7 +194,7 @@ const resolveInlineSegmentColor = (
   masterColor: string | undefined,
   mode: NodeResolveContext['mode'],
   fieldPath: string,
-): ResolvedInlineSourceSegment => {
+): InlineSegmentColorSource => {
   const { fill, ...source } = segment;
   return {
     ...source,
@@ -213,7 +210,7 @@ const resolveNodeLineColors = (
   masterColor: string | undefined,
   mode: NodeResolveContext['mode'],
   fieldPath: string,
-): ResolvedTextLine => {
+): TextLineColorSource => {
   if (typeof line === 'string') return line;
   if ('segments' in line) {
     return {
@@ -240,7 +237,7 @@ const resolveNodeLineColors = (
 
 /** 解析节点标签的文字主色、行内片段颜色与引线绘制配置 */
 const resolveNodeLabelColors = (
-  label: MaterializedNodeLabel,
+  label: NodeLabelPlacementSource,
   labelMasterColor: string | undefined,
   inheritedTextColor: string | undefined,
   context: NodeResolveContext,
@@ -256,7 +253,7 @@ const resolveNodeLabelColors = (
           fieldPath: `${fieldPath}.textColor`,
         });
   const textMaster = resolvedTextColor ?? inheritedTextColor;
-  let resolvedPin: boolean | ResolvedNodeLabelPin | undefined;
+  let resolvedPin: boolean | CanonicalNodeLabelPin | undefined;
   if (typeof pin === 'object') {
     const { stroke, ...pinSource } = pin;
     resolvedPin = {
@@ -295,11 +292,11 @@ const resolveNodeLabelColors = (
 
 /** 用自动对比色计算后的文字主色，解析正文、标签片段和引线的数值颜色 */
 const resolveNodeDependentColors = (
-  node: PrimaryColorResolvedMaterializedNode,
+  node: NodeLabelPrimaryColorSource,
   labelDefault: IRNodeLabelDefault,
   context: NodeResolveContext,
   labelWasArray: boolean,
-): ResolvedNodeSource => {
+): NodeColorSource => {
   const { text, label, ...source } = node;
   const textMaster = node.style?.textColor;
 
@@ -336,18 +333,18 @@ const resolveNodeDependentColors = (
  * @description 补齐静态默认值并展开简写；位置引用、文本测量与最终尺寸由布局阶段处理
  */
 export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeResolution => {
-  const effectiveNode = resolveEffectiveNodeStyle(source, context.scopeDefaults);
-  const effectiveLabelDefault = context.scopeDefaults.node?.label ?? {};
-  const labelWasArray = Array.isArray(effectiveNode.label);
-  const labelsMaterialized: MaterializedNodeSource = {
-    ...effectiveNode,
-    label: expandNodeLabels(effectiveNode.label, effectiveLabelDefault, context.labelDistance),
+  const mergedNode = mergeNodeStyle(source, context.scopeDefaults);
+  const mergedLabelDefault = context.scopeDefaults.node?.label ?? {};
+  const labelWasArray = Array.isArray(mergedNode.label);
+  const labelsMaterialized: NodeLabelSource = {
+    ...mergedNode,
+    label: expandNodeLabels(mergedNode.label, mergedLabelDefault, context.labelDistance),
   };
   const primaryColorsResolved = resolveNodePrimaryColors(labelsMaterialized, context);
-  const contrastResolved = resolveNodeTextColor(primaryColorsResolved, effectiveLabelDefault, context.warn);
+  const contrastResolved = resolveNodeTextColor(primaryColorsResolved, mergedLabelDefault, context.warn);
   const dependentColorsResolved = resolveNodeDependentColors(
     contrastResolved,
-    effectiveLabelDefault,
+    mergedLabelDefault,
     context,
     labelWasArray,
   );

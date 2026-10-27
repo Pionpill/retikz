@@ -11,7 +11,7 @@ import type {
   InspectionSelection,
   InspectionSelectionRule,
   InspectionSelectionTarget,
-  ResolvedInspectionRequest,
+  CanonicalInspectionRequest,
 } from './types';
 
 type IndexedRule = Readonly<{
@@ -181,7 +181,7 @@ export const resolveAdmittedInspectionSelection = ({
   registry: InspectorRegistry;
   admittedRules: ReadonlyArray<IndexedRule>;
   observations: ReadonlyArray<CompileObservation>;
-}>): ReadonlyArray<ResolvedInspectionRequest> => {
+}>): ReadonlyArray<CanonicalInspectionRequest> => {
   /** 所有实例按 Core 的稳定顺序处理，避免输入 observation 顺序影响 options 合并或颜色 */
   const orderedObservations = [...observations].sort((left, right) =>
     compareCompileOccurrences(left.occurrence, right.occurrence),
@@ -223,7 +223,7 @@ export const resolveAdmittedInspectionSelection = ({
   }
 
   /** 每项都是一个 observation 与一个 owner-matched Inspector 的最终请求，尚未分配外观颜色 */
-  const pendingRequests: Array<Omit<ResolvedInspectionRequest, 'colorScope'>> = [];
+  const pendingRequests: Array<Omit<CanonicalInspectionRequest, 'colorScope'>> = [];
 
   for (const observation of orderedObservations) {
     for (const definition of getResolvedInspectorRegistry(registry).definitions) {

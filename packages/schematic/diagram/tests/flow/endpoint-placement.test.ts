@@ -2,7 +2,7 @@ import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowLayoutDefinition, IRFlowRelation, IRFlowRouting } from '../../src/flow';
-import { LayeredFlowLayoutDefinition, FlowEndpointSchema } from '../../src/flow';
+import { layeredFlowLayoutDefinition, FlowEndpointSchema } from '../../src/flow';
 import { FlowDiagramSchema, FlowDiagramArtifactSchema, createFlowDiagramProviderContribution } from '../../src/flow';
 
 const compileEndpoints = (count: number, shared = false) => {
@@ -163,12 +163,12 @@ it('schema 拒绝混用 side 和 anchor，不给省略 overlap 提前补默认',
 it('不支持端点能力的 provider 在回调前拒绝请求', () => {
   let called = false;
   const definition: FlowLayoutDefinition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'no-endpoints',
-    capabilities: { ...LayeredFlowLayoutDefinition.capabilities, endpointPlacement: false },
+    capabilities: { ...layeredFlowLayoutDefinition.capabilities, endpointPlacement: false },
     layout: (input, context) => {
       called = true;
-      return LayeredFlowLayoutDefinition.layout(input, context);
+      return layeredFlowLayoutDefinition.layout(input, context);
     },
   };
 
@@ -178,10 +178,10 @@ it('不支持端点能力的 provider 在回调前拒绝请求', () => {
 
 it('自定义布局重复查询与原数组内位置更新都使用当前真实几何', () => {
   const definition: FlowLayoutDefinition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'query-layout-changes',
     layout: (input, context) => {
-      const output = LayeredFlowLayoutDefinition.layout(input, context);
+      const output = layeredFlowLayoutDefinition.layout(input, context);
       const elements = output.elements.map(element => ({ ...element, bounds: { ...element.bounds } }));
       const original = context.resolveEndpoint({ elements, target: { id: 'a', anchor: 'right' } });
       expect(
@@ -209,10 +209,10 @@ it('自定义布局重复查询与原数组内位置更新都使用当前真实�
 
 it('校验 provider 必须保持指定侧', () => {
   const definition: FlowLayoutDefinition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'wrong-side',
     layout: (input, context) => {
-      const output = LayeredFlowLayoutDefinition.layout(input, context);
+      const output = layeredFlowLayoutDefinition.layout(input, context);
       return {
         ...output,
         relations: output.relations.map(relation => ({

@@ -12,7 +12,7 @@ import { materializeSpatialHandleIndex } from './orchestration/spatial-handle';
 import { assemblePreparedScene } from './output';
 import type { CompileProvenance } from './provenance';
 import type { CompileOptions, CompileResult, CompositeArtifactOf, ObservedCompileResult } from './types';
-import type { CompileWarning, CompileWarningInput } from './warning';
+import type { CompileWarning, InputCompileWarning } from './warning';
 import { formatCompileWarning } from './warning';
 
 export { BuiltinCompileWarningCode, type CompileWarningCode } from './constants';
@@ -74,7 +74,7 @@ export const prepareSceneCompilation = <const TComposites extends ReadonlyArray<
   options?: Omit<CompileOptions<TComposites>, 'onWarn'>,
   execution: SceneCompilationPreparationOptions = {},
 ): PreparedSceneCompilation<TComposites> => {
-  const diagnostics: Array<CompileWarningInput> = [];
+  const diagnostics: Array<InputCompileWarning> = [];
   const observation =
     execution.observers === undefined ? undefined : createCompileObservationRuntime(execution.observers);
   const context = createCompileContext(ir, {

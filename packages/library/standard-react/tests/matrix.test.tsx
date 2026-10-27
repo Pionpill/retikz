@@ -1,5 +1,5 @@
 import { createInputScene, Node } from '@retikz/react';
-import { matrix, MatrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { matrix, matrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
@@ -37,10 +37,10 @@ it('JSX 行保留空单元格和具有 Vanilla 等价性的显式别名', () => 
   const options = { adapters: synchronousAdapters(jsx.adapters) };
 
   expect(normalizeScene(jsx.scene, options).ir).toEqual(
-    normalizeScene(vanilla, { adapters: [MatrixInputEmbedAdapter] }).ir,
+    normalizeScene(vanilla, { adapters: [matrixInputEmbedAdapter] }).ir,
   );
   expect(renderToSvgString(jsx.scene, options)).toEqual(
-    renderToSvgString(vanilla, { adapters: [MatrixInputEmbedAdapter] }),
+    renderToSvgString(vanilla, { adapters: [matrixInputEmbedAdapter] }),
   );
 });
 it('自动收集嵌套的 Matrix、Array、Map 和裁剪提供者', () => {

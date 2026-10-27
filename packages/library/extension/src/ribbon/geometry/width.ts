@@ -18,7 +18,7 @@ const assertFiniteWidth = (width: number, source: string): number => {
 };
 
 /** 按指定插值模式在两个宽度值之间取样 */
-type InterpolateInput = {
+type InputRibbonWidthInterpolation = {
   /** 区间起点的宽度值 */
   from: number;
   /** 区间终点的宽度值 */
@@ -30,7 +30,7 @@ type InterpolateInput = {
 };
 
 /** 按给定区间比例插值宽度；step 始终取起点值，其他模式不裁剪比例 */
-export const interpolate = ({ from, to, t, mode }: InterpolateInput): number => {
+export const interpolate = ({ from, to, t, mode }: InputRibbonWidthInterpolation): number => {
   if (mode === 'step') return from;
   const u = mode === 'smooth' ? smoothstep(t) : t;
   return from + (to - from) * u;

@@ -1,12 +1,12 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
-const options: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const options: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const rows = [
   { x: 0, y: 1, category: 'A', value: 0 },
@@ -14,7 +14,7 @@ const rows = [
   { x: 2, y: 3, category: 'C', value: 100 },
 ];
 
-const lower = (source: unknown, extra: LowerPlotsOptions = {}): IRScope =>
+const lower = (source: unknown, extra: PlotsLoweringOptions = {}): IRScope =>
   lowerPlotWithDataArtifact(PlotSchema.parse(source), { d: rows }, { textMeasurer: measureLabel, ...options, ...extra })
     .child as IRScope;
 

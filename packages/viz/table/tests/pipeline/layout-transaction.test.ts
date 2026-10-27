@@ -6,7 +6,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -228,7 +228,7 @@ describe('Table 布局事务', () => {
     );
 
     expect(calls).toEqual([
-      NaturalLayoutProposal,
+      naturalLayoutProposal,
       {
         x: { kind: LayoutAxisProposalKind.Range, min: 0, max: 50 },
         y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
@@ -454,7 +454,7 @@ describe('Table 布局事务', () => {
       type: 'discard-table-probe',
       schema: OuterSchema,
       compile: (node, context) => {
-        context.layoutChild(node.table, NaturalLayoutProposal);
+        context.layoutChild(node.table, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -588,7 +588,7 @@ describe('Table 布局事务', () => {
         table: TableSchema,
       }),
       compile: (node, context) => {
-        const probe = context.layoutChild(node.table, NaturalLayoutProposal);
+        const probe = context.layoutChild(node.table, naturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
         return { children: [context.replay(probe.result)] };
       },
@@ -756,7 +756,7 @@ describe('Table 布局事务', () => {
       compile: (_node, context) => {
         const failedProbe = context.layoutChild(
           { namespace: 'fixture', type: 'border-failure' },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (failedProbe.kind === LayoutChildProbeKind.Resolved) {
           throw new Error('expected a real failed Border fixture probe');
@@ -776,7 +776,7 @@ describe('Table 布局事务', () => {
 
             borderLayoutCalls += 1;
 
-            expect(proposal).toEqual(NaturalLayoutProposal);
+            expect(proposal).toEqual(naturalLayoutProposal);
 
             return failedProbe;
           },

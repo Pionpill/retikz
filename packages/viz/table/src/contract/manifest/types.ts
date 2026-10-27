@@ -2,7 +2,7 @@ import type { infer as ZodInfer } from 'zod';
 
 import type { DeepReadonly } from '../../shared';
 import type {
-  ResolvedTableBorderLineSchema,
+  TableBorderLineSchema,
   TableBorderContributionSchema,
   TableBorderLocatorEntrySchema,
   TableBorderManifestAtomSchema,
@@ -18,7 +18,7 @@ import type {
 export type TableBorderSource = DeepReadonly<ZodInfer<typeof TableBorderSourceSchema>>;
 
 /** Border Graph lowering 消费的完整 line style */
-export type ResolvedTableBorderLine = DeepReadonly<ZodInfer<typeof ResolvedTableBorderLineSchema>>;
+export type TableBorderLine = DeepReadonly<ZodInfer<typeof TableBorderLineSchema>>;
 
 /** 单个 Border Graph atom 的候选贡献 */
 export type TableBorderContribution = DeepReadonly<ZodInfer<typeof TableBorderContributionSchema>>;

@@ -2,7 +2,7 @@ import type { Transform } from '../../contract';
 import type { IRScope, IRPosition } from '../../schemas';
 import type { CompileEnvironment } from '../environment';
 import { createSyntheticRectangleLayout } from '../node';
-import type { NodeLayout } from '../node';
+import type { CompiledNodeLayout } from '../node';
 import {
   applyTransformChain,
   inverseTransformChain,
@@ -22,7 +22,7 @@ export const projectCompileReference = (
   source: CompileReferenceSource,
   environment: CompileEnvironment,
   parentTransforms: ReadonlyArray<Transform> = [],
-): NodeLayout => {
+): CompiledNodeLayout => {
   if (source.type === 'node') {
     return projectLayoutWithTransform(source.compiled.layout, composeScopeTransform(parentTransforms));
   }
@@ -46,20 +46,20 @@ export const projectCompileReference = (
 /** 按 Core 包络规则向父 Scope 贡献布局；匿名 Scope 透传子布局 */
 export const projectScopeCompileLayouts = (
   input: Pick<IRScope, 'id'>,
-  envelope: NodeLayout,
-  children: ReadonlyArray<NodeLayout>,
+  envelope: CompiledNodeLayout,
+  children: ReadonlyArray<CompiledNodeLayout>,
   transforms: ReadonlyArray<Transform>,
-): Array<NodeLayout> => {
+): Array<CompiledNodeLayout> => {
   const transform = composeScopeTransform(transforms);
   return (input.id === undefined ? children : [envelope]).map(layout => projectLayoutWithTransform(layout, transform));
 };
 
 /** 将已按 parent ancestor chain 发布的 layout 投影并返回新布局，不修改已发布对象当前 Scope own chain */
 export const projectPublishedCompileLayout = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   parentChain: ReadonlyArray<Transform>,
   ownChain: ReadonlyArray<Transform>,
-): NodeLayout => {
+): CompiledNodeLayout => {
   if (ownChain.length === 0) return layout;
 
   const projectAcrossParent = (point: IRPosition): IRPosition => {

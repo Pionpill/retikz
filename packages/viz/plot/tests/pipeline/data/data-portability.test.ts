@@ -4,7 +4,7 @@ import {
   applyTransforms,
   coerceValue,
   defineTransform,
-  normalizeRows,
+  resolveDataRows,
   resolveFieldPath,
   DataFieldType,
   readSourceIndex,
@@ -16,13 +16,17 @@ import { describe, expect, it } from 'vitest';
 import { object } from 'zod';
 
 import { createPlotLocator } from '../../../src/pipeline';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
-const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions) =>
+const compile = (
+  spec: IRPlot,
+  datasets: Record<string, Array<Record<string, unknown>>>,
+  options?: PlotsLoweringOptions,
+) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
 
 const specWithModel = (reference = 'd'): IRPlot =>
@@ -130,21 +134,21 @@ describe('coerceValue — 按 DataFieldType 值强制（contract）', () => {
   });
 });
 
-describe('normalizeRows — ingest 归一化（contract）', () => {
+describe('resolveDataRows — ingest 归一化（contract）', () => {
   const fieldTypeMap = new Map([
     ['month', DataFieldType.Temporal],
     ['revenue', DataFieldType.Continuous],
   ]);
 
   it('身份强制到位', () => {
-    const out = normalizeRows([{ month: '2024-01-01', revenue: '120' }], fieldTypeMap);
+    const out = resolveDataRows([{ month: '2024-01-01', revenue: '120' }], fieldTypeMap);
 
     expect(out[0].month).toBe(Date.parse('2024-01-01'));
     expect(out[0].revenue).toBe(120);
   });
 
   it('字段映射重命名然后强制', () => {
-    const out = normalizeRows([{ period: '2024-01-01', amount: '90' }], fieldTypeMap, {
+    const out = resolveDataRows([{ period: '2024-01-01', amount: '90' }], fieldTypeMap, {
       month: 'period',
       revenue: 'amount',
     });
@@ -154,7 +158,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
   });
 
   it('嵌套物理路径通过字段映射', () => {
-    const out = normalizeRows([{ pricing: { amount: 42 } }], new Map([['revenue', DataFieldType.Continuous]]), {
+    const out = resolveDataRows([{ pricing: { amount: 42 } }], new Map([['revenue', DataFieldType.Continuous]]), {
       revenue: 'pricing.amount',
     });
 
@@ -163,7 +167,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
 
   it('嵌套逻辑路径强制', () => {
     // 点路径逻辑名归一化写扁平 key，下游 resolveFieldPath exact-first 命中 coerced 值（不再读回原始嵌套字符串）
-    const out = normalizeRows([{ user: { age: '42' } }], new Map([['user.age', DataFieldType.Continuous]]));
+    const out = resolveDataRows([{ user: { age: '42' } }], new Map([['user.age', DataFieldType.Continuous]]));
 
     expect(out[0]['user.age']).toBe(42);
     expect(resolveFieldPath(out[0], 'user.age')).toBe(42);
@@ -171,7 +175,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
 
   it('保留源索引', () => {
     const tagged = tagSourceIndex([{ revenue: '5' }, { revenue: '7' }]);
-    const out = normalizeRows(tagged, new Map([['revenue', DataFieldType.Continuous]]));
+    const out = resolveDataRows(tagged, new Map([['revenue', DataFieldType.Continuous]]));
 
     expect(readSourceIndex(out[1])).toBe(1);
     expect(out[1].revenue).toBe(7);
@@ -181,7 +185,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
 describe('coerce-before-transform 关键回归', () => {
   it('数字字符串堆栈正确', () => {
     // 数字串先归一化成数值，再 stack 累加 → 得 8 而非 0
-    const normalized = normalizeRows(
+    const normalized = resolveDataRows(
       [
         { m: 'Q1', v: '3' },
         { m: 'Q1', v: '5' },

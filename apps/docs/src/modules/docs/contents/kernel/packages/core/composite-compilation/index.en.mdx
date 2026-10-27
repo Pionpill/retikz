@@ -50,8 +50,8 @@ Consider a scatter chart titled “Monthly sales”. Chart uses the `chart.point
 | Object          | Meaning in this example                                                                                                                                                              |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Root dependency | `chart.point`, contributed by the scatter chart provider, requests the Point chart capability                                                                                        |
-| Provider        | Chart's provider declares a dependency on `FlexLayoutProvider` and supplies a factory for the Chart Definition; the factory on `FlexLayoutProvider` returns `FlexLayoutDefinition`   |
-| Definition      | The Chart Definition validates chart input with its schema and runs its compile callback; `FlexLayoutDefinition` uses its layout schema and callback to measure and arrange children |
+| Provider        | Chart's provider declares a dependency on `flexLayoutProvider` and supplies a factory for the Chart Definition; the factory on `flexLayoutProvider` returns `flexLayoutDefinition`   |
+| Definition      | The Chart Definition validates chart input with its schema and runs its compile callback; `flexLayoutDefinition` uses its layout schema and callback to measure and arrange children |
 
 Assembly prepares the FlexLayout Definition before the Chart Definition. During chart compilation, Chart creates a text node from the title configuration and places it before Plot in a column FlexLayout. Layout compilation measures and positions those children; Core draws the text node. Chart also depends on Surface and Plot; the diagram shows only the FlexLayout dependency.
 

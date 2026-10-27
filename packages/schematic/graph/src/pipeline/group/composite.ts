@@ -1,23 +1,23 @@
 import type { CompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
-import { FlexLayoutProvider } from '@retikz/layout';
-import { SurfaceProvider } from '@retikz/standard/presentation';
+import { flexLayoutProvider } from '@retikz/layout';
+import { surfaceProvider } from '@retikz/standard/presentation';
 
 import type { GraphDefinitionOptions } from '../../contract';
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
 import { resolveGraphDefinitionOptions, resolveGraphRuntimeOptions } from '../../providers';
 import type { IRGroup } from '../../schemas';
 import { GroupSchema } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
-import { BlockProviderKey } from '../block';
-import { EntityProviderKey } from '../entity';
-import { RelationProviderKey } from '../relation';
-import { GroupBodyAllocationProviderKey } from './allocation';
+import { blockProviderKey } from '../block';
+import { entityProviderKey } from '../entity';
+import { relationProviderKey } from '../relation';
+import { groupBodyAllocationProviderKey } from './allocation';
 import { createCompileGroup } from './compile';
 
 /** 用已解析 registries 创建 Group Composite Definition */
 export const createGroupDefinitionFromOptions = (
-  options: ResolvedGraphDefinitionOptions,
+  options: GraphDefinitionRegistries,
 ): CompositeDefinition<IRGroup, typeof GRAPH_NAMESPACE, typeof GraphType.Group> =>
   defineComposite({
     namespace: GRAPH_NAMESPACE,
@@ -33,11 +33,11 @@ export const createGroupDefinition = (
   createGroupDefinitionFromOptions(resolveGraphDefinitionOptions(options));
 
 /** 使用内置 registries 的默认 Group Composite Definition */
-export const GroupDefinition: CompositeDefinition<IRGroup, typeof GRAPH_NAMESPACE, typeof GraphType.Group> =
+export const groupDefinition: CompositeDefinition<IRGroup, typeof GRAPH_NAMESPACE, typeof GraphType.Group> =
   createGroupDefinition();
 
 /** Group Composite provider 的公开完整 key */
-export const GroupProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const groupProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: GRAPH_NAMESPACE,
   type: GraphType.Group,
@@ -51,18 +51,18 @@ export const createGroupProvider = (
   options: GraphDefinitionOptions = {},
 ): CoreDependencyProvider<GraphDefinitionOptions> =>
   Object.freeze({
-    key: GroupProviderKey,
+    key: groupProviderKey,
     dependencies: Object.freeze([
-      BlockProviderKey,
-      EntityProviderKey,
-      RelationProviderKey,
-      GroupBodyAllocationProviderKey,
-      FlexLayoutProvider.key,
-      SurfaceProvider.key,
+      blockProviderKey,
+      entityProviderKey,
+      relationProviderKey,
+      groupBodyAllocationProviderKey,
+      flexLayoutProvider.key,
+      surfaceProvider.key,
     ]),
     params: options,
     makeDefinition: makeGroupDefinition,
   });
 
 /** 使用内置 Graph registries 的默认 Group provider */
-export const GroupProvider = createGroupProvider();
+export const groupProvider = createGroupProvider();

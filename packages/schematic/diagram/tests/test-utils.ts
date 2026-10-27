@@ -14,9 +14,9 @@ import {
   LayoutChildProbeKind,
   resolveCoreProviderDependencies,
 } from '@retikz/core';
-import { PathClipProvider } from '@retikz/extension';
-import { FlexLayoutProvider } from '@retikz/layout';
-import { LegendProvider, SurfaceProvider } from '@retikz/standard/presentation';
+import { pathClipProvider } from '@retikz/extension';
+import { flexLayoutProvider } from '@retikz/layout';
+import { legendProvider, surfaceProvider } from '@retikz/standard/presentation';
 import { literal } from 'zod';
 
 import type { DiagramDefinitionOptions } from '../src/_diagram';
@@ -77,7 +77,7 @@ const createTestDiagramFoundationProvider = (
   const resolved = resolveDiagramDefinitionOptions(options);
   return Object.freeze({
     key: TestDiagramFoundationProviderKey,
-    dependencies: Object.freeze([FlexLayoutProvider.key, SurfaceProvider.key, LegendProvider.key]),
+    dependencies: Object.freeze([flexLayoutProvider.key, surfaceProvider.key, legendProvider.key]),
     params: undefined,
     makeDefinition: () => createTestDiagramFoundationDefinition(resolved, proposal),
   });
@@ -114,7 +114,7 @@ export const compileTestDiagramFoundation = (
     contributions: [
       {
         roots: [TestDiagramFoundationProviderKey],
-        providers: [provider, FlexLayoutProvider, SurfaceProvider, LegendProvider, PathClipProvider],
+        providers: [provider, flexLayoutProvider, surfaceProvider, legendProvider, pathClipProvider],
       },
     ],
   });

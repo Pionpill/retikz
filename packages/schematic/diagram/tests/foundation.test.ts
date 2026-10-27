@@ -1,4 +1,4 @@
-import type { IRChild, IRScope, ResolvedTheme, ScenePrimitive } from '@retikz/core';
+import type { IRChild, IRScope, CanonicalTheme, ScenePrimitive } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME, defineTheme, LayoutAxisProposalKind, ThemeMode } from '@retikz/core';
 import type { IRFlexLayout } from '@retikz/layout';
 import { FlexLayoutArtifactSchema, FlexLayoutDirection, FlexLayoutSchema, LayoutAlignment } from '@retikz/layout';
@@ -296,7 +296,7 @@ describe('Diagram Foundation 下沉', () => {
 
 describe('Diagram Foundation 提供者集成', () => {
   it('在解析命名的 Diagram 样式之前观察有效的 Core Scope 主题', () => {
-    const observed: Array<ResolvedTheme> = [];
+    const observed: Array<CanonicalTheme> = [];
     const diagramStyle = {
       name: 'brand',
       resolve: theme => {

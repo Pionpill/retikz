@@ -1,22 +1,22 @@
 import {
   createGridLayout,
-  FlexLayoutDefinition,
-  FlexLayoutProvider,
-  GridLayoutDefinition,
-  GridLayoutProvider,
+  flexLayoutDefinition,
+  flexLayoutProvider,
+  gridLayoutDefinition,
+  gridLayoutProvider,
   GridLayoutSchema,
   LayoutItemKind,
-  OverlayLayoutDefinition,
-  OverlayLayoutProvider,
+  overlayLayoutDefinition,
+  overlayLayoutProvider,
 } from '@retikz/layout';
 import {
   flexLayout,
-  FlexLayoutInputEmbedAdapter,
+  flexLayoutInputEmbedAdapter,
   gridLayout,
-  GridLayoutInputEmbedAdapter,
-  LayoutInputEmbedAdapters,
+  gridLayoutInputEmbedAdapter,
+  layoutInputEmbedAdapters,
   overlayLayout,
-  OverlayLayoutInputEmbedAdapter,
+  overlayLayoutInputEmbedAdapter,
 } from '@retikz/layout-vanilla';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -29,17 +29,17 @@ describe('Layout Vanilla 系列', () => {
       scene({
         children: [flexLayout({}), gridLayout({ columns: [{ kind: 'fixed', value: 10 }] }), overlayLayout({})],
       }),
-      { adapters: LayoutInputEmbedAdapters },
+      { adapters: layoutInputEmbedAdapters },
     );
 
     expect(normalized.contributions).toEqual([
-      { roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] },
-      { roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] },
-      { roots: [OverlayLayoutProvider.key], providers: [OverlayLayoutProvider] },
+      { roots: [flexLayoutProvider.key], providers: [flexLayoutProvider] },
+      { roots: [gridLayoutProvider.key], providers: [gridLayoutProvider] },
+      { roots: [overlayLayoutProvider.key], providers: [overlayLayoutProvider] },
     ]);
-    expect(FlexLayoutProvider.makeDefinition([])).toBe(FlexLayoutDefinition);
-    expect(GridLayoutProvider.makeDefinition([])).toBe(GridLayoutDefinition);
-    expect(OverlayLayoutProvider.makeDefinition([])).toBe(OverlayLayoutDefinition);
+    expect(flexLayoutProvider.makeDefinition([])).toBe(flexLayoutDefinition);
+    expect(gridLayoutProvider.makeDefinition([])).toBe(gridLayoutDefinition);
+    expect(overlayLayoutProvider.makeDefinition([])).toBe(overlayLayoutDefinition);
   });
 
   it('构建精确的嵌入规范并规范化系列定义一次', () => {
@@ -53,7 +53,7 @@ describe('Layout Vanilla 系列', () => {
         overlayLayout({}),
       ],
     });
-    const normalized = normalizeScene(input, { adapters: LayoutInputEmbedAdapters });
+    const normalized = normalizeScene(input, { adapters: layoutInputEmbedAdapters });
 
     expect(input.children.map(child => ('kind' in child ? child.kind : undefined))).toEqual([
       'layout.flexLayout',
@@ -63,9 +63,9 @@ describe('Layout Vanilla 系列', () => {
     expect(normalized.ir.children.map(child => child.type)).toEqual(['flexLayout', 'gridLayout', 'overlayLayout']);
     expect(normalized.ir.children[0]).toMatchObject({ gap: { column: 4, row: 8 } });
     expect(normalized.contributions.flatMap(contribution => contribution.providers)).toEqual([
-      FlexLayoutProvider,
-      GridLayoutProvider,
-      OverlayLayoutProvider,
+      flexLayoutProvider,
+      gridLayoutProvider,
+      overlayLayoutProvider,
     ]);
   });
 
@@ -78,7 +78,7 @@ describe('Layout Vanilla 系列', () => {
           }),
         ],
       }),
-      { adapters: LayoutInputEmbedAdapters },
+      { adapters: layoutInputEmbedAdapters },
     );
 
     const item = (normalized.ir.children[0] as { children: Array<Record<string, unknown>> }).children[0];
@@ -87,13 +87,13 @@ describe('Layout Vanilla 系列', () => {
   });
 
   it('按容器顺序导出浅冻结系列适配器数组', () => {
-    expect(LayoutInputEmbedAdapters).toEqual([
-      FlexLayoutInputEmbedAdapter,
-      GridLayoutInputEmbedAdapter,
-      OverlayLayoutInputEmbedAdapter,
+    expect(layoutInputEmbedAdapters).toEqual([
+      flexLayoutInputEmbedAdapter,
+      gridLayoutInputEmbedAdapter,
+      overlayLayoutInputEmbedAdapter,
     ]);
-    expect(Object.isFrozen(LayoutInputEmbedAdapters)).toBe(true);
-    expect(Object.isFrozen(FlexLayoutInputEmbedAdapter)).toBe(false);
+    expect(Object.isFrozen(layoutInputEmbedAdapters)).toBe(true);
+    expect(Object.isFrozen(flexLayoutInputEmbedAdapter)).toBe(false);
   });
 
   it('拒绝 Source schema 边界处的外部 Vanilla 嵌入有效负载', () => {
@@ -130,7 +130,7 @@ describe('Layout Vanilla 系列', () => {
       ],
     });
     const normalized = normalizeScene(input, {
-      adapters: LayoutInputEmbedAdapters,
+      adapters: layoutInputEmbedAdapters,
     });
 
     expect(normalized.ir.children[0]).toMatchObject({
@@ -144,11 +144,11 @@ describe('Layout Vanilla 系列', () => {
         },
       ],
     });
-    expect(normalized.contributions.flatMap(contribution => contribution.providers)).toEqual([FlexLayoutProvider]);
+    expect(normalized.contributions.flatMap(contribution => contribution.providers)).toEqual([flexLayoutProvider]);
     expect(
       renderToSvgString(input, {
-        adapters: LayoutInputEmbedAdapters,
-        compile: { composites: [GridLayoutDefinition] },
+        adapters: layoutInputEmbedAdapters,
+        compile: { composites: [gridLayoutDefinition] },
       }),
     ).toMatch(/^<svg/);
   });
@@ -169,7 +169,7 @@ describe('Layout Vanilla 系列', () => {
       ],
     });
 
-    const normalized = normalizeScene(input, { adapters: LayoutInputEmbedAdapters });
+    const normalized = normalizeScene(input, { adapters: layoutInputEmbedAdapters });
 
     expect(normalized.ir.children[0]).toMatchObject({
       namespace: 'layout',
@@ -177,8 +177,8 @@ describe('Layout Vanilla 系列', () => {
       children: [{ kind: LayoutItemKind.Flex, key: 'grid', child: { namespace: 'layout', type: 'gridLayout' } }],
     });
     expect(normalized.contributions[0]).toEqual({
-      roots: [FlexLayoutProvider.key, GridLayoutProvider.key],
-      providers: [FlexLayoutProvider, GridLayoutProvider],
+      roots: [flexLayoutProvider.key, gridLayoutProvider.key],
+      providers: [flexLayoutProvider, gridLayoutProvider],
     });
   });
 });

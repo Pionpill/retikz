@@ -205,7 +205,7 @@ describe('Relation 下沉', () => {
 
   it('在 Core Node 和 Scope 目标之间编译直接 Relation', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.relationProviderKey], providers: Graph.createGraphProviders() }],
     });
     const output = compileToScene(
       {
@@ -240,7 +240,7 @@ describe('Relation 下沉', () => {
 
   it('继承 Relation 前景，同时将 Graph 预设字体大小应用于无样式标签', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.relationProviderKey], providers: Graph.createGraphProviders() }],
     });
     const output = compileToScene(
       {
@@ -323,7 +323,7 @@ describe('Relation 下沉', () => {
 
   it('将未解析的目标委托给 Core 参考诊断', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.relationProviderKey], providers: Graph.createGraphProviders() }],
     });
 
     const warnings: Array<CompileWarning> = [];

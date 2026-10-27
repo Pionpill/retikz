@@ -6,9 +6,9 @@ interface CanonicalAxesExtent {
   positive: number;
 }
 
-type AxesExtentInput = number | CanonicalAxesExtent;
+type InputAxesExtent = number | CanonicalAxesExtent;
 
-type AxesTickSourceInput =
+type InputAxesTickSource =
   | {
       kind: typeof AxesTickSourceKind.Spacing;
       spacing: number;
@@ -20,7 +20,7 @@ type AxesTickSourceInput =
     };
 
 /** 将对称长度 shorthand 规范化为显式正负方向长度 */
-export const normalizeAxesExtent = (extent: AxesExtentInput): CanonicalAxesExtent =>
+export const resolveAxesExtent = (extent: InputAxesExtent): CanonicalAxesExtent =>
   typeof extent === 'number' ? { negative: extent, positive: extent } : extent;
 
 /** 返回规则刻度来源实际覆盖的有符号轴向范围 */
@@ -34,7 +34,7 @@ export const axesTickRangeOf = (
 
 /** 按轴向正负语义枚举刻度值，排除原点并过滤过于靠近端点的刻度 */
 export const enumerateAxesTickValues = (
-  source: AxesTickSourceInput,
+  source: InputAxesTickSource,
   extent: CanonicalAxesExtent,
   endpointGap: number,
 ): Array<number> => {

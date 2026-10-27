@@ -85,7 +85,7 @@ export const AxisLineStepSchema = strictObject({
 }).describe('Axis-line action: project a target to one local host axis and draw one straight segment.');
 
 /** 折线路径步骤共用的终点和标签字段 */
-const FoldStepCommonShape = {
+const foldStepCommonShape = {
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('fold').describe('Folded orthogonal segment from cursor to target.'),
   to: TargetSchema.describe('Destination point of the folded segment'),
@@ -96,7 +96,7 @@ const FoldStepCommonShape = {
 
 /** 校验只有一个拐点的折线路径步骤 */
 const TwoLegFoldStepSchema = strictObject({
-  ...FoldStepCommonShape,
+  ...foldStepCommonShape,
   via: zodEnum([FoldStepVia.HorizontalThenVertical, FoldStepVia.VerticalThenHorizontal]).describe(
     'Two-leg direction: `-|` is horizontal then vertical; `|-` is vertical then horizontal.',
   ),
@@ -104,7 +104,7 @@ const TwoLegFoldStepSchema = strictObject({
 
 /** 校验有两个拐点的折线路径步骤 */
 const ThreeLegFoldStepSchema = strictObject({
-  ...FoldStepCommonShape,
+  ...foldStepCommonShape,
   via: zodEnum([FoldStepVia.HorizontalVerticalHorizontal, FoldStepVia.VerticalHorizontalVertical]).describe(
     'Three-leg direction: `-|-` is H-V-H; `|-|` is V-H-V.',
   ),

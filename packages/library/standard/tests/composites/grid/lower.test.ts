@@ -2,7 +2,7 @@ import type { GroupPrimitive, IRPath, IRScope, ScenePrimitive } from '@retikz/co
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { createGrid, GridDefinition, lowerGrid } from '../../../src/presentation';
+import { createGrid, gridDefinition, lowerGrid } from '../../../src/presentation';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const findGridGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrimitive | undefined => {
@@ -28,7 +28,7 @@ const firstStepPosition = (child: LoweredChild): unknown => {
   return 'to' in step ? step.to : undefined;
 };
 
-describe('GridDefinition', () => {
+describe('gridDefinition', () => {
   it('将统一网格下沉到有序的 Core 路径', () => {
     const lowered = lowerGridChildren(createGrid({ bounds: { start: [0, 0], end: [20, 10] } }));
 
@@ -314,7 +314,7 @@ describe('GridDefinition', () => {
         version: 1,
         children: [createGrid({ bounds: { position: [10, 5], width: 20, height: 10 }, line: { spacing: 10 } })],
       },
-      { composites: [GridDefinition], onWarn: warning => warnings.push(warning.code) },
+      { composites: [gridDefinition], onWarn: warning => warnings.push(warning.code) },
     ).scene;
     const group = findGridGroup(scene.primitives);
 
@@ -340,7 +340,7 @@ describe('GridDefinition', () => {
           }),
         ],
       },
-      { composites: [GridDefinition], onWarn: warning => warnings.push(warning.code) },
+      { composites: [gridDefinition], onWarn: warning => warnings.push(warning.code) },
     ).scene;
     const group = findGridGroup(scene.primitives);
 
@@ -361,7 +361,7 @@ describe('GridDefinition', () => {
           }),
         ],
       },
-      { composites: [GridDefinition], onWarn: warning => warnings.push(warning.code) },
+      { composites: [gridDefinition], onWarn: warning => warnings.push(warning.code) },
     );
 
     expect(warnings).toContain('OFFSET_BASE_UNRESOLVED');

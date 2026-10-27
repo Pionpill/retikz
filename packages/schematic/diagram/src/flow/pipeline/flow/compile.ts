@@ -6,7 +6,7 @@ import type { Position } from '@retikz/math';
 import { composeDiagramFoundation, resolveDiagramFoundation } from '../../../_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowLayoutElementOutput } from '../../contract';
-import type { ResolvedFlowDiagramDefinitionOptions } from '../../providers';
+import type { FlowDiagramDefinitionRegistries } from '../../providers';
 import {
   evaluateFlowBezierConflicts,
   evaluateFlowOrthogonalConflicts,
@@ -110,7 +110,7 @@ const drawingFailureContext = (
 
 /** 创建一次 Flow Source 到 Graph、Foundation、artifact 与spatial handles的原子compile */
 export const createCompileFlowDiagram =
-  (options: ResolvedFlowDiagramDefinitionOptions) =>
+  (options: FlowDiagramDefinitionRegistries) =>
   (source: IRFlowDiagram, context: CompositeCompileContext): CompositeCompileResult<FlowDiagramArtifact> => {
     if (source.theme !== undefined) context = context.withTheme(source.theme);
     const definition = options.flowLayouts.defaultLayout;

@@ -1,12 +1,12 @@
 import type { CompositeCoreProviderKey, CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import { GraphProviderKey } from '@retikz/graph';
-import { FlexLayoutProvider, GridLayoutProvider } from '@retikz/layout';
-import { LegendProvider } from '@retikz/standard/presentation';
+import { flexLayoutProvider, gridLayoutProvider } from '@retikz/layout';
+import { legendProvider } from '@retikz/standard/presentation';
 
 import { DIAGRAM_NAMESPACE } from '../../_diagram';
 import type { FlowDiagramDefinitionOptions } from '../contract';
-import type { ResolvedFlowDiagramDefinitionOptions } from '../providers';
+import type { FlowDiagramDefinitionRegistries } from '../providers';
 import { resolveFlowDiagramDefinitionOptions } from '../providers';
 import type { FlowDiagramArtifact, IRFlowDiagram } from '../schemas';
 import { FlowDiagramArtifactSchema, FlowDiagramSchema } from '../schemas';
@@ -15,7 +15,7 @@ import { createCompileFlowDiagram } from './flow';
 
 /** 使用已解析 registries 创建 Flow Diagram Composite Definition */
 const createFlowDiagramDefinitionFromOptions = (
-  options: ResolvedFlowDiagramDefinitionOptions,
+  options: FlowDiagramDefinitionRegistries,
 ): CompositeDefinition<IRFlowDiagram, typeof DIAGRAM_NAMESPACE, typeof FLOW_TYPE, FlowDiagramArtifact> =>
   defineComposite({
     namespace: DIAGRAM_NAMESPACE,
@@ -26,7 +26,7 @@ const createFlowDiagramDefinitionFromOptions = (
   });
 
 /** 使用内置 registries 的默认 Flow Diagram Composite Definition */
-export const FlowDiagramDefinition: CompositeDefinition<
+export const flowDiagramDefinition: CompositeDefinition<
   IRFlowDiagram,
   typeof DIAGRAM_NAMESPACE,
   typeof FLOW_TYPE,
@@ -34,7 +34,7 @@ export const FlowDiagramDefinition: CompositeDefinition<
 > = createFlowDiagramDefinitionFromOptions(resolveFlowDiagramDefinitionOptions([{}]));
 
 /** Flow Diagram Composite provider 的公开完整 key */
-export const FlowDiagramProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const flowDiagramProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: DIAGRAM_NAMESPACE,
   type: FLOW_TYPE,
@@ -48,8 +48,8 @@ export const createFlowDiagramProvider = (
   options: FlowDiagramDefinitionOptions = {},
 ): CoreDependencyProvider<FlowDiagramDefinitionOptions> =>
   Object.freeze({
-    key: FlowDiagramProviderKey,
-    dependencies: Object.freeze([GraphProviderKey, FlexLayoutProvider.key, GridLayoutProvider.key, LegendProvider.key]),
+    key: flowDiagramProviderKey,
+    dependencies: Object.freeze([GraphProviderKey, flexLayoutProvider.key, gridLayoutProvider.key, legendProvider.key]),
     params: options,
     makeDefinition: makeFlowDiagramDefinition,
   });

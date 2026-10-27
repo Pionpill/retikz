@@ -414,14 +414,14 @@ export type NodeTextColor = ValueOf<typeof NodeTextColor>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
+export type BoundaryDefinition = InputBoundaryDefinition<JsonObject>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BoundaryDefinitionInput"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={21}>BoundaryDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputBoundaryDefinition"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={21}>InputBoundaryDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -446,7 +446,7 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type BoundaryDefinitionInput<TParams extends JsonObject> = {
+export type InputBoundaryDefinition<TParams extends JsonObject> = {
   name: string;
   paramsSchema: ZodType<TParams>;
   resolveRect?: (context: BoundaryFitContext, params: TParams) => CenteredBox;
@@ -479,7 +479,7 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 | `computeEdgePoint?`            | `(rect: CenteredBox, side: Side, t: number, params: Record<string, JsonValue>) => Position`                                                   | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
 | `computeKeyPoints?`            | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
 | `computeOutline?`              | `(rect: CenteredBox, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                                                        | —                        | 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何                                                                                                                    |
-| `emit`                         | `(rect: CenteredBox, style: ResolvedShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
+| `emit`                         | `(rect: CenteredBox, style: CompiledShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
 | `name`                         | `string`                                                                                                                                      | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
 | `paramsSchema`                 | `ShapeDefinition["paramsSchema"]`                                                                                                             | —                        | 实例参数 schema<br />解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`                                                                                           |
 | `resolveAnchor`                | `(rect: CenteredBox, name: ShapeAnchorName, params: Record<string, JsonValue>) => Position \| undefined`                                      | —                        | 解析命名 anchor 的世界坐标；不支持时返回 `undefined`                                                                                                                            |
@@ -492,14 +492,14 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
+export type ShapeDefinition = InputShapeDefinition<JsonObject>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinitionInput"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={124}>ShapeDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={124}>InputShapeDefinition</ApiSourceLink>
 
 描述第三方作者和内置 shape 共同实现的运行时能力契约；定义本身不进入 IR。
 每个能力函数都以实例级 `params` 作为末位参数
@@ -519,7 +519,7 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
 | `computeEdgePoint?`            | `(rect: CenteredBox, side: Side, t: number, params: TParams) => Position`                                                   | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
 | `computeKeyPoints?`            | `(rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                   | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
 | `computeOutline?`              | `(rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>`                                                        | —                        | 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何                                                                                                                    |
-| `emit`                         | `(rect: CenteredBox, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>` | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
+| `emit`                         | `(rect: CenteredBox, style: CompiledShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>` | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
 | `name`                         | `string`                                                                                                                    | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
 | `paramsSchema`                 | `ZodType<TParams>`                                                                                                          | —                        | 实例参数 schema<br />解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`                                                                                           |
 | `resolveAnchor`                | `(rect: CenteredBox, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                      | —                        | 解析命名 anchor 的世界坐标；不支持时返回 `undefined`                                                                                                                            |
@@ -532,7 +532,7 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type ShapeDefinitionInput<TParams extends JsonObject> = {
+export type InputShapeDefinition<TParams extends JsonObject> = {
   name: string;
   paramsSchema: ZodType<TParams>;
   computeCircumscribedGeometry: (
@@ -552,7 +552,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   computeEdgePoint?: (rect: CenteredBox, side: Side, t: number, params: TParams) => Position;
   emit: (
     rect: CenteredBox,
-    style: ResolvedShapeStyle,
+    style: CompiledShapeStyle,
     round: (n: number) => number,
     params: TParams,
   ) => Iterable<ScenePrimitive>;
@@ -629,7 +629,7 @@ export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
 | 类别   | 名称      | 类型 / 签名                        | 说明                                                                            |
 | ------ | --------- | ---------------------------------- | ------------------------------------------------------------------------------- |
 | 泛型   | `TParams` | `extends JsonObject`               | 由 paramsSchema 解析得到的 JSON 对象类型，各连接面回调接收同一参数类型          |
-| 参数   | `def`     | `BoundaryDefinitionInput<TParams>` | 连接面名称、参数 schema 与连接几何回调                                          |
+| 参数   | `def`     | `InputBoundaryDefinition<TParams>` | 连接面名称、参数 schema 与连接几何回调                                          |
 | 返回值 | —         | `BoundaryDefinition`               | 原定义对象，类型转换为可存入连接面注册表的 BoundaryDefinition；不复制或修改输入 |
 
 </ApiTable>
@@ -640,7 +640,7 @@ export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
 
 ```ts
 export declare const defineBoundary: <TParams extends JsonObject>(
-  def: BoundaryDefinitionInput<TParams>,
+  def: InputBoundaryDefinition<TParams>,
 ) => BoundaryDefinition;
 ```
 
@@ -661,7 +661,7 @@ export declare const defineBoundary: <TParams extends JsonObject>(
 | 类别   | 名称      | 类型 / 签名                     | 说明                                                                       |
 | ------ | --------- | ------------------------------- | -------------------------------------------------------------------------- |
 | 泛型   | `TParams` | `extends JsonObject`            | 由 paramsSchema 解析得到的 JSON 对象类型，各形状回调接收同一参数类型       |
-| 参数   | `def`     | `ShapeDefinitionInput<TParams>` | 形状名称、参数 schema 与几何及绘制回调                                     |
+| 参数   | `def`     | `InputShapeDefinition<TParams>` | 形状名称、参数 schema 与几何及绘制回调                                     |
 | 返回值 | —         | `ShapeDefinition`               | 原定义对象，类型转换为可存入形状注册表的 ShapeDefinition；不复制或修改输入 |
 
 </ApiTable>
@@ -671,7 +671,7 @@ export declare const defineBoundary: <TParams extends JsonObject>(
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const defineShape: <TParams extends JsonObject>(def: ShapeDefinitionInput<TParams>) => ShapeDefinition;
+export declare const defineShape: <TParams extends JsonObject>(def: InputShapeDefinition<TParams>) => ShapeDefinition;
 ```
 
 </DocTab>

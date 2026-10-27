@@ -4,7 +4,7 @@ import type { IRGraph } from '@retikz/graph';
 import { createGraphDefinitions } from '@retikz/graph';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
 import type { InputGraph } from '@retikz/graph-vanilla';
-import { createGraphVanillaAdapters, graph, GraphInputEmbedAdapter, normalizeGraph } from '@retikz/graph-vanilla';
+import { createGraphVanillaAdapters, graph, graphInputEmbedAdapter, normalizeGraph } from '@retikz/graph-vanilla';
 import { Node } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
@@ -159,9 +159,9 @@ describe('Graph 渲染器集成', () => {
     });
 
     expect(vanilla.code).toContain('graph({');
-    expect(vanilla.code).toContain('GraphInputEmbedAdapter');
-    expect(vanilla.code).not.toContain('EntityInputEmbedAdapter');
-    expect(vanilla.code).not.toContain('RelationInputEmbedAdapter');
+    expect(vanilla.code).toContain('graphInputEmbedAdapter');
+    expect(vanilla.code).not.toContain('entityInputEmbedAdapter');
+    expect(vanilla.code).not.toContain('relationInputEmbedAdapter');
     expect(vanilla.code).toContain('graphThemeDefinitions: PreviewThemeDefinitionBundle.graph');
     expect(vanilla.svg).toContain('<svg');
   });
@@ -172,9 +172,9 @@ describe('Graph 渲染器集成', () => {
     expect(vanilla.code).toContain('entity({');
     expect(vanilla.code).toContain('relation({');
     expect(vanilla.code.match(/graph\(\{/g)).toHaveLength(2);
-    expect(vanilla.code).toContain('EntityInputEmbedAdapter');
-    expect(vanilla.code).toContain('RelationInputEmbedAdapter');
-    expect(vanilla.code).toContain('GraphInputEmbedAdapter');
+    expect(vanilla.code).toContain('entityInputEmbedAdapter');
+    expect(vanilla.code).toContain('relationInputEmbedAdapter');
+    expect(vanilla.code).toContain('graphInputEmbedAdapter');
     expect(vanilla.code).not.toContain("id: 'preview-entity-1'");
     expect(vanilla.code).not.toContain("id: 'preview-relation-1'");
     expect(vanilla.code).not.toContain("id: 'preview-graph-1'");
@@ -204,7 +204,7 @@ describe('Graph 渲染器集成', () => {
     expect(calls.length).toBeGreaterThan(0);
     expect(
       renderVanillaToSvgString(vanillaInput, {
-        adapters: [GraphInputEmbedAdapter],
+        adapters: [graphInputEmbedAdapter],
         output: { width: 280, height: 200 },
       }),
     ).toContain('<svg');

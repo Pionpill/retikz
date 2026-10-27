@@ -2,7 +2,7 @@ import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import { PerformanceTraceOutcome } from './constants';
 import { notifyRuntimeTraceReporterDiagnostic } from './internal';
 import type {
-  CreateRuntimeTraceReporterInput,
+  InputRuntimeTraceReporter,
   PerformanceTraceDiagnostic,
   PerformanceTraceRecord,
   RuntimeTracePhaseDefinition,
@@ -39,7 +39,7 @@ const isValidRecord = (
   return record.outcome !== PerformanceTraceOutcome.Bailout || record.changed === 0;
 };
 
-const normalizePhaseDefinitions = (
+const resolveTracePhaseDefinitions = (
   definitions: ReadonlyArray<RuntimeTracePhaseDefinition>,
 ): ReadonlyMap<string, RuntimeTracePhaseDefinition> => {
   const byKey = new Map<string, RuntimeTracePhaseDefinition>();
@@ -71,7 +71,7 @@ const normalizePhaseDefinitions = (
  * @throws {RetikzRuntimeError} owner 为空、阶段与单位重复或 outcomes 为空时抛出 TraceDefinitionInvalid
  */
 export const createRuntimeTraceReporter = <const TOwner extends string>(
-  input: CreateRuntimeTraceReporterInput<TOwner>,
+  input: InputRuntimeTraceReporter<TOwner>,
 ): RuntimeTraceReporter<TOwner> => {
   const owner = input.owner;
   const sink = input.sink;
@@ -79,7 +79,7 @@ export const createRuntimeTraceReporter = <const TOwner extends string>(
     throw traceDefinitionError('createRuntimeTraceReporter: owner must not be empty', owner);
   }
 
-  const definitions = normalizePhaseDefinitions(input.phases);
+  const definitions = resolveTracePhaseDefinitions(input.phases);
   let diagnostics: Array<PerformanceTraceDiagnostic> = [];
   let reporting = false;
   const reporterRef: { current?: RuntimeTraceReporter<TOwner> } = {};

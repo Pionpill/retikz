@@ -1,11 +1,11 @@
-import type { AxesInput } from '@retikz/standard/presentation';
-import { AxesDefinition, AxesProvider, createAxes } from '@retikz/standard/presentation';
+import type { InputAxes } from '@retikz/standard/presentation';
+import { axesDefinition, axesProvider, createAxes } from '@retikz/standard/presentation';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { axes, AxesInputEmbedAdapter, grid, GridInputEmbedAdapter } from '../src/presentation';
+import { axes, axesInputEmbedAdapter, grid, gridInputEmbedAdapter } from '../src/presentation';
 
-const input: AxesInput = {
+const input: InputAxes = {
   origin: { position: [100, 80], label: '0' },
   x: {
     extent: 40,
@@ -23,7 +23,7 @@ const input: AxesInput = {
 describe('轴（）', () => {
   it('保留编写的根 ID 并将其重新用于嵌入', () => {
     const embed = axes({ ...input, id: 'authored-axes', meta: { source: 'vanilla' } });
-    const contribution = AxesInputEmbedAdapter.lower(embed.props, {
+    const contribution = axesInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
       kind: embed.kind,
       layerId: 'main',
@@ -35,7 +35,7 @@ describe('轴（）', () => {
 
   it('创建一个贡献规范 Axes IR 的嵌入', () => {
     const embed = axes(input);
-    const contribution = AxesInputEmbedAdapter.lower(embed.props, {
+    const contribution = axesInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
       kind: embed.kind,
       layerId: 'main',
@@ -44,8 +44,8 @@ describe('轴（）', () => {
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.axes' });
     expect(contribution.node).toEqual(createAxes(input));
-    expect(contribution.providerDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
-    expect(AxesProvider.makeDefinition([])).toBe(AxesDefinition);
+    expect(contribution.providerDependencies).toEqual({ roots: [axesProvider.key], providers: [axesProvider] });
+    expect(axesProvider.makeDefinition([])).toBe(axesDefinition);
   });
 
   it('与 Grid 共存，并贡献两个定义一次', () => {
@@ -53,7 +53,7 @@ describe('轴（）', () => {
       scene({
         children: [grid({ bounds: { start: [-2, -1], end: [2, 1] }, line: { spacing: 1 } }), axes(input)],
       }),
-      { adapters: [GridInputEmbedAdapter, AxesInputEmbedAdapter] },
+      { adapters: [gridInputEmbedAdapter, axesInputEmbedAdapter] },
     );
 
     expect(result.contributions).toHaveLength(2);

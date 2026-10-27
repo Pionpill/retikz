@@ -1,6 +1,6 @@
 import type { IRNodeLabel } from '@retikz/core';
 
-import type { MarkChannelDefinition, ResolveLabel } from '../../../contract';
+import type { MarkChannelDefinition, LabelResolver } from '../../../contract';
 import { ChannelDefinitionKind, labelEntries } from '../../../contract';
 import type { IRPlotMark } from '../../../schemas';
 import { labelOf } from '../shared';
@@ -14,7 +14,7 @@ type BuiltinTextChannels = {
 /** 创建内置文本通道时可注入的运行时 label resolver */
 export type BuiltinTextChannelOptions = {
   /** 按 mark id 索引的运行时标签回调 */
-  resolveLabel?: Record<string, ResolveLabel>;
+  resolveLabel?: Record<string, LabelResolver>;
 };
 
 /** 文本目标的字段来源、固定内容与显示配置 */

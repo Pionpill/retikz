@@ -736,12 +736,12 @@ export type ParsedCssColor = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"StaticCssNamedColorHexByName"} path={"packages/kernel/foundation/src/color.ts"} startLine={171}>StaticCssNamedColorHexByName</ApiSourceLink>
+#### <ApiSourceLink label={"staticCssNamedColorHexByName"} path={"packages/kernel/foundation/src/color.ts"} startLine={171}>staticCssNamedColorHexByName</ApiSourceLink>
 
 仅包含 `parseStaticCssColor()` 支持的命名颜色，不包含 transparent、函数和十六进制写法
 
 ```ts
-export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>> = Object.freeze(
+export const staticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>> = Object.freeze(
   Object.fromEntries(
     Object.entries(CSS_NAMED_COLOR_HEX).map(([name, colorHex]): [string, `#${string}`] => [
       name,
@@ -751,7 +751,7 @@ export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>
 );
 ```
 
-#### <ApiSourceLink label={"compositeOpaqueColor"} path={"packages/kernel/foundation/src/color.ts"} startLine={401}>compositeOpaqueColor</ApiSourceLink>
+#### <ApiSourceLink label={"compositeOpaqueColor"} path={"packages/kernel/foundation/src/color.ts"} startLine={395}>compositeOpaqueColor</ApiSourceLink>
 
 前景自身 alpha 与 weight 相乘，再按 source-over sRGB 得到不含透明度的确定性颜色
 

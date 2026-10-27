@@ -5,7 +5,7 @@ import { literal, number, object } from 'zod';
 
 import type { AnyCoordinateDefinition, CoordinateFrame, DimensionRole } from '../../../src/contract';
 import { createCoordinateFrame, defineCoordinate } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
@@ -19,11 +19,11 @@ import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
-const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
@@ -36,7 +36,7 @@ const WIDTH = 480;
 
 const HEIGHT = 240;
 
-const opts = (coordinates: Array<AnyCoordinateDefinition>): LowerPlotsOptions => ({
+const opts = (coordinates: Array<AnyCoordinateDefinition>): PlotsLoweringOptions => ({
   layout: { width: WIDTH, height: HEIGHT },
   definitions: { coordinates },
 });

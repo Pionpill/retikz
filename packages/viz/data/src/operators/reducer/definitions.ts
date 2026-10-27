@@ -14,11 +14,11 @@ import {
 } from '../statistics';
 import type { AnyStatisticsReducerDefinition, AnySynchronousStatisticsReducerImplementation } from './contract';
 import { defineStatisticsReducer, defineStatisticsReducerImplementation } from './contract';
-import { BuiltinReducerOperationSchemas } from './schema';
+import { BUILTIN_REDUCER_OPERATION_SCHEMAS } from './schema';
 
 /** count reducer definition：统计组内行数，不读取源字段 */
 const countReducerDefinition = defineStatisticsReducer({
-  schema: BuiltinReducerOperationSchemas.Count,
+  schema: BUILTIN_REDUCER_OPERATION_SCHEMAS.Count,
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
 });
 
@@ -30,7 +30,7 @@ const countReducerImplementation = defineStatisticsReducerImplementation({
 
 /** sum reducer definition：读取一个数值字段并输出有限值之和 */
 const sumReducerDefinition = defineStatisticsReducer({
-  schema: BuiltinReducerOperationSchemas.Sum,
+  schema: BUILTIN_REDUCER_OPERATION_SCHEMAS.Sum,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
 });
@@ -45,7 +45,7 @@ const sumReducerImplementation = defineStatisticsReducerImplementation({
 
 /** mean reducer definition：读取一个数值字段并输出有限值平均数 */
 const meanReducerDefinition = defineStatisticsReducer({
-  schema: BuiltinReducerOperationSchemas.Mean,
+  schema: BUILTIN_REDUCER_OPERATION_SCHEMAS.Mean,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
 });
@@ -61,7 +61,7 @@ const meanReducerImplementation = defineStatisticsReducerImplementation({
 
 /** median reducer definition：读取一个数值字段并输出有限值中位数 */
 const medianReducerDefinition = defineStatisticsReducer({
-  schema: BuiltinReducerOperationSchemas.Median,
+  schema: BUILTIN_REDUCER_OPERATION_SCHEMAS.Median,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
 });
@@ -74,7 +74,7 @@ const medianReducerImplementation = defineStatisticsReducerImplementation({
 
 /** min reducer definition：读取一个数值字段并输出有限值最小值 */
 const minReducerDefinition = defineStatisticsReducer({
-  schema: BuiltinReducerOperationSchemas.Min,
+  schema: BUILTIN_REDUCER_OPERATION_SCHEMAS.Min,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
 });
@@ -90,7 +90,7 @@ const minReducerImplementation = defineStatisticsReducerImplementation({
 
 /** max reducer definition：读取一个数值字段并输出有限值最大值 */
 const maxReducerDefinition = defineStatisticsReducer({
-  schema: BuiltinReducerOperationSchemas.Max,
+  schema: BUILTIN_REDUCER_OPERATION_SCHEMAS.Max,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
 });
@@ -106,7 +106,7 @@ const maxReducerImplementation = defineStatisticsReducerImplementation({
 
 /** extent reducer definition：读取一个数值字段并输出有限值最小值和最大值字段 */
 const extentReducerDefinition = defineStatisticsReducer({
-  schema: BuiltinReducerOperationSchemas.Extent,
+  schema: BUILTIN_REDUCER_OPERATION_SCHEMAS.Extent,
   inputFields: operation => [operation.field],
   outputs: operation => [
     { field: operation.as.min, type: DataFieldType.Continuous },
@@ -126,7 +126,7 @@ const extentReducerImplementation = defineStatisticsReducerImplementation({
 
 /** quantile reducer definition：读取一个数值字段并输出单个分位点 */
 const quantileReducerDefinition = defineStatisticsReducer({
-  schema: BuiltinReducerOperationSchemas.Quantile,
+  schema: BUILTIN_REDUCER_OPERATION_SCHEMAS.Quantile,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
 });
@@ -141,7 +141,7 @@ const quantileReducerImplementation = defineStatisticsReducerImplementation({
 
 /** quantile-band reducer definition：读取一个数值字段并输出参数化分位区间及可选 whisker 字段 */
 const quantileBandReducerDefinition = defineStatisticsReducer({
-  schema: BuiltinReducerOperationSchemas.QuantileBand,
+  schema: BUILTIN_REDUCER_OPERATION_SCHEMAS.QuantileBand,
   inputFields: operation => [operation.field],
   outputs: operation => {
     const fields: Array<string> = [

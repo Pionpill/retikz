@@ -3,7 +3,7 @@ import type { CurveSegmentSample } from '@retikz/math';
 import type { PathCommand, ScenePrimitive } from '../../../contract';
 import type { CanonicalPathLabel, CanonicalStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import type { LowerTex, TextMeasurer } from '../../text';
+import type { TexLowerer, TextMeasurer } from '../../text';
 import { emitLabelPrimitive } from '../host';
 import { sampleStrokePathGeometry, sampleStrokeStepParameterGeometry } from './interruption';
 import { sampleRoundedCommands } from './rounded-corners';
@@ -12,7 +12,7 @@ import { sampleRoundedCommands } from './rounded-corners';
 type StrokeSegmentSampler = (t: number) => CurveSegmentSample;
 
 /** stroke 整体路径采样输入 */
-type SampleStrokePathInput = {
+type InputStrokePathSampling = {
   /** 圆角处理后的最终路径命令 */
   commands: ReadonlyArray<PathCommand>;
   /** 按声明顺序排列的绘制段采样函数 */
@@ -32,7 +32,7 @@ export const sampleStrokePath = ({
   segmentSamplers,
   roundedCommands,
   position,
-}: SampleStrokePathInput): CurveSegmentSample | undefined => {
+}: InputStrokePathSampling): CurveSegmentSample | undefined => {
   if (segmentSamplers.length === 0) return undefined;
   if (roundedCommands) return sampleRoundedCommands(commands, position);
 
@@ -99,7 +99,7 @@ const parameterBoundaryOwnerOfStep = (stepKind: CanonicalStep['kind']): 'previou
   stepKind === 'fold' ? 'previous' : 'next';
 
 /** 创建 stroke sampling collector 所需的上下文 */
-type CreateStrokeSamplingCollectorInput = {
+type InputStrokeSamplingCollector = {
   /** 追加 label 几何边界的 path bounds 数组 */
   boundsPoints: Array<IRPosition>;
   /** 文本测量函数 */
@@ -111,7 +111,7 @@ type CreateStrokeSamplingCollectorInput = {
   /** preset/rem 字号解析根字号 */
   rootFontSize?: number;
   /** 可选 TeX 降级能力 */
-  lowerTex?: LowerTex;
+  lowerTex?: TexLowerer;
   /** path warning 收集器 */
   warn: (code: string, message: string, subPath?: string) => void;
 };
@@ -128,7 +128,7 @@ export const createStrokeSamplingCollector = ({
   rootFontSize,
   lowerTex,
   warn,
-}: CreateStrokeSamplingCollectorInput): StrokeSamplingCollector => {
+}: InputStrokeSamplingCollector): StrokeSamplingCollector => {
   const labelPrimitives: Array<ScenePrimitive> = [];
   const segmentSamplers: Array<StrokeSegmentSampler> = [];
   const samplerRecords: Array<StrokeSamplerRecord> = [];

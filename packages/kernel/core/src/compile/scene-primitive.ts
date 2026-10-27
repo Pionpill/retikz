@@ -494,7 +494,7 @@ const visitScenePrimitive = (
 };
 
 /** 在统一 fatal boundary 内物化并校验 Shape provider 发出的 Scene primitive 列表 */
-export const validateScenePrimitives = (owner: string, emitted: unknown): Array<ScenePrimitive> => {
+export const snapshotScenePrimitives = (owner: string, emitted: unknown): Array<ScenePrimitive> => {
   /** 校验单个第三方 Shape primitive 的完整 Core Scene runtime contract */
   const assertValidScenePrimitive: (owner: string, primitive: unknown) => asserts primitive is ScenePrimitive = (
     providerOwner,

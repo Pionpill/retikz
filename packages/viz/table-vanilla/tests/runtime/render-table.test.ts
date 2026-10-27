@@ -1,5 +1,5 @@
 import { CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
-import type { CellPresentationInput } from '@retikz/table';
+import type { InputCellPresentation } from '@retikz/table';
 import {
   defineCellFormatter,
   TableSchema,
@@ -194,7 +194,7 @@ describe('renderTable', () => {
   });
 
   it('通过 SSR 传递新的 Presentation ABI 和语义边框外观', () => {
-    const observed: Array<CellPresentationInput> = [];
+    const observed: Array<InputCellPresentation> = [];
     const inspect = defineCellPresentation({
       name: 'inspect-appearance',
       optionsSchema: strictObject({}),
@@ -247,7 +247,7 @@ describe('renderTable', () => {
   });
 
   it('通过简单编写将有序根规则传递到 SSR', () => {
-    const observed: Array<CellPresentationInput> = [];
+    const observed: Array<InputCellPresentation> = [];
     const inspect = defineCellPresentation({
       name: 'rule-inspect',
       optionsSchema: strictObject({}),

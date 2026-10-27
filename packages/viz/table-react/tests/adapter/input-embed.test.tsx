@@ -1,6 +1,6 @@
 import { createManualTableIR } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -15,7 +15,7 @@ type InputEmbeddableTableComponent = {
 
 /** 读取 React Table 组件交给 Vanilla 的唯一输入 */
 const inputOf = <TProps,>(component: InputEmbeddableTableComponent, props: TProps): InputTable<unknown> => {
-  if (component.inputEmbedAdapter !== TableInputEmbedAdapter) {
+  if (component.inputEmbedAdapter !== tableInputEmbedAdapter) {
     throw new Error('expected the shared Table Vanilla adapter');
   }
 

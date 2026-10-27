@@ -2,7 +2,7 @@ import type { IRChild } from '@retikz/core';
 import { ChildSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { OverlayLayoutInput, OverlayLayoutItemInput, OverlayPlacementInput } from '../../src';
+import type { InputOverlayLayoutConfig, InputOverlayLayoutItemConfig, InputOverlayPlacement } from '../../src';
 import {
   createOverlayLayout,
   LayoutAlignment,
@@ -21,8 +21,8 @@ const parseOverlayLayout = (input: Record<string, unknown>) =>
 
 describe('OverlayLayout schema 和工厂', () => {
   it('根据作者输入默认值创建规范的 JSON IR', () => {
-    const item = { kind: LayoutItemKind.Overlay, key: 'plot', child } satisfies OverlayLayoutItemInput;
-    const input = { children: [item] } satisfies OverlayLayoutInput;
+    const item = { kind: LayoutItemKind.Overlay, key: 'plot', child } satisfies InputOverlayLayoutItemConfig;
+    const input = { children: [item] } satisfies InputOverlayLayoutConfig;
     const source = createOverlayLayout(input);
 
     expect(source).toEqual({ namespace: 'layout', type: 'overlayLayout', ...input });
@@ -60,7 +60,7 @@ describe('OverlayLayout schema 和工厂', () => {
       kind: OverlayPlacementKind.Positioned,
       at: { x: 10, y: -5 },
       width: 20,
-    } satisfies OverlayPlacementInput;
+    } satisfies InputOverlayPlacement;
 
     expect(
       parseOverlayLayout({
@@ -81,7 +81,7 @@ describe('OverlayLayout schema 和工厂', () => {
   });
 
   it('拒绝布局、项目、放置和嵌套点路径中的未知字段', () => {
-    const base = { children: [{ kind: 'overlay', key: 'badge', child }] } satisfies OverlayLayoutInput;
+    const base = { children: [{ kind: 'overlay', key: 'badge', child }] } satisfies InputOverlayLayoutConfig;
 
     expect(() =>
       OverlayLayoutSchema.parse({ namespace: 'layout', type: 'overlayLayout', ...base, extra: true }),

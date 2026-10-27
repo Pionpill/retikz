@@ -14,15 +14,15 @@ import {
   createFlexLayout,
   createGridLayout,
   createOverlayLayout,
-  FlexLayoutDefinition,
+  flexLayoutDefinition,
   FlexLayoutDirection,
   FlexLayoutWrap,
-  GridLayoutDefinition,
+  gridLayoutDefinition,
   LayoutAlignment,
   LayoutItemKind,
   LayoutOverflow,
   LayoutSizeParticipation,
-  OverlayLayoutDefinition,
+  overlayLayoutDefinition,
   OverlayPlacementKind,
 } from '../../src';
 import { createLayoutArtifactItem, sortLayoutSpacing } from '../../src/composites/internal';
@@ -115,9 +115,9 @@ const leaf = (
 });
 
 const definitions = [
-  FlexLayoutDefinition,
-  GridLayoutDefinition,
-  OverlayLayoutDefinition,
+  flexLayoutDefinition,
+  gridLayoutDefinition,
+  overlayLayoutDefinition,
   ArtifactLeafDefinition,
 ] as const;
 

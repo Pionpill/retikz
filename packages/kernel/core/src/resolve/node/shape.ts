@@ -11,7 +11,7 @@ import { withProviderOutputValidationBoundary } from '../provider-validation';
 import type { ShapeResolution } from './types';
 
 /** 节点形状解析所需的输入与缩放参数 */
-type NodeShapeResolveInput = {
+type InputNodeShapeResolve = {
   /** 待解析节点 */
   node: Pick<IRNode, 'shape' | 'cornerRadius'>;
   /** 形状定义注册表 */
@@ -77,7 +77,7 @@ const scaleJsonObjectNumbers = (value: JsonObject, factor: number): JsonObject =
  * 查找节点形状定义，解析参数并应用节点缩放
  * @description 优先使用定义提供的 scaleParams；未提供时，将参数中的所有数值乘以两轴缩放系数的几何平均值
  */
-export const resolveNodeShape = (input: NodeShapeResolveInput): ShapeResolution => {
+export const resolveNodeShape = (input: InputNodeShapeResolve): ShapeResolution => {
   const { node, shapes, scaleX, scaleY, irPath = 'node' } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
   const shapeParamsPath = `${irPath}.shape.params`;

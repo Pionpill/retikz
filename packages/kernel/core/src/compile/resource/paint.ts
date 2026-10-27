@@ -3,7 +3,7 @@ import type {
   PatternEmitContext,
   PatternEmitResult,
   PatternEmitOutput,
-  ResolvedPatternTile,
+  CompiledPatternTile,
   SceneResource,
 } from '../../contract';
 import {
@@ -11,14 +11,14 @@ import {
   createLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
-import type { PaintResolution, PaintResolutionInput, PatternResolution } from '../../resolve/resource';
+import type { PaintResolution, InputPaintResolution, PatternResolution } from '../../resolve/resource';
 import { materializeScenePrimitives } from './scene-content';
 
 /** Paint resource registry 输入：resolve 阶段已绑定的 paint */
-type PaintInput = PaintResolutionInput;
+type InputPaint = InputPaintResolution;
 
 /** paint resolver 只负责把已解析值注册为 resourceRef */
-export type PaintResolver = (paint: PaintInput | undefined) => PaintValue | undefined;
+export type PaintResolver = (paint: InputPaint | undefined) => PaintValue | undefined;
 
 /** paint 资源注册表：仅负责 cache、去重和 Scene resource materialization */
 export type PaintRegistry = {
@@ -48,7 +48,7 @@ const paintKeyOf = (value: unknown): string => {
 };
 
 /** compile 仅消费 resolve 阶段已绑定的 pattern 并调用 provider emit */
-const resolvePatternTile = (resolution: PatternResolution, round: (n: number) => number): ResolvedPatternTile => {
+const resolvePatternTile = (resolution: PatternResolution, round: (n: number) => number): CompiledPatternTile => {
   const { spec, definition, size, style } = resolution;
   const ctx: PatternEmitContext = {
     size,
@@ -83,7 +83,7 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
   }
 
   const motif = materializeScenePrimitives(`Pattern '${spec.shape}' motif`, emittedMotif);
-  const tile: ResolvedPatternTile = { size: tileSize, motif };
+  const tile: CompiledPatternTile = { size: tileSize, motif };
   if (spec.background !== undefined) tile.background = spec.background;
   if (spec.rotation !== undefined) tile.rotation = spec.rotation;
 

@@ -60,12 +60,12 @@ export const visitSceneAnimations = (
 export const resolveSceneResourceMap = (scene: Scene): ReadonlyMap<string, SceneResource> => {
   const content = runtimeContentCache.get(scene);
   if (content !== undefined) return content.resourceMap;
-  validateSceneContent(scene);
+  assertSceneContent(scene);
   return new Map((scene.resources ?? []).map(resource => [resource.id, resource]));
 };
 
 /** 在渲染器发布任何输出前检查 Scene 的资源引用闭包 */
-const validateSceneContent = (scene: Scene): void => {
+const assertSceneContent = (scene: Scene): void => {
   if (runtimeContentCache.has(scene)) return;
   try {
     visitSceneContent(scene);

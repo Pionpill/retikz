@@ -4,8 +4,8 @@ import {
   resolveScopeDefaults,
   resolveDashPattern,
   resolveDropShadow,
-  resolveEffectiveNodeStyle,
-  resolveEffectivePath,
+  mergeNodeStyle,
+  mergePathStyle,
 } from '../../src/resolve/style';
 import type { IRPathBase, IRScope, IRScopeDefaults } from '../../src/schemas';
 import { PathLabelSchema, NodeSchema, PathSchema, SHADOW_PRESETS } from '../../src/schemas';
@@ -46,10 +46,10 @@ describe('Scope 有效默认值', () => {
       }),
       parent,
     );
-    const node = resolveEffectiveNodeStyle({ type: 'node', position: [0, 0], style: { color: 'gold' } }, child);
+    const node = mergeNodeStyle({ type: 'node', position: [0, 0], style: { color: 'gold' } }, child);
     expect(node.style).toMatchObject({ stroke: 'green', opacity: { overall: 0 }, fill: 'gold', textColor: 'gold' });
-    expect(resolveEffectivePath(pathOf(), child).style?.stroke).toBe('green');
-    expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style).toMatchObject({
+    expect(mergePathStyle(pathOf(), child).style?.stroke).toBe('green');
+    expect(mergeNodeStyle({ type: 'node', position: [0, 0] }, parent).style).toMatchObject({
       stroke: 'blue',
       opacity: { overall: 0.8 },
       fill: 'red',
@@ -70,18 +70,18 @@ describe('Scope 有效默认值', () => {
       styleScope({ defaults: { reset: ['node', 'path'], path: { arrow: {} } } }),
       parent,
     );
-    expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, child).style).toEqual({});
+    expect(mergeNodeStyle({ type: 'node', position: [0, 0] }, child).style).toEqual({});
     expect(child.node?.label).toBeUndefined();
     expect(child.path?.label).toEqual({});
     expect(child.path?.arrow).toEqual({});
     const arrow = { end: {} };
-    expect(resolveEffectivePath(pathOf({ style: { color: 'gold' }, arrow }), parent).arrow?.end).toMatchObject({
+    expect(mergePathStyle(pathOf({ style: { color: 'gold' }, arrow }), parent).arrow?.end).toMatchObject({
       color: 'gold',
       scale: 2,
     });
-    expect(resolveEffectivePath(pathOf({ arrow }), parent).arrow?.end).toMatchObject({ color: 'red', scale: 2 });
+    expect(mergePathStyle(pathOf({ arrow }), parent).arrow?.end).toMatchObject({ color: 'red', scale: 2 });
     expect(parent.path?.arrow).toEqual({ color: 'purple', end: { color: 'green', scale: 2 } });
-    expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style?.fill).toBe('blue');
+    expect(mergeNodeStyle({ type: 'node', position: [0, 0] }, parent).style?.fill).toBe('blue');
   });
 
   it.each<{ reset: IRScopeDefaults['reset']; keepNode: boolean; keepPath: boolean }>([
@@ -107,10 +107,10 @@ describe('Scope 有效默认值', () => {
     );
     const node = NodeSchema.parse({ type: 'node', position: [0, 0] });
 
-    expect(resolveEffectiveNodeStyle(node, frame)).toMatchObject({
+    expect(mergeNodeStyle(node, frame)).toMatchObject({
       style: { fill: 'red', stroke: 'red', textColor: 'red' },
     });
-    expect(resolveEffectivePath(pathOf(), frame)).toMatchObject({
+    expect(mergePathStyle(pathOf(), frame)).toMatchObject({
       style: { color: 'red' },
     });
   });
@@ -125,7 +125,7 @@ describe('Scope 有效默认值', () => {
       }),
     );
     const label = PathLabelSchema.parse({ text: 'x', font: { family: 'label', size: 10 } });
-    const resolved = resolveEffectivePath(pathOf({ label }), frame);
+    const resolved = mergePathStyle(pathOf({ label }), frame);
 
     expect(resolved.label).toMatchObject({
       font: { family: 'label', size: 10, weight: 'bold' },
@@ -147,7 +147,7 @@ describe('Scope 有效默认值', () => {
         },
       }),
     );
-    const resolved = resolveEffectivePath(
+    const resolved = mergePathStyle(
       pathOf({
         arrow: { start: {}, end: { scale: 3 } },
       }),

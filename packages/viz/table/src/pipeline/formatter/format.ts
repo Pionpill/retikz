@@ -12,14 +12,14 @@ import { RetikzTableError } from '../../error';
 import { cellFormatterDefinitionOf, resolveCellFormatterRegistry } from '../../providers';
 import { TableCellPayloadKind } from '../../schemas';
 import { deepFreeze } from '../../shared';
-import type { ResolvedTableCellPlan } from '../rule';
+import type { TableCellPlanResolution } from '../rule';
 
 const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
 /** 把单个 canonical Cell 转换为 formatter 阶段结果 */
 const formatCell = (
   cell: SemanticTableCell,
-  plan: ResolvedTableCellPlan,
+  plan: TableCellPlanResolution,
   registry: ReadonlyMap<string, AnyCellFormatterDefinition>,
 ): FormattedTableCell => {
   /** 从 canonical Cell 构造 detached、递归冻结的 formatter context */
@@ -74,7 +74,7 @@ const formatCell = (
 /** formatter 阶段消费的 canonical-order-aligned Cell plans */
 type FormatTableOptions = Readonly<{
   /** 与 canonical Cells 等长同序，显式 id 也必须一致的 resolved plans */
-  cells: ReadonlyArray<ResolvedTableCellPlan>;
+  cells: ReadonlyArray<TableCellPlanResolution>;
   /** 用户自定义 Cell formatter definitions */
   formatterDefinitions?: ReadonlyArray<AnyCellFormatterDefinition>;
 }>;
@@ -82,7 +82,10 @@ type FormatTableOptions = Readonly<{
 /** 把 canonical Table Cells 格式化为同 identity、同顺序的展示值模型 */
 export const formatTable = (model: SemanticTableModel, options: FormatTableOptions): FormattedTableModel => {
   /** 校验 formatter plans 与 canonical Cells 同长同序，并校验显式 identity / kind */
-  const assertPlanAlignment = (sourceModel: SemanticTableModel, plans: ReadonlyArray<ResolvedTableCellPlan>): void => {
+  const assertPlanAlignment = (
+    sourceModel: SemanticTableModel,
+    plans: ReadonlyArray<TableCellPlanResolution>,
+  ): void => {
     if (sourceModel.cells.length !== plans.length)
       throw new RetikzTableError('table: formatter plan Cell count differs from semantic model');
 

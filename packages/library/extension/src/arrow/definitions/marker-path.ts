@@ -14,7 +14,7 @@ type OpenMarkerSubpath = Readonly<{
 }>;
 
 /** 创建实心闭合标记路径 */
-export const filledPath = (context: MarkEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
+export const buildFilledPath = (context: MarkEmitContext, points: ReadonlyArray<[number, number]>): ScenePrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: points[0] },
@@ -30,7 +30,7 @@ export const filledPath = (context: MarkEmitContext, points: ReadonlyArray<[numb
 });
 
 /** 创建空心闭合标记路径 */
-export const hollowPath = (
+export const buildHollowPath = (
   context: MarkEmitContext,
   points: ReadonlyArray<[number, number]>,
   options: HollowPathOptions = {},
@@ -51,7 +51,7 @@ export const hollowPath = (
 });
 
 /** 创建由一条或多条开放线段组成的描边标记路径 */
-export const openStrokePath = (
+export const buildOpenStrokePath = (
   context: MarkEmitContext,
   subpaths: ReadonlyArray<OpenMarkerSubpath>,
 ): ScenePrimitive => ({

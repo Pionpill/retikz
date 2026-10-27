@@ -10,7 +10,7 @@ import {
 } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { prepareRows } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
@@ -37,7 +37,7 @@ const parseFirst = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   logical: string,
-  options: LowerPlotsOptions = {},
+  options: PlotsLoweringOptions = {},
 ): unknown => {
   const ingested = tagSourceIndex(datasets.d);
   const { normalized } = prepareRows(spec, datasets, options, ingested);

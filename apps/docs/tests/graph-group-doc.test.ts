@@ -15,7 +15,7 @@ describe('Graph Group 文档', () => {
       const vanilla = buildVanillaPreview(preview);
 
       expect(vanilla.code).toContain('group({');
-      expect(vanilla.code).toContain('GroupInputEmbedAdapter');
+      expect(vanilla.code).toContain('groupInputEmbedAdapter');
       expect(vanilla.code).toContain('caption: {');
       expect(vanilla.code).toContain("title: { text: '运行时' }");
       expect(vanilla.code).toContain("description: { text: '编译与渲染' }");

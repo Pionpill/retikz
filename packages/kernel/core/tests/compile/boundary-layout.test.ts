@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   boundaryPointOf,
   createNodeGeometryContext,
-  compileResolvedNode,
+  compileNodeResolution,
   nodeReferenceViewOf,
 } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
@@ -34,13 +34,13 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
     labelDistance: 12,
   });
 
-  return compileResolvedNode(resolution, {
+  return compileNodeResolution(resolution, {
     measureText,
     positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
   }).layout;
 };
 
-describe('NodeLayout 边界/形状', () => {
+describe('CompiledNodeLayout 边界/形状', () => {
   it('连接面消费上下文在布局投影和引用视图间共享缓存，并区分几何位置', () => {
     const shapes = new Map(resolveShapeRegistry());
     const rectangle = shapes.get('rectangle')!;

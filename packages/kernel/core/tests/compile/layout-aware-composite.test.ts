@@ -20,7 +20,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
 
 const fixedMeasurer: TextMeasurer = text => ({
@@ -33,7 +33,7 @@ const fixedMeasurer: TextMeasurer = text => ({
 const resolvedResultOf = (
   context: CompositeCompileContext,
   child: IRChild,
-  proposal: LayoutProposal = NaturalLayoutProposal,
+  proposal: LayoutProposal = naturalLayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
@@ -55,12 +55,12 @@ const createLayoutDefinition = () =>
       rangeWidth: number(),
     }),
     compile: (node, context) => {
-      expect(context.proposal).toEqual(NaturalLayoutProposal);
+      expect(context.proposal).toEqual(naturalLayoutProposal);
       expect(Object.isFrozen(context.proposal)).toBe(true);
       expect(Object.isFrozen(context.proposal.x)).toBe(true);
       expect(Object.isFrozen(context.proposal.y)).toBe(true);
 
-      const naturalProbe = context.layoutChild(node.child, NaturalLayoutProposal);
+      const naturalProbe = context.layoutChild(node.child, naturalLayoutProposal);
 
       expect(naturalProbe.kind).toBe(LayoutChildProbeKind.Resolved);
 
@@ -161,7 +161,7 @@ describe('布局感知复合', () => {
         const source = { namespace: 'test', type: 'themed-child' };
         const bound = context.bindChild(source, []);
         const local = context.withTheme({ name: 'compact' });
-        const probe = local.layoutChild(bound, NaturalLayoutProposal);
+        const probe = local.layoutChild(bound, naturalLayoutProposal);
         if (probe.kind === 'failed') return local.raise(probe.failure);
         expect(probe.result.allocationBounds.width).toBe(40);
         expect(resolvedResultOf(context, source).allocationBounds.width).toBe(80);
@@ -230,7 +230,7 @@ describe('布局感知复合', () => {
         replay: boolean(),
       }),
       compile: (node, context) => {
-        const probe = context.layoutChild({ namespace: 'test', type: 'warningChild' }, NaturalLayoutProposal);
+        const probe = context.layoutChild({ namespace: 'test', type: 'warningChild' }, naturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
         return { children: node.replay ? [context.replay(probe.result)] : [] };
       },

@@ -1,10 +1,10 @@
-import type { LowerTex } from '@retikz/core';
+import type { TexLowerer } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { Layout, Node } from '../../../src';
 
-const lowerTex: LowerTex = () => ({
+const lowerTex: TexLowerer = () => ({
   paths: [
     {
       commands: [

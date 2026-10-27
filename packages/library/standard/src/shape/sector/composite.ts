@@ -7,7 +7,7 @@ import { SectorSchema } from './schema';
 import type { IRSector } from './types';
 
 /** Sector 的 Core composite 注册项 */
-export const SectorDefinition = defineComposite({
+export const sectorDefinition = defineComposite({
   namespace: 'standard',
   type: 'sector',
   schema: SectorSchema,
@@ -22,7 +22,7 @@ export const createSector = (input: ShapeProperties<IRSector>): IRSector => ({
 });
 
 /** Sector 的按需依赖贡献 */
-export const SectorProvider: CoreDependencyProvider = Object.freeze({
+export const sectorProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'sector' }),
-  makeDefinition: () => SectorDefinition,
+  makeDefinition: () => sectorDefinition,
 });

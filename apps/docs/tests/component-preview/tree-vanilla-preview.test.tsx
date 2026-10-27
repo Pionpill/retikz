@@ -17,7 +17,7 @@ it('Tree 预览保留四个方向的根配置', () => {
     expect(result.svg).toContain('dodgerblue');
     expect(result.svg).toContain('darkorange');
     expect(result.code).toContain('tree(');
-    expect(result.code).toContain('TreeInputEmbedAdapter');
+    expect(result.code).toContain('treeInputEmbedAdapter');
     expect(result.code).toContain('root:');
   }
 });

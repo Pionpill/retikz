@@ -1,5 +1,5 @@
 import { fadeIn } from '@retikz/core';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -24,7 +24,7 @@ const AnimatedDemo: FC = () => (
 );
 
 const RibbonDemo: FC = () => (
-  <Layout width={40} height={20} extensions={{ paths: [RibbonPathDefinition] }}>
+  <Layout width={40} height={20} extensions={{ paths: [ribbonPathDefinition] }}>
     <Node id="ribbon" position={[0, 0]} />
   </Layout>
 );
@@ -64,7 +64,7 @@ describe('预览控件提供者', () => {
   });
 
   it('在解析预览控件时保留通用路径定义', () => {
-    expect(buildPreviewIR(RibbonDemo).paths).toEqual([RibbonPathDefinition]);
+    expect(buildPreviewIR(RibbonDemo).paths).toEqual([ribbonPathDefinition]);
   });
 
   it('按输入顺序合并槽组', () => {

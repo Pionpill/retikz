@@ -1,7 +1,7 @@
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowLayoutCatalogEntry, FlowLayoutDefinition } from '../../contract';
 import { BUILTIN_FLOW_LAYOUT_DEFINITIONS } from './definitions';
-import { LayeredFlowLayoutDefinition } from './layered';
+import { layeredFlowLayoutDefinition } from './layered';
 
 /** Flow Layout registry 的运行时注入与默认选择 */
 export type FlowLayoutRegistryOptions = Readonly<{
@@ -12,13 +12,13 @@ export type FlowLayoutRegistryOptions = Readonly<{
   flowLayouts?: ReadonlyArray<FlowLayoutDefinition>;
   /**
    * 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局
-   * @default LayeredFlowLayoutDefinition.name
+   * @default layeredFlowLayoutDefinition.name
    */
   defaultFlowLayout?: string;
 }>;
 
 /** 已验证的 Flow Layout registry 与当前默认项 */
-export type ResolvedFlowLayoutRegistry = Readonly<{
+export type FlowLayoutRegistryResolution = Readonly<{
   /** 按名称索引的可用布局定义 */
   layouts: ReadonlyMap<string, FlowLayoutDefinition>;
   /** 未显式选择布局名称时使用的定义 */
@@ -35,8 +35,8 @@ const invalidDefinition = (definition: FlowLayoutDefinition, reason: string, cau
 };
 
 /** 校验一个 Flow Layout Definition 的完整运行时保证 */
-const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): FlowLayoutDefinition => {
-  const validateUniqueValues = <T>(
+const resolveFlowLayoutDefinition = (definition: FlowLayoutDefinition): FlowLayoutDefinition => {
+  const assertUniqueValues = <T>(
     values: ReadonlyArray<T>,
     label: string,
     layoutDefinition: FlowLayoutDefinition,
@@ -46,7 +46,7 @@ const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): FlowLay
     if (unique.size !== values.length) invalidDefinition(layoutDefinition, `${label} must not contain duplicates.`);
   };
 
-  const validateFiniteNonNegative = (value: number, label: string, layoutDefinition: FlowLayoutDefinition): void => {
+  const assertFiniteNonNegative = (value: number, label: string, layoutDefinition: FlowLayoutDefinition): void => {
     if (!Number.isFinite(value) || value < 0)
       invalidDefinition(layoutDefinition, `${label} must be finite and non-negative.`);
   };
@@ -62,8 +62,8 @@ const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): FlowLay
     invalidDefinition(definition, 'crossScopeRelations requires compoundScopes.');
   }
 
-  validateUniqueValues(capabilities.relationDirections, 'relationDirections', definition);
-  validateUniqueValues(
+  assertUniqueValues(capabilities.relationDirections, 'relationDirections', definition);
+  assertUniqueValues(
     capabilities.routing.map(item => item.kind),
     'routing',
     definition,
@@ -71,15 +71,15 @@ const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): FlowLay
 
   for (const item of capabilities.routing) {
     if (item.kind === 'curve' || item.kind === 'cubic') {
-      validateUniqueValues(item.modes, 'routing modes', definition);
+      assertUniqueValues(item.modes, 'routing modes', definition);
     }
   }
 
-  validateUniqueValues(capabilities.placementKinds, 'placementKinds', definition);
-  validateFiniteNonNegative(defaults.nodeGap, 'defaults.nodeGap', definition);
-  validateFiniteNonNegative(defaults.rankGap, 'defaults.rankGap', definition);
-  validateFiniteNonNegative(defaults.placementGap.horizontal, 'defaults.placementGap.horizontal', definition);
-  validateFiniteNonNegative(defaults.placementGap.vertical, 'defaults.placementGap.vertical', definition);
+  assertUniqueValues(capabilities.placementKinds, 'placementKinds', definition);
+  assertFiniteNonNegative(defaults.nodeGap, 'defaults.nodeGap', definition);
+  assertFiniteNonNegative(defaults.rankGap, 'defaults.rankGap', definition);
+  assertFiniteNonNegative(defaults.placementGap.horizontal, 'defaults.placementGap.horizontal', definition);
+  assertFiniteNonNegative(defaults.placementGap.vertical, 'defaults.placementGap.vertical', definition);
   if (!capabilities.routing.some(item => item.kind === defaults.routing.kind)) {
     invalidDefinition(definition, 'defaults.routing.kind is not declared by routing.');
   }
@@ -95,17 +95,17 @@ const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): FlowLay
     );
   }
 
-  if (radius !== undefined) validateFiniteNonNegative(radius, 'defaults.routing.orthogonalCornerRadius', definition);
+  if (radius !== undefined) assertFiniteNonNegative(radius, 'defaults.routing.orthogonalCornerRadius', definition);
 
   return definition;
 };
 
 /** 组装内置优先且 identity-aware 的 Flow Layout registry */
-export const resolveFlowLayoutRegistry = (options: FlowLayoutRegistryOptions = {}): ResolvedFlowLayoutRegistry => {
+export const resolveFlowLayoutRegistry = (options: FlowLayoutRegistryOptions = {}): FlowLayoutRegistryResolution => {
   const layouts = new Map<string, FlowLayoutDefinition>();
 
   for (const definition of [...BUILTIN_FLOW_LAYOUT_DEFINITIONS, ...(options.flowLayouts ?? [])]) {
-    validateFlowLayoutDefinition(definition);
+    resolveFlowLayoutDefinition(definition);
     const existing = layouts.get(definition.name);
     if (existing === definition) continue;
     if (existing !== undefined) {
@@ -119,7 +119,7 @@ export const resolveFlowLayoutRegistry = (options: FlowLayoutRegistryOptions = {
     layouts.set(definition.name, definition);
   }
 
-  const defaultName = options.defaultFlowLayout ?? LayeredFlowLayoutDefinition.name;
+  const defaultName = options.defaultFlowLayout ?? layeredFlowLayoutDefinition.name;
   const defaultLayout = layouts.get(defaultName);
   if (defaultLayout === undefined) {
     throw new RetikzDiagramError({

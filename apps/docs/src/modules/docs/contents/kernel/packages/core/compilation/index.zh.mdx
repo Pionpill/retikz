@@ -112,7 +112,7 @@ const result = compileToScene(ir, { padding: 10 });
 
 - CanonicalNode：合并有效样式、补齐缺省值并解析填充与描边后的节点，`fill` / `stroke` 直接携带 paint 解析结果。
 - NodeResolution：CanonicalNode 加上已经选定的形状与连接边界，供布局使用。
-- NodeLayout：测量并定位后的节点结果，按节点属性、形状、连接面、几何、正文排版和标签分组。
+- CompiledNodeLayout：测量并定位后的节点结果，按节点属性、形状、连接面、几何、正文排版和标签分组。
 
 以下为这三个内部类型的源码定义，省略注释，不展开它们引用的其他类型。
 
@@ -122,7 +122,7 @@ const result = compileToScene(ir, { padding: 10 });
 
 ```ts
 export type CanonicalNode = Omit<
-  Omit<ResolvedNodeSource, 'style' | 'layout'> & NonNullable<ResolvedNodeSource['style']> & IRNodeLayout,
+  Omit<NodeColorSource, 'style' | 'layout'> & NonNullable<NodeColorSource['style']> & IRNodeLayout,
   | 'padding'
   | 'position'
   | 'margin'
@@ -139,8 +139,8 @@ export type CanonicalNode = Omit<
   | 'fill'
   | 'stroke'
 > & {
-  fill?: PaintResolutionInput;
-  stroke?: PaintResolutionInput;
+  fill?: InputPaintResolution;
+  stroke?: InputPaintResolution;
   position: NonNullable<IRNode['position']>;
   padding: BoundsInsets;
   margin: BoundsInsets;
@@ -152,12 +152,12 @@ export type CanonicalNode = Omit<
     x: number;
     y: number;
   };
-  text?: Array<ResolvedTextLine>;
+  text?: Array<TextLineColorSource>;
   label?: Array<CanonicalNodeLabel>;
   align: NodeTextAlign;
   rotate: number;
   dashPattern?: StrokeDashPattern;
-  shadow?: ResolvedDropShadow;
+  shadow?: CanonicalDropShadow;
 };
 ```
 
@@ -176,12 +176,12 @@ export type NodeResolution = Readonly<{
 
 </DocTab>
 
-<DocTab value="node-layout" label="NodeLayout">
+<DocTab value="node-layout" label="CompiledNodeLayout">
 
 `irPath` 属于编译结果顶层的来源信息，与节点的 `properties`、`layout` 平级。Node、Coordinate、Path 和 Scope 的编译结果都在顶层保存该路径，布局对象不持有来源位置。
 
 ```ts
-export type NodeLayout = {
+export type CompiledNodeLayout = {
   boundarySource?: CanonicalNode['boundary'];
   shape: NodeResolution['shape'];
   boundary: NodeResolution['boundary'];
@@ -200,7 +200,7 @@ export type NodeLayoutGeometry = {
 export type NodeCompilation = {
   irPath: string;
   properties: NodeResolvedProperties;
-  layout: NodeLayout;
+  layout: CompiledNodeLayout;
 };
 
 export type NodeResolvedProperties = Omit<CanonicalNode, 'text' | 'label'> & {
@@ -228,7 +228,7 @@ export type NodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` 先确定有效配置和能力绑定，`compileResolvedNode` 再确定正文与标签的文字属性，计算排版、节点尺寸及位置。返回的 `properties` 保存完整有效属性及身份，`layout` 保存计算后的几何与排版。描边宽度、颜色和虚线保持在同一属性来源；标签引线也保留完整配置。`emitNodePrimitives` 消费布局与当前属性生成 Scene 图元；普通文本通过作者行索引读取当前行样式，改色时无需重新折行。这里的数据结构不代替变化影响判断，Weave 的分类调度仍需要独立的能力契约。
+`resolveNode` 先确定有效配置和能力绑定，`compileNodeResolution` 再确定正文与标签的文字属性，计算排版、节点尺寸及位置。返回的 `properties` 保存完整有效属性及身份，`layout` 保存计算后的几何与排版。描边宽度、颜色和虚线保持在同一属性来源；标签引线也保留完整配置。`emitNodePrimitives` 消费布局与当前属性生成 Scene 图元；普通文本通过作者行索引读取当前行样式，改色时无需重新折行。这里的数据结构不代替变化影响判断，Weave 的分类调度仍需要独立的能力契约。
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -521,12 +521,12 @@ export type SpatialHandleOwner = Readonly<{
 
 需要自行调度元素时，调用方可持有 `CompileEnvironment`，并通过以下入口计算一个基础元素。它们复用全量编译的 resolve、layout 和 emit 实现，不递归编译其他元素，也不自动注册名称。
 
-| 入口                | 完成状态             | 保存的内容                                                      |
-| ------------------- | -------------------- | --------------------------------------------------------------- |
-| `compileNode`       | `CompiledNode`       | `layout` 保存 NodeLayout，`output` 保存绘制、资源和必要观察贡献 |
-| `compileCoordinate` | `CompiledCoordinate` | `id` 与局部 `position`；选中观察时才有 `output`                 |
-| `compilePath`       | `CompiledPath`       | `output` 保存完整路径输出，包括定制 kind 的宿主处理             |
-| `compileScope`      | `CompiledScope`      | `envelope`、不含 children 的 `group` 和自身 `output`            |
+| 入口                | 完成状态             | 保存的内容                                                              |
+| ------------------- | -------------------- | ----------------------------------------------------------------------- |
+| `compileNode`       | `CompiledNode`       | `layout` 保存 CompiledNodeLayout，`output` 保存绘制、资源和必要观察贡献 |
+| `compileCoordinate` | `CompiledCoordinate` | `id` 与局部 `position`；选中观察时才有 `output`                         |
+| `compilePath`       | `CompiledPath`       | `output` 保存完整路径输出，包括定制 kind 的宿主处理                     |
+| `compileScope`      | `CompiledScope`      | `envelope`、不含 children 的 `group` 和自身 `output`                    |
 
 `NodeLayoutObservation` 是面向调用方的节点布局观察投影，原名为 `CompiledNodeLayout`。它不包含重新绘制所需的完整编译状态；缓存应使用 `CompiledNode`。
 

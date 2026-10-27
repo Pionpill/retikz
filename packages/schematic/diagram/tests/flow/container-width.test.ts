@@ -9,7 +9,7 @@ import {
   createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,
   FlowDiagramSchema,
-  LayeredFlowLayoutDefinition,
+  layeredFlowLayoutDefinition,
 } from '../../src/flow';
 
 const source = (fill = true, fixed = false) => ({
@@ -302,10 +302,10 @@ describe('Flow 容器宽度边界', () => {
 
 it('自定义 provider 无法忽略已分配宽度', () => {
   const definition: FlowLayoutDefinition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'violates-width',
     layout: (input, context) => {
-      const output = LayeredFlowLayoutDefinition.layout(input, context);
+      const output = layeredFlowLayoutDefinition.layout(input, context);
       return {
         ...output,
         elements: output.elements.map(element =>

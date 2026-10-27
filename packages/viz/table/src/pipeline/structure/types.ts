@@ -3,8 +3,8 @@ import type { ExternalDatasets, IRDataReference, DataTransformResult } from '@re
 import type { AnyTableStructureDefinition } from '../../contract';
 import type { IRTableCellLayoutDefaults } from '../../schemas';
 
-/** 表格结构归一化选项 */
-export type NormalizeTableStructureOptions = Readonly<{
+/** 表格结构解析选项 */
+export type TableStructureResolveOptions = Readonly<{
   /** 根 Table 外部数据引用 */
   data?: IRDataReference;
   /** 在 Cell padding 物化前应用的已解析区域默认值 */

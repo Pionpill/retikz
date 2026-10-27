@@ -83,8 +83,8 @@ const functionExport = <TFunction extends (...arguments_: never) => unknown>(nam
 
 const adapterExport = (): SynchronousInputEmbedAdapter<Readonly<Record<string, unknown>>> | undefined => {
   const value: unknown = FlowVanilla;
-  if (typeof value !== 'object' || value === null || !('FlowDiagramInputEmbedAdapter' in value)) return undefined;
-  return value.FlowDiagramInputEmbedAdapter as SynchronousInputEmbedAdapter<Readonly<Record<string, unknown>>>;
+  if (typeof value !== 'object' || value === null || !('flowDiagramInputEmbedAdapter' in value)) return undefined;
+  return value.flowDiagramInputEmbedAdapter as SynchronousInputEmbedAdapter<Readonly<Record<string, unknown>>>;
 };
 
 const context: InputEmbedContext = {
@@ -240,7 +240,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
 
     expect(contribution.node).toEqual(expectedSource);
     expect(contribution.node).not.toHaveProperty('flowThemeDefinitions');
-    expect(contribution.providerDependencies.roots).toEqual([DiagramFlow.FlowDiagramProviderKey]);
+    expect(contribution.providerDependencies.roots).toEqual([DiagramFlow.flowDiagramProviderKey]);
   });
 
   it('通过贡献的提供者将规范化的 Source 编译为公共 Flow 产物', () => {

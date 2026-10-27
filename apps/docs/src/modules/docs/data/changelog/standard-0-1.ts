@@ -453,8 +453,8 @@ export const standardV01: Release = {
             {
               label: { zh: '通用 Legend 呈现', en: 'Generic Legend presentation' },
               content: {
-                zh: '`standard.legend` 接收已解析的离散样本或连续 ramp，使用 Core minimum / natural / exact probe 与 replay 求解标题、标签、换行和溢出，并发布按 key 与 authored order 稳定的 strict typed artifact。调用方直接向 Core 注入 `LegendDefinition`；嵌套样本依赖仍需显式提供。',
-                en: '`standard.legend` accepts resolved discrete samples or a continuous sample and solves titles, labels, wrapping, and overflow through Core minimum, natural, and exact probes plus replay. Hosts inject `LegendDefinition` directly into Core, and nested sample dependencies remain explicit.',
+                zh: '`standard.legend` 接收已解析的离散样本或连续 ramp，使用 Core minimum / natural / exact probe 与 replay 求解标题、标签、换行和溢出，并发布按 key 与 authored order 稳定的 strict typed artifact。调用方直接向 Core 注入 `legendDefinition`；嵌套样本依赖仍需显式提供。',
+                en: '`standard.legend` accepts resolved discrete samples or a continuous sample and solves titles, labels, wrapping, and overflow through Core minimum, natural, and exact probes plus replay. Hosts inject `legendDefinition` directly into Core, and nested sample dependencies remain explicit.',
               },
             },
             {
@@ -597,8 +597,8 @@ export const standardV01: Release = {
             {
               label: { zh: 'Surface Vanilla 闭环', en: 'Surface Vanilla path' },
               content: {
-                zh: '`surface()` 与 `embedSurface()` 归一为同一 `standard.surface` IR；`SurfaceInputEmbedAdapter` 携带 Surface 及任意 child 所需的完整 provider contribution，并可直接用于 SSR。',
-                en: '`surface()` and `embedSurface()` normalize to the same `standard.surface` IR. `SurfaceInputEmbedAdapter` carries the complete provider contribution required by Surface and its arbitrary child and can be used directly for SSR.',
+                zh: '`surface()` 与 `embedSurface()` 归一为同一 `standard.surface` IR；`surfaceInputEmbedAdapter` 携带 Surface 及任意 child 所需的完整 provider contribution，并可直接用于 SSR。',
+                en: '`surface()` and `embedSurface()` normalize to the same `standard.surface` IR. `surfaceInputEmbedAdapter` carries the complete provider contribution required by Surface and its arbitrary child and can be used directly for SSR.',
               },
             },
             {
@@ -816,8 +816,8 @@ export const standardV01: Release = {
             {
               label: { zh: 'Legend 无头组合 API', en: 'Headless Legend composition API' },
               content: {
-                zh: 'BREAKING：`<Legend kind>` 改用 `LegendTitle`、`LegendItem`、`LegendRamp` 与 `LegendTick` 组合可绘制 JSX slot；旧 React `content` / `title` props 已移除。Vanilla 与持久化 `LegendInput` 保持 JSON-safe plain data，静态 Tier 2 adapter 仍在当前 Layout 局部贡献 `LegendDefinition`。',
-                en: 'BREAKING: `<Legend kind>` now composes drawable JSX slots through `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick`; the old React `content` and `title` props are removed. Vanilla and persisted `LegendInput` remain JSON-safe plain data, while the static Tier 2 adapter still contributes `LegendDefinition` locally to the current Layout.',
+                zh: 'BREAKING：`<Legend kind>` 改用 `LegendTitle`、`LegendItem`、`LegendRamp` 与 `LegendTick` 组合可绘制 JSX slot；旧 React `content` / `title` props 已移除。Vanilla 与持久化 `InputLegendConfig` 保持 JSON-safe plain data，静态 Tier 2 adapter 仍在当前 Layout 局部贡献 `legendDefinition`。',
+                en: 'BREAKING: `<Legend kind>` now composes drawable JSX slots through `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick`; the old React `content` and `title` props are removed. Vanilla and persisted `InputLegendConfig` remain JSON-safe plain data, while the static Tier 2 adapter still contributes `legendDefinition` locally to the current Layout.',
               },
             },
           ],

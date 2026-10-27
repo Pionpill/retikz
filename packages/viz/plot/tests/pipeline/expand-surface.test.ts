@@ -1,9 +1,9 @@
 import type { IRScene } from '@retikz/core';
 import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies } from '@retikz/core';
-import { BUILTIN_RIBBON_WIDTH_PROFILES, RibbonPathDefinition } from '@retikz/extension';
+import { BUILTIN_RIBBON_WIDTH_PROFILES, ribbonPathDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions, PlotDefinitions, PlotImplementations } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions, PlotDefinitions, PlotImplementations } from '../../src/pipeline/expand';
 import { createPlotProviderContribution } from '../../src/pipeline/expand';
 
 describe('扩大管线稳定面', () => {
@@ -39,7 +39,7 @@ describe('扩大管线稳定面', () => {
     ).not.toThrow();
   });
 
-  it.each<[LowerPlotsOptions, LowerPlotsOptions, string]>([
+  it.each<[PlotsLoweringOptions, PlotsLoweringOptions, string]>([
     [{ layout: { fontSize: 12 } }, { layout: { fontSize: 16 } }, 'layout.fontSize'],
     [{ definitions: { channels: [] } }, { definitions: { channels: [] } }, 'definitions.channels'],
     [{ implementations: { transforms: [] } }, { implementations: { transforms: [] } }, 'implementations.transforms'],
@@ -67,7 +67,7 @@ describe('扩大管线稳定面', () => {
     const ribbonDefinitions = definitions.paths?.filter(definition => definition.name === 'ribbon') ?? [];
 
     expect(ribbonDefinitions).toHaveLength(1);
-    expect(ribbonDefinitions[0]?.schema).toBe(RibbonPathDefinition.schema);
+    expect(ribbonDefinitions[0]?.schema).toBe(ribbonPathDefinition.schema);
 
     const ir: IRScene = {
       version: CURRENT_IR_VERSION,

@@ -1,5 +1,5 @@
 import type { ConnectedScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point';
-import { connectedScatterChart, ConnectedScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { connectedScatterChart, connectedScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import type { IRConnectedScatterChart } from '@retikz/chart/point';
 
 import type { TypedChartCommonProps } from '../shared';
@@ -30,5 +30,5 @@ export const ConnectedScatterChart = createTypedChartComponent<
       input => connectedScatterChart(input),
       'ConnectedScatterEncodings',
     ),
-  ConnectedScatterChartInputEmbedAdapter,
+  connectedScatterChartInputEmbedAdapter,
 );

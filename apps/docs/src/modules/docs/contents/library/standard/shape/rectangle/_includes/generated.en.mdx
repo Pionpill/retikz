@@ -200,10 +200,10 @@ export type InputRectangle = InputShape<IRRectangle>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RectangleInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/rectangle.ts"} startLine={12}>RectangleInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"rectangleInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/rectangle.ts"} startLine={12}>rectangleInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const RectangleInputEmbedAdapter: SynchronousInputEmbedAdapter<InputRectangle & { id?: string }>;
+export declare const rectangleInputEmbedAdapter: SynchronousInputEmbedAdapter<InputRectangle & { id?: string }>;
 ```
 
 **Persistent configuration**
@@ -306,7 +306,7 @@ export type IRRectangle = ShapeSource<ZodInput<typeof RectangleSchema>>;
 
 **Extension definitions and registration**
 
-#### <ApiSourceLink label={"RectangleDefinition"} path={"packages/library/standard/src/shape/rectangle/composite.ts"} startLine={10}>RectangleDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"rectangleDefinition"} path={"packages/library/standard/src/shape/rectangle/composite.ts"} startLine={10}>rectangleDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -328,7 +328,7 @@ export type IRRectangle = ShapeSource<ZodInput<typeof RectangleSchema>>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export const RectangleDefinition = defineComposite({
+export const rectangleDefinition = defineComposite({
   namespace: 'standard',
   type: 'rectangle',
   schema: RectangleSchema,
@@ -340,12 +340,12 @@ export const RectangleDefinition = defineComposite({
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RectangleProvider"} path={"packages/library/standard/src/shape/rectangle/composite.ts"} startLine={25}>RectangleProvider</ApiSourceLink>
+#### <ApiSourceLink label={"rectangleProvider"} path={"packages/library/standard/src/shape/rectangle/composite.ts"} startLine={25}>rectangleProvider</ApiSourceLink>
 
 ```ts
-export const RectangleProvider: CoreDependencyProvider = Object.freeze({
+export const rectangleProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'rectangle' }),
-  makeDefinition: () => RectangleDefinition,
+  makeDefinition: () => rectangleDefinition,
 });
 ```
 

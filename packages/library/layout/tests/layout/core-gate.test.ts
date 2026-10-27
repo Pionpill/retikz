@@ -21,7 +21,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { enum as zodEnum, literal, strictObject } from 'zod';
@@ -238,13 +238,13 @@ describe('Layout Core 布局能力门', () => {
       compile: (_node, context) => {
         const withGuide = context.layoutChild(
           { namespace: 'layout-core-gate', type: 'explicit-guide' },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (withGuide.kind === LayoutChildProbeKind.Failed) return context.raise(withGuide.failure);
 
         const withoutGuide = context.layoutChild(
           { namespace: 'layout-core-gate', type: 'implicit-guide' },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (withoutGuide.kind === LayoutChildProbeKind.Failed) return context.raise(withoutGuide.failure);
 
@@ -362,7 +362,7 @@ describe('Layout Core 布局能力门', () => {
         type: literal('nested-parent'),
       }),
       compile: (_node, context) => {
-        const discarded = context.layoutChild({ namespace: 'layout-core-gate', type: 'nested' }, NaturalLayoutProposal);
+        const discarded = context.layoutChild({ namespace: 'layout-core-gate', type: 'nested' }, naturalLayoutProposal);
         if (discarded.kind === LayoutChildProbeKind.Failed) return context.raise(discarded.failure);
 
         const selected = context.layoutChild(
@@ -456,7 +456,7 @@ describe('Layout Core 布局能力门', () => {
             },
             layout: { minimumSize: 10 },
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (staged.kind === LayoutChildProbeKind.Failed) return context.raise(staged.failure);
 
@@ -471,13 +471,13 @@ describe('Layout Core 布局能力门', () => {
         type: literal('discard-failure'),
       }),
       compile: (_node, context) => {
-        const failed = context.layoutChild({ namespace: 'layout-core-gate', type: 'failure' }, NaturalLayoutProposal);
+        const failed = context.layoutChild({ namespace: 'layout-core-gate', type: 'failure' }, naturalLayoutProposal);
 
         expect(failed.kind).toBe(LayoutChildProbeKind.Failed);
 
         const selected = context.layoutChild(
           { type: 'coordinate', id: 'selected-coordinate', position: [3, 4] },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (selected.kind === LayoutChildProbeKind.Failed) return context.raise(selected.failure);
 
@@ -492,7 +492,7 @@ describe('Layout Core 布局能力门', () => {
         type: literal('raise-failure'),
       }),
       compile: (_node, context) => {
-        const failed = context.layoutChild({ namespace: 'layout-core-gate', type: 'failure' }, NaturalLayoutProposal);
+        const failed = context.layoutChild({ namespace: 'layout-core-gate', type: 'failure' }, naturalLayoutProposal);
         if (failed.kind === LayoutChildProbeKind.Failed) return context.raise(failed.failure);
         throw new Error('Expected the failure probe to fail');
       },
@@ -507,7 +507,7 @@ describe('Layout Core 布局能力门', () => {
       compile: (_node, context) => {
         const selected = context.layoutChild(
           { type: 'coordinate', id: 'duplicate-coordinate', position: [3, 4] },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (selected.kind === LayoutChildProbeKind.Failed) return context.raise(selected.failure);
 
@@ -550,7 +550,7 @@ describe('Layout Core 布局能力门', () => {
       compile: (_node, context) => {
         const result = context.layoutChild(
           { type: 'coordinate', id: 'retained-coordinate', position: [0, 0] },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (result.kind === LayoutChildProbeKind.Failed) return context.raise(result.failure);
 

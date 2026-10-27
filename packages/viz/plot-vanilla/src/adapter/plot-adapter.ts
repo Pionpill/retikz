@@ -41,7 +41,7 @@ const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']) => {
 };
 
 /** 将 Plot authoring input 下沉为 Core contribution 的 InputEmbed adapter */
-export const PlotInputEmbedAdapter = {
+export const plotInputEmbedAdapter = {
   kind: PLOT_NAMESPACE,
   lower: (props: InputPlotEmbed, _context: InputEmbedContext) => {
     if (props.datasets === undefined || props.dataTransformExecutor !== undefined || props.signal !== undefined)

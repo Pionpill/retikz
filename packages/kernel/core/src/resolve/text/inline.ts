@@ -1,8 +1,14 @@
-import type { CanonicalInlineSegment, ParsedInlineSegments, ResolvedMathSegment, SourceInlineSegment } from './types';
+import type {
+  CanonicalInlineSegment,
+  ParsedInlineSegments,
+  MathSegmentColorSource,
+  InlineSegmentColorSource,
+} from './types';
 
 /** 判断行内片段是否为公式 */
-export const isMathSegment = (segment: SourceInlineSegment | CanonicalInlineSegment): segment is ResolvedMathSegment =>
-  'tex' in segment;
+export const isMathSegment = (
+  segment: InlineSegmentColorSource | CanonicalInlineSegment,
+): segment is MathSegmentColorSource => 'tex' in segment;
 
 /** 从指定位置查找下一个未转义的公式闭合符，未找到时返回 -1 */
 const findClose = (raw: string, from: number, display: boolean): number => {
@@ -37,7 +43,7 @@ const findClose = (raw: string, from: number, display: boolean): number => {
 export const parseInlineSegments = (raw: string, gatingOn: boolean): ParsedInlineSegments => {
   if (!gatingOn) return { segments: [{ text: raw }], hasMath: false, warn: false };
 
-  const segments: Array<SourceInlineSegment> = [];
+  const segments: Array<InlineSegmentColorSource> = [];
   let buffer = '';
   let warn = false;
   let hasMath = false;

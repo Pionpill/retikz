@@ -8,7 +8,7 @@ import { PreviewControlStateContext } from '@/modules/docs/components/component-
 import { getPreviewControlFields, isPreviewControlVisible } from '@/modules/docs/components/component-preview/controls';
 import { PreviewThemeProvider } from '@/modules/docs/components/component-preview/theme';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
-import EntityDefinition, {
+import entityDefinition, {
   previewSource as definitionSource,
 } from '@/modules/docs/contents/schematic/graph/entity/custom/entity-definition';
 import {
@@ -225,7 +225,7 @@ describe('Entity 自定义谓词交互演示', () => {
 
     for (const [status, color] of Object.entries({ available: '#16a34a', degraded: '#d97706', offline: '#dc2626' })) {
       for (const critical of [false, true]) {
-        const markup = renderWithValues(EntityDefinition, definitionContract, { status, critical });
+        const markup = renderWithValues(entityDefinition, definitionContract, { status, critical });
 
         expect(markup).toContain(`stroke="${color}"`);
 

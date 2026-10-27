@@ -17,7 +17,7 @@ import { bindWaapiDescriptorElements, isWaapiAnimationStyleOwned } from '../../s
 import { renderToCanvas } from '../../src/canvas';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
 import type { HydrationAnimationControls, HydrationContext } from '../../src/hydration';
-import type { RenderFrameSnapshot, RenderReadonlyLayer, RenderRuntimeConfigInput } from '../../src/runtime';
+import type { RenderFrameSnapshot, RenderReadonlyLayer, InputRenderRuntimeConfig } from '../../src/runtime';
 import { builtinRetainedRendererFactory, createRetainedRenderTarget } from '../../src/runtime';
 import { getRetainedRendererExecutor } from '../../src/runtime/renderer';
 
@@ -152,7 +152,7 @@ const createSession = (
   backend: 'svg' | 'canvas',
   host: SVGSVGElement | HTMLCanvasElement,
   options: Readonly<{
-    config?: RenderRuntimeConfigInput;
+    config?: InputRenderRuntimeConfig;
     ir?: IRScene;
     mountMode?: 'create' | 'adopt';
     probe?: ReconcilerCommitTarget;
@@ -219,7 +219,7 @@ const createSession = (
   const session = Object.assign(
     new ReconcilerSession({ onWarn: () => undefined }, { captureProvenance: true, target }),
     {
-      updateConfig: (next: RenderRuntimeConfigInput) => {
+      updateConfig: (next: InputRenderRuntimeConfig) => {
         const previous = config;
         config = next;
         try {

@@ -1,13 +1,13 @@
 import type { IRAnimationTrack } from '../../schemas';
 import { BuiltinCompileWarningCode } from '../constants';
-import type { CompileWarningInput } from '../warning';
+import type { InputCompileWarning } from '../warning';
 
 /** animation 过滤上下文 */
 type FilterAnimationsContext = {
   /** 校验目标层级 */
   target: 'element' | 'root';
   /** warning 收集器 */
-  onWarn: (warning: CompileWarningInput) => void;
+  onWarn: (warning: InputCompileWarning) => void;
   /** 当前 IR locator */
   irPath: string;
 };

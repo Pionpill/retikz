@@ -3,21 +3,21 @@ import { PLOT_NAMESPACE, PlotComposite, BuiltinPlotCoordinate, PlotGuide } from 
 
 import { RetikzPlotVanillaError } from '../../error';
 import type {
-  BuildPlotOptions,
+  PlotBuildOptions,
   PlotAuthoringContext,
   PlotAuthoringRuntime,
   PlotDeclarationCollection,
   PlotMemberFragment,
-  ResolveLabelMap,
+  LabelResolverByField,
 } from './contracts';
 import { normalizePlotDeclarations } from './normalize';
 
 export type {
-  BuildPlotOptions,
+  PlotBuildOptions,
   InputPlotCoordinate,
   MarkTransformShortcutContext,
   MarkTransformShortcutDefinition,
-  ResolveLabelMap,
+  LabelResolverByField,
 } from './contracts';
 
 /** 默认 guide（供 decorateDefaultGuides 复用，薄 Plot 本身不补） */
@@ -27,13 +27,13 @@ const DEFAULT_GUIDES: ReadonlyArray<IRPlotGuide> = [
 ];
 
 /** buildPlotIR 收集的 resolveLabel 运行时旁路 */
-const resolveLabelByPlotIR = new WeakMap<IRPlot, ResolveLabelMap>();
+const resolveLabelByPlotIR = new WeakMap<IRPlot, LabelResolverByField>();
 
 /** 取某 IRPlot 经 buildPlotIR 收集的 resolveLabel 运行时表 */
-export const resolveLabelOf = (spec: IRPlot): ResolveLabelMap | undefined => resolveLabelByPlotIR.get(spec);
+export const resolveLabelOf = (spec: IRPlot): LabelResolverByField | undefined => resolveLabelByPlotIR.get(spec);
 
 /** Chart typed extension 的 Plot-owned declaration 归一化结果 */
-export type ResolvedPlotExtensionAuthoring = Readonly<{
+export type PlotExtensionAuthoringResolution = Readonly<{
   /** 可 JSON 序列化的绘图成员片段 */
   fragment: PlotMemberFragment;
   /** 不进入 IR 的 Plot runtime sidecar */
@@ -47,7 +47,7 @@ export type ResolvedPlotExtensionAuthoring = Readonly<{
 export const resolvePlotExtensionAuthoring = (
   collection: PlotDeclarationCollection,
   context: Omit<PlotAuthoringContext, 'mode'>,
-): ResolvedPlotExtensionAuthoring => {
+): PlotExtensionAuthoringResolution => {
   return normalizePlotDeclarations(collection, { ...context, mode: 'chart-extension' });
 };
 
@@ -58,7 +58,7 @@ export const resolvePlotExtensionAuthoring = (
 export const normalizePlotIR = (
   collection: PlotDeclarationCollection,
   dataRef: string,
-  options: BuildPlotOptions = {},
+  options: PlotBuildOptions = {},
 ): IRPlot => {
   const data = options.model ? { reference: dataRef, model: options.model } : { reference: dataRef };
   const plotRootContext = {

@@ -16,7 +16,7 @@ export type TableCellFitScale = Readonly<{
 }>;
 
 /** 验证 bounds 字段、尺寸和 max endpoint 均为可计算的有限值 */
-const validateBoundsRect = (rect: BoundsRect, name: string): void => {
+const assertBoundsRect = (rect: BoundsRect, name: string): void => {
   if (
     !Number.isFinite(rect.x) ||
     !Number.isFinite(rect.y) ||
@@ -32,7 +32,7 @@ const validateBoundsRect = (rect: BoundsRect, name: string): void => {
 };
 
 /** 验证 fit scale 两轴均为有限非负数 */
-const validateScale = (scale: TableCellFitScale): void => {
+const assertScale = (scale: TableCellFitScale): void => {
   if (!Number.isFinite(scale.x) || !Number.isFinite(scale.y) || scale.x < 0 || scale.y < 0) {
     throw new RetikzTableError('table: Cell fit scale must contain finite nonnegative x and y');
   }
@@ -48,8 +48,8 @@ export const computeTableCellFitScale = (
   contentBox: BoundsRect,
   fit: TableCellFit,
 ): TableCellFitScale => {
-  validateBoundsRect(sourceAllocationBounds, 'sourceAllocationBounds');
-  validateBoundsRect(contentBox, 'contentBox');
+  assertBoundsRect(sourceAllocationBounds, 'sourceAllocationBounds');
+  assertBoundsRect(contentBox, 'contentBox');
 
   let scale: TableCellFitScale;
 
@@ -77,7 +77,7 @@ export const computeTableCellFitScale = (
       throw new RetikzTableError('table: Cell fit must be none, contain, cover, or stretch');
   }
 
-  validateScale(scale);
+  assertScale(scale);
 
   return deepFreeze(scale);
 };
@@ -88,8 +88,8 @@ export const projectTableCellBounds = (
   scale: TableCellFitScale,
   translation: TableCellTranslation,
 ): BoundsRect => {
-  validateBoundsRect(bounds, 'bounds');
-  validateScale(scale);
+  assertBoundsRect(bounds, 'bounds');
+  assertScale(scale);
   if (!Number.isFinite(translation.x) || !Number.isFinite(translation.y)) {
     throw new RetikzTableError('table: Cell bounds translation must contain finite x and y');
   }
@@ -100,7 +100,7 @@ export const projectTableCellBounds = (
     width: bounds.width * scale.x,
     height: bounds.height * scale.y,
   };
-  validateBoundsRect(projected, 'projected bounds');
+  assertBoundsRect(projected, 'projected bounds');
 
   return deepFreeze(projected);
 };

@@ -58,10 +58,10 @@ const probeReplayComposite = core.defineComposite({
   }),
   artifactSchema: strictObject({ chosen: string() }),
   compile: (_, context) => {
-    context.layoutChild({ type: 'node', position: [0, 0], text: 'discarded' }, core.NaturalLayoutProposal);
+    context.layoutChild({ type: 'node', position: [0, 0], text: 'discarded' }, core.naturalLayoutProposal);
     const selected = context.layoutChild(
       { type: 'node', position: [0, 0], text: 'selected' },
-      core.NaturalLayoutProposal,
+      core.naturalLayoutProposal,
     );
     if (selected.kind !== core.LayoutChildProbeKind.Resolved) return { children: [] };
 

@@ -10,20 +10,20 @@ import {
 import { localToWorld } from '@retikz/math';
 
 import { BuiltinExtensionShapeName } from '../constants';
-import type { EllipticCapShapeParams } from './_elliptic-cap';
+import type { EllipticCapShapeParams } from './elliptic-cap';
 import {
   EllipticCapShapeParamsSchema,
   circumscribeEllipticCaps,
   ellipticCapCommands,
   ellipticCapLocalBoundary,
   scaleEllipticCapParams,
-} from './_elliptic-cap';
+} from './elliptic-cap';
 
 /** Cylinder 形状参数 */
 export type CylinderShapeParams = EllipticCapShapeParams;
 
 /** 可选 Cylinder 形状 Definition */
-export const CylinderShapeDefinition = defineShape<CylinderShapeParams>({
+export const cylinderShapeDefinition = defineShape<CylinderShapeParams>({
   name: BuiltinExtensionShapeName.Cylinder,
   paramsSchema: EllipticCapShapeParamsSchema,
   computeCircumscribedGeometry: circumscribeEllipticCaps,
@@ -41,7 +41,7 @@ export const CylinderShapeDefinition = defineShape<CylinderShapeParams>({
 });
 
 /** Cylinder 的静态 Core provider */
-export const CylinderShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
-  key: { capability: 'shape', name: CylinderShapeDefinition.name },
-  makeDefinition: () => CylinderShapeDefinition,
+export const cylinderShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
+  key: { capability: 'shape', name: cylinderShapeDefinition.name },
+  makeDefinition: () => cylinderShapeDefinition,
 });

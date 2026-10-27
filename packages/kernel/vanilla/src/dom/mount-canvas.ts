@@ -33,10 +33,10 @@ import type {
   HydrateOptions,
   MountCanvasOptions,
   RawStaticMountCanvasOptions,
-  RenderInput,
+  InputRender,
   RetainedCanvasView,
   RetainedMountCanvasOptions,
-  RetainedRenderInput,
+  InputRetainedRender,
   ScenePoint,
   StaticCanvasView,
   StaticMountCanvasOptions,
@@ -61,7 +61,7 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
  */
 const mountStaticCanvas = (
   container: Element,
-  input: RenderInput,
+  input: InputRender,
   options: StaticMountCanvasOptions | RawStaticMountCanvasOptions,
 ): StaticCanvasView | StaticRawCanvasView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
@@ -119,7 +119,7 @@ const mountStaticCanvas = (
     );
   };
 
-  const ensureClockPlaying = (): void => {
+  const startClockIfIdle = (): void => {
     clock?.play();
   };
 
@@ -140,7 +140,7 @@ const mountStaticCanvas = (
 
     if (!changed) return;
 
-    ensureClockPlaying();
+    startClockIfIdle();
     renderFrame();
   };
 
@@ -179,7 +179,7 @@ const mountStaticCanvas = (
     };
   };
 
-  const renderInto = (next: RenderInput): void => {
+  const renderInto = (next: InputRender): void => {
     const { scene, artifacts, compileResult, layers, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
     currentLayers = layers;
@@ -334,7 +334,7 @@ const mountStaticCanvas = (
   return {
     mode: VanillaViewMode.Static,
     root: canvas,
-    update(next: RenderInput) {
+    update(next: InputRender) {
       if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountCanvas: view already disposed.');
 
       renderInto(next);
@@ -374,7 +374,7 @@ const mountStaticCanvas = (
 /** 把 IR / InputScene 挂成 retained Canvas Runtime */
 const mountRetainedCanvas = (
   container: Element,
-  input: RetainedRenderInput,
+  input: InputRetainedRender,
   options: RetainedMountCanvasOptions,
   runtimeOptions: VanillaRetainedRuntimeOptions,
 ): RetainedCanvasView => {
@@ -442,14 +442,14 @@ const mountRetainedCanvas = (
 /** `mountCanvas` 的 static / retained 输入重载 */
 type MountCanvas = {
   (container: Element, input: Scene, options?: StaticMountCanvasOptions): StaticCanvasView;
-  (container: Element, input: RetainedRenderInput, options: RawStaticMountCanvasOptions): StaticRawCanvasView;
-  (container: Element, input: RetainedRenderInput, options?: RetainedMountCanvasOptions): RetainedCanvasView;
+  (container: Element, input: InputRetainedRender, options: RawStaticMountCanvasOptions): StaticRawCanvasView;
+  (container: Element, input: InputRetainedRender, options?: RetainedMountCanvasOptions): RetainedCanvasView;
 };
 
 /** 按输入是否已编译，创建 static 或 retained Canvas view */
 export const mountCanvas: MountCanvas = ((
   container: Element,
-  input: Scene | RetainedRenderInput,
+  input: Scene | InputRetainedRender,
   options: StaticMountCanvasOptions | MountCanvasOptions = {},
 ): CanvasView => {
   if ('primitives' in input) {

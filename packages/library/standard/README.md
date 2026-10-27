@@ -24,7 +24,7 @@ This package is ESM-only and requires Node.js 22.12 or newer.
 本包仅发布 ES modules，要求 Node.js 22.12 或更高版本。
 
 ```ts
-import { createGrid, GridDefinition } from '@retikz/standard';
+import { createGrid, gridDefinition } from '@retikz/standard';
 ```
 
 Imports do not mutate a global registry. Pass only the definitions selected for

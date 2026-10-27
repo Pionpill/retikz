@@ -57,7 +57,7 @@ export type TypedChartCommonProps<TSource extends IRChartSource, TNative = never
     children?: ReactNode;
   }>;
 
-type PointFactoryInput = Readonly<{
+type InputPointFactory = Readonly<{
   data?: Array<ExternalRow>;
   dataBindings?: DataInputBindings<unknown>;
   coordinate?: InputChartCoordinate;
@@ -69,7 +69,7 @@ type PointFactoryInput = Readonly<{
 
 type PlotExtensionAuthoringContext = Parameters<typeof resolvePlotExtensionAuthoring>[1];
 
-type TypedPointChartDeclarations<TInput extends PointFactoryInput> = CollectedChartDeclarations &
+type TypedPointChartDeclarations<TInput extends InputPointFactory> = CollectedChartDeclarations &
   Readonly<{
     encodings?: CollectedChartDeclaration<TInput['encodings']>;
     properties?: CollectedChartDeclaration<NonNullable<TInput['properties']>>;
@@ -77,7 +77,7 @@ type TypedPointChartDeclarations<TInput extends PointFactoryInput> = CollectedCh
     presentation: Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>>;
   }>;
 
-type TypedChartRootRecipe<TInput extends PointFactoryInput> = Readonly<{
+type TypedChartRootRecipe<TInput extends InputPointFactory> = Readonly<{
   encodings?: TInput['encodings'];
   properties?: TInput['properties'];
   guides?: TInput['guides'];
@@ -143,7 +143,7 @@ const rootDeclarationConflictError = (slot: string, declaration: string): Retikz
 
 const presentationOf = (
   rootPresentation: IRChartSource['presentation'] | undefined,
-  declarationPresentation: TypedPointChartDeclarations<PointFactoryInput>['presentation'],
+  declarationPresentation: TypedPointChartDeclarations<InputPointFactory>['presentation'],
 ): Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>> => {
   const presentation: Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>> = {};
 
@@ -170,7 +170,7 @@ const presentationOf = (
 export const createTypedChartInput = <
   TProps extends TypedChartCommonProps<TSource, unknown>,
   TSource extends IRChartSource,
-  TInput extends PointFactoryInput,
+  TInput extends InputPointFactory,
 >(
   props: TProps,
   declarations: TypedPointChartDeclarations<TInput>,

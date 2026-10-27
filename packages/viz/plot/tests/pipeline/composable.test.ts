@@ -2,7 +2,7 @@ import type { IRNode, IRScene, IRScope, IRTarget, ScenePrimitive } from '@retikz
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
 import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
@@ -30,7 +30,7 @@ const pointSpec = (extra: Record<string, unknown> = {}): IRPlot =>
     ...extra,
   });
 
-const expandOf = (spec: IRPlot, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, options?: PlotsLoweringOptions): IRScope => {
   return lowerPlotWithDataArtifact(spec, { sales: SALES }, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
@@ -46,7 +46,7 @@ const nodeHeight = (node: IRNode): number => {
   return size?.height ?? size?.default ?? 0;
 };
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 describe('contract L1-a · IRPlot 自描述尺寸', () => {
   it('节点宽度覆盖全局', () => {

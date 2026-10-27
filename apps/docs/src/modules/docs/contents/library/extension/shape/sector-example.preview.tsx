@@ -1,4 +1,4 @@
-import { SectorShapeDefinition } from '@retikz/extension';
+import { sectorShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 /** 图形参数 */
@@ -12,7 +12,7 @@ export type SectorExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderSectorExamplePreview = (values: SectorExamplePreviewValues) => (
-  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} extensions={{ shapes: [SectorShapeDefinition] }}>
+  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} extensions={{ shapes: [sectorShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'sector', params: values }}

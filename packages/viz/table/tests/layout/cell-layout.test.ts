@@ -1,7 +1,7 @@
 import { resolveBoxSpacing } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { TableTrackLayout } from '../../src/pipeline/layout';
+import type { CompiledTableTrackLayout } from '../../src/pipeline/layout';
 import {
   computeTableCellBox,
   computeTableCellContentBox,
@@ -9,7 +9,7 @@ import {
   computeTableCellTranslation,
 } from '../../src/pipeline/layout';
 
-const track = (id: string, index: number, offset: number, size: number): TableTrackLayout => ({
+const track = (id: string, index: number, offset: number, size: number): CompiledTableTrackLayout => ({
   id,
   index,
   offset,

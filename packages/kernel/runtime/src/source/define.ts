@@ -1,6 +1,6 @@
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeIdentity } from '../identity';
-import type { RuntimeSourceDefinition, RuntimeSourceDefinitionInput, RuntimeSourceToken } from './types';
+import type { RuntimeSourceDefinition, InputRuntimeSourceDefinition, RuntimeSourceToken } from './types';
 
 const runtimeSourceTokens = new WeakSet<object>();
 
@@ -48,7 +48,7 @@ export type RuntimeSourceErasedExecutor = Readonly<{
  * @throws {RetikzRuntimeError} 来源键为空时抛出 TokenInvalid
  */
 export const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
-  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>,
+  input: InputRuntimeSourceDefinition<TInput, TValue, TRead>,
 ): RuntimeSourceDefinition<TInput, TValue, TRead, TChange> => {
   if (input.key.length === 0) {
     throw new RetikzRuntimeError({

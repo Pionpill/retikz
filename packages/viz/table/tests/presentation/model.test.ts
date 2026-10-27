@@ -1,15 +1,15 @@
 ﻿import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import type { CellPresentationInput } from '../../src';
+import type { InputCellPresentation } from '../../src';
 import { defineCellPresentation } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 import { formatDefaultTable } from '../utils/stages';
 
 const formattedModel = () =>
   formatDefaultTable(
-    normalizeTableStructure({
+    resolveTableStructure({
       kind: 'manual',
       rows: [
         [
@@ -32,7 +32,7 @@ const formattedModel = () =>
 
 describe('推出 Table 型号', () => {
   it('保留值/内容标识符、执行名称和默认边框外观', () => {
-    let observed: CellPresentationInput | undefined;
+    let observed: InputCellPresentation | undefined;
     const inspect = defineCellPresentation({
       name: 'inspect',
       optionsSchema: strictObject({}),
@@ -75,7 +75,7 @@ describe('推出 Table 型号', () => {
   });
 
   it('接受独立提供的载体并通过相同的最终外观进行演示', () => {
-    let observed: CellPresentationInput | undefined;
+    let observed: InputCellPresentation | undefined;
     const inspect = defineCellPresentation({
       name: 'inspect',
       optionsSchema: strictObject({}),

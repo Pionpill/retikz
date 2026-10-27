@@ -1,12 +1,12 @@
 import type { CanonicalFont, TextLineResolution } from '../../../resolve';
 import { resolveTextLine } from '../../../resolve';
 import type { InlineLineLayout, LineLayoutContext, TextFont } from '../../text';
-import { layoutInlineLine, normalizeTextMetrics } from '../../text';
+import { layoutInlineLine, resolveTextMetrics } from '../../text';
 import type { NodeTextLayoutContext, NodeTextLineLayout } from '../types';
 import { measureMinimumTextWidth, wrapText } from './text';
 
 /** 节点正文布局输入 */
-type LayoutNodeContentInput = NodeTextLayoutContext & {
+type InputNodeContentLayout = NodeTextLayoutContext & {
   /** 基准字体大小 */
   fontSize: number;
   /** 未缩放前的节点基准字号 */
@@ -46,7 +46,7 @@ type NodeContentLayout = {
 };
 
 /** 布局节点正文文本 */
-export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLayout => {
+export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLayout => {
   const {
     node,
     measureText,
@@ -122,10 +122,10 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
       textBaselineOffsets = blockLines.map(line => line.baselineOffset);
       textHeight = cursor;
     } else {
-      const metricsByFont = new Map<TextFont, Map<string, ReturnType<typeof normalizeTextMetrics>>>();
+      const metricsByFont = new Map<TextFont, Map<string, ReturnType<typeof resolveTextMetrics>>>();
 
       /** 在单次正文 layout 内复用同一 authored font/text 的真实测量结果 */
-      const measurePhysicalText = (text: string, font: TextFont): ReturnType<typeof normalizeTextMetrics> => {
+      const measurePhysicalText = (text: string, font: TextFont): ReturnType<typeof resolveTextMetrics> => {
         let metricsByText = metricsByFont.get(font);
         if (metricsByText === undefined) {
           metricsByText = new Map();
@@ -135,7 +135,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         const cached = metricsByText.get(text);
         if (cached !== undefined) return cached;
 
-        const measured = normalizeTextMetrics(measureText(text, font));
+        const measured = resolveTextMetrics(measureText(text, font));
         metricsByText.set(text, measured);
 
         return measured;

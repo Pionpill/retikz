@@ -4,7 +4,7 @@ import type { AffineMatrix } from '@retikz/math';
 import type { Transform } from '../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRPosition } from '../schemas';
-import type { NodeLayout } from './node';
+import type { CompiledNodeLayout } from './node';
 
 /** 将局部点按 transform chain 投影到全局坐标 */
 export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
@@ -70,7 +70,7 @@ export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<T
 };
 
 /** 当前 Scope 的合成消费态；仅 compile 内部使用，不进入 IR 或 Scene */
-export type EffectiveScopeTransform = Readonly<{
+export type ComposedScopeTransform = Readonly<{
   /** 按祖先到当前层排列的只读声明，用于输出及极端数值的逐项计算 */
   chain: ReadonlyArray<Transform>;
   /** 正向仿射矩阵 */
@@ -81,15 +81,15 @@ export type EffectiveScopeTransform = Readonly<{
   finiteForward: boolean;
   /** 逆矩阵系数是否可直接消费 */
   finiteInverse: boolean;
-  /** 保持 NodeLayout 投影规则的累计旋转弧度 */
+  /** 保持 CompiledNodeLayout 投影规则的累计旋转弧度 */
   rotation: number;
-  /** 保持 NodeLayout 投影规则的逐轴缩放乘积 */
+  /** 保持 CompiledNodeLayout 投影规则的逐轴缩放乘积 */
   scaleX: number;
   scaleY: number;
 }>;
 
 /** 无变换 Scope 共享的只读消费态 */
-const IDENTITY_SCOPE_TRANSFORM: EffectiveScopeTransform = Object.freeze({
+const IDENTITY_SCOPE_TRANSFORM: ComposedScopeTransform = Object.freeze({
   chain: Object.freeze([]),
   forward: AFFINE_IDENTITY,
   inverse: AFFINE_IDENTITY,
@@ -124,9 +124,9 @@ const matrixOfTransform = (transform: Transform, inverse: boolean): AffineMatrix
 /** 从父级消费态组合本层变换；调用方提供的完整链只用于输出，不参与重复遍历 */
 export const composeScopeTransform = (
   transforms: ReadonlyArray<Transform>,
-  parent: EffectiveScopeTransform = IDENTITY_SCOPE_TRANSFORM,
+  parent: ComposedScopeTransform = IDENTITY_SCOPE_TRANSFORM,
   chain: ReadonlyArray<Transform> = parent.chain.length === 0 ? transforms : [...parent.chain, ...transforms],
-): EffectiveScopeTransform => {
+): ComposedScopeTransform => {
   if (transforms.length === 0) return parent;
   let forward = parent.forward;
   let inverse = parent.inverse;
@@ -158,13 +158,13 @@ export const composeScopeTransform = (
 };
 
 /** 用已合成消费态投影点；系数溢出时保留逐项算术的数值范围 */
-export const applyScopeTransform = (point: IRPosition, transform: EffectiveScopeTransform): IRPosition => {
+export const applyScopeTransform = (point: IRPosition, transform: ComposedScopeTransform): IRPosition => {
   if (transform.chain.length === 0) return [point[0], point[1]];
   return transform.finiteForward ? applyAffine(transform.forward, point) : applyTransformChain(point, transform.chain);
 };
 
 /** 用已合成消费态反投影，保留零轴错误与极小非零轴的既有语义 */
-export const inverseScopeTransform = (point: IRPosition, transform: EffectiveScopeTransform): IRPosition => {
+export const inverseScopeTransform = (point: IRPosition, transform: ComposedScopeTransform): IRPosition => {
   if (transform.chain.length === 0) return [point[0], point[1]];
   if (transform.inverse === null)
     throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'non-invertible scope transform');
@@ -174,7 +174,10 @@ export const inverseScopeTransform = (point: IRPosition, transform: EffectiveSco
 };
 
 /** 保持既有布局投影口径，只复用合成的点变换与旋转/缩放累计量 */
-export const projectLayoutWithTransform = (layout: NodeLayout, transform: EffectiveScopeTransform): NodeLayout => {
+export const projectLayoutWithTransform = (
+  layout: CompiledNodeLayout,
+  transform: ComposedScopeTransform,
+): CompiledNodeLayout => {
   const [x, y] = applyScopeTransform([layout.geometry.rect.x, layout.geometry.rect.y], transform);
   const scaleX = Math.abs(transform.scaleX);
   const scaleY = Math.abs(transform.scaleY);
@@ -205,17 +208,17 @@ export const projectLayoutWithTransform = (layout: NodeLayout, transform: Effect
  * @description 所有插入均返回新链，旧链与其合成结果永不原位修改；同一父链/插入序列共享结果
  */
 export const createScopeTransformContext = () => {
-  const effective = new WeakMap<ReadonlyArray<Transform>, EffectiveScopeTransform>();
+  const transformCache = new WeakMap<ReadonlyArray<Transform>, ComposedScopeTransform>();
   const insertions = new WeakMap<
     ReadonlyArray<Transform>,
     WeakMap<ReadonlyArray<Transform>, Map<number, ReadonlyArray<Transform>>>
   >();
-  const resolve = (chain: ReadonlyArray<Transform>): EffectiveScopeTransform => {
+  const resolve = (chain: ReadonlyArray<Transform>): ComposedScopeTransform => {
     if (chain.length === 0) return IDENTITY_SCOPE_TRANSFORM;
-    let value = effective.get(chain);
+    let value = transformCache.get(chain);
     if (value === undefined) {
       value = composeScopeTransform(chain);
-      effective.set(chain, value);
+      transformCache.set(chain, value);
     }
     return value;
   };
@@ -244,7 +247,7 @@ export const createScopeTransformContext = () => {
         : [...chain.slice(0, index), ...transforms, ...chain.slice(index)];
     const value =
       index === chain.length ? composeScopeTransform(transforms, resolve(chain), next) : composeScopeTransform(next);
-    effective.set(next, value);
+    transformCache.set(next, value);
     byIndex.set(index, next);
     return next;
   };
@@ -255,7 +258,7 @@ export const createScopeTransformContext = () => {
       insert(chain, chain.length, transforms),
     apply: (point: IRPosition, chain: ReadonlyArray<Transform>) => applyScopeTransform(point, resolve(chain)),
     inverse: (point: IRPosition, chain: ReadonlyArray<Transform>) => inverseScopeTransform(point, resolve(chain)),
-    project: (layout: NodeLayout, chain: ReadonlyArray<Transform>) =>
+    project: (layout: CompiledNodeLayout, chain: ReadonlyArray<Transform>) =>
       projectLayoutWithTransform(layout, resolve(chain)),
   };
 };

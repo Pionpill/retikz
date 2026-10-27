@@ -223,8 +223,8 @@ export const vizV02: Release = {
         {
           label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
           content: {
-            zh: '移除 createPlotProvider、resolvePlotContribution 及其专用请求/结果类型；通过 embedPlot 与 PlotInputEmbedAdapter 接入，底层 provider contribution 仍由 @retikz/plot 提供。',
-            en: 'Removes createPlotProvider, resolvePlotContribution, and their request/result types. Use embedPlot and PlotInputEmbedAdapter; @retikz/plot still owns the underlying provider contribution.',
+            zh: '移除 createPlotProvider、resolvePlotContribution 及其专用请求/结果类型；通过 embedPlot 与 plotInputEmbedAdapter 接入，底层 provider contribution 仍由 @retikz/plot 提供。',
+            en: 'Removes createPlotProvider, resolvePlotContribution, and their request/result types. Use embedPlot and plotInputEmbedAdapter; @retikz/plot still owns the underlying provider contribution.',
           },
         },
         {

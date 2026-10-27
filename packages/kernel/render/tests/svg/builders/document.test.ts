@@ -1,4 +1,4 @@
-import type { PathPrimitive, RectPrimitive, ResolvedArrowEnd, Scene, SceneResource } from '@retikz/core';
+import type { PathPrimitive, RectPrimitive, CompiledArrowEnd, Scene, SceneResource } from '@retikz/core';
 import type { SvgNode } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 
@@ -7,7 +7,7 @@ import { renderToSvgString } from '../../../src/svg/serialize/to-string';
 
 const layout = { x: 0, y: 0, width: 10, height: 10 };
 
-const arrowSpec: ResolvedArrowEnd = {
+const arrowSpec: CompiledArrowEnd = {
   shape: 'stealth',
   baseSize: 10,
   refX: 8,

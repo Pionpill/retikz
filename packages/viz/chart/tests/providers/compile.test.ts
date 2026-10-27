@@ -8,11 +8,11 @@ import {
 import { defineTransformImplementation, defineRegressionImplementation, defineRegression } from '@retikz/data';
 import type { ExternalDatasets } from '@retikz/data';
 import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import type { JsonObject } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { FlexLayoutArtifactSchema } from '@retikz/layout';
-import type { LowerPlotsOptions } from '@retikz/plot';
+import type { PlotsLoweringOptions } from '@retikz/plot';
 import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { number } from 'zod';
@@ -82,11 +82,11 @@ const scenePrimitivesOfType = (
 
 const compileDefinitionsOf = (
   chartContributions: ReadonlyArray<CoreProviderContribution>,
-  lowerOptions: LowerPlotsOptions = {},
+  lowerOptions: PlotsLoweringOptions = {},
 ) => {
   const plot = createPlotProviderContribution({ 'scatter.rows': rows }, lowerOptions);
   return resolveCoreProviderDependencies({
-    contributions: [...chartContributions, plot, { roots: [PathClipProvider.key], providers: [PathClipProvider] }],
+    contributions: [...chartContributions, plot, { roots: [pathClipProvider.key], providers: [pathClipProvider] }],
   });
 };
 
@@ -124,7 +124,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       contributions: [
         createStripChartProviderContribution(),
         createPlotProviderContribution({ 'strip.rows': stripRows }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
 
@@ -180,7 +180,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       contributions: [
         createStripChartProviderContribution(),
         createPlotProviderContribution({ 'strip.polar': stripRows }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
 
@@ -208,7 +208,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       contributions: [
         createStripChartProviderContribution(),
         createPlotProviderContribution({ 'strip.empty': [] }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
 
@@ -274,7 +274,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         contributions: [
           fixture.contribution,
           createPlotProviderContribution(fixture.datasets),
-          { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+          { roots: [pathClipProvider.key], providers: [pathClipProvider] },
         ],
       });
       const result = compileToScene(sceneOf(fixture.source), definitions);
@@ -312,7 +312,7 @@ describe('Chart 提供者通过 Core 编译', () => {
             { x: 3, y: 5 },
           ],
         }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
     const result = compileToScene(sceneOf(source), definitions);
@@ -348,7 +348,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       contributions: [
         createConnectedScatterChartProviderContribution(),
         createPlotProviderContribution({ 'connected.rows': connectedRows }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
     const result = compileToScene(sceneOf(source), definitions);
@@ -393,7 +393,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       contributions: [
         createRangedDotChartProviderContribution(),
         createPlotProviderContribution({ 'ranged.rows': rangedRows }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
     const result = compileToScene(sceneOf(source), definitions);
@@ -448,7 +448,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       contributions: [
         createRegressionChartProviderContribution(),
         createPlotProviderContribution({ 'regression.rows': regressionRows }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
     const result = compileToScene(sceneOf(source), definitions);
@@ -496,7 +496,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       contributions: [
         createRegressionChartProviderContribution(),
         createPlotProviderContribution({ 'regression.rows': regressionRows }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
     const result = compileToScene(sceneOf(source), definitions);
@@ -540,7 +540,7 @@ describe('Chart 提供者通过 Core 编译', () => {
             { series: 'B', x: 1, y: 3 },
           ],
         }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
 
@@ -567,7 +567,7 @@ describe('Chart 提供者通过 Core 编译', () => {
             { x: 2, y: 4 },
           ],
         }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
 
@@ -610,7 +610,7 @@ describe('Chart 提供者通过 Core 编译', () => {
             { panel: 'right', x: 2, y: 5 },
           ],
         }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
     const primitives = compileToScene(sceneOf(source), definitions).scene.primitives;
@@ -695,7 +695,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         contributions: [
           createBubbleChartProviderContribution(),
           plot,
-          { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+          { roots: [pathClipProvider.key], providers: [pathClipProvider] },
         ],
       });
       const result = compileToScene(sceneOf(source), definitions);
@@ -717,7 +717,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       contributions: [
         createBubbleChartProviderContribution(),
         createPlotProviderContribution({ 'bubble.rows': [{ x: 1, y: 2, size: -1 }] }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
 
@@ -737,7 +737,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       contributions: [
         createBubbleChartProviderContribution(),
         createPlotProviderContribution({ 'bubble.rows': [{ x: 1, y: 2, size: 3 }] }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
 
@@ -892,7 +892,7 @@ describe('Chart 提供者通过 Core 编译', () => {
       apply: (inputRows, operation) =>
         inputRows.map(row => ({ ...row, [operation.params.as]: row[operation.params.field] })),
     });
-    const lowerOptions: LowerPlotsOptions = {
+    const lowerOptions: PlotsLoweringOptions = {
       definitions: { transforms: [copyField] },
       implementations: { transforms: [copyFieldImplementation] },
     };
@@ -1046,7 +1046,7 @@ describe('点感知编译边界', () => {
             { category: 'B', value: 4 },
           ],
         }),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
 
@@ -1079,7 +1079,7 @@ describe('注册回归编译', () => {
       contributions: [
         createRegressionChartProviderContribution([], lowerOptions),
         createPlotProviderContribution({ rows }, lowerOptions),
-        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
       ],
     });
 

@@ -11,7 +11,7 @@ import { compileToScene as compileCoreToScene, PathLabelSchema } from '@retikz/c
 import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { RibbonLabelSchema, RibbonPathDefinition, RibbonPathSchema } from '../../src/ribbon';
+import { RibbonLabelSchema, ribbonPathDefinition, RibbonPathSchema } from '../../src/ribbon';
 
 const ASCENT_FACTOR = 0.8;
 
@@ -57,7 +57,7 @@ const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
 
 const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
   const supplied = options.paths ?? [];
-  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathDefinition;
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? ribbonPathDefinition;
 
   return compileCoreToScene(input, {
     ...options,

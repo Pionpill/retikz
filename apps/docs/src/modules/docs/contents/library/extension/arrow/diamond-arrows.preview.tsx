@@ -1,4 +1,4 @@
-import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/extension';
+import { diamondArrowDefinition, openDiamondArrowDefinition } from '@retikz/extension';
 import { Draw, Layout, Node } from '@retikz/react';
 
 /** 图形参数 */
@@ -14,7 +14,7 @@ export const renderDiamondArrowsPreview = (values: DiamondArrowsPreviewValues) =
   return (
     <Layout
       viewBox={{ x: -210, y: -80, width: 420, height: 160 }}
-      extensions={{ arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition] }}
+      extensions={{ arrows: [diamondArrowDefinition, openDiamondArrowDefinition] }}
     >
       <Draw
         way={[

@@ -8,7 +8,7 @@ import type {
   IRTableTrackSize,
 } from '../../src';
 import { TableTrackSizeKind } from '../../src';
-import type { ResolvedTableTrackSize } from '../../src/pipeline/layout';
+import type { CanonicalTableTrackSize } from '../../src/pipeline/layout';
 import { resolveTableTrackSizes, solveTableTracks } from '../../src/pipeline/layout';
 
 const fixed = (value: number): IRTableFixedTrackSize => ({ kind: TableTrackSizeKind.Fixed, value });
@@ -25,7 +25,7 @@ const minmax = (
   max: IRTableFixedTrackSize | IRTableAutoTrackSize | IRTableFractionTrackSize,
 ): IRTableMinmaxTrackSize => ({ kind: TableTrackSizeKind.Minmax, min, max });
 
-const resolve = (tracks: ReadonlyArray<IRTableTrackSize>): ReadonlyArray<ResolvedTableTrackSize> =>
+const resolve = (tracks: ReadonlyArray<IRTableTrackSize>): ReadonlyArray<CanonicalTableTrackSize> =>
   resolveTableTrackSizes(tracks);
 
 describe('Table 轨道尺寸', () => {
@@ -45,7 +45,7 @@ describe('Table 轨道尺寸', () => {
     expect(tracks).toEqual(snapshot);
     expect(Object.isFrozen(resolved)).toBe(true);
     expect(Object.isFrozen(resolved[1])).toBe(true);
-    expect(Object.isFrozen((resolved[1] as Extract<ResolvedTableTrackSize, { kind: 'minmax' }>).max)).toBe(true);
+    expect(Object.isFrozen((resolved[1] as Extract<CanonicalTableTrackSize, { kind: 'minmax' }>).max)).toBe(true);
   });
 
   it('通过规范索引应用稀疏覆盖并拒绝重复或超出范围的索引', () => {
@@ -238,7 +238,7 @@ describe('Table 轨道尺寸', () => {
   it('拒绝解算器边界处的无效解析轨迹', () => {
     expect(() =>
       solveTableTracks({
-        tracks: [{ kind: TableTrackSizeKind.Fraction, weight: 0 }] as ReadonlyArray<ResolvedTableTrackSize>,
+        tracks: [{ kind: TableTrackSizeKind.Fraction, weight: 0 }] as ReadonlyArray<CanonicalTableTrackSize>,
         contributions: [],
         gap: 0,
       }),

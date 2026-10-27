@@ -81,7 +81,7 @@ Path looks up a path by `kind`, using builtin `stroke` when the field is omitted
 
 ## Style inheritance
 
-On entering each Scope, `resolveScopeDefaults` merges the parent's effective defaults with the current `defaults` into an `EffectiveScopeDefaults` object with Node, Path, Label, and Arrow channels. Children in that scope share this object. Node's `resolveEffectiveNodeStyle` and Path's `resolveEffectivePath` read their channel and apply the element's own properties without walking ancestor Scopes for each element.
+On entering each Scope, `resolveScopeDefaults` merges the parent's effective defaults with the current `defaults` into an `MergedScopeDefaults` object with Node, Path, Label, and Arrow channels. Children in that scope share this object. Node's `mergeNodeStyle` and Path's `mergePathStyle` read their channel and apply the element's own properties without walking ancestor Scopes for each element.
 
 Within each frame, the Scope's general `defaults.style` applies before `defaults.node.style`. The example's `strokeWidth` therefore starts at 1, becomes 2 through node defaults, and ends at 3 through A's own declaration.
 
@@ -235,7 +235,7 @@ The example's `NodeResolution` has four fields:
 }
 ```
 
-`CanonicalNode` is an internal resolved result and can carry bound paint capabilities. It still retains position expressions for layout to resolve and has no final text dimensions or outer box. `compileResolvedNode` receives `NodeResolution` and combines it with measurement capabilities and position context to produce separate layout, paint, and identity metadata.
+`CanonicalNode` is an internal resolved result and can carry bound paint capabilities. It still retains position expressions for layout to resolve and has no final text dimensions or outer box. `compileNodeResolution` receives `NodeResolution` and combines it with measurement capabilities and position context to produce separate layout, paint, and identity metadata.
 
 <SourceLinks
   sources={[

@@ -141,7 +141,7 @@ export type RibbonCapDefinition<TParams extends JsonObject = JsonObject> = Reado
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RibbonWidthProfileDefinitionInput"} path={"packages/library/extension/src/ribbon/profile-types.ts"} startLine={21}>RibbonWidthProfileDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRibbonWidthProfileDefinition"} path={"packages/library/extension/src/ribbon/profile-types.ts"} startLine={21}>InputRibbonWidthProfileDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -163,7 +163,7 @@ export type RibbonCapDefinition<TParams extends JsonObject = JsonObject> = Reado
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonObject> = {
+export type InputRibbonWidthProfileDefinition<TParams extends JsonObject = JsonObject> = {
   name: string;
   paramsSchema?: ZodType<TParams>;
   widthAt: (ctx: RibbonWidthProfileContext<TParams>) => number;
@@ -174,12 +174,12 @@ export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonO
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RibbonPathDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={47}>RibbonPathDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ribbonPathDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={47}>ribbonPathDefinition</ApiSourceLink>
 
 Must be explicitly supplied through paths for the current drawing; not automatically registered
 
 ```ts
-export const RibbonPathDefinition = createDefinition([], []);
+export const ribbonPathDefinition = createDefinition([], []);
 ```
 
 #### <ApiSourceLink label={"createRibbonPathDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={55}>createRibbonPathDefinition</ApiSourceLink>
@@ -215,7 +215,7 @@ export declare const createRibbonPathDefinition: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createRibbonProviderContribution"} path={"packages/library/extension/src/ribbon/provider.ts"} startLine={32}>createRibbonProviderContribution</ApiSourceLink>
+#### <ApiSourceLink label={"createRibbonProviderContribution"} path={"packages/library/extension/src/ribbon/provider.ts"} startLine={39}>createRibbonProviderContribution</ApiSourceLink>
 
 Includes the ribbon root dependency and built-in definitions, with optional custom width profiles and caps; does not automatically inject them into the compiler
 
@@ -291,7 +291,7 @@ export declare const defineRibbonCap: <TParams extends JsonObject>(
 | Category        | Name         | Type / signature                             | Description                                                                                                 |
 | --------------- | ------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | Type parameters | `TParams`    | `extends JsonObject = JsonObject`            | JSON object type for width profile parameters, relating optional parameter parsing to the widthAt context   |
-| Parameters      | `definition` | `RibbonWidthProfileDefinitionInput<TParams>` | Width profile name, optional parameter schema, and sampling callback; does not parse parameters or sample   |
+| Parameters      | `definition` | `InputRibbonWidthProfileDefinition<TParams>` | Width profile name, optional parameter schema, and sampling callback; does not parse parameters or sample   |
 | Returns         | —            | `RibbonWidthProfileDefinition`               | The original definition object, with its parameter generic erased for storage in the width profile registry |
 
 </ApiTable>
@@ -302,7 +302,7 @@ export declare const defineRibbonCap: <TParams extends JsonObject>(
 
 ```ts
 export declare const defineRibbonWidthProfile: <TParams extends JsonObject = JsonObject>(
-  definition: RibbonWidthProfileDefinitionInput<TParams>,
+  definition: InputRibbonWidthProfileDefinition<TParams>,
 ) => RibbonWidthProfileDefinition;
 ```
 

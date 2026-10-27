@@ -1,6 +1,6 @@
 import { compileToScene } from '@retikz/core';
 import type { InspectionSelection } from '@retikz/inspect';
-import { GridLayoutArtifactSchema, GridLayoutDefinition } from '@retikz/layout';
+import { GridLayoutArtifactSchema, gridLayoutDefinition } from '@retikz/layout';
 import type { LayoutProps } from '@retikz/react';
 import { cloneElement } from 'react';
 import type { ReactElement } from 'react';
@@ -25,7 +25,7 @@ export const defineGridPreview = <const TDefinition extends PreviewControlsDefin
     values => {
       const element = render(values);
       const { ir } = buildPreviewIR(() => element);
-      const output = compileToScene(ir, { composites: [GridLayoutDefinition], measureText: browserMeasurer });
+      const output = compileToScene(ir, { composites: [gridLayoutDefinition], measureText: browserMeasurer });
       const rectangles = [output.scene.layout];
 
       for (const artifact of output.artifacts) {

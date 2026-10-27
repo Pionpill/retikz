@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuntimeCommitParticipantDefinitionInput, RuntimeDiagnostic } from '../../src';
+import type { InputRuntimeCommitParticipantDefinition, RuntimeDiagnostic } from '../../src';
 import {
   createRuntimeSourceInput,
   createRuntimeSourceRegistry,
@@ -355,7 +355,7 @@ describe('Runtime 运行时参与者失败生命周期', () => {
 
     const define = (key: string, rollbackFailure?: Error) => {
       let live = 1;
-      const input: RuntimeCommitParticipantDefinitionInput<Readonly<{ value: number }>> = {
+      const input: InputRuntimeCommitParticipantDefinition<Readonly<{ value: number }>> = {
         key,
         sources: [owner],
         computations: [],

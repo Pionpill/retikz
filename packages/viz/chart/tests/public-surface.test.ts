@@ -62,8 +62,8 @@ describe('@retikz/chart 公开接口', () => {
     expect(point).not.toHaveProperty('PointChartProvider');
     expect(point).not.toHaveProperty('defineChartRecipe');
     expect(point).not.toHaveProperty('defineChartMark');
-    expect(point).not.toHaveProperty('ScatterChartDefinition');
-    expect(point).not.toHaveProperty('ScatterMarkDefinition');
+    expect(point).not.toHaveProperty('scatterChartDefinition');
+    expect(point).not.toHaveProperty('scatterMarkDefinition');
     expect(point).not.toHaveProperty('PathMarkDefinition');
   });
 

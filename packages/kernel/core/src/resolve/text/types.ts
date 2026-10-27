@@ -1,36 +1,36 @@
 import type { IRFont, IRLine, IRMathSegment, IRTextSegment, IRSegmentedLine } from '../../schemas';
 
-type WithResolvedFill<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
+type WithStringFill<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
 
 /** 已将数值颜色转换为字符串的文字片段 */
-export type ResolvedTextSegment = WithResolvedFill<IRTextSegment>;
+export type TextSegmentColorSource = WithStringFill<IRTextSegment>;
 
 /** 已将数值颜色转换为字符串的公式片段 */
-export type ResolvedMathSegment = WithResolvedFill<IRMathSegment>;
+export type MathSegmentColorSource = WithStringFill<IRMathSegment>;
 
 /** 已解析颜色、尚待解析字体的文字或公式片段 */
-export type ResolvedInlineSourceSegment = ResolvedTextSegment | ResolvedMathSegment;
+export type InlineSegmentColorSource = TextSegmentColorSource | MathSegmentColorSource;
 
 /** 已解析行级与片段颜色的混排行 */
-type ResolvedSegmentedLine = Omit<IRSegmentedLine, 'segments' | 'fill'> &
+type SegmentedLineColorSource = Omit<IRSegmentedLine, 'segments' | 'fill'> &
   Readonly<{
     /** 已解析行级颜色 */
     fill?: string;
     /** 保留作者顺序的文本与行内内容片段 */
-    segments: Array<ResolvedInlineSourceSegment>;
+    segments: Array<InlineSegmentColorSource>;
   }>;
 
 /** 已解析颜色的单行文本输入 */
-export type ResolvedTextLine =
+export type TextLineColorSource =
   | string
   | (Omit<Extract<IRLine, { text: string }>, 'fill'> & {
       /** 当前文本行已解析的填充颜色 */
       fill?: string;
     })
-  | ResolvedSegmentedLine;
+  | SegmentedLineColorSource;
 
 /** 已解析颜色的单行或多行标签文本 */
-export type ResolvedLabelTextBlock = string | Array<ResolvedTextLine>;
+export type LabelTextColorSource = string | Array<TextLineColorSource>;
 
 /** 字号解析所需的根字号与继承字号 */
 export type FontSizeResolveContext = Readonly<{
@@ -61,7 +61,7 @@ export type FontResolveContext = Readonly<{
 }>;
 
 /** 已完成字体继承并换算字号的文字片段 */
-type CanonicalTextSegment = Omit<ResolvedTextSegment, 'font'> &
+type CanonicalTextSegment = Omit<TextSegmentColorSource, 'font'> &
   Readonly<{
     /** 当前文本片段完成继承与默认值补全的字体 */
     font: CanonicalFont;
@@ -70,15 +70,12 @@ type CanonicalTextSegment = Omit<ResolvedTextSegment, 'font'> &
 /** 已完成字号解析的文字或公式片段 */
 export type CanonicalInlineSegment =
   | CanonicalTextSegment
-  | (Omit<ResolvedMathSegment, 'fontSize'> & { /** 有效数学字号 */ fontSize: number });
-
-/** 进入字体解析前的文字或公式片段 */
-export type SourceInlineSegment = ResolvedInlineSourceSegment;
+  | (Omit<MathSegmentColorSource, 'fontSize'> & { /** 有效数学字号 */ fontSize: number });
 
 /** 字符串拆分后的文字与公式片段 */
 export type ParsedInlineSegments = Readonly<{
   /** 按原文顺序排列的片段 */
-  segments: Array<SourceInlineSegment>;
+  segments: Array<InlineSegmentColorSource>;
   /** 是否包含公式片段 */
   hasMath: boolean;
   /** 是否遇到未闭合公式分隔符 */
@@ -86,7 +83,7 @@ export type ParsedInlineSegments = Readonly<{
 }>;
 
 /** 纯文本布局所需的显式行样式 */
-export type ResolvedTextLineStyle = Readonly<{
+export type CanonicalTextLineStyle = Readonly<{
   /** 显式行填充色 */
   fill?: string;
   /** 显式行不透明度 */
@@ -112,7 +109,7 @@ export type TextLineResolution = Readonly<{
   /** 是否按片段布局；含公式或显式使用 segments 时为 true */
   mixed: boolean;
   /** 仅包含作者显式写出的行级样式 */
-  style?: ResolvedTextLineStyle;
+  style?: CanonicalTextLineStyle;
 }>;
 
 /** 文本行解析所需的字体与诊断配置 */
@@ -127,4 +124,4 @@ export type TextLineResolveContext = FontResolveContext &
   }>;
 
 /** 文本解析器接受的已解析颜色的单行输入 */
-export type TextLineSource = ResolvedTextLine;
+export type TextLineSource = TextLineColorSource;

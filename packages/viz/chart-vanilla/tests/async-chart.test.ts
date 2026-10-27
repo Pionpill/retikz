@@ -4,7 +4,7 @@ import { processToStaticInputResultAsync, scene } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
 import { renderChartAsync } from '../src';
-import { scatterChart, ScatterChartInputEmbedAdapter } from '../src/point';
+import { scatterChart, scatterChartInputEmbedAdapter } from '../src/point';
 
 describe('Chart 异步数据准备', () => {
   it('通过生成的 Surface 和 Flex 表示绑定 Promise 输出，无需重新执行', async () => {
@@ -41,7 +41,7 @@ describe('Chart 异步数据准备', () => {
       },
     });
     const result = await renderChartAsync(input, {
-      adapters: [ScatterChartInputEmbedAdapter],
+      adapters: [scatterChartInputEmbedAdapter],
     });
     const svg = result.svg;
 
@@ -85,7 +85,7 @@ describe('Chart 异步数据准备', () => {
       },
     });
     const result = await renderChartAsync(input, {
-      adapters: [ScatterChartInputEmbedAdapter],
+      adapters: [scatterChartInputEmbedAdapter],
     });
 
     expect(result.svg.match(/<ellipse/g)).toHaveLength(1);
@@ -97,7 +97,7 @@ describe('Chart 异步数据准备', () => {
     });
 
     await expect(
-      processToStaticInputResultAsync(scene({ children: [inherited] }), { adapters: [ScatterChartInputEmbedAdapter] }),
+      processToStaticInputResultAsync(scene({ children: [inherited] }), { adapters: [scatterChartInputEmbedAdapter] }),
     ).rejects.toThrow(/unsupported fixture/);
     expect(external).toHaveBeenCalledWith('summarize');
   });

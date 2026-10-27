@@ -3,14 +3,14 @@ import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { DataModelSchema, defineFieldOrder, FieldDefinitionSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { preparePlotData } from '../../../src/pipeline/expand/preparation';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
@@ -18,7 +18,7 @@ const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categor
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = opts,
+  options: PlotsLoweringOptions = opts,
 ): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
@@ -27,7 +27,7 @@ const expandOf = (
 const firstLayer = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = opts,
+  options: PlotsLoweringOptions = opts,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 /**

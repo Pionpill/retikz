@@ -113,7 +113,7 @@ const mergedPropertiesOf = (context: ChartMarkResolveContext, source: IRRangedDo
 };
 
 /** 范围点标记的作者定义 */
-export const RangedDotMarkDefinition: ChartMarkDefinition = defineChartMark({
+export const rangedDotMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'ranged-dot',
   schema: RangedDotChartMarkSchema,
   resolve: context => {

@@ -1,4 +1,4 @@
-import { CircleClipDefinition, CompoundClipDefinition } from '@retikz/extension';
+import { circleClipDefinition, compoundClipDefinition } from '@retikz/extension';
 import { Layout, Node, Scope } from '@retikz/react';
 
 /** 图形参数 */
@@ -12,7 +12,7 @@ export type CompoundClipPreviewValues = {
 export const renderCompoundClipPreview = (values: CompoundClipPreviewValues) => (
   <Layout
     viewBox={{ x: -165, y: -100, width: 330, height: 200 }}
-    extensions={{ clips: [CompoundClipDefinition, CircleClipDefinition] }}
+    extensions={{ clips: [compoundClipDefinition, circleClipDefinition] }}
   >
     <Node
       position={[0, 0]}

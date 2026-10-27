@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { compileToScene } from '@retikz/core';
-import { LegendArtifactSchema, LegendDefinition, LegendSchema } from '@retikz/standard/presentation';
+import { LegendArtifactSchema, legendDefinition, LegendSchema } from '@retikz/standard/presentation';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -48,7 +48,7 @@ const legendOf = (values: Parameters<typeof LegendPlaygroundPreview>[0]) => {
 
 const legendHorizontalCenterDelta = (Preview: FC): number => {
   const preview = buildPreviewIR(Preview);
-  const output = compileToScene(preview.ir, { composites: [LegendDefinition], padding: 0 });
+  const output = compileToScene(preview.ir, { composites: [legendDefinition], padding: 0 });
   const viewBox = output.scene.layout;
   const envelope = output.artifacts.find(artifact => artifact.kind === 'composite');
   if (envelope === undefined) throw new Error('Expected a Legend compile artifact');
@@ -78,7 +78,7 @@ describe('Standard Legend 文档', () => {
 
   it('记录两种语言的所有编写条目和可执行预览源', () => {
     for (const source of [readPage('zh'), readPage('en')]) {
-      for (const api of ['LegendInputEmbedAdapter', 'LegendDefinition', 'InputLegend', 'IRLegend']) {
+      for (const api of ['legendInputEmbedAdapter', 'legendDefinition', 'InputLegend', 'IRLegend']) {
         expect(source).toContain(api);
       }
 

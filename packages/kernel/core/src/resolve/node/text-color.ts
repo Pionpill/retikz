@@ -5,7 +5,7 @@ import type { IRLine, IRNode, IRNodeLabel } from '../../schemas';
 import { NodeTextColor } from '../../schemas';
 import type { IRNodeLabelDefault } from '../../schemas';
 import { resolveGraphicOpacity } from '../style';
-import type { PrimaryColorResolvedNode } from './types';
+import type { NodePrimaryColorSource } from './types';
 
 /** 判断正文行是否仍有内容需要继承节点文字色 */
 const bodyLineInheritsNodeTextColor = (line: IRLine): boolean => {
@@ -76,7 +76,7 @@ const contrastingBlackOrWhite = (color: ParsedCssColor): '#000000' | '#ffffff' =
  * @description 仅对可解析且完全不透明的纯色填充计算；其余情况发出警告并使用 currentColor。没有内容继承文字色时移除该配置
  * @template TNode 需要解析对比文字色的节点类型，保留其它节点字段
  */
-export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(
+export const resolveNodeTextColor = <TNode extends NodePrimaryColorSource>(
   node: TNode,
   labelDefault: IRNodeLabelDefault,
   warn: (code: string, message: string) => void,

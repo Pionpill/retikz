@@ -1,4 +1,4 @@
-import type { ResolvedArrowEnd, Scene, SceneResource } from '@retikz/core';
+import type { CompiledArrowEnd, Scene, SceneResource } from '@retikz/core';
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -7,7 +7,7 @@ import { svgToReact } from '../../../src/render/svg';
 
 type AnyElement = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
-const arrowSpec: ResolvedArrowEnd = {
+const arrowSpec: CompiledArrowEnd = {
   shape: 'stealth',
   baseSize: 10,
   refX: 8,

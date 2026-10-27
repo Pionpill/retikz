@@ -110,7 +110,7 @@ export const snapshotCompositeLayoutChild = (owner: string, value: unknown, inde
   snapshotCompositeCallbackChild(owner, value, `layoutChild input at probe ${index}`);
 
 /** 校验直接声明的空间区域，带变换的子 Scope 应在自身局部坐标声明 */
-export const validateCompositeSpatialOutput = (
+export const resolveCompositeSpatialOutput = (
   owner: string,
   value: ReadonlyArray<SpatialHandleDeclaration> | undefined,
   children: ReadonlyArray<IRChild>,

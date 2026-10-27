@@ -1,6 +1,6 @@
 import type { HydrationEventProps } from '@retikz/react';
 import type { InputRectangle } from '@retikz/standard-vanilla/shape';
-import { RectangleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { rectangleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
@@ -19,5 +19,5 @@ const RectangleComponent: FC<RectangleProps> = () => null;
 export const Rectangle = RectangleComponent as StandardEmbeddableComponent<RectangleProps>;
 Rectangle.displayName = 'Rectangle';
 Rectangle.isTier2Embeddable = true;
-Rectangle.inputEmbedAdapter = RectangleInputEmbedAdapter;
+Rectangle.inputEmbedAdapter = rectangleInputEmbedAdapter;
 Rectangle.createInputEmbedProps = shapeEmbedProps;

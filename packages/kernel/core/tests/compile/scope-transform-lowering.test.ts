@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { NamespaceStack } from '../../src/compile/namespace';
-import type { NodeLayout } from '../../src/compile/node';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { lowerScopeTransforms } from '../../src/compile/scope';
 import { composeScopeTransform, projectLayoutWithTransform } from '../../src/compile/transform';
@@ -15,7 +15,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
   const stack = new NamespaceStack();
 
   for (const [id, [x, y]] of entries) {
-    const layout: NodeLayout = {
+    const layout: CompiledNodeLayout = {
       shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
       geometry: {
         rect: { x, y, width: 0, height: 0, rotate: 0 },
@@ -36,7 +36,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
   return stack;
 };
 
-const layoutForProjection = (): NodeLayout => ({
+const layoutForProjection = (): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },

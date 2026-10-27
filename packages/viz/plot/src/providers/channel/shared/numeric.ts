@@ -8,7 +8,7 @@ import { RetikzPlotError } from '../../../error';
 import type { IRPlot, IRPlotLinearScale, IRPlotChannel } from '../../../schemas';
 import { BuiltinPlotScale } from '../../../schemas';
 import { resolveLinearScale } from '../../scale';
-import { makeMarkValueResolver } from './common';
+import { createMarkValueResolver } from './common';
 
 type NumericChannelOptions = {
   range?: readonly [number, number];
@@ -27,7 +27,7 @@ export const resolveNumericChannel = (
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   if (!channel) return undefined;
 
-  const source = makeMarkValueResolver<number>(channel, model, {
+  const source = createMarkValueResolver<number>(channel, model, {
     channelName,
     expectedFieldType: DataFieldType.Continuous,
     parse: value => (isFiniteNumber(value) ? value : undefined),

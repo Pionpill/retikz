@@ -1,13 +1,13 @@
 import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 
 import { compileMatrix } from './pipeline';
 import { MatrixSchema } from './schema';
 import type { IRMatrix } from './schema';
 
 /** Standard Matrix 的布局感知 Definition */
-export const MatrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix'> = defineComposite({
+export const matrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix'> = defineComposite({
   namespace: 'standard',
   type: 'matrix',
   schema: MatrixSchema,
@@ -22,8 +22,8 @@ export const MatrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix
 export const createMatrix = (input: IRMatrix): IRMatrix => ({ ...input });
 
 /** Matrix 与单元格 lower target 的按需依赖声明 */
-export const MatrixProvider: CoreDependencyProvider = {
+export const matrixProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'standard', type: 'matrix' },
-  dependencies: [PathClipProvider.key],
-  makeDefinition: () => MatrixDefinition,
+  dependencies: [pathClipProvider.key],
+  makeDefinition: () => matrixDefinition,
 };

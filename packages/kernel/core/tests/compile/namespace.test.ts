@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { DuplicateRegisterInfo } from '../../src/compile/namespace';
 import { NamespaceStack } from '../../src/compile/namespace';
-import type { NodeLayout } from '../../src/compile/node';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
-const makeLayout = (_id: string, x = 0, y = 0): NodeLayout => ({
+const makeLayout = (_id: string, x = 0, y = 0): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x, y, width: 0, height: 0, rotate: 0 },

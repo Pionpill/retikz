@@ -1,7 +1,12 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets, DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { ValueOf } from '@retikz/foundation';
-import type { DetailTableInput, IRCustomTable, LowerTablesOptions, ManualTableInput } from '@retikz/table';
+import type {
+  InputDetailTableConfig,
+  IRCustomTable,
+  TablesLoweringOptions,
+  InputManualTableConfig,
+} from '@retikz/table';
 
 /** Table authoring 输入的精确变体 */
 export const InputTableKind = {
@@ -21,7 +26,7 @@ export type InputDetailTable = Readonly<{
   /** 标识明细表作者输入 */
   kind: typeof InputTableKind.Detail;
   /** 明细表结构与呈现的作者配置 */
-  input: DetailTableInput;
+  input: InputDetailTableConfig;
 }>;
 
 /** Manual Table 的无框架 authoring 输入 */
@@ -29,7 +34,7 @@ export type InputManualTable = Readonly<{
   /** 标识手动表格作者输入 */
   kind: typeof InputTableKind.Manual;
   /** 手动声明行列与单元格的作者配置 */
-  input: ManualTableInput;
+  input: InputManualTableConfig;
 }>;
 
 /** Custom Table 的无框架 authoring 输入 */
@@ -59,7 +64,7 @@ export type InputTable<TSource = never> = Readonly<{
   /** 本次请求取消信号 */
   signal?: AbortSignal;
   /** Table definitions 与其他 lowering 选项 */
-  lowerOptions?: LowerTablesOptions;
+  lowerOptions?: TablesLoweringOptions;
   /** Cell 内嵌 Tier 2 内容所需的额外 composites */
   composites?: ReadonlyArray<AnyCompositeDefinition>;
 }>;

@@ -17,7 +17,7 @@ import { guideLayerId, guideLayerMeta } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { defaultOriginAxisTickSideOf, layoutPolarAngularLabel, polarFixedRadiusSteps } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
-import type { EffectiveLegendGuideTokens } from '../../resolve/theme';
+import type { CanonicalLegendGuideTokens } from '../../resolve/theme';
 import type { IRPlotAxisGuide, LegendChannelValue, LegendOrient, LegendPosition } from '../../schemas';
 import {
   AxisCardinalSide,
@@ -1877,7 +1877,7 @@ export type LegendRamp = {
  * @description 形态选择（swatch / ramp）与颜色 / 代表值由 expand 据 descriptor + scale 求好后传入；
  *   本函数只管几何摆放与 core 节点产出（关注点分离：求值在 expand、绘制在 guide）
  */
-export type LowerLegendOptions = {
+export type LegendLoweringOptions = {
   /** 形态：swatch（离散 / 分箱 / size / opacity）或 ramp（连续色带） */
   form: 'swatch' | 'ramp';
   /** 绑定通道（决定 swatch 视觉量取色 / 形状 / 半径 / 透明度） */
@@ -1901,7 +1901,7 @@ export type LowerLegendOptions = {
   /** legend 语义图层的 core zIndex */
   zIndex?: number;
   /** 已按 resolved Plot defaults < LegendGuide.style 合并的视觉 token */
-  style: EffectiveLegendGuideTokens;
+  style: CanonicalLegendGuideTokens;
 };
 
 /**
@@ -1931,7 +1931,7 @@ const legendTextNode = (node: IRNode): IRNode => ({
  *   条目从传入 band 左上角开始排列，文字尺寸复用 Core 测量；band 的预留宽高仍由图例布局配置决定。
  *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON
  */
-export const lowerLegend = (options: LowerLegendOptions, measure: PlotLabelMeasure): IRScope => {
+export const lowerLegend = (options: LegendLoweringOptions, measure: PlotLabelMeasure): IRScope => {
   const { fontSize, band, orient } = options;
   const {
     swatchSize,

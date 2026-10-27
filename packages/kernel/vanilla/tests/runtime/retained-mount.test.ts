@@ -6,7 +6,7 @@ import type {
   RenderFrameSnapshot,
   RenderRuntimeConfig,
   RetainedRendererFactory,
-  RetainedRendererFactoryInput,
+  InputRetainedRendererFactory,
 } from '@retikz/render/runtime';
 import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -79,7 +79,7 @@ const createMemoryRendererFactory = (
   failMount: boolean | (() => boolean) = false,
   onCreate?: () => void,
 ): RetainedRendererFactory =>
-  ((input: RetainedRendererFactoryInput) => {
+  ((input: InputRetainedRendererFactory) => {
     onCreate?.();
     let current: RenderFrameSnapshot | undefined;
 

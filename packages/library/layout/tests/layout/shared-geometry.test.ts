@@ -6,7 +6,7 @@ import {
   alignAllocationInSlot,
   contentRectOf,
   layoutClipOf,
-  normalizeLayoutSpacing,
+  resolveLayoutSpacing,
   outsetLayoutRect,
   positionedLayoutSlotOf,
   resolveLayoutAxisSize,
@@ -113,13 +113,13 @@ describe('共享布局尺寸解析结果', () => {
 
 describe('共享布局盒几何形状', () => {
   it('标准化间距，侧边轴高于默认优先级', () => {
-    expect(normalizeLayoutSpacing({ default: 1, x: 2, y: 3, left: 4 })).toEqual({
+    expect(resolveLayoutSpacing({ default: 1, x: 2, y: 3, left: 4 })).toEqual({
       top: 3,
       right: 2,
       bottom: 3,
       left: 4,
     });
-    expect(normalizeLayoutSpacing(0)).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
+    expect(resolveLayoutSpacing(0)).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
   });
 
   it('当过多的填充将内容折叠为零时，保留编写的前导填充', () => {

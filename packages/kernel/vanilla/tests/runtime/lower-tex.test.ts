@@ -1,9 +1,9 @@
-import type { IRScene, LowerTex } from '@retikz/core';
+import type { IRScene, TexLowerer } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { renderToSvgString } from '../../src';
 
-const lowerTex: LowerTex = () => ({
+const lowerTex: TexLowerer = () => ({
   paths: [
     {
       commands: [

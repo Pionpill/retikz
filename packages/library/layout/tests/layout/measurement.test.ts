@@ -7,9 +7,9 @@ import {
   createFlexLayout,
   createGridLayout,
   createOverlayLayout,
-  FlexLayoutDefinition,
-  GridLayoutDefinition,
-  OverlayLayoutDefinition,
+  flexLayoutDefinition,
+  gridLayoutDefinition,
+  overlayLayoutDefinition,
 } from '../../src';
 
 it('匹配内容、固定和约束布局下请求的轴的完整布局槽', () => {
@@ -140,7 +140,7 @@ it('匹配内容、固定和约束布局下请求的轴的完整布局槽', () =
         compileToScene(
           { version: 1, type: 'scene', children: [{ namespace: 'measure-spec', type: 'host', child }] },
           {
-            composites: [host, custom, FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
+            composites: [host, custom, flexLayoutDefinition, gridLayoutDefinition, overlayLayoutDefinition],
             measureText: (text, font) => ({ width: (text.length * font.size) / 2, height: font.size }),
           },
         );

@@ -20,7 +20,7 @@ This is the persistent input contract. Factories preserve omitted fields; parse(
 | `justifyItems?`       | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | `"center"`                                        | Default horizontal alignment inherited by aligned and positioned items.           |
 | `overflow?`           | `"visible" \| "clip"`                                                                                                                                                                                              | `"visible"`                                       | Container visual overflow policy.                                                 |
 | `padding?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`                                               | Insets from allocation box to content box.                                        |
-| `size?`               | `OverlayLayoutInput['size']`                                                                                                                                                                                       | `{"x":{"kind":"content"},"y":{"kind":"content"}}` | Container allocation size including padding.                                      |
+| `size?`               | `InputOverlayLayoutConfig['size']`                                                                                                                                                                                 | `{"x":{"kind":"content"},"y":{"kind":"content"}}` | Container allocation size including padding.                                      |
 
 </ApiTable>
 
@@ -33,7 +33,7 @@ export declare const OverlayLayout: {
   (props: OverlayLayoutProps, context?: any): ReactNode;
 };
 
-export type OverlayLayoutProps = Omit<OverlayLayoutInput, 'children'> &
+export type OverlayLayoutProps = Omit<InputOverlayLayoutConfig, 'children'> &
   Readonly<{
     authoring?: unknown;
     children?: ReactNode;
@@ -98,7 +98,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 ```ts
 export declare const OverlayLayoutItem: FC<OverlayLayoutItemProps>;
 
-export type OverlayLayoutItemProps = Omit<OverlayLayoutItemInput, 'child' | 'key' | 'kind'> &
+export type OverlayLayoutItemProps = Omit<InputOverlayLayoutItemConfig, 'child' | 'key' | 'kind'> &
   Readonly<{
     itemKey?: string;
   }> &
@@ -126,7 +126,7 @@ export type OverlayLayoutItemProps = Omit<OverlayLayoutItemInput, 'child' | 'key
 | `justifyItems?`          | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | `"center"`                                        | Default horizontal alignment inherited by aligned and positioned items.          |
 | `overflow?`              | `"visible" \| "clip"`                                                                                                                                                                                              | `"visible"`                                       | Container visual overflow policy.                                                |
 | `padding?`               | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`                                               | Insets from allocation box to content box.                                       |
-| `size?`                  | `OverlayLayoutInput['size']`                                                                                                                                                                                       | `{"x":{"kind":"content"},"y":{"kind":"content"}}` | Container allocation size including padding.                                     |
+| `size?`                  | `InputOverlayLayoutConfig['size']`                                                                                                                                                                                 | `{"x":{"kind":"content"},"y":{"kind":"content"}}` | Container allocation size including padding.                                     |
 | `input` (Parameter)      | `InputOverlayLayout`                                                                                                                                                                                               | —                                                 | Container and item input; the input object reference is retained                 |
 | `authoring?` (Parameter) | `unknown`                                                                                                                                                                                                          | —                                                 | Opaque data for the compilation driver; omitted input adds no authoring data     |
 | Returns                  | `InputEmbed<InputOverlayLayout>`                                                                                                                                                                                   | —                                                 | An InputEmbed consumed by the layout adapter; creation does not solve the layout |
@@ -140,7 +140,7 @@ export type OverlayLayoutItemProps = Omit<OverlayLayoutItemInput, 'child' | 'key
 ```ts
 export declare const overlayLayout: (input: InputOverlayLayout, authoring?: unknown) => InputEmbed<InputOverlayLayout>;
 
-export type InputOverlayLayout = Omit<OverlayLayoutInput, 'children'> & {
+export type InputOverlayLayout = Omit<InputOverlayLayoutConfig, 'children'> & {
   children?: ReadonlyArray<InputOverlayLayoutItem>;
 };
 ```
@@ -177,21 +177,21 @@ export type InputOverlayLayout = Omit<OverlayLayoutInput, 'children'> & {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InputOverlayLayoutItem = InputLayoutItem<OverlayLayoutItemInput>;
+export type InputOverlayLayoutItem = InputLayoutItem<InputOverlayLayoutItemConfig>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"OverlayLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={12}>OverlayLayoutInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"overlayLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={12}>overlayLayoutInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
+export declare const overlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
   Required<Pick<SynchronousInputEmbedAdapter<InputOverlayLayout>, 'prepare'>>;
 ```
 
-#### <ApiSourceLink label={"createOverlayLayout"} path={"packages/library/layout/src/composites/overlay-layout/composite.ts"} startLine={30}>createOverlayLayout</ApiSourceLink> / <ApiSourceLink label={"OverlayLayoutInput"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={32}>OverlayLayoutInput</ApiSourceLink>
+#### <ApiSourceLink label={"createOverlayLayout"} path={"packages/library/layout/src/composites/overlay-layout/composite.ts"} startLine={30}>createOverlayLayout</ApiSourceLink> / <ApiSourceLink label={"InputOverlayLayoutConfig"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={32}>InputOverlayLayoutConfig</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -207,7 +207,7 @@ export declare const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapte
 | `overflow?`         | `"visible" \| "clip"`                                                                                                                                                                                              | `"visible"`                                       | Container visual overflow policy.                                            |
 | `padding?`          | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`                                               | Insets from allocation box to content box.                                   |
 | `size?`             | `IROverlayLayout['size']`                                                                                                                                                                                          | `{"x":{"kind":"content"},"y":{"kind":"content"}}` | Container allocation size including padding.                                 |
-| `input` (Parameter) | `OverlayLayoutInput`                                                                                                                                                                                               | —                                                 | Container and item configuration; Schema parsing applies static defaults     |
+| `input` (Parameter) | `InputOverlayLayoutConfig`                                                                                                                                                                                         | —                                                 | Container and item configuration; Schema parsing applies static defaults     |
 | Returns             | `IROverlayLayout`                                                                                                                                                                                                  | —                                                 | Source IR with the layout namespace and container type; input is not mutated |
 
 </ApiTable>
@@ -217,9 +217,9 @@ export declare const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapte
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createOverlayLayout: (input: OverlayLayoutInput) => IROverlayLayout;
+export declare const createOverlayLayout: (input: InputOverlayLayoutConfig) => IROverlayLayout;
 
-export type OverlayLayoutInput = Omit<IROverlayLayout, 'namespace' | 'type'>;
+export type InputOverlayLayoutConfig = Omit<IROverlayLayout, 'namespace' | 'type'>;
 ```
 
 </DocTab>
@@ -316,7 +316,7 @@ export type OverlayLayoutArtifact = ZodInfer<typeof OverlayLayoutArtifactSchema>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"OverlayLayoutItemInput"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={21}>OverlayLayoutItemInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputOverlayLayoutItemConfig"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={21}>InputOverlayLayoutItemConfig</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -344,21 +344,21 @@ export type OverlayLayoutArtifact = ZodInfer<typeof OverlayLayoutArtifactSchema>
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type OverlayLayoutItemInput = IROverlayLayoutItem;
+export type InputOverlayLayoutItemConfig = IROverlayLayoutItem;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"OverlayPlacementInput"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={14}>OverlayPlacementInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputOverlayPlacement"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={14}>InputOverlayPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="expanded">
 
 <DocTab value="expanded" label="Expanded type">
 
 ```ts
-export type OverlayPlacementInput =
+export type InputOverlayPlacement =
   | undefined
   | {
       kind: 'aligned';
@@ -377,7 +377,7 @@ export type OverlayPlacementInput =
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type OverlayPlacementInput = ZodInput<typeof OverlayPlacementSchema>;
+export type InputOverlayPlacement = ZodInput<typeof OverlayPlacementSchema>;
 ```
 
 </DocTab>
@@ -408,10 +408,10 @@ export type OverlayPlacementKind = ValueOf<typeof OverlayPlacementKind>;
 
 ## Extension definitions and registration
 
-#### <ApiSourceLink label={"OverlayLayoutDefinition"} path={"packages/library/layout/src/composites/overlay-layout/composite.ts"} startLine={10}>OverlayLayoutDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"overlayLayoutDefinition"} path={"packages/library/layout/src/composites/overlay-layout/composite.ts"} startLine={10}>overlayLayoutDefinition</ApiSourceLink>
 
 ```ts
-export const OverlayLayoutDefinition: CompositeDefinition<
+export const overlayLayoutDefinition: CompositeDefinition<
   IROverlayLayout,
   typeof LAYOUT_NAMESPACE,
   'overlayLayout',
@@ -425,14 +425,14 @@ export const OverlayLayoutDefinition: CompositeDefinition<
 });
 ```
 
-#### <ApiSourceLink label={"OverlayLayoutProvider"} path={"packages/library/layout/src/composites/overlay-layout/composite.ts"} startLine={39}>OverlayLayoutProvider</ApiSourceLink>
+#### <ApiSourceLink label={"overlayLayoutProvider"} path={"packages/library/layout/src/composites/overlay-layout/composite.ts"} startLine={39}>overlayLayoutProvider</ApiSourceLink>
 
 ```ts
-export const OverlayLayoutProvider: CoreDependencyProvider = Object.freeze({
+export const overlayLayoutProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({
     capability: 'composite',
-    namespace: OverlayLayoutDefinition.namespace,
-    type: OverlayLayoutDefinition.type,
+    namespace: overlayLayoutDefinition.namespace,
+    type: overlayLayoutDefinition.type,
   }),
   makeDefinition: makeOverlayLayoutDefinition,
 });

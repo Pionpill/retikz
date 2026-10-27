@@ -66,7 +66,7 @@ type ReducerOutputConstraints = {
 };
 
 /** 在执行 reducer 前校验 definition 声明的动态输出字段 */
-export const validateReducerMetrics = (
+export const assertReducerMetrics = (
   metrics: ReadonlyArray<IRDataReducerOperation>,
   context: Pick<TransformSemanticContext, 'statisticsReducerRegistry'>,
   constraints: ReducerOutputConstraints,
@@ -143,7 +143,7 @@ export function* computeSummarize(
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
     if (!validated) {
-      validateReducerMetrics(operation.params.metrics, context, {
+      assertReducerMetrics(operation.params.metrics, context, {
         reservedFields: new Set(operation.params.groupBy ?? []),
         reservedLabel: 'a groupBy field',
       });
@@ -215,7 +215,7 @@ export function* computeAnnotate(
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
     if (!validated) {
-      validateReducerMetrics(operation.params.metrics ?? [], context, {
+      assertReducerMetrics(operation.params.metrics ?? [], context, {
         reservedFields: new Set((operation.params.selectors ?? []).map(selector => selector.as)),
         reservedLabel: 'an annotate selector output field',
       });

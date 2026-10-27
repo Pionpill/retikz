@@ -158,13 +158,13 @@ describe('Flow Group Graph 曲面', () => {
   });
 
   it('使用标题侧和描述大小作为 shell 指标，并使标签仅可见', () => {
-    const inputs: Array<Flow.FlowLayoutInput> = [];
+    const inputs: Array<Flow.InputFlowLayoutComputation> = [];
     const definition = Flow.defineFlowLayout({
-      ...Flow.LayeredFlowLayoutDefinition,
+      ...Flow.layeredFlowLayoutDefinition,
       name: 'observe-group-metrics',
       layout: (input, context) => {
         inputs.push(input);
-        return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+        return Flow.layeredFlowLayoutDefinition.layout(input, context);
       },
     });
     const options = { flowLayouts: [definition], defaultFlowLayout: definition.name };

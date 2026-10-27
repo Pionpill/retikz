@@ -25,44 +25,44 @@ describe('@retikz/graph 封装边界', () => {
 
   it('公开一个 Graph 语义编译根和 Source 编写表面', () => {
     expect(graphExports.GRAPH_NAMESPACE).toBe('graph');
-    expect(graphExports.GraphDefinition).toBeDefined();
+    expect(graphExports.graphDefinition).toBeDefined();
     expect(graphExports.GraphProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'graph',
     });
-    expect(graphExports.EntityDefinition).toBeDefined();
-    expect(graphExports.EntityProviderKey).toEqual({
+    expect(graphExports.entityDefinition).toBeDefined();
+    expect(graphExports.entityProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'entity',
     });
-    expect(graphExports.RelationDefinition).toBeDefined();
-    expect(graphExports.RelationProviderKey).toEqual({
+    expect(graphExports.relationDefinition).toBeDefined();
+    expect(graphExports.relationProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'relation',
     });
-    expect(graphExports.BlockDefinition).toBeDefined();
-    expect(graphExports.BlockProviderKey).toEqual({
+    expect(graphExports.blockDefinition).toBeDefined();
+    expect(graphExports.blockProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'block',
     });
-    expect(graphExports.BlockHeaderDefinition).toBeDefined();
-    expect(graphExports.BlockHeaderProviderKey).toEqual({
+    expect(graphExports.blockHeaderDefinition).toBeDefined();
+    expect(graphExports.blockHeaderProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'blockHeader',
     });
-    expect(graphExports.BlockSectionDefinition).toBeDefined();
-    expect(graphExports.BlockSectionProviderKey).toEqual({
+    expect(graphExports.blockSectionDefinition).toBeDefined();
+    expect(graphExports.blockSectionProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'blockSection',
     });
-    expect(graphExports.BlockRowDefinition).toBeDefined();
-    expect(graphExports.BlockRowProviderKey).toEqual({
+    expect(graphExports.blockRowDefinition).toBeDefined();
+    expect(graphExports.blockRowProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'blockRow',

@@ -3,7 +3,7 @@ import type { IRTableCellAppearance, IRTablePresentationRef } from '../../schema
 import type { DeepReadonly } from '../../shared';
 
 /** presentation 阶段消费的最终 Cell carrier */
-export type ResolvedTableCellPresentationInput =
+export type InputTableCellPresentation =
   | Readonly<{
       /** value Cell 判别字段 */
       kind: 'value';
@@ -26,7 +26,7 @@ export type ResolvedTableCellPresentationInput =
 /** presentation 阶段的 canonical-order-aligned carrier 与 provider options */
 export type PresentTableOptions = Readonly<{
   /** 与 formatted Cells 等长同序，显式 id 也必须一致的最终 carrier */
-  cells?: ReadonlyArray<ResolvedTableCellPresentationInput>;
+  cells?: ReadonlyArray<InputTableCellPresentation>;
   /** 当前 Table 可用的自定义 presentation definitions */
   presentationDefinitions?: ReadonlyArray<AnyCellPresentationDefinition>;
 }>;

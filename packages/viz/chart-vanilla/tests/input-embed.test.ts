@@ -1,7 +1,7 @@
 import { renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { scatterChart, ScatterChartInputEmbedAdapter, bubbleChart, BubbleChartInputEmbedAdapter } from '../src/point';
+import { scatterChart, scatterChartInputEmbedAdapter, bubbleChart, bubbleChartInputEmbedAdapter } from '../src/point';
 
 const input = {
   id: 'scatter',
@@ -16,13 +16,13 @@ describe('Chart Vanilla 标准组成', () => {
   it('在标准嵌入中保留原始编写输入', () => {
     const chart = scatterChart(input);
 
-    expect(chart).toEqual({ type: 'embed', kind: ScatterChartInputEmbedAdapter.kind, id: 'scatter', props: input });
+    expect(chart).toEqual({ type: 'embed', kind: scatterChartInputEmbedAdapter.kind, id: 'scatter', props: input });
     expect(chart.props).toBe(input);
   });
 
   it('渲染为共享 Vanilla 场景的子级', () => {
     const svg = renderToSvgString(scene({ children: [scatterChart(input)] }), {
-      adapters: [ScatterChartInputEmbedAdapter],
+      adapters: [scatterChartInputEmbedAdapter],
     });
 
     expect(svg).toContain('<svg');
@@ -38,7 +38,7 @@ describe('Chart Vanilla 标准组成', () => {
       panel: { position: [700, 0] },
     });
     const svg = renderToSvgString(scene({ children: [scatterChart(input), bubble] }), {
-      adapters: [ScatterChartInputEmbedAdapter, BubbleChartInputEmbedAdapter],
+      adapters: [scatterChartInputEmbedAdapter, bubbleChartInputEmbedAdapter],
     });
 
     expect(svg).toContain('scatter');

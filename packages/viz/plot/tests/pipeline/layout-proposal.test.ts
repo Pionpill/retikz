@@ -5,13 +5,13 @@ import {
   defineComposite,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
 import { lowerPlots } from '../../src/pipeline/expand';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
@@ -43,12 +43,12 @@ const ProposalParentSchema = CompositeBaseSchema.extend({
   child: PlotSchema,
 });
 
-const { x: naturalX, y: naturalY } = NaturalLayoutProposal;
+const { x: naturalX, y: naturalY } = naturalLayoutProposal;
 
 const compileWithProposal = (
   proposal: LayoutProposal,
   child: IRPlot = plot(),
-  lowerOptions: LowerPlotsOptions = {},
+  lowerOptions: PlotsLoweringOptions = {},
 ): LayoutChildResult => {
   const observations: Array<LayoutChildResult> = [];
   const parent = defineComposite({
@@ -123,14 +123,14 @@ describe('Plot 布局建议契约', () => {
   });
 
   it('保留节点、下沉选项和内在提案的默认维度', () => {
-    const result = compileWithProposal(NaturalLayoutProposal);
+    const result = compileWithProposal(naturalLayoutProposal);
 
     expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 480, height: 300 });
     expect(result.slotSize).toEqual({ width: 480, height: 300 });
   });
 
   it('当省略固有节点尺寸时，使用下沉的选项', () => {
-    const result = compileWithProposal(NaturalLayoutProposal, plot(), { layout: { width: 360, height: 220 } });
+    const result = compileWithProposal(naturalLayoutProposal, plot(), { layout: { width: 360, height: 220 } });
 
     expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 360, height: 220 });
     expect(result.slotSize).toEqual({ width: 360, height: 220 });
@@ -138,7 +138,7 @@ describe('Plot 布局建议契约', () => {
 
   it('在内部提案的下沉选项之前使用节点维度', () => {
     const result = compileWithProposal(
-      NaturalLayoutProposal,
+      naturalLayoutProposal,
       PlotSchema.parse({ ...plot(), width: 420, height: 260 }),
       { layout: { width: 360, height: 220 } },
     );

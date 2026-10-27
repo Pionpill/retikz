@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -13,7 +13,7 @@ const geometry = (child: IRChild): Array<IRNode | IRPath> => {
   return [];
 };
 
-const render = (mark: unknown, rows: Array<{ x: number; y: number }>, options: LowerPlotsOptions = {}) => {
+const render = (mark: unknown, rows: Array<{ x: number; y: number }>, options: PlotsLoweringOptions = {}) => {
   const source = PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',

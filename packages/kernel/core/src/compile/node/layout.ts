@@ -21,13 +21,13 @@ import type { CompileWarningCode } from '../constants';
 import { resolveAnchorRefUncached } from '../reference';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
 import type { TextMeasurer } from '../text';
-import type { EffectiveScopeTransform } from '../transform';
+import type { ComposedScopeTransform } from '../transform';
 import { composeScopeTransform, inverseScopeTransform, projectLayoutWithTransform } from '../transform';
 import { layoutNodeContent } from './content/layout';
 import { createNodeGeometryContext } from './geometry-context';
 import type { NodeGeometryContext } from './geometry-context';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
-import type { NodeCompilation, NodeLayout, TexLoweringContext } from './types';
+import type { NodeCompilation, CompiledNodeLayout, TexLoweringContext } from './types';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
@@ -40,7 +40,7 @@ const isAnchorPosition = (position: CanonicalNode['position']): position is IRAn
 const localDeltaOf = (
   deltaGlobal: IRPosition,
   globalOrigin: IRPosition,
-  transform: EffectiveScopeTransform,
+  transform: ComposedScopeTransform,
 ): IRPosition => {
   if (transform.chain.length === 0) return deltaGlobal;
   if (transform.inverse === null) {
@@ -60,11 +60,11 @@ const localDeltaOf = (
 const placeAnchorPositionedLayout = (
   node: CanonicalNode,
   position: IRAnchorPosition,
-  provisional: NodeLayout,
+  provisional: CompiledNodeLayout,
   positionContext: PositionTargetResolveContext,
-  transform: EffectiveScopeTransform,
+  transform: ComposedScopeTransform,
   geometryContext: NodeGeometryContext,
-): NodeLayout => {
+): CompiledNodeLayout => {
   if (node.id === position.target.id || node.aliasIds?.includes(position.target.id)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -124,7 +124,7 @@ const placeAnchorPositionedLayout = (
 };
 
 /** 节点 layout 阶段使用的编译依赖 */
-type LayoutNodeContext = {
+type NodeLayoutContext = {
   /** 文本测量函数 */
   measureText: TextMeasurer;
   /** 当前编译共享的连接面缓存与诊断状态 */
@@ -136,7 +136,7 @@ type LayoutNodeContext = {
   /** 当前 scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
   /** 当前 Scope 已合成的坐标消费态 */
-  effectiveTransform?: EffectiveScopeTransform;
+  composedTransform?: ComposedScopeTransform;
   /** TeX 降级上下文 */
   texLowering?: TexLoweringContext;
   /** 当前 node 的 compile warning 分发函数 */
@@ -146,7 +146,7 @@ type LayoutNodeContext = {
 };
 
 /** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
-export const compileResolvedNode = (resolution: NodeResolution, context: LayoutNodeContext): NodeCompilation => {
+export const compileNodeResolution = (resolution: NodeResolution, context: NodeLayoutContext): NodeCompilation => {
   const { node, shape: shapeResolution, boundary: boundaryResolution } = resolution;
   const {
     measureText,
@@ -380,7 +380,7 @@ export const compileResolvedNode = (resolution: NodeResolution, context: LayoutN
     fontStyle,
   });
 
-  const provisional: NodeLayout = {
+  const provisional: CompiledNodeLayout = {
     boundarySource: node.boundary,
     shape: shapeResolution,
     geometry: {
@@ -421,7 +421,7 @@ export const compileResolvedNode = (resolution: NodeResolution, context: LayoutN
   };
   geometryContext.get(provisional).warn = warn;
   geometryContext.get(provisional).irPath = resolution.irPath;
-  const resolved: NodeLayout = {
+  const resolved: CompiledNodeLayout = {
     ...provisional,
     labels: layoutNodeLabels(provisional, measuredLabels),
   };
@@ -432,7 +432,7 @@ export const compileResolvedNode = (resolution: NodeResolution, context: LayoutN
         anchorPosition,
         resolved,
         positionContext,
-        context.effectiveTransform ?? composeScopeTransform(scopeChain),
+        context.composedTransform ?? composeScopeTransform(scopeChain),
         geometryContext,
       )
     : resolved;

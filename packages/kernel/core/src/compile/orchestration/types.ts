@@ -22,15 +22,15 @@ import type {
   Transform,
 } from '../../contract';
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
-import type { EffectiveScopeDefaults } from '../../resolve';
-import type { IRChild, IRPathBase, IRPosition, ResolvedDropShadow } from '../../schemas';
-import type { ResolvedTheme } from '../../shared';
+import type { MergedScopeDefaults } from '../../resolve';
+import type { IRChild, IRPathBase, IRPosition, CanonicalDropShadow } from '../../schemas';
+import type { CanonicalTheme } from '../../shared';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
-import type { NodeLayout } from '../node';
+import type { CompiledNodeLayout } from '../node';
 import type { LayoutProbeFailureEntry } from '../probe-failure';
 import type { CompileOwnerKey, CompileProvenance } from '../provenance';
 import type { CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../types';
-import type { CompileWarningInput } from '../warning';
+import type { InputCompileWarning } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive, PathPlaceholder, PrimitiveZIndexTable } from './primitive';
 import type { PendingSpatialHandle } from './spatial-handle';
@@ -66,9 +66,9 @@ export type PendingPathEmission = {
   /** 当前 authored Path site 选中的 observer keys */
   observerKeys?: ReadonlyArray<string>;
   /** Path occurrence 捕获的有效 Theme */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** Path occurrence 捕获的有效默认配置 */
-  scopeDefaults: EffectiveScopeDefaults;
+  scopeDefaults: MergedScopeDefaults;
   /** 产生 path primitive 的语义 owner */
   semanticOwner?: CompileSemanticOwner;
   /** 编译期排序用 zIndex，不写入 Scene primitive */
@@ -86,7 +86,7 @@ export type TraversalResult = {
   /** 自动 layout 使用的全局 bbox */
   layoutBounds: AxisAlignedBounds | undefined;
   /** 顶层 child 对父 Scope 的 allocation layout 贡献 */
-  layouts: Array<NodeLayout>;
+  layouts: Array<CompiledNodeLayout>;
   /** 顶层自动 layout 几何贡献 */
   bounds: Array<LayoutBoundsContribution>;
   /** 顶层父布局 allocation 几何贡献 */
@@ -106,9 +106,9 @@ export type TraversalResult = {
 /** layout-aware child probe 保存的全部可提交贡献 */
 export type CompositeReplayMaterializeContext = Readonly<{
   /** replay child 在最终 authored Scope 中继承的有效默认配置 */
-  scopeDefaults: EffectiveScopeDefaults;
+  scopeDefaults: MergedScopeDefaults;
   /** replay child 在最终 authored Scope 中继承的 Theme */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** replay child 所处 Scope 的 preliminary transform chain */
   scopeChain: ReadonlyArray<Transform>;
 }>;
@@ -126,7 +126,7 @@ export type CompositeReplayTransaction = {
   /** 与 primitives 对齐的父层 zIndex */
   primitiveZIndices: Array<number | undefined>;
   /** probe 的父布局输入 */
-  layouts: Array<NodeLayout>;
+  layouts: Array<CompiledNodeLayout>;
   /** probe 自动 layout 几何贡献 */
   bounds: Array<LayoutBoundsContribution>;
   /** probe allocation 几何贡献 */
@@ -144,12 +144,12 @@ export type CompositeReplayTransaction = {
     /** 与探测起始命名空间发生冲突的标识 */
     id: string;
     /** 重放时需要重新判断是否发布的重名诊断 */
-    warning: CompileWarningInput;
+    warning: InputCompileWarning;
   }>;
   /** probe 已解析资源 */
   resources: Array<SceneResource>;
   /** 仅在 replay 时发布的 warning */
-  warnings: Array<CompileWarningInput>;
+  warnings: Array<InputCompileWarning>;
   /** 仅在 replay 时发布的 artifacts */
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
   /** 仅在 replay 时发布的 compile observation entries */
@@ -257,9 +257,9 @@ export type TraversalCompileOptions = {
   /** probe 继承的当前 scope chain */
   scopeChain?: ReadonlyArray<Transform>;
   /** probe 继承的有效默认配置 */
-  scopeDefaults?: EffectiveScopeDefaults;
+  scopeDefaults?: MergedScopeDefaults;
   /** 隔离 traversal 继承的完整 Theme */
-  theme?: ResolvedTheme;
+  theme?: CanonicalTheme;
   /** 当前 child 根 occurrence；省略时按 canonical IR path 分配 */
   occurrence?: CompileOccurrenceLocator;
   /** 当前 traversal 的 composite 深度 */
@@ -352,15 +352,15 @@ export type TraversalFrame = {
   /** 当前层 IR locator 前缀 */
   locatorPrefix: string;
   /** 向父 scope 汇报 bbox 输入 layout */
-  layoutSink: Array<NodeLayout>;
+  layoutSink: Array<CompiledNodeLayout>;
   /** 当前层延迟 emit 的 path 任务 */
   pathSink: Array<PendingPathEmission>;
   /** 当前层共享的有效默认配置 */
-  scopeDefaults: EffectiveScopeDefaults;
+  scopeDefaults: MergedScopeDefaults;
   /** 当前层后代读取的完整 Theme */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** 当前层及后代注册的全局 layout 对象，供 Scope 收尾时原位升级到最终几何 */
-  publicationSink: Array<NodeLayout>;
+  publicationSink: Array<CompiledNodeLayout>;
   /** 当前层自动 viewBox 几何贡献；Scope 收尾后再投到父 frame */
   boundsSink: Array<LayoutBoundsContribution>;
   /** 当前层父布局 allocation 几何贡献 */
@@ -429,7 +429,7 @@ export type ScopeLayoutPlaceholder = {
   /** scope.id 所在父 namespace frame 深度 */
   parentFrameDepth: number;
   /** scope.id 初始占位 layout；无 id 时不存在 */
-  placeholderLayout?: NodeLayout;
+  placeholderLayout?: CompiledNodeLayout;
 };
 
 /** 创建 Scope 布局占位项所需的遍历位置与父帧 */
@@ -463,7 +463,7 @@ type LayoutBoundsContribution = {
   /** 当前 frame 中的几何点 */
   boundsPoints: Array<IRPosition>;
   /** 与该点集关联的阴影外溢 */
-  shadow?: ResolvedDropShadow;
+  shadow?: CanonicalDropShadow;
   /** 位于该显式 composite allocation boundary 内时不直接贡献到外层 */
   allocationBoundary?: object;
 };
@@ -473,7 +473,7 @@ export type PendingNodeLayoutObservation = {
   /** 观察对象身份，独立于可复用布局 */
   id?: string;
   /** 节点自身局部 layout */
-  layout: NodeLayout;
+  layout: CompiledNodeLayout;
   /** 从节点所在 frame 到 world 的最终只读 chain；Scope 收尾时替换链引用 */
   scopeChain: ReadonlyArray<Transform>;
   /** 节点在逻辑树中的出现位置 */
@@ -497,7 +497,7 @@ export type CompileObservationContribution = {
   /** 选中该 authored site 的 observer keys */
   observerKeys: ReadonlyArray<string>;
   /** owner occurrence 捕获的有效 Theme */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** owner occurrence 捕获的有效默认配置 */
-  scopeDefaults: EffectiveScopeDefaults;
+  scopeDefaults: MergedScopeDefaults;
 };

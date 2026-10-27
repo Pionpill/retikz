@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, string, strictObject } from 'zod';
 
 import type { IRChild, IRScene, IRScopePosition } from '../../src';
-import { compileToScene, CompositeBaseSchema, defineComposite, ScopeSchema, NaturalLayoutProposal } from '../../src';
+import { compileToScene, CompositeBaseSchema, defineComposite, ScopeSchema, naturalLayoutProposal } from '../../src';
 
 const card = defineComposite({
   namespace: 'third',
@@ -57,8 +57,8 @@ describe('合格的空间句柄编译', () => {
       type: 'container',
       schema: CompositeBaseSchema.extend({ namespace: literal('third'), type: literal('container') }),
       compile: (_node, context) => {
-        context.layoutChild({ namespace: 'third', type: 'measured' }, NaturalLayoutProposal);
-        const selected = context.layoutChild({ namespace: 'third', type: 'measured' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'third', type: 'measured' }, naturalLayoutProposal);
+        const selected = context.layoutChild({ namespace: 'third', type: 'measured' }, naturalLayoutProposal);
         if (selected.kind === 'failed') return context.raise(selected.failure);
         return { children: [context.replay(selected.result, { transforms: [{ kind: 'translate', x: 30, y: 40 }] })] };
       },

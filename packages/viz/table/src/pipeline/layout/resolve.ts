@@ -2,10 +2,10 @@ import { RetikzTableError } from '../../error';
 import type { IRTableLayout, IRTableTrackOverride, IRTableTrackSize } from '../../schemas';
 import { TableTrackSizeKind } from '../../schemas';
 import { DEFAULT_TABLE_COLUMN_WIDTH, DEFAULT_TABLE_ROW_HEIGHT, DEFAULT_TABLE_TRACK_GAP } from '../../shared';
-import type { ResolvedTableLayout, ResolvedTableTrackSize } from './types';
+import type { CanonicalTableLayout, CanonicalTableTrackSize } from './types';
 
 /** 物化单个轨道尺寸的运行时默认值并递归冻结 */
-const resolveTableTrackSize = (size: IRTableTrackSize): ResolvedTableTrackSize => {
+const resolveTableTrackSize = (size: IRTableTrackSize): CanonicalTableTrackSize => {
   const parsed = size;
 
   switch (parsed.kind) {
@@ -18,8 +18,8 @@ const resolveTableTrackSize = (size: IRTableTrackSize): ResolvedTableTrackSize =
     case TableTrackSizeKind.Minmax:
       return Object.freeze({
         kind: parsed.kind,
-        min: resolveTableTrackSize(parsed.min) as ResolvedTableTrackSize & ({ kind: 'fixed' } | { kind: 'auto' }),
-        max: resolveTableTrackSize(parsed.max) as ResolvedTableTrackSize &
+        min: resolveTableTrackSize(parsed.min) as CanonicalTableTrackSize & ({ kind: 'fixed' } | { kind: 'auto' }),
+        max: resolveTableTrackSize(parsed.max) as CanonicalTableTrackSize &
           ({ kind: 'fixed' } | { kind: 'auto' } | { kind: 'fraction' }),
       });
   }
@@ -29,7 +29,7 @@ const resolveTableTrackSize = (size: IRTableTrackSize): ResolvedTableTrackSize =
 export const resolveTableTrackSizes = (
   defaults: ReadonlyArray<IRTableTrackSize>,
   overrides: ReadonlyArray<IRTableTrackOverride> = [],
-): ReadonlyArray<ResolvedTableTrackSize> => {
+): ReadonlyArray<CanonicalTableTrackSize> => {
   const indexes = new Set<number>();
 
   for (const override of overrides) {
@@ -57,7 +57,7 @@ export const resolveTableTrackSizes = (
 };
 
 /** 解析 Table layout 并物化稳定默认值 */
-export const resolveTableLayout = (spec?: IRTableLayout): ResolvedTableLayout => {
+export const resolveTableLayout = (spec?: IRTableLayout): CanonicalTableLayout => {
   const parsed = spec ?? {};
   const rowSize = resolveTableTrackSize(
     parsed.rowSize ?? { kind: TableTrackSizeKind.Fixed, value: DEFAULT_TABLE_ROW_HEIGHT },

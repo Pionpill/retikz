@@ -12,7 +12,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -24,7 +24,7 @@ const scene = (children: IRScene['children']): IRScene => ({
 const resolvedResultOf = (
   context: CompositeCompileContext,
   child: IRChild,
-  proposal: LayoutProposal = NaturalLayoutProposal,
+  proposal: LayoutProposal = naturalLayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
@@ -70,7 +70,7 @@ describe('布局感知的复合事务和产物', () => {
             text: 'natural',
             style: { fill: gradient('#300', '#400') },
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         const exact = resolvedResultOf(
           context,
@@ -122,7 +122,7 @@ describe('布局感知的复合事务和产物', () => {
             text: 'discarded',
             style: { fill: discarded },
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         const final = resolvedResultOf(context, {
           type: 'node',
@@ -158,7 +158,7 @@ describe('布局感知的复合事务和产物', () => {
             position: [0, 0],
             text: [{ segments: [{ tex: 'x' }] }],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         return { children: [] };
       },
@@ -205,7 +205,7 @@ describe('布局感知的复合事务和产物', () => {
               { namespace: 'test', type: 'lateProbeFailure' },
             ],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
 
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
@@ -272,7 +272,7 @@ describe('布局感知的复合事务和产物', () => {
         type: literal('discardedNamespace'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ type: 'node', id: 'discarded', position: [20, 0] }, NaturalLayoutProposal);
+        context.layoutChild({ type: 'node', id: 'discarded', position: [20, 0] }, naturalLayoutProposal);
         return { children: [] };
       },
     });
@@ -495,7 +495,7 @@ describe('布局感知的复合事务和产物', () => {
             type: 'scope',
             children: [{ namespace: 'test', type: 'replayedLeaf' }],
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         const selected = resolvedResultOf(context, {
           type: 'scope',

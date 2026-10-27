@@ -1,7 +1,7 @@
 import type { ContourCommand, Position } from '@retikz/math';
 
 import type { PathCommand, PathPrimitive } from '../scene';
-import type { ResolvedShapeStyle } from './shape';
+import type { CompiledShapeStyle } from './shape';
 
 /** 将共享轮廓命令转换为 Scene path 命令 */
 export const contourToPathCommands = (
@@ -62,7 +62,7 @@ type PathPrimitiveStyle = Pick<
 
 /** 把形状样式投影到路径图元，忽略只属于节点盒的 cornerRadius */
 export const buildPathPrimitiveStyle = (
-  style: ResolvedShapeStyle,
+  style: CompiledShapeStyle,
   options?: Readonly<{ fill?: PathPrimitive['fill'] }>,
 ): PathPrimitiveStyle => {
   const { fill, stroke, strokeWidth, cornerRadius: _cornerRadius, ...passthroughStyle } = style;
@@ -77,7 +77,7 @@ export const buildPathPrimitiveStyle = (
 };
 
 /** 将已转换的轮廓命令与形状样式组合为路径图元 */
-export const contourToPathPrimitive = (commands: Array<PathCommand>, style: ResolvedShapeStyle): PathPrimitive => ({
+export const contourToPathPrimitive = (commands: Array<PathCommand>, style: CompiledShapeStyle): PathPrimitive => ({
   type: 'path',
   commands,
   ...buildPathPrimitiveStyle(style),

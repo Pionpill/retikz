@@ -1,9 +1,9 @@
-import type { LowerTablesOptions } from '../types';
+import type { TablesLoweringOptions } from '../types';
 import { createTableNestedDefinitionProvider, createTableProvider } from './composite';
-import type { TableRuntimeContribution, TableRuntimeContributionInput } from './types';
+import type { TableRuntimeContribution, InputTableRuntimeContribution } from './types';
 
 /** 防御性复制 Table lowering definitions 的外层数组 */
-const snapshotLowerOptions = (input: LowerTablesOptions): LowerTablesOptions =>
+const snapshotLowerOptions = (input: TablesLoweringOptions): TablesLoweringOptions =>
   Object.freeze({
     ...input,
     ...Object.fromEntries(
@@ -24,7 +24,7 @@ const snapshotLowerOptions = (input: LowerTablesOptions): LowerTablesOptions =>
           'statisticsReducerImplementations',
           'rowSelectorImplementations',
           'regressionImplementations',
-        ] satisfies Array<keyof LowerTablesOptions>
+        ] satisfies Array<keyof TablesLoweringOptions>
       ).map(key => {
         const entries = input[key];
         return [key, entries === undefined ? undefined : Object.freeze([...entries])];
@@ -33,7 +33,7 @@ const snapshotLowerOptions = (input: LowerTablesOptions): LowerTablesOptions =>
   });
 
 /** 创建供 React 与 Vanilla 宿主统一聚合的 Table runtime contribution */
-export const createTableRuntimeContribution = (input: TableRuntimeContributionInput): TableRuntimeContribution => {
+export const createTableRuntimeContribution = (input: InputTableRuntimeContribution): TableRuntimeContribution => {
   const tableProvider = createTableProvider(input.data ?? {}, snapshotLowerOptions(input.lowerOptions ?? {}));
   const nestedProviders = [...(input.composites ?? [])].map(createTableNestedDefinitionProvider);
 

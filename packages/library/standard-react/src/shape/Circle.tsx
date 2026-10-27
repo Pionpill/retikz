@@ -1,6 +1,6 @@
 import type { HydrationEventProps } from '@retikz/react';
 import type { InputCircle } from '@retikz/standard-vanilla/shape';
-import { CircleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { circleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
@@ -19,5 +19,5 @@ const CircleComponent: FC<CircleProps> = () => null;
 export const Circle = CircleComponent as StandardEmbeddableComponent<CircleProps>;
 Circle.displayName = 'Circle';
 Circle.isTier2Embeddable = true;
-Circle.inputEmbedAdapter = CircleInputEmbedAdapter;
+Circle.inputEmbedAdapter = circleInputEmbedAdapter;
 Circle.createInputEmbedProps = shapeEmbedProps;

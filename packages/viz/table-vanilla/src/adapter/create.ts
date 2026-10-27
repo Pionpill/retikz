@@ -6,7 +6,7 @@ import type { InputTable } from '../normalize/table';
 import { normalizeTable } from '../normalize/table';
 
 /** 可复用于多个 embed 与 update 周期的无状态 Table InputEmbed adapter */
-export const TableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unknown>> &
+export const tableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unknown>> &
   Required<Pick<SynchronousInputEmbedAdapter<InputTable<unknown>>, 'prepare'>> = {
   kind: TABLE_NAMESPACE,
   lower: props => {

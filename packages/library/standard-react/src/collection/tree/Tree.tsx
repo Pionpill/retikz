@@ -1,4 +1,4 @@
-import { TreeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { treeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { InputTree } from '@retikz/standard-vanilla/collection';
 import type { FC } from 'react';
 
@@ -12,4 +12,4 @@ const TreeComponent: FC<TreeProps> = () => null;
 export const Tree = TreeComponent as StandardEmbeddableComponent<TreeProps>;
 Tree.displayName = 'Tree';
 Tree.isTier2Embeddable = true;
-Tree.inputEmbedAdapter = TreeInputEmbedAdapter;
+Tree.inputEmbedAdapter = treeInputEmbedAdapter;

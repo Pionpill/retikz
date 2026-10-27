@@ -51,7 +51,7 @@ describe('Flow Diagram 的 ComponentPreview 预览', () => {
     const code = irToVanillaCode(scene);
 
     expect(code).toContain('flowDiagram({');
-    expect(code).toContain('FlowDiagramInputEmbedAdapter');
+    expect(code).toContain('flowDiagramInputEmbedAdapter');
     expect(code).toContain('PreviewThemeDefinitionBundle.flow');
     expect(code).toContain('entities:');
     expect(code).toContain('groups: []');
@@ -146,7 +146,7 @@ describe('Flow Diagram 的 ComponentPreview 预览', () => {
     expect(serialized).not.toContain('"width":720');
     expect(serialized).not.toContain('"width":760');
     expect(vanilla.svg).toContain('<svg');
-    expect(vanilla.code).toContain('FlowDiagramInputEmbedAdapter');
+    expect(vanilla.code).toContain('flowDiagramInputEmbedAdapter');
   });
 
   it('使用双语控件更改真实 Flow Source 中的前端表单角色、状态、富文本、块排版和 Relation 状态', () => {

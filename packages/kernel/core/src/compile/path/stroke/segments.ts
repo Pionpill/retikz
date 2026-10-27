@@ -14,7 +14,7 @@ import type { StrokeSamplingCollector } from './sampling';
 type StrokeSegmentStep = Extract<CanonicalStep, { kind: 'line' | 'axis-line' | 'curve' | 'cubic' | 'bend' | 'fold' }>;
 
 /** 普通 segment step 降级所需的共享上下文 */
-type LowerSegmentStepContext = {
+type SegmentStepLoweringContext = {
   /** resolving 阶段绑定的 target view */
   targetView: PathTargetView;
   /** 当前 scope 的累计变换链 */
@@ -44,7 +44,7 @@ export const isStrokeSegmentStep = (step: CanonicalStep): step is StrokeSegmentS
  * 将普通 segment step 降级为 path commands
  * @returns `false` 表示 target clipping 失败，调用方应跳过整个 path
  */
-export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentStepContext): boolean => {
+export const lowerSegmentStep = (step: StrokeSegmentStep, context: SegmentStepLoweringContext): boolean => {
   const { targetView, scopeChain, previous, currentAnchor, penOverride, commandEmitter, sampling } = context;
   const { emitLine, emitQuad, emitCubic, startSegment } = commandEmitter;
   const targetContext = { targetView, scopeChain };

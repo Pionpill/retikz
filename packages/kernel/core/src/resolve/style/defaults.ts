@@ -5,7 +5,7 @@ import { mergeArrowDefaults } from './arrow';
 import { mergeFont } from './font';
 import { mergeNodeLabelDefaults, mergePathLabelDefaults } from './label';
 import { mergeGraphicStyle } from './opacity';
-import type { EffectiveScopeDefaults } from './types';
+import type { MergedScopeDefaults } from './types';
 
 /**
  * 合并当前作用域与父级的默认配置，供子元素继续继承
@@ -15,8 +15,8 @@ import type { EffectiveScopeDefaults } from './types';
  */
 export const resolveScopeDefaults = <TScope extends Pick<IRScope, 'defaults'>>(
   scope: TScope,
-  parent: EffectiveScopeDefaults = {},
-): EffectiveScopeDefaults => {
+  parent: MergedScopeDefaults = {},
+): MergedScopeDefaults => {
   const defaults = scope.defaults;
   if (defaults === undefined) return parent;
 

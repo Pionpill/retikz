@@ -31,7 +31,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       ],
     }),
     canonicalValues: { grouped: true, order: 'ascending', index: 1 },
-    relatedApis: ['BuiltinSelectorOperationSchemas.Nth'],
+    relatedApis: ['BUILTIN_SELECTOR_OPERATION_SCHEMAS.Nth'],
   } satisfies PreviewControlContract;
 };
 /** 缺少语言上下文时采用中文基线 */

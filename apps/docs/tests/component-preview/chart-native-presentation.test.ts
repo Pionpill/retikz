@@ -160,7 +160,7 @@ describe('Chart 原生 Scatter 呈现', () => {
       expect(vanilla.code).not.toContain('const datasets =');
       expect(vanilla.code).toContain("import { renderChart } from '@retikz/chart-vanilla';");
       expect(vanilla.code).toContain(
-        "import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';",
+        "import { scatterChart, scatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';",
       );
       expect(vanilla.code).not.toContain('markDefinitions: [scatterMarkDefinition]');
       expect(vanilla.svg).toContain('<svg');

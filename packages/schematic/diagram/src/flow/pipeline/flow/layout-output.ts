@@ -4,14 +4,14 @@ import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
   FlowLayoutDefinition,
-  FlowLayoutElementInput,
+  InputFlowLayoutElement,
   FlowLayoutElementOutput,
   FlowLayoutExecutionContext,
-  FlowLayoutInput,
+  InputFlowLayoutComputation,
   FlowLayoutOutput,
-  FlowLayoutPlacementInput,
+  InputFlowLayoutPlacement,
   FlowLayoutPlacementOutput,
-  FlowLayoutRelationInput,
+  InputFlowLayoutRelation,
   FlowLayoutRoute,
 } from '../../contract';
 import { coincidentFlowEndpoints, resolveFlowEndpointPosition, createFlowOrthogonalCandidates } from '../../providers';
@@ -101,7 +101,7 @@ const collapsePoints = (points: ReadonlyArray<Position>): ReadonlyArray<Position
     (point, index) => index === 0 || point[0] !== points[index - 1]?.[0] || point[1] !== points[index - 1]?.[1],
   );
 
-const flattenElements = (elements: ReadonlyArray<FlowLayoutElementInput>): ReadonlyArray<FlowLayoutElementInput> =>
+const flattenElements = (elements: ReadonlyArray<InputFlowLayoutElement>): ReadonlyArray<InputFlowLayoutElement> =>
   elements.flatMap(element => [element, ...(element.kind === 'leaf' ? [] : flattenElements(element.elements))]);
 
 /** 判断两个有限布局数值是否满足带尺度 epsilon 的小于等于关系 */
@@ -134,8 +134,8 @@ const overlaps = (left: Readonly<BoundsRect>, right: Readonly<BoundsRect>): bool
   left.y < right.y + right.height &&
   left.y + left.height > right.y;
 
-const validateElementGeometry = (
-  elements: ReadonlyArray<FlowLayoutElementInput>,
+const assertElementGeometry = (
+  elements: ReadonlyArray<InputFlowLayoutElement>,
   boundsById: ReadonlyMap<string, Readonly<BoundsRect>>,
   definition: FlowLayoutDefinition,
 ): void => {
@@ -196,7 +196,7 @@ const validateElementGeometry = (
     }
   }
 
-  const visitScope = (scopeElements: ReadonlyArray<FlowLayoutElementInput>): void => {
+  const visitScope = (scopeElements: ReadonlyArray<InputFlowLayoutElement>): void => {
     for (let leftIndex = 0; leftIndex < scopeElements.length; leftIndex += 1) {
       const left = scopeElements[leftIndex];
       const leftBounds = boundsById.get(left.id);
@@ -226,7 +226,7 @@ const validateElementGeometry = (
 };
 
 type PlacementRecord = Readonly<{
-  input: FlowLayoutPlacementInput;
+  input: InputFlowLayoutPlacement;
   output: FlowLayoutPlacementOutput;
 }>;
 
@@ -264,10 +264,10 @@ const hasMatchingGridPlacements = (
   );
 };
 
-const validatePlacementInput = (
+const assertPlacementInput = (
   definition: FlowLayoutDefinition,
-  expected: Extract<FlowLayoutElementInput, { kind: 'layout' }>,
-  input: FlowLayoutPlacementInput,
+  expected: Extract<InputFlowLayoutElement, { kind: 'layout' }>,
+  input: InputFlowLayoutPlacement,
 ): void => {
   if (
     !isPlainRecord(input) ||
@@ -330,9 +330,9 @@ const validatePlacementInput = (
   }
 };
 
-const normalizePlacementOutput = (
+const resolvePlacementOutput = (
   definition: FlowLayoutDefinition,
-  input: FlowLayoutPlacementInput,
+  input: InputFlowLayoutPlacement,
   value: unknown,
 ): FlowLayoutPlacementOutput => {
   const path = ['layouts', input.layout.id] as const;
@@ -368,16 +368,16 @@ const normalizePlacementOutput = (
   return { bounds: parseBounds(value.bounds, definition, [...path, 'bounds']), elements };
 };
 
-const validateRecordedPlacements = (
+const assertRecordedPlacements = (
   definition: FlowLayoutDefinition,
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   output: FlowLayoutOutput,
   records: ReadonlyMap<string, PlacementRecord>,
 ): void => {
   const boundsById = new Map(output.elements.map(element => [element.id, element.bounds]));
 
   for (const layout of flattenElements(input.elements).filter(
-    (element): element is Extract<FlowLayoutElementInput, { kind: 'layout' }> => element.kind === 'layout',
+    (element): element is Extract<InputFlowLayoutElement, { kind: 'layout' }> => element.kind === 'layout',
   )) {
     const record = records.get(layout.id);
     if (record === undefined) {
@@ -413,8 +413,8 @@ const validateRecordedPlacements = (
   }
 };
 
-const validateRoute = (
-  relation: FlowLayoutRelationInput,
+const assertRoute = (
+  relation: InputFlowLayoutRelation,
   route: FlowLayoutRoute,
   labelBounds: Readonly<BoundsRect> | undefined,
   boundsById: ReadonlyMap<string, Readonly<BoundsRect>>,
@@ -573,9 +573,9 @@ const validateRoute = (
   }
 };
 
-const normalizeAndValidateOutput = (
+const resolveFlowLayoutOutput = (
   definition: FlowLayoutDefinition,
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   value: FlowLayoutOutput,
   context: FlowLayoutExecutionContext,
 ): FlowLayoutOutput => {
@@ -596,7 +596,7 @@ const normalizeAndValidateOutput = (
     return { id: expected.id, bounds: parseBounds(elementValue.bounds, definition, [...path, 'bounds']) };
   });
   const boundsById = new Map(elements.map(element => [element.id, element.bounds]));
-  validateElementGeometry(input.elements, boundsById, definition);
+  assertElementGeometry(input.elements, boundsById, definition);
 
   if (value.relations.length !== input.relations.length) {
     invalidOutput(definition, ['relations'], 'relation coverage must exactly match input order.');
@@ -649,26 +649,26 @@ const normalizeAndValidateOutput = (
         parsed.error,
       );
 
-    const normalizePoint = (point: Position): Position => [
+    const roundLayoutPoint = (point: Position): Position => [
       point[0] === 0 ? 0 : point[0],
       point[1] === 0 ? 0 : point[1],
     ];
     const route: FlowLayoutRoute =
       parsed.data.kind === 'bend' || parsed.data.kind === 'curve' || parsed.data.kind === 'cubic'
-        ? { ...parsed.data, points: [normalizePoint(parsed.data.points[0]), normalizePoint(parsed.data.points[1])] }
+        ? { ...parsed.data, points: [roundLayoutPoint(parsed.data.points[0]), roundLayoutPoint(parsed.data.points[1])] }
         : {
             ...parsed.data,
             points:
               parsed.data.kind === 'smooth'
-                ? parsed.data.points.map(normalizePoint)
-                : collapsePoints(parsed.data.points.map(normalizePoint)),
+                ? parsed.data.points.map(roundLayoutPoint)
+                : collapsePoints(parsed.data.points.map(roundLayoutPoint)),
           };
 
     const labelBounds =
       relationValue.labelBounds === undefined
         ? undefined
         : parseBounds(relationValue.labelBounds, definition, [...path, 'labelBounds']);
-    validateRoute(expected, route, labelBounds, boundsById, definition, index, endpoints, elements, context);
+    assertRoute(expected, route, labelBounds, boundsById, definition, index, endpoints, elements, context);
     if (
       route.kind === 'orthogonal' &&
       expected.routing.kind === 'orthogonal' &&
@@ -739,13 +739,13 @@ const normalizeAndValidateOutput = (
 /** 同步调用并验证一个 Flow Layout Definition，返回脱离且深冻结的唯一几何 */
 export const executeFlowLayout = (
   definition: FlowLayoutDefinition,
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   placementContext?: FlowLayoutExecutionContext,
 ): FlowLayoutOutput => {
   const inputSnapshot = cloneAndFreezeJson(input, `Flow Layout Definition '${definition.name}' input`);
   const layouts = new Map(
     flattenElements(inputSnapshot.elements)
-      .filter((element): element is Extract<FlowLayoutElementInput, { kind: 'layout' }> => element.kind === 'layout')
+      .filter((element): element is Extract<InputFlowLayoutElement, { kind: 'layout' }> => element.kind === 'layout')
       .map(element => [element.id, element]),
   );
   const placements = new Map<string, PlacementRecord>();
@@ -783,13 +783,13 @@ export const executeFlowLayout = (
         );
       }
 
-      validatePlacementInput(definition, expected, value);
+      assertPlacementInput(definition, expected, value);
       if (placementContext === undefined) {
         return invalidOutput(definition, ['layouts', layoutId], 'Layout placement context is unavailable.', [layoutId]);
       }
 
       const placementInput = cloneAndFreezeJson(value, `Flow Layout '${layoutId}' placement input`);
-      const placementOutput = normalizePlacementOutput(
+      const placementOutput = resolvePlacementOutput(
         definition,
         placementInput,
         cloneAndFreezeJson(placementContext.placeLayout(placementInput), `Flow Layout '${layoutId}' placement output`),
@@ -827,9 +827,9 @@ export const executeFlowLayout = (
   }
 
   const output = cloneAndFreezeJson(
-    normalizeAndValidateOutput(definition, inputSnapshot, detachedOutput, executionContext),
+    resolveFlowLayoutOutput(definition, inputSnapshot, detachedOutput, executionContext),
   );
-  validateRecordedPlacements(definition, inputSnapshot, output, placements);
+  assertRecordedPlacements(definition, inputSnapshot, output, placements);
 
   for (const [index, relation] of inputSnapshot.relations.entries()) {
     if (relation.routing.kind !== 'smooth') continue;

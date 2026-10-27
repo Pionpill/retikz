@@ -1,11 +1,11 @@
-import type { IRPaint, PaintResource, ResolvedPatternTile } from '@retikz/core';
+import type { IRPaint, PaintResource, CompiledPatternTile } from '@retikz/core';
 import { DEFAULT_EPSILON } from '@retikz/math';
 
 import { gradientLineFromAngle, parseHexColor } from '../../shared';
 import type { SvgNode } from '../types';
 import { compact } from './attrs';
 import { buildPrim } from './prim';
-import type { BuildContext } from './prim';
+import type { SvgPrimitiveBuildContext } from './prim';
 
 /** fit → SVG preserveAspectRatio（cover 为缺省） */
 const fitToPAR = (fit: 'fill' | 'contain' | 'cover' | undefined): string =>
@@ -26,7 +26,7 @@ const CONIC_SEGMENT_OVERLAP_DEG = 0.25;
 
 const clamp01 = (n: number): number => Math.min(1, Math.max(0, n));
 
-const normalizeStops = (stops: ReadonlyArray<GradientStop>): Array<GradientStop> => {
+const resolveGradientStops = (stops: ReadonlyArray<GradientStop>): Array<GradientStop> => {
   const sorted = [...stops].sort((a, b) => a.offset - b.offset);
   if (sorted.length === 0)
     return [
@@ -44,7 +44,7 @@ const normalizeStops = (stops: ReadonlyArray<GradientStop>): Array<GradientStop>
 const channelToHex = (n: number): string => Math.round(n).toString(16).padStart(2, '0');
 
 const colorAt = (stops: ReadonlyArray<GradientStop>, t: number): { color: string; opacity?: number } => {
-  const normalized = normalizeStops(stops);
+  const normalized = resolveGradientStops(stops);
   const offset = clamp01(t);
   let left = normalized[0];
   let right = normalized[normalized.length - 1];
@@ -121,7 +121,7 @@ const buildConicGradient = (spec: Extract<IRPaint, { kind: 'conicGradient' }>, i
  * @description 宽高 = `tile.size`、`patternUnits=userSpaceOnUse`（tile 固定 user units）、可选整体旋转；
  *   `tile.motif`（`ScenePrimitive[]`）复用 `buildMarkerPrim` 物化（contextStroke → context-stroke）
  */
-const buildPatternTile = (tile: ResolvedPatternTile, id: string, context: BuildContext): SvgNode => ({
+const buildPatternTile = (tile: CompiledPatternTile, id: string, context: SvgPrimitiveBuildContext): SvgNode => ({
   tag: 'pattern',
   attrs: compact({
     id,
@@ -137,7 +137,7 @@ const buildPatternTile = (tile: ResolvedPatternTile, id: string, context: BuildC
  * 一个 paint 资源 → SVG paint server SvgNode（gradient / pattern / image）
  * @description gradient / image 用 objectBoundingBox（随形状缩放）；pattern 用 userSpaceOnUse（tile 固定 user units）。
  */
-export const buildPaintDef = (resource: PaintResource, id: string, context: BuildContext = {}): SvgNode => {
+export const buildPaintDef = (resource: PaintResource, id: string, context: SvgPrimitiveBuildContext = {}): SvgNode => {
   if ('tile' in resource) return buildPatternTile(resource.tile, id, context);
   const spec = resource.spec;
 

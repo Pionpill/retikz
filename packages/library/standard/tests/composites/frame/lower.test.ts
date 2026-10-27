@@ -2,8 +2,8 @@ import type { NodeLayoutObservation, GroupPrimitive, PathPrimitive, ScenePrimiti
 import { compileToScene, isNodeLayoutCompileArtifact, rect as rectOps } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { FrameInput } from '../../../src/presentation';
-import { createFrame, FrameDefinition, FrameHeaderDirection } from '../../../src/presentation';
+import type { InputFrameConfig } from '../../../src/presentation';
+import { createFrame, frameDefinition, FrameHeaderDirection } from '../../../src/presentation';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
@@ -14,11 +14,11 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive
     primitive.type === 'group' ? pathsOf(primitive.children) : primitive.type === 'path' ? [primitive] : [],
   );
 
-const compileFrameScene = (input: FrameInput, nodeLayouts = false) =>
+const compileFrameScene = (input: InputFrameConfig, nodeLayouts = false) =>
   compileToScene(
     { type: 'scene', version: 1, children: [createFrame(input)] },
     {
-      composites: [FrameDefinition],
+      composites: [frameDefinition],
       padding: 0,
       ...(nodeLayouts ? { artifacts: { nodeLayouts: true } } : {}),
     },

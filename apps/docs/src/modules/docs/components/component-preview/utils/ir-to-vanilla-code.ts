@@ -15,16 +15,16 @@ import type {
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import {
-  RibbonPathDefinition,
-  ContourShapeDefinition,
-  CrossShapeDefinition,
-  CylinderShapeDefinition,
-  EllipticCapsuleShapeDefinition,
-  HexagonShapeDefinition,
-  ParallelogramShapeDefinition,
-  SectorShapeDefinition,
-  StarShapeDefinition,
-  TrapezoidShapeDefinition,
+  ribbonPathDefinition,
+  contourShapeDefinition,
+  crossShapeDefinition,
+  cylinderShapeDefinition,
+  ellipticCapsuleShapeDefinition,
+  hexagonShapeDefinition,
+  parallelogramShapeDefinition,
+  sectorShapeDefinition,
+  starShapeDefinition,
+  trapezoidShapeDefinition,
 } from '@retikz/extension';
 import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
 import {
@@ -348,33 +348,33 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
 ];
 
 const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'CircleInputEmbedAdapter',
-  'EllipseInputEmbedAdapter',
-  'RectangleInputEmbedAdapter',
-  'PolygonInputEmbedAdapter',
-  'StarInputEmbedAdapter',
-  'ArcInputEmbedAdapter',
-  'SectorInputEmbedAdapter',
-  'GridInputEmbedAdapter',
-  'AxesInputEmbedAdapter',
-  'FrameInputEmbedAdapter',
-  'SurfaceInputEmbedAdapter',
-  'QueueInputEmbedAdapter',
-  'TreeInputEmbedAdapter',
-  'StackInputEmbedAdapter',
-  'ChainInputEmbedAdapter',
-  'MatrixInputEmbedAdapter',
-  'ArrayInputEmbedAdapter',
-  'MapInputEmbedAdapter',
-  'LegendInputEmbedAdapter',
+  'circleInputEmbedAdapter',
+  'ellipseInputEmbedAdapter',
+  'rectangleInputEmbedAdapter',
+  'polygonInputEmbedAdapter',
+  'starInputEmbedAdapter',
+  'arcInputEmbedAdapter',
+  'sectorInputEmbedAdapter',
+  'gridInputEmbedAdapter',
+  'axesInputEmbedAdapter',
+  'frameInputEmbedAdapter',
+  'surfaceInputEmbedAdapter',
+  'queueInputEmbedAdapter',
+  'treeInputEmbedAdapter',
+  'stackInputEmbedAdapter',
+  'chainInputEmbedAdapter',
+  'matrixInputEmbedAdapter',
+  'arrayInputEmbedAdapter',
+  'mapInputEmbedAdapter',
+  'legendInputEmbedAdapter',
 ];
 
 const LAYOUT_HELPER_ORDER: ReadonlyArray<string> = ['flexLayout', 'gridLayout', 'overlayLayout'];
 
 const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'FlexLayoutInputEmbedAdapter',
-  'GridLayoutInputEmbedAdapter',
-  'OverlayLayoutInputEmbedAdapter',
+  'flexLayoutInputEmbedAdapter',
+  'gridLayoutInputEmbedAdapter',
+  'overlayLayoutInputEmbedAdapter',
 ];
 
 const GRAPH_HELPER_ORDER: ReadonlyArray<string> = [
@@ -389,89 +389,89 @@ const GRAPH_HELPER_ORDER: ReadonlyArray<string> = [
 ];
 
 const GRAPH_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'GraphInputEmbedAdapter',
-  'GroupInputEmbedAdapter',
-  'BlockInputEmbedAdapter',
-  'BlockHeaderInputEmbedAdapter',
-  'BlockSectionInputEmbedAdapter',
-  'BlockRowInputEmbedAdapter',
-  'EntityInputEmbedAdapter',
-  'RelationInputEmbedAdapter',
+  'graphInputEmbedAdapter',
+  'groupInputEmbedAdapter',
+  'blockInputEmbedAdapter',
+  'blockHeaderInputEmbedAdapter',
+  'blockSectionInputEmbedAdapter',
+  'blockRowInputEmbedAdapter',
+  'entityInputEmbedAdapter',
+  'relationInputEmbedAdapter',
 ];
 
 /** docs 预览能够显式注入的 Standard definition 名 */
 export type StandardPreviewDefinitionName =
-  | 'CircleDefinition'
-  | 'EllipseDefinition'
-  | 'RectangleDefinition'
-  | 'PolygonDefinition'
-  | 'StarDefinition'
-  | 'ArcDefinition'
-  | 'SectorDefinition'
-  | 'GridDefinition'
-  | 'AxesDefinition'
-  | 'FrameDefinition'
-  | 'QueueDefinition'
-  | 'TreeDefinition'
-  | 'StackDefinition'
-  | 'ChainDefinition'
-  | 'MatrixDefinition'
-  | 'ArrayDefinition'
-  | 'MapDefinition'
-  | 'SurfaceDefinition'
-  | 'LegendDefinition';
+  | 'circleDefinition'
+  | 'ellipseDefinition'
+  | 'rectangleDefinition'
+  | 'polygonDefinition'
+  | 'starDefinition'
+  | 'arcDefinition'
+  | 'sectorDefinition'
+  | 'gridDefinition'
+  | 'axesDefinition'
+  | 'frameDefinition'
+  | 'queueDefinition'
+  | 'treeDefinition'
+  | 'stackDefinition'
+  | 'chainDefinition'
+  | 'matrixDefinition'
+  | 'arrayDefinition'
+  | 'mapDefinition'
+  | 'surfaceDefinition'
+  | 'legendDefinition';
 
 /** docs 预览能够显式注入的 Layout definition 名 */
-export type LayoutPreviewDefinitionName = 'FlexLayoutDefinition' | 'GridLayoutDefinition' | 'OverlayLayoutDefinition';
+export type LayoutPreviewDefinitionName = 'flexLayoutDefinition' | 'gridLayoutDefinition' | 'overlayLayoutDefinition';
 
 /** docs 预览能够显式注入的 Graph definition 名 */
 export type GraphPreviewDefinitionName =
-  | 'GraphDefinition'
-  | 'GroupDefinition'
-  | 'BlockDefinition'
-  | 'BlockHeaderDefinition'
-  | 'BlockSectionDefinition'
-  | 'BlockRowDefinition'
-  | 'EntityDefinition'
-  | 'RelationDefinition';
+  | 'graphDefinition'
+  | 'groupDefinition'
+  | 'blockDefinition'
+  | 'blockHeaderDefinition'
+  | 'blockSectionDefinition'
+  | 'blockRowDefinition'
+  | 'entityDefinition'
+  | 'relationDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
-  circle: 'CircleDefinition',
-  ellipse: 'EllipseDefinition',
-  rectangle: 'RectangleDefinition',
-  polygon: 'PolygonDefinition',
-  star: 'StarDefinition',
-  arc: 'ArcDefinition',
-  sector: 'SectorDefinition',
-  grid: 'GridDefinition',
-  axes: 'AxesDefinition',
-  frame: 'FrameDefinition',
-  queue: 'QueueDefinition',
-  tree: 'TreeDefinition',
-  stack: 'StackDefinition',
-  chain: 'ChainDefinition',
-  matrix: 'MatrixDefinition',
-  array: 'ArrayDefinition',
-  map: 'MapDefinition',
-  surface: 'SurfaceDefinition',
-  legend: 'LegendDefinition',
+  circle: 'circleDefinition',
+  ellipse: 'ellipseDefinition',
+  rectangle: 'rectangleDefinition',
+  polygon: 'polygonDefinition',
+  star: 'starDefinition',
+  arc: 'arcDefinition',
+  sector: 'sectorDefinition',
+  grid: 'gridDefinition',
+  axes: 'axesDefinition',
+  frame: 'frameDefinition',
+  queue: 'queueDefinition',
+  tree: 'treeDefinition',
+  stack: 'stackDefinition',
+  chain: 'chainDefinition',
+  matrix: 'matrixDefinition',
+  array: 'arrayDefinition',
+  map: 'mapDefinition',
+  surface: 'surfaceDefinition',
+  legend: 'legendDefinition',
 };
 
 const LAYOUT_DEFINITION_BY_KIND: Readonly<Record<string, LayoutPreviewDefinitionName>> = {
-  flexLayout: 'FlexLayoutDefinition',
-  gridLayout: 'GridLayoutDefinition',
-  overlayLayout: 'OverlayLayoutDefinition',
+  flexLayout: 'flexLayoutDefinition',
+  gridLayout: 'gridLayoutDefinition',
+  overlayLayout: 'overlayLayoutDefinition',
 };
 
 const GRAPH_DEFINITION_BY_KIND: Readonly<Record<string, GraphPreviewDefinitionName>> = {
-  graph: 'GraphDefinition',
-  group: 'GroupDefinition',
-  block: 'BlockDefinition',
-  blockHeader: 'BlockHeaderDefinition',
-  blockSection: 'BlockSectionDefinition',
-  blockRow: 'BlockRowDefinition',
-  entity: 'EntityDefinition',
-  relation: 'RelationDefinition',
+  graph: 'graphDefinition',
+  group: 'groupDefinition',
+  block: 'blockDefinition',
+  blockHeader: 'blockHeaderDefinition',
+  blockSection: 'blockSectionDefinition',
+  blockRow: 'blockRowDefinition',
+  entity: 'entityDefinition',
+  relation: 'relationDefinition',
 };
 
 const previewOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
@@ -620,8 +620,8 @@ export const collectPreviewDefinitions = (
               child.type === 'matrix') &&
             (child as IRChain | IRArray | IRMap | IRMatrix).data !== undefined
           ) {
-            standard.add('ArrayDefinition');
-            standard.add('MapDefinition');
+            standard.add('arrayDefinition');
+            standard.add('mapDefinition');
           }
         }
       } else if (child.namespace === 'layout') {
@@ -1036,22 +1036,22 @@ const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ct
 
 /** 可生成公开导入的官方形状；按 Definition 身份匹配，避免同名自定义实现误配 */
 const shapeDefinitionImports = {
-  ContourShapeDefinition,
-  CrossShapeDefinition,
-  CylinderShapeDefinition,
-  EllipticCapsuleShapeDefinition,
-  HexagonShapeDefinition,
-  ParallelogramShapeDefinition,
-  SectorShapeDefinition,
-  StarShapeDefinition,
-  TrapezoidShapeDefinition,
+  contourShapeDefinition,
+  crossShapeDefinition,
+  cylinderShapeDefinition,
+  ellipticCapsuleShapeDefinition,
+  hexagonShapeDefinition,
+  parallelogramShapeDefinition,
+  sectorShapeDefinition,
+  starShapeDefinition,
+  trapezoidShapeDefinition,
 };
 
 const HELPER_ORDER: ReadonlyArray<string> = ['scene', 'node', 'path', 'coordinate', 'scope'];
 
 /** 从纯 IR 生成不含运行时 authoring sidecar 的 Vanilla 示例代码 */
 export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {}): string => {
-  const unsupportedPath = options.paths?.find(definition => definition !== RibbonPathDefinition);
+  const unsupportedPath = options.paths?.find(definition => definition !== ribbonPathDefinition);
   if (unsupportedPath !== undefined) {
     throw new Error(`Cannot generate Vanilla source for Path "${unsupportedPath.name}" without its Definition source.`);
   }
@@ -1068,7 +1068,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
       }),
     ),
   ];
-  const usesRibbon = options.paths?.includes(RibbonPathDefinition) ?? false;
+  const usesRibbon = options.paths?.includes(ribbonPathDefinition) ?? false;
   const ctx: Ctx = {
     used: new Set(['scene']),
     usesDrawWay: false,
@@ -1109,7 +1109,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   ];
   const coreImports = [...(hasStandaloneGraphMembers ? ['resolveCoreProviderDependencies'] : [])];
   if (coreImports.length > 0) imports.push(`import { ${coreImports.join(', ')} } from '@retikz/core';`);
-  const extensionImports = [...shapeImports, ...(usesRibbon ? ['RibbonPathDefinition'] : [])];
+  const extensionImports = [...shapeImports, ...(usesRibbon ? ['ribbonPathDefinition'] : [])];
   if (extensionImports.length > 0) imports.push(`import { ${extensionImports.join(', ')} } from '@retikz/extension';`);
 
   const definitions = collectPreviewDefinitions(
@@ -1130,15 +1130,15 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
       'stack',
       'chain',
       'matrix',
-      'QueueInputEmbedAdapter',
-      'TreeInputEmbedAdapter',
-      'StackInputEmbedAdapter',
-      'ChainInputEmbedAdapter',
-      'MatrixInputEmbedAdapter',
+      'queueInputEmbedAdapter',
+      'treeInputEmbedAdapter',
+      'stackInputEmbedAdapter',
+      'chainInputEmbedAdapter',
+      'matrixInputEmbedAdapter',
       'array',
       'map',
-      'ArrayInputEmbedAdapter',
-      'MapInputEmbedAdapter',
+      'arrayInputEmbedAdapter',
+      'mapInputEmbedAdapter',
     ]);
     const collectionMembers = members.filter(name => collectionMemberNames.has(name));
     const presentationMembers = members.filter(
@@ -1162,7 +1162,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   }
 
   if (ctx.flowCount > 0) {
-    imports.push("import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';");
+    imports.push("import { flowDiagram, flowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';");
     if (graphHelpers.length === 0) {
       imports.push("import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';");
     }
@@ -1173,13 +1173,13 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
       STANDARD_SHAPE_KINDS.some(kind => name.startsWith(`${kind[0].toUpperCase()}${kind.slice(1)}`)),
     );
     const collectionDefinitionNames = new Set<string>([
-      'QueueDefinition',
-      'TreeDefinition',
-      'StackDefinition',
-      'ChainDefinition',
-      'MatrixDefinition',
-      'ArrayDefinition',
-      'MapDefinition',
+      'queueDefinition',
+      'treeDefinition',
+      'stackDefinition',
+      'chainDefinition',
+      'matrixDefinition',
+      'arrayDefinition',
+      'mapDefinition',
     ]);
     const collectionDefinitions = definitions.standard.filter(name => collectionDefinitionNames.has(name));
     const presentationDefinitions = definitions.standard.filter(
@@ -1208,7 +1208,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     ...standardAdapters,
     ...layoutAdapters,
     ...graphAdapters,
-    ...(ctx.flowCount > 0 ? ['FlowDiagramInputEmbedAdapter'] : []),
+    ...(ctx.flowCount > 0 ? ['flowDiagramInputEmbedAdapter'] : []),
   ];
   const adapterCode = adapters.length > 0 ? `\nconst adapters = [${adapters.join(', ')}];\n` : '';
   const definitionNames = [
@@ -1221,7 +1221,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     : '';
   const compileEntries = [
     ...(shapeImports.length ? [`shapes: [${shapeImports.join(', ')}]`] : []),
-    ...(usesRibbon ? ['paths: [RibbonPathDefinition]'] : []),
+    ...(usesRibbon ? ['paths: [ribbonPathDefinition]'] : []),
     ...(graphHelpers.length > 0 || ctx.flowCount > 0 ? ['themeDefinitions: PreviewThemeDefinitionBundle.core'] : []),
     ...(hasStandaloneGraphMembers
       ? ['...definitions']

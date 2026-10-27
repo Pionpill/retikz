@@ -1,5 +1,5 @@
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
+import type { IRPlot, PlotsLoweringOptions } from '@retikz/plot';
 import { PLOT_NAMESPACE } from '@retikz/plot';
 import type { InputEmbed } from '@retikz/vanilla';
 import { embed } from '@retikz/vanilla';
@@ -19,7 +19,7 @@ export const plotIROf = (source: PlotSource): IRPlot =>
 export const embedPlot = (
   source: PlotSource,
   datasets: ExternalDatasets,
-  lowerOptions?: LowerPlotsOptions,
+  lowerOptions?: PlotsLoweringOptions,
 ): InputEmbed<InputPlotEmbed> => {
   const id = source.input === undefined ? source.spec.id : source.input.id;
   return embed({

@@ -62,10 +62,10 @@ export declare const tree: (input: InputTree) => InputEmbed<InputTree>;
 export type InputTree = Omit<IRTree, 'namespace' | 'type'>;
 ```
 
-#### <ApiSourceLink label={"TreeInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/tree.ts"} startLine={10}>TreeInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"treeInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/tree.ts"} startLine={10}>treeInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const TreeInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTree>;
+export declare const treeInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTree>;
 ```
 
 **Persistent configuration**
@@ -86,10 +86,10 @@ export type IRTree = Omit<input<typeof TreeSchema>, keyof IRScopeProps> & IRScop
 
 **Extension definitions and registration**
 
-#### <ApiSourceLink label={"TreeDefinition"} path={"packages/library/standard/src/collection/tree/composite.ts"} startLine={9}>TreeDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"treeDefinition"} path={"packages/library/standard/src/collection/tree/composite.ts"} startLine={9}>treeDefinition</ApiSourceLink>
 
 ```ts
-export const TreeDefinition: CompositeDefinition<IRTree, 'standard', 'tree'> = defineComposite({
+export const treeDefinition: CompositeDefinition<IRTree, 'standard', 'tree'> = defineComposite({
   namespace: 'standard',
   type: 'tree',
   schema: TreeSchema,
@@ -97,10 +97,10 @@ export const TreeDefinition: CompositeDefinition<IRTree, 'standard', 'tree'> = d
 });
 ```
 
-#### <ApiSourceLink label={"TreeProvider"} path={"packages/library/standard/src/collection/tree/composite.ts"} startLine={20}>TreeProvider</ApiSourceLink>
+#### <ApiSourceLink label={"treeProvider"} path={"packages/library/standard/src/collection/tree/composite.ts"} startLine={20}>treeProvider</ApiSourceLink>
 
 ```ts
-export declare const TreeProvider: CoreDependencyProvider;
+export declare const treeProvider: CoreDependencyProvider;
 ```
 
 **Execution and supporting contracts**

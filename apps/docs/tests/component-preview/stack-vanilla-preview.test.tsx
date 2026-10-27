@@ -62,7 +62,7 @@ it('Stack 预览通过 Vanilla 适配器渲染所有输入和空状态', () => {
       const result = buildVanillaPreview(buildPreviewIR(() => renderInputs({ input, empty, expand: true })));
       expect(result.svg).toContain('<svg');
       expect(result.code).toContain('stack(');
-      expect(result.code).toContain('StackInputEmbedAdapter');
+      expect(result.code).toContain('stackInputEmbedAdapter');
     }
   }
 });

@@ -6,7 +6,7 @@ import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { embedTable, inputTableFromIR, TableInputEmbedAdapter } from '../../src';
+import { embedTable, inputTableFromIR, tableInputEmbedAdapter } from '../../src';
 
 const contextOf = (id: string): InputEmbedContext => ({
   id,
@@ -28,9 +28,9 @@ describe('Table Vanilla 适配器', () => {
     const named = createManualTableIR({ id: 'scores', rows: [[null]] });
 
     expect(
-      TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf('panel')).node,
+      tableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf('panel')).node,
     ).not.toHaveProperty('id');
-    expect(TableInputEmbedAdapter.lower({ table: inputTableFromIR(named) }, contextOf('panel')).node).toMatchObject({
+    expect(tableInputEmbedAdapter.lower({ table: inputTableFromIR(named) }, contextOf('panel')).node).toMatchObject({
       id: 'scores',
     });
   });
@@ -62,7 +62,7 @@ describe('Table Vanilla 适配器', () => {
     });
 
     const lowered = TableSchema.parse(
-      TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('panel')).node,
+      tableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('panel')).node,
     );
 
     expect(lowered).toEqual(spec);
@@ -73,8 +73,8 @@ describe('Table Vanilla 适配器', () => {
 
   it('返回 table.table 根和每个下沉调用的共享稳定提供者工厂', () => {
     const spec = createManualTableIR({ rows: [[null]] });
-    const first = TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('first'));
-    const second = TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('second'));
+    const first = tableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('first'));
+    const second = tableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('second'));
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
@@ -98,12 +98,12 @@ describe('Table Vanilla 适配器', () => {
         }),
       ],
     });
-    const svg = renderToSvgString(inputScene, { adapters: [TableInputEmbedAdapter] });
+    const svg = renderToSvgString(inputScene, { adapters: [tableInputEmbedAdapter] });
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
 
-    const normalized = normalizeScene(inputScene, { adapters: [TableInputEmbedAdapter] });
+    const normalized = normalizeScene(inputScene, { adapters: [tableInputEmbedAdapter] });
 
     expect(new Set(normalized.runtimeMeta.layers[0].childIds).size).toBe(2);
 
@@ -127,13 +127,13 @@ describe('Table Vanilla 适配器', () => {
     });
     const inputScene = scene([embedTable(spec, { composites: [badge] })]);
 
-    expect(renderToSvgString(inputScene, { adapters: [TableInputEmbedAdapter] })).toContain('Nested');
+    expect(renderToSvgString(inputScene, { adapters: [tableInputEmbedAdapter] })).toContain('Nested');
   });
 
   it('重复的匿名嵌入在 Source 中仍保持匿名', () => {
     const spec = createManualTableIR({ rows: [[null]] });
     const normalized = normalizeScene(scene([embedTable(spec), embedTable(spec)]), {
-      adapters: [TableInputEmbedAdapter],
+      adapters: [tableInputEmbedAdapter],
     });
 
     expect(normalized.ir.children).toEqual([spec, spec]);

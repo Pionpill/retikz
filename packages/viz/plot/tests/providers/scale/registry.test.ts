@@ -7,7 +7,7 @@ import { literal, object, string } from 'zod';
 import * as plot from '../../../src';
 import type { AnyScaleDefinition, ChannelScaleResolveContext } from '../../../src/contract';
 import { defineScale, extractScaleType } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_SCALES, linearPositionScale, resolveLinearScale, resolveScaleRegistry } from '../../../src/providers';
 import {
@@ -87,7 +87,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
 ): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };

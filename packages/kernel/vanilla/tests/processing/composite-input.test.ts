@@ -3,7 +3,7 @@ import {
   CompositeBaseSchema,
   defineComposite,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
@@ -75,7 +75,7 @@ describe('预处理复合组件输入的消费', () => {
       schema: CompositeBaseSchema.extend({ namespace: literal('fixture'), type: literal('outer'), child: ChildSchema }),
       compile: (_node, context) => {
         const child = context.selectSourceChild(['child']);
-        const probe = context.layoutChild(child, NaturalLayoutProposal);
+        const probe = context.layoutChild(child, naturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
 
         return { children: [context.replay(probe.result)] };

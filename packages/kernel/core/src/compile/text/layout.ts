@@ -4,8 +4,8 @@ import { BuiltinCompileWarningCode } from '../constants';
 import type { CompileWarningCode } from '../constants';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
 import type { TextFont, TextMeasurer } from './metrics';
-import { normalizeTextMetrics } from './metrics';
-import type { LoweredTexPaint, LoweredTexPath, LowerTex } from './tex';
+import { resolveTextMetrics } from './metrics';
+import type { LoweredTexPaint, LoweredTexPath, TexLowerer } from './tex';
 import { snapshotLoweredTex } from './tex';
 
 /** 行高近似系数 */
@@ -14,7 +14,7 @@ const LINE_HEIGHT_FACTOR = 1.2;
 type Round = (n: number) => number;
 
 /** 布局阶段消费的文字或公式输入，不含宿主外观 */
-type InlineSegmentLayoutInput =
+type InputInlineSegmentLayout =
   | Omit<Extract<CanonicalInlineSegment, { text: string }>, 'fill' | 'opacity'>
   | Omit<Extract<CanonicalInlineSegment, { tex: string }>, 'fill' | 'opacity'>;
 
@@ -45,7 +45,7 @@ export type LineLayoutContext = {
   /** 测量每个文本片段在指定字体下的尺寸 */
   measureText: TextMeasurer;
   /** TeX 降解能力 */
-  lowerTex?: LowerTex;
+  lowerTex?: TexLowerer;
   /** 块级字体 */
   font: TextFont;
   /** 接收混排行布局与公式降解产生的诊断 */
@@ -101,7 +101,7 @@ const resolveTexPaint = (paint: LoweredTexPaint, hostColor: string | undefined):
 
 /** 度量一行 inline segment，并返回可 emit 的行布局 */
 export const layoutInlineLine = (
-  segments: Array<InlineSegmentLayoutInput>,
+  segments: Array<InputInlineSegmentLayout>,
   ctx: LineLayoutContext,
 ): InlineLineLayout => {
   let x = 0;
@@ -144,7 +144,7 @@ export const layoutInlineLine = (
       x += lowered.width;
     } else {
       const font = segment.font;
-      const m = normalizeTextMetrics(ctx.measureText(segment.text, font));
+      const m = resolveTextMetrics(ctx.measureText(segment.text, font));
       ascent = Math.max(ascent, m.ascent);
       descent = Math.max(descent, m.descent);
       pieces.push({

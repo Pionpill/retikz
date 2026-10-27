@@ -1,6 +1,6 @@
 import type { HydrationEventProps } from '@retikz/react';
 import type { InputArc } from '@retikz/standard-vanilla/shape';
-import { ArcInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { arcInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
@@ -19,5 +19,5 @@ const ArcComponent: FC<ArcProps> = () => null;
 export const Arc = ArcComponent as StandardEmbeddableComponent<ArcProps>;
 Arc.displayName = 'Arc';
 Arc.isTier2Embeddable = true;
-Arc.inputEmbedAdapter = ArcInputEmbedAdapter;
+Arc.inputEmbedAdapter = arcInputEmbedAdapter;
 Arc.createInputEmbedProps = shapeEmbedProps;

@@ -195,7 +195,7 @@ type PatternResource = {
   kind: 'paint';
   id: string;
   spec: Extract<IRPaint, { kind: 'pattern' }>;
-  tile: ResolvedPatternTile;
+  tile: CompiledPatternTile;
 };
 
 type ImageResource = {
@@ -376,7 +376,7 @@ type CompositeCompileArtifact = Readonly<{
 以 Layout 包的 FlexLayout 为例，其定义通过 `artifactSchema` 声明布局产物。
 
 ```ts
-const FlexLayoutDefinition = defineComposite({
+const flexLayoutDefinition = defineComposite({
   namespace: LAYOUT_NAMESPACE,
   type: 'flexLayout',
   schema: FlexLayoutSchema,
@@ -408,7 +408,7 @@ return {
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { createFlexLayout, FlexLayoutDefinition } from '@retikz/layout';
+import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
 
 const layout = createFlexLayout({
   gap: 12,
@@ -420,7 +420,7 @@ const layout = createFlexLayout({
 
 const result = compileToScene(
   { type: 'scene', version: 1, children: [layout] },
-  { composites: [FlexLayoutDefinition] },
+  { composites: [flexLayoutDefinition] },
 );
 
 for (const artifact of result.artifacts) {

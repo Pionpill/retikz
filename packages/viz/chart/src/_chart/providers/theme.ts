@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { ZodError } from 'zod';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
@@ -39,7 +39,7 @@ export const parseChartThemeDefinition = (
 };
 
 /** 校验当前 active 命名主题的 base 链与继承环 */
-export const validateChartThemeBases = (themes: ReadonlyMap<string, ChartThemeDefinition>): void => {
+export const assertChartThemeBases = (themes: ReadonlyMap<string, ChartThemeDefinition>): void => {
   for (const theme of themes.values()) {
     const visiting = new Set<string>();
     let current: string | undefined = theme.name;
@@ -105,7 +105,7 @@ const chartThemeChainOf = (
 
 /** 按 Core style 选取去重后的 active Theme Definition */
 export const chartThemeDefinitionsOf = (
-  theme: ResolvedTheme,
+  theme: CanonicalTheme,
   themes: ReadonlyMap<string, ChartThemeDefinition>,
 ): ReadonlyArray<ChartThemeDefinition> => {
   if (theme.name === undefined) return [];

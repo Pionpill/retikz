@@ -1,7 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-import { ContourShapeDefinition } from '@retikz/extension';
+import { contourShapeDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
@@ -13,7 +13,7 @@ import {
   densifyCellContour,
   RETIKZ_POLAR_SEGMENT_SAMPLES,
 } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { CartesianCoordinateFrame } from '../../../src/providers';
 import { buildIntervalContext } from '../../../src/providers';
@@ -40,11 +40,11 @@ const lowerMark = (mark: IRPlotIntervalMark, rows: Array<ExternalRow>, frame: Co
 const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: CoordinateFrame, context?: IntervalContext) =>
   resolveDatumAnchor(mark, { kind: 'row', row, transformedIndex: 0 }, frame, { registry: markRegistry }, context);
 
-const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options: PlotsLoweringOptions): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
-const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options: PlotsLoweringOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
@@ -316,7 +316,7 @@ const WIDTH = 400;
 
 const HEIGHT = 400;
 
-const cartOpts: LowerPlotsOptions = { layout: { width: WIDTH, height: HEIGHT } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: WIDTH, height: HEIGHT } };
 
 const cartesianBarSpec = (arrangement?: 'stack', series?: string): IRPlot =>
   PlotSchema.parse({
@@ -664,7 +664,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
         },
       ],
     };
-    const compiled = compileToScene(scene, { shapes: [ContourShapeDefinition] }).scene;
+    const compiled = compileToScene(scene, { shapes: [contourShapeDefinition] }).scene;
 
     expect(compiled).toBeTruthy();
   });
@@ -865,7 +865,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
     });
 
     // custom 工厂返回无 projectCell 的 frame → interval fail-loud（指明缺 projectCell）
-    const options: LowerPlotsOptions = {
+    const options: PlotsLoweringOptions = {
       layout: { width: WIDTH, height: HEIGHT },
       definitions: {
         coordinates: [
@@ -914,7 +914,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       coordinate: { type: 'curved-cell' },
       marks: [{ type: 'interval', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
     });
-    const options: LowerPlotsOptions = {
+    const options: PlotsLoweringOptions = {
       layout: { width: WIDTH, height: HEIGHT },
       definitions: {
         coordinates: [
@@ -990,7 +990,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
         },
       ],
     });
-    const options: LowerPlotsOptions = {
+    const options: PlotsLoweringOptions = {
       layout: { width: WIDTH, height: HEIGHT },
       definitions: {
         coordinates: [

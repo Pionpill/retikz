@@ -197,8 +197,8 @@ export const diagramV01: Release = {
         {
           label: { zh: 'Vanilla 与 Direct IR 同源', en: 'Vanilla and Direct IR share one source' },
           content: {
-            zh: '`flowDiagram()` 与 `FlowDiagramInputEmbedAdapter` 只组装 `IRFlowDiagram` 并复用 Diagram provider contribution，不在 adapter 中维护布局、测量、主题或 catalog。',
-            en: '`flowDiagram()` and `FlowDiagramInputEmbedAdapter` only assemble `IRFlowDiagram` and reuse the Diagram provider contribution, keeping layout, measurement, themes, and catalogs out of the adapter.',
+            zh: '`flowDiagram()` 与 `flowDiagramInputEmbedAdapter` 只组装 `IRFlowDiagram` 并复用 Diagram provider contribution，不在 adapter 中维护布局、测量、主题或 catalog。',
+            en: '`flowDiagram()` and `flowDiagramInputEmbedAdapter` only assemble `IRFlowDiagram` and reuse the Diagram provider contribution, keeping layout, measurement, themes, and catalogs out of the adapter.',
           },
         },
       ],

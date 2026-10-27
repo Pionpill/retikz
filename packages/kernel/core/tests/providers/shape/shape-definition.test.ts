@@ -3,7 +3,7 @@ import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import type { PathCommand, ResolvedShapeStyle, ScenePrimitive, ShapeDefinition } from '../../../src/contract';
+import type { PathCommand, CompiledShapeStyle, ScenePrimitive, ShapeDefinition } from '../../../src/contract';
 import { defineShape } from '../../../src/contract';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';
 
@@ -86,7 +86,7 @@ describe('boundaryPoint 尊重 rect.rotate（旋转轴承矩形）', () => {
 
 describe('发出在轴对齐空间中运行并返回 Iterable<ScenePrimitive>', () => {
   const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
-  const style: ResolvedShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
+  const style: CompiledShapeStyle = { fill: 'red', stroke: 'blue', strokeWidth: 2 };
   it('矩形→单个 RectPrimitive', () => {
     const prims = [...BUILTIN_SHAPES.get('rectangle')!.emit(rect, style, id, NO_PARAMS)];
 

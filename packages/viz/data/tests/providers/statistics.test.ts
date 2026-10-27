@@ -18,37 +18,37 @@ import {
   SelectorOperationSchema,
 } from '../../src';
 import {
-  BuiltinReducerOperationSchemas,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS,
   reducerOutputDescriptors,
   reducerOutputFields,
   resolveReducerComputation,
 } from '../../src/operators/reducer';
-import { BuiltinSelectorOperationSchemas, resolveSelectorComputation } from '../../src/operators/selector';
+import { BUILTIN_SELECTOR_OPERATION_SCHEMAS, resolveSelectorComputation } from '../../src/operators/selector';
 
 describe('统计提供者 schema 边界', () => {
   it('对每个内置定义使用 schema 所属模块实例', () => {
     const reducerRegistry = resolveStatisticsReducerRegistry();
     const selectorRegistry = resolveRowSelectorRegistry();
     const reducerSchemas = [
-      [BuiltinReducerOperationKind.Count, BuiltinReducerOperationSchemas.Count],
-      [BuiltinReducerOperationKind.Sum, BuiltinReducerOperationSchemas.Sum],
-      [BuiltinReducerOperationKind.Mean, BuiltinReducerOperationSchemas.Mean],
-      [BuiltinReducerOperationKind.Median, BuiltinReducerOperationSchemas.Median],
-      [BuiltinReducerOperationKind.Min, BuiltinReducerOperationSchemas.Min],
-      [BuiltinReducerOperationKind.Max, BuiltinReducerOperationSchemas.Max],
-      [BuiltinReducerOperationKind.Extent, BuiltinReducerOperationSchemas.Extent],
-      [BuiltinReducerOperationKind.Quantile, BuiltinReducerOperationSchemas.Quantile],
-      [BuiltinReducerOperationKind.QuantileBand, BuiltinReducerOperationSchemas.QuantileBand],
+      [BuiltinReducerOperationKind.Count, BUILTIN_REDUCER_OPERATION_SCHEMAS.Count],
+      [BuiltinReducerOperationKind.Sum, BUILTIN_REDUCER_OPERATION_SCHEMAS.Sum],
+      [BuiltinReducerOperationKind.Mean, BUILTIN_REDUCER_OPERATION_SCHEMAS.Mean],
+      [BuiltinReducerOperationKind.Median, BUILTIN_REDUCER_OPERATION_SCHEMAS.Median],
+      [BuiltinReducerOperationKind.Min, BUILTIN_REDUCER_OPERATION_SCHEMAS.Min],
+      [BuiltinReducerOperationKind.Max, BUILTIN_REDUCER_OPERATION_SCHEMAS.Max],
+      [BuiltinReducerOperationKind.Extent, BUILTIN_REDUCER_OPERATION_SCHEMAS.Extent],
+      [BuiltinReducerOperationKind.Quantile, BUILTIN_REDUCER_OPERATION_SCHEMAS.Quantile],
+      [BuiltinReducerOperationKind.QuantileBand, BUILTIN_REDUCER_OPERATION_SCHEMAS.QuantileBand],
     ] as const;
     const selectorSchemas = [
-      [BuiltinSelectorOperationKind.Min, BuiltinSelectorOperationSchemas.Min],
-      [BuiltinSelectorOperationKind.Max, BuiltinSelectorOperationSchemas.Max],
-      [BuiltinSelectorOperationKind.First, BuiltinSelectorOperationSchemas.First],
-      [BuiltinSelectorOperationKind.Last, BuiltinSelectorOperationSchemas.Last],
-      [BuiltinSelectorOperationKind.Top, BuiltinSelectorOperationSchemas.Top],
-      [BuiltinSelectorOperationKind.Bottom, BuiltinSelectorOperationSchemas.Bottom],
-      [BuiltinSelectorOperationKind.Nth, BuiltinSelectorOperationSchemas.Nth],
-      [BuiltinSelectorOperationKind.OutsideQuantileBand, BuiltinSelectorOperationSchemas.OutsideQuantileBand],
+      [BuiltinSelectorOperationKind.Min, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Min],
+      [BuiltinSelectorOperationKind.Max, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Max],
+      [BuiltinSelectorOperationKind.First, BUILTIN_SELECTOR_OPERATION_SCHEMAS.First],
+      [BuiltinSelectorOperationKind.Last, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Last],
+      [BuiltinSelectorOperationKind.Top, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Top],
+      [BuiltinSelectorOperationKind.Bottom, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Bottom],
+      [BuiltinSelectorOperationKind.Nth, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Nth],
+      [BuiltinSelectorOperationKind.OutsideQuantileBand, BUILTIN_SELECTOR_OPERATION_SCHEMAS.OutsideQuantileBand],
     ] as const;
 
     for (const [kind, schema] of reducerSchemas) expect(reducerRegistry.get(kind)?.schema).toBe(schema);

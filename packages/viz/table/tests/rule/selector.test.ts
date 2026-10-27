@@ -3,11 +3,11 @@ import { literal, strictObject } from 'zod';
 
 import type { IRTableCellSelector, SemanticTableCell } from '../../src';
 import { defineTableStructure } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { matchesTableCellSelector } from '../../src/pipeline/rule';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 
 const manualModel = () =>
-  normalizeTableStructure({
+  resolveTableStructure({
     kind: 'manual',
     rowKinds: ['columnHeader', 'body'],
     rows: [
@@ -47,7 +47,7 @@ describe('Table Cell 选择器匹配', () => {
   });
 
   it('仅匹配规范字段源的字段', () => {
-    const detail = normalizeTableStructure(
+    const detail = resolveTableStructure(
       { kind: 'detail', columns: [{ id: 'score', field: 'score' }] },
       { data: { reference: 'sales' }, datasets: { sales: [{ score: 42 }] } },
     );
@@ -107,9 +107,8 @@ describe('Table Cell 选择器匹配', () => {
         ],
       }),
     });
-    const manual = normalizeTableStructure({ kind: 'manual', rows: [[1]] }).cells[0];
-    const generated = normalizeTableStructure({ kind: 'fixture-structure' }, { structureDefinitions: [custom] })
-      .cells[0];
+    const manual = resolveTableStructure({ kind: 'manual', rows: [[1]] }).cells[0];
+    const generated = resolveTableStructure({ kind: 'fixture-structure' }, { structureDefinitions: [custom] }).cells[0];
     const selectors: Array<IRTableCellSelector> = [
       { rowIndices: [0], columnIndices: [0], locations: ['body'] },
       { roles: { all: ['data'] }, payloadKinds: ['value'] },
@@ -127,22 +126,22 @@ describe('Table Cell 选择器匹配', () => {
 describe('Table 原始值谓词匹配', () => {
   it('使用严格的 JSON 标量相等性和成员资格，无需强制', () => {
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: 1 }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 1 }]] }).cells[0], {
         value: { kind: 'equal', value: 1 },
       }),
     ).toBe(true);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: '1' }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: '1' }]] }).cells[0], {
         value: { kind: 'equal', value: 1 },
       }),
     ).toBe(false);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: false }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: false }]] }).cells[0], {
         value: { kind: 'oneOf', values: [0, false, null] },
       }),
     ).toBe(true);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: '' }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: '' }]] }).cells[0], {
         value: { kind: 'oneOf', values: [false, 0] },
       }),
     ).toBe(false);
@@ -150,22 +149,22 @@ describe('Table 原始值谓词匹配', () => {
 
   it('仅比较具有确定性关系语义的相同类型字符串或数字', () => {
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: 10 }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 10 }]] }).cells[0], {
         value: { kind: 'compare', operator: 'gt', value: 2 },
       }),
     ).toBe(true);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: '10' }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: '10' }]] }).cells[0], {
         value: { kind: 'compare', operator: 'gt', value: 2 },
       }),
     ).toBe(false);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: 'ä' }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 'ä' }]] }).cells[0], {
         value: { kind: 'compare', operator: 'gt', value: 'z' },
       }),
     ).toBe(true);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: true }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: true }]] }).cells[0], {
         value: { kind: 'compare', operator: 'gt', value: 0 },
       }),
     ).toBe(false);
@@ -173,27 +172,27 @@ describe('Table 原始值谓词匹配', () => {
 
   it('尊重相等的端点和每个包含边界之间的端点', () => {
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: 2 }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 2 }]] }).cells[0], {
         value: { kind: 'between', min: 2, max: 2 },
       }),
     ).toBe(true);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: 2 }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 2 }]] }).cells[0], {
         value: { kind: 'between', min: 2, max: 3, includeMin: false },
       }),
     ).toBe(false);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: 3 }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 3 }]] }).cells[0], {
         value: { kind: 'between', min: 2, max: 3, includeMax: false },
       }),
     ).toBe(false);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: 'b' }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 'b' }]] }).cells[0], {
         value: { kind: 'between', min: 'a', max: 'c' },
       }),
     ).toBe(true);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: 2 }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 2 }]] }).cells[0], {
         value: { kind: 'between', min: '1', max: '3' },
       }),
     ).toBe(false);
@@ -201,27 +200,27 @@ describe('Table 原始值谓词匹配', () => {
 
   it('区分 null 和每个虚假的非 null 标量', () => {
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: null }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: null }]] }).cells[0], {
         value: { kind: 'null' },
       }),
     ).toBe(true);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: null }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: null }]] }).cells[0], {
         value: { kind: 'null', isNull: false },
       }),
     ).toBe(false);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: false }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: false }]] }).cells[0], {
         value: { kind: 'null', isNull: false },
       }),
     ).toBe(true);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: 0 }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 0 }]] }).cells[0], {
         value: { kind: 'null', isNull: false },
       }),
     ).toBe(true);
     expect(
-      matchesTableCellSelector(normalizeTableStructure({ kind: 'manual', rows: [[{ value: '' }]] }).cells[0], {
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: '' }]] }).cells[0], {
         value: { kind: 'null', isNull: false },
       }),
     ).toBe(true);

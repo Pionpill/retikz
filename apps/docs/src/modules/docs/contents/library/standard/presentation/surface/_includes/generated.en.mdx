@@ -8,7 +8,7 @@
 
 <DocTab value="members" label="Direct members">
 
-The remaining members are inherited from `SurfaceInput`, with `'namespace'`, `'type'`, `'child'` removed. See “Type definition” for the complete composition.
+The remaining members are inherited from `InputSurfaceConfig`, with `'namespace'`, `'type'`, `'child'` removed. See “Type definition” for the complete composition.
 
 <ApiTable>
 
@@ -27,7 +27,7 @@ export declare const Surface: {
   (props: SurfaceProps, context?: any): ReactNode;
 };
 
-export type SurfaceProps = Omit<SurfaceInput, 'namespace' | 'type' | 'child'> & {
+export type SurfaceProps = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'child'> & {
   children: ReactNode;
 };
 ```
@@ -44,7 +44,7 @@ export type SurfaceProps = Omit<SurfaceInput, 'namespace' | 'type' | 'child'> & 
 
 <DocTab value="members" label="Direct members">
 
-The remaining members are inherited from `SurfaceInput`, with `'namespace'`, `'type'`, `'child'`, `'id'` removed. See “Type definition” for the complete composition.
+The remaining members are inherited from `InputSurfaceConfig`, with `'namespace'`, `'type'`, `'child'`, `'id'` removed. See “Type definition” for the complete composition.
 
 <ApiTable>
 
@@ -60,7 +60,7 @@ The remaining members are inherited from `SurfaceInput`, with `'namespace'`, `'t
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InputSurface = Omit<SurfaceInput, 'namespace' | 'type' | 'child' | 'id'> & {
+export type InputSurface = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'child' | 'id'> & {
   id?: string;
   child: InputSurfaceChild;
 };
@@ -76,10 +76,10 @@ export type InputSurface = Omit<SurfaceInput, 'namespace' | 'type' | 'child' | '
 export type InputSurfaceChild = InputChild;
 ```
 
-#### <ApiSourceLink label={"SurfaceInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={64}>SurfaceInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"surfaceInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={64}>surfaceInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const SurfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
+export declare const surfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
   Required<Pick<SynchronousInputEmbedAdapter<InputSurface>, 'prepare'>>;
 ```
 
@@ -139,7 +139,7 @@ export declare const surfaceChild: (child: InputSurfaceChild) => InputSurfaceChi
 
 </DocTabs>
 
-#### <ApiSourceLink label={"SurfaceInput"} path={"packages/library/standard/src/presentation/surface/types.ts"} startLine={7}>SurfaceInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputSurfaceConfig"} path={"packages/library/standard/src/presentation/surface/types.ts"} startLine={7}>InputSurfaceConfig</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -176,7 +176,7 @@ export declare const surfaceChild: (child: InputSurfaceChild) => InputSurfaceChi
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type SurfaceInput = IRSurface;
+export type InputSurfaceConfig = IRSurface;
 ```
 
 </DocTab>
@@ -191,10 +191,10 @@ export type SurfaceInput = IRSurface;
 
 <ApiTable variant="parameters">
 
-| Category   | Name    | Type / signature | Description |
-| ---------- | ------- | ---------------- | ----------- |
-| Parameters | `input` | `SurfaceInput`   | —           |
-| Returns    | —       | `IRSurface`      | —           |
+| Category   | Name    | Type / signature     | Description |
+| ---------- | ------- | -------------------- | ----------- |
+| Parameters | `input` | `InputSurfaceConfig` | —           |
+| Returns    | —       | `IRSurface`          | —           |
 
 </ApiTable>
 
@@ -203,7 +203,7 @@ export type SurfaceInput = IRSurface;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createSurface: (input: SurfaceInput) => IRSurface;
+export declare const createSurface: (input: InputSurfaceConfig) => IRSurface;
 ```
 
 </DocTab>
@@ -226,10 +226,10 @@ export type IRSurface = Omit<ZodInput<typeof SurfaceSchema>, keyof IRScopeProps 
 
 **Extension definitions and registration**
 
-#### <ApiSourceLink label={"SurfaceDefinition"} path={"packages/library/standard/src/presentation/surface/composite.ts"} startLine={12}>SurfaceDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"surfaceDefinition"} path={"packages/library/standard/src/presentation/surface/composite.ts"} startLine={12}>surfaceDefinition</ApiSourceLink>
 
 ```ts
-export const SurfaceDefinition: CompositeDefinition<IRSurface, typeof STANDARD_NAMESPACE, typeof SURFACE_TYPE> =
+export const surfaceDefinition: CompositeDefinition<IRSurface, typeof STANDARD_NAMESPACE, typeof SURFACE_TYPE> =
   defineComposite({
     namespace: STANDARD_NAMESPACE,
     type: SURFACE_TYPE,
@@ -238,12 +238,12 @@ export const SurfaceDefinition: CompositeDefinition<IRSurface, typeof STANDARD_N
   });
 ```
 
-#### <ApiSourceLink label={"SurfaceProvider"} path={"packages/library/standard/src/presentation/surface/composite.ts"} startLine={24}>SurfaceProvider</ApiSourceLink>
+#### <ApiSourceLink label={"surfaceProvider"} path={"packages/library/standard/src/presentation/surface/composite.ts"} startLine={24}>surfaceProvider</ApiSourceLink>
 
 ```ts
-export const SurfaceProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'composite', namespace: SurfaceDefinition.namespace, type: SurfaceDefinition.type }),
-  dependencies: Object.freeze([PathClipProvider.key]),
-  makeDefinition: () => SurfaceDefinition,
+export const surfaceProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'composite', namespace: surfaceDefinition.namespace, type: surfaceDefinition.type }),
+  dependencies: Object.freeze([pathClipProvider.key]),
+  makeDefinition: () => surfaceDefinition,
 });
 ```

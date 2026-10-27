@@ -2,7 +2,7 @@ import { RetikzTableError } from '../../error';
 import { TableTrackSizeKind } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { solveTableTracks } from './track';
-import type { ResolvedTableTrackSize, TableTrackContribution } from './types';
+import type { CanonicalTableTrackSize, TableTrackContribution } from './types';
 
 /** 单个 spanning Cell 对一个 canonical 轴的自然尺寸要求 */
 type TableSpanConstraint = Readonly<{
@@ -17,9 +17,9 @@ type TableSpanConstraint = Readonly<{
 }>;
 
 /** span contribution 传播输入 */
-type PropagateTableSpanContributionsInput = Readonly<{
+type InputTableSpanContributions = Readonly<{
   /** 与 canonical 轨道同序的 resolved size */
-  tracks: ReadonlyArray<ResolvedTableTrackSize>;
+  tracks: ReadonlyArray<CanonicalTableTrackSize>;
   /** 非 spanning Cell 形成的数值 contribution */
   contributions: ReadonlyArray<TableTrackContribution>;
   /** spanning Cell 的轴向约束 */
@@ -60,7 +60,7 @@ const assertFiniteNonnegative = (value: number, name: string): void => {
   }
 };
 
-const validateConstraint = (constraint: TableSpanConstraint, trackCount: number): void => {
+const assertConstraint = (constraint: TableSpanConstraint, trackCount: number): void => {
   const label = constraint.cellId ?? `${constraint.startIndex}:${constraint.length}`;
   if (!Number.isInteger(constraint.startIndex) || constraint.startIndex < 0) {
     throw new RetikzTableError(`table: span Cell "${label}" startIndex must be a nonnegative integer`);
@@ -85,7 +85,7 @@ const compareConstraint = (a: TableSpanConstraint, b: TableSpanConstraint): numb
 };
 
 /** 把 resolved track 分类为非增长、等额增长或 flex 增长候选 */
-const growthCandidateOf = (track: ResolvedTableTrackSize, index: number): SpanGrowthCandidate | undefined => {
+const growthCandidateOf = (track: CanonicalTableTrackSize, index: number): SpanGrowthCandidate | undefined => {
   switch (track.kind) {
     case TableTrackSizeKind.Fixed:
       return undefined;
@@ -208,9 +208,7 @@ const growFlexibleNaturalSizes = (
 };
 
 /** 把 spanning Cell 的自然尺寸要求传播为 canonical per-track contributions */
-export const propagateTableSpanContributions = (
-  input: PropagateTableSpanContributionsInput,
-): TableSpanContributionResult => {
+export const propagateTableSpanContributions = (input: InputTableSpanContributions): TableSpanContributionResult => {
   solveTableTracks({
     tracks: input.tracks,
     contributions: input.contributions,
@@ -224,7 +222,7 @@ export const propagateTableSpanContributions = (
     );
   });
 
-  input.constraints.forEach(constraint => validateConstraint(constraint, input.tracks.length));
+  input.constraints.forEach(constraint => assertConstraint(constraint, input.tracks.length));
   const constraints = [...input.constraints].sort(compareConstraint);
   const unmet: Array<TableSpanUnmetSize> = [];
 

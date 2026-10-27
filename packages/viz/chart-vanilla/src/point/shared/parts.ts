@@ -1,11 +1,11 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { CoreProviderContribution } from '@retikz/core';
 import type { ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
-import type { LowerPlotsOptions } from '@retikz/plot';
+import type { PlotsLoweringOptions } from '@retikz/plot';
 
 import type { InputChartCoordinate } from '../../normalize/chart';
-import type { ChartRuntimeInput, InputChartPanel } from '../../shared';
-import type { TypedChartCommonInput } from './types';
+import type { InputChartRuntime, InputChartPanel } from '../../shared';
+import type { InputChartCommon } from './types';
 
 /** 未显式提供 dataRef 时使用的稳定数据引用 */
 const DEFAULT_CHART_DATA_REFERENCE = 'chart.data';
@@ -44,9 +44,9 @@ type TypedChartParts<TSource extends IRChartSource, TNative = never> = Readonly<
   /** 当前数据准备请求的取消信号 */
   signal?: AbortSignal;
   /** 当前 chartType 可用的主题定义 */
-  chartThemeDefinitions?: TypedChartCommonInput<TSource>['chartThemeDefinitions'];
+  chartThemeDefinitions?: InputChartCommon<TSource>['chartThemeDefinitions'];
   /** 共享 Plot 下沉能力及定义的选项 */
-  lowerOptions?: LowerPlotsOptions;
+  lowerOptions?: PlotsLoweringOptions;
   /** 在图表外包裹的可选面板输入 */
   panel?: InputChartPanel;
 }>;
@@ -57,7 +57,7 @@ type TypedChartParts<TSource extends IRChartSource, TNative = never> = Readonly<
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
 export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
-  input: TypedChartCommonInput<TSource, TNative>,
+  input: InputChartCommon<TSource, TNative>,
 ): TypedChartParts<TSource, TNative> => {
   const {
     data,
@@ -107,7 +107,7 @@ export const buildPointChartRuntime = <TSource extends IRChartSource, TNative>(
   source: TSource,
   parts: TypedChartParts<TSource, TNative>,
   provider: CoreProviderContribution,
-): ChartRuntimeInput<TSource, TNative> => ({
+): InputChartRuntime<TSource, TNative> => ({
   source,
   datasets: parts.datasets,
   ...(parts.dataBindings === undefined ? {} : { dataBindings: parts.dataBindings }),

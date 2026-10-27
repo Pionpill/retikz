@@ -14,7 +14,7 @@ describe('基础公共面', () => {
         'RetikzError',
         'RetikzFoundationError',
         'RetikzFoundationErrorCode',
-        'StaticCssNamedColorHexByName',
+        'staticCssNamedColorHexByName',
         'JsonObjectSchema',
         'JsonValueSchema',
         'assertPlainDataContainers',

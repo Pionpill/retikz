@@ -4,20 +4,20 @@ import type { Position } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramErrorCode } from '../../src/errors';
-import type { FlowLayoutInput, FlowLayoutOutput } from '../../src/flow';
+import type { InputFlowLayoutComputation, FlowLayoutOutput } from '../../src/flow';
 import {
   createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,
   FlowDiagramSchema,
   FlowRoutingSchema,
   getFlowLayoutCatalog,
-  LayeredFlowLayoutDefinition,
+  layeredFlowLayoutDefinition,
 } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
 import { resolveEffectiveFlowLayout } from '../../src/flow/resolve';
 
-const inputFor = (kind: '-|' | '|-'): FlowLayoutInput => ({
+const inputFor = (kind: '-|' | '|-'): InputFlowLayoutComputation => ({
   layout: { direction: 'right', nodeGap: 48, rankGap: 48, routing: { kind, cornerRadius: 0 } },
   elements: ['a', 'b'].map(id => ({
     kind: 'leaf',
@@ -63,11 +63,11 @@ describe('Flow 单弯头铣削', () => {
     });
     let calls = 0;
     const provider = {
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'observe-elbow',
-      layout: (...args: Parameters<typeof LayeredFlowLayoutDefinition.layout>) => {
+      layout: (...args: Parameters<typeof layeredFlowLayoutDefinition.layout>) => {
         calls += 1;
-        return LayeredFlowLayoutDefinition.layout(...args);
+        return layeredFlowLayoutDefinition.layout(...args);
       },
     };
     const compile = (definition: typeof provider) =>
@@ -187,10 +187,10 @@ describe('Flow 单弯头铣削', () => {
 
   it.each(['-|', '|-'] as const)('仅允许具有默认半径的 %s 提供者', kind => {
     const provider = {
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'elbow',
-      capabilities: { ...LayeredFlowLayoutDefinition.capabilities, routing: [{ kind }] },
-      defaults: { ...LayeredFlowLayoutDefinition.defaults, routing: { kind, orthogonalCornerRadius: 5 } },
+      capabilities: { ...layeredFlowLayoutDefinition.capabilities, routing: [{ kind }] },
+      defaults: { ...layeredFlowLayoutDefinition.defaults, routing: { kind, orthogonalCornerRadius: 5 } },
     };
 
     expect(
@@ -326,7 +326,7 @@ describe('Flow 单弯头铣削', () => {
 
     expect(relations[0].route.points).toEqual(expected);
     expect(
-      executeFlowLayout({ ...LayeredFlowLayoutDefinition, layout: () => ({ elements, relations }) }, input).relations[0]
+      executeFlowLayout({ ...layeredFlowLayoutDefinition, layout: () => ({ elements, relations }) }, input).relations[0]
         .route.points,
     ).toEqual(expected);
     expect(
@@ -367,7 +367,7 @@ describe('Flow 单弯头铣削', () => {
       expect(() =>
         executeFlowLayout(
           {
-            ...LayeredFlowLayoutDefinition,
+            ...layeredFlowLayoutDefinition,
             layout: () => ({
               elements: elementsAt([100, 80]),
               relations: [{ source: { id: 'a' }, target: { id: 'b' }, route: { kind, cornerRadius: 0, points } }],
@@ -381,7 +381,7 @@ describe('Flow 单弯头铣削', () => {
     expect(() =>
       executeFlowLayout(
         {
-          ...LayeredFlowLayoutDefinition,
+          ...layeredFlowLayoutDefinition,
           layout: () => ({
             elements: elementsAt([0, 0]),
             relations: [
@@ -406,19 +406,19 @@ describe('Flow 单弯头铣削', () => {
   });
 
   it('继承跨轴对齐模式的圆角并保留显式零', () => {
-    const parent = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, {
+    const parent = resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, undefined, {
       kind: '-|',
       cornerRadius: 11,
     });
 
-    expect(resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, parent, { kind: '|-' }).routing).toEqual({
+    expect(resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, parent, { kind: '|-' }).routing).toEqual({
       kind: '|-',
       cornerRadius: 11,
     });
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, parent, { kind: '|-', cornerRadius: 0 }).routing,
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, parent, { kind: '|-', cornerRadius: 0 }).routing,
     ).toEqual({ kind: '|-', cornerRadius: 0 });
-    expect(resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, { kind: '-|' }).routing).toEqual({
+    expect(resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, undefined, { kind: '-|' }).routing).toEqual({
       kind: '-|',
       cornerRadius: 8,
     });

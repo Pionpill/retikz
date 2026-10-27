@@ -6,9 +6,9 @@ import {
   createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,
   FlowDiagramSchema,
-  LayeredFlowLayoutDefinition,
+  layeredFlowLayoutDefinition,
 } from '../../src/flow';
-import type { FlowLayoutInput, FlowLayoutRoute, FlowLayoutOutput } from '../../src/flow';
+import type { InputFlowLayoutComputation, FlowLayoutRoute, FlowLayoutOutput } from '../../src/flow';
 import { FlowRouteArtifactSchema } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { createFlowBendCurve, flowRelationObstacles, scoreFlowBendNodes } from '../../src/flow/providers';
@@ -16,7 +16,7 @@ import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
 import { resolveEffectiveFlowLayout } from '../../src/flow/resolve';
 import { findFlowCurveObstacleIntervals } from '../../src/flow/shared/geometry';
 
-const routingInput = (): FlowLayoutInput => ({
+const routingInput = (): InputFlowLayoutComputation => ({
   layout: { direction: 'right', nodeGap: 48, rankGap: 48, routing: { kind: 'bend', bendAngle: 60 } },
   elements: ['a', 'b', 'obstacle'].map(id => ({
     kind: 'leaf',
@@ -77,7 +77,7 @@ describe('Flow 弯曲布线', () => {
 
   it('搜索六名候选人，喜欢平局上较小的角度，并尊重固定的一面', () => {
     const input = routingInput();
-    const automatic: FlowLayoutInput = {
+    const automatic: InputFlowLayoutComputation = {
       ...input,
       relations: [{ ...input.relations[0], routing: { kind: 'bend' } }],
     };
@@ -105,7 +105,7 @@ describe('Flow 弯曲布线', () => {
       bendAngle: 60,
     });
 
-    const fixedSide: FlowLayoutInput = {
+    const fixedSide: InputFlowLayoutComputation = {
       ...automatic,
       relations: [{ ...automatic.relations[0], routing: { kind: 'bend', bendDirection: 'right' } }],
     };
@@ -118,21 +118,21 @@ describe('Flow 弯曲布线', () => {
   });
 
   it('通过解析结果保留省略的角度并锁定继承的显式零角和负角', () => {
-    const automatic = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, { kind: 'bend' });
+    const automatic = resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, undefined, { kind: 'bend' });
 
     expect(automatic.routing).toEqual({ kind: 'bend' });
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, automatic, { kind: 'bend', bendDirection: 'right' })
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, automatic, { kind: 'bend', bendDirection: 'right' })
         .routing,
     ).toEqual({ kind: 'bend', bendDirection: 'right' });
 
     for (const bendAngle of [0, -45, 30]) {
-      const parent = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, automatic, {
+      const parent = resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, automatic, {
         kind: 'bend',
         bendAngle,
       });
 
-      expect(resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, parent, { kind: 'bend' }).routing).toEqual({
+      expect(resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, parent, { kind: 'bend' }).routing).toEqual({
         kind: 'bend',
         bendAngle,
       });
@@ -140,14 +140,14 @@ describe('Flow 弯曲布线', () => {
   });
 
   it('仅接受自动候选角度并保留提供者边界处的对称族', () => {
-    const input: FlowLayoutInput = {
+    const input: InputFlowLayoutComputation = {
       ...routingInput(),
       relations: [{ ...routingInput().relations[0], routing: { kind: 'bend' } }],
     };
     const run = (route: FlowLayoutRoute) =>
       executeFlowLayout(
         {
-          ...LayeredFlowLayoutDefinition,
+          ...layeredFlowLayoutDefinition,
           layout: () => ({
             elements: routingElements,
             relations: [{ source: { id: 'a' }, target: { id: 'b' }, route }],
@@ -209,7 +209,7 @@ describe('Flow 弯曲布线', () => {
     });
 
     expect(() =>
-      executeFlowLayout({ ...LayeredFlowLayoutDefinition, layout: () => JSON.parse(outputJson) }, routingInput()),
+      executeFlowLayout({ ...layeredFlowLayoutDefinition, layout: () => JSON.parse(outputJson) }, routingInput()),
     ).toThrow('expected a resolved endpoint target');
   });
 
@@ -241,10 +241,10 @@ describe('Flow 弯曲布线', () => {
   it('产物将参考端点一起平移，同时绘图包含曲线范围', () => {
     let output: FlowLayoutOutput | undefined;
     const provider = {
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'capture',
-      layout: (...args: Parameters<typeof LayeredFlowLayoutDefinition.layout>) => {
-        output = LayeredFlowLayoutDefinition.layout(...args);
+      layout: (...args: Parameters<typeof layeredFlowLayoutDefinition.layout>) => {
+        output = layeredFlowLayoutDefinition.layout(...args);
         return output;
       },
     };
@@ -304,13 +304,13 @@ describe('Flow 弯曲布线', () => {
   it('在调用自定义布局回调之前拒绝不支持的弯曲', () => {
     let calls = 0;
     const provider = {
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'straight-only',
-      capabilities: { ...LayeredFlowLayoutDefinition.capabilities, routing: [{ kind: 'straight' as const }] },
-      defaults: { ...LayeredFlowLayoutDefinition.defaults, routing: { kind: 'straight' as const } },
-      layout: (...args: Parameters<typeof LayeredFlowLayoutDefinition.layout>) => {
+      capabilities: { ...layeredFlowLayoutDefinition.capabilities, routing: [{ kind: 'straight' as const }] },
+      defaults: { ...layeredFlowLayoutDefinition.defaults, routing: { kind: 'straight' as const } },
+      layout: (...args: Parameters<typeof layeredFlowLayoutDefinition.layout>) => {
         calls++;
-        return LayeredFlowLayoutDefinition.layout(...args);
+        return layeredFlowLayoutDefinition.layout(...args);
       },
     };
     const source = FlowDiagramSchema.parse({
@@ -355,7 +355,7 @@ describe('Flow 弯曲布线', () => {
     };
     const labeled = { ...input, relations: [relation] };
     const relations = routeFlowRelations(labeled, routingElements);
-    const provider = { ...LayeredFlowLayoutDefinition, layout: () => ({ elements: routingElements, relations }) };
+    const provider = { ...layeredFlowLayoutDefinition, layout: () => ({ elements: routingElements, relations }) };
 
     expect(executeFlowLayout(provider, labeled).relations[0].labelBounds).toEqual(relations[0].labelBounds);
     expect(() =>
@@ -438,7 +438,7 @@ describe('Flow 弯曲布线', () => {
   });
 
   it('部分切线保留零，不同的布线类型会破坏继承', () => {
-    const root = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, {
+    const root = resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, undefined, {
       kind: 'bend',
       outAngle: 45,
       inAngle: 90,
@@ -446,15 +446,15 @@ describe('Flow 弯曲布线', () => {
     });
 
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, root, { kind: 'bend', outAngle: 0 }).routing,
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, root, { kind: 'bend', outAngle: 0 }).routing,
     ).toEqual({ kind: 'bend', outAngle: 0, inAngle: 90, looseness: 2 });
 
-    const axis = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, root, {
+    const axis = resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, root, {
       kind: 'orthogonal',
       cornerRadius: 12,
     });
 
-    expect(resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, axis, { kind: 'bend' }).routing).toEqual({
+    expect(resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, axis, { kind: 'bend' }).routing).toEqual({
       kind: 'bend',
     });
   });
@@ -485,7 +485,7 @@ describe('Flow 弯曲布线', () => {
 
   it('相关的 Group shell 和不可见的布局不是固体，而它们的子级仍然是障碍', () => {
     const input = routingInput();
-    const grouped: FlowLayoutInput = {
+    const grouped: InputFlowLayoutComputation = {
       ...input,
       elements: [
         {
@@ -524,9 +524,9 @@ describe('Flow 弯曲布线', () => {
 
   it('冲突的自定义弯曲会发出源定位警告并保持可绘制', () => {
     const provider = {
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'fixed-bend',
-      layout: (input: FlowLayoutInput) => {
+      layout: (input: InputFlowLayoutComputation) => {
         const elements = input.elements.map((element, index) => {
           if (element.kind !== 'leaf') throw new Error('leaf fixture required');
 
@@ -579,7 +579,7 @@ describe('Flow 弯曲布线', () => {
 
   it('弯曲溢出保留 Core 原因和违规关系路径', () => {
     const input = routingInput();
-    const overflowing: FlowLayoutInput = {
+    const overflowing: InputFlowLayoutComputation = {
       ...input,
       relations: [
         input.relations[0],
@@ -590,7 +590,7 @@ describe('Flow 弯曲布线', () => {
     expect(() =>
       executeFlowLayout(
         {
-          ...LayeredFlowLayoutDefinition,
+          ...layeredFlowLayoutDefinition,
           layout: received => ({
             elements: routingElements,
             relations: routeFlowRelations(received, routingElements),
@@ -645,7 +645,7 @@ describe('Flow 弯曲布线', () => {
       { id: 'c', bounds: { x: 98, y: -152, width: 4, height: 4 } },
       { id: 'd', bounds: { x: 98, y: -12, width: 4, height: 4 } },
     ];
-    const crossing: FlowLayoutInput = {
+    const crossing: InputFlowLayoutComputation = {
       ...input,
       elements: [...input.elements, ...['c', 'd'].map(id => ({ ...input.elements[0], id }))],
       relations: [
@@ -682,7 +682,7 @@ describe('Flow 弯曲布线', () => {
     const run = (route: FlowLayoutRoute) =>
       executeFlowLayout(
         {
-          ...LayeredFlowLayoutDefinition,
+          ...layeredFlowLayoutDefinition,
           layout: () => ({
             elements: routingElements,
             relations: [{ source: { id: 'a' }, target: { id: 'b' }, route }],
@@ -721,7 +721,7 @@ describe('Flow 弯曲布线', () => {
   });
 
   it('仅继承活动参数族并支持显式对称退出', () => {
-    const root = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, {
+    const root = resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, undefined, {
       kind: 'bend',
       outAngle: 45,
       bendAngle: 70,
@@ -729,14 +729,14 @@ describe('Flow 弯曲布线', () => {
     });
 
     expect(root.routing).toEqual({ kind: 'bend', outAngle: 45, inAngle: 180, looseness: 1 });
-    expect(resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, root, { kind: 'bend' }).routing).toEqual(
+    expect(resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, root, { kind: 'bend' }).routing).toEqual(
       root.routing,
     );
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, root, { kind: 'bend', bendAngle: 0 }).routing,
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, root, { kind: 'bend', bendAngle: 0 }).routing,
     ).toEqual({ kind: 'bend', bendAngle: 0 });
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, { kind: 'bend', looseness: 4 }).routing,
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, undefined, { kind: 'bend', looseness: 4 }).routing,
     ).toEqual({ kind: 'bend' });
   });
 

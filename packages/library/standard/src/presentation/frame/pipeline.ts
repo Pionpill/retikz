@@ -7,7 +7,7 @@ import type {
   CompositeCompileContext,
   CompositeCompileResult,
 } from '@retikz/core';
-import { NaturalLayoutProposal } from '@retikz/core';
+import { naturalLayoutProposal } from '@retikz/core';
 import { requiredLayoutProbe } from '@retikz/layout/compose';
 import type { BoundsRect } from '@retikz/math';
 
@@ -16,7 +16,7 @@ import type { CanonicalFrame } from './resolve';
 import { resolveFrame } from './resolve';
 import type { IRFrame, IRFrameDescription, IRFrameTitle } from './types';
 
-type FrameHeaderInput = IRFrameTitle | IRFrameDescription;
+type InputFrameHeader = IRFrameTitle | IRFrameDescription;
 
 type FrameHeaderOptions = {
   font: NonNullable<NonNullable<IRNode['style']>['font']>;
@@ -34,7 +34,7 @@ const omitUndefined = <T extends object>(value: T): Partial<T> =>
   Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>;
 
 /** 把 Node-like Frame header 补全为可独立 probe 的普通 Core Node */
-const frameHeaderNodeOf = (header: FrameHeaderInput, options: FrameHeaderOptions): IRNode => {
+const frameHeaderNodeOf = (header: InputFrameHeader, options: FrameHeaderOptions): IRNode => {
   const { text, style, layout, ...nodeFields } = header;
   return {
     type: 'node',
@@ -136,7 +136,7 @@ export const compileFrame = (sourceFrame: IRFrame, context: CompositeCompileCont
       },
       occurrence: occurrence++,
     },
-    NaturalLayoutProposal,
+    naturalLayoutProposal,
   );
   const body = {
     result: bodyResult,
@@ -153,7 +153,7 @@ export const compileFrame = (sourceFrame: IRFrame, context: CompositeCompileCont
             child: frameHeaderNodeOf(frame.title, { font: { size: 'sm', weight: 600 } }),
             occurrence: occurrence++,
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
   const descriptionResult =
     frame.description === undefined
@@ -164,7 +164,7 @@ export const compileFrame = (sourceFrame: IRFrame, context: CompositeCompileCont
             child: frameHeaderNodeOf(frame.description, { font: { size: 'xs' }, opacity: 0.7 }),
             occurrence,
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
 
   const contentTop = { x: body.bounds.x, y: body.bounds.y - frame.gap };

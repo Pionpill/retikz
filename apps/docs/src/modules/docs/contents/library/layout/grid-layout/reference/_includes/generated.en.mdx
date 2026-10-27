@@ -10,7 +10,7 @@ This is the persistent input contract. Factories preserve omitted fields; parse(
 
 <DocTab value="members" label="Direct members">
 
-The remaining members are inherited from `GridLayoutInput`, with `'children'` removed. See “Type definition” for the complete composition.
+The remaining members are inherited from `InputGridLayoutConfig`, with `'children'` removed. See “Type definition” for the complete composition.
 
 <ApiTable>
 
@@ -30,7 +30,7 @@ export declare const GridLayout: {
   (props: GridLayoutProps, context?: any): ReactNode;
 };
 
-export type GridLayoutProps = Omit<GridLayoutInput, 'children'> &
+export type GridLayoutProps = Omit<InputGridLayoutConfig, 'children'> &
   Readonly<{
     authoring?: unknown;
     children?: ReactNode;
@@ -93,7 +93,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 ```ts
 export declare const GridLayoutItem: FC<GridLayoutItemProps>;
 
-export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'kind'> &
+export type GridLayoutItemProps = Omit<InputGridLayoutItemConfig, 'child' | 'key' | 'kind'> &
   Readonly<{
     itemKey?: string;
   }> &
@@ -112,7 +112,7 @@ export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'k
 
 <DocTab value="members" label="Direct members">
 
-The remaining members are inherited from `GridLayoutInput`, with `'children'` removed. See “Type definition” for the complete composition.
+The remaining members are inherited from `InputGridLayoutConfig`, with `'children'` removed. See “Type definition” for the complete composition.
 
 <ApiTable>
 
@@ -132,7 +132,7 @@ The remaining members are inherited from `GridLayoutInput`, with `'children'` re
 ```ts
 export declare const gridLayout: (input: InputGridLayout, authoring?: unknown) => InputEmbed<InputGridLayout>;
 
-export type InputGridLayout = Omit<GridLayoutInput, 'children'> & {
+export type InputGridLayout = Omit<InputGridLayoutConfig, 'children'> & {
   children?: ReadonlyArray<InputGridLayoutItem>;
 };
 ```
@@ -167,21 +167,21 @@ export type InputGridLayout = Omit<GridLayoutInput, 'children'> & {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InputGridLayoutItem = InputLayoutItem<GridLayoutItemInput>;
+export type InputGridLayoutItem = InputLayoutItem<InputGridLayoutItemConfig>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GridLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={12}>GridLayoutInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"gridLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={12}>gridLayoutInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const GridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGridLayout> &
+export declare const gridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGridLayout> &
   Required<Pick<SynchronousInputEmbedAdapter<InputGridLayout>, 'prepare'>>;
 ```
 
-#### <ApiSourceLink label={"createGridLayout"} path={"packages/library/layout/src/composites/grid-layout/composite.ts"} startLine={30}>createGridLayout</ApiSourceLink> / <ApiSourceLink label={"GridLayoutInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={47}>GridLayoutInput</ApiSourceLink>
+#### <ApiSourceLink label={"createGridLayout"} path={"packages/library/layout/src/composites/grid-layout/composite.ts"} startLine={30}>createGridLayout</ApiSourceLink> / <ApiSourceLink label={"InputGridLayoutConfig"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={47}>InputGridLayoutConfig</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -189,10 +189,10 @@ export declare const GridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<I
 
 <ApiTable>
 
-| Member              | Type              | Default | Description                                                                  |
-| ------------------- | ----------------- | ------- | ---------------------------------------------------------------------------- |
-| `input` (Parameter) | `GridLayoutInput` | —       | Container and item configuration; Schema parsing applies static defaults     |
-| Returns             | `IRGridLayout`    | —       | Source IR with the layout namespace and container type; input is not mutated |
+| Member              | Type                    | Default | Description                                                                  |
+| ------------------- | ----------------------- | ------- | ---------------------------------------------------------------------------- |
+| `input` (Parameter) | `InputGridLayoutConfig` | —       | Container and item configuration; Schema parsing applies static defaults     |
+| Returns             | `IRGridLayout`          | —       | Source IR with the layout namespace and container type; input is not mutated |
 
 </ApiTable>
 
@@ -201,9 +201,9 @@ export declare const GridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<I
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createGridLayout: (input: GridLayoutInput) => IRGridLayout;
+export declare const createGridLayout: (input: InputGridLayoutConfig) => IRGridLayout;
 
-export type GridLayoutInput = Omit<IRGridLayout, 'namespace' | 'type'>;
+export type InputGridLayoutConfig = Omit<IRGridLayout, 'namespace' | 'type'>;
 ```
 
 </DocTab>
@@ -243,7 +243,7 @@ export type GridLayoutArtifact = ZodInfer<typeof GridLayoutArtifactSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GridLayoutItemInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={36}>GridLayoutItemInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputGridLayoutItemConfig"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={36}>InputGridLayoutItemConfig</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -269,14 +269,14 @@ export type GridLayoutArtifact = ZodInfer<typeof GridLayoutArtifactSchema>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type GridLayoutItemInput = IRGridLayoutItem;
+export type InputGridLayoutItemConfig = IRGridLayoutItem;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GridPlacementInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={29}>GridPlacementInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputGridPlacement"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={29}>InputGridPlacement</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -296,14 +296,14 @@ export type GridLayoutItemInput = IRGridLayoutItem;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
+export type InputGridPlacement = ZodInput<typeof GridPlacementSchema>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GridTrackBreadthInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={17}>GridTrackBreadthInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputGridTrackBreadth"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={17}>InputGridTrackBreadth</ApiSourceLink>
 
 <DocTabs defaultValue="fixed">
 
@@ -349,14 +349,14 @@ export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
+export type InputGridTrackBreadth = ZodInput<typeof GridTrackBreadthSchema>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GridTrackInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={23}>GridTrackInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputGridTrack"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={23}>InputGridTrack</ApiSourceLink>
 
 <DocTabs defaultValue="fixed">
 
@@ -416,7 +416,7 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type GridTrackInput = ZodInput<typeof GridTrackSchema>;
+export type InputGridTrack = ZodInput<typeof GridTrackSchema>;
 ```
 
 </DocTab>
@@ -578,10 +578,10 @@ Optional layout inspector configuration, imported from `@retikz/layout/inspect`.
 
 ## Extension definitions and registration
 
-#### <ApiSourceLink label={"GridLayoutDefinition"} path={"packages/library/layout/src/composites/grid-layout/composite.ts"} startLine={10}>GridLayoutDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"gridLayoutDefinition"} path={"packages/library/layout/src/composites/grid-layout/composite.ts"} startLine={10}>gridLayoutDefinition</ApiSourceLink>
 
 ```ts
-export const GridLayoutDefinition: CompositeDefinition<
+export const gridLayoutDefinition: CompositeDefinition<
   IRGridLayout,
   typeof LAYOUT_NAMESPACE,
   'gridLayout',
@@ -595,14 +595,14 @@ export const GridLayoutDefinition: CompositeDefinition<
 });
 ```
 
-#### <ApiSourceLink label={"GridLayoutProvider"} path={"packages/library/layout/src/composites/grid-layout/composite.ts"} startLine={39}>GridLayoutProvider</ApiSourceLink>
+#### <ApiSourceLink label={"gridLayoutProvider"} path={"packages/library/layout/src/composites/grid-layout/composite.ts"} startLine={39}>gridLayoutProvider</ApiSourceLink>
 
 ```ts
-export const GridLayoutProvider: CoreDependencyProvider = Object.freeze({
+export const gridLayoutProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({
     capability: 'composite',
-    namespace: GridLayoutDefinition.namespace,
-    type: GridLayoutDefinition.type,
+    namespace: gridLayoutDefinition.namespace,
+    type: gridLayoutDefinition.type,
   }),
   makeDefinition: makeGridLayoutDefinition,
 });

@@ -375,10 +375,10 @@ export type InputChain = Omit<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ChainInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={90}>ChainInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"chainInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/chain.ts"} startLine={90}>chainInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain>;
+export declare const chainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain>;
 ```
 
 **Persistent configuration**
@@ -497,10 +497,10 @@ export type IRChain = Omit<input<typeof ChainSchema>, keyof IRScopeProps | 'item
 
 **Extension definitions and registration**
 
-#### <ApiSourceLink label={"ChainDefinition"} path={"packages/library/standard/src/collection/chain/composite.ts"} startLine={10}>ChainDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"chainDefinition"} path={"packages/library/standard/src/collection/chain/composite.ts"} startLine={10}>chainDefinition</ApiSourceLink>
 
 ```ts
-export const ChainDefinition: CompositeDefinition<IRChain, 'standard', 'chain'> = defineComposite({
+export const chainDefinition: CompositeDefinition<IRChain, 'standard', 'chain'> = defineComposite({
   namespace: 'standard',
   type: 'chain',
   schema: ChainSchema,
@@ -508,10 +508,10 @@ export const ChainDefinition: CompositeDefinition<IRChain, 'standard', 'chain'> 
 });
 ```
 
-#### <ApiSourceLink label={"ChainProvider"} path={"packages/library/standard/src/collection/chain/composite.ts"} startLine={21}>ChainProvider</ApiSourceLink>
+#### <ApiSourceLink label={"chainProvider"} path={"packages/library/standard/src/collection/chain/composite.ts"} startLine={21}>chainProvider</ApiSourceLink>
 
 ```ts
-export declare const ChainProvider: CoreDependencyProvider;
+export declare const chainProvider: CoreDependencyProvider;
 ```
 
 **Execution and supporting contracts**

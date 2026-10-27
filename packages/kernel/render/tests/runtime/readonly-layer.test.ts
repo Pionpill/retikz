@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { RenderReadonlyLayer } from '../../src/runtime';
 import * as runtime from '../../src/runtime';
-import { validateReadonlyLayers } from '../../src/runtime';
+import { snapshotReadonlyLayers } from '../../src/runtime';
 
 const makeScene = (overrides: Partial<Scene> = {}): Scene => ({
   layout: { x: 0, y: 0, width: 10, height: 10 },
@@ -30,7 +30,7 @@ describe('只读渲染层契约', () => {
   });
 
   it('将有效的有序层序列规范化为深度冻结数据', () => {
-    const layers = validateReadonlyLayers([makeLayer()]);
+    const layers = snapshotReadonlyLayers([makeLayer()]);
 
     expect(layers).toHaveLength(1);
     expect(Object.isFrozen(layers)).toBe(true);
@@ -43,18 +43,18 @@ describe('只读渲染层契约', () => {
     const scene = makeScene();
     const layer = Object.freeze(makeLayer({ scene }));
 
-    const layers = validateReadonlyLayers([layer]);
+    const layers = snapshotReadonlyLayers([layer]);
 
     expect(Object.isFrozen(layers[0]?.scene)).toBe(true);
     expect(Object.isFrozen(layers[0]?.scene.primitives)).toBe(true);
   });
 
   it('拒绝一帧内重复的图层关键点', () => {
-    expect(() => validateReadonlyLayers([makeLayer(), makeLayer()])).toThrow();
+    expect(() => snapshotReadonlyLayers([makeLayer(), makeLayer()])).toThrow();
   });
 
   it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])('拒绝非有限变换分量 %s', value => {
-    expect(() => validateReadonlyLayers([makeLayer({ transform: [1, 0, 0, 1, value, 0] })])).toThrow();
+    expect(() => snapshotReadonlyLayers([makeLayer({ transform: [1, 0, 0, 1, value, 0] })])).toThrow();
   });
 
   it('拒绝层场景中的公共原始标识和元数据', () => {
@@ -65,8 +65,8 @@ describe('只读渲染层契约', () => {
       primitives: [{ type: 'rect', meta: { source: 'layer' }, x: 0, y: 0, width: 1, height: 1 }],
     });
 
-    expect(() => validateReadonlyLayers([makeLayer({ scene: withId })])).toThrow();
-    expect(() => validateReadonlyLayers([makeLayer({ scene: withMeta })])).toThrow();
+    expect(() => snapshotReadonlyLayers([makeLayer({ scene: withId })])).toThrow();
+    expect(() => snapshotReadonlyLayers([makeLayer({ scene: withMeta })])).toThrow();
   });
 
   it('拒绝图层场景中的原始和根动画语义', () => {
@@ -83,7 +83,7 @@ describe('只读渲染层契约', () => {
     });
     const rootAnimation = makeScene({ animations: [animation] });
 
-    expect(() => validateReadonlyLayers([makeLayer({ scene: primitiveAnimation })])).toThrow();
-    expect(() => validateReadonlyLayers([makeLayer({ scene: rootAnimation })])).toThrow();
+    expect(() => snapshotReadonlyLayers([makeLayer({ scene: primitiveAnimation })])).toThrow();
+    expect(() => snapshotReadonlyLayers([makeLayer({ scene: rootAnimation })])).toThrow();
   });
 });

@@ -47,8 +47,8 @@ describe('贝塞尔曲线编写契约', () => {
 });
 
 // 布局层契约：形状、避让、确定性与不可变作者点
-import type { FlowLayoutInput, FlowLayoutOutput } from '../../src/flow';
-import { LayeredFlowLayoutDefinition } from '../../src/flow';
+import type { InputFlowLayoutComputation, FlowLayoutOutput } from '../../src/flow';
+import { layeredFlowLayoutDefinition } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
 import { findFlowCurveObstacleIntervals } from '../../src/flow/shared/geometry';
@@ -59,7 +59,7 @@ const elements: FlowLayoutOutput['elements'] = [
   { id: 'obstacle', bounds: { x: 90, y: -15, width: 20, height: 30 } },
 ];
 
-const inputFor = (routing: FlowLayoutInput['relations'][number]['routing']): FlowLayoutInput => ({
+const inputFor = (routing: InputFlowLayoutComputation['relations'][number]['routing']): InputFlowLayoutComputation => ({
   layout: { direction: 'right', nodeGap: 48, rankGap: 48, routing: { kind: 'straight' } },
   elements: elements.map(element => ({
     kind: 'leaf',
@@ -106,7 +106,7 @@ describe('贝塞尔曲线布局', () => {
   it('拒绝显式控件的提供者突变，同时接受等值克隆', () => {
     const input = inputFor({ kind: 'curve', control: [100, -80] });
     const provider = {
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       layout: () => ({
         elements,
         relations: [
@@ -266,15 +266,15 @@ it('将显式二次曲线下沉为原生 quad 并通过 origin 往返还原产�
 it('在回调之前检查自动功能，但允许完整的显式控制', () => {
   let calls = 0;
   const provider: FlowLayoutDefinition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'explicit-only',
     capabilities: {
-      ...LayeredFlowLayoutDefinition.capabilities,
+      ...layeredFlowLayoutDefinition.capabilities,
       routing: [{ kind: 'straight' }, { kind: 'orthogonal' }, { kind: 'curve', modes: ['explicit'] }],
     },
     layout: (input, context) => {
       calls++;
-      return LayeredFlowLayoutDefinition.layout(input, context);
+      return layeredFlowLayoutDefinition.layout(input, context);
     },
   };
 
@@ -287,10 +287,10 @@ it('在回调之前检查自动功能，但允许完整的显式控制', () => {
 });
 it('保留冲突的显式控制并区分自动冲突警告', () => {
   const provider: FlowLayoutDefinition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'conflicted',
     layout: (input, context) => {
-      const output = LayeredFlowLayoutDefinition.layout(input, context);
+      const output = layeredFlowLayoutDefinition.layout(input, context);
       return {
         ...output,
         relations: output.relations.map((relation, index) => {

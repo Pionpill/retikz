@@ -1,13 +1,13 @@
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { BlockInputEmbedAdapter } from './block';
-import { BlockHeaderInputEmbedAdapter } from './block-header';
-import { BlockRowInputEmbedAdapter } from './block-row';
-import { BlockSectionInputEmbedAdapter } from './block-section';
-import { EntityInputEmbedAdapter } from './entity';
-import { GraphInputEmbedAdapter } from './graph';
-import { GroupInputEmbedAdapter } from './group';
-import { RelationInputEmbedAdapter } from './relation';
+import { blockInputEmbedAdapter } from './block';
+import { blockHeaderInputEmbedAdapter } from './block-header';
+import { blockRowInputEmbedAdapter } from './block-row';
+import { blockSectionInputEmbedAdapter } from './block-section';
+import { entityInputEmbedAdapter } from './entity';
+import { graphInputEmbedAdapter } from './graph';
+import { groupInputEmbedAdapter } from './group';
+import { relationInputEmbedAdapter } from './relation';
 
 /**
  * 创建可一次性传给 Vanilla normalize 的 Graph adapter 集合
@@ -23,13 +23,13 @@ export const createGraphVanillaAdapters = (): Array<SynchronousInputEmbedAdapter
   });
 
   return [
-    eraseAdapter(GraphInputEmbedAdapter),
-    eraseAdapter(GroupInputEmbedAdapter),
-    eraseAdapter(BlockInputEmbedAdapter),
-    eraseAdapter(BlockHeaderInputEmbedAdapter),
-    eraseAdapter(BlockSectionInputEmbedAdapter),
-    eraseAdapter(BlockRowInputEmbedAdapter),
-    eraseAdapter(EntityInputEmbedAdapter),
-    eraseAdapter(RelationInputEmbedAdapter),
+    eraseAdapter(graphInputEmbedAdapter),
+    eraseAdapter(groupInputEmbedAdapter),
+    eraseAdapter(blockInputEmbedAdapter),
+    eraseAdapter(blockHeaderInputEmbedAdapter),
+    eraseAdapter(blockSectionInputEmbedAdapter),
+    eraseAdapter(blockRowInputEmbedAdapter),
+    eraseAdapter(entityInputEmbedAdapter),
+    eraseAdapter(relationInputEmbedAdapter),
   ];
 };

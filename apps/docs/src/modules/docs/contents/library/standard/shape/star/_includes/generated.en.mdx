@@ -146,10 +146,10 @@ export type InputStar = InputShape<IRStar>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"StarInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/star.ts"} startLine={12}>StarInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"starInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/star.ts"} startLine={12}>starInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const StarInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStar & { id?: string }>;
+export declare const starInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStar & { id?: string }>;
 ```
 
 **Persistent configuration**
@@ -225,7 +225,7 @@ export type IRStar = ShapeSource<ZodInput<typeof StarSchema>>;
 
 **Extension definitions and registration**
 
-#### <ApiSourceLink label={"StarDefinition"} path={"packages/library/standard/src/shape/star/composite.ts"} startLine={10}>StarDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"starDefinition"} path={"packages/library/standard/src/shape/star/composite.ts"} startLine={10}>starDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -247,7 +247,7 @@ export type IRStar = ShapeSource<ZodInput<typeof StarSchema>>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export const StarDefinition = defineComposite({
+export const starDefinition = defineComposite({
   namespace: 'standard',
   type: 'star',
   schema: StarSchema,
@@ -259,12 +259,12 @@ export const StarDefinition = defineComposite({
 
 </DocTabs>
 
-#### <ApiSourceLink label={"StarProvider"} path={"packages/library/standard/src/shape/star/composite.ts"} startLine={25}>StarProvider</ApiSourceLink>
+#### <ApiSourceLink label={"starProvider"} path={"packages/library/standard/src/shape/star/composite.ts"} startLine={25}>starProvider</ApiSourceLink>
 
 ```ts
-export const StarProvider: CoreDependencyProvider = Object.freeze({
+export const starProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'star' }),
-  makeDefinition: () => StarDefinition,
+  makeDefinition: () => starDefinition,
 });
 ```
 

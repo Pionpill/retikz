@@ -1,6 +1,6 @@
 import { sceneIdentityEquals } from '@retikz/reconciler';
 
-import type { BuildContext, HydrationContext } from './context';
+import type { HydrationContextBuilder, HydrationContext } from './context';
 import { noopAnimationControls } from './context';
 import type { ElementHandlers, HydrationHandlers, Locate } from './events';
 import type { HydrationTarget } from './events';
@@ -43,7 +43,7 @@ const invoke = (
   name: RetikzEvent,
   event: Event,
   root: EventTarget,
-  buildContext: BuildContext | undefined,
+  buildContext: HydrationContextBuilder | undefined,
   renderer: 'svg' | 'canvas',
 ): void => {
   if (id === null || !Object.hasOwn(handlers, id)) return;
@@ -111,7 +111,7 @@ export const createHydrationController = (
   root: EventTarget,
   handlers: HydrationHandlers,
   locate: Locate,
-  buildContext?: BuildContext,
+  buildContext?: HydrationContextBuilder,
   renderer: 'svg' | 'canvas' = 'svg',
 ): HydrationController => {
   const used = collectUsedEvents(handlers);

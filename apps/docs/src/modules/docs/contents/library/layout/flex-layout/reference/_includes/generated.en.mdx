@@ -16,7 +16,7 @@ Neither shared schema supplies a default. FlexLayout uses `0`, Map uses `2`, and
 
 <DocTab value="members" label="Direct members">
 
-The remaining members are inherited from `FlexLayoutInput`, with `'children'` removed. See “Type definition” for the complete composition.
+The remaining members are inherited from `InputFlexLayoutConfig`, with `'children'` removed. See “Type definition” for the complete composition.
 
 <ApiTable>
 
@@ -36,7 +36,7 @@ export declare const FlexLayout: {
   (props: FlexLayoutProps, context?: any): ReactNode;
 };
 
-export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
+export type FlexLayoutProps = Omit<InputFlexLayoutConfig, 'children'> &
   Readonly<{
     authoring?: unknown;
     children?: ReactNode;
@@ -101,7 +101,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 ```ts
 export declare const FlexLayoutItem: FC<FlexLayoutItemProps>;
 
-export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'kind'> &
+export type FlexLayoutItemProps = Omit<InputFlexLayoutItemConfig, 'child' | 'key' | 'kind'> &
   Readonly<{
     itemKey?: string;
   }> &
@@ -120,7 +120,7 @@ export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'k
 
 <DocTab value="members" label="Direct members">
 
-The remaining members are inherited from `FlexLayoutInput`, with `'children'` removed. See “Type definition” for the complete composition.
+The remaining members are inherited from `InputFlexLayoutConfig`, with `'children'` removed. See “Type definition” for the complete composition.
 
 <ApiTable>
 
@@ -140,7 +140,7 @@ The remaining members are inherited from `FlexLayoutInput`, with `'children'` re
 ```ts
 export declare const flexLayout: (input: InputFlexLayout, authoring?: unknown) => InputEmbed<InputFlexLayout>;
 
-export type InputFlexLayout = Omit<FlexLayoutInput, 'children'> & {
+export type InputFlexLayout = Omit<InputFlexLayoutConfig, 'children'> & {
   children?: ReadonlyArray<InputFlexLayoutItem>;
 };
 ```
@@ -177,29 +177,29 @@ export type InputFlexLayout = Omit<FlexLayoutInput, 'children'> & {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InputFlexLayoutItem = InputLayoutItem<FlexLayoutItemInput>;
+export type InputFlexLayoutItem = InputLayoutItem<InputFlexLayoutItemConfig>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlexLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={12}>FlexLayoutInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"flexLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={12}>flexLayoutInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const FlexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlexLayout> &
+export declare const flexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlexLayout> &
   Required<Pick<SynchronousInputEmbedAdapter<InputFlexLayout>, 'prepare'>>;
 ```
 
-#### <ApiSourceLink label={"LayoutInputEmbedAdapters"} path={"packages/library/layout-vanilla/src/preset/index.ts"} startLine={8}>LayoutInputEmbedAdapters</ApiSourceLink>
+#### <ApiSourceLink label={"layoutInputEmbedAdapters"} path={"packages/library/layout-vanilla/src/preset/index.ts"} startLine={8}>layoutInputEmbedAdapters</ApiSourceLink>
 
 ```ts
-export const LayoutInputEmbedAdapters: ReadonlyArray<
+export const layoutInputEmbedAdapters: ReadonlyArray<
   AnyInputEmbedAdapter & Required<Pick<AnyInputEmbedAdapter, 'lower' | 'prepare'>>
-> = Object.freeze([FlexLayoutInputEmbedAdapter, GridLayoutInputEmbedAdapter, OverlayLayoutInputEmbedAdapter]);
+> = Object.freeze([flexLayoutInputEmbedAdapter, gridLayoutInputEmbedAdapter, overlayLayoutInputEmbedAdapter]);
 ```
 
-#### <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={30}>createFlexLayout</ApiSourceLink> / <ApiSourceLink label={"FlexLayoutInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={25}>FlexLayoutInput</ApiSourceLink>
+#### <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={30}>createFlexLayout</ApiSourceLink> / <ApiSourceLink label={"InputFlexLayoutConfig"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={25}>InputFlexLayoutConfig</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -207,10 +207,10 @@ export const LayoutInputEmbedAdapters: ReadonlyArray<
 
 <ApiTable>
 
-| Member              | Type              | Default | Description                                                                  |
-| ------------------- | ----------------- | ------- | ---------------------------------------------------------------------------- |
-| `input` (Parameter) | `FlexLayoutInput` | —       | Container and item configuration; Schema parsing applies static defaults     |
-| Returns             | `IRFlexLayout`    | —       | Source IR with the layout namespace and container type; input is not mutated |
+| Member              | Type                    | Default | Description                                                                  |
+| ------------------- | ----------------------- | ------- | ---------------------------------------------------------------------------- |
+| `input` (Parameter) | `InputFlexLayoutConfig` | —       | Container and item configuration; Schema parsing applies static defaults     |
+| Returns             | `IRFlexLayout`          | —       | Source IR with the layout namespace and container type; input is not mutated |
 
 </ApiTable>
 
@@ -219,9 +219,9 @@ export const LayoutInputEmbedAdapters: ReadonlyArray<
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createFlexLayout: (input: FlexLayoutInput) => IRFlexLayout;
+export declare const createFlexLayout: (input: InputFlexLayoutConfig) => IRFlexLayout;
 
-export type FlexLayoutInput = Omit<IRFlexLayout, 'namespace' | 'type'>;
+export type InputFlexLayoutConfig = Omit<IRFlexLayout, 'namespace' | 'type'>;
 ```
 
 </DocTab>
@@ -260,7 +260,7 @@ export type FlexLayoutArtifact = ZodInfer<typeof FlexLayoutArtifactSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlexLayoutItemInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={14}>FlexLayoutItemInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputFlexLayoutItemConfig"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={14}>InputFlexLayoutItemConfig</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -288,7 +288,7 @@ export type FlexLayoutArtifact = ZodInfer<typeof FlexLayoutArtifactSchema>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type FlexLayoutItemInput = IRFlexLayoutItem;
+export type InputFlexLayoutItemConfig = IRFlexLayoutItem;
 ```
 
 </DocTab>
@@ -317,7 +317,7 @@ export type FlexMainDistribution = Exclude<LayoutDistribution, typeof LayoutDist
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LayoutAxisSizeInput"} path={"packages/library/layout/src/composites/shared/types.ts"} startLine={21}>LayoutAxisSizeInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputLayoutAxisSize"} path={"packages/library/layout/src/composites/shared/types.ts"} startLine={21}>InputLayoutAxisSize</ApiSourceLink>
 
 <DocTabs defaultValue="content">
 
@@ -365,21 +365,21 @@ export type FlexMainDistribution = Exclude<LayoutDistribution, typeof LayoutDist
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type LayoutAxisSizeInput = ZodInput<typeof LayoutAxisSizeSchema>;
+export type InputLayoutAxisSize = ZodInput<typeof LayoutAxisSizeSchema>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LayoutSizeInput"} path={"packages/library/layout/src/composites/shared/types.ts"} startLine={27}>LayoutSizeInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputLayoutSize"} path={"packages/library/layout/src/composites/shared/types.ts"} startLine={27}>InputLayoutSize</ApiSourceLink>
 
 <DocTabs defaultValue="expanded">
 
 <DocTab value="expanded" label="Expanded type">
 
 ```ts
-export type LayoutSizeInput =
+export type InputLayoutSize =
   | undefined
   | {
       x?:
@@ -400,7 +400,7 @@ export type LayoutSizeInput =
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type LayoutSizeInput = ZodInput<typeof LayoutSizeSchema>;
+export type InputLayoutSize = ZodInput<typeof LayoutSizeSchema>;
 ```
 
 </DocTab>
@@ -617,10 +617,10 @@ Optional layout inspector configuration, imported from `@retikz/layout/inspect`.
 
 ## Extension definitions and registration
 
-#### <ApiSourceLink label={"FlexLayoutDefinition"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={10}>FlexLayoutDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"flexLayoutDefinition"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={10}>flexLayoutDefinition</ApiSourceLink>
 
 ```ts
-export const FlexLayoutDefinition: CompositeDefinition<
+export const flexLayoutDefinition: CompositeDefinition<
   IRFlexLayout,
   typeof LAYOUT_NAMESPACE,
   'flexLayout',
@@ -634,14 +634,14 @@ export const FlexLayoutDefinition: CompositeDefinition<
 });
 ```
 
-#### <ApiSourceLink label={"FlexLayoutProvider"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={39}>FlexLayoutProvider</ApiSourceLink>
+#### <ApiSourceLink label={"flexLayoutProvider"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={39}>flexLayoutProvider</ApiSourceLink>
 
 ```ts
-export const FlexLayoutProvider: CoreDependencyProvider = Object.freeze({
+export const flexLayoutProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({
     capability: 'composite',
-    namespace: FlexLayoutDefinition.namespace,
-    type: FlexLayoutDefinition.type,
+    namespace: flexLayoutDefinition.namespace,
+    type: flexLayoutDefinition.type,
   }),
   makeDefinition: makeFlexLayoutDefinition,
 });

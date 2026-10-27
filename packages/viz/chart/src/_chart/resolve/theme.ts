@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { ThemeMode } from '@retikz/core';
 import type { IRPlotDefaults } from '@retikz/plot';
 import { mergePlotDefaults } from '@retikz/plot';
@@ -82,7 +82,7 @@ const mergeChartDefaults = (
 export const resolveChartTheme = (
   source: IRChartSource,
   context: Readonly<{
-    theme: ResolvedTheme;
+    theme: CanonicalTheme;
     chartThemeDefinitions: ReadonlyArray<ChartThemeDefinition>;
   }>,
 ): ChartThemeResolution => {

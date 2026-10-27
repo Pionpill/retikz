@@ -4,7 +4,7 @@ import type { BoundsInsets, BoundsRect } from '@retikz/math';
 import { resolveSurface } from '@retikz/standard/presentation';
 
 import type { GraphDefinitionOptions } from '../../contract';
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
 import { resolveGraphDefinitionOptions } from '../../providers';
 import type { CanonicalGroup } from '../../resolve';
 import { resolveGroup } from '../../resolve';
@@ -56,7 +56,7 @@ export const composeGroupShell = (
 const measureResolvedGroupShell = (
   source: IRGroup,
   context: CompositeCompileContext,
-  options: ResolvedGraphDefinitionOptions,
+  options: GraphDefinitionRegistries,
 ): GroupShellMetrics => composeGroupShell(resolveGroup(source, options, context.theme), context).metrics;
 
 /** 使用 Group 自身 caption、padding 与 Surface 真源测量 shell */

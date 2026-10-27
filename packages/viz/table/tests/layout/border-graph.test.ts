@@ -1,22 +1,22 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ResolvedTableBorderLine, TableBorderContribution, TableBorderSource } from '../../src/contract/manifest';
+import type { TableBorderLine, TableBorderContribution, TableBorderSource } from '../../src/contract/manifest';
 import {
-  ResolvedTableBorderLineSchema,
+  TableBorderLineSchema,
   TableBorderContributionSchema,
   TableBorderManifestEntrySchema,
   TableBorderPathMetaSchema,
 } from '../../src/contract/manifest';
 import type {
-  BuildTableBorderGraphInput,
-  ResolvedTableBorderAtom,
-  ResolvedTableBorderCandidate,
+  InputTableBorderGraph,
+  CompiledTableBorderAtom,
+  TableBorderCandidateResolution,
   TableBorderAtom,
-  TableTrackLayout,
+  CompiledTableTrackLayout,
 } from '../../src/pipeline/layout';
 import { buildTableBorderGraph, mergeTableBorderAtoms, resolveTableBorderAtoms } from '../../src/pipeline/layout';
 
-const line = (override: Partial<ResolvedTableBorderLine> = {}): ResolvedTableBorderLine => ({
+const line = (override: Partial<TableBorderLine> = {}): TableBorderLine => ({
   color: '#111827',
   stroke: '#111827',
   width: 1,
@@ -27,19 +27,20 @@ const line = (override: Partial<ResolvedTableBorderLine> = {}): ResolvedTableBor
   ...override,
 });
 
-const lineCandidate = (
-  override: Partial<ResolvedTableBorderLine> = {},
-  priority = 0,
-): ResolvedTableBorderCandidate => ({ kind: 'line', priority, line: line(override) });
+const lineCandidate = (override: Partial<TableBorderLine> = {}, priority = 0): TableBorderCandidateResolution => ({
+  kind: 'line',
+  priority,
+  line: line(override),
+});
 
-const outerCandidates = (candidate: ResolvedTableBorderCandidate) => ({
+const outerCandidates = (candidate: TableBorderCandidateResolution) => ({
   top: candidate,
   right: candidate,
   bottom: candidate,
   left: candidate,
 });
 
-const track = (id: string, index: number, offset: number, size: number): TableTrackLayout => ({
+const track = (id: string, index: number, offset: number, size: number): CompiledTableTrackLayout => ({
   id,
   index,
   offset,
@@ -60,7 +61,7 @@ const contribution = (
     priority?: number;
     specificity?: 0 | 1;
     ownerSideRank?: number;
-    borderLine?: ResolvedTableBorderLine;
+    borderLine?: TableBorderLine;
   }> = {},
 ): TableBorderContribution => {
   const sourceOrderKey = sourceOrderKeyOf(source);
@@ -82,7 +83,7 @@ const rows = [track('r0', 0, 0, 10), track('r1', 1, 14, 20)];
 
 const columns = [track('c0', 0, 0, 20), track('c1', 1, 26, 30)];
 
-const fullGridInput = (): BuildTableBorderGraphInput => ({
+const fullGridInput = (): InputTableBorderGraph => ({
   rows,
   columns,
   cells: [
@@ -97,12 +98,12 @@ const fullGridInput = (): BuildTableBorderGraphInput => ({
 
 describe('Table 边框 Graph', () => {
   it('解析清单和 Path 元数据的分离严格 JSON 输出词汇', () => {
-    expect(ResolvedTableBorderLineSchema.parse({ ...line(), color: '#336699', stroke: 0.8 })).toMatchObject({
+    expect(TableBorderLineSchema.parse({ ...line(), color: '#336699', stroke: 0.8 })).toMatchObject({
       color: '#336699',
       stroke: 0.8,
     });
 
-    const resolvedLine = ResolvedTableBorderLineSchema.parse(line());
+    const resolvedLine = TableBorderLineSchema.parse(line());
     const atomKey = 'c:h:0:0';
     const winner = contribution(atomKey, { kind: 'default', scope: 'outer', side: 'top' });
 
@@ -126,7 +127,7 @@ describe('Table 边框 Graph', () => {
         atomicKeys: [atomKey],
       }),
     ).toEqual({ kind: 'tableBorder', tableId: 'table', edgeKey: 'edge', atomicKeys: [atomKey] });
-    expect(() => ResolvedTableBorderLineSchema.parse({ ...line(), extra: true })).toThrow();
+    expect(() => TableBorderLineSchema.parse({ ...line(), extra: true })).toThrow();
 
     const hidden = contribution(atomKey, { kind: 'default', scope: 'outer', side: 'top' }, { kind: 'none' });
 
@@ -407,7 +408,7 @@ describe('Table 边框 Graph', () => {
   it('返回分离的冻结边缘，而不冻结调用者拥有的解析原子', () => {
     const atomKey = 'c:h:0:0';
     const winner = contribution(atomKey, { kind: 'default', scope: 'outer', side: 'top' });
-    const atom: ResolvedTableBorderAtom = {
+    const atom: CompiledTableBorderAtom = {
       key: atomKey,
       orientation: 'horizontal',
       start: { x: 0, y: 0 },
@@ -430,7 +431,7 @@ describe('Table 边框 Graph', () => {
   it('不合并不同的母版、虚线、资源绘制或连接分隔的原子', () => {
     const firstKey = 'c:h:0:0';
     const secondKey = 'c:h:0:1';
-    const horizontalAtoms = (borderLine: ResolvedTableBorderLine): ReadonlyArray<TableBorderAtom> => [
+    const horizontalAtoms = (borderLine: TableBorderLine): ReadonlyArray<TableBorderAtom> => [
       {
         key: firstKey,
         orientation: 'horizontal',
@@ -492,7 +493,7 @@ describe('Table 边框 Graph', () => {
   });
 
   it('保持单独的 Cell 边独立，并且仅当边不存在时才应用默认值', () => {
-    const input: BuildTableBorderGraphInput = {
+    const input: InputTableBorderGraph = {
       rows: [rows[0]],
       columns,
       cells: [
@@ -536,7 +537,7 @@ describe('Table 边框 Graph', () => {
 
   it('是确定性的、分离的、独立于 Cell 输入顺序或 id 重命名', () => {
     const base = fullGridInput();
-    const input: BuildTableBorderGraphInput = {
+    const input: InputTableBorderGraph = {
       ...base,
       cells: base.cells.map(cell => {
         if (cell.rowIndex === 0 && cell.columnIndex === 0) {
@@ -550,7 +551,7 @@ describe('Table 边框 Graph', () => {
         return cell;
       }),
     };
-    const renamedAndReversed: BuildTableBorderGraphInput = {
+    const renamedAndReversed: InputTableBorderGraph = {
       ...input,
       cells: [...input.cells]
         .reverse()

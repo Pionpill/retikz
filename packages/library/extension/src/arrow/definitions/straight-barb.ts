@@ -4,7 +4,7 @@ import { defineArrow } from '@retikz/core';
 import { BuiltinExtensionArrowName } from '../constants';
 
 /** 可选开放直线倒钩箭头 Definition */
-export const StraightBarbArrowDefinition = defineArrow({
+export const straightBarbArrowDefinition = defineArrow({
   name: BuiltinExtensionArrowName.StraightBarb,
   hollow: true,
   backX: 1,
@@ -26,7 +26,7 @@ export const StraightBarbArrowDefinition = defineArrow({
 });
 
 /** StraightBarb 箭头的静态 Core provider */
-export const StraightBarbArrowProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'arrow', name: StraightBarbArrowDefinition.name }),
-  makeDefinition: () => StraightBarbArrowDefinition,
+export const straightBarbArrowProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'arrow', name: straightBarbArrowDefinition.name }),
+  makeDefinition: () => straightBarbArrowDefinition,
 });

@@ -9,7 +9,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import type { LowerTablesOptions, TableProviderParams, TableStructureOutput } from '../../../src';
+import type { TablesLoweringOptions, TableProviderParams, TableStructureOutput } from '../../../src';
 import {
   createTableRuntimeContribution,
   defineCellFormatter,
@@ -268,7 +268,7 @@ describe('Table 运行时贡献', () => {
 
   it('需要未来的非定义下沉选项来共享相同的对象标识', () => {
     const shared = {};
-    const optionsOf = (futureMode: object) => ({ futureMode }) as LowerTablesOptions & { futureMode: object };
+    const optionsOf = (futureMode: object) => ({ futureMode }) as TablesLoweringOptions & { futureMode: object };
     const first = createTableRuntimeContribution({ lowerOptions: optionsOf(shared) });
     const second = createTableRuntimeContribution({ lowerOptions: optionsOf(shared) });
     const conflict = createTableRuntimeContribution({ lowerOptions: optionsOf({}) });

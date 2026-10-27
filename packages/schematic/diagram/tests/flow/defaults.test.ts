@@ -50,14 +50,14 @@ const baseFlow = {
 
 describe('Flow 默认值和正式的 Source 片段', () => {
   it.each([undefined, 0, 48])('使用低于自动范围的自定义轴默认值，但继承编写的父间隙：%s', gap => {
-    const inputs: Array<Flow.FlowLayoutInput> = [];
+    const inputs: Array<Flow.InputFlowLayoutComputation> = [];
     const definition = Flow.defineFlowLayout({
-      ...Flow.LayeredFlowLayoutDefinition,
+      ...Flow.layeredFlowLayoutDefinition,
       name: 'custom-axis-spacing',
-      defaults: { ...Flow.LayeredFlowLayoutDefinition.defaults, placementGap: { horizontal: 60, vertical: 24 } },
+      defaults: { ...Flow.layeredFlowLayoutDefinition.defaults, placementGap: { horizontal: 60, vertical: 24 } },
       layout: (input, context) => {
         inputs.push(input);
-        return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+        return Flow.layeredFlowLayoutDefinition.layout(input, context);
       },
     });
     compileFlow(
@@ -97,13 +97,13 @@ describe('Flow 默认值和正式的 Source 片段', () => {
   });
 
   it.each(['right', 'left', 'down', 'up'] as const)('使用物理轴默认值进行 %s 放置，而不更改自动布局', direction => {
-    const inputs: Array<Flow.FlowLayoutInput> = [];
+    const inputs: Array<Flow.InputFlowLayoutComputation> = [];
     const definition = Flow.defineFlowLayout({
-      ...Flow.LayeredFlowLayoutDefinition,
+      ...Flow.layeredFlowLayoutDefinition,
       name: 'observe-axis-defaults',
       layout: (input, context) => {
         inputs.push(input);
-        return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+        return Flow.layeredFlowLayoutDefinition.layout(input, context);
       },
     });
     compileFlow(
@@ -134,13 +134,13 @@ describe('Flow 默认值和正式的 Source 片段', () => {
   });
 
   it.each([undefined, 0, 48, 19])('通过嵌套布局：%s，仅将编写的 nodeGap 继承到 Grid 中', nodeGap => {
-    const inputs: Array<Flow.FlowLayoutInput> = [];
+    const inputs: Array<Flow.InputFlowLayoutComputation> = [];
     const definition = Flow.defineFlowLayout({
-      ...Flow.LayeredFlowLayoutDefinition,
+      ...Flow.layeredFlowLayoutDefinition,
       name: 'observe-grid-defaults',
       layout: (input, context) => {
         inputs.push(input);
-        return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+        return Flow.layeredFlowLayoutDefinition.layout(input, context);
       },
     });
     compileFlow(
@@ -381,13 +381,13 @@ describe('Flow 默认值和正式的 Source 片段', () => {
       children: ['group'],
       relations: [{ source: 'source', target: 'target' }],
     };
-    const inputs: Array<Flow.FlowLayoutInput> = [];
+    const inputs: Array<Flow.InputFlowLayoutComputation> = [];
     const layout = Flow.defineFlowLayout({
-      ...Flow.LayeredFlowLayoutDefinition,
+      ...Flow.layeredFlowLayoutDefinition,
       name: 'observe-routing',
       layout: (input, context) => {
         inputs.push(input);
-        return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+        return Flow.layeredFlowLayoutDefinition.layout(input, context);
       },
     });
     const output = compileFlow(source, { flowLayouts: [layout], defaultFlowLayout: layout.name });
@@ -452,13 +452,13 @@ describe('Flow 默认值和正式的 Source 片段', () => {
   });
 
   it('在应用本地覆盖之前，通过 Group 和 Layout 继承显式祖先间距', () => {
-    const inputs: Array<Flow.FlowLayoutInput> = [];
+    const inputs: Array<Flow.InputFlowLayoutComputation> = [];
     const layout = Flow.defineFlowLayout({
-      ...Flow.LayeredFlowLayoutDefinition,
+      ...Flow.layeredFlowLayoutDefinition,
       name: 'observe-spacing',
       layout: (input, context) => {
         inputs.push(input);
-        return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+        return Flow.layeredFlowLayoutDefinition.layout(input, context);
       },
     });
     compileFlow(

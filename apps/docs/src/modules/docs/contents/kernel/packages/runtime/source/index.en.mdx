@@ -49,7 +49,7 @@ The position has the same meaning throughout; its representation and access rule
 
 ```ts
 declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
-  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>,
+  input: InputRuntimeSourceDefinition<TInput, TValue, TRead>,
 ) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
 ```
 
@@ -71,16 +71,16 @@ declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
 <DocTab value="definition" label="Type definition">
 
 ```ts
-type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<{
+type InputRuntimeSourceValueDefinition<TInput, TValue, TRead> = Readonly<{
   capture: (input: TInput) => TValue;
   read: (value: TValue) => TRead;
   equals: (left: TValue, right: TValue) => boolean;
   dispose?: (value: TValue) => void;
 }>;
 
-type RuntimeSourceDefinitionInput<TInput, TValue, TRead> = Readonly<{
+type InputRuntimeSourceDefinition<TInput, TValue, TRead> = Readonly<{
   key: string;
-  value: RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>;
+  value: InputRuntimeSourceValueDefinition<TInput, TValue, TRead>;
   collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>;
 }>;
 ```
@@ -264,7 +264,7 @@ Only public members used in this chapter are listed; follow the source links bel
     {
       name: 'defineRuntimeSource',
       kind: 'function',
-      type: '<TInput, TValue, TRead, TChange>(input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>',
+      type: '<TInput, TValue, TRead, TChange>(input: InputRuntimeSourceDefinition<TInput, TValue, TRead>) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>',
       description:
         'Creates a Source token from key, value and optional collectIdentities. Definition does not capture data.',
     },

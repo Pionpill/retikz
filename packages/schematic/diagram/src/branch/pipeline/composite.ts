@@ -1,8 +1,8 @@
 import type { CoreDependencyProvider, CoreProviderContribution, CompositeCoreProviderKey } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import { createGraphProviders, GraphProviderKey } from '@retikz/graph';
-import { OverlayLayoutProvider, FlexLayoutProvider } from '@retikz/layout';
-import { LegendProvider } from '@retikz/standard/presentation';
+import { overlayLayoutProvider, flexLayoutProvider } from '@retikz/layout';
+import { legendProvider } from '@retikz/standard/presentation';
 
 import type { BranchDiagramDefinitionOptions } from '../contract';
 import { resolveBranchDefinitionOptions } from '../providers';
@@ -10,7 +10,7 @@ import { BranchDiagramArtifactSchema, BranchDiagramSchema } from '../schemas';
 import { compileBranchDiagram } from './compile';
 
 /** Branch composite 的公开 provider key */
-export const BranchDiagramProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const branchDiagramProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: 'diagram',
   type: 'branch',
@@ -32,8 +32,8 @@ const makeDefinition: CoreDependencyProvider<BranchDiagramDefinitionOptions>['ma
 export const createBranchDiagramProvider = (
   options: BranchDiagramDefinitionOptions = {},
 ): CoreDependencyProvider<BranchDiagramDefinitionOptions> => ({
-  key: BranchDiagramProviderKey,
-  dependencies: [GraphProviderKey, OverlayLayoutProvider.key, FlexLayoutProvider.key, LegendProvider.key],
+  key: branchDiagramProviderKey,
+  dependencies: [GraphProviderKey, overlayLayoutProvider.key, flexLayoutProvider.key, legendProvider.key],
   params: options,
   makeDefinition,
 });
@@ -42,11 +42,11 @@ export const createBranchDiagramProvider = (
 export const createBranchDiagramProviderContribution = (
   options: BranchDiagramDefinitionOptions = {},
 ): CoreProviderContribution => ({
-  roots: [BranchDiagramProviderKey],
+  roots: [branchDiagramProviderKey],
   providers: [
     ...createGraphProviders(options),
-    OverlayLayoutProvider,
-    LegendProvider,
+    overlayLayoutProvider,
+    legendProvider,
     createBranchDiagramProvider(options),
   ],
 });

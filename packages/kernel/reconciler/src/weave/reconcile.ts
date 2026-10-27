@@ -11,7 +11,7 @@ import type {
   IRChild,
   IRScene,
   IRScope,
-  NodeLayout,
+  CompiledNodeLayout,
   PreparedSceneCompilation,
   SceneCompilationPreparationOptions,
   Transform,
@@ -77,7 +77,7 @@ type Publication = {
   /** 绑定对应的候选节点 */
   node: WeaveNode;
   /** 当前已发布坐标系中的布局 */
-  layout: NodeLayout;
+  layout: CompiledNodeLayout;
 };
 
 /** 一层声明容器的遍历上下文，递归时独立创建 */
@@ -339,7 +339,7 @@ export class WeaveReconciler {
   }
 
   /** 只从已完成的局部编译状态投影引用几何 */
-  private projectNodeReference(node: WeaveNode, transforms: ReadonlyArray<Transform>): NodeLayout {
+  private projectNodeReference(node: WeaveNode, transforms: ReadonlyArray<Transform>): CompiledNodeLayout {
     switch (node.type) {
       case 'node': {
         const compiled = this.transaction.readNode(node).compiled;
@@ -406,7 +406,7 @@ export class WeaveReconciler {
   private reconcileNode(
     node: WeaveShapeNode,
     element: WeaveElementCompileContext,
-  ): { output: CompileOutput | undefined; layout: NodeLayout; publication: Publication } {
+  ): { output: CompileOutput | undefined; layout: CompiledNodeLayout; publication: Publication } {
     const state = this.transaction.editNode(node);
     const { options, container, owner } = element;
     if (!this.canNodeReuse(node, options) || state.compiled === null) {
@@ -437,7 +437,7 @@ export class WeaveReconciler {
   private reconcileCoordinate(
     node: WeaveCoordinateNode,
     element: WeaveElementCompileContext,
-  ): { output: CompileOutput | undefined; layout: NodeLayout; publication: Publication } {
+  ): { output: CompileOutput | undefined; layout: CompiledNodeLayout; publication: Publication } {
     const state = this.transaction.editNode(node);
     const { options, container, owner } = element;
     if (!this.canNodeReuse(node, options) || state.compiled === null) {
@@ -487,7 +487,7 @@ export class WeaveReconciler {
     node: WeaveScopeNode,
     child: IRScope,
     element: WeaveElementCompileContext,
-  ): { output: CompileOutput; layouts: Array<NodeLayout>; publications: Array<Publication> } {
+  ): { output: CompileOutput; layouts: Array<CompiledNodeLayout>; publications: Array<Publication> } {
     const state = this.transaction.editNode(node);
     const { namespaceRegistry, ids, options: context } = element.container;
     const { options: compileOptions, owner: semanticOwner } = element;
@@ -590,12 +590,12 @@ export class WeaveReconciler {
     },
   ): {
     outputs: (transforms?: ReadonlyArray<Transform>) => Array<CompileOutput>;
-    layouts: Array<NodeLayout>;
+    layouts: Array<CompiledNodeLayout>;
     publications: Array<Publication>;
   } {
     const { parent, namespaceRegistry, ids, options: context, owner, prefix } = container;
     const outputs = new Map<WeaveNode, CompileOutput | undefined>();
-    const layouts: Array<NodeLayout> = [];
+    const layouts: Array<CompiledNodeLayout> = [];
     const publications: Array<Publication> = [];
     // path 编译队列，延后编译 path
     const pathCompileQueue: Array<(transforms?: ReadonlyArray<Transform>) => void> = [];

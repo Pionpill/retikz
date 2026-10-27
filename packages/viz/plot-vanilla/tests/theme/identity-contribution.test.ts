@@ -27,7 +27,7 @@ vi.mock('@retikz/vanilla', async importOriginal => {
   };
 });
 
-import { plot, PlotInputEmbedAdapter, renderPlot } from '../../src';
+import { plot, plotInputEmbedAdapter, renderPlot } from '../../src';
 
 const spec: IRPlot = plot({
   data: { reference: 'sales' },
@@ -66,8 +66,8 @@ describe('Plot Vanilla 运行时样式选项', () => {
     expect(options?.themeDefinitions).toEqual([]);
   });
 
-  it('嵌入式 PlotInputEmbedAdapter 将运行时样式定义保留在贡献有效负载之外', () => {
-    const contribution = PlotInputEmbedAdapter.lower({ spec, datasets: data }, contextOf('panel'));
+  it('嵌入式 plotInputEmbedAdapter 将运行时样式定义保留在贡献有效负载之外', () => {
+    const contribution = plotInputEmbedAdapter.lower({ spec, datasets: data }, contextOf('panel'));
 
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
     expect(contribution).not.toHaveProperty('datasets');

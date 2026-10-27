@@ -14,7 +14,7 @@ import {
   TableRowKind,
 } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -63,14 +63,14 @@ const contextOf = (id: string): InputEmbedContext => ({
 
 /** 读取 React 根组件构造的唯一 Table Vanilla 输入 */
 const inputOf = <TProps,>(component: InputTableComponent, props: TProps): InputTable<unknown> => {
-  if (component.inputEmbedAdapter !== TableInputEmbedAdapter) throw new Error('expected Table Vanilla adapter');
+  if (component.inputEmbedAdapter !== tableInputEmbedAdapter) throw new Error('expected Table Vanilla adapter');
   if (component.createInputEmbedProps === undefined) throw new Error('expected Table Vanilla input factory');
   return component.createInputEmbedProps(props as Readonly<Record<string, unknown>>);
 };
 
 /** 经 Vanilla adapter 取得 React authoring 的 Core contribution */
 const contributionOf = <TProps,>(component: InputTableComponent, props: TProps, id: string) =>
-  TableInputEmbedAdapter.lower(inputOf(component, props), contextOf(id));
+  tableInputEmbedAdapter.lower(inputOf(component, props), contextOf(id));
 
 describe('Table React 元件', () => {
   it('通过相同的 Table 运行时呈现通用手册、详细信息和自定义 Table 规格', () => {
@@ -215,9 +215,9 @@ describe('Table React 元件', () => {
       'manual',
     );
 
-    expect(Table.inputEmbedAdapter).toBe(TableInputEmbedAdapter);
-    expect(DetailTable.inputEmbedAdapter).toBe(TableInputEmbedAdapter);
-    expect(ManualTable.inputEmbedAdapter).toBe(TableInputEmbedAdapter);
+    expect(Table.inputEmbedAdapter).toBe(tableInputEmbedAdapter);
+    expect(DetailTable.inputEmbedAdapter).toBe(tableInputEmbedAdapter);
+    expect(ManualTable.inputEmbedAdapter).toBe(tableInputEmbedAdapter);
     expect(tableContribution.node).toMatchObject({ id: 'generic' });
     expect(detailContribution.node).toMatchObject({ id: 'detail' });
     expect(manualContribution.node).toMatchObject({ id: 'manual' });

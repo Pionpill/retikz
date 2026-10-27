@@ -7,7 +7,7 @@ description: 使用 Array 展示一维内容，配置单元格、组合图形并
 
 ## 接入方式
 
-[安装与首次渲染](/library/standard/get-start)后，可从以下四种入口接入。JSX 与 Vanilla adapter 自动收集所需定义；直接 IR 显式注入组件定义；启用单元格裁切时还需从 `@retikz/extension` 注入 `PathClipDefinition`。
+[安装与首次渲染](/library/standard/get-start)后，可从以下四种入口接入。JSX 与 Vanilla adapter 自动收集所需定义；直接 IR 显式注入组件定义；启用单元格裁切时还需从 `@retikz/extension` 注入 `pathClipDefinition`。
 
 <ComponentPreview files="array-basic" hideCode size="sm" />
 
@@ -31,7 +31,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { ArrayDefinition } from '@retikz/standard/collection';
+import { arrayDefinition } from '@retikz/standard/collection';
 
 const ir: IRScene = {
   type: 'scene',
@@ -44,14 +44,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} composites={[ArrayDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[arrayDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { array, ArrayInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { array, arrayInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -61,7 +61,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [ArrayInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [arrayInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -70,7 +70,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { ArrayDefinition } from '@retikz/standard/collection';
+import { arrayDefinition } from '@retikz/standard/collection';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -85,7 +85,7 @@ const ir: IRScene = {
   ],
 };
 const svg = renderToSvgString(ir, {
-  compile: { composites: [ArrayDefinition] },
+  compile: { composites: [arrayDefinition] },
 });
 console.log(svg);
 ```
@@ -272,7 +272,7 @@ Array
 
 数据默认不生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。需要逐格定制时，使用显式单元格。defaultCell.style / defaultCell.layout 只控制当前层，但 `data` 模式下的 `defaultCell.layout.width: 'content'` 会沿自动生成的 Array / Map 数据树传给后代 Array，让每层的单元格按自身内容定宽；手写嵌套组件不继承。字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
 
-React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ArrayDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
+React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `arrayDefinition` 和 `mapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `pathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
 
 ### 引用单元格与控制溢出
 
@@ -306,7 +306,7 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
   }
 />
 
-自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `defaultCell.layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
+自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `defaultCell.layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `pathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
 
 <ComponentPreview
   files="array-overflow"

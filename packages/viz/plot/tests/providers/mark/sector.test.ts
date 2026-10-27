@@ -1,8 +1,8 @@
 import type { IRNode, IRScope } from '@retikz/core';
-import { SectorShapeDefinition } from '@retikz/extension';
+import { sectorShapeDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
@@ -10,12 +10,12 @@ import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /** 正方形画布 → outerRadius = min(w,h)/2 = 200、center = [200,200]（无角向轴 → margin 0） */
-const opts: LowerPlotsOptions = { layout: { width: 400, height: 400 } };
+const opts: PlotsLoweringOptions = { layout: { width: 400, height: 400 } };
 
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = opts,
+  options: PlotsLoweringOptions = opts,
 ): IRScope => {
   return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
@@ -24,7 +24,7 @@ const expandOf = (
 const firstLayer = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = opts,
+  options: PlotsLoweringOptions = opts,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 sector node（无 color 时直接子，有 color 时藏在子 Scope 里） */
@@ -242,7 +242,7 @@ describe('lowerPlots 区间→polar2D 下的扇区（契约）', () => {
     const { compileToScene } = await import('@retikz/core');
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [roseSpec()] },
-      { composites: lowerPlots({ sales: SALES }, opts), shapes: [SectorShapeDefinition] },
+      { composites: lowerPlots({ sales: SALES }, opts), shapes: [sectorShapeDefinition] },
     ).scene;
 
     expect(scene.primitives.length).toBeGreaterThan(0);
@@ -373,7 +373,7 @@ describe('lowerPlots 扇区标记饼图/甜甜圈（契约）', () => {
     const { compileToScene } = await import('@retikz/core');
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [pieSpec()] },
-      { composites: lowerPlots({ share: SHARE }, opts), shapes: [SectorShapeDefinition] },
+      { composites: lowerPlots({ share: SHARE }, opts), shapes: [sectorShapeDefinition] },
     ).scene;
 
     expect(scene.primitives.length).toBeGreaterThan(0);

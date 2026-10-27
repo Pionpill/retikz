@@ -1,9 +1,9 @@
 import type { CompileWarning, IRChild, ScenePrimitive } from '@retikz/core';
 import { BuiltinCompileWarningCode, compileToScene } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { ArrayDefinition, MapDefinition } from '../../../src/collection';
+import { arrayDefinition, mapDefinition } from '../../../src/collection';
 
 const content: IRChild = {
   type: 'node',
@@ -20,8 +20,8 @@ const compile = (children: Array<IRChild>) =>
   compileToScene(
     { type: 'scene', version: 1, children },
     {
-      composites: [ArrayDefinition, MapDefinition],
-      clips: [PathClipDefinition],
+      composites: [arrayDefinition, mapDefinition],
+      clips: [pathClipDefinition],
       padding: 0,
     },
   );
@@ -227,8 +227,8 @@ it('保留 Core 命名空间隔离、重复诊断和延迟单元引用', () => {
         ],
       },
       {
-        composites: [ArrayDefinition],
-        clips: [PathClipDefinition],
+        composites: [arrayDefinition],
+        clips: [pathClipDefinition],
         onWarn: warning => warnings.push(warning),
         padding: 0,
       },

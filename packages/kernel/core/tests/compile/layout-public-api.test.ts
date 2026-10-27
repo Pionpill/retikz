@@ -7,7 +7,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
 import { createRound } from '../../src/compile/scene';
 
@@ -38,13 +38,13 @@ describe('布局公共 API', () => {
       LastBaseline: 'last-baseline',
     });
     expect(LayoutAlignmentGuideDimension).toEqual({ X: 'x', Y: 'y' });
-    expect(NaturalLayoutProposal).toEqual({
+    expect(naturalLayoutProposal).toEqual({
       x: { kind: 'intrinsic', mode: 'natural' },
       y: { kind: 'intrinsic', mode: 'natural' },
     });
-    expect(Object.isFrozen(NaturalLayoutProposal)).toBe(true);
-    expect(Object.isFrozen(NaturalLayoutProposal.x)).toBe(true);
-    expect(Object.isFrozen(NaturalLayoutProposal.y)).toBe(true);
-    expect(Reflect.set(NaturalLayoutProposal.x, 'mode', 'minimum')).toBe(false);
+    expect(Object.isFrozen(naturalLayoutProposal)).toBe(true);
+    expect(Object.isFrozen(naturalLayoutProposal.x)).toBe(true);
+    expect(Object.isFrozen(naturalLayoutProposal.y)).toBe(true);
+    expect(Reflect.set(naturalLayoutProposal.x, 'mode', 'minimum')).toBe(false);
   });
 });

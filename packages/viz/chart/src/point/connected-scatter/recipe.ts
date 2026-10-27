@@ -16,12 +16,12 @@ import {
   resolvePointScaleDefaults,
 } from '../shared';
 import { pointRecipeId } from '../shared/plot';
-import { ConnectedScatterMarkDefinition, resolveConnectedScatterMarkGroup } from './mark';
+import { connectedScatterMarkDefinition, resolveConnectedScatterMarkGroup } from './mark';
 import type { IRConnectedScatterChart } from './schema';
 import { ConnectedScatterChartSchema } from './schema';
 
 /** Connected Scatter exact schema、调度与消费检查共用的 encoding 顺序 */
-const ConnectedScatterChartEncodingSlots = ['x', 'y', 'order', 'series', 'row', 'column', 'facet'] as const;
+const connectedScatterChartEncodingSlots = ['x', 'y', 'order', 'series', 'row', 'column', 'facet'] as const;
 
 const markPropertySlots = ['point', 'path', 'colorMode'] as const;
 
@@ -29,7 +29,7 @@ const propertySlots = [...markPropertySlots, 'domainPadding', 'autoPadding'] as 
 
 const seriesScaleName = pointRecipeId(ChartType.ConnectedScatter, 'scale.series');
 
-const consumers: ReadonlyArray<ChartEncodingFieldConsumer<(typeof ConnectedScatterChartEncodingSlots)[number]>> = [
+const consumers: ReadonlyArray<ChartEncodingFieldConsumer<(typeof connectedScatterChartEncodingSlots)[number]>> = [
   ...pointPositionFieldConsumersOf(ChartType.ConnectedScatter),
   { slot: 'order' },
   {
@@ -43,19 +43,19 @@ const consumers: ReadonlyArray<ChartEncodingFieldConsumer<(typeof ConnectedScatt
 ];
 
 /** Connected Scatter Chart 的内建 semantic recipe Definition */
-export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedScatterChart> = defineChartRecipe({
+export const connectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedScatterChart> = defineChartRecipe({
   chartType: ChartType.ConnectedScatter,
-  encodingSlots: ConnectedScatterChartEncodingSlots,
+  encodingSlots: connectedScatterChartEncodingSlots,
   schema: ConnectedScatterChartSchema,
-  consumes: { encodings: ConnectedScatterChartEncodingSlots, properties: propertySlots },
+  consumes: { encodings: connectedScatterChartEncodingSlots, properties: propertySlots },
   marks: [
     {
-      definition: ConnectedScatterMarkDefinition,
+      definition: connectedScatterMarkDefinition,
       inherit: { encodings: ['x', 'y', 'order', 'series'], properties: [...markPropertySlots, 'autoPadding'] },
     },
   ],
   resolveEncodings: context => {
-    const resolution = resolveChartEncodingMappings(context, ConnectedScatterChartEncodingSlots, consumers);
+    const resolution = resolveChartEncodingMappings(context, connectedScatterChartEncodingSlots, consumers);
     const spatial = pointSpatialResolutionOf(ChartType.ConnectedScatter, context.encodings);
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },

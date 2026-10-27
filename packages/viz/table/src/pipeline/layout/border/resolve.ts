@@ -2,7 +2,7 @@ import type { TableBorderContribution } from '../../../contract/manifest';
 import { TableBorderContributionSchema } from '../../../contract/manifest';
 import { RetikzTableError } from '../../../error';
 import { deepFreeze } from '../../../shared';
-import type { ResolvedTableBorderAtom, TableBorderAtom } from './types';
+import type { CompiledTableBorderAtom, TableBorderAtom } from './types';
 import { tableBorderSourceOrderKey } from './types';
 
 /** 按 conflict tuple 把更高优先候选排在前面 */
@@ -22,7 +22,7 @@ const compareContributions = (left: TableBorderContribution, right: TableBorderC
   return left.sourceOrderKey.localeCompare(right.sourceOrderKey);
 };
 
-const SideRank = { top: 0, right: 1, bottom: 2, left: 3 } as const;
+const sideRank = { top: 0, right: 1, bottom: 2, left: 3 } as const;
 
 /** 按 collapse numeric key 或 separate row/column/side 形成 canonical atom 顺序 */
 const compareAtoms = (left: TableBorderAtom, right: TableBorderAtom): number => {
@@ -41,7 +41,7 @@ const compareAtoms = (left: TableBorderAtom, right: TableBorderAtom): number => 
     const column = Number(leftParts[2]) - Number(rightParts[2]);
     if (column !== 0) return column;
 
-    return SideRank[leftParts[3] as keyof typeof SideRank] - SideRank[rightParts[3] as keyof typeof SideRank];
+    return sideRank[leftParts[3] as keyof typeof sideRank] - sideRank[rightParts[3] as keyof typeof sideRank];
   }
 
   return left.key.localeCompare(right.key);
@@ -50,9 +50,9 @@ const compareAtoms = (left: TableBorderAtom, right: TableBorderAtom): number => 
 /** 按 canonical conflict tuple 解析 Border Graph atom winners */
 export const resolveTableBorderAtoms = (
   atoms: ReadonlyArray<TableBorderAtom>,
-): ReadonlyArray<ResolvedTableBorderAtom> => {
+): ReadonlyArray<CompiledTableBorderAtom> => {
   /** 验证 atom 几何为 finite 正向轴对齐线段 */
-  const validateAtomGeometry = (atom: TableBorderAtom): void => {
+  const assertAtomGeometry = (atom: TableBorderAtom): void => {
     const values = [atom.start.x, atom.start.y, atom.end.x, atom.end.y];
     if (!values.every(Number.isFinite)) {
       throw new RetikzTableError(`table: Border Graph atom "${atom.key}" geometry must be finite`);
@@ -77,7 +77,7 @@ export const resolveTableBorderAtoms = (
     }
 
     seenAtomKeys.add(atom.key);
-    validateAtomGeometry(atom);
+    assertAtomGeometry(atom);
     if (atom.contributors.length === 0) {
       throw new RetikzTableError(`table: Border Graph atom "${atom.key}" must have at least one contributor`);
     }

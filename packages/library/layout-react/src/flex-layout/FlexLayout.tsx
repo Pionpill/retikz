@@ -1,7 +1,7 @@
-import type { FlexLayoutInput } from '@retikz/layout';
+import type { InputFlexLayoutConfig } from '@retikz/layout';
 import { LayoutItemKind } from '@retikz/layout';
 import type { InputFlexLayout } from '@retikz/layout-vanilla';
-import { FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { flexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
@@ -10,7 +10,7 @@ import type { LayoutEmbeddableComponent } from '../shared';
 import { createInputLayoutItems } from '../shared';
 
 /** Flex 布局的 React 属性 */
-export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
+export type FlexLayoutProps = Omit<InputFlexLayoutConfig, 'children'> &
   Readonly<{
     /** 交给可选编译驱动解释的不透明声明数据 */
     authoring?: unknown;
@@ -36,5 +36,5 @@ export const FlexLayout = FlexLayoutComponent as LayoutEmbeddableComponent<FlexL
 
 FlexLayout.displayName = 'FlexLayout';
 FlexLayout.isTier2Embeddable = true;
-FlexLayout.inputEmbedAdapter = FlexLayoutInputEmbedAdapter;
+FlexLayout.inputEmbedAdapter = flexLayoutInputEmbedAdapter;
 FlexLayout.createInputEmbedProps = createFlexLayoutInput;

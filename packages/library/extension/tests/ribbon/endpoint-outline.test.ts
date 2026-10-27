@@ -7,11 +7,11 @@ import {
   createRibbonPathDefinition,
   createRibbonProviderContribution,
   defineRibbonCap,
-  RibbonPathDefinition,
+  ribbonPathDefinition,
   RibbonPathOptionsSchema,
 } from '../../src/ribbon';
 
-const compile = (kindOptions: IRPathBase['kindOptions'], definition: AnyPathDefinition = RibbonPathDefinition) => {
+const compile = (kindOptions: IRPathBase['kindOptions'], definition: AnyPathDefinition = ribbonPathDefinition) => {
   const scene = compileToScene(
     {
       version: 1,
@@ -113,7 +113,7 @@ describe('功能区端点轮廓契约', () => {
           },
         ],
       },
-      { paths: [RibbonPathDefinition] },
+      { paths: [ribbonPathDefinition] },
     ).scene;
     const path = scene.primitives.find(primitive => primitive.type === 'path');
     if (path?.type !== 'path') throw new Error('Expected ribbon path');
@@ -199,7 +199,7 @@ describe('功能区端点轮廓契约', () => {
           },
         ],
       },
-      { paths: [RibbonPathDefinition], padding: 0 },
+      { paths: [ribbonPathDefinition], padding: 0 },
     ).scene;
 
     expect(scene.layout.x + scene.layout.width).toBeGreaterThanOrEqual(110);
@@ -296,7 +296,7 @@ describe('功能区端点轮廓契约', () => {
           },
         ],
       },
-      { paths: [RibbonPathDefinition] },
+      { paths: [ribbonPathDefinition] },
     ).scene;
     const path = scene.primitives.find(primitive => primitive.type === 'path');
 

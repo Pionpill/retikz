@@ -12,17 +12,17 @@ import {
   TableCellSourceKind,
   TableRowKind,
 } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 import { formatDefaultTable } from '../utils/stages';
 
-describe('normalizeTableStructure', () => {
+describe('resolveTableStructure', () => {
   it('输出稳定的源判别字段值', () => {
     expect(TableCellSourceKind).toEqual({ Manual: 'manual', Field: 'field', Generated: 'generated' });
   });
 
   it('标准化手动单元而不合成身份', () => {
-    const model = normalizeTableStructure({
+    const model = resolveTableStructure({
       kind: 'manual',
       rows: [
         ['Name', { value: false }],
@@ -97,7 +97,7 @@ describe('normalizeTableStructure', () => {
   });
 
   it('实现手动标题/正文位置并拒绝语义不匹配', () => {
-    const model = normalizeTableStructure({
+    const model = resolveTableStructure({
       kind: 'manual',
       rows: [['Name'], ['Ada']],
       rowKinds: [TableRowKind.ColumnHeader, TableRowKind.Body],
@@ -108,7 +108,7 @@ describe('normalizeTableStructure', () => {
       [TableCellLocation.Body, [TableCellRole.Data]],
     ]);
     expect(() =>
-      normalizeTableStructure({
+      resolveTableStructure({
         kind: 'manual',
         rows: [[{ value: 'Name', location: TableCellLocation.Body, roles: [TableCellRole.Data] }]],
         rowKinds: [TableRowKind.ColumnHeader],
@@ -117,7 +117,7 @@ describe('normalizeTableStructure', () => {
   });
 
   it('保留全空轨道并拒绝占用的跨度槽、超出范围的跨度和重复的 ID', () => {
-    const empty = normalizeTableStructure({
+    const empty = resolveTableStructure({
       kind: 'manual',
       rows: [
         [null, null],
@@ -129,16 +129,16 @@ describe('normalizeTableStructure', () => {
     expect(empty.columns).toHaveLength(2);
     expect(empty.cells).toEqual([]);
     expect(() =>
-      normalizeTableStructure({
+      resolveTableStructure({
         kind: 'manual',
         rows: [[{ value: 1, span: { columns: 2 } }, 2]],
       }),
     ).toThrow(/overlaps/i);
-    expect(() => normalizeTableStructure({ kind: 'manual', rows: [[{ value: 1, span: { rows: 2 } }]] })).toThrow(
+    expect(() => resolveTableStructure({ kind: 'manual', rows: [[{ value: 1, span: { rows: 2 } }]] })).toThrow(
       /span range/i,
     );
     expect(() =>
-      normalizeTableStructure({
+      resolveTableStructure({
         kind: 'manual',
         rows: [
           [
@@ -151,7 +151,7 @@ describe('normalizeTableStructure', () => {
   });
 
   it('标准化详细信息头部、嵌套字段、标量值和源标识', () => {
-    const model = normalizeTableStructure(
+    const model = resolveTableStructure(
       {
         kind: 'detail',
         columns: [
@@ -196,11 +196,11 @@ describe('normalizeTableStructure', () => {
   });
 
   it('支持 header false 和无模型的空数据集', () => {
-    const withoutHeader = normalizeTableStructure(
+    const withoutHeader = resolveTableStructure(
       { kind: 'detail', header: false, columns: [{ id: 'name', field: 'name' }] },
       { data: { reference: 'sales' }, datasets: { sales: [{ name: 'Ada' }] } },
     );
-    const empty = normalizeTableStructure(
+    const empty = resolveTableStructure(
       { kind: 'detail', columns: [{ id: 'name', field: 'missing' }] },
       { data: { reference: 'sales' }, datasets: { sales: [] } },
     );
@@ -214,32 +214,32 @@ describe('normalizeTableStructure', () => {
   it('由于缺少数据集、严格模型未知字段、缺失值和非标量而失败', () => {
     const detail = { kind: 'detail' as const, columns: [{ id: 'score', field: 'score' }] };
 
-    expect(() => normalizeTableStructure(detail)).toThrow(/table: structure "detail"/);
-    expect(() => normalizeTableStructure(detail, { data: { reference: 'sales' }, datasets: {} })).toThrow(
+    expect(() => resolveTableStructure(detail)).toThrow(/table: structure "detail"/);
+    expect(() => resolveTableStructure(detail, { data: { reference: 'sales' }, datasets: {} })).toThrow(
       /dataset.*sales/i,
     );
     expect(() =>
-      normalizeTableStructure(detail, {
+      resolveTableStructure(detail, {
         data: { reference: 'sales', model: [{ name: 'name' }] },
         datasets: { sales: [] },
       }),
     ).toThrow(/unknown field.*score/i);
-    expect(() => normalizeTableStructure(detail, { data: { reference: 'sales' }, datasets: { sales: [{}] } })).toThrow(
+    expect(() => resolveTableStructure(detail, { data: { reference: 'sales' }, datasets: { sales: [{}] } })).toThrow(
       /sourceIndex.*0.*score/i,
     );
     expect(() =>
-      normalizeTableStructure(detail, { data: { reference: 'sales' }, datasets: { sales: [{ score: [42] }] } }),
+      resolveTableStructure(detail, { data: { reference: 'sales' }, datasets: { sales: [{ score: [42] }] } }),
     ).toThrow(/scalar/i);
   });
 
   it.each(['toString', '__proto__'])('将继承的数据集名称 %j 视为缺失', reference => {
     const detail = { kind: 'detail' as const, header: false, columns: [{ id: 'value', field: 'value' }] };
 
-    expect(() => normalizeTableStructure(detail, { data: { reference }, datasets: {} })).toThrow(
+    expect(() => resolveTableStructure(detail, { data: { reference }, datasets: {} })).toThrow(
       new RegExp(`dataset.*${reference}`, 'i'),
     );
     expect(
-      normalizeTableStructure(detail, {
+      resolveTableStructure(detail, {
         data: { reference },
         datasets: Object.fromEntries([[reference, [{ value: reference }]]]),
       }).cells[0].payload,
@@ -265,7 +265,7 @@ describe('normalizeTableStructure', () => {
         ],
       }),
     });
-    const model = normalizeTableStructure({ kind: 'summary', label: 'Total' }, { structureDefinitions: [summary] });
+    const model = resolveTableStructure({ kind: 'summary', label: 'Total' }, { structureDefinitions: [summary] });
 
     expect(model.cells[0]).toMatchObject({
       id: 'cell.summary',
@@ -284,7 +284,7 @@ describe('normalizeTableStructure', () => {
         }) as unknown as TableStructureOutput,
     });
 
-    expect(() => normalizeTableStructure({ kind: 'invalid' }, { structureDefinitions: [invalid] })).toThrow(
+    expect(() => resolveTableStructure({ kind: 'invalid' }, { structureDefinitions: [invalid] })).toThrow(
       /table: structure "invalid"/,
     );
   });
@@ -296,7 +296,7 @@ describe('normalizeTableStructure', () => {
     });
     const duplicate = defineTableStructure({ ...extension });
 
-    expect(() => normalizeTableStructure({ kind: 'missing' })).toThrow(/not registered/i);
+    expect(() => resolveTableStructure({ kind: 'missing' })).toThrow(/not registered/i);
     expect(() => resolveTableStructureRegistry([extension, duplicate])).toThrow(/duplicate.*extension/i);
 
     for (const kind of ['manual', 'detail', 'pivot', 'matrix', 'custom'] as const) {
@@ -310,7 +310,7 @@ describe('normalizeTableStructure', () => {
   });
 
   it('在不更改身份或顺序的情况下呈现分离快照中的规范单元', () => {
-    const semantic = normalizeTableStructure({
+    const semantic = resolveTableStructure({
       kind: 'manual',
       rows: [['A', { content: { type: 'node', position: [0, 0] } }]],
     });
@@ -319,7 +319,7 @@ describe('normalizeTableStructure', () => {
       optionsSchema: strictObject({}),
       present: ({ value }) => ({ type: 'node', position: [0, 0], text: String(value).toUpperCase() }),
     });
-    const semanticWithCustom = normalizeTableStructure({
+    const semanticWithCustom = resolveTableStructure({
       kind: 'manual',
       rows: [[{ value: 'custom', presentation: { name: 'upper' } }]],
     });

@@ -8,7 +8,7 @@ import {
   FlowDiagramSchema,
   createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,
-  LayeredFlowLayoutDefinition,
+  layeredFlowLayoutDefinition,
 } from '../../src/flow';
 import type { FlowLayoutDefinition } from '../../src/flow';
 import { flowRouteLabelBounds, flowSmoothConflicts } from '../../src/flow/providers';
@@ -153,15 +153,15 @@ it('在 Flow 根变换下保留世界单位中的 NodeTarget 偏移量', () => {
 it('在调用未声明支持的提供者之前拒绝平滑', () => {
   let called = false;
   const provider: FlowLayoutDefinition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'without-smooth',
     capabilities: {
-      ...LayeredFlowLayoutDefinition.capabilities,
-      routing: LayeredFlowLayoutDefinition.capabilities.routing.filter(item => item.kind !== 'smooth'),
+      ...layeredFlowLayoutDefinition.capabilities,
+      routing: layeredFlowLayoutDefinition.capabilities.routing.filter(item => item.kind !== 'smooth'),
     },
     layout: (input, context) => {
       called = true;
-      return LayeredFlowLayoutDefinition.layout(input, context);
+      return layeredFlowLayoutDefinition.layout(input, context);
     },
   };
 
@@ -171,10 +171,10 @@ it('在调用未声明支持的提供者之前拒绝平滑', () => {
 
 it('拒绝中间结的提供者突变', () => {
   const provider: FlowLayoutDefinition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'changed-smooth',
     layout: (input, context) => {
-      const output = LayeredFlowLayoutDefinition.layout(input, context);
+      const output = layeredFlowLayoutDefinition.layout(input, context);
       return {
         ...output,
         relations: output.relations.map((relation, relationIndex) => {

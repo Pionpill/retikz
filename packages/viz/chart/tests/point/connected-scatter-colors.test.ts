@@ -5,11 +5,11 @@ import { describe, expect, it } from 'vitest';
 
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveSelectedChart } from '../../src/_chart/resolve';
-import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
+import { connectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
 import { ConnectedScatterChartSchema } from '../../src/point/connected-scatter/schema';
 
 const runtime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ConnectedScatterChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: connectedScatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const palette = ['#ff0000', '#00ff00', '#0000ff'];
@@ -43,7 +43,7 @@ const chartOf = (properties: Record<string, unknown> = {}, series = true, extras
 
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
-    recipe: ConnectedScatterChartDefinition,
+    recipe: connectedScatterChartDefinition,
     chartThemeDefinitions: [],
     runtime,
   }).plot;

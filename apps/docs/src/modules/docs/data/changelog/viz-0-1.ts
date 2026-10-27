@@ -568,8 +568,8 @@ export const vizV01: Release = {
             {
               label: { zh: '顶层入口只保留公开渲染契约', en: 'Root entry keeps only public rendering contracts' },
               content: {
-                zh: '`@retikz/plot` 顶层继续导出 `lowerPlots`、`LowerPlotsOptions`、locator、schema 与 contract；内部 pipeline / layout helper 不再经顶层 barrel 暴露。',
-                en: 'The `@retikz/plot` root continues to expose `lowerPlots`, `LowerPlotsOptions`, locator, schemas, and contracts; internal pipeline / layout helpers are no longer exposed through the root barrel.',
+                zh: '`@retikz/plot` 顶层继续导出 `lowerPlots`、`PlotsLoweringOptions`、locator、schema 与 contract；内部 pipeline / layout helper 不再经顶层 barrel 暴露。',
+                en: 'The `@retikz/plot` root continues to expose `lowerPlots`, `PlotsLoweringOptions`, locator, schemas, and contracts; internal pipeline / layout helpers are no longer exposed through the root barrel.',
               },
             },
             {
@@ -1069,8 +1069,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'plain authoring 与 Tier 2', en: 'Plain authoring and Tier 2' },
           content: {
-            zh: '`plot()` 返回无方法的 `IRPlot`；`embedPlot()` 与 `PlotInputEmbedAdapter` 将 Plot authoring 输入交给 Kernel Vanilla processing 统一下沉为场景。',
-            en: '`plot()` returns a method-free `IRPlot`; `embedPlot()` and `PlotInputEmbedAdapter` hand Plot authoring input to Kernel Vanilla processing for unified Scene lowering.',
+            zh: '`plot()` 返回无方法的 `IRPlot`；`embedPlot()` 与 `plotInputEmbedAdapter` 将 Plot authoring 输入交给 Kernel Vanilla processing 统一下沉为场景。',
+            en: '`plot()` returns a method-free `IRPlot`; `embedPlot()` and `plotInputEmbedAdapter` hand Plot authoring input to Kernel Vanilla processing for unified Scene lowering.',
           },
         },
         {
@@ -1117,8 +1117,8 @@ export const vizV01: Release = {
             {
               label: { zh: '共享规范化与 Tier 2 嵌入', en: 'Shared normalization and Tier 2 embedding' },
               content: {
-                zh: '`plot()` 与 React DSL 都通过 `@retikz/plot-vanilla` 的 authoring normalization 生成同一 `IRPlot`；`embedPlot()` 与 `PlotInputEmbedAdapter` 由 Kernel Vanilla processing 处理嵌入，datasets 仍留在运行时。',
-                en: '`plot()` and the React DSL both use `@retikz/plot-vanilla` authoring normalization to produce the same `IRPlot`. `embedPlot()` and `PlotInputEmbedAdapter` are handled by Kernel Vanilla processing while datasets remain runtime-only.',
+                zh: '`plot()` 与 React DSL 都通过 `@retikz/plot-vanilla` 的 authoring normalization 生成同一 `IRPlot`；`embedPlot()` 与 `plotInputEmbedAdapter` 由 Kernel Vanilla processing 处理嵌入，datasets 仍留在运行时。',
+                en: '`plot()` and the React DSL both use `@retikz/plot-vanilla` authoring normalization to produce the same `IRPlot`. `embedPlot()` and `plotInputEmbedAdapter` are handled by Kernel Vanilla processing while datasets remain runtime-only.',
               },
             },
           ],
@@ -1231,8 +1231,8 @@ export const vizV01: Release = {
           version: 'alpha.6',
           date: '2026-06-08',
           summary: {
-            zh: '随 plot 数据模型 lockstep：`renderPlot` 入口本就整体展开 `LowerPlotsOptions`，故 alpha.6 新增的数据模型选项（`fieldMaps` / `resolveField` / `validateData` / `invalid`）无需改代码自动生效——SSR 产物可消费可移植契约与缺省类型推断，无新 API。',
-            en: 'Lockstep with plot’s data model: the `renderPlot` entry already spreads `LowerPlotsOptions`, so alpha.6’s new data-model options (`fieldMaps` / `resolveField` / `validateData` / `invalid`) take effect with no code change — SSR output benefits from the portable contract and default type inference, no new API.',
+            zh: '随 plot 数据模型 lockstep：`renderPlot` 入口本就整体展开 `PlotsLoweringOptions`，故 alpha.6 新增的数据模型选项（`fieldMaps` / `resolveField` / `validateData` / `invalid`）无需改代码自动生效——SSR 产物可消费可移植契约与缺省类型推断，无新 API。',
+            en: 'Lockstep with plot’s data model: the `renderPlot` entry already spreads `PlotsLoweringOptions`, so alpha.6’s new data-model options (`fieldMaps` / `resolveField` / `validateData` / `invalid`) take effect with no code change — SSR output benefits from the portable contract and default type inference, no new API.',
           },
           items: [],
         },
@@ -1640,8 +1640,8 @@ export const vizV01: Release = {
         {
           label: { zh: '复用 Kernel runtime', en: 'Kernel runtime reuse' },
           content: {
-            zh: '`embedTable()` 与 `TableInputEmbedAdapter` 将 Table authoring 输入接入 Kernel Vanilla processing；`renderTable()` 提供无 DOM SSR 和可选 manifest。',
-            en: '`embedTable()` and `TableInputEmbedAdapter` connect Table authoring input to Kernel Vanilla processing; `renderTable()` provides DOM-free SSR with an optional manifest.',
+            zh: '`embedTable()` 与 `tableInputEmbedAdapter` 将 Table authoring 输入接入 Kernel Vanilla processing；`renderTable()` 提供无 DOM SSR 和可选 manifest。',
+            en: '`embedTable()` and `tableInputEmbedAdapter` connect Table authoring input to Kernel Vanilla processing; `renderTable()` provides DOM-free SSR with an optional manifest.',
           },
         },
       ],

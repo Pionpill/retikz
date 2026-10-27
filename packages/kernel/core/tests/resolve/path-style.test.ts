@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveEffectivePath, resolveScopeDefaults } from '../../src/resolve/style';
+import { mergePathStyle, resolveScopeDefaults } from '../../src/resolve/style';
 import { resolvePathWithBuiltinProviders } from './path-helper';
 
 describe('路径宿主样式', () => {
@@ -14,7 +14,7 @@ describe('路径宿主样式', () => {
       'teal',
     ],
   ])('保持 %s 颜色有效，直到所选路径消费它', (_, style, defaults, color) => {
-    const resolved = resolveEffectivePath(
+    const resolved = mergePathStyle(
       { type: 'path', kind: 'custom', children: [], style },
       resolveScopeDefaults({ type: 'scope', children: [], defaults }),
     );

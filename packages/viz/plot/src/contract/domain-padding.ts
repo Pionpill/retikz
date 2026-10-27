@@ -1,6 +1,6 @@
 import type { MarkChannels } from './channel';
 import type { CoordinateFrame } from './coordinate';
-import type { MarkInstanceInput } from './mark';
+import type { InputMarkInstance } from './mark';
 import type { PositionScale } from './scale';
 
 /** 逐点域留白的独立观测目标 */
@@ -19,7 +19,7 @@ export type DomainPaddingTarget = {
  */
 export type MarkDomainPaddingCapability<T> = (
   mark: T,
-  instances: MarkInstanceInput,
+  instances: InputMarkInstance,
   roles: ReadonlyArray<string>,
   channels: MarkChannels,
 ) => Array<DomainPaddingTarget>;

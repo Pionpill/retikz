@@ -1,11 +1,11 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { resolveCoreThemeColors, resolveDefaultCoreThemeColors, resolveThemeRegistry } from '../../providers';
 import type { IRTheme } from '../../schemas';
-import type { ResolvedTheme } from '../../shared';
+import type { CanonicalTheme } from '../../shared';
 import { ThemeMode } from '../../shared';
 
 /** 未指定主题名称时使用的浅色主题与默认配色 */
-export const DEFAULT_RESOLVED_THEME: ResolvedTheme = Object.freeze({
+export const DEFAULT_RESOLVED_THEME: CanonicalTheme = Object.freeze({
   mode: ThemeMode.Light,
   colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 });
@@ -19,11 +19,11 @@ export const DEFAULT_RESOLVED_THEME: ResolvedTheme = Object.freeze({
  * @throws 需要重新解析的主题名称未注册，或主题配色计算失败时抛出 RetikzCoreError
  */
 export const resolveTheme = (
-  parent: ResolvedTheme,
+  parent: CanonicalTheme,
   sparse: IRTheme | undefined,
   path: string,
   definitions = resolveThemeRegistry(),
-): ResolvedTheme => {
+): CanonicalTheme => {
   if (sparse === undefined) return parent;
 
   const name = sparse.name ?? parent.name;

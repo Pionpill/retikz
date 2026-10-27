@@ -1,5 +1,12 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '宿主是否允许自动断线；为 true 且标签居中时，缺省的 interrupt 取 true，显式值始终优先':
+    'Whether the host allows automatic interruption; if true and the label is centered, interrupt defaults to true. An explicit value always takes precedence',
+  '默认位置为 0.5，距离和断口每侧留白均为 4；未指定 side 时，随线倾斜的标签居中，其余位于上方':
+    'Position defaults to 0.5; distance and the gap on each side default to 4. If side is omitted, sloped labels are centered and other labels are placed above the path',
+  '将标签位置简写换算为比例，并补齐方向、距离和断线配置':
+    'Convert label position shorthands to a fraction and complete side, distance, and interruption options',
+  已补齐默认值的标签位置与断线配置: 'Label placement and path interruption options with defaults applied',
   局部基准正方形边长: 'Side length of the local reference square',
   实例未指定长度时使用的默认长度: 'Default length when the instance does not specify one',
   实例未指定宽度时使用的默认宽度: 'Default width when the instance does not specify one',

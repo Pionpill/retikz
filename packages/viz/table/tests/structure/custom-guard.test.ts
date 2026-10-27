@@ -3,7 +3,7 @@ import { literal, strictObject, string } from 'zod';
 
 import type { TableStructureOutput } from '../../src';
 import { defineTableStructure, TableCellLocation, TableCellRole, TableRowKind } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 
 const validOutput = (): TableStructureOutput => ({
   rows: [{ id: 'row.0', kind: TableRowKind.Body }],
@@ -40,11 +40,11 @@ const definitionOf = (kind: string, output: TableStructureOutput) =>
 const normalizeCustom = (
   kind: string,
   output: TableStructureOutput,
-  options: Parameters<typeof normalizeTableStructure>[1] = {},
-) => normalizeTableStructure({ kind }, { ...options, structureDefinitions: [definitionOf(kind, output)] });
+  options: Parameters<typeof resolveTableStructure>[1] = {},
+) => resolveTableStructure({ kind }, { ...options, structureDefinitions: [definitionOf(kind, output)] });
 
 const illegalSourceCases: Array<
-  readonly [string, TableStructureOutput, Parameters<typeof normalizeTableStructure>[1], RegExp]
+  readonly [string, TableStructureOutput, Parameters<typeof resolveTableStructure>[1], RegExp]
 > = [
   [
     'manual-source',
@@ -169,7 +169,7 @@ describe('自定义 Table 结构运行时防护', () => {
     });
 
     expect(
-      normalizeTableStructure({ kind: 'transformed-option', option: 'input' }, { structureDefinitions: [definition] })
+      resolveTableStructure({ kind: 'transformed-option', option: 'input' }, { structureDefinitions: [definition] })
         .cells[0].source,
     ).toEqual({ kind: 'generated', structureKind: 'transformed-option' });
     expect(observed).toBe('INPUT');

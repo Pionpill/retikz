@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 
 import type { PlotThemeDefinition } from '../../contract';
 import { RetikzPlotError } from '../../error';
@@ -34,7 +34,7 @@ const ruleSourcesOf = (layers: ReadonlyArray<DefaultsLayer>) =>
 
 /** 按 Core Theme、Plot style 与 Direct Plot Source 顺序解析 Plot defaults */
 export const resolvePlotTheme = (
-  effectiveTheme: ResolvedTheme,
+  effectiveTheme: CanonicalTheme,
   input: Pick<IRPlot, 'defaultPlot' | 'plotRules'> = {},
   plotThemeDefinitions: ReadonlyArray<PlotThemeDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {

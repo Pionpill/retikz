@@ -25,9 +25,9 @@ describe('Layout Inspector 定义', () => {
   it('使 Inspector 定义独立于根复合定义', async () => {
     const layout = await import('../../src');
 
-    expect(layout.FlexLayoutDefinition).not.toHaveProperty('inspector');
-    expect(layout.GridLayoutDefinition).not.toHaveProperty('inspector');
-    expect(layout.OverlayLayoutDefinition).not.toHaveProperty('inspector');
+    expect(layout.flexLayoutDefinition).not.toHaveProperty('inspector');
+    expect(layout.gridLayoutDefinition).not.toHaveProperty('inspector');
+    expect(layout.overlayLayoutDefinition).not.toHaveProperty('inspector');
     expect(layout).not.toHaveProperty('FlexLayoutInspectOptionsSchema');
   });
 });

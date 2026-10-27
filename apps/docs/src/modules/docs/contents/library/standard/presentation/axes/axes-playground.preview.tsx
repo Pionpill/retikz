@@ -1,8 +1,8 @@
 import { Layout } from '@retikz/react';
 import { Axes } from '@retikz/standard-react/presentation';
-import type { AxesInput } from '@retikz/standard/presentation';
+import type { InputAxes } from '@retikz/standard/presentation';
 
-type AxisInput = AxesInput['x'];
+type AxisInput = InputAxes['x'];
 
 type AxisTicksInput = Exclude<AxisInput['ticks'], false | undefined>;
 
@@ -431,7 +431,7 @@ export const renderAxesPlaygroundPreview = (values: AxesPlaygroundPreviewValues)
     label: false,
   });
 
-  const axesInput: AxesInput = {
+  const axesInput: InputAxes = {
     origin: {
       position: [values.originX, values.originY],
       label: values.originEnabled

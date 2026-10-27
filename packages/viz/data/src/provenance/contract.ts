@@ -213,7 +213,7 @@ export type DataLineageEvent =
 export type DataLineageSink = (event: DataLineageEvent) => void;
 
 /** transform step 记录输入 */
-export type DataLineageTransformStepInput = {
+export type InputDataLineageTransformStep = {
   /** transform 在声明数组中的下标 */
   operationIndex: number;
   /** 数据变换操作 */
@@ -229,7 +229,7 @@ export type DataLineageTransformStepInput = {
 };
 
 /** reducer 记录输入 */
-export type DataLineageReducerInput = {
+export type InputDataLineageReducer = {
   /** 聚合归约操作 */
   operation: IRDataReducerOperation;
   /** reducer 本次消费的行 */
@@ -241,7 +241,7 @@ export type DataLineageReducerInput = {
 };
 
 /** selector 记录输入 */
-export type DataLineageSelectorInput = {
+export type InputDataLineageSelector = {
   /** 数据选择操作 */
   operation: IRDataSelectorOperation;
   /** selector 本次消费的行 */
@@ -257,11 +257,11 @@ export type DataLineageRecorder = {
   /** 记录原始输入数据来源 */
   recordSource: (rows: Array<ExternalRow>) => void;
   /** 记录 transform step */
-  recordTransformStep: (input: DataLineageTransformStepInput) => void;
+  recordTransformStep: (input: InputDataLineageTransformStep) => void;
   /** 记录 reducer 操作 */
-  recordReducerOperation: (input: DataLineageReducerInput) => void;
+  recordReducerOperation: (input: InputDataLineageReducer) => void;
   /** 记录 selector 操作 */
-  recordSelectorOperation: (input: DataLineageSelectorInput) => void;
+  recordSelectorOperation: (input: InputDataLineageSelector) => void;
 };
 
 /** data lineage 运行结果 */

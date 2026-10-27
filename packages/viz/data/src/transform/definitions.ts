@@ -38,7 +38,7 @@ import {
   computeSelect,
   computeSummarize,
   relationEndpointOutputField,
-  validateReducerMetrics,
+  assertReducerMetrics,
 } from './group';
 import {
   applyDeriveInterval,
@@ -140,7 +140,7 @@ const summarizeTransformDefinition = defineTransform({
   kind: 'summarize',
   paramsSchema: SummarizeParamsSchema,
   validate: (operation, context) =>
-    validateReducerMetrics(operation.params.metrics, context, {
+    assertReducerMetrics(operation.params.metrics, context, {
       reservedFields: new Set(operation.params.groupBy ?? []),
       reservedLabel: 'a groupBy field',
     }),
@@ -199,7 +199,7 @@ const annotateTransformDefinition = defineTransform({
   kind: 'annotate',
   paramsSchema: AnnotateParamsSchema,
   validate: (operation, context) =>
-    validateReducerMetrics(operation.params.metrics ?? [], context, {
+    assertReducerMetrics(operation.params.metrics ?? [], context, {
       reservedFields: new Set((operation.params.selectors ?? []).map(selector => selector.as)),
       reservedLabel: 'an annotate selector output field',
     }),

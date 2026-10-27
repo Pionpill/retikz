@@ -2,7 +2,7 @@ import { pointAtArcAngle } from '@retikz/math';
 
 import type { IRPosition } from '../../schemas';
 import {
-  AnchorUnitVectorByAnchor,
+  anchorUnitVectorByAnchor,
   isAtPositionLike,
   isBetweenPositionLike,
   isNodeTargetLike,
@@ -63,7 +63,7 @@ export const resolvePosition = (
 
     const referenceLocal = context.toLocal([reference.node.rect.x, reference.node.rect.y]);
     const distance = position.distance ?? context.nodeDistance;
-    const [dx, dy] = AnchorUnitVectorByAnchor[position.direction];
+    const [dx, dy] = anchorUnitVectorByAnchor[position.direction];
 
     return resolutionOfLocal([referenceLocal[0] + dx * distance, referenceLocal[1] + dy * distance], context);
   }

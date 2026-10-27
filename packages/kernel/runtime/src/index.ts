@@ -4,11 +4,11 @@ export type {
   RuntimeCommitEvent,
   RuntimeComputationContext,
   RuntimeComputationDefinition,
-  RuntimeComputationDefinitionInput,
-  RuntimeComputationResultDefinitionInput,
+  InputRuntimeComputationDefinition,
+  InputRuntimeComputationResultDefinition,
   RuntimeComputationToken,
   RuntimeComputationTraceReporter,
-  RuntimeComputationWarningInput,
+  InputRuntimeComputationWarning,
   RuntimeRunOutcome,
   RuntimeUpdateOutcome,
 } from './computation';
@@ -18,23 +18,23 @@ export * from './diagnostic';
 export * from './error';
 export * from './identity';
 export * from './participant';
-export type { RuntimeComputationRegistry, RuntimeComputationRegistryInput, RuntimeSourceRegistry } from './registry';
+export type { RuntimeComputationRegistry, InputRuntimeComputationRegistry, RuntimeSourceRegistry } from './registry';
 export { createRuntimeComputationRegistry, createRuntimeSourceRegistry } from './registry';
 export * from './runtime';
 export type {
   RuntimeChangeSet,
   RuntimeRevision,
   RuntimeSourceDefinition,
-  RuntimeSourceDefinitionInput,
+  InputRuntimeSourceDefinition,
   RuntimeSourceToken,
-  RuntimeSourceValueDefinitionInput,
+  InputRuntimeSourceValueDefinition,
 } from './source';
 export { defineRuntimeSource } from './source';
 export * from './trace';
 export type {
   RuntimeResult,
   RuntimeSnapshot,
-  RuntimeSourceInput,
+  InputRuntimeSource,
   RuntimeSourceUpdate,
   RuntimeUpdate,
 } from './transaction';

@@ -18,7 +18,7 @@ import { RetikzTableError } from '../../error';
 import { extractTableStructureKind } from '../../providers';
 import { TABLE_NAMESPACE, TableComposite } from '../../schemas';
 import { lowerTables } from '../resolve';
-import type { LowerTablesOptions } from '../types';
+import type { TablesLoweringOptions } from '../types';
 
 const STRUCTURE_DEFINITIONS_KEY = 'structureDefinitions';
 
@@ -48,11 +48,11 @@ export type TableProviderParams = Readonly<{
   /** 按引用名索引的行数据集 */
   datasets: ExternalDatasets;
   /** Table 编译选项 */
-  lowerOptions: LowerTablesOptions;
+  lowerOptions: TablesLoweringOptions;
 }>;
 
 /** Table Composite provider 的公开完整 key */
-export const TableProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const tableProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: TABLE_NAMESPACE,
   type: TableComposite.Table,
@@ -82,7 +82,7 @@ const mergeByIdentity = <T>(
 };
 
 /** 合并当前与未来的非 definition lowering options */
-const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>): Record<string, unknown> => {
+const mergeSharedLowerOptions = (optionSets: ReadonlyArray<TablesLoweringOptions>): Record<string, unknown> => {
   const merged: Record<string, unknown> = {};
 
   for (const options of optionSets) {
@@ -110,7 +110,7 @@ const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>):
 };
 
 /** 合并多个 Table 贡献的编译选项 */
-const mergeLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>): LowerTablesOptions => {
+const mergeLowerOptions = (optionSets: ReadonlyArray<TablesLoweringOptions>): TablesLoweringOptions => {
   const structureDefinitions = mergeByIdentity<AnyTableStructureDefinition>(
     optionSets.map(options => options.structureDefinitions),
     extractTableStructureKind,
@@ -216,10 +216,10 @@ const makeNestedDefinition: CoreDependencyProvider<AnyCompositeDefinition>['make
 /** 创建携带具名参数的 Table 提供者 */
 export const createTableProvider = (
   data: ExternalDatasets,
-  lowerOptions: LowerTablesOptions,
+  lowerOptions: TablesLoweringOptions,
 ): CoreDependencyProvider<TableProviderParams> =>
   Object.freeze({
-    key: TableProviderKey,
+    key: tableProviderKey,
     params: Object.freeze({ datasets: Object.freeze({ ...data }), lowerOptions }),
     makeDefinition: makeTableDefinition,
   });

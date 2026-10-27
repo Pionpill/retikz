@@ -1,9 +1,9 @@
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import type { IRMap } from '@retikz/standard/collection';
-import { createMap, MapProvider } from '@retikz/standard/collection';
+import { createMap, mapProvider } from '@retikz/standard/collection';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { StandardMapEmbedKind } from '../shared/constants';
+import { standardMapEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCells } from './cell';
 
@@ -40,13 +40,13 @@ export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
   );
 
 /** 将 Map 输入与嵌套内容交给根级 traversal */
-export const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
-  kind: StandardMapEmbedKind,
+export const mapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
+  kind: standardMapEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)
       return {
         node: createMap({ namespace: 'standard', type: 'map', ...props }),
-        providerDependencies: { roots: [MapProvider.key], providers: [MapProvider, PathClipProvider] },
+        providerDependencies: { roots: [mapProvider.key], providers: [mapProvider, pathClipProvider] },
       };
 
     if (props.data !== undefined)
@@ -61,7 +61,7 @@ export const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
         [entry.key, entry.value].map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
       ),
       context,
-      MapProvider,
+      mapProvider,
     );
 
     return {
@@ -83,7 +83,7 @@ export const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
 /** 创建 Map embed；显式 input.id 同时用作领域与 embed 身份 */
 export const map = (input: InputMap): InputEmbed<InputMap> => ({
   type: 'embed',
-  kind: StandardMapEmbedKind,
+  kind: standardMapEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

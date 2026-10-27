@@ -1,25 +1,25 @@
-import { PathClipProvider } from '@retikz/extension';
-import type { SurfaceInput } from '@retikz/standard/presentation';
+import { pathClipProvider } from '@retikz/extension';
+import type { InputSurfaceConfig } from '@retikz/standard/presentation';
 import {
   createSurface,
   RetikzStandardError,
   RetikzStandardErrorCode,
-  SurfaceProvider,
+  surfaceProvider,
 } from '@retikz/standard/presentation';
 import type {
   InputChild,
   InputEmbed,
   SynchronousInputEmbedAdapter,
-  NormalizedInputEmbedChildren,
+  EmbedChildrenNormalizationResult,
 } from '@retikz/vanilla';
 
-import { StandardSurfaceEmbedKind } from '../shared/constants';
+import { standardSurfaceEmbedKind } from '../shared/constants';
 
 /** Surface 唯一 child 的作者侧输入 */
 export type InputSurfaceChild = InputChild;
 
 /** Surface 输入可显式指定持久化 Scope id */
-export type InputSurface = Omit<SurfaceInput, 'namespace' | 'type' | 'child' | 'id'> & {
+export type InputSurface = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'child' | 'id'> & {
   /** 要持久化到 Surface IR 的显式身份 */
   id?: string;
   /** 唯一 child 与其可选 Tier 2 依赖 */
@@ -30,7 +30,7 @@ export type InputSurface = Omit<SurfaceInput, 'namespace' | 'type' | 'child' | '
 export const surfaceChild = (child: InputSurfaceChild): InputSurfaceChild => child;
 
 /** Standard Surface 的 InputEmbed adapter */
-const createSurfaceContribution = (props: InputSurface, normalized: NormalizedInputEmbedChildren) => {
+const createSurfaceContribution = (props: InputSurface, normalized: EmbedChildrenNormalizationResult) => {
   const { child, id, ...input } = props;
   void child;
   if (normalized.children.length !== 1)
@@ -53,17 +53,17 @@ const createSurfaceContribution = (props: InputSurface, normalized: NormalizedIn
       path: ['child', ...binding.path.slice(1)],
     })),
     providerDependencies: {
-      roots: [SurfaceProvider.key, ...normalized.providerDependencies.roots],
-      providers: [SurfaceProvider, PathClipProvider, ...normalized.providerDependencies.providers],
+      roots: [surfaceProvider.key, ...normalized.providerDependencies.roots],
+      providers: [surfaceProvider, pathClipProvider, ...normalized.providerDependencies.providers],
     },
     ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
   };
 };
 
 /** Standard Surface 的同步与异步 InputEmbed adapter */
-export const SurfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
+export const surfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
   Required<Pick<SynchronousInputEmbedAdapter<InputSurface>, 'prepare'>> = {
-  kind: StandardSurfaceEmbedKind,
+  kind: standardSurfaceEmbedKind,
   lower: (props, context) => {
     const { child } = props;
     const normalizeChildren = context.normalizeChildren;
@@ -71,7 +71,7 @@ export const SurfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface
       throw new RetikzStandardError({
         code: RetikzStandardErrorCode.AuthoringInvalid,
         message: 'Standard Surface inputs require Kernel Vanilla normalizeScene.',
-        details: { operation: 'SurfaceInputEmbedAdapter' },
+        details: { operation: 'surfaceInputEmbedAdapter' },
       });
     }
 
@@ -85,10 +85,10 @@ export const SurfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface
   },
 };
 
-/** 创建由 SurfaceInputEmbedAdapter 下沉的 Standard Surface embed */
+/** 创建由 surfaceInputEmbedAdapter 下沉的 Standard Surface embed */
 export const surface = (input: InputSurface): InputEmbed<InputSurface> => ({
   type: 'embed',
-  kind: StandardSurfaceEmbedKind,
+  kind: standardSurfaceEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

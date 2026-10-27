@@ -60,6 +60,6 @@ export const regressionControlContractOf = (method: string, lang: Lang = 'zh') =
       sampleCount: 32,
       tail: 33,
     },
-    relatedApis: ['BuiltinRegressionMethodSchemas', 'resolveRegression', 'RegressionModel.predict'],
+    relatedApis: ['BUILTIN_REGRESSION_METHOD_SCHEMAS', 'resolveRegression', 'RegressionModel.predict'],
   } satisfies PreviewControlContract;
 };

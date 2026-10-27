@@ -1,10 +1,10 @@
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import type { IRChain, IRChainConnection, IRChainParallel, IRChainItem } from '@retikz/standard/collection';
-import { ChainProvider, createChain } from '@retikz/standard/collection';
+import { chainProvider, createChain } from '@retikz/standard/collection';
 import type { InputPath, InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
 
-import { StandardChainEmbedKind } from '../shared/constants';
+import { standardChainEmbedKind } from '../shared/constants';
 import { normalizeCells, dataCellDependencies } from './cell';
 import type { InputCell } from './cell';
 
@@ -87,8 +87,8 @@ const normalizeConnection = (defaultConnection: InputChainConnection): IRChainCo
 };
 
 /** 递归收集内容，通过 Kernel 归一化一次并保留依赖 */
-export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = {
-  kind: StandardChainEmbedKind,
+export const chainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = {
+  kind: standardChainEmbedKind,
   lower: (props, context) => {
     const {
       defaultConnection,
@@ -116,10 +116,10 @@ export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
             : { skeleton: props.skeleton }),
         }),
         providerDependencies: {
-          roots: [ChainProvider.key, ...(props.data !== undefined ? dataCellDependencies.roots : [])],
+          roots: [chainProvider.key, ...(props.data !== undefined ? dataCellDependencies.roots : [])],
           providers: [
-            ChainProvider,
-            PathClipProvider,
+            chainProvider,
+            pathClipProvider,
             ...(props.data !== undefined ? dataCellDependencies.providers : []),
           ],
         },
@@ -139,7 +139,7 @@ export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
     };
 
     collect(props.items);
-    const normalized = normalizeCells(cells, context, ChainProvider);
+    const normalized = normalizeCells(cells, context, chainProvider);
     let cursor = 0;
     const rebuild = (items: Array<InputChainItem>): Array<IRChainItem> =>
       items.map(item => {
@@ -170,7 +170,7 @@ export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
 /** 创建保留作者输入的链 */
 export const chain = (input: InputChain): InputEmbed<InputChain> => ({
   type: 'embed',
-  kind: StandardChainEmbedKind,
+  kind: standardChainEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

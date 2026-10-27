@@ -1,6 +1,6 @@
 import type { ExternalRow } from '@retikz/data';
 
-import type { CoordinateFrame, FieldCollector, IntervalContext, MarkInstance, MarkInstanceInput } from '../../contract';
+import type { CoordinateFrame, FieldCollector, IntervalContext, MarkInstance, InputMarkInstance } from '../../contract';
 import { cellGeometryAnchor } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { AnyMarkDefinition } from '../../providers';
@@ -51,7 +51,7 @@ export const datumAnchor = (
 export const resolveMarkInstances = (
   resolution: MarkOperationResolution,
   rows: Array<ExternalRow>,
-): MarkInstanceInput => {
+): InputMarkInstance => {
   const fields = new Set<string>();
   resolution.definition.collectFields?.(resolution.operation as never, createFieldCollector(fields));
   if (fields.size > 0) return { kind: 'rows', rows };

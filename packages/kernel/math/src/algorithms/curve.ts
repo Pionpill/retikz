@@ -126,7 +126,7 @@ export type CurveParameterAtDistanceOptions = CurveApproximationOptions & {
 
 type CurveArcSegment = Extract<CurveSegment, { kind: 'arc' | 'ellipseArc' }>;
 
-type CatmullRomSegmentControlsInput = {
+type InputCatmullRomSegmentControls = {
   p0: Position;
   p1: Position;
   p2: Position;
@@ -149,7 +149,7 @@ const centripetalKnotSpacing = (a: Position, b: Position): number => {
  * @remarks 复杂度：时间 O(1)，空间 O(1)；tension 缩放切线长度，不改变段终点
  */
 const catmullRomSegmentControls = (
-  input: CatmullRomSegmentControlsInput,
+  input: InputCatmullRomSegmentControls,
 ): { control1: Position; control2: Position } => {
   const { p0, p1, p2, p3, tension } = input;
   const dt0 = centripetalKnotSpacing(p0, p1);
@@ -200,13 +200,13 @@ const clampUnit = (value: number): number => Math.max(0, Math.min(1, value));
 
 const copyPoint = (pointValue: Position): Position => [pointValue[0], pointValue[1]];
 
-const normalizedSampleCount = (sampleCount: number | undefined): number =>
+const resolveSampleCount = (sampleCount: number | undefined): number =>
   Math.max(1, Math.floor(sampleCount ?? DEFAULT_CURVE_SAMPLE_COUNT));
 
-const normalizedBisectionSteps = (bisectionSteps: number | undefined): number =>
+const resolveBisectionSteps = (bisectionSteps: number | undefined): number =>
   Math.max(1, Math.floor(bisectionSteps ?? DEFAULT_CURVE_BISECTION_STEPS));
 
-const normalizedArcSweep = (segment: CurveArcSegment): { startAngleDeg: number; endAngleDeg: number } => {
+const resolveArcSweep = (segment: CurveArcSegment): { startAngleDeg: number; endAngleDeg: number } => {
   const { startAngleDeg, endAngleDeg } = segment;
   const counterClockwise = segment.counterClockwise ?? endAngleDeg < startAngleDeg;
   const aligned = alignAngleSweep(startAngleDeg, endAngleDeg, counterClockwise);
@@ -230,7 +230,7 @@ const evaluateArcPoint = (
 };
 
 const sampleArcAt = (segment: CurveArcSegment, parameter: number): CurveSegmentSample => {
-  const sweep = normalizedArcSweep(segment);
+  const sweep = resolveArcSweep(segment);
   const angleDeg = sweep.startAngleDeg + (sweep.endAngleDeg - sweep.startAngleDeg) * parameter;
   const angleRad = (angleDeg * Math.PI) / 180;
   const direction = sweep.endAngleDeg >= sweep.startAngleDeg ? 1 : -1;
@@ -281,7 +281,7 @@ const evaluateCurvePoint = (segment: CurveSegment, parameter: number): Position 
   }
   if (segment.kind === 'quadraticBezier') return evaluateQuadraticPoint(segment, t, 1 - t);
   if (segment.kind === 'cubicBezier') return evaluateCubicPoint(segment, t, 1 - t);
-  const sweep = normalizedArcSweep(segment);
+  const sweep = resolveArcSweep(segment);
   const angleRad = ((sweep.startAngleDeg + (sweep.endAngleDeg - sweep.startAngleDeg) * t) * Math.PI) / 180;
   const radiusX = segment.kind === 'arc' ? segment.radius : segment.radiusX;
   const radiusY = segment.kind === 'arc' ? segment.radius : segment.radiusY;
@@ -352,7 +352,7 @@ const createLengthMeasure = (segment: CurveSegment, sampleCount: number): ((para
     };
   }
   if (segment.kind === 'arc') {
-    const sweep = normalizedArcSweep(segment);
+    const sweep = resolveArcSweep(segment);
     const length = Math.abs(sweep.endAngleDeg - sweep.startAngleDeg) * (Math.PI / 180) * Math.abs(segment.radius);
     return parameter => {
       const t = clampUnit(parameter);
@@ -366,7 +366,7 @@ const createLengthMeasure = (segment: CurveSegment, sampleCount: number): ((para
   } else if (segment.kind === 'cubicBezier') {
     evaluatePoint = t => evaluateCubicPoint(segment, t, 1 - t);
   } else {
-    const sweep = normalizedArcSweep(segment);
+    const sweep = resolveArcSweep(segment);
     const rotationRad = ((segment.rotationDeg ?? 0) * Math.PI) / 180;
     const cosRotation = Math.cos(rotationRad);
     const sinRotation = Math.sin(rotationRad);
@@ -479,7 +479,7 @@ const sliceCurveSegment = (segment: CurveSegment, fromParameter: number, toParam
     };
   }
 
-  const sweep = normalizedArcSweep(segment);
+  const sweep = resolveArcSweep(segment);
   const startAngleDeg = sweep.startAngleDeg + (sweep.endAngleDeg - sweep.startAngleDeg) * start;
   const endAngleDeg = sweep.startAngleDeg + (sweep.endAngleDeg - sweep.startAngleDeg) * end;
   if (segment.kind === 'arc') {
@@ -515,7 +515,7 @@ const projectedCurveRange = (segment: CurveSegment, axis: Vector2): { min: numbe
   let evaluatePoint = (t: number): Position => evaluateCurvePoint(segment, t);
   if (segment.kind === 'arc' || segment.kind === 'ellipseArc') {
     // 一次投影中的候选点共享扫角和半轴，避免每个极值点重复准备
-    const sweep = normalizedArcSweep(segment);
+    const sweep = resolveArcSweep(segment);
     const radiusX = segment.kind === 'arc' ? segment.radius : segment.radiusX;
     const radiusY = segment.kind === 'arc' ? segment.radius : segment.radiusY;
     const rotationRad = segment.kind === 'ellipseArc' ? ((segment.rotationDeg ?? 0) * Math.PI) / 180 : 0;
@@ -576,7 +576,7 @@ const projectedCurveRange = (segment: CurveSegment, axis: Vector2): { min: numbe
       }
     }
   } else if (segment.kind === 'arc' || segment.kind === 'ellipseArc') {
-    const sweep = normalizedArcSweep(segment);
+    const sweep = resolveArcSweep(segment);
     const length = sweep.endAngleDeg - sweep.startAngleDeg;
     if (length !== 0) {
       const rotation = segment.kind === 'ellipseArc' ? ((segment.rotationDeg ?? 0) * Math.PI) / 180 : 0;
@@ -617,7 +617,7 @@ export const curve = {
    * @remarks 复杂度：时间 O(n)，空间 O(1)，n 为有效采样数量
    */
   approximateLength: (segment: CurveSegment, options: CurveApproximationOptions = {}): number =>
-    createLengthMeasure(segment, normalizedSampleCount(options.sampleCount))(1),
+    createLengthMeasure(segment, resolveSampleCount(options.sampleCount))(1),
   /**
    * 将沿曲线的距离反解为参数位置
    * @description 使用与 `approximateLength` 相同的离散长度模型；传入 `totalLength` 时必须与相同 sample count 对应。当中点的近似长度与目标距离相差不超过默认几何容差时提前返回
@@ -632,7 +632,7 @@ export const curve = {
     distance: number,
     options: CurveParameterAtDistanceOptions = {},
   ): number => {
-    const sampleCount = normalizedSampleCount(options.sampleCount);
+    const sampleCount = resolveSampleCount(options.sampleCount);
     let measureLength: ((parameter: number) => number) | undefined;
     let totalLength = options.totalLength;
     if (totalLength === undefined) {
@@ -651,7 +651,7 @@ export const curve = {
     let lowerParameter = 0;
     let upperParameter = 1;
 
-    const bisectionSteps = normalizedBisectionSteps(options.bisectionSteps);
+    const bisectionSteps = resolveBisectionSteps(options.bisectionSteps);
     for (let index = 0; index < bisectionSteps; index += 1) {
       const middleParameter = (lowerParameter + upperParameter) / 2;
       const middleLength = measureLength(middleParameter);

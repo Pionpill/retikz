@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type { IRTableCellRule, SemanticTableModel } from '../../src';
 import { TableCellRuleSchema } from '../../src';
 import { formatTable } from '../../src/pipeline/formatter';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 
 const modelOf = () =>
-  normalizeTableStructure({
+  resolveTableStructure({
     kind: 'manual',
     rows: [
       [
@@ -257,7 +257,7 @@ describe('解决了 Table Cell 计划', () => {
   });
 
   it('通过规范地址诊断匿名直接内容 Cell', () => {
-    const model = normalizeTableStructure({
+    const model = resolveTableStructure({
       kind: 'manual',
       rows: [[{ content: { type: 'node', position: [0, 0], text: 'direct' } }]],
     });

@@ -51,7 +51,7 @@ import type { IRScene } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { RegressionChartSchema, createRegressionChartProviderContribution } from '@retikz/chart/point';
 import { createPlotProviderContribution } from '@retikz/plot';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import { regressionMinimalData } from './regression-minimal.data';
 import { Layout } from '@retikz/react';
 
@@ -66,7 +66,7 @@ const definitions = resolveCoreProviderDependencies({
   contributions: [
     createRegressionChartProviderContribution(),
     createPlotProviderContribution({ 'chart.data': regressionMinimalData }),
-    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
   ],
 });
 
@@ -78,14 +78,14 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { regressionChart, RegressionChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { regressionChart, regressionChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import { regressionMinimalData } from './regression-minimal.data';
 
 const chart = regressionChart({
   data: regressionMinimalData,
   encodings: { x: 'distanceMiles', y: 'delayMinutes' },
 });
-export const svg = renderChart(chart, { adapters: [RegressionChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart, { adapters: [regressionChartInputEmbedAdapter] }).svg;
 ```
 
 </DocTab>
@@ -96,7 +96,7 @@ import type { IRScene } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { RegressionChartSchema, createRegressionChartProviderContribution } from '@retikz/chart/point';
 import { createPlotProviderContribution } from '@retikz/plot';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import { regressionMinimalData } from './regression-minimal.data';
 import { compileToScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
@@ -112,7 +112,7 @@ const definitions = resolveCoreProviderDependencies({
   contributions: [
     createRegressionChartProviderContribution(),
     createPlotProviderContribution({ 'chart.data': regressionMinimalData }),
-    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
   ],
 });
 

@@ -10,7 +10,7 @@ import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type {
   FlowLayoutDefinition,
   FlowLayoutExecutionContext,
-  FlowLayoutInput,
+  InputFlowLayoutComputation,
   FlowLayoutOutput,
   IRFlowEntity,
 } from '../../src/flow';
@@ -25,7 +25,7 @@ import { parseTestFlowDiagram } from './fixtures';
 
 type ExecuteFlowLayout = (
   definition: FlowLayoutDefinition,
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   context?: FlowLayoutExecutionContext,
 ) => FlowLayoutOutput;
 
@@ -56,7 +56,7 @@ const getExecuteFlowLayout = (): ExecuteFlowLayout | undefined => {
   return undefined;
 };
 
-const input: FlowLayoutInput = {
+const input: InputFlowLayoutComputation = {
   layout: {
     direction: 'right',
     nodeGap: 20,
@@ -178,7 +178,7 @@ describe('Flow 布局回调执行', () => {
     if (executeFlowLayout === undefined) return;
 
     let callCount = 0;
-    let receivedInput: FlowLayoutInput | undefined;
+    let receivedInput: InputFlowLayoutComputation | undefined;
     const mutableOutput = output();
     const result = executeFlowLayout(
       definition(received => {
@@ -290,7 +290,7 @@ describe('Flow 布局回调执行', () => {
 
     if (executeFlowLayout === undefined) return;
 
-    const layoutInput: FlowLayoutInput = {
+    const layoutInput: InputFlowLayoutComputation = {
       layout: input.layout,
       elements: [
         {
@@ -352,7 +352,7 @@ describe('Flow 布局回调执行', () => {
         ],
         relations: [],
       }),
-      (_input: FlowLayoutInput, context: FlowLayoutExecutionContext) => {
+      (_input: InputFlowLayoutComputation, context: FlowLayoutExecutionContext) => {
         const placement = place(context);
         place(context);
 
@@ -364,7 +364,7 @@ describe('Flow 布局回调执行', () => {
           relations: [],
         };
       },
-      (_input: FlowLayoutInput, context: FlowLayoutExecutionContext) => {
+      (_input: InputFlowLayoutComputation, context: FlowLayoutExecutionContext) => {
         const placement = place(context);
         return {
           elements: [

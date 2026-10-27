@@ -53,7 +53,7 @@ const worldVertices = (rect: CenteredBox, params: ContourShapeParams): Array<Pos
   centeredPoints(params).map(vertex => localToWorld(rect, vertex));
 
 /** 可选 Contour 形状 Definition */
-export const ContourShapeDefinition = defineShape<ContourShapeParams>({
+export const contourShapeDefinition = defineShape<ContourShapeParams>({
   name: BuiltinExtensionShapeName.Contour,
   paramsSchema: ContourShapeParamsSchema,
   computeCircumscribedGeometry: (_halfWidth, _halfHeight, params) => {
@@ -91,7 +91,7 @@ export const ContourShapeDefinition = defineShape<ContourShapeParams>({
 });
 
 /** Contour 的静态 Core provider */
-export const ContourShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
-  key: { capability: 'shape', name: ContourShapeDefinition.name },
-  makeDefinition: () => ContourShapeDefinition,
+export const contourShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
+  key: { capability: 'shape', name: contourShapeDefinition.name },
+  makeDefinition: () => contourShapeDefinition,
 });

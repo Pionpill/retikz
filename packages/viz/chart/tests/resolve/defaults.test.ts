@@ -1,6 +1,6 @@
 import type { ScenePrimitive } from '@retikz/core';
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import { createPlotProviderContribution } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
@@ -25,7 +25,7 @@ const compileChart = (source: unknown) => {
     contributions: [
       createScatterChartProviderContribution(),
       createPlotProviderContribution({ rows }),
-      { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      { roots: [pathClipProvider.key], providers: [pathClipProvider] },
     ],
   });
 

@@ -6,16 +6,16 @@ import { resolvePositionTargetWorld } from '../../resolve/position';
 import type { IRScope, IRPosition, IRScopePositionTarget, IRScopeSelfPoint, IRTransform } from '../../schemas';
 import { ScopeBoundingShape } from '../../schemas';
 import type { CompileEnvironment } from '../environment';
-import type { NodeLayout } from '../node';
+import type { CompiledNodeLayout } from '../node';
 import { createScopeCircleLayout, createScopeRectangleLayout } from '../node';
 import { transformWarnCode } from '../orchestration';
 import { resolveAnchorRefUncached } from '../reference';
 import { applyTransformChain, composeScopeTransform, projectLayoutWithTransform } from '../transform';
-import type { CompileWarningInput } from '../warning';
+import type { InputCompileWarning } from '../warning';
 import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from './layout';
 
 /** Scope 自身几何声明，不包含子树 */
-export type ScopeCompileInput = Omit<IRScope, 'children'>;
+export type InputScopeCompile = Omit<IRScope, 'children'>;
 
 /** Scope 单次几何计算环境 */
 type ScopeGeometryContext = Readonly<{
@@ -24,7 +24,7 @@ type ScopeGeometryContext = Readonly<{
   /** 当前诊断位置 */
   irPath: string;
   /** 当前诊断接收器 */
-  onWarn: (warning: CompileWarningInput) => void;
+  onWarn: (warning: InputCompileWarning) => void;
 }>;
 /** 拒绝非 finite 的 Scope position 中间结果 */
 const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition => {
@@ -40,7 +40,7 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition =>
  * @description 只允许父 frame 显式坐标或此前已完成的 namespace entry，避免 descendant / self / placeholder cycle
  */
 export const resolveScopePositionTarget = (
-  child: ScopeCompileInput,
+  child: InputScopeCompile,
   context: ScopeGeometryContext,
 ): IRPosition | undefined => {
   const target: IRScopePositionTarget | undefined = Array.isArray(child.position) ? undefined : child.position?.target;
@@ -77,10 +77,10 @@ export const resolveScopePositionTarget = (
 
 /** 从当前 Scope 的固有 child layouts 创建 rectangle / circle synthetic envelope */
 export const createIntrinsicScopeLayout = (
-  child: ScopeCompileInput,
-  scopeLayouts: ReadonlyArray<NodeLayout>,
+  child: InputScopeCompile,
+  scopeLayouts: ReadonlyArray<CompiledNodeLayout>,
   environment: Pick<CompileEnvironment, 'shapes' | 'boundaries'>,
-): NodeLayout => {
+): CompiledNodeLayout => {
   const id = child.id ?? '__anonymous_scope__';
   return child.boundingShape === ScopeBoundingShape.Circle
     ? createScopeCircleLayout(
@@ -96,7 +96,7 @@ export const createIntrinsicScopeLayout = (
 /** anchor position self point：anchor 在 transformed envelope 上解析；origin / 显式点先按 own chain 投影 */
 const resolveTransformedSelfPoint = (
   point: IRScopeSelfPoint,
-  transformedLayout: NodeLayout,
+  transformedLayout: CompiledNodeLayout,
   scopeTransforms: ReadonlyArray<Transform>,
 ): IRPosition => {
   if (typeof point === 'string') {
@@ -119,9 +119,9 @@ const resolveTransformedSelfPoint = (
 
 /** children intrinsic layout 完成后解析 pivot，并生成最终 own chain */
 export const resolveFinalScopeTransforms = (
-  child: ScopeCompileInput,
+  child: InputScopeCompile,
   context: ScopeGeometryContext,
-  intrinsicLayout: NodeLayout,
+  intrinsicLayout: CompiledNodeLayout,
   positionTarget: IRPosition | undefined,
   preliminaryTransforms: Array<Transform> | undefined,
 ): Array<Transform> => {
@@ -176,7 +176,7 @@ export const resolveFinalScopeTransforms = (
  * @description 保持 v0.4 Scope transform 下跨 frame relative 定位语义；anchor pivot 才进入完整两阶段收尾
  */
 export const resolvePreliminaryScopeTransforms = (
-  child: ScopeCompileInput,
+  child: InputScopeCompile,
   context: ScopeGeometryContext,
 ): Array<Transform> | undefined => {
   const needsIntrinsicEnvelope = (child.transforms ?? []).some(transform => {

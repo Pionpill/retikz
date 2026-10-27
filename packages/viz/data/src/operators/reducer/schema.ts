@@ -227,7 +227,7 @@ export const QuantileBandReducerOperationSchema = strictObject({
   .describe('Quantile-band reducer operation');
 
 /** 内置 reducer operation 的 schema 单一真源；aggregate schema 与 provider definition 共用这些实例 */
-export const BuiltinReducerOperationSchemas = Object.freeze({
+export const BUILTIN_REDUCER_OPERATION_SCHEMAS = Object.freeze({
   Count: CountReducerOperationSchema,
   Sum: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Sum),
   Mean: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Mean),
@@ -255,15 +255,15 @@ const ExternalReducerOperationSchema = ExternalReducerOperationObjectSchema.catc
 
 /** 内置统计 reducer operation schema */
 const BuiltinReducerOperationSchema = union([
-  BuiltinReducerOperationSchemas.Count,
-  BuiltinReducerOperationSchemas.Sum,
-  BuiltinReducerOperationSchemas.Mean,
-  BuiltinReducerOperationSchemas.Median,
-  BuiltinReducerOperationSchemas.Min,
-  BuiltinReducerOperationSchemas.Max,
-  BuiltinReducerOperationSchemas.Extent,
-  BuiltinReducerOperationSchemas.Quantile,
-  BuiltinReducerOperationSchemas.QuantileBand,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Count,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Sum,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Mean,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Median,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Min,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Max,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Extent,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Quantile,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.QuantileBand,
 ]).describe('Built-in statistic reducer operation');
 
 /** 统计 reducer operation schema；包含内置 kind 与外部注册 kind 开放配置对象 */
@@ -273,13 +273,13 @@ export const ReducerOperationSchema = union([BuiltinReducerOperationSchema, Exte
 
 /** compact aggregate可解析的单scalar reducer候选；custom项仍需Definition capability确认 */
 export const DataScalarReducerOperationSchema = union([
-  BuiltinReducerOperationSchemas.Count,
-  BuiltinReducerOperationSchemas.Sum,
-  BuiltinReducerOperationSchemas.Mean,
-  BuiltinReducerOperationSchemas.Median,
-  BuiltinReducerOperationSchemas.Min,
-  BuiltinReducerOperationSchemas.Max,
-  BuiltinReducerOperationSchemas.Quantile,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Count,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Sum,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Mean,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Median,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Min,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Max,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Quantile,
   ExternalReducerOperationSchema,
 ]).describe('Single-scalar reducer candidate for compact field aggregation');
 

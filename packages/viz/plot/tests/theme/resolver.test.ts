@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -8,7 +8,7 @@ import { getNeutralPlotDefaults } from '../../src/providers/theme';
 import { resolvePlotAxisDefaults } from '../../src/resolve/theme';
 import { PlotDefaultsSchema, PlotThemeResolutionSchema } from '../../src/schemas';
 
-const themeOf = (name: string | undefined, mode: ResolvedTheme['mode']): ResolvedTheme => ({
+const themeOf = (name: string | undefined, mode: CanonicalTheme['mode']): CanonicalTheme => ({
   ...(name === undefined ? {} : { name }),
   mode,
   colors: resolveDefaultCoreThemeColors(mode),

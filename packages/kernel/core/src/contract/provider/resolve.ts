@@ -10,7 +10,7 @@ import type {
   CoreProviderDefinition,
   CoreProviderDefinitions,
   CoreProviderKey,
-  ResolveCoreProviderDependenciesOptions,
+  CoreProviderDependenciesResolveOptions,
 } from './types';
 import { ProviderCapability } from './types';
 
@@ -61,7 +61,7 @@ const findProvider = (index: ProviderIndex, key: CoreProviderKey): ProviderEntry
 
 /** 建立完整提供者索引，并在创建函数执行前完成声明检查与参数收集 */
 const buildProviderIndex = (
-  options: ResolveCoreProviderDependenciesOptions,
+  options: CoreProviderDependenciesResolveOptions,
 ): { index: ProviderIndex; roots: Array<CoreProviderKey>; definitions: CoreProviderDefinitions } => {
   /** 写入完整 Core 提供者键对应的提供者 */
   const setProvider = (index: ProviderIndex, entry: ProviderEntry): void => {
@@ -358,7 +358,7 @@ const freezeResolvedDefinitions = (definitions: MutableCoreProviderDefinitions):
  * @throws 工厂执行失败时抛出 RetikzCoreError，保留原始异常为 cause，并通过 details.key 标识失败的提供者
  */
 export const resolveCoreProviderDependencies = (
-  options: ResolveCoreProviderDependenciesOptions,
+  options: CoreProviderDependenciesResolveOptions,
 ): CoreProviderDefinitions => {
   /** 判断定义标识是否与提供者键相同 */
   const doesDefinitionMatchKey = (key: CoreProviderKey, definition: CoreProviderDefinition): boolean => {

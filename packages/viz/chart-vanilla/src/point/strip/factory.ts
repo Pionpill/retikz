@@ -7,7 +7,7 @@ import { normalizeStripChart } from './normalize';
 import type { StripChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 StripChart 输入并复用统一数据准备 */
-export const StripChartInputEmbedAdapter = createChartInputEmbedAdapter(
+export const stripChartInputEmbedAdapter = createChartInputEmbedAdapter(
   'chart.strip',
   (input: StripChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
@@ -39,7 +39,7 @@ export const stripChart = <TNative = never>(
   input: StripChartInputEmbedProps<TNative>,
 ): InputEmbed<StripChartInputEmbedProps<TNative>> => ({
   type: 'embed',
-  kind: StripChartInputEmbedAdapter.kind,
+  kind: stripChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });
