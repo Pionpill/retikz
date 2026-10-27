@@ -18,11 +18,11 @@ Core 已拥有各 provider 的 Definition、registry 与最终 compile 语义，
 ## 决策：Core 提供通用 provider graph
 
 ```ts
-type CoreProviderCapability = 'shape' | 'boundary' | 'clip' | 'arrow' | 'pattern' | 'path' | 'composite';
+type ProviderCapability = 'shape' | 'boundary' | 'clip' | 'arrow' | 'pattern' | 'path' | 'composite';
 
 type CoreProviderKey =
   | Readonly<{
-      capability: Exclude<CoreProviderCapability, 'composite'>;
+      capability: Exclude<ProviderCapability, 'composite'>;
       name: string;
     }>
   | Readonly<{

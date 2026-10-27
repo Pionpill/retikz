@@ -11,8 +11,8 @@ import type {
   CoreProviderDefinitions,
   CoreProviderKey,
   ResolveCoreProviderDependenciesOptions,
-} from './dependency-provider';
-import { CoreProviderCapability } from './dependency-provider';
+} from './types';
+import { ProviderCapability } from './types';
 
 type ProviderEntry = {
   key: CoreProviderKey;
@@ -21,7 +21,7 @@ type ProviderEntry = {
   makeDefinition: AnyCoreDependencyProvider['makeDefinition'];
 };
 
-type NamedProviderCapability = Exclude<CoreProviderCapability, typeof CoreProviderCapability.Composite>;
+type NamedProviderCapability = Exclude<ProviderCapability, typeof ProviderCapability.Composite>;
 
 /** 提供者索引将复合定义的命名空间/类型标识保存在独立映射维度中 */
 type ProviderIndex = Readonly<{
@@ -49,22 +49,19 @@ type CoreDefinitionCollection = ReadonlyArray<CoreProviderDefinition> | undefine
 
 /** 把完整 key 格式化为面向作者的诊断名称 */
 const formatProviderKey = (key: CoreProviderKey): string =>
-  key.capability === CoreProviderCapability.Composite
+  key.capability === ProviderCapability.Composite
     ? `${key.capability}:${key.namespace}.${key.type}`
     : `${key.capability}:${key.name}`;
 
 /** 按能力与完整键读取提供者，避免字符串拼接歧义 */
-const findProvider = (index: ProviderIndex, key: CoreProviderKey): ProviderEntry | undefined => {
-  if (key.capability === CoreProviderCapability.Composite) {
-    return index.composites.get(key.namespace)?.get(key.type);
-  }
-
-  return index.named.get(key.capability)?.get(key.name);
-};
+const findProvider = (index: ProviderIndex, key: CoreProviderKey): ProviderEntry | undefined =>
+  key.capability === ProviderCapability.Composite
+    ? index.composites.get(key.namespace)?.get(key.type)
+    : index.named.get(key.capability)?.get(key.name);
 
 /** 写入完整 Core 提供者键对应的提供者 */
 const setProvider = (index: ProviderIndex, entry: ProviderEntry): void => {
-  if (entry.key.capability === CoreProviderCapability.Composite) {
+  if (entry.key.capability === ProviderCapability.Composite) {
     const namespaceProviders = index.composites.get(entry.key.namespace);
     if (namespaceProviders === undefined) {
       index.composites.set(entry.key.namespace, new Map([[entry.key.type, entry]]));
@@ -72,7 +69,6 @@ const setProvider = (index: ProviderIndex, entry: ProviderEntry): void => {
     }
 
     namespaceProviders.set(entry.key.type, entry);
-
     return;
   }
 
@@ -85,30 +81,30 @@ const setProvider = (index: ProviderIndex, entry: ProviderEntry): void => {
   capabilityProviders.set(entry.key.name, entry);
 };
 
-/** 判断两组有序依赖是否逐项使用相同完整 key */
-const isProviderDependencyListEqual = (
-  left: ReadonlyArray<CoreProviderKey>,
-  right: ReadonlyArray<CoreProviderKey>,
-): boolean =>
-  left.length === right.length &&
-  left.every((dependency, index) => {
-    const candidate = right[index];
-    if (dependency.capability !== candidate.capability) return false;
-    if (dependency.capability === CoreProviderCapability.Composite) {
-      return (
-        candidate.capability === CoreProviderCapability.Composite &&
-        dependency.namespace === candidate.namespace &&
-        dependency.type === candidate.type
-      );
-    }
-
-    return candidate.capability !== CoreProviderCapability.Composite && dependency.name === candidate.name;
-  });
-
 /** 建立完整提供者索引，并在创建函数执行前完成声明检查与参数收集 */
 const buildProviderIndex = (
   options: ResolveCoreProviderDependenciesOptions,
 ): { index: ProviderIndex; roots: Array<CoreProviderKey>; definitions: CoreProviderDefinitions } => {
+  /** 判断两组有序依赖是否逐项使用相同完整 key */
+  const isProviderDependencyListEqual = (
+    left: ReadonlyArray<CoreProviderKey>,
+    right: ReadonlyArray<CoreProviderKey>,
+  ): boolean =>
+    left.length === right.length &&
+    left.every((dependency, index) => {
+      const candidate = right[index];
+      if (dependency.capability !== candidate.capability) return false;
+      if (dependency.capability === ProviderCapability.Composite) {
+        return (
+          candidate.capability === ProviderCapability.Composite &&
+          dependency.namespace === candidate.namespace &&
+          dependency.type === candidate.type
+        );
+      }
+
+      return candidate.capability !== ProviderCapability.Composite && dependency.name === candidate.name;
+    });
+
   const index: ProviderIndex = {
     named: new Map(),
     composites: new Map(),
@@ -132,6 +128,7 @@ const buildProviderIndex = (
         continue;
       }
 
+      // 多次注入相同 key 等价判断
       if (existing.makeDefinition !== provider.makeDefinition) {
         throw new RetikzCoreError(
           RetikzCoreErrorCode.Contract,
@@ -216,63 +213,31 @@ const collectReachableProviders = (
   return ordered;
 };
 
-/** 从路径定义 schema 读取提供者键 */
-const pathNameOf = (definition: AnyPathDefinition): string => definition.name;
-
 type DefinitionIdentity =
   | Readonly<{ capability: NamedProviderCapability; name: string }>
-  | Readonly<{ capability: typeof CoreProviderCapability.Composite; namespace: string; type: string }>;
-
-/** 在接受创建函数输出前推断被擦除定义所属的能力 */
-const resolveDefinitionCapability = (
-  definition: CoreProviderDefinition,
-  expected: CoreProviderCapability,
-): CoreProviderCapability => {
-  if ('namespace' in definition && 'type' in definition) return CoreProviderCapability.Composite;
-  if ('computeCircumscribedGeometry' in definition && 'computeBoundaryPoint' in definition)
-    return CoreProviderCapability.Shape;
-  if ('lineContactX' in definition && 'emit' in definition) return CoreProviderCapability.Arrow;
-  if ('name' in definition && 'emit' in definition)
-    return expected === CoreProviderCapability.Mark ? CoreProviderCapability.Mark : CoreProviderCapability.Pattern;
-  if ('kind' in definition && 'schema' in definition && 'lower' in definition) return CoreProviderCapability.Clip;
-
-  if ('paramsSchema' in definition && 'computeBoundaryPoint' in definition) return CoreProviderCapability.Boundary;
-  if ('compile' in definition && 'schema' in definition) return CoreProviderCapability.Path;
-
-  throw new RetikzCoreError(
-    RetikzCoreErrorCode.Contract,
-    'resolveCoreProviderDependencies: maker returned an unrecognized definition capability',
-  );
-};
+  | Readonly<{ capability: typeof ProviderCapability.Composite; namespace: string; type: string }>;
 
 /** 从定义读取指定能力的注册表标识 */
 const resolveDefinitionIdentity = (
-  capability: CoreProviderCapability,
+  capability: ProviderCapability,
   definition: CoreProviderDefinition,
 ): DefinitionIdentity => {
-  if (resolveDefinitionCapability(definition, capability) !== capability) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Contract,
-      `resolveCoreProviderDependencies: expected ${capability} definition but received ${resolveDefinitionCapability(definition, capability)}`,
-    );
-  }
-
   switch (capability) {
-    case CoreProviderCapability.Shape:
+    case ProviderCapability.Shape:
       return { capability, name: (definition as ShapeDefinition).name };
-    case CoreProviderCapability.Boundary:
+    case ProviderCapability.Boundary:
       return { capability, name: (definition as BoundaryDefinition).name };
-    case CoreProviderCapability.Clip:
+    case ProviderCapability.Clip:
       return { capability, name: (definition as ClipDefinition).kind };
-    case CoreProviderCapability.Mark:
+    case ProviderCapability.Mark:
       return { capability, name: (definition as MarkDefinition).name };
-    case CoreProviderCapability.Arrow:
+    case ProviderCapability.Arrow:
       return { capability, name: (definition as ArrowDefinition).name };
-    case CoreProviderCapability.Pattern:
+    case ProviderCapability.Pattern:
       return { capability, name: (definition as PatternDefinition).name };
-    case CoreProviderCapability.Path:
-      return { capability, name: pathNameOf(definition as AnyPathDefinition) };
-    case CoreProviderCapability.Composite: {
+    case ProviderCapability.Path:
+      return { capability, name: (definition as AnyPathDefinition).name };
+    case ProviderCapability.Composite: {
       const composite = definition as AnyCompositeDefinition;
       return { capability, namespace: composite.namespace, type: composite.type };
     }
@@ -282,8 +247,8 @@ const resolveDefinitionIdentity = (
 /** 判断定义标识是否与提供者键相同 */
 const doesDefinitionMatchKey = (key: CoreProviderKey, definition: CoreProviderDefinition): boolean => {
   const identity = resolveDefinitionIdentity(key.capability, definition);
-  return key.capability === CoreProviderCapability.Composite
-    ? identity.capability === CoreProviderCapability.Composite &&
+  return key.capability === ProviderCapability.Composite
+    ? identity.capability === ProviderCapability.Composite &&
         identity.namespace === key.namespace &&
         identity.type === key.type
     : identity.capability === key.capability && identity.name === key.name;
@@ -292,32 +257,32 @@ const doesDefinitionMatchKey = (key: CoreProviderKey, definition: CoreProviderDe
 /** 把定义放入其所属的编译选项集合 */
 const appendByCapability = (
   definitions: MutableCoreProviderDefinitions,
-  capability: CoreProviderCapability,
+  capability: ProviderCapability,
   definition: CoreProviderDefinition,
 ): void => {
   switch (capability) {
-    case CoreProviderCapability.Shape:
+    case ProviderCapability.Shape:
       definitions.shapes.push(definition as ShapeDefinition);
       return;
-    case CoreProviderCapability.Boundary:
+    case ProviderCapability.Boundary:
       definitions.boundaries.push(definition as BoundaryDefinition);
       return;
-    case CoreProviderCapability.Clip:
+    case ProviderCapability.Clip:
       definitions.clips.push(definition as ClipDefinition);
       return;
-    case CoreProviderCapability.Mark:
+    case ProviderCapability.Mark:
       definitions.marks.push(definition as MarkDefinition);
       return;
-    case CoreProviderCapability.Arrow:
+    case ProviderCapability.Arrow:
       definitions.arrows.push(definition as ArrowDefinition);
       return;
-    case CoreProviderCapability.Pattern:
+    case ProviderCapability.Pattern:
       definitions.patterns.push(definition as PatternDefinition);
       return;
-    case CoreProviderCapability.Path:
+    case ProviderCapability.Path:
       definitions.paths.push(definition as AnyPathDefinition);
       return;
-    case CoreProviderCapability.Composite:
+    case ProviderCapability.Composite:
       definitions.composites.push(definition as AnyCompositeDefinition);
   }
 };
@@ -326,12 +291,12 @@ const appendByCapability = (
 const appendDefinition = (
   definitions: MutableCoreProviderDefinitions,
   definitionIndex: DefinitionIndex,
-  capability: CoreProviderCapability,
+  capability: ProviderCapability,
   definition: CoreProviderDefinition,
 ): void => {
   const identity = resolveDefinitionIdentity(capability, definition);
   const existing =
-    identity.capability === CoreProviderCapability.Composite
+    identity.capability === ProviderCapability.Composite
       ? definitionIndex.composites.get(identity.namespace)?.get(identity.type)
       : definitionIndex.named.get(identity.capability)?.get(identity.name);
   if (existing !== undefined) {
@@ -340,18 +305,18 @@ const appendDefinition = (
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
       `resolveCoreProviderDependencies: definition conflict for ${formatProviderKey(
-        capability === CoreProviderCapability.Composite
+        capability === ProviderCapability.Composite
           ? {
               capability,
-              namespace: identity.capability === CoreProviderCapability.Composite ? identity.namespace : '',
-              type: identity.capability === CoreProviderCapability.Composite ? identity.type : '',
+              namespace: identity.capability === ProviderCapability.Composite ? identity.namespace : '',
+              type: identity.capability === ProviderCapability.Composite ? identity.type : '',
             }
-          : { capability, name: identity.capability === CoreProviderCapability.Composite ? '' : identity.name },
+          : { capability, name: identity.capability === ProviderCapability.Composite ? '' : identity.name },
       )} uses different objects`,
     );
   }
 
-  if (identity.capability === CoreProviderCapability.Composite) {
+  if (identity.capability === ProviderCapability.Composite) {
     const namespaceDefinitions = definitionIndex.composites.get(identity.namespace);
     if (namespaceDefinitions === undefined) {
       definitionIndex.composites.set(identity.namespace, new Map([[identity.type, definition]]));
@@ -376,15 +341,15 @@ const appendExplicitDefinitions = (
   definitionIndex: DefinitionIndex,
   explicit: CoreProviderDefinitions,
 ): void => {
-  const collections: ReadonlyArray<readonly [CoreProviderCapability, CoreDefinitionCollection]> = [
-    [CoreProviderCapability.Shape, explicit.shapes],
-    [CoreProviderCapability.Boundary, explicit.boundaries],
-    [CoreProviderCapability.Clip, explicit.clips],
-    [CoreProviderCapability.Arrow, explicit.arrows],
-    [CoreProviderCapability.Mark, explicit.marks],
-    [CoreProviderCapability.Pattern, explicit.patterns],
-    [CoreProviderCapability.Path, explicit.paths],
-    [CoreProviderCapability.Composite, explicit.composites],
+  const collections: ReadonlyArray<readonly [ProviderCapability, CoreDefinitionCollection]> = [
+    [ProviderCapability.Shape, explicit.shapes],
+    [ProviderCapability.Boundary, explicit.boundaries],
+    [ProviderCapability.Clip, explicit.clips],
+    [ProviderCapability.Arrow, explicit.arrows],
+    [ProviderCapability.Mark, explicit.marks],
+    [ProviderCapability.Pattern, explicit.patterns],
+    [ProviderCapability.Path, explicit.paths],
+    [ProviderCapability.Composite, explicit.composites],
   ];
 
   for (const [capability, entries] of collections) {
@@ -440,7 +405,7 @@ export const resolveCoreProviderDependencies = (
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Contract,
         `resolveCoreProviderDependencies: provider ${formatProviderKey(provider.key)} returned definition ${
-          returnedIdentity.capability === CoreProviderCapability.Composite
+          returnedIdentity.capability === ProviderCapability.Composite
             ? `${returnedIdentity.namespace}.${returnedIdentity.type}`
             : returnedIdentity.name
         }`,

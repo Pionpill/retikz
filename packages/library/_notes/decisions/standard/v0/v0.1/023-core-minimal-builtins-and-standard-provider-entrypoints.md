@@ -68,12 +68,12 @@ import { CompoundClipDefinition } from '@retikz/standard/clip';
 现有 Composite dependency graph 只装配 `CompositeDefinition`，不能表达 Shape、Arrow、Clip、Path Generator、Path Kind 等普通 Core provider。Core 将它泛化为 adapter-neutral 的 provider dependency graph；一次 authoring contribution 声明实际需要的 roots，并携带可解析这些 roots 的 providers：
 
 ```ts
-type CoreProviderCapability =
+type ProviderCapability =
   'shape' | 'boundary' | 'clip' | 'arrow' | 'pattern' | 'pathGenerator' | 'pathKind' | 'composite';
 
 type CoreProviderKey =
   | Readonly<{
-      capability: Exclude<CoreProviderCapability, 'composite'>;
+      capability: Exclude<ProviderCapability, 'composite'>;
       name: string;
     }>
   | Readonly<{

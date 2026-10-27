@@ -360,17 +360,8 @@ describe('resolveCoreProviderDependencies', () => {
     expect(dependencyMaker).not.toHaveBeenCalled();
   });
 
-  it('拒绝能力或合格键与其提供者键不同的工厂输出', () => {
+  it('拒绝名称与提供者键不同的工厂输出', () => {
     const root = shapeKey('cross');
-    const makeDefinition = vi.fn(() => arrowDefinitionOf('other'));
-
-    expect(() =>
-      resolveCoreProviderDependencies({
-        contributions: [contributionOf([root], [providerOf(root, { makeDefinition })])],
-      }),
-    ).toThrow(/expected shape definition but received arrow/i);
-    expect(makeDefinition).toHaveBeenCalledTimes(1);
-
     const mismatchedName = vi.fn(() => shapeDefinitionOf('other'));
 
     expect(() =>

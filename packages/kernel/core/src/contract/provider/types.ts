@@ -7,7 +7,7 @@ import type { ClipDefinition } from '../scope';
 import type { PatternDefinition } from '../style';
 
 /** Core 提供者能力的稳定判别值 */
-export const CoreProviderCapability = {
+export const ProviderCapability = {
   Shape: 'shape',
   Boundary: 'boundary',
   Clip: 'clip',
@@ -19,12 +19,12 @@ export const CoreProviderCapability = {
 } as const;
 
 /** Core 提供者能力判别值 */
-export type CoreProviderCapability = ValueOf<typeof CoreProviderCapability>;
+export type ProviderCapability = ValueOf<typeof ProviderCapability>;
 
 /** 非复合提供者的完整能力/名称标识 */
 export type NamedCoreProviderKey = Readonly<{
   /** 提供者所属的 Core 能力 */
-  capability: Exclude<CoreProviderCapability, typeof CoreProviderCapability.Composite>;
+  capability: Exclude<ProviderCapability, typeof ProviderCapability.Composite>;
   /** 能力内稳定的提供者名称 */
   name: string;
 }>;
@@ -32,7 +32,7 @@ export type NamedCoreProviderKey = Readonly<{
 /** 复合提供者的完整命名空间/类型标识 */
 export type CompositeCoreProviderKey = Readonly<{
   /** 复合提供者的能力 */
-  capability: typeof CoreProviderCapability.Composite;
+  capability: typeof ProviderCapability.Composite;
   /** 复合提供者所属命名空间 */
   namespace: string;
   /** 复合提供者所属的局部类型 */
@@ -84,7 +84,10 @@ export type CoreDependencyProvider<TParams = void> = Readonly<{
   dependencies?: ReadonlyArray<CoreProviderKey>;
   /** 当前编写实例的参数；省略或为 undefined 时不贡献参数，Core 保留已提供参数的引用 */
   params?: TParams;
-  /** 按贡献顺序接收同键已提供的参数，由所属方合并并创建唯一定义；无参数时接收空数组 */
+  /**
+   * 按贡献顺序接收同键已提供的参数，由所属方合并并创建唯一定义；无参数时接收空数组
+   * @remarks 作者负责保证返回定义的能力类别与 key 一致，Core 不探测定义结构以校验类别
+   */
   makeDefinition: (contributions: ReadonlyArray<TParams>) => CoreProviderDefinition;
 }>;
 

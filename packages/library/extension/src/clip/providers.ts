@@ -1,5 +1,5 @@
 import type { ClipDefinition, CoreDependencyProvider } from '@retikz/core';
-import { CoreProviderCapability } from '@retikz/core';
+import { ProviderCapability } from '@retikz/core';
 
 import {
   CircleClipDefinition,
@@ -11,7 +11,7 @@ import {
 
 const clipProviderOf = (definition: ClipDefinition): CoreDependencyProvider =>
   Object.freeze({
-    key: Object.freeze({ capability: CoreProviderCapability.Clip, name: definition.kind }),
+    key: Object.freeze({ capability: ProviderCapability.Clip, name: definition.kind }),
     makeDefinition: () => definition,
   });
 
