@@ -1,75 +1,48 @@
 ---
 title: mark · 图元
-description: 图元声明数据要生成的几何类型；比例尺、坐标系与渲染器继续决定数值解释、空间投影和最终输出。
+description: 用 Point、Path 和 Interval 三种基础图元表达位置、路径与区间，组合成所需的图表。
 ---
 
-Mark 是图形语法里的几何层。它回答“每行或每组数据要生成什么几何”，例如点、路径、区间，或连接两个目标的关系路径。
+Mark 决定数据以什么几何形式呈现。Plot 提供三种内置图元：Point 表达位置上的节点，Path 表达轨迹与连接，Interval 表达位置范围。它们可以单独使用，也可以叠加在同一张图中。
 
-选择图元时先看数据要表达的几何关系，不必先决定最终图表名称。同一个 `IntervalMark` 可以组成柱图、热图或饼图，同一个 `PointMark` 也可以表现为散点、气泡或文本点。
-
-当图元未指定颜色时，`defaultColorIndex` 可选择 `defaultPlot.palette.series` 中的默认颜色索引，从 0 开始并循环取色。它优先于 `defaultColorGroup`，不占用其他图元的自动分组槽位，也不覆盖显式颜色或字段映射。
+选择图元时，从要表达的数据关系出发。例如，同一组月度营收可以用 Point 标出各月数值，用 Path 展示变化趋势，也可以用 Interval 比较各月从零开始的柱高。
 
 ## 职责一览
 
-| 分类 | 图元           | 负责表达                     | 常见用途                        |
-| ---- | -------------- | ---------------------------- | ------------------------------- |
-| 主体 | `PointMark`    | 每行数据对应的一个位置或节点 | 散点、气泡、形状标记、文本点    |
-|      | `PathMark`     | 一组有序数据形成的一维轨迹   | 折线、面积边界、雷达线框        |
-|      | `IntervalMark` | 一个或多个位置维度上的区间积 | 柱、直方、热图、径向柱、饼 / 环 |
+| 图元           | 负责表达                           | 常见用途                           |
+| -------------- | ---------------------------------- | ---------------------------------- |
+| `PointMark`    | 在指定位置放置节点                 | 散点、气泡、形状标记、文本         |
+| `PathMark`     | 连接有序位置或指定端点，构造路径   | 折线、闭合区域、节点连线、带状路径 |
+| `IntervalMark` | 由一个或多个位置维度的区间形成区域 | 柱、直方、热图、径向柱、饼与环     |
 
-<ComponentAlert
-  title="为什么只有三类内置图元？"
-  description="图表名称很多，但图元按基础几何职责而不是成品图表枚举。三个主体图元可理解为点、线、面三类基础结构；常见的散点、折线、面积、柱、饼和热图，都可以按需组合通道绑定、数据变换、坐标投影与图层组合，从这些基础结构衍生。PathMark 同时支持端点连接与带状路径。"
-/>
+Path 可以闭合并填充，也可以沿中心线形成带状区域；Interval 则由位置区间确定几何范围。因此，选择时要看几何如何由数据构成，不能只按最终画面中的点、线、面来区分。
 
-图元只拥有“数据如何形成几何”的契约：
+## 图元组合
 
-- [比例尺](/viz/plot/scale)负责把字段值映射到位置、颜色或尺寸等视觉值
-- [坐标系](/viz/plot/coordinate)负责解释位置角色并投影到画布
-- [Guide](/viz/plot/guide)负责轴、图例等阅读辅助
-- renderer 负责把 lowering 后的 core 几何输出为 SVG、Canvas 等目标
+一张带数据点的折线图可以由 Path 绘制趋势、Point 标出每个观测位置。连接两个节点时，也可以由 Point 绘制两端的形状，再由 Path 引用节点作为端点。各图元分别控制自身的样式，共同表达同一组数据关系。
 
-内置图元最终会下沉为 [@retikz/core](/kernel/components/introduction) 的 Node、Path 等 Kernel IR，但使用内置图元时不需要手动处理这些底层对象。
+图元与其他图形语法能力配合工作：[通道绑定](/viz/plot/channel/binding)指定位置、颜色和尺寸从哪里取值，[比例尺](/viz/plot/scale)将这些值映射到视觉范围，[坐标系](/viz/plot/coordinate)决定它们在画布上的位置，[辅助](/viz/plot/guide)提供轴与图例。
+
+同一个图元在不同坐标系下可以形成不同图形。例如，Interval 在直角坐标系下可以表达柱或矩形单元，在极坐标系下可以表达径向柱或扇区。
 
 ## 章节内容
 
 <LinkedSections
   items={[
     {
-      title: 'PointMark',
-      description: '从单行数据生成一个位置节点，学习散点、气泡、文本点和坐标角色。',
+      title: 'PointMark · 点图元',
+      description: '从位置节点入手，绘制散点、气泡、形状和文本。',
       url: '/viz/plot/mark/point',
     },
     {
-      title: 'PathMark',
-      description: '按顺序连接数据点，学习分组、曲线、闭合区域和缺失值中断。',
+      title: 'PathMark · 路径图元',
+      description: '学习有序连线、分组、曲线与闭合区域，再探索端点连接和带状路径。',
       url: '/viz/plot/mark/path',
     },
     {
-      title: 'IntervalMark',
-      description: '从位置区间生成几何，学习柱、热图、径向区间与饼图。',
+      title: 'IntervalMark · 区间图元',
+      description: '用位置区间表达柱、热图、径向区间和饼图。',
       url: '/viz/plot/mark/interval',
     },
   ]}
-/>
-
-## 位置输入与参考标记
-
-Point、Path 和 Interval Mark 统一支持以下位置输入：
-
-| 输入 | 写法                                    | 含义                             |
-| ---- | --------------------------------------- | -------------------------------- |
-| 字段 | `{ field: 'x' }`                        | 读取最终结果行                   |
-| 常量 | `{ value: 50 }`                         | 数据空间数值或分类字符串         |
-| 边界 | `{ edge: 'start' }` / `{ edge: 'end' }` | 最终映射范围的两端，跟随范围反转 |
-
-位置统一写入 `encodings`，几何样式写入 `properties`。存在有效字段依赖时按最终结果行生成图元；只用常量和 edge 时，在每个实际视图中生成一个实例。空结果表不会产生数据实例。`transforms: []` 与省略相同；没有字段依赖时不能声明非空变换。
-
-参考线、文字和背景区域使用常规 Mark。以下示例绑定空数组、指定比例尺范围，并设置 `contributeToDomain={false}`；移动阈值观察参考线。
-
-<ComponentPreview
-  files={['reference-entry', 'reference.preview.tsx', 'shared/reference-coordinate.ts']}
-  defaultSourceFile="reference.preview.tsx"
-  controls={{ name: 'reference-entry' }}
-  size="md"
 />
