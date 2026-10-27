@@ -8,7 +8,7 @@ import * as plot from '../../../src';
 import type { AnyScaleDefinition, ChannelScaleResolveContext } from '../../../src/contract';
 import { defineScale, extractScaleType } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_SCALES, linearPositionScale, resolveLinearScale, resolveScaleRegistry } from '../../../src/providers';
 import {
   assertBaselineScaleCompatible,
@@ -89,7 +89,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 describe('比例尺登记（契约规格）', () => {

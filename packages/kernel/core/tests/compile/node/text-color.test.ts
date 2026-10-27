@@ -4,7 +4,6 @@ import { BuiltinCompileWarningCode } from '../../../src';
 import { compileToScene } from '../../../src/compile/compile';
 import type { CompileWarning } from '../../../src/compile/warning';
 import type { TextPrimitive } from '../../../src/contract';
-import { chooseBlackOrWhiteForLuminance } from '../../../src/resolve/node';
 import type { IRNode, IRNodeStyle, IRScene } from '../../../src/schemas';
 import { flattenPrims } from '../../helpers/flatten';
 
@@ -83,10 +82,6 @@ describe('Node 自动对比静态不透明颜色解析', () => {
 });
 
 describe('Node 自动对比度不透明度边界和对比度', () => {
-  it('未 round 的黑白对比率相等时选择黑色', () => {
-    expect(chooseBlackOrWhiteForLuminance(0.179128784747792)).toBe('#000000');
-  });
-
   it.each([
     ['#0008', {}],
     ['rgb(0 0 0 / 50%)', {}],

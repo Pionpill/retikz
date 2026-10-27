@@ -6,8 +6,8 @@ import { describe, expect, it } from 'vitest';
 import { number, strictObject, string, union } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
-import { BUILTIN_NODE_CHANNELS, SIZE_MAX_RADIUS, SIZE_MIN_RADIUS } from '../../../src/providers';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
+import { BUILTIN_NODE_CHANNELS, SIZE_MAX_RADIUS } from '../../../src/providers';
 import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
@@ -39,7 +39,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const firstLayer = (
@@ -170,10 +170,10 @@ describe('size channel 映射节点半径', () => {
     const nodes = collectNodes(firstLayer(pointSpec('p'), { d: data }, cartOpts));
     const radii = nodes.map(radiusOf);
 
-    expect(radii[0]).toBeCloseTo(SIZE_MIN_RADIUS, 6); // p=0 位于 domain 下界，映射到 MIN
+    expect(radii[0]).toBeCloseTo(2, 6); // p=0 位于 domain 下界，映射到 MIN
     expect(radii[2]).toBeCloseTo(SIZE_MAX_RADIUS, 6); // p=16 是最大正值，映射到 MAX
 
-    const mid = SIZE_MIN_RADIUS + 0.5 * (SIZE_MAX_RADIUS - SIZE_MIN_RADIUS);
+    const mid = 2 + 0.5 * (SIZE_MAX_RADIUS - 2);
 
     expect(radii[1]).toBeCloseTo(mid, 6); // p=4 是 sqrt 映射的中点
   });
@@ -274,7 +274,7 @@ describe('size channel 边界输入', () => {
     ];
     const nodes = collectNodes(firstLayer(pointSpec('p'), { d: data }, cartOpts));
 
-    expect(nodes.every(n => Math.abs(radiusOf(n)! - SIZE_MIN_RADIUS) < 1e-6)).toBe(true);
+    expect(nodes.every(n => Math.abs(radiusOf(n)! - 2) < 1e-6)).toBe(true);
   });
 
   it('单正值映射到范围顶部', () => {
@@ -348,10 +348,10 @@ describe('size channel 边界输入', () => {
     const rows = [{ p: 0 }, { p: 0 }];
     const resolution = sizeResolutionOf('p', rows);
 
-    expect(rows.map(row => resolution.resolver(row))).toEqual([SIZE_MIN_RADIUS, SIZE_MIN_RADIUS]);
+    expect(rows.map(row => resolution.resolver(row))).toEqual([2, 2]);
     expect(resolution.descriptor).toMatchObject({
       domain: [0, 0],
-      range: [SIZE_MIN_RADIUS, SIZE_MIN_RADIUS],
+      range: [2, 2],
     });
   });
 
@@ -385,7 +385,7 @@ describe('size channel 边界输入', () => {
     expect(resolution.descriptor).toMatchObject({
       scaleName: '__size_p',
       domain: [0, 7],
-      range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS],
+      range: [2, SIZE_MAX_RADIUS],
     });
   });
 

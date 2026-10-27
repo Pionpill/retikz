@@ -62,7 +62,7 @@ import type {
 } from './types';
 
 /** 同次 Table compile transaction 的输出 */
-export type ResolvedTableTransaction = Readonly<{
+type ResolvedTableTransaction = Readonly<{
   /** 当前 callback 可直接提交的 output children */
   children: ReadonlyArray<IRChild | CompositeCompileChild>;
   /** 与 output children 同源、待 artifact schema 接纳的 manifest candidate */
@@ -70,7 +70,7 @@ export type ResolvedTableTransaction = Readonly<{
 }>;
 
 /** 已完成 presentation 的 Table 后半布局事务输入 */
-export type PresentedTableTransactionInput = Readonly<{
+type PresentedTableTransactionInput = Readonly<{
   /** 可选 Table root identity */
   tableId?: string;
   /** 透传到 Table root Scope 的 JSON metadata */
@@ -489,7 +489,7 @@ const cellOutputOf = (
 };
 
 /** 从 Presented model 执行完整 Table layout-aware 后半事务 */
-export const resolvePresentedTableTransaction = (
+const resolvePresentedTableTransaction = (
   input: PresentedTableTransactionInput,
   context: CompositeCompileContext,
 ): ResolvedTableTransaction => {

@@ -3,7 +3,7 @@ import { BuiltinCompileWarningCode } from '../constants';
 import type { CompileWarningInput } from '../warning';
 
 /** animation 过滤上下文 */
-export type FilterAnimationsContext = {
+type FilterAnimationsContext = {
   /** 校验目标层级 */
   target: 'element' | 'root';
   /** warning 收集器 */

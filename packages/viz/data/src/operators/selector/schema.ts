@@ -44,9 +44,7 @@ export const RowSelectorTie = {
 } as const;
 
 /** row selector operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
-export const RESERVED_SELECTOR_OPERATION_KINDS: ReadonlySet<string> = new Set(
-  Object.values(BuiltinSelectorOperationKind),
-);
+const RESERVED_SELECTOR_OPERATION_KINDS: ReadonlySet<string> = new Set(Object.values(BuiltinSelectorOperationKind));
 
 /** 内置 row selector operation kind 取值 */
 export type BuiltinSelectorOperationKind = ValueOf<typeof BuiltinSelectorOperationKind>;
@@ -132,12 +130,12 @@ const ExternalSelectorOperationObjectSchema = looseObject({
 });
 
 /** 校验带 JSON 配置的自定义数据选择操作 */
-export const ExternalSelectorOperationSchema = ExternalSelectorOperationObjectSchema.catchall(JsonValueSchema).describe(
+const ExternalSelectorOperationSchema = ExternalSelectorOperationObjectSchema.catchall(JsonValueSchema).describe(
   'Custom selector operation with JSON config',
 );
 
 /** 内置 row selector operation schema */
-export const BuiltinSelectorOperationSchema = union([
+const BuiltinSelectorOperationSchema = union([
   BuiltinSelectorOperationSchemas.Min,
   BuiltinSelectorOperationSchemas.Max,
   BuiltinSelectorOperationSchemas.First,

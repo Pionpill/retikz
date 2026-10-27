@@ -168,7 +168,7 @@ export const buildAngleScale = (collected: Collected, explicit: InputPlotScale |
 type ScaleRole = 'x' | 'y' | 'angle' | 'radius';
 
 /** 按规范坐标角色索引的显式比例尺集合 */
-export type ExplicitScaleMap = Partial<Record<ScaleRole, InputPlotScale>>;
+type ExplicitScaleMap = Partial<Record<ScaleRole, InputPlotScale>>;
 
 const validScaleDimensionsOf = (
   coordKind: ReturnType<typeof coordinateTypeOf>,

@@ -40,7 +40,7 @@ const resolveScaleSource = (
 };
 
 /** exact encoding scale declaration、reference 与 recipe fallback 的连接结果 */
-export type ChartEncodingScaleResolution = Readonly<{
+type ChartEncodingScaleResolution = Readonly<{
   /** 字段映射显式产生的尺度操作 */
   scales: ReadonlyArray<IRPlotScaleOperation>;
   /** 解析并补齐后的 Plot 扩展尺度 */

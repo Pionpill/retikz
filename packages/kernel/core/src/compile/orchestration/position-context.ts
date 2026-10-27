@@ -38,7 +38,7 @@ const targetBoundaryResolutionOf = (
 };
 
 /** 创建 position resolver context 所需的 compile 状态投影 */
-export type CreatePositionResolveContextInput = Readonly<{
+type CreatePositionResolveContextInput = Readonly<{
   /** 当前命名空间 */
   lookupReference: (id: string) => NamespaceEntry | undefined;
   /** 与节点布局及路径裁剪共享的几何消费状态 */

@@ -14,7 +14,7 @@ import type { CompileWarningCode } from '../constants';
 import type { InlineLineLayout, LowerTex, TextFont, TextMeasurer } from '../text';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
-export type NodeFontWeight = NonNullable<IRFont['weight']>;
+type NodeFontWeight = NonNullable<IRFont['weight']>;
 
 /** 连接面 provider 的几何实现契约 */
 export type BoundaryGeometryDefinition = {

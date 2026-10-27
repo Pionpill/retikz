@@ -6,7 +6,7 @@ import type { IRPlotMark } from '../../../schemas';
 import { labelOf } from '../shared';
 
 /** 内置文本通道 definition 的按名称索引类型 */
-export type BuiltinTextChannels = {
+type BuiltinTextChannels = {
   /** 把数据值解析为 mark 标签内容的通道 */
   label: MarkChannelDefinition<IRNodeLabel['text']>;
 };

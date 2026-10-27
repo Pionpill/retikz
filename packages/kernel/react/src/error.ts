@@ -15,7 +15,7 @@ export const RetikzReactErrorCode = {
 export type RetikzReactErrorCode = ValueOf<typeof RetikzReactErrorCode>;
 
 /** React 包错误的结构化构造参数 */
-export type RetikzReactErrorOptions = Readonly<{
+type RetikzReactErrorOptions = Readonly<{
   /** 稳定错误码 */
   code: RetikzReactErrorCode;
   /** 面向调用方的原始错误消息 */

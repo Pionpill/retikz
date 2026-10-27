@@ -53,7 +53,7 @@ export const composeGroupShell = (
 };
 
 /** 使用已解析 Graph registries 测量 Group shell */
-export const measureResolvedGroupShell = (
+const measureResolvedGroupShell = (
   source: IRGroup,
   context: CompositeCompileContext,
   options: ResolvedGraphDefinitionOptions,

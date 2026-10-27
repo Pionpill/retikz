@@ -217,10 +217,10 @@ export type SharedScaffold = Extract<Arrangement, { kind: 'tracks' }>;
 export type ScaffoldTrack = SharedScaffold['tracks'][number];
 
 /** normalization 中暂存的 facet */
-export type CollectedFacet = InputPlotFacet;
+type CollectedFacet = InputPlotFacet;
 
 /** normalization 中暂存的 scaffold */
-export type CollectedScaffold = Omit<SharedScaffold, 'coordinate'> & {
+type CollectedScaffold = Omit<SharedScaffold, 'coordinate'> & {
   /** 布局骨架使用的坐标系 */
   coordinate?: SharedScaffold['coordinate'];
   /** 组合布局的间距 */

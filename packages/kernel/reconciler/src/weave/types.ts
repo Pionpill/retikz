@@ -24,7 +24,7 @@ import type { WeaveChangeKind, WeaveChangeSource } from './constants';
 export type WeaveDependencyKind = null;
 
 /** 节点自身输入与有效继承上下文，不重复保存合并后的输入 */
-export type WeaveInput<TInput> = {
+type WeaveInput<TInput> = {
   /** Core 定义的自身输入 */
   own: TInput;
   /** Core 负责解析的有效继承上下文 */
@@ -46,25 +46,25 @@ type WeaveNodeStateBase<TInput> = {
 };
 
 /** 普通图元状态 */
-export type WeaveShapeState = WeaveNodeStateBase<IRNode> & {
+type WeaveShapeState = WeaveNodeStateBase<IRNode> & {
   /** Core 完整编译产物，只读复用 */
   compiled: CompiledNode | null;
 };
 
 /** 坐标状态 */
-export type WeaveCoordinateState = WeaveNodeStateBase<IRCoordinate> & {
+type WeaveCoordinateState = WeaveNodeStateBase<IRCoordinate> & {
   /** Core 完整编译产物，只读复用 */
   compiled: CompiledCoordinate | null;
 };
 
 /** 路径状态 */
-export type WeavePathState = WeaveNodeStateBase<IRPathBase> & {
+type WeavePathState = WeaveNodeStateBase<IRPathBase> & {
   /** Core 完整编译产物，只读复用 */
   compiled: CompiledPath | null;
 };
 
 /** Scope 状态，自身输入不重复保存 children */
-export type WeaveScopeState = WeaveNodeStateBase<Omit<IRScope, 'children'>> & {
+type WeaveScopeState = WeaveNodeStateBase<Omit<IRScope, 'children'>> & {
   /** Core 完整编译产物，只读复用 */
   compiled: CompiledScope | null;
   /** 有序子节点，子节点状态变化不改变此数组 */
@@ -111,7 +111,7 @@ export type WeaveScopeNode = WeaveNodeVersions<WeaveScopeState> & {
 export type WeaveNode = WeaveCoordinateNode | WeavePathNode | WeaveScopeNode | WeaveShapeNode;
 
 /** 根状态，集合、记录与输入随候选隔离 */
-export type WeaveRootState = {
+type WeaveRootState = {
   /** 根没有父节点 */
   parent: null;
   /** Scene 自身输入 */
@@ -156,7 +156,7 @@ export type WeaveElementInput =
     });
 
 /** 通过树内唯一 id 定位 Scope 自身 */
-export type WeaveScopeTarget = {
+type WeaveScopeTarget = {
   /** Scope 自身定位 */
   kind: 'scope';
   /** Scope 定位 id */
@@ -164,7 +164,7 @@ export type WeaveScopeTarget = {
 };
 
 /** 在指定容器的命名空间上下文中查找用户 id */
-export type WeaveIdTarget = {
+type WeaveIdTarget = {
   /** 用户 id 定位 */
   kind: 'id';
   /** Scope 或 root 的容器定位 id */
@@ -174,7 +174,7 @@ export type WeaveIdTarget = {
 };
 
 /** 按容器直接 children 中的位置定位 */
-export type WeaveChildTarget = {
+type WeaveChildTarget = {
   /** 直接子元素定位 */
   kind: 'child';
   /** Scope 或 root 的容器定位 id */
@@ -187,7 +187,7 @@ export type WeaveChildTarget = {
 export type WeaveTarget = WeaveScopeTarget | WeaveIdTarget | WeaveChildTarget;
 
 /** 在候选容器中按数组顺序连续插入基础元素或 Scope 子树 */
-export type WeaveInsertOperation = {
+type WeaveInsertOperation = {
   /** 插入操作 */
   kind: 'insert';
   /** Scope 或 root 的容器定位 id */
@@ -199,7 +199,7 @@ export type WeaveInsertOperation = {
 };
 
 /** 完整替换已有元素自身输入，不改变类别或 Scope children */
-export type WeaveUpdateOperation = {
+type WeaveUpdateOperation = {
   /** 修改操作 */
   kind: 'update';
   /** 已有元素的地址 */
@@ -209,7 +209,7 @@ export type WeaveUpdateOperation = {
 };
 
 /** 删除元素；Scope 连同其声明子树删除 */
-export type WeaveRemoveOperation = {
+type WeaveRemoveOperation = {
   /** 删除操作 */
   kind: 'remove';
   /** 待删除元素的地址 */
@@ -226,7 +226,7 @@ export type WeaveBatch = {
 };
 
 /** 节点待处理变化，影响范围去重不代表依赖已就绪 */
-export type WeavePendingInput =
+type WeavePendingInput =
   | {
       /** 自身输入变化 */
       source: typeof WeaveChangeSource.Own;

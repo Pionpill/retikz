@@ -25,7 +25,7 @@ const SYNTHETIC_POSITION_CONTEXT: PositionTargetResolveContext = {
 };
 
 /** synthetic layout 构造使用的 shape / boundary 注册表 */
-export type SyntheticLayoutRegistryContext = {
+type SyntheticLayoutRegistryContext = {
   /** shape 注册表 */
   shapes?: ProviderRegistry<ShapeDefinition>;
   /** boundary 注册表 */
@@ -33,7 +33,7 @@ export type SyntheticLayoutRegistryContext = {
 };
 
 /** synthetic rectangle layout 输入 */
-export type SyntheticRectangleLayoutInput = {
+type SyntheticRectangleLayoutInput = {
   /** 布局对象的标识 */
   id: string;
   /** layout 矩形 */
@@ -41,7 +41,7 @@ export type SyntheticRectangleLayoutInput = {
 };
 
 /** synthetic scope rectangle layout 输入 */
-export type ScopeRectangleLayoutInput = {
+type ScopeRectangleLayoutInput = {
   /** 布局对象的标识 */
   id: string;
   /** 已计算的 bbox rect；空 scope 时传 null */
@@ -51,7 +51,7 @@ export type ScopeRectangleLayoutInput = {
 };
 
 /** synthetic scope circle layout 输入 */
-export type ScopeCircleLayoutInput = {
+type ScopeCircleLayoutInput = {
   /** 子树外包络角点 */
   cornerPoints: ReadonlyArray<IRPosition>;
   /** 空点集时使用的回退原点 */

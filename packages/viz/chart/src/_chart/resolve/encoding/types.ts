@@ -1,7 +1,7 @@
 import type { DataFieldType, IRDataTransform } from '@retikz/data';
 
 /** Chart encoding mapping 允许连接的 scale capability */
-export type ChartEncodingScaleConsumer = Readonly<{
+type ChartEncodingScaleConsumer = Readonly<{
   /** 允许的位置或视觉通道尺度族 */
   family: 'position' | 'channel';
   /** 可选的精确尺度类型限制 */

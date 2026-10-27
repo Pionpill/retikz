@@ -13,26 +13,25 @@ import {
   resolveFieldTypes,
   validateBoundData,
 } from '../../src';
-import { coerceCategory, coerceNumber } from '../../src/model';
 
 describe('数据提供者运行时边界', () => {
   it('仅将有限的十进制值强制转换为连续数字', () => {
-    expect(coerceNumber(1.5)).toBe(1.5);
-    expect(coerceNumber(42n)).toBe(42);
-    expect(coerceNumber(' 1.2e2 ')).toBe(120);
-    expect(coerceNumber('.5')).toBe(0.5);
+    expect(coerceValue(1.5, DataFieldType.Continuous)).toBe(1.5);
+    expect(coerceValue(42n, DataFieldType.Continuous)).toBe(42);
+    expect(coerceValue(' 1.2e2 ', DataFieldType.Continuous)).toBe(120);
+    expect(coerceValue('.5', DataFieldType.Continuous)).toBe(0.5);
 
     for (const value of [Number.POSITIVE_INFINITY, 9007199254740993n, '', '0x10', '12px', null]) {
-      expect(Number.isNaN(coerceNumber(value))).toBe(true);
+      expect(Number.isNaN(coerceValue(value, DataFieldType.Continuous))).toBe(true);
     }
   });
 
   it('保持分类值 JSON 安全并拒绝非有限数字', () => {
-    expect(coerceCategory('alpha')).toBe('alpha');
-    expect(coerceCategory(2)).toBe(2);
-    expect(coerceCategory(true)).toBe('true');
-    expect(coerceCategory(Number.NaN)).toBeUndefined();
-    expect(coerceCategory({ label: 'alpha' })).toBeUndefined();
+    expect(coerceValue('alpha', DataFieldType.Categorical)).toBe('alpha');
+    expect(coerceValue(2, DataFieldType.Categorical)).toBe(2);
+    expect(coerceValue(true, DataFieldType.Categorical)).toBe('true');
+    expect(coerceValue(Number.NaN, DataFieldType.Categorical)).toBeUndefined();
+    expect(coerceValue({ label: 'alpha' }, DataFieldType.Categorical)).toBeUndefined();
     expect(coerceValue(undefined, DataFieldType.Categorical)).toBeUndefined();
   });
 

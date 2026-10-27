@@ -14,7 +14,7 @@ import { createCompileInvariantError } from '../probe-failure';
 import { resolveAnchorRefUncached } from '../reference';
 
 /** scope transform lowering 所需的编译上下文 */
-export type LowerScopeTransformsContext = {
+type LowerScopeTransformsContext = {
   /** Position Source IR 确定化上下文 */
   positionContext: PositionTargetResolveContext;
   /** transform 引用解析失败时的回调 */
@@ -36,7 +36,7 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition =>
  * 在 Scope 固有包络上解析 self point
  * @description `origin` 与显式坐标不依赖包络；anchor 引用统一走现有 shape / boundary resolver
  */
-export const resolveScopeSelfPoint = (point: IRScopeSelfPoint, intrinsicLayout: NodeLayout | undefined): IRPosition => {
+const resolveScopeSelfPoint = (point: IRScopeSelfPoint, intrinsicLayout: NodeLayout | undefined): IRPosition => {
   if (point === 'origin') return [0, 0];
   if (Array.isArray(point)) return assertFiniteScopePoint([point[0], point[1]], 'scope self point');
   if (intrinsicLayout === undefined) {

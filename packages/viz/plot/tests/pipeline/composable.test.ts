@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
 import { lowerPlots } from '../../src/pipeline/expand';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -31,7 +31,7 @@ const pointSpec = (extra: Record<string, unknown> = {}): IRPlot =>
   });
 
 const expandOf = (spec: IRPlot, options?: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, { sales: SALES }, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, { sales: SALES }, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const nodeWidth = (node: IRNode): number => {

@@ -14,7 +14,7 @@ import type { RibbonCrossSection, RibbonSegment } from '../types';
 import { ribbonCrossSection } from './cross-section';
 
 /** 采样边界构造输入 */
-export type OutlineCommandsInput = {
+type OutlineCommandsInput = {
   /** 按路径顺序连接的可采样中心线段 */
   segments: ReadonlyArray<RibbonSegment>;
   /** 全部中心线段的总弧长 */

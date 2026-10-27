@@ -11,7 +11,7 @@ import { computeTableCellFitScale, projectTableCellBounds } from './fit';
 export type TableCellOverflow = 'visible' | 'clip';
 
 /** Cell 内容 fit、alignment 与 overflow 的纯几何输入 */
-export type ComputeTableCellContentPlacementInput = Readonly<{
+type ComputeTableCellContentPlacementInput = Readonly<{
   /** replay-root local 的 fit 前 allocation bounds */
   sourceAllocationBounds: BoundsRect;
   /** replay-root local 的 fit 前 visual overflow bounds */
@@ -29,7 +29,7 @@ export type ComputeTableCellContentPlacementInput = Readonly<{
 }>;
 
 /** Cell 内容最终放置的纯数值结果 */
-export type TableCellContentPlacement = Readonly<{
+type TableCellContentPlacement = Readonly<{
   /** 相对重放根节点的局部缩放 */
   scale: TableCellFitScale;
   /** scale 后施加的 Table-local translation */

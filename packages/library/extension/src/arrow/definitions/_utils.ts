@@ -6,7 +6,7 @@ type HollowPathOptions = {
 };
 
 /** 一条开放 marker 子路径 */
-export type OpenMarkerSubpath = Readonly<{
+type OpenMarkerSubpath = Readonly<{
   /** 开放标记子路径的起点 */
   from: [number, number];
   /** 开放标记子路径的终点 */

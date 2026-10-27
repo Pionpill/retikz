@@ -18,17 +18,7 @@ import type { IRScatterChart } from './schema';
 import { ScatterChartSchema } from './schema';
 
 /** Scatter exact schema、调度与消费检查共用的encoding顺序 */
-export const ScatterChartEncodingSlots = [
-  'x',
-  'y',
-  'color',
-  'size',
-  'opacity',
-  'shape',
-  'row',
-  'column',
-  'facet',
-] as const;
+const ScatterChartEncodingSlots = ['x', 'y', 'color', 'size', 'opacity', 'shape', 'row', 'column', 'facet'] as const;
 
 const scatterPropertySlots = [...pointPropertySlots, 'domainPadding'] as const;
 

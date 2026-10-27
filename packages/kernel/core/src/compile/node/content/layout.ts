@@ -6,7 +6,7 @@ import type { NodeTextLayoutContext, NodeTextLineLayout } from '../types';
 import { measureMinimumTextWidth, wrapText } from './text';
 
 /** 节点正文布局输入 */
-export type LayoutNodeContentInput = NodeTextLayoutContext & {
+type LayoutNodeContentInput = NodeTextLayoutContext & {
   /** 基准字体大小 */
   fontSize: number;
   /** 未缩放前的节点基准字号 */
@@ -22,7 +22,7 @@ export type LayoutNodeContentInput = NodeTextLayoutContext & {
 };
 
 /** 节点正文排版与完整作者行解析结果 */
-export type NodeContentLayout = {
+type NodeContentLayout = {
   /** 普通文本行 */
   lines?: Array<NodeTextLineLayout>;
   /** 行内公式混排块 */

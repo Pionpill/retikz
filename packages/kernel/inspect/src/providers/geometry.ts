@@ -3,7 +3,7 @@ import { DEFAULT_EPSILON, DEG_TO_RAD, alignAngleSweep, applyAffine, localToWorld
 import type { AffineMatrix } from '@retikz/math';
 
 /** 由 Inspector 生成的普通 Path 子项样式 */
-export type InspectionPathStyle = Readonly<{
+type InspectionPathStyle = Readonly<{
   /** 辅助轮廓固定不填充内部区域 */
   fill: 'none';
   /** 辅助轮廓使用的 CSS 描边颜色 */

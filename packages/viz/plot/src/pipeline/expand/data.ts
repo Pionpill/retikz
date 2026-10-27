@@ -58,7 +58,7 @@ export const applyMarkTransforms = (
  * 校验 datasetFieldMaps 中的数据集与逻辑字段引用
  * @description 供 lowering 与 locator 共用，保证两条入口采用相同的 fail-loud 契约
  */
-export const assertDatasetFieldMaps = (
+const assertDatasetFieldMaps = (
   spec: IRPlot,
   datasets: ExternalDatasets,
   datasetFieldMaps: LowerPlotsOptions['datasetFieldMaps'],

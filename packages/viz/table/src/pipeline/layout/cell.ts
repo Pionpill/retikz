@@ -8,7 +8,7 @@ import type { TableTrackLayout } from './types';
 export type TableCellAlignment = 'start' | 'center' | 'end';
 
 /** allocation bounds 与 padding 合成的 Cell 外部尺寸 */
-export type TableCellOuterSize = Readonly<{
+type TableCellOuterSize = Readonly<{
   /** 横向 finite nonnegative 外部尺寸 */
   width: number;
   /** 纵向 finite nonnegative 外部尺寸 */
@@ -24,7 +24,7 @@ export type TableCellTranslation = Readonly<{
 }>;
 
 /** 由 canonical tracks 计算 spanning Cell box 的输入 */
-export type ComputeTableCellBoxInput = Readonly<{
+type ComputeTableCellBoxInput = Readonly<{
   /** 规范化后的行轨道 */
   rows: ReadonlyArray<TableTrackLayout>;
   /** 规范化后的列轨道 */
@@ -44,7 +44,7 @@ export type ComputeTableCellBoxInput = Readonly<{
 }>;
 
 /** Cell content box 与 Core allocation bounds 的对齐输入 */
-export type ComputeTableCellTranslationInput = Readonly<{
+type ComputeTableCellTranslationInput = Readonly<{
   /** padding 收缩后的 Table-local content box */
   contentBox: BoundsRect;
   /** replay root 未放置局部坐标系的 Core allocation bounds */

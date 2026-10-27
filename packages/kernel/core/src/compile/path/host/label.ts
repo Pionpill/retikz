@@ -21,7 +21,7 @@ import {
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 
 /** 边标注公式上下文 */
-export type LabelTexContext = {
+type LabelTexContext = {
   /** 注入的 TeX 降解能力 */
   lowerTex?: LowerTex;
   /** `$...$` 解析门控 */
@@ -31,7 +31,7 @@ export type LabelTexContext = {
 };
 
 /** step label 放置时额外需要的宿主几何信息 */
-export type LabelPlacementContext = {
+type LabelPlacementContext = {
   /** 宿主计算的侧向距离，省略时使用标签自身的 distance */
   sideOffset?: number;
 };

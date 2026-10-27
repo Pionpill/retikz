@@ -4,7 +4,7 @@ import { WebFontSizeRatio } from '../../schemas';
 import type { CanonicalFont, FontResolveContext, FontSizeResolveContext } from './types';
 
 /** 文本默认行高系数 */
-export const DEFAULT_TEXT_LINE_HEIGHT_FACTOR = 1.2;
+const DEFAULT_TEXT_LINE_HEIGHT_FACTOR = 1.2;
 
 /**
  * 将字号解析为绘图坐标中的数值

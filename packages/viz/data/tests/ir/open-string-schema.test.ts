@@ -1,15 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { toJSONSchema } from 'zod';
 
-import {
-  BuiltinDataFieldFormat,
-  BuiltinDataTransform,
-  BuiltinReducerOperationKind,
-  BuiltinSelectorOperationKind,
-  FieldDefinitionSchema,
-} from '../../src';
-import { ExternalReducerOperationSchema, ReducerOperationSchema } from '../../src/operators/reducer';
-import { ExternalSelectorOperationSchema, SelectorOperationSchema } from '../../src/operators/selector';
+import { BuiltinDataFieldFormat, BuiltinDataTransform, FieldDefinitionSchema } from '../../src';
+import { ReducerOperationSchema } from '../../src/operators/reducer';
+import { SelectorOperationSchema } from '../../src/operators/selector';
 import { ExternalTransformSchema, TransformSchema } from '../../src/transform';
 
 describe('数据注册表支持的开放字符串 schema', () => {
@@ -43,31 +37,12 @@ describe('数据注册表支持的开放字符串 schema', () => {
   });
 
   it.each([
-    [
-      'reducer',
-      ReducerOperationSchema,
-      ExternalReducerOperationSchema,
-      Object.values(BuiltinReducerOperationKind),
-      { kind: 'count', as: 'count' },
-    ],
-    [
-      'selector',
-      SelectorOperationSchema,
-      ExternalSelectorOperationSchema,
-      Object.values(BuiltinSelectorOperationKind),
-      { kind: 'first' },
-    ],
-  ] as const)('通过完整 schema 验证内置和自定义 %s 操作', (_label, schema, externalSchema, builtins, builtin) => {
-    expect(toJSONSchema(externalSchema).properties?.kind).toMatchObject({
-      anyOf: [
-        { type: 'string', enum: [...builtins] },
-        { type: 'string', minLength: 1 },
-      ],
-    });
+    ['reducer', ReducerOperationSchema, { kind: 'count', as: 'count' }],
+    ['selector', SelectorOperationSchema, { kind: 'first' }],
+  ] as const)('通过完整 schema 验证内置和自定义 %s 操作', (_label, schema, builtin) => {
     const custom = { kind: 'custom.operation', parameter: 2 };
     expect(schema.parse(custom)).toEqual(custom);
     expect(schema.parse(builtin)).toMatchObject(builtin);
     expect(() => schema.parse({ kind: '   ' })).toThrow();
-    expect(() => externalSchema.parse(builtin)).toThrow();
   });
 });

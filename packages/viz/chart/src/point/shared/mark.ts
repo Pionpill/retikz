@@ -9,10 +9,7 @@ import { pointFieldMappingOf, requiredFieldOf } from './encoding';
 import type { IRPointProperties } from './schema';
 
 /** 将 Chart 字段映射下沉为 Plot 字段简写或具名尺度绑定 */
-export const markEncodingOf = (
-  encodings: JsonObject,
-  name: string,
-): string | { field: string; scale: string } | undefined => {
+const markEncodingOf = (encodings: JsonObject, name: string): string | { field: string; scale: string } | undefined => {
   if (!Object.hasOwn(encodings, name)) return undefined;
   const mapping = pointFieldMappingOf(encodings[name], ['recipe', 'encodings', name]);
   return mapping.scale === undefined ? mapping.field : { field: mapping.field, scale: mapping.scale };

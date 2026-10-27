@@ -19,7 +19,7 @@ import type {
 import type { DeepReadonly } from '../../shared';
 
 /** Table defaults cascade 中的实际 Source 来源层 */
-export type TableDefaultsLayer = DeepReadonly<{
+type TableDefaultsLayer = DeepReadonly<{
   /** 来源层类别 */
   kind: 'neutral' | 'style' | 'source';
   /** 稳定 Source 路径 */

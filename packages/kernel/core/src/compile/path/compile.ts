@@ -33,7 +33,7 @@ import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
 import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';
 
 /** Path 宿主编译所需的显式服务与本次工作区 */
-export type PathCompileHost = Pick<
+type PathCompileHost = Pick<
   CompileEnvironment,
   'round' | 'lowerTex' | 'rootFontSize' | 'paths' | 'arrows' | 'marks' | 'patterns' | 'measureText'
 > & {

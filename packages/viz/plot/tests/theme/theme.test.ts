@@ -3,7 +3,7 @@ import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retik
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots } from '../../src/pipeline';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import {
   resolveAxisGuideTokens,
   resolveLegendGuideTokens,
@@ -22,7 +22,8 @@ const ROWS = [
 ];
 
 const expandOf = (spec: IRPlot): IRScope =>
-  lowerPlot(spec, { d: ROWS }, { layout: { width: 480, height: 300 }, textMeasurer: measureLabel }) as IRScope;
+  lowerPlotWithDataArtifact(spec, { d: ROWS }, { layout: { width: 480, height: 300 }, textMeasurer: measureLabel })
+    .child as IRScope;
 
 const baseSpec = (override: Partial<IRPlot> = {}): IRPlot =>
   PlotSchema.parse({

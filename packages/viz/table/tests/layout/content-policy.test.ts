@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ComputeTableCellContentPlacementInput } from '../../src/pipeline/layout';
 import { computeTableCellContentPlacement, computeTableCellFitScale } from '../../src/pipeline/layout';
 
 describe('Table Cell 内容政策', () => {
@@ -135,7 +134,7 @@ describe('Table Cell 内容政策', () => {
   });
 
   it('将零轴裁剪框变成没有无效裁剪的空可见内容', () => {
-    const input: ComputeTableCellContentPlacementInput = {
+    const input: Parameters<typeof computeTableCellContentPlacement>[0] = {
       sourceAllocationBounds: { x: 0, y: 0, width: 10, height: 10 },
       sourceVisualOverflowBounds: { x: -2, y: -2, width: 14, height: 14 },
       contentBox: { x: 100, y: 50, width: 0, height: 30 },

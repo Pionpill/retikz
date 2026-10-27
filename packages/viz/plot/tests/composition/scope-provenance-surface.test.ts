@@ -2,7 +2,7 @@ import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { createPlotLocator } from '../../src';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -110,11 +110,11 @@ const trackSpec = {
 const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 
 const expandOf = (spec: IRPlot): IRScope => {
-  return lowerPlot(
+  return lowerPlotWithDataArtifact(
     spec,
     { weather: weatherRows },
     { layout: { width: 480, height: 300 }, textMeasurer: measureLabel, provenance: true, datumProvenance: true },
-  ) as IRScope;
+  ).child as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import { PlotSchema } from '../../../src';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { measureLabel } from '../../helpers/text-measurement';
 
 const definition = defineRegression({
@@ -65,7 +65,7 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
     ],
   });
   return pathsOf(
-    lowerPlot(
+    lowerPlotWithDataArtifact(
       plot,
       {
         rows: [
@@ -80,7 +80,7 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
         implementations: { regressions: [implementation] },
         textMeasurer: measureLabel,
       },
-    ),
+    ).child,
   )[0];
 };
 describe('回归曲线几何', () => {

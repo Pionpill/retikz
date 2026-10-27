@@ -4,7 +4,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
  * 创建能力注册表所需的内置项、自定义项与键提取规则
  * @template TDefinition 内置项、自定义项和键提取回调共享的定义类型
  */
-export type CreateProviderRegistryOptions<TDefinition> = {
+type CreateProviderRegistryOptions<TDefinition> = {
   /** 能力名称，用于错误信息 */
   capability: string;
   /**

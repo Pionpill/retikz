@@ -45,7 +45,7 @@ const computationError = (
 ) => new RetikzRuntimeError({ code, phase: 'computation-registry', computation, cause });
 
 /** 对 Computation graph 执行依赖优先且稳定的拓扑排序 */
-export const sortRuntimeComputationGraph = (
+const sortRuntimeComputationGraph = (
   definitions: ReadonlyArray<RuntimeComputationToken>,
   dependenciesFor: (definition: RuntimeComputationToken) => ReadonlyArray<RuntimeComputationToken>,
 ): ReadonlyArray<RuntimeComputationToken> => {

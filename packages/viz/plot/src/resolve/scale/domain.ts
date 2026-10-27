@@ -12,10 +12,10 @@ import type { IRPlotDomainPadding } from '../../schemas';
 import { PlotDomainPaddingKind } from '../../schemas';
 
 /** 可按连续值域规则扩展的 position scale 族 */
-export type PositionDomainFamily = 'linear' | 'time' | 'log' | 'pow' | 'sqrt' | 'symlog' | 'radial';
+type PositionDomainFamily = 'linear' | 'time' | 'log' | 'pow' | 'sqrt' | 'symlog' | 'radial';
 
 /** 解析带弹性值域时需要的 scale 上下文 */
-export type ResolvePaddedDomainOptions = {
+type ResolvePaddedDomainOptions = {
   /** scale 名称，用于报错定位 */
   scaleName: string;
   /** 连续 position scale 族 */

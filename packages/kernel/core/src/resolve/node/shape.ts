@@ -11,7 +11,7 @@ import { withProviderOutputValidationBoundary } from '../provider-validation';
 import type { ShapeResolution } from './types';
 
 /** 节点形状解析所需的输入与缩放参数 */
-export type NodeShapeResolveInput = {
+type NodeShapeResolveInput = {
   /** 待解析节点 */
   node: Pick<IRNode, 'shape' | 'cornerRadius'>;
   /** 形状定义注册表 */

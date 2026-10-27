@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { NodeLayout } from '../../src/compile/node';
-import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
+import { resolveAnchor, resolveAnchorRef } from '../../src/compile/reference';
 import type { ShapeDefinition } from '../../src/contract';
 import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
@@ -176,10 +176,10 @@ describe('resolveAnchor 数字角度支持负号 / 小数', () => {
   });
 });
 
-describe('resolveEdgePoint 边上比例点', () => {
+describe('resolveAnchorRef 边上比例点', () => {
   it('rect top t=0.5 = 上边中点', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
-    const p = resolveEdgePoint(layout, 'top', 0.5);
+    const p = resolveAnchorRef(layout, { side: 'top', fraction: 0.5 });
 
     expect(p[0]).toBeCloseTo(0, 6);
     expect(p[1]).toBeCloseTo(-5, 6);
@@ -187,15 +187,15 @@ describe('resolveEdgePoint 边上比例点', () => {
 
   it('缓存命中返回同一引用（key = `${side}:${t}`）', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
-    const first = resolveEdgePoint(layout, 'top', 0.25);
+    const first = resolveAnchorRef(layout, { side: 'top', fraction: 0.25 });
 
-    expect(resolveEdgePoint(layout, 'top', 0.25)).toBe(first);
+    expect(resolveAnchorRef(layout, { side: 'top', fraction: 0.25 })).toBe(first);
   });
 
   it('与命名 anchor cache key 命名空间不冲突（top vs top:0.5）', () => {
     const layout = makeLayout('rectangle', 20, 10, 0, 0);
     const named = resolveAnchor(layout, 'top'); // 上边中点 (0,-5)
-    const edge = resolveEdgePoint(layout, 'top', 0); // NW 角 (-10,-5)
+    const edge = resolveAnchorRef(layout, { side: 'top', fraction: 0 }); // NW 角 (-10,-5)
 
     expect(named).not.toBe(edge);
     expect(edge[0]).toBeCloseTo(-10, 6);
@@ -221,12 +221,12 @@ describe('resolveEdgePoint 边上比例点', () => {
       boundary: { name: noEdge.name, definition: noEdge, params: {}, isShape: true },
     };
 
-    expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/does not support side anchors/);
+    expect(() => resolveAnchorRef(layout, { side: 'top', fraction: 0.5 })).toThrow(/does not support side anchors/);
   });
 
   it('零尺寸 Coordinate → { side, fraction } 报错（决策细节 #10）', () => {
     const layout = makeLayout('rectangle', 0, 0, 5, 5);
 
-    expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/zero-size target/);
+    expect(() => resolveAnchorRef(layout, { side: 'top', fraction: 0.5 })).toThrow(/zero-size target/);
   });
 });

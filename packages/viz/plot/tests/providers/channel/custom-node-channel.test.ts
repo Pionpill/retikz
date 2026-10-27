@@ -5,7 +5,7 @@ import { markChannelEncoding, channelField } from '../../../src/contract';
 import type { AnyChannelDefinition } from '../../../src/contract';
 import { ChannelDefinitionKind, defineNodeChannel, definePathChannel, defineScopeChannel } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
@@ -223,7 +223,8 @@ const firstLayer = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
-  return (lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope).children[0] as IRScope;
+  return (lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope)
+    .children[0] as IRScope;
 };
 
 const expandOf = (
@@ -231,7 +232,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 describe('自定义节点通道注册表', () => {
@@ -276,9 +277,9 @@ describe('自定义节点通道注册表', () => {
       deliver: () => {},
     });
 
-    expect(() => lowerPlot(scatterSpec(), { d: rows }, { ...opts([bad]), textMeasurer: measureLabel })).toThrow(
-      /collides with a built-in channel/,
-    );
+    expect(
+      () => lowerPlotWithDataArtifact(scatterSpec(), { d: rows }, { ...opts([bad]), textMeasurer: measureLabel }).child,
+    ).toThrow(/collides with a built-in channel/);
   });
 
   // 错误路径：缺 deliver → fail-loud
@@ -290,19 +291,20 @@ describe('自定义节点通道注册表', () => {
       resolve: () => undefined,
     } as unknown as AnyChannelDefinition;
 
-    expect(() => lowerPlot(scatterSpec(), { d: rows }, { ...opts([bad]), textMeasurer: measureLabel })).toThrow(
-      /must provide deliver/,
-    );
+    expect(
+      () => lowerPlotWithDataArtifact(scatterSpec(), { d: rows }, { ...opts([bad]), textMeasurer: measureLabel }).child,
+    ).toThrow(/must provide deliver/);
   });
 
   // 错误路径：两个自定义通道同名 → fail-loud
   it('重复的自定义通道明确报错', () => {
-    expect(() =>
-      lowerPlot(
-        scatterSpec(),
-        { d: rows },
-        { ...opts([intensityChannel, intensityChannel]), textMeasurer: measureLabel },
-      ),
+    expect(
+      () =>
+        lowerPlotWithDataArtifact(
+          scatterSpec(),
+          { d: rows },
+          { ...opts([intensityChannel, intensityChannel]), textMeasurer: measureLabel },
+        ).child,
     ).toThrow(/duplicate custom channel/);
   });
 

@@ -51,7 +51,7 @@ import type {
 } from './types';
 
 /** 本次完整基础树准备结果 */
-export type WeaveCompilation = {
+type WeaveCompilation = {
   /** 已完成编译的声明根 */
   root: WeaveRoot;
   /** 可交给 Runtime 提交的完整输出 */

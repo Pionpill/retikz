@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -55,10 +55,10 @@ const expandOf = (
   options: { width?: number; height?: number } = {},
   datasets: { sales: Array<Record<string, string | number>> } = { sales: salesRows },
 ): IRScope => {
-  return lowerPlot(spec, datasets, {
+  return lowerPlotWithDataArtifact(spec, datasets, {
     layout: { width: options.width ?? 480, height: options.height ?? 300 },
     textMeasurer: measureLabel,
-  }) as IRScope;
+  }).child as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

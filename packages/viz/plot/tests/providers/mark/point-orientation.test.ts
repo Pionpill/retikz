@@ -5,7 +5,7 @@ import { literal, strictObject } from 'zod';
 import type { CoordinateFrame, ScreenPositionAdjustmentDefinition } from '../../../src/contract';
 import { createCoordinateFrame, defineCoordinate } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlotPointMark } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
@@ -42,7 +42,7 @@ const render = (
     guides: [],
   });
   return nodesOf(
-    lowerPlot(
+    lowerPlotWithDataArtifact(
       spec,
       { d: rows },
       {
@@ -50,7 +50,7 @@ const render = (
         ...options,
         textMeasurer: measureLabel,
       },
-    ),
+    ).child,
   );
 };
 

@@ -8,7 +8,7 @@ import { AnimationProperty } from '@retikz/core';
 import { classifyProperty, animationSkipReason, resolveTransformOrigin, sampleAnimationTrack } from '../../animation';
 
 /** CSS 直属通道 → SVG/CSS 属性名（opacity / fill / stroke / stroke-width） */
-export const cssPropertyName = (property: IRAnimationTrack['property']): string => {
+const cssPropertyName = (property: IRAnimationTrack['property']): string => {
   switch (property) {
     case 'strokeWidth':
       return 'stroke-width';
@@ -44,7 +44,7 @@ export const transformValue = (property: string, value: number): string => {
 };
 
 /** 将缓动预设或贝塞尔控制点转换为 CSS timing-function */
-export const easingToCss = (easing: IRAnimationTrack['easing']): string =>
+const easingToCss = (easing: IRAnimationTrack['easing']): string =>
   Array.isArray(easing) ? `cubic-bezier(${easing.join(', ')})` : (easing ?? 'linear');
 
 /** iterations → CSS animation-iteration-count 串（'infinite' 原样，数值转串，缺省 1） */
@@ -52,7 +52,7 @@ export const iterationsToCss = (iterations: number | 'infinite' | undefined): st
   iterations === undefined ? '1' : iterations === 'infinite' ? 'infinite' : String(iterations);
 
 /** 单帧归一化形态：offset∈[0,1] + 该通道 CSS 值（+ 可选段内 easing） */
-export type ExpandedFrame = {
+type ExpandedFrame = {
   /** 展开帧在单次轨道周期内的归一化位置 */
   offset: number;
   /** 当前 CSS 属性在此帧的序列化值 */
@@ -74,7 +74,7 @@ export type ExpandedTrack = {
 };
 
 /** 跳过原因（caller 据此 warn 并降级到 base） */
-export type ExpandSkip = {
+type ExpandSkip = {
   /** 当前轨道无法展开为 CSS 动画时的诊断原因 */
   skip: string;
 };

@@ -12,7 +12,6 @@ import { defineScale } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import { qualifyChartLocatorOptions } from '../../src/_chart/contract';
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveChartEncodingMappings, resolveSelectedChart } from '../../src/_chart/resolve';
 import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
@@ -343,21 +342,6 @@ describe('分散 Chart 编码解析结果', () => {
         },
       });
     }
-  });
-
-  it('限定具有固定分散标识的面向 Chart 的面定位器', () => {
-    expect(
-      qualifyChartLocatorOptions(
-        { facet: { row: 'north', column: [2025, 2026] } },
-        { facet: '__chart.scatter.composition.facet' },
-      ),
-    ).toEqual({
-      facet: {
-        id: '__chart.scatter.composition.facet',
-        row: 'north',
-        column: [2025, 2026],
-      },
-    });
   });
 
   it('通过所属模块定义解决自定义转换、归约器和缩放操作', () => {

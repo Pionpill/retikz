@@ -19,7 +19,7 @@ import { FlexLayoutProvider } from '@retikz/layout';
 import { LegendProvider, SurfaceProvider } from '@retikz/standard/presentation';
 import { literal } from 'zod';
 
-import type { DiagramDefinitionOptions, ResolvedDiagramDefinitionOptions } from '../src/_diagram';
+import type { DiagramDefinitionOptions } from '../src/_diagram';
 import {
   DiagramDefaultsSchema,
   DiagramFrameSchema,
@@ -45,7 +45,7 @@ const TestDiagramFoundationProviderKey: CompositeCoreProviderKey = Object.freeze
 });
 
 const createTestDiagramFoundationDefinition = (
-  options: ResolvedDiagramDefinitionOptions,
+  options: ReturnType<typeof resolveDiagramDefinitionOptions>,
   proposal: LayoutProposal | undefined,
 ) => {
   return defineComposite({

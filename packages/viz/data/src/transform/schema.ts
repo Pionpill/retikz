@@ -37,7 +37,7 @@ import {
 import { createTransformSchema } from './factory';
 
 /** 校验分组字段列表，按字段顺序逐层分组，每层保留首次出现顺序；省略或空列表表示所有行属于同一组 */
-export const GroupBySchema = array(NonBlankStringSchema)
+const GroupBySchema = array(NonBlankStringSchema)
   .optional()
   .describe(
     'Group key fields in hierarchy order; each level retains first-seen order; omitted or empty means one group',

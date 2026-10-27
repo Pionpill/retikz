@@ -51,7 +51,7 @@ export type LowerTexOptions = {
  * 内部 lowering 成功结果
  * @template T 成功分支 value 承载的转换产物类型
  */
-export type TexLoweringSuccess<T> = {
+type TexLoweringSuccess<T> = {
   /** 标识已成功产出转换结果 */
   ok: true;
   /** 当前转换阶段产出的有效载荷 */
@@ -59,7 +59,7 @@ export type TexLoweringSuccess<T> = {
 };
 
 /** 内部 lowering 失败结果 */
-export type TexLoweringFailure = {
+type TexLoweringFailure = {
   /** 标识转换失败，应读取诊断而非产物 */
   ok: false;
   /** 可向调用方报告的失败类别、源码与原因 */

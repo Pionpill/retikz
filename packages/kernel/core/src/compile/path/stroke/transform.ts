@@ -13,7 +13,7 @@ export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
 };
 
 /** path rotate / scale transform 构造输入 */
-export type BuildPathTransformsInput = {
+type BuildPathTransformsInput = {
   /** 绕路径包围盒中心旋转的角度，单位为度；未指定时不生成旋转 */
   rotate: number | undefined;
   /** 绕路径包围盒中心应用的统一或分轴缩放 */

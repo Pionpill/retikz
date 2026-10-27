@@ -10,7 +10,7 @@ import { BuiltinPlotMark } from '../../schemas';
 import type { MarkOperationResolution, MarkResolveContext } from './types';
 
 /** 返回内置图元对应的行为定义 */
-export const resolveMarkDefinition = (mark: IRPlotMark, context: MarkResolveContext): AnyMarkDefinition =>
+const resolveMarkDefinition = (mark: IRPlotMark, context: MarkResolveContext): AnyMarkDefinition =>
   context.registry[mark.type];
 
 /** 用匹配 definition schema 解析 mark operation，产出 lowering 唯一消费结构 */

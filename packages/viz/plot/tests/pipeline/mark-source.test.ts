@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
@@ -16,7 +16,7 @@ const leaves = (child: IRChild): Array<IRNode | IRPath> =>
 
 const render = (marks: Array<unknown>, rows: Array<Record<string, string | number>> = []) =>
   leaves(
-    lowerPlot(
+    lowerPlotWithDataArtifact(
       PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
@@ -31,7 +31,7 @@ const render = (marks: Array<unknown>, rows: Array<Record<string, string | numbe
       }),
       { rows },
       { textMeasurer: measureLabel },
-    ),
+    ).child,
   );
 
 describe('标记字段和属性下沉', () => {
@@ -124,7 +124,9 @@ describe('标记字段和属性下沉', () => {
         },
       ],
     });
-    const [path] = leaves(lowerPlot(spec, { rows: [{ amount: 5 }] }, { textMeasurer: measureLabel }));
+    const [path] = leaves(
+      lowerPlotWithDataArtifact(spec, { rows: [{ amount: 5 }] }, { textMeasurer: measureLabel }).child,
+    );
     expect(path).toMatchObject({ kind: 'ribbon', kindOptions: { width: { kind: 'fixed', value: 7 } } });
   });
   it('将数据点字段位置与固定数据空间位置相结合', () => {

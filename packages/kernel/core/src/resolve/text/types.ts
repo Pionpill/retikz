@@ -12,7 +12,7 @@ export type ResolvedMathSegment = WithResolvedFill<IRMathSegment>;
 export type ResolvedInlineSourceSegment = ResolvedTextSegment | ResolvedMathSegment;
 
 /** 已解析行级与片段颜色的混排行 */
-export type ResolvedSegmentedLine = Omit<IRSegmentedLine, 'segments' | 'fill'> &
+type ResolvedSegmentedLine = Omit<IRSegmentedLine, 'segments' | 'fill'> &
   Readonly<{
     /** 已解析行级颜色 */
     fill?: string;
@@ -61,7 +61,7 @@ export type FontResolveContext = Readonly<{
 }>;
 
 /** 已完成字体继承并换算字号的文字片段 */
-export type CanonicalTextSegment = Omit<ResolvedTextSegment, 'font'> &
+type CanonicalTextSegment = Omit<ResolvedTextSegment, 'font'> &
   Readonly<{
     /** 当前文本片段完成继承与默认值补全的字体 */
     font: CanonicalFont;

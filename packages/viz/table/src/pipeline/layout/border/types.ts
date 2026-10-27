@@ -56,7 +56,7 @@ export type TableBorderCellInput = Readonly<{
 }>;
 
 /** 边框图使用的已解析表格默认样式 */
-export type TableBorderDefaultsInput = Readonly<{
+type TableBorderDefaultsInput = Readonly<{
   /** Table 外轮廓默认候选 */
   outer?: Readonly<Partial<Record<TableBorderSide, ResolvedTableBorderCandidate>>>;
   /** row 间默认候选 */

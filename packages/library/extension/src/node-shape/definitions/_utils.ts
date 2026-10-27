@@ -15,7 +15,7 @@ import type { CenteredBox, Position } from '@retikz/math';
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
 
 /** Shape 外接矩形半轴 */
-export type ShapeHalfAxes = {
+type ShapeHalfAxes = {
   /** 形状外接矩形的半宽 */
   halfWidth: number;
   /** 形状外接矩形的半高 */
@@ -23,7 +23,7 @@ export type ShapeHalfAxes = {
 };
 
 /** 根据最终外接半轴生成局部顶点 */
-export type PolygonVertices = (halfWidth: number, halfHeight: number) => Array<Position>;
+type PolygonVertices = (halfWidth: number, halfHeight: number) => Array<Position>;
 
 /** 报告无法生成有限 Shape 几何 */
 const invalidGeometry = (shape: string, details: Readonly<Record<string, unknown>>): never => {
@@ -121,7 +121,7 @@ export const circumscribeRoundedPolygon = (
 };
 
 /** 将局部多边形顶点映射到 Shape 世界坐标 */
-export const polygonWorldVertices = (bounds: CenteredBox, verticesFor: PolygonVertices): Array<Position> =>
+const polygonWorldVertices = (bounds: CenteredBox, verticesFor: PolygonVertices): Array<Position> =>
   verticesFor(bounds.width / 2, bounds.height / 2).map(vertex => localToWorld(bounds, vertex));
 
 /** 从最终多边形轮廓解析方向边界点 */

@@ -1604,7 +1604,7 @@ export const lowerPlotWithDataArtifact = (
 };
 
 /** 把一个Plot IR根节点与外部数据下沉成Core IR */
-export const lowerPlot = (
+const lowerPlot = (
   node: IRPlot,
   datasets: ExternalDatasets,
   options: PlotLayoutOptions,

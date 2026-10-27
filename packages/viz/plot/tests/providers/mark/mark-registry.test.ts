@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { defineNodeChannel, markChannelEncoding, channelField } from '../../../src/contract';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { MarkSchema, PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
@@ -42,18 +42,19 @@ describe('封闭标记词汇和通道扩展', () => {
   });
 
   it('拒绝内置标记上未注册的通道', () => {
-    expect(() =>
-      lowerPlot(
-        specWithChannel('ghost'),
-        { d: [{ cat: 'A', val: 3, intensity: 0.75 }] },
-        { textMeasurer: measureLabel },
-      ),
+    expect(
+      () =>
+        lowerPlotWithDataArtifact(
+          specWithChannel('ghost'),
+          { d: [{ cat: 'A', val: 3, intensity: 0.75 }] },
+          { textMeasurer: measureLabel },
+        ).child,
     ).toThrow(/channel "ghost" is not registered/);
   });
 
   it('在内置标记上提供已注册的扩展通道', () => {
     const delivered: { value?: number } = {};
-    lowerPlot(
+    lowerPlotWithDataArtifact(
       specWithChannel('bareIntensity'),
       { d: [{ cat: 'A', val: 3, intensity: 0.75 }] },
       {

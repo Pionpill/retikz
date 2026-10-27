@@ -27,7 +27,7 @@ export const ReactTableRuntimeKind = {
 export type ReactTableRuntimeKind = ValueOf<typeof ReactTableRuntimeKind>;
 
 /** Table standalone 入口允许透传给 Layout 的宿主字段 */
-export const TABLE_LAYOUT_HOST_PROP_KEYS = [
+const TABLE_LAYOUT_HOST_PROP_KEYS = [
   'handlers',
   'width',
   'height',

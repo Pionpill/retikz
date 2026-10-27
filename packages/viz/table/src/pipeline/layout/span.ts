@@ -5,7 +5,7 @@ import { solveTableTracks } from './track';
 import type { ResolvedTableTrackSize, TableTrackContribution } from './types';
 
 /** 单个 spanning Cell 对一个 canonical 轴的自然尺寸要求 */
-export type TableSpanConstraint = Readonly<{
+type TableSpanConstraint = Readonly<{
   /** 可选的单元格语义标识 */
   cellId?: string;
   /** span 起始 canonical track index */
@@ -17,7 +17,7 @@ export type TableSpanConstraint = Readonly<{
 }>;
 
 /** span contribution 传播输入 */
-export type PropagateTableSpanContributionsInput = Readonly<{
+type PropagateTableSpanContributionsInput = Readonly<{
   /** 与 canonical 轨道同序的 resolved size */
   tracks: ReadonlyArray<ResolvedTableTrackSize>;
   /** 非 spanning Cell 形成的数值 contribution */
@@ -29,7 +29,7 @@ export type PropagateTableSpanContributionsInput = Readonly<{
 }>;
 
 /** 单个 Cell 仍未被轨道自然尺寸覆盖的外部尺寸 */
-export type TableSpanUnmetSize = Readonly<{
+type TableSpanUnmetSize = Readonly<{
   /** 可选的单元格语义标识 */
   cellId?: string;
   /** finite nonnegative 未满足尺寸 */
@@ -37,7 +37,7 @@ export type TableSpanUnmetSize = Readonly<{
 }>;
 
 /** span contribution 传播结果 */
-export type TableSpanContributionResult = Readonly<{
+type TableSpanContributionResult = Readonly<{
   /** 与 canonical 轨道同序且每轨恰一项的 contribution */
   contributions: ReadonlyArray<TableTrackContribution>;
   /** 按 canonical constraint 顺序保留 Cell 归属的未满足尺寸 */

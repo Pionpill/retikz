@@ -46,7 +46,7 @@ export type BranchDiagramLayoutHostProps = Pick<
 >;
 
 /** Branch standalone-only Layout props 的完整字段表 */
-export const branchDiagramLayoutHostPropKeys = [
+const branchDiagramLayoutHostPropKeys = [
   'authoring',
   'compileDriver',
   'handlers',

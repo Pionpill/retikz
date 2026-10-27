@@ -27,7 +27,7 @@ const providerKeyByType: Readonly<Record<InputGraphMember['type'], GraphSemantic
 });
 
 /** 判断 Vanilla child 是否为可直接归一化的 Graph-family semantic 输入 */
-export const isGraphSemanticInput = (child: InputGraphChild): child is InputGraphMember =>
+const isGraphSemanticInput = (child: InputGraphChild): child is InputGraphMember =>
   !('namespace' in child) && 'type' in child && child.type !== undefined && child.type in providerKeyByType;
 
 /** 判断 Vanilla child 是否应交由 Core authoring normalizer 处理 */

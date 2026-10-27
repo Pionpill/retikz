@@ -72,7 +72,7 @@ const formatCell = (
 };
 
 /** formatter 阶段消费的 canonical-order-aligned Cell plans */
-export type FormatTableOptions = Readonly<{
+type FormatTableOptions = Readonly<{
   /** 与 canonical Cells 等长同序，显式 id 也必须一致的 resolved plans */
   cells: ReadonlyArray<ResolvedTableCellPlan>;
   /** 用户自定义 Cell formatter definitions */

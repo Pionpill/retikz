@@ -18,7 +18,7 @@ const lineStyleInputOf = (spec: IRPatternPaint): IRPatternLineStyle => ({
 });
 
 /** 在基础线型上应用局部覆盖；显式提供虚线相关字段时重新解析虚线，解析为空则清除继承值 */
-export const resolvePatternLineStyle = (
+const resolvePatternLineStyle = (
   base: ResolvedPatternLineStyle,
   override: IRPatternLineStyle,
 ): ResolvedPatternLineStyle => {

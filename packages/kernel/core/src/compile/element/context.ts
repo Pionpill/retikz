@@ -95,7 +95,7 @@ const createElementWorkspace = (options: ElementCompileOptions) => {
 };
 
 /** 单次计算工作区，仅在本次调用中使用 */
-export type ElementCompileWorkspace = ReturnType<typeof createElementWorkspace>;
+type ElementCompileWorkspace = ReturnType<typeof createElementWorkspace>;
 
 /** 运行一次单元素计算，将依赖等待与真实编译错误分开 */
 export const runElementCompilation = <TCompiled>(

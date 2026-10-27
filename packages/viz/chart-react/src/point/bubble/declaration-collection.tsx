@@ -10,7 +10,7 @@ import type { BubblePropertiesProps } from './BubbleProperties';
 import { BubbleProperties } from './BubbleProperties';
 
 /** BubbleChart direct-child declarations 的完整收集结果 */
-export type CollectedBubbleChartDeclarations = CollectedPointChartDeclarations<
+type CollectedBubbleChartDeclarations = CollectedPointChartDeclarations<
   BubbleEncodingsProps,
   BubblePropertiesProps,
   BubbleChartMark

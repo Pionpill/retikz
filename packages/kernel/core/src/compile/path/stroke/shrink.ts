@@ -31,7 +31,7 @@ const emitArrowEnd = (
 };
 
 /** 已解析的端点箭头及对应 path 收缩量 */
-export type EndpointArrowMarkEmission = {
+type EndpointArrowMarkEmission = {
   /** 已物化的 Scene 端点箭头描述 */
   spec: ResolvedArrowEnd;
   /** path 本体需要向内收缩的距离（未乘 strokeWidth） */
@@ -84,7 +84,7 @@ export const emitEndpointArrowMark = (
 };
 
 /** 箭头收缩改写所需上下文 */
-export type ApplyArrowShrinksContext = EndpointArrowSpecs & {
+type ApplyArrowShrinksContext = EndpointArrowSpecs & {
   /** 起点收缩系数，乘 strokeWidth 得到实际距离 */
   shrinkStart: number;
   /** 终点收缩系数，乘 strokeWidth 得到实际距离 */

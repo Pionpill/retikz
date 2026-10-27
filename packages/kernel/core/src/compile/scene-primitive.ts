@@ -256,7 +256,7 @@ export const assertProviderOutputUnitInterval = (
 };
 
 /** 校验 Scene 或 Marker 的 paint 值，Marker 模式禁止 resourceRef */
-export const assertProviderOutputPaint = (owner: string, value: unknown, path: string, markerOnly = false): void => {
+const assertProviderOutputPaint = (owner: string, value: unknown, path: string, markerOnly = false): void => {
   if (value === undefined || typeof value === 'string') return;
 
   const candidate = providerOutputRecord(owner, value, path);
@@ -279,7 +279,7 @@ export const assertProviderOutputPaint = (owner: string, value: unknown, path: s
 };
 
 /** 校验 dash pattern 是 dense finite 非负数组 */
-export const assertProviderOutputDashPattern = (owner: string, value: Record<string, unknown>, path: string): void => {
+const assertProviderOutputDashPattern = (owner: string, value: Record<string, unknown>, path: string): void => {
   if (value.dashPattern === undefined) return;
 
   providerOutputArray(owner, value.dashPattern, `${path}.dashPattern`).forEach((entry, index) =>
@@ -288,7 +288,7 @@ export const assertProviderOutputDashPattern = (owner: string, value: Record<str
 };
 
 /** 校验 Scene/Marker 的结构化 transform 数组 */
-export const assertProviderOutputTransforms = (owner: string, value: unknown, path: string): void => {
+const assertProviderOutputTransforms = (owner: string, value: unknown, path: string): void => {
   if (value === undefined) return;
 
   providerOutputArray(owner, value, path).forEach((transform, index) => {
@@ -313,7 +313,7 @@ export const assertProviderOutputTransforms = (owner: string, value: unknown, pa
 };
 
 /** 校验 Scene/Marker path 的 fill/stroke enum 字段 */
-export const assertProviderOutputPathEnums = (owner: string, value: Record<string, unknown>, path: string): void => {
+const assertProviderOutputPathEnums = (owner: string, value: Record<string, unknown>, path: string): void => {
   if (value.fillRule !== undefined && !Object.values(PathFillRule).includes(value.fillRule as never)) {
     failProviderOutput(owner, `an invalid ${path}.fillRule`);
   }

@@ -5,7 +5,7 @@ import type { IRPosition } from '../../../schemas';
 import { samePoint } from '../host';
 
 /** 向路径追加三次贝塞尔曲线所需的控制点和终点 */
-export type EmitCubicCommandInput = {
+type EmitCubicCommandInput = {
   /** 靠近当前路径端点的第一控制点 */
   control1: IRPosition;
   /** 靠近曲线终点的第二控制点 */
@@ -20,7 +20,7 @@ export type EmitCubicCommandInput = {
 };
 
 /** 以圆心、半径及角度范围描述待追加的圆弧 */
-export type EmitArcCommandInput = {
+type EmitArcCommandInput = {
   /** 圆弧圆心，使用当前路径坐标系 */
   center: IRPosition;
   /** 圆弧半径 */
@@ -32,7 +32,7 @@ export type EmitArcCommandInput = {
 };
 
 /** 以轴向半径及角度范围描述待追加的椭圆弧 */
-export type EmitEllipseArcCommandInput = {
+type EmitEllipseArcCommandInput = {
   /** 椭圆中心，使用当前路径坐标系 */
   center: IRPosition;
   /** 椭圆沿 x 轴的半径 */
@@ -85,7 +85,7 @@ export type PathCommandEmitter = {
 };
 
 /** 路径命令数值舍入与源步骤追踪所需的回调 */
-export type CreatePathCommandEmitterInput = {
+type CreatePathCommandEmitterInput = {
   /** 舍入输出命令中的坐标和半径，角度及内部端点保持原值 */
   round: (n: number) => number;
   /** 每次追加命令时读取其来源步骤种类 */

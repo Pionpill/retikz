@@ -102,7 +102,7 @@ export const resolveAnchor = (
 };
 
 /** 取节点边上比例点的全局坐标 */
-export const resolveEdgePoint = (layout: AnchorLayout, side: Side, t: number): IRPosition => {
+const resolveEdgePoint = (layout: AnchorLayout, side: Side, t: number): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
     layoutCache = new Map<string, IRPosition>();

@@ -42,7 +42,7 @@ export const normalizeShapeInput = <TSource>(
 };
 
 /** 路径作者简写，由 Kernel Vanilla 统一解释 */
-export type InputShapeProperties = Pick<InputPath, 'arrow'>;
+type InputShapeProperties = Pick<InputPath, 'arrow'>;
 
 type NormalizedShapeProperties<TInput> = TInput extends object
   ? Omit<TInput, keyof InputShapeProperties> & Pick<IRPath, 'arrow' | 'style' | 'marks'>
@@ -52,7 +52,7 @@ type NormalizedShapeProperties<TInput> = TInput extends object
  * 复用完整路径归一化，固定步骤仅满足路径结构，不参与形状几何
  * @template TInput 携带路径简写的作者输入类型，其余字段在归一化后保留
  */
-export const normalizeShapeProperties = <TInput extends InputShapeProperties>(
+const normalizeShapeProperties = <TInput extends InputShapeProperties>(
   input: TInput,
 ): NormalizedShapeProperties<TInput> => {
   const {

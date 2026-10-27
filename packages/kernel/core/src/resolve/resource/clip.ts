@@ -6,7 +6,7 @@ import { parseProviderPayload } from '../provider-payload';
 import type { ClipResolution } from './types';
 
 /** 解析裁剪配置所需的定义注册表与错误定位信息 */
-export type ClipResolveContext = Readonly<{
+type ClipResolveContext = Readonly<{
   /** 当前可用的裁剪定义注册表 */
   clips: ReadonlyMap<string, ClipDefinition>;
   /** 当前裁剪配置的 IR 路径，用于参数校验错误定位 */

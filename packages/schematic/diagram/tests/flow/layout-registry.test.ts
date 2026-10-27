@@ -5,7 +5,7 @@ import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type { FlowLayoutDefinition } from '../../src/flow';
 import { defineFlowLayout, FlowDiagramSchema, getFlowLayoutCatalog } from '../../src/flow';
 import { resolveFlowLayoutRegistry, resolveFlowThemeRegistry } from '../../src/flow/providers';
-import { assertFlowLayoutCapabilities, deriveFlowLayoutCapabilities, resolveFlowDiagram } from '../../src/flow/resolve';
+import { assertFlowLayoutCapabilities, resolveFlowDiagram } from '../../src/flow/resolve';
 import { parseTestFlowDiagram } from './fixtures';
 
 const customDefinition = (name = 'custom'): FlowLayoutDefinition =>
@@ -110,9 +110,9 @@ describe('Flow Layout 能力预检', () => {
       flowThemeDefinitions: resolveFlowThemeRegistry(),
     });
 
-    expect(deriveFlowLayoutCapabilities(customDefinition(), canonical).map(item => item.name)).toEqual([
-      'compoundScopes',
-    ]);
+    expect(() => assertFlowLayoutCapabilities(customDefinition(), canonical)).toThrowError(
+      expect.objectContaining({ details: expect.objectContaining({ missingCapabilities: ['compoundScopes'] }) }),
+    );
   });
 
   it('导出复合、端点、交叉 Group、循环、自环、并行、标签、方向和路由需求', () => {

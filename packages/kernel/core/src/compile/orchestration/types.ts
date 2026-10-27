@@ -202,7 +202,7 @@ export type CompositeCompileOwner = Readonly<{
 }>;
 
 /** opaque output handle 对应的 callback-local runtime entry */
-export type CompositeRuntimeOutputEntry = Readonly<{
+type CompositeRuntimeOutputEntry = Readonly<{
   /** 创建该输出句柄的复合组件回调身份 */
   owner: CompositeCompileOwner;
   /** 句柄对应的实际输出子树 */
@@ -213,7 +213,7 @@ export type CompositeRuntimeOutputEntry = Readonly<{
 };
 
 /** layoutChild 返回对象对应的 callback-local replay identity */
-export type CompositeLayoutResultEntry = Readonly<{
+type CompositeLayoutResultEntry = Readonly<{
   /** 创建布局结果的复合组件回调身份 */
   owner: CompositeCompileOwner;
   /** 与该布局结果绑定的重放凭证 */
@@ -283,7 +283,7 @@ export type TraversalCompileOptions = {
 };
 
 /** 整棵 child 树遍历期间共享的可变状态 */
-export type TraversalState = {
+type TraversalState = {
   /** 顶层 primitive 输出容器，path 占位会在返回前回填 */
   primitives: Array<InternalScenePrimitive>;
   /** 自动 layout 使用的全局 bbox */
@@ -299,7 +299,7 @@ export type TraversalState = {
 };
 
 /** child 遍历期间使用的 compile 依赖 */
-export type TraversalContext = Pick<
+type TraversalContext = Pick<
   CompileContext,
   | 'nodeGeometry'
   | 'measureText'
@@ -457,7 +457,7 @@ export type EmitScopeGroupContext = {
 };
 
 /** 自动 viewBox 的当前 frame 几何贡献 */
-export type LayoutBoundsContribution = {
+type LayoutBoundsContribution = {
   /** 包络装饰的可见范围，需要沿祖先裁剪收敛 */
   decoration?: true;
   /** 当前 frame 中的几何点 */

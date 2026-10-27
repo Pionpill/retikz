@@ -20,7 +20,7 @@ const numericScopeChannel = (
   });
 
 /** 允许直接交付到 core Scope 的内置通道名集合 */
-export const BUILTIN_SCOPE_CHANNELS = {
+const BUILTIN_SCOPE_CHANNELS = {
   strokeWidth: numericScopeChannel(
     'strokeWidth',
     { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },

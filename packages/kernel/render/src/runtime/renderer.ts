@@ -164,7 +164,7 @@ export type RetainedRendererFactory = {
 };
 
 /** Render 私有 renderer executor */
-export type RetainedRendererExecutor = Readonly<{
+type RetainedRendererExecutor = Readonly<{
   /** 准备首次场景挂载，返回可提交和回滚的事务 */
   prepareMount: RetainedRendererDefinitionBase['prepareMount'];
   /** 准备场景补丁与运行时配置的原子更新 */

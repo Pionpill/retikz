@@ -81,7 +81,7 @@ export type InputEmbedSite = Readonly<{
 }>;
 
 /** 子项完整贡献就绪后，复用同步 normalizer */
-export type InputChildrenTraversal = Readonly<{
+type InputChildrenTraversal = Readonly<{
   /** 按归一化遍历顺序收集的待准备嵌入位置 */
   sites: ReadonlyArray<InputEmbedSite>;
   /** 将与 sites 顺序对应的已完成贡献交给同步归一化流程 */
@@ -89,7 +89,7 @@ export type InputChildrenTraversal = Readonly<{
 }>;
 
 /** 根 traversal 与唯一 Source 归一化的衔接 */
-export type InputSceneTraversal = Readonly<{
+type InputSceneTraversal = Readonly<{
   /** 整张场景按归一化遍历顺序收集的嵌入位置 */
   sites: ReadonlyArray<InputEmbedSite>;
   /** 将与 sites 顺序对应的已完成贡献组装为唯一场景 Source */

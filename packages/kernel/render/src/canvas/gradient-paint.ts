@@ -4,7 +4,7 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { gradientLineFromAngle } from '../shared';
 
 /** Canvas objectBoundingBox gradient 使用的局部几何 bbox */
-export type GradientBBox = {
+type GradientBBox = {
   /** 左上角 x 坐标 */
   x: number;
   /** 左上角 y 坐标 */
@@ -16,7 +16,7 @@ export type GradientBBox = {
 };
 
 /** Canvas 支持的 gradient paint */
-export type GradientPaint = Extract<IRPaint, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
+type GradientPaint = Extract<IRPaint, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
 
 type GradientCommonInput = {
   /** 目标 Canvas context */
@@ -32,7 +32,7 @@ type GradientCommonInput = {
 };
 
 /** 已构建 current path 上执行 gradient fill 的输入 */
-export type GradientFillInput = GradientCommonInput & {
+type GradientFillInput = GradientCommonInput & {
   /** 本次填充透明度 */
   fillOpacity: number | undefined;
   /** 执行一次 current path fill */
@@ -40,7 +40,7 @@ export type GradientFillInput = GradientCommonInput & {
 };
 
 /** gradient stroke style 构建输入 */
-export type GradientStrokeInput = GradientCommonInput & {
+type GradientStrokeInput = GradientCommonInput & {
   /** 创建离屏 Canvas context 的宿主工厂 */
   createOffscreen: ((width: number, height: number) => CanvasRenderingContext2D | null) | undefined;
   /** 描边相对几何 bbox 的最大外扩 */

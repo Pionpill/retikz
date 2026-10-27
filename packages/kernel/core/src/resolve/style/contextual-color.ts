@@ -5,7 +5,7 @@ import type { IRContextualColor } from '../../schemas';
 import { ThemeMode } from '../../shared';
 
 /** 解析数值颜色所需的主色、主题明暗模式和错误定位信息 */
-export type ContextualColorResolveContext = Readonly<{
+type ContextualColorResolveContext = Readonly<{
   /** 完成样式继承与覆盖后的主色 */
   masterColor?: string;
   /** 用于选择混色背景的主题明暗模式 */
@@ -15,7 +15,7 @@ export type ContextualColorResolveContext = Readonly<{
 }>;
 
 /** 浅色模式使用白色背景，深色模式使用黑色背景 */
-const backdropOf = (mode: ThemeMode): '#ffffff' | '#000000' => (mode === ThemeMode.Dark ? '#000000' : '#ffffff');
+const backdropOf = (mode: ThemeMode): string => (mode === ThemeMode.Dark ? '#000000' : '#ffffff');
 
 /**
  * 将颜色字符串或主色混合比例解析为颜色字符串

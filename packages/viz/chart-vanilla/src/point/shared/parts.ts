@@ -8,14 +8,14 @@ import type { ChartRuntimeInput, InputChartPanel } from '../../shared';
 import type { TypedChartCommonInput } from './types';
 
 /** 未显式提供 dataRef 时使用的稳定数据引用 */
-export const DEFAULT_CHART_DATA_REFERENCE = 'chart.data';
+const DEFAULT_CHART_DATA_REFERENCE = 'chart.data';
 
 /**
  * Typed Chart factory 在 Source 与运行时之间传递的共享拆分结果
  * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-export type TypedChartParts<TSource extends IRChartSource, TNative = never> = Readonly<{
+type TypedChartParts<TSource extends IRChartSource, TNative = never> = Readonly<{
   /** 将进入精确 Chart Source 的根字段 */
   root: Readonly<{
     /** 图表的作者身份 */

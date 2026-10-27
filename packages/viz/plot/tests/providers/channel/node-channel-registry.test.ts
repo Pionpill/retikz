@@ -6,7 +6,6 @@ import {
   PLOT_SHAPE_PALETTE,
   resolveChannelRegistry,
   SIZE_MAX_RADIUS,
-  SIZE_MIN_RADIUS,
   STROKE_WIDTH_MAX,
   STROKE_WIDTH_MIN,
 } from '../../../src/providers';
@@ -40,7 +39,7 @@ describe('节点通道注册表', () => {
     const size = registry.get('size');
     if (size?.kind !== ChannelDefinitionKind.Node) throw new Error('size should be a node channel');
 
-    expect(size.output).toEqual({ outputKind: 'number', range: [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS] });
+    expect(size.output).toEqual({ outputKind: 'number', range: [2, SIZE_MAX_RADIUS] });
     expect(size.legend).toBe('size');
   });
 

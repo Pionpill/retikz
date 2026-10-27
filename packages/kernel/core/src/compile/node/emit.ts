@@ -100,7 +100,7 @@ const toShapeStyle = (properties: NodeShapeProperties, resolvePaint: PaintResolv
 });
 
 /** 发出节点 shape 主体图元 */
-export const emitNodeShapePrimitives = (
+const emitNodeShapePrimitives = (
   layout: NodeLayout,
   properties: NodeShapeProperties,
   round: Round,

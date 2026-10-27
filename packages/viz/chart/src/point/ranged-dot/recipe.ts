@@ -20,7 +20,7 @@ import type { IRRangedDotChart } from './schema';
 import { RangedDotChartSchema } from './schema';
 
 /** Ranged Dot exact schema、调度与消费检查共用的 encoding 顺序 */
-export const RangedDotChartEncodingSlots = ['category', 'start', 'end', 'color', 'row', 'column', 'facet'] as const;
+const RangedDotChartEncodingSlots = ['category', 'start', 'end', 'color', 'row', 'column', 'facet'] as const;
 
 const markPropertySlots = ['point', 'startPoint', 'endPoint', 'range'] as const;
 

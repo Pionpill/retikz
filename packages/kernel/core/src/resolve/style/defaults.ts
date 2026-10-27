@@ -1,17 +1,11 @@
 import { mergeProperties } from '@retikz/foundation';
 
-import type { IRScope, IRScopeDefaults, StyleChannel } from '../../schemas';
+import type { IRScope, StyleChannel } from '../../schemas';
 import { mergeArrowDefaults } from './arrow';
 import { mergeFont } from './font';
 import { mergeNodeLabelDefaults, mergePathLabelDefaults } from './label';
 import { mergeGraphicStyle } from './opacity';
 import type { EffectiveScopeDefaults } from './types';
-
-/** 判断 reset 是否要求停止继承节点或路径的父级默认配置 */
-export const cutsStyleChannel = (reset: IRScopeDefaults['reset'], channel: StyleChannel): boolean => {
-  if (reset === undefined || reset === false) return false;
-  return reset === true || reset.includes(channel);
-};
 
 /**
  * 合并当前作用域与父级的默认配置，供子元素继续继承
@@ -27,9 +21,16 @@ export const resolveScopeDefaults = <TScope extends Pick<IRScope, 'defaults'>>(
   if (defaults === undefined) return parent;
 
   const { style, reset } = defaults;
+  /** 判断 reset 是否要求停止继承当前通道的父级默认配置 */
+  const cutsStyleChannel = (channel: StyleChannel): boolean => {
+    if (reset === undefined || reset === false) return false;
+    return reset === true || reset.includes(channel);
+  };
+
   const shouldOverride = (value: unknown) => value !== undefined;
-  let node = cutsStyleChannel(reset, 'node') ? undefined : parent.node;
-  let path = cutsStyleChannel(reset, 'path') ? undefined : parent.path;
+
+  let node = cutsStyleChannel('node') ? undefined : parent.node;
+  let path = cutsStyleChannel('path') ? undefined : parent.path;
 
   if (style !== undefined || defaults.node !== undefined) {
     const { style: nodeStyle, layout, label, ...geometry } = defaults.node ?? {};

@@ -59,7 +59,7 @@ const linearizeSrgb = (channel: number): number =>
   channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
 
 /** 按 WCAG 对比率从相对亮度选择黑色或白色，相等时选择黑色 */
-export const chooseBlackOrWhiteForLuminance = (luminance: number): '#000000' | '#ffffff' => {
+const chooseBlackOrWhiteForLuminance = (luminance: number): '#000000' | '#ffffff' => {
   const blackContrast = (luminance + 0.05) / 0.05;
   const whiteContrast = 1.05 / (luminance + 0.05);
   return blackContrast >= whiteContrast ? '#000000' : '#ffffff';

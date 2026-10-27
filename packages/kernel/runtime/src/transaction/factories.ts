@@ -94,7 +94,7 @@ export const createNextRuntimeRevision = (current: RuntimeRevision): RuntimeRevi
 };
 
 /** 判断 change set 是否由当前 Runtime factory 创建 */
-export const isRuntimeChangeSet = (value: unknown): value is RuntimeChangeSet<unknown> =>
+const isRuntimeChangeSet = (value: unknown): value is RuntimeChangeSet<unknown> =>
   typeof value === 'object' && value !== null && runtimeChangeSets.has(value);
 
 /**

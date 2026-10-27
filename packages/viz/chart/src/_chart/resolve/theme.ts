@@ -46,7 +46,7 @@ const neutralChartDefaultsOf = (mode: ThemeMode): IRChartDefaults => {
 };
 
 /** 合并 Chart shell 默认片段，font/background 保持正式 Source 覆盖粒度 */
-export const mergeChartDefaults = (
+const mergeChartDefaults = (
   base: IRChartDefaults | undefined,
   override: IRChartDefaults | undefined,
 ): IRChartDefaults => {

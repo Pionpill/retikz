@@ -2,7 +2,7 @@ import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
@@ -26,7 +26,7 @@ const render = (mark: unknown, rows: Array<{ x: number; y: number }>, options: L
     ],
     marks: [mark],
   });
-  return geometry(lowerPlot(source, { rows }, { textMeasurer: measureLabel, ...options }));
+  return geometry(lowerPlotWithDataArtifact(source, { rows }, { textMeasurer: measureLabel, ...options }).child);
 };
 
 describe('标记实例源', () => {

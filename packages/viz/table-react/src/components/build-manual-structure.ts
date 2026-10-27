@@ -11,7 +11,7 @@ import type { RowProps } from './row';
 import { Row } from './row';
 
 /** ManualTable children 收集后交给 plain constructor 的矩形结构输入 */
-export type ManualStructureInput = Pick<ManualTableInput, 'rows' | 'rowKinds'>;
+type ManualStructureInput = Pick<ManualTableInput, 'rows' | 'rowKinds'>;
 
 /** 判断节点是否为 Cell marker */
 const isCellElement = (child: ReactNode): child is ReactElement<CellProps, typeof Cell> =>

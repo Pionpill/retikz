@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
 import type { Cell } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { buildIntervalContext, intervalCell } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, MARK_REGISTRY } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
@@ -38,7 +38,7 @@ const HEIGHT = 400;
 const cartOpts: LowerPlotsOptions = { layout: { width: WIDTH, height: HEIGHT } };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope =>

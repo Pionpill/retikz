@@ -87,7 +87,7 @@ const starMark = defineMark({
 });
 
 /** 内置普通标记注册项 */
-export const BUILTIN_MARKS: ReadonlyMap<string, MarkDefinition> = new Map([
+const BUILTIN_MARKS: ReadonlyMap<string, MarkDefinition> = new Map([
   [timesMark.name, timesMark],
   [plusMark.name, plusMark],
   [checkMark.name, checkMark],

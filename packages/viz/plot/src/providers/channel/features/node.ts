@@ -60,13 +60,13 @@ export const STROKE_WIDTH_MIN = 0.5;
 export const STROKE_WIDTH_MAX = 4;
 
 /** size 通道最小 / 最大半径（px，user units；对齐散点默认直径 10 量级）；core 换算细节，不外泄 IR */
-export const SIZE_MIN_RADIUS = 2;
+const SIZE_MIN_RADIUS = 2;
 
 /** size 通道自动半径映射的默认最大值 */
 export const SIZE_MAX_RADIUS = 20;
 
 /** 数值 Node 通道 resolver 的 range、clamp 与整数化选项 */
-export type NumericNodeResolverOptions = {
+type NumericNodeResolverOptions = {
   /** 数值尺度的默认输出范围，可由命名尺度覆盖 */
   range?: readonly [number, number];
   /** 数值尺度的默认钳位策略，可由命名尺度覆盖 */
@@ -305,7 +305,7 @@ export const resolveSizeChannel = (
  * @description 读取 mark 上结构化的 shape 字段。常量 value 直用；categorical 字段按 domain 索引从有效 shape palette
  *   循环取值。非 categorical 字段 fail-loud（形状是分类编码）
  */
-export const resolveShapeChannel = (
+const resolveShapeChannel = (
   ctx: NodeChannelDefinitionResolveContext,
   mark: IRPlotMark,
 ): ChannelResolution<JsonValue> | undefined => {
@@ -638,7 +638,7 @@ const shapeNodeChannel: NodeChannelDefinition<JsonValue> = defineNodeChannel<Jso
 });
 
 /** 内置 Node 通道 definition 的按名称索引类型 */
-export type BuiltinNodeChannels = {
+type BuiltinNodeChannels = {
   /** 映射 Node 整体透明度 */
   opacity: NodeChannelDefinition<number>;
   /** 映射 Node 填充透明度 */

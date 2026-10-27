@@ -6,7 +6,7 @@ import { BuiltinCompileWarningCode } from '../../constants';
 import { pointOfTarget } from '../host';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */
-export type StrokeTargetStep = Exclude<
+type StrokeTargetStep = Exclude<
   CanonicalStep,
   | { kind: 'cycle' }
   | { kind: 'arc' }
@@ -49,7 +49,7 @@ export type StrokeCursor = {
 };
 
 /** 创建 stroke cursor 所需的目标解析上下文 */
-export type CreateStrokeCursorInput = {
+type CreateStrokeCursorInput = {
   /** 已归一化的 path steps */
   steps: Array<CanonicalStep>;
   /** resolving 阶段绑定的 target view */

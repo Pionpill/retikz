@@ -11,7 +11,7 @@ import { deepFreeze } from '../../shared';
 import { cellVisualScaleDefinitionOf } from './registry';
 
 /** package-private visual scale 消费输入 */
-export type ResolveCellVisualScaleInput = Readonly<{
+type ResolveCellVisualScaleInput = Readonly<{
   /** 已解析的 encoding scale ref */
   ref: IRTableVisualScaleRef;
   /** canonical selector 命中的 non-null raw scalars */

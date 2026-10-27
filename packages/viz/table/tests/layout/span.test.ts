@@ -8,7 +8,6 @@ import type {
   IRTableTrackSize,
 } from '../../src';
 import { TableTrackSizeKind } from '../../src';
-import type { PropagateTableSpanContributionsInput } from '../../src/pipeline/layout';
 import { propagateTableSpanContributions, resolveTableTrackSizes, solveTableTracks } from '../../src/pipeline/layout';
 
 const fixed = (value: number): IRTableFixedTrackSize => ({ kind: TableTrackSizeKind.Fixed, value });
@@ -24,8 +23,8 @@ const minmax = (
 
 const inputOf = (
   tracks: ReadonlyArray<IRTableTrackSize>,
-  override: Partial<PropagateTableSpanContributionsInput> = {},
-): PropagateTableSpanContributionsInput => ({
+  override: Partial<Parameters<typeof propagateTableSpanContributions>[0]> = {},
+): Parameters<typeof propagateTableSpanContributions>[0] => ({
   tracks: resolveTableTrackSizes(tracks),
   contributions: [],
   constraints: [],

@@ -11,7 +11,7 @@ import type { PaintResolver } from '../../resource';
 import { combineOpacity } from '../../text';
 
 /** 标记输出的资源引用及诊断位置 */
-export type MarkResourceContext = {
+type MarkResourceContext = {
   /** 按 id 索引的资源 Map */
   resourceMap: ReadonlyMap<string, SceneResource>;
   /** 宿主路径与标记下标 */
@@ -32,7 +32,7 @@ const resolveMarkerContextFill = (value: PaintValue, contextStroke: PaintValue):
   typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
 
 /** marker 放置所需上下文 */
-export type BuildMarkMarkerGroupContext = {
+type BuildMarkMarkerGroupContext = {
   /** 标记的固定角度或切线定向 */
   rotate?: 'auto' | number;
   /** 标记放置缩放 */

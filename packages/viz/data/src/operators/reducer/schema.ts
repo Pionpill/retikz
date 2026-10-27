@@ -32,9 +32,7 @@ export const BuiltinReducerOperationKind = {
 } as const;
 
 /** 统计 reducer operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
-export const RESERVED_REDUCER_OPERATION_KINDS: ReadonlySet<string> = new Set(
-  Object.values(BuiltinReducerOperationKind),
-);
+const RESERVED_REDUCER_OPERATION_KINDS: ReadonlySet<string> = new Set(Object.values(BuiltinReducerOperationKind));
 
 /** 内置统计 reducer operation kind 取值 */
 export type BuiltinReducerOperationKind = ValueOf<typeof BuiltinReducerOperationKind>;
@@ -251,12 +249,12 @@ const ExternalReducerOperationObjectSchema = looseObject({
 });
 
 /** 校验带 JSON 配置的自定义聚合归约操作 */
-export const ExternalReducerOperationSchema = ExternalReducerOperationObjectSchema.catchall(JsonValueSchema).describe(
+const ExternalReducerOperationSchema = ExternalReducerOperationObjectSchema.catchall(JsonValueSchema).describe(
   'Custom reducer operation with JSON config',
 );
 
 /** 内置统计 reducer operation schema */
-export const BuiltinReducerOperationSchema = union([
+const BuiltinReducerOperationSchema = union([
   BuiltinReducerOperationSchemas.Count,
   BuiltinReducerOperationSchemas.Sum,
   BuiltinReducerOperationSchemas.Mean,

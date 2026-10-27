@@ -14,12 +14,12 @@ const LINE_HEIGHT_FACTOR = 1.2;
 type Round = (n: number) => number;
 
 /** 布局阶段消费的文字或公式输入，不含宿主外观 */
-export type InlineSegmentLayoutInput =
+type InlineSegmentLayoutInput =
   | Omit<Extract<CanonicalInlineSegment, { text: string }>, 'fill' | 'opacity'>
   | Omit<Extract<CanonicalInlineSegment, { tex: string }>, 'fill' | 'opacity'>;
 
 /** 按原始 segment 顺序保存的外观覆盖 */
-export type InlineSegmentPaint = {
+type InlineSegmentPaint = {
   /** 显式文字或公式宿主颜色 */
   fill?: string;
   /** 与块透明度相乘的 segment 透明度 */
@@ -27,7 +27,7 @@ export type InlineSegmentPaint = {
 };
 
 /** 混排行当前外观，独立于测量结果 */
-export type InlineLinePaint = {
+type InlineLinePaint = {
   /** 块继承色 */
   color?: string;
   /** 块透明度 */

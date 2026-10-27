@@ -4,7 +4,7 @@ import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS, GridAutoFlow, GridOverlap } from './co
 import type { IRGridPlacement } from './types';
 
 /** Grid placement solver 接受的 authored item 摘要 */
-export type GridPlacementItem = Readonly<{
+type GridPlacementItem = Readonly<{
   /** 布局项的稳定身份键 */
   key: string;
   /** 布局项在作者输入数组中的零基索引 */
@@ -16,7 +16,7 @@ export type GridPlacementItem = Readonly<{
 }>;
 
 /** Grid item 求解后的零基 track 区域 */
-export type ResolvedGridPlacement = Readonly<{
+type ResolvedGridPlacement = Readonly<{
   /** 已放置布局项的稳定身份键 */
   key: string;
   /** 对应作者输入数组的零基索引 */
@@ -32,7 +32,7 @@ export type ResolvedGridPlacement = Readonly<{
 }>;
 
 /** Grid placement solver 的完整 extent 与 authored-order 结果 */
-export type ResolvedGridPlacements = Readonly<{
+type ResolvedGridPlacements = Readonly<{
   /** 包含自动扩展轨道的最终列数 */
   columnCount: number;
   /** 包含自动扩展轨道的最终行数 */

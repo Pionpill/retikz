@@ -8,10 +8,7 @@ import type { IRStack } from './schema';
 import { StackBorderSchema, StackLayoutSchema, StackSchema } from './schema';
 
 /** 供布局消费的单一栈结构，位置与栈顶不重复存储 */
-export type CanonicalStack = Omit<
-  IRStack,
-  'items' | 'data' | 'skeleton' | 'dataExpand' | 'layout' | 'padding' | 'border'
-> & {
+type CanonicalStack = Omit<IRStack, 'items' | 'data' | 'skeleton' | 'dataExpand' | 'layout' | 'padding' | 'border'> & {
   /** 已展开并完成逐格继承的输入序列 */
   items: Array<CanonicalCell>;
   /** 确定的物理方向与间距 */

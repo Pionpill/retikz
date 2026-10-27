@@ -17,7 +17,7 @@ import type { RibbonEmitOptions, RibbonLike, RibbonSegment } from './types';
 import { widthFunction, resolveSampleCount } from './width';
 
 /** ribbon path emit 所需的 Extension 编排上下文 */
-export type EmitRibbonPrimitiveContext = RibbonEmitOptions;
+type EmitRibbonPrimitiveContext = RibbonEmitOptions;
 
 const LABEL_POSITION: Record<string, number> = {
   'at-start': 0,

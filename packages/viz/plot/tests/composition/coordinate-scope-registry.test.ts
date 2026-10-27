@@ -1,7 +1,7 @@
 import type { IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -74,11 +74,11 @@ const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 const parsedComposition = (): IRPlot => parsePlotIR(compositionSpec);
 
 const expandOf = (spec: IRPlot): IRScope => {
-  return lowerPlot(
+  return lowerPlotWithDataArtifact(
     spec,
     { sales: rows },
     { layout: { width: 480, height: 300 }, textMeasurer: measureLabel },
-  ) as IRScope;
+  ).child as IRScope;
 };
 
 describe('坐标组合注册表 schema', () => {

@@ -23,7 +23,7 @@ import type { infer as ZodInfer } from 'zod';
 export type InputPlotFieldName = string;
 
 /** 工厂的视图绑定糖，不进入 Plot Source */
-export type InputPlotCoordinateScope = {
+type InputPlotCoordinateScope = {
   coordinateView?: string;
   facetId?: string;
   trackId?: string;

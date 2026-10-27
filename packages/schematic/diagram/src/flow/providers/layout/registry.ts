@@ -35,7 +35,7 @@ const invalidDefinition = (definition: FlowLayoutDefinition, reason: string, cau
 };
 
 /** 校验一个 Flow Layout Definition 的完整运行时保证 */
-export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): FlowLayoutDefinition => {
+const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): FlowLayoutDefinition => {
   const validateUniqueValues = <T>(
     values: ReadonlyArray<T>,
     label: string,

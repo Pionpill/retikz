@@ -7,7 +7,7 @@ import { createLayoutProbeRecoverableError, safeThrownDetail } from './diagnosti
  * 扩展定义的输入数据与校验、诊断配置
  * @template TOutput 扩展定义的 schema 解析后的输出类型
  */
-export type ParseProviderPayloadInput<TOutput> = {
+type ParseProviderPayloadInput<TOutput> = {
   /** 能力名称，用于错误诊断 */
   capability: string;
   /** 能力提供者的注册键 */

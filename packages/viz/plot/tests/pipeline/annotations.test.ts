@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { MarkChannels } from '../../src/contract';
 import type { CoordinateFrame, PositionScale } from '../../src/contract';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { preparePlotData } from '../../src/pipeline/expand/preparation';
 import { lowerPlotWithLineage } from '../../src/pipeline/lineage';
 import { lowerMark, MARK_REGISTRY } from '../../src/providers';
@@ -63,7 +63,9 @@ describe('独立注释', () => {
         contributeToDomain: false,
       },
     ]);
-    const output = nodes(lowerPlot(source, { data: [{ title: 'Bound body' }] }, { textMeasurer: measureLabel }));
+    const output = nodes(
+      lowerPlotWithDataArtifact(source, { data: [{ title: 'Bound body' }] }, { textMeasurer: measureLabel }).child,
+    );
     expect(output).toHaveLength(1);
     expect(output[0].text).toBe(expected);
     expect(output[0].label).toMatchObject({ text: 'A', position: 'top', distance: 8 });
@@ -117,7 +119,11 @@ describe('独立注释', () => {
       paddingInner: 0,
       paddingOuter: 0,
     };
-    const output = lowerPlot(PlotSchema.parse(source), { data: [] }, { textMeasurer: measureLabel });
+    const output = lowerPlotWithDataArtifact(
+      PlotSchema.parse(source),
+      { data: [] },
+      { textMeasurer: measureLabel },
+    ).child;
     const steps = paths(output)[0].children;
     expect(steps).toHaveLength(3);
     expect(steps[1]).toMatchObject({ kind: 'line', to: nodes(output)[0].position });
@@ -132,7 +138,8 @@ describe('独立注释', () => {
       properties: { ...source.marks[0].properties, connection: 'straight' },
     });
     expect(
-      paths(lowerPlot(PlotSchema.parse(source), { data: [] }, { textMeasurer: measureLabel }))[0].children,
+      paths(lowerPlotWithDataArtifact(PlotSchema.parse(source), { data: [] }, { textMeasurer: measureLabel }).child)[0]
+        .children,
     ).toHaveLength(2);
   });
 
@@ -183,7 +190,7 @@ describe('独立注释', () => {
         { x: 10, y: 10 },
       ],
     };
-    const without = nodes(lowerPlot(source, data, { textMeasurer: measureLabel }));
+    const without = nodes(lowerPlotWithDataArtifact(source, data, { textMeasurer: measureLabel }).child);
     source.marks[1] = PointMarkSchema.parse({
       ...point,
       contributeToDomain: true,
@@ -191,7 +198,7 @@ describe('独立注释', () => {
       encodings: { position: { x: { value: 5 }, y: { value: 100 } } },
       properties: { ...point.properties },
     });
-    const withContribution = nodes(lowerPlot(source, data, { textMeasurer: measureLabel }));
+    const withContribution = nodes(lowerPlotWithDataArtifact(source, data, { textMeasurer: measureLabel }).child);
     expect(without[1].position).not.toEqual(withContribution[1].position);
   });
   it('保留声明标识，而不声明行值或转换血缘', () => {
@@ -218,16 +225,16 @@ describe('独立注释', () => {
       views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'x', y: 'y' } }],
       arrangements: [{ kind: 'facet', id: 'groups', view: 'main', column: { field: 'group' } }],
     };
-    const output = lowerPlot(
+    const output = lowerPlotWithDataArtifact(
       source,
       { data: [{ group: 'a' }, { group: 'a' }, { group: 'b' }] },
       { textMeasurer: measureLabel },
-    );
+    ).child;
     expect(nodes(output).filter(node => node.text === 'target')).toHaveLength(2);
     expect(() => compileToScene({ type: 'scene', version: 1, children: [output] })).not.toThrow();
   });
   it('发出 JSON 安全内核 IR，无需单独的渲染器即可编译', () => {
-    const output = lowerPlot(plot(), { data: [] }, { textMeasurer: measureLabel });
+    const output = lowerPlotWithDataArtifact(plot(), { data: [] }, { textMeasurer: measureLabel }).child;
     expect(() => compileToScene({ type: 'scene', version: 1, children: [output] })).not.toThrow();
   });
   it('仅执行仅注释图的根数据范围', async () => {
@@ -260,7 +267,7 @@ describe('独立注释', () => {
         contributeToDomain: false,
       },
     ]);
-    const output = lowerPlot(source, { data: [] }, { textMeasurer: measureLabel });
+    const output = lowerPlotWithDataArtifact(source, { data: [] }, { textMeasurer: measureLabel }).child;
     expect(paths(output)).toHaveLength(1);
     expect(paths(output)[0].children).toHaveLength(2);
     expect(paths(output)[0].style?.stroke).toBe('red');
@@ -286,7 +293,7 @@ describe('独立注释', () => {
       },
     ]);
     source.coordinate = { type: 'polar2D', angle: 'x', radius: 'y' };
-    const output = lowerPlot(source, { data: [] }, { textMeasurer: measureLabel });
+    const output = lowerPlotWithDataArtifact(source, { data: [] }, { textMeasurer: measureLabel }).child;
     expect(paths(output)[0].children.length).toBeGreaterThan(2);
     expect(nodes(output)[0].shape).toMatchObject({ type: 'sector' });
   });
@@ -297,7 +304,9 @@ describe('独立注释', () => {
       { type: 'linear', name: 'x', domainPadding: 0 },
       { type: 'linear', name: 'y', domainPadding: 0 },
     ];
-    expect(nodes(lowerPlot(source, { data: [] }, { textMeasurer: measureLabel }))).toHaveLength(1);
+    expect(nodes(lowerPlotWithDataArtifact(source, { data: [] }, { textMeasurer: measureLabel }).child)).toHaveLength(
+      1,
+    );
   });
   it('往返直接常量，而不将字符串解释为字段', () => {
     const parsed = MarkSchema.parse(point);
@@ -317,7 +326,7 @@ describe('独立注释', () => {
       ],
     },
   ])('使用绑定行 $rows 创建一个点', ({ rows }) => {
-    const result = lowerPlot(plot(), { data: rows }, { textMeasurer: measureLabel });
+    const result = lowerPlotWithDataArtifact(plot(), { data: rows }, { textMeasurer: measureLabel }).child;
     expect(nodes(result)).toHaveLength(1);
     expect(nodes(result)[0].text).toBe('target');
   });
@@ -328,13 +337,15 @@ describe('独立注释', () => {
   });
 
   it('拒绝同步和异步入口点中缺失的根绑定', async () => {
-    expect(() => lowerPlot(plot(), {}, { textMeasurer: measureLabel })).toThrow(/data|binding|reference/i);
+    expect(() => lowerPlotWithDataArtifact(plot(), {}, { textMeasurer: measureLabel }).child).toThrow(
+      /data|binding|reference/i,
+    );
     await expect(preparePlotData(plot(), { dataBindings: {} })).rejects.toThrow(/binding/i);
   });
 
   it('通过与数据标记相同的坐标系映射点常量', () => {
-    const annotation = lowerPlot(plot(), { data: [] }, { textMeasurer: measureLabel });
-    const data = lowerPlot(
+    const annotation = lowerPlotWithDataArtifact(plot(), { data: [] }, { textMeasurer: measureLabel }).child;
+    const data = lowerPlotWithDataArtifact(
       plot([
         {
           type: 'point',
@@ -344,18 +355,19 @@ describe('独立注释', () => {
       ]),
       { data: [{ x: 5, y: 5 }] },
       { textMeasurer: measureLabel },
-    );
+    ).child;
     expect(nodes(annotation)[0].position).toEqual(nodes(data)[0].position);
   });
 
   it('拒绝丢失和未知的坐标角色', () => {
     for (const position of [{ x: 5 }, { x: 5, y: 5, z: 1 }]) {
-      expect(() =>
-        lowerPlot(
-          plot([{ ...point, position, properties: { ...point.properties } }]),
-          { data: [] },
-          { textMeasurer: measureLabel },
-        ),
+      expect(
+        () =>
+          lowerPlotWithDataArtifact(
+            plot([{ ...point, position, properties: { ...point.properties } }]),
+            { data: [] },
+            { textMeasurer: measureLabel },
+          ).child,
       ).toThrow(/role|position/i);
     }
   });

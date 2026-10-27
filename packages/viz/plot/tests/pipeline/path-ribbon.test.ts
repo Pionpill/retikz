@@ -3,7 +3,7 @@ import { compileToScene } from '@retikz/core';
 import { RibbonPathDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
@@ -31,7 +31,7 @@ const source = (properties: object, ribbon?: object) => ({
 });
 const lower = (properties: object, ribbon?: object, width = 12) =>
   paths(
-    lowerPlot(
+    lowerPlotWithDataArtifact(
       PlotSchema.parse(source(properties, ribbon)),
       {
         rows: [
@@ -40,7 +40,7 @@ const lower = (properties: object, ribbon?: object, width = 12) =>
         ],
       },
       { textMeasurer: measureLabel },
-    ),
+    ).child,
   );
 
 describe('PathMark 色带', () => {
@@ -69,7 +69,9 @@ describe('PathMark 色带', () => {
       ...spec,
       scales: [...spec.scales, { name: 'width', type: 'linear', domain: [0, 20], range: [0, 10] }],
     });
-    const [path] = paths(lowerPlot(parsed, { rows: [{ width: 12 }] }, { textMeasurer: measureLabel }));
+    const [path] = paths(
+      lowerPlotWithDataArtifact(parsed, { rows: [{ width: 12 }] }, { textMeasurer: measureLabel }).child,
+    );
     expect(path.kindOptions?.width).toEqual({ kind: 'fixed', value: 6 });
     expect(path.children[0]).toMatchObject({ to: [0, 0] });
   });
@@ -80,7 +82,7 @@ describe('PathMark 色带', () => {
       marks: [{ ...spec.marks[0], encodings: { ...spec.marks[0].encodings, fill: 'paint' } }],
     });
     const result = paths(
-      lowerPlot(
+      lowerPlotWithDataArtifact(
         parsed,
         {
           rows: [
@@ -89,7 +91,7 @@ describe('PathMark 色带', () => {
           ],
         },
         { textMeasurer: measureLabel },
-      ),
+      ).child,
     );
     expect(result[0].style?.fill).toBeDefined();
     expect(result[0].style?.fill).not.toEqual(result[1].style?.fill);
@@ -111,7 +113,7 @@ describe('PathMark 色带', () => {
       ],
     });
     const result = paths(
-      lowerPlot(
+      lowerPlotWithDataArtifact(
         parsed,
         {
           rows: [
@@ -120,7 +122,7 @@ describe('PathMark 色带', () => {
           ],
         },
         { textMeasurer: measureLabel },
-      ),
+      ).child,
     );
     expect(result).toHaveLength(1);
     expect(result[0].kindOptions?.width).toEqual({ kind: 'fixed', value: 8 });

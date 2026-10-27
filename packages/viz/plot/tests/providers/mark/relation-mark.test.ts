@@ -5,7 +5,7 @@ import { markChannelEncoding, channelField } from '../../../src/contract';
 import type { PositionScale } from '../../../src/contract';
 import { definePathChannel } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { createPolarCoordinate, lowerMark as lowerMarkDefinition, MARK_REGISTRY } from '../../../src/providers';
 import { resolveMarkOperation } from '../../../src/resolve/mark';
 import type { IRPlot } from '../../../src/schemas';
@@ -55,7 +55,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const markLayer = (root: IRScope, index: number): IRScope => root.children[index] as IRScope;

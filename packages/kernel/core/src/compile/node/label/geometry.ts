@@ -96,7 +96,7 @@ export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Positio
 };
 
 /** 从 label 中心朝 border 方向，求 label 框边界交点 */
-export type LabelBoxEdgeTowardInput = {
+type LabelBoxEdgeTowardInput = {
   /** 标签视觉盒的中心，与 border 使用同一坐标系 */
   center: Position;
   /** 用于确定从标签中心向外求交方向的目标点 */
@@ -143,9 +143,7 @@ export const labelBoxEdgeToward = ({
  * 算 label 文本自旋角度
  * @description keepUpright 会翻转倒置文本
  */
-export const resolveLabelRotateDeg = (
-  label: Pick<NodeLabelResolution, 'position' | 'rotate' | 'keepUpright'>,
-): number => {
+const resolveLabelRotateDeg = (label: Pick<NodeLabelResolution, 'position' | 'rotate' | 'keepUpright'>): number => {
   return resolveBoundaryLabelRotation(label.rotate, label.keepUpright, labelPlacementVector(label.position));
 };
 

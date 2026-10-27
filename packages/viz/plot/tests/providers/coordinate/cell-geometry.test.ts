@@ -14,7 +14,7 @@ import {
   RETIKZ_POLAR_SEGMENT_SAMPLES,
 } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { CartesianCoordinateFrame } from '../../../src/providers';
 import { buildIntervalContext } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, MARK_REGISTRY } from '../../../src/providers';
@@ -41,7 +41,7 @@ const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: Coordina
   resolveDatumAnchor(mark, { kind: 'row', row, transformedIndex: 0 }, frame, { registry: markRegistry }, context);
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope =>

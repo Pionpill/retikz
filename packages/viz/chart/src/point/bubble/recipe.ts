@@ -17,17 +17,7 @@ import type { IRBubbleChart } from './schema';
 import { BubbleChartSchema } from './schema';
 
 /** Bubble exact schema、调度与消费检查共用的 encoding 顺序 */
-export const BubbleChartEncodingSlots = [
-  'x',
-  'y',
-  'size',
-  'color',
-  'opacity',
-  'shape',
-  'row',
-  'column',
-  'facet',
-] as const;
+const BubbleChartEncodingSlots = ['x', 'y', 'size', 'color', 'opacity', 'shape', 'row', 'column', 'facet'] as const;
 
 const bubblePropertySlots = [...pointPropertySlotsWithoutSize, 'domainPadding'] as const;
 

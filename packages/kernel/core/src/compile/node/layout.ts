@@ -124,7 +124,7 @@ const placeAnchorPositionedLayout = (
 };
 
 /** 节点 layout 阶段使用的编译依赖 */
-export type LayoutNodeContext = {
+type LayoutNodeContext = {
   /** 文本测量函数 */
   measureText: TextMeasurer;
   /** 当前编译共享的连接面缓存与诊断状态 */

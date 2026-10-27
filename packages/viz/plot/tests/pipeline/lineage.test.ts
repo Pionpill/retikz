@@ -8,7 +8,7 @@ import { literal, object, union } from 'zod';
 import type { IRPlot } from '../../src';
 import { createPlotLineageLocator, defineNodeChannel, lowerPlotWithLineage, PlotSchema } from '../../src';
 import { markChannelEncoding, channelField } from '../../src/contract';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { measureLabel } from '../helpers/text-measurement';
 
 const SALES = [
@@ -158,7 +158,12 @@ const scopeChildrenOf = (child: IRChild): Array<IRScope> => {
 describe('绘制血缘运行时间', () => {
   it('当不使用血缘 API 时，保持 lowerPlots 形状不变', () => {
     const result = {
-      children: [lowerPlot(pointSpec(), datasets, { layout: { width: 480, height: 300 }, textMeasurer: measureLabel })],
+      children: [
+        lowerPlotWithDataArtifact(pointSpec(), datasets, {
+          layout: { width: 480, height: 300 },
+          textMeasurer: measureLabel,
+        }).child,
+      ],
     };
 
     expect(result.children).toHaveLength(1);
@@ -413,7 +418,9 @@ describe('绘制血缘运行时间', () => {
       transform: [{ operation: { kind: 'missing-transform' as const, params: {} } }],
     };
 
-    expect(() => lowerPlot(spec, datasets, { textMeasurer: measureLabel })).toThrow(/not registered/);
+    expect(() => lowerPlotWithDataArtifact(spec, datasets, { textMeasurer: measureLabel }).child).toThrow(
+      /not registered/,
+    );
     expect(() => lowerPlotWithLineage(spec, datasets, { environment: {}, lineage: {} })).toThrow(/not registered/);
   });
 

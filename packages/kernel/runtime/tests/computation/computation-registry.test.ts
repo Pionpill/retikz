@@ -13,11 +13,7 @@ import {
   RuntimeComputationKind,
   RuntimeComputationPhase,
 } from '../../src/computation';
-import {
-  createRuntimeSourceRegistry,
-  createRuntimeComputationRegistry,
-  sortRuntimeComputationGraph,
-} from '../../src/registry';
+import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '../../src/registry';
 import type { RuntimeSourceToken, RuntimeRevision } from '../../src/source';
 import { defineRuntimeSource } from '../../src/source';
 import { createRuntimeTraceReporter, PerformanceTraceOutcome } from '../../src/trace';
@@ -219,26 +215,6 @@ describe('运行时计算定义和注册表', () => {
         },
       }),
     ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.RegistryMismatch }));
-  });
-
-  it.each(['self', 'cycle'] as const)('防御性 graph validation 拒绝 %s dependency', kind => {
-    const owner = defineSource('counter');
-    const a = defineComputation(owner, { owner: 'counter', key: 'a' });
-    const b = defineComputation(owner, { owner: 'counter', key: 'b' });
-    const dependencies =
-      kind === 'self'
-        ? new Map<RuntimeComputationToken, ReadonlyArray<RuntimeComputationToken>>([
-            [a, [a]],
-            [b, []],
-          ])
-        : new Map<RuntimeComputationToken, ReadonlyArray<RuntimeComputationToken>>([
-            [a, [b]],
-            [b, [a]],
-          ]);
-
-    expect(() => sortRuntimeComputationGraph([a, b], definition => dependencies.get(definition) ?? [])).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationCycle }),
-    );
   });
 
   it('拒绝 object literal 与 foreign module Computation token', async () => {

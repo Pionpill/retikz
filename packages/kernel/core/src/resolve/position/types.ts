@@ -10,7 +10,7 @@ import type {
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 
 /** 引用的布局状态：已完成布局，或暂用作用域占位几何 */
-export type PositionReferenceState = 'resolved' | 'scope-placeholder';
+type PositionReferenceState = 'resolved' | 'scope-placeholder';
 
 /** 位置解析器可读取的引用状态与节点几何 */
 export type PositionReferenceView = Readonly<{

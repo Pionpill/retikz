@@ -24,7 +24,7 @@ export const createCompileInvariantError = (message: string, options?: ErrorOpti
 };
 
 /** 单个 callback 的 failure owner identity */
-export type LayoutProbeFailureOwner = Readonly<{
+type LayoutProbeFailureOwner = Readonly<{
   /** 用于错误消息的回调所属者描述 */
   label: string;
 }>;

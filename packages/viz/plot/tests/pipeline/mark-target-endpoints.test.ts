@@ -2,15 +2,15 @@ import type { CompileWarning, IRChild, IRPath, IRScope, ScenePrimitive } from '@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
 const lower = (
-  source: Parameters<typeof lowerPlot>[0],
-  datasets: Parameters<typeof lowerPlot>[1],
-  options: Partial<Parameters<typeof lowerPlot>[2]> = {},
-) => lowerPlot(source, datasets, { textMeasurer: measureLabel, ...options });
+  source: Parameters<typeof lowerPlotWithDataArtifact>[0],
+  datasets: Parameters<typeof lowerPlotWithDataArtifact>[1],
+  options: Partial<Parameters<typeof lowerPlotWithDataArtifact>[2]> = {},
+) => lowerPlotWithDataArtifact(source, datasets, { textMeasurer: measureLabel, ...options }).child;
 
 const rows = [
   { id: 'a', x: 2, y: 3, source: 'a', target: 'b' },

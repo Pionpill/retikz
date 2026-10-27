@@ -3,11 +3,8 @@ import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies } f
 import { BUILTIN_RIBBON_WIDTH_PROFILES, RibbonPathDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import * as expand from '../../src/pipeline/expand';
 import type { LowerPlotsOptions, PlotDefinitions, PlotImplementations } from '../../src/pipeline/expand';
 import { createPlotProviderContribution } from '../../src/pipeline/expand';
-import { coordinateScopeIdOf, resolveCoordinateScopeRegistry } from '../../src/resolve/composition';
-import { resolveCoordinateFrame } from '../../src/resolve/coordinate';
 
 describe('扩大管线稳定面', () => {
   it('复用同名行数组，拒绝不同引用覆盖同名数据集', () => {
@@ -52,21 +49,6 @@ describe('扩大管线稳定面', () => {
         contributions: [createPlotProviderContribution({}, first), createPlotProviderContribution({}, second)],
       }),
     ).toThrow(field);
-  });
-
-  it('保持已建立的运行时导出可用', () => {
-    expect(
-      [
-        expand.lowerPlots,
-        expand.prepareRows,
-        expand.assertDatasetFieldMaps,
-        resolveCoordinateFrame,
-        coordinateScopeIdOf,
-        resolveCoordinateScopeRegistry,
-      ].every(value => typeof value === 'function'),
-    ).toBe(true);
-    expect(expand).not.toHaveProperty('coordinateScopeIdOf');
-    expect(expand).not.toHaveProperty('resolveCoordinateScopeRegistry');
   });
 
   it('明确贡献 Standard 色带路径及其配置参数', () => {

@@ -14,7 +14,7 @@ import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } fro
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);
 
 /** 判断 target 是否需要由节点边界自动裁剪决定端点 */
-export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
+const isAutoBoundaryTarget = (target: IRTarget): boolean =>
   isNodeTarget(target) && target.anchor === undefined && target.offset === undefined;
 
 /** 判断 target 是否为进入 emit 前应被 path 游标归一化的相对端点 */

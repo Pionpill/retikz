@@ -14,7 +14,7 @@ import { FLOW_TYPE } from '../shared';
 import { createCompileFlowDiagram } from './flow';
 
 /** 使用已解析 registries 创建 Flow Diagram Composite Definition */
-export const createFlowDiagramDefinitionFromOptions = (
+const createFlowDiagramDefinitionFromOptions = (
   options: ResolvedFlowDiagramDefinitionOptions,
 ): CompositeDefinition<IRFlowDiagram, typeof DIAGRAM_NAMESPACE, typeof FLOW_TYPE, FlowDiagramArtifact> =>
   defineComposite({

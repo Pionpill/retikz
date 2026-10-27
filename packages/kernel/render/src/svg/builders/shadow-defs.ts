@@ -12,7 +12,7 @@ const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
  * IRDropShadow → 稳定字符串 key
  * @description 按固定字段顺序遍历（不依赖对象字面量字段顺序），相同 shadow → 同 key（dedup）
  */
-export const stableShadowKey = (s: IRDropShadow): string => {
+const stableShadowKey = (s: IRDropShadow): string => {
   const parts: Array<string> = [];
 
   for (const field of ['offsetX', 'offsetY', 'blur', 'color', 'opacity'] as const) {

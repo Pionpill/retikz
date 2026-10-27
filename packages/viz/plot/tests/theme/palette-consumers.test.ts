@@ -2,7 +2,7 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
@@ -15,7 +15,8 @@ const rows = [
 ];
 
 const lower = (source: unknown, extra: LowerPlotsOptions = {}): IRScope =>
-  lowerPlot(PlotSchema.parse(source), { d: rows }, { textMeasurer: measureLabel, ...options, ...extra }) as IRScope;
+  lowerPlotWithDataArtifact(PlotSchema.parse(source), { d: rows }, { textMeasurer: measureLabel, ...options, ...extra })
+    .child as IRScope;
 
 const nodesOf = (root: IRScope): Array<IRNode> => {
   const result: Array<IRNode> = [];

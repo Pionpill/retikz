@@ -7,7 +7,7 @@ import type { DeepReadonly } from '../../shared';
 export type TableThemeContext = Pick<ResolvedTheme, 'name' | 'mode' | 'colors'>;
 
 /** Table defaults 来源在 resolver inspection 中的稳定分类 */
-export type TableThemeDefaultsLayerKind = 'neutral' | 'style';
+type TableThemeDefaultsLayerKind = 'neutral' | 'style';
 
 /** 一个实际参与 Table defaults cascade 的来源层 */
 export type TableThemeDefaultsSource = DeepReadonly<{

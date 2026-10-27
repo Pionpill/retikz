@@ -4,7 +4,7 @@ import type { NodeLayout } from './node';
 import { createCompileInvariantError } from './probe-failure';
 
 /** namespace 栈当前写入/解析阶段 */
-export type NamespacePhase = 'registering' | 'resolving';
+type NamespacePhase = 'registering' | 'resolving';
 
 /** namespace layout 的编译生命周期状态 */
 export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
@@ -36,7 +36,7 @@ export type DuplicateRegisterInfo = {
 };
 
 /** namespace 单次 register 的内部观测信息 */
-export type NamespaceRegisterInfo = {
+type NamespaceRegisterInfo = {
   /** 本次注册的 id */
   id: string;
   /** 当前 frame 深度 */
@@ -48,7 +48,7 @@ export type NamespaceRegisterInfo = {
 };
 
 /** NamespaceStack 构造选项 */
-export type NamespaceStackOptions = {
+type NamespaceStackOptions = {
   /** 同 frame 重复 register 时的回调 */
   onDuplicate?: (info: DuplicateRegisterInfo) => void;
   /** 每次 register 完成后的内部观测回调 */

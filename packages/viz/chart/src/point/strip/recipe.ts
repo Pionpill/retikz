@@ -25,7 +25,7 @@ import type { IRStripChart, IRStripChartProperties } from './schema';
 import { StripChartSchema } from './schema';
 
 /** Strip exact schema、调度与消费检查共用的 encoding 顺序 */
-export const StripChartEncodingSlots = ['x', 'y', 'color', 'size', 'opacity', 'shape'] as const;
+const StripChartEncodingSlots = ['x', 'y', 'color', 'size', 'opacity', 'shape'] as const;
 
 const stripPropertySlots = [...pointPropertySlots, 'jitter', 'domainPadding'] as const;
 
@@ -94,7 +94,7 @@ const stripContinuityByRole = (
 };
 
 /** 验证 Strip scale topology，并让默认 grid 只跟随 continuous role */
-export const resolveStripGuideDefaults = (context: ChartGuideDefaultsResolveContext): ReadonlyArray<IRPlotGuide> => {
+const resolveStripGuideDefaults = (context: ChartGuideDefaultsResolveContext): ReadonlyArray<IRPlotGuide> => {
   const continuityByRole = stripContinuityByRole(context);
   const continuousRoles = (['x', 'y'] as const).filter(
     role => continuityByRole[role] === PositionScaleContinuity.Continuous,

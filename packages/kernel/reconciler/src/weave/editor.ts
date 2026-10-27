@@ -16,7 +16,7 @@ import type {
 } from './types';
 
 /** 单次声明编辑产生的变化，供协调器安排依赖传播与事务清理 */
-export type WeaveEditResult = {
+type WeaveEditResult = {
   /** 自身输入或声明成员发生变化的节点，不包含推导的消费者 */
   changedNodes: Array<WeaveNode>;
   /** 新建的全部节点，用于登记编译 binding */

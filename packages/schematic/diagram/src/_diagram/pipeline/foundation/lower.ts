@@ -21,7 +21,7 @@ const flexItem = (key: string, child: IRChild, alignSelf?: IRFlexLayoutItem['ali
 });
 
 /** 创建不带可见 Node 外壳的 presentation text */
-export const createDiagramPresentationTextNode = (
+const createDiagramPresentationTextNode = (
   text: NonNullable<NonNullable<DiagramFoundationResolution['presentation']>['title']>,
   appearance: EffectiveDiagramTextAppearance,
 ): IRNode => ({

@@ -2,13 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   resolveScopeDefaults,
-  cutsStyleChannel,
   resolveDashPattern,
   resolveDropShadow,
   resolveEffectiveNodeStyle,
   resolveEffectivePath,
 } from '../../src/resolve/style';
-import type { IRPathBase, IRScope } from '../../src/schemas';
+import type { IRPathBase, IRScope, IRScopeDefaults } from '../../src/schemas';
 import { PathLabelSchema, NodeSchema, PathSchema, SHADOW_PRESETS } from '../../src/schemas';
 
 const styleScope = (properties: Partial<IRScope>): IRScope => ({
@@ -85,13 +84,19 @@ describe('Scope 有效默认值', () => {
     expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style?.fill).toBe('blue');
   });
 
-  it('仅剪切 resetStyle 命名的通道', () => {
-    expect(cutsStyleChannel(['node'], 'node')).toBe(true);
-    expect(cutsStyleChannel(['node'], 'path')).toBe(false);
-    expect(cutsStyleChannel(['path'], 'path')).toBe(true);
-    expect(cutsStyleChannel(['path'], 'node')).toBe(false);
-    expect(cutsStyleChannel(true, 'node')).toBe(true);
-    expect(cutsStyleChannel([], 'path')).toBe(false);
+  it.each<{ reset: IRScopeDefaults['reset']; keepNode: boolean; keepPath: boolean }>([
+    { reset: ['node'], keepNode: false, keepPath: true },
+    { reset: ['path'], keepNode: true, keepPath: false },
+    { reset: true, keepNode: false, keepPath: false },
+    { reset: [], keepNode: true, keepPath: true },
+    { reset: false, keepNode: true, keepPath: true },
+    { reset: undefined, keepNode: true, keepPath: true },
+  ])('按 reset=$reset 决定节点和路径是否继承父级默认值', ({ reset, keepNode, keepPath }) => {
+    const parent = resolveScopeDefaults(styleScope({ defaults: { style: { color: 'red' } } }));
+    const child = resolveScopeDefaults(styleScope({ defaults: { reset } }), parent);
+
+    expect(child.node).toEqual(keepNode ? parent.node : undefined);
+    expect(child.path).toEqual(keepPath ? parent.path : undefined);
   });
 
   it('将范围主颜色传播到节点和路径通道', () => {

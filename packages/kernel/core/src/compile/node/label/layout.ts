@@ -13,7 +13,7 @@ import type {
 import { resolveNodeLabelGeometry } from './geometry';
 
 /** 节点附属 label 布局输入 */
-export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
+type LayoutNodeLabelsInput = NodeTextLayoutContext & {
   /** 基准字体大小 */
   baseFontSize: number;
   /** preset 与 rem 字号解析的根字号 */

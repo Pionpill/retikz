@@ -10,7 +10,7 @@ const DEFAULT_PATTERN_SIZE = 8;
 const DEFAULT_MOTIF_COLOR = 'currentColor';
 
 /** 解析图案填充所需的定义注册表与尺寸舍入规则 */
-export type PaintResolveContext = Readonly<{
+type PaintResolveContext = Readonly<{
   /** 当前可用的图案定义注册表 */
   patterns: ReadonlyMap<string, PatternDefinition>;
   /** 圆整尺寸，保持资源与 Scene 几何一致 */

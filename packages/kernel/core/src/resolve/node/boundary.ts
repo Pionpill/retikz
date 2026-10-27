@@ -11,7 +11,7 @@ import type { BoundaryReferenceResolution } from './types';
 const SELF = 'shape';
 
 /** 解析连接面所需的节点形状与定义注册表 */
-export type BoundaryReferenceResolveContext = {
+type BoundaryReferenceResolveContext = {
   /** 节点视觉形状定义 */
   visualDef: ShapeDefinition;
   /** 节点视觉形状参数 */

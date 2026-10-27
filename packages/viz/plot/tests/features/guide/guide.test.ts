@@ -6,7 +6,7 @@ import type { CoordinateFrame, PositionScale } from '../../../src/contract';
 import type { GuideContext } from '../../../src/contract';
 import { createCoordinateFrame } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline/guide';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
@@ -1351,11 +1351,11 @@ const guidedSpec = (guides: Array<unknown>): IRPlot =>
   });
 
 const expandOf = (spec: IRPlot): IRScope => {
-  return lowerPlot(
+  return lowerPlotWithDataArtifact(
     spec,
     { sales: SALES },
     { layout: { width: 480, height: 300 }, textMeasurer: measureLabel },
-  ) as IRScope;
+  ).child as IRScope;
 };
 
 describe('lowerPlots 指导编排（契约）', () => {

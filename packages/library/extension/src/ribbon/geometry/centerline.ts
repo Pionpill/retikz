@@ -10,7 +10,7 @@ import type { RibbonSegment, RibbonSegmentInput } from './types';
 const LENGTH_SUBDIVISIONS = 16;
 
 /** 校验并归一化 ribbon 方向向量；零向量或非有限值直接报错 */
-export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
+const normalizeVector = (vector: Vector2, source: string): Vector2 => {
   const normalized = vector2.normalizeOrNull(vector);
   if (normalized === null) {
     throw new RetikzExtensionError({
@@ -49,7 +49,7 @@ export const directionToSectionAxis = (direction: IRRibbonDirection, source: str
 };
 
 /** 用固定细分估算曲线弧长，供 offset→segment 映射和采样数量选择使用 */
-export const estimateLength = (sampleAt: (t: number) => CurveSegmentSample): number => {
+const estimateLength = (sampleAt: (t: number) => CurveSegmentSample): number => {
   let total = 0;
   let prev = sampleAt(0).point;
 
@@ -250,7 +250,7 @@ export const sampleAtDistance = (
 };
 
 /** 把一条开放路径转换为可采样中心线时所需的命令及错误来源标识 */
-export type SegmentsFromCommandsInput = {
+type SegmentsFromCommandsInput = {
   /** 用于提取中心线段的结构化路径命令 */
   commands: ReadonlyArray<PathCommand>;
   /** 错误诊断中标识中心线来源的名称 */

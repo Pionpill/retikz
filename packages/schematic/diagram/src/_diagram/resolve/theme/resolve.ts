@@ -58,7 +58,7 @@ const mergePresentationText = (
 };
 
 /** 按 Source 同构路径合并 Diagram defaults */
-export const mergeDiagramDefaults = (
+const mergeDiagramDefaults = (
   base: IRDiagramDefaults | undefined,
   override: IRDiagramDefaults | undefined,
 ): IRDiagramDefaults => {

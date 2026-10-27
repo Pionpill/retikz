@@ -19,13 +19,13 @@ import type { StrokeCursor } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
 
 /** 由几何形状产生路径命令的 shape step */
-export type StrokeShapeStep = Extract<
+type StrokeShapeStep = Extract<
   CanonicalStep,
   { kind: 'cycle' | 'rectangle' | 'arc' | 'circlePath' | 'ellipsePath' | 'smooth' }
 >;
 
 /** shape step 降级所需的共享上下文 */
-export type LowerShapeStepContext = {
+type LowerShapeStepContext = {
   /** resolving 阶段绑定的 target view */
   targetView: PathTargetView;
   /** 当前 scope 的累计变换链 */

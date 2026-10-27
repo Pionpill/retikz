@@ -11,13 +11,10 @@ import type { StrokePreviousTarget } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
 
 /** 连接前驱目标与当前目标的普通 path segment step */
-export type StrokeSegmentStep = Extract<
-  CanonicalStep,
-  { kind: 'line' | 'axis-line' | 'curve' | 'cubic' | 'bend' | 'fold' }
->;
+type StrokeSegmentStep = Extract<CanonicalStep, { kind: 'line' | 'axis-line' | 'curve' | 'cubic' | 'bend' | 'fold' }>;
 
 /** 普通 segment step 降级所需的共享上下文 */
-export type LowerSegmentStepContext = {
+type LowerSegmentStepContext = {
   /** resolving 阶段绑定的 target view */
   targetView: PathTargetView;
   /** 当前 scope 的累计变换链 */

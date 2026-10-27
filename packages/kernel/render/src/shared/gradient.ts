@@ -3,7 +3,7 @@
  */
 
 /** 单位方框（objectBoundingBox，0..1）内的渐变线端点 */
-export type GradientLine = {
+type GradientLine = {
   /** 渐变起点在单位包围盒中的横坐标 */
   x1: number;
   /** 渐变起点在单位包围盒中的纵坐标 */

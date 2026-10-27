@@ -21,7 +21,7 @@ import type { IRConnectedScatterChart } from './schema';
 import { ConnectedScatterChartSchema } from './schema';
 
 /** Connected Scatter exact schema、调度与消费检查共用的 encoding 顺序 */
-export const ConnectedScatterChartEncodingSlots = ['x', 'y', 'order', 'series', 'row', 'column', 'facet'] as const;
+const ConnectedScatterChartEncodingSlots = ['x', 'y', 'order', 'series', 'row', 'column', 'facet'] as const;
 
 const markPropertySlots = ['point', 'path', 'colorMode'] as const;
 

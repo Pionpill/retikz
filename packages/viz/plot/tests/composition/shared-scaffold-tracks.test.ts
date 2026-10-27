@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
@@ -101,11 +101,11 @@ const polarScaffoldSpec = {
 const parsePlotIR = (spec: unknown) => PlotSchema.parse(spec);
 
 const expandOf = (spec: unknown, provenance = false): IRScope => {
-  return lowerPlot(
+  return lowerPlotWithDataArtifact(
     parsePlotIR(spec),
     { d: rows },
     { layout: { width: 480, height: 300 }, textMeasurer: measureLabel, provenance },
-  ) as IRScope;
+  ).child as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

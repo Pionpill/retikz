@@ -1,7 +1,7 @@
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../../errors';
 
 /** 参与层级分配的元素身份与可选显式层号 */
-export type LayeredRankElement = Readonly<{
+type LayeredRankElement = Readonly<{
   /** 拓扑中的元素唯一标识 */
   id: string;
   /** 作者指定的层号，缺省时由拓扑约束推导 */

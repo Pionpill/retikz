@@ -3,7 +3,7 @@ import { LayoutAlignment, LayoutDistribution } from '../shared';
 import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from './distribution';
 
 /** Flex engine 支持的顺序流换行策略 */
-export type FlexEngineWrap = 'nowrap' | 'wrap' | 'wrap-reverse';
+type FlexEngineWrap = 'nowrap' | 'wrap' | 'wrap-reverse';
 
 /** Flex 主轴求解所需的稳定有限 item 输入 */
 export type FlexMainItem = Readonly<{
@@ -28,7 +28,7 @@ export type FlexMainItem = Readonly<{
 }>;
 
 /** Flex line formation 的有限空间选项 */
-export type FlexLineFormationOptions = Readonly<{
+type FlexLineFormationOptions = Readonly<{
   /** 是否换行及交叉轴行序方向 */
   wrap: FlexEngineWrap;
   /** 有限的主轴可用空间，省略时不以宽度触发换行 */
@@ -38,7 +38,7 @@ export type FlexLineFormationOptions = Readonly<{
 }>;
 
 /** 主轴 distribution 产生的起始偏移与附加 item 间距 */
-export type FlexSpaceDistribution = Readonly<{
+type FlexSpaceDistribution = Readonly<{
   /** 首项之前分配的附加空间 */
   leading: number;
   /** 相邻项之间分配的附加空间，不包含固定 gap */
@@ -80,7 +80,7 @@ export type FlexLineCrossMetrics = Readonly<{
 }>;
 
 /** 已确定交叉轴尺寸的 line slot */
-export type FlexCrossLine = Readonly<{
+type FlexCrossLine = Readonly<{
   /** 行槽位在交叉轴上的起始位置 */
   crossStart: number;
   /** 行槽位最终分配的交叉轴尺寸 */

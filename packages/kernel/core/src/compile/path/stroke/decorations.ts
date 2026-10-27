@@ -11,7 +11,7 @@ import type { PathBasePropsWithStrokeWidth } from './output';
 import { emitEndpointArrowMark } from './shrink';
 
 /** 端点箭头及主线接触调整 */
-export type PathEndpointArrows = {
+type PathEndpointArrows = {
   /** 起点箭头内容 */
   arrowStart?: ResolvedArrowEnd;
   /** 终点箭头内容 */
@@ -27,7 +27,7 @@ export type PathEndpointArrows = {
 };
 
 /** 端点箭头生成上下文 */
-export type EmitPathEndpointArrowsContext = {
+type EmitPathEndpointArrowsContext = {
   /** 箭头声明对应的解析结果 Map */
   arrowResolutions: StrokePathResolution['arrows'];
   /** 坐标取整函数 */
@@ -73,7 +73,7 @@ export const emitPathEndpointArrows = (
 };
 
 /** 沿线标记生成上下文 */
-export type EmitPathMarksInput = {
+type EmitPathMarksInput = {
   /** 当前编译资源，用于普通标记的引用诊断 */
   resources?: () => ReadonlyArray<SceneResource>;
   /** 截断前路径几何 */

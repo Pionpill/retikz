@@ -22,7 +22,7 @@ export const resolveBoundaryLabelRotation = (
 };
 
 /** 旋转文字布局框沿单位向量的半投影长度 */
-export const labelProjectedHalfExtent = (vector: Position, width: number, height: number, degrees: number): number => {
+const labelProjectedHalfExtent = (vector: Position, width: number, height: number, degrees: number): number => {
   const angle = degrees * DEG_TO_RAD;
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -34,7 +34,7 @@ export const labelProjectedHalfExtent = (vector: Position, width: number, height
 };
 
 /** 共享边界标签布局输入，向量均为宿主局部单位轴 */
-export type BoundaryLabelBoxInput = {
+type BoundaryLabelBoxInput = {
   /** 决定内外放置、对齐及旋转的边界标签配置 */
   label: IRBoundaryLabel;
   /** 宿主局部坐标中的边界采样点 */

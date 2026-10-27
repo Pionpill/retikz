@@ -54,7 +54,7 @@ const scaleNamesOf = (
 };
 
 /** 按 recipe 的 replaceable 标记组合 Plot scale scaffold 与显式 scales */
-export const resolveChartPlotScales = (
+const resolveChartPlotScales = (
   recipe: ChartRecipeResolution,
   encodings: ChartEncodingResolution,
   extension: IRChartPlotExtension | undefined,
@@ -171,7 +171,7 @@ const resolveChartCoordinate = (
 };
 
 /** 按 recipe 的 spatial replaceable 标记组合 coordinate / composition */
-export const resolveChartPlotSpatial = (
+const resolveChartPlotSpatial = (
   recipe: ChartRecipeResolution,
   encodings: ChartEncodingResolution,
   authoredCoordinate: IRPlotCoordinateOperation | undefined,
@@ -260,7 +260,7 @@ export const resolveChartPlotSpatial = (
 };
 
 /** 按 recipe 的 guides replaceable 标记组合 guides */
-export const resolveChartPlotGuides = (
+const resolveChartPlotGuides = (
   recipe: ChartRecipeResolution,
   extension: IRChartPlotExtension | undefined,
 ): ReadonlyArray<NonNullable<IRPlot['guides']>[number]> | undefined => {

@@ -13,7 +13,7 @@ import type { TableBorderEdge, TableLayout } from '../layout';
 import type { ResolvedTableCellPlan, ResolvedTableDefaults, ResolvedTableEncoding } from '../rule';
 
 /** manifest 中的 style、plan 与 encoding lineage 输入 */
-export type BuildTableManifestContext = Readonly<{
+type BuildTableManifestContext = Readonly<{
   /** 当前有效 Core Theme 的 style */
   name?: ThemeName;
   /** 当前有效 Core Theme 的 mode */

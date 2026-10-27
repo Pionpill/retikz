@@ -2,7 +2,7 @@ import type { IRChild, IRPath, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
@@ -15,7 +15,7 @@ const lower = (
     { x: 8, y: 7 },
   ],
 ) =>
-  lowerPlot(
+  lowerPlotWithDataArtifact(
     PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -29,11 +29,11 @@ const lower = (
     }),
     { data: rows },
     { textMeasurer: measureLabel },
-  );
+  ).child;
 
 describe('投影路径构建', () => {
   it('保留构造路径的端点箭头并生成 Scene 箭头', () => {
-    const output = lowerPlot(
+    const output = lowerPlotWithDataArtifact(
       PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
@@ -55,7 +55,7 @@ describe('投影路径构建', () => {
       }),
       { data: [] },
       { textMeasurer: measureLabel },
-    );
+    ).child;
     const path = paths(output)[0];
     expect(path.arrow).toEqual({ end: { length: 7 } });
     const scene = compileToScene({ type: 'scene', version: 1, children: [path] }).scene;
@@ -64,7 +64,7 @@ describe('投影路径构建', () => {
 
   it('包括推断域中的数据控制点，同时绘图坐标保持固定', () => {
     const compile = (maximum: number, domain?: [number, number]) =>
-      lowerPlot(
+      lowerPlotWithDataArtifact(
         PlotSchema.parse({
           namespace: 'plot',
           type: 'plot',
@@ -90,7 +90,7 @@ describe('投影路径构建', () => {
         }),
         { data: [] },
         { textMeasurer: measureLabel },
-      );
+      ).child;
     expect(paths(compile(10))[0].children).toEqual(paths(compile(10, [0, 10]))[0].children);
     expect(paths(compile(20))[0].children).toEqual(paths(compile(20, [0, 20]))[0].children);
   });
@@ -118,7 +118,8 @@ describe('投影路径构建', () => {
         },
       ],
     });
-    const output = paths(lowerPlot(source, { data: [] }, { textMeasurer: measureLabel }))[0].children;
+    const output = paths(lowerPlotWithDataArtifact(source, { data: [] }, { textMeasurer: measureLabel }).child)[0]
+      .children;
     expect(output).toHaveLength(2);
     const start = output[0],
       curve = output[1];

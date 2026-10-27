@@ -5,7 +5,7 @@ import type { CanonicalRibbonSampling } from '../types';
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
 /** 校验宽度函数输出：ribbon 宽度必须是有限且非负的数 */
-export const assertFiniteWidth = (width: number, source: string): number => {
+const assertFiniteWidth = (width: number, source: string): number => {
   if (!Number.isFinite(width) || width < 0) {
     throw new RetikzExtensionError({
       code: RetikzExtensionErrorCode.GeometryInvalid,
@@ -18,7 +18,7 @@ export const assertFiniteWidth = (width: number, source: string): number => {
 };
 
 /** 按指定插值模式在两个宽度值之间取样 */
-export type InterpolateInput = {
+type InterpolateInput = {
   /** 区间起点的宽度值 */
   from: number;
   /** 区间终点的宽度值 */

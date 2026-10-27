@@ -160,7 +160,7 @@ export type PathDefinitionResolution = Readonly<{
 }>;
 
 /** 箭头与标记共用的有效视觉属性 */
-export type MarkVisual = Readonly<{
+type MarkVisual = Readonly<{
   /** 箭头或标记定义的注册名称 */
   shape: string;
   /** 对有效长度与宽度共同应用的比例系数 */

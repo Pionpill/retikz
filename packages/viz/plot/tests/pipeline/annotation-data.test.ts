@@ -2,7 +2,7 @@ import type { IRChild, IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/c
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { preparePlotData } from '../../src/pipeline/expand/preparation';
 import { createPlotLineageLocator, lowerPlotWithLineage } from '../../src/pipeline/lineage';
 import { MarkSchema, PlotSchema } from '../../src/schemas';
@@ -53,16 +53,16 @@ const options = { textMeasurer: measureLabel };
 
 describe('数据绑定注释', () => {
   it.each([6, 14, 24])('常量位置在没有数据行时保留固定半径 %s', size => {
-    const output = lowerPlot(
+    const output = lowerPlotWithDataArtifact(
       plot([{ ...point, properties: { ...point.properties, size, minimumSize: 2 } }]),
       { rows: [] },
       options,
-    );
+    ).child;
     const { scene } = compileToScene({ type: 'scene', version: 1, children: [output] });
     const flatten = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>
       items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
     const ellipses = flatten(scene.primitives).filter(item => item.type === 'ellipse');
-    const dataOutput = lowerPlot(
+    const dataOutput = lowerPlotWithDataArtifact(
       plot([
         {
           ...point,
@@ -72,7 +72,7 @@ describe('数据绑定注释', () => {
       ]),
       { rows: [{ x: 1, y: 2 }] },
       options,
-    );
+    ).child;
     const expected = flatten(
       compileToScene({ type: 'scene', version: 1, children: [dataOutput] }).scene.primitives,
     ).filter(item => item.type === 'ellipse');
@@ -101,13 +101,23 @@ describe('数据绑定注释', () => {
   });
 
   it('使常量与显式空数据链保持独立', () => {
-    expect(leaves(lowerPlot(plot([point]), { rows }, options))).toHaveLength(1);
+    expect(leaves(lowerPlotWithDataArtifact(plot([point]), { rows }, options).child)).toHaveLength(1);
     expect(
-      leaves(lowerPlot(plot([{ ...point, transforms: [], properties: { ...point.properties } }]), { rows }, options)),
+      leaves(
+        lowerPlotWithDataArtifact(
+          plot([{ ...point, transforms: [], properties: { ...point.properties } }]),
+          { rows },
+          options,
+        ).child,
+      ),
     ).toHaveLength(1);
     expect(
       leaves(
-        lowerPlot(plot([{ ...point, transforms: [], properties: { ...point.properties } }]), { rows: [] }, options),
+        lowerPlotWithDataArtifact(
+          plot([{ ...point, transforms: [], properties: { ...point.properties } }]),
+          { rows: [] },
+          options,
+        ).child,
       ),
     ).toHaveLength(1);
   });
@@ -131,7 +141,7 @@ describe('数据绑定注释', () => {
         contributeToDomain: false,
       },
     ]);
-    const output = lowerPlot(data, { rows }, options);
+    const output = lowerPlotWithDataArtifact(data, { rows }, options).child;
     const constant = plot([
       ...rows.map(row => ({
         ...point,
@@ -148,13 +158,13 @@ describe('数据绑定注释', () => {
       })),
     ]);
     expect(leaves(output).map(({ id: _id, ...geometry }) => geometry)).toEqual(
-      leaves(lowerPlot(constant, { rows: [] }, options)),
+      leaves(lowerPlotWithDataArtifact(constant, { rows: [] }, options).child),
     );
     expect(() => compileToScene({ type: 'scene', version: 1, children: [output] })).not.toThrow();
   });
 
   it('计算局部平均值而不改变同级数据视图', () => {
-    const output = lowerPlot(
+    const output = lowerPlotWithDataArtifact(
       plot([
         { ...path, transforms: summarize, properties: { ...path.properties } },
         {
@@ -166,8 +176,8 @@ describe('数据绑定注释', () => {
       ]),
       { rows },
       options,
-    );
-    const expected = lowerPlot(
+    ).child;
+    const expected = lowerPlotWithDataArtifact(
       plot([
         {
           ...path,
@@ -178,7 +188,7 @@ describe('数据绑定注释', () => {
       ]),
       { rows: [] },
       options,
-    );
+    ).child;
     expect(leaves(output)[0]).toEqual(leaves(expected)[0]);
     expect(leaves(output)).toHaveLength(3);
   });
@@ -189,8 +199,8 @@ describe('数据绑定注释', () => {
       await preparePlotData(source, { dataBindings: { rows: { kind: 'rows', rows } } })
     ).execute();
     expect(prepared.marks[0]?.rows).toMatchObject([{ mean: 5 }]);
-    const asyncOutput = lowerPlot(source, { rows }, options, undefined, prepared);
-    expect(leaves(asyncOutput)).toEqual(leaves(lowerPlot(source, { rows }, options)));
+    const asyncOutput = lowerPlotWithDataArtifact(source, { rows }, options, undefined, undefined, prepared).child;
+    expect(leaves(asyncOutput)).toEqual(leaves(lowerPlotWithDataArtifact(source, { rows }, options).child));
     const result = lowerPlotWithLineage(
       source,
       { rows },
@@ -205,28 +215,29 @@ describe('数据绑定注释', () => {
   });
 
   it('拒绝通过聚合删除的字段并跳过缺失的点值', () => {
-    expect(() =>
-      lowerPlot(
-        plot([
-          {
-            ...point,
-            transforms: summarize,
-            encodings: { position: { y: { value: 2 }, x: { field: 'x' } } },
-            properties: { ...point.properties },
-            contributeToDomain: false,
-          },
-        ]),
-        { rows },
-        options,
-      ),
+    expect(
+      () =>
+        lowerPlotWithDataArtifact(
+          plot([
+            {
+              ...point,
+              transforms: summarize,
+              encodings: { position: { y: { value: 2 }, x: { field: 'x' } } },
+              properties: { ...point.properties },
+              contributeToDomain: false,
+            },
+          ]),
+          { rows },
+          options,
+        ).child,
     ).toThrow(/field|map|x/i);
     expect(
       leaves(
-        lowerPlot(
+        lowerPlotWithDataArtifact(
           plot([{ ...point, encodings: { position: { x: { field: 'x' }, y: { value: 2 } } } }]),
           { rows: [{ x: null }] },
           options,
-        ),
+        ).child,
       ),
     ).toHaveLength(0);
   });
@@ -267,7 +278,7 @@ describe('数据绑定注释', () => {
         { group: 'b', x: 9, y: 9 },
       ],
     };
-    const result = leaves(lowerPlot(source, data, options));
+    const result = leaves(lowerPlotWithDataArtifact(source, data, options).child);
     expect(result).toHaveLength(2);
     expect(result.map(child => (child.type === 'path' ? child.children : []))).toMatchObject([
       [{ to: [48, 210] }, { to: [192, 210] }],
@@ -298,8 +309,8 @@ describe('数据绑定注释', () => {
       await preparePlotData(source, { dataBindings: { rows: { kind: 'rows', rows: data.rows } } })
     ).execute();
     expect(prepared.panels.map(panel => panel[0]?.rows)).toMatchObject([[{ mean: 3 }], [{ mean: 8 }]]);
-    expect(leaves(lowerPlot(source, data, options, undefined, prepared))).toEqual(
-      leaves(lowerPlot(source, data, options)),
+    expect(leaves(lowerPlotWithDataArtifact(source, data, options, undefined, undefined, prepared).child)).toEqual(
+      leaves(lowerPlotWithDataArtifact(source, data, options).child),
     );
     const locator = createPlotLineageLocator(source, data, { ...options, environment: {} });
     const a = locator.datum(0, { markIndex: 0, facet: { id: 'groups', column: 'a' } });
@@ -333,9 +344,9 @@ describe('数据绑定注释', () => {
         { x: 10, y: 10, limit: 100 },
       ],
     };
-    const original = leaves(lowerPlot(source, data, options));
+    const original = leaves(lowerPlotWithDataArtifact(source, data, options).child);
     source.marks[1] = MarkSchema.parse({ ...source.marks[1], contributeToDomain: true });
-    const included = leaves(lowerPlot(source, data, options));
+    const included = leaves(lowerPlotWithDataArtifact(source, data, options).child);
     expect(original[1]).not.toEqual(included[1]);
     expect(included).toHaveLength(4);
   });
@@ -358,7 +369,7 @@ describe('数据绑定注释', () => {
       },
     ]);
     source.coordinate = { type: 'polar2D', angle: 'x', radius: 'y' };
-    const result = leaves(lowerPlot(source, { rows: [{ y: 5 }] }, options));
+    const result = leaves(lowerPlotWithDataArtifact(source, { rows: [{ y: 5 }] }, options).child);
     expect(result[0].type === 'path' && result[0].children.length).toBeGreaterThan(2);
     expect(result[1]).toHaveProperty('shape.type', 'sector');
   });
@@ -366,7 +377,7 @@ describe('数据绑定注释', () => {
   it('将标记执行策略和声明覆盖应用于注释转换', () => {
     const source = plot([{ ...path, transforms: summarize, properties: { ...path.properties } }]);
     source.dataExecution = { root: { mode: 'builtin' }, marks: { mode: 'external', external: 'fixture' } };
-    expect(() => lowerPlot(source, { rows }, options)).toThrow(/async preparation/i);
+    expect(() => lowerPlotWithDataArtifact(source, { rows }, options).child).toThrow(/async preparation/i);
     source.marks[0] = MarkSchema.parse({
       ...path,
       transforms: summarize.map(declaration => ({
@@ -375,6 +386,6 @@ describe('数据绑定注释', () => {
       })),
       properties: { ...path.properties },
     });
-    expect(leaves(lowerPlot(source, { rows }, options))).toHaveLength(1);
+    expect(leaves(lowerPlotWithDataArtifact(source, { rows }, options).child)).toHaveLength(1);
   });
 });

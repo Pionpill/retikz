@@ -15,7 +15,7 @@ import type { PaintResolution, PaintResolutionInput, PatternResolution } from '.
 import { materializeScenePrimitives } from './scene-content';
 
 /** Paint resource registry 输入：resolve 阶段已绑定的 paint */
-export type PaintInput = PaintResolutionInput;
+type PaintInput = PaintResolutionInput;
 
 /** paint resolver 只负责把已解析值注册为 resourceRef */
 export type PaintResolver = (paint: PaintInput | undefined) => PaintValue | undefined;

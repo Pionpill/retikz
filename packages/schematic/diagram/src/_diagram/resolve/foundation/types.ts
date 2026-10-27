@@ -24,7 +24,7 @@ export type DiagramFoundationResolveContext = Readonly<{
 }>;
 
 /** Diagram Foundation 解析后的完整 Frame */
-export type CanonicalDiagramFrame = Readonly<{
+type CanonicalDiagramFrame = Readonly<{
   /** 图例相对绘图区的最终方位 */
   legendPosition: NonNullable<IRDiagramFrame['legendPosition']>;
   /** 图例沿绘图区交叉轴的对齐方式 */

@@ -128,10 +128,7 @@ export const sortLayoutSpacing = (spacing: ReadonlyArray<LayoutSpacingArtifact>)
   });
 
 /** 把 child-local rect 平移到 container allocation coordinate */
-export const translateLayoutRect = (
-  rect: LayoutRect,
-  translation: Readonly<{ x: number; y: number }>,
-): LayoutArtifactRect =>
+const translateLayoutRect = (rect: LayoutRect, translation: Readonly<{ x: number; y: number }>): LayoutArtifactRect =>
   Object.freeze({
     x: rect.x + translation.x,
     y: rect.y + translation.y,
@@ -152,7 +149,7 @@ export const unionLayoutArtifactRects = (rects: ReadonlyArray<LayoutArtifactRect
 };
 
 /** 求两个 rect 的正面积交集，无正面积时返回 null */
-export const intersectLayoutArtifactRects = (
+const intersectLayoutArtifactRects = (
   first: LayoutArtifactRect,
   second: LayoutArtifactRect,
 ): LayoutArtifactRect | null => {

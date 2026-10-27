@@ -5,7 +5,7 @@ import { mapPositionInput, positionValue } from '../../../contract';
 import type { IRPlotMark, IRPlotPositionInput } from '../../../schemas';
 
 /** 读取已声明的角色位置输入 */
-export const positionForRole = (mark: IRPlotMark, role: string): IRPlotPositionInput | undefined =>
+const positionForRole = (mark: IRPlotMark, role: string): IRPlotPositionInput | undefined =>
   (mark.encodings?.position as Partial<Record<string, IRPlotPositionInput>> | undefined)?.[role];
 
 /** 读取位置角色的有效固定值；字段绑定存在时不回退 */

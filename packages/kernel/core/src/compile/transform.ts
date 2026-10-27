@@ -89,7 +89,7 @@ export type EffectiveScopeTransform = Readonly<{
 }>;
 
 /** 无变换 Scope 共享的只读消费态 */
-export const IDENTITY_SCOPE_TRANSFORM: EffectiveScopeTransform = Object.freeze({
+const IDENTITY_SCOPE_TRANSFORM: EffectiveScopeTransform = Object.freeze({
   chain: Object.freeze([]),
   forward: AFFINE_IDENTITY,
   inverse: AFFINE_IDENTITY,

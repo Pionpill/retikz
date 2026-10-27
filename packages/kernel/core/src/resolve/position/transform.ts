@@ -11,7 +11,7 @@ import { resolvePosition } from './resolve';
 import type { PositionResolution, PositionResolveContext } from './types';
 
 /** 位置解析器支持的平移配置 */
-export type IRTranslationTransform =
+type IRTranslationTransform =
   | IRTranslateTransform
   | IRPolarTranslateTransform
   | IRAtTranslateTransform

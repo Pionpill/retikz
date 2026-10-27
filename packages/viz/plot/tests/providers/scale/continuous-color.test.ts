@@ -2,7 +2,7 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
@@ -15,7 +15,8 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = {},
 ): IRScope => {
-  return lowerPlot(spec, datasets, { textMeasurer: measureLabel, ...cartOpts, ...options }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { textMeasurer: measureLabel, ...cartOpts, ...options })
+    .child as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */

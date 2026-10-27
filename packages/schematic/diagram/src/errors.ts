@@ -30,7 +30,7 @@ export const RetikzDiagramErrorCode = {
 export type RetikzDiagramErrorCode = ValueOf<typeof RetikzDiagramErrorCode>;
 
 /** Diagram package 错误的结构化详情 */
-export type RetikzDiagramErrorDetails = Readonly<{
+type RetikzDiagramErrorDetails = Readonly<{
   /** 发生失败的能力域 */
   capability?: string;
   /** 无法注册或查找的定义键 */
@@ -56,7 +56,7 @@ export type RetikzDiagramErrorDetails = Readonly<{
 }>;
 
 /** 创建 Diagram package 错误所需的参数 */
-export type RetikzDiagramErrorOptions = Readonly<{
+type RetikzDiagramErrorOptions = Readonly<{
   /** 调用者可据以分类处理的稳定错误码 */
   code: RetikzDiagramErrorCode;
   /** 描述本次失败的可读消息 */

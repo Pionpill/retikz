@@ -9,7 +9,7 @@ import type {
 } from '../../schemas';
 
 /** 已物化运行时默认值的弹性轨道尺寸 */
-export type ResolvedTableFractionTrackSize = Readonly<
+type ResolvedTableFractionTrackSize = Readonly<
   Omit<IRTableFractionTrackSize, 'weight'> & {
     /** 有限正弹性权重 */
     weight: number;
@@ -17,7 +17,7 @@ export type ResolvedTableFractionTrackSize = Readonly<
 >;
 
 /** 已物化运行时默认值的 minmax 轨道尺寸 */
-export type ResolvedTableMinmaxTrackSize = Readonly<{
+type ResolvedTableMinmaxTrackSize = Readonly<{
   /** minmax 判别值 */
   kind: 'minmax';
   /** 固定或内容自然下界 */

@@ -14,7 +14,7 @@ import { compileResolvedNode } from './layout';
 import type { NodeCompilation } from './types';
 
 /** 节点解析与布局所需的显式调用环境 */
-export type NodeLayoutCompileContext = Pick<
+type NodeLayoutCompileContext = Pick<
   CompileEnvironment,
   'shapes' | 'boundaries' | 'patterns' | 'round' | 'labelDistance' | 'measureText' | 'rootFontSize' | 'lowerTex'
 > & {

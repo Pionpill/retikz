@@ -5,7 +5,7 @@ export const ASCENT_FACTOR = 0.8;
 export const DESCENT_FACTOR = 0.2;
 
 /** 文本基线换算输入 */
-export type AlphabeticBaselineInput = {
+type AlphabeticBaselineInput = {
   /** 文本锚点 y */
   y: number;
   /** 原始垂直锚点 */

@@ -143,7 +143,7 @@ const assertExtensionTransformConflicts = (
 };
 
 /** 字段绑定与聚合操作的解析结果 */
-export type ChartEncodingTransformResolution = Readonly<{
+type ChartEncodingTransformResolution = Readonly<{
   /** 已改写为直接字段消费形式的映射 */
   encodings: JsonObject;
   /** 由聚合映射合并生成的数据操作 */
