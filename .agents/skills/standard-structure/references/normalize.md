@@ -27,7 +27,7 @@ Vanilla normalize 不负责：
 
 ## 所有权与依赖
 
-- `InputXxx` 与 `normalizeXxx` 只定义在 `@retikz/vanilla`、`@retikz/plot-vanilla` 等 Vanilla API 包
+- Vanilla authoring 的 `InputXxx` 与阶段函数 `normalizeXxx` 只定义在 `@retikz/vanilla`、`@retikz/plot-vanilla` 等 Vanilla API 包
 - `normalize/` 只依赖目标领域公开的 `shared` / `schemas` / `IRXxx`；不得依赖 contract、providers、resolve、pipeline、compile、runtime、DOM 或 renderer
 - React 与其它 framework adapter 只构建对应 Vanilla `InputXxx` 并调度 `normalizeXxx`；不得绕过 Vanilla 建立平行 Source IR builder
 - 领域默认、IR shorthand、上下文优先级与 Canonical 归属纵向领域包 `resolve/`
