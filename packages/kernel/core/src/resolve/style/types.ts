@@ -9,9 +9,9 @@ import type {
   IRPathStyle,
 } from '../../schemas';
 
-/** 当前 Scope 已合并的默认配置，元素解析只能派生新值，不能修改共享配置 */
+/** 当前作用域合并后的默认配置，子元素解析时不得修改这份共享数据 */
 export type EffectiveScopeDefaults = Readonly<{
-  /** 节点默认值，style 已按层合入共同样式，颜色尚未展开 */
+  /** 节点默认配置，已合入各层共同样式，颜色将在元素解析时确定 */
   node?: Readonly<{
     /** 形状、边界与变换等几何默认值 */
     geometry: Readonly<Omit<IRNodeDefault, 'style' | 'layout' | 'label'>>;
@@ -22,7 +22,7 @@ export type EffectiveScopeDefaults = Readonly<{
     /** 已有节点标签的有效默认值 */
     label?: Readonly<IRNodeLabelDefault>;
   }>;
-  /** 路径默认值，style 已按层合入共同样式 */
+  /** 路径默认配置，已合入各层共同样式 */
   path?: Readonly<{
     /** 路径整体几何默认值 */
     geometry: Readonly<Omit<IRPathDefault, 'style' | 'label' | 'arrow'>>;
@@ -35,7 +35,7 @@ export type EffectiveScopeDefaults = Readonly<{
   }>;
 }>;
 
-/** Scene 与几何消费的独立不透明度因子 */
+/** 整体、填充和描边各自的不透明度，缺省字段保持省略 */
 export type GraphicOpacityResolution = {
   /** 主体整体不透明度 */
   opacity?: number;

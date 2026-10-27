@@ -5,7 +5,7 @@ import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH } fro
 import { resolvePaint } from '../resource';
 import type { MarkResolution, PathResolveContext, ResolvedMarkStyle } from './types';
 
-/** 解析标记共用的尺寸与绘制样式 */
+/** 解析箭头与沿线标记共用的外观、有效尺寸和锚点；空心定义不保留填充 */
 export const resolveMarkStyle = (
   mark: ResolvedMarkStyle,
   definition: MarkDefinition,

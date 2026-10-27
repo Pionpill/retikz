@@ -22,13 +22,13 @@ import type { PaintResolutionInput } from '../resource';
 import type { EffectiveScopeDefaults, GraphicOpacityResolution } from '../style';
 import type { ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
 
-/** 已把派生颜色确定为字符串的 Node label pin */
+/** 已解析描边颜色与绘制资源的节点标签引线 */
 export type ResolvedNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
-  /** 已确定的引线颜色 */
+  /** 已解析的引线描边，可为颜色或绘制资源 */
   stroke?: PaintResolutionInput;
 };
 
-/** 已把 Node 自身派生颜色确定为字符串、但尚未处理正文和 label 的中间形态 */
+/** 已解析节点自身数值颜色的中间结果，正文和标签颜色仍待处理 */
 export type PrimaryColorResolvedNode = Omit<IRNode, 'style'> & {
   /** 已确定上下文颜色的节点样式 */
   style?: Omit<IRNodeStyle, 'fill' | 'stroke' | 'textColor'> & {
@@ -41,11 +41,11 @@ export type PrimaryColorResolvedNode = Omit<IRNode, 'style'> & {
   };
 };
 
-/** 所有上下文颜色均已确定为字符串的 Node Source 投影 */
+/** 已解析节点、正文和标签数值颜色的节点输入 */
 export type ResolvedNodeSource = Omit<PrimaryColorResolvedNode, 'text' | 'label'> & {
-  /** 已确定行级与 run 颜色的正文 */
+  /** 已解析行级与片段颜色的正文 */
   text?: string | Array<ResolvedTextLine>;
-  /** 已确定 label、run 与 pin 颜色的附属标签 */
+  /** 已解析文字和引线颜色的附属标签 */
   label?: Array<CanonicalNodeLabel>;
 };
 
@@ -70,13 +70,13 @@ export type CanonicalNodeLabel = Omit<
   distance: number;
   /** 已确定的标签文字主色 */
   textColor?: string;
-  /** 已确定 run 颜色的标签正文 */
+  /** 已解析行级与片段颜色的标签正文 */
   text: ResolvedLabelTextBlock;
-  /** 已确定 stroke 颜色的标签引线 */
+  /** 已解析描边颜色与绘制资源的标签引线 */
   pin?: boolean | ResolvedNodeLabelPin;
 };
 
-/** 展开 Node 紧凑写法、静态默认值并完成 paint 解析的内部形态 */
+/** 已展开节点简写、补齐静态默认值并解析绘制资源的待布局节点 */
 export type CanonicalNode = Omit<
   Omit<ResolvedNodeSource, 'style' | 'layout'> & NonNullable<ResolvedNodeSource['style']> & IRNodeLayout,
   | 'padding'
@@ -127,99 +127,96 @@ export type CanonicalNode = Omit<
     label?: Array<CanonicalNodeLabel>;
     /** 正文对齐 */
     align: NodeTextAlign;
-    /** 节点旋转角度 */
+    /** 节点旋转角度，单位为度 */
     rotate: number;
     /** 已解析的边框虚线样式 */
     dashPattern?: StrokeDashPattern;
-    /** 已展开预设与静态默认值的投影 */
+    /** 已展开预设并补齐颜色的阴影 */
     shadow?: ResolvedDropShadow;
   };
 
-/** 已解析的节点 shape 定义与实例参数 */
+/** 已绑定的节点形状定义与实例参数 */
 export type ShapeResolution = {
-  /** 实际 provider 名称 */
+  /** 实际选中的形状定义名称 */
   name: string;
-  /** shape provider 定义 */
+  /** 形状定义 */
   definition: ShapeDefinition;
   /** 已校验并按节点缩放处理的实例参数 */
   params: JsonObject;
 };
 
-/** 已绑定 definition 与参数，但仍可按视觉 rect 解析几何的连接面引用 */
+/** 已绑定定义与参数的连接面，几何需结合节点视觉尺寸计算 */
 export type BoundaryReferenceResolution = {
-  /** 实际 provider 名称；`shape` 表示视觉 shape */
+  /** 实际选中的定义名称；沿用节点形状时为该形状的名称 */
   name: string;
-  /** boundary 或视觉 shape provider 定义 */
+  /** 选中的连接面定义或形状定义 */
   definition: BoundaryDefinition | ShapeDefinition;
   /** 已校验的实例参数 */
   params: JsonObject;
-  /** 是否引用视觉 shape */
+  /** 是否使用形状定义；既可为节点自身形状，也可为另行指定的形状 */
   isShape: boolean;
 };
 
 /**
- * Path target binding 所需的纯节点几何视图
- *
- * 该视图只保留节点引用与边界几何需要的值，不携带 NamespaceStack、NodeLayout
- * 或其他 compile 编排状态。resolve 阶段将已完成 layout 的节点投影为此视图，
- * 后续 path lowering 只消费这份不可变数据
+ * 位置引用与路径连接所需的只读节点几何
+ * @description 由编译阶段从节点布局中提取，供解析器查询节点位置、形状和连接面
  */
 export type NodeReferenceView = Readonly<{
   /** 节点 id */
   id?: string;
-  /** 节点 shape 名称 */
+  /** 节点形状名称 */
   shapeName: string;
-  /** 节点视觉 shape definition */
+  /** 节点视觉形状定义 */
   shapeDef: ShapeDefinition;
-  /** 已校验的 shape 参数 */
+  /** 已解析并应用缩放的形状参数 */
   shapeParams: JsonObject;
-  /** 节点视觉 rect */
+  /** 节点视觉外框，x、y 表示中心，rotate 使用弧度 */
   rect: CenteredBox;
   /** 节点外边距 */
   margin: BoundsInsets;
   /** 节点自身默认连接面 */
   boundary?: IRBoundary;
-  /** 已绑定的默认连接面 provider 与参数 */
+  /** 已绑定的默认连接面定义与参数 */
   boundaryResolution: BoundaryReferenceResolution;
   /** 当前节点 IR 路径 */
   irPath?: string;
 }>;
 
-/** 将边界引用绑定到 shape 上下文的解析回调 */
+/** 结合节点视觉形状解析连接面定义与参数的回调 */
 export type BoundaryReferenceResolver = (
   boundary: IRBoundary | undefined,
   context: Readonly<{ visualDef: ShapeDefinition; visualParams: JsonObject; irPath?: string }>,
 ) => BoundaryReferenceResolution;
 
-/** 已解析的 Node 输入、shape 与默认连接面 */
+/** 已解析的节点输入、形状与默认连接面 */
 export type NodeResolution = Readonly<{
-  /** 当前节点的 IR 路径，用于布局与 provider 诊断 */
+  /** 当前节点的 IR 路径，用于布局与扩展定义的错误定位 */
   irPath: string;
-  /** 样式级联、静态默认值、auto-contrast 与 paint 解析完成后的节点 */
+  /** 已完成样式继承、颜色和绘制资源解析并补齐默认值的节点 */
   node: CanonicalNode;
-  /** 节点视觉 shape */
+  /** 节点视觉形状 */
   shape: ShapeResolution;
   /** 节点默认连接面引用 */
   boundary: BoundaryReferenceResolution;
 }>;
 
-/** Node resolve 阶段需要的样式、provider 与诊断上下文 */
+/** 节点解析所需的默认配置、扩展定义与诊断能力 */
 export type NodeResolveContext = {
-  /** 当前节点所在 scope 的有效默认配置 */
+  /** 当前节点所在作用域的有效默认配置 */
   scopeDefaults: EffectiveScopeDefaults;
-  /** 当前节点所在位置的 Theme 明暗模式 */
+  /** 当前节点使用的主题明暗模式 */
   mode: ThemeMode;
-  /** shape provider 注册表 */
+  /** 形状定义注册表 */
   shapes: ProviderRegistry<ShapeDefinition>;
-  /** boundary provider 注册表 */
+  /** 连接面定义注册表 */
   boundaries: ProviderRegistry<BoundaryDefinition>;
-  /** 当前有效 pattern provider registry */
+  /** 当前可用的图案定义注册表 */
   patterns: ReadonlyMap<string, PatternDefinition>;
   /** 资源尺寸圆整规则 */
   round: (value: number) => number;
   /** 当前节点的 IR 路径 */
   irPath: string;
-  /** compile warning 分发函数 */
+  /** 接收节点解析警告的回调 */
   warn: (code: string, message: string) => void;
   /** 节点标签缺省距离 */
   labelDistance: number;

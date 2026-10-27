@@ -54,7 +54,7 @@ const isBuiltinStrokePath = (path: ResolvedPathSource): boolean =>
 const hasNoEffectivePathFill = (path: ResolvedPathSource): boolean =>
   path.style?.fill === undefined || path.style.fill === 'none';
 
-/** 验证显式 label interruption 是否可以由当前 Path 承载 */
+/** 检查标签断线配置：显式设置仅限内置 Stroke 路径，开启时要求路径无填充 */
 const assertPathLabelInterruption = (label: ResolvedPathLabel, path: ResolvedPathSource, labelPath: string): void => {
   if (label.interrupt === undefined) return;
   if (!isBuiltinStrokePath(path)) {
@@ -72,7 +72,7 @@ const assertPathLabelInterruption = (label: ResolvedPathLabel, path: ResolvedPat
   }
 };
 
-/** 在 provider 解析前验证所有显式标签断线请求 */
+/** 检查路径和步骤标签是否满足断线条件 */
 const assertPathLabelInterruptionPolicy = (path: ResolvedPathSource, irPath: string): void => {
   if (path.label !== undefined) {
     if (Array.isArray(path.label)) {
@@ -91,7 +91,7 @@ const assertPathLabelInterruptionPolicy = (path: ResolvedPathSource, irPath: str
   }
 };
 
-/** 在 provider 消费前拒绝非内置 Stroke Path 上的端点箭头重叠声明 */
+/** 检查端点箭头重叠配置是否用于内置 Stroke 路径 */
 const assertPathEndpointOverlapHost = (path: ResolvedPathSource, irPath: string): void => {
   if (isBuiltinStrokePath(path)) return;
 
@@ -105,7 +105,11 @@ const assertPathEndpointOverlapHost = (path: ResolvedPathSource, irPath: string)
   }
 };
 
-/** 展开位置、方向、距离、interruption 与断口留白的默认值 */
+/**
+ * 将标签位置简写换算为比例，并补齐方向、距离和断线配置
+ * @description 默认位置为 0.5，距离和断口每侧留白均为 4；未指定 side 时，随线倾斜的标签居中，其余位于上方
+ * @param canAutomaticallyInterrupt 宿主是否允许自动断线；为 true 且标签居中时，缺省的 interrupt 取 true，显式值始终优先
+ */
 export const resolvePathLabelPlacement = (
   label: PathLabelGeometryOptions,
   canAutomaticallyInterrupt: boolean,
@@ -126,12 +130,13 @@ export const resolvePathLabelPlacement = (
   };
 };
 
-/** 在已确定文本外观上应用统一的标签几何默认 */
+/** 为已解析颜色的标签补齐放置与断线默认值 */
 const canonicalizeLabel = (label: ResolvedPathLabel, canAutomaticallyInterrupt: boolean): CanonicalPathLabel => ({
   ...label,
   ...resolvePathLabelPlacement(label, canAutomaticallyInterrupt),
 });
 
+/** 为路径步骤及其标签补齐静态默认值，保留目标引用供后续解析 */
 const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: boolean): CanonicalStep => {
   if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
 
@@ -164,12 +169,13 @@ const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: b
   return { ...step, label };
 };
 
+/** 按原顺序补齐每个路径步骤的默认值 */
 const canonicalizeSteps = (
   steps: ReadonlyArray<ResolvedStepSource> | undefined,
   canAutomaticallyInterrupt: boolean,
 ): Array<CanonicalStep> | undefined => steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt));
 
-/** 展开路径静态字段，fill / stroke 保留待绑定的 paint 输入 */
+/** 合入路径样式并展开步骤、标签与阴影默认值，填充和描边资源随后解析 */
 const canonicalizePath = (
   path: ResolvedPathSource,
   canAutomaticallyInterrupt: boolean,
@@ -192,7 +198,7 @@ const canonicalizePath = (
   };
 };
 
-/** 将 contextual paint 的 number 分支确定为字符串，paint object 保持不变 */
+/** 将数值颜色按路径主色与主题混色，字符串和绘制资源配置保持不变 */
 const resolvePathPaint = (
   value: IRPaintValue | undefined,
   masterColor: string | undefined,
@@ -201,7 +207,7 @@ const resolvePathPaint = (
 ): Exclude<IRPaintValue, number> | undefined =>
   typeof value === 'number' ? resolveContextualColor(value, { masterColor, mode: context.mode, fieldPath }) : value;
 
-/** 确定 path label 中单个文字或公式 segment 的派生颜色 */
+/** 解析路径标签中单个文字或公式片段的数值颜色 */
 const resolveLabelSegmentColor = (
   segment: IRTextSegment | IRMathSegment,
   masterColor: string | undefined,
@@ -223,7 +229,7 @@ const resolveLabelSegmentColor = (
   };
 };
 
-/** 确定 path label 单行内容中各 segment 的派生颜色 */
+/** 解析路径标签的行级与片段数值颜色 */
 const resolvePathLabelTextLine = (
   text: IRLine,
   masterColor: string | undefined,
@@ -254,7 +260,7 @@ const resolvePathLabelTextLine = (
   };
 };
 
-/** 确定 path label 文本块中各行的派生颜色 */
+/** 逐行解析路径标签的数值颜色 */
 const resolvePathLabelText = (
   text: IRPathLabel['text'],
   masterColor: string | undefined,
@@ -265,7 +271,7 @@ const resolvePathLabelText = (
     ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, context, `${fieldPath}[${index}]`))
     : text;
 
-/** 确定一个 path label 的文字主色与 segment 颜色 */
+/** 确定路径标签的文字主色，并据此解析行级与片段颜色 */
 export const resolvePathLabelColors = (
   label: IRPathLabel,
   masterColor: string | undefined,
@@ -290,7 +296,7 @@ export const resolvePathLabelColors = (
   };
 };
 
-/** 确定一个 step 可选 label 的派生颜色 */
+/** 解析路径步骤已有标签的文字与片段颜色 */
 const resolveStepLabelColors = (
   step: IRStep,
   masterColor: string | undefined,
@@ -308,7 +314,7 @@ const resolveStepLabelColors = (
   };
 };
 
-/** 解析标记主色及派生填充色 */
+/** 解析标记主色及依赖它的填充、描边颜色 */
 const resolveMarkColors = (
   mark: IRMarkStyle,
   masterColor: string | undefined,
@@ -355,7 +361,7 @@ const resolveMarkColors = (
   };
 };
 
-/** 在 provider 消费前确定 Path、label 与 arrow 的所有上下文颜色 */
+/** 解析路径、标签、箭头及沿线标记中的数值颜色 */
 const resolvePathContextualColors = (
   path: IRPathBase,
   context: PathResolveContext,
@@ -425,12 +431,14 @@ const resolvePathContextualColors = (
   };
 };
 
+/** 通过调用方提供的解析器读取目标的局部坐标，无法解析时返回 null */
 const pointOfTarget = (
   target: IRTarget,
   resolver: PathTargetResolver | undefined,
   scopeChain: ReadonlyArray<Transform>,
 ): IRPosition | null => resolver?.pointOfTarget(target, scopeChain) ?? null;
 
+/** 优先获取目标的完整绑定；未提供绑定时读取坐标，参考点缺省时沿用局部点 */
 const bindTarget = (
   target: IRTarget,
   context: PathResolveContext,
@@ -445,7 +453,10 @@ const bindTarget = (
   return { target, point, referencePoint };
 };
 
-/** 在 resolve 阶段完成 path relative / relativeAccumulate / smooth target 绑定 */
+/**
+ * 解析路径步骤中可确定的目标坐标，并按字段路径登记绑定结果
+ * @description 普通相对目标不更新后续偏移的基点，累积相对目标会更新；经过轴向线或平滑步骤后，后续相对目标保留给编译游标处理
+ */
 const resolveSteps = (
   steps: ReadonlyArray<CanonicalStep>,
   context: PathResolveContext,
@@ -542,7 +553,10 @@ const resolveSteps = (
   return out;
 };
 
-/** 合并路径级联样式，解析路径定义、目标与绘制样式，产出编译消费的确定化路径 */
+/**
+ * 解析路径默认配置、定义、颜色和目标引用，得到待编译的路径
+ * @description 补齐静态默认值并绑定可确定的目标；箭头与沿线标记定义在实际编译 Stroke 时另行解析
+ */
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
   const styled = context.scopeDefaults === undefined ? path : resolveEffectivePath(path, context.scopeDefaults);
   const irPath = context.irPath ?? 'path';

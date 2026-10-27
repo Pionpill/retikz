@@ -6,38 +6,38 @@ import type {
 } from '../../contract';
 import type { IRClip, IRPaint, IRPatternPaint } from '../../schemas';
 
-/** 已在 resolve 阶段绑定的 pattern 线型数据 */
+/** 图案的基础线型及各方向、周期的线型解析结果 */
 export type PatternStyleResolution = Readonly<{
   /** 顶层基础线型 */
   base: ResolvedPatternLineStyle;
-  /** horizontalStyle 继承基础线型后的结果 */
+  /** 水平线继承基础线型后的样式 */
   horizontalStyle?: ResolvedPatternLineStyle;
-  /** verticalStyle 继承基础线型后的结果 */
+  /** 垂直线继承基础线型后的样式 */
   verticalStyle?: ResolvedPatternLineStyle;
-  /** lineStyleCycle 展开后的完整周期 */
+  /** 按周期索引补齐的线型序列 */
   lineStyleCycle?: ResolvedPatternLineStyleCycle;
 }>;
 
-/** 已完成 provider 选择、默认值和样式 shaping 的 pattern */
+/** 已绑定图案定义并确定尺寸、线型的图案 */
 export type PatternResolution = Readonly<{
-  /** 保留原始 paint spec，供资源去重和 Scene materialization 使用 */
+  /** 原始图案配置，供资源去重与生成使用 */
   spec: IRPatternPaint;
-  /** 实际绑定的 provider 名称 */
+  /** 实际绑定的图案名称 */
   name: string;
-  /** 已绑定的 pattern provider */
+  /** 已绑定的图案定义 */
   definition: PatternDefinition;
-  /** 应用 provider 默认值后的基础尺寸 */
+  /** 依次取显式值、定义默认值或内置默认值，再舍入后的基础尺寸 */
   size: number;
-  /** 已完成样式继承与 preset 展开的线型数据 */
+  /** 已完成继承与虚线简写展开的线型 */
   style: PatternStyleResolution;
 }>;
 
-/** 已在 resolve 阶段确定的 paint resource 输入 */
+/** 供编译阶段生成绘制资源的解析结果 */
 export type PaintResolution = Readonly<
   | {
-      /** 内部 discriminator，不属于持久化 IR */
+      /** 标识这是绘制资源解析结果 */
       kind: 'paint';
-      /** 原始 paint spec */
+      /** 原始绘制配置 */
       spec: Exclude<IRPaint, { kind: 'pattern' }>;
     }
   | {
@@ -45,24 +45,24 @@ export type PaintResolution = Readonly<
       kind: 'paint';
       /** 原始图案声明 */
       spec: IRPatternPaint;
-      /** pattern paint 的 provider 和样式解析结果 */
+      /** 图案定义、尺寸和线型的解析结果 */
       pattern: PatternResolution;
     }
 >;
 
-/** resolve 阶段可以产生的 paint 值 */
+/** 解析后的颜色字符串或绘制资源输入 */
 export type PaintResolutionInput = string | PaintResolution;
 
-/** 已绑定 clip provider 且完成 schema params 解析的 clip */
+/** 已绑定裁剪定义并通过其 schema 解析的裁剪配置 */
 export type ClipResolution = Readonly<{
-  /** 原始 clip spec，供递归解析与错误定位使用 */
+  /** 原始裁剪配置 */
   spec: IRClip;
-  /** 实际绑定的 provider key */
+  /** 裁剪定义的注册名称 */
   kind: string;
-  /** 已绑定的 clip provider */
+  /** 已绑定的裁剪定义 */
   definition: ClipDefinition;
-  /** provider schema 解析后的完整 spec，保留转换后的参数类型 */
+  /** 裁剪定义的 schema 解析后的完整配置 */
   params: IRClip;
-  /** 递归解析嵌套 clip，闭包捕获同一有效 registry */
+  /** 使用同一注册表解析嵌套裁剪配置 */
   resolve: (clip: IRClip) => ClipResolution;
 }>;

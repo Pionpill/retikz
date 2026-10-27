@@ -2,7 +2,7 @@ import type { IRComposite } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 import type { CompositeBinding, CompositeRegistry, CompositeResolution, RegisteredCompositeBinding } from './types';
 
-/** 绑定 composite provider key、definition 与可执行分支 */
+/** 按命名空间和类型查找复合组件定义，返回已注册绑定或未注册标记 */
 export const bindComposite = (source: IRComposite, composites: CompositeRegistry): CompositeBinding => {
   const key = `${source.namespace}.${source.type}`;
   const definition = composites.get(source.namespace)?.get(source.type);
@@ -22,8 +22,8 @@ export const bindComposite = (source: IRComposite, composites: CompositeRegistry
 };
 
 /**
- * 按已绑定 provider schema 解析 composite payload
- * @template TBinding 关联已注册定义、输入与执行分支的组件绑定类型
+ * 按已绑定定义的 schema 解析复合组件节点，保留后续编译所需的定义信息
+ * @template TBinding 已注册的组件绑定类型，解析结果保留该绑定的字段
  */
 export const resolveComposite = <TBinding extends RegisteredCompositeBinding>(
   binding: TBinding,

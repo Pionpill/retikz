@@ -12,11 +12,11 @@ import {
 } from '../../shared';
 import type { PositionResolution, PositionResolveContext, ResolvablePosition } from './types';
 
-/** 从 position referent 中提取诊断用节点 id；只读输入，不解析 namespace */
+/** 从位置引用中提取诊断用的节点 id，不查询节点是否存在 */
 export const nodeIdFromPositionReferent = (reference: unknown): string | undefined =>
   typeof reference === 'string' ? reference : nodeIdFromResolvableTarget(reference);
 
-/** 从可解析 target / position 形态中提取一个代表性节点 id，供 unresolved warning 使用 */
+/** 从目标或位置配置中提取一个节点 id，用于引用未找到时的警告 */
 export const nodeIdFromResolvableTarget = (target: unknown): string | undefined => {
   if (isNodeTargetLike(target)) return target.id;
   if (isBetweenPositionLike(target)) {
@@ -29,21 +29,22 @@ export const nodeIdFromResolvableTarget = (target: unknown): string | undefined 
   return undefined;
 };
 
-/** 从局部点建立同时包含 local/world 的确定结果 */
+/** 为局部坐标点补上对应的世界坐标 */
 const resolutionOfLocal = (localPoint: IRPosition, context: PositionResolveContext): PositionResolution => ({
   localPoint,
   worldPoint: context.toWorld(localPoint),
 });
 
-/** 从世界点建立同时包含 local/world 的确定结果 */
+/** 为世界坐标点补上对应的局部坐标 */
 const resolutionOfWorld = (worldPoint: IRPosition, context: PositionResolveContext): PositionResolution => ({
   localPoint: context.toLocal(worldPoint),
   worldPoint,
 });
 
 /**
- * 把 Position Source IR 确定为当前 Scope 局部点和世界点
- * @description tuple、polar 与 offset 使用局部度量；命名引用从世界坐标反投影；解析失败返回 null
+ * 将位置配置解析为当前作用域的局部坐标与世界坐标
+ * @description 坐标对、极坐标及偏移量按局部坐标计算；命名引用读取节点中心，between 由上下文回调解析
+ * @returns 引用未找到或 between 无法解析时返回 null
  */
 export const resolvePosition = (
   position: ResolvablePosition,

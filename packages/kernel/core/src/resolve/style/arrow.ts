@@ -10,7 +10,7 @@ const mergeArrowEnd = (a: IRPathArrow['start'], b: IRPathArrow['start']): IRPath
   return { ...a, ...mergeProperties([b], { shouldOverride: value => value !== undefined }) };
 };
 
-/** 合并 path 箭头样式：顶层字段与 start / end 端点字段都按继承语义覆盖 */
+/** 合并路径箭头默认值：b 中非 undefined 的字段覆盖 a，start / end 各自逐字段合并 */
 export const mergeArrowDefaults = (a: IRArrowDetail, b: IRArrowDetail): IRArrowDetail => {
   const { start: aStart, end: aEnd, ...aTop } = a;
   const { start: bStart, end: bEnd, ...bTop } = b;
@@ -23,12 +23,17 @@ export const mergeArrowDefaults = (a: IRArrowDetail, b: IRArrowDetail): IRArrowD
   return out;
 };
 
+/** 标记外观继承所需的端点位置、默认配置与路径主色 */
 type ResolveMarkAppearanceContext = {
+  /** 箭头所在端点；沿线标记省略此字段 */
   endpoint?: 'start' | 'end';
+  /** 当前作用域的有效默认配置 */
   scopeDefaults: EffectiveScopeDefaults;
+  /** 路径主色，提供时覆盖标记主色 */
   masterColor: string | undefined;
 };
 
+/** 合并共用、端点和标记自身的外观；提供路径主色时以该色覆盖标记主色 */
 const resolveMarkAppearance = (
   mark: IRMarkStyle,
   { endpoint, scopeDefaults, masterColor }: ResolveMarkAppearanceContext,
@@ -47,7 +52,7 @@ const resolveMarkAppearance = (
   };
 };
 
-/** 为沿线标记补齐共享的默认外观 */
+/** 为已有沿线标记补齐箭头共用外观，并应用路径主色 */
 export const resolvePathMarks = (
   marks: IRPathBase['marks'] | undefined,
   scopeDefaults: EffectiveScopeDefaults,

@@ -4,8 +4,8 @@ import { ZodError } from 'zod';
 import { createLayoutProbeRecoverableError, safeThrownDetail } from './diagnostics';
 
 /**
- * provider payload 校验输入
- * @template TOutput provider schema 解析后的输出类型
+ * 扩展定义的输入数据与校验、诊断配置
+ * @template TOutput 扩展定义的 schema 解析后的输出类型
  */
 export type ParseProviderPayloadInput<TOutput> = {
   /** 能力名称，用于错误诊断 */
@@ -14,15 +14,15 @@ export type ParseProviderPayloadInput<TOutput> = {
   providerName: string;
   /** 用户应修改的 IR 路径 */
   irPath: string;
-  /** payload 名称 */
+  /** 待校验数据的名称，用于诊断文案 */
   payloadName: string;
-  /** provider 声明的 payload schema */
+  /** 扩展定义声明的数据 schema */
   schema: ZodType<TOutput>;
-  /** 原始 payload 值 */
+  /** 待解析的原始数据 */
   value: unknown;
 };
 
-/** 格式化 Zod issue 的嵌套字段路径，用于补充 provider payload 定位信息 */
+/** 将校验错误的字段路径转换为点号与数组下标形式 */
 const formatIssuePath = (path: ReadonlyArray<PropertyKey>): string => {
   let formatted = '';
 
@@ -37,7 +37,7 @@ const formatIssuePath = (path: ReadonlyArray<PropertyKey>): string => {
   return formatted;
 };
 
-/** 为 path 的完整 subject schema 失败补充 schema 内字段定位 */
+/** 路径整体校验失败时，将首条 Zod 错误的字段路径追加到 IR 路径 */
 const appendPathIssuePath = (capability: string, payloadName: string, irPath: string, error: unknown): string => {
   if (capability !== 'path' || payloadName !== 'path' || !(error instanceof ZodError)) return irPath;
 
@@ -48,8 +48,8 @@ const appendPathIssuePath = (capability: string, payloadName: string, irPath: st
 };
 
 /**
- * 用统一错误上下文解析 provider payload，并保留原始 ZodError cause
- * @template TOutput provider schema 解析后的输出类型
+ * 按扩展定义的 schema 解析输入；失败时包装为布局候选失败，并将原始异常保留为 cause
+ * @template TOutput 扩展定义的 schema 解析后的输出类型
  */
 export const parseProviderPayload = <TOutput>({
   capability,

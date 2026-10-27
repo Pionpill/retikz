@@ -1,10 +1,10 @@
 import type { CanonicalInlineSegment, ParsedInlineSegments, ResolvedMathSegment, SourceInlineSegment } from './types';
 
-/** 判断 segment 是否为公式 segment */
+/** 判断行内片段是否为公式 */
 export const isMathSegment = (segment: SourceInlineSegment | CanonicalInlineSegment): segment is ResolvedMathSegment =>
   'tex' in segment;
 
-/** 从指定位置查找下一个未转义公式闭合符 */
+/** 从指定位置查找下一个未转义的公式闭合符，未找到时返回 -1 */
 const findClose = (raw: string, from: number, display: boolean): number => {
   const n = raw.length;
   let i = from;
@@ -30,7 +30,10 @@ const findClose = (raw: string, from: number, display: boolean): number => {
   return -1;
 };
 
-/** 把行内文本 shorthand 解析为 text/math segment；未开启 TeX 时原样返回文本 */
+/**
+ * 将字符串中的 $...$ 和 $$...$$ 拆成文字与公式片段
+ * @description 未开启公式解析时保留原文本；开启后将转义美元符还原为文字，未闭合分隔符及其后内容保留为文字并标记 warn
+ */
 export const parseInlineSegments = (raw: string, gatingOn: boolean): ParsedInlineSegments => {
   if (!gatingOn) return { segments: [{ text: raw }], hasMath: false, warn: false };
 

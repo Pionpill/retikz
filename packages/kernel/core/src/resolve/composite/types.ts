@@ -4,10 +4,10 @@ import type { ZodType } from 'zod';
 import type { AnyCompositeDefinition, CompositeCompileContext, CompositeEvaluationResult } from '../../contract';
 import type { IRComposite } from '../../schemas';
 
-/** 已完成 composite key 与 provider lookup 的绑定结果 */
+/** 复合组件定义的查找结果 */
 export type CompositeBinding =
   | Readonly<{
-      /** registry 中不存在对应 provider */
+      /** 注册表中未找到对应的组件定义 */
       kind: 'unregistered';
       /** 以 namespace.type 表示的诊断名称，不用于注册表索引 */
       key: string;
@@ -17,32 +17,32 @@ export type CompositeBinding =
       kind: 'compile';
       /** 以 namespace.type 表示的诊断名称，不用于注册表索引 */
       key: string;
-      /** provider 定义的 namespace */
+      /** 组件定义的命名空间 */
       namespace: string;
-      /** provider 定义的 type */
+      /** 组件定义的类型名称 */
       type: string;
-      /** 待 provider schema 解析的 Source IR */
+      /** 待组件定义的 schema 解析的原始节点 */
       source: IRComposite;
-      /** provider 声明的完整节点 schema */
+      /** 组件定义声明的完整节点 schema */
       schema: ZodType;
-      /** schema 解析后可执行的编译 callback */
+      /** 接收已解析节点并执行编译的回调 */
       compile: (node: unknown, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
-      /** 可选的 artifact schema */
+      /** 用于校验组件附加产物的可选 schema */
       artifactSchema?: ZodType<JsonValue>;
     }>;
 
-/** registry 中已找到 provider 的 composite binding */
+/** 已找到组件定义的绑定结果 */
 export type RegisteredCompositeBinding = Exclude<CompositeBinding, { kind: 'unregistered' }>;
 
 /**
- * provider payload 已按 owner schema 解析的 composite 结果
+ * 已按组件定义的 schema 解析节点后的结果
  * @template TBinding 解析前的注册绑定类型，结果保留其身份与执行分支
  */
 export type CompositeResolution<TBinding extends RegisteredCompositeBinding = RegisteredCompositeBinding> = TBinding &
   Readonly<{
-    /** provider callback 消费的已解析节点 */
+    /** 交给组件编译回调的已解析节点 */
     node: unknown;
   }>;
 
-/** 按 namespace、type 两级索引的 composite provider registry 只读视图 */
+/** 按命名空间、类型名称两级索引的只读复合组件注册表 */
 export type CompositeRegistry = ReadonlyMap<string, ReadonlyMap<string, AnyCompositeDefinition>>;

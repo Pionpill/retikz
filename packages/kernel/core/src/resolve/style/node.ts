@@ -5,7 +5,7 @@ import { mergeFont } from './font';
 import { mergeGraphicStyle } from './opacity';
 import type { EffectiveScopeDefaults } from './types';
 
-/** 按各字段的原有覆盖粒度解析节点分组，复合叶子保持整体覆盖 */
+/** 将作用域默认值与节点自身配置合并，并用主色补齐缺省的填充、描边和文字色 */
 export const resolveEffectiveNodeStyle = (node: IRNode, scopeDefaults: EffectiveScopeDefaults): IRNode => {
   const defaults = scopeDefaults.node;
   const style = mergeGraphicStyle<IRNodeStyle>(defaults?.style, node.style);

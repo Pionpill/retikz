@@ -10,7 +10,7 @@ import type {
 import { resolvePosition } from './resolve';
 import type { PositionResolution, PositionResolveContext } from './types';
 
-/** Position resolver 支持的 translate transform Source IR */
+/** 位置解析器支持的平移配置 */
 export type IRTranslationTransform =
   | IRTranslateTransform
   | IRPolarTranslateTransform
@@ -18,7 +18,7 @@ export type IRTranslationTransform =
   | IROffsetTranslateTransform
   | IRBetweenTranslateTransform;
 
-/** 将 Scope translate 变体确定为当前 Scope 的局部与世界坐标 */
+/** 解析平移配置对应的局部与世界坐标；依赖的位置无法解析时返回 null */
 export const resolveTransformTranslation = (
   source: IRTranslationTransform,
   context: PositionResolveContext,

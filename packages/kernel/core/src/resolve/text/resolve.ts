@@ -13,7 +13,7 @@ import type {
 
 const TEXT_TEX_PARSE_ERROR = 'TEXT_TEX_PARSE_ERROR';
 
-/** 仅保留作者显式写出的 TextLine 样式 */
+/** 提取行级显式样式并换算字号，未声明的字段不补入继承值 */
 const resolveExplicitStyle = (
   source: Exclude<TextLineSource, string>,
   context: TextLineResolveContext,
@@ -32,7 +32,7 @@ const resolveExplicitStyle = (
   fontStyle: source.font?.style,
 });
 
-/** 将 Source text segment 的字体确定化 */
+/** 让文字或公式片段继承行级字体，并将字号换算为数值 */
 const resolveSegment = (
   segment: SourceInlineSegment,
   lineFont: IRFont | undefined,
@@ -57,7 +57,7 @@ const resolveSegment = (
   return resolved;
 };
 
-/** 确定单行文字的 shorthand、样式、字体与混排形态 */
+/** 解析单行文字与公式片段，补齐片段字体和行级外观，并保留纯文本内容与混排标记 */
 export const resolveTextLine = (source: TextLineSource, context: TextLineResolveContext): TextLineResolution => {
   const styled = typeof source === 'object' ? source : undefined;
   const parsed =

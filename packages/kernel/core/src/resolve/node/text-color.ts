@@ -7,21 +7,21 @@ import type { IRNodeLabelDefault } from '../../schemas';
 import { resolveGraphicOpacity } from '../style';
 import type { PrimaryColorResolvedNode } from './types';
 
-/** 判断正文行是否仍消费 Node 文字颜色 */
+/** 判断正文行是否仍有内容需要继承节点文字色 */
 const bodyLineInheritsNodeTextColor = (line: IRLine): boolean => {
   if (typeof line === 'string') return true;
   if ('segments' in line) return line.segments.some(segment => segment.fill === undefined);
   return line.fill === undefined;
 };
 
-/** 判断 Node 正文是否仍消费 Node 文字颜色 */
+/** 判断节点正文是否需要继承节点文字色 */
 const bodyInheritsNodeTextColor = (text: IRNode['text']): boolean => {
   if (text === undefined) return false;
   if (typeof text === 'string') return true;
   return text.some(bodyLineInheritsNodeTextColor);
 };
 
-/** 判断 label 的正文或 pin 是否仍消费 Node 文字颜色 */
+/** 判断标签正文或引线是否需要继承节点文字色 */
 const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: IRNodeLabelDefault): boolean => {
   if (label.textColor !== undefined || labelDefault.textColor !== undefined || labelDefault.color !== undefined) {
     return false;
@@ -33,7 +33,7 @@ const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: IRNodeLabe
   return textInherits || pinInherits;
 };
 
-/** 判断至少一个真实文本或 pin 消费者是否继承 Node 文字颜色 */
+/** 判断正文、标签或引线中是否仍有内容需要节点文字色 */
 const hasNodeTextColorConsumer = (node: IRNode, labelDefault: IRNodeLabelDefault): boolean => {
   if (bodyInheritsNodeTextColor(node.text)) return true;
   if (node.label === undefined) return false;
@@ -43,7 +43,7 @@ const hasNodeTextColorConsumer = (node: IRNode, labelDefault: IRNodeLabelDefault
   return labels.some(label => labelInheritsNodeTextColor(label, labelDefault));
 };
 
-/** 把不可解析原因转成稳定 warning，并返回固定 fallback */
+/** 报告自动对比色无法计算的原因，并返回 currentColor */
 const fallbackTextColor = (reason: string, warn: (code: string, message: string) => void): string => {
   const fallback = 'currentColor';
   warn(
@@ -72,7 +72,8 @@ const contrastingBlackOrWhite = (color: ParsedCssColor): '#000000' | '#ffffff' =
 };
 
 /**
- * 解析 Node auto-contrast 关键字，供 layout 消费具体 CSS color
+ * 将节点的 auto-contrast 文字色解析为对比度更高的黑色或白色
+ * @description 仅对可解析且完全不透明的纯色填充计算；其余情况发出警告并使用 currentColor。没有内容继承文字色时移除该配置
  * @template TNode 需要解析对比文字色的节点类型，保留其它节点字段
  */
 export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(

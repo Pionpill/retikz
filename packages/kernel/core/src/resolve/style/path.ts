@@ -6,7 +6,7 @@ import { resolvePathLabel } from './label';
 import { mergeGraphicStyle } from './opacity';
 import type { EffectiveScopeDefaults } from './types';
 
-/** 替换 path children 中各 step 的 label 为已解析 effective label */
+/** 为每个步骤已有的标签合入默认配置 */
 const resolveStepLabels = (
   children: ReadonlyArray<IRStep>,
   labelDefault: IRPathLabelDefault,
@@ -20,6 +20,7 @@ const resolveStepLabels = (
     return step;
   });
 
+/** 为单个或多个路径标签合入默认配置，保留输入的单值或数组形式 */
 const resolvePathLabelField = (
   label: IRPathLabel | Array<IRPathLabel> | undefined,
   labelDefault: IRPathLabelDefault,
@@ -33,7 +34,7 @@ const resolvePathLabelField = (
   return resolvePathLabel(label, labelDefault, masterColor);
 };
 
-/** 解析 path 的最终样式 */
+/** 合并路径几何与外观默认值，并为已有标签、箭头和沿线标记补齐配置 */
 export const resolveEffectivePath = (path: IRPathBase, scopeDefaults: EffectiveScopeDefaults): IRPathBase => {
   const defaults = scopeDefaults.path;
   const style = mergeGraphicStyle<IRPathStyle>(defaults?.style, path.style);

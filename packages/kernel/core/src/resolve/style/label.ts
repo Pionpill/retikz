@@ -3,7 +3,7 @@ import { mergeProperties } from '@retikz/foundation';
 import type { IRNodeLabelDefault, IRPathLabelDefault, IRPathLabel } from '../../schemas';
 import { mergeFont } from './font';
 
-/** 合并路径标签默认配置，字体逐字段覆盖 */
+/** 合并路径标签默认值，own 的非 undefined 字段优先，字体逐字段继承 */
 export const mergePathLabelDefaults = (
   parent: IRPathLabelDefault = {},
   own: IRPathLabelDefault = {},
@@ -14,7 +14,7 @@ export const mergePathLabelDefaults = (
   return out;
 };
 
-/** 合并节点标签配置；pin 对象逐字段覆盖，布尔值整体替换 */
+/** 合并节点标签配置，own 的非 undefined 字段优先；字体及两侧均为对象的 pin 逐字段合并 */
 export const mergeNodeLabelDefaults = (
   parent: IRNodeLabelDefault = {},
   own: IRNodeLabelDefault = {},
@@ -28,7 +28,7 @@ export const mergeNodeLabelDefaults = (
   return out;
 };
 
-/** 解析路径或步骤已有标签的配置，默认片段不产生内容 */
+/** 为已有路径或步骤标签合入默认配置；文字色依次取标签 textColor、默认 textColor、合并后的 color、路径主色 */
 export const resolvePathLabel = (
   label: IRPathLabel,
   labelDefault: Readonly<IRPathLabelDefault>,

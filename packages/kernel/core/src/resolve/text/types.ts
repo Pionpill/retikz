@@ -2,16 +2,16 @@ import type { IRFont, IRLine, IRMathSegment, IRTextSegment, IRSegmentedLine } fr
 
 type WithResolvedFill<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
 
-/** 已把派生颜色确定为字符串的文字 segment */
+/** 已将数值颜色转换为字符串的文字片段 */
 export type ResolvedTextSegment = WithResolvedFill<IRTextSegment>;
 
-/** 已把派生颜色确定为字符串的公式 segment */
+/** 已将数值颜色转换为字符串的公式片段 */
 export type ResolvedMathSegment = WithResolvedFill<IRMathSegment>;
 
-/** 已把派生颜色确定为字符串的行内 Source segment */
+/** 已解析颜色、尚待解析字体的文字或公式片段 */
 export type ResolvedInlineSourceSegment = ResolvedTextSegment | ResolvedMathSegment;
 
-/** 已把 segment 派生颜色确定为字符串的混排行 */
+/** 已解析行级与片段颜色的混排行 */
 export type ResolvedSegmentedLine = Omit<IRSegmentedLine, 'segments' | 'fill'> &
   Readonly<{
     /** 已解析行级颜色 */
@@ -20,7 +20,7 @@ export type ResolvedSegmentedLine = Omit<IRSegmentedLine, 'segments' | 'fill'> &
     segments: Array<ResolvedInlineSourceSegment>;
   }>;
 
-/** 已把派生颜色确定为字符串的单行 Source */
+/** 已解析颜色的单行文本输入 */
 export type ResolvedTextLine =
   | string
   | (Omit<Extract<IRLine, { text: string }>, 'fill'> & {
@@ -29,12 +29,12 @@ export type ResolvedTextLine =
     })
   | ResolvedSegmentedLine;
 
-/** 已把派生颜色确定为字符串的标签文本块 */
+/** 已解析颜色的单行或多行标签文本 */
 export type ResolvedLabelTextBlock = string | Array<ResolvedTextLine>;
 
 /** 字号解析所需的根字号与继承字号 */
 export type FontSizeResolveContext = Readonly<{
-  /** preset 与 rem 的根字号 */
+  /** 字号预设与 rem 使用的基准字号 */
   rootFontSize: number;
   /** em 与缺省值继承的当前字号 */
   inheritedFontSize: number;
@@ -54,38 +54,38 @@ export type CanonicalFont = Readonly<{
 
 /** 字体继承解析上下文 */
 export type FontResolveContext = Readonly<{
-  /** preset 与 rem 的根字号 */
+  /** 字号预设与 rem 使用的基准字号 */
   rootFontSize: number;
   /** 缺省字段的继承字体 */
   inheritedFont: CanonicalFont;
 }>;
 
-/** 已解析字体的文本 segment */
+/** 已完成字体继承并换算字号的文字片段 */
 export type CanonicalTextSegment = Omit<ResolvedTextSegment, 'font'> &
   Readonly<{
     /** 当前文本片段完成继承与默认值补全的字体 */
     font: CanonicalFont;
   }>;
 
-/** 已确定的行内文字或公式 segment */
+/** 已完成字号解析的文字或公式片段 */
 export type CanonicalInlineSegment =
   | CanonicalTextSegment
   | (Omit<ResolvedMathSegment, 'fontSize'> & { /** 有效数学字号 */ fontSize: number });
 
-/** Source IR 行内文字或公式 segment */
+/** 进入字体解析前的文字或公式片段 */
 export type SourceInlineSegment = ResolvedInlineSourceSegment;
 
-/** 行内 shorthand 解析结果 */
+/** 字符串拆分后的文字与公式片段 */
 export type ParsedInlineSegments = Readonly<{
-  /** Source IR segment 序列 */
+  /** 按原文顺序排列的片段 */
   segments: Array<SourceInlineSegment>;
-  /** 是否包含公式 segment */
+  /** 是否包含公式片段 */
   hasMath: boolean;
   /** 是否遇到未闭合公式分隔符 */
   warn: boolean;
 }>;
 
-/** 纯文本快路径需要保留的显式行样式 */
+/** 纯文本布局所需的显式行样式 */
 export type ResolvedTextLineStyle = Readonly<{
   /** 显式行填充色 */
   fill?: string;
@@ -101,30 +101,30 @@ export type ResolvedTextLineStyle = Readonly<{
   fontStyle?: IRFont['style'];
 }>;
 
-/** 单行 Source IR 的确定化结果 */
+/** 单行内容、字体与样式的解析结果 */
 export type TextLineResolution = Readonly<{
-  /** 已确定字体和行样式的 segment */
+  /** 已继承行级外观并确定字体的片段 */
   segments: Array<CanonicalInlineSegment>;
-  /** 去除公式 segment 后的纯文本内容 */
+  /** 按顺序拼接文字片段的内容，不含公式 */
   plainText: string;
-  /** 是否包含公式 segment */
+  /** 是否包含公式片段 */
   hasMath: boolean;
-  /** 是否需要逐 segment 混排 */
+  /** 是否按片段布局；含公式或显式使用 segments 时为 true */
   mixed: boolean;
   /** 仅包含作者显式写出的行级样式 */
   style?: ResolvedTextLineStyle;
 }>;
 
-/** 文本行确定化上下文 */
+/** 文本行解析所需的字体与诊断配置 */
 export type TextLineResolveContext = FontResolveContext &
   Readonly<{
-    /** 是否启用 `$...$` 公式 shorthand */
+    /** 是否识别字符串中的 $...$ 和 $$...$$ 公式简写 */
     gatingOn: boolean;
-    /** warning 分发函数 */
+    /** 接收未闭合公式分隔符的警告 */
     warn?: (code: string, message: string) => void;
-    /** 未闭合公式 shorthand 的宿主诊断文案 */
+    /** 未闭合公式分隔符的自定义警告文案 */
     warningMessage?: string;
   }>;
 
-/** 可由文本 resolver 消费的单行 Source IR */
+/** 文本解析器接受的已解析颜色的单行输入 */
 export type TextLineSource = ResolvedTextLine;

@@ -17,7 +17,7 @@ const lineStyleInputOf = (spec: IRPatternPaint): IRPatternLineStyle => ({
   ...(spec.lineJoin === undefined ? {} : { lineJoin: spec.lineJoin }),
 });
 
-/** 在基础线型上应用局部 override，并按 selector 优先级展开 dash */
+/** 在基础线型上应用局部覆盖；显式提供虚线相关字段时重新解析虚线，解析为空则清除继承值 */
 export const resolvePatternLineStyle = (
   base: ResolvedPatternLineStyle,
   override: IRPatternLineStyle,
@@ -40,7 +40,7 @@ export const resolvePatternLineStyle = (
   return resolved;
 };
 
-/** 解析 Pattern 顶层、方向和周期线型 */
+/** 解析图案基础线型，并据此补齐水平、垂直及周期内每项的线型 */
 export const resolvePatternStyle = (spec: IRPatternPaint, defaultColor: string): PatternStyleResolution => {
   const baseInput = lineStyleInputOf(spec);
   const base = resolvePatternLineStyle({ color: defaultColor }, baseInput);

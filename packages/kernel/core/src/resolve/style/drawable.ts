@@ -10,7 +10,7 @@ const DOTTED_PATTERN: StrokeDashPattern = [1, 2];
 /** 投影缺省颜色 */
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 
-/** 将投影预设与显式覆盖解析为完整内部结构 */
+/** 合并阴影预设与显式配置；未提供阴影或合并后缺少任一偏移量时返回 undefined */
 export const resolveDropShadow = (shadow: ShadowPreset | IRDropShadow | undefined): ResolvedDropShadow | undefined => {
   if (shadow === undefined) return undefined;
 

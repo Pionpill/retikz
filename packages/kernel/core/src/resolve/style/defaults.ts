@@ -7,13 +7,18 @@ import { mergeNodeLabelDefaults, mergePathLabelDefaults } from './label';
 import { mergeGraphicStyle } from './opacity';
 import type { EffectiveScopeDefaults } from './types';
 
-/** 判断当前层是否切断指定默认配置通道 */
+/** 判断 reset 是否要求停止继承节点或路径的父级默认配置 */
 export const cutsStyleChannel = (reset: IRScopeDefaults['reset'], channel: StyleChannel): boolean => {
   if (reset === undefined || reset === false) return false;
   return reset === true || reset.includes(channel);
 };
 
-/** 在 Scope 入口合并默认配置；不提前展开主色或解析依赖元素的主题值 */
+/**
+ * 合并当前作用域与父级的默认配置，供子元素继续继承
+ * @description 先按 reset 清除指定通道的继承值，再依次合入共同样式与节点、路径各自的配置；颜色保留到元素解析时确定
+ * @template TScope 提供 defaults 字段的作用域类型
+ * @returns 未提供 defaults 时返回 parent 原对象，否则返回合并后的配置
+ */
 export const resolveScopeDefaults = <TScope extends Pick<IRScope, 'defaults'>>(
   scope: TScope,
   parent: EffectiveScopeDefaults = {},

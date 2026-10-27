@@ -5,15 +5,15 @@ import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
 import type { ClipResolution } from './types';
 
-/** Clip provider 解析所需的 registry 和 locator 上下文 */
+/** 解析裁剪配置所需的定义注册表与错误定位信息 */
 export type ClipResolveContext = Readonly<{
-  /** 有效 clip provider registry */
+  /** 当前可用的裁剪定义注册表 */
   clips: ReadonlyMap<string, ClipDefinition>;
-  /** 当前 IR locator，用于 schema diagnostics */
+  /** 当前裁剪配置的 IR 路径，用于参数校验错误定位 */
   irPath?: string;
 }>;
 
-/** 绑定 definition 并解析 provider params；路径生成保留到 compile resource 阶段执行 */
+/** 查找裁剪定义并按其 schema 解析配置，返回供编译阶段生成裁剪几何的绑定结果 */
 export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipResolution => {
   const kind = clip.kind;
   const definition = providerDefinitionOf(context.clips, kind);

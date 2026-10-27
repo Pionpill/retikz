@@ -10,29 +10,29 @@ import { parseProviderPayload } from '../provider-payload';
 import { withProviderOutputValidationBoundary } from '../provider-validation';
 import type { ShapeResolution } from './types';
 
-/** 节点 shape 解析输入 */
+/** 节点形状解析所需的输入与缩放参数 */
 export type NodeShapeResolveInput = {
   /** 待解析节点 */
   node: Pick<IRNode, 'shape' | 'cornerRadius'>;
-  /** shape 注册表 */
+  /** 形状定义注册表 */
   shapes: ProviderRegistry<ShapeDefinition>;
   /** x 轴缩放 */
   scaleX: number;
   /** y 轴缩放 */
   scaleY: number;
-  /** 当前 node 的 IR 路径，用于 provider payload 诊断 */
+  /** 当前节点的 IR 路径，用于形状参数校验错误定位 */
   irPath?: string;
 };
 
-/** Node shape preset 解析后的 provider 查询形态 */
+/** 形状简写展开后的定义名称与参数 */
 type NodeShapePresetResolution = {
-  /** 实际查询的 shape provider 名称 */
+  /** 实际查询的形状定义名称 */
   type: string;
-  /** 传给 provider 的 JSON-safe 参数对象 */
+  /** 交给形状定义解析的 JSON 参数对象 */
   params: JsonObject;
 };
 
-/** 将 Node shape preset 展开为实际 provider 名称和参数 */
+/** 将节点形状简写展开为定义名称与参数，缺省形状为矩形 */
 const resolveNodeShapePreset = (shape: IRNode['shape']): NodeShapePresetResolution => {
   if (shape === undefined) return { type: BuiltinShape.Rectangle, params: {} };
   if (shape === BuiltinShape.Circle) return { type: BuiltinShape.Ellipse, params: { circumscribe: 'equal' } };
@@ -73,7 +73,10 @@ const scaleJsonNumbers = (value: JsonValue, factor: number): JsonValue => {
 const scaleJsonObjectNumbers = (value: JsonObject, factor: number): JsonObject =>
   Object.fromEntries(Object.entries(value).map(([key, childValue]) => [key, scaleJsonNumbers(childValue, factor)]));
 
-/** 解析节点 shape definition 与随节点缩放后的 params */
+/**
+ * 查找节点形状定义，解析参数并应用节点缩放
+ * @description 优先使用定义提供的 scaleParams；未提供时，将参数中的所有数值乘以两轴缩放系数的几何平均值
+ */
 export const resolveNodeShape = (input: NodeShapeResolveInput): ShapeResolution => {
   const { node, shapes, scaleX, scaleY, irPath = 'node' } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);

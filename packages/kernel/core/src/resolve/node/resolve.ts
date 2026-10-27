@@ -29,10 +29,10 @@ import type {
   ResolvedNodeSource,
 } from './types';
 
-/** Node 缺省内边距 */
+/** 节点缺省内边距 */
 const DEFAULT_NODE_PADDING = 8;
 
-/** 展开 Node 的单值或轴向缩放 */
+/** 将节点缩放展开为 x、y 两轴系数，未指定时为 1 */
 const expandAxisScale = (value: number | IRAxisScale | undefined): CanonicalNode['scale'] => {
   if (typeof value === 'number') return { x: value, y: value };
 
@@ -44,7 +44,7 @@ const expandAxisScale = (value: number | IRAxisScale | undefined): CanonicalNode
   };
 };
 
-/** 展开 Node 的单值或宽高最小尺寸 */
+/** 将最小尺寸展开为宽和高，未指定时为 0 */
 const expandBoxSize = (value: number | IRBoxSize | undefined): CanonicalNode['minimumSize'] => {
   if (typeof value === 'number') return { width: value, height: value };
 
@@ -60,7 +60,7 @@ const expandBoxSize = (value: number | IRBoxSize | undefined): CanonicalNode['mi
 const expandNodeText = (text: ResolvedNodeSource['text']): CanonicalNode['text'] =>
   text === undefined ? undefined : typeof text === 'string' ? [text] : text;
 
-/** 展开标签边界位置的比例缺省值 */
+/** 补齐标签位置：缺省为 top，边界位置对象缺省比例为 0.5 */
 const expandNodeLabelPosition = (position: IRNodeLabel['position']): CanonicalNodeLabel['position'] => {
   if (position === undefined) return 'top';
   if (typeof position === 'object') return { ...position, fraction: position.fraction ?? 0.5 };
@@ -82,7 +82,7 @@ type PrimaryColorResolvedMaterializedNode = Omit<PrimaryColorResolvedNode, 'labe
   label?: Array<MaterializedNodeLabel>;
 };
 
-/** 按有效 labelDefault 补齐一个标签，并保留显式字段优先级 */
+/** 用标签默认配置补齐单个标签，并拒绝内部标签使用引线 */
 const expandNodeLabel = (
   label: IRNodeLabel,
   labelDefault: IRNodeLabelDefault,
@@ -117,7 +117,7 @@ const expandNodeLabels = (
       ? label.map(item => expandNodeLabel(item, labelDefault, labelDistance))
       : [expandNodeLabel(label, labelDefault, labelDistance)];
 
-/** 展开 Node 的紧凑字段与默认值，paint 随后绑定到具体能力 */
+/** 展开节点简写与默认值，将样式、布局字段合入节点结果，绘制资源随后解析 */
 const expandNodeFields = (
   node: ResolvedNodeSource,
 ): Omit<CanonicalNode, 'fill' | 'stroke'> & Pick<NonNullable<ResolvedNodeSource['style']>, 'fill' | 'stroke'> => {
@@ -141,12 +141,15 @@ const expandNodeFields = (
   };
 };
 
+/** 节点颜色解析使用的主题模式与错误定位信息 */
 type NodeColorContext = Readonly<{
+  /** 当前主题明暗模式 */
   mode: NodeResolveContext['mode'];
+  /** 当前节点的 IR 路径 */
   irPath: string;
 }>;
 
-/** 将 contextual paint 的 number 分支确定为字符串，paint object 保持不变 */
+/** 将数值颜色按节点主色与主题混色，字符串和绘制资源配置保持不变 */
 const resolveNodePaint = (
   value: IRPaintValue | undefined,
   masterColor: string | undefined,
@@ -161,7 +164,7 @@ const resolveNodePaint = (
       })
     : value;
 
-/** 先确定 Node 自身 fill / stroke / textColor，供 auto-contrast 消费真实背景 */
+/** 先解析节点填充、描边和文字的数值颜色，供后续自动对比色计算使用 */
 const resolveNodePrimaryColors = (
   node: MaterializedNodeSource,
   context: NodeColorContext,
@@ -188,7 +191,7 @@ const resolveNodePrimaryColors = (
   };
 };
 
-/** 确定单个文字或公式 segment 的派生颜色 */
+/** 解析单个文字或公式片段的数值颜色 */
 const resolveInlineSegmentColor = (
   segment: IRTextSegment | IRMathSegment,
   masterColor: string | undefined,
@@ -204,7 +207,7 @@ const resolveInlineSegmentColor = (
   };
 };
 
-/** 确定正文一行的 line / segment 派生颜色 */
+/** 解析正文行及其片段的数值颜色 */
 const resolveNodeLineColors = (
   line: IRLine,
   masterColor: string | undefined,
@@ -235,7 +238,7 @@ const resolveNodeLineColors = (
   };
 };
 
-/** 确定 Node label 的文字主色、segment 与 pin 颜色 */
+/** 解析节点标签的文字主色、行内片段颜色与引线绘制配置 */
 const resolveNodeLabelColors = (
   label: MaterializedNodeLabel,
   labelMasterColor: string | undefined,
@@ -290,7 +293,7 @@ const resolveNodeLabelColors = (
   };
 };
 
-/** 在 auto-contrast 后确定正文、label segment 与 pin 的派生颜色 */
+/** 用自动对比色计算后的文字主色，解析正文、标签片段和引线的数值颜色 */
 const resolveNodeDependentColors = (
   node: PrimaryColorResolvedMaterializedNode,
   labelDefault: IRNodeLabelDefault,
@@ -328,7 +331,10 @@ const resolveNodeDependentColors = (
   };
 };
 
-/** 解析 Node 的样式、静态默认值、provider 与布局前 canonical 形态 */
+/**
+ * 合并节点默认配置并解析颜色、形状、连接面和绘制资源，得到待布局的节点
+ * @description 补齐静态默认值并展开简写；位置引用、文本测量与最终尺寸由布局阶段处理
+ */
 export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeResolution => {
   const effectiveNode = resolveEffectiveNodeStyle(source, context.scopeDefaults);
   const effectiveLabelDefault = context.scopeDefaults.node?.label ?? {};
