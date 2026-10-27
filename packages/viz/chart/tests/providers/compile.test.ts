@@ -369,12 +369,11 @@ describe('Chart providers through Core compile', () => {
     expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
   });
 
-  it('atomically compiles mixed Ranged Dot rows with shared field colors and preserved range direction', () => {
+  it('compiles Ranged Dot Points and Paths with shared colors, reversed and zero-length ranges', () => {
     const rangedRows = [
       { category: 'Forward', start: 1, end: 3, group: 'A' },
       { category: 'Reverse', start: 5, end: 2, group: 'B' },
       { category: 'Zero', start: 4, end: 4, group: 'A' },
-      { category: 'Invalid', start: null, end: 6, group: 'B' },
     ];
     const source = RangedDotChartSchema.parse({
       namespace: 'chart',
@@ -422,6 +421,28 @@ describe('Chart providers through Core compile', () => {
       ),
     ).toBe(true);
     expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
+  });
+
+  it.each(['start', 'end'])('rejects a missing Ranged Dot %s through the Path endpoint contract', endpoint => {
+    const source = RangedDotChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'ranged.invalid' },
+      recipe: {
+        chartType: 'ranged-dot',
+        encodings: { category: 'category', start: 'start', end: 'end' },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createRangedDotChartProviderContribution(),
+        createPlotProviderContribution({
+          'ranged.invalid': [{ category: 'A', start: 1, end: 2, [endpoint]: null }],
+        }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/Path endpoint cannot map role x/);
   });
 
   it('compiles grouped Regression through Point + mark-local Smooth Path with finite Scene output', () => {

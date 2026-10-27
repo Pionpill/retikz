@@ -424,7 +424,7 @@ describe('Point Chart recipe Definitions', () => {
     );
 
     for (const chart of [scatter, regression, connectedScatter, rangedDot]) {
-      expect(chart.plot.marks.find(mark => mark.type === 'point' || mark.type === 'relation')).toMatchObject({
+      expect(chart.plot.marks.find(mark => mark.type === 'point')).toMatchObject({
         properties: { autoPadding: 'max-radius' },
       });
       expect(chart.plot.scales.every(scale => !Object.hasOwn(scale, 'domainPadding'))).toBe(true);
@@ -608,12 +608,10 @@ describe('Point Chart recipe Definitions', () => {
     expect(connected.plot.marks.find(mark => mark.type === 'point')).toMatchObject({
       properties: { autoPadding: 'max-radius', size: 14 },
     });
-    expect(ranged.plot.marks[0]).toMatchObject({
-      properties: {
-        autoPadding: 'max-radius',
-        endpoints: { source: { size: 8 }, target: { size: 15 } },
-      },
-    });
+    expect(ranged.plot.marks.filter(mark => mark.type === 'point')).toMatchObject([
+      { properties: { autoPadding: 'max-radius', size: 8 } },
+      { properties: { autoPadding: 'max-radius', size: 15 } },
+    ]);
   });
 
   it('resolves Core side precedence, ratio gaps, and reversed Cartesian ranges', () => {
@@ -845,7 +843,7 @@ describe('Point Chart recipe Definitions', () => {
     expect(point).toMatchObject({ properties: { color: '#dc2626' } });
   });
 
-  it('Ranged Dot emits one projected Relation with endpoint glyphs and shared authored roles', () => {
+  it('Ranged Dot emits a connector followed by independently styled endpoint Points', () => {
     const result = resolve(
       RangedDotChartDefinition,
       { category: 'country', start: 'before', end: 'after' },
@@ -856,33 +854,25 @@ describe('Point Chart recipe Definitions', () => {
         range: { stroke: '#64748b', strokeWidth: 2, dashPattern: [4, 2] },
       },
     );
-
-    expect(result.semanticMarks).toEqual([
+    expect(result.semanticMarks).toHaveLength(1);
+    expect(result.semanticMarks[0].plotMarks).toMatchObject([
       {
-        kind: 'ranged-dot',
-        plotMarks: [
-          expect.objectContaining({
-            type: 'relation',
-            encodings: expect.objectContaining({
-              source: { position: { x: { field: 'before' }, y: { field: 'country' } } },
-              target: { position: { x: { field: 'after' }, y: { field: 'country' } } },
-            }),
-            properties: expect.objectContaining({
-              endpoints: {
-                source: expect.objectContaining({
-                  color: '#2563eb',
-                  size: 4,
-                }),
-                target: expect.objectContaining({
-                  color: '#dc2626',
-                  shape: 'diamond',
-                  size: 4,
-                }),
-              },
-              geometry: { kind: 'path', options: { style: { dashPattern: [4, 2] } } },
-            }),
-          }),
-        ],
+        type: 'path',
+        encodings: {
+          from: { x: { field: 'before' }, y: { field: 'country' } },
+          to: { x: { field: 'after' }, y: { field: 'country' } },
+        },
+        properties: { stroke: '#64748b', strokeWidth: 2, dashPattern: [4, 2] },
+      },
+      {
+        type: 'point',
+        encodings: { position: { x: { field: 'before' }, y: { field: 'country' } } },
+        properties: { color: '#2563eb', size: 4, strokeWidth: 1, autoPadding: 'max-radius' },
+      },
+      {
+        type: 'point',
+        encodings: { position: { x: { field: 'after' }, y: { field: 'country' } } },
+        properties: { color: '#dc2626', shape: 'diamond', size: 4, strokeWidth: 1, autoPadding: 'max-radius' },
       },
     ]);
   });
@@ -894,17 +884,17 @@ describe('Point Chart recipe Definitions', () => {
       end: 'after',
       color: 'region',
     });
-    const [relation] = result.semanticMarks[0].plotMarks;
+    const marks = result.semanticMarks[0].plotMarks;
 
     expect(result.scaffold.scales).toContainEqual({
       value: { type: 'ordinal', name: '__chart.ranged-dot.scale.color' },
       replaceable: true,
     });
     expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'color' });
-    expect(relation).toMatchObject({
-      encodings: { color: { field: 'region', scale: '__chart.ranged-dot.scale.color' } },
-      properties: { endpoints: { source: {}, target: {} } },
-    });
+    for (const mark of marks)
+      expect(mark).toMatchObject({
+        encodings: { color: { field: 'region', scale: '__chart.ranged-dot.scale.color' } },
+      });
   });
 
   it('Ranged Dot delegates its unconfigured connector and endpoint color to the Plot palette', () => {
@@ -925,7 +915,9 @@ describe('Point Chart recipe Definitions', () => {
     });
 
     expect(result.plot.marks).toEqual([
-      expect.objectContaining({ type: 'relation', defaultColorGroup: '__chart.default-color.0' }),
+      expect.objectContaining({ type: 'path', defaultColorGroup: '__chart.default-color.0' }),
+      expect.objectContaining({ type: 'point', defaultColorGroup: '__chart.default-color.0' }),
+      expect.objectContaining({ type: 'point', defaultColorGroup: '__chart.default-color.0' }),
     ]);
     expect(JSON.stringify(result.plot.marks)).not.toContain('currentColor');
   });
@@ -979,11 +971,11 @@ describe('Point Chart recipe Definitions', () => {
       runtime: rangedDotRuntime,
     });
 
-    expect(result.plot.marks).toHaveLength(1);
+    expect(result.plot.marks).toHaveLength(3);
     expect(result.plot.marks[0]).toMatchObject({
       encodings: {
-        source: { position: { x: { field: 'later' }, y: { field: 'category' } } },
-        target: { position: { x: { field: 'earlier' }, y: { field: 'category' } } },
+        from: { x: { field: 'later' }, y: { field: 'category' } },
+        to: { x: { field: 'earlier' }, y: { field: 'category' } },
       },
     });
   });

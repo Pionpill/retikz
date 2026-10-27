@@ -15,7 +15,7 @@ import {
   resolvePointScaleDefaults,
 } from '../shared';
 import { pointAxisGuidesOf, pointCartesian2DOf, pointRecipeId } from '../shared/plot';
-import { RangedDotMarkDefinition, resolveRangedDotMark } from './mark';
+import { RangedDotMarkDefinition, resolveRangedDotMarkGroup } from './mark';
 import type { IRRangedDotChart } from './schema';
 import { RangedDotChartSchema } from './schema';
 
@@ -129,7 +129,7 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
         guides: { value: guides, replaceable: true },
       },
       semanticMarks: [
-        { kind: ChartType.RangedDot, plotMarks: [resolveRangedDotMark(slots.encodings, slots.properties)] },
+        { kind: ChartType.RangedDot, plotMarks: resolveRangedDotMarkGroup(slots.encodings, slots.properties) },
       ],
     };
   },
