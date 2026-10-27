@@ -97,7 +97,7 @@ type CoreProviderContribution = Readonly<{
 declare const resolveCoreProviderDependencies: (
   contributions: ReadonlyArray<CoreProviderContribution>,
   explicit?: CompileProviderOptions & Pick<CompileCompositeOptions, 'composites'>,
-) => ResolvedCoreProviderOptions;
+) => CoreProviderDefinitions;
 ```
 
 这是等价的最小跨层形状；最终公开命名应复用既有 Composite graph vocabulary，但不得拆成 adapter 私有协议。`capability + name` 是普通 provider 的完整 identity；Composite 继续使用独立的 `namespace + type` identity，不能编码进字符串或退化成 owner namespace、数组位置。resolver 最终按 `CompileProviderOptions` 的能力复数名返回分组 definitions。

@@ -116,6 +116,3 @@ export type ResolveCoreProviderDependenciesOptions = Readonly<{
   /** 在提供者定义之后追加的最终显式定义 */
   definitions?: CoreProviderDefinitions;
 }>;
-
-/** Core 提供者图解析后可直接传入 CompileOptions 的定义 */
-export type ResolvedCoreProviderOptions = CoreProviderDefinitions;

@@ -59,32 +59,32 @@ const findProvider = (index: ProviderIndex, key: CoreProviderKey): ProviderEntry
     ? index.composites.get(key.namespace)?.get(key.type)
     : index.named.get(key.capability)?.get(key.name);
 
-/** 写入完整 Core 提供者键对应的提供者 */
-const setProvider = (index: ProviderIndex, entry: ProviderEntry): void => {
-  if (entry.key.capability === ProviderCapability.Composite) {
-    const namespaceProviders = index.composites.get(entry.key.namespace);
-    if (namespaceProviders === undefined) {
-      index.composites.set(entry.key.namespace, new Map([[entry.key.type, entry]]));
-      return;
-    }
-
-    namespaceProviders.set(entry.key.type, entry);
-    return;
-  }
-
-  const capabilityProviders = index.named.get(entry.key.capability);
-  if (capabilityProviders === undefined) {
-    index.named.set(entry.key.capability, new Map([[entry.key.name, entry]]));
-    return;
-  }
-
-  capabilityProviders.set(entry.key.name, entry);
-};
-
 /** 建立完整提供者索引，并在创建函数执行前完成声明检查与参数收集 */
 const buildProviderIndex = (
   options: ResolveCoreProviderDependenciesOptions,
 ): { index: ProviderIndex; roots: Array<CoreProviderKey>; definitions: CoreProviderDefinitions } => {
+  /** 写入完整 Core 提供者键对应的提供者 */
+  const setProvider = (index: ProviderIndex, entry: ProviderEntry): void => {
+    if (entry.key.capability === ProviderCapability.Composite) {
+      const namespaceProviders = index.composites.get(entry.key.namespace);
+      if (namespaceProviders === undefined) {
+        index.composites.set(entry.key.namespace, new Map([[entry.key.type, entry]]));
+        return;
+      }
+
+      namespaceProviders.set(entry.key.type, entry);
+      return;
+    }
+
+    const capabilityProviders = index.named.get(entry.key.capability);
+    if (capabilityProviders === undefined) {
+      index.named.set(entry.key.capability, new Map([[entry.key.name, entry]]));
+      return;
+    }
+
+    capabilityProviders.set(entry.key.name, entry);
+  };
+
   /** 判断两组有序依赖是否逐项使用相同完整 key */
   const isProviderDependencyListEqual = (
     left: ReadonlyArray<CoreProviderKey>,
@@ -170,14 +170,20 @@ const collectReachableProviders = (
   index: ProviderIndex,
   roots: ReadonlyArray<CoreProviderKey>,
 ): Array<ProviderEntry> => {
+  /** 已完成访问的提供者，依赖排在消费方之前，每个提供者仅追加一次 */
   const ordered: Array<ProviderEntry> = [];
-  const state = new Map<ProviderEntry, 'visiting' | 'visited'>();
-  const stack: Array<ProviderEntry> = [];
+  /** 本次闭包遍历的提供者状态 Map，区分当前递归链与已完成节点 */
+  const providerStateMap = new Map<ProviderEntry, 'visiting' | 'visited'>();
+  /** 当前递归链，进入时压栈、退出时弹栈，用于报告依赖路径 */
+  const providerStack: Array<ProviderEntry> = [];
 
-  const visit = (key: CoreProviderKey, parent?: ProviderEntry): void => {
+  /** 递归访问依赖，完成后追加到依赖优先输出 */
+  const visitProvider = (key: CoreProviderKey, parent?: ProviderEntry): void => {
     const entry = findProvider(index, key);
     if (entry === undefined) {
-      const chain = [...stack.map(candidate => formatProviderKey(candidate.key)), formatProviderKey(key)].join(' -> ');
+      const chain = [...providerStack.map(candidate => formatProviderKey(candidate.key)), formatProviderKey(key)].join(
+        ' -> ',
+      );
       const relation = parent === undefined ? 'root' : 'dependency';
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Contract,
@@ -185,12 +191,12 @@ const collectReachableProviders = (
       );
     }
 
-    const currentState = state.get(entry);
+    const currentState = providerStateMap.get(entry);
     if (currentState === 'visited') return;
     if (currentState === 'visiting') {
-      const cycleStart = stack.indexOf(entry);
+      const cycleStart = providerStack.indexOf(entry);
       const cycle = [
-        ...stack.slice(cycleStart).map(candidate => formatProviderKey(candidate.key)),
+        ...providerStack.slice(cycleStart).map(candidate => formatProviderKey(candidate.key)),
         formatProviderKey(entry.key),
       ].join(' -> ');
       throw new RetikzCoreError(
@@ -199,29 +205,25 @@ const collectReachableProviders = (
       );
     }
 
-    state.set(entry, 'visiting');
-    stack.push(entry);
+    providerStateMap.set(entry, 'visiting');
+    providerStack.push(entry);
 
-    for (const dependency of entry.dependencies) visit(dependency, entry);
-    stack.pop();
-    state.set(entry, 'visited');
+    for (const dependency of entry.dependencies) visitProvider(dependency, entry);
+    providerStack.pop();
+    providerStateMap.set(entry, 'visited');
     ordered.push(entry);
   };
 
-  for (const root of roots) visit(root);
+  for (const root of roots) visitProvider(root);
 
   return ordered;
 };
 
-type DefinitionIdentity =
-  | Readonly<{ capability: NamedProviderCapability; name: string }>
-  | Readonly<{ capability: typeof ProviderCapability.Composite; namespace: string; type: string }>;
-
 /** 从定义读取指定能力的注册表标识 */
-const resolveDefinitionIdentity = (
+const readDefinitionIdentity = (
   capability: ProviderCapability,
   definition: CoreProviderDefinition,
-): DefinitionIdentity => {
+): CoreProviderKey => {
   switch (capability) {
     case ProviderCapability.Shape:
       return { capability, name: (definition as ShapeDefinition).name };
@@ -244,49 +246,6 @@ const resolveDefinitionIdentity = (
   }
 };
 
-/** 判断定义标识是否与提供者键相同 */
-const doesDefinitionMatchKey = (key: CoreProviderKey, definition: CoreProviderDefinition): boolean => {
-  const identity = resolveDefinitionIdentity(key.capability, definition);
-  return key.capability === ProviderCapability.Composite
-    ? identity.capability === ProviderCapability.Composite &&
-        identity.namespace === key.namespace &&
-        identity.type === key.type
-    : identity.capability === key.capability && identity.name === key.name;
-};
-
-/** 把定义放入其所属的编译选项集合 */
-const appendByCapability = (
-  definitions: MutableCoreProviderDefinitions,
-  capability: ProviderCapability,
-  definition: CoreProviderDefinition,
-): void => {
-  switch (capability) {
-    case ProviderCapability.Shape:
-      definitions.shapes.push(definition as ShapeDefinition);
-      return;
-    case ProviderCapability.Boundary:
-      definitions.boundaries.push(definition as BoundaryDefinition);
-      return;
-    case ProviderCapability.Clip:
-      definitions.clips.push(definition as ClipDefinition);
-      return;
-    case ProviderCapability.Mark:
-      definitions.marks.push(definition as MarkDefinition);
-      return;
-    case ProviderCapability.Arrow:
-      definitions.arrows.push(definition as ArrowDefinition);
-      return;
-    case ProviderCapability.Pattern:
-      definitions.patterns.push(definition as PatternDefinition);
-      return;
-    case ProviderCapability.Path:
-      definitions.paths.push(definition as AnyPathDefinition);
-      return;
-    case ProviderCapability.Composite:
-      definitions.composites.push(definition as AnyCompositeDefinition);
-  }
-};
-
 /** 向最终定义追加一个键唯一的定义 */
 const appendDefinition = (
   definitions: MutableCoreProviderDefinitions,
@@ -294,7 +253,36 @@ const appendDefinition = (
   capability: ProviderCapability,
   definition: CoreProviderDefinition,
 ): void => {
-  const identity = resolveDefinitionIdentity(capability, definition);
+  /** 把定义放入其所属的编译选项集合 */
+  const appendByCapability = (): void => {
+    switch (capability) {
+      case ProviderCapability.Shape:
+        definitions.shapes.push(definition as ShapeDefinition);
+        return;
+      case ProviderCapability.Boundary:
+        definitions.boundaries.push(definition as BoundaryDefinition);
+        return;
+      case ProviderCapability.Clip:
+        definitions.clips.push(definition as ClipDefinition);
+        return;
+      case ProviderCapability.Mark:
+        definitions.marks.push(definition as MarkDefinition);
+        return;
+      case ProviderCapability.Arrow:
+        definitions.arrows.push(definition as ArrowDefinition);
+        return;
+      case ProviderCapability.Pattern:
+        definitions.patterns.push(definition as PatternDefinition);
+        return;
+      case ProviderCapability.Path:
+        definitions.paths.push(definition as AnyPathDefinition);
+        return;
+      case ProviderCapability.Composite:
+        definitions.composites.push(definition as AnyCompositeDefinition);
+    }
+  };
+
+  const identity = readDefinitionIdentity(capability, definition);
   const existing =
     identity.capability === ProviderCapability.Composite
       ? definitionIndex.composites.get(identity.namespace)?.get(identity.type)
@@ -304,15 +292,7 @@ const appendDefinition = (
 
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
-      `resolveCoreProviderDependencies: definition conflict for ${formatProviderKey(
-        capability === ProviderCapability.Composite
-          ? {
-              capability,
-              namespace: identity.capability === ProviderCapability.Composite ? identity.namespace : '',
-              type: identity.capability === ProviderCapability.Composite ? identity.type : '',
-            }
-          : { capability, name: identity.capability === ProviderCapability.Composite ? '' : identity.name },
-      )} uses different objects`,
+      `resolveCoreProviderDependencies: definition conflict for ${formatProviderKey(identity)} uses different objects`,
     );
   }
 
@@ -332,7 +312,7 @@ const appendDefinition = (
     }
   }
 
-  appendByCapability(definitions, capability, definition);
+  appendByCapability();
 };
 
 /** 将按选项传入的显式定义追加到提供者解析结果 */
@@ -375,10 +355,21 @@ const freezeResolvedDefinitions = (definitions: MutableCoreProviderDefinitions):
 /**
  * 解析 Core 提供者贡献的可达定义闭包
  * @description 在调用任何创建函数前完成提供者、缺失依赖与环路预检，再按依赖优先顺序把同键参数交给所属方物化定义
+ * @throws 工厂执行失败时抛出 RetikzCoreError，保留原始异常为 cause，并通过 details.key 标识失败的提供者
  */
 export const resolveCoreProviderDependencies = (
   options: ResolveCoreProviderDependenciesOptions,
 ): CoreProviderDefinitions => {
+  /** 判断定义标识是否与提供者键相同 */
+  const doesDefinitionMatchKey = (key: CoreProviderKey, definition: CoreProviderDefinition): boolean => {
+    const identity = readDefinitionIdentity(key.capability, definition);
+    return key.capability === ProviderCapability.Composite
+      ? identity.capability === ProviderCapability.Composite &&
+          identity.namespace === key.namespace &&
+          identity.type === key.type
+      : identity.capability === key.capability && identity.name === key.name;
+  };
+
   const { index, roots, definitions: explicit } = buildProviderIndex(options);
   const orderedProviders = collectReachableProviders(index, roots);
   const definitions: MutableCoreProviderDefinitions = {
@@ -399,9 +390,18 @@ export const resolveCoreProviderDependencies = (
   for (const provider of orderedProviders) {
     // 同键声明已验证工厂引用一致；此处集中恢复工厂与其参数的关联
     const makeDefinition = provider.makeDefinition as CoreDependencyProvider<unknown>['makeDefinition'];
-    const definition = makeDefinition(Object.freeze(provider.params));
+    let definition: CoreProviderDefinition;
+    try {
+      definition = makeDefinition(Object.freeze(provider.params));
+    } catch (cause) {
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Provider,
+        `resolveCoreProviderDependencies: provider ${formatProviderKey(provider.key)} failed to create its definition`,
+        { cause, details: { key: provider.key } },
+      );
+    }
     if (!doesDefinitionMatchKey(provider.key, definition)) {
-      const returnedIdentity = resolveDefinitionIdentity(provider.key.capability, definition);
+      const returnedIdentity = readDefinitionIdentity(provider.key.capability, definition);
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Contract,
         `resolveCoreProviderDependencies: provider ${formatProviderKey(provider.key)} returned definition ${

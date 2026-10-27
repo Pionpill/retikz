@@ -9,7 +9,15 @@ import type {
   CoreProviderDefinition,
   CoreProviderKey,
 } from '../../../src';
-import { defineArrow, defineClip, defineComposite, defineShape, resolveCoreProviderDependencies } from '../../../src';
+import {
+  defineArrow,
+  defineClip,
+  defineComposite,
+  defineShape,
+  resolveCoreProviderDependencies,
+  RetikzCoreError,
+  RetikzCoreErrorCode,
+} from '../../../src';
 
 const shapeKey = (name: string): CoreProviderKey => ({ capability: 'shape', name });
 
@@ -393,6 +401,38 @@ describe('resolveCoreProviderDependencies', () => {
         definitions: { composites: [compositeDefinitionOf('third', 'card')] },
       }),
     ).toThrow(/definition.*conflict.*composite:third\.card/i);
+  });
+
+  it.each([new Error('factory failed'), 'factory failed'])('包装工厂异常并保留所属者与原始原因：%s', cause => {
+    const root = compositeKey('third', 'card');
+    const resolve = () =>
+      resolveCoreProviderDependencies({
+        contributions: [
+          contributionOf(
+            [root],
+            [
+              providerOf(root, {
+                makeDefinition: () => {
+                  throw cause;
+                },
+              }),
+            ],
+          ),
+        ],
+      });
+
+    let failure: unknown;
+    try {
+      resolve();
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toBeInstanceOf(RetikzCoreError);
+    if (!(failure instanceof RetikzCoreError)) throw new Error('Expected a Core error');
+    expect(failure.code).toBe(RetikzCoreErrorCode.Provider);
+    expect(failure.message).toContain('composite:third.card');
+    expect(failure.cause).toBe(cause);
+    expect(failure.details).toEqual({ key: root });
   });
 
   it('在提供者执行之前快照显式定义', () => {
