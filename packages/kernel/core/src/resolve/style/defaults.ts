@@ -1,4 +1,4 @@
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 
 import type { IRScope, StyleChannel } from '../../schemas';
 import { mergeArrowDefaults } from './arrow';
@@ -27,28 +27,26 @@ export const resolveScopeDefaults = <TScope extends Pick<IRScope, 'defaults'>>(
     return reset === true || reset.includes(channel);
   };
 
-  const shouldOverride = (value: unknown) => value !== undefined;
-
   let node = cutsStyleChannel('node') ? undefined : parent.node;
   let path = cutsStyleChannel('path') ? undefined : parent.path;
 
   if (style !== undefined || defaults.node !== undefined) {
     const { style: nodeStyle, layout, label, ...geometry } = defaults.node ?? {};
     node = {
-      geometry: mergeProperties([node?.geometry, geometry], { shouldOverride }),
+      geometry: mergeDefinedProperties([node?.geometry, geometry]),
       style: {
         ...mergeGraphicStyle(node?.style, style, nodeStyle),
         font: mergeFont(node?.style.font, nodeStyle?.font),
       },
       label: mergeNodeLabelDefaults(node?.label, label),
-      layout: mergeProperties([node?.layout, layout], { shouldOverride }),
+      layout: mergeDefinedProperties([node?.layout, layout]),
     };
   }
 
   if (style !== undefined || defaults.path !== undefined) {
     const { style: pathStyle, label, arrow, ...geometry } = defaults.path ?? {};
     path = {
-      geometry: mergeProperties([path?.geometry, geometry], { shouldOverride }),
+      geometry: mergeDefinedProperties([path?.geometry, geometry]),
       style: mergeGraphicStyle(path?.style, style, pathStyle),
       label: mergePathLabelDefaults(path?.label, label),
       arrow: arrow === undefined ? path?.arrow : mergeArrowDefaults(path?.arrow ?? {}, arrow),

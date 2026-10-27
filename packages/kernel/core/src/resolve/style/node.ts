@@ -1,4 +1,4 @@
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 
 import type { IRNode, IRNodeStyle } from '../../schemas';
 import { mergeFont } from './font';
@@ -11,7 +11,7 @@ export const resolveEffectiveNodeStyle = (node: IRNode, scopeDefaults: Effective
   const style = mergeGraphicStyle<IRNodeStyle>(defaults?.style, node.style);
   const font = mergeFont(defaults?.style.font, node.style?.font);
   if (font !== undefined) style.font = font;
-  const layout = mergeProperties([defaults?.layout, node.layout], { shouldOverride: value => value !== undefined });
+  const layout = mergeDefinedProperties([defaults?.layout, node.layout]);
   if (style.color !== undefined) {
     style.stroke ??= style.color;
     style.fill ??= style.color;
@@ -19,7 +19,7 @@ export const resolveEffectiveNodeStyle = (node: IRNode, scopeDefaults: Effective
   }
 
   return {
-    ...mergeProperties([defaults?.geometry, node], { shouldOverride: value => value !== undefined }),
+    ...mergeDefinedProperties([defaults?.geometry, node]),
     type: node.type,
     position: node.position,
     style,

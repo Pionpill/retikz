@@ -1,4 +1,4 @@
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 
 import type { IRArrowDetail, IRMarkStyle, IRPathArrowEnd, IRPathBase } from '../../schemas';
 import type { EffectiveScopeDefaults } from './types';
@@ -9,16 +9,14 @@ const mergeArrowEnd = (
   own: IRPathArrowEnd | undefined,
 ): IRPathArrowEnd | undefined => {
   if (parent === undefined && own === undefined) return undefined;
-  return mergeProperties([parent, own], { shouldOverride: value => value !== undefined });
+  return mergeDefinedProperties([parent, own]);
 };
 
 /** 合并路径箭头默认值：own 中非 undefined 的字段覆盖 parent，start / end 各自逐字段合并 */
 export const mergeArrowDefaults = (parent: IRArrowDetail, own: IRArrowDetail): IRArrowDetail => {
   const { start: parentStart, end: parentEnd, ...parentStyle } = parent;
   const { start: ownStart, end: ownEnd, ...ownStyle } = own;
-  const out: IRArrowDetail = mergeProperties([parentStyle, ownStyle], {
-    shouldOverride: value => value !== undefined,
-  });
+  const out: IRArrowDetail = mergeDefinedProperties([parentStyle, ownStyle]);
   const start = mergeArrowEnd(parentStart, ownStart);
   if (start !== undefined) out.start = start;
   const end = mergeArrowEnd(parentEnd, ownEnd);
@@ -51,7 +49,7 @@ const resolveMarkAppearance = (
   return {
     ...top,
     ...side,
-    ...mergeProperties([mark], { shouldOverride: value => value !== undefined }),
+    ...mergeDefinedProperties([mark]),
     ...(masterColor === undefined ? {} : { color: masterColor }),
   };
 };

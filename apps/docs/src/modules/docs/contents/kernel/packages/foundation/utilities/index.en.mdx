@@ -89,17 +89,20 @@ Dynamic `currentColor`, CSS variables, system colors, and host colors such as P3
 
 Use `mergeProperties(sources, options)` to combine priority layers: sources are applied from left to right, with later properties taking precedence. It returns a new object without mutating inputs or recursively merging nested objects.
 
-```ts
-import { mergeProperties } from '@retikz/foundation';
+Use `mergeDefinedProperties(sources)` to skip undefined properties and preserve earlier values. It still retains `null`, `false`, `0`, and empty strings.
 
-const options = mergeProperties<{ color?: string | null; width?: number }>(
-  [{ color: 'red', width: 1 }, { width: 2 }, { color: undefined, width: 0 }],
-  { shouldOverride: value => value !== undefined },
-);
+```ts
+import { mergeDefinedProperties } from '@retikz/foundation';
+
+const options = mergeDefinedProperties<{ color?: string | null; width?: number }>([
+  { color: 'red', width: 1 },
+  { width: 2 },
+  { color: undefined, width: 0 },
+]);
 // { color: 'red', width: 0 }
 ```
 
-`shouldOverride(value, key)` applies to both initial writes and subsequent overrides. Returning `false` skips the current property without deleting an earlier value. To also ignore `null`, use `value => value !== undefined && value !== null`; a truthiness check would also discard `false`, `0`, and empty strings.
+`mergeProperties` accepts `shouldOverride(value, key)`, which applies to both initial writes and subsequent overrides. Returning `false` skips the current property without deleting an earlier value. To also ignore `null`, use `value => value !== undefined && value !== null`; a truthiness check would also discard `false`, `0`, and empty strings.
 
 Without a policy, property values of `undefined` and `null` overwrite earlier values; an `undefined` source is always skipped. Only own enumerable string and symbol properties are copied, while nested objects and arrays retain their references. Since the policy can filter any field, the return type is `Partial<T>`; consumers supply required fields. Property-read or policy-callback failures throw `RetikzFoundationError` with the original exception preserved as `cause`.
 

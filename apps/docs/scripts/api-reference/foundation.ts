@@ -42,6 +42,7 @@ const config = {
         'createReadonlyMap',
         'isRetikzError',
         'jsonStructuralEquals',
+        'mergeDefinedProperties',
         'mergeProperties',
         'parseStaticCssColor',
       ],

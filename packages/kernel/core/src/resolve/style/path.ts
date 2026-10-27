@@ -1,4 +1,4 @@
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 
 import type { IRPathLabelDefault, IRPathLabel, IRPathBase, IRPathStyle, IRStep } from '../../schemas';
 import { resolvePathArrows, resolvePathMarks } from './arrow';
@@ -40,7 +40,7 @@ export const resolveEffectivePath = (path: IRPathBase, scopeDefaults: EffectiveS
   const style = mergeGraphicStyle<IRPathStyle>(defaults?.style, path.style);
   const masterColor = style.color;
   const effective: IRPathBase = {
-    ...mergeProperties([defaults?.geometry, path], { shouldOverride: value => value !== undefined }),
+    ...mergeDefinedProperties([defaults?.geometry, path]),
     type: path.type,
     style,
   };

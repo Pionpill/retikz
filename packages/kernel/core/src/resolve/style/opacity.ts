@@ -1,4 +1,4 @@
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 
 import type { IRGraphicStyle } from '../../schemas';
 import type { GraphicOpacityResolution } from './types';
@@ -12,13 +12,8 @@ const opacityFactors = (value: IRGraphicStyle['opacity']) => (typeof value === '
  * @template T 参与合并的图形样式类型，结果保留该类型的可选字段
  */
 export const mergeGraphicStyle = <T extends IRGraphicStyle>(...styles: Array<T | undefined>): Partial<T> => {
-  const merged = mergeProperties<T>(styles, { shouldOverride: value => value !== undefined });
-  const factors = mergeProperties(
-    styles.map(style => opacityFactors(style?.opacity)),
-    {
-      shouldOverride: value => value !== undefined,
-    },
-  );
+  const merged = mergeDefinedProperties<T>(styles);
+  const factors = mergeDefinedProperties(styles.map(style => opacityFactors(style?.opacity)));
   if (Object.keys(factors).length > 0) merged.opacity = factors;
   return merged;
 };

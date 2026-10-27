@@ -1,5 +1,31 @@
-import { mergeProperties, RetikzFoundationError } from '@retikz/foundation';
+import { mergeDefinedProperties, mergeProperties, RetikzFoundationError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
+
+describe('mergeDefinedProperties', () => {
+  it('跳过 undefined 源和属性，同时保留其余有效值与浅引用', () => {
+    const nested = { color: 'red' };
+    const parent = Object.freeze({ enabled: true, count: 2, label: 'base', nullable: 'value', nested });
+    const result = mergeDefinedProperties<{
+      enabled?: boolean;
+      count?: number;
+      label?: string;
+      nullable?: string | null;
+      absent?: string;
+      nested?: typeof nested;
+    }>([
+      parent,
+      undefined,
+      { enabled: false, count: 0, label: '', nullable: null, absent: undefined },
+      { count: undefined },
+    ]);
+    expect(result).toEqual({ enabled: false, count: 0, label: '', nullable: null, nested });
+    expect(Object.hasOwn(result, 'absent')).toBe(false);
+    expect(result.nested).toBe(nested);
+    expect(parent.count).toBe(2);
+    expect(mergeDefinedProperties([])).toEqual({});
+    expect(mergeDefinedProperties([undefined])).toEqual({});
+  });
+});
 
 describe('mergeProperties', () => {
   it('按顺序合并任意数量的层，包括显式 undefined 和空', () => {

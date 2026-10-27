@@ -1,4 +1,4 @@
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 
 import type { IRNodeLabelDefault, IRPathLabelDefault, IRPathLabel } from '../../schemas';
 import { mergeFont } from './font';
@@ -8,7 +8,7 @@ export const mergePathLabelDefaults = (
   parent: IRPathLabelDefault = {},
   own: IRPathLabelDefault = {},
 ): IRPathLabelDefault => {
-  const out = mergeProperties([parent, own], { shouldOverride: value => value !== undefined });
+  const out = mergeDefinedProperties([parent, own]);
   const font = mergeFont(parent.font, own.font);
   if (font !== undefined) out.font = font;
   return out;
@@ -19,11 +19,11 @@ export const mergeNodeLabelDefaults = (
   parent: IRNodeLabelDefault = {},
   own: IRNodeLabelDefault = {},
 ): IRNodeLabelDefault => {
-  const out = mergeProperties([parent, own], { shouldOverride: value => value !== undefined });
+  const out = mergeDefinedProperties([parent, own]);
   const font = mergeFont(parent.font, own.font);
   if (font !== undefined) out.font = font;
   if (typeof parent.pin === 'object' && typeof own.pin === 'object') {
-    out.pin = mergeProperties([parent.pin, own.pin], { shouldOverride: value => value !== undefined });
+    out.pin = mergeDefinedProperties([parent.pin, own.pin]);
   }
   return out;
 };

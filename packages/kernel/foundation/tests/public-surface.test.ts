@@ -26,6 +26,7 @@ describe('基础公共面', () => {
         'createReadonlyMap',
         'isRetikzError',
         'jsonStructuralEquals',
+        'mergeDefinedProperties',
         'mergeProperties',
         'parseStaticCssColor',
       ].sort(),

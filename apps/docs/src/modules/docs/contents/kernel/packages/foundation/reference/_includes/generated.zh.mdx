@@ -510,7 +510,7 @@ export declare const jsonStructuralEquals: (left: unknown, right: unknown) => bo
 
 ## 校验与集合工具
 
-#### <ApiSourceLink label={"MergePropertiesOptions"} path={"packages/kernel/foundation/src/objects.ts"} startLine={8}>MergePropertiesOptions</ApiSourceLink>
+#### <ApiSourceLink label={"MergePropertiesOptions"} path={"packages/kernel/foundation/src/objects.ts"} startLine={19}>MergePropertiesOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -632,7 +632,40 @@ export declare const createReadonlyMap: <TKey, TValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"mergeProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={24}>mergeProperties</ApiSourceLink>
+#### <ApiSourceLink label={"mergeDefinedProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={11}>mergeDefinedProperties</ApiSourceLink>
+
+跳过 undefined 源和属性值，保留 null、false、0 和空字符串；后面的有效值优先，不递归合并或修改输入
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称      | 类型 / 签名                               | 说明                                                           |
+| ------ | --------- | ----------------------------------------- | -------------------------------------------------------------- |
+| 泛型   | `T`       | `extends object`                          | 被浅合并的对象类型                                             |
+| 参数   | `sources` | `ReadonlyArray<Readonly<T> \| undefined>` | 按优先级从低到高排列的源对象                                   |
+| 返回值 | —         | `Partial<T>`                              | 过滤 undefined 属性后的新对象                                  |
+| 错误   | —         | —                                         | 属性读取失败时抛出 RetikzFoundationError，原始异常保留为 cause |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const mergeDefinedProperties: <T extends object>(
+  sources: ReadonlyArray<Readonly<T> | undefined>,
+) => Partial<T>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"mergeProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={35}>mergeProperties</ApiSourceLink>
 
 包含字符串与 symbol 键，跳过 undefined 源；默认保留所有属性值，不递归合并或修改输入
 

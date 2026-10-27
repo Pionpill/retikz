@@ -514,7 +514,7 @@ export declare const jsonStructuralEquals: (left: unknown, right: unknown) => bo
 
 ## Validation and collection utilities
 
-#### <ApiSourceLink label={"MergePropertiesOptions"} path={"packages/kernel/foundation/src/objects.ts"} startLine={8}>MergePropertiesOptions</ApiSourceLink>
+#### <ApiSourceLink label={"MergePropertiesOptions"} path={"packages/kernel/foundation/src/objects.ts"} startLine={19}>MergePropertiesOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -636,7 +636,40 @@ export declare const createReadonlyMap: <TKey, TValue>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"mergeProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={24}>mergeProperties</ApiSourceLink>
+#### <ApiSourceLink label={"mergeDefinedProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={11}>mergeDefinedProperties</ApiSourceLink>
+
+Skips undefined sources and property values while retaining null, false, 0, and empty strings; later defined values win, without recursive merging or input mutation
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name      | Type / signature                          | Description                                                                                          |
+| --------------- | --------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Type parameters | `T`       | `extends object`                          | Object type being shallowly merged                                                                   |
+| Parameters      | `sources` | `ReadonlyArray<Readonly<T> \| undefined>` | Source objects ordered from lowest to highest priority                                               |
+| Returns         | —         | `Partial<T>`                              | New object with undefined properties omitted                                                         |
+| Throws          | —         | —                                         | Throws RetikzFoundationError if reading a property fails, preserving the original exception as cause |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const mergeDefinedProperties: <T extends object>(
+  sources: ReadonlyArray<Readonly<T> | undefined>,
+) => Partial<T>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"mergeProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={35}>mergeProperties</ApiSourceLink>
 
 Includes string and symbol keys and skips undefined sources; preserves all property values by default without recursively merging or mutating inputs
 
