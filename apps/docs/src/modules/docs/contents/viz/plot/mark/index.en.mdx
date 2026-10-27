@@ -11,16 +11,15 @@ For a mark without an authored color, `defaultColorIndex` selects a zero-based, 
 
 ## Responsibilities
 
-| Category   | Mark           | What it expresses                         | Common uses                              |
-| ---------- | -------------- | ----------------------------------------- | ---------------------------------------- |
-| Primary    | `PointMark`    | One position or node per row              | Scatter, bubbles, shape marks, text      |
-|            | `PathMark`     | A one-dimensional trajectory from a group | Lines, area boundaries, radar outlines   |
-|            | `IntervalMark` | Products of intervals on position roles   | Bars, histograms, heatmaps, radial forms |
-| Relational | `RelationMark` | Connections between two locatable targets | Arrows, dependencies, ribbons            |
+| Category | Mark           | What it expresses                         | Common uses                              |
+| -------- | -------------- | ----------------------------------------- | ---------------------------------------- |
+| Primary  | `PointMark`    | One position or node per row              | Scatter, bubbles, shape marks, text      |
+|          | `PathMark`     | A one-dimensional trajectory from a group | Lines, area boundaries, radar outlines   |
+|          | `IntervalMark` | Products of intervals on position roles   | Bars, histograms, heatmaps, radial forms |
 
 <ComponentAlert
-  title="Why only four built-in marks?"
-  description="Charts have many names, but marks are classified by basic geometric responsibility rather than by finished chart type. The three primary marks can be understood as the basic point, line, and area structures; familiar scatterplots, lines, areas, bars, pies, and heatmaps are derived from them by combining channel bindings, data transforms, coordinate projection, and layer composition as needed. The relational mark adds connections between two targets."
+  title="Why only three built-in marks?"
+  description="Charts have many names, but marks are classified by basic geometric responsibility rather than by finished chart type. The three primary marks can be understood as the basic point, line, and area structures; familiar scatterplots, lines, areas, bars, pies, and heatmaps are derived from them by combining channel bindings, data transforms, coordinate projection, and layer composition as needed. PathMark also supports endpoint connections and ribbons."
 />
 
 A mark owns only the contract that turns data into geometry:
@@ -50,11 +49,6 @@ Built-in marks eventually lower into [@retikz/core](/kernel/components/introduct
       title: 'IntervalMark',
       description: 'Generate geometry from position intervals; learn bars, heatmaps, radial intervals, and pies.',
       url: '/viz/plot/mark/interval',
-    },
-    {
-      title: 'RelationMark',
-      description: 'Connect point, path, or interval targets with ordinary paths or ribbons.',
-      url: '/viz/plot/mark/relation',
     },
   ]}
 />

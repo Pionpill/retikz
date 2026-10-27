@@ -390,34 +390,6 @@ describe('mark padding final geometry', () => {
   it('reports impossible extent instead of rendering a clipped automatic edge', () => {
     expect(() => frameOf({ ...plotOf(), width: 40 })).toThrow(/feasible/);
   });
-
-  it('protects projected relation endpoints independently', () => {
-    const base = plotOf();
-    const spec = {
-      ...base,
-      marks: [
-        {
-          id: 'dots',
-          type: 'relation',
-          encodings: {
-            source: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-            target: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-          },
-          properties: {
-            endpoints: {
-              source: { size: 8 },
-              target: { size: 12 },
-            },
-            geometry: { kind: 'path' },
-          },
-        },
-      ],
-    };
-    const scale = frameOf(spec).roleScales!.x!;
-
-    expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(12);
-    expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(12);
-  });
 });
 
 describe('mark padding capabilities', () => {

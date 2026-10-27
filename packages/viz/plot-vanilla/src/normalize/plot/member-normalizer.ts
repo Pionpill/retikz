@@ -13,12 +13,7 @@ import type {
 import type { InputPlotFacet } from './input';
 import type { InputPlotFacetDimension } from './input-composition';
 import type { InputPlotAxis, InputPlotLegend } from './input-guides';
-import type {
-  InputPlotIntervalMark,
-  InputPlotPathMark,
-  InputPlotPointMark,
-  InputPlotRelationMark,
-} from './input-marks';
+import type { InputPlotIntervalMark, InputPlotPathMark, InputPlotPointMark } from './input-marks';
 import type { InputPlotScale } from './input-scales';
 import { normalizeIntervalDeclaration, recordFieldColor } from './interval';
 import { recordResolveLabel } from './mark-normalizers';
@@ -89,11 +84,11 @@ export const applyDeclaration = (declaration: PlotAuthoringDeclaration, into: Co
     throw new RetikzPlotVanillaError('buildPlotIR: <PlotTrack> must be declared inside <PlotScaffold>');
   }
 
-  if (declaration.kind === 'path-mark' || declaration.kind === 'point-mark' || declaration.kind === 'relation-mark') {
-    const props = child.props as InputPlotPathMark | InputPlotPointMark | InputPlotRelationMark;
+  if (declaration.kind === 'path-mark' || declaration.kind === 'point-mark') {
+    const props = child.props as InputPlotPathMark | InputPlotPointMark;
     const { resolveLabel, ...rawSource } = props;
     const source = declaration.kind === 'path-mark' ? normalizePlotPathMark(props as InputPlotPathMark) : rawSource;
-    const type = declaration.kind === 'path-mark' ? 'path' : declaration.kind === 'point-mark' ? 'point' : 'relation';
+    const type = declaration.kind === 'path-mark' ? 'path' : 'point';
     const path = type === 'path' ? (props as InputPlotPathMark) : undefined;
     const series = path?.encodings?.series;
     let encodings: typeof source.encodings =

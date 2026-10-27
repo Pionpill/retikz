@@ -33,14 +33,14 @@ describe('relate transform', () => {
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [
         {
-          type: 'relation',
+          type: 'path',
           transforms: [{ operation }],
           encodings: {
             label: { text: 'deltaLabel' },
-            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
-            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            from: { x: { field: 'sourceX' }, y: { field: 'sourceY' } },
+            to: { x: { field: 'targetX' }, y: { field: 'targetY' } },
           },
-          properties: { label: {}, geometry: { kind: 'path' } },
+          properties: { label: {} },
         },
       ],
     });

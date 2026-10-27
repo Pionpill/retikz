@@ -475,7 +475,7 @@ export const PlotSchema: ZodObject<typeof plotBaseSchema.shape & { marks: ZodArr
     .extend({
       marks: array(MarkSchema)
         .min(1)
-        .describe('Built-in mark layers, drawn in array order (stable z-order): point, path, interval, or relation'),
+        .describe('Built-in mark layers, drawn in array order (stable z-order): point, path, or interval'),
     })
     .superRefine((spec, ctx) => {
       const scaleNames = new Set<string>();

@@ -4,13 +4,9 @@ import type {
   IRPlotPointMark,
   IRPlotPathMark,
   IRPlotIntervalMark,
-  IRPlotRelationMark,
   IRPlotMarkNodeLabel,
   IRPlotMarkPathLabel,
   IRPlotChannel,
-  IRPlotRelationPathGeometry,
-  IRPlotRelationRouteStep,
-  IRPlotRelationStepLabel,
   IRPlotPathStep,
   IRPlotPathStepTarget,
   PathMarkAppearanceEncodingSchema,
@@ -62,7 +58,6 @@ export type InputPlotPathMark = Omit<IRPlotPathMark, 'type' | 'encodings'> &
     | { way: InputPlotPathWay; encodings?: PlotPathAppearanceEncoding; children?: never }
     | { children: Array<IRPlotPathStep>; encodings?: PlotPathAppearanceEncoding; way?: never }
   );
-export type InputPlotRelationMark = Omit<IRPlotRelationMark, 'type'> & InputPlotCoordinateScope & InputPlotDatumLabel;
 
 /** 区间构造糖保持 Data 变换语义，视觉目标与 Source 使用同一分组 */
 export type InputPlotIntervalMark = Omit<IRPlotIntervalMark, 'type'> &
@@ -98,6 +93,3 @@ export type InputPlotPathLabel = string | IRPlotMarkPathLabel;
 export type InputPlotMarkNodeLabel = string | IRPlotMarkNodeLabel;
 export type InputPlotMarkPathLabel = string | IRPlotMarkPathLabel;
 export type InputPlotExtensionChannel = IRPlotChannel;
-export type InputPlotRelationPathGeometry = IRPlotRelationPathGeometry;
-export type InputPlotRelationRouteStep = IRPlotRelationRouteStep;
-export type InputPlotRelationStepLabel = IRPlotRelationStepLabel;

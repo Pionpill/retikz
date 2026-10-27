@@ -20,9 +20,6 @@ import {
   CoordinateViewPlacementKind,
   PolarInterpolation,
   PositionScaleContinuity,
-  RelationOrthogonalLabelStep,
-  RelationRouteStepKind,
-  RelationRoutingKind,
 } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
@@ -77,14 +74,11 @@ describe('schema vocabulary constants', () => {
       'exponential',
       'power',
     ]);
-    expect(Object.values(RelationRouteStepKind).sort()).toEqual(['bend', 'cubic', 'curve', 'fold', 'line', 'move']);
-    expect(Object.values(RelationRoutingKind).sort()).toEqual(['bend', 'line', 'orthogonal']);
-    expect(Object.values(RelationOrthogonalLabelStep).sort()).toEqual(['last', 'main']);
     expect(Object.values(PolarInterpolation).sort()).toEqual(['chord', 'polar']);
     expect(Object.values(PositionScaleContinuity).sort()).toEqual(['continuous', 'discrete']);
   });
 
-  it('reuses core path vocabularies for relation routing and ribbon options', () => {
+  it('reuses core path vocabularies for path construction and ribbon options', () => {
     expect(Object.values(BendDirection).sort()).toEqual(['left', 'right']);
     expect(Object.values(RibbonTaperInterpolation).sort()).toEqual(['linear', 'smooth']);
     expect(Object.values(RibbonAlignment).sort()).toEqual(['center', 'left', 'right']);

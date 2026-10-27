@@ -31,13 +31,12 @@ it('coordinate alignment shares rotated node geometry, connection endpoints and 
           },
         },
         {
-          type: 'relation',
-          encodings: { source: { anchorId: 'name' }, target: { anchorId: 'next' } },
-          properties: {
-            source: { anchorId: { prefix: 'point' } },
-            target: { anchorId: { prefix: 'point' } },
-            geometry: { kind: 'path' },
+          type: 'path',
+          encodings: {
+            from: { mark: 'points', key: { field: 'name' } },
+            to: { mark: 'points', key: { field: 'next' } },
           },
+          properties: {},
         },
       ],
       guides: [],

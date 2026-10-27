@@ -71,7 +71,7 @@ describe('stat-geom composition surface (contract)', () => {
     },
   } as const;
 
-  it('boxplot composition uses interval, relation, and point layers without a boxplot mark type', () => {
+  it('boxplot composition uses interval, path, and point layers without a boxplot mark type', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -95,22 +95,22 @@ describe('stat-geom composition surface (contract)', () => {
           properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } }, opacity: { fill: 0.28 } },
         },
         {
-          type: 'relation',
+          type: 'path',
           transforms: [{ operation: boxSummary }],
           encodings: {
-            source: { position: { x: { field: 'boxX0' }, y: { field: 'median' } } },
-            target: { position: { x: { field: 'boxX1' }, y: { field: 'median' } } },
+            from: { x: { field: 'boxX0' }, y: { field: 'median' } },
+            to: { x: { field: 'boxX1' }, y: { field: 'median' } },
           },
-          properties: { geometry: { kind: 'path' } },
+          properties: {},
         },
         {
-          type: 'relation',
+          type: 'path',
           transforms: [{ operation: boxSummary }],
           encodings: {
-            source: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMin' } } },
-            target: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMax' } } },
+            from: { x: { field: 'boxX' }, y: { field: 'whiskerMin' } },
+            to: { x: { field: 'boxX' }, y: { field: 'whiskerMax' } },
           },
-          properties: { geometry: { kind: 'path' } },
+          properties: {},
         },
         {
           type: 'point',

@@ -4,7 +4,7 @@ import type { ExternalRow } from '@retikz/data';
 import type { CoordinateFrame, MarkChannels, MarkInstanceInput, MarkLoweringContext } from '../../contract';
 import type { IRPlotMark } from '../../schemas';
 import { BuiltinPlotMark } from '../../schemas';
-import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition, relationMarkDefinition } from './features';
+import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition } from './features';
 import type { AnyMarkDefinition } from './types';
 
 /**
@@ -16,7 +16,6 @@ export const MARK_REGISTRY: Record<BuiltinPlotMark, AnyMarkDefinition> = {
   [BuiltinPlotMark.Point]: pointMarkDefinition,
   [BuiltinPlotMark.Path]: pathMarkDefinition,
   [BuiltinPlotMark.Interval]: intervalMarkDefinition,
-  [BuiltinPlotMark.Relation]: relationMarkDefinition,
 };
 
 const isScopeLayer = (layer: IRChild | null): layer is IRScope =>

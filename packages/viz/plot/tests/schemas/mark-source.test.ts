@@ -116,22 +116,6 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(MarkSchema.parse(input)).toEqual({ ...input, contributeToDomain: true });
   });
 
-  it('uses the relation geometry discriminator independently of mark construction', () => {
-    const input = {
-      type: 'relation',
-      properties: {
-        source: { anchorId: { template: 'a' } },
-        target: { anchorId: { template: 'b' } },
-        geometry: { kind: 'path' },
-      },
-    };
-    expect(MarkSchema.parse(input)).toEqual({
-      ...input,
-      contributeToDomain: true,
-      properties: { ...input.properties, autoPadding: false },
-    });
-  });
-
   it.each([
     { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
     { type: 'point', color: { kind: 'constant', value: 'red' }, encoding: {} },
@@ -142,13 +126,6 @@ describe('Mark Source field encodings and fixed properties', () => {
       properties: {},
       transform: [],
       contributeToDomain: false,
-    },
-    {
-      type: 'relation',
-      kind: 'ribbon',
-      source: { anchorId: { template: 'a' } },
-      target: { anchorId: { template: 'b' } },
-      ribbon: { width: 2 },
     },
   ])('rejects obsolete external mark structures %j', input => {
     expect(MarkSchema.safeParse(input).success).toBe(false);
@@ -191,59 +168,6 @@ describe('Mark Source field encodings and fixed properties', () => {
     { encodings: { channels: { custom: 'value' } } },
   ])('rejects obsolete wrappers or undeclared nested targets %j', fragment => {
     expect(PointMarkSchema.safeParse({ type: 'point', ...fragment }).success).toBe(false);
-  });
-
-  it('encodes relation projections without putting field names in fixed targets', () => {
-    const input = {
-      type: 'relation',
-      encodings: {
-        source: { position: { x: { field: 'fromX' }, y: { field: 'fromY' } } },
-        target: { position: { x: { field: 'toX' }, y: { field: 'toY' } } },
-        geometry: { width: 'flow' },
-      },
-      properties: { geometry: { kind: 'ribbon' } },
-    };
-    expect(MarkSchema.parse(input)).toMatchObject(input);
-  });
-
-  it.each([
-    { kind: 'path', route: [{ kind: 'line' }], routing: { kind: 'line' } },
-    { kind: 'path', route: [{ kind: 'line' }], via: [{ id: 'c' }] },
-    { kind: 'ribbon' },
-    { kind: 'ribbon', width: 2, options: { interpolation: 'linear' } },
-  ])('retains relation geometry validation %j', geometry => {
-    expect(
-      MarkSchema.safeParse({
-        type: 'relation',
-        properties: { source: { anchorId: { template: 'a' } }, target: { anchorId: { template: 'b' } }, geometry },
-      }).success,
-    ).toBe(false);
-  });
-
-  it('rejects endpoint glyphs on references that are not projected positions', () => {
-    expect(
-      MarkSchema.safeParse({
-        type: 'relation',
-        properties: {
-          source: { anchorId: { template: 'a' } },
-          target: { anchorId: { template: 'b' } },
-          geometry: { kind: 'path' },
-          endpoints: { source: { size: 3 } },
-        },
-      }).success,
-    ).toBe(false);
-  });
-
-  it('accepts projected endpoint glyphs with direct constant properties', () => {
-    const input = {
-      type: 'relation',
-      encodings: {
-        source: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-        target: { position: { x: { field: 'u' }, y: { field: 'v' } } },
-      },
-      properties: { endpoints: { source: { size: 3, fill: 'red' } }, geometry: { kind: 'path' } },
-    };
-    expect(MarkSchema.parse(input)).toMatchObject(input);
   });
 });
 

@@ -13,7 +13,6 @@ export type {
   PlotTrackProps,
   PlotTransformProps,
   PointMarkProps,
-  RelationMarkProps,
 } from './components';
 export {
   IntervalMark,
@@ -27,7 +26,6 @@ export {
   PlotTrack,
   PlotTransform,
   PointMark,
-  RelationMark,
 } from './components';
 export * from './error';
 export type { PlotDslProps, PlotIRProps, PlotLineageProps, PlotPanelProps, PlotProps } from './Plot';

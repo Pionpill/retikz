@@ -85,18 +85,18 @@ describe('mark field and property lowering', () => {
       expect(path).toEqual(expected);
     },
   );
-  it('projects fixed relation target edges through the final coordinate range', () => {
-    const relation = (x: { value: number } | { edge: 'end' }) => ({
-      type: 'relation',
+  it('projects fixed path endpoint edges through the final coordinate range', () => {
+    const path = (x: { value: number } | { edge: 'end' }) => ({
+      type: 'path',
       encodings: {
-        source: { position: { x: { value: 0 }, y: { field: 'start' } } },
-        target: { position: { x, y: { field: 'end' } } },
+        from: { x: { value: 0 }, y: { field: 'start' } },
+        to: { x, y: { field: 'end' } },
       },
-      properties: { source: {}, target: {}, geometry: { kind: 'path' } },
+      properties: {},
     });
     const rows = [{ start: 2, end: 8 }];
-    const actual = render([relation({ edge: 'end' })], rows);
-    const expected = render([relation({ value: 10 })], rows);
+    const actual = render([path({ edge: 'end' })], rows);
+    const expected = render([path({ value: 10 })], rows);
     expect(expected).toHaveLength(1);
     expect(actual).toEqual(expected);
   });
@@ -113,16 +113,15 @@ describe('mark field and property lowering', () => {
       ],
       marks: [
         {
-          type: 'relation',
+          type: 'path',
           encodings: {
-            source: { position: { x: { value: 1 }, y: { value: 2 } } },
-            target: { position: { x: { value: 8 }, y: { value: 6 } } },
-            geometry: { width: { field: 'amount', scale: 'width' } },
+            from: { x: { value: 1 }, y: { value: 2 } },
+            to: { x: { value: 8 }, y: { value: 6 } },
+            ribbon: { width: { field: 'amount', scale: 'width' } },
           },
           properties: {
-            source: {},
-            target: {},
-            geometry: { kind: 'ribbon', width: 99 },
+            kind: 'ribbon',
+            ribbon: { width: { kind: 'fixed', value: 99 } },
           },
         },
       ],

@@ -107,7 +107,6 @@ export {
   lowerIntervalLayer,
   lowerPathLayer,
   lowerPoint,
-  lowerRelation,
   makeColorChannelDefinition,
   makeColorSchemeResolver,
   makeMarkValueResolver,

@@ -127,5 +127,5 @@ key.field 是有效字段依赖，与位置、外观等现有字段共同决定�
 - 目标必须实际生成可寻址实体；因过滤、无效位置或空结果而未生成的目标不可引用，不回退为原点、不跳过连线、不回查原始数据
 - 缺失或重复 Mark ID、缺失 key 字段、非法 key、重复目标身份、Core id 冲突、目标未暴露身份、未知 Mark、未知 key、不支持的目标粒度及连接空间均明确失败。Plot 诊断携带连线 Mark、端点、目标 Mark、key 及可用的行上下文；底层几何失败保留 Core 原因
 - 不改变顶点型 Path 的 series/order、缺值分段和现有曲线规则；显式端点与多行顶点输入仍互斥
-- 现有坐标端点保持行为；本决策新增图元引用分支。RelationMark 及其目标契约尚未被此决策替代，路由、ribbon、端点图形等迁移完成前不删除 RelationMark，也不把旧 source/target 转换成新 from/to 的兼容层
+- 坐标端点与图元引用统一由 PathMark 消费；配合 027、028 和独立 PointMark 表达关系路径与端点图形。RelationMark 及其旧目标契约移除，不提供 source/target 兼容入口
 - 实施交付须同步中英文位置说明、目标身份说明、Schema 参考和 React / Vanilla / JSON 示例，清楚区分坐标输入与图元引用，以及 Path 顶点和整条路径

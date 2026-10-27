@@ -5,7 +5,7 @@ import { RetikzPlotError } from '../../error';
 import { POINT_DEFAULT_RADIUS, SIZE_MAX_RADIUS } from '../../providers';
 import type { IRPlotChannel } from '../../schemas';
 import type { IRPlotPointAutoPadding, IRPlotScaleOperation } from '../../schemas';
-import { PointPropertiesSchema, RelationPropertiesSchema } from '../../schemas';
+import { PointPropertiesSchema } from '../../schemas';
 import type { MarkDataView } from '../coordinate';
 
 /** 一个坐标角色的图元留白需求 */
@@ -16,14 +16,12 @@ export type PointPaddingResolution = {
   points: Array<{ view: MarkDataView; clearance: { lower: number; upper: number } }>;
 };
 
-/** 读取 Point / Relation 的自动策略，忽略没有节点半径语义的其它图元 */
+/** 读取 Point 的自动策略，忽略没有节点半径语义的其它图元 */
 export const pointAutoPaddingOf = (view: MarkDataView): IRPlotPointAutoPadding => {
   const mark = view.mark;
 
   if (mark.type === 'point')
     return mark.properties?.autoPadding ?? PointPropertiesSchema.shape.autoPadding.unwrap().parse(undefined);
-  if (mark.type === 'relation' && mark.properties.endpoints !== undefined)
-    return mark.properties.autoPadding ?? RelationPropertiesSchema.shape.autoPadding.unwrap().parse(undefined);
   return false;
 };
 
@@ -90,11 +88,6 @@ export const resolvePointPadding = (
 
     let radius = 0;
     if (mark.type === 'point') radius = maximumRadiusOf(mark.encodings.size ?? mark.properties?.size, scales);
-    else if (mark.type === 'relation') {
-      for (const glyph of [mark.properties.endpoints?.source, mark.properties.endpoints?.target]) {
-        if (glyph !== undefined) radius = Math.max(radius, maximumRadiusOf(glyph.size, scales));
-      }
-    }
     result.minimum.lower = Math.max(result.minimum.lower, radius + clearance.lower);
     result.minimum.upper = Math.max(result.minimum.upper, radius + clearance.upper);
   }

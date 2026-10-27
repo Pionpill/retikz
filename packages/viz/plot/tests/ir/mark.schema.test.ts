@@ -12,19 +12,6 @@ const gradientPaint = {
 };
 
 describe('MarkSchema (contract)', () => {
-  it.each(['source', 'target'])('rejects direct core ids in relation %s targets', role => {
-    const properties = {
-      source: { anchorId: { template: 'pt.A' } },
-      target: { anchorId: { template: 'pt.B' } },
-      geometry: { kind: 'path' },
-    };
-    expect(MarkSchema.safeParse({ type: 'relation', properties }).success).toBe(true);
-    for (const target of [{ id: 'A' }, { id: 'A', anchorId: { template: 'pt.A' } }]) {
-      expect(MarkSchema.safeParse({ type: 'relation', properties: { ...properties, [role]: target } }).success).toBe(
-        false,
-      );
-    }
-  });
   it('点方向契约可 JSON round-trip，非法方向声明被拒绝', () => {
     const mark = {
       type: 'point',
@@ -899,139 +886,6 @@ describe('MarkSchema (contract)', () => {
     ).toThrow();
   });
 
-  it('mark_relation_label_valid_and_json_round_trip', () => {
-    const m = {
-      type: 'relation',
-      encodings: { label: { text: 'label' } },
-      properties: {
-        autoPadding: false,
-        label: { position: 0.5, side: 'center' },
-        source: { anchorId: { template: 'A' } },
-        target: { anchorId: { template: 'B' } },
-        geometry: { kind: 'path' },
-      },
-    };
-
-    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual({
-      ...m,
-      contributeToDomain: true,
-    });
-  });
-
-  it('路径标签编码不接受节点专属 placement', () => {
-    expect(
-      MarkSchema.safeParse({
-        type: 'relation',
-        encodings: { label: { placement: 'labelPlacement' } },
-        properties: { source: { id: 'A' }, target: { id: 'B' }, geometry: { kind: 'path' } },
-      }).success,
-    ).toBe(false);
-  });
-
-  it('mark_relation_accepts_projected_endpoint_glyphs', () => {
-    const mark = {
-      type: 'relation',
-      encodings: {
-        source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
-        target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
-      },
-      properties: {
-        autoPadding: false,
-        endpoints: {
-          source: { shape: 'circle', size: 5 },
-          target: { shape: 'diamond', size: 6 },
-        },
-        geometry: { kind: 'path' },
-      },
-    };
-
-    expect(MarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual({ ...mark, contributeToDomain: true });
-  });
-
-  it('mark_relation_rejects_endpoint_glyphs_outside_plain_projected_paths', () => {
-    const endpoints = { source: {}, target: {} };
-
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        properties: {
-          endpoints,
-          autoPadding: false,
-          source: { anchorId: { template: 'A' } },
-          target: { anchorId: { template: 'B' } },
-          geometry: { kind: 'path' },
-        },
-      }),
-    ).toThrow(/projected/);
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        encodings: {
-          source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
-          target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
-        },
-        properties: { endpoints, autoPadding: false, geometry: { kind: 'ribbon', width: 8 } },
-      }),
-    ).toThrow(/path geometry/);
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        encodings: {
-          source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
-          target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
-          geometry: { via: [{ position: { x: { value: 1 }, y: { value: 2 } } }] },
-        },
-        properties: {
-          autoPadding: false,
-          endpoints,
-          geometry: { kind: 'path', via: [{}] },
-        },
-      }),
-    ).toThrow(/via or route/);
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        encodings: {
-          source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
-          target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
-        },
-        properties: {
-          autoPadding: false,
-          endpoints: { source: { zIndex: { kind: 'constant', value: 2 } } },
-          geometry: { kind: 'path' },
-        },
-      }),
-    ).toThrow();
-  });
-
-  it('mark_relation_explicit_route_accepts_three_leg_core_fold', () => {
-    const mark = {
-      type: 'relation',
-      properties: {
-        autoPadding: false,
-        source: { anchorId: { template: 'A' } },
-        target: { anchorId: { template: 'B' } },
-        geometry: { kind: 'path', route: [{ kind: 'fold', via: '-|-' }] },
-      },
-    };
-
-    expect(MarkSchema.parse(mark)).toEqual({ ...mark, contributeToDomain: true });
-  });
-
-  it('mark_relation_algorithmic_orthogonal_routing_rejects_three_leg_fold', () => {
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        properties: {
-          autoPadding: false,
-          source: { anchorId: { template: 'A' } },
-          target: { anchorId: { template: 'B' } },
-          geometry: { kind: 'path', routing: { kind: 'orthogonal', via: '-|-' } },
-        },
-      }),
-    ).toThrow();
-  });
-
   it('mark_point_accepts_local_transform', () => {
     const m = {
       type: 'point',
@@ -1065,50 +919,9 @@ describe('MarkSchema (contract)', () => {
 });
 
 describe('Polar interpolation mark contract', () => {
-  it.each(['polar', 'chord'] as const)('round-trips interpolation=%s for supported marks', interpolation => {
-    const marks = [
-      {
-        type: 'path',
-        properties: { connection: 'coordinate', interpolation },
-        encodings: { position: { x: { field: 'angle' }, y: { field: 'radius' } } },
-      },
-      {
-        type: 'interval',
-        properties: { connection: 'coordinate', interpolation },
-        encodings: { position: { x: { field: 'angle' }, y: { field: 'radius' } } },
-      },
-      {
-        type: 'relation',
-        encodings: {
-          source: { position: { x: { field: 'sourceAngle' }, y: { field: 'sourceRadius' } } },
-          target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } } },
-        },
-        properties: { autoPadding: false, geometry: { kind: 'path' } },
-      },
-    ];
-
-    for (const mark of marks) {
-      expect(MarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual({ ...mark, contributeToDomain: true });
-    }
-  });
-
   it.each(['path', 'interval'] as const)('rejects unknown %s interpolation', type => {
     const encoding = { x: { field: 'x' }, y: { field: 'y' } };
 
     expect(() => MarkSchema.parse({ type, interpolation: 'spline', encoding })).toThrow();
-  });
-
-  it('rejects unknown relation path interpolation', () => {
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        properties: {
-          autoPadding: false,
-          source: { anchorId: { template: 'A' } },
-          target: { anchorId: { template: 'B' } },
-          geometry: { kind: 'path', interpolation: 'spline' },
-        },
-      }),
-    ).toThrow();
   });
 });

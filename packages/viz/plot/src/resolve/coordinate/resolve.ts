@@ -111,7 +111,7 @@ const intervalProportionalAxisTicks = (
 
 /** 读取内置图元的单点位置编码 */
 const markEncoding = (mark: IRPlotMark): Record<string, IRPlotPositionInput | undefined> | undefined =>
-  mark.type === 'relation' ? undefined : mark.encodings?.position;
+  mark.encodings?.position;
 
 /** 非位置 encoding key：这些键有专属语义，不参与 CoordinateDefinition.roles 校验 */
 
@@ -174,9 +174,6 @@ const assertRequiredPositionChannels = (
   const required = roles;
 
   for (const mark of marks) {
-    // relation 通过 source / target 定位，不要求 encoding 位置通道
-    if (mark.type === BuiltinPlotMark.Relation) continue;
-
     // interval：band / span bounds 需对应 encoding 位置通道；extent（字段区间）/ full（满域）从字段 / 坐标系取位置，豁免该角色
     if (mark.type === BuiltinPlotMark.Interval) {
       const encoding = (mark.encodings?.position ?? {}) as Record<string, IRPlotPositionInput | undefined>;

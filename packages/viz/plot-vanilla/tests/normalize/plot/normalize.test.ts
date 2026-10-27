@@ -102,13 +102,13 @@ describe('normalizePlot', () => {
             path: [1],
           },
           {
-            kind: 'relation-mark',
+            kind: 'path-mark',
             props: {
               encodings: {
-                source: { position: { x: 'sourceAngle', y: 'sourceRadius' } },
-                target: { position: { x: 'targetAngle', y: 'targetRadius' } },
+                from: { x: 'sourceAngle', y: 'sourceRadius' },
+                to: { x: 'targetAngle', y: 'targetRadius' },
               },
-              properties: { geometry: { kind: 'path', interpolation: 'chord' } },
+              properties: { interpolation: 'chord' },
             },
             path: [3],
           },
@@ -122,7 +122,7 @@ describe('normalizePlot', () => {
     expect(declaration.fragment.marks).toMatchObject([
       { type: 'path', properties: { interpolation: 'polar' } },
       { type: 'interval', properties: { interpolation: 'chord' } },
-      { type: 'relation', properties: { geometry: { kind: 'path', interpolation: 'chord' } } },
+      { type: 'path', properties: { interpolation: 'chord' } },
     ]);
   });
 
