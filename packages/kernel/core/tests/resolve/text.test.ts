@@ -84,27 +84,44 @@ describe('解析文本', () => {
     expect(resolved.mixed).toBe(false);
   });
 
-  it('保留显式混合段并解析文本段字体', () => {
+  it.each([false, true])('显式混排共享行级相对字体并保留片段覆盖，公式简写开关=%s', gatingOn => {
     const resolved = resolveTextLine(
       {
         segments: [
-          { text: 'a', font: { family: 'mono' } },
+          { text: 'a', font: { family: 'mono', size: '2em' } },
           { tex: 'x', fill: 'blue' },
         ],
+        font: { size: '0.5em' },
+        fill: 'red',
+        opacity: 0,
       },
       {
         rootFontSize: 16,
         inheritedFont: { size: 18, family: 'serif', weight: 400 },
-        gatingOn: true,
+        gatingOn,
       },
     );
 
     expect(resolved.segments).toEqual([
-      { text: 'a', font: { size: 18, family: 'mono', weight: 400 } },
-      { tex: 'x', fill: 'blue', fontSize: 18 },
+      { text: 'a', fill: 'red', opacity: 0, font: { size: 18, family: 'mono', weight: 400 } },
+      { tex: 'x', fill: 'blue', opacity: 0, fontSize: 9 },
     ]);
     expect(resolved.hasMath).toBe(true);
     expect(resolved.mixed).toBe(true);
+  });
+
+  it('保留空的显式片段列表及行级样式', () => {
+    const resolved = resolveTextLine(
+      { segments: [], font: { size: '0.5em' } },
+      { rootFontSize: 16, inheritedFont: { size: 20 }, gatingOn: false },
+    );
+    expect(resolved).toMatchObject({
+      segments: [],
+      plainText: '',
+      hasMath: false,
+      mixed: true,
+      style: { fontSize: 10 },
+    });
   });
 
   it('报告不平衡的 TeX，同时保留尾随字面量', () => {

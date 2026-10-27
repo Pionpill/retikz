@@ -1,8 +1,8 @@
-import type { IRFont } from '../../schemas';
 import { resolveFont, resolveFontSize } from './font';
 import { isMathSegment, parseInlineSegments } from './inline';
 import type {
   CanonicalInlineSegment,
+  CanonicalFont,
   ResolvedTextLineStyle,
   ResolvedTextSegment,
   SourceInlineSegment,
@@ -35,10 +35,9 @@ const resolveExplicitStyle = (
 /** 让文字或公式片段继承行级字体，并将字号换算为数值 */
 const resolveSegment = (
   segment: SourceInlineSegment,
-  lineFont: IRFont | undefined,
+  inheritedFont: CanonicalFont,
   context: TextLineResolveContext,
 ): CanonicalInlineSegment => {
-  const inheritedFont = resolveFont(lineFont, context);
   if (isMathSegment(segment))
     return {
       ...segment,
@@ -70,22 +69,24 @@ export const resolveTextLine = (source: TextLineSource, context: TextLineResolve
     context.warn(TEXT_TEX_PARSE_ERROR, context.warningMessage ?? 'Unbalanced `$` in text.');
   }
 
-  const foldedSegments = styled
-    ? parsed.segments.map(segment =>
-        isMathSegment(segment)
-          ? { ...segment, fill: segment.fill ?? styled.fill, opacity: segment.opacity ?? styled.opacity }
-          : {
-              ...segment,
-              fill: segment.fill ?? styled.fill,
-              opacity: segment.opacity ?? styled.opacity,
-            },
-      )
-    : parsed.segments;
-  const segments = foldedSegments.map(segment => resolveSegment(segment, styled?.font, context));
+  const segments: Array<CanonicalInlineSegment> = [];
+  let plainText = '';
+  if (parsed.segments.length > 0) {
+    const inheritedFont = resolveFont(styled?.font, context);
+    for (const segment of parsed.segments) {
+      const resolved = resolveSegment(segment, inheritedFont, context);
+      if (styled !== undefined) {
+        resolved.fill = segment.fill ?? styled.fill;
+        resolved.opacity = segment.opacity ?? styled.opacity;
+      }
+      segments.push(resolved);
+      if (!isMathSegment(resolved)) plainText += resolved.text;
+    }
+  }
 
   return {
     segments,
-    plainText: segments.map(segment => (isMathSegment(segment) ? '' : segment.text)).join(''),
+    plainText,
     hasMath: parsed.hasMath,
     mixed: parsed.hasMath || (typeof source === 'object' && 'segments' in source),
     ...(styled === undefined ? {} : { style: resolveExplicitStyle(styled, context) }),

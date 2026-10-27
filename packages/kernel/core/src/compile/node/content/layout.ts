@@ -1,6 +1,6 @@
 import type { CanonicalFont, TextLineResolution } from '../../../resolve';
 import { resolveTextLine } from '../../../resolve';
-import type { InlineLineLayout, LineLayoutContext, TextFont, TextMeasurer } from '../../text';
+import type { InlineLineLayout, LineLayoutContext, TextFont } from '../../text';
 import { layoutInlineLine, normalizeTextMetrics } from '../../text';
 import type { NodeTextLayoutContext, NodeTextLineLayout } from '../types';
 import { measureMinimumTextWidth, wrapText } from './text';
@@ -74,24 +74,32 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
   const texGatingOn = texLowering?.lowerTex !== undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   if (rawLines) {
-    const scaledBlockFont: CanonicalFont = {
-      size: fontSize,
-      family: fontFamily,
-      weight: fontWeight,
-      style: fontStyle,
-    };
-    const resolved = rawLines.map(spec =>
-      resolveTextLine(spec, {
-        rootFontSize,
-        inheritedFont: scaledBlockFont,
-        gatingOn: texGatingOn,
-        warn: inlineWarn,
-        warningMessage: 'Unbalanced `$` in node text; the trailing fragment is kept literal.',
-      }),
-    );
     const anyMixed = rawLines.some(spec => typeof spec === 'object' && 'segments' in spec);
-    const anyMath = resolved.some(r => r.hasMath);
-    if (anyMath || anyMixed) {
+    let resolved: Array<TextLineResolution> = [];
+    if (
+      anyMixed ||
+      (texGatingOn &&
+        rawLines.some(spec =>
+          typeof spec === 'string' ? spec.includes('$') : 'text' in spec && spec.text.includes('$'),
+        ))
+    ) {
+      const scaledBlockFont: CanonicalFont = {
+        size: fontSize,
+        family: fontFamily,
+        weight: fontWeight,
+        style: fontStyle,
+      };
+      resolved = rawLines.map(spec =>
+        resolveTextLine(spec, {
+          rootFontSize,
+          inheritedFont: scaledBlockFont,
+          gatingOn: texGatingOn,
+          warn: inlineWarn,
+          warningMessage: 'Unbalanced `$` in node text; the trailing fragment is kept literal.',
+        }),
+      );
+    }
+    if (anyMixed || resolved.some(line => line.hasMath)) {
       const blockFont: TextFont = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
       const ctx: LineLayoutContext = {
         measureText,
@@ -114,10 +122,10 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
       textBaselineOffsets = blockLines.map(line => line.baselineOffset);
       textHeight = cursor;
     } else {
-      const metricsByFont = new Map<TextFont, Map<string, ReturnType<TextMeasurer>>>();
+      const metricsByFont = new Map<TextFont, Map<string, ReturnType<typeof normalizeTextMetrics>>>();
 
       /** 在单次正文 layout 内复用同一 authored font/text 的真实测量结果 */
-      const measurePhysicalText: TextMeasurer = (text, font) => {
+      const measurePhysicalText = (text: string, font: TextFont): ReturnType<typeof normalizeTextMetrics> => {
         let metricsByText = metricsByFont.get(font);
         if (metricsByText === undefined) {
           metricsByText = new Map();
@@ -194,7 +202,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         );
 
         for (const ptext of physical) {
-          const m = normalizeTextMetrics(measurePhysicalText(ptext, font));
+          const m = measurePhysicalText(ptext, font);
           if (m.width > textWidth) textWidth = m.width;
           firstPlainBaselineOffset ??= (lineHeight - (m.ascent + m.descent)) / 2 + m.ascent;
           textBaselineOffsets.push(firstPlainBaselineOffset + lines.length * lineHeight);

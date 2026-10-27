@@ -113,7 +113,7 @@ describe('编译字体大小预设和相对单位', () => {
     expect(findText(compileToScene(ir).scene, 'label').fontSize).toBe(18);
   });
 
-  it('从节点字体大小解析行 em', () => {
+  it.each([false, true])('普通文本按未缩放字号解析行 em 后应用节点缩放，公式开关=%s', withTex => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -122,14 +122,15 @@ describe('编译字体大小预设和相对单位', () => {
           type: 'node',
           position: [0, 0],
           text: [{ text: 'line', font: { size: '0.5em' } }],
+          scale: 2,
           style: { font: { size: 'lg' } },
         },
       ],
     };
 
-    const text = findText(compileToScene(ir).scene, 'line');
+    const text = findText(compileToScene(ir, withTex ? { lowerTex: () => null } : {}).scene, 'line');
 
-    expect(text.lines[0].fontSize).toBe(9);
+    expect(text.lines[0].fontSize).toBe(18);
   });
 
   it('解析预设后应用现有节点比例', () => {
