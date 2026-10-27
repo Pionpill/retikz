@@ -32,7 +32,9 @@ Definition 统一提供 `compile(node, context)`。`node` 是 schema 解析后�
 
 ### 定义与依赖
 
-进入遍历前，编译选项已提供可用的形状、箭头、复合组件等 Definition。Core 建立注册表；遇到父项时，`bindComposite` 按 `namespace.type` 查找定义，`resolveComposite` 使用该定义的 schema 解析完整输入，再进入对应回调。
+进入遍历前，编译选项已提供可用的形状、箭头、复合组件等 Definition。Core 建立注册表；遇到父项时，`bindComposite` 依次按 `namespace` 和 `type` 查找定义，`resolveComposite` 使用该定义的 schema 解析完整输入，再进入对应回调。
+
+公开函数 `resolveCompositeRegistry(definitions)` 返回两级只读 Map，查询方式为 `registry.get(namespace)?.get(type)`。两个字段独立匹配，即使包含点号也不会混淆：`namespace: 'a.b', type: 'c'` 与 `namespace: 'a', type: 'b.c'` 可以同时注册。同一命名空间内重复注册相同类型会报错；注册表外层的 `size` 表示命名空间数量。
 
 上层组件还可能贡献一组依赖提供者。这里涉及三个对象：
 

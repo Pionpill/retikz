@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
-import type { AnyCompositeDefinition, IRComposite } from '../../src';
-import { CompositeBaseSchema, defineComposite } from '../../src';
+import type { IRComposite } from '../../src';
+import { CompositeBaseSchema, defineComposite, resolveCompositeRegistry } from '../../src';
 import { bindComposite, resolveComposite } from '../../src/resolve';
 
 const source = (overrides: Record<string, unknown> = {}): IRComposite => ({
@@ -35,10 +35,21 @@ const layoutDefinition = defineComposite({
   compile: node => ({ children: [], artifact: { value: node.value } }),
 });
 
-const registryOf = (...definitions: ReadonlyArray<AnyCompositeDefinition>) =>
-  new Map(definitions.map(definition => [`${definition.namespace}.${definition.type}`, definition]));
-
 describe('resolveComposite', () => {
+  it('点号拼接相同但字段不同的组合仍视为未注册', () => {
+    const definition = defineComposite({
+      namespace: 'a.b',
+      type: 'c',
+      schema: CompositeBaseSchema.extend({ namespace: literal('a.b'), type: literal('c') }),
+      compile: () => ({ children: [] }),
+    });
+
+    expect(bindComposite({ namespace: 'a', type: 'b.c' }, resolveCompositeRegistry([definition]))).toEqual({
+      kind: 'unregistered',
+      key: 'a.b.c',
+    });
+  });
+
   it('当组合未注册时返回规范提供者键', () => {
     expect(bindComposite(source(), new Map())).toEqual({
       kind: 'unregistered',
@@ -47,7 +58,7 @@ describe('resolveComposite', () => {
   });
 
   it('绑定并解析一次组合', () => {
-    const binding = bindComposite(source(), registryOf(expandDefinition));
+    const binding = bindComposite(source(), resolveCompositeRegistry([expandDefinition]));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
 
     const resolution = resolveComposite(binding, 'children[0]');
@@ -58,7 +69,7 @@ describe('resolveComposite', () => {
   });
 
   it('将布局感知组合与其产物 schema 绑定', () => {
-    const binding = bindComposite(source({ type: 'layout' }), registryOf(layoutDefinition));
+    const binding = bindComposite(source({ type: 'layout' }), resolveCompositeRegistry([layoutDefinition]));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
 
     const resolution = resolveComposite(binding, 'children[0]');
@@ -69,7 +80,7 @@ describe('resolveComposite', () => {
   });
 
   it('当负载解析失败时报告提供者键和 IR 定位器', () => {
-    const binding = bindComposite(source({ value: 'invalid' }), registryOf(expandDefinition));
+    const binding = bindComposite(source({ value: 'invalid' }), resolveCompositeRegistry([expandDefinition]));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
 
     expect(() => resolveComposite(binding, 'children[2]')).toThrow(

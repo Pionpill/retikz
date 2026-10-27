@@ -112,7 +112,7 @@ const isAspectRatioDiamond = (params: PolygonParams): params is PolygonParams & 
   params.sides === 4 && params.aspectRatio !== undefined;
 
 /**
- * 正多边形顶点的世界坐标
+ * 正多边形顶点的局部坐标
  * @description 顶点均布在外接圆上，按 params.rotate 自旋
  */
 const polygonLocalVertices = (radius: number, params: PolygonParams): Array<Position> =>

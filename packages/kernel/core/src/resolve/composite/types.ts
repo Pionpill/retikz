@@ -9,13 +9,13 @@ export type CompositeBinding =
   | Readonly<{
       /** registry 中不存在对应 provider */
       kind: 'unregistered';
-      /** 以 namespace.type 表示的能力提供者注册键 */
+      /** 以 namespace.type 表示的诊断名称，不用于注册表索引 */
       key: string;
     }>
   | Readonly<{
       /** 已绑定的复合编译定义 */
       kind: 'compile';
-      /** 以 namespace.type 表示的能力提供者注册键 */
+      /** 以 namespace.type 表示的诊断名称，不用于注册表索引 */
       key: string;
       /** provider 定义的 namespace */
       namespace: string;
@@ -44,5 +44,5 @@ export type CompositeResolution<TBinding extends RegisteredCompositeBinding = Re
     node: unknown;
   }>;
 
-/** composite provider registry 只读视图 */
-export type CompositeRegistry = ReadonlyMap<string, AnyCompositeDefinition>;
+/** 按 namespace、type 两级索引的 composite provider registry 只读视图 */
+export type CompositeRegistry = ReadonlyMap<string, ReadonlyMap<string, AnyCompositeDefinition>>;

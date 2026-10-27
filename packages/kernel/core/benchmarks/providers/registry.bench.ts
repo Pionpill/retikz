@@ -97,17 +97,25 @@ registerRegistry<ThemeDefinition>(
   definition => definition.name,
 );
 const compositeSchema = strictObject({ namespace: string(), type: string() });
-registerRegistry<AnyCompositeDefinition>(
-  'composite',
-  new Map(),
-  resolveCompositeRegistry,
-  index => ({
-    namespace: `namespace-${index % 2}`,
-    type: `custom-${Math.floor(index / 2)}`,
-    schema: compositeSchema,
-    compile: () => ({ children: [] }),
-  }),
-  definition => `${definition.namespace}.${definition.type}`,
+defineBenchmark(
+  { id: 'providers/registry/composite/8', dimensions: ['Registry resolve', 'composite', '8自定义项'] },
+  () => {
+    const custom: Array<AnyCompositeDefinition> = Array.from({ length: 8 }, (_, index) => ({
+      namespace: `namespace-${index % 2}`,
+      type: `custom-${Math.floor(index / 2)}`,
+      schema: compositeSchema,
+      compile: () => ({ children: [] }),
+    }));
+    return {
+      run: () => resolveCompositeRegistry(custom),
+      verify: result => {
+        expect(result.size).toBe(2);
+        for (const definitionsByType of result.values()) expect(definitionsByType.size).toBe(4);
+        for (const definition of custom)
+          expect(result.get(definition.namespace)?.get(definition.type)).toBe(definition);
+      },
+    };
+  },
 );
 
 for (const count of [8])

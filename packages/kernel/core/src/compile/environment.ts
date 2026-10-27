@@ -1,5 +1,4 @@
 import type {
-  AnyCompositeDefinition,
   AnyPathDefinition,
   ArrowDefinition,
   MarkDefinition,
@@ -21,6 +20,7 @@ import {
   resolveShapeRegistry,
   resolveThemeRegistry,
 } from '../providers';
+import type { CompositeRegistry } from '../resolve';
 import {
   DEFAULT_FONT_SIZE,
   DEFAULT_LABEL_DISTANCE,
@@ -42,7 +42,7 @@ export type CompileEnvironment = Readonly<{
   /** 运行时注入的 TeX lowering 钩子 */
   lowerTex: CompileOptions['lowerTex'];
   /** layout-aware composite 注册表 */
-  composites: ReadonlyMap<string, AnyCompositeDefinition>;
+  composites: CompositeRegistry;
   /** 复合编译的嵌套深度上限 */
   maxCompositeDepth: number;
   /** 本次请求的 artifact 开关 */

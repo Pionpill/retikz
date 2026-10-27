@@ -5,7 +5,7 @@ import type { CompositeBinding, CompositeRegistry, CompositeResolution, Register
 /** 绑定 composite provider key、definition 与可执行分支 */
 export const bindComposite = (source: IRComposite, composites: CompositeRegistry): CompositeBinding => {
   const key = `${source.namespace}.${source.type}`;
-  const definition = composites.get(key);
+  const definition = composites.get(source.namespace)?.get(source.type);
   if (definition === undefined) return { kind: 'unregistered', key };
 
   return {

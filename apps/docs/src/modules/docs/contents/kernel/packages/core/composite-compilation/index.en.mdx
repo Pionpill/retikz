@@ -35,7 +35,9 @@ Core prepares the available Definitions before invoking the shared callback. Chi
 
 ### Definitions and dependencies
 
-Before traversal, compile options provide Definitions for shapes, arrows, composites, and other capabilities. Core builds registries. When it encounters the parent, `bindComposite` looks up `namespace.type`, and `resolveComposite` parses the complete input with that Definition's schema before invoking its callback.
+Before traversal, compile options provide Definitions for shapes, arrows, composites, and other capabilities. Core builds registries. When it encounters the parent, `bindComposite` looks up the Definition by `namespace`, then by `type`. `resolveComposite` parses the complete input with that Definition's schema before invoking its callback.
+
+The public function `resolveCompositeRegistry(definitions)` returns a two-level readonly Map, queried with `registry.get(namespace)?.get(type)`. The fields match independently, including when they contain dots: `namespace: 'a.b', type: 'c'` and `namespace: 'a', type: 'b.c'` can both be registered. Registering the same type twice within one namespace throws an error. The outer Map's `size` counts namespaces.
 
 Higher-level components may contribute dependency providers. Three objects are involved:
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { defineTheme, RetikzCoreError, RetikzCoreErrorCode, resolveThemeRegistry } from '../../src';
 import { BUILTIN_CLIPS } from '../../src/providers/clip';
 import { providerDefinitionOf, createProviderRegistry } from '../../src/providers/registry';
 
@@ -11,6 +12,18 @@ type MockProvider = {
 const provider = (name: string, value = 1): MockProvider => ({ name, value });
 
 describe('提供者注册契约', () => {
+  it('主题注册保留定义且拒绝同名覆盖', () => {
+    const theme = defineTheme({ name: 'custom', resolve: () => ({}) });
+    const replacement = defineTheme({ name: 'custom', resolve: () => ({ semantic: { guide: 'red' } }) });
+
+    expect(resolveThemeRegistry().size).toBe(0);
+    expect(resolveThemeRegistry([theme]).get('custom')).toBe(theme);
+    expect(() => resolveThemeRegistry([theme, replacement])).toThrow(RetikzCoreError);
+    expect(() => resolveThemeRegistry([theme, replacement])).toThrow(
+      expect.objectContaining({ code: RetikzCoreErrorCode.Provider }),
+    );
+  });
+
   it('将内置和自定义定义合并到只读映射中', () => {
     const builtins = new Map([['builtin', provider('builtin')]]);
     const registry = createProviderRegistry({

@@ -101,7 +101,7 @@ export const rectangle = defineShape<RectangleParams>({
     const halfW = r.width / 2;
     const halfH = r.height / 2;
 
-    // compile 已把顶层 Node.cornerRadius 合进 params（见 compile/node.ts），故与 boundaryPoint 一致只读 params.cornerRadius
+    // resolve/node/shape.ts 已把顶层 Node.cornerRadius 合进 params，故与 boundaryPoint 一致只读 params.cornerRadius
     const cornerRadius = params.cornerRadius === undefined ? undefined : Math.min(params.cornerRadius, halfW, halfH);
     yield {
       type: 'rect',

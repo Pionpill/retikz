@@ -9,9 +9,53 @@ import {
   CompositeBaseSchema,
   defineComposite,
   defineShape,
+  resolveCompositeRegistry,
 } from '../../src';
 
 describe('提供者键契约', () => {
+  it('包含点号的命名空间与类型独立注册并编译到对应定义', () => {
+    const first = defineComposite({
+      namespace: 'a.b',
+      type: 'c',
+      schema: CompositeBaseSchema.extend({ namespace: literal('a.b'), type: literal('c') }),
+      compile: () => ({ children: [{ type: 'node', position: [0, 0], text: 'first' }] }),
+    });
+    const second = defineComposite({
+      namespace: 'a',
+      type: 'b.c',
+      schema: CompositeBaseSchema.extend({ namespace: literal('a'), type: literal('b.c') }),
+      compile: () => ({ children: [{ type: 'node', position: [40, 0], text: 'second' }] }),
+    });
+    const registry = resolveCompositeRegistry([first, second]);
+
+    expect(resolveCompositeRegistry().size).toBe(0);
+    expect(registry.get('a.b')?.get('c')).toBe(first);
+    expect(registry.get('a')?.get('b.c')).toBe(second);
+    expect(() => resolveCompositeRegistry([first, second, { ...first }])).toThrow(/duplicate composite registration/);
+    expect(
+      compileToScene(
+        {
+          version: 1,
+          type: 'scene',
+          children: [
+            { namespace: 'a.b', type: 'c' },
+            { namespace: 'a', type: 'b.c' },
+          ],
+        },
+        { composites: [first, second] },
+      ).scene,
+    ).toEqual(
+      compileToScene({
+        version: 1,
+        type: 'scene',
+        children: [
+          { type: 'node', position: [0, 0], text: 'first' },
+          { type: 'node', position: [40, 0], text: 'second' },
+        ],
+      }).scene,
+    );
+  });
+
   it('形状定义声明其注册表名称', () => {
     const shapeNames = [...BUILTIN_SHAPES.values()].map(def => def.name).sort();
 
