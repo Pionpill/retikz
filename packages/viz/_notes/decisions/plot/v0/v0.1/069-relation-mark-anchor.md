@@ -5,6 +5,8 @@ keywords: 'RelationMark、anchor、contract、LinkMark、link、AnchorId'
 
 # ADR-069：RelationMark + anchor id contract
 
+> RelationMark 入口已移除；目标引用、路径构造与流带分别由 [026](../v0.2/026-mark-target-endpoints.md)、[027](../v0.2/027-path-step-construction.md)、[028](../v0.2/028-path-ribbon.md) 承接。数据关系变换保留在 Data；端点图形由 PointMark 组合。本文保留历史设计。
+
 状态：Accepted
 决策日期：2026-06-26
 

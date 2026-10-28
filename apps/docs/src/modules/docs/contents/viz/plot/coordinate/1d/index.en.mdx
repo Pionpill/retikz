@@ -20,7 +20,7 @@ Switch between the line and circle in the control panel. In the circular form, y
 
 A 1D coordinate does not have to be the final graphic. It can first arrange objects along a line and let the mapped results participate in links. The figure places 12 objects on the upper line; every four connect to one shared summary point below, producing three groups.
 
-Within the same Plot, `PointMark` first uses `thingX` to map the single positional field into core Nodes, then a mark-local `summarize` collapses repeated target fields into three lower Nodes. `anchorId` gives these results stable ids, so `RelationMark` can make every four source Nodes reference the same target Node. Mapped results can therefore continue into converging links, annotations, and other follow-up operations.
+Within the same Plot, `PointMark` first uses `thingX` to map the single positional field into core Nodes, then a mark-local `summarize` collapses repeated target fields into three lower Nodes. `anchorId` gives these results stable ids, so `PathMark` can make every four source Nodes reference the same target Node. Mapped results can therefore continue into converging links, annotations, and other follow-up operations.
 
 <ComponentPreview
   files={['coordinate-1d-composition', 'coordinate-1d-composition.preview.tsx', 'coordinate-1d-composition.en.data.ts']}
@@ -44,7 +44,7 @@ The playground's “Sweep angle” is a teaching control, not a `PlotDslProps['c
 
 The number of coordinate dimensions does not restrict the scale type. The position field can still use linear, log, time, and other scales. This example explicitly fixes the hour domain to `[0, 24]`, so hour `22` lands at `330°` on a full circle.
 
-`<PointMark>` is currently the only mark whose position can be projected directly by a 1D coordinate, covering axis events, timeline nodes, and circular event points. `RelationMark` can still reference already positioned targets, as in the figure above. Bars, sectors, and areas require a 2D region and report an error in a 1D coordinate.
+`<PointMark>` is currently the only mark whose position can be projected directly by a 1D coordinate, covering axis events, timeline nodes, and circular event points. `PathMark` can still reference already positioned targets, as in the figure above. Bars, sectors, and areas require a 2D region and report an error in a 1D coordinate.
 
 ## Further Reading
 
@@ -61,9 +61,9 @@ The number of coordinate dimensions does not restrict the scale type. The positi
       url: '/viz/plot/scale',
     },
     {
-      title: 'RelationMark',
+      title: 'PathMark',
       description: 'Connect mapped nodes through stable ids',
-      url: '/viz/plot/mark/relation',
+      url: '/viz/plot/mark/path',
     },
   ]}
 />
