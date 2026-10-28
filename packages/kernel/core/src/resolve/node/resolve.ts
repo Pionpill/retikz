@@ -269,7 +269,7 @@ const resolveNodeLabelColors = (
                     mode: context.mode,
                     fieldPath: `${fieldPath}.pin.stroke`,
                   }),
-              { patterns: context.patterns, round: context.round, irPath: `${fieldPath}.pin.stroke` },
+              { patternRegistry: context.patternRegistry, round: context.round, irPath: `${fieldPath}.pin.stroke` },
             ),
           }),
     };
@@ -358,7 +358,7 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
 
   const shape = resolveNodeShape({
     node,
-    shapes: context.shapes,
+    shapeRegistry: context.shapeRegistry,
     scaleX: node.scale.x,
     scaleY: node.scale.y,
     irPath: context.irPath,
@@ -366,17 +366,17 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
   const boundary = resolveBoundaryReference(node.boundary, {
     visualDef: shape.definition,
     visualParams: shape.params,
-    shapeRegistry: context.shapes,
-    boundaryRegistry: context.boundaries,
+    shapeRegistry: context.shapeRegistry,
+    boundaryRegistry: context.boundaryRegistry,
     irPath: context.irPath,
   });
   const fill = resolvePaint(node.fill, {
-    patterns: context.patterns,
+    patternRegistry: context.patternRegistry,
     round: context.round,
     irPath: context.irPath,
   });
   const stroke = resolvePaint(node.stroke, {
-    patterns: context.patterns,
+    patternRegistry: context.patternRegistry,
     round: context.round,
     irPath: context.irPath,
   });

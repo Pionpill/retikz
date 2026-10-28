@@ -15,7 +15,7 @@ type InputNodeShapeResolve = {
   /** 待解析节点 */
   node: Pick<IRNode, 'shape' | 'cornerRadius'>;
   /** 形状定义注册表 */
-  shapes: ProviderRegistry<ShapeDefinition>;
+  shapeRegistry: ProviderRegistry<ShapeDefinition>;
   /** x 轴缩放 */
   scaleX: number;
   /** y 轴缩放 */
@@ -78,10 +78,10 @@ const scaleJsonObjectNumbers = (value: JsonObject, factor: number): JsonObject =
  * @description 优先使用定义提供的 scaleParams；未提供时，将参数中的所有数值乘以两轴缩放系数的几何平均值
  */
 export const resolveNodeShape = (input: InputNodeShapeResolve): ShapeResolution => {
-  const { node, shapes, scaleX, scaleY, irPath = 'node' } = input;
+  const { node, shapeRegistry, scaleX, scaleY, irPath = 'node' } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
   const shapeParamsPath = `${irPath}.shape.params`;
-  const shapeDefinition = providerDefinitionOf(shapes, shapeName);
+  const shapeDefinition = providerDefinitionOf(shapeRegistry, shapeName);
   const parsedShapeParams: JsonObject = parseProviderPayload({
     capability: 'shape',
     providerName: shapeName,

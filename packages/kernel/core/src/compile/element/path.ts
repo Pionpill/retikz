@@ -33,7 +33,11 @@ export const compilePath = (
       bindTarget: (target: Parameters<typeof bindPathTarget>[0]) => bindPathTarget(target, workspace.positionContext),
     };
     const resolution = resolvePath(path, {
-      ...context.environment,
+      round: context.environment.round,
+      pathRegistry: context.environment.paths,
+      arrowRegistry: context.environment.arrows,
+      markRegistry: context.environment.marks,
+      patternRegistry: context.environment.patterns,
       scopeDefaults: context.context.defaults,
       mode: context.context.theme.mode,
       scopeChain: workspace.scopeChain,

@@ -89,9 +89,9 @@ const resolveSyntheticLayout = (
   const resolution = resolveNode(node, {
     scopeDefaults: {},
     mode: ThemeMode.Light,
-    shapes,
-    boundaries,
-    patterns: new Map(),
+    shapeRegistry: shapes,
+    boundaryRegistry: boundaries,
+    patternRegistry: new Map(),
     round: value => value,
     irPath: `synthetic.${input.id}`,
     warn: () => {},

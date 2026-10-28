@@ -47,9 +47,9 @@ export const compileNodeState = (
   const resolvedNode = resolveNode(child, {
     scopeDefaults: context.scopeDefaults,
     mode: context.mode,
-    shapes: context.shapes,
-    boundaries: context.boundaries,
-    patterns: context.patterns,
+    shapeRegistry: context.shapes,
+    boundaryRegistry: context.boundaries,
+    patternRegistry: context.patterns,
     round: context.round,
     irPath: nodeIrPath,
     warn,

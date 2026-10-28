@@ -13,7 +13,7 @@ import type { IRClip, IRPaint, IRScene } from '../../src/schemas';
 const round = createRound(3);
 
 const patternContext = (patterns: ReadonlyArray<PatternDefinition> = []) => ({
-  patterns: resolvePatternRegistry(patterns),
+  patternRegistry: resolvePatternRegistry(patterns),
   round,
   irPath: 'children[0].node.fill',
 });
@@ -161,7 +161,7 @@ describe('解析/资源裁剪', () => {
           ],
         },
       },
-      { clips: resolveClipRegistry([polygon]), irPath: 'children[0].scope.clip' },
+      { clipRegistry: resolveClipRegistry([polygon]), irPath: 'children[0].scope.clip' },
     );
 
     expect(resolved.kind).toBe('polygon');
@@ -210,7 +210,7 @@ describe('解析/资源裁剪', () => {
     const clips = resolveClipRegistry([wrapper, leaf]);
     const resolution = resolveClip(
       { kind: 'wrapper', params: { child: { kind: 'leaf', params: { radius: 3 } } } },
-      { clips, irPath: 'children[0].scope.clip' },
+      { clipRegistry: clips, irPath: 'children[0].scope.clip' },
     );
 
     expect(wrapperLower).not.toHaveBeenCalled();
@@ -255,7 +255,7 @@ describe('解析/资源裁剪', () => {
   });
 
   it('报告解析边界处未知的裁剪提供者', () => {
-    expect(() => resolveClip({ kind: 'missing', params: {} }, { clips: resolveClipRegistry() })).toThrow(
+    expect(() => resolveClip({ kind: 'missing', params: {} }, { clipRegistry: resolveClipRegistry() })).toThrow(
       /Unknown provider 'missing'/,
     );
   });

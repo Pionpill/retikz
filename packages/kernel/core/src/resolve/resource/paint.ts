@@ -1,5 +1,6 @@
 import type { PatternDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { ProviderRegistry } from '../../providers';
 import { providerDefinitionOf } from '../../providers';
 import type { IRPaint } from '../../schemas';
 import { resolvePatternStyle } from './pattern';
@@ -12,7 +13,7 @@ const DEFAULT_MOTIF_COLOR = 'currentColor';
 /** 解析图案填充所需的定义注册表与尺寸舍入规则 */
 type PaintResolveContext = Readonly<{
   /** 当前可用的图案定义注册表 */
-  patterns: ReadonlyMap<string, PatternDefinition>;
+  patternRegistry: ProviderRegistry<PatternDefinition>;
   /** 圆整尺寸，保持资源与 Scene 几何一致 */
   round: (value: number) => number;
   /** 调用方传入的 IR 路径；当前图案解析未使用此字段 */
@@ -24,7 +25,7 @@ const resolvePattern = (
   spec: Extract<IRPaint, { kind: 'pattern' }>,
   context: PaintResolveContext,
 ): PatternResolution => {
-  const definition = providerDefinitionOf(context.patterns, spec.shape);
+  const definition = providerDefinitionOf(context.patternRegistry, spec.shape);
   const rawSize = spec.size ?? definition.defaultSize ?? DEFAULT_PATTERN_SIZE;
   if (!Number.isFinite(rawSize) || rawSize <= 0) {
     throw new RetikzCoreError(

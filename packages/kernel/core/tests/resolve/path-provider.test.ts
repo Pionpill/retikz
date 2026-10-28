@@ -27,7 +27,7 @@ describe('解析/路径提供者绑定', () => {
       compile: () => null,
     });
     const resolution = resolvePathWithBuiltinProviders(path({ kind: 'highlight', kindOptions: { stroke: 'gold' } }), {
-      paths: resolvePathRegistry([custom]),
+      pathRegistry: resolvePathRegistry([custom]),
     });
 
     expect(resolution.kind.name).toBe('highlight');
@@ -48,7 +48,7 @@ describe('解析/路径提供者绑定', () => {
 
     expect(() =>
       resolvePathWithBuiltinProviders(path({ kind: 'ribbon', label: { text: 'unsupported', interrupt: false } }), {
-        paths: resolvePathRegistry([strictRibbon]),
+        pathRegistry: resolvePathRegistry([strictRibbon]),
       }),
     ).toThrow(/label\.interrupt.*built-in stroke path/i);
   });
@@ -83,7 +83,7 @@ describe('解析/路径提供者绑定', () => {
   });
 
   it('通过解析器注册表诊断未知路径定义失败', () => {
-    expect(() => resolvePathWithBuiltinProviders(path({ kind: 'missing' }), { paths: resolvePathRegistry() })).toThrow(
+    expect(() => resolvePathWithBuiltinProviders(path({ kind: 'missing' }), { pathRegistry: resolvePathRegistry() })).toThrow(
       /Unknown provider 'missing'.*available: stroke/s,
     );
   });
@@ -106,7 +106,7 @@ describe('解析/路径提供者绑定', () => {
     };
     const mark = { shape: 'hollowProbe', length: 12, scale: 2 };
     const resolution = resolveStrokePathWithBuiltinProviders(path({ arrow: { end: mark } }), {
-      arrows: resolveArrowRegistry([arrow]),
+      arrowRegistry: resolveArrowRegistry([arrow]),
     });
     const resolvedMark = resolution.path.arrow?.end;
     if (resolvedMark === undefined) throw new Error('Expected endpoint arrow');
@@ -146,7 +146,7 @@ describe('解析/路径提供者绑定', () => {
 
     expect(() =>
       resolveStrokePathWithBuiltinProviders(path({ arrow: { end: { shape: 'invalidGeometry' } } }), {
-        arrows: resolveArrowRegistry([arrow]),
+        arrowRegistry: resolveArrowRegistry([arrow]),
       }),
     ).toThrow(expected);
   });
@@ -164,7 +164,7 @@ describe('解析/路径提供者绑定', () => {
 
     expect(() =>
       resolveStrokePathWithBuiltinProviders(path({ arrow: { end: { shape: arrow.name, endpointOverlap: 0 } } }), {
-        arrows: resolveArrowRegistry([arrow]),
+        arrowRegistry: resolveArrowRegistry([arrow]),
       }),
     ).toThrow(/resolved visual back.*non-finite/i);
   });

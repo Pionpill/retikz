@@ -22,9 +22,9 @@ const layoutSquare = (node: IRNode) => {
   const resolution = resolveNode(node, {
     scopeDefaults: {},
     mode: 'light',
-    shapes: BUILTIN_SHAPES,
-    boundaries,
-    patterns: resolvePatternRegistry(),
+    shapeRegistry: BUILTIN_SHAPES,
+    boundaryRegistry: boundaries,
+    patternRegistry: resolvePatternRegistry(),
     round: value => value,
     irPath: 'node',
     warn: () => {},

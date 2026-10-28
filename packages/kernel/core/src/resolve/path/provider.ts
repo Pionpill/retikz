@@ -30,7 +30,7 @@ export const resolvePathDefinition = (
   irPath: string,
 ): PathDefinitionResolution => {
   const kind = path.kind ?? 'stroke';
-  const definition = providerDefinitionOf(context.paths, kind);
+  const definition = providerDefinitionOf(context.pathRegistry, kind);
   const parsed = parseProviderPayload({
     capability: 'path',
     providerName: kind,
@@ -86,7 +86,7 @@ const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): 
 /** 绑定箭头定义，确定外观、有效尺寸及端点接触与收缩参数 */
 export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): ArrowMarkResolution => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
-  const definition = providerDefinitionOf(context.arrows, shape);
+  const definition = providerDefinitionOf(context.arrowRegistry, shape);
   assertFiniteArrowGeometry(shape, definition);
   const shared = resolveMarkStyle(mark, definition, context);
   const { visual } = shared;
@@ -165,11 +165,11 @@ export const resolveStrokePathProviders = (
   const marks = new Map<NonNullable<typeof path.marks>[number], MarkResolution>();
   for (const [index, placement] of (path.marks ?? []).entries()) {
     const shape = placement.shape ?? DEFAULT_ARROW_SHAPE;
-    const definition = context.marks?.get(shape);
+    const definition = context.markRegistry?.get(shape);
     if (definition === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Provider,
-        `Unknown provider '${shape}' at ${context.irPath}.marks[${index}].shape; available: ${[...(context.marks?.keys() ?? [])].sort().join(', ') || '(none registered)'}.`,
+        `Unknown provider '${shape}' at ${context.irPath}.marks[${index}].shape; available: ${[...(context.markRegistry?.keys() ?? [])].sort().join(', ') || '(none registered)'}.`,
       );
     marks.set(placement, resolveMarkStyle(placement, definition, context));
   }

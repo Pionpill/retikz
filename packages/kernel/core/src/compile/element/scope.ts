@@ -61,7 +61,7 @@ export const compileScope = (
     if (input.clip !== undefined) {
       group.clipRef = workspace.clip.register(
         resolveClip(input.clip, {
-          clips: context.environment.clips,
+          clipRegistry: context.environment.clips,
           irPath: `${context.irPath}.clip`,
         }),
       );

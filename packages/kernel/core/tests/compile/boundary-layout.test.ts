@@ -25,9 +25,9 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
   const resolution = resolveNode(source, {
     scopeDefaults: {},
     mode: 'light',
-    shapes,
-    boundaries,
-    patterns: resolvePatternRegistry(),
+    shapeRegistry: shapes,
+    boundaryRegistry: boundaries,
+    patternRegistry: resolvePatternRegistry(),
     round: value => value,
     irPath: 'node',
     warn: () => {},

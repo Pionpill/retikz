@@ -577,7 +577,7 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
     ...(canonicalSteps === undefined ? {} : { children: canonicalSteps }),
   };
   const paintContext = {
-    patterns: context.patterns,
+    patternRegistry: context.patternRegistry,
     round: context.round,
     irPath,
   };

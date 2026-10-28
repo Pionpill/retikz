@@ -27,9 +27,9 @@ const resolve = (source: IRNode, scopeDefaults: MergedScopeDefaults = {}) =>
   resolveNode(source, {
     scopeDefaults,
     mode: 'light',
-    shapes: resolveShapeRegistry(),
-    boundaries: resolveBoundaryRegistry(),
-    patterns: resolvePatternRegistry(),
+    shapeRegistry: resolveShapeRegistry(),
+    boundaryRegistry: resolveBoundaryRegistry(),
+    patternRegistry: resolvePatternRegistry(),
     round: value => value,
     irPath: 'node',
     warn: () => {},

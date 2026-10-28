@@ -207,11 +207,11 @@ export type NodeResolveContext = {
   /** 当前节点使用的主题明暗模式 */
   mode: ThemeMode;
   /** 形状定义注册表 */
-  shapes: ProviderRegistry<ShapeDefinition>;
+  shapeRegistry: ProviderRegistry<ShapeDefinition>;
   /** 连接面定义注册表 */
-  boundaries: ProviderRegistry<BoundaryDefinition>;
+  boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
   /** 当前可用的图案定义注册表 */
-  patterns: ReadonlyMap<string, PatternDefinition>;
+  patternRegistry: ProviderRegistry<PatternDefinition>;
   /** 资源尺寸圆整规则 */
   round: (value: number) => number;
   /** 当前节点的 IR 路径 */

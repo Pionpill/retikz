@@ -1,4 +1,5 @@
 import type { AnyPathDefinition, ArrowDefinition, MarkDefinition, PatternDefinition, Transform } from '../../contract';
+import type { ProviderRegistry } from '../../providers';
 import type {
   IRMarkStyle,
   IRPathMark,
@@ -256,13 +257,13 @@ export type PathResolveContext = Readonly<{
   /** 目标坐标与引用查询能力；省略时目标绑定中的坐标为空 */
   targetResolver?: PathTargetResolver;
   /** 路径定义能力注册表 */
-  paths: ReadonlyMap<string, AnyPathDefinition>;
+  pathRegistry: ProviderRegistry<AnyPathDefinition>;
   /** 箭头能力注册表 */
-  arrows: ReadonlyMap<string, ArrowDefinition>;
+  arrowRegistry: ProviderRegistry<ArrowDefinition>;
   /** 普通标记注册表 */
-  marks?: ReadonlyMap<string, MarkDefinition>;
+  markRegistry?: ProviderRegistry<MarkDefinition>;
   /** 图案填充能力注册表 */
-  patterns: ReadonlyMap<string, PatternDefinition>;
+  patternRegistry: ProviderRegistry<PatternDefinition>;
   /** 填充资源尺寸的数值舍入函数 */
   round: (value: number) => number;
   /** 当前路径的 IR 路径，用于扩展参数校验错误定位，缺省为 path */

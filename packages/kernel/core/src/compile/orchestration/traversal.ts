@@ -379,10 +379,10 @@ export const compileChildrenToPrimitives = (
             mode: pendingPath.theme.mode,
             scopeChain: pendingPath.scopeChain,
             targetResolver,
-            paths: runtime.context.paths,
-            arrows: runtime.context.arrows,
-            marks: runtime.context.marks,
-            patterns: runtime.context.patterns,
+            pathRegistry: runtime.context.paths,
+            arrowRegistry: runtime.context.arrows,
+            markRegistry: runtime.context.marks,
+            patternRegistry: runtime.context.patterns,
             round: runtime.context.round,
             irPath: pendingPath.irPath,
           });
@@ -621,7 +621,7 @@ export const compileChildrenToPrimitives = (
       group.clipRef = runtime.context.clip.importPath(resolvedClipPath);
     } else if (child.clip !== undefined) {
       group.clipRef = runtime.context.clip.register(
-        resolveClipValue(child.clip, { clips: runtime.context.clips, irPath: `${scopeIrPath}.clip` }),
+        resolveClipValue(child.clip, { clipRegistry: runtime.context.clips, irPath: `${scopeIrPath}.clip` }),
       );
     }
 
@@ -1320,7 +1320,7 @@ export const compileChildrenToPrimitives = (
           entry.child.props.clip === undefined
             ? undefined
             : runtime.context.clip.lower(
-                resolveClipValue(entry.child.props.clip, { clips: runtime.context.clips, irPath: 'clip' }),
+                resolveClipValue(entry.child.props.clip, { clipRegistry: runtime.context.clips, irPath: 'clip' }),
               );
         preparedOutputs.set(handle, {
           output: entry.child,
@@ -1362,7 +1362,7 @@ export const compileChildrenToPrimitives = (
         entry.child.wrapper?.clip === undefined
           ? undefined
           : runtime.context.clip.lower(
-              resolveClipValue(entry.child.wrapper.clip, { clips: runtime.context.clips, irPath: 'clip' }),
+              resolveClipValue(entry.child.wrapper.clip, { clipRegistry: runtime.context.clips, irPath: 'clip' }),
             );
       assertReplayResourceRefs(transaction);
       preparedReplays.set(entry.child.replay, {
@@ -1964,10 +1964,10 @@ export const compileChildrenToPrimitives = (
                   pointOfTarget: target => bindingOf(target)?.point ?? null,
                   bindTarget: target => bindingOf(target),
                 },
-                paths: context.paths,
-                arrows: context.arrows,
-                marks: context.marks,
-                patterns: context.patterns,
+                pathRegistry: context.paths,
+                arrowRegistry: context.arrows,
+                markRegistry: context.marks,
+                patternRegistry: context.patterns,
                 round: context.round,
                 irPath: 'query',
               },

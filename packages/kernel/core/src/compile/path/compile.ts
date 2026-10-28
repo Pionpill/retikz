@@ -112,10 +112,10 @@ export const emitDefinedPath = (
           mode: pendingPath.theme.mode,
           scopeChain,
           targetResolver,
-          paths: context.paths,
-          arrows: context.arrows,
-          marks: context.marks,
-          patterns: context.patterns,
+          pathRegistry: context.paths,
+          arrowRegistry: context.arrows,
+          markRegistry: context.marks,
+          patternRegistry: context.patterns,
           round: context.round,
           irPath,
         });
@@ -125,10 +125,10 @@ export const emitDefinedPath = (
     const sourceResolution = resolutionOf(source);
     const strokeResolution = resolveStrokePathProviders(sourceResolution, {
       mode: pendingPath.theme.mode,
-      paths: context.paths,
-      arrows: context.arrows,
-      marks: context.marks,
-      patterns: context.patterns,
+      pathRegistry: context.paths,
+      arrowRegistry: context.arrows,
+      markRegistry: context.marks,
+      patternRegistry: context.patterns,
       round: context.round,
       irPath,
     });
