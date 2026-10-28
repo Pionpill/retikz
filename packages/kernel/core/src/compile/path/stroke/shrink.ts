@@ -12,20 +12,20 @@ const emitArrowEnd = (
   round: (n: number) => number,
   resolvePaint: PaintResolver,
 ): CompiledArrowEnd => {
-  const { visual, geometry } = resolution;
+  const { mark, geometry } = resolution;
   const marker = emitMarkPrimitives(resolution, round, resolvePaint, {
-    label: `Arrow '${visual.shape}'`,
-    providerKey: `arrow:${visual.shape}`,
+    label: `Arrow '${mark.shape}'`,
+    providerKey: `arrow:${mark.shape}`,
   });
   const out: CompiledArrowEnd = {
-    shape: visual.shape,
+    shape: mark.shape,
     baseSize: geometry.baseSize,
     refX: geometry.contactX,
     markerWidth: geometry.resolvedLength,
     markerHeight: geometry.resolvedWidth,
     marker,
   };
-  if (visual.opacity !== undefined) out.opacity = visual.opacity;
+  if (mark.opacity !== undefined) out.opacity = mark.opacity;
 
   return out;
 };
@@ -64,7 +64,7 @@ export const emitEndpointArrowMark = (
   if (!Number.isFinite(fullEntryShrink)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `Arrow '${resolution.visual.shape}' full-entry shrink is non-finite; use smaller back/contact/length/scale values.`,
+      `Arrow '${resolution.mark.shape}' full-entry shrink is non-finite; use smaller back/contact/length/scale values.`,
     );
   }
 
@@ -72,7 +72,7 @@ export const emitEndpointArrowMark = (
   if (!Number.isFinite(endpointShrink)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `Arrow '${resolution.visual.shape}' endpoint-overlap shrink is non-finite; use smaller geometry values.`,
+      `Arrow '${resolution.mark.shape}' endpoint-overlap shrink is non-finite; use smaller geometry values.`,
     );
   }
 

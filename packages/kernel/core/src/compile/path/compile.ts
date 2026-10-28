@@ -83,7 +83,8 @@ export const emitDefinedPath = (
   const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
     context.onWarn({ code, message, path: node?.irPath ?? irPath });
   const targetView = pathTargetViewOf(resolution.targets, targetWarn, context.nodeGeometry, context.resolveTransform);
-  const { name: kind, definition } = resolution.kind;
+  const { definition } = resolution;
+  const kind = definition.name;
   const observationOwner = Object.freeze({ kind: 'path' as const, name: kind });
   const ownerOutput = createOwnerOutputPublisher(
     observationOwner,
@@ -262,7 +263,7 @@ export const emitDefinedPath = (
 
   const compilePath = definition.compile as (context: PathCompileContext) => PathCompileResult | null;
   const produced = compilePath({
-    path: resolution.kind.path,
+    path: resolution.source,
     ownerOutput: ownerOutput.publisher,
     materializePath,
     emitStroke,

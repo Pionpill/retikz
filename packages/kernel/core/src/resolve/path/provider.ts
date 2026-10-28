@@ -37,7 +37,7 @@ export const resolvePathDefinition = (
     value: path,
   });
 
-  return { name: kind, definition, path: parsed as IRPathBase };
+  return { kind, definition, path: parsed as IRPathBase };
 };
 
 /** 绑定箭头定义，确定外观、有效尺寸及端点接触与收缩参数 */
@@ -45,11 +45,11 @@ export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveCont
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const definition = getProviderDefinition(context.arrowRegistry, shape);
   const shared = resolveMarkStyle(mark, definition, context);
-  const { visual } = shared;
+  const { mark: canonicalMark } = shared;
   const { baseSize, resolvedLength, resolvedWidth } = shared.geometry;
   const tipX = definition.tipX ?? baseSize;
-  const contactX = definition.hollow ? definition.lineContactX - visual.lineWidth / 2 : definition.lineContactX;
-  const rawOuterInset = definition.outerInset ?? (definition.hollow ? visual.lineWidth / 2 : 0);
+  const contactX = definition.hollow ? definition.lineContactX - canonicalMark.lineWidth / 2 : definition.lineContactX;
+  const rawOuterInset = definition.outerInset ?? (definition.hollow ? canonicalMark.lineWidth / 2 : 0);
   const visualBackX = definition.backX - rawOuterInset;
   const boundaryOuterInset = (rawOuterInset * resolvedLength) / baseSize;
   if (!Number.isFinite(boundaryOuterInset)) {
@@ -83,7 +83,7 @@ export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveCont
     );
   }
 
-  return { mark, definition, visual, geometry };
+  return { source: mark, definition, mark: canonicalMark, geometry };
 };
 
 /** 解析已声明的起点、终点箭头，并以声明对象为键保存结果 */

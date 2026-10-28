@@ -146,7 +146,7 @@ export const placeMarkPrimitives = (
     markerPrimToScene(
       primitive,
       context.contextStroke,
-      combineOpacity(resolution.visual.opacity, context.hostOpacity),
+      combineOpacity(resolution.mark.opacity, context.hostOpacity),
       resources,
     ),
   ),
@@ -154,25 +154,25 @@ export const placeMarkPrimitives = (
 
 /** 由共同定义生成箭头或沿线标记的局部图元 */
 export const emitMarkPrimitives = (
-  resolution: Pick<MarkResolution, 'mark' | 'visual' | 'definition'>,
+  resolution: Pick<MarkResolution, 'source' | 'mark' | 'definition'>,
   round: (value: number) => number,
   resolvePaint: PaintResolver,
   owner: { label: string; providerKey: string },
 ): Array<ScenePrimitive> => {
-  const { mark, visual, definition } = resolution;
+  const { source, mark, definition } = resolution;
   const contextStroke: PaintValue = { kind: 'contextStroke' };
   let emitted: Array<ScenePrimitive>;
   try {
     emitted = Array.from(
       definition.emit({
-        params: mark.params ?? {},
-        stroke: resolvePaint(visual.stroke) ?? contextStroke,
-        fill: definition.hollow ? contextStroke : (resolvePaint(visual.fill) ?? contextStroke),
-        lineWidth: visual.lineWidth,
-        dashPattern: visual.dashPattern,
-        dashOffset: visual.dashOffset,
-        lineCap: visual.lineCap,
-        lineJoin: visual.lineJoin,
+        params: source.params ?? {},
+        stroke: resolvePaint(mark.stroke) ?? contextStroke,
+        fill: definition.hollow ? contextStroke : (resolvePaint(mark.fill) ?? contextStroke),
+        lineWidth: mark.lineWidth,
+        dashPattern: mark.dashPattern,
+        dashOffset: mark.dashOffset,
+        lineCap: mark.lineCap,
+        lineJoin: mark.lineJoin,
         round,
       }),
     );

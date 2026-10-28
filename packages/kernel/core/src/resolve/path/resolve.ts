@@ -566,8 +566,8 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
   const canAutomaticallyInterrupt = isBuiltinStrokePath(colorsResolved) && hasNoEffectivePathFill(colorsResolved);
   assertPathEndpointOverlapHost(colorsResolved, irPath);
   assertPathLabelInterruptionPolicy(colorsResolved, irPath);
-  const kind = resolvePathDefinition(colorsResolved, context, irPath);
-  const providerColorsResolved = resolvePathContextualColors(kind.path, context, irPath, labelMasterColor);
+  const pathDefinition = resolvePathDefinition(colorsResolved, context, irPath);
+  const providerColorsResolved = resolvePathContextualColors(pathDefinition.path, context, irPath, labelMasterColor);
   const canonicalPath = canonicalizePath(providerColorsResolved, canAutomaticallyInterrupt);
   const targets = new Map<string, TargetResolution>();
   const canonicalSteps =
@@ -588,6 +588,7 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
     irPath,
     path: { ...resolvedPath, fill, stroke, strokeWidth: resolvedPath.strokeWidth ?? 1 },
     targets,
-    kind,
+    definition: pathDefinition.definition,
+    source: pathDefinition.path,
   };
 };

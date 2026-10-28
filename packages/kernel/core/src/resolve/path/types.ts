@@ -152,16 +152,16 @@ export type CanonicalPath = Omit<
 
 /** 路径定义及其 schema 解析后的完整路径输入 */
 export type PathDefinitionResolution = Readonly<{
-  /** 当前路径定义的注册名称 */
-  name: string;
+  /** 当前路径种类，对应路径定义的注册名称 */
+  kind: string;
   /** 与当前路径匹配的路径定义 */
   definition: AnyPathDefinition;
   /** 经过定义的完整 schema 解析、尚未展开为 CanonicalPath 的路径 */
   path: IRPathBase;
 }>;
 
-/** 箭头与标记共用的有效视觉属性 */
-type MarkVisual = Readonly<{
+/** 已补齐默认值并解析绘制资源的标记属性 */
+export type CanonicalMark = Readonly<{
   /** 箭头或标记定义的注册名称 */
   shape: string;
   /** 对有效长度与宽度共同应用的比例系数 */
@@ -210,12 +210,15 @@ export type ArrowMarkGeometry = Readonly<{
 
 /** 已绑定定义并确定外观与几何参数的端点箭头 */
 export type ArrowMarkResolution = Readonly<{
-  /** 当前箭头标记的输入声明 */
-  mark: IRArrowStyle;
+  /** 已解析上下文颜色的箭头输入配置 */
+  source: MarkColorSource & {
+    /** 箭头与路径端点的重叠比例 */
+    endpointOverlap?: number;
+  };
   /** 当前箭头匹配的形状定义 */
   definition: ArrowDefinition;
   /** 完成默认值与颜色解析的视觉属性 */
-  visual: MarkVisual;
+  mark: CanonicalMark;
   /** 用于端点放置和路径收缩的几何参数 */
   geometry: ArrowMarkGeometry;
 }>;
@@ -292,8 +295,10 @@ export type PathResolution = Readonly<{
   path: CanonicalPath;
   /** 按步骤字段的 IR 路径保存的目标绑定 */
   targets: ReadonlyMap<string, TargetResolution>;
-  /** 已选中的路径定义及其 schema 解析结果 */
-  kind: PathDefinitionResolution;
+  /** 与当前路径匹配的定义 */
+  definition: AnyPathDefinition;
+  /** 经过定义 schema 解析、供自定义路径编译回调使用的输入 */
+  source: IRPathBase;
 }>;
 
 /** 补齐端点箭头与沿线标记定义后，供 Stroke 编译使用的路径结果 */
@@ -307,21 +312,24 @@ export type StrokePathResolution = PathResolution &
 
 /** 标记的已解析定义、样式与放置几何 */
 export type MarkResolution = Readonly<{
-  /** 源样式与参数 */
-  mark: IRMarkStyle;
+  /** 已解析上下文颜色的标记输入配置 */
+  source: MarkColorSource;
   /** 已绑定的形状定义 */
   definition: MarkDefinition;
   /** 有效绘制样式 */
-  visual: MarkVisual;
+  mark: CanonicalMark;
   /** 局部尺寸和锚点 */
-  geometry: {
-    /** 定义采用的基准尺寸 */
-    baseSize: number;
-    /** 长度乘 scale 后的有效值 */
-    resolvedLength: number;
-    /** 宽度乘 scale 后的有效值 */
-    resolvedWidth: number;
-    /** 标记的定位锚点，使用定义的基准坐标 */
-    anchor: IRPosition;
-  };
+  geometry: MarkGeometry;
+}>;
+
+/** 标记的有效尺寸与定义坐标系中的定位锚点 */
+export type MarkGeometry = Readonly<{
+  /** 定义采用的基准尺寸 */
+  baseSize: number;
+  /** 长度乘 scale 后的有效值 */
+  resolvedLength: number;
+  /** 宽度乘 scale 后的有效值 */
+  resolvedWidth: number;
+  /** 标记的定位锚点，使用定义的基准坐标 */
+  anchor: IRPosition;
 }>;

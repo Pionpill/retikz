@@ -30,10 +30,10 @@ describe('解析/路径提供者绑定', () => {
       pathRegistry: resolvePathRegistry([custom]),
     });
 
-    expect(resolution.kind.name).toBe('highlight');
-    expect(resolution.kind.definition).toBe(custom);
-    expect(resolution.kind.path.kindOptions).toEqual({ stroke: 'gold' });
-    expect(resolvePathWithBuiltinProviders(path()).kind.name).toBe('stroke');
+    expect(resolution.definition.name).toBe('highlight');
+    expect(resolution.definition).toBe(custom);
+    expect(resolution.source.kindOptions).toEqual({ stroke: 'gold' });
+    expect(resolvePathWithBuiltinProviders(path()).definition.name).toBe('stroke');
   });
 
   it('在自定义严格路径定义 schema 解析标签之前报告不支持的显式中断', () => {
@@ -113,8 +113,8 @@ describe('解析/路径提供者绑定', () => {
     const arrowResolution = resolution.arrows.get(resolvedMark);
 
     expect(arrowResolution?.definition).toBe(arrow);
-    expect(arrowResolution?.visual.fill).toBeUndefined();
-    expect(arrowResolution?.visual).toMatchObject({ length: 12, scale: 2, width: 8 });
+    expect(arrowResolution?.mark.fill).toBeUndefined();
+    expect(arrowResolution?.mark).toMatchObject({ length: 12, scale: 2, width: 8 });
     expect(arrowResolution?.geometry.contactX).toBe(2 - 1.5 / 2);
     expect(arrowResolution?.geometry).toHaveProperty('visualBackX', 1 - 1.5 / 2);
     expect(arrowResolution?.geometry.resolvedLength).toBe(24);
