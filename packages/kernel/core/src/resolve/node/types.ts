@@ -20,7 +20,7 @@ import type {
 import type { ThemeMode } from '../../shared';
 import type { InputPaintResolution } from '../resource';
 import type { MergedScopeDefaults, GraphicOpacityResolution } from '../style';
-import type { LabelTextColorSource, TextLineColorSource } from '../text';
+import type { LabelTextColorSource, ColorResolvedTextLine } from '../text';
 
 /** 已解析描边颜色与绘制资源的节点标签引线 */
 export type CanonicalNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
@@ -44,7 +44,7 @@ export type NodePrimaryColorSource = Omit<IRNode, 'style'> & {
 /** 已解析节点、正文和标签数值颜色的节点输入 */
 export type NodeColorSource = Omit<NodePrimaryColorSource, 'text' | 'label'> & {
   /** 已解析行级与片段颜色的正文 */
-  text?: string | Array<TextLineColorSource>;
+  text?: string | Array<ColorResolvedTextLine>;
   /** 已解析文字和引线颜色的附属标签 */
   label?: Array<CanonicalNodeLabel>;
 };
@@ -122,7 +122,7 @@ export type CanonicalNode = Omit<
       y: number;
     };
     /** 多行正文 */
-    text?: Array<TextLineColorSource>;
+    text?: Array<ColorResolvedTextLine>;
     /** 已按数组形态展开的附属标签 */
     label?: Array<CanonicalNodeLabel>;
     /** 正文对齐 */

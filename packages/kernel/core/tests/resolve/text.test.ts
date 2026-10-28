@@ -78,10 +78,18 @@ describe('解析文本', () => {
     expect(resolved.style).toEqual({
       fill: 'red',
       opacity: 0.5,
-      fontSize: 10,
-      fontWeight: 'bold',
+      font: { size: 10, weight: 'bold' },
     });
     expect(resolved.mixed).toBe(false);
+  });
+
+  it('行级字体省略时不物化继承值，仅覆盖字重时不补入字号', () => {
+    const context = { rootFontSize: 16, inheritedFont: { size: 20, family: 'Inter' }, gatingOn: false };
+    const omitted = resolveTextLine({ text: 'plain' }, context);
+    expect(omitted.style?.font).toBeUndefined();
+    const overridden = resolveTextLine({ text: 'bold', font: { weight: 'bold' } }, context);
+    expect(overridden.style?.font).toEqual({ weight: 'bold' });
+    expect(overridden.segments).toMatchObject([{ text: 'bold', font: { size: 20, family: 'Inter', weight: 'bold' } }]);
   });
 
   it.each([false, true])('显式混排共享行级相对字体并保留片段覆盖，公式简写开关=%s', gatingOn => {
@@ -120,7 +128,7 @@ describe('解析文本', () => {
       plainText: '',
       hasMath: false,
       mixed: true,
-      style: { fontSize: 10 },
+      style: { font: { size: 10 } },
     });
   });
 

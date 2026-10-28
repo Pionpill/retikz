@@ -15,7 +15,7 @@ import { resolvePaint } from '../resource';
 import { resolveBoxSpacing } from '../spacing';
 import { resolveGraphicOpacity, mergeNodeLabelDefaults } from '../style';
 import { resolveContextualColor, resolveDashPattern, resolveDropShadow, mergeNodeStyle } from '../style';
-import type { InlineSegmentColorSource, TextLineColorSource } from '../text';
+import type { InlineSegmentColorSource, ColorResolvedTextLine } from '../text';
 import { resolveBoundaryReference } from './boundary';
 import { resolveNodeShape } from './shape';
 import { resolveNodeTextColor } from './text-color';
@@ -210,7 +210,7 @@ const resolveNodeLineColors = (
   masterColor: string | undefined,
   mode: NodeResolveContext['mode'],
   fieldPath: string,
-): TextLineColorSource => {
+): ColorResolvedTextLine => {
   if (typeof line === 'string') return line;
   if ('segments' in line) {
     return {

@@ -18,7 +18,7 @@ import { BendAngleSchema, BuiltinPath, SmoothTensionSchema } from '../../schemas
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import { resolvePaint } from '../resource';
 import { resolveContextualColor, resolveDropShadow, mergePathStyle, resolveGraphicOpacity } from '../style';
-import type { InlineSegmentColorSource, LabelTextColorSource, TextLineColorSource } from '../text';
+import type { InlineSegmentColorSource, LabelTextColorSource, ColorResolvedTextLine } from '../text';
 import { resolvePathDefinition } from './provider';
 import type {
   CanonicalPath,
@@ -235,7 +235,7 @@ const resolvePathLabelTextLine = (
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
-): TextLineColorSource => {
+): ColorResolvedTextLine => {
   if (typeof text === 'string') return text;
   if ('segments' in text) {
     return {

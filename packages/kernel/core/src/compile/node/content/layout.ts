@@ -153,12 +153,12 @@ export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLay
           gatingOn: texGatingOn,
         });
         const lineStyle = line.style;
-        const lineFontSize = lineStyle?.fontSize;
+        const lineFontSize = lineStyle?.font?.size;
         const font: TextFont = {
           size: lineFontSize !== undefined ? lineFontSize * fontScale : fontSize,
-          family: lineStyle?.fontFamily ?? fontFamily,
-          weight: lineStyle?.fontWeight ?? fontWeight,
-          style: lineStyle?.fontStyle ?? fontStyle,
+          family: lineStyle?.font?.family ?? fontFamily,
+          weight: lineStyle?.font?.weight ?? fontWeight,
+          style: lineStyle?.font?.style ?? fontStyle,
         };
 
         resolvedLines.push(line);
@@ -209,9 +209,9 @@ export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLay
           const out: NodeTextLineLayout = { text: ptext, sourceLineIndex };
           if (lineStyle !== undefined) {
             if (lineFontSize !== undefined) out.fontSize = lineFontSize * fontScale;
-            if (lineStyle.fontFamily !== undefined) out.fontFamily = lineStyle.fontFamily;
-            if (lineStyle.fontWeight !== undefined) out.fontWeight = lineStyle.fontWeight;
-            if (lineStyle.fontStyle !== undefined) out.fontStyle = lineStyle.fontStyle;
+            if (lineStyle.font?.family !== undefined) out.fontFamily = lineStyle.font.family;
+            if (lineStyle.font?.weight !== undefined) out.fontWeight = lineStyle.font.weight;
+            if (lineStyle.font?.style !== undefined) out.fontStyle = lineStyle.font.style;
           }
 
           lines.push(out);

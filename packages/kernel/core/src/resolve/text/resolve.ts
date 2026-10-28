@@ -8,28 +8,31 @@ import type {
   InlineSegmentColorSource,
   TextLineResolution,
   TextLineResolveContext,
-  TextLineSource,
+  ColorResolvedTextLine,
 } from './types';
 
 const TEXT_TEX_PARSE_ERROR = 'TEXT_TEX_PARSE_ERROR';
 
 /** 提取行级显式样式并换算字号，未声明的字段不补入继承值 */
 const resolveExplicitStyle = (
-  source: Exclude<TextLineSource, string>,
+  source: Exclude<ColorResolvedTextLine, string>,
   context: TextLineResolveContext,
 ): CanonicalTextLineStyle => ({
   fill: source.fill,
   opacity: source.opacity,
-  fontSize:
-    source.font?.size === undefined
+  font:
+    source.font === undefined
       ? undefined
-      : resolveFontSize(source.font.size, {
-          rootFontSize: context.rootFontSize,
-          inheritedFontSize: context.inheritedFont.size,
-        }),
-  fontFamily: source.font?.family,
-  fontWeight: source.font?.weight,
-  fontStyle: source.font?.style,
+      : {
+          ...source.font,
+          size:
+            source.font.size === undefined
+              ? undefined
+              : resolveFontSize(source.font.size, {
+                  rootFontSize: context.rootFontSize,
+                  inheritedFontSize: context.inheritedFont.size,
+                }),
+        },
 });
 
 /** 让文字或公式片段继承行级字体，并将字号换算为数值 */
@@ -57,7 +60,7 @@ const resolveSegment = (
 };
 
 /** 解析单行文字与公式片段，补齐片段字体和行级外观，并保留纯文本内容与混排标记 */
-export const resolveTextLine = (source: TextLineSource, context: TextLineResolveContext): TextLineResolution => {
+export const resolveTextLine = (source: ColorResolvedTextLine, context: TextLineResolveContext): TextLineResolution => {
   const styled = typeof source === 'object' ? source : undefined;
   const parsed =
     typeof source === 'string'

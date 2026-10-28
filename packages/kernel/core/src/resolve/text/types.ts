@@ -21,7 +21,7 @@ type SegmentedLineColorSource = Omit<IRSegmentedLine, 'segments' | 'fill'> &
   }>;
 
 /** 已解析颜色的单行文本输入 */
-export type TextLineColorSource =
+export type ColorResolvedTextLine =
   | string
   | (Omit<Extract<IRLine, { text: string }>, 'fill'> & {
       /** 当前文本行已解析的填充颜色 */
@@ -30,7 +30,7 @@ export type TextLineColorSource =
   | SegmentedLineColorSource;
 
 /** 已解析颜色的单行或多行标签文本 */
-export type LabelTextColorSource = string | Array<TextLineColorSource>;
+export type LabelTextColorSource = string | Array<ColorResolvedTextLine>;
 
 /** 字号解析所需的根字号与继承字号 */
 export type FontSizeResolveContext = Readonly<{
@@ -88,14 +88,8 @@ export type CanonicalTextLineStyle = Readonly<{
   fill?: string;
   /** 显式行不透明度 */
   opacity?: number;
-  /** 已确定的显式行字号 */
-  fontSize?: number;
-  /** 显式行字体族 */
-  fontFamily?: IRFont['family'];
-  /** 显式行字重 */
-  fontWeight?: IRFont['weight'];
-  /** 显式行字形 */
-  fontStyle?: IRFont['style'];
+  /** 仅保留显式声明的字体字段，字号已换算为数值，不补入继承值 */
+  font?: Partial<CanonicalFont>;
 }>;
 
 /** 单行内容、字体与样式的解析结果 */
@@ -122,6 +116,3 @@ export type TextLineResolveContext = FontResolveContext &
     /** 未闭合公式分隔符的自定义警告文案 */
     warningMessage?: string;
   }>;
-
-/** 文本解析器接受的已解析颜色的单行输入 */
-export type TextLineSource = TextLineColorSource;
