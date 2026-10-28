@@ -106,11 +106,8 @@ export const buildPositionScale = (
       return { type: BuiltinPlotScale.Symlog, name, ...scaleOptions };
     case 'radial':
       return { type: BuiltinPlotScale.Radial, name, ...scaleOptions };
-    default: {
-      // 穷尽守卫：新增 InputPlotPositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
-      const exhaustive: never = type;
-      throw new RetikzPlotVanillaError(`buildPlotIR: unsupported position scale type "${String(exhaustive)}"`);
-    }
+    default:
+      return type satisfies never;
   }
 };
 

@@ -97,6 +97,27 @@ const fullGridInput = (): InputTableBorderGraph => ({
 });
 
 describe('Table 边框 Graph', () => {
+  it('空表和被隐藏的候选仍经过边框准入', () => {
+    expect(() =>
+      buildTableBorderGraph({
+        rows: [],
+        columns: [],
+        cells: [],
+        mode: 'collapse',
+        defaults: { horizontal: lineCandidate({ width: Number.NaN }) },
+      }),
+    ).toThrow(/number|finite/i);
+
+    const input = fullGridInput();
+    expect(() =>
+      buildTableBorderGraph({
+        ...input,
+        cells: input.cells.map(cell => ({ ...cell, borders: { top: { kind: 'none', priority: 100 } } })),
+        defaults: { outer: { top: lineCandidate({ strokeOpacity: 2 }, -100) } },
+      }),
+    ).toThrow();
+  });
+
   it('解析清单和 Path 元数据的分离严格 JSON 输出词汇', () => {
     expect(TableBorderLineSchema.parse({ ...line(), color: '#336699', stroke: 0.8 })).toMatchObject({
       color: '#336699',

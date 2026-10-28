@@ -9,7 +9,7 @@ import type {
 } from '../../src';
 import { TableTrackSizeKind } from '../../src';
 import type { CanonicalTableTrackSize } from '../../src/pipeline/layout';
-import { resolveTableTrackSizes, solveTableTracks } from '../../src/pipeline/layout';
+import { resolveTableLayout, resolveTableTrackSizes, solveTableTracks } from '../../src/pipeline/layout';
 
 const fixed = (value: number): IRTableFixedTrackSize => ({ kind: TableTrackSizeKind.Fixed, value });
 
@@ -29,6 +29,37 @@ const resolve = (tracks: ReadonlyArray<IRTableTrackSize>): ReadonlyArray<Canonic
   resolveTableTrackSizes(tracks);
 
 describe('Table 轨道尺寸', () => {
+  it('在布局准入时拒绝尚未绑定轨道数量的非法静态声明', () => {
+    expect(() => resolveTableLayout({ columnSize: fixed(Number.POSITIVE_INFINITY) })).toThrow(/finite/i);
+    expect(() => resolveTableLayout({ rowSize: fraction(0) })).toThrow(/weight/i);
+    expect(() => resolveTableLayout({ headerRowSize: minmax(fixed(20), fixed(10)) })).toThrow(/max/i);
+    expect(() => resolveTableLayout({ rowGap: Number.NaN })).toThrow(/gap/i);
+    expect(() => resolveTableLayout({ columns: [{ index: -1, size: auto() }] })).toThrow(/index/i);
+    expect(() =>
+      resolveTableLayout({
+        rows: [
+          { index: 0, size: auto() },
+          { index: 0, size: fixed(12) },
+        ],
+      }),
+    ).toThrow(/duplicate/i);
+    expect(resolveTableLayout({ columns: [{ index: 20, size: fraction() }] }).columns).toEqual([
+      { index: 20, size: fraction() },
+    ]);
+  });
+
+  it('布局准入后的覆盖快照不受作者对象后续修改影响', () => {
+    const size = fraction();
+    const override = { index: 0, size };
+    const layout = resolveTableLayout({ columns: [override] });
+    override.index = -1;
+    size.weight = 0;
+
+    expect(layout.columns).toEqual([{ index: 0, size: fraction() }]);
+    expect(Object.isFrozen(layout.columns[0].size)).toBe(true);
+    expect(resolveTableTrackSizes([auto()], layout.columns)).toEqual([fraction(1)]);
+  });
+
   it('将嵌套分数权重具体化为分离的不可变解析轨道', () => {
     const tracks = [fraction(), minmax(fixed(10), fraction())];
     const snapshot = structuredClone(tracks);

@@ -1,6 +1,5 @@
 import type { BoundsRect } from '@retikz/math';
 
-import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
 import type { TableCellAlignment, TableCellTranslation } from './cell';
 import { computeTableCellTranslation } from './cell';
@@ -44,15 +43,8 @@ type TableCellContentPlacement = Readonly<{
   replayContent: boolean;
 }>;
 
-/** 判断运行时输入是否为支持的 Cell overflow 策略 */
-const isTableCellOverflow = (value: unknown): value is TableCellOverflow => value === 'visible' || value === 'clip';
-
 /** 计算 Cell 内容的 fit、对齐与 overflow 放置结果 */
 export const computeTableCellContentPlacement = (input: InputTableCellContentPlacement): TableCellContentPlacement => {
-  if (!isTableCellOverflow(input.overflow)) {
-    throw new RetikzTableError('table: Cell overflow must be visible or clip');
-  }
-
   const scale = computeTableCellFitScale(input.sourceAllocationBounds, input.contentBox, input.fit);
   const scaledAllocationBounds = projectTableCellBounds(input.sourceAllocationBounds, scale, { x: 0, y: 0 });
   const translation = computeTableCellTranslation({

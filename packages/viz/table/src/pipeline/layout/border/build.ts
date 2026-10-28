@@ -1,10 +1,12 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
+
 import type { TableBorderContribution, TableBorderSource } from '../../../contract/manifest';
 import { TableBorderLineSchema, TableBorderContributionOrigin } from '../../../contract/manifest';
 import { RetikzTableError } from '../../../error';
 import { deepFreeze } from '../../../shared';
 import type { CompiledTableTrackLayout } from '../types';
+import { resolveCanonicalTableBorderAtoms } from './atom-resolution';
 import { mergeTableBorderAtoms } from './merge';
-import { resolveTableBorderAtoms } from './resolve';
 import type {
   InputTableBorderGraph,
   TableBorderCandidateResolution,
@@ -65,11 +67,14 @@ const resolveBorderCandidate = (candidate: TableBorderCandidateResolution): Tabl
     throw new RetikzTableError('table: Source defaults Border candidate priority must be -100');
   }
 
+  const defaults =
+    candidate.defaults === undefined ? undefined : { path: NonBlankStringSchema.parse(candidate.defaults.path) };
+
   if (candidate.kind === 'none') {
     return {
       kind: 'none',
       priority: candidate.priority,
-      ...(candidate.defaults === undefined ? {} : { defaults: structuredClone(candidate.defaults) }),
+      ...(defaults === undefined ? {} : { defaults }),
     };
   }
 
@@ -77,7 +82,7 @@ const resolveBorderCandidate = (candidate: TableBorderCandidateResolution): Tabl
     kind: 'line',
     priority: candidate.priority,
     line: TableBorderLineSchema.parse(candidate.line),
-    ...(candidate.defaults === undefined ? {} : { defaults: structuredClone(candidate.defaults) }),
+    ...(defaults === undefined ? {} : { defaults }),
   };
 };
 
@@ -88,7 +93,7 @@ const contributionOf = (
   candidateInput: TableBorderCandidateResolution,
   ownerSideRank: number,
 ): TableBorderContribution => {
-  const candidate = resolveBorderCandidate(candidateInput);
+  const candidate = candidateInput;
   const sourceOrderKey = tableBorderSourceOrderKey(source);
   const base = {
     key: `${sourceOrderKey}@${atomKey}`,
@@ -200,7 +205,7 @@ const boundaryCoordinates = (tracks: ReadonlyArray<CompiledTableTrackLayout>): R
 
 const cellSource = (cell: InputTableBorderCell, side: TableBorderSide): TableBorderSource => ({
   kind: 'cell',
-  ...(cell.cellId === undefined ? {} : { cellId: cell.cellId }),
+  ...(cell.cellId === undefined ? {} : { cellId: NonBlankStringSchema.parse(cell.cellId) }),
   row: cell.rowIndex,
   column: cell.columnIndex,
   side,
@@ -394,17 +399,32 @@ export const buildTableBorderGraph = (input: InputTableBorderGraph): TableBorder
     throw new RetikzTableError('table: Border Graph mode must be collapse or separate');
   }
 
-  const { cells, occupancy } = buildOccupancy(input.rows.length, input.columns.length, input.cells);
-  Object.values(input.defaults.outer ?? {}).forEach(candidate => resolveBorderCandidate(candidate));
-  if (input.defaults.horizontal !== undefined) resolveBorderCandidate(input.defaults.horizontal);
-  if (input.defaults.vertical !== undefined) resolveBorderCandidate(input.defaults.vertical);
-  cells.forEach(cell => Object.values(cell.borders ?? {}).forEach(candidate => resolveBorderCandidate(candidate)));
+  const resolveCandidates = (candidates: Readonly<Partial<Record<TableBorderSide, TableBorderCandidateResolution>>>) =>
+    Object.fromEntries(
+      Object.entries(candidates).map(([side, candidate]) => [side, resolveBorderCandidate(candidate)]),
+    );
+  const resolvedInput: InputTableBorderGraph = {
+    ...input,
+    defaults: {
+      ...(input.defaults.outer === undefined ? {} : { outer: resolveCandidates(input.defaults.outer) }),
+      ...(input.defaults.horizontal === undefined
+        ? {}
+        : { horizontal: resolveBorderCandidate(input.defaults.horizontal) }),
+      ...(input.defaults.vertical === undefined ? {} : { vertical: resolveBorderCandidate(input.defaults.vertical) }),
+    },
+    cells: input.cells.map(cell => ({
+      ...cell,
+      ...(cell.borders === undefined ? {} : { borders: resolveCandidates(cell.borders) }),
+    })),
+  };
+  const { cells, occupancy } = buildOccupancy(input.rows.length, input.columns.length, resolvedInput.cells);
   if (input.rows.length === 0 || input.columns.length === 0 || input.cells.length === 0) {
     return deepFreeze({ atoms: [], edges: [] });
   }
 
-  const rawAtoms = input.mode === 'collapse' ? buildCollapseAtoms(input, occupancy) : buildSeparateAtoms(input, cells);
-  const atoms = resolveTableBorderAtoms(rawAtoms);
+  const rawAtoms =
+    input.mode === 'collapse' ? buildCollapseAtoms(resolvedInput, occupancy) : buildSeparateAtoms(resolvedInput, cells);
+  const atoms = resolveCanonicalTableBorderAtoms(rawAtoms);
   const edges = mergeTableBorderAtoms(atoms, input.mode);
 
   return deepFreeze({ atoms, edges });

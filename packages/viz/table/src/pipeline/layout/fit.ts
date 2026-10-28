@@ -74,7 +74,7 @@ export const computeTableCellFitScale = (
       break;
     }
     default:
-      throw new RetikzTableError('table: Cell fit must be none, contain, cover, or stretch');
+      return fit satisfies never;
   }
 
   assertScale(scale);

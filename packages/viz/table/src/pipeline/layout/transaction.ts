@@ -50,9 +50,10 @@ import type { TableBorderCandidateResolution, TableBorderSide } from './border';
 import { buildTableBorderGraph } from './border';
 import { computeTableCellBox, computeTableCellContentBox, computeTableCellOuterSize } from './cell';
 import { computeTableCellContentPlacement } from './content';
-import { resolveTableLayout, resolveTableTrackSizes } from './resolve';
-import { propagateTableSpanContributions } from './span';
-import { solveTableTracks } from './track';
+import { resolveTableLayout } from './resolve';
+import { computeTableSpanContributions } from './span-computation';
+import { computeTableTracks } from './track-computation';
+import { applyTableTrackOverrides } from './track-resolution';
 import type {
   CanonicalTableTrackSize,
   CompiledTableCellLayout,
@@ -378,7 +379,7 @@ const contributionsOf = (
     ];
   });
 
-  return propagateTableSpanContributions({ tracks, contributions: direct, constraints, gap }).contributions;
+  return computeTableSpanContributions({ tracks, contributions: direct, constraints, gap }).contributions;
 };
 
 /** 校验 Presented model 与 canonical semantic Cells 同序同 identity */
@@ -529,7 +530,7 @@ const resolvePresentedTableTransaction = (
     );
   });
 
-  const columnTracks = resolveTableTrackSizes(
+  const columnTracks = applyTableTrackOverrides(
     semantic.columns.map(() => resolved.columnSize),
     resolved.columns,
   );
@@ -542,7 +543,7 @@ const resolvePresentedTableTransaction = (
   );
 
   const availableColumnSize = availableColumnSizeOf(context.proposal.x);
-  const columnSizes = solveTableTracks({
+  const columnSizes = computeTableTracks({
     tracks: columnTracks,
     contributions: columnContributions,
     gap: resolved.columnGap,
@@ -584,7 +585,7 @@ const resolvePresentedTableTransaction = (
   const rowDefaults = semantic.rows.map(row =>
     row.kind === TableRowKind.ColumnHeader ? resolved.headerRowSize : resolved.rowSize,
   );
-  const rowTracks = resolveTableTrackSizes(rowDefaults, resolved.rows);
+  const rowTracks = applyTableTrackOverrides(rowDefaults, resolved.rows);
   const rowContributions = contributionsOf(
     semantic.cells,
     rowTracks,
@@ -592,7 +593,7 @@ const resolvePresentedTableTransaction = (
     'row',
     (cell, index) => computeTableCellOuterSize(probes[index].final.allocationBounds, cell.layout.padding).height,
   );
-  const rowSizes = solveTableTracks({ tracks: rowTracks, contributions: rowContributions, gap: resolved.rowGap });
+  const rowSizes = computeTableTracks({ tracks: rowTracks, contributions: rowContributions, gap: resolved.rowGap });
   const rows = trackLayoutsOf(
     semantic.rows.map(row => row.id),
     rowSizes,

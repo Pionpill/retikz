@@ -166,9 +166,8 @@ describe('Table Cell 内容政策', () => {
     [{ x: 0, y: 0, width: -1, height: 1 }, { x: 0, y: 0, width: 1, height: 1 }, 'contain'],
     [{ x: Number.NaN, y: 0, width: 1, height: 1 }, { x: 0, y: 0, width: 1, height: 1 }, 'cover'],
     [{ x: 0, y: 0, width: 1, height: 1 }, { x: 0, y: 0, width: Infinity, height: 1 }, 'stretch'],
-    [{ x: 0, y: 0, width: 1, height: 1 }, { x: 0, y: 0, width: 1, height: 1 }, 'unknown'],
-  ] as const)('拒绝 %# 的无效边界或拟合策略', (source, target, fit) => {
-    expect(() => computeTableCellFitScale(source, target, fit as 'none')).toThrow(/table: Cell/);
+  ] as const)('拒绝 %# 的无效拟合边界', (source, target, fit) => {
+    expect(() => computeTableCellFitScale(source, target, fit)).toThrow(/table: Cell/);
   });
 
   it('当有限拟合输入溢出比例或投影边界时失败', () => {
@@ -191,19 +190,5 @@ describe('Table Cell 内容政策', () => {
         overflow: 'visible',
       }),
     ).toThrow(/finite/);
-  });
-
-  it('拒绝未知的溢出策略，而不是默默地回退', () => {
-    expect(() =>
-      computeTableCellContentPlacement({
-        sourceAllocationBounds: { x: 0, y: 0, width: 1, height: 1 },
-        sourceVisualOverflowBounds: { x: 0, y: 0, width: 1, height: 1 },
-        contentBox: { x: 0, y: 0, width: 1, height: 1 },
-        horizontalAlign: 'start',
-        verticalAlign: 'start',
-        fit: 'none',
-        overflow: 'hidden' as 'visible',
-      }),
-    ).toThrow(/overflow/);
   });
 });
