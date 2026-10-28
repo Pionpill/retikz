@@ -255,12 +255,65 @@ export const assertProviderOutputUnitInterval = (
   }
 };
 
+/** 读取已脱离的 JSON 快照对象字段 */
+const readSnapshotRecord = (owner: string, value: unknown, path: string): Record<string, unknown> => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value))
+    failProviderOutput(owner, `an invalid ${path}`);
+  return value as Record<string, unknown>;
+};
+
+/** 读取已脱离的 JSON 快照数组字段 */
+const readSnapshotArray = (owner: string, value: unknown, path: string): Array<unknown> => {
+  if (!Array.isArray(value)) return failProviderOutput(owner, `an invalid ${path}`);
+  return value;
+};
+
+/** 快照已保证属性可枚举，此处只检查领域字段集 */
+const assertSnapshotKeys = (
+  owner: string,
+  value: Record<string, unknown>,
+  allowed: ReadonlyArray<string>,
+  path: string,
+): void => {
+  const unsupported = Object.keys(value).filter(key => !allowed.includes(key));
+  if (unsupported.length > 0) failProviderOutput(owner, `${path} with unsupported field(s): ${unsupported.join(', ')}`);
+};
+
+/** 快照已保证数值有限，此处只检查字段类型与值域 */
+const assertSnapshotNumber = (owner: string, value: unknown, path: string, nonNegative = false): void => {
+  if (typeof value !== 'number' || (nonNegative && value < 0)) failProviderOutput(owner, `an invalid ${path}`);
+};
+
+/** 检查快照中的可选数值字段 */
+const assertSnapshotOptionalNumber = (
+  owner: string,
+  value: Record<string, unknown>,
+  field: string,
+  path: string,
+  nonNegative = false,
+): void => {
+  if (value[field] !== undefined) assertSnapshotNumber(owner, value[field], `${path}.${field}`, nonNegative);
+};
+
+/** 检查快照字段的单位区间 */
+const assertSnapshotUnitInterval = (
+  owner: string,
+  value: Record<string, unknown>,
+  field: string,
+  path: string,
+): void => {
+  if (value[field] === undefined) return;
+  assertSnapshotNumber(owner, value[field], `${path}.${field}`);
+  if ((value[field] as number) < 0 || (value[field] as number) > 1)
+    failProviderOutput(owner, `an invalid ${path}.${field}`);
+};
+
 /** 校验 Scene 或 Marker 的 paint 值，Marker 模式禁止 resourceRef */
 const assertProviderOutputPaint = (owner: string, value: unknown, path: string, markerOnly = false): void => {
   if (value === undefined || typeof value === 'string') return;
 
-  const candidate = providerOutputRecord(owner, value, path);
-  const keyCount = providerOutputOwnStringKeys(owner, candidate, path).length;
+  const candidate = readSnapshotRecord(owner, value, path);
+  const keyCount = Object.keys(candidate).length;
   const contextStroke = candidate.kind === 'contextStroke' && keyCount === 1;
   const resourceRef =
     !markerOnly &&
@@ -282,8 +335,8 @@ const assertProviderOutputPaint = (owner: string, value: unknown, path: string, 
 const assertProviderOutputDashPattern = (owner: string, value: Record<string, unknown>, path: string): void => {
   if (value.dashPattern === undefined) return;
 
-  providerOutputArray(owner, value.dashPattern, `${path}.dashPattern`).forEach((entry, index) =>
-    assertProviderOutputFinite(owner, entry, `${path}.dashPattern[${index}]`, true),
+  readSnapshotArray(owner, value.dashPattern, `${path}.dashPattern`).forEach((entry, index) =>
+    assertSnapshotNumber(owner, entry, `${path}.dashPattern[${index}]`, true),
   );
 };
 
@@ -291,21 +344,21 @@ const assertProviderOutputDashPattern = (owner: string, value: Record<string, un
 const assertProviderOutputTransforms = (owner: string, value: unknown, path: string): void => {
   if (value === undefined) return;
 
-  providerOutputArray(owner, value, path).forEach((transform, index) => {
-    const candidate = providerOutputRecord(owner, transform, `${path}[${index}]`);
+  readSnapshotArray(owner, value, path).forEach((transform, index) => {
+    const candidate = readSnapshotRecord(owner, transform, `${path}[${index}]`);
     if (candidate.kind === 'translate') {
-      assertProviderOutputKeys(owner, candidate, ['kind', 'x', 'y'], `${path}[${index}]`);
-      assertProviderOutputFinite(owner, candidate.x, `${path}[${index}].x`);
-      assertProviderOutputFinite(owner, candidate.y, `${path}[${index}].y`);
+      assertSnapshotKeys(owner, candidate, ['kind', 'x', 'y'], `${path}[${index}]`);
+      assertSnapshotNumber(owner, candidate.x, `${path}[${index}].x`);
+      assertSnapshotNumber(owner, candidate.y, `${path}[${index}].y`);
     } else if (candidate.kind === 'rotate') {
-      assertProviderOutputKeys(owner, candidate, ['kind', 'degrees', 'cx', 'cy'], `${path}[${index}]`);
-      assertProviderOutputFinite(owner, candidate.degrees, `${path}[${index}].degrees`);
-      assertProviderOutputOptionalFinite(owner, candidate, 'cx', `${path}[${index}]`);
-      assertProviderOutputOptionalFinite(owner, candidate, 'cy', `${path}[${index}]`);
+      assertSnapshotKeys(owner, candidate, ['kind', 'degrees', 'cx', 'cy'], `${path}[${index}]`);
+      assertSnapshotNumber(owner, candidate.degrees, `${path}[${index}].degrees`);
+      assertSnapshotOptionalNumber(owner, candidate, 'cx', `${path}[${index}]`);
+      assertSnapshotOptionalNumber(owner, candidate, 'cy', `${path}[${index}]`);
     } else if (candidate.kind === 'scale') {
-      assertProviderOutputKeys(owner, candidate, ['kind', 'x', 'y'], `${path}[${index}]`);
-      assertProviderOutputFinite(owner, candidate.x, `${path}[${index}].x`);
-      assertProviderOutputOptionalFinite(owner, candidate, 'y', `${path}[${index}]`);
+      assertSnapshotKeys(owner, candidate, ['kind', 'x', 'y'], `${path}[${index}]`);
+      assertSnapshotNumber(owner, candidate.x, `${path}[${index}].x`);
+      assertSnapshotOptionalNumber(owner, candidate, 'y', `${path}[${index}]`);
     } else {
       failProviderOutput(owner, `an invalid ${path}[${index}].kind`);
     }
@@ -333,22 +386,22 @@ const assertSceneStyle = (owner: string, value: Record<string, unknown>, scenePa
   const assertResolvedShadow = (providerOwner: string, shadowValue: unknown, shadowPath: string): void => {
     if (shadowValue === undefined) return;
 
-    const shadow = providerOutputRecord(providerOwner, shadowValue, shadowPath);
-    assertProviderOutputKeys(providerOwner, shadow, ['offsetX', 'offsetY', 'blur', 'color', 'opacity'], shadowPath);
-    assertProviderOutputFinite(providerOwner, shadow.offsetX, `${shadowPath}.offsetX`);
-    assertProviderOutputFinite(providerOwner, shadow.offsetY, `${shadowPath}.offsetY`);
+    const shadow = readSnapshotRecord(providerOwner, shadowValue, shadowPath);
+    assertSnapshotKeys(providerOwner, shadow, ['offsetX', 'offsetY', 'blur', 'color', 'opacity'], shadowPath);
+    assertSnapshotNumber(providerOwner, shadow.offsetX, `${shadowPath}.offsetX`);
+    assertSnapshotNumber(providerOwner, shadow.offsetY, `${shadowPath}.offsetY`);
     if (typeof shadow.color !== 'string') failProviderOutput(providerOwner, `an invalid ${shadowPath}.color`);
-    assertProviderOutputOptionalFinite(providerOwner, shadow, 'blur', shadowPath, true);
-    assertProviderOutputUnitInterval(providerOwner, shadow, 'opacity', shadowPath);
+    assertSnapshotOptionalNumber(providerOwner, shadow, 'blur', shadowPath, true);
+    assertSnapshotUnitInterval(providerOwner, shadow, 'opacity', shadowPath);
   };
 
   assertProviderOutputPaint(owner, value.fill, `${scenePath}.fill`);
   assertProviderOutputPaint(owner, value.stroke, `${scenePath}.stroke`);
-  assertProviderOutputUnitInterval(owner, value, 'fillOpacity', scenePath);
-  assertProviderOutputUnitInterval(owner, value, 'strokeOpacity', scenePath);
-  assertProviderOutputUnitInterval(owner, value, 'opacity', scenePath);
-  assertProviderOutputOptionalFinite(owner, value, 'strokeWidth', scenePath, true);
-  assertProviderOutputOptionalFinite(owner, value, 'dashOffset', scenePath);
+  assertSnapshotUnitInterval(owner, value, 'fillOpacity', scenePath);
+  assertSnapshotUnitInterval(owner, value, 'strokeOpacity', scenePath);
+  assertSnapshotUnitInterval(owner, value, 'opacity', scenePath);
+  assertSnapshotOptionalNumber(owner, value, 'strokeWidth', scenePath, true);
+  assertSnapshotOptionalNumber(owner, value, 'dashOffset', scenePath);
   assertProviderOutputDashPattern(owner, value, scenePath);
   assertProviderOutputPathEnums(owner, value, scenePath);
   if (value.blendMode !== undefined && !Object.values(BlendMode).includes(value.blendMode as never)) {
@@ -358,36 +411,26 @@ const assertSceneStyle = (owner: string, value: Record<string, unknown>, scenePa
   assertResolvedShadow(owner, value.shadow, `${scenePath}.shadow`);
 };
 
-/** Scene recursive validation 所需的 active-path 与 Marker 子集入口 */
-type SceneValidationContext = Readonly<{
-  active: WeakSet<object>;
-}>;
-
-/** 递归校验单个 Scene primitive 并沿当前 group 路径检测循环 */
-const visitScenePrimitive = (
-  owner: string,
-  primitive: unknown,
-  scenePath: string,
-  context: SceneValidationContext,
-): void => {
+/** 递归校验快照中 Scene primitive 的领域约束 */
+const visitScenePrimitive = (owner: string, primitive: unknown, scenePath: string): void => {
   const value = primitive as Record<string, unknown>;
 
   switch (value.type) {
     case 'rect':
-      assertProviderOutputFinite(owner, value.x, `${scenePath}.x`);
-      assertProviderOutputFinite(owner, value.y, `${scenePath}.y`);
-      assertProviderOutputFinite(owner, value.width, `${scenePath}.width`, true);
-      assertProviderOutputFinite(owner, value.height, `${scenePath}.height`, true);
-      assertProviderOutputOptionalFinite(owner, value, 'cornerRadius', scenePath, true);
+      assertSnapshotNumber(owner, value.x, `${scenePath}.x`);
+      assertSnapshotNumber(owner, value.y, `${scenePath}.y`);
+      assertSnapshotNumber(owner, value.width, `${scenePath}.width`, true);
+      assertSnapshotNumber(owner, value.height, `${scenePath}.height`, true);
+      assertSnapshotOptionalNumber(owner, value, 'cornerRadius', scenePath, true);
       assertSceneStyle(owner, value, scenePath);
 
       return;
     case 'ellipse':
-      assertProviderOutputFinite(owner, value.cx, `${scenePath}.cx`);
-      assertProviderOutputFinite(owner, value.cy, `${scenePath}.cy`);
-      assertProviderOutputFinite(owner, value.rx, `${scenePath}.rx`, true);
-      assertProviderOutputFinite(owner, value.ry, `${scenePath}.ry`, true);
-      assertProviderOutputOptionalFinite(owner, value, 'rotate', scenePath);
+      assertSnapshotNumber(owner, value.cx, `${scenePath}.cx`);
+      assertSnapshotNumber(owner, value.cy, `${scenePath}.cy`);
+      assertSnapshotNumber(owner, value.rx, `${scenePath}.rx`, true);
+      assertSnapshotNumber(owner, value.ry, `${scenePath}.ry`, true);
+      assertSnapshotOptionalNumber(owner, value, 'rotate', scenePath);
       assertSceneStyle(owner, value, scenePath);
 
       return;
@@ -399,15 +442,13 @@ const visitScenePrimitive = (
 
         const arrow = value[field] as Record<string, unknown>;
         if (typeof arrow.shape !== 'string') failProviderOutput(owner, `an invalid ${scenePath}.${field}.shape`);
-        assertProviderOutputFinite(owner, arrow.baseSize, `${scenePath}.${field}.baseSize`, true);
-        assertProviderOutputFinite(owner, arrow.refX, `${scenePath}.${field}.refX`);
-        assertProviderOutputFinite(owner, arrow.markerWidth, `${scenePath}.${field}.markerWidth`, true);
-        assertProviderOutputFinite(owner, arrow.markerHeight, `${scenePath}.${field}.markerHeight`, true);
-        assertProviderOutputUnitInterval(owner, arrow, 'opacity', `${scenePath}.${field}`);
+        assertSnapshotNumber(owner, arrow.baseSize, `${scenePath}.${field}.baseSize`, true);
+        assertSnapshotNumber(owner, arrow.refX, `${scenePath}.${field}.refX`);
+        assertSnapshotNumber(owner, arrow.markerWidth, `${scenePath}.${field}.markerWidth`, true);
+        assertSnapshotNumber(owner, arrow.markerHeight, `${scenePath}.${field}.markerHeight`, true);
+        assertSnapshotUnitInterval(owner, arrow, 'opacity', `${scenePath}.${field}`);
         const marker = arrow.marker as Array<unknown>;
-        marker.forEach((child, index) =>
-          visitScenePrimitive(owner, child, `${scenePath}.${field}.marker[${index}]`, context),
-        );
+        marker.forEach((child, index) => visitScenePrimitive(owner, child, `${scenePath}.${field}.marker[${index}]`));
       }
 
       assertSceneStyle(owner, value, scenePath);
@@ -415,12 +456,12 @@ const visitScenePrimitive = (
       return;
     }
     case 'text': {
-      assertProviderOutputFinite(owner, value.x, `${scenePath}.x`);
-      assertProviderOutputFinite(owner, value.y, `${scenePath}.y`);
-      assertProviderOutputFinite(owner, value.fontSize, `${scenePath}.fontSize`, true);
-      assertProviderOutputFinite(owner, value.lineHeight, `${scenePath}.lineHeight`, true);
-      assertProviderOutputFinite(owner, value.measuredWidth, `${scenePath}.measuredWidth`, true);
-      assertProviderOutputFinite(owner, value.measuredHeight, `${scenePath}.measuredHeight`, true);
+      assertSnapshotNumber(owner, value.x, `${scenePath}.x`);
+      assertSnapshotNumber(owner, value.y, `${scenePath}.y`);
+      assertSnapshotNumber(owner, value.fontSize, `${scenePath}.fontSize`, true);
+      assertSnapshotNumber(owner, value.lineHeight, `${scenePath}.lineHeight`, true);
+      assertSnapshotNumber(owner, value.measuredWidth, `${scenePath}.measuredWidth`, true);
+      assertSnapshotNumber(owner, value.measuredHeight, `${scenePath}.measuredHeight`, true);
 
       const lines = value.lines as Array<unknown>;
       if (lines.length === 0) failProviderOutput(owner, `an invalid ${scenePath}.lines`);
@@ -428,7 +469,7 @@ const visitScenePrimitive = (
         const candidate = line as Record<string, unknown>;
         if (typeof candidate.text !== 'string')
           failProviderOutput(owner, `an invalid ${scenePath}.lines[${index}].text`);
-        assertProviderOutputOptionalFinite(owner, candidate, 'fontSize', `${scenePath}.lines[${index}]`, true);
+        assertSnapshotOptionalNumber(owner, candidate, 'fontSize', `${scenePath}.lines[${index}]`, true);
         if (candidate.fontFamily !== undefined && typeof candidate.fontFamily !== 'string')
           failProviderOutput(owner, `an invalid ${scenePath}.lines[${index}].fontFamily`);
         if (
@@ -439,12 +480,12 @@ const visitScenePrimitive = (
           failProviderOutput(owner, `an invalid ${scenePath}.lines[${index}].fontWeight`);
 
         if (typeof candidate.fontWeight === 'number')
-          assertProviderOutputFinite(owner, candidate.fontWeight, `${scenePath}.lines[${index}].fontWeight`, true);
+          assertSnapshotNumber(owner, candidate.fontWeight, `${scenePath}.lines[${index}].fontWeight`, true);
         if (candidate.fontStyle !== undefined && !Object.values(FontStyle).includes(candidate.fontStyle as never))
           failProviderOutput(owner, `an invalid ${scenePath}.lines[${index}].fontStyle`);
         if (candidate.fill !== undefined && typeof candidate.fill !== 'string')
           failProviderOutput(owner, `an invalid ${scenePath}.lines[${index}].fill`);
-        assertProviderOutputUnitInterval(owner, candidate, 'opacity', `${scenePath}.lines[${index}]`);
+        assertSnapshotUnitInterval(owner, candidate, 'opacity', `${scenePath}.lines[${index}]`);
       });
 
       if (value.fontFamily !== undefined && typeof value.fontFamily !== 'string')
@@ -457,7 +498,7 @@ const visitScenePrimitive = (
         failProviderOutput(owner, `an invalid ${scenePath}.fontWeight`);
 
       if (typeof value.fontWeight === 'number')
-        assertProviderOutputFinite(owner, value.fontWeight, `${scenePath}.fontWeight`, true);
+        assertSnapshotNumber(owner, value.fontWeight, `${scenePath}.fontWeight`, true);
       if (value.fontStyle !== undefined && !Object.values(FontStyle).includes(value.fontStyle as never))
         failProviderOutput(owner, `an invalid ${scenePath}.fontStyle`);
       if (!['start', 'middle', 'end'].includes(String(value.align)))
@@ -466,7 +507,7 @@ const visitScenePrimitive = (
         failProviderOutput(owner, `an invalid ${scenePath}.baseline`);
       if (value.fill !== undefined && typeof value.fill !== 'string')
         failProviderOutput(owner, `an invalid ${scenePath}.fill`);
-      assertProviderOutputUnitInterval(owner, value, 'opacity', scenePath);
+      assertSnapshotUnitInterval(owner, value, 'opacity', scenePath);
 
       return;
     }
@@ -475,16 +516,7 @@ const visitScenePrimitive = (
       if (value.clipRef !== undefined && typeof value.clipRef !== 'string')
         failProviderOutput(owner, `an invalid ${scenePath}.clipRef`);
       const children = value.children as Array<unknown>;
-      if (context.active.has(value)) failProviderOutput(owner, `a cyclic ${scenePath}`);
-      context.active.add(value);
-
-      try {
-        children.forEach((child, index) =>
-          visitScenePrimitive(owner, child, `${scenePath}.children[${index}]`, context),
-        );
-      } finally {
-        context.active.delete(value);
-      }
+      children.forEach((child, index) => visitScenePrimitive(owner, child, `${scenePath}.children[${index}]`));
 
       return;
     }
@@ -494,30 +526,11 @@ const visitScenePrimitive = (
 };
 
 /** 在统一 fatal boundary 内物化并校验 Shape provider 发出的 Scene primitive 列表 */
-export const snapshotScenePrimitives = (owner: string, emitted: unknown): Array<ScenePrimitive> => {
-  /** 校验单个第三方 Shape primitive 的完整 Core Scene runtime contract */
-  const assertValidScenePrimitive: (owner: string, primitive: unknown) => asserts primitive is ScenePrimitive = (
-    providerOwner,
-    primitive,
-  ) => {
-    visitScenePrimitive(providerOwner, primitive, 'Scene primitive', {
-      active: new WeakSet(),
-    });
-  };
-
-  return withProviderOutputValidationBoundary(owner, () => {
-    if (
-      emitted === null ||
-      (typeof emitted !== 'object' && typeof emitted !== 'function') ||
-      typeof (emitted as { [Symbol.iterator]?: unknown })[Symbol.iterator] !== 'function'
-    ) {
-      throw createCompositeContractError(`${owner} emit must return an iterable of Scene primitives.`);
-    }
-
-    return [...(emitted as Iterable<unknown>)].map(primitive => {
+export const snapshotScenePrimitives = (owner: string, emitted: Iterable<ScenePrimitive>): Array<ScenePrimitive> =>
+  withProviderOutputValidationBoundary(owner, () =>
+    [...emitted].map(primitive => {
       const snapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive');
-      assertValidScenePrimitive(owner, snapshot);
+      visitScenePrimitive(owner, snapshot, 'Scene primitive');
       return snapshot;
-    });
-  });
-};
+    }),
+  );

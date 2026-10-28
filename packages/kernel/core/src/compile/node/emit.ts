@@ -107,7 +107,7 @@ const emitNodeShapePrimitives = (
   resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
   const axisAlignedRect: CenteredBox = { ...layout.geometry.rect, rotate: 0 };
-  let emitted: unknown;
+  let emitted: Iterable<ScenePrimitive>;
 
   try {
     emitted = layout.shape.definition.emit(

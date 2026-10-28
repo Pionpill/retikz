@@ -186,3 +186,10 @@ describe('编译字体大小预设和相对单位', () => {
     expect(() => compileToScene(ir, { fontSize: 0 }).scene).toThrow(/fontSize/);
   });
 });
+
+describe('根字号编译准入', () => {
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('空场景也拒绝非法根字号 %s', fontSize => {
+    const ir: IRScene = { version: 1, type: 'scene', children: [] };
+    expect(() => compileToScene(ir, { fontSize })).toThrow(/CompileOptions.fontSize.*positive finite/);
+  });
+});

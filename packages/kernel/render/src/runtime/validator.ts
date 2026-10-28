@@ -10,7 +10,7 @@ import type {
   SceneRuntimeSubtreeNode,
 } from '@retikz/reconciler';
 import type { SceneIdentity } from '@retikz/reconciler';
-import { createSceneIdentityLookup, sceneIdentityEquals } from '@retikz/reconciler';
+import { sceneIdentityEquals } from '@retikz/reconciler';
 
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { SceneIdentityMap } from './shared';
@@ -156,18 +156,6 @@ const isSceneIdentity = (value: unknown): value is SceneIdentity => {
   }
 };
 
-const assertUniqueIdentities = (identities: ReadonlyArray<SceneIdentity>): void => {
-  const byOwner = new Map<string, Array<SceneIdentity>>();
-
-  for (const identity of identities) {
-    const values = byOwner.get(identity.owner) ?? [];
-    values.push(identity);
-    byOwner.set(identity.owner, values);
-  }
-
-  for (const [owner, values] of byOwner) createSceneIdentityLookup(owner, values);
-};
-
 const primitiveKinds = new Set(['rect', 'ellipse', 'text', 'path', 'group']);
 
 const assertPrimitiveArray: (
@@ -262,8 +250,6 @@ const assertTopology = (
     byPath.set(path, node);
   }
 
-  assertUniqueIdentities(topology.map(node => node.identity));
-
   for (const path of expectedPaths) {
     const node = byPath.get(path.join('.'));
     const primitive = primitiveAtPath(primitives, path);
@@ -316,8 +302,6 @@ const assertSubtree = (subtree: SceneRuntimeSubtree): void => {
 
     byPath.set(path, node);
   }
-
-  assertUniqueIdentities(subtree.topology.map(node => node.identity));
 
   for (const path of paths) {
     const node = byPath.get(path.join('.'));

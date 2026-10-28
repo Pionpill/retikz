@@ -1,6 +1,6 @@
-import type { Position } from '@retikz/math';
+import type { CenteredBox, Position } from '@retikz/math';
 
-import type { BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition } from '../../contract';
+import type { BoundaryDefinition, ConnectionEnvelope, ConnectionEnvelopeKind, ShapeDefinition } from '../../contract';
 import type { BoundaryReferenceResolution } from '../../resolve';
 import {
   createCompositeContractError,
@@ -24,23 +24,11 @@ const connectionEnvelopeCacheKey = (
 const resolveConnectionEnvelope = (
   shapeName: string,
   kind: ConnectionEnvelopeKind,
-  envelope: unknown,
+  envelope: ConnectionEnvelope,
   irPath?: string,
 ): Readonly<{ halfWidth: number; halfHeight: number }> => {
   const path = irPath ?? 'node';
-  if (envelope === null || typeof envelope !== 'object') {
-    throw createCompositeContractError(
-      `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected an object with finite positive half-axes`,
-    );
-  }
-
-  const { halfWidth, halfHeight } = envelope as Record<string, unknown>;
-  if (typeof halfWidth !== 'number' || typeof halfHeight !== 'number') {
-    throw createCompositeContractError(
-      `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected numeric half-axes`,
-    );
-  }
-
+  const { halfWidth, halfHeight } = envelope;
   if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth <= 0 || halfHeight <= 0) {
     throw createCompositeContractError(
       `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected finite positive half-axes, received [${halfWidth}, ${halfHeight}]`,
@@ -90,20 +78,9 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: BoundaryGeo
 };
 
 /** 校验 Boundary provider 解析出的最终矩形 */
-const resolveBoundaryRect = (providerName: string, value: unknown, irPath?: string) => {
-  if (value === null || typeof value !== 'object') {
-    throw createCompositeContractError(
-      `Boundary '${providerName}' resolved an invalid rect at ${irPath ?? 'node'}: expected an object`,
-    );
-  }
-
-  const { x, y, width, height, rotate } = value as Record<string, unknown>;
+const resolveBoundaryRect = (providerName: string, value: CenteredBox, irPath?: string) => {
+  const { x, y, width, height, rotate } = value;
   if (
-    typeof x !== 'number' ||
-    typeof y !== 'number' ||
-    typeof width !== 'number' ||
-    typeof height !== 'number' ||
-    (rotate !== undefined && typeof rotate !== 'number') ||
     !Number.isFinite(x) ||
     !Number.isFinite(y) ||
     !Number.isFinite(width) ||
@@ -135,7 +112,7 @@ export const resolveBoundary = (
   const boundaryDef = resolution.definition as BoundaryDefinition;
   let rect = context.visualRect;
   if (boundaryDef.resolveRect !== undefined) {
-    let rawRect: unknown;
+    let rawRect: CenteredBox;
 
     try {
       rawRect = boundaryDef.resolveRect(

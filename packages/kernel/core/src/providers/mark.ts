@@ -1,5 +1,6 @@
 import type { ArrowDefinition, MarkDefinition, MarkEmitContext, PathCommand, PathPrimitive } from '../contract';
 import { defineMark } from '../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { BuiltinMarkShape } from '../schemas';
 import { createProviderRegistry } from './registry';
 
@@ -94,6 +95,19 @@ const BUILTIN_MARKS: ReadonlyMap<string, MarkDefinition> = new Map([
   [starMark.name, starMark],
 ]);
 
+/** 注册时检查标记静态几何 */
+const assertMarkGeometry = (definition: MarkDefinition): void => {
+  const baseSize = definition.baseSize ?? 10;
+  if (!Number.isFinite(baseSize) || baseSize <= 0)
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Resolve,
+      `Mark '${definition.name}' has invalid baseSize; expected a finite positive number.`,
+    );
+  const anchor = definition.anchor;
+  if (anchor !== undefined && !anchor.every(Number.isFinite))
+    throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Mark '${definition.name}' has a non-finite anchor.`);
+};
+
 /** 合并普通标记定义并诊断重复名称 */
 export const resolveMarkRegistry = (
   marks: ReadonlyArray<MarkDefinition> | undefined,
@@ -118,6 +132,9 @@ export const resolveMarkRegistry = (
       keyOf: definition => definition.name,
     }),
     custom: marks,
-    keyOf: definition => definition.name,
+    keyOf: definition => {
+      assertMarkGeometry(definition);
+      return definition.name;
+    },
   });
 };

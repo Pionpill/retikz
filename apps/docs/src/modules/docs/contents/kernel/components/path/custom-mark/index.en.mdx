@@ -30,6 +30,8 @@ The context also provides resolved `stroke`, `fill`, `lineWidth`, line caps, joi
 
 The preview above includes React registration and use. Keep the `ringMark` definition from `ring-mark.ts` outside the host code, register it once for that host, and reference it with `shape: 'ring'`.
 
+Registration checks static geometry: `baseSize` must be finite and positive, and the coordinates in `anchor` must be finite. An invalid definition is rejected at registration even if no path references the mark yet.
+
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
 

@@ -1650,6 +1650,7 @@ describe('布局感知的复契约束和边界', () => {
   });
 
   it('在废弃探测内保持敌对形状限制输出反射致命', () => {
+    const reflectionFailure = new Error('hostile circumscribe reflection');
     const hostileShape = defineShape({
       name: 'hostileCircumscribeShape',
       paramsSchema: strictObject({}),
@@ -1657,8 +1658,8 @@ describe('布局感知的复契约束和边界', () => {
         new Proxy(
           { halfWidth: 10, halfHeight: 10 },
           {
-            has: () => {
-              throw new Error('hostile circumscribe reflection');
+            get: () => {
+              throw reflectionFailure;
             },
           },
         ),
@@ -1687,7 +1688,7 @@ describe('布局感知的复契约束和边界', () => {
         composites: [parent],
         shapes: [hostileShape],
       }),
-    ).toThrow(RetikzCoreError);
+    ).toThrow(expect.objectContaining({ cause: reflectionFailure }));
   });
 
   it.each([
@@ -1885,53 +1886,6 @@ describe('布局感知的复契约束和边界', () => {
         composites: [parent],
         shapes: [hostileEnvelopeShape],
         boundaries: [hostileBoundary],
-      }),
-    ).toThrow(RetikzCoreError);
-  });
-
-  it.each([
-    { label: 'null', output: null },
-    { label: 'undefined', output: undefined },
-  ])('在废弃的探测内保留致命的边界 resolveRect $label 输出', ({ output }) => {
-    const malformedBoundary = defineBoundary({
-      name: 'nullishRectBoundary',
-      paramsSchema: strictObject({}),
-      resolveRect: () => output as never,
-      computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
-      resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
-    });
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'nullishRectBoundaryParent',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('nullishRectBoundaryParent'),
-      }),
-      compile: (_, context) => {
-        context.layoutChild(
-          {
-            type: 'scope',
-            children: [
-              { type: 'node', id: 'target', position: [0, 0], boundary: 'nullishRectBoundary' },
-              {
-                type: 'path',
-                children: [
-                  { type: 'step', kind: 'move', to: [100, 0] },
-                  { type: 'step', kind: 'line', to: { id: 'target' } },
-                ],
-              },
-            ],
-          },
-          naturalLayoutProposal,
-        );
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'nullishRectBoundaryParent' }), {
-        composites: [parent],
-        boundaries: [malformedBoundary],
       }),
     ).toThrow(RetikzCoreError);
   });

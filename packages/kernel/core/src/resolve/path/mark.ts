@@ -28,18 +28,11 @@ export const resolveMarkStyle = (
   const baseSize = definition.baseSize ?? 10;
   const resolvedLength = visual.length * visual.scale;
   const resolvedWidth = visual.width * visual.scale;
-  if (!Number.isFinite(baseSize) || baseSize <= 0)
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Resolve,
-      `Mark '${definition.name}' has invalid baseSize; expected a finite positive number.`,
-    );
   if (!Number.isFinite(resolvedLength) || !Number.isFinite(resolvedWidth))
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
       `Mark '${definition.name}' resolved length/width is non-finite (length × scale overflowed).`,
     );
   const anchor: IRPosition = definition.anchor ?? [baseSize / 2, baseSize / 2];
-  if (!anchor.every(Number.isFinite))
-    throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Mark '${definition.name}' has a non-finite anchor.`);
   return { mark, definition, visual, geometry: { baseSize, resolvedLength, resolvedWidth, anchor } };
 };

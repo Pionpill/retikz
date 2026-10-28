@@ -89,6 +89,14 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
     );
   }
 
+  const rootFontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
+  if (!Number.isFinite(rootFontSize) || rootFontSize <= 0) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `CompileOptions.fontSize must be a positive finite number; received ${rootFontSize}.`,
+    );
+  }
+
   const clips = resolveClipRegistry(options.clips);
   const maxClipDepth = options.maxClipDepth ?? DEFAULT_MAX_CLIP_DEPTH;
   if (!Number.isSafeInteger(maxClipDepth) || maxClipDepth < 0) {
@@ -114,7 +122,7 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,
     nodeDistance: options.nodeDistance ?? DEFAULT_NODE_DISTANCE,
     labelDistance,
-    rootFontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+    rootFontSize,
     shapes: resolveShapeRegistry(options.shapes),
     boundaries: resolveBoundaryRegistry(options.boundaries),
     clips,

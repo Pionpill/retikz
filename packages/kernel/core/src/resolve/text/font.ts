@@ -9,17 +9,10 @@ const DEFAULT_TEXT_LINE_HEIGHT_FACTOR = 1.2;
 /**
  * 将字号解析为绘图坐标中的数值
  * @description 缺省时继承当前字号；预设与 rem 相对根字号计算，em 相对继承字号计算，数值直接使用
- * @throws 根字号或继承字号不是有限正数，或字号字符串不受支持时抛出 RetikzCoreError
+ * @throws 继承字号不是有限正数，或字号字符串不受支持时抛出 RetikzCoreError
  */
 export const resolveFontSize = (size: IRFont['size'] | undefined, context: FontSizeResolveContext): number => {
   const { rootFontSize, inheritedFontSize } = context;
-  if (!Number.isFinite(rootFontSize) || rootFontSize <= 0) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Compile,
-      `CompileOptions.fontSize must be a positive finite number; received ${rootFontSize}.`,
-    );
-  }
-
   if (!Number.isFinite(inheritedFontSize) || inheritedFontSize <= 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,

@@ -2,6 +2,7 @@ import type {
   EmitStrokeOwnerOutputOptions,
   InputPathBoundaryLabel,
   PathCompileContext,
+  PathCompileResult,
   InputPathLabel,
   CompiledPathAppearance,
   ScenePrimitive,
@@ -51,17 +52,13 @@ type PathCompileHost = Pick<
   resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform;
 };
 /** 校验并脱离 BuiltinPath provider 返回的 primitive 与 bounds point */
-const assertPathCompileResult = (kind: string, value: unknown) =>
+const assertPathCompileResult = (kind: string, value: PathCompileResult | null) =>
   withProviderOutputValidationBoundary(`Path '${kind}'`, () => {
     if (value === null) return null;
-    if (typeof value !== 'object') {
-      throw createCompositeContractError(`Path '${kind}' must return a compile result object or null.`);
-    }
-
-    const result = value as Record<string, unknown>;
+    const result = value;
     const primitives = snapshotScenePrimitives(`Path '${kind}'`, result.primitives);
     const rawBoundsPoints = result.boundsPoints;
-    const boundsPoints = Array.from(rawBoundsPoints as Iterable<IRPosition>, (point, index): IRPosition =>
+    const boundsPoints = Array.from(rawBoundsPoints, (point, index): IRPosition =>
       snapshotProviderPosition(`Path '${kind}' bounds point at index ${index}`, point),
     );
 
@@ -263,7 +260,7 @@ export const emitDefinedPath = (
       return emitted.primitive;
     });
 
-  const compilePath = definition.compile as unknown as (context: PathCompileContext) => unknown;
+  const compilePath = definition.compile as (context: PathCompileContext) => PathCompileResult | null;
   const produced = compilePath({
     path: resolution.kind.path,
     ownerOutput: ownerOutput.publisher,

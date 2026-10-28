@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { defineTheme, RetikzCoreError, RetikzCoreErrorCode, resolveThemeRegistry } from '../../src';
+import {
+  defineArrow,
+  defineTheme,
+  RetikzCoreError,
+  RetikzCoreErrorCode,
+  resolveArrowRegistry,
+  resolveThemeRegistry,
+} from '../../src';
 import { BUILTIN_CLIPS } from '../../src/providers/clip';
+import { resolveMarkRegistry } from '../../src/providers/mark';
 import { getProviderDefinition, createProviderRegistry } from '../../src/providers/registry';
 
 type MockProvider = {
@@ -78,5 +86,34 @@ describe('提供者注册契约', () => {
 
   it('按类型索引保留的内置裁剪', () => {
     expect(BUILTIN_CLIPS.get('rect')!.kind).toBe('rect');
+  });
+});
+
+describe('静态标记几何注册准入', () => {
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('未被使用的箭头也拒绝无效基准尺寸 %s', baseSize => {
+    const arrow = { name: 'invalid-base', baseSize, backX: 0, lineContactX: 0, emit: () => [] };
+    expect(() => resolveArrowRegistry([arrow])).toThrow(
+      expect.objectContaining({ code: RetikzCoreErrorCode.CompositeContractViolation }),
+    );
+  });
+
+  it('经 define 或直接构造的箭头使用同一注册约束', () => {
+    const arrow = { name: 'invalid-order', backX: 4, lineContactX: 2, emit: () => [] };
+    expect(() => resolveArrowRegistry([arrow])).toThrow(/backX.*lineContactX.*tipX/);
+    expect(() => resolveArrowRegistry([defineArrow(arrow)])).toThrow(/backX.*lineContactX.*tipX/);
+  });
+
+  it('再次注册会检查已变更的定义', () => {
+    const arrow = { name: 'mutable', backX: 0, lineContactX: 0, emit: () => [] };
+    expect(resolveArrowRegistry([arrow]).get('mutable')).toBe(arrow);
+    arrow.backX = Number.POSITIVE_INFINITY;
+    expect(() => resolveArrowRegistry([arrow])).toThrow(/non-finite backX/);
+  });
+
+  it('普通标记注册拒绝非正基准尺寸和非有限锚点', () => {
+    expect(() => resolveMarkRegistry([{ name: 'zero', baseSize: 0, emit: () => [] }], new Map())).toThrow(/baseSize/);
+    expect(() =>
+      resolveMarkRegistry([{ name: 'invalid-anchor', anchor: [Number.NaN, 0], emit: () => [] }], new Map()),
+    ).toThrow(/anchor/);
   });
 });

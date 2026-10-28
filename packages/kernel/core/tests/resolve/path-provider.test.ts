@@ -83,9 +83,9 @@ describe('解析/路径提供者绑定', () => {
   });
 
   it('通过解析器注册表诊断未知路径定义失败', () => {
-    expect(() => resolvePathWithBuiltinProviders(path({ kind: 'missing' }), { pathRegistry: resolvePathRegistry() })).toThrow(
-      /Unknown provider 'missing'.*available: stroke/s,
-    );
+    expect(() =>
+      resolvePathWithBuiltinProviders(path({ kind: 'missing' }), { pathRegistry: resolvePathRegistry() }),
+    ).toThrow(/Unknown provider 'missing'.*available: stroke/s);
   });
 
   it('从解析器报告未知的箭头名称', () => {

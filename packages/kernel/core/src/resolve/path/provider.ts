@@ -1,4 +1,3 @@
-import type { ArrowDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { getProviderDefinition } from '../../providers';
 import type { IRArrowStyle, IRPathBase } from '../../schemas';
@@ -17,8 +16,6 @@ import type {
   PathColorSource,
   StrokePathResolution,
 } from './types';
-
-const ARROW_GEOMETRY_BASE_SIZE = 10;
 
 /** 路径描边与箭头接触处的重叠量，以宿主线宽为单位 */
 const ARROW_PATH_CONTACT_OVERLAP = 0.5;
@@ -43,51 +40,10 @@ export const resolvePathDefinition = (
   return { name: kind, definition, path: parsed as IRPathBase };
 };
 
-/** 检查箭头定义的几何数值，以及后缘、接触点、尖端的先后关系 */
-const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): void => {
-  if (!Number.isFinite(definition.backX)) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' has a non-finite backX (${String(definition.backX)}); it must be a finite number.`,
-    );
-  }
-
-  if (!Number.isFinite(definition.lineContactX)) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' has a non-finite lineContactX (${String(definition.lineContactX)}); it must be a finite number.`,
-    );
-  }
-
-  if (definition.baseSize !== undefined && (!Number.isFinite(definition.baseSize) || definition.baseSize <= 0)) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' has an invalid baseSize (${String(definition.baseSize)}); it must be a finite number greater than 0.`,
-    );
-  }
-
-  if (definition.tipX !== undefined && !Number.isFinite(definition.tipX)) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' has a non-finite tipX (${String(definition.tipX)}); it must be a finite number.`,
-    );
-  }
-
-  if (definition.outerInset !== undefined && !Number.isFinite(definition.outerInset)) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' has a non-finite outerInset (${String(definition.outerInset)}); it must be a finite number.`,
-    );
-  }
-
-  const tipX = definition.tipX ?? definition.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;
-  if (definition.backX > definition.lineContactX || definition.lineContactX > tipX) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' geometry must satisfy backX <= lineContactX <= tipX; received ${String(definition.backX)} <= ${String(definition.lineContactX)} <= ${String(tipX)}.`,
-    );
-  }
-};
-
 /** 绑定箭头定义，确定外观、有效尺寸及端点接触与收缩参数 */
 export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): ArrowMarkResolution => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const definition = getProviderDefinition(context.arrowRegistry, shape);
-  assertFiniteArrowGeometry(shape, definition);
   const shared = resolveMarkStyle(mark, definition, context);
   const { visual } = shared;
   const { baseSize, resolvedLength, resolvedWidth } = shared.geometry;

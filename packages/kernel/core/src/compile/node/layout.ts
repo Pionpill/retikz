@@ -1,6 +1,6 @@
 import { DEG_TO_RAD } from '@retikz/math';
 
-import type { LayoutAxisProposal, Transform } from '../../contract';
+import type { LayoutAxisProposal, ShapeCircumscribedGeometry, Transform } from '../../contract';
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { CanonicalNode, NodeResolution } from '../../resolve';
@@ -228,7 +228,7 @@ export const compileNodeResolution = (resolution: NodeResolution, context: NodeL
   const minHalfH = (minimumSize.height * sy) / 2;
 
   const circumscribeContent = (textWidth: number, textHeight: number) => {
-    let raw: unknown;
+    let raw: ShapeCircumscribedGeometry;
 
     try {
       raw = shapeDef.computeCircumscribedGeometry(
@@ -246,28 +246,14 @@ export const compileNodeResolution = (resolution: NodeResolution, context: NodeL
     }
 
     return withProviderOutputValidationBoundary(`Shape '${shapeDef.name}' circumscribe`, () => {
-      if (raw === null || typeof raw !== 'object') {
+      const { halfWidth, halfHeight } = raw;
+      if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth < 0 || halfHeight < 0) {
         throw createCompositeContractError(
           `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
         );
       }
 
-      const halfWidth = 'halfWidth' in raw ? raw.halfWidth : undefined;
-      const halfHeight = 'halfHeight' in raw ? raw.halfHeight : undefined;
-      if (
-        typeof halfWidth !== 'number' ||
-        typeof halfHeight !== 'number' ||
-        !Number.isFinite(halfWidth) ||
-        !Number.isFinite(halfHeight) ||
-        halfWidth < 0 ||
-        halfHeight < 0
-      ) {
-        throw createCompositeContractError(
-          `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
-        );
-      }
-
-      const rawOffset = 'offset' in raw ? raw.offset : undefined;
+      const rawOffset = raw.offset;
       const offset =
         rawOffset === undefined
           ? undefined
