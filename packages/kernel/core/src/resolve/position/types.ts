@@ -7,7 +7,7 @@ import type {
   IRAtPosition,
   IROffsetPosition,
 } from '../../schemas';
-import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
+import type { BoundaryResolution, NodeReferenceView } from '../node';
 
 /** 引用的布局状态：已完成布局，或暂用作用域占位几何 */
 type PositionReferenceState = 'resolved' | 'scope-placeholder';
@@ -46,15 +46,12 @@ export type PositionResolution = Readonly<{
 export type PositionTargetResolveContext = PositionResolveContext &
   Readonly<{
     /** 解析节点目标选用的连接面 */
-    boundaryResolutionOf?: (
-      target: IRNodeTarget,
-      reference: PositionReferenceView,
-    ) => BoundaryReferenceResolution | undefined;
+    boundaryResolutionOf?: (target: IRNodeTarget, reference: PositionReferenceView) => BoundaryResolution | undefined;
     /** 返回节点目标的世界坐标中心或显式锚点，结果不含 target.offset */
     pointOfNodeTarget: (
       target: IRNodeTarget,
       reference: PositionReferenceView,
-      boundaryResolution: BoundaryReferenceResolution | undefined,
+      boundaryResolution: BoundaryResolution | undefined,
     ) => IRPosition;
   }>;
 
@@ -69,7 +66,7 @@ export type PositionTargetResolution = Readonly<{
   /** 直接引用的节点、坐标或作用域；插值和普通坐标目标不携带此字段 */
   reference?: PositionReferenceView;
   /** 节点目标选用的连接面 */
-  boundaryResolution?: BoundaryReferenceResolution;
+  boundaryResolution?: BoundaryResolution;
 }>;
 
 /** 目标的世界坐标与引用结果，尚未转换为局部坐标 */

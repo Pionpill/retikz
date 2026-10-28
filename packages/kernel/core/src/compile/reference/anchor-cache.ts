@@ -1,7 +1,7 @@
 import type { Position } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
+import type { BoundaryResolution, NodeReferenceView } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { Side } from '../../shared';
 import type { CompiledNodeLayout } from '../node';
@@ -28,7 +28,7 @@ const computeAnchor = (
   layout: AnchorLayout,
   anchorName: string,
   boundary: IRBoundary | undefined,
-  boundaryResolution?: BoundaryReferenceResolution,
+  boundaryResolution?: BoundaryResolution,
   state?: NodeGeometryState,
 ): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
@@ -69,7 +69,7 @@ export const resolveAnchorRefUncached = (
   layout: AnchorLayout,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
-  boundaryResolution?: BoundaryReferenceResolution,
+  boundaryResolution?: BoundaryResolution,
   state?: NodeGeometryState,
 ): IRPosition => {
   if (typeof anchor === 'number') return computeAnchor(layout, String(anchor), boundary, boundaryResolution, state);
@@ -82,7 +82,7 @@ export const resolveAnchor = (
   layout: AnchorLayout,
   anchorName: string,
   boundary?: IRBoundary,
-  boundaryResolution?: BoundaryReferenceResolution,
+  boundaryResolution?: BoundaryResolution,
   state?: NodeGeometryState,
 ): IRPosition => {
   let layoutCache = cache.get(layout);
@@ -124,7 +124,7 @@ export const resolveAnchorRef = (
   layout: AnchorLayout,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
-  boundaryResolution?: BoundaryReferenceResolution,
+  boundaryResolution?: BoundaryResolution,
   state?: NodeGeometryState,
 ): IRPosition => {
   if (typeof anchor === 'number') return resolveAnchor(layout, String(anchor), boundary, boundaryResolution, state);

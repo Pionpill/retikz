@@ -1,5 +1,5 @@
 import type { Transform } from '../../contract';
-import type { BoundaryReferenceResolution, BoundaryReferenceResolver, NodeReferenceView } from '../../resolve';
+import type { BoundaryResolution, NodeBoundaryResolver, NodeReferenceView } from '../../resolve';
 import { boundaryKey } from '../../resolve';
 import type { PositionReferenceView, PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePositionTarget } from '../../resolve/position';
@@ -12,7 +12,7 @@ import type { ComposedScopeTransform } from '../transform';
 import { applyScopeTransform, inverseScopeTransform, composeScopeTransform } from '../transform';
 
 /** 把视觉 shape 绑定为默认连接面 resolution */
-const shapeBoundaryResolutionOf = (node: NodeReferenceView): BoundaryReferenceResolution => ({
+const shapeBoundaryResolutionOf = (node: NodeReferenceView): BoundaryResolution => ({
   name: node.shapeName,
   definition: node.shapeDef,
   params: node.shapeParams,
@@ -23,8 +23,8 @@ const shapeBoundaryResolutionOf = (node: NodeReferenceView): BoundaryReferenceRe
 const targetBoundaryResolutionOf = (
   node: NodeReferenceView,
   target: IRNodeTarget,
-  resolveExplicitBoundary?: BoundaryReferenceResolver,
-): BoundaryReferenceResolution | undefined => {
+  resolveExplicitBoundary?: NodeBoundaryResolver,
+): BoundaryResolution | undefined => {
   const boundary = target.boundary ?? node.boundary;
   if (boundary === undefined || boundary === 'shape') return shapeBoundaryResolutionOf(node);
   if (boundaryKey(boundary) === boundaryKey(node.boundary)) return node.boundaryResolution;
@@ -50,7 +50,7 @@ type InputPositionResolveContext = Readonly<{
   /** traversal 已合成的当前 Scope 变换 */
   composedTransform?: ComposedScopeTransform;
   /** 显式连接面绑定能力 */
-  resolveExplicitBoundary?: BoundaryReferenceResolver;
+  resolveExplicitBoundary?: NodeBoundaryResolver;
 }>;
 
 /**
@@ -79,7 +79,7 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
   const pointOfNodeTarget = (
     target: IRNodeTarget,
     reference: PositionReferenceView,
-    boundaryResolution: BoundaryReferenceResolution | undefined,
+    boundaryResolution: BoundaryResolution | undefined,
   ): IRPosition => {
     const node = reference.node;
     if (target.anchor === undefined) return [node.rect.x, node.rect.y];

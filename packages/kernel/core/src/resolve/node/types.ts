@@ -41,6 +41,24 @@ export type NodePrimaryColorSource = Omit<IRNode, 'style'> & {
   };
 };
 
+/** 已补齐位置与放置默认值、颜色尚待解析的标签 */
+export type NodeLabelPlacementSource = Omit<IRNodeLabel, 'align' | 'position' | 'placement' | 'distance'> & {
+  align: CanonicalNodeLabel['align'];
+  position: CanonicalNodeLabel['position'];
+  placement: CanonicalNodeLabel['placement'];
+  distance: number;
+};
+
+/** 已展开标签及其默认配置的节点输入 */
+export type NodeLabelSource = Omit<IRNode, 'label'> & {
+  label?: Array<NodeLabelPlacementSource>;
+};
+
+/** 已展开标签默认配置并解析节点自身数值颜色的节点输入 */
+export type NodeLabelPrimaryColorSource = Omit<NodePrimaryColorSource, 'label'> & {
+  label?: Array<NodeLabelPlacementSource>;
+};
+
 /** 已解析节点、正文和标签数值颜色的节点输入 */
 export type NodeColorSource = Omit<NodePrimaryColorSource, 'text' | 'label'> & {
   /** 已解析行级与片段颜色的正文 */
@@ -146,7 +164,7 @@ export type ShapeResolution = {
 };
 
 /** 已绑定定义与参数的连接面，几何需结合节点视觉尺寸计算 */
-export type BoundaryReferenceResolution = {
+export type BoundaryResolution = {
   /** 实际选中的定义名称；沿用节点形状时为该形状的名称 */
   name: string;
   /** 选中的连接面定义或形状定义 */
@@ -177,16 +195,16 @@ export type NodeReferenceView = Readonly<{
   /** 节点自身默认连接面 */
   boundary?: IRBoundary;
   /** 已绑定的默认连接面定义与参数 */
-  boundaryResolution: BoundaryReferenceResolution;
+  boundaryResolution: BoundaryResolution;
   /** 当前节点 IR 路径 */
   irPath?: string;
 }>;
 
 /** 结合节点视觉形状解析连接面定义与参数的回调 */
-export type BoundaryReferenceResolver = (
+export type NodeBoundaryResolver = (
   boundary: IRBoundary | undefined,
   context: Readonly<{ visualDef: ShapeDefinition; visualParams: JsonObject; irPath?: string }>,
-) => BoundaryReferenceResolution;
+) => BoundaryResolution;
 
 /** 已解析的节点输入、形状与默认连接面 */
 export type NodeResolution = Readonly<{
@@ -197,7 +215,7 @@ export type NodeResolution = Readonly<{
   /** 节点视觉形状 */
   shape: ShapeResolution;
   /** 节点默认连接面引用 */
-  boundary: BoundaryReferenceResolution;
+  boundary: BoundaryResolution;
 }>;
 
 /** 节点解析所需的默认配置、扩展定义与诊断能力 */

@@ -10,7 +10,7 @@ import { defineBoundary } from '../../src/contract';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import type { ProviderRegistry } from '../../src/providers/registry';
 import { ellipseShape, rectangle } from '../../src/providers/shape';
-import { boundaryKey, resolveBoundaryReference } from '../../src/resolve/node';
+import { boundaryKey, resolveNodeBoundary } from '../../src/resolve/node';
 
 const visualRect: CenteredBox = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
 
@@ -49,9 +49,9 @@ const resolveContext = (overrides: Partial<BoundaryTestContext> = {}): BoundaryT
   ...overrides,
 });
 
-const resolveBoundary = (boundary: Parameters<typeof resolveBoundaryReference>[0], context: BoundaryTestContext) =>
+const resolveBoundary = (boundary: Parameters<typeof resolveNodeBoundary>[0], context: BoundaryTestContext) =>
   resolveBoundaryGeometry(
-    resolveBoundaryReference(boundary, {
+    resolveNodeBoundary(boundary, {
       visualDef: context.visualDef,
       visualParams: context.visualParams,
       shapeRegistry: context.shapeRegistry,

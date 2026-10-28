@@ -1,7 +1,7 @@
 import type { CenteredBox, Position } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelope, ConnectionEnvelopeKind, ShapeDefinition } from '../../contract';
-import type { BoundaryReferenceResolution } from '../../resolve';
+import type { BoundaryResolution } from '../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -102,7 +102,7 @@ const asGeometryDefinition = (definition: BoundaryDefinition | ShapeDefinition):
 
 /** 将已解析连接面引用绑定到视觉 rect 并执行 provider 几何 */
 export const resolveBoundary = (
-  resolution: BoundaryReferenceResolution,
+  resolution: BoundaryResolution,
   context: BoundaryGeometryResolveContext,
 ): BoundaryGeometryResolution => {
   if (resolution.isShape) {

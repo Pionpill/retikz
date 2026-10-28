@@ -14,7 +14,7 @@ import type {
   CanonicalDropShadow,
 } from '../../schemas';
 import type { ThemeMode } from '../../shared';
-import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
+import type { BoundaryResolution, NodeReferenceView } from '../node';
 import type { InputPaintResolution } from '../resource';
 import type { MergedScopeDefaults, GraphicOpacityResolution } from '../style';
 import type { LabelTextColorSource } from '../text';
@@ -281,7 +281,7 @@ export type TargetResolution = Readonly<{
   /** 直接引用的节点、坐标或作用域几何，普通坐标目标不设置 */
   node?: NodeReferenceView;
   /** 节点目标选用的连接面，普通坐标目标不设置 */
-  boundaryResolution?: BoundaryReferenceResolution;
+  boundaryResolution?: BoundaryResolution;
 }>;
 
 /** 路径输入经样式解析、默认值补全与目标绑定后的结果 */

@@ -29,10 +29,10 @@ import { CompileExpansionKind, LayoutChildProbeKind, naturalLayoutProposal } fro
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import { captureCompositeInputScope, selectCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { BoundaryReferenceResolver, PathTargetResolver, TargetResolution } from '../../resolve';
+import type { NodeBoundaryResolver, PathTargetResolver, TargetResolution } from '../../resolve';
 import {
   bindComposite,
-  resolveBoundaryReference,
+  resolveNodeBoundary,
   resolveComposite,
   resolvePath as resolvePathValue,
   resolveScopeDefaults,
@@ -249,8 +249,8 @@ export const compileChildrenToPrimitives = (
     },
   };
 
-  const resolveExplicitBoundary: BoundaryReferenceResolver = (boundary, referenceContext) =>
-    resolveBoundaryReference(boundary, {
+  const resolveExplicitBoundary: NodeBoundaryResolver = (boundary, referenceContext) =>
+    resolveNodeBoundary(boundary, {
       visualDef: referenceContext.visualDef,
       visualParams: referenceContext.visualParams,
       shapeRegistry: runtime.context.shapes,

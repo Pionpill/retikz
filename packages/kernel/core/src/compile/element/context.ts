@@ -1,6 +1,6 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { DEFAULT_RESOLVED_THEME, resolveScopeDefaults, resolveTheme } from '../../resolve';
-import { resolveBoundaryReference } from '../../resolve';
+import { resolveNodeBoundary } from '../../resolve';
 import type { IRScope } from '../../schemas';
 import type { CompileEnvironment } from '../environment';
 import { createNodeGeometryContext } from '../node';
@@ -71,7 +71,7 @@ const createElementWorkspace = (options: ElementCompileOptions) => {
       return undefined;
     },
     resolveExplicitBoundary: (boundary, reference) =>
-      resolveBoundaryReference(boundary, {
+      resolveNodeBoundary(boundary, {
         visualDef: reference.visualDef,
         visualParams: reference.visualParams,
         shapeRegistry: options.environment.shapes,
