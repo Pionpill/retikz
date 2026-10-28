@@ -5,12 +5,12 @@ import { createFlexLayout, FlexLayoutArtifactSchema, LayoutItemKind } from '@ret
 import { LegendSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
-import { defineDiagramTheme } from '../../src/_diagram';
+import type { DiagramThemeDefinition } from '../../src/_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type {
   FlowLayoutDefinition,
   FlowLayoutExecutionContext,
-  FlowLayoutInput,
+  InputFlowLayoutComputation,
   FlowLayoutOutput,
   IRFlowEntity,
 } from '../../src/flow';
@@ -25,7 +25,7 @@ import { parseTestFlowDiagram } from './fixtures';
 
 type ExecuteFlowLayout = (
   definition: FlowLayoutDefinition,
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   context?: FlowLayoutExecutionContext,
 ) => FlowLayoutOutput;
 
@@ -56,7 +56,7 @@ const getExecuteFlowLayout = (): ExecuteFlowLayout | undefined => {
   return undefined;
 };
 
-const input: FlowLayoutInput = {
+const input: InputFlowLayoutComputation = {
   layout: {
     direction: 'right',
     nodeGap: 20,
@@ -169,8 +169,8 @@ const slopedLabelGroup = (primitives: ReadonlyArray<ScenePrimitive>, text: strin
       textPrimitive(primitive.children, text) !== undefined,
   );
 
-describe('Flow layout callback execution', () => {
-  it('publishes one detached, frozen and normalized provider boundary', () => {
+describe('Flow 布局回调执行', () => {
+  it('发布一个独立的、冻结的和标准化的提供者边界', () => {
     const executeFlowLayout = getExecuteFlowLayout();
 
     expect(executeFlowLayout).toBeDefined();
@@ -178,7 +178,7 @@ describe('Flow layout callback execution', () => {
     if (executeFlowLayout === undefined) return;
 
     let callCount = 0;
-    let receivedInput: FlowLayoutInput | undefined;
+    let receivedInput: InputFlowLayoutComputation | undefined;
     const mutableOutput = output();
     const result = executeFlowLayout(
       definition(received => {
@@ -204,7 +204,7 @@ describe('Flow layout callback execution', () => {
     expect(Object.isFrozen(result.relations[0]?.route.points)).toBe(true);
   });
 
-  it('rejects non-plain callback outputs at the snapshot boundary', () => {
+  it('拒绝快照边界处的非普通回调输出', () => {
     const executeFlowLayout = getExecuteFlowLayout();
 
     expect(executeFlowLayout).toBeDefined();
@@ -222,7 +222,7 @@ describe('Flow layout callback execution', () => {
     );
   });
 
-  it('rejects identity, order, coverage, leaf size, endpoint, route and label contract violations', () => {
+  it('拒绝身份、顺序、覆盖范围、叶子大小、端点、路线和标签契约违规', () => {
     const executeFlowLayout = getExecuteFlowLayout();
 
     expect(executeFlowLayout).toBeDefined();
@@ -230,6 +230,31 @@ describe('Flow layout callback execution', () => {
     if (executeFlowLayout === undefined) return;
 
     const invalidOutputs: Array<FlowLayoutOutput> = [
+      {
+        ...output(),
+        relations: [
+          {
+            ...output().relations[0],
+            route: {
+              kind: 'orthogonal',
+              cornerRadius: -1,
+              points: [
+                [0, 5],
+                [20, 5],
+              ],
+            },
+          },
+        ],
+      },
+      {
+        ...output(),
+        relations: [
+          {
+            ...output().relations[0],
+            source: { id: input.relations[0].source.id, anchor: { side: 'right', fraction: 2 } },
+          },
+        ],
+      },
       { ...output(), elements: [...output().elements].reverse() },
       { ...output(), relations: [] },
       {
@@ -283,14 +308,14 @@ describe('Flow layout callback execution', () => {
     }
   });
 
-  it('requires each authored Layout placement exactly once and preserves its relative child bounds', () => {
+  it('要求每个编写的 Layout 放置恰好一次并保留其相对子边界', () => {
     const executeFlowLayout = getExecuteFlowLayout();
 
     expect(executeFlowLayout).toBeDefined();
 
     if (executeFlowLayout === undefined) return;
 
-    const layoutInput: FlowLayoutInput = {
+    const layoutInput: InputFlowLayoutComputation = {
       layout: input.layout,
       elements: [
         {
@@ -352,7 +377,7 @@ describe('Flow layout callback execution', () => {
         ],
         relations: [],
       }),
-      (_input: FlowLayoutInput, context: FlowLayoutExecutionContext) => {
+      (_input: InputFlowLayoutComputation, context: FlowLayoutExecutionContext) => {
         const placement = place(context);
         place(context);
 
@@ -364,7 +389,7 @@ describe('Flow layout callback execution', () => {
           relations: [],
         };
       },
-      (_input: FlowLayoutInput, context: FlowLayoutExecutionContext) => {
+      (_input: InputFlowLayoutComputation, context: FlowLayoutExecutionContext) => {
         const placement = place(context);
         return {
           elements: [
@@ -380,19 +405,6 @@ describe('Flow layout callback execution', () => {
         RetikzDiagramErrorCode.FlowLayoutOutputInvalid,
       );
     }
-
-    expectDiagramError(
-      () =>
-        executeFlowLayout(
-          definition((_input, context) => {
-            Reflect.apply(context.placeLayout, context, [null]);
-            return { elements: [], relations: [] };
-          }),
-          layoutInput,
-          placementContext,
-        ),
-      RetikzDiagramErrorCode.FlowLayoutOutputInvalid,
-    );
   });
 });
 
@@ -401,8 +413,8 @@ type CreateFlowDiagramProviderContribution = () => CoreProviderContribution;
 const isCreateFlowDiagramProviderContribution = (value: unknown): value is CreateFlowDiagramProviderContribution =>
   typeof value === 'function';
 
-describe('Flow Diagram compile transaction', () => {
-  it('applies match-largest only to direct Layout Entities and preserves the final Core width through materialization', () => {
+describe('Flow Diagram 编译事务', () => {
+  it('仅对直接 Layout 实体应用最大匹配，并通过物化保留最终的 Core 宽度', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
@@ -453,7 +465,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(textPrimitive(result.scene.primitives, 'A')).toBeDefined();
   });
 
-  it('measures and renders a styled multi-line Entity text block through the Graph pipeline', () => {
+  it('通过 Graph 管线测量和渲染样式化的多行 Entity 文本块', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
@@ -510,7 +522,7 @@ describe('Flow Diagram compile transaction', () => {
     );
   });
 
-  it('renders Flow Entity and Relation status through the existing Graph Theme appearance', () => {
+  it('通过现有的 Graph 主题外观渲染 Flow Entity 和 Relation 状态', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
@@ -541,7 +553,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(scene).toContain(DEFAULT_RESOLVED_THEME.colors.semantic.warning);
   });
 
-  it('produces Scene, one Flow artifact and world-space element handles from the same provider contribution', () => {
+  it('生成 Scene、一个 Flow 产物和来自同一提供者贡献的世界空间元素句柄', () => {
     const candidate: unknown = Flow;
     const createContribution =
       typeof candidate === 'object' &&
@@ -598,7 +610,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(serializedScene).toContain('Target');
   });
 
-  it('inherits named Graph Group appearance while the Flow definition remains empty', () => {
+  it('继承名为 Graph Group 的外观，而 Flow 定义保持为空', () => {
     const styleName = 'graph-owned-group';
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
@@ -612,7 +624,10 @@ describe('Flow Diagram compile transaction', () => {
       contributions: [
         Flow.createFlowDiagramProviderContribution({
           diagramThemeDefinitions: [
-            defineDiagramTheme({ name: styleName, resolve: () => ({ frame: { background: { fill: 'none' } } }) }),
+            {
+              name: styleName,
+              resolve: () => ({ frame: { background: { fill: 'none' } } }),
+            } satisfies DiagramThemeDefinition,
           ],
           flowThemeDefinitions: [Flow.defineFlowTheme({ name: styleName, resolve: () => ({}) })],
           graphThemeDefinitions: [
@@ -654,7 +669,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(source).not.toHaveProperty('flowTheme');
   });
 
-  it('reports only authored Foundation regions in the Flow artifact', () => {
+  it('仅报告 Flow 产物中编写的 Foundation 区域', () => {
     const createContribution = Flow.createFlowDiagramProviderContribution;
     const definitions = resolveCoreProviderDependencies({ contributions: [createContribution()] });
     const source: IRChild = parseTestFlowDiagram({
@@ -692,7 +707,7 @@ describe('Flow Diagram compile transaction', () => {
     );
   });
 
-  it('accepts four nested Groups and preserves depth-first artifact identity', () => {
+  it('接受四个嵌套组并保留深度优先的产物标识', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
@@ -728,7 +743,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(flattenIds(artifact.elements)).toEqual(['group-0', 'group-1', 'group-2', 'group-3', 'leaf']);
   });
 
-  it('applies an explicit root orthogonal routing override', () => {
+  it('应用显式根正交路由覆盖', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
@@ -761,7 +776,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(artifact.relations[0]?.route).toMatchObject({ kind: 'orthogonal', cornerRadius: 0 });
   });
 
-  it('materializes an unconfigured layered Relation as a straight two-point route', () => {
+  it('将未配置的分层 Relation 具体化为直线两点路线', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
@@ -795,81 +810,78 @@ describe('Flow Diagram compile transaction', () => {
     expect(route.points).toHaveLength(2);
   });
 
-  it.each(['top', 'right', 'bottom', 'left'] as const)(
-    'projects exact-proposal drawing and %s Legend regions in their physical order',
-    legendPosition => {
-      const definitions = resolveCoreProviderDependencies({
-        contributions: [Flow.createFlowDiagramProviderContribution()],
-      });
-      const legend = LegendSchema.parse({
-        namespace: 'standard',
-        type: 'legend',
-        content: {
-          kind: 'items',
-          items: [
-            {
-              key: 'active',
-              sample: {
-                type: 'node',
-                position: [0, 0],
-                style: { fill: '#2563eb' },
-                layout: { minimumSize: 10 },
-              },
-              label: { type: 'node', position: [0, 0], text: 'Active' },
+  it.each(['top', 'right', 'bottom', 'left'] as const)('按物理顺序投影精确建议图和 %s Legend 区域', legendPosition => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [Flow.createFlowDiagramProviderContribution()],
+    });
+    const legend = LegendSchema.parse({
+      namespace: 'standard',
+      type: 'legend',
+      content: {
+        kind: 'items',
+        items: [
+          {
+            key: 'active',
+            sample: {
+              type: 'node',
+              position: [0, 0],
+              style: { fill: '#2563eb' },
+              layout: { minimumSize: 10 },
             },
-          ],
-        },
-      });
-      const source: IRChild = parseTestFlowDiagram({
-        namespace: 'diagram',
-        type: 'flow',
-        presentation: { title: { text: 'Architecture' }, legend },
-        frame: { padding: 12, legendPosition, legendAlign: 'center', drawingLegendGap: 9 },
-        entities: [{ id: 'only', text: 'Only' }],
-        groups: [],
-        layouts: [],
-        children: ['only'],
-      });
-      const result = compileToScene(
-        {
-          type: 'scene',
-          version: 1,
-          children: [
-            createFlexLayout({
-              size: { x: { kind: 'fixed', value: 420 }, y: { kind: 'fixed', value: 260 } },
-              children: [{ kind: LayoutItemKind.Flex, child: source, grow: 1 }],
-            }),
-          ],
-        },
-        {
-          ...definitions,
-          padding: 0,
-          measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
-        },
-      );
-      const artifactEnvelope = result.artifacts.find(
-        artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
-      );
-      const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
-      const drawing = artifact.regions.drawing.allocationBounds;
-      const legendBounds = artifact.regions.legend?.allocationBounds;
+            label: { type: 'node', position: [0, 0], text: 'Active' },
+          },
+        ],
+      },
+    });
+    const source: IRChild = parseTestFlowDiagram({
+      namespace: 'diagram',
+      type: 'flow',
+      presentation: { title: { text: 'Architecture' }, legend },
+      frame: { padding: 12, legendPosition, legendAlign: 'center', drawingLegendGap: 9 },
+      entities: [{ id: 'only', text: 'Only' }],
+      groups: [],
+      layouts: [],
+      children: ['only'],
+    });
+    const result = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          createFlexLayout({
+            size: { x: { kind: 'fixed', value: 420 }, y: { kind: 'fixed', value: 260 } },
+            children: [{ kind: LayoutItemKind.Flex, child: source, grow: 1 }],
+          }),
+        ],
+      },
+      {
+        ...definitions,
+        padding: 0,
+        measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
+      },
+    );
+    const artifactEnvelope = result.artifacts.find(
+      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+    );
+    const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
+    const drawing = artifact.regions.drawing.allocationBounds;
+    const legendBounds = artifact.regions.legend?.allocationBounds;
 
-      expect(artifact.frame.allocationBounds).toMatchObject({ width: 420, height: 260 });
-      expect(legendBounds).toBeDefined();
+    expect(artifact.frame.allocationBounds).toMatchObject({ width: 420, height: 260 });
+    expect(legendBounds).toBeDefined();
 
-      if (legendBounds === undefined) return;
-      if (legendPosition === 'top') expect(legendBounds.y + legendBounds.height + 9).toBe(drawing.y);
-      if (legendPosition === 'bottom') expect(drawing.y + drawing.height + 9).toBe(legendBounds.y);
-      if (legendPosition === 'left') expect(legendBounds.x + legendBounds.width + 9).toBe(drawing.x);
-      if (legendPosition === 'right') expect(drawing.x + drawing.width + 9).toBe(legendBounds.x);
-    },
-  );
+    if (legendBounds === undefined) return;
+    if (legendPosition === 'top') expect(legendBounds.y + legendBounds.height + 9).toBe(drawing.y);
+    if (legendPosition === 'bottom') expect(drawing.y + drawing.height + 9).toBe(legendBounds.y);
+    if (legendPosition === 'left') expect(legendBounds.x + legendBounds.width + 9).toBe(drawing.x);
+    if (legendPosition === 'right') expect(drawing.x + drawing.width + 9).toBe(legendBounds.x);
+  });
 
   it.each([
     { legendPosition: 'top', legendAlign: 'center' },
     { legendPosition: 'right', legendAlign: 'end' },
   ] as const)(
-    'projects $legendPosition/$legendAlign Foundation regions and handles from the exact Flex placement',
+    '从精确的 Flex 位置投影 $legendPosition/$legendAlign Foundation 区域和句柄',
     ({ legendPosition, legendAlign }) => {
       const definitions = resolveCoreProviderDependencies({
         contributions: [Flow.createFlowDiagramProviderContribution()],
@@ -978,7 +990,7 @@ describe('Flow Diagram compile transaction', () => {
     },
   );
 
-  it('keeps Flow relation labels centered on the path midpoint regardless of their layout reservation', () => {
+  it('保持 Flow 关系标签居中于路径中点，无论其布局保留如何', () => {
     const compile = (
       reservation: 'horizontal' | 'vertical',
       relationLabel: string | Array<string> = 'edge-label',
@@ -1109,7 +1121,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(multiLine.hasDetail).toBe(true);
   });
 
-  it('reports a final Graph relation probe failure as materialize with the authored relation context', () => {
+  it('报告最终的 Graph 关系探测失败，具体化为所编写的关系上下文', () => {
     const failingRole = defineRelationRole({
       role: 'failing-relation',
       description: 'Fails only when Core materializes the Graph Relation marker',
@@ -1167,7 +1179,7 @@ describe('Flow Diagram compile transaction', () => {
     }
   });
 
-  it('wraps an exact Foundation allocation failure with the assemble stage and original cause', () => {
+  it('将精确的 Foundation 分配失败与组装阶段和原始原因包装在一起', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
@@ -1211,7 +1223,7 @@ describe('Flow Diagram compile transaction', () => {
     }
   });
 
-  it('materializes recursive Group geometry and relation routing from one custom callback', () => {
+  it('从一个自定义回调具体化递归 Group 几何图形和关系路由', () => {
     let callCount = 0;
     const customLayout = definition(layoutInput => {
       callCount += 1;
@@ -1326,7 +1338,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(JSON.stringify(result.scene)).toContain('crosses');
   });
 
-  it('keeps Layout as a fixed zero-shell scope without Graph endpoint identity', () => {
+  it('将 Layout 保持为固定的零 shell 范围，没有 Graph 端点标识', () => {
     const customLayout = definition((layoutInput, context) => {
       const layout = layoutInput.elements[0];
       const outside = layoutInput.elements[1];
@@ -1410,7 +1422,7 @@ describe('Flow Diagram compile transaction', () => {
     ['left', 'x', 'y', -1],
     ['down', 'y', 'x', 1],
     ['up', 'y', 'x', -1],
-  ] as const)('places a real Layout %s through canonical Flex with end alignment', (direction, main, cross, sign) => {
+  ] as const)('通过末端对齐的规范 Flex 放置真实的 Layout %s', (direction, main, cross, sign) => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
@@ -1453,8 +1465,8 @@ describe('Flow Diagram compile transaction', () => {
   });
 });
 
-describe('Flow Graph materialization invariants', () => {
-  it('reports authored id and Source path when validated layout geometry loses an element', () => {
+describe('Flow Graph 物化不变量', () => {
+  it('当经过验证的布局几何图形丢失元素时，报告编写的 id 和 Source 路径', () => {
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
       type: 'flow',

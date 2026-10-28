@@ -1,6 +1,6 @@
 import type { IRChild, IRPath, IRStep, IRTarget, IRPaintValue } from '@retikz/core';
 
-import type { CoordinateFrame, MarkChannels, MarkInstanceInput, MarkLoweringContext } from '../../../contract';
+import type { CoordinateFrame, MarkChannels, InputMarkInstance, MarkLoweringContext } from '../../../contract';
 import { mapPositionInput, markInstances, unencodedMarkProperties } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotPathMark, IRPlotPositionInput, IRPlotPathEndpoint } from '../../../schemas';
@@ -21,7 +21,7 @@ import { lowerPathSteps } from './path-steps';
 /** 按实例生成完整步骤或端点连接，共享路径宿主外观与追溯 */
 export const lowerPathInstances = (
   mark: IRPlotPathMark,
-  input: MarkInstanceInput,
+  input: InputMarkInstance,
   frame: CoordinateFrame,
   channels: MarkChannels,
   context?: MarkLoweringContext,

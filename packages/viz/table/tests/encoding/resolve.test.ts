@@ -18,8 +18,8 @@ const runCustom = (definition: AnyCellVisualScaleDefinition, values: ReadonlyArr
     registry: resolveCellVisualScaleRegistry([definition]),
   });
 
-describe('Cell visual scale runtime guard', () => {
-  it('passes detached recursively frozen options and trusts the exact schema transform output', () => {
+describe('Cell 视觉秤运行时防护', () => {
+  it('传递分离的递归冻结选项并信任确切的 schema 转换输出', () => {
     const input = { nested: { colors: ['red'] } };
     let observed: unknown;
     const inspect = defineCellVisualScale({
@@ -57,7 +57,7 @@ describe('Cell visual scale runtime guard', () => {
     expect(Object.isFrozen(transformedOptions)).toBe(true);
   });
 
-  it('detaches and freezes resolution arrays without probing the evaluator', () => {
+  it('分离并冻结解析结果数组而不探测求值器', () => {
     let calls = 0;
     const domain = [1, 2];
     const range = ['red', 'blue'];
@@ -89,7 +89,7 @@ describe('Cell visual scale runtime guard', () => {
     expect(scale).toMatchObject({ domain: [1, 2], range: ['red', 'blue'] });
   });
 
-  it('captures one evaluator function from a custom resolution getter', () => {
+  it('从自定义解析结果获取器捕获一个求值器函数', () => {
     let evaluatorReads = 0;
     const definition = defineCellVisualScale({
       name: 'captured-evaluator',
@@ -116,7 +116,7 @@ describe('Cell visual scale runtime guard', () => {
     [{ legendForm: 'ramp', domain: [0, 1], range: ['red', 'blue'], edges: [0] }, /ramp/i],
     [{ legendForm: 'swatch', domain: ['a'], range: ['red', 'blue'] }, /swatch/i],
     [{ legendForm: 'swatch', domain: [2, 1], range: ['red', 'blue', 'green'], edges: [2, 1] }, /edges/i],
-  ] as const)('rejects malformed resolution %j', (partial, message) => {
+  ] as const)('拒绝格式错误的解析结果 %j', (partial, message) => {
     const invalid = defineCellVisualScale({
       name: `invalid-${String(partial.legendForm)}-${partial.range.length}-${partial.domain.length}`,
       optionsSchema: strictObject({}),
@@ -126,7 +126,7 @@ describe('Cell visual scale runtime guard', () => {
     expect(() => runCustom(invalid)).toThrow(message);
   });
 
-  it('guards only naturally evaluated outputs and repeated scalar determinism', () => {
+  it('仅保护自然评估的输出和重复的标量确定性', () => {
     let calls = 0;
     const definition = defineCellVisualScale({
       name: 'output-guard',

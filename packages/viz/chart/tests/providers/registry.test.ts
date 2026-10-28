@@ -7,9 +7,9 @@ import { defineChartTheme, RetikzChartErrorCode } from '../../src';
 import { defineChartRecipe, eraseChartRecipeDefinition } from '../../src/_chart/contract';
 import { resolveChartFromProvider, resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
-import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
-import { RegressionChartDefinition } from '../../src/point/regression/recipe';
-import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
+import { bubbleChartDefinition } from '../../src/point/bubble/recipe';
+import { regressionChartDefinition } from '../../src/point/regression/recipe';
+import { scatterChartDefinition } from '../../src/point/scatter/recipe';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
   encodings: context.encodings as JsonObject,
@@ -37,12 +37,12 @@ const recipe = defineChartRecipe({
   }),
 });
 
-describe('active Chart provider registry', () => {
-  it('builds one exact Point schema union for active recipes', () => {
+describe('活动的 Chart 提供者注册表', () => {
+  it('为活动配方构建一个精确的点 schema 联合', () => {
     const registry = resolveChartProviderRegistry([
-      { family: 'point', recipe: eraseChartRecipeDefinition(ScatterChartDefinition), chartThemeDefinitions: [] },
-      { family: 'point', recipe: eraseChartRecipeDefinition(BubbleChartDefinition), chartThemeDefinitions: [] },
-      { family: 'point', recipe: eraseChartRecipeDefinition(RegressionChartDefinition), chartThemeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(scatterChartDefinition), chartThemeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(bubbleChartDefinition), chartThemeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(regressionChartDefinition), chartThemeDefinitions: [] },
     ]);
 
     expect([...registry.recipes.keys()]).toEqual(['scatter', 'bubble', 'regression']);
@@ -56,7 +56,7 @@ describe('active Chart provider registry', () => {
     ).toBe(true);
   });
 
-  it('deduplicates identical recipes and rejects duplicate identities or family mismatches', () => {
+  it('删除重复的相同食谱并拒绝重复的身份或系列不匹配', () => {
     expect(
       resolveChartProviderRegistry([
         { family: 'point', recipe, chartThemeDefinitions: [] },
@@ -78,7 +78,7 @@ describe('active Chart provider registry', () => {
     );
   });
 
-  it('resolves Core style chains, Chart defaults, and Plot extensions through the provider entry', () => {
+  it('通过提供者条目解析 Core 样式链、Chart 默认值和 Plot 扩展', () => {
     const base = defineChartTheme({
       name: 'base',
       defaults: { background: { fill: '#101010' }, layout: { gap: 4 } },
@@ -93,7 +93,7 @@ describe('active Chart provider registry', () => {
     const registry = resolveChartProviderRegistry([
       {
         family: 'point',
-        recipe: eraseChartRecipeDefinition(ScatterChartDefinition),
+        recipe: eraseChartRecipeDefinition(scatterChartDefinition),
         chartThemeDefinitions: [base, clean],
       },
     ]);
@@ -126,7 +126,7 @@ describe('active Chart provider registry', () => {
     expect(resolution.plot.plotRules).toEqual(source.plotExtension?.plotRules);
   });
 
-  it('wraps invalid Definition shapes at the registry boundary', () => {
+  it('在注册表边界处包装无效的 Definition 形状', () => {
     const invalid = Object.defineProperty({ name: 'invalid' }, 'defaults', { enumerable: true, value: { recipe: {} } });
 
     expect(() =>

@@ -1,17 +1,17 @@
 ﻿import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import { makeMarkValueResolver } from '../../../src/providers';
+import { createMarkValueResolver } from '../../../src/providers';
 import type { IRPlotChannel } from '../../../src/schemas';
 
-describe('makeMarkValueResolver', () => {
-  it('does not create a field resolver when no encoding is declared', () => {
-    expect(makeMarkValueResolver(undefined, [], { channelName: 'weight', parse: value => value })).toBeUndefined();
+describe('createMarkValueResolver', () => {
+  it('未声明编码时不创建字段解析器', () => {
+    expect(createMarkValueResolver(undefined, [], { channelName: 'weight', parse: value => value })).toBeUndefined();
   });
 
-  it('resolves_field_mark_value_per_row', () => {
+  it('解析每行字段标记值', () => {
     const value: IRPlotChannel = 'weight';
-    const resolver = makeMarkValueResolver<number>(value, [{ name: 'weight', type: DataFieldType.Continuous }], {
+    const resolver = createMarkValueResolver<number>(value, [{ name: 'weight', type: DataFieldType.Continuous }], {
       channelName: 'weight',
       expectedFieldType: DataFieldType.Continuous,
       parse: raw => (typeof raw === 'number' ? raw : undefined),
@@ -23,11 +23,11 @@ describe('makeMarkValueResolver', () => {
     expect(resolver?.resolver({ weight: 'bad' })).toBeUndefined();
   });
 
-  it('rejects_unexpected_field_type', () => {
+  it('拒绝意外字段类型', () => {
     const value: IRPlotChannel = 'group';
 
     expect(() =>
-      makeMarkValueResolver<number>(value, [{ name: 'group', type: DataFieldType.Categorical }], {
+      createMarkValueResolver<number>(value, [{ name: 'group', type: DataFieldType.Categorical }], {
         channelName: 'weight',
         expectedFieldType: DataFieldType.Continuous,
         parse: raw => (typeof raw === 'number' ? raw : undefined),

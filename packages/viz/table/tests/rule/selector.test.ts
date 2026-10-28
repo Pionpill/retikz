@@ -3,11 +3,11 @@ import { literal, strictObject } from 'zod';
 
 import type { IRTableCellSelector, SemanticTableCell } from '../../src';
 import { defineTableStructure } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
-import { matchesTableCellSelector, matchesTableValuePredicate } from '../../src/pipeline/rule';
+import { matchesTableCellSelector } from '../../src/pipeline/rule';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 
 const manualModel = () =>
-  normalizeTableStructure({
+  resolveTableStructure({
     kind: 'manual',
     rowKinds: ['columnHeader', 'body'],
     rows: [
@@ -19,8 +19,8 @@ const manualModel = () =>
     ],
   });
 
-describe('Table Cell selector matching', () => {
-  it('uses membership OR within fields and conjunction across canonical fields', () => {
+describe('Table Cell 选择器匹配', () => {
+  it('在字段内使用成员资格 OR 以及跨规范字段的合取', () => {
     const span = manualModel().cells[0];
 
     expect(
@@ -37,7 +37,7 @@ describe('Table Cell selector matching', () => {
     expect(matchesTableCellSelector(span, { cellIds: ['span'], rowIndices: [1] })).toBe(false);
   });
 
-  it('matches a spanning Cell only by its origin row and column', () => {
+  it('仅通过其原始行和列来匹配跨越 Cell', () => {
     const span = manualModel().cells[0];
 
     expect(matchesTableCellSelector(span, { columnIds: ['column.0'] })).toBe(false);
@@ -46,8 +46,8 @@ describe('Table Cell selector matching', () => {
     expect(matchesTableCellSelector(span, { columnIndices: [1] })).toBe(false);
   });
 
-  it('matches fields only for canonical field sources', () => {
-    const detail = normalizeTableStructure(
+  it('仅匹配规范字段源的字段', () => {
+    const detail = resolveTableStructure(
       { kind: 'detail', columns: [{ id: 'score', field: 'score' }] },
       { data: { reference: 'sales' }, datasets: { sales: [{ score: 42 }] } },
     );
@@ -59,7 +59,7 @@ describe('Table Cell selector matching', () => {
     expect(matchesTableCellSelector(body, { fields: ['missing'] })).toBe(false);
   });
 
-  it('keeps content Cells outside a value predicate negate domain', () => {
+  it('将内容单元保留在值谓词否定域之外', () => {
     const cells = manualModel().cells;
     const direct = cells.find(cell => cell.id === 'direct') as SemanticTableCell;
     const falseValue = cells.find(cell => cell.id === 'false-value') as SemanticTableCell;
@@ -70,7 +70,7 @@ describe('Table Cell selector matching', () => {
     expect(matchesTableCellSelector(falseValue, { value: { kind: 'null', isNull: false } })).toBe(true);
   });
 
-  it('applies ordinary negate after all non-value conditions', () => {
+  it('在所有非值条件之后应用普通否定', () => {
     const cells = manualModel().cells;
     const span = cells.find(cell => cell.id === 'span') as SemanticTableCell;
     const direct = cells.find(cell => cell.id === 'direct') as SemanticTableCell;
@@ -79,7 +79,7 @@ describe('Table Cell selector matching', () => {
     expect(matchesTableCellSelector(direct, { cellIds: ['span'], negate: true })).toBe(true);
   });
 
-  it('distinguishes roles any membership from roles all containment', () => {
+  it('区分任何成员资格的角色和所有包含的角色', () => {
     const span = manualModel().cells.find(cell => cell.id === 'span') as SemanticTableCell;
 
     expect(matchesTableCellSelector(span, { roles: { any: ['data', 'columnHeader'] } })).toBe(true);
@@ -88,7 +88,7 @@ describe('Table Cell selector matching', () => {
     expect(matchesTableCellSelector(span, { roles: { all: ['columnHeader', 'data'] } })).toBe(false);
   });
 
-  it('keeps selector semantics independent from the structure provider', () => {
+  it('保持选择器语义独立于结构提供者', () => {
     const custom = defineTableStructure({
       schema: strictObject({ kind: literal('fixture-structure') }),
       build: () => ({
@@ -107,9 +107,8 @@ describe('Table Cell selector matching', () => {
         ],
       }),
     });
-    const manual = normalizeTableStructure({ kind: 'manual', rows: [[1]] }).cells[0];
-    const generated = normalizeTableStructure({ kind: 'fixture-structure' }, { structureDefinitions: [custom] })
-      .cells[0];
+    const manual = resolveTableStructure({ kind: 'manual', rows: [[1]] }).cells[0];
+    const generated = resolveTableStructure({ kind: 'fixture-structure' }, { structureDefinitions: [custom] }).cells[0];
     const selectors: Array<IRTableCellSelector> = [
       { rowIndices: [0], columnIndices: [0], locations: ['body'] },
       { roles: { all: ['data'] }, payloadKinds: ['value'] },
@@ -124,34 +123,106 @@ describe('Table Cell selector matching', () => {
   });
 });
 
-describe('Table raw value predicate matching', () => {
-  it('uses strict JSON scalar equality and membership without coercion', () => {
-    expect(matchesTableValuePredicate(1, { kind: 'equal', value: 1 })).toBe(true);
-    expect(matchesTableValuePredicate('1', { kind: 'equal', value: 1 })).toBe(false);
-    expect(matchesTableValuePredicate(false, { kind: 'oneOf', values: [0, false, null] })).toBe(true);
-    expect(matchesTableValuePredicate('', { kind: 'oneOf', values: [false, 0] })).toBe(false);
+describe('Table 原始值谓词匹配', () => {
+  it('使用严格的 JSON 标量相等性和成员资格，无需强制', () => {
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 1 }]] }).cells[0], {
+        value: { kind: 'equal', value: 1 },
+      }),
+    ).toBe(true);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: '1' }]] }).cells[0], {
+        value: { kind: 'equal', value: 1 },
+      }),
+    ).toBe(false);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: false }]] }).cells[0], {
+        value: { kind: 'oneOf', values: [0, false, null] },
+      }),
+    ).toBe(true);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: '' }]] }).cells[0], {
+        value: { kind: 'oneOf', values: [false, 0] },
+      }),
+    ).toBe(false);
   });
 
-  it('compares only same-type strings or numbers with deterministic relational semantics', () => {
-    expect(matchesTableValuePredicate(10, { kind: 'compare', operator: 'gt', value: 2 })).toBe(true);
-    expect(matchesTableValuePredicate('10', { kind: 'compare', operator: 'gt', value: 2 })).toBe(false);
-    expect(matchesTableValuePredicate('ä', { kind: 'compare', operator: 'gt', value: 'z' })).toBe(true);
-    expect(matchesTableValuePredicate(true, { kind: 'compare', operator: 'gt', value: 0 })).toBe(false);
+  it('仅比较具有确定性关系语义的相同类型字符串或数字', () => {
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 10 }]] }).cells[0], {
+        value: { kind: 'compare', operator: 'gt', value: 2 },
+      }),
+    ).toBe(true);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: '10' }]] }).cells[0], {
+        value: { kind: 'compare', operator: 'gt', value: 2 },
+      }),
+    ).toBe(false);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 'ä' }]] }).cells[0], {
+        value: { kind: 'compare', operator: 'gt', value: 'z' },
+      }),
+    ).toBe(true);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: true }]] }).cells[0], {
+        value: { kind: 'compare', operator: 'gt', value: 0 },
+      }),
+    ).toBe(false);
   });
 
-  it('respects equal endpoints and every between inclusion boundary', () => {
-    expect(matchesTableValuePredicate(2, { kind: 'between', min: 2, max: 2 })).toBe(true);
-    expect(matchesTableValuePredicate(2, { kind: 'between', min: 2, max: 3, includeMin: false })).toBe(false);
-    expect(matchesTableValuePredicate(3, { kind: 'between', min: 2, max: 3, includeMax: false })).toBe(false);
-    expect(matchesTableValuePredicate('b', { kind: 'between', min: 'a', max: 'c' })).toBe(true);
-    expect(matchesTableValuePredicate(2, { kind: 'between', min: '1', max: '3' })).toBe(false);
+  it('尊重相等的端点和每个包含边界之间的端点', () => {
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 2 }]] }).cells[0], {
+        value: { kind: 'between', min: 2, max: 2 },
+      }),
+    ).toBe(true);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 2 }]] }).cells[0], {
+        value: { kind: 'between', min: 2, max: 3, includeMin: false },
+      }),
+    ).toBe(false);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 3 }]] }).cells[0], {
+        value: { kind: 'between', min: 2, max: 3, includeMax: false },
+      }),
+    ).toBe(false);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 'b' }]] }).cells[0], {
+        value: { kind: 'between', min: 'a', max: 'c' },
+      }),
+    ).toBe(true);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 2 }]] }).cells[0], {
+        value: { kind: 'between', min: '1', max: '3' },
+      }),
+    ).toBe(false);
   });
 
-  it('distinguishes null from every falsy non-null scalar', () => {
-    expect(matchesTableValuePredicate(null, { kind: 'null' })).toBe(true);
-    expect(matchesTableValuePredicate(null, { kind: 'null', isNull: false })).toBe(false);
-    expect(matchesTableValuePredicate(false, { kind: 'null', isNull: false })).toBe(true);
-    expect(matchesTableValuePredicate(0, { kind: 'null', isNull: false })).toBe(true);
-    expect(matchesTableValuePredicate('', { kind: 'null', isNull: false })).toBe(true);
+  it('区分 null 和每个虚假的非 null 标量', () => {
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: null }]] }).cells[0], {
+        value: { kind: 'null' },
+      }),
+    ).toBe(true);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: null }]] }).cells[0], {
+        value: { kind: 'null', isNull: false },
+      }),
+    ).toBe(false);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: false }]] }).cells[0], {
+        value: { kind: 'null', isNull: false },
+      }),
+    ).toBe(true);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: 0 }]] }).cells[0], {
+        value: { kind: 'null', isNull: false },
+      }),
+    ).toBe(true);
+    expect(
+      matchesTableCellSelector(resolveTableStructure({ kind: 'manual', rows: [[{ value: '' }]] }).cells[0], {
+        value: { kind: 'null', isNull: false },
+      }),
+    ).toBe(true);
   });
 });

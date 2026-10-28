@@ -1,17 +1,11 @@
-import type { CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
-import type { DataLineageOptions, ExternalDatasets } from '@retikz/data';
-import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
-import {
-  createPlotProvider as createPlotDependencyProvider,
-  createPlotProviderContribution,
-  PLOT_NAMESPACE,
-  preparePlotData,
-} from '@retikz/plot';
+import type { DataLineageOptions } from '@retikz/data';
+import type { IRPlot } from '@retikz/plot';
+import { createPlotProviderContribution, PLOT_NAMESPACE, preparePlotData } from '@retikz/plot';
 import type {
   InputEmbedContext,
   InputEmbedPreparationContext,
-  SynchronousInputEmbedAdapter,
   InputScope,
+  SynchronousInputEmbedAdapter,
 } from '@retikz/vanilla';
 import { normalizeScopeWithChildren } from '@retikz/vanilla';
 
@@ -46,40 +40,8 @@ const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']) => {
   return normalizeScopeWithChildren(input, () => [node]);
 };
 
-/** 完整 IRPlot 的 Vanilla contribution request */
-export type PlotContributionRequest = Readonly<{
-  /** 已完成的 IRPlot */
-  spec: IRPlot;
-  /** 仅在运行时持有的数据集表 */
-  datasets: ExternalDatasets;
-  /** 将绘图描述降低为 Core 图元时的运行时选项 */
-  lowerOptions?: LowerPlotsOptions;
-}>;
-
-/** Plot-owned Vanilla contribution 解析结果 */
-export type ResolvedPlotContribution = Readonly<{
-  /** 已类型化的完整 Plot Source IR */
-  spec: IRPlot;
-  /** Plot composite 及其 Standard shape 依赖的 provider contribution */
-  contribution: CoreProviderContribution;
-}>;
-
-/** 创建一个共享 datasets 与 lowering options 的 Plot dependency provider */
-export const createPlotProvider = (input: {
-  datasets: ExternalDatasets;
-  lowerOptions?: LowerPlotsOptions;
-}): CoreDependencyProvider => createPlotDependencyProvider(input.datasets, input.lowerOptions);
-
-/** 将完整 IRPlot 归一为 Plot-owned dependency contribution */
-export const resolvePlotContribution = (request: PlotContributionRequest): ResolvedPlotContribution => {
-  return {
-    spec: request.spec,
-    contribution: createPlotProviderContribution(request.datasets, request.lowerOptions),
-  };
-};
-
 /** 将 Plot authoring input 下沉为 Core contribution 的 InputEmbed adapter */
-export const PlotInputEmbedAdapter = {
+export const plotInputEmbedAdapter = {
   kind: PLOT_NAMESPACE,
   lower: (props: InputPlotEmbed, _context: InputEmbedContext) => {
     if (props.datasets === undefined || props.dataTransformExecutor !== undefined || props.signal !== undefined)

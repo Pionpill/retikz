@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 import EnglishDemo from '@/modules/docs/contents/viz/data/transform/data-transform-shape.en.demo';
 import ChineseDemo from '@/modules/docs/contents/viz/data/transform/data-transform-shape.zh.demo';
 
-describe('Data transform overview', () => {
-  it('renders localized input and result tables through the real embedded Table pipeline', () => {
+describe('数据转换概述', () => {
+  it('通过真正的嵌入式 Table 管线渲染本地化的输入和结果表', () => {
     const chineseSvg = renderToStaticMarkup(createElement(ChineseDemo));
     const englishSvg = renderToStaticMarkup(createElement(EnglishDemo));
 

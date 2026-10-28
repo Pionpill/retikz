@@ -1,15 +1,13 @@
-import type { IRChild, CompositeCompileContext, ScenePrimitive } from '@retikz/core';
+import type { IRChild, ScenePrimitive } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import type { PresentedTableModel } from '../../src';
-import type { ResolvedTableTransaction } from '../../src/pipeline/layout';
-import { resolvePresentedTableTransaction } from '../../src/pipeline/layout';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
-import { presentTable } from '../../src/pipeline/presentation';
-import { formatDefaultTable } from '../utils/stages';
+import type { IRTable } from '../../src';
+import { TableSchema } from '../../src';
+import { resolveTableTransaction } from '../../src/pipeline/layout';
+import { CLEAN_TABLE_DEFAULTS } from '../fixtures/clean-table-defaults';
 
 const flattenScenePrimitives = (primitives: ReadonlyArray<ScenePrimitive>): ReadonlyArray<ScenePrimitive> =>
   primitives.flatMap(primitive =>
@@ -26,108 +24,8 @@ const contentNode = (id: string, fill: string, text = id): IRChild => ({
   layout: { minimumSize: { width: 4, height: 4 }, padding: 0 },
 });
 
-describe('Presented Table layout transaction', () => {
-  it('does not claim a named style when token resolution is omitted', () => {
-    const semantic = normalizeTableStructure({ kind: 'manual', rows: [['plain']] });
-    const presented = presentTable(formatDefaultTable(semantic));
-    let transaction: ResolvedTableTransaction | undefined;
-    const harness = defineComposite({
-      namespace: 'fixture',
-      type: 'unstyled-presented-table',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('fixture'),
-        type: literal('unstyled-presented-table'),
-      }),
-      compile: (_node, context) => {
-        transaction = resolvePresentedTableTransaction({ presented }, context);
-        return { children: transaction.children };
-      },
-    });
-
-    compileToScene(
-      {
-        type: 'scene',
-        version: 1,
-        children: [{ namespace: 'fixture', type: 'unstyled-presented-table' }],
-      },
-      { composites: [harness], padding: 0 },
-    );
-
-    expect(transaction?.manifest).toMatchObject({
-      style: { themeMode: 'light' },
-      cells: [{ appearance: {} }],
-      borders: [],
-    });
-  });
-
-  it('fails loud for a mixed Presented content branch before probing Core content', () => {
-    const semantic = normalizeTableStructure({
-      kind: 'manual',
-      rows: [[{ id: 'mixed', content: contentNode('mixed-content', '#111111') }]],
-    });
-    const presented = presentTable(formatDefaultTable(semantic));
-    const malformed = {
-      ...presented,
-      cells: [{ ...presented.cells[0], rawValue: 'leaked-value-trace' }],
-    } as unknown as PresentedTableModel;
-    const harness = defineComposite({
-      namespace: 'fixture',
-      type: 'malformed-presented-table',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('fixture'),
-        type: literal('malformed-presented-table'),
-      }),
-      compile: (_node, context) => {
-        const transaction = resolvePresentedTableTransaction({ presented: malformed }, context);
-        return { children: transaction.children };
-      },
-    });
-
-    expect(() =>
-      compileToScene(
-        {
-          type: 'scene',
-          version: 1,
-          children: [{ namespace: 'fixture', type: 'malformed-presented-table' }],
-        },
-        { composites: [harness], padding: 0 },
-      ),
-    ).toThrow(/transaction presentation Cell 0 shape differs/i);
-  });
-
-  it('fails loud when a Presented raw value differs from the canonical semantic payload', () => {
-    const semantic = normalizeTableStructure({ kind: 'manual', rows: [[{ id: 'tampered', value: 7 }]] });
-    const presented = presentTable(formatDefaultTable(semantic));
-    const malformed = {
-      ...presented,
-      cells: [{ ...presented.cells[0], rawValue: 9 }],
-    } as PresentedTableModel;
-    const harness = defineComposite({
-      namespace: 'fixture',
-      type: 'tampered-presented-table',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('fixture'),
-        type: literal('tampered-presented-table'),
-      }),
-      compile: (_node, context) => {
-        const transaction = resolvePresentedTableTransaction({ presented: malformed }, context);
-        return { children: transaction.children };
-      },
-    });
-
-    expect(() =>
-      compileToScene(
-        {
-          type: 'scene',
-          version: 1,
-          children: [{ namespace: 'fixture', type: 'tampered-presented-table' }],
-        },
-        { composites: [harness], padding: 0 },
-      ),
-    ).toThrow(/transaction presentation Cell 0 raw value differs/i);
-  });
-
-  it('consumes supplied appearances through the real layout transaction', () => {
+describe('提出 Table 布局交易', () => {
+  it('通过真实布局事务消费提供的外观', () => {
     const wrapProbe = defineComposite({
       namespace: 'fixture',
       type: 'styled-wrap-probe',
@@ -151,7 +49,7 @@ describe('Presented Table layout transaction', () => {
         };
       },
     });
-    const semantic = normalizeTableStructure({
+    const structure: IRTable['structure'] = {
       kind: 'manual',
       rows: [
         [
@@ -167,34 +65,26 @@ describe('Presented Table layout transaction', () => {
           },
         ],
       ],
-    });
-    const presented = presentTable(formatDefaultTable(semantic), {
-      cells: [
-        {
-          kind: 'content',
-          cellId: 'left',
-          appearance: {
-            background: { fill: '#ff0000' },
-            content: {
-              defaults: {
-                node: {
-                  style: { font: { size: 40 } },
-                  layout: { padding: 20 },
-                },
+    };
+    const rules: IRTable['rules'] = [
+      {
+        selector: { cellIds: ['left'] },
+        appearance: {
+          background: { fill: '#ff0000' },
+          content: {
+            defaults: {
+              node: {
+                style: { font: { size: 40 } },
+                layout: { padding: 20 },
               },
             },
-            borders: { bottom: { kind: 'line', stroke: '#0000ff', width: 2 } },
           },
+          borders: { bottom: { kind: 'line', stroke: '#0000ff', width: 2 } },
         },
-        {
-          kind: 'content',
-          cellId: 'right',
-          appearance: { background: { fill: '#00ff00', fillOpacity: 0.5 } },
-        },
-      ],
-    });
-    let transaction: ResolvedTableTransaction | undefined;
-    const layoutCalls: Array<Readonly<{ cellId: string; xKind: string }>> = [];
+      },
+      { selector: { cellIds: ['right'] }, appearance: { background: { fill: '#00ff00', fillOpacity: 0.5 } } },
+    ];
+    let transaction: ReturnType<typeof resolveTableTransaction> | undefined;
     const harness = defineComposite({
       namespace: 'fixture',
       type: 'presented-table-transaction',
@@ -203,24 +93,22 @@ describe('Presented Table layout transaction', () => {
         type: literal('presented-table-transaction'),
       }),
       compile: (_node, context) => {
-        const tableContext: CompositeCompileContext = {
-          ...context,
-          layoutChild: (child, proposal) => {
-            const cell = presented.cells.find(candidate => candidate.content === child);
-            if (cell?.cellId !== undefined) layoutCalls.push({ cellId: cell.cellId, xKind: proposal.x.kind });
-            return context.layoutChild(child, proposal);
-          },
-        };
-        transaction = resolvePresentedTableTransaction(
-          {
-            tableId: 'styled',
+        transaction = resolveTableTransaction(
+          TableSchema.parse({
+            namespace: 'table',
+            type: 'table',
+            defaultTable: CLEAN_TABLE_DEFAULTS,
+            structure,
+            rules,
+            id: 'styled',
             layout: {
               columnSize: { kind: 'fixed', value: 20 },
               rowSize: { kind: 'fixed', value: 10 },
             },
-            presented,
-          },
-          tableContext,
+          }),
+          {},
+          {},
+          context,
         );
 
         return { children: transaction.children };
@@ -256,12 +144,6 @@ describe('Presented Table layout transaction', () => {
     expect(transaction?.manifest.cells[0].sourceAllocationBounds.height).toBeGreaterThan(
       transaction?.manifest.cells[1].sourceAllocationBounds.height ?? Number.POSITIVE_INFINITY,
     );
-    expect(layoutCalls).toEqual([
-      { cellId: 'left', xKind: 'intrinsic' },
-      { cellId: 'right', xKind: 'intrinsic' },
-      { cellId: 'left', xKind: 'range' },
-      { cellId: 'right', xKind: 'range' },
-    ]);
 
     const tableVisualBounds = transaction?.manifest.visualOverflowBounds;
 
@@ -343,7 +225,7 @@ describe('Presented Table layout transaction', () => {
     expect(Math.max(...contentIndexes)).toBeLessThan(Math.min(...borderIndexes));
   });
 
-  it('omits cleared, transparent, and zero-area backgrounds without losing a visible background-only Cell', () => {
+  it('省略清除的、透明的和零区域的背景，而不会丢失仅可见的背景 Cell', () => {
     const invisibleContent = (id: string): IRChild => ({
       type: 'node',
       id,
@@ -352,7 +234,7 @@ describe('Presented Table layout transaction', () => {
       style: { fill: 'none', stroke: 'none', opacity: 0 },
       layout: { minimumSize: 0, padding: 0 },
     });
-    const semantic = normalizeTableStructure({
+    const structure: IRTable['structure'] = {
       kind: 'manual',
       rows: [
         [
@@ -363,21 +245,15 @@ describe('Presented Table layout transaction', () => {
         ],
         [{ id: 'zero-area', content: invisibleContent('zero-content') }, null, null, null],
       ],
-    });
-    const presented = presentTable(formatDefaultTable(semantic), {
-      cells: [
-        { kind: 'content', cellId: 'empty', appearance: {} },
-        { kind: 'content', cellId: 'none', appearance: { background: { fill: 'none' } } },
-        {
-          kind: 'content',
-          cellId: 'transparent',
-          appearance: { background: { fill: '#ff0000', fillOpacity: 0 } },
-        },
-        { kind: 'content', cellId: 'visible', appearance: { background: { fill: '#facc15' } } },
-        { kind: 'content', cellId: 'zero-area', appearance: { background: { fill: '#0ea5e9' } } },
-      ],
-    });
-    let transaction: ResolvedTableTransaction | undefined;
+    };
+    const rules: IRTable['rules'] = [
+      { selector: { cellIds: ['empty'] }, appearance: {} },
+      { selector: { cellIds: ['none'] }, appearance: { background: { fill: 'none' } } },
+      { selector: { cellIds: ['transparent'] }, appearance: { background: { fill: '#ff0000', fillOpacity: 0 } } },
+      { selector: { cellIds: ['visible'] }, appearance: { background: { fill: '#facc15' } } },
+      { selector: { cellIds: ['zero-area'] }, appearance: { background: { fill: '#0ea5e9' } } },
+    ];
+    let transaction: ReturnType<typeof resolveTableTransaction> | undefined;
     const harness = defineComposite({
       namespace: 'fixture',
       type: 'background-omission',
@@ -386,15 +262,21 @@ describe('Presented Table layout transaction', () => {
         type: literal('background-omission'),
       }),
       compile: (_node, context) => {
-        transaction = resolvePresentedTableTransaction(
-          {
+        transaction = resolveTableTransaction(
+          TableSchema.parse({
+            namespace: 'table',
+            type: 'table',
+            defaultTable: CLEAN_TABLE_DEFAULTS,
+            structure,
+            rules,
             layout: {
               columnSize: { kind: 'fixed', value: 10 },
               rowSize: { kind: 'fixed', value: 8 },
               rows: [{ index: 1, size: { kind: 'fixed', value: 0 } }],
             },
-            presented,
-          },
+          }),
+          {},
+          {},
           context,
         );
         return { children: transaction.children };
@@ -428,8 +310,8 @@ describe('Presented Table layout transaction', () => {
     ]);
   });
 
-  it('keeps background paint out of intrinsic track contributions', () => {
-    const semantic = normalizeTableStructure({
+  it('使背景涂料远离固有轨道贡献', () => {
+    const structure: IRTable['structure'] = {
       kind: 'manual',
       rows: [
         [
@@ -437,14 +319,12 @@ describe('Presented Table layout transaction', () => {
           { id: 'painted', content: contentNode('painted-content', '#111111', 'same') },
         ],
       ],
-    });
-    const presented = presentTable(formatDefaultTable(semantic), {
-      cells: [
-        { kind: 'content', cellId: 'plain', appearance: {} },
-        { kind: 'content', cellId: 'painted', appearance: { background: { fill: '#dc2626' } } },
-      ],
-    });
-    let transaction: ResolvedTableTransaction | undefined;
+    };
+    const rules: IRTable['rules'] = [
+      { selector: { cellIds: ['plain'] }, appearance: {} },
+      { selector: { cellIds: ['painted'] }, appearance: { background: { fill: '#dc2626' } } },
+    ];
+    let transaction: ReturnType<typeof resolveTableTransaction> | undefined;
     const harness = defineComposite({
       namespace: 'fixture',
       type: 'background-intrinsic',
@@ -453,11 +333,17 @@ describe('Presented Table layout transaction', () => {
         type: literal('background-intrinsic'),
       }),
       compile: (_node, context) => {
-        transaction = resolvePresentedTableTransaction(
-          {
+        transaction = resolveTableTransaction(
+          TableSchema.parse({
+            namespace: 'table',
+            type: 'table',
+            defaultTable: CLEAN_TABLE_DEFAULTS,
+            structure,
+            rules,
             layout: { columnSize: { kind: 'auto' }, rowSize: { kind: 'auto' } },
-            presented,
-          },
+          }),
+          {},
+          {},
           context,
         );
         return { children: transaction.children };

@@ -257,7 +257,7 @@ export const previewControlContract = {
     'IRTableLayout.rowSize',
     'IRTableLayout.columnGap',
     'IRTableLayout.rowGap',
-    'TableDetailColumnInput.bodyLayout',
+    'InputTableDetailColumn.bodyLayout',
     'IRTableCellLayout.padding',
     'IRTableCellLayout.horizontalAlign',
     'IRTableCellLayout.verticalAlign',

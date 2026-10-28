@@ -7,7 +7,7 @@ import { CircleSchema } from './schema';
 import type { IRCircle } from './types';
 
 /** Circle 的 Core composite 注册项 */
-export const CircleDefinition = defineComposite({
+export const circleDefinition = defineComposite({
   namespace: 'standard',
   type: 'circle',
   schema: CircleSchema,
@@ -22,9 +22,7 @@ export const createCircle = (input: ShapeProperties<IRCircle>): IRCircle => ({
 });
 
 /** Circle 的按需依赖贡献 */
-export const CircleProvider: CoreDependencyProvider = Object.freeze({
+export const circleProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'circle' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => CircleDefinition,
+  makeDefinition: () => circleDefinition,
 });

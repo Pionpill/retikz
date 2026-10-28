@@ -2,9 +2,9 @@ import type { IRNode, IRScene, IRScope, IRTarget, ScenePrimitive } from '@retikz
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
 import { lowerPlots } from '../../src/pipeline/expand';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -30,8 +30,8 @@ const pointSpec = (extra: Record<string, unknown> = {}): IRPlot =>
     ...extra,
   });
 
-const expandOf = (spec: IRPlot, options?: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, { sales: SALES }, { ...options, textMeasurer: measureLabel }) as IRScope;
+const expandOf = (spec: IRPlot, options?: PlotsLoweringOptions): IRScope => {
+  return lowerPlotWithDataArtifact(spec, { sales: SALES }, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const nodeWidth = (node: IRNode): number => {
@@ -46,10 +46,10 @@ const nodeHeight = (node: IRNode): number => {
   return size?.height ?? size?.default ?? 0;
 };
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 describe('contract L1-a · IRPlot 自描述尺寸', () => {
-  it('node_width_overrides_global', () => {
+  it('节点宽度覆盖全局', () => {
     // node.width=200 应覆盖全局 opts.width=480：max-x 数据点落在 200，而非 480
     const layer = expandOf(pointSpec({ width: 200, height: 120 }), opts).children[0] as IRScope;
     const xs = (layer.children as Array<IRNode>).map(n => (n.position as [number, number])[0]);
@@ -57,7 +57,7 @@ describe('contract L1-a · IRPlot 自描述尺寸', () => {
     expect(Math.max(...xs)).toBe(200);
   });
 
-  it('node_height_overrides_global', () => {
+  it('节点高度覆盖全局', () => {
     // node.height=120 覆盖全局 300：y 轴底（revenue 最小值 9）落在 height=120 处
     const layer = expandOf(pointSpec({ width: 200, height: 120 }), opts).children[0] as IRScope;
     const ys = (layer.children as Array<IRNode>).map(n => (n.position as [number, number])[1]);
@@ -65,7 +65,7 @@ describe('contract L1-a · IRPlot 自描述尺寸', () => {
     expect(Math.max(...ys)).toBe(120);
   });
 
-  it('size_fallback_to_global', () => {
+  it('大小回退到全局', () => {
     // 不写 node.width/height → 回退全局 opts（单图逐字回归）：max-x = 480
     const layer = expandOf(pointSpec(), opts).children[0] as IRScope;
     const xs = (layer.children as Array<IRNode>).map(n => (n.position as [number, number])[0]);
@@ -75,7 +75,7 @@ describe('contract L1-a · IRPlot 自描述尺寸', () => {
 });
 
 describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
-  it('id_plot_outer_panel_scope', () => {
+  it('id 绘图外面板范围', () => {
     // 有 id → 外层 panel scope（id、非 localNamespace，承面板 bbox）⊃ 内层 localNamespace 内容
     const outer = expandOf(pointSpec({ id: 'p' }), opts);
 
@@ -89,7 +89,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
     expect(inner.localNamespace).toBe(true);
   });
 
-  it('plotarea_carrier_present', () => {
+  it('存在绘图区承载节点', () => {
     // 不可见矩形 carrier，id=`<plotId>.plotArea`
     const outer = expandOf(pointSpec({ id: 'p' }), opts);
     const carrier = outer.children.find(
@@ -105,7 +105,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
     expect(nodeHeight(carrier!)).toBeGreaterThan(0);
   });
 
-  it('plotarea_carrier_matches_drawing_region', () => {
+  it('绘图区承载节点与绘制区域一致', () => {
     // 有轴 → plotArea 扣边距，carrier 尺寸 < 整图（非整面板框、非 0×0）
     const guided = expandOf(
       pointSpec({
@@ -127,7 +127,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
     expect(nodeHeight(carrier)).toBeLessThan(300);
   });
 
-  it('no_id_structure_unchanged', () => {
+  it('没有 id 结构不变', () => {
     // 无 id → 老结构（localNamespace root、无 carrier、children[0]=首个 mark 层），单图零回归
     const outer = expandOf(pointSpec(), opts);
 
@@ -164,7 +164,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
     return undefined;
   };
 
-  it('panel_bbox_resolvable_from_sibling', () => {
+  it('可从同级中解析面板 bbox', () => {
     // 面板 bbox：core contract 既有能力（scope.id 注册父帧）；无 guides → 内容满图，p.right ≈ [480,150]
     const end = lineEndpoint(pointSpec({ id: 'p' }), { id: 'p', anchor: 'right' });
 
@@ -176,7 +176,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
     expect(end![1]).toBeCloseTo(150, 0);
   });
 
-  it('plotarea_resolvable_from_sibling', () => {
+  it('可从同级解析绘图区域', () => {
     // 跨 localNamespace：`<plotId>.plotArea` 兄弟可锚（外部可见）；无 guides → plotArea 满图，center = [240,150]
     const end = lineEndpoint(pointSpec({ id: 'p' }), { id: 'p.plotArea', anchor: 'center' });
 

@@ -1,4 +1,4 @@
-import { ContourShapeDefinition } from '@retikz/extension';
+import { contourShapeDefinition } from '@retikz/extension';
 import type { Position } from '@retikz/math';
 import { Layout, Node } from '@retikz/react';
 
@@ -35,7 +35,7 @@ export type ContourExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderContourExamplePreview = (values: ContourExamplePreviewValues) => (
-  <Layout viewBox={{ x: -110, y: -90, width: 220, height: 180 }} extensions={{ shapes: [ContourShapeDefinition] }}>
+  <Layout viewBox={{ x: -110, y: -90, width: 220, height: 180 }} extensions={{ shapes: [contourShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'contour', params: { points: presetPoints[values.preset], cornerRadius: values.cornerRadius } }}

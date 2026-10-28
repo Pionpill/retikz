@@ -789,7 +789,7 @@ export declare const mergeInspectorRegistries: (...registries: ReadonlyArray<Ins
 
 ## 扩展定义与注册
 
-#### <ApiSourceLink label={"AnyInspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={177}>AnyInspectorDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputAnyInspectorDefinition"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={177}>InputAnyInspectorDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -814,7 +814,7 @@ export declare const mergeInspectorRegistries: (...registries: ReadonlyArray<Ins
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type AnyInspectorDefinitionInput = WithOptionalProperties<
+export type InputAnyInspectorDefinition = WithOptionalProperties<
   AnyInspectorDefinition,
   'optionsSchema' | 'resolveOptions'
 >;
@@ -824,7 +824,7 @@ export type AnyInspectorDefinitionInput = WithOptionalProperties<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={117}>InspectorDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputInspectorDefinition"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={117}>InputInspectorDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -846,7 +846,7 @@ export type AnyInspectorDefinitionInput = WithOptionalProperties<
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type InspectorDefinitionInput<
+export type InputInspectorDefinition<
   TSubject extends JsonValue = JsonValue,
   TParsedOptions extends JsonObject = Record<string, never>,
   TResolvedOptions extends JsonObject = TParsedOptions,
@@ -899,7 +899,7 @@ export type InspectorRegistry = Readonly<{
 
 | 类别   | 名称           | 类型 / 签名                                  | 说明                                                                              |
 | ------ | -------------- | -------------------------------------------- | --------------------------------------------------------------------------------- |
-| 参数   | `definitions?` | `ReadonlyArray<AnyInspectorDefinitionInput>` | 追加在五类内置 Inspector 之后的自定义定义，省略时仅注册内置定义                   |
+| 参数   | `definitions?` | `ReadonlyArray<InputAnyInspectorDefinition>` | 追加在五类内置 Inspector 之后的自定义定义，省略时仅注册内置定义                   |
 | 返回值 | —              | `InspectorRegistry`                          | 包含内置与自定义定义的新只读注册表                                                |
 | 错误   | —              | —                                            | 自定义定义无效或与内置、自定义定义的 namespace/type 重复时抛出 RetikzInspectError |
 
@@ -911,7 +911,7 @@ export type InspectorRegistry = Readonly<{
 
 ```ts
 export declare const createDefaultInspectorRegistry: (
-  definitions?: ReadonlyArray<AnyInspectorDefinitionInput>,
+  definitions?: ReadonlyArray<InputAnyInspectorDefinition>,
 ) => InspectorRegistry;
 ```
 
@@ -929,7 +929,7 @@ export declare const createDefaultInspectorRegistry: (
 
 | 类别   | 名称          | 类型 / 签名                                  | 说明                                                                                           |
 | ------ | ------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| 参数   | `definitions` | `ReadonlyArray<AnyInspectorDefinitionInput>` | 按注册顺序提供的 Inspector 定义；空数组创建空注册表                                            |
+| 参数   | `definitions` | `ReadonlyArray<InputAnyInspectorDefinition>` | 按注册顺序提供的 Inspector 定义；空数组创建空注册表                                            |
 | 返回值 | —             | `InspectorRegistry`                          | 独立的只读注册表，定义在注册时补齐缺省选项并冻结                                               |
 | 错误   | —             | —                                            | 定义的 namespace、type 或所属者标识为空白，或存在重复 namespace/type 时抛出 RetikzInspectError |
 
@@ -941,7 +941,7 @@ export declare const createDefaultInspectorRegistry: (
 
 ```ts
 export declare const createInspectorRegistry: (
-  definitions: ReadonlyArray<AnyInspectorDefinitionInput>,
+  definitions: ReadonlyArray<InputAnyInspectorDefinition>,
 ) => InspectorRegistry;
 ```
 
@@ -949,7 +949,7 @@ export declare const createInspectorRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineInspector"} path={"packages/kernel/inspect/src/contract/define.ts"} startLine={72}>defineInspector</ApiSourceLink>
+#### <ApiSourceLink label={"defineInspector"} path={"packages/kernel/inspect/src/contract/define.ts"} startLine={40}>defineInspector</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -957,15 +957,14 @@ export declare const createInspectorRegistry: (
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称               | 类型 / 签名                                                                            | 说明                                                                                      |
-| ------ | ------------------ | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 泛型   | `TSubject`         | `extends JsonValue`                                                                    | 所属者发布的被观察对象类型                                                                |
-|        | `TParsedOptions`   | `extends JsonObject = Record<string, never>`                                           | options schema 解析后的 options 类型                                                      |
-|        | `TResolvedOptions` | `extends JsonObject = TParsedOptions`                                                  | callback 消费的已解析 options 类型                                                        |
-|        | `TSourceOptions`   | `extends JsonObject = TParsedOptions`                                                  | 传入 options schema 前的原始 options 输入类型                                             |
-| 参数   | `definition`       | `InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | 待校验的 Inspector 定义；省略选项 schema 时仅接受空对象，省略 resolver 时直接使用解析结果 |
-| 返回值 | —                  | `InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | 补齐缺省选项并浅冻结的定义；已由本包处理的定义保持原引用                                  |
-| 错误   | —                  | —                                                                                      | namespace、type 或所属者要求的标识为空白时抛出 RetikzInspectError                         |
+| 类别   | 名称               | 类型 / 签名                                                                            | 说明                                                                                        |
+| ------ | ------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| 泛型   | `TSubject`         | `extends JsonValue`                                                                    | 所属者发布的被观察对象类型                                                                  |
+|        | `TParsedOptions`   | `extends JsonObject = Record<string, never>`                                           | options schema 解析后的 options 类型                                                        |
+|        | `TResolvedOptions` | `extends JsonObject = TParsedOptions`                                                  | callback 消费的已解析 options 类型                                                          |
+|        | `TSourceOptions`   | `extends JsonObject = TParsedOptions`                                                  | 传入 options schema 前的原始 options 输入类型                                               |
+| 参数   | `definition`       | `InputInspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | 作者提供的 Inspector 定义；省略选项 schema 时仅接受空对象，省略 resolver 时直接使用解析结果 |
+| 返回值 | —                  | `InputInspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | 补齐缺省选项并浅冻结的定义；已由本包处理的定义保持原引用                                    |
 
 </ApiTable>
 
@@ -980,8 +979,8 @@ export declare const defineInspector: <
   TResolvedOptions extends JsonObject = TParsedOptions,
   TSourceOptions extends JsonObject = TParsedOptions,
 >(
-  definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
-) => InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
+  definition: InputInspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
+) => InputInspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
 ```
 
 </DocTab>
@@ -1002,7 +1001,7 @@ export declare const defineInspector: <
 | ---------- | --------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`       | `string`                                                                                                  | —      | 坐标点 id；路径端点和节点定位通过它引用此位置                                                                                                                                                                          |
 | `position` | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —      | 坐标点位置；不支持 Node 专属的自身锚点对齐<br />笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` |
-| `request`  | `Exclude<InspectionVanillaAuthoringInput, false>`                                                         | —      | 当前 Coordinate 的单项或多项检查请求                                                                                                                                                                                   |
+| `request`  | `Exclude<InputInspectionVanillaAuthoring, false>`                                                         | —      | 当前 Coordinate 的单项或多项检查请求                                                                                                                                                                                   |
 
 </ApiTable>
 
@@ -1014,7 +1013,7 @@ export declare const defineInspector: <
 export declare const InspectCoordinate: FC<InspectCoordinateProps>;
 
 export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
-  request: Exclude<InspectionVanillaAuthoringInput, false>;
+  request: Exclude<InputInspectionVanillaAuthoring, false>;
 };
 ```
 
@@ -1035,7 +1034,7 @@ export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
 | 主要   | `children?`              | `ReactNode`                                           | —                             | 通过 JSX 声明的图形内容                                                                                  |
 |        | `ir?`                    | `IRScene`                                             | —                             | 直接传入持久化 Source IR，与 children 二选一                                                             |
 |        | `readonly registry`      | `InspectorRegistry`                                   | —                             | 当前 Layout 使用的 Inspector registry                                                                    |
-|        | `readonly request?`      | `InspectionVanillaAuthoringInput`                     | —                             | 可选 scene requests，false 表示全图 barrier                                                              |
+|        | `readonly request?`      | `InputInspectionVanillaAuthoring`                     | —                             | 可选 scene requests，false 表示全图 barrier                                                              |
 |        | `readonly selection?`    | `InspectionSelection`                                 | —                             | 与 authored wrapper rules 合并的显式 selection                                                           |
 | 布局   | `nodeDistance?`          | `number`                                              | `24`                          | 节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效                |
 | 样式   | `fontSize?`              | `number`                                              | `16`                          | 默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号      |
@@ -1060,7 +1059,7 @@ export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
 | 运行时 | `runtime?`               | `LayoutRuntimeOptions`                                | `captureLayoutRuntimeOptions` | 选择 retained 增量更新或 static 完整编译模式；省略时使用 retained                                        |
 | 输出   | `artifacts?`             | `CompileArtifactOptions`                              | —                             | 请求生成的编译附加产物                                                                                   |
 | 扩展   | `extensions?`            | `LayoutExtensions`                                    | —                             | 按能力分类的运行时扩展注册，复用 Core 编译契约                                                           |
-|        | `lowerTex?`              | `LowerTex`                                            | —                             | 公式下沉能力                                                                                             |
+|        | `lowerTex?`              | `TexLowerer`                                          | —                             | 公式下沉能力                                                                                             |
 |        | `measureText?`           | `TextMeasurer`                                        | —                             | 自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级                                                  |
 
 </ApiTable>
@@ -1076,7 +1075,7 @@ export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'
   Readonly<{
     registry: InspectorRegistry;
     selection?: InspectionSelection;
-    request?: InspectionVanillaAuthoringInput;
+    request?: InputInspectionVanillaAuthoring;
     onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
     onCommit?: (result: InspectionCompileResult) => void;
   }>;
@@ -1098,7 +1097,7 @@ export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'
 
 | 成员      | 类型                                              | 默认值 | 说明                           |
 | --------- | ------------------------------------------------- | ------ | ------------------------------ |
-| `request` | `Exclude<InspectionVanillaAuthoringInput, false>` | —      | 当前 Node 的单项或多项检查请求 |
+| `request` | `Exclude<InputInspectionVanillaAuthoring, false>` | —      | 当前 Node 的单项或多项检查请求 |
 
 </ApiTable>
 
@@ -1110,7 +1109,7 @@ export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'
 export declare const InspectNode: FC<InspectNodeProps>;
 
 export type InspectNodeProps = Omit<NodeProps, 'authoring'> & {
-  request: Exclude<InspectionVanillaAuthoringInput, false>;
+  request: Exclude<InputInspectionVanillaAuthoring, false>;
 };
 ```
 
@@ -1130,7 +1129,7 @@ export type InspectNodeProps = Omit<NodeProps, 'authoring'> & {
 
 | 成员               | 类型                                              | 默认值 | 说明                                    |
 | ------------------ | ------------------------------------------------- | ------ | --------------------------------------- |
-| `readonly request` | `Exclude<InspectionVanillaAuthoringInput, false>` | —      | 当前 authored Path 的 Inspector request |
+| `readonly request` | `Exclude<InputInspectionVanillaAuthoring, false>` | —      | 当前 authored Path 的 Inspector request |
 
 </ApiTable>
 
@@ -1143,7 +1142,7 @@ export declare const InspectPath: FC<InspectPathProps>;
 
 export type InspectPathProps = Omit<PathProps, 'authoring'> &
   Readonly<{
-    request: Exclude<InspectionVanillaAuthoringInput, false>;
+    request: Exclude<InputInspectionVanillaAuthoring, false>;
   }>;
 ```
 
@@ -1163,7 +1162,7 @@ export type InspectPathProps = Omit<PathProps, 'authoring'> &
 
 | 成员               | 类型                              | 默认值 | 说明                                                   |
 | ------------------ | --------------------------------- | ------ | ------------------------------------------------------ |
-| `readonly request` | `InspectionVanillaAuthoringInput` | —      | 当前 subtree 的 requests，false 表示不可重开的 barrier |
+| `readonly request` | `InputInspectionVanillaAuthoring` | —      | 当前 subtree 的 requests，false 表示不可重开的 barrier |
 
 </ApiTable>
 
@@ -1176,7 +1175,7 @@ export declare const InspectScope: FC<InspectScopeProps>;
 
 export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
   Readonly<{
-    request: InspectionVanillaAuthoringInput;
+    request: InputInspectionVanillaAuthoring;
   }>;
 ```
 
@@ -1186,7 +1185,7 @@ export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
 
 ## 直接调用
 
-#### <ApiSourceLink label={"CreateInspectionVanillaDriverOptions"} path={"packages/kernel/inspect/src/vanilla/driver.ts"} startLine={71}>CreateInspectionVanillaDriverOptions</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionVanillaDriverOptions"} path={"packages/kernel/inspect/src/vanilla/driver.ts"} startLine={71}>InspectionVanillaDriverOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1208,7 +1207,7 @@ export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type CreateInspectionVanillaDriverOptions = Readonly<{
+export type InspectionVanillaDriverOptions = Readonly<{
   registry: InspectorRegistry;
   selection?: InspectionSelection;
   onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
@@ -1220,10 +1219,10 @@ export type CreateInspectionVanillaDriverOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionVanillaAuthoringInput"} path={"packages/kernel/inspect/src/vanilla/authoring.ts"} startLine={19}>InspectionVanillaAuthoringInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputInspectionVanillaAuthoring"} path={"packages/kernel/inspect/src/vanilla/authoring.ts"} startLine={19}>InputInspectionVanillaAuthoring</ApiSourceLink>
 
 ```ts
-export type InspectionVanillaAuthoringInput =
+export type InputInspectionVanillaAuthoring =
   false | InspectionVanillaRequest | ReadonlyArray<InspectionVanillaRequest>;
 ```
 
@@ -1267,7 +1266,7 @@ export type InspectionVanillaRequest = Readonly<{
 
 | 类别   | 名称    | 类型 / 签名                       | 说明                                                                |
 | ------ | ------- | --------------------------------- | ------------------------------------------------------------------- |
-| 参数   | `input` | `InspectionVanillaAuthoringInput` | 单项或多项检查请求；false 封锁整个 Scene 或 Scope，不能用于单个实体 |
+| 参数   | `input` | `InputInspectionVanillaAuthoring` | 单项或多项检查请求；false 封锁整个 Scene 或 Scope，不能用于单个实体 |
 | 返回值 | —       | `InspectionVanillaAuthoring`      | 写入 Vanilla 输入 authoring 字段的冻结标记；其请求在驱动编译时解析  |
 
 </ApiTable>
@@ -1278,7 +1277,7 @@ export type InspectionVanillaRequest = Readonly<{
 
 ```ts
 export declare const createInspectionVanillaAuthoring: (
-  input: InspectionVanillaAuthoringInput,
+  input: InputInspectionVanillaAuthoring,
 ) => InspectionVanillaAuthoring;
 ```
 
@@ -1294,10 +1293,10 @@ export declare const createInspectionVanillaAuthoring: (
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称      | 类型 / 签名                            | 说明                                                                           |
-| ------ | --------- | -------------------------------------- | ------------------------------------------------------------------------------ |
-| 参数   | `options` | `CreateInspectionVanillaDriverOptions` | 固定注册表与可选选择规则、提交通知；selection 省略时仅使用 authoring 请求      |
-| 返回值 | —         | `VanillaCompileDriver`                 | 供 Vanilla 宿主接入的编译驱动；诊断通知先于 onCommit，通知失败不回滚已提交结果 |
+| 类别   | 名称      | 类型 / 签名                      | 说明                                                                           |
+| ------ | --------- | -------------------------------- | ------------------------------------------------------------------------------ |
+| 参数   | `options` | `InspectionVanillaDriverOptions` | 固定注册表与可选选择规则、提交通知；selection 省略时仅使用 authoring 请求      |
+| 返回值 | —         | `VanillaCompileDriver`           | 供 Vanilla 宿主接入的编译驱动；诊断通知先于 onCommit，通知失败不回滚已提交结果 |
 
 </ApiTable>
 
@@ -1306,9 +1305,7 @@ export declare const createInspectionVanillaAuthoring: (
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createInspectionVanillaDriver: (
-  options: CreateInspectionVanillaDriverOptions,
-) => VanillaCompileDriver;
+export declare const createInspectionVanillaDriver: (options: InspectionVanillaDriverOptions) => VanillaCompileDriver;
 ```
 
 </DocTab>

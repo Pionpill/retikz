@@ -10,7 +10,7 @@ import type { StripPropertiesProps } from './StripProperties';
 import { StripProperties } from './StripProperties';
 
 /** StripChart direct-child declarations 的完整收集结果 */
-export type CollectedStripChartDeclarations = CollectedPointChartDeclarations<
+type CollectedStripChartDeclarations = CollectedPointChartDeclarations<
   StripEncodingsProps,
   StripPropertiesProps,
   StripChartMark

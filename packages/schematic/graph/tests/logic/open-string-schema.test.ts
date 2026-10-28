@@ -13,8 +13,8 @@ const expectOpenStringSchema = (schema: ZodType, values: ReadonlyArray<string>):
   });
 };
 
-describe('Graph registry-backed open string schemas', () => {
-  it('accepts built-in and custom keys while rejecting blank values', () => {
+describe('Graph 注册表支持的开放字符串 schema', () => {
+  it('接受内置和自定义键，同时拒绝空白值', () => {
     expect(
       Graph.EntitySchema.parse({
         namespace: 'graph',
@@ -44,7 +44,7 @@ describe('Graph registry-backed open string schemas', () => {
     expect(() => Graph.EntitySchema.parse({ namespace: 'graph', type: 'entity', role: '   ' })).toThrow();
   });
 
-  it('exposes built-in values without closing Entity and Relation extension keys', () => {
+  it('公开内置值而不关闭 Entity 和 Relation 扩展键', () => {
     expectOpenStringSchema(Graph.EntityRoleSchema, Object.values(Graph.BuiltinEntityRole));
     expectOpenStringSchema(Graph.RelationRoleSchema, Object.values(Graph.BuiltinRelationRole));
 
@@ -59,7 +59,7 @@ describe('Graph registry-backed open string schemas', () => {
     );
   });
 
-  it('uses the same hinted schemas in semantic Theme selectors without visual keys', () => {
+  it('在语义主题选择器中使用相同的暗示 schema，无需视觉键', () => {
     const graphSchema = toJSONSchema(Graph.GraphSchema) as {
       properties?: Record<string, ZodCore.JSONSchema.BaseSchema>;
     };
@@ -91,7 +91,7 @@ describe('Graph registry-backed open string schemas', () => {
     ).toThrow(/Duplicate/);
   });
 
-  it('keeps unregistered custom values as resolver errors instead of schema errors', () => {
+  it('将未注册的自定义值保留为解析器错误而不是 schema 错误', () => {
     const source = Graph.EntitySchema.parse({
       namespace: 'graph',
       type: 'entity',

@@ -15,12 +15,12 @@ import {
   resolvePointScaleDefaults,
 } from '../shared';
 import { pointAxisGuidesOf, pointCartesian2DOf, pointRecipeId } from '../shared/plot';
-import { RangedDotMarkDefinition, resolveRangedDotMark } from './mark';
+import { rangedDotMarkDefinition, resolveRangedDotMarkGroup } from './mark';
 import type { IRRangedDotChart } from './schema';
 import { RangedDotChartSchema } from './schema';
 
 /** Ranged Dot exact schema、调度与消费检查共用的 encoding 顺序 */
-export const RangedDotChartEncodingSlots = ['category', 'start', 'end', 'color', 'row', 'column', 'facet'] as const;
+const rangedDotChartEncodingSlots = ['category', 'start', 'end', 'color', 'row', 'column', 'facet'] as const;
 
 const markPropertySlots = ['point', 'startPoint', 'endPoint', 'range'] as const;
 
@@ -34,7 +34,7 @@ const colorScaleName = pointRecipeId(ChartType.RangedDot, 'scale.color');
 
 const [xConsumer, yConsumer] = pointPositionFieldConsumersOf(ChartType.RangedDot);
 
-type RangedDotEncodingSlot = (typeof RangedDotChartEncodingSlots)[number];
+type RangedDotEncodingSlot = (typeof rangedDotChartEncodingSlots)[number];
 
 const fieldConsumers: ReadonlyArray<ChartEncodingFieldConsumer<RangedDotEncodingSlot>> = [
   {
@@ -86,19 +86,19 @@ const withColorFallback = (encodings: JsonObject): JsonObject => {
 };
 
 /** Ranged Dot Chart 内建 recipe Definition */
-export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> = defineChartRecipe({
+export const rangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> = defineChartRecipe({
   chartType: ChartType.RangedDot,
-  encodingSlots: RangedDotChartEncodingSlots,
+  encodingSlots: rangedDotChartEncodingSlots,
   schema: RangedDotChartSchema,
-  consumes: { encodings: RangedDotChartEncodingSlots, properties: propertySlots },
+  consumes: { encodings: rangedDotChartEncodingSlots, properties: propertySlots },
   marks: [
     {
-      definition: RangedDotMarkDefinition,
+      definition: rangedDotMarkDefinition,
       inherit: { encodings: ['category', 'start', 'end', 'color'], properties: [...markPropertySlots, 'autoPadding'] },
     },
   ],
   resolveEncodings: context => {
-    const resolution = resolveChartEncodingMappings(context, RangedDotChartEncodingSlots, fieldConsumers);
+    const resolution = resolveChartEncodingMappings(context, rangedDotChartEncodingSlots, fieldConsumers);
     const encodings = withColorFallback(resolution.encodings);
     const spatial = pointSpatialResolutionOf(ChartType.RangedDot, {
       row: context.encodings.row,
@@ -129,7 +129,7 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
         guides: { value: guides, replaceable: true },
       },
       semanticMarks: [
-        { kind: ChartType.RangedDot, plotMarks: [resolveRangedDotMark(slots.encodings, slots.properties)] },
+        { kind: ChartType.RangedDot, plotMarks: resolveRangedDotMarkGroup(slots.encodings, slots.properties) },
       ],
     };
   },

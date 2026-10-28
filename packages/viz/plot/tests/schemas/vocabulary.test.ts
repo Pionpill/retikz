@@ -20,14 +20,11 @@ import {
   CoordinateViewPlacementKind,
   PolarInterpolation,
   PositionScaleContinuity,
-  RelationOrthogonalLabelStep,
-  RelationRouteStepKind,
-  RelationRoutingKind,
 } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-describe('schema vocabulary constants', () => {
-  it('exports plot transform and data vocabularies as const objects', () => {
+describe('schema 词汇常量', () => {
+  it('将绘图变换和数据词汇导出为 const 对象', () => {
     expect(Object.values(DataSortOrder).sort()).toEqual(['ascending', 'descending']);
     expect(Object.values(RowSelectorTie).sort()).toEqual(['all', 'first', 'last']);
     expect(Object.values(BuiltinReducerOperationKind).sort()).toEqual([
@@ -60,7 +57,7 @@ describe('schema vocabulary constants', () => {
     ]);
   });
 
-  it('exports closed plot schema vocabularies from their owners', () => {
+  it('从其所属模块导出封闭图 schema 词汇', () => {
     expect(Object.values(CoordinateViewPlacementKind).sort()).toEqual(['overlay', 'root', 'slot']);
     expect(Object.values(CoordinateArrangementKind).sort()).toEqual(['facet', 'tracks']);
     expect(Object.values(AxisLineExtentTarget)).toEqual(['plotArea']);
@@ -77,20 +74,17 @@ describe('schema vocabulary constants', () => {
       'exponential',
       'power',
     ]);
-    expect(Object.values(RelationRouteStepKind).sort()).toEqual(['bend', 'cubic', 'curve', 'fold', 'line', 'move']);
-    expect(Object.values(RelationRoutingKind).sort()).toEqual(['bend', 'line', 'orthogonal']);
-    expect(Object.values(RelationOrthogonalLabelStep).sort()).toEqual(['last', 'main']);
     expect(Object.values(PolarInterpolation).sort()).toEqual(['chord', 'polar']);
     expect(Object.values(PositionScaleContinuity).sort()).toEqual(['continuous', 'discrete']);
   });
 
-  it('reuses core path vocabularies for relation routing and ribbon options', () => {
+  it('reuses core path vocabularies for path construction and ribbon options', () => {
     expect(Object.values(BendDirection).sort()).toEqual(['left', 'right']);
     expect(Object.values(RibbonTaperInterpolation).sort()).toEqual(['linear', 'smooth']);
     expect(Object.values(RibbonAlignment).sort()).toEqual(['center', 'left', 'right']);
   });
 
-  it('uses the shared vocabulary values in transform schema parsing', () => {
+  it('在转换 schema 解析中使用共享词汇值', () => {
     expect(
       TransformSchema.parse({
         kind: 'select',

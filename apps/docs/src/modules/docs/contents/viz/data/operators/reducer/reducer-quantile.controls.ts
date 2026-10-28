@@ -22,7 +22,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       ],
     }),
     canonicalValues: { grouped: true, p: 0.5, tail: 90 },
-    relatedApis: ['BuiltinReducerOperationSchemas.Quantile'],
+    relatedApis: ['BUILTIN_REDUCER_OPERATION_SCHEMAS.Quantile'],
   } satisfies PreviewControlContract;
 };
 /** 缺少语言上下文时采用中文基线 */

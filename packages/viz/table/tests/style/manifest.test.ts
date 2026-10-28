@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { compileTable, TableLayoutManifestSchema } from '../../src';
 
-describe('Table style and encoding manifest seed', () => {
-  it('publishes resolved style winners and Cell appearance lineage in canonical order', () => {
+describe('Table 样式和编码清单种子', () => {
+  it('按规范顺序发布已解决的风格获胜者和 Cell 外观血缘', () => {
     const result = compileTable(
       {
         namespace: 'table',
@@ -75,7 +75,7 @@ describe('Table style and encoding manifest seed', () => {
     expect(() => TableLayoutManifestSchema.parse(forgedCellDefaults)).toThrow(/Cell defaults source|appearance leaf/i);
   });
 
-  it('rejects non-canonical defaults layers and mismatched border defaults provenance', () => {
+  it('拒绝非规范默认图层和不匹配的边界默认来源', () => {
     const result = compileTable(
       {
         namespace: 'table',
@@ -240,7 +240,7 @@ describe('Table style and encoding manifest seed', () => {
     expect(() => TableLayoutManifestSchema.parse(wrongLocalPath)).toThrow(/source|path/i);
   });
 
-  it('rejects forged encoding, Cell, and Legend descriptor seed relationships', () => {
+  it('拒绝伪造编码、Cell 和 Legend 描述符种子关系', () => {
     const result = compileTable(
       {
         namespace: 'table',

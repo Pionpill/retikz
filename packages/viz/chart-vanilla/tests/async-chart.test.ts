@@ -4,10 +4,10 @@ import { processToStaticInputResultAsync, scene } from '@retikz/vanilla';
 import { describe, expect, it, vi } from 'vitest';
 
 import { renderChartAsync } from '../src';
-import { scatterChart, ScatterChartInputEmbedAdapter } from '../src/point';
+import { scatterChart, scatterChartInputEmbedAdapter } from '../src/point';
 
-describe('Chart async data preparation', () => {
-  it('binds Promise output through generated Surface and Flex presentation without reexecution', async () => {
+describe('Chart 异步数据准备', () => {
+  it('通过生成的 Surface 和 Flex 表示绑定 Promise 输出，无需重新执行', async () => {
     const execute = vi.fn();
     const provider: DataTransformImplementationProvider<never> = {
       resolve: stage => ({
@@ -41,7 +41,7 @@ describe('Chart async data preparation', () => {
       },
     });
     const result = await renderChartAsync(input, {
-      adapters: [ScatterChartInputEmbedAdapter],
+      adapters: [scatterChartInputEmbedAdapter],
     });
     const svg = result.svg;
 
@@ -51,7 +51,7 @@ describe('Chart async data preparation', () => {
     expect(execute).toHaveBeenCalledOnce();
   });
 
-  it('inherits root mode for generated declarations while preserving an explicit declaration override', async () => {
+  it('继承生成声明的根模式，同时保留显式声明覆盖', async () => {
     const external = vi.fn();
     const provider: DataTransformImplementationProvider<never> = {
       resolve: stage => {
@@ -85,7 +85,7 @@ describe('Chart async data preparation', () => {
       },
     });
     const result = await renderChartAsync(input, {
-      adapters: [ScatterChartInputEmbedAdapter],
+      adapters: [scatterChartInputEmbedAdapter],
     });
 
     expect(result.svg.match(/<ellipse/g)).toHaveLength(1);
@@ -97,7 +97,7 @@ describe('Chart async data preparation', () => {
     });
 
     await expect(
-      processToStaticInputResultAsync(scene({ children: [inherited] }), { adapters: [ScatterChartInputEmbedAdapter] }),
+      processToStaticInputResultAsync(scene({ children: [inherited] }), { adapters: [scatterChartInputEmbedAdapter] }),
     ).rejects.toThrow(/unsupported fixture/);
     expect(external).toHaveBeenCalledWith('summarize');
   });

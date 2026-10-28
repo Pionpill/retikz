@@ -231,7 +231,7 @@ export type IRDataReference = ZodInfer<typeof DataReferenceSchema>;
 export type ParsedFieldValue = string | number | undefined;
 ```
 
-#### <ApiSourceLink label={"ResolveField"} path={"packages/viz/data/src/model/contract.ts"} startLine={41}>ResolveField</ApiSourceLink>
+#### <ApiSourceLink label={"FieldResolver"} path={"packages/viz/data/src/model/contract.ts"} startLine={41}>FieldResolver</ApiSourceLink>
 
 Returns a type override and optional parser by field name; undefined preserves the existing model or format resolution
 
@@ -254,7 +254,7 @@ Returns a type override and optional parser by field name; undefined preserves t
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type ResolveField = (
+export type FieldResolver = (
   field: string,
   context: {
     dataReference: string;
@@ -324,7 +324,7 @@ export type FieldFormatDefinition = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BUILTIN_FORMATS"} path={"packages/viz/data/src/format/definitions.ts"} startLine={118}>BUILTIN_FORMATS</ApiSourceLink>
+#### <ApiSourceLink label={"BUILTIN_FORMATS"} path={"packages/viz/data/src/format/definitions.ts"} startLine={117}>BUILTIN_FORMATS</ApiSourceLink>
 
 ```ts
 export const BUILTIN_FORMATS: ReadonlyArray<FieldFormatDefinition> = freezeDefinitions([
@@ -381,7 +381,7 @@ export declare const defineFieldFormat: (def: FieldFormatDefinition) => FieldFor
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveFormatRegistry"} path={"packages/viz/data/src/format/definitions.ts"} startLine={144}>resolveFormatRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveFormatRegistry"} path={"packages/viz/data/src/format/definitions.ts"} startLine={136}>resolveFormatRegistry</ApiSourceLink>
 
 Built-ins are registered first; custom definitions cannot override built-in names or duplicate each other
 
@@ -395,7 +395,7 @@ Built-ins are registered first; custom definitions cannot override built-in name
 | ---------- | --------- | -------------------------------------- | ----------------------------------------------------------------------- |
 | Parameters | `custom?` | `ReadonlyArray<FieldFormatDefinition>` | Custom format definitions; omitting this includes only built-in formats |
 | Returns    | —         | `Map<string, FieldFormatDefinition>`   | A fresh name-to-definition map created for each call                    |
-| Throws     | —         | —                                      | A format name is empty or duplicates a built-in or custom name          |
+| Throws     | —         | —                                      | A format name duplicates a built-in or custom name                      |
 
 </ApiTable>
 

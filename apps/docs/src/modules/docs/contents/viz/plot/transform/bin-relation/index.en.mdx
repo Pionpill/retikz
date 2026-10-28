@@ -35,7 +35,7 @@ The demo uses the default outputs `binStart`, `binEnd`, and `binCount`. Binning 
 
 ## Relation generation
 
-`relate` selects a source and target in each group and produces rows for `RelationMark`. This demo retains the lines and observations, applying the transform only to the relation mark.
+`relate` selects a source and target in each group and produces rows for `PathMark`. This demo retains the lines and observations, applying the transform only to the connecting path.
 
 | Parameter         | Use and constraints in this demo                                             |
 | ----------------- | ---------------------------------------------------------------------------- |
@@ -55,4 +55,4 @@ The demo uses the default outputs `binStart`, `binEnd`, and `binCount`. Binning 
   caption="Switch the grouping scope and endpoint selectors; observe the purple link and its difference label."
 />
 
-The background lines create anchors for observations. The relation mark looks them up using the output endpoint IDs. Local pairing leaves the background marks’ data intact.
+The background lines create anchors for observations. The connecting path looks them up using the output endpoint IDs. Local pairing leaves the background marks’ data intact.

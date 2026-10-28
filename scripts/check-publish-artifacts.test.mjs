@@ -20,12 +20,12 @@ import { releaseGroups } from './release-groups.config.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-test('peer package names map to their DefinitelyTyped package names', () => {
+test('对等包名称映射到其 DefinitelyTyped 包名称', () => {
   assert.equal(peerTypePackageName('react'), '@types/react');
   assert.equal(peerTypePackageName('@scope/example'), '@types/scope__example');
 });
 
-test('valid single-format dist files have no diagnostics', () => {
+test('有效的单一格式 dist 文件没有诊断', () => {
   const diagnostics = validateDistFiles('@retikz/example', [
     'index.js',
     'internal/helper.js',
@@ -36,7 +36,7 @@ test('valid single-format dist files have no diagnostics', () => {
   assert.deepEqual(diagnostics, []);
 });
 
-test('legacy and duplicate dist trees are rejected', () => {
+test('遗留和重复的 dist 树被拒绝', () => {
   const invalidCases = [
     ['es/index.js', 'dist/es'],
     ['lib/index.cjs', 'dist/lib'],
@@ -59,7 +59,7 @@ test('legacy and duplicate dist trees are rejected', () => {
   }
 });
 
-test('packed files use pnpm package-relative paths', () => {
+test('打包文件使用 pnpm 包相对路径', () => {
   const diagnostics = validatePackedFiles('@retikz/example', [
     { path: 'dist/index.js' },
     { path: 'dist/types/index.d.ts' },
@@ -76,7 +76,7 @@ test('packed files use pnpm package-relative paths', () => {
   );
 });
 
-test('packed workspace dependency ranges must be rewritten before fixture overrides', () => {
+test('在固定装置覆盖之前必须重写打包工作空间依赖范围', () => {
   const sourceManifest = {
     name: '@retikz/example',
     dependencies: {
@@ -113,7 +113,7 @@ test('packed workspace dependency ranges must be rewritten before fixture overri
   );
 });
 
-test('packed manifest fields and every export target must match publishConfig', () => {
+test('打包清单字段和每个导出目标必须匹配 publishConfig', () => {
   const sourceManifest = {
     name: '@retikz/example',
     publishConfig: {
@@ -168,7 +168,7 @@ test('packed manifest fields and every export target must match publishConfig', 
   }
 });
 
-test('export specifiers include package root and public subpaths', () => {
+test('导出说明符包括包根目录和公共子路径', () => {
   assert.deepEqual(
     exportSpecifiers({
       name: '@retikz/tex',
@@ -181,7 +181,7 @@ test('export specifiers include package root and public subpaths', () => {
   );
 });
 
-test('fixture overrides are written in pnpm 11 workspace settings', () => {
+test('测试数据覆盖写入 pnpm 11 工作区设置中', () => {
   assert.equal(
     renderFixtureWorkspaceYaml({
       '@retikz/core': 'file:C:/tmp/retikz-core.tgz',
@@ -196,7 +196,7 @@ test('fixture overrides are written in pnpm 11 workspace settings', () => {
   );
 });
 
-test('safe temp paths accept only direct retikz publish task directories', () => {
+test('安全临时路径仅接受直接 retikz 发布任务目录', () => {
   const tempRoot = realpathSync(os.tmpdir());
   const validPath = path.join(tempRoot, 'retikz-publish-123');
 
@@ -215,7 +215,7 @@ test('safe temp paths accept only direct retikz publish task directories', () =>
   }
 });
 
-test('Foundation publish artifact is root-only and has only the Zod runtime dependency', async () => {
+test('Foundation 发布产物仅限 root，并且仅具有 Zod 运行时依赖项', async () => {
   assert.ok(releaseGroups.kernel.packages.includes('@retikz/foundation'));
 
   const manifest = JSON.parse(

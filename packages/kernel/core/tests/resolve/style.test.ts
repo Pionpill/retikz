@@ -2,13 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   resolveScopeDefaults,
-  cutsStyleChannel,
   resolveDashPattern,
   resolveDropShadow,
-  resolveEffectiveNodeStyle,
-  resolveEffectivePath,
+  mergeNodeStyle,
+  mergePathStyle,
 } from '../../src/resolve/style';
-import type { IRPathBase, IRScope } from '../../src/schemas';
+import type { IRPathBase, IRScope, IRScopeDefaults } from '../../src/schemas';
 import { PathLabelSchema, NodeSchema, PathSchema, SHADOW_PRESETS } from '../../src/schemas';
 
 const styleScope = (properties: Partial<IRScope>): IRScope => ({
@@ -27,7 +26,7 @@ const pathOf = (properties: Partial<IRPathBase> = {}): IRPathBase =>
     ...properties,
   });
 
-describe('Scope effective defaults', () => {
+describe('Scope 有效默认值', () => {
   it('按层合并共同样式与通道样式，实例主色在继承完成后展开', () => {
     const parent = resolveScopeDefaults(
       styleScope({
@@ -47,10 +46,10 @@ describe('Scope effective defaults', () => {
       }),
       parent,
     );
-    const node = resolveEffectiveNodeStyle({ type: 'node', position: [0, 0], style: { color: 'gold' } }, child);
+    const node = mergeNodeStyle({ type: 'node', position: [0, 0], style: { color: 'gold' } }, child);
     expect(node.style).toMatchObject({ stroke: 'green', opacity: { overall: 0 }, fill: 'gold', textColor: 'gold' });
-    expect(resolveEffectivePath(pathOf(), child).style?.stroke).toBe('green');
-    expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style).toMatchObject({
+    expect(mergePathStyle(pathOf(), child).style?.stroke).toBe('green');
+    expect(mergeNodeStyle({ type: 'node', position: [0, 0] }, parent).style).toMatchObject({
       stroke: 'blue',
       opacity: { overall: 0.8 },
       fill: 'red',
@@ -71,30 +70,36 @@ describe('Scope effective defaults', () => {
       styleScope({ defaults: { reset: ['node', 'path'], path: { arrow: {} } } }),
       parent,
     );
-    expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, child).style).toEqual({});
+    expect(mergeNodeStyle({ type: 'node', position: [0, 0] }, child).style).toEqual({});
     expect(child.node?.label).toBeUndefined();
     expect(child.path?.label).toEqual({});
     expect(child.path?.arrow).toEqual({});
     const arrow = { end: {} };
-    expect(resolveEffectivePath(pathOf({ style: { color: 'gold' }, arrow }), parent).arrow?.end).toMatchObject({
+    expect(mergePathStyle(pathOf({ style: { color: 'gold' }, arrow }), parent).arrow?.end).toMatchObject({
       color: 'gold',
       scale: 2,
     });
-    expect(resolveEffectivePath(pathOf({ arrow }), parent).arrow?.end).toMatchObject({ color: 'red', scale: 2 });
+    expect(mergePathStyle(pathOf({ arrow }), parent).arrow?.end).toMatchObject({ color: 'red', scale: 2 });
     expect(parent.path?.arrow).toEqual({ color: 'purple', end: { color: 'green', scale: 2 } });
-    expect(resolveEffectiveNodeStyle({ type: 'node', position: [0, 0] }, parent).style?.fill).toBe('blue');
+    expect(mergeNodeStyle({ type: 'node', position: [0, 0] }, parent).style?.fill).toBe('blue');
   });
 
-  it('cuts only the channels named by resetStyle', () => {
-    expect(cutsStyleChannel(['node'], 'node')).toBe(true);
-    expect(cutsStyleChannel(['node'], 'path')).toBe(false);
-    expect(cutsStyleChannel(['path'], 'path')).toBe(true);
-    expect(cutsStyleChannel(['path'], 'node')).toBe(false);
-    expect(cutsStyleChannel(true, 'node')).toBe(true);
-    expect(cutsStyleChannel([], 'path')).toBe(false);
+  it.each<{ reset: IRScopeDefaults['reset']; keepNode: boolean; keepPath: boolean }>([
+    { reset: ['node'], keepNode: false, keepPath: true },
+    { reset: ['path'], keepNode: true, keepPath: false },
+    { reset: true, keepNode: false, keepPath: false },
+    { reset: [], keepNode: true, keepPath: true },
+    { reset: false, keepNode: true, keepPath: true },
+    { reset: undefined, keepNode: true, keepPath: true },
+  ])('按 reset=$reset 决定节点和路径是否继承父级默认值', ({ reset, keepNode, keepPath }) => {
+    const parent = resolveScopeDefaults(styleScope({ defaults: { style: { color: 'red' } } }));
+    const child = resolveScopeDefaults(styleScope({ defaults: { reset } }), parent);
+
+    expect(child.node).toEqual(keepNode ? parent.node : undefined);
+    expect(child.path).toEqual(keepPath ? parent.path : undefined);
   });
 
-  it('propagates a scope master color to node and path channels', () => {
+  it('将范围主颜色传播到节点和路径通道', () => {
     const frame = resolveScopeDefaults(
       styleScope({
         defaults: { style: { color: 'red' } },
@@ -102,15 +107,15 @@ describe('Scope effective defaults', () => {
     );
     const node = NodeSchema.parse({ type: 'node', position: [0, 0] });
 
-    expect(resolveEffectiveNodeStyle(node, frame)).toMatchObject({
+    expect(mergeNodeStyle(node, frame)).toMatchObject({
       style: { fill: 'red', stroke: 'red', textColor: 'red' },
     });
-    expect(resolveEffectivePath(pathOf(), frame)).toMatchObject({
+    expect(mergePathStyle(pathOf(), frame)).toMatchObject({
       style: { color: 'red' },
     });
   });
 
-  it('applies label font fields by per-field priority', () => {
+  it('按每个字段优先级应用标签字体字段', () => {
     const frame = resolveScopeDefaults(
       styleScope({
         defaults: {
@@ -120,14 +125,14 @@ describe('Scope effective defaults', () => {
       }),
     );
     const label = PathLabelSchema.parse({ text: 'x', font: { family: 'label', size: 10 } });
-    const resolved = resolveEffectivePath(pathOf({ label }), frame);
+    const resolved = mergePathStyle(pathOf({ label }), frame);
 
     expect(resolved.label).toMatchObject({
       font: { family: 'label', size: 10, weight: 'bold' },
     });
   });
 
-  it('applies arrow start and end overrides after shared defaults', () => {
+  it('在共享默认值后应用箭头开始和结束覆盖', () => {
     const frame = resolveScopeDefaults(
       styleScope({
         defaults: {
@@ -142,7 +147,7 @@ describe('Scope effective defaults', () => {
         },
       }),
     );
-    const resolved = resolveEffectivePath(
+    const resolved = mergePathStyle(
       pathOf({
         arrow: { start: {}, end: { scale: 3 } },
       }),
@@ -155,11 +160,11 @@ describe('Scope effective defaults', () => {
 });
 
 describe('resolveDashPattern', () => {
-  it('uses an explicit dash pattern before dashed and dotted presets', () => {
+  it('在虚线和点线预设之前使用显式虚线图案', () => {
     expect(resolveDashPattern([0, 2], true, true)).toEqual([0, 2]);
   });
 
-  it('uses dashed before dotted and preserves explicit false selectors', () => {
+  it('在点之前使用破折号，并保留显式的错误选择器', () => {
     expect(resolveDashPattern(undefined, true, true)).toEqual([4, 2]);
     expect(resolveDashPattern(undefined, false, true)).toEqual([1, 2]);
     expect(resolveDashPattern(undefined, false, false)).toBeUndefined();
@@ -167,12 +172,12 @@ describe('resolveDashPattern', () => {
 });
 
 describe('resolveDropShadow', () => {
-  it('expands preset strings and preset objects to the same canonical shadow', () => {
+  it('将预设字符串和预设对象扩展为相同的规范阴影', () => {
     expect(resolveDropShadow('md')).toEqual(SHADOW_PRESETS.md);
     expect(resolveDropShadow({ preset: 'md' })).toEqual(SHADOW_PRESETS.md);
   });
 
-  it('applies explicit fields after the preset while preserving falsy values', () => {
+  it('在预设后应用显式字段，同时保留虚假值', () => {
     expect(resolveDropShadow({ preset: 'sm', offsetY: 0, blur: 0, opacity: 0 })).toEqual({
       offsetX: SHADOW_PRESETS.sm!.offsetX,
       offsetY: 0,
@@ -182,7 +187,7 @@ describe('resolveDropShadow', () => {
     });
   });
 
-  it('supplies the default color for explicit offsets and keeps omitted or none absent', () => {
+  it('为显式偏移提供默认颜色，并保持省略或不缺失', () => {
     expect(resolveDropShadow({ offsetX: 0, offsetY: 0 })).toEqual({
       offsetX: 0,
       offsetY: 0,

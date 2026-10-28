@@ -1,27 +1,5 @@
-import type { JsonObject } from '@retikz/foundation';
-
 import type { TableBorderPathMeta } from '../../contract';
-import type { SemanticTableCell } from '../../contract';
-import { TableCellSourceKind } from '../../shared';
 import type { TableBorderEdge } from '../layout';
-
-/** 构造不含原始值的最小 Cell Core meta */
-export const tableCellMetaOf = (cell: SemanticTableCell): JsonObject => ({
-  role: 'tableCell',
-  ...(cell.id === undefined ? {} : { cellId: cell.id }),
-  rowIndex: cell.rowIndex,
-  columnIndex: cell.columnIndex,
-  span: { ...cell.span },
-  location: cell.location,
-  roles: [...cell.roles],
-  ...(cell.source?.kind === TableCellSourceKind.Field
-    ? {
-        reference: cell.source.reference,
-        sourceIndex: cell.source.sourceIndex,
-        field: cell.source.field,
-      }
-    : {}),
-});
 
 /** 构造 Border Path 的稳定 JSON provenance */
 export const tableBorderPathMetaOf = (edge: TableBorderEdge, tableId?: string): TableBorderPathMeta => ({

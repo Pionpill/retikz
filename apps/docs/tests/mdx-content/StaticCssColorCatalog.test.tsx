@@ -36,7 +36,7 @@ afterEach(() => {
 });
 
 describe('<StaticCssColorCatalog>', () => {
-  it('filters the package-provided named color manifest by name and hex value', () => {
+  it('按名称和十六进制值过滤包提供的命名颜色清单', () => {
     const container = renderCatalog();
     const searchInput = container.querySelector<HTMLInputElement>('input[type="search"]');
     const colorList = container.querySelector<HTMLElement>('[data-static-css-color-list]');
@@ -61,7 +61,7 @@ describe('<StaticCssColorCatalog>', () => {
     expect(container.textContent).toContain('darkorange');
   });
 
-  it('renders an immediate preview only for static CSS colors accepted by Foundation', () => {
+  it('仅针对 Foundation 接受的静态 CSS 颜色渲染即时预览', () => {
     const container = renderCatalog();
     const searchInput = container.querySelector<HTMLInputElement>('input[type="search"]');
 

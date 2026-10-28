@@ -1,11 +1,11 @@
 import type { AnyCompositeDefinition, IRChild, LayoutChildResult, LayoutProposal } from '@retikz/core';
 import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { intrinsicLayoutProposal } from '@retikz/layout/compose';
 import { describe, expect, it } from 'vitest';
 import { literal, boolean } from 'zod';
 
-import { ArrayDefinition, MapDefinition } from '../../../src/collection';
+import { arrayDefinition, mapDefinition } from '../../../src/collection';
 
 const cell = (id: string, width: number, height: number) => ({
   id,
@@ -21,7 +21,7 @@ const compile = (
   child: IRChild,
   proposal: LayoutProposal = intrinsicLayoutProposal('natural'),
   extra: Array<AnyCompositeDefinition> = [],
-  arrayDefinition = ArrayDefinition,
+  customArrayDefinition = arrayDefinition,
 ) => {
   let observed: LayoutChildResult | undefined;
   const harness = defineComposite({
@@ -44,8 +44,8 @@ const compile = (
   const scene = compileToScene(
     { type: 'scene', version: 1, children: [{ namespace: 'cell-test', type: 'harness', child }] },
     {
-      composites: [harness, arrayDefinition, MapDefinition, ...extra],
-      clips: [PathClipDefinition],
+      composites: [harness, customArrayDefinition, mapDefinition, ...extra],
+      clips: [pathClipDefinition],
       padding: 0,
     },
   );
@@ -54,8 +54,8 @@ const compile = (
   return { scene, observed };
 };
 
-describe('Array / Map allocation', () => {
-  it.each(['row', 'column'] as const)('sizes %s Array cells to their own content and padding', direction => {
+describe('Array / Map 分配', () => {
+  it.each(['row', 'column'] as const)('将 %s Array 单元格调整为其自己的内容和填充', direction => {
     const result = compile({
       namespace: 'standard',
       type: 'array',
@@ -83,7 +83,7 @@ describe('Array / Map allocation', () => {
     );
   });
 
-  it('lets per-cell auto and fixed widths override overall content sizing', () => {
+  it('让每个单元格的自动和固定宽度覆盖整体内容大小', () => {
     const result = compile({
       namespace: 'standard',
       type: 'array',
@@ -107,7 +107,7 @@ describe('Array / Map allocation', () => {
     ]);
   });
 
-  it('uses content width for indexed data cells without widening the shorter cell', () => {
+  it('使用索引数据单元的内容宽度，而不加宽较短的单元', () => {
     const result = compile({
       namespace: 'standard',
       type: 'array',
@@ -127,7 +127,7 @@ describe('Array / Map allocation', () => {
     expect(result.observed.allocationBounds.width).toBe(cells[0].width + cells[1].width + 2);
   });
 
-  it('lets a content cell override an auto-width Array', () => {
+  it('让内容单元覆盖自动宽度 Array', () => {
     const result = compile({
       namespace: 'standard',
       type: 'array',
@@ -143,7 +143,7 @@ describe('Array / Map allocation', () => {
     ).toEqual([20, 40]);
   });
 
-  it('publishes string cell identities only when requested', () => {
+  it('仅在请求时发布字符串单元格标识', () => {
     const base = { namespace: 'standard', type: 'array', items: ['A', 'A'] };
     const withoutIds = compile(base).scene.spatialHandles.entries;
 
@@ -154,7 +154,7 @@ describe('Array / Map allocation', () => {
     expect(withIds.filter(entry => entry.role === 'array-cell').map(entry => entry.id)).toEqual(['cell:A', 'cell:B']);
   });
 
-  it.each(['row', 'column'] as const)('places index strips on both sides of a %s without resizing cells', direction => {
+  it.each(['row', 'column'] as const)('将索引条放置在 %s 的两侧，而不调整单元格大小', direction => {
     const base = {
       namespace: 'standard',
       type: 'array',
@@ -188,14 +188,14 @@ describe('Array / Map allocation', () => {
     expect(large.observed.slotSize[dimension]).toBeGreaterThan(before.observed.slotSize[dimension]);
   });
 
-  it('keeps empty indexed lists empty', () => {
+  it('将空索引列表保留为空', () => {
     expect(
       compile({ namespace: 'standard', type: 'array', items: [], index: { position: 'after', start: 100 } }).observed
         .slotSize,
     ).toEqual({ width: 0, height: 0 });
   });
 
-  it.each(['row', 'column'] as const)('applies per-cell dimensions and auto overrides in a %s Array', direction => {
+  it.each(['row', 'column'] as const)('在 %s Array 中应用每个单元尺寸和自动覆盖', direction => {
     const source = {
       namespace: 'standard',
       type: 'array',
@@ -229,7 +229,7 @@ describe('Array / Map allocation', () => {
     expect(JSON.stringify(source)).toBe(before);
   });
 
-  it('applies Map overall, role and cell dimensions without stretching smaller overrides', () => {
+  it('应用 Map 整体、角色和单元尺寸，而不拉伸更小的覆盖', () => {
     const result = compile({
       namespace: 'standard',
       type: 'map',
@@ -256,7 +256,7 @@ describe('Array / Map allocation', () => {
     ]);
   });
 
-  it('allocates equal horizontal cells using natural maxima', () => {
+  it('使用自然最大值分配相等的水平单元格', () => {
     const { observed } = compile({
       namespace: 'standard',
       type: 'array',
@@ -266,7 +266,7 @@ describe('Array / Map allocation', () => {
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 94, height: 36 });
   });
 
-  it('uses separate column maxima and per-row height in Map', () => {
+  it('在 Map 中使用单独的列最大值和每行高度', () => {
     const { observed } = compile({
       namespace: 'standard',
       type: 'map',
@@ -279,7 +279,7 @@ describe('Array / Map allocation', () => {
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 104, height: 64 });
   });
 
-  it('honors zero padding and gap in vertical Array', () => {
+  it('支持垂直 Array 中的零填充和间隙', () => {
     const { observed } = compile({
       namespace: 'standard',
       type: 'array',
@@ -291,7 +291,7 @@ describe('Array / Map allocation', () => {
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 30, height: 40 });
   });
 
-  it('does not stretch cells to consume larger parent allocations', () => {
+  it('不拉伸单元以消费更大的父分配', () => {
     const { observed } = compile(
       { namespace: 'standard', type: 'array', items: [cell('a', 20, 10)] },
       { x: { kind: 'exact', value: 100 }, y: { kind: 'exact', value: 80 } },
@@ -300,7 +300,7 @@ describe('Array / Map allocation', () => {
     expect(observed.allocationBounds).toEqual({ x: 0, y: 0, width: 100, height: 80 });
   });
 
-  it('rejects insufficient parent allocation while small fixed cells clip oversized content and padding', () => {
+  it('拒绝不足的父分配，同时小的固定单元格会裁剪过大的内容和填充', () => {
     expect(() =>
       compile(
         { namespace: 'standard', type: 'array', items: [cell('a', 20, 10)] },
@@ -317,7 +317,7 @@ describe('Array / Map allocation', () => {
     ).toEqual({ x: 0, y: 0, width: 1, height: 0 });
   });
 
-  it('has zero natural allocation for an empty structure', () => {
+  it('空结构的自然分配为零', () => {
     for (const child of [
       { namespace: 'standard', type: 'array', items: [] },
       { namespace: 'standard', type: 'map', entries: [] },
@@ -345,7 +345,7 @@ const custom = defineComposite({
     };
   },
 });
-it('centers third-party content with a negative origin and preserves its own spatial handle', () => {
+it('以负原点居中第三方内容并保留其自己的空间句柄', () => {
   const result = compile(
     {
       namespace: 'standard',
@@ -370,7 +370,7 @@ it('centers third-party content with a negative origin and preserves its own spa
     height: 50,
   });
 });
-it('preserves third-party compilation failures and missing definition errors', () => {
+it('保留第三方编译失败和缺少定义错误', () => {
   const source = {
     namespace: 'standard',
     type: 'array',
@@ -380,7 +380,7 @@ it('preserves third-party compilation failures and missing definition errors', (
   expect(() => compile(source, intrinsicLayoutProposal('natural'), [custom])).toThrow(/foreign child rejected/);
   expect(() => compile(source)).toThrow();
 });
-it('keeps fixed slot geometry under finite range bounds', () => {
+it('将固定槽几何形状保持在有限范围范围内', () => {
   const source = { namespace: 'standard', type: 'array', items: [cell('a', 20, 10)] };
   const result = compile(source, { x: { kind: 'range', min: 100, max: 120 }, y: { kind: 'range', min: 60, max: 80 } });
 
@@ -396,14 +396,14 @@ it('keeps fixed slot geometry under finite range bounds', () => {
   ).toThrow();
 });
 
-it('measures each fixed-cell content once per Array callback, including replay under changed defaults', () => {
+it('每个 Array 回调测量一次每个固定单元内容，包括更改后的默认值下的回放', () => {
   let calls = 0;
   const callsPerArray: Array<number> = [];
-  const arrayDefinition: typeof ArrayDefinition = {
-    ...ArrayDefinition,
+  const customArrayDefinition: typeof arrayDefinition = {
+    ...arrayDefinition,
     compile: (node, context) => {
       const before = calls;
-      const result = ArrayDefinition.compile(node, context);
+      const result = arrayDefinition.compile(node, context);
       callsPerArray.push(calls - before);
       return result;
     },
@@ -430,7 +430,7 @@ it('measures each fixed-cell content once per Array callback, including replay u
     },
     intrinsicLayoutProposal('natural'),
     [measured],
-    arrayDefinition,
+    customArrayDefinition,
   );
 
   expect(calls).toBeGreaterThan(0);
@@ -438,7 +438,7 @@ it('measures each fixed-cell content once per Array callback, including replay u
   expect(callsPerArray.every(count => count === 6)).toBe(true);
 });
 
-it('keeps label visual overflow outside the parent allocation including indexed lists', () => {
+it('将标签视觉溢出保留在父分配之外，包括索引列表', () => {
   const source = { namespace: 'standard', type: 'array', index: true, items: [cell('a', 40, 20)] };
   const before = compile(source).observed;
   const after = compile({ ...source, label: { text: 'a very long title outside allocation', distance: 30 } }).observed;

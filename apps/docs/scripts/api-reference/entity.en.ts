@@ -17,8 +17,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'A new Entity Source record; does not parse the schema, generate an id, or fill in position or theme defaults',
   '实体编写字段；自定义语义仅引用已由 Graph 注册的 key':
     'Entity authoring fields; custom semantics reference only keys registered through Graph',
-  '供 Vanilla 内容树使用的 embed 节点，由 EntityInputEmbedAdapter 转换为 Entity Source':
-    'An embed node for a Vanilla content tree, converted to Entity Source by EntityInputEmbedAdapter',
+  '供 Vanilla 内容树使用的 embed 节点，由 entityInputEmbedAdapter 转换为 Entity Source':
+    'An embed node for a Vanilla content tree, converted to Entity Source by entityInputEmbedAdapter',
   '带 type 判别字段的实体编写输入': 'Entity authoring input with its type discriminator',
   '新建的 Entity Source 记录；保留输入字段，不生成 id 或布局位置':
     'A new Entity Source record preserving input fields without generating an id or layout position',

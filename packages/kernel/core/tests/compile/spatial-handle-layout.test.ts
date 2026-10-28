@@ -54,8 +54,8 @@ const parent = defineComposite({
   },
 });
 
-describe('spatial handle layout replay', () => {
-  it('remaps probe occurrence and applies replay plus outer Scope transforms once', () => {
+describe('空间手柄布局回放', () => {
+  it('重新映射探测发生并应用回放以及外部 Scope 转换一次', () => {
     const scene: IRScene = {
       version: 1,
       type: 'scene',

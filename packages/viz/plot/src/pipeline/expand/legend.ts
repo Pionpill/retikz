@@ -13,12 +13,12 @@ import type { ChannelResolveContext } from '../../resolve/channel';
 import { resolveChannelDefinition, resolveMarkChannels } from '../../resolve/channel';
 import { resolveGuideTicks } from '../../resolve/guide';
 import { resolveScaleDefinition } from '../../resolve/scale';
-import type { EffectivePlotGuideTheme } from '../../resolve/theme';
+import type { CanonicalPlotGuideTheme } from '../../resolve/theme';
 import { resolveLegendGuideTokens } from '../../resolve/theme';
 import type { IRPlot, IRPlotLegendGuide, IRPlotScaleOperation, LegendChannelValue } from '../../schemas';
 import { LegendSymbolFit, PlotLayerZIndex, BuiltinPlotScale } from '../../schemas';
 import type { PlotLabelMeasure } from '../../shared';
-import type { LegendEntry, LowerLegendOptions } from '../guide';
+import type { LegendEntry, LegendLoweringOptions } from '../guide';
 import { lowerLegend } from '../guide';
 import type { MarkDataView } from './types';
 
@@ -233,7 +233,7 @@ type LegendLoweringBase = {
   band: BoundsRect;
   id: string;
   zIndex: number;
-  style: LowerLegendOptions['style'];
+  style: LegendLoweringOptions['style'];
 };
 
 /**
@@ -247,7 +247,7 @@ const resolveColorLegend = (
   guide: IRPlotLegendGuide,
   base: LegendLoweringBase,
   showLabels: boolean,
-): LowerLegendOptions => {
+): LegendLoweringOptions => {
   // 标题只在用户显式给时渲染（field 名仅作占位 fallback 的语义来源，不自动生成标题 Node，避免与条目标签混淆）
   const title = guide.title;
   const resolution = descriptor.colorScale;
@@ -403,7 +403,7 @@ export const buildLegendLayers = (
   bands: Array<BoundsRect>,
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
-  resolvedTheme: EffectivePlotGuideTheme,
+  resolvedTheme: CanonicalPlotGuideTheme,
   measure: PlotLabelMeasure,
 ): Array<IRScope> => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));

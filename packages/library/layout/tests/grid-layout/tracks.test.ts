@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { LayoutDistribution } from '../../src';
 import { solveGridTracks } from '../../src/composites/grid-layout/tracks';
 
-describe('GridLayout track solver', () => {
-  it('builds separate minimum and natural profiles and resolves finite fractions', () => {
+describe('GridLayout 轨迹解算器', () => {
+  it('构建单独的最小和自然轮廓并解析有限分数', () => {
     const tracks = [
       { kind: 'fixed', value: 20 },
       { kind: 'content', mode: 'natural' },
@@ -27,7 +27,7 @@ describe('GridLayout track solver', () => {
     expect(finite.sizes).toEqual([20, 30, 50]);
   });
 
-  it('aggregates spanning constraints independently of authored order', () => {
+  it('独立于编写顺序聚合跨越约束', () => {
     const tracks = [
       { kind: 'content', mode: 'minimum' },
       { kind: 'content', mode: 'minimum' },
@@ -54,7 +54,7 @@ describe('GridLayout track solver', () => {
     expect(reverse).toEqual(forward);
   });
 
-  it('honors minmax lower and maximum breadth semantics in both profiles', () => {
+  it('在两个配置中均遵循最小最大下限和最大宽度语义', () => {
     const constraint = [{ start: 0, span: 1, minimum: 5, natural: 30 }];
     const minNatural = solveGridTracks(
       [{ kind: 'minmax', min: { kind: 'content', mode: 'natural' }, max: { kind: 'fixed', value: 10 } }],
@@ -80,7 +80,7 @@ describe('GridLayout track solver', () => {
     expect(maxNatural.naturalProfile).toEqual([30]);
   });
 
-  it('selects minimum or natural contribution targets for intrinsic minmax maxima', () => {
+  it('选择内在最小最大最大值的最小或自然贡献目标', () => {
     const maximumMinimum = solveGridTracks(
       [
         { kind: 'minmax', min: { kind: 'fixed', value: 0 }, max: { kind: 'content', mode: 'minimum' } },
@@ -110,7 +110,7 @@ describe('GridLayout track solver', () => {
     expect(maximumNatural.naturalProfile).toEqual([65, 35]);
   });
 
-  it('does not grow a fixed-only span and keeps caller inputs immutable', () => {
+  it('不增加固定范围并保持调用者输入不可变', () => {
     const tracks = Object.freeze([
       Object.freeze({ kind: 'fixed' as const, value: 10 }),
       Object.freeze({ kind: 'fixed' as const, value: 20 }),
@@ -132,7 +132,7 @@ describe('GridLayout track solver', () => {
     expect(constraints).toEqual(beforeConstraints);
   });
 
-  it('freezes oversized fraction bases and stretches only non-fixed tracks', () => {
+  it('冻结超大分数基数并仅拉伸非固定轨道', () => {
     const fractions = solveGridTracks(
       [
         { kind: 'fraction', factor: 1 },
@@ -154,7 +154,7 @@ describe('GridLayout track solver', () => {
     expect(stretched.sizes).toEqual([20, 80]);
   });
 
-  it('keeps negative overflow explicit and computes deterministic content offsets', () => {
+  it('保持负溢出显式并计算确定性内容偏移', () => {
     const overflow = solveGridTracks(
       [
         { kind: 'fixed', value: 40 },

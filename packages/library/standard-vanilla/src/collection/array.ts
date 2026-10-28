@@ -1,9 +1,9 @@
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import type { IRArray, IRArrayCell } from '@retikz/standard/collection';
-import { createArray, ArrayProvider } from '@retikz/standard/collection';
+import { createArray, arrayProvider } from '@retikz/standard/collection';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { StandardArrayEmbedKind } from '../shared/constants';
+import { standardArrayEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCellItems } from './cell';
 
@@ -38,13 +38,13 @@ export type InputArray = Omit<IRArray, 'namespace' | 'type' | 'items' | 'data' |
   );
 
 /** 将 Array 输入与嵌套内容交给根级 traversal */
-export const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray> = {
-  kind: StandardArrayEmbedKind,
+export const arrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray> = {
+  kind: standardArrayEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)
       return {
         node: createArray({ namespace: 'standard', type: 'array', ...props }),
-        providerDependencies: { roots: [ArrayProvider.key], providers: [ArrayProvider, PathClipProvider] },
+        providerDependencies: { roots: [arrayProvider.key], providers: [arrayProvider, pathClipProvider] },
       };
 
     if (props.data !== undefined)
@@ -54,7 +54,7 @@ export const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray> = 
       };
 
     const { items, ...input } = props;
-    const normalized = normalizeCellItems(items, context, ArrayProvider);
+    const normalized = normalizeCellItems(items, context, arrayProvider);
 
     return {
       node: createArray({
@@ -76,7 +76,7 @@ export const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray> = 
  */
 export const array = (input: InputArray): InputEmbed<InputArray> => ({
   type: 'embed',
-  kind: StandardArrayEmbedKind,
+  kind: standardArrayEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

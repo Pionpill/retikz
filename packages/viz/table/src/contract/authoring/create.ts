@@ -1,9 +1,9 @@
 import type { IRDetailTable, IRManualTable, IRTableDetailColumn } from '../../schemas';
 import { TABLE_NAMESPACE, TableCellPayloadKind, TableComposite, TableStructureKind } from '../../schemas';
-import type { DetailTableInput, ManualTableInput, TableDetailColumnInput } from './types';
+import type { InputDetailTableConfig, InputManualTableConfig, InputTableDetailColumn } from './types';
 
 /** 把 detail column 的字符串列头规范化为 value payload */
-const normalizeDetailColumn = (column: TableDetailColumnInput): IRTableDetailColumn => {
+const buildDetailColumn = (column: InputTableDetailColumn): IRTableDetailColumn => {
   const { header, ...fields } = column;
   if (header === undefined) return fields;
 
@@ -14,7 +14,7 @@ const normalizeDetailColumn = (column: TableDetailColumnInput): IRTableDetailCol
 };
 
 /** 从 plain detail 输入构造独立的稀疏 Table Source */
-export const createDetailTableIR = (input: DetailTableInput): IRDetailTable => {
+export const createDetailTableIR = (input: InputDetailTableConfig): IRDetailTable => {
   const { dataRef, model, columns, header, ...root } = input;
   return structuredClone({
     namespace: TABLE_NAMESPACE,
@@ -26,14 +26,14 @@ export const createDetailTableIR = (input: DetailTableInput): IRDetailTable => {
     },
     structure: {
       kind: TableStructureKind.Detail,
-      columns: columns.map(normalizeDetailColumn),
+      columns: columns.map(buildDetailColumn),
       ...(header === undefined ? {} : { header }),
     },
   });
 };
 
 /** 从 plain manual 输入构造独立的稀疏 Table Source */
-export const createManualTableIR = (input: ManualTableInput): IRManualTable => {
+export const createManualTableIR = (input: InputManualTableConfig): IRManualTable => {
   const { rows, rowKinds, ...root } = input;
   return structuredClone({
     namespace: TABLE_NAMESPACE,

@@ -4,7 +4,7 @@ import type {
   CoordinateFrame,
   FieldCollector,
   MarkChannels,
-  MarkInstanceInput,
+  InputMarkInstance,
   MarkLoweringContext,
 } from '../../../contract';
 import { markProperty, unencodedMarkProperties, markInstances, markInstanceKey } from '../../../contract';
@@ -69,7 +69,7 @@ const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
  */
 export const lowerPoint = (
   mark: IRPlotMark,
-  instances: MarkInstanceInput,
+  instances: InputMarkInstance,
   frame: CoordinateFrame,
   channels: MarkChannels,
   ctx: MarkLoweringContext | undefined,

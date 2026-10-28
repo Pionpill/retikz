@@ -4,15 +4,11 @@ import type { Transform } from '../../../contract';
 import type { PathTargetView } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { FoldStepVia } from '../../../schemas';
-import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
+import { isNodeTargetLike } from '../../../shared';
 
 /** 判断 target 是否为自动边界裁剪的节点引用 */
 export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
   isNodeTargetLike(target) && target.anchor === undefined && target.offset === undefined;
-
-/** 判断 target 是否为相对路径简写 */
-export const isRelativeTarget = (target: IRTarget): boolean =>
-  isRelativeTargetLike(target) || isRelativeAccumulateTargetLike(target);
 
 /** 使用 resolving phase 绑定的 target view 获取局部参考点 */
 export const pointOfTarget = (
@@ -20,13 +16,6 @@ export const pointOfTarget = (
   targetView: PathTargetView,
   scopeChain: ReadonlyArray<Transform>,
 ): IRPosition | null => targetView.pointOfTarget(target, scopeChain);
-
-/** 使用 resolving phase 绑定的 target view 获取参考点 */
-export const referenceOfTarget = (
-  target: IRTarget,
-  targetView: PathTargetView,
-  scopeChain: ReadonlyArray<Transform>,
-): IRPosition | null => targetView.referenceOfTarget(target, scopeChain);
 
 /** 使用 toward 计算 resolving phase 绑定的 target 裁剪点 */
 export const clipTarget = (

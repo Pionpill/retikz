@@ -34,19 +34,19 @@ export type TextMetrics = {
   /** 文本高度（user units） */
   height: number;
   /**
-   * 基线以上的高度；省略时由 normalizeTextMetrics 根据总高度与 descent 补齐，两者均省略时各取总高度的一半
-   * @default normalizeTextMetrics
+   * 基线以上的高度；省略时由 resolveTextMetrics 根据总高度与 descent 补齐，两者均省略时各取总高度的一半
+   * @default resolveTextMetrics
    */
   ascent?: number;
   /**
-   * 基线以下的深度；省略时由 normalizeTextMetrics 根据总高度与 ascent 补齐，两者均省略时各取总高度的一半
-   * @default normalizeTextMetrics
+   * 基线以下的深度；省略时由 resolveTextMetrics 根据总高度与 ascent 补齐，两者均省略时各取总高度的一半
+   * @default resolveTextMetrics
    */
   descent?: number;
 };
 
 /** 已规范化的文字度量结果 */
-export type NormalizedTextMetrics = {
+export type CanonicalTextMetrics = {
   /** 文本宽度 */
   width: number;
   /** 文本视觉盒高度 */
@@ -58,15 +58,10 @@ export type NormalizedTextMetrics = {
 };
 
 /** 校验并规范化单次文字度量结果 */
-export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetrics =>
-  withProviderOutputValidationBoundary('normalizeTextMetrics', () => {
-    const candidate = providerOutputRecord('normalizeTextMetrics', metrics, 'text metrics');
-    assertProviderOutputKeys(
-      'normalizeTextMetrics',
-      candidate,
-      ['width', 'height', 'ascent', 'descent'],
-      'text metrics',
-    );
+export const resolveTextMetrics = (metrics: TextMetrics): CanonicalTextMetrics =>
+  withProviderOutputValidationBoundary('resolveTextMetrics', () => {
+    const candidate = providerOutputRecord('resolveTextMetrics', metrics, 'text metrics');
+    assertProviderOutputKeys('resolveTextMetrics', candidate, ['width', 'height', 'ascent', 'descent'], 'text metrics');
     const width = candidate.width;
     const height = candidate.height;
     const rawAscent = candidate.ascent;
@@ -75,7 +70,7 @@ export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetric
     const assertMetric = (name: keyof TextMetrics, value: unknown): number => {
       if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
         throw createCompositeContractError(
-          `normalizeTextMetrics: invalid ${name} '${String(value)}'; must be a non-negative finite number`,
+          `resolveTextMetrics: invalid ${name} '${String(value)}'; must be a non-negative finite number`,
         );
       }
 
@@ -93,7 +88,7 @@ export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetric
       const measuredVerticalSpan = measuredAscent + measuredDescent;
       if (!Number.isFinite(measuredVerticalSpan)) {
         throw createCompositeContractError(
-          `normalizeTextMetrics: invalid ascent/descent sum '${measuredVerticalSpan}'; must be a non-negative finite number`,
+          `resolveTextMetrics: invalid ascent/descent sum '${measuredVerticalSpan}'; must be a non-negative finite number`,
         );
       }
 

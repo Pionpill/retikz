@@ -27,8 +27,8 @@ const scene = (width: number, aliasIds?: Array<string>): IRScene => ({
   children: [{ namespace: 'third', type: 'card', width, ...(aliasIds === undefined ? {} : { aliasIds }) }],
 });
 
-describe('incremental spatial handle atomicity', () => {
-  it('position-only changes update Scene and spatial handles identically to fresh compilation', () => {
+describe('增量空间句柄原子性', () => {
+  it('仅位置变化时 Scene 和空间句柄的更新结果与全新编译相同', () => {
     const source = (x: number): IRScene => ({
       type: 'scene',
       version: 1,
@@ -53,7 +53,7 @@ describe('incremental spatial handle atomicity', () => {
     }
   });
 
-  it('rebuilds Node alias registration on retained updates and matches fresh compilation', () => {
+  it('在保留的更新上重建 Node 别名注册并匹配新的编译', () => {
     const source = (aliasIds: Array<string>): IRScene => ({
       type: 'scene',
       version: 1,
@@ -81,7 +81,7 @@ describe('incremental spatial handle atomicity', () => {
     }
   });
 
-  it('commits Scene, artifacts, and spatial index together and preserves the previous revision on failure', () => {
+  it('将 Scene、产物和空间索引一起提交，并在失败时保留先前的修订', () => {
     const session = new ReconcilerSession({ composites: [card] });
     session.mount(scene(10));
 

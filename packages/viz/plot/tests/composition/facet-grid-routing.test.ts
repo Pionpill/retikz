@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -55,10 +55,10 @@ const expandOf = (
   options: { width?: number; height?: number } = {},
   datasets: { sales: Array<Record<string, string | number>> } = { sales: salesRows },
 ): IRScope => {
-  return lowerPlot(spec, datasets, {
+  return lowerPlotWithDataArtifact(spec, datasets, {
     layout: { width: options.width ?? 480, height: options.height ?? 300 },
     textMeasurer: measureLabel,
-  }) as IRScope;
+  }).child as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
@@ -94,18 +94,18 @@ const translateOf = (scope: IRScope): { x: number; y: number } => {
   return { x: translate?.x ?? 0, y: translate?.y ?? 0 };
 };
 
-describe('facet grid data routing schema', () => {
-  it('facet_column_schema_parses', () => {
+describe('分面网格数据路由 schema', () => {
+  it('分面列 schema 解析', () => {
     expect(parsePlotIR(baseFacetSpec)).toEqual(baseFacetSpec);
   });
 
-  it('facet_grid_round_trips_through_json', () => {
+  it('通过 json 进行切面网格往返', () => {
     const parsed = parsePlotIR(JSON.parse(JSON.stringify(baseFacetSpec)));
 
     expect(parsed).toEqual(baseFacetSpec);
   });
 
-  it('facet_row_column_show_empty_schema_parses', () => {
+  it('方面行列显示空 schema 解析', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -125,7 +125,7 @@ describe('facet grid data routing schema', () => {
     expect(parsePlotIR(spec)).toEqual(spec);
   });
 
-  it('facet_multi_level_dimension_schema_parses', () => {
+  it('facet 多级维度 schema 解析', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -146,7 +146,7 @@ describe('facet grid data routing schema', () => {
     expect(parsePlotIR(spec)).toEqual(spec);
   });
 
-  it('facet_without_row_or_column_rejected', () => {
+  it('没有行或列的构面被拒绝', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -158,7 +158,7 @@ describe('facet grid data routing schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/row or column/);
   });
 
-  it('duplicate_facet_id_rejected', () => {
+  it('重复的构面 ID 被拒绝', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -173,7 +173,7 @@ describe('facet grid data routing schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/duplicate arrangement/i);
   });
 
-  it('facet_id_conflicting_with_scope_id_rejected', () => {
+  it('方面 ID 与范围 ID 冲突被拒绝', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -185,7 +185,7 @@ describe('facet grid data routing schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/arrangement/i);
   });
 
-  it('facet_scale_sharing_mode_rejected_when_unknown', () => {
+  it('未知时拒绝面尺度共享模式', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -200,8 +200,8 @@ describe('facet grid data routing schema', () => {
   });
 });
 
-describe('facet grid data routing lowering', () => {
-  it('column_facet_generates_panel_scopes_in_order', () => {
+describe('小面网格数据路由下沉', () => {
+  it('列 facet 按顺序生成面板范围', () => {
     const outer = expandOf(parsePlotIR(baseFacetSpec));
     const panels = facetPanelsOf(outer);
 
@@ -209,7 +209,7 @@ describe('facet grid data routing lowering', () => {
     expect(panels.map(panel => allNodes(panel).length)).toEqual([2, 3]);
   });
 
-  it('row_column_empty_show_generates_all_combinations', () => {
+  it('行列空分面设为显示时生成所有组合', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -237,7 +237,7 @@ describe('facet grid data routing lowering', () => {
     expect(panels.map(panel => allNodes(panel).length)).toEqual([2, 1, 2, 0]);
   });
 
-  it('multi_level_row_facet_routes_tuple_panel_values', () => {
+  it('多级行面路由元组面板值', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -269,7 +269,7 @@ describe('facet grid data routing lowering', () => {
     expect(panels.map(panel => allNodes(panel).length)).toEqual([2, 1, 2]);
   });
 
-  it('multi_level_facet_groups_row_and_column_label_strips_by_level', () => {
+  it('多级分面按级别对行和列标签条进行分组', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -336,7 +336,7 @@ describe('facet grid data routing lowering', () => {
   it.each([
     { header: { row: false, column: true }, expectedDimension: 'column' },
     { header: { row: true, column: false }, expectedDimension: 'row' },
-  ] as const)('facet_header_visibility_is_independent_per_dimension', ({ header, expectedDimension }) => {
+  ] as const)('构面标题可见性对于每个维度都是独立的', ({ header, expectedDimension }) => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -357,7 +357,7 @@ describe('facet grid data routing lowering', () => {
     expect(labels.map(label => label.meta?.dimension)).toEqual([expectedDimension, expectedDimension]);
   });
 
-  it('facet_label_bands_reserve_label_gap_from_panel_grid', () => {
+  it('小平面标签带与面板网格保留标签间隙', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -395,7 +395,7 @@ describe('facet grid data routing lowering', () => {
     expect(translateOf(secondRowPanel as IRScope).y).toBe(106);
   });
 
-  it('facet_label_bands_use_one_label_band_as_default_gap', () => {
+  it('分面标签带使用一个标签带作为默认间隙', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -428,7 +428,7 @@ describe('facet grid data routing lowering', () => {
     expect(translateOf(firstPanel as IRScope).x).toBe(66);
   });
 
-  it('facet_header_label_style_controls_row_rotation', () => {
+  it('分面标题标签样式控制行旋转', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -462,7 +462,7 @@ describe('facet grid data routing lowering', () => {
     expect(rowLabelNodes.map(node => node.style?.textColor)).toEqual(['#334155', '#334155']);
   });
 
-  it('typography_supplies_facet_header_defaults_beneath_local_header_style', () => {
+  it('排版在本地标题样式下提供构面标题默认值', () => {
     const spec = {
       ...baseFacetSpec,
       defaultPlot: {
@@ -515,7 +515,7 @@ describe('facet grid data routing lowering', () => {
     expect(columnNodes.every(node => node.layout?.lineHeight === 1.4)).toBe(true);
   });
 
-  it('facet_dimension_labels_override_header_text_blocks', () => {
+  it('小平面尺寸标签覆盖标题文本块', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -564,7 +564,7 @@ describe('facet grid data routing lowering', () => {
     expect(rowLabelNodes.map(node => node.style?.textColor)).toEqual(['#334155', '#334155']);
   });
 
-  it('row_column_facet_treats_width_height_as_total_chart_size', () => {
+  it('行列面将宽度高度视为图表总大小', () => {
     const rows = [
       { region: 'north', channel: 'online', month: 1, revenue: 58 },
       { region: 'south', channel: 'online', month: 1, revenue: 42 },
@@ -605,7 +605,7 @@ describe('facet grid data routing lowering', () => {
     expect(translateOf(northStore as IRScope)).toEqual({ x: 0, y: 252 });
   });
 
-  it('independent_y_scale_uses_panel_local_domain', () => {
+  it('独立 y 比例尺使用面板局部定义域', () => {
     const outer = expandOf(parsePlotIR(baseFacetSpec));
     const [south, north] = facetPanelsOf(outer);
     const southNodes = allNodes(south);
@@ -616,7 +616,7 @@ describe('facet grid data routing lowering', () => {
     expect(northTopY).toBeCloseTo(southTopY, 6);
   });
 
-  it('shared_y_scale_uses_all_panel_rows_for_domain', () => {
+  it('共享 y 比例使用所有面板行作为域', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {
@@ -640,7 +640,7 @@ describe('facet grid data routing lowering', () => {
     expect(northTopY).toBeGreaterThan(southTopY);
   });
 
-  it('synchronized_y_scale_uses_all_panel_rows_for_domain', () => {
+  it('同步 y 比例使用所有面板行作为域', () => {
     const spec = {
       namespace: 'plot',
       type: 'plot',
@@ -680,7 +680,7 @@ describe('facet grid data routing lowering', () => {
     expect(northTopY).toBeGreaterThan(southTopY);
   });
 
-  it('missing_facet_field_fails_loudly', () => {
+  it('分面字段缺失时明确报错', () => {
     const spec = {
       ...baseFacetSpec,
       composition: {

@@ -1,14 +1,14 @@
-import { LayeredFlowLayoutDefinition, routeFlowRelations } from '@retikz/diagram/flow';
+import { layeredFlowLayoutDefinition, routeFlowRelations } from '@retikz/diagram/flow';
 import type { FlowLayoutDefinition } from '@retikz/diagram/flow';
 
 /** 示例布局固定端点，仅改变参与路由计算的障碍中心 */
 export const createObstacleLayout = (x: number, y: number, orthogonal = false): FlowLayoutDefinition => ({
-  ...LayeredFlowLayoutDefinition,
+  ...layeredFlowLayoutDefinition,
   name: 'obstacle-playground',
   description: 'Fixed endpoints and an authored obstacle center with built-in Flow routing.',
   layout: (input, context) => {
     if (input.elements.some(element => element.kind !== 'leaf'))
-      return LayeredFlowLayoutDefinition.layout(input, context);
+      return layeredFlowLayoutDefinition.layout(input, context);
 
     const elements = input.elements.map(element => {
       if (element.kind !== 'leaf') throw new Error('The obstacle playground accepts leaf entities only');

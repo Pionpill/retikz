@@ -2,13 +2,13 @@ import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
 import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
-import type { TableTrackLayout } from './types';
+import type { CompiledTableTrackLayout } from './types';
 
 /** Cell 几何计算支持的轴向对齐值 */
 export type TableCellAlignment = 'start' | 'center' | 'end';
 
 /** allocation bounds 与 padding 合成的 Cell 外部尺寸 */
-export type TableCellOuterSize = Readonly<{
+type TableCellOuterSize = Readonly<{
   /** 横向 finite nonnegative 外部尺寸 */
   width: number;
   /** 纵向 finite nonnegative 外部尺寸 */
@@ -24,11 +24,11 @@ export type TableCellTranslation = Readonly<{
 }>;
 
 /** 由 canonical tracks 计算 spanning Cell box 的输入 */
-export type ComputeTableCellBoxInput = Readonly<{
+type InputTableCellBox = Readonly<{
   /** 规范化后的行轨道 */
-  rows: ReadonlyArray<TableTrackLayout>;
+  rows: ReadonlyArray<CompiledTableTrackLayout>;
   /** 规范化后的列轨道 */
-  columns: ReadonlyArray<TableTrackLayout>;
+  columns: ReadonlyArray<CompiledTableTrackLayout>;
   /** 起始 canonical row index */
   rowIndex: number;
   /** 起始 canonical column index */
@@ -44,7 +44,7 @@ export type ComputeTableCellBoxInput = Readonly<{
 }>;
 
 /** Cell content box 与 Core allocation bounds 的对齐输入 */
-export type ComputeTableCellTranslationInput = Readonly<{
+type InputTableCellTranslation = Readonly<{
   /** padding 收缩后的 Table-local content box */
   contentBox: BoundsRect;
   /** replay root 未放置局部坐标系的 Core allocation bounds */
@@ -61,7 +61,7 @@ const assertFiniteNonnegative = (value: number, name: string): void => {
   }
 };
 
-const validateBoundsRect = (rect: BoundsRect, name: string): void => {
+const assertBoundsRect = (rect: BoundsRect, name: string): void => {
   if (!Number.isFinite(rect.x) || !Number.isFinite(rect.y)) {
     throw new RetikzTableError(`table: ${name} must have finite x and y`);
   }
@@ -70,14 +70,14 @@ const validateBoundsRect = (rect: BoundsRect, name: string): void => {
   assertFiniteNonnegative(rect.height, `${name} height`);
 };
 
-const validatePadding = (padding: Readonly<BoundsInsets>): void => {
+const assertPadding = (padding: Readonly<BoundsInsets>): void => {
   assertFiniteNonnegative(padding.top, 'padding top');
   assertFiniteNonnegative(padding.right, 'padding right');
   assertFiniteNonnegative(padding.bottom, 'padding bottom');
   assertFiniteNonnegative(padding.left, 'padding left');
 };
 
-const validateStartAndSpan = (start: number, span: number, count: number, axis: string): void => {
+const assertStartAndSpan = (start: number, span: number, count: number, axis: string): void => {
   if (!Number.isInteger(start) || start < 0) {
     throw new RetikzTableError(`table: ${axis}Index must be a nonnegative integer`);
   }
@@ -110,8 +110,8 @@ export const computeTableCellOuterSize = (
   allocationBounds: BoundsRect,
   padding: Readonly<BoundsInsets>,
 ): TableCellOuterSize => {
-  validateBoundsRect(allocationBounds, 'allocationBounds');
-  validatePadding(padding);
+  assertBoundsRect(allocationBounds, 'allocationBounds');
+  assertPadding(padding);
   const width = allocationBounds.width + padding.left + padding.right;
   const height = allocationBounds.height + padding.top + padding.bottom;
   if (!Number.isFinite(width) || !Number.isFinite(height)) {
@@ -122,8 +122,8 @@ export const computeTableCellOuterSize = (
 };
 
 /** 从 canonical row / column tracks 计算包含内部 gaps 的 Cell box */
-export const computeTableCellBox = (input: ComputeTableCellBoxInput): BoundsRect => {
-  const validateTrackLayouts = (tracks: ReadonlyArray<TableTrackLayout>, axis: string): void => {
+export const computeTableCellBox = (input: InputTableCellBox): BoundsRect => {
+  const assertTrackLayouts = (tracks: ReadonlyArray<CompiledTableTrackLayout>, axis: string): void => {
     tracks.forEach((track, index) => {
       if (track.index !== index) {
         throw new RetikzTableError(`table: ${axis} track ${index} has non-canonical index ${track.index}`);
@@ -137,10 +137,10 @@ export const computeTableCellBox = (input: ComputeTableCellBoxInput): BoundsRect
     });
   };
 
-  validateTrackLayouts(input.rows, 'row');
-  validateTrackLayouts(input.columns, 'column');
-  validateStartAndSpan(input.rowIndex, input.rowSpan, input.rows.length, 'row');
-  validateStartAndSpan(input.columnIndex, input.columnSpan, input.columns.length, 'column');
+  assertTrackLayouts(input.rows, 'row');
+  assertTrackLayouts(input.columns, 'column');
+  assertStartAndSpan(input.rowIndex, input.rowSpan, input.rows.length, 'row');
+  assertStartAndSpan(input.columnIndex, input.columnSpan, input.columns.length, 'column');
   assertFiniteNonnegative(input.rowGap, 'rowGap');
   assertFiniteNonnegative(input.columnGap, 'columnGap');
 
@@ -155,30 +155,30 @@ export const computeTableCellBox = (input: ComputeTableCellBoxInput): BoundsRect
     input.rows.slice(input.rowIndex, input.rowIndex + input.rowSpan).reduce((total, track) => total + track.size, 0) +
     (input.rowSpan - 1) * input.rowGap;
   const box = { x: column.offset, y: row.offset, width, height };
-  validateBoundsRect(box, 'Cell box');
+  assertBoundsRect(box, 'Cell box');
 
   return deepFreeze(box);
 };
 
 /** 按 resolved padding 向内收缩 Cell box */
 export const computeTableCellContentBox = (box: BoundsRect, padding: Readonly<BoundsInsets>): BoundsRect => {
-  validateBoundsRect(box, 'Cell box');
-  validatePadding(padding);
+  assertBoundsRect(box, 'Cell box');
+  assertPadding(padding);
   const contentBox = {
     x: box.x + Math.min(padding.left, box.width),
     y: box.y + Math.min(padding.top, box.height),
     width: Math.max(0, box.width - padding.left - padding.right),
     height: Math.max(0, box.height - padding.top - padding.bottom),
   };
-  validateBoundsRect(contentBox, 'Cell contentBox');
+  assertBoundsRect(contentBox, 'Cell contentBox');
 
   return deepFreeze(contentBox);
 };
 
 /** 按真实 allocation bounds anchor 计算 Table-local finite translation */
-export const computeTableCellTranslation = (input: ComputeTableCellTranslationInput): TableCellTranslation => {
-  validateBoundsRect(input.contentBox, 'contentBox');
-  validateBoundsRect(input.allocationBounds, 'allocationBounds');
+export const computeTableCellTranslation = (input: InputTableCellTranslation): TableCellTranslation => {
+  assertBoundsRect(input.contentBox, 'contentBox');
+  assertBoundsRect(input.allocationBounds, 'allocationBounds');
   const x =
     alignmentAnchor(input.contentBox.x, input.contentBox.width, input.horizontalAlign) -
     alignmentAnchor(input.allocationBounds.x, input.allocationBounds.width, input.horizontalAlign);

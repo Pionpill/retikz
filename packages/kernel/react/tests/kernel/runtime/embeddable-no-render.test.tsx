@@ -70,8 +70,7 @@ const makeThrowingFixture = (options: { namespace?: string; displayName?: string
         providers: [
           {
             key: { capability: 'composite', namespace, type: 'panel' },
-            dependencies: [],
-            datasets: { [props.id]: props.data },
+            params: { [props.id]: props.data },
             makeDefinition: makePanelDefinition,
           },
         ],

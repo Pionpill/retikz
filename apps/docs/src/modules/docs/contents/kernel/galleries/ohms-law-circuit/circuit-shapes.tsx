@@ -84,7 +84,7 @@ const horizontalBoundaryPoint = (rect: CenteredBox, toward: Position): Position 
 const circuitBattery: ShapeDefinition = defineShape({
   name: 'circuit-battery',
   paramsSchema: z.strictObject({}),
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => ({
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 4 + BATTERY_LEAD),
     halfHeight: Math.max(innerHalfHeight, 14),
   }),
@@ -150,7 +150,7 @@ const circuitBattery: ShapeDefinition = defineShape({
 const circuitSwitch: ShapeDefinition = defineShape({
   name: 'circuit-switch',
   paramsSchema: z.strictObject({}),
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => ({
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 11 + SWITCH_LEAD),
     halfHeight: Math.max(innerHalfHeight, 13),
   }),
@@ -218,7 +218,7 @@ const circuitSwitch: ShapeDefinition = defineShape({
 const circuitResistor: ShapeDefinition = defineShape({
   name: 'circuit-resistor',
   paramsSchema: z.strictObject({}),
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => ({
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 26 + RESISTOR_LEAD),
     halfHeight: Math.max(innerHalfHeight, 12),
   }),
@@ -272,7 +272,7 @@ const circuitResistor: ShapeDefinition = defineShape({
 const circuitRheostat: ShapeDefinition = defineShape({
   name: 'circuit-rheostat',
   paramsSchema: z.strictObject({}),
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => ({
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 26 + RESISTOR_LEAD),
     halfHeight: Math.max(innerHalfHeight, 12),
   }),

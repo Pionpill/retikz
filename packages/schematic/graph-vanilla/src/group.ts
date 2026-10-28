@@ -1,7 +1,7 @@
-import { GroupProviderKey } from '@retikz/graph';
+import { groupProviderKey } from '@retikz/graph';
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { GroupEmbedKind } from './constants';
+import { groupEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
 import type { InputGroup, WithoutInputType } from './normalize';
 import { normalizeGroup } from './normalize';
@@ -16,12 +16,12 @@ const inputOf = (props: GroupInputEmbedProps): InputGroup => {
 };
 
 /** Group Source 的 InputEmbed adapter */
-export const GroupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbedProps> = {
-  kind: GroupEmbedKind,
+export const groupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbedProps> = {
+  kind: groupEmbedKind,
   lower: (props, context) => {
     const input = inputOf(props);
     const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'Group.children');
-    const dependencies = createGraphProviderDependencies(GroupProviderKey);
+    const dependencies = createGraphProviderDependencies(groupProviderKey);
 
     return {
       node: normalizeGroup({
@@ -42,4 +42,4 @@ export const GroupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbe
 };
 
 /** 创建 Group Source 的 authoring embed 节点 */
-export const group = (input: GroupInputEmbedProps) => createGraphInputEmbed(GroupEmbedKind, input, input.id);
+export const group = (input: GroupInputEmbedProps) => createGraphInputEmbed(groupEmbedKind, input, input.id);

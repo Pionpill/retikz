@@ -1,12 +1,12 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
-const options: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const options: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const rows = [
   { x: 0, y: 1, category: 'A', value: 0 },
@@ -14,8 +14,9 @@ const rows = [
   { x: 2, y: 3, category: 'C', value: 100 },
 ];
 
-const lower = (source: unknown, extra: LowerPlotsOptions = {}): IRScope =>
-  lowerPlot(PlotSchema.parse(source), { d: rows }, { textMeasurer: measureLabel, ...options, ...extra }) as IRScope;
+const lower = (source: unknown, extra: PlotsLoweringOptions = {}): IRScope =>
+  lowerPlotWithDataArtifact(PlotSchema.parse(source), { d: rows }, { textMeasurer: measureLabel, ...options, ...extra })
+    .child as IRScope;
 
 const nodesOf = (root: IRScope): Array<IRNode> => {
   const result: Array<IRNode> = [];
@@ -44,8 +45,8 @@ const base = {
   coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
 } as const;
 
-describe('Plot defaults palette consumers', () => {
-  it('sequential scheme from defaultPlot reaches the real scale consumer', () => {
+describe('Plot 默认调色板消费者', () => {
+  it('从 defaultPlot 开始的时序方案到达真正比例尺的消费者', () => {
     const root = lower(
       {
         ...base,
@@ -73,7 +74,7 @@ describe('Plot defaults palette consumers', () => {
     expect(layers.map(layer => layer.children.length)).toEqual([1, 2]);
   });
 
-  it('explicit scale range and mark color retain priority over palette defaults', () => {
+  it('明确的比例范围和标记颜色保留优先于调色板默认值', () => {
     const source = {
       ...base,
       defaultPlot: { palette: { categorical: ['#default-a', '#default-b'] } },
@@ -100,7 +101,7 @@ describe('Plot defaults palette consumers', () => {
     expect((ordinalLayer.children[0] as IRScope).defaults?.node?.style?.fill).toBe('#range-a');
   });
 
-  it('categorical palette reaches the legend swatch consumer', () => {
+  it('传奇色板消费者的分类调色板', () => {
     const source = {
       ...base,
       defaultPlot: { palette: { categorical: ['#legend-a', '#legend-b'] } },

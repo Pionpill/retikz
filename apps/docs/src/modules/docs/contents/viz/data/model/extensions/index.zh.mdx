@@ -102,9 +102,9 @@ const domain = resolveCategoryDomain(['10.18', '2.0', '10.2', '10.2.0'], 'labelL
 运行时解析器只关心字段与原始值。下面显式返回时间类型，将季度标签转换为该季度起始时刻：
 
 ```ts
-import type { ResolveField } from '@retikz/data';
+import type { FieldResolver } from '@retikz/data';
 
-const resolveField: ResolveField = field =>
+const resolveField: FieldResolver = field =>
   field === 'quarter'
     ? {
         type: 'temporal',

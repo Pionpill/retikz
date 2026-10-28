@@ -27,11 +27,11 @@ import { Stack } from '@retikz/standard-react/collection';
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { stack, StackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { stack, stackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 renderToSvgString(scene({ children: [stack({ items: ['A', 'B', 'C'] })] }), {
-  adapters: [StackInputEmbedAdapter],
+  adapters: [stackInputEmbedAdapter],
 });
 ```
 
@@ -42,7 +42,7 @@ renderToSvgString(scene({ children: [stack({ items: ['A', 'B', 'C'] })] }), {
 { "namespace": "standard", "type": "stack", "items": ["A", "B", "C"] }
 ```
 
-直接 IR 注册 StackProvider 与 PathClipProvider；data 展开还需要 ArrayProvider、MapProvider，显式嵌套内容提供自身依赖。
+直接 IR 注册 stackProvider 与 pathClipProvider；data 展开还需要 arrayProvider、mapProvider，显式嵌套内容提供自身依赖。
 
 </DocTab>
 </DocTabs>

@@ -150,7 +150,7 @@ describe('preset 集成', () => {
     expect(style!.textContent).toContain('translate('); // 镜头 group transform
   });
 
-  it('<Layout ir animations> appends animations prop to the IR root', async () => {
+  it('<Layout iranimations> 将 animations prop 附加到 IR 根', async () => {
     const irAnimation = cameraTo({ from: [0, 0, 100, 100], to: [10, 10, 80, 80] });
     const propAnimation = cameraTo({ from: [0, 0, 100, 100], to: [25, 25, 50, 50] });
     const ir: IRScene = {

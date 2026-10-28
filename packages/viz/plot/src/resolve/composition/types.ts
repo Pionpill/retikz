@@ -48,7 +48,7 @@ export type CompositionPolicyContext = {
 export type CompositionAxisPolicy = 'perScope' | 'outerShared' | 'none';
 
 /** axis grid object 配置 */
-export type AxisGridConfig = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
+type AxisGridConfig = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
 
 /** axis grid 显式目标选择器 */
 export type GridTargetSelector = NonNullable<AxisGridConfig['select']>;
@@ -95,7 +95,7 @@ export type FacetPanel = {
 };
 
 /** 坐标 scope 在 composition 中的确定放置结果 */
-export type CoordinateScopePlacement =
+type CoordinateScopePlacement =
   | Exclude<
       NonNullable<NonNullable<NonNullable<IRPlot['composition']>['views']>[number]['placement']>,
       {

@@ -1,4 +1,4 @@
-import { PolygonClipDefinition } from '@retikz/extension';
+import { polygonClipDefinition } from '@retikz/extension';
 import { Layout, Node, Scope } from '@retikz/react';
 
 /** 图形参数 */
@@ -10,7 +10,7 @@ export type PolygonClipPreviewValues = {
 
 /** 绘制示例图形 */
 export const renderPolygonClipPreview = (values: PolygonClipPreviewValues) => (
-  <Layout viewBox={{ x: 0, y: 0, width: 200, height: 200 }} extensions={{ clips: [PolygonClipDefinition] }}>
+  <Layout viewBox={{ x: 0, y: 0, width: 200, height: 200 }} extensions={{ clips: [polygonClipDefinition] }}>
     <Node
       position={[100, 100]}
       shape="rectangle"

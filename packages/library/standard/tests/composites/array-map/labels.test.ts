@@ -1,9 +1,9 @@
 import type { IRChild, IRNode, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { ArrayDefinition, ArraySchema, MapDefinition, MapSchema } from '../../../src/collection';
+import { arrayDefinition, ArraySchema, mapDefinition, MapSchema } from '../../../src/collection';
 import type { IRArray, IRMap } from '../../../src/collection';
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
@@ -12,7 +12,7 @@ const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
 const compile = (children: Array<IRChild>) =>
   compileToScene(
     { type: 'scene', version: 1, children },
-    { composites: [ArrayDefinition, MapDefinition], clips: [PathClipDefinition], padding: 0 },
+    { composites: [arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
   );
 
 const labelsOf = (children: Array<IRChild>) =>
@@ -46,8 +46,8 @@ const host = (label: IRNode['label']): IRNode => ({
   layout: { minimumSize: { width: 80, height: 40 }, padding: 0, margin: 0 },
 });
 
-describe('Array / Map container labels', () => {
-  it('preserves Node label Source and its cross-field validation', () => {
+describe('Array / Map 容器标签', () => {
+  it('保留 Node 标签 Source 及其跨域验证', () => {
     const label = [{ text: 'label top' }, { text: 'label pin', position: 'bottom', pin: true }];
 
     for (const source of sources) {
@@ -65,7 +65,7 @@ describe('Array / Map container labels', () => {
     }
   });
 
-  it('uses the same default and explicit label rendering as a Node of the allocated size', () => {
+  it('使用与分配大小的 Node 相同的默认和显式标签渲染', () => {
     for (const label of [
       { text: 'label default' },
       [
@@ -77,7 +77,7 @@ describe('Array / Map container labels', () => {
     }
   });
 
-  it('keeps container and cell handles and named path endpoints stable while expanding the viewBox', () => {
+  it('在扩展 viewBox 的同时保持容器和单元句柄以及命名路径端点的稳定', () => {
     for (const source of sources) {
       const path: IRChild = {
         type: 'path',
@@ -108,7 +108,7 @@ describe('Array / Map container labels', () => {
     }
   });
 
-  it('inherits label defaults and container text style without inheriting cell role styles', () => {
+  it('继承标签默认值和容器文本样式，而不继承单元格角色样式', () => {
     const defaults = { node: { label: { font: { size: 21 }, textColor: 'green' } } };
     const label = { text: 'label inherited' };
     const expected = labelsOf([{ type: 'scope', defaults, children: [host(label)] }]);
@@ -136,7 +136,7 @@ describe('Array / Map container labels', () => {
       );
   });
 
-  it('renders empty container labels and applies root transforms and clipping outside cell clips', () => {
+  it('渲染空容器标签并应用根变换和剪切外部单元格裁剪', () => {
     for (const source of [
       { namespace: 'standard', type: 'array', data: [] },
       { namespace: 'standard', type: 'map', data: {} },

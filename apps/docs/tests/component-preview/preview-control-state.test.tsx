@@ -104,7 +104,7 @@ afterEach(async () => {
   document.body.replaceChildren();
 });
 
-describe('preview control state', () => {
+describe('预览控制状态', () => {
   it('从 definition 初始化并提供类型化值', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

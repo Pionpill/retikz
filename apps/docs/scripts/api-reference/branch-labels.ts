@@ -98,7 +98,7 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'source', field: 'kind', type: "'source'", label: { zh: '原生源预检', en: 'Source descriptor' } },
     { value: 'result', field: 'kind', type: "'result'", label: { zh: '结果模型预检', en: 'Result descriptor' } },
   ],
-  '@retikz/data#DataTransformStageInput': [
+  '@retikz/data#InputDataTransformStage': [
     { value: 'source', field: 'kind', type: "'source'", label: { zh: '原生数据源', en: 'Native source' } },
     { value: 'result', field: 'kind', type: "'result'", label: { zh: '前一阶段结果', en: 'Previous result' } },
   ],
@@ -497,23 +497,23 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'jsx', field: 'ir', type: 'never', label: { zh: 'JSX 子元素', en: 'JSX child' } },
     { value: 'ir', field: 'children', type: 'never', label: { zh: 'IR 子图形', en: 'IR child' } },
   ],
-  '@retikz/layout#LayoutAxisSizeInput': [
+  '@retikz/layout#InputLayoutAxisSize': [
     { value: 'content', field: 'kind', type: '"content"', label: { zh: '内容尺寸', en: 'Content' } },
     { value: 'fixed', field: 'kind', type: '"fixed"', label: { zh: '固定尺寸', en: 'Fixed' } },
     { value: 'fill', field: 'kind', type: '"fill"', label: { zh: '填充空间', en: 'Fill' } },
   ],
-  '@retikz/layout#GridTrackBreadthInput': [
+  '@retikz/layout#InputGridTrackBreadth': [
     { value: 'fixed', field: 'kind', type: '"fixed"', label: { zh: '固定尺寸', en: 'Fixed' } },
     { value: 'content', field: 'kind', type: '"content"', label: { zh: '内容尺寸', en: 'Content' } },
     { value: 'fraction', field: 'kind', type: '"fraction"', label: { zh: '份额', en: 'Fraction' } },
   ],
-  '@retikz/layout#GridTrackInput': [
+  '@retikz/layout#InputGridTrack': [
     { value: 'fixed', field: 'kind', type: '"fixed"', label: { zh: '固定尺寸', en: 'Fixed' } },
     { value: 'content', field: 'kind', type: '"content"', label: { zh: '内容尺寸', en: 'Content' } },
     { value: 'fraction', field: 'kind', type: '"fraction"', label: { zh: '份额', en: 'Fraction' } },
     { value: 'minmax', field: 'kind', type: '"minmax"', label: { zh: '上下界', en: 'Minmax' } },
   ],
-  '@retikz/layout#OverlayPlacementInput': [
+  '@retikz/layout#InputOverlayPlacement': [
     { value: 'aligned', field: 'kind', type: '"aligned"', label: { zh: '对齐', en: 'Aligned' } },
     { value: 'positioned', field: 'kind', type: '"positioned"', label: { zh: '局部定位', en: 'Positioned' } },
   ],

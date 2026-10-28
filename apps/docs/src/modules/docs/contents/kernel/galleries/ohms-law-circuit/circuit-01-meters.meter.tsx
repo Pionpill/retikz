@@ -20,7 +20,7 @@ const FONT = { family: 'Arial, sans-serif' } as const;
 export const circuitMeter: ShapeDefinition = defineShape({
   name: 'circuit-meter',
   paramsSchema: z.strictObject({}),
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => {
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight) => {
     const radius = Math.sqrt(innerHalfWidth * innerHalfWidth + innerHalfHeight * innerHalfHeight);
     return { halfWidth: radius + 27.5, halfHeight: radius };
   },

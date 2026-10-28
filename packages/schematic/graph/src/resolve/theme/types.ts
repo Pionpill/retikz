@@ -1,6 +1,6 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
 import type { IRGraphDefaults, IRGraphRule } from '../../schemas';
 
 /** Graph 作者层传递的稀疏 defaults 与有序 rules */
@@ -12,8 +12,8 @@ export type GraphAuthorLayer = Readonly<{
 }>;
 
 /** 单成员 appearance resolver 共享的 Theme 与 definition 上下文 */
-export type GraphMemberAppearanceResolveContext = ResolvedGraphDefinitionOptions &
+export type GraphMemberAppearanceResolveContext = GraphDefinitionRegistries &
   Readonly<{
     /** 当前位置已解析的 Core 主题上下文 */
-    theme: ResolvedTheme;
+    theme: CanonicalTheme;
   }>;

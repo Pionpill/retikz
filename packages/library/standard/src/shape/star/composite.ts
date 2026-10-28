@@ -7,7 +7,7 @@ import { StarSchema } from './schema';
 import type { IRStar } from './types';
 
 /** Star 的 Core composite 注册项 */
-export const StarDefinition = defineComposite({
+export const starDefinition = defineComposite({
   namespace: 'standard',
   type: 'star',
   schema: StarSchema,
@@ -22,9 +22,7 @@ export const createStar = (input: ShapeProperties<IRStar>): IRStar => ({
 });
 
 /** Star 的按需依赖贡献 */
-export const StarProvider: CoreDependencyProvider = Object.freeze({
+export const starProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'star' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => StarDefinition,
+  makeDefinition: () => starDefinition,
 });

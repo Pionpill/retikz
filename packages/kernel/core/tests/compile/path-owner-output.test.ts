@@ -20,8 +20,8 @@ const observe = (ownerKind: 'path' | 'composite' = 'path'): CompileObserverDefin
   }),
 });
 
-describe('Core Path owner output', () => {
-  it('requests and publishes a typed output exactly once for a non-empty Path', () => {
+describe('Core Path 所属模块输出', () => {
+  it('为非空 Path 请求并发布一次类型化输出', () => {
     let requested = false;
     let publishCount = 0;
     const kind = core.definePath<core.IRPathBase, { label: string }>({
@@ -67,7 +67,7 @@ describe('Core Path owner output', () => {
     expect(result.observerOutputs).toEqual([{ key: 'path-owner-output', value: null }]);
   });
 
-  it('keeps owner output lazy for an ordinary compile', () => {
+  it('使普通编译的所属模块输出保持惰性', () => {
     let requested = true;
     let published = 0;
     const kind = core.definePath({
@@ -104,7 +104,7 @@ describe('Core Path owner output', () => {
         publish({ value: 2 });
       },
     ],
-  ])('fails loudly when a requested non-empty Path has %s', (_label, publishOutput) => {
+  ])('当请求的非空 Path 具有 %s 时，会明确报错', (_label, publishOutput) => {
     const kind = core.definePath({
       name: `bad-owner-output-${_label.replace(' ', '-')}`,
       schema: core.PathSchema.extend({ kind: literal(`bad-owner-output-${_label.replace(' ', '-')}`) }),
@@ -137,7 +137,7 @@ describe('Core Path owner output', () => {
     ).toThrow(/owner output|publish/i);
   });
 
-  it('rejects owner output when a Path returns null', () => {
+  it('当 Path 返回 null 时拒绝所属模块输出', () => {
     const kind = core.definePath({
       name: 'null-owner-output',
       schema: core.PathSchema.extend({ kind: literal('null-owner-output') }),

@@ -40,7 +40,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { SurfaceDefinition } from '@retikz/standard/presentation';
+import { surfaceDefinition } from '@retikz/standard/presentation';
 
 const ir: IRScene = {
   type: 'scene',
@@ -55,14 +55,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} composites={[SurfaceDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[surfaceDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { surface, surfaceChild, SurfaceInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { surface, surfaceChild, surfaceInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import { scene, node, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -74,7 +74,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [SurfaceInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [surfaceInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -83,7 +83,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { SurfaceDefinition } from '@retikz/standard/presentation';
+import { surfaceDefinition } from '@retikz/standard/presentation';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -99,7 +99,7 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [SurfaceDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [surfaceDefinition] } });
 console.log(svg);
 ```
 
@@ -126,7 +126,7 @@ console.log(svg);
 
 ## 错误与限制
 
-归一化后必须恰好有一个 child。padding 和圆角半径不能为负；父容器在某轴提供的有限范围或精确尺寸小于该轴 padding 总和时，会在探测 child 前失败。直接 IR 使用 `overflow: 'clip'` 时还需注册 `PathClipDefinition`；React 与 Vanilla adapter 自动贡献该依赖。
+归一化后必须恰好有一个 child。padding 和圆角半径不能为负；父容器在某轴提供的有限范围或精确尺寸小于该轴 padding 总和时，会在探测 child 前失败。直接 IR 使用 `overflow: 'clip'` 时还需注册 `pathClipDefinition`；React 与 Vanilla adapter 自动贡献该依赖。
 
 ## 实现原理
 
@@ -136,13 +136,13 @@ console.log(svg);
 
 </ComponentAlert>
 
-`SurfaceDefinition` 先根据 parent proposal 和 padding 探测唯一 child，再回放 child 并输出背景 Path、内容 Scope 和边框 Path。`overflow="clip"` 的 clip 只挂在内容 Scope；Surface 自身的 Core `clip` 仍作用于完整外层。
+`surfaceDefinition` 先根据 parent proposal 和 padding 探测唯一 child，再回放 child 并输出背景 Path、内容 Scope 和边框 Path。`overflow="clip"` 的 clip 只挂在内容 Scope；Surface 自身的 Core `clip` 仍作用于完整外层。
 
 ```text
-standard.surface → SurfaceDefinition → Core Scope(Path + child replay + Path)
+standard.surface → surfaceDefinition → Core Scope(Path + child replay + Path)
 ```
 
-未注入 `SurfaceDefinition` 的手写 `standard.surface` 会得到 `COMPOSITE_NOT_REGISTERED` 诊断。React 与 Vanilla adapter 会贡献 `SurfaceProvider → PathClipProvider` 的完整依赖链；嵌套 Tier 2 child 的 provider 依赖按 authored order 一并进入 Core resolver。直接调用 `compileToScene` 时，如果使用 `overflow: 'clip'`，除了 `SurfaceDefinition` 还需通过 `clips` 传入完整的 `PathClipDefinition`。
+未注入 `surfaceDefinition` 的手写 `standard.surface` 会得到 `COMPOSITE_NOT_REGISTERED` 诊断。React 与 Vanilla adapter 会贡献 `surfaceProvider → pathClipProvider` 的完整依赖链；嵌套 Tier 2 child 的 provider 依赖按 authored order 一并进入 Core resolver。直接调用 `compileToScene` 时，如果使用 `overflow: 'clip'`，除了 `surfaceDefinition` 还需通过 `clips` 传入完整的 `pathClipDefinition`。
 
 Surface 还在 authored 外层 Scope 发布 id 为 `surface` 的 qualified spatial handle。handle 继承最终 placement 与 transform；child 自己的 handle 保持原 id、role、tags 与 payload，只增加真实 owner path。
 

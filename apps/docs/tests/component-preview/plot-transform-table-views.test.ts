@@ -10,7 +10,7 @@ import { previewControlContract as pointTransformContract } from '../../src/modu
 import { previewControlContract as pointTransformEnglishContract } from '../../src/modules/docs/contents/viz/plot/mark/point/point-transform.en.controls';
 import { createPlotTransformTableViews } from '../../src/modules/docs/contents/viz/plot/transform-table-views';
 
-describe('Plot transform table views', () => {
+describe('Plot 转换表视图', () => {
   it('使用 Data registry 执行内置 transform', () => {
     const views = createPlotTransformTableViews(
       { source: 'Source', result: 'Stacked' },

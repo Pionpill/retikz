@@ -127,7 +127,7 @@ const renderWithValues = (contract: PreviewControlContract, Demo: FC, values: Re
     </PreviewControlStateContext.Provider>,
   );
 
-describe('Graph Relation role controls', () => {
+describe('Graph Relation 角色控件', () => {
   it('为五个 role 提供双语一致且只包含有效语义分支的 controls', () => {
     for (const scenario of scenarios) {
       const { chineseControls, englishControls } = getScenarioModules(scenario.role);
@@ -202,7 +202,7 @@ describe('Graph Relation role controls', () => {
   });
 });
 
-describe('Graph Relation style playground', () => {
+describe('Graph Relation 风格的交互演示', () => {
   const renderStyleWithValues = (values: Readonly<PreviewControlValues>): string =>
     renderToStaticMarkup(
       <PreviewControlStateContext.Provider

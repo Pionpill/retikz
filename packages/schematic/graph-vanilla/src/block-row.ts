@@ -1,7 +1,7 @@
-import { BlockRowProviderKey } from '@retikz/graph';
+import { blockRowProviderKey } from '@retikz/graph';
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { BlockRowEmbedKind } from './constants';
+import { blockRowEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
 import type { InputBlockRow, WithoutInputType } from './normalize';
 import { normalizeBlockRow } from './normalize';
@@ -12,8 +12,8 @@ import { normalizeGraphAuthoringChildren } from './semantic-children';
 export type BlockRowInputEmbedProps = WithoutInputType<InputBlockRow>;
 
 /** Block Row Source 的 InputEmbed adapter */
-export const BlockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInputEmbedProps> = {
-  kind: BlockRowEmbedKind,
+export const blockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInputEmbedProps> = {
+  kind: blockRowEmbedKind,
   lower: (props, context) => {
     const inputOf = (inputProps: BlockRowInputEmbedProps): InputBlockRow => {
       return { type: 'blockRow', ...inputProps };
@@ -22,7 +22,7 @@ export const BlockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInp
     const input = inputOf(props);
     const inputChildren = 'content' in input ? undefined : input.children;
     const normalized = normalizeGraphAuthoringChildren(inputChildren ?? [], context, 'BlockRow.children');
-    const dependencies = createGraphProviderDependencies(BlockRowProviderKey);
+    const dependencies = createGraphProviderDependencies(blockRowProviderKey);
     let node: ReturnType<typeof normalizeBlockRow>;
     if (input.content !== undefined || inputChildren === undefined) {
       node = normalizeBlockRow(input);
@@ -51,4 +51,4 @@ export const BlockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInp
 };
 
 /** 创建 Block Row Source 的 authoring embed 节点 */
-export const blockRow = (input: BlockRowInputEmbedProps) => createGraphInputEmbed(BlockRowEmbedKind, input, input.id);
+export const blockRow = (input: BlockRowInputEmbedProps) => createGraphInputEmbed(blockRowEmbedKind, input, input.id);

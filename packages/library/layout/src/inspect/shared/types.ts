@@ -14,7 +14,7 @@ export type LayoutInspectionSelectionScope = InspectionSelectionTarget;
  * 构造一个布局检查器选择结果所需的输入
  * @template TOptions 目标检查器接受的 JSON 选项类型，默认使用基础布局检查选项
  */
-export type CreateLayoutInspectionSelectionInput<TOptions extends JsonObject = BaseLayoutInspectOptions> = Readonly<{
+export type InputLayoutInspectionSelection<TOptions extends JsonObject = BaseLayoutInspectOptions> = Readonly<{
   /** 目标检查器的注册键 */
   inspector: InspectorKey;
   /** 整张图、子树或组件自身 */

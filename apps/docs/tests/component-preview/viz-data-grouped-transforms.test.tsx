@@ -55,7 +55,7 @@ const renderDemo = (
     ),
   );
 
-describe('Grouped Data transform documentation demos', () => {
+describe('分组数据转换文档演示', () => {
   const demos: Array<{
     name: string;
     Demo: FC<{ lang?: Lang }>;
@@ -128,7 +128,7 @@ describe('Grouped Data transform documentation demos', () => {
       field: 'sourceId',
     },
   ];
-  it.each(demos)('$name has a complete bilingual Reset baseline', ({ contractOf }) => {
+  it.each(demos)('$name 具有完整的双语 Reset 基线', ({ contractOf }) => {
     const zh = contractOf('zh');
     expect(comparableContract(zh)).toBe(comparableContract(contractOf('en')));
     expect(Object.keys(zh.canonicalValues).sort()).toEqual(
@@ -137,22 +137,19 @@ describe('Grouped Data transform documentation demos', () => {
         .sort(),
     );
   });
-  it.each(demos)(
-    '$name renders its result table through the actual controlled entry',
-    ({ Demo, contractOf, values, field }) => {
-      for (const lang of ['zh', 'en'] as const) {
-        const contract = contractOf(lang);
-        const baseline = renderDemo(Demo, contract, {}, lang);
-        const changed = renderDemo(Demo, contract, values, lang);
-        expect(baseline).toContain('data-retikz-id="source"');
-        expect(changed).toContain('data-retikz-id="result"');
-        expect(changed).toContain(`>${field}</tspan>`);
-        expect(changed).toContain(lang === 'zh' ? '变换结果' : 'Transformed rows');
-        // 比较可见文本，排除每次渲染生成的 marker id
-        const textOf = (svg: string): string =>
-          [...svg.matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map(match => match[1]).join('|');
-        expect(textOf(changed)).not.toBe(textOf(baseline));
-      }
-    },
-  );
+  it.each(demos)('$name 通过实际受控入口渲染结果表', ({ Demo, contractOf, values, field }) => {
+    for (const lang of ['zh', 'en'] as const) {
+      const contract = contractOf(lang);
+      const baseline = renderDemo(Demo, contract, {}, lang);
+      const changed = renderDemo(Demo, contract, values, lang);
+      expect(baseline).toContain('data-retikz-id="source"');
+      expect(changed).toContain('data-retikz-id="result"');
+      expect(changed).toContain(`>${field}</tspan>`);
+      expect(changed).toContain(lang === 'zh' ? '变换结果' : 'Transformed rows');
+      // 比较可见文本，排除每次渲染生成的 marker id
+      const textOf = (svg: string): string =>
+        [...svg.matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map(match => match[1]).join('|');
+      expect(textOf(changed)).not.toBe(textOf(baseline));
+    }
+  });
 });

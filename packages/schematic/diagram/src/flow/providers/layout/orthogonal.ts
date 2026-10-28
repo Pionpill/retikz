@@ -3,11 +3,11 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 
 import type { FlowLayoutExecutionContext } from '../../contract';
 import type {
-  EffectiveFlowLayout,
-  FlowLayoutInput,
+  CanonicalFlowLayoutOptions,
+  InputFlowLayoutComputation,
   FlowLayoutOutput,
   FlowLayoutRoute,
-  FlowLayoutRelationInput,
+  InputFlowLayoutRelation,
 } from '../../contract';
 import { doFlowBoundsOverlap } from '../../shared/geometry';
 import type { FlowRelationEndpoints } from './endpoints';
@@ -20,7 +20,7 @@ type OrthogonalRoute = Extract<FlowLayoutRoute, { kind: 'orthogonal' }>;
 
 /** 在实际作用域和边界间隙中生成正交候选，对齐端点不产生绕行 */
 export const createFlowOrthogonalCandidates = (
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   elements: FlowLayoutOutput['elements'],
   relationIndex: number,
   endpoints?: FlowRelationEndpoints,
@@ -49,9 +49,9 @@ export const createFlowOrthogonalCandidates = (
   });
   if (source[0] === target[0] || source[1] === target[1]) return [route([source, target])];
 
-  const paths = new Map<string, Array<EffectiveFlowLayout>>();
+  const paths = new Map<string, Array<CanonicalFlowLayoutOptions>>();
 
-  const visit = (items: FlowLayoutInput['elements'], ancestors: Array<EffectiveFlowLayout>): void => {
+  const visit = (items: InputFlowLayoutComputation['elements'], ancestors: Array<CanonicalFlowLayoutOptions>): void => {
     for (const item of items) {
       paths.set(item.id, ancestors);
       if (item.kind !== 'leaf') visit(item.elements, [...ancestors, item.layout]);
@@ -174,7 +174,7 @@ const obstacleIntervals = (
 /** 正交路线按节点数、实际穿越长度、标签冲突逐项比较 */
 export const evaluateFlowOrthogonalConflicts = (
   route: OrthogonalRoute,
-  relation: FlowLayoutRelationInput,
+  relation: InputFlowLayoutRelation,
   obstacles: ReturnType<typeof flowRelationObstacles>,
   labels: ReadonlyArray<Readonly<{ bounds: Readonly<BoundsRect> }>>,
 ) => {

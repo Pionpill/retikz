@@ -53,7 +53,7 @@ vi.mock('@/modules/docs/layout/DocPageFooterNav', () => ({ DocPageFooterNav: () 
 
 import { DocPage } from '@/modules/docs/layout';
 
-describe('<DocPage> MDX source errors', () => {
+describe('<DocPage> MDX 源错误', () => {
   beforeEach(() => {
     mocks.useMdxSource.mockReturnValue({
       source: null,
@@ -65,7 +65,7 @@ describe('<DocPage> MDX source errors', () => {
     });
   });
 
-  it('shows the current page load error instead of rendering incomplete MDX', () => {
+  it('显示当前页面加载错误而不是渲染不完整的 MDX', () => {
     const html = renderToStaticMarkup(<DocPage />);
 
     expect(html).toContain('role="alert"');

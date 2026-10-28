@@ -27,11 +27,11 @@ import { Tree } from '@retikz/standard-react/collection';
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { tree, TreeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { tree, treeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 renderToSvgString(scene({ children: [tree({ root: { content: 'A', children: ['B', 'C'] } })] }), {
-  adapters: [TreeInputEmbedAdapter],
+  adapters: [treeInputEmbedAdapter],
 });
 ```
 
@@ -42,7 +42,7 @@ renderToSvgString(scene({ children: [tree({ root: { content: 'A', children: ['B'
 { "namespace": "standard", "type": "tree", "root": { "content": "A", "children": ["B", "C"] } }
 ```
 
-Register TreeProvider when compiling IR directly. Shapes and arrows use the Core registries.
+Register treeProvider when compiling IR directly. Shapes and arrows use the Core registries.
 
 </DocTab>
 </DocTabs>

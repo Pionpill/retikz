@@ -44,7 +44,7 @@ describe('buildPlotIR 自定义坐标系（alpha.12 ADR-05）', () => {
     });
   });
 
-  it('legacy_custom_coordinate_rejected', () => {
+  it('拒绝旧式自定义坐标配置', () => {
     expect(() =>
       buildPlotIR(<PointMark encodings={{ position: { x: { field: 'v' } } }} />, '__plot', {
         coordinate: { type: 'custom', name: 'sine', roles: ['x'] },

@@ -4,7 +4,7 @@ import { compileToScene } from '../../../src/compile/compile';
 import type { IRScene } from '../../../src/schemas';
 import { findPathPrim } from './helpers';
 
-describe('compile path: fill / fillRule', () => {
+describe('编译路径：填写/fillRule', () => {
   it('缺省 fill = none（仅描边，向后兼容）', () => {
     const ir: IRScene = {
       version: 1,

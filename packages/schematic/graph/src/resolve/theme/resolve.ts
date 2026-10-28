@@ -1,5 +1,5 @@
 import { mergeGraphicStyle } from '@retikz/core';
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import { mergeProperties } from '@retikz/foundation';
 
@@ -212,7 +212,7 @@ const selectorKeys = (value: string | ReadonlyArray<string> | undefined): Readon
   value === undefined ? [] : typeof value === 'string' ? [value] : value;
 
 /** 校验 Theme selector 引用的全部开放 key 已在对应成员 registry 注册 */
-export const validateGraphThemeSelector = (
+export const assertGraphThemeSelector = (
   selector: IRGraphEntityThemeSelector | IRGraphRelationThemeSelector | undefined,
   context: GraphThemeSelectorRegistryContext,
 ): void => {
@@ -246,7 +246,7 @@ export const validateGraphThemeSelector = (
 
 /** 按当前 Core Theme 解析 Graph defaults 与有序 rules */
 export const resolveGraphTheme = (
-  theme: ResolvedTheme,
+  theme: CanonicalTheme,
   styles: ReadonlyMap<string, GraphThemeDefinition>,
 ): GraphThemeResolution => {
   const baseline = getDefaultGraphThemePreset(theme);
@@ -282,6 +282,6 @@ export const resolveGraphTheme = (
 
 /** 按有效 Core Theme 与 Graph Definition 解析代码实体的有限视觉 token */
 export const resolveCodeBlockTokens = (
-  theme: ResolvedTheme,
+  theme: CanonicalTheme,
   styles: ReadonlyMap<string, GraphThemeDefinition>,
 ): CodeBlockTokens => resolveGraphTheme(theme, styles).codeBlockTokens;

@@ -186,7 +186,7 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     expect(midpoint).toBeLessThan(0.5);
   });
 
-  it('transform track（scaleY + origin bottom）→ wrapper <g> + transform-origin + @keyframes scale', () => {
+  it('变换轨迹（scaleY + 原点底部）→ 包装器 <g> + 变换原点 + @keyframes 比例', () => {
     const out = buildSvgFragment(scene([rect({ animations: [GROW_UP] })]), { idPrefix: 't' });
     const g = findTag(out, 'g')!;
 
@@ -320,7 +320,7 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
     expect(JSON.stringify(out)).not.toContain('data-retikz-anim');
   });
 
-  it('at ≥ duration → settled（opacity = base 1）', () => {
+  it('≥持续时间→稳定（不透明度=底数 1）', () => {
     const out = buildSvgFragment(scene([rect({ animations: [LINEAR_FADE] })]), { idPrefix: 't', snapshotAt: 999 });
 
     expect(findTag(out, 'rect')!.attrs.opacity).toBe(1);
@@ -490,7 +490,7 @@ describe('交互', () => {
     expect(typeof r.attrs.class).toBe('string');
   });
 
-  it('unsafe idPrefix is normalized before animation class and keyframe names are emitted', () => {
+  it('不安全的 idPrefix 在发出动画类和关键帧名称之前标准化', () => {
     const unsafePrefix = 'bad prefix:foo.bar)';
     const out = buildSvgFragment(scene([rect({ animations: [FADE] })]), { idPrefix: unsafePrefix });
     const css = String(findTag(out, 'style')!.children![0]);

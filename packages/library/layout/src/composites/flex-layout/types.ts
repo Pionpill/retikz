@@ -11,7 +11,7 @@ export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'chil
   Pick<ZodInfer<typeof FlexLayoutItemSchema>, 'child'>;
 
 /** 创建 FlexLayout item 时允许省略默认字段的输入 */
-export type FlexLayoutItemInput = IRFlexLayoutItem;
+export type InputFlexLayoutItemConfig = IRFlexLayoutItem;
 
 /** 持久化的 Layout FlexLayout composite */
 export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> & {
@@ -22,7 +22,7 @@ export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> &
 };
 
 /** 创建 FlexLayout 时允许省略固定 discriminator 与 可选字段的输入 */
-export type FlexLayoutInput = Omit<IRFlexLayout, 'namespace' | 'type'>;
+export type InputFlexLayoutConfig = Omit<IRFlexLayout, 'namespace' | 'type'>;
 
 /** FlexLayout 的 JSON-safe compile artifact payload */
 export type FlexLayoutArtifact = ZodInfer<typeof FlexLayoutArtifactSchema>;

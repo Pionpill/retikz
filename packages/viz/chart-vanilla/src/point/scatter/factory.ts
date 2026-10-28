@@ -7,7 +7,7 @@ import { normalizeScatterChart } from './normalize';
 import type { ScatterChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 ScatterChart 输入并复用统一数据准备 */
-export const ScatterChartInputEmbedAdapter = createChartInputEmbedAdapter(
+export const scatterChartInputEmbedAdapter = createChartInputEmbedAdapter(
   'chart.scatter',
   (input: ScatterChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
@@ -39,7 +39,7 @@ export const scatterChart = <TNative = never>(
   input: ScatterChartInputEmbedProps<TNative>,
 ): InputEmbed<ScatterChartInputEmbedProps<TNative>> => ({
   type: 'embed',
-  kind: ScatterChartInputEmbedAdapter.kind,
+  kind: scatterChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

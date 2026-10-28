@@ -2,7 +2,7 @@ import type { IRNode } from '@retikz/core';
 import type { IRSurface } from '@retikz/standard/presentation';
 
 /** Diagram Theme 解析后的完整 Frame baseline */
-export type EffectiveDiagramThemeFrame = Readonly<{
+export type CanonicalDiagramThemeFrame = Readonly<{
   /** 主题提供的外框内边距 */
   padding: IRSurface['padding'];
   /** 主题提供的标题与说明间距 */
@@ -20,7 +20,7 @@ export type EffectiveDiagramThemeFrame = Readonly<{
 }>;
 
 /** Diagram Theme 解析后的完整 presentation 文本 baseline */
-export type EffectiveDiagramTextAppearance = Readonly<{
+export type CanonicalDiagramTextAppearance = Readonly<{
   /** 文字使用的颜色 */
   textColor: NonNullable<NonNullable<IRNode['style']>['textColor']>;
   /** 文字的整体透明度 */
@@ -36,14 +36,14 @@ export type EffectiveDiagramTextAppearance = Readonly<{
 }>;
 
 /** 当前 Core Theme 下解析完成的 Diagram Theme */
-export type EffectiveDiagramTheme = Readonly<{
+export type CanonicalDiagramTheme = Readonly<{
   /** 用于补全外框输入的有效主题参数 */
-  frame: EffectiveDiagramThemeFrame;
+  frame: CanonicalDiagramThemeFrame;
   /** 标题与说明各自的有效文字外观 */
   presentation: Readonly<{
     /** 标题区域使用的文字外观 */
-    title: EffectiveDiagramTextAppearance;
+    title: CanonicalDiagramTextAppearance;
     /** 说明区域使用的文字外观 */
-    description: EffectiveDiagramTextAppearance;
+    description: CanonicalDiagramTextAppearance;
   }>;
 }>;

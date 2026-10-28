@@ -10,8 +10,8 @@ import {
 
 const selector = { fields: ['score'], locations: ['body'] } as const;
 
-describe('Table visual encoding schema', () => {
-  it('round-trips the closed encoding and scale reference contract', () => {
+describe('Table 视觉编码 schema', () => {
+  it('往返封闭编码和缩放参考契约', () => {
     const encoding = TableCellVisualEncodingSchema.parse({
       id: 'score-fill',
       selector,
@@ -26,7 +26,7 @@ describe('Table visual encoding schema', () => {
     expect(() => TableCellVisualEncodingSchema.parse({ ...encoding, extra: true })).toThrow();
   });
 
-  it('accepts only a non-empty provider name with JSON-object options', () => {
+  it('仅接受带有 JSON 对象选项的非空提供者名称', () => {
     expect(TableVisualScaleRefSchema.parse({ name: 'company-scale', options: { nested: [1, true, null] } })).toEqual({
       name: 'company-scale',
       options: { nested: [1, true, null] },
@@ -36,7 +36,7 @@ describe('Table visual encoding schema', () => {
     expect(() => TableVisualScaleRefSchema.parse({ name: 'x', options: { callback: () => '#fff' } })).toThrow();
   });
 
-  it('keeps encoding order while rejecting duplicate ids', () => {
+  it('保持编码顺序，同时拒绝重复的 id', () => {
     const spec = {
       namespace: 'table',
       type: 'table',
@@ -57,7 +57,7 @@ describe('Table visual encoding schema', () => {
     ).toThrow(/encoding id/i);
   });
 
-  it('allows an anonymous root to produce a Legend descriptor', () => {
+  it('允许匿名根生成 Legend 描述符', () => {
     const base = {
       namespace: 'table',
       type: 'table',

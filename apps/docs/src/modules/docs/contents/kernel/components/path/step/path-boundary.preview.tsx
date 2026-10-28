@@ -1,5 +1,5 @@
 import type { IRBoundary } from '@retikz/core';
-import { StarShapeDefinition } from '@retikz/extension';
+import { starShapeDefinition } from '@retikz/extension';
 import { Draw, Layout, Node } from '@retikz/react';
 import { Circle } from '@retikz/standard-react/shape';
 
@@ -29,7 +29,7 @@ export const PathBoundaryPreview = (values: PathBoundaryPreviewValues) => {
   return (
     <Layout
       viewBox={{ x: -180, y: -110, width: 360, height: 220 }}
-      extensions={{ shapes: [StarShapeDefinition] }}
+      extensions={{ shapes: [starShapeDefinition] }}
       rootScope={{
         defaults: {
           node: {

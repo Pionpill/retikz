@@ -9,34 +9,33 @@ import {
   DataFieldType,
   inferCategoryDomain,
   inferFieldType,
-  normalizeRows,
+  resolveDataRows,
   resolveFieldTypes,
-  validateBoundData,
+  assertBoundData,
 } from '../../src';
-import { coerceCategory, coerceNumber } from '../../src/model';
 
-describe('data provider runtime boundaries', () => {
-  it('coerces only finite decimal values into continuous numbers', () => {
-    expect(coerceNumber(1.5)).toBe(1.5);
-    expect(coerceNumber(42n)).toBe(42);
-    expect(coerceNumber(' 1.2e2 ')).toBe(120);
-    expect(coerceNumber('.5')).toBe(0.5);
+describe('数据提供者运行时边界', () => {
+  it('仅将有限的十进制值强制转换为连续数字', () => {
+    expect(coerceValue(1.5, DataFieldType.Continuous)).toBe(1.5);
+    expect(coerceValue(42n, DataFieldType.Continuous)).toBe(42);
+    expect(coerceValue(' 1.2e2 ', DataFieldType.Continuous)).toBe(120);
+    expect(coerceValue('.5', DataFieldType.Continuous)).toBe(0.5);
 
     for (const value of [Number.POSITIVE_INFINITY, 9007199254740993n, '', '0x10', '12px', null]) {
-      expect(Number.isNaN(coerceNumber(value))).toBe(true);
+      expect(Number.isNaN(coerceValue(value, DataFieldType.Continuous))).toBe(true);
     }
   });
 
-  it('keeps categorical values JSON-safe and rejects non-finite numbers', () => {
-    expect(coerceCategory('alpha')).toBe('alpha');
-    expect(coerceCategory(2)).toBe(2);
-    expect(coerceCategory(true)).toBe('true');
-    expect(coerceCategory(Number.NaN)).toBeUndefined();
-    expect(coerceCategory({ label: 'alpha' })).toBeUndefined();
+  it('保持分类值 JSON 安全并拒绝非有限数字', () => {
+    expect(coerceValue('alpha', DataFieldType.Categorical)).toBe('alpha');
+    expect(coerceValue(2, DataFieldType.Categorical)).toBe(2);
+    expect(coerceValue(true, DataFieldType.Categorical)).toBe('true');
+    expect(coerceValue(Number.NaN, DataFieldType.Categorical)).toBeUndefined();
+    expect(coerceValue({ label: 'alpha' }, DataFieldType.Categorical)).toBeUndefined();
     expect(coerceValue(undefined, DataFieldType.Categorical)).toBeUndefined();
   });
 
-  it('coerces valid temporal values and rejects impossible calendar dates', () => {
+  it('强制有效的时间值并拒绝不可能的日历日期', () => {
     const stamp = Date.UTC(2024, 1, 29);
 
     expect(coerceTimestamp(new Date(stamp))).toBe(stamp);
@@ -47,7 +46,7 @@ describe('data provider runtime boundaries', () => {
     expect(Number.isNaN(coerceValue('2023-02-29', DataFieldType.Temporal))).toBe(true);
   });
 
-  it('infers measurement types from non-missing samples and preserves category order', () => {
+  it('从非缺失样本推断测量类型并保留类别顺序', () => {
     expect(inferFieldType([{ x: null }, { x: 1 }, { x: 2 }], 'x')).toBe(DataFieldType.Continuous);
     expect(inferFieldType([{ x: '2024-01-01' }, { x: '2024-02-01' }], 'x')).toBe(DataFieldType.Temporal);
     expect(inferFieldType([{ x: 1 }, { x: 'one' }], 'x')).toBe(DataFieldType.Categorical);
@@ -56,7 +55,7 @@ describe('data provider runtime boundaries', () => {
     expect(inferCategoryDomain([Number.NaN, Infinity, -Infinity, 1, 'alpha'])).toEqual([1, 'alpha']);
   });
 
-  it('rejects duplicate or unknown model fields before runtime normalization', () => {
+  it('在运行时规范化之前拒绝重复或未知的模型字段', () => {
     expect(() =>
       resolveFieldTypes(
         [
@@ -72,7 +71,7 @@ describe('data provider runtime boundaries', () => {
     );
   });
 
-  it('applies resolver type and parser overrides with physical-path context', () => {
+  it('使用物理路径上下文应用解析器类型和解析器覆盖', () => {
     const baseTypes: DataFieldTypeMap = new Map([
       ['amount', DataFieldType.Categorical],
       ['group', DataFieldType.Categorical],
@@ -102,7 +101,7 @@ describe('data provider runtime boundaries', () => {
     expect(baseTypes.get('amount')).toBe(DataFieldType.Categorical);
   });
 
-  it('requires a measurement type when a resolver adds an untyped parser', () => {
+  it('当解析器添加无类型解析器时需要测量类型', () => {
     expect(() =>
       applyFieldResolver(
         new Map([['value', DataFieldType.Categorical]]),
@@ -115,9 +114,9 @@ describe('data provider runtime boundaries', () => {
     ).toThrow('data: resolveField parse for "value" needs a type');
   });
 
-  it('normalizes logical fields without mutating source rows', () => {
+  it('规范化逻辑字段而不改变源行', () => {
     const source: Array<ExternalRow> = [{ raw: { amount: '$12' }, group: true }];
-    const normalized = normalizeRows(
+    const normalized = resolveDataRows(
       source,
       new Map([
         ['amount', DataFieldType.Continuous],
@@ -131,17 +130,17 @@ describe('data provider runtime boundaries', () => {
     expect(source).toEqual([{ raw: { amount: '$12' }, group: true }]);
   });
 
-  it('diagnoses sampled invalid and missing values separately', () => {
+  it('分别诊断采样的无效值和缺失值', () => {
     const types: DataFieldTypeMap = new Map([['value', DataFieldType.Continuous]]);
     const rows: Array<ExternalRow> = [{ value: null }, { value: 'bad' }, { value: 3 }];
 
-    expect(() => validateBoundData(rows, types, 2)).toThrow(
+    expect(() => assertBoundData(rows, types, 2)).toThrow(
       'data: field "value" has no valid values in the sampled data: 1/2 invalid, 1/2 missing',
     );
-    expect(() => validateBoundData(rows, types, 3)).not.toThrow();
+    expect(() => assertBoundData(rows, types, 3)).not.toThrow();
   });
 
-  it('reports the first invalid normalized row in strict mode', () => {
+  it('报告严格模式下第一个无效的规范化行', () => {
     const types: DataFieldTypeMap = new Map([['value', DataFieldType.Continuous]]);
 
     expect(() => assertAllValuesValid([{ value: 1 }, { value: Number.NaN }], types)).toThrow(

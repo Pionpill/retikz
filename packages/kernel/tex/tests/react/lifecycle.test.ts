@@ -29,7 +29,7 @@ beforeEach(() => {
   createMathJaxEngineMock.mockReset();
 });
 
-describe('useLowerTex lifecycle', () => {
+describe('useLowerTex 生命周期', () => {
   it('组件卸载后引擎才就绪时不创建 lowerer', async () => {
     let resolveEngine: ((engine: MathJaxSvgEngine) => void) | undefined;
     createMathJaxEngineMock.mockReturnValue(

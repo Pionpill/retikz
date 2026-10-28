@@ -59,29 +59,26 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-describe('Graph status preview', () => {
-  it.each([ThemeMode.Light, ThemeMode.Dark])(
-    'updates the default semantic appearance after a status change: %s',
-    mode => {
-      const container = document.createElement('div');
-      document.body.appendChild(container);
-      const root = createRoot(container);
-      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+describe('Graph 状态预览', () => {
+  it.each([ThemeMode.Light, ThemeMode.Dark])('状态更改后更新默认语义外观：%s', mode => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 
-      act(() => root.render(<EntityStatusPreview theme={{ mode }} />));
-      const initialFill = container.querySelector('svg [fill]')?.getAttribute('fill');
-      act(() => container.querySelector<HTMLButtonElement>('button')?.click());
+    act(() => root.render(<EntityStatusPreview theme={{ mode }} />));
+    const initialFill = container.querySelector('svg [fill]')?.getAttribute('fill');
+    act(() => container.querySelector<HTMLButtonElement>('button')?.click());
 
-      expect(container.querySelector('[data-testid="status"]')?.textContent).toBe(GraphStatus.Error);
+    expect(container.querySelector('[data-testid="status"]')?.textContent).toBe(GraphStatus.Error);
 
-      const entityShape = container.querySelector('svg [fill]');
+    const entityShape = container.querySelector('svg [fill]');
 
-      expect(entityShape?.getAttribute('fill')).not.toBe(initialFill);
-      expect(entityShape?.getAttribute('stroke')).toBe(
-        compositeOpaqueColor(resolveCoreThemeColors(mode, {}).semantic.error, '#ffffff', 1),
-      );
+    expect(entityShape?.getAttribute('fill')).not.toBe(initialFill);
+    expect(entityShape?.getAttribute('stroke')).toBe(
+      compositeOpaqueColor(resolveCoreThemeColors(mode, {}).semantic.error, '#ffffff', 1),
+    );
 
-      act(() => root.unmount());
-    },
-  );
+    act(() => root.unmount());
+  });
 });

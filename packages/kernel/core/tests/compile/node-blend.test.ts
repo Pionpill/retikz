@@ -21,7 +21,7 @@ const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToSce
 
 // ════════════════ Happy ════════════════
 
-describe('[blend] Happy', () => {
+describe('[混合]快乐', () => {
   it('node-blend：Node + blendMode="multiply" → shape 图元带 blendMode', () => {
     const compiled = compileNode({ shape: 'circle', text: 'x', fill: 'magenta', blendMode: 'multiply' });
     const el = findByType(compiled.primitives, 'ellipse');
@@ -123,7 +123,7 @@ describe('[blend] 交互', () => {
 
 // ════════════════ round-trip ════════════════
 
-describe('[blend] round-trip', () => {
+describe('【混合】往返', () => {
   it('含 blendMode 的 IRNode JSON 往返 parse 深等', () => {
     const node = {
       type: 'node',

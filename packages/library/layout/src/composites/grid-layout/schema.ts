@@ -115,10 +115,10 @@ const GridLayoutBaseSchema = LayoutContainerBoxSchema.extend({
   children: array(GridLayoutItemSchema).default([]).describe('Authored grid items in stable paint order.'),
 });
 
-type GridLayoutRefinementInput = ZodInfer<typeof GridLayoutBaseSchema>;
+type InputGridLayoutRefinement = ZodInfer<typeof GridLayoutBaseSchema>;
 
 /** 校验 GridLayout 的本地 identity 与显式 placement guard */
-const refineGridLayout = (layout: GridLayoutRefinementInput, context: RefinementCtx): void => {
+const refineGridLayout = (layout: InputGridLayoutRefinement, context: RefinementCtx): void => {
   const seen = new Set<string>();
   layout.children.forEach((item, index) => {
     if (item.key !== undefined && seen.has(item.key)) {

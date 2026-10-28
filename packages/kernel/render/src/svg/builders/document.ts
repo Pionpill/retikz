@@ -1,7 +1,7 @@
 import type { PaintValue, Scene, ScenePrimitive } from '@retikz/core';
 
 import type { StaticRenderFrame } from '../../runtime';
-import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
+import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '../../runtime';
 import { resolveSceneResourceMap } from '../../shared';
 import { countScenePrimitiveOccurrences, startArrowPlacement, endArrowPlacement } from '../../shared';
 import type { RenderTraceReporter } from '../../trace';
@@ -12,13 +12,13 @@ import type { SvgNode } from '../types';
 import { formatViewBox } from '../view-box';
 import { buildClipDef } from './clip-defs';
 import { buildPaintDef } from './paint-defs';
-import type { BuildContext } from './prim';
+import type { SvgPrimitiveBuildContext } from './prim';
 import { buildPrim } from './prim';
 import { buildSvgReadonlyLayer } from './readonly-layer';
 import { buildShadowDef, shadowHash } from './shadow-defs';
 
 /** `buildSvgDocument` / `buildSvgFragment` 选项 */
-export type BuildDocumentOptions = {
+export type SvgDocumentOptions = {
   /**
    * id 前缀——所有 `<defs>` 资源 id（marker / paint / clip）与对应 `url(#...)` 引用共用此前缀确保唯一
    * @description 同 scene + 同 idPrefix → 逐字一致的 id（水合前置）；不同 idPrefix → id 无交集（多实例隔离）。
@@ -47,7 +47,7 @@ export type BuildDocumentOptions = {
  * Scene → SVG 内容子树（`<defs>` + primitives，无 `<svg>` 外壳）
  * @description 给 Vanilla `mountSvg` 往已有容器塞、或需要自定义 `<svg>` 外壳的 caller 用
  */
-export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): Array<SvgNode> => {
+export const buildSvgFragment = (scene: Scene, options: SvgDocumentOptions): Array<SvgNode> => {
   const safeIdPrefix = toSafeSvgToken(options.idPrefix);
   const resources = resolveSceneResourceMap(scene);
 
@@ -69,9 +69,13 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
           });
   const definitions = new Map<string, () => SvgNode>();
   const clipIdFor = (id: string): string => `retikz-clip-${safeIdPrefix}-${id}`;
-  const contextFor = (hostId?: string, isResourceContent = false, contextStroke?: PaintValue): BuildContext => {
+  const contextFor = (
+    hostId?: string,
+    isResourceContent = false,
+    contextStroke?: PaintValue,
+  ): SvgPrimitiveBuildContext => {
     const suffix = hostId === undefined ? '' : `-host-${toSafeSvgToken(hostId)}`;
-    const resourceContext = (): BuildContext => contextFor(hostId, true, 'currentColor');
+    const resourceContext = (): SvgPrimitiveBuildContext => contextFor(hostId, true, 'currentColor');
     return {
       hostId,
       contextStroke,
@@ -146,9 +150,9 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
  * @description `@retikz/render/svg` 的核心总装入口。width / height / className / 框架级 style 等 svg 元素附加由
  *   framework adapter 自理（非本包职责）
  */
-export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDocumentOptions): SvgNode => {
+export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: SvgDocumentOptions): SvgNode => {
   const scene = frame.primary;
-  const layers = validateReadonlyLayers(frame.layers);
+  const layers = snapshotReadonlyLayers(frame.layers);
   const document: SvgNode = {
     tag: 'svg',
     attrs: {
@@ -190,5 +194,5 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDo
 };
 
 /** Scene → 整棵 `<svg>` 描述树，等价于使用空只读图层的静态 frame */
-export const buildSvgDocument = (scene: Scene, options: BuildDocumentOptions): SvgNode =>
+export const buildSvgDocument = (scene: Scene, options: SvgDocumentOptions): SvgNode =>
   buildSvgFrameDocument({ primary: scene, layers: EMPTY_READONLY_LAYERS }, options);

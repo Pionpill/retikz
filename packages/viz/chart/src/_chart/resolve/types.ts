@@ -1,4 +1,4 @@
-import type { IRChild, ResolvedTheme } from '@retikz/core';
+import type { IRChild, CanonicalTheme } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlot } from '@retikz/plot';
 import type { IRSurface } from '@retikz/standard/presentation';
@@ -8,7 +8,7 @@ import type { ChartThemeDefinition, ChartThemeResolution } from '../contract/the
 import type { IRChartSource } from '../schemas';
 
 /** Chart 外部 border-box 的最终有效尺寸 */
-export type EffectiveChartLayout = Readonly<{
+export type CanonicalChartLayout = Readonly<{
   /** 最终宽度 */
   width: number;
   /** 最终高度 */
@@ -22,7 +22,7 @@ export type ChartPresentationResolution = Readonly<{
   /** 包含 Chart shell padding 与 canvas 的 Standard Surface */
   surface: IRSurface;
   /** 外部 Chart border-box allocation；不写入 IRPlot */
-  layout: EffectiveChartLayout;
+  layout: CanonicalChartLayout;
   /** 固定顺序的已消费 presentation slot 名称 */
   slots: ReadonlyArray<'title' | 'subtitle' | 'plot' | 'note' | 'source'>;
 }>;
@@ -57,7 +57,7 @@ export type ChartResolveWarning = Readonly<{
  */
 export type SelectedChartResolveContext<TSource extends IRChartSource = IRChartSource> = Readonly<{
   /** 当前位置已解析的 Core 主题上下文 */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** 与当前精确 Chart Source 配对的 recipe 定义 */
   recipe: ChartRecipeDefinition<TSource>;
   /** 当前编译边界可见的 Chart 主题定义 */

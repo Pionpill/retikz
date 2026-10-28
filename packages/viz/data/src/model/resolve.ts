@@ -1,5 +1,5 @@
 import { RetikzDataError } from '../error';
-import type { DataFieldMap, DataFieldTypeMap, FieldResolution, ParsedFieldValue, ResolveField } from './contract';
+import type { DataFieldMap, DataFieldTypeMap, FieldResolution, ParsedFieldValue, FieldResolver } from './contract';
 import type { IRDataModel } from './types';
 
 /**
@@ -12,7 +12,7 @@ export const applyFieldResolver = (
   model: IRDataModel | undefined,
   dataReference: string,
   fieldMap: DataFieldMap | undefined,
-  resolveField: ResolveField | undefined,
+  resolveField: FieldResolver | undefined,
 ): {
   fieldTypeMap: DataFieldTypeMap;
   parsers: Map<string, (raw: unknown) => ParsedFieldValue>;

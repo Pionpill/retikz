@@ -116,7 +116,7 @@ reducer 的返回值不是完整的数据表，也不一定只是一个数。多
 
 <ComponentPreview files="statistics-execution" hideCode type="flow" size="lg" />
 
-从 `computeSelect` 或 `computeSummarize` 看宿主如何划分输入与组织输出，再进入 `applySelectorOperation` 或 `applyReducerOperation` 看定义解析和实现调度，最后阅读相应实现的 `select` 或 `reduce`。这样能区分统计算法本身与宿主赋予它的表结构语义。
+从 `computeSelect` 或 `computeSummarize` 看宿主如何划分输入与组织输出，再进入 `resolveSelectorComputation` 或 `resolveReducerComputation` 看定义解析和实现调度，最后阅读相应实现的 `select` 或 `reduce`。这样能区分统计算法本身与宿主赋予它的表结构语义。
 
 ## 相关属性
 

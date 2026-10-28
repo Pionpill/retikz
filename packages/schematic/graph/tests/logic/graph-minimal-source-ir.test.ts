@@ -7,8 +7,8 @@ const minimalGraph = {
   type: 'graph',
 } as const;
 
-describe('Graph minimal Source IR', () => {
-  it('accepts ordered semantic members in the root children array and rejects legacy collections', () => {
+describe('Graph 最小 Source IR', () => {
+  it('接受根子数组中的有序语义成员并拒绝旧集合', () => {
     const parsed = Graph.GraphSchema.parse({
       ...minimalGraph,
       children: [
@@ -28,7 +28,7 @@ describe('Graph minimal Source IR', () => {
     expect(() => Graph.GraphSchema.parse({ ...minimalGraph, entities: [] })).toThrow();
   });
 
-  it('materializes the Scope position while preserving omitted collections and author defaults', () => {
+  it('具体化 Scope 位置，同时保留省略的集合和作者默认值', () => {
     const parsed = Graph.GraphSchema.parse(minimalGraph);
     const explicit = Graph.GraphSchema.parse({ ...minimalGraph, children: [] });
 
@@ -45,7 +45,7 @@ describe('Graph minimal Source IR', () => {
     expect(() => Graph.GraphSchema.parse({ ...minimalGraph, geometry: {} })).toThrow();
   });
 
-  it('preserves omitted member fields and explicit empty collections distinctly', () => {
+  it('明确保留省略的成员字段和显式空集合', () => {
     const entity = Graph.EntitySchema.parse({ namespace: 'graph', type: 'entity', id: 'service', role: 'participant' });
     const relation = Graph.RelationSchema.parse({
       namespace: 'graph',
@@ -63,7 +63,7 @@ describe('Graph minimal Source IR', () => {
     expect(relation).not.toHaveProperty('id');
   });
 
-  it('accepts an Entity without identity for drawable-only Graph content', () => {
+  it('对于仅可绘制的 Graph 内容，接受没有标识的 Entity', () => {
     const first = Graph.EntitySchema.parse({ namespace: 'graph', type: 'entity', role: 'participant' });
     const second = Graph.EntitySchema.parse({ namespace: 'graph', type: 'entity', role: 'resource' });
     const source = Graph.GraphSchema.parse({
@@ -75,7 +75,7 @@ describe('Graph minimal Source IR', () => {
     expect(source.children).toEqual([first, second]);
   });
 
-  it('keeps projection structural while independent Entity resolve owns semantic defaults', () => {
+  it('保持投影结构，而独立的 Entity 解析拥有语义默认值', () => {
     const source = Graph.GraphSchema.parse({
       ...minimalGraph,
       children: [{ namespace: 'graph', type: 'entity', id: 'service', role: 'participant' }],

@@ -93,7 +93,7 @@ describe('curve.catmullRomToCubic', () => {
 });
 
 describe('curve.sampleAt', () => {
-  it('samples a line at a clamped parameter with a unit tangent', () => {
+  it('以单位切线在钳位参数处对直线进行采样', () => {
     const segment: CurveSegment = { kind: 'line', from: [0, 0], to: [12, 0] };
 
     expect(curve.sampleAt(segment, -1)).toEqual({ point: [0, 0], tangent: [1, 0] });
@@ -101,7 +101,7 @@ describe('curve.sampleAt', () => {
     expect(curve.sampleAt(segment, 2)).toEqual({ point: [12, 0], tangent: [1, 0] });
   });
 
-  it('samples cubic Bezier geometry without exposing a Drawing command', () => {
+  it('在不公开绘图命令的情况下采样三次贝塞尔几何图形', () => {
     const segment: CurveSegment = {
       kind: 'cubicBezier',
       from: [0, 0],
@@ -117,7 +117,7 @@ describe('curve.sampleAt', () => {
     expect(sample.tangent[1]).toBeCloseTo(0, 12);
   });
 
-  it('samples quadratic Bezier endpoints and the derivative direction', () => {
+  it('采样二次贝塞尔端点和导数方向', () => {
     const segment: CurveSegment = {
       kind: 'quadraticBezier',
       from: [0, 0],
@@ -132,7 +132,7 @@ describe('curve.sampleAt', () => {
     expect(curve.sampleAt(segment, 0).tangent[1]).toBeCloseTo(2 / Math.sqrt(5), 12);
   });
 
-  it('respects an ellipse arc rotation and its directed sweep', () => {
+  it('遵循椭圆弧旋转及其定向扫描', () => {
     const segment: CurveSegment = {
       kind: 'ellipseArc',
       center: [0, 0],
@@ -154,7 +154,7 @@ describe('curve.sampleAt', () => {
     expect(start.tangent[1]).toBeCloseTo(0, 12);
   });
 
-  it('uses the directed circular-arc tangent at its start parameter', () => {
+  it('在起始参数处使用有向圆弧切线', () => {
     const sample = curve.sampleAt({ kind: 'arc', center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: -90 }, 0);
 
     expect(sample.point).toEqual([10, 0]);
@@ -162,7 +162,7 @@ describe('curve.sampleAt', () => {
     expect(sample.tangent[1]).toBeCloseTo(-1, 12);
   });
 
-  it('uses a stable fallback tangent for a zero-length line', () => {
+  it('对零长度线使用稳定的回退切线', () => {
     const sample = curve.sampleAt({ kind: 'line', from: [3, 4], to: [3, 4] }, 0.5);
 
     expect(sample).toEqual({ point: [3, 4], tangent: [1, 0] });
@@ -170,7 +170,7 @@ describe('curve.sampleAt', () => {
 });
 
 describe('curve.parameterAtDistance', () => {
-  it('keeps prepared geometry local to each query', () => {
+  it('将准备好的几何图形保留在每个查询的本地', () => {
     const segment: CurveSegment = {
       kind: 'ellipseArc',
       center: [0, 0],
@@ -191,7 +191,7 @@ describe('curve.parameterAtDistance', () => {
     expect(curve.parameterAtDistance(segment, beforeLength * 3, options)).toBe(1);
   });
 
-  it('inverts a known line distance and preserves a caller-supplied total length', () => {
+  it('反转已知的线路距离并保留调用者提供的总长度', () => {
     const segment: CurveSegment = { kind: 'line', from: [0, 0], to: [20, 0] };
 
     expect(curve.approximateLength(segment)).toBe(20);
@@ -199,7 +199,7 @@ describe('curve.parameterAtDistance', () => {
     expect(curve.parameterAtDistance(segment, 15, { totalLength: 20 })).toBe(0.75);
   });
 
-  it('maps a symmetric cubic half-length back near its middle parameter', () => {
+  it('将对称立方半长映射回其中间参数附近', () => {
     const segment: CurveSegment = {
       kind: 'cubicBezier',
       from: [0, 0],
@@ -212,7 +212,7 @@ describe('curve.parameterAtDistance', () => {
     expect(curve.parameterAtDistance(segment, length / 2, { totalLength: length })).toBeCloseTo(0.5, 4);
   });
 
-  it('returns an exactly matching sampled cubic midpoint before the bisection limit', () => {
+  it('返回二分极限之前完全匹配的采样三次中点', () => {
     const segment: CurveSegment = {
       kind: 'cubicBezier',
       from: [0, 0],
@@ -225,7 +225,7 @@ describe('curve.parameterAtDistance', () => {
     expect(curve.parameterAtDistance(segment, totalLength / 2, { totalLength, bisectionSteps: 1 })).toBe(0.5);
   });
 
-  it('continues bracketing when a sampled cubic midpoint has a material distance residual', () => {
+  it('当采样的立方体中点有材料距离残差时继续包围', () => {
     const segment: CurveSegment = {
       kind: 'cubicBezier',
       from: [0, 0],
@@ -238,7 +238,7 @@ describe('curve.parameterAtDistance', () => {
     expect(curve.parameterAtDistance(segment, totalLength / 4, { totalLength, bisectionSteps: 1 })).toBe(0.25);
   });
 
-  it('uses the same fixed approximation model for a rotated elliptical arc', () => {
+  it('对旋转椭圆弧使用相同的固定近似模型', () => {
     const segment: CurveSegment = {
       kind: 'ellipseArc',
       center: [0, 0],
@@ -256,13 +256,13 @@ describe('curve.parameterAtDistance', () => {
     );
   });
 
-  it('returns the start parameter for a zero-length segment', () => {
+  it('返回零长度段的起始参数', () => {
     expect(curve.parameterAtDistance({ kind: 'line', from: [1, 1], to: [1, 1] }, 3)).toBe(0);
   });
 });
 
 describe('curve.slice', () => {
-  it('uses De Casteljau and preserves a cubic Bezier segment', () => {
+  it('使用 De Casteljau 并保留三次贝塞尔线段', () => {
     const segment: CurveSegment = {
       kind: 'cubicBezier',
       from: [0, 0],
@@ -280,7 +280,7 @@ describe('curve.slice', () => {
     expect(sliced.to).toEqual(curve.sampleAt(segment, 0.75).point);
   });
 
-  it('keeps the directed arc kind and limits its sweep to the selected range', () => {
+  it('保持定向弧类型并将其扫描限制在选定范围内', () => {
     const segment: CurveSegment = {
       kind: 'arc',
       center: [0, 0],
@@ -299,7 +299,7 @@ describe('curve.slice', () => {
     });
   });
 
-  it('preserves a rotated ellipse arc and its directed selected sweep', () => {
+  it('保留旋转的椭圆弧及其定向选定的扫描', () => {
     const segment: CurveSegment = {
       kind: 'ellipseArc',
       center: [3, -2],

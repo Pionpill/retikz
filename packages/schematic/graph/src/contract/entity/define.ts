@@ -4,7 +4,7 @@ import type { ZodType } from 'zod';
 import type {
   EntityKindDefinition,
   EntityPredicateDefinition,
-  EntityPredicateDefinitionInput,
+  InputEntityPredicateDefinition,
   EntityRoleDefinition,
 } from './types';
 
@@ -29,5 +29,5 @@ export const defineEntityKind = (definition: EntityKindDefinition): EntityKindDe
  * @returns 原样返回 definition，不复制或修改输入对象
  */
 export const defineEntityPredicate = <TSchema extends ZodType<JsonObject>>(
-  definition: EntityPredicateDefinitionInput<TSchema>,
+  definition: InputEntityPredicateDefinition<TSchema>,
 ): EntityPredicateDefinition => definition;

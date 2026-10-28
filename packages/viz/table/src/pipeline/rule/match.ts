@@ -6,7 +6,7 @@ import { TableCellPayloadKind, TableValueCompareOperator, TableValuePredicateKin
 import { TableCellSourceKind } from '../../shared';
 
 /** 判断 raw scalar 是否满足闭合 Table value predicate */
-export const matchesTableValuePredicate = (value: IRDataScalarValue, predicate: IRTableValuePredicate): boolean => {
+const matchesTableValuePredicate = (value: IRDataScalarValue, predicate: IRTableValuePredicate): boolean => {
   switch (predicate.kind) {
     case TableValuePredicateKind.Equal:
       return value === predicate.value;

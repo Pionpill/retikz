@@ -1,6 +1,6 @@
 import type { IRTarget } from '@retikz/core';
-import { parseTargetSugar } from '@retikz/core';
 import type { IRPath } from '@retikz/core';
+import { parseTargetSugar } from '@retikz/vanilla';
 import type { InputPath } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
 import type { InputTarget } from '@retikz/vanilla';
@@ -42,9 +42,9 @@ export const normalizeShapeInput = <TSource>(
 };
 
 /** 路径作者简写，由 Kernel Vanilla 统一解释 */
-export type InputShapeProperties = Pick<InputPath, 'arrow'>;
+type InputShapeProperties = Pick<InputPath, 'arrow'>;
 
-type NormalizedShapeProperties<TInput> = TInput extends object
+type ShapeNormalizationResult<TInput> = TInput extends object
   ? Omit<TInput, keyof InputShapeProperties> & Pick<IRPath, 'arrow' | 'style' | 'marks'>
   : never;
 
@@ -52,9 +52,9 @@ type NormalizedShapeProperties<TInput> = TInput extends object
  * 复用完整路径归一化，固定步骤仅满足路径结构，不参与形状几何
  * @template TInput 携带路径简写的作者输入类型，其余字段在归一化后保留
  */
-export const normalizeShapeProperties = <TInput extends InputShapeProperties>(
+const normalizeShapeProperties = <TInput extends InputShapeProperties>(
   input: TInput,
-): NormalizedShapeProperties<TInput> => {
+): ShapeNormalizationResult<TInput> => {
   const {
     type: _type,
     children: _children,
@@ -69,5 +69,5 @@ export const normalizeShapeProperties = <TInput extends InputShapeProperties>(
   void _type;
   void _children;
 
-  return source as NormalizedShapeProperties<TInput>;
+  return source as ShapeNormalizationResult<TInput>;
 };

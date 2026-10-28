@@ -39,7 +39,7 @@ export type CollectedChartDeclarations = Readonly<{
 }>;
 
 /** 具体 chartType declaration 的 direct-child 收集回调 */
-export type CollectChartTypeDeclaration = (element: ReactElement, path: ChartDeclarationPath) => boolean;
+type ChartTypeDeclarationCollector = (element: ReactElement, path: ChartDeclarationPath) => boolean;
 
 const duplicateDeclarationError = (name: string, path: ChartDeclarationPath): RetikzChartReactError =>
   new RetikzChartReactError(`chart react: ${name} may appear at most once at ${JSON.stringify(path)}`);
@@ -47,7 +47,7 @@ const duplicateDeclarationError = (name: string, path: ChartDeclarationPath): Re
 /** 收集 Chart 公共 direct-child declarations，并把具体类型声明交给 chartType owner */
 export const collectChartDeclarations = (
   children: ReactNode,
-  collectChartTypeDeclaration: CollectChartTypeDeclaration,
+  collectChartTypeDeclaration: ChartTypeDeclarationCollector,
 ): CollectedChartDeclarations => {
   let data: CollectedChartDeclaration<ChartDataProps> | undefined;
   let coordinate: CollectedChartDeclaration<ChartCoordinateProps> | undefined;
@@ -132,7 +132,7 @@ const sourceLayoutOf = (props: ChartLayoutProps): ChartLayoutProps['layout'] => 
 };
 
 /** standalone Chart 交给 Layout host 的尺寸与已移除 host dimensions 的 children */
-export type StandaloneChartDeclarations = Readonly<{
+type StandaloneChartDeclarations = Readonly<{
   /** 交给独立图表内容收集器的 JSX 声明 */
   children: ReactNode;
   /** 独立 Layout 宿主采用的宽、高与取景范围 */

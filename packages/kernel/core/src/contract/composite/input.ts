@@ -45,7 +45,8 @@ export type CompositeRuntimeInputScope = Readonly<{
   bindings: ReadonlyArray<CompositeInputBinding>;
 }>;
 
-const snapshots = new WeakMap<CompositeInputBindings, CompositeRuntimeInputScope>();
+/** 绑定句柄对应的 Source 快照 WeakMap，句柄释放后允许快照回收 */
+const inputScopeMap = new WeakMap<CompositeInputBindings, CompositeRuntimeInputScope>();
 
 /** 精确读取 Source 路径，不使用继承属性或模糊字段匹配 */
 const readSourceAtPath = (source: unknown, path: CompositeInputPath): unknown => {
@@ -79,16 +80,17 @@ export const captureCompositeInputScope = (
   bindings: ReadonlyArray<CompositeInputBinding>,
 ): CompositeRuntimeInputScope => {
   const snapshot = cloneAndFreezeJson(source, 'Composite input Source');
-  const paths = new Set<string>();
+  /** 本次捕获中已绑定的精确路径，用序列化形式检测重复 */
+  const boundPaths = new Set<string>();
   const captured = bindings.map(binding => {
     const key = JSON.stringify(binding.path);
-    if (paths.has(key))
+    if (boundPaths.has(key))
       throw new RetikzCoreError(
         RetikzCoreErrorCode.CompositeContractViolation,
         `Duplicate composite input path ${key}`,
       );
 
-    paths.add(key);
+    boundPaths.add(key);
     const target = readSourceAtPath(snapshot, binding.path);
     if (target === null || typeof target !== 'object' || !('namespace' in target) || !('type' in target))
       throw new RetikzCoreError(
@@ -109,7 +111,7 @@ export const resolveCompositeInputScope = (
 ): CompositeRuntimeInputScope => {
   if (inputs === undefined) return { source, bindings: [] };
 
-  const snapshot = snapshots.get(inputs);
+  const snapshot = inputScopeMap.get(inputs);
   if (snapshot === undefined || !jsonStructuralEquals(snapshot.source, source))
     throw new RetikzCoreError(
       RetikzCoreErrorCode.CompositeContractViolation,
@@ -138,12 +140,7 @@ export const createCompositeInputBindings = (
 ): CompositeInputBindings => {
   const scope = captureCompositeInputScope(source, bindings);
   const handle = Object.freeze({}) as CompositeInputBindings;
-  snapshots.set(handle, scope);
+  inputScopeMap.set(handle, scope);
 
   return handle;
-};
-
-/** 校验运行时绑定属于指定 Source，不执行编译或派发诊断 */
-export const assertCompositeInputBindings = (source: IRScene, inputs: CompositeInputBindings | undefined): void => {
-  if (inputs !== undefined) resolveCompositeInputScope(source, inputs);
 };

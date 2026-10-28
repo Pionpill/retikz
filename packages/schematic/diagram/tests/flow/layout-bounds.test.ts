@@ -8,7 +8,7 @@ import {
   FlowDiagramArtifactSchema,
   FlowDiagramSchema,
   FlowLayoutSchema,
-  LayeredFlowLayoutDefinition,
+  layeredFlowLayoutDefinition,
 } from '../../src/flow';
 
 const compile = (source: unknown, options: FlowDiagramDefinitionOptions = {}) => {
@@ -58,8 +58,8 @@ const sourceOf = (direction = 'right', text = 'PNG', excluded: Array<string> = [
   ],
 });
 
-describe('Flow Layout bounds contribution', () => {
-  it('retains local relative placement and includes overflow in the final drawing', () => {
+describe('Flow Layout 边界贡献', () => {
+  it('保留局部相对位置并在最终图形中包含溢出', () => {
     const full = compile(sourceOf('left', 'PNG'.repeat(20), []));
     const excluded = compile(sourceOf('left', 'PNG'.repeat(20)));
     const fullCanvas = boundsOf(full, 'canvas');
@@ -79,7 +79,7 @@ describe('Flow Layout bounds contribution', () => {
     }
   });
 
-  it('projects Grid bounds without removing its local track placement', () => {
+  it('投影 Grid 边界，而不删除其本地轨道放置', () => {
     const source = sourceOf();
     const layouts = source.layouts.map(layout =>
       layout.id === 'row'
@@ -100,7 +100,7 @@ describe('Flow Layout bounds contribution', () => {
     expect(boundsOf(artifact, 'png').x).toBeGreaterThan(canvas.x + canvas.width);
   });
 
-  it('includes authored margins but not relation-label additions in structural contribution', () => {
+  it('包括编写边距，但不包括结构贡献中的关系标签添加', () => {
     const source = sourceOf();
     const artifact = compile({
       ...source,
@@ -118,12 +118,12 @@ describe('Flow Layout bounds contribution', () => {
     expect(row.height).toBeCloseTo(canvas.height + 9, 8);
   });
 
-  it('rejects a custom provider that discards the authored exclusion', () => {
+  it('拒绝放弃编写排除的自定义提供者', () => {
     const provider = defineFlowLayout({
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'discard-bounds',
       layout: (input, context) =>
-        LayeredFlowLayoutDefinition.layout(input, {
+        layeredFlowLayoutDefinition.layout(input, {
           resolveEndpoint: () => {
             throw new Error('Unexpected endpoint query');
           },
@@ -143,7 +143,7 @@ describe('Flow Layout bounds contribution', () => {
     );
   });
 
-  it.each(['right', 'left', 'up', 'down'])('keeps the primary aligned through %s nested placement', direction => {
+  it.each(['right', 'left', 'up', 'down'])('通过 %s 嵌套放置保持主对齐', direction => {
     for (const text of ['PNG', 'PNG'.repeat(20)]) {
       const artifact = compile(sourceOf(direction, text));
       const canvas = boundsOf(artifact, 'canvas');
@@ -162,7 +162,7 @@ describe('Flow Layout bounds contribution', () => {
     }
   });
 
-  it('preserves complete Group containment when a nested Layout overflows', () => {
+  it('当嵌套的 Layout 溢出时，保留完整的 Group 遏制', () => {
     const artifact = compile(sourceOf('left', 'PNG'.repeat(20), ['formats'], true));
     const group = boundsOf(artifact, 'group');
 
@@ -176,7 +176,7 @@ describe('Flow Layout bounds contribution', () => {
     }
   });
 
-  it('preserves the old result for omitted and empty exclusion lists', () => {
+  it('保留省略和空排除列表的旧结果', () => {
     const source = sourceOf('right', 'PNG', []);
     const omitted = {
       ...source,
@@ -189,15 +189,15 @@ describe('Flow Layout bounds contribution', () => {
     expect(compile(source)).toEqual(compile(omitted));
   });
 
-  it('uses the shared placement semantics for custom providers', () => {
-    const provider = defineFlowLayout({ ...LayeredFlowLayoutDefinition, name: 'custom-bounds' });
+  it('使用自定义提供者的共享放置语义', () => {
+    const provider = defineFlowLayout({ ...layeredFlowLayoutDefinition, name: 'custom-bounds' });
     const options = { flowLayouts: [provider], defaultFlowLayout: provider.name };
 
     expect(compile(sourceOf(), options).elements).toEqual(compile(sourceOf()).elements);
   });
 
   it.each([{ excluded: ['formats', 'formats'] }, { excluded: ['png'] }, { excluded: ['canvas', 'formats'] }])(
-    'rejects invalid exclusion $excluded at its field',
+    '拒绝其字段中的无效排除 $excluded',
     ({ excluded }) => {
       const result = FlowLayoutSchema.safeParse({
         kind: 'linear',
@@ -213,7 +213,7 @@ describe('Flow Layout bounds contribution', () => {
     },
   );
 
-  it('round-trips Grid exclusion without changing child declarations', () => {
+  it('往返 Grid 排除而不更改子声明', () => {
     const source = {
       kind: 'grid',
       id: 'grid',

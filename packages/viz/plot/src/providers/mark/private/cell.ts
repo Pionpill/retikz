@@ -34,7 +34,7 @@ const shapeStyle = (fill: MarkPaint, stroke: MarkPaint | undefined): IRNodeDefau
 });
 
 /** 某 geometry kind 对应的 node 样式工厂（rect → 矩形 barStyle；sector / contour → shapeStyle） */
-export const styleForGeometry = (
+const styleForGeometry = (
   kind: CellGeometry['kind'],
   mark: IRPlotMark,
 ): ((fill: MarkPaint, stroke?: MarkPaint) => IRNodeDefault) => {

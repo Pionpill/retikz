@@ -32,7 +32,7 @@ Field paths support dotted access. Runtime resolution fails when a declared fiel
 
 <ZodSchema name="TableDetailColumnSchema" />
 
-Authoring-side `TableDetailColumnInput` also accepts a string `header`. `createDetailTableIR()`, `DetailTable`, and `detailTable()` normalize it to `{ kind: 'value', value: header }`.
+Authoring-side `InputTableDetailColumn` also accepts a string `header`. `createDetailTableIR()`, `DetailTable`, and `detailTable()` normalize it to `{ kind: 'value', value: header }`.
 `headerLayout` and `bodyLayout` reuse [TableCellLayoutSchema](/viz/table/reference/contract-layout#tablecelllayoutschema) to configure padding, alignment, wrapping, fit, overflow, and borders independently for header and body Cells.
 
 A column `formatter` is the default reference for its body value Cells, and root `rules` can override it in Cell-selector declaration order. Formatting changes only the display scalar: field selection, visual encodings, and value predicates continue to read the raw pre-formatter value.

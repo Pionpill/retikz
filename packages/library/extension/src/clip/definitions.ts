@@ -4,7 +4,7 @@ import { CircleClipSchema, CompoundClipSchema, EllipseClipSchema, PathClipSchema
 import type { IRCircleClip, IRCompoundClip, IREllipseClip, IRPathClip, IRPolygonClip } from './types';
 
 /** Extension 提供的完整圆形裁剪 Definition */
-export const CircleClipDefinition = defineClip<IRCircleClip>({
+export const circleClipDefinition = defineClip<IRCircleClip>({
   kind: 'circle',
   schema: CircleClipSchema,
 
@@ -22,7 +22,7 @@ export const CircleClipDefinition = defineClip<IRCircleClip>({
 });
 
 /** Extension 提供的完整椭圆裁剪 Definition */
-export const EllipseClipDefinition = defineClip<IREllipseClip>({
+export const ellipseClipDefinition = defineClip<IREllipseClip>({
   kind: 'ellipse',
   schema: EllipseClipSchema,
 
@@ -47,7 +47,7 @@ export const EllipseClipDefinition = defineClip<IREllipseClip>({
 });
 
 /** Extension 提供的完整多边形裁剪 Definition */
-export const PolygonClipDefinition = defineClip<IRPolygonClip>({
+export const polygonClipDefinition = defineClip<IRPolygonClip>({
   kind: 'polygon',
   schema: PolygonClipSchema,
 
@@ -62,7 +62,7 @@ export const PolygonClipDefinition = defineClip<IRPolygonClip>({
 });
 
 /** Extension 提供的完整路径裁剪 Definition */
-export const PathClipDefinition = defineClip<IRPathClip>({
+export const pathClipDefinition = defineClip<IRPathClip>({
   kind: 'path',
   schema: PathClipSchema,
 
@@ -70,7 +70,7 @@ export const PathClipDefinition = defineClip<IRPathClip>({
 });
 
 /** Extension 提供的完整复合裁剪 Definition */
-export const CompoundClipDefinition = defineClip<IRCompoundClip>({
+export const compoundClipDefinition = defineClip<IRCompoundClip>({
   kind: 'compound',
   schema: CompoundClipSchema,
 

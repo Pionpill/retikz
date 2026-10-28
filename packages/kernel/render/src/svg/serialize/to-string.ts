@@ -3,7 +3,7 @@ import type { Scene } from '@retikz/core';
 import type { StaticRenderFrame } from '../../runtime';
 import { EMPTY_READONLY_LAYERS } from '../../runtime';
 import { computeDisplaySize } from '../../shared';
-import type { BuildDocumentOptions } from '../builders';
+import type { SvgDocumentOptions } from '../builders';
 import { buildSvgFrameDocument } from '../builders';
 import type { SvgNode, SvgStyle } from '../types';
 
@@ -52,7 +52,7 @@ const serializeNode = (node: SvgNode | string): string => {
 };
 
 /** `renderToSvgString` 选项：文档构建项 + 根 `<svg>` 显示尺寸 */
-export type RenderToStringOptions = BuildDocumentOptions & {
+export type RenderToStringOptions = SvgDocumentOptions & {
   /**
    * 根 `<svg>` 的 `width` 属性（显示尺寸）
    * @description 缺省取 Scene.layout 宽度；只指定一个尺寸时，另一轴按内容比例推导

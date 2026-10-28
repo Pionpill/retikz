@@ -8,7 +8,7 @@ import {
   runtimeIdentityEquals,
 } from '../../src';
 
-describe('runtime identity', () => {
+describe('运行时标识', () => {
   it('复制并冻结 owner 与 segment path', () => {
     const path = ['group', 'node'];
     const identity = createRuntimeIdentity('core', path);
@@ -50,7 +50,7 @@ describe('runtime identity', () => {
   it.each([
     { owner: ' \t', path: ['node'] as ReadonlyArray<string> },
     { owner: 'owner', path: ['\u2003'] as ReadonlyArray<string> },
-  ] as const)('rejects blank identity text as a Runtime identity error', input => {
+  ] as const)('拒绝空白身份文本作为 Runtime 身份错误', input => {
     const create = () => createRuntimeIdentity(input.owner, input.path);
 
     let failure: unknown;
@@ -72,7 +72,7 @@ describe('runtime identity', () => {
     });
   });
 
-  it('rejects a Unicode-whitespace path segment as a Runtime identity error', () => {
+  it('拒绝 Unicode 空白路径段作为 Runtime 标识错误', () => {
     const rejectedValue = '\u00a0';
     const path = ['group', rejectedValue];
     let failure: unknown;

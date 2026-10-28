@@ -56,7 +56,7 @@ const mergeSourceValue = (base: unknown, override: unknown, field: string | unde
 };
 
 /** 判断 defaults 片段是否包含至少一个有意义的 Source 值 */
-export const hasPlotDefaultsValue = (defaults: IRPlotDefaults | undefined): boolean =>
+const hasPlotDefaultsValue = (defaults: IRPlotDefaults | undefined): boolean =>
   defaults !== undefined && hasDefinedValue(defaults);
 
 /** 按正式 Source 粒度合并 Plot defaults */

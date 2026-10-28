@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
 
-describe('Graph Scope lowering', () => {
-  it('lowers to exactly one Scope with complete authored props and ordered composite children', () => {
+describe('Graph Scope 下沉', () => {
+  it('下沉到恰好 1 个 Scope，并具有完整编写的 props 和有序的复合子项', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
@@ -61,7 +61,7 @@ describe('Graph Scope lowering', () => {
     });
   });
 
-  it('does not create an id or namespace frame when the author omitted both', () => {
+  it('当作者省略了 id 或命名空间框架时，不会创建两者', () => {
     const lowered = Graph.lowerGraph(
       Graph.GraphSchema.parse({ namespace: 'graph', type: 'graph', children: [] }),
       Graph.resolveGraphDefinitionOptions(),

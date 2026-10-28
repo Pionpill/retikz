@@ -1,20 +1,20 @@
-import type { JsonObject } from '@retikz/foundation';
+import type { JsonObject, OpenString } from '@retikz/foundation';
 import type { CenteredBox, Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { IRGraphicStyle, IRPathBase, ResolvedDropShadow } from '../../schemas';
+import type { IRGraphicStyle, IRPathBase, CanonicalDropShadow } from '../../schemas';
 import type { Anchor, Side } from '../../shared';
 import type { PaintValue, PathCommand, ScenePrimitive } from '../scene';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段 */
-type ResolvedShapeStyleFields = Pick<IRGraphicStyle, 'strokeWidth' | 'blendMode'> & {
+type CompiledShapeStyleFields = Pick<IRGraphicStyle, 'strokeWidth' | 'blendMode'> & {
   opacity?: number;
   fillOpacity?: number;
   strokeOpacity?: number;
 };
 
 /** Shape provider 接收到的命名 anchor：标准方位名或 shape 自定义扩展名 */
-export type ShapeAnchorName = Anchor | (string & {});
+export type ShapeAnchorName = OpenString<Anchor>;
 
 /** Shape 可为之提供安全包络的规则连接面种类 */
 export type ConnectionEnvelopeKind = 'circle' | 'ellipse' | 'rectangle';
@@ -37,10 +37,10 @@ export type GeometryKeyPoint = Readonly<{
 
 /**
  * emit 需要的已解析视觉样式子集
- * @description 从 NodeLayout 的样式字段收敛（不含几何 / 文本），作为 shape provider 的 runtime 输入。
+ * @description 从 CompiledNodeLayout 的样式字段收敛（不含几何 / 文本），作为 shape provider 的 runtime 输入。
  *   与 IR style schema 同语义的标量字段通过 `IRGraphicStyle` 复用类型；paint / shadow 等 compile 后字段显式组合
  */
-export type ResolvedShapeStyle = {
+export type CompiledShapeStyle = {
   /** 描边线帽 */
   lineCap?: IRGraphicStyle['lineCap'];
   /** 描边拐角连接 */
@@ -54,7 +54,7 @@ export type ResolvedShapeStyle = {
    * 填充不透明度
    * @default 1
    */
-  fillOpacity?: ResolvedShapeStyleFields['fillOpacity'];
+  fillOpacity?: CompiledShapeStyleFields['fillOpacity'];
   /**
    * 已解析描边 paint；缺省由 shape emit 按当前文字色处理
    * @default 'currentColor'
@@ -64,12 +64,12 @@ export type ResolvedShapeStyle = {
    * 描边不透明度
    * @default 1
    */
-  strokeOpacity?: ResolvedShapeStyleFields['strokeOpacity'];
+  strokeOpacity?: CompiledShapeStyleFields['strokeOpacity'];
   /**
    * 描边宽度
    * @default 1
    */
-  strokeWidth?: ResolvedShapeStyleFields['strokeWidth'];
+  strokeWidth?: CompiledShapeStyleFields['strokeWidth'];
   /**
    * 描边虚线模式；缺省为实线
    * @default []
@@ -89,17 +89,30 @@ export type ResolvedShapeStyle = {
    * 整体不透明度
    * @default 1
    */
-  opacity?: ResolvedShapeStyleFields['opacity'];
+  opacity?: CompiledShapeStyleFields['opacity'];
   /**
    * 投影：解析后对象（compile 已把预设展开 + 显式字段覆盖合并；缺省无投影）
    * @default undefined
    */
-  shadow?: ResolvedDropShadow;
+  shadow?: CanonicalDropShadow;
   /**
    * 混合模式：解析后值（compile 透传；缺省 / normal 等价普通 source-over）
    * @default 'normal'
    */
-  blendMode?: ResolvedShapeStyleFields['blendMode'];
+  blendMode?: CompiledShapeStyleFields['blendMode'];
+};
+
+/** 形状包围内容所需的未旋转外接盒几何 */
+export type ShapeCircumscribedGeometry = {
+  /** 外接盒的局部 x 轴半宽，须为有限非负数 */
+  halfWidth: number;
+  /** 外接盒的局部 y 轴半高，须为有限非负数 */
+  halfHeight: number;
+  /**
+   * 外接盒中心相对 node position 的未旋转局部偏移
+   * @default [0, 0]
+   */
+  offset?: Position;
 };
 
 /**
@@ -108,7 +121,7 @@ export type ResolvedShapeStyle = {
  *   每个能力函数都以实例级 `params` 作为末位参数
  * @template TParams 由 paramsSchema 解析得到的 JSON 对象类型，各形状回调接收同一参数类型
  */
-export type ShapeDefinitionInput<TParams extends JsonObject> = {
+export type InputShapeDefinition<TParams extends JsonObject> = {
   /** shape 名称，由 IR `node.shape` 引用 */
   name: string;
   /**
@@ -117,18 +130,13 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
    */
   paramsSchema: ZodType<TParams>;
   /**
-   * 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴
+   * 根据包含 padding 的内容半轴和 params，计算完整形状的未旋转外接盒半轴及中心偏移
    */
-  computeCircumscribedHalfAxes: (
+  computeCircumscribedGeometry: (
     innerHalfWidth: number,
     innerHalfHeight: number,
     params: TParams,
-  ) => { halfWidth: number; halfHeight: number };
-  /**
-   * 外接 AABB 中心相对 node `position` 的未旋转局部偏移
-   * @default [0, 0]
-   */
-  computeCircumscribedOffset?: (params: TParams) => Position;
+  ) => ShapeCircumscribedGeometry;
   /**
    * 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点
    * @description `rect` 可包含旋转；实现需要按需转换坐标
@@ -148,6 +156,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
     kind: ConnectionEnvelopeKind,
     params: TParams,
   ) => ConnectionEnvelope | undefined;
+  // TODO: 随 Inspect 与所属者产物契约调整，统一评估轮廓和关键点的归属及按需计算
   /** 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何 */
   computeOutline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
   /** 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一 */
@@ -163,7 +172,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
    */
   emit: (
     rect: CenteredBox,
-    style: ResolvedShapeStyle,
+    style: CompiledShapeStyle,
     round: (n: number) => number,
     params: TParams,
   ) => Iterable<ScenePrimitive>;
@@ -180,7 +189,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
  * @description 所有函数收 `JsonObject`（实际类型由 `paramsSchema.parse` 在编译期保证）；registry 同构
  *   不泛型化（避免逆变 / 落 any）。定义点用 `defineShape<TParams>` 拿类型安全
  */
-export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
+export type ShapeDefinition = InputShapeDefinition<JsonObject>;
 
 /**
  * 创建可注入编译配置的形状定义，保留定义时的参数类型检查
@@ -189,5 +198,5 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
  * @param def 形状名称、参数 schema 与几何及绘制回调
  * @returns 原定义对象，类型转换为可存入形状注册表的 ShapeDefinition；不复制或修改输入
  */
-export const defineShape = <TParams extends JsonObject>(def: ShapeDefinitionInput<TParams>): ShapeDefinition =>
+export const defineShape = <TParams extends JsonObject>(def: InputShapeDefinition<TParams>): ShapeDefinition =>
   def as unknown as ShapeDefinition;

@@ -1,5 +1,5 @@
 import type { IRPlot } from '@retikz/plot';
-import type { BuildPlotOptions, PlotAuthoringContext, ResolvedPlotExtensionAuthoring } from '@retikz/plot-vanilla';
+import type { PlotBuildOptions, PlotAuthoringContext, PlotExtensionAuthoringResolution } from '@retikz/plot-vanilla';
 import {
   normalizePlotIR,
   resolvePlotExtensionAuthoring as normalizePlotExtensionAuthoring,
@@ -9,11 +9,11 @@ import type { ReactNode } from 'react';
 import { collectPlotDeclarations } from './collector';
 
 /** 将 React Plot children 收集后交给 Plot Vanilla 归一化 */
-export const buildPlotIR = (children: ReactNode, dataRef: string, options: BuildPlotOptions = {}): IRPlot =>
+export const buildPlotIR = (children: ReactNode, dataRef: string, options: PlotBuildOptions = {}): IRPlot =>
   normalizePlotIR(collectPlotDeclarations(children), dataRef, options);
 
 /** 将 React Chart extension children 收集后交给 Plot Vanilla 归一化 */
 export const resolvePlotExtensionAuthoring = (
   children: ReactNode,
   context: Omit<PlotAuthoringContext, 'mode'>,
-): ResolvedPlotExtensionAuthoring => normalizePlotExtensionAuthoring(collectPlotDeclarations(children), context);
+): PlotExtensionAuthoringResolution => normalizePlotExtensionAuthoring(collectPlotDeclarations(children), context);

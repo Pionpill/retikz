@@ -5,8 +5,8 @@ import { PathMarkSchema } from '../../src/schemas';
 const coordinate = { x: { value: 0 }, y: { value: 1 } };
 const reference = { mark: 'nodes', key: { field: 'source' } };
 
-describe('Mark target endpoints', () => {
-  it.each([coordinate, reference])('round trips complete endpoint inputs', from => {
+describe('标记目标端点', () => {
+  it.each([coordinate, reference])('往返完整端点输入', from => {
     const mark = PathMarkSchema.parse({ type: 'path', encodings: { from, to: reference }, properties: {} });
     expect(mark.properties?.connection).toBe('straight');
     expect(PathMarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
@@ -19,7 +19,7 @@ describe('Mark target endpoints', () => {
     { mark: 'nodes', key: { field: 'source', value: 'a' } },
     { mark: 'nodes', key: { edge: 'start' } },
     { ...reference, boundary: true },
-  ])('rejects incomplete or ambiguous external targets', from => {
+  ])('拒绝不完整或不明确的外部目标', from => {
     expect(PathMarkSchema.safeParse({ type: 'path', encodings: { from, to: coordinate } }).success).toBe(false);
   });
 });

@@ -1,10 +1,9 @@
-import type { ArrowDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { providerDefinitionOf } from '../../providers';
+import { getProviderDefinition } from '../../providers';
 import type { IRArrowStyle, IRPathBase } from '../../schemas';
 import { DEFAULT_ARROW_SHAPE } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
-import { parseProviderPayload } from '../provider-payload';
+import { parseProviderPayload } from '../provider';
 import { resolveMarkStyle } from './mark';
 import type {
   ArrowMarkGeometry,
@@ -13,24 +12,22 @@ import type {
   PathDefinitionResolution,
   PathResolution,
   PathResolveContext,
-  ResolvedMarkStyle,
-  ResolvedPathSource,
+  MarkColorSource,
+  PathColorSource,
   StrokePathResolution,
 } from './types';
 
-const ARROW_GEOMETRY_BASE_SIZE = 10;
-
-/** 主路径进入 marker 接触边的描边宽度比例 */
+/** 路径描边与箭头接触处的重叠量，以宿主线宽为单位 */
 const ARROW_PATH_CONTACT_OVERLAP = 0.5;
 
-/** 解析 path provider */
+/** 查找路径定义，并用其完整 schema 解析路径输入 */
 export const resolvePathDefinition = (
-  path: ResolvedPathSource,
+  path: PathColorSource,
   context: PathResolveContext,
   irPath: string,
 ): PathDefinitionResolution => {
   const kind = path.kind ?? 'stroke';
-  const definition = providerDefinitionOf(context.paths, kind);
+  const definition = getProviderDefinition(context.pathRegistry, kind);
   const parsed = parseProviderPayload({
     capability: 'path',
     providerName: kind,
@@ -43,50 +40,10 @@ export const resolvePathDefinition = (
   return { name: kind, definition, path: parsed as IRPathBase };
 };
 
-const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): void => {
-  if (!Number.isFinite(definition.backX)) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' has a non-finite backX (${String(definition.backX)}); it must be a finite number.`,
-    );
-  }
-
-  if (!Number.isFinite(definition.lineContactX)) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' has a non-finite lineContactX (${String(definition.lineContactX)}); it must be a finite number.`,
-    );
-  }
-
-  if (definition.baseSize !== undefined && (!Number.isFinite(definition.baseSize) || definition.baseSize <= 0)) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' has an invalid baseSize (${String(definition.baseSize)}); it must be a finite number greater than 0.`,
-    );
-  }
-
-  if (definition.tipX !== undefined && !Number.isFinite(definition.tipX)) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' has a non-finite tipX (${String(definition.tipX)}); it must be a finite number.`,
-    );
-  }
-
-  if (definition.outerInset !== undefined && !Number.isFinite(definition.outerInset)) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' has a non-finite outerInset (${String(definition.outerInset)}); it must be a finite number.`,
-    );
-  }
-
-  const tipX = definition.tipX ?? definition.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;
-  if (definition.backX > definition.lineContactX || definition.lineContactX > tipX) {
-    throw createCompositeContractError(
-      `Arrow '${shape}' geometry must satisfy backX <= lineContactX <= tipX; received ${String(definition.backX)} <= ${String(definition.lineContactX)} <= ${String(tipX)}.`,
-    );
-  }
-};
-
-/** 解析 arrow mark 的有效视觉属性与几何输入 */
-export const resolveArrowMark = (mark: ResolvedMarkStyle, context: PathResolveContext): ArrowMarkResolution => {
+/** 绑定箭头定义，确定外观、有效尺寸及端点接触与收缩参数 */
+export const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): ArrowMarkResolution => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
-  const definition = providerDefinitionOf(context.arrows, shape);
-  assertFiniteArrowGeometry(shape, definition);
+  const definition = getProviderDefinition(context.arrowRegistry, shape);
   const shared = resolveMarkStyle(mark, definition, context);
   const { visual } = shared;
   const { baseSize, resolvedLength, resolvedWidth } = shared.geometry;
@@ -129,19 +86,22 @@ export const resolveArrowMark = (mark: ResolvedMarkStyle, context: PathResolveCo
   return { mark, definition, visual, geometry };
 };
 
-/** 解析显式端点箭头定义 */
+/** 解析已声明的起点、终点箭头，并以声明对象为键保存结果 */
 const resolveEndpointArrowProviders = (
-  arrow: ResolvedPathSource['arrow'],
+  arrow: PathColorSource['arrow'],
   context: PathResolveContext,
 ): ReadonlyMap<IRArrowStyle, ArrowMarkResolution> => {
-  /** 按端点声明索引的箭头解析结果 Map */
+  /** 按端点声明对象索引的箭头解析结果 */
   const resolutionMap = new Map<IRArrowStyle, ArrowMarkResolution>();
   for (const endpoint of [arrow?.start, arrow?.end])
     if (endpoint !== undefined) resolutionMap.set(endpoint, resolveArrowMark(endpoint, context));
   return resolutionMap;
 };
 
-/** 为 stroke emitter 绑定实际会消费的 arrow provider */
+/**
+ * 为 Stroke 路径补齐缺省填充和描边，并绑定箭头与沿线标记定义
+ * @description 不足以绘制的步骤序列返回空绑定表，单个矩形步骤除外
+ */
 export const resolveStrokePathProviders = (
   resolution: PathResolution,
   context: PathResolveContext,
@@ -157,15 +117,15 @@ export const resolveStrokePathProviders = (
     return { ...resolution, path, arrows: new Map(), marks: new Map() };
   }
 
-  /** 按标记声明索引的解析结果 Map */
+  /** 按标记声明对象索引的解析结果 */
   const marks = new Map<NonNullable<typeof path.marks>[number], MarkResolution>();
   for (const [index, placement] of (path.marks ?? []).entries()) {
     const shape = placement.shape ?? DEFAULT_ARROW_SHAPE;
-    const definition = context.marks?.get(shape);
+    const definition = context.markRegistry?.get(shape);
     if (definition === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Provider,
-        `Unknown provider '${shape}' at ${context.irPath}.marks[${index}].shape; available: ${[...(context.marks?.keys() ?? [])].sort().join(', ') || '(none registered)'}.`,
+        `Unknown provider '${shape}' at ${context.irPath}.marks[${index}].shape; available: ${[...(context.markRegistry?.keys() ?? [])].sort().join(', ') || '(none registered)'}.`,
       );
     marks.set(placement, resolveMarkStyle(placement, definition, context));
   }

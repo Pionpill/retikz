@@ -32,7 +32,7 @@ const runUpdate = (initial: IRScene, next: IRScene) => {
   return { result, actual: session.read().compilation.result, expected: compileToScene(next, options) };
 };
 
-describe('Theme retained invalidation', () => {
+describe('主题保留失效', () => {
   it('主色更新与宿主重置后的箭头输出等价于完整编译', () => {
     const source = (color: string, reset: boolean): IRScene => ({
       type: 'scene',

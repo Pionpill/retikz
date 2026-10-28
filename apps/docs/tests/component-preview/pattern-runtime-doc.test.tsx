@@ -12,11 +12,11 @@ const canonicalComponent = (previewSource: PreviewSourceConfig): FC => {
   return (): ReactNode => render();
 };
 
-describe('pattern controls docs runtime', () => {
+describe('图案控件的文档运行时', () => {
   it.each([
     ['built-in pattern', builtinPatternPreviewSource],
     ['custom pattern', customPatternPreviewSource],
-  ])('%s canonical IR remains lossless through JSON serialization', (_name, previewSource) => {
+  ])('%s 规范 IR 通过 JSON 序列化保持无损', (_name, previewSource) => {
     const ir = buildPreviewIR(canonicalComponent(previewSource)).ir;
 
     expect(ir).toStrictEqual(JSON.parse(JSON.stringify(ir)));

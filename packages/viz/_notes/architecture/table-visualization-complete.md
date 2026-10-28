@@ -162,4 +162,4 @@ Table alpha.2 已通过 Core layout-aware composite 在同一次 compile 内完�
 
 ## 7. 与现有设计的关系
 
-竞品取舍见 [Table 竞品与能力差距分析](../analysis/table-compare-analysis.md)，总体指导思想见 [Table 表格语法与 lowering 总设计](./table-design.md)。具体能力状态以 Table roadmap、Accepted ADR、当前公开类型与就近 `AGENTS.md` 为准；本文只维护长期边界与准入方法。
+竞品调研方法见 [Viz 功能比较方案 · Table](../analysis/viz-compare-analysis.md#table表格能力比较)，总体指导思想见 [Table 表格语法与 lowering 总设计](./table-design.md)。具体能力状态以 Table roadmap、Accepted ADR、当前公开类型与就近 `AGENTS.md` 为准；本文只维护长期边界与准入方法。

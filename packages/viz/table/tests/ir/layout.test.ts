@@ -12,8 +12,8 @@ import {
   TableTrackSizeSchema,
 } from '../../src';
 
-describe('Table layout schema', () => {
-  it('preserves finite integer border priorities without imposing a safe-integer bound', () => {
+describe('Table 布局 schema', () => {
+  it('保留有限整数边界优先级，而不强加安全整数边界', () => {
     for (const priority of [-1e100, -1, 0, 1, 1e100]) {
       expect(TableNoBorderSchema.parse({ kind: 'none', priority }).priority).toBe(priority);
     }
@@ -22,7 +22,7 @@ describe('Table layout schema', () => {
     }
   });
 
-  it('round-trips alpha.2 track sizing, gaps, and border defaults without materializing defaults', () => {
+  it('往返 alpha.2 轨道大小、间隙和边框默认值，而不实现默认值', () => {
     const layout = {
       columnSize: { kind: TableTrackSizeKind.Auto },
       rowSize: { kind: TableTrackSizeKind.Fixed, value: 28 },
@@ -42,7 +42,7 @@ describe('Table layout schema', () => {
     expect(TableLayoutSchema.parse({})).toEqual({});
   });
 
-  it.each(['columnWidth', 'rowHeight', 'headerHeight'])('rejects removed alpha.1 field %s', field => {
+  it.each(['columnWidth', 'rowHeight', 'headerHeight'])('拒绝删除的 alpha.1 字段 %s', field => {
     expect(() => TableLayoutSchema.parse({ [field]: 10 })).toThrow();
   });
 
@@ -50,11 +50,11 @@ describe('Table layout schema', () => {
     ['columnGap', -1],
     ['rowGap', Number.NaN],
     ['rowGap', Number.POSITIVE_INFINITY],
-  ])('rejects invalid %s=%s', (field, value) => {
+  ])('拒绝无效的 %s=%s', (field, value) => {
     expect(() => TableLayoutSchema.parse({ [field]: value })).toThrow();
   });
 
-  it('accepts zero fixed tracks and zero gaps', () => {
+  it('接受零固定轨道和零间隙', () => {
     const layout = {
       columnSize: { kind: TableTrackSizeKind.Fixed, value: 0 },
       rowSize: { kind: TableTrackSizeKind.Fixed, value: 0 },
@@ -65,7 +65,7 @@ describe('Table layout schema', () => {
     expect(TableLayoutSchema.parse(layout)).toEqual(layout);
   });
 
-  it('round-trips each track-size variant through the public root fields', () => {
+  it('通过公共根字段往返每个轨道大小变体', () => {
     const variants = [
       { kind: TableTrackSizeKind.Fixed, value: 0 },
       { kind: TableTrackSizeKind.Auto },
@@ -93,11 +93,11 @@ describe('Table layout schema', () => {
     { kind: TableTrackSizeKind.Fraction, weight: -1 },
     { kind: TableTrackSizeKind.Auto, value: 1 },
     { kind: 'unknown' },
-  ])('rejects an invalid track size %#', track => {
+  ])('拒绝无效的磁道尺寸 %#', track => {
     expect(() => TableTrackSizeSchema.parse(track)).toThrow();
   });
 
-  it('rejects invalid minmax combinations at the nested field', () => {
+  it('拒绝嵌套字段中无效的最小最大组合', () => {
     expect(() =>
       TableMinmaxTrackSizeSchema.parse({
         kind: TableTrackSizeKind.Minmax,
@@ -114,7 +114,7 @@ describe('Table layout schema', () => {
     ).toThrow();
   });
 
-  it('accepts sparse overrides and rejects duplicate or invalid canonical indexes', () => {
+  it('接受稀疏覆盖并拒绝重复或无效的规范索引', () => {
     const overrides = [
       { index: 2, size: { kind: TableTrackSizeKind.Auto } },
       { index: 0, size: { kind: TableTrackSizeKind.Fixed, value: 24 } },

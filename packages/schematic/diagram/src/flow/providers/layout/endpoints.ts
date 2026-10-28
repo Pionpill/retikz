@@ -4,7 +4,7 @@ import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
   FlowLayoutEndpoint,
   FlowLayoutExecutionContext,
-  FlowLayoutInput,
+  InputFlowLayoutComputation,
   FlowLayoutElementOutput,
 } from '../../contract';
 import type { FlowEndpointTarget } from '../../schemas';
@@ -71,7 +71,7 @@ const allocationFailure = (record: EndpointRecord, reason: string): never => {
 
 /** 同节点汇总要求，按侧等分自动槽，固定锚点只作为不可移动约束 */
 export const allocateFlowEndpoints = (
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   elements: ReadonlyArray<FlowLayoutElementOutput>,
   context?: FlowLayoutExecutionContext,
 ): ReadonlyArray<FlowRelationEndpoints> => {

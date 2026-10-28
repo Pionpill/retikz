@@ -3,12 +3,12 @@ import type { ScenePrimitive, LayoutProposal, LayoutChildResult } from '@retikz/
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { TreeDefinition } from '../../../src/collection/tree';
+import { treeDefinition } from '../../../src/collection/tree';
 import type { IRTree } from '../../../src/collection/tree/schema';
 
 const base = { namespace: 'standard', type: 'tree' } as const;
 const compile = (tree: IRTree) =>
-  compileToScene({ type: 'scene', version: 1, children: [tree] }, { composites: [TreeDefinition], padding: 0 });
+  compileToScene({ type: 'scene', version: 1, children: [tree] }, { composites: [treeDefinition], padding: 0 });
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(n => (n.type === 'group' ? flat(n.children) : [n]));
 it('字符串叶节点与对象配置产生相同图形', () => {
@@ -57,7 +57,7 @@ it('圆形连接命中真实边界，外部引用保留节点身份', () => {
         },
       ],
     },
-    { composites: [TreeDefinition] },
+    { composites: [treeDefinition] },
   );
   const paths = flat(result.scene.primitives).filter(n => n.type === 'path');
   const edge = paths.find(n => n.meta?.edge);
@@ -124,7 +124,7 @@ it.each(['straight', '-|', '|-', '-|-', '|-|'] as const)('%s 连接与直接引�
           },
         ],
       },
-      { composites: [TreeDefinition] },
+      { composites: [treeDefinition] },
     );
     const paths = flat(result.scene.primitives).filter(n => n.type === 'path');
     expect(paths.find(n => n.meta?.edge)?.commands).toEqual(paths.find(n => n.meta?.reference)?.commands);
@@ -157,7 +157,7 @@ it.each(['circle', 'ellipse', 'diamond', 'rectangle'] as const)('%s 带不对称
         },
       ],
     },
-    { composites: [TreeDefinition] },
+    { composites: [treeDefinition] },
   );
   const paths = flat(result.scene.primitives).filter(n => n.type === 'path');
   expect(paths.find(n => n.meta?.edge)?.commands).toEqual(paths.find(n => n.meta?.reference)?.commands);
@@ -184,7 +184,7 @@ it('空子槽保留默认节点宽度及子树净距，唯一子节点居中', (
           },
         ],
       },
-      { composites: [TreeDefinition] },
+      { composites: [treeDefinition] },
     );
     return flat(result.scene.primitives).find(n => n.type === 'path' && n.meta?.measure);
   };
@@ -222,7 +222,7 @@ it('多个匿名树的内部引用互不冲突，根变换保留实际节点引�
         },
       ],
     },
-    { composites: [TreeDefinition] },
+    { composites: [treeDefinition] },
   );
   const edge = flat(result.scene.primitives).find(n => n.type === 'path' && n.meta?.external);
   expect(edge?.type === 'path' && edge.commands.at(-1)).toEqual({ kind: 'line', to: [218, 118] });
@@ -258,7 +258,7 @@ it('父分配保留自然节点尺寸，过小约束失败', () => {
           },
         ],
       },
-      { composites: [TreeDefinition, harness] },
+      { composites: [treeDefinition, harness] },
     );
     return measured?.allocationBounds;
   };
@@ -293,7 +293,7 @@ it('非均匀子树不重叠，同层中心对齐且兄弟顺序稳定', () => {
           },
         ],
       },
-      { composites: [TreeDefinition] },
+      { composites: [treeDefinition] },
     );
     const edge = flat(result.scene.primitives).find(n => n.type === 'path' && n.meta?.centers);
     if (edge?.type !== 'path') throw new Error('Missing center evidence');
@@ -328,7 +328,7 @@ it('根容器引用和整体标签保留', () => {
         },
       ],
     },
-    { composites: [TreeDefinition] },
+    { composites: [treeDefinition] },
   );
   expect(flat(result.scene.primitives).some(n => n.type === 'text')).toBe(true);
   expect(flat(result.scene.primitives).some(n => n.meta?.container)).toBe(true);
@@ -357,7 +357,7 @@ it('继承节点旋转时直线仍与真实形状边界相接', () => {
         },
       ],
     },
-    { composites: [TreeDefinition] },
+    { composites: [treeDefinition] },
   );
   const paths = flat(result.scene.primitives).filter(n => n.type === 'path');
   const actual = paths.find(n => n.meta?.edge)?.commands;
@@ -390,7 +390,7 @@ it.each(['down', 'up', 'right', 'left'] as const)('%s 父节点居于直属子�
         })),
       ],
     },
-    { composites: [TreeDefinition] },
+    { composites: [treeDefinition] },
   );
   const coordinate = (id: string) => {
     const path = flat(result.scene.primitives).find(node => node.type === 'path' && node.meta?.center === id);

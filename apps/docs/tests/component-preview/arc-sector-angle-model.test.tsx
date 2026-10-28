@@ -10,8 +10,8 @@ const attributeNumber = (markup: string, name: string) => {
   return Number(value);
 };
 
-describe('Arc / Sector angle model figure', () => {
-  it('keeps the sweepAngle label clear of the orange arc', () => {
+describe('圆弧/扇形角模型图', () => {
+  it('使 sweepAngle 标签远离橙色弧线', () => {
     (globalThis as typeof globalThis & { React: typeof React }).React = React;
     const markup = renderToStaticMarkup(<ArcSectorAngleModel />);
     const labelGroup = Array.from(markup.matchAll(/<g>(.*?)<\/g>/g), match => match[1]).find(group =>

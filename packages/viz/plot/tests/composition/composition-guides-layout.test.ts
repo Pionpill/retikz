@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { AxisGridApplyTo, PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -167,12 +167,12 @@ const lanesSpec = {
 };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
-  return lowerPlot(spec, datasets, {
+  return lowerPlotWithDataArtifact(spec, datasets, {
     layout: { width: 480, height: 300 },
     textMeasurer: measureLabel,
 
     provenance: true,
-  }) as IRScope;
+  }).child as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
@@ -216,14 +216,14 @@ const nodeYSpanOf = (scope: IRScope): number => {
   return Math.max(...ys) - Math.min(...ys);
 };
 
-describe('composition guides layout schema', () => {
-  it('layout_and_guide_policy_round_trip', () => {
+describe('组合引导布局 schema', () => {
+  it('布局引导政策往返', () => {
     const parsed = parsePlotIR(JSON.parse(JSON.stringify(facetSpec)));
 
     expect(parsed).toEqual(facetSpec);
   });
 
-  it('axis_grid_targeting_round_trip', () => {
+  it('轴网格定位往返', () => {
     const spec = {
       ...lanesSpec,
       guides: [
@@ -243,7 +243,7 @@ describe('composition guides layout schema', () => {
     expect(parsed.guides?.[0]).toEqual(spec.guides[0]);
   });
 
-  it('selected_grid_without_selector_is_rejected', () => {
+  it('没有选择器的选定网格被拒绝', () => {
     expect(() =>
       parsePlotIR({
         ...lanesSpec,
@@ -252,7 +252,7 @@ describe('composition guides layout schema', () => {
     ).toThrow(/select/i);
   });
 
-  it('negative_gap_rejected', () => {
+  it('负间隙被拒绝', () => {
     const spec = {
       ...facetSpec,
       composition: {
@@ -264,7 +264,7 @@ describe('composition guides layout schema', () => {
     expect(() => parsePlotIR(spec)).toThrow();
   });
 
-  it('zero_gaps_are_valid', () => {
+  it('零间隙有效', () => {
     const spec = {
       ...facetSpec,
       composition: {
@@ -282,15 +282,15 @@ describe('composition guides layout schema', () => {
   });
 });
 
-describe('composition guides layout lowering', () => {
-  it('facet_outer_shared_axes_keeps_only_outer_shared_axis', () => {
+describe('构图引导布局下沉', () => {
+  it('小平面外共享轴仅保留外共享轴', () => {
     const outer = expandOf(parsePlotIR(facetSpec), { sales: salesRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
 
     expect(yAxes).toHaveLength(1);
   });
 
-  it('outer_shared_x_axis_does_not_shrink_last_row_facet_data_viewport', () => {
+  it('外部共享 x 轴不收缩最后一行构面数据视口', () => {
     const rows = ['a', 'b', 'c'].flatMap(row => [
       { row, month: 0, revenue: 0 },
       { row, month: 1, revenue: 100 },
@@ -327,7 +327,7 @@ describe('composition guides layout lowering', () => {
     expect(spans[2]).toBeCloseTo(spans[0], 6);
   });
 
-  it('independent_scale_facet_keeps_per_panel_axis_under_outer_shared_policy', () => {
+  it('独立的缩放面将每个面板轴保持在外部共享策略下', () => {
     const spec = {
       ...facetSpec,
       composition: {
@@ -349,7 +349,7 @@ describe('composition guides layout lowering', () => {
     expect(yAxes).toHaveLength(2);
   });
 
-  it('panel_gap_changes_panel_translation_without_changing_panel_order', () => {
+  it('面板间距改变平移量但不改变面板顺序', () => {
     const outer = expandOf(parsePlotIR(facetSpec), { sales: salesRows });
     const panels = panelScopesOf(outer);
 
@@ -357,7 +357,7 @@ describe('composition guides layout lowering', () => {
     expect(panels[1].transforms).toEqual([{ kind: 'translate', x: 252, y: 0 }]);
   });
 
-  it('overlay_same_side_axis_gap_offsets_axes', () => {
+  it('叠加同侧轴间隙偏移轴', () => {
     const outer = expandOf(parsePlotIR(overlaySpec), { weather: weatherRows });
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
 
@@ -365,7 +365,7 @@ describe('composition guides layout lowering', () => {
     expect(firstMoveX(yAxes[0]) - firstMoveX(yAxes[1])).toBeCloseTo(12, 6);
   });
 
-  it('axis_title_outputs_label_without_changing_long_title_layout', () => {
+  it('坐标轴标题生成标签但不改变长标题布局', () => {
     const longTitle = 'Revenue '.repeat(20);
     const spec = {
       ...overlaySpec,
@@ -385,7 +385,7 @@ describe('composition guides layout lowering', () => {
     expect(allNodes(axis).some(node => node.text === longTitle)).toBe(true);
   });
 
-  it('facet_policy_omitted_uses_outer_shared_axes', () => {
+  it('省略的方面策略使用外部共享轴', () => {
     const spec = {
       ...facetSpec,
       composition: {
@@ -399,7 +399,7 @@ describe('composition guides layout lowering', () => {
     expect(yAxes).toHaveLength(1);
   });
 
-  it('grid_false_overrides_shared_role_default', () => {
+  it('网格 false 覆盖共享角色默认值', () => {
     const spec = {
       ...facetSpec,
       guides: facetSpec.guides.map(guide => ({ ...guide, grid: false })),
@@ -409,7 +409,7 @@ describe('composition guides layout lowering', () => {
     expect(gridLayersOf(outer)).toHaveLength(0);
   });
 
-  it('theme_default_grid_enters_facet_policy_before_dimension_override', () => {
+  it('主题默认网格在维度覆盖之前输入构面策略', () => {
     const spec = {
       ...facetSpec,
       guides: facetSpec.guides.map(guide => ({ ...guide, grid: undefined })),
@@ -430,7 +430,7 @@ describe('composition guides layout lowering', () => {
     expect(panels.flatMap(gridLayersOf).every(layer => firstPathOf(layer).style?.stroke === '#ffffff')).toBe(true);
   });
 
-  it('facet_outer_shared_axes_can_keep_per_panel_grids', () => {
+  it('小平面外共享轴可以保留每个面板网格', () => {
     const spec = {
       ...facetSpec,
       composition: {
@@ -446,7 +446,7 @@ describe('composition guides layout lowering', () => {
     expect(panels.map(panel => gridLayersOf(panel).length)).toEqual([2, 2]);
   });
 
-  it('facet_local_guides_use_panel_local_ids', () => {
+  it('方面本地参考线使用面板本地 ID', () => {
     const spec = {
       ...facetSpec,
       composition: {
@@ -471,7 +471,7 @@ describe('composition guides layout lowering', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('facet_local_resolve_overrides_composition_grid_default', () => {
+  it('构面本地解析覆盖合成网格默认值', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -510,7 +510,7 @@ describe('composition guides layout lowering', () => {
     expect(panels.map(panel => gridLayersOf(panel).length)).toEqual([1, 1]);
   });
 
-  it('facet_axis_none_suppresses_matching_axis_role', () => {
+  it('小平面轴无抑制匹配轴角色', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -551,7 +551,7 @@ describe('composition guides layout lowering', () => {
     expect(axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'x').length).toBeGreaterThan(0);
   });
 
-  it('facet_selected_grid_targets_only_matching_panels', () => {
+  it('选择网格的构面仅针对匹配的面板', () => {
     const spec = {
       ...facetSpec,
       composition: {
@@ -589,7 +589,7 @@ describe('composition guides layout lowering', () => {
     ]);
   });
 
-  it('track_gap_opens_space_between_adjacent_track_bands', () => {
+  it('轨道间隙打开相邻轨道带之间的空间', () => {
     const noGapSpec = {
       ...lanesSpec,
       composition: {
@@ -609,7 +609,7 @@ describe('composition guides layout lowering', () => {
     expect(withGapDistance).toBeGreaterThan(withoutGapDistance);
   });
 
-  it('track_local_spacing_opens_space_between_adjacent_track_bands', () => {
+  it('轨道局部间距打开相邻轨道带之间的空间', () => {
     const directLanesSpec = {
       namespace: 'plot',
       type: 'plot',
@@ -675,14 +675,14 @@ describe('composition guides layout lowering', () => {
     expect(withGapDistance).toBeGreaterThan(withoutGapDistance);
   });
 
-  it('scaffold_shared_grid_keeps_one_grid_per_dimension', () => {
+  it('基础结构共享网格为每个维度保留一个网格', () => {
     const outer = expandOf(parsePlotIR(lanesSpec), { lanes: laneRows });
     const trackGridScopes = gridLayersOf(outer).map(layer => layer.meta?.track);
 
     expect(trackGridScopes).toEqual(['events', 'volume']);
   });
 
-  it('scaffold_policy_omitted_projects_grid_to_shared_tracks', () => {
+  it('省略基础结构策略时将网格投影到共享轨道', () => {
     const spec = {
       ...lanesSpec,
       composition: {
@@ -696,7 +696,7 @@ describe('composition guides layout lowering', () => {
     expect(trackGridScopes).toEqual(['events', 'volume']);
   });
 
-  it('selected_track_grid_targets_only_named_track', () => {
+  it('所选轨道网格目标仅命名轨道', () => {
     const spec = {
       ...lanesSpec,
       guides: [
@@ -716,7 +716,7 @@ describe('composition guides layout lowering', () => {
     expect(gridLayersOf(outer).map(layer => layer.meta?.track)).toEqual(['volume']);
   });
 
-  it('grid_selector_matches_no_target_rejected', () => {
+  it('网格选择器匹配没有目标被拒绝', () => {
     const spec = {
       ...lanesSpec,
       guides: [

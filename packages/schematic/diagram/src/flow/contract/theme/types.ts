@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 
 import type { IRFlowDefaults } from '../../schemas';
 
@@ -7,5 +7,5 @@ export type FlowThemeDefinition = Readonly<{
   /** 在 Flow 主题样式注册表中唯一的名称 */
   name: string;
   /** 根据有效 Core 主题生成 Flow 稀疏默认片段 */
-  resolve: (theme: ResolvedTheme) => IRFlowDefaults;
+  resolve: (theme: CanonicalTheme) => IRFlowDefaults;
 }>;

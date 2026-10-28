@@ -92,14 +92,14 @@ import * as DiagramIR from '@retikz/diagram/flow';
 import {
   CircleClipSchema,
   CompoundClipSchema,
-  ContourShapeDefinition,
-  CrossShapeDefinition,
-  CylinderShapeDefinition,
+  contourShapeDefinition,
+  crossShapeDefinition,
+  cylinderShapeDefinition,
   EllipseClipSchema,
   PathClipSchema,
   PolygonClipSchema,
-  HexagonShapeDefinition,
-  ParallelogramShapeDefinition,
+  hexagonShapeDefinition,
+  parallelogramShapeDefinition,
   FixedRibbonWidthSchema,
   TaperRibbonWidthSchema,
   RibbonWidthSchema,
@@ -115,9 +115,9 @@ import {
   RibbonPathSchema,
   ProfileRibbonWidthSchema,
   StopsRibbonWidthSchema,
-  SectorShapeDefinition,
-  StarShapeDefinition,
-  TrapezoidShapeDefinition,
+  sectorShapeDefinition,
+  starShapeDefinition,
+  trapezoidShapeDefinition,
 } from '@retikz/extension';
 import {
   JsonObjectSchema,
@@ -868,42 +868,42 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/library/extension/ribbon/reference#ribbonadaptivesamplingschema',
   },
   CrossShapeParamsSchema: {
-    schema: CrossShapeDefinition.paramsSchema,
+    schema: crossShapeDefinition.paramsSchema,
     label: 'CrossShapeParamsSchema',
     url: '/library/extension/shape',
   },
   TrapezoidShapeParamsSchema: {
-    schema: TrapezoidShapeDefinition.paramsSchema,
+    schema: trapezoidShapeDefinition.paramsSchema,
     label: 'TrapezoidShapeParamsSchema',
     url: '/library/extension/shape',
   },
   ParallelogramShapeParamsSchema: {
-    schema: ParallelogramShapeDefinition.paramsSchema,
+    schema: parallelogramShapeDefinition.paramsSchema,
     label: 'ParallelogramShapeParamsSchema',
     url: '/library/extension/shape',
   },
   HexagonShapeParamsSchema: {
-    schema: HexagonShapeDefinition.paramsSchema,
+    schema: hexagonShapeDefinition.paramsSchema,
     label: 'HexagonShapeParamsSchema',
     url: '/library/extension/shape',
   },
   EllipticCapShapeParamsSchema: {
-    schema: CylinderShapeDefinition.paramsSchema,
+    schema: cylinderShapeDefinition.paramsSchema,
     label: 'EllipticCapShapeParamsSchema',
     url: '/library/extension/shape',
   },
   SectorShapeParamsSchema: {
-    schema: SectorShapeDefinition.paramsSchema,
+    schema: sectorShapeDefinition.paramsSchema,
     label: 'SectorShapeParamsSchema',
     url: '/library/extension/shape',
   },
   StarShapeParamsSchema: {
-    schema: StarShapeDefinition.paramsSchema,
+    schema: starShapeDefinition.paramsSchema,
     label: 'StarShapeParamsSchema',
     url: '/library/extension/shape',
   },
   ContourShapeParamsSchema: {
-    schema: ContourShapeDefinition.paramsSchema,
+    schema: contourShapeDefinition.paramsSchema,
     label: 'ContourShapeParamsSchema',
     url: '/library/extension/shape',
   },
@@ -1301,7 +1301,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   GridLineInputSchema: {
     schema: StandardPresentationIR.GridLineInputSchema,
-    label: 'GridLineInput',
+    label: 'InputGridLine',
     url: '/library/standard/presentation/grid#gridlineinput--gridlineinputschema',
     localizations: { zh: GridLineSchemaZhLocalization },
   },
@@ -1676,7 +1676,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   TableCellLayoutSchema: {
     schema: IRTable.TableCellLayoutSchema,
-    label: 'TableCellLayout',
+    label: 'CompiledTableCellLayout',
     url: '/viz/table/reference/contract-layout#tablecelllayoutschema',
   },
   TableCellFitSchema: {
@@ -1691,7 +1691,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   TableLayoutSchema: {
     schema: IRTable.TableLayoutSchema,
-    label: 'TableLayout',
+    label: 'CompiledTableLayout',
     url: '/viz/table/reference/contract-layout#tablelayoutschema',
   },
   TableFixedTrackSizeSchema: {
@@ -1774,9 +1774,9 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TableCellManifestEntry',
     url: '/viz/table/reference/manifest#tablecellmanifestentryschema',
   },
-  ResolvedTableBorderLineSchema: {
-    schema: IRTable.ResolvedTableBorderLineSchema,
-    label: 'ResolvedTableBorderLine',
+  TableBorderLineSchema: {
+    schema: IRTable.TableBorderLineSchema,
+    label: 'TableBorderLine',
     url: '/viz/table/reference/manifest#resolvedtableborderlineschema',
   },
   TableBorderSourceSchema: {
@@ -2380,41 +2380,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IRPlot.IntervalBoundsSchema,
     label: 'IntervalBounds',
     url: '/viz/plot/reference/mark#intervalboundsschema',
-  },
-  RelationMarkSchema: {
-    schema: IRPlot.RelationMarkSchema,
-    label: 'RelationMark',
-    url: '/viz/plot/reference/mark#relationmarkschema',
-  },
-  RelationPrimitiveStyleSchema: {
-    schema: IRPlot.RelationPrimitiveStyleSchema,
-    label: 'RelationPrimitiveStyle',
-    url: '/viz/plot/reference/mark#relationprimitivestyleschema',
-  },
-  RelationPathGeometrySchema: {
-    schema: IRPlot.RelationPathGeometrySchema,
-    label: 'RelationPathGeometry',
-    url: '/viz/plot/reference/mark#relationpathgeometryschema',
-  },
-  RelationRibbonOptionsSchema: {
-    schema: IRPlot.RelationRibbonOptionsSchema,
-    label: 'RelationRibbonOptions',
-    url: '/viz/plot/reference/mark#relationribbonoptionsschema',
-  },
-  RelationRouteStepSchema: {
-    schema: IRPlot.RelationRouteStepSchema,
-    label: 'RelationRouteStep',
-    url: '/viz/plot/reference/mark#relationroutestepschema',
-  },
-  PlotTargetRefSchema: {
-    schema: IRPlot.PlotTargetRefSchema,
-    label: 'PlotTargetRef',
-    url: '/viz/plot/reference/mark#plottargetrefschema',
-  },
-  RelationRoutingSchema: {
-    schema: IRPlot.RelationRoutingSchema,
-    label: 'RelationRouting',
-    url: '/viz/plot/reference/mark#relationroutingschema',
   },
   PathClosureSchema: {
     schema: IRPlot.PathClosureSchema,

@@ -2,7 +2,7 @@ import type { IRChild } from '@retikz/core';
 import { ChildSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { OverlayLayoutInput, OverlayLayoutItemInput, OverlayPlacementInput } from '../../src';
+import type { InputOverlayLayoutConfig, InputOverlayLayoutItemConfig, InputOverlayPlacement } from '../../src';
 import {
   createOverlayLayout,
   LayoutAlignment,
@@ -19,10 +19,10 @@ const child: IRChild = { type: 'node', position: [0, 0], text: 'Overlay' };
 const parseOverlayLayout = (input: Record<string, unknown>) =>
   OverlayLayoutSchema.parse({ namespace: 'layout', type: 'overlayLayout', ...input });
 
-describe('OverlayLayout schema and factory', () => {
-  it('creates canonical JSON IR from author input defaults', () => {
-    const item = { kind: LayoutItemKind.Overlay, key: 'plot', child } satisfies OverlayLayoutItemInput;
-    const input = { children: [item] } satisfies OverlayLayoutInput;
+describe('OverlayLayout schema 和工厂', () => {
+  it('根据作者输入默认值创建规范的 JSON IR', () => {
+    const item = { kind: LayoutItemKind.Overlay, key: 'plot', child } satisfies InputOverlayLayoutItemConfig;
+    const input = { children: [item] } satisfies InputOverlayLayoutConfig;
     const source = createOverlayLayout(input);
 
     expect(source).toEqual({ namespace: 'layout', type: 'overlayLayout', ...input });
@@ -55,12 +55,12 @@ describe('OverlayLayout schema and factory', () => {
     expect(ChildSchema.safeParse(parsed.children[0]?.child).success).toBe(true);
   });
 
-  it('keeps placement and item inputs aligned with parsed schema outputs', () => {
+  it('使放置和项目输入与解析的 schema 输出保持一致', () => {
     const placement = {
       kind: OverlayPlacementKind.Positioned,
       at: { x: 10, y: -5 },
       width: 20,
-    } satisfies OverlayPlacementInput;
+    } satisfies InputOverlayPlacement;
 
     expect(
       parseOverlayLayout({
@@ -74,14 +74,14 @@ describe('OverlayLayout schema and factory', () => {
     });
   });
 
-  it('keeps an omitted item key out of Source IR', () => {
+  it('将省略的项目键保留在 Source IR 之外', () => {
     const parsed = parseOverlayLayout({ children: [{ kind: LayoutItemKind.Overlay, child }] });
 
     expect(parsed.children[0]).not.toHaveProperty('key');
   });
 
-  it('rejects unknown fields at layout, item, placement and nested point paths', () => {
-    const base = { children: [{ kind: 'overlay', key: 'badge', child }] } satisfies OverlayLayoutInput;
+  it('拒绝布局、项目、放置和嵌套点路径中的未知字段', () => {
+    const base = { children: [{ kind: 'overlay', key: 'badge', child }] } satisfies InputOverlayLayoutConfig;
 
     expect(() =>
       OverlayLayoutSchema.parse({ namespace: 'layout', type: 'overlayLayout', ...base, extra: true }),
@@ -121,7 +121,7 @@ describe('OverlayLayout schema and factory', () => {
     ).toThrow();
   });
 
-  it('rejects invalid anchor, size, offset, zIndex, duplicate keys and item kind', () => {
+  it('拒绝无效的锚点、大小、偏移量、zIndex、重复的键和项目种类', () => {
     const positioned = (overrides: Record<string, unknown>) => ({
       kind: 'positioned',
       at: { x: 0, y: 0 },
@@ -155,7 +155,7 @@ describe('OverlayLayout schema and factory', () => {
     expect(() => parseOverlayLayout({ children: [{ kind: 'grid', key: 'bad', child }] })).toThrow();
   });
 
-  it('rejects effective positioned baselines and aligned baseline y offsets', () => {
+  it('拒绝有效定位基线和对齐基线 y 偏移', () => {
     expect(() =>
       parseOverlayLayout({
         alignItems: LayoutAlignment.FirstBaseline,

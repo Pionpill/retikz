@@ -1,4 +1,4 @@
-import { KiteArrowDefinition, OpenKiteArrowDefinition } from '@retikz/extension';
+import { kiteArrowDefinition, openKiteArrowDefinition } from '@retikz/extension';
 import { Draw, Layout } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -14,7 +14,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Layout
       viewBox={{ x: -190, y: -55, width: 380, height: 110 }}
-      extensions={{ arrows: [KiteArrowDefinition, OpenKiteArrowDefinition] }}
+      extensions={{ arrows: [kiteArrowDefinition, openKiteArrowDefinition] }}
     >
       <Draw
         way={[

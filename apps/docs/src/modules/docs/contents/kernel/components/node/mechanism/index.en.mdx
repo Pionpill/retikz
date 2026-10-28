@@ -122,7 +122,7 @@ The diagram expands one Map and its entry for `a`. This node has completed layou
 
 <ComponentPreview files="namespace-storage" size="xl" type="illustration" hideCode />
 
-The Map key is the `id`; its value contains `layout` and `state`. `layout` is a resolved `NodeLayout`, containing the rectangle, shape definition, connection boundary, margins, and other layout results such as text. Nested Map components show the object hierarchy: `layout` is an object, and its `rect` field is an object too. `shapeName` holds the shape name. The diagram is illustrative; refer to the code for the exact data structures.
+The Map key is the `id`; its value contains `layout` and `state`. `layout` is a resolved `CompiledNodeLayout`, containing the rectangle, shape definition, connection boundary, margins, and other layout results such as text. Nested Map components show the object hierarchy: `layout` is an object, and its `rect` field is an object too. `shapeName` holds the shape name. The diagram is illustrative; refer to the code for the exact data structures.
 
 When traversal reaches a Node, compilation completes text and shape layout and positioning, then projects the layout into global coordinates. Only a named Node registers that result in the current Map with state `resolved`. Coordinate uses the same Map with a zero-width, zero-height geometry record. These maps are compilation runtime state, not data written back into persistent IR.
 
@@ -135,7 +135,7 @@ When traversal reaches a Node, compilation completes text and shape layout and p
       endLine: 83,
     },
     {
-      label: 'NodeLayout geometry fields',
+      label: 'CompiledNodeLayout geometry fields',
       path: 'packages/kernel/core/src/compile/node/types.ts',
       startLine: 74,
       endLine: 119,
@@ -462,7 +462,7 @@ The execution order is:
 1. Resolve `node.shape`; normalize `circle` / `diamond` presets to real provider names and params
 2. Look up the definition in one shape registry; built-ins and custom definitions do not fork into separate consumption paths
 3. Validate through the JSON-object guard and the definition's `paramsSchema`
-4. Call `computeCircumscribedHalfAxes` for Node layout, geometry hooks for connections and anchors, `computeConnectionEnvelope` for regular tight-fit surfaces, and `emit` for drawing
+4. Call `computeCircumscribedGeometry` for Node layout, geometry hooks for connections and anchors, `computeConnectionEnvelope` for regular tight-fit surfaces, and `emit` for drawing
 
 <SourceLinks
   sources={[

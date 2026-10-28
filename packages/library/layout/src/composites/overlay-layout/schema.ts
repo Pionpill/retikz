@@ -75,10 +75,10 @@ const OverlayLayoutBaseSchema = LayoutContainerBoxSchema.extend({
   children: array(OverlayLayoutItemSchema).default([]).describe('Authored overlay items in stable identity order.'),
 });
 
-type OverlayLayoutRefinementInput = ZodInfer<typeof OverlayLayoutBaseSchema>;
+type InputOverlayLayoutRefinement = ZodInfer<typeof OverlayLayoutBaseSchema>;
 
 /** 校验 Overlay item identity 与 effective baseline 语义 */
-const refineOverlayLayout = (layout: OverlayLayoutRefinementInput, context: RefinementCtx): void => {
+const refineOverlayLayout = (layout: InputOverlayLayoutRefinement, context: RefinementCtx): void => {
   const seen = new Set<string>();
   layout.children.forEach((item, index) => {
     if (item.key !== undefined && seen.has(item.key)) {

@@ -2,17 +2,17 @@ import type { SceneResource } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { PaintDefs } from '../../../src/render/svg';
+import { renderPaintDefs } from './helpers';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
 const childrenOf = (resources: Array<SceneResource>): Array<AnyEl> => {
-  const frag = PaintDefs({ resources, idFor: id => `g-${id}` }) as AnyEl;
+  const frag = renderPaintDefs({ resources, idFor: id => `g-${id}` }) as AnyEl;
   return (frag.props.children as Array<AnyEl>).filter(Boolean);
 };
 
-describe('PaintDefs conicGradient', () => {
-  it('materializes a conic gradient as an objectBoundingBox pattern', () => {
+describe('renderPaintDefs 的 conicGradient 渲染', () => {
+  it('将圆锥曲线具体化为 objectBoundingBox 图案', () => {
     const [pattern] = childrenOf([
       {
         kind: 'paint',

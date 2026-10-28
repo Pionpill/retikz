@@ -3,10 +3,10 @@ import { curve, DEFAULT_EPSILON } from '@retikz/math';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
-  EffectiveFlowLayout,
+  CanonicalFlowLayoutOptions,
   FlowBezierRoute,
   FlowBezierRouting,
-  FlowLayoutRelationInput,
+  InputFlowLayoutRelation,
   FlowLayoutRelationOutput,
   FlowLayoutRouting,
 } from '../../contract';
@@ -28,7 +28,7 @@ export const isFlowAutomaticRouting = (routing: FlowLayoutRouting): boolean =>
 
 /** 当前关系可见的其他标签，排除尚未求解的自动关系 */
 export const flowPriorLabelReservations = (
-  relations: ReadonlyArray<FlowLayoutRelationInput>,
+  relations: ReadonlyArray<InputFlowLayoutRelation>,
   outputs: ReadonlyArray<Omit<FlowLayoutRelationOutput, 'source' | 'target'>>,
   index: number,
 ): Array<Readonly<{ id: string; bounds: Readonly<BoundsRect> }>> =>
@@ -41,7 +41,7 @@ export const flowPriorLabelReservations = (
   );
 
 /** 将不可构造的自动路线定位到作者关系 */
-const unavailable = (relation: FlowLayoutRelationInput, relationIndex: number): never => {
+const unavailable = (relation: InputFlowLayoutRelation, relationIndex: number): never => {
   throw new RetikzDiagramError({
     code: RetikzDiagramErrorCode.FlowBezierRouteUnavailable,
     message: 'Flow Bezier route requires distinct finite endpoint centers and finite controls.',
@@ -53,7 +53,7 @@ const unavailable = (relation: FlowLayoutRelationInput, relationIndex: number): 
 export const createFlowBezierBaseline = (
   routing: FlowBezierRouting,
   points: FlowBezierRoute['points'],
-  relation: FlowLayoutRelationInput,
+  relation: InputFlowLayoutRelation,
   relationIndex: number,
 ): FlowBezierRoute => {
   const [from, to] = points;
@@ -78,7 +78,7 @@ export const createFlowBezierBaseline = (
 /** 贝塞尔节点与标签冲突；障碍盒用于下一轮候选，不持久化 */
 export const evaluateFlowBezierConflicts = (
   route: FlowBezierRoute,
-  relation: FlowLayoutRelationInput,
+  relation: InputFlowLayoutRelation,
   obstacles: ReturnType<typeof flowRelationObstacles>,
   labels: ReturnType<typeof flowPriorLabelReservations>,
 ) => {
@@ -130,8 +130,8 @@ export const evaluateFlowBezierConflicts = (
 /** 固定两轮目标反求，完整比较本轮后才允许早停 */
 export const selectFlowBezierRoute = (
   initial: FlowBezierRoute,
-  relation: FlowLayoutRelationInput,
-  layout: EffectiveFlowLayout,
+  relation: InputFlowLayoutRelation,
+  layout: CanonicalFlowLayoutOptions,
   obstacles: ReturnType<typeof flowRelationObstacles>,
   labels: ReturnType<typeof flowPriorLabelReservations>,
 ): Omit<FlowLayoutRelationOutput, 'source' | 'target'> => {

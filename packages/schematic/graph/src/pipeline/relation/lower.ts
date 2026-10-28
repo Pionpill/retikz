@@ -1,6 +1,6 @@
 import type { IRArrowStyle, IRPathBase, IRPathStyle } from '@retikz/core';
 
-import type { CanonicalRelation, EffectiveRelationAppearance, EffectiveRelationStructure } from '../../resolve';
+import type { CanonicalRelation, MergedRelationAppearance, MergedRelationStructure } from '../../resolve';
 import type { IRGraphRelation, IRGraphRelationMarkerAppearance, IRGraphRelationMarkerRecipe } from '../../schemas';
 
 const marker = (
@@ -36,13 +36,13 @@ const definedPathFields = (source: IRGraphRelation): Partial<IRPathBase> =>
   Object.fromEntries(Object.entries(source).filter(isDefinedPathField));
 
 /** 从有效 Relation appearance 中投影 Core Path appearance */
-const pathAppearanceOf = (appearance: EffectiveRelationAppearance): IRPathStyle => appearance.style ?? {};
+const pathAppearanceOf = (appearance: MergedRelationAppearance): IRPathStyle => appearance.style ?? {};
 
 /** 把 Canonical Relation、确定 structure / appearance 与唯一 route 下沉为一个 Core Path */
 export const lowerRelation = (
   relation: CanonicalRelation,
-  structure: EffectiveRelationStructure,
-  appearance: EffectiveRelationAppearance,
+  structure: MergedRelationStructure,
+  appearance: MergedRelationAppearance,
 ): IRPathBase => {
   const source = relation.source;
   const route =

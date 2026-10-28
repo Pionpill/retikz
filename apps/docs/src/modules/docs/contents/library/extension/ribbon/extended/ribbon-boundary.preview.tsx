@@ -1,9 +1,9 @@
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { Layout, Path } from '@retikz/react';
 
 /** 只改变下边界位置与采样，保持上边界和取景固定 */
 export const renderRibbonBoundaryPreview = (values: { lowerOffset: number }) => (
-  <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ paths: [RibbonPathDefinition] }}>
+  <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ paths: [ribbonPathDefinition] }}>
     <Path
       kind="ribbon"
       kindOptions={{

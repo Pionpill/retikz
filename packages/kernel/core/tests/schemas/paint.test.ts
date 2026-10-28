@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { NodeSchema, PaintSchema, PathSchema, ScopeSchema } from '../../src/schemas';
 
-describe('PaintSchema — linear gradient', () => {
+describe('PaintSchema — 线性渐变', () => {
   it('接受 2 stops + angle', () => {
     const spec = {
       kind: 'linearGradient' as const,
@@ -41,7 +41,7 @@ describe('PaintSchema — linear gradient', () => {
   });
 });
 
-describe('PaintSchema — radial gradient', () => {
+describe('PaintSchema — 径向渐变', () => {
   it('接受 2 stops（center / radius 可省）', () => {
     expect(() =>
       PaintSchema.parse({
@@ -133,7 +133,7 @@ describe('PaintSchema — 错误路径', () => {
   });
 });
 
-describe('PaintSchema — pattern', () => {
+describe('PaintSchema — 图案', () => {
   it('接受 lines / dots / grid（仅 shape 必填）', () => {
     for (const shape of ['lines', 'dots', 'grid'] as const) {
       expect(() => PaintSchema.parse({ kind: 'pattern', shape })).not.toThrow();
@@ -301,7 +301,7 @@ describe('PaintSchema — pattern', () => {
   });
 });
 
-describe('PaintSchema — image', () => {
+describe('PaintSchema — 图像', () => {
   it('接受 href + 可选 fit', () => {
     expect(() => PaintSchema.parse({ kind: 'image', href: 'https://x/y.png' })).not.toThrow();
 
@@ -333,7 +333,7 @@ describe('PaintSchema — JSON 可序列化', () => {
   });
 });
 
-describe('stroke IRPaint schema', () => {
+describe('描边 IRPaint schema', () => {
   const strokePaint = {
     kind: 'linearGradient',
     angle: 90,

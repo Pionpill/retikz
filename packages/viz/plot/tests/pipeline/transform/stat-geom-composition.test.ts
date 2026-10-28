@@ -1,26 +1,26 @@
 import type { IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options?: LowerPlotsOptions,
+  options?: PlotsLoweringOptions,
 ): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const layerOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, index: number): IRScope =>
   expandOf(spec, datasets, opts).children[index] as IRScope;
 
-describe('stat-geom composition surface (contract)', () => {
+describe('统计几何组合表面（契约）', () => {
   const boxRows = [
     { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 1 },
     { group: 'A', boxX: 1, boxX0: 0.74, boxX1: 1.26, value: 2 },
@@ -71,7 +71,7 @@ describe('stat-geom composition surface (contract)', () => {
     },
   } as const;
 
-  it('boxplot composition uses interval, relation, and point layers without a boxplot mark type', () => {
+  it('boxplot composition uses interval, path, and point layers without a boxplot mark type', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -95,22 +95,22 @@ describe('stat-geom composition surface (contract)', () => {
           properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } }, opacity: { fill: 0.28 } },
         },
         {
-          type: 'relation',
+          type: 'path',
           transforms: [{ operation: boxSummary }],
           encodings: {
-            source: { position: { x: { field: 'boxX0' }, y: { field: 'median' } } },
-            target: { position: { x: { field: 'boxX1' }, y: { field: 'median' } } },
+            from: { x: { field: 'boxX0' }, y: { field: 'median' } },
+            to: { x: { field: 'boxX1' }, y: { field: 'median' } },
           },
-          properties: { geometry: { kind: 'path' } },
+          properties: {},
         },
         {
-          type: 'relation',
+          type: 'path',
           transforms: [{ operation: boxSummary }],
           encodings: {
-            source: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMin' } } },
-            target: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMax' } } },
+            from: { x: { field: 'boxX' }, y: { field: 'whiskerMin' } },
+            to: { x: { field: 'boxX' }, y: { field: 'whiskerMax' } },
           },
-          properties: { geometry: { kind: 'path' } },
+          properties: {},
         },
         {
           type: 'point',
@@ -132,7 +132,7 @@ describe('stat-geom composition surface (contract)', () => {
     expect(JSON.stringify(spec)).not.toMatch(/boxplot|densityMark|regression/i);
   });
 
-  it('raw and derived stat layers can coexist without named data views', () => {
+  it('原始统计层和派生统计层可以共存，无需命名数据视图', () => {
     const samples = [
       { group: 'A', time: 0, value: 1 },
       { group: 'A', time: 1, value: 3 },

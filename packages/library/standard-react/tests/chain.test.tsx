@@ -1,5 +1,5 @@
 import { createInputScene } from '@retikz/react';
-import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { chain, chainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
@@ -35,10 +35,10 @@ it('JSX 与 Vanilla 的嵌套分支和空单元等价', () => {
   const options = { adapters: synchronousAdapters(jsx.adapters) };
 
   expect(normalizeScene(jsx.scene, options).ir).toEqual(
-    normalizeScene(vanilla, { adapters: [ChainInputEmbedAdapter] }).ir,
+    normalizeScene(vanilla, { adapters: [chainInputEmbedAdapter] }).ir,
   );
   expect(renderToSvgString(jsx.scene, options)).toEqual(
-    renderToSvgString(vanilla, { adapters: [ChainInputEmbedAdapter] }),
+    renderToSvgString(vanilla, { adapters: [chainInputEmbedAdapter] }),
   );
 });
 it('任意图形与骨架依赖自动闭合', () => {

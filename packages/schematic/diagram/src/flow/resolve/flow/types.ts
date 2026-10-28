@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import type { GraphDefinitionOptions, IRGraphEntity, IRGraphRelation, IRGroup } from '@retikz/graph';
 
 import type { FlowLayoutEndpoint } from '../../contract';
@@ -22,7 +22,7 @@ export type FlowSourcePath = ReadonlyArray<string | number>;
 /** 解析一个 Flow Source 所需的 Theme 与开放 definitions */
 export type FlowResolveContext = Readonly<{
   /** 当前宿主已经解析的 Core 主题 */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** 可供当前 Flow 选择的主题样式定义 */
   flowThemeDefinitions: ReadonlyMap<string, FlowThemeDefinition>;
   /** 解析 Graph 语义投影所使用的扩展定义 */

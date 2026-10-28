@@ -21,8 +21,8 @@ const scaleOf = (
   setRange: () => {},
 });
 
-describe('resolveGuideTicks interval and density', () => {
-  it('number_interval_generates_fixed_step_ticks', () => {
+describe('resolveGuideTicks 间隔和密度', () => {
+  it('数字间隔生成固定步长刻度', () => {
     const scale = scaleOf('number', [0, 50], [0, 25, 50]);
     const ticks = resolveGuideTicks(scale, { interval: { kind: 'number', step: 10 } });
 
@@ -30,7 +30,7 @@ describe('resolveGuideTicks interval and density', () => {
     expect(ticks.labels).toEqual(['0', '10', '20', '30', '40', '50']);
   });
 
-  it('time_interval_generates_utc_unit_ticks', () => {
+  it('时间间隔生成 utc 单位刻度', () => {
     const start = Date.UTC(2026, 0, 1);
     const end = Date.UTC(2026, 3, 1);
     const scale = scaleOf('time', [start, end], [start, end]);
@@ -45,7 +45,7 @@ describe('resolveGuideTicks interval and density', () => {
     expect(ticks.labels).toEqual(['2026-01', '2026-02', '2026-03', '2026-04']);
   });
 
-  it('category_interval_samples_domain_categories', () => {
+  it('类别间隔从定义域类别中采样', () => {
     const scale = scaleOf('category', ['A', 'B', 'C', 'D', 'E'], ['A', 'B', 'C', 'D', 'E']);
     const ticks = resolveGuideTicks(scale, { interval: { kind: 'category', step: 2, offset: 1 } });
 
@@ -53,7 +53,7 @@ describe('resolveGuideTicks interval and density', () => {
     expect(ticks.labels).toEqual(['B', 'D']);
   });
 
-  it('tick_source_priority_prefers_values_then_interval_then_count', () => {
+  it('刻度源优先级优先于值，然后是间隔，然后是计数', () => {
     const scale = scaleOf('number', [0, 100], [0, 50, 100]);
 
     expect(
@@ -64,7 +64,7 @@ describe('resolveGuideTicks interval and density', () => {
     ]);
   });
 
-  it('density_max_count_and_min_gap_sample_visible_ticks', () => {
+  it('按密度的最大数量和最小间距采样可见刻度', () => {
     const ticks = { values: [0, 5, 10, 15, 20, 25], labels: ['0', '5', '10', '15', '20', '25'] };
 
     expect(resolveVisibleGuideTicks(ticks, { density: { kind: 'sample', maxCount: 3 } }, Number).values).toHaveLength(
@@ -75,7 +75,7 @@ describe('resolveGuideTicks interval and density', () => {
     ]);
   });
 
-  it('interval_kind_mismatch_fails_loud', () => {
+  it('间隔 kind 不匹配时明确报错', () => {
     const scale = scaleOf('number', [0, 10], [0, 10]);
 
     expect(() => resolveGuideTicks(scale, { interval: { kind: 'time', unit: 'day' } })).toThrow(
@@ -83,13 +83,13 @@ describe('resolveGuideTicks interval and density', () => {
     );
   });
 
-  it('interval_generation_has_a_candidate_limit', () => {
+  it('间隔生成具有候选数量上限', () => {
     const scale = scaleOf('number', [0, 20_000], [0, 20_000]);
 
     expect(() => resolveGuideTicks(scale, { interval: { kind: 'number', step: 1 } })).toThrow(/candidate ticks/);
   });
 
-  it('category_interval_generation_has_a_candidate_limit', () => {
+  it('类别区间生成有候选限制', () => {
     const domain = Array.from({ length: 10_001 }, (_unused, index) => `c${index}`);
     const scale = scaleOf('category', domain, domain);
 

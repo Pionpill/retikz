@@ -66,21 +66,10 @@ export const Node: FC<NodeProps> = () => null;
 Node.displayName = TIKZ_NODE;
 ```
 
-Sugar 组件也不新增 IR。例如 `<Draw>` 先用 Core 的 `parseWay` 解析 `way`，再返回标准 `<Path>` / `<Step>` Kernel JSX。下面只截取 line 分支；源码还覆盖 fold、curve、arc、cycle 等同一映射过程：
+Sugar 组件也不新增 IR。例如 `<Draw>` 将作者输入透传给 `<Path>`，由 Vanilla 的 `normalizePath` 调用 `parseWay`，把 `way` 展开为标准 Core Step。React 不重复实现路径语法解析。
 
 ```tsx
-const steps = parseWay(way);
-
-return (
-  <Path arrow={arrow}>
-    {steps.map((step, index) => {
-      if (step.kind === 'line') {
-        return <Step key={index} kind="line" to={step.to} label={step.label} />;
-      }
-      return null;
-    })}
-  </Path>
-);
+export const Draw: FC<DrawProps> = props => <Path {...props} />;
 ```
 
 `readSceneChildren` 同步遍历 children：识别 Kernel 标记、展开 Fragment，并直接调用函数式 Sugar 后继续递归。这个过程不经过 React DOM renderer，所以 Kernel / Sugar 必须是无 hook、无副作用的函数组件；`createInputScene()` 产出唯一的 `InputScene` 与收集到的 `InputEmbedAdapter`，再交给 Vanilla normalize。

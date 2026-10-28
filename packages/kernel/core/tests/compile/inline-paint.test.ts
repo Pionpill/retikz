@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { emitInlineLine, fallbackMeasurer, layoutInlineLine } from '../../src/compile/text';
 
-describe('inline layout and paint', () => {
+describe('内联布局和绘制', () => {
   it('同一布局可换色，保持公式显式色且不重新测量或降解', () => {
     const measureText = vi.fn(fallbackMeasurer);
     const lowerTex = vi.fn(() => ({

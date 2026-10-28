@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { BoundaryLabelSchema, NodeLabelSchema } from '../../src';
 
-describe('Boundary label shared schema', () => {
+describe('边界标签共享 schema', () => {
   it('标签引线保留零线宽、非负虚线长度和负相位偏移', () => {
     const label = {
       text: 'label',
@@ -16,7 +16,7 @@ describe('Boundary label shared schema', () => {
     expect(NodeLabelSchema.safeParse({ text: 'label', pin }).success).toBe(false);
   });
 
-  it('owns defaults without materializing them in Node source labels', () => {
+  it('拥有默认值，但没有在 Node 源标签中具体化它们', () => {
     expect(BoundaryLabelSchema.parse({ text: 'label' })).toMatchObject({
       rotate: 'none',
       keepUpright: false,
@@ -27,7 +27,7 @@ describe('Boundary label shared schema', () => {
     expect(NodeLabelSchema.parse({ text: 'label' })).toEqual({ text: 'label' });
   });
 
-  it('shares all rotation choices and preserves boundary-only restrictions', () => {
+  it('共享所有旋转选择并保留仅限边界的限制', () => {
     for (const rotate of ['none', 'radial', 'tangent', 30]) {
       expect(BoundaryLabelSchema.safeParse({ text: 'label', rotate }).success).toBe(true);
       expect(NodeLabelSchema.safeParse({ text: 'label', rotate }).success).toBe(true);

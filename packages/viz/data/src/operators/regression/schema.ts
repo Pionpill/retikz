@@ -26,7 +26,7 @@ export const RegressionMethodSchema = looseObject({
   .describe('Regression method with JSON parameters');
 
 /** 内置拟合 Definition 的精确参数真源 */
-export const BuiltinRegressionMethodSchemas = {
+export const BUILTIN_REGRESSION_METHOD_SCHEMAS = {
   Linear: strictObject({ kind: literal(BuiltinRegressionMethod.Linear) }),
   Quadratic: strictObject({ kind: literal(BuiltinRegressionMethod.Quadratic) }),
   Polynomial: strictObject({

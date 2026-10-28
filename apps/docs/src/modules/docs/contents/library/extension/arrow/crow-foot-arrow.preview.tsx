@@ -1,4 +1,4 @@
-import { CrowFootArrowDefinition } from '@retikz/extension';
+import { crowFootArrowDefinition } from '@retikz/extension';
 import { Draw, Layout } from '@retikz/react';
 
 /** 图形参数 */
@@ -11,7 +11,7 @@ export type CrowFootArrowPreviewValues = {
 
 /** 绘制示例图形 */
 export const renderCrowFootArrowPreview = (values: CrowFootArrowPreviewValues) => (
-  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} extensions={{ arrows: [CrowFootArrowDefinition] }}>
+  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} extensions={{ arrows: [crowFootArrowDefinition] }}>
     <Draw
       way={[
         [-120, 0],

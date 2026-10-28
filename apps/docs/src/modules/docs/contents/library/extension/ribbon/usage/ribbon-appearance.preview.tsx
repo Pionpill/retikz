@@ -1,5 +1,5 @@
 import type { IRPaint } from '@retikz/core';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { Layout, Path, Step } from '@retikz/react';
 
 /** 流带外观参数 */
@@ -36,7 +36,7 @@ export const renderRibbonAppearancePreview = (values: RibbonAppearancePreviewVal
   })();
 
   return (
-    <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ paths: [RibbonPathDefinition] }}>
+    <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ paths: [ribbonPathDefinition] }}>
       <Path
         kind="ribbon"
         kindOptions={{ width: { kind: 'taper', start: 16, end: 44, interpolation: 'smooth' } }}

@@ -4,15 +4,21 @@ import { defineConfig } from 'vitest/config';
 
 import { BenchmarkReporter } from '../../../scripts/benchmarks/reporter';
 
-const coreEntry = fileURLToPath(new URL('./dist/index.js', import.meta.url));
+// 当前原生构建入口有 schema 初始化错误；源码探索结果不可与原生 ESM 基线直接比较
+const coreEntry = fileURLToPath(new URL('./src/index.ts', import.meta.url));
 
 export default defineConfig({
-  resolve: { alias: [{ find: /^@retikz\/core$/, replacement: coreEntry }] },
+  resolve: {
+    alias: [{ find: /^@retikz\/core$/, replacement: coreEntry }],
+  },
   test: {
+    maxWorkers: 1,
+    fileParallelism: false,
     reporters: [
       'verbose',
       new BenchmarkReporter({
-        title: 'Core 编译性能测试报告',
+        title: 'Core Provider 单元性能测试报告（源码加载探索，非原生 ESM）',
+        artifact: 'vite-source',
         dimensionLabels: ['操作', '输入形态', '规模'],
         budgets: {},
         baselinePath: process.env.RETIKZ_CORE_BENCH_BASELINE,
@@ -24,7 +30,6 @@ export default defineConfig({
     environment: 'node',
     include: [],
     benchmark: { include: ['benchmarks/**/*.bench.ts'], retainSamples: true },
-    server: { deps: { external: [/\/core\/dist\/index\.js$/] } },
     pool: 'threads',
   },
 });

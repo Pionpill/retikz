@@ -36,47 +36,47 @@ const spec = (
   });
 
 describe('derivePositionScale — 按 DataFieldType 派生默认 scale', () => {
-  it('continuous_to_linear', () => {
+  it('连续到线性', () => {
     expect(derivePositionScale(DataFieldType.Continuous, 'x').type).toBe('linear');
   });
 
-  it('temporal_to_time', () => {
+  it('时间到时间', () => {
     expect(derivePositionScale(DataFieldType.Temporal, 'x').type).toBe('time');
   });
 
-  it('categorical_to_band', () => {
+  it('分类到频带', () => {
     expect(derivePositionScale(DataFieldType.Categorical, 'x').type).toBe('band');
   });
 
-  it('undefined_field_defaults_linear', () => {
+  it('undefined 的字段默认线性', () => {
     expect(derivePositionScale(undefined, 'x').type).toBe('linear');
   });
 });
 
 describe('assertScaleFieldCompatible — 类型↔scale 兼容', () => {
-  it('incompatible_categorical_linear_throws', () => {
+  it('不兼容的分类线性抛出', () => {
     expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Categorical, 'xs')).toThrow(/incompatible/i);
   });
 
-  it('incompatible_temporal_band_throws', () => {
+  it('不兼容的时间带抛出', () => {
     expect(() => assertScaleFieldCompatible('x', 'band', DataFieldType.Temporal, 'xs')).toThrow(/incompatible/i);
   });
 
-  it('continuous_band_allowed', () => {
+  it('允许连续带', () => {
     expect(() => assertScaleFieldCompatible('x', 'band', DataFieldType.Continuous, 'xs')).not.toThrow();
   });
 
-  it('continuous_linear_allowed', () => {
+  it('允许连续线性', () => {
     expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Continuous, 'xs')).not.toThrow();
   });
 
-  it('temporal_time_allowed', () => {
+  it('时间字段允许 time 比例尺', () => {
     expect(() => assertScaleFieldCompatible('x', 'time', DataFieldType.Temporal, 'xs')).not.toThrow();
   });
 });
 
 describe('type-driven scale 集成', () => {
-  it('derive_when_coordinate_binding_omitted', () => {
+  it('忽略坐标绑定时派生', () => {
     // 省略 coordinate.x/y + model 声明类型 → 派生 scale，正常下沉
     const scene = compile(
       spec({}, [
@@ -94,7 +94,7 @@ describe('type-driven scale 集成', () => {
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
-  it('derive_categorical_band', () => {
+  it('从分类字段推导 band 比例尺', () => {
     expect(() =>
       compile(
         spec({}, [
@@ -111,7 +111,7 @@ describe('type-driven scale 集成', () => {
     ).not.toThrow();
   });
 
-  it('explicit_scale_overrides_derive', () => {
+  it('显式比例覆盖派生', () => {
     // 显式声明并绑定 → 用显式（不派生）；linear + continuous 兼容
     expect(() =>
       compile(
@@ -131,7 +131,7 @@ describe('type-driven scale 集成', () => {
     ).not.toThrow();
   });
 
-  it('explicit_incompatible_throws', () => {
+  it('显式不兼容抛出', () => {
     // categorical 字段显式绑 linear → fail-loud
     expect(() =>
       compile(
@@ -151,7 +151,7 @@ describe('type-driven scale 集成', () => {
     ).toThrow(/incompatible/i);
   });
 
-  it('multi_mark_explicit_checks_all_field_types', () => {
+  it('多标记显式检查所有字段类型', () => {
     // 两 mark 共用 x：a=continuous、c=categorical，显式 linear + model → 第二个字段 categorical 触发兼容报错
     const s = PlotSchema.parse({
       namespace: 'plot',
@@ -178,7 +178,7 @@ describe('type-driven scale 集成', () => {
     expect(() => compile(s, { d: [{ a: 1, b: 2, c: 'x' }] })).toThrow(/incompatible/i);
   });
 
-  it('derive_mixed_role_types_throws', () => {
+  it('推导时角色类型混合则抛出错误', () => {
     // 省略 x scale，两 mark 的 x 字段类型不一（continuous + categorical）→ 无从派生单一 scale，fail-loud
     const s = PlotSchema.parse({
       namespace: 'plot',
@@ -202,7 +202,7 @@ describe('type-driven scale 集成', () => {
     expect(() => compile(s, { d: [{ a: 1, b: 2, c: 'x' }] })).toThrow(/mixed types/i);
   });
 
-  it('undeclared_binding_name_still_throws', () => {
+  it('未声明的绑定名称仍然抛出', () => {
     // 提供了绑定名但未声明该 scale → 仍抛（typo 守卫，不静默派生）
     expect(() =>
       compile(

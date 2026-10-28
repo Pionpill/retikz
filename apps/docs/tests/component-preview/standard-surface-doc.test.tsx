@@ -17,8 +17,8 @@ const surfaceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/st
 
 const readPage = (language: 'zh' | 'en'): string => readFileSync(resolve(surfaceRoot, `index.${language}.mdx`), 'utf8');
 
-describe('Standard Surface documentation', () => {
-  it('generates nested Grid authoring code and renders the Surface composition through Vanilla', () => {
+describe('Standard Surface 文档', () => {
+  it('生成嵌套的 Grid 编写代码并通过 Vanilla 渲染 Surface 组合', () => {
     const vanilla = buildVanillaPreview(
       buildPreviewIR(() => (
         <Layout>
@@ -30,13 +30,13 @@ describe('Standard Surface documentation', () => {
     );
 
     expect(vanilla.code).toContain('surfaceChild(grid(');
-    expect(vanilla.code).toContain('GridInputEmbedAdapter');
-    expect(vanilla.code).toContain('SurfaceInputEmbedAdapter');
+    expect(vanilla.code).toContain('gridInputEmbedAdapter');
+    expect(vanilla.code).toContain('surfaceInputEmbedAdapter');
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('<path');
   });
 
-  it('registers the route after Frame in the presentation group and keeps both locale labels available', () => {
+  it('在 presentation 分组的 Frame 后注册路由并提供两种语言的标签', () => {
     const presentationPages = librarySection
       .find(section => section.id === 'standard')
       ?.pages.find(page => page.id === 'presentation')?.children;
@@ -51,13 +51,13 @@ describe('Standard Surface documentation', () => {
     );
   });
 
-  it('documents the single Source schema, execution defaults, provider, and spatial handle in both languages', () => {
+  it('记录两种语言的单个 Source schema、执行默认值、提供者和空间句柄', () => {
     for (const source of [readPage('zh'), readPage('en')]) {
       for (const value of [
         'SurfaceSchema',
-        'SurfaceDefinition',
-        'SurfaceProvider',
-        'SurfaceInputEmbedAdapter',
+        'surfaceDefinition',
+        'surfaceProvider',
+        'surfaceInputEmbedAdapter',
         'surfaceChild',
         'surface-basic',
         'surface-overflow',
@@ -73,7 +73,7 @@ describe('Standard Surface documentation', () => {
   });
 
   it.each([SurfaceBasicDemo, SurfaceOverflowZhDemo, SurfaceOverflowEnDemo])(
-    'derives sparse Source IR and a real Vanilla SVG for each demo',
+    '为每个演示导出稀疏 Source IR 和真实的 Vanilla SVG',
     Demo => {
       const preview = buildPreviewIR(Demo);
       const surfaces = preview.ir.children.filter(

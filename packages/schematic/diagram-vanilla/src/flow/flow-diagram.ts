@@ -2,7 +2,7 @@ import type { FlowDiagramDefinitionOptions } from '@retikz/diagram/flow';
 import { createFlowDiagramProviderContribution } from '@retikz/diagram/flow';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { FlowDiagramEmbedKind } from './constants';
+import { flowDiagramEmbedKind } from './constants';
 import type { InputFlowDiagram } from './normalize';
 import { normalizeFlowDiagram } from './normalize';
 import { flowDiagramDefinitionOptionsOf } from './providers';
@@ -41,8 +41,8 @@ const inputOf = (props: FlowDiagramInputEmbedProps): InputFlowDiagram => {
 };
 
 /** Flow Diagram Source root 的 InputEmbed adapter */
-export const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<FlowDiagramInputEmbedProps> = {
-  kind: FlowDiagramEmbedKind,
+export const flowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<FlowDiagramInputEmbedProps> = {
+  kind: flowDiagramEmbedKind,
   lower: props => ({
     node: normalizeFlowDiagram(inputOf(props)),
     providerDependencies: createFlowDiagramProviderContribution(flowDiagramDefinitionOptionsOf(props)),
@@ -56,7 +56,7 @@ export const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<FlowDiag
  */
 export const flowDiagram = (input: FlowDiagramInputEmbedProps): InputEmbed<FlowDiagramInputEmbedProps> => ({
   type: 'embed',
-  kind: FlowDiagramEmbedKind,
+  kind: flowDiagramEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

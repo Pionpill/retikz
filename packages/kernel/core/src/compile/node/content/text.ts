@@ -20,7 +20,7 @@ const isCjk = (ch: string): boolean => {
  * 文本折行使用的字体、行宽上限与测量能力
  * @description 行宽与测量结果使用同一绘图单位；此对象只提供折行条件，不保存中间行内容
  */
-export type WrapTextContext = {
+type WrapTextContext = {
   /** 文本字体 */
   font: TextFont;
   /** 最大行宽 */

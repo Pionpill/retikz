@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { applyTransforms, RetikzDataError, TransformSchema } from '../../src';
 
-describe('data built-in operations through the package root', () => {
+describe('通过包根进行数据内置操作', () => {
   it.each([
     {
       operation: { kind: 'stack', params: { y: 'value' } },
@@ -68,13 +68,13 @@ describe('data built-in operations through the package root', () => {
         { sample: 2, prediction: 5 },
       ],
     },
-  ])('executes $operation.kind without a host definition', ({ operation, rows, expected }) => {
+  ])('在没有宿主定义的情况下执行 $operation.kind', ({ operation, rows, expected }) => {
     const parsed = TransformSchema.parse(JSON.parse(JSON.stringify(operation)));
 
     expect(applyTransforms(rows, [parsed]).rows).toEqual(expected);
   });
 
-  it('executes density with numeric output and a declared sampling extent', () => {
+  it('使用数字输出和声明的采样范围执行密度', () => {
     const operation = TransformSchema.parse({
       kind: 'density',
       params: {
@@ -93,7 +93,7 @@ describe('data built-in operations through the package root', () => {
     expect(rows[1].density).toBeCloseTo(0.226466623, 8);
   });
 
-  it('validates built-in config instead of accepting it as an external operation', () => {
+  it('验证内置配置而不是接受它作为外部操作', () => {
     expect(TransformSchema.safeParse({ kind: 'stack', params: {} }).success).toBe(false);
     expect(
       TransformSchema.safeParse({ kind: 'density', params: { field: 'value', xAs: 'same', densityAs: 'same' } })
@@ -110,7 +110,7 @@ describe('data built-in operations through the package root', () => {
     });
   });
 
-  it('reports invalid numeric transform input as a data error', () => {
+  it('将无效的数字转换输入报告为数据错误', () => {
     expect(() => applyTransforms([{ value: -1 }], [{ kind: 'normalize', params: { field: 'value' } }]).rows).toThrow(
       RetikzDataError,
     );

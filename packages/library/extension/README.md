@@ -3,7 +3,7 @@
 Optional node shapes, arrows, clips, Ribbon definitions, and animation effect presets for Retikz.
 
 ```ts
-import { CrossShapeDefinition, DiamondArrowDefinition, pulse } from '@retikz/extension';
+import { crossShapeDefinition, diamondArrowDefinition, pulse } from '@retikz/extension';
 ```
 
 Pass the selected definitions explicitly to your drawing host's `shapes`, `arrows`, `clips` or `paths` options. Importing this package does not register anything globally.

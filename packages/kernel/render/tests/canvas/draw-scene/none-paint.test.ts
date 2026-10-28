@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { drawScene } from '../../../src/canvas';
 import { createSpyCanvasContext } from './helpers';
 
-describe('drawScene fill/stroke "none"', () => {
+describe('drawScene 填充/描边 "none"', () => {
   it('none-no-paint：fill/stroke="none" 不绘制，且不继承前一个图元的样式', () => {
     const context = createSpyCanvasContext();
     const s: Scene = {

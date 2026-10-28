@@ -8,7 +8,7 @@ export { FlexLayoutDirection, FlexLayoutSchema, FlexLayoutWrap } from '../compos
 export { compileFlexLayout } from '../composites/flex-layout/pipeline';
 export { compileGridLayout } from '../composites/grid-layout/pipeline';
 export type {
-  CreateLayoutArtifactItemInput,
+  InputLayoutArtifactItem,
   FlexCrossItem,
   FlexLineCrossMetrics,
   FlexLineMainProfile,
@@ -27,9 +27,9 @@ export type {
   PairedFlowSlot,
   PairedFlowWrap,
   PlacedLayoutChild,
-  PositionedLayoutSlotInput,
-  ResolvedLayoutAxisSize,
-  ResolveLayoutAxisSizeInput,
+  InputPositionedLayoutSlot,
+  LayoutAxisSizeResolution,
+  InputLayoutAxisSizeResolution,
 } from '../composites/internal';
 export {
   alignAllocationInSlot,
@@ -41,7 +41,7 @@ export {
   intrinsicLayoutProposal,
   layoutClipOf,
   measureLayoutChild,
-  normalizeLayoutSpacing,
+  resolveLayoutSpacing,
   placeLayoutChild,
   positionedLayoutSlotOf,
   replayLayoutChildren,
@@ -63,7 +63,7 @@ export type {
   LayoutArtifactItemBase,
   LayoutArtifactOverflow,
   LayoutArtifactRect,
-  LayoutSizeInput,
+  InputLayoutSize,
 } from '../composites/shared';
 export {
   LayoutAlignment,

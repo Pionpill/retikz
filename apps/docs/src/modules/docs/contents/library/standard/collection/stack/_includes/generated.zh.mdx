@@ -319,10 +319,10 @@ export type InputStack = Omit<IRStack, 'namespace' | 'type' | 'items' | 'data' |
 
 </DocTabs>
 
-#### <ApiSourceLink label={"StackInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/stack.ts"} startLine={41}>StackInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"stackInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/stack.ts"} startLine={41}>stackInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const StackInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStack>;
+export declare const stackInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStack>;
 ```
 
 **持久化配置**
@@ -446,10 +446,10 @@ export type IRStack = Omit<
 
 **扩展定义与注册**
 
-#### <ApiSourceLink label={"StackDefinition"} path={"packages/library/standard/src/collection/stack/composite.ts"} startLine={10}>StackDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"stackDefinition"} path={"packages/library/standard/src/collection/stack/composite.ts"} startLine={10}>stackDefinition</ApiSourceLink>
 
 ```ts
-export const StackDefinition: CompositeDefinition<IRStack, 'standard', 'stack'> = defineComposite({
+export const stackDefinition: CompositeDefinition<IRStack, 'standard', 'stack'> = defineComposite({
   namespace: 'standard',
   type: 'stack',
   schema: StackSchema,
@@ -457,10 +457,10 @@ export const StackDefinition: CompositeDefinition<IRStack, 'standard', 'stack'> 
 });
 ```
 
-#### <ApiSourceLink label={"StackProvider"} path={"packages/library/standard/src/collection/stack/composite.ts"} startLine={21}>StackProvider</ApiSourceLink>
+#### <ApiSourceLink label={"stackProvider"} path={"packages/library/standard/src/collection/stack/composite.ts"} startLine={21}>stackProvider</ApiSourceLink>
 
 ```ts
-export declare const StackProvider: CoreDependencyProvider;
+export declare const stackProvider: CoreDependencyProvider;
 ```
 
 **执行与辅助契约**

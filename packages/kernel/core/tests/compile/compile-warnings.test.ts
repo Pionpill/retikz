@@ -12,7 +12,7 @@ const scene = (children: IRScene['children']): IRScene => ({
 });
 
 describe('CompileOptions.onWarn', () => {
-  it('keeps PATH_TOO_SHORT ahead of unused arrow and generator lookup', () => {
+  it('使 PATH_TOO_SHORT 保持在未使用的箭头和生成器查找之前', () => {
     const cases: Array<IRScene['children'][number]> = [
       {
         type: 'path',
@@ -184,7 +184,7 @@ describe('CompileOptions.onWarn', () => {
     const customShape = defineShape({
       name: 'custom-without-envelope',
       paramsSchema: strictObject({}),
-      computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
       computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
       resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
       emit: BUILTIN_SHAPES.get('rectangle')!.emit,

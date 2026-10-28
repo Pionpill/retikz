@@ -12,5 +12,9 @@ export const resolveFrame = (source: IRFrame): CanonicalFrame => ({
   padding: resolveBoxSpacing(source.padding, resolveBoxSpacing(FrameSchema.shape.padding.parse(undefined), 0).top),
   gap: source.gap ?? FrameSchema.shape.gap.parse(undefined),
   headerDirection: source.headerDirection ?? FrameSchema.shape.headerDirection.parse(undefined),
-  border: FrameSchema.shape.border.parse(source.border),
+  border: {
+    ...source.border,
+    style: source.border?.style ?? FrameSchema.shape.border.unwrap().shape.style.parse(undefined),
+    cornerRadius: source.border?.cornerRadius ?? FrameSchema.shape.border.unwrap().shape.cornerRadius.parse(undefined),
+  },
 });

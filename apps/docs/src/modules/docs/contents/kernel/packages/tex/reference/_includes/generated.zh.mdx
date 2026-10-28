@@ -2,7 +2,7 @@
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"LowerTexOptions"} path={"packages/kernel/tex/src/lower/types.ts"} startLine={45}>LowerTexOptions</ApiSourceLink>
+#### <ApiSourceLink label={"TexLoweringOptions"} path={"packages/kernel/tex/src/lower/types.ts"} startLine={45}>TexLoweringOptions</ApiSourceLink>
 
 控制由 `createLowerTex` 创建的 lowerer 如何向外报告失败。它不改变 TeX 解析或缓存语义，成功结果仍直接返回给 Core 的文本编译流程
 
@@ -23,7 +23,7 @@
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type LowerTexOptions = {
+export type TexLoweringOptions = {
   onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void;
 };
 ```
@@ -66,7 +66,7 @@ export type MathJaxEngineOptions = {
 
 #### <ApiSourceLink label={"MathJaxLowerTexOptions"} path={"packages/kernel/tex/src/lower/create-mathjax.ts"} startLine={13}>MathJaxLowerTexOptions</ApiSourceLink>
 
-合并 `MathJaxEngineOptions` 的解析配置与 `LowerTexOptions` 的诊断回调，作为 `createMathJaxLowerTex` 的单一输入。它只描述工厂参数，不保存引擎、缓存或渲染状态
+合并 `MathJaxEngineOptions` 的解析配置与 `TexLoweringOptions` 的诊断回调，作为 `createMathJaxLowerTex` 的单一输入。它只描述工厂参数，不保存引擎、缓存或渲染状态
 
 <DocTabs defaultValue="members">
 
@@ -87,7 +87,7 @@ export type MathJaxEngineOptions = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type MathJaxLowerTexOptions = MathJaxEngineOptions & LowerTexOptions;
+export type MathJaxLowerTexOptions = MathJaxEngineOptions & TexLoweringOptions;
 ```
 
 </DocTab>
@@ -131,7 +131,7 @@ export type MathJaxSvgEngine = {
 
 #### <ApiSourceLink label={"TexLoweringDiagnostic"} path={"packages/kernel/tex/src/lower/types.ts"} startLine={6}>TexLoweringDiagnostic</ApiSourceLink>
 
-描述引擎执行、MathJax 解析或 SVG 降解阶段不能产出公式路径的原因。它只承载可展示或记录的失败事实，不负责错误恢复；调用方可通过 `LowerTexOptions.onDiagnostic` 决定如何提示用户
+描述引擎执行、MathJax 解析或 SVG 降解阶段不能产出公式路径的原因。它只承载可展示或记录的失败事实，不负责错误恢复；调用方可通过 `TexLoweringOptions.onDiagnostic` 决定如何提示用户
 
 **公共属性**
 
@@ -269,11 +269,11 @@ export type MathJaxProfile = ValueOf<typeof MathJaxProfile>;
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称       | 类型 / 签名        | 说明                                                                               |
-| ------ | ---------- | ------------------ | ---------------------------------------------------------------------------------- |
-| 参数   | `engine`   | `MathJaxSvgEngine` | 提供同步 TeX → SVG 转换能力的引擎                                                  |
-|        | `options?` | `LowerTexOptions`  | 控制 lowering 失败诊断的可选配置                                                   |
-| 返回值 | —          | `LowerTex`         | 同步 LowerTex；转换失败时返回 null 并通知 onDiagnostic，缓存命中的失败也会再次通知 |
+| 类别   | 名称       | 类型 / 签名          | 说明                                                                                 |
+| ------ | ---------- | -------------------- | ------------------------------------------------------------------------------------ |
+| 参数   | `engine`   | `MathJaxSvgEngine`   | 提供同步 TeX → SVG 转换能力的引擎                                                    |
+|        | `options?` | `TexLoweringOptions` | 控制 lowering 失败诊断的可选配置                                                     |
+| 返回值 | —          | `TexLowerer`         | 同步 TexLowerer；转换失败时返回 null 并通知 onDiagnostic，缓存命中的失败也会再次通知 |
 
 </ApiTable>
 
@@ -293,14 +293,14 @@ const lowerTex = createLowerTex(engine, {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createLowerTex: (engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex;
+export declare const createLowerTex: (engine: MathJaxSvgEngine, options?: TexLoweringOptions) => TexLowerer;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createMathJaxEngine"} path={"packages/kernel/tex/src/mathjax/engine.ts"} startLine={51}>createMathJaxEngine</ApiSourceLink>
+#### <ApiSourceLink label={"createMathJaxEngine"} path={"packages/kernel/tex/src/mathjax/engine.ts"} startLine={39}>createMathJaxEngine</ApiSourceLink>
 
 异步加载并配置 `mathjax-full`，返回可被 `createLowerTex` 反复同步调用的引擎。输入配置只影响启用的 TeX 扩展；返回值只负责 TeX → SVG，不承担 SVG 路径降解、缓存或 Core 注入
 
@@ -345,7 +345,7 @@ export declare const createMathJaxEngine: (options?: MathJaxEngineOptions) => Pr
 
 #### <ApiSourceLink label={"createMathJaxLowerTex"} path={"packages/kernel/tex/src/lower/create-mathjax.ts"} startLine={31}>createMathJaxLowerTex</ApiSourceLink>
 
-异步加载可选的 `mathjax-full`、建立同步 SVG 引擎，并返回可交给 Core 的 `LowerTex`。适合不需要替换引擎实现的场景；如果应用已有兼容引擎，使用 `createLowerTex` 保留引擎所有权
+异步加载可选的 `mathjax-full`、建立同步 SVG 引擎，并返回可交给 Core 的 `TexLowerer`。适合不需要替换引擎实现的场景；如果应用已有兼容引擎，使用 `createLowerTex` 保留引擎所有权
 
 <DocTabs defaultValue="members">
 
@@ -356,7 +356,7 @@ export declare const createMathJaxEngine: (options?: MathJaxEngineOptions) => Pr
 | 类别   | 名称       | 类型 / 签名              | 说明                                                                            |
 | ------ | ---------- | ------------------------ | ------------------------------------------------------------------------------- |
 | 参数   | `options?` | `MathJaxLowerTexOptions` | 同时控制 MathJax 扩展和 lowering 诊断的可选配置                                 |
-| 返回值 | —          | `Promise<LowerTex>`      | Promise 在引擎初始化完成后兑现为可注入 Core 的同步 LowerTex                     |
+| 返回值 | —          | `Promise<TexLowerer>`    | Promise 在引擎初始化完成后兑现为可注入 Core 的同步 TexLowerer                   |
 | 错误   | —          | —                        | 引擎初始化失败时先通知 onDiagnostic，再拒绝 Promise；此时诊断 source 为空字符串 |
 
 </ApiTable>
@@ -377,7 +377,7 @@ const lowerTex = await createMathJaxLowerTex({
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createMathJaxLowerTex: (options?: MathJaxLowerTexOptions) => Promise<LowerTex>;
+export declare const createMathJaxLowerTex: (options?: MathJaxLowerTexOptions) => Promise<TexLowerer>;
 ```
 
 </DocTab>
@@ -406,10 +406,10 @@ export declare const createMathJaxLowerTex: (options?: MathJaxLowerTexOptions) =
 
 <ApiTable>
 
-| 成员       | 类型       | 默认值 | 说明                                                                     |
-| ---------- | ---------- | ------ | ------------------------------------------------------------------------ |
-| `lowerTex` | `LowerTex` | —      | 可传给 Layout 的同步公式转换函数；后续公式转换失败通过 onDiagnostic 报告 |
-| `status`   | `'ready'`  | —      | 当前配置的 lowerer 已可用                                                |
+| 成员       | 类型         | 默认值 | 说明                                                                     |
+| ---------- | ------------ | ------ | ------------------------------------------------------------------------ |
+| `lowerTex` | `TexLowerer` | —      | 可传给 Layout 的同步公式转换函数；后续公式转换失败通过 onDiagnostic 报告 |
+| `status`   | `'ready'`    | —      | 当前配置的 lowerer 已可用                                                |
 
 </ApiTable>
 
@@ -437,7 +437,7 @@ export type MathJaxLowerTexState =
     }
   | {
       status: 'ready';
-      lowerTex: LowerTex;
+      lowerTex: TexLowerer;
     }
   | {
       status: 'error';
@@ -449,7 +449,7 @@ export type MathJaxLowerTexState =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"useLowerTex"} path={"packages/kernel/tex/src/react/use-lower-tex.ts"} startLine={90}>useLowerTex</ApiSourceLink>
+#### <ApiSourceLink label={"useLowerTex"} path={"packages/kernel/tex/src/react/use-lower-tex.ts"} startLine={87}>useLowerTex</ApiSourceLink>
 
 接收与根入口工厂一致的 MathJax 配置，复用同一有效扩展集合的引擎，并返回可判别的初始化状态。ready 状态中的 lowerer 应传入 `Layout` 等 React authoring 入口；本 Hook 不渲染公式，也不处理应用级错误界面
 

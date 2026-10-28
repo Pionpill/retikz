@@ -13,8 +13,8 @@ const gradientPaint: IRPaint = {
   ],
 };
 
-describe('buildPlotIR paint props', () => {
-  it('omits nested optional props while preserving explicit values and label array positions', () => {
+describe('buildPlotIR 绘制 props', () => {
+  it('省略嵌套的可选属性，同时保留显式值和标签数组位置', () => {
     const spec = buildPlotIR(
       <PointMark
         encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
@@ -42,7 +42,7 @@ describe('buildPlotIR paint props', () => {
     expect(JSON.parse(JSON.stringify(properties))).toEqual(properties);
   });
 
-  it('point paint props pass through to mark IR', () => {
+  it('点绘制 props 穿过标记 IR', () => {
     const spec = buildPlotIR(
       <PointMark
         encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
@@ -57,7 +57,7 @@ describe('buildPlotIR paint props', () => {
     });
   });
 
-  it('path paint props pass through to mark IR', () => {
+  it('路径绘画 props 穿过以标记 IR', () => {
     const spec = buildPlotIR(
       <PathMark
         encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
@@ -72,7 +72,7 @@ describe('buildPlotIR paint props', () => {
     });
   });
 
-  it('path paint none passes through as constant paint', () => {
+  it('路径绘制没有作为恒定绘制穿过', () => {
     const spec = buildPlotIR(
       <PathMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} properties={{ stroke: 'none' }} />,
       '__plot',
@@ -81,7 +81,7 @@ describe('buildPlotIR paint props', () => {
     expect(spec.marks[0]).toMatchObject({ type: 'path', properties: { stroke: 'none' } });
   });
 
-  it('path connectNulls passes through to mark IR', () => {
+  it('路径 connectNulls 经过以标记 IR', () => {
     const spec = buildPlotIR(
       <PathMark
         encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
@@ -96,7 +96,7 @@ describe('buildPlotIR paint props', () => {
     });
   });
 
-  it('interval paint props pass through to mark IR', () => {
+  it('间隔绘制 props 穿过标记 IR', () => {
     const spec = buildPlotIR(
       <IntervalMark
         encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } } }}

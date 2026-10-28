@@ -2,12 +2,12 @@ import type { IRPathLabel, ScenePrimitive } from '@retikz/core';
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { createFlowDiagramProviderContribution, FlowDiagramSchema, LayeredFlowLayoutDefinition } from '../../src/flow';
-import type { FlowLayoutInput, FlowLayoutRoute } from '../../src/flow';
+import { createFlowDiagramProviderContribution, FlowDiagramSchema, layeredFlowLayoutDefinition } from '../../src/flow';
+import type { InputFlowLayoutComputation, FlowLayoutRoute } from '../../src/flow';
 import { flowRouteLabelBounds } from '../../src/flow/providers';
 
-describe('Flow relation path labels', () => {
-  it('forwards interruption and gap to the actual cubic stroke', () => {
+describe('Flow 关系路径标签', () => {
+  it('将中断和间隙转发到实际立方行程', () => {
     const flatten = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
       items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
 
@@ -47,13 +47,13 @@ describe('Flow relation path labels', () => {
     expect(compile(true, 12)).not.toEqual(interrupted);
   });
 
-  it('complete label font overrides size while inheriting family during measurement', () => {
+  it('完整的标签字体覆盖尺寸，同时在测量过程中继承系列', () => {
     const fonts: Array<{ size: number; family?: string }> = [];
     const provider = {
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'measured',
-      layout: (...args: Parameters<typeof LayeredFlowLayoutDefinition.layout>) =>
-        LayeredFlowLayoutDefinition.layout(...args),
+      layout: (...args: Parameters<typeof layeredFlowLayoutDefinition.layout>) =>
+        layeredFlowLayoutDefinition.layout(...args),
     };
     const source = FlowDiagramSchema.parse({
       namespace: 'diagram',
@@ -100,14 +100,14 @@ describe('Flow relation path labels', () => {
     expect(JSON.stringify(result.scene)).toContain('unique-label');
   });
 
-  it('full labels preserve an empty geometry projection distinct from compact labels', () => {
-    const projections: Array<FlowLayoutInput> = [];
+  it('完整标签保留与紧凑标签不同的空几何投影', () => {
+    const projections: Array<InputFlowLayoutComputation> = [];
     const provider = {
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'labels',
-      layout: (...args: Parameters<typeof LayeredFlowLayoutDefinition.layout>) => {
+      layout: (...args: Parameters<typeof layeredFlowLayoutDefinition.layout>) => {
         projections.push(args[0]);
-        return LayeredFlowLayoutDefinition.layout(...args);
+        return layeredFlowLayoutDefinition.layout(...args);
       },
     };
     const source = FlowDiagramSchema.parse({
@@ -145,7 +145,7 @@ describe('Flow relation path labels', () => {
     expect(empty.success).toBe(false);
   });
 
-  it('sloped reservations rotate measured dimensions along the actual reference tangent', () => {
+  it('倾斜保留沿实际参考切线旋转测量尺寸', () => {
     const route: FlowLayoutRoute = {
       kind: 'bend',
       points: [
@@ -175,7 +175,7 @@ describe('Flow relation path labels', () => {
     });
   });
 
-  it.each(['straight', 'orthogonal', '-|', '|-', 'bend'] as const)('full label fields compile on %s', kind => {
+  it.each(['straight', 'orthogonal', '-|', '|-', 'bend'] as const)('完整标签字段在 %s 上编译', kind => {
     const label: IRPathLabel = {
       text: 'edge',
       textColor: '#123456',

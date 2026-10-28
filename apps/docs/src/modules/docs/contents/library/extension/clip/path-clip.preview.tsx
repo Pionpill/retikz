@@ -1,4 +1,4 @@
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { Layout, Node, Scope } from '@retikz/react';
 
 /** 图形参数 */
@@ -12,7 +12,7 @@ export type PathClipPreviewValues = {
 
 /** 绘制示例图形 */
 export const renderPathClipPreview = (values: PathClipPreviewValues) => (
-  <Layout viewBox={{ x: -125, y: -100, width: 250, height: 200 }} extensions={{ clips: [PathClipDefinition] }}>
+  <Layout viewBox={{ x: -125, y: -100, width: 250, height: 200 }} extensions={{ clips: [pathClipDefinition] }}>
     <Node
       position={[0, 0]}
       shape="rectangle"

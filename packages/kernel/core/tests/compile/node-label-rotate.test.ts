@@ -39,7 +39,7 @@ const findLabelRotateGroup = (prims: Array<ScenePrimitive>, text: string): Group
   return undefined;
 };
 
-describe('Node label rotate', () => {
+describe('Node 标签旋转', () => {
   // Happy path
   it('rotate 缺省 → label 不包 rotate group', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'A', label: { text: 'L' } }]);
@@ -101,7 +101,7 @@ describe('Node label rotate', () => {
     expect(rot.degrees).toBeCloseTo(-90);
   });
 
-  it("tangent = radial + 90：position='right' → ≈ 90", () => {
+  it("切线=径向+90：位置='right' → ≈ 90", () => {
     const ir = scene([
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 'tangent' } },
     ]);

@@ -16,14 +16,14 @@ export type InspectionVanillaRequest = Readonly<{
 }>;
 
 /** Vanilla site 可声明一个 request、多个 request，或 barrier */
-export type InspectionVanillaAuthoringInput =
+export type InputInspectionVanillaAuthoring =
   | false
   | InspectionVanillaRequest
   | ReadonlyArray<InspectionVanillaRequest>;
 
 type InspectionVanillaAuthoring = Readonly<{
   token: typeof INSPECTION_VANILLA_AUTHORING_TOKEN;
-  input: InspectionVanillaAuthoringInput;
+  input: InputInspectionVanillaAuthoring;
 }>;
 
 /** 创建只由 Inspect Vanilla 驱动识别的 opaque authoring 标记
@@ -31,7 +31,7 @@ type InspectionVanillaAuthoring = Readonly<{
  * @param input 单项或多项检查请求；false 封锁整个 Scene 或 Scope，不能用于单个实体
  * @returns 写入 Vanilla 输入 authoring 字段的冻结标记；其请求在驱动编译时解析
  */
-export const createInspectionVanillaAuthoring = (input: InspectionVanillaAuthoringInput): InspectionVanillaAuthoring =>
+export const createInspectionVanillaAuthoring = (input: InputInspectionVanillaAuthoring): InspectionVanillaAuthoring =>
   Object.freeze({ token: INSPECTION_VANILLA_AUTHORING_TOKEN, input });
 
 /** 读取基础 Vanilla adapter 报告的 opaque Inspect authoring 标记 */

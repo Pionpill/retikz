@@ -4,11 +4,11 @@ import type { BoundsRect } from '@retikz/math';
 import type { IRTableCellBackground } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import type { TableBorderEdge } from '../layout';
-import type { TableLayout } from '../layout';
+import type { CompiledTableLayout } from '../layout';
 import { tableBorderPathMetaOf } from './meta';
 
 /** 让 Table allocation bounds 参与 Core Scene AABB */
-export const emitTableBoundsSentinel = (layout: Pick<TableLayout, 'allocationBounds'>): IRNode => ({
+export const emitTableBoundsSentinel = (layout: Pick<CompiledTableLayout, 'allocationBounds'>): IRNode => ({
   type: 'node',
   position: [
     layout.allocationBounds.x + layout.allocationBounds.width / 2,

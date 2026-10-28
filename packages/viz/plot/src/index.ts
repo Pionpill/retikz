@@ -1,7 +1,8 @@
 export * from './contract';
 export * from './error';
 export type {
-  LowerPlotsOptions,
+  PlotsLoweringOptions,
+  PlotProviderParams,
   PlotCompileEnvironment,
   PlotDefinitions,
   PlotImplementations,
@@ -16,7 +17,7 @@ export {
   createPlotProviderContribution,
   lowerPlots,
   lowerPlotWithLineage,
-  PlotProviderKey,
+  plotProviderKey,
   preparePlotData,
 } from './pipeline';
 export type {
@@ -31,8 +32,8 @@ export type {
   MarkValueResolverOptions,
   PlotPaint,
   Polar1DCoordinateFrame,
-  Polar1DCoordinateInput,
-  PolarCoordinateInput,
+  InputPolar1DCoordinate,
+  InputPolarCoordinate,
   PolarVertex,
   SeriesPathBuilder,
 } from './providers';
@@ -55,7 +56,6 @@ export {
   SIZE_MAX_RADIUS,
   applyNodeChannelDeliveries,
   applyPathChannelDeliveries,
-  assertUniqueAxisDimension,
   assertUniqueAxisPlacement,
   attachMarkAnchor,
   attachDatumLabel,
@@ -69,7 +69,6 @@ export {
   builtinColorSchemeInterpolator,
   cellAnchor,
   channelDefaultOf,
-  channelForRole,
   channelValue,
   channelValueOf,
   collectAnchorIdFields,
@@ -107,10 +106,9 @@ export {
   lowerIntervalLayer,
   lowerPathLayer,
   lowerPoint,
-  lowerRelation,
   makeColorChannelDefinition,
-  makeColorSchemeResolver,
-  makeMarkValueResolver,
+  createColorSchemeResolver,
+  createMarkValueResolver,
   markCell,
   markPaintOf,
   nodeChannelKinds,
@@ -152,7 +150,6 @@ export {
   timePositionScale,
   timeTicks,
   toHexColor,
-  toPolarVertex,
 } from './providers';
 export type { PlotFacetCompositionResolveContext } from './resolve';
 export { mergePlotDefaults, resolvePlotFacetComposition, resolvePlotTheme } from './resolve';

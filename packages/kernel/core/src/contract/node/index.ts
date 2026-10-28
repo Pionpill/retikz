@@ -1,3 +1,3 @@
 export * from './boundary';
-export * from './outline';
+export * from './contour';
 export * from './shape';

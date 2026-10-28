@@ -2,7 +2,7 @@ import type { GraphDefinitionOptions } from '@retikz/graph';
 import { GraphProviderKey } from '@retikz/graph';
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { GraphEmbedKind } from './constants';
+import { graphEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
 import type { InputGraph, WithoutInputType } from './normalize';
 import { normalizeGraph } from './normalize';
@@ -35,8 +35,8 @@ const inputOf = (props: GraphInputEmbedProps): InputGraph => {
 };
 
 /** Graph Source root 的 InputEmbed adapter */
-export const GraphInputEmbedAdapter: SynchronousInputEmbedAdapter<GraphInputEmbedProps> = {
-  kind: GraphEmbedKind,
+export const graphInputEmbedAdapter: SynchronousInputEmbedAdapter<GraphInputEmbedProps> = {
+  kind: graphEmbedKind,
   lower: (props, context) => {
     const input = inputOf(props);
     const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'Graph.children');
@@ -61,4 +61,4 @@ export const GraphInputEmbedAdapter: SynchronousInputEmbedAdapter<GraphInputEmbe
 };
 
 /** 创建 Graph Source root 的 authoring embed 节点 */
-export const graph = (input: GraphInputEmbedProps) => createGraphInputEmbed(GraphEmbedKind, input, input.id);
+export const graph = (input: GraphInputEmbedProps) => createGraphInputEmbed(graphEmbedKind, input, input.id);

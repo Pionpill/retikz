@@ -430,7 +430,7 @@ Render 的后端阶段和单位分别使用 `RenderTracePhase` 与 `RenderTraceU
     {
       name: 'createRuntimeTraceReporter',
       kind: 'function',
-      type: '<const TOwner extends string>(input: CreateRuntimeTraceReporterInput<TOwner>) => RuntimeTraceReporter<TOwner>',
+      type: '<const TOwner extends string>(input: InputRuntimeTraceReporter<TOwner>) => RuntimeTraceReporter<TOwner>',
       description:
         '独立 reporter 输入 `{ owner: TOwner, phases: ReadonlyArray<RuntimeTracePhaseDefinition>, sink: PerformanceTraceSink }`；返回 owner、report 和读取清空局部诊断的 diagnostics。',
     },

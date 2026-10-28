@@ -9,7 +9,7 @@ type ArcCommand = ArcPathCommand | EllipseArcPathCommand;
 const ROOT_EPSILON = 1e-12;
 
 /** PathCommand 绘制几何的轴对齐包围盒 */
-export type PathBounds = {
+type PathBounds = {
   /** 左上角 x 坐标 */
   x: number;
   /** 左上角 y 坐标 */

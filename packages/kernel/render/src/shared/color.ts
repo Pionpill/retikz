@@ -1,7 +1,7 @@
 import { parseStaticCssColor } from '@retikz/foundation';
 
 /** sRGB 字节通道（各 0..255） */
-export type RgbBytes = {
+type RgbBytes = {
   /** 红色通道字节值，范围为 0 到 255 */
   r: number;
   /** 绿色通道字节值，范围为 0 到 255 */

@@ -1,14 +1,14 @@
 import {
-  BlockHeaderProviderKey,
-  BlockProviderKey,
-  BlockRowProviderKey,
-  BlockSectionProviderKey,
-  EntityProviderKey,
+  blockHeaderProviderKey,
+  blockProviderKey,
+  blockRowProviderKey,
+  blockSectionProviderKey,
+  entityProviderKey,
   GraphProviderKey,
-  GroupProviderKey,
-  RelationProviderKey,
+  groupProviderKey,
+  relationProviderKey,
 } from '@retikz/graph';
-import type { InputChild, InputEmbedContext, NormalizedInputEmbedChildren } from '@retikz/vanilla';
+import type { InputChild, InputEmbedContext, EmbedChildrenNormalizationResult } from '@retikz/vanilla';
 
 import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from './errors';
 import type { InputGraphChild, InputGraphMember } from './normalize';
@@ -17,17 +17,17 @@ type GraphSemanticProviderKey = typeof GraphProviderKey;
 
 const providerKeyByType: Readonly<Record<InputGraphMember['type'], GraphSemanticProviderKey>> = Object.freeze({
   graph: GraphProviderKey,
-  group: GroupProviderKey,
-  block: BlockProviderKey,
-  blockHeader: BlockHeaderProviderKey,
-  blockSection: BlockSectionProviderKey,
-  blockRow: BlockRowProviderKey,
-  entity: EntityProviderKey,
-  relation: RelationProviderKey,
+  group: groupProviderKey,
+  block: blockProviderKey,
+  blockHeader: blockHeaderProviderKey,
+  blockSection: blockSectionProviderKey,
+  blockRow: blockRowProviderKey,
+  entity: entityProviderKey,
+  relation: relationProviderKey,
 });
 
 /** 判断 Vanilla child 是否为可直接归一化的 Graph-family semantic 输入 */
-export const isGraphSemanticInput = (child: InputGraphChild): child is InputGraphMember =>
+const isGraphSemanticInput = (child: InputGraphChild): child is InputGraphMember =>
   !('namespace' in child) && 'type' in child && child.type !== undefined && child.type in providerKeyByType;
 
 /** 判断 Vanilla child 是否应交由 Core authoring normalizer 处理 */
@@ -99,7 +99,7 @@ export const normalizeGraphAuthoringChildren = (
 ): Readonly<{
   children: ReadonlyArray<InputGraphChild>;
   providerRoots: ReadonlyArray<GraphSemanticProviderKey>;
-  nested?: NormalizedInputEmbedChildren;
+  nested?: EmbedChildrenNormalizationResult;
 }> => {
   const authoredChildren: Array<InputChild> = [];
   const providerRoots: Array<GraphSemanticProviderKey> = [];

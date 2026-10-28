@@ -145,22 +145,22 @@ describe('polygon — 边界（边数极值）', () => {
 // ─────────────────────────── 错误路径（≥2）───────────────────────────
 
 describe('polygon — 错误路径（paramsSchema 拒绝）', () => {
-  it('polygon_sides_lt_3_rejected：sides:2 → paramsSchema reject', () => {
+  it('paramsSchema 拒绝边数小于 3 的多边形', () => {
     expect(() => polygon.paramsSchema.parse({ sides: 2 })).toThrow();
 
     // 端到端：compile 同样在 paramsSchema.parse 抛
     expect(() => compileToScene(scene([polyNode({ sides: 2 })])).scene).toThrow();
   });
 
-  it('polygon_sides_non_integer_rejected：sides:3.5 → int() reject', () => {
+  it('拒绝多边形非整数边数 sides:3.5', () => {
     expect(() => polygon.paramsSchema.parse({ sides: 3.5 })).toThrow();
   });
 
-  it('polygon_rotate_non_finite_rejected：rotate:NaN → finite() reject', () => {
+  it('拒绝多边形非有限旋转角 rotate:NaN', () => {
     expect(() => polygon.paramsSchema.parse({ sides: 6, rotate: NaN })).toThrow();
   });
 
-  it('polygon_extra_params_rejected：{ sides:6, foo:1 } → strictObject reject', () => {
+  it('strictObject 拒绝多边形额外参数 { sides:6, foo:1 }', () => {
     expect(() => polygon.paramsSchema.parse({ sides: 6, foo: 1 })).toThrow();
   });
 });
@@ -222,7 +222,7 @@ describe('polygon — 交互（self-rotate + Node.rotate）', () => {
 
 // ─────────────────────────── round-trip + schema ───────────────────────────
 
-describe('polygon — round-trip / schema', () => {
+describe('多边形 — 往返/schema', () => {
   it('roundtrip_nested_params：含 polygon nested params 的 IR → JSON → parse 等价', () => {
     const node = {
       type: 'node',

@@ -1,5 +1,4 @@
 import type { IRScene } from '@retikz/core';
-import { parseWay } from '@retikz/core';
 import {
   BlockHeaderSchema,
   BlockRowSchema,
@@ -8,6 +7,7 @@ import {
   GraphSchema,
   GroupSchema,
 } from '@retikz/graph';
+import { parseWay } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
@@ -66,9 +66,9 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("caption: { title: { text: 'Runtime' } }");
     expect(code).toContain("boundary: 'right'");
     expect(code).toContain('entity({');
-    expect(code).toContain('GroupInputEmbedAdapter');
-    expect(code).toContain('EntityInputEmbedAdapter');
-    expect(code).not.toContain('GroupDefinition');
+    expect(code).toContain('groupInputEmbedAdapter');
+    expect(code).toContain('entityInputEmbedAdapter');
+    expect(code).not.toContain('groupDefinition');
   });
 
   it('block-codegen：保留开放 children 与独立 Header / Section / Row composite', () => {
@@ -116,12 +116,12 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("id: 'user.fields'");
     expect(code).toContain("id: 'user.name'");
     expect(code).toContain('entity({');
-    expect(code).toContain('BlockInputEmbedAdapter');
-    expect(code).toContain('BlockHeaderInputEmbedAdapter');
-    expect(code).toContain('BlockSectionInputEmbedAdapter');
-    expect(code).toContain('BlockRowInputEmbedAdapter');
-    expect(code).toContain('EntityInputEmbedAdapter');
-    expect(code).not.toContain('BlockDefinition');
+    expect(code).toContain('blockInputEmbedAdapter');
+    expect(code).toContain('blockHeaderInputEmbedAdapter');
+    expect(code).toContain('blockSectionInputEmbedAdapter');
+    expect(code).toContain('blockRowInputEmbedAdapter');
+    expect(code).toContain('entityInputEmbedAdapter');
+    expect(code).not.toContain('blockDefinition');
   });
 
   it('import-header：恒定 vanilla import + scene 装配', () => {
@@ -143,13 +143,13 @@ describe('irToVanillaCode', () => {
     expect(anon).not.toContain("node('");
   });
 
-  it('coordinate-codegen：coordinate({ id, position })', () => {
+  it('coordinate 代码生成：coordinate({ id, position })', () => {
     const code = irToVanillaCode(ir([{ type: 'coordinate', id: 'm', position: [60, 40] }]));
 
     expect(code).toContain("coordinate({ id: 'm', position: [60, 40] })");
   });
 
-  it('path-way-line：move+line steps → path({ way })', () => {
+  it('直线路径代码生成：move 与 line 步骤转换为 path({ way })', () => {
     const code = irToVanillaCode(
       ir([
         {
@@ -166,7 +166,7 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("path({ way: [[0, 0], [50, 50]], arrow: '->' })");
   });
 
-  it('draw-way-fold-cycle：fold(-|) + cycle → 字面量 + DrawWay.Cycle + core import', () => {
+  it('draw-way-fold-cycle：fold(-|) + cycle → 字面量 + DrawWay.Cycle + vanilla import', () => {
     const code = irToVanillaCode(
       ir([
         {
@@ -182,7 +182,8 @@ describe('irToVanillaCode', () => {
 
     expect(code).toContain("'-|'");
     expect(code).toContain('DrawWay.Cycle');
-    expect(code).toContain("import { DrawWay } from '@retikz/core'");
+    expect(code).toMatch(/import \{[^}]*DrawWay[^}]*\} from '@retikz\/vanilla'/);
+    expect(code).not.toMatch(/import \{[^}]*DrawWay[^}]*\} from '@retikz\/core'/);
   });
 
   it('draw-way-three-leg-fold：默认用裸 token，显式 fraction 用 strict 对象且可还原', () => {
@@ -345,8 +346,8 @@ describe('irToVanillaCode', () => {
   });
 });
 
-describe('irToVanillaCode fallback', () => {
-  it('rectangle stays runnable as raw IR child', () => {
+describe('irToVanillaCode 回退', () => {
+  it('矩形作为原始 IR 子项保持可运行', () => {
     const code = irToVanillaCode(
       ir([
         {
@@ -364,7 +365,7 @@ describe('irToVanillaCode fallback', () => {
     expect(code.split('\n')[0]).not.toContain('draw');
   });
 
-  it('explicit center arc and partial circle are not faked as way', () => {
+  it('显式圆心圆弧和部分圆不伪装为 way', () => {
     const centeredArc = irToVanillaCode(
       ir([
         {
@@ -446,9 +447,9 @@ describe('irToVanillaCode fallback', () => {
     expect(code).toContain('flexLayout(');
     expect(code).toContain('gridLayout(');
     expect(code).toContain('overlayLayout(');
-    expect(code).toContain('FlexLayoutInputEmbedAdapter');
-    expect(code).toContain('GridLayoutInputEmbedAdapter');
-    expect(code).toContain('OverlayLayoutInputEmbedAdapter');
+    expect(code).toContain('flexLayoutInputEmbedAdapter');
+    expect(code).toContain('gridLayoutInputEmbedAdapter');
+    expect(code).toContain('overlayLayoutInputEmbedAdapter');
   });
 
   it('为 Legend 生成 authoring builder、adapter 与嵌套 Standard / Layout definitions', () => {
@@ -509,9 +510,9 @@ describe('irToVanillaCode fallback', () => {
     );
 
     expect(code).toContain('legend({');
-    expect(code).toContain('LegendInputEmbedAdapter');
-    expect(code).toContain('const compile = { composites: [GridDefinition, FlexLayoutDefinition] };');
-    expect(code).not.toContain('LegendDefinition');
+    expect(code).toContain('legendInputEmbedAdapter');
+    expect(code).toContain('const compile = { composites: [gridDefinition, flexLayoutDefinition] };');
+    expect(code).not.toContain('legendDefinition');
     expect(code).not.toMatch(/\binspect\b/);
   });
 
@@ -548,12 +549,12 @@ describe('irToVanillaCode fallback', () => {
     expect(code).toContain("text: 'Start'");
     expect(code).toContain('position: [0, 0]');
     expect(code).toContain("source: { id: 'start' }");
-    expect(code).toContain('GraphInputEmbedAdapter');
-    expect(code).not.toContain('EntityInputEmbedAdapter');
-    expect(code).not.toContain('RelationInputEmbedAdapter');
+    expect(code).toContain('graphInputEmbedAdapter');
+    expect(code).not.toContain('entityInputEmbedAdapter');
+    expect(code).not.toContain('relationInputEmbedAdapter');
     expect(code).toContain("from '@retikz/graph-vanilla'");
-    expect(code).not.toContain('EntityDefinition');
-    expect(code).not.toContain('RelationDefinition');
+    expect(code).not.toContain('entityDefinition');
+    expect(code).not.toContain('relationDefinition');
   });
 
   it('为 direct Entity、direct Relation 与 nested Graph 生成独立 Vanilla 入口且不合成 authored id', () => {
@@ -586,9 +587,9 @@ describe('irToVanillaCode fallback', () => {
     expect(code).toContain('entity({');
     expect(code).toContain('relation({');
     expect(code.match(/graph\(\{/g)).toHaveLength(2);
-    expect(code).toContain('EntityInputEmbedAdapter');
-    expect(code).toContain('RelationInputEmbedAdapter');
-    expect(code).toContain('GraphInputEmbedAdapter');
+    expect(code).toContain('entityInputEmbedAdapter');
+    expect(code).toContain('relationInputEmbedAdapter');
+    expect(code).toContain('graphInputEmbedAdapter');
     expect(code).not.toContain("id: 'preview-entity-1'");
     expect(code).not.toContain("id: 'preview-relation-1'");
     expect(code).not.toContain("id: 'preview-graph-1'");

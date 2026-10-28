@@ -12,7 +12,7 @@ type GuideTextStyle = Partial<
 type LegendStyle = NonNullable<IRPlotLegendGuide['style']>;
 
 /** Plot palette 解析结果：所有默认配色入口收敛到一个对象 */
-export type EffectivePlotPalette = {
+export type CanonicalPlotPalette = {
   /** 分类 scale 默认颜色 */
   categorical: Array<string>;
   /** 无 color 编码的 mark / series 默认颜色 */
@@ -26,7 +26,7 @@ export type EffectivePlotPalette = {
 };
 
 /** Plot legend 解析后的视觉 defaults */
-export type EffectiveLegendGuideTokens = Required<
+export type CanonicalLegendGuideTokens = Required<
   Pick<
     LegendStyle,
     | 'swatchSize'
@@ -47,15 +47,15 @@ export type EffectiveLegendGuideTokens = Required<
 };
 
 /** Plot defaults 解析结果：lowering 只消费确定的视觉默认值 */
-export type EffectivePlotGuideTheme = {
+export type CanonicalPlotGuideTheme = {
   /** 绘图区视觉样式 */
   plotArea?: IRPlotDefaults['plotArea'];
   /** 全局 guide 文本默认样式 */
   typography: NonNullable<IRPlotDefaults['typography']>;
   /** 解析后的 palette */
-  palette: EffectivePlotPalette;
+  palette: CanonicalPlotPalette;
   /** Axis 视觉默认值 */
   axis: IRPlotAxisDefaults;
   /** Legend 视觉默认值 */
-  legend: EffectiveLegendGuideTokens;
+  legend: CanonicalLegendGuideTokens;
 };

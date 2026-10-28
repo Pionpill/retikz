@@ -8,7 +8,7 @@ import { LayoutAlignment } from '../shared';
 import type { IRGridTrack } from './types';
 
 /** Grid track 在 container-local 坐标中的确定位置 */
-export type PositionedGridTrack = Readonly<{
+type PositionedGridTrack = Readonly<{
   /** 轨道在容器局部坐标中的起始位置 */
   start: number;
   /** 轨道最终分配的尺寸 */
@@ -16,7 +16,7 @@ export type PositionedGridTrack = Readonly<{
 }>;
 
 /** 单行 baseline 求解所需的 child 结构量 */
-export type GridBaselineParticipant = Readonly<{
+type GridBaselineParticipant = Readonly<{
   /** 参与基线对齐的作者输入项索引 */
   sourceIndex: number;
   /** 该项要求的对齐方式 */
@@ -28,7 +28,7 @@ export type GridBaselineParticipant = Readonly<{
 }>;
 
 /** 单行结构尺寸与 first/last baseline target */
-export type GridRowMetrics = Readonly<{
+type GridRowMetrics = Readonly<{
   /** 满足行内尺寸及基线约束的行高 */
   size: number;
   /** 首基线目标相对行起始边的偏移 */

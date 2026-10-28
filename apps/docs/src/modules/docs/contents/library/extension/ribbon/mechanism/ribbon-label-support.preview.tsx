@@ -1,10 +1,10 @@
 import type { RibbonCapContext } from '@retikz/extension';
 import {
-  ArcRibbonCapDefinition,
-  ButtRibbonCapDefinition,
-  RibbonPathDefinition,
-  RoundRibbonCapDefinition,
-  SquareRibbonCapDefinition,
+  arcRibbonCapDefinition,
+  buttRibbonCapDefinition,
+  ribbonPathDefinition,
+  roundRibbonCapDefinition,
+  squareRibbonCapDefinition,
 } from '@retikz/extension';
 import type { Position } from '@retikz/math';
 import { curve } from '@retikz/math';
@@ -23,7 +23,7 @@ export const renderRibbonLabelSupportPreview = (values: RibbonLabelSupportPrevie
   // 固定端面弦长，根据圆弧角度反推圆心与半径，保持两侧接点不变
   const halfAngle = (values.arcAngle * Math.PI) / 360;
   const halfWidth = values.width / 2;
-  const arcParams = ArcRibbonCapDefinition.paramsSchema.parse({
+  const arcParams = arcRibbonCapDefinition.paramsSchema.parse({
     center: [-halfWidth / Math.tan(halfAngle), 0],
     radius: halfWidth / Math.sin(halfAngle),
   });
@@ -37,8 +37,8 @@ export const renderRibbonLabelSupportPreview = (values: RibbonLabelSupportPrevie
   } satisfies Omit<RibbonCapContext, 'params'>;
   const geometry =
     values.cap === 'arc'
-      ? ArcRibbonCapDefinition.resolve({ ...context, params: arcParams })
-      : { butt: ButtRibbonCapDefinition, round: RoundRibbonCapDefinition, square: SquareRibbonCapDefinition }[
+      ? arcRibbonCapDefinition.resolve({ ...context, params: arcParams })
+      : { butt: buttRibbonCapDefinition, round: roundRibbonCapDefinition, square: squareRibbonCapDefinition }[
           values.cap
         ].resolve({ ...context, params: {} });
   const projections: Array<number> = [];
@@ -82,7 +82,7 @@ export const renderRibbonLabelSupportPreview = (values: RibbonLabelSupportPrevie
       height={180}
       viewBox={{ x: -220, y: -90, width: 440, height: 180 }}
       style={{ maxWidth: '100%', height: 'auto' }}
-      extensions={{ paths: [RibbonPathDefinition] }}
+      extensions={{ paths: [ribbonPathDefinition] }}
     >
       <Path
         kind="ribbon"

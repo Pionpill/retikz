@@ -7,7 +7,7 @@ import type {
   DataFieldMap,
   FieldFormatDefinition,
   FieldOrderDefinition,
-  ResolveField,
+  FieldResolver,
 } from '@retikz/data';
 import type { BoundsInsets } from '@retikz/math';
 
@@ -18,7 +18,7 @@ import type {
   AnyPositionAdjustmentDefinition,
   AnyScaleDefinition,
   PlotThemeDefinition,
-  ResolveLabel,
+  LabelResolver,
 } from '../../contract';
 import type { PlotLabelMeasure } from '../../shared';
 
@@ -78,7 +78,7 @@ export type PlotImplementations = {
 };
 
 /** lowerPlots 运行时选项；尺寸、registry 与 runtime resolver 均不进入 Plot IR */
-export type LowerPlotsOptions = {
+export type PlotsLoweringOptions = {
   /** 布局尺寸、字号与边距覆盖 */
   layout?: PlotLayoutOverrides;
   /** 本次运行注入的扩展定义 */
@@ -111,20 +111,20 @@ export type LowerPlotsOptions = {
    */
   invalid?: 'skip' | 'error';
   /** 程序化字段解析逃生舱（运行时函数，不进 IR）：按字段名覆盖类型 + 自定义值解析；返回 undefined → 回退 model/推断 + 内置 coerce */
-  resolveField?: ResolveField;
+  resolveField?: FieldResolver;
   /**
    * datum label 内容逃生舱（运行时函数，不进 IR）：按 mark id 映射的「行 → 完全自定义标签串」
    * @description 优先级最高（resolveLabel > field+format > value），覆盖该 mark 的 label / text 内容声明。
    *   按 mark id 取（宿主 mark 的 priority-1 label / 独立 TextMark 的 priority-2 text 共用）；未命中的 mark 走声明层 field/value/format。
    *   不进 IRPlot，故不破坏 IR JSON 可序列化
    */
-  resolveLabel?: Record<string, ResolveLabel>;
+  resolveLabel?: Record<string, LabelResolver>;
   /** 自定义命名配色 scheme；IR 只保存 scheme 名，runtime 解析为插值函数 */
   colorSchemes?: Record<string, (t: number) => string>;
 };
 
 /** 本次下沉使用的布局环境，不写入 Plot IR */
-export type PlotLayoutOptions = LowerPlotsOptions & {
+export type PlotLayoutOptions = PlotsLoweringOptions & {
   /** 当前 Core 编译环境的文字测量 */
   textMeasurer: PlotLabelMeasure;
 };

@@ -2,17 +2,17 @@ import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
 import { BuiltinExtensionArrowName } from '../constants';
-import { filledPath, hollowPath } from './_utils';
+import { buildFilledPath, buildHollowPath } from './marker-path';
 
 /** 可选实心风筝形箭头 Definition */
-export const KiteArrowDefinition = defineArrow({
+export const kiteArrowDefinition = defineArrow({
   name: BuiltinExtensionArrowName.Kite,
   backX: 0,
   lineContactX: 0,
   defaultLength: 11,
   defaultWidth: 6,
   emit: context => [
-    filledPath(context, [
+    buildFilledPath(context, [
       [0, 5],
       [2.5, 0],
       [10, 5],
@@ -22,15 +22,13 @@ export const KiteArrowDefinition = defineArrow({
 });
 
 /** Kite 箭头的静态 Core provider */
-export const KiteArrowProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'arrow', name: KiteArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => KiteArrowDefinition,
+export const kiteArrowProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'arrow', name: kiteArrowDefinition.name }),
+  makeDefinition: () => kiteArrowDefinition,
 });
 
 /** 可选空心风筝形箭头 Definition */
-export const OpenKiteArrowDefinition = defineArrow({
+export const openKiteArrowDefinition = defineArrow({
   name: BuiltinExtensionArrowName.OpenKite,
   hollow: true,
   backX: 1,
@@ -39,7 +37,7 @@ export const OpenKiteArrowDefinition = defineArrow({
   defaultLength: 11,
   defaultWidth: 6,
   emit: context => [
-    hollowPath(
+    buildHollowPath(
       context,
       [
         [1, 5],
@@ -53,9 +51,7 @@ export const OpenKiteArrowDefinition = defineArrow({
 });
 
 /** OpenKite 箭头的静态 Core provider */
-export const OpenKiteArrowProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'arrow', name: OpenKiteArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => OpenKiteArrowDefinition,
+export const openKiteArrowProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'arrow', name: openKiteArrowDefinition.name }),
+  makeDefinition: () => openKiteArrowDefinition,
 });

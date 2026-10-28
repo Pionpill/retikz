@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 
 import type { PlotThemeDefinition } from '../../contract';
 import { RetikzPlotError } from '../../error';
@@ -34,7 +34,7 @@ const ruleSourcesOf = (layers: ReadonlyArray<DefaultsLayer>) =>
 
 /** 按 Core Theme、Plot style 与 Direct Plot Source 顺序解析 Plot defaults */
 export const resolvePlotTheme = (
-  effectiveTheme: ResolvedTheme,
+  effectiveTheme: CanonicalTheme,
   input: Pick<IRPlot, 'defaultPlot' | 'plotRules'> = {},
   plotThemeDefinitions: ReadonlyArray<PlotThemeDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
@@ -107,13 +107,3 @@ export const resolvePlotTheme = (
     },
   };
 };
-
-/** 仅供 Chart 在不复制 Plot 级联语义时构造其转发 defaults 输入 */
-export type PlotDefaultsLayer = Readonly<{
-  /** Chart forwarding 在 inspection 中的稳定路径 */
-  path: string;
-  /** Chart forwarding 的 Plot-owned sparse defaults */
-  defaults?: IRPlotDefaults;
-  /** Chart forwarding 的 Plot-owned Axis rules */
-  rules?: ReadonlyArray<IRPlotAxisRule>;
-}>;

@@ -12,7 +12,7 @@ import type {
   IRAnimationTrack,
   IRScene,
   IRViewBox,
-  LowerTex,
+  TexLowerer,
   PatternDefinition,
   ShapeDefinition,
   TextMeasurer,
@@ -296,7 +296,7 @@ export type LayoutProps = {
   /** 按能力分类的运行时扩展注册，复用 Core 编译契约 */
   extensions?: LayoutExtensions;
   /** 公式下沉能力 */
-  lowerTex?: LowerTex;
+  lowerTex?: TexLowerer;
   /** 请求生成的编译附加产物 */
   artifacts?: CompileArtifactOptions;
   /** 编译附加产物成功提交后的通知 */

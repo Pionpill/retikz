@@ -41,8 +41,8 @@ const firstMoveX = (path: PathPrimitive): number => {
   return command.to[0];
 };
 
-describe('stroke dash offset', () => {
-  it('schema accepts finite positive/negative dashOffset and rejects non-finite values', () => {
+describe('描边虚线偏移', () => {
+  it('schema 接受有限正/负 dashOffset 并拒绝非有限值', () => {
     expect(PathSchema.safeParse(strokePath(-3)).success).toBe(true);
     expect(PathSchema.safeParse(strokePathWithOnlyOffset(0)).success).toBe(true);
     expect(PathSchema.safeParse(strokePath('3')).success).toBe(false);
@@ -81,7 +81,7 @@ describe('stroke dash offset', () => {
     ).toBe(false);
   });
 
-  it('compile forwards dashOffset for path, node border, and label pin leader', () => {
+  it('向前编译路径、节点边界和标签 pin 引线的 dashOffset', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -127,7 +127,7 @@ describe('stroke dash offset', () => {
     expect(firstRect(scene.primitives, 'dashed')?.dashOffset).toBeUndefined();
   });
 
-  it('preserves the logical dash phase when a centered label splits the stroke', () => {
+  it('当居中标签分割描边时保留逻辑破折号阶段', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

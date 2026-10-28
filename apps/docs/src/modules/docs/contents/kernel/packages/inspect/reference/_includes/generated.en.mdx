@@ -779,7 +779,7 @@ export declare const mergeInspectorRegistries: (...registries: ReadonlyArray<Ins
 
 ## Extension definitions and registration
 
-#### <ApiSourceLink label={"AnyInspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={177}>AnyInspectorDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputAnyInspectorDefinition"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={177}>InputAnyInspectorDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -804,7 +804,7 @@ export declare const mergeInspectorRegistries: (...registries: ReadonlyArray<Ins
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type AnyInspectorDefinitionInput = WithOptionalProperties<
+export type InputAnyInspectorDefinition = WithOptionalProperties<
   AnyInspectorDefinition,
   'optionsSchema' | 'resolveOptions'
 >;
@@ -814,7 +814,7 @@ export type AnyInspectorDefinitionInput = WithOptionalProperties<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectorDefinitionInput"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={117}>InspectorDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputInspectorDefinition"} path={"packages/kernel/inspect/src/contract/types.ts"} startLine={117}>InputInspectorDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -836,7 +836,7 @@ export type AnyInspectorDefinitionInput = WithOptionalProperties<
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InspectorDefinitionInput<
+export type InputInspectorDefinition<
   TSubject extends JsonValue = JsonValue,
   TParsedOptions extends JsonObject = Record<string, never>,
   TResolvedOptions extends JsonObject = TParsedOptions,
@@ -889,7 +889,7 @@ export type InspectorRegistry = Readonly<{
 
 | Category   | Name           | Type / signature                             | Description                                                                                                                     |
 | ---------- | -------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Parameters | `definitions?` | `ReadonlyArray<AnyInspectorDefinitionInput>` | Custom definitions appended after the five built-in Inspectors; omission registers only the built-ins                           |
+| Parameters | `definitions?` | `ReadonlyArray<InputAnyInspectorDefinition>` | Custom definitions appended after the five built-in Inspectors; omission registers only the built-ins                           |
 | Returns    | —              | `InspectorRegistry`                          | A new readonly registry containing built-in and custom definitions                                                              |
 | Throws     | —              | —                                            | Throws RetikzInspectError for invalid custom definitions or namespace/type keys duplicated among built-in or custom definitions |
 
@@ -901,7 +901,7 @@ export type InspectorRegistry = Readonly<{
 
 ```ts
 export declare const createDefaultInspectorRegistry: (
-  definitions?: ReadonlyArray<AnyInspectorDefinitionInput>,
+  definitions?: ReadonlyArray<InputAnyInspectorDefinition>,
 ) => InspectorRegistry;
 ```
 
@@ -919,7 +919,7 @@ export declare const createDefaultInspectorRegistry: (
 
 | Category   | Name          | Type / signature                             | Description                                                                                                            |
 | ---------- | ------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Parameters | `definitions` | `ReadonlyArray<AnyInspectorDefinitionInput>` | Inspector definitions in registration order; an empty array creates an empty registry                                  |
+| Parameters | `definitions` | `ReadonlyArray<InputAnyInspectorDefinition>` | Inspector definitions in registration order; an empty array creates an empty registry                                  |
 | Returns    | —             | `InspectorRegistry`                          | An independent readonly registry whose definitions receive missing option defaults and are frozen during registration  |
 | Throws     | —             | —                                            | Throws RetikzInspectError for blank definition namespace, type, or owner identifiers, or duplicate namespace/type keys |
 
@@ -931,7 +931,7 @@ export declare const createDefaultInspectorRegistry: (
 
 ```ts
 export declare const createInspectorRegistry: (
-  definitions: ReadonlyArray<AnyInspectorDefinitionInput>,
+  definitions: ReadonlyArray<InputAnyInspectorDefinition>,
 ) => InspectorRegistry;
 ```
 
@@ -939,7 +939,7 @@ export declare const createInspectorRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineInspector"} path={"packages/kernel/inspect/src/contract/define.ts"} startLine={72}>defineInspector</ApiSourceLink>
+#### <ApiSourceLink label={"defineInspector"} path={"packages/kernel/inspect/src/contract/define.ts"} startLine={40}>defineInspector</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -947,15 +947,14 @@ export declare const createInspectorRegistry: (
 
 <ApiTable variant="parameters">
 
-| Category        | Name               | Type / signature                                                                       | Description                                                                                                                                       |
-| --------------- | ------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Type parameters | `TSubject`         | `extends JsonValue`                                                                    | Observed subject type published by its owner                                                                                                      |
-|                 | `TParsedOptions`   | `extends JsonObject = Record<string, never>`                                           | Options type parsed by the options schema                                                                                                         |
-|                 | `TResolvedOptions` | `extends JsonObject = TParsedOptions`                                                  | Resolved options type consumed by the callback                                                                                                    |
-|                 | `TSourceOptions`   | `extends JsonObject = TParsedOptions`                                                  | Raw options input type before it reaches the options schema                                                                                       |
-| Parameters      | `definition`       | `InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | Inspector definition to validate; an omitted options schema accepts only an empty object, and an omitted resolver uses the parsed result directly |
-| Returns         | —                  | `InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | The definition with missing defaults filled and shallowly frozen; definitions already processed by this package retain their reference            |
-| Throws          | —                  | —                                                                                      | Throws RetikzInspectError when namespace, type, or required owner identifiers are blank                                                           |
+| Category        | Name               | Type / signature                                                                       | Description                                                                                                                                                |
+| --------------- | ------------------ | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TSubject`         | `extends JsonValue`                                                                    | Observed subject type published by its owner                                                                                                               |
+|                 | `TParsedOptions`   | `extends JsonObject = Record<string, never>`                                           | Options type parsed by the options schema                                                                                                                  |
+|                 | `TResolvedOptions` | `extends JsonObject = TParsedOptions`                                                  | Resolved options type consumed by the callback                                                                                                             |
+|                 | `TSourceOptions`   | `extends JsonObject = TParsedOptions`                                                  | Raw options input type before it reaches the options schema                                                                                                |
+| Parameters      | `definition`       | `InputInspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | Author-provided Inspector definition; omitting the options schema accepts only an empty object, and omitting the resolver uses the parsed options directly |
+| Returns         | —                  | `InputInspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | The definition with missing defaults filled and shallowly frozen; definitions already processed by this package retain their reference                     |
 
 </ApiTable>
 
@@ -970,8 +969,8 @@ export declare const defineInspector: <
   TResolvedOptions extends JsonObject = TParsedOptions,
   TSourceOptions extends JsonObject = TParsedOptions,
 >(
-  definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
-) => InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
+  definition: InputInspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
+) => InputInspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
 ```
 
 </DocTab>
@@ -992,7 +991,7 @@ export declare const defineInspector: <
 | ---------- | --------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`       | `string`                                                                                                  | —       | Coordinate ID used by path endpoints and node positioning to reference this position                                                                                                                                                            |
 | `position` | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —       | Coordinate position; does not support Node-only self-anchor alignment<br />Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or between `{ between: [A, B], fraction }` |
-| `request`  | `Exclude<InspectionVanillaAuthoringInput, false>`                                                         | —       | One or more inspection requests for the current Coordinate                                                                                                                                                                                      |
+| `request`  | `Exclude<InputInspectionVanillaAuthoring, false>`                                                         | —       | One or more inspection requests for the current Coordinate                                                                                                                                                                                      |
 
 </ApiTable>
 
@@ -1004,7 +1003,7 @@ export declare const defineInspector: <
 export declare const InspectCoordinate: FC<InspectCoordinateProps>;
 
 export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
-  request: Exclude<InspectionVanillaAuthoringInput, false>;
+  request: Exclude<InputInspectionVanillaAuthoring, false>;
 };
 ```
 
@@ -1025,7 +1024,7 @@ export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
 | Main       | `children?`              | `ReactNode`                                           | —                             | Drawing content declared through JSX                                                                                                                                           |
 |            | `ir?`                    | `IRScene`                                             | —                             | Persisted Source IR, used instead of children                                                                                                                                  |
 |            | `readonly registry`      | `InspectorRegistry`                                   | —                             | Inspector registry used by the current Layout                                                                                                                                  |
-|            | `readonly request?`      | `InspectionVanillaAuthoringInput`                     | —                             | Optional scene requests; false sets a barrier for the entire drawing                                                                                                           |
+|            | `readonly request?`      | `InputInspectionVanillaAuthoring`                     | —                             | Optional scene requests; false sets a barrier for the entire drawing                                                                                                           |
 |            | `readonly selection?`    | `InspectionSelection`                                 | —                             | Explicit selection merged with authored wrapper rules                                                                                                                          |
 | Layout     | `nodeDistance?`          | `number`                                              | `24`                          | Default distance for relative node positioning in drawing units; applies when position uses direction/of and omits distance                                                    |
 | Style      | `fontSize?`              | `number`                                              | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for font presets and rem, without overriding explicit numeric font sizes               |
@@ -1050,7 +1049,7 @@ export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
 | Runtime    | `runtime?`               | `LayoutRuntimeOptions`                                | `captureLayoutRuntimeOptions` | Selects retained incremental updates or static full compilation; defaults to retained                                                                                          |
 | Output     | `artifacts?`             | `CompileArtifactOptions`                              | —                             | Compilation artifacts requested for generation                                                                                                                                 |
 | Extensions | `extensions?`            | `LayoutExtensions`                                    | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                  |
-|            | `lowerTex?`              | `LowerTex`                                            | —                             | Formula lowering capability                                                                                                                                                    |
+|            | `lowerTex?`              | `TexLowerer`                                          | —                             | Formula lowering capability                                                                                                                                                    |
 |            | `measureText?`           | `TextMeasurer`                                        | —                             | Custom text measurement; defaults to Vanilla environment measurement with an estimation fallback                                                                               |
 
 </ApiTable>
@@ -1066,7 +1065,7 @@ export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'
   Readonly<{
     registry: InspectorRegistry;
     selection?: InspectionSelection;
-    request?: InspectionVanillaAuthoringInput;
+    request?: InputInspectionVanillaAuthoring;
     onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
     onCommit?: (result: InspectionCompileResult) => void;
   }>;
@@ -1088,7 +1087,7 @@ The remaining members are inherited from `NodeProps`, with `'authoring'` removed
 
 | Member    | Type                                              | Default | Description                                          |
 | --------- | ------------------------------------------------- | ------- | ---------------------------------------------------- |
-| `request` | `Exclude<InspectionVanillaAuthoringInput, false>` | —       | One or more inspection requests for the current Node |
+| `request` | `Exclude<InputInspectionVanillaAuthoring, false>` | —       | One or more inspection requests for the current Node |
 
 </ApiTable>
 
@@ -1100,7 +1099,7 @@ The remaining members are inherited from `NodeProps`, with `'authoring'` removed
 export declare const InspectNode: FC<InspectNodeProps>;
 
 export type InspectNodeProps = Omit<NodeProps, 'authoring'> & {
-  request: Exclude<InspectionVanillaAuthoringInput, false>;
+  request: Exclude<InputInspectionVanillaAuthoring, false>;
 };
 ```
 
@@ -1120,7 +1119,7 @@ The remaining members are inherited from `PathProps`, with `'authoring'` removed
 
 | Member             | Type                                              | Default | Description                                     |
 | ------------------ | ------------------------------------------------- | ------- | ----------------------------------------------- |
-| `readonly request` | `Exclude<InspectionVanillaAuthoringInput, false>` | —       | Inspector request for the current authored Path |
+| `readonly request` | `Exclude<InputInspectionVanillaAuthoring, false>` | —       | Inspector request for the current authored Path |
 
 </ApiTable>
 
@@ -1133,7 +1132,7 @@ export declare const InspectPath: FC<InspectPathProps>;
 
 export type InspectPathProps = Omit<PathProps, 'authoring'> &
   Readonly<{
-    request: Exclude<InspectionVanillaAuthoringInput, false>;
+    request: Exclude<InputInspectionVanillaAuthoring, false>;
   }>;
 ```
 
@@ -1153,7 +1152,7 @@ The remaining members are inherited from `ScopeProps`, with `'authoring'` remove
 
 | Member             | Type                              | Default | Description                                                                                  |
 | ------------------ | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
-| `readonly request` | `InspectionVanillaAuthoringInput` | —       | Requests for the current subtree; false establishes a barrier that descendants cannot reopen |
+| `readonly request` | `InputInspectionVanillaAuthoring` | —       | Requests for the current subtree; false establishes a barrier that descendants cannot reopen |
 
 </ApiTable>
 
@@ -1166,7 +1165,7 @@ export declare const InspectScope: FC<InspectScopeProps>;
 
 export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
   Readonly<{
-    request: InspectionVanillaAuthoringInput;
+    request: InputInspectionVanillaAuthoring;
   }>;
 ```
 
@@ -1176,7 +1175,7 @@ export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
 
 ## Direct calls
 
-#### <ApiSourceLink label={"CreateInspectionVanillaDriverOptions"} path={"packages/kernel/inspect/src/vanilla/driver.ts"} startLine={71}>CreateInspectionVanillaDriverOptions</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionVanillaDriverOptions"} path={"packages/kernel/inspect/src/vanilla/driver.ts"} startLine={71}>InspectionVanillaDriverOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1198,7 +1197,7 @@ export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type CreateInspectionVanillaDriverOptions = Readonly<{
+export type InspectionVanillaDriverOptions = Readonly<{
   registry: InspectorRegistry;
   selection?: InspectionSelection;
   onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
@@ -1210,10 +1209,10 @@ export type CreateInspectionVanillaDriverOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionVanillaAuthoringInput"} path={"packages/kernel/inspect/src/vanilla/authoring.ts"} startLine={19}>InspectionVanillaAuthoringInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputInspectionVanillaAuthoring"} path={"packages/kernel/inspect/src/vanilla/authoring.ts"} startLine={19}>InputInspectionVanillaAuthoring</ApiSourceLink>
 
 ```ts
-export type InspectionVanillaAuthoringInput =
+export type InputInspectionVanillaAuthoring =
   false | InspectionVanillaRequest | ReadonlyArray<InspectionVanillaRequest>;
 ```
 
@@ -1257,7 +1256,7 @@ export type InspectionVanillaRequest = Readonly<{
 
 | Category   | Name    | Type / signature                  | Description                                                                                                     |
 | ---------- | ------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Parameters | `input` | `InspectionVanillaAuthoringInput` | One or more inspection requests; false blocks a whole Scene or Scope and cannot be used on an individual entity |
+| Parameters | `input` | `InputInspectionVanillaAuthoring` | One or more inspection requests; false blocks a whole Scene or Scope and cannot be used on an individual entity |
 | Returns    | —       | `InspectionVanillaAuthoring`      | A frozen marker for the Vanilla input authoring field; its requests are resolved during driver compilation      |
 
 </ApiTable>
@@ -1268,7 +1267,7 @@ export type InspectionVanillaRequest = Readonly<{
 
 ```ts
 export declare const createInspectionVanillaAuthoring: (
-  input: InspectionVanillaAuthoringInput,
+  input: InputInspectionVanillaAuthoring,
 ) => InspectionVanillaAuthoring;
 ```
 
@@ -1284,10 +1283,10 @@ export declare const createInspectionVanillaAuthoring: (
 
 <ApiTable variant="parameters">
 
-| Category   | Name      | Type / signature                       | Description                                                                                                                                  |
-| ---------- | --------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Parameters | `options` | `CreateInspectionVanillaDriverOptions` | Fixed registry with optional selection and commit callbacks; omitting selection uses only authoring requests                                 |
-| Returns    | —         | `VanillaCompileDriver`                 | A compilation driver for Vanilla hosts; diagnostics are delivered before onCommit, and callback failure does not roll back committed results |
+| Category   | Name      | Type / signature                 | Description                                                                                                                                  |
+| ---------- | --------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `options` | `InspectionVanillaDriverOptions` | Fixed registry with optional selection and commit callbacks; omitting selection uses only authoring requests                                 |
+| Returns    | —         | `VanillaCompileDriver`           | A compilation driver for Vanilla hosts; diagnostics are delivered before onCommit, and callback failure does not roll back committed results |
 
 </ApiTable>
 
@@ -1296,9 +1295,7 @@ export declare const createInspectionVanillaAuthoring: (
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createInspectionVanillaDriver: (
-  options: CreateInspectionVanillaDriverOptions,
-) => VanillaCompileDriver;
+export declare const createInspectionVanillaDriver: (options: InspectionVanillaDriverOptions) => VanillaCompileDriver;
 ```
 
 </DocTab>

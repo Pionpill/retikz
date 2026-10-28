@@ -2,7 +2,7 @@ import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { createPlotLocator } from '../../src';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -110,11 +110,11 @@ const trackSpec = {
 const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 
 const expandOf = (spec: IRPlot): IRScope => {
-  return lowerPlot(
+  return lowerPlotWithDataArtifact(
     spec,
     { weather: weatherRows },
     { layout: { width: 480, height: 300 }, textMeasurer: measureLabel, provenance: true, datumProvenance: true },
-  ) as IRScope;
+  ).child as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
@@ -138,15 +138,15 @@ const markLayersOf = (scope: IRScope): Array<IRScope> =>
 const gridLayersOf = (scope: IRScope): Array<IRScope> =>
   allScopes(scope).filter(child => child.meta?.source === 'plot' && child.meta.layer === 'grid');
 
-describe('scope provenance surface lowering', () => {
-  it('mark_layer_meta_carries_coordinate_view', () => {
+describe('范围来源地表下沉', () => {
+  it('标记层元数据包含坐标视图', () => {
     const outer = expandOf(parsePlotIR(overlaySpec));
 
     expect(markLayersOf(outer).map(layer => layer.meta?.coordinateView)).toEqual(['temp', 'rain']);
     expect(markLayersOf(outer).every(layer => layer.meta?.coordinateScope === undefined)).toBe(true);
   });
 
-  it('facet_datum_meta_carries_facet_context', () => {
+  it('刻面数据元携带刻面上下文', () => {
     const outer = expandOf(parsePlotIR(facetSpec));
     const datum = allNodes(outer).find(node => node.meta?.transformedIndex === 0);
 
@@ -157,7 +157,7 @@ describe('scope provenance surface lowering', () => {
     expect(datum?.meta?.coordinateScope).toBeUndefined();
   });
 
-  it('track_datum_meta_carries_arrangement_and_track_context', () => {
+  it('轨道数据元携带排列和轨道上下文', () => {
     const outer = expandOf(parsePlotIR(trackSpec));
     const datum = allNodes(outer).find(node => node.meta?.markIndex === 1 && node.meta.transformedIndex === 0);
 
@@ -165,7 +165,7 @@ describe('scope provenance surface lowering', () => {
     expect(datum?.meta?.scaffold).toBeUndefined();
   });
 
-  it('track_guide_meta_carries_arrangement_and_track_context', () => {
+  it('轨道辅助线元承载排列和轨道上下文', () => {
     const outer = expandOf(parsePlotIR(trackSpec));
     const rainGridLayer = gridLayersOf(outer).find(layer => layer.meta?.coordinateView === 'rain');
 
@@ -173,7 +173,7 @@ describe('scope provenance surface lowering', () => {
     expect(rainGridLayer?.meta?.scaffold).toBeUndefined();
   });
 
-  it('grid_layer_uses_explicit_guide_owner_id', () => {
+  it('网格层使用显式辅助线所属模块 ID', () => {
     const spec = parsePlotIR({
       ...overlaySpec,
       guides: overlaySpec.guides.map((guide, index) => ({
@@ -187,7 +187,7 @@ describe('scope provenance surface lowering', () => {
     expect(ids).toEqual(['weather.temperature-axis.grid', 'weather.rainfall-axis.grid']);
   });
 
-  it('anonymous_grid_layer_uses_coordinate_view_owner_id', () => {
+  it('匿名网格层使用所属坐标视图的 id', () => {
     const spec = parsePlotIR({
       ...overlaySpec,
       guides: overlaySpec.guides.map(guide => ({ ...guide, grid: true })),
@@ -198,8 +198,8 @@ describe('scope provenance surface lowering', () => {
   });
 });
 
-describe('scope provenance surface locator', () => {
-  it('locator_by_coordinate_view_disambiguates_same_index', () => {
+describe('范围来源表面定位器', () => {
+  it('定位器按坐标视图区分相同索引', () => {
     const locator = createPlotLocator(
       parsePlotIR(overlaySpec),
       { weather: weatherRows },
@@ -213,7 +213,7 @@ describe('scope provenance surface locator', () => {
     expect(rain?.position).not.toEqual(temp?.position);
   });
 
-  it('locator_by_facet_key_disambiguates_panel', () => {
+  it('通过侧面键定位器消除面板歧义', () => {
     const locator = createPlotLocator(
       parsePlotIR(facetSpec),
       { weather: weatherRows },
@@ -227,7 +227,7 @@ describe('scope provenance surface locator', () => {
     expect(south?.position[0]).toBeGreaterThan(north?.position[0] ?? 0);
   });
 
-  it('locator_by_track_returns_track_context', () => {
+  it('轨道定位器返回轨道上下文', () => {
     const locator = createPlotLocator(
       parsePlotIR(trackSpec),
       { weather: weatherRows },
@@ -238,7 +238,7 @@ describe('scope provenance surface locator', () => {
     expect(rain?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
   });
 
-  it('root_and_view_addresses_resolve', () => {
+  it('根地址和视图地址解析', () => {
     const locator = createPlotLocator(
       parsePlotIR(overlaySpec),
       { weather: weatherRows },
@@ -250,7 +250,7 @@ describe('scope provenance surface locator', () => {
     expect(locator.resolve('weather.scope.rain.datum.0')).toBeNull();
   });
 
-  it('unknown_view_or_invalid_facet_returns_null', () => {
+  it('未知视图或无效面返回空', () => {
     const locator = createPlotLocator(
       parsePlotIR(facetSpec),
       { weather: weatherRows },

@@ -103,7 +103,7 @@ describe('PathLabelSchema 零破坏（旧形态仍合法）', () => {
   });
 });
 
-describe('StepLabel JSON round-trip', () => {
+describe('StepLabel JSON 往返', () => {
   it('interrupt 序列化往返保持布尔值', () => {
     const label = { text: 'gap', interrupt: false };
 

@@ -8,19 +8,19 @@ export * from './readonly-layer';
 export type {
   DefineRetainedRenderer,
   RetainedCanvasRenderer,
-  RetainedCanvasRendererDefinitionInput,
+  InputRetainedCanvasRendererDefinition,
   RetainedCanvasRendererImmutableOptions,
   RetainedRenderer,
   RetainedRendererDefinitionBase,
-  RetainedRendererDefinitionInput,
+  InputRetainedRendererDefinition,
   RetainedRendererFactory,
-  RetainedRendererFactoryInput,
+  InputRetainedRendererFactory,
   RetainedRendererHost,
   RetainedRendererImmutableOptions,
   RetainedRendererRead,
   RetainedRendererTokenBase,
   RetainedSvgRenderer,
-  RetainedSvgRendererDefinitionInput,
+  InputRetainedSvgRendererDefinition,
   RetainedSvgRendererImmutableOptions,
 } from './renderer';
 export {

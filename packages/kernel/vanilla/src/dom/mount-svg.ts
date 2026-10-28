@@ -27,9 +27,9 @@ import type {
   HydrationHandle,
   MountOptions,
   RawStaticMountOptions,
-  RenderInput,
+  InputRender,
   RetainedMountOptions,
-  RetainedRenderInput,
+  InputRetainedRender,
   RetainedSvgView,
   StaticMountOptions,
   StaticRawSvgView,
@@ -48,7 +48,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  */
 const mountStaticSvg = (
   container: Element,
-  input: RenderInput,
+  input: InputRender,
   options: StaticMountOptions | RawStaticMountOptions,
 ): StaticSvgView | StaticRawSvgView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
@@ -67,7 +67,7 @@ const mountStaticSvg = (
   let currentRuntimeMeta: InputRuntimeMeta = createEmptyRuntimeMeta();
   const liveHydrationDisposers = new Set<() => void>();
 
-  const renderInto = (next: RenderInput): void => {
+  const renderInto = (next: InputRender): void => {
     const { scene, artifacts, compileResult, layers, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
     currentArtifacts = artifacts;
@@ -128,7 +128,7 @@ const mountStaticSvg = (
   return {
     mode: VanillaViewMode.Static,
     root,
-    update(next: RenderInput) {
+    update(next: InputRender) {
       if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountSvg: view already disposed.');
       renderInto(next);
     },
@@ -160,7 +160,7 @@ const mountStaticSvg = (
 /** 把 IR / InputScene 挂成 retained SVG Runtime */
 const mountRetainedSvg = (
   container: Element,
-  input: RetainedRenderInput,
+  input: InputRetainedRender,
   options: RetainedMountOptions,
   runtimeOptions: VanillaRetainedRuntimeOptions,
 ): RetainedSvgView => {
@@ -208,14 +208,14 @@ const mountRetainedSvg = (
 /** `mountSvg` 的 static / retained 输入重载 */
 type MountSvg = {
   (container: Element, input: Scene, options?: StaticMountOptions): StaticSvgView;
-  (container: Element, input: RetainedRenderInput, options: RawStaticMountOptions): StaticRawSvgView;
-  (container: Element, input: RetainedRenderInput, options?: RetainedMountOptions): RetainedSvgView;
+  (container: Element, input: InputRetainedRender, options: RawStaticMountOptions): StaticRawSvgView;
+  (container: Element, input: InputRetainedRender, options?: RetainedMountOptions): RetainedSvgView;
 };
 
 /** 挂载 SVG 视图；预编译 Scene 只能走 static 路径 */
 export const mountSvg: MountSvg = ((
   container: Element,
-  input: RenderInput,
+  input: InputRender,
   options: StaticMountOptions | MountOptions = {},
 ): VanillaView => {
   if ('primitives' in input) {

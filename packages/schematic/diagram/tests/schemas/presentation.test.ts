@@ -8,8 +8,8 @@ const minimalLegend = {
   content: { kind: 'items', items: [] },
 } as const;
 
-describe('Diagram Presentation schema', () => {
-  it('parses every fixed slot and preserves complete Core TextBlock authoring', () => {
+describe('Diagram 表示 schema', () => {
+  it('解析每个固定槽并保留完整的 Core TextBlock 编写', () => {
     const presentation = DiagramPresentationSchema.parse({
       title: {
         text: [
@@ -43,14 +43,14 @@ describe('Diagram Presentation schema', () => {
     expect(presentation.legend).toMatchObject({ namespace: 'standard', type: 'legend' });
   });
 
-  it('accepts authored whitespace without trimming it', () => {
+  it('接受编写的空白而不修剪它', () => {
     expect(DiagramPresentationSchema.parse({ title: { text: '   ' } }).title?.text).toBe('   ');
     expect(
       DiagramPresentationSchema.parse({ description: { text: [{ segments: [{ tex: '  ' }] }] } }).description?.text,
     ).toEqual([{ segments: [{ tex: '  ' }] }]);
   });
 
-  it('preserves valid empty Core TextBlock authoring', () => {
+  it('保留有效的空 Core TextBlock 编写', () => {
     expect(DiagramPresentationSchema.parse({ title: { text: '' } }).title?.text).toBe('');
     expect(DiagramPresentationSchema.parse({ title: { text: [''] } }).title?.text).toEqual(['']);
     expect(DiagramPresentationSchema.parse({ title: { text: [{ text: '' }] } }).title?.text).toEqual([{ text: '' }]);
@@ -59,7 +59,7 @@ describe('Diagram Presentation schema', () => {
     ).toEqual([{ segments: [{ text: '' }, { tex: '' }] }]);
   });
 
-  it.each([{}, { unknown: true }])('rejects an empty Presentation or records outside the fixed slots: %j', input => {
+  it.each([{}, { unknown: true }])('拒绝固定槽之外的空演示文稿或记录：%j', input => {
     expect(() => DiagramPresentationSchema.parse(input)).toThrow();
   });
 });

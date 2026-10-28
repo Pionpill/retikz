@@ -1,8 +1,8 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
@@ -13,7 +13,7 @@ const geometry = (child: IRChild): Array<IRNode | IRPath> => {
   return [];
 };
 
-const render = (mark: unknown, rows: Array<{ x: number; y: number }>, options: LowerPlotsOptions = {}) => {
+const render = (mark: unknown, rows: Array<{ x: number; y: number }>, options: PlotsLoweringOptions = {}) => {
   const source = PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -26,10 +26,10 @@ const render = (mark: unknown, rows: Array<{ x: number; y: number }>, options: L
     ],
     marks: [mark],
   });
-  return geometry(lowerPlot(source, { rows }, { textMeasurer: measureLabel, ...options }));
+  return geometry(lowerPlotWithDataArtifact(source, { rows }, { textMeasurer: measureLabel, ...options }).child);
 };
 
-describe('Mark instance sources', () => {
+describe('标记实例源', () => {
   const rows = [
     { x: 2, y: 3 },
     { x: 8, y: 7 },
@@ -39,13 +39,13 @@ describe('Mark instance sources', () => {
     encodings: { position: { x: { value: 5 }, y: { value: 5 } } },
   };
 
-  it('renders one constant point with an empty or populated source', () => {
+  it('使用空源或填充源渲染一个常量点', () => {
     expect(render(fixedPoint, [])).toHaveLength(1);
     expect(render(fixedPoint, rows)).toHaveLength(1);
     expect(render({ ...fixedPoint, transforms: [] }, rows)).toHaveLength(1);
   });
 
-  it('broadcasts constant coordinates over field-bound records without an empty-result fallback', () => {
+  it('在字段绑定记录上广播常量坐标，没有空结果回退', () => {
     const mark = { type: 'point', encodings: { position: { x: { field: 'x' }, y: { value: 5 } } } };
     const points = render(mark, rows);
     expect(points).toHaveLength(2);
@@ -53,7 +53,7 @@ describe('Mark instance sources', () => {
     expect(render(mark, [])).toHaveLength(0);
   });
 
-  it('renders one complete edge-to-edge path per result record', () => {
+  it('为每个结果记录渲染一条完整的边到边路径', () => {
     const mark = {
       type: 'path',
       encodings: {
@@ -65,12 +65,12 @@ describe('Mark instance sources', () => {
     expect(render(mark, [])).toHaveLength(0);
   });
 
-  it('keeps field-bound vertices in a single path', () => {
+  it('将字段绑定顶点保留在单个路径中', () => {
     const mark = { type: 'path', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } };
     expect(render(mark, rows).filter(child => child.type === 'path')).toHaveLength(1);
   });
 
-  it('passes a real single instance to anchor generators without datum metadata', () => {
+  it('将真实的单个实例传递给锚点生成器，而无需数据元数据', () => {
     const generator = vi.fn(() => 'fixed');
     const points = render({ ...fixedPoint, properties: { anchorId: { generator: 'fixed' } } }, rows, {
       anchorIdGenerators: { fixed: generator },
@@ -84,13 +84,13 @@ describe('Mark instance sources', () => {
     expect(points[0]).not.toHaveProperty('meta.transformedIndex');
   });
 
-  it('rejects index templates on single instances instead of inventing a row index', () => {
+  it('拒绝单个实例上的索引模板，而不是发明行索引', () => {
     expect(() => render({ ...fixedPoint, properties: { anchorId: { template: 'point.{index}' } } }, rows)).toThrow(
       /index.*row/i,
     );
   });
 
-  it('uses template fields as row dependencies and rejects duplicate generated IDs', () => {
+  it('使用模板字段作为行依赖项并拒绝重复生成的 ID', () => {
     const mark = { ...fixedPoint, properties: { anchorId: { template: 'point.{field:x}' } } };
     expect(render(mark, rows).map(point => point.id)).toEqual(['point.2', 'point.8']);
     expect(render(mark, [])).toHaveLength(0);

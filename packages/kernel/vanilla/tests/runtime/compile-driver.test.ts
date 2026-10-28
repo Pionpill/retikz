@@ -39,8 +39,8 @@ const observer: CompileObserverDefinition<string> = Object.freeze({
     }),
 });
 
-describe('Vanilla compile driver', () => {
-  it('uses the shared Retikz error contract', () => {
+describe('Vanilla 编译驱动程序', () => {
+  it('使用共享的 Retikz 错误契约', () => {
     const cause = new Error('driver cause');
     const error = new RetikzVanillaError({
       code: RetikzVanillaErrorCode.CompileDriverFailed,

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { loadCorpus } from '../../src/corpus/load';
 import { CorpusPromptSchema } from '../../src/corpus/types';
 
-describe('corpus assertions', () => {
+describe('语料库断言', () => {
   const corpus = loadCorpus(new URL('../../corpus/core.json', import.meta.url));
 
   it('每条都带 >=1 条 assertions 且全部过 schema', () => {

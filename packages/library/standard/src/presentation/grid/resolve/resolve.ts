@@ -1,5 +1,3 @@
-import { RetikzStandardError, RetikzStandardErrorCode } from '../../../shared/errors';
-import { getLatticeRangeError } from '../../shared/lattice';
 import { computeGridBounds } from '../geometry';
 import { GridLineInputSchema, GridSchema } from '../schema';
 import type { IRGrid, IRGridLine } from '../types';
@@ -24,26 +22,36 @@ export const resolveGrid = (source: IRGrid): CanonicalGrid => {
       line === false
         ? false
         : {
-            vertical: resolveGridLine(pair.vertical, bounds.minX, bounds.maxX, 'vertical'),
-            horizontal: resolveGridLine(pair.horizontal, bounds.minY, bounds.maxY, 'horizontal'),
+            vertical: resolveGridLine(pair.vertical, bounds.minX),
+            horizontal: resolveGridLine(pair.horizontal, bounds.minY),
           },
-    border: GridSchema.shape.border.parse(source.border),
+    border:
+      source.border === undefined
+        ? undefined
+        : {
+            ...source.border,
+            padding: source.border.padding ?? GridSchema.shape.border.unwrap().shape.padding.parse(undefined),
+            order: source.border.order ?? GridSchema.shape.border.unwrap().shape.order.parse(undefined),
+            extendLines:
+              source.border.extendLines ?? GridSchema.shape.border.unwrap().shape.extendLines.parse(undefined),
+          },
   };
 };
 
-/** 补全单方向默认值并检查可枚举范围 */
-const resolveGridLine = (source: IRGridLine, min: number, max: number, direction: string): CanonicalGridLine => {
+/** 补全单方向默认值，最终可枚举范围由枚举入口统一检查 */
+const resolveGridLine = (source: IRGridLine, min: number): CanonicalGridLine => {
   const line: CanonicalGridLine = {
-    ...GridLineInputSchema.parse(source),
+    ...source,
+    spacing: source.spacing ?? GridLineInputSchema.shape.spacing.parse(undefined),
+    includeBoundary: source.includeBoundary ?? GridLineInputSchema.shape.includeBoundary.parse(undefined),
+    major:
+      source.major === undefined
+        ? undefined
+        : {
+            ...source.major,
+            offset: source.major.offset ?? GridLineInputSchema.shape.major.unwrap().shape.offset.parse(undefined),
+          },
     origin: source.origin ?? min,
   };
-  const error = getLatticeRangeError({ ...line, min, max });
-  if (error !== undefined)
-    throw new RetikzStandardError({
-      code: RetikzStandardErrorCode.ResolutionInvalid,
-      message: error,
-      details: { path: ['line', direction, 'spacing'] },
-    });
-
   return line;
 };

@@ -8,7 +8,7 @@ import { PreviewControlStateContext } from '@/modules/docs/components/component-
 import { getPreviewControlFields, isPreviewControlVisible } from '@/modules/docs/components/component-preview/controls';
 import { PreviewThemeProvider } from '@/modules/docs/components/component-preview/theme';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
-import EntityDefinition, {
+import entityDefinition, {
   previewSource as definitionSource,
 } from '@/modules/docs/contents/schematic/graph/entity/custom/entity-definition';
 import {
@@ -59,7 +59,7 @@ const renderWithValues = (
     </PreviewThemeProvider>,
   );
 
-describe('Entity role and style playground', () => {
+describe('Entity 角色和风格交互演示', () => {
   it('双语共享语义值，覆盖全部内置角色与状态，不泄漏站点私有 kind', () => {
     const zh = createPreviewControlContract('zh');
     const en = createPreviewControlContract('en');
@@ -165,7 +165,7 @@ describe('Entity role and style playground', () => {
   });
 });
 
-describe('Entity style and size playground', () => {
+describe('Entity 样式和尺寸交互演示', () => {
   it('双语使用相同默认值，六个控件均映射到公开样式和排布字段', () => {
     const en = createStyleSizeContract('en');
 
@@ -218,14 +218,14 @@ describe('Entity style and size playground', () => {
   });
 });
 
-describe('Entity custom predicate playground', () => {
+describe('Entity 自定义谓词交互演示', () => {
   it('双语参数契约一致，predicate 规则按参数计算颜色并独立叠加描边', () => {
     expect(createDefinitionContract('en').canonicalValues).toEqual(definitionContract.canonicalValues);
     expect(createDefinitionContract('en').relatedApis).toEqual(definitionContract.relatedApis);
 
     for (const [status, color] of Object.entries({ available: '#16a34a', degraded: '#d97706', offline: '#dc2626' })) {
       for (const critical of [false, true]) {
-        const markup = renderWithValues(EntityDefinition, definitionContract, { status, critical });
+        const markup = renderWithValues(entityDefinition, definitionContract, { status, critical });
 
         expect(markup).toContain(`stroke="${color}"`);
 

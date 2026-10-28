@@ -15,7 +15,7 @@ const source = defineRuntimeSource<number, number, number, { delta: number }>({
   value: { capture: value => value, read: value => value, equals: (left, right) => left === right },
 });
 
-describe('runtime revision and source commands', () => {
+describe('运行时修订和源命令', () => {
   it('change set factory 校验 revision、复制并冻结 changes', () => {
     const changes = [{ delta: 1 }];
     const changeSet = createRuntimeChangeSet(0 as RuntimeRevision, changes);

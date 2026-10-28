@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_EPSILON, intersect } from '../../src';
 
-describe('intersect', () => {
+describe('相交', () => {
   it('lineLine：相交返回交点，平行返回 null', () => {
     expect(intersect.lineLine({ a1: [0, 0], a2: [2, 2], b1: [0, 2], b2: [2, 0] })).toEqual([1, 1]);
     expect(intersect.lineLine({ a1: [0, 0], a2: [1, 0], b1: [0, 1], b2: [1, 1] })).toBeNull();

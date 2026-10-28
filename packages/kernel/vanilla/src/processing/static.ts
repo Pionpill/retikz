@@ -12,7 +12,7 @@ import { assertPreparationActive } from './authoring';
 import { prepareProcessingInput } from './prepare';
 import { prepareProcessingInputAsync } from './prepare';
 import type { ProcessingOptions, ProcessingResult, ProcessingSource } from './types';
-import type { PreparedProcessingInput, PreparedAsyncStaticProcessing, AsyncProcessingOptions } from './types';
+import type { InputPreparedProcessing, PreparedAsyncStaticProcessing, AsyncProcessingOptions } from './types';
 
 const EMPTY_ARTIFACTS = Object.freeze([]);
 
@@ -40,7 +40,7 @@ export const prepareStaticProcessing = (
 
 /** 唯一的同步编译过程，消费已经完整准备的作者输入 */
 const prepareStaticProcessingInput = (
-  prepared: PreparedProcessingInput,
+  prepared: InputPreparedProcessing,
   options: ProcessingOptions,
   revision: number,
   assertCurrent?: () => void,

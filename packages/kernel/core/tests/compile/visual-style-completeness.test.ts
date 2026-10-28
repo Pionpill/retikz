@@ -14,7 +14,7 @@ import type { ScenePrimitive } from '../../src';
 const leaves = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? leaves(item.children) : [item]));
 
-it('line font and math override reach the TeX lowerer', () => {
+it('行字体和数学公式覆盖传递至 TeX 下沉器', () => {
   const sizes: Array<number> = [];
   const source = SceneSchema.parse({
     type: 'scene',
@@ -39,7 +39,7 @@ it('line font and math override reach the TeX lowerer', () => {
   expect(sizes).toEqual([30, 20, 10]);
 });
 
-it('segmented line defaults retain partial font and visual overrides', () => {
+it('分段线默认保留部分字体和视觉覆盖', () => {
   const source = SceneSchema.parse({
     type: 'scene',
     version: 1,
@@ -65,7 +65,7 @@ it('segmented line defaults retain partial font and visual overrides', () => {
   expect(text[1]).toMatchObject({ fontSize: 24, fontFamily: 'serif', fill: 'blue', opacity: 0.8 });
 });
 
-it('shared effects and stroke geometry reach the scoped node', () => {
+it('共享效果和描边几何体到达范围节点', () => {
   const source = SceneSchema.parse({
     type: 'scene',
     version: 1,
@@ -91,7 +91,7 @@ const gradient = {
   ],
 };
 
-it('pin resolves paint resources and uses its own opacity and stroke geometry', () => {
+it('pin 解析绘画资源并使用其自己的不透明度和描边几何形状', () => {
   const source = SceneSchema.parse({
     type: 'scene',
     version: 1,
@@ -130,7 +130,7 @@ it('pin resolves paint resources and uses its own opacity and stroke geometry', 
   expect(scene.resources).toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'paint', spec: gradient })]));
 });
 
-it('endpoint and inline arrows retain explicit paints and stroke overrides', () => {
+it('端点和内联箭头保留显式绘画和描边覆盖', () => {
   const source = SceneSchema.parse({
     type: 'scene',
     version: 1,
@@ -181,7 +181,7 @@ it('endpoint and inline arrows retain explicit paints and stroke overrides', () 
   expect(scene.resources).toHaveLength(1);
 });
 
-it('custom arrow output retains fixed nested styles when arrow options are provided', () => {
+it('提供箭头选项时，自定义箭头输出保留固定的嵌套样式', () => {
   const custom = defineArrow({
     name: 'styled',
     backX: 0,
@@ -232,7 +232,7 @@ it('custom arrow output retains fixed nested styles when arrow options are provi
   expect(leaves(path?.arrowEnd?.marker ?? [])[0]).toEqual(leaves(path?.arrowStart?.marker ?? [])[0]);
 });
 
-it('new visual fields survive JSON round trips and reject misspelled properties', () => {
+it('新的视觉字段可通过 JSON 往返且拒绝拼写错误的属性', () => {
   const cases = [
     { schema: ArrowStyleSchema, value: { stroke: gradient, lineCap: 'round', dashPattern: [2, 1] } },
     { schema: NodeLabelPinSchema, value: { stroke: gradient, opacity: 0.5 } },
@@ -248,7 +248,7 @@ it('new visual fields survive JSON round trips and reject misspelled properties'
   }
 });
 
-it('shared effects reach paths while explicit node resets win', () => {
+it('共享效果到达路径，同时显式节点重置获胜', () => {
   const scene = compileToScene(
     SceneSchema.parse({
       type: 'scene',

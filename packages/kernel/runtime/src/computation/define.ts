@@ -11,7 +11,7 @@ import type {
   RuntimeCommitEvent,
   RuntimeComputationContext,
   RuntimeComputationDefinition,
-  RuntimeComputationDefinitionInput,
+  InputRuntimeComputationDefinition,
   RuntimeComputationToken,
   RuntimeRunOutcome,
   RuntimeUpdateOutcome,
@@ -163,7 +163,7 @@ export const defineRuntimeComputation = <
   TComputationRead = TResult,
   TPublicRead = TResult,
 >(
-  input: RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>,
+  input: InputRuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
 ): RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead> => {
   const { owner, key } = input.id;
   if (owner.length === 0 || key.length === 0) {

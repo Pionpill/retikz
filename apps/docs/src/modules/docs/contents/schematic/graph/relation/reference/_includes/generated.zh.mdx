@@ -74,7 +74,7 @@ export type RelationProps = Omit<InputRelation, 'type'> &
 | `targetMarker?`        | `RelationInputEmbedProps["targetMarker"]`                                                                                                                                                             | —      | 终点 marker 的外观覆盖，不包含 shape                                                    |
 | `zIndex?`              | `number`                                                                                                                                                                                              | —      | 同级绘制顺序，越大越靠上；省略为 0，同值保留原顺序                                      |
 | `input` (参数)         | `RelationInputEmbedProps`                                                                                                                                                                             | —      | 关系编写字段，端点可使用 id 字符串，路径可使用 way                                      |
-| 返回值                 | `InputEmbed<RelationInputEmbedProps>`                                                                                                                                                                 | —      | 供 Vanilla 内容树使用的 embed 节点，由 RelationInputEmbedAdapter 转换为 Relation Source |
+| 返回值                 | `InputEmbed<RelationInputEmbedProps>`                                                                                                                                                                 | —      | 供 Vanilla 内容树使用的 embed 节点，由 relationInputEmbedAdapter 转换为 Relation Source |
 
 </ApiTable>
 
@@ -268,13 +268,13 @@ export type InputRelationWay = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RelationInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/relation.ts"} startLine={18}>RelationInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"relationInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/relation.ts"} startLine={18}>relationInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const RelationInputEmbedAdapter: SynchronousInputEmbedAdapter<RelationInputEmbedProps>;
+export declare const relationInputEmbedAdapter: SynchronousInputEmbedAdapter<RelationInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={24}>createGraphVanillaAdapters</ApiSourceLink>
+#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -433,14 +433,14 @@ export type RelationKindDefinition = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodType<JsonObject>>;
+export type RelationPredicateDefinition = InputRelationPredicateDefinition<ZodType<JsonObject>>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RelationPredicateDefinitionInput"} path={"packages/schematic/graph/src/contract/relation/types.ts"} startLine={44}>RelationPredicateDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRelationPredicateDefinition"} path={"packages/schematic/graph/src/contract/relation/types.ts"} startLine={44}>InputRelationPredicateDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -465,7 +465,7 @@ export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodTy
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type RelationPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
+export type InputRelationPredicateDefinition<TSchema extends ZodType<JsonObject>> = Readonly<{
   name: string;
   role: string;
   kinds?: ReadonlyArray<string>;
@@ -551,10 +551,10 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称       | 类型 / 签名                             | 说明                                                                       |
-| ------ | ---------- | --------------------------------------- | -------------------------------------------------------------------------- |
-| 参数   | `options?` | `GraphDefinitionOptions`                | 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配 |
-| 返回值 | —          | `ReadonlyArray<CoreDependencyProvider>` | 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖          |
+| 类别   | 名称       | 类型 / 签名                                | 说明                                                                       |
+| ------ | ---------- | ------------------------------------------ | -------------------------------------------------------------------------- |
+| 参数   | `options?` | `GraphDefinitionOptions`                   | 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配 |
+| 返回值 | —          | `ReadonlyArray<AnyCoreDependencyProvider>` | 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖          |
 
 </ApiTable>
 
@@ -563,7 +563,9 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createGraphProviders: (options?: GraphDefinitionOptions) => ReadonlyArray<CoreDependencyProvider>;
+export declare const createGraphProviders: (
+  options?: GraphDefinitionOptions,
+) => ReadonlyArray<AnyCoreDependencyProvider>;
 ```
 
 </DocTab>
@@ -608,7 +610,7 @@ export declare const defineRelationKind: (definition: RelationKindDefinition) =>
 | 类别   | 名称         | 类型 / 签名                                 | 说明                                                                          |
 | ------ | ------------ | ------------------------------------------- | ----------------------------------------------------------------------------- |
 | 泛型   | `TSchema`    | `extends ZodType<JsonObject>`               | 约束 paramsSchema 的 JSON 对象 Schema 类型，决定 predicate 参数的解析契约     |
-| 参数   | `definition` | `RelationPredicateDefinitionInput<TSchema>` | 传给 GraphDefinitionOptions.relationPredicates 的定义；此函数不执行注册或校验 |
+| 参数   | `definition` | `InputRelationPredicateDefinition<TSchema>` | 传给 GraphDefinitionOptions.relationPredicates 的定义；此函数不执行注册或校验 |
 | 返回值 | —            | `RelationPredicateDefinition`               | 原样返回 definition，不复制或修改输入对象                                     |
 
 </ApiTable>
@@ -619,7 +621,7 @@ export declare const defineRelationKind: (definition: RelationKindDefinition) =>
 
 ```ts
 export declare const defineRelationPredicate: <TSchema extends ZodType<JsonObject>>(
-  definition: RelationPredicateDefinitionInput<TSchema>,
+  definition: InputRelationPredicateDefinition<TSchema>,
 ) => RelationPredicateDefinition;
 ```
 

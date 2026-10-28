@@ -3,17 +3,17 @@ import { compareCompileOccurrences } from '../../contract';
 import type { IRTransform } from '../../schemas';
 import { BuiltinCompileWarningCode } from '../constants';
 import type { DuplicateRegisterInfo } from '../namespace';
-import type { CompileWarning, CompileWarningInput } from '../warning';
+import type { CompileWarning, InputCompileWarning } from '../warning';
 import { freezeOccurrence } from './artifact';
 
 const compileWarningOccurrence = Symbol('compileWarningOccurrence');
 
-type OrderedCompileWarning = CompileWarningInput & {
+type OrderedCompileWarning = InputCompileWarning & {
   [compileWarningOccurrence]?: CompileOccurrenceLocator;
 };
 
 /** 按 transform 失败来源选择 warning code */
-export const transformWarnCode = (failed: IRTransform | undefined): CompileWarningInput['code'] => {
+export const transformWarnCode = (failed: IRTransform | undefined): InputCompileWarning['code'] => {
   switch (failed?.kind) {
     case 'offset-translate':
       return BuiltinCompileWarningCode.OffsetBaseUnresolved;
@@ -27,7 +27,7 @@ export const transformWarnCode = (failed: IRTransform | undefined): CompileWarni
 };
 
 /** 格式化重复 id warning */
-export const createDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarningInput => {
+export const createDuplicateWarning = (info: DuplicateRegisterInfo): InputCompileWarning => {
   const frameNote =
     info.frameDepth === 0
       ? 'frame depth: 0 (root namespace)'
@@ -44,32 +44,32 @@ export const createDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarn
 
 /** 为内部 warning 绑定完整 occurrence，公开结构仍只保留 code/message/path */
 export const withCompileWarningOccurrence = (
-  warning: CompileWarningInput,
+  warning: InputCompileWarning,
   occurrence: CompileOccurrenceLocator | undefined,
-): CompileWarningInput => {
+): InputCompileWarning => {
   if (occurrence === undefined || compileWarningOccurrence in warning) return warning;
   return replaceCompileWarningOccurrence(warning, occurrence);
 };
 
 /** 强制替换内部 warning occurrence，供 replay placement 重映射 */
 export const replaceCompileWarningOccurrence = (
-  warning: CompileWarningInput,
+  warning: InputCompileWarning,
   occurrence: CompileOccurrenceLocator,
-): CompileWarningInput => {
+): InputCompileWarning => {
   const ordered: OrderedCompileWarning = { ...warning };
   Object.defineProperty(ordered, compileWarningOccurrence, { value: freezeOccurrence(occurrence) });
   return ordered;
 };
 
 /** 读取 warning 的完整 occurrence；root/global warning 回退到公开 locator */
-export const compileWarningOccurrenceOf = (warning: CompileWarningInput): CompileOccurrenceLocator =>
+export const compileWarningOccurrenceOf = (warning: InputCompileWarning): CompileOccurrenceLocator =>
   (warning as OrderedCompileWarning)[compileWarningOccurrence] ?? {
     sourcePath: warning.path,
     expansionPath: [],
   };
 
 /** 按 canonical occurrence 排序 warning，并保留同 occurrence 的 emission 顺序 */
-export const orderCompileWarnings = (warnings: ReadonlyArray<CompileWarningInput>): Array<CompileWarning> =>
+export const orderCompileWarnings = (warnings: ReadonlyArray<InputCompileWarning>): Array<CompileWarning> =>
   warnings
     .map((warning, emissionOrder) => ({
       warning,

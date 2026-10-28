@@ -9,9 +9,9 @@ import type { RuntimeSourceDefinition, RuntimeSourceToken, RuntimeRevision } fro
 import type { RuntimeTracePhaseDefinition } from '../trace';
 import type { RuntimeSnapshot } from '../transaction';
 
-declare const RuntimeCommitParticipantTokenBrand: unique symbol;
+declare const runtimeCommitParticipantTokenBrand: unique symbol;
 
-declare const RuntimeCommitParticipantReadBrand: unique symbol;
+declare const runtimeCommitParticipantReadBrand: unique symbol;
 
 /** 动态 runtime options 只暴露的 commit participant token */
 export type RuntimeCommitParticipantToken = Readonly<{
@@ -26,7 +26,7 @@ export type RuntimeCommitParticipantToken = Readonly<{
   /** participant 允许发射的 trace phases */
   tracePhases: ReadonlyArray<RuntimeTracePhaseDefinition>;
   /** 只允许 defineRuntimeCommitParticipant() 构造 token */
-  [RuntimeCommitParticipantTokenBrand]: true;
+  [runtimeCommitParticipantTokenBrand]: true;
 }>;
 
 /**
@@ -36,7 +36,7 @@ export type RuntimeCommitParticipantToken = Readonly<{
 export type RuntimeCommitParticipant<TRead> = RuntimeCommitParticipantToken &
   Readonly<{
     /** phantom 函数只承载 read 类型，不存在于运行时 token */
-    [RuntimeCommitParticipantReadBrand]: (read: TRead) => TRead;
+    [runtimeCommitParticipantReadBrand]: (read: TRead) => TRead;
   }>;
 
 /** participant prepare 产生的单次 transaction token */
@@ -50,7 +50,7 @@ export type RuntimePreparedCommit = Readonly<{
 }>;
 
 /** participant callback 可提交的 warning 输入 */
-export type RuntimeParticipantWarningInput = Readonly<{
+export type InputRuntimeParticipantWarning = Readonly<{
   /** 稳定 warning 分类 */
   code: string;
   /** 产生 warning 的领域阶段 */
@@ -67,7 +67,7 @@ export type RuntimeParticipantContext = Readonly<{
   /** 固定绑定 participant key 的 trace reporter */
   trace: RuntimeParticipantTraceReporter;
   /** 追加由 Runtime 统一归属的 commit-safe warning */
-  diagnose: (warning: RuntimeParticipantWarningInput) => void;
+  diagnose: (warning: InputRuntimeParticipantWarning) => void;
 }>;
 
 /** participant candidate 只允许读取已声明依赖 */
@@ -119,7 +119,7 @@ export type RuntimeParticipantCandidateView =
  * Runtime commit participant 的作者侧输入
  * @template TRead 提交参与者对宿主暴露的已提交只读视图类型
  */
-export type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
+export type InputRuntimeCommitParticipantDefinition<TRead> = Readonly<{
   /** participant 的稳定唯一 key */
   key: string;
   /**
@@ -150,9 +150,9 @@ export type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
 /** participant 私有 executor 的类型擦除视图 */
 export type RuntimeCommitParticipantExecutor = Readonly<{
   /** 为候选状态准备可回滚的参与者提交事务 */
-  prepare: RuntimeCommitParticipantDefinitionInput<unknown>['prepare'];
+  prepare: InputRuntimeCommitParticipantDefinition<unknown>['prepare'];
   /** 读取参与者已提交的公开状态 */
-  read: RuntimeCommitParticipantDefinitionInput<unknown>['read'];
+  read: InputRuntimeCommitParticipantDefinition<unknown>['read'];
   /** 释放参与者持有的宿主状态 */
-  dispose: RuntimeCommitParticipantDefinitionInput<unknown>['dispose'];
+  dispose: InputRuntimeCommitParticipantDefinition<unknown>['dispose'];
 }>;

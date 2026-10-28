@@ -56,8 +56,8 @@ const result = (
 
 const margin = (value = 0) => ({ top: value, right: value, bottom: value, left: value });
 
-describe('OverlayLayout pure solver', () => {
-  it('takes the maximum aligned outer slot for each profile', () => {
+describe('OverlayLayout 纯求解器', () => {
+  it('采用每个轮廓的最大对齐外槽', () => {
     const profile = resolveOverlayProfile([
       {
         sourceIndex: 0,
@@ -84,7 +84,7 @@ describe('OverlayLayout pure solver', () => {
     expect(profile.contentSize).toEqual({ width: 30, height: 20 });
   });
 
-  it('uses positioned slot, anchor, offset and margin only for positive-side contribution', () => {
+  it('仅使用定位槽、锚、偏移和边距进行正侧贡献', () => {
     const positive = resolveOverlayProfile([
       {
         sourceIndex: 0,
@@ -122,7 +122,7 @@ describe('OverlayLayout pure solver', () => {
     expect(negative.contentSize).toEqual({ width: 0, height: 0 });
   });
 
-  it('excludes items from structural size while preserving a finite profile', () => {
+  it('从结构尺寸中排除项目，同时保留有限的轮廓', () => {
     const profile = resolveOverlayProfile([
       {
         sourceIndex: 0,
@@ -139,7 +139,7 @@ describe('OverlayLayout pure solver', () => {
     expect(profile).toEqual({ contentSize: { width: 0, height: 0 } });
   });
 
-  it('forms independent baseline metrics from include aligned participants', () => {
+  it('从一致的参与者中形成独立的基线指标', () => {
     const first = resolveOverlayProfile([
       {
         sourceIndex: 0,
@@ -167,7 +167,7 @@ describe('OverlayLayout pure solver', () => {
     expect(first.firstBaseline).toEqual({ ascent: 7, descent: 15 });
   });
 
-  it('places aligned and positioned slots while compensating allocation origins', () => {
+  it('放置对齐和定位的槽，同时补偿分配原点', () => {
     const aligned = placeOverlayItem({
       placement: { kind: OverlayPlacementKind.Aligned },
       content: { x: 0, y: 0, width: 100, height: 50 },
@@ -196,7 +196,7 @@ describe('OverlayLayout pure solver', () => {
     expect(positioned.translation).toEqual({ x: 37, y: 12 });
   });
 
-  it('sorts paint order by zIndex and then authored source index', () => {
+  it('按 zIndex 排序绘制顺序，然后编写源索引', () => {
     expect(
       sortOverlayPaintOrder([
         { sourceIndex: 0, zIndex: 2 },

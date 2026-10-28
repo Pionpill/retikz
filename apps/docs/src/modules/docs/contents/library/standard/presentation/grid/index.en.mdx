@@ -31,25 +31,25 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { GridDefinition } from '@retikz/standard/presentation';
+import { gridDefinition } from '@retikz/standard/presentation';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [{ namespace: 'standard', type: 'grid', bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } }],
 };
-export const Example = () => <Layout ir={ir} composites={[GridDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[gridDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { grid, GridInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { grid, gridInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [grid({ bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } })] });
-const svg = renderToSvgString(input, { adapters: [GridInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [gridInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -58,7 +58,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { GridDefinition } from '@retikz/standard/presentation';
+import { gridDefinition } from '@retikz/standard/presentation';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -66,7 +66,7 @@ const ir: IRScene = {
   version: 1,
   children: [{ namespace: 'standard', type: 'grid', bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [GridDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [gridDefinition] } });
 console.log(svg);
 ```
 
@@ -83,8 +83,8 @@ You define a grid with `bounds` and `line`; spacing, alignment, styles, and majo
 - `start` and `end` are sorted independently on x and y during lowering, so reversed and equal coordinates are valid; corner positions must be Cartesian `Position` values
 - centered `position` is the geometric center and accepts `Position` or `PolarPosition`; Core resolves PolarPosition, while the grid itself remains Cartesian
 - `line` may be omitted or set to `true` to enable both directions with default spacing `10`; `false` disables all grid lines while leaving `border` independent
-- a shared `line` object applies one `GridLineInput` to both directions; `{ vertical, horizontal }` configures each direction independently
-- each `GridLineInput` accepts positive `spacing`, an optional scalar `origin`, `includeBoundary`, ordinary-line `style`, and periodic `major` settings
+- a shared `line` object applies one `InputGridLine` to both directions; `{ vertical, horizontal }` configures each direction independently
+- each `InputGridLine` accepts positive `spacing`, an optional scalar `origin`, `includeBoundary`, ordinary-line `style`, and periodic `major` settings
 - `origin` uses scene coordinates for corner bounds and center-local coordinates for centered bounds
 - `border` can be configured independently and remains available when `line` is `false`
 
@@ -115,7 +115,7 @@ Use the panel to change corner bounds, uniform or direction-specific spacing, li
 
 ## Errors and limitations
 
-Spacing must be positive, major.every a positive integer, and dimensions and border padding nonnegative. Corner bounds may be reversed or coincident. Center positioning does not create a polar grid. Direct IR without GridDefinition reports COMPOSITE_NOT_REGISTERED.
+Spacing must be positive, major.every a positive integer, and dimensions and border padding nonnegative. Corner bounds may be reversed or coincident. Center positioning does not create a polar grid. Direct IR without gridDefinition reports COMPOSITE_NOT_REGISTERED.
 
 ## Implementation
 

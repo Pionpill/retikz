@@ -82,7 +82,7 @@ export type HydrationContext = {
 };
 
 /** 命中 id 后构造上下文：控制器恒以 `handler(event, buildContext(event, id))` 调用 */
-export type BuildContext = (event: Event, id: string) => HydrationContext;
+export type HydrationContextBuilder = (event: Event, id: string) => HydrationContext;
 
 /** 各方法皆 no-op 的动画控制（无 scene / runtime 时用） */
 export const noopAnimationControls: HydrationAnimationControls = {
@@ -536,7 +536,7 @@ export const resolveSvgElement = (event: Event): Element | null => {
 };
 
 /** createContextBuilder 的 renderer 专有片段 */
-export type ContextSources = {
+export type HydrationContextDependencies = {
   /** 渲染后端 */
   renderer: 'svg' | 'canvas';
   /** figure 根（svg root / canvas） */
@@ -561,7 +561,7 @@ export type ContextSources = {
  * @description renderer 无关骨架——meta / geometry 经 scene 按 id 聚合查询；element / point / animation 由 `sources`
  *   注入的 renderer 专有片段提供。无 scene → meta / geometry / scene 缺省。context 永远完整对象（绝不 undefined）
  */
-export const createContextBuilder = (sources: ContextSources): BuildContext => {
+export const createContextBuilder = (sources: HydrationContextDependencies): HydrationContextBuilder => {
   const { renderer, root, scene, resolvePrimitivePaths, resolveElement, resolvePoint, makeAnimation } = sources;
   return (event, id) => {
     const currentScene = typeof scene === 'function' ? scene() : scene;

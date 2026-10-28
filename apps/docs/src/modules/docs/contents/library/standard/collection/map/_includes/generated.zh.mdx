@@ -397,10 +397,10 @@ export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MapInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={43}>MapInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"mapInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={43}>mapInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap>;
+export declare const mapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap>;
 ```
 
 **持久化配置**
@@ -521,10 +521,10 @@ export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries'
 
 **扩展定义与注册**
 
-#### <ApiSourceLink label={"MapDefinition"} path={"packages/library/standard/src/collection/map/composite.ts"} startLine={10}>MapDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"mapDefinition"} path={"packages/library/standard/src/collection/map/composite.ts"} startLine={10}>mapDefinition</ApiSourceLink>
 
 ```ts
-export const MapDefinition: CompositeDefinition<IRMap, 'standard', 'map'> = defineComposite({
+export const mapDefinition: CompositeDefinition<IRMap, 'standard', 'map'> = defineComposite({
   namespace: 'standard',
   type: 'map',
   schema: MapSchema,
@@ -532,10 +532,10 @@ export const MapDefinition: CompositeDefinition<IRMap, 'standard', 'map'> = defi
 });
 ```
 
-#### <ApiSourceLink label={"MapProvider"} path={"packages/library/standard/src/collection/map/composite.ts"} startLine={21}>MapProvider</ApiSourceLink>
+#### <ApiSourceLink label={"mapProvider"} path={"packages/library/standard/src/collection/map/composite.ts"} startLine={21}>mapProvider</ApiSourceLink>
 
 ```ts
-export declare const MapProvider: CoreDependencyProvider;
+export declare const mapProvider: CoreDependencyProvider;
 ```
 
 **执行与辅助契约**

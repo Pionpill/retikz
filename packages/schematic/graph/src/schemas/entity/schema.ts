@@ -11,7 +11,7 @@ export const EntityRoleSchema = createOpenStringSchema(BuiltinEntityRole).descri
   'Open Entity role key resolved by the configured Graph role registry.',
 );
 
-const EntityNodeShape = strictObject(NodeSchema.shape).omit({
+const EntityNodeSchema = strictObject(NodeSchema.shape).omit({
   aliasIds: true,
   type: true,
   shape: true,
@@ -33,9 +33,9 @@ export const EntitySchema = strictObject({
     .describe('Optional semantic group key for Entities within a Graph; members share a categorical color by default.'),
   predicate: GraphPredicateRefSchema.optional().describe('Optional precise semantic predicate reference.'),
   status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),
-  ...EntityNodeShape,
+  ...EntityNodeSchema,
   layout: NodeLayoutSchema.omit({ padding: true })
     .optional()
     .describe('Node layout overrides without role-owned padding.'),
-  position: EntityNodeShape.position.unwrap().optional().describe('Optional Core Node placement.'),
+  position: EntityNodeSchema.position.unwrap().optional().describe('Optional Core Node placement.'),
 }).describe('JSON-safe Graph Entity with role-owned structure and the non-structural Core Node surface.');

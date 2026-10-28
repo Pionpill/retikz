@@ -49,7 +49,7 @@ description: 定义状态来源，理解输入、内部值与只读视图的职�
 
 ```ts
 declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
-  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>,
+  input: InputRuntimeSourceDefinition<TInput, TValue, TRead>,
 ) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
 ```
 
@@ -71,16 +71,16 @@ declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
 <DocTab value="definition" label="类型定义">
 
 ```ts
-type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<{
+type InputRuntimeSourceValueDefinition<TInput, TValue, TRead> = Readonly<{
   capture: (input: TInput) => TValue;
   read: (value: TValue) => TRead;
   equals: (left: TValue, right: TValue) => boolean;
   dispose?: (value: TValue) => void;
 }>;
 
-type RuntimeSourceDefinitionInput<TInput, TValue, TRead> = Readonly<{
+type InputRuntimeSourceDefinition<TInput, TValue, TRead> = Readonly<{
   key: string;
-  value: RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>;
+  value: InputRuntimeSourceValueDefinition<TInput, TValue, TRead>;
   collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>;
 }>;
 ```
@@ -251,7 +251,7 @@ Source Token 只关联规则。同一个 Token 可以交给多个 Runtime，每�
     {
       name: 'defineRuntimeSource',
       kind: 'function',
-      type: '<TInput, TValue, TRead, TChange>(input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>',
+      type: '<TInput, TValue, TRead, TChange>(input: InputRuntimeSourceDefinition<TInput, TValue, TRead>) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>',
       description: '创建来源 Token；配置包含 key、value 和可选 collectIdentities。定义不捕获数据。',
     },
     {

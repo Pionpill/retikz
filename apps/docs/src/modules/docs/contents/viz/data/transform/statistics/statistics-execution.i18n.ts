@@ -5,14 +5,14 @@ export const statisticsExecutionI18n: Record<Lang, Array<string>> = {
   zh: [
     'groupRowsByFields',
     'computeReducerMetrics / computation.select',
-    'applyReducerOperation / applySelectorOperation',
+    'resolveReducerComputation / resolveSelectorComputation',
     'implementation.reduce / implementation.select',
     'computeSummarize / computeSelect 组织结果',
   ],
   en: [
     'groupRowsByFields',
     'computeReducerMetrics / computation.select',
-    'applyReducerOperation / applySelectorOperation',
+    'resolveReducerComputation / resolveSelectorComputation',
     'implementation.reduce / implementation.select',
     'computeSummarize / computeSelect assemble results',
   ],

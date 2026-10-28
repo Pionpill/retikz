@@ -20,8 +20,8 @@ const packageDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url
 
 const manifest = JSON.parse(readFileSync(path.join(packageDirectory, 'package.json'), 'utf8')) as PackageManifest;
 
-describe('@retikz/table package boundary', () => {
-  it('is a publishable viz feature in the Table release group', () => {
+describe('@retikz/table 封装边界', () => {
+  it('是 Table 发布组中的可发布可视化功能', () => {
     expect(manifest.name).toBe('@retikz/table');
     expect(manifest.retikz).toEqual({
       domain: 'viz',
@@ -31,7 +31,7 @@ describe('@retikz/table package boundary', () => {
     });
   });
 
-  it('depends only on Core, Foundation, Data, Math, the formatter and scale runtimes, and the schema runtime', () => {
+  it('仅取决于 Core、Foundation、数据、数学、格式化程序和缩放运行时以及 schema 运行时', () => {
     expect(Object.keys(manifest.dependencies).sort()).toEqual([
       '@retikz/core',
       '@retikz/data',

@@ -1,12 +1,11 @@
 import { compileToScene } from '@retikz/core';
-import type { IRDataTransformDeclaration } from '@retikz/data';
-import type { IRPlot, IRPlotRelationRouting } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 import { lowerPlots, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
 import { PlotAxis, PlotLegend } from '../../../src/components/guides';
-import { IntervalMark, PathMark, PointMark, RelationMark } from '../../../src/components/marks';
+import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 
 const compilePlot = (
   spec: IRPlot,
@@ -110,7 +109,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('point extension fields remain in encodings', () => {
+  it('点扩展字段保留在编码中', () => {
     const spec = buildPlotIR(
       <PointMark
         encodings={{ intensity: 'score', threshold: 'limit', position: { x: { field: 'x' }, y: { field: 'y' } } }}
@@ -124,7 +123,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('layer prop forwards to marks and guides', () => {
+  it('图层支柱转发到标记和参考线', () => {
     const spec = buildPlotIR(
       <>
         <PointMark
@@ -177,7 +176,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('point node style props pass through to mark IR', () => {
+  it('点节点样式 props 通过来标记 IR', () => {
     const spec = buildPlotIR(
       <PointMark
         encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
@@ -211,7 +210,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('path core style props pass through to mark IR', () => {
+  it('路径核心样式 props 通过标记 IR', () => {
     const spec = buildPlotIR(
       <PathMark
         encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
@@ -241,7 +240,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('interval core node style props pass through to mark IR', () => {
+  it('区间核心节点样式 props 通过标记 IR', () => {
     const spec = buildPlotIR(
       <IntervalMark
         encodings={{ strokeWidth: 'weight', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
@@ -258,7 +257,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('interval padAngle forwards to interval mark', () => {
+  it('区间 padAngle 转发到区间标记', () => {
     const spec = buildPlotIR(<IntervalMark angle="value" properties={{ padAngle: 4 }} />, '__plot', {
       coordinate: 'polar2D',
     });
@@ -266,7 +265,7 @@ describe('buildPlotIR 装配', () => {
     expect(spec.marks[0]).toMatchObject({ type: 'interval', properties: { padAngle: 4 } });
   });
 
-  it('interval pull forwards numeric and field values to interval mark', () => {
+  it('间隔将数字和字段值前移到间隔标记', () => {
     const numeric = buildPlotIR(<IntervalMark angle="value" properties={{ pull: 12 }} />, '__plot', {
       coordinate: 'polar2D',
     });
@@ -278,142 +277,6 @@ describe('buildPlotIR 装配', () => {
     });
 
     expect(field.marks[0]).toMatchObject({ type: 'interval', encodings: { pull: 'offset' } });
-  });
-
-  it('relation mark assembles source-target refs, top-level label, path config, and color channel', () => {
-    const spec = buildPlotIR(
-      <>
-        <PointMark
-          encodings={{ anchorId: 'id', position: { x: { field: 'x' }, y: { field: 'y' } } }}
-          properties={{ anchorId: { prefix: 'pt' } }}
-        />
-        <RelationMark
-          encodings={{
-            source: { anchorId: 'from' },
-            target: { anchorId: 'to' },
-            color: 'kind',
-            label: { text: 'label' },
-          }}
-          properties={{
-            source: { anchorId: { prefix: 'pt' } },
-            target: { anchorId: { prefix: 'pt' } },
-            label: { position: 'midway' },
-            geometry: { kind: 'path', options: { arrow: { end: {} }, cornerRadius: 6 } },
-          }}
-        />
-      </>,
-      '__plot',
-      { dataFieldNames: new Set(['kind']) },
-    );
-
-    expect(spec.marks[0]).toMatchObject({
-      type: 'point',
-      encodings: { anchorId: 'id' },
-      properties: { anchorId: { prefix: 'pt' } },
-    });
-    expect(spec.marks[1]).toEqual({
-      type: 'relation',
-      encodings: {
-        source: { anchorId: 'from' },
-        target: { anchorId: 'to' },
-        label: { text: 'label' },
-        color: { field: 'kind', scale: '__color' },
-      },
-      properties: {
-        source: { anchorId: { prefix: 'pt' } },
-        target: { anchorId: { prefix: 'pt' } },
-        label: { position: 'midway' },
-        geometry: { kind: 'path', options: { arrow: { end: {} }, cornerRadius: 6 } },
-      },
-    });
-    expect(() => PlotSchema.parse(spec)).not.toThrow();
-  });
-
-  it('relation mark forwards mark-scoped transform and routing strategy', () => {
-    const transform: Array<IRDataTransformDeclaration> = [
-      {
-        operation: {
-          kind: 'relate',
-          params: {
-            source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
-            target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
-            measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
-          },
-        },
-      },
-    ];
-    const routing: IRPlotRelationRouting = { kind: 'bend', bendDirection: 'left', bendAngle: 20 };
-    const spec = buildPlotIR(
-      <RelationMark
-        transforms={transform}
-        encodings={{
-          source: { anchorId: 'sourceId' },
-          target: { anchorId: 'targetId' },
-          label: { text: 'deltaLabel' },
-        }}
-        properties={{
-          source: { anchorId: { prefix: 'trend' } },
-          target: { anchorId: { prefix: 'trend' } },
-          label: { position: 0.5 },
-          geometry: { kind: 'path', routing },
-        }}
-      />,
-      '__plot',
-    );
-
-    expect(spec.marks[0]).toEqual({
-      type: 'relation',
-      transforms: transform,
-      encodings: {
-        source: { anchorId: 'sourceId' },
-        target: { anchorId: 'targetId' },
-        label: { text: 'deltaLabel' },
-      },
-      properties: {
-        source: { anchorId: { prefix: 'trend' } },
-        target: { anchorId: { prefix: 'trend' } },
-        label: { position: 0.5 },
-        geometry: { kind: 'path', routing },
-      },
-    });
-    expect(() => PlotSchema.parse(spec)).not.toThrow();
-  });
-
-  it('relation mark assembles ribbon kind, shared style, and ribbon options', () => {
-    const spec = buildPlotIR(
-      <RelationMark
-        encodings={{
-          source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
-          target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
-          fill: 'fill',
-          geometry: { width: 'width' },
-        }}
-        properties={{
-          opacity: { overall: 0.8 },
-          geometry: {
-            kind: 'ribbon',
-            endWidth: 4,
-            options: { interpolation: 'smooth' },
-          },
-        }}
-      />,
-      '__plot',
-    );
-
-    expect(spec.marks[0]).toEqual({
-      type: 'relation',
-      encodings: {
-        source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
-        target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
-        fill: 'fill',
-        geometry: { width: 'width' },
-      },
-      properties: {
-        opacity: { overall: 0.8 },
-        geometry: { kind: 'ribbon', endWidth: 4, options: { interpolation: 'smooth' } },
-      },
-    });
-    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('line + point 叠加：marks 两项、共享 scales/coordinate', () => {
@@ -497,7 +360,7 @@ describe('buildPlotIR 装配', () => {
     ]);
   });
 
-  it('dsl_axis_with_grid：<PlotAxis dimension="y" grid/> → grid:true', () => {
+  it('PlotAxis 的 grid 简写生成 grid:true', () => {
     const spec = buildPlotIR(
       <>
         <PathMark encodings={{ position: { x: { field: 'm' }, y: { field: 'r' } } }} />

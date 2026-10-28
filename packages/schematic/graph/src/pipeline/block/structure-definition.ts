@@ -7,7 +7,7 @@ import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { compileBlockHeader, compileBlockRow, compileBlockSection } from './structure-compile';
 
 /** Block Header 的独立 Core layout-aware composite definition */
-export const BlockHeaderDefinition: CompositeDefinition<
+export const blockHeaderDefinition: CompositeDefinition<
   IRBlockHeader,
   typeof GRAPH_NAMESPACE,
   typeof GraphType.BlockHeader
@@ -19,7 +19,7 @@ export const BlockHeaderDefinition: CompositeDefinition<
 });
 
 /** Block Section 的独立 Core layout-aware composite definition */
-export const BlockSectionDefinition: CompositeDefinition<
+export const blockSectionDefinition: CompositeDefinition<
   IRBlockSection,
   typeof GRAPH_NAMESPACE,
   typeof GraphType.BlockSection
@@ -31,7 +31,7 @@ export const BlockSectionDefinition: CompositeDefinition<
 });
 
 /** Block Row 的独立 Core layout-aware composite definition */
-export const BlockRowDefinition: CompositeDefinition<IRBlockRow, typeof GRAPH_NAMESPACE, typeof GraphType.BlockRow> =
+export const blockRowDefinition: CompositeDefinition<IRBlockRow, typeof GRAPH_NAMESPACE, typeof GraphType.BlockRow> =
   defineComposite({
     namespace: GRAPH_NAMESPACE,
     type: GraphType.BlockRow,

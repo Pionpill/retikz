@@ -12,7 +12,7 @@ import { z } from 'zod';
 const subroutine: ShapeDefinition = defineShape({
   name: 'subroutine',
   paramsSchema: z.strictObject({}),
-  computeCircumscribedHalfAxes: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedHalfAxes,
+  computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
   computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
   resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
   *emit(rect, style, round) {

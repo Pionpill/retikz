@@ -31,7 +31,7 @@ describe('compile path: arrow 箭头', () => {
     expect(path.arrowStart).toBeUndefined();
   });
 
-  it("arrow: '<-' → arrowStart shape='stealth'", () => {
+  it("箭头：'<-' → arrowStart 形状='stealth'", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -242,7 +242,7 @@ describe('compile path: arrow 箭头', () => {
     expect(path.arrowEnd?.shape).toBe('stealth');
   });
 
-  it('centered label interruption keeps arrows on logical endpoints instead of gap edges', () => {
+  it('居中标签中断将箭头保留在逻辑端点上，而不是间隙边缘上', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -276,7 +276,7 @@ describe('compile path: arrow 箭头', () => {
     expect(endMove).toMatchObject({ kind: 'move', to: [64.5, 0] });
   });
 
-  it('endpoint label interruptions retain both endpoint arrows on their original anchors', () => {
+  it('端点标签中断将两个端点箭头保留在其原始锚点上', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

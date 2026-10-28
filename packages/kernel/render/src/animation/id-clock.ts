@@ -51,13 +51,13 @@ export type IdClockRegistry = {
 
 /** 创建按 id 的虚拟时钟登记表 */
 export const createIdClockRegistry = (): IdClockRegistry => {
-  const map = new Map<string, IdEntry>();
+  const clockEntries = new Map<string, IdEntry>();
 
-  const ensure = (id: string): IdEntry => {
-    let entry = map.get(id);
+  const getOrCreateClockEntry = (id: string): IdEntry => {
+    let entry = clockEntries.get(id);
     if (!entry) {
       entry = { offset: 0, pausedAt: null, active: false, stopped: false };
-      map.set(id, entry);
+      clockEntries.set(id, entry);
     }
 
     return entry;
@@ -67,16 +67,16 @@ export const createIdClockRegistry = (): IdClockRegistry => {
     timeFor: (id, globalTime) => {
       if (id === undefined) return globalTime;
 
-      const entry = map.get(id);
+      const entry = clockEntries.get(id);
       if (!entry) return globalTime;
 
       return entry.pausedAt ?? globalTime - entry.offset;
     },
-    isActive: id => (id === undefined ? false : (map.get(id)?.active ?? false)),
-    isStopped: id => (id === undefined ? false : (map.get(id)?.stopped ?? false)),
-    hasActive: () => Array.from(map.values()).some(entry => entry.active && !entry.stopped),
+    isActive: id => (id === undefined ? false : (clockEntries.get(id)?.active ?? false)),
+    isStopped: id => (id === undefined ? false : (clockEntries.get(id)?.stopped ?? false)),
+    hasActive: () => Array.from(clockEntries.values()).some(entry => entry.active && !entry.stopped),
     play: (id, globalTime) => {
-      const entry = ensure(id);
+      const entry = getOrCreateClockEntry(id);
       if (entry.pausedAt !== null) {
         entry.offset = globalTime - entry.pausedAt;
         entry.pausedAt = null;
@@ -86,25 +86,25 @@ export const createIdClockRegistry = (): IdClockRegistry => {
       entry.stopped = false;
     },
     pause: (id, globalTime) => {
-      const entry = ensure(id);
+      const entry = getOrCreateClockEntry(id);
       if (entry.pausedAt === null) entry.pausedAt = globalTime - entry.offset;
       entry.stopped = false;
     },
     restart: (id, globalTime) => {
-      const entry = ensure(id);
+      const entry = getOrCreateClockEntry(id);
       entry.offset = globalTime;
       entry.pausedAt = null;
       entry.active = true;
       entry.stopped = false;
     },
     stop: id => {
-      const entry = ensure(id);
+      const entry = getOrCreateClockEntry(id);
       entry.stopped = true;
       entry.active = false;
       entry.pausedAt = null;
     },
     seek: (id, timeMs, globalTime) => {
-      const entry = ensure(id);
+      const entry = getOrCreateClockEntry(id);
       entry.stopped = false;
       entry.active = true;
       if (entry.pausedAt !== null) entry.pausedAt = timeMs;
@@ -113,23 +113,23 @@ export const createIdClockRegistry = (): IdClockRegistry => {
     rekey: (from, to) => {
       if (from === to) return;
 
-      const entry = map.get(from);
-      map.delete(from);
-      if (entry !== undefined) map.set(to, entry);
+      const entry = clockEntries.get(from);
+      clockEntries.delete(from);
+      if (entry !== undefined) clockEntries.set(to, entry);
     },
     restartTimeline: (id, globalTime) => {
-      const entry = ensure(id);
+      const entry = getOrCreateClockEntry(id);
       entry.offset = globalTime;
       if (entry.pausedAt !== null) entry.pausedAt = 0;
       entry.stopped = false;
     },
     remove: id => {
-      map.delete(id);
+      clockEntries.delete(id);
     },
-    capture: () => Object.freeze(Array.from(map, ([id, entry]) => [id, Object.freeze({ ...entry })] as const)),
+    capture: () => Object.freeze(Array.from(clockEntries, ([id, entry]) => [id, Object.freeze({ ...entry })] as const)),
     restore: snapshot => {
-      map.clear();
-      for (const [id, entry] of snapshot) map.set(id, { ...entry });
+      clockEntries.clear();
+      for (const [id, entry] of snapshot) clockEntries.set(id, { ...entry });
     },
   };
 };

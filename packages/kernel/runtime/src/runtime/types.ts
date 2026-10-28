@@ -4,7 +4,7 @@ import type { RuntimeCommitParticipant, RuntimeCommitParticipantToken } from '..
 import type { RuntimeSourceRegistry, RuntimeComputationRegistry } from '../registry';
 import type { RuntimeSourceDefinition, RuntimeRevision } from '../source';
 import type { PerformanceTraceSink } from '../trace';
-import type { RuntimeSourceInput, RuntimeResult, RuntimeUpdate, RuntimeSnapshot } from '../transaction';
+import type { InputRuntimeSource, RuntimeResult, RuntimeUpdate, RuntimeSnapshot } from '../transaction';
 import type { RuntimeUpdateStrategy } from './constants';
 
 /** 同步 Runtime 的创建配置，创建后固定注册表、更新策略与 trace 引用 */
@@ -14,7 +14,7 @@ export type RuntimeOptions = Readonly<{
   /** 与同一 Source registry 绑定的 Computation registry */
   computations: RuntimeComputationRegistry;
   /** 精确覆盖 Source registry 的初始完整 Snapshot commands */
-  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
+  initialSnapshots: ReadonlyArray<InputRuntimeSource>;
   /**
    * Computation 更新策略
    * @default RuntimeUpdateStrategy.Auto

@@ -20,7 +20,7 @@ const compileOptions: CompileOptions = {
   rehypePlugins: [rehypeSlug, [rehypeMdxCodeProps, { tagName: 'code' }]],
 };
 
-describe('TeX API Reference MDX', () => {
+describe('TeX API 参考 MDX', () => {
   it('把 package exports 的公开导出生成可直接内联的中文 MDX', async () => {
     const source = await createTexApiReferenceMdx('zh');
 
@@ -33,7 +33,7 @@ describe('TeX API Reference MDX', () => {
     expect(source).toContain("import { createLowerTex, createMathJaxEngine, MathJaxProfile } from '@retikz/tex';");
     expect(source).toContain('| 成员 | 类型 | 默认值 | 说明 |');
     expect(source).toContain('| `onDiagnostic?` |');
-    expect(source).toContain('### LowerTexOptions');
+    expect(source).toContain('### TexLoweringOptions');
     expect(source).not.toContain('```ts\n{ onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void }\n```');
 
     const lowerTexState = source.split('### MathJaxLowerTexState\n')[1]?.split('\n### ')[0] ?? '';
@@ -60,7 +60,7 @@ describe('TeX API Reference MDX', () => {
     expect(source).toContain('| 类别 | 名称 | 类型 / 签名 | 说明 |');
     expect(source).not.toContain('#### 参数');
     expect(source).toContain('| 参数 | `engine` | `MathJaxSvgEngine` | 提供同步 TeX → SVG 转换能力的引擎 |');
-    expect(source).toContain('|  | `options?` | `LowerTexOptions` | 控制 lowering 失败诊断的可选配置 |');
+    expect(source).toContain('|  | `options?` | `TexLoweringOptions` | 控制 lowering 失败诊断的可选配置 |');
     expect(source).toContain('| 返回值 |');
     expect(source).toContain('转换失败时返回 null');
     expect(source).toContain('| 错误 |');

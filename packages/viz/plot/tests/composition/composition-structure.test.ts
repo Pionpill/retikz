@@ -24,14 +24,14 @@ const baseSpec = {
   guides: [{ type: 'axis', dimension: 'y', coordinateView: 'main', grid: true }],
 };
 
-describe('composition structure schema', () => {
-  it('composition_views_round_trip_as_json', () => {
+describe('组合结构 schema', () => {
+  it('组合将往返视为 json', () => {
     const parsed = PlotSchema.parse(JSON.parse(JSON.stringify(baseSpec)));
 
     expect(parsed).toEqual(baseSpec);
   });
 
-  it('facet_arrangement_with_multilevel_header_parses', () => {
+  it('具有多级头部解析的方面排列', () => {
     const spec = {
       ...baseSpec,
       composition: {
@@ -58,7 +58,7 @@ describe('composition structure schema', () => {
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
-  it('tracks_arrangement_with_generated_view_template_parses', () => {
+  it('使用生成的视图模板解析来跟踪排列', () => {
     const spec = {
       ...baseSpec,
       composition: {
@@ -85,7 +85,7 @@ describe('composition structure schema', () => {
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
-  it('mixed_facet_and_tracks_arrangements_are_rejected', () => {
+  it('拒绝混合面和轨道排列', () => {
     const spec = {
       ...baseSpec,
       composition: {
@@ -111,7 +111,7 @@ describe('composition structure schema', () => {
     expect(() => PlotSchema.parse(spec)).toThrow(/cannot mix facet and track arrangements/i);
   });
 
-  it('axis_grid_selected_selector_parses_with_new_view_and_arrangement_names', () => {
+  it('轴网格选择选择器使用新视图和排列名称进行解析', () => {
     const spec = {
       ...baseSpec,
       guides: [
@@ -134,7 +134,7 @@ describe('composition structure schema', () => {
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
-  it('negative_spacing_is_rejected', () => {
+  it('负间距被拒绝', () => {
     const spec = {
       ...baseSpec,
       composition: {

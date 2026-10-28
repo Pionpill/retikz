@@ -1,4 +1,4 @@
-import { FlexLayoutDefinition } from '@retikz/layout';
+import { flexLayoutDefinition } from '@retikz/layout';
 import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
@@ -12,7 +12,7 @@ export const previewControls = previewControlContract.controls;
 
 const preview = defineFlexPreview(
   previewControlContract,
-  values => <Layout ir={createInspectionScene(values)} extensions={{ composites: [FlexLayoutDefinition] }} />,
+  values => <Layout ir={createInspectionScene(values)} extensions={{ composites: [flexLayoutDefinition] }} />,
   values => ({
     rules: [
       {

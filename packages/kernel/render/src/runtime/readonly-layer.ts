@@ -25,7 +25,7 @@ const deepFreeze = <T>(value: T): T => {
 };
 
 /** 校验并冻结单帧有序只读图层 */
-export const validateReadonlyLayers = (
+export const snapshotReadonlyLayers = (
   input: ReadonlyArray<RenderReadonlyLayer>,
 ): ReadonlyArray<RenderReadonlyLayer> => {
   /** 递归拒绝只读图层 primitive 树中的公共身份、元数据与动画语义 */

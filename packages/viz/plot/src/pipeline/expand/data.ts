@@ -15,7 +15,7 @@ import {
   collectFormatFields,
   createDataView,
   DEFAULT_TRANSFORM_CONTEXT,
-  normalizeRows,
+  resolveDataRows,
   resolveFieldPath,
   resolveFieldTypes,
   resolveFormatRegistry,
@@ -36,7 +36,7 @@ import type { AnyMarkDefinition } from '../../providers';
 import { MARK_REGISTRY, resolvePositionAdjustmentRegistry, resolveScaleRegistry } from '../../providers';
 import type { IRPlot, IRPlotMark } from '../../schemas';
 import { collectSourceFields } from '../source-fields';
-import type { LowerPlotsOptions } from './types';
+import type { PlotsLoweringOptions } from './types';
 
 /** 对单个mark应用局部transform，返回该mark实际消费的完整DataView */
 export const applyMarkTransforms = (
@@ -58,10 +58,10 @@ export const applyMarkTransforms = (
  * 校验 datasetFieldMaps 中的数据集与逻辑字段引用
  * @description 供 lowering 与 locator 共用，保证两条入口采用相同的 fail-loud 契约
  */
-export const assertDatasetFieldMaps = (
+const assertDatasetFieldMaps = (
   spec: IRPlot,
   datasets: ExternalDatasets,
-  datasetFieldMaps: LowerPlotsOptions['datasetFieldMaps'],
+  datasetFieldMaps: PlotsLoweringOptions['datasetFieldMaps'],
 ): void => {
   if (datasetFieldMaps === undefined) return;
 
@@ -97,7 +97,7 @@ export const assertDatasetFieldMaps = (
 export const prepareRows = (
   spec: IRPlot,
   datasets: ExternalDatasets,
-  options: LowerPlotsOptions,
+  options: PlotsLoweringOptions,
   ingested: Array<ExternalRow>,
   registries = preparePlotRegistries(options),
 ): {
@@ -145,7 +145,7 @@ export const prepareRows = (
   );
 
   const resolveField = options.resolveField;
-  const trackedResolveField: LowerPlotsOptions['resolveField'] =
+  const trackedResolveField: PlotsLoweringOptions['resolveField'] =
     resolveField === undefined
       ? undefined
       : (field, context) => {
@@ -163,7 +163,7 @@ export const prepareRows = (
   );
 
   const parsers = new Map([...formatParsers, ...resolverParsers]);
-  const normalized = normalizeRows(ingested, fieldTypeMap, fieldMap, parsers);
+  const normalized = resolveDataRows(ingested, fieldTypeMap, fieldMap, parsers);
   const positionFields = new Set<string>();
   for (const mark of spec.marks)
     for (const position of markPositionInputs(mark))
@@ -211,7 +211,7 @@ export const prepareRows = (
 };
 
 /** 为同步 lowering 和异步数据准备建立同一领域注册表 */
-export const preparePlotRegistries = (options: LowerPlotsOptions) => {
+export const preparePlotRegistries = (options: PlotsLoweringOptions) => {
   const transformRegistry = resolveTransformRegistry(options.definitions?.transforms);
   const transformContext: TransformContext = {
     ...DEFAULT_TRANSFORM_CONTEXT,

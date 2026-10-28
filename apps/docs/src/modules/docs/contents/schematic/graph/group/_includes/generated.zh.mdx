@@ -124,13 +124,13 @@ export type InputGroup = Omit<GroupCreateOptions, 'children'> &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GroupInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/group.ts"} startLine={19}>GroupInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"groupInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/group.ts"} startLine={19}>groupInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const GroupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbedProps>;
+export declare const groupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={24}>createGraphVanillaAdapters</ApiSourceLink>
+#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -242,10 +242,10 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称       | 类型 / 签名                             | 说明                                                                       |
-| ------ | ---------- | --------------------------------------- | -------------------------------------------------------------------------- |
-| 参数   | `options?` | `GraphDefinitionOptions`                | 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配 |
-| 返回值 | —          | `ReadonlyArray<CoreDependencyProvider>` | 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖          |
+| 类别   | 名称       | 类型 / 签名                                | 说明                                                                       |
+| ------ | ---------- | ------------------------------------------ | -------------------------------------------------------------------------- |
+| 参数   | `options?` | `GraphDefinitionOptions`                   | 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配 |
+| 返回值 | —          | `ReadonlyArray<AnyCoreDependencyProvider>` | 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖          |
 
 </ApiTable>
 
@@ -254,7 +254,9 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createGraphProviders: (options?: GraphDefinitionOptions) => ReadonlyArray<CoreDependencyProvider>;
+export declare const createGraphProviders: (
+  options?: GraphDefinitionOptions,
+) => ReadonlyArray<AnyCoreDependencyProvider>;
 ```
 
 </DocTab>

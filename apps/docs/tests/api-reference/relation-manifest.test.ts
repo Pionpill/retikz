@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { relationApiConfigs } from '../../scripts/api-reference/relation';
 import { createApiReferenceMdx } from '../../scripts/api-reference/tex';
 
-describe('Relation API public reference', () => {
-  it('preserves paired entries, route alternatives, semantic recipes, and complete English output', async () => {
+describe('Relation API 公共参考', () => {
+  it('保留配对条目、路线替代方案、语义配方和完整的英文输出', async () => {
     const sections: Array<string> = [];
 
     for (const config of relationApiConfigs) sections.push(await createApiReferenceMdx(config, 'en'));

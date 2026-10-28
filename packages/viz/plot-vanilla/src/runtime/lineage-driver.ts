@@ -1,6 +1,6 @@
 import type { CompileResult } from '@retikz/core';
 import { lowerPlotWithLineage } from '@retikz/plot';
-import type { VanillaCompileDriver, VanillaCompileDriverSession, VanillaCompileDriverInput } from '@retikz/vanilla';
+import type { VanillaCompileDriver, VanillaCompileDriverSession, InputVanillaCompileDriver } from '@retikz/vanilla';
 
 import type { PreparedPlotLineageNotification } from '../spec';
 
@@ -10,7 +10,7 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
     object,
     {
       session: VanillaCompileDriverSession;
-      updateSites: (sites: Array<PreparedPlotLineageNotification>, input: VanillaCompileDriverInput) => void;
+      updateSites: (sites: Array<PreparedPlotLineageNotification>, input: InputVanillaCompileDriver) => void;
     }
   >();
   return {

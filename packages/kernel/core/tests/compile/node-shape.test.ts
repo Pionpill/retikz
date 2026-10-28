@@ -13,7 +13,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-describe('Node shape multimorphism', () => {
+describe('Node 形状多态', () => {
   it('默认 shape = rectangle，emit RectPrimitive', () => {
     const ir: IRScene = {
       version: 1,
@@ -194,7 +194,7 @@ describe('Target 字符串锚点扩展', () => {
   });
 });
 
-describe('ellipse nested params IR round-trip', () => {
+describe('椭圆嵌套参数 IR 往返', () => {
   it("含 ellipse {circumscribe:'equal'} 的 Node IR → JSON → parse 等价（params 全在 IR）", () => {
     const node = {
       type: 'node',
@@ -267,7 +267,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
     expect(el!.rx).toBe(el!.ry);
   });
 
-  it("circle_with_extra_params_rejected：{type:'ellipse', params:{foo:1}} → strictObject reject", () => {
+  it("strictObject 拒绝带有额外参数的形状：{type:'ellipse', params:{foo:1}}", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

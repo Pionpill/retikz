@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
 
-describe('Graph Source authoring helpers', () => {
-  it('creates semantic member records and assembles them through one Graph root', () => {
+describe('Graph Source 编写助手', () => {
+  it('创建语义成员记录并通过一个 Graph 根组装它们', () => {
     const entity = Graph.createEntity({
       id: 'service',
       role: 'participant',
@@ -50,7 +50,7 @@ describe('Graph Source authoring helpers', () => {
     });
   });
 
-  it('rejects removed wrapper-era sugar while accepting direct Core-compatible fields', () => {
+  it('拒绝去除包装时代的糖，同时接受直接的 Core 兼容字段', () => {
     expect(Graph.createEntity({ id: 'service', role: 'participant', position: [0, 0] })).toMatchObject({
       position: [0, 0],
     });
@@ -66,7 +66,7 @@ describe('Graph Source authoring helpers', () => {
     ).toThrow();
   });
 
-  it('creates independent Block-family records without nesting them into Block grammar', () => {
+  it('创建独立的 Block 系列记录，而不将它们嵌套到 Block 语法中', () => {
     const header = Graph.createBlockHeader({ title: { text: 'Service' } });
     const section = Graph.createBlockSection({ children: [{ type: 'node', position: [0, 0], text: 'content' }] });
     const row = Graph.createBlockRow({

@@ -18,7 +18,7 @@ const sceneWith = (node: IRNode, nested: boolean): IRScene => ({
     : [node],
 });
 
-describe('Node default position', () => {
+describe('Node 默认位置', () => {
   it('物化 schema 默认值并保留非法输入的拒绝语义', () => {
     expect(NodeSchema.parse({ type: 'node' }).position).toEqual([0, 0]);
     expect(SceneSchema.parse(sceneWith({ type: 'node' }, false)).children[0]).toMatchObject({ position: [0, 0] });

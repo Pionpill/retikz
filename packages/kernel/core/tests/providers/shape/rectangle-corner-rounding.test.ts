@@ -39,7 +39,7 @@ describe('rectangle cornerRadius — emit 仍 RectPrimitive', () => {
     expect(prim.cornerRadius).toBeUndefined();
   });
 
-  it('rect_emit_clamps_cornerRadius_to_rect_bounds', () => {
+  it('矩形发射将 cornerRadius 钳位到矩形边界', () => {
     const rect = aaRect(120, 80);
     const prims = [...rectangle.emit(rect, {}, round2, { cornerRadius: 1_000_000 })];
     const prim = prims[0];
@@ -49,7 +49,7 @@ describe('rectangle cornerRadius — emit 仍 RectPrimitive', () => {
   });
 });
 
-describe('rectangle cornerRadius — boundary aware', () => {
+describe('矩形 cornerRadius — 边界感知', () => {
   it('rect_boundary_aware：朝角方向 r>0 落 fillet 弧（≠ 直角顶点），r=0 = 直角顶点', () => {
     const rect = aaRect(120, 120); // 正方形：朝 [1,1] 方向命中右下角
     const toward: Position = [1000, 1000];
@@ -129,17 +129,17 @@ describe('rectangle cornerRadius — r=0 等价于现状矩形边求交', () => 
   });
 });
 
-describe('rectangle cornerRadius — scaleParams / paramsSchema', () => {
-  it('rect_scaleParams_corner：scale=2 → cornerRadius×2', () => {
+describe('矩形 cornerRadius — scaleParams / paramsSchema', () => {
+  it('矩形 scaleParams 在 scale=2 时将 cornerRadius 乘以 2', () => {
     expect(rectangle.scaleParams!({ cornerRadius: 6 }, 2, 2)).toEqual({ cornerRadius: 12 });
     expect(rectangle.scaleParams!({}, 2, 2)).toEqual({});
   });
 
-  it('negative_cornerRadius_rejected', () => {
+  it('否定 cornerRadius 被拒绝', () => {
     expect(() => rectangle.paramsSchema.parse({ cornerRadius: -3 })).toThrow();
   });
 
-  it('non_finite_cornerRadius_rejected', () => {
+  it('非有限 cornerRadius 被拒绝', () => {
     expect(() => rectangle.paramsSchema.parse({ cornerRadius: Infinity })).toThrow();
     expect(() => rectangle.paramsSchema.parse({ cornerRadius: NaN })).toThrow();
   });

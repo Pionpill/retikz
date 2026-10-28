@@ -17,8 +17,8 @@ const manualSpec = {
   structure: { kind: 'manual', rows: [['value']] },
 } as const;
 
-describe('Table root spec schema', () => {
-  it('exposes precise detail, manual, and custom root schemas', () => {
+describe('Table 根规范 schema', () => {
+  it('公开精确的细节、手动和自定义根 schema', () => {
     const detail = DetailTableSchema.parse({
       namespace: 'table',
       type: 'table',
@@ -37,7 +37,7 @@ describe('Table root spec schema', () => {
     expect(custom.structure.kind).toBe('summaryByRegion');
   });
 
-  it('round-trips a manual root without external data', () => {
+  it('无需外部数据即可往返手动根', () => {
     const parsed: IRTable = TableSchema.parse(JSON.parse(JSON.stringify(manualSpec)));
 
     expect(parsed).toEqual(manualSpec);
@@ -47,7 +47,7 @@ describe('Table root spec schema', () => {
     });
   });
 
-  it('accepts detail data references and preserves id, layout, and JSON metadata', () => {
+  it('接受详细数据引用并保留 id、布局和 JSON 元数据', () => {
     const spec = {
       namespace: 'table',
       type: 'table',
@@ -67,7 +67,7 @@ describe('Table root spec schema', () => {
     expect(TableSchema.parse(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
   });
 
-  it('accepts shortest non-empty identities and JSON-safe custom structures without forcing data', () => {
+  it('接受最短的非空身份和 JSON 安全的自定义结构，而不强制数据', () => {
     const spec = {
       namespace: 'table',
       type: 'table',
@@ -86,11 +86,11 @@ describe('Table root spec schema', () => {
     [{ namespace: 'table', type: 'table' }],
     [{ ...manualSpec, namespace: 'plot' }],
     [{ ...manualSpec, type: 'detail' }],
-  ])('rejects missing or incorrect root discriminators and structure: %j', invalid => {
+  ])('拒绝丢失或不正确的根判别字段和结构：%j', invalid => {
     expect(() => TableSchema.parse(invalid)).toThrow();
   });
 
-  it('requires data for detail and rejects unused data for manual structures', () => {
+  it('需要详细数据，拒绝手动结构未使用的数据', () => {
     const detailWithoutData = {
       namespace: 'table',
       type: 'table',
@@ -112,7 +112,7 @@ describe('Table root spec schema', () => {
     ).toThrow();
   });
 
-  it('keeps rows, functions, and non-JSON metadata outside the IR', () => {
+  it('将行、函数和非 JSON 元数据保留在 IR 之外', () => {
     expect(() => TableSchema.parse({ ...manualSpec, data: { reference: 'people', rows: [] } })).toThrow();
     expect(() =>
       TableSchema.parse({
@@ -122,7 +122,7 @@ describe('Table root spec schema', () => {
     ).toThrow();
   });
 
-  it('extends the Core composite contract with matching literal keys', () => {
+  it('使用匹配的字面量键扩展 Core 复合契约', () => {
     const definition = defineComposite({
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,

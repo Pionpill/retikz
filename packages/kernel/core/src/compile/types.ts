@@ -10,7 +10,7 @@ import type {
   SpatialHandleIndex,
 } from '../contract';
 import type { CoreProviderDefinitions, ThemeDefinition } from '../contract';
-import type { LowerTex, TextMeasurer } from './text';
+import type { TexLowerer, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
 
 /** 编译期节点布局观测结果 */
@@ -153,7 +153,7 @@ export type CompileHostOptions = {
    * 运行时注入的公式渲染能力
    * @description 带 tex 内容但未注入或解析失败时会 warning 并降级
    */
-  lowerTex?: LowerTex;
+  lowerTex?: TexLowerer;
   /**
    * 编译期警告收集器
    * @description path / position 解析失败时按 IR locator + code + message 同步触发

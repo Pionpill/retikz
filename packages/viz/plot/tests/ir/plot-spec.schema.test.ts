@@ -47,23 +47,23 @@ const baseLine = {
   ],
 };
 
-describe('PlotSchema (contract)', () => {
+describe('PlotSchema（契约）', () => {
   // Happy path
-  it('plot_root_line_valid', () => {
+  it('绘图根线有效', () => {
     expect(PlotSchema.parse(baseLine)).toEqual(baseLine);
   });
 
-  it('plot_root_with_id_and_meta_valid', () => {
+  it('绘制具有 id 和元有效的根', () => {
     const spec = { ...baseLine, id: 'sales-chart', meta: { source: 'contract-example' } };
 
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
-  it('plot_whitespace_only_id_rejected', () => {
+  it('仅绘制空白 id 被拒绝', () => {
     expect(PlotSchema.safeParse({ ...baseLine, id: '   ' }).success).toBe(false);
   });
 
-  it('plot_root_omits_optionals_valid', () => {
+  it('绘图根省略有效选项', () => {
     const spec = {
       namespace: 'plot',
       type: 'plot',
@@ -78,7 +78,7 @@ describe('PlotSchema (contract)', () => {
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
-  it('plot_duplicate_scale_name_rejected_at_later_name_path', () => {
+  it('绘制在后面的名称路径中拒绝的重复比例名称', () => {
     const result = PlotSchema.safeParse({
       ...baseLine,
       scales: [
@@ -97,18 +97,18 @@ describe('PlotSchema (contract)', () => {
   });
 
   // 边界
-  it('plot_marks_empty_array_rejected', () => {
+  it('绘图标记空数组被拒绝', () => {
     expect(() => PlotSchema.parse({ ...baseLine, marks: [] })).toThrow();
   });
 
-  it('plot_meta_nested_json_valid', () => {
+  it('绘图元嵌套 json 有效', () => {
     const spec = { ...baseLine, meta: { a: { b: [1, true, null] } } };
 
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
   // 错误路径
-  it('plot_missing_namespace_rejected', () => {
+  it('绘图缺少命名空间被拒绝', () => {
     const rest = {
       type: 'plot',
       data: baseLine.data,
@@ -120,21 +120,21 @@ describe('PlotSchema (contract)', () => {
     expect(() => PlotSchema.parse(rest)).toThrow();
   });
 
-  it('plot_wrong_type_literal_rejected', () => {
+  it('绘制错误的类型字面量被拒绝', () => {
     expect(() => PlotSchema.parse({ ...baseLine, type: 'chart' })).toThrow();
   });
 
-  it('plot_meta_function_value_rejected', () => {
+  it('绘制元函数值被拒绝', () => {
     expect(() => PlotSchema.parse({ ...baseLine, meta: { f: () => 1 } })).toThrow();
   });
 
-  it('plot_data_inline_values_rejected', () => {
+  it('拒绝绘制数据内联值', () => {
     // 数据不进 IR：data 槽位无 reference（旧内联形态）被拒
     expect(() => PlotSchema.parse({ ...baseLine, data: { values: [{ x: 1 }] } })).toThrow();
   });
 
   // 交互
-  it('plot_multi_mark_layers_valid', () => {
+  it('绘图多标记层有效', () => {
     const spec = {
       ...baseLine,
       marks: [
@@ -154,20 +154,20 @@ describe('PlotSchema (contract)', () => {
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
-  it('coordinate_references_unknown_scale_name_schema_passes', () => {
+  it('引用未知比例尺名称的坐标配置通过 schema 校验', () => {
     // 引用完整性是 lowering 的校验，非 schema 职责
     const spec = { ...baseLine, coordinate: { type: 'cartesian2D', x: 'nope', y: 'missing' } };
 
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
-  it('custom_coordinate_op_type_schema_passes_and_round_trips', () => {
+  it('自定义坐标操作类型通过 schema 校验并保持往返等价', () => {
     const spec = { ...baseLine, coordinate: { type: 'arch', x: 'xMonth', archHeight: 30 } };
 
     expect(PlotSchema.parse(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
   });
 
-  it('compat_rejects_unregistered_custom_coordinate_shape', () => {
+  it('兼容性检查拒绝未注册的自定义坐标形态', () => {
     const spec = {
       ...baseLine,
       coordinate: { type: 'custom', name: 'arch', roles: ['x'], params: { archHeight: 30 } },
@@ -177,7 +177,7 @@ describe('PlotSchema (contract)', () => {
   });
 
   // guides are optional schema-level plot annotations.
-  it('plot_with_guides_valid', () => {
+  it('带有有效辅助线的绘图', () => {
     const spec = {
       ...baseLine,
       guides: [
@@ -189,12 +189,12 @@ describe('PlotSchema (contract)', () => {
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
-  it('plot_omits_guides_valid', () => {
+  it('绘图省略有效辅助线', () => {
     // compat: specs without guides remain valid.
     expect(PlotSchema.parse(baseLine)).toEqual(baseLine);
   });
 
-  it('plot_empty_guides_valid', () => {
+  it('绘图空辅助线有效', () => {
     const spec = { ...baseLine, guides: [] };
 
     expect(PlotSchema.parse(spec)).toEqual(spec);
@@ -203,11 +203,11 @@ describe('PlotSchema (contract)', () => {
   it.each([
     ['layout', { ...baseLine, layout: { autoPadding: true } }],
     ['labels', { ...baseLine, labels: [{ type: 'text', role: 'title', text: 'Monthly Revenue' }] }],
-  ])('plot_presentation_field_%s_is_rejected', (_field, spec) => {
+  ])('绘图呈现字段 %s 被拒绝', (_field, spec) => {
     expect(PlotSchema.safeParse(spec).success).toBe(false);
   });
 
-  it('plot_theme_label_text_is_rejected', () => {
+  it('绘图主题标签文本被拒绝', () => {
     expect(
       PlotSchema.safeParse({
         ...baseLine,
@@ -216,7 +216,7 @@ describe('PlotSchema (contract)', () => {
     ).toBe(false);
   });
 
-  it('guides_coexist_with_marks', () => {
+  it('引导线与标记共存', () => {
     const spec = {
       ...baseLine,
       marks: [
@@ -239,7 +239,7 @@ describe('PlotSchema (contract)', () => {
 });
 
 describe('PlotFacetConfigurationSchema', () => {
-  it('round-trips the JSON-safe authored facet facts', () => {
+  it('往返 JSON 安全的编写方面事实', () => {
     const configuration = {
       id: 'species',
       row: [{ field: 'island' }, { field: 'sex', order: ['female', 'male', null] }],
@@ -253,7 +253,7 @@ describe('PlotFacetConfigurationSchema', () => {
     expect(plotFacetConfigurationSchema().parse(JSON.parse(JSON.stringify(configuration)))).toEqual(configuration);
   });
 
-  it('rejects configuration without a row or column at the row path', () => {
+  it('拒绝行路径上没有行或列的配置', () => {
     const result = plotFacetConfigurationSchema().safeParse({ id: 'species' });
 
     expect(result.success).toBe(false);
@@ -263,7 +263,7 @@ describe('PlotFacetConfigurationSchema', () => {
     }
   });
 
-  it.each(['view', 'coordinate', 'viewIdTemplate'])('rejects Plot-only %s controls', field => {
+  it.each(['view', 'coordinate', 'viewIdTemplate'])('拒绝仅 Plot 的 %s 控制', field => {
     const result = plotFacetConfigurationSchema().safeParse({
       id: 'species',
       column: { field: 'species' },
@@ -280,8 +280,8 @@ describe('PlotFacetConfigurationSchema', () => {
   });
 });
 
-describe('Plot partition authoring schemas', () => {
-  it('exports reusable partition and facet-option schemas', () => {
+describe('Plot 分区编写 schema', () => {
+  it('导出可重用分区和构面选项 schema', () => {
     expect(runtimeSchemaOf('PlotPartitionScalarSchema').parse(-0)).toBe(-0);
     expect(runtimeSchemaOf('PlotPartitionDimensionSchema').parse({ field: 'metric', order: ['cpu', null] })).toEqual({
       field: 'metric',
@@ -293,7 +293,7 @@ describe('Plot partition authoring schemas', () => {
     });
   });
 
-  it('rejects non-finite partition scalars', () => {
+  it('拒绝非有限分区标量', () => {
     expect(runtimeSchemaOf('PlotPartitionScalarSchema').safeParse(Number.NaN).success).toBe(false);
     expect(runtimeSchemaOf('PlotPartitionScalarSchema').safeParse(Number.POSITIVE_INFINITY).success).toBe(false);
   });

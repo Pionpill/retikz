@@ -266,7 +266,7 @@ describe('PathSchema：marks 错误路径', () => {
   });
 });
 
-describe('JSON round-trip', () => {
+describe('JSON 往返', () => {
   it('含 out/in bend + path rotate/scale + marks 的 path 序列化往返语义等价', () => {
     const path = {
       type: 'path' as const,

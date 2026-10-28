@@ -1,7 +1,7 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type { EntityKindDefinition, EntityPredicateDefinition, EntityRoleDefinition } from '../../contract';
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
 import type { IRGraphEntity, IRGraphEntityDefaults } from '../../schemas';
 import type { GraphAuthorLayer, GraphMemberAppearanceResolveContext } from '../theme';
 
@@ -14,10 +14,7 @@ export type CanonicalEntityPredicate = Readonly<{
 }>;
 
 /** Entity data resolver 的窄上下文 */
-export type EntityResolveContext = Pick<
-  ResolvedGraphDefinitionOptions,
-  'entityRoles' | 'entityKinds' | 'entityPredicates'
->;
+export type EntityResolveContext = Pick<GraphDefinitionRegistries, 'entityRoles' | 'entityKinds' | 'entityPredicates'>;
 
 /** Graph Entity data 的确定内部形态 */
 export type CanonicalEntity = Readonly<{
@@ -42,4 +39,4 @@ export type EntityGraphLayerResolveContext = EntityResolveContext &
   }>;
 
 /** Entity Theme 级联后的完整有效外观 */
-export type EffectiveEntityAppearance = Readonly<IRGraphEntityDefaults>;
+export type MergedEntityAppearance = Readonly<IRGraphEntityDefaults>;

@@ -1,6 +1,6 @@
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { FlowDiagramInputEmbedAdapter } from './flow-diagram';
+import { flowDiagramInputEmbedAdapter } from './flow-diagram';
 
 /** 创建可一次性传给 Vanilla normalize 的 Flow Diagram adapter 集合 */
 export const createFlowDiagramVanillaAdapters = (): Array<SynchronousInputEmbedAdapter<unknown>> => {
@@ -12,5 +12,5 @@ export const createFlowDiagramVanillaAdapters = (): Array<SynchronousInputEmbedA
     lower: (props, context) => adapter.lower(props as TProps, context),
   });
 
-  return [eraseAdapter(FlowDiagramInputEmbedAdapter)];
+  return [eraseAdapter(flowDiagramInputEmbedAdapter)];
 };

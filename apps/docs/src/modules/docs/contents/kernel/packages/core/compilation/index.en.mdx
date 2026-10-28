@@ -117,7 +117,7 @@ Traversal also creates state for this execution: emitted primitives, accumulated
 
 - CanonicalNode: the node after effective styles are merged, defaults are filled, and paints are resolved; `fill` / `stroke` directly carry the paint resolution results.
 - NodeResolution: CanonicalNode together with the selected shape and connection boundary, ready for layout.
-- NodeLayout: the measured and positioned result, grouped into node properties, shape, boundary, geometry, text layout, and labels.
+- CompiledNodeLayout: the measured and positioned result, grouped into node properties, shape, boundary, geometry, text layout, and labels.
 
 These are the source definitions of the three internal types, with comments omitted and referenced types left unexpanded.
 
@@ -127,7 +127,7 @@ These are the source definitions of the three internal types, with comments omit
 
 ```ts
 export type CanonicalNode = Omit<
-  Omit<ResolvedNodeSource, 'style' | 'layout'> & NonNullable<ResolvedNodeSource['style']> & IRNodeLayout,
+  Omit<NodeColorSource, 'style' | 'layout'> & NonNullable<NodeColorSource['style']> & IRNodeLayout,
   | 'padding'
   | 'position'
   | 'margin'
@@ -144,8 +144,8 @@ export type CanonicalNode = Omit<
   | 'fill'
   | 'stroke'
 > & {
-  fill?: PaintResolutionInput;
-  stroke?: PaintResolutionInput;
+  fill?: InputPaintResolution;
+  stroke?: InputPaintResolution;
   position: NonNullable<IRNode['position']>;
   padding: BoundsInsets;
   margin: BoundsInsets;
@@ -157,12 +157,12 @@ export type CanonicalNode = Omit<
     x: number;
     y: number;
   };
-  text?: Array<ResolvedTextLine>;
+  text?: Array<TextLineColorSource>;
   label?: Array<CanonicalNodeLabel>;
   align: NodeTextAlign;
   rotate: number;
   dashPattern?: StrokeDashPattern;
-  shadow?: ResolvedDropShadow;
+  shadow?: CanonicalDropShadow;
 };
 ```
 
@@ -181,12 +181,12 @@ export type NodeResolution = Readonly<{
 
 </DocTab>
 
-<DocTab value="node-layout" label="NodeLayout">
+<DocTab value="node-layout" label="CompiledNodeLayout">
 
 `irPath` records source provenance at the top level of the compilation result, alongside the node's `properties` and `layout` fields. Node, Coordinate, Path, and Scope compilation results all keep this path at the top level; layout objects do not carry source locations.
 
 ```ts
-export type NodeLayout = {
+export type CompiledNodeLayout = {
   boundarySource?: CanonicalNode['boundary'];
   shape: NodeResolution['shape'];
   boundary: NodeResolution['boundary'];
@@ -205,7 +205,7 @@ export type NodeLayoutGeometry = {
 export type NodeCompilation = {
   irPath: string;
   properties: NodeResolvedProperties;
-  layout: NodeLayout;
+  layout: CompiledNodeLayout;
 };
 
 export type NodeResolvedProperties = Omit<CanonicalNode, 'text' | 'label'> & {
@@ -233,7 +233,7 @@ export type NodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` determines effective configuration and capability bindings. `compileResolvedNode` then prepares body and label text properties and computes typesetting, node size, and position. The returned `properties` field holds complete effective properties and identity, while `layout` holds computed geometry and typesetting. Stroke width, color, and dashes share one property source; label pins also retain their complete configuration. `emitNodePrimitives` consumes layout and current properties to produce Scene primitives. Physical text lines retain their authored-line index so painting can read current line styles without wrapping again. This structure does not replace change-impact analysis; Weave still needs a separate capability contract for classified scheduling.
+`resolveNode` determines effective configuration and capability bindings. `compileNodeResolution` then prepares body and label text properties and computes typesetting, node size, and position. The returned `properties` field holds complete effective properties and identity, while `layout` holds computed geometry and typesetting. Stroke width, color, and dashes share one property source; label pins also retain their complete configuration. `emitNodePrimitives` consumes layout and current properties to produce Scene primitives. Physical text lines retain their authored-line index so painting can read current line styles without wrapping again. This structure does not replace change-impact analysis; Weave still needs a separate capability contract for classified scheduling.
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -542,12 +542,12 @@ Start in `prepareSceneCompilation` to see context creation, traversal, and assem
 
 A caller that schedules elements itself can retain a `CompileEnvironment` and compile one basic element through these entries. They share resolve, layout and emit logic with full compilation, do not recursively compile other elements, and do not register names automatically.
 
-| Entry               | Completed state      | Retained data                                                                    |
-| ------------------- | -------------------- | -------------------------------------------------------------------------------- |
-| `compileNode`       | `CompiledNode`       | NodeLayout in `layout`; drawing, resources and selected observations in `output` |
-| `compileCoordinate` | `CompiledCoordinate` | `id` and local `position`; `output` only when observation is selected            |
-| `compilePath`       | `CompiledPath`       | Complete `output`, including host processing for custom kinds                    |
-| `compileScope`      | `CompiledScope`      | `envelope`, `group` without children, and its own `output`                       |
+| Entry               | Completed state      | Retained data                                                                            |
+| ------------------- | -------------------- | ---------------------------------------------------------------------------------------- |
+| `compileNode`       | `CompiledNode`       | CompiledNodeLayout in `layout`; drawing, resources and selected observations in `output` |
+| `compileCoordinate` | `CompiledCoordinate` | `id` and local `position`; `output` only when observation is selected                    |
+| `compilePath`       | `CompiledPath`       | Complete `output`, including host processing for custom kinds                            |
+| `compileScope`      | `CompiledScope`      | `envelope`, `group` without children, and its own `output`                               |
 
 `NodeLayoutObservation`, previously named `CompiledNodeLayout`, is a public observation projection. It lacks the complete state required for drawing reuse; cache `CompiledNode` instead.
 

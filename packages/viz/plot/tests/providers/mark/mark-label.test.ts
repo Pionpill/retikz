@@ -4,20 +4,20 @@ import { resolveFieldPath } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { defineLabelChannel } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { layout: { width: 200, height: 100 } };
+const opts: PlotsLoweringOptions = { layout: { width: 200, height: 100 } };
 
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = opts,
+  options: PlotsLoweringOptions = opts,
 ): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const markLayer = (root: IRScope, index: number): IRScope => root.children[index] as IRScope;
@@ -52,7 +52,7 @@ const baseSpec = (marks: unknown): IRPlot =>
     guides: [],
   });
 
-describe('contract mark host label lowering', () => {
+describe('契约标记宿主标签下沉', () => {
   it('path-mark-host-path-label：PathMark label lowering 到 core Path.label', () => {
     const root = expandOf(
       baseSpec([
@@ -76,7 +76,7 @@ describe('contract mark host label lowering', () => {
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
 
-  it('path-mark-host-path-label accepts canonical side names', () => {
+  it('路径标记宿主路径标签接受规范的侧面名称', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -98,7 +98,7 @@ describe('contract mark host label lowering', () => {
     expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'top' });
   });
 
-  it('preserves multiline path-label text blocks during lowering', () => {
+  it('在下沉过程中保留多行路径标签文本块', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -125,17 +125,17 @@ describe('contract mark host label lowering', () => {
     });
   });
 
-  it('relation-path-host-label：RelationMark 顶层 label lowering 到 core Path.label', () => {
+  it('endpoint-path-host-label：PathMark 顶层 label lowering 到 core Path.label', () => {
     const root = expandOf(
       baseSpec([
         {
-          type: 'relation',
+          type: 'path',
           encodings: {
             label: { text: 'label' },
-            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
-            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            from: { x: { field: 'sourceX' }, y: { field: 'sourceY' } },
+            to: { x: { field: 'targetX' }, y: { field: 'targetY' } },
           },
-          properties: { label: { position: 0.5, side: 'top' }, geometry: { kind: 'path' } },
+          properties: { label: { position: 0.5, side: 'top' } },
         },
       ]),
       {
@@ -149,18 +149,19 @@ describe('contract mark host label lowering', () => {
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
 
-  it('RelationMark 标签下沉到 Ribbon kindOptions.label', () => {
+  it('PathMark 标签下沉到 Ribbon kindOptions.label', () => {
     const root = expandOf(
       baseSpec([
         {
-          type: 'relation',
+          type: 'path',
           encodings: {
-            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
-            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            from: { x: { field: 'sourceX' }, y: { field: 'sourceY' } },
+            to: { x: { field: 'targetX' }, y: { field: 'targetY' } },
           },
           properties: {
             label: { text: 'flow', position: 'midway', side: 'center', sloped: true },
-            geometry: { kind: 'ribbon', width: 12 },
+            kind: 'ribbon',
+            ribbon: { width: { kind: 'fixed', value: 12 } },
           },
         },
       ]),
@@ -178,8 +179,8 @@ describe('contract mark host label lowering', () => {
   });
 });
 
-describe('label field styles and shorthand', () => {
-  it('keeps mixed label indices and maps font leaves before lowering', () => {
+describe('标签字段样式和简写', () => {
+  it('在下沉之前保留混合标签索引并映射字体叶', () => {
     const root = expandOf(
       baseSpec([
         {
@@ -204,7 +205,7 @@ describe('label field styles and shorthand', () => {
     ]);
   });
 
-  it('rejects missing style data instead of falling back to fixed properties', () => {
+  it('拒绝缺失的样式数据，而不是回退到固定属性', () => {
     expect(() =>
       expandOf(
         baseSpec([
@@ -247,8 +248,8 @@ const fixedDomains = (marks: unknown): IRPlot => {
   };
 };
 
-describe('label dependencies and target contracts', () => {
-  it('style-only fields create real row instances and an empty result stays empty', () => {
+describe('标签依赖关系和目标契约', () => {
+  it('仅样式字段创建真实的行实例，空结果保持为空', () => {
     const spec = fixedDomains([constantPoint({ font: { size: 'size' } })]);
     expect(collectNodes(expandOf(spec, { d: [{ size: 12 }, { size: 24 }] })).map(node => node.label)).toEqual([
       { text: 'fixed', font: { size: 12 } },
@@ -257,12 +258,12 @@ describe('label dependencies and target contracts', () => {
     expect(collectNodes(expandOf(spec, { d: [] }))).toHaveLength(0);
   });
 
-  it('constant shorthand produces a single label without data', () => {
+  it('常量简写产生没有数据的单个标签', () => {
     const spec = fixedDomains([constantPoint(undefined)]);
     expect(collectNodes(expandOf(spec, { d: [] }))[0].label).toEqual({ text: 'fixed' });
   });
 
-  it('resolves numeric font scales and preserves family and style fields', () => {
+  it('解析数字字体比例并保留系列和样式字段', () => {
     const spec = fixedDomains([
       constantPoint({
         font: {
@@ -284,7 +285,7 @@ describe('label dependencies and target contracts', () => {
     });
   });
 
-  it('maps label colors and scalar opacity independently of the host', () => {
+  it('独立于宿主映射标签颜色和标量不透明度', () => {
     const spec = fixedDomains([constantPoint({ textColor: { field: 'category', scale: 'colors' }, opacity: 'alpha' })]);
     spec.scales.push({ type: 'ordinal', name: 'colors', domain: ['a', 'b'], range: ['red', 'blue'] });
     const labels = collectNodes(
@@ -301,7 +302,7 @@ describe('label dependencies and target contracts', () => {
     ]);
   });
 
-  it('checks final host constraints after combining fields and fixed properties', () => {
+  it('在组合字段和固定属性后检查最终宿主约束', () => {
     expect(() =>
       expandOf(fixedDomains([constantPoint({ placement: 'placement' }, { text: 'x', pin: true })]), {
         d: [{ placement: 'inside' }],
@@ -309,14 +310,14 @@ describe('label dependencies and target contracts', () => {
     ).toThrow(/label.*host constraints/i);
   });
 
-  it('does not shift style indices when an earlier label has missing content', () => {
+  it('当较早的标签缺少内容时，不会改变样式索引', () => {
     const root = expandOf(fixedDomains([constantPoint(['missing', { text: 'name', font: { size: 'size' } }])]), {
       d: [{ missing: null, name: 'second', size: 15 }],
     });
     expect(collectNodes(root)[0].label).toEqual({ text: 'second', font: { size: 15 } });
   });
 
-  it('uses the same registry and dependency path for custom label channels', () => {
+  it('对自定义标签通道使用相同的注册表和依赖路径', () => {
     const definition = defineLabelChannel({
       channel: 'label.emphasis',
       hosts: ['node'],
@@ -338,7 +339,7 @@ describe('label dependencies and target contracts', () => {
     ]);
   });
 
-  it('rejects unregistered targets and unknown scales with the original label location', () => {
+  it('拒绝原始标签位置未注册的目标和未知比例', () => {
     expect(() => expandOf(fixedDomains([constantPoint({ unknown: 'value' })]), { d: [{ value: 1 }] })).toThrow(
       /label\[0\].unknown/,
     );
@@ -350,14 +351,14 @@ describe('label dependencies and target contracts', () => {
   });
 });
 
-it('consumes boolean classification values for label orientation', () => {
+it('使用布尔分类值进行标签方向', () => {
   const root = expandOf(fixedDomains([constantPoint({ keepUpright: 'upright', rotate: 'angle' })]), {
     d: [{ upright: true, angle: 180 }],
   });
   expect(collectNodes(root)[0].label).toEqual({ text: 'fixed', keepUpright: true, rotate: 180 });
 });
 
-it('compiles encoded font leaves into the same measured scene as fixed label values', () => {
+it('将编码的字体叶子编译到与固定标签值相同的测量场景中', () => {
   const encoded = expandOf(fixedDomains([constantPoint({ font: { size: 'size', weight: 'weight' } })]), {
     d: [{ size: 24, weight: 700 }],
   });

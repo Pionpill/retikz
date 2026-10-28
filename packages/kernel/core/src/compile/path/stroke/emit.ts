@@ -32,7 +32,7 @@ import { emitInterruptedPathFragments, splitSubPathsForEndpointArrows } from './
 import { bboxCenter, buildPathOwnerOutputTransforms } from './transform';
 
 /** 普通 path emit 所需的编译上下文 */
-export type EmitPathPrimitiveContext = {
+type EmitPathPrimitiveContext = {
   /** 节点 id 与 target 几何解析视图 */
   targetView: PathTargetView;
   /** 坐标取整函数 */

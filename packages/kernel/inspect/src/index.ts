@@ -10,11 +10,11 @@ export type {
 } from './compile';
 export { compileInspectionToScene } from './compile';
 export type {
-  AnyInspectorDefinitionInput,
+  InputAnyInspectorDefinition,
   InspectionAppearanceContext,
   InspectorContext,
   InspectorCoordinateSpace,
-  InspectorDefinitionInput,
+  InputInspectorDefinition,
   InspectorFragment,
   InspectorKey,
   InspectorOutput,

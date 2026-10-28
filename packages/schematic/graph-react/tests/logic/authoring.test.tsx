@@ -3,10 +3,10 @@ import {
   defineGraphTheme,
   defineRelationKind,
   defineRelationRole,
-  EntityProviderKey,
+  entityProviderKey,
   GraphProviderKey,
   GraphSchema,
-  RelationProviderKey,
+  relationProviderKey,
 } from '@retikz/graph';
 import type { InputGraph } from '@retikz/graph-vanilla';
 import { createGraphVanillaAdapters, graph, normalizeGraph, relation } from '@retikz/graph-vanilla';
@@ -35,8 +35,8 @@ import {
 import { collectEntityInput, collectRelationInput, graphLayoutHostPropsOf } from '../../src/graph/authoring';
 import { synchronousAdapters } from '../helpers/synchronous-adapters';
 
-describe('Group React authoring', () => {
-  it('produces the same Group Source IR while accepting arbitrary React children', () => {
+describe('Group React 编写', () => {
+  it('生成相同的 Group Source IR，同时接受任意 React 子项', () => {
     const input = createInputScene(
       <Group
         id="runtime"
@@ -65,8 +65,8 @@ describe('Group React authoring', () => {
   });
 });
 
-describe('Block React authoring', () => {
-  it('keeps string Header text as sparse Source text', () => {
+describe('Block React 编写', () => {
+  it('将字符串 Header 文本保留为稀疏 Source 文本', () => {
     const result = normalizeReact(createElement(BlockHeader, { title: 'User', description: 'Domain entity' }));
 
     expect(result.ir.children[0]).toEqual({
@@ -77,7 +77,7 @@ describe('Block React authoring', () => {
     });
   });
 
-  it('keeps BlockRow content as sparse Source text without generated children', () => {
+  it('将 BlockRow 内容保留为稀疏 Source 文本，而不生成子项', () => {
     const content = ['name', { text: 'string', textColor: '#64748b', font: { weight: 'bold' as const } }];
     const result = normalizeReact(createElement(BlockRow, { id: 'name', content }));
 
@@ -90,7 +90,7 @@ describe('Block React authoring', () => {
     expect(result.ir.children[0]).not.toHaveProperty('children');
   });
 
-  it('normalizes arbitrary Block children in authored order through fragments and function wrappers', () => {
+  it('通过片段和函数包装器按编写顺序规范任意 Block 子项', () => {
     const WrappedContent: FC = () =>
       createElement(
         Fragment,
@@ -144,7 +144,7 @@ describe('Block React authoring', () => {
     });
   });
 
-  it('exposes Header, Section and Row as independent composites with nested adapter collection', () => {
+  it('将 Header、Section 和 Row 公开为具有嵌套适配器集合的独立复合组件', () => {
     const WrappedEntity: FC = () => createElement(Entity, { role: 'concept', position: [0, 0] });
     const result = normalizeReact(
       createElement(
@@ -194,7 +194,7 @@ describe('Block React authoring', () => {
     ]);
   });
 
-  it('keeps direct Row children unwrapped in Source IR', () => {
+  it('将直接的 Row 子项保持在 Source IR 中展开', () => {
     const result = normalizeReact(
       createElement(BlockRow, null, createElement(Node, { position: [0, 0], children: 'name' })),
     );
@@ -205,7 +205,7 @@ describe('Block React authoring', () => {
     expect(row.children[0]).not.toHaveProperty('key');
   });
 
-  it('omits optional Header slots when React children normalize to zero items', () => {
+  it('当 React 子项标准化为零项目时，省略可选的 Header 槽位', () => {
     for (const empty of [null, false, createElement(Fragment)] as const) {
       const result = normalizeReact(
         createElement(BlockHeader, { title: { text: 'Empty slots' }, icon: empty, trail: empty }),
@@ -290,8 +290,8 @@ const normalizeReact = (element: ReturnType<typeof createElement>) => {
   return normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 };
 
-describe('@retikz/graph-react package boundary', () => {
-  it('exposes every Graph semantic composite independently', async () => {
+describe('@retikz/graph-react 封装边界', () => {
+  it('独立公开每个 Graph 语义组合', async () => {
     const graphReact = await import('../../src');
 
     expect(Graph.inputEmbedAdapter.kind).toBe('graph.graph');
@@ -306,14 +306,14 @@ describe('@retikz/graph-react package boundary', () => {
   });
 });
 
-describe('Entity and Relation React authoring', () => {
-  it('omits an Entity status when its React prop is undefined', () => {
+describe('Entity 和 Relation React 编写', () => {
+  it('当 React 属性 undefined 时，忽略 Entity 状态', () => {
     const input = collectEntityInput({ role: 'participant', position: [0, 0], status: undefined }, 'entity-status');
 
     expect(input).not.toHaveProperty('status');
   });
 
-  it('omits a Relation status when its React prop is undefined', () => {
+  it('当 React 属性 undefined 时，忽略 Relation 状态', () => {
     const input = collectRelationInput(
       {
         role: 'association',
@@ -327,7 +327,7 @@ describe('Entity and Relation React authoring', () => {
     expect(input).not.toHaveProperty('status');
   });
 
-  it('normalizes string Relation endpoints through the shared Vanilla input', () => {
+  it('通过共享 Vanilla 输入标准化字符串 Relation 端点', () => {
     const result = normalizeReact(
       createElement(Relation, {
         role: 'flow',
@@ -347,7 +347,7 @@ describe('Entity and Relation React authoring', () => {
     ]);
   });
 
-  it('normalizes direct Entity and Relation children without a Graph parent or generated ids', () => {
+  it('标准化直接 Entity 和 Relation 子项，没有 Graph 父项或生成的 id', () => {
     const result = normalizeReact(
       createElement(
         Fragment,
@@ -393,12 +393,12 @@ describe('Entity and Relation React authoring', () => {
     expect(result.ir.children[2]).not.toHaveProperty('id');
     expect(result.ir.children[3]).not.toHaveProperty('id');
     expect(result.contributions.map(contribution => contribution.roots)).toEqual([
-      [EntityProviderKey],
-      [RelationProviderKey],
+      [entityProviderKey],
+      [relationProviderKey],
     ]);
   });
 
-  it('normalizes Entity text and Relation Step wrappers through the Core authoring grammar', () => {
+  it('通过 Core 编写语法规范 Entity 文本和 Relation 步骤包装器', () => {
     const result = normalizeReact(
       createElement(
         Fragment,
@@ -431,7 +431,7 @@ describe('Entity and Relation React authoring', () => {
     ]);
   });
 
-  it('rejects conflicting Entity text and Relation route authoring', () => {
+  it('拒绝冲突的 Entity 文本和 Relation 路由编写', () => {
     expect(() => normalizeReact(createElement(Entity, { role: 'activity', text: 'prop' }, 'child'))).toThrowError(
       expect.objectContaining({ code: RetikzGraphReactErrorCode.EntityInputInvalid }),
     );
@@ -453,8 +453,8 @@ describe('Entity and Relation React authoring', () => {
   });
 });
 
-describe('Graph Source and child authoring', () => {
-  it('keeps defaultGraph and graphRules identical to Direct and Vanilla Source IR', () => {
+describe('Graph Source 和儿童编写', () => {
+  it('使 defaultGraph 和 graphRules 与 Direct 和 Vanilla Source IR 相同', () => {
     const input = {
       id: 'parity',
       position: [0, 0],
@@ -500,7 +500,7 @@ describe('Graph Source and child authoring', () => {
     expect(react.ir.children[0]).toEqual(direct);
   });
 
-  it('preserves the complete Graph Scope surface and keeps Theme fields disjoint', () => {
+  it('保留完整的 Graph Scope 表面并保持主题字段不相交', () => {
     const result = normalizeReact(
       createElement(
         Graph,
@@ -581,7 +581,7 @@ describe('Graph Source and child authoring', () => {
     ]);
   });
 
-  it('uses generic child normalization for semantic and third-party embeds in author order', () => {
+  it('按作者顺序对语义和第三方嵌入使用通用子规范化', () => {
     const result = normalizeReact(
       createElement(
         Graph,
@@ -615,10 +615,10 @@ describe('Graph Source and child authoring', () => {
         ],
       },
     ]);
-    expect(result.contributions[0]?.roots).toEqual([GraphProviderKey, EntityProviderKey, RelationProviderKey]);
+    expect(result.contributions[0]?.roots).toEqual([GraphProviderKey, entityProviderKey, relationProviderKey]);
   });
 
-  it('does not create a nested Scene when Graph is embedded', () => {
+  it('嵌入 Graph 时不创建嵌套 Scene', () => {
     const result = normalizeReact(
       createElement(Graph, null, createElement(Graph, null, createElement(Node, { position: [0, 0] }))),
     );
@@ -643,8 +643,8 @@ describe('Graph Source and child authoring', () => {
   });
 });
 
-describe('Graph standalone and embedded host classification', () => {
-  it('renders standalone Graph through exactly one Layout Scene host', () => {
+describe('Graph 独立式和嵌入式宿主分类', () => {
+  it('通过一台 Layout Scene 宿主渲染独立的 Graph', () => {
     const markup = renderToStaticMarkup(
       createElement(
         Graph,
@@ -664,7 +664,7 @@ describe('Graph standalone and embedded host classification', () => {
     expect(markup).toContain('fill="#123456"');
   });
 
-  it('forwards the complete standalone host surface without consuming Source fields', () => {
+  it('转发完整的独立宿主表面，而不消费 Source 字段', () => {
     const props = {
       authoring: undefined,
       compileDriver: undefined,
@@ -710,7 +710,7 @@ describe('Graph standalone and embedded host classification', () => {
     expect(hostProps).not.toHaveProperty('animations');
   });
 
-  it.each(hostPropKeys)('rejects embedded own host property %s including explicit undefined', key => {
+  it.each(hostPropKeys)('拒绝嵌入的自己的宿主属性 %s，包括显式 undefined', key => {
     const props: GraphProps = { [key]: undefined };
 
     expect(() => normalizeReact(createElement(Graph, props))).toThrowError(
@@ -719,8 +719,8 @@ describe('Graph standalone and embedded host classification', () => {
   });
 });
 
-describe('Graph Definition options parity', () => {
-  it('compiles an explicitly registered Relation kind identically through React and Vanilla', () => {
+describe('Graph Definition 选项等价性', () => {
+  it('通过 React 和 Vanilla 相同地编译显式注册的 Relation 类型', () => {
     const kind = defineRelationKind({
       kind: 'domain.contract',
       role: 'dependency',
@@ -779,7 +779,7 @@ describe('Graph Definition options parity', () => {
     expect(normalized.ir.children[0]).not.toHaveProperty('relationKinds');
   });
 
-  it('keeps Graph definitions out of Source and compiles standalone members with built-in definitions', () => {
+  it('将 Graph 定义保留在 Source 之外，并使用内置定义编译独立成员', () => {
     const entityRole = defineEntityRole({
       role: 'custom-entity',
       description: 'Custom Entity role',
@@ -843,7 +843,7 @@ describe('Graph Definition options parity', () => {
 });
 
 describe('GraphThemeProvider', () => {
-  it('merges ancestor and local definitions in declaration order', () => {
+  it('按声明顺序合并祖先和本地定义', () => {
     const parent = defineGraphTheme({ name: 'parent', resolve: () => ({}) });
     const local = defineGraphTheme({ name: 'local', resolve: () => ({}) });
 
@@ -863,7 +863,7 @@ describe('GraphThemeProvider', () => {
     expect(markup).toContain('parent,local');
   });
 
-  it('supplies ambient definitions to standalone Graph and keeps Graph props last', () => {
+  it('为独立的 Graph 提供环境定义，并将 Graph props 保留在最后', () => {
     const ambient = defineGraphTheme({ name: 'ambient', resolve: () => ({}) });
     const brand = defineGraphTheme({
       name: 'brand',

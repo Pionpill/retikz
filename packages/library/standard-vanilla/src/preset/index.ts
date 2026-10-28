@@ -1,46 +1,46 @@
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { TreeInputEmbedAdapter } from '../collection';
-import { ArrayInputEmbedAdapter } from '../collection/array';
-import { ChainInputEmbedAdapter } from '../collection/chain';
-import { MapInputEmbedAdapter } from '../collection/map';
-import { MatrixInputEmbedAdapter } from '../collection/matrix';
-import { QueueInputEmbedAdapter } from '../collection/queue';
-import { StackInputEmbedAdapter } from '../collection/stack';
-import { AxesInputEmbedAdapter } from '../presentation/axes';
-import { FrameInputEmbedAdapter } from '../presentation/frame';
-import { GridInputEmbedAdapter } from '../presentation/grid';
-import { LegendInputEmbedAdapter } from '../presentation/legend';
-import { SurfaceInputEmbedAdapter } from '../presentation/surface';
+import { treeInputEmbedAdapter } from '../collection';
+import { arrayInputEmbedAdapter } from '../collection/array';
+import { chainInputEmbedAdapter } from '../collection/chain';
+import { mapInputEmbedAdapter } from '../collection/map';
+import { matrixInputEmbedAdapter } from '../collection/matrix';
+import { queueInputEmbedAdapter } from '../collection/queue';
+import { stackInputEmbedAdapter } from '../collection/stack';
+import { axesInputEmbedAdapter } from '../presentation/axes';
+import { frameInputEmbedAdapter } from '../presentation/frame';
+import { gridInputEmbedAdapter } from '../presentation/grid';
+import { legendInputEmbedAdapter } from '../presentation/legend';
+import { surfaceInputEmbedAdapter } from '../presentation/surface';
 import {
-  CircleInputEmbedAdapter,
-  EllipseInputEmbedAdapter,
-  RectangleInputEmbedAdapter,
-  PolygonInputEmbedAdapter,
-  StarInputEmbedAdapter,
-  ArcInputEmbedAdapter,
-  SectorInputEmbedAdapter,
+  circleInputEmbedAdapter,
+  ellipseInputEmbedAdapter,
+  rectangleInputEmbedAdapter,
+  polygonInputEmbedAdapter,
+  starInputEmbedAdapter,
+  arcInputEmbedAdapter,
+  sectorInputEmbedAdapter,
 } from '../shape';
 
 /** 当前 Standard 版本全部 InputEmbed adapter 的 catalog */
-export const StandardInputEmbedAdapters: ReadonlyArray<SynchronousInputEmbedAdapter<never>> = Object.freeze([
-  TreeInputEmbedAdapter,
-  QueueInputEmbedAdapter,
-  StackInputEmbedAdapter,
-  ChainInputEmbedAdapter,
-  MatrixInputEmbedAdapter,
-  MapInputEmbedAdapter,
-  ArrayInputEmbedAdapter,
-  GridInputEmbedAdapter,
-  AxesInputEmbedAdapter,
-  FrameInputEmbedAdapter,
-  SurfaceInputEmbedAdapter,
-  LegendInputEmbedAdapter,
-  CircleInputEmbedAdapter,
-  EllipseInputEmbedAdapter,
-  RectangleInputEmbedAdapter,
-  PolygonInputEmbedAdapter,
-  StarInputEmbedAdapter,
-  ArcInputEmbedAdapter,
-  SectorInputEmbedAdapter,
+export const standardInputEmbedAdapters: ReadonlyArray<SynchronousInputEmbedAdapter<never>> = Object.freeze([
+  treeInputEmbedAdapter,
+  queueInputEmbedAdapter,
+  stackInputEmbedAdapter,
+  chainInputEmbedAdapter,
+  matrixInputEmbedAdapter,
+  mapInputEmbedAdapter,
+  arrayInputEmbedAdapter,
+  gridInputEmbedAdapter,
+  axesInputEmbedAdapter,
+  frameInputEmbedAdapter,
+  surfaceInputEmbedAdapter,
+  legendInputEmbedAdapter,
+  circleInputEmbedAdapter,
+  ellipseInputEmbedAdapter,
+  rectangleInputEmbedAdapter,
+  polygonInputEmbedAdapter,
+  starInputEmbedAdapter,
+  arcInputEmbedAdapter,
+  sectorInputEmbedAdapter,
 ]);

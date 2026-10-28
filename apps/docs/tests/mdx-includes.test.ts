@@ -10,8 +10,8 @@ const sharedApiEntries = [
   ],
 ] as const;
 
-describe('MDX includes', () => {
-  it('expands the requested language without changing surrounding MDX', async () => {
+describe('MDX 内容引用', () => {
+  it('扩展请求的语言而不改变周围的 MDX', async () => {
     const registry = createMdxIncludeRegistry(sharedApiEntries);
 
     await expect(
@@ -22,7 +22,7 @@ describe('MDX includes', () => {
     );
   });
 
-  it('expands every marker in authored order', async () => {
+  it('按编写顺序扩展每个标记', async () => {
     const registry = createMdxIncludeRegistry([
       ...sharedApiEntries,
       ['../contents/viz/chart/_includes/notes.zh.mdx', () => Promise.resolve('## 注意事项')],
@@ -37,7 +37,7 @@ describe('MDX includes', () => {
     ).resolves.toBe('## 通用 API\n\n共享中文内容。\n\nBody.\n\n## 注意事项');
   });
 
-  it('fails loud for an unknown include or a missing language', async () => {
+  it('由于未知包含或缺少语言而失败', async () => {
     const registry = createMdxIncludeRegistry(sharedApiEntries.slice(0, 1));
 
     await expect(expandMdxIncludes('{/* @include viz/chart/missing */}', 'zh', registry)).rejects.toThrow(
@@ -48,7 +48,7 @@ describe('MDX includes', () => {
     );
   });
 
-  it('rejects duplicate name and language sources when building the registry', () => {
+  it('构建注册表时拒绝重复的名称和语言源', () => {
     expect(() =>
       createMdxIncludeRegistry([
         ...sharedApiEntries,
@@ -57,7 +57,7 @@ describe('MDX includes', () => {
     ).toThrow('Duplicate MDX include "viz/chart/shared-api" for language "zh"');
   });
 
-  it('leaves ordinary MDX unchanged when it has no include marker', async () => {
+  it('当普通 MDX 没有包含标记时，保持不变', async () => {
     const registry = createMdxIncludeRegistry(sharedApiEntries);
 
     await expect(expandMdxIncludes('## Point Mark\n\nNo shared fragment.', 'zh', registry)).resolves.toBe(

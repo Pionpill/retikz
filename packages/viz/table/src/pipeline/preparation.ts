@@ -1,4 +1,4 @@
-import type { DataTransformResult, DataTransformStageInput, ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { DataTransformResult, InputDataTransformStage, ExternalDatasets, ExternalRow } from '@retikz/data';
 import {
   applyTransformsToDataView,
   assertDataTransformModel,
@@ -11,7 +11,7 @@ import {
   createDataView,
   DEFAULT_TRANSFORM_CONTEXT,
   describeDataTransformInput,
-  normalizeRows,
+  resolveDataRows,
   resolveDataExecution,
   resolveDataTransforms,
   resolveFieldTypes,
@@ -75,7 +75,7 @@ const tableRowsResult = (spec: IRTable, rows: Array<ExternalRow>, options: Table
       ? { fieldTypeMap: types, parsers: undefined }
       : collectFormatFields(spec.data?.model, types, fields, resolveFormatRegistry(options.formatDefinitions));
   const normalized =
-    spec.transform === undefined ? rows : normalizeRows(rows, formats.fieldTypeMap, undefined, formats.parsers);
+    spec.transform === undefined ? rows : resolveDataRows(rows, formats.fieldTypeMap, undefined, formats.parsers);
   const view = createDataView(
     normalized,
     [...fields].map(name => {
@@ -190,7 +190,7 @@ const prepareTableDataImpl = async <TSource = never>(
     throw new RetikzTableError(`Table data binding "${reference}" not found`);
 
   const binding = request.dataBindings[reference];
-  let input: DataTransformStageInput<TSource>;
+  let input: InputDataTransformStage<TSource>;
   if (binding.kind === 'rows') input = { kind: 'result', result: tableRowsResult(spec, binding.rows, options) };
   else {
     if (spec.data.model?.some(field => field.format !== undefined))

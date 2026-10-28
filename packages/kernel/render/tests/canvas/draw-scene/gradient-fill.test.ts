@@ -6,7 +6,7 @@ import { drawScene } from '../../../src/canvas';
 import { createSpyCanvasContext } from './helpers';
 
 describe('drawScene 渐变填充', () => {
-  it('non-square radial gradient uses unit coordinates under the bbox transform', () => {
+  it('非方形径向渐变使用 bbox 变换下的单位坐标', () => {
     const context = createSpyCanvasContext();
     const s: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 80 },
@@ -35,7 +35,7 @@ describe('drawScene 渐变填充', () => {
     expect(context.calls.some(call => call.name === 'createPattern')).toBe(false);
   });
 
-  it('rasterizes equal normalized radial distances to matching colors on a non-square bbox', () => {
+  it('栅格化相等的标准化径向距离以匹配非方形 bbox 上的颜色', () => {
     const canvas = createCanvas(100, 60);
     const context = canvas.getContext('2d');
     const s: Scene = {
@@ -68,7 +68,7 @@ describe('drawScene 渐变填充', () => {
     expect(horizontal).toBeLessThan(145);
   });
 
-  it('diagonal linear gradient is also created in the unit bbox', () => {
+  it('对角线性渐变也在单元 bbox 中创建', () => {
     const context = createSpyCanvasContext();
     const s: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 80 },
@@ -101,7 +101,7 @@ describe('drawScene 渐变填充', () => {
     expect(args[3]).toBeCloseTo(0.85355339);
   });
 
-  it('uses the true path geometry bbox for gradient mapping', () => {
+  it('使用真实路径几何 bbox 进行渐变映射', () => {
     const context = createSpyCanvasContext();
     const s: Scene = {
       layout: { x: 0, y: 0, width: 220, height: 120 },
@@ -135,7 +135,7 @@ describe('drawScene 渐变填充', () => {
     expect(context.calls.find(call => call.name === 'transform')?.args).toEqual([200, 0, 0, 50, 0, 0]);
   });
 
-  it('appends the local bbox transform without resetting the parent CTM', () => {
+  it('附加本地 bbox 变换而不重置父 CTM', () => {
     const context = createSpyCanvasContext();
     context.setTransform(2, 0, 0, 3, 5, 7);
     const s: Scene = {
@@ -166,7 +166,7 @@ describe('drawScene 渐变填充', () => {
   });
 
   it.each(['linearGradient', 'radialGradient', 'conicGradient'] as const)(
-    'skips %s fill for a degenerate bbox with one paint warning',
+    '跳过 %s 填充退化 bbox，并带有一个绘制警告',
     kind => {
       const context = createSpyCanvasContext();
       const warnings: Array<string> = [];
@@ -292,7 +292,7 @@ describe('drawScene 渐变填充', () => {
     expect(context.calls.filter(c => c.name === 'addColorStop').length).toBe(2);
   });
 
-  it('conic-gradient: rect fill maps bbox center to createConicGradient', () => {
+  it('圆锥梯度：矩形填充将 bbox 中心映射到 createConicGradient', () => {
     const context = createSpyCanvasContext();
     const s: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 50 },

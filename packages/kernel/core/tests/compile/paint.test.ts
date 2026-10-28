@@ -141,8 +141,8 @@ describe('去重 + 稳定 id', () => {
   });
 });
 
-describe('path IRPaint fill', () => {
-  it('path gradient fill → PathPrimitive.fill = resourceRef', () => {
+describe('IRPaint 填充路径', () => {
+  it('路径渐变填充→PathPrimitive.fill = resourceRef', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -222,7 +222,7 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
 });
 
 describe('stroke IRPaint → 资源表 + resourceRef', () => {
-  it('path stroke linearGradient → PathPrimitive.stroke = resourceRef', () => {
+  it('路径行程 linearGradient→PathPrimitive.stroke = resourceRef', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -243,7 +243,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
   });
 
-  it('node stroke radialGradient → RectPrimitive.stroke = resourceRef', () => {
+  it('节点行程 radialGradient → RectPrimitive.stroke = resourceRef', () => {
     const radial: IRPaint = { kind: 'radialGradient', stops: grad.stops };
     const ir: IRScene = {
       version: 1,

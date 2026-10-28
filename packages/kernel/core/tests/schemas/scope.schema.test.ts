@@ -320,7 +320,7 @@ describe('ChildSchema discriminated union 含 scope', () => {
 });
 
 describe('TransformSchema 各变体合法形态', () => {
-  it('translate', () => {
+  it('翻译', () => {
     const parsed = TransformSchema.safeParse({ kind: 'translate', x: 5, y: 3 });
 
     expect(parsed.success).toBe(true);

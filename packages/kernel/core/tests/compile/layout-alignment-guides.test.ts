@@ -13,7 +13,7 @@ import {
   CompositeBaseSchema,
   defineComposite,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
 
 type MutableGuide = {
@@ -40,7 +40,7 @@ const explicitGuideDefinition = (guides: ReadonlyArray<LayoutAlignmentGuide>) =>
   });
 
 const resolvedGuides = (context: CompositeCompileContext, child: IRChild) => {
-  const probe = context.layoutChild(child, NaturalLayoutProposal);
+  const probe = context.layoutChild(child, naturalLayoutProposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
   return probe.result.alignmentGuides;
 };
@@ -73,8 +73,8 @@ const probeGuidesOf = (
 
 const explicitGuideChild: IRChild = { namespace: 'test', type: 'explicitGuides' };
 
-describe('layout alignment guide propagation', () => {
-  it('applies translate only to the matching guide dimension and clip does not alter guides', () => {
+describe('布局对齐引导传播', () => {
+  it('仅沿匹配维度平移对齐辅助线且裁剪不改变辅助线', () => {
     const explicit = explicitGuideDefinition([
       { name: 'column', dimension: 'x', position: 3 },
       { name: 'row', dimension: 'y', position: 4 },
@@ -96,7 +96,7 @@ describe('layout alignment guide propagation', () => {
     ]);
   });
 
-  it('applies a transform chain in the same reverse-list order as Core geometry', () => {
+  it('以与 Core 几何体相同的反向列表顺序应用变换链', () => {
     const explicit = explicitGuideDefinition([{ name: 'column', dimension: 'x', position: 3 }]);
 
     expect(
@@ -114,7 +114,7 @@ describe('layout alignment guide propagation', () => {
     ).toEqual([{ name: 'column', dimension: 'x', position: 16 }]);
   });
 
-  it('applies positive and negative uniform or anisotropic scale per dimension', () => {
+  it('每个维度应用正负均匀或各向异性比例', () => {
     const explicit = explicitGuideDefinition([
       { name: 'column', dimension: 'x', position: 3 },
       { name: 'row', dimension: 'y', position: 4 },
@@ -148,7 +148,7 @@ describe('layout alignment guide propagation', () => {
     ]);
   });
 
-  it('omits only guides whose matching scale dimension is zero', () => {
+  it('仅省略对应缩放维度为零的辅助线', () => {
     const explicit = explicitGuideDefinition([
       { name: 'column', dimension: 'x', position: 3 },
       { name: 'row', dimension: 'y', position: 4 },
@@ -166,7 +166,7 @@ describe('layout alignment guide propagation', () => {
     ).toEqual([{ name: 'row', dimension: 'y', position: 8 }]);
   });
 
-  it('normalizes full-turn rotate to identity and never restores a guide after effective rotation', () => {
+  it('将整圈旋转归一为恒等变换且有效旋转后不恢复辅助线', () => {
     const explicit = explicitGuideDefinition([{ name: 'row', dimension: 'y', position: 4 }]);
 
     expect(
@@ -199,8 +199,8 @@ describe('layout alignment guide propagation', () => {
   });
 });
 
-describe('layout alignment guide ownership', () => {
-  it('propagates one unambiguous Structural Scope descendant and omits duplicate descendant keys', () => {
+describe('布局对齐辅助线所有权', () => {
+  it('传播一个明确的结构 Scope 后代并省略重复的后代键', () => {
     const one = probeGuidesOf({
       type: 'scope',
       children: [
@@ -241,7 +241,7 @@ describe('layout alignment guide ownership', () => {
     expect(duplicate).toBeUndefined();
   });
 
-  it('exposes only explicit Composite guides and does not infer them from replay children', () => {
+  it('仅公开显式的复合辅助线，并且不会从回放子项中推断它们', () => {
     const explicit = defineComposite({
       namespace: 'test',
       type: 'explicitContainer',
@@ -265,7 +265,7 @@ describe('layout alignment guide ownership', () => {
             text: 'A',
             layout: { padding: 0, margin: 0 },
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (laid.kind === LayoutChildProbeKind.Failed) return context.raise(laid.failure);
 
@@ -290,7 +290,7 @@ describe('layout alignment guide ownership', () => {
             text: 'A',
             layout: { padding: 0, margin: 0 },
           },
-          NaturalLayoutProposal,
+          naturalLayoutProposal,
         );
         if (laid.kind === LayoutChildProbeKind.Failed) return context.raise(laid.failure);
 
@@ -304,7 +304,7 @@ describe('layout alignment guide ownership', () => {
     expect(probeGuidesOf({ namespace: 'test', type: 'implicitContainer' }, [inferred])).toBeUndefined();
   });
 
-  it('validates duplicate and non-finite explicit guides', () => {
+  it('验证重复和非有限显式辅助线', () => {
     const duplicate = explicitGuideDefinition([
       { name: 'same', dimension: 'x', position: 1 },
       { name: 'same', dimension: 'x', position: 2 },
@@ -315,7 +315,7 @@ describe('layout alignment guide ownership', () => {
     expect(() => probeGuidesOf(explicitGuideChild, [nonFinite])).toThrow(/guide.*position.*finite/i);
   });
 
-  it('reads every explicit guide field and array item once before validation and detaches it', () => {
+  it('在验证之前读取每个显式引导字段和数组项一次并将其分离', () => {
     const fieldReads = new Map<PropertyKey, number>();
     const guardedGuide = new Proxy({ name: 'origin', dimension: 'x', position: 1 } as const, {
       get: (target, property, receiver) => {
@@ -343,7 +343,7 @@ describe('layout alignment guide ownership', () => {
     expect([...arrayReads.values()]).toEqual([...arrayReads.values()].map(() => 1));
   });
 
-  it('detaches and freezes every result-facing guide occurrence while canonicalizing negative zero', () => {
+  it('分离并冻结每个面向结果的辅助线实例，同时规范化负零', () => {
     const sourceGuides: Array<MutableGuide> = [{ name: 'origin', dimension: 'x', position: -0 }];
     const explicit = explicitGuideDefinition(sourceGuides);
     let first: ReadonlyArray<LayoutAlignmentGuide> | undefined;
@@ -357,7 +357,7 @@ describe('layout alignment guide ownership', () => {
         type: literal('doubleInspector'),
       }),
       compile: (_node, context) => {
-        firstResult = context.layoutChild(explicitGuideChild, NaturalLayoutProposal);
+        firstResult = context.layoutChild(explicitGuideChild, naturalLayoutProposal);
         if (firstResult.kind === LayoutChildProbeKind.Failed) return context.raise(firstResult.failure);
 
         first = firstResult.result.alignmentGuides;

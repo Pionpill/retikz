@@ -7,12 +7,12 @@ import { TableLayoutManifestSchema } from '../contract';
 import type { IRTable } from '../schemas';
 import { TABLE_NAMESPACE, TableComposite, TableSchema } from '../schemas';
 import { resolveTableTransaction } from './layout';
-import type { LowerTablesOptions } from './types';
+import type { TablesLoweringOptions } from './types';
 
 /** 构造 Table 的 layout-aware composite definition，供 Core compile options 注入 */
 export const lowerTables = (
   datasets: ExternalDatasets,
-  options: LowerTablesOptions = {},
+  options: TablesLoweringOptions = {},
 ): Array<
   CompositeDefinition<
     IRTable,

@@ -2,12 +2,12 @@ import { mergeGraphDefinitionOptions } from '@retikz/graph';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../errors';
 import type { BranchDiagramDefinitionOptions, BranchLayoutDefinition } from '../contract';
-import { LanesBranchLayoutDefinition } from './lanes';
+import { lanesBranchLayoutDefinition } from './lanes';
 
 /** 合并 Branch 布局注册表与运行时定义装配 */
 export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchDiagramDefinitionOptions>) => {
   const registry = new Map<string, BranchLayoutDefinition>([
-    [LanesBranchLayoutDefinition.name, LanesBranchLayoutDefinition],
+    [lanesBranchLayoutDefinition.name, lanesBranchLayoutDefinition],
   ]);
   const names = new Set<string>();
 
@@ -34,7 +34,7 @@ export const resolveBranchDefinitionOptions = (optionSets: ReadonlyArray<BranchD
       details: { availableKeys: [...names] },
     });
 
-  const name = [...names][0] ?? LanesBranchLayoutDefinition.name;
+  const name = [...names][0] ?? lanesBranchLayoutDefinition.name;
   const definition = registry.get(name);
   if (definition === undefined)
     throw new RetikzDiagramError({

@@ -20,8 +20,8 @@ const expectDeepFrozen = (value: unknown): void => {
   for (const child of Object.values(value)) expectDeepFrozen(child);
 };
 
-describe('Table layout manifest', () => {
-  it('publishes detached source and Table-local Cell bounds with semantic identity', () => {
+describe('Table 布局清单', () => {
+  it('发布具有语义标识的分离源和 Table 本地 Cell 边界', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -89,7 +89,7 @@ describe('Table layout manifest', () => {
     });
   });
 
-  it('recursively freezes the artifact and remains deterministic without modifying input', () => {
+  it('递归地冻结产物并保持确定性而不修改输入', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -114,7 +114,7 @@ describe('Table layout manifest', () => {
     expect(spec).toEqual(before);
   });
 
-  it('keeps canonical border geometry and per-atom provenance in the same manifest', () => {
+  it('在同一清单中保持规范边界几何形状和每个原子的来源', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,

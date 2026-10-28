@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { FoldStepSchema, StepSchema } from '../../../src/schemas';
 
-describe('fold step schema', () => {
+describe('折叠步骤 schema', () => {
   it.each(['-|', '|-'] as const)('两段 via=%s 保持原结构且拒绝 fraction', via => {
     const step = { type: 'step', kind: 'fold', via, to: [100, 60] } as const;
 

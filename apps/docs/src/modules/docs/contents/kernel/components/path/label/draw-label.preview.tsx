@@ -1,5 +1,5 @@
-import type { WayDSL } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
+import type { WayDSL } from '@retikz/vanilla';
 
 const wayOf = (values: DrawLabelPreviewValues): WayDSL => {
   const label = {

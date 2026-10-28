@@ -23,7 +23,7 @@ math segment 是文本行中的一个公式片段，与普通文字片段相区�
 
 调用方也可以直接在结构化文本中声明公式片段，这就是“显式 math segment”，不需要从美元符号中识别。它已经明确要求公式排版，因此缺少 lowerer 时会跳过该片段并报告诊断，而不是退回普通文字。
 
-Core 将公式内容、`displayMode` 和字号传入同步 `LowerTex`。宿主颜色留到绘制时解析，不参与公式降解。这一步把文本布局与公式引擎隔开，Core 不需要知道 MathJax 如何排版。
+Core 将公式内容、`displayMode` 和字号传入同步 `TexLowerer`。宿主颜色留到绘制时解析，不参与公式降解。这一步把文本布局与公式引擎隔开，Core 不需要知道 MathJax 如何排版。
 
 本文沿 inline 例子展开；display 模式同样通过 `layoutInlineLine()` 调用 lowerer，并把 `displayMode` 传给引擎，不是另一套 SVG 转换链路。
 
@@ -42,10 +42,10 @@ MathJax 也提供按 package 组合的 TeX 语法能力，正好对应 `profile`
 
 这并不是把 Retikz 锁定为 MathJax：MathJax 只是内置 engine。只要其它 engine 同步返回本包支持的 SVG 子集，就可以复用同一条 SVG lowering 链路。
 
-Core 只依赖同步的 `LowerTex`：
+Core 只依赖同步的 `TexLowerer`：
 
 ```ts
-type LowerTex = (content: { tex: string; displayMode?: boolean }, style: { fontSize: number }) => LoweredTex | null;
+type TexLowerer = (content: { tex: string; displayMode?: boolean }, style: { fontSize: number }) => LoweredTex | null;
 ```
 
 `LoweredTex` 包含按绘制顺序排列的 paths，以及公式的 `width`、`height`、`depth`。每条 path 自带 fill / stroke、透明度和路径命令，因此 Core 可以继续布局和渲染。Tex 包消费的最小 engine 契约是同步的 `MathJaxSvgEngine.convert(tex, { display }) => string`；自定义 engine 必须返回本包支持的 SVG 子集。
@@ -59,7 +59,7 @@ type LowerTex = (content: { tex: string; displayMode?: boolean }, style: { fontS
       path: 'packages/kernel/tex/src/mathjax/engine.ts',
     },
     {
-      label: 'Core 的 LowerTex 与 LoweredTex 契约',
+      label: 'Core 的 TexLowerer 与 LoweredTex 契约',
       path: 'packages/kernel/core/src/compile/text/tex.ts',
     },
   ]}

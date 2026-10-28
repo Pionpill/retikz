@@ -1,16 +1,16 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
-  return lowerPlot(spec, datasets, { ...opts, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...opts, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
@@ -66,8 +66,8 @@ const collectScopes = (scope: IRScope): Array<IRScope> => {
   return out;
 };
 
-describe('channel core coverage (contract)', () => {
-  it('delivers cornerRadius independently to node and path marks', () => {
+describe('通道核心覆盖（契约）', () => {
+  it('将 cornerRadius 独立下发到节点和路径标记', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -91,7 +91,7 @@ describe('channel core coverage (contract)', () => {
     expect(collectNodes(output).some(node => node.cornerRadius === 4)).toBe(true);
     expect(collectPaths(output).some(path => path.cornerRadius === 4)).toBe(true);
   });
-  it('constant_style_channels_deliver_to_core_scope', () => {
+  it('恒定风格通道传递到核心范围', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -122,7 +122,7 @@ describe('channel core coverage (contract)', () => {
     });
   });
 
-  it('path_style_channels_deliver_to_core_path', () => {
+  it('路径样式通道传递到核心路径', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -161,7 +161,7 @@ describe('channel core coverage (contract)', () => {
     });
   });
 
-  it('interval_node_channels_deliver_to_core_node', () => {
+  it('间隔节点通道传递到核心节点', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -201,7 +201,7 @@ describe('channel core coverage (contract)', () => {
     ).toEqual({ overall: 0.9 });
   });
 
-  it('datum_label_style_fields_deliver_to_core_node_label', () => {
+  it('基准标签样式字段传递到核心节点标签', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -245,7 +245,7 @@ describe('channel core coverage (contract)', () => {
     });
   });
 
-  it('point_text_color_channel_delivers_to_core_text_node', () => {
+  it('点文本颜色通道传递到核心文本节点', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -274,7 +274,7 @@ describe('channel core coverage (contract)', () => {
     expect(nodes.map(node => node.style?.textColor)).toEqual(['#ef4444', '#2563eb']);
   });
 
-  it('node_scalar_and_enum_channels_deliver_to_core_node', () => {
+  it('节点标量和枚举通道传递到核心节点', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -319,7 +319,7 @@ describe('channel core coverage (contract)', () => {
     });
   });
 
-  it('mark_color_delivers_scaled_color_to_core_node_color', () => {
+  it('标记颜色将缩放颜色传递给核心节点颜色', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -354,7 +354,7 @@ describe('channel core coverage (contract)', () => {
     );
   });
 
-  it('node_json_channels_deliver_to_core_node', () => {
+  it('节点 json 通道传递到核心节点', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -394,7 +394,7 @@ describe('channel core coverage (contract)', () => {
     });
   });
 
-  it('path_scalar_enum_and_json_channels_deliver_to_core_path', () => {
+  it('路径标量枚举和 json 通道传递到核心路径', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -448,8 +448,8 @@ describe('channel core coverage (contract)', () => {
   });
 });
 
-describe('shared graphic style delivery', () => {
-  it.each(['point', 'path', 'interval'])('delivers fixed and encoded stroke fields for %s', type => {
+describe('共享图形样式传递', () => {
+  it.each(['point', 'path', 'interval'])('为 %s 提供固定和编码的描边字段', type => {
     const make = (encoded: boolean) =>
       PlotSchema.parse({
         namespace: 'plot',
@@ -499,7 +499,7 @@ describe('shared graphic style delivery', () => {
         );
     }
   });
-  it('retains scalar overall opacity when a fill factor is encoded', () => {
+  it('在对填充因子进行编码时保留标量整体不透明度', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

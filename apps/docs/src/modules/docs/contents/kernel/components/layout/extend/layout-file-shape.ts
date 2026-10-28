@@ -73,7 +73,7 @@ const toPathCommands = (
 export const fileShape: ShapeDefinition = defineShape({
   name: FileShapeName,
   paramsSchema: z.strictObject({}),
-  computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({
+  computeCircumscribedGeometry: (halfWidth, halfHeight) => ({
     halfWidth: Math.max(halfWidth, 42),
     halfHeight: Math.max(halfHeight, 52),
   }),

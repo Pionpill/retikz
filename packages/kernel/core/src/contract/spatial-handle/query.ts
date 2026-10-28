@@ -54,13 +54,15 @@ export const resolveSpatialHandle = (
   selector: SpatialHandleSelector,
 ): QualifiedSpatialHandle => {
   const matches = selectSpatialHandles(index, selector);
-  const summary = JSON.stringify(selector);
   if (matches.length === 0)
-    throw new RetikzCoreError(RetikzCoreErrorCode.Contract, `Spatial handle resolution miss for selector ${summary}.`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      `Spatial handle resolution miss for selector ${JSON.stringify(selector)}.`,
+    );
   if (matches.length > 1) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
-      `Spatial handle resolution ambiguity for selector ${summary}; matched ${matches.length} entries.`,
+      `Spatial handle resolution ambiguity for selector ${JSON.stringify(selector)}; matched ${matches.length} entries.`,
     );
   }
 

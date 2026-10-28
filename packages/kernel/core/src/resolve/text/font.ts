@@ -1,21 +1,18 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { WebFontSizePreset, IRFont } from '../../schemas';
-import { WebFontSizeRatio } from '../../schemas';
+import { webFontSizeRatio } from '../../schemas';
 import type { CanonicalFont, FontResolveContext, FontSizeResolveContext } from './types';
 
 /** 文本默认行高系数 */
-export const DEFAULT_TEXT_LINE_HEIGHT_FACTOR = 1.2;
+const DEFAULT_TEXT_LINE_HEIGHT_FACTOR = 1.2;
 
-/** 把 IR 字号确定为布局消费的数值 */
+/**
+ * 将字号解析为绘图坐标中的数值
+ * @description 缺省时继承当前字号；预设与 rem 相对根字号计算，em 相对继承字号计算，数值直接使用
+ * @throws 继承字号不是有限正数，或字号字符串不受支持时抛出 RetikzCoreError
+ */
 export const resolveFontSize = (size: IRFont['size'] | undefined, context: FontSizeResolveContext): number => {
   const { rootFontSize, inheritedFontSize } = context;
-  if (!Number.isFinite(rootFontSize) || rootFontSize <= 0) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Compile,
-      `CompileOptions.fontSize must be a positive finite number; received ${rootFontSize}.`,
-    );
-  }
-
   if (!Number.isFinite(inheritedFontSize) || inheritedFontSize <= 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -25,8 +22,8 @@ export const resolveFontSize = (size: IRFont['size'] | undefined, context: FontS
 
   if (size === undefined) return inheritedFontSize;
   if (typeof size === 'number') return size;
-  if (Object.hasOwn(WebFontSizeRatio, size)) {
-    return rootFontSize * WebFontSizeRatio[size as WebFontSizePreset];
+  if (Object.hasOwn(webFontSizeRatio, size)) {
+    return rootFontSize * webFontSizeRatio[size as WebFontSizePreset];
   }
 
   if (size.endsWith('rem')) return Number.parseFloat(size) * rootFontSize;
@@ -35,7 +32,7 @@ export const resolveFontSize = (size: IRFont['size'] | undefined, context: FontS
   throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `resolveFontSize: unsupported font size '${size}'.`);
 };
 
-/** 按字段继承并确定字体 */
+/** 用继承字体补齐缺省字段，并将字号换算为数值 */
 export const resolveFont = (source: IRFont | undefined, context: FontResolveContext): CanonicalFont => ({
   size: resolveFontSize(source?.size, {
     rootFontSize: context.rootFontSize,
@@ -46,6 +43,6 @@ export const resolveFont = (source: IRFont | undefined, context: FontResolveCont
   style: source?.style ?? context.inheritedFont.style,
 });
 
-/** 补齐文本行高默认值 */
+/** 返回显式行高，缺省时使用继承字号的 1.2 倍 */
 export const resolveTextLineHeight = (source: number | undefined, inheritedFontSize: number): number =>
   source ?? inheritedFontSize * DEFAULT_TEXT_LINE_HEIGHT_FACTOR;

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { normalizeScatterChart } from '../src/point';
 
-describe('Chart mark Vanilla authoring', () => {
-  it('keeps plain Chart marks in authored order and separate from Plot marks', () => {
+describe('Chart 标记 Vanilla 编写', () => {
+  it('按编写顺序保留普通 Chart 标记，并与 Plot 标记分开', () => {
     const source = normalizeScatterChart({
       data: { reference: 'rows' },
       encodings: { x: 'x', y: 'y' },

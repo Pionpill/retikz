@@ -22,6 +22,8 @@ const crossing = intersect.segmentSegment({
 
 ## Rounded contours
 
+Import `verticesToSegments(vertices)` from `@retikz/math` to convert ordered vertices into a closed ring of line segments for contour algorithms. It preserves vertex order and repeated vertices, and endpoints reuse the input coordinates. Empty input returns an empty array, one vertex produces a self-connected segment, and two vertices produce two opposite segments. It does not repair degenerate contours.
+
 Describe connected lines and circular arcs with `ContourSegment`, then solve their corner fillets with `solveContourFillets`. `buildContourCommands` converts the contour and fillets into neutral commands; `intersectContourRay` finds the nearest intersection along a ray from an origin toward a target. These functions do not create Core IR or Scene data.
 
 ```ts
@@ -83,7 +85,7 @@ For a line and circle, substituting $p=origin+s\,direction$ into the circle equa
 
 ### Call summary
 
-The input types are `LineLineInput` (two lines or segments defined by endpoints), `LineCircleInput` (a line and a circle), and `CircleCircleInput` (two circles). The table lists the intersection methods
+The input types are `InputLineLine` (two lines or segments defined by endpoints), `InputLineCircle` (a line and a circle), and `InputCircleCircle` (two circles). The table lists the intersection methods
 
 | API                        | Complexity            | Purpose                                                                                                |
 | -------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -122,7 +124,7 @@ The returned $s$ locates the point in `origin + s * direction`; it is not a geom
 
 ### Call summary
 
-The `RayArcIntersectionInput` type describes the ray origin, direction, and arc range. The table lists the intersection method
+The `InputRayArcIntersection` type describes the ray origin, direction, and arc range. The table lists the intersection method
 
 | API                   | Complexity            | Purpose                                                                |
 | --------------------- | --------------------- | ---------------------------------------------------------------------- |

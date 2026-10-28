@@ -23,8 +23,8 @@ const relation = (id: string, group?: string, input: Record<string, unknown> = {
   ...input,
 });
 
-describe('Graph context projection', () => {
-  it('preserves arbitrary Core child order while projecting Entity and Relation context', () => {
+describe('Graph 上下文投影', () => {
+  it('在投影 Entity 和 Relation 上下文时保留任意 Core 子顺序', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
@@ -59,7 +59,7 @@ describe('Graph context projection', () => {
     ]);
   });
 
-  it('crosses ordinary Scope while preserving Graph author layers at Core Theme boundaries', () => {
+  it('跨越普通 Scope，同时在 Core 主题边界保留 Graph 作者图层', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
@@ -86,7 +86,7 @@ describe('Graph context projection', () => {
     );
   });
 
-  it('merges nested Graph context and leaves third-party composite payload opaque', () => {
+  it('合并嵌套的 Graph 上下文，并使第三方复合有效负载不透明', () => {
     const opaque = {
       namespace: 'custom',
       type: 'opaque',
@@ -116,7 +116,7 @@ describe('Graph context projection', () => {
     });
   });
 
-  it('lets an inner Graph default outrank an outer Graph rule', () => {
+  it('让内部 Graph 默认值高于外部 Graph 规则', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
@@ -139,7 +139,7 @@ describe('Graph context projection', () => {
     });
   });
 
-  it('assigns Entity and Relation groups stable colors from the categorical palette head', () => {
+  it('从分类调色板头分配 Entity 和 Relation 组稳定颜色', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
@@ -174,7 +174,7 @@ describe('Graph context projection', () => {
     expect(projected[4]).not.toHaveProperty('style');
   });
 
-  it('keeps rule, explicit path and marker colors above a Relation group fallback', () => {
+  it('将规则、显式路径和标记颜色保留在 Relation 组回退之上', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
@@ -200,7 +200,7 @@ describe('Graph context projection', () => {
     });
   });
 
-  it('reserves an Entity group color slot when its appearance is explicit', () => {
+  it('当其外观明确时，保留 Entity 组颜色槽', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',

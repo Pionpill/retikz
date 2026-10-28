@@ -2,7 +2,7 @@ import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import { createRuntimeTraceReporter } from '../trace';
 import type {
   RuntimeCommitParticipant,
-  RuntimeCommitParticipantDefinitionInput,
+  InputRuntimeCommitParticipantDefinition,
   RuntimeCommitParticipantExecutor,
   RuntimeCommitParticipantToken,
 } from './types';
@@ -21,7 +21,7 @@ const participantOwnership = new WeakMap<object, 'unowned' | 'owned' | 'consumed
  * @throws {RetikzRuntimeError} 参与者键为空或 Trace 声明无效时抛出
  */
 export const defineRuntimeCommitParticipant = <TRead>(
-  input: RuntimeCommitParticipantDefinitionInput<TRead>,
+  input: InputRuntimeCommitParticipantDefinition<TRead>,
 ): RuntimeCommitParticipant<TRead> => {
   /** 创建 participant definition 输入错误 */
   const invalidParticipant = (cause: unknown) =>

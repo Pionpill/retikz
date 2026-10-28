@@ -4,7 +4,7 @@ import { FlowRoutingKind } from '../../../shared';
 import { layoutLayeredFlow } from './layout';
 
 /** 内置 layered Flow Layout Definition */
-export const LayeredFlowLayoutDefinition: FlowLayoutDefinition = defineFlowLayout({
+export const layeredFlowLayoutDefinition: FlowLayoutDefinition = defineFlowLayout({
   name: 'layered',
   description: 'Deterministic hierarchical layout for compound directed Flow diagrams.',
   capabilities: {

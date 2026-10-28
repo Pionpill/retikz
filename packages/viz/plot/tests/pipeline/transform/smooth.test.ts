@@ -7,8 +7,8 @@ import { PlotSchema } from '../../../src/schemas/plot';
 
 const smoothOperation = (operation: unknown) => TransformSchema.parse(operation);
 
-describe('smooth transform behavior (contract)', () => {
-  it('reports input and output fields for strict model collection', () => {
+describe('平滑变换行为（契约）', () => {
+  it('报告输入和输出字段以进行严格的模型收集', () => {
     const fields = new Set<string>();
     const derivedOutputs = new Set<string>();
 
@@ -32,7 +32,7 @@ describe('smooth transform behavior (contract)', () => {
     expect([...derivedOutputs].sort()).toEqual(['trendX', 'trendY']);
   });
 
-  it('strict model accepts smooth output fields as derived fields', () => {
+  it('严格模型接受平滑输出字段作为派生字段', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

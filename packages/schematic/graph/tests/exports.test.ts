@@ -12,8 +12,8 @@ const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.
   publishConfig: { exports: Record<string, unknown> };
 };
 
-describe('@retikz/graph package boundary', () => {
-  it('declares the Graph release metadata and one root export', () => {
+describe('@retikz/graph 封装边界', () => {
+  it('声明 Graph 版本元数据和一个根导出', () => {
     expect(manifest).toMatchObject({
       name: '@retikz/graph',
       version: '0.1.0-alpha.3',
@@ -23,46 +23,46 @@ describe('@retikz/graph package boundary', () => {
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);
   });
 
-  it('exposes one Graph semantic compile root and Source authoring surface', () => {
+  it('公开一个 Graph 语义编译根和 Source 编写表面', () => {
     expect(graphExports.GRAPH_NAMESPACE).toBe('graph');
-    expect(graphExports.GraphDefinition).toBeDefined();
+    expect(graphExports.graphDefinition).toBeDefined();
     expect(graphExports.GraphProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'graph',
     });
-    expect(graphExports.EntityDefinition).toBeDefined();
-    expect(graphExports.EntityProviderKey).toEqual({
+    expect(graphExports.entityDefinition).toBeDefined();
+    expect(graphExports.entityProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'entity',
     });
-    expect(graphExports.RelationDefinition).toBeDefined();
-    expect(graphExports.RelationProviderKey).toEqual({
+    expect(graphExports.relationDefinition).toBeDefined();
+    expect(graphExports.relationProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'relation',
     });
-    expect(graphExports.BlockDefinition).toBeDefined();
-    expect(graphExports.BlockProviderKey).toEqual({
+    expect(graphExports.blockDefinition).toBeDefined();
+    expect(graphExports.blockProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'block',
     });
-    expect(graphExports.BlockHeaderDefinition).toBeDefined();
-    expect(graphExports.BlockHeaderProviderKey).toEqual({
+    expect(graphExports.blockHeaderDefinition).toBeDefined();
+    expect(graphExports.blockHeaderProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'blockHeader',
     });
-    expect(graphExports.BlockSectionDefinition).toBeDefined();
-    expect(graphExports.BlockSectionProviderKey).toEqual({
+    expect(graphExports.blockSectionDefinition).toBeDefined();
+    expect(graphExports.blockSectionProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'blockSection',
     });
-    expect(graphExports.BlockRowDefinition).toBeDefined();
-    expect(graphExports.BlockRowProviderKey).toEqual({
+    expect(graphExports.blockRowDefinition).toBeDefined();
+    expect(graphExports.blockRowProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'blockRow',
@@ -100,7 +100,7 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports.createGraphProviders).toBeTypeOf('function');
   });
 
-  it('does not expose split member wrappers or private continuation artifacts', () => {
+  it('不公开拆分成员包装器或私有延续产物', () => {
     expect(graphExports).not.toHaveProperty('BlockCellDefinition');
     expect(graphExports).not.toHaveProperty('BlockCellProviderKey');
     expect(graphExports).not.toHaveProperty('BlockRegionSchema');
@@ -119,7 +119,7 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports).not.toHaveProperty('GraphRelationLabelSchema');
   });
 
-  it('exposes the three independent member vocabularies and extension hooks', () => {
+  it('公开三个独立的成员词汇表和扩展钩子', () => {
     expect(graphExports.BuiltinEntityRole).toEqual({
       Participant: 'participant',
       Activity: 'activity',
@@ -167,7 +167,7 @@ describe('@retikz/graph package boundary', () => {
     }
   });
 
-  it('rejects the former namespace and does not register the former role vocabulary', () => {
+  it('拒绝原命名空间，不注册原角色词汇', () => {
     expect(() =>
       graphExports.EntitySchema.parse({ namespace: 'notation', type: 'entity', id: 'legacy', role: 'stage' }),
     ).toThrow();

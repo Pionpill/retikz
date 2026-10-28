@@ -83,21 +83,21 @@ const demos: ReadonlyArray<Readonly<{ name: string; Component: FC }>> = [
   { name: 'nested en', Component: NestedEnCanonical },
 ];
 
-describe('Layout documentation demos', () => {
-  it('loads transitive nested Standard definitions for a Legend Vanilla preview', () => {
+describe('Layout 文档演示', () => {
+  it('加载 Legend Vanilla 预览的传递嵌套 Standard 定义', () => {
     const preview = buildPreviewIR(LegendWithNestedStandardDemo);
     const vanilla = buildVanillaPreview(preview);
 
     expect(vanilla.code).toContain('legend({');
-    expect(vanilla.code).toContain('const compile = { composites: [GridDefinition, FlexLayoutDefinition] };');
-    expect(vanilla.code).not.toContain('LegendDefinition');
+    expect(vanilla.code).toContain('const compile = { composites: [gridDefinition, flexLayoutDefinition] };');
+    expect(vanilla.code).not.toContain('legendDefinition');
     expect(vanilla.code).not.toContain('Unsupported Layout composite');
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('Nested');
   });
 
   it.each([['flex', flexZhContract, flexEnContract]])(
-    'keeps %s controls structurally aligned across languages',
+    '保持 %s 控件在跨语言结构上保持一致',
     (_name, chinese, english) => {
       expect(english.stateOnlyIds).toEqual(chinese.stateOnlyIds);
       expect(english.canonicalValues).toEqual(chinese.canonicalValues);
@@ -112,7 +112,7 @@ describe('Layout documentation demos', () => {
   );
 
   it.each([['flex', flexEnContract, 'Inspection details', 'Inspection preset']])(
-    'uses family-accurate English inspection labels for %s',
+    '为 %s 使用与组件系列匹配的英文检查标签',
     (_name, contract, detailsLabel, presetLabel) => {
       expect(contract.controls.sections[0].label).toBe(detailsLabel);
       expect(contract.presetSelector.label).toBe(presetLabel);
@@ -122,7 +122,7 @@ describe('Layout documentation demos', () => {
   it.each([
     ['flex zh', flexZhContract],
     ['flex en', flexEnContract],
-  ])('resolves preset-only inspection state for %s', (_name, contract) => {
+  ])('解析 %s 仅由预设指定的检查状态', (_name, contract) => {
     expect(resolvePreviewControlContract({ previewControlContract: contract })).toBe(contract);
   });
 
@@ -136,7 +136,7 @@ describe('Layout documentation demos', () => {
         inspectDistributedSpace: false,
       },
     ],
-  ])('offers reusable recommended, all, and off inspection profiles for %s', (_name, contract, familyValues) => {
+  ])('为 %s 提供可复用的推荐、全部和关闭检查配置', (_name, contract, familyValues) => {
     const recommendedValues = {
       ...contract.canonicalValues,
       inspect: true,
@@ -174,7 +174,7 @@ describe('Layout documentation demos', () => {
     });
   });
 
-  it.each(demos)('derives canonical IR and a real Vanilla SVG for $name', ({ Component }) => {
+  it.each(demos)('为 $name 派生规范的 IR 和真实的 Vanilla SVG', ({ Component }) => {
     const preview = buildPreviewIR(Component);
     const vanilla = buildVanillaPreview(preview);
 
@@ -188,14 +188,14 @@ describe('Layout documentation demos', () => {
   it.each([
     ['flex zh', FlexZhDemo],
     ['flex en', FlexEnDemo],
-  ] as const)('keeps %s basic Source IR free of optional item keys', (_name, Component) => {
+  ] as const)('%s 基础 Source IR 不包含可选条目键', (_name, Component) => {
     const source = JSON.stringify(buildPreviewIR(Component).sourceIr);
 
     expect(source).not.toContain('"key":');
   });
 
   it.each([['flexLayout', FlexPlaygroundCanonical]])(
-    'keeps runtime-only %s inspection out of canonical IR and Vanilla output',
+    '将仅运行时的 %s 检查保留在规范的 IR 和 Vanilla 输出之外',
     (kind, Component) => {
       const preview = buildPreviewIR(Component);
       const vanilla = buildVanillaPreview(preview);
@@ -211,7 +211,7 @@ describe('Layout documentation demos', () => {
   it.each([
     ['zh', NestedZhCanonical],
     ['en', NestedEnCanonical],
-  ])('keeps nested %s demo selection out of generated Vanilla output', (_language, Component) => {
+  ])('将嵌套的 %s 演示选择保留在生成的 Vanilla 输出之外', (_language, Component) => {
     const preview = buildPreviewIR(Component);
     const vanilla = buildVanillaPreview(preview);
 
@@ -223,27 +223,24 @@ describe('Layout documentation demos', () => {
   it.each([
     ['zh', ScopeInspectionZhDemo, ScopeInspectionZhCanonical],
     ['en', ScopeInspectionEnDemo, ScopeInspectionEnCanonical],
-  ])(
-    'renders the optional Scope inspection %s demo while keeping preview IR pure',
-    (_language, Component, Canonical) => {
-      const preview = buildPreviewIR(Canonical);
-      const vanilla = buildVanillaPreview(preview);
-      const html = renderToString(<Component />);
+  ])('渲染可选的 Scope 检查 %s 演示，同时保持预览 IR 纯净', (_language, Component, Canonical) => {
+    const preview = buildPreviewIR(Canonical);
+    const vanilla = buildVanillaPreview(preview);
+    const html = renderToString(<Component />);
 
-      expect(preview).not.toHaveProperty('inspectionRoots');
-      expect(preview).not.toHaveProperty('inspect');
-      expect(vanilla.code).toContain('flexLayout({');
-      expect(vanilla.code).not.toMatch(/\binspect\b/);
-      expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
-      expect(html).toContain('data-retikz-readonly-layer');
+    expect(preview).not.toHaveProperty('inspectionRoots');
+    expect(preview).not.toHaveProperty('inspect');
+    expect(vanilla.code).toContain('flexLayout({');
+    expect(vanilla.code).not.toMatch(/\binspect\b/);
+    expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
+    expect(html).toContain('data-retikz-readonly-layer');
 
-      for (const label of ['A1', 'A2', 'B1', 'B2']) expect(vanilla.svg).toContain(label);
+    for (const label of ['A1', 'A2', 'B1', 'B2']) expect(vanilla.svg).toContain(label);
 
-      for (const color of ['#dbeafe', '#2563eb', '#dcfce7', '#16a34a']) expect(vanilla.svg).toContain(color);
-    },
-  );
+    for (const color of ['#dbeafe', '#2563eb', '#dcfce7', '#16a34a']) expect(vanilla.svg).toContain(color);
+  });
 
-  it('keeps the explicit Vanilla Scope demo equivalent to the React pair', () => {
+  it('显式 Vanilla Scope 演示与对应 React 演示等价', () => {
     expect(scopeInspectionVanillaSource).toContain('createLayoutInspectionBarrier()');
     expect(scopeInspectionVanillaSource).toContain('createLayoutInspectionVanillaDriver()');
     expect(scopeInspectionVanillaSvg).toContain('<svg');

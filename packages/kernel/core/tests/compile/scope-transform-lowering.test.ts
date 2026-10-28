@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { NamespaceStack } from '../../src/compile/namespace';
-import type { NodeLayout } from '../../src/compile/node';
-import { boxInsets } from '../../src/compile/node';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { lowerScopeTransforms } from '../../src/compile/scope';
 import { composeScopeTransform, projectLayoutWithTransform } from '../../src/compile/transform';
@@ -16,12 +15,12 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
   const stack = new NamespaceStack();
 
   for (const [id, [x, y]] of entries) {
-    const layout: NodeLayout = {
+    const layout: CompiledNodeLayout = {
       shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
       geometry: {
         rect: { x, y, width: 0, height: 0, rotate: 0 },
         contentCenter: [x, y],
-        margin: boxInsets(0),
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
         contentSize: { width: 0, height: 0 },
       },
       boundary: {
@@ -37,12 +36,12 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
   return stack;
 };
 
-const layoutForProjection = (): NodeLayout => ({
+const layoutForProjection = (): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },
     contentCenter: [10, 20],
-    margin: boxInsets(2),
+    margin: { top: 2, right: 2, bottom: 2, left: 2 },
     contentSize: { width: 30, height: 40 },
   },
   boundary: {
@@ -148,7 +147,7 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
     expect(out![0]).toEqual({ kind: 'translate', x: 0, y: -15 });
   });
 
-  it('offset-translate of=string + offset', () => {
+  it('偏移翻译=字符串+偏移', () => {
     const idx = makeStack([['A', [0, 0]]]);
     const out = lower([{ kind: 'offset-translate', of: 'A', offset: [10, 5] }], idx);
 
@@ -170,8 +169,8 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
     const out = lower([{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 }], idx, {
       resolveBetweenGlobal: between => {
         const [a, b] = between.between;
-        const aLayout = 'id' in a ? idx.lookup(a.id) : null;
-        const bLayout = 'id' in b ? idx.lookup(b.id) : null;
+        const aLayout = 'id' in a ? idx.lookupEntry(a.id)?.layout : null;
+        const bLayout = 'id' in b ? idx.lookupEntry(b.id)?.layout : null;
         if (!aLayout || !bLayout) return null;
 
         return [
@@ -317,8 +316,8 @@ describe('lowerScopeTransforms 链复合', () => {
     const out = lower(transforms, idx, {
       resolveBetweenGlobal: between => {
         const [a, b] = between.between;
-        const aLayout = 'id' in a ? idx.lookup(a.id) : null;
-        const bLayout = 'id' in b ? idx.lookup(b.id) : null;
+        const aLayout = 'id' in a ? idx.lookupEntry(a.id)?.layout : null;
+        const bLayout = 'id' in b ? idx.lookupEntry(b.id)?.layout : null;
         if (!aLayout || !bLayout) return null;
 
         return [

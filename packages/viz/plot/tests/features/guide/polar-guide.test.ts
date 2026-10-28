@@ -1,8 +1,8 @@
 import type { IRChild, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
@@ -19,11 +19,11 @@ import { measureLabel } from '../../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope => {
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 /** 是否为 path 子节点 */
 const isPath = (child: IRChild): child is IRPath => child.type === 'path';
@@ -105,8 +105,8 @@ const ROWS = [
   { cat: 'D', value: 6 },
 ];
 
-describe('lowerPlots polar guide — angular axis (contract)', () => {
-  it('discrete_angular_axis_defaults_to_a_closed_chord_boundary', () => {
+describe('lowerPlots 极轴 — 角度轴（契约）', () => {
+  it('离散角度轴默认使用闭合弦边界', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
@@ -117,7 +117,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     expect(allKinds(axisLayer)).not.toContain('arc');
   });
 
-  it('partial_discrete_angular_axis_connects_each_structural_direction_without_closing', () => {
+  it('部分离散角轴连接每个结构方向无闭合', () => {
     const outer = expandOf(
       polarSpec([{ type: 'axis', dimension: 'x' }], { startAngle: 0, endAngle: 180 }),
       { d: ROWS.slice(0, 3) },
@@ -130,7 +130,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     expect(stepKinds(boundary)).toEqual(['move', 'line', 'line']);
   });
 
-  it('coordinate_override_keeps_a_circular_axis_line_for_a_discrete_scale', () => {
+  it('坐标覆盖可使离散比例尺保留圆形轴线', () => {
     const outer = expandOf(
       polarSpec([{ type: 'axis', dimension: 'x' }], { interpolation: 'polar' }),
       { d: ROWS },
@@ -142,7 +142,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     expect(allKinds(axisLayer)).toContain('circlePath');
   });
 
-  it('angular_axis_arc_radius_near_outer_radius', () => {
+  it('角轴弧半径近外半径', () => {
     const outer = expandOf(
       polarSpec([{ type: 'axis', dimension: 'x' }], { interpolation: 'polar' }),
       { d: ROWS },
@@ -161,7 +161,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     expect(circleStep?.radius).toBeLessThanOrEqual(150);
   });
 
-  it('angular_axis_tick_per_category', () => {
+  it('角度轴刻度每个类别', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
@@ -179,7 +179,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     expect(labels.map(n => n.text).sort()).toEqual(['A', 'B', 'C', 'D']);
   });
 
-  it('keeps authored text layout when angular labels choose automatic alignment', () => {
+  it('当角度标签选择自动对齐时，保持编写的文本布局', () => {
     const outer = expandOf(
       polarSpec([{ type: 'axis', dimension: 'x', tickLabels: { lineHeight: 24, maxTextWidth: 80, layout: false } }], {
         interpolation: 'polar',
@@ -199,7 +199,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     }
   });
 
-  it('angular_axis_labels_outside_arc', () => {
+  it('角度轴标签位于圆弧外侧', () => {
     const outer = expandOf(
       polarSpec([{ type: 'axis', dimension: 'x' }], { interpolation: 'polar' }),
       { d: ROWS },
@@ -227,7 +227,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
   });
 
   // 边界：tickLabels:false → 无标签、仍出轴线刻度
-  it('angular_axis_tick_labels_false_keeps_line', () => {
+  it('角度轴刻度标签假保留线', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x', tickLabels: false }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
@@ -238,7 +238,7 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
   });
 });
 
-describe('lowerPlots polar guide — radial axis (contract)', () => {
+describe('lowerPlots 极轴导轨 — 径向轴（契约）', () => {
   /** 径向轴（linear）spec：dimension=y；用 linear 角向使刻度沿辐条 */
   const radialSpec = (guides: Array<Record<string, unknown>>): IRPlot =>
     PlotSchema.parse({
@@ -260,7 +260,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
   ];
 
   // Happy path：径向轴 = 沿 startAngle 辐条的轴线（直段）+ radius tick 刻度 + 标签
-  it('radial_axis_produces_straight_spoke_axis_line', () => {
+  it('径向轴产生直辐轴线', () => {
     const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
@@ -272,7 +272,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
     expect(allKinds(axisLayer)).not.toContain('arc');
   });
 
-  it('radial_axis_default_spoke_along_start_angle', () => {
+  it('径向轴默认辐条沿起始角度', () => {
     // startAngle 默认 0（+x）→ 辐条轴线沿圆心向右：两端共 y、x 跨度 > 0
     const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
@@ -285,7 +285,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
   });
 
   // 刻度垂直于辐条（与 cartesian / angular 一致）：辐条沿 0°（水平）→ 刻度竖直
-  it('radial_axis_ticks_perpendicular_to_spoke', () => {
+  it('径向轴刻度垂直于辐条', () => {
     const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
@@ -300,7 +300,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
   });
 
   // 刻度不沿辐条越出内 / 外端点（修：首尾刻度曾各多出 DEFAULT_AXIS_TICK_LENGTH/2）
-  it('radial_axis_ticks_do_not_overshoot_spoke_endpoints', () => {
+  it('径向轴刻度不会超出辐条端点', () => {
     const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
@@ -319,7 +319,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
     }
   });
 
-  it('radial_axis_tick_labels_present', () => {
+  it('存在径向轴刻度标签', () => {
     const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'y' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
@@ -330,7 +330,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
   });
 });
 
-describe('lowerPlots polar guide — grid (contract)', () => {
+describe('lowerPlots 极轴辅助线-网格（契约）', () => {
   /** 径向轴 grid（同心环）：linear radius + grid:true */
   const radiusGridSpec: IRPlot = PlotSchema.parse({
     namespace: 'plot',
@@ -346,7 +346,7 @@ describe('lowerPlots polar guide — grid (contract)', () => {
   });
 
   // Happy path：radius axis grid:true → 每 radius tick 一个同心环
-  it('radius_grid_produces_concentric_circular_paths', () => {
+  it('半径网格产生同心圆形路径', () => {
     const outer = expandOf(radiusGridSpec, { d: [{ theta: 0, value: 5 }] }, opts);
     const { children, markIndex } = layersOf(outer);
 
@@ -362,7 +362,7 @@ describe('lowerPlots polar guide — grid (contract)', () => {
     expect(circles.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('radius_grid_one_ring_per_tick', () => {
+  it('半径网格每刻度一圈', () => {
     const outer = expandOf(radiusGridSpec, { d: [{ theta: 0, value: 5 }] }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
@@ -377,7 +377,7 @@ describe('lowerPlots polar guide — grid (contract)', () => {
     expect(new Set(radii.map(r => r.toFixed(3))).size).toBe(radii.length);
   });
 
-  it('discrete_angular_scale_uses_polygonal_radius_grid_boundaries', () => {
+  it('离散角度比例尺的半径网格使用多边形边界', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'y', grid: true }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
@@ -409,7 +409,7 @@ describe('lowerPlots polar guide — grid (contract)', () => {
   });
 
   // Happy path：angle axis grid:true → 每 angle tick 一条圆心→外圆辐条（直段，不是 arc）
-  it('angle_grid_produces_radial_spokes_as_lines', () => {
+  it('角度网格产生径向辐条作为线', () => {
     const outer = expandOf(angleGridSpec, { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
@@ -421,7 +421,7 @@ describe('lowerPlots polar guide — grid (contract)', () => {
     expect(allKinds(gridLayer)).not.toContain('arc');
   });
 
-  it('angle_grid_includes_category_spokes_and_plot_range_boundaries', () => {
+  it('角度网格包括类别辐条和绘图范围边界', () => {
     const outer = expandOf(angleGridSpec, { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
@@ -435,8 +435,8 @@ describe('lowerPlots polar guide — grid (contract)', () => {
   });
 });
 
-describe('lowerPlots polar guide — z-order (contract)', () => {
-  it('grid_below_mark_axis_above', () => {
+describe('lowerPlots 极轴导轨 — z 顺序（契约）', () => {
+  it('上方标记轴下方的网格', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -474,7 +474,7 @@ describe('lowerPlots polar guide — z-order (contract)', () => {
 });
 
 describe('lowerPlots polar guide — 错误路径 (contract)', () => {
-  it('duplicate_angle_axis_throws', () => {
+  it('重复 angle 轴抛出错误', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -501,7 +501,7 @@ describe('lowerPlots polar guide — 错误路径 (contract)', () => {
   });
 
   // hybrid 别名：x 与 angle 都映射到角向角色 → 应按角色判重抛错（Bug Hunter contract W）
-  it('duplicate_angular_role_x_throws', () => {
+  it('重复角度角色 x 抛出错误', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -553,7 +553,7 @@ describe('lowerPlots cartesian guide 回归 (contract)', () => {
     { month: 2, revenue: 9 },
   ];
 
-  it('cartesian_axis_remains_straight_lines', () => {
+  it('笛卡尔轴保留直线', () => {
     const outer = expandOf(cartGuidedSpec, { sales: SALES }, opts);
     const { children, markIndex } = layersOf(outer);
 
@@ -568,7 +568,7 @@ describe('lowerPlots cartesian guide 回归 (contract)', () => {
     }
   });
 
-  it('cartesian_grid_remains_straight_lines', () => {
+  it('笛卡尔网格保持直线', () => {
     const outer = expandOf(cartGuidedSpec, { sales: SALES }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayers = children.slice(0, markIndex).filter(isScope);
@@ -581,7 +581,7 @@ describe('lowerPlots cartesian guide 回归 (contract)', () => {
     }
   });
 
-  it('cartesian_x_axis_labels_at_tick_positions', () => {
+  it('笛卡尔 x 轴标签位于刻度位置', () => {
     // 回归：x 轴标签数 = x 刻度数（直线轴 Node text），与既有行为一致
     const outer = expandOf(cartGuidedSpec, { sales: SALES }, opts);
     const { children, markIndex } = layersOf(outer);

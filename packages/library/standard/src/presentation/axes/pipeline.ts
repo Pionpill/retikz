@@ -108,7 +108,7 @@ const appendAxisTicks = (
 
   const ticks = axis.ticks;
   const [originX, originY] = origin;
-  const tickLengths = normalizeTickSideLengths(ticks.side, ticks.length);
+  const tickLengths = resolveTickSideLengths(ticks.side, ticks.length);
   enumerateAxesTickValues(ticks.source, extentInput, ticks.endpointGap).forEach(value => {
     if (axisName === 'x') {
       const x = originX + value;
@@ -137,7 +137,7 @@ const appendTickLabels = (
   if (labels === undefined || labels === false) return;
 
   const [originX, originY] = origin;
-  const distance = normalizeTickSideLengths(ticks.side, ticks.length).negative + labels.offset;
+  const distance = resolveTickSideLengths(ticks.side, ticks.length).negative + labels.offset;
   labels.entries.forEach(entry => {
     const position: IRPosition =
       axisName === 'x' ? [originX + entry.value, originY + distance] : [originX - distance, originY - entry.value];
@@ -164,7 +164,7 @@ const createAxisLabel = (
 };
 
 /** 将刻度完整长度分配到轴线两侧 */
-const normalizeTickSideLengths = (side: AxesTicks['side'], length: number): { negative: number; positive: number } => {
+const resolveTickSideLengths = (side: AxesTicks['side'], length: number): { negative: number; positive: number } => {
   if (side === AxesTickSide.Positive) return { negative: 0, positive: length };
   if (side === AxesTickSide.Negative) return { negative: length, positive: 0 };
   return { negative: length / 2, positive: length / 2 };

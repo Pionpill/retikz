@@ -30,7 +30,7 @@ it('非法外部输入在schema边界失败', () => {
     expect(result.error.issues).toContainEqual(expect.objectContaining({ path: ['items', 1, 'id'] }));
 });
 
-it('arrow object materializes each omitted side as false', () => {
+it('箭头对象将每个省略的边具体化为 false', () => {
   expect(QueueSchema.parse({ ...base, items: [], arrow: { input: true } }).arrow).toEqual({
     input: true,
     output: false,

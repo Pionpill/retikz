@@ -142,4 +142,4 @@ export const snapshotLoweredTex = (value: unknown): LoweredTex =>
   });
 
 /** 按字号降解公式；宿主颜色由绘制阶段解析，无法解析时返回 null */
-export type LowerTex = (content: IRTexContent, style: { fontSize: number }) => LoweredTex | null;
+export type TexLowerer = (content: IRTexContent, style: { fontSize: number }) => LoweredTex | null;

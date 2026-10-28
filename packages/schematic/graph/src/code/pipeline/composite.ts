@@ -10,9 +10,9 @@ import { literal, strictObject } from 'zod';
 import type { GraphDefinitionOptions } from '../../contract';
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { createBaseGraphProviders } from '../../pipeline/base-providers';
-import { BlockProviderKey } from '../../pipeline/block';
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import { createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
+import { blockProviderKey } from '../../pipeline/block';
+import type { GraphDefinitionRegistries } from '../../providers';
+import { resolveGraphRuntimeOptions } from '../../providers';
 import { resolveCodeBlockTokens } from '../../resolve/theme';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import type { CodeBlockDefinition } from '../contract';
@@ -45,7 +45,7 @@ const createCodeBlockDefinition = <TSource extends IRCodeBlock>(
 const createCodeBlockContentDefinition = <TSource extends IRCodeBlock>(
   definition: CodeBlockDefinition<TSource>,
   key: CompositeCoreProviderKey,
-  options: ResolvedGraphDefinitionOptions,
+  options: GraphDefinitionRegistries,
 ) =>
   defineComposite({
     namespace: key.namespace,
@@ -84,7 +84,10 @@ const createCodeBlockContentDefinition = <TSource extends IRCodeBlock>(
 /** 同一 definition 的 maker identity 跨 contribution 保持一致，不承载实体注册或编译结果 */
 const makers = new WeakMap<
   object,
-  { root: CoreDependencyProvider['makeDefinition']; content: CoreDependencyProvider['makeDefinition'] }
+  {
+    root: CoreDependencyProvider<GraphDefinitionOptions>['makeDefinition'];
+    content: CoreDependencyProvider<GraphDefinitionOptions>['makeDefinition'];
+  }
 >();
 
 /**
@@ -112,19 +115,17 @@ export const createCodeBlockContribution = <TSource extends IRCodeBlock>(
   if (pair === undefined) {
     pair = {
       root: () => createCodeBlockDefinition(definition, contentKey),
-      content: datasets =>
-        createCodeBlockContentDefinition(definition, contentKey, resolveGraphRuntimeOptions(datasets)),
+      content: contributions =>
+        createCodeBlockContentDefinition(definition, contentKey, resolveGraphRuntimeOptions(contributions)),
     };
     makers.set(definition, pair);
   }
 
-  const datasets = createGraphRuntimeDatasets(options);
-
   return {
     roots: [key],
     providers: [
-      { key, dependencies: [contentKey], datasets, makeDefinition: pair.root },
-      { key: contentKey, dependencies: [BlockProviderKey], datasets, makeDefinition: pair.content },
+      { key, dependencies: [contentKey], params: options, makeDefinition: pair.root },
+      { key: contentKey, dependencies: [blockProviderKey], params: options, makeDefinition: pair.content },
       ...createBaseGraphProviders(options),
     ],
   };

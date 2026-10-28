@@ -21,7 +21,7 @@ import {
   LayoutAlignment,
   LayoutAxisSizeKind,
   measureLayoutChild,
-  normalizeLayoutSpacing,
+  resolveLayoutSpacing,
   placeLayoutChild,
   replayLayoutChildren,
   requiredLayoutProbe,
@@ -338,7 +338,7 @@ const compileLegendRamp = (
   });
 
   const localStructure = createLegendRampStructure(ramp, sampleMeasured.natural, measuredTicks);
-  const padding = normalizeLayoutSpacing(node.padding);
+  const padding = resolveLayoutSpacing(node.padding);
   const paddingX = paddingAxisSize(padding, 'x');
   const paddingY = paddingAxisSize(padding, 'y');
 
@@ -475,7 +475,7 @@ export const compileLegend = (
     });
   });
 
-  const padding = normalizeLayoutSpacing(node.padding);
+  const padding = resolveLayoutSpacing(node.padding);
   const paddingX = paddingAxisSize(padding, 'x');
   const paddingY = paddingAxisSize(padding, 'y');
   const hasBody = measured.length > 0;

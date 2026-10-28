@@ -317,10 +317,10 @@ export type InputArray = Omit<IRArray, 'namespace' | 'type' | 'items' | 'data' |
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArrayInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={41}>ArrayInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"arrayInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/array.ts"} startLine={41}>arrayInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray>;
+export declare const arrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray>;
 ```
 
 **Persistent configuration**
@@ -551,16 +551,16 @@ export type IRArrayIndexStyle = input<typeof ArrayIndexStyleSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArraySchema"} path={"packages/library/standard/src/collection/array/schema/schema.ts"} startLine={71}>ArraySchema</ApiSourceLink>
+#### <ApiSourceLink label={"ArraySchema"} path={"packages/library/standard/src/collection/array/schema/schema.ts"} startLine={73}>ArraySchema</ApiSourceLink>
 
 <ZodSchema name="ArraySchema" expandNested />
 
 **Extension definitions and registration**
 
-#### <ApiSourceLink label={"ArrayDefinition"} path={"packages/library/standard/src/collection/array/composite.ts"} startLine={10}>ArrayDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"arrayDefinition"} path={"packages/library/standard/src/collection/array/composite.ts"} startLine={10}>arrayDefinition</ApiSourceLink>
 
 ```ts
-export const ArrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> = defineComposite({
+export const arrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> = defineComposite({
   namespace: 'standard',
   type: 'array',
   schema: ArraySchema,
@@ -568,10 +568,10 @@ export const ArrayDefinition: CompositeDefinition<IRArray, 'standard', 'array'> 
 });
 ```
 
-#### <ApiSourceLink label={"ArrayProvider"} path={"packages/library/standard/src/collection/array/composite.ts"} startLine={25}>ArrayProvider</ApiSourceLink>
+#### <ApiSourceLink label={"arrayProvider"} path={"packages/library/standard/src/collection/array/composite.ts"} startLine={25}>arrayProvider</ApiSourceLink>
 
 ```ts
-export declare const ArrayProvider: CoreDependencyProvider;
+export declare const arrayProvider: CoreDependencyProvider;
 ```
 
 **Execution and supporting contracts**
@@ -611,12 +611,12 @@ export declare const createArray: (input: IRArray) => IRArray;
 
 <ApiTable variant="parameters">
 
-| Category   | Name      | Type / signature | Description                                                       |
-| ---------- | --------- | ---------------- | ----------------------------------------------------------------- |
-| Parameters | `arrayId` | `string`         | Nonblank Array id                                                 |
-|            | `index`   | `number`         | Nonnegative integer index of the direct cell                      |
-| Returns    | —         | `string`         | A cell id composed of arrayId, a hyphen, and the zero-based index |
-| Throws     | —         | —                | Throws RetikzStandardError for invalid arguments                  |
+| Category   | Name      | Type / signature | Description                                                             |
+| ---------- | --------- | ---------------- | ----------------------------------------------------------------------- |
+| Parameters | `arrayId` | `string`         | Nonblank Array id                                                       |
+|            | `index`   | `number`         | Nonnegative integer index of the direct cell                            |
+| Returns    | —         | `string`         | A cell id composed of arrayId, a hyphen, and the zero-based index       |
+| Throws     | —         | —                | Throws RetikzStandardError when the index is not a non-negative integer |
 
 </ApiTable>
 

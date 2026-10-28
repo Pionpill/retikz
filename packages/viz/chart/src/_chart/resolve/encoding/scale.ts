@@ -4,18 +4,18 @@ import type { IRPlotScaleOperation } from '@retikz/plot';
 import type { ChartEncodingResolveContext, ChartResolvedFieldMapping } from '../../contract/recipe';
 import type { IRChartSource } from '../../schemas';
 import { invalidEncoding, mappingPathOf, mappingScaleOf, objectValueOf } from './shared';
-import type { ChartEncodingFieldConsumer, ResolvedScaleSource } from './types';
+import type { ChartEncodingFieldConsumer, CanonicalScaleSource } from './types';
 
-type ResolvedScaleOperation = Readonly<{
+type ScaleOperationResolution = Readonly<{
   operation: IRPlotScaleOperation;
-  source: ResolvedScaleSource;
+  source: CanonicalScaleSource;
 }>;
 
 const resolveScaleSource = (
   context: ChartEncodingResolveContext,
   operation: IRPlotScaleOperation,
   path: ReadonlyArray<string | number>,
-): ResolvedScaleOperation => {
+): ScaleOperationResolution => {
   const definition = context.runtime.scales.get(operation.type);
   if (definition === undefined) {
     throw invalidEncoding(`Chart scale type "${operation.type}" is not registered`, path);
@@ -40,7 +40,7 @@ const resolveScaleSource = (
 };
 
 /** exact encoding scale declaration、reference 与 recipe fallback 的连接结果 */
-export type ChartEncodingScaleResolution = Readonly<{
+type ChartEncodingScaleResolution = Readonly<{
   /** 字段映射显式产生的尺度操作 */
   scales: ReadonlyArray<IRPlotScaleOperation>;
   /** 解析并补齐后的 Plot 扩展尺度 */
@@ -66,7 +66,7 @@ export const resolveChartEncodingScales = <
 ): ChartEncodingScaleResolution => {
   const assertScaleCompatible = (
     consumer: ChartEncodingFieldConsumer,
-    source: ResolvedScaleSource,
+    source: CanonicalScaleSource,
     path: ReadonlyArray<string | number>,
   ): void => {
     const expected = consumer.scale;
@@ -93,7 +93,7 @@ export const resolveChartEncodingScales = <
     extensionScaleByName.set(operation.name, { index, operation });
   }
 
-  const fallbackByName = new Map<string, Readonly<{ slot: string; source: ResolvedScaleSource }>>();
+  const fallbackByName = new Map<string, Readonly<{ slot: string; source: CanonicalScaleSource }>>();
 
   for (const consumer of consumers) {
     const scale = consumer.scale;
@@ -106,8 +106,8 @@ export const resolveChartEncodingScales = <
     }
   }
 
-  const encodingScaleByName = new Map<string, Readonly<{ slot: string } & ResolvedScaleOperation>>();
-  const encodingScaleBySlot = new Map<string, ResolvedScaleOperation>();
+  const encodingScaleByName = new Map<string, Readonly<{ slot: string } & ScaleOperationResolution>>();
+  const encodingScaleBySlot = new Map<string, ScaleOperationResolution>();
 
   for (const consumer of consumers) {
     const value = context.encodings[consumer.slot];
@@ -176,7 +176,7 @@ export const resolveChartEncodingScales = <
         );
       }
 
-      let resolvedExtension: ResolvedScaleOperation | undefined;
+      let resolvedExtension: ScaleOperationResolution | undefined;
       if (extensionEntry !== undefined) {
         resolvedExtension = resolveScaleSource(context, extensionEntry.operation, path);
         extensionScales[extensionEntry.index] = resolvedExtension.operation;

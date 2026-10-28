@@ -11,14 +11,14 @@ import type {
 export type IROverlayPlacement = ZodInput<typeof OverlayPlacementSchema>;
 
 /** Overlay placement 的作者输入 */
-export type OverlayPlacementInput = ZodInput<typeof OverlayPlacementSchema>;
+export type InputOverlayPlacement = ZodInput<typeof OverlayPlacementSchema>;
 
 /** OverlayLayout item 的 canonical JSON IR */
 export type IROverlayLayoutItem = Omit<ZodInput<typeof OverlayLayoutItemSchema>, 'child'> &
   Pick<ZodInfer<typeof OverlayLayoutItemSchema>, 'child'>;
 
 /** OverlayLayout item 的作者输入 */
-export type OverlayLayoutItemInput = IROverlayLayoutItem;
+export type InputOverlayLayoutItemConfig = IROverlayLayoutItem;
 
 /** OverlayLayout 的 canonical JSON IR */
 export type IROverlayLayout = Omit<ZodInput<typeof OverlayLayoutSchema>, 'children'> & {
@@ -29,7 +29,7 @@ export type IROverlayLayout = Omit<ZodInput<typeof OverlayLayoutSchema>, 'childr
 };
 
 /** OverlayLayout factory 接受的作者输入 */
-export type OverlayLayoutInput = Omit<IROverlayLayout, 'namespace' | 'type'>;
+export type InputOverlayLayoutConfig = Omit<IROverlayLayout, 'namespace' | 'type'>;
 
 /** OverlayLayout 的 JSON-safe compile artifact payload */
 export type OverlayLayoutArtifact = ZodInfer<typeof OverlayLayoutArtifactSchema>;

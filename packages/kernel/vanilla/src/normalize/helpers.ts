@@ -65,7 +65,7 @@ type InputSceneChildrenOptions = Omit<InputSceneChildren, 'type' | 'version'>;
 type InputSceneLayersOptions = Omit<InputSceneLayers, 'type' | 'version'>;
 
 /** 创建作者侧 Scene 输入 */
-type CreateInputScene = {
+type InputSceneFactory = {
   /**
    * 用子图元列表创建场景
    * @param children 有序子图元列表，允许空数组
@@ -105,4 +105,4 @@ const createInputScene = (
 };
 
 /** 创建作者侧 Scene 输入 */
-export const scene = createInputScene as CreateInputScene;
+export const scene = createInputScene as InputSceneFactory;

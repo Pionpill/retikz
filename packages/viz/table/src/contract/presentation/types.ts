@@ -8,7 +8,7 @@ import type { DeepReadonly } from '../../shared';
 import type { TableCellContext } from '../model';
 
 /** Cell presentation 接收的稳定输入 */
-export type CellPresentationInput = Readonly<{
+export type InputCellPresentation = Readonly<{
   /** formatter 前的 canonical scalar */
   rawValue: IRDataScalarValue;
   /** formatter 产生的展示 scalar */
@@ -29,7 +29,7 @@ export type CellPresentationDefinition<TOptions extends JsonObject = JsonObject>
   /** provider options 的精确运行时 schema */
   optionsSchema: ZodType<TOptions>;
   /** 把 scalar value 转成 Cell 局部坐标中的 Core 内容 */
-  present: (input: CellPresentationInput, options: TOptions) => IRChild;
+  present: (input: InputCellPresentation, options: TOptions) => IRChild;
 };
 
 /** 异构 Cell presentation provider 定义 */
@@ -37,5 +37,5 @@ export type AnyCellPresentationDefinition = Omit<CellPresentationDefinition, 'op
   /** 异构 registry 消费的 options schema */
   optionsSchema: ZodType;
   /** options 经对应 schema 收窄后以 never 调用 */
-  present: (input: CellPresentationInput, options: never) => IRChild;
+  present: (input: InputCellPresentation, options: never) => IRChild;
 };

@@ -1,5 +1,3 @@
-import { createReadonlyMap } from '@retikz/foundation';
-
 import { RetikzDataError } from '../error';
 import { DataFieldType } from '../model';
 import { reducerInputFields, reducerOutputDescriptors, resolveReducerDependency } from '../operators/reducer';
@@ -40,7 +38,7 @@ import {
   computeSelect,
   computeSummarize,
   relationEndpointOutputField,
-  validateReducerMetrics,
+  assertReducerMetrics,
 } from './group';
 import {
   applyDeriveInterval,
@@ -142,7 +140,7 @@ const summarizeTransformDefinition = defineTransform({
   kind: 'summarize',
   paramsSchema: SummarizeParamsSchema,
   validate: (operation, context) =>
-    validateReducerMetrics(operation.params.metrics, context, {
+    assertReducerMetrics(operation.params.metrics, context, {
       reservedFields: new Set(operation.params.groupBy ?? []),
       reservedLabel: 'a groupBy field',
     }),
@@ -201,7 +199,7 @@ const annotateTransformDefinition = defineTransform({
   kind: 'annotate',
   paramsSchema: AnnotateParamsSchema,
   validate: (operation, context) =>
-    validateReducerMetrics(operation.params.metrics ?? [], context, {
+    assertReducerMetrics(operation.params.metrics ?? [], context, {
       reservedFields: new Set((operation.params.selectors ?? []).map(selector => selector.as)),
       reservedLabel: 'an annotate selector output field',
     }),
@@ -520,13 +518,6 @@ export const BUILTIN_TRANSFORMS: ReadonlyArray<AnyTransformDefinition> = freezeD
 const BUILTIN_TRANSFORM_REGISTRY = new Map(
   BUILTIN_TRANSFORMS.map(def => [extractTransformKind(def.schema), def] as const),
 );
-
-/**
- * 按 kind 索引的内置 transform definition
- * @description 主要供诊断与测试确认内置覆盖；自定义 definition 不写入此表，而是在每次 lowering 时合并
- */
-export const BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND: ReadonlyMap<string, AnyTransformDefinition> =
-  createReadonlyMap(BUILTIN_TRANSFORM_REGISTRY);
 
 /**
  * 解析 transform registry

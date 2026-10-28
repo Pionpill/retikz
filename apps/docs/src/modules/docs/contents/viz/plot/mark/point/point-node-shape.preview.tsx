@@ -1,5 +1,5 @@
-import { StarShapeDefinition } from '@retikz/extension';
-import { PlotAxis, PointMark, RelationMark } from '@retikz/plot-react';
+import { starShapeDefinition } from '@retikz/extension';
+import { PlotAxis, PointMark, PathMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -33,7 +33,7 @@ export type PointNodeShapePreviewValues = {
 
 /** 绘制示例图形 */
 export const PointNodeShapePreview = (values: PointNodeShapePreviewValues) => (
-  <Layout viewBox={{ x: -50, y: -70, width: 540, height: 408 }} extensions={{ shapes: [StarShapeDefinition] }}>
+  <Layout viewBox={{ x: -50, y: -70, width: 540, height: 408 }} extensions={{ shapes: [starShapeDefinition] }}>
     <Plot
       data={shapePoints}
       width={400}
@@ -41,6 +41,7 @@ export const PointNodeShapePreview = (values: PointNodeShapePreviewValues) => (
       coordinate={values.coordinate === 'polar2D' ? 'polar2D' : undefined}
     >
       <PointMark
+        id="shape-nodes"
         encodings={{ anchorId: 'label', color: 'region', position: { x: { field: 'x' }, y: { field: 'y' } } }}
         properties={{
           anchorId: { prefix: 'shape-demo' },
@@ -69,12 +70,12 @@ export const PointNodeShapePreview = (values: PointNodeShapePreviewValues) => (
         }}
       />
       {values.showRelations && (
-        <RelationMark
-          encodings={{ source: { anchorId: 'label' }, target: { anchorId: 'nextLabel' } }}
+        <PathMark
+          encodings={{
+            from: { mark: 'shape-nodes', key: { field: 'label' } },
+            to: { mark: 'shape-nodes', key: { field: 'nextLabel' } },
+          }}
           properties={{
-            geometry: { kind: 'path' },
-            source: { anchorId: { prefix: 'shape-demo' } },
-            target: { anchorId: { prefix: 'shape-demo' } },
             color: '#94a3b8',
             strokeWidth: 1,
           }}

@@ -18,7 +18,7 @@ export type ChartMarkResolveContext = Readonly<{
 }>;
 
 /** Chart mark 的确定输出 */
-export type ChartMarkResolution = Readonly<{
+type ChartMarkResolution = Readonly<{
   /** 当前 Chart mark 解析得到的非空 Plot mark 序列 */
   marks: NonEmptyReadonlyArray<IRPlotMark>;
 }>;

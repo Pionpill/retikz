@@ -65,7 +65,7 @@ const OFFSET_CORNERS = [
   [20, 30],
 ] as const;
 
-describe('shadow playground positioning', () => {
+describe('阴影交互演示定位', () => {
   it('调整 shadow offset 时保持固定 viewBox，避免 Node 在预览中移动', () => {
     const rendered = OFFSET_CORNERS.map(([offsetX, offsetY]) => {
       const markup = renderAtOffset(offsetX, offsetY);

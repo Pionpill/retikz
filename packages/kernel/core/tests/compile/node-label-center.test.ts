@@ -18,8 +18,8 @@ const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrimitive> => {
 
 const visualMiddle = (t: TextPrimitive): number => t.y;
 
-describe('Node label position center', () => {
-  it('draws the label at the node center', () => {
+describe('Node 标签位置中心', () => {
+  it('在节点中心绘制标签', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -44,7 +44,7 @@ describe('Node label position center', () => {
     expect(visualMiddle(label!)).toBeCloseTo(30);
   });
 
-  it('uses CompileOptions.labelDistance when label distance is omitted', () => {
+  it('省略标签距离时使用 CompileOptions.labelDistance', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

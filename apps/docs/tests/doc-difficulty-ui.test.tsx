@@ -63,7 +63,7 @@ describe('<DocDifficultyIndicator>', () => {
     [DocDifficulty.Beginner, 'lucide-smile', 'text-green'],
     [DocDifficulty.Advanced, 'lucide-meh', 'text-yellow'],
     [DocDifficulty.Internals, 'lucide-frown', 'text-red'],
-  ] as const)('renders the %s icon and semantic color', (difficulty, iconClass, colorClass) => {
+  ] as const)('渲染 %s 图标和语义颜色', (difficulty, iconClass, colorClass) => {
     const container = render(<DocDifficultyIndicator difficulty={difficulty} />);
     const indicator = container.querySelector('[data-doc-difficulty]');
     const icon = indicator?.querySelector('svg');
@@ -73,7 +73,7 @@ describe('<DocDifficultyIndicator>', () => {
     expect(icon?.getAttribute('class')).toContain(colorClass);
   });
 
-  it('does not reserve a slot for an unmarked document', () => {
+  it('不为未标记的文档保留槽位', () => {
     const container = render(<DocDifficultyIndicator difficulty={undefined} />);
 
     expect(container.querySelector('[data-doc-difficulty]')).toBeNull();
@@ -81,7 +81,7 @@ describe('<DocDifficultyIndicator>', () => {
 });
 
 describe('<DocDifficultyDot>', () => {
-  it('reveals an aligned colored marker on row hover and exposes its localized difficulty', () => {
+  it('行悬停时显示对齐的彩色标记并提供本地化难度说明', () => {
     const marked = render(<DocDifficultyDot difficulty={DocDifficulty.Advanced} />);
     const unmarked = render(<DocDifficultyDot difficulty={undefined} />);
     const slot = marked.querySelector('[data-doc-difficulty-slot]');
@@ -97,7 +97,7 @@ describe('<DocDifficultyDot>', () => {
 });
 
 describe('<HeaderActions>', () => {
-  it('does not render a document-difficulty filter control', () => {
+  it('不渲染文档难度过滤器控件', () => {
     const container = render(
       <MemoryRouter>
         <HeaderActions />
@@ -167,13 +167,13 @@ describe('<DocPageActions>', () => {
     [DocDifficulty.Beginner, 4],
     [DocDifficulty.Advanced, 5],
     [DocDifficulty.Internals, 6],
-  ] as const)('applies the %s coefficient before rounding reading time', (difficulty, minutes) => {
+  ] as const)('在舍入读取时间之前应用 %s 系数', (difficulty, minutes) => {
     const container = renderActions(difficulty);
 
     expect(container.textContent).toContain(`desktop:${minutes}`);
   });
 
-  it('keeps reading stats and page arrows out of the mobile header', () => {
+  it('移动端页头不包含阅读统计和翻页箭头', () => {
     const container = renderActions(DocDifficulty.Advanced);
     const desktopStats = Array.from(container.querySelectorAll('span')).find(element =>
       element.textContent.startsWith('desktop:'),

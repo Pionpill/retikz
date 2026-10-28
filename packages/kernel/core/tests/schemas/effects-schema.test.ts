@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { BlendMode, DropShadowSchema, SHADOW_PRESETS, ShadowPreset } from '../../src/schemas';
 
-describe('[effects] DropShadowSchema accept/reject', () => {
+describe('[效果] DropShadowSchema 接受/拒绝', () => {
   it('preset-only：{preset:"md"} → 过', () => {
     expect(DropShadowSchema.safeParse({ preset: 'md' }).success).toBe(true);
   });
@@ -53,7 +53,7 @@ describe('[effects] SHADOW_PRESETS 表完整性', () => {
     expect(SHADOW_PRESETS.none).toBeNull();
   });
 
-  it('sm/md/lg/xl/2xl → offsetX=0 的 ResolvedDropShadow', () => {
+  it('sm/md/lg/xl/2xl → offsetX=0 的 CanonicalDropShadow', () => {
     for (const key of ['sm', 'md', 'lg', 'xl', '2xl'] as const) {
       const s = SHADOW_PRESETS[key];
 

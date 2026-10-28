@@ -148,9 +148,3 @@ export type SceneIdentityLookup = Readonly<{
 }>;
 /** Scene 输出的会话内版本 */
 export type SceneRevision = number;
-/** 验证渲染输出版本 */
-export const createSceneRevision = (value: number): SceneRevision => {
-  if (!Number.isSafeInteger(value) || value < 0)
-    throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Invalid scene revision');
-  return value;
-};

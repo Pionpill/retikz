@@ -18,7 +18,7 @@ import {
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import type { CanonicalGridLayout, CanonicalGridLayoutItem } from '../../resolve/grid-layout';
 import { resolveGridLayout } from '../../resolve/grid-layout';
-import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
+import type { KeyedLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import {
   alignAllocationInSlot,
   alignResolvedLayoutSlot,
@@ -56,7 +56,7 @@ import type { GridLayoutArtifact } from './types';
 import type { IRGridLayout } from './types';
 
 type MeasuredGridItem = Readonly<{
-  authored: EffectiveLayoutItem<CanonicalGridLayoutItem>;
+  authored: KeyedLayoutItem<CanonicalGridLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
   columnStart: number;

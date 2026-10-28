@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { emitInlineLine, fallbackMeasurer, layoutInlineLine, snapshotLoweredTex } from '../../src/compile/text';
 import type { GroupPrimitive, PathPrimitive } from '../../src/contract';
 
-describe('[tex-lowering] multi-path contract', () => {
+describe('[tex-lowering]多路径契约', () => {
   it('按 paint order 输出多条路径并解析宿主颜色与透明度', () => {
     const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,

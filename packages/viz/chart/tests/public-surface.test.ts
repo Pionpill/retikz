@@ -2,7 +2,6 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, strictObject } from 'zod';
 
-import type { ChartLocatorOptions } from '../src';
 import * as chart from '../src';
 import * as point from '../src/point';
 
@@ -12,8 +11,8 @@ const RecipeSchema = strictObject({
   properties: strictObject({ visible: boolean().optional() }).optional(),
 });
 
-describe('@retikz/chart public surface', () => {
-  it('exports only family-independent Chart contracts from the root', () => {
+describe('@retikz/chart 公开接口', () => {
+  it('仅从根导出与系列无关的 Chart 契约', () => {
     expect(chart).toHaveProperty('ChartPresentationSchema');
     expect(chart).toHaveProperty('ChartLayoutSchema');
     expect(chart).toHaveProperty('ChartPlotExtensionSchema');
@@ -36,7 +35,7 @@ describe('@retikz/chart public surface', () => {
     expect(chart).not.toHaveProperty('resolveChart');
   });
 
-  it('exposes concrete Point schemas and provider contributions from the Point entry', () => {
+  it('公开来自点条目的具体点 schema 和提供者贡献', () => {
     expect(point.ChartFamily).toEqual({ Point: 'point' });
     expect(point.ChartType).toEqual({
       Bubble: 'bubble',
@@ -59,40 +58,16 @@ describe('@retikz/chart public surface', () => {
     expect(point).toHaveProperty('createConnectedScatterChartProviderContribution');
     expect(point).toHaveProperty('createRangedDotChartProviderContribution');
     expect(point).toHaveProperty('createStripChartProviderContribution');
-    expect(point).toHaveProperty('qualifyScatterChartLocatorOptions');
     expect(point).not.toHaveProperty('PointChartSchema');
     expect(point).not.toHaveProperty('PointChartProvider');
     expect(point).not.toHaveProperty('defineChartRecipe');
     expect(point).not.toHaveProperty('defineChartMark');
-    expect(point).not.toHaveProperty('ScatterChartDefinition');
-    expect(point).not.toHaveProperty('ScatterMarkDefinition');
+    expect(point).not.toHaveProperty('scatterChartDefinition');
+    expect(point).not.toHaveProperty('scatterMarkDefinition');
     expect(point).not.toHaveProperty('PathMarkDefinition');
   });
 
-  it('publishes Chart-facing locator options without exposing recipe identities', () => {
-    const options: ChartLocatorOptions = { facet: { row: 'north' } };
-
-    expect(point.qualifyScatterChartLocatorOptions(options)).toEqual({
-      facet: {
-        id: '__chart.scatter.composition.facet',
-        row: 'north',
-      },
-    });
-    expect(point.qualifyBubbleChartLocatorOptions(options)).toEqual({
-      facet: {
-        id: '__chart.bubble.composition.facet',
-        row: 'north',
-      },
-    });
-    expect(point.qualifyRegressionChartLocatorOptions(options)).toEqual({
-      facet: {
-        id: '__chart.regression.composition.facet',
-        row: 'north',
-      },
-    });
-  });
-
-  it('keeps generated Source JSON-safe without publishing a wide Chart schema', () => {
+  it('保持生成的 Source JSON 安全，无需发布广泛的 Chart schema', () => {
     expect(chart).not.toHaveProperty('ChartSchema');
     expect(chart).not.toHaveProperty('IRChart');
 

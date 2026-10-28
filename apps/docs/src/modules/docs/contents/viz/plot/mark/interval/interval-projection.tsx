@@ -1,4 +1,4 @@
-import { SectorShapeDefinition } from '@retikz/extension';
+import { sectorShapeDefinition } from '@retikz/extension';
 import { pointAtArcAngle } from '@retikz/math';
 import type { Position } from '@retikz/math';
 import { Layout, Node, Path, Step } from '@retikz/react';
@@ -44,7 +44,7 @@ const IntervalProjection: FC<IntervalProjectionProps> = props => {
   return (
     <Layout
       viewBox={{ x: 0, y: 0, width: 750, height: 430 }}
-      extensions={{ shapes: [SectorShapeDefinition] }}
+      extensions={{ shapes: [sectorShapeDefinition] }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       {[0, 1, 2].map(stage => {

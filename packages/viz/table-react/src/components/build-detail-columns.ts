@@ -1,4 +1,4 @@
-import type { TableDetailColumnInput } from '@retikz/table';
+import type { InputTableDetailColumn } from '@retikz/table';
 import type { ReactElement, ReactNode } from 'react';
 import { isValidElement } from 'react';
 
@@ -8,12 +8,12 @@ import type { DetailColumnProps } from './detail-column';
 import { DetailColumn } from './detail-column';
 
 /** 从 DetailColumn marker children 构造有序 plain columns */
-export const buildDetailColumns = (children: ReactNode): Array<TableDetailColumnInput> => {
+export const buildDetailColumns = (children: ReactNode): Array<InputTableDetailColumn> => {
   /** 判断节点是否为 DetailColumn marker */
   const isDetailColumnElement = (child: ReactNode): child is ReactElement<DetailColumnProps, typeof DetailColumn> =>
     isValidElement(child) && child.type === DetailColumn;
 
-  const columns: Array<TableDetailColumnInput> = [];
+  const columns: Array<InputTableDetailColumn> = [];
   visitTableChildren(children, child => {
     if (!isDetailColumnElement(child)) {
       throw new RetikzTableReactError('table react: DetailTable children only accept DetailColumn');

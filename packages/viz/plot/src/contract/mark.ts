@@ -1,13 +1,13 @@
 import type { ExternalRow } from '@retikz/data';
 
 /** 下沉、位置调整与域留白共同消费的实例来源 */
-export type MarkInstanceInput = { kind: 'single' } | { kind: 'rows'; rows: Array<ExternalRow> };
+export type InputMarkInstance = { kind: 'single' } | { kind: 'rows'; rows: Array<ExternalRow> };
 
 /** 单个几何目标的真实实例身份，独立实例没有数据行 */
 export type MarkInstance = { kind: 'single' } | { kind: 'row'; row: ExternalRow; transformedIndex: number };
 
 /** 将实例来源展开为稳定有序的几何消费目标，空结果保持为空 */
-export const markInstances = (input: MarkInstanceInput): Array<MarkInstance> =>
+export const markInstances = (input: InputMarkInstance): Array<MarkInstance> =>
   input.kind === 'single'
     ? [{ kind: 'single' }]
     : input.rows.map((row, transformedIndex) => ({ kind: 'row', row, transformedIndex }));

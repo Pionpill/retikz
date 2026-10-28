@@ -1,10 +1,10 @@
 import type { GroupPrimitive, IRChild, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite, resolveCoreProviderDependencies } from '@retikz/core';
-import { PathClipDefinition, PathClipProvider } from '@retikz/extension';
+import { pathClipDefinition, pathClipProvider } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { createSurface, SurfaceDefinition, SurfaceProvider } from '../../../src/presentation';
+import { createSurface, surfaceDefinition, surfaceProvider } from '../../../src/presentation';
 
 const node: IRChild = {
   type: 'node',
@@ -22,10 +22,10 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive
     primitive.type === 'group' ? pathsOf(primitive.children) : primitive.type === 'path' ? [primitive] : [],
   );
 
-describe('Surface appearance, Scope, and spatial identity', () => {
-  it('resolves the path clip dependency through the Surface provider graph', () => {
+describe('Surface 外观、Scope 和空间标识', () => {
+  it('通过 Surface 提供者图解决路径裁剪依赖关系', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [SurfaceProvider.key], providers: [SurfaceProvider, PathClipProvider] }],
+      contributions: [{ roots: [surfaceProvider.key], providers: [surfaceProvider, pathClipProvider] }],
     });
     const surface = createSurface({
       namespace: 'standard',
@@ -37,13 +37,13 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
 
     expect(definitions.clips?.map(definition => definition.kind)).toEqual(['path']);
-    expect(definitions).toEqual({ composites: [SurfaceDefinition], clips: [PathClipDefinition] });
+    expect(definitions).toEqual({ composites: [surfaceDefinition], clips: [pathClipDefinition] });
     expect(() =>
       compileToScene({ type: 'scene', version: 1, children: [surface] }, { ...definitions, padding: 0 }),
     ).not.toThrow();
   });
 
-  it('keeps background, isolated content, and border in fixed layers without changing allocation', () => {
+  it('将背景、隔离内容和边框保留在固定图层中，而不更改分配', () => {
     const surface = createSurface({
       namespace: 'standard',
       type: 'surface',
@@ -57,8 +57,8 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
       {
-        composites: [SurfaceDefinition],
-        clips: [PathClipDefinition],
+        composites: [surfaceDefinition],
+        clips: [pathClipDefinition],
         padding: 0,
       },
     );
@@ -79,7 +79,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     expect(result.scene.layout).toEqual({ x: 0, y: 0, width: 24, height: 14 });
   });
 
-  it('clips only the content with the rounded boundary while preserving an authored outer clip', () => {
+  it('仅裁剪具有圆形边界的内容，同时保留编写的外部裁剪', () => {
     const surface = createSurface({
       namespace: 'standard',
       type: 'surface',
@@ -94,8 +94,8 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
       {
-        composites: [SurfaceDefinition],
-        clips: [PathClipDefinition],
+        composites: [surfaceDefinition],
+        clips: [pathClipDefinition],
         padding: 0,
       },
     );
@@ -114,7 +114,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
   });
 
-  it('applies complete outer Scope identity and transforms once while keeping internal style inheritance', () => {
+  it('应用完整的外部 Scope 身份并转换一次，同时保持内部风格继承', () => {
     const surface = createSurface({
       namespace: 'standard',
       type: 'surface',
@@ -142,8 +142,8 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
       {
-        composites: [SurfaceDefinition],
-        clips: [PathClipDefinition],
+        composites: [surfaceDefinition],
+        clips: [pathClipDefinition],
         padding: 0,
       },
     );
@@ -161,7 +161,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     expect(handle?.geometry.bounds).toEqual({ x: 10, y: 20, width: 20, height: 10 });
   });
 
-  it('prefixes a descendant handle without copying its key, role, tags, or payload', () => {
+  it('为后代句柄添加前缀，而不复制其键、角色、标签或有效负载', () => {
     const card = defineComposite({
       namespace: 'third',
       type: 'card',
@@ -197,7 +197,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition, card], padding: 0 },
+      { composites: [surfaceDefinition, card], padding: 0 },
     );
     const descendant = result.spatialHandles.entries.find(entry => entry.role === 'card');
 
@@ -214,7 +214,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
   });
 
-  it('keeps a high-z child isolated between the background and border layers', () => {
+  it('使高 z 子级在背景层和边框层之间保持隔离', () => {
     const surface = createSurface({
       namespace: 'standard',
       type: 'surface',
@@ -225,7 +225,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition], padding: 0 },
+      { composites: [surfaceDefinition], padding: 0 },
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'isolated-surface');
 
@@ -238,7 +238,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     if (content?.type === 'group') expect(content.children.length).toBeGreaterThan(0);
   });
 
-  it('emits finite rounded clip geometry for a degenerate child allocation', () => {
+  it('为退化子分配发出有限的圆形裁剪几何形状', () => {
     const surface = createSurface({
       namespace: 'standard',
       type: 'surface',
@@ -250,8 +250,8 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
       {
-        composites: [SurfaceDefinition],
-        clips: [PathClipDefinition],
+        composites: [surfaceDefinition],
+        clips: [pathClipDefinition],
         padding: 0,
       },
     );

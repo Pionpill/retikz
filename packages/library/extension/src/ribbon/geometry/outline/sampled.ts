@@ -14,7 +14,7 @@ import type { RibbonCrossSection, RibbonSegment } from '../types';
 import { ribbonCrossSection } from './cross-section';
 
 /** 采样边界构造输入 */
-export type OutlineCommandsInput = {
+type InputOutlineCommands = {
   /** 按路径顺序连接的可采样中心线段 */
   segments: ReadonlyArray<RibbonSegment>;
   /** 全部中心线段的总弧长 */
@@ -64,7 +64,7 @@ const sideCommands = (chunks: ReadonlyArray<ReadonlyArray<IRPosition>>): Array<P
 
 /** 统一弧长采样、特征点分段和端帽闭合 */
 export const outlineCommands = (
-  input: OutlineCommandsInput,
+  input: InputOutlineCommands,
 ): {
   commands: Array<PathCommand>;
   points: Array<IRPosition>;

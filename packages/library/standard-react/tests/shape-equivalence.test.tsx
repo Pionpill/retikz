@@ -23,8 +23,8 @@ const starVertices = (center: [number, number], outer: number, inner: number, po
   Array.from({ length: points * 2 }, (_, i) =>
     polarXY(center, i % 2 ? inner : outer, i % 2 ? inner : outer, rotate + (i * 180) / points),
   );
-describe('Circle equivalence', () => {
-  it('center + radius', () => {
+describe('圆等效', () => {
+  it('中心+半径', () => {
     expect(ir(<Circle center={[0, 0]} radius={10} />).children).toEqual(
       ir(
         <Path>
@@ -35,13 +35,13 @@ describe('Circle equivalence', () => {
     );
   });
 
-  it('center + diameter', () => {
+  it('中心+直径', () => {
     expect(ir(<Circle center={[1, 2]} diameter={8} />).children).toEqual(
       ir(<Circle center={[1, 2]} radius={4} />).children,
     );
   });
 
-  it('{ from, to } diameter endpoints', () => {
+  it('{从，到}直径端点', () => {
     expect(ir(<Circle from={[0, 0]} to={[10, 0]} />).children).toEqual(
       ir(
         <Path>
@@ -52,7 +52,7 @@ describe('Circle equivalence', () => {
     );
   });
 
-  it('{ corner1, corner2 } bbox', () => {
+  it('{ 角点 1, 角点 2 } bbox', () => {
     expect(ir(<Circle corner1={[0, 0]} corner2={[10, 4]} />).children).toEqual(
       ir(<Circle center={[5, 2]} radius={2} />).children,
     );
@@ -67,7 +67,7 @@ describe('Circle equivalence', () => {
     );
   });
 
-  it('inset / outset adjust the box before fitting', () => {
+  it('安装前插入/向外调整框', () => {
     expect(ir(<Circle corner1={[0, 0]} corner2={[10, 6]} inset={1} />).children).toEqual(
       ir(<Circle center={[5, 3]} radius={2} />).children,
     );
@@ -76,7 +76,7 @@ describe('Circle equivalence', () => {
     );
   });
 
-  it('partial circle uses circlePath with angles', () => {
+  it('部分圆使用带角度的 circlePath', () => {
     expect(ir(<Circle center={[0, 0]} radius={10} startAngle={0} sweepAngle={180} />).children).toEqual(
       ir(
         <Path>
@@ -87,7 +87,7 @@ describe('Circle equivalence', () => {
     );
   });
 
-  it('partial circle can close as sector', () => {
+  it('部分圆可以闭合为扇形', () => {
     expect(ir(<Circle center={[0, 0]} radius={10} startAngle={0} endAngle={90} closed="sector" />).children).toEqual(
       ir(
         <Path>
@@ -99,8 +99,8 @@ describe('Circle equivalence', () => {
   });
 });
 
-describe('Ellipse equivalence', () => {
-  it('center + radius object', () => {
+describe('椭圆等效', () => {
+  it('中心+半径对象', () => {
     expect(ir(<Ellipse center={[0, 0]} radius={{ x: 15, y: 10 }} />).children).toEqual(
       ir(
         <Path>
@@ -111,7 +111,7 @@ describe('Ellipse equivalence', () => {
     );
   });
 
-  it('{ corner1, corner2 } bbox', () => {
+  it('{ 角点 1, 角点 2 } bbox', () => {
     expect(ir(<Ellipse corner1={[0, 0]} corner2={[20, 10]} />).children).toEqual(
       ir(<Ellipse center={[10, 5]} radius={{ x: 10, y: 5 }} />).children,
     );
@@ -126,7 +126,7 @@ describe('Ellipse equivalence', () => {
     );
   });
 
-  it('inset / outset adjust the box before fitting', () => {
+  it('安装前插入/向外调整框', () => {
     expect(ir(<Ellipse corner1={[0, 0]} corner2={[20, 10]} inset={2} />).children).toEqual(
       ir(<Ellipse center={[10, 5]} radius={{ x: 8, y: 3 }} />).children,
     );
@@ -135,7 +135,7 @@ describe('Ellipse equivalence', () => {
     );
   });
 
-  it('partial ellipse can close as sector', () => {
+  it('部分椭圆可以闭合为扇形', () => {
     expect(
       ir(<Ellipse center={[0, 0]} radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} closed="sector" />).children,
     ).toEqual(
@@ -149,8 +149,8 @@ describe('Ellipse equivalence', () => {
   });
 });
 
-describe('Arc equivalence', () => {
-  it('center + radius + angles', () => {
+describe('弧等效', () => {
+  it('中心+半径+角度', () => {
     expect(ir(<Arc center={[0, 0]} radius={10} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
@@ -161,7 +161,7 @@ describe('Arc equivalence', () => {
     );
   });
 
-  it('ellipse arc', () => {
+  it('椭圆弧', () => {
     expect(ir(<Arc center={[0, 0]} radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
@@ -172,7 +172,7 @@ describe('Arc equivalence', () => {
     );
   });
 
-  it('close="chord" delegates to circlePath chord', () => {
+  it('close="chord" 委托给 circlePath 和弦', () => {
     expect(ir(<Arc center={[0, 0]} radius={10} startAngle={0} endAngle={90} close="chord" />).children).toEqual(
       ir(
         <Path>
@@ -183,7 +183,7 @@ describe('Arc equivalence', () => {
     );
   });
 
-  it('close="sector" on an ellipse delegates to ellipsePath sector', () => {
+  it('椭圆上的 close="sector" 委托给 ellipsePath 的扇形处理', () => {
     expect(
       ir(<Arc center={[0, 0]} radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} close="sector" />).children,
     ).toEqual(
@@ -197,8 +197,8 @@ describe('Arc equivalence', () => {
   });
 });
 
-describe('Sector equivalence', () => {
-  it('filled wedge uses circlePath sector close (center accepts any target)', () => {
+describe('扇区等效', () => {
+  it('填充楔形使用 circlePath 扇形闭合（中心接受任何目标）', () => {
     expect(ir(<Sector center={[0, 0]} radius={10} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
@@ -209,7 +209,7 @@ describe('Sector equivalence', () => {
     );
   });
 
-  it('elliptical filled wedge uses ellipsePath sector close', () => {
+  it('椭圆填充楔形采用 ellipsePath 扇形闭合', () => {
     expect(ir(<Sector center={[0, 0]} radius={{ x: 15, y: 10 }} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
@@ -220,7 +220,7 @@ describe('Sector equivalence', () => {
     );
   });
 
-  it('filled wedge accepts a node-id center', () => {
+  it('填充楔形接受节点 ID 中心', () => {
     expect(ir(<Sector center="hub" radius={10} startAngle={0} sweepAngle={90} />).children).toEqual(
       ir(
         <Path>
@@ -231,7 +231,7 @@ describe('Sector equivalence', () => {
     );
   });
 
-  it('donut sector', () => {
+  it('甜甜圈扇区', () => {
     const c: [number, number] = [0, 0];
 
     expect(ir(<Sector center={c} radius={60} innerRadius={30} startAngle={0} endAngle={90} />).children).toEqual(
@@ -248,8 +248,8 @@ describe('Sector equivalence', () => {
   });
 });
 
-describe('Rectangle equivalence', () => {
-  it('{ corner1, corner2 } pass through', () => {
+describe('矩形等效', () => {
+  it('{corner1,corner2}穿过', () => {
     expect(ir(<Rectangle corner1={[0, 0]} corner2={[10, 6]} />).children).toEqual(
       ir(
         <Path>
@@ -260,13 +260,13 @@ describe('Rectangle equivalence', () => {
     );
   });
 
-  it('{ center, width, height } normalizes to corners', () => {
+  it('{ center, width, height } 标准化为角点', () => {
     expect(ir(<Rectangle center={[5, 3]} width={10} height={6} />).children).toEqual(
       ir(<Rectangle corner1={[0, 0]} corner2={[10, 6]} />).children,
     );
   });
 
-  it('cornerRadius passes through to rectangle step', () => {
+  it('cornerRadius 穿过矩形步骤', () => {
     expect(ir(<Rectangle corner1={[0, 0]} corner2={[10, 6]} cornerRadius={6} />).children).toEqual(
       ir(
         <Path>
@@ -278,8 +278,8 @@ describe('Rectangle equivalence', () => {
   });
 });
 
-describe('Polygon equivalence', () => {
-  it('sides=4', () => {
+describe('多边形等效', () => {
+  it('边数=4', () => {
     const verts = polygonVertices([0, 0], 30, 30, 4, -90);
 
     expect(ir(<Polygon center={[0, 0]} radius={30} sides={4} />).children).toEqual(
@@ -330,8 +330,8 @@ describe('Polygon equivalence', () => {
   });
 });
 
-describe('Star equivalence', () => {
-  it('5-point star', () => {
+describe('星形等效', () => {
+  it('五角星', () => {
     const verts = starVertices([0, 0], 30, 12, 5, -90);
     const hand = ir(
       <Path>

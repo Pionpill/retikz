@@ -31,25 +31,25 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { AxesDefinition } from '@retikz/standard/presentation';
+import { axesDefinition } from '@retikz/standard/presentation';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [{ namespace: 'standard', type: 'axes', x: { extent: 80 }, y: { extent: 50 } }],
 };
-export const Example = () => <Layout ir={ir} composites={[AxesDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[axesDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { axes, AxesInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { axes, axesInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [axes({ x: { extent: 80 }, y: { extent: 50 } })] });
-const svg = renderToSvgString(input, { adapters: [AxesInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [axesInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -58,7 +58,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { AxesDefinition } from '@retikz/standard/presentation';
+import { axesDefinition } from '@retikz/standard/presentation';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -66,7 +66,7 @@ const ir: IRScene = {
   version: 1,
   children: [{ namespace: 'standard', type: 'axes', x: { extent: 80 }, y: { extent: 50 } }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [AxesDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [axesDefinition] } });
 console.log(svg);
 ```
 
@@ -139,7 +139,7 @@ console.log(svg);
   description="只有在直接读写 Axes IR、对齐其它 Core 图元或排查编译诊断时才需要理解 lowering。"
 />
 
-Axes IR 不会成为 renderer 专有图元。当前图加载 `AxesDefinition` 后，lowering 才会规范化正负范围、换算 y 方向、枚举网格与刻度，并按固定顺序组装普通 Core IR。
+Axes IR 不会成为 renderer 专有图元。当前图加载 `axesDefinition` 后，lowering 才会规范化正负范围、换算 y 方向、枚举网格与刻度，并按固定顺序组装普通 Core IR。
 
 下图只展示 Axes 自己负责的转换链。输出到达 `Core IR[]` 后，它的职责就结束了。
 
@@ -147,7 +147,7 @@ Axes IR 不会成为 renderer 专有图元。当前图加载 `AxesDefinition` �
 
 y 轴路径始终从负端走向正端；正值 `v` 映射到屏幕位置 `originY - v`，所以默认正向箭头稳定朝上。这不是新的全局坐标系，旁边的 `<Node position>` 与 `<Step to>` 仍使用 Core 的 y-down 坐标。
 
-Axes 的 `x.grid` 与 `y.grid` 只生成裁切在各自轴范围内的普通格线：前者沿 x 轴枚举并投影为竖直线，后者沿 y 轴枚举并投影为水平线。两者都复用 Path style，不依赖 `GridDefinition`；主线、边框和更完整的网格能力继续使用单独的 [Grid](/library/standard/presentation/grid)。
+Axes 的 `x.grid` 与 `y.grid` 只生成裁切在各自轴范围内的普通格线：前者沿 x 轴枚举并投影为竖直线，后者沿 y 轴枚举并投影为水平线。两者都复用 Path style，不依赖 `gridDefinition`；主线、边框和更完整的网格能力继续使用单独的 [Grid](/library/standard/presentation/grid)。
 
 未加载 definition 的手写 `IRAxes` 不会被静默解释：Core 会发出 `COMPOSITE_NOT_REGISTERED` 并跳过它。renderer 只看到 lowering 后的 `Path` 与文字 `Node`，不需要识别 Axes。
 

@@ -4,8 +4,8 @@ import { compile } from '@mdx-js/mdx';
 import remarkGfm from 'remark-gfm';
 import { describe, expect, it } from 'vitest';
 
-describe('Block public API reference', () => {
-  it('keeps bilingual public entries, row alternatives, and runtime extension contracts', async () => {
+describe('Block 公共 API 参考', () => {
+  it('保留双语公共条目、行替代项和运行时扩展契约', async () => {
     for (const lang of ['zh', 'en']) {
       const source = readFileSync(
         new URL(

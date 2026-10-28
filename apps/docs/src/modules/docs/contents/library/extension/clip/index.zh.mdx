@@ -9,7 +9,7 @@ description: 按需装配圆形、椭圆、多边形、路径和组合裁剪，�
 
 ## 接入方式
 
-从 `@retikz/extension` 按需导入 Definition，例如 `CircleClipDefinition`；也可以使用包含本页全部类型的 `ExtensionClipDefinitions`。导入不会全局注册裁剪。下例把圆形裁剪限制在当前 `Layout` 内。
+从 `@retikz/extension` 按需导入 Definition，例如 `circleClipDefinition`；也可以使用包含本页全部类型的 `extensionClipDefinitions`。导入不会全局注册裁剪。下例把圆形裁剪限制在当前 `Layout` 内。
 
 <ComponentPreview files="entry" size="sm" hideCode />
 
@@ -17,11 +17,11 @@ description: 按需装配圆形、椭圆、多边形、路径和组合裁剪，�
 <DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-import { CircleClipDefinition } from '@retikz/extension';
+import { circleClipDefinition } from '@retikz/extension';
 import { Layout, Node, Scope } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ clips: [CircleClipDefinition] }}>
+  <Layout extensions={{ clips: [circleClipDefinition] }}>
     <Scope clip={{ kind: 'circle', params: { cx: 0, cy: 0, r: 50 } }}>
       <Node layout={{ minimumSize: { width: 160, height: 120 } }} />
     </Scope>
@@ -34,7 +34,7 @@ export const Example = () => (
 
 ```tsx
 import type { IRScene } from '@retikz/core';
-import { CircleClipDefinition } from '@retikz/extension';
+import { circleClipDefinition } from '@retikz/extension';
 import { Layout } from '@retikz/react';
 
 const ir: IRScene = {
@@ -48,14 +48,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ clips: [CircleClipDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ clips: [circleClipDefinition] }} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { CircleClipDefinition } from '@retikz/extension';
+import { circleClipDefinition } from '@retikz/extension';
 import { node, renderToSvgString, scene, scope } from '@retikz/vanilla';
 
 const input = scene({
@@ -65,7 +65,7 @@ const input = scene({
     ]),
   ],
 });
-const svg = renderToSvgString(input, { compile: { clips: [CircleClipDefinition] } });
+const svg = renderToSvgString(input, { compile: { clips: [circleClipDefinition] } });
 console.log(svg);
 ```
 
@@ -74,7 +74,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { CircleClipDefinition } from '@retikz/extension';
+import { circleClipDefinition } from '@retikz/extension';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -88,7 +88,7 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { clips: [CircleClipDefinition] } });
+const svg = renderToSvgString(ir, { compile: { clips: [circleClipDefinition] } });
 console.log(svg);
 ```
 
@@ -105,13 +105,13 @@ console.log(svg);
   defaultSourceFile="circle-ellipse-clip.preview.tsx"
 />
 
-#### <ApiSourceLink label={"IRCircleClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={12}>IRCircleClip</ApiSourceLink> / <ApiSourceLink label={"IREllipseClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={14}>IREllipseClip</ApiSourceLink> / <ApiSourceLink label={"CircleClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={8}>CircleClipSchema</ApiSourceLink> / <ApiSourceLink label={"EllipseClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={18}>EllipseClipSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRCircleClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={11}>IRCircleClip</ApiSourceLink> / <ApiSourceLink label={"IREllipseClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={13}>IREllipseClip</ApiSourceLink> / <ApiSourceLink label={"CircleClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={8}>CircleClipSchema</ApiSourceLink> / <ApiSourceLink label={"EllipseClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={18}>EllipseClipSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-注入 `CircleClipDefinition`：
+注入 `circleClipDefinition`：
 
 | 字段                     | 类型       | 说明                     |
 | ------------------------ | ---------- | ------------------------ |
@@ -119,7 +119,7 @@ console.log(svg);
 | `params.cx`、`params.cy` | `number`   | 圆心坐标                 |
 | `params.r`               | `number`   | 正数半径，单位为用户坐标 |
 
-注入 `EllipseClipDefinition`：
+注入 `ellipseClipDefinition`：
 
 | 字段                     | 类型        | 说明               |
 | ------------------------ | ----------- | ------------------ |
@@ -173,13 +173,13 @@ export type IREllipseClip = ZodInfer<typeof EllipseClipSchema>;
   defaultSourceFile="polygon-clip.preview.tsx"
 />
 
-#### <ApiSourceLink label={"IRPolygonClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={16}>IRPolygonClip</ApiSourceLink> / <ApiSourceLink label={"PolygonClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={29}>PolygonClipSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPolygonClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={15}>IRPolygonClip</ApiSourceLink> / <ApiSourceLink label={"PolygonClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={29}>PolygonClipSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-注入 `PolygonClipDefinition`：
+注入 `polygonClipDefinition`：
 
 | 字段            | 类型                      | 说明                     |
 | --------------- | ------------------------- | ------------------------ |
@@ -215,13 +215,13 @@ export type IRPolygonClip = ZodInfer<typeof PolygonClipSchema>;
 
 <ComponentPreview files={['path-clip', 'path-clip.preview.tsx']} size="md" defaultSourceFile="path-clip.preview.tsx" />
 
-#### <ApiSourceLink label={"IRPathClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={18}>IRPathClip</ApiSourceLink> / <ApiSourceLink label={"PathClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={37}>PathClipSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPathClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={17}>IRPathClip</ApiSourceLink> / <ApiSourceLink label={"PathClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={37}>PathClipSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-注入 `PathClipDefinition`。命令格式可在[自定义路径](/kernel/components/path/custom-path)中查阅。
+注入 `pathClipDefinition`。命令格式可在[自定义路径](/kernel/components/path/custom-path)中查阅。
 
 | 字段               | 类型                     | 说明                         |
 | ------------------ | ------------------------ | ---------------------------- |
@@ -266,13 +266,13 @@ export type IRPathClip = ZodInfer<typeof PathClipSchema>;
   defaultSourceFile="compound-clip.preview.tsx"
 />
 
-#### <ApiSourceLink label={"IRCompoundClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={20}>IRCompoundClip</ApiSourceLink> / <ApiSourceLink label={"CompoundClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={46}>CompoundClipSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRCompoundClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={19}>IRCompoundClip</ApiSourceLink> / <ApiSourceLink label={"CompoundClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={46}>CompoundClipSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-注入 `CompoundClipDefinition`，并同时注入每个 child 对应的 Definition。几何交集可通过嵌套多个 `<Scope clip>` 实现。
+注入 `compoundClipDefinition`，并同时注入每个 child 对应的 Definition。几何交集可通过嵌套多个 `<Scope clip>` 实现。
 
 | 字段               | 类型                     | 说明                                   |
 | ------------------ | ------------------------ | -------------------------------------- |

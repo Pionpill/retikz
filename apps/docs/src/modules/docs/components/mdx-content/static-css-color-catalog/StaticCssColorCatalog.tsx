@@ -1,4 +1,4 @@
-import { parseStaticCssColor, StaticCssNamedColorHexByName } from '@retikz/foundation';
+import { parseStaticCssColor, staticCssNamedColorHexByName } from '@retikz/foundation';
 import { Search } from 'lucide-react';
 import type { FC } from 'react';
 import { useMemo, useState } from 'react';
@@ -22,7 +22,7 @@ export type StaticCssColorCatalogProps = {
   previewLabel?: string;
 };
 
-const namedColorEntries = Object.entries(StaticCssNamedColorHexByName);
+const namedColorEntries = Object.entries(staticCssNamedColorHexByName);
 
 /** 将 Foundation 的归一化 sRGB 解析结果写成浏览器可绘制的 CSS 值 */
 const cssColorFromInput = (input: string): string | null => {

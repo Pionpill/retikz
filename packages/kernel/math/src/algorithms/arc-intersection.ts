@@ -1,9 +1,9 @@
 import { DEFAULT_EPSILON } from '../constants';
-import type { ArcBoundingCandidatesInput, Position } from '../primitives';
+import type { InputArcBoundingCandidates, Position } from '../primitives';
 import { isAngleWithinArcSweep } from '../primitives';
 
 /** 射线与圆弧求交参数 */
-export type RayArcIntersectionInput = ArcBoundingCandidatesInput & {
+export type InputRayArcIntersection = InputArcBoundingCandidates & {
   /** 射线起点 */
   origin: Position;
   /** 射线方向，不要求单位化 */
@@ -27,7 +27,7 @@ export const intersectRayWithArc = ({
   startAngleDeg,
   endAngleDeg,
   tolerance = DEFAULT_EPSILON,
-}: RayArcIntersectionInput): Array<number> => {
+}: InputRayArcIntersection): Array<number> => {
   const ox = origin[0] - center[0];
   const oy = origin[1] - center[1];
   const directionX = direction[0];

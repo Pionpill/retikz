@@ -1,33 +1,31 @@
 import type { ClipDefinition, CoreDependencyProvider } from '@retikz/core';
-import { CoreProviderCapability } from '@retikz/core';
+import { ProviderCapability } from '@retikz/core';
 
 import {
-  CircleClipDefinition,
-  CompoundClipDefinition,
-  EllipseClipDefinition,
-  PathClipDefinition,
-  PolygonClipDefinition,
+  circleClipDefinition,
+  compoundClipDefinition,
+  ellipseClipDefinition,
+  pathClipDefinition,
+  polygonClipDefinition,
 } from './definitions';
 
 const clipProviderOf = (definition: ClipDefinition): CoreDependencyProvider =>
   Object.freeze({
-    key: Object.freeze({ capability: CoreProviderCapability.Clip, name: definition.kind }),
-    dependencies: Object.freeze([]),
-    datasets: Object.freeze({}),
+    key: Object.freeze({ capability: ProviderCapability.Clip, name: definition.kind }),
     makeDefinition: () => definition,
   });
 
 /** Circle Clip 的静态 Core provider */
-export const CircleClipProvider = clipProviderOf(CircleClipDefinition);
+export const circleClipProvider = clipProviderOf(circleClipDefinition);
 
 /** Ellipse Clip 的静态 Core provider */
-export const EllipseClipProvider = clipProviderOf(EllipseClipDefinition);
+export const ellipseClipProvider = clipProviderOf(ellipseClipDefinition);
 
 /** Polygon Clip 的静态 Core provider */
-export const PolygonClipProvider = clipProviderOf(PolygonClipDefinition);
+export const polygonClipProvider = clipProviderOf(polygonClipDefinition);
 
 /** Path Clip 的静态 Core provider */
-export const PathClipProvider = clipProviderOf(PathClipDefinition);
+export const pathClipProvider = clipProviderOf(pathClipDefinition);
 
 /** Compound Clip 的静态 Core provider */
-export const CompoundClipProvider = clipProviderOf(CompoundClipDefinition);
+export const compoundClipProvider = clipProviderOf(compoundClipDefinition);

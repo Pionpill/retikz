@@ -1,17 +1,17 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /** 笛卡尔默认画布：x [0,..]→[0,480]，y range [300,0]（无 axis → plot area = 整图） */
-const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
-  return lowerPlot(spec, datasets, { ...cartOpts, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...cartOpts, textMeasurer: measureLabel }).child as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
@@ -324,7 +324,7 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
     });
 
   // 错误路径：line + 离散化 color → fail-loud（离散色仅 point/bar/sector）
-  it('line + quantize color fail-loud', () => {
+  it('线条使用 quantize 颜色比例尺时明确报错', () => {
     const data = [
       { x: 0, y: 1, v: 0 },
       { x: 1, y: 3, v: 50 },
@@ -336,7 +336,7 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
     ).toThrow();
   });
 
-  it('area + threshold color fail-loud', () => {
+  it('区域+阈值颜色失败', () => {
     const data = [
       { x: 0, y: 1, v: 0 },
       { x: 1, y: 3, v: 50 },
@@ -348,7 +348,7 @@ describe('离散色 · fail-loud 守卫（contract）', () => {
     ).toThrow();
   });
 
-  it('line + quantile color fail-loud', () => {
+  it('线条使用 quantile 颜色比例尺时明确报错', () => {
     const data = [
       { x: 0, y: 1, v: 0 },
       { x: 1, y: 3, v: 50 },

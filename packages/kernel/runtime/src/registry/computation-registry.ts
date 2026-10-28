@@ -7,7 +7,7 @@ import { getRuntimeComputationDefinitionExecutor, isRuntimeComputationDefinition
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeComputationId } from '../identity';
 import { isRuntimeSourceRegistry } from './source-registry';
-import type { RuntimeSourceRegistry, RuntimeComputationRegistry, RuntimeComputationRegistryInput } from './types';
+import type { RuntimeSourceRegistry, RuntimeComputationRegistry, InputRuntimeComputationRegistry } from './types';
 
 type RuntimeComputationRegistryState = Readonly<{
   sources: RuntimeSourceRegistry;
@@ -45,7 +45,7 @@ const computationError = (
 ) => new RetikzRuntimeError({ code, phase: 'computation-registry', computation, cause });
 
 /** 对 Computation graph 执行依赖优先且稳定的拓扑排序 */
-export const sortRuntimeComputationGraph = (
+const sortRuntimeComputationGraph = (
   definitions: ReadonlyArray<RuntimeComputationToken>,
   dependenciesFor: (definition: RuntimeComputationToken) => ReadonlyArray<RuntimeComputationToken>,
 ): ReadonlyArray<RuntimeComputationToken> => {
@@ -100,7 +100,7 @@ export const sortRuntimeComputationGraph = (
  * @throws {RetikzRuntimeError} 凭证、依赖绑定、计算身份或依赖图无效时抛出
  */
 export const createRuntimeComputationRegistry = (
-  input: RuntimeComputationRegistryInput,
+  input: InputRuntimeComputationRegistry,
 ): RuntimeComputationRegistry => {
   if (!isRuntimeSourceRegistry(input.sources)) {
     throw computationError(RetikzRuntimeErrorCode.RegistryMismatch, undefined, input.sources);

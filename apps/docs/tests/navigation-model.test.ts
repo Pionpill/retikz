@@ -29,7 +29,7 @@ const sections: Array<Section> = [
   },
 ];
 
-describe('layout utils', () => {
+describe('布局实用程序', () => {
   it('编译机制入口指向原文，且不进入本地阅读顺序', () => {
     const t = ((key: string) => key) as TFunction;
     const categories = buildSidebarCategories(t, 'kernel', kernelSection);

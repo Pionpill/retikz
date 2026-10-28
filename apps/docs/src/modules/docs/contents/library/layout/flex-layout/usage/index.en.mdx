@@ -48,7 +48,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { FlexLayoutDefinition } from '@retikz/layout';
+import { flexLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -66,7 +66,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ composites: [FlexLayoutDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ composites: [flexLayoutDefinition] }} />;
 ```
 
 </DocTab>
@@ -74,7 +74,7 @@ export const Example = () => <Layout ir={ir} extensions={{ composites: [FlexLayo
 
 ```ts
 import { scene, renderToSvgString } from '@retikz/vanilla';
-import { flexLayout, FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { flexLayout, flexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 
 const input = scene({
   children: [
@@ -88,7 +88,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] }));
+console.log(renderToSvgString(input, { adapters: [flexLayoutInputEmbedAdapter] }));
 ```
 
 </DocTab>
@@ -97,7 +97,7 @@ console.log(renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] }
 ```ts
 import type { IRScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
-import { FlexLayoutDefinition } from '@retikz/layout';
+import { flexLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -115,7 +115,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { composites: [FlexLayoutDefinition] } }));
+console.log(renderToSvgString(ir, { compile: { composites: [flexLayoutDefinition] } }));
 ```
 
 </DocTab>
@@ -187,7 +187,7 @@ These properties cover this page's integration, sizing, spacing, single-line all
     {
       name: 'size',
       kind: 'property',
-      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      type: '{ x?: InputLayoutAxisSize; y?: InputLayoutAxisSize }',
       description:
         'This page uses `{ kind: "content" }` for content sizing and `{ kind: "fixed", value }` for fixed sizing. x / y are physical width and height. Nested layouts can use `{ kind: "fill" }` to accept finite parent space.',
       defaultValue: 'content / content',
@@ -231,7 +231,7 @@ These properties cover this page's integration, sizing, spacing, single-line all
     {
       name: 'children',
       kind: 'property',
-      type: 'Array<FlexLayoutItemInput>',
+      type: 'Array<InputFlexLayoutItemConfig>',
       description: 'Authored items; explicit keys must be unique within this container',
       defaultValue: '[]',
     },

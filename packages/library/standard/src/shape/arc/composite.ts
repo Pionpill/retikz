@@ -7,7 +7,7 @@ import { ArcSchema } from './schema';
 import type { IRArc } from './types';
 
 /** Arc 的 Core composite 注册项 */
-export const ArcDefinition = defineComposite({
+export const arcDefinition = defineComposite({
   namespace: 'standard',
   type: 'arc',
   schema: ArcSchema,
@@ -22,9 +22,7 @@ export const createArc = (input: ShapeProperties<IRArc>): IRArc => ({
 });
 
 /** Arc 的按需依赖贡献 */
-export const ArcProvider: CoreDependencyProvider = Object.freeze({
+export const arcProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'arc' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => ArcDefinition,
+  makeDefinition: () => arcDefinition,
 });

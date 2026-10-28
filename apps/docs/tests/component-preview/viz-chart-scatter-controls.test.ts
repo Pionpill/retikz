@@ -83,7 +83,7 @@ const canonicalDeclarationProps = (source: PreviewSourceConfig, component: unkno
   return declaration.props;
 };
 
-describe('Viz Chart scatter controls', () => {
+describe('Viz Chart Scatter 控件', () => {
   it('生育率与女性劳动参与率示例使用完整的 World Bank 2022 有效快照', () => {
     expect(WORLD_BANK_FERTILITY_WORK_YEAR).toBe(2022);
     expect(fertilityWorkData).toHaveLength(186);

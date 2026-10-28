@@ -73,7 +73,7 @@ const boxWithId = defineComposite({
   }),
 });
 
-describe('lowerComposites — happy path', () => {
+describe('lowerComposites — 正常流程', () => {
   it('register-and-compile: tier2 节点经注册 compile 回调生成成 tier1 → Scene 含 rect', () => {
     const ir: IRScene = {
       version: 1,

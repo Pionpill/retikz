@@ -117,7 +117,7 @@ describe('颜色 oklch + viewBox 分量', () => {
   });
 });
 
-describe('iteration / direction / fill', () => {
+describe('迭代/方向/填充', () => {
   it('iterations infinite + alternate 折返取值', () => {
     const spin: IRAnimationTrack = {
       property: 'rotate',

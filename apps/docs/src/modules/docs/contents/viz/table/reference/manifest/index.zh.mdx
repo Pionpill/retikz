@@ -119,10 +119,10 @@ descriptor 不是 Standard Legend IR，也不包含 placement、bounds 或最终
 
 border manifest 把最终可见 edge 与原子边冲突来源一起保存。resolved line 同时保留 contextual stroke 的字符串主色，避免在 Table 层缓存预合成颜色；Core lowering 使用该主色解析数值 stroke。以下 schema 从 resolved line 和候选 contribution 逐层组成 atom，再组成 merged edge。
 
-### ResolvedTableBorderLineSchema
+### TableBorderLineSchema
 
 <ZodSchema
-  name="ResolvedTableBorderLineSchema"
+  name="TableBorderLineSchema"
   description="完成默认值解析、可直接 lowering 为 Core Path 的 border line style。"
   descriptions={{
     color: '用于解析 contextual border paint 的字符串主色。',

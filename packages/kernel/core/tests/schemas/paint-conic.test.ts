@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { PaintSchema } from '../../src/schemas';
 
-describe('PaintSchema conicGradient', () => {
-  it('accepts stops, center and angle', () => {
+describe('PaintSchema 的 conicGradient 定义', () => {
+  it('接受停止点、中心和角度', () => {
     const spec = {
       kind: 'conicGradient' as const,
       center: [0.5, 0.5] as [number, number],
@@ -18,7 +18,7 @@ describe('PaintSchema conicGradient', () => {
     expect(PaintSchema.parse(spec)).toEqual(spec);
   });
 
-  it('rejects non-finite center and angle', () => {
+  it('拒绝非有限中心和角度', () => {
     expect(() =>
       PaintSchema.parse({
         kind: 'conicGradient',

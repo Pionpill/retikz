@@ -1,7 +1,7 @@
 import type { CompositeCompileContext, CompositeContributionResult, LayoutProposal } from '@retikz/core';
 
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
-import type { ResolveLayoutAxisSizeInput } from './geometry';
+import type { InputLayoutAxisSizeResolution } from './geometry';
 import { resolveLayoutAxisSize } from './geometry';
 
 /** 只查询当前 solver 需要的单轴槽位贡献 */
@@ -24,7 +24,7 @@ export const measureLayoutAxis = (
 
 /** 只在尺寸与内容贡献无关时调用已有尺寸求解器 */
 export const resolveKnownLayoutAxisSize = (
-  input: Omit<ResolveLayoutAxisSizeInput, 'minimumContribution' | 'naturalContribution'>,
+  input: Omit<InputLayoutAxisSizeResolution, 'minimumContribution' | 'naturalContribution'>,
 ): number | undefined => {
   if (input.policy.kind === 'content' && input.proposal.kind !== 'exact') return undefined;
   return resolveLayoutAxisSize({ ...input, minimumContribution: 0, naturalContribution: 0 }).allocationSize;
@@ -48,7 +48,7 @@ export const createLayoutContributionResult = (
 /** 尺寸规则已足够决定请求时，在同一 pipeline 内提前结束 */
 export const resolveKnownLayoutContribution = (
   context: CompositeCompileContext,
-  size: { x: ResolveLayoutAxisSizeInput['policy']; y: ResolveLayoutAxisSizeInput['policy'] },
+  size: { x: InputLayoutAxisSizeResolution['policy']; y: InputLayoutAxisSizeResolution['policy'] },
 ): CompositeContributionResult | undefined => {
   if (context.evaluation.kind !== 'contribution') return undefined;
   const axis = context.evaluation.axis;

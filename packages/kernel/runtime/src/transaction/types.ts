@@ -1,16 +1,16 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
 import type { RuntimeSourceToken, RuntimeRevision } from '../source';
 
-declare const RuntimeSourceCommandBrand: unique symbol;
+declare const runtimeSourceCommandBrand: unique symbol;
 
 /** 初始 Snapshot 的 opaque source command */
-export type RuntimeSourceInput = Readonly<{
+export type InputRuntimeSource = Readonly<{
   /** command 关联的 source token */
   source: RuntimeSourceToken;
   /** 初始输入判别字段 */
   kind: 'initial';
   /** 只允许 Runtime builder 构造 command */
-  [RuntimeSourceCommandBrand]: true;
+  [runtimeSourceCommandBrand]: true;
 }>;
 
 /** 更新 Snapshot 的 opaque source command */
@@ -20,7 +20,7 @@ export type RuntimeSourceUpdate = Readonly<{
   /** 更新输入判别字段 */
   kind: 'update';
   /** 只允许 Runtime builder 构造 command */
-  [RuntimeSourceCommandBrand]: true;
+  [runtimeSourceCommandBrand]: true;
 }>;
 
 /**

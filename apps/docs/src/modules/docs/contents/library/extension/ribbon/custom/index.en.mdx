@@ -223,7 +223,7 @@ These are the members needed to define, inject, and reference a profile. See the
     {
       name: 'defineRibbonWidthProfile',
       kind: 'function',
-      type: '<TParams extends JsonObject>(definition: RibbonWidthProfileDefinitionInput<TParams>) => RibbonWidthProfileDefinition',
+      type: '<TParams extends JsonObject>(definition: InputRibbonWidthProfileDefinition<TParams>) => RibbonWidthProfileDefinition',
       description:
         'Validate the profile name and create a runtime definition; `definition` supplies `name`, optional `paramsSchema`, and a `widthAt` function returning non-negative widths',
     },
