@@ -179,7 +179,7 @@ export type BoundaryResolution = {
  * 位置引用与路径连接所需的只读节点几何
  * @description 由编译阶段从节点布局中提取，供解析器查询节点位置、形状和连接面
  */
-export type NodeReferenceView = Readonly<{
+export type NodeReferenceGeometry = Readonly<{
   /** 节点 id */
   id?: string;
   /** 节点形状名称 */

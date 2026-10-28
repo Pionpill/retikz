@@ -1,18 +1,18 @@
 import type { Transform } from '../../contract';
-import type { BoundaryResolution, NodeBoundaryResolver, NodeReferenceView } from '../../resolve';
+import type { BoundaryResolution, NodeBoundaryResolver, NodeReferenceGeometry } from '../../resolve';
 import { boundaryKey } from '../../resolve';
 import type { PositionReferenceView, PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePositionTarget } from '../../resolve/position';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
 import type { NamespaceEntry } from '../namespace';
-import { nodeReferenceViewOf } from '../node';
+import { createNodeReferenceGeometry } from '../node';
 import type { NodeGeometryContext } from '../node';
 import { resolveAnchorRef } from '../reference';
 import type { ComposedScopeTransform } from '../transform';
 import { applyScopeTransform, inverseScopeTransform, composeScopeTransform } from '../transform';
 
 /** 把视觉 shape 绑定为默认连接面 resolution */
-const shapeBoundaryResolutionOf = (node: NodeReferenceView): BoundaryResolution => ({
+const shapeBoundaryResolutionOf = (node: NodeReferenceGeometry): BoundaryResolution => ({
   name: node.shapeName,
   definition: node.shapeDef,
   params: node.shapeParams,
@@ -21,7 +21,7 @@ const shapeBoundaryResolutionOf = (node: NodeReferenceView): BoundaryResolution 
 
 /** 绑定 NodeTarget 选择的连接面，不执行 layout geometry */
 const targetBoundaryResolutionOf = (
-  node: NodeReferenceView,
+  node: NodeReferenceGeometry,
   target: IRNodeTarget,
   resolveExplicitBoundary?: NodeBoundaryResolver,
 ): BoundaryResolution | undefined => {
@@ -66,7 +66,10 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
     const entry = input.lookupReference(id);
     return entry === undefined
       ? undefined
-      : { state: entry.state, node: nodeReferenceViewOf(entry.layout, input.geometryContext, id, entry.irPath) };
+      : {
+          state: entry.state,
+          node: createNodeReferenceGeometry(entry.layout, input.geometryContext, id, entry.irPath),
+        };
   };
 
   const toLocal = (world: IRPosition): IRPosition =>

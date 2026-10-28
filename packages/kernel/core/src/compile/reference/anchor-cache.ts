@@ -1,16 +1,16 @@
 import type { Position } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { BoundaryResolution, NodeReferenceView } from '../../resolve';
+import type { BoundaryResolution, NodeReferenceGeometry } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { Side } from '../../shared';
 import type { CompiledNodeLayout } from '../node';
 
-type AnchorLayout = CompiledNodeLayout | NodeReferenceView;
+type AnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
 
 import { boundaryKey } from '../../resolve';
 import { isAnchor } from '../../shared';
-import { anchorOf, angleBoundaryOf, nodeReferenceViewOf } from '../node';
+import { anchorOf, angleBoundaryOf, createNodeReferenceGeometry } from '../node';
 import type { NodeGeometryState } from '../node';
 import { snapshotProviderPosition } from '../scene-primitive';
 
@@ -40,7 +40,7 @@ const computeAnchor = (
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
 const computeEdgePoint = (input: AnchorLayout, side: Side, fraction: number): IRPosition => {
-  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const { computeEdgePoint: edgePoint } = layout.shapeDef;
   if (!edgePoint) {
     throw new RetikzCoreError(

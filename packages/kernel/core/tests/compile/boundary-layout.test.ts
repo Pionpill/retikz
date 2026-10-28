@@ -4,7 +4,7 @@ import {
   boundaryPointOf,
   createNodeGeometryContext,
   compileNodeResolution,
-  nodeReferenceViewOf,
+  createNodeReferenceGeometry,
 } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../src/compile/reference';
@@ -49,7 +49,7 @@ describe('CompiledNodeLayout 边界/形状', () => {
     const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
     const context = createNodeGeometryContext();
     const projected = projectLayoutWithTransform(layout, composeScopeTransform([]));
-    const reference = nodeReferenceViewOf(projected, context);
+    const reference = createNodeReferenceGeometry(projected, context);
     const first = boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout));
     expect(boundaryPointOf(reference, [100, 0], 'circle', undefined, undefined, context.get(reference))).toEqual(first);
     expect(envelope).toHaveBeenCalledTimes(1);

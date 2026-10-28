@@ -2,13 +2,13 @@ import { DEG_TO_RAD, point } from '@retikz/math';
 import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { BoundaryResolution, NodeReferenceView } from '../../resolve';
+import type { BoundaryResolution, NodeReferenceGeometry } from '../../resolve';
 import type { IRBoundary } from '../../schemas';
 import type { NodeGeometryState } from './geometry-context';
-import { nodeReferenceViewOf } from './reference';
+import { createNodeReferenceGeometry } from './reference';
 import type { CompiledNodeLayout } from './types';
 
-type NodeAnchorLayout = CompiledNodeLayout | NodeReferenceView;
+type NodeAnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
 
 import { boundaryKey } from '../../resolve';
 import { CenterAnchor, isAnchor } from '../../shared';
@@ -44,7 +44,7 @@ const inflateRect = (r: CenteredBox, m: BoundsInsets): CenteredBox => {
 export const outerRectOf = (layout: CompiledNodeLayout): CenteredBox =>
   inflateRect(layout.geometry.rect, layout.geometry.margin);
 
-const shapeBoundaryResolutionOf = (layout: NodeReferenceView): BoundaryResolution => ({
+const shapeBoundaryResolutionOf = (layout: NodeReferenceGeometry): BoundaryResolution => ({
   name: layout.shapeName,
   definition: layout.shapeDef,
   params: layout.shapeParams,
@@ -58,7 +58,7 @@ const resolveBoundaryOf = (
   warn?: (code: string, message: string) => void,
   state?: NodeGeometryState,
 ) => {
-  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const resolution =
     boundaryResolution ??
     (boundary === undefined || boundary === 'shape'
@@ -92,7 +92,7 @@ export const boundaryPointOf = (
   warn?: (code: string, message: string) => void,
   state?: NodeGeometryState,
 ): Position => {
-  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
   const raw = def.computeBoundaryPoint(inflateRect(rect, layout.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
@@ -107,7 +107,7 @@ export const clipNodePolyline = (
   warn?: (code: string, message: string) => void,
   state?: NodeGeometryState,
 ): Array<Position> => {
-  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
   const outer = inflateRect(rect, layout.margin);
   const center: Position = [outer.x, outer.y];
@@ -148,7 +148,7 @@ export const anchorOf = (
   boundaryResolution?: BoundaryResolution,
   state?: NodeGeometryState,
 ): Position => {
-  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
       const own = snapshotOptionalProviderPosition(
@@ -214,7 +214,7 @@ export const angleBoundaryOf = (
   boundaryResolution?: BoundaryResolution,
   state?: NodeGeometryState,
 ): Position => {
-  const layout = 'geometry' in input ? nodeReferenceViewOf(input) : input;
+  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);

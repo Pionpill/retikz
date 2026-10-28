@@ -1,5 +1,5 @@
 import type { Transform } from '../../contract';
-import type { NodeReferenceView, PathTargetView, TargetResolution } from '../../resolve';
+import type { NodeReferenceGeometry, PathTargetView, TargetResolution } from '../../resolve';
 import type { PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePositionTarget } from '../../resolve/position';
 import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
@@ -61,7 +61,7 @@ export const targetKeyOf = (target: IRTarget): string => {
 /** 从 resolving 结果构造只读 target view；该 view 不再访问 NamespaceStack 或 provider registry */
 export const pathTargetViewOf = (
   targets: ReadonlyMap<string, TargetResolution>,
-  warn?: (code: string, message: string, node?: NodeReferenceView) => void,
+  warn?: (code: string, message: string, node?: NodeReferenceGeometry) => void,
   geometryContext: NodeGeometryContext = createNodeGeometryContext(),
   resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform = composeScopeTransform,
 ): PathTargetView => {

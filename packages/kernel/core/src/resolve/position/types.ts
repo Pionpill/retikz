@@ -7,7 +7,7 @@ import type {
   IRAtPosition,
   IROffsetPosition,
 } from '../../schemas';
-import type { BoundaryResolution, NodeReferenceView } from '../node';
+import type { BoundaryResolution, NodeReferenceGeometry } from '../node';
 
 /** 引用的布局状态：已完成布局，或暂用作用域占位几何 */
 type PositionReferenceState = 'resolved' | 'scope-placeholder';
@@ -17,7 +17,7 @@ export type PositionReferenceView = Readonly<{
   /** 引用当前是否已经完成布局 */
   state: PositionReferenceState;
   /** 由编译阶段提供的只读节点几何 */
-  node: NodeReferenceView;
+  node: NodeReferenceGeometry;
 }>;
 
 /** 位置解析所需的引用查询与坐标转换能力 */

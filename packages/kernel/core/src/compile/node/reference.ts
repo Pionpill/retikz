@@ -1,15 +1,15 @@
-import type { NodeReferenceView } from '../../resolve';
+import type { NodeReferenceGeometry } from '../../resolve';
 import type { NodeGeometryContext } from './geometry-context';
 import type { CompiledNodeLayout } from './types';
 
-/** 将布局结果投影为 resolver 消费的节点引用视图 */
-export const nodeReferenceViewOf = (
+/** 从节点布局提取供引用解析使用的几何信息 */
+export const createNodeReferenceGeometry = (
   layout: CompiledNodeLayout,
   context?: NodeGeometryContext,
   id?: string,
   irPath?: string,
-): NodeReferenceView => {
-  const reference: NodeReferenceView = {
+): NodeReferenceGeometry => {
+  const reference: NodeReferenceGeometry = {
     id,
     shapeName: layout.shape.name,
     shapeDef: layout.shape.definition,
