@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import ExternalExecution from '../../src/modules/docs/contents/viz/data/transform/computation/external-execution';
 
-describe('Data external execution documentation', () => {
+describe('Data 外部执行文档', () => {
   beforeEach(() => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
@@ -17,7 +17,7 @@ describe('Data external execution documentation', () => {
     vi.restoreAllMocks();
   });
 
-  it('mode and order controls preserve stable sorting without counter-driven reexecution', async () => {
+  it('模式和顺序控制保持稳定的排序，无需计数器驱动的重新执行', async () => {
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);

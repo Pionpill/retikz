@@ -12,12 +12,12 @@ import type {
 } from '../../schemas';
 import { GraphRelationStructureTokenOverridesSchema } from '../../schemas';
 import { mergeGraphDefaults } from '../theme';
-import { matchesGraphThemeSelector, resolveGraphTheme, validateGraphThemeSelector } from '../theme';
+import { matchesGraphThemeSelector, resolveGraphTheme, assertGraphThemeSelector } from '../theme';
 import type {
   CanonicalRelation,
   CanonicalRelationPredicate,
-  EffectiveRelationAppearance,
-  EffectiveRelationStructure,
+  MergedRelationAppearance,
+  MergedRelationStructure,
   RelationAppearanceResolveContext,
   RelationGraphLayerResolveContext,
   RelationResolveContext,
@@ -107,9 +107,9 @@ export const resolveRelation = (source: IRGraphRelation, context: RelationResolv
 };
 
 const applyStructure = (
-  structure: EffectiveRelationStructure,
+  structure: MergedRelationStructure,
   override: IRGraphRelationStructureTokenOverrides | undefined,
-): EffectiveRelationStructure => ({
+): MergedRelationStructure => ({
   sourceMarker: override?.sourceMarker ?? structure.sourceMarker,
   targetMarker: override?.targetMarker ?? structure.targetMarker,
   dashPattern: override?.dashPattern ?? structure.dashPattern,
@@ -121,7 +121,22 @@ const resolvePredicateStructure = (relation: CanonicalRelation): IRGraphRelation
   if (predicate === undefined || callback === undefined) return undefined;
 
   try {
-    return GraphRelationStructureTokenOverridesSchema.parse(callback(predicate.params));
+    const structure = callback(predicate.params);
+    if (Object.keys(structure).length === 0) {
+      throw new RetikzGraphError({
+        code: RetikzGraphErrorCode.ResolveInvalid,
+        message: 'Relation structure overrides require at least one field.',
+        details: { capability: 'relation-predicate', key: predicate.definition.name },
+      });
+    }
+
+    // 回调保证对象结构；标记尺寸、开放名称与虚线值域仍需在计算结果产生后检查
+    const fields = GraphRelationStructureTokenOverridesSchema.shape;
+    if (structure.sourceMarker !== undefined) fields.sourceMarker.parse(structure.sourceMarker);
+    if (structure.targetMarker !== undefined) fields.targetMarker.parse(structure.targetMarker);
+    if (structure.dashPattern !== undefined) fields.dashPattern.parse(structure.dashPattern);
+
+    return structure;
   } catch (cause) {
     throw new RetikzGraphError({
       code: RetikzGraphErrorCode.DefinitionCallbackFailed,
@@ -144,7 +159,7 @@ const resolveRelationThemeStructure = (
   for (const rule of graphTheme.rules) {
     if (rule.type !== 'relation') continue;
 
-    validateGraphThemeSelector(rule.selector, selectorContext);
+    assertGraphThemeSelector(rule.selector, selectorContext);
     if (matchesGraphThemeSelector(rule.selector, subject) && rule.structure !== undefined) {
       structure = rule.structure;
     }
@@ -157,7 +172,7 @@ const resolveRelationThemeStructure = (
 export const resolveRelationStructure = (
   relation: CanonicalRelation,
   context: RelationStructureResolveContext,
-): EffectiveRelationStructure => {
+): MergedRelationStructure => {
   const roleStructure = relation.roleDefinition.directions[relation.effectiveDirection];
   if (roleStructure === undefined) {
     throw new RetikzGraphError({
@@ -176,9 +191,9 @@ export const resolveRelationStructure = (
 };
 
 const mergeRelationAppearance = (
-  current: EffectiveRelationAppearance | undefined,
+  current: MergedRelationAppearance | undefined,
   override: IRGraphRelationDefaults | undefined,
-): EffectiveRelationAppearance =>
+): MergedRelationAppearance =>
   mergeGraphDefaults(
     current === undefined ? undefined : { relation: current },
     override === undefined ? undefined : { relation: override },
@@ -213,10 +228,10 @@ const selectorContextOf = (context: RelationResolveContext) => ({
 const resolveRelationAuthorAppearance = (
   relation: CanonicalRelation,
   context: RelationGraphLayerResolveContext,
-): EffectiveRelationAppearance => {
+): MergedRelationAppearance => {
   const selectorContext = selectorContextOf(context);
   const subject = relationSubject(relation);
-  let appearance: EffectiveRelationAppearance = {};
+  let appearance: MergedRelationAppearance = {};
 
   for (const layer of context.layers) {
     appearance = mergeRelationAppearance(appearance, layer.defaults?.relation);
@@ -224,7 +239,7 @@ const resolveRelationAuthorAppearance = (
     for (const rule of layer.rules ?? []) {
       if (rule.type !== 'relation') continue;
 
-      validateGraphThemeSelector(rule.selector, selectorContext);
+      assertGraphThemeSelector(rule.selector, selectorContext);
       if (matchesGraphThemeSelector(rule.selector, subject)) {
         appearance = mergeRelationAppearance(appearance, relationRuleAppearance(rule));
       }
@@ -246,7 +261,7 @@ const resolveRelationAuthorStructure = (
     for (const rule of layer.rules ?? []) {
       if (rule.type !== 'relation') continue;
 
-      validateGraphThemeSelector(rule.selector, selectorContext);
+      assertGraphThemeSelector(rule.selector, selectorContext);
       if (matchesGraphThemeSelector(rule.selector, subject) && rule.structure !== undefined) {
         structure = rule.structure;
       }
@@ -311,9 +326,9 @@ export const projectRelationGraphLayers = (
 };
 
 const resolveRelationStroke = (
-  appearance: EffectiveRelationAppearance,
+  appearance: MergedRelationAppearance,
   sourceAppearance: IRGraphRelationDefaults,
-): EffectiveRelationAppearance => {
+): MergedRelationAppearance => {
   const sourceStroke = sourceAppearance.style?.stroke;
   const stroke = appearance.style?.stroke;
   const color = appearance.style?.color;
@@ -328,16 +343,16 @@ const resolveRelationStroke = (
 export const resolveRelationAppearance = (
   relation: CanonicalRelation,
   context: RelationAppearanceResolveContext,
-): EffectiveRelationAppearance => {
+): MergedRelationAppearance => {
   const graphTheme = resolveGraphTheme(context.theme, context.graphThemeDefinitions);
   const selectorContext = selectorContextOf(context);
   const subject = relationSubject(relation);
-  let appearance: EffectiveRelationAppearance = graphTheme.defaults.relation ?? {};
+  let appearance: MergedRelationAppearance = graphTheme.defaults.relation ?? {};
 
   for (const rule of graphTheme.rules) {
     if (rule.type !== 'relation') continue;
 
-    validateGraphThemeSelector(rule.selector, selectorContext);
+    assertGraphThemeSelector(rule.selector, selectorContext);
     if (matchesGraphThemeSelector(rule.selector, subject)) {
       appearance = mergeRelationAppearance(appearance, relationRuleAppearance(rule));
     }

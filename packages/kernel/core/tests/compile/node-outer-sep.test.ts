@@ -1,22 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import type { NodeLayout } from '../../src/compile/node';
-import { boxInsets } from '../../src/compile/node';
-import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
+import type { CompiledNodeLayout } from '../../src/compile/node';
+import { resolveAnchor, resolveAnchorRef } from '../../src/compile/reference';
 import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import type { IRScene } from '../../src/schemas';
 import { NodeSchema } from '../../src/schemas';
 import { line, move } from '../helpers/path-command-factory';
 
-/** 最简 rectangle NodeLayout（rect 40×30、半轴 20×15、中心原点），margin 可调 */
-const mkLayout = (margin: number, rotate = 0): NodeLayout => ({
+/** 最简 rectangle CompiledNodeLayout（rect 40×30、半轴 20×15、中心原点），margin 可调 */
+const mkLayout = (margin: number, rotate = 0): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: 0, y: 0, width: 40, height: 30, rotate },
     contentCenter: [0, 0],
-    margin: boxInsets(margin),
+    margin: { top: margin, right: margin, bottom: margin, left: margin },
     contentSize: { width: 0, height: 0 },
   },
   boundary: {
@@ -157,8 +156,8 @@ describe('margin：不外扩护栏 + 校验', () => {
   });
 
   it('edgePoint-no-margin：{ side, fraction } 恒走视觉 shape，不受 margin 影响', () => {
-    const e0 = resolveEdgePoint(mkLayout(0), 'top', 0.5);
-    const e10 = resolveEdgePoint(mkLayout(10), 'top', 0.5);
+    const e0 = resolveAnchorRef(mkLayout(0), { side: 'top', fraction: 0.5 });
+    const e10 = resolveAnchorRef(mkLayout(10), { side: 'top', fraction: 0.5 });
 
     expect(e10).toEqual(e0); // 视觉 top 边中点 = [0,-15]
     expect(e0).toEqual([0, -15]);

@@ -5,7 +5,7 @@ import { createMathJaxLowerTex } from '../../src';
 
 const TIMEOUT = 20_000;
 
-describe('[mathjax-golden] math profile lowering', () => {
+describe('[mathjax-golden] 数学配置下沉', () => {
   it(
     '九个 extension 的代表输入完整降解为受支持 drawable',
     async () => {

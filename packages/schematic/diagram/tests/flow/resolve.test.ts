@@ -42,8 +42,8 @@ const singleEntityFlow = {
   children: ['entity'],
 } as const;
 
-describe('Flow Source resolve', () => {
-  it('projects root Graph rules after Flow defaults and item overrides', () => {
+describe('Flow Source 解析', () => {
+  it('在 Flow 默认值和项目覆盖之后投影根 Graph 规则', () => {
     const graph = {
       entityKinds: [
         defineEntityKind({ kind: 'docs.logic.important', role: 'activity', description: 'Important logic content' }),
@@ -89,7 +89,7 @@ describe('Flow Source resolve', () => {
     expect(resolved.relations[1]?.graph.style).toMatchObject({ color: 'darkorange', strokeWidth: 2 });
   });
 
-  it('projects shared Flow Entity and Relation groups through the Graph categorical color fallback', () => {
+  it('项目通过 Graph 分类颜色回退共享 Flow Entity 和 Relation 组', () => {
     const resolved = resolve({
       namespace: 'diagram',
       type: 'flow',
@@ -121,7 +121,7 @@ describe('Flow Source resolve', () => {
     ]);
   });
 
-  it('rebuilds one recursive Canonical tree from owner children order and catalog paths', () => {
+  it('根据所属模块的 children 顺序及目录路径重建唯一递归 Canonical 树', () => {
     const resolved = resolve({
       namespace: 'diagram',
       type: 'flow',
@@ -156,7 +156,7 @@ describe('Flow Source resolve', () => {
     expect(resolved.relations[0]).toMatchObject({ path: ['relations', 0] });
   });
 
-  it('does not let catalog declaration order affect the reconstructed tree', () => {
+  it('不允许目录声明顺序影响重建的树', () => {
     const source = {
       namespace: 'diagram',
       type: 'flow',
@@ -183,7 +183,7 @@ describe('Flow Source resolve', () => {
     expect(elementIds(resolve(reordered))).toEqual(['layout', 'first', 'second']);
   });
 
-  it('projects structured Entity text and status unchanged to Graph', () => {
+  it('项目结构化 Entity 文本和状态不变为 Graph', () => {
     const text = ['Frontend form', { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } }];
     const resolved = resolve({
       namespace: 'diagram',
@@ -215,7 +215,7 @@ describe('Flow Source resolve', () => {
     expect(resolved.relations[0]?.graph.status).toBe('warning');
   });
 
-  it('reports the later cross-catalog duplicate id with its declaration path', () => {
+  it('报告后来的跨目录重复 ID 及其声明路径', () => {
     expectDiagramError(
       {
         namespace: 'diagram',
@@ -245,7 +245,7 @@ describe('Flow Source resolve', () => {
       },
       path: ['layouts', 0, 'children', 0],
     },
-  ])('reports $name at the authored children path', ({ source, path }) => {
+  ])('在编写的子路径中报告 $name', ({ source, path }) => {
     expectDiagramError(source, RetikzDiagramErrorCode.FlowReferenceNotFound, {
       path,
       relatedIds: ['missing'],
@@ -299,11 +299,11 @@ describe('Flow Source resolve', () => {
       path: ['layouts', 0, 'children', 0],
       reason: 'cycle',
     },
-  ])('rejects $name without repairing containment', ({ source, path, reason }) => {
+  ])('拒绝 $name 而不修复收容', ({ source, path, reason }) => {
     expectDiagramError(source, RetikzDiagramErrorCode.FlowContainmentInvalid, { path, reason });
   });
 
-  it.each(['source', 'target'] as const)('reports an unresolved %s endpoint at the exact field path', endpoint => {
+  it.each(['source', 'target'] as const)('报告确切字段路径处未解析的 %s 端点', endpoint => {
     expectDiagramError(
       {
         ...singleEntityFlow,
@@ -319,7 +319,7 @@ describe('Flow Source resolve', () => {
     );
   });
 
-  it.each(['source', 'target'] as const)('rejects a Layout as relation %s', endpoint => {
+  it.each(['source', 'target'] as const)('拒绝 Layout 作为关系 %s', endpoint => {
     expectDiagramError(
       {
         ...singleEntityFlow,
@@ -341,7 +341,7 @@ describe('Flow Source resolve', () => {
     );
   });
 
-  it('keeps visible Group endpoints, self-loops, parallel relations, cycles and cross-Group references legal', () => {
+  it('保持可见的 Group 端点、自循环、并行关系、循环和交叉 Group 引用合法', () => {
     const resolved = resolve({
       namespace: 'diagram',
       type: 'flow',

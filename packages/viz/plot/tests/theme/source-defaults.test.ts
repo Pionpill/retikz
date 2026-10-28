@@ -37,8 +37,8 @@ const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<Sce
     primitive.type === 'group' ? [primitive, ...flattenPrimitives(primitive.children)] : [primitive],
   );
 
-describe('Plot Source defaults and rules', () => {
-  it('accepts Source-shaped defaultPlot and ordered plotRules with JSON-safe round-trip', () => {
+describe('Plot Source 默认值和规则', () => {
+  it('接受 Source 形状的 defaultPlot 并订购 plotRules，带 JSON 安全往返', () => {
     const source = basePlot({
       defaultPlot: {
         plotArea: { fill: '#f8fafc', border: { stroke: '#334155', strokeWidth: 1.5, drawOpacity: 0.8 } },
@@ -71,7 +71,7 @@ describe('Plot Source defaults and rules', () => {
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
   });
 
-  it('rejects invalid plot area border fields', () => {
+  it('拒绝无效的绘图区域边框字段', () => {
     for (const border of [{ strokeWidth: -1 }, { drawOpacity: 2 }, { unknown: true }]) {
       const result = PlotSchema.safeParse(basePlot({ defaultPlot: { plotArea: { border } } }));
 
@@ -84,7 +84,7 @@ describe('Plot Source defaults and rules', () => {
     }
   });
 
-  it('rejects the removed token and native theme roots', () => {
+  it('拒绝删除的令牌和本机主题根', () => {
     const legacyFields: ReadonlyArray<readonly [string, unknown]> = [
       ['plotThemeTokens', {}],
       ['plotThemeTokenRules', []],
@@ -106,7 +106,7 @@ describe('Plot Source defaults and rules', () => {
     }
   });
 
-  it('does not create Axis, Legend, grid, or mark objects from defaults and rules', () => {
+  it('不根据默认值和规则创建轴、Legend、网格或标记对象', () => {
     const baseline = compilePlot(basePlot());
     const themed = compilePlot(
       basePlot({
@@ -128,7 +128,7 @@ describe('Plot Source defaults and rules', () => {
     expect(themedPrimitives.filter(primitive => primitive.type === 'ellipse')).toHaveLength(rows.length);
   });
 
-  it('rejects sector palettes while retaining the interval polar geometry contract', () => {
+  it('拒绝扇形调色板，同时保留间隔极坐标几何契约', () => {
     const result = PlotSchema.safeParse(basePlot({ defaultPlot: { palette: { sector: ['#ef4444', '#3b82f6'] } } }));
 
     expect(result.success).toBe(false);

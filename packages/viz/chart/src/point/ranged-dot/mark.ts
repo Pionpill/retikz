@@ -28,23 +28,13 @@ const endpointGlyphOf = (properties: IRRangedDotPointProperties): JsonObject => 
 const rangeStyleOf = (properties: IRRangedDotRangeProperties): JsonObject => {
   const style: JsonObject = {};
 
-  for (const name of ['stroke', 'strokeWidth', 'shadow', 'blendMode'] as const) {
+  for (const name of ['stroke', 'strokeWidth', 'lineCap', 'lineJoin', 'dashPattern', 'shadow', 'blendMode'] as const) {
     if (properties[name] !== undefined) style[name] = properties[name];
   }
 
   const opacity = markOpacityOf(properties);
   if (opacity !== undefined) style.opacity = opacity;
   return style;
-};
-
-const rangePathOf = (properties: IRRangedDotRangeProperties): JsonObject | undefined => {
-  const options: JsonObject = {};
-
-  for (const name of ['lineCap', 'lineJoin', 'dashPattern'] as const) {
-    if (properties[name] !== undefined) options[name] = properties[name];
-  }
-
-  return Object.keys(options).length === 0 ? undefined : { options: { style: options } };
 };
 
 const fieldMappingOf = (
@@ -61,8 +51,11 @@ const fieldMappingOf = (
     : undefined;
 };
 
-/** 把一个 Ranged Dot semantic mark 解析为原子 projected Relation */
-export const resolveRangedDotMark = (encodings: JsonObject, properties: IRRangedDotChartProperties): IRPlotMark => {
+/** 将范围点语义图元展开为连接路径、起点和终点 */
+export const resolveRangedDotMarkGroup = (
+  encodings: JsonObject,
+  properties: IRRangedDotChartProperties,
+): readonly [IRPlotMark, IRPlotMark, IRPlotMark] => {
   const category = requiredFieldOf(encodings, 'category', ['recipe', 'encodings', 'category']);
   const start = requiredFieldOf(encodings, 'start', ['recipe', 'encodings', 'start']);
   const end = requiredFieldOf(encodings, 'end', ['recipe', 'encodings', 'end']);
@@ -72,22 +65,27 @@ export const resolveRangedDotMark = (encodings: JsonObject, properties: IRRanged
   const range = properties.range ?? {};
   const color = fieldMappingOf(encodings.color, '__chart.ranged-dot.scale.color');
   const style = rangeStyleOf(range);
-  const path = rangePathOf(range);
+  const from = { x: { field: start }, y: { field: category } };
+  const to = { x: { field: end }, y: { field: category } };
+  const autoPadding = properties.autoPadding ?? 'max-radius';
 
-  return {
-    type: BuiltinPlotMark.Relation,
-    encodings: {
-      source: { position: { x: { field: start }, y: { field: category } } },
-      target: { position: { x: { field: end }, y: { field: category } } },
-      ...(color === undefined ? {} : { color }),
+  return [
+    {
+      type: BuiltinPlotMark.Path,
+      encodings: { from, to, ...(color === undefined ? {} : { color }) },
+      properties: style,
     },
-    properties: {
-      autoPadding: properties.autoPadding ?? 'max-radius',
-      ...style,
-      geometry: { kind: 'path', ...path },
-      endpoints: { source, target },
+    {
+      type: BuiltinPlotMark.Point,
+      encodings: { position: from, ...(color === undefined || Object.hasOwn(source, 'color') ? {} : { color }) },
+      properties: { ...source, autoPadding },
     },
-  };
+    {
+      type: BuiltinPlotMark.Point,
+      encodings: { position: to, ...(color === undefined || Object.hasOwn(target, 'color') ? {} : { color }) },
+      properties: { ...target, autoPadding },
+    },
+  ];
 };
 
 const mergedPropertiesOf = (context: ChartMarkResolveContext, source: IRRangedDotMark): IRRangedDotChartProperties => {
@@ -113,18 +111,16 @@ const mergedPropertiesOf = (context: ChartMarkResolveContext, source: IRRangedDo
 };
 
 /** 范围点标记的作者定义 */
-export const RangedDotMarkDefinition: ChartMarkDefinition = defineChartMark({
+export const rangedDotMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'ranged-dot',
   schema: RangedDotChartMarkSchema,
   resolve: context => {
     const source = context.source as IRRangedDotMark;
     return {
-      marks: [
-        resolveRangedDotMark(
-          { ...context.inherited.encodings, ...(source.encodings ?? {}) },
-          mergedPropertiesOf(context, source),
-        ),
-      ],
+      marks: resolveRangedDotMarkGroup(
+        { ...context.inherited.encodings, ...(source.encodings ?? {}) },
+        mergedPropertiesOf(context, source),
+      ),
     };
   },
 });

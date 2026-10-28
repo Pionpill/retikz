@@ -1,8 +1,10 @@
 import type { IRArcStep, IRAxisLineTarget, IRPath, IRStep, IRTarget } from '@retikz/core';
-import { AxisLineTargetSchema, parseTargetSugar, parseWay } from '@retikz/core';
+import { AxisLineTargetSchema } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
+import { parseTargetSugar } from './target';
 import type { InputAxisLineTarget, InputPath, InputStep, InputTarget } from './types';
+import { parseWay } from './way';
 
 /** 将方向简写转换为端点箭头对象，供 Kernel 与领域路径作者入口复用 */
 export const normalizePathArrow = (arrow: InputPath['arrow']): IRPath['arrow'] =>

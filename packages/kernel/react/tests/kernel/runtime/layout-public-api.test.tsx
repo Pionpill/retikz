@@ -7,8 +7,8 @@ import { literal } from 'zod';
 import type { LayoutExtensions, LayoutProps, LayoutRuntimeOptions } from '../../../src';
 import { Layout, LayoutRuntimeMode, Node } from '../../../src';
 
-describe('Layout public API', () => {
-  it('exports Layout and its public option types from package entry', () => {
+describe('Layout 公共 API', () => {
+  it('从包条目导出 Layout 及其公共选项类型', () => {
     const runtime: LayoutRuntimeOptions = {};
     const props: LayoutProps = { width: 120, height: 80, runtime };
     const svg = renderToStaticMarkup(

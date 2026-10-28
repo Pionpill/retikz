@@ -119,7 +119,7 @@ const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 's
   };
 };
 
-describe('Viz Chart Regression controls', () => {
+describe('Viz Chart Regression 控件', () => {
   it('保留可追溯且未筛行的 UCI Iris 150 行静态快照', () => {
     const data = requiredModule(dataModules, modulePath('data.ts'));
 

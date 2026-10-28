@@ -15,7 +15,7 @@ const rec = (over: Partial<RunRecord>): RunRecord => ({
   ...over,
 });
 
-describe('aggregate', () => {
+describe('聚合', () => {
   it('总览：两层通过率 = 通过数 / 总数', () => {
     const r = aggregate([
       rec({ zodOk: true, compileOk: true }),

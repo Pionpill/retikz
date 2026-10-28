@@ -80,21 +80,21 @@ const circularCap = (
 };
 
 /** 官方平直端帽 */
-export const ButtRibbonCapDefinition = defineRibbonCap({
+export const buttRibbonCapDefinition = defineRibbonCap({
   name: 'butt',
   paramsSchema: strictObject({}),
   resolve: context => straightCap(context, 0),
 });
 
 /** 官方方形端帽 */
-export const SquareRibbonCapDefinition = defineRibbonCap({
+export const squareRibbonCapDefinition = defineRibbonCap({
   name: 'square',
   paramsSchema: strictObject({}),
   resolve: context => straightCap(context, context.width / 2),
 });
 
 /** 官方半圆端帽 */
-export const RoundRibbonCapDefinition = defineRibbonCap({
+export const roundRibbonCapDefinition = defineRibbonCap({
   name: 'round',
   paramsSchema: strictObject({}),
   resolve: context =>
@@ -102,7 +102,7 @@ export const RoundRibbonCapDefinition = defineRibbonCap({
 });
 
 /** 官方显式圆弧端帽 */
-export const ArcRibbonCapDefinition = defineRibbonCap({
+export const arcRibbonCapDefinition = defineRibbonCap({
   name: 'arc',
   paramsSchema: RibbonArcCapSchema,
   resolve: context =>
@@ -115,9 +115,9 @@ export const ArcRibbonCapDefinition = defineRibbonCap({
 });
 
 /** 官方端帽定义集合 */
-export const ExtensionRibbonCapDefinitions: ReadonlyArray<RibbonCapDefinition> = [
-  ButtRibbonCapDefinition,
-  SquareRibbonCapDefinition,
-  RoundRibbonCapDefinition,
-  ArcRibbonCapDefinition,
+export const extensionRibbonCapDefinitions: ReadonlyArray<RibbonCapDefinition> = [
+  buttRibbonCapDefinition,
+  squareRibbonCapDefinition,
+  roundRibbonCapDefinition,
+  arcRibbonCapDefinition,
 ];

@@ -9,7 +9,7 @@ All clip specs use `{ kind, params }`: `kind` selects the definition and the req
 
 ## Using this topic
 
-Import a Definition such as `CircleClipDefinition` from `@retikz/extension`, or use `ExtensionClipDefinitions` for the complete family. Importing does not register clips globally.
+Import a Definition such as `circleClipDefinition` from `@retikz/extension`, or use `extensionClipDefinitions` for the complete family. Importing does not register clips globally.
 
 <ComponentPreview files="entry" size="sm" hideCode />
 
@@ -19,11 +19,11 @@ The four forms below clip the same node to a circle. React uses `Layout.extensio
 <DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-import { CircleClipDefinition } from '@retikz/extension';
+import { circleClipDefinition } from '@retikz/extension';
 import { Layout, Node, Scope } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ clips: [CircleClipDefinition] }}>
+  <Layout extensions={{ clips: [circleClipDefinition] }}>
     <Scope clip={{ kind: 'circle', params: { cx: 0, cy: 0, r: 50 } }}>
       <Node layout={{ minimumSize: { width: 160, height: 120 } }} />
     </Scope>
@@ -36,7 +36,7 @@ export const Example = () => (
 
 ```tsx
 import type { IRScene } from '@retikz/core';
-import { CircleClipDefinition } from '@retikz/extension';
+import { circleClipDefinition } from '@retikz/extension';
 import { Layout } from '@retikz/react';
 
 const ir: IRScene = {
@@ -50,14 +50,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ clips: [CircleClipDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ clips: [circleClipDefinition] }} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { CircleClipDefinition } from '@retikz/extension';
+import { circleClipDefinition } from '@retikz/extension';
 import { node, renderToSvgString, scene, scope } from '@retikz/vanilla';
 
 const input = scene({
@@ -67,7 +67,7 @@ const input = scene({
     ]),
   ],
 });
-const svg = renderToSvgString(input, { compile: { clips: [CircleClipDefinition] } });
+const svg = renderToSvgString(input, { compile: { clips: [circleClipDefinition] } });
 console.log(svg);
 ```
 
@@ -76,7 +76,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { CircleClipDefinition } from '@retikz/extension';
+import { circleClipDefinition } from '@retikz/extension';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -90,7 +90,7 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { clips: [CircleClipDefinition] } });
+const svg = renderToSvgString(ir, { compile: { clips: [circleClipDefinition] } });
 console.log(svg);
 ```
 
@@ -107,13 +107,13 @@ console.log(svg);
   defaultSourceFile="circle-ellipse-clip.preview.tsx"
 />
 
-#### <ApiSourceLink label={"IRCircleClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={12}>IRCircleClip</ApiSourceLink> / <ApiSourceLink label={"IREllipseClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={14}>IREllipseClip</ApiSourceLink> / <ApiSourceLink label={"CircleClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={8}>CircleClipSchema</ApiSourceLink> / <ApiSourceLink label={"EllipseClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={18}>EllipseClipSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRCircleClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={11}>IRCircleClip</ApiSourceLink> / <ApiSourceLink label={"IREllipseClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={13}>IREllipseClip</ApiSourceLink> / <ApiSourceLink label={"CircleClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={8}>CircleClipSchema</ApiSourceLink> / <ApiSourceLink label={"EllipseClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={18}>EllipseClipSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-Inject `CircleClipDefinition`:
+Inject `circleClipDefinition`:
 
 | Field                    | Type       | Description                   |
 | ------------------------ | ---------- | ----------------------------- |
@@ -121,7 +121,7 @@ Inject `CircleClipDefinition`:
 | `params.cx`, `params.cy` | `number`   | Center coordinates            |
 | `params.r`               | `number`   | Positive radius in user units |
 
-Inject `EllipseClipDefinition`:
+Inject `ellipseClipDefinition`:
 
 | Field                    | Type        | Description                            |
 | ------------------------ | ----------- | -------------------------------------- |
@@ -163,13 +163,13 @@ The dashed bounds show the original content. Controls change the radius of the f
   defaultSourceFile="polygon-clip.preview.tsx"
 />
 
-#### <ApiSourceLink label={"IRPolygonClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={16}>IRPolygonClip</ApiSourceLink> / <ApiSourceLink label={"PolygonClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={29}>PolygonClipSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPolygonClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={15}>IRPolygonClip</ApiSourceLink> / <ApiSourceLink label={"PolygonClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={29}>PolygonClipSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-Inject `PolygonClipDefinition`:
+Inject `polygonClipDefinition`:
 
 | Field           | Type                      | Description                     |
 | --------------- | ------------------------- | ------------------------------- |
@@ -202,13 +202,13 @@ The demo fixes `kind` to `polygon`; its three point controls directly change `pa
 
 <ComponentPreview files={['path-clip', 'path-clip.preview.tsx']} size="md" defaultSourceFile="path-clip.preview.tsx" />
 
-#### <ApiSourceLink label={"IRPathClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={18}>IRPathClip</ApiSourceLink> / <ApiSourceLink label={"PathClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={37}>PathClipSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRPathClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={17}>IRPathClip</ApiSourceLink> / <ApiSourceLink label={"PathClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={37}>PathClipSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-Inject `PathClipDefinition`. See [Custom Paths](/kernel/components/path/custom-path) for command authoring.
+Inject `pathClipDefinition`. See [Custom Paths](/kernel/components/path/custom-path) for command authoring.
 
 | Field              | Type                     | Description                      |
 | ------------------ | ------------------------ | -------------------------------- |
@@ -246,13 +246,13 @@ The demo keeps its command structure and starts with `evenodd`; controls change 
   defaultSourceFile="compound-clip.preview.tsx"
 />
 
-#### <ApiSourceLink label={"IRCompoundClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={20}>IRCompoundClip</ApiSourceLink> / <ApiSourceLink label={"CompoundClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={46}>CompoundClipSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRCompoundClip"} path={"packages/library/extension/src/clip/types.ts"} startLine={19}>IRCompoundClip</ApiSourceLink> / <ApiSourceLink label={"CompoundClipSchema"} path={"packages/library/extension/src/clip/schema.ts"} startLine={46}>CompoundClipSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-Inject `CompoundClipDefinition` and the Definitions of its children. Nest `<Scope clip>` elements when you need geometric intersections.
+Inject `compoundClipDefinition` and the Definitions of its children. Nest `<Scope clip>` elements when you need geometric intersections.
 
 | Field              | Type                     | Description                               |
 | ------------------ | ------------------------ | ----------------------------------------- |

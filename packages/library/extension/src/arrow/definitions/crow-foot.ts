@@ -2,17 +2,17 @@ import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
 import { BuiltinExtensionArrowName } from '../constants';
-import { openStrokePath } from './_utils';
+import { buildOpenStrokePath } from './marker-path';
 
 /** 可选 CrowFoot 箭头 Definition */
-export const CrowFootArrowDefinition = defineArrow({
+export const crowFootArrowDefinition = defineArrow({
   name: BuiltinExtensionArrowName.CrowFoot,
   hollow: true,
   backX: 1,
   lineContactX: 1,
   tipX: 9,
   emit: context => [
-    openStrokePath(context, [
+    buildOpenStrokePath(context, [
       { from: [1, 5], to: [9, 1] },
       { from: [1, 5], to: [9, 5] },
       { from: [1, 5], to: [9, 9] },
@@ -21,9 +21,7 @@ export const CrowFootArrowDefinition = defineArrow({
 });
 
 /** CrowFoot 箭头的静态 Core provider */
-export const CrowFootArrowProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'arrow', name: CrowFootArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => CrowFootArrowDefinition,
+export const crowFootArrowProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'arrow', name: crowFootArrowDefinition.name }),
+  makeDefinition: () => crowFootArrowDefinition,
 });

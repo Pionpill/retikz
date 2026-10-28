@@ -123,7 +123,7 @@ This source excerpt shows the core data structure, omitting diagnostics, branch 
 export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
 
 export type NamespaceEntry = {
-  layout: NodeLayout;
+  layout: CompiledNodeLayout;
   state: NamespaceEntryState;
 };
 
@@ -134,7 +134,7 @@ export class NamespaceStack {
 }
 ```
 
-The outer `Array` records scope levels: `frames[0]` is the root, and the last item is the top frame. Each `Map` maps an element id to a `NamespaceEntry`. Its `layout` holds the geometry needed for references, while `state` distinguishes a resolved layout from a Scope placeholder. Despite its name, `NodeLayout` also represents reference geometry for Coordinates and Scopes.
+The outer `Array` records scope levels: `frames[0]` is the root, and the last item is the top frame. Each `Map` maps an element id to a `NamespaceEntry`. Its `layout` holds the geometry needed for references, while `state` distinguishes a resolved layout from a Scope placeholder. Despite its name, `CompiledNodeLayout` also represents reference geometry for Coordinates and Scopes.
 
 The constructor creates the root frame with `[new Map()]`. Here, `readonly` prevents reassignment of the `frames` field; it does not freeze the array or its Maps. Entering a frame still calls `frames.push(new Map())`, and registration writes to the top Map.
 
@@ -341,7 +341,7 @@ This diagram follows the lifecycle of a Scope with an `id`. The main chain runs 
 
 <ComponentPreview files="coordinate-implementation" size="xxxl" hideCode type="flow" />
 
-Start with entry and finalization in `compileScopeChild`, then follow `createPositionResolveContext` into `resolvePosition` / `resolvePositionTargetWorld`. Ordinary nodes go through `compileResolvedNode`, followed by projection and registration. Scope computes its envelope and final transforms after child traversal, fills deferred paths, and assembles group output.
+Start with entry and finalization in `compileScopeChild`, then follow `createPositionResolveContext` into `resolvePosition` / `resolvePositionTargetWorld`. Ordinary nodes go through `compileNodeResolution`, followed by projection and registration. Scope computes its envelope and final transforms after child traversal, fills deferred paths, and assembles group output.
 
 The overview's positioning and layout step, followed by world reference registration, runs per child. Scope finalization runs once per Scope. Position resolvers return geometry; compilation traversal owns reference visibility, registration timing, and lifecycle.
 

@@ -2,7 +2,7 @@ import type {
   DataFieldTypeMap,
   DataTransformPreparation,
   DataTransformResult,
-  DataTransformStageInput,
+  InputDataTransformStage,
   IRDataTransformDeclaration,
   IRDataExecution,
 } from '@retikz/data';
@@ -20,7 +20,7 @@ import {
   SOURCE_INDEX,
   SOURCE_INDICES,
   tagSourceIndex,
-  validateBoundData,
+  assertBoundData,
 } from '@retikz/data';
 
 import type { PlotDataPreparation, PlotDataPreparationOptions, PreparedPlotData } from '../../contract';
@@ -30,7 +30,7 @@ import { resolvePlotDataExecution } from '../../resolve';
 import { resolveComposition, resolveFacetPanels } from '../../resolve/composition';
 import type { IRPlot, IRPlotMark } from '../../schemas';
 import { preparePlotRegistries, prepareRows } from './data';
-import type { LowerPlotsOptions } from './types';
+import type { PlotsLoweringOptions } from './types';
 
 /** 读取内置图元的局部 Data 变换声明 */
 export const plotMarkTransformsOf = (mark: IRPlotMark): Array<IRDataTransformDeclaration> => mark.transforms ?? [];
@@ -42,7 +42,7 @@ export const plotMarkTransformsOf = (mark: IRPlotMark): Array<IRDataTransformDec
 export const preparePlotData = async <TSource = never>(
   spec: IRPlot,
   request: PlotDataPreparationOptions<TSource>,
-  options: LowerPlotsOptions = {},
+  options: PlotsLoweringOptions = {},
 ): Promise<PlotDataPreparation> => {
   const reference = spec.data.reference;
   if (!Object.hasOwn(request.dataBindings, reference))
@@ -53,13 +53,13 @@ export const preparePlotData = async <TSource = never>(
     options.provenance === true || options.datumProvenance === true || options.datumIdField !== undefined;
   const registries = preparePlotRegistries(options);
   assertFieldOrders(spec.data.model, registries.fieldOrderRegistry);
-  let input: DataTransformStageInput<TSource>;
+  let input: InputDataTransformStage<TSource>;
   if (binding.kind === 'rows') {
     const rows = provenance ? tagSourceIndex(binding.rows) : binding.rows;
     const prepared = prepareRows(spec, { [reference]: rows }, options, rows, registries);
     if (options.invalid === 'error') assertAllValuesValid(prepared.normalized, prepared.fieldTypeMap);
     if (options.validateData)
-      validateBoundData(
+      assertBoundData(
         prepared.normalized,
         prepared.fieldTypeMap,
         typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100,
@@ -102,7 +102,7 @@ export const preparePlotData = async <TSource = never>(
 
         if (options.invalid === 'error') assertAllValuesValid(view.rows, fieldTypeMap);
         if (options.validateData)
-          validateBoundData(
+          assertBoundData(
             view.rows,
             fieldTypeMap,
             typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100,
@@ -195,7 +195,7 @@ export const preparePlotData = async <TSource = never>(
       const run = async (
         scope: string,
         prepared: Extract<DataTransformPreparation<TSource>, { kind: 'ready' }>,
-        actual: DataTransformStageInput<TSource>,
+        actual: InputDataTransformStage<TSource>,
       ) => {
         try {
           const result = await prepared.bind(actual).execute();

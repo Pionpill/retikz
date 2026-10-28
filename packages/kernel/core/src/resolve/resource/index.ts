@@ -3,7 +3,7 @@ export * from './paint';
 export type {
   ClipResolution,
   PaintResolution,
-  PaintResolutionInput,
+  InputPaintResolution,
   PatternResolution,
   PatternStyleResolution,
 } from './types';

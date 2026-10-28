@@ -7,8 +7,8 @@ import { PlotSchema } from '../../../src/schemas/plot';
 
 const densityOperation = (operation: unknown) => TransformSchema.parse(operation);
 
-describe('density transform behavior (contract)', () => {
-  it('reports input and output fields for strict model collection', () => {
+describe('密度变换行为（契约）', () => {
+  it('报告输入和输出字段以进行严格的模型收集', () => {
     const fields = new Set<string>();
     const derivedOutputs = new Set<string>();
 
@@ -31,7 +31,7 @@ describe('density transform behavior (contract)', () => {
     expect([...derivedOutputs].sort()).toEqual(['density', 'densityX']);
   });
 
-  it('strict model accepts density output fields as derived fields', () => {
+  it('严格模型接受密度输出字段作为派生字段', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

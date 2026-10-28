@@ -1,8 +1,8 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
@@ -23,9 +23,9 @@ const HEIGHT = 300;
 const expandOf = (
   spec: IRPlot,
   datasets: Datasets,
-  options: LowerPlotsOptions = { layout: { width: WIDTH, height: HEIGHT } },
+  options: PlotsLoweringOptions = { layout: { width: WIDTH, height: HEIGHT } },
 ): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 /** 收集 scope 树内所有 node */
@@ -376,7 +376,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
   });
 });
 
-describe('contract schema accept/reject', () => {
+describe('契约 schema 接受/拒绝', () => {
   it('text-channel-both-reject：text 通道同时设 field 与 value → refine 拒', () => {
     expect(() => textSpec({ encodings: { text: { field: 'label', value: 'x' } } })).toThrow();
   });

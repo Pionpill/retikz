@@ -64,8 +64,8 @@ const ordinaryChildren = (value: unknown): Array<IRChild> => {
   return value;
 };
 
-describe('Layout inspect output', () => {
-  it('lowers Flex, Grid, and Overlay artifacts to ordinary Core children', () => {
+describe('Layout 检查输出', () => {
+  it('将 Flex、Grid 和 Overlay 产物下沉为普通 Core 子项', () => {
     const flexArtifact: FlexLayoutArtifact = {
       kind: 'flex',
       container,

@@ -36,8 +36,8 @@ const mainItem = (
   marginEnd: options.marginEnd ?? 0,
 });
 
-describe('shared Flex engine', () => {
-  it('resolves minimum and natural main profiles with margins and gaps', () => {
+describe('共享 Flex 引擎', () => {
+  it('解决带有边距和间隙的最小和自然的主轮廓', () => {
     const items = [
       mainItem('item-0', 20, { min: 10, marginStart: 2, marginEnd: 3 }),
       mainItem('item-1', 10, { min: 15, marginStart: 1, marginEnd: 2 }),
@@ -46,7 +46,7 @@ describe('shared Flex engine', () => {
     expect(resolveFlexLineMainProfile(items, [0, 1], 5)).toEqual({ minimum: 38, natural: 48 });
   });
 
-  it('aggregates wrapped line profiles with max main and gapped cross extents', () => {
+  it('聚合具有最大主线和间隙交叉范围的缠绕线型材', () => {
     const lines = [
       { minimum: 10, natural: 20 },
       { minimum: 30, natural: 25 },
@@ -56,7 +56,7 @@ describe('shared Flex engine', () => {
     expect(resolveFlexLinesCrossProfile(lines, 5)).toEqual({ minimum: 45, natural: 50 });
   });
 
-  it('forms authored-order lines without creating an empty oversized line', () => {
+  it('按显式顺序形成行且不创建超大的空行', () => {
     const items = [mainItem('item-0', 80), mainItem('item-1', 30), mainItem('item-2', 30)] as const;
 
     expect(formFlexLines(items, { wrap: FlexLayoutWrap.Wrap, availableMainSize: 60, gap: 5 })).toEqual([[0], [1], [2]]);
@@ -72,7 +72,7 @@ describe('shared Flex engine', () => {
     expect(fittingItems.map(item => item.sourceIndex)).toEqual([0, 1, 2]);
   });
 
-  it('resolves grow, shrink, max and remaining space with the same numeric contract', () => {
+  it('使用相同的数字契约解决增长、收缩、最大和剩余空间', () => {
     expect(
       resolveFlexLineMainSizes(
         [mainItem('item-0', 20, { grow: 1, max: 30 }), mainItem('item-1', 20, { grow: 3 })],
@@ -92,7 +92,7 @@ describe('shared Flex engine', () => {
     ).toEqual({ values: [10, 10], remaining: 20 });
   });
 
-  it('resolves distribution without inventing space-* gaps for negative remaining space', () => {
+  it('解决分配问题，而无需为负剩余空间发明 space-* 间隙', () => {
     expect(resolveFlexSpaceDistribution(LayoutDistribution.Center, 20, 2)).toEqual({ leading: 10, between: 0 });
     expect(resolveFlexSpaceDistribution(LayoutDistribution.SpaceBetween, 20, 2)).toEqual({ leading: 0, between: 20 });
     expect(resolveFlexSpaceDistribution(LayoutDistribution.SpaceAround, 20, 2)).toEqual({ leading: 5, between: 10 });
@@ -109,7 +109,7 @@ describe('shared Flex engine', () => {
     });
   });
 
-  it('keeps margin and gap overflow in the remaining-space result', () => {
+  it('在剩余空间结果中保留边距和间隙溢出', () => {
     const items = [
       mainItem('item-0', 10, { min: 10, marginStart: 20, marginEnd: 20 }),
       mainItem('item-1', 10, { min: 10, marginStart: 10, marginEnd: 10 }),
@@ -118,7 +118,7 @@ describe('shared Flex engine', () => {
     expect(resolveFlexLineMainSizes(items, 40, 5)).toEqual({ values: [10, 10], remaining: -45 });
   });
 
-  it('computes cross-line size and baseline targets from contribution-only inputs', () => {
+  it('根据仅贡献输入计算跨线大小和基线目标', () => {
     const metrics = resolveFlexLineCrossMetrics([
       {
         slotSize: 10,
@@ -138,7 +138,7 @@ describe('shared Flex engine', () => {
     expect(metrics).toEqual({ size: 15, firstTarget: 8 });
   });
 
-  it('places cross slots with start, center, end and baseline alignment', () => {
+  it('放置十字槽，起始、中心、结束和基线对齐', () => {
     const line = { crossStart: 10, finalCrossSize: 30, firstTarget: 18, lastTarget: 32 } as const;
 
     expect(resolveFlexItemCrossSlotStart(line, 8, { start: 2, end: 3 }, LayoutAlignment.Start, 0)).toBe(12);
@@ -148,7 +148,7 @@ describe('shared Flex engine', () => {
     expect(resolveFlexItemCrossSlotStart(line, 8, { start: 2, end: 3 }, LayoutAlignment.LastBaseline, 6)).toBe(36);
   });
 
-  it('distributes cross lines with stretch and keeps start ordering stable', () => {
+  it('以拉伸方式分布交叉线并保持起始顺序稳定', () => {
     expect(resolveFlexLineDistribution(LayoutDistribution.Stretch, 10, 2)).toEqual({
       leading: 0,
       between: 0,

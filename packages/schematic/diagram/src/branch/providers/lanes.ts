@@ -4,7 +4,7 @@ import type { BranchLayoutOutput } from '../contract';
 import { defineBranchLayout } from '../contract';
 
 /** 保持主线、共享节点与稳定推进的内置轨道布局 */
-export const LanesBranchLayoutDefinition = defineBranchLayout({
+export const lanesBranchLayoutDefinition = defineBranchLayout({
   name: 'lanes',
   description: 'Stable topological progression with shared nodes and a continuous main branch.',
   layout: input => {

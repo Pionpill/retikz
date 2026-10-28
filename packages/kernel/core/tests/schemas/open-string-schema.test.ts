@@ -25,8 +25,8 @@ const expectOpenStringSchema = (schema: ZodType, values: ReadonlyArray<string>):
   });
 };
 
-describe('Core registry-backed open string schemas', () => {
-  it('exposes built-in shape vocabularies without closing custom names', () => {
+describe('Core 注册表支持的开放字符串 schema', () => {
+  it('公开内置形状词汇表而不关闭自定义名称', () => {
     expectOpenStringSchema(ShapeNameSchema, Object.values(BuiltinShape));
     expectOpenStringSchema(ArrowShapeSchema, Object.values(BuiltinArrowShape));
     expectOpenStringSchema(PatternShapeNameSchema, Object.values(BuiltinPatternShape));
@@ -37,7 +37,7 @@ describe('Core registry-backed open string schemas', () => {
     expect(() => ShapeNameSchema.parse('   ')).toThrow();
   });
 
-  it('uses open built-in hints in nested provider-backed fields', () => {
+  it('在嵌套提供者支持的字段中使用开放的内置提示', () => {
     expect(BoundarySchema.parse('custom.boundary')).toBe('custom.boundary');
     expect(() => EasingSchema.parse('custom.easing')).toThrow();
     expect(AnchorRefSchema.parse('custom.anchor')).toBe('custom.anchor');

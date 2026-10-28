@@ -30,7 +30,7 @@ describe('<ApiSourceLink>', () => {
     act(() => {
       root.render(
         <ApiSourceLink label="createLowerTex" path="packages/kernel/tex/src/lower/lower-tex.ts" startLine={24}>
-          把同步 SVG engine 适配为 Core LowerTex
+          把同步 SVG engine 适配为 Core TexLowerer
         </ApiSourceLink>,
       );
     });

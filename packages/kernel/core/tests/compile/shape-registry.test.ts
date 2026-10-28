@@ -21,7 +21,7 @@ const radialShape = (): ShapeDefinition =>
   defineShape({
     name: 'hexagon',
     paramsSchema: strictObject({}),
-    computeCircumscribedHalfAxes: (hw, hh) => {
+    computeCircumscribedGeometry: (hw, hh) => {
       const r = Math.hypot(hw, hh);
       return { halfWidth: r, halfHeight: r };
     },
@@ -52,7 +52,7 @@ const chipShape = (): ShapeDefinition =>
   defineShape({
     name: 'chip',
     paramsSchema: strictObject({}),
-    computeCircumscribedHalfAxes: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+    computeCircumscribedGeometry: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
     computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
     resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
     *emit(rect): Iterable<ScenePrimitive> {
@@ -87,8 +87,50 @@ const chipShape = (): ShapeDefinition =>
     },
   });
 
-describe('Shape registry — injection (happy path)', () => {
-  it('inject_custom_shape_compiles: shapes:{hexagon} + node.shape=hexagon → emits custom prim', () => {
+describe('形状注册表 - 注入（快乐路径）', () => {
+  it('固定宽度折行后使用与最终内容尺寸一致的包围偏移', () => {
+    const rectangle = BUILTIN_SHAPES.get('rectangle')!;
+    const shape = defineShape({
+      name: 'contentOffset',
+      paramsSchema: strictObject({}),
+      computeCircumscribedGeometry: (halfWidth, halfHeight) => ({
+        halfWidth,
+        halfHeight,
+        offset: [halfWidth, halfHeight],
+      }),
+      computeBoundaryPoint: rectangle.computeBoundaryPoint,
+      resolveAnchor: rectangle.resolveAnchor,
+      emit: rectangle.emit,
+    });
+    const result = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            position: [10, 20],
+            shape: 'contentOffset',
+            text: 'aa aa aa',
+            layout: { width: 40, padding: 0, margin: 0, lineHeight: 10 },
+            style: { font: { size: 10 } },
+          },
+        ],
+      },
+      {
+        shapes: [shape],
+        measureText: text => ({ width: text.length * 10, height: 10, ascent: 8, descent: 2 }),
+      },
+    );
+    const rect = findByType(result.scene.primitives, 'rect');
+    expect(rect).toBeDefined();
+    expect(rect!.x + rect!.width / 2).toBe(20);
+    expect(rect!.y).toBe(20);
+    expect(rect!.width).toBe(40);
+    expect(rect!.height).toBeGreaterThan(10);
+  });
+
+  it('注入 hexagon 自定义形状后编译产生自定义图元', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -99,7 +141,7 @@ describe('Shape registry — injection (happy path)', () => {
     expect(findByType(scene.primitives, 'ellipse')).toBeDefined();
   });
 
-  it('numeric_angle_generic_for_custom: a custom shape with only boundaryPoint gets `.30` for free', () => {
+  it('仅实现 boundaryPoint 的自定义形状也支持 `.30` 数值角度锚点', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -121,7 +163,7 @@ describe('Shape registry — injection (happy path)', () => {
     if (linePath?.type === 'path') expect(linePath.commands[0]).toEqual({ kind: 'move', to: [9.8, 5.66] });
   });
 
-  it('shape_emits_multiple_primitives: emit yielding body + 2 pins → all prims in Scene', () => {
+  it('形状 emit 返回主体和两个 pin 时所有图元均进入 Scene', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -164,8 +206,8 @@ describe('Shape registry — injection (happy path)', () => {
   });
 });
 
-describe('Shape registry — boundary', () => {
-  it('empty_shapes_option_equals_baseline: shapes:{} deep-equals no options', () => {
+describe('形状注册表 - 边界', () => {
+  it('空 shapes 配置与未提供选项的基线深度相等', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -185,7 +227,7 @@ describe('Shape registry — boundary', () => {
     expect(compileToScene(ir, { shapes: [] }).scene).toEqual(compileToScene(ir).scene);
   });
 
-  it('default_rectangle_when_shape_absent: no shape → RectPrimitive', () => {
+  it('未指定形状时默认生成 RectPrimitive', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -195,7 +237,7 @@ describe('Shape registry — boundary', () => {
     expect(findByType(compileToScene(ir).scene.primitives, 'rect')).toBeDefined();
   });
 
-  it('synthetic_layouts_have_rectangle_shapedef: coordinate + scope.id resolve via rectangle geometry', () => {
+  it('Coordinate 和带 id 的 Scope 通过矩形几何解析合成布局', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -263,8 +305,8 @@ describe('Shape registry — boundary', () => {
   });
 });
 
-describe('Shape registry — error path', () => {
-  it('unknown_shape_throws_with_list: unregistered shape → throw with sorted available names', () => {
+describe('形状注册表 - 错误路径', () => {
+  it('未注册形状报错时列出排序后的可用名称', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -278,16 +320,16 @@ describe('Shape registry — error path', () => {
     expect(() => compileToScene(ir).scene).toThrow(/ellipse, polygon, rectangle/);
   });
 
-  it('unknown_shape_string_in_schema_passes_validation: schema accepts any non-blank string', () => {
+  it('schema 接受非空白字符串形式的未知形状名', () => {
     expect(NodeSchema.safeParse({ type: 'node', shape: 'cloud', position: [0, 0] }).success).toBe(true);
     expect(NodeSchema.safeParse({ type: 'node', shape: '', position: [0, 0] }).success).toBe(false);
   });
 
-  it('custom_shape_params_error_contains_provider_and_ir_path', () => {
+  it('自定义形状参数错误包含提供者和 ir 路径', () => {
     const strictShape = defineShape({
       name: 'scaledBox',
       paramsSchema: strictObject({ scale: number().positive() }),
-      computeCircumscribedHalfAxes: (hw, hh, params) => ({
+      computeCircumscribedGeometry: (hw, hh, params) => ({
         halfWidth: hw * params.scale,
         halfHeight: hh * params.scale,
       }),
@@ -359,8 +401,8 @@ describe('Shape registry — error path', () => {
   });
 });
 
-describe('Shape registry — interaction', () => {
-  it('duplicate_builtin_shape_rejected: override rectangle → duplicate error', () => {
+describe('形状注册表——交互', () => {
+  it('覆盖内置 rectangle 时报告重复定义错误', () => {
     const ovalRect: ShapeDefinition = {
       ...BUILTIN_SHAPES.get('rectangle')!,
       name: 'ovalRect',
@@ -388,7 +430,7 @@ describe('Shape registry — interaction', () => {
     );
   });
 
-  it('duplicate_builtin_shape_rejected_in_prod: duplicate error still fires in production', () => {
+  it('生产环境仍拒绝重复的内置形状定义', () => {
     const prev = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
 
@@ -410,7 +452,7 @@ describe('Shape registry — interaction', () => {
     }
   });
 
-  it('diamond_rotate_via_outer_group: rotated diamond → axis-aligned path under a rotate group', () => {
+  it('旋转菱形通过外层旋转分组包裹轴对齐路径', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -423,7 +465,7 @@ describe('Shape registry — interaction', () => {
     expect(group?.children.some(c => c.type === 'path')).toBe(true);
   });
 
-  it('injected_shape_with_margin: margin inflates the rect passed to boundaryPoint', () => {
+  it('自定义形状的 margin 扩大传给 boundaryPoint 的矩形', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

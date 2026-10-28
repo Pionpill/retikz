@@ -108,14 +108,14 @@ const pointSpec = (transform: IRPlot['transform']): IRPlot =>
     marks: [{ type: 'point', encodings: { position: { x: { field: 'x2' }, y: { field: 'y' } } } }],
   });
 
-describe('transform registry (contract)', () => {
-  it('builtin_registry_contains_all_transform_kinds', () => {
+describe('转换注册表（契约）', () => {
+  it('内置注册表包含所有转换类型', () => {
     const registry = resolveTransformRegistry();
 
     expect([...registry.keys()].sort()).toEqual(Object.values(BuiltinDataTransform).sort());
   });
 
-  it('publishes schedules for field-bindable plot transforms', () => {
+  it('发布可现场绑定绘图转换的时间表', () => {
     const registry = resolveTransformRegistry();
 
     expect(registry.get(BuiltinDataTransform.Stack)?.schedule).toEqual({
@@ -146,7 +146,7 @@ describe('transform registry (contract)', () => {
     expect(registry.get(BuiltinDataTransform.Density)?.schedule).toBeUndefined();
   });
 
-  it('define_transform_preserves_schema_and_extracts_kind', () => {
+  it('定义变换时保留 schema 并提取 kind', () => {
     expect(extractTransformKind(doubleDefinition.schema)).toBe('double');
     expect(doubleDefinition.schema.parse({ kind: 'double', params: { field: 'x', as: 'x2' } })).toEqual({
       kind: 'double',
@@ -157,7 +157,7 @@ describe('transform registry (contract)', () => {
     });
   });
 
-  it('duplicate_custom_or_builtin_registration_throws', () => {
+  it('重复自定义或内置注册抛出', () => {
     expect(() => resolveTransformRegistry([doubleDefinition, doubleDefinition])).toThrow(
       /duplicate transform registration/i,
     );
@@ -171,7 +171,7 @@ describe('transform registry (contract)', () => {
     expect(() => resolveTransformRegistry([builtinCollision])).toThrow(/duplicate transform registration/i);
   });
 
-  it('malformed_registration_schema_throws', () => {
+  it('格式错误的注册 schema 抛出', () => {
     const missingLiteralKind: AnyTransformDefinition = {
       schema: object({ kind: string(), params: object({}) }),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
@@ -181,7 +181,7 @@ describe('transform registry (contract)', () => {
     expect(() => resolveTransformRegistry([missingLiteralKind])).toThrow(/literal/i);
   });
 
-  it('custom_transform_apply_uses_same_registry_pipeline', () => {
+  it('自定义转换应用使用相同的注册表管线', () => {
     const registry = resolveTransformRegistry([doubleDefinition]);
     const rows = applyTransforms([{ x: 2, y: 5 }], [{ kind: 'double', params: { field: 'x', as: 'x2' } }], {
       registry,
@@ -191,14 +191,14 @@ describe('transform registry (contract)', () => {
     expect(rows).toEqual([{ x: 2, y: 5, x2: 4 }]);
   });
 
-  it('input_and_output_fields_feed_source_field_collection', () => {
+  it('输入及输出字段参与源字段收集', () => {
     const spec = pointSpec([{ operation: { kind: 'double', params: { field: 'x', as: 'x2' } } }]);
     const fields = collectSourceFields(spec, resolveTransformRegistry([doubleDefinition]));
 
     expect([...fields].sort()).toEqual(['x', 'y']);
   });
 
-  it('unknown_or_invalid_custom_operation_throws_at_lowering', () => {
+  it('未知或无效的自定义操作在下沉时抛出', () => {
     const spec = pointSpec([{ operation: { kind: 'double', params: { field: 'x' } } }]);
 
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] })).toThrow();
@@ -209,13 +209,13 @@ describe('transform registry (contract)', () => {
     ).toThrow(/not registered/i);
   });
 
-  it('custom_output_fields_strict_model_passes_when_registered', () => {
+  it('注册自定义输出字段后严格模型校验通过', () => {
     const spec = pointSpec([{ operation: { kind: 'double', params: { field: 'x', as: 'x2' } } }]);
 
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] })).not.toThrow();
   });
 
-  it('custom_output_fields_strict_model_rejects_when_omitted', () => {
+  it('未注册自定义输出字段时严格模型校验拒绝', () => {
     const missingOutputDefinition = defineTransform({
       kind: 'double',
       paramsSchema: doubleDefinition.schema.shape.params,
@@ -227,7 +227,7 @@ describe('transform registry (contract)', () => {
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] }, [missingOutputDefinition])).toThrow(/x2/);
   });
 
-  it('custom_group_provenance_tracks_source_indices', () => {
+  it('自定义组来源跟踪源索引', () => {
     const registry = resolveTransformRegistry([groupSumDefinition]);
     const rows = applyTransforms(
       tagSourceIndex([
@@ -247,7 +247,7 @@ describe('transform registry (contract)', () => {
     expect(readSourceIndices(rows[1])).toEqual([2]);
   });
 
-  it('custom_then_builtin_chain_uses_one_registry', () => {
+  it('自定义然后内置链使用一个注册表', () => {
     const registry = resolveTransformRegistry([doubleDefinition]);
     const rows = applyTransforms(
       [{ x: 2 }, { x: 1 }],

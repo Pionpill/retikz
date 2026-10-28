@@ -5,7 +5,7 @@ import { resolveAxes } from '../../../src/presentation/axes/resolve';
 import { fullScopeProps } from '../presentation/scope-props';
 
 describe('AxesSchema', () => {
-  it('resolves default-dependent label and lattice checks without modifying typed factory source', () => {
+  it('解决默认相关标签和点阵检查，无需修改类型化工厂源', () => {
     const source = createAxes({ x: { extent: 20, label: false }, y: { extent: 20 } });
 
     expect(source.x).toEqual({ extent: 20, label: false });
@@ -36,7 +36,7 @@ describe('AxesSchema', () => {
     expect(() => resolveAxes(invalidLabel)).toThrow(/emitted tick/);
   });
 
-  it('reuses the complete Core Scope authored surface', () => {
+  it('重用完整的 Core Scope 编写的曲面', () => {
     const parsed = AxesSchema.parse({
       namespace: 'standard',
       type: 'axes',
@@ -49,7 +49,7 @@ describe('AxesSchema', () => {
     expect(AxesSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('keeps source sparse and resolves origin and per-axis defaults', () => {
+  it('保持源稀疏并解析原点和每轴默认值', () => {
     const parsed = AxesSchema.parse({
       namespace: 'standard',
       type: 'axes',
@@ -71,7 +71,7 @@ describe('AxesSchema', () => {
     expect(AxesSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('accepts independent axis, grid, tick-source, and static-label configurations', () => {
+  it('接受独立轴、网格、刻度源和静态标签配置', () => {
     const parsed = AxesSchema.parse({
       namespace: 'standard',
       type: 'axes',
@@ -117,7 +117,7 @@ describe('AxesSchema', () => {
     expect(parsed.origin.label).toMatchObject({ text: 'O', offset: 5 });
   });
 
-  it('defaults tick segments to both sides of the axis with a six-unit endpoint gap', () => {
+  it('默认刻度线段位于轴两侧，具有六个单位的端点间隙', () => {
     const parsed = AxesSchema.parse({
       namespace: 'standard',
       type: 'axes',
@@ -134,7 +134,7 @@ describe('AxesSchema', () => {
     expect(resolveAxes(parsed).x).toMatchObject({ ticks: { side: 'both', endpointGap: 6, length: 6 } });
   });
 
-  it('accepts a zero endpoint gap and rejects negative gaps', () => {
+  it('接受零端点间隙并拒绝负间隙', () => {
     const zeroGap = AxesSchema.safeParse({
       namespace: 'standard',
       type: 'axes',
@@ -154,7 +154,7 @@ describe('AxesSchema', () => {
     if (!negativeGap.success) expect(negativeGap.error.issues[0]?.path).toEqual(['x', 'ticks', 'endpointGap']);
   });
 
-  it('parses axis-local grid offsets and Core-compatible arrow details', () => {
+  it('解析轴局部网格偏移和 Core 兼容的箭头详细信息', () => {
     const parsed = AxesSchema.parse({
       namespace: 'standard',
       type: 'axes',
@@ -190,7 +190,7 @@ describe('AxesSchema', () => {
     expect(AxesSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('defaults an axis grid offset and rejects invalid arrow details', () => {
+  it('默认轴网格偏移并拒绝无效的箭头细节', () => {
     const parsed = AxesSchema.parse({
       namespace: 'standard',
       type: 'axes',
@@ -212,7 +212,7 @@ describe('AxesSchema', () => {
       expect(invalidArrow.error.issues[0]?.path).toEqual(['x', 'line', 'arrowDetail', 'scale']);
   });
 
-  it('rejects zero-length axes and hiding every axis artifact', () => {
+  it('拒绝零长度轴并隐藏每个轴产物', () => {
     const zeroExtent = AxesSchema.safeParse({
       namespace: 'standard',
       type: 'axes',
@@ -238,7 +238,7 @@ describe('AxesSchema', () => {
     { values: [-20, -20, 20], issuePath: ['x', 'ticks', 'source', 'values', 1] },
     { values: [20, -20], issuePath: ['x', 'ticks', 'source', 'values', 1] },
     { values: [-60, 20], issuePath: ['x', 'ticks', 'source', 'values', 0] },
-  ])('rejects invalid explicit tick values $values', ({ values, issuePath }) => {
+  ])('拒绝无效的显式刻度值 $values', ({ values, issuePath }) => {
     const parsed = AxesSchema.safeParse({
       namespace: 'standard',
       type: 'axes',
@@ -251,7 +251,7 @@ describe('AxesSchema', () => {
     if (!parsed.success) expect(parsed.error.issues[0]?.path).toEqual(issuePath);
   });
 
-  it('rejects tick labels that do not refer to emitted tick values', () => {
+  it('拒绝不引用发出的刻度值的刻度标签', () => {
     const spacingLabel = AxesSchema.safeParse({
       namespace: 'standard',
       type: 'axes',
@@ -288,7 +288,7 @@ describe('AxesSchema', () => {
       expect(explicitLabel.error.issues[0]?.path).toEqual(['x', 'ticks', 'labels', 'entries', 0, 'value']);
   });
 
-  it('rejects tick labels whose tick is filtered by the endpoint gap', () => {
+  it('拒绝其刻度由端点间隙过滤的刻度标签', () => {
     const parsed = AxesSchema.safeParse({
       namespace: 'standard',
       type: 'axes',
@@ -308,7 +308,7 @@ describe('AxesSchema', () => {
     if (!parsed.success) expect(parsed.error.issues[0]?.path).toEqual(['x', 'ticks', 'labels', 'entries', 0, 'value']);
   });
 
-  it('rejects unsafe lattice sizes and unknown legacy fields before lowering', () => {
+  it('在下沉之前拒绝不安全的晶格尺寸和未知的遗留字段', () => {
     const excessiveTicks = AxesSchema.safeParse({
       namespace: 'standard',
       type: 'axes',
@@ -331,7 +331,7 @@ describe('AxesSchema', () => {
     if (!unknownField.success) expect(unknownField.error.issues[0]?.path).toEqual([]);
   });
 
-  it('rejects false-axis forms', () => {
+  it('拒绝假轴形式', () => {
     const falseAxis = AxesSchema.safeParse({
       namespace: 'standard',
       type: 'axes',

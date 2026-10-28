@@ -1,10 +1,10 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { registerFatalProbeError } from '../resolve/diagnostics';
-import type { NodeLayout } from './node';
+import type { CompiledNodeLayout } from './node';
 import { createCompileInvariantError } from './probe-failure';
 
 /** namespace 栈当前写入/解析阶段 */
-export type NamespacePhase = 'registering' | 'resolving';
+type NamespacePhase = 'registering' | 'resolving';
 
 /** namespace layout 的编译生命周期状态 */
 export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
@@ -14,11 +14,11 @@ export type NamespaceEntry = {
   /** 当前名称绑定的来源路径 */
   irPath?: string;
   /** 可供既有引用解析逻辑消费的布局 */
-  layout: NodeLayout;
+  layout: CompiledNodeLayout;
   /** 区分合法已解析布局与尚未闭合的 Scope 占位布局 */
   state: NamespaceEntryState;
   /** Scope 占位到最终布局共享的对象身份，用于引用归属检查 */
-  scopeOwner?: NodeLayout;
+  scopeOwner?: CompiledNodeLayout;
 };
 
 /** 同一 namespace frame 内重复 id 的诊断载荷 */
@@ -36,7 +36,7 @@ export type DuplicateRegisterInfo = {
 };
 
 /** namespace 单次 register 的内部观测信息 */
-export type NamespaceRegisterInfo = {
+type NamespaceRegisterInfo = {
   /** 本次注册的 id */
   id: string;
   /** 当前 frame 深度 */
@@ -48,7 +48,7 @@ export type NamespaceRegisterInfo = {
 };
 
 /** NamespaceStack 构造选项 */
-export type NamespaceStackOptions = {
+type NamespaceStackOptions = {
   /** 同 frame 重复 register 时的回调 */
   onDuplicate?: (info: DuplicateRegisterInfo) => void;
   /** 每次 register 完成后的内部观测回调 */
@@ -75,7 +75,7 @@ export type NamespaceFrameChange = {
  */
 export class NamespaceStack {
   /** 正在编译的命名 Scope；fork 保留祖先归属 */
-  private readonly scopeAncestors: Array<{ layout: NodeLayout; id: string }> = [];
+  private readonly scopeAncestors: Array<{ layout: CompiledNodeLayout; id: string }> = [];
 
   /** 栈式 frame 容器；栈底为根 frame，栈顶为当前 frame */
   private readonly frames: Array<Map<string, NamespaceEntry>>;
@@ -178,11 +178,6 @@ export class NamespaceStack {
     return this.frames.length;
   }
 
-  /** 当前阶段 */
-  get phase(): NamespacePhase {
-    return this.currentPhase;
-  }
-
   /** 推入新 frame；通常对应 `<Scope localNamespace>` 入场 */
   pushFrame(): void {
     this.snapshotIdentity = {};
@@ -218,7 +213,7 @@ export class NamespaceStack {
   }
 
   /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值 */
-  register(id: string, layout: NodeLayout, irPath?: string, state: NamespaceEntryState = 'resolved'): boolean {
+  register(id: string, layout: CompiledNodeLayout, irPath?: string, state: NamespaceEntryState = 'resolved'): boolean {
     if (this.currentPhase !== 'registering') {
       throw createCompileInvariantError(
         `NamespaceStack.register('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
@@ -254,7 +249,12 @@ export class NamespaceStack {
   }
 
   /** 替换指定 frame 内已注册的 layout；用于 scope 占位升级，不触发重复 id 诊断 */
-  replaceLayout(id: string, layout: NodeLayout, frameDepth: number, expectedCurrent?: NodeLayout): boolean {
+  replaceLayout(
+    id: string,
+    layout: CompiledNodeLayout,
+    frameDepth: number,
+    expectedCurrent?: CompiledNodeLayout,
+  ): boolean {
     if (this.currentPhase !== 'registering') {
       throw createCompileInvariantError(
         `NamespaceStack.replaceLayout('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
@@ -284,7 +284,7 @@ export class NamespaceStack {
   }
 
   /** 用新的投影替换本次名称绑定，不原位修改布局或 fork 共享的 entry */
-  replacePublishedLayout(previous: NodeLayout, next: NodeLayout): void {
+  replacePublishedLayout(previous: CompiledNodeLayout, next: CompiledNodeLayout): void {
     if (previous === next) return;
     for (const frame of this.frames) {
       for (const [id, entry] of frame) {
@@ -296,7 +296,7 @@ export class NamespaceStack {
   }
 
   /** 进入命名 Scope 的后代求值区间 */
-  enterScope(owner: NodeLayout, id: string): void {
+  enterScope(owner: CompiledNodeLayout, id: string): void {
     this.scopeAncestors.push({ layout: owner, id });
   }
 
@@ -319,11 +319,6 @@ export class NamespaceStack {
       throw error;
     }
     return entry;
-  }
-
-  /** 按 inside-out 规则查找 id 对应的 layout */
-  lookup(id: string): NodeLayout | undefined {
-    return this.lookupEntry(id)?.layout;
   }
 
   /** 按 inside-out 规则查找 id 对应的 layout 与生命周期状态 */

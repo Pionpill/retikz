@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { InputNode, InputPath, InputScene } from '../../src';
 import { normalizeNode, normalizePath, normalizeScene } from '../../src';
 
-describe('Vanilla Input normalizers', () => {
+describe('Vanilla 输入标准化器', () => {
   it.each(['->', '<-', '<->'] as const)('箭头简写 %s 与显式端点对象等价，保留 marks', arrow => {
     const endpoints = arrow === '->' ? { end: {} } : arrow === '<-' ? { start: {} } : { start: {}, end: {} };
     const input: InputPath = {

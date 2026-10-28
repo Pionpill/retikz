@@ -4,8 +4,8 @@ import { buildPlotIR } from '../../../src/adapter';
 import { PlotAxis } from '../../../src/components/guides';
 import { PathMark } from '../../../src/components/marks';
 
-describe('buildPlotIR PlotAxis scale shortcut', () => {
-  it('builds the same dimension scale as <PlotScale>', () => {
+describe('buildPlotIR PlotAxis 缩放快捷键', () => {
+  it('构建与<PlotScale>相同的尺寸比例', () => {
     const spec = buildPlotIR(
       <>
         <PathMark encodings={{ position: { x: { field: 'm' }, y: { field: 'r' } } }} />

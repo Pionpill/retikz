@@ -18,7 +18,7 @@ This example treats region as a category and revenue as a continuous quantity th
 ```ts
 import type { ExternalRow, IRDataModel, IRDataTransform } from '@retikz/data';
 
-import { applyTransforms, DataFieldType, normalizeRows, resolveFieldTypes } from '@retikz/data';
+import { applyTransforms, DataFieldType, resolveDataRows, resolveFieldTypes } from '@retikz/data';
 
 const rows: Array<ExternalRow> = [
   { region: 'north', revenue: '12' },
@@ -31,7 +31,7 @@ const model: IRDataModel = [
   { name: 'revenue', type: DataFieldType.Continuous },
 ];
 const fieldTypeMap = resolveFieldTypes(model, rows, new Set(['region', 'revenue']));
-const canonicalRows = normalizeRows(rows, fieldTypeMap);
+const canonicalRows = resolveDataRows(rows, fieldTypeMap);
 
 const transforms: Array<IRDataTransform> = [
   {
@@ -51,7 +51,7 @@ console.log(summary);
 // [{ region: 'north', total: 20, rows: 2 }, { region: 'south', total: 5, rows: 1 }]
 ```
 
-`resolveFieldTypes()` resolves measurement types from the field model and participating fields. `normalizeRows()` converts the string revenue values to continuous numbers while retaining logical field names. `applyTransforms()` runs built-in transforms in declaration order. The example produces two summary rows: an observable data result, not graphics.
+`resolveFieldTypes()` resolves measurement types from the field model and participating fields. `resolveDataRows()` converts the string revenue values to continuous numbers while retaining logical field names. `applyTransforms()` runs built-in transforms in declaration order. The example produces two summary rows: an observable data result, not graphics.
 
 `model` and `transforms` can be stored as JSON. `rows`, along with any custom parsers, Definitions, and registries, participates only at runtime.
 

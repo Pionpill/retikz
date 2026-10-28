@@ -52,7 +52,7 @@ export const JitterPositionAdjustmentSchema = strictObject({
 const CustomPositionAdjustmentObjectSchema = looseObject({
   kind: NonBlankStringSchema.refine(kind => !BUILTIN_POSITION_ADJUSTMENT_KINDS.has(kind), {
     message: 'custom position adjustment kind must not collide with a built-in kind',
-  }).describe('Custom adjustment discriminator resolved through LowerPlotsOptions.definitions.positionAdjustments'),
+  }).describe('Custom adjustment discriminator resolved through PlotsLoweringOptions.definitions.positionAdjustments'),
 });
 
 /** 校验由运行时能力定义进一步解析的自定义位置调整操作 */

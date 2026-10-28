@@ -10,9 +10,9 @@ import { PlotScale } from '../../../src/components/scales';
 import { PlotTransform } from '../../../src/components/transform';
 import { resolvePlotAuthoring } from '../../../src/plot-runtime';
 
-describe('Plot member extraction characterization', () => {
+describe('Plot 成员提取表征', () => {
   it.each([false, 'max-radius', { kind: 'point-aware', clearance: { left: 0, default: 8 } }] as const)(
-    'preserves autoPadding %j identically through React and Vanilla',
+    '通过 React 和 Vanilla 相同地保留 autoPadding、%j',
     autoPadding => {
       const react = buildPlotIR(
         <PointMark encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} properties={{ autoPadding }} />,
@@ -35,7 +35,7 @@ describe('Plot member extraction characterization', () => {
       expect(react.marks[0]).toMatchObject({ properties: { autoPadding } });
     },
   );
-  it('preserves mixed members, automatic bindings, shortcuts, and runtime callbacks', () => {
+  it('保留混合成员、自动绑定、快捷方式和运行时回调', () => {
     const resolvePointLabel = (row: Record<string, unknown>): string => String(row.category);
     const spec = buildPlotIR(
       <>
@@ -114,7 +114,7 @@ describe('Plot member extraction characterization', () => {
     expect(resolveLabelOf(spec)).toEqual({ points: resolvePointLabel });
   });
 
-  it('keeps raw nested arrays and generic iterables behavior-equivalent to flat children', () => {
+  it('保持原始嵌套数组和通用可迭代行为 - 相当于平面子项', () => {
     const nested: ReactNode = [
       <PointMark key="point" encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />,
       [
@@ -143,7 +143,7 @@ describe('Plot member extraction characterization', () => {
     expect(nestedSpec.guides).toEqual([{ type: 'axis', dimension: 'y', grid: true }]);
   });
 
-  it('collects resolveLabel for polar interval marks through the runtime sidecar', () => {
+  it('通过运行时 sidecar 收集 resolveLabel 的极区间标记', () => {
     const resolveSectorLabel = (row: { category?: string }) => row.category ?? '';
     const spec = buildPlotIR(
       <IntervalMark id="sectors" angle="value" resolveLabel={resolveSectorLabel} encodings={{ color: 'category' }} />,
@@ -155,7 +155,7 @@ describe('Plot member extraction characterization', () => {
     expect(JSON.stringify(spec)).not.toContain('resolveLabel');
   });
 
-  it('preserves explicit composition and multi-axis binding normalization', () => {
+  it('保留显式组合和多轴绑定标准化', () => {
     const spec = buildPlotIR(
       <>
         <PlotAxis dimension="x" />
@@ -197,7 +197,7 @@ describe('Plot member extraction characterization', () => {
     ]);
   });
 
-  it('keeps row-derived style fields runtime-only when no model is declared', () => {
+  it('当没有声明模型时，仅在运行时保留行派生样式字段', () => {
     const runtime = resolvePlotAuthoring({
       data: [
         { x: 1, y: 2, category: 'north' },

@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 import { mergeGraphDefaults } from '@retikz/graph';
 
@@ -112,7 +112,7 @@ export const mergeFlowDefaults = (
 };
 
 const resolveRegisteredDefaults = (
-  theme: ResolvedTheme,
+  theme: CanonicalTheme,
   registry: ReadonlyMap<string, FlowThemeDefinition>,
 ): IRFlowDefaults | undefined => {
   if (theme.name === undefined) return undefined;
@@ -140,7 +140,7 @@ const resolveRegisteredDefaults = (
 
 /** 按同名 Theme Definition 与 Flow Source defaults 解析最终 Flow defaults */
 export const resolveFlowTheme = (
-  theme: ResolvedTheme,
+  theme: CanonicalTheme,
   styles: ReadonlyMap<string, FlowThemeDefinition>,
   inline?: IRFlowDefaults,
 ): IRFlowDefaults => {

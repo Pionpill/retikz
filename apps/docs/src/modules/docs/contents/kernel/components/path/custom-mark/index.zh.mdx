@@ -30,6 +30,8 @@ description: 用 defineMark 定义局部图元，注册后通过 shape 和 param
 
 上面的预览同时展示了 React 注册与引用。将 `ring-mark.ts` 中的 `ringMark` 定义放在宿主代码外，按使用方式注入一次，再通过 `shape: 'ring'` 引用。
 
+注册时会检查静态几何：`baseSize` 必须是有限正数，`anchor` 的坐标必须有限。即使路径尚未引用该标记，无效定义也会在注册时被拒绝。
+
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
 

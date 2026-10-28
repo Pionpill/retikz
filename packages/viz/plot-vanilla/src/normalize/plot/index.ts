@@ -1,4 +1,4 @@
-export type { ResolvedPlotExtensionAuthoring } from './build-plot-spec';
+export type { PlotExtensionAuthoringResolution } from './build-plot-spec';
 export {
   decorateDefaultGuides,
   normalizePlotIR,
@@ -6,7 +6,7 @@ export {
   resolvePlotExtensionAuthoring,
 } from './build-plot-spec';
 export type {
-  BuildPlotOptions,
+  PlotBuildOptions,
   CollectionContext,
   InputPlotCoordinate,
   MarkTransformShortcutContext,
@@ -22,7 +22,7 @@ export type {
   PlotDeclarationPath,
   PlotDeclarationSource,
   PlotMemberFragment,
-  ResolveLabelMap,
+  LabelResolverByField,
   ScaffoldTrack,
 } from './contracts';
 export type { InputPlot, InputPlotFacet, InputPlotGuide, InputPlotMark, InputPlotScaffold } from './input';
@@ -43,10 +43,6 @@ export type {
   InputPlotPathMark,
   InputPlotPathWay,
   InputPlotPointMark,
-  InputPlotRelationMark,
-  InputPlotRelationPathGeometry,
-  InputPlotRelationRouteStep,
-  InputPlotRelationStepLabel,
 } from './input-marks';
 export type { InputPlotPositionScaleType, InputPlotScale, InputPlotScaleDimension } from './input-scales';
 export { normalizePlot, normalizePlotDeclarations } from './normalize';

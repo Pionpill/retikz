@@ -1,19 +1,19 @@
 import { compileToScene } from '@retikz/core';
-import { coerceValue, inferFieldType, normalizeRows, validateBoundData } from '@retikz/data';
+import { coerceValue, inferFieldType, resolveDataRows, assertBoundData } from '@retikz/data';
 import { DataFieldType, ScalarValueSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlots, prepareRows } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /**
- * contract 待实现字段的本地类型扩展：`LowerPlotsOptions.invalid` 现在还不存在（实现 Agent 的活），
+ * contract 待实现字段的本地类型扩展：`PlotsLoweringOptions.invalid` 现在还不存在（实现 Agent 的活），
  * 给 options 一个 `invalid?: 'skip' | 'error'` 表达「实现后该字段应存在」，让测试文件能编译。
- * 实现落地后应删除此扩展、直接用 `LowerPlotsOptions`
+ * 实现落地后应删除此扩展、直接用 `PlotsLoweringOptions`
  */
-type RobustOptions = LowerPlotsOptions & { invalid?: 'skip' | 'error' };
+type RobustOptions = PlotsLoweringOptions & { invalid?: 'skip' | 'error' };
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
 const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, options?: RobustOptions) =>
@@ -103,7 +103,7 @@ const prepare = (spec: IRPlot, rows: Array<Record<string, unknown>>, options: Ro
 
 describe('contract 数据健壮性 — bigint ingest', () => {
   it('bigint_ingested_as_continuous：无 model 下 bigint 推断 continuous 且归一化成数值', () => {
-    // classify(bigint) → continuous（无 model 推断）；normalizeRows 把 42n coerce 成 42
+    // classify(bigint) → continuous（无 model 推断）；resolveDataRows 把 42n coerce 成 42
     expect(inferFieldType([{ a: 42n }, { a: 7n }], 'a')).toBe(DataFieldType.Continuous);
 
     const { fieldTypeMap, normalized } = prepare(specNoModel(), [
@@ -226,7 +226,7 @@ describe('contract 数据健壮性 — invalid 策略（skip / error）', () => 
 
 describe('contract 数据健壮性 — validateData 字段级报告', () => {
   it('validatedata_reports_field_counts：报错含字段级 invalid/missing 计数', () => {
-    // 字段 a 全部非法 → validateBoundData 报错须带字段级计数（如 "field \"a\": N invalid"），不止二元 fail
+    // 字段 a 全部非法 → assertBoundData 报错须带字段级计数（如 "field \"a\": N invalid"），不止二元 fail
     const rows = [
       { a: 'bad', b: 1 },
       { a: undefined, b: 2 },
@@ -239,7 +239,7 @@ describe('contract 数据健壮性 — validateData 字段级报告', () => {
     let message = '';
 
     try {
-      validateBoundData(rows, fieldTypeMap, 100);
+      assertBoundData(rows, fieldTypeMap, 100);
     } catch (error) {
       message = (error as Error).message;
     }
@@ -254,7 +254,7 @@ describe('contract 数据健壮性 — validateData 字段级报告', () => {
 
 describe('contract 数据健壮性 — 恒归一化（去门控）', () => {
   it('no_model_normalize_equivalent：无 model 干净数据恒归一化后产物与现状等价（防回归）', () => {
-    // 干净数据（数字是数、字符串分类）：恒归一化 normalizeRows 后逐字段等于手动 coerceValue 的结果
+    // 干净数据（数字是数、字符串分类）：恒归一化 resolveDataRows 后逐字段等于手动 coerceValue 的结果
     const spec = specNoModel();
     const rows = [
       { a: 1, b: 10 },
@@ -262,7 +262,7 @@ describe('contract 数据健壮性 — 恒归一化（去门控）', () => {
       { a: 3, b: 30 },
     ];
     const { fieldTypeMap, normalized } = prepare(spec, rows);
-    const manual = normalizeRows(rows, fieldTypeMap);
+    const manual = resolveDataRows(rows, fieldTypeMap);
 
     expect(normalized).toEqual(manual);
 
@@ -291,7 +291,7 @@ describe('contract 数据健壮性 — resolveField 交互', () => {
     const spec = specWithModel();
 
     // resolveField.parse 对 a 返回 undefined（非法）→ 归一化写哨兵；默认 skip 不抛
-    const resolveField: LowerPlotsOptions['resolveField'] = field =>
+    const resolveField: PlotsLoweringOptions['resolveField'] = field =>
       field === 'a' ? { type: DataFieldType.Continuous, parse: () => undefined } : undefined;
     const { normalized } = prepare(spec, [{ a: 5, b: 1 }], { resolveField });
 

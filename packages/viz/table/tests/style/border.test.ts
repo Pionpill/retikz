@@ -14,8 +14,8 @@ const sourceBorders = {
   },
 } as const;
 
-describe('Source defaults Border Graph integration', () => {
-  it('maps per-side outer defaults and injects priority -100 with provenance', () => {
+describe('Source 默认边框 Graph 集成', () => {
+  it('映射每侧外部默认值并注入优先级 -100 和来源', () => {
     const result = compileTable(
       {
         namespace: 'table',
@@ -44,7 +44,7 @@ describe('Source defaults Border Graph integration', () => {
     }
   });
 
-  it('lets explicit Table layout border candidates replace Source defaults before graph construction', () => {
+  it('在图形构建之前，让显式的 Table 布局边框候选替换 Source 默认值', () => {
     const result = compileTable(
       {
         namespace: 'table',
@@ -74,7 +74,7 @@ describe('Source defaults Border Graph integration', () => {
     expect(result.manifest.borders[0].atoms[0].winner).not.toHaveProperty('defaults');
   });
 
-  it('lets a header Cell-side default win over the same-priority horizontal default', () => {
+  it('让头部 Cell 侧默认值胜过相同优先级的水平默认值', () => {
     const result = compileTable(
       {
         namespace: 'table',
@@ -108,7 +108,7 @@ describe('Source defaults Border Graph integration', () => {
     });
   });
 
-  it('keeps a spanning column header default on the span perimeter', () => {
+  it('在跨度周边上保留默认的跨度列标题', () => {
     const result = compileTable(
       {
         namespace: 'table',
@@ -144,7 +144,7 @@ describe('Source defaults Border Graph integration', () => {
     ]);
   });
 
-  it('lets a root rule replace explicit Cell and Source default border slots without duplicate keys', () => {
+  it('让根规则替换显式的 Cell 和 Source 默认边框槽，而无需重复键', () => {
     const result = compileTable(
       {
         namespace: 'table',

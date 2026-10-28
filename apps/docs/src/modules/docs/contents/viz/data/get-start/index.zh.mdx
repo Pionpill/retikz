@@ -18,7 +18,7 @@ description: 安装 @retikz/data，声明字段模型，归一化外部数据，
 ```ts
 import type { ExternalRow, IRDataModel, IRDataTransform } from '@retikz/data';
 
-import { applyTransforms, DataFieldType, normalizeRows, resolveFieldTypes } from '@retikz/data';
+import { applyTransforms, DataFieldType, resolveDataRows, resolveFieldTypes } from '@retikz/data';
 
 const rows: Array<ExternalRow> = [
   { region: 'north', revenue: '12' },
@@ -31,7 +31,7 @@ const model: IRDataModel = [
   { name: 'revenue', type: DataFieldType.Continuous },
 ];
 const fieldTypeMap = resolveFieldTypes(model, rows, new Set(['region', 'revenue']));
-const canonicalRows = normalizeRows(rows, fieldTypeMap);
+const canonicalRows = resolveDataRows(rows, fieldTypeMap);
 
 const transforms: Array<IRDataTransform> = [
   {
@@ -51,7 +51,7 @@ console.log(summary);
 // [{ region: 'north', total: 20, rows: 2 }, { region: 'south', total: 5, rows: 1 }]
 ```
 
-`resolveFieldTypes()` 以字段模型和参与字段解析测量类型；`normalizeRows()` 将字符串收入转成连续数值，并保留逻辑字段名；`applyTransforms()` 按声明顺序运行内置变换。示例最后得到两条汇总行，这是可观察的数据结果，不是图形。
+`resolveFieldTypes()` 以字段模型和参与字段解析测量类型；`resolveDataRows()` 将字符串收入转成连续数值，并保留逻辑字段名；`applyTransforms()` 按声明顺序运行内置变换。示例最后得到两条汇总行，这是可观察的数据结果，不是图形。
 
 `model` 与 `transforms` 可以保存为 JSON。`rows` 以及可能的自定义 parser、Definition 和 registry 则只在运行时参与处理。
 

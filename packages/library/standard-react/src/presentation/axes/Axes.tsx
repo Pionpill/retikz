@@ -1,11 +1,11 @@
-import { AxesInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
-import type { AxesInput } from '@retikz/standard/presentation';
+import { axesInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import type { InputAxes } from '@retikz/standard/presentation';
 import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../../shared';
 
 /** React Axes 组件接受的 Standard authoring 输入 */
-export type AxesProps = AxesInput;
+export type AxesProps = InputAxes;
 
 const AxesComponent: FC<AxesProps> = () => null;
 
@@ -14,4 +14,4 @@ export const Axes = AxesComponent as StandardEmbeddableComponent<AxesProps>;
 
 Axes.displayName = 'Axes';
 Axes.isTier2Embeddable = true;
-Axes.inputEmbedAdapter = AxesInputEmbedAdapter;
+Axes.inputEmbedAdapter = axesInputEmbedAdapter;

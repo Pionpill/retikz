@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -9,7 +9,7 @@ import { resolveFlowThemeRegistry } from '../../src/flow/providers';
 import { resolveFlowDiagram } from '../../src/flow/resolve';
 import { parseTestFlowDiagram } from './fixtures';
 
-const themeWith = (overrides: Partial<ResolvedTheme>): ResolvedTheme => ({
+const themeWith = (overrides: Partial<CanonicalTheme>): CanonicalTheme => ({
   ...DEFAULT_RESOLVED_THEME,
   ...overrides,
 });
@@ -17,8 +17,8 @@ const themeWith = (overrides: Partial<ResolvedTheme>): ResolvedTheme => ({
 const registryOf = (...definitions: ReadonlyArray<FlowThemeDefinition>): ReadonlyMap<string, FlowThemeDefinition> =>
   resolveFlowThemeRegistry(definitions);
 
-describe('Flow Theme Definition and registry', () => {
-  it('keeps the exact Definition object as a typed identity', () => {
+describe('Flow 主题 Definition 和注册表', () => {
+  it('将确切的 Definition 对象保留为类型标识', () => {
     const definition = {
       name: 'brand',
       resolve: () => ({ entity: { style: { opacity: 0.8 } } }),
@@ -27,7 +27,7 @@ describe('Flow Theme Definition and registry', () => {
     expect(defineFlowTheme(definition)).toBe(definition);
   });
 
-  it('deduplicates the same identity and rejects conflicting names', () => {
+  it('删除相同身份的重复数据并拒绝冲突的名称', () => {
     const brand = defineFlowTheme({
       name: 'brand',
       resolve: () => ({ entity: { style: { opacity: 0.8 } } }),
@@ -40,7 +40,7 @@ describe('Flow Theme Definition and registry', () => {
     }
   });
 
-  it('fails loudly when the Core style lacks a same-named Flow Definition', () => {
+  it('当 Core 样式缺少同名的 Flow Definition 时，会明确报错', () => {
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
       type: 'flow',
@@ -76,7 +76,7 @@ describe('Flow Theme Definition and registry', () => {
         throw new Error('external callback failed');
       },
     ],
-  ])('wraps invalid %s output with the Definition as cause', (_label, resolve) => {
+  ])('以 Definition 为原因包装无效的 %s 输出', (_label, resolve) => {
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
       type: 'flow',
@@ -104,8 +104,8 @@ describe('Flow Theme Definition and registry', () => {
   });
 });
 
-describe('Flow Theme cascade', () => {
-  it('applies named defaults, author defaults, Group layout and item overrides in order', () => {
+describe('Flow 主题级联', () => {
+  it('按顺序应用命名默认值、作者默认值、Group 布局和项目覆盖', () => {
     const brand = defineFlowTheme({
       name: 'brand',
       resolve: () => ({

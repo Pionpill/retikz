@@ -16,7 +16,7 @@
 |                 | `TValue`  | —                                                         | Captured Source value owned, compared, and disposed by the runtime                                     |
 |                 | `TRead`   | —                                                         | Readonly Source view produced by read and exposed through snapshots                                    |
 |                 | `TChange` | —                                                         | Individual domain change hint type, validated and consumed by a computation for incremental processing |
-| Parameters      | `input`   | `RuntimeSourceDefinitionInput<TInput, TValue, TRead>`     | Source key and value capture, read, equality, and disposal contract                                    |
+| Parameters      | `input`   | `InputRuntimeSourceDefinition<TInput, TValue, TRead>`     | Source key and value capture, read, equality, and disposal contract                                    |
 | Returns         | —         | `RuntimeSourceDefinition<TInput, TValue, TRead, TChange>` | Frozen Source token; callbacks are stored privately by Runtime                                         |
 | Throws          | —         | —                                                         | TokenInvalid when the Source key is empty                                                              |
 
@@ -28,7 +28,7 @@
 
 ```ts
 export declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
-  input: RuntimeSourceDefinitionInput<TInput, TValue, TRead>,
+  input: InputRuntimeSourceDefinition<TInput, TValue, TRead>,
 ) => RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
 ```
 
@@ -36,7 +36,7 @@ export declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RuntimeSourceDefinitionInput"} path={"packages/kernel/runtime/src/source/types.ts"} startLine={50}>RuntimeSourceDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRuntimeSourceDefinition"} path={"packages/kernel/runtime/src/source/types.ts"} startLine={50}>InputRuntimeSourceDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -51,7 +51,7 @@ export declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
 | `TRead` (Type parameter)      | `—`                                                        | —       | Readonly Source view produced by read and exposed through snapshots                  |
 | `readonly collectIdentities?` | `(value: TValue) => ReadonlyArray<RuntimeIdentity>`        | —       | Collects the Source's complete identity set from its captured value                  |
 | `readonly key`                | `string`                                                   | —       | Non-empty Source key matched exactly across the registry                             |
-| `readonly value`              | `RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>` | —       | Complete snapshot lifecycle of the Source value                                      |
+| `readonly value`              | `InputRuntimeSourceValueDefinition<TInput, TValue, TRead>` | —       | Complete snapshot lifecycle of the Source value                                      |
 
 </ApiTable>
 
@@ -60,9 +60,9 @@ export declare const defineRuntimeSource: <TInput, TValue, TRead, TChange>(
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RuntimeSourceDefinitionInput<TInput, TValue, TRead> = Readonly<{
+export type InputRuntimeSourceDefinition<TInput, TValue, TRead> = Readonly<{
   key: string;
-  value: RuntimeSourceValueDefinitionInput<TInput, TValue, TRead>;
+  value: InputRuntimeSourceValueDefinition<TInput, TValue, TRead>;
   collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>;
 }>;
 ```
@@ -71,7 +71,7 @@ export type RuntimeSourceDefinitionInput<TInput, TValue, TRead> = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RuntimeSourceValueDefinitionInput"} path={"packages/kernel/runtime/src/source/types.ts"} startLine={33}>RuntimeSourceValueDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRuntimeSourceValueDefinition"} path={"packages/kernel/runtime/src/source/types.ts"} startLine={33}>InputRuntimeSourceValueDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -96,7 +96,7 @@ export type RuntimeSourceDefinitionInput<TInput, TValue, TRead> = Readonly<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<{
+export type InputRuntimeSourceValueDefinition<TInput, TValue, TRead> = Readonly<{
   capture: (input: TInput) => TValue;
   read: (value: TValue) => TRead;
   equals: (left: TValue, right: TValue) => boolean;
@@ -132,7 +132,7 @@ export type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<
 ```ts
 export type RuntimeSourceDefinition<TInput, TValue, TRead, TChange> = RuntimeSourceToken &
   Readonly<{
-    [RuntimeSourceType]: (input: TInput, value: TValue, read: TRead, change: TChange) => void;
+    [runtimeSourceType]: (input: TInput, value: TValue, read: TRead, change: TChange) => void;
   }>;
 ```
 
@@ -145,7 +145,7 @@ export type RuntimeSourceDefinition<TInput, TValue, TRead, TChange> = RuntimeSou
 ```ts
 export type RuntimeSourceToken = Readonly<{
   key: string;
-  [RuntimeSourceTokenBrand]: true;
+  [runtimeSourceTokenBrand]: true;
 }>;
 ```
 
@@ -227,7 +227,7 @@ export type RuntimeSourceRegistry = Readonly<{
 |                 | `TChange` | —                                                         | Individual domain change hint type, validated and consumed by a computation for incremental processing |
 | Parameters      | `source`  | `RuntimeSourceDefinition<TInput, TValue, TRead, TChange>` | Source definition to initialize                                                                        |
 |                 | `value`   | `TInput`                                                  | Complete initial input; capture runs during Runtime initialization                                     |
-| Returns         | —         | `RuntimeSourceInput`                                      | Opaque initialization command for initialSnapshots                                                     |
+| Returns         | —         | `InputRuntimeSource`                                      | Opaque initialization command for initialSnapshots                                                     |
 
 </ApiTable>
 
@@ -239,20 +239,20 @@ export type RuntimeSourceRegistry = Readonly<{
 export declare const createRuntimeSourceInput: <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,
-) => RuntimeSourceInput;
+) => InputRuntimeSource;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RuntimeSourceInput"} path={"packages/kernel/runtime/src/transaction/types.ts"} startLine={7}>RuntimeSourceInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRuntimeSource"} path={"packages/kernel/runtime/src/transaction/types.ts"} startLine={7}>InputRuntimeSource</ApiSourceLink>
 
 ```ts
-export type RuntimeSourceInput = Readonly<{
+export type InputRuntimeSource = Readonly<{
   source: RuntimeSourceToken;
   kind: 'initial';
-  [RuntimeSourceCommandBrand]: true;
+  [runtimeSourceCommandBrand]: true;
 }>;
 ```
 
@@ -300,7 +300,7 @@ export declare const createRuntimeSourceUpdate: <TInput, TValue, TRead, TChange>
 export type RuntimeSourceUpdate = Readonly<{
   source: RuntimeSourceToken;
   kind: 'update';
-  [RuntimeSourceCommandBrand]: true;
+  [runtimeSourceCommandBrand]: true;
 }>;
 ```
 
@@ -359,7 +359,7 @@ export declare const createRuntimeChangeSet: <TChange>(
 export type RuntimeChangeSet<TChange> = Readonly<{
   baseRevision: RuntimeRevision;
   changes: ReadonlyArray<TChange>;
-  [RuntimeChangeSetType]: true;
+  [runtimeChangeSetType]: true;
 }>;
 ```
 
@@ -637,7 +637,7 @@ export type RuntimeComputationId = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineRuntimeComputation"} path={"packages/kernel/runtime/src/computation/define.ts"} startLine={172}>defineRuntimeComputation</ApiSourceLink>
+#### <ApiSourceLink label={"defineRuntimeComputation"} path={"packages/kernel/runtime/src/computation/define.ts"} startLine={160}>defineRuntimeComputation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -651,7 +651,7 @@ export type RuntimeComputationId = Readonly<{
 |                 | `TResult`          | `= TResultInput`                                                                          | Captured computation result owned and disposed by the runtime; defaults to TResultInput            |
 |                 | `TComputationRead` | `= TResult`                                                                               | Private previous-result view used only by this computation's update; defaults to TResult           |
 |                 | `TPublicRead`      | `= TResult`                                                                               | Public result view for dependent computations, commit observers, and the host; defaults to TResult |
-| Parameters      | `input`            | `RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>` | Computation identity, dependencies, callbacks, and result lifecycle                                |
+| Parameters      | `input`            | `InputRuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>` | Computation identity, dependencies, callbacks, and result lifecycle                                |
 | Returns         | —                  | `RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>`      | Frozen Computation token; callbacks are stored privately by Runtime                                |
 | Throws          | —                  | —                                                                                         | Invalid computation identity or Trace declarations                                                 |
 
@@ -668,7 +668,7 @@ export declare const defineRuntimeComputation: <
   TComputationRead = TResult,
   TPublicRead = TResult,
 >(
-  input: RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>,
+  input: InputRuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
 ) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
 ```
 
@@ -676,7 +676,7 @@ export declare const defineRuntimeComputation: <
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RuntimeComputationDefinitionInput"} path={"packages/kernel/runtime/src/computation/types.ts"} startLine={251}>RuntimeComputationDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRuntimeComputationDefinition"} path={"packages/kernel/runtime/src/computation/types.ts"} startLine={251}>InputRuntimeComputationDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -698,7 +698,7 @@ export declare const defineRuntimeComputation: <
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RuntimeComputationDefinitionInput<
+export type InputRuntimeComputationDefinition<
   TResultInput,
   TResult = TResultInput,
   TComputationRead = TResult,
@@ -708,7 +708,7 @@ export type RuntimeComputationDefinitionInput<
   sources: ReadonlyArray<RuntimeSourceToken>;
   computations?: ReadonlyArray<RuntimeComputationToken>;
   tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
-  result?: RuntimeComputationResultDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>;
+  result?: InputRuntimeComputationResultDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
   run: (view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeRunOutcome<TResultInput>;
   update?: (
     previous: TComputationRead,
@@ -724,7 +724,7 @@ export type RuntimeComputationDefinitionInput<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RuntimeComputationResultDefinitionInput"} path={"packages/kernel/runtime/src/computation/types.ts"} startLine={164}>RuntimeComputationResultDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRuntimeComputationResultDefinition"} path={"packages/kernel/runtime/src/computation/types.ts"} startLine={164}>InputRuntimeComputationResultDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -746,7 +746,7 @@ export type RuntimeComputationDefinitionInput<
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RuntimeComputationResultDefinitionInput<
+export type InputRuntimeComputationResultDefinition<
   TResultInput,
   TResult = TResultInput,
   TComputationRead = TResult,
@@ -795,7 +795,7 @@ export type RuntimeComputationDefinition<
   TPublicRead = TResult,
 > = RuntimeComputationToken &
   Readonly<{
-    [RuntimeComputationType]: (
+    [runtimeComputationType]: (
       input: TResultInput,
       result: TResult,
       computationRead: TComputationRead,
@@ -813,11 +813,11 @@ export type RuntimeComputationDefinition<
 ```ts
 export type RuntimeComputationToken = Readonly<{
   id: RuntimeComputationId;
-  [RuntimeComputationTokenBrand]: true;
+  [runtimeComputationTokenBrand]: true;
 }>;
 ```
 
-#### <ApiSourceLink label={"createRuntimeComputationRegistry"} path={"packages/kernel/runtime/src/registry/computation-registry.ts"} startLine={102}>createRuntimeComputationRegistry</ApiSourceLink> / <ApiSourceLink label={"RuntimeComputationRegistryInput"} path={"packages/kernel/runtime/src/registry/types.ts"} startLine={18}>RuntimeComputationRegistryInput</ApiSourceLink>
+#### <ApiSourceLink label={"createRuntimeComputationRegistry"} path={"packages/kernel/runtime/src/registry/computation-registry.ts"} startLine={102}>createRuntimeComputationRegistry</ApiSourceLink> / <ApiSourceLink label={"InputRuntimeComputationRegistry"} path={"packages/kernel/runtime/src/registry/types.ts"} startLine={18}>InputRuntimeComputationRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -829,7 +829,7 @@ export type RuntimeComputationToken = Readonly<{
 | ------------------------ | ---------------------------------------- | ------- | ---------------------------------------------------------------------------- |
 | `readonly computations?` | `ReadonlyArray<RuntimeComputationToken>` | `[]`    | Computation tokens to register; defaults to an empty list                    |
 | `readonly sources`       | `RuntimeSourceRegistry`                  | —       | Source registry from which Computation dependencies must originate           |
-| `input` (Parameter)      | `RuntimeComputationRegistryInput`        | —       | Bound Source registry and computations to register                           |
+| `input` (Parameter)      | `InputRuntimeComputationRegistry`        | —       | Bound Source registry and computations to register                           |
 | Returns                  | `RuntimeComputationRegistry`             | —       | Frozen registry exposing computations in dependency-first order              |
 | Throws                   | `—`                                      | —       | Invalid token, dependency binding, computation identity, or dependency graph |
 
@@ -841,10 +841,10 @@ export type RuntimeComputationToken = Readonly<{
 
 ```ts
 export declare const createRuntimeComputationRegistry: (
-  input: RuntimeComputationRegistryInput,
+  input: InputRuntimeComputationRegistry,
 ) => RuntimeComputationRegistry;
 
-export type RuntimeComputationRegistryInput = Readonly<{
+export type InputRuntimeComputationRegistry = Readonly<{
   sources: RuntimeSourceRegistry;
   computations?: ReadonlyArray<RuntimeComputationToken>;
 }>;
@@ -1006,7 +1006,7 @@ export type RuntimeCandidateView =
 
 | Member               | Type                                                   | Default | Description                                                            |
 | -------------------- | ------------------------------------------------------ | ------- | ---------------------------------------------------------------------- |
-| `readonly diagnose`  | `(diagnostic: RuntimeComputationWarningInput) => void` | —       | Appends a commit-safe warning whose attribution is assigned by Runtime |
+| `readonly diagnose`  | `(diagnostic: InputRuntimeComputationWarning) => void` | —       | Appends a commit-safe warning whose attribution is assigned by Runtime |
 | `readonly execution` | `RuntimeComputationExecution`                          | —       | Actual execution mode of the current callback                          |
 | `readonly trace`     | `RuntimeComputationTraceReporter`                      | —       | Trace reporter bound to the Computation's Source                       |
 
@@ -1020,7 +1020,7 @@ export type RuntimeCandidateView =
 export type RuntimeComputationContext = Readonly<{
   execution: RuntimeComputationExecution;
   trace: RuntimeComputationTraceReporter;
-  diagnose: (diagnostic: RuntimeComputationWarningInput) => void;
+  diagnose: (diagnostic: InputRuntimeComputationWarning) => void;
 }>;
 ```
 
@@ -1064,7 +1064,7 @@ export const RuntimeComputationKind = {
 export type RuntimeComputationKind = ValueOf<typeof RuntimeComputationKind>;
 ```
 
-#### <ApiSourceLink label={"RuntimeComputationWarningInput"} path={"packages/kernel/runtime/src/computation/types.ts"} startLine={45}>RuntimeComputationWarningInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRuntimeComputationWarning"} path={"packages/kernel/runtime/src/computation/types.ts"} startLine={45}>InputRuntimeComputationWarning</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1085,7 +1085,7 @@ export type RuntimeComputationKind = ValueOf<typeof RuntimeComputationKind>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RuntimeComputationWarningInput = Readonly<{
+export type InputRuntimeComputationWarning = Readonly<{
   code: string;
   phase: RuntimeDiagnosticPhase;
   message: string;
@@ -1167,7 +1167,7 @@ export type RuntimeRunOutcome<TResultInput> = Readonly<{
 | Member                          | Type                                            | Default | Description                                                           |
 | ------------------------------- | ----------------------------------------------- | ------- | --------------------------------------------------------------------- |
 | `TResultInput` (Type parameter) | `—`                                             | —       | Result input produced by run or update and passed to result capture   |
-| `readonly diagnostics?`         | `ReadonlyArray<RuntimeComputationWarningInput>` | —       | Optional warnings committed with the successful full result           |
+| `readonly diagnostics?`         | `ReadonlyArray<InputRuntimeComputationWarning>` | —       | Optional warnings committed with the successful full result           |
 | `readonly kind`                 | `typeof RuntimeComputationKind.Fallback`        | —       | Discriminator for abandoning the incremental path and running in full |
 
 </ApiTable>
@@ -1187,7 +1187,7 @@ export type RuntimeUpdateOutcome<TResultInput> =
     }>
   | Readonly<{
       kind: typeof RuntimeComputationKind.Fallback;
-      diagnostics?: ReadonlyArray<RuntimeComputationWarningInput>;
+      diagnostics?: ReadonlyArray<InputRuntimeComputationWarning>;
     }>;
 ```
 
@@ -1282,7 +1282,7 @@ Initialization runs Source, Computation, then Participant prepare / commit / rea
 | Member                      | Type                                           | Default                      | Description                                                                                           |
 | --------------------------- | ---------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `readonly computations`     | `RuntimeComputationRegistry`                   | —                            | Computation registry bound to the same Source registry                                                |
-| `readonly initialSnapshots` | `ReadonlyArray<RuntimeSourceInput>`            | —                            | Initial complete snapshot commands covering the Source registry exactly                               |
+| `readonly initialSnapshots` | `ReadonlyArray<InputRuntimeSource>`            | —                            | Initial complete snapshot commands covering the Source registry exactly                               |
 | `readonly participants?`    | `ReadonlyArray<RuntimeCommitParticipantToken>` | —                            | Optional domain-neutral commit participants                                                           |
 | `readonly sources`          | `RuntimeSourceRegistry`                        | —                            | Source registry owning the runtime state                                                              |
 | `readonly trace?`           | `PerformanceTraceSink`                         | —                            | Optional performance trace sink                                                                       |
@@ -1303,7 +1303,7 @@ export declare const createRuntime: (options: RuntimeOptions) => Runtime;
 export type RuntimeOptions = Readonly<{
   sources: RuntimeSourceRegistry;
   computations: RuntimeComputationRegistry;
-  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
+  initialSnapshots: ReadonlyArray<InputRuntimeSource>;
   updateStrategy?: RuntimeUpdateStrategy;
   trace?: PerformanceTraceSink;
   participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
@@ -1402,7 +1402,7 @@ export declare const createRuntimeRevision: (value: number) => RuntimeRevision;
 ```ts
 export type RuntimeRevision = number &
   Readonly<{
-    [RuntimeRevisionType]: true;
+    [runtimeRevisionType]: true;
   }>;
 ```
 
@@ -1536,12 +1536,12 @@ export type RuntimeComputationTraceReporter = Pick<RuntimeTraceReporter, 'owner'
 
 <ApiTable variant="parameters">
 
-| Category        | Name     | Type / signature                          | Description                                                                             |
-| --------------- | -------- | ----------------------------------------- | --------------------------------------------------------------------------------------- |
-| Type parameters | `TOwner` | `extends string`                          | Owner name type bound to the reporter, preserving its literal type                      |
-| Parameters      | `input`  | `CreateRuntimeTraceReporterInput<TOwner>` | Fixed owner, allowed phases, and synchronous sink                                       |
-| Returns         | —        | `RuntimeTraceReporter<TOwner>`            | Reporter isolating invalid records, sink failures, and reentrant reports                |
-| Throws          | —        | —                                         | TraceDefinitionInvalid for an empty owner, duplicate phase/unit pair, or empty outcomes |
+| Category        | Name     | Type / signature                    | Description                                                                             |
+| --------------- | -------- | ----------------------------------- | --------------------------------------------------------------------------------------- |
+| Type parameters | `TOwner` | `extends string`                    | Owner name type bound to the reporter, preserving its literal type                      |
+| Parameters      | `input`  | `InputRuntimeTraceReporter<TOwner>` | Fixed owner, allowed phases, and synchronous sink                                       |
+| Returns         | —        | `RuntimeTraceReporter<TOwner>`      | Reporter isolating invalid records, sink failures, and reentrant reports                |
+| Throws          | —        | —                                   | TraceDefinitionInvalid for an empty owner, duplicate phase/unit pair, or empty outcomes |
 
 </ApiTable>
 
@@ -1551,7 +1551,7 @@ export type RuntimeComputationTraceReporter = Pick<RuntimeTraceReporter, 'owner'
 
 ```ts
 export declare const createRuntimeTraceReporter: <const TOwner extends string>(
-  input: CreateRuntimeTraceReporterInput<TOwner>,
+  input: InputRuntimeTraceReporter<TOwner>,
 ) => RuntimeTraceReporter<TOwner>;
 ```
 
@@ -1559,7 +1559,7 @@ export declare const createRuntimeTraceReporter: <const TOwner extends string>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CreateRuntimeTraceReporterInput"} path={"packages/kernel/runtime/src/trace/types.ts"} startLine={65}>CreateRuntimeTraceReporterInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRuntimeTraceReporter"} path={"packages/kernel/runtime/src/trace/types.ts"} startLine={65}>InputRuntimeTraceReporter</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1581,7 +1581,7 @@ export declare const createRuntimeTraceReporter: <const TOwner extends string>(
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type CreateRuntimeTraceReporterInput<TOwner extends string = string> = Readonly<{
+export type InputRuntimeTraceReporter<TOwner extends string = string> = Readonly<{
   owner: TOwner;
   phases: ReadonlyArray<RuntimeTracePhaseDefinition>;
   sink: PerformanceTraceSink;
@@ -1772,7 +1772,7 @@ export type PerformanceTraceDiagnostic = Readonly<{
 
 ## Transaction commits
 
-#### <ApiSourceLink label={"defineRuntimeCommitParticipant"} path={"packages/kernel/runtime/src/participant/define.ts"} startLine={31}>defineRuntimeCommitParticipant</ApiSourceLink>
+#### <ApiSourceLink label={"defineRuntimeCommitParticipant"} path={"packages/kernel/runtime/src/participant/define.ts"} startLine={23}>defineRuntimeCommitParticipant</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1783,7 +1783,7 @@ export type PerformanceTraceDiagnostic = Readonly<{
 | Category        | Name    | Type / signature                                 | Description                                                           |
 | --------------- | ------- | ------------------------------------------------ | --------------------------------------------------------------------- |
 | Type parameters | `TRead` | —                                                | Committed readonly view exposed by the participant to the host        |
-| Parameters      | `input` | `RuntimeCommitParticipantDefinitionInput<TRead>` | Participant dependencies, selection policy, and transaction callbacks |
+| Parameters      | `input` | `InputRuntimeCommitParticipantDefinition<TRead>` | Participant dependencies, selection policy, and transaction callbacks |
 | Returns         | —       | `RuntimeCommitParticipant<TRead>`                | Participant token that can be owned by only one Runtime               |
 | Throws          | —       | —                                                | Empty participant key or invalid Trace declarations                   |
 
@@ -1795,7 +1795,7 @@ export type PerformanceTraceDiagnostic = Readonly<{
 
 ```ts
 export declare const defineRuntimeCommitParticipant: <TRead>(
-  input: RuntimeCommitParticipantDefinitionInput<TRead>,
+  input: InputRuntimeCommitParticipantDefinition<TRead>,
 ) => RuntimeCommitParticipant<TRead>;
 ```
 
@@ -1803,7 +1803,7 @@ export declare const defineRuntimeCommitParticipant: <TRead>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RuntimeCommitParticipantDefinitionInput"} path={"packages/kernel/runtime/src/participant/types.ts"} startLine={122}>RuntimeCommitParticipantDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRuntimeCommitParticipantDefinition"} path={"packages/kernel/runtime/src/participant/types.ts"} startLine={122}>InputRuntimeCommitParticipantDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1830,7 +1830,7 @@ export declare const defineRuntimeCommitParticipant: <TRead>(
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
+export type InputRuntimeCommitParticipantDefinition<TRead> = Readonly<{
   key: string;
   sources?: ReadonlyArray<RuntimeSourceToken>;
   computations?: ReadonlyArray<RuntimeComputationToken>;
@@ -1867,7 +1867,7 @@ export type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
 ```ts
 export type RuntimeCommitParticipant<TRead> = RuntimeCommitParticipantToken &
   Readonly<{
-    [RuntimeCommitParticipantReadBrand]: (read: TRead) => TRead;
+    [runtimeCommitParticipantReadBrand]: (read: TRead) => TRead;
   }>;
 ```
 
@@ -1884,7 +1884,7 @@ export type RuntimeCommitParticipantToken = Readonly<{
   computations: ReadonlyArray<RuntimeComputationToken>;
   revisionPolicy: 'affected' | 'continuous';
   tracePhases: ReadonlyArray<RuntimeTracePhaseDefinition>;
-  [RuntimeCommitParticipantTokenBrand]: true;
+  [runtimeCommitParticipantTokenBrand]: true;
 }>;
 ```
 
@@ -1998,7 +1998,7 @@ export type RuntimeParticipantCandidateView =
 
 | Member              | Type                                                | Default | Description                                                            |
 | ------------------- | --------------------------------------------------- | ------- | ---------------------------------------------------------------------- |
-| `readonly diagnose` | `(warning: RuntimeParticipantWarningInput) => void` | —       | Appends a commit-safe warning whose attribution is assigned by Runtime |
+| `readonly diagnose` | `(warning: InputRuntimeParticipantWarning) => void` | —       | Appends a commit-safe warning whose attribution is assigned by Runtime |
 | `readonly trace`    | `RuntimeParticipantTraceReporter`                   | —       | Trace reporter bound to the participant key                            |
 
 </ApiTable>
@@ -2010,7 +2010,7 @@ export type RuntimeParticipantCandidateView =
 ```ts
 export type RuntimeParticipantContext = Readonly<{
   trace: RuntimeParticipantTraceReporter;
-  diagnose: (warning: RuntimeParticipantWarningInput) => void;
+  diagnose: (warning: InputRuntimeParticipantWarning) => void;
 }>;
 ```
 
@@ -2077,7 +2077,7 @@ export type RuntimeParticipantTraceReporter = RuntimeComputationTraceReporter;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RuntimeParticipantWarningInput"} path={"packages/kernel/runtime/src/participant/types.ts"} startLine={53}>RuntimeParticipantWarningInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRuntimeParticipantWarning"} path={"packages/kernel/runtime/src/participant/types.ts"} startLine={53}>InputRuntimeParticipantWarning</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2098,7 +2098,7 @@ export type RuntimeParticipantTraceReporter = RuntimeComputationTraceReporter;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RuntimeParticipantWarningInput = Readonly<{
+export type InputRuntimeParticipantWarning = Readonly<{
   code: string;
   phase: RuntimeDiagnosticPhase;
   message: string;

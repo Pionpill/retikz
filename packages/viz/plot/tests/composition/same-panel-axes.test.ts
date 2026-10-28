@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -99,11 +99,11 @@ const sharedYOverlaySpec = {
 const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 
 const expandOf = (spec: IRPlot): IRScope => {
-  return lowerPlot(
+  return lowerPlotWithDataArtifact(
     spec,
     { weather: rows },
     { layout: { width: 480, height: 300 }, textMeasurer: measureLabel, provenance: true },
-  ) as IRScope;
+  ).child as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
@@ -154,14 +154,14 @@ const pathYValues = (path: IRPath): Array<number> =>
 
 const spanOf = (values: ReadonlyArray<number>): number => Math.max(...values) - Math.min(...values);
 
-describe('same-panel multi-axis overlay schema', () => {
-  it('axis_placement_and_overlay_zindex_round_trip', () => {
+describe('同面板多轴叠加方案', () => {
+  it('轴放置和叠加 zindex 往返', () => {
     const parsed = parsePlotIR(JSON.parse(JSON.stringify(dualAxisSpec)));
 
     expect(parsed).toEqual(dualAxisSpec);
   });
 
-  it('axis_placement_requires_known_kind', () => {
+  it('轴放置需要已知类型', () => {
     const spec = {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'x', placement: { kind: 'corner' } }],
@@ -170,7 +170,7 @@ describe('same-panel multi-axis overlay schema', () => {
     expect(() => parsePlotIR(spec)).toThrow();
   });
 
-  it('axis_side_requires_cardinal_side', () => {
+  it('轴侧需要基侧', () => {
     const spec = {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'center' } }],
@@ -179,7 +179,7 @@ describe('same-panel multi-axis overlay schema', () => {
     expect(() => parsePlotIR(spec)).toThrow();
   });
 
-  it('overlay_cycle_rejected', () => {
+  it('覆盖循环被拒绝', () => {
     const spec = {
       ...dualAxisSpec,
       composition: {
@@ -215,8 +215,8 @@ describe('same-panel multi-axis overlay schema', () => {
   });
 });
 
-describe('same-panel multi-axis overlay lowering', () => {
-  it('left_and_right_y_axes_can_coexist', () => {
+describe('同面板多轴叠加下降', () => {
+  it('左和右 y 轴可以共存', () => {
     const outer = expandOf(parsePlotIR(dualAxisSpec));
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
 
@@ -224,7 +224,7 @@ describe('same-panel multi-axis overlay lowering', () => {
     expect(moveXOf(firstPathOf(yAxes[1]))).toBeGreaterThan(moveXOf(firstPathOf(yAxes[0])));
   });
 
-  it('duplicate_axis_same_scope_dimension_and_placement_rejected', () => {
+  it('重复轴相同范围尺寸和放置被拒绝', () => {
     const spec = {
       ...dualAxisSpec,
       guides: [
@@ -236,7 +236,7 @@ describe('same-panel multi-axis overlay lowering', () => {
     expect(() => expandOf(parsePlotIR(spec))).toThrow(/duplicate axis/i);
   });
 
-  it('cartesian_rejects_incompatible_cardinal_side', () => {
+  it('笛卡尔坐标拒绝不兼容的方位边', () => {
     const spec = {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'right' } }],
@@ -245,7 +245,7 @@ describe('same-panel multi-axis overlay lowering', () => {
     expect(() => expandOf(parsePlotIR(spec))).toThrow(/cartesian x axis.*top or bottom/i);
   });
 
-  it('cartesian_rejects_unknown_native_edge', () => {
+  it('笛卡尔拒绝未知的本机边缘', () => {
     const spec = {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'y', placement: { kind: 'edge', edge: 'hypotenuse' } }],
@@ -254,7 +254,7 @@ describe('same-panel multi-axis overlay lowering', () => {
     expect(() => expandOf(parsePlotIR(spec))).toThrow(/cartesian axis edge.*top, right, bottom, or left/i);
   });
 
-  it('overlay_scope_uses_target_plot_area_for_projection', () => {
+  it('叠加范围使用目标绘图区域进行投影', () => {
     const outer = expandOf(parsePlotIR(dualAxisSpec));
     const marks = markLayersOf(outer);
     const intervalNodes = allNodes(marks[1]);
@@ -266,7 +266,7 @@ describe('same-panel multi-axis overlay lowering', () => {
     expect(intervalYMin).toBeCloseTo(pathYMin, 6);
   });
 
-  it('overlay_scopes_with_the_same_scale_name_share_domain', () => {
+  it('具有相同比例名称的叠加范围共享域', () => {
     const outer = expandOf(parsePlotIR(sharedYOverlaySpec));
     const marks = markLayersOf(outer);
     const temperatureSpan = spanOf(pathYValues(firstPathOf(marks[0])));
@@ -275,14 +275,14 @@ describe('same-panel multi-axis overlay lowering', () => {
     expect(temperatureSpan).toBeLessThan(rainfallSpan / 5);
   });
 
-  it('overlay_zindex_changes_mark_layer_order', () => {
+  it('覆盖 zindex 更改标记层顺序', () => {
     const outer = expandOf(parsePlotIR(dualAxisSpec));
     const marks = markLayersOf(outer);
 
     expect(marks.map(mark => mark.meta?.mark)).toEqual(['path', 'interval']);
   });
 
-  it('x_axis_declared_only_on_target_scope_is_not_copied_to_overlay', () => {
+  it('仅在目标范围上声明的 x 轴不会复制到覆盖', () => {
     const outer = expandOf(parsePlotIR(dualAxisSpec));
     const xAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'x');
 

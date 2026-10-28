@@ -1,6 +1,6 @@
 import type { HydrationEventProps } from '@retikz/react';
 import type { InputEllipse } from '@retikz/standard-vanilla/shape';
-import { EllipseInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { ellipseInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
@@ -19,5 +19,5 @@ const EllipseComponent: FC<EllipseProps> = () => null;
 export const Ellipse = EllipseComponent as StandardEmbeddableComponent<EllipseProps>;
 Ellipse.displayName = 'Ellipse';
 Ellipse.isTier2Embeddable = true;
-Ellipse.inputEmbedAdapter = EllipseInputEmbedAdapter;
+Ellipse.inputEmbedAdapter = ellipseInputEmbedAdapter;
 Ellipse.createInputEmbedProps = shapeEmbedProps;

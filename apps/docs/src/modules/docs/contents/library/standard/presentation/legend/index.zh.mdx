@@ -46,7 +46,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { LegendDefinition } from '@retikz/standard/presentation';
+import { legendDefinition } from '@retikz/standard/presentation';
 
 const ir: IRScene = {
   type: 'scene',
@@ -68,14 +68,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} composites={[LegendDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[legendDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { legend, LegendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { legend, legendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import { scene, node, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -90,7 +90,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [LegendInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [legendInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -99,7 +99,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { LegendDefinition } from '@retikz/standard/presentation';
+import { legendDefinition } from '@retikz/standard/presentation';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -122,7 +122,7 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [LegendDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [legendDefinition] } });
 console.log(svg);
 ```
 
@@ -185,15 +185,15 @@ marker 脱离 `Legend` 单独使用、marker 与 form 不匹配或基数不合�
 
 ### 从 Legend IR 到 Core 输出
 
-`LegendDefinition` 由 Core composite registry 消费。它先对标题、样本和标签执行 minimum / natural probe，求出结构轮廓。内容宽度确定后，标题按 x 轴 range 与 y 轴 natural 再 probe；样本和标签则按最终 slot 执行 exact probe。编译只 replay 被选中的结果，被丢弃的 probe 不发布图元、资源或产物。
+`legendDefinition` 由 Core composite registry 消费。它先对标题、样本和标签执行 minimum / natural probe，求出结构轮廓。内容宽度确定后，标题按 x 轴 range 与 y 轴 natural 再 probe；样本和标签则按最终 slot 执行 exact probe。编译只 replay 被选中的结果，被丢弃的 probe 不发布图元、资源或产物。
 
 <ComponentPreview files="legend-pipeline" hideCode type="flow" size="md" />
 
-`LegendDefinition` 返回普通 Core IR children，并在同次编译并列返回 `LegendArtifact`。Core 随后把这些 children 编译进 Scene，而 artifact 保持为独立产物；SVG 与 Canvas renderer 不认识 `standard.legend`，也不提供专属分支。
+`legendDefinition` 返回普通 Core IR children，并在同次编译并列返回 `LegendArtifact`。Core 随后把这些 children 编译进 Scene，而 artifact 保持为独立产物；SVG 与 Canvas renderer 不认识 `standard.legend`，也不提供专属分支。
 
 ### 嵌套能力与失败
 
-Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Tier 2 composite 仍需在同一 compile options 中注册自己的 Definition；直接传入的 `LegendDefinition` 不会猜测或全局安装样本依赖
+Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Tier 2 composite 仍需在同一 compile options 中注册自己的 Definition；直接传入的 `legendDefinition` 不会猜测或全局安装样本依赖
 
 未注册 Legend 会产生 `COMPOSITE_NOT_REGISTERED`。内嵌 composite 的 probe 失败会保留原始 occurrence 并终止当前 Legend，而不是用空样本继续。重复 `items[].key` / `ticks[].key`、纯空白 key、越界或逆序 tick offset 会在 schema 边界 fail-loud。
 

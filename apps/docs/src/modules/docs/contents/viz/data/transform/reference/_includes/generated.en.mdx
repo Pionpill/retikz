@@ -106,7 +106,7 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
 
 </DocTabs>
 
-#### <ApiSourceLink label={"TransformDefinitionInput"} path={"packages/viz/data/src/transform/contract.ts"} startLine={166}>TransformDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputTransformDefinition"} path={"packages/viz/data/src/transform/contract.ts"} startLine={166}>InputTransformDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -133,7 +133,7 @@ The remaining members are inherited from `TransformDefinition<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type TransformDefinitionInput<
+export type InputTransformDefinition<
   TKind extends string,
   TParamsSchema extends ZodType<Record<string, JsonValue>, Record<string, JsonValue>>,
 > = Omit<
@@ -399,7 +399,7 @@ export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.free
 | --------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | Type parameters | `TKind`         | `extends string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Fixed registered transform kind                                                 |
 |                 | `TParamsSchema` | `extends ZodType<Record<string, JsonValue>, Record<string, JsonValue>>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Parameter input and parsed-output contract determining the callback params type |
-| Parameters      | `def`           | `TransformDefinitionInput<TKind, TParamsSchema>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Kind, parameter schema, and field semantics; does not register the Definition   |
+| Parameters      | `def`           | `InputTransformDefinition<TKind, TParamsSchema>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Kind, parameter schema, and field semantics; does not register the Definition   |
 | Returns         | —               | `{ dependencies?: (operation: { kind: TKind; params: output<TParamsSchema> }, context: TransformSemanticContext) => Array<DataTransformDependency>; inputFields?: (operation: { kind: TKind; params: output<TParamsSchema> }, context: TransformSemanticContext) => Array<string>; outputModel: (operation: { kind: TKind; params: output<TParamsSchema> }, context: TransformSemanticContext) => DataTransformOutputModel; schedule?: Readonly<{ bindingClass: DataTransformBindingClass; fieldEffect: DataTransformFieldEffect; phase: DataTransformPhase }>; schema: ZodObject<{ kind: ZodLiteral<TKind>; params: TParamsSchema }, $strict>; validate?: (operation: { kind: TKind; params: output<TParamsSchema> }, context: TransformSemanticContext) => void }` | Definition whose complete operation schema is assembled by the shared factory   |
 
 </ApiTable>
@@ -417,7 +417,7 @@ export declare const defineTransform: <
     $ZodTypeInternals<Record<string, JsonValue>, Record<string, JsonValue>>
   >,
 >(
-  def: TransformDefinitionInput<TKind, TParamsSchema>,
+  def: InputTransformDefinition<TKind, TParamsSchema>,
 ) => {
   dependencies?: (
     operation: { kind: TKind; params: output<TParamsSchema> },
@@ -509,7 +509,7 @@ export declare const extractTransformKind: (schema: ZodType) => string;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveTransformRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={538}>resolveTransformRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveTransformRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={529}>resolveTransformRegistry</ApiSourceLink>
 
 Built-ins are registered first; custom Definitions cannot override built-in kinds or duplicate one another
 
@@ -541,7 +541,7 @@ export declare const resolveTransformRegistry: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"resolveTransformImplementationRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={580}>resolveTransformImplementationRegistry</ApiSourceLink>
+#### <ApiSourceLink label={"resolveTransformImplementationRegistry"} path={"packages/viz/data/src/transform/definitions.ts"} startLine={571}>resolveTransformImplementationRegistry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -578,7 +578,7 @@ export declare const resolveTransformImplementationRegistry: <
 
 ## Row selection
 
-#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/operators/selector/schema.ts"} startLine={191}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/operators/selector/schema.ts"} startLine={185}>SelectorOperationSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataSelectorOperation"} path={"packages/viz/data/src/operators/selector/schema.ts"} startLine={156}>IRDataSelectorOperation</ApiSourceLink> / <ApiSourceLink label={"SelectorOperationSchema"} path={"packages/viz/data/src/operators/selector/schema.ts"} startLine={150}>SelectorOperationSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -938,7 +938,7 @@ export declare const resolveRowSelectorImplementationRegistry: <
 
 ## Statistical reduction
 
-#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={330}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={291}>ReducerOperationSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerOperation"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={309}>IRDataReducerOperation</ApiSourceLink> / <ApiSourceLink label={"ReducerOperationSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={270}>ReducerOperationSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -960,7 +960,7 @@ Shared reducer operation configuration. Additional custom fields must be JSON va
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRDataReducerMetrics"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={336}>IRDataReducerMetrics</ApiSourceLink> / <ApiSourceLink label={"ReducerMetricsSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={308}>ReducerMetricsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRDataReducerMetrics"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={315}>IRDataReducerMetrics</ApiSourceLink> / <ApiSourceLink label={"ReducerMetricsSchema"} path={"packages/viz/data/src/operators/reducer/schema.ts"} startLine={287}>ReducerMetricsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="definition">
 
@@ -2203,7 +2203,7 @@ export declare const collectTransformFields: (
 | Category        | Name      | Type / signature                        | Description                                                                                         |
 | --------------- | --------- | --------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | Type parameters | `TSource` | —                                       | Native source-handle type shared by bindings and the executor                                       |
-| Parameters      | `input`   | `DataTransformStageInput<TSource>`      | Actual source input or computation result                                                           |
+| Parameters      | `input`   | `InputDataTransformStage<TSource>`      | Actual source input or computation result                                                           |
 | Returns         | —         | `DataTransformInputDescriptor<TSource>` | Preparation descriptor preserving the source handle or result model without reading or copying rows |
 
 </ApiTable>
@@ -2214,7 +2214,7 @@ export declare const collectTransformFields: (
 
 ```ts
 export declare const describeDataTransformInput: <TSource>(
-  input: DataTransformStageInput<TSource>,
+  input: InputDataTransformStage<TSource>,
 ) => DataTransformInputDescriptor<TSource>;
 ```
 
@@ -2420,7 +2420,7 @@ export type DataInputBindings<TSource> = Readonly<Record<string, DataInputBindin
 
 </DocTabs>
 
-#### <ApiSourceLink label={"DataTransformStageInput"} path={"packages/viz/data/src/execution/contract.ts"} startLine={31}>DataTransformStageInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputDataTransformStage"} path={"packages/viz/data/src/execution/contract.ts"} startLine={31}>InputDataTransformStage</ApiSourceLink>
 
 <DocTabs defaultValue="source">
 
@@ -2456,7 +2456,7 @@ export type DataInputBindings<TSource> = Readonly<Record<string, DataInputBindin
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type DataTransformStageInput<TSource> =
+export type InputDataTransformStage<TSource> =
   | Readonly<{
       kind: 'source';
       source: TSource;
@@ -2564,7 +2564,7 @@ export type DataTransformStageSupport<TSource> =
 | -------------------------- | -------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------- |
 | `TSource` (Type parameter) | `—`                                                                                                | —       | Native source-handle type shared by bindings and the executor         |
 | `readonly definition`      | `AnyTransformDefinition`                                                                           | —       | Definition identity explicitly adapted by the provider                |
-| `readonly execute`         | `(input: DataTransformStageInput<TSource>) => DataTransformResult \| Promise<DataTransformResult>` | —       | Consumes this actual input without querying the original source again |
+| `readonly execute`         | `(input: InputDataTransformStage<TSource>) => DataTransformResult \| Promise<DataTransformResult>` | —       | Consumes this actual input without querying the original source again |
 
 </ApiTable>
 
@@ -2575,7 +2575,7 @@ export type DataTransformStageSupport<TSource> =
 ```ts
 export type DataTransformStageImplementation<TSource> = Readonly<{
   definition: AnyTransformDefinition;
-  execute: (input: DataTransformStageInput<TSource>) => DataTransformResult | Promise<DataTransformResult>;
+  execute: (input: InputDataTransformStage<TSource>) => DataTransformResult | Promise<DataTransformResult>;
 }>;
 ```
 
@@ -2744,7 +2744,7 @@ export type DataTransformExecutionOptions<TSource> = Readonly<{
 | Member                     | Type                                                                  | Default | Description                                                                |
 | -------------------------- | --------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------- |
 | `TSource` (Type parameter) | `—`                                                                   | —       | Native source-handle type shared by bindings and the executor              |
-| `readonly bind`            | `(input: DataTransformStageInput<TSource>) => DataTransformExecution` | —       | Binds an actual input to the fixed plan and creates a single-use execution |
+| `readonly bind`            | `(input: InputDataTransformStage<TSource>) => DataTransformExecution` | —       | Binds an actual input to the fixed plan and creates a single-use execution |
 | `readonly kind`            | `'ready'`                                                             | —       | Discriminates successful preparation from unsupported plans                |
 
 </ApiTable>
@@ -2771,7 +2771,7 @@ export type DataTransformExecutionOptions<TSource> = Readonly<{
 export type DataTransformPreparation<TSource> =
   | Readonly<{
       kind: 'ready';
-      bind: (input: DataTransformStageInput<TSource>) => DataTransformExecution;
+      bind: (input: InputDataTransformStage<TSource>) => DataTransformExecution;
     }>
   | Readonly<{
       kind: 'unsupported';
@@ -3017,7 +3017,7 @@ export declare const createDataTransformExecutor: <TSource = never>(
 | Category        | Name         | Type / signature                   | Description                                                                                                                |
 | --------------- | ------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | Type parameters | `TSource`    | —                                  | Native source-handle type shared by bindings and the executor                                                              |
-| Parameters      | `input`      | `DataTransformStageInput<TSource>` | Actual source input or completed result for this request                                                                   |
+| Parameters      | `input`      | `InputDataTransformStage<TSource>` | Actual source input or completed result for this request                                                                   |
 |                 | `resolution` | `DataTransformResolution`          | Semantic resolution without reading rows                                                                                   |
 |                 | `executor`   | `DataTransformExecutor<TSource>`   | Executor responsible for capability preparation and computation                                                            |
 |                 | `options?`   | `DataTransformRequestOptions`      | Request overrides, provenance requirements, and cancellation signal; omitted adds no request configuration                 |
@@ -3032,7 +3032,7 @@ export declare const createDataTransformExecutor: <TSource = never>(
 
 ```ts
 export declare const executeDataTransforms: <TSource>(
-  input: DataTransformStageInput<TSource>,
+  input: InputDataTransformStage<TSource>,
   resolution: DataTransformResolution,
   executor: DataTransformExecutor<TSource>,
   options?: DataTransformRequestOptions,
@@ -3077,7 +3077,7 @@ export declare const ingestDataTransformResult: (
 
 ## Synchronous calls
 
-#### <ApiSourceLink label={"applyTransforms"} path={"packages/viz/data/src/execution/apply.ts"} startLine={235}>applyTransforms</ApiSourceLink>
+#### <ApiSourceLink label={"applyTransforms"} path={"packages/viz/data/src/execution/apply.ts"} startLine={228}>applyTransforms</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -3183,7 +3183,7 @@ export type ApplyTransformsResult = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"applyTransformsToDataView"} path={"packages/viz/data/src/execution/apply.ts"} startLine={218}>applyTransformsToDataView</ApiSourceLink>
+#### <ApiSourceLink label={"applyTransformsToDataView"} path={"packages/viz/data/src/execution/apply.ts"} startLine={211}>applyTransformsToDataView</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

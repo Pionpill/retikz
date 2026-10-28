@@ -5,8 +5,8 @@ import { literal, strictObject } from 'zod';
 
 import { resolvePlotAuthoring } from '../src/plot-runtime';
 
-describe('Plot regression runtime injection', () => {
-  it.each([false, true])('forwards custom fitting definitions with embedded=%s', embedded => {
+describe('Plot 回归运行时注入', () => {
+  it.each([false, true])('转发带有嵌入=%s 的自定义配件定义', embedded => {
     const definition = defineRegression({
       schema: strictObject({ kind: literal('identity-fit') }),
     });
@@ -58,7 +58,7 @@ describe('Plot regression runtime injection', () => {
   });
 });
 
-it.each([false, true])('injects field orders into React runtime with embedded=%s', embedded => {
+it.each([false, true])('将字段指令注入 React 运行时，并嵌入 = %s', embedded => {
   const definition = defineFieldOrder({ name: 'length', compare: (a, b) => String(a).length - String(b).length });
   const spec = PlotSchema.parse({
     namespace: 'plot',

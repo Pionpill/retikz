@@ -5,11 +5,11 @@ description: Follow how Core turns text metrics and shape constraints into node 
 
 [Configuration resolution](/kernel/packages/core/resolution) determines the node's font, shape, and styles. [Coordinate resolution](/kernel/packages/core/coordinates) explains where it belongs. This page follows the next questions: how much space does the text need, how does the shape contain it, and which geometry positions labels and connections?
 
-Start with [Node basic usage](/kernel/components/node/usage) and [text syntax](/kernel/components/node/text). This page starts at the resolved `NodeResolution` and ends when `NodeLayout` reaches emission and reference consumers. Browser font loading, the TeX engine, and path clipping algorithms are outside its scope.
+Start with [Node basic usage](/kernel/components/node/usage) and [text syntax](/kernel/components/node/text). This page starts at the resolved `NodeResolution` and ends when `CompiledNodeLayout` reaches emission and reference consumers. Browser font loading, the TeX engine, and path clipping algorithms are outside its scope.
 
 ## Overall flow
 
-Node layout determines the space needed by content, computes shape dimensions, and then places the body and attached labels. `NodeResolution` contains effective node configuration and bound shape and boundary definitions. `NodeLayout` holds geometry and text layout for later stages.
+Node layout determines the space needed by content, computes shape dimensions, and then places the body and attached labels. `NodeResolution` contains effective node configuration and bound shape and boundary definitions. `CompiledNodeLayout` holds geometry and text layout for later stages.
 
 <ComponentPreview files="layout-overview" size="xs" hideCode type="flow" />
 
@@ -21,9 +21,9 @@ The text is first split into the lines that will actually be displayed, called *
 
 <SourceLinks
   sources={[
-    { label: 'compileResolvedNode: layout entry point', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: 'compileNodeResolution: layout entry point', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: 'NodeResolution: layout input', path: 'packages/kernel/core/src/resolve/node/types.ts' },
-    { label: 'NodeLayout: geometry and text layout', path: 'packages/kernel/core/src/compile/node/types.ts' },
+    { label: 'CompiledNodeLayout: geometry and text layout', path: 'packages/kernel/core/src/compile/node/types.ts' },
   ]}
 />
 
@@ -54,7 +54,7 @@ Three bounds serve different purposes:
 - **Visual shape**: the outline that contains the content box plus padding, subject to size constraints.
 - **Layout allocation**: the space reserved by the parent layout, accounting for margin and rotation around the node's outer box.
 
-The shape's `computeCircumscribedHalfAxes` receives content half-width and half-height and returns an outer box that can contain them. A rectangle usually encloses the content directly; a circle needs a larger diameter to contain the same rectangular content area.
+The shape's `computeCircumscribedGeometry` receives content half-width and half-height and returns an outer box that can contain them. A rectangle usually encloses the content directly; a circle needs a larger diameter to contain the same rectangular content area.
 
 The diagram assumes an already measured content box of `40 × 24`, an unrotated rectangle, `padding = 8` on all sides, `minimumSize = { width: 80, height: 48 }`, and `margin = 6`, with no fixed `width`. Geometry is enlarged uniformly for readability. Gray dotted lines show calculated bounds, not additional node borders.
 
@@ -138,7 +138,7 @@ The flow below follows a plain-text node. The left side shows layout stages; the
 
 <ComponentPreview files="layout-implementation" size="xl" hideCode type="flow" />
 
-Start reading at `compileResolvedNode`: it organizes content layout, shape constraints, and label placement, then completes self-anchor placement. The result's `layout` field holds `NodeLayout` in local coordinates, while `properties` holds complete effective properties and identity. Within layout, `geometry` contains the outer box, content center, content dimensions, and margin. `text` holds physical lines and baselines, while `labels` holds relative positions of attached text. Painting reads current properties and existing layout; text, stroke, and label properties are not split according to layout or paint update categories.
+Start reading at `compileNodeResolution`: it organizes content layout, shape constraints, and label placement, then completes self-anchor placement. The result's `layout` field holds `CompiledNodeLayout` in local coordinates, while `properties` holds complete effective properties and identity. Within layout, `geometry` contains the outer box, content center, content dimensions, and margin. `text` holds physical lines and baselines, while `labels` holds relative positions of attached text. Painting reads current properties and existing layout; text, stroke, and label properties are not split according to layout or paint update categories.
 
 Traversal then projects geometry into world space for named references. Emission turns the local layout into shape, body-text, and label primitives. Reference geometry in the namespace and local primitives in Scene have different consumers; drawing coordinates do not all need to be expanded into world coordinates beforehand.
 

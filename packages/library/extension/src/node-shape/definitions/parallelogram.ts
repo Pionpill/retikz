@@ -13,7 +13,7 @@ import {
   polygonAnchor,
   polygonBoundaryPoint,
   polygonConnectionEnvelope,
-} from './_utils';
+} from './polygon';
 
 const ParallelogramShapeParamsSchema = strictObject({
   slantDirection: zodEnum(['left', 'right']).optional().describe('Direction of the top-edge horizontal offset.'),
@@ -62,10 +62,10 @@ const parallelogramVertices =
   };
 
 /** 可选 Parallelogram 形状 Definition */
-export const ParallelogramShapeDefinition = defineShape<ParallelogramShapeParams>({
+export const parallelogramShapeDefinition = defineShape<ParallelogramShapeParams>({
   name: BuiltinExtensionShapeName.Parallelogram,
   paramsSchema: ParallelogramShapeParamsSchema,
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight, params) => {
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight, params) => {
     const sharp = {
       halfWidth: innerHalfWidth + Math.abs(slantOffset(innerHalfHeight, params)),
       halfHeight: innerHalfHeight,
@@ -93,9 +93,7 @@ export const ParallelogramShapeDefinition = defineShape<ParallelogramShapeParams
 });
 
 /** Parallelogram 的静态 Core provider */
-export const ParallelogramShapeProvider: CoreDependencyProvider = Object.freeze({
-  key: { capability: 'shape', name: ParallelogramShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
-  makeDefinition: () => ParallelogramShapeDefinition,
+export const parallelogramShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
+  key: { capability: 'shape', name: parallelogramShapeDefinition.name },
+  makeDefinition: () => parallelogramShapeDefinition,
 });

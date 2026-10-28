@@ -1,13 +1,13 @@
 import type {
-  FrameDescriptionInput,
-  FrameInput,
-  FrameTitleInput,
+  InputFrameDescription,
+  InputFrameConfig,
+  InputFrameTitle,
   IRFrameDescription,
   IRFrameTitle,
 } from '@retikz/standard/presentation';
 import {
   createFrame,
-  FrameProvider,
+  frameProvider,
   RetikzStandardError,
   RetikzStandardErrorCode,
 } from '@retikz/standard/presentation';
@@ -19,7 +19,7 @@ import type {
   InputNode,
 } from '@retikz/vanilla';
 
-import { StandardFrameEmbedKind } from '../shared/constants';
+import { standardFrameEmbedKind } from '../shared/constants';
 
 /** React Frame marker 在 Vanilla 中延后归一化的 Node-like header 输入 */
 export type InputFrameHeaders = Readonly<{
@@ -30,7 +30,7 @@ export type InputFrameHeaders = Readonly<{
 }>;
 
 /** Vanilla Frame 输入可显式指定持久化 Scope id */
-export type InputFrame = Omit<FrameInput, 'id' | 'children'> & {
+export type InputFrame = Omit<InputFrameConfig, 'id' | 'children'> & {
   /** 要持久化到 Frame IR 的显式身份 */
   id?: string;
   /** 在根 Scene traversal 中归一化的 Frame body children */
@@ -45,22 +45,22 @@ type FrameNode = Extract<InputEmbedContribution['node'], { type: 'node' }>;
 const isFrameNode = (child: InputChild): child is FrameNode => child.type === 'node' && !('namespace' in child);
 
 /** 创建 JSON-safe 的 Frame 主标题输入 */
-export const frameTitle = (input: FrameTitleInput): IRFrameTitle => ({ ...input });
+export const frameTitle = (input: InputFrameTitle): IRFrameTitle => ({ ...input });
 
 /** 创建 JSON-safe 的 Frame 辅助说明输入 */
-export const frameDescription = (input: FrameDescriptionInput): IRFrameDescription => ({ ...input });
+export const frameDescription = (input: InputFrameDescription): IRFrameDescription => ({ ...input });
 
 /** Standard Frame 的 InputEmbed adapter */
-export const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = {
-  kind: StandardFrameEmbedKind,
+export const frameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = {
+  kind: standardFrameEmbedKind,
   lower: (props, context) => {
     /** 将已归一化的 Node 转换为 Frame header input */
-    const headerInputOf = (child: FrameNode): FrameTitleInput | FrameDescriptionInput => {
+    const headerInputOf = (child: FrameNode): InputFrameTitle | InputFrameDescription => {
       const { type: _type, position: _position, ...header } = child;
       void _type;
       void _position;
 
-      return header as FrameTitleInput | FrameDescriptionInput;
+      return header as InputFrameTitle | InputFrameDescription;
     };
 
     const { children, headers, id, ...input } = props;
@@ -69,7 +69,7 @@ export const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = 
       throw new RetikzStandardError({
         code: RetikzStandardErrorCode.AuthoringInvalid,
         message: 'Standard Frame inputs require Kernel Vanilla normalizeScene.',
-        details: { operation: 'FrameInputEmbedAdapter' },
+        details: { operation: 'frameInputEmbedAdapter' },
       });
     }
 
@@ -123,18 +123,18 @@ export const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = 
         ...(description === undefined ? {} : { description }),
       }),
       providerDependencies: {
-        roots: [FrameProvider.key, ...normalizedChildren.providerDependencies.roots],
-        providers: [FrameProvider, ...normalizedChildren.providerDependencies.providers],
+        roots: [frameProvider.key, ...normalizedChildren.providerDependencies.roots],
+        providers: [frameProvider, ...normalizedChildren.providerDependencies.providers],
       },
       ...(normalizedChildren.authoringSites.length === 0 ? {} : { authoringSites: normalizedChildren.authoringSites }),
     };
   },
 };
 
-/** 创建由 FrameInputEmbedAdapter 下沉的 Standard Frame embed */
+/** 创建由 frameInputEmbedAdapter 下沉的 Standard Frame embed */
 export const frame = (input: InputFrame): InputEmbed<InputFrame> => ({
   type: 'embed',
-  kind: StandardFrameEmbedKind,
+  kind: standardFrameEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

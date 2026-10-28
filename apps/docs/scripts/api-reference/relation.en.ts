@@ -17,8 +17,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'Relation embed 的 Source authoring 输入': 'Source authoring input for a Relation embed',
   '关系编写字段，端点可使用 id 字符串，路径可使用 way':
     'Relation authoring fields; endpoints accept id strings and paths accept way',
-  '供 Vanilla 内容树使用的 embed 节点，由 RelationInputEmbedAdapter 转换为 Relation Source':
-    'An embed for Vanilla content trees, converted to Relation Source by RelationInputEmbedAdapter',
+  '供 Vanilla 内容树使用的 embed 节点，由 relationInputEmbedAdapter 转换为 Relation Source':
+    'An embed for Vanilla content trees, converted to Relation Source by relationInputEmbedAdapter',
   '将 endpoint 与可选 Way sugar 归一为直接持有 route 的 Relation Source record':
     'Normalize endpoints and optional Way sugar into a Relation Source record with a direct route',
   'Relation 的 Vanilla authoring 输入': 'Vanilla authoring input for Relation',

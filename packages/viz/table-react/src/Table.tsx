@@ -7,9 +7,9 @@ import type {
   IRDataExecution,
 } from '@retikz/data';
 import type { LayoutExtensions, LayoutProps } from '@retikz/react';
-import type { IRTable, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
+import type { IRTable, TablesLoweringOptions, TableLayoutManifest } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
@@ -48,7 +48,7 @@ export type TableLayoutHostProps = Pick<
 
 /** 三个 Table 组件共享的宿主展示与 lowering props */
 export type TableCommonProps = TableLayoutHostProps &
-  LowerTablesOptions & {
+  TablesLoweringOptions & {
     /** Cell 内嵌 Tier 2 内容所需的额外 composite definitions */
     composites?: ReadonlyArray<AnyCompositeDefinition>;
     /** standalone 渲染后接收 Table layout manifest */
@@ -157,5 +157,5 @@ const TableComponent: FC<TableProps<unknown>> = props => (
 export const Table = TableComponent as InputEmbeddableDataTableComponent<TableProps<unknown>>;
 Table.displayName = 'Table';
 Table.isTier2Embeddable = true;
-Table.inputEmbedAdapter = TableInputEmbedAdapter;
+Table.inputEmbedAdapter = tableInputEmbedAdapter;
 Table.createInputEmbedProps = props => createReactTableInput(ReactTableRuntimeKind.Table, props as TableProps<unknown>);

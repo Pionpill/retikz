@@ -1,22 +1,6 @@
-import type { EllipsePrimitive, PathPrimitive, RectPrimitive, ResolvedShapeStyle } from '../../contract';
+import type { EllipsePrimitive, RectPrimitive, CompiledShapeStyle } from '../../contract';
 
-type ShapeStylePassthrough = Omit<ResolvedShapeStyle, 'fill' | 'stroke' | 'strokeWidth'>;
-
-type PathPrimitiveStyle = Pick<
-  PathPrimitive,
-  | 'fill'
-  | 'fillOpacity'
-  | 'stroke'
-  | 'strokeOpacity'
-  | 'strokeWidth'
-  | 'dashPattern'
-  | 'dashOffset'
-  | 'lineCap'
-  | 'lineJoin'
-  | 'opacity'
-  | 'shadow'
-  | 'blendMode'
->;
+type ShapeStylePassthrough = Omit<CompiledShapeStyle, 'fill' | 'stroke' | 'strokeWidth'>;
 
 type EllipsePrimitiveStyle = Pick<
   EllipsePrimitive,
@@ -57,22 +41,8 @@ const withoutCornerRadius = (style: ShapeStylePassthrough): Omit<ShapeStylePasst
   return passthroughStyle;
 };
 
-/** 将 shape style 落到 path primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth */
-export const buildPathPrimitiveStyle = (
-  style: ResolvedShapeStyle,
-  options?: { fill?: PathPrimitive['fill'] },
-): PathPrimitiveStyle => {
-  const { fill, stroke, strokeWidth, ...passthroughStyle } = style;
-  return {
-    ...withoutCornerRadius(passthroughStyle),
-    fill: options?.fill ?? fill ?? 'transparent',
-    stroke: stroke ?? 'currentColor',
-    strokeWidth: strokeWidth ?? 1,
-  };
-};
-
 /** 将 shape style 落到 ellipse primitive；过滤 cornerRadius 并补默认 fill / stroke / strokeWidth */
-export const ellipsePrimitiveStyle = (style: ResolvedShapeStyle): EllipsePrimitiveStyle => {
+export const ellipsePrimitiveStyle = (style: CompiledShapeStyle): EllipsePrimitiveStyle => {
   const { fill, stroke, strokeWidth, ...passthroughStyle } = style;
   return {
     ...withoutCornerRadius(passthroughStyle),
@@ -84,7 +54,7 @@ export const ellipsePrimitiveStyle = (style: ResolvedShapeStyle): EllipsePrimiti
 
 /** 将 shape style 落到 rect primitive；用调用方圆角覆盖 style.cornerRadius */
 export const rectPrimitiveStyle = (
-  style: ResolvedShapeStyle,
+  style: CompiledShapeStyle,
   cornerRadius: RectPrimitive['cornerRadius'],
 ): RectPrimitiveStyle => {
   const { fill, stroke, strokeWidth, ...passthroughStyle } = style;

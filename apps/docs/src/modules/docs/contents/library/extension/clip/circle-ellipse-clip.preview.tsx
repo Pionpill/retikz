@@ -1,4 +1,4 @@
-import { CircleClipDefinition, EllipseClipDefinition } from '@retikz/extension';
+import { circleClipDefinition, ellipseClipDefinition } from '@retikz/extension';
 import { Layout, Node, Scope } from '@retikz/react';
 
 const clippedContent = (centerX: number) => (
@@ -30,7 +30,7 @@ export type CircleEllipseClipPreviewValues = {
 export const renderCircleEllipseClipPreview = (values: CircleEllipseClipPreviewValues) => (
   <Layout
     viewBox={{ x: -220, y: -110, width: 440, height: 220 }}
-    extensions={{ clips: [CircleClipDefinition, EllipseClipDefinition] }}
+    extensions={{ clips: [circleClipDefinition, ellipseClipDefinition] }}
   >
     {sourceBoundary(-105)}
     <Scope clip={{ kind: 'circle', params: { cx: -105, cy: 0, r: values.circleRadius } }}>{clippedContent(-105)}</Scope>

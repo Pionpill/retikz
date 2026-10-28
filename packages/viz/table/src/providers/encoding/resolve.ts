@@ -11,7 +11,7 @@ import { deepFreeze } from '../../shared';
 import { cellVisualScaleDefinitionOf } from './registry';
 
 /** package-private visual scale 消费输入 */
-export type ResolveCellVisualScaleInput = Readonly<{
+type InputCellVisualScaleResolution = Readonly<{
   /** 已解析的 encoding scale ref */
   ref: IRTableVisualScaleRef;
   /** canonical selector 命中的 non-null raw scalars */
@@ -78,7 +78,9 @@ const guardResolution = (name: string, resolution: CellVisualScaleResolution): C
 };
 
 /** 解析一次 visual scale definition 并守卫 options、resolution 与 evaluator */
-export const resolveCellVisualScale = (input: ResolveCellVisualScaleInput): CellVisualScaleResolution | undefined => {
+export const resolveCellVisualScale = (
+  input: InputCellVisualScaleResolution,
+): CellVisualScaleResolution | undefined => {
   const definition = cellVisualScaleDefinitionOf(input.ref.name, input.registry);
   const parsedOptions = definition.optionsSchema.parse(input.ref.options ?? {});
   const options = deepFreeze(parsedOptions);

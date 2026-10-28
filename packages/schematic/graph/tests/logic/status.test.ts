@@ -21,36 +21,33 @@ const relation = (status?: string) =>
     ...(status === undefined ? {} : { status }),
   });
 
-describe('Graph semantic status', () => {
+describe('Graph 语义状态', () => {
   it.each(['error', 'success', 'warning', 'disabled'] as const)(
-    'preserves the closed %s status in Entity and Relation Source',
+    '保留 Entity 和 Relation Source 中关闭的 %s 状态',
     status => {
       expect(entity(status)).toMatchObject({ status });
       expect(relation(status)).toMatchObject({ status });
     },
   );
 
-  it('keeps status omitted when no semantic state is authored', () => {
+  it('在未编写语义状态时保持省略状态', () => {
     expect(entity()).not.toHaveProperty('status');
     expect(relation()).not.toHaveProperty('status');
   });
 
-  it.each(['', 'pending', ['error'], { value: 'error' }] as const)(
-    'rejects an invalid status at the Source schema boundary',
-    status => {
-      expect(() => entity(status as string)).toThrow();
-      expect(() => relation(status as string)).toThrow();
-    },
-  );
+  it.each(['', 'pending', ['error'], { value: 'error' }] as const)('拒绝 Source schema 边界处的无效状态', status => {
+    expect(() => entity(status as string)).toThrow();
+    expect(() => relation(status as string)).toThrow();
+  });
 
-  it('matches Theme selectors by status without requiring a registry definition', () => {
+  it('按状态匹配主题选择器，无需注册表定义', () => {
     const selector = Graph.GraphEntityThemeSelectorSchema.parse({ status: ['warning', 'error'] });
 
     expect(Graph.matchesGraphThemeSelector(selector, { role: 'activity', status: 'warning' })).toBe(true);
     expect(Graph.matchesGraphThemeSelector(selector, { role: 'activity', status: 'success' })).toBe(false);
   });
 
-  it('combines Relation status selectors with the effective direction', () => {
+  it('将 Relation 状态选择器与有效方向结合起来', () => {
     const selector = Graph.GraphRelationThemeSelectorSchema.parse({
       status: 'warning',
       direction: 'forward',
@@ -64,7 +61,7 @@ describe('Graph semantic status', () => {
     );
   });
 
-  it('does not infer Graph status from domain predicate params', () => {
+  it('不从域谓词参数推断 Graph 状态', () => {
     const source = Graph.EntitySchema.parse({
       namespace: 'graph',
       type: 'entity',

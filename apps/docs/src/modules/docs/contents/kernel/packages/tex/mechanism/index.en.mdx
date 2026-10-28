@@ -23,7 +23,7 @@ A math segment is a formula segment in a text line, as opposed to an ordinary te
 
 Callers can also declare a formula segment directly in structured text: this is an explicit math segment, requiring no dollar-delimiter recognition. Because it already explicitly requests formula layout, a missing lowerer skips the segment with a diagnostic instead of falling back to ordinary text.
 
-Core passes the source, `displayMode`, and font size to synchronous `LowerTex`. Host color is resolved when painting and does not participate in lowering. This separates text layout from formula typesetting: Core does not need to know how MathJax lays out the formula.
+Core passes the source, `displayMode`, and font size to synchronous `TexLowerer`. Host color is resolved when painting and does not participate in lowering. This separates text layout from formula typesetting: Core does not need to know how MathJax lays out the formula.
 
 This page follows the inline example. Display mode also calls the lowerer through `layoutInlineLine()`, forwarding `displayMode` to the engine rather than using a separate SVG conversion pipeline.
 
@@ -42,10 +42,10 @@ MathJax also provides package-composed TeX syntax, which maps directly to the pu
 
 This does not lock Retikz to MathJax: it is the built-in engine. Another engine can reuse the same SVG lowering path when it synchronously returns the SVG subset supported by this package.
 
-Core depends only on the synchronous `LowerTex` contract:
+Core depends only on the synchronous `TexLowerer` contract:
 
 ```ts
-type LowerTex = (content: { tex: string; displayMode?: boolean }, style: { fontSize: number }) => LoweredTex | null;
+type TexLowerer = (content: { tex: string; displayMode?: boolean }, style: { fontSize: number }) => LoweredTex | null;
 ```
 
 `LoweredTex` contains paths in draw order plus formula `width`, `height`, and `depth`. Each path carries fill / stroke, opacity, and path commands, so Core can continue layout and rendering. The minimal engine contract consumed by Tex is synchronous `MathJaxSvgEngine.convert(tex, { display }) => string`; a custom engine must return the SVG subset supported by this package.
@@ -59,7 +59,7 @@ This also keeps `mathjax-full` optional, so Core users who do not use formulas d
       path: 'packages/kernel/tex/src/mathjax/engine.ts',
     },
     {
-      label: 'Core LowerTex and LoweredTex contracts',
+      label: 'Core TexLowerer and LoweredTex contracts',
       path: 'packages/kernel/core/src/compile/text/tex.ts',
     },
   ]}

@@ -3,7 +3,6 @@ import { resolveFieldPath } from '@retikz/data';
 
 import { RetikzPlotError } from '../error';
 import type { IRPlotPositionInput, IRPlotMark } from '../schemas';
-import { BuiltinPlotMark } from '../schemas';
 import { pathStepTargets } from './path-step';
 import type { PositionScale } from './scale';
 
@@ -35,14 +34,6 @@ export const markPositionInputs = (mark: IRPlotMark): Array<Partial<Record<strin
     return mark.encodings.steps.flatMap(step =>
       pathStepTargets(step).flatMap(({ target }) => ('x' in target ? [target] : [])),
     );
-  }
-  if (mark.type === BuiltinPlotMark.Relation) {
-    const refs = [mark.encodings?.source, mark.encodings?.target];
-    if (mark.properties.geometry.kind === 'path') {
-      refs.push(...(mark.encodings?.geometry?.via ?? []));
-      for (const step of mark.encodings?.geometry?.route ?? []) refs.push(step.to);
-    }
-    return refs.flatMap(ref => (ref?.position === undefined ? [] : [ref.position]));
   }
   if (mark.type === 'path' && mark.encodings.from !== undefined) {
     const positions: Array<Partial<Record<string, IRPlotPositionInput>>> = [];

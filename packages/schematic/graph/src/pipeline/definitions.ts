@@ -1,15 +1,15 @@
-import type { AnyCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
-import { FlexLayoutDefinition } from '@retikz/layout';
-import { SurfaceDefinition } from '@retikz/standard/presentation';
+import type { AnyCompositeDefinition, AnyCoreDependencyProvider } from '@retikz/core';
+import { flexLayoutDefinition } from '@retikz/layout';
+import { surfaceDefinition } from '@retikz/standard/presentation';
 
 import type { GraphDefinitionOptions } from '../contract';
 import { resolveGraphDefinitionOptions } from '../providers';
 import { createBaseGraphProviders } from './base-providers';
 import { createBlockDefinitionFromOptions } from './block/composite';
-import { BlockHeaderDefinition, BlockRowDefinition, BlockSectionDefinition } from './block/structure-definition';
+import { blockHeaderDefinition, blockRowDefinition, blockSectionDefinition } from './block/structure-definition';
 import { createEntityDefinitionFromOptions } from './entity/composite';
 import { createGraphDefinitionFromOptions } from './graph/composite';
-import { GroupBodyAllocationDefinition } from './group';
+import { groupBodyAllocationDefinition } from './group';
 import { createGroupDefinitionFromOptions } from './group/composite';
 import { createRelationDefinitionFromOptions } from './relation/composite';
 
@@ -24,15 +24,15 @@ export const createGraphDefinitions = (options: GraphDefinitionOptions = {}): Ar
   return [
     createGraphDefinitionFromOptions(resolved),
     createGroupDefinitionFromOptions(resolved),
-    GroupBodyAllocationDefinition,
+    groupBodyAllocationDefinition,
     createBlockDefinitionFromOptions(resolved),
-    BlockHeaderDefinition,
-    BlockSectionDefinition,
-    BlockRowDefinition,
+    blockHeaderDefinition,
+    blockSectionDefinition,
+    blockRowDefinition,
     createEntityDefinitionFromOptions(resolved),
     createRelationDefinitionFromOptions(resolved),
-    FlexLayoutDefinition,
-    SurfaceDefinition,
+    flexLayoutDefinition,
+    surfaceDefinition,
   ];
 };
 
@@ -41,5 +41,5 @@ export const createGraphDefinitions = (options: GraphDefinitionOptions = {}): Ar
  * @param options 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配
  * @returns 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖
  */
-export const createGraphProviders = (options?: GraphDefinitionOptions): ReadonlyArray<CoreDependencyProvider> =>
+export const createGraphProviders = (options?: GraphDefinitionOptions): ReadonlyArray<AnyCoreDependencyProvider> =>
   createBaseGraphProviders(options);

@@ -1,44 +1,46 @@
-import type { IRFont } from '../../schemas';
 import { resolveFont, resolveFontSize } from './font';
 import { isMathSegment, parseInlineSegments } from './inline';
 import type {
   CanonicalInlineSegment,
-  ResolvedTextLineStyle,
-  ResolvedTextSegment,
-  SourceInlineSegment,
+  CanonicalFont,
+  CanonicalTextLineStyle,
+  TextSegmentColorSource,
+  InlineSegmentColorSource,
   TextLineResolution,
   TextLineResolveContext,
-  TextLineSource,
+  ColorResolvedTextLine,
 } from './types';
 
 const TEXT_TEX_PARSE_ERROR = 'TEXT_TEX_PARSE_ERROR';
 
-/** 仅保留作者显式写出的 TextLine 样式 */
+/** 提取行级显式样式并换算字号，未声明的字段不补入继承值 */
 const resolveExplicitStyle = (
-  source: Exclude<TextLineSource, string>,
+  source: Exclude<ColorResolvedTextLine, string>,
   context: TextLineResolveContext,
-): ResolvedTextLineStyle => ({
+): CanonicalTextLineStyle => ({
   fill: source.fill,
   opacity: source.opacity,
-  fontSize:
-    source.font?.size === undefined
+  font:
+    source.font === undefined
       ? undefined
-      : resolveFontSize(source.font.size, {
-          rootFontSize: context.rootFontSize,
-          inheritedFontSize: context.inheritedFont.size,
-        }),
-  fontFamily: source.font?.family,
-  fontWeight: source.font?.weight,
-  fontStyle: source.font?.style,
+      : {
+          ...source.font,
+          size:
+            source.font.size === undefined
+              ? undefined
+              : resolveFontSize(source.font.size, {
+                  rootFontSize: context.rootFontSize,
+                  inheritedFontSize: context.inheritedFont.size,
+                }),
+        },
 });
 
-/** 将 Source text segment 的字体确定化 */
+/** 让文字或公式片段继承行级字体，并将字号换算为数值 */
 const resolveSegment = (
-  segment: SourceInlineSegment,
-  lineFont: IRFont | undefined,
+  segment: InlineSegmentColorSource,
+  inheritedFont: CanonicalFont,
   context: TextLineResolveContext,
 ): CanonicalInlineSegment => {
-  const inheritedFont = resolveFont(lineFont, context);
   if (isMathSegment(segment))
     return {
       ...segment,
@@ -49,7 +51,7 @@ const resolveSegment = (
     };
 
   const sourceFont = segment.font;
-  const resolved: Omit<ResolvedTextSegment, 'font'> & { font: ReturnType<typeof resolveFont> } = {
+  const resolved: Omit<TextSegmentColorSource, 'font'> & { font: ReturnType<typeof resolveFont> } = {
     ...segment,
     font: resolveFont(sourceFont, { ...context, inheritedFont }),
   };
@@ -57,8 +59,8 @@ const resolveSegment = (
   return resolved;
 };
 
-/** 确定单行文字的 shorthand、样式、字体与混排形态 */
-export const resolveTextLine = (source: TextLineSource, context: TextLineResolveContext): TextLineResolution => {
+/** 解析单行文字与公式片段，补齐片段字体和行级外观，并保留纯文本内容与混排标记 */
+export const resolveTextLine = (source: ColorResolvedTextLine, context: TextLineResolveContext): TextLineResolution => {
   const styled = typeof source === 'object' ? source : undefined;
   const parsed =
     typeof source === 'string'
@@ -70,22 +72,24 @@ export const resolveTextLine = (source: TextLineSource, context: TextLineResolve
     context.warn(TEXT_TEX_PARSE_ERROR, context.warningMessage ?? 'Unbalanced `$` in text.');
   }
 
-  const foldedSegments = styled
-    ? parsed.segments.map(segment =>
-        isMathSegment(segment)
-          ? { ...segment, fill: segment.fill ?? styled.fill, opacity: segment.opacity ?? styled.opacity }
-          : {
-              ...segment,
-              fill: segment.fill ?? styled.fill,
-              opacity: segment.opacity ?? styled.opacity,
-            },
-      )
-    : parsed.segments;
-  const segments = foldedSegments.map(segment => resolveSegment(segment, styled?.font, context));
+  const segments: Array<CanonicalInlineSegment> = [];
+  let plainText = '';
+  if (parsed.segments.length > 0) {
+    const inheritedFont = resolveFont(styled?.font, context);
+    for (const segment of parsed.segments) {
+      const resolved = resolveSegment(segment, inheritedFont, context);
+      if (styled !== undefined) {
+        resolved.fill = segment.fill ?? styled.fill;
+        resolved.opacity = segment.opacity ?? styled.opacity;
+      }
+      segments.push(resolved);
+      if (!isMathSegment(resolved)) plainText += resolved.text;
+    }
+  }
 
   return {
     segments,
-    plainText: segments.map(segment => (isMathSegment(segment) ? '' : segment.text)).join(''),
+    plainText,
     hasMath: parsed.hasMath,
     mixed: parsed.hasMath || (typeof source === 'object' && 'segments' in source),
     ...(styled === undefined ? {} : { style: resolveExplicitStyle(styled, context) }),

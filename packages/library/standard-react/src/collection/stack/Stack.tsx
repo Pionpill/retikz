@@ -1,7 +1,7 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputStack } from '@retikz/standard-vanilla/collection';
-import { StackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { stackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { IRStack, IRCell } from '@retikz/standard/collection';
 import type { FC, ReactNode } from 'react';
 
@@ -73,5 +73,5 @@ const StackComponent: FC<StackProps> = () => null;
 export const Stack = StackComponent as StandardEmbeddableComponent<StackProps>;
 Stack.displayName = 'Stack';
 Stack.isTier2Embeddable = true;
-Stack.inputEmbedAdapter = StackInputEmbedAdapter;
+Stack.inputEmbedAdapter = stackInputEmbedAdapter;
 Stack.createInputEmbedProps = createStackInput;

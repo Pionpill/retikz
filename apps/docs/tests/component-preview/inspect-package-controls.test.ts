@@ -13,8 +13,8 @@ const fieldContractOf = (definition: PreviewControlsDefinition) =>
     optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
   }));
 
-describe('@retikz/inspect selection playground controls', () => {
-  it('keeps target, Inspector options, and barrier controls bilingual and stable', () => {
+describe('@retikz/inspect 选择交互演示控件', () => {
+  it('target、Inspector 选项和 barrier 控件保持双语且稳定', () => {
     const zhFields = fieldContractOf(inspectSelectionContract.controls);
     const enFields = fieldContractOf(inspectSelectionEnContract.controls);
 

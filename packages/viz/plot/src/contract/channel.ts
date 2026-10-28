@@ -45,7 +45,7 @@ export type ChannelValueResolver<T extends ChannelValue = ChannelValue> = (row: 
  * @param row 当前图元使用的数据行
  * @returns 该行的标签文本
  */
-export type ResolveLabel = (row: ExternalRow) => string;
+export type LabelResolver = (row: ExternalRow) => string;
 
 /**
  * 通道 definition 类型

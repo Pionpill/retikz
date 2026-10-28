@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import * as DataApi from '../src';
 
-describe('data public API', () => {
-  it('exposes transform authoring, validation and execution entry points', () => {
+describe('数据公开 API', () => {
+  it('公开转换编写、验证和执行入口点', () => {
     expect(DataApi.defineTransform).toBeTypeOf('function');
     expect(DataApi.defineTransformImplementation).toBeTypeOf('function');
     expect(DataApi.createDataTransformExecutor).toBeTypeOf('function');
@@ -17,19 +17,19 @@ describe('data public API', () => {
     'createTransformSchema',
     'RESERVED_TRANSFORM_KINDS',
     'BuiltinFieldReducerOperationKind',
-    'BuiltinReducerOperationSchemas',
-    'BuiltinRegressionMethodSchemas',
+    'BUILTIN_REDUCER_OPERATION_SCHEMAS',
+    'BUILTIN_REGRESSION_METHOD_SCHEMAS',
     'applyDensity',
     'binMetricOperations',
     'groupRowsByFields',
     'resolveReducerDependency',
     'applyReducerOperation',
     'selectorInputFields',
-  ])('keeps %s inside its implementation owner', name => {
+  ])('将 %s 保留在其实现所属模块内', name => {
     expect(DataApi).not.toHaveProperty(name);
   });
 
-  it('does not expose readonly collection constructors', () => {
+  it('不公开只读集合构造函数', () => {
     expect(DataApi).not.toHaveProperty('createReadonlyMap');
     expect(DataApi).not.toHaveProperty('createReadonlySet');
   });

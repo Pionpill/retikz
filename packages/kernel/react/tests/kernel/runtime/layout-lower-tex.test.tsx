@@ -1,10 +1,10 @@
-import type { LowerTex } from '@retikz/core';
+import type { TexLowerer } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { Layout, Node } from '../../../src';
 
-const lowerTex: LowerTex = () => ({
+const lowerTex: TexLowerer = () => ({
   paths: [
     {
       commands: [
@@ -29,7 +29,7 @@ const lowerTex: LowerTex = () => ({
   depth: 2,
 });
 
-describe('<Layout lowerTex> multi-path passthrough', () => {
+describe('<Layout lowerTex>多路径直通', () => {
   it('把 custom lowerer 的多条路径与 paint 交给同一 Core consumer', () => {
     const svg = renderToStaticMarkup(
       <Layout lowerTex={lowerTex}>

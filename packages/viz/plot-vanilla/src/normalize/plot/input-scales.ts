@@ -13,10 +13,10 @@ export type InputPlotScaleDimension = 'x' | 'y';
 export type InputPlotPositionScaleType = 'linear' | 'time' | 'band' | 'point' | 'log' | 'sqrt' | 'symlog' | 'radial';
 
 /** 支持连续 domain 配置的位置 scale 类型 */
-export type InputPlotContinuousPositionScaleType = Exclude<InputPlotPositionScaleType, 'band' | 'point'>;
+type InputPlotContinuousPositionScaleType = Exclude<InputPlotPositionScaleType, 'band' | 'point'>;
 
 /** React DSL 中暴露的 position scale domain padding 输入 */
-export type InputDomainPadding = IRPlotDomainPadding;
+type InputDomainPadding = IRPlotDomainPadding;
 
 /** <PlotScale> 公共 props：声明某个坐标维度使用的 scale 类型 */
 type ScaleBaseProps = {

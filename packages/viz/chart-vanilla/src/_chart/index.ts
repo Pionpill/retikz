@@ -5,20 +5,20 @@ import { renderToSvgString, scene, toSceneResult, processToStaticInputResultAsyn
 import type { InputEmbed } from '@retikz/vanilla';
 
 import { RetikzChartVanillaError } from '../error';
-import type { ChartHostThemeInput } from '../shared';
+import type { InputChartHostTheme } from '../shared';
 
 export type { InputChartCoordinate } from '../normalize/chart';
 export { normalizeChartCoordinate } from '../normalize/chart';
-export type { ChartHostThemeInput, InputChartPanel } from '../shared';
+export type { InputChartHostTheme, InputChartPanel } from '../shared';
 
 /** Chart 服务端渲染选项 */
-export type RenderChartOptions = Omit<RenderToStringOptions, 'adapters' | 'compileDriver'> & {
+export type ChartRenderOptions = Omit<RenderToStringOptions, 'adapters' | 'compileDriver'> & {
   /** 当前图表的 Vanilla adapter */
   adapters: NonNullable<RenderToStringOptions['adapters']>;
 };
 
 /** Chart 单次编译与服务端渲染结果 */
-export type RenderChartResult = Readonly<{
+export type ChartRenderResult = Readonly<{
   /** 从同一个 `CompileResult` 场景渲染出的 SVG */
   svg: string;
   /** 该 SVG 直接使用的 Core 编译结果 */
@@ -26,17 +26,17 @@ export type RenderChartResult = Readonly<{
 }>;
 
 /** Chart 异步服务端渲染选项 */
-export type RenderChartAsyncOptions = Omit<RenderChartOptions, 'adapters'> & {
+export type ChartRenderAsyncOptions = Omit<ChartRenderOptions, 'adapters'> & {
   /** 当前图表支持prepare的adapter */
   adapters: NonNullable<AsyncProcessingOptions['adapters']>;
   /** 本次请求取消信号 */
   signal?: AbortSignal;
 };
 
-type ChartRenderInput = InputEmbed<ChartHostThemeInput & { layout?: IRChartSource['layout'] }>;
+type InputChartRender = InputEmbed<InputChartHostTheme & { layout?: IRChartSource['layout'] }>;
 
 /** 两种入口共用相同的Scene与Core配置，异步生命周期由Vanilla负责 */
-const chartRenderRequest = (input: ChartRenderInput, compile: RenderChartOptions['compile']) => {
+const chartRenderRequest = (input: InputChartRender, compile: ChartRenderOptions['compile']) => {
   const themeDefinitions =
     input.props.themeDefinitions === undefined
       ? compile?.themeDefinitions
@@ -58,7 +58,7 @@ const chartRenderRequest = (input: ChartRenderInput, compile: RenderChartOptions
 };
 
 /** 通过一次同步Core编译渲染Chart */
-export const renderChart = (input: ChartRenderInput, options: RenderChartOptions): RenderChartResult => {
+export const renderChart = (input: InputChartRender, options: ChartRenderOptions): ChartRenderResult => {
   const { compile, adapters, ...renderOptions } = options;
   const request = chartRenderRequest(input, compile);
   const result = toSceneResult(request.source, { adapters, compile: request.compile });
@@ -70,9 +70,9 @@ export const renderChart = (input: ChartRenderInput, options: RenderChartOptions
 
 /** 准备完整作者树后通过同一Core编译渲染Chart，支持Promise计算 */
 export const renderChartAsync = async (
-  input: ChartRenderInput,
-  options: RenderChartAsyncOptions,
-): Promise<RenderChartResult> => {
+  input: InputChartRender,
+  options: ChartRenderAsyncOptions,
+): Promise<ChartRenderResult> => {
   const { compile, adapters, signal, ...renderOptions } = options;
   const request = chartRenderRequest(input, compile);
   const result = await processToStaticInputResultAsync(request.source, { adapters, signal, compile: request.compile });

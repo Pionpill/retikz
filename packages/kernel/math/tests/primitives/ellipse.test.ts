@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { ellipse } from '../../src';
 
-describe('ellipse geometry helpers', () => {
-  it('inscribedInBox returns the centered ellipse inside a box', () => {
+describe('椭圆几何助手', () => {
+  it('inscribedInBox 返回框内居中的椭圆', () => {
     expect(ellipse.inscribedInBox({ x: 2, y: 3, width: 20, height: 10, rotate: Math.PI / 6 })).toEqual({
       x: 2,
       y: 3,
@@ -13,7 +13,7 @@ describe('ellipse geometry helpers', () => {
     });
   });
 
-  it('circumscribedHalfAxes supports proportional ellipse and equal circle modes', () => {
+  it('circumscribedHalfAxes 支持比例椭圆和等圆模式', () => {
     expect(ellipse.circumscribedHalfAxes({ halfWidth: 10, halfHeight: 6 })).toEqual({
       halfWidth: 10 * Math.SQRT2,
       halfHeight: 6 * Math.SQRT2,
@@ -27,7 +27,7 @@ describe('ellipse geometry helpers', () => {
     });
   });
 
-  it('boundaryPoint projects a center ray onto the ellipse', () => {
+  it('boundaryPoint 将中心光线投影到椭圆上', () => {
     expect(ellipse.boundaryPoint({ x: 0, y: 0, rx: 10, ry: 5 }, [100, 0])).toEqual([10, 0]);
     expect(ellipse.boundaryPoint({ x: 0, y: 0, rx: 10, ry: 5 }, [0, 100])).toEqual([0, 5]);
   });

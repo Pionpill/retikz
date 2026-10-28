@@ -4,7 +4,7 @@ import {
   CompositeBaseSchema,
   defineComposite,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -14,7 +14,7 @@ import { ReconcilerSession, ReconcilerTracePhase, ReconcilerTraceUnit } from '..
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
-describe('Reconciler compilation trace', () => {
+describe('协调器编译跟踪', () => {
   it('基础场景报告实际 Weave 元素编译次数', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const trace = (record: PerformanceTraceRecord) => records.push(record);
@@ -81,7 +81,7 @@ describe('Reconciler compilation trace', () => {
         type: literal('replay'),
       }),
       compile: (_node, context) => {
-        const child = context.layoutChild({ type: 'node', id: 'replayed', position: [0, 0] }, NaturalLayoutProposal);
+        const child = context.layoutChild({ type: 'node', id: 'replayed', position: [0, 0] }, naturalLayoutProposal);
         if (child.kind === LayoutChildProbeKind.Failed) return context.raise(child.failure);
         return { children: [context.replay(child.result)] };
       },

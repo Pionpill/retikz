@@ -3,27 +3,27 @@ import { describe, expect, it } from 'vitest';
 import { PlotSchema } from '../../src/schemas';
 import { AxisGuideSchema, GuideSchema, LegendGuideSchema } from '../../src/schemas/guide';
 
-describe('GuideSchema contract', () => {
+describe('GuideSchema 契约', () => {
   // Happy path
-  it('axis_x_valid', () => {
+  it('接受 x 轴配置', () => {
     const guide = { type: 'axis', dimension: 'x' };
 
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_y_full_valid', () => {
+  it('y 轴完全有效', () => {
     const guide = { type: 'axis', dimension: 'y', ticks: { count: 5 }, grid: true, tickLabels: false, id: 'yAxis' };
 
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_with_grid_valid', () => {
+  it('有网格的轴有效', () => {
     const guide = { type: 'axis', dimension: 'x', grid: true };
 
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_and_legend_accept_layer_zindex', () => {
+  it('轴和图例接受图层 zindex', () => {
     const axis = { type: 'axis', dimension: 'x', layer: { zIndex: 240 } };
     const legend = { type: 'legend', channel: 'color', layer: { zIndex: 520 } };
 
@@ -31,14 +31,14 @@ describe('GuideSchema contract', () => {
     expect(LegendGuideSchema.parse(legend)).toEqual(legend);
   });
 
-  it('guide_layer_rejects_fractional_zindex_and_unknown_fields', () => {
+  it('引导层拒绝分数 zindex 和未知字段', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', layer: { zIndex: 1.5 } })).toThrow();
     expect(() =>
       LegendGuideSchema.parse({ type: 'legend', channel: 'color', layer: { zIndex: 1, order: 2 } }),
     ).toThrow();
   });
 
-  it('legend_style_accepts_size_symbol_layout_tokens', () => {
+  it('图例样式接受大小符号布局标记', () => {
     const guide = {
       type: 'legend',
       channel: 'size',
@@ -52,7 +52,7 @@ describe('GuideSchema contract', () => {
     expect(LegendGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_grid_accepts_independent_tick_source_density_minor_and_line_cap', () => {
+  it('坐标轴网格接受独立刻度来源、密度、次刻度及端帽配置', () => {
     const guide = {
       type: 'axis',
       dimension: 'x',
@@ -75,7 +75,7 @@ describe('GuideSchema contract', () => {
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_grid_domain_endpoint_policy_accepts_boolean_and_roundtrips', () => {
+  it('轴网格域端点策略接受布尔值和往返', () => {
     const guide = {
       type: 'axis',
       dimension: 'x',
@@ -86,47 +86,47 @@ describe('GuideSchema contract', () => {
   });
 
   // 边界
-  it('axis_omits_optional_valid', () => {
+  it('轴省略可选有效', () => {
     const guide = { type: 'axis', dimension: 'y' };
 
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
   // 错误路径
-  it('guide_unknown_type_rejected', () => {
+  it('引导未知类型被拒绝', () => {
     // grid 不是独立 type；legend 已纳入 union，但缺 channel 的 legend（仅给 dimension）仍非法
     expect(() => GuideSchema.parse({ type: 'grid', dimension: 'y' })).toThrow();
     expect(() => GuideSchema.parse({ type: 'legend', dimension: 'y' })).toThrow();
   });
 
-  it('guide_missing_dimension_rejected', () => {
+  it('导轨缺失尺寸被拒绝', () => {
     expect(() => GuideSchema.parse({ type: 'axis' })).toThrow();
   });
 
-  it('axis_custom_dimension_name_valid', () => {
+  it('轴自定义尺寸名称有效', () => {
     const guide = { type: 'axis', dimension: 'angle' };
 
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_tick_count_non_positive_rejected', () => {
+  it('轴刻度计数非正被拒绝', () => {
     expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { count: 0 } })).toThrow();
     expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { count: -1 } })).toThrow();
     expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { count: 2.5 } })).toThrow();
   });
 
-  it('axis_grid_non_boolean_rejected', () => {
+  it('轴网格非布尔值被拒绝', () => {
     expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', grid: 'yes' })).toThrow();
   });
 
-  it('axis_grid_rejects_invalid_minor_and_band_position', () => {
+  it('轴网格拒绝无效的次要和带位置', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { bandPosition: -0.1 } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { bandPosition: 1.1 } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { minor: true } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { minor: {} } })).toThrow();
   });
 
-  it('axis_grid_domain_endpoint_policy_rejects_non_boolean_and_minor_usage', () => {
+  it('轴网格域端点策略拒绝非布尔值和次要用法', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { includeDomain: 'yes' } })).toThrow();
     expect(() =>
       AxisGuideSchema.parse({
@@ -140,7 +140,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('legend_symbol_layout_rejects_invalid_values', () => {
+  it('图例符号布局拒绝无效值', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'size', style: { symbolSize: 0 } })).toThrow();
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'size', style: { symbolScale: 0 } })).toThrow();
     expect(() =>
@@ -149,7 +149,7 @@ describe('GuideSchema contract', () => {
   });
 
   // 交互
-  it('guide_roundtrip', () => {
+  it('导游往返', () => {
     const guide = {
       type: 'axis',
       dimension: 'y',
@@ -162,7 +162,7 @@ describe('GuideSchema contract', () => {
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 
-  it('axis_title_accepts_text_block_and_style', () => {
+  it('坐标轴标题接受文本块及样式', () => {
     const guide = {
       type: 'axis',
       dimension: 'x',
@@ -175,14 +175,14 @@ describe('GuideSchema contract', () => {
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_line_dash_offset_rejects_non_finite_values', () => {
+  it('轴线虚线偏移拒绝非有限值', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { dashOffset: Number.NaN } })).toThrow();
     expect(() =>
       AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { dashOffset: Number.POSITIVE_INFINITY } }),
     ).toThrow();
   });
 
-  it('axis_line_accepts_advanced_geometry', () => {
+  it('轴线接受高级几何形状', () => {
     const guide = {
       type: 'axis',
       dimension: 'x',
@@ -200,14 +200,14 @@ describe('GuideSchema contract', () => {
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_line_empty_arrow_object_rejected', () => {
+  it('轴线空箭头对象被拒绝', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { arrow: {} } })).toThrow();
     expect(() =>
       AxisGuideSchema.parse({ type: 'axis', dimension: 'x', line: { arrow: { negative: false, positive: false } } }),
     ).toThrow();
   });
 
-  it('axis_ticks_accept_interval_density_and_shape_mark', () => {
+  it('坐标轴刻度接受间隔、密度和形状标记', () => {
     const guide = {
       type: 'axis',
       dimension: 'x',
@@ -221,7 +221,7 @@ describe('GuideSchema contract', () => {
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_title_placement_accepts_core_label_keywords_and_ratio', () => {
+  it('轴标题放置接受核心标签关键字和比例', () => {
     const keywordGuide = {
       type: 'axis',
       dimension: 'x',
@@ -237,7 +237,7 @@ describe('GuideSchema contract', () => {
     expect(AxisGuideSchema.parse(ratioGuide)).toEqual(ratioGuide);
   });
 
-  it('axis_title_accepts_padding_anchor_shift_and_layout', () => {
+  it('轴标题接受填充锚点移位和布局', () => {
     const guide = {
       type: 'axis',
       dimension: 'x',
@@ -254,7 +254,7 @@ describe('GuideSchema contract', () => {
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_title_placement_rejects_out_of_range_ratio', () => {
+  it('轴标题放置拒绝超出范围的比率', () => {
     expect(() =>
       AxisGuideSchema.parse({
         type: 'axis',
@@ -264,7 +264,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('axis_title_rejects_gap_and_empty_layout_objects', () => {
+  it('轴标题拒绝间隙和空布局对象', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', title: { text: 'x', gap: 4 } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', title: { text: 'x', shift: {} } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', title: { text: 'x', anchor: {} } })).toThrow();
@@ -273,7 +273,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('axis_title_orientation_accepts_semantic_rotation_modes', () => {
+  it('轴标题方向接受语义旋转模式', () => {
     for (const orientation of ['auto', 'horizontal', 'axis']) {
       const guide = {
         type: 'axis',
@@ -285,7 +285,7 @@ describe('GuideSchema contract', () => {
     }
   });
 
-  it('axis_title_orientation_rejects_unknown_mode', () => {
+  it('坐标轴标题朝向拒绝未知模式', () => {
     expect(() =>
       AxisGuideSchema.parse({
         type: 'axis',
@@ -295,7 +295,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('axis_crossing_policy_accepts_corner_label_and_hidden_tick', () => {
+  it('轴交叉策略接受角标签和隐藏刻度', () => {
     const guide = {
       type: 'axis',
       dimension: 'x',
@@ -305,7 +305,7 @@ describe('GuideSchema contract', () => {
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_crossing_policy_rejects_non_finite_value_and_unused_corner', () => {
+  it('轴交叉策略拒绝非有限值和未使用的角点', () => {
     expect(() =>
       AxisGuideSchema.parse({
         type: 'axis',
@@ -329,7 +329,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('axis_tick_endpoint_policy_rejects_negative_distance', () => {
+  it('刻度端点策略拒绝负距离', () => {
     expect(() =>
       AxisGuideSchema.parse({
         type: 'axis',
@@ -339,7 +339,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('axis_ticks_accept_custom_shape_mark', () => {
+  it('轴刻度接受自定义形状标记', () => {
     const guide = {
       type: 'axis',
       dimension: 'x',
@@ -352,7 +352,7 @@ describe('GuideSchema contract', () => {
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_ticks_reject_invalid_density_interval_and_mark_conflicts', () => {
+  it('刻度配置拒绝无效密度、间隔及标记冲突', () => {
     expect(() =>
       AxisGuideSchema.parse({ type: 'axis', dimension: 'x', ticks: { density: { kind: 'sample' } } }),
     ).toThrow();
@@ -367,7 +367,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('axis_tick_labels_accept_adaptive_layout', () => {
+  it('轴刻度标签接受自适应布局', () => {
     const guide = {
       type: 'axis',
       dimension: 'x',
@@ -384,7 +384,7 @@ describe('GuideSchema contract', () => {
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('axis_tick_labels_reject_invalid_layout_values', () => {
+  it('轴刻度标签拒绝无效的布局值', () => {
     expect(() =>
       AxisGuideSchema.parse({ type: 'axis', dimension: 'x', tickLabels: { layout: { rotate: { angles: [] } } } }),
     ).toThrow();
@@ -399,7 +399,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('theme_axis_line_rejects_structural_geometry', () => {
+  it('主题中的坐标轴线拒绝结构性几何字段', () => {
     const spec = {
       namespace: 'plot',
       type: 'plot',
@@ -417,7 +417,7 @@ describe('GuideSchema contract', () => {
     expect(() => PlotSchema.parse(spec)).toThrow();
   });
 
-  it('theme_axis_ticks_accepts_mark_but_rejects_tick_source_and_density', () => {
+  it('主题刻度接受标记但拒绝刻度来源及密度', () => {
     expect(() =>
       PlotSchema.parse({
         namespace: 'plot',
@@ -462,7 +462,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('theme_axis_tick_labels_accept_layout_but_reject_format', () => {
+  it('主题轴刻度标签接受布局但拒绝格式', () => {
     expect(() =>
       PlotSchema.parse({
         namespace: 'plot',
@@ -493,7 +493,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('theme_axis_grid_accepts_line_cap_and_domain_endpoints_but_rejects_guide_only_fields', () => {
+  it('主题网格接受端帽及定义域端点但拒绝仅用于辅助元素的字段', () => {
     expect(() =>
       PlotSchema.parse({
         namespace: 'plot',
@@ -538,36 +538,36 @@ describe('GuideSchema contract', () => {
   });
 });
 
-describe('GuideSchema plot dimensions', () => {
-  it('axis_angle_dimension_valid_at_schema_layer', () => {
+describe('GuideSchema 绘图尺寸', () => {
+  it('在 schema 层有效的轴角度尺寸', () => {
     expect(GuideSchema.parse({ type: 'axis', dimension: 'angle' })).toEqual({ type: 'axis', dimension: 'angle' });
   });
 
-  it('axis_radius_dimension_valid_at_schema_layer', () => {
+  it('在 schema 层有效的轴半径尺寸', () => {
     expect(GuideSchema.parse({ type: 'axis', dimension: 'radius' })).toEqual({ type: 'axis', dimension: 'radius' });
   });
 
-  it('axis_theta_dimension_valid_at_schema_layer', () => {
+  it('轴 theta 维度在 schema 层有效', () => {
     expect(GuideSchema.parse({ type: 'axis', dimension: 'theta' })).toEqual({ type: 'axis', dimension: 'theta' });
   });
 
-  it('axis_xyz_roundtrip', () => {
+  it('x、y、z 轴配置保持往返等价', () => {
     const guide = { type: 'axis', dimension: 'x', grid: true, tickLabels: false, id: 'xAxis' };
 
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 });
 
-describe('LegendGuideSchema contract', () => {
+describe('LegendGuideSchema 契约', () => {
   // Happy path
-  it('legend_minimal_valid', () => {
+  it('接受图例最小配置', () => {
     // 最小合法 legend：仅 type + channel
     const guide = { type: 'legend', channel: 'color' };
 
     expect(LegendGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('legend_all_fields_valid', () => {
+  it('接受图例完整字段配置', () => {
     const guide = {
       type: 'legend',
       channel: 'size',
@@ -583,13 +583,13 @@ describe('LegendGuideSchema contract', () => {
     expect(LegendGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('legend_each_channel_valid', () => {
+  it('图例各通道有效', () => {
     for (const channel of ['color', 'size', 'opacity', 'shape'] as const) {
       expect(LegendGuideSchema.parse({ type: 'legend', channel })).toEqual({ type: 'legend', channel });
     }
   });
 
-  it('legend_each_position_valid', () => {
+  it('接受图例的各个位置', () => {
     for (const position of ['right', 'left', 'top', 'bottom'] as const) {
       const guide = { type: 'legend', channel: 'color', position };
 
@@ -598,40 +598,40 @@ describe('LegendGuideSchema contract', () => {
   });
 
   // 边界：可选字段省略
-  it('legend_omits_optional_valid', () => {
+  it('图例可省略可选字段', () => {
     const guide = { type: 'legend', channel: 'opacity' };
 
     expect(LegendGuideSchema.parse(guide)).toEqual(guide);
   });
 
   // 错误路径
-  it('legend_missing_channel_rejected', () => {
+  it('图例缺失通道被拒绝', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend' })).toThrow();
   });
 
-  it('legend_custom_channel_name_valid', () => {
+  it('图例自定义通道名称有效', () => {
     const guide = { type: 'legend', channel: 'intensity' };
 
     expect(LegendGuideSchema.parse(guide)).toEqual(guide);
   });
 
-  it('legend_empty_channel_rejected', () => {
+  it('图例空通道被拒绝', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: '' })).toThrow();
   });
 
-  it('legend_bad_position_rejected', () => {
+  it('图例错误位置被拒绝', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', position: 'center' })).toThrow();
   });
 
-  it('legend_bad_orient_rejected', () => {
+  it('传说坏东方被拒绝', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', orient: 'diagonal' })).toThrow();
   });
 
-  it.each(['', '   '])('legend_blank_scale_%j_rejected', scale => {
+  it.each(['', '   '])('图例空白刻度 %j 被拒绝', scale => {
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', scale })).toThrow();
   });
 
-  it('legend_empty_title_reports_legend_message', () => {
+  it('图例空标题报告图例相关错误消息', () => {
     const result = LegendGuideSchema.safeParse({ type: 'legend', channel: 'color', title: '' });
 
     expect(result.success).toBe(false);
@@ -641,27 +641,27 @@ describe('LegendGuideSchema contract', () => {
     }
   });
 
-  it('legend_tickcount_non_positive_rejected', () => {
+  it('图例刻度计数非正被拒绝', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', ticks: { count: 0 } })).toThrow();
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', ticks: { count: -2 } })).toThrow();
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', ticks: { count: 3.5 } })).toThrow();
   });
 
-  it('legend_ticklabels_non_boolean_rejected', () => {
+  it('图例刻度标签非布尔值被拒绝', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', tickLabels: 'yes' })).toThrow();
   });
 });
 
-describe('GuideSchema discriminated union contract', () => {
+describe('GuideSchema 歧视性工会契约', () => {
   // union 判别：legend 合法
-  it('union_accepts_legend', () => {
+  it('联合接受图例', () => {
     const guide = { type: 'legend', channel: 'color', position: 'right' };
 
     expect(GuideSchema.parse(guide)).toEqual(guide);
   });
 
   // type 缺失 → union 无法判别 → 报错可定位到 type
-  it('union_missing_type_rejected_at_type_path', () => {
+  it('联合缺失类型在类型路径处被拒绝', () => {
     const result = GuideSchema.safeParse({ channel: 'color' });
 
     expect(result.success).toBe(false);
@@ -672,7 +672,7 @@ describe('GuideSchema discriminated union contract', () => {
   });
 
   // type 拼错 → union 无合法成员 → 报错可定位
-  it('union_bad_type_rejected', () => {
+  it('联合错误类型被拒绝', () => {
     const result = GuideSchema.safeParse({ type: 'lgend', channel: 'color' });
 
     expect(result.success).toBe(false);
@@ -683,7 +683,7 @@ describe('GuideSchema discriminated union contract', () => {
   });
 
   // zod parse 错误路径：legend 缺 channel → issue.path 定位到 channel
-  it('union_legend_missing_channel_path', () => {
+  it('联合图例缺少通道路径', () => {
     const result = GuideSchema.safeParse({ type: 'legend' });
 
     expect(result.success).toBe(false);
@@ -694,7 +694,7 @@ describe('GuideSchema discriminated union contract', () => {
   });
 
   // JSON round-trip：legend 全字段保形
-  it('legend_roundtrip_full', () => {
+  it('传说往返满', () => {
     const guide = {
       type: 'legend',
       channel: 'color',
@@ -710,7 +710,7 @@ describe('GuideSchema discriminated union contract', () => {
   });
 
   // JSON round-trip：axis（回归 union 后仍保形）
-  it('axis_roundtrip_through_union', () => {
+  it('通过并轴往返', () => {
     const guide = { type: 'axis', dimension: 'y', ticks: { count: 4 }, grid: true };
 
     expect(GuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);

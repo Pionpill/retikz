@@ -11,7 +11,7 @@ import type {
 import { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from '../computation';
 import type { RuntimeDiagnostic, RuntimeDiagnosticPhase } from '../diagnostic';
 import { BuiltinRuntimeDiagnosticCode } from '../diagnostic';
-import { getRuntimeDiagnosticMessage, RuntimeTraceDiagnosticCodes } from '../diagnostic/internal';
+import { getRuntimeDiagnosticMessage, runtimeTraceDiagnosticCodes } from '../diagnostic/internal';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeRevision, RuntimeSourceDefinition, RuntimeSourceToken } from '../source';
 import type { PerformanceTraceDiagnostic, RuntimeTraceReporter } from '../trace';
@@ -42,7 +42,7 @@ const mapTraceDiagnostic = (
   diagnostic: PerformanceTraceDiagnostic,
 ): RuntimeDiagnostic =>
   Object.freeze({
-    code: RuntimeTraceDiagnosticCodes[diagnostic.code],
+    code: runtimeTraceDiagnosticCodes[diagnostic.code],
     phase: 'trace',
     severity: 'error',
     message: `Runtime trace reporter rejected a ${diagnostic.code} record during ${diagnostic.phase}`,

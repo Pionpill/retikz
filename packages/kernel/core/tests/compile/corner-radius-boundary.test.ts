@@ -1,7 +1,7 @@
 import type { ContourSegment } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { boundaryPointOf, compileResolvedNode } from '../../src/compile/node';
+import { boundaryPointOf, compileNodeResolution } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
@@ -22,16 +22,16 @@ const layoutSquare = (node: IRNode) => {
   const resolution = resolveNode(node, {
     scopeDefaults: {},
     mode: 'light',
-    shapes: BUILTIN_SHAPES,
-    boundaries,
-    patterns: resolvePatternRegistry(),
+    shapeRegistry: BUILTIN_SHAPES,
+    boundaryRegistry: boundaries,
+    patternRegistry: resolvePatternRegistry(),
     round: value => value,
     irPath: 'node',
     warn: () => {},
     labelDistance: 12,
   });
 
-  return compileResolvedNode(resolution, {
+  return compileNodeResolution(resolution, {
     measureText,
     positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
   }).layout;

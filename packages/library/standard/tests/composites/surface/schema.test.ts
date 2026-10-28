@@ -20,13 +20,13 @@ const surface = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('SurfaceSchema', () => {
-  it('exports static shell defaults without traversing unrelated child contracts', () => {
+  it('导出静态 shell 默认值，而不遍历不相关的子契约', () => {
     expect(toJSONSchema(SurfaceSchema.pick({ padding: true, overflow: true, cornerRadius: true }))).toMatchObject({
       properties: { padding: { default: 0 }, overflow: { default: 'visible' }, cornerRadius: { default: 0 } },
     });
   });
 
-  it('materializes static defaults without inventing appearance', () => {
+  it('在不发明外观的情况下实现静态默认值', () => {
     const source = SurfaceSchema.parse(surface());
 
     expect(source).toEqual({ ...surface(), position: [0, 0], padding: 0, overflow: 'visible', cornerRadius: 0 });
@@ -46,7 +46,7 @@ describe('SurfaceSchema', () => {
     expect(parsed).not.toHaveProperty('border');
   });
 
-  it('preserves padding shorthand until domain resolution', () => {
+  it('保留填充简写直到域解析', () => {
     expect(resolveSurface(SurfaceSchema.parse(surface({ padding: 6 }))).padding).toEqual({
       top: 6,
       right: 6,
@@ -63,7 +63,7 @@ describe('SurfaceSchema', () => {
     });
   });
 
-  it('round-trips a defaulted snapshot without expanding shorthand', () => {
+  it('往返默认快照而不扩展简写', () => {
     const source = SurfaceSchema.parse(surface({ padding: { x: 4, top: 6 } }));
 
     expect(source.padding).toEqual({ x: 4, top: 6 });
@@ -72,7 +72,7 @@ describe('SurfaceSchema', () => {
     expect(resolveSurface(source).padding).toEqual({ top: 6, right: 4, bottom: 0, left: 4 });
   });
 
-  it('accepts any one Core or Tier-2 child and round-trips Source JSON', () => {
+  it('接受任何一个 Core 或 Tier-2 子级和往返 Source JSON', () => {
     const tier2 = SurfaceSchema.parse(
       surface({
         child: { namespace: 'third', type: 'card', id: 'card-a', data: { value: 3 } },
@@ -83,7 +83,7 @@ describe('SurfaceSchema', () => {
     expect(SurfaceSchema.parse(JSON.parse(JSON.stringify(tier2)))).toEqual(tier2);
   });
 
-  it('reuses complete Scope props and closed paint/stroke appearance', () => {
+  it('重复使用完整的 Scope props 和封闭的绘制/描边外观', () => {
     const parsed = SurfaceSchema.parse(
       surface({
         ...fullScopeProps,
@@ -103,7 +103,7 @@ describe('SurfaceSchema', () => {
     });
   });
 
-  it('rejects invalid appearance, spacing, overflow, and unknown fields at the public boundary', () => {
+  it('拒绝公共边界处的无效外观、间距、溢出和未知字段', () => {
     const invalid = [
       surface({ padding: -1 }),
       surface({ cornerRadius: -1 }),
@@ -118,7 +118,7 @@ describe('SurfaceSchema', () => {
     expect(invalid.every(input => !SurfaceSchema.safeParse(input).success)).toBe(true);
   });
 
-  it('creates sparse Surface IR through the public factory', () => {
+  it('通过公共工厂创建稀疏 Surface IR', () => {
     expect(createSurface(surface({ padding: 3 }))).toEqual(surface({ padding: 3 }));
     expect({ ...resolveSurface(createSurface(surface({ padding: 3 }))), position: [0, 0] }).toEqual(
       resolveSurface(SurfaceSchema.parse(surface({ padding: 3 }))),

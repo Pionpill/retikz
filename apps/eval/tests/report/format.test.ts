@@ -69,7 +69,7 @@ describe('formatMarkdown', () => {
   });
 });
 
-describe('formatMarkdown L2', () => {
+describe('formatMarkdown 的 L2 报告', () => {
   const base: Report = {
     total: 1,
     overall: { count: 1, zodPassRate: 1, compilePassRate: 1 },

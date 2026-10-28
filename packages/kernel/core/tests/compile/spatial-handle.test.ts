@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, string, strictObject } from 'zod';
 
 import type { IRChild, IRScene, IRScopePosition } from '../../src';
-import { compileToScene, CompositeBaseSchema, defineComposite, ScopeSchema, NaturalLayoutProposal } from '../../src';
+import { compileToScene, CompositeBaseSchema, defineComposite, ScopeSchema, naturalLayoutProposal } from '../../src';
 
 const card = defineComposite({
   namespace: 'third',
@@ -39,8 +39,8 @@ const panel = defineComposite({
 
 const sceneOf = (children: ReadonlyArray<IRChild>): IRScene => ({ version: 1, type: 'scene', children: [...children] });
 
-describe('qualified spatial handle compile', () => {
-  it('commits direct spatial declarations and artifacts only for the selected probe', () => {
+describe('合格的空间句柄编译', () => {
+  it('仅针对选定的探测提交直接空间声明和产物', () => {
     const measured = defineComposite({
       namespace: 'third',
       type: 'measured',
@@ -57,8 +57,8 @@ describe('qualified spatial handle compile', () => {
       type: 'container',
       schema: CompositeBaseSchema.extend({ namespace: literal('third'), type: literal('container') }),
       compile: (_node, context) => {
-        context.layoutChild({ namespace: 'third', type: 'measured' }, NaturalLayoutProposal);
-        const selected = context.layoutChild({ namespace: 'third', type: 'measured' }, NaturalLayoutProposal);
+        context.layoutChild({ namespace: 'third', type: 'measured' }, naturalLayoutProposal);
+        const selected = context.layoutChild({ namespace: 'third', type: 'measured' }, naturalLayoutProposal);
         if (selected.kind === 'failed') return context.raise(selected.failure);
         return { children: [context.replay(selected.result, { transforms: [{ kind: 'translate', x: 30, y: 40 }] })] };
       },
@@ -85,7 +85,7 @@ describe('qualified spatial handle compile', () => {
     });
   });
 
-  it('returns one frozen empty index when no composite declares handles', () => {
+  it('当没有复合声明句柄时，返回一个冻结的空索引', () => {
     const result = compileToScene(sceneOf([]));
 
     expect(result.spatialHandles).toEqual({ entries: [] });
@@ -93,7 +93,7 @@ describe('qualified spatial handle compile', () => {
     expect(Object.isFrozen(result.spatialHandles.entries)).toBe(true);
   });
 
-  it('qualifies nested owners without copying or renaming the descendant declaration', () => {
+  it('限定嵌套所属模块，无需复制或重命名后代声明', () => {
     const result = compileToScene(sceneOf([{ namespace: 'third', type: 'panel', id: 'outer-panel' }]), {
       composites: [panel, card],
     });
@@ -115,7 +115,7 @@ describe('qualified spatial handle compile', () => {
     expect(JSON.parse(JSON.stringify(result.spatialHandles))).toEqual(result.spatialHandles);
   });
 
-  it('preserves traversal and authored declaration order while keeping anonymous owners occurrence-only', () => {
+  it('保留遍历和编写的声明顺序，同时保持匿名所属模块仅发生', () => {
     const orderedCard = defineComposite({
       namespace: 'third',
       type: 'orderedCard',
@@ -168,7 +168,7 @@ describe('qualified spatial handle compile', () => {
       transforms: [{ kind: 'rotate' as const, degrees: 90 }],
       bounds: { x: -20, y: 0, width: 20, height: 10 },
     },
-  ])('projects local rect through one $label transform exactly once', ({ transforms, bounds }) => {
+  ])('通过一次 $label 变换投影本地矩形', ({ transforms, bounds }) => {
     const result = compileToScene(
       sceneOf([{ type: 'scope', transforms, children: [{ namespace: 'third', type: 'card' }] }]),
       { composites: [card] },
@@ -177,7 +177,7 @@ describe('qualified spatial handle compile', () => {
     expect(result.spatialHandles.entries[0]?.geometry.bounds).toEqual(bounds);
   });
 
-  it('projects local rect through Scope anchor position exactly once', () => {
+  it('通过 Scope 锚点位置投影局部矩形一次', () => {
     const result = compileToScene(
       sceneOf([
         {
@@ -197,7 +197,7 @@ describe('qualified spatial handle compile', () => {
     });
   });
 
-  it('accepts declarations attached to a layout-aware runtime Scope', () => {
+  it('接受附加到布局感知运行时 Scope 的声明', () => {
     const layoutCard = defineComposite({
       namespace: 'third',
       type: 'layoutCard',
@@ -229,7 +229,7 @@ describe('qualified spatial handle compile', () => {
     expect(result.spatialHandles.entries[0]?.geometry.bounds).toEqual({ x: 12, y: 23, width: 4, height: 5 });
   });
 
-  it('rejects direct declarations combined with an owner-generated spatial Scope', () => {
+  it('拒绝与所属模块生成的空间 Scope 相结合的直接声明', () => {
     const scopedCard = defineComposite({
       namespace: 'third',
       type: 'scopedCard',
@@ -258,7 +258,7 @@ describe('qualified spatial handle compile', () => {
     { position: [0, 0], accepted: true },
     { position: [10, 20], accepted: false },
     { position: { kind: 'anchor', target: [0, 0] }, accepted: false },
-  ])('result-level handles distinguish zero from spatial Scope position: $position', ({ position, accepted }) => {
+  ])('结果级别句柄区分零和空间 Scope 位置：$position', ({ position, accepted }) => {
     const positionedCard = defineComposite({
       namespace: 'third',
       type: 'positionedCard',
@@ -274,7 +274,7 @@ describe('qualified spatial handle compile', () => {
     else expect(run).toThrow(/spatial.*Scope|Scope.*spatial/i);
   });
 
-  it('checks duplicate keys only across reachable runtime Scopes', () => {
+  it('仅在可到达的运行时范围内检查重复的键', () => {
     const declaration = { id: 'body', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } } as const;
     const layoutCard = defineComposite({
       namespace: 'third',
@@ -296,7 +296,7 @@ describe('qualified spatial handle compile', () => {
     expect(result.spatialHandles.entries.map(entry => entry.id)).toEqual(['body']);
   });
 
-  it('rejects duplicate alias ids across two reachable runtime Scopes', () => {
+  it('拒绝两个可到达的运行时范围内的重复别名 ID', () => {
     const declaration = { id: 'body', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } } as const;
     const layoutCard = defineComposite({
       namespace: 'third',
@@ -318,7 +318,7 @@ describe('qualified spatial handle compile', () => {
     ).toThrow(/duplicate.*body/i);
   });
 
-  it('validates declarations when a runtime Scope is created even if it is discarded', () => {
+  it('创建运行时 Scope 时验证声明，即使它被丢弃', () => {
     const layoutCard = defineComposite({
       namespace: 'third',
       type: 'invalidDiscardedCard',

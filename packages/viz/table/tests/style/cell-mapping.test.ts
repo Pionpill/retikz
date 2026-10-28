@@ -2,8 +2,8 @@ import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { defineTableTheme, resolveTableThemeDefaults } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 
 const lightColors = resolveDefaultCoreThemeColors(ThemeMode.Light);
 
@@ -17,9 +17,9 @@ const scaleContext = {
   sequentialColors: [sequential[0], sequential[1]] as const,
 };
 
-describe('Source defaults Cell mapping', () => {
-  it('maps body/header slots, both font leaves, and exact defaults winner traces', () => {
-    const model = normalizeTableStructure(
+describe('Source 默认 Cell 映射', () => {
+  it('映射正文/标题槽、两个字体叶以及精确的默认获胜者轨迹', () => {
+    const model = resolveTableStructure(
       { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       { data: { reference: 'rows' }, datasets: { rows: [{ value: 1 }] } },
     );
@@ -83,8 +83,8 @@ describe('Source defaults Cell mapping', () => {
     });
   });
 
-  it('uses final fill as the background gate for explicit none backgrounds', () => {
-    const model = normalizeTableStructure(
+  it('使用最终填充作为显式无背景的背景门', () => {
+    const model = resolveTableStructure(
       { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       { data: { reference: 'rows' }, datasets: { rows: [{ value: 1 }] } },
     );

@@ -36,13 +36,13 @@ const archDefinition = defineCoordinate({
   },
 });
 
-describe('coordinate registry（contract spec）', () => {
+describe('坐标注册（契约规范）', () => {
   it('defineCoordinate 保留 schema 推导出的注册 type 与 roles', () => {
     expect(extractCoordinateType(archDefinition.schema)).toBe('arch');
     expect(archDefinition.roles).toEqual(['x']);
   });
 
-  it('public_barrel_exports_coordinate_definition_helpers', () => {
+  it('公共聚合入口导出坐标定义帮助程序', () => {
     expect(plot.defineCoordinate).toBe(defineCoordinate);
     expect(plot.createCoordinateFrame).toBe(createCoordinateFrame);
     expect('createCustomCoordinate' in plot).toBe(false);
@@ -52,7 +52,7 @@ describe('coordinate registry（contract spec）', () => {
     expect(plot.bindCoordinateScaleNames).toBe(bindCoordinateScaleNames);
   });
 
-  it('coordinate_scale_binding_defaults_to_role_named_operation_fields', () => {
+  it('坐标比例尺绑定默认使用与角色同名的操作字段', () => {
     const definition = resolveCoordinateRegistry().get(BuiltinPlotCoordinate.Cartesian2D);
 
     expect(definition).toBeDefined();
@@ -69,7 +69,7 @@ describe('coordinate registry（contract spec）', () => {
     });
   });
 
-  it('preserves a precise operation transform while reading and rebinding scales', () => {
+  it('在读取和重新绑定比例时保留精确的操作转换', () => {
     const definition = defineCoordinate({
       ...archDefinition,
       schema: object({ type: literal('arch'), archHeight: number(), x: string().optional() }).transform(operation => ({
@@ -84,7 +84,7 @@ describe('coordinate registry（contract spec）', () => {
     expect(operation).toEqual({ type: 'arch', archHeight: 30, x: 'original' });
   });
 
-  it('polar_coordinate_scale_binding_aliases_x/y_roles_to_angle/radius_fields', () => {
+  it('极坐标比例尺绑定将 x、y 角色映射到 angle、radius 字段', () => {
     const definition = resolveCoordinateRegistry().get(BuiltinPlotCoordinate.Polar2D);
 
     expect(definition).toBeDefined();
@@ -103,7 +103,7 @@ describe('coordinate registry（contract spec）', () => {
     expect(readCoordinateScaleNames(definition, bound)).toEqual({ x: 'angle-scale', y: 'radius-scale' });
   });
 
-  it('custom_scale_binding_owns_role_mapping_and_preserves_unrelated_operation_fields', () => {
+  it('自定义比例尺绑定拥有角色映射并保留无关操作字段', () => {
     const definition = defineCoordinate({
       schema: object({ type: literal('named-scale'), x: number(), horizontalScale: string().optional() }),
       roles: ['x'],
@@ -134,19 +134,19 @@ describe('coordinate registry（contract spec）', () => {
     expect(registry.get('arch')).toBe(archDefinition);
   });
 
-  it('builtin_coordinate_definitions_cover_public_builtin_types', () => {
+  it('内置坐标定义覆盖公共内置类型', () => {
     expect(BUILTIN_COORDINATES.map(def => extractCoordinateType(def.schema)).sort()).toEqual(
       Object.values(BuiltinPlotCoordinate).sort(),
     );
   });
 
-  it('duplicate_coordinate_type_throws', () => {
+  it('重复坐标类型抛出', () => {
     expect(() => resolveCoordinateRegistry([archDefinition, archDefinition])).toThrow(
       /duplicate coordinate registration: "arch"/,
     );
   });
 
-  it('duplicate_builtin_coordinate_type_throws', () => {
+  it('重复内置坐标类型抛出', () => {
     const malformed: AnyCoordinateDefinition = {
       schema: object({
         type: literal(BuiltinPlotCoordinate.Cartesian2D).describe('Collides with a built-in coordinate'),
@@ -158,7 +158,7 @@ describe('coordinate registry（contract spec）', () => {
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/duplicate coordinate registration: "cartesian2D"/);
   });
 
-  it('malformed_coordinate_schema_non_object_throws', () => {
+  it('格式错误的坐标 schema 非对象抛出', () => {
     const malformed: AnyCoordinateDefinition = {
       schema: string(),
       roles: ['x'],
@@ -168,7 +168,7 @@ describe('coordinate registry（contract spec）', () => {
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/ZodObject/);
   });
 
-  it('malformed_coordinate_schema_without_literal_type_throws', () => {
+  it('格式错误的坐标 schema，没有字面量类型抛出', () => {
     const malformed: AnyCoordinateDefinition = {
       schema: object({ type: string().describe('Not a literal type') }).describe('Malformed coordinate operation'),
       roles: ['x'],
@@ -178,7 +178,7 @@ describe('coordinate registry（contract spec）', () => {
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/z\.literal/);
   });
 
-  it('malformed_coordinate_schema_empty_literal_type_throws', () => {
+  it('坐标 schema 的字面量 type 为空时抛出错误', () => {
     const malformed: AnyCoordinateDefinition = {
       schema: object({ type: literal('').describe('Empty custom coordinate type') }),
       roles: ['x'],
@@ -188,18 +188,18 @@ describe('coordinate registry（contract spec）', () => {
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/non-empty z\.literal string/);
   });
 
-  it('duplicate_coordinate_role_throws', () => {
+  it('重复坐标角色抛出', () => {
     const malformed: AnyCoordinateDefinition = { ...archDefinition, roles: ['x', 'x'] };
 
     expect(() => resolveCoordinateRegistry([malformed])).toThrow(/duplicate coordinate role: "x"/);
   });
 
-  it('custom_schema_rejects_invalid_config', () => {
+  it('自定义 schema 拒绝无效配置', () => {
     expect(() => archDefinition.schema.parse({ type: 'arch', archHeight: -1 })).toThrow();
     expect(archDefinition.schema.parse({ type: 'arch', archHeight: 30 })).toEqual({ type: 'arch', archHeight: 30 });
   });
 
-  it('definition_operation_json_round_trip', () => {
+  it('定义操作保持 JSON 往返等价', () => {
     const operation = { type: 'arch', archHeight: 30 };
 
     expect(archDefinition.schema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);

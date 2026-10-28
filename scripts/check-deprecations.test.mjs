@@ -12,7 +12,7 @@ import {
   formatDeprecatedDiagnostic,
 } from './check-deprecations.mjs';
 
-test('reports a consumed declaration marked deprecated', () => {
+test('报告标记为已弃用的消费声明', () => {
   const fixtureDirectory = mkdtempSync(path.join(os.tmpdir(), 'retikz-deprecation-'));
   const fixturePath = path.join(fixtureDirectory, 'deprecated-api.ts');
 
@@ -40,7 +40,7 @@ test('reports a consumed declaration marked deprecated', () => {
   }
 });
 
-test('keeps only changed TypeScript source paths', () => {
+test('仅保留更改的 TypeScript 源路径', () => {
   assert.deepEqual(
     filterTypeScriptPaths(['packages/viz/table/src/schema.ts', 'apps/docs/example.demo.tsx', 'README.md']),
     ['packages/viz/table/src/schema.ts', 'apps/docs/example.demo.tsx'],

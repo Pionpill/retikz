@@ -10,7 +10,7 @@ import type { RangedDotPropertiesProps } from './RangedDotProperties';
 import { RangedDotProperties } from './RangedDotProperties';
 
 /** RangedDotChart 直接子声明的收集结果 */
-export type CollectedRangedDotChartDeclarations = CollectedPointChartDeclarations<
+type CollectedRangedDotChartDeclarations = CollectedPointChartDeclarations<
   RangedDotEncodingsProps,
   RangedDotPropertiesProps,
   RangedDotChartMark

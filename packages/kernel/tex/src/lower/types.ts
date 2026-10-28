@@ -1,7 +1,7 @@
 /**
  * TeX lowering 诊断
  *
- * @description 描述引擎执行、MathJax 解析或 SVG 降解阶段不能产出公式路径的原因。它只承载可展示或记录的失败事实，不负责错误恢复；调用方可通过 `LowerTexOptions.onDiagnostic` 决定如何提示用户
+ * @description 描述引擎执行、MathJax 解析或 SVG 降解阶段不能产出公式路径的原因。它只承载可展示或记录的失败事实，不负责错误恢复；调用方可通过 `TexLoweringOptions.onDiagnostic` 决定如何提示用户
  */
 export type TexLoweringDiagnostic =
   | {
@@ -42,7 +42,7 @@ export type TexLoweringDiagnostic =
  *
  * @description 控制由 `createLowerTex` 创建的 lowerer 如何向外报告失败。它不改变 TeX 解析或缓存语义，成功结果仍直接返回给 Core 的文本编译流程
  */
-export type LowerTexOptions = {
+export type TexLoweringOptions = {
   /** 每次公开 lowering 失败时接收一次诊断，供应用记录、提示或上报 */
   onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void;
 };
@@ -51,7 +51,7 @@ export type LowerTexOptions = {
  * 内部 lowering 成功结果
  * @template T 成功分支 value 承载的转换产物类型
  */
-export type TexLoweringSuccess<T> = {
+type TexLoweringSuccess<T> = {
   /** 标识已成功产出转换结果 */
   ok: true;
   /** 当前转换阶段产出的有效载荷 */
@@ -59,7 +59,7 @@ export type TexLoweringSuccess<T> = {
 };
 
 /** 内部 lowering 失败结果 */
-export type TexLoweringFailure = {
+type TexLoweringFailure = {
   /** 标识转换失败，应读取诊断而非产物 */
   ok: false;
   /** 可向调用方报告的失败类别、源码与原因 */

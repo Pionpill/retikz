@@ -7,13 +7,7 @@ import type {
   IRPlotMark,
   IRPlotScaleOperation,
 } from '@retikz/plot';
-import {
-  BuiltinPlotCoordinate,
-  PlotGuide,
-  BuiltinPlotMark,
-  BuiltinPlotScale,
-  resolvePlotFacetComposition,
-} from '@retikz/plot';
+import { BuiltinPlotCoordinate, PlotGuide, BuiltinPlotScale, resolvePlotFacetComposition } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
 import type {
@@ -21,7 +15,7 @@ import type {
   InputPlotGuide,
   InputPlotMark,
   InputPlotScaffold,
-  NormalizedPlotBindings,
+  PlotBindingsNormalizationResult,
   PlotBindingsNormalizationContext,
 } from './input';
 import { normalizePlotPathMark } from './path';
@@ -51,10 +45,6 @@ const axisScaleNameOf = (baseScaleName: string, axisId: string): string => `${ba
 
 /** 判断 guide 是否为坐标轴 */
 const isAxisGuide = (guide: IRPlotGuide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis;
-
-/** 判断 mark 是否支持按坐标轴分配 coordinate view */
-const isPositionMark = (mark: InputPlotMark): boolean =>
-  mark.type === BuiltinPlotMark.Path || mark.type === BuiltinPlotMark.Point || mark.type === BuiltinPlotMark.Interval;
 
 /** 移除 mark 上的 authoring-only binding 字段 */
 const stripMarkBindings = (mark: InputPlotMark): IRPlotMark => {
@@ -92,13 +82,6 @@ const withGuideScope = (guide: InputPlotGuide, coordinateView: string | undefine
 
 /** 校验单个 mark 的 binding 种类与原有 coordinate view 是否兼容 */
 const assertMarkBindingCompatibility = (mark: InputPlotMark): void => {
-  const ownsAxisBinding = Object.hasOwn(mark, 'xAxisId') || Object.hasOwn(mark, 'yAxisId');
-  if (ownsAxisBinding && !isPositionMark(mark)) {
-    throw new RetikzPlotVanillaError(
-      `${ERROR_PREFIX} axis binding is only supported on path, point, and interval marks`,
-    );
-  }
-
   const bindings = [
     mark.xAxisId !== undefined ? 'xAxisId' : undefined,
     mark.yAxisId !== undefined ? 'yAxisId' : undefined,
@@ -426,7 +409,7 @@ const normalizeTopologyBindings = (
   coordinate: IRPlotCoordinateOperation,
   facets: ReadonlyArray<InputPlotFacet>,
   scaffolds: ReadonlyArray<InputPlotScaffold>,
-): NormalizedPlotBindings => {
+): PlotBindingsNormalizationResult => {
   const { composition, facetViewById, trackViewById, scaffoldDefaultViewById } = buildTopologyComposition(
     facets,
     scaffolds,
@@ -486,7 +469,7 @@ const normalizeTopologyBindings = (
 };
 
 /** 把 authoring-only axis、facet 与 scaffold binding 展开为 Plot Source IR 字段 */
-export const normalizePlotBindings = (context: PlotBindingsNormalizationContext): NormalizedPlotBindings => {
+export const normalizePlotBindings = (context: PlotBindingsNormalizationContext): PlotBindingsNormalizationResult => {
   const { marks, guides, scales, coordinate, composition, facets, scaffolds } = context;
   marks.forEach(assertMarkBindingCompatibility);
   guides.forEach(assertGuideBindingCompatibility);
@@ -646,7 +629,6 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
   }
 
   const normalizedMarks = marks.map(mark => {
-    if (!isPositionMark(mark)) return stripMarkBindings(mark);
     if (mark.xAxisId !== undefined) return withMarkScope(mark, mark.xAxisId);
     if (mark.yAxisId !== undefined) return withMarkScope(mark, mark.yAxisId);
 

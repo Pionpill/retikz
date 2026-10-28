@@ -1,7 +1,7 @@
-import { BlockHeaderProviderKey } from '@retikz/graph';
+import { blockHeaderProviderKey } from '@retikz/graph';
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { BlockHeaderEmbedKind } from './constants';
+import { blockHeaderEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
 import type { InputBlockHeader, InputGraphChild, WithoutInputType } from './normalize';
 import { normalizeBlockHeader } from './normalize';
@@ -12,8 +12,8 @@ import { normalizeGraphAuthoringChildren } from './semantic-children';
 export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 
 /** Block Header Source 的 InputEmbed adapter */
-export const BlockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHeaderInputEmbedProps> = {
-  kind: BlockHeaderEmbedKind,
+export const blockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHeaderInputEmbedProps> = {
+  kind: blockHeaderEmbedKind,
   lower: (props, context) => {
     const inputOf = (inputProps: BlockHeaderInputEmbedProps): InputBlockHeader => {
       return { type: 'blockHeader', ...inputProps };
@@ -25,7 +25,7 @@ export const BlockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHea
     if (input.trail !== undefined) slots.push(input.trail);
     const normalized = normalizeGraphAuthoringChildren(slots, context, 'BlockHeader slots');
     const trailIndex = input.icon === undefined ? 0 : 1;
-    const dependencies = createGraphProviderDependencies(BlockHeaderProviderKey);
+    const dependencies = createGraphProviderDependencies(blockHeaderProviderKey);
 
     return {
       node: normalizeBlockHeader({
@@ -48,4 +48,4 @@ export const BlockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHea
 
 /** 创建 Block Header Source 的 authoring embed 节点 */
 export const blockHeader = (input: BlockHeaderInputEmbedProps) =>
-  createGraphInputEmbed(BlockHeaderEmbedKind, input, undefined);
+  createGraphInputEmbed(blockHeaderEmbedKind, input, undefined);

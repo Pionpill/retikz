@@ -18,8 +18,8 @@ const serviceDefinition = () =>
     ],
   });
 
-describe('Code block contribution closure', () => {
-  it('compiles a custom Source using only its public contribution and preserves root identity', () => {
+describe('代码块贡献关闭', () => {
+  it('仅使用其公共贡献来编译自定义 Source 并保留根身份', () => {
     const definition = serviceDefinition();
     const contribution = Graph.createCodeBlockContribution(definition);
     const providers = resolveCoreProviderDependencies({
@@ -39,7 +39,7 @@ describe('Code block contribution closure', () => {
     expect(contribution.roots).toEqual([{ capability: 'composite', namespace: 'test', type: 'service' }]);
   });
 
-  it('resolves a local named Core theme before composing content', () => {
+  it('在编写内容之前解析本地名为 Core 的主题', () => {
     const definition = serviceDefinition();
     const style = Graph.defineGraphTheme({
       name: 'local',
@@ -62,7 +62,7 @@ describe('Code block contribution closure', () => {
     expect(JSON.stringify(output.scene)).toContain('#fedcba');
   });
 
-  it('diagnoses conflicting definitions instead of silently replacing them', () => {
+  it('诊断冲突的定义，而不是默默地替换它们', () => {
     expect(() =>
       resolveCoreProviderDependencies({
         contributions: [
@@ -73,7 +73,7 @@ describe('Code block contribution closure', () => {
     ).toThrow(/conflict/i);
   });
 
-  it('wraps compose failures while preserving the original cause', () => {
+  it('包装组合失败，同时保留原始原因', () => {
     const cause = new Error('compose failed');
     const definition = Graph.defineCodeBlock({
       namespace: 'test',
@@ -100,8 +100,8 @@ describe('Code block contribution closure', () => {
   });
 });
 
-describe('Code block root and composition semantics', () => {
-  it('matches a hand-authored Block for geometry, transforms, clipping, defaults and identity', () => {
+describe('代码块根和组合语义', () => {
+  it('与手工编写的 Block 匹配，用于几何、变换、裁剪、默认值和标识', () => {
     const definition = serviceDefinition();
     const contribution = Graph.createCodeBlockContribution(definition);
     const providers = resolveCoreProviderDependencies({ contributions: [contribution] });
@@ -150,7 +150,7 @@ describe('Code block root and composition semantics', () => {
     expect(primitivesOf(actual.scene.primitives).filter(item => item.id === 'service')).toHaveLength(1);
   });
 
-  it('compiles multiple definitions and connects an explicit member without generated ids', () => {
+  it('编译多个定义并连接显式成员而不生成 id', () => {
     const a = serviceDefinition();
     const otherSchema = Graph.CodeBlockPropsSchema.safeExtend({
       namespace: literal('other'),
@@ -198,7 +198,7 @@ describe('Code block root and composition semantics', () => {
     );
   });
 
-  it('passes defaultGraph to generated descendants and keeps empty composed content as one Block', () => {
+  it('将 defaultGraph 传递给生成的后代，并将空的组合内容保留为一个 Block', () => {
     const definition = Graph.defineCodeBlock({
       namespace: 'test',
       type: 'service',

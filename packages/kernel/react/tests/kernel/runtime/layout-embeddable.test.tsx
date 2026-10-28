@@ -10,7 +10,7 @@ import { Layout, Node } from '../../../src';
 
 type FixtureProps = { id: string; data: unknown };
 
-type DefinitionMaker = CoreDependencyProvider['makeDefinition'];
+type DefinitionMaker = CoreDependencyProvider<Readonly<Record<string, unknown>>>['makeDefinition'];
 
 type EmbeddableFixture = FC<FixtureProps> & {
   isTier2Embeddable?: boolean;
@@ -36,17 +36,17 @@ const definitionOf = (key: CompositeCoreProviderKey): AnyCompositeDefinition => 
 const providerOf = (
   key: CompositeCoreProviderKey,
   makeDefinition: DefinitionMaker,
-  datasets: Readonly<Record<string, unknown>> = {},
+  params: Readonly<Record<string, unknown>> = {},
   dependencies: ReadonlyArray<CompositeCoreProviderKey> = [],
-): CoreDependencyProvider => ({ key, dependencies, datasets, makeDefinition });
+): CoreDependencyProvider<Readonly<Record<string, unknown>>> => ({ key, dependencies, params, makeDefinition });
 
 const makeFixture = (options: {
   displayName: string;
   key: CompositeCoreProviderKey;
   makeDefinition: DefinitionMaker;
-  datasets?: Readonly<Record<string, unknown>>;
+  params?: Readonly<Record<string, unknown>>;
   dependencies?: ReadonlyArray<CompositeCoreProviderKey>;
-  extraProviders?: ReadonlyArray<CoreDependencyProvider>;
+  extraProviders?: ReadonlyArray<CoreDependencyProvider<Readonly<Record<string, unknown>>>>;
   roots?: ReadonlyArray<CompositeCoreProviderKey>;
 }): EmbeddableFixture => {
   const adapter: InputEmbedAdapter<FixtureProps> = {
@@ -56,7 +56,7 @@ const makeFixture = (options: {
       providerDependencies: {
         roots: options.roots ?? [options.key],
         providers: [
-          providerOf(options.key, options.makeDefinition, options.datasets, options.dependencies),
+          providerOf(options.key, options.makeDefinition, options.params, options.dependencies),
           ...(options.extraProviders ?? []),
         ],
       },
@@ -70,17 +70,17 @@ const makeFixture = (options: {
   return Fixture;
 };
 
-describe('<Layout> Composite provider graph', () => {
-  it('merges same-key datasets by identity and materializes one provider definition for multiple instances', () => {
+describe('<Layout> 复合提供者图', () => {
+  it('按顺序收集相同键的参数，并为多个实例具体化一个提供者定义', () => {
     const key = { capability: 'composite' as const, namespace: 'demo', type: 'panel' } as const;
     const dataA = { rows: [1, 2] };
     const dataB = { rows: [3, 4] };
-    const makeDefinition = vi.fn((datasets: Readonly<Record<string, unknown>>) => {
-      expect(datasets).toEqual({ a: dataA, b: dataB });
+    const makeDefinition = vi.fn((params: ReadonlyArray<Readonly<Record<string, unknown>>>) => {
+      expect(params).toEqual([{ a: dataA }, { b: dataB }]);
       return definitionOf(key);
     });
-    const First = makeFixture({ displayName: 'First', key, makeDefinition, datasets: { a: dataA } });
-    const Second = makeFixture({ displayName: 'Second', key, makeDefinition, datasets: { b: dataB } });
+    const First = makeFixture({ displayName: 'First', key, makeDefinition, params: { a: dataA } });
+    const Second = makeFixture({ displayName: 'Second', key, makeDefinition, params: { b: dataB } });
 
     const svg = renderToStaticMarkup(
       <Layout width={100} height={100}>
@@ -94,7 +94,7 @@ describe('<Layout> Composite provider graph', () => {
     expect(svg).toContain('data-retikz-id="demo-two"');
   });
 
-  it('resolves cross-namespace dependencies before their authored root', () => {
+  it('在其编写的根之前解决跨命名空间依赖关系', () => {
     const frameKey = { capability: 'composite' as const, namespace: 'standard', type: 'frame' } as const;
     const cardKey = { capability: 'composite' as const, namespace: 'third', type: 'card' } as const;
     const calls: Array<string> = [];
@@ -124,7 +124,7 @@ describe('<Layout> Composite provider graph', () => {
     expect(svg).toContain('data-retikz-id="third-one"');
   });
 
-  it('uses explicit Layout composites only as final definitions after provider materialization', () => {
+  it('仅使用显式 Layout 组合作为提供者具体化后的最终定义', () => {
     const demoKey = { capability: 'composite' as const, namespace: 'demo', type: 'panel' } as const;
     const userKey = { capability: 'composite' as const, namespace: 'user', type: 'panel' } as const;
     const demoMaker = vi.fn(() => definitionOf(demoKey));
@@ -153,7 +153,7 @@ describe('<Layout> Composite provider graph', () => {
     expect(svg).toContain('data-retikz-id="user-manual"');
   });
 
-  it('forwards Core missing-provider, cycle, dataset, and explicit-definition conflict diagnostics', () => {
+  it('转发 Core 缺少提供者、循环和显式定义冲突诊断', () => {
     const key = { capability: 'composite' as const, namespace: 'demo', type: 'panel' } as const;
     const dependency = { capability: 'composite' as const, namespace: 'standard', type: 'frame' } as const;
     const makeDefinition = vi.fn(() => definitionOf(key));
@@ -192,18 +192,6 @@ describe('<Layout> Composite provider graph', () => {
     expect(makeDefinition).not.toHaveBeenCalled();
     expect(dependencyMaker).not.toHaveBeenCalled();
 
-    const First = makeFixture({ displayName: 'FirstDataset', key, makeDefinition, datasets: { shared: { x: 1 } } });
-    const Second = makeFixture({ displayName: 'SecondDataset', key, makeDefinition, datasets: { shared: { x: 1 } } });
-
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout width={100} height={100}>
-          <First id="a" data={null} />
-          <Second id="b" data={null} />
-        </Layout>,
-      ),
-    ).toThrow(/demo\.panel.*dataset.*shared/i);
-
     const Valid = makeFixture({ displayName: 'Valid', key, makeDefinition });
 
     expect(() =>
@@ -215,7 +203,7 @@ describe('<Layout> Composite provider graph', () => {
     ).toThrow(/definition conflict.*demo\.panel/i);
   });
 
-  it('keeps a pure Kernel Layout unchanged when no contribution exists', () => {
+  it('当不存在贡献时，保持纯内核 Layout 不变', () => {
     const svg = renderToStaticMarkup(
       <Layout width={100} height={100}>
         <Node id="plain" position={[0, 0]} text="hi" />

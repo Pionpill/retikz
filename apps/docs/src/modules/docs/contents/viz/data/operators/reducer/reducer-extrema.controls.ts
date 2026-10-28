@@ -31,7 +31,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       ],
     }),
     canonicalValues: { grouped: true, method: 'min', tail: 90 },
-    relatedApis: ['BuiltinReducerOperationSchemas.Min', 'BuiltinReducerOperationSchemas.Max'],
+    relatedApis: ['BUILTIN_REDUCER_OPERATION_SCHEMAS.Min', 'BUILTIN_REDUCER_OPERATION_SCHEMAS.Max'],
   } satisfies PreviewControlContract;
 };
 /** 缺少语言上下文时采用中文基线 */

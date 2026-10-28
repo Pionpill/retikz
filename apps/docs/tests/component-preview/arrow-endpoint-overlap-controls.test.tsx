@@ -40,7 +40,7 @@ const renderWithValues = (Component: FC, values: PreviewControlValues) => {
   );
 };
 
-describe('Arrow endpoint-overlap controlled demo', () => {
+describe('箭头端点重叠控制演示', () => {
   it('提供中英文一致的 Core 箭头形状与 overlap 范围契约', () => {
     expect(chineseContract).toBeDefined();
     expect(chineseContract?.canonicalValues).toEqual({ shape: 'openCircle', overlap: 0.5 });

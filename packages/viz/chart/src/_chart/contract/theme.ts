@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import type { IRPlotDefaults } from '@retikz/plot';
 
 import type { IRChartDefaults } from '../schemas';
@@ -25,5 +25,5 @@ export type ChartThemeResolution = Readonly<{
   /** 转交 Plot owner 的稀疏默认片段 */
   defaultPlot?: IRPlotDefaults;
   /** Core 主题解析得到的显示模式 */
-  mode: ResolvedTheme['mode'];
+  mode: CanonicalTheme['mode'];
 }>;

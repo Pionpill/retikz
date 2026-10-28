@@ -20,8 +20,8 @@ const source: ComponentRenderSource = {
 
 afterEach(() => document.body.replaceChildren());
 
-describe('ComponentPreview showcase data tab', () => {
-  it('shows control table views in both the data tab and bottom bar', () => {
+describe('ComponentPreview 展示数据选项卡', () => {
+  it('在数据标签页和底栏中均显示控件表格视图', () => {
     const controls = definePreviewControls({
       presentation: 'panel',
       title: '数据',
@@ -89,7 +89,7 @@ describe('ComponentPreview showcase data tab', () => {
     act(() => root.unmount());
   });
 
-  it('omits the data tab when no visible table control exists', () => {
+  it('当不存在可见的表格控件时省略数据选项卡', () => {
     const controls = definePreviewControls({
       presentation: 'panel',
       title: '外观',

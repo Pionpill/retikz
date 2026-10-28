@@ -9,7 +9,7 @@ import {
   inspectLayoutOutline,
   inspectLayoutSpacing,
   lowerLayoutInspectionMarks,
-  normalizeLayoutBoundaryGroups,
+  splitLayoutBoundaryGroups,
 } from '../shared';
 
 /** 把 Grid 布局产物转换为普通 Core 辅助子元素
@@ -84,7 +84,7 @@ export const inspectGridLayoutArtifact = (
   }
 
   const spacing = inspectLayoutSpacing('grid', artifact.spacing, context.options, context.appearance);
-  const [boxes = [], normalizedStructure = [], underlay = [], normalizedSpacing = []] = normalizeLayoutBoundaryGroups([
+  const [boxes = [], normalizedStructure = [], underlay = [], normalizedSpacing = []] = splitLayoutBoundaryGroups([
     base.boxes,
     structure,
     base.underlay,

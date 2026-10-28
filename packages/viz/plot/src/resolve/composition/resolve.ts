@@ -54,7 +54,7 @@ const trackViewIdOf = (arrangement: SharedScaffold, track: ScaffoldTrack): strin
 };
 
 /** 解析 plot 的坐标简写或 composition 为统一坐标视图 registry */
-export const resolveCoordinateScopeRegistry = (node: IRPlot): CoordinateScopeRegistry => {
+const resolveCoordinateScopeRegistry = (node: IRPlot): CoordinateScopeRegistry => {
   if (node.composition !== undefined) {
     const scaffolds = (node.composition.arrangements ?? []).filter(
       (arrangement): arrangement is SharedScaffold => arrangement.kind === CoordinateArrangementKind.Tracks,
@@ -157,7 +157,7 @@ export const compositionAxisPolicyOf = (
 };
 
 /** 解析 composition grid 的默认与显式投放策略 */
-export const compositionGridPlacementOf = (
+const compositionGridPlacementOf = (
   resolve: CompositionResolve | undefined,
   context: CompositionPolicyContext,
   dimension: DimensionRole,
@@ -166,7 +166,7 @@ export const compositionGridPlacementOf = (
   (context.hasFacets || context.hasScaffolds ? AxisGridApplyTo.All : AxisGridApplyTo.Local);
 
 /** 合并根 composition 与 arrangement 的 layout 覆盖 */
-export const mergeCompositionLayout = (
+const mergeCompositionLayout = (
   base: CompositionLayout | undefined,
   override: CompositionLayout | undefined,
 ): CompositionLayout | undefined => {
@@ -185,7 +185,7 @@ const mergeCompositionResolveRecord = <T extends string>(
 };
 
 /** 合并根 composition 与 arrangement 的 scale/axis/grid resolve */
-export const mergeCompositionResolve = (
+const mergeCompositionResolve = (
   base: CompositionResolve | undefined,
   override: CompositionResolve | undefined,
 ): CompositionResolve | undefined => {

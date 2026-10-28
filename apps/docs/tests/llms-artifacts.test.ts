@@ -15,8 +15,8 @@ afterEach(() => {
   for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
-describe('LLM documentation artifacts', () => {
-  it('excludes the removed Kernel reference section from the manifest', () => {
+describe('LLM 文档产物', () => {
+  it('从清单中排除已删除的内核引用部分', () => {
     const manifest = collectDocManifest(docsRoot);
 
     expect(manifest.some(entry => entry.path.startsWith('/kernel/reference'))).toBe(false);

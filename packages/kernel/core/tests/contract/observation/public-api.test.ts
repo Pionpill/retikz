@@ -5,8 +5,8 @@ import * as core from '../../../src';
 
 const emptyScene: IRScene = { version: 1, type: 'scene', children: [] };
 
-describe('Core observation public contract', () => {
-  it('exports only the domain-neutral observation entry points', () => {
+describe('Core 观测公共契约', () => {
+  it('仅导出域中立的观察入口点', () => {
     expect(Reflect.get(core, 'observeCompileToScene')).toBeTypeOf('function');
     expect('InspectorDefinition' in core).toBe(false);
     expect('InspectionPlane' in core).toBe(false);

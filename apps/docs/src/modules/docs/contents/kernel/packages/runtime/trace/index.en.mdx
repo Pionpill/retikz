@@ -445,7 +445,7 @@ Only public members used in this chapter are listed; follow the source links bel
     {
       name: 'createRuntimeTraceReporter',
       kind: 'function',
-      type: '<const TOwner extends string>(input: CreateRuntimeTraceReporterInput<TOwner>) => RuntimeTraceReporter<TOwner>',
+      type: '<const TOwner extends string>(input: InputRuntimeTraceReporter<TOwner>) => RuntimeTraceReporter<TOwner>',
       description:
         'Standalone reporter accepts `{ owner: TOwner, phases: ReadonlyArray<RuntimeTracePhaseDefinition>, sink: PerformanceTraceSink }`; returns owner, report and diagnostics to drain local faults.',
     },

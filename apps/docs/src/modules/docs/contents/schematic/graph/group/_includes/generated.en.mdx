@@ -124,13 +124,13 @@ export type InputGroup = Omit<GroupCreateOptions, 'children'> &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GroupInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/group.ts"} startLine={19}>GroupInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"groupInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/group.ts"} startLine={19}>groupInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const GroupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbedProps>;
+export declare const groupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={24}>createGraphVanillaAdapters</ApiSourceLink>
+#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -242,10 +242,10 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 
 <ApiTable variant="parameters">
 
-| Category   | Name       | Type / signature                        | Description                                                                                                                                  |
-| ---------- | ---------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Parameters | `options?` | `GraphDefinitionOptions`                | Custom semantic and theme definitions; omission reuses built-in providers, and registration validation is deferred until dependency assembly |
-| Returns    | —          | `ReadonlyArray<CoreDependencyProvider>` | A readonly provider collection containing Graph elements and their required layout, shape, and arrow dependencies                            |
+| Category   | Name       | Type / signature                           | Description                                                                                                                                  |
+| ---------- | ---------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `options?` | `GraphDefinitionOptions`                   | Custom semantic and theme definitions; omission reuses built-in providers, and registration validation is deferred until dependency assembly |
+| Returns    | —          | `ReadonlyArray<AnyCoreDependencyProvider>` | A readonly provider collection containing Graph elements and their required layout, shape, and arrow dependencies                            |
 
 </ApiTable>
 
@@ -254,7 +254,9 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createGraphProviders: (options?: GraphDefinitionOptions) => ReadonlyArray<CoreDependencyProvider>;
+export declare const createGraphProviders: (
+  options?: GraphDefinitionOptions,
+) => ReadonlyArray<AnyCoreDependencyProvider>;
 ```
 
 </DocTab>

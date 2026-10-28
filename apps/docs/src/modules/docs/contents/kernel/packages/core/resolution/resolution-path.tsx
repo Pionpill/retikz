@@ -17,7 +17,7 @@ const ResolutionPath: FC<ResolutionPathProps> = props => {
   const lang = props.lang ?? ((i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en');
   const text = resolutionPathI18n[lang];
   const stages = [
-    { id: 'merge', name: 'resolveEffectivePath' },
+    { id: 'merge', name: 'mergePathStyle' },
     { id: 'kind', name: 'resolvePathDefinition' },
     { id: 'canonical', name: 'canonicalizePath' },
     { id: 'paint', name: 'resolvePaint' },

@@ -3,8 +3,8 @@ import { literal } from 'zod';
 
 import * as Graph from '../../src';
 
-describe('Code content Source contracts', () => {
-  it('round-trips ordered shared facts without materializing presentation or defaults', () => {
+describe('代码内容 Source 契约', () => {
+  it('往返订购共享事实，而无需具体化演示或默认值', () => {
     const method = {
       id: 'find',
       name: 'find',
@@ -23,11 +23,11 @@ describe('Code content Source contracts', () => {
     { body: { kind: 'steps', steps: [''] } },
     { body: { kind: 'text', text: '' } },
     { body: { kind: 'text', text: 'Read', steps: ['Read'] } },
-  ])('rejects invalid logic JSON: %j', value => {
+  ])('拒绝无效逻辑 JSON：%j', value => {
     expect(Graph.CodeLogicSchema.safeParse(value).success).toBe(false);
   });
 
-  it('keeps the full Block surface and its width constraint when composing an entity', () => {
+  it('在组成实体时保留完整的 Block 表面及其宽度约束', () => {
     const schema = Graph.CodeBlockPropsSchema.safeExtend({ namespace: literal('test'), type: literal('service') });
     const source = {
       namespace: 'test',

@@ -4,7 +4,7 @@
  *   transform 通道各包一层 `<g>`（避免同元素多个 transform 动画在 CSS 上冲突，且天然支持支点 transform-origin）
  */
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 
 import {
   classifyProperty,
@@ -68,10 +68,7 @@ const mergeClass = (existing: string | undefined, added: string): string => (exi
 
 /** 给 SvgNode 叠加属性（过滤 undefined） */
 const addAttrs = (node: SvgNode, attrs: SvgAttrs): SvgNode => {
-  const merged: SvgAttrs = {
-    ...node.attrs,
-    ...mergeProperties([attrs], { shouldOverride: value => value !== undefined }),
-  };
+  const merged: SvgAttrs = mergeDefinedProperties([node.attrs, attrs]);
   return { ...node, attrs: merged };
 };
 

@@ -7,11 +7,11 @@ import type {
   SceneResource,
   Transform,
 } from '../../contract';
-import type { EffectiveScopeDefaults } from '../../resolve';
-import type { IRPosition, ResolvedDropShadow } from '../../schemas';
-import type { ResolvedTheme } from '../../shared';
+import type { MergedScopeDefaults } from '../../resolve';
+import type { IRPosition, CanonicalDropShadow } from '../../schemas';
+import type { CanonicalTheme } from '../../shared';
 import type { CompileEnvironment } from '../environment';
-import type { NodeCompilation, NodeLayout } from '../node';
+import type { NodeCompilation, CompiledNodeLayout } from '../node';
 import type {
   CompileObservationContribution,
   CompileObservationRuntime,
@@ -22,9 +22,9 @@ import type { CompileWarning } from '../warning';
 /** 元素接收到的有效样式与主题，不包含资源工作区 */
 export type ElementCompileContext = Readonly<{
   /** 按 Core 继承规则解析的默认配置 */
-  defaults: EffectiveScopeDefaults;
+  defaults: MergedScopeDefaults;
   /** 有效主题 */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
 }>;
 
 /** 一个版本中的名称绑定；对象身份由调用者映射到其节点 */
@@ -35,7 +35,7 @@ export type CompileBinding =
       binding: object;
       /** 被引用元素的来源路径 */
       irPath?: string;
-      layout: NodeLayout;
+      layout: CompiledNodeLayout;
     }>;
 
 /** 声明位置可见的名称空间；父引用形成 inside-out 查找链 */
@@ -87,7 +87,7 @@ export type CompileBounds = Readonly<{
   /** 本地边界点 */
   boundsPoints: ReadonlyArray<IRPosition>;
   /** 本项阴影 */
-  shadow?: ResolvedDropShadow;
+  shadow?: CanonicalDropShadow;
   /** 外框等装饰边界，祖先 clip 可裁减其可见范围 */
   decoration?: boolean;
 }>;
@@ -151,7 +151,7 @@ export type CompiledScope = Readonly<{
   /** 元素在 IR 树中的来源路径 */
   irPath: string;
   /** 局部内容包络，包含空内容时的既有退化布局 */
-  envelope: NodeLayout;
+  envelope: CompiledNodeLayout;
   /** Scope 输出的包装属性，不包含 children */
   group: Omit<GroupPrimitive, 'children'>;
   /** 自身装饰及其资源，不重复持有子输出 */

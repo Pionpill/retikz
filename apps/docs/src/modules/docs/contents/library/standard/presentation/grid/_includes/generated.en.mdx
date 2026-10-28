@@ -12,19 +12,19 @@
 
 | Member            | Type                                                                                                                                                                                                                                   | Default | Description                                                                                                                                     |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`     | `GridInput['animations']`                                                                                                                                                                                                              | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
-| `border?`         | `GridInput['border']`                                                                                                                                                                                                                  | —       | Optional padded border and its drawing order.                                                                                                   |
+| `animations?`     | `InputGrid['animations']`                                                                                                                                                                                                              | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `border?`         | `InputGrid['border']`                                                                                                                                                                                                                  | —       | Optional padded border and its drawing order.                                                                                                   |
 | `boundingShape?`  | `"rectangle" \| "circle"`                                                                                                                                                                                                              | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
 | `bounds`          | `{ start: [number, number]; end: [number, number]; } \| { position: [number, number] \| { angle: number; radius: number; origin?: string \| SharedPolarPosition \| [number, number] \| undefined; }; width: number; height: number; }` | —       | Unordered Cartesian corners or a center position with non-negative dimensions.                                                                  |
 | `clip?`           | `{ kind: string; params: Record<string, JsonValue>; } \| { kind: "rect"; params: { x: number; y: number; width: number; height: number; }; }`                                                                                          | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
-| `defaults?`       | `GridInput['defaults']`                                                                                                                                                                                                                | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `defaults?`       | `InputGrid['defaults']`                                                                                                                                                                                                                | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
 | `id?`             | `string`                                                                                                                                                                                                                               | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
-| `line?`           | `GridInput['line']`                                                                                                                                                                                                                    | `true`  | Disabled, shared, or direction-specific grid-line configuration.                                                                                |
+| `line?`           | `InputGrid['line']`                                                                                                                                                                                                                    | `true`  | Disabled, shared, or direction-specific grid-line configuration.                                                                                |
 | `localNamespace?` | `false \| true`                                                                                                                                                                                                                        | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
 | `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                                            | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
 | `position?`       | `IRScopePosition`                                                                                                                                                                                                                      | —       | Origin position in the parent frame or final anchor alignment; defaults to the origin                                                           |
 | `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                                               | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
-| `transforms?`     | `GridInput['transforms']`                                                                                                                                                                                                              | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `transforms?`     | `InputGrid['transforms']`                                                                                                                                                                                                              | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
 | `zIndex?`         | `number`                                                                                                                                                                                                                               | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
 
 </ApiTable>
@@ -35,10 +35,10 @@
 
 ```ts
 export declare const Grid: {
-  (props: GridInput, context?: any): React.ReactNode;
+  (props: InputGrid, context?: any): React.ReactNode;
 };
 
-export type GridProps = GridInput;
+export type GridProps = InputGrid;
 ```
 
 </DocTab>
@@ -47,10 +47,10 @@ export type GridProps = GridInput;
 
 **Direct calls**
 
-#### <ApiSourceLink label={"GridInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/grid.ts"} startLine={8}>GridInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"gridInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/grid.ts"} startLine={8}>gridInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const GridInputEmbedAdapter: SynchronousInputEmbedAdapter<GridInput>;
+export declare const gridInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGrid>;
 ```
 
 **Execution and supporting contracts**
@@ -65,8 +65,8 @@ export declare const GridInputEmbedAdapter: SynchronousInputEmbedAdapter<GridInp
 
 | Category   | Name    | Type / signature        | Description |
 | ---------- | ------- | ----------------------- | ----------- |
-| Parameters | `input` | `GridInput`             | —           |
-| Returns    | —       | `InputEmbed<GridInput>` | —           |
+| Parameters | `input` | `InputGrid`             | —           |
+| Returns    | —       | `InputEmbed<InputGrid>` | —           |
 
 </ApiTable>
 
@@ -75,20 +75,20 @@ export declare const GridInputEmbedAdapter: SynchronousInputEmbedAdapter<GridInp
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const grid: (input: GridInput) => InputEmbed<GridInput>;
+export declare const grid: (input: InputGrid) => InputEmbed<InputGrid>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"GridInput"} path={"packages/library/standard/src/presentation/grid/types.ts"} startLine={18}>GridInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputGrid"} path={"packages/library/standard/src/presentation/grid/types.ts"} startLine={18}>InputGrid</ApiSourceLink>
 
 ```ts
-export type GridInput = Omit<IRGrid, 'namespace' | 'type'>;
+export type InputGrid = Omit<IRGrid, 'namespace' | 'type'>;
 ```
 
-#### <ApiSourceLink label={"GridLineInput"} path={"packages/library/standard/src/presentation/grid/types.ts"} startLine={7}>GridLineInput</ApiSourceLink> / <ApiSourceLink label={"GridLineInputSchema"} path={"packages/library/standard/src/presentation/grid/schema.ts"} startLine={36}>GridLineInputSchema</ApiSourceLink>
+#### <ApiSourceLink label={"InputGridLine"} path={"packages/library/standard/src/presentation/grid/types.ts"} startLine={7}>InputGridLine</ApiSourceLink> / <ApiSourceLink label={"GridLineInputSchema"} path={"packages/library/standard/src/presentation/grid/schema.ts"} startLine={36}>GridLineInputSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -111,7 +111,7 @@ export type GridInput = Omit<IRGrid, 'namespace' | 'type'>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type GridLineInput = ZodInput<typeof GridLineInputSchema>;
+export type InputGridLine = ZodInput<typeof GridLineInputSchema>;
 ```
 
 </DocTab>
@@ -134,7 +134,7 @@ export type GridLineInput = ZodInput<typeof GridLineInputSchema>;
 
 | Category   | Name    | Type / signature | Description |
 | ---------- | ------- | ---------------- | ----------- |
-| Parameters | `input` | `GridInput`      | —           |
+| Parameters | `input` | `InputGrid`      | —           |
 | Returns    | —       | `IRGrid`         | —           |
 
 </ApiTable>
@@ -144,7 +144,7 @@ export type GridLineInput = ZodInput<typeof GridLineInputSchema>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createGrid: (input: GridInput) => IRGrid;
+export declare const createGrid: (input: InputGrid) => IRGrid;
 ```
 
 </DocTab>
@@ -167,10 +167,10 @@ export type IRGrid = Omit<ZodInput<typeof GridSchema>, keyof IRScopeProps | 'bou
 
 **Extension definitions and registration**
 
-#### <ApiSourceLink label={"GridDefinition"} path={"packages/library/standard/src/presentation/grid/composite.ts"} startLine={10}>GridDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"gridDefinition"} path={"packages/library/standard/src/presentation/grid/composite.ts"} startLine={10}>gridDefinition</ApiSourceLink>
 
 ```ts
-export const GridDefinition = defineComposite({
+export const gridDefinition = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'grid',
   schema: GridSchema,
@@ -178,13 +178,11 @@ export const GridDefinition = defineComposite({
 } satisfies CompositeDefinition<IRGrid, typeof STANDARD_NAMESPACE, 'grid'>);
 ```
 
-#### <ApiSourceLink label={"GridProvider"} path={"packages/library/standard/src/presentation/grid/composite.ts"} startLine={25}>GridProvider</ApiSourceLink>
+#### <ApiSourceLink label={"gridProvider"} path={"packages/library/standard/src/presentation/grid/composite.ts"} startLine={25}>gridProvider</ApiSourceLink>
 
 ```ts
-export const GridProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'composite', namespace: GridDefinition.namespace, type: GridDefinition.type }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => GridDefinition,
+export const gridProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'composite', namespace: gridDefinition.namespace, type: gridDefinition.type }),
+  makeDefinition: () => gridDefinition,
 });
 ```

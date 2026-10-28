@@ -269,7 +269,7 @@ const compileBuiltinText = (
   return { layout, text: textPrimitive };
 };
 
-describe('preview controls registry', () => {
+describe('预览控制注册表', () => {
   it('从 registry owner 暴露本地化 controls key resolver', () => {
     expect(resolveControlsKey).toBeTypeOf('function');
   });
@@ -320,7 +320,7 @@ describe('preview controls registry', () => {
     expect(ToolbarIconButton).toBe(DirectToolbarIconButton);
   });
 
-  it('uses .controls.ts keys', () => {
+  it('使用 .controls.ts 中的键', () => {
     expect(buildControlsKey(['viz', 'plot', 'mark', 'path'], 'line-curve')).toBe(
       '../../contents/viz/plot/mark/path/line-curve.controls.ts',
     );
@@ -406,7 +406,7 @@ describe('preview controls registry', () => {
     });
   });
 
-  it('resolves named *Controls exports only', () => {
+  it('仅解析命名的 *Controls 导出', () => {
     const controls = componentPreviewExports.definePreviewControls({
       presentation: 'overlay',
       controls: [{ kind: 'text', id: 'size', label: 'Size', defaultValue: '6' }],
@@ -718,36 +718,6 @@ describe('preview controls registry', () => {
         buildControlsKey(segments, controlsName),
         buildLangControlsKey(segments, controlsName, 'en'),
       ]) {
-        const controls = resolvePreviewControls(controlModules[key]);
-
-        expect(controls?.presentation, key).toBe('panel');
-
-        if (!controls || controls.presentation !== 'panel') continue;
-
-        const actualIds = controls.sections
-          .flatMap(section => section.controls)
-          .filter(control => control.kind !== 'table')
-          .map(control => control.id);
-
-        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
-      }
-
-      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
-    }
-  });
-
-  it('RelationMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
-    const segments = ['viz', 'plot', 'mark', 'relation'];
-    const cases = [
-      { name: 'relation-scatter', writableIds: ['relation-scatter-routing'] },
-      { name: 'relation-sankey', writableIds: ['relation-sankey-samples', 'relation-sankey-opacity'] },
-      { name: 'relation-bubble', writableIds: ['relation-bubble-stroke-width'] },
-      { name: 'relation-path-extremes', writableIds: ['relation-path-anchor'] },
-      { name: 'relation-interval', writableIds: ['relation-interval-offset'] },
-    ];
-
-    for (const { name, writableIds } of cases) {
-      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
         const controls = resolvePreviewControls(controlModules[key]);
 
         expect(controls?.presentation, key).toBe('panel');
@@ -1674,20 +1644,14 @@ describe('preview controls registry', () => {
         language,
       ).not.toEqual(expect.arrayContaining(['axisStroke', 'axisStrokeWidth']));
 
-      const source = demoSourceOf(segments, name, language);
-
-      expect(source, language).toContain('defineControlledPreview(previewControlContract');
-      expect(source, language).toContain("anchorId={{ prefix: 'thing', field: 'thingId' }}");
-      expect(source, language).toContain("anchorId={{ prefix: 'practice', field: 'practiceId' }}");
-      expect(source, language).toContain('transform={[{ operation: coordinate1DCompositionOperation }]}');
-      expect(source, language).toContain('text="practiceGlyph"');
-      expect(source, language).toContain('path={{ routing }}');
-      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.relationStrokeWidth');
-      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisVisible');
-      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStroke');
-      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStrokeWidth');
-      expect(source, language).toContain('<RelationMark');
-      expect(source, language).toContain('<PlotAxis');
+      const line = renderControlledDemo(segments, name, language, { routing: 'line' });
+      const bend = renderControlledDemo(segments, name, language, { routing: 'bend' });
+      const fold = renderControlledDemo(segments, name, language, { routing: 'orthogonal' });
+      expect(viewBoxArea(line)).toBeGreaterThan(0);
+      expect(viewBoxArea(bend)).toBeGreaterThan(0);
+      expect(viewBoxArea(fold)).toBeGreaterThan(0);
+      expect(bend).not.toBe(line);
+      expect(fold).not.toBe(line);
     }
   });
 

@@ -5,8 +5,8 @@ import { buildPlotIR } from '../../../src/adapter';
 import { PlotAxis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
 
-describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
-  it('react_y_axis_binding_generates_overlay_composition', () => {
+describe('buildPlotIR alpha.14 ADR-08 轴结合糖', () => {
+  it('React y 轴绑定生成叠加组合', () => {
     const spec = buildPlotIR(
       <>
         <PlotAxis dimension="x" title="day" />
@@ -57,7 +57,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('y_axis_binding_supplies_scales_when_position_inference_is_deferred', () => {
+  it('当位置推断延迟时，y 轴绑定提供比例', () => {
     const spec = buildPlotIR(
       <>
         <PlotAxis dimension="x" title="day" />
@@ -82,7 +82,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('react_x_axis_binding_generates_overlay_composition', () => {
+  it('React x 轴绑定生成叠加组合', () => {
     const spec = buildPlotIR(
       <>
         <PlotAxis id="elapsed" dimension="x" placement={{ kind: 'side', side: 'bottom' }} title="elapsed day" />
@@ -130,7 +130,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('axis_binding_omitted_keeps_single_coordinate', () => {
+  it('轴绑定省略保留单个坐标', () => {
     const spec = buildPlotIR(
       <>
         <PlotAxis dimension="x" />
@@ -144,7 +144,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(spec.composition).toBeUndefined();
   });
 
-  it('marks_without_y_axis_id_bind_to_default_axis_in_binding_mode', () => {
+  it('没有 y 轴 id 的标记在绑定模式下绑定到默认轴', () => {
     const spec = buildPlotIR(
       <>
         <PlotAxis id="temperature" dimension="y" />
@@ -164,7 +164,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     ]);
   });
 
-  it('default_y_axis_id_binds_to_dimension_default_scope', () => {
+  it('默认 y 轴 id 绑定到维度默认范围', () => {
     const spec = buildPlotIR(
       <>
         <PlotAxis id="rainfall" dimension="y" />
@@ -187,7 +187,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     ]);
   });
 
-  it('explicit_composition_with_same_named_scope_accepts_y_axis_id', () => {
+  it('具有相同命名范围的显式组合接受 y 轴 id', () => {
     const spec = buildPlotIR(
       <>
         <PlotAxis id="temperature" dimension="y" />
@@ -227,7 +227,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('rejects invalid y axis binding inputs', () => {
+  it('拒绝无效的 y 轴绑定输入', () => {
     expect(() =>
       buildPlotIR(
         <>
@@ -274,7 +274,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     ).toThrow(/coordinateView.*yAxisId/i);
   });
 
-  it('rejects axis binding outside cartesian2D and missing explicit scopes', () => {
+  it('拒绝在 cartesian2D 外部绑定轴并缺少显式范围', () => {
     expect(() =>
       buildPlotIR(
         <>

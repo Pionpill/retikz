@@ -2,7 +2,7 @@ import type { IRChild, IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/c
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { preparePlotData } from '../../src/pipeline/expand/preparation';
 import { createPlotLineageLocator, lowerPlotWithLineage } from '../../src/pipeline/lineage';
 import { MarkSchema, PlotSchema } from '../../src/schemas';
@@ -51,18 +51,18 @@ const rows = [
 ];
 const options = { textMeasurer: measureLabel };
 
-describe('data-bound annotations', () => {
+describe('数据绑定注释', () => {
   it.each([6, 14, 24])('常量位置在没有数据行时保留固定半径 %s', size => {
-    const output = lowerPlot(
+    const output = lowerPlotWithDataArtifact(
       plot([{ ...point, properties: { ...point.properties, size, minimumSize: 2 } }]),
       { rows: [] },
       options,
-    );
+    ).child;
     const { scene } = compileToScene({ type: 'scene', version: 1, children: [output] });
     const flatten = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>
       items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
     const ellipses = flatten(scene.primitives).filter(item => item.type === 'ellipse');
-    const dataOutput = lowerPlot(
+    const dataOutput = lowerPlotWithDataArtifact(
       plot([
         {
           ...point,
@@ -72,7 +72,7 @@ describe('data-bound annotations', () => {
       ]),
       { rows: [{ x: 1, y: 2 }] },
       options,
-    );
+    ).child;
     const expected = flatten(
       compileToScene({ type: 'scene', version: 1, children: [dataOutput] }).scene.primitives,
     ).filter(item => item.type === 'ellipse');
@@ -83,7 +83,7 @@ describe('data-bound annotations', () => {
     expect(ellipses[0].ry).toBeCloseTo(expected[0].ry, 3);
   });
 
-  it('preserves empty transforms and field bindings through JSON', () => {
+  it('通过 JSON 保留空转换和字段绑定', () => {
     const source = MarkSchema.parse({
       ...point,
       transforms: [],
@@ -100,19 +100,29 @@ describe('data-bound annotations', () => {
     ).toBe(false);
   });
 
-  it('keeps constants independent with an explicitly empty data chain', () => {
-    expect(leaves(lowerPlot(plot([point]), { rows }, options))).toHaveLength(1);
+  it('使常量与显式空数据链保持独立', () => {
+    expect(leaves(lowerPlotWithDataArtifact(plot([point]), { rows }, options).child)).toHaveLength(1);
     expect(
-      leaves(lowerPlot(plot([{ ...point, transforms: [], properties: { ...point.properties } }]), { rows }, options)),
+      leaves(
+        lowerPlotWithDataArtifact(
+          plot([{ ...point, transforms: [], properties: { ...point.properties } }]),
+          { rows },
+          options,
+        ).child,
+      ),
     ).toHaveLength(1);
     expect(
       leaves(
-        lowerPlot(plot([{ ...point, transforms: [], properties: { ...point.properties } }]), { rows: [] }, options),
+        lowerPlotWithDataArtifact(
+          plot([{ ...point, transforms: [], properties: { ...point.properties } }]),
+          { rows: [] },
+          options,
+        ).child,
       ),
     ).toHaveLength(1);
   });
 
-  it('projects each point and interval row identically to explicit constants', () => {
+  it('将每个点和间隔行相同地投影为显式常量', () => {
     const data = plot([
       {
         ...point,
@@ -131,7 +141,7 @@ describe('data-bound annotations', () => {
         contributeToDomain: false,
       },
     ]);
-    const output = lowerPlot(data, { rows }, options);
+    const output = lowerPlotWithDataArtifact(data, { rows }, options).child;
     const constant = plot([
       ...rows.map(row => ({
         ...point,
@@ -148,13 +158,13 @@ describe('data-bound annotations', () => {
       })),
     ]);
     expect(leaves(output).map(({ id: _id, ...geometry }) => geometry)).toEqual(
-      leaves(lowerPlot(constant, { rows: [] }, options)),
+      leaves(lowerPlotWithDataArtifact(constant, { rows: [] }, options).child),
     );
     expect(() => compileToScene({ type: 'scene', version: 1, children: [output] })).not.toThrow();
   });
 
-  it('computes a local mean without mutating a sibling data view', () => {
-    const output = lowerPlot(
+  it('计算局部平均值而不改变同级数据视图', () => {
+    const output = lowerPlotWithDataArtifact(
       plot([
         { ...path, transforms: summarize, properties: { ...path.properties } },
         {
@@ -166,8 +176,8 @@ describe('data-bound annotations', () => {
       ]),
       { rows },
       options,
-    );
-    const expected = lowerPlot(
+    ).child;
+    const expected = lowerPlotWithDataArtifact(
       plot([
         {
           ...path,
@@ -178,19 +188,19 @@ describe('data-bound annotations', () => {
       ]),
       { rows: [] },
       options,
-    );
+    ).child;
     expect(leaves(output)[0]).toEqual(leaves(expected)[0]);
     expect(leaves(output)).toHaveLength(3);
   });
 
-  it('uses the same aggregated results for asynchronous preparation and lineage', async () => {
+  it('使用相同的聚合结果进行异步准备和血缘', async () => {
     const source = plot([{ ...path, id: 'mean', transforms: summarize, properties: { ...path.properties } }]);
     const prepared = await (
       await preparePlotData(source, { dataBindings: { rows: { kind: 'rows', rows } } })
     ).execute();
     expect(prepared.marks[0]?.rows).toMatchObject([{ mean: 5 }]);
-    const asyncOutput = lowerPlot(source, { rows }, options, undefined, prepared);
-    expect(leaves(asyncOutput)).toEqual(leaves(lowerPlot(source, { rows }, options)));
+    const asyncOutput = lowerPlotWithDataArtifact(source, { rows }, options, undefined, undefined, prepared).child;
+    expect(leaves(asyncOutput)).toEqual(leaves(lowerPlotWithDataArtifact(source, { rows }, options).child));
     const result = lowerPlotWithLineage(
       source,
       { rows },
@@ -204,34 +214,35 @@ describe('data-bound annotations', () => {
     expect(result.lineage.data.marks).toHaveLength(1);
   });
 
-  it('rejects fields removed by aggregation and skips missing point values', () => {
-    expect(() =>
-      lowerPlot(
-        plot([
-          {
-            ...point,
-            transforms: summarize,
-            encodings: { position: { y: { value: 2 }, x: { field: 'x' } } },
-            properties: { ...point.properties },
-            contributeToDomain: false,
-          },
-        ]),
-        { rows },
-        options,
-      ),
+  it('拒绝通过聚合删除的字段并跳过缺失的点值', () => {
+    expect(
+      () =>
+        lowerPlotWithDataArtifact(
+          plot([
+            {
+              ...point,
+              transforms: summarize,
+              encodings: { position: { y: { value: 2 }, x: { field: 'x' } } },
+              properties: { ...point.properties },
+              contributeToDomain: false,
+            },
+          ]),
+          { rows },
+          options,
+        ).child,
     ).toThrow(/field|map|x/i);
     expect(
       leaves(
-        lowerPlot(
+        lowerPlotWithDataArtifact(
           plot([{ ...point, encodings: { position: { x: { field: 'x' }, y: { value: 2 } } } }]),
           { rows: [{ x: null }] },
           options,
-        ),
+        ).child,
       ),
     ).toHaveLength(0);
   });
 
-  it('creates independent group spans and exposes one datum with aggregate provenance per path', () => {
+  it('创建独立的组跨度并公开一个数据以及每条路径的聚合来源', () => {
     const source = plot([
       {
         ...path,
@@ -267,7 +278,7 @@ describe('data-bound annotations', () => {
         { group: 'b', x: 9, y: 9 },
       ],
     };
-    const result = leaves(lowerPlot(source, data, options));
+    const result = leaves(lowerPlotWithDataArtifact(source, data, options).child);
     expect(result).toHaveLength(2);
     expect(result.map(child => (child.type === 'path' ? child.children : []))).toMatchObject([
       [{ to: [48, 210] }, { to: [192, 210] }],
@@ -279,7 +290,7 @@ describe('data-bound annotations', () => {
     expect(locator.datum(2, { markIndex: 0 })).toBeNull();
   });
 
-  it('aggregates the actual facet partition and preserves scoped locator identity', async () => {
+  it('聚合实际的分面分区并保留作用域定位器标识', async () => {
     const source = plot([{ ...path, transforms: summarize, properties: { ...path.properties } }]);
     delete source.coordinate;
     source.composition = {
@@ -298,8 +309,8 @@ describe('data-bound annotations', () => {
       await preparePlotData(source, { dataBindings: { rows: { kind: 'rows', rows: data.rows } } })
     ).execute();
     expect(prepared.panels.map(panel => panel[0]?.rows)).toMatchObject([[{ mean: 3 }], [{ mean: 8 }]]);
-    expect(leaves(lowerPlot(source, data, options, undefined, prepared))).toEqual(
-      leaves(lowerPlot(source, data, options)),
+    expect(leaves(lowerPlotWithDataArtifact(source, data, options, undefined, undefined, prepared).child)).toEqual(
+      leaves(lowerPlotWithDataArtifact(source, data, options).child),
     );
     const locator = createPlotLineageLocator(source, data, { ...options, environment: {} });
     const a = locator.datum(0, { markIndex: 0, facet: { id: 'groups', column: 'a' } });
@@ -309,7 +320,7 @@ describe('data-bound annotations', () => {
     expect(a?.anchor.position).not.toEqual(b?.anchor.position);
   });
 
-  it('only contributes final data positions to an inferred domain when enabled', () => {
+  it('启用时仅将最终数据位置贡献给推断域', () => {
     const source = plot([
       {
         type: 'point',
@@ -333,14 +344,14 @@ describe('data-bound annotations', () => {
         { x: 10, y: 10, limit: 100 },
       ],
     };
-    const original = leaves(lowerPlot(source, data, options));
+    const original = leaves(lowerPlotWithDataArtifact(source, data, options).child);
     source.marks[1] = MarkSchema.parse({ ...source.marks[1], contributeToDomain: true });
-    const included = leaves(lowerPlot(source, data, options));
+    const included = leaves(lowerPlotWithDataArtifact(source, data, options).child);
     expect(original[1]).not.toEqual(included[1]);
     expect(included).toHaveLength(4);
   });
 
-  it('retains coordinate connection semantics for field-driven polar paths and regions', () => {
+  it('保留场驱动极路径和区域的坐标连接语义', () => {
     const source = plot([
       {
         ...path,
@@ -358,15 +369,15 @@ describe('data-bound annotations', () => {
       },
     ]);
     source.coordinate = { type: 'polar2D', angle: 'x', radius: 'y' };
-    const result = leaves(lowerPlot(source, { rows: [{ y: 5 }] }, options));
+    const result = leaves(lowerPlotWithDataArtifact(source, { rows: [{ y: 5 }] }, options).child);
     expect(result[0].type === 'path' && result[0].children.length).toBeGreaterThan(2);
     expect(result[1]).toHaveProperty('shape.type', 'sector');
   });
 
-  it('applies marks execution policy and declaration overrides to annotation transforms', () => {
+  it('将标记执行策略和声明覆盖应用于注释转换', () => {
     const source = plot([{ ...path, transforms: summarize, properties: { ...path.properties } }]);
     source.dataExecution = { root: { mode: 'builtin' }, marks: { mode: 'external', external: 'fixture' } };
-    expect(() => lowerPlot(source, { rows }, options)).toThrow(/async preparation/i);
+    expect(() => lowerPlotWithDataArtifact(source, { rows }, options).child).toThrow(/async preparation/i);
     source.marks[0] = MarkSchema.parse({
       ...path,
       transforms: summarize.map(declaration => ({
@@ -375,6 +386,6 @@ describe('data-bound annotations', () => {
       })),
       properties: { ...path.properties },
     });
-    expect(leaves(lowerPlot(source, { rows }, options))).toHaveLength(1);
+    expect(leaves(lowerPlotWithDataArtifact(source, { rows }, options).child)).toHaveLength(1);
   });
 });

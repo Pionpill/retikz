@@ -234,7 +234,7 @@ describe('createClock（无 requestAnimationFrame：SSR 降级）', () => {
   });
 });
 
-describe('createClock rAF lifecycle', () => {
+describe('createClock rAF 生命周期', () => {
   it('frame callback 同步 dispose 后不再续接 rAF', () => {
     let frameSequence = 0;
     const pendingFrames = new Map<number, () => void>();

@@ -93,7 +93,7 @@ export type MarkTransformShortcutDefinition = {
 };
 
 /** `buildPlotIR` 的坐标、数据模型和根级装配选项 */
-export type BuildPlotOptions = {
+export type PlotBuildOptions = {
   /** 作为整张图外部 anchor 句柄的 IRPlot id */
   id?: string;
   /** 组合场景下每张 Plot 自描述的固有宽度 */
@@ -186,12 +186,12 @@ export type PlotMemberFragment = {
 };
 
 /** 运行时 datum label 解析器 */
-export type ResolveLabelMap = Record<string, (row: ExternalRow) => string>;
+export type LabelResolverByField = Record<string, (row: ExternalRow) => string>;
 
 /** declaration normalization 产生的 runtime-only sidecar */
 export type PlotAuthoringRuntime = {
   /** 按 mark id 归一化的运行时标签解析器 */
-  resolveLabel?: ResolveLabelMap;
+  resolveLabel?: LabelResolverByField;
 };
 
 /** 绑定 composition 作用域的 mark */
@@ -217,10 +217,10 @@ export type SharedScaffold = Extract<Arrangement, { kind: 'tracks' }>;
 export type ScaffoldTrack = SharedScaffold['tracks'][number];
 
 /** normalization 中暂存的 facet */
-export type CollectedFacet = InputPlotFacet;
+type CollectedFacet = InputPlotFacet;
 
 /** normalization 中暂存的 scaffold */
-export type CollectedScaffold = Omit<SharedScaffold, 'coordinate'> & {
+type CollectedScaffold = Omit<SharedScaffold, 'coordinate'> & {
   /** 布局骨架使用的坐标系 */
   coordinate?: SharedScaffold['coordinate'];
   /** 组合布局的间距 */
@@ -246,7 +246,7 @@ export type NormalizationState = {
   /** 显式声明的位置比例尺 */
   scales: Array<InputPlotScale>;
   /** 仅运行时使用的标签解析器 */
-  resolveLabels: ResolveLabelMap;
+  resolveLabels: LabelResolverByField;
   /** 是否使用颜色 */
   colored: boolean;
   /** 使用到的颜色字段 */
@@ -281,7 +281,6 @@ export type PlotDeclarationKind =
   | 'path-mark'
   | 'point-mark'
   | 'interval-mark'
-  | 'relation-mark'
   | 'axis'
   | 'legend'
   | 'scale'

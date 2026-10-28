@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { Layout, Node } from '../../../src';
 
 describe('<Layout viewBox> 注入显式视框', () => {
-  it('viewBox prop → <svg viewBox="x y w h">', () => {
+  it('将 viewBox 属性传递为 <svg viewBox="x y w h">', () => {
     const svg = renderToStaticMarkup(
       <Layout viewBox={{ x: -100, y: -100, width: 200, height: 200 }}>
         <Node id="o" position={[0, 0]} shape="circle" style={{ fill: '#2563eb' }} layout={{ minimumSize: 40 }} />

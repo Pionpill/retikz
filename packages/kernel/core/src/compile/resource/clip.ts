@@ -70,24 +70,24 @@ const leaveClipTraversalObjects = (guard: ClipTraversalGuard, values: ReadonlyAr
   values.forEach(value => guard.active.delete(value));
 };
 
-type ClipFieldInput = {
+type InputClipField = {
   kind: string;
   field: string;
   value: number;
 };
 
-type ClipRoundFieldInput = ClipFieldInput & {
+type InputClipRoundField = InputClipField & {
   round: (n: number) => number;
 };
 
-type ClipPointInput = {
+type InputClipPoint = {
   kind: string;
   field: string;
   value: [number, number];
   round: (n: number) => number;
 };
 
-const bad = ({ kind, field, value, positive = false }: ClipFieldInput & { positive?: boolean }): never => {
+const bad = ({ kind, field, value, positive = false }: InputClipField & { positive?: boolean }): never => {
   throw createCompositeContractError(
     `Clip shape '${kind}' has an invalid ${field} (${String(value)}); it must be a finite number${
       positive ? ' greater than 0' : ''
@@ -95,13 +95,13 @@ const bad = ({ kind, field, value, positive = false }: ClipFieldInput & { positi
   );
 };
 
-const finite = ({ kind, field, value, round }: ClipRoundFieldInput): number => {
+const finite = ({ kind, field, value, round }: InputClipRoundField): number => {
   if (!Number.isFinite(value)) bad({ kind, field, value });
   const rounded = round(value);
   return Object.is(rounded, -0) ? 0 : rounded;
 };
 
-const positive = ({ kind, field, value, round }: ClipRoundFieldInput): number => {
+const positive = ({ kind, field, value, round }: InputClipRoundField): number => {
   if (!Number.isFinite(value) || value <= 0) bad({ kind, field, value, positive: true });
   const rounded = round(value);
   if (!Number.isFinite(rounded) || rounded <= 0) bad({ kind, field, value: rounded, positive: true });
@@ -109,7 +109,7 @@ const positive = ({ kind, field, value, round }: ClipRoundFieldInput): number =>
   return Object.is(rounded, -0) ? 0 : rounded;
 };
 
-const point = ({ kind, field, value, round }: ClipPointInput): [number, number] => [
+const point = ({ kind, field, value, round }: InputClipPoint): [number, number] => [
   finite({ kind, field: `${field}[0]`, value: value[0], round }),
   finite({ kind, field: `${field}[1]`, value: value[1], round }),
 ];

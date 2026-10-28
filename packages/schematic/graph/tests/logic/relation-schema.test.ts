@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { RelationSchema } from '../../src';
 
-describe('Relation visual contract', () => {
-  it('preserves effects and zero overrides while rejecting fill fields', () => {
+describe('Relation 视觉契约', () => {
+  it('保留效果和零覆盖，同时拒绝填充字段', () => {
     const source = {
       namespace: 'graph',
       type: 'relation',

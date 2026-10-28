@@ -5,7 +5,7 @@ import type { CellPlacement } from './pipeline';
 import type { CanonicalCell } from './resolve';
 
 /** 线性单元格的物理排列参数，不包含集合专属首尾或边框语义 */
-export type LinearCellLayoutOptions = {
+type LinearCellLayoutOptions = {
   /** 输入序列的排列方向 */ direction: 'up' | 'down' | 'left' | 'right';
   /** 相邻单元格的间距 */ gap: number;
   /** 单元包络外的留白 */ padding: ReturnType<typeof resolveBoxSpacing>;

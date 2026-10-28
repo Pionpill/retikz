@@ -1,7 +1,7 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { CoreProviderContribution, IRScene, ThemeDefinition } from '@retikz/core';
 import type { ExternalDatasets, DataInputBindings, DataTransformExecutor } from '@retikz/data';
-import type { LowerPlotsOptions } from '@retikz/plot';
+import type { PlotsLoweringOptions } from '@retikz/plot';
 import type { InputScope } from '@retikz/vanilla';
 
 /** Chart 嵌入场景时可选的根 Scope 输入 */
@@ -12,7 +12,7 @@ export type InputChartPanel = Pick<InputScope, 'clip' | 'position' | 'theme' | '
  * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-export type ChartRuntimeInput<TSource extends IRChartSource = IRChartSource, TNative = never> = Readonly<{
+export type InputChartRuntime<TSource extends IRChartSource = IRChartSource, TNative = never> = Readonly<{
   /** 已由精确 normalizer 组装的 Chart Source IR */
   source: TSource;
   /** Chart / Plot lowering 使用的外部数据集 */
@@ -26,13 +26,13 @@ export type ChartRuntimeInput<TSource extends IRChartSource = IRChartSource, TNa
   /** 当前具体 chartType 的 Core provider contribution */
   chartProviderContribution: CoreProviderContribution;
   /** Plot lowering 的运行时选项 */
-  lowerOptions?: LowerPlotsOptions;
+  lowerOptions?: PlotsLoweringOptions;
   /** 可选的 Chart 宿主 Scope */
   panel?: InputChartPanel;
 }>;
 
 /** Vanilla 创建入口的宿主 Core Theme 选项 */
-export type ChartHostThemeInput = Readonly<{
+export type InputChartHostTheme = Readonly<{
   /** 创建时声明的 Core 根 Theme */
   theme?: IRScene['theme'];
   /** 创建时声明的 Core Theme definitions */

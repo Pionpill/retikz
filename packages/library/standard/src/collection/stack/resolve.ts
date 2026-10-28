@@ -8,10 +8,7 @@ import type { IRStack } from './schema';
 import { StackBorderSchema, StackLayoutSchema, StackSchema } from './schema';
 
 /** 供布局消费的单一栈结构，位置与栈顶不重复存储 */
-export type CanonicalStack = Omit<
-  IRStack,
-  'items' | 'data' | 'skeleton' | 'dataExpand' | 'layout' | 'padding' | 'border'
-> & {
+type CanonicalStack = Omit<IRStack, 'items' | 'data' | 'skeleton' | 'dataExpand' | 'layout' | 'padding' | 'border'> & {
   /** 已展开并完成逐格继承的输入序列 */
   items: Array<CanonicalCell>;
   /** 确定的物理方向与间距 */
@@ -26,14 +23,25 @@ export type CanonicalStack = Omit<
 export const resolveStack = (source: IRStack): CanonicalStack => {
   const { items, data, dataExpand, skeleton, layout, border, padding, ...common } = source;
   const cells = items ?? expandLinearCells(data !== undefined ? { data, dataExpand } : { skeleton });
-  const path = StackBorderSchema.parse(typeof border === 'object' ? border : {});
-  const style = StackBorderSchema.shape.style.unwrap().parse(path.style ?? {});
+  const path = typeof border === 'object' ? border : {};
+  const styleSchema = StackBorderSchema.shape.style.unwrap().shape;
+  const style = {
+    ...path.style,
+    stroke: path.style?.stroke ?? styleSchema.stroke.parse(undefined),
+    strokeWidth: path.style?.strokeWidth ?? styleSchema.strokeWidth.parse(undefined),
+    fill: path.style?.fill ?? styleSchema.fill.parse(undefined),
+  };
   return {
     ...common,
     items: cells.map(cell =>
       resolveCell(cell, { overallStyle: source.defaultCell?.style, overallLayout: source.defaultCell?.layout }),
     ),
-    layout: StackLayoutSchema.parse(layout ?? {}),
+    layout: {
+      ...layout,
+      direction: layout?.direction ?? StackLayoutSchema.shape.direction.parse(undefined),
+      reverseArrows: layout?.reverseArrows ?? StackLayoutSchema.shape.reverseArrows.parse(undefined),
+      gap: layout?.gap ?? StackLayoutSchema.shape.gap.parse(undefined),
+    },
     padding: resolveBoxSpacing(padding ?? StackSchema.options[0].shape.padding.parse(undefined), 0),
     ...(border === false ? {} : { border: { ...path, style } }),
   };

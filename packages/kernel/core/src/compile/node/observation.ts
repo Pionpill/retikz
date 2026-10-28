@@ -16,12 +16,12 @@ import {
 import { resolveBoundary } from './boundary';
 import { nodeBaselineYsOf } from './emit';
 import type { NodeGeometryContext } from './geometry-context';
-import type { NodeLayout } from './types';
+import type { CompiledNodeLayout } from './types';
 
 type Round = (value: number) => number;
 
 /** 将局部坐标点按 Node emit 使用的自身旋转投影到 occurrence-local 坐标 */
-const rotateNodePoint = (layout: NodeLayout, point: Position, round: Round): Position => {
+const rotateNodePoint = (layout: CompiledNodeLayout, point: Position, round: Round): Position => {
   const rect = layout.geometry.rect;
   const rotation = round((layout.geometry.rect.rotate ?? 0) * RAD_TO_DEG) * DEG_TO_RAD;
   const cos = Math.cos(rotation);
@@ -37,7 +37,7 @@ const rotateNodePoint = (layout: NodeLayout, point: Position, round: Round): Pos
 };
 
 /** 取 Node rect 的最终圆整快照 */
-const snapshotNodeRect = (layout: NodeLayout, round: Round): CenteredBox => ({
+const snapshotNodeRect = (layout: CompiledNodeLayout, round: Round): CenteredBox => ({
   ...layout.geometry.rect,
   x: round(layout.geometry.rect.x),
   y: round(layout.geometry.rect.y),
@@ -49,7 +49,7 @@ const snapshotNodeRect = (layout: NodeLayout, round: Round): CenteredBox => ({
 });
 
 /** 构造与 Node emit 同源的观测几何矩形；保留原始位置与尺寸，仅采用最终输出的圆整旋转角 */
-const observationRectOf = (layout: NodeLayout, round: Round): CenteredBox => ({
+const observationRectOf = (layout: CompiledNodeLayout, round: Round): CenteredBox => ({
   x: layout.geometry.rect.x,
   y: layout.geometry.rect.y,
   width: layout.geometry.rect.width,
@@ -175,7 +175,7 @@ const readKeyPoints = (
   });
 
 /** 从 settled Node layout 投影 occurrence-local 正文内容盒与物理基线 */
-const contentOutputOf = (layout: NodeLayout, round: Round): NodeOwnerOutput['content'] => {
+const contentOutputOf = (layout: CompiledNodeLayout, round: Round): NodeOwnerOutput['content'] => {
   const hasContent = layout.text !== undefined;
   if (!hasContent) return null;
 
@@ -206,9 +206,9 @@ const contentOutputOf = (layout: NodeLayout, round: Round): NodeOwnerOutput['con
   return { corners, baselines };
 };
 
-/** 从同次 settled NodeLayout 发布 Node owner output */
+/** 从同次 settled CompiledNodeLayout 发布 Node owner output */
 export const projectNodeOwnerOutput = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   round: Round,
   context?: NodeGeometryContext,
 ): NodeOwnerOutput => {

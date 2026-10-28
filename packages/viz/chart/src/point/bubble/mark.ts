@@ -16,7 +16,7 @@ export const resolveBubbleMark = (encodings: JsonObject, properties: JsonObject)
   resolvePointMark(encodings, mergeMarkProperties(bubbleDefaultProperties, properties));
 
 /** Bubble Chart 的 authored mark Definition */
-export const BubbleMarkDefinition: ChartMarkDefinition = defineChartMark({
+export const bubbleMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'bubble',
   schema: BubbleChartMarkSchema,
   resolve: context => {

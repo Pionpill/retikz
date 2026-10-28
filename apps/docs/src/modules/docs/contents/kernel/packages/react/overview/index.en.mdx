@@ -66,21 +66,10 @@ export const Node: FC<NodeProps> = () => null;
 Node.displayName = TIKZ_NODE;
 ```
 
-Sugar components do not add another IR either. `<Draw>`, for example, parses `way` with Core's `parseWay`, then returns standard `<Path>` / `<Step>` Kernel JSX. This excerpt shows only the line branch; the source covers fold, curve, arc, cycle, and the other branches through the same mapping:
+Sugar components do not add another IR. `<Draw>` forwards authoring input to `<Path>`; Vanilla's `normalizePath` calls `parseWay` to expand `way` into standard Core steps. React does not duplicate path grammar parsing.
 
 ```tsx
-const steps = parseWay(way);
-
-return (
-  <Path arrow={arrow}>
-    {steps.map((step, index) => {
-      if (step.kind === 'line') {
-        return <Step key={index} kind="line" to={step.to} label={step.label} />;
-      }
-      return null;
-    })}
-  </Path>
-);
+export const Draw: FC<DrawProps> = props => <Path {...props} />;
 ```
 
 `readSceneChildren` walks children synchronously: it recognizes Kernel markers, unwraps fragments, and directly invokes function Sugar before recursing into the result. This does not pass through the React DOM renderer, so Kernel and Sugar must be hook-free, side-effect-free function components. `createInputScene()` produces the single `InputScene` plus collected `InputEmbedAdapter` values for Vanilla normalization.

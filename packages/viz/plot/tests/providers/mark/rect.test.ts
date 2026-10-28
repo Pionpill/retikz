@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
 import type { Cell } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { buildIntervalContext, intervalCell } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, MARK_REGISTRY } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
@@ -35,13 +35,13 @@ const WIDTH = 400;
 
 const HEIGHT = 400;
 
-const cartOpts: LowerPlotsOptions = { layout: { width: WIDTH, height: HEIGHT } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: WIDTH, height: HEIGHT } };
 
-const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+const expandOf = (spec: IRPlot, datasets: Datasets, options: PlotsLoweringOptions): IRScope => {
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
-const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options: PlotsLoweringOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
@@ -143,7 +143,7 @@ const heatmapSpec = (color?: string): IRPlot =>
 
 // ── happy path：cartesian 双 band cell 几何 ────────────────────────────────────────────
 describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () => {
-  it('rect-cartesian-cell-geometry', () => {
+  it('直角笛卡尔单元几何', () => {
     // 2 行类 × 2 列类 band 帧：bw_x = 200/2 = 100、bw_y = 200/2 = 100
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const mark = rectMark();
@@ -166,7 +166,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     }
   });
 
-  it('rect-cell-nodes-via-lower-mark', () => {
+  it('矩形单元节点通过下标记', () => {
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const rows = [
       { rk: 'r0', ck: 'c0' },
@@ -183,7 +183,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     }
   });
 
-  it('rect-single-cell', () => {
+  it('矩形单电池', () => {
     const frame = createCartesianCoordinate(bandStub(['r0'], [0, 120]), bandStub(['c0'], [120, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 'r0', ck: 'c0' }], frame) as IRScope);
 
@@ -192,7 +192,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     expect(nodeHeight(nodes[0])).toBe(120);
   });
 
-  it('rect-missing-category-skipped', () => {
+  it('直接缺失类别跳过', () => {
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const rows = [
       { rk: 'r0', ck: 'c0' },
@@ -203,7 +203,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     expect(nodes).toHaveLength(1);
   });
 
-  it('rect-datum-anchor-matches-node-position', () => {
+  it('矩形基准锚点匹配节点位置', () => {
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const rows = [{ rk: 'r1', ck: 'c0' }];
     const node = nodesOf(lowerMark(rectMark(), rows, frame) as IRScope)[0];
@@ -229,7 +229,7 @@ describe('rect 值 → color', () => {
     { rk: 'r1', ck: 'c1', v: 5 },
   ];
 
-  it('rect-value-to-color', () => {
+  it('矩形值到颜色', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -269,7 +269,7 @@ describe('rect 值 → color', () => {
     expect(new Set(fills).size).toBeGreaterThan(1);
   });
 
-  it('rect-color-grouped-scope-equal-values-share-fill', () => {
+  it('矩形颜色分组范围等于值共享填充', () => {
     // v=5 出现两次 → 同色应分到同一子 Scope（按 fill 分组）
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -312,7 +312,7 @@ describe('rect 值 → color', () => {
 
 // ── 缺 color → 回退默认填充单图层 ───────────────────────────────────────────────────────
 describe('rect 缺 color', () => {
-  it('rect-no-color-default-fill', () => {
+  it('矩形无颜色默认填充', () => {
     const rows = [
       { rk: 'r0', ck: 'c0' },
       { rk: 'r1', ck: 'c1' },
@@ -329,7 +329,7 @@ describe('rect 缺 color', () => {
     expect(nodesOf(layer)).toHaveLength(2);
   });
 
-  it('rect-compiles-to-scene', () => {
+  it('直接编译到场景', () => {
     const rows = [{ rk: 'r0', ck: 'c0' }];
     const layer = firstLayer(heatmapSpec(), { d: rows }, cartOpts);
 
@@ -338,9 +338,9 @@ describe('rect 缺 color', () => {
 });
 
 // ── 错误路径：1D fail-loud（坐标系级守卫仍在）；band×band 在 polar / 非 band scale 下的新行为 ─
-describe('rect fail-loud', () => {
+describe('rect 无效时明确报错', () => {
   // 重构后 band bound 直接取 scale.bandwidth（linear scale = 0），不再单独要求 band scale → 退化 cell（高 0），不再 throw
-  it('rect-secondary-not-band-degenerate-cell', () => {
+  it('直次要非带简并单元', () => {
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 'r0', ck: 5 }], frame) as IRScope);
 
@@ -348,7 +348,7 @@ describe('rect fail-loud', () => {
     expect(nodeHeight(nodes[0])).toBe(0);
   });
 
-  it('rect-primary-not-band-degenerate-cell', () => {
+  it('矩形主非带简并单元', () => {
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 5, ck: 'c0' }], frame) as IRScope);
 
@@ -356,7 +356,7 @@ describe('rect fail-loud', () => {
     expect(nodeWidth(nodes[0])).toBe(0);
   });
 
-  it('rect-y-linear-via-spec-degenerate-cell', () => {
+  it('通过规格简并单元的直角线性', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -379,7 +379,7 @@ describe('rect fail-loud', () => {
   });
 
   // 重构后 interval（band×band）在 polar2D 下受支持（→ sector），不再 fail-loud
-  it('rect-polar-supported-as-sector', () => {
+  it('直极支持扇区', () => {
     const frame = createPolarCoordinate({
       center: [200, 200],
       innerRadius: 0,
@@ -395,7 +395,7 @@ describe('rect fail-loud', () => {
     expect(() => lowerMark(rectMark(), [{ rk: 'r0', ck: 'c0' }], frame)).not.toThrow();
   });
 
-  it('rect-1d-fail-loud', () => {
+  it('一维 rect 明确报错', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -417,7 +417,7 @@ describe('rect fail-loud', () => {
 
 // ── 交互：rect + interval 共存（各自 cell 算法、同走 projectCell 装配）────────────────────
 describe('rect + interval 共存', () => {
-  it('rect-with-interval-coexist', () => {
+  it('矩形与间隔共存', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -465,13 +465,13 @@ describe('rect + interval 共存', () => {
 });
 
 // ── schema：rect mark accept / 判别分流 ─────────────────────────────────────────────────
-describe('rect schema', () => {
-  it('rect-schema-accepts-with-and-without-color', () => {
+describe('矩形 schema', () => {
+  it('矩形 schema 接受带颜色和不带颜色', () => {
     expect(() => PlotSchema.parse(heatmapSpec('v'))).not.toThrow();
     expect(() => PlotSchema.parse(heatmapSpec())).not.toThrow();
   });
 
-  it('rect-schema-discriminates', () => {
+  it('矩形 schema 区分', () => {
     const spec = PlotSchema.parse(heatmapSpec());
 
     expect(spec.marks[0].type).toBe('interval');

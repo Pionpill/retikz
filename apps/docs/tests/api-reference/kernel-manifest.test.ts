@@ -42,7 +42,7 @@ const packageReferences = [
   },
 ] as const;
 
-describe('Kernel API Reference MDX', () => {
+describe('Kernel API 参考 MDX', () => {
   it('函数重载和可调用对象的说明与定义保持对应，无参函数不出现空白页签', async () => {
     const directory = mkdtempSync(resolve(tmpdir(), 'retikz-callable-reference-'));
 

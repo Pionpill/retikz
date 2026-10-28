@@ -66,7 +66,10 @@ export const writeStandardShapeApiReferences = async (
           {
             source: path.resolve(repositoryRoot, 'packages/library/standard-vanilla/src/shape/index.ts'),
             title: { zh: '`@retikz/standard-vanilla`', en: '`@retikz/standard-vanilla`' },
-            symbols: names.flatMap(name => [`Input${name}`, `${name}InputEmbedAdapter`]),
+            symbols: names.flatMap(name => [
+              `Input${name}`,
+              `${name[0].toLowerCase()}${name.slice(1)}InputEmbedAdapter`,
+            ]),
           },
         ],
         translate: translateShapeApiReference,
@@ -79,7 +82,12 @@ export const writeStandardShapeApiReferences = async (
           {
             source: path.resolve(repositoryRoot, 'packages/library/standard/src/shape/index.ts'),
             title: { zh: '`@retikz/standard`', en: '`@retikz/standard`' },
-            symbols: names.flatMap(name => [`IR${name}`, `create${name}`, `${name}Definition`, `${name}Provider`]),
+            symbols: names.flatMap(name => [
+              `IR${name}`,
+              `create${name}`,
+              `${name[0].toLowerCase()}${name.slice(1)}Definition`,
+              `${name[0].toLowerCase()}${name.slice(1)}Provider`,
+            ]),
           },
         ],
         translate: translateShapeApiReference,

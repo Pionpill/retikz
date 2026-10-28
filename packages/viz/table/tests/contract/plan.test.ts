@@ -17,8 +17,8 @@ import {
   TableCellPlanSourceSchema,
 } from '../../src';
 
-describe('Table Cell plan lineage contract', () => {
-  it('accepts only the currently executed source variants', () => {
+describe('Table Cell 计划的血缘契约', () => {
+  it('仅接受当前执行的源变体', () => {
     const sources: Array<TableCellPlanSource> = [
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Default }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Structure }),
@@ -46,7 +46,7 @@ describe('Table Cell plan lineage contract', () => {
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'default', ruleIndex: 0 })).toThrow();
   });
 
-  it('enumerates only canonical appearance winner leaf paths', () => {
+  it('仅枚举规范外观获胜者叶路径', () => {
     const paths = [
       TableCellAppearanceTracePath.BackgroundFill,
       TableCellAppearanceTracePath.ContentNodeDefaultFontWeight,
@@ -66,7 +66,7 @@ describe('Table Cell plan lineage contract', () => {
     expect(() => TableCellAppearanceTracePathSchema.parse('/content/unknown')).toThrow();
   });
 
-  it('stays exhaustive with the authoritative appearance and Core default schemas', () => {
+  it('保持详尽的权威外观和 Core 默认 schema', () => {
     const expected = new Set<string>([
       '/background/fill',
       '/background/fillOpacity',

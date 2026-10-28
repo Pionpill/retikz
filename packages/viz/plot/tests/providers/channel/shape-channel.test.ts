@@ -3,18 +3,18 @@ import type { IRShapeValue } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { PLOT_SHAPE_PALETTE } from '../../../src/providers';
 import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
-  return lowerPlot(spec, datasets, { ...cartOpts, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...cartOpts, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
@@ -58,7 +58,7 @@ const pointSpec = (shape: IRPlotChannel | undefined, fixedShape?: IRShapeValue):
   });
 
 describe('shape channel 类别映射', () => {
-  it('shape_field_maps_categories_to_palette', () => {
+  it('形状字段将类别映射到调色板', () => {
     const data = [
       { x: 0, y: 0, g: 'A' },
       { x: 1, y: 1, g: 'B' },
@@ -71,7 +71,7 @@ describe('shape channel 类别映射', () => {
     expect(shapeOf(nodes[2])).toBe(PLOT_SHAPE_PALETTE[0]);
   });
 
-  it('shape_palette_cycles', () => {
+  it('形状调色板循环使用', () => {
     const cats = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
     const data = cats.map((g, i) => ({ x: i, y: i, g }));
     const nodes = collectNodes(firstLayer(pointSpec('g'), { d: data }));
@@ -80,7 +80,7 @@ describe('shape channel 类别映射', () => {
     expect(nodes.map(shapeOf)).toEqual([...PLOT_SHAPE_PALETTE, PLOT_SHAPE_PALETTE[0]]);
   });
 
-  it('shape_palette_compiles_with_core_shape_providers', () => {
+  it('形状调色板与核心形状提供者一起编译', () => {
     const data = [
       { x: 0, y: 0, g: 'A' },
       { x: 1, y: 1, g: 'B' },
@@ -96,7 +96,7 @@ describe('shape channel 类别映射', () => {
     ).not.toThrow();
   });
 
-  it('defaultPlot_shape_palette_preserves_structured_refs', () => {
+  it('defaultPlot 形状调色板保留结构化参考', () => {
     const custom = [{ type: 'polygon', params: { sides: 5, rotate: -90 } }, 'cross'] satisfies Array<IRShapeValue>;
     const spec = PlotSchema.parse({
       ...pointSpec('g'),
@@ -112,7 +112,7 @@ describe('shape channel 类别映射', () => {
     expect(nodes.map(shapeOf)).toEqual([custom[0], custom[1], custom[0]]);
   });
 
-  it('shape_value_constant', () => {
+  it('形状值常量', () => {
     const data = [
       { x: 0, y: 0 },
       { x: 1, y: 1 },
@@ -122,7 +122,7 @@ describe('shape channel 类别映射', () => {
     expect(nodes.every(n => shapeOf(n) === 'diamond')).toBe(true);
   });
 
-  it('shape_no_channel_no_shape_override', () => {
+  it('形状无通道无形状覆盖', () => {
     const data = [{ x: 0, y: 0 }];
     const nodes = collectNodes(firstLayer(pointSpec(undefined), { d: data }));
 
@@ -130,7 +130,7 @@ describe('shape channel 类别映射', () => {
   });
 
   // continuous / temporal 字段必须 fail-loud
-  it('shape_continuous_field_fails_loud', () => {
+  it('连续类型的形状字段明确报错', () => {
     const data = [
       { x: 0, y: 0, v: 1.5 },
       { x: 1, y: 1, v: 2.5 },
@@ -139,7 +139,7 @@ describe('shape channel 类别映射', () => {
     expect(() => expandOf(pointSpec('v'), { d: data })).toThrow(/shape requires a categorical field/);
   });
 
-  it('shape_temporal_field_fails_loud', () => {
+  it('时间类型的形状字段明确报错', () => {
     const data = [
       { x: 0, y: 0, t: '2024-01-01' },
       { x: 1, y: 1, t: '2024-02-01' },
@@ -149,7 +149,7 @@ describe('shape channel 类别映射', () => {
   });
 
   // shape、color 与 size 可以同时生效
-  it('shape_with_color_and_size_coexist', () => {
+  it('形状与颜色和尺寸共存', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

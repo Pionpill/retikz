@@ -7,18 +7,18 @@ import { STANDARD_NAMESPACE } from '../../shared';
 import { StandardPathBorderStyleSchema } from '../../shared/schemas';
 import { FrameHeaderDirection } from './constants';
 
-const FrameHeaderShape = {
+const frameHeaderShape = {
   ...strictObject(NodeSchema.shape).omit({ type: true, position: true, text: true, aliasIds: true }).shape,
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text rendered as Frame header content.'),
 };
 
 /** 校验由 Frame 布局定位的主标题，不接受调用者指定标题位置 */
-export const FrameTitleSchema = strictObject(FrameHeaderShape).describe(
+export const FrameTitleSchema = strictObject(frameHeaderShape).describe(
   'Node-like primary title authored without an explicit position.',
 );
 
 /** 校验由 Frame 布局定位的辅助说明，不接受调用者指定说明位置 */
-export const FrameDescriptionSchema = strictObject(FrameHeaderShape).describe(
+export const FrameDescriptionSchema = strictObject(frameHeaderShape).describe(
   'Node-like supporting description authored without an explicit position.',
 );
 
@@ -60,9 +60,9 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
   children: array(NodeSchema).min(1).describe('Non-empty direct Core Node body contributing to Frame bounds.'),
 });
 
-type FrameRefinementInput = ZodInfer<typeof FrameBaseSchema>;
+type InputFrameRefinement = ZodInfer<typeof FrameBaseSchema>;
 
-const refineReservedIds = (frame: FrameRefinementInput, ctx: RefinementCtx): void => {
+const refineReservedIds = (frame: InputFrameRefinement, ctx: RefinementCtx): void => {
   if (frame.id === undefined) return;
 
   const reservedIds = new Set([frame.id]);

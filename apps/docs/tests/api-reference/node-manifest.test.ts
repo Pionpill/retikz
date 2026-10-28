@@ -24,7 +24,7 @@ describe('Node API 公开范围', () => {
       'node / InputNode',
       'coordinate / InputCoordinate',
       'defineBoundary',
-      'BoundaryDefinitionInput',
+      'InputBoundaryDefinition',
     ]) {
       expect(headings).toContain(name);
     }
@@ -79,8 +79,8 @@ describe('Node API 公开范围', () => {
     }
 
     for (const name of [
-      'ShapeDefinitionInput',
-      'BoundaryDefinitionInput',
+      'InputShapeDefinition',
+      'InputBoundaryDefinition',
       'node / InputNode',
       'coordinate / InputCoordinate',
     ]) {

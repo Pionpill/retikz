@@ -30,7 +30,7 @@ const sceneWithLabel = (label: IRNodeLabel, shape: IRNode['shape'] = 'rectangle'
   ],
 });
 
-describe('Node label placement', () => {
+describe('Node 标签放置', () => {
   describe('schema', () => {
     it('接受 inside placement 与边界比例 position', () => {
       expect(
@@ -109,7 +109,7 @@ describe('Node label placement', () => {
     });
   });
 
-  describe('inside placement', () => {
+  describe('内部放置', () => {
     it('top + inside 沿 top boundary 向内偏移', () => {
       const scene = compileToScene(
         sceneWithLabel({ text: 'L', position: 'top', placement: 'inside', distance: 6 }),
@@ -133,7 +133,7 @@ describe('Node label placement', () => {
     });
   });
 
-  describe('boundary position', () => {
+  describe('边界位置', () => {
     it('top boundary 支持自定义比例位置并向内偏移', () => {
       const scene = compileToScene(
         sceneWithLabel({
@@ -268,7 +268,7 @@ describe('Node label placement', () => {
     });
   });
 
-  describe('interaction', () => {
+  describe('交互', () => {
     it('旋转节点的 boundary label 仍在局部坐标计算一次', () => {
       const label: IRNodeLabel = {
         text: 'L',

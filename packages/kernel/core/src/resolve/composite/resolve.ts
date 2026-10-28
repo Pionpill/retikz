@@ -1,23 +1,12 @@
-import type { JsonValue } from '@retikz/foundation';
-import type { ZodType } from 'zod';
-
-import type { CompositeCompileContext, CompositeEvaluationResult } from '../../contract';
 import type { IRComposite } from '../../schemas';
-import { parseProviderPayload } from '../provider-payload';
+import { parseProviderPayload } from '../provider';
 import type { CompositeBinding, CompositeRegistry, CompositeResolution, RegisteredCompositeBinding } from './types';
 
-type CallableComposite = Readonly<{
-  schema: ZodType;
-  compile: (node: unknown, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
-  artifactSchema?: ZodType<JsonValue>;
-}>;
-
-/** 绑定 composite provider key、definition 与可执行分支 */
+/** 按命名空间和类型查找复合组件定义，返回已注册绑定或未注册标记 */
 export const bindComposite = (source: IRComposite, composites: CompositeRegistry): CompositeBinding => {
   const key = `${source.namespace}.${source.type}`;
-  const definition = composites.get(key);
+  const definition = composites.get(source.namespace)?.get(source.type);
   if (definition === undefined) return { kind: 'unregistered', key };
-  const callable = definition as unknown as CallableComposite;
 
   return {
     kind: 'compile',
@@ -25,15 +14,16 @@ export const bindComposite = (source: IRComposite, composites: CompositeRegistry
     namespace: definition.namespace,
     type: definition.type,
     source,
-    schema: callable.schema,
-    compile: callable.compile,
-    ...(callable.artifactSchema === undefined ? {} : { artifactSchema: callable.artifactSchema }),
+    schema: definition.schema,
+    // resolveComposite 使用同一定义的 schema 解析节点后，才交给此回调
+    compile: definition.compile as RegisteredCompositeBinding['compile'],
+    ...(definition.artifactSchema === undefined ? {} : { artifactSchema: definition.artifactSchema }),
   };
 };
 
 /**
- * 按已绑定 provider schema 解析 composite payload
- * @template TBinding 关联已注册定义、输入与执行分支的组件绑定类型
+ * 按已绑定定义的 schema 解析复合组件节点，保留后续编译所需的定义信息
+ * @template TBinding 已注册的组件绑定类型，解析结果保留该绑定的字段
  */
 export const resolveComposite = <TBinding extends RegisteredCompositeBinding>(
   binding: TBinding,

@@ -11,7 +11,7 @@ import {
 import * as ReactApi from '../../src/react';
 import { useLowerTex } from '../../src/react';
 
-describe('[exports] public API', () => {
+describe('[导出]公共 API', () => {
   it('根入口与 React 子入口只导出稳定公共 API', () => {
     expect(MathJaxProfile).toEqual({ Base: 'base', Math: 'math' });
     expect(Object.values(MathJaxExtension)).toHaveLength(9);

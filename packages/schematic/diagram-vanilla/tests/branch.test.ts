@@ -1,9 +1,9 @@
 import { createProcessingController, processToStaticInputResult } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
-import { branchDiagram, BranchDiagramInputEmbedAdapter } from '../src/branch';
+import { branchDiagram, branchDiagramInputEmbedAdapter } from '../src/branch';
 
-it('compiles Branch via the synchronous Vanilla embed', () => {
+it('通过同步 Vanilla 嵌入编译 Branch', () => {
   const result = processToStaticInputResult(
     {
       children: [
@@ -13,14 +13,14 @@ it('compiles Branch via the synchronous Vanilla embed', () => {
         }),
       ],
     },
-    { adapters: [BranchDiagramInputEmbedAdapter] },
+    { adapters: [branchDiagramInputEmbedAdapter] },
   );
 
   expect(result.artifacts.some(artifact => artifact.kind === 'composite' && artifact.type === 'branch')).toBe(true);
   expect(JSON.stringify(result.scene)).toContain('A');
 });
 
-it('updates labels without retaining obsolete presentation content', () => {
+it('更新标签而不保留过时的演示内容', () => {
   const source = (visible: boolean) => ({
     children: [
       branchDiagram({
@@ -29,7 +29,7 @@ it('updates labels without retaining obsolete presentation content', () => {
       }),
     ],
   });
-  const controller = createProcessingController(source(true), { adapters: [BranchDiagramInputEmbedAdapter] });
+  const controller = createProcessingController(source(true), { adapters: [branchDiagramInputEmbedAdapter] });
 
   try {
     const initial = controller.read();

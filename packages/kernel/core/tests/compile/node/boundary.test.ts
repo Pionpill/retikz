@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { NamespaceStack } from '../../../src/compile/namespace';
-import { angleBoundaryOf, boundaryPointOf, compileResolvedNode } from '../../../src/compile/node';
+import { angleBoundaryOf, boundaryPointOf, compileNodeResolution } from '../../../src/compile/node';
 import { createPositionResolveContext } from '../../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../../src/compile/reference';
 import * as core from '../../../src/index';
@@ -15,43 +15,43 @@ import { NodeSchema } from '../../../src/schemas';
 import { NodeTargetSchema } from '../../../src/schemas';
 
 describe('BoundarySchema', () => {
-  it('parses reserved keywords and registered names', () => {
+  it('解析保留关键字和注册名称', () => {
     expect(BoundarySchema.parse('shape')).toBe('shape');
     expect(BoundarySchema.parse('circle')).toBe('circle');
     expect(BoundarySchema.parse('rectangle')).toBe('rectangle');
   });
 
-  it('parses nested {type, params}', () => {
+  it('解析嵌套的{type，params}', () => {
     expect(BoundarySchema.parse({ type: 'star', params: { points: 5 } })).toEqual({
       type: 'star',
       params: { points: 5 },
     });
   });
 
-  it('rejects empty string', () => {
+  it('拒绝空字符串', () => {
     expect(() => BoundarySchema.parse('')).toThrow();
   });
 
-  it('exposes reserved-keyword constant', () => {
+  it('公开保留关键字常量', () => {
     expect(BuiltinBoundary.Self).toBe('shape');
     expect(BuiltinBoundary.Circle).toBe('circle');
   });
 });
 
-describe('boundary IR fields', () => {
-  it('NodeSchema accepts boundary', () => {
+describe('边界 IR 字段', () => {
+  it('NodeSchema 接受边界', () => {
     const n = NodeSchema.parse({ type: 'node', id: 'a', shape: 'rectangle', position: [0, 0], boundary: 'circle' });
 
     expect(n.boundary).toBe('circle');
   });
 
-  it('NodeSchema boundary optional', () => {
+  it('NodeSchema 边界可选', () => {
     const n = NodeSchema.parse({ type: 'node', id: 'a', position: [0, 0] });
 
     expect(n.boundary).toBeUndefined();
   });
 
-  it('NodeTargetSchema accepts boundary', () => {
+  it('NodeTargetSchema 接受边界', () => {
     const t = NodeTargetSchema.parse({ id: 'a', boundary: 'shape' });
 
     expect(t.boundary).toBe('shape');
@@ -71,16 +71,16 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
     const resolution = resolveNode(node, {
       scopeDefaults: {},
       mode: 'light',
-      shapes: BUILTIN_SHAPES,
-      boundaries,
-      patterns: resolvePatternRegistry(),
+      shapeRegistry: BUILTIN_SHAPES,
+      boundaryRegistry: boundaries,
+      patternRegistry: resolvePatternRegistry(),
       round: value => value,
       irPath: 'node',
       warn: () => {},
       labelDistance: 12,
     });
 
-    return compileResolvedNode(resolution, {
+    return compileNodeResolution(resolution, {
       measureText,
       positionContext: createPositionResolveContext({
         lookupReference: id => namespaceStack.lookupReference(id),
@@ -89,7 +89,7 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
     }).layout;
   })();
 
-describe('boundary-aware boundary/canonical', () => {
+describe('边界感知边界/规范', () => {
   it("boundaryPointOf 缺省参数等价于 'shape'", () => {
     const namespaceStack = new NamespaceStack();
     const layout = layoutBoundaryNode(
@@ -150,8 +150,8 @@ describe('boundary-aware boundary/canonical', () => {
 
 // ─── 导出断言 + 补充象限 ──────────────────────────────────────────────────────
 
-describe('public export + remaining quadrants', () => {
-  it('BuiltinBoundary / BoundarySchema exported from package root', () => {
+describe('公共导出+剩余象限', () => {
+  it('从包根导出的 BuiltinBoundary / BoundarySchema', () => {
     expect(core.BuiltinBoundary.Self).toBe('shape');
     expect(core.BuiltinBoundary.Circle).toBe('circle');
     expect(core.BoundarySchema).toBeDefined();

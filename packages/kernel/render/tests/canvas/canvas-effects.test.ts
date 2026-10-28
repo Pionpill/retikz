@@ -1,5 +1,5 @@
 import { createCanvas } from '@napi-rs/canvas';
-import type { PathPrimitive, RectPrimitive, ResolvedArrowEnd, Scene } from '@retikz/core';
+import type { PathPrimitive, RectPrimitive, CompiledArrowEnd, Scene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -49,7 +49,7 @@ it('编译后的中段mark在SVG和Canvas中保留透明度乘积', () => {
 });
 
 /** 最小可绘制的端点箭头规格（验证箭头随主路径一起进 shadow / blend 状态绘制） */
-const arrowEndSpec: ResolvedArrowEnd = {
+const arrowEndSpec: CompiledArrowEnd = {
   shape: 'stealth',
   baseSize: 10,
   refX: 0,
@@ -145,7 +145,7 @@ const makeRecordingCtx = (
 const rectScene = (extra: Partial<RectPrimitive>): Scene =>
   sceneOf([{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00', ...extra }]);
 
-describe('[canvas-effects] drop shadow', () => {
+describe('[画布效果]阴影', () => {
   it('shadowed rect → 绘制时 ctx.shadow* 已 set', () => {
     const snaps: Array<{ key: string; value: unknown }> = [];
     const ctx = makeRecordingCtx(snaps);
@@ -158,7 +158,7 @@ describe('[canvas-effects] drop shadow', () => {
     expect(at('shadowColor')).toBe('rgba(0,0,0,0.4)');
   });
 
-  it('shadowed rect with transform -> shadow* follows current canvas scale', () => {
+  it('带有变换的阴影矩形 - >阴影*遵循当前画布比例', () => {
     const snaps: Array<{ key: string; value: unknown }> = [];
     const ctx = makeRecordingCtx(snaps, { a: 2, b: 0, c: 0, d: 2 });
     drawScene(ctx, rectScene({ shadow: { offsetX: 1, offsetY: 2, blur: 4, color: '#000' } }), {});
@@ -212,7 +212,7 @@ describe('[canvas-effects] drop shadow', () => {
   });
 });
 
-describe('[canvas-effects] blend mode', () => {
+describe('[画布效果]混合模式', () => {
   it('blended rect → 绘制时 GCO = multiply，绘后 restore 回 source-over', () => {
     const snaps: Array<{ key: string; value: unknown }> = [];
     const ctx = makeRecordingCtx(snaps);

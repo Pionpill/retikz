@@ -26,7 +26,7 @@ const canonicalDeclarationProps = (source: PreviewSourceConfig): Record<string, 
   return declaration.props;
 };
 
-describe('Viz Chart Connected Scatter controls', () => {
+describe('Viz Chart Connected Scatter 控件', () => {
   it('固定按 country 分组，不暴露无意义的分组开关', () => {
     for (const contract of [createPreviewControlContract('zh'), createPreviewControlContract('en')]) {
       expect(contract.canonicalValues).not.toHaveProperty('group');

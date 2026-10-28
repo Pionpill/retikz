@@ -1,11 +1,11 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { ThemeMode } from '@retikz/core';
 
 import type { GraphThemeResolution } from '../../contract';
 import { GraphStatus, GraphType } from '../../shared';
 
 /** 从当前 Core Theme 建立 Graph Entity、Relation 与 Surface 的中立 defaults/rules */
-export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeResolution => {
+export const getDefaultGraphThemePreset = (theme: CanonicalTheme): GraphThemeResolution => {
   const foreground = theme.mode === ThemeMode.Light ? '#777777' : '#888888';
   return {
     codeBlockTokens: {

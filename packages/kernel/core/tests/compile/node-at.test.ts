@@ -14,8 +14,8 @@ const rects = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
 const centers = (ir: IRScene): Array<[number, number]> =>
   rects(compileToScene(ir).scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
 
-describe('Node at relative positioning', () => {
-  describe('schema aliases', () => {
+describe('相对定位时的 Node', () => {
+  describe('schema 别名', () => {
     it('direction 只接受 canonical 方位', () => {
       expect(AtPositionSchema.parse({ direction: 'top', of: 'A' })).toEqual({ direction: 'top', of: 'A' });
       expect(AtPositionSchema.parse({ direction: 'top-left', of: 'A' })).toEqual({
@@ -129,7 +129,7 @@ describe('Node at relative positioning', () => {
   });
 
   describe('distance 默认值优先级', () => {
-    it('node.distance > options.nodeDistance', () => {
+    it('node.distance 的优先级高于 options.nodeDistance', () => {
       const ir: IRScene = {
         version: 1,
         type: 'scene',

@@ -11,19 +11,19 @@ import { LayoutSpacingKind } from '../../composites/shared';
 import type { CanonicalBaseLayoutInspectOptions } from '../resolve/shared';
 
 /** 布局辅助边界使用的标准虚线周期 */
-const LayoutInspectionDashPattern = Object.freeze([6, 4]);
+const layoutInspectionDashPattern = Object.freeze([6, 4]);
 
 /** 布局辅助纹理在用户坐标中的标准周期 */
-const LayoutInspectionPatternSize = 12;
+const layoutInspectionPatternSize = 12;
 
 /** 布局辅助纹理的标准线宽 */
-const LayoutInspectionPatternLineWidth = 1;
+const layoutInspectionPatternLineWidth = 1;
 
 /** 布局辅助纹理的标准透明度 */
-const LayoutInspectionPatternOpacity = 0.55;
+const layoutInspectionPatternOpacity = 0.55;
 
 /** 布局溢出警告填充的标准透明度 */
-const LayoutInspectionWarningOpacity = 0.14;
+const layoutInspectionWarningOpacity = 0.14;
 
 /** 布局辅助图形的共享语义信息 */
 type LayoutInspectionMarkBase = Readonly<{
@@ -183,7 +183,7 @@ const lineFromBoundarySegment = (
 };
 
 /** 保留非边界标记，并把矩形轮廓或正交线切成未覆盖片段 */
-const normalizeBoundaryMark = (
+const splitBoundaryMark = (
   mark: LayoutInspectionMark,
   covered: Array<AxisAlignedBoundarySegment>,
 ): Array<LayoutInspectionMark> => {
@@ -216,11 +216,11 @@ const normalizeBoundaryMark = (
 };
 
 /** 按传入优先级切分共线边界，已覆盖区间保留更早语义 */
-export const normalizeLayoutBoundaryGroups = (
+export const splitLayoutBoundaryGroups = (
   groups: ReadonlyArray<ReadonlyArray<LayoutInspectionMark>>,
 ): Array<Array<LayoutInspectionMark>> => {
   const covered: Array<AxisAlignedBoundarySegment> = [];
-  return groups.map(group => group.flatMap(mark => normalizeBoundaryMark(mark, covered)));
+  return groups.map(group => group.flatMap(mark => splitBoundaryMark(mark, covered)));
 };
 
 /** 把矩形结构区域展开为四条虚线边界 */
@@ -268,8 +268,8 @@ const patternFill = (
   kind: 'pattern',
   shape: 'lines',
   color,
-  size: LayoutInspectionPatternSize,
-  lineWidth: LayoutInspectionPatternLineWidth,
+  size: layoutInspectionPatternSize,
+  lineWidth: layoutInspectionPatternLineWidth,
   rotation: direction === 'forward-diagonal' ? -45 : 45,
 });
 
@@ -286,7 +286,7 @@ const fillRing = (
     role,
     rect,
     fill: patternFill(color, direction),
-    opacity: LayoutInspectionPatternOpacity,
+    opacity: layoutInspectionPatternOpacity,
   }));
   if (fills.length === 0) return [];
 
@@ -342,7 +342,7 @@ export const inspectLayoutSpacing = (
           role,
           rect: segment.bounds,
           fill: patternFill(appearance.scopeColor, 'forward-diagonal'),
-          opacity: LayoutInspectionPatternOpacity,
+          opacity: layoutInspectionPatternOpacity,
         });
       }
 
@@ -396,7 +396,7 @@ export const inspectLayoutArtifactBase = (
         role: 'layout.overflow',
         rect: item.visualBounds,
         fill: appearance.semanticColors.warning,
-        opacity: LayoutInspectionWarningOpacity,
+        opacity: layoutInspectionWarningOpacity,
       });
     }
 
@@ -462,7 +462,7 @@ const lowerOutline = (mark: LayoutInspectionOutlineMark): IRPath => {
       { type: 'step', kind: 'line', to: [x, y + height] },
       { type: 'step', kind: 'line', to: [x, y] },
     ],
-    style: { stroke: mark.color, strokeWidth: 1, dashPattern: [...LayoutInspectionDashPattern] },
+    style: { stroke: mark.color, strokeWidth: 1, dashPattern: [...layoutInspectionDashPattern] },
   };
 };
 
@@ -480,7 +480,7 @@ const lowerLayoutInspectionMark = (mark: LayoutInspectionMark): LayoutInspection
       style: {
         stroke: mark.color,
         strokeWidth: 1,
-        ...(mark.dashed ? { dashPattern: [...LayoutInspectionDashPattern] } : {}),
+        ...(mark.dashed ? { dashPattern: [...layoutInspectionDashPattern] } : {}),
       },
     };
   }

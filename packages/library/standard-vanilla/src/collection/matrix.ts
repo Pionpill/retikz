@@ -1,9 +1,9 @@
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import type { IRMatrix } from '@retikz/standard/collection';
-import { createMatrix, MatrixProvider } from '@retikz/standard/collection';
+import { createMatrix, matrixProvider } from '@retikz/standard/collection';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { StandardMatrixEmbedKind } from '../shared/constants';
+import { standardMatrixEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCells } from './cell';
 
@@ -35,21 +35,21 @@ export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
   );
 
 /** 收集矩阵及格内 drawable 的依赖 */
-export const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix> = {
-  kind: StandardMatrixEmbedKind,
+export const matrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix> = {
+  kind: standardMatrixEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)
       return {
         node: createMatrix({ namespace: 'standard', type: 'matrix', ...props }),
-        providerDependencies: { roots: [MatrixProvider.key], providers: [MatrixProvider, PathClipProvider] },
+        providerDependencies: { roots: [matrixProvider.key], providers: [matrixProvider, pathClipProvider] },
       };
 
     if (props.data !== undefined)
       return {
         node: createMatrix({ namespace: 'standard', type: 'matrix', ...props }),
         providerDependencies: {
-          roots: [MatrixProvider.key, ...dataCellDependencies.roots],
-          providers: [MatrixProvider, ...dataCellDependencies.providers],
+          roots: [matrixProvider.key, ...dataCellDependencies.roots],
+          providers: [matrixProvider, ...dataCellDependencies.providers],
         },
       };
 
@@ -57,7 +57,7 @@ export const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix> 
     const normalized = normalizeCells(
       items.flatMap(row => row.map(cell => (typeof cell === 'string' ? { content: cell } : cell))),
       context,
-      MatrixProvider,
+      matrixProvider,
     );
     let cursor = 0;
 
@@ -82,7 +82,7 @@ export const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix> 
 /** 创建保留原始输入的 Matrix embed */
 export const matrix = (input: InputMatrix): InputEmbed<InputMatrix> => ({
   type: 'embed',
-  kind: StandardMatrixEmbedKind,
+  kind: standardMatrixEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

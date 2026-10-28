@@ -22,7 +22,7 @@ export type PaintValue =
  * 已解析 pattern tile
  * @description 描述 tile 周期、可选底色 / 旋转和局部 motif 几何；纯 JSON 数据
  */
-export type ResolvedPatternTile = {
+export type CompiledPatternTile = {
   /** tile 周期（user units）；= 解析后 pattern.size（缺省 8） */
   size: number;
   /**
@@ -58,7 +58,7 @@ export type PatternResource = PaintResourceBase & {
   /** 图案绘制声明 */
   spec: Extract<IRPaint, { kind: 'pattern' }>;
   /** 已解析的图案周期与局部图元 */
-  tile: ResolvedPatternTile;
+  tile: CompiledPatternTile;
 };
 
 /** 图像绘制资源 */

@@ -233,7 +233,7 @@ describe('Happy：drawScene({time}) 应用通道', () => {
     expect(dash).toBeUndefined();
   });
 
-  it('group opacity track wraps child drawing in ctx.globalAlpha', () => {
+  it('组不透明轨道包裹 ctx.globalAlpha 中的子绘图', () => {
     const fade: IRAnimationTrack = {
       property: 'opacity',
       keyframes: [
@@ -361,7 +361,7 @@ describe('降级', () => {
     expect(warn).toHaveBeenCalledWith(expect.objectContaining({ feature: 'animation' }));
   });
 
-  it('group fill/stroke/strokeWidth/pathDraw tracks warn and skip unsupported channels', () => {
+  it('组填充/描边/strokeWidth/pathDraw 轨道警告并跳过不支持的通道', () => {
     const warn = vi.fn();
     const tracks: Array<IRAnimationTrack> = [
       {
@@ -588,7 +588,7 @@ describe('per-id 虚拟时钟（registry + resolvePrimAnimation）', () => {
   });
 });
 
-it('resource animations resolve playback using each host instead of local ids', () => {
+it('资源动画使用每个宿主而不是本地 id 来解析播放', () => {
   const content: ScenePrimitive = {
     type: 'rect',
     id: 'local',

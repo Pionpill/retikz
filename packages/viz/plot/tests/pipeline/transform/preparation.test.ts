@@ -38,7 +38,7 @@ const rows = [
   { value: 2, group: 'b' },
 ];
 
-describe('Plot whole-scope data preparation', () => {
+describe('Plot 全范围数据准备', () => {
   it('为根变换使用 hybrid，为普通及 facet 图元使用独立 builtin 策略', async () => {
     const spec = specOf();
     spec.dataExecution = { root: { mode: 'hybrid', external: 'fixture' }, marks: { mode: 'builtin' } };
@@ -109,7 +109,7 @@ describe('Plot whole-scope data preparation', () => {
     expect(compile).toThrow(/async preparation/);
   });
 
-  it('consumes nonzero seeded jitter once across repeated compilation', async () => {
+  it('在重复编译过程中消费一次非零种子抖动', async () => {
     const spec = specOf();
     spec.dataExecution = { mode: 'builtin' };
     spec.transform = [{ operation: { kind: 'jitter', params: { xField: 'value', amount: 0.5, seed: 31 } } }];
@@ -139,7 +139,7 @@ describe('Plot whole-scope data preparation', () => {
     expect(first.primitives).toEqual(expected.primitives);
   });
 
-  it('rebases result provenance to its local dataset while retaining independent upstream lineage', async () => {
+  it('将结果来源重新定位到其本地数据集，同时保留独立的上游血缘', async () => {
     const upstreamRows = tagSourceIndex(
       Array.from({ length: 7 }, (_, index) => ({ value: index + 1, group: 'a' })),
     ).slice(5);
@@ -164,7 +164,7 @@ describe('Plot whole-scope data preparation', () => {
     expect(prepared.root.lineage?.events).toEqual(lineage?.events);
   });
 
-  it('preflights root and mark templates before computing actual root and facet inputs', async () => {
+  it('在计算实际根和构面输入之前预检根和标记模板', async () => {
     const calls: Array<string> = [];
     const provider: DataTransformImplementationProvider<never> = {
       resolve: stage => {
@@ -224,7 +224,7 @@ describe('Plot whole-scope data preparation', () => {
     await expect(plan.execute()).rejects.toThrow(/once/i);
   });
 
-  it('rejects an unsupported downstream template before any root computation', async () => {
+  it('在任何根计算之前拒绝不支持的下游模板', async () => {
     let computations = 0;
     const provider: DataTransformImplementationProvider<never> = {
       resolve: stage =>
@@ -254,7 +254,7 @@ describe('Plot whole-scope data preparation', () => {
     expect(computations).toBe(0);
   });
 
-  it('rejects source parsers on canonical result bindings', async () => {
+  it('拒绝规范结果绑定上的源解析器', async () => {
     const spec = specOf();
 
     await expect(

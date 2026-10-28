@@ -56,7 +56,7 @@ import type { IRScene } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { ScatterChartSchema, createScatterChartProviderContribution } from '@retikz/chart/point';
 import { createPlotProviderContribution } from '@retikz/plot';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import { scatterMinimalData } from './scatter-minimal.data';
 import { Layout } from '@retikz/react';
 
@@ -74,7 +74,7 @@ const definitions = resolveCoreProviderDependencies({
   contributions: [
     createScatterChartProviderContribution(),
     createPlotProviderContribution({ 'chart.data': scatterMinimalData }),
-    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
   ],
 });
 
@@ -86,14 +86,14 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { scatterChart, scatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import { scatterMinimalData } from './scatter-minimal.data';
 
 const chart = scatterChart({
   data: scatterMinimalData,
   encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' },
 });
-export const svg = renderChart(chart, { adapters: [ScatterChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart, { adapters: [scatterChartInputEmbedAdapter] }).svg;
 ```
 
 </DocTab>
@@ -104,7 +104,7 @@ import type { IRScene } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { ScatterChartSchema, createScatterChartProviderContribution } from '@retikz/chart/point';
 import { createPlotProviderContribution } from '@retikz/plot';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import { scatterMinimalData } from './scatter-minimal.data';
 import { compileToScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
@@ -123,7 +123,7 @@ const definitions = resolveCoreProviderDependencies({
   contributions: [
     createScatterChartProviderContribution(),
     createPlotProviderContribution({ 'chart.data': scatterMinimalData }),
-    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
   ],
 });
 

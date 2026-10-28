@@ -74,7 +74,7 @@ const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 's
   };
 };
 
-describe('Viz Chart Bubble controls', () => {
+describe('Viz Chart Bubble 控件', () => {
   it('保留可追溯的 Gapminder 2007 完整国家截面', () => {
     expect(GAPMINDER_BUBBLE_YEAR).toBe(2007);
     expect(GAPMINDER_BUBBLE_SOURCE_URL).toContain('jennybc/gapminder');

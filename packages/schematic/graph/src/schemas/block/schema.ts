@@ -28,7 +28,7 @@ const BlockHeaderDirectionSchema = zodEnum(['horizontal', 'vertical']).describe(
   'Physical direction used to arrange the Header title and description.',
 );
 
-const BlockSurfaceFields = {
+const blockSurfaceFields = {
   padding: SurfaceSchema.shape.padding.unwrap().optional().describe('Spacing between the content and outer shell.'),
   background: SurfaceSchema.shape.background.describe('Explicit shell background override.'),
   border: SurfaceSchema.shape.border.describe('Explicit shell border; replaces the entire theme border field.'),
@@ -60,29 +60,29 @@ export const BlockSectionSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.BlockSection).describe('Block Section Source composite discriminator.'),
   ...ScopePropsSchema.shape,
-  ...BlockSurfaceFields,
+  ...blockSurfaceFields,
   title: BlockTextSchema.optional().describe('Optional Section title placed before its children.'),
   children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
   gap: NonNegativeNumberSchema.optional().describe('Optional vertical gap between Section items in user units.'),
 }).describe('Independent Graph composite presenting arbitrary children as a vertical content section.');
 
-const BlockRowFields = {
+const blockRowFields = {
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.BlockRow).describe('Block Row Source composite discriminator.'),
   ...ScopePropsSchema.shape,
-  ...BlockSurfaceFields,
+  ...blockSurfaceFields,
   gap: NonNegativeNumberSchema.optional().describe('Optional horizontal gap between Row children in user units.'),
 };
 
 const BlockRowContentSchema = strictObject({
-  ...BlockRowFields,
+  ...blockRowFields,
   content: union([BlockTextSchema, array(BlockTextSchema)]).describe(
     'Block text shorthand lowered to one full-width item or multiple equal-width Row items.',
   ),
 });
 
 const BlockRowChildrenSchema = strictObject({
-  ...BlockRowFields,
+  ...blockRowFields,
   children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
 });
 
@@ -96,7 +96,7 @@ export const BlockSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Block).describe('Block Source composite discriminator.'),
   ...ScopePropsSchema.shape,
-  ...BlockSurfaceFields,
+  ...blockSurfaceFields,
   defaultGraph: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
   graphRules: array(GraphRuleSchema).optional().describe('Optional ordered Graph rules for visible descendants.'),
   children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),

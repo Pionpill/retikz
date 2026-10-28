@@ -9,32 +9,32 @@ import type {
 } from '../../schemas';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 
-/** 位置引用的布局生命周期 */
-export type PositionReferenceState = 'resolved' | 'scope-placeholder';
+/** 引用的布局状态：已完成布局，或暂用作用域占位几何 */
+type PositionReferenceState = 'resolved' | 'scope-placeholder';
 
-/** Position resolver 可读取的纯引用视图 */
+/** 位置解析器可读取的引用状态与节点几何 */
 export type PositionReferenceView = Readonly<{
   /** 引用当前是否已经完成布局 */
   state: PositionReferenceState;
-  /** 已从 compile layout 投影出的不可变 Node 几何视图 */
+  /** 由编译阶段提供的只读节点几何 */
   node: NodeReferenceView;
 }>;
 
-/** Position Source IR 确定化所需的窄上下文 */
+/** 位置解析所需的引用查询与坐标转换能力 */
 export type PositionResolveContext = Readonly<{
   /** 相对定位默认距离 */
   nodeDistance: number;
-  /** 按当前 namespace 可见性查询已注册引用 */
+  /** 按当前命名空间的可见范围查询已注册引用 */
   lookupReference: (id: string) => PositionReferenceView | undefined;
   /** 将世界坐标投影到当前 Scope 局部坐标 */
   toLocal: (world: IRPosition) => IRPosition;
   /** 将当前 Scope 局部坐标投影到世界坐标 */
   toWorld: (local: IRPosition) => IRPosition;
-  /** 解析 between 表达式的世界坐标，由 absolute-target resolver 注入 */
+  /** 解析两目标间插值位置的世界坐标；省略此回调时无法解析 between */
   resolveBetweenWorld?: (between: IRBetweenPosition) => IRPosition | null;
 }>;
 
-/** Position Source IR 的局部与世界坐标确定结果 */
+/** 同一位置在当前作用域和世界坐标系中的坐标 */
 export type PositionResolution = Readonly<{
   /** 当前 Scope 局部坐标 */
   localPoint: IRPosition;
@@ -42,15 +42,15 @@ export type PositionResolution = Readonly<{
   worldPoint: IRPosition;
 }>;
 
-/** Absolute target 确定化额外需要的 Node 几何能力 */
+/** 目标解析额外需要的节点连接面与锚点查询能力 */
 export type PositionTargetResolveContext = PositionResolveContext &
   Readonly<{
-    /** 绑定 target 选择的连接面 */
+    /** 解析节点目标选用的连接面 */
     boundaryResolutionOf?: (
       target: IRNodeTarget,
       reference: PositionReferenceView,
     ) => BoundaryReferenceResolution | undefined;
-    /** 在世界坐标中解析 NodeTarget 的中心或显式 anchor，不叠加 target.offset */
+    /** 返回节点目标的世界坐标中心或显式锚点，结果不含 target.offset */
     pointOfNodeTarget: (
       target: IRNodeTarget,
       reference: PositionReferenceView,
@@ -58,21 +58,21 @@ export type PositionTargetResolveContext = PositionResolveContext &
     ) => IRPosition;
   }>;
 
-/** Absolute target 的位置、引用生命周期与边界绑定结果 */
+/** 目标的位置及直接引用的节点与连接面 */
 export type PositionTargetResolution = Readonly<{
-  /** 原始 absolute target */
+  /** 原始目标配置 */
   target: IRAbsoluteTarget;
-  /** 当前 Scope 局部点 */
+  /** 当前作用域的局部坐标，无法定位时为 null */
   point: IRPosition | null;
-  /** 世界坐标参考点 */
+  /** 世界坐标参考点，无法定位时为 null */
   referencePoint: IRPosition | null;
-  /** Node/Coordinate/Scope 引用视图 */
+  /** 直接引用的节点、坐标或作用域；插值和普通坐标目标不携带此字段 */
   reference?: PositionReferenceView;
-  /** target 选择的连接面 */
+  /** 节点目标选用的连接面 */
   boundaryResolution?: BoundaryReferenceResolution;
 }>;
 
-/** Absolute target 尚未投影到当前 Scope 局部空间的世界绑定结果 */
+/** 目标的世界坐标与引用结果，尚未转换为局部坐标 */
 export type PositionTargetWorldResolution = Omit<PositionTargetResolution, 'point'>;
 
 /** 位置解析器接受的坐标、引用与定位配置 */

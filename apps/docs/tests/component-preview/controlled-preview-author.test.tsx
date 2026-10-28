@@ -26,7 +26,7 @@ const contract = {
   relatedApis: ['Node.width'],
 } satisfies PreviewControlContract;
 
-describe('controlled preview authoring', () => {
+describe('受控预览编写', () => {
   it('响应式尺寸只影响实时组件，稳定源码仍使用独立默认尺寸', () => {
     const preview = defineControlledPreview(contract, (_values, dimensions) => (
       <span>{dimensions?.width ?? 'default'}</span>

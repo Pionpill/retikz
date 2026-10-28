@@ -10,7 +10,7 @@ import type {
   SceneRuntimeSubtreeNode,
 } from '@retikz/reconciler';
 import type { SceneIdentity } from '@retikz/reconciler';
-import { createSceneIdentityLookup, sceneIdentityEquals } from '@retikz/reconciler';
+import { sceneIdentityEquals } from '@retikz/reconciler';
 
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { SceneIdentityMap } from './shared';
@@ -117,7 +117,7 @@ const isCanonicalClipPath = (value: unknown): boolean => {
   return hasDrawingSegment;
 };
 
-const validateSceneResources = (resources: unknown, fail: (cause: unknown) => never): void => {
+const assertSceneResources = (resources: unknown, fail: (cause: unknown) => never): void => {
   if (!isDenseObjectArray(resources)) {
     return fail({ reason: 'invalid-scene-resources', resources });
   }
@@ -156,21 +156,9 @@ const isSceneIdentity = (value: unknown): value is SceneIdentity => {
   }
 };
 
-const validateUniqueIdentities = (identities: ReadonlyArray<SceneIdentity>): void => {
-  const byOwner = new Map<string, Array<SceneIdentity>>();
-
-  for (const identity of identities) {
-    const values = byOwner.get(identity.owner) ?? [];
-    values.push(identity);
-    byOwner.set(identity.owner, values);
-  }
-
-  for (const [owner, values] of byOwner) createSceneIdentityLookup(owner, values);
-};
-
 const primitiveKinds = new Set(['rect', 'ellipse', 'text', 'path', 'group']);
 
-const validatePrimitiveArray: (
+const assertPrimitiveArray: (
   primitives: unknown,
 ) => asserts primitives is ReadonlyArray<RuntimeScenePrimitive> = primitives => {
   if (!Array.isArray(primitives)) {
@@ -188,7 +176,7 @@ const validatePrimitiveArray: (
       return topologyError({ reason: 'invalid-primitive-kind', primitive });
     }
 
-    if (kind === 'group') validatePrimitiveArray(Reflect.get(primitive, 'children'));
+    if (kind === 'group') assertPrimitiveArray(Reflect.get(primitive, 'children'));
   }
 };
 
@@ -224,7 +212,7 @@ const primitivePaths = (
   return paths;
 };
 
-const validateTopology = (
+const assertTopology = (
   primitives: ReadonlyArray<RuntimeScenePrimitive>,
   root: SceneIdentity,
   topology: ReadonlyArray<SceneRuntimeNode>,
@@ -262,8 +250,6 @@ const validateTopology = (
     byPath.set(path, node);
   }
 
-  validateUniqueIdentities(topology.map(node => node.identity));
-
   for (const path of expectedPaths) {
     const node = byPath.get(path.join('.'));
     const primitive = primitiveAtPath(primitives, path);
@@ -277,7 +263,7 @@ const validateTopology = (
   }
 };
 
-const validateSubtree = (subtree: SceneRuntimeSubtree): void => {
+const assertSubtree = (subtree: SceneRuntimeSubtree): void => {
   const candidate: unknown = subtree;
   if (
     typeof candidate !== 'object' ||
@@ -288,7 +274,7 @@ const validateSubtree = (subtree: SceneRuntimeSubtree): void => {
     topologyError(subtree);
   }
 
-  validatePrimitiveArray([subtree.primitive]);
+  assertPrimitiveArray([subtree.primitive]);
   const paths = primitivePaths([subtree.primitive]).map(path => path.slice(1));
   if (paths.length !== subtree.topology.length) topologyError({ reason: 'subtree-cardinality', subtree });
   const byPath = new Map<string, SceneRuntimeSubtreeNode>();
@@ -316,8 +302,6 @@ const validateSubtree = (subtree: SceneRuntimeSubtree): void => {
 
     byPath.set(path, node);
   }
-
-  validateUniqueIdentities(subtree.topology.map(node => node.identity));
 
   for (const path of paths) {
     const node = byPath.get(path.join('.'));
@@ -540,7 +524,7 @@ const operationTarget = (operation: ScenePatchOperation): SceneIdentity | undefi
   return undefined;
 };
 
-const validateOperationShape = (operation: ScenePatchOperation): void => {
+const assertOperationShape = (operation: ScenePatchOperation): void => {
   const candidate: unknown = operation;
   if (typeof candidate !== 'object' || candidate === null) return patchError(operation);
 
@@ -556,7 +540,7 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
   if (kind === 'setResources' || kind === 'setAnimations') {
     const field = kind === 'setResources' ? 'resources' : 'animations';
     if (!isDenseArray(Reflect.get(candidate, field), () => true)) return patchError(operation);
-    if (kind === 'setResources') validateSceneResources(Reflect.get(candidate, field), patchError);
+    if (kind === 'setResources') assertSceneResources(Reflect.get(candidate, field), patchError);
 
     return;
   }
@@ -569,7 +553,7 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
       return patchError(operation);
     }
 
-    validateSubtree(subtree as SceneRuntimeSubtree);
+    assertSubtree(subtree as SceneRuntimeSubtree);
 
     return;
   }
@@ -579,7 +563,7 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
     const subtree = Reflect.get(candidate, 'subtree');
     if (!isSceneIdentity(identity)) return patchError(operation);
 
-    validateSubtree(subtree as SceneRuntimeSubtree);
+    assertSubtree(subtree as SceneRuntimeSubtree);
 
     return;
   }
@@ -620,12 +604,12 @@ const comparePrimitivePaths = (left: ReadonlyArray<number>, right: ReadonlyArray
 const pathContains = (ancestor: ReadonlyArray<number>, descendant: ReadonlyArray<number>): boolean =>
   ancestor.length < descendant.length && ancestor.every((segment, index) => segment === descendant[index]);
 
-const validateNonOverlappingTargets = (
+const assertNonOverlappingTargets = (
   operations: ReadonlyArray<ScenePatchOperation>,
   current: SceneRuntimeSnapshot,
   next: SceneRuntimeSnapshot,
 ): void => {
-  const validateSnapshotTargetOverlap = (snapshot: SceneRuntimeSnapshot, targets: SceneIdentityMap<true>): void => {
+  const assertSnapshotTargetOverlap = (snapshot: SceneRuntimeSnapshot, targets: SceneIdentityMap<true>): void => {
     const paths = snapshot.topology
       .filter(node => targets.has(node.identity))
       .map(node => node.primitivePath)
@@ -646,11 +630,11 @@ const validateNonOverlappingTargets = (
       .filter(identity => identity !== undefined)
       .map(identity => [identity, true] as const),
   );
-  validateSnapshotTargetOverlap(current, targets);
-  validateSnapshotTargetOverlap(next, targets);
+  assertSnapshotTargetOverlap(current, targets);
+  assertSnapshotTargetOverlap(next, targets);
 };
 
-const validateOperationOrder = (operations: ReadonlyArray<ScenePatchOperation>): void => {
+const assertOperationOrder = (operations: ReadonlyArray<ScenePatchOperation>): void => {
   let rank = -1;
   const singletonKinds = new Set<string>();
   const targets = createSceneIdentityMap<true>([]);
@@ -704,7 +688,7 @@ const createNextPlacementIndex = (next: SceneRuntimeSnapshot): SceneIdentityMap<
   return placements;
 };
 
-const validateBeforeAgainstNext = (
+const assertBeforeAgainstNext = (
   placements: SceneIdentityMap<NextPlacement>,
   target: SceneIdentity,
   parent: SceneIdentity,
@@ -740,7 +724,7 @@ export const sceneRuntimeSnapshotEquals = (left: SceneRuntimeSnapshot, right: Sc
   });
 
 /** 校验完整 Runtime Scene snapshot 的 topology 双射与 parent/order 契约 */
-const validateSceneRuntimeSnapshotInternal = (snapshot: SceneRuntimeSnapshot): void => {
+const assertSceneRuntimeSnapshotInternal = (snapshot: SceneRuntimeSnapshot): void => {
   const candidate: unknown = snapshot;
   const candidateScene =
     typeof candidate === 'object' && candidate !== null ? Reflect.get(candidate, 'scene') : undefined;
@@ -759,15 +743,15 @@ const validateSceneRuntimeSnapshotInternal = (snapshot: SceneRuntimeSnapshot): v
     topologyError(snapshot);
   }
 
-  validateSceneResources(Reflect.get(candidateScene, 'resources'), topologyError);
-  validatePrimitiveArray(snapshot.scene.primitives);
-  validateTopology(snapshot.scene.primitives, snapshot.root, snapshot.topology);
+  assertSceneResources(Reflect.get(candidateScene, 'resources'), topologyError);
+  assertPrimitiveArray(snapshot.scene.primitives);
+  assertTopology(snapshot.scene.primitives, snapshot.root, snapshot.topology);
 };
 
 /** 校验完整 Runtime Scene snapshot 的 topology 双射与 parent/order 契约 */
-export const validateSceneRuntimeSnapshot = (snapshot: SceneRuntimeSnapshot): void => {
+export const assertSceneRuntimeSnapshot = (snapshot: SceneRuntimeSnapshot): void => {
   try {
-    validateSceneRuntimeSnapshotInternal(snapshot);
+    assertSceneRuntimeSnapshotInternal(snapshot);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;
     return topologyError(cause);
@@ -775,13 +759,13 @@ export const validateSceneRuntimeSnapshot = (snapshot: SceneRuntimeSnapshot): vo
 };
 
 /** 校验 Patch 规范化、revision lineage，并证明重放结果与 next snapshot coherent */
-const validateScenePatchInternal = (
+const assertScenePatchInternal = (
   current: SceneRuntimeSnapshot,
   patch: ScenePatch,
   next: SceneRuntimeSnapshot,
 ): void => {
-  validateSceneRuntimeSnapshot(current);
-  validateSceneRuntimeSnapshot(next);
+  assertSceneRuntimeSnapshot(current);
+  assertSceneRuntimeSnapshot(next);
   if (
     !Number.isSafeInteger(patch.baseRevision) ||
     !Number.isSafeInteger(patch.nextRevision) ||
@@ -800,21 +784,21 @@ const validateScenePatchInternal = (
     patchError({ reason: 'sparse-or-malformed-operations', patch });
   }
 
-  for (const operation of patch.operations) validateOperationShape(operation);
+  for (const operation of patch.operations) assertOperationShape(operation);
   const replacements = patch.operations.filter(operation => operation.kind === 'replaceScene');
   if (replacements.length > 0) {
     if (patch.operations.length !== 1 || replacements.length !== 1) patchError({ reason: 'replace-not-exclusive' });
     const replacement = replacements[0];
     if (replacement.snapshot !== next && replacement.snapshot !== current) {
-      validateSceneRuntimeSnapshot(replacement.snapshot);
+      assertSceneRuntimeSnapshot(replacement.snapshot);
     }
     if (!sceneRuntimeSnapshotEquals(replacement.snapshot, next)) mismatchError({ reason: 'replace-mismatch' });
 
     return;
   }
 
-  validateOperationOrder(patch.operations);
-  validateNonOverlappingTargets(patch.operations, current, next);
+  assertOperationOrder(patch.operations);
+  assertNonOverlappingTargets(patch.operations, current, next);
 
   const tree = buildMutableTree(current);
   const index = indexMutableTree(tree);
@@ -841,7 +825,7 @@ const validateScenePatchInternal = (
     }
 
     if (operation.kind === 'insert') {
-      validateSubtree(operation.subtree);
+      assertSubtree(operation.subtree);
       if (index.has(operation.subtree.root)) patchError({ reason: 'insert-existing', operation });
       const parent = sceneIdentityEquals(operation.parent, tree.identity) ? tree : index.get(operation.parent);
       if (parent === undefined) return patchError({ reason: 'insert-parent', operation });
@@ -857,12 +841,12 @@ const validateScenePatchInternal = (
 
       insertNodeBefore(parent, node, before);
       addMutableSubtreeToIndex(node, index);
-      validateBeforeAgainstNext(nextPlacements, node.identity, operation.parent, operation.before);
+      assertBeforeAgainstNext(nextPlacements, node.identity, operation.parent, operation.before);
       continue;
     }
 
     if (operation.kind === 'update') {
-      validateSubtree(operation.subtree);
+      assertSubtree(operation.subtree);
       if (!sceneIdentityEquals(operation.identity, operation.subtree.root)) patchError(operation);
       const previous = index.get(operation.identity);
       if (previous === undefined) return patchError({ reason: 'update-missing', operation });
@@ -908,7 +892,7 @@ const validateScenePatchInternal = (
       }
 
       insertNodeBefore(parent, node, before);
-      validateBeforeAgainstNext(nextPlacements, node.identity, operation.parent, operation.before);
+      assertBeforeAgainstNext(nextPlacements, node.identity, operation.parent, operation.before);
     }
   }
 
@@ -923,13 +907,13 @@ const validateScenePatchInternal = (
 };
 
 /** 校验 Patch 规范化、revision lineage，并证明重放结果与 next snapshot coherent */
-export const validateScenePatch = (
+export const assertScenePatch = (
   current: SceneRuntimeSnapshot,
   patch: ScenePatch,
   next: SceneRuntimeSnapshot,
 ): void => {
   try {
-    validateScenePatchInternal(current, patch, next);
+    assertScenePatchInternal(current, patch, next);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;
     return patchError(cause);

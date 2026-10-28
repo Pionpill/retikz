@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import type { IRChild, IRScene, ResolvedTheme } from '../../src';
+import type { IRChild, IRScene, CanonicalTheme } from '../../src';
 import { compileToScene, CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '../../src';
 
 const sceneOf = (children: Array<IRChild>, theme?: IRScene['theme']): IRScene => ({
@@ -11,7 +11,7 @@ const sceneOf = (children: Array<IRChild>, theme?: IRScene['theme']): IRScene =>
   children,
 });
 
-const createProbe = (observed: Array<ResolvedTheme>) =>
+const createProbe = (observed: Array<CanonicalTheme>) =>
   defineComposite({
     namespace: 'theme-test',
     type: 'probe',
@@ -22,9 +22,9 @@ const createProbe = (observed: Array<ResolvedTheme>) =>
     },
   });
 
-describe('Theme compile context', () => {
+describe('主题编译上下文', () => {
   it('从 selector 生成没有 token bag 的完整共享 Theme', () => {
-    const observed: Array<ResolvedTheme> = [];
+    const observed: Array<CanonicalTheme> = [];
     compileToScene(sceneOf([{ namespace: 'theme-test', type: 'probe' }], { mode: ThemeMode.Light }), {
       composites: [createProbe(observed)],
     });
@@ -41,7 +41,7 @@ describe('Theme compile context', () => {
   });
 
   it('按字段继承 Scene 和 Scope selector', () => {
-    const observed: Array<ResolvedTheme> = [];
+    const observed: Array<CanonicalTheme> = [];
     compileToScene(
       sceneOf(
         [{ type: 'scope', theme: { mode: ThemeMode.Light }, children: [{ namespace: 'theme-test', type: 'probe' }] }],
@@ -55,7 +55,7 @@ describe('Theme compile context', () => {
   });
 
   it('通过同一 Core style registry 解析自定义 style', () => {
-    const observed: Array<ResolvedTheme> = [];
+    const observed: Array<CanonicalTheme> = [];
     const brand = defineTheme({
       name: 'brand',
       resolve: ({ mode }) => ({

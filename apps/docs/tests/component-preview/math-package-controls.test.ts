@@ -41,10 +41,10 @@ const renderCurveSegments = (scenario: CurveSegmentsScenario, valuesOverride: Pr
   );
 };
 
-describe('CurveSegment playground', () => {
+describe('CurveSegment 交互演示', () => {
   const chineseScenario: CurveSegmentsScenario = { Demo: CurveSegmentsDemo, contract: curveSegmentsContract };
 
-  it('exposes the same bilingual controls for every supported CurveSegment kind', () => {
+  it('为每种受支持的 CurveSegment 类型公开相同的双语控件', () => {
     const chineseFields = getPreviewControlFields(curveSegmentsControls);
     const englishContract = createCurveSegmentsControlContract('en');
     const englishFields = getPreviewControlFields(englishContract.controls);
@@ -102,7 +102,7 @@ describe('CurveSegment playground', () => {
     });
   });
 
-  it('renders every segment kind and responds to sampling and slicing', () => {
+  it('渲染每个片段类型并响应采样和切片', () => {
     const kindValues = ['line', 'quadraticBezier', 'cubicBezier', 'arc', 'ellipseArc'] as const;
     const markups = kindValues.map(kind =>
       renderCurveSegments(chineseScenario, { kind, sampleParameter: 0.5, sliceStart: 0.28, sliceEnd: 0.74 }),

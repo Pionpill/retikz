@@ -20,7 +20,7 @@ description: 一维坐标系把一个位置字段放到直线或圆周上，适�
 
 一维坐标不必成为最终图形，它也可以先把对象排到一条线上，再让这些结果参与连线。下图把 12 个上层对象排到横线上，每 4 个对象连接到下方同一个汇总点，最终形成 3 组。
 
-在同一个 Plot 内，`PointMark` 先用 `thingX` 把单个位置字段映射为 core Node，再用局部 `summarize` 将重复的目标字段折叠成 3 个下层 Node。`anchorId` 为这些映射结果提供稳定 id，`RelationMark` 因而能让每 4 个来源 Node 引用同一个目标 Node。映射后的结果还可以继续参与汇聚连线、标注等二次操作。
+在同一个 Plot 内，`PointMark` 先用 `thingX` 把单个位置字段映射为 core Node，再用局部 `summarize` 将重复的目标字段折叠成 3 个下层 Node。`anchorId` 为这些映射结果提供稳定 id，`PathMark` 因而能让每 4 个来源 Node 引用同一个目标 Node。映射后的结果还可以继续参与汇聚连线、标注等二次操作。
 
 <ComponentPreview
   files={['coordinate-1d-composition', 'coordinate-1d-composition.preview.tsx', 'coordinate-1d-composition.zh.data.ts']}
@@ -44,7 +44,7 @@ description: 一维坐标系把一个位置字段放到直线或圆周上，适�
 
 坐标维度的数量不会限制比例尺类型；这个位置字段仍可使用 linear、log 或 time 等比例尺。示例显式把小时 domain 固定为 `[0, 24]`，因此 `22` 小时会落在完整圆周的 `330°`。
 
-需要一维坐标直接投影位置的 mark 目前只有 `<PointMark>`，适合沿轴事件点、时间线节点或圆周事件点；`RelationMark` 可以像上图一样引用已经定位的目标。柱、扇区和面积需要二维区域，在一维坐标中会报错。
+需要一维坐标直接投影位置的 mark 目前只有 `<PointMark>`，适合沿轴事件点、时间线节点或圆周事件点；`PathMark` 可以像上图一样引用已经定位的目标。柱、扇区和面积需要二维区域，在一维坐标中会报错。
 
 ## 延伸阅读
 
@@ -61,9 +61,9 @@ description: 一维坐标系把一个位置字段放到直线或圆周上，适�
       url: '/viz/plot/scale',
     },
     {
-      title: 'RelationMark',
+      title: 'PathMark',
       description: '用稳定 id 连接映射后的节点',
-      url: '/viz/plot/mark/relation',
+      url: '/viz/plot/mark/path',
     },
   ]}
 />

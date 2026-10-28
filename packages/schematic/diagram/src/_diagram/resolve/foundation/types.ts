@@ -1,9 +1,9 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import type { IRSurface } from '@retikz/standard/presentation';
 
 import type { DiagramThemeDefinition } from '../../contract';
 import type { IRDiagramDefaults, IRDiagramFrame, IRDiagramPresentation } from '../../schemas';
-import type { EffectiveDiagramTheme } from '../theme';
+import type { CanonicalDiagramTheme } from '../theme';
 
 /** Diagram Foundation 解析使用的持久化片段集合 */
 export type DiagramFoundationSource = Readonly<{
@@ -18,13 +18,13 @@ export type DiagramFoundationSource = Readonly<{
 /** Diagram Foundation 解析所需的调用位置上下文 */
 export type DiagramFoundationResolveContext = Readonly<{
   /** 当前宿主已经解析的 Core 主题 */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** 可供当前图示选择的主题样式定义 */
   diagramThemeDefinitions: ReadonlyMap<string, DiagramThemeDefinition>;
 }>;
 
 /** Diagram Foundation 解析后的完整 Frame */
-export type CanonicalDiagramFrame = Readonly<{
+type CanonicalDiagramFrame = Readonly<{
   /** 图例相对绘图区的最终方位 */
   legendPosition: NonNullable<IRDiagramFrame['legendPosition']>;
   /** 图例沿绘图区交叉轴的对齐方式 */
@@ -54,5 +54,5 @@ export type DiagramFoundationResolution = Readonly<{
   /** 已完成默认值与主题合并的外框参数 */
   frame: CanonicalDiagramFrame;
   /** 用于标题与说明的最终文字外观 */
-  presentationAppearance: EffectiveDiagramTheme['presentation'];
+  presentationAppearance: CanonicalDiagramTheme['presentation'];
 }>;

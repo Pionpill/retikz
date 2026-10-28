@@ -3,7 +3,7 @@
 ## IR 与 Canonical
 
 - 只有可持久化 Source IR 定义 Zod。允许省略默认字段的 `IRXxx` 从 `z.input` 派生，解析结果从 `z.output` / `z.infer` 派生；递归或 preprocess 的宽输入复用已有精确字段类型。`XxxSchema` 不加 IR 前缀，Canonical、Input 和 compile 消费态不设平行 schema
-- `CanonicalXxx` 是由 `IRXxx` 用 `Omit`、`Pick`、交叉或字段替换派生的内部完整形态，定义在纵向领域 `resolve/<domain>/types.ts`。`InputXxx` 是 Vanilla API 包的 TypeScript authoring API，不设 schema，也不作为持久化格式
+- `CanonicalXxx` 是由 `IRXxx` 用 `Omit`、`Pick`、交叉或字段替换派生的本领域确定形态，定义在纵向领域 `resolve/<domain>/types.ts`。`InputXxx` 表示 TypeScript 输入契约，由实际 owner 持有；其中 authoring 输入归 Vanilla API 包。Input 不设平行 schema，也不作为持久化格式
 - unknown JSON 在 owner schema / parse 边界校验；直接 parse 产出默认已物化的快照。类型化 factory 保留作者输入；resolve 在继承合并后应用同一 schema 的默认值，不将已变换输出再次作为原始输入解析
 
 retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序列化边界、派生 TS 类型和文档 API 表都应从 schema 出发。改 schema 前先确认这是 IR 层契约，不是 provider / compile / adapter 的运行时能力。

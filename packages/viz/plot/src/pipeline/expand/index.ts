@@ -1,9 +1,9 @@
-export { PlotProviderKey, createPlotProvider, createPlotProviderContribution } from './composite';
-export { applyMarkTransforms, assertDatasetFieldMaps, prepareRows } from './data';
+export { plotProviderKey, createPlotProvider, createPlotProviderContribution } from './composite';
+export { applyMarkTransforms, prepareRows } from './data';
 export { lowerPlots } from './lower';
 export type {
   CoordinateFrameResolution,
-  LowerPlotsOptions,
+  PlotsLoweringOptions,
   MarkDataView,
   PlotDefinitions,
   PlotImplementations,

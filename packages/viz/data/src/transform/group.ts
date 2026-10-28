@@ -5,7 +5,7 @@ import { RetikzDataError } from '../error';
 import { resolveFieldPath } from '../model';
 import { finiteFieldValuesOf } from '../operators';
 import type { IRDataReducerOperation } from '../operators/reducer';
-import { resolveReducerComputation, BuiltinReducerOperationKind, reducerOutputFields } from '../operators/reducer';
+import { BuiltinReducerOperationKind, reducerOutputFields, resolveReducerComputation } from '../operators/reducer';
 import type { IRDataSelectorOperation, RowSelection } from '../operators/selector';
 import { resolveSelectorComputation } from '../operators/selector';
 import type { ExternalRow } from '../shared';
@@ -66,7 +66,7 @@ type ReducerOutputConstraints = {
 };
 
 /** 在执行 reducer 前校验 definition 声明的动态输出字段 */
-export const validateReducerMetrics = (
+export const assertReducerMetrics = (
   metrics: ReadonlyArray<IRDataReducerOperation>,
   context: Pick<TransformSemanticContext, 'statisticsReducerRegistry'>,
   constraints: ReducerOutputConstraints,
@@ -102,17 +102,6 @@ function* computeReducerMetrics(
 
   return out;
 }
-
-/** 同步执行分组统计，保持所有调用方的同步返回 */
-export const applyReducerMetrics = (
-  rows: Array<ExternalRow>,
-  metrics: ReadonlyArray<IRDataReducerOperation>,
-  context: TransformContext,
-  constraints: ReducerOutputConstraints = {},
-): ExternalRow => {
-  validateReducerMetrics(metrics, context, constraints);
-  return runTransformComputation(computeReducerMetrics(rows, metrics, context));
-};
 
 /** 从 selector operation 中取出可回填的数值字段；rank-only selector 返回 undefined */
 const selectorValueFieldOf = (selector: IRDataAnnotateSelector['selector']): string | undefined => {
@@ -154,7 +143,7 @@ export function* computeSummarize(
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
     if (!validated) {
-      validateReducerMetrics(operation.params.metrics, context, {
+      assertReducerMetrics(operation.params.metrics, context, {
         reservedFields: new Set(operation.params.groupBy ?? []),
         reservedLabel: 'a groupBy field',
       });
@@ -226,7 +215,7 @@ export function* computeAnnotate(
 
   for (const group of groupRowsByFields(rows, operation.params.groupBy)) {
     if (!validated) {
-      validateReducerMetrics(operation.params.metrics ?? [], context, {
+      assertReducerMetrics(operation.params.metrics ?? [], context, {
         reservedFields: new Set((operation.params.selectors ?? []).map(selector => selector.as)),
         reservedLabel: 'an annotate selector output field',
       });

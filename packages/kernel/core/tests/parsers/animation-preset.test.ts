@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { AnimationTrackSchema, cameraTo, colorShift, drawOn, fadeIn, loop, scaleIn, slideIn, stagger } from '../../src';
 
 describe('Sugar=Kernel 等价（默认参数）', () => {
-  it('fadeIn / drawOn / scaleIn', () => {
+  it('解析 fadeIn、drawOn 和 scaleIn 动画预设', () => {
     expect(fadeIn()).toEqual({
       property: 'opacity',
       keyframes: [
@@ -33,7 +33,7 @@ describe('Sugar=Kernel 等价（默认参数）', () => {
     });
   });
 
-  it('slideIn / colorShift', () => {
+  it('解析 slideIn 和 colorShift 动画预设', () => {
     expect(slideIn()).toEqual({
       property: 'translateX',
       keyframes: [
@@ -54,7 +54,7 @@ describe('Sugar=Kernel 等价（默认参数）', () => {
     });
   });
 
-  it('cameraTo', () => {
+  it('解析 cameraTo 动画预设', () => {
     expect(cameraTo({ from: [0, 0, 100, 100], to: [10, 10, 50, 50] })).toEqual({
       property: 'viewBox',
       keyframes: [
@@ -95,7 +95,7 @@ describe('opts 覆盖', () => {
     });
   });
 
-  it('scaleIn from/origin、slideIn axis/offset', () => {
+  it('scaleIn 自/原点、slideIn 轴/偏移', () => {
     expect(scaleIn({ from: 0.5, origin: [2, 3] })).toEqual({
       property: 'scale',
       keyframes: [
@@ -118,7 +118,7 @@ describe('opts 覆盖', () => {
   });
 });
 
-describe('loop / stagger', () => {
+describe('循环/交错', () => {
   it('loop 叠加 iterations:infinite（+ direction）', () => {
     expect(loop(fadeIn())).toEqual({ ...fadeIn(), iterations: 'infinite' });
     expect(loop(fadeIn(), { iterations: 3, direction: 'alternate' })).toEqual({

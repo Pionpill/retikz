@@ -49,8 +49,8 @@ const measurement = (
   ],
 });
 
-describe('Figure size recommendation', () => {
-  it('raises a small preview by no more than two sizes when the control height gap is within 50%', async () => {
+describe('插图尺寸建议', () => {
+  it('控件高度差在 50% 以内时将小型预览最多提高两个尺寸档位', async () => {
     const { recommendPreviewLayout } = await loadFigureSizeUtils();
 
     expect(
@@ -72,7 +72,7 @@ describe('Figure size recommendation', () => {
     });
   });
 
-  it('widens a narrow figure control panel when the large height gap fits at 50% width', async () => {
+  it('将宽度增至 50% 可容纳较大高度差时加宽狭窄的插图控件面板', async () => {
     const { recommendPreviewLayout } = await loadFigureSizeUtils();
 
     expect(
@@ -89,7 +89,7 @@ describe('Figure size recommendation', () => {
     });
   });
 
-  it('combines the bounded size increase with a wider panel when neither option alone fits', async () => {
+  it('单独调整尺寸或面板宽度均不足时组合使用有限尺寸提升与面板加宽', async () => {
     const { recommendPreviewLayout } = await loadFigureSizeUtils();
 
     expect(
@@ -106,7 +106,7 @@ describe('Figure size recommendation', () => {
     });
   });
 
-  it('returns the maximum permitted control space and observable overflow when controls still cannot fit', async () => {
+  it('控件仍无法容纳时返回允许的最大控件空间并报告可观察的溢出', async () => {
     const { recommendPreviewLayout } = await loadFigureSizeUtils();
 
     expect(
@@ -128,7 +128,7 @@ describe('Figure size recommendation', () => {
     });
   });
 
-  it('does not widen a figure that would exceed half of its workspace', async () => {
+  it('不加宽超过其工作空间一半的图形', async () => {
     const { recommendPreviewLayout } = await loadFigureSizeUtils();
 
     expect(
@@ -145,7 +145,7 @@ describe('Figure size recommendation', () => {
     });
   });
 
-  it('does not widen the control panel when double width still renders one column', async () => {
+  it('宽度翻倍后仍只渲染一列时不加宽控件面板', async () => {
     const { recommendPreviewLayout } = await loadFigureSizeUtils();
 
     expect(

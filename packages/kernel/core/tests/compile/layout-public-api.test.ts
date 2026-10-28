@@ -7,11 +7,11 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
 import { createRound } from '../../src/compile/scene';
 
-describe('layout public API', () => {
+describe('布局公共 API', () => {
   it('从公开入口计算包含 padding 的布局边界', () => {
     const layout = computeLayout(
       [
@@ -25,7 +25,7 @@ describe('layout public API', () => {
     expect(layout).toEqual({ x: -5, y: -5, width: 20, height: 30 });
   });
 
-  it('exports the frozen layout proposal, probe, and guide constants from the package root', () => {
+  it('从包根导出冻结的布局建议、探测和引导常量', () => {
     expect(LayoutAxisProposalKind).toEqual({
       Intrinsic: 'intrinsic',
       Range: 'range',
@@ -38,13 +38,13 @@ describe('layout public API', () => {
       LastBaseline: 'last-baseline',
     });
     expect(LayoutAlignmentGuideDimension).toEqual({ X: 'x', Y: 'y' });
-    expect(NaturalLayoutProposal).toEqual({
+    expect(naturalLayoutProposal).toEqual({
       x: { kind: 'intrinsic', mode: 'natural' },
       y: { kind: 'intrinsic', mode: 'natural' },
     });
-    expect(Object.isFrozen(NaturalLayoutProposal)).toBe(true);
-    expect(Object.isFrozen(NaturalLayoutProposal.x)).toBe(true);
-    expect(Object.isFrozen(NaturalLayoutProposal.y)).toBe(true);
-    expect(Reflect.set(NaturalLayoutProposal.x, 'mode', 'minimum')).toBe(false);
+    expect(Object.isFrozen(naturalLayoutProposal)).toBe(true);
+    expect(Object.isFrozen(naturalLayoutProposal.x)).toBe(true);
+    expect(Object.isFrozen(naturalLayoutProposal.y)).toBe(true);
+    expect(Reflect.set(naturalLayoutProposal.x, 'mode', 'minimum')).toBe(false);
   });
 });

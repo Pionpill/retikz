@@ -18,7 +18,7 @@ const scene: Scene = {
   ],
 };
 
-describe('drawScene performance trace', () => {
+describe('drawScene 性能跟踪', () => {
   it('每次完整 Canvas draw 递归统计 Group 与 child occurrence', () => {
     const records: Array<RenderTraceRecord> = [];
     const trace = { report: (record: RenderTraceRecord) => records.push(record) };

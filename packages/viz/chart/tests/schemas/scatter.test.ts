@@ -17,8 +17,8 @@ const scatter = {
   },
 } as const;
 
-describe('Scatter Chart exact Source schema', () => {
-  it('rejects inline data transforms in encoding mappings', () => {
+describe('分散 Chart 精确的 Source schema', () => {
+  it('拒绝编码映射中的内联数据转换', () => {
     for (const kind of ['normalize', 'jitter', 'custom.shift']) {
       const result = ScatterChartEncodingsSchema.safeParse({
         x: { transform: { operation: { kind, params: { field: 'amount', as: 'output' } } }, output: 'output' },
@@ -28,14 +28,14 @@ describe('Scatter Chart exact Source schema', () => {
       if (!result.success) expect(result.error.issues[0]?.path[0]).toBe('x');
     }
   });
-  it('parses nested family and recipe envelope and round-trips JSON', () => {
+  it('解析嵌套系列和配方信封以及往返 JSON', () => {
     const parsed = ScatterChartSchema.parse(scatter);
 
     expect(parsed).toEqual(scatter);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
   });
 
-  it('accepts direct, aggregate, scale, and facet mappings in the exact encoding slots', () => {
+  it('在精确的编码槽中接受直接、聚合、比例和方面映射', () => {
     const parsed = ScatterChartSchema.parse({
       ...scatter,
       recipe: {
@@ -77,7 +77,7 @@ describe('Scatter Chart exact Source schema', () => {
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
   });
 
-  it('keeps string shorthand field-bound and properties constant-only', () => {
+  it('保持字符串简写字段绑定和属性仅常量', () => {
     expect(ScatterChartEncodingsSchema.safeParse({ x: 'amount', y: 'margin', color: 'group' }).success).toBe(true);
     expect(ScatterChartEncodingsSchema.safeParse({ x: '   ', y: 'margin' }).success).toBe(false);
     expect(ScatterChartEncodingsSchema.safeParse({ x: { field: 'amount' }, y: 'margin' }).success).toBe(true);
@@ -85,7 +85,7 @@ describe('Scatter Chart exact Source schema', () => {
     expect(ScatterChartPropertiesSchema.safeParse({ size: { field: 'amount' } }).success).toBe(false);
   });
 
-  it('accepts shared or per-role position domain padding only on recipe properties', () => {
+  it('仅在配方属性上接受共享或每个角色位置域填充', () => {
     for (const domainPadding of [
       0,
       12,
@@ -130,7 +130,7 @@ describe('Scatter Chart exact Source schema', () => {
     );
   });
 
-  it('rejects unsupported and malformed Scatter encoding slots at the encodings boundary', () => {
+  it('拒绝编码边界处不支持和格式错误的分散编码槽', () => {
     for (const invalidEncodings of [
       { series: 'series' },
       { detail: 'detail' },
@@ -155,7 +155,7 @@ describe('Scatter Chart exact Source schema', () => {
     }
   });
 
-  it('enforces facet composition dependencies', () => {
+  it('强制执行构面组合依赖性', () => {
     for (const encodings of [
       { x: 'amount', y: 'margin', facet: { empty: 'show' } },
       { x: 'amount', y: 'margin', column: [], facet: {} },
@@ -169,7 +169,7 @@ describe('Scatter Chart exact Source schema', () => {
     }
   });
 
-  it('accepts registered-operation envelopes but rejects unsupported built-ins and invalid scale families', () => {
+  it('接受注册操作包络，但拒绝不支持的内置和无效的秤系列', () => {
     expect(
       ScatterChartEncodingsSchema.safeParse({
         x: {
@@ -194,13 +194,13 @@ describe('Scatter Chart exact Source schema', () => {
     }
   });
 
-  it('rejects whitespace-only constant colors and paints', () => {
+  it('拒绝仅空白的恒定颜色和绘制', () => {
     for (const property of ['color', 'textColor', 'fill', 'stroke'] as const) {
       expect(ScatterChartPropertiesSchema.safeParse({ [property]: '   ' }).success).toBe(false);
     }
   });
 
-  it('rejects old flattened/config shapes and unknown fields', () => {
+  it('拒绝旧的扁平/配置形状和未知字段', () => {
     expect(ScatterChartSchema.safeParse({ ...scatter, type: 'scatter' }).success).toBe(false);
     expect(ScatterChartSchema.safeParse({ ...scatter, config: {} }).success).toBe(false);
     expect(
@@ -215,7 +215,7 @@ describe('Scatter Chart exact Source schema', () => {
     expect(ScatterChartSchema.safeParse({ ...scatter, unknown: true }).success).toBe(false);
   });
 
-  it('accepts ordered Scatter marks and rejects Path as a Chart mark', () => {
+  it('接受有序的分散标记并拒绝 Path 作为 Chart 标记', () => {
     const parsed = ScatterChartSchema.parse({
       ...scatter,
       recipe: {

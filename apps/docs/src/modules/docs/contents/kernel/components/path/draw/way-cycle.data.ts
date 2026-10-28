@@ -1,5 +1,5 @@
-import type { WayItem } from '@retikz/core';
-import { DrawWay } from '@retikz/core';
+import type { WayItem } from '@retikz/vanilla';
+import { DrawWay } from '@retikz/vanilla';
 
 type WayCyclePresentation = {
   /** 当前状态传给 Draw 的完整 way */

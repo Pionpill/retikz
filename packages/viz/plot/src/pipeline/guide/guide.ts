@@ -1,8 +1,6 @@
-import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
-import type { IRShapeValue } from '@retikz/core';
+import type { IRGradientStop, IRNode, IRPath, IRScope, IRShapeValue, IRStep } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
-import type { BoundsRect } from '@retikz/math';
-import type { Position } from '@retikz/math';
+import type { BoundsRect, Position } from '@retikz/math';
 import { pointAtArcAngle } from '@retikz/math';
 
 import type {
@@ -12,14 +10,14 @@ import type {
   LoweredGuide,
   PolarCoordinateFrame,
   PositionScale,
+  ProvenanceContext,
   TickSet,
 } from '../../contract';
-import type { ProvenanceContext } from '../../contract';
 import { guideLayerId, guideLayerMeta } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { defaultOriginAxisTickSideOf, layoutPolarAngularLabel, polarFixedRadiusSteps } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
-import type { EffectiveLegendGuideTokens } from '../../resolve/theme';
+import type { CanonicalLegendGuideTokens } from '../../resolve/theme';
 import type { IRPlotAxisGuide, LegendChannelValue, LegendOrient, LegendPosition } from '../../schemas';
 import {
   AxisCardinalSide,
@@ -1834,26 +1832,6 @@ export const lowerGuide = (guide: IRPlotAxisGuide, ctx: GuideContext, context?: 
   return lowerCartesianGuide(guide, ctx, context);
 };
 
-// ── legend ─────────────────────────────────────────────────────
-
-/** legend swatch 边长（user units）；离散色块 / 形状框 / size 符号格的基准格尺寸 */
-export const LEGEND_SWATCH_SIZE = 14;
-
-/** legend swatch 到标签的水平间距（user units） */
-export const LEGEND_LABEL_GAP = 6;
-
-/** legend 条目间的行 / 列距（user units） */
-export const LEGEND_ENTRY_GAP = 6;
-
-/** legend 标题到首条目的间距（user units） */
-export const LEGEND_TITLE_GAP = 6;
-
-/** 连续色带 ramp 的长边长度（user units） */
-export const LEGEND_RAMP_LENGTH = 100;
-
-/** 连续色带 ramp 的短边宽度（user units） */
-export const LEGEND_RAMP_THICKNESS = 12;
-
 /**
  * 一个离散 legend 条目：swatch 视觉量 + 标签
  * @description color = 色块填充；shape = glyph 名（形状 swatch）；radius = size 梯度符号半径；opacity = 透明度块。
@@ -1899,7 +1877,7 @@ export type LegendRamp = {
  * @description 形态选择（swatch / ramp）与颜色 / 代表值由 expand 据 descriptor + scale 求好后传入；
  *   本函数只管几何摆放与 core 节点产出（关注点分离：求值在 expand、绘制在 guide）
  */
-export type LowerLegendOptions = {
+export type LegendLoweringOptions = {
   /** 形态：swatch（离散 / 分箱 / size / opacity）或 ramp（连续色带） */
   form: 'swatch' | 'ramp';
   /** 绑定通道（决定 swatch 视觉量取色 / 形状 / 半径 / 透明度） */
@@ -1923,7 +1901,7 @@ export type LowerLegendOptions = {
   /** legend 语义图层的 core zIndex */
   zIndex?: number;
   /** 已按 resolved Plot defaults < LegendGuide.style 合并的视觉 token */
-  style: EffectiveLegendGuideTokens;
+  style: CanonicalLegendGuideTokens;
 };
 
 /**
@@ -1953,7 +1931,7 @@ const legendTextNode = (node: IRNode): IRNode => ({
  *   条目从传入 band 左上角开始排列，文字尺寸复用 Core 测量；band 的预留宽高仍由图例布局配置决定。
  *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON
  */
-export const lowerLegend = (options: LowerLegendOptions, measure: PlotLabelMeasure): IRScope => {
+export const lowerLegend = (options: LegendLoweringOptions, measure: PlotLabelMeasure): IRScope => {
   const { fontSize, band, orient } = options;
   const {
     swatchSize,

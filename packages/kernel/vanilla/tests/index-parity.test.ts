@@ -17,6 +17,11 @@ describe('@retikz/vanilla 入口边界', () => {
       'prepareProcessingInput',
       'processToStaticResult',
       'createProcessingController',
+      'DrawWay',
+      'parseNodeTarget',
+      'parseTargetSugar',
+      'parseWay',
+      'parseWayWithTargets',
     ] as const) {
       expect(vanilla[name]).toBeDefined();
     }
@@ -46,11 +51,10 @@ describe('@retikz/vanilla 入口边界', () => {
     }
   });
 
-  it('no-core-reexport：不从 vanilla 转手导出 core 注册器或 way 常量', () => {
+  it('no-core-reexport：不从 vanilla 转手导出 core 注册器或动画工厂', () => {
     const namespace = vanilla as Record<string, unknown>;
 
     for (const name of [
-      'DrawWay',
       'defineArrow',
       'defineBoundary',
       'defineClip',

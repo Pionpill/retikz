@@ -20,7 +20,7 @@ const isValidIsoCalendarDate = (value: string): boolean => {
 };
 
 /** 数值 coercion：number 原样，safe-integer bigint 转 number，严格数字串转 number，其余转 NaN */
-export const coerceNumber = (value: unknown): number => {
+const coerceNumber = (value: unknown): number => {
   if (typeof value === 'number') return isFiniteNumber(value) ? value : NaN;
   if (typeof value === 'bigint') {
     const numeric = Number(value);
@@ -36,7 +36,7 @@ export const coerceNumber = (value: unknown): number => {
 };
 
 /** 分类 coercion：string / finite number 原样，boolean 转字符串，其余跳过 */
-export const coerceCategory = (value: unknown): string | number | undefined => {
+const coerceCategory = (value: unknown): string | number | undefined => {
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return isFiniteNumber(value) ? value : undefined;
   if (typeof value === 'boolean') return String(value);

@@ -4,12 +4,12 @@ import { describe, expect, it } from 'vitest';
 import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 
-describe('buildPlotIR mark-local transform', () => {
+describe('buildPlotIR 标记局部变换', () => {
   const markTransform: Array<IRDataTransformDeclaration> = [
     { operation: { kind: 'sort', params: { field: 'score', order: 'descending' } } },
   ];
 
-  it('point_mark_forwards_local_transform', () => {
+  it('点标记转发局部变换', () => {
     const spec = buildPlotIR(
       <PointMark transforms={markTransform} encodings={{ position: { x: { field: 'x' }, y: { field: 'score' } } }} />,
       '__plot',
@@ -18,7 +18,7 @@ describe('buildPlotIR mark-local transform', () => {
     expect(spec.marks[0]).toMatchObject({ type: 'point', transforms: markTransform });
   });
 
-  it('path_mark_forwards_local_transform', () => {
+  it('路径标记转发局部变换', () => {
     const spec = buildPlotIR(
       <PathMark
         transforms={markTransform}
@@ -30,7 +30,7 @@ describe('buildPlotIR mark-local transform', () => {
     expect(spec.marks[0]).toMatchObject({ type: 'path', transforms: markTransform });
   });
 
-  it('interval_mark_forwards_local_transform', () => {
+  it('interval 标记透传局部变换', () => {
     const spec = buildPlotIR(
       <IntervalMark
         transforms={markTransform}
@@ -42,7 +42,7 @@ describe('buildPlotIR mark-local transform', () => {
     expect(spec.marks[0]).toMatchObject({ type: 'interval', transforms: markTransform });
   });
 
-  it('mark_transform_shortcut_definitions_append_plot_transforms_without_consuming_mark_local_transform', () => {
+  it('标记变换快捷方式定义附加绘图变换而不消费标记局部变换', () => {
     const shortcutTransform: IRDataTransform = {
       kind: 'jitter',
       params: { axis: 'x', xField: 'x', amount: 0.2, seed: 9 },

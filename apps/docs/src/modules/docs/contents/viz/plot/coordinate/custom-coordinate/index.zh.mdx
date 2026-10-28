@@ -159,10 +159,10 @@ coordinate: { type: 'bridge', archHeigth: 60 }
 
 宿主注入：
 
-| 宿主                                   | 公开契约            | 注入字段                                         |
-| -------------------------------------- | ------------------- | ------------------------------------------------ |
-| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `definitions.coordinates`                        |
-| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.definitions.coordinates` |
+| 宿主                                   | 公开契约            | 注入字段                                            |
+| -------------------------------------- | ------------------- | --------------------------------------------------- |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `definitions.coordinates`                           |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `PlotRenderOptions` | 继承 `PlotsLoweringOptions.definitions.coordinates` |
 
 ## 相关
 

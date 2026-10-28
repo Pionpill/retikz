@@ -6,9 +6,9 @@ import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resol
 import type { IRBoundary } from '../../schemas';
 import type { NodeGeometryState } from './geometry-context';
 import { nodeReferenceViewOf } from './reference';
-import type { NodeLayout } from './types';
+import type { CompiledNodeLayout } from './types';
 
-type NodeAnchorLayout = NodeLayout | NodeReferenceView;
+type NodeAnchorLayout = CompiledNodeLayout | NodeReferenceView;
 
 import { boundaryKey } from '../../resolve';
 import { CenterAnchor, isAnchor } from '../../shared';
@@ -41,7 +41,7 @@ const inflateRect = (r: CenteredBox, m: BoundsInsets): CenteredBox => {
 };
 
 /** 取节点视觉 rect 外扩 margin 后的外边界 */
-export const outerRectOf = (layout: NodeLayout): CenteredBox =>
+export const outerRectOf = (layout: CompiledNodeLayout): CenteredBox =>
   inflateRect(layout.geometry.rect, layout.geometry.margin);
 
 const shapeBoundaryResolutionOf = (layout: NodeReferenceView): BoundaryReferenceResolution => ({

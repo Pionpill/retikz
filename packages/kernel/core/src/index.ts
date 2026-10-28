@@ -216,7 +216,7 @@ export {
   Vector2Schema,
   ViewBoxSchema,
   WebFontSizePreset,
-  WebFontSizeRatio,
+  webFontSizeRatio,
 } from './schemas';
 export type {
   ArrowShape,
@@ -322,7 +322,7 @@ export type {
   IRViewBox,
   PatternShapeName,
   PolarPosition,
-  ResolvedDropShadow,
+  CanonicalDropShadow,
   StrokeDashPattern,
   StyleChannel,
 } from './schemas';

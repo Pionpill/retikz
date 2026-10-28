@@ -1,4 +1,4 @@
-import { PathMark, Plot, PlotAxis, PlotScale, PointMark, RelationMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import type { Lang } from '@/i18n';
 
@@ -34,6 +34,7 @@ export const TransformRelatePreview = (
       <PlotScale dimension="x" type="linear" domain={[0.5, 6.5]} />
       <PlotScale dimension="y" type="linear" domain={[20, 62]} />
       <PathMark
+        id="trend"
         encodings={{
           color: 'series',
           series: 'series',
@@ -47,30 +48,26 @@ export const TransformRelatePreview = (
         encodings={{ stroke: 'series', position: { x: { field: 'month' }, y: { field: 'value' } } }}
         properties={{ fill: 'white', strokeWidth: 1.2, size: 5 }}
       />
-      <RelationMark
+      <PathMark
         transforms={[{ operation: relateOperationOf(values) }]}
         encodings={{
-          source: { anchorId: 'sourceId' },
-          target: { anchorId: 'targetId' },
-          geometry: { label: { text: 'deltaLabel' } },
+          steps: [
+            { kind: 'move', to: { mark: 'trend', key: { field: 'sourceId' } } },
+            { kind: 'bend', to: { mark: 'trend', key: { field: 'targetId' } }, bendDirection: 'left', bendAngle: 28 },
+          ],
+          label: { text: 'deltaLabel' },
         }}
         properties={{
-          source: { anchorId: { prefix: 'trend' } },
-          target: { anchorId: { prefix: 'trend' } },
           color: 'mediumvioletred',
           strokeWidth: 1.6,
-          geometry: {
-            kind: 'path',
-            routing: { kind: 'bend', bendDirection: 'left', bendAngle: 28 },
-            label: {
-              position: 0.5,
-              side: 'top',
-              distance: 4,
-              sloped: true,
-              textColor: 'mediumvioletred',
-              font: { size: 11, weight: 'bold' },
-            },
-            options: { arrow: { end: {} } },
+          arrow: { end: {} },
+          label: {
+            position: 0.5,
+            side: 'top',
+            distance: 4,
+            sloped: true,
+            textColor: 'mediumvioletred',
+            font: { size: 11, weight: 'bold' },
           },
         }}
       />

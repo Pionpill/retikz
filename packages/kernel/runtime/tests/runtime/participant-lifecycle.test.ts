@@ -23,7 +23,7 @@ const defineCounterSource = () =>
     },
   });
 
-describe('runtime runtime participant lifecycle', () => {
+describe('Runtime 运行时参与者生命周期', () => {
   it('initial create 在 publish 前 prepare、commit 并缓存 participant read', () => {
     const owner = defineCounterSource();
     const sources = createRuntimeSourceRegistry([owner]);

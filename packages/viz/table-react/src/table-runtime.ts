@@ -2,7 +2,12 @@ import type { AnyCompositeDefinition } from '@retikz/core';
 import type { DataInputBindings, DataTransformExecutor, ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { AssertEqual, ValueOf } from '@retikz/foundation';
 import type { LayoutProps } from '@retikz/react';
-import type { LowerTablesOptions, ManualTableInput, TableDetailColumnInput, TableLayoutManifest } from '@retikz/table';
+import type {
+  TablesLoweringOptions,
+  InputManualTableConfig,
+  InputTableDetailColumn,
+  TableLayoutManifest,
+} from '@retikz/table';
 import type { InputDetailTable, InputManualTable, InputTable, InputTableVariant } from '@retikz/table-vanilla';
 import { inputTableFromIR, InputTableKind } from '@retikz/table-vanilla';
 
@@ -27,7 +32,7 @@ export const ReactTableRuntimeKind = {
 export type ReactTableRuntimeKind = ValueOf<typeof ReactTableRuntimeKind>;
 
 /** Table standalone 入口允许透传给 Layout 的宿主字段 */
-export const TABLE_LAYOUT_HOST_PROP_KEYS = [
+const TABLE_LAYOUT_HOST_PROP_KEYS = [
   'handlers',
   'width',
   'height',
@@ -83,7 +88,7 @@ export type ReactTableRuntime = Readonly<{
   /** detail datasetSource 对应的 runtime reference */
   datasetReference?: string;
   /** Table definitions 与其它 lowering 选项 */
-  lowerOptions: LowerTablesOptions;
+  lowerOptions: TablesLoweringOptions;
   /** Cell 内嵌 Tier 2 内容所需的额外 composites */
   composites: ReadonlyArray<AnyCompositeDefinition>;
   /** standalone 模式的 manifest observer */
@@ -95,7 +100,7 @@ export type ReactTableRuntime = Readonly<{
 type AnyTableProps = TableProps<unknown> | DetailTableProps<unknown> | ManualTableProps;
 
 /** 从共享 props 提取 Table lowering options */
-const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
+const lowerOptionsOf = (props: TableCommonProps): TablesLoweringOptions => ({
   structureDefinitions: props.structureDefinitions,
   formatterDefinitions: props.formatterDefinitions,
   presentationDefinitions: props.presentationDefinitions,
@@ -114,13 +119,13 @@ const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
 });
 
 /** 统一 DetailTable 的 columns props 与 marker children authoring */
-const detailColumnsOf = (props: DetailTableProps<unknown>): Array<TableDetailColumnInput> => {
+const detailColumnsOf = (props: DetailTableProps<unknown>): Array<InputTableDetailColumn> => {
   if (props.columns !== undefined) return props.columns;
   return buildDetailColumns(props.children);
 };
 
 /** 统一 ManualTable 的 rows props 与 Row marker children authoring */
-const manualStructureOf = (props: ManualTableProps): Pick<ManualTableInput, 'rows' | 'rowKinds'> => {
+const manualStructureOf = (props: ManualTableProps): Pick<InputManualTableConfig, 'rows' | 'rowKinds'> => {
   if (props.rows === undefined) return buildManualStructure(props.children);
 
   return {

@@ -86,12 +86,6 @@ export const densityInputFields = (operation: IRDataDensityTransform): Array<str
   ...(operation.params.groupBy ?? []),
 ];
 
-/** 返回 density transform 写出的派生字段 */
-export const densityOutputFields = (operation: IRDataDensityTransform): Array<string> => [
-  operation.params.xAs,
-  operation.params.densityAs,
-];
-
 /** density：一维 Gaussian KDE 采样，每组输出 sampleCount 行 */
 export const applyDensity = (
   rows: Array<ExternalRow>,

@@ -1,6 +1,6 @@
 import type { IRScene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
-import { createFlexLayout, FlexLayoutArtifactSchema, FlexLayoutDefinition } from '@retikz/layout';
+import { createFlexLayout, FlexLayoutArtifactSchema, flexLayoutDefinition } from '@retikz/layout';
 
 import type { PreviewControlValues } from '@/modules/docs/components/component-preview';
 import { browserMeasurer } from '@/modules/docs/components/component-preview/vanilla-preview';
@@ -38,7 +38,7 @@ export const readInspectionRows = (
   labels: { key: string; line: string; slot: string; actual: string },
 ) => {
   const output = compileToScene(createInspectionScene(values), {
-    composites: [FlexLayoutDefinition],
+    composites: [flexLayoutDefinition],
     measureText: browserMeasurer,
   });
   const envelope = output.artifacts.find(item => item.kind === 'composite');

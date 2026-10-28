@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
@@ -101,11 +101,11 @@ const polarScaffoldSpec = {
 const parsePlotIR = (spec: unknown) => PlotSchema.parse(spec);
 
 const expandOf = (spec: unknown, provenance = false): IRScope => {
-  return lowerPlot(
+  return lowerPlotWithDataArtifact(
     parsePlotIR(spec),
     { d: rows },
     { layout: { width: 480, height: 300 }, textMeasurer: measureLabel, provenance },
-  ) as IRScope;
+  ).child as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
@@ -136,25 +136,25 @@ const distancesFromCenter = (scope: IRScope, center: [number, number]): Array<nu
     return Math.hypot(x - center[0], y - center[1]);
   });
 
-describe('shared scaffold tracks schema', () => {
-  it('shared scaffold spec preserves JSON round trip', () => {
+describe('共享基础结构跟踪 schema', () => {
+  it('共享基础结构规格保留 JSON 往返', () => {
     const parsed = parsePlotIR(JSON.parse(JSON.stringify(cartesianScaffoldSpec)));
 
     expect(parsed).toEqual(cartesianScaffoldSpec);
   });
 
-  it('track view can inherit scaffold coordinate', () => {
+  it('轨迹视图可以继承基础结构坐标', () => {
     const parsed = parsePlotIR(cartesianScaffoldSpec);
     const tracks = parsed.composition?.arrangements?.find(arrangement => arrangement.kind === 'tracks')?.tracks ?? [];
 
     expect(tracks.every(track => track.coordinate === undefined)).toBe(true);
   });
 
-  it('band can touch scaffold edges', () => {
+  it('带子可以接触基础结构边缘', () => {
     expect(() => parsePlotIR(cartesianScaffoldSpec)).not.toThrow();
   });
 
-  it('bad band range is rejected', () => {
+  it('不良频带范围被拒绝', () => {
     const spec = {
       ...cartesianScaffoldSpec,
       composition: {
@@ -171,7 +171,7 @@ describe('shared scaffold tracks schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/band|start|end/i);
   });
 
-  it('overlapping bands on the same role are rejected', () => {
+  it('同一角色上的重叠带被拒绝', () => {
     const spec = {
       ...cartesianScaffoldSpec,
       composition: {
@@ -191,7 +191,7 @@ describe('shared scaffold tracks schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/overlap|band/i);
   });
 
-  it('duplicate track id is rejected', () => {
+  it('重复的轨道 ID 被拒绝', () => {
     const spec = {
       ...cartesianScaffoldSpec,
       composition: {
@@ -211,7 +211,7 @@ describe('shared scaffold tracks schema', () => {
     expect(() => parsePlotIR(spec)).toThrow(/duplicate track/i);
   });
 
-  it('local band role must not be shared', () => {
+  it('本地频段角色不得共享', () => {
     const spec = {
       ...cartesianScaffoldSpec,
       composition: {
@@ -229,8 +229,8 @@ describe('shared scaffold tracks schema', () => {
   });
 });
 
-describe('shared scaffold tracks lowering', () => {
-  it('cartesian lanes share x and use independent y bands', () => {
+describe('共用基础结构轨道下降', () => {
+  it('笛卡尔通道共享 x 并使用独立的 y 波段', () => {
     const outer = expandOf(cartesianScaffoldSpec, true);
     const [events, volume] = markLayersOf(outer);
 
@@ -238,7 +238,7 @@ describe('shared scaffold tracks lowering', () => {
     expect(Math.min(...yValuesOf(events))).toBeGreaterThan(Math.max(...yValuesOf(volume)));
   });
 
-  it('polar rings share angle scaffold and use different radius bands', () => {
+  it('极环共享角支架并使用不同的半径带', () => {
     const outer = expandOf(polarScaffoldSpec, true);
     const [inner, outerRing] = markLayersOf(outer);
     const center: [number, number] = [150, 150];
@@ -248,7 +248,7 @@ describe('shared scaffold tracks lowering', () => {
     );
   });
 
-  it('single track scaffold lowers like a local band', () => {
+  it('单轨基础结构像本地带一样下沉', () => {
     const spec = {
       ...cartesianScaffoldSpec,
       composition: {
@@ -270,7 +270,7 @@ describe('shared scaffold tracks lowering', () => {
     expect(markLayersOf(expandOf(spec, true))).toHaveLength(1);
   });
 
-  it('empty sharedRoles can share only the scaffold frame', () => {
+  it('空 sharedRoles 只能共用基础结构框架', () => {
     const spec = {
       ...cartesianScaffoldSpec,
       composition: {
@@ -288,14 +288,14 @@ describe('shared scaffold tracks lowering', () => {
     expect(markLayersOf(expandOf(spec, true))).toHaveLength(2);
   });
 
-  it('guide can bind to a track view', () => {
+  it('辅助线可以绑定到轨迹视图', () => {
     const outer = expandOf(cartesianScaffoldSpec, true);
     const axes = axisLayersOf(outer);
 
     expect(axes.map(axis => axis.meta?.dimension)).toEqual(['x', 'y']);
   });
 
-  it('provenance meta carries arrangement and track identity', () => {
+  it('来源追溯元携带排列和曲目标识', () => {
     const outer = expandOf(cartesianScaffoldSpec, true);
     const [events, volume] = markLayersOf(outer);
 
@@ -305,7 +305,7 @@ describe('shared scaffold tracks lowering', () => {
     expect(volume.meta?.scaffold).toBeUndefined();
   });
 
-  it('unknown shared role fails loud during lowering', () => {
+  it('未知的共享角色在下降过程中失败', () => {
     const spec = {
       ...cartesianScaffoldSpec,
       composition: {
@@ -323,8 +323,8 @@ describe('shared scaffold tracks lowering', () => {
   });
 });
 
-describe('track placement containment', () => {
-  it('keeps track axis boundaries while jitter narrows mapped positions', () => {
+describe('轨道放置遏制', () => {
+  it('保持轨迹轴边界，同时抖动缩小映射位置', () => {
     const baseline = expandOf(cartesianScaffoldSpec, true);
     const jittered = expandOf(
       {

@@ -10,7 +10,7 @@ import { ScatterChart } from '../src/point';
 
 type NativeRows = { values: Array<{ x: number; y: number }> };
 
-describe('Chart client preparation', () => {
+describe('Chart 客户端准备', () => {
   beforeEach(() => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
@@ -18,7 +18,7 @@ describe('Chart client preparation', () => {
 
   afterEach(() => vi.restoreAllMocks());
 
-  it.each([false, true])('renders typed native Promise input with embedded=%s', async embedded => {
+  it.each([false, true])('使用嵌入的 = %s 呈现类型化的本机 Promise 输入', async embedded => {
     const execute = vi.fn();
     const provider: DataTransformImplementationProvider<NativeRows> = {
       resolve: stage => ({

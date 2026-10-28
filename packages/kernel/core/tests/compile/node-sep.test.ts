@@ -13,7 +13,7 @@ const rectSize = (ir: IRScene) => {
   return r?.type === 'rect' ? { w: r.width, h: r.height } : undefined;
 };
 
-describe('Node spacing（CSS-like padding / margin）', () => {
+describe('Node 间距（类似 CSS 的 padding/margin）', () => {
   it('拒绝已删除的 TikZ sep 字段', () => {
     expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], innerXSep: 1 }).success).toBe(false);
     expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], innerYSep: 1 }).success).toBe(false);
@@ -116,7 +116,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
     expect(rectSize(ir)).toEqual(rectSize(sym));
   });
 
-  it('asymmetric padding keeps content at position and shifts the visual shape center', () => {
+  it('非对称内边距保持内容位置不变并偏移视觉形状中心', () => {
     const ir = {
       version: 1,
       type: 'scene',

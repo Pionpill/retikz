@@ -5,7 +5,7 @@ import { resolveMathJaxExtensions } from '../../src/mathjax';
 
 const TIMEOUT = 20_000;
 
-describe('[mathjax-profile] public profile', () => {
+describe('[mathjax-profile] 公共配置', () => {
   it('公开闭合的 profile 与九个 extension', () => {
     expect(MathJaxProfile).toEqual({ Base: 'base', Math: 'math' });
     expect(Object.values(MathJaxExtension)).toEqual([

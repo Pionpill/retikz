@@ -10,7 +10,7 @@ import type {
 import { LegendSymbolFit } from '../../schemas';
 import { mergeGuideTextStyle } from './mapping';
 import { resolvePlotAxisDefaults } from './token-rule';
-import type { EffectiveLegendGuideTokens, EffectivePlotGuideTheme, EffectivePlotPalette } from './types';
+import type { CanonicalLegendGuideTokens, CanonicalPlotGuideTheme, CanonicalPlotPalette } from './types';
 
 type GuidePathStyle = Partial<
   Pick<NonNullable<IRPath['style']>, 'stroke' | 'strokeWidth' | 'opacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
@@ -31,7 +31,7 @@ const DEFAULT_TYPOGRAPHY: PlotTypographyStyle = {
   textColor: 'currentColor',
 };
 
-const DEFAULT_LEGEND: EffectiveLegendGuideTokens = {
+const DEFAULT_LEGEND: CanonicalLegendGuideTokens = {
   swatchSize: 14,
   swatchGap: 6,
   entryGap: 6,
@@ -51,7 +51,7 @@ const mergePathStyle = <T extends GuidePathStyle>(base: GuidePathStyle | undefin
   return { ...base, ...override };
 };
 
-const guideThemeFromDefaults = (defaults: IRPlotDefaults, palette: EffectivePlotPalette): EffectivePlotGuideTheme => {
+const guideThemeFromDefaults = (defaults: IRPlotDefaults, palette: CanonicalPlotPalette): CanonicalPlotGuideTheme => {
   const typography = mergeGuideTextStyle(DEFAULT_TYPOGRAPHY, defaults.typography);
   const legend = defaults.legend;
 
@@ -77,14 +77,14 @@ const guideThemeFromDefaults = (defaults: IRPlotDefaults, palette: EffectivePlot
 };
 
 /** 把解析完成的 Plot defaults 转成 guide lowering 消费态 */
-export const resolvePlotGuideTheme = (resolution: IRPlotThemeResolution): EffectivePlotGuideTheme =>
+export const resolvePlotGuideTheme = (resolution: IRPlotThemeResolution): CanonicalPlotGuideTheme =>
   guideThemeFromDefaults(resolution.defaults, resolution.palette);
 
 /** 为一个既有 Axis dimension 解析其匹配规则后的 guide 默认值 */
 export const resolvePlotAxisGuideTheme = (
   resolution: IRPlotThemeResolution,
   dimension: string,
-): EffectivePlotGuideTheme =>
+): CanonicalPlotGuideTheme =>
   guideThemeFromDefaults(resolvePlotAxisDefaults(resolution, dimension), resolution.palette);
 
 const mergeAxisTicks = (
@@ -194,7 +194,7 @@ const mergeAxisGrid = (
  * 合并 axis guide 的 Plot defaults
  * @description 合并 line/tick line/tick label/title 的视觉字段，以及 grid 视觉与 domain endpoint 默认；ticks.values、ticks.count、tickLabels.format、title.text 和 grid projection 保持 local 语义
  */
-export const resolveAxisGuideTokens = (theme: EffectivePlotGuideTheme, guide: IRPlotAxisGuide): IRPlotAxisGuide => ({
+export const resolveAxisGuideTokens = (theme: CanonicalPlotGuideTheme, guide: IRPlotAxisGuide): IRPlotAxisGuide => ({
   ...guide,
   ...(theme.axis.line === undefined
     ? {}
@@ -241,9 +241,9 @@ export const resolveAxisGuideTokens = (theme: EffectivePlotGuideTheme, guide: IR
  * @description position、orient、channel、scale、ticks、tickLabels.format 等语义字段不参与合并
  */
 export const resolveLegendGuideTokens = (
-  theme: EffectivePlotGuideTheme,
+  theme: CanonicalPlotGuideTheme,
   local: LegendStyle | undefined,
-): EffectiveLegendGuideTokens => ({
+): CanonicalLegendGuideTokens => ({
   swatchSize: local?.swatchSize ?? theme.legend.swatchSize,
   swatchGap: local?.swatchGap ?? theme.legend.swatchGap,
   entryGap: local?.entryGap ?? theme.legend.entryGap,

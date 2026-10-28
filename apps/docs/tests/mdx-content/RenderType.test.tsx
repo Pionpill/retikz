@@ -6,7 +6,7 @@ import { walkType } from '@/modules/docs/components';
 import { RenderType } from '@/modules/docs/components/mdx-content/zod-schema/RenderType';
 
 describe('RenderType', () => {
-  it('renders an array type as one code token', () => {
+  it('将数组类型呈现为一个代码标记', () => {
     const markup = renderToStaticMarkup(
       <RenderType
         name="ExampleSchema.transforms"
@@ -22,7 +22,7 @@ describe('RenderType', () => {
     expect(markup.match(/bg-muted/g)).toHaveLength(1);
   });
 
-  it('renders object union branches with discriminators, field types, and open properties', () => {
+  it('使用判别字段、字段类型和开放属性渲染对象联合分支', () => {
     const schema = z.union([
       z.strictObject({
         kind: z.literal('sum'),
@@ -43,7 +43,7 @@ describe('RenderType', () => {
     expect(markup).toContain('[key: string]: unknown');
   });
 
-  it('renders intersection members with an explicit separator', () => {
+  it('使用显式分隔符呈现交集成员', () => {
     const schema = z.intersection(
       z.strictObject({ kind: z.string() }),
       z.record(z.string(), z.union([z.string(), z.number()])),

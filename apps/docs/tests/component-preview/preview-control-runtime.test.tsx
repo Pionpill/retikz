@@ -29,11 +29,11 @@ const Probe = (props: ProbeProps) => {
 };
 
 describe('usePreviewControlRuntime', () => {
-  it('does not expose runtime internals from the top-level component-preview barrel', () => {
+  it('不从 component-preview 顶层聚合入口暴露运行时内部实现', () => {
     expect(componentPreviewExports).not.toHaveProperty('usePreviewControlRuntime');
   });
 
-  it('only exposes preview-control names in context exports', () => {
+  it('仅在上下文导出中公开预览控件名称', () => {
     expect(previewContextExports).toMatchObject({
       PreviewControlStateContext: expect.anything(),
       usePreviewControlContext: expect.any(Function),

@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import type { IRTableDefaults } from '@retikz/table';
 import { defineTableTheme, TableDefaultsSchema } from '@retikz/table';
 
@@ -133,9 +133,9 @@ const styles = {
       layout: { borders: { horizontal: { kind: 'none' } } },
     },
   },
-} as const satisfies Record<ReferenceStyle, Record<ResolvedTheme['mode'], IRTableDefaults>>;
+} as const satisfies Record<ReferenceStyle, Record<CanonicalTheme['mode'], IRTableDefaults>>;
 
-const defaultsOf = (style: ReferenceStyle, theme: ResolvedTheme): IRTableDefaults =>
+const defaultsOf = (style: ReferenceStyle, theme: CanonicalTheme): IRTableDefaults =>
   TableDefaultsSchema.parse(structuredClone(styles[style][theme.mode]));
 
 /** docs 维护的三个 Table reference Theme definitions */

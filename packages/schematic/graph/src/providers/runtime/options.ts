@@ -55,7 +55,7 @@ const mergeDefinitionCollection = <TDefinition>(
 };
 
 /** 一次 Graph definition 装配共享的已解析 registries */
-export type ResolvedGraphDefinitionOptions = Readonly<{
+export type GraphDefinitionRegistries = Readonly<{
   /** 按 role 键索引的实体角色定义 */
   entityRoles: ReadonlyMap<string, EntityRoleDefinition>;
   /** 已解析的实体 kind 定义注册表 */
@@ -135,7 +135,7 @@ export const mergeGraphDefinitionOptions = (
 });
 
 /** 一次性校验并解析 Graph definition options */
-export const resolveGraphDefinitionOptions = (options: GraphDefinitionOptions = {}): ResolvedGraphDefinitionOptions => {
+export const resolveGraphDefinitionOptions = (options: GraphDefinitionOptions = {}): GraphDefinitionRegistries => {
   const entityRoles = resolveEntityRoleRegistry(options.entityRoles);
   const entityKinds = resolveEntityKindRegistry(options.entityKinds, entityRoles);
   const entityPredicates = resolveEntityPredicateRegistry(options.entityPredicates, entityRoles, entityKinds);

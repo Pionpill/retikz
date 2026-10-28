@@ -4,7 +4,7 @@ import { markSlotsOf, resolvePointMark } from '../shared';
 import { ScatterChartMarkSchema } from './schema';
 
 /** Scatter Chart 的 authored mark Definition */
-export const ScatterMarkDefinition: ChartMarkDefinition = defineChartMark({
+export const scatterMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'scatter',
   schema: ScatterChartMarkSchema,
   resolve: context => {

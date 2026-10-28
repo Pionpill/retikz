@@ -8,7 +8,7 @@ import { flattenPrims } from '../helpers/flatten';
 const findText = (prims: Array<ScenePrimitive>): TextPrimitive | undefined =>
   flattenPrims(prims).find((p): p is TextPrimitive => p.type === 'text');
 
-describe('Node multi-line text', () => {
+describe('Node 多行文本', () => {
   it("text: 'Hello' 与 text: ['Hello'] 编译产出相同 lines", () => {
     const single: IRScene = {
       version: 1,

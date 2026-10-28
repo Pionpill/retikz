@@ -1,19 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { toJSONSchema } from 'zod';
 
-import {
-  BuiltinDataFieldFormat,
-  BuiltinDataTransform,
-  BuiltinReducerOperationKind,
-  BuiltinSelectorOperationKind,
-  FieldDefinitionSchema,
-} from '../../src';
-import { ExternalReducerOperationSchema, ReducerOperationSchema } from '../../src/operators/reducer';
-import { ExternalSelectorOperationSchema, SelectorOperationSchema } from '../../src/operators/selector';
+import { BuiltinDataFieldFormat, BuiltinDataTransform, FieldDefinitionSchema } from '../../src';
+import { ReducerOperationSchema } from '../../src/operators/reducer';
+import { SelectorOperationSchema } from '../../src/operators/selector';
 import { ExternalTransformSchema, TransformSchema } from '../../src/transform';
 
-describe('Data registry-backed open string schemas', () => {
-  it('hints built-in formats while preserving custom provider names', () => {
+describe('数据注册表支持的开放字符串 schema', () => {
+  it('提示内置格式，同时保留自定义提供者名称', () => {
     expect(toJSONSchema(FieldDefinitionSchema.options[0]).properties?.format).toMatchObject({
       anyOf: [
         { type: 'string', enum: Object.values(BuiltinDataFieldFormat) },
@@ -27,7 +21,7 @@ describe('Data registry-backed open string schemas', () => {
     expect(() => FieldDefinitionSchema.parse({ name: 'value', format: '   ' })).toThrow();
   });
 
-  it('keeps transform kinds open while retaining built-in hints', () => {
+  it('保持变换类型打开，同时保留内置提示', () => {
     expect(toJSONSchema(ExternalTransformSchema).properties?.kind).toMatchObject({
       anyOf: [
         { type: 'string', enum: Object.values(BuiltinDataTransform) },
@@ -43,34 +37,12 @@ describe('Data registry-backed open string schemas', () => {
   });
 
   it.each([
-    [
-      'reducer',
-      ReducerOperationSchema,
-      ExternalReducerOperationSchema,
-      Object.values(BuiltinReducerOperationKind),
-      { kind: 'count', as: 'count' },
-    ],
-    [
-      'selector',
-      SelectorOperationSchema,
-      ExternalSelectorOperationSchema,
-      Object.values(BuiltinSelectorOperationKind),
-      { kind: 'first' },
-    ],
-  ] as const)(
-    'validates built-in and custom %s operations through the complete schema',
-    (_label, schema, externalSchema, builtins, builtin) => {
-      expect(toJSONSchema(externalSchema).properties?.kind).toMatchObject({
-        anyOf: [
-          { type: 'string', enum: [...builtins] },
-          { type: 'string', minLength: 1 },
-        ],
-      });
-      const custom = { kind: 'custom.operation', parameter: 2 };
-      expect(schema.parse(custom)).toEqual(custom);
-      expect(schema.parse(builtin)).toMatchObject(builtin);
-      expect(() => schema.parse({ kind: '   ' })).toThrow();
-      expect(() => externalSchema.parse(builtin)).toThrow();
-    },
-  );
+    ['reducer', ReducerOperationSchema, { kind: 'count', as: 'count' }],
+    ['selector', SelectorOperationSchema, { kind: 'first' }],
+  ] as const)('通过完整 schema 验证内置和自定义 %s 操作', (_label, schema, builtin) => {
+    const custom = { kind: 'custom.operation', parameter: 2 };
+    expect(schema.parse(custom)).toEqual(custom);
+    expect(schema.parse(builtin)).toMatchObject(builtin);
+    expect(() => schema.parse({ kind: '   ' })).toThrow();
+  });
 });

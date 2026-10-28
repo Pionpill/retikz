@@ -11,7 +11,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
@@ -39,30 +39,31 @@ import { deepFreeze } from '../../shared';
 import { formatTable } from '../formatter';
 import { emitTableBorderScope, emitTableBoundsSentinel, emitTableCellBackground } from '../lower';
 import { buildTableLayoutManifest } from '../manifest';
-import { normalizeTableStructure } from '../normalize';
 import { resolveTableData } from '../preparation';
 import { presentTable } from '../presentation';
-import type { ResolvedTableDefaults } from '../rule';
-import type { ResolvedTablePlan, TableCellAppearanceTrace } from '../rule';
+import type { TableDefaultsResolution } from '../rule';
+import type { TablePlanResolution, TableCellAppearanceTrace } from '../rule';
 import { presentationInputsOfTableCellPlans, resolveTableCellPlans } from '../rule';
-import type { LowerTablesOptions } from '../types';
-import type { ResolvedTableBorderCandidate, TableBorderSide } from './border';
+import { resolveTableStructure } from '../structure';
+import type { TablesLoweringOptions } from '../types';
+import type { TableBorderCandidateResolution, TableBorderSide } from './border';
 import { buildTableBorderGraph } from './border';
 import { computeTableCellBox, computeTableCellContentBox, computeTableCellOuterSize } from './cell';
 import { computeTableCellContentPlacement } from './content';
-import { resolveTableLayout, resolveTableTrackSizes } from './resolve';
-import { propagateTableSpanContributions } from './span';
-import { solveTableTracks } from './track';
+import { resolveTableLayout } from './resolve';
+import { computeTableSpanContributions } from './span-computation';
+import { computeTableTracks } from './track-computation';
+import { applyTableTrackOverrides } from './track-resolution';
 import type {
-  ResolvedTableTrackSize,
-  TableCellLayout,
-  TableLayout,
+  CanonicalTableTrackSize,
+  CompiledTableCellLayout,
+  CompiledTableLayout,
   TableTrackContribution,
-  TableTrackLayout,
+  CompiledTableTrackLayout,
 } from './types';
 
 /** 同次 Table compile transaction 的输出 */
-export type ResolvedTableTransaction = Readonly<{
+type TableTransactionCompilation = Readonly<{
   /** 当前 callback 可直接提交的 output children */
   children: ReadonlyArray<IRChild | CompositeCompileChild>;
   /** 与 output children 同源、待 artifact schema 接纳的 manifest candidate */
@@ -70,7 +71,7 @@ export type ResolvedTableTransaction = Readonly<{
 }>;
 
 /** 已完成 presentation 的 Table 后半布局事务输入 */
-export type PresentedTableTransactionInput = Readonly<{
+type InputPresentedTableTransaction = Readonly<{
   /** 可选 Table root identity */
   tableId?: string;
   /** 透传到 Table root Scope 的 JSON metadata */
@@ -82,9 +83,9 @@ export type PresentedTableTransactionInput = Readonly<{
   /** 同次 style resolution 与选择值 */
   theme?: CompositeCompileContext['theme'];
   /** 当前表格布局与呈现共同采用的已解析默认值 */
-  defaultTable?: ResolvedTableDefaults;
+  defaultTable?: TableDefaultsResolution;
   /** 同次 Cell/encoding plan bundle */
-  plan?: ResolvedTablePlan;
+  plan?: TablePlanResolution;
 }>;
 
 type TableCellProbe = Readonly<{
@@ -221,7 +222,7 @@ const trackLayoutsOf = (
   ids: ReadonlyArray<string | undefined>,
   sizes: ReadonlyArray<number>,
   gap: number,
-): ReadonlyArray<TableTrackLayout> => {
+): ReadonlyArray<CompiledTableTrackLayout> => {
   let offset = 0;
   return sizes.map((size, index) => {
     const track = { ...(ids[index] === undefined ? {} : { id: ids[index] }), index, offset, size };
@@ -236,10 +237,10 @@ const resolveTableDefaults = (
   spec:
     | Pick<IRTable, 'defaultAppearance' | 'defaultCellLayout' | 'layout' | 'defaultVisual' | 'defaultTable'>
     | undefined,
-  tableThemeDefinitions: LowerTablesOptions['tableThemeDefinitions'] | undefined,
-): ResolvedTableDefaults => {
+  tableThemeDefinitions: TablesLoweringOptions['tableThemeDefinitions'] | undefined,
+): TableDefaultsResolution => {
   const base = resolveTableThemeDefaults(theme, tableThemeDefinitions);
-  const layers: Array<ResolvedTableDefaults['layers'][number]> = [...base.layers];
+  const layers: Array<TableDefaultsResolution['layers'][number]> = [...base.layers];
 
   const append = (path: string, defaults: IRTableDefaults): void => {
     layers.push({ kind: 'source', path, defaults: structuredClone(defaults) });
@@ -273,7 +274,7 @@ const resolveTableDefaults = (
 };
 
 /** 从 resolved defaults 找到某个字段最终采用的 Source 层 */
-const defaultsSourcePathOf = (defaults: ResolvedTableDefaults, path: ReadonlyArray<string>): string | undefined => {
+const defaultsSourcePathOf = (defaults: TableDefaultsResolution, path: ReadonlyArray<string>): string | undefined => {
   for (let index = defaults.layers.length - 1; index >= 0; index -= 1) {
     const layer = defaults.layers[index];
     let current: unknown = layer.defaults;
@@ -297,7 +298,7 @@ const defaultsSourcePathOf = (defaults: ResolvedTableDefaults, path: ReadonlyArr
 const resolveBorderCandidate = (
   border: DeepReadonly<IRTableBorder>,
   masterColor: string,
-): ResolvedTableBorderCandidate => {
+): TableBorderCandidateResolution => {
   if (border.kind === TableBorderKind.None) return { kind: 'none', priority: border.priority ?? 0 };
 
   return {
@@ -321,7 +322,7 @@ const resolveDefaultBorderCandidate = (
   border: DeepReadonly<IRTableBorder>,
   masterColor: string,
   sourcePath: string,
-): ResolvedTableBorderCandidate => ({
+): TableBorderCandidateResolution => ({
   ...resolveBorderCandidate({ ...structuredClone(border), priority: -100 }, masterColor),
   defaults: { path: sourcePath },
 });
@@ -331,7 +332,7 @@ const resolveCellBorders = (
   borders: DeepReadonly<IRTableCellBorders>,
   masterColor: string,
   trace?: TableCellAppearanceTrace,
-): Readonly<Partial<Record<TableBorderSide, ResolvedTableBorderCandidate>>> => ({
+): Readonly<Partial<Record<TableBorderSide, TableBorderCandidateResolution>>> => ({
   ...Object.fromEntries(
     (['top', 'right', 'bottom', 'left'] as const).flatMap(side => {
       const border = borders[side];
@@ -353,7 +354,7 @@ const resolveCellBorders = (
 /** 从单轴 Cell outer sizes 构造 span-aware canonical contributions */
 const contributionsOf = (
   cells: ReadonlyArray<SemanticTableCell>,
-  tracks: ReadonlyArray<ResolvedTableTrackSize>,
+  tracks: ReadonlyArray<CanonicalTableTrackSize>,
   gap: number,
   axis: 'row' | 'column',
   outerSizeOf: (cell: SemanticTableCell, index: number) => number,
@@ -378,7 +379,7 @@ const contributionsOf = (
     ];
   });
 
-  return propagateTableSpanContributions({ tracks, contributions: direct, constraints, gap }).contributions;
+  return computeTableSpanContributions({ tracks, contributions: direct, constraints, gap }).contributions;
 };
 
 /** 校验 Presented model 与 canonical semantic Cells 同序同 identity */
@@ -419,7 +420,7 @@ const assertPresentedAlignment = (presented: PresentedTableModel): void => {
 /** 计算单个 Cell 覆盖的 column outer width */
 const cellColumnWidth = (
   cell: SemanticTableCell,
-  columns: ReadonlyArray<TableTrackLayout>,
+  columns: ReadonlyArray<CompiledTableTrackLayout>,
   columnGap: number,
 ): number =>
   columns
@@ -431,7 +432,7 @@ const cellColumnWidth = (
 const cellOutputOf = (
   context: CompositeCompileContext,
   probe: TableCellProbe,
-  geometry: TableCellLayout,
+  geometry: CompiledTableCellLayout,
 ): CompositeCompileChild => {
   const placement = computeTableCellContentPlacement({
     sourceAllocationBounds: probe.final.allocationBounds,
@@ -489,10 +490,10 @@ const cellOutputOf = (
 };
 
 /** 从 Presented model 执行完整 Table layout-aware 后半事务 */
-export const resolvePresentedTableTransaction = (
-  input: PresentedTableTransactionInput,
+const resolvePresentedTableTransaction = (
+  input: InputPresentedTableTransaction,
   context: CompositeCompileContext,
-): ResolvedTableTransaction => {
+): TableTransactionCompilation => {
   const { tableId, meta, presented } = input;
   assertPresentedAlignment(presented);
   const semantic = presented.semantic;
@@ -518,7 +519,7 @@ export const resolvePresentedTableTransaction = (
     const semanticCell = semantic.cells[index];
     return resultOfTableProbe(
       context,
-      context.layoutChild(cell.content, NaturalLayoutProposal),
+      context.layoutChild(cell.content, naturalLayoutProposal),
       'intrinsic Cell layout',
       tableId,
       {
@@ -529,7 +530,7 @@ export const resolvePresentedTableTransaction = (
     );
   });
 
-  const columnTracks = resolveTableTrackSizes(
+  const columnTracks = applyTableTrackOverrides(
     semantic.columns.map(() => resolved.columnSize),
     resolved.columns,
   );
@@ -542,7 +543,7 @@ export const resolvePresentedTableTransaction = (
   );
 
   const availableColumnSize = availableColumnSizeOf(context.proposal.x);
-  const columnSizes = solveTableTracks({
+  const columnSizes = computeTableTracks({
     tracks: columnTracks,
     contributions: columnContributions,
     gap: resolved.columnGap,
@@ -584,7 +585,7 @@ export const resolvePresentedTableTransaction = (
   const rowDefaults = semantic.rows.map(row =>
     row.kind === TableRowKind.ColumnHeader ? resolved.headerRowSize : resolved.rowSize,
   );
-  const rowTracks = resolveTableTrackSizes(rowDefaults, resolved.rows);
+  const rowTracks = applyTableTrackOverrides(rowDefaults, resolved.rows);
   const rowContributions = contributionsOf(
     semantic.cells,
     rowTracks,
@@ -592,7 +593,7 @@ export const resolvePresentedTableTransaction = (
     'row',
     (cell, index) => computeTableCellOuterSize(probes[index].final.allocationBounds, cell.layout.padding).height,
   );
-  const rowSizes = solveTableTracks({ tracks: rowTracks, contributions: rowContributions, gap: resolved.rowGap });
+  const rowSizes = computeTableTracks({ tracks: rowTracks, contributions: rowContributions, gap: resolved.rowGap });
   const rows = trackLayoutsOf(
     semantic.rows.map(row => row.id),
     rowSizes,
@@ -645,7 +646,7 @@ export const resolvePresentedTableTransaction = (
       sourceVisualOverflowBounds: { ...probe.final.visualBounds },
       contentAllocationBounds: placement.contentAllocationBounds,
       visualOverflowBounds,
-    } satisfies TableCellLayout;
+    } satisfies CompiledTableCellLayout;
   });
 
   const defaultBorders = defaultTable.defaults.layout?.borders;
@@ -726,7 +727,7 @@ export const resolvePresentedTableTransaction = (
       ? undefined
       : resultOfTableProbe(
           context,
-          context.layoutChild(emitTableBorderScope(graph.edges, tableId), NaturalLayoutProposal),
+          context.layoutChild(emitTableBorderScope(graph.edges, tableId), naturalLayoutProposal),
           'Border Scope layout',
           tableId,
           undefined,
@@ -745,7 +746,7 @@ export const resolvePresentedTableTransaction = (
     visual = unionBounds(visual, borderResult.visualBounds);
   }
 
-  const layout: TableLayout = deepFreeze({
+  const layout: CompiledTableLayout = deepFreeze({
     allocationBounds: { x: 0, y: 0, width, height },
     visualOverflowBounds: visual ?? zeroBounds(),
     rows,
@@ -784,11 +785,11 @@ export const resolvePresentedTableTransaction = (
 export const resolveTableTransaction = (
   spec: IRTable,
   datasets: ExternalDatasets,
-  options: LowerTablesOptions,
+  options: TablesLoweringOptions,
   context: CompositeCompileContext,
-): ResolvedTableTransaction => {
+): TableTransactionCompilation => {
   const defaultTable = resolveTableDefaults(context.theme, spec, options.tableThemeDefinitions);
-  const semantic = normalizeTableStructure(spec.structure, {
+  const semantic = resolveTableStructure(spec.structure, {
     defaultCellLayout: defaultTable.defaults.defaultCellLayout,
     data: spec.data,
     datasets,

@@ -27,7 +27,7 @@ const createFixture = async () => {
   };
 };
 
-test('resolves only a temporary test below the selected workspace scratch directory', async t => {
+test('仅解析所选工作区暂存目录下的临时测试', async t => {
   const fixture = await createFixture();
   t.after(() => rm(fixture.repositoryRoot, { recursive: true, force: true }));
 
@@ -56,7 +56,7 @@ test('resolves only a temporary test below the selected workspace scratch direct
   );
 });
 
-test('rejects a scratch junction that resolves outside the repository', async t => {
+test('拒绝在存储库外部解析的临时连接', async t => {
   const fixture = await createFixture();
   const externalScratchRoot = await mkdtemp(path.join(os.tmpdir(), 'retikz-temp-test-external-'));
   const externalFilePath = path.join(externalScratchRoot, 'preview-controls.test.ts');
@@ -80,7 +80,7 @@ test('rejects a scratch junction that resolves outside the repository', async t 
   assert.equal(existsSync(externalFilePath), true);
 });
 
-test('removes the temporary test after a successful run and prunes its empty scratch directory', async t => {
+test('成功运行后删除临时测试并修剪其空的临时目录', async t => {
   const fixture = await createFixture();
   t.after(() => rm(fixture.repositoryRoot, { recursive: true, force: true }));
 
@@ -95,7 +95,7 @@ test('removes the temporary test after a successful run and prunes its empty scr
   assert.equal(existsSync(fixture.scratchRoot), false);
 });
 
-test('removes the temporary test after a failed run before forwarding the failure', async t => {
+test('在转发失败之前删除运行失败后的临时测试', async t => {
   const fixture = await createFixture();
   t.after(() => rm(fixture.repositoryRoot, { recursive: true, force: true }));
   const failure = new Error('expected test failure');
@@ -117,7 +117,7 @@ test('removes the temporary test after a failed run before forwarding the failur
   assert.equal(existsSync(fixture.scratchRoot), false);
 });
 
-test('keeps the temporary test only when explicitly requested', async t => {
+test('仅在明确请求时保留临时测试', async t => {
   const fixture = await createFixture();
   t.after(() => rm(fixture.repositoryRoot, { recursive: true, force: true }));
 

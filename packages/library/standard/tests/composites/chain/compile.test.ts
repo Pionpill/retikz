@@ -8,16 +8,16 @@ import {
   LayoutChildProbeKind,
   resolveSpatialHandle,
 } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { ChainDefinition, createChain } from '../../../src/collection/chain';
+import { chainDefinition, createChain } from '../../../src/collection/chain';
 
 const compile = (input: Parameters<typeof createChain>[0]) =>
   compileToScene(
     { type: 'scene', version: 1, children: [createChain(input)] },
-    { composites: [ChainDefinition], clips: [PathClipDefinition], padding: 0 },
+    { composites: [chainDefinition], clips: [pathClipDefinition], padding: 0 },
   );
 
 const base = { namespace: 'standard', type: 'chain' } as const;
@@ -80,7 +80,7 @@ it('外部路径连接显式单元边框，局部命名空间隔离同名内容'
         }),
       ],
     },
-    { composites: [ChainDefinition], clips: [PathClipDefinition] },
+    { composites: [chainDefinition], clips: [pathClipDefinition] },
   );
   const path = flat(result.scene.primitives).find(p => p.type === 'path' && p.meta?.external === true);
 
@@ -158,7 +158,7 @@ it('父约束不足时失败，充足空间不拉伸单元或间距', () => {
           },
         ],
       },
-      { composites: [harness, ChainDefinition], clips: [PathClipDefinition] },
+      { composites: [harness, chainDefinition], clips: [pathClipDefinition] },
     );
   };
 

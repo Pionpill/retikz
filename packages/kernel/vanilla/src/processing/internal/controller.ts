@@ -6,7 +6,7 @@ import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type {
   VanillaCompileDriver,
-  VanillaCompileDriverInput,
+  InputVanillaCompileDriver,
   VanillaCompileDriverSession,
 } from '../../runtime/compile-driver';
 import {
@@ -17,7 +17,7 @@ import {
 } from '../../runtime/compile-driver';
 import { createRetainedCompositeDefinitions } from '../composites';
 import { prepareProcessingInput } from '../prepare';
-import type { PreparedProcessingInput, ProcessingOptions, ProcessingResult, ProcessingSource } from '../types';
+import type { InputPreparedProcessing, ProcessingOptions, ProcessingResult, ProcessingSource } from '../types';
 import type {
   InternalProcessingController,
   ProcessingTransactionParticipantFactory,
@@ -44,7 +44,7 @@ const captureProcessingOptions = (options: ProcessingOptions): ProcessingOptions
 /** 恢复 compile driver 的上一份输入，并保持 retained session identity */
 const restoreVanillaCompileDriverSession = (
   compileDriver: VanillaCompileDriver,
-  input: VanillaCompileDriverInput,
+  input: InputVanillaCompileDriver,
   compileSession: VanillaCompileDriverSession,
 ): void => {
   const restored = createVanillaCompileDriverSession(compileDriver, input);
@@ -58,7 +58,7 @@ const restoreVanillaCompileDriverSession = (
 /** 以同一 Runtime revision 冻结全部 processing 公共结果 */
 const createProcessingResult = (
   revision: number,
-  prepared: PreparedProcessingInput,
+  prepared: InputPreparedProcessing,
   output: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>>,
   compileSession: VanillaCompileDriverSession,
 ): ProcessingResult => {
@@ -79,13 +79,13 @@ type RetainedProcessingState = Readonly<{
   /** 当前 Computation 可接受的 definition topology */
   compositeDefinitions: ReturnType<typeof createRetainedCompositeDefinitions>;
   /** 当前编译驱动输入，用于失败后恢复驱动状态 */
-  driverInput: () => VanillaCompileDriverInput;
+  driverInput: () => InputVanillaCompileDriver;
   /** 读取该 session 的已提交结果 */
   read: () => ProcessingResult;
   /** 在固定 topology 内更新 source */
   update: (
-    next: PreparedProcessingInput,
-    nextDriverInput: VanillaCompileDriverInput,
+    next: InputPreparedProcessing,
+    nextDriverInput: InputVanillaCompileDriver,
     revision: number,
   ) => ProcessingResult;
   /** 仅更新固定 participant 的配置 */
@@ -100,8 +100,8 @@ type RetainedProcessingState = Readonly<{
 
 /** 创建一个与固定 Composite topology 绑定的 retained processing state */
 const createRetainedProcessingState = (
-  initial: PreparedProcessingInput,
-  initialDriverInput: VanillaCompileDriverInput,
+  initial: InputPreparedProcessing,
+  initialDriverInput: InputVanillaCompileDriver,
   initialRevision: number,
   compileDriver: NonNullable<ProcessingOptions['compileDriver']>,
   compileSession: VanillaCompileDriverSession,
@@ -220,7 +220,7 @@ const createProcessingController = (
   source: ProcessingSource,
   options: ProcessingOptions = {},
   transactionParticipantFactory?: ProcessingTransactionParticipantFactory,
-  initialPrepared?: PreparedProcessingInput,
+  initialPrepared?: InputPreparedProcessing,
   assertInitial?: () => void,
 ): PreparedInputProcessingController => {
   let assertCurrent = assertInitial ?? (() => undefined);
@@ -229,7 +229,7 @@ const createProcessingController = (
   const compileDriver = fixedOptions.compileDriver ?? defaultVanillaCompileDriver;
   const instance = Object.freeze({});
 
-  const driverInput = (prepared: PreparedProcessingInput): VanillaCompileDriverInput =>
+  const driverInput = (prepared: InputPreparedProcessing): InputVanillaCompileDriver =>
     Object.freeze({
       instance,
       source: prepared.source,
@@ -241,8 +241,8 @@ const createProcessingController = (
   assertCurrent();
 
   const createState = (
-    prepared: PreparedProcessingInput,
-    input: VanillaCompileDriverInput,
+    prepared: InputPreparedProcessing,
+    input: InputVanillaCompileDriver,
     revision: number,
     participantFactory?: ProcessingTransactionParticipantFactory,
   ): RetainedProcessingState =>
@@ -280,7 +280,7 @@ const createProcessingController = (
     if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Processing controller is disposed');
   };
 
-  const applyPrepared = (next: PreparedProcessingInput): void => {
+  const applyPrepared = (next: InputPreparedProcessing): void => {
     assertActive();
     const nextDriverInput = driverInput(next);
     if (!state.compositeDefinitions.isCompatible(next.coreOptions.composites)) {
@@ -357,7 +357,7 @@ const createProcessingController = (
     },
     update: nextSource => {
       assertActive();
-      let next: PreparedProcessingInput;
+      let next: InputPreparedProcessing;
 
       try {
         next = prepareProcessingInput(nextSource, fixedOptions);
@@ -407,7 +407,7 @@ export const createDomProcessingController = (
 
 /** 异步作者贡献已就绪时复用 retained controller，而不是重建 Source 或静态 revision */
 export const createPreparedInputProcessingController = (
-  input: PreparedProcessingInput,
+  input: InputPreparedProcessing,
   options: ProcessingOptions,
   assertCurrent?: () => void,
 ): PreparedInputProcessingController =>

@@ -273,7 +273,10 @@ describe('端点箭头与普通标记', () => {
         {
           roots: [{ capability: 'mark', name: 'dot' }],
           providers: [
-            { key: { capability: 'mark', name: 'dot' }, dependencies: [], datasets: {}, makeDefinition: () => dot },
+            {
+              key: { capability: 'mark', name: 'dot' },
+              makeDefinition: () => dot,
+            },
           ],
         },
       ],

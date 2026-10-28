@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { RetikzRuntimeErrorCode } from '../../src';
-import type { RuntimeComputationResultDefinitionInput } from '../../src/computation';
+import type { InputRuntimeComputationResultDefinition } from '../../src/computation';
 import { defineRuntimeComputation, RuntimeComputationKind } from '../../src/computation';
 import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '../../src/registry';
 import { createRuntime } from '../../src/runtime';
@@ -21,9 +21,9 @@ const defineSource = (dispose = vi.fn()) =>
 
 type Result = Readonly<{ value: number }>;
 
-type ResultDefinition = RuntimeComputationResultDefinitionInput<number, Result, number, number>;
+type ResultDefinition = InputRuntimeComputationResultDefinition<number, Result, number, number>;
 
-describe('runtime Computation result lifecycle', () => {
+describe('运行时计算结果生命周期', () => {
   const failureCases: ReadonlyArray<{
     name: string;
     expectedCode: string;

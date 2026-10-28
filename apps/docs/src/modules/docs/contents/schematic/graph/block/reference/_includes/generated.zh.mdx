@@ -12,7 +12,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Block"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={103}>Block</ApiSourceLink> / <ApiSourceLink label={"BlockProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={23}>BlockProps</ApiSourceLink>
+#### <ApiSourceLink label={"Block"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={86}>Block</ApiSourceLink> / <ApiSourceLink label={"BlockProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={23}>BlockProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -161,7 +161,7 @@ export type BlockSectionProps = Omit<BlockSectionInputEmbedProps, 'type' | 'chil
 | 成员                 | 类型                   | 默认值 | 说明                                   |
 | -------------------- | ---------------------- | ------ | -------------------------------------- |
 | `readonly children?` | `never`                | —      | —                                      |
-| `readonly content`   | `BlockRowContentInput` | —      | 行的便捷内容入口，与显式 children 互斥 |
+| `readonly content`   | `InputBlockRowContent` | —      | 行的便捷内容入口，与显式 children 互斥 |
 
 </ApiTable>
 
@@ -364,7 +364,7 @@ export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 | 成员                 | 类型                   | 默认值 | 说明                                   |
 | -------------------- | ---------------------- | ------ | -------------------------------------- |
 | `readonly children?` | `never`                | —      | —                                      |
-| `readonly content`   | `BlockRowContentInput` | —      | 行的便捷内容入口，与显式 children 互斥 |
+| `readonly content`   | `InputBlockRowContent` | —      | 行的便捷内容入口，与显式 children 互斥 |
 
 </ApiTable>
 
@@ -545,7 +545,7 @@ export type InputBlockSection = Omit<BlockSectionCreateOptions, 'children'> &
 | 成员                 | 类型                   | 默认值 | 说明                                   |
 | -------------------- | ---------------------- | ------ | -------------------------------------- |
 | `readonly children?` | `never`                | —      | —                                      |
-| `readonly content`   | `BlockRowContentInput` | —      | 行的便捷内容入口，与显式 children 互斥 |
+| `readonly content`   | `InputBlockRowContent` | —      | 行的便捷内容入口，与显式 children 互斥 |
 
 </ApiTable>
 
@@ -572,7 +572,7 @@ export declare const normalizeBlockRow: (input: InputBlockRow) => IRBlockRow;
 export type InputBlockRow = InputBlockRowFields &
   (
     | Readonly<{
-        content: BlockRowContentInput;
+        content: InputBlockRowContent;
         children?: never;
       }>
     | Readonly<{
@@ -586,31 +586,31 @@ export type InputBlockRow = InputBlockRowFields &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BlockHeaderInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-header.ts"} startLine={19}>BlockHeaderInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"blockHeaderInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-header.ts"} startLine={15}>blockHeaderInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const BlockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHeaderInputEmbedProps>;
+export declare const blockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHeaderInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"BlockInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block.ts"} startLine={19}>BlockInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"blockInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block.ts"} startLine={19}>blockInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const BlockInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockInputEmbedProps>;
+export declare const blockInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"BlockRowInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={19}>BlockRowInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"blockRowInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={15}>blockRowInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const BlockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInputEmbedProps>;
+export declare const blockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"BlockSectionInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-section.ts"} startLine={19}>BlockSectionInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"blockSectionInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-section.ts"} startLine={15}>blockSectionInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const BlockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSectionInputEmbedProps>;
+export declare const blockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSectionInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={24}>createGraphVanillaAdapters</ApiSourceLink>
+#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -767,7 +767,7 @@ export type BlockRowCreateOptions = DistributiveOmit<IRBlockRow, 'namespace' | '
 | 成员                       | 类型              | 默认值 | 说明                              |
 | -------------------------- | ----------------- | ------ | --------------------------------- |
 | `readonly codeBlockTokens` | `CodeBlockTokens` | —      | 当前 Graph style 的有限视觉 token |
-| `readonly theme`           | `ResolvedTheme`   | —      | 当前 Core Scope 的有效主题        |
+| `readonly theme`           | `CanonicalTheme`  | —      | 当前 Core Scope 的有效主题        |
 
 </ApiTable>
 
@@ -777,7 +777,7 @@ export type BlockRowCreateOptions = DistributiveOmit<IRBlockRow, 'namespace' | '
 
 ```ts
 export type CodeBlockComposeContext = Readonly<{
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   codeBlockTokens: CodeBlockTokens;
 }>;
 ```
@@ -799,7 +799,7 @@ export type CodeBlockComposeContext = Readonly<{
 | `readonly accentColor`        | `NonNullable<NonNullable<IRNode['style']>['textColor']>`                   | —      | 默认 icon 颜色                          |
 | `readonly codeFontFamily`     | `NonNullable<NonNullable<NonNullable<IRNode['style']>['font']>['family']>` | —      | 签名与方法名称字体                      |
 | `readonly mutedTextColor`     | `NonNullable<NonNullable<IRNode['style']>['textColor']>`                   | —      | 说明、类型与默认 trail 颜色             |
-| `readonly sectionBackground?` | `SurfaceInput['background']`                                               | —      | 内容分区背景；省略使用基础 Section 默认 |
+| `readonly sectionBackground?` | `InputSurfaceConfig['background']`                                         | —      | 内容分区背景；省略使用基础 Section 默认 |
 | `readonly textColor`          | `NonNullable<NonNullable<IRNode['style']>['textColor']>`                   | —      | 标题、成员名称与逻辑正文颜色            |
 
 </ApiTable>
@@ -814,7 +814,7 @@ export type CodeBlockTokens = Readonly<{
   mutedTextColor: NonNullable<NonNullable<IRNode['style']>['textColor']>;
   accentColor: NonNullable<NonNullable<IRNode['style']>['textColor']>;
   codeFontFamily: NonNullable<NonNullable<NonNullable<IRNode['style']>['font']>['family']>;
-  sectionBackground?: SurfaceInput['background'];
+  sectionBackground?: InputSurfaceConfig['background'];
 }>;
 ```
 
@@ -899,7 +899,7 @@ export type GraphDefinitionOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createCodeBlockContribution"} path={"packages/schematic/graph/src/code/pipeline/composite.ts"} startLine={97}>createCodeBlockContribution</ApiSourceLink>
+#### <ApiSourceLink label={"createCodeBlockContribution"} path={"packages/schematic/graph/src/code/pipeline/composite.ts"} startLine={100}>createCodeBlockContribution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -967,10 +967,10 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称       | 类型 / 签名                             | 说明                                                                       |
-| ------ | ---------- | --------------------------------------- | -------------------------------------------------------------------------- |
-| 参数   | `options?` | `GraphDefinitionOptions`                | 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配 |
-| 返回值 | —          | `ReadonlyArray<CoreDependencyProvider>` | 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖          |
+| 类别   | 名称       | 类型 / 签名                                | 说明                                                                       |
+| ------ | ---------- | ------------------------------------------ | -------------------------------------------------------------------------- |
+| 参数   | `options?` | `GraphDefinitionOptions`                   | 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配 |
+| 返回值 | —          | `ReadonlyArray<AnyCoreDependencyProvider>` | 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖          |
 
 </ApiTable>
 
@@ -979,7 +979,9 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createGraphProviders: (options?: GraphDefinitionOptions) => ReadonlyArray<CoreDependencyProvider>;
+export declare const createGraphProviders: (
+  options?: GraphDefinitionOptions,
+) => ReadonlyArray<AnyCoreDependencyProvider>;
 ```
 
 </DocTab>

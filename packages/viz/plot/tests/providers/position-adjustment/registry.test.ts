@@ -18,15 +18,15 @@ const nudge = definePositionAdjustment<Nudge>({
     })),
 });
 
-describe('Position Adjustment registry', () => {
-  it('uses the same registry for built-in and custom definitions', () => {
+describe('位置调整注册表', () => {
+  it('对内置定义和自定义定义使用相同的注册表', () => {
     const registry = resolvePositionAdjustmentRegistry([nudge]);
 
     expect([...registry.keys()]).toEqual(['jitter', 'screen-nudge']);
     expect(extractPositionAdjustmentKind(NudgeSchema)).toBe('screen-nudge');
   });
 
-  it('rejects duplicate custom definitions and built-in collisions', () => {
+  it('拒绝重复的自定义定义和内置冲突', () => {
     expect(() => resolvePositionAdjustmentRegistry([nudge, nudge])).toThrow(/duplicate position adjustment/);
     expect(() =>
       resolvePositionAdjustmentRegistry([

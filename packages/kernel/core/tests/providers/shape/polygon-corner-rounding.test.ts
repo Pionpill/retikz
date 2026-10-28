@@ -10,18 +10,18 @@ const identity = (n: number): number => n;
 /** 轴对齐 rect（emit / boundaryPoint 都接受；boundaryPoint 含 rotate 语义但此处 rotate=0） */
 const squareRect = (size = 120): CenteredBox => ({ x: 0, y: 0, width: size, height: size, rotate: 0 });
 
-describe('polygon cornerRadius — paramsSchema', () => {
-  it('cornerRadius optional + nonnegative finite', () => {
+describe('多边形 cornerRadius — paramsSchema', () => {
+  it('cornerRadius 可选+非负有限', () => {
     expect(polygon.paramsSchema.parse({ sides: 6 })).toEqual({ sides: 6 });
     expect(polygon.paramsSchema.parse({ sides: 6, cornerRadius: 8 })).toEqual({ sides: 6, cornerRadius: 8 });
     expect(polygon.paramsSchema.parse({ sides: 6, cornerRadius: 0 })).toEqual({ sides: 6, cornerRadius: 0 });
   });
 
-  it('negative_cornerRadius_rejected', () => {
+  it('否定 cornerRadius 被拒绝', () => {
     expect(() => polygon.paramsSchema.parse({ sides: 6, cornerRadius: -1 })).toThrow();
   });
 
-  it('non_finite_cornerRadius_rejected', () => {
+  it('非有限 cornerRadius 被拒绝', () => {
     expect(() => polygon.paramsSchema.parse({ sides: 6, cornerRadius: Infinity })).toThrow();
     expect(() => polygon.paramsSchema.parse({ sides: 6, cornerRadius: NaN })).toThrow();
   });
@@ -43,7 +43,7 @@ describe('polygon cornerRadius — paramsSchema', () => {
   });
 });
 
-describe('polygon cornerRadius — emit', () => {
+describe('多边形 cornerRadius — 发射', () => {
   it('polygon_cornerRadius_emit：sides:6 cornerRadius:8 → path 含 fillet arc 命令', () => {
     const rect = squareRect();
     const prims = [...polygon.emit(rect, {}, round2, { sides: 6, cornerRadius: 8 })];
@@ -83,7 +83,7 @@ describe('polygon cornerRadius — emit', () => {
   });
 });
 
-describe('polygon cornerRadius — boundary aware', () => {
+describe('多边形 cornerRadius — 边界感知', () => {
   // sides=4 rotate=0：顶点角 0/90/180/270；首顶点在 +x 方向（right）。朝首顶点方向 [1,0] 射线，
   //   r=0 命中尖顶点（外接半径处）；r>0 命中被磨圆的 fillet 弧（离中心更近）。
   it('polygon_boundary_aware：朝顶点方向 r>0 落 fillet 弧（≠ 尖顶点），r=0 = 尖顶点', () => {
@@ -114,7 +114,7 @@ describe('polygon cornerRadius — boundary aware', () => {
   });
 });
 
-describe('polygon cornerRadius — r=0 equivalence to current sharp-corner output', () => {
+describe('多边形 cornerRadius — r=0 相当于当前尖角输出', () => {
   // 现状参考实现：emit = move(v0) + line(v1..v_{n-1}) + close（顶点过 round），无回起点冗余 line。
   const sharpEmitReference = (
     rect: CenteredBox,
@@ -172,7 +172,7 @@ describe('polygon cornerRadius — r=0 equivalence to current sharp-corner outpu
   });
 });
 
-describe('polygon cornerRadius — scaleParams', () => {
+describe('多边形 cornerRadius — scaleParams', () => {
   it('polygon_scaleParams_corner：scale=2 → cornerRadius×2、sides/rotate 不变', () => {
     expect(polygon.scaleParams!({ sides: 6, rotate: 10, cornerRadius: 8 }, 2, 2)).toEqual({
       sides: 6,
@@ -192,31 +192,31 @@ describe('polygon cornerRadius — scaleParams', () => {
   });
 });
 
-describe('polygon cornerRadius — circumscribe unchanged', () => {
+describe('多边形 cornerRadius — 外接圆不变', () => {
   it('polygon_circumscribe_unchanged：cornerRadius 变化不改 circumscribe AABB', () => {
-    const noCorner = polygon.computeCircumscribedHalfAxes(40, 30, { sides: 6 });
-    const withCorner = polygon.computeCircumscribedHalfAxes(40, 30, { sides: 6, cornerRadius: 12 });
+    const noCorner = polygon.computeCircumscribedGeometry(40, 30, { sides: 6 });
+    const withCorner = polygon.computeCircumscribedGeometry(40, 30, { sides: 6, cornerRadius: 12 });
 
     expect(withCorner).toEqual(noCorner);
   });
 });
 
-describe('polygon diamond aspectRatio', () => {
-  it('aspectRatio=1 preserves the existing diamond dimensions', () => {
-    expect(polygon.computeCircumscribedHalfAxes(40, 30, { sides: 4 })).toEqual(
-      polygon.computeCircumscribedHalfAxes(40, 30, { sides: 4, aspectRatio: 1 }),
+describe('多边形菱形 aspectRatio', () => {
+  it('aspectRatio=1 保留现有的菱形尺寸', () => {
+    expect(polygon.computeCircumscribedGeometry(40, 30, { sides: 4 })).toEqual(
+      polygon.computeCircumscribedGeometry(40, 30, { sides: 4, aspectRatio: 1 }),
     );
   });
 
-  it('aspectRatio controls the four-sided diamond width-to-height ratio', () => {
-    const result = polygon.computeCircumscribedHalfAxes(40, 30, { sides: 4, aspectRatio: 1.8 });
+  it('aspectRatio 控制四面菱形宽高比', () => {
+    const result = polygon.computeCircumscribedGeometry(40, 30, { sides: 4, aspectRatio: 1.8 });
 
     expect(result.halfWidth / result.halfHeight).toBeCloseTo(1.8, 10);
     expect(result.halfWidth).toBeCloseTo(94, 10);
     expect(result.halfHeight).toBeCloseTo(94 / 1.8, 10);
   });
 
-  it('boundaryPoint and connectionEnvelope reuse the same anisotropic diamond contour', () => {
+  it('boundaryPoint 和 connectionEnvelope 重复使用相同的各向异性金刚石轮廓', () => {
     const bounds = squareRect(100);
     const params = { sides: 4, aspectRatio: 1.8 } as const;
     const right = polygon.computeBoundaryPoint({ ...bounds, width: 180 }, [1000, 0], params);

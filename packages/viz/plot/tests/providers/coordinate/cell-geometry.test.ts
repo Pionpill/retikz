@@ -1,7 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-import { ContourShapeDefinition } from '@retikz/extension';
+import { contourShapeDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
@@ -13,8 +13,8 @@ import {
   densifyCellContour,
   RETIKZ_POLAR_SEGMENT_SAMPLES,
 } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { CartesianCoordinateFrame } from '../../../src/providers';
 import { buildIntervalContext } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, MARK_REGISTRY } from '../../../src/providers';
@@ -40,11 +40,11 @@ const lowerMark = (mark: IRPlotIntervalMark, rows: Array<ExternalRow>, frame: Co
 const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: CoordinateFrame, context?: IntervalContext) =>
   resolveDatumAnchor(mark, { kind: 'row', row, transformedIndex: 0 }, frame, { registry: markRegistry }, context);
 
-const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+const expandOf = (spec: IRPlot, datasets: Datasets, options: PlotsLoweringOptions): IRScope => {
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
-const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options: PlotsLoweringOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
@@ -110,8 +110,8 @@ const squarePolarFrame = (interpolation: 'polar' | 'chord', step = 90, startAngl
     secondary: linearStub([0, 1], [0, 100]),
   });
 
-describe('Polar mapped-role projection', () => {
-  it('projects a discrete chord angle onto its adjacent polygon edge', () => {
+describe('极坐标映射角色投影', () => {
+  it('将离散弦角投影到其相邻的多边形边上', () => {
     const frame = squarePolarFrame(PolarInterpolation.Chord);
     const start = frame.projectPolar(45, 100);
     const end = frame.projectPolar(135, 100);
@@ -124,14 +124,14 @@ describe('Polar mapped-role projection', () => {
     ]);
   });
 
-  it('keeps polar and continuous chord angles on the circular projection', () => {
+  it('在圆形投影上保持极弦角和连续弦角', () => {
     const expected = squarePolarFrame(PolarInterpolation.Polar).projectPolar(67.5, 100);
 
     expect(squarePolarFrame(PolarInterpolation.Polar).projectMappedRoles([67.5, 100])).toEqual(expected);
     expect(squarePolarFrame(PolarInterpolation.Chord, 0).projectMappedRoles([67.5, 100])).toEqual(expected);
   });
 
-  it('interpolates the cyclic seam in forward and reversed sweeps', () => {
+  it('在正向和反向扫描中插入循环接缝', () => {
     const expected = [Math.SQRT1_2 * 100, -Math.SQRT1_2 * 50];
 
     const forward = squarePolarFrame(PolarInterpolation.Chord).projectMappedRoles([337.5, 100]);
@@ -143,7 +143,7 @@ describe('Polar mapped-role projection', () => {
     expect(reversed?.[1]).toBeCloseTo(expected[1], 6);
   });
 
-  it('converts glyph extents with chord length and polygon edge depth', () => {
+  it('使用弦长和多边形边缘深度转换字形范围', () => {
     const frame = squarePolarFrame(PolarInterpolation.Chord);
 
     expect(frame.placementBoundary.glyphExtentInRoleUnits('x', [67.5, 100], 10)).toBeCloseTo(
@@ -156,7 +156,7 @@ describe('Polar mapped-role projection', () => {
 
 // ── projectCell 闭式快路：cartesian → rect、polar → sector ──────────────────────────────
 describe('projectCell 闭式快路（rect / sector）', () => {
-  it('cartesian_projectcell_returns_rect', () => {
+  it('笛卡尔投影单元返回矩形', () => {
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 100], 20), linearStub([0, 10], [200, 0]));
 
     // primary 像素带 [40,60]、secondary 像素 [200,120] → rect 中心 [50,160]、width 20、height 80
@@ -166,7 +166,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     expect(geometry).toEqual({ kind: 'rect', position: [50, 160], width: 20, height: 80 });
   });
 
-  it('polar_projectcell_returns_sector', () => {
+  it('极坐标 projectCell 返回扇区', () => {
     const frame = createPolarCoordinate({
       center: [200, 200],
       innerRadius: 0,
@@ -191,7 +191,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     });
   });
 
-  it('polar_projectcell_chord_returns_straight_contour_for_a_partial_cell', () => {
+  it('极坐标 projectCell 的 chord 插值为部分单元格返回直线轮廓', () => {
     const frame = createPolarCoordinate({
       center: [0, 0],
       innerRadius: 0,
@@ -225,7 +225,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     }
   });
 
-  it('polar_projectcell_chord_with_zero_inner_radius_uses_the_center_once_for_a_partial_cell', () => {
+  it('内半径为零时部分单元格的 chord 插值仅使用一次圆心', () => {
     const frame = createPolarCoordinate({
       center: [0, 0],
       innerRadius: 0,
@@ -247,7 +247,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     expect(geometry.points.filter(point => point[0] === 0 && point[1] === 0)).toHaveLength(1);
   });
 
-  it('polar_projectcell_chord_uses_the_structural_skeleton_for_a_full_sweep', () => {
+  it('整圈扫掠时极坐标 projectCell 的 chord 插值使用结构骨架', () => {
     const frame = createPolarCoordinate({
       center: [0, 0],
       innerRadius: 0,
@@ -269,7 +269,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     expect(new Set(geometry.points.map(point => point.map(value => value.toFixed(6)).join(','))).size).toBe(8);
   });
 
-  it('polar_projectcell_chord_with_zero_inner_radius_returns_only_the_outer_polygon', () => {
+  it('内半径为零时极坐标 projectCell 的 chord 插值仅返回外多边形', () => {
     const frame = createPolarCoordinate({
       center: [0, 0],
       innerRadius: 0,
@@ -291,7 +291,7 @@ describe('projectCell 闭式快路（rect / sector）', () => {
     expect(geometry.points.every(point => Math.hypot(point[0], point[1]) === 100)).toBe(true);
   });
 
-  it('polar_projectcell_chord_skips_a_full_sweep_with_fewer_than_three_directions', () => {
+  it('整圈扫掠不足三个方向时极坐标 projectCell 的 chord 插值跳过输出', () => {
     const frame = createPolarCoordinate({
       center: [0, 0],
       innerRadius: 0,
@@ -316,7 +316,7 @@ const WIDTH = 400;
 
 const HEIGHT = 400;
 
-const cartOpts: LowerPlotsOptions = { layout: { width: WIDTH, height: HEIGHT } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: WIDTH, height: HEIGHT } };
 
 const cartesianBarSpec = (arrangement?: 'stack', series?: string): IRPlot =>
   PlotSchema.parse({
@@ -350,7 +350,7 @@ const cartesianBarSpec = (arrangement?: 'stack', series?: string): IRPlot =>
   });
 
 describe('cartesian interval → rect 产物（byte-equal 回归基线）', () => {
-  it('cartesian_interval_plain_rect_nodes', () => {
+  it('笛卡尔 interval 生成普通矩形节点', () => {
     const rows = [
       { m: 'A', v: 3 },
       { m: 'B', v: 6 },
@@ -375,7 +375,7 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
     expect(nodeHeight(nodes[2]) > nodeHeight(nodes[0])).toBe(true);
   });
 
-  it('cartesian_interval_dodge_rect_subwidth', () => {
+  it('笛卡尔 interval 的 dodge 使用矩形子宽度', () => {
     const rows = [
       { m: 'A', v: 3, s: 'x' },
       { m: 'A', v: 5, s: 'y' },
@@ -392,7 +392,7 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
     expect(nodeWidth(nodes[0]) < nodeWidth(plain[0])).toBe(true);
   });
 
-  it('cartesian_interval_compiles_to_scene', () => {
+  it('笛卡尔 interval 可编译为 Scene', () => {
     const rows = [
       { m: 'A', v: 3 },
       { m: 'B', v: 6 },
@@ -443,7 +443,7 @@ const pieSpec = (): IRPlot =>
   });
 
 describe('polar interval / sector → sector 产物（byte-equal 回归基线）', () => {
-  it('polar_interval_sector_nodes', () => {
+  it('极坐标 interval 生成扇区节点', () => {
     const rows = [
       { m: 'A', v: 3 },
       { m: 'B', v: 6 },
@@ -461,7 +461,7 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
     }
   });
 
-  it('polar_interval_discrete_default_uses_contour_nodes', () => {
+  it('离散极坐标 interval 默认使用轮廓节点', () => {
     const rows = [
       { m: 'A', v: 3 },
       { m: 'B', v: 6 },
@@ -473,7 +473,7 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
     expect(nodes.every(node => (node.shape as { type?: string } | undefined)?.type === 'contour')).toBe(true);
   });
 
-  it('polar_interval_mark_override_takes_precedence_over_the_coordinate', () => {
+  it('极坐标 interval 的标记插值覆盖优先于坐标配置', () => {
     const rows = [
       { m: 'A', v: 3 },
       { m: 'B', v: 6 },
@@ -486,7 +486,7 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
     expect(chordNodes.every(node => (node.shape as { type?: string } | undefined)?.type === 'contour')).toBe(true);
   });
 
-  it('cartesian_interval_rejects_a_polar_interpolation_override', () => {
+  it('笛卡尔 interval 拒绝 polar 插值覆盖', () => {
     const spec = PlotSchema.parse({
       ...cartesianBarSpec(),
       marks: [
@@ -501,7 +501,7 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
     expect(() => firstLayer(spec, { d: [{ m: 'A', v: 3 }] }, cartOpts)).toThrow(/interpolation|polar2D/i);
   });
 
-  it('pie_sector_mark_nodes', () => {
+  it('饼图扇形标记节点', () => {
     const rows = [
       { label: 'A', value: 3 },
       { label: 'B', value: 5 },
@@ -557,7 +557,7 @@ const firstIntervalMark = (spec: IRPlot): IRPlotIntervalMark => {
 };
 
 describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
-  it('densify_cell_contour_dense_and_closed', () => {
+  it('单元格轮廓加密后保持密集且闭合', () => {
     const cell: Cell = { intervals: { x: [0, 200], y: [200, 100] } };
     const projectFn = (px: number, py: number): [number, number] => [px, py + 20 * Math.sin((px / 200) * Math.PI)];
     const points = densifyCellContour(cell, projectFn, { curvedPrimary: true, curvedSecondary: false });
@@ -574,7 +574,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
     expect(Math.abs(mid[1] - 200)).toBeGreaterThan(1e-6);
   });
 
-  it('interval_custom_without_rolescales_fails_loud', () => {
+  it('自定义 interval 缺少 roleScales 时明确报错', () => {
     // 注册 frame 即便带 projectCell，缺少 roleScales 时也无法从 encoding/bounds 构造 cell →
     //   fail-loud，不静默产空层（守「无 cell 构造即 fail-loud、无引擎自动兜底」）
     const custom = createCoordinateFrame('curved-cell', ['x', 'y'], values => [Number(values[0]), Number(values[1])], {
@@ -588,7 +588,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
     expect(() => lowerMark(mark, [{ m: 2, v: 3 }], custom)).toThrow(/not supported|interval|custom/i);
   });
 
-  it('curved_frame_interval_lowers_to_contour_nodes', () => {
+  it('曲线坐标框架的 interval 下沉为轮廓节点', () => {
     const mark = firstIntervalMark(intervalMarkSpec());
     const rows = [
       { m: 2, v: 3 },
@@ -610,7 +610,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
     }
   });
 
-  it('contour_position_is_points_aabb_center', () => {
+  it('轮廓位置为各点 AABB 的中心', () => {
     const mark = firstIntervalMark(intervalMarkSpec());
     const rows = [{ m: 4, v: 3 }];
     const layer = lowerMark(mark, rows, curvedFrame()) as IRScope;
@@ -634,7 +634,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
     expect(position[1]).toBeCloseTo((minY + maxY) / 2, 9);
   });
 
-  it('contour_interval_node_is_connectable', () => {
+  it('轮廓 interval 节点可连接', () => {
     // 另一 core Path 自动 clip 到 contour interval Node 边界（boundaryPoint 指向式）→ compile 不抛、解析出轮廓交点
     const mark = firstIntervalMark(intervalMarkSpec());
     const rows = [{ m: 4, v: 3 }];
@@ -664,7 +664,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
         },
       ],
     };
-    const compiled = compileToScene(scene, { shapes: [ContourShapeDefinition] }).scene;
+    const compiled = compileToScene(scene, { shapes: [contourShapeDefinition] }).scene;
 
     expect(compiled).toBeTruthy();
   });
@@ -672,13 +672,13 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
 
 // ── datumAnchor 三态 parity（locator 与 lowering 摆放同源）──────────────────────────────
 describe('datumAnchor 三态与 CellGeometry 同源', () => {
-  it('anchor_rect_equals_position', () => {
+  it('矩形锚点与位置一致', () => {
     const geometry = { kind: 'rect' as const, position: [50, 160] as [number, number], width: 20, height: 80 };
 
     expect(cellGeometryAnchor(geometry)).toEqual([50, 160]);
   });
 
-  it('anchor_sector_is_centroid', () => {
+  it('锚点扇区是质心', () => {
     // mid-angle 90°、mid-radius 80 → [center + 80·cos90, center + 80·sin90] = [200, 280]
     const geometry = {
       kind: 'sector' as const,
@@ -695,7 +695,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
     expect(anchor![1]).toBeCloseTo(280, 6);
   });
 
-  it('anchor_contour_is_aabb_center', () => {
+  it('锚轮廓为 aabb 中心', () => {
     const geometry = {
       kind: 'contour' as const,
       points: [
@@ -709,7 +709,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
     expect(cellGeometryAnchor(geometry)).toEqual([5, 10]);
   });
 
-  it('anchor_contour_with_too_few_points_is_null', () => {
+  it('点太少的锚轮廓为空', () => {
     const geometry = {
       kind: 'contour' as const,
       points: [
@@ -721,7 +721,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
     expect(cellGeometryAnchor(geometry)).toBeNull();
   });
 
-  it('datum_anchor_cartesian_interval_matches_node_position', () => {
+  it('基准锚点笛卡尔间隔与节点位置匹配', () => {
     // datumAnchor（locator）= lowerMark 摆放的柱 Node.position（同一 frame、同源不漂移）
     const mark = firstIntervalMark(intervalMarkSpec());
     const rows = [
@@ -741,7 +741,7 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
     });
   });
 
-  it('datum_anchor_curved_interval_is_contour_aabb_center', () => {
+  it('基准锚弯曲区间为轮廓 aabb 中心', () => {
     // 曲线 frame：datumAnchor 走 markCell → projectCell(contour) → AABB 中心，与 lowered Node.position 同源
     const mark = firstIntervalMark(intervalMarkSpec());
     const rows = [{ m: 4, v: 3 }];
@@ -768,7 +768,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     properties: { bounds: { x: { kind: 'extent' } } },
   });
 
-  it('x0x1_primary_is_continuous_interval_not_band', () => {
+  it('x0x1 主要是连续间隔而不是带状', () => {
     // 连续 x scale（bandwidth 0）：primary cell = [coord(binStart), coord(binEnd)]、紧贴排列、宽随箱边
     const mark = histogramMark();
     const rows = [
@@ -791,7 +791,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     expect(nodeHeight(nodes[1])).toBeCloseTo(60, 9);
   });
 
-  it('x0x1_unequal_width_bins_follow_edges', () => {
+  it('x0x1 不等宽的 bin 跟随边缘', () => {
     // 不等宽箱（thresholds 派生）：宽随各自箱边
     const mark = histogramMark();
     const rows = [
@@ -806,7 +806,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
     expect(nodeWidth(nodes[1])).toBeCloseTo(80, 9);
   });
 
-  it('x0x1_histogram_end_to_end_renders_continuous_bars', () => {
+  it('x0x1 直方图端到端渲染连续条', () => {
     // 经 lowerPlots：bin transform + interval x0/x1（连续 x linear scale）→ 紧贴直方柱，可 compile
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -841,7 +841,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
 
 // ── fail-loud：无 projectCell 的坐标系 / 不支持的 cell bound ──────────────────────────────
 describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
-  it('interval_1d_fails_loud', () => {
+  it('一维 interval 明确报错', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -854,7 +854,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
     expect(() => expandOf(spec, { d: [{ m: 'A', v: 3 }] }, cartOpts)).toThrow(/cartesian1D|not supported|interval/i);
   });
 
-  it('interval_custom_without_projectcell_fails_loud', () => {
+  it('没有项目单元的自定义间隔明确报错', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -865,7 +865,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
     });
 
     // custom 工厂返回无 projectCell 的 frame → interval fail-loud（指明缺 projectCell）
-    const options: LowerPlotsOptions = {
+    const options: PlotsLoweringOptions = {
       layout: { width: WIDTH, height: HEIGHT },
       definitions: {
         coordinates: [
@@ -905,7 +905,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
     expect(() => expandOf(spec, { d: [{ m: 1, v: 3 }] }, options)).toThrow(/noproj|projectCell|not supported/i);
   });
 
-  it('interval_custom_with_projectcell_lowers_to_contour', () => {
+  it('使用投影单元下沉轮廓的间隔自定义', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -914,7 +914,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       coordinate: { type: 'curved-cell' },
       marks: [{ type: 'interval', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } }],
     });
-    const options: LowerPlotsOptions = {
+    const options: PlotsLoweringOptions = {
       layout: { width: WIDTH, height: HEIGHT },
       definitions: {
         coordinates: [
@@ -971,7 +971,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
     expect(shape?.params?.points?.length ?? 0).toBeGreaterThanOrEqual(4);
   });
 
-  it('interval_custom_grouped_band_uses_subbands', () => {
+  it('自定义分组 band 的 interval 使用子分带', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -990,7 +990,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
         },
       ],
     });
-    const options: LowerPlotsOptions = {
+    const options: PlotsLoweringOptions = {
       layout: { width: WIDTH, height: HEIGHT },
       definitions: {
         coordinates: [

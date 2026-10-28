@@ -1,34 +1,34 @@
-import type { FlexLayoutItemInput } from '@retikz/layout';
-import { createFlexLayout, FlexLayoutProvider } from '@retikz/layout';
+import type { InputFlexLayoutItemConfig } from '@retikz/layout';
+import { createFlexLayout, flexLayoutProvider } from '@retikz/layout';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputFlexLayout } from './normalize';
 import { normalizeLayoutItems, prepareLayoutItems } from './normalize';
 
 /** Vanilla Flex 布局嵌入项的稳定类别 */
-const FlexLayoutEmbedKind = 'layout.flexLayout';
+const flexLayoutEmbedKind = 'layout.flexLayout';
 
 /** Layout Flex 布局的 InputEmbed adapter */
-export const FlexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlexLayout> &
+export const flexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlexLayout> &
   Required<Pick<SynchronousInputEmbedAdapter<InputFlexLayout>, 'prepare'>> = {
-  kind: FlexLayoutEmbedKind,
+  kind: flexLayoutEmbedKind,
   lower: (props, context) => {
     const { children, ...input } = props;
-    const normalized = normalizeLayoutItems<FlexLayoutItemInput>(children, context);
+    const normalized = normalizeLayoutItems<InputFlexLayoutItemConfig>(children, context);
 
     return {
       runtimeInputs: normalized.runtimeInputs,
       node: createFlexLayout({ ...input, children: normalized.items }),
       providerDependencies: {
-        roots: [FlexLayoutProvider.key, ...normalized.providerDependencies.roots],
-        providers: [FlexLayoutProvider, ...normalized.providerDependencies.providers],
+        roots: [flexLayoutProvider.key, ...normalized.providerDependencies.roots],
+        providers: [flexLayoutProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
     };
   },
   prepare: async (props, context) => {
     const { children, ...input } = props;
-    const execute = await prepareLayoutItems<FlexLayoutItemInput>(children, context);
+    const execute = await prepareLayoutItems<InputFlexLayoutItemConfig>(children, context);
 
     return {
       execute: async () => {
@@ -37,8 +37,8 @@ export const FlexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlex
           node: createFlexLayout({ ...input, children: normalized.items }),
           runtimeInputs: normalized.runtimeInputs,
           providerDependencies: {
-            roots: [FlexLayoutProvider.key, ...normalized.providerDependencies.roots],
-            providers: [FlexLayoutProvider, ...normalized.providerDependencies.providers],
+            roots: [flexLayoutProvider.key, ...normalized.providerDependencies.roots],
+            providers: [flexLayoutProvider, ...normalized.providerDependencies.providers],
           },
           ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
         };
@@ -54,7 +54,7 @@ export const FlexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlex
  */
 export const flexLayout = (input: InputFlexLayout, authoring?: unknown): InputEmbed<InputFlexLayout> => ({
   type: 'embed',
-  kind: FlexLayoutEmbedKind,
+  kind: flexLayoutEmbedKind,
   props: input,
   ...(authoring === undefined ? {} : { authoring }),
 });

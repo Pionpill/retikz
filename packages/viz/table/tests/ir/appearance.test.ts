@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { TableCellAppearanceSchema, TableCellBackgroundSchema, TableCellContentStyleSchema } from '../../src';
 
-describe('Table Cell appearance schema', () => {
-  it('parses JSON-safe background, content defaults, and border candidates', () => {
+describe('Table Cell 外观 schema', () => {
+  it('解析 JSON 安全背景​​、内容默认值和候选边框', () => {
     const input = {
       background: { fill: '#fff4e5', fillOpacity: 0.75 },
       content: {
@@ -29,7 +29,7 @@ describe('Table Cell appearance schema', () => {
     expect(TableCellBackgroundSchema.parse({ fill: 'none' })).toEqual({ fill: 'none' });
   });
 
-  it('rejects opacity-only backgrounds and non-finite opacity', () => {
+  it('拒绝仅不透明背景和非有限不透明度', () => {
     expect(() => TableCellBackgroundSchema.parse({ fillOpacity: 0.5 })).toThrow();
     expect(() => TableCellBackgroundSchema.parse({ fill: '#fff', fillOpacity: Number.NaN })).toThrow();
     expect(() => TableCellBackgroundSchema.parse({ fill: '#fff', fillOpacity: 1.1 })).toThrow();
@@ -43,11 +43,11 @@ describe('Table Cell appearance schema', () => {
     { content: { children: [] } },
     { content: { id: 'private-scope' } },
     { background: { fill: '#fff', stroke: '#000' } },
-  ])('rejects layout, topology, renderer, and unknown fields %#', input => {
+  ])('拒绝布局、拓扑、渲染器和未知字段 %#', input => {
     expect(() => TableCellAppearanceSchema.parse(input)).toThrow();
   });
 
-  it('uses the same closed content vocabulary as the public Core Scope style channels', () => {
+  it('使用与公共 Core Scope 风格频道相同的封闭内容词汇', () => {
     expect(
       TableCellContentStyleSchema.parse({
         defaults: {
@@ -69,7 +69,7 @@ describe('Table Cell appearance schema', () => {
     });
   });
 
-  it('keeps content color string-only while accepting contextual background and border colors', () => {
+  it('仅保留内容颜色字符串，同时接受上下文背景和边框颜色', () => {
     expect(
       TableCellAppearanceSchema.parse({
         background: { fill: 0.2 },

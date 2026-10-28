@@ -443,7 +443,7 @@ These are the definition and computation entries used on this page. See the [Dat
     {
       name: 'defineTransform',
       kind: 'function',
-      type: '<TKind extends string, TParamsSchema extends z.ZodType<Record<string, JsonValue>, Record<string, JsonValue>>>(definition: TransformDefinitionInput<TKind, TParamsSchema>) => TransformDefinition<{ kind: TKind; params: z.output<TParamsSchema> }>',
+      type: '<TKind extends string, TParamsSchema extends z.ZodType<Record<string, JsonValue>, Record<string, JsonValue>>>(definition: InputTransformDefinition<TKind, TParamsSchema>) => TransformDefinition<{ kind: TKind; params: z.output<TParamsSchema> }>',
       description:
         'Declares a name, parameter schema and field changes. outputModel is required; semantic callbacks do not compute rows.',
     },

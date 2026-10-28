@@ -153,10 +153,10 @@ scales: [{ type: 'ease-position', name: 'x', exponnent: 1.8 }];
 
 宿主注入：
 
-| 宿主                                   | 公开契约            | 注入字段                                                      |
-| -------------------------------------- | ------------------- | ------------------------------------------------------------- |
-| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `definitions.scales`、`colorSchemes`                          |
-| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | 继承 `LowerPlotsOptions.definitions.scales` 与 `colorSchemes` |
+| 宿主                                   | 公开契约            | 注入字段                                                         |
+| -------------------------------------- | ------------------- | ---------------------------------------------------------------- |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `definitions.scales`、`colorSchemes`                             |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `PlotRenderOptions` | 继承 `PlotsLoweringOptions.definitions.scales` 与 `colorSchemes` |
 
 ## 相关
 

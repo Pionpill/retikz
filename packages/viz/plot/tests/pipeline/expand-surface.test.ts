@@ -1,15 +1,27 @@
 import type { IRScene } from '@retikz/core';
-import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies } from '@retikz/core';
-import { BUILTIN_RIBBON_WIDTH_PROFILES, RibbonPathDefinition } from '@retikz/extension';
+import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies, RetikzCoreErrorCode } from '@retikz/core';
+import { BUILTIN_RIBBON_WIDTH_PROFILES, ribbonPathDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import * as expand from '../../src/pipeline/expand';
-import type { LowerPlotsOptions, PlotDefinitions, PlotImplementations } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions, PlotDefinitions, PlotImplementations } from '../../src/pipeline/expand';
 import { createPlotProviderContribution } from '../../src/pipeline/expand';
-import { coordinateScopeIdOf, resolveCoordinateScopeRegistry } from '../../src/resolve/composition';
-import { resolveCoordinateFrame } from '../../src/resolve/coordinate';
 
-describe('expand pipeline stable surface', () => {
+describe('扩大管线稳定面', () => {
+  it('复用同名行数组，拒绝不同引用覆盖同名数据集', () => {
+    const rows = [{ value: 1 }];
+    const first = createPlotProviderContribution({ sales: rows });
+    const shared = createPlotProviderContribution({ sales: rows });
+    const conflict = createPlotProviderContribution({ sales: [...rows] });
+
+    expect(resolveCoreProviderDependencies({ contributions: [first, shared] }).composites).toHaveLength(1);
+    expect(() => resolveCoreProviderDependencies({ contributions: [first, conflict] })).toThrow(
+      expect.objectContaining({
+        code: RetikzCoreErrorCode.Provider,
+        cause: expect.objectContaining({ message: expect.stringMatching(/sales.*conflicts by identity/) }),
+      }),
+    );
+  });
+
   it('合并不同分组对象中的相同共享字段，允许各 Plot 使用不同尺寸', () => {
     const channels: PlotDefinitions['channels'] = [];
     const transforms: PlotImplementations['transforms'] = [];
@@ -30,7 +42,7 @@ describe('expand pipeline stable surface', () => {
     ).not.toThrow();
   });
 
-  it.each<[LowerPlotsOptions, LowerPlotsOptions, string]>([
+  it.each<[PlotsLoweringOptions, PlotsLoweringOptions, string]>([
     [{ layout: { fontSize: 12 } }, { layout: { fontSize: 16 } }, 'layout.fontSize'],
     [{ definitions: { channels: [] } }, { definitions: { channels: [] } }, 'definitions.channels'],
     [{ implementations: { transforms: [] } }, { implementations: { transforms: [] } }, 'implementations.transforms'],
@@ -39,25 +51,15 @@ describe('expand pipeline stable surface', () => {
       resolveCoreProviderDependencies({
         contributions: [createPlotProviderContribution({}, first), createPlotProviderContribution({}, second)],
       }),
-    ).toThrow(field);
+    ).toThrow(
+      expect.objectContaining({
+        code: RetikzCoreErrorCode.Provider,
+        cause: expect.objectContaining({ message: expect.stringContaining(field) }),
+      }),
+    );
   });
 
-  it('keeps the established runtime exports available', () => {
-    expect(
-      [
-        expand.lowerPlots,
-        expand.prepareRows,
-        expand.assertDatasetFieldMaps,
-        resolveCoordinateFrame,
-        coordinateScopeIdOf,
-        resolveCoordinateScopeRegistry,
-      ].every(value => typeof value === 'function'),
-    ).toBe(true);
-    expect(expand).not.toHaveProperty('coordinateScopeIdOf');
-    expect(expand).not.toHaveProperty('resolveCoordinateScopeRegistry');
-  });
-
-  it('contributes the Standard Ribbon path and its profile dataset explicitly', () => {
+  it('明确贡献 Standard 色带路径及其配置参数', () => {
     const contribution = createPlotProviderContribution({});
 
     expect(contribution.roots).toContainEqual({ capability: 'path', name: 'ribbon' });
@@ -67,13 +69,13 @@ describe('expand pipeline stable surface', () => {
     );
 
     expect(ribbonProvider).toBeDefined();
-    expect(ribbonProvider?.datasets['profile:bulge']).toBe(BUILTIN_RIBBON_WIDTH_PROFILES[0]);
+    expect(ribbonProvider?.params).toMatchObject({ profiles: [BUILTIN_RIBBON_WIDTH_PROFILES[0]] });
 
     const definitions = resolveCoreProviderDependencies({ contributions: [contribution] });
     const ribbonDefinitions = definitions.paths?.filter(definition => definition.name === 'ribbon') ?? [];
 
     expect(ribbonDefinitions).toHaveLength(1);
-    expect(ribbonDefinitions[0]?.schema).toBe(RibbonPathDefinition.schema);
+    expect(ribbonDefinitions[0]?.schema).toBe(ribbonPathDefinition.schema);
 
     const ir: IRScene = {
       version: CURRENT_IR_VERSION,

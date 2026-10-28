@@ -60,7 +60,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-describe('ComponentPreviewCard dialog boundary', () => {
+describe('ComponentPreviewCard 对话框边界', () => {
   it('正文 Card 使用 compact 属性字段', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

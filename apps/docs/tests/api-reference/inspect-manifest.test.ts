@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { createInspectApiReferenceMdx } from '../../scripts/api-reference/inspect';
 import { ApiTable } from '../../src/modules/docs/components/mdx-content/api-table';
 
-describe('Inspect API Reference', () => {
+describe('Inspect API 参考', () => {
   it('保留公开入口、调用契约与语义分支，Schema 只展示摘要', async () => {
     for (const lang of ['zh', 'en'] as const) {
       const source = await createInspectApiReferenceMdx(lang);
@@ -45,10 +45,10 @@ describe('Inspect API Reference', () => {
         expect(schemaSection).not.toContain('```');
       }
 
-      const definitionInput = source.split('### InspectorDefinitionInput\n')[1]?.split('\n### ')[0] ?? '';
+      const definitionInput = source.split('### InputInspectorDefinition\n')[1]?.split('\n### ')[0] ?? '';
 
       expect(definitionInput).not.toContain(lang === 'zh' ? '#### 展开类型' : '#### Expanded type');
-      expect(definitionInput).toContain('export type InspectorDefinitionInput');
+      expect(definitionInput).toContain('export type InputInspectorDefinition');
 
       const diagnosticOrigin = source.split('### InspectionDiagnosticOrigin\n')[1]?.split('\n### ')[0] ?? '';
 
@@ -82,14 +82,14 @@ describe('Inspect API Reference', () => {
       const scopeProps = source.split('### InspectScope / InspectScopeProps\n')[1]?.split('\n### ')[0] ?? '';
 
       expect(scopeProps).toContain(lang === 'zh' ? 'label="直接属性"' : 'label="Direct members"');
-      expect(scopeProps).toContain('`InspectionVanillaAuthoringInput`');
+      expect(scopeProps).toContain('`InputInspectionVanillaAuthoring`');
       expect(scopeProps).toContain('`ScopeProps`');
       expect(scopeProps).not.toContain('`animations?`');
 
       const section = (name: string): string => source.split(`### ${name}\n`)[1]?.split('\n### ')[0] ?? '';
 
       expect(section('createDefaultInspectorRegistry')).toContain(
-        'definitions?: ReadonlyArray<AnyInspectorDefinitionInput>',
+        'definitions?: ReadonlyArray<InputAnyInspectorDefinition>',
       );
       expect(section('mergeInspectorRegistries')).toContain('...registries: ReadonlyArray<InspectorRegistry>');
       expect(section('compileInspectionToScene')).toContain('`IRScene`');
@@ -133,7 +133,7 @@ describe('Inspect API Reference', () => {
         }),
       );
 
-      expect(html).toContain('InspectorDefinitionInput');
+      expect(html).toContain('InputInspectorDefinition');
     }
   }, 20000);
 });

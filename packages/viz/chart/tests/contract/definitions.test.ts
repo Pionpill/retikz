@@ -40,8 +40,8 @@ const mark = defineChartMark({
   resolve: () => ({ marks: [{ type: 'point', encodings: { position: { x: { value: 0 } } } }] }),
 });
 
-describe('Chart Definition contracts', () => {
-  it('preserves definition identity and validates ordered slots', () => {
+describe('Chart Definition 契约', () => {
+  it('保留定义标识并验证有序槽', () => {
     expect(defineChartRecipe(recipe)).toBe(recipe);
     expect(defineChartMark(mark)).toBe(mark);
     expect(defineChartTheme({ name: 'fixture', defaults: { layout: { gap: 8 } } })).toEqual({
@@ -59,7 +59,7 @@ describe('Chart Definition contracts', () => {
     ).toThrow();
   });
 
-  it('applies guide defaults after scale defaults', () => {
+  it('在比例默认值之后应用辅助线默认值', () => {
     const guideRecipe = defineChartRecipe({
       ...recipe,
       resolveScaleDefaults: () => [{ type: 'linear', name: 'final-x' }],

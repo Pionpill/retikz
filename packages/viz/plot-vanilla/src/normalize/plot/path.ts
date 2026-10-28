@@ -1,5 +1,6 @@
-import { AxisLineTargetSchema, DrawWay, parseTargetSugar, parseWayWithTargets } from '@retikz/core';
+import { AxisLineTargetSchema } from '@retikz/core';
 import type { IRPlotPathMark, IRPlotPathStep } from '@retikz/plot';
+import { DrawWay, parseTargetSugar, parseWayWithTargets } from '@retikz/vanilla';
 import { normalizePathArrow } from '@retikz/vanilla';
 
 import { RetikzPlotVanillaError } from '../../error';

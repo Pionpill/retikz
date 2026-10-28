@@ -1,12 +1,12 @@
 export { defineRuntimeCommitParticipant } from './define';
 export type {
   RuntimeCommitParticipant,
-  RuntimeCommitParticipantDefinitionInput,
+  InputRuntimeCommitParticipantDefinition,
   RuntimeCommitParticipantToken,
   RuntimeParticipantCandidateLookup,
   RuntimeParticipantCandidateView,
   RuntimeParticipantContext,
   RuntimeParticipantTraceReporter,
-  RuntimeParticipantWarningInput,
+  InputRuntimeParticipantWarning,
   RuntimePreparedCommit,
 } from './types';

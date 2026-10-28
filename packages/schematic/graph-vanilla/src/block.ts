@@ -1,7 +1,7 @@
-import { BlockProviderKey } from '@retikz/graph';
+import { blockProviderKey } from '@retikz/graph';
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { BlockEmbedKind } from './constants';
+import { blockEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
 import type { InputBlock, WithoutInputType } from './normalize';
 import { normalizeBlock } from './normalize';
@@ -16,12 +16,12 @@ const inputOf = (props: BlockInputEmbedProps): InputBlock => {
 };
 
 /** Block Source 的 InputEmbed adapter */
-export const BlockInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockInputEmbedProps> = {
-  kind: BlockEmbedKind,
+export const blockInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockInputEmbedProps> = {
+  kind: blockEmbedKind,
   lower: (props, context) => {
     const input = inputOf(props);
     const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'Block.children');
-    const dependencies = createGraphProviderDependencies(BlockProviderKey);
+    const dependencies = createGraphProviderDependencies(blockProviderKey);
 
     return {
       node: normalizeBlock({
@@ -42,4 +42,4 @@ export const BlockInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockInputEmbe
 };
 
 /** 创建 Block Source 的 authoring embed 节点 */
-export const block = (input: BlockInputEmbedProps) => createGraphInputEmbed(BlockEmbedKind, input, input.id);
+export const block = (input: BlockInputEmbedProps) => createGraphInputEmbed(blockEmbedKind, input, input.id);

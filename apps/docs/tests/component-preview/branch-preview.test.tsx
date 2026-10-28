@@ -11,7 +11,7 @@ import { renderPreview as renderLayout } from '../../src/modules/docs/contents/s
 import { renderPreview as renderPresentation } from '../../src/modules/docs/contents/schematic/diagram/branch/extended/branch-presentation.preview';
 import { renderPreview as renderNodes } from '../../src/modules/docs/contents/schematic/diagram/branch/usage/branch-nodes.preview';
 
-it.each(['zh', 'en'] as const)('renders three Branch scenarios through source IR and Vanilla in %s', lang => {
+it.each(['zh', 'en'] as const)('通过 %s 中的源 IR 和 Vanilla 渲染三个分支场景', lang => {
   for (const Demo of [BranchRoadmap, BranchHistory, BranchReading]) {
     const preview = buildPreviewIR(() => <Demo lang={lang} />);
     const source = BranchDiagramSchema.parse(preview.sourceIr.children[0]);
@@ -27,7 +27,7 @@ it.each(['zh', 'en'] as const)('renders three Branch scenarios through source IR
   }
 });
 
-it.each(['right', 'left', 'down', 'up'])('renders layout controls at both gap limits in %s', direction => {
+it.each(['right', 'left', 'down', 'up'])('在 %s 中渲染间距上下限对应的布局控件', direction => {
   for (const gap of [0, 80]) {
     const preview = buildPreviewIR(() => renderLayout({ direction, nodeGap: gap, laneGap: gap, color: '#c76b34' }));
     const result = buildVanillaPreview(preview);
@@ -40,7 +40,7 @@ it.each(['right', 'left', 'down', 'up'])('renders layout controls at both gap li
   }
 });
 
-it('applies marker, label, and main-branch controls to authoring input', () => {
+it('将标记、标签和主分支控件应用于编写输入', () => {
   for (const size of [4, 24]) {
     const preview = buildPreviewIR(() => renderNodes({ size, labels: false, main: 'side' }));
     const source = BranchDiagramSchema.parse(preview.sourceIr.children[0]);
@@ -55,7 +55,7 @@ it('applies marker, label, and main-branch controls to authoring input', () => {
   }
 });
 
-it.each(['zh', 'en'] as const)('removes each presentation region independently in %s', lang => {
+it.each(['zh', 'en'] as const)('独立删除 %s 中的每个呈现区域', lang => {
   for (const hidden of ['title', 'description', 'legend'] as const) {
     const values = { title: true, description: true, legend: true, [hidden]: false };
     const preview = buildPreviewIR(() => renderPresentation(values, lang));

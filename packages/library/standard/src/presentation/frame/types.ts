@@ -7,13 +7,13 @@ import type { FrameDescriptionSchema, FrameSchema, FrameTitleSchema } from './sc
 export type IRFrameTitle = ZodInfer<typeof FrameTitleSchema>;
 
 /** 创建 Frame 主标题时接受的输入 */
-export type FrameTitleInput = ZodInfer<typeof FrameTitleSchema>;
+export type InputFrameTitle = ZodInfer<typeof FrameTitleSchema>;
 
 /** Frame 辅助说明的持久化 Node-like 输入 */
 export type IRFrameDescription = ZodInfer<typeof FrameDescriptionSchema>;
 
 /** 创建 Frame 辅助说明时接受的输入 */
-export type FrameDescriptionInput = ZodInfer<typeof FrameDescriptionSchema>;
+export type InputFrameDescription = ZodInfer<typeof FrameDescriptionSchema>;
 
 /** 持久化的 Standard Frame composite */
 export type IRFrame = Omit<ZodInput<typeof FrameSchema>, keyof IRScopeProps | 'children' | 'title' | 'description'> &
@@ -24,4 +24,4 @@ export type IRFrame = Omit<ZodInput<typeof FrameSchema>, keyof IRScopeProps | 'c
   };
 
 /** 创建 Frame 时允许省略固定 discriminator 与 schema 默认字段的输入 */
-export type FrameInput = Omit<IRFrame, 'namespace' | 'type'>;
+export type InputFrameConfig = Omit<IRFrame, 'namespace' | 'type'>;

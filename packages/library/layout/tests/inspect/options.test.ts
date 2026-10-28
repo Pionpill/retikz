@@ -2,7 +2,7 @@ import { compileInspectionToScene, createInspectorRegistry, defineInspector } fr
 import { describe, expect, it, vi } from 'vitest';
 import { toJSONSchema } from 'zod';
 
-import { createFlexLayout, FlexLayoutDefinition, LayoutItemKind } from '../../src';
+import { createFlexLayout, flexLayoutDefinition, LayoutItemKind } from '../../src';
 import {
   createLayoutInspectionSelection,
   FLEX_LAYOUT_INSPECT_PRESETS,
@@ -18,14 +18,14 @@ import {
   OverlayLayoutInspectOptionsSchema,
 } from '../../src/inspect';
 
-describe('Layout inspect options', () => {
-  it('exports shared and family defaults through JSON Schema', () => {
+describe('Layout 检查选项', () => {
+  it('通过 JSON schema 导出共享和系列默认值', () => {
     expect(toJSONSchema(FlexLayoutInspectOptionsSchema)).toMatchObject({
       properties: { labels: { default: false }, bounds: { default: true }, lines: { default: true } },
     });
   });
 
-  it('preserves nested inherited options through the actual selection pipeline', () => {
+  it('通过实际选择管线保留嵌套的继承选项', () => {
     const inspect = vi.fn(FLEX_LAYOUT_INSPECTOR.inspect);
     compileInspectionToScene(
       {
@@ -46,7 +46,7 @@ describe('Layout inspect options', () => {
       },
       {
         registry: createInspectorRegistry([defineInspector({ ...FLEX_LAYOUT_INSPECTOR, inspect })]),
-        compileOptions: { composites: [FlexLayoutDefinition] },
+        compileOptions: { composites: [flexLayoutDefinition] },
         selection: {
           rules: [
             {
@@ -79,7 +79,7 @@ describe('Layout inspect options', () => {
     });
   });
 
-  it('preserves parent fields across sparse and undefined overrides without changing either source', () => {
+  it('在稀疏和 undefined 的覆盖中保留父字段，而不更改任何源', () => {
     const inherited = {
       labels: true,
       bounds: { visual: true, content: false },
@@ -106,7 +106,7 @@ describe('Layout inspect options', () => {
     expect(local.bounds).toEqual({ visual: undefined, slot: false });
   });
 
-  it('replaces boolean groups and resolves undefined nested fields with owner defaults', () => {
+  it('替换布尔组并使用所属模块默认值解析 undefined 的嵌套字段', () => {
     const merged = FLEX_LAYOUT_INSPECTOR.mergeOptionsInput?.(
       { bounds: { visual: true }, spacing: { margin: true } },
       { bounds: false, spacing: false },
@@ -128,7 +128,7 @@ describe('Layout inspect options', () => {
     });
   });
 
-  it('exposes described strict schemas with shared and family defaults', () => {
+  it('公开具有共享和系列默认值的所描述的严格 schema', () => {
     const schemas = [FlexLayoutInspectOptionsSchema, GridLayoutInspectOptionsSchema, OverlayLayoutInspectOptionsSchema];
 
     expect(schemas.map(schema => schema.parse({}))).toEqual([
@@ -141,7 +141,7 @@ describe('Layout inspect options', () => {
     expect(() => GridLayoutInspectOptionsSchema.parse({ lines: true })).toThrow();
   });
 
-  it('expands parsed shared and family defaults into callback options', () => {
+  it('将解析的共享和系列默认值扩展为回调选项', () => {
     expect(FLEX_LAYOUT_INSPECTOR.resolveOptions(FLEX_LAYOUT_INSPECTOR.optionsSchema.parse({}))).toEqual({
       bounds: { container: true, content: true, slot: true, allocation: true, visual: false },
       spacing: { padding: true, margin: true },
@@ -172,7 +172,7 @@ describe('Layout inspect options', () => {
     expect(options.labels).toBe(true);
   });
 
-  it('provides recommended, all, and off presets for every layout family', () => {
+  it('为每个布局系列提供推荐、全部和关闭预设', () => {
     expect(
       FLEX_LAYOUT_INSPECTOR.resolveOptions(
         FLEX_LAYOUT_INSPECTOR.optionsSchema.parse(FLEX_LAYOUT_INSPECT_PRESETS.Recommended),
@@ -227,7 +227,7 @@ describe('Layout inspect options', () => {
     expect(Object.isFrozen(FLEX_LAYOUT_INSPECT_PRESETS)).toBe(true);
   });
 
-  it('accepts family-specific sparse options in the shared selection helper', () => {
+  it('在共享选择帮助器中接受特定于系列的稀疏选项', () => {
     const selection = createLayoutInspectionSelection({
       inspector: GRID_LAYOUT_INSPECTOR_KEY,
       target: { kind: 'scene' },

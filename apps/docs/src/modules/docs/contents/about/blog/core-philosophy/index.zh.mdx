@@ -148,7 +148,7 @@ retikz 的语法**采用** TikZ 子集，而不是另起一套 DSL。这条决�
 - **AI 红利**：LLM 训练数据里 TikZ 体量极大，零样本生成质量远超任何自创语法。AI 时代的图形 DSL，能复用预训练就是巨大领先。
 - **真实迁移**：retikz 支持的 TikZ 代码计划做到可直接复制进 LaTeX 编译；反向 `@retikz/codec`（v2.x 计划）把 IR 导出回 `.tex`，让浏览器里画好的图能贴进论文。
 
-所以 IR 里的 `padding` / `margin` 直接对应 TikZ 的 `inner sep` / `outer sep`、节点 anchor 用 `north-west` / `45` 这种字符串、polar convention 0°=+x 而不是屏幕坐标的 0°=向右——都是有意保留原词，让懂 TikZ 的人零学习成本，让 LLM 命中训练分布。
+所以 IR 里的 `padding` / `margin` 对应 TikZ 的 `inner sep` / `outer sep`，保留了熟悉的绘图概念。方位命名采用 Web 风格：节点 anchor 使用 `top-left` 等名称或 `45` 这样的数字角度，字符串简写可写成 `A.top-left` 或 `A.45`；不支持 `north-west`、`above-left` 等别名。
 
 ## 引用
 

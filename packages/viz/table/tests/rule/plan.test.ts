@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type { IRTableCellRule, SemanticTableModel } from '../../src';
 import { TableCellRuleSchema } from '../../src';
 import { formatTable } from '../../src/pipeline/formatter';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 
 const modelOf = () =>
-  normalizeTableStructure({
+  resolveTableStructure({
     kind: 'manual',
     rows: [
       [
@@ -74,8 +74,8 @@ const rulesOf = (): Array<IRTableCellRule> => [
   },
 ];
 
-describe('resolved Table Cell plans', () => {
-  it('cascades references and appearance by declaration order with precise winner trace', () => {
+describe('解决了 Table Cell 计划', () => {
+  it('通过声明顺序级联引用和外观，并具有精确的获胜者跟踪', () => {
     const plans = resolvePlans(modelOf(), rulesOf());
     const value = plans[0];
 
@@ -126,7 +126,7 @@ describe('resolved Table Cell plans', () => {
     expect(value.trace.appearance).toHaveProperty('/background/fillOpacity', { kind: 'rootRule', ruleIndex: 0 });
   });
 
-  it('does not create a winner trace for an explicitly undefined atomic appearance field', () => {
+  it('不为明确 undefined 的原子外观字段创建获胜者跟踪', () => {
     const rule = TableCellRuleSchema.parse({
       selector: { cellIds: ['value'] },
       appearance: { content: { defaults: { style: { fill: undefined } } } },
@@ -137,7 +137,7 @@ describe('resolved Table Cell plans', () => {
     expect(value.trace.appearance).not.toHaveProperty('/content/defaults/style/fill');
   });
 
-  it('treats an explicitly undefined structured appearance field as omitted', () => {
+  it('将明确 undefined 的结构化外观字段视为省略', () => {
     const rule = TableCellRuleSchema.parse({
       selector: { cellIds: ['value'] },
       appearance: {
@@ -154,7 +154,7 @@ describe('resolved Table Cell plans', () => {
     expect(() => resolvePlans(modelOf(), [rule])).not.toThrow();
   });
 
-  it('omits an explicitly undefined opacity from a complete background replacement', () => {
+  it('从完整的背景替换中省略显式 undefined 的不透明度', () => {
     const rules = [
       {
         selector: { cellIds: ['value'] },
@@ -172,7 +172,7 @@ describe('resolved Table Cell plans', () => {
     expect(JSON.parse(JSON.stringify(value.appearance.background))).toStrictEqual(value.appearance.background);
   });
 
-  it('lets a later none border replace an earlier line border', () => {
+  it('让后面的无边框替换前面的线边框', () => {
     const value = resolvePlans(modelOf(), [
       {
         selector: { cellIds: ['value'] },
@@ -185,7 +185,7 @@ describe('resolved Table Cell plans', () => {
     expect(value.trace.appearance['/borders/top']).toEqual({ kind: 'rootRule', ruleIndex: 1 });
   });
 
-  it('applies appearance-only rules to direct content Cells', () => {
+  it('将仅外观规则应用于直接内容单元格', () => {
     const direct = resolvePlans(modelOf(), [
       {
         selector: { cellIds: ['direct'] },
@@ -203,7 +203,7 @@ describe('resolved Table Cell plans', () => {
     });
   });
 
-  it('keeps value/content plans discriminated and seeds structure winners once', () => {
+  it('保持价值/内容计划的区别，并为获胜者提供一次种子结构', () => {
     const plans = resolvePlans(modelOf());
 
     expect(plans[0]).toMatchObject({
@@ -228,7 +228,7 @@ describe('resolved Table Cell plans', () => {
     expect(plans[1]).not.toHaveProperty('presentation');
   });
 
-  it('detaches and recursively freezes plans without freezing authored rules', () => {
+  it('分离并递归冻结计划而不冻结编写的规则', () => {
     const rules = rulesOf();
     const plans = resolvePlans(modelOf(), rules);
     const original = structuredClone(plans[0]);
@@ -245,7 +245,7 @@ describe('resolved Table Cell plans', () => {
     expect(plans[0]).toEqual(original);
   });
 
-  it('rejects formatter or presentation rewrites of direct content with rule and Cell identity', () => {
+  it('拒绝使用规则和 Cell 标识的直接内容的格式化程序或表示重写', () => {
     const model = modelOf();
 
     expect(() => resolvePlans(model, [{ selector: { cellIds: ['direct'] }, formatter: { name: 'identity' } }])).toThrow(
@@ -256,8 +256,8 @@ describe('resolved Table Cell plans', () => {
     );
   });
 
-  it('diagnoses an anonymous direct content Cell by canonical address', () => {
-    const model = normalizeTableStructure({
+  it('通过规范地址诊断匿名直接内容 Cell', () => {
+    const model = resolveTableStructure({
       kind: 'manual',
       rows: [[{ content: { type: 'node', position: [0, 0], text: 'direct' } }]],
     });
@@ -267,7 +267,7 @@ describe('resolved Table Cell plans', () => {
     );
   });
 
-  it('makes formatTable consume the same strictly aligned value plan', () => {
+  it('使 formatTable 消费相同的严格对齐的价值计划', () => {
     const model = modelOf();
     const plans = resolvePlans(model, [{ selector: { cellIds: ['value'] }, formatter: { name: 'identity' } }]);
     const formatted = formatTable(model, { cells: plans });

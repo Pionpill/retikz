@@ -12,7 +12,7 @@ import {
   processToStaticResult,
 } from '../../src';
 
-describe('Vanilla processing', () => {
+describe('Vanilla 处理', () => {
   it('只在 processing prepare 中解析 InputEmbed 的 Composite contribution', () => {
     const definition = defineComposite({
       namespace: 'fixture',
@@ -33,8 +33,6 @@ describe('Vanilla processing', () => {
           providers: [
             {
               key: { capability: 'composite', namespace: 'fixture', type: 'box' },
-              dependencies: [],
-              datasets: {},
               makeDefinition,
             },
           ],
@@ -164,8 +162,6 @@ describe('Vanilla processing', () => {
           providers: [
             {
               key: { capability: 'composite', namespace: 'fixture', type: 'box' },
-              dependencies: [],
-              datasets: {},
               makeDefinition: () => definition,
             },
           ],
@@ -213,8 +209,6 @@ describe('Vanilla processing', () => {
           providers: [
             {
               key: { capability: 'composite', namespace: 'fixture', type: 'broken' },
-              dependencies: [],
-              datasets: {},
               makeDefinition: () => definition,
             },
           ],

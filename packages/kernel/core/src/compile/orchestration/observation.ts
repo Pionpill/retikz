@@ -14,23 +14,6 @@ type RuntimeObserverEntry = Readonly<{
   session: CompileObserverSession;
 }>;
 
-/** 校验 observer factory 返回的 session 形状 */
-const isCompileObserverSession = (value: unknown): value is CompileObserverSession => {
-  if (value === null || typeof value !== 'object') return false;
-
-  const candidate = value as Readonly<{
-    select?: unknown;
-    observe?: unknown;
-    complete?: unknown;
-  }>;
-
-  return (
-    typeof candidate.select === 'function' &&
-    typeof candidate.observe === 'function' &&
-    typeof candidate.complete === 'function'
-  );
-};
-
 /** 一次 observed compile 独占的 observer session 集合 */
 export type CompileObservationRuntime = Readonly<{
   /** 本次 compile 是否存在 observer */
@@ -58,13 +41,7 @@ export const createCompileObservationRuntime = (
     }
 
     seen.add(normalized.key);
-    const session: unknown = normalized.createSession();
-    if (!isCompileObserverSession(session)) {
-      throw new RetikzCoreError(
-        RetikzCoreErrorCode.Compile,
-        `observeCompileToScene: observer '${normalized.key}' created an invalid session.`,
-      );
-    }
+    const session = normalized.createSession();
 
     return { definition: normalized, session };
   });
@@ -77,13 +54,6 @@ export const createCompileObservationRuntime = (
 
       for (const entry of entries) {
         const value = entry.session.select(Object.freeze({ owner: site.owner, sourcePath: site.sourcePath }));
-        if (typeof value !== 'boolean') {
-          throw new RetikzCoreError(
-            RetikzCoreErrorCode.Compile,
-            `observeCompileToScene: observer '${entry.definition.key}' select() must return boolean.`,
-          );
-        }
-
         if (value) selected.push(entry.definition.key);
       }
 

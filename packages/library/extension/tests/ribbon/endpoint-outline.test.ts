@@ -7,11 +7,11 @@ import {
   createRibbonPathDefinition,
   createRibbonProviderContribution,
   defineRibbonCap,
-  RibbonPathDefinition,
+  ribbonPathDefinition,
   RibbonPathOptionsSchema,
 } from '../../src/ribbon';
 
-const compile = (kindOptions: IRPathBase['kindOptions'], definition: AnyPathDefinition = RibbonPathDefinition) => {
+const compile = (kindOptions: IRPathBase['kindOptions'], definition: AnyPathDefinition = ribbonPathDefinition) => {
   const scene = compileToScene(
     {
       version: 1,
@@ -36,21 +36,21 @@ const compile = (kindOptions: IRPathBase['kindOptions'], definition: AnyPathDefi
   return path;
 };
 
-describe('Ribbon endpoint outline contract', () => {
-  it('treats reversed section vectors as the same axis', () => {
+describe('功能区端点轮廓契约', () => {
+  it('将反转的截面向量视为同一轴', () => {
     expect(compile({ width: { kind: 'fixed', value: 20 }, start: { direction: [1, 0] } }).commands).toEqual(
       compile({ width: { kind: 'fixed', value: 20 }, start: { direction: [-1, 0] } }).commands,
     );
   });
 
-  it.each(['butt', 'square', 'round'])('collapses zero-width %s caps without invalid geometry', name => {
+  it.each(['butt', 'square', 'round'])('零宽度 %s 端帽退化时不产生无效几何', name => {
     const path = compile({ width: { kind: 'fixed', value: 0 }, start: { cap: { name } }, end: { cap: { name } } });
 
     expect(JSON.stringify(path.commands)).not.toMatch(/null/);
     expect(path.commands[0]).toEqual({ kind: 'move', to: [0, 0] });
   });
 
-  it('rejects zero-width arc sweeps', () => {
+  it('拒绝零宽度圆弧扫描', () => {
     expect(() =>
       compile({
         width: { kind: 'fixed', value: 0 },
@@ -59,7 +59,7 @@ describe('Ribbon endpoint outline contract', () => {
     ).toThrow(/nonzero width/);
   });
 
-  it('assembles a custom cap identically through direct and provider definitions', () => {
+  it('直接定义和提供者定义以相同方式组装自定义端帽', () => {
     const cap = defineRibbonCap({
       name: 'pointed',
       paramsSchema: strictObject({}),
@@ -95,7 +95,7 @@ describe('Ribbon endpoint outline contract', () => {
     expect(direct.commands).toContainEqual({ kind: 'line', to: [100, 130] });
   });
 
-  it('keeps bevel joins at centerline corners even with only two base samples', () => {
+  it('即使只有两个基础样本，也可以在中心线角处保持斜角连接', () => {
     const scene = compileToScene(
       {
         version: 1,
@@ -113,7 +113,7 @@ describe('Ribbon endpoint outline contract', () => {
           },
         ],
       },
-      { paths: [RibbonPathDefinition] },
+      { paths: [ribbonPathDefinition] },
     ).scene;
     const path = scene.primitives.find(primitive => primitive.type === 'path');
     if (path?.type !== 'path') throw new Error('Expected ribbon path');
@@ -123,32 +123,32 @@ describe('Ribbon endpoint outline contract', () => {
     expect(path.commands.some(command => command.kind === 'cubic')).toBe(false);
   });
 
-  it('retains direction as a section axis and preserves the endpoint center', () => {
+  it('保留方向作为截面轴并保留端点中心', () => {
     const path = compile({ width: { kind: 'fixed', value: 20 }, start: { direction: 0 }, end: { direction: 0 } });
 
     expect(path.commands[0]).toEqual({ kind: 'move', to: [-10, 0] });
     expect(path.commands).toContainEqual({ kind: 'line', to: [110, 100] });
   });
 
-  it('rejects a section parallel to the centerline', () => {
+  it('拒绝平行于中心线的截面', () => {
     expect(() => compile({ width: { kind: 'fixed', value: 20 }, start: { direction: 45 } })).toThrow(/section/i);
   });
 
-  it('uses cubic interpolation by default', () => {
+  it('默认使用三次插值', () => {
     const path = compile({ width: { kind: 'fixed', value: 20 } });
 
     expect(path.commands.some(command => command.kind === 'cubic')).toBe(true);
     expect(path.commands.at(-1)).toEqual({ kind: 'close' });
   });
 
-  it('rejects removed sampling shorthand at the JSON boundary', () => {
+  it('拒绝在 JSON 边界处删除的采样简写', () => {
     expect(RibbonPathOptionsSchema.safeParse({ width: { kind: 'fixed', value: 20 }, samples: 4 }).success).toBe(false);
     expect(
       RibbonPathOptionsSchema.safeParse({ width: { kind: 'fixed', value: 20 }, start: { cap: 'round' } }).success,
     ).toBe(false);
   });
 
-  it('gives custom caps the endpoint frame and preserves callback failure cause', () => {
+  it('向自定义端帽提供端点坐标系并保留回调失败原因', () => {
     const failure = new Error('cap failure');
     const cap = defineRibbonCap({
       name: 'failing',
@@ -176,7 +176,7 @@ describe('Ribbon endpoint outline contract', () => {
     expect(caught).toBe(failure);
   });
 
-  it('includes the long circular cap extrema in the scene layout bounds', () => {
+  it('包括场景布局边界中的长圆形帽极值', () => {
     const scene = compileToScene(
       {
         version: 1,
@@ -199,14 +199,14 @@ describe('Ribbon endpoint outline contract', () => {
           },
         ],
       },
-      { paths: [RibbonPathDefinition], padding: 0 },
+      { paths: [ribbonPathDefinition], padding: 0 },
     ).scene;
 
     expect(scene.layout.x + scene.layout.width).toBeGreaterThanOrEqual(110);
     expect(scene.layout.y + scene.layout.height).toBeGreaterThanOrEqual(100 - Math.sqrt(75) + 10);
   });
 
-  it('reports unknown caps and invalid cap parameters instead of falling back', () => {
+  it('报告未知端帽及无效端帽参数而不回退', () => {
     expect(() => compile({ width: { kind: 'fixed', value: 20 }, end: { cap: { name: 'missing' } } })).toThrow(
       /missing/,
     );
@@ -215,7 +215,7 @@ describe('Ribbon endpoint outline contract', () => {
     ).toThrow(/end.cap/);
   });
 
-  it('rotates a chord arc around the section frame', () => {
+  it('绕截面框架旋转弦弧', () => {
     const path = compile({
       width: { kind: 'fixed', value: 10 },
       start: { direction: 0, cap: { name: 'arc', params: { center: [-Math.sqrt(75), 0], radius: 10 } } },
@@ -231,7 +231,7 @@ describe('Ribbon endpoint outline contract', () => {
     expect(Math.abs(arc.endAngle - arc.startAngle)).toBeCloseTo(60);
   });
 
-  it('selects the long chord arc without replacing it with a short arc', () => {
+  it('选择长弦弧而不将其替换为短弧', () => {
     const path = compile({
       width: { kind: 'fixed', value: 10 },
       end: { direction: 0, cap: { name: 'arc', params: { center: [-Math.sqrt(75), 0], radius: 10, sweep: 'long' } } },
@@ -242,7 +242,7 @@ describe('Ribbon endpoint outline contract', () => {
     expect(Math.abs(arc.endAngle - arc.startAngle)).toBeCloseTo(300);
   });
 
-  it('rejects disconnected custom cap output', () => {
+  it('拒绝断开的自定义电容输出', () => {
     const cap = defineRibbonCap({
       name: 'disconnected',
       paramsSchema: strictObject({}),
@@ -263,7 +263,7 @@ describe('Ribbon endpoint outline contract', () => {
     ).toThrow(/side points/);
   });
 
-  it('rejects builtin cap overrides', () => {
+  it('拒绝覆盖内置端帽', () => {
     const cap = defineRibbonCap({
       name: 'butt',
       paramsSchema: strictObject({}),
@@ -273,7 +273,7 @@ describe('Ribbon endpoint outline contract', () => {
     expect(() => createRibbonPathDefinition({ caps: [cap] })).toThrow(/defined more than once/);
   });
 
-  it('keeps authored boundary curves and reverses cubic control order', () => {
+  it('保留编写的边界曲线并反转三次控制顺序', () => {
     const scene = compileToScene(
       {
         version: 1,
@@ -296,7 +296,7 @@ describe('Ribbon endpoint outline contract', () => {
           },
         ],
       },
-      { paths: [RibbonPathDefinition] },
+      { paths: [ribbonPathDefinition] },
     ).scene;
     const path = scene.primitives.find(primitive => primitive.type === 'path');
 

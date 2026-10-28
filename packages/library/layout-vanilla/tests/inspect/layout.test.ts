@@ -2,7 +2,7 @@ import { LayoutItemKind } from '@retikz/layout';
 import { renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { LayoutInputEmbedAdapters } from '../../src';
+import { layoutInputEmbedAdapters } from '../../src';
 import { createLayoutInspectionVanillaDriver, inspectFlexLayout } from '../../src/inspect';
 
 describe('@retikz/layout-vanilla/inspect', () => {
@@ -17,7 +17,7 @@ describe('@retikz/layout-vanilla/inspect', () => {
       ],
     });
     const svg = renderToSvgString(source, {
-      adapters: LayoutInputEmbedAdapters,
+      adapters: layoutInputEmbedAdapters,
       compileDriver: createLayoutInspectionVanillaDriver(),
     });
 

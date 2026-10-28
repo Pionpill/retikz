@@ -51,7 +51,7 @@ import type { IRScene } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { BubbleChartSchema, createBubbleChartProviderContribution } from '@retikz/chart/point';
 import { createPlotProviderContribution } from '@retikz/plot';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import { bubbleMinimalData } from './bubble-minimal.data';
 import { Layout } from '@retikz/react';
 
@@ -66,7 +66,7 @@ const definitions = resolveCoreProviderDependencies({
   contributions: [
     createBubbleChartProviderContribution(),
     createPlotProviderContribution({ 'chart.data': bubbleMinimalData }),
-    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
   ],
 });
 
@@ -78,14 +78,14 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { bubbleChart, BubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { bubbleChart, bubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import { bubbleMinimalData } from './bubble-minimal.data';
 
 const chart = bubbleChart({
   data: bubbleMinimalData,
   encodings: { x: 'depthKm', y: 'magnitude', size: 'significance' },
 });
-export const svg = renderChart(chart, { adapters: [BubbleChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart, { adapters: [bubbleChartInputEmbedAdapter] }).svg;
 ```
 
 </DocTab>
@@ -96,7 +96,7 @@ import type { IRScene } from '@retikz/core';
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { BubbleChartSchema, createBubbleChartProviderContribution } from '@retikz/chart/point';
 import { createPlotProviderContribution } from '@retikz/plot';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import { bubbleMinimalData } from './bubble-minimal.data';
 import { compileToScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
@@ -112,7 +112,7 @@ const definitions = resolveCoreProviderDependencies({
   contributions: [
     createBubbleChartProviderContribution(),
     createPlotProviderContribution({ 'chart.data': bubbleMinimalData }),
-    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+    { roots: [pathClipProvider.key], providers: [pathClipProvider] },
   ],
 });
 

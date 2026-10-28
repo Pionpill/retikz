@@ -44,7 +44,7 @@ const ngon = defineShape({
   paramsSchema: z.strictObject({
     sides: z.number().int().min(3).describe('Number of sides of the regular polygon (>= 3).'),
   }),
-  computeCircumscribedHalfAxes: (hw, hh, params) => {
+  computeCircumscribedGeometry: (hw, hh, params) => {
     const corners: Array<Position> = [
       [hw, hh],
       [hw, -hh],

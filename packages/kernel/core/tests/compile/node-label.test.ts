@@ -22,8 +22,8 @@ const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrimitive> => {
 const findLabel = (prims: Array<ScenePrimitive>, text: string): TextPrimitive | undefined =>
   collectTexts(prims).find(t => t.lines.some(l => (typeof l === 'string' ? l : l.text) === text));
 
-describe('Node label', () => {
-  it('preserves per-line and segment styles in a multiline label', () => {
+describe('Node 标签', () => {
+  it('保留多行标签中的每行和段样式', () => {
     const scene = compileToScene({
       version: 1,
       type: 'scene',
@@ -51,7 +51,7 @@ describe('Node label', () => {
     expect(findLabel(scene.primitives, 'explicit')?.fill).toBe('#00ff00');
     expect(inherited!.y).toBeGreaterThan(styled!.y);
   });
-  it('lays out hard line breaks as one centered label block', () => {
+  it('将硬换行符布置为一个居中的标签块', () => {
     const scene = compileToScene(
       {
         version: 1,

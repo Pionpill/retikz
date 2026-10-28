@@ -6,7 +6,7 @@ import { BuiltinCompileWarningCode } from '../../constants';
 import { pointOfTarget } from '../host';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */
-export type StrokeTargetStep = Exclude<
+type StrokeTargetStep = Exclude<
   CanonicalStep,
   | { kind: 'cycle' }
   | { kind: 'arc' }
@@ -49,7 +49,7 @@ export type StrokeCursor = {
 };
 
 /** 创建 stroke cursor 所需的目标解析上下文 */
-export type CreateStrokeCursorInput = {
+type InputStrokeCursor = {
   /** 已归一化的 path steps */
   steps: Array<CanonicalStep>;
   /** resolving 阶段绑定的 target view */
@@ -74,7 +74,7 @@ export const isStrokeTargetStep = (step: CanonicalStep): step is StrokeTargetSte
  * 创建 path stroke step 游标
  * @description 初始化时按声明顺序预解析普通目标 anchor；循环推进只消费当前索引的前一个 step
  */
-export const createStrokeCursor = ({ steps, targetView, scopeChain, warn }: CreateStrokeCursorInput): StrokeCursor => {
+export const createStrokeCursor = ({ steps, targetView, scopeChain, warn }: InputStrokeCursor): StrokeCursor => {
   const anchors: Array<IRPosition | null> = steps.map((step, index) => {
     if (!isStrokeTargetStep(step)) return null;
 

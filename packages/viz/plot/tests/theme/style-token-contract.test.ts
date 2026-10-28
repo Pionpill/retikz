@@ -24,7 +24,7 @@ const baseSpec = {
   guides: [],
 } as const;
 
-describe('Plot Source defaults and rules contract', () => {
+describe('Plot Source 默认并规则契约', () => {
   it('从 Plot 根入口公开 Source schemas，并移除旧 token surface', () => {
     const api = plot as Record<string, unknown>;
 

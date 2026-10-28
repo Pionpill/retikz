@@ -4,6 +4,8 @@
 
 ## 当前结构
 
+[`feature-comparison.md`](./feature-comparison.md) 维护全仓功能比较思路、证据口径和反馈格式；各模块在自己的 `_notes/analysis/*-compare-analysis.md` 维护比较 prompt、对象与维度。生成结果放在 Git 忽略的 `notes/reports/feature-comparison/`。
+
 | 目录                             | 内容                                                             | 生命周期                                     |
 | -------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- |
 | [`architecture`](./architecture) | 全仓长期架构真源。只放跨包原则、IR / Scene / schema 等底层契约。 | 永久；重大架构调整直接更新原文。             |
@@ -64,7 +66,7 @@
 - [`kernel notes`](../packages/kernel/_notes/README.md)：kernel 发布组内部文档入口。
 - [`kernel v0 roadmap`](../packages/kernel/_notes/decisions/v0/roadmap.md)：kernel v0 总路线。
 - [`kernel ADR template`](../packages/kernel/_notes/decisions/_template.md)：kernel ADR 模板。
-- [`core compare analysis`](../packages/kernel/_notes/analysis/core-compare-analysis.md)：core 底座横向对比。
+- [`Kernel 功能比较 prompt`](../packages/kernel/_notes/analysis/kernel-compare-analysis.md)：底座比较对象与维度。
 
 ### viz 发布组
 
@@ -74,8 +76,7 @@
 - [`plot-visualization-complete.md`](../packages/viz/_notes/architecture/plot-visualization-complete.md)：plot 可视化完备与跨能力域闭环。
 - [`plot v0 roadmap`](../packages/viz/_notes/decisions/plot/v0/roadmap.md)：plot v0 总路线。
 - [`plot v0.1 roadmap`](../packages/viz/_notes/decisions/plot/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
-- [`plot compare analysis`](../packages/viz/_notes/analysis/plot-compare-analysis.md)：plot 横向对比。
-- [`plot rendering performance`](../packages/viz/_notes/analysis/plot-rendering-performance.md)：plot 渲染性能分析。
+- [`Viz 功能比较 prompt`](../packages/viz/_notes/analysis/viz-compare-analysis.md)：Data、Plot、Chart、Table 独立比较。
 - [`table-visualization-complete.md`](../packages/viz/_notes/architecture/table-visualization-complete.md)：table 能力准入与完备性边界。
 - [`table-design.md`](../packages/viz/_notes/architecture/table-design.md)：Table grammar、Table Algebra 与约束布局总设计。
 - [`table v0.1 roadmap`](../packages/viz/_notes/decisions/table/v0/v0.1/roadmap.md)：table v0.1 路线与 milestone 索引。

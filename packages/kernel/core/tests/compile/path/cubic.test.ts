@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { close, cubic, line, move } from '../../helpers/path-command-factory';
 import { pathCommands } from './helpers';
 
-describe("compile path: 'cubic'", () => {
+describe("编译路径：'cubic'", () => {
   it('cubic 直接坐标 → M ... C c1x c1y c2x c2y x y', () => {
     expect(
       pathCommands([
@@ -23,7 +23,7 @@ describe("compile path: 'cubic'", () => {
     ).toEqual([move([0, 0]), cubic([2, 5], [8, 5], [10, 0]), line([20, 0])]);
   });
 
-  it('cubic + cycle', () => {
+  it('立方+循环', () => {
     expect(
       pathCommands([
         { type: 'step', kind: 'move', to: [0, 0] },

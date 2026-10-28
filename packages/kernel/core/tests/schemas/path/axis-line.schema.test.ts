@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { AxisLineStepSchema, AxisLineTargetSchema, StepSchema } from '../../../src/schemas';
 
-describe('axis-line step schema', () => {
+describe('轴线步进 schema', () => {
   it.each(['horizontal', 'vertical'] as const)('接受必填 axis=%s 与收窄 target', axis => {
     expect(
       AxisLineStepSchema.parse({

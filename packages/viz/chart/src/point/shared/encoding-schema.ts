@@ -28,7 +28,7 @@ import {
 } from '../../_chart/schemas/encoding';
 
 /** Point 位置通道允许使用的尺度 operation */
-export const PointPositionScaleOperationSchema = union([
+const PointPositionScaleOperationSchema = union([
   LinearScaleSchema,
   BandScaleSchema,
   PointScaleSchema,
@@ -42,7 +42,7 @@ export const PointPositionScaleOperationSchema = union([
 ]).describe('Point position scale operation');
 
 /** Point 颜色通道允许使用的尺度 operation */
-export const PointColorScaleOperationSchema = union([
+const PointColorScaleOperationSchema = union([
   OrdinalScaleSchema,
   SequentialColorScaleSchema,
   DivergingColorScaleSchema,
@@ -103,7 +103,7 @@ export const PointPartitionEncodingSchema = union([NonBlankStringSchema, PlotPar
   'Point facet partition field mapping',
 );
 
-export type IRPointPositionEncoding = ZodInfer<ReturnType<typeof createPointPositionEncodingSchema>>;
+type IRPointPositionEncoding = ZodInfer<ReturnType<typeof createPointPositionEncodingSchema>>;
 
 type PointFacetEncodingPlan = Readonly<{
   x: IRPointPositionEncoding;

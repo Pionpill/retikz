@@ -1,8 +1,8 @@
 # @retikz/core
 
-Framework-agnostic core of [retikz](https://pionpill.github.io/retikz/) — a TikZ-inspired diagramming library. Provides the zod-typed **IR**, the **`compileToScene`** compiler, pure **parsers**, geometry helpers, and the provider registries used by core compilation. Runtime dependencies are `@retikz/foundation`, `@retikz/math`, and `zod`; IR remains 100% JSON-serializable.
+Framework-agnostic core of [retikz](https://pionpill.github.io/retikz/) — a TikZ-inspired diagramming library. Provides the zod-typed **IR**, the **`compileToScene`** compiler, geometry helpers, and the provider registries used by core compilation. Runtime dependencies are `@retikz/foundation`, `@retikz/math`, and `zod`; IR remains 100% JSON-serializable.
 
-零框架核心：retikz 的中间表示（IR）、`compileToScene` 编译器、纯解析器、几何工具与 core 编译期 provider 注册面。**零 React、零 DOM**，运行时依赖为 `@retikz/foundation`、`@retikz/math` 与 `zod`，IR 100% 可 JSON 序列化。
+零框架核心：retikz 的中间表示（IR）、`compileToScene` 编译器、几何工具与 core 编译期 provider 注册面。**零 React、零 DOM**，运行时依赖为 `@retikz/foundation`、`@retikz/math` 与 `zod`，IR 100% 可 JSON 序列化。
 
 ## Install
 
@@ -34,7 +34,7 @@ Most users consume core indirectly through [`@retikz/react`](https://www.npmjs.c
 - `computeLayout` — bounds points → `BoundsRect`; `fallbackMeasurer` — dependency-free default `TextMeasurer`
 - Layout-aware composite authoring — `layoutChild(child, proposal)` evaluates two-axis `minimum` / `natural` / `range` / `exact` proposals and returns a resolved `slotSize`, real allocation / visual bounds, alignment guides, or an isolated failure; `context.replay()` / `context.raise()` select one callback-local transaction without adding runtime handles to IR or Scene
 - IR & `Scene` zod schemas + inferred types
-- `parseWay` / `parseNodeTarget` / `parseTargetSugar` — pure parsers
+- Authoring parsers `parseWay` / `parseNodeTarget` / `parseTargetSugar` are provided by `@retikz/vanilla`; Core consumes their structured IR output
 - `point` / `rect` / `circle` / `ellipse` / `diamond` / `polar` — geometry
 - Provider registries and definition helpers for `shapes`, `boundaries`, `clips`, `arrows`, `patterns`, `pathGenerators`, `paths`, and `composites`
 - Built-in provider collections such as `BUILTIN_SHAPES`, `BUILTIN_BOUNDARIES`, `BUILTIN_CLIPS`, `BUILTIN_ARROWS`, `BUILTIN_PATTERNS`, `BUILTIN_PATH_GENERATORS`, and `BUILTIN_PATHS`; optional kinds such as Ribbon come from `@retikz/extension` and are injected through `paths` or a provider contribution

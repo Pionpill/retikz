@@ -10,7 +10,7 @@ import type {
   SceneResource,
   Transform,
 } from '../../contract';
-import type { IRPosition, ResolvedDropShadow } from '../../schemas';
+import type { IRPosition, CanonicalDropShadow } from '../../schemas';
 import { CANONICAL_STROKE_MITER_LIMIT } from '../constants';
 import { buildMarkMarkerGroup } from '../path';
 import { createCompileInvariantError } from '../probe-failure';
@@ -115,7 +115,7 @@ const expandStroke = (rect: BoundsRect, strokeWidth: number | undefined, miter: 
   };
 };
 
-const expandShadow = (rect: BoundsRect, shadow: ResolvedDropShadow | undefined): BoundsRect => {
+const expandShadow = (rect: BoundsRect, shadow: CanonicalDropShadow | undefined): BoundsRect => {
   if (shadow === undefined) return rect;
 
   const expanded = expandBoundsForShadow(

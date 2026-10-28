@@ -99,8 +99,8 @@ const createHarness = (
   return { handle, prepare, prepareMount, renderer, session };
 };
 
-describe('retained render frame contract', () => {
-  it('exposes readonlyLayerCapability on the nominal token', () => {
+describe('保留渲染帧契约', () => {
+  it('在名义代币上公开 readonlyLayerCapability', () => {
     const harness = createHarness('supported');
 
     expect(harness.renderer.readonlyLayerCapability).toBe('supported');
@@ -108,7 +108,7 @@ describe('retained render frame contract', () => {
     harness.session.dispose();
   });
 
-  it('uses one frozen empty layer array when no resolver is provided', () => {
+  it('当没有提供解析器时，使用一个冻结的空层数组', () => {
     const harness = createHarness('unsupported');
     const frame = harness.prepareMount.mock.calls[0][0];
 
@@ -119,7 +119,7 @@ describe('retained render frame contract', () => {
     harness.session.dispose();
   });
 
-  it('rejects non-empty layers on unsupported renderers before prepareMount', () => {
+  it('在 prepareMount 之前拒绝不受支持的渲染器上的非空层', () => {
     const onPrepareMount = vi.fn();
 
     expect(() => createHarness('unsupported', { onPrepareMount, resolveReadonlyLayers: layersFrom })).toThrowError(
@@ -130,7 +130,7 @@ describe('retained render frame contract', () => {
     expect(onPrepareMount).not.toHaveBeenCalled();
   });
 
-  it('resolves initial, Core update, and config-only candidates from the available Core output', () => {
+  it('从可用的 Core 输出中解析初始、Core 更新和仅配置候选', () => {
     const outputs: Array<ReconcilerOutput> = [];
     const harness = createHarness('supported', {
       resolveReadonlyLayers: output => {
@@ -161,7 +161,7 @@ describe('retained render frame contract', () => {
     harness.session.dispose();
   });
 
-  it('keeps the previous committed whole frame when layer resolution fails', () => {
+  it('当图层解析失败时，保留先前提交的整帧', () => {
     let reject = false;
     const harness = createHarness('supported', {
       resolveReadonlyLayers: output => {
@@ -185,7 +185,7 @@ describe('retained render frame contract', () => {
     harness.session.dispose();
   });
 
-  it('rejects an SSR seed whose primary or layers differ from the initial frame', () => {
+  it('拒绝其主层或层与初始帧不同的 SSR 种子', () => {
     expect(() =>
       createHarness('supported', {
         expectedInitialFrame: {

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { runLayoutPackageBoundary } from '../../../layout/tests/inspect/isolated-consumer';
 
-describe('@retikz/layout-vanilla optional inspect boundary', () => {
+describe('@retikz/layout-vanilla 可选检查边界', () => {
   it('根入口不转导可选 Inspect，manifest 提供独立子入口', () => {
     const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')) as {
       exports: Record<string, unknown>;

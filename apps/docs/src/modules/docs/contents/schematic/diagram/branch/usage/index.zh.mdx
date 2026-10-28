@@ -7,7 +7,7 @@ description: 声明平级节点和有序分支，用共享节点表达分叉与�
 
 ## 接入方式
 
-示例提供 React、Vanilla 和 IR 源码。React 从 `@retikz/diagram-react/branch` 导入组件；Vanilla 使用 `@retikz/diagram-vanilla/branch` 的 `branchDiagram()` 和 `BranchDiagramInputEmbedAdapter`。Direct IR 使用 `namespace: 'diagram', type: 'branch'`，由 `createBranchDiagramProviderContribution()` 注册编译能力。
+示例提供 React、Vanilla 和 IR 源码。React 从 `@retikz/diagram-react/branch` 导入组件；Vanilla 使用 `@retikz/diagram-vanilla/branch` 的 `branchDiagram()` 和 `branchDiagramInputEmbedAdapter`。Direct IR 使用 `namespace: 'diagram', type: 'branch'`，由 `createBranchDiagramProviderContribution()` 注册编译能力。
 
 React 声明保持平级，分支通过 `nodes` 引用节点 ID：
 

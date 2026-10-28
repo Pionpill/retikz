@@ -1,7 +1,7 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputArray } from '@retikz/standard-vanilla/collection';
-import { ArrayInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { arrayInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { IRArray, IRArrayCell } from '@retikz/standard/collection';
 import type { FC, ReactNode } from 'react';
 
@@ -73,5 +73,5 @@ const ArrayComponent: FC<ArrayProps> = () => null;
 export const Array = ArrayComponent as StandardEmbeddableComponent<ArrayProps>;
 Array.displayName = 'Array';
 Array.isTier2Embeddable = true;
-Array.inputEmbedAdapter = ArrayInputEmbedAdapter;
+Array.inputEmbedAdapter = arrayInputEmbedAdapter;
 Array.createInputEmbedProps = createArrayInput;

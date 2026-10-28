@@ -7,7 +7,7 @@ import { fullScopeProps } from '../presentation/scope-props';
 const node = { type: 'node', position: [0, 0], text: 'A' } as const;
 
 describe('FrameSchema', () => {
-  it('reuses the complete Core Scope authored surface while keeping border fields nested', () => {
+  it('重用完整的 Core Scope 编写的曲面，同时保持边界字段嵌套', () => {
     const parsed = FrameSchema.parse({
       namespace: 'standard',
       type: 'frame',
@@ -21,7 +21,7 @@ describe('FrameSchema', () => {
     expect(FrameSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('keeps Source sparse and resolves stable border, padding, and header defaults', () => {
+  it('保持 Source 稀疏并解决稳定的边框、填充和头部默认值', () => {
     const parsed = FrameSchema.parse({
       namespace: 'standard',
       type: 'frame',
@@ -45,7 +45,7 @@ describe('FrameSchema', () => {
     expect(FrameSchema.parse({ namespace: 'standard', type: 'frame', children: [node] })).not.toHaveProperty('id');
   });
 
-  it('reuses the closed Node contract for title and description without accepting position', () => {
+  it('重用已关闭的 Node 契约作为标题和描述，而不接受仓位', () => {
     const title = FrameTitleSchema.parse({
       id: 'heading',
       text: 'Contract',
@@ -86,7 +86,7 @@ describe('FrameSchema', () => {
     ).toBe(false);
   });
 
-  it('separates root Scope styles from the nested border Path style', () => {
+  it('将根 Scope 样式与嵌套边框 Path 样式分开', () => {
     const parsed = FrameSchema.parse({
       namespace: 'standard',
       type: 'frame',
@@ -114,7 +114,7 @@ describe('FrameSchema', () => {
     });
   });
 
-  it('rejects empty body, missing header text, invalid spacing, and unknown nested fields precisely', () => {
+  it('精确拒绝空正文、缺少标题文本、无效间距和未知嵌套字段', () => {
     const cases = [
       {
         input: { namespace: 'standard', type: 'frame', id: 'group', children: [] },
@@ -161,7 +161,7 @@ describe('FrameSchema', () => {
     });
   });
 
-  it('reserves only the explicit root id and allows former generated suffixes', () => {
+  it('仅保留显式根 ID 并允许以前生成的后缀', () => {
     const parts = [
       (id: string) => ({ children: [{ ...node, id }] }),
       (id: string) => ({ children: [node], title: { id, text: 'Title' } }),

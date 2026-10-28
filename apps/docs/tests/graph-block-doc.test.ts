@@ -117,8 +117,8 @@ const arrowTipOf = (path: Extract<ScenePrimitive, { type: 'path' }>): readonly [
   return [end[0] + (dx / length) * advance, end[1] + (dy / length) * advance];
 };
 
-describe('Graph Block documentation', () => {
-  it('keeps the built-in example minimal in executable IR and Vanilla code views', () => {
+describe('Graph Block 文档', () => {
+  it('在可执行 IR 和 Vanilla 代码视图中保持内置示例最少', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     try {
@@ -126,9 +126,9 @@ describe('Graph Block documentation', () => {
       const vanilla = buildVanillaPreview(preview);
 
       expect(vanilla.code).toContain('block({');
-      expect(vanilla.code).toContain('BlockInputEmbedAdapter');
+      expect(vanilla.code).toContain('blockInputEmbedAdapter');
       expect(vanilla.code).toContain('blockHeader({');
-      expect(vanilla.code).toContain('BlockHeaderInputEmbedAdapter');
+      expect(vanilla.code).toContain('blockHeaderInputEmbedAdapter');
       expect(vanilla.code).toContain('blockSection({');
       expect(vanilla.code).toContain('blockRow({');
       expect(vanilla.code).toContain("title: 'User'");
@@ -148,7 +148,7 @@ describe('Graph Block documentation', () => {
     }
   });
 
-  it('keeps custom Header slots and an arbitrary body child in Source IR and Vanilla code', () => {
+  it('在 Source IR 和 Vanilla 代码中保留自定义 Header 槽位和任意主体子代', () => {
     const preview = buildPreviewIR(() => blockCustomPreviewSource.canonicalRender?.() ?? null);
     const source = JSON.stringify(preview.sourceIr);
     const vanilla = buildVanillaPreview(preview);
@@ -162,7 +162,7 @@ describe('Graph Block documentation', () => {
     expect(vanilla.code).toContain("text: 'Cache hit rate 98.7%'");
   });
 
-  it.each(['zh', 'en'] as const)('%s exposes a text control for custom Node content', async lang => {
+  it.each(['zh', 'en'] as const)('%s 公开用于自定义 Node 内容的文本控件', async lang => {
     const result = await loadPreviewResources({
       segments: ['schematic', 'graph', 'block', 'usage'],
       name: 'block-custom',
@@ -256,7 +256,7 @@ describe('Graph Block documentation', () => {
   it.each([
     ['zh', blockCustomPreviewModule, '队列深度 42'],
     ['en', blockCustomPreviewModuleEn, 'Queue depth 42'],
-  ] as const)('%s compiles edited custom Node content into Source IR and Vanilla', (_lang, module, content) => {
+  ] as const)('%s 将修改后的自定义 Node 内容编译到 Source IR 和 Vanilla 输出', (_lang, module, content) => {
     expect(isControlledBlockCustomPreviewModule(module)).toBe(true);
 
     if (!isControlledBlockCustomPreviewModule(module)) return;
@@ -317,7 +317,7 @@ describe('Graph Block documentation', () => {
   it.each([
     ['zh', blockCustomPreviewModule],
     ['en', blockCustomPreviewModuleEn],
-  ] as const)('%s keeps the custom viewport at a natural 1:1 scale', (_lang, module) => {
+  ] as const)('%s 使自定义视口保持自然的 1:1 比例', (_lang, module) => {
     expect(isControlledBlockCustomPreviewModule(module)).toBe(true);
 
     if (!isControlledBlockCustomPreviewModule(module)) return;
@@ -345,7 +345,7 @@ describe('Graph Block documentation', () => {
     expect(element.props.viewBox).toEqual({ x: -90, y: -64, width: 420, height: 340 });
   });
 
-  it('keeps the built-in controls structurally aligned across languages', () => {
+  it('保持内置控件在跨语言结构上保持一致', () => {
     const shapeOf = (controls: {
       readonly sections: ReadonlyArray<{
         readonly controls: ReadonlyArray<{
@@ -379,7 +379,7 @@ describe('Graph Block documentation', () => {
     expect(JSON.stringify(blockBuiltinControlsEn)).not.toContain('showSection');
   });
 
-  it('applies the Header direction control to Source IR', () => {
+  it('对 Source IR 应用 Header 方向控制', () => {
     const horizontalSource = createGraphPreviewSource(() =>
       BlockBuiltinPreview({
         ...blockBuiltinContract.canonicalValues,
@@ -414,7 +414,7 @@ describe('Graph Block documentation', () => {
     expect(source.match(/"type":"blockSection"/g)).toHaveLength(2);
   });
 
-  it('derives the built-in viewport from the actual Block layout', () => {
+  it('从实际的 Block 布局派生内置视口', () => {
     const canonical = buildPreviewIR(() => blockBuiltinPreviewSource.canonicalRender?.() ?? null);
     const canonicalEn = buildPreviewIR(() => blockBuiltinPreviewSourceEn.canonicalRender?.() ?? null);
     const defaultValues = { ...blockBuiltinContract.canonicalValues, rowItemCount: '2' as const };
@@ -516,7 +516,7 @@ describe('Graph Block documentation', () => {
   it.each([
     ['zh', BlockStylePreview],
     ['en', BlockStylePreviewEn],
-  ] as const)('%s writes Header and Row text style controls into Source IR and Vanilla', (_lang, Preview) => {
+  ] as const)('%s 将 Header 和 Row 文本样式控件写入 Source IR 和 Vanilla', (_lang, Preview) => {
     const values = {
       ...blockStyleContract.canonicalValues,
       headerTitleTextColor: '#dc2626',
@@ -572,43 +572,40 @@ describe('Graph Block documentation', () => {
   it.each([
     ['zh', blockConnectionPreviewSource],
     ['en', blockConnectionPreviewSourceEn],
-  ] as const)(
-    '%s connects two Entities to the whole Block and one Section with folded routes',
-    (_lang, previewSource) => {
-      const preview = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null);
-      const source = JSON.stringify(preview.sourceIr);
-      const graph = GraphSchema.parse(preview.sourceIr.children[0]);
-      const children = graph.children ?? [];
-      const caller = children.find(child => child.type === 'entity' && child.id === 'caller');
-      const validator = children.find(child => child.type === 'entity' && child.id === 'validator');
+  ] as const)('%s 通过折线路径将两个 Entity 连接至整个 Block 和一个 Section', (_lang, previewSource) => {
+    const preview = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null);
+    const source = JSON.stringify(preview.sourceIr);
+    const graph = GraphSchema.parse(preview.sourceIr.children[0]);
+    const children = graph.children ?? [];
+    const caller = children.find(child => child.type === 'entity' && child.id === 'caller');
+    const validator = children.find(child => child.type === 'entity' && child.id === 'validator');
 
-      expect(source.match(/"type":"entity"/g)).toHaveLength(2);
-      expect(source.match(/"type":"relation"/g)).toHaveLength(2);
-      expect(source).toContain('"width":240');
-      expect(caller).toMatchObject({
-        position: [-150, 57.6],
-      });
-      expect(validator).toMatchObject({
-        position: [430, 57.6],
-      });
-      expect(source).toContain('"source":{"id":"caller","anchor":"right"}');
-      expect(source).toContain(
-        '"target":{"id":"user","anchor":"left","boundary":{"type":"rectangle","params":{"fit":"tight","gap":8.5}}}',
-      );
-      expect(source).toContain('"source":{"id":"validator","anchor":"left"}');
-      expect(source).toContain(
-        '"target":{"id":"user.fields","anchor":"right","boundary":{"type":"rectangle","params":{"fit":"tight","gap":8.5}}}',
-      );
-      expect(source.match(/"type":"rectangle","params":\{"fit":"tight","gap":8.5\}/g)).toHaveLength(3);
-      expect(source.match(/"kind":"fold"/g)).toHaveLength(2);
-      expect(source.match(/"via":"-\|-"/g)).toHaveLength(2);
-    },
-  );
+    expect(source.match(/"type":"entity"/g)).toHaveLength(2);
+    expect(source.match(/"type":"relation"/g)).toHaveLength(2);
+    expect(source).toContain('"width":240');
+    expect(caller).toMatchObject({
+      position: [-150, 57.6],
+    });
+    expect(validator).toMatchObject({
+      position: [430, 57.6],
+    });
+    expect(source).toContain('"source":{"id":"caller","anchor":"right"}');
+    expect(source).toContain(
+      '"target":{"id":"user","anchor":"left","boundary":{"type":"rectangle","params":{"fit":"tight","gap":8.5}}}',
+    );
+    expect(source).toContain('"source":{"id":"validator","anchor":"left"}');
+    expect(source).toContain(
+      '"target":{"id":"user.fields","anchor":"right","boundary":{"type":"rectangle","params":{"fit":"tight","gap":8.5}}}',
+    );
+    expect(source.match(/"type":"rectangle","params":\{"fit":"tight","gap":8.5\}/g)).toHaveLength(3);
+    expect(source.match(/"kind":"fold"/g)).toHaveLength(2);
+    expect(source.match(/"via":"-\|-"/g)).toHaveLength(2);
+  });
 
   it.each([
     ['zh', blockConnectionPreviewSource],
     ['en', blockConnectionPreviewSourceEn],
-  ] as const)('%s lands relation arrow tips on the visible Block and Section boundaries', (_lang, previewSource) => {
+  ] as const)('%s 将关系箭头尖端落在可见的 Block 和 Section 边界上', (_lang, previewSource) => {
     const preview = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null);
     const definitions = resolveCoreProviderDependencies({ contributions: preview.contributions });
     const { viewBox: _viewBox, ...ir } = preview.ir;
@@ -653,7 +650,7 @@ describe('Graph Block documentation', () => {
     ['custom en', blockCustomPreviewSourceEn],
     ['connection', blockConnectionPreviewSource],
     ['style', blockStylePreviewSource],
-  ] as const)('renders the %s preview canonical state', (_name, previewSource) => {
+  ] as const)('渲染 %s 预览规范状态', (_name, previewSource) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     try {
@@ -669,7 +666,7 @@ describe('Graph Block documentation', () => {
     ['connection en', blockConnectionPreviewSourceEn],
     ['style zh', blockStylePreviewSource],
     ['style en', blockStylePreviewSourceEn],
-  ] as const)('centers the %s viewBox on its compiled visual layout', (_name, previewSource) => {
+  ] as const)('将 %s viewBox 集中在其编译的视觉布局上', (_name, previewSource) => {
     const preview = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null);
     const rendered = buildVanillaPreview(preview);
 

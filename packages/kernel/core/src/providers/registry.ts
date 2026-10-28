@@ -4,7 +4,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
  * 创建能力注册表所需的内置项、自定义项与键提取规则
  * @template TDefinition 内置项、自定义项和键提取回调共享的定义类型
  */
-export type CreateProviderRegistryOptions<TDefinition> = {
+type ProviderRegistryOptions<TDefinition> = {
   /** 能力名称，用于错误信息 */
   capability: string;
   /**
@@ -34,7 +34,7 @@ export const createProviderRegistry = <TDefinition>({
   builtins = new Map(),
   custom = [],
   keyOf,
-}: CreateProviderRegistryOptions<TDefinition>): ProviderRegistry<TDefinition> => {
+}: ProviderRegistryOptions<TDefinition>): ProviderRegistry<TDefinition> => {
   const registry = new Map(builtins);
 
   for (const definition of custom) {
@@ -54,7 +54,7 @@ export const createProviderRegistry = <TDefinition>({
  * @template TDefinition 注册项及返回定义的类型
  * @throws RetikzCoreError 未找到定义时抛出，并提供已注册名称
  */
-export const providerDefinitionOf = <TDefinition>(
+export const getProviderDefinition = <TDefinition>(
   registry: ProviderRegistry<TDefinition>,
   key: string,
 ): TDefinition => {

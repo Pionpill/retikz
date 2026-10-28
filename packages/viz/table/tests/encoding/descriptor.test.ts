@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { TableLegendDescriptorSchema } from '../../src';
 
-describe('Table Legend descriptor schema', () => {
-  it('accepts strict swatch and ramp descriptors as JSON-safe public output', () => {
+describe('Table Legend 描述符 schema', () => {
+  it('接受严格的样本和斜坡描述符作为 JSON 安全公共输出', () => {
     const swatch = TableLegendDescriptorSchema.parse({
       encodingId: 'status',
       channel: 'contentColor',
@@ -26,7 +26,7 @@ describe('Table Legend descriptor schema', () => {
     expect(() => TableLegendDescriptorSchema.parse({ ...swatch, placement: 'right' })).toThrow();
   });
 
-  it('enforces form-specific domain, range, edge, scalar, and color contracts', () => {
+  it('强制执行特定于表单的域、范围、边缘、标量和颜色契约', () => {
     const threshold = {
       encodingId: 'risk',
       channel: 'backgroundFill',
@@ -49,7 +49,7 @@ describe('Table Legend descriptor schema', () => {
     ).toThrow();
   });
 
-  it('requires exactly two ramp endpoints while preserving omitted threshold edges', () => {
+  it('恰好需要两个斜坡端点，同时保留省略的阈值边缘', () => {
     const ramp = {
       encodingId: 'score',
       channel: 'backgroundFill',

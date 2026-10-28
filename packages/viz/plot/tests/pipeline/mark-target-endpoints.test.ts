@@ -2,15 +2,15 @@ import type { CompileWarning, IRChild, IRPath, IRScope, ScenePrimitive } from '@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
 const lower = (
-  source: Parameters<typeof lowerPlot>[0],
-  datasets: Parameters<typeof lowerPlot>[1],
-  options: Partial<Parameters<typeof lowerPlot>[2]> = {},
-) => lowerPlot(source, datasets, { textMeasurer: measureLabel, ...options });
+  source: Parameters<typeof lowerPlotWithDataArtifact>[0],
+  datasets: Parameters<typeof lowerPlotWithDataArtifact>[1],
+  options: Partial<Parameters<typeof lowerPlotWithDataArtifact>[2]> = {},
+) => lowerPlotWithDataArtifact(source, datasets, { textMeasurer: measureLabel, ...options }).child;
 
 const rows = [
   { id: 'a', x: 2, y: 3, source: 'a', target: 'b' },
@@ -48,8 +48,8 @@ const paths = (child: IRChild): Array<IRPath> =>
 const flatten = (items: Array<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
 
-describe('Mark target connections', () => {
-  it('resolves step targets and rejects their forward declarations even for empty data', () => {
+describe('标记目标连接', () => {
+  it('解析步骤目标并拒绝其前向声明，即使对于空数据也是如此', () => {
     const stepped = {
       type: 'path',
       encodings: {
@@ -68,7 +68,7 @@ describe('Mark target connections', () => {
     expect(() => compileToScene({ version: 1, type: 'scene', children: [lowered] })).not.toThrow();
     expect(() => lower(plot([stepped, nodes]), { data: [] })).toThrow(/declared before/);
   });
-  it('resolves target identity and compiles actual geometry', () => {
+  it('解析目标标识并编译实际几何图形', () => {
     const lowered = lower(plot([nodes, connection]), { data: rows }, { textMeasurer: measureLabel });
     const links = paths(lowered);
     expect(links).toHaveLength(2);
@@ -85,23 +85,23 @@ describe('Mark target connections', () => {
     expect(flatten(result.scene.primitives).filter(item => item.type === 'path')).toHaveLength(2);
   });
 
-  it('rejects targets declared after their connection', () => {
+  it('拒绝连接后声明的目标', () => {
     expect(() => lower(plot([connection, nodes]), { data: rows }, { textMeasurer: measureLabel })).toThrow(
       /declared before/,
     );
   });
 
-  it('validates declaration order even when the data is empty', () => {
+  it('即使数据为空也验证声明顺序', () => {
     expect(() => lower(plot([connection, nodes]), { data: [] })).toThrow(/declared before/);
   });
 
-  it('rejects duplicate declarations and targets without exposed identities', () => {
+  it('拒绝重复的声明和目标而不暴露身份', () => {
     expect(() => lower(plot([nodes, nodes, connection]), { data: rows })).toThrow(/Duplicate mark id/);
     const unnamedIdentity = { ...nodes, encodings: { position: nodes.encodings.position }, properties: {} };
     expect(() => lower(plot([unnamedIdentity, connection]), { data: rows })).toThrow(/does not expose anchorId/);
   });
 
-  it('does not treat an entire endpoint path as a node target', () => {
+  it('不将整个端点路径视为节点目标', () => {
     const target = {
       type: 'path',
       id: 'nodes',
@@ -111,7 +111,7 @@ describe('Mark target connections', () => {
     expect(() => lower(plot([target, connection]), { data: rows })).toThrow(/whole-path/);
   });
 
-  it('does not infer a position domain from identity keys', () => {
+  it('不从身份键推断位置域', () => {
     const spec = plot([nodes, connection]);
     const inferred = { ...spec, scales: spec.scales.map(scale => ({ ...scale, domain: undefined })) };
     const compile = (data: typeof rows) =>
@@ -127,7 +127,7 @@ describe('Mark target connections', () => {
     expect(compile(rows)).toEqual(compile(renamed));
   });
 
-  it('generates one constant connection independently of data row count', () => {
+  it('生成一个与数据行数无关的恒定连接', () => {
     const fixed = {
       ...connection,
       encodings: { from: { mark: 'nodes', key: { value: 'a' } }, to: { x: { value: 0 }, y: { value: 0 } } },
@@ -135,7 +135,7 @@ describe('Mark target connections', () => {
     expect(paths(lower(plot([nodes, fixed]), { data: rows }, { textMeasurer: measureLabel }))).toHaveLength(1);
   });
 
-  it('diagnoses missing keys rather than falling back to a coordinate', () => {
+  it('诊断缺失的键而不是回退到坐标', () => {
     const fixed = {
       ...connection,
       encodings: { from: { mark: 'nodes', key: { value: 'missing' } }, to: { x: { value: 0 }, y: { value: 0 } } },
@@ -143,7 +143,7 @@ describe('Mark target connections', () => {
     expect(() => lower(plot([nodes, fixed]), { data: rows }, { textMeasurer: measureLabel })).toThrow(/missing/);
   });
 
-  it('rejects coordinate interpolation for geometry references', () => {
+  it('拒绝几何参考的坐标插值', () => {
     expect(() =>
       lower(
         plot([nodes, { ...connection, properties: { connection: 'coordinate' } }]),
@@ -153,7 +153,7 @@ describe('Mark target connections', () => {
     ).toThrow(/coordinate/);
   });
 
-  it('preserves identity after rows are reordered', () => {
+  it('在行重新排序后保留标识', () => {
     const fixed = {
       ...connection,
       encodings: { from: { mark: 'nodes', key: { value: 'a' } }, to: { mark: 'nodes', key: { value: 'b' } } },
@@ -166,7 +166,7 @@ describe('Mark target connections', () => {
     expect(compile(rows)).toEqual(compile([...rows].reverse()));
   });
 
-  it('evaluates target generators once and uses their returned key', () => {
+  it('评估目标生成器一次并使用它们返回的键', () => {
     const generator = vi.fn(() => 'generated');
     const target = {
       ...nodes,
@@ -182,7 +182,7 @@ describe('Mark target connections', () => {
     expect(paths(lowered)[0].children[0]).toMatchObject({ to: { id: 'generated' } });
   });
 
-  it('uses a constant template identity without inventing a data row', () => {
+  it('使用常量模板标识，而不创建数据行', () => {
     const target = {
       ...nodes,
       encodings: { position: { x: { value: 2 }, y: { value: 3 } } },
@@ -195,11 +195,11 @@ describe('Mark target connections', () => {
     expect(paths(lower(plot([target, fixed]), { data: [] }))[0].children[0]).toMatchObject({ to: { id: 'fixed' } });
   });
 
-  it.each([null, '', {}, true])('rejects invalid identity data %j', id => {
+  it.each([null, '', {}, true])('拒绝无效身份数据 %j', id => {
     expect(() => lower(plot([nodes, connection]), { data: [{ ...rows[0], id }] })).toThrow(/key|anchorId/);
   });
 
-  it('rejects numeric/string identity collisions', () => {
+  it('拒绝数字/字符串身份冲突', () => {
     expect(() =>
       lower(plot([nodes, connection]), {
         data: [
@@ -210,13 +210,13 @@ describe('Mark target connections', () => {
     ).toThrow(/duplicate/i);
   });
 
-  it('does not register targets whose geometry is missing', () => {
+  it('不注册几何形状缺失的目标', () => {
     expect(() => lower(plot([nodes, connection]), { data: [{ ...rows[0], x: null }, rows[1]] })).toThrow(
       /Missing mark target key/,
     );
   });
 
-  it('references path vertices but rejects shape boundaries on them', () => {
+  it('引用路径顶点但拒绝其上的形状边界', () => {
     const vertices = { type: 'path', id: 'nodes', encodings: nodes.encodings };
     expect(paths(lower(plot([vertices, connection]), { data: rows }))).toHaveLength(3);
     const bounded = {
@@ -226,7 +226,7 @@ describe('Mark target connections', () => {
     expect(() => lower(plot([vertices, bounded]), { data: rows })).toThrow(/Coordinate target/);
   });
 
-  it('references interval region nodes', () => {
+  it('引用区间区域节点', () => {
     const intervals = {
       type: 'interval',
       id: 'nodes',
@@ -243,7 +243,7 @@ describe('Mark target connections', () => {
     expect(paths(lowered)).toHaveLength(2);
   });
 
-  it('isolates repeated target identities in facet panels', () => {
+  it('隔离构面面板中重复的目标身份', () => {
     const source = plot([nodes, connection]);
     const faceted = PlotSchema.parse({
       ...source,
@@ -266,7 +266,7 @@ describe('Mark target connections', () => {
     ).toThrow(/Missing mark target key/);
   });
 
-  it('does not generate field-bound connections for an empty result', () => {
+  it('不为空结果生成字段绑定连接', () => {
     expect(paths(lower(plot([nodes, connection]), { data: [] }))).toHaveLength(0);
   });
 });

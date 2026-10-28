@@ -7,12 +7,12 @@ import {
   createFlexLayout,
   createGridLayout,
   createOverlayLayout,
-  FlexLayoutDefinition,
-  GridLayoutDefinition,
-  OverlayLayoutDefinition,
+  flexLayoutDefinition,
+  gridLayoutDefinition,
+  overlayLayoutDefinition,
 } from '../../src';
 
-it('matches full layout slots for requested axes under content, fixed, and constrained layouts', () => {
+it('匹配内容、固定和约束布局下请求的轴的完整布局槽', () => {
   const leaf: IRChild = { type: 'node', position: [0, 0], text: 'alpha beta gamma delta', layout: { padding: 0 } };
   const proposals: Array<LayoutProposal> = [
     { x: { kind: 'intrinsic', mode: 'minimum' }, y: { kind: 'intrinsic', mode: 'natural' } },
@@ -140,7 +140,7 @@ it('matches full layout slots for requested axes under content, fixed, and const
         compileToScene(
           { version: 1, type: 'scene', children: [{ namespace: 'measure-spec', type: 'host', child }] },
           {
-            composites: [host, custom, FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
+            composites: [host, custom, flexLayoutDefinition, gridLayoutDefinition, overlayLayoutDefinition],
             measureText: (text, font) => ({ width: (text.length * font.size) / 2, height: font.size }),
           },
         );

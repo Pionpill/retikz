@@ -1,5 +1,5 @@
 import type { InputEntity } from '@retikz/graph-vanilla';
-import { EntityInputEmbedAdapter } from '@retikz/graph-vanilla';
+import { entityInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
@@ -23,5 +23,5 @@ export const Entity = EntityComponent as GraphEmbeddableComponent<EntityProps>;
 
 Entity.displayName = 'Entity';
 Entity.isTier2Embeddable = true;
-Entity.inputEmbedAdapter = EntityInputEmbedAdapter;
+Entity.inputEmbedAdapter = entityInputEmbedAdapter;
 Entity.createInputEmbedProps = createEntityInput;

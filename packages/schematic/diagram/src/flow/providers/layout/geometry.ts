@@ -8,10 +8,10 @@ import type {
   FlowBendRoute,
   FlowSmoothRoute,
   FlowBezierRoute,
-  FlowLayoutElementInput,
-  FlowLayoutInput,
+  InputFlowLayoutElement,
+  InputFlowLayoutComputation,
   FlowLayoutOutput,
-  FlowLayoutRelationInput,
+  InputFlowLayoutRelation,
   FlowLayoutRoute,
 } from '../../contract';
 import { doFlowBoundsOverlap, findFlowCurveObstacleIntervals, getFlowCurveBounds } from '../../shared/geometry';
@@ -43,7 +43,7 @@ export const createFlowBezierCurve = (route: FlowBezierRoute): CurveSegment =>
 /** 检查全部样条段，跨段合并连续接触后只豁免首尾连接区间 */
 export const flowSmoothConflicts = (
   route: FlowSmoothRoute,
-  relation: FlowLayoutRelationInput,
+  relation: InputFlowLayoutRelation,
   obstacles: ReturnType<typeof flowRelationObstacles>,
 ): Array<string> => {
   const segments = curve.catmullRomToCubic(
@@ -104,7 +104,7 @@ const routeCommands = (route: FlowLayoutRoute): Array<PathCommand> => {
 /** 完整标签的预留矩形；使用参考路线，不能当作最终 glyph bounds */
 export const flowRouteLabelBounds = (
   route: FlowLayoutRoute,
-  relation: FlowLayoutRelationInput,
+  relation: InputFlowLayoutRelation,
 ): BoundsRect | undefined => {
   if (relation.labelSize === undefined) return undefined;
 
@@ -138,14 +138,14 @@ export const flowRouteLabelBounds = (
 
 /** 每条关系独立的障碍盒，相关祖先外壳不作为实心障碍 */
 export const flowRelationObstacles = (
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   output: Pick<FlowLayoutOutput, 'elements'>,
-  relation: FlowLayoutRelationInput,
+  relation: InputFlowLayoutRelation,
 ): Array<Readonly<{ id: string; bounds: BoundsRect }>> => {
   const bounds = new Map(output.elements.map(element => [element.id, element.bounds]));
   const ancestors = new Set<string>();
 
-  const visitAncestors = (elements: ReadonlyArray<FlowLayoutElementInput>, path: ReadonlyArray<string>): void => {
+  const visitAncestors = (elements: ReadonlyArray<InputFlowLayoutElement>, path: ReadonlyArray<string>): void => {
     for (const element of elements) {
       if (element.id === relation.source.id || element.id === relation.target.id)
         for (const id of path) ancestors.add(id);
@@ -155,7 +155,7 @@ export const flowRelationObstacles = (
 
   visitAncestors(input.elements, []);
   const collect = (
-    elements: ReadonlyArray<FlowLayoutElementInput>,
+    elements: ReadonlyArray<InputFlowLayoutElement>,
   ): Array<Readonly<{ id: string; bounds: BoundsRect }>> =>
     elements.flatMap(element => {
       const box = bounds.get(element.id)!;
@@ -181,7 +181,7 @@ export const flowRelationObstacles = (
 /** 节点优先评分：冲突节点数和连续参数跨度 */
 export const scoreFlowBendNodes = (
   route: FlowBendRoute,
-  relation: FlowLayoutRelationInput,
+  relation: InputFlowLayoutRelation,
   obstacles: ReturnType<typeof flowRelationObstacles>,
 ): readonly [number, number] => {
   const segment = createFlowBendCurve(route);
@@ -209,7 +209,7 @@ export const scoreFlowBendNodes = (
 /** 将参考几何计算错误定位到对应 Source 关系，原样保留 Core cause */
 export const flowBendGeometryFailure = (
   relationIndex: number,
-  relation: FlowLayoutRelationInput,
+  relation: InputFlowLayoutRelation,
   cause: unknown,
 ): never => {
   throw new RetikzDiagramError({

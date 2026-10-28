@@ -19,7 +19,7 @@ const DEFAULT_SOURCE_IDENTITY_LIMIT = 20;
  * data lineage recorder 的归一化消费选项
  * @description 已补齐公开开关默认值，并把需要记录 row 值的选项收敛为显式白名单形态
  */
-type ResolvedDataLineageOptions = {
+type CanonicalDataLineageOptions = {
   /** sourceIndex / sourceIndices 摘要策略；false 表示不记录来源索引 */
   sourceIdentity: false | Required<DataSourceIdentityOptions>;
   /** 是否记录 transform step 摘要事件 */
@@ -41,7 +41,7 @@ type ResolvedDataLineageOptions = {
 };
 
 /** 校验 sample 类开关，避免省略字段后记录整行 */
-const normalizeSampleOptions = (
+const resolveDataSampleOptions = (
   value: false | DataValueSampleOptions | undefined,
   label: string,
 ): false | DataValueSampleOptions => {
@@ -64,7 +64,7 @@ const normalizeSampleOptions = (
 };
 
 /** 解析 source identity 开关；默认 summary + 固定上限 */
-const normalizeSourceIdentityOptions = (
+const resolveSourceIdentityOptions = (
   value: DataLineageOptions['sourceIdentity'],
 ): false | Required<DataSourceIdentityOptions> => {
   if (value === false) return false;
@@ -82,14 +82,14 @@ const normalizeSourceIdentityOptions = (
 };
 
 /** 归一化 lineage 开关默认值 */
-const normalizeLineageOptions = (options: DataLineageOptions = {}): ResolvedDataLineageOptions => ({
-  sourceIdentity: normalizeSourceIdentityOptions(options.sourceIdentity),
+const resolveDataLineageOptions = (options: DataLineageOptions = {}): CanonicalDataLineageOptions => ({
+  sourceIdentity: resolveSourceIdentityOptions(options.sourceIdentity),
   transformSteps: options.transformSteps ?? true,
   fieldFlow: options.fieldFlow ?? false,
   reducerOperations: options.reducerOperations ?? false,
   selectorOperations: options.selectorOperations ?? false,
-  rowSamples: normalizeSampleOptions(options.rowSamples, 'rowSamples'),
-  calculationDetails: normalizeSampleOptions(options.calculationDetails, 'calculationDetails'),
+  rowSamples: resolveDataSampleOptions(options.rowSamples, 'rowSamples'),
+  calculationDetails: resolveDataSampleOptions(options.calculationDetails, 'calculationDetails'),
   ...(options.sink !== undefined ? { sink: options.sink } : {}),
   retainEvents: options.sink === undefined || options.retainEvents === true,
 });
@@ -123,7 +123,7 @@ const sourceIdentityOf = (
 
 /** 创建 data lineage recorder */
 export const createDataLineageRecorder = (options: DataLineageOptions = {}): DataLineageRecorder & DataLineageRun => {
-  const resolved = normalizeLineageOptions(options);
+  const resolved = resolveDataLineageOptions(options);
   const events: Array<DataLineageEvent> = [];
 
   const record = (event: DataLineageEvent): void => {
@@ -239,7 +239,7 @@ export const importDataLineageEvents = (
   options: DataLineageOptions,
   operationIndex?: number,
 ): Array<DataLineageEvent> => {
-  const resolved = normalizeLineageOptions(options);
+  const resolved = resolveDataLineageOptions(options);
   const retained: Array<DataLineageEvent> = [];
 
   const identity = (value?: DataSourceIdentity): DataSourceIdentity | undefined => {

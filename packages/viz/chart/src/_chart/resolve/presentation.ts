@@ -1,5 +1,5 @@
 import type { IRChild, IRNode } from '@retikz/core';
-import type { FlexLayoutItemInput, IRFlexLayout } from '@retikz/layout';
+import type { InputFlexLayoutItemConfig, IRFlexLayout } from '@retikz/layout';
 import {
   createFlexLayout,
   FlexLayoutDirection,
@@ -13,11 +13,11 @@ import { createSurface } from '@retikz/standard/presentation';
 
 import { ChartPresentationSlot } from '../constants';
 import type { IRChartDefaults, IRChartPresentation, IRChartSource } from '../schemas';
-import type { ChartPresentationResolution, EffectiveChartLayout } from './types';
+import type { ChartPresentationResolution, CanonicalChartLayout } from './types';
 
-const DEFAULT_CARTESIAN_CHART_LAYOUT: EffectiveChartLayout = { width: 800, height: 500 };
+const DEFAULT_CARTESIAN_CHART_LAYOUT: CanonicalChartLayout = { width: 800, height: 500 };
 
-const DEFAULT_POLAR_CHART_LAYOUT: EffectiveChartLayout = { width: 400, height: 500 };
+const DEFAULT_POLAR_CHART_LAYOUT: CanonicalChartLayout = { width: 400, height: 500 };
 
 type TextSlot = 'title' | 'subtitle' | 'note' | 'source';
 
@@ -29,7 +29,7 @@ const defaultCoordinateTypeOf = (plot: IRPlot): string | undefined => {
 };
 
 /** 按最终坐标系补齐 Chart 外部尺寸，同时保留 authored dimension 优先级 */
-const resolveChartLayout = (source: IRChartSource, plot: IRPlot): EffectiveChartLayout => {
+const resolveChartLayout = (source: IRChartSource, plot: IRPlot): CanonicalChartLayout => {
   const coordinateType = defaultCoordinateTypeOf(plot);
   const defaults =
     coordinateType === 'polar-1d' || coordinateType === 'polar-2d'
@@ -74,7 +74,7 @@ const flexOf = (
   defaults: IRChartDefaults,
   id: string | undefined,
 ): Readonly<{ content: IRFlexLayout; slots: ReadonlyArray<'title' | 'subtitle' | 'plot' | 'note' | 'source'> }> => {
-  const children: Array<FlexLayoutItemInput> = [];
+  const children: Array<InputFlexLayoutItemConfig> = [];
   const slots: Array<'title' | 'subtitle' | 'plot' | 'note' | 'source'> = [];
 
   const appendText = (slot: TextSlot): void => {

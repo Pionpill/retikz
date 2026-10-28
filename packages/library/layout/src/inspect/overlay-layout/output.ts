@@ -8,7 +8,7 @@ import {
   inspectLayoutLine,
   inspectLayoutOutline,
   lowerLayoutInspectionMarks,
-  normalizeLayoutBoundaryGroups,
+  splitLayoutBoundaryGroups,
 } from '../shared';
 
 /** 把 Overlay 布局产物转换为普通 Core 辅助子元素
@@ -49,7 +49,7 @@ export const inspectOverlayLayoutArtifact = (
     }
   });
 
-  const [boxes = [], normalizedStructure = [], underlay = []] = normalizeLayoutBoundaryGroups([
+  const [boxes = [], normalizedStructure = [], underlay = []] = splitLayoutBoundaryGroups([
     base.boxes,
     structure,
     base.underlay,

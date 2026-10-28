@@ -16,7 +16,8 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 
 - 使用完整的语义词。不得缩写 `direction`、`reference`、`background`；已建立的 TikZ / SVG / CSS 术语如 `stroke`、`fill`、`cx` 例外
 - 目录与非组件文件的语义部分使用 kebab-case；内部领域基础目录使用 `_<domain>` 的条件见 [分层命名](references/layers.md)。源码名通常用一至两个语义词，只有确实区分独立概念时才用第三个；`.test` / `.demo` / `.data` / locale 后缀不计入词数
-- React 组件和类才使用 PascalCase。hook、store、context 分别使用 `useXxx`、`useXxxStore`、`useXxxContext`；其余值和函数使用 camelCase
+
+- 类型、接口、类、React 组件及 const object enum 使用 PascalCase。hook、store、context 分别使用 `useXxx`、`useXxxStore`、`useXxxContext`；其余值和函数使用 camelCase
 - 类成员按“属性 → 构造函数 → 公开方法 → 私有方法”排列；同一方法的重载声明与实现相邻，方法名应直接表达动作与职责
 - `index.ts` 只用作目录 barrel：导出 owner 的稳定表面，不承载业务逻辑
 - 默认按语义单文件组织强相关声明，仅内容较多且职责或依赖确需分离时拆技术分类文件；拆分后 `types.ts` 放导出或 owner 内共享类型，`constants.ts` 放稳定常量与 const object enum，`utils.ts` 只放没有更窄职责的纯 helper
@@ -33,6 +34,16 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 - namespace、registry、builder 等成员按完整调用表达式判断，如 `vector2.add()`、`registry.get()`；owner 已表达的领域词不在成员名中重复，脱离 owner 的顶层函数必须补足
 
 通用可读性参考 [Google TypeScript](https://google.github.io/styleguide/tsguide.html#identifiers)、[Microsoft TypeScript](https://github.com/microsoft/TypeScript/wiki/Coding-guidelines#names)、[Airbnb JavaScript](https://github.com/airbnb/javascript#naming-conventions)、[Angular](https://angular.dev/style-guide) 与 [typescript-eslint](https://typescript-eslint.io/rules/naming-convention/)；具体动词、阶段和角色以本规范为准
+
+## 类型名称的组合
+
+类型命名遵循：**前缀表达状态或阶段，主体表达领域对象，后缀表达用途或结构角色；只保留有区分价值的部分**。适用于各包的具名数据类型，不要求每个名称都同时包含前缀和后缀。
+
+- 前缀必须描述整个类型在所属领域内的保证，不能因为个别字段已处理就给整个对象加阶段前缀；阶段词统一见 [分层命名](references/layers.md#按语义阶段命名符号)
+- 主体及后缀明确数据用途，如 `MergedNodeStyle`、`CompiledNodeLayout`；结构角色如 `NodeResolveContext`、`NodeDefinition` 无需额外阶段前缀。避免用 `Data`、`Info` 等泛词掩盖真实用途
+- 输入类型统一使用 `InputXxx`，包括 authoring、操作参数、Definition 和 Options 输入；用途与角色保留在后缀，如 `InputNodeLayout`、`InputNodeOptions`、`InputNodeDefinition`，不使用 `XxxInput`。此前缀不限定所属包，也不表示输入未经类型检查；仅在需要独立输入契约时定义类型
+- 仅为实际存在且需要区分的形态命名，不为凑齐命名结构新增类型、包装或状态；既有 `IRXxx`、`InputXxx`、`BuiltinXxx` 等专用角色按分层规则使用，不堆叠同义限定词
+- 函数仍用“动作 + 对象”，如 `mergeNodeStyle`；变量按实际内容命名，如 `mergedNodeStyle`，局部上下文明确时可简化。枚举成员、常量、目录和文件继续遵循各自形式，不机械套用类型组合
 
 ## 按需读取
 

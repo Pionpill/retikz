@@ -6,8 +6,8 @@ import type {
   IRScene,
   Scene,
 } from '@retikz/core';
-import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import type { ReconcilerUpdateStrategy } from '@retikz/reconciler';
+import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import type { InputAuthoringSite, InputNormalizeOptions, InputRuntimeMeta, InputScene } from '../normalize';
 import type { AnyInputEmbedAdapter } from '../normalize';
@@ -31,7 +31,7 @@ export type ProcessingOptions = Readonly<{
 }>;
 
 /** 已完成作者侧归一与 Composite dependency 解析的 processing 输入 */
-export type PreparedProcessingInput = Readonly<{
+export type InputPreparedProcessing = Readonly<{
   /** 直接交给 Core compile 的 Source IR */
   source: IRScene;
   /** 与 Source IR 同次确定的 Core compile options */

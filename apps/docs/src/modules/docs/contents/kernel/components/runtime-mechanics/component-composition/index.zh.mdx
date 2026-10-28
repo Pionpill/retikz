@@ -51,7 +51,7 @@ React 或 Vanilla 接收作者输入后，由 Adapter 整理成高层组件的 S
   sources={[
     { label: 'Adapter 提供输入与依赖', path: 'packages/viz/chart-vanilla/src/shared/adapter.ts' },
     { label: 'Chart 与 Plot 的依赖汇总', path: 'packages/viz/chart-vanilla/src/shared/contribution.ts' },
-    { label: 'Core 装配 Definition', path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts' },
+    { label: 'Core 装配 Definition', path: 'packages/kernel/core/src/contract/provider/resolve.ts' },
   ]}
 />
 
@@ -133,7 +133,7 @@ Core 提供递归编译、度量和结果提交能力；Chart、Surface、FlexLa
 
 <ComponentPreview files="composition-implementation" hideCode type="flow" size="lg" />
 
-阅读源码时，从 `ConnectedScatterChartInputEmbedAdapter` 看输入如何生成 Source IR 与依赖，再看 `createChartDefinition` 怎样得到展示结构并发起布局。接着沿 `compileSurface`、`compileFlexLayout` 和 `lowerPlots` 查看子项提案与输出；最后回到 Core 遍历器查看结果如何汇合。函数名是源码定位点，不要求应用直接调用这些内部入口。
+阅读源码时，从 `connectedScatterChartInputEmbedAdapter` 看输入如何生成 Source IR 与依赖，再看 `createChartDefinition` 怎样得到展示结构并发起布局。接着沿 `compileSurface`、`compileFlexLayout` 和 `lowerPlots` 查看子项提案与输出；最后回到 Core 遍历器查看结果如何汇合。函数名是源码定位点，不要求应用直接调用这些内部入口。
 
 ## 延伸阅读
 

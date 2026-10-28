@@ -15,13 +15,13 @@ const lowerSvgForTest = (svg: string, fontSize: number) => {
  * SVG path-d 解析 + MathJax SVG → renderer-agnostic 字形 LoweredTex
  */
 
-describe('SVG structured errors', () => {
-  it('transform failures use the package RetikzTexError', () => {
+describe('SVG 结构化错误', () => {
+  it('转换失败使用包 RetikzTexError', () => {
     expect(() => parseSvgTransform('rotate(90)')).toThrow(RetikzTexError);
   });
 });
 
-describe('[path-d] parsePathD', () => {
+describe('[路径-d] parsePathD', () => {
   it('M/L/Z 绝对', () => {
     expect(parsePathD('M0 0 L10 0 L10 10 Z')).toEqual([
       { kind: 'move', to: [0, 0] },
@@ -31,7 +31,7 @@ describe('[path-d] parsePathD', () => {
     ]);
   });
 
-  it('H/V → line', () => {
+  it('水平/垂直 → 线', () => {
     expect(parsePathD('M0 0 H10 V10')).toEqual([
       { kind: 'move', to: [0, 0] },
       { kind: 'line', to: [10, 0] },
@@ -88,7 +88,7 @@ describe('[path-d] parsePathD', () => {
   });
 });
 
-describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
+describe('[下-mathjax-svg] lowerMathJaxSvg', () => {
   // 已知 viewBox + 全局 scale(1,-1) 翻转 + path；fontSize=1000 → scale=1，便于核对坐标
   const svg =
     '<svg viewBox="0 -100 200 150"><g transform="scale(1,-1)">' +
@@ -105,7 +105,7 @@ describe('[lower-mathjax-svg] lowerMathJaxSvg', () => {
     ]);
   });
 
-  it('bbox：width/height = viewBox×scale，depth = (vbY+vbH)×scale', () => {
+  it('bbox：宽度/高度 = viewBox×比例，深度 = (vbY+vbH)×比例', () => {
     const r = lowerSvgForTest(svg, 1000);
 
     expect(r.width).toBe(200);

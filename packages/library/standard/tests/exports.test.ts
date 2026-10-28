@@ -5,29 +5,29 @@ import { RetikzStandardError } from '../src';
 import * as collectionExports from '../src/collection';
 import * as presentationExports from '../src/presentation';
 import {
-  AxesDefinition,
+  axesDefinition,
   createGrid,
-  FrameDefinition,
-  GridDefinition,
+  frameDefinition,
+  gridDefinition,
   LegendArtifactSchema,
-  LegendDefinition,
+  legendDefinition,
   LegendSchema,
 } from '../src/presentation';
 
-describe('@retikz/standard family exports', () => {
-  it('exposes presentation composites from their family entry', () => {
-    expect(AxesDefinition).toBe(presentationExports.AxesDefinition);
-    expect(FrameDefinition).toBe(presentationExports.FrameDefinition);
-    expect(GridDefinition).toBe(presentationExports.GridDefinition);
-    expect(LegendDefinition).toBe(presentationExports.LegendDefinition);
-    expect(LegendDefinition.schema).toBe(LegendSchema);
-    expect(LegendDefinition.artifactSchema).toBe(LegendArtifactSchema);
+describe('@retikz/standard 系列出口', () => {
+  it('公开其家族条目中的演示复合组件', () => {
+    expect(axesDefinition).toBe(presentationExports.axesDefinition);
+    expect(frameDefinition).toBe(presentationExports.frameDefinition);
+    expect(gridDefinition).toBe(presentationExports.gridDefinition);
+    expect(legendDefinition).toBe(presentationExports.legendDefinition);
+    expect(legendDefinition.schema).toBe(LegendSchema);
+    expect(legendDefinition.artifactSchema).toBe(LegendArtifactSchema);
     expect(createGrid({ bounds: { start: [0, 0], end: [10, 10] }, line: { spacing: 10 } })).toMatchObject({
       namespace: 'standard',
       type: 'grid',
     });
-    expect(collectionExports).not.toHaveProperty('GridDefinition');
+    expect(collectionExports).not.toHaveProperty('gridDefinition');
     expect(standardExports).toHaveProperty('RetikzStandardError', RetikzStandardError);
-    expect(standardExports).not.toHaveProperty('GridDefinition');
+    expect(standardExports).not.toHaveProperty('gridDefinition');
   });
 });

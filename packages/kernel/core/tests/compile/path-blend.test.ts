@@ -26,7 +26,7 @@ const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileT
 
 // ════════════════ Happy ════════════════
 
-describe('[path-blend] Happy', () => {
+describe('[路径混合]快乐', () => {
   it('path-blend：Path + blendMode="screen" → 主 PathPrimitive 带 blendMode', () => {
     const prim = findPathPrim(
       compilePath({
@@ -119,7 +119,7 @@ describe('[path-blend] 交互', () => {
 
 // ════════════════ round-trip ════════════════
 
-describe('[path-blend] round-trip', () => {
+describe('[路径混合]往返', () => {
   it('含 blendMode 的 IRPath JSON 往返 parse 深等', () => {
     const path = {
       type: 'path',

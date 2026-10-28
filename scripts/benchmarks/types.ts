@@ -20,7 +20,7 @@ export type BenchmarkEnvironment = {
   lockHash: string;
   /** 用例与加载配置的摘要，防止输入或测量方式改变后误用基线 */
   fixtureHash: string;
-  artifact: 'native-esm';
+  artifact: 'native-esm' | 'vite-source';
   sampling: { time: number; iterations: number; warmupTime: number; warmupIterations: number };
 };
 
@@ -95,6 +95,8 @@ export type BenchmarkReport = {
 
 /** 包级基准接入配置，路径相对被测包根目录 */
 export type BenchmarkReporterOptions = {
+  /** 实际加载方式，默认使用原生 ESM 构建产物 */
+  artifact?: BenchmarkEnvironment['artifact'];
   /** 报告标题 */
   title: string;
   /** 模块提供的维度列名，数量不限；用例按同一顺序提供值 */

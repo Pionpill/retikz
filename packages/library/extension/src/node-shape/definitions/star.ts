@@ -6,24 +6,23 @@ import {
   contourToPathPrimitive,
   defineShape,
   pointsConnectionEnvelope,
-  verticesToSegments,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { DEG_TO_RAD, localToWorld } from '@retikz/math';
+import { DEG_TO_RAD, localToWorld, verticesToSegments } from '@retikz/math';
 import type { CenteredBox, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
 
 import { BuiltinExtensionShapeName } from '../constants';
 
-const MaxStarPoints = 1024;
+const maxStarPoints = 1024;
 
 const StarShapeParamsSchema = strictObject({
   points: number()
     .int()
     .min(3)
-    .max(MaxStarPoints)
-    .describe(`Number of star points (3..${MaxStarPoints}); capped to bound vertex count (mirrors polygon sides).`),
+    .max(maxStarPoints)
+    .describe(`Number of star points (3..${maxStarPoints}); capped to bound vertex count (mirrors polygon sides).`),
   innerRadius: PositiveNumberSchema.describe('Inner (notch) radius in user units.'),
   outerRadius: PositiveNumberSchema.describe('Outer (tip) radius in user units; must be > innerRadius.'),
   rotate: number()
@@ -74,10 +73,10 @@ const worldVertices = (rect: CenteredBox, geometry: StarGeometry): Array<Positio
   geometry.vertices.map(vertex => localToWorld(rect, vertex));
 
 /** 可选 Star 形状 Definition */
-export const StarShapeDefinition = defineShape<StarShapeParams>({
+export const starShapeDefinition = defineShape<StarShapeParams>({
   name: BuiltinExtensionShapeName.Star,
   paramsSchema: StarShapeParamsSchema,
-  computeCircumscribedHalfAxes: (_halfWidth, _halfHeight, params) => starGeometry(params).aabbHalfAxes,
+  computeCircumscribedGeometry: (_halfWidth, _halfHeight, params) => starGeometry(params).aabbHalfAxes,
   computeBoundaryPoint: (rect, toward, params) => {
     const vertices = worldVertices(rect, starGeometry(params));
     const center = localToWorld(rect, [0, 0]);
@@ -119,9 +118,7 @@ export const StarShapeDefinition = defineShape<StarShapeParams>({
 });
 
 /** Star 的静态 Core provider */
-export const StarShapeProvider: CoreDependencyProvider = Object.freeze({
-  key: { capability: 'shape', name: StarShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
-  makeDefinition: () => StarShapeDefinition,
+export const starShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
+  key: { capability: 'shape', name: starShapeDefinition.name },
+  makeDefinition: () => starShapeDefinition,
 });

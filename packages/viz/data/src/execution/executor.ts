@@ -9,7 +9,7 @@ import type {
   DataTransformPreparation,
   DataTransformRequestOptions,
   DataTransformStageImplementation,
-  DataTransformStageInput,
+  InputDataTransformStage,
   DataTransformStageSupport,
   DataTransformImplementationProvider,
 } from './contract';
@@ -25,7 +25,7 @@ import { assertDataTransformModel, assertDataExecutionActive, hasDataProvenance 
  * @returns 保留源句柄或结果模型的预检描述，不读取或复制行数据
  */
 export const describeDataTransformInput = <TSource>(
-  input: DataTransformStageInput<TSource>,
+  input: InputDataTransformStage<TSource>,
 ): DataTransformInputDescriptor<TSource> =>
   input.kind === 'source' ? input : { kind: 'result', model: input.result.model };
 
@@ -194,7 +194,7 @@ export const createDataTransformExecutor = <TSource = never>(
  * @throws {RetikzDataError} 预检不支持、输入不匹配、计算或结果校验失败，或请求被取消；Promise 会拒绝
  */
 export const executeDataTransforms = async <TSource>(
-  input: DataTransformStageInput<TSource>,
+  input: InputDataTransformStage<TSource>,
   resolution: DataTransformResolution,
   executor: DataTransformExecutor<TSource>,
   options: DataTransformRequestOptions = {},

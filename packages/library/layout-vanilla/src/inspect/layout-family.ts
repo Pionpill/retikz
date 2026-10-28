@@ -1,11 +1,11 @@
 import type { InspectorRegistry } from '@retikz/inspect';
 import { createInspectorRegistry, mergeInspectorRegistries } from '@retikz/inspect';
-import type { CreateInspectionVanillaDriverOptions } from '@retikz/inspect/vanilla';
+import type { InspectionVanillaDriverOptions } from '@retikz/inspect/vanilla';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
 import { FLEX_LAYOUT_INSPECTOR, GRID_LAYOUT_INSPECTOR, OVERLAY_LAYOUT_INSPECTOR } from '@retikz/layout/inspect';
 
 /** Layout 检查编译驱动的创建选项 */
-export type CreateLayoutInspectionVanillaDriverOptions = Omit<CreateInspectionVanillaDriverOptions, 'registry'> &
+export type LayoutInspectionVanillaDriverOptions = Omit<InspectionVanillaDriverOptions, 'registry'> &
   Readonly<{
     /** 除三种 Layout 布局检查器外合并的自定义检查 registry */
     registry?: InspectorRegistry;
@@ -16,7 +16,7 @@ export type CreateLayoutInspectionVanillaDriverOptions = Omit<CreateInspectionVa
  * @returns 传给 Vanilla render 或 mount 入口的检查编译驱动
  */
 export const createLayoutInspectionVanillaDriver = (
-  options: CreateLayoutInspectionVanillaDriverOptions = {},
+  options: LayoutInspectionVanillaDriverOptions = {},
 ): ReturnType<typeof createInspectionVanillaDriver> => {
   const { registry: customRegistry, ...driver } = options;
   const layoutRegistry = createInspectorRegistry([

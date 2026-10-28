@@ -57,23 +57,6 @@ export const createChartDefinition = (
     type: registry.family,
     schema: registry.schema,
     compile: (source, context) => {
-      const recipe = registry.recipes.get(source.recipe.chartType);
-      if (recipe === undefined) {
-        throw new RetikzChartError({
-          code: RetikzChartErrorCode.UnknownDefinition,
-          message: `Chart recipe "${source.recipe.chartType}" is not active in this Chart provider`,
-          details: { path: ['recipe', 'chartType'], chartType: source.recipe.chartType },
-        });
-      }
-
-      if (source.type !== registry.family) {
-        throw new RetikzChartError({
-          code: RetikzChartErrorCode.FamilyMismatch,
-          message: `Chart family "${source.type}" does not match provider family "${registry.family}"`,
-          details: { path: ['type'], family: source.type, expected: registry.family },
-        });
-      }
-
       const resolution = resolveChartFromProvider(source, { theme: context.theme, registry });
 
       for (const warning of resolution.warnings) {

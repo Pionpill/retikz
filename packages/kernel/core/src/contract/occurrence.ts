@@ -42,9 +42,7 @@ export const isCompileOccurrenceEqual = (left: CompileOccurrenceLocator, right: 
       segment.kind === right.expansionPath[index]?.kind && segment.index === right.expansionPath[index]?.index,
   );
 
-const collectSourceIndexes = (sourcePath: string): Array<number> =>
-  Array.from(sourcePath.matchAll(/children\[(\d+)\]/g), match => Number(match[1]));
-
+/** 按字典序比较索引链，前缀相同时较短的链排在前面 */
 const compareIndexes = (left: ReadonlyArray<number>, right: ReadonlyArray<number>): number => {
   const sharedLength = Math.min(left.length, right.length);
 
@@ -58,6 +56,10 @@ const compareIndexes = (left: ReadonlyArray<number>, right: ReadonlyArray<number
 
 /** 按 canonical 逻辑树 preorder 比较两个 compile occurrence */
 export const compareCompileOccurrences = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): number => {
+  /** 从 Source 路径提取子项索引，供树遍历顺序比较 */
+  const collectSourceIndexes = (sourcePath: string): Array<number> =>
+    Array.from(sourcePath.matchAll(/children\[(\d+)\]/g), match => Number(match[1]));
+
   const sourceDifference = compareIndexes(
     collectSourceIndexes(left.sourcePath),
     collectSourceIndexes(right.sourcePath),

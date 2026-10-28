@@ -443,7 +443,7 @@ Plot 通过 `definitions.regressions` 和 `implementations.regressions` 接收�
     {
       name: 'defineTransform',
       kind: 'function',
-      type: '<TKind extends string, TParamsSchema extends z.ZodType<Record<string, JsonValue>, Record<string, JsonValue>>>(definition: TransformDefinitionInput<TKind, TParamsSchema>) => TransformDefinition<{ kind: TKind; params: z.output<TParamsSchema> }>',
+      type: '<TKind extends string, TParamsSchema extends z.ZodType<Record<string, JsonValue>, Record<string, JsonValue>>>(definition: InputTransformDefinition<TKind, TParamsSchema>) => TransformDefinition<{ kind: TKind; params: z.output<TParamsSchema> }>',
       description: '声明名称、参数 schema 与字段变化；outputModel 必填，语义回调不计算行数据。',
     },
     {

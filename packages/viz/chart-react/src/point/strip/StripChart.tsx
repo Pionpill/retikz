@@ -1,5 +1,5 @@
 import type { StripChartInputEmbedProps } from '@retikz/chart-vanilla/point';
-import { stripChart, StripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { stripChart, stripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import type { IRStripChart } from '@retikz/chart/point';
 
 import type { TypedChartCommonProps } from '../shared';
@@ -26,5 +26,5 @@ export const StripChart = createTypedChartComponent<
       input => stripChart(input),
       'StripEncodings',
     ),
-  StripChartInputEmbedAdapter,
+  stripChartInputEmbedAdapter,
 );

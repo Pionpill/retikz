@@ -39,7 +39,7 @@ describe('宿主标签简写与详细配置', () => {
     expect(mark.properties?.label).toMatchObject({ pin: true });
   });
 
-  it('label core style props pass through', () => {
+  it('标签核心样式 props 穿越', () => {
     const spec = buildPlotIR(
       <IntervalMark
         encodings={{ position: { x: { field: 'month' }, y: { field: 'revenue' } }, label: { text: 'revenue' } }}
@@ -172,7 +172,7 @@ describe('PointMark 内容字段与固定属性', () => {
   });
 });
 
-it('React and Vanilla preserve split opacity and label declarations', () => {
+it('React 和 Vanilla 保留分割不透明度和标签声明', () => {
   const encodings = {
     position: { x: { field: 'x' }, y: { field: 'y' } },
     opacity: { fill: { field: 'alpha', scale: 'alpha-scale' } },

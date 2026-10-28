@@ -51,8 +51,8 @@ const roleDemos: Partial<Record<string, DemoModule>> = {
 
 const expectedStatusValues = ['', 'error', 'success', 'warning', 'disabled'];
 
-describe('Graph semantic status controls', () => {
-  it('adds an unstyled option and every closed status to every bilingual Relation playground', () => {
+describe('Graph 语义状态控件', () => {
+  it('为每个双语 Relation 交互演示提供无样式选项及所有封闭枚举状态', () => {
     for (const path of [...relationRoleControlPaths, ...styleControlPaths]) {
       const controls = roleControls[path];
       const englishControls = controls?.createPreviewControlContract('en');
@@ -74,11 +74,11 @@ describe('Graph semantic status controls', () => {
     }
   });
 
-  it('omits the Relation status when the unstyled option is selected', () => {
+  it('选择无样式选项时忽略 Relation 状态', () => {
     expect(relationStatusOf('')).toBeUndefined();
   });
 
-  it('omits the canonical status from every Relation role Source preview', () => {
+  it('忽略每个 Relation 角色 Source 预览的规范状态', () => {
     for (const path of [...relationRoleDemoPaths]) {
       const demo = roleDemos[path];
 

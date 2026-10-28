@@ -1,14 +1,14 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { InspectionSelectionRule } from '@retikz/inspect';
 
-import type { CreateLayoutInspectionSelectionInput, LayoutInspectionSelection } from './types';
+import type { InputLayoutInspectionSelection, LayoutInspectionSelection } from './types';
 
 /**
  * 为整张图、作用域子树或组件自身创建一个布局检查请求
  * @template TOptions 目标检查器接受的 JSON 选项类型
  */
 export const createLayoutInspectionSelection = <TOptions extends JsonObject>(
-  input: CreateLayoutInspectionSelectionInput<TOptions>,
+  input: InputLayoutInspectionSelection<TOptions>,
 ): LayoutInspectionSelection =>
   Object.freeze({
     rules: Object.freeze([

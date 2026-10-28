@@ -45,7 +45,7 @@ describe('React JSX Input 场景', () => {
     expect(fromDraw).toEqual(explicit);
     expect(compileToScene(fromDraw).scene).toEqual(compileToScene(explicit).scene);
   });
-  it('preserves multiline node labels through JSX, Vanilla and IR round-trip', () => {
+  it('通过 JSX、Vanilla 和 IR 往返保留多行节点标签', () => {
     const text = ['first', { text: 'second', fill: '#ff0000' }];
     const input = createInputScene(<Node label={{ text }} />);
     const ir = normalizeScene(input.scene).ir;
@@ -56,7 +56,7 @@ describe('React JSX Input 场景', () => {
     const rebuilt = createInputScene(convertIRToReactNode({ ...ir, children: [child] }));
     expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
   });
-  it('preserves Node aliases through JSX, Vanilla normalization and IR round-trip', () => {
+  it('通过 JSX、Vanilla 标准化和 IR 往返保留 Node 别名', () => {
     const input = createInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
     const ir = normalizeScene(input.scene).ir;
 

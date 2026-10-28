@@ -3,14 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { curve } from '../src';
 import type { CurveSegment } from '../src';
 
-describe('curve projected range', () => {
-  it('uses quadratic interior extrema rather than control points', () => {
+describe('曲线投影范围', () => {
+  it('使用二次贝塞尔曲线的内部极值而非控制点确定投影范围', () => {
     expect(
       curve.projectedRange({ kind: 'quadraticBezier', from: [0, 0], control: [20, 10], to: [0, 20] }, [1, 0]),
     ).toEqual({ min: 0, max: 10 });
   });
 
-  it('limits arc extrema to the authored sweep', () => {
+  it('将圆弧极值限制在指定的扫掠范围内', () => {
     const range = curve.projectedRange(
       { kind: 'arc', center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 90 },
       [-1, 0],
@@ -21,7 +21,7 @@ describe('curve projected range', () => {
   });
 });
 
-it('finds cubic extrema and handles zero projection axes', () => {
+it('计算三次贝塞尔曲线的极值并处理零投影轴', () => {
   const segment = {
     kind: 'cubicBezier',
     from: [0, 0],
@@ -33,7 +33,7 @@ it('finds cubic extrema and handles zero projection axes', () => {
   expect(curve.projectedRange(segment, [2, 0])).toEqual({ min: 0, max: 60 });
   expect(curve.projectedRange(segment, [0, 0])).toEqual({ min: 0, max: 0 });
 });
-it('finds rotated ellipse extrema in reverse sweeps', () => {
+it('计算旋转椭圆在反向扫掠时的极值', () => {
   const range = curve.projectedRange(
     {
       kind: 'ellipseArc',
@@ -51,7 +51,7 @@ it('finds rotated ellipse extrema in reverse sweeps', () => {
   expect(range.max).toBeCloseTo(3 + Math.sqrt(250));
 });
 
-it('preserves a constant projection for degenerate geometry', () => {
+it('退化几何保持恒定的投影值', () => {
   const segments: Array<CurveSegment> = [
     { kind: 'line', from: [3, 4], to: [3, 4] },
     { kind: 'quadraticBezier', from: [3, 4], control: [3, 4], to: [3, 4] },

@@ -1,28 +1,29 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
 /** 笛卡尔默认画布：x [0,..]→[0,480]，y range [300,0]（无 axis → plot area = 整图） */
-const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = {},
+  options: PlotsLoweringOptions = {},
 ): IRScope => {
-  return lowerPlot(spec, datasets, { textMeasurer: measureLabel, ...cartOpts, ...options }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { textMeasurer: measureLabel, ...cartOpts, ...options })
+    .child as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
 const firstLayer = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = {},
+  options: PlotsLoweringOptions = {},
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 point node（连续色按色分组到子 Scope，fill 落在子 Scope.nodeDefault） */
@@ -374,7 +375,7 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
   });
 
   // 错误路径：temporal 字段 + diverging → fail-loud（diverging 对 temporal 无意义）
-  it('temporal + diverging fail-loud', () => {
+  it('时间+发散的失败声音', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

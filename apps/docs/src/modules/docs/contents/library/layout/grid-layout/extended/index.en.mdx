@@ -58,7 +58,7 @@ With overlap disabled, the second demo item occupies the adjacent column. Enabli
     {
       name: 'columns',
       kind: 'property',
-      type: 'Array<GridTrackInput>',
+      type: 'Array<InputGridTrack>',
       description:
         'Intrinsic contributions and bounded tracks `content` selects `minimum` / `natural`; `minmax` has `min` and `max` breadths, with no fractional minimum.',
       required: true,
@@ -66,7 +66,7 @@ With overlap disabled, the second demo item occupies the adjacent column. Enabli
     {
       name: 'size',
       kind: 'property',
-      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      type: '{ x?: InputLayoutAxisSize; y?: InputLayoutAxisSize }',
       description:
         'Finite available space Each axis accepts `{ kind: "content", min?, max? }`, `{ kind: "fixed", value }`, or `{ kind: "fill", min?, max? }`.',
       defaultValue: 'content / content',
@@ -74,7 +74,7 @@ With overlap disabled, the second demo item occupies the adjacent column. Enabli
     {
       name: 'implicitRow',
       kind: 'property',
-      type: 'GridTrackInput',
+      type: 'InputGridTrack',
       description:
         'Materialize rows beyond explicit entries; this page uses `{ kind: "fixed", value }` for implicit row height',
       defaultValue: '{ kind: "content", mode: "natural" }',
@@ -82,7 +82,7 @@ With overlap disabled, the second demo item occupies the adjacent column. Enabli
     {
       name: 'implicitColumn',
       kind: 'property',
-      type: 'GridTrackInput',
+      type: 'InputGridTrack',
       description: 'Materialize columns beyond explicit entries using the same track definitions as columns',
       defaultValue: '{ kind: "content", mode: "natural" }',
     },

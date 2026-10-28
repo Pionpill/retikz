@@ -2,7 +2,7 @@ import type { BranchDiagramDefinitionOptions } from '@retikz/diagram/branch';
 import { createBranchDiagramProviderContribution } from '@retikz/diagram/branch';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { BranchDiagramEmbedKind } from './constants';
+import { branchDiagramEmbedKind } from './constants';
 import type { InputBranchDiagram } from './normalize';
 import { normalizeBranchDiagram } from './normalize';
 import { branchDiagramDefinitionOptionsOf } from './providers';
@@ -39,8 +39,8 @@ const inputOf = (props: BranchDiagramInputEmbedProps): InputBranchDiagram => {
 };
 
 /** Branch Diagram Source root 的 InputEmbed adapter */
-export const BranchDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<BranchDiagramInputEmbedProps> = {
-  kind: BranchDiagramEmbedKind,
+export const branchDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<BranchDiagramInputEmbedProps> = {
+  kind: branchDiagramEmbedKind,
   lower: props => ({
     node: normalizeBranchDiagram(inputOf(props)),
     providerDependencies: createBranchDiagramProviderContribution(branchDiagramDefinitionOptionsOf(props)),
@@ -54,7 +54,7 @@ export const BranchDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<Branch
  */
 export const branchDiagram = (input: BranchDiagramInputEmbedProps): InputEmbed<BranchDiagramInputEmbedProps> => ({
   type: 'embed',
-  kind: BranchDiagramEmbedKind,
+  kind: branchDiagramEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

@@ -4,7 +4,7 @@ import type {
   CoreProviderContribution,
   IRChild,
   IRTheme,
-  ResolvedTheme,
+  CanonicalTheme,
   ThemeDefinition,
 } from '@retikz/core';
 
@@ -23,7 +23,7 @@ export type InputEmbedAuthoringSite = Readonly<{
 }>;
 
 /** 嵌入 adapter 在同次 Scene 归一化中处理的子项结果 */
-export type NormalizedInputEmbedChildren = Readonly<{
+export type EmbedChildrenNormalizationResult = Readonly<{
   /** 相对 children 数组的实例输入；父 adapter 按实际输出字段转交 */
   runtimeInputs?: ReadonlyArray<CompositeInputBinding>;
   /** 已归一为 Core Source IR 的子节点 */
@@ -37,7 +37,7 @@ export type NormalizedInputEmbedChildren = Readonly<{
 /** InputEmbed 所在位置已生效的 Core Theme 上下文 */
 export type InputEmbedThemeContext = Readonly<{
   /** Scene / Scope 链解析后的有效 Theme */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** 调用方提供的 Core Theme definitions */
   themeDefinitions?: ReadonlyArray<ThemeDefinition>;
 }>;
@@ -85,11 +85,11 @@ export type InputEmbedContext = {
   /** 从分层到当前节点的身份路径 */
   identityPath: Array<string>;
   /** processing 已准备的有效 Theme */
-  theme?: ResolvedTheme;
+  theme?: CanonicalTheme;
   /** processing 传递的 Core Theme definitions */
   themeDefinitions?: ReadonlyArray<ThemeDefinition>;
   /** 在当前根 Scene traversal 中归一化嵌入 slot 的已类型化 authoring 子项 */
-  normalizeChildren?: (children: ReadonlyArray<InputChild>) => NormalizedInputEmbedChildren;
+  normalizeChildren?: (children: ReadonlyArray<InputChild>) => EmbedChildrenNormalizationResult;
 };
 
 /** Tier 2 adapter 对 Source IR 与 Composite resolver 的贡献 */
@@ -113,7 +113,7 @@ export type InputEmbedPreparation = Readonly<{
 /** 嵌套作者输入的独立执行权 */
 export type InputEmbedChildrenPreparation = Readonly<{
   /** 按作者顺序消费已准备的子项 */
-  execute: () => NormalizedInputEmbedChildren | Promise<NormalizedInputEmbedChildren>;
+  execute: () => EmbedChildrenNormalizationResult | Promise<EmbedChildrenNormalizationResult>;
 }>;
 
 /** 共享 processing 提供的作者位置、主题与失效信号 */

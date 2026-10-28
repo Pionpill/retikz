@@ -140,5 +140,5 @@ arrow 复用 Vanilla 路径箭头输入，支持 none、->、<-、<-> 及端点�
 - 路径扩展复用 Core 的 Path Definition 能力，Plot 不恢复已移除的生成器步骤或建立平行生成器 registry
 - 既有 position 和 from/to 行为不变，不将 steps 的几何规则反向套到已有曲线插值和数据缺值策略
 - 保留路径宿主样式、分段标签和路径标记的 Core 语义；实例 provenance 仍来自当前路径行，不被目标行替换
-- Ribbon 是由中心线生成带状几何的 Path kind 能力，不能用普通描边步骤或 strokeWidth 冒充。本决策不改变 Ribbon 契约；其接入、关系端点图形和剩余关系消费方迁移需独立决策，完成整体替代前不移除 RelationMark
+- Ribbon 是由中心线生成带状几何的 Path kind，按 028 接入，不能用 strokeWidth 冒充。端点图形使用独立 PointMark；RelationMark 移除。步骤标签保留固定声明，不提供逐段字段标签或最长段／最后一段自动选段策略
 - 公开交付同步中英文路径构造说明、完整步骤与 way 示例、React / Vanilla 等价入口，并明确数据空间与绘图空间

@@ -6,7 +6,7 @@ import {
   createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,
   FlowDiagramSchema,
-  LayeredFlowLayoutDefinition,
+  layeredFlowLayoutDefinition,
 } from '../../src/flow';
 
 const source = (equal = true): IRFlowDiagram => ({
@@ -36,7 +36,7 @@ const source = (equal = true): IRFlowDiagram => ({
   relations: [{ source: 'b', target: 'c', label: 'Continue' }],
 });
 
-const compile = (input: IRFlowDiagram, definition = LayeredFlowLayoutDefinition) => {
+const compile = (input: IRFlowDiagram, definition = layeredFlowLayoutDefinition) => {
   const result = compileToScene(
     { type: 'scene', version: 1, children: [FlowDiagramSchema.parse(input)] },
     {
@@ -270,10 +270,10 @@ describe('Flow 分组高度', () => {
 
   it('自定义 provider 不能忽略分配高度', () => {
     const definition: FlowLayoutDefinition = {
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       name: 'violates-height',
       layout: (input, context) => {
-        const output = LayeredFlowLayoutDefinition.layout(input, context);
+        const output = layeredFlowLayoutDefinition.layout(input, context);
         return {
           ...output,
           elements: output.elements.map(element =>

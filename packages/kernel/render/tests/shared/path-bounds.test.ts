@@ -14,7 +14,7 @@ const expectBoundsClose = (
 };
 
 describe('pathBounds', () => {
-  it('uses the true quadratic extrema instead of the control point', () => {
+  it('使用真正的二次极值代替控制点', () => {
     expectBoundsClose(
       pathBounds([
         { kind: 'move', to: [0, 0] },
@@ -24,7 +24,7 @@ describe('pathBounds', () => {
     );
   });
 
-  it('solves cubic derivative roots on both axes', () => {
+  it('求解两个轴上的三次导数根', () => {
     expectBoundsClose(
       pathBounds([
         { kind: 'move', to: [0, 0] },
@@ -34,7 +34,7 @@ describe('pathBounds', () => {
     );
   });
 
-  it('limits circular bounds to the directed sweep', () => {
+  it('将圆形边界限制为定向扫描', () => {
     expectBoundsClose(pathBounds([{ kind: 'arc', center: [0, 0], radius: 10, startAngle: 0, endAngle: 90 }]), {
       x: 0,
       y: 0,
@@ -43,7 +43,7 @@ describe('pathBounds', () => {
     });
   });
 
-  it('includes rotated ellipse extrema for a full sweep', () => {
+  it('包括用于完整扫描的旋转椭圆极值', () => {
     const halfExtent = Math.sqrt(58);
     expectBoundsClose(
       pathBounds([
@@ -74,11 +74,11 @@ describe('pathBounds', () => {
       label: 'input beyond one revolution',
       command: { kind: 'arc', center: [0, 0], radius: 10, startAngle: 0, endAngle: 720 },
     },
-  ] satisfies Array<{ label: string; command: PathCommand }>)('$label follows the aligned sweep', ({ command }) => {
+  ] satisfies Array<{ label: string; command: PathCommand }>)('$label 遵循对齐扫描', ({ command }) => {
     expectBoundsClose(pathBounds([command]), { x: -10, y: -10, w: 20, h: 20 });
   });
 
-  it('keeps a zero sweep as a finite point bound', () => {
+  it('保持零扫描作为有限点边界', () => {
     expectBoundsClose(pathBounds([{ kind: 'arc', center: [0, 0], radius: 10, startAngle: 0, endAngle: 0 }]), {
       x: 10,
       y: 0,
@@ -87,7 +87,7 @@ describe('pathBounds', () => {
     });
   });
 
-  it('includes the implicit connector when the cursor differs from the arc start', () => {
+  it('当光标与弧起点不同时，包括隐式连接器', () => {
     expectBoundsClose(
       pathBounds([
         { kind: 'move', to: [0, 0] },
@@ -97,7 +97,7 @@ describe('pathBounds', () => {
     );
   });
 
-  it('tracks close and multiple subpath cursors', () => {
+  it('跟踪关闭和多个子路径光标', () => {
     expectBoundsClose(
       pathBounds([
         { kind: 'move', to: [0, 0] },
@@ -111,7 +111,7 @@ describe('pathBounds', () => {
     );
   });
 
-  it('returns a finite zero bbox for move-only input', () => {
+  it('为仅移动输入返回有限零 bbox', () => {
     expect(pathBounds([{ kind: 'move', to: [12, 34] }])).toEqual({ x: 0, y: 0, w: 0, h: 0 });
   });
 });

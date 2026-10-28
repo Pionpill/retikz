@@ -69,7 +69,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe('Docs module navigation domain', () => {
+describe('文档模块导航域', () => {
   it('只暴露四个可切换模块，并将 About 排除在模块域之外', () => {
     expect(DOC_MODULE_IDS).toEqual(['kernel', 'library', 'schematic', 'viz']);
     expect(modules.map(module => module.id)).toEqual(DOC_MODULE_IDS);

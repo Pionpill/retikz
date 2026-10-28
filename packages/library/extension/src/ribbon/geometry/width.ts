@@ -5,7 +5,7 @@ import type { CanonicalRibbonSampling } from '../types';
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
 /** 校验宽度函数输出：ribbon 宽度必须是有限且非负的数 */
-export const assertFiniteWidth = (width: number, source: string): number => {
+const assertFiniteWidth = (width: number, source: string): number => {
   if (!Number.isFinite(width) || width < 0) {
     throw new RetikzExtensionError({
       code: RetikzExtensionErrorCode.GeometryInvalid,
@@ -18,7 +18,7 @@ export const assertFiniteWidth = (width: number, source: string): number => {
 };
 
 /** 按指定插值模式在两个宽度值之间取样 */
-export type InterpolateInput = {
+type InputRibbonWidthInterpolation = {
   /** 区间起点的宽度值 */
   from: number;
   /** 区间终点的宽度值 */
@@ -30,7 +30,7 @@ export type InterpolateInput = {
 };
 
 /** 按给定区间比例插值宽度；step 始终取起点值，其他模式不裁剪比例 */
-export const interpolate = ({ from, to, t, mode }: InterpolateInput): number => {
+export const interpolate = ({ from, to, t, mode }: InputRibbonWidthInterpolation): number => {
   if (mode === 'step') return from;
   const u = mode === 'smooth' ? smoothstep(t) : t;
   return from + (to - from) * u;
@@ -49,9 +49,11 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
   if (width.kind === 'stops') {
     const stops = width.stops;
     const mode = width.interpolation;
+    // 独立调用也可构造 width resolution；静态值在创建采样函数时准入一次
+    for (const stop of stops) assertFiniteWidth(stop.value, 'stop');
 
     return offset => {
-      if (offset <= stops[0].offset) return assertFiniteWidth(stops[0].value, 'first stop');
+      if (offset <= stops[0].offset) return stops[0].value;
 
       for (let i = 1; i < stops.length; i += 1) {
         const prev = stops[i - 1];
@@ -67,7 +69,7 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
         }
       }
 
-      return assertFiniteWidth(stops[stops.length - 1].value, 'last stop');
+      return stops[stops.length - 1].value;
     };
   }
 

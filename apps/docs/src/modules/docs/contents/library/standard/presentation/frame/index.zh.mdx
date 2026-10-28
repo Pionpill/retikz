@@ -43,7 +43,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { FrameDefinition } from '@retikz/standard/presentation';
+import { frameDefinition } from '@retikz/standard/presentation';
 
 const ir: IRScene = {
   type: 'scene',
@@ -57,20 +57,20 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} composites={[FrameDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[frameDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { frame, frameTitle, FrameInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { frame, frameTitle, frameInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import { scene, node, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
   children: [frame({ title: frameTitle({ text: 'Group' }), children: [node({ position: [0, 0], text: 'A' })] })],
 });
-const svg = renderToSvgString(input, { adapters: [FrameInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [frameInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -79,7 +79,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { FrameDefinition } from '@retikz/standard/presentation';
+import { frameDefinition } from '@retikz/standard/presentation';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -94,7 +94,7 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [FrameDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [frameDefinition] } });
 console.log(svg);
 ```
 
@@ -144,11 +144,11 @@ Frame 可以只围合内容区，也可以组合 Title 与 Description。两者�
 
 ### 从 Frame IR 到 Core IR
 
-Frame 的 JSON IR 不会成为新的 renderer 图元。`FrameDefinition` 先校验并匹配 `standard.frame`，随后 lowering 只输出 Core 已认识的 `Scope`、`Path` 与 `Node`。
+Frame 的 JSON IR 不会成为新的 renderer 图元。`frameDefinition` 先校验并匹配 `standard.frame`，随后 lowering 只输出 Core 已认识的 `Scope`、`Path` 与 `Node`。
 
 <ComponentPreview files="frame-lowering" hideCode type="flow" size="xs" />
 
-输出到达 Core IR 后，Frame 的职责就结束了。未注入 `FrameDefinition` 的手写 `IRFrame` 会得到 `COMPOSITE_NOT_REGISTERED` 诊断并被跳过，而不是被 renderer 静默猜测。
+输出到达 Core IR 后，Frame 的职责就结束了。未注入 `frameDefinition` 的手写 `IRFrame` 会得到 `COMPOSITE_NOT_REGISTERED` 诊断并被跳过，而不是被 renderer 静默猜测。
 
 ### 边界、标题排布与可选 id
 

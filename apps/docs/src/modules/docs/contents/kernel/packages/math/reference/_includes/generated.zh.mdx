@@ -168,7 +168,7 @@ export declare const normalizeSignedDegrees: (degrees: number) => number;
 
 ## 轮廓与圆角
 
-#### <ApiSourceLink label={"ArcSegment"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={40}>ArcSegment</ApiSourceLink>
+#### <ApiSourceLink label={"ArcSegment"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={48}>ArcSegment</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -206,7 +206,7 @@ export type ArcSegment = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ContourCommand"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={62}>ContourCommand</ApiSourceLink>
+#### <ApiSourceLink label={"ContourCommand"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={70}>ContourCommand</ApiSourceLink>
 
 <DocTabs defaultValue="move">
 
@@ -294,7 +294,7 @@ export type ContourCommand =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ContourSegment"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={59}>ContourSegment</ApiSourceLink>
+#### <ApiSourceLink label={"ContourSegment"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={67}>ContourSegment</ApiSourceLink>
 
 <DocTabs defaultValue="line">
 
@@ -339,7 +339,7 @@ export type ContourSegment = LineSegment | ArcSegment;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FilletSolution"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={128}>FilletSolution</ApiSourceLink>
+#### <ApiSourceLink label={"FilletSolution"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={133}>FilletSolution</ApiSourceLink>
 
 tangentInPoint = 前段被裁短到此点（前段新终点）；tangentOutPoint = 后段从此点起（后段新起点）；
 圆心、半径与起末角描述连接两切点的圆弧。clampedToZero=true 表示该角夹紧后 r→0，不倒角（保持尖角）
@@ -416,7 +416,7 @@ export type LineSegment = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"buildContourCommands"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={482}>buildContourCommands</ApiSourceLink>
+#### <ApiSourceLink label={"buildContourCommands"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={490}>buildContourCommands</ApiSourceLink>
 
 fillets 为空时保留原轮廓；非空时必须与同一段序列及 closed 配对，逐段裁剪并插入相切圆弧。
 夹紧到零的接缝保持尖角；closed 为 false 时不添加闭合命令
@@ -452,7 +452,7 @@ export declare const buildContourCommands: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"intersectContourRay"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={577}>intersectContourRay</ApiSourceLink>
+#### <ApiSourceLink label={"intersectContourRay"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={585}>intersectContourRay</ApiSourceLink>
 
 rayOrigin 显式传（不假设中心）；toward 是射线指向的目标点（方向 = toward − rayOrigin）。
 遍历 fillet 后的有效段（缩短 line / 裁剪 arc / fillet arc），对每段求 ray∩段、取最小正参数命中点。
@@ -491,7 +491,7 @@ export declare const intersectContourRay: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"solveContourFillets"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={441}>solveContourFillets</ApiSourceLink>
+#### <ApiSourceLink label={"solveContourFillets"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={449}>solveContourFillets</ApiSourceLink>
 
 cornerRadius 省略 / ≤0 → 返回空数组；需要倒角的 arc-arc 接缝返回 undefined。
 closed（缺省 true）= 闭合轮廓，含首尾环绕接缝（下标 n-1 = 段 n-1 终点接段 0 起点）；
@@ -556,6 +556,36 @@ from/to 任意顺序，归一化 (x0,y0)=min、(x1,y1)=max。直角 = 3 line + c
 
 ```ts
 export declare const rectOutline: (from: Position, to: Position, cornerRadius?: number) => Array<ContourCommand>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"verticesToSegments"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={44}>verticesToSegments</ApiSourceLink>
+
+空数组返回空数组；单顶点产生自连接线段，双顶点产生方向相反的两段
+保留输入绕向与重复顶点，线段端点复用输入坐标，不修改或复制坐标
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称       | 类型 / 签名          | 说明 |
+| ------ | ---------- | -------------------- | ---- |
+| 参数   | `vertices` | `Array<Position>`    | —    |
+| 返回值 | —          | `Array<LineSegment>` | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const verticesToSegments: (vertices: Array<Position>) => Array<LineSegment>;
 ```
 
 </DocTab>
@@ -744,7 +774,7 @@ export declare const worldToLocal: (shape: CenteredShape, world: Position) => Po
 
 ## 形状与弧段
 
-#### <ApiSourceLink label={"ArcBoundingCandidatesInput"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={5}>ArcBoundingCandidatesInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputArcBoundingCandidates"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={5}>InputArcBoundingCandidates</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -766,7 +796,7 @@ export declare const worldToLocal: (shape: CenteredShape, world: Position) => Po
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type ArcBoundingCandidatesInput = {
+export type InputArcBoundingCandidates = {
   center: Position;
   radius: number;
   startAngleDeg: number;
@@ -778,7 +808,7 @@ export type ArcBoundingCandidatesInput = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArcSweepAngleInput"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={17}>ArcSweepAngleInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputArcSweepAngle"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={17}>InputArcSweepAngle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -800,7 +830,7 @@ export type ArcBoundingCandidatesInput = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type ArcSweepAngleInput = {
+export type InputArcSweepAngle = {
   startAngleDeg: number;
   endAngleDeg: number;
   angleDeg: number;
@@ -875,7 +905,7 @@ export type Ellipse = CenteredShape & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipseArcAnglePointInput"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={31}>EllipseArcAnglePointInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputEllipseArcAnglePoint"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={31}>InputEllipseArcAnglePoint</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -897,7 +927,7 @@ export type Ellipse = CenteredShape & {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type EllipseArcAnglePointInput = {
+export type InputEllipseArcAnglePoint = {
   center: Position;
   radiusX: number;
   radiusY: number;
@@ -909,7 +939,7 @@ export type EllipseArcAnglePointInput = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipseArcBoundingCandidatesInput"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={43}>EllipseArcBoundingCandidatesInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputEllipseArcBoundingCandidates"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={43}>InputEllipseArcBoundingCandidates</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -932,7 +962,7 @@ export type EllipseArcAnglePointInput = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 'angleDeg'> & {
+export type InputEllipseArcBoundingCandidates = Omit<InputEllipseArcAnglePoint, 'angleDeg'> & {
   startAngleDeg: number;
   endAngleDeg: number;
 };
@@ -1078,7 +1108,7 @@ export declare const triangle: {
 
 | 类别   | 名称                                                                                 | 类型 / 签名                  | 说明                             |
 | ------ | ------------------------------------------------------------------------------------ | ---------------------------- | -------------------------------- |
-| 参数   | `{`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `ArcBoundingCandidatesInput` | 几何输入参数，字段含义见对应类型 |
+| 参数   | `{`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `InputArcBoundingCandidates` | 几何输入参数，字段含义见对应类型 |
 | 返回值 | —                                                                                    | `Array<Position>`            | —                                |
 
 </ApiTable>
@@ -1093,7 +1123,7 @@ export declare const collectArcBoundingCandidates: ({
   radius,
   startAngleDeg,
   endAngleDeg,
-}: ArcBoundingCandidatesInput) => Array<Position>;
+}: InputArcBoundingCandidates) => Array<Position>;
 ```
 
 </DocTab>
@@ -1112,7 +1142,7 @@ export declare const collectArcBoundingCandidates: ({
 
 | 类别   | 名称                                                                                                  | 类型 / 签名                         | 说明                             |
 | ------ | ----------------------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------------- |
-| 参数   | `{`<br />`center,`<br />`radiusX,`<br />`radiusY,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `EllipseArcBoundingCandidatesInput` | 几何输入参数，字段含义见对应类型 |
+| 参数   | `{`<br />`center,`<br />`radiusX,`<br />`radiusY,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `InputEllipseArcBoundingCandidates` | 几何输入参数，字段含义见对应类型 |
 | 返回值 | —                                                                                                     | `Array<Position>`                   | —                                |
 
 </ApiTable>
@@ -1128,7 +1158,7 @@ export declare const collectEllipseArcBoundingCandidates: ({
   radiusY,
   startAngleDeg,
   endAngleDeg,
-}: EllipseArcBoundingCandidatesInput) => Array<Position>;
+}: InputEllipseArcBoundingCandidates) => Array<Position>;
 ```
 
 </DocTab>
@@ -1179,7 +1209,7 @@ start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 
 | 类别   | 名称                                                                                                | 类型 / 签名          | 说明                             |
 | ------ | --------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------- |
-| 参数   | `{`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`angleDeg,`<br />`toleranceDeg = 1e-7,`<br />`}` | `ArcSweepAngleInput` | 几何输入参数，字段含义见对应类型 |
+| 参数   | `{`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`angleDeg,`<br />`toleranceDeg = 1e-7,`<br />`}` | `InputArcSweepAngle` | 几何输入参数，字段含义见对应类型 |
 | 返回值 | —                                                                                                   | `boolean`            | —                                |
 
 </ApiTable>
@@ -1194,7 +1224,7 @@ export declare const isAngleWithinArcSweep: ({
   endAngleDeg,
   angleDeg,
   toleranceDeg = 1e-7,
-}: ArcSweepAngleInput) => boolean;
+}: InputArcSweepAngle) => boolean;
 ```
 
 </DocTab>
@@ -1242,7 +1272,7 @@ export declare const pointAtArcAngle: (center: Position, radius: number, angleDe
 
 | 类别   | 名称                                     | 类型 / 签名                 | 说明                             |
 | ------ | ---------------------------------------- | --------------------------- | -------------------------------- |
-| 参数   | `{ center, radiusX, radiusY, angleDeg }` | `EllipseArcAnglePointInput` | 几何输入参数，字段含义见对应类型 |
+| 参数   | `{ center, radiusX, radiusY, angleDeg }` | `InputEllipseArcAnglePoint` | 几何输入参数，字段含义见对应类型 |
 | 返回值 | —                                        | `Position`                  | —                                |
 
 </ApiTable>
@@ -1257,7 +1287,7 @@ export declare const pointAtEllipseArcAngle: ({
   radiusX,
   radiusY,
   angleDeg,
-}: EllipseArcAnglePointInput) => Position;
+}: InputEllipseArcAnglePoint) => Position;
 ```
 
 </DocTab>
@@ -1742,7 +1772,7 @@ export declare const rectToBounds: ({ height, width, x, y }: BoundsRect) => Axis
 
 ## 几何相交
 
-#### <ApiSourceLink label={"CircleCircleInput"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={30}>CircleCircleInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputCircleCircle"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={30}>InputCircleCircle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1764,7 +1794,7 @@ export declare const rectToBounds: ({ height, width, x, y }: BoundsRect) => Axis
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type CircleCircleInput = {
+export type InputCircleCircle = {
   centerA: Position;
   radiusA: number;
   centerB: Position;
@@ -1776,7 +1806,7 @@ export type CircleCircleInput = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LineCircleInput"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={18}>LineCircleInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputLineCircle"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={18}>InputLineCircle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1798,7 +1828,7 @@ export type CircleCircleInput = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type LineCircleInput = {
+export type InputLineCircle = {
   origin: Position;
   direction: Position;
   center: Position;
@@ -1810,7 +1840,7 @@ export type LineCircleInput = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LineLineInput"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={6}>LineLineInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputLineLine"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={6}>InputLineLine</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1832,7 +1862,7 @@ export type LineCircleInput = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type LineLineInput = {
+export type InputLineLine = {
   a1: Position;
   a2: Position;
   b1: Position;
@@ -1844,7 +1874,7 @@ export type LineLineInput = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RayArcIntersectionInput"} path={"packages/kernel/math/src/algorithms/arc-intersection.ts"} startLine={6}>RayArcIntersectionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRayArcIntersection"} path={"packages/kernel/math/src/algorithms/arc-intersection.ts"} startLine={6}>InputRayArcIntersection</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1869,7 +1899,7 @@ export type LineLineInput = {
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type RayArcIntersectionInput = ArcBoundingCandidatesInput & {
+export type InputRayArcIntersection = InputArcBoundingCandidates & {
   origin: Position;
   direction: Position;
   tolerance?: number;
@@ -1892,10 +1922,10 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 
 | 成员             | 签名                                           | 说明                                                                                                                                              |
 | ---------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `circleCircle`   | `(input: CircleCircleInput) => Array<Vector2>` | 圆 ∩ 圆，返回 0/1/2 交点（重合 / 内含 / 相离返回空）；外 / 内切（discriminant≈0）返回 2 个重合点，调用方自判<br />`input`: 两个圆各自的圆心和半径 |
-| `lineCircle`     | `(input: LineCircleInput) => Array<Vector2>`   | 直线（origin + direction，direction 不必单位化）∩ 圆，返回 0/1/2 交点；切线返回 2 个重合点，调用方自判<br />`input`: 直线原点、方向与圆心、半径   |
-| `lineLine`       | `(input: LineLineInput) => Vector2 \| null`    | 两条无限直线（各由两点定）的交点；平行 / 共线返回 null<br />`input`: 两条直线各自的两个定义点                                                     |
-| `segmentSegment` | `(input: LineLineInput) => Vector2 \| null`    | 线段 ∩ 线段：真交叉返回交点；平行 / 共线（含重叠）/ 不相交返回 null<br />`input`: 两条线段各自的端点                                              |
+| `circleCircle`   | `(input: InputCircleCircle) => Array<Vector2>` | 圆 ∩ 圆，返回 0/1/2 交点（重合 / 内含 / 相离返回空）；外 / 内切（discriminant≈0）返回 2 个重合点，调用方自判<br />`input`: 两个圆各自的圆心和半径 |
+| `lineCircle`     | `(input: InputLineCircle) => Array<Vector2>`   | 直线（origin + direction，direction 不必单位化）∩ 圆，返回 0/1/2 交点；切线返回 2 个重合点，调用方自判<br />`input`: 直线原点、方向与圆心、半径   |
+| `lineLine`       | `(input: InputLineLine) => Vector2 \| null`    | 两条无限直线（各由两点定）的交点；平行 / 共线返回 null<br />`input`: 两条直线各自的两个定义点                                                     |
+| `segmentSegment` | `(input: InputLineLine) => Vector2 \| null`    | 线段 ∩ 线段：真交叉返回交点；平行 / 共线（含重叠）/ 不相交返回 null<br />`input`: 两条线段各自的端点                                              |
 
 </ApiTable>
 
@@ -1923,7 +1953,7 @@ export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment };
 
 | 类别   | 名称                                                                                                                                                      | 类型 / 签名               | 说明                             |
 | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | -------------------------------- |
-| 参数   | `{`<br />`origin,`<br />`direction,`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`tolerance = DEFAULT_EPSILON,`<br />`}` | `RayArcIntersectionInput` | 几何输入参数，字段含义见对应类型 |
+| 参数   | `{`<br />`origin,`<br />`direction,`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`tolerance = DEFAULT_EPSILON,`<br />`}` | `InputRayArcIntersection` | 几何输入参数，字段含义见对应类型 |
 | 返回值 | —                                                                                                                                                         | `Array<number>`           | —                                |
 
 </ApiTable>
@@ -1941,7 +1971,7 @@ export declare const intersectRayWithArc: ({
   startAngleDeg,
   endAngleDeg,
   tolerance = DEFAULT_EPSILON,
-}: RayArcIntersectionInput) => Array<number>;
+}: InputRayArcIntersection) => Array<number>;
 ```
 
 </DocTab>

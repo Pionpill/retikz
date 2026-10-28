@@ -17,10 +17,10 @@ type SvgNode = {
 
 const HOST_COLOR = Symbol('host-color');
 
-type EffectiveColor = string | typeof HOST_COLOR;
+type SvgColorValue = string | typeof HOST_COLOR;
 
 type PaintContext = {
-  color: EffectiveColor;
+  color: SvgColorValue;
   fill: string;
   stroke: string;
   fillOpacity?: number;
@@ -187,7 +187,7 @@ const resolvePaintContext = (
 };
 
 /** 把 SVG paint 值转换为 Core 可消费的填充或描边对象 */
-const materializePaint = (value: string, color: EffectiveColor): LoweredTexPaint => {
+const materializePaint = (value: string, color: SvgColorValue): LoweredTexPaint => {
   if (value === 'none') return { kind: 'none' };
   if (value !== 'currentColor') return { kind: 'color', value };
   return color === HOST_COLOR ? { kind: 'currentColor' } : { kind: 'color', value: color };

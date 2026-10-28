@@ -2,9 +2,9 @@ import type { IRNode, IRPaint, IRPath, IRScope } from '@retikz/core';
 import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
 import { lowerPlots } from '../../src/pipeline/expand';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotLayerZIndex, PlotSchema } from '../../src/schemas';
 import { DEFAULT_FONT_SIZE } from '../../src/shared';
@@ -55,16 +55,16 @@ const pointSpec = (): IRPlot =>
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options?: LowerPlotsOptions,
+  options?: PlotsLoweringOptions,
 ): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
 const firstLayer = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options?: LowerPlotsOptions,
+  options?: PlotsLoweringOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
 
 const isScope = (value: unknown): value is IRScope =>
@@ -111,12 +111,12 @@ const nodeHeight = (node: IRNode): number => {
   return size?.height ?? size?.default ?? 0;
 };
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
-describe('lowerPlots (contract)', () => {
-  it('auto_rotated_x_tick_labels_remain_inside_plot_allocation', () => {
+describe('lowerPlots（契约）', () => {
+  it('自动旋转的 x 刻度标签保留在绘图分配内', () => {
     const width = 240;
     const height = 180;
     const tickValues = [100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000];
@@ -158,7 +158,7 @@ describe('lowerPlots (contract)', () => {
   });
 
   // Happy path
-  it('marks_become_layer_scopes', () => {
+  it('标记成为图层范围', () => {
     const outer = expandOf(lineSpec, { sales: SALES }, opts);
 
     expect(outer.type).toBe('scope');
@@ -168,7 +168,7 @@ describe('lowerPlots (contract)', () => {
     expect((outer.children[0] as IRScope).type).toBe('scope');
   });
 
-  it('lower_line_produces_path', () => {
+  it('下线生产路径', () => {
     const layer = firstLayer(lineSpec, { sales: SALES }, opts);
     const path = layer.children[0] as IRPath;
 
@@ -185,7 +185,7 @@ describe('lowerPlots (contract)', () => {
     ]);
   });
 
-  it('lower_point_produces_bare_nodes_with_hoisted_style', () => {
+  it('下点产生吊装式裸节点', () => {
     const layer = firstLayer(pointSpec(), { sales: SALES }, opts);
 
     expect(layer.children).toHaveLength(3);
@@ -199,7 +199,7 @@ describe('lowerPlots (contract)', () => {
     expect((layer.children[0] as IRNode).position).toEqual([0, 240]);
   });
 
-  it('shares one sequential palette slot across marks in the same default color group', () => {
+  it('同一默认颜色组中的标记共享一个连续的调色板槽', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -238,7 +238,7 @@ describe('lowerPlots (contract)', () => {
     ]);
   });
 
-  it('lower_point_applies_constant_node_style', () => {
+  it('下点采用常节点样式', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -281,7 +281,7 @@ describe('lowerPlots (contract)', () => {
     expect((layer.children[0] as IRNode).zIndex).toBe(3);
   });
 
-  it('drawing_semantic_layers_emit_default_zindex_scopes_without_presentation_decoration', () => {
+  it('绘图语义层生成默认 zIndex 作用域且不添加呈现装饰', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -318,7 +318,7 @@ describe('lowerPlots (contract)', () => {
     expect(scopeByLayerMeta(root, 'legend').zIndex).toBe(500);
   });
 
-  it('theme_grid_enables_every_existing_axis_without_local_grid', () => {
+  it('主题网格使每个现有轴无需本地网格', () => {
     const spec = PlotSchema.parse({
       ...pointSpec(),
       id: 'theme-grid',
@@ -343,7 +343,7 @@ describe('lowerPlots (contract)', () => {
   it.each([
     [ThemeMode.Light, '#d6e0eb', '#adc2d6', '#5c85ad'],
     [ThemeMode.Dark, '#0a141f', '#14293d', '#29527a'],
-  ] as const)('projects the Plot typography master into presentation layers in %s mode', (mode, area, grid, line) => {
+  ] as const)('以 %s 模式将 Plot 版式母版投影到表示层中', (mode, area, grid, line) => {
     const spec = PlotSchema.parse({
       ...pointSpec(),
       defaultPlot: {
@@ -414,7 +414,7 @@ describe('lowerPlots (contract)', () => {
     expect(serialized).not.toMatch(/"(?:fill|stroke)":0(?:\.\d+)?/);
   });
 
-  it('layer_zindex_overrides_semantic_scope_without_reusing_mark_node_zindex', () => {
+  it('层 zindex 覆盖语义范围而不重用标记节点 zindex', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -439,7 +439,7 @@ describe('lowerPlots (contract)', () => {
     expect((layer.children[0] as IRNode).zIndex).toBe(3);
   });
 
-  it('lower_point_applies_stroke_channels_per_datum', () => {
+  it('下点应用描边通道每个数据', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -474,7 +474,7 @@ describe('lowerPlots (contract)', () => {
     expect(layer.children[1]).toMatchObject({ style: { stroke: '#dc2626', strokeWidth: 3 } });
   });
 
-  it('compile_line_to_scene_ok', () => {
+  it('将行编译到场景正常', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [lineSpec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
@@ -485,7 +485,7 @@ describe('lowerPlots (contract)', () => {
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
-  it('compile_point_to_scene_ok', () => {
+  it('编译点到场景正常', () => {
     // 验证样式上提后 nodeDefault 仍级联出可渲染的散点
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [pointSpec()] },
@@ -496,7 +496,7 @@ describe('lowerPlots (contract)', () => {
   });
 
   // 边界
-  it('domain_inferred_from_data', () => {
+  it('从数据推断域', () => {
     const layer = firstLayer(pointSpec(), { sales: SALES }, opts);
 
     // 端点：month 0 -> x 0；month 2 -> x 480
@@ -506,18 +506,18 @@ describe('lowerPlots (contract)', () => {
     expect(Math.max(...xs)).toBe(480);
   });
 
-  it('lower_single_datum_point', () => {
+  it('下沉单个数据项的点标记', () => {
     const layer = firstLayer(pointSpec(), { sales: [{ month: 1, revenue: 5 }] }, opts);
 
     expect(layer.children).toHaveLength(1);
   });
 
   // 错误路径
-  it('ref_not_in_datasets_throws', () => {
+  it('引用不在数据集中抛出', () => {
     expect(() => expandOf(lineSpec, { other: SALES }, opts)).toThrow(/sales/);
   });
 
-  it('non_finite_field_skipped', () => {
+  it('非有限场跳过', () => {
     const rows = [
       { month: 0, revenue: 10 },
       { month: 'oops', revenue: 14 },
@@ -528,7 +528,7 @@ describe('lowerPlots (contract)', () => {
     expect(layer.children).toHaveLength(2); // 非有限 x 的那行被跳过
   });
 
-  it('non_finite_size_throws', () => {
+  it('非有限尺寸抛出', () => {
     // 非有限的绘图区尺寸会一路污染出 cx="NaN" 坏坐标——入口抛清晰错误而非静默出坏图
     expect(() => expandOf(lineSpec, { sales: SALES }, { layout: { width: Number.NaN, height: 300 } })).toThrow(/width/);
     expect(() =>
@@ -536,13 +536,13 @@ describe('lowerPlots (contract)', () => {
     ).toThrow(/height/);
   });
 
-  it('non_positive_size_throws', () => {
+  it('非正大小抛出', () => {
     expect(() => expandOf(lineSpec, { sales: SALES }, { layout: { width: 0, height: 300 } })).toThrow(/width/);
     expect(() => expandOf(lineSpec, { sales: SALES }, { layout: { width: 480, height: -10 } })).toThrow(/height/);
   });
 
   // 交互
-  it('explicit_domain_range_respected', () => {
+  it('明确的域范围受尊重', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -560,7 +560,7 @@ describe('lowerPlots (contract)', () => {
     expect((layer.children[0] as IRNode).position).toEqual([50, 50]);
   });
 
-  it('order_field_sorts_line', () => {
+  it('顺序字段排序行', () => {
     const shuffled = [
       { month: 2, revenue: 9 },
       { month: 0, revenue: 10 },
@@ -592,7 +592,7 @@ describe('lowerPlots (contract)', () => {
     ],
   });
 
-  it('compat_no_guides_projection_unchanged', () => {
+  it('兼容无引导投影不变', () => {
     // compat: omitting guides keeps the plot area equal to the full frame.
     const path = (firstLayer(lineSpec, { sales: SALES }, opts).children[0] as IRPath).children;
 
@@ -603,7 +603,7 @@ describe('lowerPlots (contract)', () => {
     ]);
   });
 
-  it('mark_projects_into_plot_area', () => {
+  it('将项目标记为绘图区域', () => {
     // 有 x+y 轴 → mark 投影到缩进的 plot area：首点 x>0（左移过 left margin）、末点 x<480（右留白）
     const path = (firstLayer(guidedLineSpec, { sales: SALES }, opts).children[0] as IRPath).children;
     const firstX = (path[0] as { to: [number, number] }).to[0];
@@ -614,7 +614,7 @@ describe('lowerPlots (contract)', () => {
     expect(firstX).toBeLessThan(lastX);
   });
 
-  it('explicit_range_not_overridden_by_plot_area', () => {
+  it('绘图区不覆盖显式值域', () => {
     // 显式 range 的 scale 即便有 axis 也不被 plot area 覆盖（尊重用户手设）
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -652,8 +652,8 @@ const barSpec = (): IRPlot =>
     marks: [{ type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } }],
   });
 
-describe('lowerPlots interval/bar (contract)', () => {
-  it('bar_layer_rectangle_nodes', () => {
+describe('lowerPlots 区间/柱（契约）', () => {
+  it('条形层矩形节点', () => {
     const layer = firstLayer(barSpec(), { sales: SALES }, opts);
 
     expect(layer.children).toHaveLength(3);
@@ -666,7 +666,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
   });
 
-  it('bar_width_is_bandwidth_equal', () => {
+  it('条形宽度等于带宽', () => {
     const widths = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => nodeWidth(n));
 
     expect(widths.every(w => w > 0)).toBe(true);
@@ -674,7 +674,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     expect(widths[1]).toBeCloseTo(widths[2], 6);
   });
 
-  it('bar_height_reflects_value', () => {
+  it('条形高度反映价值', () => {
     const heights = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => nodeHeight(n));
 
     // revenue 10/14/9 → 第二根最高、第三根最矮
@@ -682,7 +682,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     expect(heights[2]).toBeLessThan(heights[0]);
   });
 
-  it('bar_sits_on_baseline', () => {
+  it('条位于基线上', () => {
     // 无 guides → plot area 满，baseline y(0)=300：正值柱底 center + height/2 ≈ 300
     for (const node of firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>) {
       const cy = (node.position as [number, number])[1];
@@ -691,7 +691,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     }
   });
 
-  it('bar_centers_ascending_evenly', () => {
+  it('条形中心均匀上升', () => {
     const xs = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(
       n => (n.position as [number, number])[0],
     );
@@ -701,7 +701,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     expect(xs[1] - xs[0]).toBeCloseTo(xs[2] - xs[1], 6);
   });
 
-  it('proportional_interval_axis_uses_role_channel_as_labels', () => {
+  it('比例间隔轴使用角色通道作为标签', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -742,7 +742,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     expect(xs[1]).toBeLessThan(xs[2]);
   });
 
-  it('bar_missing_value_skipped', () => {
+  it('跳过了条形缺失值', () => {
     const rows = [
       { month: 0, revenue: 10 },
       { month: 1, revenue: 'oops' },
@@ -752,7 +752,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     expect(firstLayer(barSpec(), { sales: rows }, opts).children).toHaveLength(2);
   });
 
-  it('bar_compiles_to_scene', () => {
+  it('bar 编译到场景', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [barSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts) },
@@ -761,7 +761,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
-  it('bar_coexists_with_point', () => {
+  it('条与点共存', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -787,7 +787,7 @@ describe('lowerPlots interval/bar (contract)', () => {
 });
 
 // contract：ordinal·color scale + color 通道
-describe('lowerPlots color (contract)', () => {
+describe('lowerPlots 颜色（契约）', () => {
   const COUNTRIES = [
     { gdp: 1, life: 70, continent: 'Asia' },
     { gdp: 2, life: 80, continent: 'Europe' },
@@ -811,7 +811,7 @@ describe('lowerPlots color (contract)', () => {
       ],
     });
 
-  it('point_color_groups_into_subscopes', () => {
+  it('将颜色组点到子范围中', () => {
     const layer = firstLayer(
       coloredPoint([
         { type: 'linear', name: 'x', domainPadding: 0 },
@@ -837,7 +837,7 @@ describe('lowerPlots color (contract)', () => {
     expect(europe.children).toHaveLength(1);
   });
 
-  it('point_color_default_scheme', () => {
+  it('Point 颜色使用默认配色方案', () => {
     const layer = firstLayer(
       coloredPoint([
         { type: 'linear', name: 'x', domainPadding: 0 },
@@ -852,7 +852,7 @@ describe('lowerPlots color (contract)', () => {
     expect((layer.children[1] as IRScope).defaults?.node?.style?.fill).toBe(sharedCategorical[1]);
   });
 
-  it('point_color_auto_synthesized_scale', () => {
+  it('点色自动合成比例', () => {
     // color 有 field 无 scale ref → 自动合成 ordinal 色 scale（默认配色）
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -873,7 +873,7 @@ describe('lowerPlots color (contract)', () => {
     expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe(sharedCategorical[0]);
   });
 
-  it('point_color_constant_single_subscope', () => {
+  it('点颜色恒定单副镜', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -898,7 +898,7 @@ describe('lowerPlots color (contract)', () => {
     expect((layer.children[0] as IRScope).children).toHaveLength(3);
   });
 
-  it('color_unknown_scale_ref_throws', () => {
+  it('颜色引用未知比例尺时抛出错误', () => {
     const spec = coloredPoint([
       { type: 'linear', name: 'x', domainPadding: 0 },
       { type: 'linear', name: 'y', domainPadding: 0 },
@@ -907,7 +907,7 @@ describe('lowerPlots color (contract)', () => {
     expect(() => expandOf(spec, { c: COUNTRIES }, opts)).toThrow(/unknown scale/);
   });
 
-  it('color_non_ordinal_scale_ref_throws', () => {
+  it('颜色非序数标度引用抛出', () => {
     const spec = coloredPoint([
       { type: 'linear', name: 'x', domainPadding: 0 },
       { type: 'linear', name: 'y', domainPadding: 0 },
@@ -917,7 +917,7 @@ describe('lowerPlots color (contract)', () => {
     expect(() => expandOf(spec, { c: COUNTRIES }, opts)).toThrow(/ordinal/);
   });
 
-  it('line_color_constant_to_stroke', () => {
+  it('线颜色常量到描边', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -939,7 +939,7 @@ describe('lowerPlots color (contract)', () => {
     expect(firstLayer(spec, { c: COUNTRIES }, opts).defaults?.path?.style?.stroke).toBe('tomato');
   });
 
-  it('bar_color_groups_into_subscopes', () => {
+  it('将颜色组划分到子范围中', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -966,14 +966,14 @@ describe('lowerPlots color (contract)', () => {
     expect((layer.children[0] as IRScope).defaults?.node?.shape).toBe('rectangle');
   });
 
-  it('uncolored_point_keeps_single_scope', () => {
+  it('无色点保持单一范围', () => {
     // No color channel keeps the mark in one scope with node defaults.
     expect(firstLayer(pointSpec(), { sales: SALES }, opts).defaults?.node?.shape).toBe('circle');
   });
 });
 
-describe('lowerPlots mark paint', () => {
-  it('point_constant_paint_lowers_to_node_default_and_compiles', () => {
+describe('lowerPlots 标记绘制', () => {
+  it('点常量绘制下沉到节点默认值并编译', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -1004,7 +1004,7 @@ describe('lowerPlots mark paint', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
-  it('path_constant_stroke_paint_lowers_to_path_default_and_compiles', () => {
+  it('路径常量描边绘制下沉到路径默认值并编译', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -1034,7 +1034,7 @@ describe('lowerPlots mark paint', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
-  it('interval_constant_paint_lowers_to_node_default_and_compiles', () => {
+  it('间隔常量绘制下沉到节点默认值并编译', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -1065,7 +1065,7 @@ describe('lowerPlots mark paint', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
-  it('path_closure_constant_paint_lowers_to_path_default_and_compiles', () => {
+  it('路径闭合常量绘制下沉到路径默认值并编译', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -1096,7 +1096,7 @@ describe('lowerPlots mark paint', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
-  it('interval_constant_paint_lowers_to_node_default_and_compiles', () => {
+  it('间隔常量绘制下沉到节点默认值并编译', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -1133,7 +1133,7 @@ describe('lowerPlots mark paint', () => {
 });
 
 // contract：relation（series / dodge / stack / 多系列折线）
-describe('lowerPlots relation (contract)', () => {
+describe('lowerPlots 关系（契约）', () => {
   const SALES2 = [
     { month: 'Jan', product: 'A', revenue: 3 },
     { month: 'Jan', product: 'B', revenue: 5 },
@@ -1143,7 +1143,7 @@ describe('lowerPlots relation (contract)', () => {
   const allNodes = (layer: IRScope): Array<IRNode> =>
     layer.children.flatMap(child => (child as IRScope).children as Array<IRNode>);
 
-  it('dodge_subbands_equal_width_offset', () => {
+  it('闪避子带等宽偏移', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -1190,7 +1190,7 @@ describe('lowerPlots relation (contract)', () => {
     expect(aJanX).toBeLessThan(bJanX);
   });
 
-  it('stack_bars_from_transform', () => {
+  it('来自变换的堆叠条', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -1232,7 +1232,7 @@ describe('lowerPlots relation (contract)', () => {
     expect((bJan.position as [number, number])[1]).toBeLessThan((aJan.position as [number, number])[1]);
   });
 
-  it('stack_without_transform_throws', () => {
+  it('没有转换抛出的堆叠', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -1258,7 +1258,7 @@ describe('lowerPlots relation (contract)', () => {
     expect(() => expandOf(spec, { s: SALES2 }, opts)).toThrow(/field.*y0/);
   });
 
-  it('line_series_multi_paths', () => {
+  it('线系列多路径', () => {
     const TREND = [
       { t: 0, v: 1, city: 'X' },
       { t: 1, v: 3, city: 'X' },
@@ -1299,7 +1299,7 @@ describe('lowerPlots relation (contract)', () => {
     expect((seriesY.children[0] as IRPath).style?.stroke).toBe('#bb');
   });
 
-  it('series_omitted_single_bar_layer', () => {
+  it('系列省略单条层', () => {
     // 无 series → 退化普通柱（单层 nodeDefault）
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -1317,7 +1317,7 @@ describe('lowerPlots relation (contract)', () => {
     expect(layer.defaults?.node?.shape).toBe('rectangle');
   });
 
-  it('stacked_bar_compiles_to_scene', () => {
+  it('堆叠条编译到场景', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

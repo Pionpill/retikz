@@ -145,10 +145,10 @@ export type BranchDiagramLayoutHostProps = Pick<
 >;
 ```
 
-#### <ApiSourceLink label={"BranchDiagramEmbedKind"} path={"packages/schematic/diagram-vanilla/src/branch/constants.ts"} startLine={2}>BranchDiagramEmbedKind</ApiSourceLink>
+#### <ApiSourceLink label={"branchDiagramEmbedKind"} path={"packages/schematic/diagram-vanilla/src/branch/constants.ts"} startLine={2}>branchDiagramEmbedKind</ApiSourceLink>
 
 ```ts
-export const BranchDiagramEmbedKind = 'diagram.branch';
+export const branchDiagramEmbedKind = 'diagram.branch';
 ```
 
 #### <ApiSourceLink label={"BranchDiagramArtifact"} path={"packages/schematic/diagram/src/branch/schemas/types.ts"} startLine={26}>BranchDiagramArtifact</ApiSourceLink>
@@ -182,7 +182,7 @@ export type BranchDiagramArtifact = output<typeof BranchDiagramArtifactSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BranchLayoutInput"} path={"packages/schematic/diagram/src/branch/contract/types.ts"} startLine={18}>BranchLayoutInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputBranchLayout"} path={"packages/schematic/diagram/src/branch/contract/types.ts"} startLine={18}>InputBranchLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -195,7 +195,7 @@ export type BranchDiagramArtifact = output<typeof BranchDiagramArtifactSchema>;
 | `readonly branches`    | `ReadonlyArray<Pick<IRBranch, 'id' \| 'nodes'>>`                                                                              | —      | 唯一有序连接事实源 |
 | `readonly layout`      | `Readonly<{`<br />`direction: 'right' \| 'left' \| 'down' \| 'up';`<br />`nodeGap: number;`<br />`laneGap: number;`<br />`}>` | —      | 已解析的布局意图   |
 | `readonly mainBranch?` | `string`                                                                                                                      | —      | 显式主分支         |
-| `readonly nodes`       | `ReadonlyArray<BranchLayoutNodeInput>`                                                                                        | —      | 共享节点只出现一次 |
+| `readonly nodes`       | `ReadonlyArray<InputBranchLayoutNode>`                                                                                        | —      | 共享节点只出现一次 |
 
 </ApiTable>
 
@@ -204,13 +204,13 @@ export type BranchDiagramArtifact = output<typeof BranchDiagramArtifactSchema>;
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type BranchLayoutInput = Readonly<{
+export type InputBranchLayout = Readonly<{
   layout: Readonly<{
     direction: 'right' | 'left' | 'down' | 'up';
     nodeGap: number;
     laneGap: number;
   }>;
-  nodes: ReadonlyArray<BranchLayoutNodeInput>;
+  nodes: ReadonlyArray<InputBranchLayoutNode>;
   branches: ReadonlyArray<Pick<IRBranch, 'id' | 'nodes'>>;
   mainBranch?: string;
 }>;
@@ -220,7 +220,7 @@ export type BranchLayoutInput = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BranchLayoutNodeInput"} path={"packages/schematic/diagram/src/branch/contract/types.ts"} startLine={8}>BranchLayoutNodeInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputBranchLayoutNode"} path={"packages/schematic/diagram/src/branch/contract/types.ts"} startLine={8}>InputBranchLayoutNode</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -241,7 +241,7 @@ export type BranchLayoutInput = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type BranchLayoutNodeInput = Readonly<{
+export type InputBranchLayoutNode = Readonly<{
   id: string;
   markerBounds: Readonly<BoundsRect>;
   visualBounds: Readonly<BoundsRect>;
@@ -476,10 +476,10 @@ export type InputBranchNode = IRBranchNode;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BranchDiagramInputEmbedAdapter"} path={"packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts"} startLine={42}>BranchDiagramInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"branchDiagramInputEmbedAdapter"} path={"packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts"} startLine={42}>branchDiagramInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const BranchDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<BranchDiagramInputEmbedProps>;
+export declare const branchDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<BranchDiagramInputEmbedProps>;
 ```
 
 #### <ApiSourceLink label={"createBranchDiagramVanillaAdapters"} path={"packages/schematic/diagram-vanilla/src/branch/adapters.ts"} startLine={6}>createBranchDiagramVanillaAdapters</ApiSourceLink>
@@ -590,7 +590,7 @@ export type BranchDiagramDefinitionOptions = DiagramDefinitionOptions &
 | 成员                   | 类型                                               | 默认值 | 说明                                             |
 | ---------------------- | -------------------------------------------------- | ------ | ------------------------------------------------ |
 | `readonly description` | `string`                                           | —      | 布局语义说明                                     |
-| `readonly layout`      | `(input: BranchLayoutInput) => BranchLayoutOutput` | —      | 完整支持有序分支、主线与测量占位的同步确定性布局 |
+| `readonly layout`      | `(input: InputBranchLayout) => BranchLayoutOutput` | —      | 完整支持有序分支、主线与测量占位的同步确定性布局 |
 | `readonly name`        | `string`                                           | —      | 全局唯一布局名称                                 |
 
 </ApiTable>
@@ -603,7 +603,7 @@ export type BranchDiagramDefinitionOptions = DiagramDefinitionOptions &
 export type BranchLayoutDefinition = Readonly<{
   name: string;
   description: string;
-  layout: (input: BranchLayoutInput) => BranchLayoutOutput;
+  layout: (input: InputBranchLayout) => BranchLayoutOutput;
 }>;
 ```
 
@@ -611,23 +611,23 @@ export type BranchLayoutDefinition = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BranchDiagramProviderKey"} path={"packages/schematic/diagram/src/branch/pipeline/composite.ts"} startLine={13}>BranchDiagramProviderKey</ApiSourceLink>
+#### <ApiSourceLink label={"branchDiagramProviderKey"} path={"packages/schematic/diagram/src/branch/pipeline/composite.ts"} startLine={13}>branchDiagramProviderKey</ApiSourceLink>
 
 ```ts
-export const BranchDiagramProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const branchDiagramProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: 'diagram',
   type: 'branch',
 });
 ```
 
-#### <ApiSourceLink label={"LanesBranchLayoutDefinition"} path={"packages/schematic/diagram/src/branch/providers/lanes.ts"} startLine={7}>LanesBranchLayoutDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"lanesBranchLayoutDefinition"} path={"packages/schematic/diagram/src/branch/providers/lanes.ts"} startLine={7}>lanesBranchLayoutDefinition</ApiSourceLink>
 
 <details>
 <summary>查看完整推断签名</summary>
 
 ```ts
-export const LanesBranchLayoutDefinition = defineBranchLayout({
+export const lanesBranchLayoutDefinition = defineBranchLayout({
   name: 'lanes',
   description: 'Stable topological progression with shared nodes and a continuous main branch.',
   layout: input => {
@@ -714,7 +714,7 @@ export const LanesBranchLayoutDefinition = defineBranchLayout({
 
 </details>
 
-#### <ApiSourceLink label={"createBranchDiagramProvider"} path={"packages/schematic/diagram/src/branch/pipeline/composite.ts"} startLine={41}>createBranchDiagramProvider</ApiSourceLink>
+#### <ApiSourceLink label={"createBranchDiagramProvider"} path={"packages/schematic/diagram/src/branch/pipeline/composite.ts"} startLine={32}>createBranchDiagramProvider</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -722,10 +722,10 @@ export const LanesBranchLayoutDefinition = defineBranchLayout({
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称       | 类型 / 签名                      | 说明 |
-| ------ | ---------- | -------------------------------- | ---- |
-| 参数   | `options?` | `BranchDiagramDefinitionOptions` | —    |
-| 返回值 | —          | `CoreDependencyProvider`         | —    |
+| 类别   | 名称       | 类型 / 签名                                              | 说明 |
+| ------ | ---------- | -------------------------------------------------------- | ---- |
+| 参数   | `options?` | `BranchDiagramDefinitionOptions`                         | —    |
+| 返回值 | —          | `CoreDependencyProvider<BranchDiagramDefinitionOptions>` | —    |
 
 </ApiTable>
 
@@ -734,14 +734,16 @@ export const LanesBranchLayoutDefinition = defineBranchLayout({
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createBranchDiagramProvider: (options?: BranchDiagramDefinitionOptions) => CoreDependencyProvider;
+export declare const createBranchDiagramProvider: (
+  options?: BranchDiagramDefinitionOptions,
+) => CoreDependencyProvider<BranchDiagramDefinitionOptions>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createBranchDiagramProviderContribution"} path={"packages/schematic/diagram/src/branch/pipeline/composite.ts"} startLine={49}>createBranchDiagramProviderContribution</ApiSourceLink>
+#### <ApiSourceLink label={"createBranchDiagramProviderContribution"} path={"packages/schematic/diagram/src/branch/pipeline/composite.ts"} startLine={42}>createBranchDiagramProviderContribution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

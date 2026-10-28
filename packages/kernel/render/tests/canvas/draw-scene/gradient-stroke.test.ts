@@ -35,7 +35,7 @@ const gradientRectScene = (kind: 'linearGradient' | 'radialGradient' | 'conicGra
 });
 
 describe('drawScene 渐变描边', () => {
-  it('non-square radial stroke uses an offscreen no-repeat pattern without scaling stroke geometry', () => {
+  it('非方形径向描边使用屏幕外无重复图案，无需缩放描边几何形状', () => {
     const context = createSpyCanvasContext();
     const offscreen = createSpyCanvasContext();
     const s: Scene = {
@@ -96,7 +96,7 @@ describe('drawScene 渐变描边', () => {
     expect(context.calls.some(call => call.name === 'scale')).toBe(false);
   });
 
-  it('falls back to a native approximation with one warning when offscreen is unavailable', () => {
+  it('当屏幕外不可用时，回退到本机近似值并发出一个警告', () => {
     const context = createSpyCanvasContext();
     const warnings: Array<string> = [];
     const s: Scene = {
@@ -140,7 +140,7 @@ describe('drawScene 渐变描边', () => {
     expect(warnings).toEqual(['paint']);
   });
 
-  it('reuses the same gradient stroke texture within one drawScene call', () => {
+  it('在一次 drawScene 调用中重复使用相同的渐变描边纹理', () => {
     const context = createSpyCanvasContext();
     const offscreens: Array<ReturnType<typeof createSpyCanvasContext>> = [];
     const path = {
@@ -186,7 +186,7 @@ describe('drawScene 渐变描边', () => {
     expect(context.calls.filter(call => call.name === 'stroke')).toHaveLength(2);
   });
 
-  it('caps extreme gradient textures by edge and total pixel budgets', () => {
+  it('通过边缘和总像素预算限制极端梯度纹理', () => {
     const context = createSpyCanvasContext();
     const sizes: Array<[number, number]> = [];
     const s: Scene = {
@@ -234,7 +234,7 @@ describe('drawScene 渐变描边', () => {
   });
 
   it.each(['linearGradient', 'radialGradient', 'conicGradient'] as const)(
-    'skips %s stroke for a degenerate bbox with one paint warning',
+    '跳过带有一个绘制警告的退化 bbox 的 %s 描边',
     kind => {
       const context = createSpyCanvasContext();
       const warnings: Array<string> = [];
@@ -255,7 +255,7 @@ describe('drawScene 渐变描边', () => {
     },
   );
 
-  it('silently skips texture allocation for a singular current transform', () => {
+  it('默默地跳过单个当前变换的纹理分配', () => {
     const context = createSpyCanvasContext();
     const warnings: Array<string> = [];
     let offscreenCalls = 0;
@@ -273,7 +273,7 @@ describe('drawScene 渐变描边', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('warns and skips texture allocation for a non-finite current transform', () => {
+  it('警告并跳过非有限当前变换的纹理分配', () => {
     const context = createSpyCanvasContext();
     const warnings: Array<string> = [];
     let offscreenCalls = 0;
@@ -291,7 +291,7 @@ describe('drawScene 渐变描边', () => {
     expect(warnings).toEqual(['paint']);
   });
 
-  it('does not mistake a tiny but highly non-square bbox for a square', () => {
+  it('不会将微小但高度非方形的 bbox 误认为是正方形', () => {
     const context = createSpyCanvasContext();
     let offscreenCalls = 0;
     const scene = gradientRectScene('radialGradient');

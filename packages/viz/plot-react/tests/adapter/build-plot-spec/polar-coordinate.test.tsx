@@ -5,11 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { createPolarPieSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
 import { buildPlotIR } from '../../../src/adapter';
 import { PlotAxis } from '../../../src/components/guides';
-import { IntervalMark, PathMark, RelationMark } from '../../../src/components/marks';
+import { IntervalMark, PathMark } from '../../../src/components/marks';
 import { PlotScale } from '../../../src/components/scales';
 
-describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius', () => {
-  it('forwards coordinate and interpolation-sensitive mark overrides unchanged', () => {
+describe('buildPlotIR 极坐标/扇形/面积/闭合/角度·半径', () => {
+  it('转发坐标和插值敏感标记覆盖不变', () => {
     const spec = buildPlotIR(
       <>
         <PathMark
@@ -20,12 +20,12 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
           encodings={{ position: { x: { field: 'angle' }, y: { field: 'radius' } } }}
           properties={{ interpolation: 'chord' }}
         />
-        <RelationMark
+        <PathMark
           encodings={{
-            source: { position: { x: { field: 'sourceAngle' }, y: { field: 'sourceRadius' } } },
-            target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } } },
+            from: { x: { field: 'sourceAngle' }, y: { field: 'sourceRadius' } },
+            to: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } },
           }}
-          properties={{ geometry: { kind: 'path', interpolation: 'chord' } }}
+          properties={{ interpolation: 'chord' }}
         />
       </>,
       '__plot',
@@ -36,7 +36,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     expect(spec.marks).toMatchObject([
       { type: 'path', properties: { interpolation: 'polar' } },
       { type: 'interval', properties: { interpolation: 'chord' } },
-      { type: 'relation', properties: { geometry: { kind: 'path', interpolation: 'chord' } } },
+      { type: 'path', properties: { interpolation: 'chord' } },
     ]);
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
@@ -83,7 +83,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     expect(PlotSchema.parse(spec)).toEqual(PlotSchema.parse(expected));
   });
 
-  it('radial_bar_explicit_band_scale_forwards_gap_options', () => {
+  it('径向条显式带标度向前间隙选项', () => {
     const spec = buildPlotIR(
       <>
         <IntervalMark encodings={{ position: { x: { field: 'month' }, y: { field: 'amount' } } }} />

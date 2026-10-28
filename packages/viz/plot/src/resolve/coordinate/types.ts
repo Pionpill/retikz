@@ -29,7 +29,7 @@ export type MarkDataView = {
 };
 
 /** 曲线坐标轴下沉器，由 pipeline 提供，resolve 只消费其窄 contract */
-export type CoordinateAxisLowerer = (
+type CoordinateAxisLowerer = (
   frame: CoordinateFrame,
   guide: IRPlotAxisGuide,
   fontSize: number,

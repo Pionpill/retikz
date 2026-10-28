@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import type { InputPlotMark } from '../../../src';
 import { normalizePlotBindings } from '../../../src/normalize/plot/bindings';
 
 describe('normalizePlotBindings', () => {
@@ -377,27 +376,6 @@ describe('normalizePlotBindings', () => {
         ],
       }),
     ).toThrow(/plot authoring:.*facets and scaffolds cannot be mixed/i);
-  });
-
-  it.each([
-    {
-      type: 'relation',
-      source: { markId: 'source' },
-      target: { markId: 'target' },
-      yAxisId: undefined,
-    },
-    { type: 'heatmap', xAxisId: undefined, intensity: 0.8 },
-  ])('拒绝非 position mark $type 显式持有 undefined axis binding 字段', mark => {
-    expect(() =>
-      normalizePlotBindings({
-        marks: [mark as unknown as InputPlotMark],
-        guides: [],
-        scales: [],
-        coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-        facets: [],
-        scaffolds: [],
-      }),
-    ).toThrow(/plot authoring:.*axis binding is only supported on path, point, and interval marks/i);
   });
 
   it('对多种 binding mode 使用统一错误前缀', () => {

@@ -1,9 +1,9 @@
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import type { IRStack, IRCell } from '@retikz/standard/collection';
-import { createStack, StackProvider } from '@retikz/standard/collection';
+import { createStack, stackProvider } from '@retikz/standard/collection';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { StandardStackEmbedKind } from '../shared/constants';
+import { standardStackEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCellItems } from './cell';
 
@@ -38,26 +38,26 @@ export type InputStack = Omit<IRStack, 'namespace' | 'type' | 'items' | 'data' |
   );
 
 /** 将 Stack 输入与嵌套内容交给根级 traversal */
-export const StackInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStack> = {
-  kind: StandardStackEmbedKind,
+export const stackInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStack> = {
+  kind: standardStackEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)
       return {
         node: createStack({ namespace: 'standard', type: 'stack', ...props }),
-        providerDependencies: { roots: [StackProvider.key], providers: [StackProvider, PathClipProvider] },
+        providerDependencies: { roots: [stackProvider.key], providers: [stackProvider, pathClipProvider] },
       };
 
     if (props.data !== undefined)
       return {
         node: createStack({ namespace: 'standard', type: 'stack', ...props }),
         providerDependencies: {
-          roots: [StackProvider.key, ...dataCellDependencies.roots],
-          providers: [StackProvider, ...dataCellDependencies.providers],
+          roots: [stackProvider.key, ...dataCellDependencies.roots],
+          providers: [stackProvider, ...dataCellDependencies.providers],
         },
       };
 
     const { items, ...input } = props;
-    const normalized = normalizeCellItems(items, context, StackProvider);
+    const normalized = normalizeCellItems(items, context, stackProvider);
 
     return {
       node: createStack({
@@ -79,7 +79,7 @@ export const StackInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStack> = 
  */
 export const stack = (input: InputStack): InputEmbed<InputStack> => ({
   type: 'embed',
-  kind: StandardStackEmbedKind,
+  kind: standardStackEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

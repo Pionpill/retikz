@@ -13,8 +13,8 @@ import {
 
 const smoothOperation = (operation: unknown) => TransformSchema.parse(operation);
 
-describe('smooth transform schema (contract)', () => {
-  it('accepts smooth transform and preserves JSON round trip', () => {
+describe('平滑变换 schema（契约）', () => {
+  it('接受平滑变换并保留 JSON 往返', () => {
     const operation = {
       kind: 'smooth',
       params: {
@@ -41,7 +41,7 @@ describe('smooth transform schema (contract)', () => {
     { kind: 'logarithmic' },
     { kind: 'exponential' },
     { kind: 'power' },
-  ])('accepts complete regression method object: $kind $order', method => {
+  ])('接受完整回归方法对象：$kind $order', method => {
     const operation = {
       kind: 'smooth',
       params: {
@@ -56,7 +56,7 @@ describe('smooth transform schema (contract)', () => {
     expect(TransformSchema.parse(operation)).toEqual(operation);
   });
 
-  it('rejects malformed smooth JSON with useful zod errors', () => {
+  it('拒绝具有有用的 zod 错误的畸形平滑 JSON', () => {
     expect(() =>
       TransformSchema.parse({ kind: 'smooth', params: { x: 'time', y: 'value', sampleCount: 1, xAs: 'x', yAs: 'y' } }),
     ).toThrow();
@@ -78,7 +78,7 @@ describe('smooth transform schema (contract)', () => {
   });
 });
 
-describe('smooth transform behavior (contract)', () => {
+describe('平滑变换行为（契约）', () => {
   const rows: Array<ExternalRow> = [
     { series: 'A', time: 0, value: 1 },
     { series: 'A', time: 1, value: 3 },
@@ -88,7 +88,7 @@ describe('smooth transform behavior (contract)', () => {
     { series: 'B', time: 4, value: 10 },
   ];
 
-  it('computes a known linear regression line over explicit extent', () => {
+  it('计算显式范围内的已知线性回归线', () => {
     const out = applyTransforms(rows.slice(0, 3), [
       smoothOperation({
         kind: 'smooth',
@@ -107,7 +107,7 @@ describe('smooth transform behavior (contract)', () => {
     expect(out.map(row => row.trendY)).toEqual([1, 3, 5, 7, 9]);
   });
 
-  it('recovers known quadratic and polynomial models', () => {
+  it('恢复已知的二次和多项式模型', () => {
     const quadraticRows: Array<ExternalRow> = [-2, -1, 0, 1, 2].map(x => ({ x, y: x ** 2 + 2 * x + 1 }));
     const cubicRows: Array<ExternalRow> = [-2, -1, 0, 1, 2].map(x => ({ x, y: x ** 3 - 2 * x + 1 }));
 
@@ -163,7 +163,7 @@ describe('smooth transform behavior (contract)', () => {
     polynomialDefault.forEach((row, index) => expect(row.trendY).toBeCloseTo([-3, 2, 1, 0, 5][index], 10));
   });
 
-  it('recovers known logarithmic, exponential and power models', () => {
+  it('恢复已知的对数、指数和幂模型', () => {
     const logarithmic = applyTransforms(
       [0, 1, 2, 3].map(exponent => {
         const x = Math.exp(exponent);
@@ -228,7 +228,7 @@ describe('smooth transform behavior (contract)', () => {
     power.forEach((row, index) => expect(row.trendY).toBeCloseTo([3, 12, 27, 48][index], 10));
   });
 
-  it('uses observed x extent and default sample count', () => {
+  it('使用观察到的 x 范围和默认样本计数', () => {
     const out = applyTransforms(rows.slice(0, 3), [
       smoothOperation({
         kind: 'smooth',
@@ -252,7 +252,7 @@ describe('smooth transform behavior (contract)', () => {
     expect(out.every(row => Number.isFinite(row.trendY))).toBe(true);
   });
 
-  it('computes smooth lines independently per group and preserves group keys', () => {
+  it('每组独立计算平滑线并保留组键', () => {
     const out = applyTransforms(rows, [
       smoothOperation({
         kind: 'smooth',
@@ -280,7 +280,7 @@ describe('smooth transform behavior (contract)', () => {
     ]);
   });
 
-  it('filters non-finite pairs but keeps valid pairs', () => {
+  it('过滤非有限对，但保留有效对', () => {
     const out = applyTransforms(
       [
         { time: 0, value: 1 },
@@ -297,7 +297,7 @@ describe('smooth transform behavior (contract)', () => {
     ]);
   });
 
-  it('fails loud for too few finite pairs and vertical x variance', () => {
+  it('对于太少的有限对和垂直 x 方差，失败很大', () => {
     expect(
       () =>
         applyTransforms(
@@ -320,7 +320,7 @@ describe('smooth transform behavior (contract)', () => {
   it.each([
     ['quadratic', { kind: 'quadratic' }, 2],
     ['polynomial', { kind: 'polynomial', order: 4 }, 4],
-  ])('fails loud when %s has fewer than degree plus one pairs', (_name, method, sampleSize) => {
+  ])('当 %s 的度数加一对数少于时，明确报错', (_name, method, sampleSize) => {
     const insufficientRows = Array.from({ length: sampleSize }, (_, x) => ({ x, y: x ** 2 }));
 
     expect(
@@ -331,7 +331,7 @@ describe('smooth transform behavior (contract)', () => {
     ).toThrow(/pairs|samples|degree|order/i);
   });
 
-  it('fails loud for rank-deficient polynomial input', () => {
+  it('对于秩不足的多项式输入，明确报错', () => {
     expect(
       () =>
         applyTransforms(
@@ -357,7 +357,7 @@ describe('smooth transform behavior (contract)', () => {
     ).toThrow(/rank|distinct|polynomial/i);
   });
 
-  it('fails loud for a near-rank-deficient sixth-degree polynomial', () => {
+  it('对于近似秩亏的六次多项式来说，失败很大', () => {
     const clusteredX = [0, 1e-12, 2e-12, 3e-12, 4e-12, 5e-12, 1];
 
     expect(
@@ -413,7 +413,7 @@ describe('smooth transform behavior (contract)', () => {
         { x: 2, y: 2 },
       ],
     ],
-  ])('fails loud for %s', (_name, method, invalidRows) => {
+  ])('%s 明确报错', (_name, method, invalidRows) => {
     expect(
       () =>
         applyTransforms(invalidRows, [
@@ -439,7 +439,7 @@ describe('smooth transform behavior (contract)', () => {
         { x: 2, y: 4 },
       ],
     ],
-  ])('fails loud when %s sampling extent includes non-positive x', (_name, method, validRows) => {
+  ])('当 %s 采样范围包含非正 x 时，明确报错', (_name, method, validRows) => {
     expect(
       () =>
         applyTransforms(validRows, [
@@ -458,7 +458,7 @@ describe('smooth transform behavior (contract)', () => {
     ).toThrow(/extent|positive|domain/i);
   });
 
-  it('fails loud for non-finite coefficients and predictions', () => {
+  it('对于非有限系数和预测失败很大', () => {
     expect(
       () =>
         applyTransforms(
@@ -495,7 +495,7 @@ describe('smooth transform behavior (contract)', () => {
     ).toThrow(/finite|prediction|exponential/i);
   });
 
-  it('aborts the whole grouped transform and identifies the invalid group', () => {
+  it('中止整个分组变换并识别无效组', () => {
     expect(
       () =>
         applyTransforms(
@@ -522,7 +522,7 @@ describe('smooth transform behavior (contract)', () => {
     ).toThrow(/logarithmic.*series.*B/i);
   });
 
-  it('records group-level provenance source indices', () => {
+  it('记录组级种源索引', () => {
     const tagged = tagSourceIndex(rows);
     const out = applyTransforms(tagged, [
       smoothOperation({
@@ -542,7 +542,7 @@ describe('smooth transform behavior (contract)', () => {
     expect(readSourceIndices(out[2])).toEqual([3, 4, 5]);
   });
 
-  it('rejects custom transform registration collisions with smooth', () => {
+  it('拒绝自定义变换注册与平滑的冲突', () => {
     const collision = defineTransform({
       kind: 'smooth',
       paramsSchema: object({}),

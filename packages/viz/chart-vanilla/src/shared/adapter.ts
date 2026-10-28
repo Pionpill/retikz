@@ -5,7 +5,7 @@ import type { InputEmbedContext, InputEmbedPreparationContext, SynchronousInputE
 import { RetikzChartVanillaError } from '../error';
 import { buildChartProviderContribution } from './contribution';
 import { wrapChartPanel } from './scope';
-import type { ChartRuntimeInput } from './types';
+import type { InputChartRuntime } from './types';
 
 /**
  * 具体 chartType 共享的同步贡献与异步数据准备
@@ -13,7 +13,7 @@ import type { ChartRuntimeInput } from './types';
  */
 export const createChartInputEmbedAdapter = <TInput>(
   kind: string,
-  createRuntime: (input: TInput) => ChartRuntimeInput<IRChartSource, unknown>,
+  createRuntime: (input: TInput) => InputChartRuntime<IRChartSource, unknown>,
 ) =>
   ({
     kind,

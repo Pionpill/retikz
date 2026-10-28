@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { RetikzRuntimeErrorCode, BuiltinRuntimeDiagnosticCode } from '../../src';
-import type { RuntimeComputationDefinitionInput, RuntimeComputationWarningInput } from '../../src/computation';
+import type { InputRuntimeComputationDefinition, InputRuntimeComputationWarning } from '../../src/computation';
 import { defineRuntimeComputation, RuntimeComputationKind } from '../../src/computation';
 import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '../../src/registry';
 import { createRuntime } from '../../src/runtime';
@@ -19,7 +19,7 @@ const defineSource = () =>
     },
   });
 
-describe('runtime callback contract', () => {
+describe('运行时回调契约', () => {
   it('创建时复制 updateStrategy，后续修改 options 不改变既有 Runtime', () => {
     const owner = defineSource();
     const sources = createRuntimeSourceRegistry([owner]);
@@ -94,7 +94,7 @@ describe('runtime callback contract', () => {
         mode === 'fallback'
           ? {
               kind: RuntimeComputationKind.Fallback,
-              get diagnostics(): ReadonlyArray<RuntimeComputationWarningInput> {
+              get diagnostics(): ReadonlyArray<InputRuntimeComputationWarning> {
                 throw getterCause;
               },
             }
@@ -148,7 +148,7 @@ describe('runtime callback contract', () => {
         readForComputation: (value: number) => value,
         read: (value: number) => value,
       },
-      run: (view: Parameters<RuntimeComputationDefinitionInput<number, number, number, number>['run']>[0]) => ({
+      run: (view: Parameters<InputRuntimeComputationDefinition<number, number, number, number>['run']>[0]) => ({
         kind: RuntimeComputationKind.Full,
         result: view.snapshot(owner).value,
       }),
@@ -160,7 +160,7 @@ describe('runtime callback contract', () => {
         },
         result: 2,
       }),
-    } satisfies RuntimeComputationDefinitionInput<number, number, number, number>;
+    } satisfies InputRuntimeComputationDefinition<number, number, number, number>;
     const computation = defineRuntimeComputation(input);
     const computations = createRuntimeComputationRegistry({ sources, computations: [computation] });
     const runtime = createRuntime({

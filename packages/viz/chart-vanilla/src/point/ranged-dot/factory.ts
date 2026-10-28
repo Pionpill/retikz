@@ -7,7 +7,7 @@ import { normalizeRangedDotChart } from './normalize';
 import type { RangedDotChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 RangedDotChart 输入并复用统一数据准备 */
-export const RangedDotChartInputEmbedAdapter = createChartInputEmbedAdapter(
+export const rangedDotChartInputEmbedAdapter = createChartInputEmbedAdapter(
   'chart.ranged-dot',
   (input: RangedDotChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
@@ -39,7 +39,7 @@ export const rangedDotChart = <TNative = never>(
   input: RangedDotChartInputEmbedProps<TNative>,
 ): InputEmbed<RangedDotChartInputEmbedProps<TNative>> => ({
   type: 'embed',
-  kind: RangedDotChartInputEmbedAdapter.kind,
+  kind: rangedDotChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

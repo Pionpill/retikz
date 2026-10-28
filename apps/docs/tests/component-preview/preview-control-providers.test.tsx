@@ -1,5 +1,5 @@
 import { fadeIn } from '@retikz/core';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -24,7 +24,7 @@ const AnimatedDemo: FC = () => (
 );
 
 const RibbonDemo: FC = () => (
-  <Layout width={40} height={20} extensions={{ paths: [RibbonPathDefinition] }}>
+  <Layout width={40} height={20} extensions={{ paths: [ribbonPathDefinition] }}>
     <Node id="ribbon" position={[0, 0]} />
   </Layout>
 );
@@ -41,37 +41,37 @@ const slotB: PreviewControlSlot = {
   render: () => null,
 };
 
-describe('preview control providers', () => {
-  it('does not resolve animation controls for a static preview by default', () => {
+describe('预览控件提供者', () => {
+  it('默认情况下不解析静态预览的动画控件', () => {
     expect(resolveBuiltinControlSlots({ previewIr: buildPreviewIR(StaticDemo), options: {} })).toEqual([]);
   });
 
-  it('resolves hover animation controls for an animated preview by default', () => {
+  it('默认解析动画预览的悬停动画控件', () => {
     expect(resolveBuiltinControlSlots({ previewIr: buildPreviewIR(AnimatedDemo), options: {} })[0]).toMatchObject({
       id: 'animation-controls',
       visibility: 'hover',
     });
   });
 
-  it('force enables animation controls without preview IR', () => {
+  it('强制启用动画控件，无需预览 IR', () => {
     expect(resolveBuiltinControlSlots({ previewIr: null, options: { animation: true } })).toHaveLength(1);
   });
 
-  it('force disables animation controls for an animated preview', () => {
+  it('强制禁用动画预览的动画控件', () => {
     expect(
       resolveBuiltinControlSlots({ previewIr: buildPreviewIR(AnimatedDemo), options: { animation: false } }),
     ).toEqual([]);
   });
 
-  it('retains generic path definitions while resolving preview controls', () => {
-    expect(buildPreviewIR(RibbonDemo).paths).toEqual([RibbonPathDefinition]);
+  it('在解析预览控件时保留通用路径定义', () => {
+    expect(buildPreviewIR(RibbonDemo).paths).toEqual([ribbonPathDefinition]);
   });
 
-  it('merges slot groups in input order', () => {
+  it('按输入顺序合并槽组', () => {
     expect(mergePreviewControlSlots([slotA], [slotB])).toEqual([slotA, slotB]);
   });
 
-  it('rejects duplicate slot ids', () => {
+  it('拒绝重复的槽 ID', () => {
     expect(() => mergePreviewControlSlots([slotA], [{ ...slotB, id: slotA.id }])).toThrow(
       'Duplicate preview control slot id: "slot-a".',
     );

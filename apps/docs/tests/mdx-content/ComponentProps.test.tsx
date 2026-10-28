@@ -25,7 +25,7 @@ const getComponentProps = (): FC<ComponentPropsProbeProps> => {
 };
 
 describe('<ComponentProps>', () => {
-  it('renders categorized members, values, and MDX descriptions', () => {
+  it('呈现分类成员、值和 MDX 描述', () => {
     const ComponentProps = getComponentProps();
     const html = renderToStaticMarkup(
       <ComponentProps

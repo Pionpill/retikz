@@ -1,6 +1,6 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import type { GraphInputEmbedProps, InputGraph } from '@retikz/graph-vanilla';
-import { GraphInputEmbedAdapter } from '@retikz/graph-vanilla';
+import { graphInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { Layout, withInputEmbedAdapters } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
@@ -24,13 +24,13 @@ export type GraphProps = Omit<InputGraph, 'children'> &
     children?: ReactNode;
   }>;
 
-type GraphCollectedInput = Readonly<{
+type GraphInputCollection = Readonly<{
   input: GraphInputEmbedProps;
   adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }>;
 
 /** 将 React children 与 props 组装为唯一 Graph Vanilla Input */
-const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: boolean): GraphCollectedInput => {
+const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: boolean): GraphInputCollection => {
   const unsupported = graphLayoutHostPropKeys.filter(key => Object.hasOwn(props, key));
   if (rejectHostProps && unsupported.length > 0) {
     throw new RetikzGraphReactError({
@@ -128,7 +128,7 @@ const GraphRuntimeEmbed = (() => null) as unknown as GraphEmbeddableComponent<Gr
 
 GraphRuntimeEmbed.displayName = 'GraphRuntimeEmbed';
 GraphRuntimeEmbed.isTier2Embeddable = true;
-GraphRuntimeEmbed.inputEmbedAdapter = GraphInputEmbedAdapter;
+GraphRuntimeEmbed.inputEmbedAdapter = graphInputEmbedAdapter;
 GraphRuntimeEmbed.createInputEmbedProps = props => {
   const { input, adapters } = props as GraphRuntimeEmbedProps;
   return withInputEmbedAdapters(input, adapters);
@@ -179,5 +179,5 @@ export const Graph = GraphComponent as GraphEmbeddableComponent<GraphProps>;
 
 Graph.displayName = 'Graph';
 Graph.isTier2Embeddable = true;
-Graph.inputEmbedAdapter = GraphInputEmbedAdapter;
+Graph.inputEmbedAdapter = graphInputEmbedAdapter;
 Graph.createInputEmbedProps = createGraphInput;

@@ -27,11 +27,11 @@ import { Queue } from '@retikz/standard-react/collection';
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { queue, QueueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { queue, queueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 renderToSvgString(scene({ children: [queue({ items: ['A', 'B', 'C'] })] }), {
-  adapters: [QueueInputEmbedAdapter],
+  adapters: [queueInputEmbedAdapter],
 });
 ```
 
@@ -42,7 +42,7 @@ renderToSvgString(scene({ children: [queue({ items: ['A', 'B', 'C'] })] }), {
 { "namespace": "standard", "type": "queue", "items": ["A", "B", "C"] }
 ```
 
-直接 IR 注册 QueueProvider 与 PathClipProvider；data 展开还需要 ArrayProvider、MapProvider，显式嵌套内容提供自身依赖。
+直接 IR 注册 queueProvider 与 pathClipProvider；data 展开还需要 arrayProvider、mapProvider，显式嵌套内容提供自身依赖。
 
 </DocTab>
 </DocTabs>

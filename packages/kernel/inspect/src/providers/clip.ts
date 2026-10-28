@@ -1,5 +1,5 @@
 import type { ClipOwnerOutput, IRChild, IRPosition, PathCommand } from '@retikz/core';
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 import type { output as ZodOutput } from 'zod';
 
 import type { InspectorContext } from '../contract';
@@ -44,10 +44,7 @@ export const CLIP_INSPECTOR = defineInspector({
   ...CLIP_INSPECTOR_KEY,
   owner: { kind: 'clip' },
   optionsSchema: ClipInspectOptionsSchema,
-  mergeOptionsInput: (inherited, local) => ({
-    ...inherited,
-    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
-  }),
+  mergeOptionsInput: (inherited, local) => mergeDefinedProperties([inherited, local]),
   inspect: (subject: ClipOwnerOutput, context: InspectorContext<ClipInspectorOptions>): Array<IRChild> => {
     const output: Array<IRChild> = [];
     if (context.options.outline) {

@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { ThemeMode } from '@retikz/core';
 import type { IRPlotDefaults } from '@retikz/plot';
 import { mergePlotDefaults } from '@retikz/plot';
@@ -46,7 +46,7 @@ const neutralChartDefaultsOf = (mode: ThemeMode): IRChartDefaults => {
 };
 
 /** 合并 Chart shell 默认片段，font/background 保持正式 Source 覆盖粒度 */
-export const mergeChartDefaults = (
+const mergeChartDefaults = (
   base: IRChartDefaults | undefined,
   override: IRChartDefaults | undefined,
 ): IRChartDefaults => {
@@ -82,7 +82,7 @@ export const mergeChartDefaults = (
 export const resolveChartTheme = (
   source: IRChartSource,
   context: Readonly<{
-    theme: ResolvedTheme;
+    theme: CanonicalTheme;
     chartThemeDefinitions: ReadonlyArray<ChartThemeDefinition>;
   }>,
 ): ChartThemeResolution => {

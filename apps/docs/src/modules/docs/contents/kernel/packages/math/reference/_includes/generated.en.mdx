@@ -168,7 +168,7 @@ export declare const normalizeSignedDegrees: (degrees: number) => number;
 
 ## Contours and fillets
 
-#### <ApiSourceLink label={"ArcSegment"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={40}>ArcSegment</ApiSourceLink>
+#### <ApiSourceLink label={"ArcSegment"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={48}>ArcSegment</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -206,7 +206,7 @@ export type ArcSegment = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ContourCommand"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={62}>ContourCommand</ApiSourceLink>
+#### <ApiSourceLink label={"ContourCommand"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={70}>ContourCommand</ApiSourceLink>
 
 <DocTabs defaultValue="move">
 
@@ -294,7 +294,7 @@ export type ContourCommand =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ContourSegment"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={59}>ContourSegment</ApiSourceLink>
+#### <ApiSourceLink label={"ContourSegment"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={67}>ContourSegment</ApiSourceLink>
 
 <DocTabs defaultValue="line">
 
@@ -339,7 +339,7 @@ export type ContourSegment = LineSegment | ArcSegment;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FilletSolution"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={128}>FilletSolution</ApiSourceLink>
+#### <ApiSourceLink label={"FilletSolution"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={133}>FilletSolution</ApiSourceLink>
 
 The incoming segment ends at tangentInPoint and the outgoing segment starts at tangentOutPoint. The center, radius, and endpoint angles describe the connecting arc. clampedToZero means the radius was clamped to zero and the corner remains sharp.
 
@@ -415,7 +415,7 @@ export type LineSegment = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"buildContourCommands"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={482}>buildContourCommands</ApiSourceLink>
+#### <ApiSourceLink label={"buildContourCommands"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={490}>buildContourCommands</ApiSourceLink>
 
 An empty fillet list preserves the original contour. A nonempty list must match the same segment sequence and closed flag; segments are trimmed and tangent arcs inserted. Zero-radius seams remain sharp. No closing command is emitted when closed is false.
 
@@ -450,7 +450,7 @@ export declare const buildContourCommands: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"intersectContourRay"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={577}>intersectContourRay</ApiSourceLink>
+#### <ApiSourceLink label={"intersectContourRay"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={585}>intersectContourRay</ApiSourceLink>
 
 The explicit ray origin need not be the contour center; direction is toward minus rayOrigin. Tests trimmed lines, original arcs, and fillet arcs, selecting the smallest positive ray parameter. An empty fillet list queries the original contour; a nonempty list must match the segments. Returns undefined when no hit exists.
 
@@ -487,7 +487,7 @@ export declare const intersectContourRay: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"solveContourFillets"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={441}>solveContourFillets</ApiSourceLink>
+#### <ApiSourceLink label={"solveContourFillets"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={449}>solveContourFillets</ApiSourceLink>
 
 An omitted or nonpositive radius returns an empty list. Arc-to-arc seams requiring a fillet return undefined. closed defaults to true and includes the wraparound seam. For an open contour, only internal seams are rounded; a final clampedToZero placeholder preserves one result per segment so construction and intersection can skip the absent wraparound seam.
 
@@ -547,6 +547,35 @@ Accepts either corner order and derives the minimum and maximum coordinates. Sha
 
 ```ts
 export declare const rectOutline: (from: Position, to: Position, cornerRadius?: number) => Array<ContourCommand>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"verticesToSegments"} path={"packages/kernel/math/src/algorithms/contour.ts"} startLine={44}>verticesToSegments</ApiSourceLink>
+
+An empty array returns an empty array; one vertex creates a self-loop, and two vertices create opposite segments. Input winding and repeated vertices are preserved. Segment endpoints reuse the input coordinates without modifying or copying them
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name       | Type / signature     | Description |
+| ---------- | ---------- | -------------------- | ----------- |
+| Parameters | `vertices` | `Array<Position>`    | —           |
+| Returns    | —          | `Array<LineSegment>` | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const verticesToSegments: (vertices: Array<Position>) => Array<LineSegment>;
 ```
 
 </DocTab>
@@ -735,7 +764,7 @@ export declare const worldToLocal: (shape: CenteredShape, world: Position) => Po
 
 ## Shapes and arcs
 
-#### <ApiSourceLink label={"ArcBoundingCandidatesInput"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={5}>ArcBoundingCandidatesInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputArcBoundingCandidates"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={5}>InputArcBoundingCandidates</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -757,7 +786,7 @@ export declare const worldToLocal: (shape: CenteredShape, world: Position) => Po
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type ArcBoundingCandidatesInput = {
+export type InputArcBoundingCandidates = {
   center: Position;
   radius: number;
   startAngleDeg: number;
@@ -769,7 +798,7 @@ export type ArcBoundingCandidatesInput = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArcSweepAngleInput"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={17}>ArcSweepAngleInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputArcSweepAngle"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={17}>InputArcSweepAngle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -791,7 +820,7 @@ export type ArcBoundingCandidatesInput = {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type ArcSweepAngleInput = {
+export type InputArcSweepAngle = {
   startAngleDeg: number;
   endAngleDeg: number;
   angleDeg: number;
@@ -866,7 +895,7 @@ export type Ellipse = CenteredShape & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipseArcAnglePointInput"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={31}>EllipseArcAnglePointInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputEllipseArcAnglePoint"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={31}>InputEllipseArcAnglePoint</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -888,7 +917,7 @@ export type Ellipse = CenteredShape & {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type EllipseArcAnglePointInput = {
+export type InputEllipseArcAnglePoint = {
   center: Position;
   radiusX: number;
   radiusY: number;
@@ -900,7 +929,7 @@ export type EllipseArcAnglePointInput = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EllipseArcBoundingCandidatesInput"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={43}>EllipseArcBoundingCandidatesInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputEllipseArcBoundingCandidates"} path={"packages/kernel/math/src/primitives/arc.ts"} startLine={43}>InputEllipseArcBoundingCandidates</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -923,7 +952,7 @@ export type EllipseArcAnglePointInput = {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 'angleDeg'> & {
+export type InputEllipseArcBoundingCandidates = Omit<InputEllipseArcAnglePoint, 'angleDeg'> & {
   startAngleDeg: number;
   endAngleDeg: number;
 };
@@ -1069,7 +1098,7 @@ Does not deduplicate candidates; callers handle endpoint angles that fall exactl
 
 | Category   | Name                                                                                 | Type / signature             | Description                                                               |
 | ---------- | ------------------------------------------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------- |
-| Parameters | `{`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `ArcBoundingCandidatesInput` | Geometry input parameters; see the corresponding type for field semantics |
+| Parameters | `{`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `InputArcBoundingCandidates` | Geometry input parameters; see the corresponding type for field semantics |
 | Returns    | —                                                                                    | `Array<Position>`            | —                                                                         |
 
 </ApiTable>
@@ -1084,7 +1113,7 @@ export declare const collectArcBoundingCandidates: ({
   radius,
   startAngleDeg,
   endAngleDeg,
-}: ArcBoundingCandidatesInput) => Array<Position>;
+}: InputArcBoundingCandidates) => Array<Position>;
 ```
 
 </DocTab>
@@ -1103,7 +1132,7 @@ Handles only axis-aligned elliptical arcs and does not deduplicate candidates.
 
 | Category   | Name                                                                                                  | Type / signature                    | Description                                                               |
 | ---------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------- |
-| Parameters | `{`<br />`center,`<br />`radiusX,`<br />`radiusY,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `EllipseArcBoundingCandidatesInput` | Geometry input parameters; see the corresponding type for field semantics |
+| Parameters | `{`<br />`center,`<br />`radiusX,`<br />`radiusY,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `InputEllipseArcBoundingCandidates` | Geometry input parameters; see the corresponding type for field semantics |
 | Returns    | —                                                                                                     | `Array<Position>`                   | —                                                                         |
 
 </ApiTable>
@@ -1119,7 +1148,7 @@ export declare const collectEllipseArcBoundingCandidates: ({
   radiusY,
   startAngleDeg,
   endAngleDeg,
-}: EllipseArcBoundingCandidatesInput) => Array<Position>;
+}: InputEllipseArcBoundingCandidates) => Array<Position>;
 ```
 
 </DocTab>
@@ -1169,7 +1198,7 @@ A positive start-to-end range sweeps clockwise on screen; a negative range sweep
 
 | Category   | Name                                                                                                | Type / signature     | Description                                                               |
 | ---------- | --------------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------- |
-| Parameters | `{`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`angleDeg,`<br />`toleranceDeg = 1e-7,`<br />`}` | `ArcSweepAngleInput` | Geometry input parameters; see the corresponding type for field semantics |
+| Parameters | `{`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`angleDeg,`<br />`toleranceDeg = 1e-7,`<br />`}` | `InputArcSweepAngle` | Geometry input parameters; see the corresponding type for field semantics |
 | Returns    | —                                                                                                   | `boolean`            | —                                                                         |
 
 </ApiTable>
@@ -1184,7 +1213,7 @@ export declare const isAngleWithinArcSweep: ({
   endAngleDeg,
   angleDeg,
   toleranceDeg = 1e-7,
-}: ArcSweepAngleInput) => boolean;
+}: InputArcSweepAngle) => boolean;
 ```
 
 </DocTab>
@@ -1232,7 +1261,7 @@ Uses the same angle convention as `pointAtArcAngle`; θ is a parameter angle and
 
 | Category   | Name                                     | Type / signature            | Description                                                               |
 | ---------- | ---------------------------------------- | --------------------------- | ------------------------------------------------------------------------- |
-| Parameters | `{ center, radiusX, radiusY, angleDeg }` | `EllipseArcAnglePointInput` | Geometry input parameters; see the corresponding type for field semantics |
+| Parameters | `{ center, radiusX, radiusY, angleDeg }` | `InputEllipseArcAnglePoint` | Geometry input parameters; see the corresponding type for field semantics |
 | Returns    | —                                        | `Position`                  | —                                                                         |
 
 </ApiTable>
@@ -1247,7 +1276,7 @@ export declare const pointAtEllipseArcAngle: ({
   radiusX,
   radiusY,
   angleDeg,
-}: EllipseArcAnglePointInput) => Position;
+}: InputEllipseArcAnglePoint) => Position;
 ```
 
 </DocTab>
@@ -1732,7 +1761,7 @@ export declare const rectToBounds: ({ height, width, x, y }: BoundsRect) => Axis
 
 ## Geometric intersections
 
-#### <ApiSourceLink label={"CircleCircleInput"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={30}>CircleCircleInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputCircleCircle"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={30}>InputCircleCircle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1754,7 +1783,7 @@ export declare const rectToBounds: ({ height, width, x, y }: BoundsRect) => Axis
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type CircleCircleInput = {
+export type InputCircleCircle = {
   centerA: Position;
   radiusA: number;
   centerB: Position;
@@ -1766,7 +1795,7 @@ export type CircleCircleInput = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LineCircleInput"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={18}>LineCircleInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputLineCircle"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={18}>InputLineCircle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1788,7 +1817,7 @@ export type CircleCircleInput = {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type LineCircleInput = {
+export type InputLineCircle = {
   origin: Position;
   direction: Position;
   center: Position;
@@ -1800,7 +1829,7 @@ export type LineCircleInput = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LineLineInput"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={6}>LineLineInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputLineLine"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={6}>InputLineLine</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1822,7 +1851,7 @@ export type LineCircleInput = {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type LineLineInput = {
+export type InputLineLine = {
   a1: Position;
   a2: Position;
   b1: Position;
@@ -1834,7 +1863,7 @@ export type LineLineInput = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RayArcIntersectionInput"} path={"packages/kernel/math/src/algorithms/arc-intersection.ts"} startLine={6}>RayArcIntersectionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRayArcIntersection"} path={"packages/kernel/math/src/algorithms/arc-intersection.ts"} startLine={6}>InputRayArcIntersection</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1859,7 +1888,7 @@ export type LineLineInput = {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RayArcIntersectionInput = ArcBoundingCandidatesInput & {
+export type InputRayArcIntersection = InputArcBoundingCandidates & {
   origin: Position;
   direction: Position;
   tolerance?: number;
@@ -1882,10 +1911,10 @@ ray∩arc returns scalar parameters along the ray as `Array<number>`, so it is e
 
 | Member           | Signature                                      | Description                                                                                                                                                                                                 |
 | ---------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `circleCircle`   | `(input: CircleCircleInput) => Array<Vector2>` | Intersects circles; returns no points for coincident, contained, or disjoint circles, and two coincident points for tangency; callers handle duplicates<br />`input`: Center and radius of each circle      |
-| `lineCircle`     | `(input: LineCircleInput) => Array<Vector2>`   | Intersects a line with a circle without requiring a unit direction; tangency returns two coincident points for callers to deduplicate<br />`input`: Line origin and direction, and circle center and radius |
-| `lineLine`       | `(input: LineLineInput) => Vector2 \| null`    | Intersects two infinite lines defined by point pairs; returns null for parallel or collinear lines<br />`input`: Two defining points for each infinite line                                                 |
-| `segmentSegment` | `(input: LineLineInput) => Vector2 \| null`    | Intersects line segments; returns null for parallel, collinear (including overlapping), or disjoint segments<br />`input`: Endpoints of the two line segments                                               |
+| `circleCircle`   | `(input: InputCircleCircle) => Array<Vector2>` | Intersects circles; returns no points for coincident, contained, or disjoint circles, and two coincident points for tangency; callers handle duplicates<br />`input`: Center and radius of each circle      |
+| `lineCircle`     | `(input: InputLineCircle) => Array<Vector2>`   | Intersects a line with a circle without requiring a unit direction; tangency returns two coincident points for callers to deduplicate<br />`input`: Line origin and direction, and circle center and radius |
+| `lineLine`       | `(input: InputLineLine) => Vector2 \| null`    | Intersects two infinite lines defined by point pairs; returns null for parallel or collinear lines<br />`input`: Two defining points for each infinite line                                                 |
+| `segmentSegment` | `(input: InputLineLine) => Vector2 \| null`    | Intersects line segments; returns null for parallel, collinear (including overlapping), or disjoint segments<br />`input`: Endpoints of the two line segments                                               |
 
 </ApiTable>
 
@@ -1913,7 +1942,7 @@ Returns forward ray parameters `s` in ascending order; returns an empty array fo
 
 | Category   | Name                                                                                                                                                      | Type / signature          | Description                                                               |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------- |
-| Parameters | `{`<br />`origin,`<br />`direction,`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`tolerance = DEFAULT_EPSILON,`<br />`}` | `RayArcIntersectionInput` | Geometry input parameters; see the corresponding type for field semantics |
+| Parameters | `{`<br />`origin,`<br />`direction,`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`tolerance = DEFAULT_EPSILON,`<br />`}` | `InputRayArcIntersection` | Geometry input parameters; see the corresponding type for field semantics |
 | Returns    | —                                                                                                                                                         | `Array<number>`           | —                                                                         |
 
 </ApiTable>
@@ -1931,7 +1960,7 @@ export declare const intersectRayWithArc: ({
   startAngleDeg,
   endAngleDeg,
   tolerance = DEFAULT_EPSILON,
-}: RayArcIntersectionInput) => Array<number>;
+}: InputRayArcIntersection) => Array<number>;
 ```
 
 </DocTab>

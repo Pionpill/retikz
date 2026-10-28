@@ -7,12 +7,12 @@ This page assumes [Basic usage](/schematic/diagram/flow/usage) and follows one F
 
 ## Overall flow
 
-| Stage                    | Input                                            | Output passed onward                                               |
-| ------------------------ | ------------------------------------------------ | ------------------------------------------------------------------ |
-| Resolve                  | Source, Definitions, Theme                       | Effective Entity, Group, Layout, and Relation semantics            |
-| Measure                  | Resolved semantics and Graph appearance          | Element sizes, scopes, relation-label sizes, and `FlowLayoutInput` |
-| Layout and validate      | `FlowLayoutInput` and selected Layout Definition | Validated bounds and routes detached from callback objects         |
-| Materialize and assemble | The same validated geometry                      | Graph primitives and `FlowDiagramArtifact`                         |
+| Stage                    | Input                                                       | Output passed onward                                                          |
+| ------------------------ | ----------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Resolve                  | Source, Definitions, Theme                                  | Effective Entity, Group, Layout, and Relation semantics                       |
+| Measure                  | Resolved semantics and Graph appearance                     | Element sizes, scopes, relation-label sizes, and `InputFlowLayoutComputation` |
+| Layout and validate      | `InputFlowLayoutComputation` and selected Layout Definition | Validated bounds and routes detached from callback objects                    |
+| Materialize and assemble | The same validated geometry                                 | Graph primitives and `FlowDiagramArtifact`                                    |
 
 Source contains declarations and references; measurement produces layout input, and the Definition's geometry passes validation before materialization and result assembly. The figure below shows this path, and the following sections trace a “receive → verify” example as its data changes.
 
@@ -89,7 +89,7 @@ The nested tree has no final coordinates yet. Measurement and layout determine i
 
 Flow first measures what layout needs: how large each drawing object is, how much space to leave around it and inside groups, and how much room the text on each connection needs. It then passes this information, along with layout and connection settings, to the layout stage.
 
-This information is stored in `FlowLayoutInput`. The layout stage can then arrange objects and route connections without measuring them again. For example, if the text in “verify” becomes longer, Flow calculates the width it needs first, so layout can leave enough room for it.
+This information is stored in `InputFlowLayoutComputation`. The layout stage can then arrange objects and route connections without measuring them again. For example, if the text in “verify” becomes longer, Flow calculates the width it needs first, so layout can leave enough room for it.
 
 The diagram below shows the measured object sizes, spacing inside groups, and connection text, and how this information becomes layout input.
 

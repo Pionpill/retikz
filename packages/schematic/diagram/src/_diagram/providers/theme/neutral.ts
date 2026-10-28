@@ -1,10 +1,10 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { ThemeMode } from '@retikz/core';
 
 import type { IRDiagramDefaults } from '../../schemas';
 
 /** 从当前 Core Theme 建立 Diagram Neutral defaults */
-export const getDefaultDiagramTheme = (theme: ResolvedTheme): IRDiagramDefaults => ({
+export const getDefaultDiagramTheme = (theme: CanonicalTheme): IRDiagramDefaults => ({
   frame: {
     padding: 16,
     titleDescriptionGap: 6,

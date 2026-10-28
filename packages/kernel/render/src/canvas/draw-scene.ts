@@ -4,8 +4,8 @@ import type {
   IRPaint,
   PaintValue,
   ScenePrimitive,
-  ResolvedArrowEnd,
-  ResolvedPatternTile,
+  CompiledArrowEnd,
+  CompiledPatternTile,
   Scene,
   SceneResource,
   TextPrimitive,
@@ -474,7 +474,7 @@ type Point = [number, number];
  */
 const buildPattern = (
   ctx: CanvasRenderingContext2D,
-  tile: ResolvedPatternTile,
+  tile: CompiledPatternTile,
   options: SceneDrawOptions,
   resources: ResourceMap,
 ): CanvasPattern | undefined => {
@@ -508,7 +508,7 @@ const buildPattern = (
  */
 const drawArrowMarker = (
   ctx: CanvasRenderingContext2D,
-  spec: ResolvedArrowEnd,
+  spec: CompiledArrowEnd,
   vertex: Point,
   angle: number,
   strokeWidth: number,

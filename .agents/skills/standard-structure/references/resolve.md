@@ -41,14 +41,14 @@ schema 已覆盖或 TypeScript 已保证的结构不得在 resolve 重复校验�
 
 | 概念                                                       | 命名                 |
 | ---------------------------------------------------------- | -------------------- |
-| 唯一完整内部形态                                           | `CanonicalXxx`       |
+| 本领域确定形态                                             | `CanonicalXxx`       |
 | resolver 的窄输入上下文                                    | `XxxResolveContext`  |
-| cascade / 继承后的有效值                                   | `EffectiveXxx`       |
+| cascade / 继承后的有效值                                   | `MergedXxx`          |
 | 同时携带 value、provider、provenance 或 diagnostics 的结果 | `XxxResolution`      |
 | Source IR 到内部确定形态                                   | `resolveXxx`         |
 | provider registry 合并                                     | `resolveXxxRegistry` |
 
-不要使用泛化 `ResolvedXxx`，也不要为非持久化的 Canonical、Effective 或 Resolution 定义 `XxxSchema` / `IRXxx`。
+不要使用泛化 `ResolvedXxx`，也不要为非持久化的 Canonical、Merged 或 Resolution 定义 `XxxSchema` / `IRXxx`。
 
 ## 组织与依赖
 

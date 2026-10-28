@@ -2,7 +2,7 @@ import type { IRScene, ScenePrimitive } from '@retikz/core';
 import { compileToScene, visitSceneContent } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { RibbonPathDefinition } from '../../src/ribbon';
+import { ribbonPathDefinition } from '../../src/ribbon';
 
 const line = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -11,11 +11,11 @@ const line = [
 
 const compile = (path: Record<string, unknown>) =>
   compileToScene({ version: 1, type: 'scene', children: [path] } as unknown as IRScene, {
-    paths: [RibbonPathDefinition],
+    paths: [ribbonPathDefinition],
   }).scene;
 
-describe('Extension Ribbon definition', () => {
-  it('maps master color to fill and preserves explicit stroke', () => {
+describe('扩展功能区定义', () => {
+  it('将主颜色映射到填充并保留明确的描边', () => {
     const scene = compile({
       type: 'path',
       kind: 'ribbon',
@@ -30,7 +30,7 @@ describe('Extension Ribbon definition', () => {
     });
   });
 
-  it('ignores host marks while materializing the centerline', () => {
+  it('在具体化中心线时忽略主体标记', () => {
     const scene = compile({
       type: 'path',
       kind: 'ribbon',
@@ -47,7 +47,7 @@ describe('Extension Ribbon definition', () => {
     expect(contents[0]).toMatchObject({ type: 'path' });
   });
 
-  it('emits a boundary ribbon from both explicit boundary paths', () => {
+  it('从两个显式边界路径发出边界带', () => {
     const scene = compile({
       type: 'path',
       kind: 'ribbon',

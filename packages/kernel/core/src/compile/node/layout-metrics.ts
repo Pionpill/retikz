@@ -3,16 +3,16 @@ import { RAD_TO_DEG, boundsOf, boundsToRect } from '@retikz/math';
 import type { LayoutAlignmentGuide, Transform } from '../../contract';
 import { BuiltinLayoutAlignmentGuideName, LayoutAlignmentGuideDimension } from '../../contract';
 import type { IRPosition } from '../../schemas';
-import type { EffectiveScopeTransform } from '../transform';
+import type { ComposedScopeTransform } from '../transform';
 import { applyScopeTransform, composeScopeTransform, projectLayoutWithTransform } from '../transform';
 import type { NodeLayoutObservation } from '../types';
-import type { NodeLayout } from './types';
+import type { CompiledNodeLayout } from './types';
 
 const isEffectiveIdentityRotation = (degrees: number): boolean => Object.is(degrees % 360, -0) || degrees % 360 === 0;
 
 /** 从同次 Node 正文排版结果投影 child-local baseline guides */
 export const alignmentGuidesOfNode = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   round: (value: number) => number,
 ): Array<LayoutAlignmentGuide> | undefined => {
   const text = layout.text;
@@ -59,7 +59,7 @@ export const alignmentGuidesOfNode = (
   ];
 };
 
-const contentCorners = (layout: NodeLayout): Array<IRPosition> => {
+const contentCorners = (layout: CompiledNodeLayout): Array<IRPosition> => {
   const [cx, cy] = layout.geometry.contentCenter;
   const halfW = layout.geometry.contentSize.width / 2;
   const halfH = layout.geometry.contentSize.height / 2;
@@ -73,7 +73,7 @@ const contentCorners = (layout: NodeLayout): Array<IRPosition> => {
 };
 
 /** 把节点自身旋转组合到已合成的 Scope 变换 */
-const nodeTransformOf = (layout: NodeLayout, transform: EffectiveScopeTransform): EffectiveScopeTransform =>
+const nodeTransformOf = (layout: CompiledNodeLayout, transform: ComposedScopeTransform): ComposedScopeTransform =>
   (layout.geometry.rect.rotate ?? 0) === 0
     ? transform
     : composeScopeTransform(
@@ -89,8 +89,8 @@ const nodeTransformOf = (layout: NodeLayout, transform: EffectiveScopeTransform)
       );
 
 const contentBounds = (
-  layout: NodeLayout,
-  transform: EffectiveScopeTransform,
+  layout: CompiledNodeLayout,
+  transform: ComposedScopeTransform,
 ): NodeLayoutObservation['content']['bounds'] => {
   const projected = contentCorners(layout).map(point => applyScopeTransform(point, transform));
   const bounds = boundsOf(projected);
@@ -101,11 +101,11 @@ const contentBounds = (
   return boundsToRect(bounds);
 };
 
-/** 将内部 NodeLayout 收敛为公开 compile 观测 DTO */
+/** 将内部 CompiledNodeLayout 收敛为公开 compile 观测 DTO */
 export const projectNodeLayoutObservation = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   scopeChain: ReadonlyArray<Transform>,
-  transform: EffectiveScopeTransform = composeScopeTransform(scopeChain),
+  transform: ComposedScopeTransform = composeScopeTransform(scopeChain),
   id?: string,
 ): NodeLayoutObservation => {
   const globalLayout = scopeChain.length === 0 ? layout : projectLayoutWithTransform(layout, transform);

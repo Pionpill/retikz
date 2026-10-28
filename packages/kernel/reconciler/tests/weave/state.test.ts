@@ -1,7 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { prepareWeaveCompilation, readWeaveCurrent, WeaveTransaction } from '../../src/weave';
+import { readWeaveCurrent, WeaveReconciler, WeaveTransaction } from '../../src/weave';
 
 const input: IRScene = {
   type: 'scene',
@@ -20,7 +20,7 @@ const input: IRScene = {
 
 /** 构造包含声明及双向依赖的已提交树 */
 const fixture = () => {
-  const prepared = prepareWeaveCompilation(input);
+  const prepared = new WeaveReconciler(input).mount();
   const root = prepared.root;
   const scope = readWeaveCurrent(root).children[0];
   if (scope.type !== 'scope') throw new Error('Expected scope fixture');
@@ -156,11 +156,11 @@ it('未完成状态阻止整批提交，不切换此前已检查的节点', () =
 });
 
 it('普通 Scope 缺少局部 ids 时不隐式创建命名空间', () => {
-  const { root } = prepareWeaveCompilation({
+  const { root } = new WeaveReconciler({
     type: 'scene',
     version: 1,
     children: [{ type: 'scope', children: [] }],
-  });
+  }).mount();
   const scope = readWeaveCurrent(root).children[0];
   if (scope.type !== 'scope') throw new Error('Expected scope fixture');
   const work = new WeaveTransaction(root);

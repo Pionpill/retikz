@@ -46,7 +46,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { LegendDefinition } from '@retikz/standard/presentation';
+import { legendDefinition } from '@retikz/standard/presentation';
 
 const ir: IRScene = {
   type: 'scene',
@@ -68,14 +68,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} composites={[LegendDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[legendDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { legend, LegendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { legend, legendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import { scene, node, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -90,7 +90,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [LegendInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [legendInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -99,7 +99,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { LegendDefinition } from '@retikz/standard/presentation';
+import { legendDefinition } from '@retikz/standard/presentation';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -122,7 +122,7 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [LegendDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [legendDefinition] } });
 console.log(svg);
 ```
 
@@ -185,15 +185,15 @@ Using a marker outside `Legend`, mixing a marker with the wrong form, or violati
 
 ### From Legend IR to Core outputs
 
-The Core composite registry consumes `LegendDefinition`. It first runs minimum and natural probes for the title, samples, and labels to obtain structural profiles. Once the content width is known, the title is probed again with an x-axis range and a natural y axis; samples and labels receive exact probes for their final slots. Compilation replays only selected results, so discarded probes publish no primitives, resources, or artifacts.
+The Core composite registry consumes `legendDefinition`. It first runs minimum and natural probes for the title, samples, and labels to obtain structural profiles. Once the content width is known, the title is probed again with an x-axis range and a natural y axis; samples and labels receive exact probes for their final slots. Compilation replays only selected results, so discarded probes publish no primitives, resources, or artifacts.
 
 <ComponentPreview files="legend-pipeline" hideCode type="flow" size="md" />
 
-`LegendDefinition` returns ordinary Core IR children and a parallel `LegendArtifact` from the same compile call. Core then compiles those children into the Scene while the artifact remains a separate output. SVG and Canvas renderers do not know `standard.legend` and have no Legend-specific branch.
+`legendDefinition` returns ordinary Core IR children and a parallel `LegendArtifact` from the same compile call. Core then compiles those children into the Scene while the artifact remains a separate output. SVG and Canvas renderers do not know `standard.legend` and have no Legend-specific branch.
 
 ### Nested capabilities and failures
 
-Core `Node`, `Path`, and `Scope` values can be used directly as `IRChild`. A nested Tier 2 composite still needs its own Definition in the same compile options. The injected `LegendDefinition` does not guess or globally install sample dependencies.
+Core `Node`, `Path`, and `Scope` values can be used directly as `IRChild`. A nested Tier 2 composite still needs its own Definition in the same compile options. The injected `legendDefinition` does not guess or globally install sample dependencies.
 
 An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composite probe fails, Legend preserves the original occurrence and fails the current Legend instead of continuing with an empty sample. Duplicate `items[].key` / `ticks[].key`, whitespace-only keys, out-of-range offsets, and decreasing tick offsets fail loudly at the schema boundary.
 

@@ -6,7 +6,7 @@ import { isFiniteNumber } from '@retikz/math';
 import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
-import type { FieldCollector, ResolveLabel } from '../../../contract';
+import type { FieldCollector, LabelResolver } from '../../../contract';
 import { channelField } from '../../../contract';
 import type { IRPlotChannel } from '../../../schemas';
 
@@ -54,7 +54,7 @@ export const labelOf = (
   text: IRNodeLabel['text'] | undefined,
   row: ExternalRow,
   fieldType?: DataFieldType,
-  resolveLabel?: ResolveLabel,
+  resolveLabel?: LabelResolver,
   field?: string,
   displayFormat?: string,
 ): IRNodeLabel['text'] | string | undefined => {

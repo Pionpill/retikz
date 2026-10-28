@@ -12,7 +12,7 @@ it('每种输入实际通过 Vanilla 转换与渲染', () => {
 
     expect(v.svg).toContain('<svg');
     expect(v.code).toContain('chain(');
-    expect(v.code).toContain('ChainInputEmbedAdapter');
+    expect(v.code).toContain('chainInputEmbedAdapter');
   }
 });
 it('嵌套图形和箭头转换可执行', () => {

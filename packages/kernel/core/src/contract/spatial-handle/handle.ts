@@ -3,7 +3,7 @@ import type { BoundsRect } from '@retikz/math';
 
 import type { CompileOccurrenceLocator } from '../occurrence';
 
-/** spatial handle geometry 的首版判别值 */
+/** 空间句柄几何的判别值 */
 export const SpatialHandleGeometryKind = {
   Rect: 'rect',
 } as const;

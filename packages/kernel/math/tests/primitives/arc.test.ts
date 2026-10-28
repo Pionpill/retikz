@@ -18,7 +18,7 @@ import {
  */
 
 describe('pointAtArcAngle 圆周点投影', () => {
-  it('center=[0,0], radius=10, angle=0 → [10, 0]', () => {
+  it('中心=[0,0]，半径=10，角度=0 → [10, 0]', () => {
     const [x, y] = pointAtArcAngle([0, 0], 10, 0);
 
     expect(x).toBeCloseTo(10);
@@ -32,14 +32,14 @@ describe('pointAtArcAngle 圆周点投影', () => {
     expect(y).toBeCloseTo(10);
   });
 
-  it('center=[0,0], radius=10, angle=180 → [-10, 0]', () => {
+  it('中心=[0,0]，半径=10，角度=180 → [-10, 0]', () => {
     const [x, y] = pointAtArcAngle([0, 0], 10, 180);
 
     expect(x).toBeCloseTo(-10);
     expect(y).toBeCloseTo(0);
   });
 
-  it('center=[0,0], radius=10, angle=270 → [0, -10]', () => {
+  it('中心=[0,0]，半径=10，角度=270 → [0, -10]', () => {
     const [x, y] = pointAtArcAngle([0, 0], 10, 270);
 
     expect(x).toBeCloseTo(0);
@@ -54,7 +54,7 @@ describe('pointAtArcAngle 圆周点投影', () => {
     expect(a[1]).toBeCloseTo(b[1]);
   });
 
-  it('center=[5, 5], radius=3, angle=0 → [8, 5]', () => {
+  it('中心=[5, 5]，半径=3，角度=0 → [8, 5]', () => {
     const [x, y] = pointAtArcAngle([5, 5], 3, 0);
 
     expect(x).toBeCloseTo(8);

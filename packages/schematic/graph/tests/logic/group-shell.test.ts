@@ -79,8 +79,8 @@ const compileMeasurement = (
   return metricSchema.parse(artifact.value);
 };
 
-describe('Graph Group shell composition', () => {
-  it('measures caption placement and padding through one Graph-owned shell projection', () => {
+describe('Graph、Group 外壳组成', () => {
+  it('通过 Graph 拥有的 shell 投影测量标题位置和填充', () => {
     const candidate: unknown = Graph;
     const measureGroupShell =
       typeof candidate === 'object' && candidate !== null && 'measureGroupShell' in candidate
@@ -111,7 +111,7 @@ describe('Graph Group shell composition', () => {
     expect(bottom.contentInsets.bottom).toBeGreaterThan(4 + 7);
   });
 
-  it('keeps Group shell metrics stable when named Theme changes appearance only', () => {
+  it('当命名主题仅更改外观时，保持 Group shell 指标稳定', () => {
     const candidate: unknown = Graph;
     const measureGroupShell =
       typeof candidate === 'object' && candidate !== null && 'measureGroupShell' in candidate
@@ -151,7 +151,7 @@ describe('Graph Group shell composition', () => {
     expect(resolutionCount).toBe(1);
   });
 
-  it('creates an exact allocation constraint without primitives, identity, handles or artifacts', () => {
+  it('创建精确的分配约束，无需原语、身份、句柄或产物', () => {
     const candidate: unknown = Graph;
     const createGroupBodyAllocation =
       typeof candidate === 'object' && candidate !== null && 'createGroupBodyAllocation' in candidate

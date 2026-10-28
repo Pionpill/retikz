@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createGrid, GridSchema } from '../../../src/presentation';
+import { createGrid, GridSchema, lowerGrid } from '../../../src/presentation';
 import { resolveGrid } from '../../../src/presentation/grid/resolve';
 import { fullScopeProps } from '../presentation/scope-props';
 
@@ -12,7 +12,7 @@ const base = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('GridSchema', () => {
-  it('keeps factory and persisted source sparse while resolving default-dependent limits', () => {
+  it('保持工厂和持久源稀疏，同时解决与默认相关的限制', () => {
     const source = createGrid({ bounds: { start: [0, 0], end: [120, 80] }, line: { major: { every: 2 } }, border: {} });
 
     expect(resolveGrid(GridSchema.parse(JSON.parse(JSON.stringify(source))))).toEqual({
@@ -27,10 +27,13 @@ describe('GridSchema', () => {
 
     const excessive = GridSchema.parse(base({ line: { spacing: 0.000001 } }));
 
-    expect(() => resolveGrid(excessive)).toThrow(/exceeds/);
+    expect(() => lowerGrid(excessive)).toThrow(/exceeds/);
+    expect(() =>
+      lowerGrid(createGrid({ bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 0.000001 } })),
+    ).toThrow(/exceeds/);
   });
 
-  it('reuses the complete Core Scope authored surface', () => {
+  it('重用完整的 Core Scope 编写的曲面', () => {
     const parsed = GridSchema.parse({
       namespace: 'standard',
       type: 'grid',
@@ -42,7 +45,7 @@ describe('GridSchema', () => {
     expect(GridSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('preserves omitted lines and resolves both default directions', () => {
+  it('保留省略的行并解析两个默认方向', () => {
     const result = GridSchema.safeParse(base());
 
     expect(result.success).toBe(true);
@@ -54,7 +57,7 @@ describe('GridSchema', () => {
     }
   });
 
-  it('parses a shared line object with spacing, origin, major, and border styles', () => {
+  it('解析具有间距、原点、主要和边框样式的共享线条对象', () => {
     const result = GridSchema.safeParse(
       base({
         line: {
@@ -82,7 +85,7 @@ describe('GridSchema', () => {
     }
   });
 
-  it('parses independent vertical and horizontal line configurations', () => {
+  it('解析独立的垂直和水平线配置', () => {
     const result = GridSchema.safeParse(
       base({
         line: {
@@ -102,7 +105,7 @@ describe('GridSchema', () => {
     }
   });
 
-  it('accepts line false while preserving an independent border', () => {
+  it('接受 false 行，同时保留独立边框', () => {
     const result = GridSchema.safeParse(base({ line: false, border: { padding: 4, style: { stroke: '#64748b' } } }));
 
     expect(result.success).toBe(true);
@@ -110,13 +113,13 @@ describe('GridSchema', () => {
     if (result.success) expect(result.data.line).toBe(false);
   });
 
-  it('accepts reversed and equal Cartesian corners without ordering validation', () => {
+  it('接受反向且相等的笛卡尔角，无需订购验证', () => {
     expect(GridSchema.safeParse(base({ bounds: { start: [20, 10], end: [0, 0] } })).success).toBe(true);
     expect(GridSchema.safeParse(base({ bounds: { start: [0, 0], end: [0, 10] } })).success).toBe(true);
     expect(GridSchema.safeParse(base({ bounds: { start: [20, 10], end: [0, 10] } })).success).toBe(true);
   });
 
-  it('parses center-plus-size bounds with Cartesian and PolarPosition centers', () => {
+  it('用笛卡尔和 PolarPosition 中心解析中心加大小边界', () => {
     const centered = GridSchema.safeParse(base({ bounds: { position: [100, 60], width: 80, height: 40 } }));
     const polar = GridSchema.safeParse(
       base({ bounds: { position: { origin: 'anchor', angle: 0, radius: 30 }, width: 80, height: 40 } }),
@@ -126,12 +129,12 @@ describe('GridSchema', () => {
     expect(polar.success).toBe(true);
   });
 
-  it('accepts zero-sized center dimensions as degenerate bounds', () => {
+  it('接受零大小的中心尺寸作为简并边界', () => {
     expect(GridSchema.safeParse(base({ bounds: { position: [10, 5], width: 0, height: 10 } })).success).toBe(true);
     expect(GridSchema.safeParse(base({ bounds: { position: [10, 5], width: 20, height: 0 } })).success).toBe(true);
   });
 
-  it('rejects PolarPosition corners, obsolete top-level line fields, and negative dimensions', () => {
+  it('拒绝 PolarPosition 角点、过时的顶级线字段和负尺寸', () => {
     const polarCorner = GridSchema.safeParse(
       base({ bounds: { start: { origin: [0, 0], angle: 0, radius: 10 }, end: [10, 10] } }),
     );
@@ -150,7 +153,7 @@ describe('GridSchema', () => {
     expect(negativeDimension.success).toBe(false);
   });
 
-  it('preserves recursive PolarPosition center input without resolving it in Standard', () => {
+  it('保留递归 PolarPosition 中心输入，而不在 Standard 中解析它', () => {
     const result = GridSchema.safeParse(
       base({
         bounds: {
@@ -172,7 +175,7 @@ describe('GridSchema', () => {
     }
   });
 
-  it('rejects unknown nested style fields at their input path', () => {
+  it('拒绝其输入路径中的未知嵌套样式字段', () => {
     const unknownStyle = GridSchema.safeParse(base({ line: { style: { strokeWidth: 1, unsupported: true } } }));
 
     expect(unknownStyle.success).toBe(false);
@@ -188,7 +191,7 @@ describe('GridSchema', () => {
     }
   });
 
-  it('rejects lattice configurations that exceed the bounded lowering size for both bounds forms', () => {
+  it('拒绝超过两种边界形式的有界下沉尺寸的晶格配置', () => {
     const corner = GridSchema.safeParse(
       base({ bounds: { start: [0, 0], end: [1, 1] }, line: { spacing: 0.000001, origin: 0, includeBoundary: false } }),
     );
@@ -206,7 +209,7 @@ describe('GridSchema', () => {
     if (!center.success) expect(center.error.issues[0]?.path).toEqual(['line', 'spacing']);
   });
 
-  it('reports bounded lattice errors at the independent direction path', () => {
+  it('报告独立方向路径上的有界晶格误差', () => {
     const result = GridSchema.safeParse(
       base({
         line: { vertical: { spacing: 0.000001, origin: 0, includeBoundary: false }, horizontal: { spacing: 10 } },

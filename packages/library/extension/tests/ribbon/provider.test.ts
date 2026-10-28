@@ -28,15 +28,15 @@ const profileScene = (name: string): IRScene => ({
   ],
 });
 
-describe('Extension Ribbon provider contribution', () => {
-  it('uses one stable maker and contributes the official bulge profile by default', () => {
+describe('扩展功能区提供者的贡献', () => {
+  it('使用一个稳定器，默认提供官方凸出轮廓', () => {
     const first = createRibbonProviderContribution();
     const second = createRibbonProviderContribution();
     const firstProvider = first.providers[0];
     const secondProvider = second.providers[0];
 
     expect(firstProvider.makeDefinition).toBe(secondProvider.makeDefinition);
-    expect(firstProvider.datasets['profile:bulge']).toBe(BUILTIN_RIBBON_WIDTH_PROFILES[0]);
+    expect(firstProvider.params).toMatchObject({ profiles: [BUILTIN_RIBBON_WIDTH_PROFILES[0]] });
 
     const definitions = resolveCoreProviderDependencies({ contributions: [first] });
 
@@ -44,7 +44,7 @@ describe('Extension Ribbon provider contribution', () => {
     expect(definitions.paths).toMatchObject([{ name: 'ribbon' }]);
   });
 
-  it('merges repeated profile references from multiple contributions into one Ribbon definition', () => {
+  it('将多个贡献的重复配置引用合并到一个功能区定义中', () => {
     const custom = profile('custom', 8);
     const first = createRibbonProviderContribution({ profiles: [custom] });
     const second = createRibbonProviderContribution({ profiles: [custom] });
@@ -59,22 +59,21 @@ describe('Extension Ribbon provider contribution', () => {
     ).not.toThrow();
   });
 
-  it('fails loudly when contributions define the same profile name with different objects', () => {
+  it('当贡献使用不同的对象定义相同的配置名称时，会明确报错', () => {
     const first = createRibbonProviderContribution({ profiles: [profile('custom', 8)] });
     const second = createRibbonProviderContribution({ profiles: [profile('custom', 12)] });
 
     expect(() => resolveCoreProviderDependencies({ contributions: [first, second] })).toThrow(
-      /dataset "profile:custom" conflicts by identity/i,
+      /profile 'custom'.*more than once/i,
     );
   });
 
-  it('supports __proto__ as a profile name and compiles it through the merged dataset', () => {
+  it('支持 __proto__ 作为配置名称，并通过提供者参数进行编译', () => {
     const custom = profile('__proto__', 8);
     const contribution = createRibbonProviderContribution({ profiles: [custom] });
     const provider = contribution.providers[0];
 
-    expect(Object.hasOwn(provider.datasets, 'profile:__proto__')).toBe(true);
-    expect(provider.datasets['profile:__proto__']).toBe(custom);
+    expect(provider.params).toMatchObject({ profiles: expect.arrayContaining([custom]) });
 
     const definitions = resolveCoreProviderDependencies({ contributions: [contribution] });
 
@@ -86,12 +85,12 @@ describe('Extension Ribbon provider contribution', () => {
     ).not.toThrow();
   });
 
-  it('fails loudly when different contributions define __proto__ with different objects', () => {
+  it('当不同的贡献用不同的对象定义 __proto__ 时，会明确报错', () => {
     const first = createRibbonProviderContribution({ profiles: [profile('__proto__', 8)] });
     const second = createRibbonProviderContribution({ profiles: [profile('__proto__', 12)] });
 
     expect(() => resolveCoreProviderDependencies({ contributions: [first, second] })).toThrow(
-      /dataset "profile:__proto__" conflicts by identity/i,
+      /profile '__proto__'.*more than once/i,
     );
   });
 });

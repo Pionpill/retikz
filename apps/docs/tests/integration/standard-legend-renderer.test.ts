@@ -5,8 +5,8 @@ import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react/presentation';
 import type { InputLegend } from '@retikz/standard-vanilla/presentation';
-import { legend, LegendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
-import { createLegend, LegendContentKind, LegendDefinition, LegendSchema } from '@retikz/standard/presentation';
+import { legend, legendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { createLegend, LegendContentKind, legendDefinition, LegendSchema } from '@retikz/standard/presentation';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -61,11 +61,11 @@ const compileLegendScene = (): Scene =>
         }),
       ],
     },
-    { composites: [LegendDefinition] },
+    { composites: [legendDefinition] },
   ).scene;
 
-describe('Standard Legend renderer boundary', () => {
-  it('keeps direct, React, and Vanilla canonical IR, Scene, and typed artifact equivalent', () => {
+describe('Standard Legend 渲染器边界', () => {
+  it('保持直接、React 和 Vanilla 规范 IR、Scene 和类型化产物等效', () => {
     const input = {
       title: { type: 'node', position: [0, 0], text: 'Legend' },
       contentAlign: 'end',
@@ -97,10 +97,10 @@ describe('Standard Legend renderer boundary', () => {
     );
     const vanillaInput = scene({ children: [legend(input)] });
     const vanilla = LegendSchema.parse(
-      normalizeScene(vanillaInput, { adapters: [LegendInputEmbedAdapter] }).ir.children[0],
+      normalizeScene(vanillaInput, { adapters: [legendInputEmbedAdapter] }).ir.children[0],
     );
     const compile = (node: IRChild) =>
-      compileToScene({ type: 'scene', version: 1, children: [node] }, { composites: [LegendDefinition], padding: 0 });
+      compileToScene({ type: 'scene', version: 1, children: [node] }, { composites: [legendDefinition], padding: 0 });
     const outputs = [compile(direct), compile(react), compile(vanilla)];
 
     expect(react).toEqual(direct);
@@ -111,7 +111,7 @@ describe('Standard Legend renderer boundary', () => {
     expect(outputs[2]?.artifacts).toEqual(outputs[0]?.artifacts);
   });
 
-  it('renders one lowered Core Scene through SVG and Canvas without renderer-side Legend knowledge', () => {
+  it('通过 SVG 和 Canvas 渲染一个下沉的 Core Scene，而无需渲染器端 Legend 知识', () => {
     const compiledScene = compileLegendScene();
     const calls: Array<string> = [];
     const svg = renderToSvgString(compiledScene, { idPrefix: 'legend' });

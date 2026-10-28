@@ -2,12 +2,12 @@ import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../../src';
-import type { IRScene, IRStep, PathPrimitive, ResolvedArrowEnd } from '../../../src';
+import type { IRScene, IRStep, PathPrimitive, CompiledArrowEnd } from '../../../src';
 import { createStrokePathGeometry, curveSegmentOfOccurrence } from '../../../src/compile/path/stroke/interruption';
 import { applyTransformChain } from '../../../src/compile/transform';
 import { flattenPrims } from '../../helpers/flatten';
 
-describe('endpoint arrow contact', () => {
+describe('端点箭头触点', () => {
   it.each(['line', 'curve', 'cubic'] as const)('%s 的默认箭头尖端落在目标坐标', kind => {
     const ir: IRScene = {
       version: 1,
@@ -73,7 +73,7 @@ describe('endpoint arrow contact', () => {
 
 /** 按 SVG / Canvas 的 marker 变换契约计算局部点的实际场景位置 */
 const markerPoint = (
-  spec: ResolvedArrowEnd,
+  spec: CompiledArrowEnd,
   local: [number, number],
   position: [number, number],
   tangent: [number, number],
@@ -90,7 +90,7 @@ const markerPoint = (
   ];
 };
 
-describe('preserved endpoint geometry', () => {
+describe('保留端点几何形状', () => {
   it('末段不足时沿前一段寻找接合点，箭头仍指向原目标', () => {
     const scene: IRScene = {
       version: 1,

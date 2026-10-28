@@ -1,8 +1,8 @@
 import * as foundation from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
-describe('foundation public surface', () => {
-  it('exports only the declared runtime symbols from its root', () => {
+describe('基础公共面', () => {
+  it('仅从其根导出声明的运行时符号', () => {
     expect(Object.keys(foundation).sort()).toEqual(
       [
         'NonBlankStringSchema',
@@ -14,7 +14,7 @@ describe('foundation public surface', () => {
         'RetikzError',
         'RetikzFoundationError',
         'RetikzFoundationErrorCode',
-        'StaticCssNamedColorHexByName',
+        'staticCssNamedColorHexByName',
         'JsonObjectSchema',
         'JsonValueSchema',
         'assertPlainDataContainers',
@@ -26,6 +26,7 @@ describe('foundation public surface', () => {
         'createReadonlyMap',
         'isRetikzError',
         'jsonStructuralEquals',
+        'mergeDefinedProperties',
         'mergeProperties',
         'parseStaticCssColor',
       ].sort(),
@@ -33,7 +34,7 @@ describe('foundation public surface', () => {
   });
 
   it.each(['types', 'schema', 'assert', 'collections', 'objects', 'color', 'error', 'json'])(
-    'rejects the %s subpath',
+    '拒绝 %s 子路径',
     async subpath => {
       await expect(import(/* @vite-ignore */ `@retikz/foundation/${subpath}`)).rejects.toThrow();
     },

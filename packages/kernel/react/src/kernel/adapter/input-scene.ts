@@ -49,7 +49,7 @@ export type ReactInputScene = Readonly<{
 }>;
 
 /** 局部 JSX 收集时为匿名嵌入分配稳定 identity 的选项 */
-export type CreateInputSceneOptions = Readonly<{
+export type InputSceneCreationOptions = Readonly<{
   /** 父嵌入提供的身份前缀，避免局部收集器之间的匿名 id 冲突 */
   embedIdPrefix?: string;
 }>;
@@ -547,7 +547,7 @@ const readSceneChildren = (children: ReactNode, context: InputContext): Readonly
 };
 
 /** 收集 JSX children 为唯一 Vanilla InputScene */
-export const createInputScene = (children: ReactNode, options: CreateInputSceneOptions = {}): ReactInputScene => {
+export const createInputScene = (children: ReactNode, options: InputSceneCreationOptions = {}): ReactInputScene => {
   const context: InputContext = {
     adapters: new Map(),
     ...(options.embedIdPrefix === undefined ? {} : { embedIdPrefix: options.embedIdPrefix }),

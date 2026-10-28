@@ -25,13 +25,13 @@ const minimalSource = {
   recipe: { chartType: 'fixture', encodings: { x: 'amount', y: 'margin' } },
 } as const;
 
-describe('Chart Source schema primitives', () => {
-  it('parses the minimal strict family and recipe Source shape', () => {
+describe('Chart Source schema 基元', () => {
+  it('解析最小严格族和配方 Source 形状', () => {
     expect(FixtureSourceSchema.parse(minimalSource)).toEqual(minimalSource);
     expect(FixtureSourceSchema.safeParse({ ...minimalSource, extra: true }).success).toBe(false);
   });
 
-  it('round-trips formal presentation and sparse Source-shaped defaults', () => {
+  it('往返正式表示和稀疏 Source 形默认值', () => {
     const source = FixtureSourceSchema.parse({
       ...minimalSource,
       background: { fill: '#f8fafc' },
@@ -47,13 +47,13 @@ describe('Chart Source schema primitives', () => {
     expect(JSON.parse(JSON.stringify(source))).toEqual(source);
   });
 
-  it('does not accept removed theme/token inputs or presentation shorthand in Direct IR', () => {
+  it('不接受 Direct IR 中删除的主题/令牌输入或表示简写', () => {
     expect(FixtureSourceSchema.safeParse({ ...minimalSource, theme: 'clean' }).success).toBe(false);
     expect(FixtureSourceSchema.safeParse({ ...minimalSource, chartThemeTokens: {} }).success).toBe(false);
     expect(FixtureSourceSchema.safeParse({ ...minimalSource, presentation: { title: 'Title' } }).success).toBe(false);
   });
 
-  it('only permits defaultable visual and layout fields in defaultChart', () => {
+  it('仅允许 defaultChart 中的默认视觉和布局字段', () => {
     expect(FixtureSourceSchema.safeParse({ ...minimalSource, defaultChart: { layout: { width: 640 } } }).success).toBe(
       false,
     );
@@ -64,7 +64,7 @@ describe('Chart Source schema primitives', () => {
     expect(FixtureSourceSchema.safeParse({ ...minimalSource, defaultChart: { recipe: {} } }).success).toBe(false);
   });
 
-  it('keeps fixed presentation slots, root coordinate, and explicit Plot fragment boundaries', () => {
+  it('保持固定的表示槽、根坐标和显式的 Plot 片段边界', () => {
     expect(ChartPresentationSchema.safeParse({ title: { text: 'Title' }, children: [] }).success).toBe(false);
     expect(ChartLayoutSchema.safeParse({ width: 0 }).success).toBe(false);
     expect(ChartPlotExtensionSchema.safeParse({ data: { reference: 'rows' } }).success).toBe(false);

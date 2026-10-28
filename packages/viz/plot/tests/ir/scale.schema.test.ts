@@ -2,19 +2,19 @@ import { describe, expect, it } from 'vitest';
 
 import { ScaleSchema } from '../../src/schemas/scale';
 
-describe('ScaleSchema linear', () => {
+describe('ScaleSchema 线性', () => {
   // Happy path
-  it('scale_linear_omits_optionals_valid', () => {
+  it('linear 比例尺可省略可选字段', () => {
     expect(ScaleSchema.parse({ type: 'linear', name: 'x' })).toEqual({ type: 'linear', name: 'x' });
   });
 
-  it('scale_linear_full_fields_valid', () => {
+  it('比例线性完整字段有效', () => {
     const s = { type: 'linear', name: 'y', domain: [0, 100], range: [0, 480], nice: true, clamp: true };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('scale_linear_nice_only_valid', () => {
+  it('linear 比例尺可仅指定 nice', () => {
     const s = { type: 'linear', name: 'y', nice: true };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
@@ -24,58 +24,58 @@ describe('ScaleSchema linear', () => {
   it.each([
     ['one value', [0]],
     ['three values', [0, 1, 2]],
-  ])('scale_domain_two_tuple_only: %s', (_name, domain) => {
+  ])('比例尺定义域仅接受二元元组：%s', (_name, domain) => {
     expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', domain })).toThrow();
   });
 
-  it('scale_range_two_tuple_only', () => {
+  it('仅缩放范围两个元组', () => {
     expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', range: [0] })).toThrow();
   });
 
   // 错误路径
-  it('scale_empty_name_rejected', () => {
+  it('比例空名称被拒绝', () => {
     expect(() => ScaleSchema.parse({ type: 'linear', name: '' })).toThrow();
   });
 
-  it('scale_missing_type_rejected', () => {
+  it('比例缺失类型被拒绝', () => {
     expect(() => ScaleSchema.parse({ name: 'x' })).toThrow();
   });
 
-  it('scale_unknown_type_rejected', () => {
+  it('比例未知类型被拒绝', () => {
     expect(() => ScaleSchema.parse({ type: 'bogus', name: 'x' })).toThrow();
   });
 });
 
-describe('ScaleSchema log / pow / sqrt', () => {
+describe('ScaleSchema 的 log、pow 和 sqrt 定义', () => {
   // Happy path
-  it('log_schema_valid', () => {
+  it('日志 schema 有效', () => {
     const s = { type: 'log', name: 'y', base: 10, nice: true };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('log_omits_optionals_valid', () => {
+  it('日志省略有效选项', () => {
     expect(ScaleSchema.parse({ type: 'log', name: 'y' })).toEqual({ type: 'log', name: 'y' });
   });
 
-  it('pow_schema_valid', () => {
+  it('pow schema 有效', () => {
     const s = { type: 'pow', name: 'y', exponent: 2, domain: [0, 100] };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('sqrt_schema_valid', () => {
+  it('sqrt schema 有效', () => {
     const s = { type: 'sqrt', name: 'r', domain: [0, 50], range: [0, 20] };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   // 边界 / 错误路径（注：domain 正性是 lowering 校验，schema 仅校验结构）
-  it.each([1, 0])('log_base_must_be_gt_one: %s', base => {
+  it.each([1, 0])('log 的底数必须大于 1：%s', base => {
     expect(() => ScaleSchema.parse({ type: 'log', name: 'y', base })).toThrow();
   });
 
-  it('log_domain_negative_accepted_by_schema_rejected_at_lowering', () => {
+  it('schema 接受的日志域否定在下沉时被拒绝', () => {
     // schema 只校验结构（两元数值元组）；正性留 lowering fail-loud
     expect(ScaleSchema.parse({ type: 'log', name: 'y', domain: [-1, 10] })).toEqual({
       type: 'log',
@@ -84,65 +84,65 @@ describe('ScaleSchema log / pow / sqrt', () => {
     });
   });
 
-  it('pow_exponent_non_number_rejected', () => {
+  it('pow 指数非数字被拒绝', () => {
     expect(() => ScaleSchema.parse({ type: 'pow', name: 'y', exponent: 'two' })).toThrow();
   });
 });
 
-describe('ScaleSchema symlog / radial', () => {
-  it('symlog_omits_optionals_valid', () => {
+describe('ScaleSchema 符号/径向', () => {
+  it('symlog 比例尺可省略可选字段', () => {
     expect(ScaleSchema.parse({ type: 'symlog', name: 'y' })).toEqual({ type: 'symlog', name: 'y' });
   });
 
-  it('symlog_full_fields_valid', () => {
+  it('符号日志完整字段有效', () => {
     const s = { type: 'symlog', name: 'y', domain: [-100, 100], range: [0, 480], constant: 2, nice: true, clamp: true };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('symlog_negative_domain_accepted_by_schema', () => {
+  it('符号日志负域接受 schema', () => {
     // symlog 全域有定义（含零 / 负），schema 不拦负 domain
     const s = { type: 'symlog', name: 'y', domain: [-50, 50] };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it.each([0, -1])('symlog_constant_must_be_positive: %s', constant => {
+  it.each([0, -1])('symlog 的常数必须为正：%s', constant => {
     expect(() => ScaleSchema.parse({ type: 'symlog', name: 'y', constant })).toThrow();
   });
 
-  it('radial_omits_optionals_valid', () => {
+  it('径向省略选项有效', () => {
     expect(ScaleSchema.parse({ type: 'radial', name: 'r' })).toEqual({ type: 'radial', name: 'r' });
   });
 
-  it('radial_full_fields_valid', () => {
+  it('radial 比例尺接受完整字段配置', () => {
     const s = { type: 'radial', name: 'r', domain: [0, 50], range: [0, 120], nice: true, clamp: false };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 });
 
-describe('ScaleSchema band / point', () => {
+describe('ScaleSchema 带/点', () => {
   // Happy path
-  it('band_schema_valid', () => {
+  it('频段 schema 有效', () => {
     const s = { type: 'band', name: 'x', domain: ['a', 'b'] };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('band_full_fields_valid', () => {
+  it('带全字段有效', () => {
     const s = { type: 'band', name: 'x', domain: ['a', 'b'], paddingInner: 0.2, paddingOuter: 0.1, align: 0 };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('point_schema_valid', () => {
+  it('点 schema 有效', () => {
     const s = { type: 'point', name: 'x', padding: 0.5 };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('band_numeric_domain_valid', () => {
+  it('带数字域有效', () => {
     // 类别可为数值（如年份）
     const s = { type: 'band', name: 'x', domain: [2021, 2022, 2023] };
 
@@ -150,58 +150,58 @@ describe('ScaleSchema band / point', () => {
   });
 
   // 边界 / 错误路径
-  it('band_omits_optionals_valid', () => {
+  it('带省略有效选项', () => {
     expect(ScaleSchema.parse({ type: 'band', name: 'x' })).toEqual({ type: 'band', name: 'x' });
   });
 
-  it.each([1.5, -0.1])('band_padding_out_of_range_rejected: %s', paddingInner => {
+  it.each([1.5, -0.1])('拒绝 band 超出范围的 padding：%s', paddingInner => {
     expect(() => ScaleSchema.parse({ type: 'band', name: 'x', paddingInner })).toThrow();
   });
 
   it.each([
     ['boolean', [true]],
     ['object', [{}]],
-  ])('band_domain_bad_element_rejected: %s', (_name, domain) => {
+  ])('拒绝 band 定义域中的无效元素：%s', (_name, domain) => {
     expect(() => ScaleSchema.parse({ type: 'band', name: 'x', domain })).toThrow();
   });
 });
 
-describe('ScaleSchema ordinal', () => {
-  it('ordinal_schema_valid', () => {
+describe('ScaleSchema 序号', () => {
+  it('序数 schema 有效', () => {
     const s = { type: 'ordinal', name: 'col' };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('ordinal_with_range_valid', () => {
+  it('范围有效的序数', () => {
     const s = { type: 'ordinal', name: 'col', domain: ['a', 'b'], range: ['#a', '#b'] };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('ordinal_range_non_string_rejected', () => {
+  it('序数范围非字符串被拒绝', () => {
     expect(() => ScaleSchema.parse({ type: 'ordinal', name: 'col', range: [1, 2] })).toThrow();
   });
 
-  it('ordinal_range_whitespace_color_rejected', () => {
+  it('拒绝序数范围空白颜色', () => {
     expect(() => ScaleSchema.parse({ type: 'ordinal', name: 'col', range: ['#fff', '   '] })).toThrow();
   });
 });
 
-describe('ScaleSchema time', () => {
-  it('time_schema_valid', () => {
+describe('ScaleSchema 时间', () => {
+  it('时间 schema 有效', () => {
     const s = { type: 'time', name: 'x' };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('time_with_domain_nice_valid', () => {
+  it('域名有效的时间', () => {
     const s = { type: 'time', name: 'x', domain: [1704067200000, 1735689600000], nice: true };
 
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
-  it('time_domain_non_number_rejected', () => {
+  it('时域非数被拒绝', () => {
     expect(() => ScaleSchema.parse({ type: 'time', name: 'x', domain: ['2024', '2025'] })).toThrow();
   });
 });
@@ -629,13 +629,13 @@ describe('离散化 / 连续色阶 · 非有限数值字段被 schema 拒（自 
   });
 });
 
-describe('ScaleSchema position domain padding', () => {
+describe('ScaleSchema 位置域填充', () => {
   it.each([
     ['range number', 0.25],
     ['range object without kind', { lower: 12 }],
     ['explicit range object', { kind: 'range', upper: 8 }],
     ['explicit ratio object', { kind: 'ratio', lower: 0.1, upper: 0.2 }],
-  ])('preserves %s through parse and JSON round-trip', (_name, domainPadding) => {
+  ])('通过解析和 JSON 往返保留 %s', (_name, domainPadding) => {
     const source = { type: 'linear', name: 'x', domainPadding, singleValueSpan: 2 };
 
     expect(ScaleSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
@@ -651,14 +651,14 @@ describe('ScaleSchema position domain padding', () => {
     ['non-finite range side', { kind: 'range', lower: Number.POSITIVE_INFINITY }],
     ['ratio equal to one', { kind: 'ratio', lower: 1 }],
     ['ratio above one', { kind: 'ratio', upper: 1.1 }],
-  ])('rejects %s', (_name, domainPadding) => {
+  ])('拒绝 %s', (_name, domainPadding) => {
     expect(ScaleSchema.safeParse({ type: 'linear', name: 'x', domainPadding }).success).toBe(false);
   });
 
   it.each([
     ['lower', { kind: 'ratio', lower: 1 }],
     ['upper', { kind: 'ratio', upper: 1 }],
-  ])('locates an invalid ratio at the %s side', (side, domainPadding) => {
+  ])('在 %s 侧找到无效的比率', (side, domainPadding) => {
     const result = ScaleSchema.safeParse({ type: 'linear', name: 'x', domainPadding });
 
     expect(result.success).toBe(false);
@@ -666,7 +666,7 @@ describe('ScaleSchema position domain padding', () => {
     if (!result.success) expect(result.error.issues[0]?.path).toEqual(['domainPadding', side]);
   });
 
-  it('single_value_span_must_be_positive', () => {
+  it('单值跨度必须为正', () => {
     expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', singleValueSpan: 0 })).toThrow();
   });
 });

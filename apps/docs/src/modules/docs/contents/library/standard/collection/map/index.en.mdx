@@ -7,7 +7,7 @@ description: Use Map to display key/value records, configure cells, compose draw
 
 ## Getting started
 
-After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `PathClipDefinition` from `@retikz/extension`.
+After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `pathClipDefinition` from `@retikz/extension`.
 
 <ComponentPreview files="map-basic" hideCode size="sm" />
 
@@ -36,7 +36,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { MapDefinition } from '@retikz/standard/collection';
+import { mapDefinition } from '@retikz/standard/collection';
 
 const ir: IRScene = {
   type: 'scene',
@@ -58,14 +58,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} composites={[MapDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[mapDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { map, mapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -84,7 +84,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [MapInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [mapInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -93,7 +93,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { MapDefinition } from '@retikz/standard/collection';
+import { mapDefinition } from '@retikz/standard/collection';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -117,7 +117,7 @@ const ir: IRScene = {
   ],
 };
 const svg = renderToSvgString(ir, {
-  compile: { composites: [MapDefinition] },
+  compile: { composites: [mapDefinition] },
 });
 console.log(svg);
 ```
@@ -236,13 +236,13 @@ Object keys are displayed as plain text; string values use quoted, escaped JSON 
 
 Data never generates cell ids, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. For connections or per-cell customization, use explicit cells containing a nested component with `data`. defaultCell.style / defaultCell.layout affects the current level only; nested structures use their own defaults, with font and text color inherited through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
 
-React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ArrayDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
+React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `arrayDefinition` and `mapDefinition` in `composites` and `pathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
 
 ### Reference cells and control overflow
 
 Set a cell `id` to reference it from a path endpoint, for example `to={{ id: 'selected', anchor: 'right' }}`. The reference uses the cell border rectangle, excluding gaps, indices, and visual overflow. Hiding the background does not change it. An id on the content references its own geometry. Cells without ids do not acquire identities from array indices.
 
-Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `defaultCell.layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `PathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
+Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `defaultCell.layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `pathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
 
 <ComponentPreview
   files={['map-overflow', 'map-overflow.preview.tsx']}

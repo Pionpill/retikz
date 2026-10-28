@@ -10,8 +10,6 @@ import type { ThemeCardProps } from './theme-card';
 
 const ThemeCardProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'theme-demo', type: 'card' },
-  dependencies: [],
-  datasets: {},
   makeDefinition: () => themeCardComposite,
 };
 

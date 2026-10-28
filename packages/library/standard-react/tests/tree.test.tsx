@@ -1,5 +1,5 @@
 import { createInputScene } from '@retikz/react';
-import { tree, TreeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { tree, treeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { InputTree } from '@retikz/standard-vanilla/collection';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
@@ -18,10 +18,10 @@ it('Tree字符串与对象配置的Source及SVG和Vanilla等价', () => {
     const vanilla = scene({ children: [tree(props)] });
     const options = { adapters: synchronousAdapters(jsx.adapters) };
     expect(normalizeScene(jsx.scene, options).ir).toEqual(
-      normalizeScene(vanilla, { adapters: [TreeInputEmbedAdapter] }).ir,
+      normalizeScene(vanilla, { adapters: [treeInputEmbedAdapter] }).ir,
     );
     expect(renderToSvgString(jsx.scene, options)).toEqual(
-      renderToSvgString(vanilla, { adapters: [TreeInputEmbedAdapter] }),
+      renderToSvgString(vanilla, { adapters: [treeInputEmbedAdapter] }),
     );
   }
 });

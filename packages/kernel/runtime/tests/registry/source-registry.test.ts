@@ -13,7 +13,7 @@ const defineNumberSource = (key: string) =>
     },
   });
 
-describe('runtime source registry', () => {
+describe('运行时源注册表', () => {
   it('统一注册不同值类型的来源并保留 typed token', () => {
     const builtin = defineNumberSource('builtin');
     const custom = defineRuntimeSource<string, string, string, never>({

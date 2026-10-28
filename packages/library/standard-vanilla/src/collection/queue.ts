@@ -1,9 +1,9 @@
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 import type { IRQueue, IRCell } from '@retikz/standard/collection';
-import { createQueue, QueueProvider } from '@retikz/standard/collection';
+import { createQueue, queueProvider } from '@retikz/standard/collection';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { StandardQueueEmbedKind } from '../shared/constants';
+import { standardQueueEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCellItems } from './cell';
 
@@ -38,26 +38,26 @@ export type InputQueue = Omit<IRQueue, 'namespace' | 'type' | 'items' | 'data' |
   );
 
 /** 将 Queue 输入与嵌套内容交给根级 traversal */
-export const QueueInputEmbedAdapter: SynchronousInputEmbedAdapter<InputQueue> = {
-  kind: StandardQueueEmbedKind,
+export const queueInputEmbedAdapter: SynchronousInputEmbedAdapter<InputQueue> = {
+  kind: standardQueueEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)
       return {
         node: createQueue({ namespace: 'standard', type: 'queue', ...props }),
-        providerDependencies: { roots: [QueueProvider.key], providers: [QueueProvider, PathClipProvider] },
+        providerDependencies: { roots: [queueProvider.key], providers: [queueProvider, pathClipProvider] },
       };
 
     if (props.data !== undefined)
       return {
         node: createQueue({ namespace: 'standard', type: 'queue', ...props }),
         providerDependencies: {
-          roots: [QueueProvider.key, ...dataCellDependencies.roots],
-          providers: [QueueProvider, ...dataCellDependencies.providers],
+          roots: [queueProvider.key, ...dataCellDependencies.roots],
+          providers: [queueProvider, ...dataCellDependencies.providers],
         },
       };
 
     const { items, ...input } = props;
-    const normalized = normalizeCellItems(items, context, QueueProvider);
+    const normalized = normalizeCellItems(items, context, queueProvider);
 
     return {
       node: createQueue({
@@ -79,7 +79,7 @@ export const QueueInputEmbedAdapter: SynchronousInputEmbedAdapter<InputQueue> = 
  */
 export const queue = (input: InputQueue): InputEmbed<InputQueue> => ({
   type: 'embed',
-  kind: StandardQueueEmbedKind,
+  kind: standardQueueEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

@@ -9,8 +9,8 @@ import {
   TableStructureSchema,
 } from '../../src';
 
-describe('Table structure schema', () => {
-  it('exports stable built-in and reserved structure kinds', () => {
+describe('Table 结构 schema', () => {
+  it('输出稳定的内置和预留结构类型', () => {
     expect(TableStructureKind).toEqual({
       Manual: 'manual',
       Detail: 'detail',
@@ -20,7 +20,7 @@ describe('Table structure schema', () => {
     });
   });
 
-  it('parses manual and detail operations through JSON round-trip', () => {
+  it('通过 JSON 往返解析手动和详细操作', () => {
     const manual = {
       kind: 'manual',
       rows: [
@@ -55,7 +55,7 @@ describe('Table structure schema', () => {
     expect(TableStructureSchema.parse(JSON.parse(JSON.stringify(detail)))).toEqual(detail);
   });
 
-  it('rejects empty, undefined, and holey manual structures', () => {
+  it('拒绝空的、undefined 的和有漏洞的手动结构', () => {
     const holeyRow = Array<unknown>(1);
 
     expect(() => ManualTableStructureSchema.parse({ kind: 'manual', rows: [] })).toThrow();
@@ -64,7 +64,7 @@ describe('Table structure schema', () => {
     expect(() => ManualTableStructureSchema.parse({ kind: 'manual', rows: [holeyRow] })).toThrow();
   });
 
-  it('rejects ragged rows and reports the offending row path', () => {
+  it('拒绝参差不齐的行并报告有问题的行路径', () => {
     const result = ManualTableStructureSchema.safeParse({
       kind: 'manual',
       rows: [['A'], ['B', 'C']],
@@ -77,7 +77,7 @@ describe('Table structure schema', () => {
     }
   });
 
-  it('rejects rowKinds whose length differs from rows at the rowKinds path', () => {
+  it('拒绝长度与 rowKinds 路径上的行不同的 rowKinds', () => {
     const result = ManualTableStructureSchema.safeParse({
       kind: 'manual',
       rows: [['A'], ['B']],
@@ -91,7 +91,7 @@ describe('Table structure schema', () => {
     }
   });
 
-  it('rejects mixed value/content objects and invalid direct children', () => {
+  it('拒绝混合值/内容对象和无效的直接子对象', () => {
     expect(() =>
       ManualTableStructureSchema.parse({ kind: 'manual', rows: [[{ value: 1, content: { type: 'group' } }]] }),
     ).toThrow();
@@ -106,7 +106,7 @@ describe('Table structure schema', () => {
     ).toThrow();
   });
 
-  it('rejects duplicate detail column ids', () => {
+  it('拒绝重复的详细信息列 ID', () => {
     expect(() =>
       TableStructureSchema.parse({
         kind: 'detail',
@@ -118,7 +118,7 @@ describe('Table structure schema', () => {
     ).toThrow(/duplicate/i);
   });
 
-  it('rejects whitespace-only detail column ids and field names', () => {
+  it('拒绝仅包含空格的详细信息列 ID 和字段名称', () => {
     expect(TableStructureSchema.safeParse({ kind: 'detail', columns: [{ id: '   ', field: 'score' }] }).success).toBe(
       false,
     );
@@ -127,7 +127,7 @@ describe('Table structure schema', () => {
     );
   });
 
-  it('accepts JSON-safe custom operations and rejects reserved kinds', () => {
+  it('接受 JSON 安全的自定义操作并拒绝保留类型', () => {
     expect(TableStructureSchema.parse({ kind: 'summaryByRegion', group: 'region' })).toEqual({
       kind: 'summaryByRegion',
       group: 'region',

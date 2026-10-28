@@ -1,4 +1,4 @@
-import type { IRDropShadow, ScenePrimitive } from '@retikz/core';
+import type { IRDropShadow } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
 import type { SvgNode } from '../types';
@@ -9,31 +9,10 @@ import { compact } from './attrs';
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 
 /**
- * 递归收集 scene 里所有几何图元（rect / ellipse / path）携带的已解析 IRDropShadow —— 按需注入 filter defs
- * @description 仅主几何图元带 shadow（compile 已保证 text / marker 不带）；group 递归
- */
-export const collectShadows = (prims: ReadonlyArray<ScenePrimitive>): Array<IRDropShadow> => {
-  const out: Array<IRDropShadow> = [];
-
-  const visit = (p: ScenePrimitive | undefined | null): void => {
-    if (!p) return;
-    if (p.type === 'rect' || p.type === 'ellipse' || p.type === 'path') {
-      if (p.shadow) out.push(p.shadow);
-    } else if (p.type === 'group') {
-      for (const c of p.children) visit(c);
-    }
-  };
-
-  for (const p of prims) visit(p);
-
-  return out;
-};
-
-/**
  * IRDropShadow → 稳定字符串 key
  * @description 按固定字段顺序遍历（不依赖对象字面量字段顺序），相同 shadow → 同 key（dedup）
  */
-export const stableShadowKey = (s: IRDropShadow): string => {
+const stableShadowKey = (s: IRDropShadow): string => {
   const parts: Array<string> = [];
 
   for (const field of ['offsetX', 'offsetY', 'blur', 'color', 'opacity'] as const) {

@@ -35,7 +35,9 @@ Core prepares the available Definitions before invoking the shared callback. Chi
 
 ### Definitions and dependencies
 
-Before traversal, compile options provide Definitions for shapes, arrows, composites, and other capabilities. Core builds registries. When it encounters the parent, `bindComposite` looks up `namespace.type`, and `resolveComposite` parses the complete input with that Definition's schema before invoking its callback.
+Before traversal, compile options provide Definitions for shapes, arrows, composites, and other capabilities. Core builds registries. When it encounters the parent, `bindComposite` looks up the Definition by `namespace`, then by `type`. `resolveComposite` parses the complete input with that Definition's schema before invoking its callback.
+
+The public function `resolveCompositeRegistry(definitions)` returns a two-level readonly Map, queried with `registry.get(namespace)?.get(type)`. The fields match independently, including when they contain dots: `namespace: 'a.b', type: 'c'` and `namespace: 'a', type: 'b.c'` can both be registered. Registering the same type twice within one namespace throws an error. The outer Map's `size` counts namespaces.
 
 Higher-level components may contribute dependency providers. Three objects are involved:
 
@@ -48,12 +50,14 @@ Consider a scatter chart titled “Monthly sales”. Chart uses the `chart.point
 | Object          | Meaning in this example                                                                                                                                                              |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Root dependency | `chart.point`, contributed by the scatter chart provider, requests the Point chart capability                                                                                        |
-| Provider        | Chart's provider declares a dependency on `FlexLayoutProvider` and supplies a factory for the Chart Definition; the factory on `FlexLayoutProvider` returns `FlexLayoutDefinition`   |
-| Definition      | The Chart Definition validates chart input with its schema and runs its compile callback; `FlexLayoutDefinition` uses its layout schema and callback to measure and arrange children |
+| Provider        | Chart's provider declares a dependency on `flexLayoutProvider` and supplies a factory for the Chart Definition; the factory on `flexLayoutProvider` returns `flexLayoutDefinition`   |
+| Definition      | The Chart Definition validates chart input with its schema and runs its compile callback; `flexLayoutDefinition` uses its layout schema and callback to measure and arrange children |
 
 Assembly prepares the FlexLayout Definition before the Chart Definition. During chart compilation, Chart creates a text node from the title configuration and places it before Plot in a column FlexLayout. Layout compilation measures and positions those children; Core draws the text node. Chart also depends on Surface and Plot; the diagram shows only the FlexLayout dependency.
 
-`resolveCoreProviderDependencies` merges provider declarations and datasets, checks the graph reachable from the roots, then calls `makeDefinition` in dependency order. It returns collections of Definitions and rejects missing dependencies, cycles, and conflicts. Vanilla calls this capability during preparation; direct Core callers can also supply Definitions that are already assembled.
+`CoreDependencyProvider<TParams>` carries its owner's runtime parameters in the optional `params` field. `resolveCoreProviderDependencies` collects parameters by provider key, checks the graph reachable from the roots, then calls `makeDefinition` in dependency order. Each factory receives a readonly array in contribution order and handles its own merging and domain conflicts. Core does not interpret datasets or lowering options. Omitting `dependencies` means there are no dependencies; omitted or `undefined` parameters contribute no array entry. Static providers use the default `void` type and need only `key` and `makeDefinition`; the factory receives an empty array and must still return a definition.
+
+The factory returns `CoreProviderDefinition`, the union of the capability definitions. Heterogeneous provider catalogs use `AnyCoreDependencyProvider`; providers with the same key must share the same factory and parameter contract. Missing dependencies, cycles, and conflicting factory identities are rejected. If a factory fails, Core throws a `RetikzCoreError` with the provider identified by `details.key` and the original exception preserved in `cause`. Dependencies determine assembly order without injecting data or dependency return values. Table and Plot can reference the same row arrays through their parameters and select datasets through `data.reference`. Both use Data's `mergeExternalDatasets`: entries with the same name must reference the same row array, and merging does not copy rows. Vanilla calls the resolver during preparation; direct Core callers can also supply Definitions that are already assembled.
 
 The diagram follows root `chart.point` to `layout.flexLayout`. Once the registry is ready, traversal finds the Chart Definition using `namespace: chart` and `type: point` from the chart declaration.
 
@@ -65,7 +69,7 @@ The diagram follows root `chart.point` to `layout.flexLayout`. Once the registry
   sources={[
     {
       label: 'Dependency checks and Definition assembly',
-      path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts',
+      path: 'packages/kernel/core/src/contract/provider/resolve.ts',
     },
     { label: 'Vanilla preparation entry', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     { label: 'Chart layout dependency', path: 'packages/viz/chart/src/_chart/providers/provider.ts' },
@@ -76,6 +80,8 @@ The diagram follows root `chart.point` to `layout.flexLayout`. Once the registry
 />
 
 ### One compile callback
+
+`defineComposite` preserves the definition and its inferred types without inspecting the schema structure at runtime. TypeScript requires the schema output's `namespace` and `type` to match the definition's registration keys. Schemas may include transforms as long as their output satisfies this constraint. Actual component data is validated against that schema during compilation, and the parsed result is passed to `compile`.
 
 For full layout evaluation, `CompositeDefinition` provides a `compile` callback that returns `CompositeCompileResult`. The callback can generate child declarations directly. When placement depends on child dimensions, it can first call the layout methods on `CompositeCompileContext`, then output the selected results. The table distinguishes these uses; the example starts with direct composition.
 

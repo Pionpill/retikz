@@ -68,7 +68,7 @@ export type InspectionSelection = Readonly<{
 }>;
 
 /** selection 解析出的 canonical request */
-export type ResolvedInspectionRequest = Readonly<{
+export type CanonicalInspectionRequest = Readonly<{
   /** 检查器的注册键 */
   inspector: InspectorKey;
   /** 实际 owner */

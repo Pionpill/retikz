@@ -9,7 +9,7 @@
 | 语义类别   | `nodeSchema`、`resolveContext`、`compileOptions`、`compileResult`、`sourcePath`       | 避免脱离窄上下文的 `data`、`value`、`item`、`base`、`target`、`result`                          |
 | 类型信息   | `scenePath`、`diagnostics`、`resourceMap`                                             | 不写 `nameString`、`optionsObject`；集合必须表达元素语义与容器角色，不能只叫 `data` 或 `active` |
 | 生命周期   | `previousXxx`、`currentXxx`、`nextXxx`、`candidateXxx`、`pendingXxx`、`committedXxx`  | 多个版本同时存在时必须标明时间或事务角色                                                        |
-| 来源与阶段 | `sourceXxx`、`authoredXxx`、`localXxx`、`effectiveXxx`、`resolvedXxx`                 | 限定词必须对应真实阶段，不单独使用 `local`、`effective` 代替类别                                |
+| 来源与阶段 | `sourceXxx`、`authoredXxx`、`localXxx`、`mergedXxx`、`canonicalXxx`、`compiledXxx`    | 限定词必须对应真实阶段，不单独使用 `local`、`merged` 代替类别                                   |
 | 布尔值     | `isXxx`、`hasXxx`、`canXxx`、`shouldXxx`                                              | 优先肯定语义，避免 `active`、`alive`、`matching`、`isNotDisabled`                               |
 | callback   | `onDiagnostic`、`onCommit`、`onFrame`                                                 | `onXxx` 只表示外部注入的事件回调；主动执行使用 `emit`、`dispatch`、`notify`                     |
 | 身份       | `xxxId`、`xxxKey`、`xxxToken`、`xxxHandle`                                            | 分别表达外部身份、索引键、不透明凭证和能力句柄，不混用也不省略后缀                              |
@@ -56,4 +56,4 @@ package-public / owner-visible 名称必须独立表达领域与角色；文件�
 | callback / 阶段上下文 | `XxxContext`、`XxxVisitContext`、`XxxResolveContext` | 上下文及其具名片段均以 `Context` 结尾；访问上下文不使用含义不明确的 `Site`               |
 | 运行时 schema 值      | `XxxSchema`、可复用 shape 的 `XxxBaseSchema`         | 只要符号承载运行时 parse / validation schema，就以 `Schema` 结尾                         |
 | 单条诊断记录          | `XxxDiagnostic`                                      | diagnostics 集合元素的具名类型以 `Diagnostic` 结尾；集合字段或局部变量使用 `diagnostics` |
-| 配置选项              | `XxxOptions`、`XxxOptionsInput`                      | 完整选项以 `Options` 结尾；作者侧、稀疏或待解析输入以 `OptionsInput` 结尾                |
+| 配置选项              | `XxxOptions`、`InputXxxOptions`                      | 完整选项以 `Options` 结尾；需要独立输入契约时使用 `InputXxxOptions`，保留 `Options` 后缀 |

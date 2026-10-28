@@ -6,7 +6,7 @@ import { drawScene } from '../../../src/canvas';
 import { renderToSvgString } from '../../../src/svg';
 import { createSpyCanvasContext } from './helpers';
 
-it('arrow paint resources render as scoped SVG references and Canvas gradients', () => {
+it('箭头绘制资源渲染为范围 SVG 引用和 Canvas 渐变', () => {
   const source = SceneSchema.parse({
     type: 'scene',
     version: 1,
@@ -52,7 +52,7 @@ it('arrow paint resources render as scoped SVG references and Canvas gradients',
   });
 });
 
-it('rectangles and ellipses preserve dash caps and joins across renderers', () => {
+it('矩形和椭圆保留破折号大写并跨渲染器连接', () => {
   const scene: Scene = {
     layout: { x: 0, y: 0, width: 100, height: 100 },
     primitives: [

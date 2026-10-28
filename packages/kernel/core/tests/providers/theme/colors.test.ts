@@ -61,7 +61,7 @@ const cases = [
   ],
 ] as const;
 
-describe('Core default theme colors', () => {
+describe('Core 默认主题颜色', () => {
   it('不公开内置 Theme', () => {
     expect(resolveDefaultCoreThemeColors(ThemeMode.Light)).toBeDefined();
   });

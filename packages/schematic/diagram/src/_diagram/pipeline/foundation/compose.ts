@@ -10,7 +10,7 @@ import type { DiagramFoundationResolution } from '../../resolve';
 import { lowerDiagramFoundation } from './lower';
 
 /** Diagram Foundation 中一个实际 authored region 的几何 */
-export type DiagramFoundationRegionGeometry = Readonly<{
+type DiagramFoundationRegionGeometry = Readonly<{
   /** 区域在 Foundation 框架坐标中的布局分配范围 */
   allocationBounds: Readonly<BoundsRect>;
   /** 区域在 Foundation 框架坐标中的可见几何范围 */
@@ -18,7 +18,7 @@ export type DiagramFoundationRegionGeometry = Readonly<{
 }>;
 
 /** 同一次 Foundation probe 产生的完整 frame、regions 与drawing平移 */
-export type DiagramFoundationComposition = Readonly<{
+type DiagramFoundationComposition = Readonly<{
   /** 完整框架的布局探测结果，供最终放置时重放 */
   frame: LayoutChildResult;
   /** 将绘图区局部坐标转换为 Foundation 框架坐标的平移 */

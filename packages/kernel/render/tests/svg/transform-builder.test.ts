@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { buildTransform } from '../../src/svg';
 
 describe('buildTransform: 单 kind', () => {
-  it('translate → "translate(x y)"', () => {
+  it('翻译→"translate(x y)"', () => {
     const transforms: Array<Transform> = [{ kind: 'translate', x: 10, y: 20 }];
 
     expect(buildTransform(transforms)).toBe('translate(10 20)');

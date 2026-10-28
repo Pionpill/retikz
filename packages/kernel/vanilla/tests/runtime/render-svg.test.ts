@@ -162,12 +162,12 @@ describe('@retikz/vanilla renderToSvgString', () => {
     expect(root).toContain(`height="${scene.layout.height}"`);
   });
 
-  it('passes boundary providers to compile options', () => {
+  it('将边界提供者传递给编译选项', () => {
     expect(() => renderToSvgString(boundaryIr)).toThrow(/options\.boundaries/i);
     expect(renderToSvgString(boundaryIr, { compile: { boundaries: [fixedBoundary()] } })).toMatch(/^<svg/);
   });
 
-  it('passes clip providers to compile options', () => {
+  it('将裁剪提供者传递给编译选项', () => {
     expect(() => renderToSvgString(clipIr)).toThrow(/Unknown provider 'circleFrame'/);
 
     const svg = renderToSvgString(clipIr, {

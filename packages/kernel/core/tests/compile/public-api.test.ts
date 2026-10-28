@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import * as core from '../../src';
 
-describe('core public compile exports', () => {
-  it('keeps root runtime compile exports available', () => {
+describe('核心公共编译导出', () => {
+  it('保持根运行时编译导出可用', () => {
     expect('compositeOpaqueColor' in core).toBe(false);
     expect('parseStaticCssColor' in core).toBe(false);
     expect(core.compileToScene).toBeDefined();
@@ -21,7 +21,7 @@ describe('core public compile exports', () => {
     });
   });
 
-  it('uses Foundation for shared schema primitives', () => {
+  it('使用 Foundation 来共享 schema 基元', () => {
     expect(NormalizedFractionSchema.parse(0.5)).toBe(0.5);
     expect('NormalizedFractionSchema' in core).toBe(false);
   });

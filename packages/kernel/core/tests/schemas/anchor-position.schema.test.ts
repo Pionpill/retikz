@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { IRAnchorPosition } from '../../src/schemas';
 import { AnchorPositionSchema, CoordinateSchema, NodeSchema } from '../../src/schemas';
 
-describe('Node anchor-to-anchor position schema', () => {
+describe('Node 锚点到锚点位置方案', () => {
   it('接受仅含 target.id 的最小形式', () => {
     const value: IRAnchorPosition = {
       kind: 'anchor',

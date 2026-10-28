@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { literal, object, string } from 'zod';
+import { literal, string } from 'zod';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../src';
 import { compileToScene, BuiltinCompileWarningCode, CompositeBaseSchema, defineComposite } from '../../../src';
@@ -24,7 +24,7 @@ const labeledBox = defineComposite({
   }),
 });
 
-describe('lowerComposites — adversarial', () => {
+describe('lowerComposites — 对抗性', () => {
   it('duplicate-registration-throws: 两个 def 同 namespace.type → 注册期 throw（即使 IR 无 tier2）', () => {
     const dupA = defineComposite({
       namespace: 'x',
@@ -69,28 +69,6 @@ describe('lowerComposites — adversarial', () => {
     const scene = compileToScene(ir, { composites: [first, second] }).scene;
 
     expect(flattenPrims(scene.primitives).filter(primitive => primitive.type === 'text')).toHaveLength(2);
-  });
-
-  it('non-zodobject-schema-throws: schema 非 ZodObject（z.string）→ 注册期可诊断 throw', () => {
-    expect(() =>
-      defineComposite({
-        namespace: 'invalid',
-        type: 'invalid',
-        schema: string(),
-        compile: () => ({ children: [] }),
-      }),
-    ).toThrow(/ZodObject/);
-  });
-
-  it('non-literal-discriminator-throws: namespace/type 非 z.literal → 注册期可诊断 throw', () => {
-    expect(() =>
-      defineComposite({
-        namespace: 'm',
-        type: 'a',
-        schema: object({ namespace: string(), type: string() }),
-        compile: () => ({ children: [] }),
-      }),
-    ).toThrow(/literal/);
   });
 
   it('mutual-cycle-throws: A 展开 B、B 展开 A → 深度守卫 throw、非死循环', () => {

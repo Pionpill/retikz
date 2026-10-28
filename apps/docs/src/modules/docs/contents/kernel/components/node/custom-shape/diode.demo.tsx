@@ -10,7 +10,7 @@ type Position = IRPosition;
 const diode: ShapeDefinition = defineShape({
   name: 'diode',
   paramsSchema: z.strictObject({}),
-  computeCircumscribedHalfAxes: (innerHalfWidth, innerHalfHeight) => ({
+  computeCircumscribedGeometry: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 42),
     halfHeight: Math.max(innerHalfHeight, 22),
   }),

@@ -61,16 +61,25 @@ export const resolveBranchDiagram = (source: IRBranchDiagram): CanonicalBranchDi
 
   return {
     source,
-    layout: BranchLayoutIntentSchema.parse(source.layout ?? {}),
+    layout: {
+      direction: source.layout?.direction ?? BranchLayoutIntentSchema.shape.direction.parse(undefined),
+      nodeGap: source.layout?.nodeGap ?? BranchLayoutIntentSchema.shape.nodeGap.parse(undefined),
+      laneGap: source.layout?.laneGap ?? BranchLayoutIntentSchema.shape.laneGap.parse(undefined),
+    },
     nodes: order.map(id => {
       const { labels, layout, shape, ...node } = byId.get(id)!;
       return {
         ...node,
         type: 'node',
         position: [0, 0],
-        shape: BranchNodeSchema.shape.shape.parse(shape),
+        shape: shape ?? BranchNodeSchema.shape.shape.parse(undefined),
         ...(labels === undefined ? {} : { label: labels }),
-        layout: { ...BranchNodeLayoutSchema.parse(layout ?? {}), padding: 0, margin: 0 },
+        layout: {
+          ...layout,
+          minimumSize: layout?.minimumSize ?? BranchNodeLayoutSchema.shape.minimumSize.parse(undefined),
+          padding: 0,
+          margin: 0,
+        },
       };
     }),
   };

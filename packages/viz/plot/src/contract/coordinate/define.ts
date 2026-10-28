@@ -224,7 +224,7 @@ export const defineCoordinate = <TCoordinateOperation extends IRPlotCoordinateOp
 ): CoordinateDefinition<TCoordinateOperation> => def;
 
 /** createCoordinateFrame 的可选运行时能力 */
-export type CreateCoordinateFrameOptions = {
+export type CoordinateFrameOptions = {
   /** 是否支持绘图区背景、边框和区域锚点
    * @default true
    */
@@ -257,7 +257,7 @@ export const createCoordinateFrame = (
   type: string,
   roles: ReadonlyArray<DimensionRole>,
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null,
-  options?: CreateCoordinateFrameOptions,
+  options?: CoordinateFrameOptions,
 ): CoordinateFrame => ({
   type,
   roles,

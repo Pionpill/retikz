@@ -1,7 +1,7 @@
-import type { LowerTex } from '@retikz/core';
+import type { TexLowerer } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 
-const renderTexPlayground = (values: TexPlaygroundPreviewValues, lowerTex?: LowerTex) => {
+const renderTexPlayground = (values: TexPlaygroundPreviewValues, lowerTex?: TexLowerer) => {
   const delimiters = values.displayMode === 'display' ? '$$' : '$';
   const content = `${delimiters}${values.source}${delimiters}`;
 
@@ -27,5 +27,5 @@ export type TexPlaygroundPreviewValues = {
 };
 
 /** 绘制示例图形 */
-export const TexPlaygroundPreview = (values: TexPlaygroundPreviewValues, lowerTex?: LowerTex) =>
+export const TexPlaygroundPreview = (values: TexPlaygroundPreviewValues, lowerTex?: TexLowerer) =>
   renderTexPlayground(values, lowerTex);

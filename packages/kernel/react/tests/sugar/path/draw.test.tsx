@@ -1,4 +1,4 @@
-import { DrawWay } from '@retikz/core';
+import { DrawWay } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { Path } from '../../../src/kernel';

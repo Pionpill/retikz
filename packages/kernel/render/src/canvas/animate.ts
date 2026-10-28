@@ -12,7 +12,7 @@ import { commandEndpoint } from '../shared';
 import { DEG_TO_RAD } from './path-geometry';
 
 /** 应用动画所需的子集选项 */
-export type AnimateContext = {
+type AnimateContext = {
   /** 报告跳过或无法完整执行的动画能力 */
   warn: (message: string) => void;
   /** 是否施加非自动播（manual / visible / onEvent）track（per-id 激活时为 true；缺省仅自动播） */

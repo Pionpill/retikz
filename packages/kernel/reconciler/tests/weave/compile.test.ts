@@ -1,11 +1,9 @@
-import type { CompileObservation, CompileObserverDefinition, ScenePrimitive } from '@retikz/core';
-import { definePath, PathSchema } from '@retikz/core';
-import { compileToScene, prepareSceneCompilation } from '@retikz/core';
-import type { IRScene } from '@retikz/core';
+import type { CompileObservation, CompileObserverDefinition, IRScene, ScenePrimitive } from '@retikz/core';
+import { compileToScene, definePath, PathSchema, prepareSceneCompilation } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { readWeaveCurrent, prepareWeaveCompilation } from '../../src/weave';
+import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
 
 const scene: IRScene = {
   type: 'scene',
@@ -25,7 +23,7 @@ const scene: IRScene = {
 
 describe('Weave 编译构建', () => {
   it('保留跨 Scope 延后路径、声明结构和完整来源', () => {
-    const prepared = prepareWeaveCompilation(scene);
+    const prepared = new WeaveReconciler(scene).mount();
     expect(prepared.compilation.result).toEqual(compileToScene(scene));
     expect(prepared.root.pending).toBeNull();
     expect(readWeaveCurrent(prepared.root).children.every(node => node.pending === null)).toBe(true);
@@ -42,14 +40,14 @@ describe('Weave 编译构建', () => {
   });
 
   it('失败的新候选不改变此前树、索引和已完成输出', () => {
-    const previous = prepareWeaveCompilation(scene);
+    const previous = new WeaveReconciler(scene).mount();
     const output = JSON.stringify(previous.compilation.result);
     const nodes = [...readWeaveCurrent(previous.root).scopeIds.values()];
     expect(() =>
-      prepareWeaveCompilation({
+      new WeaveReconciler({
         ...scene,
         children: [{ type: 'coordinate', id: 'bad', position: { direction: 'right', of: 'absent' } }],
-      }),
+      }).mount(),
     ).toThrow();
     expect(JSON.stringify(previous.compilation.result)).toBe(output);
     expect([...readWeaveCurrent(previous.root).scopeIds.values()]).toEqual(nodes);
@@ -83,7 +81,7 @@ describe('Weave 编译构建', () => {
         },
       ],
     };
-    expect(prepareWeaveCompilation(input).compilation.result).toEqual(compileToScene(input));
+    expect(new WeaveReconciler(input).mount().compilation.result).toEqual(compileToScene(input));
   });
 });
 
@@ -164,7 +162,7 @@ describe('Weave 与 Core 可观察等价', () => {
   ];
   it.each(inputs)('保持引用、变换、排序、诊断与发射归属', input => {
     const full = prepareSceneCompilation(input, { artifacts: { nodeLayouts: true } }, { captureProvenance: true });
-    const weave = prepareWeaveCompilation(input, { artifacts: { nodeLayouts: true } }).compilation;
+    const weave = new WeaveReconciler(input, { artifacts: { nodeLayouts: true } }).mount().compilation;
     expect(weave.result).toEqual(full.result);
     expect(weave.diagnostics).toEqual(full.diagnostics);
     expect(
@@ -240,7 +238,7 @@ it('嵌套旋转缩放后的引用、渐变资源与观察结果保持同版本'
     ],
   };
   const full = prepareSceneCompilation(input, { artifacts: { nodeLayouts: true } });
-  const weave = prepareWeaveCompilation(input, { artifacts: { nodeLayouts: true } }).compilation;
+  const weave = new WeaveReconciler(input, { artifacts: { nodeLayouts: true } }).mount().compilation;
   expect(weave.result).toEqual(full.result);
 });
 
@@ -260,11 +258,11 @@ it('观察、节点布局产物与完整编译一致，重建使用独立观察�
   const full = prepareSceneCompilation(scene, options, { observers: [observer] });
   const expected = [...events];
   events.length = 0;
-  const actual = prepareWeaveCompilation(scene, options, { observers: [observer] });
+  const actual = new WeaveReconciler(scene, options, { observers: [observer] }).mount();
   expect(actual.compilation.result).toEqual(full.result);
   expect(events).toEqual(expected);
   events.length = 0;
-  prepareWeaveCompilation(scene, options, { observers: [observer] });
+  new WeaveReconciler(scene, options, { observers: [observer] }).mount();
   expect(events).toEqual(expected);
 });
 
@@ -274,11 +272,11 @@ it('新环境的测量服务生效，空树不携带旧资源或读取记录', (
     version: 1,
     children: [{ type: 'node', id: 'a', text: 'A', position: [0, 0] }],
   };
-  const first = prepareWeaveCompilation(input, { measureText: () => ({ width: 10, height: 10 }) });
-  const second = prepareWeaveCompilation(input, { measureText: () => ({ width: 100, height: 10 }) });
+  const first = new WeaveReconciler(input, { measureText: () => ({ width: 10, height: 10 }) }).mount();
+  const second = new WeaveReconciler(input, { measureText: () => ({ width: 100, height: 10 }) }).mount();
   expect(second.compilation.result.scene.layout.width).toBeGreaterThan(first.compilation.result.scene.layout.width);
   expect(second.root.scopeId).not.toBe(first.root.scopeId);
-  const empty = prepareWeaveCompilation({ ...input, children: [] });
+  const empty = new WeaveReconciler({ ...input, children: [] }).mount();
   expect(readWeaveCurrent(empty.root).records.size).toBe(0);
   expect(readWeaveCurrent(empty.root).ids.size).toBe(0);
   expect(readWeaveCurrent(empty.root).scopeIds.size).toBe(1);
@@ -287,7 +285,7 @@ it('新环境的测量服务生效，空树不携带旧资源或读取记录', (
 
 it('祖先 Scope 几何引用失败，未来声明不会提前对 Node 可见', () => {
   expect(() =>
-    prepareWeaveCompilation({
+    new WeaveReconciler({
       type: 'scene',
       version: 1,
       children: [
@@ -297,7 +295,7 @@ it('祖先 Scope 几何引用失败，未来声明不会提前对 Node 可见', 
           children: [{ type: 'coordinate', id: 'a', position: { direction: 'right', of: 's' } }],
         },
       ],
-    }),
+    }).mount(),
   ).toThrow(/ancestor Scope/);
   const input: IRScene = {
     type: 'scene',
@@ -308,7 +306,7 @@ it('祖先 Scope 几何引用失败，未来声明不会提前对 Node 可见', 
     ],
   };
   expect(() => prepareSceneCompilation(input)).toThrow(/Cannot resolve position/);
-  expect(() => prepareWeaveCompilation(input)).toThrow(/Cannot resolve position/);
+  expect(() => new WeaveReconciler(input).mount()).toThrow(/Cannot resolve position/);
 });
 
 it('自定义 Path 重用相同图元对象时保留各自的发射来源', () => {
@@ -348,7 +346,7 @@ it('自定义 Path 重用相同图元对象时保留各自的发射来源', () =
       },
     ],
   };
-  const prepared = prepareWeaveCompilation(input, { paths: [kind] });
+  const prepared = new WeaveReconciler(input, { paths: [kind] }).mount();
   expect(prepared.compilation.result).toEqual(compileToScene(input, { paths: [kind] }));
   const owners = prepared.compilation.provenance?.emissions.map(emission => emission.owner);
   expect(new Set(owners).size).toBe(2);

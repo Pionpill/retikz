@@ -8,7 +8,7 @@ import {
   inspectLayoutSpacing,
   inspectLayoutStructureRect,
   lowerLayoutInspectionMarks,
-  normalizeLayoutBoundaryGroups,
+  splitLayoutBoundaryGroups,
 } from '../shared';
 
 /** 把 Flex 布局产物转换为普通 Core 辅助子元素
@@ -48,7 +48,7 @@ export const inspectFlexLayoutArtifact = (
   }
 
   const spacing = inspectLayoutSpacing('flex', artifact.spacing, context.options, context.appearance);
-  const [boxes = [], structure = [], underlay = [], normalizedSpacing = []] = normalizeLayoutBoundaryGroups([
+  const [boxes = [], structure = [], underlay = [], normalizedSpacing = []] = splitLayoutBoundaryGroups([
     base.boxes,
     structureLines,
     base.underlay,
