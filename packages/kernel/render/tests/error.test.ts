@@ -3,14 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../src/error';
 
 describe('RetikzRenderError', () => {
-  it('uses the default code for a single message argument', () => {
+  it('使用单个消息参数的默认代码', () => {
     const error = new RetikzRenderError('default failure');
 
     expect(error.code).toBe(RetikzRenderErrorCode.Default);
     expect(error.message).toBe('default failure');
   });
 
-  it('accepts an explicit code with a message', () => {
+  it('接受带有消息的显式代码', () => {
     const error = new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'explicit failure');
 
     expect(error.code).toBe(RetikzRenderErrorCode.Runtime);

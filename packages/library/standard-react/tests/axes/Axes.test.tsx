@@ -1,6 +1,6 @@
 import { createInputScene } from '@retikz/react';
-import type { AxesInput } from '@retikz/standard/presentation';
-import { AxesDefinition, AxesProvider, createAxes, GridProvider } from '@retikz/standard/presentation';
+import type { InputAxes } from '@retikz/standard/presentation';
+import { axesDefinition, axesProvider, createAxes, gridProvider } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -13,7 +13,7 @@ const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) =
   return normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 };
 
-const input: AxesInput = {
+const input: InputAxes = {
   origin: { position: [100, 80], label: '0' },
   x: {
     extent: 40,
@@ -29,7 +29,7 @@ const input: AxesInput = {
 };
 
 describe('<Axes>', () => {
-  it('forwards authored root Scope identity instead of deriving it from React host state', () => {
+  it('转发编写的根 Scope 身份，而不是从 React 宿主状态派生它', () => {
     const result = normalizeReactInput(
       <Axes {...input} id="authored-axes" localNamespace meta={{ source: 'react' }} />,
     );
@@ -41,17 +41,17 @@ describe('<Axes>', () => {
     });
   });
 
-  it('contributes canonical Axes IR through one stable exact-key provider', () => {
+  it('通过一个稳定的精确键提供者贡献规范的 Axes IR', () => {
     const first = normalizeReactInput(<Axes {...input} />);
     const second = normalizeReactInput(<Axes {...input} />);
 
     expect(first.ir.children[0]).toEqual(createAxes(input));
-    expect(first.contributions[0]).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
-    expect(second.contributions[0]?.providers[0]).toBe(AxesProvider);
-    expect(AxesProvider.makeDefinition({})).toBe(AxesDefinition);
+    expect(first.contributions[0]).toEqual({ roots: [axesProvider.key], providers: [axesProvider] });
+    expect(second.contributions[0]?.providers[0]).toBe(axesProvider);
+    expect(axesProvider.makeDefinition([])).toBe(axesDefinition);
   });
 
-  it('coexists with Grid under distinct qualified provider keys', () => {
+  it('与 Grid 在不同的合格提供者键下共存', () => {
     const result = normalizeReactInput(
       <>
         <Grid bounds={{ start: [-2, -1], end: [2, 1] }} line={{ spacing: 1 }} />
@@ -61,8 +61,8 @@ describe('<Axes>', () => {
 
     expect(result.ir.children.map(child => child.type)).toEqual(['grid', 'axes']);
     expect(result.contributions.map(contribution => contribution.roots[0])).toEqual([
-      GridProvider.key,
-      AxesProvider.key,
+      gridProvider.key,
+      axesProvider.key,
     ]);
   });
 });

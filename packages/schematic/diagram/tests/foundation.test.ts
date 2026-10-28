@@ -1,12 +1,12 @@
-import type { IRChild, IRScope, ResolvedTheme, ScenePrimitive } from '@retikz/core';
+import type { IRChild, IRScope, CanonicalTheme, ScenePrimitive } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME, defineTheme, LayoutAxisProposalKind, ThemeMode } from '@retikz/core';
 import type { IRFlexLayout } from '@retikz/layout';
 import { FlexLayoutArtifactSchema, FlexLayoutDirection, FlexLayoutSchema, LayoutAlignment } from '@retikz/layout';
 import { LegendArtifactSchema, LegendSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
+import type { DiagramThemeDefinition } from '../src/_diagram';
 import {
-  defineDiagramTheme,
   DiagramDefaultsSchema,
   DiagramFrameSchema,
   DiagramPresentationSchema,
@@ -104,8 +104,8 @@ const primitivesOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePri
     primitive.type === 'group' ? [primitive, ...primitivesOf(primitive.children)] : [primitive],
   );
 
-describe('Diagram Foundation resolve', () => {
-  it('resolves complete Frame defaults without manufacturing Presentation or drawing state', () => {
+describe('Diagram Foundation 解析', () => {
+  it('解析完整 Frame 默认值且不生成 Presentation 或绘图状态', () => {
     const resolution = resolveFoundation();
 
     expect(resolution).toEqual({
@@ -141,7 +141,7 @@ describe('Diagram Foundation resolve', () => {
     expect(resolution).not.toHaveProperty('artifact');
   });
 
-  it('applies inline Theme then preserves every legal falsy Frame override', () => {
+  it('应用内联主题，然后保留每个合法的虚假框架覆盖', () => {
     const resolution = resolveFoundation({
       presentation: DiagramPresentationSchema.parse({ legend }),
       defaultDiagram: DiagramDefaultsSchema.parse({
@@ -178,7 +178,7 @@ describe('Diagram Foundation resolve', () => {
     });
   });
 
-  it('lets an authored title font replace defaults while preserving independent formatting fields', () => {
+  it('让编写的标题字体替换默认值，同时保留独立的格式字段', () => {
     const result = resolveFoundation({
       presentation: { title: { text: 'Title', style: { font: { size: 13 }, opacity: 0 } } },
       defaultDiagram: {
@@ -205,7 +205,7 @@ describe('Diagram Foundation resolve', () => {
   });
 
   it.each([{ legendPosition: 'left' as const }, { legendAlign: 'center' as const }, { drawingLegendGap: 0 }])(
-    'rejects explicit Legend structure fields when Presentation has no Legend: %j',
+    '当 Presentation 没有 Legend：%j 时，拒绝显式的 Legend 结构字段',
     frame => {
       try {
         resolveFoundation({ frame: DiagramFrameSchema.parse(frame) });
@@ -221,8 +221,8 @@ describe('Diagram Foundation resolve', () => {
   );
 });
 
-describe('Diagram Foundation lowering', () => {
-  it('uses the drawing child directly when every optional region is absent', () => {
+describe('Diagram Foundation 下沉', () => {
+  it('当每个可选区域都不存在时，直接使用绘图子项', () => {
     const surface = lowerDiagramFoundation(resolveFoundation(), drawing);
 
     expect(surface).toMatchObject({
@@ -236,7 +236,7 @@ describe('Diagram Foundation lowering', () => {
     expect(JSON.stringify(surface).match(/"id":"drawing"/g)).toHaveLength(1);
   });
 
-  it('places complete Presentation text in a node-reset heading outside the drawing child', () => {
+  it('将完整的演示文本放置在绘图子项外部的节点重置标题中', () => {
     const presentation = DiagramPresentationSchema.parse({
       title: { text: ['Title', { segments: [{ text: 'styled', fill: '#2563eb' }, { tex: 'x^2' }] }] },
       description: { text: 'Description' },
@@ -273,23 +273,20 @@ describe('Diagram Foundation lowering', () => {
     { side: 'right' as const, direction: FlexLayoutDirection.Row, legendIndex: 1, drawingIndex: 0 },
     { side: 'bottom' as const, direction: FlexLayoutDirection.Column, legendIndex: 1, drawingIndex: 0 },
     { side: 'left' as const, direction: FlexLayoutDirection.Row, legendIndex: 0, drawingIndex: 1 },
-  ])(
-    'docks the Legend on $side without changing its internal layout',
-    ({ side, direction, legendIndex, drawingIndex }) => {
-      const presentation = DiagramPresentationSchema.parse({ legend });
-      const frame = DiagramFrameSchema.parse({ legendPosition: side, legendAlign: 'center', drawingLegendGap: 9 });
-      const main = flexOf(lowerDiagramFoundation(resolveFoundation({ presentation, frame }), drawing).child);
+  ])('将 Legend 对接在 $side 上，而不改变其内部布局', ({ side, direction, legendIndex, drawingIndex }) => {
+    const presentation = DiagramPresentationSchema.parse({ legend });
+    const frame = DiagramFrameSchema.parse({ legendPosition: side, legendAlign: 'center', drawingLegendGap: 9 });
+    const main = flexOf(lowerDiagramFoundation(resolveFoundation({ presentation, frame }), drawing).child);
 
-      expect(main.direction).toBe(direction);
-      expect(main.gap).toBe(9);
-      expect(main.children?.[legendIndex]).toMatchObject({ alignSelf: LayoutAlignment.Center, child: legend });
-      expect(main.children?.[drawingIndex]).toMatchObject({ alignSelf: LayoutAlignment.Stretch, child: drawing });
-      expect(main.children?.[legendIndex]?.child).toEqual(legend);
-      expect(main.children?.[legendIndex]?.child).not.toHaveProperty('direction');
-    },
-  );
+    expect(main.direction).toBe(direction);
+    expect(main.gap).toBe(9);
+    expect(main.children?.[legendIndex]).toMatchObject({ alignSelf: LayoutAlignment.Center, child: legend });
+    expect(main.children?.[drawingIndex]).toMatchObject({ alignSelf: LayoutAlignment.Stretch, child: drawing });
+    expect(main.children?.[legendIndex]?.child).toEqual(legend);
+    expect(main.children?.[legendIndex]?.child).not.toHaveProperty('direction');
+  });
 
-  it('preserves a non-default ramp Legend and its authored tick keys', () => {
+  it('保留非默认渐变 Legend 及其编写的刻度键', () => {
     const presentation = DiagramPresentationSchema.parse({ legend: rampLegend });
     const main = flexOf(lowerDiagramFoundation(resolveFoundation({ presentation }), drawing).child);
 
@@ -297,16 +294,16 @@ describe('Diagram Foundation lowering', () => {
   });
 });
 
-describe('Diagram Foundation provider integration', () => {
-  it('observes the effective Core Scope Theme before resolving the named Diagram style', () => {
-    const observed: Array<ResolvedTheme> = [];
-    const diagramStyle = defineDiagramTheme({
+describe('Diagram Foundation 提供者集成', () => {
+  it('在解析命名的 Diagram 样式之前观察有效的 Core Scope 主题', () => {
+    const observed: Array<CanonicalTheme> = [];
+    const diagramStyle = {
       name: 'brand',
       resolve: theme => {
         observed.push(theme);
         return { presentation: { title: { style: { textColor: '#f97316' } } } };
       },
-    });
+    } satisfies DiagramThemeDefinition;
     const coreStyle = defineTheme({
       name: 'brand',
       resolve: () => ({ semantic: { guide: '#94a3b8' } }),
@@ -331,7 +328,7 @@ describe('Diagram Foundation provider integration', () => {
     expect(text).toMatchObject({ type: 'text', fill: '#f97316' });
   });
 
-  it('isolates generated text Nodes while the opaque drawing keeps host nodeDefault', () => {
+  it('隔离生成的文本节点，同时不透明绘图保留宿主 nodeDefault', () => {
     const output = compileTestDiagramFoundation(
       {
         presentation: DiagramPresentationSchema.parse({ title: { text: 'Title' } }),
@@ -358,7 +355,7 @@ describe('Diagram Foundation provider integration', () => {
     expect(title).toMatchObject({ type: 'text', fill: '#000000' });
   });
 
-  it('keeps dependency-owned artifacts observable without publishing Diagram identity or artifacts', () => {
+  it('保持依赖项拥有的产物可观察，而无需发布 Diagram 身份或产物', () => {
     const output = compileTestDiagramFoundation({
       presentation: DiagramPresentationSchema.parse({
         title: { text: 'Title' },
@@ -410,7 +407,7 @@ describe('Diagram Foundation provider integration', () => {
     expect(output.scene.layout.height).toBeGreaterThan(0);
   });
 
-  it('keeps ramp tick identity in the dependency-owned Legend artifact', () => {
+  it('在依赖所属的 Legend 产物中保留渐变刻度标识', () => {
     const output = compileTestDiagramFoundation({
       presentation: DiagramPresentationSchema.parse({ legend: rampLegend }),
       drawing,
@@ -429,7 +426,7 @@ describe('Diagram Foundation provider integration', () => {
     });
   });
 
-  it('lets replacement drawing geometry determine the complete Scene allocation', () => {
+  it('让替换绘图几何图形确定完整的 Scene 分配', () => {
     const compileWithSize = (width: number, height: number) =>
       compileTestDiagramFoundation({
         drawing: {
@@ -445,7 +442,7 @@ describe('Diagram Foundation provider integration', () => {
     expect(large.height).toBeGreaterThan(small.height);
   });
 
-  it('keeps rounded Surface content clipping inside Scope clipping while preserving frame paint', () => {
+  it('将圆形 Surface 内容裁剪保留在 Scope 裁剪内，同时保留框架绘制', () => {
     const output = compileTestDiagramFoundation(
       {
         frame: DiagramFrameSchema.parse({
@@ -508,7 +505,7 @@ describe('Diagram Foundation provider integration', () => {
     expect(output.scene.layout.height).toBeGreaterThan(30);
   });
 
-  it('fails before drawing layout when an exact proposal cannot contain Surface padding', () => {
+  it('当精确提案无法包含 Surface 填充时，在绘制布局之前失败', () => {
     expect(() =>
       compileTestDiagramFoundation(
         { drawing },

@@ -78,8 +78,8 @@ describe('OffsetPosition: schema 校验', () => {
   });
 });
 
-describe('OffsetPosition: compile resolve（Node.position）', () => {
-  describe('Happy path', () => {
+describe('OffsetPosition: 编译解析（Node.position）', () => {
+  describe('正常流程', () => {
     it('offset_of_string_basic：of=节点 id → 世界坐标累加', () => {
       const ir: IRScene = {
         version: 1,
@@ -207,7 +207,7 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
       expect(b[1]).toBeCloseTo(a[1]);
     });
 
-    it('offset_of_cartesian_at_origin：of=[0,0] + offset=[10,0]', () => {
+    it('笛卡尔原点偏移量：of=[0,0] + 偏移量=[10,0]', () => {
       const ir: IRScene = {
         version: 1,
         type: 'scene',

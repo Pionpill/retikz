@@ -12,7 +12,7 @@ import type { SvgNode } from '../../../src/svg/types';
  */
 const layout = { x: 0, y: 0, width: 100, height: 100 };
 
-describe('SVG emit data-retikz-id', () => {
+describe('SVG 发出 data-retikz-id', () => {
   it('rect-with-id：带 id 的 rect 图元 → data-retikz-id 等于该 id', () => {
     const rect: RectPrimitive = { type: 'rect', id: 'a', x: 0, y: 0, width: 10, height: 10, fill: '#f00' };
     const node = buildPrim(rect);

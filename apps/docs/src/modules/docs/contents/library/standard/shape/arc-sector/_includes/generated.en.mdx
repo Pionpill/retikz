@@ -310,16 +310,16 @@ export type InputSector = InputShape<IRSector>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArcInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/arc.ts"} startLine={12}>ArcInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"arcInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/arc.ts"} startLine={12}>arcInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const ArcInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArc & { id?: string }>;
+export declare const arcInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArc & { id?: string }>;
 ```
 
-#### <ApiSourceLink label={"SectorInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/sector.ts"} startLine={12}>SectorInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"sectorInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/sector.ts"} startLine={12}>sectorInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const SectorInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSector & { id?: string }>;
+export declare const sectorInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSector & { id?: string }>;
 ```
 
 **Persistent configuration**
@@ -475,7 +475,7 @@ export type IRSector = ShapeSource<ZodInput<typeof SectorSchema>>;
 
 **Extension definitions and registration**
 
-#### <ApiSourceLink label={"ArcDefinition"} path={"packages/library/standard/src/shape/arc/composite.ts"} startLine={10}>ArcDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"arcDefinition"} path={"packages/library/standard/src/shape/arc/composite.ts"} startLine={10}>arcDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -485,7 +485,7 @@ export type IRSector = ShapeSource<ZodInput<typeof SectorSchema>>;
 
 | Member               | Type                              | Default      | Description |
 | -------------------- | --------------------------------- | ------------ | ----------- |
-| `readonly compile`   | `typeof ArcDefinition["compile"]` | `...`        | —           |
+| `readonly compile`   | `typeof arcDefinition["compile"]` | `...`        | —           |
 | `readonly namespace` | `'standard'`                      | `'standard'` | —           |
 | `readonly schema`    | `typeof ArcSchema`                | `ArcSchema`  | —           |
 | `readonly type`      | `'arc'`                           | `'arc'`      | —           |
@@ -497,7 +497,7 @@ export type IRSector = ShapeSource<ZodInput<typeof SectorSchema>>;
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export const ArcDefinition = defineComposite({
+export const arcDefinition = defineComposite({
   namespace: 'standard',
   type: 'arc',
   schema: ArcSchema,
@@ -509,18 +509,16 @@ export const ArcDefinition = defineComposite({
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ArcProvider"} path={"packages/library/standard/src/shape/arc/composite.ts"} startLine={25}>ArcProvider</ApiSourceLink>
+#### <ApiSourceLink label={"arcProvider"} path={"packages/library/standard/src/shape/arc/composite.ts"} startLine={25}>arcProvider</ApiSourceLink>
 
 ```ts
-export const ArcProvider: CoreDependencyProvider = Object.freeze({
+export const arcProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'arc' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => ArcDefinition,
+  makeDefinition: () => arcDefinition,
 });
 ```
 
-#### <ApiSourceLink label={"SectorDefinition"} path={"packages/library/standard/src/shape/sector/composite.ts"} startLine={10}>SectorDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"sectorDefinition"} path={"packages/library/standard/src/shape/sector/composite.ts"} startLine={10}>sectorDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -542,7 +540,7 @@ export const ArcProvider: CoreDependencyProvider = Object.freeze({
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export const SectorDefinition = defineComposite({
+export const sectorDefinition = defineComposite({
   namespace: 'standard',
   type: 'sector',
   schema: SectorSchema,
@@ -554,14 +552,12 @@ export const SectorDefinition = defineComposite({
 
 </DocTabs>
 
-#### <ApiSourceLink label={"SectorProvider"} path={"packages/library/standard/src/shape/sector/composite.ts"} startLine={25}>SectorProvider</ApiSourceLink>
+#### <ApiSourceLink label={"sectorProvider"} path={"packages/library/standard/src/shape/sector/composite.ts"} startLine={25}>sectorProvider</ApiSourceLink>
 
 ```ts
-export const SectorProvider: CoreDependencyProvider = Object.freeze({
+export const sectorProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'sector' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => SectorDefinition,
+  makeDefinition: () => sectorDefinition,
 });
 ```
 

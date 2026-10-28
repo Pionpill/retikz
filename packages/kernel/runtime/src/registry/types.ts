@@ -15,7 +15,7 @@ export type RuntimeSourceRegistry = Readonly<{
 }>;
 
 /** Computation registry 的 Source binding 与计算列表输入 */
-export type RuntimeComputationRegistryInput = Readonly<{
+export type InputRuntimeComputationRegistry = Readonly<{
   /** Computation dependencies 必须来自的 Source registry */
   sources: RuntimeSourceRegistry;
   /**

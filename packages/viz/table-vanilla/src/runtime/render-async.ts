@@ -3,10 +3,10 @@ import type { IRTable, TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import { processToStaticInputResultAsync, renderToSvgString, scene } from '@retikz/vanilla';
 
-import { TableInputEmbedAdapter } from '../adapter';
+import { tableInputEmbedAdapter } from '../adapter';
 import { RetikzTableVanillaError } from '../error';
 import { embedTable } from '../spec';
-import type { RenderTableAsync, RenderTableAsyncCommonOptions, RenderTableArtifactResult } from './types';
+import type { AsyncTableRenderer, TableRenderAsyncCommonOptions, TableRenderArtifactResult } from './types';
 
 /** 只选择本次根Table的实际编译产物 */
 const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
@@ -19,8 +19,8 @@ const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompil
 /** 共享Vanilla准备、编译和提交，不建立Table私有异步状态机 */
 const renderTableAsyncImpl = async <TSource = never>(
   spec: IRTable,
-  options: RenderTableAsyncCommonOptions<TSource> & { artifacts?: boolean } = {},
-): Promise<string | RenderTableArtifactResult> => {
+  options: TableRenderAsyncCommonOptions<TSource> & { artifacts?: boolean } = {},
+): Promise<string | TableRenderArtifactResult> => {
   const input = embedTable(spec, {
     data: options.data,
     dataBindings: options.dataBindings,
@@ -31,7 +31,7 @@ const renderTableAsyncImpl = async <TSource = never>(
   const result = await processToStaticInputResultAsync(
     scene({ ...(options.theme === undefined ? {} : { theme: options.theme }), children: [input] }),
     {
-      adapters: [TableInputEmbedAdapter],
+      adapters: [tableInputEmbedAdapter],
       signal: options.signal,
       compile: options.compile,
     },
@@ -47,4 +47,4 @@ const renderTableAsyncImpl = async <TSource = never>(
 };
 
 /** 把单个Table异步准备并渲染为SVG，可返回同次manifest */
-export const renderTableAsync = renderTableAsyncImpl as RenderTableAsync;
+export const renderTableAsync = renderTableAsyncImpl as AsyncTableRenderer;

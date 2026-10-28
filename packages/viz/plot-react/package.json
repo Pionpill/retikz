@@ -80,6 +80,7 @@
     "@retikz/react": "workspace:^"
   },
   "devDependencies": {
+    "@retikz/vanilla": "workspace:^",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -6,9 +6,15 @@ export type ArrowDefinition = Omit<MarkDefinition, 'anchor'> & {
   backX: number;
   /** 线接触点，决定路径截断与端点定位 */
   lineContactX: number;
-  /** 外轮廓补偿量，默认空心定义为 lineWidth / 2，实心定义为 0 */
+  /**
+   * 外轮廓补偿量；省略时空心定义使用已解析线宽的一半，实心定义使用 0
+   * @default resolveArrowMark
+   */
   outerInset?: number;
-  /** 尖端横坐标，默认 baseSize；沿线放置时以尖端为锚点 */
+  /**
+   * 尖端横坐标；省略时使用已解析的 baseSize，沿线放置时以尖端为锚点
+   * @default resolveArrowMark
+   */
   tipX?: number;
 };
 

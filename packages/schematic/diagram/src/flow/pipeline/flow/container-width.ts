@@ -4,7 +4,7 @@ import { createFlexLayout, LayoutItemKind } from '@retikz/layout';
 import { compileFlexLayout, intrinsicLayoutProposal } from '@retikz/layout/compose';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { FlowLayoutElementInput, FlowLayoutInput, FlowLayoutLeafInput } from '../../contract';
+import type { InputFlowLayoutElement, InputFlowLayoutComputation, InputFlowLayoutLeaf } from '../../contract';
 import { measureFlowLayoutElement } from '../../providers';
 import type { CanonicalFlowDiagram, CanonicalFlowElement, CanonicalFlowEntity } from '../../resolve';
 import { createFlowLayoutExecutionContext } from './layout-placement';
@@ -32,10 +32,10 @@ const widthFailure = (element: CanonicalFlowElement, reason: string): never => {
 /** 在共享编排中确定同级容器预算，再重测需要增长的直接节点 */
 export const allocateFlowContainerWidths = (
   diagram: CanonicalFlowDiagram,
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   context: CompositeCompileContext,
-  remeasure: (entity: CanonicalFlowEntity, allocatedWidth: number) => FlowLayoutLeafInput,
-): FlowLayoutInput => {
+  remeasure: (entity: CanonicalFlowEntity, allocatedWidth: number) => InputFlowLayoutLeaf,
+): InputFlowLayoutComputation => {
   const authored = new Map<string, CanonicalFlowElement>();
 
   const collect = (elements: ReadonlyArray<CanonicalFlowElement>): void => {
@@ -48,9 +48,9 @@ export const allocateFlowContainerWidths = (
   collect(diagram.elements);
   const allocatedRows = new Set<string>();
   const placement = createFlowLayoutExecutionContext(context, input);
-  const naturalSize = (element: FlowLayoutElementInput) => measureFlowLayoutElement(element, input, placement);
+  const naturalSize = (element: InputFlowLayoutElement) => measureFlowLayoutElement(element, input, placement);
 
-  const rowOf = (element: FlowLayoutElementInput): Extract<FlowLayoutElementInput, { kind: 'layout' }> => {
+  const rowOf = (element: InputFlowLayoutElement): Extract<InputFlowLayoutElement, { kind: 'layout' }> => {
     const row = element.kind === 'group' && element.elements.length === 1 ? element.elements[0] : element;
     if (
       row.kind !== 'layout' ||
@@ -72,7 +72,7 @@ export const allocateFlowContainerWidths = (
     return row;
   };
 
-  const growRow = (row: Extract<FlowLayoutElementInput, { kind: 'layout' }>, width: number): FlowLayoutElementInput => {
+  const growRow = (row: Extract<InputFlowLayoutElement, { kind: 'layout' }>, width: number): InputFlowLayoutElement => {
     allocatedRows.add(row.id);
     const owner = authored.get(row.id)!;
     if (owner.type !== 'layout') return widthFailure(owner, 'Expected a Layout.');
@@ -127,7 +127,7 @@ export const allocateFlowContainerWidths = (
     };
   };
 
-  const visit = (elements: ReadonlyArray<FlowLayoutElementInput>): ReadonlyArray<FlowLayoutElementInput> =>
+  const visit = (elements: ReadonlyArray<InputFlowLayoutElement>): ReadonlyArray<InputFlowLayoutElement> =>
     elements.map(element => {
       if (element.kind === 'leaf') return element;
 

@@ -43,7 +43,7 @@ const angleDiff = (a: number, b: number): number => {
 };
 
 describe('out/in 角编译为 cubic 控制点方向', () => {
-  it('single tangent angles compile like explicit defaults without changing symmetric bend', () => {
+  it('单切线角度像显式默认值一样编译，而不改变对称弯曲', () => {
     const render = (parameters: Partial<Extract<IRStep, { kind: 'bend' }>>) =>
       compileToScene({
         type: 'scene',

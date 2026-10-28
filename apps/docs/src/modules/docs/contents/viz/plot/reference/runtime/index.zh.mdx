@@ -21,7 +21,7 @@ Plot 根和图元局部 `transform` 保存 `{ operation, dataExecution? }` 声�
 
 <ComponentPreview files="plot-runtime-architecture" size="xs" hideCode />
 
-React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把 `XxxProps` / children 桥接为 Plot Vanilla 的 `InputPlotEmbed`，交给同一份 `PlotInputEmbedAdapter`；`embedPlot()` 创建可放入 Vanilla `scene()` 的 `InputEmbed`，配合 `PlotInputEmbedAdapter` 完成 `InputPlot -> IRPlot` 归一与下沉。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
+React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把 `XxxProps` / children 桥接为 Plot Vanilla 的 `InputPlotEmbed`，交给同一份 `plotInputEmbedAdapter`；`embedPlot()` 创建可放入 Vanilla `scene()` 的 `InputEmbed`，配合 `plotInputEmbedAdapter` 完成 `InputPlot -> IRPlot` 归一与下沉。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
 
 `<Plot theme>` 是 Plot 面板所在 Core Scope 的局部 Theme，只选择该 Plot 的 `name` 与 `mode`。它不同于 Plot owner 持久化的 `defaultPlot` / `plotRules`。Vanilla `renderPlot(spec, data, { theme })` 把 `theme` 写入根 `IRScene.theme`，作为整个编译 Scene 的 Core Theme；它不会改写 `spec.defaultPlot` 或 `spec.plotRules`。
 
@@ -54,7 +54,7 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
 
 例如 `renderPlot(spec, data, { layout: { width: 480, height: 300 } })`。React 的 `width` / `height` 仍声明 Plot IR 尺寸，`layout` 则提供运行时布局默认值；IR 尺寸优先。
 
-`LowerPlotsOptions.definitions.positionAdjustments` 是统一的位置调整注入入口。React `<Plot>` 与 Vanilla runtime 原样转发该数组；adapter 不计算 step、随机数、coordinate projection、initializer 或 glyph containment。
+`PlotsLoweringOptions.definitions.positionAdjustments` 是统一的位置调整注入入口。React `<Plot>` 与 Vanilla runtime 原样转发该数组；adapter 不计算 step、随机数、coordinate projection、initializer 或 glyph containment。
 
 ## Lowering 与产物
 
@@ -76,7 +76,7 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
 | ---------------- | --------------------------------------------------- | --------------------------------------------- |
 | React standalone | `<Plot>`                                            | `<Layout>` 管理的 SVG / Canvas                |
 | React embedded   | `<Layout><Plot /></Layout>`                         | 与其它 Tier 2 内容合编的 Scene                |
-| Vanilla embedded | `embedPlot()` + `PlotInputEmbedAdapter`             | Kernel Input Scene / layer 中的 Scene         |
+| Vanilla embedded | `embedPlot()` + `plotInputEmbedAdapter`             | Kernel Input Scene / layer 中的 Scene         |
 | Vanilla / SSR    | `renderPlot(spec, datasets, { theme, ...options })` | 根 Theme 下的 SVG 字符串或 `{ svg, lineage }` |
 | 自定义宿主       | `lowerPlots(datasets, options)` + Core compile      | Core IR → Scene                               |
 | 审计与交互       | `lowerPlotWithLineage()`、`createPlotLocator()`     | runtime-only lineage / anchor                 |

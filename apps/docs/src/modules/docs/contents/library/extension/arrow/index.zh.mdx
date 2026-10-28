@@ -7,7 +7,7 @@ description: 按需装配菱形、风筝形、方形、直线倒钩、阻断线�
 
 ## 接入方式
 
-按需从 `@retikz/extension` 导入 Definition，例如 `DiamondArrowDefinition`；或使用包含全部端点的 `ExtensionArrowDefinitions`。导入不会全局注册端点。React 传给 `Layout.extensions.arrows`，Vanilla 传给 `compile.arrows`。
+按需从 `@retikz/extension` 导入 Definition，例如 `diamondArrowDefinition`；或使用包含全部端点的 `extensionArrowDefinitions`。导入不会全局注册端点。React 传给 `Layout.extensions.arrows`，Vanilla 传给 `compile.arrows`。
 
 <ComponentPreview files="entry" size="xs" hideCode />
 
@@ -15,11 +15,11 @@ description: 按需装配菱形、风筝形、方形、直线倒钩、阻断线�
 <DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-import { DiamondArrowDefinition } from '@retikz/extension';
+import { diamondArrowDefinition } from '@retikz/extension';
 import { Draw, Layout } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ arrows: [DiamondArrowDefinition] }}>
+  <Layout extensions={{ arrows: [diamondArrowDefinition] }}>
     <Draw
       way={[
         [0, 0],
@@ -36,7 +36,7 @@ export const Example = () => (
 
 ```tsx
 import type { IRScene } from '@retikz/core';
-import { DiamondArrowDefinition } from '@retikz/extension';
+import { diamondArrowDefinition } from '@retikz/extension';
 import { Layout } from '@retikz/react';
 
 const ir: IRScene = {
@@ -54,14 +54,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ arrows: [DiamondArrowDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ arrows: [diamondArrowDefinition] }} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { DiamondArrowDefinition } from '@retikz/extension';
+import { diamondArrowDefinition } from '@retikz/extension';
 import { path, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
@@ -75,7 +75,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { compile: { arrows: [DiamondArrowDefinition] } });
+const svg = renderToSvgString(input, { compile: { arrows: [diamondArrowDefinition] } });
 console.log(svg);
 ```
 
@@ -84,7 +84,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { DiamondArrowDefinition } from '@retikz/extension';
+import { diamondArrowDefinition } from '@retikz/extension';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -102,7 +102,7 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { arrows: [DiamondArrowDefinition] } });
+const svg = renderToSvgString(ir, { compile: { arrows: [diamondArrowDefinition] } });
 console.log(svg);
 ```
 
@@ -122,14 +122,14 @@ console.log(svg);
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
 
-#### DiamondArrowDefinition / OpenDiamondArrowDefinition
+#### diamondArrowDefinition / openDiamondArrowDefinition
 
 将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition                   | `shape`       | 默认长 × 宽 |
 | ---------------------------- | ------------- | ----------- |
-| `DiamondArrowDefinition`     | `diamond`     | 11 × 6      |
-| `OpenDiamondArrowDefinition` | `openDiamond` | 11 × 6      |
+| `diamondArrowDefinition`     | `diamond`     | 11 × 6      |
+| `openDiamondArrowDefinition` | `openDiamond` | 11 × 6      |
 
 #### IRArrowStyle
 
@@ -155,14 +155,14 @@ console.log(svg);
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
 
-#### KiteArrowDefinition / OpenKiteArrowDefinition
+#### kiteArrowDefinition / openKiteArrowDefinition
 
 将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition                | `shape`    | 默认长 × 宽 |
 | ------------------------- | ---------- | ----------- |
-| `KiteArrowDefinition`     | `kite`     | 11 × 6      |
-| `OpenKiteArrowDefinition` | `openKite` | 11 × 6      |
+| `kiteArrowDefinition`     | `kite`     | 11 × 6      |
+| `openKiteArrowDefinition` | `openKite` | 11 × 6      |
 
 #### IRArrowStyle
 
@@ -188,14 +188,14 @@ console.log(svg);
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
 
-#### SquareArrowDefinition / OpenSquareArrowDefinition
+#### squareArrowDefinition / openSquareArrowDefinition
 
 将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition                  | `shape`      | 默认长 × 宽 |
 | --------------------------- | ------------ | ----------- |
-| `SquareArrowDefinition`     | `square`     | 8 × 8       |
-| `OpenSquareArrowDefinition` | `openSquare` | 8 × 8       |
+| `squareArrowDefinition`     | `square`     | 8 × 8       |
+| `openSquareArrowDefinition` | `openSquare` | 8 × 8       |
 
 #### IRArrowStyle
 
@@ -221,13 +221,13 @@ console.log(svg);
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
 
-#### StraightBarbArrowDefinition
+#### straightBarbArrowDefinition
 
 将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition                    | `shape`        | 默认长 × 宽 |
 | ----------------------------- | -------------- | ----------- |
-| `StraightBarbArrowDefinition` | `straightBarb` | 8 × 8       |
+| `straightBarbArrowDefinition` | `straightBarb` | 8 × 8       |
 
 #### IRArrowStyle
 
@@ -253,13 +253,13 @@ console.log(svg);
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
 
-#### BarArrowDefinition
+#### barArrowDefinition
 
 将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition           | `shape` | 默认长 × 宽 |
 | -------------------- | ------- | ----------- |
-| `BarArrowDefinition` | `bar`   | 8 × 8       |
+| `barArrowDefinition` | `bar`   | 8 × 8       |
 
 #### IRArrowStyle
 
@@ -289,13 +289,13 @@ console.log(svg);
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
 
-#### CrowFootArrowDefinition
+#### crowFootArrowDefinition
 
 将下列 Definition 传入 `Layout.extensions.arrows` 或 `compile.arrows`，用 `arrow.end.shape` 选择端点：
 
 | Definition                | `shape`    | 默认长 × 宽 |
 | ------------------------- | ---------- | ----------- |
-| `CrowFootArrowDefinition` | `crowFoot` | 8 × 8       |
+| `crowFootArrowDefinition` | `crowFoot` | 8 × 8       |
 
 #### IRArrowStyle
 

@@ -42,8 +42,8 @@ const flexArtifactWithKeys = (
   return artifact;
 };
 
-describe('Block-family layout-aware lowering', () => {
-  it('keeps arbitrary Block children in authored column order and applies shell defaults', () => {
+describe('Block 系列布局感知下沉', () => {
+  it('按编写的列顺序保留任意 Block 子项并应用 shell 默认值', () => {
     const { output, result } = compileInHarness(
       Graph.createBlock({ children: [textNode('first'), textNode('second'), textNode('third')] }),
       naturalProposal,
@@ -60,7 +60,7 @@ describe('Block-family layout-aware lowering', () => {
     );
   });
 
-  it('keeps omitted and empty Block children on one stable Surface root', () => {
+  it('将省略的和空的 Block 子项保留在一个稳定的 Surface 根上', () => {
     const omitted = compileInHarness(Graph.createBlock({}), naturalProposal, Graph.createGraphDefinitions());
     const empty = compileInHarness(
       Graph.createBlock({ children: [] }),
@@ -77,7 +77,7 @@ describe('Block-family layout-aware lowering', () => {
     );
   });
 
-  it('applies named Graph Theme defaults to the Block root shell', () => {
+  it('将命名的 Graph 主题默认应用于 Block 根 shell', () => {
     const styleName = 'block-shell';
     const graphStyle = Graph.defineGraphTheme({
       name: styleName,
@@ -119,7 +119,7 @@ describe('Block-family layout-aware lowering', () => {
     ).toBe(true);
   });
 
-  it('replaces a themed Block border as one complete explicit Source field', () => {
+  it('将主题 Block 边框替换为一个完整的显式 Source 字段', () => {
     const styleName = 'block-explicit-shell';
     const graphStyle = Graph.defineGraphTheme({
       name: styleName,
@@ -156,7 +156,7 @@ describe('Block-family layout-aware lowering', () => {
     );
   });
 
-  it('compiles Header slots and text defaults without optional placeholders', () => {
+  it('编译 Header 槽位和文本默认值，不带可选占位符', () => {
     const { output } = compileInHarness(
       Graph.createBlockHeader({
         icon: textNode('icon'),
@@ -203,7 +203,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(textValues(primitivesOf(titleOnly.output.scene.primitives))).toEqual(['Only']);
   });
 
-  it('renders string Header text with the regular title and description defaults', () => {
+  it('使用常规标题和描述默认值呈现字符串 Header 文本', () => {
     const { output } = compileInHarness(
       Graph.createBlockHeader({
         title: 'Service',
@@ -219,7 +219,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(texts[1]).toEqual(expect.objectContaining({ fontSize: 12, opacity: 0.7 }));
   });
 
-  it('changes only the Header text layout direction', () => {
+  it('仅更改 Header 文本布局方向', () => {
     const source = {
       icon: textNode('icon'),
       title: { text: 'Service' },
@@ -252,7 +252,7 @@ describe('Block-family layout-aware lowering', () => {
     }
   });
 
-  it('uses bottom alignment only for horizontal Header text', () => {
+  it('仅对水平 Header 文本使用底部对齐', () => {
     const source = {
       title: { text: 'Service' },
       description: { text: 'Public API' },
@@ -280,7 +280,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(verticalTitle.x).toBeCloseTo(verticalDescription.x);
   });
 
-  it('applies Header itemGap and main-axis distribution only inside the text region', () => {
+  it('仅在文本区域内应用 Header itemGap 和主轴分布', () => {
     const source = {
       icon: textNode('icon'),
       title: { text: 'A' },
@@ -319,7 +319,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(textValues(primitivesOf(distributed.output.scene.primitives))).toEqual(['icon', 'A', 'B', 'stable']);
   });
 
-  it('compiles independent Section without a default stroke and keeps Row shell-free', () => {
+  it('编译独立的 Section，没有默认描边，并保持 Row 无壳', () => {
     const section = Graph.createBlockSection({
       id: 'section',
       title: { text: 'Fields' },
@@ -348,7 +348,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(primitives.filter(primitive => primitive.type === 'path' && primitive.id === 'row')).toHaveLength(0);
   });
 
-  it('defaults Row padding to zero while preserving explicit padding', () => {
+  it('Row 内边距默认为零且保留显式内边距', () => {
     const compileRow = (padding?: number) =>
       compileInHarness(
         Graph.createBlockRow({ content: 'name', ...(padding === undefined ? {} : { padding }) }),
@@ -365,7 +365,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(explicitEight.result.allocationBounds.height - explicitZero.result.allocationBounds.height).toBeCloseTo(16);
   });
 
-  it('shares Row space equally across direct children', () => {
+  it('在直接子级之间平均共享 Row 空间', () => {
     const compileCells = (labels: ReadonlyArray<string>) => {
       const compiled = compileInHarness(
         Graph.createBlockRow({
@@ -389,7 +389,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(compileCells(['x', 'medium', 'much wider content'])).toEqual([80, 80, 80]);
   });
 
-  it('lowers sparse Row text content to equal-share Core Nodes', () => {
+  it('将稀疏的 Row 文本内容下沉到均等的 Core 节点', () => {
     const compileContent = (content: Graph.IRBlockText | Array<Graph.IRBlockText>) =>
       compileInHarness(
         Graph.createBlockRow({ padding: 0, gap: 0, content }),
@@ -415,7 +415,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(pathPrimitivesOf(multiple.output.scene.primitives)).toHaveLength(0);
   });
 
-  it('lowers styled Row content through shell-free equal-share Core Nodes', () => {
+  it('通过无壳均等共享 Core 节点下沉样式化 Row 内容', () => {
     const { output } = compileInHarness(
       Graph.createBlockRow({
         padding: 0,
@@ -446,7 +446,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(pathPrimitivesOf(output.scene.primitives)).toHaveLength(0);
   });
 
-  it('keeps equal-share CJK Row content at its final single-line height inside a minimum-width Block', () => {
+  it('将均等的 CJK Row 内容保留在最小宽度 Block 内的最终单行高度', () => {
     const compileBlock = (content: Array<Graph.IRBlockText>) =>
       compileInHarness(
         Graph.createGraph({
@@ -495,7 +495,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(sectionHeight(threeItems.output)).toBe(74.4);
   });
 
-  it('preserves explicit zero layout and transparent appearance values', () => {
+  it('保留显式零布局和透明外观值', () => {
     const source = Graph.createBlock({
       gap: 0,
       padding: 0,
@@ -526,7 +526,7 @@ describe('Block-family layout-aware lowering', () => {
       },
     ],
     ['exact parent stretch', exactProposal(240, 160)],
-  ])('keeps the Block Surface equal to its final allocation under %s', (_name, proposal) => {
+  ])('使 Block Surface 等于 %s 下的最终分配', (_name, proposal) => {
     const { result } = compileInHarness(
       Graph.createBlock({ children: [textNode('content')] }),
       proposal,
@@ -541,7 +541,7 @@ describe('Block-family layout-aware lowering', () => {
     });
   });
 
-  it('keeps width and minWidth on the outer Surface allocation only', () => {
+  it('仅在外部 Surface 分配上保留宽度和 minWidth', () => {
     const fixed = compileInHarness(
       Graph.createBlock({ width: 180, padding: 12, children: [textNode('content')] }),
       naturalProposal,
@@ -564,7 +564,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(growing.result.allocationBounds.width).toBeGreaterThan(240);
   });
 
-  it('defaults an unconstrained Block to a 240-unit minimum outer width', () => {
+  it('默认不受约束的 Block 为 240 单位的最小外部宽度', () => {
     const { result } = compileInHarness(
       Graph.createBlock({ children: [textNode('content')] }),
       naturalProposal,
@@ -575,7 +575,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(result.slotSize.width).toBe(240);
   });
 
-  it('keeps explicit width and minWidth values ahead of the default minimum', () => {
+  it('将显式宽度和 minWidth 值保持在默认最小值之前', () => {
     const fixed = compileInHarness(
       Graph.createBlock({ width: 180, children: [textNode('content')] }),
       naturalProposal,
@@ -591,7 +591,7 @@ describe('Block-family layout-aware lowering', () => {
     expect(authoredMinimum.result.allocationBounds.width).toBeLessThan(240);
   });
 
-  it('keeps replayed child ids inside a Block local namespace while publishing the Block id', () => {
+  it('在发布 Block id 时，将回放的子 id 保留在 Block 本地命名空间内', () => {
     const warnings: Array<CompileWarning> = [];
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
@@ -635,7 +635,7 @@ describe('Block-family layout-aware lowering', () => {
     );
   });
 
-  it('projects Graph Theme through open Block-family content boundaries only', () => {
+  it('仅通过开放的 Block 系列内容边界来项目 Graph 主题', () => {
     const { output } = compileInHarness(
       Graph.createBlock({
         graphRules: [{ type: 'entity', style: { fill: '#ef4444' } }],

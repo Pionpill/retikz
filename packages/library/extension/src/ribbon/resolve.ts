@@ -1,5 +1,4 @@
 import type { JsonObject } from '@retikz/foundation';
-import { JsonObjectSchema } from '@retikz/foundation';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../errors';
 import type { RibbonWidthProfileDefinition } from './profile-types';
@@ -47,7 +46,7 @@ export const resolveRibbonWidth = (
   let params: JsonObject;
 
   try {
-    params = definition.paramsSchema?.parse(rawParams) ?? JsonObjectSchema.parse(rawParams);
+    params = definition.paramsSchema?.parse(rawParams) ?? rawParams;
   } catch (cause) {
     throw new RetikzExtensionError({
       code: RetikzExtensionErrorCode.ResolutionInvalid,

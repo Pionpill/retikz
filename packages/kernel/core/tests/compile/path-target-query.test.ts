@@ -23,7 +23,7 @@ const runQueries = (query: (context: CompositeCompileContext) => void) => {
   expect(result.scene.resources).toBeUndefined();
 };
 
-it('isolates repeated target sequences and observes changes to the same child object', () => {
+it('隔离重复的目标序列并观察同一子对象的变化', () => {
   runQueries(context => {
     const child: IRNode = { type: 'node', id: 'n', position: [30, 20] };
     const first = context.resolvePathTargets({ child, source: { id: 'n' }, points: [{ relative: [5, 0] }] });
@@ -47,7 +47,7 @@ it('isolates repeated target sequences and observes changes to the same child ob
   });
 });
 
-it('keeps successful geometry usable after failed targets and reports the current field', () => {
+it('在目标失败后保持成功的几何图形可用并报告当前字段', () => {
   runQueries(context => {
     const child: IRNode = { type: 'node', id: 'n', position: [30, 20] };
     expect(() => context.resolvePathTargets({ child, source: { id: 'missing' }, points: [] })).toThrow(/source/);
@@ -69,7 +69,7 @@ it('keeps successful geometry usable after failed targets and reports the curren
   });
 });
 
-it('keeps theme-specific geometry separate across derived contexts and callback owners', () => {
+it('使特定于主题的几何图形在派生上下文和回调所属模块之间保持分离', () => {
   const positions: Array<ReadonlyArray<number>> = [];
   const geometry = defineComposite({
     namespace: 'test',
@@ -111,7 +111,7 @@ it('keeps theme-specific geometry separate across derived contexts and callback 
   );
 });
 
-it('preserves root-local transforms and earlier coordinates after many distinct queries', () => {
+it('在许多不同的查询之后保留根局部变换和早期坐标', () => {
   runQueries(context => {
     for (let index = 0; index < 80; index++) {
       const result = context.resolvePathTargets({
@@ -136,7 +136,7 @@ it('preserves root-local transforms and earlier coordinates after many distinct 
   });
 });
 
-it('queries real child targets with smooth cursor semantics without publishing probe geometry', () => {
+it('使用平滑的光标语义查询真实的子目标，而无需发布探测几何形状', () => {
   let observed: PathTargetQueryResult | undefined;
   const definition = defineComposite({
     namespace: 'test',
@@ -187,7 +187,7 @@ it('queries real child targets with smooth cursor semantics without publishing p
   expect(result.scene.primitives).toEqual([]);
 });
 
-it('repeated local shadowing queries never replace a visible ancestor reference', () => {
+it('重复的本地阴影查询永远不会替换可见的祖先引用', () => {
   const query = defineComposite({
     namespace: 'test',
     type: 'query',
@@ -230,7 +230,7 @@ it('repeated local shadowing queries never replace a visible ancestor reference'
   expect(result.scene.primitives).toEqual([]);
 });
 
-it('fails a target query at the missing point instead of silently dropping it', () => {
+it('在缺失点使目标查询失败，而不是默默地删除它', () => {
   const definition = defineComposite({
     namespace: 'test',
     type: 'query',
@@ -250,7 +250,7 @@ it('fails a target query at the missing point instead of silently dropping it', 
   ).toThrow(/points\[1\]/);
 });
 
-it('uses caller transforms and world node offsets with nested absolute expressions', () => {
+it('使用调用者变换和带有嵌套绝对表达式的世界节点偏移', () => {
   let observed: PathTargetQueryResult | undefined;
   const definition = defineComposite({
     namespace: 'test',
@@ -307,12 +307,12 @@ it('uses caller transforms and world node offsets with nested absolute expressio
   ]);
 });
 
-it('queries registered shape anchors rather than rectangle approximations', () => {
+it('查询注册的形状锚点而不是矩形近似值', () => {
   let observed: PathTargetQueryResult | undefined;
   const shape = defineShape({
     name: 'query-shape',
     paramsSchema: strictObject({}),
-    computeCircumscribedHalfAxes: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
+    computeCircumscribedGeometry: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
     computeBoundaryPoint: rect => [rect.x + 3, rect.y + 7],
     resolveAnchor: (rect, name) => (name === 'tip' ? [rect.x + 3, rect.y + 7] : undefined),
     *emit() {},
@@ -338,7 +338,7 @@ it('queries registered shape anchors rather than rectangle approximations', () =
   expect(observed?.points).toEqual([[103, 57]]);
 });
 
-it('resolves inside a queried root Scope namespace and returns its local coordinates', () => {
+it('在查询的根 Scope 命名空间内解析并返回其本地坐标', () => {
   let observed: PathTargetQueryResult | undefined;
   const definition = defineComposite({
     namespace: 'test',

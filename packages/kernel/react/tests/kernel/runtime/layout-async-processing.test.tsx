@@ -51,7 +51,7 @@ const fixture = () => {
   return { Leaf, pending, prepared, lowered };
 };
 
-describe('Layout async processing bridge', () => {
+describe('Layout 异步处理桥', () => {
   beforeEach(() => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
@@ -62,7 +62,7 @@ describe('Layout async processing bridge', () => {
     vi.restoreAllMocks();
   });
 
-  it('uses Vanilla retained replacement and preserves the committed frame on current failure', async () => {
+  it('使用 Vanilla 保留模式替换且本次失败时保留已提交帧', async () => {
     const { Leaf, pending, lowered } = fixture();
     const container = document.createElement('div');
     document.body.append(container);
@@ -114,7 +114,7 @@ describe('Layout async processing bridge', () => {
     act(() => root.unmount());
   });
 
-  it('cancels pending initialization on a new input and never publishes after unmount', async () => {
+  it('取消新输入的挂起初始化，并且在卸载后从不发布', async () => {
     const { Leaf, pending } = fixture();
     const initial = deferred();
     pending.set('initial', initial);
@@ -161,7 +161,7 @@ describe('Layout async processing bridge', () => {
     expect(publish).toHaveBeenCalledTimes(publications);
   });
 
-  it('keeps synchronous React SSR on lower without starting preparation', () => {
+  it('保持同步 React SSR 为低，不启动准备', () => {
     const { Leaf, lowered, prepared } = fixture();
 
     expect(

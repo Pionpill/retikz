@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { PlotSchema } from '../../../src/schemas';
 
-describe('relate transform', () => {
+describe('关联变换', () => {
   const operation = {
     kind: 'relate',
     params: {
@@ -14,7 +14,7 @@ describe('relate transform', () => {
     },
   };
 
-  it('reports input and output fields for strict model collection', () => {
+  it('报告输入和输出字段以进行严格的模型收集', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

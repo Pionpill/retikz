@@ -85,6 +85,8 @@ The effective Path `color` overrides the arrow's own `color`; explicit arrow `st
 
 React injects definitions through `<Layout extensions={{ arrows }}>`; direct core calls use `CompileOptions.arrows`. Endpoints and path marks then reference the registered name.
 
+Registration checks the definition's geometry: `backX`, `lineContactX`, and explicit `tipX` and `outerInset` must be finite; an explicit `baseSize` must be finite and positive. They must satisfy `backX <= lineContactX <= tipX`. An omitted `tipX` uses `baseSize`, or `10` when both are omitted. Invalid definitions are rejected at registration even when the drawing does not reference them. Non-finite results from scaling and other calculations are still checked during compilation.
+
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
 

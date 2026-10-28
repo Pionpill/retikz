@@ -16,7 +16,7 @@ const radialShape = (): ShapeDefinition =>
   defineShape({
     name: 'hexagon',
     paramsSchema: strictObject({}),
-    computeCircumscribedHalfAxes: (hw, hh) => {
+    computeCircumscribedGeometry: (hw, hh) => {
       const r = Math.hypot(hw, hh);
       return { halfWidth: r, halfHeight: r };
     },
@@ -101,8 +101,8 @@ describe('<Layout shapes> 自定义 shape 注入', () => {
   });
 });
 
-describe('<Layout boundaries> custom boundary passthrough', () => {
-  it('passes boundary providers to compileToScene', () => {
+describe('<Layout 边界> 自定义边界直通', () => {
+  it('将边界提供者传递给 compileToScene', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout width={120} height={80} extensions={{ boundaries: [fixedBoundary()] }}>
@@ -116,7 +116,7 @@ describe('<Layout boundaries> custom boundary passthrough', () => {
     ).not.toThrow();
   });
 
-  it('throws when a referenced boundary provider is not registered', () => {
+  it('当引用的边界提供者未注册时抛出', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout width={120} height={80}>
@@ -131,8 +131,8 @@ describe('<Layout boundaries> custom boundary passthrough', () => {
   });
 });
 
-describe('<Layout clips> complete Clip definition passthrough', () => {
-  it('forwards one complete clips registry to static Vanilla processing and SSR', () => {
+describe('<Layout 裁剪> 完整的裁剪定义直通', () => {
+  it('将一个完整的裁剪注册表转发给静态 Vanilla 处理和 SSR', () => {
     const svg = renderToStaticMarkup(
       <Layout ir={clippedIr} extensions={{ clips: [customClip()] }} runtime={{ mode: 'static' }} />,
     );

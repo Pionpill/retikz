@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
 
-describe('Group Source schema', () => {
-  it('keeps the minimal Source record minimal while accepting arbitrary Core children', () => {
+describe('Group Source 的 schema', () => {
+  it('在接受任意 Core 子项的同时，保持最小 Source 记录最小', () => {
     expect(Graph.createGroup({})).toEqual({ namespace: 'graph', type: 'group' });
     expect(
       Graph.createGroup({
@@ -16,7 +16,7 @@ describe('Group Source schema', () => {
     ).toMatchObject({ namespace: 'graph', type: 'group', id: 'system' });
   });
 
-  it('accepts caption, Surface presentation and the complete Core Node label contract', () => {
+  it('接受标题、Surface 演示文稿和完整的 Core Node 标签契约', () => {
     const group = Graph.createGroup({
       caption: {
         side: 'bottom',
@@ -47,7 +47,7 @@ describe('Group Source schema', () => {
     expect(group.labels?.[0]?.position).toEqual({ boundary: 'right', fraction: 0.25 });
   });
 
-  it('rejects empty captions, invalid gaps and Core-invalid label combinations', () => {
+  it('拒绝空标题、无效间隙和 Core 无效标签组合', () => {
     expect(() => Graph.GroupSchema.parse(Graph.createGroup({ caption: {} }))).toThrow();
     expect(() =>
       Graph.GroupSchema.parse(Graph.createGroup({ caption: { title: { text: 'A' }, bodyGap: -1 } })),
@@ -58,7 +58,7 @@ describe('Group Source schema', () => {
     expect(() => Graph.GroupSchema.parse(Graph.createGroup({ labels: [] }))).toThrow();
   });
 
-  it('does not accept Node identity or geometry fields inside caption text', () => {
+  it('不接受标题文本内的 Node 标识或几何字段', () => {
     expect(() =>
       Graph.GroupSchema.parse({
         namespace: 'graph',

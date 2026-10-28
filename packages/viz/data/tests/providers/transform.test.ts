@@ -27,8 +27,8 @@ const SALES: Array<ExternalRow> = [
   { month: 'Feb', product: 'B', revenue: 4 },
 ];
 
-describe('data transform runtime', () => {
-  it('publishes the closed transform schedule through the shared registry', () => {
+describe('数据转换运行时', () => {
+  it('通过共享注册表发布封闭的转换计划', () => {
     expect(resolveTransformRegistry().get('sort')?.schedule).toEqual({
       phase: DataTransformPhase.RowOrder,
       bindingClass: DataTransformBindingClass.Order,
@@ -49,7 +49,7 @@ describe('data transform runtime', () => {
     expect(resolveTransformRegistry([custom]).get('custom-derive')?.schedule).toEqual(custom.schedule);
   });
 
-  it('executes stable sorting and cumulative intervals through the default data registry', () => {
+  it('通过默认的数据注册表执行稳定的排序和累积间隔', () => {
     const sorted = applyTransforms([{ m: 3 }, { m: 1 }, { m: 2 }], [{ kind: 'sort', params: { field: 'm' } }]).rows;
 
     expect(sorted.map(row => row.m)).toEqual([1, 2, 3]);
@@ -66,7 +66,7 @@ describe('data transform runtime', () => {
     ]);
   });
 
-  it('executes custom transform through the same registry', () => {
+  it('通过同一注册表执行自定义转换', () => {
     const doubleRevenue = defineTransform({
       kind: 'double-revenue',
       paramsSchema: object({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
@@ -94,7 +94,7 @@ describe('data transform runtime', () => {
     expect(out).toEqual([{ revenue: 3, doubleRevenue: 6 }]);
   });
 
-  it('fails loud for unknown and duplicate transform registrations', () => {
+  it('未知和重复的转换注册失败', () => {
     const custom = defineTransform({
       kind: 'custom',
       paramsSchema: object({ value: number() }),
@@ -107,7 +107,7 @@ describe('data transform runtime', () => {
     expect(() => resolveTransformRegistry([custom, custom])).toThrow(/duplicate transform registration/);
   });
 
-  it('preserves group provenance through summarize', () => {
+  it('通过汇总保留组来源追溯', () => {
     const out = applyTransforms(tagSourceIndex(SALES), [
       {
         kind: 'summarize',
@@ -122,7 +122,7 @@ describe('data transform runtime', () => {
     expect(readSourceIndices(out[1])).toEqual([2, 3]);
   });
 
-  it('reuses parsed reducer parameters across groups and reparses for a new request', () => {
+  it('跨组重用已解析的归约器参数并重新解析新请求', () => {
     let parses = 0;
     const reducer = defineStatisticsReducer({
       schema: strictObject({
@@ -172,7 +172,7 @@ describe('data transform runtime', () => {
     expect(parses).toBeGreaterThan(0);
   });
 
-  it('uses custom statistics reducer registry from transform context', () => {
+  it('使用来自转换上下文的自定义统计缩减器注册表', () => {
     const range = defineStatisticsReducer({
       schema: object({
         kind: literal('range'),
@@ -219,7 +219,7 @@ describe('data transform runtime', () => {
     ]);
   });
 
-  it('rejects custom reducer outputs that collide with group or reducer fields', () => {
+  it('拒绝与组或归约器字段发生冲突的自定义归约器输出', () => {
     let groupWriterCalls = 0;
     let firstStatCalls = 0;
     let secondStatCalls = 0;
@@ -297,7 +297,7 @@ describe('data transform runtime', () => {
     expect(secondStatCalls).toBe(0);
   });
 
-  it('rejects custom reducer outputs that collide with annotate selector fields', () => {
+  it('拒绝与注释选择器字段冲突的自定义归约器输出', () => {
     let statWriterCalls = 0;
     const statWriter = defineStatisticsReducer({
       schema: strictObject({ kind: literal('stat-writer') }),
@@ -339,7 +339,7 @@ describe('data transform runtime', () => {
     expect(statWriterCalls).toBe(0);
   });
 
-  it('allows custom annotate reducer and selector outputs with distinct fields', () => {
+  it('允许使用不同的字段自定义注释缩减器和选择器输出', () => {
     const meanWriter = defineStatisticsReducer({
       schema: strictObject({ kind: literal('mean-writer') }),
       outputs: () => ['mean'].map(field => ({ field })),
@@ -378,7 +378,7 @@ describe('data transform runtime', () => {
     ]);
   });
 
-  it('uses tie last for the final threshold row in top and bottom selectors', () => {
+  it('在顶部和底部选择器中使用最后一个阈值行', () => {
     const rows: Array<ExternalRow> = [
       { id: 'A', score: 10 },
       { id: 'B', score: 9 },
@@ -426,7 +426,7 @@ describe('data transform runtime', () => {
     ).toEqual(['A', 'B', 'C']);
   });
 
-  it('keeps missing order values last for ascending and descending selectors', () => {
+  it('将升序和降序选择器的缺失顺序值保留在最后', () => {
     const rows: Array<ExternalRow> = [
       { id: 'missing-undefined' },
       { id: 'two', value: 2 },
@@ -487,7 +487,7 @@ describe('data transform runtime', () => {
     ).toBe('missing-null');
   });
 
-  it('keeps missing and non-finite sort values last in both directions', () => {
+  it('将缺失和非有限排序值保留在两个方向上的最后', () => {
     const rows: Array<ExternalRow> = [
       { id: 'missing-undefined' },
       { id: 'two', value: 2 },

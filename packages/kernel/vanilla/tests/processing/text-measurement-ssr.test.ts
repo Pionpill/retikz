@@ -1,9 +1,9 @@
 import { fallbackMeasurer } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { createDefaultTextMeasurer } from '../../src/processing/text-measurement';
+import { createTextMeasurer } from '../../src/processing/text-measurement';
 
-const browserMeasurer = createDefaultTextMeasurer();
+const browserMeasurer = createTextMeasurer(undefined, undefined);
 
 /**
  * 验证 node 环境下 browserMeasurer 降级到 fallbackMeasurer

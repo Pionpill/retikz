@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 describe('<Layout onArtifacts>', () => {
-  it('does not call user observer during render', () => {
+  it('渲染期间不调用用户观察者', () => {
     const onArtifacts = vi.fn();
 
     renderToStaticMarkup(
@@ -29,7 +29,7 @@ describe('<Layout onArtifacts>', () => {
     expect(onArtifacts).not.toHaveBeenCalled();
   });
 
-  it('notifies immutable compiled artifacts after commit', async () => {
+  it('提交后通知不可变的编译产物', async () => {
     const onArtifacts = vi.fn();
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -66,7 +66,7 @@ describe('<Layout onArtifacts>', () => {
     container.remove();
   });
 
-  it('does not recompile for an equivalent inline artifacts option', async () => {
+  it('不会重新编译等效的内联产物选项', async () => {
     const onArtifacts = vi.fn();
     const ir: IRScene = {
       version: 1,
@@ -98,7 +98,7 @@ describe('<Layout onArtifacts>', () => {
     container.remove();
   });
 
-  it('does not notify again when only the inline observer identity changes', async () => {
+  it('只有内联观察者身份发生变化时，不再通知', async () => {
     let notificationCount = 0;
     const ir: IRScene = {
       version: 1,

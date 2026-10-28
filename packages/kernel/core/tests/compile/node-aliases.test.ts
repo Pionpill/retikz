@@ -17,8 +17,8 @@ const path = (id: string): IRChild => ({
   ],
 });
 
-describe('Node query aliases', () => {
-  it('keeps cross-node collisions last-wins and aliases isolated by local namespaces', () => {
+describe('Node 查询别名', () => {
+  it('保持跨节点冲突最后获胜，并通过本地名称空间隔离别名', () => {
     const warnings: Array<CompileWarning> = [];
     const first = { ...node('first', []), position: [0, 0] as [number, number] };
     const second = node('second', ['first']);
@@ -43,7 +43,7 @@ describe('Node query aliases', () => {
     expect(isolatedWarnings.some(warning => warning.message.includes("'alternate'"))).toBe(true);
   });
 
-  it('preserves JSON aliases and rejects missing primary ids or repeated names', () => {
+  it('保留 JSON 别名并拒绝缺失的主 ID 或重复的名称', () => {
     expect(NodeSchema.parse(JSON.parse(JSON.stringify(node())))).toEqual(node());
 
     for (const input of [
@@ -55,7 +55,7 @@ describe('Node query aliases', () => {
       expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], ...input }).success).toBe(false);
   });
 
-  it('resolves delayed references through either id without duplicating Scene or layout artifacts', () => {
+  it('通过任一 id 解决延迟引用，而无需重复 Scene 或布局产物', () => {
     expect(compile([path('alternate'), node()])).toEqual(compile([path('primary'), node()]));
 
     const withAlias = compile([node()]);
@@ -64,7 +64,7 @@ describe('Node query aliases', () => {
     expect(withAlias).toEqual(withoutAlias);
   });
 
-  it('keeps alias lookup inside transformed local namespaces', () => {
+  it('在转换后的本地命名空间内保留别名查找', () => {
     const scoped = (id: string): IRChild => ({
       type: 'scope',
       localNamespace: true,

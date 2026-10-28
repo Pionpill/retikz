@@ -103,7 +103,7 @@ const textBlockOf = (children: ReactNode): IRTextBlock => {
 };
 
 /** React children 中提取出的固定 presentation slots 与剩余 children */
-export type ChartPresentationMarkerSplit = Readonly<{
+type ChartPresentationMarkerSplit = Readonly<{
   /** 已从子元素中提取的固定展示槽位 */
   presentation: Partial<Record<ChartPresentationMarkerSlot, IRTextBlock>>;
   /** 移除展示 marker 后继续收集的图表子声明 */
@@ -135,13 +135,4 @@ export const splitPresentationMarkers = (children: ReactNode): ChartPresentation
   };
 
   return { presentation, chartChildren: visit(children) };
-};
-
-/** 判断处理 presentation marker 后是否仍包含未消费的 children */
-export const hasPlotChild = (value: ReactNode): boolean => {
-  if (value === null || value === undefined || typeof value === 'boolean') return false;
-  if (Array.isArray(value)) return value.some(hasPlotChild);
-  if (isValidElement(value) && value.type === Fragment) return hasPlotChild(value.props.children as ReactNode);
-
-  return true;
 };

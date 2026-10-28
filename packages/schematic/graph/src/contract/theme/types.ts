@@ -1,5 +1,5 @@
-import type { IRNode, ResolvedTheme } from '@retikz/core';
-import type { SurfaceInput } from '@retikz/standard/presentation';
+import type { IRNode, CanonicalTheme } from '@retikz/core';
+import type { InputSurfaceConfig } from '@retikz/standard/presentation';
 
 import type { IRGraphDefaults, IRGraphRule } from '../../schemas';
 
@@ -14,7 +14,7 @@ export type CodeBlockTokens = Readonly<{
   /** 签名与方法名称字体 */
   codeFontFamily: NonNullable<NonNullable<NonNullable<IRNode['style']>['font']>['family']>;
   /** 内容分区背景；省略使用基础 Section 默认 */
-  sectionBackground?: SurfaceInput['background'];
+  sectionBackground?: InputSurfaceConfig['background'];
 }>;
 
 /** 当前 Core Theme 下确定的 Graph defaults 与 ordered rules */
@@ -42,5 +42,5 @@ export type GraphThemeDefinition = Readonly<{
   /** 与 Core Theme 对齐的开放名称 */
   name: string;
   /** 从当前位置完整 Core Theme 解析 Graph defaults/rules 稀疏片段 */
-  resolve: (theme: ResolvedTheme) => GraphThemeSource;
+  resolve: (theme: CanonicalTheme) => GraphThemeSource;
 }>;

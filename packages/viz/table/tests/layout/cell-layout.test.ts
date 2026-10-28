@@ -1,7 +1,7 @@
 import { resolveBoxSpacing } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { TableTrackLayout } from '../../src/pipeline/layout';
+import type { CompiledTableTrackLayout } from '../../src/pipeline/layout';
 import {
   computeTableCellBox,
   computeTableCellContentBox,
@@ -9,15 +9,15 @@ import {
   computeTableCellTranslation,
 } from '../../src/pipeline/layout';
 
-const track = (id: string, index: number, offset: number, size: number): TableTrackLayout => ({
+const track = (id: string, index: number, offset: number, size: number): CompiledTableTrackLayout => ({
   id,
   index,
   offset,
   size,
 });
 
-describe('Table Cell geometry', () => {
-  it('adds resolved padding to allocation dimensions without reading visual overflow', () => {
+describe('Table Cell 几何形状', () => {
+  it('将解析的填充添加到分配维度，而不读取视觉溢出', () => {
     const allocationBounds = { x: -10, y: 5, width: 30, height: 20 };
     const padding = resolveBoxSpacing({ default: 1, x: 2, left: 4, bottom: 3 }, 0);
     const result = computeTableCellOuterSize(allocationBounds, padding);
@@ -28,7 +28,7 @@ describe('Table Cell geometry', () => {
     expect(Object.isFrozen(result)).toBe(true);
   });
 
-  it('computes one-track and spanning boxes with internal gaps', () => {
+  it('计算具有内部间隙的单轨和跨越框', () => {
     const rows = [track('r0', 0, 0, 5), track('r1', 1, 8, 7)];
     const columns = [track('c0', 0, 0, 10), track('c1', 1, 12, 20), track('c2', 2, 34, 30)];
 
@@ -58,7 +58,7 @@ describe('Table Cell geometry', () => {
     ).toEqual({ x: 12, y: 0, width: 52, height: 15 });
   });
 
-  it('shrinks the content box and clamps over-padding to zero size within the Cell box', () => {
+  it('缩小内容框并将 Cell 框内的过度填充夹紧到零大小', () => {
     expect(
       computeTableCellContentBox({ x: 10, y: 20, width: 30, height: 20 }, { top: 3, right: 6, bottom: 7, left: 4 }),
     ).toEqual({ x: 14, y: 23, width: 20, height: 10 });
@@ -72,7 +72,7 @@ describe('Table Cell geometry', () => {
     ['center', 'center', { x: 150, y: 205 }],
     ['end', 'end', { x: 180, y: 220 }],
     ['start', 'end', { x: 120, y: 220 }],
-  ] as const)('aligns real allocation bounds with %s/%s anchors', (horizontalAlign, verticalAlign, expected) => {
+  ] as const)('将实际分配边界与 %s/%s 锚点对齐', (horizontalAlign, verticalAlign, expected) => {
     expect(
       computeTableCellTranslation({
         contentBox: { x: 100, y: 200, width: 80, height: 40 },
@@ -83,7 +83,7 @@ describe('Table Cell geometry', () => {
     ).toEqual(expected);
   });
 
-  it('returns detached immutable geometry without mutating inputs', () => {
+  it('返回分离的不可变几何体，而不改变输入', () => {
     const rows = [track('r0', 0, 4, 10)];
     const columns = [track('c0', 0, 6, 20)];
     const input = {
@@ -144,7 +144,7 @@ describe('Table Cell geometry', () => {
         }),
       /column.*range/i,
     ],
-  ])('rejects invalid Cell geometry input %#', (run, message) => {
+  ])('拒绝无效的 Cell 几何输入 %#', (run, message) => {
     expect(run).toThrow(message);
   });
 });

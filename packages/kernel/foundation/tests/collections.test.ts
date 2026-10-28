@@ -2,7 +2,7 @@ import { createReadonlyMap } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
 describe('createReadonlyMap', () => {
-  it('creates a frozen structural snapshot without exposing Map mutators', () => {
+  it('创建冻结的结构快照且不暴露 Map 修改方法', () => {
     const source = new Map<string, number>([
       ['first', 1],
       ['second', 2],
@@ -22,7 +22,7 @@ describe('createReadonlyMap', () => {
     expect(Reflect.get(snapshot, 'clear')).toBeUndefined();
   });
 
-  it('preserves value identity and exposes itself as the forEach owner', () => {
+  it('保留价值身份并将自己暴露为 forEach 所属模块', () => {
     const value = { label: 'value' };
     const snapshot = createReadonlyMap([['key', value] as const]);
     let owner: ReadonlyMap<string, typeof value> | undefined;

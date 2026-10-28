@@ -1,7 +1,7 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputMatrix } from '@retikz/standard-vanilla/collection';
-import { MatrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { matrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { IRMatrix } from '@retikz/standard/collection';
 import type { FC, ReactNode } from 'react';
 
@@ -85,5 +85,5 @@ const MatrixComponent: FC<MatrixProps> = () => null;
 export const Matrix = MatrixComponent as StandardEmbeddableComponent<MatrixProps>;
 Matrix.displayName = 'Matrix';
 Matrix.isTier2Embeddable = true;
-Matrix.inputEmbedAdapter = MatrixInputEmbedAdapter;
+Matrix.inputEmbedAdapter = matrixInputEmbedAdapter;
 Matrix.createInputEmbedProps = createMatrixInput;

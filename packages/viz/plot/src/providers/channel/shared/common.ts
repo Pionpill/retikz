@@ -41,7 +41,7 @@ export type MarkValueResolverOptions<T> = {
  * @returns 逐行解析器与字段元数据；未绑定时返回 undefined
  * @throws {RetikzPlotError} 已知字段类型与 expectedFieldType 不一致
  */
-export const makeMarkValueResolver = <T>(
+export const createMarkValueResolver = <T>(
   encoding: IRPlotChannel | undefined,
   model: DataTransformModel,
   options: MarkValueResolverOptions<T>,

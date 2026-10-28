@@ -1,15 +1,15 @@
 ﻿import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import type { CellPresentationInput } from '../../src';
+import type { InputCellPresentation } from '../../src';
 import { defineCellPresentation } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 import { formatDefaultTable } from '../utils/stages';
 
 const formattedModel = () =>
   formatDefaultTable(
-    normalizeTableStructure({
+    resolveTableStructure({
       kind: 'manual',
       rows: [
         [
@@ -30,9 +30,9 @@ const formattedModel = () =>
     }),
   );
 
-describe('Presented Table model', () => {
-  it('preserves value/content discriminators, executed names, and default border appearance', () => {
-    let observed: CellPresentationInput | undefined;
+describe('推出 Table 型号', () => {
+  it('保留值/内容标识符、执行名称和默认边框外观', () => {
+    let observed: InputCellPresentation | undefined;
     const inspect = defineCellPresentation({
       name: 'inspect',
       optionsSchema: strictObject({}),
@@ -74,8 +74,8 @@ describe('Presented Table model', () => {
     });
   });
 
-  it('accepts detached supplied carriers and passes the same final appearance to presentation', () => {
-    let observed: CellPresentationInput | undefined;
+  it('接受独立提供的载体并通过相同的最终外观进行演示', () => {
+    let observed: InputCellPresentation | undefined;
     const inspect = defineCellPresentation({
       name: 'inspect',
       optionsSchema: strictObject({}),
@@ -113,7 +113,7 @@ describe('Presented Table model', () => {
     expect(Object.isFrozen(cells[0])).toBe(false);
   });
 
-  it('fails loud for supplied carrier length, order, identity, and kind mismatches', () => {
+  it('由于提供的载体长度、顺序、身份和种类不匹配而失败', () => {
     const base = [
       {
         kind: 'value' as const,

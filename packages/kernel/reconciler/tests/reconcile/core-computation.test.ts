@@ -29,7 +29,7 @@ const primitivePaths = (
   return paths;
 };
 
-describe('Core Runtime Computation initial full run', () => {
+describe('Core Runtime 计算初始完整运行', () => {
   it('为 topology 建立 primitive 双射、真实 semantic owner 与稳定 emission identity', () => {
     const ir: IRScene = {
       version: 1,
@@ -124,7 +124,7 @@ describe('Core Runtime Computation initial full run', () => {
   });
 });
 
-describe('Core Runtime Computation observed output', () => {
+describe('Core Runtime 计算观测输出', () => {
   const observedComposite = defineComposite({
     namespace: 'test',
     type: 'program-observed',
@@ -161,7 +161,7 @@ describe('Core Runtime Computation observed output', () => {
     },
   };
 
-  it('commits primary and observer outputs from one full candidate revision', () => {
+  it('提交来自一个完整候选修订版的主要和观察者输出', () => {
     const session = new ReconcilerSession(
       { composites: [observedComposite], onWarn: () => {} },
       { observers: [observer] },
@@ -181,7 +181,7 @@ describe('Core Runtime Computation observed output', () => {
     expect(after.compilation.result).not.toBe(before.compilation.result);
   });
 
-  it('rolls back the whole candidate when observer completion fails', () => {
+  it('当观察者完成失败时回滚整个候选者', () => {
     let shouldFail = false;
     const failingObserver: CompileObserverDefinition = {
       key: 'failing-program-observer',
@@ -213,7 +213,7 @@ describe('Core Runtime Computation observed output', () => {
     expect(session.read()).toBe(before);
   });
 
-  it('prepares a consistent replacement when observers are empty', () => {
+  it('当观察者为空时准备一致的替换', () => {
     const session = new ReconcilerSession({ onWarn: () => {} }, { observers: [] });
 
     const initial = sceneWithText('A');
@@ -226,7 +226,7 @@ describe('Core Runtime Computation observed output', () => {
   });
 });
 
-describe('Core Runtime Computation full fallback update', () => {
+describe('Core Runtime 计算完整回退更新', () => {
   it('完整输入替换同时更新根配置与子元素', () => {
     const session = new ReconcilerSession({ onWarn: () => {} }, { captureProvenance: true });
 
@@ -270,7 +270,7 @@ describe('Core Runtime Computation full fallback update', () => {
   });
 });
 
-describe('Core Runtime Computation replacement style update', () => {
+describe('Core Runtime 计算替换样式更新', () => {
   it('填充与其它样式同时变化时保留完整输出', () => {
     const initial: IRScene = {
       version: 1,

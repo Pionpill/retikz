@@ -1,5 +1,6 @@
 import type { ArrowDefinition, MarkEmitContext, ScenePrimitive } from '../contract';
 import { defineArrow } from '../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { BuiltinArrowShape } from '../schemas';
 import { createProviderRegistry } from './registry';
 
@@ -154,11 +155,62 @@ export const BUILTIN_ARROWS: ReadonlyMap<string, ArrowDefinition> = new Map([
   [openCircleArrow.name, openCircleArrow],
 ]);
 
+const ARROW_GEOMETRY_BASE_SIZE = 10;
+
+/** 检查箭头定义的几何数值，以及后缘、接触点、尖端的先后关系 */
+const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): void => {
+  if (!Number.isFinite(definition.backX)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.CompositeContractViolation,
+      `Arrow '${shape}' has a non-finite backX (${String(definition.backX)}); it must be a finite number.`,
+    );
+  }
+
+  if (!Number.isFinite(definition.lineContactX)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.CompositeContractViolation,
+      `Arrow '${shape}' has a non-finite lineContactX (${String(definition.lineContactX)}); it must be a finite number.`,
+    );
+  }
+
+  if (definition.baseSize !== undefined && (!Number.isFinite(definition.baseSize) || definition.baseSize <= 0)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.CompositeContractViolation,
+      `Arrow '${shape}' has an invalid baseSize (${String(definition.baseSize)}); it must be a finite number greater than 0.`,
+    );
+  }
+
+  if (definition.tipX !== undefined && !Number.isFinite(definition.tipX)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.CompositeContractViolation,
+      `Arrow '${shape}' has a non-finite tipX (${String(definition.tipX)}); it must be a finite number.`,
+    );
+  }
+
+  if (definition.outerInset !== undefined && !Number.isFinite(definition.outerInset)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.CompositeContractViolation,
+      `Arrow '${shape}' has a non-finite outerInset (${String(definition.outerInset)}); it must be a finite number.`,
+    );
+  }
+
+  const tipX = definition.tipX ?? definition.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;
+  if (definition.backX > definition.lineContactX || definition.lineContactX > tipX) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.CompositeContractViolation,
+      `Arrow '${shape}' geometry must satisfy backX <= lineContactX <= tipX; received ${String(definition.backX)} <= ${String(definition.lineContactX)} <= ${String(tipX)}.`,
+    );
+  }
+};
+
 /** 解析 arrow provider 注册表：内置项先注册，自定义项后注册并复用统一冲突诊断 */
 export const resolveArrowRegistry = (arrows?: ReadonlyArray<ArrowDefinition>): ReadonlyMap<string, ArrowDefinition> =>
   createProviderRegistry({
     capability: 'arrow',
     builtins: BUILTIN_ARROWS,
     custom: arrows,
-    keyOf: definition => definition.name,
+    keyOf: definition => {
+      assertFiniteArrowGeometry(definition.name, definition);
+      return definition.name;
+    },
   });

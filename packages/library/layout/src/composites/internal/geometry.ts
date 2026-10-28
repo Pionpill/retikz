@@ -22,7 +22,7 @@ export type LayoutInsets = Readonly<{
 }>;
 
 /** 以 content-box、target、anchor 与 offset 构造 positioned child slot */
-export type PositionedLayoutSlotInput = Readonly<{
+export type InputPositionedLayoutSlot = Readonly<{
   /** 提供局部原点的容器内容矩形 */
   content: LayoutRect;
   /** 相对内容矩形原点的目标位置 */
@@ -56,7 +56,7 @@ export type PositionedLayoutSlotInput = Readonly<{
 }>;
 
 /** 单轴容器尺寸求值输入 */
-export type ResolveLayoutAxisSizeInput = Readonly<{
+export type InputLayoutAxisSizeResolution = Readonly<{
   /** 当前求解的水平或垂直轴 */
   axis: 'x' | 'y';
   /** 作者声明的当前轴尺寸策略 */
@@ -70,7 +70,7 @@ export type ResolveLayoutAxisSizeInput = Readonly<{
 }>;
 
 /** 单轴容器真实 allocation 与可用父级空间 */
-export type ResolvedLayoutAxisSize = Readonly<{
+export type LayoutAxisSizeResolution = Readonly<{
   /** 当前轴实际分配的尺寸 */
   allocationSize: number;
   /** 父提案中的有限尺寸或上限，固有尺寸提案时省略 */
@@ -107,7 +107,7 @@ const finiteLayoutRect = (rect: LayoutRect, label: string): LayoutRect => {
 };
 
 /** 复用 Overlay positioned placement 的 container-local slot 公式 */
-export const positionedLayoutSlotOf = (input: PositionedLayoutSlotInput): LayoutRect =>
+export const positionedLayoutSlotOf = (input: InputPositionedLayoutSlot): LayoutRect =>
   finiteLayoutRect(
     {
       x: input.content.x + input.at.x + input.offset.x - input.anchor.x * input.size.width,
@@ -133,7 +133,7 @@ const finiteAvailableOf = (proposal: LayoutAxisProposal): number | undefined => 
 };
 
 /** 根据作者策略、child contribution 与 Core proposal 求容器真实单轴 allocation */
-export const resolveLayoutAxisSize = (input: ResolveLayoutAxisSizeInput): ResolvedLayoutAxisSize => {
+export const resolveLayoutAxisSize = (input: InputLayoutAxisSizeResolution): LayoutAxisSizeResolution => {
   const minimum = finiteNonNegative(input.minimumContribution, 'minimumContribution');
   const natural = finiteNonNegative(input.naturalContribution, 'naturalContribution');
   const finiteAvailable = finiteAvailableOf(input.proposal);
@@ -180,7 +180,7 @@ export const resolveLayoutAxisSize = (input: ResolveLayoutAxisSizeInput): Resolv
 };
 
 /** 把作者 spacing 规范化为完整四边值 */
-export const normalizeLayoutSpacing = (value: number | IRBoxSpacing | undefined): LayoutInsets =>
+export const resolveLayoutSpacing = (value: number | IRBoxSpacing | undefined): LayoutInsets =>
   resolveBoxSpacing(value, 0);
 
 /** 以内边距从 container allocation 得到 content rect */

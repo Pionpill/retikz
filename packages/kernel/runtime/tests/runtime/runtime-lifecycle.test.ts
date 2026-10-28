@@ -18,7 +18,7 @@ const defineCounterSource = () =>
     },
   });
 
-describe('runtime runtime lifecycle', () => {
+describe('Runtime 运行时生命周期', () => {
   it('公开方法解构后仍操作同一实例，公开接口保持冻结', () => {
     const source = defineCounterSource();
     const sources = createRuntimeSourceRegistry([source]);

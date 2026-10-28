@@ -378,6 +378,20 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          content: {
+            zh: '删除无生产消费者的内部 helper 和测试专用入口；Reconciler 同步移除 createSceneRevision，SceneRevision 类型及编译 revision 语义保持。',
+            en: 'Removes unused internal helpers and test-only entry points. Reconciler also removes createSceneRevision; the SceneRevision type and compilation revision semantics remain unchanged.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：Shape 包围几何统一入口', en: 'BREAKING: unified Shape circumscribed geometry' },
+          content: {
+            zh: '自定义 Shape 将 computeCircumscribedHalfAxes 和 computeCircumscribedOffset 合并为 computeCircumscribedGeometry，统一返回 { halfWidth, halfHeight, offset? }；省略 offset 表示居中。删除旧回调，尺寸和偏移随同一布局候选消费，已有形状的绘制与定位行为保持不变。',
+            en: 'Custom Shapes replace computeCircumscribedHalfAxes and computeCircumscribedOffset with computeCircumscribedGeometry, returning { halfWidth, halfHeight, offset? } together. Omitting offset means a centered box. The old callbacks are removed; sizing and offset belong to the same layout candidate, preserving existing drawing and positioning behavior.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：端点箭头与沿线标记分离', en: 'BREAKING: separate endpoint arrows and path marks' },
           content: {
             zh: '端点箭头统一使用 arrow.start / arrow.end，并负责接触与截断；marks 按截断前整条路径的弧长放置图元，包括首尾位置，且不截断主线。marks 每项直接组合 pos、shape、尺寸和样式，自定义参数放入 params；删除 kind 与内层 mark。内置 times、plus、check、star 四种普通标记，补充[标记用法](/kernel/components/path/mark)与[自定义标记](/kernel/components/path/custom-mark)文档。普通标记通过 defineMark 注册，与箭头共享 MarkEmitContext、尺寸和图元生成能力；已注册箭头自动可作为标记使用，名称冲突报错。React、Vanilla 保留 ->、<-、<-> 方向简写，由 Vanilla 归一化为端点对象；JSON IR 只使用对象。arrowDetail、arrowPlacement 内容并入端点对象，原先承担端点箭头的 marks 需迁入 arrow。',
@@ -841,8 +855,8 @@ export const kernelV05: Release = {
             {
               label: { zh: 'Theme Composite 上下文', en: 'Theme composite context' },
               content: {
-                zh: '`Theme` / `ThemeMode`、严格 `ThemeSchema` 与 `ResolvedTheme` 成为 Core 公共契约；Theme 变化进入 retained compile input，无法证明更窄依赖时保守 full fallback，并保持与 fresh compile 等价。',
-                en: '`Theme`, `ThemeMode`, strict `ThemeSchema`, and `ResolvedTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
+                zh: '`Theme` / `ThemeMode`、严格 `ThemeSchema` 与 `CanonicalTheme` 成为 Core 公共契约；Theme 变化进入 retained compile input，无法证明更窄依赖时保守 full fallback，并保持与 fresh compile 等价。',
+                en: '`Theme`, `ThemeMode`, strict `ThemeSchema`, and `CanonicalTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
               },
             },
             {
@@ -851,8 +865,8 @@ export const kernelV05: Release = {
                 en: 'BREAKING: Lightweight Theme selectors and shared colors',
               },
               content: {
-                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。省略 `style` 时使用默认基线；`defineTheme` 与 `themeDefinitions` 注册 Core runtime resolver，应用 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
-                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. Omitting `style` selects the default baseline; `defineTheme` and `themeDefinitions` register Core runtime resolvers, and each application style must provide a same-named resolver for every consuming owner such as Plot or Chart. Missing entries fail loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
+                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`CanonicalTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。省略 `style` 时使用默认基线；`defineTheme` 与 `themeDefinitions` 注册 Core runtime resolver，应用 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
+                en: '`Theme` now persists only sparse `style / mode`; `CanonicalTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. Omitting `style` selects the default baseline; `defineTheme` and `themeDefinitions` register Core runtime resolvers, and each application style must provide a same-named resolver for every consuming owner such as Plot or Chart. Missing entries fail loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
               },
             },
             {
@@ -1035,6 +1049,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          content: {
+            zh: '移除 sampleColorOklch 与 RENDER_RUNTIME_SOURCE_KEY；颜色动画继续通过 lerpColorOklch 求值，SVG 资源仍由正式 builder 物化。',
+            en: 'Removes sampleColorOklch and RENDER_RUNTIME_SOURCE_KEY. Color animation continues through lerpColorOklch and SVG resources through the active builders.',
+          },
+        },
+        {
           label: { zh: '视觉样式完整消费', en: 'Complete visual style support' },
           content: {
             zh: 'SVG 与 Canvas 统一执行矩形、椭圆和箭头的端帽、连接样式与 paint；SVG 箭头资源使用实例隔离的引用。',
@@ -1158,6 +1179,13 @@ export const kernelV05: Release = {
         en: 'React exposes new placement, path, and label capabilities. Layout manages ongoing updates by default, offers full static rendering, and can notify applications of compile artifacts.',
       },
       highlights: [
+        {
+          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          content: {
+            zh: '移除 createLayoutAuthoringSite 冻结包装函数及未被 Layout 消费的内部 SVG 包装组件；LayoutAuthoringSite 类型与 Layout 渲染行为保持。',
+            en: 'Removes the createLayoutAuthoringSite freeze wrapper and internal SVG wrappers unused by Layout. LayoutAuthoringSite and Layout rendering behavior remain unchanged.',
+          },
+        },
         {
           label: { zh: 'Layout 异步准备桥接', en: 'Layout async preparation bridge' },
           content: {

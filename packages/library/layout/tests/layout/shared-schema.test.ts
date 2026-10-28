@@ -1,7 +1,7 @@
 import { ChildSchema, LayoutAxisProposalKind, LayoutIntrinsicMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LayoutAxisSizeInput, LayoutContainerBoxInput, LayoutItemBaseInput, LayoutSizeInput } from '../../src';
+import type { InputLayoutAxisSize, InputLayoutContainerBox, InputLayoutItemBase, InputLayoutSize } from '../../src';
 import {
   LayoutAlignment,
   LayoutAlignmentSchema,
@@ -17,14 +17,14 @@ import {
 } from '../../src';
 import { resolveLayoutContainerBox } from '../../src/resolve/shared';
 
-describe('shared layout schema', () => {
-  it('describes the public container and item object contracts', () => {
+describe('共享布局 schema', () => {
+  it('描述公共容器和项目对象契约', () => {
     expect(LayoutContainerBoxSchema.description).toBe('Shared Box contract for Layout containers.');
     expect(LayoutItemBaseSchema.description).toBe('Shared JSON-safe child item contract for Layouts.');
   });
 
-  it('materializes Box defaults only when parsing or resolving author input', () => {
-    const input = {} satisfies LayoutContainerBoxInput;
+  it('仅在解析或解析作者输入时才具体化 Box 默认值', () => {
+    const input = {} satisfies InputLayoutContainerBox;
 
     expect(LayoutContainerBoxSchema.parse(input)).toEqual({
       size: { x: { kind: 'content' }, y: { kind: 'content' } },
@@ -41,12 +41,12 @@ describe('shared layout schema', () => {
     });
   });
 
-  it('keeps content, fixed and fill as strict discriminated axis policies', () => {
+  it('将内容、固定和填充保持为严格的区分轴策略', () => {
     const inputs = [
       { kind: LayoutAxisSizeKind.Content, min: 10, max: 20 },
       { kind: LayoutAxisSizeKind.Fixed, value: 12 },
       { kind: LayoutAxisSizeKind.Fill, min: 4 },
-    ] satisfies Array<LayoutAxisSizeInput>;
+    ] satisfies Array<InputLayoutAxisSize>;
 
     expect(inputs.map(input => LayoutAxisSizeSchema.parse(input))).toEqual(inputs);
     expect(LayoutAxisSizeSchema.safeParse({ kind: 'fixed' }).success).toBe(false);
@@ -56,8 +56,8 @@ describe('shared layout schema', () => {
     expect(LayoutAxisSizeSchema.safeParse({ kind: 'content', max: Number.POSITIVE_INFINITY }).success).toBe(false);
   });
 
-  it('parses partial physical size and spacing without losing explicit zero', () => {
-    const sizeInput = { x: { kind: 'fixed', value: 0 } } satisfies LayoutSizeInput;
+  it('解析部分物理尺寸和间距，而不丢失显式零', () => {
+    const sizeInput = { x: { kind: 'fixed', value: 0 } } satisfies InputLayoutSize;
 
     expect(LayoutSizeSchema.parse(sizeInput)).toEqual({
       x: { kind: 'fixed', value: 0 },
@@ -75,13 +75,13 @@ describe('shared layout schema', () => {
     ).toMatchObject({ padding: { default: 1, x: 2, left: 0 }, overflow: 'clip' });
   });
 
-  it('accepts any JSON-safe Core child and keeps container-local item identity strict', () => {
+  it('接受任何 JSON 安全的 Core 子项，并严格保持容器本地项身份', () => {
     const input = {
       kind: LayoutItemKind.Flex,
       key: 'legend-label',
       margin: { right: 8 },
       child: { type: 'node', position: [0, 0], text: 'Revenue' },
-    } satisfies LayoutItemBaseInput;
+    } satisfies InputLayoutItemBase;
     const parsed = LayoutItemBaseSchema.parse(input);
 
     expect(parsed).toEqual(input);
@@ -91,7 +91,7 @@ describe('shared layout schema', () => {
     expect(LayoutItemBaseSchema.safeParse({ ...input, unknown: true }).success).toBe(false);
   });
 
-  it('keeps edge alignment narrower than baseline-aware alignment', () => {
+  it('使边缘对齐比基线感知对齐更窄', () => {
     expect(LayoutAlignmentSchema.options).toEqual([
       LayoutAlignment.Start,
       LayoutAlignment.Center,
@@ -113,7 +113,7 @@ describe('shared layout schema', () => {
     ]);
   });
 
-  it('uses Core proposal vocabulary without introducing a parallel layout protocol', () => {
+  it('使用 Core 提案词汇，而不引入并行布局协议', () => {
     const proposals = [
       { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Minimum },
       { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },

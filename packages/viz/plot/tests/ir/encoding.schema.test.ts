@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { PointMarkEncodingSchema, PointMarkSchema, PathMarkSchema, IntervalMarkSchema } from '../../src/schemas';
 import { ChannelSchema, PositionEncodingSchema, PositionInputSchema } from '../../src/schemas/encoding';
 
-describe('Field encoding contract', () => {
-  it('preserves nested field paths and explicit scale references', () => {
+describe('字段编码契约', () => {
+  it('保留嵌套字段路径和显式比例引用', () => {
     expect(ChannelSchema.parse('user.age')).toBe('user.age');
     const binding = { field: 'continent', scale: 'col' };
     expect(ChannelSchema.parse(binding)).toEqual(binding);
@@ -18,11 +18,11 @@ describe('Field encoding contract', () => {
     { field: 'x', value: 1 },
     {},
     { field: 'x', scale: 's', extra: true },
-  ])('rejects constants and incomplete or undeclared binding members: %j', input => {
+  ])('拒绝常量和不完整或未声明的绑定成员：%j', input => {
     expect(ChannelSchema.safeParse(input).success).toBe(false);
   });
 
-  it('groups closed coordinate roles separately from visual targets through JSON', () => {
+  it('通过 JSON 将封闭坐标角色与视觉目标分开分组', () => {
     const input = {
       position: { x: { field: 'longitude' }, y: { field: 'latitude' } },
       color: { field: 'continent', scale: 'col' },
@@ -35,17 +35,17 @@ describe('Field encoding contract', () => {
     { x: { field: 'theta' } },
     { x: { value: 1 }, y: { edge: 'end' } },
     { x: { value: 1 }, y: { field: 'height' }, z: { edge: 'end' } },
-  ])('accepts consecutive position roles in one, two or three dimensions: %j', position => {
+  ])('接受一维、二维或三维的连续位置角色：%j', position => {
     expect(PositionEncodingSchema.parse(position)).toEqual(position);
   });
   it.each([{}, { y: { value: 1 } }, { x: { value: 1 }, z: { edge: 'end' } }, { x: { value: 1 }, u: { value: 2 } }])(
-    'rejects skipped or unknown position roles: %j',
+    '拒绝跳过或未知的位置角色：%j',
     position => {
       expect(PositionEncodingSchema.safeParse(position).success).toBe(false);
     },
   );
   it.each([{ field: 'a.b' }, { value: 12 }, { value: 'May' }, { edge: 'start' }, { edge: 'end' }])(
-    'round-trips a position source: %j',
+    '往返位置源：%j',
     input => {
       expect(PositionInputSchema.parse(JSON.parse(JSON.stringify(input)))).toEqual(input);
     },
@@ -60,17 +60,17 @@ describe('Field encoding contract', () => {
     { value: Infinity },
     { value: null },
     { field: 'x', scale: 's' },
-  ])('rejects invalid or mixed position sources: %j', input => {
+  ])('拒绝无效或混合位置源：%j', input => {
     expect(PositionInputSchema.safeParse(input).success).toBe(false);
   });
 
-  it('rejects blank role keys and nested role binding objects', () => {
+  it('拒绝空白角色键和嵌套角色绑定对象', () => {
     expect(PositionEncodingSchema.safeParse({ ' ': 'longitude' }).success).toBe(false);
     expect(PositionEncodingSchema.safeParse({ x: { field: 'longitude', extra: true } }).success).toBe(false);
     expect(PointMarkEncodingSchema.safeParse({ position: { ' ': 'longitude' } }).success).toBe(false);
   });
 
-  it('supports size and shape as field targets and retains registered extension candidates', () => {
+  it('支持大小和形状作为字段目标并保留注册的扩展候选', () => {
     const input = {
       position: { x: { field: 'x' }, y: { field: 'y' } },
       size: 'population',
@@ -86,7 +86,7 @@ describe('Field encoding contract', () => {
     });
   });
 
-  it('validates fixed sizes and shapes in properties rather than field encodings', () => {
+  it('验证属性中的固定大小和形状，而不是字段编码', () => {
     expect(
       PointMarkSchema.parse({
         type: 'point',
@@ -104,11 +104,11 @@ describe('Field encoding contract', () => {
   });
 });
 
-describe('Mark position geometry inputs', () => {
+describe('标记位置几何输入', () => {
   const start = { x: { edge: 'start' }, y: { value: 10 } };
   const end = { x: { edge: 'end' }, y: { value: 10 } };
 
-  it('accepts complete endpoints and keeps default domain contribution', () => {
+  it('接受完整端点并保留默认域贡献', () => {
     const mark = { type: 'path', encodings: { from: start, to: end } };
     expect(PathMarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toMatchObject({ ...mark, contributeToDomain: true });
   });
@@ -118,11 +118,11 @@ describe('Mark position geometry inputs', () => {
     { from: start },
     { from: start, to: end, series: 'group' },
     { from: start, to: end, order: 'order' },
-  ])('rejects mixed or incomplete path geometry: %j', encodings => {
+  ])('拒绝混合或不完整的路径几何形状：%j', encodings => {
     expect(PathMarkSchema.safeParse({ type: 'path', encodings }).success).toBe(false);
   });
 
-  it('accepts independently sourced extent endpoints on x/y', () => {
+  it('接受 x/y 上独立来源的范围端点', () => {
     const mark = {
       type: 'interval',
       properties: { bounds: { x: { kind: 'extent' }, y: { kind: 'extent' } } },
@@ -136,7 +136,7 @@ describe('Mark position geometry inputs', () => {
     expect(IntervalMarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toMatchObject(mark);
   });
 
-  it('rejects z and arbitrary interval roles in all position structures', () => {
+  it('拒绝所有位置结构中的 z 和任意区间角色', () => {
     for (const mark of [
       { type: 'interval', encodings: { position: { x: { value: 1 }, z: { value: 2 } } } },
       { type: 'interval', encodings: { bounds: { z: { from: { value: 1 }, to: { value: 2 } } } } },
@@ -145,7 +145,7 @@ describe('Mark position geometry inputs', () => {
       expect(IntervalMarkSchema.safeParse(mark).success).toBe(false);
   });
 
-  it('rejects obsolete kind and property positions instead of converting them', () => {
+  it('拒绝过时的种类和属性位置而不是转换它们', () => {
     expect(PointMarkSchema.safeParse({ type: 'point', kind: 'data', encodings: { position: start } }).success).toBe(
       false,
     );
@@ -156,7 +156,7 @@ describe('Mark position geometry inputs', () => {
   });
 });
 
-it('round-trips shorthand labels and rejects cross-host or invalid font bindings', () => {
+it('往返简写标签并拒绝跨宿主或无效字体绑定', () => {
   const point = {
     type: 'point',
     encodings: { label: ['name', { font: { family: 'family', size: 'size' } }] },

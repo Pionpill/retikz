@@ -1,13 +1,13 @@
 import { defineComposite } from '@retikz/core';
 import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 
 import { compileQueue } from './pipeline';
 import { QueueSchema } from './schema';
 import type { IRQueue } from './schema';
 
 /** Queue 的布局感知编译定义 */
-export const QueueDefinition: CompositeDefinition<IRQueue, 'standard', 'queue'> = defineComposite({
+export const queueDefinition: CompositeDefinition<IRQueue, 'standard', 'queue'> = defineComposite({
   namespace: 'standard',
   type: 'queue',
   schema: QueueSchema,
@@ -18,9 +18,8 @@ export const QueueDefinition: CompositeDefinition<IRQueue, 'standard', 'queue'> 
 export const createQueue = (input: IRQueue): IRQueue => ({ ...input });
 
 /** Queue 及单格裁切依赖 */
-export const QueueProvider: CoreDependencyProvider = {
+export const queueProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'standard', type: 'queue' },
-  dependencies: [PathClipProvider.key],
-  datasets: {},
-  makeDefinition: () => QueueDefinition,
+  dependencies: [pathClipProvider.key],
+  makeDefinition: () => queueDefinition,
 };

@@ -15,7 +15,7 @@ Detail and data-bound Custom Tables accept root `transform` declarations and `da
 
 React Table / DetailTable accept `dataBindings`, `dataTransformExecutor`, `signal`, and separate Data definitions/implementations. Bindings and raw data are exclusive. DetailTable accepts transform/dataExecution directly; Table accepts a root override but rejects duplicate configuration in the spec and props. ManualTable has no data executor. Standalone clients prepare automatically; embedded clients enable `runtime={{ preparation: 'async' }}` on their outer Layout.
 
-Vanilla `embedTable(spec, { dataBindings, dataTransformExecutor, signal, lowerOptions })` uses TableInputEmbedAdapter preparation. Async SSR uses `renderTableAsync(spec, options?)`: it returns a Promise SVG string, or `{ svg, manifest }` with `artifacts: true`. The manifest comes from the actual compilation. Synchronous renderTable/compileTable and React SSR use local synchronous computation. See [Data extensions](/viz/data/transform/extensions) for execution and model boundaries.
+Vanilla `embedTable(spec, { dataBindings, dataTransformExecutor, signal, lowerOptions })` uses tableInputEmbedAdapter preparation. Async SSR uses `renderTableAsync(spec, options?)`: it returns a Promise SVG string, or `{ svg, manifest }` with `artifacts: true`. The manifest comes from the actual compilation. Synchronous renderTable/compileTable and React SSR use local synchronous computation. See [Data extensions](/viz/data/transform/extensions) for execution and model boundaries.
 
 ## How entries converge
 
@@ -44,7 +44,7 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
 </div>
 
 1. **Canonical model**: Table schema validation runs first and a Structure definition normalizes one semantic model. Each Cell starts from the Table owner-local default preset selected by the host `theme.mode`; an explicit `theme.name` then applies the injected sparse Table defaults with the same name. Source `defaultTable`, `defaultAppearance`, `defaultVisual`, explicit `layout.borders`, Cell configuration, encodings, and ordered rules complete the final plan. Value Cells then run the winning formatter/Presentation; content Cells bypass both and apply their resolved content style.
-2. **Natural proposal probes**: every Cell calls `layoutChild` with `NaturalLayoutProposal` to obtain allocation and visual bounds. These probes measure content but do not commit output.
+2. **Natural proposal probes**: every Cell calls `layoutChild` with `naturalLayoutProposal` to obtain allocation and visual bounds. These probes measure content but do not commit output.
 3. **Columns and wrap**: natural width, spans, gaps, track configuration, and the parent x-axis `exact.value` or finite `range.max` feed the column solver. Only wrapping Cells issue another `x: range(0, contentWidth)` probe.
 4. **Rows and placement**: final probe heights feed the row solver. The transaction then computes Cell boxes, padding-reduced content boxes, fit / align / overflow placement, and the border conflict graph.
 5. **Replay and publish**: the runtime replays only each Cell's final probe and the final border Scope to build Scene children. The same composite occurrence publishes a detached, recursively frozen `TableLayoutManifest`.
@@ -108,8 +108,8 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
     {
       label: 'Runtime contribution merge and frozen copied containers',
       path: 'packages/viz/table/src/pipeline/contribution/contribution.ts',
-      startLine: 18,
-      endLine: 64,
+      startLine: 5,
+      endLine: 44,
     },
   ]}
 />
@@ -128,20 +128,20 @@ The two `ManualTable` authoring modes are mutually exclusive. Props mode forward
 
 `TableLayoutHostProps` precisely reuses the host fields currently supported by Kernel `<Layout ir>`: handlers, output size/viewBox, renderer, animation, resource ids, Core provider definitions, and the TeX lowerer. Standalone host CSS uses `containerStyle`; it is renamed to internal Layout `style` exactly once and never enters IRTable. See the authoritative [Layout API](/kernel/components/layout/reference) for complete field semantics. Scope defaults, full `compile`, and `artifacts/onArtifacts` are not part of the Table-root public surface.
 
-| Shared prop                | Type                                            | Default | Description                                            |
-| -------------------------- | ----------------------------------------------- | ------- | ------------------------------------------------------ |
-| `containerStyle?`          | `LayoutProps['style']`                          | —       | Standalone host CSS; unsupported when embedded         |
-| `formatterDefinitions?`    | `LowerTablesOptions['formatterDefinitions']`    | `[]`    | Custom Cell formatter definitions                      |
-| `structureDefinitions?`    | `LowerTablesOptions['structureDefinitions']`    | `[]`    | Custom Structure definitions                           |
-| `presentationDefinitions?` | `LowerTablesOptions['presentationDefinitions']` | `[]`    | Custom Cell presentation definitions                   |
-| `visualScaleDefinitions?`  | `LowerTablesOptions['visualScaleDefinitions']`  | `[]`    | Custom Cell visual-scale definitions                   |
-| `tableThemeDefinitions?`   | `LowerTablesOptions['tableThemeDefinitions']`   | `[]`    | Table baseline definitions sharing the Core theme name |
-| `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`         | `[]`    | Extra definitions required by Tier 2 Cell content      |
-| `onManifest?`              | `(manifest: TableLayoutManifest) => void`       | —       | Reports the same compile's root manifest after commit  |
+| Shared prop                | Type                                               | Default | Description                                            |
+| -------------------------- | -------------------------------------------------- | ------- | ------------------------------------------------------ |
+| `containerStyle?`          | `LayoutProps['style']`                             | —       | Standalone host CSS; unsupported when embedded         |
+| `formatterDefinitions?`    | `TablesLoweringOptions['formatterDefinitions']`    | `[]`    | Custom Cell formatter definitions                      |
+| `structureDefinitions?`    | `TablesLoweringOptions['structureDefinitions']`    | `[]`    | Custom Structure definitions                           |
+| `presentationDefinitions?` | `TablesLoweringOptions['presentationDefinitions']` | `[]`    | Custom Cell presentation definitions                   |
+| `visualScaleDefinitions?`  | `TablesLoweringOptions['visualScaleDefinitions']`  | `[]`    | Custom Cell visual-scale definitions                   |
+| `tableThemeDefinitions?`   | `TablesLoweringOptions['tableThemeDefinitions']`   | `[]`    | Table baseline definitions sharing the Core theme name |
+| `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`            | `[]`    | Extra definitions required by Tier 2 Cell content      |
+| `onManifest?`              | `(manifest: TableLayoutManifest) => void`          | —       | Reports the same compile's root manifest after commit  |
 
 The standalone runtime builds a canonical `children[0]` Scene. From `Layout.onArtifacts` it selects exactly one artifact with definition key `table.table`, `sourcePath: 'children[0]'`, and `expansionPath: []`. Notifications are deduplicated by serialized manifest content, and SSR render causes no callback side effect.
 
-The five definition categories and composites merge by stable key and object identity when entering a runtime contribution. Runtime stores copied frozen arrays, `lowerOptions`, and envelope, so later caller `push` operations cannot mutate an existing contribution. Definition and composite objects remain caller-owned and are neither cloned nor frozen.
+The owner factories merge the five definition categories and composites by stable key and object identity. Table provider `params` carries `datasets` and `lowerOptions`, without a separate runtime reference. Contribution creation copies and freezes definition arrays and option containers, so later caller `push` operations cannot mutate an existing contribution. Definition and composite objects, along with row arrays, remain caller-owned and are neither cloned nor frozen. Datasets with the same name must reference the same row array; the host Core compiler handles duplicate drawing IDs.
 
 ### Theme inputs
 
@@ -217,7 +217,7 @@ The built-ins are `ordinal-color`, `sequential-color`, and `threshold-color`. An
 
 ## Vanilla
 
-`detailTable()` / `manualTable()` construct ordinary-data specs; `embedTable()` with `TableInputEmbedAdapter` enters Scene / mount composition; `renderTable()` is the one-shot SSR entry.
+`detailTable()` / `manualTable()` construct ordinary-data specs; `embedTable()` with `tableInputEmbedAdapter` enters Scene / mount composition; `renderTable()` is the one-shot SSR entry.
 
 ```ts
 const result = renderTable(spec, {
@@ -241,7 +241,7 @@ result.manifest;
 | -------------------- | ------------------------------------ | ------- | --------------------------------------------------------------- |
 | `theme?`             | `IRScene['theme']`                   | —       | Core Theme written to the standalone root Scene                 |
 | `data?`              | `ExternalDatasets`                   | `{}`    | Table datasets                                                  |
-| `lowerOptions?`      | `LowerTablesOptions`                 | `{}`    | Formatter / Structure / Presentation / Visual Scale definitions |
+| `lowerOptions?`      | `TablesLoweringOptions`              | `{}`    | Formatter / Structure / Presentation / Visual Scale definitions |
 | `compile?`           | `RenderToStringOptions['compile']`   | `{}`    | Core compile options; extra composites live here                |
 | `animation?`         | `RenderToStringOptions['animation']` | `{}`    | SSR animation, snapshot, and easing options                     |
 | `output?`            | `RenderToStringOptions['output']`    | `{}`    | SVG id prefix and display dimensions                            |

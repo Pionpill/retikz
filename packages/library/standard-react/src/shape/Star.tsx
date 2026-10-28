@@ -1,6 +1,6 @@
 import type { HydrationEventProps } from '@retikz/react';
 import type { InputStar } from '@retikz/standard-vanilla/shape';
-import { StarInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { starInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
@@ -19,5 +19,5 @@ const StarComponent: FC<StarProps> = () => null;
 export const Star = StarComponent as StandardEmbeddableComponent<StarProps>;
 Star.displayName = 'Star';
 Star.isTier2Embeddable = true;
-Star.inputEmbedAdapter = StarInputEmbedAdapter;
+Star.inputEmbedAdapter = starInputEmbedAdapter;
 Star.createInputEmbedProps = shapeEmbedProps;

@@ -37,7 +37,7 @@ export const TableCellSourceSchema = union([
 ]).describe('Runtime-only Table Cell source identity.');
 
 /** Structure Definition runtime output 的完整 guard */
-export const TableStructureOutputSchema = strictObject({
+const TableStructureOutputSchema = strictObject({
   rows: array(
     strictObject({
       id: NonBlankStringSchema.optional().describe('Optional stable row id supplied by the structure definition.'),

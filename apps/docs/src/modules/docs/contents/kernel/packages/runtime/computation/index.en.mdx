@@ -41,7 +41,7 @@ declare const defineRuntimeComputation: <
   TComputationRead = TResult,
   TPublicRead = TResult,
 >(
-  input: RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>,
+  input: InputRuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
 ) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
 ```
 
@@ -69,7 +69,7 @@ These properties are explained in detail later in the documentation.
 The main structure is expanded below. Conditional types that require `result` when conversion types differ are omitted.
 
 ```ts
-type RuntimeComputationDefinitionInput<
+type InputRuntimeComputationDefinition<
   TResultInput,
   TResult = TResultInput,
   TComputationRead = TResult,
@@ -79,7 +79,7 @@ type RuntimeComputationDefinitionInput<
   sources: ReadonlyArray<RuntimeSourceToken>;
   computations?: ReadonlyArray<RuntimeComputationToken>;
   tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
-  result?: RuntimeComputationResultDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>;
+  result?: InputRuntimeComputationResultDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
   run: (view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeRunOutcome<TResultInput>;
   update?: (
     previous: TComputationRead,
@@ -185,7 +185,7 @@ Registration determines which definitions are available and their execution orde
 A **computation registry** organizes definitions into an executable dependency graph: it checks that dependencies exist and orders upstream computations before their consumers. `createRuntimeComputationRegistry(input)` creates this fixed registry without calling `run`.
 
 ```ts
-declare const createRuntimeComputationRegistry: (input: RuntimeComputationRegistryInput) => RuntimeComputationRegistry;
+declare const createRuntimeComputationRegistry: (input: InputRuntimeComputationRegistry) => RuntimeComputationRegistry;
 ```
 
 <DocTabs defaultValue="members">
@@ -200,7 +200,7 @@ declare const createRuntimeComputationRegistry: (input: RuntimeComputationRegist
 <DocTab value="definition" label="Type definition">
 
 ```ts
-type RuntimeComputationRegistryInput = Readonly<{
+type InputRuntimeComputationRegistry = Readonly<{
   sources: RuntimeSourceRegistry;
   computations?: ReadonlyArray<RuntimeComputationToken>;
 }>;
@@ -270,7 +270,7 @@ The `result` configuration manages these conversions. `readForComputation` suppl
 Conditional types that require conversion functions when input and output types differ are omitted below.
 
 ```ts
-type RuntimeComputationResultDefinitionInput<
+type InputRuntimeComputationResultDefinition<
   TResultInput,
   TResult = TResultInput,
   TComputationRead = TResult,
@@ -570,14 +570,14 @@ Only public members used in this chapter are listed; follow the source links bel
     {
       name: 'defineRuntimeComputation',
       kind: 'function',
-      type: '<TResultInput, TResult = TResultInput, TComputationRead = TResult, TPublicRead = TResult>(input: RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>',
+      type: '<TResultInput, TResult = TResultInput, TComputationRead = TResult, TPublicRead = TResult>(input: InputRuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>',
       description:
         'Defines id, sources and run; optionally configures computations, result, update, tracePhases and observeCommit. Different transform input/output types require the corresponding transform.',
     },
     {
       name: 'createRuntimeComputationRegistry',
       kind: 'function',
-      type: '(input: RuntimeComputationRegistryInput) => RuntimeComputationRegistry',
+      type: '(input: InputRuntimeComputationRegistry) => RuntimeComputationRegistry',
       description:
         'input is `{ sources: RuntimeSourceRegistry, computations?: ReadonlyArray<RuntimeComputationToken> }`; computations defaults to []. Validates dependencies and sorts topologically.',
     },
@@ -594,7 +594,7 @@ Only public members used in this chapter are listed; follow the source links bel
       kind: 'property',
       type: '(previous: TComputationRead, view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeUpdateOutcome<TResultInput>',
       description:
-        "Branches:\n\n- `{ kind: 'incremental', result: TResultInput }`: complete new result.\n\n- `{ kind: 'bailout' }`: reuse old result.\n\n- `{ kind: 'fallback', diagnostics?: ReadonlyArray<RuntimeComputationWarningInput> }`: call run, optionally with business warnings.",
+        "Branches:\n\n- `{ kind: 'incremental', result: TResultInput }`: complete new result.\n\n- `{ kind: 'bailout' }`: reuse old result.\n\n- `{ kind: 'fallback', diagnostics?: ReadonlyArray<InputRuntimeComputationWarning> }`: call run, optionally with business warnings.",
     },
     {
       name: 'context.execution',
@@ -612,7 +612,7 @@ Only public members used in this chapter are listed; follow the source links bel
     {
       name: 'result',
       kind: 'property',
-      type: 'RuntimeComputationResultDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>',
+      type: 'InputRuntimeComputationResultDefinition<TResultInput, TResult, TComputationRead, TPublicRead>',
       description:
         'capture: (input: TResultInput) => TResult; readForComputation: (result: TResult) => TComputationRead; read: (result: TResult) => TPublicRead; dispose?: (result: TResult) => void. Same-type transforms default to identity, without copying or freezing.',
     },

@@ -1,5 +1,5 @@
-import { DrawWay } from '@retikz/core';
 import { Draw, Layout, Node, Scope } from '@retikz/react';
+import { DrawWay } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 /**

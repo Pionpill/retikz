@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 describe('Standard 形状事件全链 DOM 派发', () => {
-  it('updates ring geometry when an authored inner radius is removed', async () => {
+  it('删除编写的内半径时更新环几何形状', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);

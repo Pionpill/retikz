@@ -1,4 +1,4 @@
-import type { AnyInspectorDefinition, AnyInspectorDefinitionInput, InspectorKey } from '../contract';
+import type { AnyInspectorDefinition, InputAnyInspectorDefinition, InspectorKey } from '../contract';
 import { sealInspectorDefinition } from '../contract';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { BUILTIN_INSPECTORS } from './definitions';
@@ -11,7 +11,7 @@ export type InspectorRegistry = Readonly<{
 }>;
 
 /** Inspector compile 路径消费的已解析 registry */
-type ResolvedInspectorRegistry = InspectorRegistry &
+type InspectorRegistryIndex = InspectorRegistry &
   Readonly<{
     /** 输入顺序稳定的 definitions */
     definitions: ReadonlyArray<AnyInspectorDefinition>;
@@ -30,7 +30,7 @@ export const formatInspectorRegistryKey = (key: InspectorKey): string => JSON.st
  * @returns 独立的只读注册表，定义在注册时补齐缺省选项并冻结
  * @throws 定义的 namespace、type 或所属者标识为空白，或存在重复 namespace/type 时抛出 RetikzInspectError
  */
-export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinitionInput>): InspectorRegistry => {
+export const createInspectorRegistry = (definitions: ReadonlyArray<InputAnyInspectorDefinition>): InspectorRegistry => {
   const definitionsByKey = new Map<string, AnyInspectorDefinition>();
   const sealedDefinitions = definitions.map((definition, index) => {
     const candidateDefinition = sealInspectorDefinition(definition);
@@ -77,8 +77,8 @@ export const mergeInspectorRegistries = (...registries: ReadonlyArray<InspectorR
   createInspectorRegistry(registries.flatMap(registry => getResolvedInspectorRegistry(registry).definitions));
 
 /** 取得编译路径使用的已解析 registry */
-export const getResolvedInspectorRegistry = (registry: InspectorRegistry): ResolvedInspectorRegistry =>
-  registry as ResolvedInspectorRegistry;
+export const getResolvedInspectorRegistry = (registry: InspectorRegistry): InspectorRegistryIndex =>
+  registry as InspectorRegistryIndex;
 
 /** 创建内置优先、第三方同路的默认 Inspector registry
  *
@@ -87,5 +87,5 @@ export const getResolvedInspectorRegistry = (registry: InspectorRegistry): Resol
  * @throws 自定义定义无效或与内置、自定义定义的 namespace/type 重复时抛出 RetikzInspectError
  */
 export const createDefaultInspectorRegistry = (
-  definitions: ReadonlyArray<AnyInspectorDefinitionInput> = [],
+  definitions: ReadonlyArray<InputAnyInspectorDefinition> = [],
 ): InspectorRegistry => createInspectorRegistry([...BUILTIN_INSPECTORS, ...definitions]);

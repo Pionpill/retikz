@@ -5,7 +5,7 @@ import type { IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 import { line, move } from '../helpers/path-command-factory';
 
-describe('Coordinate placeholder', () => {
+describe('Coordinate 占位符', () => {
   it('coordinate 自身不发任何 primitive', () => {
     const ir: IRScene = {
       version: 1,

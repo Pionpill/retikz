@@ -8,15 +8,15 @@ import {
   PreviewThemeOptions,
 } from '../../src/modules/docs/components/component-preview/theme';
 
-describe('preview theme settings icons', () => {
-  it('maps each Theme to its semantic icon', () => {
+describe('预览主题设置图标', () => {
+  it('将每个主题映射到其语义图标', () => {
     expect(getPreviewThemeIcon(PreviewTheme.Default)).toBe(CircleDot);
     expect(getPreviewThemeIcon(PreviewTheme.Academic)).toBe(GraduationCap);
     expect(getPreviewThemeIcon(PreviewTheme.Vibrant)).toBe(Sparkles);
     expect(getPreviewThemeIcon(PreviewTheme.Clean)).toBe(BrushCleaning);
   });
 
-  it('exposes four flat style options for Viz docs', () => {
+  it('为 Viz 文档公开四个平面样式选项', () => {
     expect(PreviewThemeOptions).toEqual([
       PreviewTheme.Default,
       PreviewTheme.Academic,

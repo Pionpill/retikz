@@ -46,7 +46,7 @@ In React, write optional `key` as `itemKey` and provide `child` through one draw
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { OverlayLayoutDefinition } from '@retikz/layout';
+import { overlayLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -64,7 +64,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ composites: [OverlayLayoutDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ composites: [overlayLayoutDefinition] }} />;
 ```
 
 </DocTab>
@@ -72,7 +72,7 @@ export const Example = () => <Layout ir={ir} extensions={{ composites: [OverlayL
 
 ```ts
 import { scene, renderToSvgString } from '@retikz/vanilla';
-import { overlayLayout, OverlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { overlayLayout, overlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 
 const input = scene({
   children: [
@@ -86,7 +86,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { adapters: [OverlayLayoutInputEmbedAdapter] }));
+console.log(renderToSvgString(input, { adapters: [overlayLayoutInputEmbedAdapter] }));
 ```
 
 </DocTab>
@@ -95,7 +95,7 @@ console.log(renderToSvgString(input, { adapters: [OverlayLayoutInputEmbedAdapter
 ```ts
 import type { IRScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
-import { OverlayLayoutDefinition } from '@retikz/layout';
+import { overlayLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -113,7 +113,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { composites: [OverlayLayoutDefinition] } }));
+console.log(renderToSvgString(ir, { compile: { composites: [overlayLayoutDefinition] } }));
 ```
 
 </DocTab>
@@ -165,7 +165,7 @@ The first demo item stays fixed. Switch the second item’s vertical alignment, 
     {
       name: 'size',
       kind: 'property',
-      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      type: '{ x?: InputLayoutAxisSize; y?: InputLayoutAxisSize }',
       description:
         'Container allocation and content insets Each axis accepts `{ kind: "content", min?, max? }`, `{ kind: "fixed", value }`, or `{ kind: "fill", min?, max? }`.',
       defaultValue: 'content / content',
@@ -194,7 +194,7 @@ The first demo item stays fixed. Switch the second item’s vertical alignment, 
     {
       name: 'placement',
       kind: 'property',
-      type: 'OverlayPlacementInput',
+      type: 'InputOverlayPlacement',
       description:
         'Use the shared content box `{ kind: "aligned" }` uses the content box; `{ kind: "positioned", at: { x, y }, anchor?: { x?, y? }, width?, height? }` pins a normalized slot anchor.',
       defaultValue: '{ kind: "aligned" }',

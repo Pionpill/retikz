@@ -29,7 +29,7 @@ const readLogicFigure = (element: ReactNode) => {
   return normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) }).ir.children[0];
 };
 
-describe('LogicFigure semantic vocabulary', () => {
+describe('LogicFigure 语义词汇', () => {
   it.each([
     { mode: 'light' as const, fill: '#e4e4e4', text: '#555555' },
     { mode: 'dark' as const, fill: '#1b1b1b', text: '#bbbbbb' },
@@ -80,7 +80,7 @@ describe('LogicFigure semantic vocabulary', () => {
     ]);
   });
 
-  it('defines site Entity kinds for important, important data, secondary, and algorithmic content', () => {
+  it('定义站点 Entity 类型为重要、重要数据、次要和算法内容', () => {
     expect(LogicFigureEntityKind).toEqual({
       Important: 'docs.logic.important',
       ImportantData: 'docs.logic.importantData',
@@ -89,7 +89,7 @@ describe('LogicFigure semantic vocabulary', () => {
     });
   });
 
-  it('records the site Entity and Relation kinds in Graph Source IR', () => {
+  it('在 Graph Source IR 中记录站点定义的 Entity 和 Relation 类型', () => {
     const figure = readLogicFigure(
       <LogicFigure>
         <Entity id="input" role="participant" kind={LogicFigureEntityKind.Important} position={[60, 90]}>
@@ -122,7 +122,7 @@ describe('LogicFigure semantic vocabulary', () => {
     });
   });
 
-  it('keeps semantic Entity children in a LogicFigureFrame Graph group', () => {
+  it('将语义 Entity 子项保留在 LogicFigureFrame Graph 组中', () => {
     const figure = readLogicFigure(
       <LogicFigure>
         <LogicFigureFrame id="core">
@@ -152,7 +152,7 @@ describe('LogicFigure semantic vocabulary', () => {
   it.each([
     ['Chinese', OpaqueColorFlow],
     ['English', OpaqueColorFlow],
-  ])('renders the %s CSS color flow with stable logic kinds', (_language, Demo) => {
+  ])('以稳定的逻辑类型渲染 %s CSS 颜色流', (_language, Demo) => {
     const figure = FlowDiagramSchema.parse(buildPreviewIR(Demo).sourceIr.children[0]);
 
     expect(figure).toMatchObject({
@@ -208,7 +208,7 @@ describe('LogicFigure semantic vocabulary', () => {
   it.each([
     ['Chinese', CoordinateConversionFlow],
     ['English', CoordinateConversionFlow],
-  ])('uses two shared Entity and Relation groups for the %s coordinate conversion Flow', (_language, Demo) => {
+  ])('使用两个共享的 Entity 和 Relation 组进行 %s 坐标转换 Flow', (_language, Demo) => {
     const figure = FlowDiagramSchema.parse(buildPreviewIR(Demo).sourceIr.children[0]);
     const entities = figure.entities;
     const relations = figure.relations ?? [];
@@ -234,7 +234,7 @@ describe('LogicFigure semantic vocabulary', () => {
   it.each([
     ['Chinese', AffineCompositionFlow],
     ['English', AffineCompositionFlow],
-  ])('keeps the %s affine composition Flow ungrouped', (_language, Demo) => {
+  ])('保持 %s 仿射组合 Flow 不分组', (_language, Demo) => {
     const figure = FlowDiagramSchema.parse(buildPreviewIR(Demo).sourceIr.children[0]);
     const relations = figure.relations ?? [];
 

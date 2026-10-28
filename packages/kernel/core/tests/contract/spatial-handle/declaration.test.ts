@@ -29,8 +29,8 @@ const valid = {
   payload: { itemId: 'a', rank: 1 },
 } satisfies SpatialHandleDeclaration;
 
-describe('spatial handle declaration contract', () => {
-  it('accepts a detached JSON-safe declaration at the callback boundary', () => {
+describe('空间句柄声明契约', () => {
+  it('在回调边界接受分离的 JSON 安全声明', () => {
     expect(() => compileToScene(scene, { composites: [defineCard([valid])] })).not.toThrow();
   });
 
@@ -44,11 +44,11 @@ describe('spatial handle declaration contract', () => {
     ['negative width', { ...valid, bounds: { ...valid.bounds, width: -1 } }],
     ['negative height', { ...valid, bounds: { ...valid.bounds, height: -1 } }],
     ['duplicate tag', { ...valid, tags: ['content', 'content'] }],
-  ])('rejects %s', (_label, declaration) => {
+  ])('拒绝 %s', (_label, declaration) => {
     expect(() => compileToScene(scene, { composites: [defineCard([declaration])] })).toThrow(/spatial handle/i);
   });
 
-  it('rejects duplicate owner-local keys', () => {
+  it('拒绝重复的所属模块本地键', () => {
     expect(() =>
       compileToScene(scene, {
         composites: [defineCard([valid, { ...valid, role: 'duplicate-role' }])],
@@ -56,7 +56,7 @@ describe('spatial handle declaration contract', () => {
     ).toThrow(/spatial handle.*duplicate.*body/i);
   });
 
-  it('rejects aliases colliding with another declaration and keeps aliases detached', () => {
+  it('拒绝与另一个声明冲突的别名并保持别名分离', () => {
     expect(() =>
       compileToScene(scene, {
         composites: [

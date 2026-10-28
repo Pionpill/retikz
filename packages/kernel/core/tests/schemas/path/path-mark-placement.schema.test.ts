@@ -18,7 +18,7 @@ describe('路径端点与标记 schema', () => {
   });
 });
 
-it('flat marks reject structural wrappers and accept shared appearance', () => {
+it('平面标记拒绝结构包装并接受共享外观', () => {
   const source = { pos: 0.5, shape: 'checkpoint', rotate: 30, scale: 2, fill: 'red', params: { radius: 3 } };
   expect(PathMarkPlacementSchema.parse(source)).toEqual(source);
   for (const extra of [{ kind: 'arrow' }, { mark: { shape: 'stealth' } }])

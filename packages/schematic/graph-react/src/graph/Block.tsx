@@ -5,10 +5,10 @@ import type {
   BlockSectionInputEmbedProps,
 } from '@retikz/graph-vanilla';
 import {
-  BlockHeaderInputEmbedAdapter,
-  BlockInputEmbedAdapter,
-  BlockRowInputEmbedAdapter,
-  BlockSectionInputEmbedAdapter,
+  blockHeaderInputEmbedAdapter,
+  blockInputEmbedAdapter,
+  blockRowInputEmbedAdapter,
+  blockSectionInputEmbedAdapter,
 } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
@@ -87,7 +87,7 @@ export const Block = BlockComponent as GraphEmbeddableComponent<BlockProps>;
 
 Block.displayName = 'Block';
 Block.isTier2Embeddable = true;
-Block.inputEmbedAdapter = BlockInputEmbedAdapter;
+Block.inputEmbedAdapter = blockInputEmbedAdapter;
 Block.createInputEmbedProps = createBlockInput;
 
 const createBlockHeaderInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
@@ -129,7 +129,7 @@ export const BlockHeader = BlockHeaderComponent as GraphEmbeddableComponent<Bloc
 
 BlockHeader.displayName = 'BlockHeader';
 BlockHeader.isTier2Embeddable = true;
-BlockHeader.inputEmbedAdapter = BlockHeaderInputEmbedAdapter;
+BlockHeader.inputEmbedAdapter = blockHeaderInputEmbedAdapter;
 BlockHeader.createInputEmbedProps = createBlockHeaderInput;
 
 const createBlockSectionInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
@@ -152,7 +152,7 @@ export const BlockSection = BlockSectionComponent as GraphEmbeddableComponent<Bl
 
 BlockSection.displayName = 'BlockSection';
 BlockSection.isTier2Embeddable = true;
-BlockSection.inputEmbedAdapter = BlockSectionInputEmbedAdapter;
+BlockSection.inputEmbedAdapter = blockSectionInputEmbedAdapter;
 BlockSection.createInputEmbedProps = createBlockSectionInput;
 
 const createBlockRowInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
@@ -186,5 +186,5 @@ export const BlockRow = BlockRowComponent as GraphEmbeddableComponent<BlockRowPr
 
 BlockRow.displayName = 'BlockRow';
 BlockRow.isTier2Embeddable = true;
-BlockRow.inputEmbedAdapter = BlockRowInputEmbedAdapter;
+BlockRow.inputEmbedAdapter = blockRowInputEmbedAdapter;
 BlockRow.createInputEmbedProps = createBlockRowInput;

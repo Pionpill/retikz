@@ -1,6 +1,6 @@
 import { compileToScene } from '@retikz/core';
-import type { ParsedFieldValue, ResolveField } from '@retikz/data';
-import { applyFieldResolver, normalizeRows } from '@retikz/data';
+import type { ParsedFieldValue, FieldResolver } from '@retikz/data';
+import { applyFieldResolver, resolveDataRows } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
@@ -23,7 +23,7 @@ const pointSpec = (model?: Array<{ name: string; type?: string }>): IRPlot =>
 const parseSlashDate = (raw: unknown): ParsedFieldValue => Date.parse(String(raw).replaceAll('/', '-'));
 
 describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', () => {
-  it('apply_resolver_overrides_type_collects_parse', () => {
+  it('应用解析器覆盖类型收集解析', () => {
     const base = new Map([['x', DataFieldType.Continuous]]);
     const parse = (raw: unknown): ParsedFieldValue => Number(raw);
     const { fieldTypeMap, parsers, resolverHit } = applyFieldResolver(
@@ -40,7 +40,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
     expect(resolverHit).toBe(true);
   });
 
-  it('apply_resolver_undefined_no_hit', () => {
+  it('解析器返回 undefined 时视为未命中', () => {
     const base = new Map([['x', DataFieldType.Continuous]]);
     const result = applyFieldResolver(base, new Set(['x']), undefined, 'd', undefined, undefined);
 
@@ -48,7 +48,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
     expect(result.fieldTypeMap).toBe(base);
   });
 
-  it('apply_resolver_passes_dataset_context', () => {
+  it('应用解析器传递数据集上下文', () => {
     const base = new Map([['x', DataFieldType.Temporal]]);
     let seen: unknown;
     applyFieldResolver(
@@ -66,7 +66,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
     expect(seen).toEqual({ dataReference: 'd', physicalPath: 'when', declaredType: DataFieldType.Temporal });
   });
 
-  it('parse_only_without_declared_type_throws', () => {
+  it('仅在没有声明类型抛出的情况下进行解析', () => {
     const base = new Map([['x', DataFieldType.Continuous]]);
 
     expect(() =>
@@ -74,7 +74,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
     ).toThrow(/needs a type/i);
   });
 
-  it('parse_only_with_declared_type_ok', () => {
+  it('仅解析声明类型即可', () => {
     const base = new Map([['x', DataFieldType.Temporal]]);
     const { parsers } = applyFieldResolver(
       base,
@@ -89,9 +89,9 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
   });
 });
 
-describe('normalizeRows — 自定义 parser（contract）', () => {
-  it('parser_overrides_builtin_coerce', () => {
-    const out = normalizeRows(
+describe('resolveDataRows — 自定义 parser（contract）', () => {
+  it('解析器覆盖内置强制', () => {
+    const out = resolveDataRows(
       [{ x: '2024/01/01' }],
       new Map([['x', DataFieldType.Temporal]]),
       undefined,
@@ -101,8 +101,8 @@ describe('normalizeRows — 自定义 parser（contract）', () => {
     expect(out[0].x).toBe(Date.parse('2024-01-01'));
   });
 
-  it('parser_returning_boolean_or_null_skipped', () => {
-    const out = normalizeRows(
+  it('解析器返回布尔值或跳过 null', () => {
+    const out = resolveDataRows(
       [{ a: 'x' }],
       new Map([['a', DataFieldType.Categorical]]),
       undefined,
@@ -112,8 +112,8 @@ describe('normalizeRows — 自定义 parser（contract）', () => {
     expect(out[0].a).toBeUndefined();
   });
 
-  it('parser_returning_undefined_skips', () => {
-    const out = normalizeRows(
+  it('解析器返回 undefined 的跳过', () => {
+    const out = resolveDataRows(
       [{ a: 'x' }],
       new Map([['a', DataFieldType.Categorical]]),
       undefined,
@@ -125,7 +125,7 @@ describe('normalizeRows — 自定义 parser（contract）', () => {
 });
 
 describe('prepareRows — resolveField 集成（contract）', () => {
-  it('custom_date_parse', () => {
+  it('自定义日期解析', () => {
     const spec = pointSpec([{ name: 'x', type: 'temporal' }, { name: 'y' }]);
     const rows = [{ x: '2024/01/01', y: 10 }];
     const { normalized } = prepareRows(
@@ -138,7 +138,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
     expect(normalized[0].x).toBe(Date.parse('2024-01-01'));
   });
 
-  it('numeric_enum_categorical_no_model', () => {
+  it('数字枚举分类无模型', () => {
     const spec = pointSpec();
     const rows = [
       { x: 0, y: 1 },
@@ -155,7 +155,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
     expect(normalized[0].x).toBe(0); // resolver 命中 → 归一化跑，类别键原样
   });
 
-  it('parse_only_with_model', () => {
+  it('仅使用模型进行解析', () => {
     const spec = pointSpec([{ name: 'x', type: 'temporal' }, { name: 'y' }]);
     const rows = [{ x: '2024/03/04', y: 1 }];
     const { fieldTypeMap, normalized } = prepareRows(
@@ -169,7 +169,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
     expect(normalized[0].x).toBe(Date.parse('2024-03-04'));
   });
 
-  it('parse_only_without_model_throws', () => {
+  it('仅解析而不抛出模型', () => {
     const spec = pointSpec();
     const rows = [{ x: 1, y: 2 }];
 
@@ -178,7 +178,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
     );
   });
 
-  it('resolver_does_not_bypass_strict', () => {
+  it('解析器不绕过严格', () => {
     // model 仅声明 x，mark 引用了未声明的 y；resolver 返类型也不能让 y 通过 strict
     const spec = pointSpec([{ name: 'x', type: 'continuous' }]);
     const rows = [{ x: 1, y: 2 }];
@@ -188,7 +188,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
     );
   });
 
-  it('resolver_undefined_falls_back', () => {
+  it('解析器 undefined 回退', () => {
     const spec = pointSpec();
     const rows = [{ x: 5, y: 1 }];
     const withoutResolver = prepareRows(spec, { d: rows }, {}, rows);
@@ -200,7 +200,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
     expect(withUndefinedResolver.dataView.model).toEqual(withoutResolver.dataView.model);
   });
 
-  it('resolver_receives_physical_path_from_fieldmaps', () => {
+  it('解析器从字段映射接收物理路径', () => {
     const spec = pointSpec([{ name: 'x', type: 'temporal' }, { name: 'y' }]);
     const rows = [{ when: '2024/01/01', y: 1 }];
     let seenPath = '';
@@ -227,7 +227,8 @@ describe('prepareRows — resolveField 集成（contract）', () => {
 
 describe('render ⟺ locator parity + scale 兼容', () => {
   const spec = pointSpec([{ name: 'x', type: 'temporal' }, { name: 'y' }]);
-  const resolveField: ResolveField = field => (field === 'x' ? { type: 'temporal', parse: parseSlashDate } : undefined);
+  const resolveField: FieldResolver = field =>
+    field === 'x' ? { type: 'temporal', parse: parseSlashDate } : undefined;
   const datasets = {
     d: [
       { x: '2024/01/01', y: 10 },
@@ -235,7 +236,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
     ],
   };
 
-  it('render_compiles_with_resolveField', () => {
+  it('使用 resolveField 进行渲染编译', () => {
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots(datasets, { resolveField }) },
@@ -244,11 +245,11 @@ describe('render ⟺ locator parity + scale 兼容', () => {
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
-  it('locator_builds_with_same_resolveField', () => {
+  it('定位器使用相同的 resolveField 构建', () => {
     expect(() => createPlotLocator(spec, datasets, { environment: {}, resolveField })).not.toThrow();
   });
 
-  it('resolved_type_feeds_scale_compat', () => {
+  it('解析型进料秤兼容', () => {
     // resolveField 把 x 盖成 categorical → 与显式 linear scale 不兼容 → 用覆盖后类型 fail-loud
     const explicitSpec = PlotSchema.parse({
       namespace: 'plot',

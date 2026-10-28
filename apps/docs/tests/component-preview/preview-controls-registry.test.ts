@@ -269,7 +269,7 @@ const compileBuiltinText = (
   return { layout, text: textPrimitive };
 };
 
-describe('preview controls registry', () => {
+describe('预览控制注册表', () => {
   it('从 registry owner 暴露本地化 controls key resolver', () => {
     expect(resolveControlsKey).toBeTypeOf('function');
   });
@@ -320,7 +320,7 @@ describe('preview controls registry', () => {
     expect(ToolbarIconButton).toBe(DirectToolbarIconButton);
   });
 
-  it('uses .controls.ts keys', () => {
+  it('使用 .controls.ts 中的键', () => {
     expect(buildControlsKey(['viz', 'plot', 'mark', 'path'], 'line-curve')).toBe(
       '../../contents/viz/plot/mark/path/line-curve.controls.ts',
     );
@@ -406,7 +406,7 @@ describe('preview controls registry', () => {
     });
   });
 
-  it('resolves named *Controls exports only', () => {
+  it('仅解析命名的 *Controls 导出', () => {
     const controls = componentPreviewExports.definePreviewControls({
       presentation: 'overlay',
       controls: [{ kind: 'text', id: 'size', label: 'Size', defaultValue: '6' }],

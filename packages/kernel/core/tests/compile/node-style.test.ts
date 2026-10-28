@@ -113,7 +113,7 @@ describe('Node 颜色 / 不透明度', () => {
     expect(findShapePath(diamondIR)?.fillOpacity).toBe(0.4);
   });
 
-  it('strokeOpacity → shape primitive.strokeOpacity', () => {
+  it('strokeOpacity→形状 primitive.strokeOpacity', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -197,7 +197,7 @@ describe('Node 描边样式', () => {
 });
 
 describe('Node 尺寸约束', () => {
-  it('cornerRadius → RectPrimitive.cornerRadius', () => {
+  it('将 cornerRadius 传递至 RectPrimitive.cornerRadius', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

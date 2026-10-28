@@ -1,5 +1,5 @@
 import type { IRChild, IRPosition, NodeOwnerOutput } from '@retikz/core';
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 import type { output as ZodOutput } from 'zod';
 
 import type { InspectorContext, InspectorOutput } from '../contract';
@@ -146,9 +146,6 @@ export const NODE_INSPECTOR = defineInspector({
   ...NODE_INSPECTOR_KEY,
   owner: { kind: 'node' },
   optionsSchema: NodeInspectOptionsSchema,
-  mergeOptionsInput: (inherited, local) => ({
-    ...inherited,
-    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
-  }),
+  mergeOptionsInput: (inherited, local) => mergeDefinedProperties([inherited, local]),
   inspect: inspectNodeGeometry,
 });

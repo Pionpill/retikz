@@ -23,7 +23,7 @@ const defineCounterSource = (key: string) =>
     },
   });
 
-describe('runtime runtime participant revision policy', () => {
+describe('Runtime 运行时参与者修订策略', () => {
   it('participants omitted 与显式空数组严格保持既有 runtime 行为', () => {
     const owner = defineCounterSource('counter');
     const sources = createRuntimeSourceRegistry([owner]);

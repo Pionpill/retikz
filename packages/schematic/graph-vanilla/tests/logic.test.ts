@@ -1,15 +1,15 @@
 import {
-  BlockHeaderProviderKey,
-  BlockProviderKey,
-  BlockRowProviderKey,
-  BlockSectionProviderKey,
+  blockHeaderProviderKey,
+  blockProviderKey,
+  blockRowProviderKey,
+  blockSectionProviderKey,
   defineEntityRole,
   defineRelationRole,
-  EntityProviderKey,
+  entityProviderKey,
   GraphProviderKey,
   GraphSchema,
-  GroupProviderKey,
-  RelationProviderKey,
+  groupProviderKey,
+  relationProviderKey,
 } from '@retikz/graph';
 import type { InputEmbed, SynchronousInputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
@@ -19,19 +19,19 @@ import type { InputBlock, InputBlockHeader, InputBlockRow, InputBlockSection, In
 import {
   block,
   blockHeader,
-  BlockHeaderInputEmbedAdapter,
-  BlockInputEmbedAdapter,
+  blockHeaderInputEmbedAdapter,
+  blockInputEmbedAdapter,
   blockRow,
-  BlockRowInputEmbedAdapter,
+  blockRowInputEmbedAdapter,
   blockSection,
-  BlockSectionInputEmbedAdapter,
+  blockSectionInputEmbedAdapter,
   createGraphVanillaAdapters,
   entity,
-  EntityInputEmbedAdapter,
+  entityInputEmbedAdapter,
   graph,
-  GraphInputEmbedAdapter,
+  graphInputEmbedAdapter,
   group,
-  GroupInputEmbedAdapter,
+  groupInputEmbedAdapter,
   normalizeBlock,
   normalizeBlockHeader,
   normalizeBlockRow,
@@ -40,7 +40,7 @@ import {
   normalizeGroup,
   normalizeRelation,
   relation,
-  RelationInputEmbedAdapter,
+  relationInputEmbedAdapter,
 } from '../src';
 
 const definitionOptionKeys = [
@@ -62,18 +62,18 @@ const contextOf = (id: string, kind: string): InputEmbedContext => ({
 
 const lower = <TProps>(spec: InputEmbed<TProps>, adapter: SynchronousInputEmbedAdapter<TProps>) =>
   adapter.lower(spec.props, contextOf(spec.id ?? '__test-embed', spec.kind));
-describe('@retikz/graph-vanilla package boundary', () => {
-  it('exports one adapter and builder for each Graph semantic composite', async () => {
+describe('@retikz/graph-vanilla 封装边界', () => {
+  it('为每个 Graph 语义组合导出一个适配器和构建器', async () => {
     const graphVanilla = await import('../src');
 
-    expect(graphVanilla.GraphInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.BlockInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.BlockHeaderInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.BlockSectionInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.BlockRowInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.EntityInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.GroupInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.RelationInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.graphInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.blockInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.blockHeaderInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.blockSectionInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.blockRowInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.entityInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.groupInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.relationInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.graph).toBeTypeOf('function');
     expect(graphVanilla.block).toBeTypeOf('function');
     expect(graphVanilla.blockHeader).toBeTypeOf('function');
@@ -110,7 +110,7 @@ describe('normalizeBlock', () => {
     );
   });
 
-  it('keeps string Header and Section text as sparse Source values', () => {
+  it('将字符串 Header 和 Section 文本保留为稀疏 Source 值', () => {
     expect(normalizeBlockHeader({ title: 'User', description: 'Domain entity' })).toEqual({
       namespace: 'graph',
       type: 'blockHeader',
@@ -124,7 +124,7 @@ describe('normalizeBlock', () => {
     });
   });
 
-  it('keeps Row text content as the minimal Source value', () => {
+  it('将 Row 文本内容保留为最小 Source 值', () => {
     expect(normalizeBlockRow({ content: 'name' })).toEqual({
       namespace: 'graph',
       type: 'blockRow',
@@ -146,7 +146,7 @@ describe('normalizeBlock', () => {
     });
   });
 
-  it('normalizes open Block-family semantic children to the same sparse Source as Direct authoring', () => {
+  it('将开放的 Block 系列语义子规范化为与直接编写相同的稀疏 Source', () => {
     const header = {
       type: 'blockHeader',
       title: { text: 'User' },
@@ -210,7 +210,7 @@ describe('normalizeBlock', () => {
     ]);
   });
 
-  it('preserves omitted and explicit empty Block-family children', () => {
+  it('保留省略的和显式的空 Block 系列子代', () => {
     expect(normalizeBlock({})).toEqual({ namespace: 'graph', type: 'block' });
     expect(normalizeBlock({ children: [] })).toEqual({ namespace: 'graph', type: 'block', children: [] });
     expect(normalizeBlockSection({})).toEqual({ namespace: 'graph', type: 'blockSection' });
@@ -223,7 +223,7 @@ describe('normalizeBlock', () => {
   });
 });
 describe('normalizeGroup', () => {
-  it('preserves Group presentation and normalizes collocated Entity / Relation Source', () => {
+  it('保留 Group 表示并标准化并置的 Entity / Relation Source', () => {
     const input: InputGroup = {
       id: 'runtime',
       caption: { title: { text: 'Runtime' } },
@@ -257,7 +257,7 @@ describe('normalizeGroup', () => {
   });
 });
 describe('normalizeGraph', () => {
-  it('omits absent children while preserving an explicit empty array', () => {
+  it('忽略不存在的子元素，同时保留显式的空数组', () => {
     expect(normalizeGraph({})).toEqual({ namespace: 'graph', type: 'graph' });
     expect(normalizeGraph({ children: [] })).toEqual({
       namespace: 'graph',
@@ -266,7 +266,7 @@ describe('normalizeGraph', () => {
     });
   });
 
-  it('preserves the complete authored Scope surface directly on Graph', () => {
+  it('直接在 Graph 上保留完整的编写 Scope 曲面', () => {
     const input: InputGraph = {
       id: 'architecture',
       theme: { mode: 'dark' as const },
@@ -300,7 +300,7 @@ describe('normalizeGraph', () => {
     });
   });
 
-  it('keeps defaultGraph and graphRules identical to Direct Source IR', () => {
+  it('保持 defaultGraph 和 graphRules 与直接 Source IR 相同', () => {
     const input: InputGraph = {
       id: 'parity',
       defaultGraph: {
@@ -330,7 +330,7 @@ describe('normalizeGraph', () => {
     );
   });
 
-  it('normalizes only Entity, Relation and Way authoring sugar', () => {
+  it('仅标准化 Entity、Relation 和 Way 编写糖', () => {
     expect(
       normalizeGraph({
         children: [
@@ -378,11 +378,11 @@ describe('normalizeGraph', () => {
     });
   });
 });
-describe('Graph Vanilla embed adapters', () => {
-  it('uses one explicit Graph id for the Entity embed and Source identities', () => {
+describe('Graph Vanilla 嵌入适配器', () => {
+  it('对 Entity 嵌入和 Source 身份使用一个显式 Graph id', () => {
     const contribution = lower(
       entity({ id: 'client', role: 'participant', position: [0, 0], text: 'Client' }),
-      EntityInputEmbedAdapter,
+      entityInputEmbedAdapter,
     );
 
     expect(contribution.node).toEqual({
@@ -395,10 +395,10 @@ describe('Graph Vanilla embed adapters', () => {
     });
   });
 
-  it('keeps an anonymous Entity out of the Graph Source namespace', () => {
+  it('将匿名 Entity 保留在 Graph Source 命名空间之外', () => {
     const contribution = lower(
       entity({ role: 'event', position: [0, 0], text: 'Anonymous event' }),
-      EntityInputEmbedAdapter,
+      entityInputEmbedAdapter,
     );
 
     expect(contribution.node).toEqual({
@@ -410,11 +410,11 @@ describe('Graph Vanilla embed adapters', () => {
     });
   });
 
-  it('keeps embed identity separate from optional authored identity for every composite', () => {
-    const graphContribution = lower(graph({}), GraphInputEmbedAdapter);
+  it('将每个组合的嵌入身份与可选的编写身份分开', () => {
+    const graphContribution = lower(graph({}), graphInputEmbedAdapter);
     const entityContribution = lower(
       entity({ role: 'participant', status: 'success', position: [0, 0] }),
-      EntityInputEmbedAdapter,
+      entityInputEmbedAdapter,
     );
     const relationContribution = lower(
       relation({
@@ -423,13 +423,13 @@ describe('Graph Vanilla embed adapters', () => {
         role: 'association',
         status: 'warning',
       }),
-      RelationInputEmbedAdapter,
+      relationInputEmbedAdapter,
     );
-    const groupContribution = lower(group({}), GroupInputEmbedAdapter);
-    const blockContribution = lower(block({}), BlockInputEmbedAdapter);
-    const headerContribution = lower(blockHeader({ title: { text: 'Block' } }), BlockHeaderInputEmbedAdapter);
-    const sectionContribution = lower(blockSection({}), BlockSectionInputEmbedAdapter);
-    const rowContribution = lower(blockRow({}), BlockRowInputEmbedAdapter);
+    const groupContribution = lower(group({}), groupInputEmbedAdapter);
+    const blockContribution = lower(block({}), blockInputEmbedAdapter);
+    const headerContribution = lower(blockHeader({ title: { text: 'Block' } }), blockHeaderInputEmbedAdapter);
+    const sectionContribution = lower(blockSection({}), blockSectionInputEmbedAdapter);
+    const rowContribution = lower(blockRow({}), blockRowInputEmbedAdapter);
 
     expect(graphContribution.node).toEqual({ namespace: 'graph', type: 'graph' });
     expect(entityContribution.node).toEqual({
@@ -466,7 +466,7 @@ describe('Graph Vanilla embed adapters', () => {
     expect(rowContribution.node).not.toHaveProperty('id');
   });
 
-  it('normalizes Relation Way while preserving complete Core NodeTargets', () => {
+  it('标准化 Relation 方式，同时保留完整的 Core NodeTargets', () => {
     const contribution = lower(
       relation({
         source: {
@@ -479,7 +479,7 @@ describe('Graph Vanilla embed adapters', () => {
         role: 'dependency',
         way: ['source', { id: 'target' }],
       }),
-      RelationInputEmbedAdapter,
+      relationInputEmbedAdapter,
     );
 
     expect(contribution.node).toEqual({
@@ -500,7 +500,7 @@ describe('Graph Vanilla embed adapters', () => {
     });
   });
 
-  it('normalizes string Relation endpoints into Core NodeTargets', () => {
+  it('将字符串 Relation 端点标准化为 Core NodeTargets', () => {
     expect(
       normalizeRelation({
         type: 'relation',
@@ -517,7 +517,7 @@ describe('Graph Vanilla embed adapters', () => {
     });
   });
 
-  it('normalizes arbitrary nested embeds without adding a panel Scope', () => {
+  it('标准化任意嵌套嵌入，无需添加面板 Scope', () => {
     const normalized = normalizeScene(
       {
         children: [
@@ -572,7 +572,7 @@ describe('Graph Vanilla embed adapters', () => {
     ]);
   });
 
-  it('normalizes nested independent structure embeds while merging provider contributions', () => {
+  it('在合并提供者贡献的同时标准化嵌套的独立结构嵌入', () => {
     const normalized = normalizeScene(
       {
         children: [
@@ -620,17 +620,17 @@ describe('Graph Vanilla embed adapters', () => {
     });
     expect(normalized.contributions.flatMap(contribution => contribution.roots)).toEqual(
       expect.arrayContaining([
-        BlockProviderKey,
-        BlockHeaderProviderKey,
-        BlockSectionProviderKey,
-        BlockRowProviderKey,
-        EntityProviderKey,
-        GroupProviderKey,
+        blockProviderKey,
+        blockHeaderProviderKey,
+        blockSectionProviderKey,
+        blockRowProviderKey,
+        entityProviderKey,
+        groupProviderKey,
       ]),
     );
   });
 
-  it('compiles a collocated Block declared directly inside a standalone Group', () => {
+  it('编译直接在独立 Group 内声明的并置 Block', () => {
     expect(() =>
       processToStaticInputResult(
         {
@@ -650,58 +650,58 @@ describe('Graph Vanilla embed adapters', () => {
     ).not.toThrow();
   });
 
-  it('contributes the provider closure rooted at the matching semantic composite', () => {
-    const graphContribution = lower(graph({}), GraphInputEmbedAdapter);
-    const entityContribution = lower(entity({ role: 'participant', position: [0, 0] }), EntityInputEmbedAdapter);
+  it('贡献基于匹配语义组合的提供者闭包', () => {
+    const graphContribution = lower(graph({}), graphInputEmbedAdapter);
+    const entityContribution = lower(entity({ role: 'participant', position: [0, 0] }), entityInputEmbedAdapter);
     const relationContribution = lower(
       relation({
         source: { id: 'source' },
         target: { id: 'target' },
         role: 'association',
       }),
-      RelationInputEmbedAdapter,
+      relationInputEmbedAdapter,
     );
-    const groupContribution = lower(group({}), GroupInputEmbedAdapter);
-    const blockContribution = lower(block({}), BlockInputEmbedAdapter);
-    const headerContribution = lower(blockHeader({ title: { text: 'Block' } }), BlockHeaderInputEmbedAdapter);
-    const sectionContribution = lower(blockSection({}), BlockSectionInputEmbedAdapter);
-    const rowContribution = lower(blockRow({}), BlockRowInputEmbedAdapter);
+    const groupContribution = lower(group({}), groupInputEmbedAdapter);
+    const blockContribution = lower(block({}), blockInputEmbedAdapter);
+    const headerContribution = lower(blockHeader({ title: { text: 'Block' } }), blockHeaderInputEmbedAdapter);
+    const sectionContribution = lower(blockSection({}), blockSectionInputEmbedAdapter);
+    const rowContribution = lower(blockRow({}), blockRowInputEmbedAdapter);
 
     expect(graphContribution.providerDependencies.roots).toEqual([GraphProviderKey]);
-    expect(entityContribution.providerDependencies.roots).toEqual([EntityProviderKey]);
-    expect(relationContribution.providerDependencies.roots).toEqual([RelationProviderKey]);
-    expect(groupContribution.providerDependencies.roots).toEqual([GroupProviderKey]);
-    expect(blockContribution.providerDependencies.roots).toEqual([BlockProviderKey]);
-    expect(headerContribution.providerDependencies.roots).toEqual([BlockHeaderProviderKey]);
-    expect(sectionContribution.providerDependencies.roots).toEqual([BlockSectionProviderKey]);
-    expect(rowContribution.providerDependencies.roots).toEqual([BlockRowProviderKey]);
+    expect(entityContribution.providerDependencies.roots).toEqual([entityProviderKey]);
+    expect(relationContribution.providerDependencies.roots).toEqual([relationProviderKey]);
+    expect(groupContribution.providerDependencies.roots).toEqual([groupProviderKey]);
+    expect(blockContribution.providerDependencies.roots).toEqual([blockProviderKey]);
+    expect(headerContribution.providerDependencies.roots).toEqual([blockHeaderProviderKey]);
+    expect(sectionContribution.providerDependencies.roots).toEqual([blockSectionProviderKey]);
+    expect(rowContribution.providerDependencies.roots).toEqual([blockRowProviderKey]);
     expect(graphContribution.providerDependencies.providers.map(provider => provider.key)).toEqual(
       expect.arrayContaining([
         GraphProviderKey,
-        GroupProviderKey,
-        BlockProviderKey,
-        EntityProviderKey,
-        RelationProviderKey,
+        groupProviderKey,
+        blockProviderKey,
+        entityProviderKey,
+        relationProviderKey,
       ]),
     );
     expect(groupContribution.providerDependencies.providers.map(provider => provider.key)).toEqual(
-      expect.arrayContaining([GroupProviderKey, BlockProviderKey, EntityProviderKey, RelationProviderKey]),
+      expect.arrayContaining([groupProviderKey, blockProviderKey, entityProviderKey, relationProviderKey]),
     );
     expect(blockContribution.providerDependencies.providers.map(provider => provider.key)).toEqual(
       expect.arrayContaining([
-        BlockProviderKey,
-        BlockHeaderProviderKey,
-        BlockSectionProviderKey,
-        BlockRowProviderKey,
-        EntityProviderKey,
-        RelationProviderKey,
+        blockProviderKey,
+        blockHeaderProviderKey,
+        blockSectionProviderKey,
+        blockRowProviderKey,
+        entityProviderKey,
+        relationProviderKey,
       ]),
     );
     expect(entityContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(3);
     expect(relationContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(5);
   });
 
-  it('keeps Graph definitions out of Source IR and compiles standalone members with built-in definitions', () => {
+  it('将 Graph 定义保留在 Source IR 之外，并使用内置定义编译独立成员', () => {
     const entityRole = defineEntityRole({
       role: 'custom-entity',
       description: 'Custom Entity role',
@@ -738,14 +738,14 @@ describe('Graph Vanilla embed adapters', () => {
           },
         ],
       }),
-      GraphInputEmbedAdapter,
+      graphInputEmbedAdapter,
     );
     const entityContribution = lower(
       entity({
         role: 'participant',
         position: [0, 100],
       }),
-      EntityInputEmbedAdapter,
+      entityInputEmbedAdapter,
     );
     const relationContribution = lower(
       relation({
@@ -753,7 +753,7 @@ describe('Graph Vanilla embed adapters', () => {
         target: { id: 'direct-target' },
         role: 'association',
       }),
-      RelationInputEmbedAdapter,
+      relationInputEmbedAdapter,
     );
 
     for (const contribution of [graphContribution, entityContribution, relationContribution]) {

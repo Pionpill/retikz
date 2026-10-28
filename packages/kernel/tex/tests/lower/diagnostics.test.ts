@@ -5,7 +5,7 @@ import { createLowerTex } from '../../src';
 
 const validSvg = '<svg viewBox="0 0 10 10"><path d="M0 0 L10 10"/></svg>';
 
-describe('[lower-tex] diagnostics and cache', () => {
+describe('[lower-tex] 诊断和缓存', () => {
   it('缓存确定失败并在每次公开调用向 callback 重放诊断', () => {
     let calls = 0;
     const diagnostics: Array<TexLoweringDiagnostic> = [];

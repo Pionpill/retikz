@@ -17,7 +17,7 @@ import { createEmptyInputRuntimeMetaSnapshot, isInputScene, normalizeScene } fro
 import { createInputSceneTraversal } from '../normalize/scene';
 import { assertPreparationActive, prepareAuthoringContributions } from './authoring';
 import { createTextMeasurer } from './text-measurement';
-import type { AsyncProcessingOptions, PreparedProcessingInput, ProcessingOptions, ProcessingSource } from './types';
+import type { AsyncProcessingOptions, InputPreparedProcessing, ProcessingOptions, ProcessingSource } from './types';
 
 const EMPTY_AUTHORING_SITES: ReadonlyArray<InputAuthoringSite> = Object.freeze([]);
 
@@ -73,7 +73,7 @@ const resolveCoreOptions = (
 export const prepareProcessingInput = (
   source: ProcessingSource,
   options: ProcessingOptions,
-): PreparedProcessingInput => {
+): InputPreparedProcessing => {
   if (isInputScene(source)) {
     const normalized = normalizeScene(source, {
       adapters: options.adapters,
@@ -112,7 +112,7 @@ export const prepareProcessingInputAsync = async (
   source: ProcessingSource,
   options: AsyncProcessingOptions,
   signal: AbortSignal,
-): Promise<PreparedProcessingInput> => {
+): Promise<InputPreparedProcessing> => {
   assertPreparationActive(signal);
   if (!isInputScene(source)) return prepareProcessingInput(source, { ...options, adapters: undefined });
 

@@ -1,10 +1,10 @@
-import { DiamondArrowDefinition } from '@retikz/extension';
+import { diamondArrowDefinition } from '@retikz/extension';
 import { Draw, Layout } from '@retikz/react';
 import type { FC } from 'react';
 
 /** 展示按需装配后的单个箭头 */
 const Entry: FC = () => (
-  <Layout viewBox={{ x: -110, y: -45, width: 220, height: 90 }} extensions={{ arrows: [DiamondArrowDefinition] }}>
+  <Layout viewBox={{ x: -110, y: -45, width: 220, height: 90 }} extensions={{ arrows: [diamondArrowDefinition] }}>
     <Draw
       way={[
         [-70, 0],

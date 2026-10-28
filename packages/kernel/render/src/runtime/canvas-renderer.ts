@@ -29,7 +29,7 @@ import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
 import type { RenderReadonlyLayer } from './readonly-layer';
-import { validateReadonlyLayers } from './readonly-layer';
+import { snapshotReadonlyLayers } from './readonly-layer';
 import type { RetainedCanvasRenderer, RetainedCanvasRendererImmutableOptions } from './renderer';
 import { defineRetainedRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
@@ -135,7 +135,7 @@ type CanvasAnimationState = Readonly<{
   /** 全场景共享 coarse clock */
   controls: AnimationControls;
   /** 创建绑定命中 SceneIdentity 的 hydration 控制器 */
-  makeHydrationControls: (target: HydrationTarget) => HydrationAnimationControls;
+  createHydrationControls: (target: HydrationTarget) => HydrationAnimationControls;
   /** 按已确定的 public id 创建控制器，供合成 enter/leave context 保持 previous target 语义 */
   makeHydrationControlsForPublicId: (publicId: string) => HydrationAnimationControls;
   /** 构造不触碰 committed state 的 candidate Scene/registry */
@@ -288,7 +288,7 @@ const createCanvasImageLoader = (onReady: () => void): CanvasImageLoader => {
   let active = true;
   let committed = new Set<string>();
 
-  const ensure = (href: string): void => {
+  const loadImageIfAbsent = (href: string): void => {
     if (entries.has(href) || typeof Image === 'undefined') return;
 
     const image = new Image();
@@ -303,7 +303,7 @@ const createCanvasImageLoader = (onReady: () => void): CanvasImageLoader => {
   };
 
   const getImage: CanvasImageResolver = href => {
-    ensure(href);
+    loadImageIfAbsent(href);
     const entry = entries.get(href);
     return entry?.loaded() === true ? entry.image : null;
   };
@@ -327,7 +327,7 @@ const createCanvasImageLoader = (onReady: () => void): CanvasImageLoader => {
       try {
         for (const href of hrefs) {
           if (!entries.has(href)) created.add(href);
-          ensure(href);
+          loadImageIfAbsent(href);
         }
       } catch (cause) {
         for (const href of created) if (!committed.has(href)) release(href);
@@ -1075,7 +1075,7 @@ const createCanvasAnimation = (
       }
 
       if (changed) {
-        ensureActiveTimelinesPlaying();
+        startActiveTimelines();
         renderFrame();
       }
     };
@@ -1235,7 +1235,7 @@ const createCanvasAnimation = (
   };
 
   /** per-id play/restart/seek 后按有效时刻刷新 finite envelope，并确保新 clock 推进 */
-  const ensureActiveTimelinesPlaying = (): void => {
+  const startActiveTimelines = (): void => {
     if (!enabled || cleanupStarted) return;
 
     const currentTime = clock.time;
@@ -1317,29 +1317,29 @@ const createCanvasAnimation = (
   });
 
   /** 以 renderer-private token 与默认 public id 创建一组 per-id hydration controls */
-  const makeHydrationControls = (defaultId: string): HydrationAnimationControls =>
+  const createHydrationControls = (defaultId: string): HydrationAnimationControls =>
     createCanvasIdAnimationControls({
       registry,
       clockTime: () => clock.time,
-      ensurePlaying: ensureActiveTimelinesPlaying,
+      ensurePlaying: startActiveTimelines,
       renderFrame: () => renderFrame(),
       defaultId,
       resolveIds: publicId => occurrenceIndex.tokensByPublicId.get(publicId),
     });
   const state: CanvasAnimationState = Object.freeze({
     controls,
-    makeHydrationControls: target => {
+    createHydrationControls: target => {
       if (!enabled || cleanupStarted) return createClockAnimationControls(undefined);
 
       const defaultToken = occurrenceIndex.tokenByIdentity.get(target.identity);
       if (defaultToken === undefined) return createClockAnimationControls(undefined);
 
-      return makeHydrationControls(target.publicId ?? defaultToken);
+      return createHydrationControls(target.publicId ?? defaultToken);
     },
     makeHydrationControlsForPublicId: publicId => {
       if (!enabled || cleanupStarted) return createClockAnimationControls(undefined);
       const defaultToken = occurrenceIndex.tokensByPublicId.get(publicId)?.[0];
-      return defaultToken === undefined ? createClockAnimationControls(undefined) : makeHydrationControls(publicId);
+      return defaultToken === undefined ? createClockAnimationControls(undefined) : createHydrationControls(publicId);
     },
     stage: (nextSnapshot, nextLayers, nextConfig, diff) => {
       const nextOccurrenceIndex = createCanvasAnimationOccurrenceIndex(nextSnapshot, occurrenceIndex, allocateToken);
@@ -1551,7 +1551,7 @@ export const createBuiltinCanvasRetainedRenderer = (
     config: RenderRuntimeConfig,
   ): ReconcilerPreparedCommit => {
     const snapshot = frame.primary;
-    const layers = validateReadonlyLayers(frame.layers);
+    const layers = snapshotReadonlyLayers(frame.layers);
     const imageStage = imageLoader.stage(collectCanvasImageHrefs(snapshot, layers));
 
     try {

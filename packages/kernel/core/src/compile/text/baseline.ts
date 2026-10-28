@@ -5,7 +5,7 @@ export const ASCENT_FACTOR = 0.8;
 export const DESCENT_FACTOR = 0.2;
 
 /** 文本基线换算输入 */
-export type AlphabeticBaselineInput = {
+type InputAlphabeticBaseline = {
   /** 文本锚点 y */
   y: number;
   /** 原始垂直锚点 */
@@ -19,7 +19,7 @@ export type AlphabeticBaselineInput = {
 };
 
 /** 把文本块垂直锚点折算成首行 alphabetic 基线 y */
-export const toAlphabeticBaselineY = (input: AlphabeticBaselineInput): number => {
+export const toAlphabeticBaselineY = (input: InputAlphabeticBaseline): number => {
   const { y, baseline, lineCount, lineHeight, fontSize } = input;
   const asc = fontSize * ASCENT_FACTOR;
   const desc = fontSize * DESCENT_FACTOR;

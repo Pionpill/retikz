@@ -4,8 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import type { NodeLayout } from '../../src/compile/node';
-import { boxInsets } from '../../src/compile/node';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { createScopeCircleLayout } from '../../src/compile/node';
 import { collectScopeCornerPoints } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
@@ -30,12 +29,12 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 };
 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout */
-const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => ({
+const layoutAt = (cx: number, cy: number, w: number, h: number): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
     contentCenter: [cx, cy],
-    margin: boxInsets(0),
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
     contentSize: { width: w, height: h },
   },
   boundary: {
@@ -47,7 +46,7 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
 });
 
 describe('createScopeCircleLayout 单元测试', () => {
-  it('shapeName ellipse + shapeParams circumscribe:equal', () => {
+  it('shapeName 椭圆 + shapeParams 外接：相等', () => {
     const layout = createScopeCircleLayout({ id: 'g', cornerPoints: [], fallbackOrigin: [0, 0] });
 
     expect(layout.shape.name).toBe('ellipse');
@@ -62,7 +61,7 @@ describe('createScopeCircleLayout 单元测试', () => {
     expect(layout.geometry.rect.width).toBe(0);
     expect(layout.geometry.rect.height).toBe(0);
     expect(layout.geometry.rect.rotate).toBe(0);
-    expect(layout.geometry.margin).toEqual(boxInsets(0));
+    expect(layout.geometry.margin).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
   });
 
   it('有点集 → rect width===height===2*radius，center 等于 MEC center', () => {

@@ -17,7 +17,7 @@ import type {
   DataTransformPreparation,
   DataTransformRequestOptions,
   DataTransformStageImplementation,
-  DataTransformStageInput,
+  InputDataTransformStage,
 } from './contract';
 import {
   assertDataExecutionActive,
@@ -61,7 +61,7 @@ export class PreparedTransformPlan<TSource> implements Extract<DataTransformPrep
   }
 
   /** 校验实际输入并创建独立的一次性执行实例 */
-  bind = (input: DataTransformStageInput<TSource>): DataTransformExecution => {
+  bind = (input: InputDataTransformStage<TSource>): DataTransformExecution => {
     assertDataExecutionActive(this.signal);
     assertDataTransformModel(this.descriptor.model, input.kind === 'source' ? input.model : input.result.model);
     if (
@@ -78,7 +78,7 @@ export class PreparedTransformPlan<TSource> implements Extract<DataTransformPrep
 
   /** 源物化遵守请求级取消、模型与来源要求 */
   materialize = async (
-    input: Extract<DataTransformStageInput<TSource>, { kind: 'source' }>,
+    input: Extract<InputDataTransformStage<TSource>, { kind: 'source' }>,
   ): Promise<DataTransformResult> => {
     const materializer = this.materializeSource;
     if (materializer === undefined) throw new RetikzDataError('data: source materializer is unavailable');

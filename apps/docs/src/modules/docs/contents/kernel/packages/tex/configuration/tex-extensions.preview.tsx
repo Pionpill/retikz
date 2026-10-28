@@ -1,4 +1,4 @@
-import type { LowerTex } from '@retikz/core';
+import type { TexLowerer } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 import type { MathJaxExtension } from '@retikz/tex';
 
@@ -6,7 +6,7 @@ import { TexExtensionExample, TexExtensions } from './tex-extensions.controls';
 
 const extensions: Array<MathJaxExtension> = [...TexExtensions];
 
-const renderTexExtensions = (values: TexExtensionsPreviewValues, lowerTex?: LowerTex) => {
+const renderTexExtensions = (values: TexExtensionsPreviewValues, lowerTex?: TexLowerer) => {
   const source = TexExtensionExample[values.example];
   const extensionLines = extensions.reduce<Array<string>>(
     (lines, extension) => {
@@ -54,5 +54,5 @@ export type TexExtensionsPreviewValues = {
 };
 
 /** 绘制示例图形 */
-export const TexExtensionsPreview = (values: TexExtensionsPreviewValues, lowerTex?: LowerTex) =>
+export const TexExtensionsPreview = (values: TexExtensionsPreviewValues, lowerTex?: TexLowerer) =>
   renderTexExtensions(values, lowerTex);

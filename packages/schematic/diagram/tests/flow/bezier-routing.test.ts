@@ -3,13 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { FlowRoutingSchema, FlowDiagramSchema } from '../../src/flow';
 import { evaluateFlowBezierConflicts, flowRouteLabelBounds } from '../../src/flow/providers';
 
-describe('Bezier authoring contract', () => {
+describe('贝塞尔曲线编写契约', () => {
   it.each([
     { kind: 'curve' },
     { kind: 'cubic' },
     { kind: 'curve', control: [80, -40] },
     { kind: 'cubic', control1: [20, -40], control2: [120, 60] },
-  ])('preserves input and JSON round-trip: $kind', routing => {
+  ])('保留输入和 JSON 往返：$kind', routing => {
     expect(FlowRoutingSchema.parse(routing)).toEqual(routing);
     expect(FlowRoutingSchema.parse(JSON.parse(JSON.stringify(routing)))).toEqual(routing);
   });
@@ -21,11 +21,11 @@ describe('Bezier authoring contract', () => {
     { kind: 'curve', control: null },
     { kind: 'curve', control1: [20, 30] },
     { kind: 'cubic', control: [20, 30] },
-  ])('rejects partial controls, invalid controls and unrelated fields', routing => {
+  ])('拒绝部分控件、无效控件和不相关字段', routing => {
     expect(FlowRoutingSchema.safeParse(routing).success).toBe(false);
   });
 
-  it('rejects Bezier as root and Group routing defaults', () => {
+  it('拒绝 Bezier 作为根和 Group 路由默认值', () => {
     const source = {
       namespace: 'diagram',
       type: 'flow',
@@ -47,8 +47,8 @@ describe('Bezier authoring contract', () => {
 });
 
 // 布局层契约：形状、避让、确定性与不可变作者点
-import type { FlowLayoutInput, FlowLayoutOutput } from '../../src/flow';
-import { LayeredFlowLayoutDefinition } from '../../src/flow';
+import type { InputFlowLayoutComputation, FlowLayoutOutput } from '../../src/flow';
+import { layeredFlowLayoutDefinition } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
 import { findFlowCurveObstacleIntervals } from '../../src/flow/shared/geometry';
@@ -59,7 +59,7 @@ const elements: FlowLayoutOutput['elements'] = [
   { id: 'obstacle', bounds: { x: 90, y: -15, width: 20, height: 30 } },
 ];
 
-const inputFor = (routing: FlowLayoutInput['relations'][number]['routing']): FlowLayoutInput => ({
+const inputFor = (routing: InputFlowLayoutComputation['relations'][number]['routing']): InputFlowLayoutComputation => ({
   layout: { direction: 'right', nodeGap: 48, rankGap: 48, routing: { kind: 'straight' } },
   elements: elements.map(element => ({
     kind: 'leaf',
@@ -72,8 +72,8 @@ const inputFor = (routing: FlowLayoutInput['relations'][number]['routing']): Flo
   ],
 });
 
-describe('Bezier layout', () => {
-  it.each(['curve', 'cubic'] as const)('automatically avoids a central obstacle deterministically: %s', kind => {
+describe('贝塞尔曲线布局', () => {
+  it.each(['curve', 'cubic'] as const)('自动确定地避开中心障碍物：%s', kind => {
     const input = inputFor(kind === 'curve' ? { kind } : { kind });
     const before = JSON.stringify(input);
     const result = routeFlowRelations(input, elements);
@@ -103,10 +103,10 @@ describe('Bezier layout', () => {
     expect(findFlowCurveObstacleIntervals(segment, elements[2].bounds)).toEqual([]);
   });
 
-  it('rejects provider mutation of explicit controls while accepting value-equal clones', () => {
+  it('拒绝显式控件的提供者突变，同时接受等值克隆', () => {
     const input = inputFor({ kind: 'curve', control: [100, -80] });
     const provider = {
-      ...LayeredFlowLayoutDefinition,
+      ...layeredFlowLayoutDefinition,
       layout: () => ({
         elements,
         relations: [
@@ -154,7 +154,7 @@ describe('Bezier layout', () => {
     ).toThrow('preserve effective input');
   });
 
-  it('rejects coincident automatic endpoints', () => {
+  it('拒绝重合的自动端点', () => {
     expect(() =>
       routeFlowRelations(
         inputFor({ kind: 'cubic' }),
@@ -222,33 +222,30 @@ const compileBezier = (
   return { result, artifact, warnings };
 };
 
-it.each(['forward', 'reverse', 'both', 'none'] as const)(
-  'preserves explicit cubic controls and translates all coordinates once: %s',
-  direction => {
-    const routing = {
-      kind: 'cubic' as const,
-      control1: [-40, -90] as [number, number],
-      control2: [180, 70] as [number, number],
-    };
-    const { artifact, result } = compileBezier(routing, undefined, direction);
-    const route = artifact.relations[0].route;
-    if (route.kind !== 'cubic') throw new Error('expected cubic artifact');
+it.each(['forward', 'reverse', 'both', 'none'] as const)('保留显式立方控件并平移所有坐标一次：%s', direction => {
+  const routing = {
+    kind: 'cubic' as const,
+    control1: [-40, -90] as [number, number],
+    control2: [180, 70] as [number, number],
+  };
+  const { artifact, result } = compileBezier(routing, undefined, direction);
+  const route = artifact.relations[0].route;
+  if (route.kind !== 'cubic') throw new Error('expected cubic artifact');
 
-    const origin = artifact.regions.drawing.origin;
+  const origin = artifact.regions.drawing.origin;
 
-    expect(route.control1.map((value, index) => value - origin[index])).toEqual(routing.control1);
-    expect(route.control2.map((value, index) => value - origin[index])).toEqual(routing.control2);
-    expect(origin[1]).not.toBe(0);
-    expect(artifact.relations[0].labelReservation).toBeDefined();
-    expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
-    expect(
-      flatten(result.scene.primitives).some(
-        item => item.type === 'path' && item.commands.some(command => command.kind === 'cubic'),
-      ),
-    ).toBe(true);
-  },
-);
-it('lowers explicit quadratic to native quad and round-trips artifact control using origin', () => {
+  expect(route.control1.map((value, index) => value - origin[index])).toEqual(routing.control1);
+  expect(route.control2.map((value, index) => value - origin[index])).toEqual(routing.control2);
+  expect(origin[1]).not.toBe(0);
+  expect(artifact.relations[0].labelReservation).toBeDefined();
+  expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
+  expect(
+    flatten(result.scene.primitives).some(
+      item => item.type === 'path' && item.commands.some(command => command.kind === 'cubic'),
+    ),
+  ).toBe(true);
+});
+it('将显式二次曲线下沉为原生 quad 并通过 origin 往返还原产物控制点', () => {
   const first = compileBezier({ kind: 'curve', control: [100, -90] });
   const route = first.artifact.relations[0].route;
   if (route.kind !== 'curve') throw new Error('expected curve');
@@ -266,18 +263,18 @@ it('lowers explicit quadratic to native quad and round-trips artifact control us
     ),
   ).toBe(true);
 });
-it('checks automatic capability before callback, but permits complete explicit controls', () => {
+it('在回调之前检查自动功能，但允许完整的显式控制', () => {
   let calls = 0;
   const provider: FlowLayoutDefinition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'explicit-only',
     capabilities: {
-      ...LayeredFlowLayoutDefinition.capabilities,
+      ...layeredFlowLayoutDefinition.capabilities,
       routing: [{ kind: 'straight' }, { kind: 'orthogonal' }, { kind: 'curve', modes: ['explicit'] }],
     },
     layout: (input, context) => {
       calls++;
-      return LayeredFlowLayoutDefinition.layout(input, context);
+      return layeredFlowLayoutDefinition.layout(input, context);
     },
   };
 
@@ -288,12 +285,12 @@ it('checks automatic capability before callback, but permits complete explicit c
 
   expect(calls).toBe(1);
 });
-it('keeps conflicted explicit controls and distinguishes automatic conflict warnings', () => {
+it('保留冲突的显式控制并区分自动冲突警告', () => {
   const provider: FlowLayoutDefinition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'conflicted',
     layout: (input, context) => {
-      const output = LayeredFlowLayoutDefinition.layout(input, context);
+      const output = layeredFlowLayoutDefinition.layout(input, context);
       return {
         ...output,
         relations: output.relations.map((relation, index) => {
@@ -320,40 +317,37 @@ it('keeps conflicted explicit controls and distinguishes automatic conflict warn
   expect(automatic.warnings.some(warning => warning.code === 'FlowBezierSearchExhausted')).toBe(true);
 });
 
-it.each(['curve', 'cubic'] as const)(
-  'preserves avoidance under quarter-turn, translation and reversed endpoints: %s',
-  kind => {
-    const scenarios = [
-      elements,
-      elements.map(element => ({
-        ...element,
-        bounds: {
-          x: 300 - element.bounds.y - element.bounds.height,
-          y: 50 + element.bounds.x,
-          width: element.bounds.height,
-          height: element.bounds.width,
-        },
-      })),
-    ];
+it.each(['curve', 'cubic'] as const)('在直角回转、平移和反转端点下保留回避：%s', kind => {
+  const scenarios = [
+    elements,
+    elements.map(element => ({
+      ...element,
+      bounds: {
+        x: 300 - element.bounds.y - element.bounds.height,
+        y: 50 + element.bounds.x,
+        width: element.bounds.height,
+        height: element.bounds.width,
+      },
+    })),
+  ];
 
-    for (const output of scenarios)
-      for (const reverse of [false, true]) {
-        const input = inputFor(kind === 'curve' ? { kind } : { kind });
-        const relation = {
-          ...input.relations[0],
-          source: { id: reverse ? 'b' : 'a', overlap: 'allow' as const },
-          target: { id: reverse ? 'a' : 'b', overlap: 'allow' as const },
-        };
-        const route = routeFlowRelations({ ...input, relations: [relation] }, output)[0].route;
-        if (route.kind !== 'curve' && route.kind !== 'cubic') throw new Error('Bezier expected');
+  for (const output of scenarios)
+    for (const reverse of [false, true]) {
+      const input = inputFor(kind === 'curve' ? { kind } : { kind });
+      const relation = {
+        ...input.relations[0],
+        source: { id: reverse ? 'b' : 'a', overlap: 'allow' as const },
+        target: { id: reverse ? 'a' : 'b', overlap: 'allow' as const },
+      };
+      const route = routeFlowRelations({ ...input, relations: [relation] }, output)[0].route;
+      if (route.kind !== 'curve' && route.kind !== 'cubic') throw new Error('Bezier expected');
 
-        expect(
-          evaluateFlowBezierConflicts(route, relation, [{ id: 'obstacle', bounds: output[2].bounds }], []).nodes,
-        ).toBe(0);
-      }
-  },
-);
-it('returns a collinear baseline when clear and expands for a reserved label', () => {
+      expect(
+        evaluateFlowBezierConflicts(route, relation, [{ id: 'obstacle', bounds: output[2].bounds }], []).nodes,
+      ).toBe(0);
+    }
+});
+it('清除时返回共线基线并针对保留标签进行扩展', () => {
   const input = inputFor({ kind: 'curve' });
   const clear = elements.map(element =>
     element.id === 'obstacle' ? { ...element, bounds: { ...element.bounds, y: 200 } } : element,
@@ -371,7 +365,7 @@ it('returns a collinear baseline when clear and expands for a reserved label', (
 
   expect(result[1].route).not.toMatchObject({ control: [100, 0] });
 });
-it('uses subcurve boxes to exclude empty interiors while retaining tangency and endpoint re-entry', () => {
+it('使用子曲线框排除空内部，同时保留相切和端点重新进入', () => {
   const quadratic = {
     kind: 'quadraticBezier' as const,
     from: [0, 0] as [number, number],

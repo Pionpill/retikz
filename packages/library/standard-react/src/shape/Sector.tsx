@@ -1,6 +1,6 @@
 import type { HydrationEventProps } from '@retikz/react';
 import type { InputSector } from '@retikz/standard-vanilla/shape';
-import { SectorInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { sectorInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
@@ -19,5 +19,5 @@ const SectorComponent: FC<SectorProps> = () => null;
 export const Sector = SectorComponent as StandardEmbeddableComponent<SectorProps>;
 Sector.displayName = 'Sector';
 Sector.isTier2Embeddable = true;
-Sector.inputEmbedAdapter = SectorInputEmbedAdapter;
+Sector.inputEmbedAdapter = sectorInputEmbedAdapter;
 Sector.createInputEmbedProps = shapeEmbedProps;

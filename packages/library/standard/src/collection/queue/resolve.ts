@@ -8,10 +8,7 @@ import type { IRQueue } from './schema';
 import { QueueBorderSchema, QueueLayoutSchema, QueueSchema } from './schema';
 
 /** 供布局消费的单一队列结构，位置与首尾不重复存储 */
-export type CanonicalQueue = Omit<
-  IRQueue,
-  'items' | 'data' | 'skeleton' | 'dataExpand' | 'layout' | 'padding' | 'border'
-> & {
+type CanonicalQueue = Omit<IRQueue, 'items' | 'data' | 'skeleton' | 'dataExpand' | 'layout' | 'padding' | 'border'> & {
   /** 已展开并完成逐格继承的输入序列 */
   items: Array<CanonicalCell>;
   /** 确定的物理方向与间距 */

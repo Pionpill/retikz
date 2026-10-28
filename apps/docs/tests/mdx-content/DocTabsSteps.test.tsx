@@ -41,7 +41,7 @@ afterEach(async () => {
   document.body.replaceChildren();
 });
 
-describe('MDX DocTabs / DocSteps', () => {
+describe('MDX 的 DocTabs 与 DocSteps', () => {
   it('使用 shadcn 默认标签外观', async () => {
     const container = await render(
       <DocTabs defaultValue="react">

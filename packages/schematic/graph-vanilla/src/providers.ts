@@ -58,7 +58,7 @@ export const createGraphProviderDependencies = (rootKey: GraphProviderKey, optio
     visited.add(provider);
     output.push(provider);
 
-    for (const dependency of provider.dependencies) {
+    for (const dependency of provider.dependencies ?? []) {
       const candidate = providers.find(entry => sameProviderKey(entry.key, dependency));
       if (candidate === undefined) {
         const label = providerLabelOf(dependency);

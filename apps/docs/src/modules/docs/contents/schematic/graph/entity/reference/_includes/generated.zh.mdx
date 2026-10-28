@@ -70,7 +70,7 @@ export type EntityProps = Omit<InputEntity, 'type'> &
 | 动画 | `animations?`  | `Array<IRAnimationTrack>`                                                                        | —      | 动画轨道，不参与布局                                                                        |
 | 数据 | `meta?`        | `Record<string, JsonValue>`                                                                      | —      | 透传的 JSON 元信息                                                                          |
 |      | `input` (参数) | `EntityInputEmbedProps`                                                                          | —      | 实体编写字段；自定义语义仅引用已由 Graph 注册的 key                                         |
-|      | 返回值         | `InputEmbed<Omit<InputEntity, 'type'>>`                                                          | —      | 供 Vanilla 内容树使用的 embed 节点，由 EntityInputEmbedAdapter 转换为 Entity Source         |
+|      | 返回值         | `InputEmbed<Omit<InputEntity, 'type'>>`                                                          | —      | 供 Vanilla 内容树使用的 embed 节点，由 entityInputEmbedAdapter 转换为 Entity Source         |
 
 </ApiTable>
 
@@ -137,13 +137,13 @@ export type InputEntity = EntityCreateOptions &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EntityInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/entity.ts"} startLine={18}>EntityInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"entityInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/entity.ts"} startLine={18}>entityInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const EntityInputEmbedAdapter: SynchronousInputEmbedAdapter<EntityInputEmbedProps>;
+export declare const entityInputEmbedAdapter: SynchronousInputEmbedAdapter<EntityInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={24}>createGraphVanillaAdapters</ApiSourceLink>
+#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -255,14 +255,14 @@ export type EntityKindDefinition = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<JsonObject>>;
+export type EntityPredicateDefinition = InputEntityPredicateDefinition<ZodType<JsonObject>>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EntityPredicateDefinitionInput"} path={"packages/schematic/graph/src/contract/entity/types.ts"} startLine={37}>EntityPredicateDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputEntityPredicateDefinition"} path={"packages/schematic/graph/src/contract/entity/types.ts"} startLine={37}>InputEntityPredicateDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -286,7 +286,7 @@ export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<J
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
+export type InputEntityPredicateDefinition<TSchema extends ZodType<JsonObject>> = Readonly<{
   name: string;
   role: string;
   kinds?: ReadonlyArray<string>;
@@ -415,10 +415,10 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称       | 类型 / 签名                             | 说明                                                                       |
-| ------ | ---------- | --------------------------------------- | -------------------------------------------------------------------------- |
-| 参数   | `options?` | `GraphDefinitionOptions`                | 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配 |
-| 返回值 | —          | `ReadonlyArray<CoreDependencyProvider>` | 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖          |
+| 类别   | 名称       | 类型 / 签名                                | 说明                                                                       |
+| ------ | ---------- | ------------------------------------------ | -------------------------------------------------------------------------- |
+| 参数   | `options?` | `GraphDefinitionOptions`                   | 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配 |
+| 返回值 | —          | `ReadonlyArray<AnyCoreDependencyProvider>` | 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖          |
 
 </ApiTable>
 
@@ -427,7 +427,9 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createGraphProviders: (options?: GraphDefinitionOptions) => ReadonlyArray<CoreDependencyProvider>;
+export declare const createGraphProviders: (
+  options?: GraphDefinitionOptions,
+) => ReadonlyArray<AnyCoreDependencyProvider>;
 ```
 
 </DocTab>
@@ -472,7 +474,7 @@ export declare const defineEntityKind: (definition: EntityKindDefinition) => Ent
 | 类别   | 名称         | 类型 / 签名                               | 说明                                                                        |
 | ------ | ------------ | ----------------------------------------- | --------------------------------------------------------------------------- |
 | 泛型   | `TSchema`    | `extends ZodType<JsonObject>`             | 约束 paramsSchema 的 JSON 对象 Schema 类型，决定 predicate 参数的解析契约   |
-| 参数   | `definition` | `EntityPredicateDefinitionInput<TSchema>` | 传给 GraphDefinitionOptions.entityPredicates 的定义；此函数不执行注册或校验 |
+| 参数   | `definition` | `InputEntityPredicateDefinition<TSchema>` | 传给 GraphDefinitionOptions.entityPredicates 的定义；此函数不执行注册或校验 |
 | 返回值 | —            | `EntityPredicateDefinition`               | 原样返回 definition，不复制或修改输入对象                                   |
 
 </ApiTable>
@@ -483,7 +485,7 @@ export declare const defineEntityKind: (definition: EntityKindDefinition) => Ent
 
 ```ts
 export declare const defineEntityPredicate: <TSchema extends ZodType<JsonObject>>(
-  definition: EntityPredicateDefinitionInput<TSchema>,
+  definition: InputEntityPredicateDefinition<TSchema>,
 ) => EntityPredicateDefinition;
 ```
 

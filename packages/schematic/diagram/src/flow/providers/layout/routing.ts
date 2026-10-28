@@ -2,13 +2,13 @@ import type { BoundsRect, Position } from '@retikz/math';
 import { DEFAULT_EPSILON } from '@retikz/math';
 
 import type {
-  EffectiveFlowLayout,
+  CanonicalFlowLayoutOptions,
   FlowBendRoute,
-  FlowLayoutElementInput,
+  InputFlowLayoutElement,
   FlowLayoutElementOutput,
-  FlowLayoutInput,
+  InputFlowLayoutComputation,
   FlowLayoutExecutionContext,
-  FlowLayoutRelationInput,
+  InputFlowLayoutRelation,
   FlowLayoutRelationOutput,
   FlowLayoutRoute,
 } from '../../contract';
@@ -32,14 +32,14 @@ import { createFlowOrthogonalCandidates, evaluateFlowOrthogonalConflicts } from 
 
 type RoutingIndex = Readonly<{
   scopes: ReadonlyMap<string, ReadonlyArray<string>>;
-  layouts: ReadonlyMap<string, EffectiveFlowLayout>;
+  layouts: ReadonlyMap<string, CanonicalFlowLayoutOptions>;
 }>;
 
-const buildRoutingIndex = (elements: ReadonlyArray<FlowLayoutElementInput>): RoutingIndex => {
+const buildRoutingIndex = (elements: ReadonlyArray<InputFlowLayoutElement>): RoutingIndex => {
   const scopes = new Map<string, ReadonlyArray<string>>();
-  const layouts = new Map<string, EffectiveFlowLayout>();
+  const layouts = new Map<string, CanonicalFlowLayoutOptions>();
 
-  const visit = (items: ReadonlyArray<FlowLayoutElementInput>, ancestors: ReadonlyArray<string>): void => {
+  const visit = (items: ReadonlyArray<InputFlowLayoutElement>, ancestors: ReadonlyArray<string>): void => {
     for (const item of items) {
       scopes.set(item.id, ancestors);
       if (item.kind !== 'leaf') {
@@ -72,7 +72,7 @@ const collapsePoints = (points: ReadonlyArray<Readonly<Position>>): ReadonlyArra
 
 const labelBoundsFor = (
   points: ReadonlyArray<Readonly<Position>>,
-  size: NonNullable<FlowLayoutRelationInput['labelSize']>,
+  size: NonNullable<InputFlowLayoutRelation['labelSize']>,
 ): Readonly<BoundsRect> => {
   const lengths = points.slice(1).map((point, index) => {
     const previous = points[index];
@@ -115,7 +115,7 @@ const labelBoundsFor = (
  * @returns 按输入关系顺序排列的路由输出，由调用方与元素一起返回并接受布局输出校验
  */
 export const routeFlowRelations = (
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   elements: ReadonlyArray<FlowLayoutElementOutput>,
   context?: FlowLayoutExecutionContext,
 ): ReadonlyArray<FlowLayoutRelationOutput> => {
@@ -197,7 +197,7 @@ export const routeFlowRelations = (
     },
   );
 
-  const isAutomatic = (relation: FlowLayoutRelationInput): boolean => isFlowAutomaticRouting(relation.routing);
+  const isAutomatic = (relation: InputFlowLayoutRelation): boolean => isFlowAutomaticRouting(relation.routing);
 
   for (const [relationIndex, relation] of input.relations.entries()) {
     const routing = relation.routing;

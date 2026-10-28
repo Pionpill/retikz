@@ -1,15 +1,15 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { createInputScene, withInputEmbedAdapters } from '@retikz/react';
 import type { InputSurface } from '@retikz/standard-vanilla/presentation';
-import { SurfaceInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
-import type { SurfaceInput } from '@retikz/standard/presentation';
+import { surfaceInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import type { InputSurfaceConfig } from '@retikz/standard/presentation';
 import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/presentation';
 import type { FC, ReactNode } from 'react';
 
 import type { StandardEmbeddableComponent } from '../../shared';
 
 /** React Surface 组件接受的 Standard authoring 输入 */
-export type SurfaceProps = Omit<SurfaceInput, 'namespace' | 'type' | 'child'> & {
+export type SurfaceProps = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'child'> & {
   /** 恰好一个可转换为 Core IR 的 Kernel、Sugar 或 Tier 2 child */
   children: ReactNode;
 };
@@ -42,5 +42,5 @@ export const Surface = SurfaceComponent as StandardEmbeddableComponent<SurfacePr
 
 Surface.displayName = 'Surface';
 Surface.isTier2Embeddable = true;
-Surface.inputEmbedAdapter = SurfaceInputEmbedAdapter;
+Surface.inputEmbedAdapter = surfaceInputEmbedAdapter;
 Surface.createInputEmbedProps = createSurfaceInput;

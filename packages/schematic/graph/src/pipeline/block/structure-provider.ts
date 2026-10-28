@@ -1,60 +1,57 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
-import { FlexLayoutProvider } from '@retikz/layout';
-import { SurfaceProvider } from '@retikz/standard/presentation';
+import { flexLayoutProvider } from '@retikz/layout';
+import { surfaceProvider } from '@retikz/standard/presentation';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
-import { EntityProviderKey } from '../entity';
-import { RelationProviderKey } from '../relation';
-import { BlockHeaderDefinition, BlockRowDefinition, BlockSectionDefinition } from './structure-definition';
+import { entityProviderKey } from '../entity';
+import { relationProviderKey } from '../relation';
+import { blockHeaderDefinition, blockRowDefinition, blockSectionDefinition } from './structure-definition';
 
 const STRUCTURE_DEPENDENCIES = Object.freeze([
-  EntityProviderKey,
-  RelationProviderKey,
-  FlexLayoutProvider.key,
-  SurfaceProvider.key,
+  entityProviderKey,
+  relationProviderKey,
+  flexLayoutProvider.key,
+  surfaceProvider.key,
 ]);
 
 /** Block Header Composite provider 的公开完整 key */
-export const BlockHeaderProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const blockHeaderProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: GRAPH_NAMESPACE,
   type: GraphType.BlockHeader,
 });
 
 /** Block Section Composite provider 的公开完整 key */
-export const BlockSectionProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const blockSectionProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: GRAPH_NAMESPACE,
   type: GraphType.BlockSection,
 });
 
 /** Block Row Composite provider 的公开完整 key */
-export const BlockRowProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const blockRowProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: GRAPH_NAMESPACE,
   type: GraphType.BlockRow,
 });
 
 /** Block Header 的 Core Composite dependency provider */
-export const BlockHeaderProvider: CoreDependencyProvider = Object.freeze({
-  key: BlockHeaderProviderKey,
+export const blockHeaderProvider: CoreDependencyProvider = Object.freeze({
+  key: blockHeaderProviderKey,
   dependencies: STRUCTURE_DEPENDENCIES,
-  datasets: Object.freeze({}),
-  makeDefinition: () => BlockHeaderDefinition,
+  makeDefinition: () => blockHeaderDefinition,
 });
 
 /** Block Section 的 Core Composite dependency provider */
-export const BlockSectionProvider: CoreDependencyProvider = Object.freeze({
-  key: BlockSectionProviderKey,
+export const blockSectionProvider: CoreDependencyProvider = Object.freeze({
+  key: blockSectionProviderKey,
   dependencies: STRUCTURE_DEPENDENCIES,
-  datasets: Object.freeze({}),
-  makeDefinition: () => BlockSectionDefinition,
+  makeDefinition: () => blockSectionDefinition,
 });
 
 /** Block Row 的 Core Composite dependency provider */
-export const BlockRowProvider: CoreDependencyProvider = Object.freeze({
-  key: BlockRowProviderKey,
+export const blockRowProvider: CoreDependencyProvider = Object.freeze({
+  key: blockRowProviderKey,
   dependencies: STRUCTURE_DEPENDENCIES,
-  datasets: Object.freeze({}),
-  makeDefinition: () => BlockRowDefinition,
+  makeDefinition: () => blockRowDefinition,
 });

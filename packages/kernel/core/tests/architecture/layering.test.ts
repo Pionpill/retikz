@@ -112,8 +112,8 @@ const importsCrossOwnerSubmodule = (file: string, declaration: string): boolean 
   return target !== join(targetOwner.rootPath, 'index.ts');
 };
 
-describe('core layer import boundaries', () => {
-  it('shared code does not import upward into schemas, contract, providers, primitive, or compile', () => {
+describe('核心层导入边界', () => {
+  it('shared 代码不向上依赖 schemas、contract、providers、primitive 或 compile', () => {
     const offenders = tsFiles(join(SRC_ROOT, 'shared')).flatMap(file =>
       importDeclarations(file)
         .filter(line => /from ['"].*(schemas|contract|providers|primitive|compile)/.test(line))
@@ -123,7 +123,7 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('source code outside schemas imports schemas through the owner barrel', () => {
+  it('schemas 以外的源码通过所属模块聚合入口导入 schemas', () => {
     const offenders = tsFiles(SRC_ROOT)
       .filter(file => !relative(SRC_ROOT, file).replace(/\\/g, '/').startsWith('schemas/'))
       .flatMap(file =>
@@ -135,7 +135,7 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('source code outside contract imports through the root or capability owner barrel', () => {
+  it('contract 以外的源码通过根入口或能力所属模块聚合入口导入', () => {
     const offenders = tsFiles(SRC_ROOT).flatMap(file =>
       importDeclarations(file)
         .filter(line => importsFromContractSubmodule(file, line))
@@ -145,7 +145,7 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('source code outside providers does not import flat provider internals', () => {
+  it('providers 以外的源码不直接导入扁平提供者内部实现', () => {
     const offenders = tsFiles(SRC_ROOT).flatMap(file =>
       importDeclarations(file)
         .filter(line => importsFlatProviderInternal(file, line))
@@ -155,7 +155,7 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('cross-owner imports go through the target owner barrel', () => {
+  it('跨所属模块导入经过目标所属模块聚合入口', () => {
     const offenders = tsFiles(SRC_ROOT).flatMap(file =>
       importDeclarations(file)
         .filter(line => importsCrossOwnerSubmodule(file, line))
@@ -165,7 +165,7 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('scene contracts reuse schema field-level types for shared vocabulary', () => {
+  it('场景契约重用共享词汇表的 schema 字段级类型', () => {
     const sceneRoot = join(SRC_ROOT, 'contract', 'scene');
     const forbiddenPatterns = [
       { label: 'position tuple', pattern: /\[number,\s*number\]/u },
@@ -187,7 +187,7 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('scene contracts do not rename whole IRScene branches as Scene-owned types', () => {
+  it('场景契约不会将整个 IRScene 分支重命名为 Scene 拥有的类型', () => {
     const sceneRoot = join(SRC_ROOT, 'contract', 'scene');
     const forbiddenPatterns = [
       { label: 'direct IRScene branch alias', pattern: /export type \w+ = IR\w+/u },
@@ -205,7 +205,7 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('compile code does not import provider shape internals', () => {
+  it('编译代码不导入提供者形状内部结构', () => {
     const offenders = tsFiles(join(SRC_ROOT, 'compile')).flatMap(file =>
       importDeclarations(file)
         .filter(line => /from ['"].*providers\/shape\//.test(line.replace(/\\/g, '/')))
@@ -215,7 +215,7 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('canonical anchor consumers do not reintroduce alias vocabularies or normalize helpers', () => {
+  it('规范锚点的消费方不重新引入别名或 normalize 辅助函数', () => {
     const scannedRoots = ['shared', 'schemas', 'contract', 'providers', 'compile'].map(root => join(SRC_ROOT, root));
     const forbiddenPatterns = [/\b(?:Compass|Tikz|Web)(?:Anchor|Side|Corner)\w*\b/u, /\bnormalize(?:Anchor|Side)\b/u];
 
@@ -231,7 +231,7 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('compile-reachable core code does not use time or module-level provider geometry caches', () => {
+  it('编译可达的核心代码不使用时间或模块级提供者几何缓存', () => {
     const timeOrSharedCacheOffenders = tsFiles(SRC_ROOT).flatMap(file => {
       const relativePath = relative(SRC_ROOT, file).replace(/\\/g, '/');
       const source = readFileSync(file, 'utf8');

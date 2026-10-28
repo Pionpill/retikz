@@ -2,7 +2,7 @@ import { resolveFieldPath } from '../model';
 import type { ExternalRow } from '../shared';
 
 /** transform 分组结果，保留分组键、成员行和回写到输出行的分组字段值 */
-export type TransformRowGroup = {
+type TransformRowGroup = {
   /** 由 groupBy 字段值序列化得到的稳定分组键 */
   key: string;
   /** 该分组包含的原始行，保持输入顺序 */

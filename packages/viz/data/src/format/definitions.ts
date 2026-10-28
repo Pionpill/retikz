@@ -1,4 +1,3 @@
-import { createReadonlyMap } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
 import { RetikzDataError } from '../error';
@@ -126,13 +125,6 @@ export const BUILTIN_FORMATS: ReadonlyArray<FieldFormatDefinition> = freezeDefin
 
 /** 默认格式 registry 的私有稳定索引；公开只读视图与每次 resolver 副本均从此生成 */
 const BUILTIN_FORMAT_REGISTRY = new Map(BUILTIN_FORMATS.map(def => [def.name, def] as const));
-
-/**
- * 按 name 索引的内置格式 definition 只读视图
- * @description 供诊断与测试确认内置覆盖；默认 resolver 使用私有稳定索引，自定义 definition 不写入此视图
- */
-export const BUILTIN_FORMAT_DEFINITIONS_BY_NAME: ReadonlyMap<string, FieldFormatDefinition> =
-  createReadonlyMap(BUILTIN_FORMAT_REGISTRY);
 
 /**
  * 解析字段格式 registry

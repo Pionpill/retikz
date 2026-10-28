@@ -28,8 +28,8 @@ const SALES: Array<ExternalRow> = [
   { month: 'Feb', product: 'B', revenue: 4 },
 ];
 
-describe('applyTransforms (contract)', () => {
-  it('propagates built-in output types through the shared DataView pipeline', () => {
+describe('applyTransforms（契约）', () => {
+  it('通过共享 DataView 管线传播内置输出类型', () => {
     const baseView: DataView = createDataView(SALES, [
       { name: 'month', type: DataFieldType.Categorical },
       { name: 'product', type: DataFieldType.Categorical },
@@ -61,19 +61,19 @@ describe('applyTransforms (contract)', () => {
     ]);
   });
 
-  it('transform_empty_pipeline', () => {
+  it('改造空管线', () => {
     expect(applyTransforms(SALES)).toBe(SALES);
     expect(applyTransforms(SALES, [])).toBe(SALES);
   });
 
   // sort
-  it('sort_ascending', () => {
+  it('升序排序', () => {
     const rows = [{ m: 3 }, { m: 1 }, { m: 2 }];
 
     expect(applyTransforms(rows, [{ kind: 'sort', params: { field: 'm' } }]).map(r => r.m)).toEqual([1, 2, 3]);
   });
 
-  it('sort_descending', () => {
+  it('降序排序', () => {
     const rows = [{ m: 1 }, { m: 3 }, { m: 2 }];
 
     expect(
@@ -81,7 +81,7 @@ describe('applyTransforms (contract)', () => {
     ).toEqual([3, 2, 1]);
   });
 
-  it('sort_stable', () => {
+  it('排序稳定', () => {
     const rows = [
       { m: 1, tag: 'a' },
       { m: 1, tag: 'b' },
@@ -93,7 +93,7 @@ describe('applyTransforms (contract)', () => {
   });
 
   // stack
-  it('stack_two_series', () => {
+  it('堆叠两个系列', () => {
     const out = applyTransforms(SALES, [{ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } }]);
 
     // 保持输入顺序，追加 y0/y1；Jan: A[0,3] B[3,8]；Feb: A[0,2] B[2,6]
@@ -103,21 +103,21 @@ describe('applyTransforms (contract)', () => {
     expect(out[3]).toMatchObject({ month: 'Feb', product: 'B', y0: 2, y1: 6 });
   });
 
-  it('stack_first_segment_zero', () => {
+  it('堆叠第一段零', () => {
     const out = applyTransforms(SALES, [{ kind: 'stack', params: { x: 'month', y: 'revenue', groupBy: 'product' } }]);
 
     // 每组首系列 y0 = 0
     expect(out.filter(r => r.product === 'A').every(r => r.y0 === 0)).toBe(true);
   });
 
-  it('stack_single_series', () => {
+  it('堆叠单个系列', () => {
     const rows = [{ x: 'a', s: 'X', v: 5 }];
     const out = applyTransforms(rows, [{ kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's' } }]);
 
     expect(out[0]).toMatchObject({ y0: 0, y1: 5 });
   });
 
-  it('stack_missing_field_counts_zero', () => {
+  it('堆叠缺失字段计数为零', () => {
     const rows = [
       { x: 'a', s: 'A', v: 3 },
       { x: 'a', s: 'B' }, // 缺 v → 按 0
@@ -127,7 +127,7 @@ describe('applyTransforms (contract)', () => {
     expect(out[1]).toMatchObject({ y0: 3, y1: 3 });
   });
 
-  it('stack_custom_output_fields', () => {
+  it('堆叠自定义输出字段', () => {
     const rows = [{ x: 'a', s: 'A', v: 2 }];
     const out = applyTransforms(rows, [
       { kind: 'stack', params: { x: 'x', y: 'v', groupBy: 's', startField: 'lo', endField: 'hi' } },
@@ -137,7 +137,7 @@ describe('applyTransforms (contract)', () => {
     expect(out[0]).not.toHaveProperty('y0');
   });
 
-  it('stack_offset_normalize', () => {
+  it('堆叠偏移标准化', () => {
     const rows = [
       { x: 'a', s: 'A', v: 2 },
       { x: 'a', s: 'B', v: 6 },
@@ -152,7 +152,7 @@ describe('applyTransforms (contract)', () => {
     ]);
   });
 
-  it('stack_offset_normalize_rejects_negative_values', () => {
+  it('堆叠偏移标准化拒绝负值', () => {
     const rows = [
       { x: 'a', s: 'A', v: 3 },
       { x: 'a', s: 'B', v: -1 },
@@ -163,7 +163,7 @@ describe('applyTransforms (contract)', () => {
     ).toThrow(/stack.*normalize.*negative.*v/i);
   });
 
-  it('stack_offset_normalize_treats_non_finite_values_as_zero', () => {
+  it('堆叠偏移归一化将非有限值视为零', () => {
     const rows = [
       { x: 'a', s: 'A', v: Number.NaN },
       { x: 'a', s: 'B', v: Number.POSITIVE_INFINITY },
@@ -180,7 +180,7 @@ describe('applyTransforms (contract)', () => {
     ]);
   });
 
-  it('stack_offset_diverging', () => {
+  it('堆叠偏移发散', () => {
     const rows = [
       { x: 'a', s: 'A', v: 3 },
       { x: 'a', s: 'B', v: -2 },
@@ -197,7 +197,7 @@ describe('applyTransforms (contract)', () => {
     ]);
   });
 
-  it('stack_offset_center', () => {
+  it('堆叠偏移中心', () => {
     const rows = [
       { x: 'a', s: 'A', v: 2 },
       { x: 'a', s: 'B', v: 6 },
@@ -210,7 +210,7 @@ describe('applyTransforms (contract)', () => {
     ]);
   });
 
-  it('stack_offset_overlap', () => {
+  it('堆叠偏移重叠', () => {
     const rows = [
       { x: 'a', s: 'A', v: 2 },
       { x: 'a', s: 'B', v: 6 },
@@ -224,7 +224,7 @@ describe('applyTransforms (contract)', () => {
   });
 
   // contract：泛化 stack —— 缺省 x / groupBy 的单链累积（按数据序），喂饼图
-  it('stack_single_chain_accumulates_in_data_order', () => {
+  it('栈单链按数据顺序累加', () => {
     const SHARE = [
       { label: 'A', value: 3 },
       { label: 'B', value: 5 },
@@ -238,7 +238,7 @@ describe('applyTransforms (contract)', () => {
     expect(out[2]).toMatchObject({ label: 'C', y0: 8, y1: 10 });
   });
 
-  it('stack_single_chain_custom_output_fields', () => {
+  it('堆叠单链自定义输出字段', () => {
     const out = applyTransforms(
       [
         { label: 'A', value: 4 },
@@ -252,7 +252,7 @@ describe('applyTransforms (contract)', () => {
   });
 
   // pipeline
-  it('pipeline_sort_then_stack', () => {
+  it('管线排序然后堆叠', () => {
     // 先按 product 降序再堆叠 → 系列累加序随排序后的出现序（B 先于 A）
     const out = applyTransforms(SALES, [
       { kind: 'sort', params: { field: 'product', order: 'descending' } },
@@ -265,11 +265,11 @@ describe('applyTransforms (contract)', () => {
 });
 
 // contract：bin（连续分箱，改行数）
-describe('applyBin (contract)', () => {
+describe('applyBin（契约）', () => {
   // [0,10] 域、count 10 → 10 个等宽箱（含空箱），值落箱：0,1,2,8,9,10
   const GAPPED: Array<ExternalRow> = [{ m: 0 }, { m: 1 }, { m: 2 }, { m: 8 }, { m: 9 }, { m: 10 }];
 
-  it('bin_count_histogram_exact_bins_and_empty', () => {
+  it('箱计数直方图精确箱和空箱', () => {
     const out = applyTransforms(GAPPED, [{ kind: 'bin', params: { field: 'm', count: 10 } }]);
 
     // 恰 10 箱（count:N → N 个箱，含空箱）
@@ -288,7 +288,7 @@ describe('applyBin (contract)', () => {
     expect(out[4]).toMatchObject({ binStart: 4, binEnd: 5, binCount: 0 });
   });
 
-  it('bin_step_strategy_tiles_from_lower_bound', () => {
+  it('从下限开始的 bin 步骤策略图块', () => {
     const rows = [{ m: 0 }, { m: 3 }, { m: 7 }, { m: 10 }];
     const out = applyTransforms(rows, [{ kind: 'bin', params: { field: 'm', step: 5 } }]);
 
@@ -298,7 +298,7 @@ describe('applyBin (contract)', () => {
     expect(out[1]).toMatchObject({ binStart: 5, binEnd: 10, binCount: 2 });
   });
 
-  it('bin_step_clamps_last_bin_to_explicit_extent', () => {
+  it('bin 步骤将最后一个 bin 固定到明确的范围', () => {
     const rows = [{ m: 0 }, { m: 5 }, { m: 6 }, { m: 10 }, { m: 11 }];
     const out = applyTransforms(rows, [{ kind: 'bin', params: { field: 'm', step: 6, extent: [0, 10] } }]);
 
@@ -308,7 +308,7 @@ describe('applyBin (contract)', () => {
     ]);
   });
 
-  it('bin_thresholds_strategy_k_plus_one_bins', () => {
+  it('bin 阈值策略 k 加 1 个 bin', () => {
     const rows = [{ m: 5 }, { m: 15 }, { m: 25 }, { m: 35 }];
 
     // K=3 thresholds + extent [0,40] 端点补齐 → edges [0,10,20,30,40] → 4 箱
@@ -326,7 +326,7 @@ describe('applyBin (contract)', () => {
     expect(out.map(r => r.binCount)).toEqual([1, 1, 1, 1]);
   });
 
-  it('bin_metrics_sum_mean_min_max', () => {
+  it('箱指标总和平均值最小值最大值', () => {
     const rows = [
       { m: 1, w: 10 },
       { m: 2, w: 20 },
@@ -358,7 +358,7 @@ describe('applyBin (contract)', () => {
     expect(max.map(r => r.max)).toEqual([20, 5]);
   });
 
-  it('bin_custom_output_fields', () => {
+  it('bin 自定义输出字段', () => {
     // step 从域下界（观测 min = 0）平铺 → [0,5]
     const out = applyTransforms(
       [{ m: 0 }],
@@ -374,11 +374,11 @@ describe('applyBin (contract)', () => {
     expect(out[0]).not.toHaveProperty('binStart');
   });
 
-  it('bin_empty_data_produces_no_bins', () => {
+  it('bin 空数据不产生 bin', () => {
     expect(applyTransforms([], [{ kind: 'bin', params: { field: 'm', count: 10 } }])).toEqual([]);
   });
 
-  it('bin_single_value_does_not_crash', () => {
+  it('bin 单值不崩溃', () => {
     const out = applyTransforms([{ m: 5 }], [{ kind: 'bin', params: { field: 'm', count: 4 } }]);
 
     expect(out.length).toBeGreaterThanOrEqual(1);
@@ -388,7 +388,7 @@ describe('applyBin (contract)', () => {
     expect(out.reduce((acc, r) => acc + (r.binCount as number), 0)).toBe(1);
   });
 
-  it('bin_metric_sum_missing_field_fail_loud', () => {
+  it('bin 度量总和缺失字段失败声音很大', () => {
     expect(() =>
       applyTransforms(
         [{ m: 1 }],
@@ -397,13 +397,13 @@ describe('applyBin (contract)', () => {
     ).toThrow();
   });
 
-  it('bin_conflicting_strategy_fail_loud', () => {
+  it('分箱策略冲突时明确报错', () => {
     expect(() => applyTransforms([{ m: 1 }], [{ kind: 'bin', params: { field: 'm', count: 5, step: 2 } }])).toThrow(
       /mutually exclusive|strateg/i,
     );
   });
 
-  it('bin_step_float_drift_keeps_domain_max', () => {
+  it('箱步浮动漂移保持域最大值', () => {
     // 浮点箱宽（0.1）+ extent 上界观测：末边乘法/钉值须覆盖 domainMax，否则 1.0 落空被丢（bug hunt 回归）
     const rows: Array<ExternalRow> = Array.from({ length: 11 }, (_, i) => ({ v: i * 0.1 }));
     const out = applyTransforms(rows, [{ kind: 'bin', params: { field: 'v', step: 0.1, extent: [0, 1] } }]);
@@ -412,7 +412,7 @@ describe('applyBin (contract)', () => {
     expect(out.reduce((acc, r) => acc + (r.binCount as number), 0)).toBe(11);
   });
 
-  it('bin_count_float_drift_keeps_domain_max', () => {
+  it('箱计数浮点漂移保持域最大值', () => {
     // count 策略下末边钉到 hi：非整除域不丢上界观测
     const rows: Array<ExternalRow> = Array.from({ length: 8 }, (_, i) => ({ v: i }));
     const out = applyTransforms(rows, [{ kind: 'bin', params: { field: 'v', count: 3, extent: [0, 7] } }]);
@@ -420,7 +420,7 @@ describe('applyBin (contract)', () => {
     expect(out.reduce((acc, r) => acc + (r.binCount as number), 0)).toBe(8);
   });
 
-  it('bin_thresholds_outside_extent_filtered', () => {
+  it('超出过滤范围的箱阈值', () => {
     // 域外阈值剔除：thresholds [3,100] + 观测域 [1,9] → 内部仅 3 → [1,3,9] 两箱，无倒退/丢数
     const rows: Array<ExternalRow> = [{ m: 1 }, { m: 5 }, { m: 9 }];
     const out = applyTransforms(rows, [{ kind: 'bin', params: { field: 'm', thresholds: [3, 100] } }]);
@@ -433,7 +433,7 @@ describe('applyBin (contract)', () => {
     expect(out.reduce((acc, r) => acc + (r.binCount as number), 0)).toBe(3);
   });
 
-  it('bin_group_level_provenance_source_indices', () => {
+  it('bin 组级别来源来源索引', () => {
     // 分箱产 datum 的 provenance 指向源行集合（组级），而非单 sourceIndex
     const tagged = tagSourceIndex([{ m: 0 }, { m: 1 }, { m: 8 }]); // source idx 0,1,2
     const out = applyTransforms(tagged, [{ kind: 'bin', params: { field: 'm', step: 5 } }]);
@@ -445,7 +445,7 @@ describe('applyBin (contract)', () => {
 });
 
 // contract：summarize（分组统计，改行数）
-describe('applySummarize (contract)', () => {
+describe('applySummarize（契约）', () => {
   const ORDERS: Array<ExternalRow> = [
     { region: 'N', product: 'A', revenue: 3 },
     { region: 'N', product: 'B', revenue: 5 },
@@ -453,7 +453,7 @@ describe('applySummarize (contract)', () => {
     { region: 'S', product: 'A', revenue: 4 },
   ];
 
-  it('summarize_groupby_sum', () => {
+  it('总结 groupby sum', () => {
     const out = applyTransforms(ORDERS, [
       { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] } },
     ]);
@@ -463,7 +463,7 @@ describe('applySummarize (contract)', () => {
     expect(out[1]).toMatchObject({ region: 'S', total: 6 });
   });
 
-  it('summarize_requires_explicit_as', () => {
+  it('summarize 要求显式 as', () => {
     expect(() =>
       applyTransforms(ORDERS, [
         { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue' }] } },
@@ -471,7 +471,7 @@ describe('applySummarize (contract)', () => {
     ).toThrow();
   });
 
-  it('summarize_multikey_composite', () => {
+  it('总结多键复合', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'summarize',
@@ -488,7 +488,7 @@ describe('applySummarize (contract)', () => {
     ]);
   });
 
-  it('summarize_count_no_field', () => {
+  it('汇总计数无字段', () => {
     const out = applyTransforms(ORDERS, [
       { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] } },
     ]);
@@ -498,7 +498,7 @@ describe('applySummarize (contract)', () => {
     expect(out[1]).toMatchObject({ region: 'S', count: 2 });
   });
 
-  it('summarize_mean_min_max', () => {
+  it('总结平均值最小值最大值', () => {
     const mean = applyTransforms(ORDERS, [
       { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'mean', field: 'revenue', as: 'v' }] } },
     ]);
@@ -519,7 +519,7 @@ describe('applySummarize (contract)', () => {
     expect(max.map(r => r.v)).toEqual([5, 4]);
   });
 
-  it('summarize_changes_row_count', () => {
+  it('汇总更改行数', () => {
     const out = applyTransforms(ORDERS, [
       { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'count', as: 'count' }] } },
     ]);
@@ -528,7 +528,7 @@ describe('applySummarize (contract)', () => {
     expect(out.length).toBe(2);
   });
 
-  it('summarize_missing_field_fail_loud', () => {
+  it('汇总字段缺失时明确报错', () => {
     expect(() =>
       applyTransforms(ORDERS, [
         { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'sum', as: 'total' }] } },
@@ -536,7 +536,7 @@ describe('applySummarize (contract)', () => {
     ).toThrow();
   });
 
-  it('summarize_group_level_provenance_source_indices', () => {
+  it('总结群体级别的来源索引', () => {
     const tagged = tagSourceIndex(ORDERS); // 0,1,2,3
     const out = applyTransforms(tagged, [
       { kind: 'summarize', params: { groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 't' }] } },
@@ -547,7 +547,7 @@ describe('applySummarize (contract)', () => {
   });
 
   // 交互：summarize（改行数）后接 stack（保行数）
-  it('summarize_then_stack_chain', () => {
+  it('总结然后栈链', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'summarize',
@@ -566,7 +566,7 @@ describe('applySummarize (contract)', () => {
 });
 
 // contract：normalize（组内百分比归一化，保行数）
-describe('applyNormalize (contract)', () => {
+describe('applyNormalize（契约）', () => {
   const REVENUE: Array<ExternalRow> = [
     { quarter: 'Q1', product: 'A', amount: 3 },
     { quarter: 'Q1', product: 'B', amount: 1 },
@@ -574,7 +574,7 @@ describe('applyNormalize (contract)', () => {
     { quarter: 'Q2', product: 'B', amount: 5 },
   ];
 
-  it('normalize_group_share_percent', () => {
+  it('标准化组份额百分比', () => {
     const out = applyTransforms(REVENUE, [
       { kind: 'normalize', params: { field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' } },
     ]);
@@ -589,7 +589,7 @@ describe('applyNormalize (contract)', () => {
     expect(out.filter(r => r.quarter === 'Q1').reduce((a, r) => a + (r.share as number), 0)).toBe(100);
   });
 
-  it('normalize_fraction_default', () => {
+  it('normalize 默认使用 fraction', () => {
     const out = applyTransforms(REVENUE, [
       { kind: 'normalize', params: { field: 'amount', groupBy: ['quarter'], as: 'frac' } },
     ]);
@@ -597,7 +597,7 @@ describe('applyNormalize (contract)', () => {
     expect(out[0].frac).toBeCloseTo(0.75, 9);
   });
 
-  it('normalize_rejects_negative_values', () => {
+  it('normalize 拒绝负值', () => {
     const rows = [
       { g: 'x', v: 3 },
       { g: 'x', v: -1 },
@@ -608,7 +608,7 @@ describe('applyNormalize (contract)', () => {
     ).toThrow(/normalize.*negative.*v/i);
   });
 
-  it('normalize_treats_non_finite_values_as_zero', () => {
+  it('归一化将非有限值视为零', () => {
     const rows = [
       { g: 'x', v: Number.NaN },
       { g: 'x', v: Number.NEGATIVE_INFINITY },
@@ -619,7 +619,7 @@ describe('applyNormalize (contract)', () => {
     expect(out.map(row => row.share)).toEqual([0, 0, 1]);
   });
 
-  it('normalize_overwrite_in_place', () => {
+  it('规范化覆盖就地', () => {
     const out = applyTransforms(
       [
         { g: 'x', v: 2 },
@@ -632,7 +632,7 @@ describe('applyNormalize (contract)', () => {
     expect(out[0].v).toBeCloseTo(0.5, 9);
   });
 
-  it('normalize_global_when_no_groupby', () => {
+  it('没有 groupby 时标准化全局', () => {
     const out = applyTransforms(
       [{ v: 1 }, { v: 3 }],
       [{ kind: 'normalize', params: { field: 'v', basis: 'percent', as: 's' } }],
@@ -642,7 +642,7 @@ describe('applyNormalize (contract)', () => {
     expect(out.map(r => r.s)).toEqual([25, 75]);
   });
 
-  it('normalize_zero_group_sum_no_nan', () => {
+  it('归一化零组和，无 nan', () => {
     const out = applyTransforms(
       [
         { g: 'z', v: 0 },
@@ -656,7 +656,7 @@ describe('applyNormalize (contract)', () => {
   });
 
   // 交互：normalize → stack = 百分比堆叠（每组 y1 上界 = 100）
-  it('normalize_then_stack_percentage_stacking', () => {
+  it('标准化然后堆叠百分比堆叠', () => {
     const out = applyTransforms(REVENUE, [
       { kind: 'normalize', params: { field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' } },
       { kind: 'stack', params: { x: 'quarter', y: 'share', groupBy: 'product' } },
@@ -672,8 +672,8 @@ describe('applyNormalize (contract)', () => {
 });
 
 // contract：derive-interval（单行派生区间，保行数）
-describe('applyDeriveInterval (contract)', () => {
-  it('derive_interval_two_field', () => {
+describe('applyDeriveInterval（契约）', () => {
+  it('导出间隔两个字段', () => {
     const tasks = [
       { task: 'A', start: 1, end: 5 },
       { task: 'B', start: 3, end: 9 },
@@ -685,13 +685,13 @@ describe('applyDeriveInterval (contract)', () => {
     expect(out[1]).toMatchObject({ y0: 3, y1: 9 });
   });
 
-  it('derive_interval_from_baseline', () => {
+  it('从基线导出间隔', () => {
     const out = applyTransforms([{ v: 8 }], [{ kind: 'derive-interval', params: { from: 'v', baseline: 2 } }]);
 
     expect(out[0]).toMatchObject({ y0: 2, y1: 8 });
   });
 
-  it('derive_interval_custom_fields', () => {
+  it('派生间隔自定义字段', () => {
     const out = applyTransforms(
       [{ s: 1, e: 4 }],
       [{ kind: 'derive-interval', params: { startFrom: 's', endFrom: 'e', startField: 'lo', endField: 'hi' } }],
@@ -700,14 +700,14 @@ describe('applyDeriveInterval (contract)', () => {
     expect(out[0]).toMatchObject({ lo: 1, hi: 4 });
   });
 
-  it('derive_interval_no_source_fail_loud', () => {
+  it('派生区间缺少源字段时明确报错', () => {
     expect(() => applyTransforms([{ v: 1 }], [{ kind: 'derive-interval', params: {} }])).toThrow(
       /from|startFrom|endFrom/,
     );
   });
 
   // derive-interval（单行）vs stack（跨行累积）产不同 y0/y1
-  it('derive_interval_vs_stack_distinct', () => {
+  it('导出间隔与堆叠不同', () => {
     const rows = [
       { x: 'a', v: 3 },
       { x: 'a', v: 5 },
@@ -728,14 +728,14 @@ describe('applyDeriveInterval (contract)', () => {
 });
 
 // contract：jitter（确定性位置抖动，保行数）
-describe('applyJitter (contract)', () => {
+describe('applyJitter（契约）', () => {
   const SAMPLES: Array<ExternalRow> = [
     { dose: 1, r: 10 },
     { dose: 1, r: 12 },
     { dose: 2, r: 8 },
   ];
 
-  it('jitter_deterministic_same_seed', () => {
+  it('相同种子的抖动结果确定且一致', () => {
     const op = { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } } as const;
     const a = applyTransforms(SAMPLES, [op]);
     const b = applyTransforms(SAMPLES, [op]);
@@ -748,7 +748,7 @@ describe('applyJitter (contract)', () => {
     );
   });
 
-  it('jitter_different_seed_differs', () => {
+  it('不同种子产生不同抖动结果', () => {
     const a = applyTransforms(SAMPLES, [
       { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 1 } },
     ]);
@@ -759,7 +759,7 @@ describe('applyJitter (contract)', () => {
     expect(a.map(r => r.dose)).not.toEqual(b.map(r => r.dose));
   });
 
-  it('jitter_preserves_row_count_and_other_fields', () => {
+  it('抖动保留行计数和其他字段', () => {
     const out = applyTransforms(SAMPLES, [
       { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 5 } },
     ]);
@@ -770,7 +770,7 @@ describe('applyJitter (contract)', () => {
     expect(out.map(r => r.r)).toEqual(SAMPLES.map(r => r.r));
   });
 
-  it('jitter_amount_zero_is_identity', () => {
+  it('抖动量为零是同一性', () => {
     const out = applyTransforms(SAMPLES, [
       { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0, seed: 9 } },
     ]);
@@ -778,14 +778,14 @@ describe('applyJitter (contract)', () => {
     expect(out.map(r => r.dose)).toEqual(SAMPLES.map(r => r.dose));
   });
 
-  it('jitter_both_axes', () => {
+  it('抖动同时作用于两个轴', () => {
     const out = applyTransforms([{ x: 0, y: 0 }], [{ kind: 'jitter', params: { axis: 'both', amount: 1, seed: 3 } }]);
 
     expect(typeof out[0].x).toBe('number');
     expect(typeof out[0].y).toBe('number');
   });
 
-  it('jitter_non_finite_value_skipped', () => {
+  it('抖动跳过非有限值', () => {
     const out = applyTransforms(
       [{ dose: 'NA', r: 1 }],
       [{ kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 1, seed: 0 } }],
@@ -796,8 +796,8 @@ describe('applyJitter (contract)', () => {
   });
 });
 
-describe('grouped row transforms', () => {
-  it('select and summarize output complete parent groups before the next parent', () => {
+describe('分组行转换', () => {
+  it('选择并汇总下一个父级之前的输出完整父级组', () => {
     const rows = tagSourceIndex([
       { team: 'A', item: 'phone', value: 10 },
       { team: 'B', item: 'phone', value: 60 },
@@ -834,7 +834,7 @@ describe('grouped row transforms', () => {
       [3, 7],
     ]);
   });
-  it.each(['ascending', 'descending'] as const)('sorts hierarchical groups stably in field order: %s', order => {
+  it.each(['ascending', 'descending'] as const)('按字段顺序对分层组进行稳定排序：%s', order => {
     const rows = tagSourceIndex([
       { team: 'Z', item: 'x', value: 2, record: 'r1' },
       { team: 'A', item: 'x', value: 9, record: 'r2' },
@@ -852,14 +852,14 @@ describe('grouped row transforms', () => {
     expect(output.map(readSourceIndex)).toEqual(indices);
     expect(rows).toEqual(original);
   });
-  it('empty grouping preserves global sort and bin behavior', () => {
+  it('空分组保留全局排序和 bin 行为', () => {
     const rows = [{ value: 3 }, { value: 1 }, { value: 2 }];
     for (const kind of ['sort', 'bin'] as const)
       expect(applyTransforms(rows, [{ kind, params: { field: 'value', groupBy: [] } }])).toEqual(
         applyTransforms(rows, [{ kind, params: { field: 'value' } }]),
       );
   });
-  it('bins composite groups with independent domains and retained model types', () => {
+  it('对具有独立域和保留模型类型的复合组进行分类', () => {
     const view = createDataView(
       [
         { team: 'B', item: 'x', value: 10 },
@@ -893,7 +893,7 @@ describe('grouped row transforms', () => {
       { name: 'binCount', type: 'continuous' },
     ]);
   });
-  it('shared extent keeps empty bins and bucket-local source evidence', () => {
+  it('共享范围保留空容器和存储聚合入口本地源证据', () => {
     const rows = tagSourceIndex([
       { team: 'B', value: 0 },
       { team: 'A', value: 10 },

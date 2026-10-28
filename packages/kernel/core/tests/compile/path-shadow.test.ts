@@ -28,7 +28,7 @@ const bottomOf = (layout: { y: number; height: number }): number => layout.y + l
 
 // ════════════════ Happy ════════════════
 
-describe('[path-shadow] Happy', () => {
+describe('路径阴影正常行为', () => {
   it('path-shadow：Path + shadow 对象 → 主 PathPrimitive 带 resolved shadow', () => {
     const prim = findPathPrim(
       compilePath({
@@ -77,7 +77,7 @@ describe('[path-shadow] 边界', () => {
     expect(prim.shadow!.blur).toBe(0);
   });
 
-  it('preset-string-equals-preset-object：shadow="md" ≡ {preset:"md"}', () => {
+  it('预设字符串等于预设对象：shadow="md" ≡ {preset:"md"}', () => {
     const a = findPathPrim(
       compilePath({
         style: { shadow: 'md' },
@@ -185,7 +185,7 @@ describe('[path-shadow] 交互', () => {
 
 // ════════════════ round-trip ════════════════
 
-describe('[path-shadow] round-trip', () => {
+describe('[路径阴影]往返', () => {
   it('含 shadow（对象）的 IRPath JSON 往返 parse 深等', () => {
     const path = {
       type: 'path',

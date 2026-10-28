@@ -1,10 +1,10 @@
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../errors';
-import type { BranchLayoutDefinition, BranchLayoutInput, BranchLayoutOutput } from '../contract';
+import type { BranchLayoutDefinition, InputBranchLayout, BranchLayoutOutput } from '../contract';
 
 /** 隔离外部 callback 并验证节点、拓扑、主线和有限几何 */
 export const executeBranchLayout = (
   definition: BranchLayoutDefinition,
-  input: BranchLayoutInput,
+  input: InputBranchLayout,
 ): BranchLayoutOutput => {
   let output: BranchLayoutOutput;
 

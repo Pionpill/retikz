@@ -1,4 +1,4 @@
-import type { CoreProviderContribution, ResolvedTheme } from '@retikz/core';
+import type { CoreProviderContribution, CanonicalTheme } from '@retikz/core';
 import type { PlotDefinitions } from '@retikz/plot';
 import type { ZodType } from 'zod';
 
@@ -26,7 +26,7 @@ export type ChartRecipeProviderContribution = Readonly<{
  * registry 入口接收的精确 Chart recipe contribution
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-export type ChartRecipeProviderContributionInput<TSource extends IRChartSource> = Omit<
+export type InputChartRecipeProviderContribution<TSource extends IRChartSource> = Omit<
   ChartRecipeProviderContribution,
   'recipe'
 > &
@@ -57,7 +57,7 @@ export type ChartProviderRegistry = Readonly<{
 /** Chart composite 解析阶段使用的主题上下文 */
 export type ChartProviderResolveContext = Readonly<{
   /** Core 当前生效的主题 */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** 当前 active recipe 与 theme 的临时 registry */
   registry: ChartProviderRegistry;
 }>;

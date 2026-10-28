@@ -9,7 +9,7 @@ import { createPositionResolveContext } from '../orchestration';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { createTextMeasurement } from '../text';
 import { composeScopeTransform } from '../transform';
-import type { CompileWarningInput } from '../warning';
+import type { InputCompileWarning } from '../warning';
 import type { CompileRead, ElementCompileContext, ElementCompileOptions, ElementCompileResult } from './types';
 
 /** 解析 Scope 子元素继承上下文；不编译 children 或聚合几何 */
@@ -31,21 +31,21 @@ export const resolveScopeContext = (
 
 /** 创建独占的资源、诊断与引用读取工作区 */
 const createElementWorkspace = (options: ElementCompileOptions) => {
-  const diagnostics: Array<CompileWarningInput> = [];
+  const diagnostics: Array<InputCompileWarning> = [];
   const reads: Array<CompileRead> = [];
   const pending = new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Element dependency is pending');
   const nodeGeometry = createNodeGeometryContext();
   const scopeChain = options.transforms ?? [];
-  const effectiveTransform = composeScopeTransform(scopeChain);
+  const composedTransform = composeScopeTransform(scopeChain);
   const paint = createPaintRegistry(options.environment.round);
   const clip = createClipRegistry(options.environment.round, options.environment.maxClipDepth);
-  const onWarn = (warning: CompileWarningInput): void => {
+  const onWarn = (warning: InputCompileWarning): void => {
     diagnostics.push(warning);
   };
   const positionContext = createPositionResolveContext({
     nodeDistance: options.environment.nodeDistance,
     scopeChain,
-    effectiveTransform,
+    composedTransform,
     geometryContext: nodeGeometry,
     lookupReference: name => {
       for (let namespace = options.namespace; namespace !== undefined; namespace = namespace.parent) {
@@ -86,7 +86,7 @@ const createElementWorkspace = (options: ElementCompileOptions) => {
     pending,
     nodeGeometry,
     scopeChain,
-    effectiveTransform,
+    composedTransform,
     paint,
     clip,
     onWarn,
@@ -95,7 +95,7 @@ const createElementWorkspace = (options: ElementCompileOptions) => {
 };
 
 /** 单次计算工作区，仅在本次调用中使用 */
-export type ElementCompileWorkspace = ReturnType<typeof createElementWorkspace>;
+type ElementCompileWorkspace = ReturnType<typeof createElementWorkspace>;
 
 /** 运行一次单元素计算，将依赖等待与真实编译错误分开 */
 export const runElementCompilation = <TCompiled>(

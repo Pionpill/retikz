@@ -1,6 +1,6 @@
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { BranchDiagramInputEmbedAdapter } from './branch-diagram';
+import { branchDiagramInputEmbedAdapter } from './branch-diagram';
 
 /** 创建可一次性传给 Vanilla normalize 的 Branch Diagram adapter 集合 */
 export const createBranchDiagramVanillaAdapters = (): Array<SynchronousInputEmbedAdapter<unknown>> => {
@@ -12,5 +12,5 @@ export const createBranchDiagramVanillaAdapters = (): Array<SynchronousInputEmbe
     lower: (props, context) => adapter.lower(props as TProps, context),
   });
 
-  return [eraseAdapter(BranchDiagramInputEmbedAdapter)];
+  return [eraseAdapter(branchDiagramInputEmbedAdapter)];
 };

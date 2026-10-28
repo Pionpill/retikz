@@ -93,7 +93,7 @@ export const DomainPaddingSchema = union([
   'Position scale domain padding; numbers and omitted kind use range output units, kind ratio uses source domain span fractions, and kind mark derives automatic ends from mark extents',
 );
 
-const ContinuousPositionDomainShape = {
+const continuousPositionDomainShape = {
   domainPadding: DomainPaddingSchema.optional().describe(
     'Padding added to the resolved domain. Numbers use range output units; kind ratio uses source domain span fractions. The mark branch computes automatic ends from named mark extents. Omitted padding defaults to 0',
   ),
@@ -114,7 +114,7 @@ export const LinearScaleSchema = object({
     .describe('[start, end] output extent in plot-area units; omit to derive from the coordinate extent at lowering'),
   nice: boolean().optional().describe('Round the domain to nice human-readable numbers; default false'),
   clamp: boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
-  ...ContinuousPositionDomainShape,
+  ...continuousPositionDomainShape,
 }).describe('Linear scale: a continuous numeric mapping from domain to range');
 
 /** 校验将离散类别映射为等宽区间的带状比例尺 */
@@ -191,7 +191,7 @@ export const TimeScaleSchema = object({
     .optional()
     .describe('Round the domain outward to nice time boundaries (day / month / year); default false'),
   clamp: boolean().optional().describe('Clamp out-of-domain instants to the range ends; default false'),
-  ...ContinuousPositionDomainShape,
+  ...continuousPositionDomainShape,
 }).describe(
   'Time scale: continuous mapping from time instants (epoch ms) to range; ticks land on human-readable time boundaries',
 );
@@ -213,7 +213,7 @@ export const LogScaleSchema = object({
   base: number().gt(1).optional().describe('Logarithm base; default 10'),
   nice: boolean().optional().describe('Round the domain outward to nice powers of the base; default false'),
   clamp: boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
-  ...ContinuousPositionDomainShape,
+  ...continuousPositionDomainShape,
 }).describe(
   'Log scale: continuous logarithmic mapping; valid only on point / line marks (interval / area baseline includes 0)',
 );
@@ -233,7 +233,7 @@ export const PowScaleSchema = object({
   exponent: number().optional().describe('Power exponent; default 2'),
   nice: boolean().optional().describe('Round the domain to nice numbers; default false'),
   clamp: boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
-  ...ContinuousPositionDomainShape,
+  ...continuousPositionDomainShape,
 }).describe('Pow scale: continuous power mapping y = m·x^exponent + b; valid only on point / line marks');
 
 /** 校验按平方根映射数值的位置比例尺，可用于面积感知的尺寸编码 */
@@ -254,7 +254,7 @@ export const SqrtScaleSchema = object({
     ),
   nice: boolean().optional().describe('Round the domain to nice numbers; default false'),
   clamp: boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
-  ...ContinuousPositionDomainShape,
+  ...continuousPositionDomainShape,
 }).describe(
   'Sqrt scale: continuous square-root mapping (area-perceptual); valid only on point / line marks; also the default derivation target for the size channel',
 );
@@ -281,7 +281,7 @@ export const SymlogScaleSchema = object({
     ),
   nice: boolean().optional().describe('Round the domain to nice numbers; default false'),
   clamp: boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
-  ...ContinuousPositionDomainShape,
+  ...continuousPositionDomainShape,
 }).describe(
   'Symlog scale: continuous bi-symmetric-log mapping, linear near zero and logarithmic in the tails, so it handles wide-range data that crosses or includes zero (unlike log); valid only on point / line marks',
 );
@@ -302,7 +302,7 @@ export const RadialScaleSchema = object({
     ),
   nice: boolean().optional().describe('Round the domain to nice numbers; default false'),
   clamp: boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
-  ...ContinuousPositionDomainShape,
+  ...continuousPositionDomainShape,
 }).describe(
   'Radial scale: continuous mapping whose output radius is area-true (encoded area is proportional to value); the natural value scale for polar / rose (Nightingale) charts',
 );

@@ -1,5 +1,5 @@
 import type { CoordinateOwnerOutput, IRChild } from '@retikz/core';
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 import type { output as ZodOutput } from 'zod';
 
 import type { InspectorContext } from '../contract';
@@ -17,10 +17,7 @@ export const COORDINATE_INSPECTOR = defineInspector({
   ...COORDINATE_INSPECTOR_KEY,
   owner: { kind: 'coordinate' },
   optionsSchema: CoordinateInspectOptionsSchema,
-  mergeOptionsInput: (inherited, local) => ({
-    ...inherited,
-    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
-  }),
+  mergeOptionsInput: (inherited, local) => mergeDefinedProperties([inherited, local]),
   inspect: (subject: CoordinateOwnerOutput, context: InspectorContext<CoordinateInspectorOptions>): Array<IRChild> => {
     const color = context.appearance.scopeColor;
     const output: Array<IRChild> = [markerNode(subject.position, color, 5)];

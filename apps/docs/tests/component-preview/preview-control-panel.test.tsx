@@ -930,7 +930,7 @@ describe('PreviewControlPanel', () => {
     expect(container.querySelector('[data-control-id="opacity"] button[aria-pressed="false"]')).not.toBeNull();
   });
 
-  it('uses the global range playback duration unless the field overrides it', async () => {
+  it('使用数值范围控件的全局播放时长，除非字段显式覆盖', async () => {
     await i18n.changeLanguage('en');
     const container = await mount(<WorkspaceHarness definition={definition} rangePlaybackDuration={400} />);
     const playButton = container.querySelector<HTMLButtonElement>(

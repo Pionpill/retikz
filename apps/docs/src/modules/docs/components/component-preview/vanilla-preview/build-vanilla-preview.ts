@@ -1,12 +1,12 @@
 import type { IRChartSource } from '@retikz/chart';
 import { renderChart } from '@retikz/chart-vanilla';
 import {
-  ScatterChartInputEmbedAdapter,
-  BubbleChartInputEmbedAdapter,
-  ConnectedScatterChartInputEmbedAdapter,
-  RangedDotChartInputEmbedAdapter,
-  RegressionChartInputEmbedAdapter,
-  StripChartInputEmbedAdapter,
+  scatterChartInputEmbedAdapter,
+  bubbleChartInputEmbedAdapter,
+  connectedScatterChartInputEmbedAdapter,
+  rangedDotChartInputEmbedAdapter,
+  regressionChartInputEmbedAdapter,
+  stripChartInputEmbedAdapter,
 } from '@retikz/chart-vanilla/point';
 import type {
   BubbleChartInputEmbedProps,
@@ -42,150 +42,150 @@ import {
 } from '@retikz/chart/point';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import { fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
+import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { InputBranchDiagram } from '@retikz/diagram-vanilla/branch';
-import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';
+import { branchDiagram, branchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
-import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
+import { flowDiagram, flowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
 import type { IRBranchDiagram } from '@retikz/diagram/branch';
 import { BranchDiagramSchema } from '@retikz/diagram/branch';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import {
-  BlockDefinition,
-  BlockHeaderDefinition,
+  blockDefinition,
+  blockHeaderDefinition,
   BlockHeaderSchema,
-  BlockRowDefinition,
+  blockRowDefinition,
   BlockRowSchema,
   BlockSchema,
-  BlockSectionDefinition,
+  blockSectionDefinition,
   BlockSectionSchema,
   createGraphProviders,
-  EntityDefinition,
+  entityDefinition,
   EntitySchema,
-  GraphDefinition,
+  graphDefinition,
   GraphProviderKey,
   GraphSchema,
-  GroupDefinition,
+  groupDefinition,
   GroupSchema,
-  RelationDefinition,
+  relationDefinition,
   RelationSchema,
 } from '@retikz/graph';
 import type { InputBlockChild, InputGraphChild, InputGroupChild } from '@retikz/graph-vanilla';
 import {
   block,
   blockHeader,
-  BlockHeaderInputEmbedAdapter,
-  BlockInputEmbedAdapter,
+  blockHeaderInputEmbedAdapter,
+  blockInputEmbedAdapter,
   blockRow,
-  BlockRowInputEmbedAdapter,
+  blockRowInputEmbedAdapter,
   blockSection,
-  BlockSectionInputEmbedAdapter,
+  blockSectionInputEmbedAdapter,
   entity,
-  EntityInputEmbedAdapter,
+  entityInputEmbedAdapter,
   graph,
-  GraphInputEmbedAdapter,
+  graphInputEmbedAdapter,
   group,
-  GroupInputEmbedAdapter,
+  groupInputEmbedAdapter,
   relation,
-  RelationInputEmbedAdapter,
+  relationInputEmbedAdapter,
 } from '@retikz/graph-vanilla';
 import {
-  FlexLayoutDefinition,
+  flexLayoutDefinition,
   FlexLayoutSchema,
-  GridLayoutDefinition,
+  gridLayoutDefinition,
   GridLayoutSchema,
-  OverlayLayoutDefinition,
+  overlayLayoutDefinition,
   OverlayLayoutSchema,
 } from '@retikz/layout';
 import {
   flexLayout,
-  FlexLayoutInputEmbedAdapter,
+  flexLayoutInputEmbedAdapter,
   gridLayout,
-  GridLayoutInputEmbedAdapter,
+  gridLayoutInputEmbedAdapter,
   overlayLayout,
-  OverlayLayoutInputEmbedAdapter,
+  overlayLayoutInputEmbedAdapter,
 } from '@retikz/layout-vanilla';
-import type { IRPlot } from '@retikz/plot';
+import type { IRPlot, PlotProviderParams } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
 import {
   tree,
-  TreeInputEmbedAdapter,
+  treeInputEmbedAdapter,
   queue,
-  QueueInputEmbedAdapter,
+  queueInputEmbedAdapter,
   stack,
-  StackInputEmbedAdapter,
+  stackInputEmbedAdapter,
 } from '@retikz/standard-vanilla/collection';
-import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { chain, chainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { InputChainItem } from '@retikz/standard-vanilla/collection';
 import {
   matrix,
-  MatrixInputEmbedAdapter,
+  matrixInputEmbedAdapter,
   array,
-  ArrayInputEmbedAdapter,
+  arrayInputEmbedAdapter,
   map,
-  MapInputEmbedAdapter,
+  mapInputEmbedAdapter,
 } from '@retikz/standard-vanilla/collection';
 import {
   axes,
-  AxesInputEmbedAdapter,
+  axesInputEmbedAdapter,
   frame,
-  FrameInputEmbedAdapter,
+  frameInputEmbedAdapter,
   grid,
-  GridInputEmbedAdapter,
+  gridInputEmbedAdapter,
   legend,
-  LegendInputEmbedAdapter,
+  legendInputEmbedAdapter,
   surface,
   surfaceChild,
-  SurfaceInputEmbedAdapter,
+  surfaceInputEmbedAdapter,
 } from '@retikz/standard-vanilla/presentation';
 import {
   shape,
-  CircleInputEmbedAdapter,
-  EllipseInputEmbedAdapter,
-  RectangleInputEmbedAdapter,
-  PolygonInputEmbedAdapter,
-  StarInputEmbedAdapter,
-  ArcInputEmbedAdapter,
-  SectorInputEmbedAdapter,
+  circleInputEmbedAdapter,
+  ellipseInputEmbedAdapter,
+  rectangleInputEmbedAdapter,
+  polygonInputEmbedAdapter,
+  starInputEmbedAdapter,
+  arcInputEmbedAdapter,
+  sectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
 import type { IRTree, IRQueue, IRStack } from '@retikz/standard/collection';
-import { TreeDefinition, QueueDefinition, StackDefinition, ChainDefinition } from '@retikz/standard/collection';
+import { treeDefinition, queueDefinition, stackDefinition, chainDefinition } from '@retikz/standard/collection';
 import type { IRChain, IRChainItem } from '@retikz/standard/collection';
 import type { IRCell, IRMatrix, IRArray, IRMap } from '@retikz/standard/collection';
-import { MatrixDefinition, ArrayDefinition, MapDefinition } from '@retikz/standard/collection';
+import { matrixDefinition, arrayDefinition, mapDefinition } from '@retikz/standard/collection';
 import {
-  AxesDefinition,
+  axesDefinition,
   AxesSchema,
-  FrameDefinition,
+  frameDefinition,
   FrameSchema,
-  GridDefinition,
+  gridDefinition,
   GridSchema,
-  LegendDefinition,
+  legendDefinition,
   LegendSchema,
-  SurfaceDefinition,
+  surfaceDefinition,
   SurfaceSchema,
 } from '@retikz/standard/presentation';
 import {
   CircleSchema,
-  CircleDefinition,
+  circleDefinition,
   EllipseSchema,
-  EllipseDefinition,
+  ellipseDefinition,
   RectangleSchema,
-  RectangleDefinition,
+  rectangleDefinition,
   PolygonSchema,
-  PolygonDefinition,
+  polygonDefinition,
   StarSchema,
-  StarDefinition,
+  starDefinition,
   ArcSchema,
-  ArcDefinition,
+  arcDefinition,
   SectorSchema,
-  SectorDefinition,
+  sectorDefinition,
 } from '@retikz/standard/shape';
-import type { IRTable } from '@retikz/table';
+import type { IRTable, TableProviderParams } from '@retikz/table';
 import { TableSchema, TableStructureKind } from '@retikz/table';
-import { embedTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { embedTable, tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { SynchronousInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 import { renderToSvgString, scene, scope } from '@retikz/vanilla';
 
@@ -797,85 +797,85 @@ const convertPreviewChild = (
 };
 
 const standardAdapters = (state: LibraryConversionState): ReadonlyArray<SynchronousInputEmbedAdapter<never>> => [
-  ...(state.adapters.has('circle') ? [CircleInputEmbedAdapter] : []),
-  ...(state.adapters.has('ellipse') ? [EllipseInputEmbedAdapter] : []),
-  ...(state.adapters.has('rectangle') ? [RectangleInputEmbedAdapter] : []),
-  ...(state.adapters.has('polygon') ? [PolygonInputEmbedAdapter] : []),
-  ...(state.adapters.has('star') ? [StarInputEmbedAdapter] : []),
-  ...(state.adapters.has('arc') ? [ArcInputEmbedAdapter] : []),
-  ...(state.adapters.has('sector') ? [SectorInputEmbedAdapter] : []),
+  ...(state.adapters.has('circle') ? [circleInputEmbedAdapter] : []),
+  ...(state.adapters.has('ellipse') ? [ellipseInputEmbedAdapter] : []),
+  ...(state.adapters.has('rectangle') ? [rectangleInputEmbedAdapter] : []),
+  ...(state.adapters.has('polygon') ? [polygonInputEmbedAdapter] : []),
+  ...(state.adapters.has('star') ? [starInputEmbedAdapter] : []),
+  ...(state.adapters.has('arc') ? [arcInputEmbedAdapter] : []),
+  ...(state.adapters.has('sector') ? [sectorInputEmbedAdapter] : []),
 
-  ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('tree') ? [TreeInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('queue') ? [QueueInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('stack') ? [StackInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('chain') ? [ChainInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('matrix') ? [MatrixInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('array') ? [ArrayInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('map') ? [MapInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('surface') ? [SurfaceInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('legend') ? [LegendInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('grid') ? [gridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('axes') ? [axesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('frame') ? [frameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('tree') ? [treeInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('queue') ? [queueInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('stack') ? [stackInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('chain') ? [chainInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('matrix') ? [matrixInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('array') ? [arrayInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('map') ? [mapInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('surface') ? [surfaceInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('legend') ? [legendInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
 ];
 
 const layoutAdapters = (state: LibraryConversionState): ReadonlyArray<SynchronousInputEmbedAdapter<never>> => [
-  ...(state.adapters.has('flexLayout') ? [FlexLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('gridLayout') ? [GridLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('flexLayout') ? [flexLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('gridLayout') ? [gridLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('overlayLayout')
-    ? [OverlayLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>]
+    ? [overlayLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>]
     : []),
 ];
 
 const graphAdapters = (state: GraphConversionState): ReadonlyArray<SynchronousInputEmbedAdapter<never>> => [
-  ...(state.adapters.has('graph') ? [GraphInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('group') ? [GroupInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('block') ? [BlockInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('blockHeader') ? [BlockHeaderInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('blockSection') ? [BlockSectionInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('blockRow') ? [BlockRowInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('entity') ? [EntityInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('relation') ? [RelationInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('graph') ? [graphInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('group') ? [groupInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('block') ? [blockInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('blockHeader') ? [blockHeaderInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('blockSection') ? [blockSectionInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('blockRow') ? [blockRowInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('entity') ? [entityInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('relation') ? [relationInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
 ];
 
 const standardDefinitionByName = {
-  CircleDefinition,
-  EllipseDefinition,
-  RectangleDefinition,
-  PolygonDefinition,
-  StarDefinition,
-  ArcDefinition,
-  SectorDefinition,
+  circleDefinition,
+  ellipseDefinition,
+  rectangleDefinition,
+  polygonDefinition,
+  starDefinition,
+  arcDefinition,
+  sectorDefinition,
 
-  GridDefinition,
-  AxesDefinition,
-  FrameDefinition,
-  TreeDefinition,
-  QueueDefinition,
-  StackDefinition,
-  ChainDefinition,
-  MatrixDefinition,
-  ArrayDefinition,
-  MapDefinition,
-  SurfaceDefinition,
-  LegendDefinition,
+  gridDefinition,
+  axesDefinition,
+  frameDefinition,
+  treeDefinition,
+  queueDefinition,
+  stackDefinition,
+  chainDefinition,
+  matrixDefinition,
+  arrayDefinition,
+  mapDefinition,
+  surfaceDefinition,
+  legendDefinition,
 } as const;
 
 const layoutDefinitionByName = {
-  FlexLayoutDefinition,
-  GridLayoutDefinition,
-  OverlayLayoutDefinition,
+  flexLayoutDefinition,
+  gridLayoutDefinition,
+  overlayLayoutDefinition,
 } as const;
 
 const graphDefinitionByName = {
-  GraphDefinition,
-  GroupDefinition,
-  BlockDefinition,
-  BlockHeaderDefinition,
-  BlockSectionDefinition,
-  BlockRowDefinition,
-  EntityDefinition,
-  RelationDefinition,
+  graphDefinition,
+  groupDefinition,
+  blockDefinition,
+  blockHeaderDefinition,
+  blockSectionDefinition,
+  blockRowDefinition,
+  entityDefinition,
+  relationDefinition,
 } as const;
 
 const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOptions): VanillaPreviewArtifact => {
@@ -969,36 +969,38 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   };
 };
 
-/** 从已收集的提供器依赖图贡献中读取一个归属方数据集 */
+/** 从 Plot 或 Table 提供者的具名参数中读取预览数据集 */
 const findProviderDataset = (
   preview: PreviewIR,
-  namespace: string,
+  namespace: 'plot' | 'table',
   reference: string,
   label: string,
 ): ExternalDatasets | null => {
-  let dataset: unknown;
-  let found = false;
+  let dataset: Array<ExternalRow> | undefined;
 
   for (const contribution of preview.contributions) {
     for (const provider of contribution.providers) {
       if (
         provider.key.capability !== 'composite' ||
         provider.key.namespace !== namespace ||
-        !Object.hasOwn(provider.datasets, reference)
+        provider.key.type !== namespace ||
+        provider.params === undefined
       )
         continue;
 
-      const candidate = provider.datasets[reference];
-      if (found && dataset !== candidate) {
+      // 官方完整 key 对应各自公开的参数契约；通用 Core 目录仅保存擦除视图
+      const { datasets } = provider.params as PlotProviderParams | TableProviderParams;
+      if (!Object.hasOwn(datasets, reference)) continue;
+      const candidate = datasets[reference];
+      if (dataset !== undefined && dataset !== candidate) {
         throw new Error(`${label} dataset reference "${reference}" resolves to different values.`);
       }
 
       dataset = candidate;
-      found = true;
     }
   }
 
-  return found ? ({ [reference]: dataset } as ExternalDatasets) : null;
+  return dataset === undefined ? null : { [reference]: dataset };
 };
 
 /** 读取 Plot 提供器的本地数据集 */
@@ -1224,12 +1226,12 @@ const buildChartPreview = (
 
   const rendered = renderChart(runtime, {
     adapters: [
-      ScatterChartInputEmbedAdapter,
-      BubbleChartInputEmbedAdapter,
-      ConnectedScatterChartInputEmbedAdapter,
-      RangedDotChartInputEmbedAdapter,
-      RegressionChartInputEmbedAdapter,
-      StripChartInputEmbedAdapter,
+      scatterChartInputEmbedAdapter,
+      bubbleChartInputEmbedAdapter,
+      connectedScatterChartInputEmbedAdapter,
+      rangedDotChartInputEmbedAdapter,
+      regressionChartInputEmbedAdapter,
+      stripChartInputEmbedAdapter,
     ],
     ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
     ...(Object.keys(size).length === 0 ? {} : { output: size }),
@@ -1264,9 +1266,9 @@ const buildTableCode = (
     adapters: '__ADAPTERS__',
     ...(Object.keys(size).length > 0 ? { output: size } : {}),
   };
-  const optionsCode = formatVanillaValue(renderOptions).replace("'__ADAPTERS__'", '[TableInputEmbedAdapter]');
+  const optionsCode = formatVanillaValue(renderOptions).replace("'__ADAPTERS__'", '[tableInputEmbedAdapter]');
 
-  return `import { embedTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\n${importCode}\nconst spec = ${formatVanillaValue(spec)};\n${dataCode}const input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, ${optionsCode});\n`;
+  return `import { embedTable, tableInputEmbedAdapter } from '@retikz/table-vanilla';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\n${importCode}\nconst spec = ${formatVanillaValue(spec)};\n${dataCode}const input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, ${optionsCode});\n`;
 };
 
 const buildTablePreview = (
@@ -1297,7 +1299,7 @@ const buildTablePreview = (
   return {
     code: buildTableCode(spec, resolvedDatasets, preview, options),
     svg: renderToSvgString(input, {
-      adapters: [TableInputEmbedAdapter],
+      adapters: [tableInputEmbedAdapter],
       output: outputSize(preview),
       ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
     }),
@@ -1334,7 +1336,7 @@ const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: Build
     children: '__FLOW_CHILDREN__',
   }).replace("'__FLOW_CHILDREN__'", `[flowDiagram(${authoringCode})]`);
 
-  return `import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [FlowDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeDefinitions: PreviewThemeDefinitionBundle.core },\n});\n`;
+  return `import { flowDiagram, flowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [flowDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeDefinitions: PreviewThemeDefinitionBundle.core },\n});\n`;
 };
 
 const buildFlowPreview = (
@@ -1361,7 +1363,7 @@ const buildFlowPreview = (
   return {
     code: buildFlowCode(source, preview, options),
     svg: renderToSvgString(input, {
-      adapters: [FlowDiagramInputEmbedAdapter],
+      adapters: [flowDiagramInputEmbedAdapter],
       output: outputSize(preview),
       compile: {
         themeDefinitions: PreviewThemeDefinitionBundle.core,
@@ -1398,7 +1400,7 @@ const buildBranchCode = (source: IRBranchDiagram, preview: PreviewIR, options: B
     children: '__BRANCH_CHILDREN__',
   }).replace("'__BRANCH_CHILDREN__'", `[branchDiagram(${authoringCode})]`);
 
-  return `import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [BranchDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeDefinitions: PreviewThemeDefinitionBundle.core },\n});\n`;
+  return `import { branchDiagram, branchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [branchDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeDefinitions: PreviewThemeDefinitionBundle.core },\n});\n`;
 };
 
 const buildBranchPreview = (
@@ -1424,7 +1426,7 @@ const buildBranchPreview = (
   return {
     code: buildBranchCode(source, preview, options),
     svg: renderToSvgString(input, {
-      adapters: [BranchDiagramInputEmbedAdapter],
+      adapters: [branchDiagramInputEmbedAdapter],
       output: outputSize(preview),
       compile: {
         themeDefinitions: PreviewThemeDefinitionBundle.core,

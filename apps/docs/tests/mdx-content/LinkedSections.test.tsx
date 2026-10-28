@@ -29,7 +29,7 @@ describe('<LinkedSections>', () => {
     expect(getLinkedSectionRowSizes(7, 3)).toEqual([3, 2, 2]);
   });
 
-  it('renders configured links in independently equal-width rows', () => {
+  it('在独立的等宽行中呈现配置的链接', () => {
     const LinkedSections = getLinkedSections();
     const html = renderToStaticMarkup(
       <MemoryRouter>

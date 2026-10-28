@@ -1,5 +1,5 @@
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { vector2 } from '@retikz/math';
 import { Layout, Path, Step } from '@retikz/react';
 
@@ -45,7 +45,7 @@ export const renderRibbonEndpointsPreview = (values: RibbonEndpointsPreviewValue
       : { name: values.cap };
 
   return (
-    <Layout viewBox={{ x: -290, y: -170, width: 580, height: 360 }} extensions={{ paths: [RibbonPathDefinition] }}>
+    <Layout viewBox={{ x: -290, y: -170, width: 580, height: 360 }} extensions={{ paths: [ribbonPathDefinition] }}>
       <Path
         kind="ribbon"
         kindOptions={{

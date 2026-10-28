@@ -197,7 +197,7 @@ type PatternResource = {
   kind: 'paint';
   id: string;
   spec: Extract<IRPaint, { kind: 'pattern' }>;
-  tile: ResolvedPatternTile;
+  tile: CompiledPatternTile;
 };
 
 type ImageResource = {
@@ -384,7 +384,7 @@ type CompositeCompileArtifact = Readonly<{
 FlexLayout in the Layout package declares its layout artifact through `artifactSchema`.
 
 ```ts
-const FlexLayoutDefinition = defineComposite({
+const flexLayoutDefinition = defineComposite({
   namespace: LAYOUT_NAMESPACE,
   type: 'flexLayout',
   schema: FlexLayoutSchema,
@@ -416,7 +416,7 @@ The following example compiles a FlexLayout containing two nodes and reads its a
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { createFlexLayout, FlexLayoutDefinition } from '@retikz/layout';
+import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
 
 const layout = createFlexLayout({
   gap: 12,
@@ -428,7 +428,7 @@ const layout = createFlexLayout({
 
 const result = compileToScene(
   { type: 'scene', version: 1, children: [layout] },
-  { composites: [FlexLayoutDefinition] },
+  { composites: [flexLayoutDefinition] },
 );
 
 for (const artifact of result.artifacts) {
@@ -773,8 +773,6 @@ These outlets deliver drawing results, observation results and compilation warni
 Call `prepareSceneCompilation(ir, options, execution)` from `@retikz/core` when warnings must be dispatched later or output provenance is needed. It performs one static compilation and returns `result`, `diagnostics` and `observerOutputs` without invoking `onWarn` or the default warning outlet. The options exclude `onWarn`; `execution.observers` can supply compilation observers.
 
 Provenance collection is off by default. With `execution.captureProvenance: true`, the returned `provenance` records entity origins, namespace registrations and final primitive emissions. Its opaque keys are valid only within that result. Reconciler uses these facts to construct cross-revision identities and Scene Patches; Core retains no incremental state.
-
-The companion `assertCompositeInputBindings(ir, bindings)` checks that Composite input bindings belong to the complete IR without compiling it. Missing bindings pass; mismatched bindings throw Core's `CompositeContractViolation` error.
 
 <SourceLinks
   sources={[

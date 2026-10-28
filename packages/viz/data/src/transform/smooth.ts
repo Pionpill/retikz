@@ -63,12 +63,6 @@ export const smoothInputFields = (operation: IRDataSmoothTransform): Array<strin
   ...(operation.params.groupBy ?? []),
 ];
 
-/** 返回 smooth transform 写出的派生字段 */
-export const smoothOutputFields = (operation: IRDataSmoothTransform): Array<string> => [
-  operation.params.xAs,
-  operation.params.yAs,
-];
-
 /** smooth：按 method 拟合回归模型，每组输出 sampleCount 个预测点 */
 export function* computeSmooth(
   rows: Array<ExternalRow>,

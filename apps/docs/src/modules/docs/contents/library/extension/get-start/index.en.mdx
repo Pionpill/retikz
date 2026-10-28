@@ -16,11 +16,11 @@ Render this component in an existing React application. React and React DOM requ
 
 ```tsx
 import type { FC } from 'react';
-import { CrossShapeDefinition } from '@retikz/extension';
+import { crossShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 export const Example: FC = () => (
-  <Layout extensions={{ shapes: [CrossShapeDefinition] }}>
+  <Layout extensions={{ shapes: [crossShapeDefinition] }}>
     <Node position={[0, 0]} shape="cross" fill="#38bdf8" layout={{ minimumSize: { width: 80, height: 80 } }} />
   </Layout>
 );
@@ -44,7 +44,7 @@ if (root) createRoot(root).render(<Example />);
 This code returns a complete SVG string that can be saved to a file or displayed in a page:
 
 ```ts
-import { CrossShapeDefinition } from '@retikz/extension';
+import { crossShapeDefinition } from '@retikz/extension';
 import { renderToSvgString, scene } from '@retikz/vanilla';
 
 const svg = renderToSvgString(
@@ -59,7 +59,7 @@ const svg = renderToSvgString(
       },
     ],
   }),
-  { compile: { shapes: [CrossShapeDefinition] } },
+  { compile: { shapes: [crossShapeDefinition] } },
 );
 console.log(svg);
 ```
@@ -67,9 +67,9 @@ console.log(svg);
 </DocTab>
 </DocTabs>
 
-Both entries produce a blue cross. `shape: 'cross'` selects the shape, while `CrossShapeDefinition` supplies its drawing rules; use them together.
+Both entries produce a blue cross. `shape: 'cross'` selects the shape, while `crossShapeDefinition` supplies its drawing rules; use them together.
 
-You can load multiple Definitions by capability in one drawing: React uses `Layout.extensions`, while Vanilla uses `compile`. To enable a complete official family, use `ExtensionShapeDefinitions`, `ExtensionArrowDefinitions`, or `ExtensionClipDefinitions` as described on the respective capability pages.
+You can load multiple Definitions by capability in one drawing: React uses `Layout.extensions`, while Vanilla uses `compile`. To enable a complete official family, use `extensionShapeDefinitions`, `extensionArrowDefinitions`, or `extensionClipDefinitions` as described on the respective capability pages.
 
 ## Further reading
 

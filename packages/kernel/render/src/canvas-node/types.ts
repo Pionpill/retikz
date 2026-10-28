@@ -4,7 +4,7 @@ import type { DrawOptions } from '../canvas';
 export type CanvasNodeImageFormat = 'png' | 'jpeg' | 'webp';
 
 /** 将 Scene 渲染为 Node 图片缓冲区时使用的选项 */
-export type RenderSceneToImageOptions = DrawOptions & {
+export type SceneImageRenderOptions = DrawOptions & {
   /** 输出图片的 CSS 像素宽度，必须是正有限数 */
   width: number;
   /** 输出图片的 CSS 像素高度，必须是正有限数 */

@@ -8,8 +8,8 @@ import type {
   IRTableTrackSize,
 } from '../../src';
 import { TableTrackSizeKind } from '../../src';
-import type { ResolvedTableTrackSize } from '../../src/pipeline/layout';
-import { resolveTableTrackSizes, solveTableTracks } from '../../src/pipeline/layout';
+import type { CanonicalTableTrackSize } from '../../src/pipeline/layout';
+import { resolveTableLayout, resolveTableTrackSizes, solveTableTracks } from '../../src/pipeline/layout';
 
 const fixed = (value: number): IRTableFixedTrackSize => ({ kind: TableTrackSizeKind.Fixed, value });
 
@@ -25,11 +25,42 @@ const minmax = (
   max: IRTableFixedTrackSize | IRTableAutoTrackSize | IRTableFractionTrackSize,
 ): IRTableMinmaxTrackSize => ({ kind: TableTrackSizeKind.Minmax, min, max });
 
-const resolve = (tracks: ReadonlyArray<IRTableTrackSize>): ReadonlyArray<ResolvedTableTrackSize> =>
+const resolve = (tracks: ReadonlyArray<IRTableTrackSize>): ReadonlyArray<CanonicalTableTrackSize> =>
   resolveTableTrackSizes(tracks);
 
-describe('Table track sizing', () => {
-  it('materializes nested fraction weights into detached immutable resolved tracks', () => {
+describe('Table 轨道尺寸', () => {
+  it('在布局准入时拒绝尚未绑定轨道数量的非法静态声明', () => {
+    expect(() => resolveTableLayout({ columnSize: fixed(Number.POSITIVE_INFINITY) })).toThrow(/finite/i);
+    expect(() => resolveTableLayout({ rowSize: fraction(0) })).toThrow(/weight/i);
+    expect(() => resolveTableLayout({ headerRowSize: minmax(fixed(20), fixed(10)) })).toThrow(/max/i);
+    expect(() => resolveTableLayout({ rowGap: Number.NaN })).toThrow(/gap/i);
+    expect(() => resolveTableLayout({ columns: [{ index: -1, size: auto() }] })).toThrow(/index/i);
+    expect(() =>
+      resolveTableLayout({
+        rows: [
+          { index: 0, size: auto() },
+          { index: 0, size: fixed(12) },
+        ],
+      }),
+    ).toThrow(/duplicate/i);
+    expect(resolveTableLayout({ columns: [{ index: 20, size: fraction() }] }).columns).toEqual([
+      { index: 20, size: fraction() },
+    ]);
+  });
+
+  it('布局准入后的覆盖快照不受作者对象后续修改影响', () => {
+    const size = fraction();
+    const override = { index: 0, size };
+    const layout = resolveTableLayout({ columns: [override] });
+    override.index = -1;
+    size.weight = 0;
+
+    expect(layout.columns).toEqual([{ index: 0, size: fraction() }]);
+    expect(Object.isFrozen(layout.columns[0].size)).toBe(true);
+    expect(resolveTableTrackSizes([auto()], layout.columns)).toEqual([fraction(1)]);
+  });
+
+  it('将嵌套分数权重具体化为分离的不可变解析轨道', () => {
     const tracks = [fraction(), minmax(fixed(10), fraction())];
     const snapshot = structuredClone(tracks);
     const resolved = resolve(tracks);
@@ -45,10 +76,10 @@ describe('Table track sizing', () => {
     expect(tracks).toEqual(snapshot);
     expect(Object.isFrozen(resolved)).toBe(true);
     expect(Object.isFrozen(resolved[1])).toBe(true);
-    expect(Object.isFrozen((resolved[1] as Extract<ResolvedTableTrackSize, { kind: 'minmax' }>).max)).toBe(true);
+    expect(Object.isFrozen((resolved[1] as Extract<CanonicalTableTrackSize, { kind: 'minmax' }>).max)).toBe(true);
   });
 
-  it('applies sparse overrides by canonical index and rejects duplicate or out-of-range indexes', () => {
+  it('通过规范索引应用稀疏覆盖并拒绝重复或超出范围的索引', () => {
     const defaults = [auto(), auto(), auto()];
     const overrides = [
       { index: 2, size: fraction(2) },
@@ -65,7 +96,7 @@ describe('Table track sizing', () => {
     expect(() => resolveTableTrackSizes(defaults, [{ index: -1, size: auto() }])).toThrow(/index.*-1/i);
   });
 
-  it('uses natural contribution sizes on an unconstrained axis', () => {
+  it('在不受约束的轴上使用自然贡献大小', () => {
     const tracks = resolve([
       fixed(10),
       auto(),
@@ -91,7 +122,7 @@ describe('Table track sizing', () => {
     expect(solveTableTracks({ tracks, contributions, gap: 4 })).toEqual([10, 12, 14, 15, 5, 8, 9, 11, 13]);
   });
 
-  it('uses the maximum contribution per track independent of input order', () => {
+  it('使用每个轨道的最大贡献，与输入顺序无关', () => {
     const tracks = resolve([auto(), fraction()]);
     const first = [
       { trackIndex: 0, size: 12 },
@@ -103,7 +134,7 @@ describe('Table track sizing', () => {
     expect(solveTableTracks({ tracks, contributions: [...first].reverse(), gap: 0 })).toEqual([30, 8]);
   });
 
-  it('subtracts gaps exactly once before flex distribution', () => {
+  it('在弹性分配之前恰好减去一次间隙', () => {
     expect(
       solveTableTracks({
         tracks: resolve([fraction(), fraction()]),
@@ -127,7 +158,7 @@ describe('Table track sizing', () => {
       [100, 100, 10],
       [55, 55, 10],
     ],
-  ])('water-fills bounded minmax tracks independent of cap order %#', (maximums, expected) => {
+  ])('有界 minmax 轨道按水位填充分配且不受上限顺序影响：%#', (maximums, expected) => {
     expect(
       solveTableTracks({
         tracks: resolve(maximums.map(maximum => minmax(fixed(0), fixed(maximum)))),
@@ -138,7 +169,7 @@ describe('Table track sizing', () => {
     ).toEqual(expected);
   });
 
-  it('runs bounded growth before weighted fraction growth', () => {
+  it('在加权分数增长之前运行有界增长', () => {
     expect(
       solveTableTracks({
         tracks: resolve([minmax(fixed(20), fixed(60)), fraction(), fraction(2)]),
@@ -149,7 +180,7 @@ describe('Table track sizing', () => {
     ).toEqual([60, 80, 160]);
   });
 
-  it('preserves the smallest positive constrained space through deterministic residual allocation', () => {
+  it('通过确定性残差分配保留最小正约束空间', () => {
     const availableSize = Number.MIN_VALUE;
     const bounded = solveTableTracks({
       tracks: resolve([minmax(fixed(0), fixed(1)), minmax(fixed(0), fixed(1))]),
@@ -170,7 +201,7 @@ describe('Table track sizing', () => {
     expect(flexible.every(size => Number.isFinite(size) && size >= 0)).toBe(true);
   });
 
-  it('uses auto contribution as a bounded limit without growing plain auto tracks', () => {
+  it('使用自动贡献作为有界限制，而不增长普通自动轨道', () => {
     expect(
       solveTableTracks({
         tracks: resolve([minmax(fixed(20), auto()), auto()]),
@@ -192,7 +223,7 @@ describe('Table track sizing', () => {
     ).toEqual([50]);
   });
 
-  it('keeps auto min above a smaller fixed max', () => {
+  it('保持自动最小值高于较小的固定最大值', () => {
     expect(
       solveTableTracks({
         tracks: resolve([minmax(auto(), fixed(50))]),
@@ -203,7 +234,7 @@ describe('Table track sizing', () => {
     ).toEqual([80]);
   });
 
-  it('preserves fixed and min bases when available space is insufficient', () => {
+  it('当可用空间不足时，保留固定和最小碱基', () => {
     expect(
       solveTableTracks({
         tracks: resolve([fixed(80), minmax(fixed(40), fixed(100))]),
@@ -224,7 +255,7 @@ describe('Table track sizing', () => {
     [{ gap: Number.POSITIVE_INFINITY }, /gap/i],
     [{ availableSize: -1 }, /availableSize/i],
     [{ availableSize: Number.NaN }, /availableSize/i],
-  ])('rejects invalid numeric solver input %#', (override, message) => {
+  ])('拒绝无效的数值解算器输入 %#', (override, message) => {
     expect(() =>
       solveTableTracks({
         tracks: resolve([auto()]),
@@ -235,17 +266,17 @@ describe('Table track sizing', () => {
     ).toThrow(message);
   });
 
-  it('rejects invalid resolved tracks at the solver boundary', () => {
+  it('拒绝解算器边界处的无效解析轨迹', () => {
     expect(() =>
       solveTableTracks({
-        tracks: [{ kind: TableTrackSizeKind.Fraction, weight: 0 }] as ReadonlyArray<ResolvedTableTrackSize>,
+        tracks: [{ kind: TableTrackSizeKind.Fraction, weight: 0 }] as ReadonlyArray<CanonicalTableTrackSize>,
         contributions: [],
         gap: 0,
       }),
     ).toThrow(/weight/i);
   });
 
-  it('returns detached immutable deterministic sizes without mutating inputs', () => {
+  it('返回分离的不可变的确定性大小，而不改变输入', () => {
     const tracks = resolve([minmax(fixed(20), fixed(60)), fraction()]);
     const contributions = [{ trackIndex: 1, size: 999 }];
     const input = { tracks, contributions, gap: 4, availableSize: 104 };

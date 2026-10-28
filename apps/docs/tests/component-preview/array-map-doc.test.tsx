@@ -46,8 +46,8 @@ const MapDataCanonical: FC = () => mapDataPreviewSource.canonicalRender?.() ?? n
 
 const ArrayDataCanonical: FC = () => arrayDataPreviewSource.canonicalRender?.() ?? null;
 
-describe('Array / Map documentation consumers', () => {
-  it('offers fixed, shared auto and per-content Array widths in both languages', () => {
+describe('Array / Map 文档使用者', () => {
+  it('为两种语言提供固定宽度、共享自动宽度和按内容确定宽度的 Array 选项', () => {
     const chinese = createArrayStylesContract('zh');
     const english = createArrayStylesContract('en');
     const width = getPreviewControlFields(chinese.controls).find(field => field.id === 'widthMode');
@@ -77,7 +77,7 @@ describe('Array / Map documentation consumers', () => {
     NamespaceStorage,
     NamespaceConsumption,
     NamespaceScope,
-  ])('generates executable Vanilla previews for %s', Component => {
+  ])('生成 %s 的可执行 Vanilla 预览', Component => {
     const preview = buildPreviewIR(Component);
     const output = buildVanillaPreview(preview);
 
@@ -86,20 +86,20 @@ describe('Array / Map documentation consumers', () => {
     expect(output.code).toMatch(/(?:Array|Map)InputEmbedAdapter/);
   });
 
-  it('preserves authored cells in copied source and keeps the top-level structure', () => {
+  it('保留复制源中编写的单元格并保留顶级结构', () => {
     const preview = buildPreviewIR(ArrayStylesCanonical);
     const code = irToVanillaCode(preview.sourceIr);
 
     expect(code).toContain("content: 'B1'");
     expect(code).toContain('items:');
-    expect(code).toContain('ArrayInputEmbedAdapter');
+    expect(code).toContain('arrayInputEmbedAdapter');
     expect(code).not.toContain('__CELLS__');
     expect(code).not.toContain('__CELL_CONTENT__');
     expect(code).not.toContain('overlayLayout');
   });
 });
 
-it('keeps text cells compact in persistent IR and copied Vanilla code', () => {
+it('在持久 IR 和复制的 Vanilla 代码中保持文本单元紧凑', () => {
   for (const Component of [ArrayBasic, MapBasic]) {
     const preview = buildPreviewIR(Component);
     const json = JSON.stringify(preview.sourceIr);
@@ -112,7 +112,7 @@ it('keeps text cells compact in persistent IR and copied Vanilla code', () => {
   }
 });
 
-it('retains Array content width in copied Vanilla source', () => {
+it('保留复制的 Vanilla 源中的 Array 内容宽度', () => {
   const code = irToVanillaCode({
     type: 'scene',
     version: 1,
@@ -120,10 +120,10 @@ it('retains Array content width in copied Vanilla source', () => {
   });
 
   expect(code).toContain("width: 'content'");
-  expect(code).toContain('ArrayInputEmbedAdapter');
+  expect(code).toContain('arrayInputEmbedAdapter');
 });
 
-it('retains compact JSON data in copied code and runtime previews', () => {
+it('在复制的代码和运行时预览中保留紧凑的 JSON 数据', () => {
   for (const Component of [ArrayDataCanonical, MapDataCanonical]) {
     const preview = buildPreviewIR(Component);
     const output = buildVanillaPreview(preview);
@@ -137,7 +137,7 @@ it('retains compact JSON data in copied code and runtime previews', () => {
   }
 });
 
-it('switches nested objects and arrays between text and components', () => {
+it('在文本和组件之间切换嵌套对象和数组', () => {
   const renderMode = (dataExpand: 'all' | 'none' | 'map' | 'array'): string =>
     renderToStaticMarkup(
       <PreviewControlStateContext.Provider
@@ -161,7 +161,7 @@ it('switches nested objects and arrays between text and components', () => {
   expect(renderMode('map')).toContain('ready');
 });
 
-it('does not interpret JSON fields as drawable children or provider names', () => {
+it('不将 JSON 字段解释为可绘制子项或提供者名称', () => {
   const Component: FC = () => (
     <Layout>
       <Map
@@ -177,7 +177,7 @@ it('does not interpret JSON fields as drawable children or provider names', () =
   expect(output.svg).toContain('<svg');
 });
 
-describe('Array container label controls', () => {
+describe('Array 容器标签控件', () => {
   const contract = createArrayLabelContract('zh');
 
   const renderWithValues = (overrides: PreviewControlValues): string =>
@@ -195,7 +195,7 @@ describe('Array container label controls', () => {
       </PreviewControlStateContext.Provider>,
     );
 
-  it('offers directional and boundary-fraction placement with matching Chinese and English control contracts', () => {
+  it('提供按方向及边界比例放置的能力并保持中英文控件契约一致', () => {
     const english = createArrayLabelContract('en');
     const fields = getPreviewControlFields(contract.controls);
     const englishFields = getPreviewControlFields(english.controls);
@@ -228,7 +228,7 @@ describe('Array container label controls', () => {
     expect(visible('boundary')).toContain('fraction');
   });
 
-  it('moves the rendered label along the top boundary and aligns its visual box', () => {
+  it('沿顶部边界移动渲染的标签并对齐其视觉框', () => {
     const left = renderWithValues({ positionMode: 'boundary', boundary: 'top', fraction: 0, align: 'start' });
     const right = renderWithValues({ positionMode: 'boundary', boundary: 'top', fraction: 1, align: 'start' });
     const centered = renderWithValues({ positionMode: 'boundary', boundary: 'top', fraction: 0, align: 'middle' });

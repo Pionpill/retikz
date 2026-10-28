@@ -2,7 +2,7 @@ import type { Scene } from '@retikz/core';
 
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { StaticRenderFrame } from '../runtime';
-import { validateReadonlyLayers } from '../runtime';
+import { snapshotReadonlyLayers } from '../runtime';
 import { drawReadonlyLayer } from './draw-readonly-layer';
 import { drawScene } from './draw-scene';
 import { createCssColorNormalizer, sceneFitMatrix } from './internal';
@@ -69,7 +69,7 @@ export const renderFrameToCanvas = (
   };
 
   const scene = frame.primary;
-  const layers = validateReadonlyLayers(frame.layers);
+  const layers = snapshotReadonlyLayers(frame.layers);
   const ctx = canvas.getContext('2d');
   if (!ctx)
     throw new RetikzRenderError(RetikzRenderErrorCode.Canvas, 'renderToCanvas: unable to acquire 2d canvas context.');

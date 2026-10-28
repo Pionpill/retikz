@@ -3,7 +3,7 @@ import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type {
   IRPlot,
-  LowerPlotsOptions,
+  PlotsLoweringOptions,
   PlotHostLineageMetadata,
   PlotLineageOptions,
   PlotLineageRun,
@@ -12,7 +12,7 @@ import { createPlotProviderContribution, lowerPlotWithLineage } from '@retikz/pl
 import { renderToSvgString } from '@retikz/vanilla';
 
 /** renderPlot 两种返回模式共享的根 Scene Theme 输入 */
-type RenderPlotThemeOptions = {
+type PlotRenderThemeOptions = {
   /** 在根 Scene 的 Core effective Theme 位置生效 */
   theme?: IRScene['theme'];
   /** Core 主题风格定义 */
@@ -20,8 +20,8 @@ type RenderPlotThemeOptions = {
 };
 
 /** renderPlot 的默认选项；不启用图元链路时保持 SVG 字符串返回值 */
-export type RenderPlotOptions = LowerPlotsOptions &
-  RenderPlotThemeOptions & {
+export type PlotRenderOptions = PlotsLoweringOptions &
+  PlotRenderThemeOptions & {
     /** 图元链路开关；默认关闭，显式 false 时仍返回 SVG 字符串 */
     lineage?: false;
     /** 宿主 metadata 只在链路模式下消费 */
@@ -29,8 +29,8 @@ export type RenderPlotOptions = LowerPlotsOptions &
   };
 
 /** renderPlot 的图元链路模式选项 */
-export type RenderPlotLineageOptions = LowerPlotsOptions &
-  RenderPlotThemeOptions & {
+export type PlotRenderLineageOptions = PlotsLoweringOptions &
+  PlotRenderThemeOptions & {
     /** 图元链路记录配置；传对象时返回 SVG 与 runtime-only 链路产物 */
     lineage: PlotLineageOptions;
     /** 宿主侧查询、AI 与权限 metadata；由 lineage.hostMetadata 独立控制透传 */
@@ -38,7 +38,7 @@ export type RenderPlotLineageOptions = LowerPlotsOptions &
   };
 
 /** renderPlot 图元链路模式返回值 */
-export type RenderPlotLineageResult = {
+export type PlotRenderLineageResult = {
   /** SSR 渲染得到的 SVG 字符串 */
   svg: string;
   /** runtime-only 图元链路产物，不写入 IRPlot 或 Scene meta */
@@ -46,19 +46,19 @@ export type RenderPlotLineageResult = {
 };
 
 /** renderPlot 调用签名 */
-type RenderPlot = {
-  (spec: IRPlot, data: ExternalDatasets, options: RenderPlotLineageOptions): RenderPlotLineageResult;
-  (spec: IRPlot, data: ExternalDatasets, options?: RenderPlotOptions): string;
+type PlotRenderer = {
+  (spec: IRPlot, data: ExternalDatasets, options: PlotRenderLineageOptions): PlotRenderLineageResult;
+  (spec: IRPlot, data: ExternalDatasets, options?: PlotRenderOptions): string;
 };
 
-const isLineageOptions = (options: RenderPlotOptions | RenderPlotLineageOptions): options is RenderPlotLineageOptions =>
+const isLineageOptions = (options: PlotRenderOptions | PlotRenderLineageOptions): options is PlotRenderLineageOptions =>
   options.lineage !== undefined && options.lineage !== false;
 
 const renderPlotImpl = (
   spec: IRPlot,
   data: ExternalDatasets,
-  options: RenderPlotOptions | RenderPlotLineageOptions = {},
-): string | RenderPlotLineageResult => {
+  options: PlotRenderOptions | PlotRenderLineageOptions = {},
+): string | PlotRenderLineageResult => {
   const providerDefinitions = resolveCoreProviderDependencies({
     contributions: [createPlotProviderContribution(data, options)],
   });
@@ -87,4 +87,4 @@ const renderPlotImpl = (
  * @description 该入口不依赖 DOM；直接用已类型化的 IRPlot 与外部 datasets 下沉并渲染。`layout.width` / `layout.height` 提供运行时尺寸与 SVG 输出尺寸；传入 lineage 配置时返回 `{ svg, lineage }`，否则返回 SVG 字符串
  * @throws 缺少引用的数据集或 lowering 失败时透传对应错误
  */
-export const renderPlot = renderPlotImpl as RenderPlot;
+export const renderPlot = renderPlotImpl as PlotRenderer;

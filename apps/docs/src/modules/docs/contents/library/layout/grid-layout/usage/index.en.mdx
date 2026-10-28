@@ -52,7 +52,7 @@ In React, write optional `key` as `itemKey` and provide `child` through one draw
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { GridLayoutDefinition } from '@retikz/layout';
+import { gridLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -74,7 +74,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ composites: [GridLayoutDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ composites: [gridLayoutDefinition] }} />;
 ```
 
 </DocTab>
@@ -82,7 +82,7 @@ export const Example = () => <Layout ir={ir} extensions={{ composites: [GridLayo
 
 ```ts
 import { scene, renderToSvgString } from '@retikz/vanilla';
-import { gridLayout, GridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { gridLayout, gridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 
 const input = scene({
   children: [
@@ -100,7 +100,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { adapters: [GridLayoutInputEmbedAdapter] }));
+console.log(renderToSvgString(input, { adapters: [gridLayoutInputEmbedAdapter] }));
 ```
 
 </DocTab>
@@ -109,7 +109,7 @@ console.log(renderToSvgString(input, { adapters: [GridLayoutInputEmbedAdapter] }
 ```ts
 import type { IRScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
-import { GridLayoutDefinition } from '@retikz/layout';
+import { gridLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -131,7 +131,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { composites: [GridLayoutDefinition] } }));
+console.log(renderToSvgString(ir, { compile: { composites: [gridLayoutDefinition] } }));
 ```
 
 </DocTab>
@@ -201,7 +201,7 @@ Only First Node changes in this demo. Increase its margin and switch horizontal 
     {
       name: 'columns',
       kind: 'property',
-      type: 'Array<GridTrackInput>',
+      type: 'Array<InputGridTrack>',
       description:
         'Explicit physical columns; at least one. Use `{ kind: "fixed", value }` for fixed widths and `{ kind: "fraction", factor }` for finite remaining space',
       required: true,
@@ -209,7 +209,7 @@ Only First Node changes in this demo. Increase its margin and switch horizontal 
     {
       name: 'rows',
       kind: 'property',
-      type: 'Array<GridTrackInput>',
+      type: 'Array<InputGridTrack>',
       description:
         'Explicit physical rows; implicit rows fill missing entries. This page uses `{ kind: "fixed", value }` to expose alignment',
       defaultValue: '[]',
@@ -217,7 +217,7 @@ Only First Node changes in this demo. Increase its margin and switch horizontal 
     {
       name: 'size',
       kind: 'property',
-      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      type: '{ x?: InputLayoutAxisSize; y?: InputLayoutAxisSize }',
       description:
         'Container sizing and content insets Each axis accepts `{ kind: "content", min?, max? }`, `{ kind: "fixed", value }`, or `{ kind: "fill", min?, max? }`.',
       defaultValue: 'content / content',

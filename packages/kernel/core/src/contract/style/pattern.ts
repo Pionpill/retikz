@@ -1,8 +1,9 @@
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
 import type { ScenePrimitive } from '../scene';
 
 /** Pattern definition 消费的已解析线条样式 */
-export type ResolvedPatternLineStyle = {
+export type CanonicalPatternLineStyle = {
   /** motif 描边颜色 */
   color: string;
   /** motif 描边宽度 */
@@ -18,11 +19,11 @@ export type ResolvedPatternLineStyle = {
 };
 
 /** Pattern definition 消费的完整线条样式周期 */
-export type ResolvedPatternLineStyleCycle = {
+export type CanonicalPatternLineStyleCycle = {
   /** 一个周期包含的相邻线条数量 */
   period: number;
   /** 按零基 index 展开的完整样式数组 */
-  styles: ReadonlyArray<ResolvedPatternLineStyle>;
+  styles: ReadonlyArray<CanonicalPatternLineStyle>;
 };
 
 /**
@@ -54,11 +55,11 @@ export type PatternEmitContext = {
   /** 描边拐角连接 */
   lineJoin?: IRPatternPaint['lineJoin'];
   /** 已继承基础字段并解析 preset 的横向线条样式 */
-  horizontalStyle?: ResolvedPatternLineStyle;
+  horizontalStyle?: CanonicalPatternLineStyle;
   /** 已继承基础字段并解析 preset 的纵向线条样式 */
-  verticalStyle?: ResolvedPatternLineStyle;
+  verticalStyle?: CanonicalPatternLineStyle;
   /** 已按 index 展开并解析继承关系的线条样式周期 */
-  lineStyleCycle?: ResolvedPatternLineStyleCycle;
+  lineStyleCycle?: CanonicalPatternLineStyleCycle;
   /** 精度取整函数（与 compile/render 同一 round，保几何一致） */
   round: (n: number) => number;
 };
@@ -85,7 +86,7 @@ export type PatternDefinition = {
   /** pattern 名称，由 IR pattern paint 的 `shape` 引用 */
   name: string;
   /**
-   * `pattern.size` 省略时的基础尺寸（user units）；最终 tile 周期可由 emit 结果改写
+   * `pattern.size` 省略时的基础尺寸（user units），必须为有限正数；最终 tile 周期可由 emit 结果改写
    * @default 8
    */
   defaultSize?: number;
@@ -94,7 +95,16 @@ export type PatternDefinition = {
 };
 
 /**
- * 定义 pattern motif 注册项
- * @remarks 当前是 typed identity；保留入口用于对齐 registry API，并为未来校验或归一化预留空间
+ * 校验默认尺寸并返回 pattern motif 注册项
+ * @throws RetikzCoreError 显式 defaultSize 不是有限正数时抛出
  */
-export const definePattern = (def: PatternDefinition): PatternDefinition => def;
+export const definePattern = (def: PatternDefinition): PatternDefinition => {
+  if (def.defaultSize !== undefined && (!Number.isFinite(def.defaultSize) || def.defaultSize <= 0)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      `Pattern '${def.name}' defaultSize must be a finite number greater than 0.`,
+    );
+  }
+
+  return def;
+};

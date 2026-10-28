@@ -17,8 +17,8 @@ const minimalSource = {
   },
 } as const;
 
-describe('Regression exact Source schema', () => {
-  it('preserves ordered extra methods and omitted inheritance fields through JSON', () => {
+describe('回归精确的 Source schema', () => {
+  it('通过 JSON 保留有序的额外方法和省略的继承字段', () => {
     const properties = {
       extraMethods: [
         { method: { kind: 'linear' } },
@@ -31,13 +31,13 @@ describe('Regression exact Source schema', () => {
   });
 
   it.each([{}, { method: { kind: 'linear' }, point: {} }, { method: { kind: 'linear' }, extraMethods: [] }])(
-    'rejects incomplete or unrelated extra method fields',
+    '拒绝不完整或不相关的额外方法字段',
     entry => {
       expect(RegressionChartPropertiesSchema.safeParse({ extraMethods: [entry] }).success).toBe(false);
     },
   );
 
-  it('locates an invalid additional extent within its entry', () => {
+  it('在其条目中找到无效的附加范围', () => {
     const result = RegressionChartPropertiesSchema.safeParse({
       extraMethods: [{ method: { kind: 'linear' }, extent: [3, 1] }],
     });
@@ -47,11 +47,11 @@ describe('Regression exact Source schema', () => {
     if (!result.success) expect(result.error.issues[0].path).toEqual(['extraMethods', 0, 'extent']);
   });
 
-  it('accepts the minimal Source without materializing runtime defaults', () => {
+  it('接受最小 Source，而不实现运行时默认值', () => {
     expect(RegressionChartSchema.parse(minimalSource)).toEqual(minimalSource);
   });
 
-  it('accepts the full JSON form and preserves round-trip equality', () => {
+  it('接受完整的 JSON 形式并保留往返相等', () => {
     const source = {
       namespace: 'chart',
       type: 'point',
@@ -107,7 +107,7 @@ describe('Regression exact Source schema', () => {
     ['missing y', { x: 'sepalLength' }],
     ['blank x', { x: '', y: 'petalLength' }],
     ['blank y', { x: 'sepalLength', y: '' }],
-  ])('rejects %s', (_name, encodings) => {
+  ])('拒绝 %s', (_name, encodings) => {
     expect(() => RegressionChartEncodingsSchema.parse(encodings)).toThrow();
   });
 
@@ -119,7 +119,7 @@ describe('Regression exact Source schema', () => {
     ],
     ['constant series', 3],
     ['sequential series scale', { field: 'species', scale: { operation: { type: 'sequential', name: 's' } } }],
-  ])('rejects non-direct or non-ordinal series: %s', (_name, series) => {
+  ])('拒绝非直接或非序数系列：%s', (_name, series) => {
     expect(() => RegressionChartEncodingsSchema.parse({ x: 'sepalLength', y: 'petalLength', series })).toThrow();
   });
 
@@ -130,11 +130,11 @@ describe('Regression exact Source schema', () => {
     ['trend fill', { trend: { fill: '#fff' } }],
     ['trend closed', { trend: { closed: true } }],
     ['trend transform', { trend: { transform: [] } }],
-  ])('rejects invalid properties: %s', (_name, properties) => {
+  ])('拒绝无效属性：%s', (_name, properties) => {
     expect(() => RegressionChartPropertiesSchema.parse(properties)).toThrow();
   });
 
-  it('keeps position domain padding recipe-only', () => {
+  it('仅保留位置域填充配方', () => {
     expect(
       RegressionChartPropertiesSchema.parse({
         domainPadding: { kind: 'ratio', default: 0.04, top: 0.02 },
@@ -147,7 +147,7 @@ describe('Regression exact Source schema', () => {
     ).toBe(false);
   });
 
-  it('keeps series recipe-only and rejects unknown nested fields', () => {
+  it('仅保留系列配方并拒绝未知的嵌套字段', () => {
     expect(() =>
       RegressionChartSchema.parse({
         ...minimalSource,

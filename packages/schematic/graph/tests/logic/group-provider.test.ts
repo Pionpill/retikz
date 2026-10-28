@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
 
-describe('Group provider closure', () => {
-  it('resolves Group, Block, Entity, Relation, FlexLayout, Surface and Surface clip dependencies', () => {
+describe('Group 提供者关闭', () => {
+  it('解决 Group、Block、Entity、Relation、FlexLayout、Surface 和 Surface 裁剪依赖性', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.GroupProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.groupProviderKey], providers: Graph.createGraphProviders() }],
     });
 
     expect(definitions.composites?.map(definition => `${definition.namespace}.${definition.type}`)).toEqual(

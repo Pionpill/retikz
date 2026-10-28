@@ -24,7 +24,7 @@ export const createCompileInvariantError = (message: string, options?: ErrorOpti
 };
 
 /** 单个 callback 的 failure owner identity */
-export type LayoutProbeFailureOwner = Readonly<{
+type LayoutProbeFailureOwner = Readonly<{
   /** 用于错误消息的回调所属者描述 */
   label: string;
 }>;
@@ -49,7 +49,7 @@ export type LayoutProbeFailureEntry = Readonly<{
 };
 
 /** 将 callback/provider 的 unknown throw 规范化为 recoverable Error，同时保留原始 cause */
-export const normalizeLayoutProbeError = (thrown: unknown): LayoutProbeRecoverableError => {
+export const wrapLayoutProbeError = (thrown: unknown): LayoutProbeRecoverableError => {
   if (isLayoutProbeRecoverableError(thrown)) return thrown;
   const message = safeErrorMessage(thrown, 'Layout child compilation threw a non-Error value');
   return createLayoutProbeRecoverableError(message, { cause: thrown });

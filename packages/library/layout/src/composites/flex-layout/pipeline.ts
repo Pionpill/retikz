@@ -18,7 +18,7 @@ import {
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import type { CanonicalFlexLayout, CanonicalFlexLayoutItem } from '../../resolve/flex-layout';
 import { resolveFlexLayout } from '../../resolve/flex-layout';
-import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
+import type { KeyedLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import {
   alignAllocationInSlot,
   appendLayoutSpacing,
@@ -52,7 +52,7 @@ import type { IRFlexLayout } from './types';
 type PhysicalAxis = 'x' | 'y';
 
 type MeasuredFlexItem = Readonly<{
-  authored: EffectiveLayoutItem<CanonicalFlexLayoutItem>;
+  authored: KeyedLayoutItem<CanonicalFlexLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
   flexBaseSlot: number;

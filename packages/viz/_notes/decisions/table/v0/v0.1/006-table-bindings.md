@@ -112,8 +112,8 @@ type ManualTableProps = TableCommonProps & ManualTableInput;
 - standalone `onManifest` 存在时同步计算 artifact、再由 effect 按序列化内容去重通知；省略时不计算 sidecar
 - `composites` 是 nested Tier 2 的宿主逃生舱；standalone 合并为 `[...lowerTables(...), ...composites]` 后交 `<Layout>`，重复 namespace/type 由 Core registry fail-loud
 - 三个组件都实现 Tier 2 embeddable adapter，并复用 `resolveReactTableRuntime()` 与同一 render / contribute 实现；`DetailTable` / `ManualTable` 不能只在 render 中返回 `<Table>`，否则宿主在 render 前无法识别 embeddable adapter
-- 嵌入态把 `composites` 随 Table runtime envelope 一并聚合进 `makeComposites`
-- standalone 允许省略 Table spec id；嵌入 `<Layout>` 时三个组件归一后的 `IRTable.id` 必须是非空且在当前 Layout 内唯一的字符串，并以它作为共享 contribution reference。匿名 embedded Table 直接 fail-loud，不使用数组序号、React key、全局计数器或 WeakMap 补 id
+- 嵌入态把 Table 参数与额外 `composites` 转成同一 Core provider contribution
+- standalone 与 embedded 都允许匿名 Table；显式模型 id 保留在 IR 中，不作为提供者参数的聚合 key。图元 ID 的重复诊断由 Core 编译器负责，不借用数据集冲突检测
 - `onManifest` 仅支持 standalone；嵌入 `<Layout>` 时 embeddable `contribute` 若看到该 prop 必须 fail-loud，并提示宿主对 spec 显式调用 `lowerTableWithArtifacts`
 - ReactNode 不进入 Table IR；alpha.1 不提供 JSX Cell children DSL
 
@@ -121,24 +121,24 @@ type ManualTableProps = TableCommonProps & ManualTableInput;
 
 #### Embedded 多实例聚合
 
-每个 embedded `Table` / `DetailTable` / `ManualTable` 在 datasets 中附加一个以 module-local `Symbol` 标识、唯一 runtime reference 承载的 envelope：
+每个 embedded `Table` / `DetailTable` / `ManualTable` 创建同键的 Table provider，以具名参数携带所属方输入：
 
 ```ts
-type EmbeddedTableRuntimeEnvelope = {
+type TableProviderParams = {
+  datasets: ExternalDatasets;
   lowerOptions: LowerTablesOptions;
-  composites: ReadonlyArray<CompositeDefinition>;
 };
 ```
 
-`makeEmbeddedTableComposites(mergedDatasets)` 逐项剥离 envelope，再按以下规则一次构造整个 Table namespace 的 definitions：
+Core 按贡献顺序把同键参数数组交给 Table 工厂。Table 工厂按以下规则构造唯一定义，额外 composite 则各自成为携带定义对象的提供者：
 
-- 普通 dataset 继续使用 Layout 既有规则：同 reference 必须是同一 rows 引用，否则 fail-loud
+- dataset 复用 Data 的 `mergeExternalDatasets`：同 reference 必须是同一 rows 引用，否则 fail-loud；合并不复制行数组
 - structure definitions 按 schema literal kind 合并，presentation definitions 按 name 合并；同 key + 同 definition 对象用 `Object.is` 去重，同 key + 不同对象 fail-loud
 - 未来 `LowerTablesOptions` 若增加非 definition 字段，同字段的非 `undefined` 值必须 `Object.is` 相同，否则 fail-loud；不允许后加入的 Table 静默覆盖
 - extra composites 按 Table contribution 首次出现顺序、再按各 props 数组顺序合并；同 namespace/type + 同 definition 对象去重，同 key + 不同对象 fail-loud
-- 最终返回 `[...lowerTables(cleanDatasets, mergedLowerOptions), ...mergedExtraComposites]`；Table definitions 永远先于 extra composites，结果不受 object key 枚举以外的隐式排序影响
+- Table 工厂调用 `lowerTables(datasets, mergedLowerOptions)` 生成定义；贡献将 Table root 放在额外 composite roots 之前，Core 按稳定依赖顺序物化
 
-runtime envelope 与 Symbol 不进入 Table IR、Scene 或用户 dataset；其唯一 reference 只用于同一次 Layout 聚合，完成后必须剥离。
+参数与提供者仅存在于本次装配，不进入 Table IR 或 Scene。无需 Symbol marker、保留数据集 key 或额外 runtime reference；Core 不读取参数内容。
 
 ### Vanilla
 
@@ -232,10 +232,10 @@ const result = renderTable(spec, {
 
 - `detailTable()` / `manualTable()` 分别只委托 `createDetailTableIR()` / `createManualTableIR()`；返回值是无方法的 plain `IRTable`，不新增细粒度 column / cell helper
 - `embedTable()` 只返回 `embed('table', id, props)` 的标准 `InputEmbed`；不执行 lowering，不修改 spec，也不把 runtime data 写入 Table IR
-- `embedTable()` 在构造前要求 `id` 为非空字符串；adapter `lower()` 也必须独立校验 `VanillaEmbedContext.id`，使手写 `embed('table', '', props)` 不能绕过稳定 identity 前置条件。两条错误均使用 `table vanilla: embed id must be non-empty`
+- embed 的运行时身份由 Vanilla 管理，不进入 Table provider 参数，也不作为 Table 模型 id 的替代值
 - `createTableAdapter()` 无 datasets/options 参数；同一 adapter 可服务多个 Table embed，并在 `mount().update(nextFigure)` 时从新 embed props 读取新 data、lower options 与 composites
 - adapter 的 `lower()` 必须重新执行 `TableSchema.parse()`，使手写 `embed('table', ...)` 不能绕过 Table schema；嵌入副本的根 id 规范化为 `${embedId}/${spec.id ?? 'table'}`，且不得修改调用方 spec
-- adapter 返回的 `makeComposites` 在创建 adapter 时固定为同一函数引用；多个 Table embed 的 datasets、lower options 与 extra composites 通过下述共享 contribution contract 聚合，不用 mutable Map 或 module-level side channel 保存本轮 props
+- adapter 贡献中的 Table provider 使用同一工厂引用；多个 Table embed 的参数通过下述共享 contribution contract 聚合，不用 module-level side channel 保存本轮 props
 - `renderTable()` 是一次性 SSR + manifest convenience：先 parse spec，再以 `data ?? {}`、`lowerOptions ?? {}` 调用 Table lowering，最后经 `compileToScene` 与 `renderToSvgString` 输出；它不作为浏览器更新或性能优化边界
 - `composites` 与 Table definitions 合并后进入 `CompileOptions.composites`，语义与 React / embed adapter 相同
 - `output` 复用 `RenderToStringOptions['output']`，其中 width / height / idPrefix 只控制 SVG 宿主输出，不改变 Table 固定轨道几何；不开放调用方覆盖内部 `compile.composites`
@@ -244,27 +244,23 @@ const result = renderTable(spec, {
 
 #### 跨 React / Vanilla 的 contribution 合同
 
-`@retikz/table` 的 `pipeline/contribution/` 提供 host-agnostic 的 runtime contribution helper。React embedded runtime 与 Vanilla adapter 都使用该 helper 生成待聚合 datasets，并复用同一个稳定 `makeTableRuntimeComposites()`：
+`@retikz/table` 提供宿主无关的 runtime contribution helper。React embedded runtime 与 Vanilla adapter 都使用该 helper 生成 Core provider contribution，并复用同一个稳定的 Table 定义工厂：
 
 ```ts
 type TableRuntimeContributionInput = {
-  reference: string;
   data?: ExternalDatasets;
   lowerOptions?: LowerTablesOptions;
-  composites?: ReadonlyArray<CompositeDefinition>;
+  composites?: ReadonlyArray<AnyCompositeDefinition>;
 };
 
-type TableRuntimeContribution = {
-  datasets: Record<string, unknown>;
-  makeComposites: (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
-};
+type TableRuntimeContribution = CoreProviderContribution;
 
 declare const createTableRuntimeContribution: (input: TableRuntimeContributionInput) => TableRuntimeContribution;
 ```
 
-每个 contribution 增加保留 runtime reference `@@retikz/table/runtime/${encodeURIComponent(reference)}`，其值带 module-local `Symbol` marker 并承载 `lowerOptions` / `composites`；Vanilla 传已校验的非空 `VanillaEmbedContext.id`，React 传已校验的 `IRTable.id`。helper 本身也要求 `reference` 非空，并拒绝用户 dataset 与该保留 reference 冲突。React 同一 Layout 内重复 Table id 会使两个独立 envelope 命中同一 reference，并由 Kernel dataset conflict fail-loud；Vanilla 的重复 embed id 由 Kernel identity 检查先拒绝。
+每个 contribution 显式携带 Table 与额外 composite 的 roots / providers。Table 参数包含 datasets 和复制后冻结的 lowering 选项容器；额外 composite provider 直接以定义对象为参数。同键额外 composite 只接受相同定义引用。
 
-`makeTableRuntimeComposites()` 聚合时剥离所有 envelope，再应用 React “Embedded 多实例聚合”一节的同一 dataset、definition、普通 option 和 extra composite 冲突规则。reference 只由显式稳定 identity 派生，因此组件重排、Strict Mode 重入或 SSR 重复执行不会改变它，也不需要进程级可变状态。该 envelope 不进入 Table IR、Core IR 或 Scene。
+Table 工厂接收按贡献顺序排列的参数数组，应用“Embedded 多实例聚合”一节的 dataset、definition 和普通 option 冲突规则。参数通过函数调用显式传递，不需要进程级计数器或保留 reference；图元身份与提供者装配相互独立。
 
 `detailTable()` / `manualTable()` 的结果保持 JSON-safe。`TableEmbedProps` 是 Vanilla runtime props：`data` 仍与 IR 分离，definitions / composites 可以包含函数，因此带这些 runtime 扩展的整个 Figure 不承诺可持久化；Kernel 当前也只保证 `embed().props` 由调用方与 adapter 负责。任何函数都不得进入 adapter 输出的 Core IR。
 
@@ -306,7 +302,7 @@ expect(resolveReactManualTableIR(manualProps)).toEqual(createManualTableIR(manua
 - 初始化 `@retikz/table-react` 与 `@retikz/table-vanilla` npm packages
 - `@retikz/table` 新增共享 `createDetailTableIR()` / `createManualTableIR()` 与 runtime contribution contract
 - 新增用户可见 `<Table>`、`<DetailTable>`、`<ManualTable>`、`detailTable()`、`manualTable()`、`embedTable()`、`createTableAdapter()` 与 `renderTable()`
-- React embedded Table 新增稳定 id 前置条件；standalone 仍允许匿名 spec
+- React embedded 与 standalone Table 都允许匿名 spec；运行时身份由宿主管理
 - alpha.1 需要在 `apps/docs` 建立 Table introduction / usage / API 基础页面和 demo，并同步 zh/en、导航与 i18n
 - docs package 同步加入 `@retikz/table`、`@retikz/table-react`、`@retikz/table-vanilla` 的 `workspace:*` dependencies，保证组件 demo、IR/API 示例和 Vanilla 示例均从真实公开包导入
 - 同步 viz、Table 与两个 adapter 的包职责文档：Table 明确拥有 framework-neutral spec normalization 和 adapter-shared contribution contract，但不拥有 React/Vanilla traversal/runtime；Vanilla 从 builder 改为 plain helper + Tier 2 embed adapter + SSR convenience；React 明确三个组件消费共享 normalization

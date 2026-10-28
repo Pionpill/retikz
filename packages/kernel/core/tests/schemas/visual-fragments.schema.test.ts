@@ -11,8 +11,8 @@ import {
   TextVisualSchema,
 } from '../../src';
 
-describe('independent visual contracts', () => {
-  it('keeps paint targets and their opacity independent', () => {
+describe('独立视觉契约', () => {
+  it('保持绘画目标及其不透明度独立', () => {
     expect(GraphicColorSchema.parse({ color: 'red' })).toEqual({ color: 'red' });
     expect(GraphicColorSchema.safeParse({ color: 0.5 }).success).toBe(false);
     expect(GraphicColorSchema.safeParse({ opacity: 0.5 }).success).toBe(false);
@@ -26,7 +26,7 @@ describe('independent visual contracts', () => {
     expect(GraphicFillSchema.safeParse({ stroke: 'red' }).success).toBe(false);
   });
 
-  it('composes sparse text and geometry without admitting unrelated fields', () => {
+  it('组合稀疏文本和几何图形，而不允许不相关的字段', () => {
     const schema = strictObject({
       ...GraphicFillSchema.shape,
       ...GraphicStrokeSchema.shape,

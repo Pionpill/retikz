@@ -15,12 +15,12 @@ import {
   resolvePointScaleDefaults,
 } from '../shared';
 import { pointRecipeId } from '../shared/plot';
-import { RegressionMarkDefinition, resolveRegressionMarkGroup } from './mark';
+import { regressionMarkDefinition, resolveRegressionMarkGroup } from './mark';
 import type { IRRegressionChart } from './schema';
 import { RegressionChartSchema } from './schema';
 
 /** Regression exact schema、调度与消费检查共用的 encoding 顺序 */
-export const RegressionChartEncodingSlots = ['x', 'y', 'series', 'row', 'column', 'facet'] as const;
+const regressionChartEncodingSlots = ['x', 'y', 'series', 'row', 'column', 'facet'] as const;
 
 const regressionMarkPropertySlots = ['method', 'sampleCount', 'extent', 'point', 'trend', 'extraMethods'] as const;
 
@@ -54,22 +54,22 @@ const withSeriesFallback = (encodings: JsonObject): JsonObject => {
 };
 
 /** Regression Chart 的内建 semantic recipe Definition */
-export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart> = defineChartRecipe({
+export const regressionChartDefinition: ChartRecipeDefinition<IRRegressionChart> = defineChartRecipe({
   chartType: ChartType.Regression,
-  encodingSlots: RegressionChartEncodingSlots,
+  encodingSlots: regressionChartEncodingSlots,
   schema: RegressionChartSchema,
   consumes: {
-    encodings: RegressionChartEncodingSlots,
+    encodings: regressionChartEncodingSlots,
     properties: regressionPropertySlots,
   },
   marks: [
     {
-      definition: RegressionMarkDefinition,
+      definition: regressionMarkDefinition,
       inherit: { encodings: ['x', 'y', 'series'], properties: [...regressionMarkPropertySlots, 'autoPadding'] },
     },
   ],
   resolveEncodings: context => {
-    const resolution = resolveChartEncodingMappings(context, RegressionChartEncodingSlots, regressionFieldConsumers);
+    const resolution = resolveChartEncodingMappings(context, regressionChartEncodingSlots, regressionFieldConsumers);
     const spatial = pointSpatialResolutionOf(ChartType.Regression, context.encodings);
 
     return {

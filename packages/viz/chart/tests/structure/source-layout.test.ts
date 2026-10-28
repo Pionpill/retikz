@@ -19,8 +19,8 @@ const sourceFilesUnder = async (directory: string): Promise<Array<string>> => {
   return files;
 };
 
-describe('Chart semantic source layout', () => {
-  it('keeps generic Chart owners independent from concrete families', async () => {
+describe('Chart 语义源布局', () => {
+  it('使通用 Chart 所属模块独立于具体系列', async () => {
     const files = await sourceFilesUnder(sourceRoot);
     const normalizedPathOf = (path: string): string => relative(sourceRoot, path).replaceAll('\\', '/');
     const chartFiles = files.filter(path => normalizedPathOf(path).startsWith('_chart/'));
@@ -30,7 +30,7 @@ describe('Chart semantic source layout', () => {
     expect(contents).not.toMatch(/\bChartCatalog\b|\bChartFamilyDefinition\b|\bPointChartSchema\b/);
   });
 
-  it('keeps family modules independent from provider lookup state', async () => {
+  it('使系列模块独立于提供者查找状态', async () => {
     const files = await sourceFilesUnder(sourceRoot);
     const normalizedPathOf = (path: string): string => relative(sourceRoot, path).replaceAll('\\', '/');
     const pointFiles = files.filter(path => normalizedPathOf(path).startsWith('point/'));

@@ -22,8 +22,8 @@ const path = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-describe('Drawable shared schema', () => {
-  it('accepts shared drawable style and instance fields on stroke paths', () => {
+describe('可绘制共享 schema', () => {
+  it('接受描边路径上的共享可绘制样式和实例字段', () => {
     const parsed = PathSchema.parse(
       path({
         id: 'edge-a',
@@ -50,7 +50,7 @@ describe('Drawable shared schema', () => {
     });
   });
 
-  it('accepts shared drawable style and instance fields on a custom path', () => {
+  it('接受自定义路径上的共享可绘制样式和实例字段', () => {
     const parsed = PathSchema.parse(
       path({
         kind: 'custom',
@@ -79,7 +79,7 @@ describe('Drawable shared schema', () => {
     });
   });
 
-  it('reuses path labels for step labels and path host labels', () => {
+  it('将路径标签重用为步骤标签和路径宿主标签', () => {
     const label = { text: '128', position: 0.75, sloped: true };
 
     expect(PathLabelSchema.parse(label)).toEqual(label);
@@ -87,14 +87,14 @@ describe('Drawable shared schema', () => {
     expect(PathLabelSchema.safeParse({ ...label, placement: 'inside' }).success).toBe(false);
   });
 
-  it('keeps edge label sides canonical and rejects parser sugar aliases', () => {
+  it('保持边缘标签侧面规范并拒绝解析器糖别名', () => {
     expect(PathLabelSchema.parse({ text: 'x', side: 'top' })).toMatchObject({ side: 'top' });
     expect(PathLabelSchema.parse({ text: 'x', side: 'bottom' })).toMatchObject({ side: 'bottom' });
     expect(() => PathLabelSchema.parse({ text: 'x', side: 'north' })).toThrow();
     expect(() => PathLabelSchema.parse({ text: 'x', side: 'above' })).toThrow();
   });
 
-  it('rejects unknown fields nested in kind options only when the custom schema rejects them', () => {
+  it('仅当自定义 schema 拒绝嵌套在种类选项中的未知字段时才拒绝它们', () => {
     for (const field of ['dashPattern', 'arrow', 'arrowDetail', 'lineCap', 'lineJoin', 'cornerRadius']) {
       const value = field === 'dashPattern' ? [4, 2] : 'round';
 
@@ -104,13 +104,13 @@ describe('Drawable shared schema', () => {
     }
   });
 
-  it('rejects unknown fields at the path host top level', () => {
+  it('拒绝路径宿主顶层的未知字段', () => {
     for (const field of ['width', 'start', 'end', 'interpolation', 'align', 'samples', 'sampling', 'upper', 'lower']) {
       expect(PathSchema.safeParse(path({ [field]: field === 'width' ? 12 : {} })).success).toBe(false);
     }
   });
 
-  it('keeps instance fields out of the graphic style schema', () => {
+  it('将实例字段保留在图形样式 schema 之外', () => {
     expect(GraphicStyleSchema.safeParse({ id: 'x' }).success).toBe(false);
     expect(GraphicStyleSchema.safeParse({ meta: { x: 1 } }).success).toBe(false);
     expect(GraphicStyleSchema.safeParse({ animations: [] }).success).toBe(false);
@@ -118,12 +118,12 @@ describe('Drawable shared schema', () => {
     expect(DrawableInstanceSchema.safeParse({ zIndex: 1, meta: { ok: true } }).success).toBe(true);
   });
 
-  it('rejects private label fields', () => {
+  it('拒绝私有标签字段', () => {
     expect(PathSchema.safeParse(path({ label: { text: 'x', side: 'upper' } })).success).toBe(false);
     expect(PathSchema.safeParse(path({ label: { text: 'x', rotate: 'sloped' } })).success).toBe(false);
   });
 
-  it('keeps shared style schema JSON round-trippable', () => {
+  it('保持共享样式 schema JSON 可往返', () => {
     const style = {
       color: '#0f172a',
       fill: '#e0f2fe',

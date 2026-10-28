@@ -5,14 +5,14 @@ import { isBetweenPositionLike, isNodeTargetLike } from '../../shared';
 import { resolvePosition } from './resolve';
 import type { PositionTargetResolution, PositionTargetResolveContext, PositionTargetWorldResolution } from './types';
 
-/** 在世界坐标叠加 NodeTarget offset */
+/** 在节点目标的世界坐标上叠加 offset */
 const addNodeTargetOffset = (point: IRPosition, target: IRNodeTarget): IRPosition =>
   target.offset === undefined ? point : [point[0] + target.offset[0], point[1] + target.offset[1]];
 
-/** 判断一个点是否可以进入后续 Scene 编译 */
+/** 判断点的两个坐标是否均为有限数值 */
 const isFinitePoint = (point: IRPosition): boolean => Number.isFinite(point[0]) && Number.isFinite(point[1]);
 
-/** 把 absolute target 绑定为世界参考点与可选 Node binding，不提前执行局部投影 */
+/** 解析目标的世界坐标，并保留直接节点引用与连接面；无法定位时 referencePoint 为 null */
 export const resolvePositionTargetWorld = (
   target: IRAbsoluteTarget,
   context: PositionTargetResolveContext,
@@ -57,7 +57,7 @@ export const resolvePositionTargetWorld = (
   };
 };
 
-/** 把 absolute target 确定为局部点、世界参考点与可选 Node binding */
+/** 解析目标的局部坐标、世界坐标和直接节点引用；无法定位时两个坐标均为 null */
 export const resolvePositionTarget = (
   target: IRAbsoluteTarget,
   context: PositionTargetResolveContext,

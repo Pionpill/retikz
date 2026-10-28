@@ -5,19 +5,19 @@ import * as core from '../../../src';
 import { resolveBoxSpacing } from '../../../src';
 
 describe('resolveBoxSpacing', () => {
-  it('is available from the package root', () => {
+  it('可从包根目录获取', () => {
     expect('resolveBoxSpacing' in core).toBe(true);
   });
 
-  it('applies a numeric value to all four sides', () => {
+  it('将数值应用于所有四个边', () => {
     expect(resolveBoxSpacing(3, 1)).toEqual({ top: 3, right: 3, bottom: 3, left: 3 });
   });
 
-  it('uses fallback when the spacing value is omitted', () => {
+  it('当省略间距值时使用回退', () => {
     expect(resolveBoxSpacing(undefined, 2)).toEqual({ top: 2, right: 2, bottom: 2, left: 2 });
   });
 
-  it('resolves default and axis values before fallback', () => {
+  it('在回退之前解析默认值和轴值', () => {
     expect(resolveBoxSpacing({ default: 1 }, 9)).toEqual({ top: 1, right: 1, bottom: 1, left: 1 });
     expect(resolveBoxSpacing({ default: 1, x: 2, y: 3 }, 9)).toEqual({
       top: 3,
@@ -27,7 +27,7 @@ describe('resolveBoxSpacing', () => {
     });
   });
 
-  it('gives side values precedence over axis and default values', () => {
+  it('使边值优先于轴和默认值', () => {
     expect(resolveBoxSpacing({ default: 1, x: 2, y: 3, top: 4, right: 5, bottom: 6, left: 7 }, 9)).toEqual({
       top: 4,
       right: 5,
@@ -36,7 +36,7 @@ describe('resolveBoxSpacing', () => {
     });
   });
 
-  it('returns a detached result', () => {
+  it('返回分离结果', () => {
     const value: IRBoxSpacing = Object.freeze({ default: 1, x: 2, top: 3 });
     const result = resolveBoxSpacing(value, 0);
     const second = resolveBoxSpacing(value, 0);
@@ -49,7 +49,7 @@ describe('resolveBoxSpacing', () => {
     expect(value).toEqual({ default: 1, x: 2, top: 3 });
   });
 
-  it('rejects a fallback that is not finite and non-negative', () => {
+  it('拒绝非有限且非负的回退', () => {
     for (const fallback of [-1, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
       expect(() => resolveBoxSpacing(undefined, fallback)).toThrow(
         'resolveBoxSpacing: fallback must be a finite non-negative number',

@@ -13,29 +13,6 @@ export type AxisRoleOf = (dimension: string) => string;
 export const defaultOriginAxisTickSideOf = (dimension: string): AxisCardinalSide =>
   dimension === 'x' ? AxisCardinalSide.Bottom : AxisCardinalSide.Left;
 
-/**
- * 校验同一坐标角色只声明一根 axis
- * @description definition.resolve 阶段调用，保证 guide lowering 不会为同一定位角色生成两套互相覆盖的轴层。
- *   roleOf 让不同坐标系在“IR 维度名”和“坐标角色名”之间做一次局部映射
- */
-export const assertUniqueAxisDimension = (
-  guides: ReadonlyArray<IRPlotAxisGuide>,
-  roleOf: AxisRoleOf = dimension => dimension,
-): void => {
-  const seen = new Set<string>();
-
-  for (const guide of guides) {
-    const role = roleOf(guide.dimension);
-    if (seen.has(role)) {
-      throw new RetikzPlotError(
-        `lowerPlots: duplicate axis for "${role}" role (dimension "${guide.dimension}"); one axis per positional role`,
-      );
-    }
-
-    seen.add(role);
-  }
-};
-
 /** axis placement 的归一化 key；offset 是同一 key 上的几何位移，不参与唯一性 */
 export const axisPlacementKeyOf = (guide: IRPlotAxisGuide, roleOf: AxisRoleOf = dimension => dimension): string => {
   const role = roleOf(guide.dimension);

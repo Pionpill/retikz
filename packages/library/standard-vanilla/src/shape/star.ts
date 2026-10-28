@@ -1,5 +1,5 @@
 import type { IRStar } from '@retikz/standard/shape';
-import { StarProvider, createStar } from '@retikz/standard/shape';
+import { starProvider, createStar } from '@retikz/standard/shape';
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputShape } from './shared';
@@ -9,10 +9,10 @@ import { normalizeShapeInput } from './shared';
 export type InputStar = InputShape<IRStar>;
 
 /** 将 Star 作者输入归一为持久化的 Standard 意图 */
-export const StarInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStar & { id?: string }> = {
+export const starInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStar & { id?: string }> = {
   kind: 'standard.star',
   lower: props => ({
     node: createStar(normalizeShapeInput<IRStar>(props)),
-    providerDependencies: { roots: [StarProvider.key], providers: [StarProvider] },
+    providerDependencies: { roots: [starProvider.key], providers: [starProvider] },
   }),
 };

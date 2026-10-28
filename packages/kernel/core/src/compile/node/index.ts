@@ -1,6 +1,6 @@
 export * from './anchors';
 export * from './boundary';
-export * from './box';
+export * from './compile';
 export * from './emit';
 export * from './geometry-context';
 export * from './label/geometry';
@@ -10,4 +10,3 @@ export * from './observation';
 export * from './reference';
 export * from './synthetic';
 export * from './types';
-export * from './compile';

@@ -1,7 +1,7 @@
 import { RAD_TO_DEG } from '@retikz/math';
 import type { CenteredBox } from '@retikz/math';
 
-import type { GroupPrimitive, ResolvedShapeStyle, ScenePrimitive, TextLine } from '../../contract';
+import type { GroupPrimitive, CompiledShapeStyle, ScenePrimitive, TextLine } from '../../contract';
 import type { CanonicalNode } from '../../resolve';
 import {
   createLayoutProbeRecoverableError,
@@ -10,7 +10,7 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { PaintResolver } from '../resource';
-import { validateScenePrimitives } from '../scene-primitive';
+import { snapshotScenePrimitives } from '../scene-primitive';
 import { emitInlineLine, inlineSegmentPaintsOf, toAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
@@ -18,7 +18,7 @@ import type {
   NodeCompilation,
   NodeLabelLayout,
   NodeLabelResolution,
-  NodeLayout,
+  CompiledNodeLayout,
   NodeResolvedProperties,
 } from './types';
 
@@ -50,7 +50,7 @@ type NodeBaselineYs = Readonly<{
 }>;
 
 /** 计算 Node 正文实际 emit 与 observation 共用的每条物理行 alphabetic baseline y */
-export const nodeBaselineYsOf = (layout: NodeLayout, round: Round): NodeBaselineYs => {
+export const nodeBaselineYsOf = (layout: CompiledNodeLayout, round: Round): NodeBaselineYs => {
   const text = layout.text;
   if (text === undefined) return { emitted: [], observed: [] };
   const lineCount = text.lines.length;
@@ -82,8 +82,8 @@ export const nodeBaselineYsOf = (layout: NodeLayout, round: Round): NodeBaseline
   };
 };
 
-/** 从 NodeLayout 收敛 shape emit 所需的视觉样式 */
-const toShapeStyle = (properties: NodeShapeProperties, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
+/** 从 CompiledNodeLayout 收敛 shape emit 所需的视觉样式 */
+const toShapeStyle = (properties: NodeShapeProperties, resolvePaint: PaintResolver): CompiledShapeStyle => ({
   fill: resolvePaint(properties.fill),
   fillOpacity: properties.fillOpacity,
   stroke: resolvePaint(properties.stroke) ?? 'currentColor',
@@ -100,14 +100,14 @@ const toShapeStyle = (properties: NodeShapeProperties, resolvePaint: PaintResolv
 });
 
 /** 发出节点 shape 主体图元 */
-export const emitNodeShapePrimitives = (
-  layout: NodeLayout,
+const emitNodeShapePrimitives = (
+  layout: CompiledNodeLayout,
   properties: NodeShapeProperties,
   round: Round,
   resolvePaint: PaintResolver,
 ): Array<ScenePrimitive> => {
   const axisAlignedRect: CenteredBox = { ...layout.geometry.rect, rotate: 0 };
-  let emitted: unknown;
+  let emitted: Iterable<ScenePrimitive>;
 
   try {
     emitted = layout.shape.definition.emit(
@@ -125,12 +125,12 @@ export const emitNodeShapePrimitives = (
     });
   }
 
-  return validateScenePrimitives(`Shape '${layout.shape.name}'`, emitted);
+  return snapshotScenePrimitives(`Shape '${layout.shape.name}'`, emitted);
 };
 
 /** 发出节点正文图元 */
 const emitNodeContentPrimitives = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   properties: NodeResolvedProperties,
   round: Round,
 ): Array<ScenePrimitive> => {
@@ -200,7 +200,7 @@ const emitNodeContentPrimitives = (
 
 /** 发出 label pin 引线图元 */
 const emitNodeLabelPinPrimitive = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   label: NodeLabelLayout,
   labelProperties: NodeLabelResolution,
   properties: NodeResolvedProperties,
@@ -239,7 +239,7 @@ const emitNodeLabelPinPrimitive = (
 
 /** 发出 label 正文图元 */
 const emitNodeLabelContentPrimitive = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   label: NodeLabelLayout,
   labelProperties: NodeLabelResolution,
   properties: NodeResolvedProperties,
@@ -297,7 +297,7 @@ const emitNodeLabelContentPrimitive = (
 
 /** 发出节点附属 label 图元 */
 const emitNodeLabelPrimitives = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   label: NodeLabelLayout,
   labelProperties: NodeLabelResolution,
   properties: NodeResolvedProperties,
@@ -360,7 +360,7 @@ const stampNodeShapePrimitives = (
 
 /** 包装带文本或旋转的节点 group */
 const wrapNodeGroupPrimitive = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   metadata: Pick<CanonicalNode, 'id' | 'meta' | 'animations'>,
   children: Array<ScenePrimitive>,
   round: Round,

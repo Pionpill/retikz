@@ -1,23 +1,23 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputLegend } from '@retikz/standard-vanilla/presentation';
-import { LegendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
-import type { LegendInput } from '@retikz/standard/presentation';
+import { legendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import type { InputLegendConfig } from '@retikz/standard/presentation';
 import { LegendContentKind } from '@retikz/standard/presentation';
 import type { FC, ReactNode } from 'react';
 
 import type { StandardEmbeddableComponent } from '../../shared';
 import { convertLegendItemsChildren, convertLegendRampChildren } from './convert-children';
 
-type LegendItemsContentInput = Extract<LegendInput['content'], { kind: 'items' }>;
+type InputLegendItemsContentConfig = Extract<InputLegendConfig['content'], { kind: 'items' }>;
 
-type LegendRampContentInput = Extract<LegendInput['content'], { kind: 'ramp' }>;
+type InputLegendRampContentConfig = Extract<InputLegendConfig['content'], { kind: 'ramp' }>;
 
-type LegendSharedProps = Omit<LegendInput, 'title' | 'content'>;
+type LegendSharedProps = Omit<InputLegendConfig, 'title' | 'content'>;
 
 /** React items Legend 的显式组合式 authoring 属性 */
 export type LegendItemsFormProps = LegendSharedProps &
-  Omit<LegendItemsContentInput, 'kind' | 'items'> &
+  Omit<InputLegendItemsContentConfig, 'kind' | 'items'> &
   Readonly<{
     /** 显式选择离散条目 form */
     kind: typeof LegendContentKind.Items;
@@ -27,7 +27,7 @@ export type LegendItemsFormProps = LegendSharedProps &
 
 /** React ramp Legend 的显式组合式 authoring 属性 */
 export type LegendRampFormProps = LegendSharedProps &
-  Omit<LegendRampContentInput, 'kind' | 'sample' | 'ticks'> &
+  Omit<InputLegendRampContentConfig, 'kind' | 'sample' | 'ticks'> &
   Readonly<{
     /** 显式选择连续样本 form */
     kind: typeof LegendContentKind.Ramp;
@@ -98,5 +98,5 @@ export const Legend = LegendComponent as StandardEmbeddableComponent<LegendProps
 
 Legend.displayName = 'Legend';
 Legend.isTier2Embeddable = true;
-Legend.inputEmbedAdapter = LegendInputEmbedAdapter;
+Legend.inputEmbedAdapter = legendInputEmbedAdapter;
 Legend.createInputEmbedProps = createLegendInput;

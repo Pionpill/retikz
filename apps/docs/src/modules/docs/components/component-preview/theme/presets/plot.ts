@@ -1,4 +1,4 @@
-import type { ResolvedTheme, ThemeMode } from '@retikz/core';
+import type { CanonicalTheme, ThemeMode } from '@retikz/core';
 import type { IRPlotAxisRule, IRPlotDefaults } from '@retikz/plot';
 import { definePlotTheme, BuiltinPlotColorScheme, PlotDefaultsSchema, PlotShapePaletteSchema } from '@retikz/plot';
 
@@ -116,7 +116,7 @@ const rulesOf = (style: ReferenceStyle, mode: ThemeMode): ReadonlyArray<IRPlotAx
   return [{ select: { dimension: ['x', 'y'] }, axis: { grid: gridDefaultsOf(mode) } }];
 };
 
-const defaultsOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotDefaults => {
+const defaultsOf = (style: ReferenceStyle, theme: CanonicalTheme): IRPlotDefaults => {
   const preset = styles[style];
   const tickMark =
     preset.axis.tick === false

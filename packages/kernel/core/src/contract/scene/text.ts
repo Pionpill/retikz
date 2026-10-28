@@ -1,9 +1,10 @@
+import type { OpenString } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
 import type { IRFont, IRTextSegment } from '../../schemas';
 import type { ScenePrimitiveBase, ScenePrimitiveOpacity } from './base';
 
-type SceneFontWeight = NonNullable<IRFont['weight']> | (string & {});
+type SceneFontWeight = OpenString<Extract<IRFont['weight'], string>> | Extract<IRFont['weight'], number>;
 
 /** 行级字段（每行可独立指定），未填走块级 TextPrimitive 默认 */
 export type TextLine = {

@@ -116,7 +116,7 @@ export type PlotBindingsNormalizationContext = {
 };
 
 /** 共享 binding normalization 的 Plot Source IR 结果 */
-export type NormalizedPlotBindings = {
+export type PlotBindingsNormalizationResult = {
   /** 已移除 authoring-only 字段的 mark */
   marks: Array<IRPlotMark>;
   /** 已移除 authoring-only 字段的 guide */

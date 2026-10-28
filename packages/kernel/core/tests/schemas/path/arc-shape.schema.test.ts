@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema, StepSchema } from '../../../src/schemas';
 
-describe('arc / circlePath / ellipsePath schema refinement', () => {
+describe('圆弧/circlePath/ellipsePath schema 细化', () => {
   it('arc 接受正圆半径或对象式椭圆半径', () => {
     expect(
       ArcStepSchema.safeParse({

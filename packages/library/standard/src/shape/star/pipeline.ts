@@ -7,8 +7,10 @@ import type { IRStar } from './types';
 /** 将 Star 意图下沉为单一 Core Path */
 export const lowerStar = (source: IRStar): IRPath => {
   const innerRadius =
-    'innerRadius' in source ? source.innerRadius : source.outerRadius * ShapeInnerRatioSchema.parse(source.innerRatio);
-  const rotate = ShapeVertexAngleSchema.parse(source.rotate);
+    'innerRadius' in source
+      ? source.innerRadius
+      : source.outerRadius * (source.innerRatio ?? ShapeInnerRatioSchema.parse(undefined));
+  const rotate = source.rotate ?? ShapeVertexAngleSchema.parse(undefined);
   const vertices = Array.from({ length: source.points * 2 }, (_, index) => {
     const radius = index % 2 === 0 ? source.outerRadius : innerRadius;
     return pointAtEllipseArcAngle({

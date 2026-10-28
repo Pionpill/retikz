@@ -55,7 +55,7 @@ export type InputRelationWay = Readonly<{
 /** Relation 的 Vanilla authoring 输入 */
 export type InputRelation = InputRelationFields & (InputRelationRoute | InputRelationWay);
 
-type BlockRowContentInput = Extract<BlockRowCreateOptions, Readonly<{ content: unknown }>>['content'];
+type InputBlockRowContent = Extract<BlockRowCreateOptions, Readonly<{ content: unknown }>>['content'];
 
 type InputBlockRowFields = Omit<BlockRowCreateOptions, 'content' | 'children'> & Readonly<{ type?: 'blockRow' }>;
 
@@ -64,7 +64,7 @@ export type InputBlockRow = InputBlockRowFields &
   (
     | Readonly<{
         /** 行的便捷内容入口，与显式 children 互斥 */
-        content: BlockRowContentInput;
+        content: InputBlockRowContent;
         children?: never;
       }>
     | Readonly<{

@@ -7,7 +7,7 @@ import type {
   ScenePrimitive,
   PathPrimitive,
   RectPrimitive,
-  ResolvedArrowEnd,
+  CompiledArrowEnd,
   TextPrimitive,
 } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -44,13 +44,13 @@ const textWith = (ir: IRScene, content: string): TextPrimitive | undefined =>
   textsOf(ir).find(t => t.lines[0]?.text === content);
 
 /**
- * 从已解析 `ResolvedArrowEnd` 的 marker 几何里抽"主导箭头颜色"
- * @description 新契约下视觉输入（color）在 compile 被消费、不再挂 `ResolvedArrowEnd`——解析后的颜色物化进
+ * 从已解析 `CompiledArrowEnd` 的 marker 几何里抽"主导箭头颜色"
+ * @description 新契约下视觉输入（color）在 compile 被消费、不再挂 `CompiledArrowEnd`——解析后的颜色物化进
  *   `marker[]` 内部几何的 fill / stroke（实心走 fill、空心走 stroke；contextStroke 表示继承 path stroke）。
  *   测断言箭头颜色优先级链时改读此处。递归穿 group 子原语，返回首个非 contextStroke 的纯色字符串；
  *   全部 contextStroke / 无 paint 时返回 undefined（= 走继承，未冻结颜色）
  */
-const markerPaintColor = (spec: ResolvedArrowEnd | undefined): string | undefined => {
+const markerPaintColor = (spec: CompiledArrowEnd | undefined): string | undefined => {
   if (!spec) return undefined;
 
   const pickFill = (f: PaintValue | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
@@ -110,7 +110,7 @@ describe('Happy: 主色级联 / 四通道', () => {
 
     expect(path?.stroke).toBe('blue');
 
-    // 解析后的箭头颜色物化进 marker 几何（新契约：color 不再挂 ResolvedArrowEnd）
+    // 解析后的箭头颜色物化进 marker 几何（新契约：color 不再挂 CompiledArrowEnd）
     expect(markerPaintColor(path?.arrowEnd)).toBe('blue');
     expect(textWith(ir, 'e')?.fill).toBe('blue');
   });
@@ -182,7 +182,7 @@ describe('Happy: 主色级联 / 四通道', () => {
 
     expect(linePathOf(ir)?.arrowEnd?.shape).toBe('stealth');
 
-    // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 8 × 1.5 = 12）；scale 不再挂 ResolvedArrowEnd
+    // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 8 × 1.5 = 12）；scale 不再挂 CompiledArrowEnd
     expect(linePathOf(ir)?.arrowEnd?.markerWidth).toBeCloseTo(12, 5);
   });
 });
@@ -192,7 +192,7 @@ describe('Happy: 主色级联 / 四通道', () => {
 // ===========================================================================
 
 describe('边界: 缺省 / 显式 / 内置', () => {
-  it('specific_overrides_master_same_source：<Node color="blue" stroke="red"> → stroke red、fill/text blue', () => {
+  it('同一来源的具体颜色覆盖通用颜色：描边为红色且填充和文本为蓝色', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -310,7 +310,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
     expect(rectOf(ir)?.stroke).toBe('blue');
   });
 
-  it('node_default_beats_scope_cascade：<Scope stroke="red" nodeDefault={{stroke:"green"}}> → node green', () => {
+  it('nodeDefault 的绿色描边优先于 Scope 级联的红色描边', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

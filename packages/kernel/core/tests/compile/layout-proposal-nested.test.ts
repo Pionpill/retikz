@@ -253,8 +253,8 @@ const runNestedFixture = (): FixtureRun => {
   return { result, warnings, nestedObservations, parentResults, dispatches };
 };
 
-describe('three-level layout proposal closure', () => {
-  it('keeps mixed-axis proposals, independent quantities, guides and selected transaction state through nesting', () => {
+describe('三层布局提案关闭', () => {
+  it('通过嵌套保留混合轴建议、独立数量、辅助线和选定的事务状态', () => {
     const run = runNestedFixture();
 
     expect(run.nestedObservations.map(observation => observation.proposal)).toEqual([
@@ -315,7 +315,7 @@ describe('three-level layout proposal closure', () => {
     ).toMatchObject({ to: [25, 0] });
   });
 
-  it('commits one selected replay without redispatch and stays renderer-neutral and deterministic', () => {
+  it('提交一个选定的回放而不重新分派，并保持渲染器中立和确定性', () => {
     const first = runNestedFixture();
     const second = runNestedFixture();
 
@@ -342,7 +342,7 @@ describe('three-level layout proposal closure', () => {
     );
   });
 
-  it('preserves the leaf provider and full Parent to nested to leaf occurrence when both levels raise', () => {
+  it('当两个级别提升时，保留叶提供者和完整的父级以嵌套到叶出现', () => {
     const rootCause = new Error('three-level leaf failure');
     const leaf = defineComposite({
       namespace: 'diagnostic-gate',

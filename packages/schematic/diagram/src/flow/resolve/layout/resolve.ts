@@ -1,8 +1,8 @@
 import { BendOutAngleSchema, BendInAngleSchema, BendLoosenessSchema, SmoothTensionSchema } from '@retikz/core';
 
 import type {
-  EffectiveFlowLayout,
-  EffectiveFlowPlacement,
+  CanonicalFlowLayoutOptions,
+  CanonicalFlowPlacement,
   FlowLayoutDefinition,
   FlowLayoutRouting,
 } from '../../contract';
@@ -13,7 +13,7 @@ export const resolveEffectiveFlowPlacement = (
   source: IRFlowLayout,
   layout: IRFlowLayoutIntent,
   definition: FlowLayoutDefinition,
-): EffectiveFlowPlacement =>
+): CanonicalFlowPlacement =>
   source.kind === 'linear'
     ? {
         kind: source.kind,
@@ -104,9 +104,9 @@ const resolveFlowLayoutRouting = (
 export const resolveEffectiveFlowLayout = (
   definition: FlowLayoutDefinition,
   intent: IRFlowLayoutIntent,
-  inheritedLayout?: EffectiveFlowLayout,
+  inheritedLayout?: CanonicalFlowLayoutOptions,
   routing?: IRFlowRouting,
-): EffectiveFlowLayout => ({
+): CanonicalFlowLayoutOptions => ({
   direction: intent.direction ?? inheritedLayout?.direction ?? definition.defaults.direction,
   nodeGap: intent.nodeGap ?? inheritedLayout?.nodeGap ?? definition.defaults.nodeGap,
   rankGap: intent.rankGap ?? inheritedLayout?.rankGap ?? definition.defaults.rankGap,

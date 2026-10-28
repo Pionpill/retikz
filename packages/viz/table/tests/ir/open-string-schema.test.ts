@@ -20,8 +20,8 @@ const expectOpenStringSchema = (schema: ZodType, values: ReadonlyArray<string>):
   });
 };
 
-describe('Table registry-backed open string schemas', () => {
-  it('hints all built-in provider names without closing custom registries', () => {
+describe('Table 注册表支持的开放字符串 schema', () => {
+  it('提示所有内置提供者名称，而不关闭自定义注册表', () => {
     expectOpenStringSchema(TableCellFormatterNameSchema, Object.values(BuiltinTableCellFormatter));
     expectOpenStringSchema(TableCellPresentationNameSchema, Object.values(BuiltinTableCellPresentation));
     expectOpenStringSchema(TableCellVisualScaleNameSchema, Object.values(BuiltinTableCellVisualScale));

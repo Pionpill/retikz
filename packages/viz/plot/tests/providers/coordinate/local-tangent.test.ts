@@ -8,12 +8,12 @@ import {
   linearPositionScale,
   resolveLinearScale,
 } from '../../../src/providers';
-import type { PolarCoordinateInput } from '../../../src/providers';
+import type { InputPolarCoordinate } from '../../../src/providers';
 
 const scale = linearPositionScale(
   resolveLinearScale({ type: 'linear', name: 'x', domain: [0, 360] }, [0, 360], [0, 360]),
 );
-const polarInput: PolarCoordinateInput = {
+const polarInput: InputPolarCoordinate = {
   center: [0, 0],
   innerRadius: 0,
   outerRadius: 100,
@@ -25,7 +25,7 @@ const polarInput: PolarCoordinateInput = {
   secondary: scale,
 };
 
-describe('mapped-role local tangent', () => {
+describe('映射角色局部切线', () => {
   it('直角坐标方向来自映射后参数，与数据 scale 顺序无关', () => {
     const reversed = linearPositionScale(
       resolveLinearScale({ type: 'linear', name: 'r', domain: [0, 360] }, [0, 360], [360, 0]),

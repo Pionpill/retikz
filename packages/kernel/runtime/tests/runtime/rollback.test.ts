@@ -7,7 +7,7 @@ import { createRuntime } from '../../src/runtime';
 import { defineRuntimeSource } from '../../src/source';
 import { createRuntimeSourceInput, createRuntimeSourceUpdate } from '../../src/transaction';
 
-describe('runtime runtime rollback', () => {
+describe('Runtime 运行时回滚', () => {
   it('initial owner prepare 失败时反向释放此前已捕获 value', () => {
     const retired: Array<string> = [];
     const first = defineRuntimeSource<number, Readonly<{ value: number }>, number, never>({

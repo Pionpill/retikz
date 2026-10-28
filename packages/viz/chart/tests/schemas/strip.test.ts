@@ -26,15 +26,15 @@ const strip = {
   },
 } as const;
 
-describe('Strip Chart exact Source schema', () => {
-  it('parses direct position mappings and round-trips JSON', () => {
+describe('Strip Chart 的精确 Source schema', () => {
+  it('解析直接位置映射和往返 JSON', () => {
     const parsed = StripChartSchema.parse(strip);
 
     expect(parsed).toEqual(strip);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
   });
 
-  it('accepts only direct field mappings for every encoding role', () => {
+  it('仅接受每个编码角色的直接字段映射', () => {
     expect(
       StripChartEncodingsSchema.safeParse({
         x: 'category',
@@ -60,7 +60,7 @@ describe('Strip Chart exact Source schema', () => {
     }
   });
 
-  it('validates jitter total span, seed, and continuous domain padding', () => {
+  it('验证抖动总跨度、种子和连续域填充', () => {
     for (const properties of [
       { jitter: { span: 0, seed: 0 } },
       { jitter: { span: 24, seed: -3.5 } },
@@ -89,7 +89,7 @@ describe('Strip Chart exact Source schema', () => {
     }
   });
 
-  it('keeps authored mark encodings field-only and excludes scale-level properties', () => {
+  it('保留编写标记编码仅字段并排除比例级别属性', () => {
     expect(
       StripChartMarkSchema.safeParse({
         kind: 'strip',
@@ -109,7 +109,7 @@ describe('Strip Chart exact Source schema', () => {
     }
   });
 
-  it('rejects missing position roles and unknown recipe fields', () => {
+  it('拒绝缺失的职位角色和未知的配方字段', () => {
     expect(
       StripChartSchema.safeParse({
         ...strip,

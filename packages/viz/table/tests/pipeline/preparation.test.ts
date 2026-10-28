@@ -2,7 +2,7 @@ import { createDataTransformExecutor } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { TableSchema, prepareTableData, resolveTableData } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 
 const detail = (transform = true) =>
   TableSchema.parse({
@@ -15,8 +15,8 @@ const detail = (transform = true) =>
       : {}),
   });
 
-describe('Table data preparation', () => {
-  it('transforms before structure resolution and preserves sync/async values and model', async () => {
+describe('Table 数据准备', () => {
+  it('在结构解析之前进行转换并保留同步/异步值和模型', async () => {
     const spec = detail();
     const rows = [{ value: 2 }, { value: 6 }];
     const synchronous = resolveTableData(spec, { rows });
@@ -25,7 +25,7 @@ describe('Table data preparation', () => {
 
     expect(preparedData).toEqual(synchronous);
 
-    const structure = normalizeTableStructure(spec.structure, { data: spec.data, preparedData });
+    const structure = resolveTableStructure(spec.structure, { data: spec.data, preparedData });
 
     expect(structure.cells.map(cell => cell.payload)).toEqual([
       { kind: 'value', value: 0.25 },
@@ -35,17 +35,17 @@ describe('Table data preparation', () => {
     await expect(preparation.execute()).rejects.toThrow(/only once/);
   });
 
-  it('keeps untransformed boolean, null and date-like values identical to raw Table structure', async () => {
+  it('保持未转换的布尔值、null 和类似日期的值与原始 Table 结构相同', async () => {
     const spec = detail(false);
     const rows = [{ value: false }, { value: null }, { value: '2026-10-03' }];
     const preparation = await prepareTableData(spec, { dataBindings: { rows: { kind: 'rows', rows } } });
     const preparedData = await preparation.execute();
-    const expected = normalizeTableStructure(spec.structure, { data: spec.data, datasets: { rows } });
+    const expected = resolveTableStructure(spec.structure, { data: spec.data, datasets: { rows } });
 
-    expect(normalizeTableStructure(spec.structure, { data: spec.data, preparedData })).toEqual(expected);
+    expect(resolveTableStructure(spec.structure, { data: spec.data, preparedData })).toEqual(expected);
   });
 
-  it('preserves format-implied temporal type through transforms', async () => {
+  it('通过转换保留格式隐含的时间类型', async () => {
     const spec = TableSchema.parse({
       ...detail(false),
       data: { reference: 'rows', model: [{ name: 'value', format: 'iso' }] },
@@ -60,7 +60,7 @@ describe('Table data preparation', () => {
     expect(result?.rows[0].value).toBe(Date.UTC(2026, 9, 3));
   });
 
-  it('rejects Manual declarations and unbound Custom before computation', async () => {
+  it('拒绝手动申报和计算前未绑定的自定义', async () => {
     expect(
       TableSchema.safeParse({
         namespace: 'table',
@@ -80,7 +80,7 @@ describe('Table data preparation', () => {
     await expect(prepareTableData(custom, { dataBindings: {} })).rejects.toThrow(/bound dataset/);
   });
 
-  it('consumes native Promise results without promoting extra payload fields', async () => {
+  it('使用本机 Promise 结果，而不提升额外的有效负载字段', async () => {
     const spec = TableSchema.parse({
       ...detail(),
       data: { reference: 'rows', model: [{ name: 'value', type: 'continuous' }] },
@@ -124,7 +124,7 @@ describe('Table data preparation', () => {
     expect(() => resolveTableData(spec, { rows: [{ value: 2 }] })).toThrow(/async processing/);
   });
 
-  it('rejects native model omission and source parsers on canonical bindings', async () => {
+  it('拒绝规范绑定上的本机模型省略和源解析器', async () => {
     await expect(
       prepareTableData(detail(), { dataBindings: { rows: { kind: 'source', source: {} } } }),
     ).rejects.toThrow(/complete data.model/);
@@ -141,7 +141,7 @@ describe('Table data preparation', () => {
     ).rejects.toThrow(/source formats/);
   });
 
-  it('preserves unknown empty fields and rejects structure fields outside the canonical model', async () => {
+  it('保留未知的空字段并拒绝规范模型之外的结构字段', async () => {
     const spec = detail(false);
     const preparation = await prepareTableData(spec, {
       dataBindings: {
@@ -154,7 +154,7 @@ describe('Table data preparation', () => {
     const preparedData = await preparation.execute();
 
     expect(() =>
-      normalizeTableStructure(
+      resolveTableStructure(
         { kind: 'detail', header: false, columns: [{ id: 'extra', field: 'extra' }] },
         { data: spec.data, preparedData },
       ),
@@ -169,13 +169,13 @@ describe('Table data preparation', () => {
   });
 });
 
-describe('Table category order intake', () => {
+describe('Table 类别顺序接入', () => {
   const specOf = (order: string) =>
     TableSchema.parse({
       ...detail(false),
       data: { reference: 'rows', model: [{ name: 'value', type: 'categorical', order }] },
     });
-  it('validates names in sync and async intake without reordering rows', async () => {
+  it('验证同步和异步摄入中的名称，无需重新排序行', async () => {
     const rows = [{ value: '10.18' }, { value: '10.2' }];
     expect(() => resolveTableData(specOf('missing'), { rows: [] })).toThrow(/unknown order/);
     await expect(
@@ -204,7 +204,7 @@ describe('Table category order intake', () => {
     );
     expect((await custom.execute())?.rows).toEqual(rows);
   });
-  it('validates canonical binding models even when the spec omits its model', async () => {
+  it('即使规范省略其模型，也会验证规范绑定模型', async () => {
     await expect(
       prepareTableData(detail(false), {
         dataBindings: {
@@ -221,7 +221,7 @@ describe('Table category order intake', () => {
   });
 });
 
-it('rejects order on an inferred numeric Table field without transforms', () => {
+it('拒绝推断的数字 Table 字段上的顺序，而不进行转换', () => {
   const spec = TableSchema.parse({
     ...detail(false),
     data: { reference: 'rows', model: [{ name: 'value', order: 'naturalAscending' }] },

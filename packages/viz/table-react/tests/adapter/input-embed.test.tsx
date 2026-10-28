@@ -1,6 +1,6 @@
 import { createManualTableIR } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -15,7 +15,7 @@ type InputEmbeddableTableComponent = {
 
 /** 读取 React Table 组件交给 Vanilla 的唯一输入 */
 const inputOf = <TProps,>(component: InputEmbeddableTableComponent, props: TProps): InputTable<unknown> => {
-  if (component.inputEmbedAdapter !== TableInputEmbedAdapter) {
+  if (component.inputEmbedAdapter !== tableInputEmbedAdapter) {
     throw new Error('expected the shared Table Vanilla adapter');
   }
 
@@ -26,8 +26,8 @@ const inputOf = <TProps,>(component: InputEmbeddableTableComponent, props: TProp
   return component.createInputEmbedProps(props as Readonly<Record<string, unknown>>);
 };
 
-describe('Table React InputEmbed routing', () => {
-  it('maps all React authoring entries to the shared Table Vanilla adapter', () => {
+describe('Table React InputEmbed 路由', () => {
+  it('将所有 React 编写条目映射到共享 Table Vanilla 适配器', () => {
     const spec = createManualTableIR({ id: 'generic', rows: [['Ada']] });
     const generic = inputOf(Table, { spec });
     const detail = inputOf(DetailTable, {

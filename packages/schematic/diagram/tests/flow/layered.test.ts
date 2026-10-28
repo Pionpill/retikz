@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type {
-  EffectiveFlowLayout,
-  FlowLayoutElementInput,
-  FlowLayoutInput,
+  CanonicalFlowLayoutOptions,
+  InputFlowLayoutElement,
+  InputFlowLayoutComputation,
   FlowLayoutPlacementOutput,
-  FlowLayoutRelationInput,
+  InputFlowLayoutRelation,
 } from '../../src/flow';
-import { LayeredFlowLayoutDefinition } from '../../src/flow';
+import { layeredFlowLayoutDefinition } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 
-const layout = (direction: EffectiveFlowLayout['direction'] = 'right'): EffectiveFlowLayout => ({
+const layout = (direction: CanonicalFlowLayoutOptions['direction'] = 'right'): CanonicalFlowLayoutOptions => ({
   direction,
   nodeGap: 20,
   rankGap: 40,
@@ -23,13 +23,13 @@ const leaf = (
   rank?: number,
   size: Readonly<{ width: number; height: number }> = { width: 80, height: 40 },
   margin = { top: 0, right: 0, bottom: 0, left: 0 },
-): FlowLayoutElementInput => ({ kind: 'leaf', id, ...(rank === undefined ? {} : { rank }), size, margin });
+): InputFlowLayoutElement => ({ kind: 'leaf', id, ...(rank === undefined ? {} : { rank }), size, margin });
 
 const relation = (
   source: string,
   target: string,
-  overrides: Partial<FlowLayoutRelationInput> = {},
-): FlowLayoutRelationInput => ({
+  overrides: Partial<InputFlowLayoutRelation> = {},
+): InputFlowLayoutRelation => ({
   source: { id: source, overlap: 'allow' },
   target: { id: target, overlap: 'allow' },
   direction: 'forward',
@@ -49,7 +49,7 @@ const noLayoutContext = {
   },
 };
 
-const run = (input: FlowLayoutInput) => LayeredFlowLayoutDefinition.layout(input, noLayoutContext);
+const run = (input: InputFlowLayoutComputation) => layeredFlowLayoutDefinition.layout(input, noLayoutContext);
 
 const boundsOf = (output: ReturnType<typeof run>, id: string) => {
   const bounds = output.elements.find(element => element.id === id)?.bounds;
@@ -57,8 +57,8 @@ const boundsOf = (output: ReturnType<typeof run>, id: string) => {
   return bounds;
 };
 
-describe('layered Flow layout', () => {
-  it('uses stable authored order inside minimal DAG ranks and keeps margin boxes apart', () => {
+describe('分层 Flow 布局', () => {
+  it('在最小 DAG 排名内使用稳定的编写顺序，并保持边距框分开', () => {
     const output = run({
       layout: layout(),
       elements: [
@@ -78,7 +78,7 @@ describe('layered Flow layout', () => {
     expect(output.elements.map(element => element.id)).toEqual(['source', 'first', 'second']);
   });
 
-  it('honors explicit rank as a hard constraint and rejects an impossible precedence', () => {
+  it('将显式排名视为硬约束并拒绝不可能的优先级', () => {
     const ranked = run({
       layout: layout(),
       elements: [leaf('a', 0), leaf('b', 2)],
@@ -108,7 +108,7 @@ describe('layered Flow layout', () => {
     ['left', 'x', -1],
     ['down', 'y', 1],
     ['up', 'y', -1],
-  ] as const)('maps canonical ranks to %s without changing relation order', (direction, axis, sign) => {
+  ] as const)('将规范等级映射到 %s，而不改变关系顺序', (direction, axis, sign) => {
     const output = run({
       layout: layout(direction),
       elements: [leaf('a'), leaf('b')],
@@ -121,24 +121,21 @@ describe('layered Flow layout', () => {
     expect(output.relations).toHaveLength(1);
   });
 
-  it.each(['right', 'left', 'down', 'up'] as const)(
-    'preserves non-square measured leaf size when the primary direction is %s',
-    direction => {
-      const output = executeFlowLayout(
-        LayeredFlowLayoutDefinition,
-        {
-          layout: layout(direction),
-          elements: [leaf('measured', undefined, { width: 100.546875, height: 35.2 })],
-          relations: [],
-        },
-        noLayoutContext,
-      );
+  it.each(['right', 'left', 'down', 'up'] as const)('当主方向为 %s 时，保留非方形测量的叶子尺寸', direction => {
+    const output = executeFlowLayout(
+      layeredFlowLayoutDefinition,
+      {
+        layout: layout(direction),
+        elements: [leaf('measured', undefined, { width: 100.546875, height: 35.2 })],
+        relations: [],
+      },
+      noLayoutContext,
+    );
 
-      expect(boundsOf(output, 'measured')).toMatchObject({ width: 100.546875, height: 35.2 });
-    },
-  );
+    expect(boundsOf(output, 'measured')).toMatchObject({ width: 100.546875, height: 35.2 });
+  });
 
-  it('centers different-height singleton ranks so forward routes stay on one line', () => {
+  it('将不同高度的单列居中，以便前向路线保持在一条线上', () => {
     const output = run({
       layout: layout(),
       elements: [
@@ -160,58 +157,52 @@ describe('layered Flow layout', () => {
     }
   });
 
-  it.each(['right', 'left', 'down', 'up'] as const)(
-    'keeps aligned endpoints straight despite different sizes when direction is %s',
-    direction => {
-      const horizontal = direction === 'right' || direction === 'left';
-      const output = run({
+  it.each(['right', 'left', 'down', 'up'] as const)('当方向为 %s 时，尽管尺寸不同，但仍保持对齐端点笔直', direction => {
+    const horizontal = direction === 'right' || direction === 'left';
+    const output = run({
+      layout: layout(direction),
+      elements: [
+        leaf('source', undefined, { width: 40, height: 40 }),
+        leaf('target', undefined, horizontal ? { width: 200, height: 40 } : { width: 40, height: 200 }),
+      ],
+      relations: [relation('source', 'target')],
+    });
+
+    expect(output.relations[0]?.route.points).toEqual([
+      [
+        boundsOf(output, 'source').x + boundsOf(output, 'source').width / 2,
+        boundsOf(output, 'source').y + boundsOf(output, 'source').height / 2,
+      ],
+      [
+        boundsOf(output, 'target').x + boundsOf(output, 'target').width / 2,
+        boundsOf(output, 'target').y + boundsOf(output, 'target').height / 2,
+      ],
+    ]);
+  });
+
+  it.each(['down', 'up'] as const)('当主方向为 %s 时，映射不对称的物理边距而不重叠同级', direction => {
+    const firstMargin = { top: 2, right: 11, bottom: 5, left: 3 };
+    const secondMargin = { top: 13, right: 7, bottom: 17, left: 19 };
+    const output = executeFlowLayout(
+      layeredFlowLayoutDefinition,
+      {
         layout: layout(direction),
         elements: [
-          leaf('source', undefined, { width: 40, height: 40 }),
-          leaf('target', undefined, horizontal ? { width: 200, height: 40 } : { width: 40, height: 200 }),
+          leaf('first', undefined, { width: 90, height: 30 }, firstMargin),
+          leaf('second', undefined, { width: 70, height: 45 }, secondMargin),
         ],
-        relations: [relation('source', 'target')],
-      });
+        relations: [],
+      },
+      noLayoutContext,
+    );
+    const first = boundsOf(output, 'first');
+    const second = boundsOf(output, 'second');
 
-      expect(output.relations[0]?.route.points).toEqual([
-        [
-          boundsOf(output, 'source').x + boundsOf(output, 'source').width / 2,
-          boundsOf(output, 'source').y + boundsOf(output, 'source').height / 2,
-        ],
-        [
-          boundsOf(output, 'target').x + boundsOf(output, 'target').width / 2,
-          boundsOf(output, 'target').y + boundsOf(output, 'target').height / 2,
-        ],
-      ]);
-    },
-  );
+    expect(first.x + first.width + firstMargin.right + 20 + secondMargin.left).toBeLessThanOrEqual(second.x);
+  });
 
-  it.each(['down', 'up'] as const)(
-    'maps asymmetric physical margins without overlapping siblings when the primary direction is %s',
-    direction => {
-      const firstMargin = { top: 2, right: 11, bottom: 5, left: 3 };
-      const secondMargin = { top: 13, right: 7, bottom: 17, left: 19 };
-      const output = executeFlowLayout(
-        LayeredFlowLayoutDefinition,
-        {
-          layout: layout(direction),
-          elements: [
-            leaf('first', undefined, { width: 90, height: 30 }, firstMargin),
-            leaf('second', undefined, { width: 70, height: 45 }, secondMargin),
-          ],
-          relations: [],
-        },
-        noLayoutContext,
-      );
-      const first = boundsOf(output, 'first');
-      const second = boundsOf(output, 'second');
-
-      expect(first.x + first.width + firstMargin.right + 20 + secondMargin.left).toBeLessThanOrEqual(second.x);
-    },
-  );
-
-  it('routes cycles and parallel relations deterministically and reserves measured labels', () => {
-    const input: FlowLayoutInput = {
+  it('确定性地路由循环和并行关系并保留测量标签', () => {
+    const input: InputFlowLayoutComputation = {
       layout: layout(),
       elements: [leaf('a'), leaf('b')],
       relations: [relation('a', 'b', { labelSize: { width: 30, height: 12 } }), relation('a', 'b'), relation('b', 'a')],
@@ -236,7 +227,7 @@ describe('layered Flow layout', () => {
     }
   });
 
-  it('reserves a horizontal rank gap for the full measured relation-label width', () => {
+  it('为完整测量的关系标签宽度保留水平排名间隙', () => {
     const output = run({
       layout: layout('right'),
       elements: [
@@ -258,7 +249,7 @@ describe('layered Flow layout', () => {
     expect(target.x - (labelBounds.x + labelBounds.width)).toBeGreaterThanOrEqual(20);
   });
 
-  it('reserves a vertical rank gap for the full measured relation-label height', () => {
+  it('为完整测量的关系标签高度保留垂直等级间隙', () => {
     const output = run({
       layout: layout('down'),
       elements: [
@@ -280,76 +271,73 @@ describe('layered Flow layout', () => {
     expect(target.y - (labelBounds.y + labelBounds.height)).toBeGreaterThanOrEqual(20);
   });
 
-  it.each(['right', 'left', 'down', 'up'] as const)(
-    'reserves only the largest label extent on a shared authored Layout side facing %s',
-    direction => {
-      const horizontal = direction === 'right' || direction === 'left';
-      let placementInput: FlowLayoutPlacementOutput | undefined;
-      let receivedMargins: ReadonlyArray<unknown> = [];
-      LayeredFlowLayoutDefinition.layout(
-        {
-          layout: layout(),
-          elements: [
-            {
-              kind: 'layout',
-              id: 'lane',
-              layout: layout(direction),
-              placement: { kind: 'linear', direction, gap: 20, align: 'center' },
-              elements: [
-                leaf('source', undefined, { width: 40, height: 40 }),
-                leaf('target', undefined, { width: 40, height: 40 }),
-              ],
-            },
-          ],
-          relations: [120, 40, 80].map(extent =>
-            relation('source', 'target', {
-              labelSize: horizontal ? { width: extent, height: 12 } : { width: 12, height: extent },
-            }),
-          ),
+  it.each(['right', 'left', 'down', 'up'] as const)('仅保留面向 %s 的共享编写 Layout 一侧的最大标签范围', direction => {
+    const horizontal = direction === 'right' || direction === 'left';
+    let placementInput: FlowLayoutPlacementOutput | undefined;
+    let receivedMargins: ReadonlyArray<unknown> = [];
+    layeredFlowLayoutDefinition.layout(
+      {
+        layout: layout(),
+        elements: [
+          {
+            kind: 'layout',
+            id: 'lane',
+            layout: layout(direction),
+            placement: { kind: 'linear', direction, gap: 20, align: 'center' },
+            elements: [
+              leaf('source', undefined, { width: 40, height: 40 }),
+              leaf('target', undefined, { width: 40, height: 40 }),
+            ],
+          },
+        ],
+        relations: [120, 40, 80].map(extent =>
+          relation('source', 'target', {
+            labelSize: horizontal ? { width: extent, height: 12 } : { width: 12, height: extent },
+          }),
+        ),
+      },
+      {
+        resolveEndpoint: () => {
+          throw new Error('Unexpected endpoint query');
         },
-        {
-          resolveEndpoint: () => {
-            throw new Error('Unexpected endpoint query');
-          },
-          resolveRoutePoints: () => {
-            throw new Error('Unexpected waypoint query');
-          },
-          placeLayout: input => {
-            receivedMargins = input.elements;
-            placementInput = {
-              bounds: { x: 0, y: 0, width: 40, height: 40 },
-              elements: [
-                { id: 'source', bounds: { x: 0, y: 0, width: 40, height: 40 } },
-                { id: 'target', bounds: { x: 0, y: 0, width: 40, height: 40 } },
-              ],
-            };
+        resolveRoutePoints: () => {
+          throw new Error('Unexpected waypoint query');
+        },
+        placeLayout: input => {
+          receivedMargins = input.elements;
+          placementInput = {
+            bounds: { x: 0, y: 0, width: 40, height: 40 },
+            elements: [
+              { id: 'source', bounds: { x: 0, y: 0, width: 40, height: 40 } },
+              { id: 'target', bounds: { x: 0, y: 0, width: 40, height: 40 } },
+            ],
+          };
 
-            return placementInput;
-          },
+          return placementInput;
         },
-      );
+      },
+    );
 
-      expect(placementInput).toBeDefined();
-      expect(receivedMargins).toMatchObject([
-        {
-          id: 'source',
-          margin: {
-            [direction === 'right' ? 'right' : direction === 'left' ? 'left' : direction === 'down' ? 'bottom' : 'top']:
-              60,
-          },
+    expect(placementInput).toBeDefined();
+    expect(receivedMargins).toMatchObject([
+      {
+        id: 'source',
+        margin: {
+          [direction === 'right' ? 'right' : direction === 'left' ? 'left' : direction === 'down' ? 'bottom' : 'top']:
+            60,
         },
-        {
-          id: 'target',
-          margin: {
-            [direction === 'right' ? 'left' : direction === 'left' ? 'right' : direction === 'down' ? 'top' : 'bottom']:
-              60,
-          },
+      },
+      {
+        id: 'target',
+        margin: {
+          [direction === 'right' ? 'left' : direction === 'left' ? 'right' : direction === 'down' ? 'top' : 'bottom']:
+            60,
         },
-      ]);
-    },
-  );
+      },
+    ]);
+  });
 
-  it('centers nested Group children when its minimum cross size exceeds the child scope', () => {
+  it('当嵌套 Group 子级的最小交叉大小超过子级范围时，将其居中', () => {
     const output = run({
       layout: layout('down'),
       elements: [
@@ -373,7 +361,7 @@ describe('layered Flow layout', () => {
     expect(output.relations[0]?.route.points.every(point => point[0] === 45)).toBe(true);
   });
 
-  it('lays out recursive Groups before their parent and keeps cross-Group endpoints in one root coordinate system', () => {
+  it('将递归组布置在其父级之前，并将交叉 Group 端点保留在一个根坐标系中', () => {
     const output = run({
       layout: layout(),
       elements: [
@@ -407,9 +395,9 @@ describe('layered Flow layout', () => {
     expect(output.relations).toHaveLength(3);
   });
 
-  it('delegates authored Layout placement once and does not derive its child order from relations', () => {
+  it('仅委托一次显式 Layout 放置且不从关系推导其子项顺序', () => {
     let calls = 0;
-    const output = LayeredFlowLayoutDefinition.layout(
+    const output = layeredFlowLayoutDefinition.layout(
       {
         layout: layout(),
         elements: [

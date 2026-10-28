@@ -15,8 +15,8 @@ import {
   TableCellSourceKind,
   TableRowKind,
 } from '../../src';
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 import { formatDefaultTable } from '../utils/stages';
 
 const layout = {
@@ -58,8 +58,8 @@ const modelOf = (value: string | number | boolean | null, formatter?: { name: st
     ],
   }) satisfies SemanticTableModel;
 
-describe('Cell formatter registry', () => {
-  it('dispatches built-in and custom definitions through the same registry', () => {
+describe('Cell 格式化程序注册表', () => {
+  it('通过同一注册表调度内置定义和自定义定义', () => {
     const prefix = defineCellFormatter({
       name: 'prefix',
       optionsSchema: strictObject({ prefix: string() }),
@@ -72,7 +72,7 @@ describe('Cell formatter registry', () => {
     expect(() => cellFormatterDefinitionOf('missing', registry)).toThrow(/not registered/i);
   });
 
-  it('fails loud for duplicate and built-in-conflicting names', () => {
+  it('重复和内置冲突名称时会失败', () => {
     const formatterOf = (name: string) =>
       defineCellFormatter({
         name,
@@ -86,8 +86,8 @@ describe('Cell formatter registry', () => {
   });
 });
 
-describe('formatted Table model', () => {
-  it('detaches and recursively freezes the semantic model snapshot', () => {
+describe('格式化的 Table 模型', () => {
+  it('分离并递归冻结语义模型快照', () => {
     const model = modelOf('before');
     const formatted = formatDefaultTable(model);
 
@@ -102,7 +102,7 @@ describe('formatted Table model', () => {
     expect(formatted.semantic.cells[0].payload).toMatchObject({ kind: 'value', value: 'before' });
   });
 
-  it.each(['plain', 42, true, false, null] as const)('uses identity without changing scalar %j', value => {
+  it.each(['plain', 42, true, false, null] as const)('使用恒等式而不更改标量 %j', value => {
     const formatted = formatDefaultTable(modelOf(value));
 
     expect(formatted.cells[0]).toEqual({
@@ -114,7 +114,7 @@ describe('formatted Table model', () => {
     });
   });
 
-  it('formats numbers with a private deterministic locale', () => {
+  it('使用私有确定性区域设置格式化数字', () => {
     const before = formatDefaultTable(modelOf(-1234.5, { name: 'number', options: { specifier: '$,.2f' } }));
 
     try {
@@ -143,7 +143,7 @@ describe('formatted Table model', () => {
     }
   });
 
-  it('handles number and boolean null labels without truthy or numeric coercion', () => {
+  it('处理数字和布尔空标签，无需真值或数字强制', () => {
     expect(formatDefaultTable(modelOf(null, { name: 'number' })).cells[0]).toMatchObject({ value: null });
     expect(formatDefaultTable(modelOf(null, { name: 'number', options: { nullText: '' } })).cells[0]).toMatchObject({
       value: '',
@@ -159,7 +159,7 @@ describe('formatted Table model', () => {
     );
   });
 
-  it('passes immutable canonical context to a custom formatter and guards options/output', () => {
+  it('将不可变的规范上下文传递给自定义格式化程序并保护选项/输出', () => {
     let observed: unknown;
     const inspect = defineCellFormatter({
       name: 'inspect',
@@ -215,7 +215,7 @@ describe('formatted Table model', () => {
     }
   });
 
-  it('passes canonical address without inventing identity for an anonymous Cell', () => {
+  it('传递规范地址，而不为匿名 Cell 发明身份', () => {
     let observed: unknown;
     const inspect = defineCellFormatter({
       name: 'anonymous-inspect',
@@ -225,7 +225,7 @@ describe('formatted Table model', () => {
         return input.value;
       },
     });
-    const semantic = normalizeTableStructure({
+    const semantic = resolveTableStructure({
       kind: 'manual',
       rows: [[{ value: 'ok', formatter: { name: 'anonymous-inspect' } }]],
     });
@@ -242,8 +242,8 @@ describe('formatted Table model', () => {
     });
   });
 
-  it('propagates detail body formatters independently from header payloads', () => {
-    const semantic = normalizeTableStructure(
+  it('独立于头部有效负载传播详细正文格式化程序', () => {
+    const semantic = resolveTableStructure(
       {
         kind: 'detail',
         columns: [
@@ -265,7 +265,7 @@ describe('formatted Table model', () => {
     ]);
   });
 
-  it('passes the raw and formatted scalars into the presentation ABI', () => {
+  it('将原始标量和格式化标量传递到表示 ABI 中', () => {
     const inspect = defineCellPresentation({
       name: 'inspect',
       optionsSchema: strictObject({}),
@@ -290,7 +290,7 @@ describe('formatted Table model', () => {
     expect(presented.cells[0].content).toMatchObject({ text: '12.5>12.50@cell.0' });
   });
 
-  it('preserves content Cells without formatter dispatch and freezes detached output', () => {
+  it('保留内容单元格而无需格式化程序调度并冻结分离的输出', () => {
     const sourceContent = { type: 'node' as const, position: [0, 0] as [number, number], text: 'direct' };
     const model: SemanticTableModel = {
       ...modelOf('unused'),

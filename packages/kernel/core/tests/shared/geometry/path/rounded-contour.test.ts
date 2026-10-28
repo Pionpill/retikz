@@ -294,11 +294,11 @@ describe('contourCommands passthrough（r=0 / 省略 / 负）', () => {
     expect((cmds[0] as { to: [number, number] }).to).toEqual([-10, -10]);
   });
 
-  it('r=0 → passthrough', () => {
+  it('r=0 → 直通', () => {
     expect(filletContour(squareSegments(), 0)).toEqual([]);
   });
 
-  it('r<0 → passthrough', () => {
+  it('r<0 → 直通', () => {
     expect(filletContour(squareSegments(), -5)).toEqual([]);
   });
 

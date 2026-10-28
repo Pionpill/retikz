@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { IRChild } from '@retikz/core';
-import type { CellPresentationInput, TableLayoutManifest } from '@retikz/table';
+import type { InputCellPresentation, TableLayoutManifest } from '@retikz/table';
 import { createManualTableIR, defineCellPresentation, defineCellVisualScale } from '@retikz/table';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -19,8 +19,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Table React manifest observation', () => {
-  it('does not call onManifest during render', () => {
+describe('Table React 明显观察', () => {
+  it('渲染期间不调用 onManifest', () => {
     const onManifest = vi.fn();
 
     renderToStaticMarkup(<ManualTable rows={[[null]]} onManifest={onManifest} />);
@@ -28,7 +28,7 @@ describe('Table React manifest observation', () => {
     expect(onManifest).not.toHaveBeenCalled();
   });
 
-  it('notifies after commit and deduplicates by serialized manifest content', async () => {
+  it('提交后通知并通过序列化清单内容进行去重', async () => {
     const manifests: Array<TableLayoutManifest> = [];
 
     const onManifest = (manifest: TableLayoutManifest): void => {
@@ -59,7 +59,7 @@ describe('Table React manifest observation', () => {
     container.remove();
   });
 
-  it('exposes Legend descriptor seeds produced by the generic Table entry', async () => {
+  it('公开由通用 Table 条目生成的 Legend 描述符种子', async () => {
     const manifests: Array<TableLayoutManifest> = [];
     const visualScale = defineCellVisualScale({
       name: 'react-manifest-palette',
@@ -111,7 +111,7 @@ describe('Table React manifest observation', () => {
     container.remove();
   });
 
-  it('selects the exact root artifact when a nested Table repeats the root id', async () => {
+  it('当嵌套 Table 重复根 id 时，选择确切的根产物', async () => {
     const manifests: Array<TableLayoutManifest> = [];
     const nested = createManualTableIR({ id: 'repeated', rows: [[null], [null]] });
     const container = document.createElement('div');
@@ -131,10 +131,10 @@ describe('Table React manifest observation', () => {
     container.remove();
   });
 
-  it('does not recompile or renotify when only the observer identity changes', async () => {
+  it('仅观察者身份发生变化时不重新编译或重新通知', async () => {
     const content: IRChild = { type: 'node', position: [0, 0], text: 'stable' };
-    const observed: Array<CellPresentationInput> = [];
-    const present = vi.fn((input: CellPresentationInput) => {
+    const observed: Array<InputCellPresentation> = [];
+    const present = vi.fn((input: InputCellPresentation) => {
       observed.push(input);
       return content;
     });
@@ -202,8 +202,8 @@ describe('Table React manifest observation', () => {
     container.remove();
   });
 
-  it('passes ordered root rules through ManualTable authoring into the shared pipeline', async () => {
-    const observed: Array<CellPresentationInput> = [];
+  it('通过 ManualTable 编写将有序根规则传递到共享管线中', async () => {
+    const observed: Array<InputCellPresentation> = [];
     const manifests: Array<TableLayoutManifest> = [];
     const inspect = defineCellPresentation({
       name: 'rule-inspect',
@@ -279,7 +279,7 @@ describe('Table React manifest observation', () => {
     container.remove();
   });
 
-  it('preserves shared content rewrite diagnostics in React SSR', () => {
+  it('在 React SSR 中保留共享内容重写诊断', () => {
     expect(() =>
       renderToStaticMarkup(
         <ManualTable

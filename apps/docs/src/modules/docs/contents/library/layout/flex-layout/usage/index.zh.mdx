@@ -48,7 +48,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { FlexLayoutDefinition } from '@retikz/layout';
+import { flexLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -66,7 +66,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ composites: [FlexLayoutDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ composites: [flexLayoutDefinition] }} />;
 ```
 
 </DocTab>
@@ -74,7 +74,7 @@ export const Example = () => <Layout ir={ir} extensions={{ composites: [FlexLayo
 
 ```ts
 import { scene, renderToSvgString } from '@retikz/vanilla';
-import { flexLayout, FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { flexLayout, flexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 
 const input = scene({
   children: [
@@ -88,7 +88,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] }));
+console.log(renderToSvgString(input, { adapters: [flexLayoutInputEmbedAdapter] }));
 ```
 
 </DocTab>
@@ -97,7 +97,7 @@ console.log(renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] }
 ```ts
 import type { IRScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
-import { FlexLayoutDefinition } from '@retikz/layout';
+import { flexLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -115,7 +115,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { composites: [FlexLayoutDefinition] } }));
+console.log(renderToSvgString(ir, { compile: { composites: [flexLayoutDefinition] } }));
 ```
 
 </DocTab>
@@ -187,7 +187,7 @@ demo 保持横向排列，子项不伸展。先改变主轴分布，再把默认
     {
       name: 'size',
       kind: 'property',
-      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      type: '{ x?: InputLayoutAxisSize; y?: InputLayoutAxisSize }',
       description:
         '本页使用 `{ kind: "content" }` 按内容求尺寸与 `{ kind: "fixed", value }` 固定尺寸，x / y 分别对应物理宽、高。嵌套时可用 `{ kind: "fill" }` 接收父级有限空间。',
       defaultValue: 'content / content',
@@ -231,7 +231,7 @@ demo 保持横向排列，子项不伸展。先改变主轴分布，再把默认
     {
       name: 'children',
       kind: 'property',
-      type: 'Array<FlexLayoutItemInput>',
+      type: 'Array<InputFlexLayoutItemConfig>',
       description: '作者声明的子项；显式 `key` 在同一容器内必须唯一',
       defaultValue: '[]',
     },

@@ -3,8 +3,8 @@ import { number, strictObject } from 'zod';
 
 import * as Graph from '../../src';
 
-describe('Entity definition registry', () => {
-  it('registers seven builtin roles whose definitions directly own Node structure', () => {
+describe('Entity 定义注册表', () => {
+  it('注册七个内置角色，其定义直接拥有 Node 结构', () => {
     const registry = Graph.resolveEntityRoleRegistry();
 
     expect([...registry.keys()]).toEqual([
@@ -52,7 +52,7 @@ describe('Entity definition registry', () => {
     expect(registry.get('participant')).not.toHaveProperty('presentation');
   });
 
-  it('keeps kind and predicate as semantic definitions', () => {
+  it('保留种类和谓词作为语义定义', () => {
     const role = Graph.defineEntityRole({
       role: 'service',
       description: 'A deployed service',
@@ -79,7 +79,7 @@ describe('Entity definition registry', () => {
     expect(predicate).not.toHaveProperty('resolvePresentation');
   });
 
-  it('keeps the Entity kind registry empty until an upper layer registers a definition', () => {
+  it('保持 Entity 类型注册表为空，直到上层注册定义', () => {
     expect(Graph.resolveGraphDefinitionOptions().entityKinds).toEqual(new Map());
 
     const kind = Graph.defineEntityKind({
@@ -93,7 +93,7 @@ describe('Entity definition registry', () => {
     );
   });
 
-  it('registers the same Entity kind independently for each declared role', () => {
+  it('为每个声明的角色独立注册相同的 Entity 类型', () => {
     const participantKind = Graph.defineEntityKind({
       kind: 'docs.logic.important',
       role: 'participant',
@@ -111,7 +111,7 @@ describe('Entity definition registry', () => {
     expect(kinds.get('activity')?.get('docs.logic.important')).toBe(activityKind);
   });
 
-  it('resolves the same Entity kind against the definition for its current role', () => {
+  it('根据当前角色的定义解析相同的 Entity 类型', () => {
     const definitions = Graph.resolveGraphDefinitionOptions({
       entityKinds: [
         { kind: 'docs.logic.important', role: 'participant', description: 'An important participant' },
@@ -135,7 +135,7 @@ describe('Entity definition registry', () => {
     }
   });
 
-  it('validates parent-role constraints and duplicate custom keys through one option assembly', () => {
+  it('通过一个选项组件验证父角色约束和重复自定义键', () => {
     const missingRoleKind = Graph.defineEntityKind({
       kind: 'unknown.kind',
       role: 'unknown',

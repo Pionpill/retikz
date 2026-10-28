@@ -22,7 +22,7 @@ it('跨包继承读取真实 Schema 描述和默认值，联合分支使用相�
     writeFileSync(
       entry,
       `
-import type { SurfaceInput, AxesInput, GridInput, GridLineInput } from '@retikz/standard/presentation';
+import type { InputSurfaceConfig, InputAxes, InputGrid, InputGridLine } from '@retikz/standard/presentation';
 import type { IRArc, IRSector as SectorSource, PolygonSchema } from '@retikz/standard/shape';
 import type { ArcProps } from '@retikz/standard-react/shape';
 import type { InputArc } from '@retikz/standard-vanilla/shape';
@@ -39,13 +39,13 @@ export type CustomArc = Omit<IRArc, 'close'> & {
 };
 export type CellFields = Pick<IRArrayCell, 'content' | 'id'>;
 export type ArrayFields = Pick<IRArray, 'index' | 'cellIdMode'>;
-export type SurfaceFields = Pick<SurfaceInput, 'padding' | 'background' | 'overflow'>;
-export type AxesFields = Pick<AxesInput, 'x' | 'y' | 'animations' | 'origin'>;
-export type Grid = Pick<GridInput, 'line' | 'localNamespace' | 'bounds'>;
-export type Line = Pick<GridLineInput, 'spacing' | 'includeBoundary' | 'origin'>;
+export type SurfaceFields = Pick<InputSurfaceConfig, 'padding' | 'background' | 'overflow'>;
+export type AxesFields = Pick<InputAxes, 'x' | 'y' | 'animations' | 'origin'>;
+export type Grid = Pick<InputGrid, 'line' | 'localNamespace' | 'bounds'>;
+export type Line = Pick<InputGridLine, 'spacing' | 'includeBoundary' | 'origin'>;
 export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radius' | 'sides'>
   | Pick<Extract<PolygonSource, { sideLength: number }>, 'sideLength' | 'sides'>)
-  & Pick<GridLineInput, 'spacing'>;
+  & Pick<InputGridLine, 'spacing'>;
 `,
       'utf8',
     );

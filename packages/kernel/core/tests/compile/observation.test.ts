@@ -58,10 +58,10 @@ const probeReplayComposite = core.defineComposite({
   }),
   artifactSchema: strictObject({ chosen: string() }),
   compile: (_, context) => {
-    context.layoutChild({ type: 'node', position: [0, 0], text: 'discarded' }, core.NaturalLayoutProposal);
+    context.layoutChild({ type: 'node', position: [0, 0], text: 'discarded' }, core.naturalLayoutProposal);
     const selected = context.layoutChild(
       { type: 'node', position: [0, 0], text: 'selected' },
-      core.NaturalLayoutProposal,
+      core.naturalLayoutProposal,
     );
     if (selected.kind !== core.LayoutChildProbeKind.Resolved) return { children: [] };
 
@@ -72,8 +72,8 @@ const probeReplayComposite = core.defineComposite({
   },
 });
 
-describe('Core observed compile', () => {
-  it('keeps ordinary compile free of observers and publishes final owner output only', () => {
+describe('Core 观察编译', () => {
+  it('保持普通编译不受观察者影响，仅发布最终所属模块输出', () => {
     const events: Array<CompileObservation> = [];
     let sessions = 0;
     let completes = 0;
@@ -119,7 +119,7 @@ describe('Core observed compile', () => {
     expect(result.primary.artifacts).toEqual(ordinary.artifacts);
   });
 
-  it('dispatches only the replayed occurrence and sorts observers by owner key', () => {
+  it('仅调度回放的实例并按所属模块键对观察者进行排序', () => {
     const order: Array<string> = [];
     const observer: CompileObserverDefinition = {
       key: 'test/ordered',
@@ -144,7 +144,7 @@ describe('Core observed compile', () => {
     expect(result.observerOutputs[0]?.value).toEqual(order);
   });
 
-  it('fails before producing a primary result when observer keys repeat', () => {
+  it('当观察者按键重复时，在生成主要结果之前失败', () => {
     const definition: CompileObserverDefinition = {
       key: 'duplicate',
       createSession: () => ({ select: () => false, observe: () => undefined, complete: () => null }),
@@ -153,7 +153,7 @@ describe('Core observed compile', () => {
     expect(() => observedCompile(scene([]), {}, [definition, definition])).toThrow(/duplicate.*key|key.*duplicate/i);
   });
 
-  it('completes an observer with no selected events', () => {
+  it('完成没有选定事件的观察者', () => {
     let completed = 0;
     const result = observedCompile(scene([]), {}, [
       {
@@ -173,7 +173,7 @@ describe('Core observed compile', () => {
     expect(result.observerOutputs).toEqual([{ key: 'empty', value: [] }]);
   });
 
-  it('dispatches primary warnings through onWarn during observed compile', () => {
+  it('在观察编译期间通过 onWarn 发送主要警告', () => {
     const warnings: Array<unknown> = [];
     const observer: CompileObserverDefinition = {
       key: 'test/warnings',
@@ -189,7 +189,7 @@ describe('Core observed compile', () => {
     expect(warnings).toHaveLength(1);
   });
 
-  it('exposes the occurrence Theme through the observation context', () => {
+  it('通过观察上下文暴露出现的 Theme', () => {
     let observedContext: CompileObservationContext | undefined;
     const observer: CompileObserverDefinition = {
       key: 'test/theme-context',

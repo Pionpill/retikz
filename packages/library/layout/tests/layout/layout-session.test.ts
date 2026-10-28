@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { exactLayoutProposal, intrinsicLayoutProposal } from '../../src/composites/internal/layout-session';
 
-describe('layout child session', () => {
-  it('creates the canonical minimum and natural intrinsic proposals', () => {
+describe('布局子会话', () => {
+  it('创建规范的最小和自然的内在提案', () => {
     expect(intrinsicLayoutProposal('minimum')).toEqual({
       x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Minimum },
       y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Minimum },
@@ -15,7 +15,7 @@ describe('layout child session', () => {
     });
   });
 
-  it('creates an exact proposal from the final structural slot', () => {
+  it('根据最终的结构槽创建精确的提案', () => {
     expect(
       exactLayoutProposal({
         x: 4,

@@ -14,7 +14,7 @@ import {
   defineComposite,
   definePath,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
   PathSchema,
 } from '@retikz/core';
 import { prepareSceneCompilation } from '@retikz/core';
@@ -71,7 +71,7 @@ const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<Sce
 const resolvedResultOf = (
   context: CompositeCompileContext,
   child: IRChild,
-  proposal: LayoutProposal = NaturalLayoutProposal,
+  proposal: LayoutProposal = naturalLayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
@@ -91,7 +91,7 @@ const recordsOf = (ir: IRScene) => {
   });
 };
 
-describe('Core canonical Runtime topology', () => {
+describe('Core 规范 Runtime 拓扑', () => {
   it('把 provider 重复返回的同一 primitive 对象物化为独立 occurrence identity', () => {
     const sharedPrimitive: ScenePrimitive = {
       type: 'rect',
@@ -309,7 +309,7 @@ describe('Core canonical Runtime topology', () => {
         type: literal('topologyReplay'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ type: 'node', position: [-100, 0] }, NaturalLayoutProposal);
+        context.layoutChild({ type: 'node', position: [-100, 0] }, naturalLayoutProposal);
         const selected = resolvedResultOf(context, { type: 'node', position: [0, 0] });
 
         return {
@@ -491,7 +491,7 @@ describe('Core canonical Runtime topology', () => {
   });
 });
 
-describe('Core compile warning collection', () => {
+describe('Core 编译警告集合', () => {
   it('把 direct output 后发生的 replay late duplicate 排在 replay placement', () => {
     const replaying = defineComposite({
       namespace: 'test',

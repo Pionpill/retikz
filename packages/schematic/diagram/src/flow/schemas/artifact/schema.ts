@@ -55,7 +55,7 @@ export const FlowElementArtifactSchema: ZodType<FlowElementArtifactSchemaOutput>
   union([FlowLeafArtifactSchema, FlowGroupArtifactSchema, FlowLayoutArtifactSchema]),
 );
 
-const FlowArtifactScopeShape = {
+const flowArtifactScopeShape = {
   id: NonBlankStringSchema.describe('Authored Flow scope identity.'),
   bounds: LayoutArtifactRectSchema.describe('Final scope layout bounds in Flow-local coordinates.'),
   elements: array(FlowElementArtifactSchema).nonempty().describe('Non-empty recursive authored containment tree.'),
@@ -63,13 +63,13 @@ const FlowArtifactScopeShape = {
 
 /** 校验可见 Flow 分组及其递归子元素的布局结果 */
 export const FlowGroupArtifactSchema: ZodType<FlowGroupArtifactSchemaOutput> = strictObject({
-  ...FlowArtifactScopeShape,
+  ...flowArtifactScopeShape,
   kind: literal('group').describe('Flow Group artifact discriminator.'),
 }).describe('Final layout geometry and authored semantics for one recursive Flow Group.');
 
 /** 校验不可见 Flow 布局容器及其递归子元素的布局结果 */
 export const FlowLayoutArtifactSchema: ZodType<FlowLayoutArtifactSchemaOutput> = strictObject({
-  ...FlowArtifactScopeShape,
+  ...flowArtifactScopeShape,
   kind: literal('layout').describe('Flow Layout artifact discriminator.'),
 }).describe('Final layout geometry for one recursive invisible Flow Layout.');
 
@@ -100,7 +100,7 @@ const FlowPointRouteArtifactSchema = discriminatedUnion('kind', [
   }),
 ]).describe('Canonical renderer-neutral Flow relation route.');
 
-const FlowBendRouteShape = {
+const flowBendRouteShape = {
   kind: literal('bend'),
   points: tuple([PositionSchema, PositionSchema]).describe('Two reference endpoint centers in Flow-local coordinates.'),
 };
@@ -120,9 +120,9 @@ export const FlowRouteArtifactSchema = union([
     control2: PositionSchema,
   }),
   FlowPointRouteArtifactSchema,
-  strictObject({ ...FlowBendRouteShape, bendDirection: zodEnum(BendDirection), bendAngle: BendAngleSchema.unwrap() }),
+  strictObject({ ...flowBendRouteShape, bendDirection: zodEnum(BendDirection), bendAngle: BendAngleSchema.unwrap() }),
   strictObject({
-    ...FlowBendRouteShape,
+    ...flowBendRouteShape,
     outAngle: BendOutAngleSchema.unwrap(),
     inAngle: BendInAngleSchema.unwrap(),
     looseness: BendLoosenessSchema.unwrap(),

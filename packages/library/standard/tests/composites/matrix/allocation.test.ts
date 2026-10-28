@@ -1,11 +1,11 @@
 import type { AnyCompositeDefinition, IRChild, LayoutChildResult, LayoutProposal } from '@retikz/core';
 import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { intrinsicLayoutProposal } from '@retikz/layout/compose';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { ArrayDefinition, MapDefinition, MatrixDefinition } from '../../../src/collection';
+import { arrayDefinition, mapDefinition, matrixDefinition } from '../../../src/collection';
 
 const compile = (
   child: IRChild,
@@ -33,8 +33,8 @@ const compile = (
   const scene = compileToScene(
     { type: 'scene', version: 1, children: [{ namespace: 'cell-test', type: 'harness', child }] },
     {
-      composites: [harness, ArrayDefinition, MapDefinition, MatrixDefinition, ...extra],
-      clips: [PathClipDefinition],
+      composites: [harness, arrayDefinition, mapDefinition, matrixDefinition, ...extra],
+      clips: [pathClipDefinition],
       padding: 0,
     },
   );
@@ -43,7 +43,7 @@ const compile = (
   return { scene, observed };
 };
 
-describe('Matrix parent allocation', () => {
+describe('Matrix 父分配', () => {
   const source = {
     namespace: 'standard',
     type: 'matrix',
@@ -53,7 +53,7 @@ describe('Matrix parent allocation', () => {
     layout: { gap: 2 },
     defaultCell: { layout: { width: 30, height: 20 } },
   };
-  it('keeps cell sizes when parent gives surplus space', () => {
+  it('当父级提供剩余空间时保持单元格大小', () => {
     const result = compile(source, { x: { kind: 'exact', value: 100 }, y: { kind: 'range', min: 80, max: 100 } });
 
     expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 100, height: 80 });
@@ -67,7 +67,7 @@ describe('Matrix parent allocation', () => {
     ]);
   });
 
-  it('rejects a parent smaller than the required tracks', () => {
+  it('拒绝小于所需轨道的父轨道', () => {
     expect(() => compile(source, { x: { kind: 'exact', value: 20 }, y: { kind: 'exact', value: 80 } })).toThrow();
   });
 });

@@ -6,7 +6,7 @@ type BrowserTextMetrics = Pick<TextMetrics, 'width'> &
   Partial<Pick<TextMetrics, 'actualBoundingBoxAscent' | 'actualBoundingBoxDescent'>>;
 
 /** 为一次处理准备建立惰性测量器，只在环境能力获取失败时估算 */
-export const createDefaultTextMeasurer = (): TextMeasurer => {
+const createDefaultTextMeasurer = (): TextMeasurer => {
   let context: CanvasRenderingContext2D | null | undefined;
   return (text, font) => {
     if (context === undefined) {

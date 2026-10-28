@@ -70,7 +70,7 @@ describe('drawScene 图案填充', () => {
     expect(off.calls.find(c => c.name === 'fillRect')?.args).toEqual([0, 0, 8, 8]);
   });
 
-  it('pattern-rotation：tile.rotation → pattern.setTransform', () => {
+  it('图案旋转：tile.rotation → pattern.setTransform', () => {
     const context = createSpyCanvasContext();
     const off = makeOffscreen();
 

@@ -57,15 +57,15 @@ describe('Happy: StepLabel 样式字段落地', () => {
     expect(label?.opacity).toBeCloseTo(0.1);
   });
 
-  it('step_label_text_color_applies：textColor=red → TextPrimitive.fill=red', () => {
+  it('步骤标签将 textColor=red 应用为 TextPrimitive.fill=red', () => {
     expect(labelOf(pathWithLabel({}, { textColor: 'red' }))?.fill).toBe('red');
   });
 
-  it('step_label_font_size_applies：font.size=10 → fontSize=10', () => {
+  it('步骤标签将 font.size=10 应用为 fontSize=10', () => {
     expect(labelOf(pathWithLabel({}, { font: { size: 10 } }))?.fontSize).toBe(10);
   });
 
-  it('step_label_opacity_applies：opacity=0.6 → opacity=0.6', () => {
+  it('步骤标签保留 opacity=0.6', () => {
     expect(labelOf(pathWithLabel({}, { opacity: 0.6 }))?.opacity).toBe(0.6);
   });
 
@@ -122,7 +122,7 @@ describe('边界: 回退链 / 不跟 stroke', () => {
 // ===========================================================================
 
 describe('交互: labelDefault / 相乘 / 零破坏', () => {
-  it('step_label_explicit_beats_label_default：scope labelDefault textColor=gray + label textColor=red → red', () => {
+  it('步骤标签的显式红色优先于 Scope labelDefault 的灰色', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -195,7 +195,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
     expect(labelOf(ir)?.fontSize).toBe(10);
   });
 
-  it('step_label_opacity_multiplies_with_path：path opacity 0.5 + label opacity 0.5 → 0.25', () => {
+  it('步骤标签不透明度与路径相乘：0.5 × 0.5 = 0.25', () => {
     expect(
       labelOf(
         pathWithLabel(

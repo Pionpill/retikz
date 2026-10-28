@@ -25,7 +25,7 @@ const compileNode = (node: Record<string, unknown>): TextPrimitive => {
 };
 
 describe('maxTextWidth 西文按词折行', () => {
-  it('"aaa bbb ccc" + maxTextWidth=7 → ["aaa bbb", "ccc"]', () => {
+  it('maxTextWidth=7 时将 "aaa bbb ccc" 换行为 ["aaa bbb", "ccc"]', () => {
     const t = compileNode({ text: 'aaa bbb ccc', maxTextWidth: 7 });
 
     expect(t.lines.map(l => l.text)).toEqual(['aaa bbb', 'ccc']);
@@ -58,7 +58,7 @@ describe('未给 maxTextWidth 行为不变', () => {
 });
 
 describe('layout.width 固定可见外框时正文自动折行', () => {
-  it('"aaa bbb ccc" + width=7 + padding=0 → ["aaa bbb", "ccc"]', () => {
+  it('"aaa bbb ccc" + 宽度=7 + 填充=0 → ["aaa bbb"，"ccc"]', () => {
     const t = compileNode({ text: 'aaa bbb ccc', layout: { width: 7, padding: 0 } });
 
     expect(t.lines.map(line => line.text)).toEqual(['aaa bbb', 'ccc']);

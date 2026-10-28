@@ -13,7 +13,7 @@ export const RetikzDiagramReactBranchErrorCode = {
 export type RetikzDiagramReactBranchErrorCode = ValueOf<typeof RetikzDiagramReactBranchErrorCode>;
 
 /** Diagram React Branch 错误的结构化详情 */
-export type RetikzDiagramReactBranchErrorDetails = Readonly<{
+type RetikzDiagramReactBranchErrorDetails = Readonly<{
   /** 发生错误的 authoring slot */
   label: string;
   /** 违反的输入约束 */
@@ -23,7 +23,7 @@ export type RetikzDiagramReactBranchErrorDetails = Readonly<{
 }>;
 
 /** 创建 Diagram React Branch 错误所需的参数 */
-export type RetikzDiagramReactBranchErrorOptions = Readonly<{
+type RetikzDiagramReactBranchErrorOptions = Readonly<{
   /** 稳定错误码 */
   code: RetikzDiagramReactBranchErrorCode;
   /** 面向调用方的错误消息 */

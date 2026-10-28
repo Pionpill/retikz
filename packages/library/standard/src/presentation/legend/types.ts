@@ -39,7 +39,7 @@ export type IRLegend = Omit<ZodInput<typeof LegendSchema>, keyof IRScopeProps | 
   };
 
 /** 创建 Legend 时允许省略固定 discriminator 与 schema 默认字段的输入 */
-export type LegendInput = Omit<IRLegend, 'namespace' | 'type'>;
+export type InputLegendConfig = Omit<IRLegend, 'namespace' | 'type'>;
 
 /** Legend 呈现区域的可观察几何 */
 export type LegendArtifactGeometry = ZodInfer<typeof LegendArtifactGeometrySchema>;

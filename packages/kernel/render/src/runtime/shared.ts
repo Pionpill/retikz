@@ -6,7 +6,7 @@ import type { HydrationController } from '../hydration';
 import { recoverHydrationSetupFailure } from '../hydration/setup-failure';
 
 /** 判断动态值是否为普通对象 */
-export const isPlainObject = (value: object): boolean => {
+const isPlainObject = (value: object): boolean => {
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
 };

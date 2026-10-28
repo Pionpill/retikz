@@ -24,7 +24,7 @@ const valuesImplementation = defineStatisticsReducerImplementation({
 const valuesContext = { statisticsReducerRegistry: resolveStatisticsReducerRegistry([valuesReducer]) };
 const valuesOptions = { context: valuesContext, statisticsReducerImplementations: [valuesImplementation] };
 
-it('keeps untyped fields in empty models without assigning fallback types', () => {
+it('将无类型字段保留在空模型中，而不分配回退类型', () => {
   const view = createDataView(
     [],
     [{ name: 'amount' }, { name: 'region', type: 'categorical' }, { name: 'when', type: 'temporal' }],
@@ -37,7 +37,7 @@ it('keeps untyped fields in empty models without assigning fallback types', () =
   ]);
 });
 
-it('retains complete empty output models and does not reinterpret canonical temporal values', () => {
+it('保留完整的空输出模型，并且不重新解释规范时间值', () => {
   const model = [{ name: 'when', type: 'temporal' as const }];
   const resolution = resolveDataTransforms([], model);
   const empty = ingestDataTransformResult(resolution, { rows: [], model });
@@ -49,7 +49,7 @@ it('retains complete empty output models and does not reinterpret canonical temp
   expect(ingestDataTransformResult(resolution, { rows, model }).rows).toBe(rows);
 });
 
-it('rejects model and canonical value drift without coercion', () => {
+it('拒绝模型和规范值漂移，无需强制', () => {
   const model = [{ name: 'value', type: 'continuous' as const }];
   const resolution = resolveDataTransforms([], model);
 
@@ -60,7 +60,7 @@ it('rejects model and canonical value drift without coercion', () => {
   expect(() => ingestDataTransformResult(resolution, { rows: [], model: [] })).toThrow(/model/);
 });
 
-it('preserves group type evidence while leaving custom non-scalar output untyped', () => {
+it('保留组类型证据，同时保留自定义非标量输出无类型', () => {
   const resolution = resolveDataTransforms(
     [
       {
@@ -101,7 +101,7 @@ it('preserves group type evidence while leaving custom non-scalar output untyped
   );
 });
 
-it('retains unknown field existence across empty transformed scopes', () => {
+it('在空的转换范围内保留未知字段的存在', () => {
   const model = [{ name: 'value', type: 'continuous' as const }];
   const input = ingestDataTransformResult(resolveDataTransforms([], model), { rows: [], model });
   const root = applyTransformsToDataView(
@@ -121,7 +121,7 @@ it('retains unknown field existence across empty transformed scopes', () => {
   expect(mark.model).toEqual([{ name: 'value', type: 'continuous' }, { name: 'range' }]);
 });
 
-it('keeps both extent endpoints continuous through grouped summaries and downstream sorting', () => {
+it('通过分组摘要和下游排序保持两个范围端点的连续', () => {
   const model = [
     { name: 'group', type: 'categorical' as const, order: ['B', 'A'] },
     { name: 'value', type: 'continuous' as const },
@@ -165,7 +165,7 @@ it('keeps both extent endpoints continuous through grouped summaries and downstr
   ).toThrow(/value/);
 });
 
-it.each(['sort', 'bin'] as const)('preflights missing %s group fields before computation', kind => {
+it.each(['sort', 'bin'] as const)('计算前预检缺少 %s 组字段', kind => {
   expect(() =>
     resolveDataTransforms(
       [{ operation: { kind, params: { field: 'value', groupBy: ['missing'] } } }],
@@ -173,7 +173,7 @@ it.each(['sort', 'bin'] as const)('preflights missing %s group fields before com
     ),
   ).toThrow(/missing input field/);
 });
-it('rejects custom bin metric outputs colliding with group keys before execution', () => {
+it('拒绝执行前与组键冲突的自定义 bin 指标输出', () => {
   const metric = defineStatisticsReducer({
     schema: strictObject({ kind: literal('group-output') }),
     outputs: () => [{ field: 'group', type: 'categorical' }],

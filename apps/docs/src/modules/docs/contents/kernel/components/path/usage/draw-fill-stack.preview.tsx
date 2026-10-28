@@ -1,5 +1,5 @@
-import { DrawWay } from '@retikz/core';
 import { Draw, Layout } from '@retikz/react';
+import { DrawWay } from '@retikz/vanilla';
 
 /** 图形参数 */
 export type DrawFillStackPreviewValues = {

@@ -21,7 +21,7 @@ import type {
   InputPlotGuide,
   InputPlotMark,
   InputPlotScaffold,
-  NormalizedPlotBindings,
+  PlotBindingsNormalizationResult,
   PlotBindingsNormalizationContext,
 } from './input';
 import { normalizePlotPathMark } from './path';
@@ -426,7 +426,7 @@ const normalizeTopologyBindings = (
   coordinate: IRPlotCoordinateOperation,
   facets: ReadonlyArray<InputPlotFacet>,
   scaffolds: ReadonlyArray<InputPlotScaffold>,
-): NormalizedPlotBindings => {
+): PlotBindingsNormalizationResult => {
   const { composition, facetViewById, trackViewById, scaffoldDefaultViewById } = buildTopologyComposition(
     facets,
     scaffolds,
@@ -486,7 +486,7 @@ const normalizeTopologyBindings = (
 };
 
 /** 把 authoring-only axis、facet 与 scaffold binding 展开为 Plot Source IR 字段 */
-export const normalizePlotBindings = (context: PlotBindingsNormalizationContext): NormalizedPlotBindings => {
+export const normalizePlotBindings = (context: PlotBindingsNormalizationContext): PlotBindingsNormalizationResult => {
   const { marks, guides, scales, coordinate, composition, facets, scaffolds } = context;
   marks.forEach(assertMarkBindingCompatibility);
   guides.forEach(assertGuideBindingCompatibility);

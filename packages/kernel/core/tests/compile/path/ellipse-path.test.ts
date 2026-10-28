@@ -5,7 +5,7 @@ import type { IRScene } from '../../../src/schemas';
 import { ellipseArc, move } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
-describe("compile path: 'ellipsePath'", () => {
+describe("编译路径：'ellipsePath'", () => {
   it('ellipsePath rx=15 / ry=10 → 两段半弧', () => {
     const ir: IRScene = {
       version: 1,

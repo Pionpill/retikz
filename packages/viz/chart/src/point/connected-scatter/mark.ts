@@ -110,7 +110,7 @@ const mergedPropertiesOf = (
 };
 
 /** 连接散点标记的作者定义 */
-export const ConnectedScatterMarkDefinition: ChartMarkDefinition = defineChartMark({
+export const connectedScatterMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'connected-scatter',
   schema: ConnectedScatterChartMarkSchema,
   resolve: context => {

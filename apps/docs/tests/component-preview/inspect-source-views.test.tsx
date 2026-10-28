@@ -63,61 +63,58 @@ const demos = [
   ['inspect-scope', Demo6, source6, contract6],
   ['inspect-coordinate', Demo7, source7, contract7],
 ] as const;
-describe('Inspect demo source views', () => {
-  it.each(demos)(
-    '%s has matching bilingual controls and keeps main geometry independent of inspection',
-    (_name, _Component, source, contractFor) => {
-      const zh = contractFor('zh');
-      const en = contractFor('en');
-      const fields = getPreviewControlFields(zh.controls);
+describe('Inspect 演示源码视图', () => {
+  it.each(demos)('%s 具有匹配的双语控制，并使主要几何形状独立于检查', (_name, _Component, source, contractFor) => {
+    const zh = contractFor('zh');
+    const en = contractFor('en');
+    const fields = getPreviewControlFields(zh.controls);
 
-      expect(fields.map(field => ({ ...field, label: '' }))).toEqual(
-        getPreviewControlFields(en.controls).map(field => ({ ...field, label: '' })),
-      );
-      expect(zh.canonicalValues).toEqual(en.canonicalValues);
+    expect(fields.map(field => ({ ...field, label: '' }))).toEqual(
+      getPreviewControlFields(en.controls).map(field => ({ ...field, label: '' })),
+    );
+    expect(zh.canonicalValues).toEqual(en.canonicalValues);
 
-      const codeFor = (values: Readonly<PreviewControlValues>) =>
-        source.buildViews?.({ lang: 'zh', values }).config?.files[0].code ?? '';
-      const baseline = codeFor(zh.canonicalValues);
-      const disabled = { ...zh.canonicalValues };
+    const codeFor = (values: Readonly<PreviewControlValues>) =>
+      source.buildViews?.({ lang: 'zh', values }).config?.files[0].code ?? '';
+    const baseline = codeFor(zh.canonicalValues);
+    const disabled = { ...zh.canonicalValues };
 
-      for (const field of fields) if (field.kind === 'switch') disabled[field.id] = false;
-      const withoutHelpers = codeFor(disabled);
-      const mainGeometry = (code: string) =>
-        JSON.parse(code, (key, value) => (key === 'authoring' ? undefined : value)).input;
+    for (const field of fields) if (field.kind === 'switch') disabled[field.id] = false;
+    const withoutHelpers = codeFor(disabled);
+    const mainGeometry = (code: string) =>
+      JSON.parse(code, (key, value) => (key === 'authoring' ? undefined : value)).input;
 
-      expect(mainGeometry(withoutHelpers)).toEqual(mainGeometry(baseline));
-      expect(withoutHelpers).not.toEqual(baseline);
+    expect(mainGeometry(withoutHelpers)).toEqual(mainGeometry(baseline));
+    expect(withoutHelpers).not.toEqual(baseline);
 
-      for (const field of fields) {
-        if (field.kind === 'switch') continue;
-        if (field.kind !== 'point' && field.kind !== 'range') continue;
-
-        for (const edge of ['min', 'max'] as const) {
-          const values: PreviewControlValues = { ...zh.canonicalValues };
-          values[field.id] = field.kind === 'point' ? [...field[edge]] : field[edge];
-
-          expect(codeFor(values)).not.toEqual(baseline);
-        }
-      }
+    for (const field of fields) {
+      if (field.kind === 'switch') continue;
+      if (field.kind !== 'point' && field.kind !== 'range') continue;
 
       for (const edge of ['min', 'max'] as const) {
-        const values = { ...zh.canonicalValues };
+        const values: PreviewControlValues = { ...zh.canonicalValues };
+        values[field.id] = field.kind === 'point' ? [...field[edge]] : field[edge];
 
-        for (const field of fields) {
-          if (field.kind === 'point') values[field.id] = [...field[edge]];
-          else if (field.kind === 'range') values[field.id] = field[edge];
-        }
-
-        const output = source.buildViews?.({ lang: 'en', values }).vanilla?.render?.('svg');
-        if (!isValidElement<{ svg: string }>(output)) throw new Error('Expected SVG output');
-
-        expect(output.props.svg).not.toMatch(/NaN|Infinity/);
+        expect(codeFor(values)).not.toEqual(baseline);
       }
-    },
-  );
+    }
 
-  it('rebuilds geometry and inspection options from current controls', () => {
+    for (const edge of ['min', 'max'] as const) {
+      const values = { ...zh.canonicalValues };
+
+      for (const field of fields) {
+        if (field.kind === 'point') values[field.id] = [...field[edge]];
+        else if (field.kind === 'range') values[field.id] = field[edge];
+      }
+
+      const output = source.buildViews?.({ lang: 'en', values }).vanilla?.render?.('svg');
+      if (!isValidElement<{ svg: string }>(output)) throw new Error('Expected SVG output');
+
+      expect(output.props.svg).not.toMatch(/NaN|Infinity/);
+    }
+  });
+
+  it('从当前控件重建几何形状和检查选项', () => {
     const baseline = source4.buildViews?.({ lang: 'zh' });
     const changed = source4.buildViews?.({ lang: 'zh', values: { position: [30, 20], bounds: false } });
 
@@ -125,94 +122,91 @@ describe('Inspect demo source views', () => {
     expect(changed?.config?.files[0].code).toContain('"bounds": false');
   });
 
-  it.each(demos)(
-    '%s preserves inspection in generated Vanilla and Config for both languages',
-    (name, Component, previewSource) => {
-      for (const lang of ['zh', 'en'] as const) {
-        const previewTheme = { mode: lang === 'zh' ? 'light' : 'dark' } as const;
-        const result = buildPreviewSource({
-          Component,
-          previewSource,
-          lang,
-          name,
-          key: name,
-          segments: [],
-          rawSource: 'export default Demo;',
-          sourceFiles: [],
-          sourceContents: {},
-          hideCode: false,
-          theme: previewTheme,
-        });
+  it.each(demos)('%s 在生成的 Vanilla 和两种语言的 Config 中保留检查', (name, Component, previewSource) => {
+    for (const lang of ['zh', 'en'] as const) {
+      const previewTheme = { mode: lang === 'zh' ? 'light' : 'dark' } as const;
+      const result = buildPreviewSource({
+        Component,
+        previewSource,
+        lang,
+        name,
+        key: name,
+        segments: [],
+        rawSource: 'export default Demo;',
+        sourceFiles: [],
+        sourceContents: {},
+        hideCode: false,
+        theme: previewTheme,
+      });
 
-        expect(availableSourceViews(result.source ?? {})).toEqual(['react', 'vanilla', 'config']);
-        expect(result.previewIr).toBeNull();
+      expect(availableSourceViews(result.source ?? {})).toEqual(['react', 'vanilla', 'config']);
+      expect(result.previewIr).toBeNull();
 
-        const configCode = result.source?.config?.files[0].code ?? '';
+      const configCode = result.source?.config?.files[0].code ?? '';
 
-        expect(configCode).toContain('authoring');
-        expect(configCode).not.toContain('token');
+      expect(configCode).toContain('authoring');
+      expect(configCode).not.toContain('token');
 
-        const config = JSON.parse(configCode);
-        const sourceCode = result.source?.vanilla?.files[0].code ?? '';
-        const moduleExports: { svg?: string } = {};
-        const modules: Record<string, unknown> = {
-          '@retikz/vanilla': vanilla,
-          '@retikz/inspect': inspect,
-          '@retikz/inspect/vanilla': inspectVanilla,
-          '@retikz/extension': clip,
-          '@/modules/docs/components/component-preview/theme': theme,
-          '@/modules/docs/components/component-preview/vanilla-preview': measure,
-          [`./${name}.config.json`]: config,
-        };
-        runInNewContext(transpileModule(sourceCode, { compilerOptions: { module: ModuleKind.CommonJS } }).outputText, {
-          exports: moduleExports,
-          require: (id: string) => {
-            if (!(id in modules)) throw new Error(`Unexpected generated import: ${id}`);
-            return modules[id];
-          },
-        });
+      const config = JSON.parse(configCode);
+      const sourceCode = result.source?.vanilla?.files[0].code ?? '';
+      const moduleExports: { svg?: string } = {};
+      const modules: Record<string, unknown> = {
+        '@retikz/vanilla': vanilla,
+        '@retikz/inspect': inspect,
+        '@retikz/inspect/vanilla': inspectVanilla,
+        '@retikz/extension': clip,
+        '@/modules/docs/components/component-preview/theme': theme,
+        '@/modules/docs/components/component-preview/vanilla-preview': measure,
+        [`./${name}.config.json`]: config,
+      };
+      runInNewContext(transpileModule(sourceCode, { compilerOptions: { module: ModuleKind.CommonJS } }).outputText, {
+        exports: moduleExports,
+        require: (id: string) => {
+          if (!(id in modules)) throw new Error(`Unexpected generated import: ${id}`);
+          return modules[id];
+        },
+      });
 
-        expect(moduleExports.svg).toContain('data-retikz-readonly-layer');
+      expect(moduleExports.svg).toContain('data-retikz-readonly-layer');
 
-        for (const view of ['vanilla', 'config'] as const) {
-          const rendered = result.source?.[view]?.render?.('svg');
+      for (const view of ['vanilla', 'config'] as const) {
+        const rendered = result.source?.[view]?.render?.('svg');
 
-          expect(isValidElement<{ svg: string }>(rendered)).toBe(true);
+        expect(isValidElement<{ svg: string }>(rendered)).toBe(true);
 
-          if (!isValidElement<{ svg: string }>(rendered)) throw new Error('Expected SVG preview');
+        if (!isValidElement<{ svg: string }>(rendered)) throw new Error('Expected SVG preview');
 
-          expect(rendered.props.svg).toEqual(moduleExports.svg);
-        }
-
-        const root = previewSource.canonicalRender?.(lang);
-        if (!isValidElement<InspectLayoutProps>(root)) throw new Error('Expected InspectLayout');
-
-        const original = createInputScene(root.props.children);
-        const input = {
-          ...original.scene,
-          theme: previewTheme,
-          viewBox: root.props.viewBox,
-          ...(root.props.request === undefined
-            ? {}
-            : { authoring: inspectVanilla.createInspectionVanillaAuthoring(root.props.request) }),
-        };
-
-        expect(
-          vanilla.renderToSvgString(input, {
-            adapters: synchronousInputAdaptersOf(original.adapters),
-            compile: {
-              clips: root.props.extensions?.clips,
-              themeDefinitions: theme.PreviewThemeDefinitionBundle.core,
-              measureText: measure.browserMeasurer,
-            },
-            compileDriver: inspectVanilla.createInspectionVanillaDriver({
-              registry: root.props.registry,
-              selection: root.props.selection,
-            }),
-          }),
-        ).toEqual(moduleExports.svg);
-        expect(JSON.stringify(vanilla.normalizeScene(input).ir)).not.toContain('authoring');
+        expect(rendered.props.svg).toEqual(moduleExports.svg);
       }
-    },
-  );
+
+      const root = previewSource.canonicalRender?.(lang);
+      if (!isValidElement<InspectLayoutProps>(root)) throw new Error('Expected InspectLayout');
+
+      const original = createInputScene(root.props.children);
+      const input = {
+        ...original.scene,
+        theme: previewTheme,
+        viewBox: root.props.viewBox,
+        ...(root.props.request === undefined
+          ? {}
+          : { authoring: inspectVanilla.createInspectionVanillaAuthoring(root.props.request) }),
+      };
+
+      expect(
+        vanilla.renderToSvgString(input, {
+          adapters: synchronousInputAdaptersOf(original.adapters),
+          compile: {
+            clips: root.props.extensions?.clips,
+            themeDefinitions: theme.PreviewThemeDefinitionBundle.core,
+            measureText: measure.browserMeasurer,
+          },
+          compileDriver: inspectVanilla.createInspectionVanillaDriver({
+            registry: root.props.registry,
+            selection: root.props.selection,
+          }),
+        }),
+      ).toEqual(moduleExports.svg);
+      expect(JSON.stringify(vanilla.normalizeScene(input).ir)).not.toContain('authoring');
+    }
+  });
 });

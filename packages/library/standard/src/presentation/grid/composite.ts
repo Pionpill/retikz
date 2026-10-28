@@ -4,10 +4,10 @@ import { defineComposite } from '@retikz/core';
 import { STANDARD_NAMESPACE } from '../../shared';
 import { lowerGrid } from './pipeline';
 import { GridSchema } from './schema';
-import type { IRGrid, GridInput } from './types';
+import type { IRGrid, InputGrid } from './types';
 
 /** Standard Grid 的官方 Core composite definition */
-export const GridDefinition = defineComposite({
+export const gridDefinition = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'grid',
   schema: GridSchema,
@@ -15,16 +15,14 @@ export const GridDefinition = defineComposite({
 } satisfies CompositeDefinition<IRGrid, typeof STANDARD_NAMESPACE, 'grid'>);
 
 /** 组装持久化的 Standard Grid composite */
-export const createGrid = (input: GridInput): IRGrid => ({
+export const createGrid = (input: InputGrid): IRGrid => ({
   namespace: STANDARD_NAMESPACE,
   type: 'grid',
   ...input,
 });
 
 /** Grid 的 Core Composite dependency provider */
-export const GridProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'composite', namespace: GridDefinition.namespace, type: GridDefinition.type }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => GridDefinition,
+export const gridProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'composite', namespace: gridDefinition.namespace, type: gridDefinition.type }),
+  makeDefinition: () => gridDefinition,
 });

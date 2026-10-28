@@ -17,8 +17,8 @@ const minimalSource = {
   },
 } as const;
 
-describe('Ranged Dot exact Source schema', () => {
-  it('accepts the minimal JSON Source without materializing defaults', () => {
+describe('范围点精确 Source schema', () => {
+  it('接受最小 JSON Source，而不实现默认值', () => {
     expect(RangedDotChartSchema.parse(JSON.parse(JSON.stringify(minimalSource)))).toEqual(minimalSource);
   });
 
@@ -26,11 +26,11 @@ describe('Ranged Dot exact Source schema', () => {
     ['category', { start: 'before', end: 'after' }],
     ['start', { category: 'category', end: 'after' }],
     ['end', { category: 'category', start: 'before' }],
-  ])('requires %s', (_name, encodings) => {
+  ])('需要 %s', (_name, encodings) => {
     expect(() => RangedDotChartEncodingsSchema.parse(encodings)).toThrow();
   });
 
-  it('accepts member styles and rejects topology or layer overrides', () => {
+  it('接受成员样式并拒绝拓扑或图层覆盖', () => {
     expect(
       RangedDotChartPropertiesSchema.parse({
         point: { size: 5, strokeWidth: 1 },
@@ -44,7 +44,7 @@ describe('Ranged Dot exact Source schema', () => {
     expect(() => RangedDotChartPropertiesSchema.parse({ range: { closed: true } })).toThrow();
   });
 
-  it('keeps position domain padding recipe-only', () => {
+  it('仅保留位置域填充配方', () => {
     expect(RangedDotChartPropertiesSchema.parse({ domainPadding: { default: 5, right: 8 } })).toEqual({
       domainPadding: { default: 5, right: 8 },
     });
@@ -53,7 +53,7 @@ describe('Ranged Dot exact Source schema', () => {
     ).toBe(false);
   });
 
-  it('keeps color recipe-only and rejects unknown mark fields', () => {
+  it('仅保留颜色配方并拒绝未知标记字段', () => {
     expect(() =>
       RangedDotChartSchema.parse({
         ...minimalSource,
@@ -65,7 +65,7 @@ describe('Ranged Dot exact Source schema', () => {
     ).toThrow();
   });
 
-  it('requires start and end to name the same authored x scale', () => {
+  it('需要开始和结束来命名相同的编写 x 比例', () => {
     expect(() =>
       RangedDotChartEncodingsSchema.parse({
         category: 'category',

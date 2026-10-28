@@ -49,7 +49,7 @@ export type FlowDiagramLayoutHostProps = Pick<
 >;
 
 /** Flow standalone-only Layout props 的完整字段表 */
-export const flowDiagramLayoutHostPropKeys = [
+const flowDiagramLayoutHostPropKeys = [
   'authoring',
   'compileDriver',
   'handlers',
@@ -104,7 +104,7 @@ export const flowDiagramLayoutHostPropsOf = (props: FlowDiagramLayoutHostProps):
 };
 
 /** Flow JSX marker 的稳定语义类别 */
-export type FlowMarkerKind = 'entity' | 'entities' | 'group' | 'layout' | 'relation' | 'relations';
+type FlowMarkerKind = 'entity' | 'entities' | 'group' | 'layout' | 'relation' | 'relations';
 
 /**
  * 只参与 FlowDiagram authoring 收集的 JSX marker

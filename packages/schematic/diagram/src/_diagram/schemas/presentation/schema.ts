@@ -3,14 +3,14 @@ import { LegendSchema } from '@retikz/standard/presentation';
 import { strictObject } from 'zod';
 
 /** Diagram Presentation 文本区域的块级样式覆盖 */
-export const DiagramPresentationTextStyleSchema = strictObject({
+const DiagramPresentationTextStyleSchema = strictObject({
   textColor: NodeSchema.shape.style.unwrap().shape.textColor,
   font: NodeSchema.shape.style.unwrap().shape.font,
   opacity: GraphicElementOpacitySchema.shape.opacity,
 }).describe('Block-level style overrides for one Diagram presentation text region.');
 
 /** Diagram Presentation 文本区域的块级布局覆盖 */
-export const DiagramPresentationTextLayoutSchema = strictObject({
+const DiagramPresentationTextLayoutSchema = strictObject({
   align: NodeSchema.shape.layout.unwrap().shape.align,
   lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight,
   maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth,

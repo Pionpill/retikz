@@ -19,7 +19,7 @@ const ResolutionImplementation: FC<ResolutionImplementationProps> = props => {
   const stages = [
     { id: 'setup', name: 'createCompileContext' },
     { id: 'scope', name: 'resolveScopeDefaults' },
-    { id: 'merge', name: 'resolveEffectiveNodeStyle' },
+    { id: 'merge', name: 'mergeNodeStyle' },
     { id: 'colors', name: 'resolveNodePrimaryColors' },
     { id: 'fields', name: 'expandNodeFields' },
     { id: 'shape', name: 'resolveNodeShape' },
@@ -28,9 +28,9 @@ const ResolutionImplementation: FC<ResolutionImplementationProps> = props => {
   ] as const;
   const products = [
     { id: 'environment', name: 'registries' },
-    { id: 'defaults', name: 'EffectiveScopeDefaults' },
+    { id: 'defaults', name: 'MergedScopeDefaults' },
     { id: 'effective', name: 'IRNode' },
-    { id: 'concrete', name: 'PrimaryColorResolvedNode' },
+    { id: 'concrete', name: 'NodePrimaryColorSource' },
     { id: 'expanded', name: 'Expanded fields' },
     { id: 'bound', name: 'ShapeResolution' },
     { id: 'resolved', name: 'paint' },

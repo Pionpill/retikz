@@ -88,7 +88,7 @@ standalone host props or local `onManifest`; move them to the outer `Layout`. Da
 definitions, and extra composites remain runtime inputs outside Table IR.
 
 Formatter, structure, presentation, visual-scale, and Table Theme style definitions use the same
-`LowerTablesOptions` and lowering contract in standalone and embedded modes. Standalone custom
+`TablesLoweringOptions` and lowering contract in standalone and embedded modes. Standalone custom
 styles receive the Core definition through `themeDefinitions` and the same-named Table definition through
 `tableThemeDefinitions`; embedded roots receive the Core definition from the outer Layout and package the
 Table definition through `createTableRuntimeContribution()`. A visual-scale

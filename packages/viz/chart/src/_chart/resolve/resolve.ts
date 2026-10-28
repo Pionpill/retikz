@@ -50,14 +50,6 @@ export const resolveSelectedChart = <TSource extends IRChartSource>(
     encodings: encodingResolution.encodings,
     properties: source.recipe.properties ?? {},
   });
-  if (recipeResolution.semanticMarks.length === 0) {
-    throw new RetikzChartError({
-      code: RetikzChartErrorCode.InvalidResolvedPlot,
-      message: `Chart recipe "${recipe.chartType}" must produce at least one semantic Plot mark`,
-      details: { path: ['recipe', 'chartType'] },
-    });
-  }
-
   const markResolution = resolveChartMarks(source, recipe, encodingResolution.encodings);
   assertConsumedSlots(source, recipe, markResolution.consumption);
   const semanticMarkResolution = resolveChartSemanticMarks(recipeResolution, markResolution);

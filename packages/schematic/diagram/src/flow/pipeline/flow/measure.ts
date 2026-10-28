@@ -10,7 +10,7 @@ import {
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { FlowLayoutDefinition, FlowLayoutElementInput, FlowLayoutRelationInput } from '../../contract';
+import type { FlowLayoutDefinition, InputFlowLayoutElement, InputFlowLayoutRelation } from '../../contract';
 import type { CanonicalFlowDiagram, CanonicalFlowElement, CanonicalFlowRelation } from '../../resolve';
 import { mergeFlowLayoutIntent, resolveEffectiveFlowLayout, resolveEffectiveFlowPlacement } from '../../resolve';
 import type { IRFlowLayoutIntent } from '../../schemas';
@@ -24,7 +24,7 @@ const measureEntity = (
   graph: Extract<CanonicalFlowElement, { type: 'entity' }>['graph'],
   context: CompositeCompileContext,
   state: MeasurementState,
-): Extract<FlowLayoutElementInput, { kind: 'leaf' }> => {
+): Extract<InputFlowLayoutElement, { kind: 'leaf' }> => {
   const child = { ...graph, position: [0, 0] as const };
   const probe = requiredLayoutProbe(context, { child, occurrence: 0 }, intrinsicLayoutProposal('natural'));
   const margin = resolveBoxSpacing(graph.layout?.margin, 0);
@@ -43,10 +43,10 @@ const measureEntity = (
 const applyLayoutItemWidth = (
   source: Extract<CanonicalFlowElement, { type: 'layout' }>['source'],
   elements: ReadonlyArray<CanonicalFlowElement>,
-  measuredElements: ReadonlyArray<FlowLayoutElementInput>,
+  measuredElements: ReadonlyArray<InputFlowLayoutElement>,
   context: CompositeCompileContext,
   state: MeasurementState,
-): ReadonlyArray<FlowLayoutElementInput> => {
+): ReadonlyArray<InputFlowLayoutElement> => {
   const itemWidth = source.itemWidth;
   if (itemWidth === undefined || itemWidth === 'fill') return measuredElements;
 
@@ -148,7 +148,7 @@ const measureElements = (
   inheritedLayoutIntent: IRFlowLayoutIntent,
   ancestorScopeIds: ReadonlyArray<string>,
   state: MeasurementState,
-): ReadonlyArray<FlowLayoutElementInput> =>
+): ReadonlyArray<InputFlowLayoutElement> =>
   elements.map(element => {
     state.scopePaths.set(element.id, ancestorScopeIds);
     if (element.type !== 'entity') {
@@ -245,7 +245,7 @@ const relationInputs = (
   definition: FlowLayoutDefinition,
   rootLayout: ReturnType<typeof resolveEffectiveFlowLayout>,
   state: MeasurementState,
-): ReadonlyArray<FlowLayoutRelationInput> =>
+): ReadonlyArray<InputFlowLayoutRelation> =>
   diagram.relations.map(relation => {
     const sourceScopes = state.scopePaths.get(relation.source.source.id) ?? [];
     const targetScopes = state.scopePaths.get(relation.source.target.id) ?? [];

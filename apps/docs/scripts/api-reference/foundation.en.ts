@@ -1,5 +1,13 @@
 /** @retikz/foundation 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  '从左到右浅合并非 undefined 属性，返回新对象':
+    'Shallowly merges non-undefined properties from left to right into a new object',
+  '跳过 undefined 源和属性值，保留 null、false、0 和空字符串；后面的有效值优先，不递归合并或修改输入':
+    'Skips undefined sources and property values while retaining null, false, 0, and empty strings; later defined values win, without recursive merging or input mutation',
+  '过滤 undefined 属性后的新对象': 'New object with undefined properties omitted',
+  '属性读取失败时抛出 RetikzFoundationError，原始异常保留为 cause':
+    'Throws RetikzFoundationError if reading a property fails, preserving the original exception as cause',
+
   '递归比较两棵 JSON 数据树的结构和值': 'Recursively compares the structure and values of two JSON data trees',
   '对象属性顺序不影响结果，数组按顺序比较，标量使用 Object.is，因此 0 与 -0 不相等；不修改输入':
     'Ignores object property order, compares arrays in order, and uses Object.is for scalars, so 0 and -0 differ; does not mutate inputs',

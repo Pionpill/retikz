@@ -11,7 +11,7 @@ processing. The adapter normalizes the exact Chart Source and contributes its
 Chart/Plot dependencies during the same traversal as other components.
 `normalizeXxxChart` remains available for explicitly constructing JSON-safe IR.
 
-For a standalone chart, `renderChart(chart, { adapters: [ScatterChartInputEmbedAdapter] })`
+For a standalone chart, `renderChart(chart, { adapters: [scatterChartInputEmbedAdapter] })`
 is a convenience over the same processing and SVG renderer. Its `{ svg, compileResult }`
 result shares one compilation. Complete `layout` dimensions define the standalone
 viewBox; `output` dimensions only resize the displayed SVG. In a composed scene,

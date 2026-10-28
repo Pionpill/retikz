@@ -13,12 +13,12 @@ import {
   rectToBounds,
 } from '../../src';
 
-describe('bounds geometry helpers', () => {
-  it('returns undefined for an empty point set', () => {
+describe('边界几何帮助器', () => {
+  it('对于空点集返回 undefined', () => {
     expect(boundsOf([])).toBeUndefined();
   });
 
-  it('computes axis-aligned min/max, center, and half axes', () => {
+  it('计算轴对齐的最小/最大、中心轴和半轴', () => {
     const bounds = boundsOf([
       [2, -3],
       [-4, 5],
@@ -32,7 +32,7 @@ describe('bounds geometry helpers', () => {
     expect(halfAxesOfBounds(bounds)).toEqual({ halfWidth: 6, halfHeight: 4 });
   });
 
-  it('expands bounds by per-side insets', () => {
+  it('通过每边插入扩展边界', () => {
     const bounds = { minX: -4, minY: -3, maxX: 8, maxY: 5 };
 
     expect(expandBounds(bounds, { left: 1, right: 2, top: 3, bottom: 4 })).toEqual({
@@ -43,7 +43,7 @@ describe('bounds geometry helpers', () => {
     });
   });
 
-  it('returns bounds corners in stable reading order', () => {
+  it('以稳定的读取顺序返回边界角', () => {
     const bounds = { minX: -4, minY: -3, maxX: 8, maxY: 5 };
 
     expect(cornersOfBounds(bounds)).toEqual([
@@ -54,7 +54,7 @@ describe('bounds geometry helpers', () => {
     ]);
   });
 
-  it('merges empty and non-empty bounds', () => {
+  it('合并空和非空边界', () => {
     const bounds = { minX: -4, minY: -3, maxX: 8, maxY: 5 };
 
     expect(mergeBounds(undefined, undefined)).toBeUndefined();
@@ -68,7 +68,7 @@ describe('bounds geometry helpers', () => {
     });
   });
 
-  it('returns copies when one side is empty', () => {
+  it('当一侧为空时返回副本', () => {
     const bounds = { minX: 1, minY: 2, maxX: 3, maxY: 4 };
     const fromLeftEmpty = mergeBounds(undefined, bounds);
     const fromRightEmpty = mergeBounds(bounds, undefined);
@@ -80,7 +80,7 @@ describe('bounds geometry helpers', () => {
     expect(bounds).toEqual({ minX: 1, minY: 2, maxX: 3, maxY: 4 });
   });
 
-  it('converts between axis-aligned bounds and top-left bounds rects', () => {
+  it('在轴对齐边界和左上角边界矩形之间转换', () => {
     const bounds = { minX: -4, minY: -3, maxX: 8, maxY: 5 };
     const rect = { x: -4, y: -3, width: 12, height: 8 };
 
@@ -88,7 +88,7 @@ describe('bounds geometry helpers', () => {
     expect(rectToBounds(rect)).toEqual(bounds);
   });
 
-  it('classifies finite and positive bounds rects', () => {
+  it('对有限和正界矩形进行分类', () => {
     expect(isFiniteBoundsRect({ x: 0, y: 1, width: 2, height: 3 })).toBe(true);
     expect(isFiniteBoundsRect({ x: 0, y: 1, width: Infinity, height: 3 })).toBe(false);
     expect(isPositiveBoundsRect({ x: 0, y: 1, width: 2, height: 3 })).toBe(true);

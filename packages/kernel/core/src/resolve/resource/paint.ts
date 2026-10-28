@@ -1,6 +1,6 @@
 import type { PatternDefinition } from '../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { providerDefinitionOf } from '../../providers';
+import type { ProviderRegistry } from '../../providers';
+import { getProviderDefinition } from '../../providers';
 import type { IRPaint } from '../../schemas';
 import { resolvePatternStyle } from './pattern';
 import type { PaintResolution, PatternResolution } from './types';
@@ -9,36 +9,23 @@ const DEFAULT_PATTERN_SIZE = 8;
 
 const DEFAULT_MOTIF_COLOR = 'currentColor';
 
-/** Pattern paint 解析所需的 registry 和 round 上下文 */
-export type PaintResolveContext = Readonly<{
-  /** 有效 pattern provider registry */
-  patterns: ReadonlyMap<string, PatternDefinition>;
+/** 解析图案填充所需的定义注册表与尺寸舍入规则 */
+type PaintResolveContext = Readonly<{
+  /** 当前可用的图案定义注册表 */
+  patternRegistry: ProviderRegistry<PatternDefinition>;
   /** 圆整尺寸，保持资源与 Scene 几何一致 */
   round: (value: number) => number;
-  /** 当前 IR locator，用于未知 provider 诊断 */
+  /** 调用方传入的 IR 路径；当前图案解析未使用此字段 */
   irPath?: string;
 }>;
 
-/** 在 resolve 阶段选择 pattern provider、应用默认值并 shaping 样式 */
+/** 查找图案定义，确定尺寸并解析图案线型 */
 const resolvePattern = (
   spec: Extract<IRPaint, { kind: 'pattern' }>,
   context: PaintResolveContext,
 ): PatternResolution => {
-  const definition = providerDefinitionOf(context.patterns, spec.shape);
+  const definition = getProviderDefinition(context.patternRegistry, spec.shape);
   const rawSize = spec.size ?? definition.defaultSize ?? DEFAULT_PATTERN_SIZE;
-  if (!Number.isFinite(rawSize) || rawSize <= 0) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Resolve,
-      `Pattern '${spec.shape}' has an invalid size (${String(rawSize)}); it must be a finite number greater than 0.`,
-    );
-  }
-
-  if (spec.rotation !== undefined && !Number.isFinite(spec.rotation)) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Resolve,
-      `Pattern '${spec.shape}' has a non-finite rotation (${String(spec.rotation)}); it must be a finite number.`,
-    );
-  }
 
   return {
     spec,
@@ -49,7 +36,7 @@ const resolvePattern = (
   };
 };
 
-/** 将 IR paint 值解析为纯色或已绑定的内部 paint resolution */
+/** 颜色字符串和 undefined 原样返回；绘制配置包装为资源输入，图案另行绑定定义与线型 */
 export const resolvePaint = (
   paint: string | IRPaint | undefined,
   context: PaintResolveContext,

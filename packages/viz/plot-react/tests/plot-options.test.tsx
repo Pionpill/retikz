@@ -63,21 +63,21 @@ describe('<Plot> lowerPlots option 转发', () => {
       ),
     ).toThrow(/async preparation/);
   });
-  it('react_options_forwarded — provenance reaches lowerPlots', () => {
+  it('React 选项将 provenance 传递至 lowerPlots', () => {
     // provenance:true + root id → 合成 scope id 'sales.mark.0' → SVG data-retikz-id
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} provenance />);
 
     expect(svg).toContain('data-retikz-id="sales.mark.0"');
   });
 
-  it('provenance_off_no_synthesized_id', () => {
+  it('没有合成 ID 的来源追溯', () => {
     // 不传 provenance（默认关）→ 不合成内部 id → SVG 无 'sales.mark.0'
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} />);
 
     expect(svg).not.toContain('data-retikz-id="sales.mark.0"');
   });
 
-  it('datum_id_field_forwarded — datumIdField reaches lowerPlots', () => {
+  it('将 datumIdField 传递至 lowerPlots', () => {
     // provenance + datumProvenance + datumIdField:'q' → datum Node.id 'sales.datum.Q1' → SVG data-retikz-id
     const svg = renderToStaticMarkup(
       <Plot spec={spec} data={data} width={480} height={300} provenance datumProvenance datumIdField="q" />,
@@ -120,7 +120,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传', () => {
     expect((svg.match(/<rect/g) ?? []).length).toBe(2);
   });
 
-  it('data_transforms_compose_with_transform_children', () => {
+  it('数据转换由转换子项组成', () => {
     // dataTransforms（直传）拼在 <PlotTransform> 子组件之前；与子组件混用同一管线（此处仅直传一条 summarize）
     const svg = renderToStaticMarkup(
       <Plot

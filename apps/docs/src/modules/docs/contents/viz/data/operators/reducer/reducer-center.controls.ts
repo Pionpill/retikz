@@ -31,7 +31,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       ],
     }),
     canonicalValues: { grouped: true, method: 'mean', tail: 90 },
-    relatedApis: ['BuiltinReducerOperationSchemas.Mean', 'BuiltinReducerOperationSchemas.Median'],
+    relatedApis: ['BUILTIN_REDUCER_OPERATION_SCHEMAS.Mean', 'BUILTIN_REDUCER_OPERATION_SCHEMAS.Median'],
   } satisfies PreviewControlContract;
 };
 /** 缺少语言上下文时采用中文基线 */

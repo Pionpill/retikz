@@ -12,7 +12,7 @@ it('保留 Map 的默认间距以及显式零和独立行列间距', () => {
   expect(MapLayoutSchema.parse({ gap: 0 }).gap).toBe(0);
   expect(MapLayoutSchema.parse({ gap: { row: 0, column: 4 } }).gap).toEqual({ row: 0, column: 4 });
 });
-it('parses index shorthand, object defaults, and JSON text styles', () => {
+it('解析索引简写、对象默认值和 JSON 文本样式', () => {
   const base = { namespace: 'standard', type: 'array', items: ['A'] };
 
   expect(ArraySchema.parse(base).index).toBe(false);
@@ -23,7 +23,7 @@ it('parses index shorthand, object defaults, and JSON text styles', () => {
 
   expect(ArraySchema.parse(JSON.parse(JSON.stringify({ ...base, index }))).index).toEqual(index);
 });
-it('treats Array strings as content by default and validates derived ids when enabled', () => {
+it('默认将 Array 字符串视为内容，并在启用时验证派生 id', () => {
   const base = { namespace: 'standard', type: 'array' };
   const items = ['A', 'A', '', '   ', { content: 'B', id: 'A' }];
 
@@ -46,8 +46,8 @@ it('treats Array strings as content by default and validates derived ids when en
     }).success,
   ).toBe(false);
 });
-describe('Array / Map Source contracts', () => {
-  it('persists expansion selections with a shared default and precise invalid-member diagnostics', () => {
+describe('Array / Map Source 契约', () => {
+  it('通过共享默认值和精确的无效成员诊断来保留扩展选择', () => {
     for (const [schema, source] of [
       [ArraySchema, { namespace: 'standard', type: 'array', data: [{ a: 1 }] }],
       [MapSchema, { namespace: 'standard', type: 'map', data: { value: { a: 1 } } }],
@@ -82,7 +82,7 @@ describe('Array / Map Source contracts', () => {
     );
   });
 
-  it('accepts content width only for Array overall and direct cells after JSON round-trip', () => {
+  it('仅接受 JSON 往返后 Array 整体和直接单元格的内容宽度', () => {
     const source = {
       namespace: 'standard',
       type: 'array',
@@ -111,7 +111,7 @@ describe('Array / Map Source contracts', () => {
     ).toBe(false);
   });
 
-  it('keeps cell styles sparse until role and overall inheritance', () => {
+  it('保持单元格样式稀疏，直到角色和整体继承', () => {
     const source = {
       namespace: 'standard',
       type: 'map',
@@ -125,7 +125,7 @@ describe('Array / Map Source contracts', () => {
     expect(parsed.entries?.[0].value).toMatchObject({ style: { fill: 'none' } });
   });
 
-  it('allows repeated display keys and empty structures', () => {
+  it('允许重复显示键和空结构', () => {
     expect(
       MapSchema.parse({
         namespace: 'standard',
@@ -136,7 +136,7 @@ describe('Array / Map Source contracts', () => {
     expect(ArraySchema.parse({ namespace: 'standard', type: 'array', items: [] }).items).toEqual([]);
   });
 
-  it('points duplicate identities at the offending cell', () => {
+  it('将重复的身份指向有问题的单元格', () => {
     const parsed = MapSchema.safeParse({
       namespace: 'standard',
       type: 'map',
@@ -165,12 +165,12 @@ describe('Array / Map Source contracts', () => {
     { style: { zIndex: 1 } },
     { items: [{ content, layout: { gap: 2 } }] },
     { items: [{ content, layout: { padding: -1 } }] },
-  ])('rejects invalid source fields %j', fields => {
+  ])('拒绝无效源字段 %j', fields => {
     expect(ArraySchema.safeParse({ namespace: 'standard', type: 'array', items: [], ...fields }).success).toBe(false);
   });
 });
 
-it('preserves JSON text cells including empty text and requires both Map roles', () => {
+it('保留 JSON 文本单元格（包括空文本），并且需要 Map 角色', () => {
   expect(ArraySchema.parse({ namespace: 'standard', type: 'array', items: [{ content: '' }] }).items).toEqual([
     { content: '' },
   ]);
@@ -184,7 +184,7 @@ it('preserves JSON text cells including empty text and requires both Map roles',
   expect(MapSchema.safeParse({ namespace: 'standard', type: 'map', entries: [{ value: 'b' }] }).success).toBe(false);
 });
 
-it('preserves sparse grouped Map role overrides through JSON parsing', () => {
+it('通过 JSON 解析保留稀疏分组的 Map 角色覆盖', () => {
   const defaultCell = {
     style: { opacity: { fill: 0 } },
     layout: { width: 80 },
@@ -204,6 +204,6 @@ it.each([
   { defaultCell: { value: { style: { key: { fill: 'red' } } } } },
   { defaultCell: { key: { layout: { width: -1 } } } },
   { defaultCell: { value: { layout: { gap: 2 } } } },
-])('rejects invalid grouped Map role fields %j', fields => {
+])('拒绝无效的分组 Map 角色字段 %j', fields => {
   expect(MapSchema.safeParse({ namespace: 'standard', type: 'map', entries: [], ...fields }).success).toBe(false);
 });

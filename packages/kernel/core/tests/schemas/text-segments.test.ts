@@ -10,8 +10,8 @@ import {
   PathLabelSchema,
 } from '../../src/schemas';
 
-describe('label text blocks', () => {
-  it.each([NodeLabelSchema, PathLabelSchema])('accepts the shared text block and rejects non-block inputs', schema => {
+describe('标签文本块', () => {
+  it.each([NodeLabelSchema, PathLabelSchema])('接受共享文本块并拒绝非块输入', schema => {
     const text = ['first', { text: 'second', fill: '#f00' }, { segments: [{ text: 'third' }] }];
     expect(schema.parse({ text }).text).toEqual(text);
     expect(schema.safeParse({ text: [] }).success).toBe(false);
@@ -19,33 +19,33 @@ describe('label text blocks', () => {
   });
 });
 
-describe('[text-segments] segment schemas', () => {
-  it('accepts a text segment with per-segment style', () => {
+describe('[文本段]段 schema', () => {
+  it('接受具有每段样式的文本段', () => {
     expect(TextSegmentSchema.safeParse({ text: 'E=', fill: '#f00', opacity: 0.8 }).success).toBe(true);
   });
 
-  it('accepts a math segment with tex / displayMode / fill', () => {
+  it('接受带有 tex / displayMode / fill 的数学段', () => {
     expect(MathSegmentSchema.safeParse({ tex: 'mc^2', displayMode: true, fill: '#00f' }).success).toBe(true);
   });
 
-  it('rejects a segment carrying both text and tex (strict)', () => {
+  it('拒绝同时携带文本和 tex 的段（严格）', () => {
     expect(TextSegmentSchema.safeParse({ text: 'x', tex: 'y' }).success).toBe(false);
     expect(MathSegmentSchema.safeParse({ tex: 'y', text: 'x' }).success).toBe(false);
   });
 
-  it('accepts a mixed line of text + math segments', () => {
+  it('接受文本+数学段的混合行', () => {
     expect(SegmentedLineSchema.safeParse({ segments: [{ text: 'when ' }, { tex: 'v=d/t' }] }).success).toBe(true);
   });
 
-  it('rejects an empty segments array', () => {
+  it('拒绝空段数组', () => {
     expect(SegmentedLineSchema.safeParse({ segments: [] }).success).toBe(false);
   });
 
-  it('admits a mixed line as a IRLine', () => {
+  it('承认混合线作为 IR 线', () => {
     expect(LineSchema.safeParse({ segments: [{ tex: 'x' }] }).success).toBe(true);
   });
 
-  it('round-trips a node whose text is an explicit segment sequence', () => {
+  it('往返文本为显式段序列的节点', () => {
     const node = NodeSchema.parse({
       type: 'node',
       id: 'eq',

@@ -27,7 +27,7 @@ const TestOpenArrowDefinition = defineArrow({
   ],
 });
 
-describe('Independent Layout arrows', () => {
+describe('独立的 Layout 箭头', () => {
   it('两实例不同 spec → 各自独立 marker，不互相串话', () => {
     const svg = renderToStaticMarkup(
       <div>

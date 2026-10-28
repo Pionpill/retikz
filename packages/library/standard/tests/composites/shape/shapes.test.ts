@@ -1,7 +1,7 @@
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { CircleDefinition, CircleSchema, createCircle, lowerCircle } from '../../../src/shape';
+import { circleDefinition, CircleSchema, createCircle, lowerCircle } from '../../../src/shape';
 import {
   EllipseSchema,
   RectangleSchema,
@@ -23,13 +23,13 @@ import {
   lowerSector,
 } from '../../../src/shape';
 
-describe('Standard shape family', () => {
-  it('applies rectangle corner radius only to the rectangle step', () => {
+describe('Standard 形状系列', () => {
+  it('仅将矩形角半径应用于矩形步骤', () => {
     const path = lowerRectangle(createRectangle({ center: [0, 0], width: 40, height: 20, cornerRadius: 4 }));
     expect(path).not.toHaveProperty('cornerRadius');
     expect(path.children.at(-1)).toMatchObject({ kind: 'rectangle', cornerRadius: 4 });
   });
-  it('preserves referenced ellipse centers and derives rectangle corners', () => {
+  it('保留参考椭圆中心并导出矩形角', () => {
     expect(lowerEllipse(createEllipse({ center: { id: 'origin' }, diameterX: 40, diameterY: 20 })).children).toEqual([
       { type: 'step', kind: 'move', to: { id: 'origin' } },
       { type: 'step', kind: 'ellipsePath', radius: { x: 20, y: 10 } },
@@ -40,7 +40,7 @@ describe('Standard shape family', () => {
     });
   });
 
-  it('bakes polygon and star orientation exactly once', () => {
+  it('将多边形和星形方向烘焙一次', () => {
     const polygon = lowerPolygon(createPolygon({ center: [0, 0], radius: 10, sides: 4, rotate: 0 }));
 
     expect(polygon).not.toHaveProperty('rotate');
@@ -53,7 +53,7 @@ describe('Standard shape family', () => {
     expect(star).not.toHaveProperty('rotate');
   });
 
-  it('attaches arc labels to the arc and reverses the inner ring winding', () => {
+  it('在圆弧上贴圆弧标签，并反转内圈绕线', () => {
     const arc = lowerArc(
       createArc({ center: [0, 0], radius: 10, startAngle: 30, sweepAngle: -90, label: { text: 'arc' } }),
     );
@@ -94,13 +94,13 @@ describe('Standard shape family', () => {
       { center: [0, 0], radius: { x: 10, y: 10 }, innerRadius: { x: 0, y: 5 }, startAngle: 0, endAngle: 90 },
     ],
     [SectorSchema, 'sector', { center: { id: 'origin' }, radius: 10, innerRadius: 5, startAngle: 0, endAngle: 90 }],
-  ])('rejects invalid %s geometry', (schema, type, input) => {
+  ])('拒绝无效的 %s 几何图形', (schema, type, input) => {
     expect(schema.safeParse({ namespace: 'standard', type, ...input }).success).toBe(false);
   });
 });
 
-describe('Circle composite', () => {
-  it('preserves semantic JSON and lowers to an ordinary path with the authored identity', () => {
+describe('圆形复合组件', () => {
+  it('保留语义 JSON 并下沉为具有编写身份的普通路径', () => {
     const circle = createCircle({ id: 'circle', center: [10, 20], radius: 30, meta: { source: 'author' } });
 
     expect(JSON.parse(JSON.stringify(circle))).toEqual(circle);
@@ -116,16 +116,16 @@ describe('Circle composite', () => {
     });
   });
 
-  it('compiles through the same path geometry as handwritten Core steps', () => {
+  it('通过与手写 Core 步骤相同的路径几何进行编译', () => {
     const circle = createCircle({ center: [10, 20], radius: 30, style: { fill: 'red' } });
     const scene = { type: 'scene' as const, version: 1 as const, children: [circle] };
-    const actual = compileToScene(scene, { composites: [CircleDefinition] });
+    const actual = compileToScene(scene, { composites: [circleDefinition] });
     const expected = compileToScene({ type: 'scene', version: 1, children: [lowerCircle(circle)] });
 
     expect(actual.scene).toEqual(expected.scene);
   });
 
-  it('resolves diameter and box fit without changing the authored source', () => {
+  it('在不更改编写源的情况下解决直径和盒配合', () => {
     const diameter = createCircle({ center: [0, 0], diameter: 20 });
 
     expect(lowerCircle(diameter).children[1]).toMatchObject({ kind: 'circlePath', radius: 10 });
@@ -143,11 +143,11 @@ describe('Circle composite', () => {
     { center: [0, 0], radius: 20, startAngle: 0, endAngle: 90, sweepAngle: 90 },
     { center: [0, 0], radius: 20, closed: 'sector' },
     { box: { x: 0, y: 0, width: 40, height: 20 }, inset: 10 },
-  ])('rejects invalid external geometry %j', geometry => {
+  ])('拒绝无效的外部几何图形 %j', geometry => {
     expect(CircleSchema.safeParse({ namespace: 'standard', type: 'circle', ...geometry }).success).toBe(false);
   });
 
-  it('preserves explicit zero radius and signed sweep', () => {
+  it('保留显式零半径和带符号扫描', () => {
     expect(lowerCircle(createCircle({ center: [0, 0], radius: 0 })).children[1]).toMatchObject({ radius: 0 });
     expect(
       lowerCircle(createCircle({ center: [0, 0], radius: 20, startAngle: 90, sweepAngle: -180 })).children[1],

@@ -1,15 +1,15 @@
 import type { CompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
 import {
-  DiamondArrowProvider,
-  OpenDiamondArrowProvider,
-  SquareArrowProvider,
-  StraightBarbArrowProvider,
+  diamondArrowProvider,
+  openDiamondArrowProvider,
+  squareArrowProvider,
+  straightBarbArrowProvider,
 } from '@retikz/extension';
 
 import type { GraphDefinitionOptions } from '../../contract';
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import { resolveGraphDefinitionOptions, createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
+import { resolveGraphDefinitionOptions, resolveGraphRuntimeOptions } from '../../providers';
 import { resolveRelation, resolveRelationAppearance, resolveRelationStructure } from '../../resolve';
 import type { IRGraphRelation } from '../../schemas';
 import { RelationSchema } from '../../schemas';
@@ -18,7 +18,7 @@ import { lowerRelation } from './lower';
 
 /** 使用已解析 Graph definitions 创建独立 Relation Composite Definition */
 export const createRelationDefinitionFromOptions = (
-  options: ResolvedGraphDefinitionOptions,
+  options: GraphDefinitionRegistries,
 ): CompositeDefinition<IRGraphRelation, typeof GRAPH_NAMESPACE, typeof GraphType.Relation> =>
   defineComposite({
     namespace: GRAPH_NAMESPACE,
@@ -40,32 +40,34 @@ export const createRelationDefinition = (
   createRelationDefinitionFromOptions(resolveGraphDefinitionOptions(options));
 
 /** 使用内置 Graph definitions 的默认 Relation Composite Definition */
-export const RelationDefinition = createRelationDefinition();
+export const relationDefinition = createRelationDefinition();
 
 /** Relation Composite provider 的公开完整 key */
-export const RelationProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const relationProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: GRAPH_NAMESPACE,
   type: GraphType.Relation,
 });
 
-/** 使用当前 provider key 已合并的 runtime datasets 创建唯一 Relation Definition */
-const makeRelationDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
-  createRelationDefinitionFromOptions(resolveGraphRuntimeOptions(datasets));
+/** 合并 Relation 提供者参数并创建唯一定义 */
+const makeRelationDefinition: CoreDependencyProvider<GraphDefinitionOptions>['makeDefinition'] = contributions =>
+  createRelationDefinitionFromOptions(resolveGraphRuntimeOptions(contributions));
 
 /** 创建携带当前 Graph definition options 的 Relation provider */
-export const createRelationProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
+export const createRelationProvider = (
+  options: GraphDefinitionOptions = {},
+): CoreDependencyProvider<GraphDefinitionOptions> =>
   Object.freeze({
-    key: RelationProviderKey,
+    key: relationProviderKey,
     dependencies: Object.freeze([
-      StraightBarbArrowProvider.key,
-      SquareArrowProvider.key,
-      DiamondArrowProvider.key,
-      OpenDiamondArrowProvider.key,
+      straightBarbArrowProvider.key,
+      squareArrowProvider.key,
+      diamondArrowProvider.key,
+      openDiamondArrowProvider.key,
     ]),
-    datasets: createGraphRuntimeDatasets(options),
+    params: options,
     makeDefinition: makeRelationDefinition,
   });
 
 /** 使用内置 Graph registries 的默认 Relation provider */
-export const RelationProvider = createRelationProvider();
+export const relationProvider = createRelationProvider();

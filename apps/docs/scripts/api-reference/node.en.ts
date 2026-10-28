@@ -1,5 +1,14 @@
 /** 经审阅的节点 API 英文说明，代码标识符保持原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  形状包围内容所需的未旋转外接盒几何: 'Unrotated bounding-box geometry required for a shape to enclose its content',
+  '根据包含 padding 的内容半轴和 params，计算完整形状的未旋转外接盒半轴及中心偏移':
+    'Compute the unrotated bounding-box half-axes and center offset of the complete shape from the content half-axes including padding and the shape parameters',
+  '外接盒的局部 x 轴半宽，须为有限非负数':
+    'Bounding-box half-width along the local x axis; must be finite and non-negative',
+  '外接盒的局部 y 轴半高，须为有限非负数':
+    'Bounding-box half-height along the local y axis; must be finite and non-negative',
+  '外接盒中心相对 node position 的未旋转局部偏移':
+    'Unrotated local offset of the bounding-box center relative to the node position',
   能力提供者的注册键: 'provider key',
   '节点中心位置；省略时在 Core 解析为当前局部坐标系的原点':
     'Node center position; Core resolves an omitted value to the origin of the current local coordinate system',

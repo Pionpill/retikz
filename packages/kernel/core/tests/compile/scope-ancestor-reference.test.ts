@@ -18,14 +18,14 @@ const sources: Array<IRChild> = [
   },
 ];
 
-describe('Scope ancestor geometry references', () => {
-  it.each(sources)('rejects ancestor geometry in nested $type', child => {
+describe('Scope 祖先几何体引用', () => {
+  it.each(sources)('拒绝嵌套 $type 中的祖先几何体', child => {
     expect(() =>
       compileToScene(scene([{ type: 'scope', id: 'outer', children: [{ type: 'scope', children: [child] }] }])),
     ).toThrow(/ancestor Scope.*outer/);
   });
 
-  it('allows a local Node shadowing the ancestor Scope name', () => {
+  it('允许本地 Node 隐藏祖先 Scope 名称', () => {
     const result = compileToScene(
       scene([
         {

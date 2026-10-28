@@ -20,12 +20,12 @@ import {
   sizeGuideOf,
 } from '../shared';
 import type { IRPointRecipeGuides } from '../shared';
-import { resolveStripPointMark, StripMarkDefinition } from './mark';
+import { resolveStripPointMark, stripMarkDefinition } from './mark';
 import type { IRStripChart, IRStripChartProperties } from './schema';
 import { StripChartSchema } from './schema';
 
 /** Strip exact schema、调度与消费检查共用的 encoding 顺序 */
-export const StripChartEncodingSlots = ['x', 'y', 'color', 'size', 'opacity', 'shape'] as const;
+const stripChartEncodingSlots = ['x', 'y', 'color', 'size', 'opacity', 'shape'] as const;
 
 const stripPropertySlots = [...pointPropertySlots, 'jitter', 'domainPadding'] as const;
 
@@ -94,7 +94,7 @@ const stripContinuityByRole = (
 };
 
 /** 验证 Strip scale topology，并让默认 grid 只跟随 continuous role */
-export const resolveStripGuideDefaults = (context: ChartGuideDefaultsResolveContext): ReadonlyArray<IRPlotGuide> => {
+const resolveStripGuideDefaults = (context: ChartGuideDefaultsResolveContext): ReadonlyArray<IRPlotGuide> => {
   const continuityByRole = stripContinuityByRole(context);
   const continuousRoles = (['x', 'y'] as const).filter(
     role => continuityByRole[role] === PositionScaleContinuity.Continuous,
@@ -127,17 +127,17 @@ export const resolveStripGuideDefaults = (context: ChartGuideDefaultsResolveCont
 };
 
 /** Strip Chart 的内建 semantic recipe Definition */
-export const StripChartDefinition: ChartRecipeDefinition<IRStripChart> = defineChartRecipe({
+export const stripChartDefinition: ChartRecipeDefinition<IRStripChart> = defineChartRecipe({
   chartType: ChartType.Strip,
-  encodingSlots: StripChartEncodingSlots,
+  encodingSlots: stripChartEncodingSlots,
   schema: StripChartSchema,
   consumes: {
-    encodings: StripChartEncodingSlots,
+    encodings: stripChartEncodingSlots,
     properties: stripPropertySlots,
   },
   marks: [
     {
-      definition: StripMarkDefinition,
+      definition: stripMarkDefinition,
       inherit: {
         encodings: ['x', 'y', 'color', 'size', 'opacity', 'shape'],
         properties: [...pointPropertySlots, 'jitter'],
@@ -145,7 +145,7 @@ export const StripChartDefinition: ChartRecipeDefinition<IRStripChart> = defineC
     },
   ],
   resolveEncodings: context =>
-    resolveChartEncodingMappings(context, StripChartEncodingSlots, pointFieldConsumersOf(ChartType.Strip)),
+    resolveChartEncodingMappings(context, stripChartEncodingSlots, pointFieldConsumersOf(ChartType.Strip)),
   resolve: (context: ChartRecipeResolveContext) => {
     const slots = pointSlotsOf(context);
     const properties = slots.properties as IRStripChartProperties;

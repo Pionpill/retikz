@@ -1,5 +1,5 @@
 import type { ScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point';
-import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { scatterChart, scatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import type { IRScatterChart } from '@retikz/chart/point';
 
 import type { TypedChartCommonProps } from '../shared';
@@ -26,5 +26,5 @@ export const ScatterChart = createTypedChartComponent<
       input => scatterChart(input),
       'ScatterEncodings',
     ),
-  ScatterChartInputEmbedAdapter,
+  scatterChartInputEmbedAdapter,
 );

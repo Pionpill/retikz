@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { arc, line, move } from '../../helpers/path-command-factory';
 import { pathCommands } from './helpers';
 
-describe("compile path: 'arc'", () => {
+describe("编译路径：'arc'", () => {
   it('arc 0°→90° 在 [0,0] 圆心 r=10 → M 10,0 A 10 10 0 0 1 0 10', () => {
     expect(
       pathCommands([
@@ -13,7 +13,7 @@ describe("compile path: 'arc'", () => {
     ).toEqual([move([10, 0]), arc([0, 0], 10, 0, 90)]);
   });
 
-  it('arc 0°→270°（large arc）→ largeArc flag = 1', () => {
+  it('圆弧 0°→270°（大圆弧）→ largeArc 标志=1', () => {
     // 结构化期望：move 到 startPt (10,0)，再 arc 段角度跨 270° → adapter 自行计算 largeArc=1
     expect(
       pathCommands([

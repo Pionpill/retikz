@@ -2,7 +2,7 @@ import type { CompileObservationOwner } from '@retikz/core';
 import { isCompileObservationOwnerEqual } from '@retikz/core';
 import type {
   VanillaCompileDriver,
-  VanillaCompileDriverInput,
+  InputVanillaCompileDriver,
   VanillaCompileDriverSession,
   VanillaCompileOutput,
 } from '@retikz/vanilla';
@@ -61,14 +61,14 @@ const allocateObservationOwnerIndex = (
 
 /** 判断 Scope 是否来自折叠贡献，因而无法无歧义定位其子树 */
 const isCollapsedContributionScope = (
-  site: VanillaCompileDriverInput['authoringSites'][number],
-  sites: VanillaCompileDriverInput['authoringSites'],
+  site: InputVanillaCompileDriver['authoringSites'][number],
+  sites: InputVanillaCompileDriver['authoringSites'],
 ): boolean =>
   site.kind === 'scope' &&
   sites.some(candidate => candidate.sourcePath === site.sourcePath && candidate.owner !== undefined);
 
 /** Inspect Vanilla 编译驱动的固定配置 */
-export type CreateInspectionVanillaDriverOptions = Readonly<{
+export type InspectionVanillaDriverOptions = Readonly<{
   /** 本次宿主使用的 Inspector registry */
   registry: InspectorRegistry;
   /** 与 plain authoring rules 合并的显式 selection */
@@ -80,7 +80,7 @@ export type CreateInspectionVanillaDriverOptions = Readonly<{
 }>;
 
 /** 隔离 commit callback 失败，避免破坏已经提交的 Vanilla/Render frame */
-const deliverCommit = (options: CreateInspectionVanillaDriverOptions, output: VanillaCompileOutput): void => {
+const deliverCommit = (options: InspectionVanillaDriverOptions, output: VanillaCompileOutput): void => {
   const result = resolveInspectionObserverOutput(output.primary, output.observerOutputs);
   if (options.onDiagnostic !== undefined) {
     for (const diagnostic of result.diagnostics) {
@@ -105,7 +105,7 @@ const deliverCommit = (options: CreateInspectionVanillaDriverOptions, output: Va
 
 /** 从显式 selection 与基础 normalizer 的作者来源构造本次 compile selection */
 const resolveVanillaSelection = (
-  input: VanillaCompileDriverInput,
+  input: InputVanillaCompileDriver,
   selection: InspectionSelection,
   registry: InspectorRegistry,
 ): InspectionSelection => {
@@ -156,10 +156,10 @@ const resolveVanillaSelection = (
  * @param options 固定注册表与可选选择规则、提交通知；selection 省略时仅使用 authoring 请求
  * @returns 供 Vanilla 宿主接入的编译驱动；诊断通知先于 onCommit，通知失败不回滚已提交结果
  */
-export const createInspectionVanillaDriver = (options: CreateInspectionVanillaDriverOptions): VanillaCompileDriver => {
+export const createInspectionVanillaDriver = (options: InspectionVanillaDriverOptions): VanillaCompileDriver => {
   const sessions = new WeakMap<
     object,
-    Readonly<{ updateInput: (input: VanillaCompileDriverInput) => void; session: VanillaCompileDriverSession }>
+    Readonly<{ updateInput: (input: InputVanillaCompileDriver) => void; session: VanillaCompileDriverSession }>
   >();
   return Object.freeze({
     create: input => {

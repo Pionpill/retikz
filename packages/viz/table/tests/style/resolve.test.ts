@@ -15,8 +15,8 @@ const lightTheme = {
   colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 } as const;
 
-describe('Table Source defaults resolution', () => {
-  it('defaults to the light baseline and records the neutral source layer', () => {
+describe('Table Source 默认解析结果', () => {
+  it('默认为灯光基线，记录中性光源层', () => {
     const resolved = resolveTableThemeDefaults();
 
     expect(resolved.defaults).toMatchObject(getDefaultTableDefaults(ThemeMode.Light));
@@ -34,7 +34,7 @@ describe('Table Source defaults resolution', () => {
     expect(Object.isFrozen(resolved.layers)).toBe(true);
   });
 
-  it('merges sparse Source defaults by formal groups while detaching inputs', () => {
+  it('在分离输入的同时，通过正式组合并稀疏的 Source 默认值', () => {
     const categorical = ['pink', 'purple'];
     const patch = TableDefaultsSchema.parse({
       defaultAppearance: {
@@ -59,7 +59,7 @@ describe('Table Source defaults resolution', () => {
     expect(resolved.defaultVisual?.categorical).toEqual(['pink', 'purple']);
   });
 
-  it('atomically replaces same-kind borders and removes null-cleared defaults', () => {
+  it('自动替换同类边框并删除空清除的默认值', () => {
     const base = TableDefaultsSchema.parse({
       defaultAppearance: {
         body: {
@@ -100,7 +100,7 @@ describe('Table Source defaults resolution', () => {
     });
   });
 
-  it('accepts an empty defaultTable no-op but rejects empty nested defaults groups', () => {
+  it('接受空的 defaultTable 无操作，但拒绝空的嵌套默认组', () => {
     expect(TableDefaultsSchema.parse({})).toEqual({});
 
     for (const invalid of [
@@ -115,7 +115,7 @@ describe('Table Source defaults resolution', () => {
     }
   });
 
-  it('resolves a same-name style definition into a Source defaults layer', () => {
+  it('将同名样式定义解析为 Source 默认图层', () => {
     const brand = defineTableTheme({
       name: 'brand',
       resolve: theme => ({
@@ -149,7 +149,7 @@ describe('Table Source defaults resolution', () => {
     expect(() => resolveTableThemeDefaults(theme, [brand, brand])).toThrow(/already registered/i);
   });
 
-  it('rejects malformed Source defaults and preserves style callback causes', () => {
+  it('拒绝格式错误的 Source 默认值并保留样式回调原因', () => {
     expect(() => TableDefaultsSchema.parse({ unknown: true })).toThrow(/unknown/i);
 
     const cause = new Error('custom Table style failed');

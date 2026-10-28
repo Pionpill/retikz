@@ -12,7 +12,7 @@ import type {
   MarkDomainPaddingCapability,
   MarkPlacementTarget,
   MarkInstance,
-  MarkInstanceInput,
+  InputMarkInstance,
   IntervalContext,
 } from '../../contract';
 import type { IRPlotMark } from '../../schemas';
@@ -40,7 +40,7 @@ export type MarkDefinition<T extends IRPlotMark = IRPlotMark> = {
   /** 可选 Mark Placement 能力；只有显式声明的 Mark 才能消费 `placement` */
   placement?: {
     /** 按稳定顺序枚举可调整的位置目标 */
-    targets: (mark: T, instances: MarkInstanceInput, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
+    targets: (mark: T, instances: InputMarkInstance, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
     /** 目标沿指定屏幕单位法向的 glyph extent；无法证明时返回 undefined */
     normalExtent?: (
       mark: T,
@@ -54,7 +54,7 @@ export type MarkDefinition<T extends IRPlotMark = IRPlotMark> = {
   /** 下沉到 core IR 图层（无可绘制图元返回 null；不支持的 mark × coordinate 由实现 fail-loud） */
   lower: (
     mark: T,
-    instances: MarkInstanceInput,
+    instances: InputMarkInstance,
     frame: CoordinateFrame,
     channels: MarkChannels,
     ctx?: MarkLoweringContext,
@@ -81,7 +81,7 @@ export type AnyMarkDefinition = {
   /** 内部宽类型占位；语义同 MarkDefinition.placement */
   placement?: {
     /** 从有效数据行提取具有稳定键和角色值的待定位目标 */
-    targets: (mark: never, instances: MarkInstanceInput, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
+    targets: (mark: never, instances: InputMarkInstance, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
     /** 计算目标沿给定单位法向的视觉外延，无法确定时返回 undefined */
     normalExtent?: (
       mark: never,
@@ -93,7 +93,7 @@ export type AnyMarkDefinition = {
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark */
   lower: (
     mark: never,
-    instances: MarkInstanceInput,
+    instances: InputMarkInstance,
     frame: CoordinateFrame,
     channels: MarkChannels,
     ctx?: MarkLoweringContext,

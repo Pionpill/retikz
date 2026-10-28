@@ -139,7 +139,7 @@ export type ChartGuideDefaultsResolveContext = Readonly<{
 }>;
 
 /** Recipe schema 解析后的语义 scaffold */
-export type ChartRecipeScaffold = Readonly<{
+type ChartRecipeScaffold = Readonly<{
   /** Recipe 生成并传入 Plot 的数据变换序列 */
   transform?: ReadonlyArray<IRDataTransform>;
   /** Recipe 生成的 Plot scale 及其可覆盖策略 */

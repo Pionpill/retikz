@@ -5,8 +5,8 @@ import * as diagramExports from '../src';
 import * as diagramCommon from '../src/_diagram';
 import * as flowExports from '../src/flow';
 
-describe('@retikz/diagram package shell', () => {
-  it('declares the Diagram release metadata', () => {
+describe('@retikz/diagram 封装外壳', () => {
+  it('声明 Diagram 发布元数据', () => {
     expect(manifest.name).toBe('@retikz/diagram');
     expect(manifest.version).toBe('0.1.0-alpha.2');
     expect(manifest.retikz).toEqual({
@@ -17,11 +17,11 @@ describe('@retikz/diagram package shell', () => {
     });
   });
 
-  it('keeps package-internal Foundation contracts out of the public root', () => {
+  it('将包内部 Foundation 契约保留在公共根之外', () => {
     expect(Object.keys(diagramExports)).toEqual([]);
   });
 
-  it('publishes Flow only from the explicit symmetric subpath', () => {
+  it('仅从显式对称子路径发布 Flow', () => {
     expect(manifest.exports).toHaveProperty('./flow');
     expect(flowExports).toEqual(
       expect.objectContaining({
@@ -29,9 +29,9 @@ describe('@retikz/diagram package shell', () => {
         FlowDiagramSchema: expect.any(Object),
         FlowLayoutSchema: expect.any(Object),
         FlowDiagramArtifactSchema: expect.any(Object),
-        FlowDiagramDefinition: expect.any(Object),
+        flowDiagramDefinition: expect.any(Object),
         FlowLayoutAlignment: { Start: 'start', Center: 'center', End: 'end' },
-        FlowDiagramProviderKey: expect.any(Object),
+        flowDiagramProviderKey: expect.any(Object),
         createFlowDiagramProviderContribution: expect.any(Function),
         defineFlowLayout: expect.any(Function),
         defineFlowTheme: expect.any(Function),
@@ -46,14 +46,13 @@ describe('@retikz/diagram package shell', () => {
     expect(flowExports).not.toHaveProperty('resolveFlowDiagram');
   });
 
-  it('collects shared Diagram capabilities in the internal _diagram owner', () => {
+  it('收集内部_diagram 所属模块中共享的 Diagram 功能', () => {
     expect(diagramCommon).toEqual(
       expect.objectContaining({
         DIAGRAM_NAMESPACE: 'diagram',
         DiagramFrameSchema: expect.any(Object),
         DiagramPresentationSchema: expect.any(Object),
         DiagramDefaultsSchema: expect.any(Object),
-        defineDiagramTheme: expect.any(Function),
         lowerDiagramFoundation: expect.any(Function),
         resolveDiagramFoundation: expect.any(Function),
       }),

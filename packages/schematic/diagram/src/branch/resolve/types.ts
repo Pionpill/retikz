@@ -1,6 +1,6 @@
 import type { IRNode } from '@retikz/core';
 
-import type { BranchLayoutInput } from '../contract';
+import type { InputBranchLayout } from '../contract';
 import type { IRBranchDiagram } from '../schemas';
 
 /** Branch 引用和拓扑已解析的编译输入 */
@@ -15,5 +15,5 @@ export type CanonicalBranchDiagram = Readonly<{
     }
   >;
   /** 已补齐方向与净间距的布局参数 */
-  layout: BranchLayoutInput['layout'];
+  layout: InputBranchLayout['layout'];
 }>;

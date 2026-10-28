@@ -3,7 +3,7 @@ import type {
   ScenePrimitive,
   PatternDefinition,
   PatternEmitContext,
-  ResolvedPatternLineStyle,
+  CanonicalPatternLineStyle,
 } from '../contract';
 import { definePattern } from '../contract';
 import { BuiltinPatternShape } from '../schemas';
@@ -23,7 +23,7 @@ const withBackground = (
     : [{ type: 'rect', x: 0, y: 0, width: tileSize, height: tileSize, fill: context.background }, ...motif];
 
 /** Pattern 基础线型上下文转为 resolved style */
-const baseLineStyleOf = (context: PatternEmitContext): ResolvedPatternLineStyle => ({
+const baseLineStyleOf = (context: PatternEmitContext): CanonicalPatternLineStyle => ({
   color: context.color,
   ...(context.lineWidth === undefined ? {} : { lineWidth: context.lineWidth }),
   ...(context.dashPattern === undefined ? {} : { dashPattern: context.dashPattern }),
@@ -34,7 +34,7 @@ const baseLineStyleOf = (context: PatternEmitContext): ResolvedPatternLineStyle 
 
 /** 已解析 Pattern 线型到 marker path 描边字段的统一映射 */
 const markerLineStyleOf = (
-  style: ResolvedPatternLineStyle,
+  style: CanonicalPatternLineStyle,
 ): Pick<PathPrimitive, 'stroke' | 'strokeWidth' | 'dashPattern' | 'dashOffset' | 'lineCap' | 'lineJoin'> => ({
   stroke: style.color,
   strokeWidth: style.lineWidth ?? DEFAULT_STROKE_WIDTH,
@@ -45,7 +45,7 @@ const markerLineStyleOf = (
 });
 
 /** 构建一个水平线 motif */
-const horizontalLineOf = (tileSize: number, y: number, style: ResolvedPatternLineStyle): PathPrimitive => ({
+const horizontalLineOf = (tileSize: number, y: number, style: CanonicalPatternLineStyle): PathPrimitive => ({
   type: 'path',
   commands: [
     { kind: 'move', to: [0, y] },

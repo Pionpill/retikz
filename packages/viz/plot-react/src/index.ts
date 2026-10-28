@@ -32,7 +32,7 @@ export {
 export * from './error';
 export type { PlotDslProps, PlotIRProps, PlotLineageProps, PlotPanelProps, PlotProps } from './Plot';
 export { Plot } from './Plot';
-export type { ResolvedPlotAuthoring, ResolvePlotAuthoringOptions } from './plot-runtime';
+export type { PlotAuthoringResolution, PlotAuthoringResolveOptions } from './plot-runtime';
 export { resolvePlotAuthoring, resolvePlotLineage } from './plot-runtime';
 export { usePlotThemeDefinitions } from './theme-context';
 export type { PlotThemeProviderProps } from './theme-provider';

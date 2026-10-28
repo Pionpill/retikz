@@ -5,7 +5,7 @@ import type { DiagramThemeDefinition } from '../../_diagram';
 import { resolveDiagramThemeRegistry } from '../../_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../errors';
 import type { FlowDiagramDefinitionOptions, FlowThemeDefinition } from '../contract';
-import type { ResolvedFlowLayoutRegistry } from './layout';
+import type { FlowLayoutRegistryResolution } from './layout';
 import { resolveFlowLayoutRegistry } from './layout';
 import { resolveFlowThemeRegistry } from './theme';
 
@@ -61,13 +61,13 @@ const graphOptionsOf = (options: FlowDiagramDefinitionOptions): GraphDefinitionO
 });
 
 /** Flow Diagram compile 共享的已解析 registries 与默认 Definition */
-export type ResolvedFlowDiagramDefinitionOptions = Readonly<{
+export type FlowDiagramDefinitionRegistries = Readonly<{
   /** 有效的 Diagram 外框与呈现主题定义 */
   diagramThemeDefinitions: ReadonlyMap<string, DiagramThemeDefinition>;
   /** 有效的 Flow 元素与关系主题定义 */
   flowThemeDefinitions: ReadonlyMap<string, FlowThemeDefinition>;
   /** 可用布局定义及其默认选择 */
-  flowLayouts: ResolvedFlowLayoutRegistry;
+  flowLayouts: FlowLayoutRegistryResolution;
   /** 交给 Graph 投影与编译的扩展定义 */
   graph: GraphDefinitionOptions;
 }>;
@@ -75,7 +75,7 @@ export type ResolvedFlowDiagramDefinitionOptions = Readonly<{
 /** 合并并解析一次 Flow Diagram provider assembly 的运行时选项 */
 export const resolveFlowDiagramDefinitionOptions = (
   optionSets: ReadonlyArray<FlowDiagramDefinitionOptions>,
-): ResolvedFlowDiagramDefinitionOptions => {
+): FlowDiagramDefinitionRegistries => {
   const diagramThemeDefinitions = mergeNamedDefinitions(
     optionSets,
     options => options.diagramThemeDefinitions,

@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 
-import type { RibbonWidthProfileDefinition, RibbonWidthProfileDefinitionInput } from './profile-types';
+import type { RibbonWidthProfileDefinition, InputRibbonWidthProfileDefinition } from './profile-types';
 
 /**
  * 定义可注册的 Ribbon 宽度函数
@@ -9,7 +9,7 @@ import type { RibbonWidthProfileDefinition, RibbonWidthProfileDefinitionInput } 
  * @returns 原 definition 对象，参数泛型被擦除以便统一装入宽度函数注册表
  */
 export const defineRibbonWidthProfile = <TParams extends JsonObject = JsonObject>(
-  definition: RibbonWidthProfileDefinitionInput<TParams>,
+  definition: InputRibbonWidthProfileDefinition<TParams>,
 ): RibbonWidthProfileDefinition => {
   return definition as unknown as RibbonWidthProfileDefinition;
 };

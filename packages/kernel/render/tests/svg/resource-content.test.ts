@@ -105,7 +105,7 @@ describe('资源中的基础图元', () => {
   });
 });
 
-it('isolates Pattern playback owners and keeps local ids outside the DOM host index', () => {
+it('隔离 Pattern 播放所属模块并将本地 ID 保留在 DOM 宿主索引之外', () => {
   const scene: Scene = {
     layout: { x: 0, y: 0, width: 100, height: 100 },
     primitives: ['A', 'B'].map(id => ({
@@ -159,7 +159,7 @@ it('isolates Pattern playback owners and keeps local ids outside the DOM host in
   expect(renderToSvgString(scene, { idPrefix: 'owners', animate: false })).not.toContain('data-retikz-anim=');
 });
 
-it('clicking one host restarts only its Pattern animation', () => {
+it('单击一台宿主仅重新启动其图案动画', () => {
   const scene: Scene = {
     layout: { x: 0, y: 0, width: 100, height: 100 },
     primitives: ['A', 'B'].map(id => ({

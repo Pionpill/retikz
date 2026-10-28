@@ -20,15 +20,15 @@ const adapterManifests = [
   readManifest('../../../standard-vanilla/package.json'),
 ];
 
-describe('Standard package exports', () => {
-  it('exposes the three Standard component families', () => {
+describe('Standard 包导出', () => {
+  it('公开三个 Standard 组件系列', () => {
     const entries = ['.', './shape', './presentation', './collection'];
 
     expect(Object.keys(standardManifest.exports)).toEqual(entries);
     expect(Object.keys(standardManifest.publishConfig.exports)).toEqual(entries);
   });
 
-  it('exposes the same family subpaths through both adapters', () => {
+  it('通过两个适配器公开相同的系列子路径', () => {
     for (const manifest of adapterManifests) {
       expect(Object.keys(manifest.exports)).toEqual(['.', './shape', './presentation', './collection']);
       expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.', './shape', './presentation', './collection']);

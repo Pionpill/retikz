@@ -11,8 +11,8 @@ import {
   normalizeStripChart,
 } from '../src/point';
 
-describe('Chart Vanilla normalization', () => {
-  it('normalizes coordinate string shorthand while preserving object configuration', () => {
+describe('Chart Vanilla 归一化', () => {
+  it('标准化坐标字符串简写，同时保留对象配置', () => {
     expect(normalizeChartCoordinate('polar2D')).toEqual({ type: 'polar2D' });
     expect(normalizeChartCoordinate('cartesian2D')).toEqual({ type: 'cartesian2D' });
     expect(normalizeChartCoordinate('arch')).toEqual({ type: 'arch' });
@@ -23,7 +23,7 @@ describe('Chart Vanilla normalization', () => {
     expect(normalizeChartCoordinate(undefined)).toBeUndefined();
   });
 
-  it('normalizes coordinate consistently for every Point chartType', () => {
+  it('对每个点 chartType 的坐标进行一致标准化', () => {
     expect(
       normalizeBubbleChart({
         data: { reference: 'rows' },
@@ -74,7 +74,7 @@ describe('Chart Vanilla normalization', () => {
     );
   });
 
-  it('normalizes Connected Scatter and Ranged Dot to exact Sources', () => {
+  it('将连接散点和范围点标准化为精确源', () => {
     expect(
       normalizeConnectedScatterChart({
         data: { reference: 'rows' },
@@ -97,7 +97,7 @@ describe('Chart Vanilla normalization', () => {
     });
   });
 
-  it('normalizes Bubble input to its exact family and recipe Source', () => {
+  it('将气泡输入标准化为其确切的系列和配方 Source', () => {
     const source = normalizeBubbleChart({
       id: 'countries',
       data: { reference: 'rows' },
@@ -140,7 +140,7 @@ describe('Chart Vanilla normalization', () => {
     });
   });
 
-  it('normalizes Scatter input to a concise family and recipe Source', () => {
+  it('将 Scatter 输入归一为精简的系列及配方 Source', () => {
     const source = normalizeScatterChart({
       id: 'sales',
       data: { reference: 'rows' },
@@ -168,7 +168,7 @@ describe('Chart Vanilla normalization', () => {
     });
   });
 
-  it('preserves sparse Point recipe guide controls in Source normalization', () => {
+  it('在 Source 标准化中保留稀疏点配方辅助线控件', () => {
     const scatter = normalizeScatterChart({
       data: { reference: 'rows' },
       encodings: { x: 'x', y: 'y', size: 'size' },
@@ -187,7 +187,7 @@ describe('Chart Vanilla normalization', () => {
     expect(strip.recipe.guides).toEqual({ grid: false });
   });
 
-  it('normalizes Strip input without losing zero jitter values or empty marks', () => {
+  it('标准化 Strip 输入，不会丢失零抖动值或空标记', () => {
     const source = normalizeStripChart({
       id: 'distribution',
       data: { reference: 'rows' },
@@ -226,7 +226,7 @@ describe('Chart Vanilla normalization', () => {
     });
   });
 
-  it('keeps presentation in fixed slots regardless of authoring property order', () => {
+  it('无论编写属性顺序如何，都将演示文稿保留在固定槽中', () => {
     const source = normalizeScatterChart({
       data: { reference: 'rows' },
       source: 'World Bank',
@@ -238,14 +238,14 @@ describe('Chart Vanilla normalization', () => {
     expect(Object.keys(source.presentation ?? {})).toEqual(['title', 'subtitle', 'source']);
   });
 
-  it('normalizes a Point recipe without exposing a type selector or config', () => {
+  it('规范化点配方而不暴露类型选择器或配置', () => {
     const source = normalizeScatterChart({ data: { reference: 'rows' }, encodings: { x: 'x', y: 'y' } });
 
     expect(source).toMatchObject({ namespace: 'chart', type: 'point', recipe: { chartType: 'scatter' } });
     expect(source).not.toHaveProperty('config');
   });
 
-  it('normalizes row and column string shorthand inside exact Scatter encodings', () => {
+  it('在精确的分散编码内标准化行和列字符串简写', () => {
     const source = normalizeScatterChart({
       data: { reference: 'rows' },
       encodings: {
@@ -269,7 +269,7 @@ describe('Chart Vanilla normalization', () => {
     expect(source.recipe).not.toHaveProperty('facet');
   });
 
-  it('normalizes Regression input to its exact Source and preserves direct series mapping', () => {
+  it('将回归输入标准化为其精确的 Source 并保留直接序列映射', () => {
     const source = normalizeRegressionChart({
       id: 'iris-regression',
       data: { reference: 'iris.rows' },
@@ -343,7 +343,7 @@ describe('Chart Vanilla normalization', () => {
     { kind: 'exponential' },
     { kind: 'power' },
   ];
-  it.each(methods)('preserves the $kind Regression method without adapter dispatch', method => {
+  it.each(methods)('保留 $kind 回归方法，无需适配器调度', method => {
     const source = normalizeRegressionChart({
       data: { reference: 'rows' },
       encodings: { x: 'x', y: 'y' },

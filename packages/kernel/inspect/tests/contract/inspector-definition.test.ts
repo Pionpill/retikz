@@ -3,8 +3,8 @@ import { strictObject, string } from 'zod';
 
 import { defineInspector } from '../../src';
 
-describe('Inspector definition', () => {
-  it('preserves the frozen independent owner and option contracts', () => {
+describe('Inspector 定义', () => {
+  it('保留冻结的独立所属模块和期权契约', () => {
     const definition = defineInspector({
       namespace: 'test',
       type: 'bounds',

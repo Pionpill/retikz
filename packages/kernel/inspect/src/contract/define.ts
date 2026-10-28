@@ -1,10 +1,10 @@
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
-import type { AnyInspectorDefinition, AnyInspectorDefinitionInput, InspectorDefinitionInput } from './types';
+import type { AnyInspectorDefinition, InputAnyInspectorDefinition, InputInspectorDefinition } from './types';
 
 /** 仅记录本模块补全并冻结的结果，避免重复处理且不阻止对象回收 */
-const sealedInspectorDefinitions = new WeakSet<AnyInspectorDefinitionInput>();
+const sealedInspectorDefinitions = new WeakSet<InputAnyInspectorDefinition>();
 
 /** 无自定义选项的 Inspector 只接受空对象 */
 const EmptyInspectorOptionsSchema = strictObject({});
@@ -13,7 +13,7 @@ const EmptyInspectorOptionsSchema = strictObject({});
 const identityOptions = (options: JsonObject): JsonObject => options;
 
 /** 补全并冻结 registry 与公开 define 共用的擦除后 Definition */
-export const sealInspectorDefinition = (definition: AnyInspectorDefinitionInput): AnyInspectorDefinition => {
+export const sealInspectorDefinition = (definition: InputAnyInspectorDefinition): AnyInspectorDefinition => {
   if (sealedInspectorDefinitions.has(definition)) return definition as AnyInspectorDefinition;
 
   const sealedDefinition = Object.freeze({
@@ -43,9 +43,9 @@ export const defineInspector = <
   TResolvedOptions extends JsonObject = TParsedOptions,
   TSourceOptions extends JsonObject = TParsedOptions,
 >(
-  definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
-): InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions> =>
-  sealInspectorDefinition(definition) as unknown as InspectorDefinitionInput<
+  definition: InputInspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
+): InputInspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions> =>
+  sealInspectorDefinition(definition) as unknown as InputInspectorDefinition<
     TSubject,
     TParsedOptions,
     TResolvedOptions,

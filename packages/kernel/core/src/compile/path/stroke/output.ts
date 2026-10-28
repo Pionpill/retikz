@@ -12,7 +12,7 @@ export type PathBasePropsWithStrokeWidth = PathBaseProps & {
 };
 
 /** path 输出样式物化上下文 */
-export type EmitPathBasePropsContext = {
+type EmitPathBasePropsContext = {
   /** IRPaint 物化器 */
   resolvePaint: PaintResolver;
 };
@@ -41,7 +41,7 @@ export const emitPathBaseProps = (
 };
 
 /** path emit 最终输出包装输入 */
-export type WrapPathPrimitiveOutputInput = {
+type InputPathPrimitiveWrapping = {
   /** 原始 IR path，用于读取 transform 与水合元数据 */
   path: CanonicalPath;
   /** 主体 primitive；无整体 transform 时 id/meta/animations 会落在这里 */
@@ -77,7 +77,7 @@ export const wrapPathPrimitiveOutput = ({
   bodyPrims,
   boundsPoints,
   round,
-}: WrapPathPrimitiveOutputInput) => {
+}: InputPathPrimitiveWrapping) => {
   if ((path.rotate !== undefined || path.scale !== undefined) && boundsPoints.length > 0) {
     const center = bboxCenter(boundsPoints);
     const transforms = buildPathTransforms({ rotate: path.rotate, scale: path.scale, center, round });

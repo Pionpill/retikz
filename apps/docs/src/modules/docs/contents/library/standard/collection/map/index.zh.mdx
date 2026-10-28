@@ -7,7 +7,7 @@ description: 使用 Map 展示键值记录，配置单元格、组合图形并�
 
 ## 接入方式
 
-[安装与首次渲染](/library/standard/get-start)后，可从以下四种入口接入。JSX 与 Vanilla adapter 自动收集所需定义；直接 IR 显式注入组件定义；启用单元格裁切时还需从 `@retikz/extension` 注入 `PathClipDefinition`。
+[安装与首次渲染](/library/standard/get-start)后，可从以下四种入口接入。JSX 与 Vanilla adapter 自动收集所需定义；直接 IR 显式注入组件定义；启用单元格裁切时还需从 `@retikz/extension` 注入 `pathClipDefinition`。
 
 <ComponentPreview files="map-basic" hideCode size="sm" />
 
@@ -36,7 +36,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { MapDefinition } from '@retikz/standard/collection';
+import { mapDefinition } from '@retikz/standard/collection';
 
 const ir: IRScene = {
   type: 'scene',
@@ -58,14 +58,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} composites={[MapDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[mapDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { map, mapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -84,7 +84,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [MapInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [mapInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -93,7 +93,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { MapDefinition } from '@retikz/standard/collection';
+import { mapDefinition } from '@retikz/standard/collection';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -117,7 +117,7 @@ const ir: IRScene = {
   ],
 };
 const svg = renderToSvgString(ir, {
-  compile: { composites: [MapDefinition] },
+  compile: { composites: [mapDefinition] },
 });
 console.log(svg);
 ```
@@ -235,13 +235,13 @@ Map
 
 数据不会生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。要连线或逐格定制，改用显式单元格，在其中嵌套带 `data` 的组件。defaultCell.style / defaultCell.layout 只控制当前层，嵌套结构使用自身默认；字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
 
-React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ArrayDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
+React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `arrayDefinition` 和 `mapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `pathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
 
 ### 引用单元格与控制溢出
 
 为单元格设置 `id` 后，可以在路径端点引用它，如 `to={{ id: 'selected', anchor: 'right' }}`。引用区域是该格的边框矩形，不包含间隙、索引或视觉溢出；关闭背景不会改变引用区域。内容自身的 id 则指向内容几何。未设 id 的格不会按数组下标自动获得身份。
 
-自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `defaultCell.layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
+自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `defaultCell.layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `pathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
 
 <ComponentPreview
   files={['map-overflow', 'map-overflow.preview.tsx']}

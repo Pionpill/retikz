@@ -7,7 +7,7 @@ type CompositeSlot = {
 };
 
 /** 一次 composite definition callback 切换的提交句柄 */
-export type PreparedCompositeDefinitions = Readonly<{
+type PreparedCompositeDefinitions = Readonly<{
   /** 本次 candidate 是否替换了任一 callback identity */
   changed: boolean;
   /** 固定当前 candidate callback */
@@ -17,7 +17,7 @@ export type PreparedCompositeDefinitions = Readonly<{
 }>;
 
 /** retained Core Computation 使用的稳定 composite definition 容器 */
-export type RetainedCompositeDefinitions = Readonly<{
+type RetainedCompositeDefinitions = Readonly<{
   /** session-lifetime identity 稳定的代理 Definitions */
   definitions: ReadonlyArray<AnyCompositeDefinition>;
   /** 判断 candidate 能否复用当前 Core Computation 的固定 definition topology */

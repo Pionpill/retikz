@@ -9,7 +9,7 @@ import {
 } from '@retikz/render/animation';
 import type { PrimAnimationResolution } from '@retikz/render/canvas';
 import { hitTest, renderFrameToCanvas } from '@retikz/render/canvas';
-import type { BuildContext, HydrationHandlers } from '@retikz/render/hydration';
+import type { HydrationContextBuilder, HydrationHandlers } from '@retikz/render/hydration';
 import {
   collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
@@ -298,7 +298,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     };
 
     // canvas 富 context：无逐元素 DOM（element=null），point 逆 meet-fit，动画 per-id（registry 折算各 id 有效时刻，读 live）。
-    const buildContext: BuildContext = (event, id) => {
+    const buildContext: HydrationContextBuilder = (event, id) => {
       const mouse = event as MouseEvent;
       return {
         id,

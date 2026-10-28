@@ -5,12 +5,12 @@ import { curve, point, vector2 } from '@retikz/math';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
 import type { IRRibbonDirection } from '../types';
-import type { RibbonSegment, RibbonSegmentInput } from './types';
+import type { RibbonSegment, InputRibbonSegment } from './types';
 
 const LENGTH_SUBDIVISIONS = 16;
 
 /** 校验并归一化 ribbon 方向向量；零向量或非有限值直接报错 */
-export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
+const normalizeVector = (vector: Vector2, source: string): Vector2 => {
   const normalized = vector2.normalizeOrNull(vector);
   if (normalized === null) {
     throw new RetikzExtensionError({
@@ -49,7 +49,7 @@ export const directionToSectionAxis = (direction: IRRibbonDirection, source: str
 };
 
 /** 用固定细分估算曲线弧长，供 offset→segment 映射和采样数量选择使用 */
-export const estimateLength = (sampleAt: (t: number) => CurveSegmentSample): number => {
+const estimateLength = (sampleAt: (t: number) => CurveSegmentSample): number => {
   let total = 0;
   let prev = sampleAt(0).point;
 
@@ -69,7 +69,7 @@ export const estimateLength = (sampleAt: (t: number) => CurveSegmentSample): num
 export const commandsToSegmentInputs = (
   commands: ReadonlyArray<PathCommand>,
   source = 'centerline',
-): Array<RibbonSegmentInput> => {
+): Array<InputRibbonSegment> => {
   const assertCursor = (cursor: IRPosition | undefined, command: PathCommand): IRPosition => {
     if (cursor !== undefined) return cursor;
 
@@ -80,7 +80,7 @@ export const commandsToSegmentInputs = (
     });
   };
 
-  const inputs: Array<RibbonSegmentInput> = [];
+  const inputs: Array<InputRibbonSegment> = [];
   let cursor: IRPosition | undefined;
   let moveCount = 0;
 
@@ -205,7 +205,7 @@ export const commandsToSegmentInputs = (
 };
 
 /** 将已物化命令投影为 Math 曲线，不改写作者控制柄 */
-export const segmentInputToCurve = (input: RibbonSegmentInput): CurveSegment => {
+export const segmentInputToCurve = (input: InputRibbonSegment): CurveSegment => {
   if (input.kind === 'line') return input;
   if (input.kind === 'quad') return { ...input, kind: 'quadraticBezier' };
   if (input.kind === 'cubic') return { ...input, kind: 'cubicBezier' };
@@ -214,7 +214,7 @@ export const segmentInputToCurve = (input: RibbonSegmentInput): CurveSegment => 
 };
 
 /** 建立共享弧长采样模型 */
-export const segmentInputsToSegments = (inputs: ReadonlyArray<RibbonSegmentInput>): Array<RibbonSegment> =>
+export const segmentInputsToSegments = (inputs: ReadonlyArray<InputRibbonSegment>): Array<RibbonSegment> =>
   inputs
     .map(input => {
       const geometry = segmentInputToCurve(input);
@@ -250,7 +250,7 @@ export const sampleAtDistance = (
 };
 
 /** 把一条开放路径转换为可采样中心线时所需的命令及错误来源标识 */
-export type SegmentsFromCommandsInput = {
+type InputCommandSegments = {
   /** 用于提取中心线段的结构化路径命令 */
   commands: ReadonlyArray<PathCommand>;
   /** 错误诊断中标识中心线来源的名称 */
@@ -264,7 +264,7 @@ export type SegmentsFromCommandsInput = {
 export const segmentsFromCommands = ({
   commands,
   source,
-}: SegmentsFromCommandsInput): { segments: Array<RibbonSegment>; totalLength: number } => {
+}: InputCommandSegments): { segments: Array<RibbonSegment>; totalLength: number } => {
   const inputs = commandsToSegmentInputs(commands, source);
   const segments = segmentInputsToSegments(inputs);
   const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);

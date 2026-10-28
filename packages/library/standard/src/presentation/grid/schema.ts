@@ -71,13 +71,13 @@ const GridBaseSchema = CompositeBaseSchema.extend({
   border: GridBorderSchema.optional().describe('Optional padded border and its drawing order.'),
 });
 
-type GridRefinementInput = ZodInfer<typeof GridBaseSchema>;
+type InputGridRefinement = ZodInfer<typeof GridBaseSchema>;
 
 type GridLineConfig = ZodInfer<typeof GridLineInputSchema>;
 
 type GridLinePair = { vertical: GridLineConfig; horizontal: GridLineConfig };
 
-const refineGrid = (grid: GridRefinementInput, ctx: RefinementCtx): void => {
+const refineGrid = (grid: InputGridRefinement, ctx: RefinementCtx): void => {
   const line = getExplicitGridLines(grid.line);
   if (line === false) return;
 
@@ -120,14 +120,14 @@ const refineGrid = (grid: GridRefinementInput, ctx: RefinementCtx): void => {
   }
 };
 
-const getExplicitGridLines = (line: GridRefinementInput['line']): GridLinePair | false => {
+const getExplicitGridLines = (line: InputGridRefinement['line']): GridLinePair | false => {
   if (line === false || line === true) return false;
   if ('vertical' in line) return line;
   return { vertical: line, horizontal: line };
 };
 
 const getGridLineSpacingPath = (
-  line: GridRefinementInput['line'],
+  line: InputGridRefinement['line'],
   direction: 'vertical' | 'horizontal',
 ): Array<string> => {
   if (line === true) return ['line'];

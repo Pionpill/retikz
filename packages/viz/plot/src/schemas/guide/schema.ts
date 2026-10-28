@@ -299,7 +299,7 @@ const AxisTickLineMarkSchema = strictObject({
     .describe('Line tick style; false hides line marks'),
 }).describe('Line tick mark configuration');
 
-const AxisTickShapeMarkBase = {
+const axisTickShapeMarkBase = {
   size: NonNegativeNumberSchema.optional().describe('Uniform shape tick size in user units'),
   width: NonNegativeNumberSchema.optional().describe('Shape tick width; overrides size for width'),
   height: NonNegativeNumberSchema.optional().describe('Shape tick height; overrides size for height'),
@@ -322,13 +322,13 @@ const AxisTickBuiltinShapeMarkSchema = strictObject({
     AxisTickMarkKind.Triangle,
     AxisTickMarkKind.Diamond,
   ]).describe('Builtin shape tick mark kind'),
-  ...AxisTickShapeMarkBase,
+  ...axisTickShapeMarkBase,
 }).describe('Builtin shape tick mark configuration');
 
 const AxisTickCustomShapeMarkSchema = strictObject({
   kind: literal(AxisTickMarkKind.Custom).describe('Custom core Node shape tick mark'),
   shape: ShapeValueSchema.describe('Core shape reference used by this tick mark'),
-  ...AxisTickShapeMarkBase,
+  ...axisTickShapeMarkBase,
 }).describe('Custom shape tick mark configuration');
 
 /** 校验刻度标记开关及其形状配置 */
@@ -611,7 +611,7 @@ export const GuideTargetSelectorSchema = strictObject({
   })
   .describe('Axis grid target selector for coordinate views, facet panels, and shared tracks');
 
-const AxisGridProjectionShape = {
+const axisGridProjectionShape = {
   applyTo: zodEnum(AxisGridApplyTo)
     .optional()
     .describe('Where this axis grid is projected; omit to use composition.resolve.grid or arrangement defaults'),
@@ -636,7 +636,7 @@ const refineAxisGridProjection = (grid: { applyTo?: string; select?: unknown }, 
   }
 };
 
-const AxisGridSourceShape = {
+const axisGridSourceShape = {
   ticks: GuideTickSourceSchema.optional().describe('Grid tick source. Omit to reuse the visible axis ticks'),
   density: AxisTickDensitySchema.optional().describe(
     'Visible grid tick density strategy; omit = all candidate grid ticks',
@@ -663,14 +663,14 @@ const AxisMinorGridSchema = strictObject({
 }).describe('Minor axis grid line source and style configuration');
 
 /** 校验坐标轴网格的投影配置 */
-export const AxisGridSchema = strictObject(AxisGridProjectionShape)
+export const AxisGridSchema = strictObject(axisGridProjectionShape)
   .superRefine(refineAxisGridProjection)
   .describe('Axis grid projection configuration');
 
 /** 校验坐标轴网格的投影、刻度来源与线条样式 */
 export const AxisGridComponentSchema = strictObject({
-  ...AxisGridProjectionShape,
-  ...AxisGridSourceShape,
+  ...axisGridProjectionShape,
+  ...axisGridSourceShape,
   minor: union([literal(false), AxisMinorGridSchema])
     .optional()
     .describe('Minor grid line configuration; false disables minor grid'),

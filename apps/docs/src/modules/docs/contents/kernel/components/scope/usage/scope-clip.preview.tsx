@@ -1,10 +1,10 @@
 import type { IRClip } from '@retikz/core';
 import {
-  CircleClipDefinition,
-  CompoundClipDefinition,
-  EllipseClipDefinition,
-  PathClipDefinition,
-  PolygonClipDefinition,
+  circleClipDefinition,
+  compoundClipDefinition,
+  ellipseClipDefinition,
+  pathClipDefinition,
+  polygonClipDefinition,
 } from '@retikz/extension';
 import { Layout, Node, Scope } from '@retikz/react';
 
@@ -65,11 +65,11 @@ export const ScopeClipPreview = (values: ScopeClipPreviewValues) => {
     <Layout
       extensions={{
         clips: [
-          CircleClipDefinition,
-          EllipseClipDefinition,
-          PolygonClipDefinition,
-          PathClipDefinition,
-          CompoundClipDefinition,
+          circleClipDefinition,
+          ellipseClipDefinition,
+          polygonClipDefinition,
+          pathClipDefinition,
+          compoundClipDefinition,
         ],
       }}
     >

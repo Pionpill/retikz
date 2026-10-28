@@ -50,8 +50,8 @@ const entries = [
 
 const index: SpatialHandleIndex = { entries };
 
-describe('spatial handle query', () => {
-  it('returns one identical entry for its primary id and aliases', () => {
+describe('空间句柄查询', () => {
+  it('为其主 ID 和别名返回一个相同的条目', () => {
     const aliased = Object.freeze({ ...entries[0], aliasIds: Object.freeze(['other', 'third']) });
     const aliasedIndex = { entries: [aliased] };
 
@@ -63,7 +63,7 @@ describe('spatial handle query', () => {
     ).toThrow(/ambiguity/);
   });
 
-  it('matches owner fields together, id, role, and all requested tags in index order', () => {
+  it('将所属模块字段、id、角色以及所有请求的标签按索引顺序匹配在一起', () => {
     expect(
       selectSpatialHandles(index, {
         owner: {
@@ -83,7 +83,7 @@ describe('spatial handle query', () => {
     ]);
   });
 
-  it('matches within as an ordered continuous ancestor subpath, not unordered containment', () => {
+  it('作为有序连续祖先子路径进行匹配，而不是无序包含', () => {
     expect(
       selectSpatialHandles(index, {
         within: [{ namespace: 'third', type: 'panel', instanceId: 'panel-b' }],
@@ -107,7 +107,7 @@ describe('spatial handle query', () => {
     ).toEqual([]);
   });
 
-  it('resolves exactly one entry and fails loudly for miss or ambiguity', () => {
+  it('仅解析一个条目，并因遗漏或模糊而明确报错', () => {
     expect(resolveSpatialHandle(index, { id: 'a' })).toBe(entries[0]);
     expect(() => resolveSpatialHandle(index, { id: 'missing' })).toThrow(/miss.*missing/i);
     expect(() => resolveSpatialHandle(index, { role: 'card' })).toThrow(/ambig.*card/i);

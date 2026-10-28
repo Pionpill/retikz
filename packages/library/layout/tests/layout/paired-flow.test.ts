@@ -18,8 +18,8 @@ const item = (
   ...(secondaryMinimum === undefined ? {} : { secondary: { minimum: secondaryMinimum, natural: secondaryNatural! } }),
 });
 
-describe('shared paired flow layout plan', () => {
-  it('uses a grid pair inside horizontal Flex flow and aligns the secondary child on y', () => {
+describe('共享配对流布局方案', () => {
+  it('在水平 Flex 流内使用网格对，并在 y 上对齐次要子级', () => {
     const plan = resolvePairedFlowPlan({
       direction: 'horizontal',
       wrap: 'nowrap',
@@ -39,7 +39,7 @@ describe('shared paired flow layout plan', () => {
     ]);
   });
 
-  it('uses a shared primary Grid track inside each wrapped vertical Flex column', () => {
+  it('在每个包裹的垂直 Flex 列内使用共享主 Grid 轨道', () => {
     const plan = resolvePairedFlowPlan({
       direction: 'vertical',
       wrap: 'nowrap',
@@ -67,7 +67,7 @@ describe('shared paired flow layout plan', () => {
     ]);
   });
 
-  it('forms an oversized vertical item as its own column when the main budget is finite', () => {
+  it('当主要预算有限时，形成一个超大的垂直项目作为自己的列', () => {
     const plan = resolvePairedFlowPlan({
       direction: 'vertical',
       wrap: 'wrap',
@@ -82,7 +82,7 @@ describe('shared paired flow layout plan', () => {
     expect(plan.slots[1]?.primary.x).toBe(14);
   });
 
-  it('does not create a secondary gap when the secondary child is absent', () => {
+  it('当次要子项不存在时，不会创建次要间隙', () => {
     const plan = resolvePairedFlowPlan({
       direction: 'horizontal',
       wrap: 'nowrap',

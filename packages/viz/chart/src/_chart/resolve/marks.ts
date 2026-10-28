@@ -66,7 +66,6 @@ const inheritedSlotsOf = (
 
 const resolveOneMark = (
   source: IRChartSource,
-  index: number,
   mark: JsonObject,
   binding: ChartMarkBinding,
   resolvedEncodings: JsonObject,
@@ -76,10 +75,6 @@ const resolveOneMark = (
     source: mark,
     inherited: inheritedSlotsOf(source, resolvedEncodings, binding),
   });
-  if (resolution.marks.length === 0) {
-    throw invalidMark('Chart mark resolver must produce at least one Plot mark', ['recipe', 'marks', index]);
-  }
-
   return resolution.marks;
 };
 
@@ -130,7 +125,7 @@ export const resolveChartMarks = (
       kind,
       index,
       override,
-      plotMarks: resolveOneMark(source, index, mark, binding, resolvedEncodings),
+      plotMarks: resolveOneMark(source, mark, binding, resolvedEncodings),
     });
   }
 
@@ -149,14 +144,6 @@ export const resolveChartSemanticMarks = (
   const groups = recipe.semanticMarks.map((group, index) => {
     if (group.kind.length === 0) {
       throw invalidMark('Chart semantic mark kind must be non-empty', ['recipe', 'semanticMarks', index, 'kind']);
-    }
-
-    if (group.plotMarks.length === 0) {
-      throw new RetikzChartError({
-        code: RetikzChartErrorCode.InvalidResolvedPlot,
-        message: `Chart semantic mark "${group.kind}" must produce at least one Plot mark`,
-        details: { path: ['recipe', 'semanticMarks', index, 'plotMarks'], kind: group.kind },
-      });
     }
 
     if (semanticIndices.has(group.kind)) {

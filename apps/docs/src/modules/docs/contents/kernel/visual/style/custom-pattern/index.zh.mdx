@@ -7,6 +7,8 @@ description: 自定义图案通过 PatternDefinition 生成重复单元，使用
 
 从 `@retikz/core` 导入 definePattern。定义提供 name、可选 defaultSize 和 emit；emit 接收已经解析的尺寸、颜色与线型，返回局部坐标中的 ScenePrimitive。
 
+`defaultSize` 必须为有限正数；`definePattern` 在定义时校验，非法值会立即抛错。直接提供定义对象时，由作者保证满足同一约束。
+
 下面定义 cross，将它传给 Layout.extensions.patterns，并通过 fill.shape 引用同一名称。
 
 <ComponentPreview files="custom-pattern-basic" size="sm" />

@@ -144,13 +144,13 @@ These are the members most often used to define, inject, and reference a custom 
     {
       name: 'defineBoundary',
       kind: 'function',
-      type: '<TParams extends JsonObject>(definition: BoundaryDefinitionInput<TParams>) => BoundaryDefinition',
+      type: '<TParams extends JsonObject>(definition: InputBoundaryDefinition<TParams>) => BoundaryDefinition',
       description: 'Creates a registrable boundary definition',
     },
     {
-      name: 'BoundaryDefinitionInput',
+      name: 'InputBoundaryDefinition',
       kind: 'type',
-      type: 'BoundaryDefinitionInput<TParams>',
+      type: 'InputBoundaryDefinition<TParams>',
       description: 'The input contract for boundary authors',
     },
     {

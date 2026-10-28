@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { TableCellRuleSchema, TableCellSelectorSchema, TableSchema, TableValuePredicateSchema } from '../../src';
 
-describe('Table Cell rule schema', () => {
-  it('round-trips a strict selector and ordered root rules', () => {
+describe('Table Cell 规则 schema', () => {
+  it('往返严格选择器和有序根规则', () => {
     const selector = TableCellSelectorSchema.parse({
       cellIds: ['cell.a'],
       rowIndices: [0],
@@ -40,11 +40,11 @@ describe('Table Cell rule schema', () => {
     { roles: {} },
     { roles: { any: [] } },
     { fields: ['field'], unknown: true },
-  ])('rejects empty, duplicate, malformed, or open selectors: %j', selector => {
+  ])('拒绝空的、重复的、格式错误的或开放的选择器：%j', selector => {
     expect(() => TableCellSelectorSchema.parse(selector)).toThrow();
   });
 
-  it('requires value predicates to target exactly value payloads when payloadKinds is present', () => {
+  it('当 payloadKinds 存在时，需要值谓词来精确定位值有效负载', () => {
     const value = { kind: 'equal', value: 1 } as const;
 
     expect(TableCellSelectorSchema.parse({ value })).toEqual({ value });
@@ -56,7 +56,7 @@ describe('Table Cell rule schema', () => {
     expect(() => TableCellSelectorSchema.parse({ payloadKinds: ['value', 'content'], value })).toThrow(/payloadKinds/i);
   });
 
-  it('validates closed value predicates and their cross-field boundaries', () => {
+  it('验证闭值谓词及其跨字段边界', () => {
     expect(TableValuePredicateSchema.parse({ kind: 'between', min: 1, max: 1 })).toEqual({
       kind: 'between',
       min: 1,
@@ -76,11 +76,11 @@ describe('Table Cell rule schema', () => {
     { selector: { cellIds: ['a'] } },
     { selector: { cellIds: ['a'] }, unknown: true, appearance: {} },
     { selector: { cellIds: ['a'] }, appearance: {}, callback: () => true },
-  ])('rejects empty or open rule patches: %j', rule => {
+  ])('拒绝空或开放的规则补丁：%j', rule => {
     expect(() => TableCellRuleSchema.parse(rule)).toThrow();
   });
 
-  it('keeps omitted rules absent from the authored root IR', () => {
+  it('使编写的根 IR 中不存在省略的规则', () => {
     const spec = {
       namespace: 'table',
       type: 'table',

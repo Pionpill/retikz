@@ -5,7 +5,7 @@ import type { IRPlotAxisGuide } from '../../../../schemas';
 import type { PlotLabelMeasure } from '../../../../shared';
 
 /** 单根轴参与绘图区布局的上下文 */
-export type PlotAxisLayoutContext = {
+type PlotAxisLayoutContext = {
   /** 轴的维度、位置与标签配置 */
   guide: IRPlotAxisGuide;
   /** 当前布局轮次使用的可见刻度 */

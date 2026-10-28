@@ -73,8 +73,8 @@ const roundedRectClip = (): ClipDefinition =>
     },
   });
 
-describe('clip providers', () => {
-  it('compiles one same-kind custom definition through options.clips only', () => {
+describe('裁剪提供者', () => {
+  it('仅通过 options.clips 编译一个同类自定义', () => {
     const scene = compileToScene(
       clippedIr({ kind: 'roundedRect', params: { x: 0, y: 0, width: 40, height: 30, r: 5 } }),
       {
@@ -93,14 +93,14 @@ describe('clip providers', () => {
     expect(scene.primitives[0]).toMatchObject({ type: 'group', clipRef: 'clip-1' });
   });
 
-  it('custom clip kind is rejected at compile time when no provider is registered', () => {
+  it('当没有注册提供者时，自定义裁剪类型在编译时被拒绝', () => {
     expect(
       () =>
         compileToScene(clippedIr({ kind: 'roundedRect', params: { x: 0, y: 0, width: 40, height: 30, r: 5 } })).scene,
     ).toThrow(/Unknown provider .*available: rect/i);
   });
 
-  it('custom clip cannot override builtin clip kinds', () => {
+  it('自定义裁剪不能覆盖内置裁剪类型', () => {
     const rectOverride = defineClip({
       kind: 'rect',
       schema: strictObject({ kind: literal('rect'), params: strictObject({}) }),
@@ -124,7 +124,7 @@ describe('clip providers', () => {
     ).toThrow(/duplicate clip registration/i);
   });
 
-  it('rejects a provider key whose complete definition has another kind', () => {
+  it('拒绝其完整定义具有另一种类型的提供者键', () => {
     const definition = defineClip({
       kind: 'other',
       schema: strictObject({ kind: literal('other'), params: strictObject({}) }),
@@ -148,8 +148,6 @@ describe('clip providers', () => {
             providers: [
               {
                 key: { capability: 'clip', name: 'roundedRect' },
-                dependencies: [],
-                datasets: {},
                 makeDefinition: () => definition,
               },
             ],
@@ -159,7 +157,7 @@ describe('clip providers', () => {
     ).toThrow(/provider clip:roundedRect returned definition other/i);
   });
 
-  it('rejects a provider schema that transforms the authored kind before lower', () => {
+  it('拒绝在下沉前改写显式 kind 的提供者 schema', () => {
     const lower = vi.fn(() => ({
       commands: [
         { kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -182,7 +180,7 @@ describe('clip providers', () => {
     expect(lower).not.toHaveBeenCalled();
   });
 
-  it('compiles JSON schema transforms into clip path commands', () => {
+  it('将 JSON schema 的转换结果编译为裁剪路径命令', () => {
     const definition = defineClip({
       kind: 'scaledClip',
       schema: strictObject({ kind: literal('scaledClip'), params: strictObject({ size: number() }) }).transform(

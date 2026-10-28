@@ -51,7 +51,7 @@ export const captureBenchmarkContext = (
         ...options.configFiles.map(path => resolve(root, path)),
         ...listSourceFiles(join(repository, 'scripts', 'benchmarks')),
       ]),
-      artifact: 'native-esm',
+      artifact: options.artifact ?? 'native-esm',
       sampling,
     },
     source: {

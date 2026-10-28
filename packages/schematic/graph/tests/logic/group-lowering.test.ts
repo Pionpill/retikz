@@ -5,15 +5,15 @@ import { describe, expect, it } from 'vitest';
 import * as Graph from '../../src';
 import { compileInHarness, naturalProposal, pathPrimitivesOf, primitivesOf } from './test-utils';
 
-describe('Group layout-aware lowering', () => {
-  it('uses the default Surface shell as the only allocation for an empty Group', () => {
+describe('Group 布局感知下沉', () => {
+  it('使用默认的 Surface shell 作为空 Group 的唯一分配', () => {
     const { result } = compileInHarness(Graph.createGroup({}), naturalProposal, Graph.createGraphDefinitions());
 
     expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 20, height: 20 });
     expect(result.slotSize).toEqual({ width: 20, height: 20 });
   });
 
-  it('keeps boundary labels visual-only while drawing the default background and border', () => {
+  it('在绘制默认背景和边框时保持边界标签仅可见', () => {
     const { output, result } = compileInHarness(
       Graph.createGroup({ labels: [{ text: 'external contract', position: 'top', distance: 8 }] }),
       naturalProposal,
@@ -42,7 +42,7 @@ describe('Group layout-aware lowering', () => {
     ).toBe(true);
   });
 
-  it('applies named Graph Theme defaults to the Group root shell', () => {
+  it('将名为 Graph 的主题默认应用于 Group 根 shell', () => {
     const styleName = 'group-shell';
     const graphStyle = Graph.defineGraphTheme({
       name: styleName,
@@ -84,7 +84,7 @@ describe('Group layout-aware lowering', () => {
     ).toBe(true);
   });
 
-  it('replaces a themed Group border as one complete explicit Source field', () => {
+  it('将主题 Group 边框替换为一个完整的显式 Source 字段', () => {
     const styleName = 'group-explicit-shell';
     const graphStyle = Graph.defineGraphTheme({
       name: styleName,
@@ -121,7 +121,7 @@ describe('Group layout-aware lowering', () => {
     );
   });
 
-  it('arranges bottom caption after a non-empty body and includes bodyGap in allocation', () => {
+  it('将底部标题排列在非空正文之后，并在分配中包含 bodyGap', () => {
     const body: IRNode = {
       type: 'node',
       position: [10, 5],
@@ -151,7 +151,7 @@ describe('Group layout-aware lowering', () => {
     expect(withGap.allocationBounds.height - withoutGap.allocationBounds.height).toBeCloseTo(7);
   });
 
-  it('isolates generated presentation Nodes from authored nodeDefault', () => {
+  it('将生成的表示节点与编写的 nodeDefault 隔离', () => {
     const warnings: Array<CompileWarning> = [];
     const { output } = compileInHarness(
       Graph.createGroup({
@@ -174,7 +174,7 @@ describe('Group layout-aware lowering', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('keeps the default title weight regular while preserving an explicit weight', () => {
+  it('保持默认标题权重规则，同时保留显式权重', () => {
     const defaultTitle = compileInHarness(
       Graph.createGroup({ caption: { title: { text: 'Title' } } }),
       naturalProposal,
@@ -197,7 +197,7 @@ describe('Group layout-aware lowering', () => {
     expect(textPrimitives(explicitTitle.output)).toEqual([expect.objectContaining({ fontWeight: 700 })]);
   });
 
-  it('defaults boundary labels with only text to the lower-left point below the Group', () => {
+  it('默认仅包含文本的边界标签位于 Group 下方的左下点', () => {
     const { output, result } = compileInHarness(
       Graph.createGroup({ labels: [{ text: 'Boundary' }] }),
       naturalProposal,
@@ -213,7 +213,7 @@ describe('Group layout-aware lowering', () => {
     expect(text[0]?.y).toBeGreaterThan(result.allocationBounds.y + result.allocationBounds.height);
   });
 
-  it('defaults boundary label typography to the description scale and gray color while preserving explicit overrides', () => {
+  it('默认边界标签排版为描述比例和灰色，同时保留显式覆盖', () => {
     const defaultLabel = compileInHarness(
       Graph.createGroup({ labels: [{ text: 'Boundary' }] }),
       naturalProposal,
@@ -236,7 +236,7 @@ describe('Group layout-aware lowering', () => {
     expect(textPrimitives(explicitLabel.output)).toEqual([expect.objectContaining({ fontSize: 20, fill: '#ef4444' })]);
   });
 
-  it('preserves an explicit boundary label alignment', () => {
+  it('保留显式边界标签对齐', () => {
     const { output, result } = compileInHarness(
       Graph.createGroup({ labels: [{ text: 'Boundary', align: 'middle' }] }),
       naturalProposal,
@@ -251,7 +251,7 @@ describe('Group layout-aware lowering', () => {
     expect(text[0]?.x).toBeCloseTo(result.allocationBounds.x);
   });
 
-  it('stacks nested Group Graph rules only onto visible Entity and Relation descendants', () => {
+  it('仅将嵌套的 Group Graph 规则堆叠到可见的 Entity 和 Relation 后代上', () => {
     const { output } = compileInHarness(
       Graph.createGroup({
         graphRules: [{ type: 'entity', style: { fill: '#ef4444' } }],
@@ -283,7 +283,7 @@ describe('Group layout-aware lowering', () => {
     expect(fills).not.toContain('#ef4444');
   });
 
-  it('publishes the Group Scope id as a normal Core Relation target without exposing a host id', () => {
+  it('将 Group Scope id 发布为普通 Core Relation 目标，而不暴露宿主 id', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });

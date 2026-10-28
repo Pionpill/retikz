@@ -4,7 +4,7 @@ import { RetikzStandardError, RetikzStandardErrorCode } from '../../../shared/er
 import type { LatticeOptions, LatticeValue } from './types';
 
 /** 单轴 lowering 允许生成的最大格点数 */
-export const MAX_LATTICE_VALUES_PER_AXIS = 10_000;
+const MAX_LATTICE_VALUES_PER_AXIS = 10_000;
 
 /** 返回格点索引或输出规模违反确定性 lowering 上限时的错误信息 */
 export const getLatticeRangeError = ({

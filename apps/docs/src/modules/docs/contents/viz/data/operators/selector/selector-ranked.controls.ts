@@ -42,7 +42,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       ],
     }),
     canonicalValues: { grouped: true, method: 'top', n: 2, tie: 'first' },
-    relatedApis: ['BuiltinSelectorOperationSchemas.Top', 'BuiltinSelectorOperationSchemas.Bottom'],
+    relatedApis: ['BUILTIN_SELECTOR_OPERATION_SCHEMAS.Top', 'BUILTIN_SELECTOR_OPERATION_SCHEMAS.Bottom'],
   } satisfies PreviewControlContract;
 };
 /** 缺少语言上下文时采用中文基线 */

@@ -56,7 +56,7 @@ const fixture = () => {
   return { execute, executor: createDataTransformExecutor({ externalProviders: [{ name: 'fixture', provider }] }) };
 };
 
-describe('Plot client async preparation', () => {
+describe('Plot 客户端异步准备', () => {
   beforeEach(() => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
@@ -67,7 +67,7 @@ describe('Plot client async preparation', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders actual Promise output and delivers the same prepared rows after commit', async () => {
+  it('呈现实际的 Promise 输出并在提交后提供相同的准备行', async () => {
     const { executor, execute } = fixture();
     const onLineage = vi.fn();
     const container = document.createElement('div');
@@ -96,7 +96,7 @@ describe('Plot client async preparation', () => {
     act(() => root.unmount());
   });
 
-  it('uses the outer Layout preparation with distinct anonymous Plot bindings', async () => {
+  it('使用具有不同匿名 Plot 绑定的外部 Layout 制剂', async () => {
     const { executor, execute } = fixture();
     const container = document.createElement('div');
     document.body.append(container);
@@ -123,7 +123,7 @@ describe('Plot client async preparation', () => {
     act(() => root.unmount());
   });
 
-  it('rejects two declarations of the root execution slot instead of adding a new override level', () => {
+  it('拒绝根执行槽的两个声明，而不是添加新的覆盖级别', () => {
     expect(() => resolvePlotAuthoring({ spec: spec(), data: { rows }, dataExecution: { mode: 'builtin' } })).toThrow(
       /both spec and root props/,
     );

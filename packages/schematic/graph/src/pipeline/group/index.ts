@@ -1,4 +1,4 @@
-export { GroupBodyAllocationDefinition, GroupBodyAllocationProvider } from './allocation';
+export { groupBodyAllocationDefinition, groupBodyAllocationProvider } from './allocation';
 export * from './composite';
 export * from './lower';
 export type { GroupShellMetrics } from './shell';

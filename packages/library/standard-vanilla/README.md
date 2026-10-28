@@ -14,7 +14,7 @@ This package is ESM-only and requires Node.js 24 or newer.
 本包仅发布 ES modules，要求 Node.js 24 或更高版本。
 
 ```ts
-import { frame, frameTitle, StandardInputEmbedAdapters } from '@retikz/standard-vanilla';
+import { frame, frameTitle, standardInputEmbedAdapters } from '@retikz/standard-vanilla';
 
 const group = frame({
   title: frameTitle({ text: 'Definition contract' }),
@@ -22,7 +22,7 @@ const group = frame({
 });
 ```
 
-`StandardInputEmbedAdapters` is an explicit all-adapters convenience array.
+`standardInputEmbedAdapters` is an explicit all-adapters convenience array.
 Callers can still pass only the adapters they use. Direct persisted IR uses
 the selected `Definition` values from `@retikz/standard` through Core compile
 options.

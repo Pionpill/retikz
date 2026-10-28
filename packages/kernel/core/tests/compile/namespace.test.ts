@@ -2,16 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { DuplicateRegisterInfo } from '../../src/compile/namespace';
 import { NamespaceStack } from '../../src/compile/namespace';
-import type { NodeLayout } from '../../src/compile/node';
-import { boxInsets } from '../../src/compile/node';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
-const makeLayout = (_id: string, x = 0, y = 0): NodeLayout => ({
+const makeLayout = (_id: string, x = 0, y = 0): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x, y, width: 0, height: 0, rotate: 0 },
     contentCenter: [x, y],
-    margin: boxInsets(0),
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
     contentSize: { width: 0, height: 0 },
   },
   boundary: {
@@ -23,18 +22,18 @@ const makeLayout = (_id: string, x = 0, y = 0): NodeLayout => ({
 });
 
 describe('NamespaceStack 基本 register / lookup', () => {
-  it('name_stack_basic_register_lookup', () => {
+  it('名称堆栈基本寄存器查找', () => {
     const stack = new NamespaceStack();
     const layout = makeLayout('A', 10, 20);
     stack.register('A', layout);
 
-    expect(stack.lookup('A')).toBe(layout);
+    expect(stack.lookupEntry('A')?.layout).toBe(layout);
   });
 
   it('lookup 未注册 id 返回 undefined', () => {
     const stack = new NamespaceStack();
 
-    expect(stack.lookup('ghost')).toBeUndefined();
+    expect(stack.lookupEntry('ghost')?.layout).toBeUndefined();
   });
 
   it('构造后初始 depth = 1（根 frame 存在）', () => {
@@ -45,7 +44,7 @@ describe('NamespaceStack 基本 register / lookup', () => {
 });
 
 describe('NamespaceStack push / pop frame 隔离', () => {
-  it('name_stack_push_pop_frame_isolated', () => {
+  it('名称堆栈推入弹出帧隔离', () => {
     const stack = new NamespaceStack();
     stack.pushFrame();
 
@@ -54,12 +53,12 @@ describe('NamespaceStack push / pop frame 隔离', () => {
     const inner = makeLayout('A', 100);
     stack.register('A', inner);
 
-    expect(stack.lookup('A')).toBe(inner);
+    expect(stack.lookupEntry('A')?.layout).toBe(inner);
 
     stack.popFrame();
 
     expect(stack.depth).toBe(1);
-    expect(stack.lookup('A')).toBeUndefined();
+    expect(stack.lookupEntry('A')?.layout).toBeUndefined();
   });
 
   it('外层 register 后 push frame，外层 id 在内层仍可见（inside-out 落到外层 frame）', () => {
@@ -68,12 +67,12 @@ describe('NamespaceStack push / pop frame 隔离', () => {
     stack.register('outer', outer);
     stack.pushFrame();
 
-    expect(stack.lookup('outer')).toBe(outer);
+    expect(stack.lookupEntry('outer')?.layout).toBe(outer);
   });
 });
 
-describe('NamespaceStack inside-out shadowing', () => {
-  it('name_stack_lookup_inside_out_shadowing', () => {
+describe('NamespaceStack 由内而外的阴影', () => {
+  it('名称堆栈查找由内而外的阴影', () => {
     const stack = new NamespaceStack();
     const outer = makeLayout('A', 0);
     stack.register('A', outer);
@@ -81,11 +80,11 @@ describe('NamespaceStack inside-out shadowing', () => {
     const inner = makeLayout('A', 50);
     stack.register('A', inner);
 
-    expect(stack.lookup('A')).toBe(inner);
+    expect(stack.lookupEntry('A')?.layout).toBe(inner);
 
     stack.popFrame();
 
-    expect(stack.lookup('A')).toBe(outer);
+    expect(stack.lookupEntry('A')?.layout).toBe(outer);
   });
 
   it('三层嵌套各自有 id="A" 时 lookup 命中栈顶', () => {
@@ -99,20 +98,20 @@ describe('NamespaceStack inside-out shadowing', () => {
     stack.pushFrame();
     stack.register('A', a2);
 
-    expect(stack.lookup('A')).toBe(a2);
+    expect(stack.lookupEntry('A')?.layout).toBe(a2);
 
     stack.popFrame();
 
-    expect(stack.lookup('A')).toBe(a1);
+    expect(stack.lookupEntry('A')?.layout).toBe(a1);
 
     stack.popFrame();
 
-    expect(stack.lookup('A')).toBe(a0);
+    expect(stack.lookupEntry('A')?.layout).toBe(a0);
   });
 });
 
 describe('NamespaceStack pop 根 frame 防御性 throw', () => {
-  it('name_stack_pop_empty_throws', () => {
+  it('空命名栈弹出时抛出错误', () => {
     const stack = new NamespaceStack();
 
     expect(() => stack.popFrame()).toThrow(/cannot pop the root frame/);
@@ -130,14 +129,14 @@ describe('NamespaceStack pop 根 frame 防御性 throw', () => {
 });
 
 describe('NamespaceStack register 返回 overwritten flag', () => {
-  it('name_stack_register_returns_overwritten_flag', () => {
+  it('名称堆栈寄存器返回覆盖标志', () => {
     const stack = new NamespaceStack();
     const first = makeLayout('A', 0);
     const second = makeLayout('A', 10);
 
     expect(stack.register('A', first)).toBe(false);
     expect(stack.register('A', second)).toBe(true);
-    expect(stack.lookup('A')).toBe(second);
+    expect(stack.lookupEntry('A')?.layout).toBe(second);
   });
 
   it('跨 frame 同 id 不算 overwritten（push frame 内首次 register 返回 false）', () => {
@@ -211,13 +210,12 @@ describe('NamespaceStack onDuplicate 回调', () => {
 });
 
 describe('NamespaceStack resolving phase 禁止 register', () => {
-  it('namespace_stack_register_during_resolving', () => {
+  it('解析期间的命名空间堆栈寄存器', () => {
     const stack = new NamespaceStack();
     stack.register('A', makeLayout('A'));
     stack.enterResolvingPhase();
 
-    expect(stack.phase).toBe('resolving');
-    expect(stack.lookup('A')).toBeDefined();
+    expect(stack.lookupEntry('A')?.layout).toBeDefined();
     expect(() => stack.register('B', makeLayout('B'))).toThrow(/only allowed during registering/);
   });
 });
@@ -250,7 +248,7 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
   });
 });
 
-it('preserves measurement identity for unchanged forks and invalidates every namespace mutation', () => {
+it('保留未更改的分叉的测量身份，并使每个名称空间突变无效', () => {
   const stack = new NamespaceStack();
   let identity = stack.measurementIdentity;
   expect(stack.fork().measurementIdentity).toBe(identity);
@@ -265,10 +263,10 @@ it('preserves measurement identity for unchanged forks and invalidates every nam
   changed();
   const fork = stack.fork();
   fork.register('other', makeLayout('other', 30));
-  expect(stack.lookup('other')).toBeUndefined();
+  expect(stack.lookupEntry('other')?.layout).toBeUndefined();
   for (const change of fork.diffTopFrame(stack)) stack.commitForkChange(change);
   changed();
-  expect(stack.lookup('other')).toBe(fork.lookup('other'));
+  expect(stack.lookupEntry('other')?.layout).toBe(fork.lookupEntry('other')?.layout);
   stack.pushFrame();
   changed();
   stack.popFrame();

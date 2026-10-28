@@ -7,7 +7,7 @@ import { normalizeRegressionChart } from './normalize';
 import type { RegressionChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 RegressionChart 输入并复用统一数据准备 */
-export const RegressionChartInputEmbedAdapter = createChartInputEmbedAdapter(
+export const regressionChartInputEmbedAdapter = createChartInputEmbedAdapter(
   'chart.regression',
   (input: RegressionChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
@@ -39,7 +39,7 @@ export const regressionChart = <TNative = never>(
   input: RegressionChartInputEmbedProps<TNative>,
 ): InputEmbed<RegressionChartInputEmbedProps<TNative>> => ({
   type: 'embed',
-  kind: RegressionChartInputEmbedAdapter.kind,
+  kind: regressionChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

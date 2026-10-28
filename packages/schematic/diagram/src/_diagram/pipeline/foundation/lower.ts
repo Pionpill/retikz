@@ -6,7 +6,7 @@ import type { IRSurface } from '@retikz/standard/presentation';
 import { createSurface } from '@retikz/standard/presentation';
 
 import type { DiagramFoundationResolution } from '../../resolve';
-import type { EffectiveDiagramTextAppearance } from '../../resolve/theme';
+import type { CanonicalDiagramTextAppearance } from '../../resolve/theme';
 import { resolveDiagramPresentationTextAppearance } from '../../resolve/theme';
 
 const flexItem = (key: string, child: IRChild, alignSelf?: IRFlexLayoutItem['alignSelf']): IRFlexLayoutItem => ({
@@ -21,9 +21,9 @@ const flexItem = (key: string, child: IRChild, alignSelf?: IRFlexLayoutItem['ali
 });
 
 /** 创建不带可见 Node 外壳的 presentation text */
-export const createDiagramPresentationTextNode = (
+const createDiagramPresentationTextNode = (
   text: NonNullable<NonNullable<DiagramFoundationResolution['presentation']>['title']>,
-  appearance: EffectiveDiagramTextAppearance,
+  appearance: CanonicalDiagramTextAppearance,
 ): IRNode => ({
   type: 'node',
   position: [0, 0],

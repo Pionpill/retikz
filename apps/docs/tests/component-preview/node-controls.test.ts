@@ -6,8 +6,8 @@ import { nodeLabelPositionControls as nodeLabelPositionEnglishControls } from '.
 import { nodeLabelRotatePinControls } from '../../src/modules/docs/contents/kernel/components/node/labels/node-label-rotate-pin.controls';
 import { nodeLabelRotatePinControls as nodeLabelRotatePinEnglishControls } from '../../src/modules/docs/contents/kernel/components/node/labels/node-label-rotate-pin.en.controls';
 
-describe('Node controls', () => {
-  it('hides controls that do not affect centered labels', () => {
+describe('Node 控件', () => {
+  it('隐藏不影响居中标签的控件', () => {
     const visibleIds = resolveVisiblePreviewControlSections(nodeLabelPositionControls.sections, {
       positionMode: 'center',
     }).flatMap(section => section.controls.map(field => field.id));
@@ -17,7 +17,7 @@ describe('Node controls', () => {
     expect(visibleIds).not.toContain('boundary');
   });
 
-  it('shows upright text only for rotated labels', () => {
+  it('仅为旋转标签显示保持文字直立的选项', () => {
     const visibleIds = (rotateMode: string) =>
       resolveVisiblePreviewControlSections(nodeLabelRotatePinControls.sections, {
         rotateMode,
@@ -31,7 +31,7 @@ describe('Node controls', () => {
     }
   });
 
-  it('keeps English controls structurally aligned with Chinese controls', () => {
+  it('使英文控件在结构上与中文控件保持一致', () => {
     expect(nodeLabelPositionEnglishControls.sections[0].controls.map(control => control.id)).toEqual(
       nodeLabelPositionControls.sections[0].controls.map(control => control.id),
     );

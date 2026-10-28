@@ -10,7 +10,7 @@ import type { ConnectedScatterPropertiesProps } from './ConnectedScatterProperti
 import { ConnectedScatterProperties } from './ConnectedScatterProperties';
 
 /** ConnectedScatterChart 直接子声明的收集结果 */
-export type CollectedConnectedScatterChartDeclarations = CollectedPointChartDeclarations<
+type CollectedConnectedScatterChartDeclarations = CollectedPointChartDeclarations<
   ConnectedScatterEncodingsProps,
   ConnectedScatterPropertiesProps,
   ConnectedScatterChartMark

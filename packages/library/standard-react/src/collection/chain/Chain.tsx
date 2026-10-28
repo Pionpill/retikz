@@ -1,7 +1,7 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputChain, InputChainItem } from '@retikz/standard-vanilla/collection';
-import { ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { chainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { FC, ReactNode, ReactElement } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
@@ -133,5 +133,5 @@ const ChainComponent: FC<ChainProps> = () => null;
 export const Chain = ChainComponent as StandardEmbeddableComponent<ChainProps>;
 Chain.displayName = 'Chain';
 Chain.isTier2Embeddable = true;
-Chain.inputEmbedAdapter = ChainInputEmbedAdapter;
+Chain.inputEmbedAdapter = chainInputEmbedAdapter;
 Chain.createInputEmbedProps = createChainInput;

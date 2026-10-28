@@ -2,7 +2,7 @@ import type { JsonValue } from '@retikz/foundation';
 import type { AffineMatrix, CenteredBox, Position } from '@retikz/math';
 
 import type { IRChild } from '../schemas';
-import type { ResolvedTheme } from '../shared';
+import type { CanonicalTheme } from '../shared';
 import type { GeometryKeyPoint } from './node';
 import type { CompileOccurrenceLocator } from './occurrence';
 import type { Scene, PathCommand, SceneClipPath } from './scene';
@@ -148,7 +148,7 @@ export type CompileObservationContext = Readonly<{
   /** 按本次主图编译精度舍入数值 */
   round: (value: number) => number;
   /** 当前最终 occurrence 的完整、只读 Theme */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** 在当前 occurrence 环境中编译隔离的普通 IR 片段 */
   compileFragment: (children: IRChild | ReadonlyArray<IRChild>) => CompiledSceneFragment;
 }>;

@@ -5,11 +5,11 @@ import { describe, expect, it } from 'vitest';
 
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveSelectedChart } from '../../src/_chart/resolve';
-import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
+import { connectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
 import { ConnectedScatterChartSchema } from '../../src/point/connected-scatter/schema';
 
 const runtime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ConnectedScatterChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: connectedScatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const palette = ['#ff0000', '#00ff00', '#0000ff'];
@@ -43,7 +43,7 @@ const chartOf = (properties: Record<string, unknown> = {}, series = true, extras
 
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
-    recipe: ConnectedScatterChartDefinition,
+    recipe: connectedScatterChartDefinition,
     chartThemeDefinitions: [],
     runtime,
   }).plot;
@@ -99,8 +99,8 @@ const render = (properties: Record<string, unknown> = {}, series = true, extras:
 
   return { plot, points, paths, symbols };
 };
-describe('Connected Scatter palette allocation', () => {
-  it('cycles adjacent point/path colors across an odd palette and matches composite legends', () => {
+describe('连接的分散调色板分配', () => {
+  it('在奇怪的调色板上循环相邻点/路径颜色并匹配复合图例', () => {
     const result = render({ colorMode: 'mark' });
 
     expect(result.points.map(point => point.style?.fill).sort()).toEqual(
@@ -119,7 +119,7 @@ describe('Connected Scatter palette allocation', () => {
     ]);
   });
 
-  it('retains the series default and explicit series equivalence', () => {
+  it('保留系列默认和显式系列等效性', () => {
     expect(chartOf()).toEqual(chartOf({ colorMode: 'series' }));
 
     const result = render();
@@ -136,7 +136,7 @@ describe('Connected Scatter palette allocation', () => {
   it.each([
     { point: { color: '#112233' }, path: { stroke: '#445566' } },
     { point: { color: '#ffffff', fill: '#112233' }, path: { stroke: '#445566' } },
-  ])('preserves explicit paints in marks and legends: %j', properties => {
+  ])('保留标记和图例中的明确绘制：%j', properties => {
     const result = render({ colorMode: 'mark', ...properties });
 
     expect(result.points).toHaveLength(8);
@@ -146,7 +146,7 @@ describe('Connected Scatter palette allocation', () => {
     );
   });
 
-  it('uses the first two colors without series and honors hidden legends', () => {
+  it('使用无系列的前两种颜色，并向隐藏的传奇致敬', () => {
     const result = render({ colorMode: 'mark' }, false);
 
     expect(result.points.every(point => point.style?.fill === palette[0])).toBe(true);
@@ -155,7 +155,7 @@ describe('Connected Scatter palette allocation', () => {
     expect(render({ colorMode: 'mark' }, true, { guides: { legend: false } }).symbols).toEqual([]);
   });
 
-  it.each([true, false])('inherits color mode in authored marks with override=%s', override => {
+  it.each([true, false])('继承编写标记中的颜色模式，覆盖 = %s', override => {
     const result = render({ colorMode: 'mark' }, true, {
       marks: [{ kind: 'connected-scatter', override, properties: { point: { fill: '#112233' } } }],
     });
@@ -165,7 +165,7 @@ describe('Connected Scatter palette allocation', () => {
   });
 });
 
-it('keeps mark colors available in series facets', () => {
+it('保持系列刻面中可用的标记颜色', () => {
   const result = render({ colorMode: 'mark' }, true, {
     encodings: { x: 'x', y: 'y', order: 'order', series: 'series', row: 'series' },
   });
@@ -175,7 +175,7 @@ it('keeps mark colors available in series facets', () => {
   expect(result.paths.length).toBeGreaterThan(0);
 });
 
-it.each([true, false])('muted keeps point appearance and lowers path opacity with series=%s', series => {
+it.each([true, false])('series=%s 时 muted 保留点外观并降低路径不透明度', series => {
   const baseline = render({ point: { opacity: 0.8 } }, series);
   const muted = render({ colorMode: 'muted', point: { opacity: 0.8 } }, series);
 
@@ -188,7 +188,7 @@ it.each([true, false])('muted keeps point appearance and lowers path opacity wit
     ),
   ).toBe(true);
 });
-it.each([0, 0.35, 1])('explicit path opacity %s wins over muted default', strokeOpacity => {
+it.each([0, 0.35, 1])('显式路径不透明度 %s 优先于 muted 默认值', strokeOpacity => {
   const result = render({ colorMode: 'muted', path: { opacity: { stroke: strokeOpacity } } });
 
   expect(result.paths).toHaveLength(4);
@@ -198,7 +198,7 @@ it.each([0, 0.35, 1])('explicit path opacity %s wins over muted default', stroke
     ),
   ).toBe(true);
 });
-it('authored mark inherits muted opacity and can override it', () => {
+it('显式标记继承 muted 不透明度且可覆盖', () => {
   const inherited = render({ colorMode: 'muted' }, true, { marks: [{ kind: 'connected-scatter', override: true }] });
 
   expect(

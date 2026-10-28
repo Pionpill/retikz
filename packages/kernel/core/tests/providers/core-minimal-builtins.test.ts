@@ -5,8 +5,8 @@ import { BUILTIN_ARROWS, BUILTIN_CLIPS, BUILTIN_SHAPES, compileToScene } from '.
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
-describe('Core minimal builtin providers', () => {
-  it('keeps only the base shape, arrow, and clip collections', () => {
+describe('Core 最小内置提供者', () => {
+  it('仅保留基本形状、箭头和裁剪集合', () => {
     expect([...BUILTIN_SHAPES.values()].map(definition => definition.name)).toEqual([
       'rectangle',
       'ellipse',
@@ -30,7 +30,7 @@ describe('Core minimal builtin providers', () => {
     );
   });
 
-  it('requires optional Standard definitions when IR names an optional provider', () => {
+  it('当 IR 命名可选提供者时，需要可选的 Standard 定义', () => {
     expect(() => compileToScene(scene([{ type: 'node', position: [0, 0], shape: 'cross' }]), { padding: 0 })).toThrow(
       /Unknown provider 'cross'.*available:/i,
     );
@@ -69,7 +69,7 @@ describe('Core minimal builtin providers', () => {
     }
   });
 
-  it.each(['circle', 'ellipse'])('requires an optional definition for the %s clip operation', kind => {
+  it.each(['circle', 'ellipse'])('需要 %s 裁剪操作的可选定义', kind => {
     const clip: IRClip =
       kind === 'circle' ? { kind, params: { cx: 0, cy: 0, r: 10 } } : { kind, params: { cx: 0, cy: 0, rx: 10, ry: 5 } };
 
@@ -78,7 +78,7 @@ describe('Core minimal builtin providers', () => {
     );
   });
 
-  it('compiles the built-in hollow stealth arrow without an injected definition', () => {
+  it('编译内置空心隐形箭头，无需注入定义', () => {
     expect(() =>
       compileToScene(
         scene([
@@ -96,7 +96,7 @@ describe('Core minimal builtin providers', () => {
     ).not.toThrow();
   });
 
-  it('compiles the built-in hollow triangle arrow without an injected definition', () => {
+  it('编译内置空心三角形箭头，无需注入定义', () => {
     expect(() =>
       compileToScene(
         scene([
@@ -114,7 +114,7 @@ describe('Core minimal builtin providers', () => {
     ).not.toThrow();
   });
 
-  it('compiles the built-in circle arrows without injected definitions', () => {
+  it('编译内置圆形箭头，无需注入定义', () => {
     expect(() =>
       compileToScene(
         scene([

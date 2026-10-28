@@ -18,37 +18,37 @@ import {
   SelectorOperationSchema,
 } from '../../src';
 import {
-  applyReducerOperation,
-  BuiltinReducerOperationSchemas,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS,
   reducerOutputDescriptors,
   reducerOutputFields,
+  resolveReducerComputation,
 } from '../../src/operators/reducer';
-import { applySelectorOperation, BuiltinSelectorOperationSchemas } from '../../src/operators/selector';
+import { BUILTIN_SELECTOR_OPERATION_SCHEMAS, resolveSelectorComputation } from '../../src/operators/selector';
 
-describe('statistics provider schema boundaries', () => {
-  it('uses the schema owner instances for every built-in definition', () => {
+describe('统计提供者 schema 边界', () => {
+  it('对每个内置定义使用 schema 所属模块实例', () => {
     const reducerRegistry = resolveStatisticsReducerRegistry();
     const selectorRegistry = resolveRowSelectorRegistry();
     const reducerSchemas = [
-      [BuiltinReducerOperationKind.Count, BuiltinReducerOperationSchemas.Count],
-      [BuiltinReducerOperationKind.Sum, BuiltinReducerOperationSchemas.Sum],
-      [BuiltinReducerOperationKind.Mean, BuiltinReducerOperationSchemas.Mean],
-      [BuiltinReducerOperationKind.Median, BuiltinReducerOperationSchemas.Median],
-      [BuiltinReducerOperationKind.Min, BuiltinReducerOperationSchemas.Min],
-      [BuiltinReducerOperationKind.Max, BuiltinReducerOperationSchemas.Max],
-      [BuiltinReducerOperationKind.Extent, BuiltinReducerOperationSchemas.Extent],
-      [BuiltinReducerOperationKind.Quantile, BuiltinReducerOperationSchemas.Quantile],
-      [BuiltinReducerOperationKind.QuantileBand, BuiltinReducerOperationSchemas.QuantileBand],
+      [BuiltinReducerOperationKind.Count, BUILTIN_REDUCER_OPERATION_SCHEMAS.Count],
+      [BuiltinReducerOperationKind.Sum, BUILTIN_REDUCER_OPERATION_SCHEMAS.Sum],
+      [BuiltinReducerOperationKind.Mean, BUILTIN_REDUCER_OPERATION_SCHEMAS.Mean],
+      [BuiltinReducerOperationKind.Median, BUILTIN_REDUCER_OPERATION_SCHEMAS.Median],
+      [BuiltinReducerOperationKind.Min, BUILTIN_REDUCER_OPERATION_SCHEMAS.Min],
+      [BuiltinReducerOperationKind.Max, BUILTIN_REDUCER_OPERATION_SCHEMAS.Max],
+      [BuiltinReducerOperationKind.Extent, BUILTIN_REDUCER_OPERATION_SCHEMAS.Extent],
+      [BuiltinReducerOperationKind.Quantile, BUILTIN_REDUCER_OPERATION_SCHEMAS.Quantile],
+      [BuiltinReducerOperationKind.QuantileBand, BUILTIN_REDUCER_OPERATION_SCHEMAS.QuantileBand],
     ] as const;
     const selectorSchemas = [
-      [BuiltinSelectorOperationKind.Min, BuiltinSelectorOperationSchemas.Min],
-      [BuiltinSelectorOperationKind.Max, BuiltinSelectorOperationSchemas.Max],
-      [BuiltinSelectorOperationKind.First, BuiltinSelectorOperationSchemas.First],
-      [BuiltinSelectorOperationKind.Last, BuiltinSelectorOperationSchemas.Last],
-      [BuiltinSelectorOperationKind.Top, BuiltinSelectorOperationSchemas.Top],
-      [BuiltinSelectorOperationKind.Bottom, BuiltinSelectorOperationSchemas.Bottom],
-      [BuiltinSelectorOperationKind.Nth, BuiltinSelectorOperationSchemas.Nth],
-      [BuiltinSelectorOperationKind.OutsideQuantileBand, BuiltinSelectorOperationSchemas.OutsideQuantileBand],
+      [BuiltinSelectorOperationKind.Min, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Min],
+      [BuiltinSelectorOperationKind.Max, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Max],
+      [BuiltinSelectorOperationKind.First, BUILTIN_SELECTOR_OPERATION_SCHEMAS.First],
+      [BuiltinSelectorOperationKind.Last, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Last],
+      [BuiltinSelectorOperationKind.Top, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Top],
+      [BuiltinSelectorOperationKind.Bottom, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Bottom],
+      [BuiltinSelectorOperationKind.Nth, BUILTIN_SELECTOR_OPERATION_SCHEMAS.Nth],
+      [BuiltinSelectorOperationKind.OutsideQuantileBand, BUILTIN_SELECTOR_OPERATION_SCHEMAS.OutsideQuantileBand],
     ] as const;
 
     for (const [kind, schema] of reducerSchemas) expect(reducerRegistry.get(kind)?.schema).toBe(schema);
@@ -56,17 +56,17 @@ describe('statistics provider schema boundaries', () => {
     for (const [kind, schema] of selectorSchemas) expect(selectorRegistry.get(kind)?.schema).toBe(schema);
   });
 
-  it('rejects extra built-in fields consistently at schema and direct dispatch boundaries', () => {
+  it('在 schema 和直接调度边界处一致拒绝额外的内置字段', () => {
     const reducer = { kind: BuiltinReducerOperationKind.Sum, field: 'value', as: 'total', typo: true } as const;
     const selector = { kind: BuiltinSelectorOperationKind.Min, by: 'value', typo: true } as const;
 
     expect(ReducerOperationSchema.safeParse(reducer).success).toBe(false);
-    expect(() => applyReducerOperation([{ value: 2 }], reducer, DEFAULT_TRANSFORM_CONTEXT)).toThrow();
+    expect(() => resolveReducerComputation(reducer, DEFAULT_TRANSFORM_CONTEXT)([{ value: 2 }])).toThrow();
     expect(SelectorOperationSchema.safeParse(selector).success).toBe(false);
-    expect(() => applySelectorOperation([{ value: 2 }], selector, DEFAULT_TRANSFORM_CONTEXT)).toThrow();
+    expect(() => resolveSelectorComputation(selector, DEFAULT_TRANSFORM_CONTEXT)([{ value: 2 }])).toThrow();
   });
 
-  it('exposes continuous output descriptors for scalar reducers and both extent endpoints', () => {
+  it('公开标量缩减器和两个扩展端点的连续输出描述符', () => {
     expect(reducerOutputDescriptors({ kind: 'count', as: 'rows' })).toEqual([
       { field: 'rows', type: DataFieldType.Continuous },
     ]);
@@ -86,7 +86,7 @@ describe('statistics provider schema boundaries', () => {
     ]);
   });
 
-  it('uses the registered reducer descriptor for custom scalar candidates', () => {
+  it('将注册的归约器描述符用于自定义标量候选', () => {
     const definition = defineStatisticsReducer({
       schema: strictObject({ kind: literal('custom-scalar'), as: string() }),
       outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
@@ -99,7 +99,7 @@ describe('statistics provider schema boundaries', () => {
     expect(reducerOutputFields({ kind: 'custom-scalar', as: 'metric' }, registry)).toEqual(['metric']);
   });
 
-  it('passes a custom reducer schema transform output directly to its definition', () => {
+  it('将自定义归约器 schema 转换输出直接传递到其定义', () => {
     let observed: unknown;
     const definition = defineStatisticsReducer({
       schema: strictObject({
@@ -125,11 +125,11 @@ describe('statistics provider schema boundaries', () => {
     };
     const operation = { kind: 'unsafe-output', stamp: '2026-07-11T00:00:00.000Z' } as const;
 
-    expect(applyReducerOperation([], operation, context)).toEqual({});
+    expect(resolveReducerComputation(operation, context)([])).toEqual({});
     expect(observed).toEqual(new Date('2026-07-11T00:00:00.000Z'));
   });
 
-  it('passes a custom selector schema transform output directly to its definition', () => {
+  it('将自定义选择器 schema 转换输出直接传递到其定义', () => {
     let observed: unknown;
     const definition = defineRowSelector({
       schema: strictObject({
@@ -154,7 +154,7 @@ describe('statistics provider schema boundaries', () => {
     };
     const operation = { kind: 'unsafe-selector-output', stamp: '2026-07-11T00:00:00.000Z' } as const;
 
-    expect(applySelectorOperation([], operation, context)).toEqual([]);
+    expect(resolveSelectorComputation(operation, context)([])).toEqual([]);
     expect(observed).toEqual(new Date('2026-07-11T00:00:00.000Z'));
   });
 });

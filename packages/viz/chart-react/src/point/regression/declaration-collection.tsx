@@ -10,7 +10,7 @@ import type { RegressionPropertiesProps } from './RegressionProperties';
 import { RegressionProperties } from './RegressionProperties';
 
 /** RegressionChart direct-child declarations 的完整收集结果 */
-export type CollectedRegressionChartDeclarations = CollectedPointChartDeclarations<
+type CollectedRegressionChartDeclarations = CollectedPointChartDeclarations<
   RegressionEncodingsProps,
   RegressionPropertiesProps,
   RegressionChartMark

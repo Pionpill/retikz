@@ -5,8 +5,8 @@ import { boolean, literal, strictObject } from 'zod';
 
 import { compileInspectionToScene, createInspectorRegistry, defineInspector } from '../../src';
 
-describe('Inspection diagnostics', () => {
-  it('keeps callback warnings before fragment warnings in a deeply frozen diagnostic list', () => {
+describe('检查诊断', () => {
+  it('将回调警告保留在深度冻结的诊断列表中的片段警告之前', () => {
     const owner = { kind: 'composite' as const, namespace: 'demo', type: 'warning-owner' };
     const key = { namespace: 'test', type: 'warning' };
     const composite = defineComposite({

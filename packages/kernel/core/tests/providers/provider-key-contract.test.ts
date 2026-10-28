@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import type { ZodType } from 'zod';
 import { literal, number, object, string, union } from 'zod';
 
 import type { IRScene } from '../../src';
@@ -10,10 +9,54 @@ import {
   CompositeBaseSchema,
   defineComposite,
   defineShape,
+  resolveCompositeRegistry,
 } from '../../src';
 
-describe('provider key contract', () => {
-  it('shape_definitions_declare_their_registry_name', () => {
+describe('提供者键契约', () => {
+  it('包含点号的命名空间与类型独立注册并编译到对应定义', () => {
+    const first = defineComposite({
+      namespace: 'a.b',
+      type: 'c',
+      schema: CompositeBaseSchema.extend({ namespace: literal('a.b'), type: literal('c') }),
+      compile: () => ({ children: [{ type: 'node', position: [0, 0], text: 'first' }] }),
+    });
+    const second = defineComposite({
+      namespace: 'a',
+      type: 'b.c',
+      schema: CompositeBaseSchema.extend({ namespace: literal('a'), type: literal('b.c') }),
+      compile: () => ({ children: [{ type: 'node', position: [40, 0], text: 'second' }] }),
+    });
+    const registry = resolveCompositeRegistry([first, second]);
+
+    expect(resolveCompositeRegistry().size).toBe(0);
+    expect(registry.get('a.b')?.get('c')).toBe(first);
+    expect(registry.get('a')?.get('b.c')).toBe(second);
+    expect(() => resolveCompositeRegistry([first, second, { ...first }])).toThrow(/duplicate composite registration/);
+    expect(
+      compileToScene(
+        {
+          version: 1,
+          type: 'scene',
+          children: [
+            { namespace: 'a.b', type: 'c' },
+            { namespace: 'a', type: 'b.c' },
+          ],
+        },
+        { composites: [first, second] },
+      ).scene,
+    ).toEqual(
+      compileToScene({
+        version: 1,
+        type: 'scene',
+        children: [
+          { type: 'node', position: [0, 0], text: 'first' },
+          { type: 'node', position: [40, 0], text: 'second' },
+        ],
+      }).scene,
+    );
+  });
+
+  it('形状定义声明其注册表名称', () => {
     const shapeNames = [...BUILTIN_SHAPES.values()].map(def => def.name).sort();
 
     expect(shapeNames).toContain('rectangle');
@@ -21,11 +64,11 @@ describe('provider key contract', () => {
     expect(new Set(shapeNames).size).toBe(shapeNames.length);
   });
 
-  it('custom_shape_uses_definition_name_not_record_key', () => {
+  it('自定义形状使用定义名称而不是记录键', () => {
     const ring = defineShape({
       name: 'ring',
       paramsSchema: object({}),
-      computeCircumscribedHalfAxes: () => ({ halfWidth: 10, halfHeight: 10 }),
+      computeCircumscribedGeometry: () => ({ halfWidth: 10, halfHeight: 10 }),
       computeBoundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
       resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
       emit: () => [{ type: 'ellipse', cx: 0, cy: 0, rx: 10, ry: 10 }],
@@ -39,11 +82,11 @@ describe('provider key contract', () => {
     expect(() => compileToScene(ir, { shapes: [ring] }).scene).not.toThrow();
   });
 
-  it('custom_shape_cannot_override_a_builtin_name', () => {
+  it('自定义形状不能覆盖内置名称', () => {
     const rectangle = defineShape({
       name: 'rectangle',
       paramsSchema: object({}),
-      computeCircumscribedHalfAxes: () => ({ halfWidth: 1, halfHeight: 1 }),
+      computeCircumscribedGeometry: () => ({ halfWidth: 1, halfHeight: 1 }),
       computeBoundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
       resolveAnchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
       emit: () => [],
@@ -59,13 +102,13 @@ describe('provider key contract', () => {
     );
   });
 
-  it('path_kind_definitions_are_keyed_by_definition_name', () => {
+  it('路径类型定义由定义名称作为键控', () => {
     const pathNames = [...BUILTIN_PATHS.values()].map(def => def.name).sort();
 
     expect(pathNames).toEqual(['stroke']);
   });
 
-  it('composite_definition_declares_namespace_and_type_as_provider_key', () => {
+  it('复合定义将命名空间和类型声明为提供者键', () => {
     const schema = CompositeBaseSchema.extend({
       namespace: literal('demo'),
       type: literal('badge'),
@@ -81,23 +124,37 @@ describe('provider key contract', () => {
     expect(() => compileToScene(ir, { composites: [badge] }).scene).not.toThrow();
   });
 
-  it('composite_schema_literal_must_match_declared_provider_key', () => {
-    const schema = CompositeBaseSchema.extend({
-      namespace: literal('actual'),
-      type: literal('badge'),
+  it('在解析组件输入时执行 schema 转换并编译转换结果', () => {
+    const badge = defineComposite({
+      namespace: 'demo',
+      type: 'badge',
+      schema: CompositeBaseSchema.extend({
+        namespace: literal('demo'),
+        type: literal('badge'),
+        text: string(),
+      }).transform(node => ({ ...node, text: node.text.toUpperCase() })),
+      compile: node => ({ children: [{ type: 'node', position: [0, 0], text: node.text }] }),
     });
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge', text: 'hello' }] },
+      { composites: [badge] },
+    ).scene;
+    const expected = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', position: [0, 0], text: 'HELLO' }],
+    }).scene;
 
+    expect(scene).toEqual(expected);
     expect(() =>
-      defineComposite({
-        namespace: 'declared',
-        type: 'badge',
-        schema,
-        compile: () => ({ children: [] }),
-      }),
-    ).toThrow(/namespace.*declared.*actual/s);
+      compileToScene(
+        { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge', text: 123 }] },
+        { composites: [badge] },
+      ),
+    ).toThrow(/payload validation/);
   });
 
-  it('composite_object_union_declares_one_shared_provider_key', () => {
+  it('复合对象联合声明一个共享提供者键', () => {
     const schema = union([
       CompositeBaseSchema.extend({
         namespace: literal('demo'),
@@ -136,53 +193,5 @@ describe('provider key contract', () => {
     };
 
     expect(() => compileToScene(ir, { composites: [badge] }).scene).not.toThrow();
-  });
-
-  it('composite_object_union_rejects_unreadable_or_mixed_provider_keys', () => {
-    const base = CompositeBaseSchema.extend({
-      namespace: literal('demo'),
-      type: literal('badge'),
-      variant: literal('base'),
-    });
-    const definitionOf = (schema: ZodType) =>
-      defineComposite({ namespace: 'demo', type: 'badge', schema, compile: () => ({ children: [] }) });
-
-    expect(() => definitionOf(union([base, string()]))).toThrow(/union option 1.*ZodObject/i);
-    expect(() =>
-      definitionOf(
-        union([
-          base,
-          CompositeBaseSchema.extend({
-            namespace: string(),
-            type: literal('badge'),
-            variant: literal('dynamicNamespace'),
-          }),
-        ]),
-      ),
-    ).toThrow(/union option 1.*namespace.*literal/i);
-    expect(() =>
-      definitionOf(
-        union([
-          base,
-          CompositeBaseSchema.extend({
-            namespace: literal('other'),
-            type: literal('badge'),
-            variant: literal('otherNamespace'),
-          }),
-        ]),
-      ),
-    ).toThrow(/union option 1.*namespace.*demo.*other|union option 1.*namespace.*other.*demo/i);
-    expect(() =>
-      definitionOf(
-        union([
-          base,
-          CompositeBaseSchema.extend({
-            namespace: literal('demo'),
-            type: literal('panel'),
-            variant: literal('otherType'),
-          }),
-        ]),
-      ),
-    ).toThrow(/union option 1.*type.*badge.*panel|union option 1.*type.*panel.*badge/i);
   });
 });

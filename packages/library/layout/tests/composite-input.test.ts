@@ -7,9 +7,9 @@ import {
   createFlexLayout,
   createGridLayout,
   createOverlayLayout,
-  FlexLayoutDefinition,
-  GridLayoutDefinition,
-  OverlayLayoutDefinition,
+  flexLayoutDefinition,
+  gridLayoutDefinition,
+  overlayLayoutDefinition,
   LayoutItemKind,
 } from '../src';
 
@@ -20,8 +20,8 @@ const leaf = defineComposite({
   compile: (_node, context) => ({ children: [{ type: 'node', position: [0, 0], text: String(context.runtimeInput) }] }),
 });
 
-describe('Layout prepared child input', () => {
-  it('retains instance input across every Layout family probe', () => {
+describe('Layout 准备子输入', () => {
+  it('保留每个 Layout 系列探测的实例输入', () => {
     const child = { namespace: 'fixture', type: 'prepared' };
     const containers = [
       createFlexLayout({ children: [{ kind: LayoutItemKind.Flex, child }] }),
@@ -35,7 +35,7 @@ describe('Layout prepared child input', () => {
     for (const container of containers) {
       const source: IRScene = { type: 'scene', version: 1, children: [container] };
       const output = compileToScene(source, {
-        composites: [leaf, FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
+        composites: [leaf, flexLayoutDefinition, gridLayoutDefinition, overlayLayoutDefinition],
         compositeInputs: createCompositeInputBindings(source, [
           { path: ['children', 0, 'children', 0, 'child'], input: 'prepared-layout-child' },
         ]),

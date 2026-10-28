@@ -3,11 +3,6 @@ import type { JsonObject } from '@retikz/foundation';
 
 import { isAxisGuide } from '../../../resolve/composition';
 import type { IRPlotAxisGuide, IRPlotGuide } from '../../../schemas';
-import { PlotGuide } from '../../../schemas';
-
-/** 判断 guide 是否为 legend */
-export const isLegendGuide = (guide: IRPlotGuide): guide is Extract<IRPlotGuide, { type: typeof PlotGuide.Legend }> =>
-  guide.type === PlotGuide.Legend;
 
 /** 关闭 axis guide 的 grid 输出，同时保留其它 guide 字段 */
 export const withoutAxisGrid = (guides: ReadonlyArray<IRPlotGuide>): Array<IRPlotGuide> =>

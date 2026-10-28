@@ -1,5 +1,5 @@
 import type { IRRectangle } from '@retikz/standard/shape';
-import { RectangleProvider, createRectangle } from '@retikz/standard/shape';
+import { rectangleProvider, createRectangle } from '@retikz/standard/shape';
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputShape } from './shared';
@@ -9,10 +9,10 @@ import { normalizeShapeInput } from './shared';
 export type InputRectangle = InputShape<IRRectangle>;
 
 /** 将 Rectangle 作者输入归一为持久化的 Standard 意图 */
-export const RectangleInputEmbedAdapter: SynchronousInputEmbedAdapter<InputRectangle & { id?: string }> = {
+export const rectangleInputEmbedAdapter: SynchronousInputEmbedAdapter<InputRectangle & { id?: string }> = {
   kind: 'standard.rectangle',
   lower: props => ({
     node: createRectangle(normalizeShapeInput<IRRectangle>(props)),
-    providerDependencies: { roots: [RectangleProvider.key], providers: [RectangleProvider] },
+    providerDependencies: { roots: [rectangleProvider.key], providers: [rectangleProvider] },
   }),
 };

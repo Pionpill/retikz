@@ -93,13 +93,13 @@ const renderWithValues = (Component: FC, values: Record<string, number | string>
     </PreviewControlStateContext.Provider>,
   );
 
-describe('Viz Data transform controls', () => {
+describe('可视化数据转换控件', () => {
   const localizedPairs = [
     [extensionTransformZh, extensionTransformEn],
     [extensionStatisticsZh, extensionStatisticsEn],
   ] as const;
 
-  it('keeps bilingual contracts structurally identical and complete', () => {
+  it('保持双语契约结构相同和完整', () => {
     for (const [zh, en] of localizedPairs) {
       expect(comparableContract(zh)).toEqual(comparableContract(en));
 
@@ -108,7 +108,7 @@ describe('Viz Data transform controls', () => {
     }
   });
 
-  it('adds explicit source and transform-result views to every Viz Data transform table', () => {
+  it('向每个可视化数据转换表添加显式源视图和转换结果视图', () => {
     for (const [zh, en] of localizedPairs) {
       const zhTable = firstTableOf(zh);
       const enTable = firstTableOf(en);
@@ -125,7 +125,7 @@ describe('Viz Data transform controls', () => {
     }
   });
 
-  it('uses compact Chinese labels for source and single transform result views', () => {
+  it('对源视图和单一转换结果视图使用紧凑的中文标签', () => {
     for (const contract of [extensionTransformZh]) {
       const table = firstTableOf(contract);
       if (!('views' in table)) throw new Error(`Expected table views: ${table.id}`);
@@ -134,7 +134,7 @@ describe('Viz Data transform controls', () => {
     }
   });
 
-  it('keeps distinct output views for custom transforms and statistics', () => {
+  it('为自定义转换和统计保留不同的输出视图', () => {
     expect(
       resolveTableView(extensionTransformZh, 'result', { factor: 2 }).map(row => Reflect.get(row, 'scaledX')),
     ).toEqual([2, 4, 6, 8, 10]);
@@ -150,7 +150,7 @@ describe('Viz Data transform controls', () => {
     ]);
   });
 
-  it('keeps controlled previews within the responsive width budget', () => {
+  it('在响应宽度预算内保持受控预览', () => {
     const viewBoxWidthOf = (markup: string): number =>
       Number(markup.match(/viewBox="[-\d.]+ [-\d.]+ ([\d.]+) [\d.]+"/)?.[1]);
     const previews = [renderWithValues(ExtensionStatisticsDemo, {})];
@@ -158,15 +158,15 @@ describe('Viz Data transform controls', () => {
     for (const preview of previews) expect(viewBoxWidthOf(preview)).toBeLessThanOrEqual(600);
   });
 
-  it('makes custom transform parameters visibly effective', () => {
+  it('使自定义变换参数明显有效', () => {
     expect(renderWithValues(ExtensionTransformDemo, { factor: 1 })).not.toBe(
       renderWithValues(ExtensionTransformDemo, { factor: 3 }),
     );
   });
 });
 
-describe('Data mechanism table comparisons', () => {
-  it('renders computed summaries and selections in both languages', () => {
+describe('数据机制表比较', () => {
+  it('以两种语言呈现计算摘要和选择', () => {
     for (const lang of ['zh', 'en'] as const) {
       for (const Demo of [PipelineDemo, ReducerDemo, SelectorDemo]) {
         const markup = renderToStaticMarkup(
@@ -198,7 +198,7 @@ describe('Data mechanism table comparisons', () => {
   });
 });
 
-it('renders all mechanism flows with the registered vocabulary in both languages', () => {
+it('使用两种语言的注册词汇来渲染所有机制流程', () => {
   for (const Demo of [OverviewDemo, ExecutionDemo, StatisticsOverviewDemo, StatisticsExecutionDemo]) {
     for (const lang of ['zh', 'en'] as const) {
       expect(

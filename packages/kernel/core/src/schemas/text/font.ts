@@ -40,7 +40,7 @@ export const WebFontSizePreset = {
 } as const;
 
 /** Web 风格字号 preset 到 root font size 的比例 */
-export const WebFontSizeRatio = {
+export const webFontSizeRatio = {
   [WebFontSizePreset.Xxs]: 0.625,
   [WebFontSizePreset.Xs]: 0.75,
   [WebFontSizePreset.Sm]: 0.875,

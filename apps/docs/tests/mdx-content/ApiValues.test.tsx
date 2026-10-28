@@ -22,16 +22,16 @@ const collectSourceMdxApiValueNames = (): Array<string> => {
 };
 
 describe('<ApiValues>', () => {
-  it('reads WebFontSizePreset values from the public core constant', () => {
+  it('从公共核心常量读取 WebFontSizePreset 值', () => {
     expect(API_VALUE_REGISTRY.WebFontSizePreset.values).toEqual(Object.values(WebFontSizePreset));
   });
 
-  it('reads Graph role and status values from public constants', () => {
+  it('从公共常量中读取 Graph 角色和状态值', () => {
     expect(API_VALUE_REGISTRY.BuiltinEntityRole.values).toEqual(Object.values(BuiltinEntityRole));
     expect(API_VALUE_REGISTRY.GraphStatus.values).toEqual(Object.values(GraphStatus));
   });
 
-  it('registers non-empty values for every ApiValues name used in source MDX', () => {
+  it('为源 MDX 中使用的每个 ApiValues 名称注册非空值', () => {
     const registry = API_VALUE_REGISTRY as Readonly<Record<string, ApiValueRegistryEntry | undefined>>;
     const names = collectSourceMdxApiValueNames();
 
@@ -44,7 +44,7 @@ describe('<ApiValues>', () => {
     });
   });
 
-  it('renders a focusable code-styled MDX trigger', () => {
+  it('呈现可聚焦代码样式的 MDX 触发器', () => {
     expect(mdxComponents.ApiValues).toBe(ApiValues);
 
     const html = renderToStaticMarkup(<ApiValues name="WebFontSizePreset" />);
@@ -55,7 +55,7 @@ describe('<ApiValues>', () => {
     expect(html).toContain('cursor-help');
   });
 
-  it('renders a diagnostic fallback for an unknown registry name', () => {
+  it('为未知注册表名称呈现诊断回退', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     const html = renderToStaticMarkup(<ApiValues name="MissingPreset" />);

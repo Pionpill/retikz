@@ -60,7 +60,7 @@ export const SceneAnimationOccurrenceChangeKind = {
 export type SceneAnimationOccurrenceChangeKind = ValueOf<typeof SceneAnimationOccurrenceChangeKind>;
 
 /** 单个 animated occurrence 在相邻 lineage 间的 descriptor/public id 变化 */
-export type SceneAnimationOccurrenceChange = Readonly<{
+type SceneAnimationOccurrenceChange = Readonly<{
   /** occurrence 的稳定 Runtime identity */
   identity: SceneIdentity;
   /** 当前 lineage 的 public id */

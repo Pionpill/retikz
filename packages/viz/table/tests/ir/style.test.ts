@@ -22,13 +22,13 @@ const validDefaults = {
   defaultVisual: { categorical: ['#fff', '#000'], sequential: ['#eff6ff', '#1d4ed8'] },
 } as const;
 
-describe('Table Source defaults schema', () => {
-  it('accepts sparse appearance, border, and visual defaults', () => {
+describe('Table Source 默认 schema', () => {
+  it('接受稀疏外观、边框和视觉默认值', () => {
     expect(TableDefaultsSchema.parse(validDefaults)).toEqual(validDefaults);
     expect(TableVisualDefaultsSchema.parse(validDefaults.defaultVisual)).toEqual(validDefaults.defaultVisual);
   });
 
-  it('rejects unknown fields and invalid values through the strict owner schemas', () => {
+  it('通过严格的所属模块 schema 拒绝未知字段和无效值', () => {
     expect(() => TableDefaultsSchema.parse({ unknown: true })).toThrow(/unknown/i);
     expect(() => TableDefaultsSchema.parse({ defaultVisual: { categorical: [] } })).toThrow(/categorical/i);
     expect(() => TableDefaultsSchema.parse({ defaultVisual: { sequential: ['#fff'] } })).toThrow(/sequential/i);
@@ -40,7 +40,7 @@ describe('Table Source defaults schema', () => {
     );
   });
 
-  it('accepts JSON-safe root Source fragments without materializing runtime defaults', () => {
+  it('接受 JSON 安全根 Source 片段，而不实现运行时默认值', () => {
     const base = { namespace: 'table', type: 'table', structure: { kind: 'manual', rows: [[1]] } };
 
     expect(TableSchema.parse(base)).toEqual(base);

@@ -1,17 +1,17 @@
 import type { IRChild, ScenePrimitive } from '@retikz/core';
 import { compileToScene, resolveSpatialHandle } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { expect, it } from 'vitest';
 
-import { ArrayDefinition, MapDefinition } from '../../../src/collection';
-import { MatrixDefinition, createMatrix, getMatrixCellId } from '../../../src/collection/matrix';
+import { arrayDefinition, mapDefinition } from '../../../src/collection';
+import { matrixDefinition, createMatrix, getMatrixCellId } from '../../../src/collection/matrix';
 
 const base = { namespace: 'standard', type: 'matrix' } as const;
 
 const compile = (child: IRChild) =>
   compileToScene(
     { type: 'scene', version: 1, children: [child] },
-    { composites: [MatrixDefinition, ArrayDefinition, MapDefinition], clips: [PathClipDefinition], padding: 0 },
+    { composites: [matrixDefinition, arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
   );
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>

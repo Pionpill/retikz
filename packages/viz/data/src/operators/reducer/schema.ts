@@ -31,32 +31,11 @@ export const BuiltinReducerOperationKind = {
   QuantileBand: 'quantile-band',
 } as const;
 
-/** 读取 numeric field 的内置统计 reducer operation kind 子集 */
-export const BuiltinFieldReducerOperationKind = {
-  /** 对数值字段求和 */
-  Sum: BuiltinReducerOperationKind.Sum,
-  /** 对数值字段求算术平均值 */
-  Mean: BuiltinReducerOperationKind.Mean,
-  /** 对数值字段求中位数 */
-  Median: BuiltinReducerOperationKind.Median,
-  /** 对数值字段求最小值 */
-  Min: BuiltinReducerOperationKind.Min,
-  /** 对数值字段求最大值 */
-  Max: BuiltinReducerOperationKind.Max,
-  /** 对数值字段求最小值和最大值区间 */
-  Extent: BuiltinReducerOperationKind.Extent,
-} as const;
-
 /** 统计 reducer operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
-export const RESERVED_REDUCER_OPERATION_KINDS: ReadonlySet<string> = new Set(
-  Object.values(BuiltinReducerOperationKind),
-);
+const RESERVED_REDUCER_OPERATION_KINDS: ReadonlySet<string> = new Set(Object.values(BuiltinReducerOperationKind));
 
 /** 内置统计 reducer operation kind 取值 */
 export type BuiltinReducerOperationKind = ValueOf<typeof BuiltinReducerOperationKind>;
-
-/** 读取 numeric field 的内置统计 reducer operation kind 取值 */
-export type BuiltinFieldReducerOperationKind = ValueOf<typeof BuiltinFieldReducerOperationKind>;
 
 /** reducer 输出字段及其在 operation 内的 schema path */
 type ReducerOutputField = {
@@ -248,7 +227,7 @@ export const QuantileBandReducerOperationSchema = strictObject({
   .describe('Quantile-band reducer operation');
 
 /** 内置 reducer operation 的 schema 单一真源；aggregate schema 与 provider definition 共用这些实例 */
-export const BuiltinReducerOperationSchemas = Object.freeze({
+export const BUILTIN_REDUCER_OPERATION_SCHEMAS = Object.freeze({
   Count: CountReducerOperationSchema,
   Sum: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Sum),
   Mean: createFieldReducerOperationSchema(BuiltinReducerOperationKind.Mean),
@@ -270,21 +249,21 @@ const ExternalReducerOperationObjectSchema = looseObject({
 });
 
 /** 校验带 JSON 配置的自定义聚合归约操作 */
-export const ExternalReducerOperationSchema = ExternalReducerOperationObjectSchema.catchall(JsonValueSchema).describe(
+const ExternalReducerOperationSchema = ExternalReducerOperationObjectSchema.catchall(JsonValueSchema).describe(
   'Custom reducer operation with JSON config',
 );
 
 /** 内置统计 reducer operation schema */
-export const BuiltinReducerOperationSchema = union([
-  BuiltinReducerOperationSchemas.Count,
-  BuiltinReducerOperationSchemas.Sum,
-  BuiltinReducerOperationSchemas.Mean,
-  BuiltinReducerOperationSchemas.Median,
-  BuiltinReducerOperationSchemas.Min,
-  BuiltinReducerOperationSchemas.Max,
-  BuiltinReducerOperationSchemas.Extent,
-  BuiltinReducerOperationSchemas.Quantile,
-  BuiltinReducerOperationSchemas.QuantileBand,
+const BuiltinReducerOperationSchema = union([
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Count,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Sum,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Mean,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Median,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Min,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Max,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Extent,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Quantile,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.QuantileBand,
 ]).describe('Built-in statistic reducer operation');
 
 /** 统计 reducer operation schema；包含内置 kind 与外部注册 kind 开放配置对象 */
@@ -294,13 +273,13 @@ export const ReducerOperationSchema = union([BuiltinReducerOperationSchema, Exte
 
 /** compact aggregate可解析的单scalar reducer候选；custom项仍需Definition capability确认 */
 export const DataScalarReducerOperationSchema = union([
-  BuiltinReducerOperationSchemas.Count,
-  BuiltinReducerOperationSchemas.Sum,
-  BuiltinReducerOperationSchemas.Mean,
-  BuiltinReducerOperationSchemas.Median,
-  BuiltinReducerOperationSchemas.Min,
-  BuiltinReducerOperationSchemas.Max,
-  BuiltinReducerOperationSchemas.Quantile,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Count,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Sum,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Mean,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Median,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Min,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Max,
+  BUILTIN_REDUCER_OPERATION_SCHEMAS.Quantile,
   ExternalReducerOperationSchema,
 ]).describe('Single-scalar reducer candidate for compact field aggregation');
 

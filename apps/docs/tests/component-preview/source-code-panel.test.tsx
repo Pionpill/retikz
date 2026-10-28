@@ -45,7 +45,7 @@ describe('InlineSourcePanel 折叠源码高度', () => {
   });
 });
 
-describe('component-preview diff owner', () => {
+describe('component-preview 差异归属', () => {
   it('从中立 utils owner 生成 unified diff', () => {
     expect(computeUnifiedDiff('a\nb', 'a\nc')).toEqual({
       code: 'a\nb\nc',

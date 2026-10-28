@@ -7,7 +7,7 @@ import type { IRPolygon } from './types';
 /** 将 Polygon 意图下沉为单一 Core Path */
 export const lowerPolygon = (source: IRPolygon): IRPath => {
   const radius = 'radius' in source ? source.radius : source.sideLength / (2 * Math.sin(Math.PI / source.sides));
-  const rotate = ShapeVertexAngleSchema.parse(source.rotate);
+  const rotate = source.rotate ?? ShapeVertexAngleSchema.parse(undefined);
   const vertices = Array.from({ length: source.sides }, (_, index) =>
     pointAtEllipseArcAngle({
       center: source.center,

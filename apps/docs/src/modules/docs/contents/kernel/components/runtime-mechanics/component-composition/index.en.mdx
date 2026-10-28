@@ -54,7 +54,7 @@ With these definitions ready, Core can invoke compilation capabilities through t
   sources={[
     { label: 'Adapter input and dependency contributions', path: 'packages/viz/chart-vanilla/src/shared/adapter.ts' },
     { label: 'Chart and Plot dependency contributions', path: 'packages/viz/chart-vanilla/src/shared/contribution.ts' },
-    { label: 'Core Definition assembly', path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts' },
+    { label: 'Core Definition assembly', path: 'packages/kernel/core/src/contract/provider/resolve.ts' },
   ]}
 />
 
@@ -135,7 +135,10 @@ Core provides recursive compilation, measurement, and result submission. Chart, 
       label: 'Core traversal and composite result submission',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
     },
-    { label: 'Child layout results and replay contract', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
+    {
+      label: 'Child layout results and replay contract',
+      path: 'packages/kernel/core/src/contract/composite/layout.ts',
+    },
   ]}
 />
 
@@ -145,7 +148,7 @@ The figure maps the main flow to source entry points. The middle row happens rec
 
 <ComponentPreview files="composition-implementation" hideCode type="flow" size="lg" />
 
-Start at `ConnectedScatterChartInputEmbedAdapter` to see how input becomes Source IR and dependencies. Then read `createChartDefinition` for presentation structure and layout entry. Follow `compileSurface`, `compileFlexLayout`, and `lowerPlots` for child proposals and outputs, then return to Core traversal to see the results combined. These names locate implementation code; applications do not need to call those internal entries directly.
+Start at `connectedScatterChartInputEmbedAdapter` to see how input becomes Source IR and dependencies. Then read `createChartDefinition` for presentation structure and layout entry. Follow `compileSurface`, `compileFlexLayout`, and `lowerPlots` for child proposals and outputs, then return to Core traversal to see the results combined. These names locate implementation code; applications do not need to call those internal entries directly.
 
 ## Further reading
 

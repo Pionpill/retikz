@@ -102,9 +102,9 @@ The example converts quarter labels such as `2026Q1` to quarter start timestamps
 A runtime resolver only needs the field and raw values. This version explicitly returns a temporal type and converts quarter labels to quarter start timestamps:
 
 ```ts
-import type { ResolveField } from '@retikz/data';
+import type { FieldResolver } from '@retikz/data';
 
-const resolveField: ResolveField = field =>
+const resolveField: FieldResolver = field =>
   field === 'quarter'
     ? {
         type: 'temporal',

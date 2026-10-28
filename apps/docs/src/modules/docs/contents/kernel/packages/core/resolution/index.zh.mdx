@@ -81,7 +81,7 @@ Node 的连接边界随后通过 `resolveBoundaryReference` 解析。它可以�
 
 ## 样式继承
 
-每进入一层 Scope，`resolveScopeDefaults` 将父级的有效默认配置与当前层 `defaults` 合并，得到一个按 Node、Path、Label、Arrow 分类的 `EffectiveScopeDefaults` 对象。同层子元素共享这个对象；Node 的 `resolveEffectiveNodeStyle` 与 Path 的 `resolveEffectivePath` 读取对应通道，再应用元素自己的属性，无需逐个遍历祖先 Scope。
+每进入一层 Scope，`resolveScopeDefaults` 将父级的有效默认配置与当前层 `defaults` 合并，得到一个按 Node、Path、Label、Arrow 分类的 `MergedScopeDefaults` 对象。同层子元素共享这个对象；Node 的 `mergeNodeStyle` 与 Path 的 `mergePathStyle` 读取对应通道，再应用元素自己的属性，无需逐个遍历祖先 Scope。
 
 同一层先应用 Scope 的通用 `defaults.style`，再应用 `defaults.node.style`。因此，本例的 `strokeWidth` 先为 1，再被节点默认值改成 2，最后由 A 覆盖为 3。
 
@@ -161,7 +161,7 @@ Scope 的 `defaults.reset` 可以切断选定的样式通道。设为 `['node']`
 
 <SourceLinks
   sources={[
-    { label: '主题继承与风格选择', path: 'packages/kernel/core/src/resolve/theme/resolve.ts' },
+    { label: '主题继承与风格选择', path: 'packages/kernel/core/src/resolve/theme.ts' },
     { label: '数值颜色预合成', path: 'packages/kernel/core/src/resolve/style/contextual-color.ts' },
     { label: '节点自动对比文字色', path: 'packages/kernel/core/src/resolve/node/text-color.ts' },
   ]}
@@ -232,7 +232,7 @@ Node 与 Path 都将稀疏声明整理为后续编译可用的结果，但它们
 }
 ```
 
-`CanonicalNode` 是解析后的内部结果，可以携带已绑定的 paint 能力。它仍保留供布局解析的位置表达，也尚未包含最终文字尺寸和外框。`compileResolvedNode` 接过 `NodeResolution`，再结合测量能力与位置上下文产生分开的布局、外观与身份元数据。
+`CanonicalNode` 是解析后的内部结果，可以携带已绑定的 paint 能力。它仍保留供布局解析的位置表达，也尚未包含最终文字尺寸和外框。`compileNodeResolution` 接过 `NodeResolution`，再结合测量能力与位置上下文产生分开的布局、外观与身份元数据。
 
 <SourceLinks
   sources={[

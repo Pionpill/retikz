@@ -6,7 +6,7 @@ const start = { kind: 'move', to: [0, 0] };
 const dataPosition = { x: { field: 'x' }, y: { field: 'y' } };
 const mark = (step: unknown) => ({ type: 'path', encodings: { steps: [start, step] } });
 
-describe('Explicit path steps', () => {
+describe('显式路径步骤', () => {
   it.each([
     { kind: 'move', to: dataPosition },
     { kind: 'line', to: dataPosition },
@@ -21,7 +21,7 @@ describe('Explicit path steps', () => {
     { kind: 'ellipsePath', radius: { x: 10, y: 20 } },
     { kind: 'rectangle', from: dataPosition, to: [10, 20] },
     { kind: 'smooth', points: [dataPosition, { relative: [10, 20] }] },
-  ])('round trips $kind with its own construction fields', step => {
+  ])('往返 $kind，有自己的构造场', step => {
     const source = mark(step);
     const parsed = PathMarkSchema.parse(source);
     expect(parsed.encodings).toEqual(source.encodings);
@@ -39,11 +39,11 @@ describe('Explicit path steps', () => {
     { kind: 'line', to: { relative: [1, 2], ...dataPosition } },
     { kind: 'line', to: { relative: [1, 2], mark: 'nodes', key: { value: 'a' } } },
     { kind: 'axis-line', axis: 'horizontal', to: { id: 'node', ...dataPosition } },
-  ])('rejects malformed external steps: %j', step => {
+  ])('拒绝格式错误的外部步骤：%j', step => {
     expect(PathMarkSchema.safeParse(mark(step)).success).toBe(false);
   });
 
-  it('rejects mixed path inputs and vertex-only properties', () => {
+  it('拒绝混合路径输入和仅顶点属性', () => {
     const source = mark({ kind: 'line', to: [1, 2] });
     expect(
       PathMarkSchema.safeParse({ ...source, encodings: { ...source.encodings, position: dataPosition } }).success,

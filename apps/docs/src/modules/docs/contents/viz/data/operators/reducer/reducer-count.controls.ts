@@ -18,7 +18,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       ],
     }),
     canonicalValues: { grouped: true },
-    relatedApis: ['BuiltinReducerOperationSchemas.Count', 'IRDataSummarizeTransform.params.groupBy'],
+    relatedApis: ['BUILTIN_REDUCER_OPERATION_SCHEMAS.Count', 'IRDataSummarizeTransform.params.groupBy'],
   } satisfies PreviewControlContract;
 };
 /** 缺少语言上下文时采用中文基线 */

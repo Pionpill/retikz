@@ -5,7 +5,7 @@ import { freezeDefinitions } from '../../shared';
 import { quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from '../statistics';
 import type { AnyRowSelectorDefinition, AnySynchronousRowSelectorImplementation } from './contract';
 import { defineRowSelector, defineRowSelectorImplementation } from './contract';
-import { BuiltinSelectorOperationSchemas, RowSelectorTie } from './schema';
+import { BUILTIN_SELECTOR_OPERATION_SCHEMAS, RowSelectorTie } from './schema';
 
 /** 按 top/bottom 的第 N 名阈值处理边界并列行，支持 first / last / all tie 策略 */
 const selectTopBottomRows = (
@@ -35,7 +35,7 @@ const selectTopBottomRows = (
 
 /** min selector definition：选择数值最小的原始行 */
 const minSelectorDefinition = defineRowSelector({
-  schema: BuiltinSelectorOperationSchemas.Min,
+  schema: BUILTIN_SELECTOR_OPERATION_SCHEMAS.Min,
   inputFields: operation => [operation.by],
 });
 
@@ -67,7 +67,7 @@ const minSelectorImplementation = defineRowSelectorImplementation({
 
 /** max selector definition：选择数值最大的原始行 */
 const maxSelectorDefinition = defineRowSelector({
-  schema: BuiltinSelectorOperationSchemas.Max,
+  schema: BUILTIN_SELECTOR_OPERATION_SCHEMAS.Max,
   inputFields: operation => [operation.by],
 });
 
@@ -99,7 +99,7 @@ const maxSelectorImplementation = defineRowSelectorImplementation({
 
 /** first selector definition：选择输入顺序或稳定排序后的首行 */
 const firstSelectorDefinition = defineRowSelector({
-  schema: BuiltinSelectorOperationSchemas.First,
+  schema: BUILTIN_SELECTOR_OPERATION_SCHEMAS.First,
   inputFields: operation => operation.orderBy?.map(order => order.field) ?? [],
 });
 
@@ -114,7 +114,7 @@ const firstSelectorImplementation = defineRowSelectorImplementation({
 
 /** last selector definition：选择输入顺序或稳定排序后的末行 */
 const lastSelectorDefinition = defineRowSelector({
-  schema: BuiltinSelectorOperationSchemas.Last,
+  schema: BUILTIN_SELECTOR_OPERATION_SCHEMAS.Last,
   inputFields: operation => operation.orderBy?.map(order => order.field) ?? [],
 });
 
@@ -129,7 +129,7 @@ const lastSelectorImplementation = defineRowSelectorImplementation({
 
 /** top selector definition：按数值字段选择前 N 行 */
 const topSelectorDefinition = defineRowSelector({
-  schema: BuiltinSelectorOperationSchemas.Top,
+  schema: BUILTIN_SELECTOR_OPERATION_SCHEMAS.Top,
   inputFields: operation => [operation.by],
 });
 
@@ -145,7 +145,7 @@ const topSelectorImplementation = defineRowSelectorImplementation({
 
 /** bottom selector definition：按数值字段选择后 N 行 */
 const bottomSelectorDefinition = defineRowSelector({
-  schema: BuiltinSelectorOperationSchemas.Bottom,
+  schema: BUILTIN_SELECTOR_OPERATION_SCHEMAS.Bottom,
   inputFields: operation => [operation.by],
 });
 
@@ -161,7 +161,7 @@ const bottomSelectorImplementation = defineRowSelectorImplementation({
 
 /** nth selector definition：按稳定排序选择指定零基下标行 */
 const nthSelectorDefinition = defineRowSelector({
-  schema: BuiltinSelectorOperationSchemas.Nth,
+  schema: BUILTIN_SELECTOR_OPERATION_SCHEMAS.Nth,
   inputFields: operation => operation.orderBy.map(order => order.field),
 });
 
@@ -176,7 +176,7 @@ const nthSelectorImplementation = defineRowSelectorImplementation({
 
 /** outside-quantile-band selector definition：选择参数化分位区间或 spread fence 外的原始行 */
 const outsideQuantileBandSelectorDefinition = defineRowSelector({
-  schema: BuiltinSelectorOperationSchemas.OutsideQuantileBand,
+  schema: BUILTIN_SELECTOR_OPERATION_SCHEMAS.OutsideQuantileBand,
   inputFields: operation => [operation.field],
 });
 

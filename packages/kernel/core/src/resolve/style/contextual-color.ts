@@ -4,22 +4,23 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRContextualColor } from '../../schemas';
 import { ThemeMode } from '../../shared';
 
-/** 上下文颜色确定化所需的最终主色、Theme mode 与诊断路径 */
-export type ContextualColorResolveContext = Readonly<{
-  /** 完整样式级联后的有效主色 */
+/** 解析数值颜色所需的主色、主题明暗模式和错误定位信息 */
+type ContextualColorResolveContext = Readonly<{
+  /** 完成样式继承与覆盖后的主色 */
   masterColor?: string;
-  /** 决定预合成背景色的 Theme 明暗模式 */
+  /** 用于选择混色背景的主题明暗模式 */
   mode: ThemeMode;
-  /** 当前派生颜色字段的 Source IR 路径 */
+  /** 当前颜色字段的 IR 路径，用于错误定位 */
   fieldPath: string;
 }>;
 
-/** Theme mode 对应的不透明预合成背景色 */
-const backdropOf = (mode: ThemeMode): '#ffffff' | '#000000' => (mode === ThemeMode.Dark ? '#000000' : '#ffffff');
+/** 浅色模式使用白色背景，深色模式使用黑色背景 */
+const backdropOf = (mode: ThemeMode): string => (mode === ThemeMode.Dark ? '#000000' : '#ffffff');
 
 /**
- * 将上下文颜色确定为 renderer 可直接消费的字符串
- * @description 显式字符串保持 SVG / CSS 原语语义；数值按最终主色与 Theme 背景预合成为不透明颜色
+ * 将颜色字符串或主色混合比例解析为颜色字符串
+ * @description 字符串原样返回；数值作为主色原有不透明度的倍率，与主题对应的黑色或白色背景混合后输出不透明颜色
+ * @throws 数值不在 0 到 1 之间、缺少主色或主色无法参与混色时抛出 RetikzCoreError
  */
 export const resolveContextualColor = (value: IRContextualColor, context: ContextualColorResolveContext): string => {
   if (typeof value === 'string') return value;

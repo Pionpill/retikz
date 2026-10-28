@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 
 import type { IRTableDefaults } from '../../schemas';
 
@@ -13,5 +13,5 @@ export type TableThemeDefinition = Readonly<{
   /** 与 Core effective style 同名的稳定名称 */
   name: string;
   /** 从当前位置完整 Core Theme 解析 Table defaults 稀疏片段 */
-  resolve: (theme: ResolvedTheme) => TableThemeSource;
+  resolve: (theme: CanonicalTheme) => TableThemeSource;
 }>;

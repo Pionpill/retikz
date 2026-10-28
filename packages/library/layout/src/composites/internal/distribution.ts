@@ -1,7 +1,7 @@
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 
 /** 可参与稳定加权分配的数值项 */
-export type WeightedLayoutSize = Readonly<{
+type WeightedLayoutSize = Readonly<{
   /** 参与加权增减前的基础尺寸 */
   base: number;
   /** 分配后允许的最小尺寸 */
@@ -13,7 +13,7 @@ export type WeightedLayoutSize = Readonly<{
 }>;
 
 /** 加权分配后的数值与无法吸收的剩余空间 */
-export type WeightedLayoutDistribution = Readonly<{
+type WeightedLayoutDistribution = Readonly<{
   /** 与输入顺序一致的最终尺寸 */
   values: ReadonlyArray<number>;
   /** 尺寸上下限约束后仍未被吸收的空间 */

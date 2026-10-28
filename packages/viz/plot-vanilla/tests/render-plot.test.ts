@@ -607,7 +607,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
   });
 });
 
-it('renders a registered category order identically to its explicit domain', () => {
+it('将注册的类别顺序呈现为其显式域', () => {
   const definition = defineFieldOrder({ name: 'length', compare: (a, b) => String(a).length - String(b).length });
   const ordered: IRPlot = {
     ...spec,

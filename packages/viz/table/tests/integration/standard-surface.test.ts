@@ -1,25 +1,25 @@
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
-import { PathClipProvider } from '@retikz/extension';
-import { createSurface, SurfaceProvider } from '@retikz/standard/presentation';
+import { pathClipProvider } from '@retikz/extension';
+import { createSurface, surfaceProvider } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
 import type { IRTable } from '../../src';
 import { createTableRuntimeContribution, TABLE_NAMESPACE, TableComposite } from '../../src';
 
-describe('Table inside Standard Surface', () => {
-  it('closes provider, layout, Scene, artifact, and Surface spatial output with a real Table child', () => {
+describe('Standard Surface 里面的 Table', () => {
+  it('使用真实的 Table 子项关闭提供者、布局、Scene、产物和 Surface 空间输出', () => {
     const table: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'people',
       structure: { kind: 'manual', rows: [['Ada']] },
     };
-    const tableContribution = createTableRuntimeContribution({ reference: 'surface-table' });
+    const tableContribution = createTableRuntimeContribution({});
     const providerDefinitions = resolveCoreProviderDependencies({
       contributions: [
         {
-          roots: [SurfaceProvider.key, ...tableContribution.roots],
-          providers: [SurfaceProvider, PathClipProvider, ...tableContribution.providers],
+          roots: [surfaceProvider.key, ...tableContribution.roots],
+          providers: [surfaceProvider, pathClipProvider, ...tableContribution.providers],
         },
       ],
     });

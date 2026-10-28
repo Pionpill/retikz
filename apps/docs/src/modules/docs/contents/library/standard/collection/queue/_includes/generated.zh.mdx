@@ -319,10 +319,10 @@ export type InputQueue = Omit<IRQueue, 'namespace' | 'type' | 'items' | 'data' |
 
 </DocTabs>
 
-#### <ApiSourceLink label={"QueueInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/queue.ts"} startLine={41}>QueueInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"queueInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/queue.ts"} startLine={41}>queueInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const QueueInputEmbedAdapter: SynchronousInputEmbedAdapter<InputQueue>;
+export declare const queueInputEmbedAdapter: SynchronousInputEmbedAdapter<InputQueue>;
 ```
 
 **持久化配置**
@@ -446,10 +446,10 @@ export type IRQueue = Omit<
 
 **扩展定义与注册**
 
-#### <ApiSourceLink label={"QueueDefinition"} path={"packages/library/standard/src/collection/queue/composite.ts"} startLine={10}>QueueDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"queueDefinition"} path={"packages/library/standard/src/collection/queue/composite.ts"} startLine={10}>queueDefinition</ApiSourceLink>
 
 ```ts
-export const QueueDefinition: CompositeDefinition<IRQueue, 'standard', 'queue'> = defineComposite({
+export const queueDefinition: CompositeDefinition<IRQueue, 'standard', 'queue'> = defineComposite({
   namespace: 'standard',
   type: 'queue',
   schema: QueueSchema,
@@ -457,10 +457,10 @@ export const QueueDefinition: CompositeDefinition<IRQueue, 'standard', 'queue'> 
 });
 ```
 
-#### <ApiSourceLink label={"QueueProvider"} path={"packages/library/standard/src/collection/queue/composite.ts"} startLine={21}>QueueProvider</ApiSourceLink>
+#### <ApiSourceLink label={"queueProvider"} path={"packages/library/standard/src/collection/queue/composite.ts"} startLine={21}>queueProvider</ApiSourceLink>
 
 ```ts
-export declare const QueueProvider: CoreDependencyProvider;
+export declare const queueProvider: CoreDependencyProvider;
 ```
 
 **执行与辅助契约**

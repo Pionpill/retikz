@@ -52,7 +52,7 @@ React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `i
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { GridLayoutDefinition } from '@retikz/layout';
+import { gridLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -74,7 +74,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ composites: [GridLayoutDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ composites: [gridLayoutDefinition] }} />;
 ```
 
 </DocTab>
@@ -82,7 +82,7 @@ export const Example = () => <Layout ir={ir} extensions={{ composites: [GridLayo
 
 ```ts
 import { scene, renderToSvgString } from '@retikz/vanilla';
-import { gridLayout, GridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { gridLayout, gridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 
 const input = scene({
   children: [
@@ -100,7 +100,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { adapters: [GridLayoutInputEmbedAdapter] }));
+console.log(renderToSvgString(input, { adapters: [gridLayoutInputEmbedAdapter] }));
 ```
 
 </DocTab>
@@ -109,7 +109,7 @@ console.log(renderToSvgString(input, { adapters: [GridLayoutInputEmbedAdapter] }
 ```ts
 import type { IRScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
-import { GridLayoutDefinition } from '@retikz/layout';
+import { gridLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -131,7 +131,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { composites: [GridLayoutDefinition] } }));
+console.log(renderToSvgString(ir, { compile: { composites: [gridLayoutDefinition] } }));
 ```
 
 </DocTab>
@@ -201,7 +201,7 @@ demo 只改变 First Node。增大它的外边距，再切换水平和垂直对�
     {
       name: 'columns',
       kind: 'property',
-      type: 'Array<GridTrackInput>',
+      type: 'Array<InputGridTrack>',
       description:
         '显式物理列轨道，至少一列。用 `{ kind: "fixed", value }` 固定宽度，用 `{ kind: "fraction", factor }` 分配有限剩余空间',
       required: true,
@@ -209,14 +209,14 @@ demo 只改变 First Node。增大它的外边距，再切换水平和垂直对�
     {
       name: 'rows',
       kind: 'property',
-      type: 'Array<GridTrackInput>',
+      type: 'Array<InputGridTrack>',
       description: '显式物理行轨道；不足时按隐式行策略补齐。本页使用 `{ kind: "fixed", value }` 便于观察对齐',
       defaultValue: '[]',
     },
     {
       name: 'size',
       kind: 'property',
-      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      type: '{ x?: InputLayoutAxisSize; y?: InputLayoutAxisSize }',
       description:
         '容器尺寸策略与内容区内缩 每个轴支持 `{ kind: "content", min?, max? }` 内容策略、`{ kind: "fixed", value }` 固定尺寸或 `{ kind: "fill", min?, max? }` 填充父级有限空间。',
       defaultValue: 'content / content',

@@ -2,17 +2,17 @@ import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
 import { BuiltinExtensionArrowName } from '../constants';
-import { openStrokePath } from './_utils';
+import { buildOpenStrokePath } from './marker-path';
 
 /** 可选 Bar 箭头 Definition */
-export const BarArrowDefinition = defineArrow({
+export const barArrowDefinition = defineArrow({
   name: BuiltinExtensionArrowName.Bar,
   hollow: true,
   backX: 9,
   lineContactX: 9,
   tipX: 9,
   emit: context => [
-    openStrokePath(context, [
+    buildOpenStrokePath(context, [
       {
         from: [9, 1],
         to: [9, 9],
@@ -22,9 +22,7 @@ export const BarArrowDefinition = defineArrow({
 });
 
 /** Bar 箭头的静态 Core provider */
-export const BarArrowProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'arrow', name: BarArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => BarArrowDefinition,
+export const barArrowProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'arrow', name: barArrowDefinition.name }),
+  makeDefinition: () => barArrowDefinition,
 });

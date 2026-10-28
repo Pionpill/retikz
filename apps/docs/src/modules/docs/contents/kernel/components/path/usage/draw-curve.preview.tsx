@@ -1,6 +1,6 @@
-import type { WayDSL } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { Circle } from '@retikz/standard-react/shape';
+import type { WayDSL } from '@retikz/vanilla';
 
 const CurveCenter: [number, number] = [100, 0];
 

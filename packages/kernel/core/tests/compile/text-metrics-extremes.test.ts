@@ -7,7 +7,7 @@ describe('fallbackMeasurer 边界', () => {
     expect(fallbackMeasurer('hello', { size: 0 })).toEqual({ width: 0, height: 0 });
   });
 
-  it('text="" + size>0 → width=0、height=size×1.2', () => {
+  it('文字=“”+尺寸>0→宽度=0、高度=尺寸×1.2', () => {
     expect(fallbackMeasurer('', { size: 10 })).toEqual({ width: 0, height: 12 });
   });
 

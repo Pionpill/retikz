@@ -12,10 +12,10 @@ import type { IRPlotDomainPadding } from '../../schemas';
 import { PlotDomainPaddingKind } from '../../schemas';
 
 /** 可按连续值域规则扩展的 position scale 族 */
-export type PositionDomainFamily = 'linear' | 'time' | 'log' | 'pow' | 'sqrt' | 'symlog' | 'radial';
+type PositionDomainFamily = 'linear' | 'time' | 'log' | 'pow' | 'sqrt' | 'symlog' | 'radial';
 
 /** 解析带弹性值域时需要的 scale 上下文 */
-export type ResolvePaddedDomainOptions = {
+type PaddedDomainResolveOptions = {
   /** scale 名称，用于报错定位 */
   scaleName: string;
   /** 连续 position scale 族 */
@@ -141,7 +141,7 @@ const applyLogRatioPadding = (
 };
 
 const invertRangeEndpoints = (
-  options: ResolvePaddedDomainOptions,
+  options: PaddedDomainResolveOptions,
   domain: readonly [number, number],
   range: readonly [number, number],
 ): [number, number] => {
@@ -184,7 +184,7 @@ const invertRangeEndpoints = (
 };
 
 const applyRangePadding = (
-  options: ResolvePaddedDomainOptions,
+  options: PaddedDomainResolveOptions,
   domain: readonly [number, number],
   padding: DomainPaddingResolution,
 ): [number, number] => {
@@ -214,7 +214,7 @@ const applyRangePadding = (
  * 解析连续 position scale 的最终 domain
  * @description 对单值 domain 先展开，再按显式 domain padding 单位与 scale 族约束处理 log / non-negative 等边界
  */
-export const resolvePaddedDomain = (options: ResolvePaddedDomainOptions): [number, number] => {
+export const resolvePaddedDomain = (options: PaddedDomainResolveOptions): [number, number] => {
   const source = finiteDomain(options.domain, options.scaleName);
   const exponent = options.exponent ?? 2;
   const base = options.base ?? 10;

@@ -41,7 +41,7 @@ declare const defineRuntimeComputation: <
   TComputationRead = TResult,
   TPublicRead = TResult,
 >(
-  input: RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>,
+  input: InputRuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>,
 ) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
 ```
 
@@ -69,7 +69,7 @@ declare const defineRuntimeComputation: <
 以下展开主要结构；省略了根据转换类型决定 `result` 必填性的条件类型。
 
 ```ts
-type RuntimeComputationDefinitionInput<
+type InputRuntimeComputationDefinition<
   TResultInput,
   TResult = TResultInput,
   TComputationRead = TResult,
@@ -79,7 +79,7 @@ type RuntimeComputationDefinitionInput<
   sources: ReadonlyArray<RuntimeSourceToken>;
   computations?: ReadonlyArray<RuntimeComputationToken>;
   tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
-  result?: RuntimeComputationResultDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>;
+  result?: InputRuntimeComputationResultDefinition<TResultInput, TResult, TComputationRead, TPublicRead>;
   run: (view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeRunOutcome<TResultInput>;
   update?: (
     previous: TComputationRead,
@@ -185,7 +185,7 @@ const label = defineRuntimeComputation<string>({
 **计算注册表**把这些定义组织成可以执行的依赖图：先确认所有依赖存在，再安排上游先于下游执行。`createRuntimeComputationRegistry(input)` 创建这个固定注册表，不会立即调用 `run`。
 
 ```ts
-declare const createRuntimeComputationRegistry: (input: RuntimeComputationRegistryInput) => RuntimeComputationRegistry;
+declare const createRuntimeComputationRegistry: (input: InputRuntimeComputationRegistry) => RuntimeComputationRegistry;
 ```
 
 <DocTabs defaultValue="members">
@@ -200,7 +200,7 @@ declare const createRuntimeComputationRegistry: (input: RuntimeComputationRegist
 <DocTab value="definition" label="类型定义">
 
 ```ts
-type RuntimeComputationRegistryInput = Readonly<{
+type InputRuntimeComputationRegistry = Readonly<{
   sources: RuntimeSourceRegistry;
   computations?: ReadonlyArray<RuntimeComputationToken>;
 }>;
@@ -267,7 +267,7 @@ console.log(computations.resolve(distance) === distance); // true
 以下省略根据输入、输出类型决定转换函数必填性的条件类型。
 
 ```ts
-type RuntimeComputationResultDefinitionInput<
+type InputRuntimeComputationResultDefinition<
   TResultInput,
   TResult = TResultInput,
   TComputationRead = TResult,
@@ -556,14 +556,14 @@ const observedDistance = defineRuntimeComputation<number>({
     {
       name: 'defineRuntimeComputation',
       kind: 'function',
-      type: '<TResultInput, TResult = TResultInput, TComputationRead = TResult, TPublicRead = TResult>(input: RuntimeComputationDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>',
+      type: '<TResultInput, TResult = TResultInput, TComputationRead = TResult, TPublicRead = TResult>(input: InputRuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>) => RuntimeComputationDefinition<TResultInput, TResult, TComputationRead, TPublicRead>',
       description:
         '定义 id、sources、run；可配置 computations、result、update、tracePhases 和 observeCommit。转换输入输出类型不同时必须提供对应转换。',
     },
     {
       name: 'createRuntimeComputationRegistry',
       kind: 'function',
-      type: '(input: RuntimeComputationRegistryInput) => RuntimeComputationRegistry',
+      type: '(input: InputRuntimeComputationRegistry) => RuntimeComputationRegistry',
       description:
         'input 为 `{ sources: RuntimeSourceRegistry, computations?: ReadonlyArray<RuntimeComputationToken> }`，computations 默认 []；验证依赖并按拓扑排序。',
     },
@@ -579,7 +579,7 @@ const observedDistance = defineRuntimeComputation<number>({
       kind: 'property',
       type: '(previous: TComputationRead, view: RuntimeCandidateView, context: RuntimeComputationContext) => RuntimeUpdateOutcome<TResultInput>',
       description:
-        "返回分支：\n\n- `{ kind: 'incremental', result: TResultInput }`：完整新结果。\n\n- `{ kind: 'bailout' }`：复用旧结果。\n\n- `{ kind: 'fallback', diagnostics?: ReadonlyArray<RuntimeComputationWarningInput> }`：改走 run，可附业务警告。",
+        "返回分支：\n\n- `{ kind: 'incremental', result: TResultInput }`：完整新结果。\n\n- `{ kind: 'bailout' }`：复用旧结果。\n\n- `{ kind: 'fallback', diagnostics?: ReadonlyArray<InputRuntimeComputationWarning> }`：改走 run，可附业务警告。",
     },
     {
       name: 'context.execution',
@@ -597,7 +597,7 @@ const observedDistance = defineRuntimeComputation<number>({
     {
       name: 'result',
       kind: 'property',
-      type: 'RuntimeComputationResultDefinitionInput<TResultInput, TResult, TComputationRead, TPublicRead>',
+      type: 'InputRuntimeComputationResultDefinition<TResultInput, TResult, TComputationRead, TPublicRead>',
       description:
         'capture: (input: TResultInput) => TResult；readForComputation: (result: TResult) => TComputationRead；read: (result: TResult) => TPublicRead；dispose?: (result: TResult) => void。同类型转换默认恒等，不自动复制或冻结。',
     },

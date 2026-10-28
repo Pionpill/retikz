@@ -6,7 +6,7 @@ import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark, PointMark, RelationMark } from '../../../src/components/marks';
 
 describe('buildPlotIR stat-geom 结构组合', () => {
-  it('boxplot composition uses existing marks and mark-local transforms', () => {
+  it('箱线图合成使用现有标记和标记局部变换', () => {
     const spec = buildPlotIR(
       <>
         <IntervalMark

@@ -1,7 +1,7 @@
 import type { LayoutAxisProposal, CompositeCompileContext, CompositeCompileResult, LayoutProposal } from '@retikz/core';
 import { requiredLayoutProbe } from '@retikz/layout/compose';
 
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
 import type { CanonicalBlock } from '../../resolve';
 import { resolveBlock } from '../../resolve';
 import type { IRBlock } from '../../schemas';
@@ -38,7 +38,7 @@ const blockProposal = (block: CanonicalBlock, proposal: LayoutProposal): LayoutP
 
 /** 创建 Block 的 layout-aware compile callback */
 export const createCompileBlock =
-  (options: ResolvedGraphDefinitionOptions) =>
+  (options: GraphDefinitionRegistries) =>
   (source: IRBlock, context: CompositeCompileContext): CompositeCompileResult => {
     const block = resolveBlock(source, options, context.theme);
     const proposal = blockProposal(block, context.proposal);

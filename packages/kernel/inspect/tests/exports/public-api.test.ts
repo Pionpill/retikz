@@ -5,15 +5,15 @@ import * as api from '../../src';
 import * as reactApi from '../../src/react';
 import * as vanillaApi from '../../src/vanilla';
 
-describe('@retikz/inspect public exports', () => {
-  it('exposes only the root and host entry points in development and publication', () => {
+describe('@retikz/inspect 公共出口', () => {
+  it('仅公开开发和发布中的根和宿主入口点', () => {
     expect(Object.keys(manifest.exports).sort()).toEqual(['.', './react', './vanilla']);
     expect(Object.keys(manifest.publishConfig.exports).sort()).toEqual(['.', './react', './vanilla']);
     expect(manifest.exports).not.toHaveProperty('./compile');
     expect(manifest.publishConfig.exports).not.toHaveProperty('./compile');
   });
 
-  it('exports the host-independent root API', () => {
+  it('导出与宿主无关的根 API', () => {
     expect(Object.keys(api).sort()).toEqual(
       [
         'defineInspector',
@@ -51,7 +51,7 @@ describe('@retikz/inspect public exports', () => {
     expect(api).not.toHaveProperty('canInspectionSelectionRequestSite');
   });
 
-  it('does not evaluate optional host peers from the root entry', async () => {
+  it('不评估根条目中的可选宿主对等点', async () => {
     vi.resetModules();
     vi.doMock('@retikz/render/runtime', () => {
       throw new Error('optional Render peer evaluated');

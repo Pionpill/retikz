@@ -21,7 +21,7 @@ const sourceFiles = (directory: string): Array<string> => {
 
 const source = (path: string): string => readFileSync(resolve(root, path), 'utf8');
 
-describe('Core public API', () => {
+describe('Core 公共 API', () => {
   it('只公开 schema 派生的 Source IR，不定义 framework authoring 输入别名', () => {
     const forbidden = [
       'IRNodeLabelBoundaryPositionInput',

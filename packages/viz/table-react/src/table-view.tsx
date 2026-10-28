@@ -4,7 +4,7 @@ import { Layout } from '@retikz/react';
 import type { TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import type { InputTable, InputTableVariant } from '@retikz/table-vanilla';
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { useCallback, useMemo, useRef } from 'react';
@@ -25,7 +25,7 @@ type TableRuntimeEmbedComponent = FC<TableRuntimeEmbedProps> & {
 const TableRuntimeEmbed = (() => null) as unknown as TableRuntimeEmbedComponent;
 TableRuntimeEmbed.displayName = 'TableRuntimeEmbed';
 TableRuntimeEmbed.isTier2Embeddable = true;
-TableRuntimeEmbed.inputEmbedAdapter = TableInputEmbedAdapter;
+TableRuntimeEmbed.inputEmbedAdapter = tableInputEmbedAdapter;
 
 const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
   artifact.kind === 'composite' &&

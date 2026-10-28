@@ -26,8 +26,8 @@ const ORDERS: Array<ExternalRow> = [
   { region: 'S', product: 'A', revenue: 4 },
 ];
 
-describe('statistical transform algebra (contract)', () => {
-  it('summarize_multiple_metrics', () => {
+describe('统计变换代数（契约）', () => {
+  it('总结多个指标', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'summarize',
@@ -48,7 +48,7 @@ describe('statistical transform algebra (contract)', () => {
     ]);
   });
 
-  it('summarize_global_group_and_group_provenance', () => {
+  it('总结全球组和组起源', () => {
     const out = applyTransforms(tagSourceIndex(ORDERS), [
       {
         kind: 'summarize',
@@ -65,7 +65,7 @@ describe('statistical transform algebra (contract)', () => {
     expect(readSourceIndices(out[0])).toEqual([0, 1, 2, 3]);
   });
 
-  it('select_group_max_preserves_row_and_source_index', () => {
+  it('按组选择最大值时保留行及来源索引', () => {
     const out = applyTransforms(tagSourceIndex(ORDERS), [
       {
         kind: 'select',
@@ -84,7 +84,7 @@ describe('statistical transform algebra (contract)', () => {
     expect(readSourceIndex(out[1])).toBe(3);
   });
 
-  it('select_top_n_writes_rank', () => {
+  it('选择前 n 个写入等级', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'select',
@@ -104,7 +104,7 @@ describe('statistical transform algebra (contract)', () => {
     ]);
   });
 
-  it('annotate_group_mean_preserves_rows', () => {
+  it('按组标注均值时保留原始行', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'annotate',
@@ -124,7 +124,7 @@ describe('statistical transform algebra (contract)', () => {
     ]);
   });
 
-  it('annotate_selector_broadcasts_selected_value', () => {
+  it('注释选择器广播所选值', () => {
     const out = applyTransforms(ORDERS, [
       {
         kind: 'annotate',
@@ -144,7 +144,7 @@ describe('statistical transform algebra (contract)', () => {
     ]);
   });
 
-  it('relate_min_to_max_per_group', () => {
+  it('关联每组的最小到最大', () => {
     const out = applyTransforms(
       [
         { series: 'A', id: 'a1', month: 1, value: 10 },
@@ -192,7 +192,7 @@ describe('statistical transform algebra (contract)', () => {
     ]);
   });
 
-  it('bin_metrics_use_shared_reducers', () => {
+  it('bin 指标使用共享归约器', () => {
     const out = applyTransforms(
       [
         { x: 1, weight: 10 },
@@ -220,7 +220,7 @@ describe('statistical transform algebra (contract)', () => {
     ]);
   });
 
-  it('custom_stat_reducer_in_summarize', () => {
+  it('summarize 使用自定义统计归约器', () => {
     const weightedMean = defineStatisticsReducer({
       schema: object({
         kind: literal('weighted-mean'),
@@ -273,7 +273,7 @@ describe('statistical transform algebra (contract)', () => {
     expect(out).toEqual([expect.objectContaining({ group: 'A', weightedValue: 17.5 })]);
   });
 
-  it('custom_row_selector_in_select', () => {
+  it('select 中的自定义行选择器', () => {
     const nearest = defineRowSelector({
       schema: object({
         kind: literal('nearest'),

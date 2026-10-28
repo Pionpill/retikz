@@ -20,8 +20,8 @@ const definition = (namespace: string, type: string) =>
     inspect: () => [],
   });
 
-describe('Inspector registry', () => {
-  it('completes omitted options fields at both authoring entry points', () => {
+describe('Inspector 注册表', () => {
+  it('完成两个编写入口点处省略的选项字段', () => {
     const rawDefinition = {
       namespace: 'test',
       type: 'empty-options',
@@ -39,7 +39,7 @@ describe('Inspector registry', () => {
     }
   });
 
-  it('preserves a custom resolver when the options schema is omitted', () => {
+  it('当省略选项 schema 时保留自定义解析器', () => {
     const resolveOptions = () => ({ label: 'marker' });
     const input = defineInspector({
       namespace: 'test',
@@ -54,7 +54,7 @@ describe('Inspector registry', () => {
     expect(inspector.resolveOptions).toBe(resolveOptions);
   });
 
-  it('reuses a validated definition across registries', () => {
+  it('跨注册表重用经过验证的定义', () => {
     const input = definition('test', 'reused');
     const inspector = resolveRegistry(createInspectorRegistry([input])).require(input);
 
@@ -62,7 +62,7 @@ describe('Inspector registry', () => {
     expect(resolveRegistry(createInspectorRegistry([input])).require(input)).toBe(inspector);
   });
 
-  it('validates and snapshots a directly supplied definition', () => {
+  it('验证并快照直接提供的定义', () => {
     const rawDefinition = { ...definition('test', 'raw'), owner: { kind: 'path' as const, name: 'stroke' } };
     const registered = resolveRegistry(createInspectorRegistry([rawDefinition])).require(rawDefinition);
     rawDefinition.owner.name = 'changed';
@@ -73,7 +73,7 @@ describe('Inspector registry', () => {
     expect(resolveRegistry(createInspectorRegistry([registered])).require(registered)).toBe(registered);
   });
 
-  it('allows multiple keys for one owner and resolves each key', () => {
+  it('允许一个所属模块使用多个键并解析每个键', () => {
     const registry = createInspectorRegistry([definition('third-party', 'points'), definition('third-party', 'curve')]);
     const resolvedRegistry = resolveRegistry(registry);
 
@@ -82,11 +82,11 @@ describe('Inspector registry', () => {
     expect(Object.isFrozen(resolvedRegistry.definitions)).toBe(true);
   });
 
-  it('fails loudly on a complete namespace and type duplicate', () => {
+  it('在完整的命名空间和类型重复上失败', () => {
     expect(() => createInspectorRegistry([definition('same', 'key'), definition('same', 'key')])).toThrow(/duplicate/i);
   });
 
-  it('merges opaque registries in input order and preserves duplicate-key checks', () => {
+  it('按输入顺序合并不透明注册表并保留重复键检查', () => {
     const first = createInspectorRegistry([definition('first', 'points')]);
     const second = createInspectorRegistry([definition('second', 'curve')]);
     const merged = getResolvedInspectorRegistry(mergeInspectorRegistries(first, second));
@@ -97,7 +97,7 @@ describe('Inspector registry', () => {
     );
   });
 
-  it('keeps distinct keys separate when namespace or type contains a NUL character', () => {
+  it('当命名空间或类型包含 NUL 字符时，保持不同的键分开', () => {
     const first = definition('a\u0000b', 'c');
     const second = definition('a', 'b\u0000c');
 
@@ -113,7 +113,7 @@ describe('Inspector registry', () => {
     });
   });
 
-  it('registers the stroke builtin through the same default path', () => {
+  it('通过相同的默认路径注册内置描边', () => {
     const registry = createDefaultInspectorRegistry([definition('third-party', 'points')]);
 
     expect(resolveRegistry(registry).get(PATH_INSPECTOR_KEY)).toBeDefined();

@@ -6,7 +6,7 @@ import type { IRFlowLayout, FlowEndpointTarget } from '../../schemas';
 import type { FlowDirection, FlowLayoutAlignment, FlowPlacementKind, FlowRoutingKind } from '../../shared';
 
 /** 已补全默认值的固定排列配置；Grid 使用物理行列，不改变流程方向 */
-export type EffectiveFlowPlacement =
+export type CanonicalFlowPlacement =
   | Readonly<{
       /** 沿单一方向排列 */
       kind: 'linear';
@@ -196,7 +196,7 @@ export type FlowLayoutRoute =
   | FlowBezierRoute;
 
 /** Flow layout scope 已补全的有效配置 */
-export type EffectiveFlowLayout = Readonly<{
+export type CanonicalFlowLayoutOptions = Readonly<{
   /** 当前作用域的流程主方向 */
   direction: FlowDirection;
   /** 同层元素之间的最小间距，使用用户单位 */
@@ -235,7 +235,7 @@ export type FlowLayoutDefaults = Readonly<{
 export type FlowLayoutSize = Readonly<Pick<BoundsRect, 'width' | 'height'>>;
 
 /** 已测量的 Flow leaf 输入 */
-export type FlowLayoutLeafInput = Readonly<{
+export type InputFlowLayoutLeaf = Readonly<{
   /** 已测量 Entity 的输入判别字段 */
   kind: 'leaf';
   /** 作者指定的元素 id，与输出 id 对应 */
@@ -249,7 +249,7 @@ export type FlowLayoutLeafInput = Readonly<{
 }>;
 
 /** 已测量的递归 Flow Group 输入 */
-export type FlowLayoutGroupInput = Readonly<{
+export type InputFlowLayoutGroup = Readonly<{
   /** 带可见外壳分组的输入判别字段 */
   kind: 'group';
   /** 本次编排已确定的分组外壳物理高度，纵向线性内容的间隙已按剩余高度分配 */
@@ -265,13 +265,13 @@ export type FlowLayoutGroupInput = Readonly<{
   /** 外壳边界到可放置内容区域的内缩，含标题与内边距 */
   contentInsets: Readonly<BoundsInsets>;
   /** 此分组已补全的方向、间距与路由配置 */
-  layout: EffectiveFlowLayout;
+  layout: CanonicalFlowLayoutOptions;
   /** 按作者直接包含关系组织的已测量子项 */
-  elements: ReadonlyArray<FlowLayoutElementInput>;
+  elements: ReadonlyArray<InputFlowLayoutElement>;
 }>;
 
 /** 作者指定 placement 的递归 Flow Layout 输入 */
-export type FlowLayoutContainerInput = Readonly<{
+export type InputFlowLayoutContainer = Readonly<{
   /** 无可见外壳容器的输入判别字段 */
   kind: 'layout';
   /** 本次编排已确定的物理宽度约束 */
@@ -281,18 +281,18 @@ export type FlowLayoutContainerInput = Readonly<{
   /** 父 Flow 作用域内的可选层级约束，省略时由布局决定 */
   rank?: number;
   /** 此容器已补全的方向、间距与路由配置 */
-  layout: EffectiveFlowLayout;
+  layout: CanonicalFlowLayoutOptions;
   /** 作者指定并已补全的 linear 或 grid 排列配置 */
-  placement: EffectiveFlowPlacement;
+  placement: CanonicalFlowPlacement;
   /** 按作者直接包含关系组织的已测量子项 */
-  elements: ReadonlyArray<FlowLayoutElementInput>;
+  elements: ReadonlyArray<InputFlowLayoutElement>;
 }>;
 
 /** Flow layout element 输入 */
-export type FlowLayoutElementInput = FlowLayoutLeafInput | FlowLayoutGroupInput | FlowLayoutContainerInput;
+export type InputFlowLayoutElement = InputFlowLayoutLeaf | InputFlowLayoutGroup | InputFlowLayoutContainer;
 
 /** 单个 Flow Layout direct child 的已测量 placement 输入 */
-export type FlowLayoutPlacementElementInput = Readonly<{
+export type InputFlowLayoutPlacementElement = Readonly<{
   /** 直接子项的作者 id */
   id: string;
   /** 直接子项已确定的可见尺寸 */
@@ -302,15 +302,15 @@ export type FlowLayoutPlacementElementInput = Readonly<{
 }>;
 
 /** Flow Layout 固定 placement 的完整输入 */
-export type FlowLayoutPlacementInput = Readonly<{
+export type InputFlowLayoutPlacement = Readonly<{
   /** 待排列容器的 id 与有效固定排列配置 */
-  layout: EffectiveFlowPlacement &
+  layout: CanonicalFlowPlacement &
     Readonly<{
       /** 用于关联布局输出的当前容器身份 */
       id: string;
     }>;
   /** 该容器全部直接子项的尺寸与外边距 */
-  elements: ReadonlyArray<FlowLayoutPlacementElementInput>;
+  elements: ReadonlyArray<InputFlowLayoutPlacementElement>;
 }>;
 
 /** Flow Layout 固定 placement 的完整输出 */
@@ -330,7 +330,7 @@ export type FlowLayoutExecutionContext = Readonly<{
   /** 用真实 Graph 几何解析经过点，返回包含首尾的根局部点列 */
   resolveRoutePoints: (query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>;
   /** 按已测量尺寸执行作者的固定排列，返回容器局部坐标中的边界和子项位置 */
-  placeLayout: (input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput;
+  placeLayout: (input: InputFlowLayoutPlacement) => FlowLayoutPlacementOutput;
 }>;
 
 /** 已补全 tension 的经过点路由意图 */
@@ -378,7 +378,7 @@ export type FlowLayoutEndpoint = Readonly<{
 }>;
 
 /** Flow layout relation 输入 */
-export type FlowLayoutRelationInput = Readonly<{
+export type InputFlowLayoutRelation = Readonly<{
   /** 起点 Entity 或 Group 的有效连接约束 */
   source: FlowLayoutEndpoint;
   /** 终点 Entity 或 Group 的有效连接约束 */
@@ -394,13 +394,13 @@ export type FlowLayoutRelationInput = Readonly<{
 }>;
 
 /** 一次原子 Flow layout callback 的完整输入 */
-export type FlowLayoutInput = Readonly<{
+export type InputFlowLayoutComputation = Readonly<{
   /** 根作用域已补全的方向、间距与路由配置 */
-  layout: EffectiveFlowLayout;
+  layout: CanonicalFlowLayoutOptions;
   /** 已解析包含关系并测量尺寸的元素树 */
-  elements: ReadonlyArray<FlowLayoutElementInput>;
+  elements: ReadonlyArray<InputFlowLayoutElement>;
   /** 按 Source 顺序排列的根级关系，输出必须保持相同顺序 */
-  relations: ReadonlyArray<FlowLayoutRelationInput>;
+  relations: ReadonlyArray<InputFlowLayoutRelation>;
 }>;
 
 /** 一个 Flow element 的根坐标系布局输出 */
@@ -468,7 +468,7 @@ export type FlowLayoutDefinition = Readonly<{
   /** Source 和祖先配置均未指定时采用的方向、间距与路由 */
   defaults: FlowLayoutDefaults;
   /** 测量完成后同步计算几何；为全部元素返回 bounds，按输入顺序返回关系；每个固定 Layout 必须调用 context.placeLayout 一次 */
-  layout: (input: FlowLayoutInput, context: FlowLayoutExecutionContext) => FlowLayoutOutput;
+  layout: (input: InputFlowLayoutComputation, context: FlowLayoutExecutionContext) => FlowLayoutOutput;
 }>;
 
 /** 向 LLM 与工具描述当前真实 Flow layout registry 的 JSON-safe 项 */

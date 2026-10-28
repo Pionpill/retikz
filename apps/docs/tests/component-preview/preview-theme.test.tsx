@@ -41,11 +41,11 @@ afterEach(() => {
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-describe('ComponentPreview global theme', () => {
+describe('ComponentPreview 全局主题', () => {
   it.each([
     { mode: ThemeMode.Light, color: 'hsl(210, 70%, 54%)' },
     { mode: ThemeMode.Dark, color: 'hsl(210, 76%, 64%)' },
-  ])('applies the named $mode theme to the responsive Scatter demo', ({ mode, color }) => {
+  ])('将命名的 $mode 主题应用于响应式 Scatter 演示', ({ mode, color }) => {
     const markup = renderToStaticMarkup(
       <PreviewThemeProvider theme={{ name: PreviewTheme.Vibrant, mode }}>
         <PreviewDimensionsContext.Provider value={{ width: 720, height: 440 }}>
@@ -61,7 +61,7 @@ describe('ComponentPreview global theme', () => {
     expect(markup).toContain('height="440"');
   });
 
-  it('updates responsive Chart colors when the preview theme changes', async () => {
+  it('预览主题更改时更新响应式 Chart 颜色', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -85,7 +85,7 @@ describe('ComponentPreview global theme', () => {
     act(() => root.unmount());
   });
 
-  it('renders the theme playground baseline with the ambient preview definitions', () => {
+  it('使用环境预览定义渲染主题交互演示基线', () => {
     const markup = renderToStaticMarkup(
       <PreviewThemeProvider>
         <ThemeInheritance />
@@ -96,18 +96,18 @@ describe('ComponentPreview global theme', () => {
     expect(markup).toContain('#dbeafe');
   });
 
-  it('writes the selected Theme and ThemeMode as a Core selector', () => {
+  it('将所选 Theme 和 ThemeMode 写入 Core 选择器', () => {
     expect(resolvePreviewTheme(PreviewTheme.Academic, ThemeMode.Dark)).toEqual({
       name: PreviewTheme.Academic,
       mode: ThemeMode.Dark,
     });
   });
 
-  it('omits style when the docs default option is selected', () => {
+  it('选择文档默认选项时省略样式', () => {
     expect(resolvePreviewTheme(PreviewTheme.Default, ThemeMode.Light)).toEqual({ mode: ThemeMode.Light });
   });
 
-  it('PreviewThemeProvider bridges persisted IDs to the React ambient Theme', () => {
+  it('PreviewThemeProvider 将持久 ID 桥接到 React 环境主题', () => {
     useComponentPreviewStore.getState().setTheme(PreviewTheme.Clean);
 
     const ThemeReader: FC = () => {
@@ -131,7 +131,7 @@ describe('ComponentPreview global theme', () => {
     act(() => root.unmount());
   });
 
-  it('keeps the Core default baseline when an explicit preview theme omits style', () => {
+  it('当显式预览主题省略样式时，保留 Core 默认基线', () => {
     useComponentPreviewStore.getState().setTheme(PreviewTheme.Vibrant);
 
     const ThemeReader: FC = () => {
@@ -155,7 +155,7 @@ describe('ComponentPreview global theme', () => {
     act(() => root.unmount());
   });
 
-  it('keeps an explicit preview Theme above later global changes', () => {
+  it('显式预览 Theme 的优先级高于后续全局变化', () => {
     useComponentPreviewStore.getState().setTheme(PreviewTheme.Clean);
 
     const ThemeReader: FC = () => {
@@ -183,7 +183,7 @@ describe('ComponentPreview global theme', () => {
     act(() => root.unmount());
   });
 
-  it('passes an explicit preview dark mode to the React ambient Theme', () => {
+  it('将显式预览黑暗模式传递给 React 环境主题', () => {
     const ThemeReader: FC = () => {
       const theme = useTheme();
       return <output>{theme?.mode}</output>;
@@ -205,7 +205,7 @@ describe('ComponentPreview global theme', () => {
     act(() => root.unmount());
   });
 
-  it('renders a standalone preview Table without registering docs definitions twice', () => {
+  it('渲染独立预览 Table，无需注册文档定义两次', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 
     expect(() =>
@@ -222,7 +222,7 @@ describe('ComponentPreview global theme', () => {
     ).not.toThrow();
   });
 
-  it('makes the selected Chart Theme available to standalone Chart previews', () => {
+  it('使选定的 Chart 主题可用于独立的 Chart 预览', () => {
     expect(() =>
       renderToStaticMarkup(
         <PreviewThemeProvider theme={{ name: PreviewTheme.Vibrant, mode: ThemeMode.Light }}>
@@ -235,7 +235,7 @@ describe('ComponentPreview global theme', () => {
     ).not.toThrow();
   });
 
-  it('renders standalone Graph previews with the default theme', () => {
+  it('使用默认主题渲染独立的 Graph 预览', () => {
     expect(() =>
       renderToStaticMarkup(
         <PreviewThemeProvider theme={{ mode: ThemeMode.Light }}>
@@ -253,7 +253,7 @@ describe('ComponentPreview global theme', () => {
     ).not.toThrow();
   });
 
-  it('renders standalone Flow previews with the default theme', () => {
+  it('使用默认主题渲染独立的 Flow 预览', () => {
     expect(() =>
       renderToStaticMarkup(
         <PreviewThemeProvider theme={{ mode: ThemeMode.Light }}>
@@ -267,7 +267,7 @@ describe('ComponentPreview global theme', () => {
     ).not.toThrow();
   });
 
-  it('keeps logic theme defaults out of Source IR and honors explicit font overrides', () => {
+  it('将逻辑主题默认值保留在 Source IR 之外，并支持显式字体覆盖', () => {
     const preview = buildPreviewIR(() => (
       <PreviewFlowDiagram {...logicFigureGraphProps()}>
         <FlowEntity id="source" text="Source" kind="docs.logic.important" role="activity" />
@@ -293,7 +293,7 @@ describe('ComponentPreview global theme', () => {
     expect(buildVanillaPreview(override, { theme: { mode: ThemeMode.Light } }).svg).toContain('font-size="20"');
   });
 
-  it('adds Graph definitions only at the Graph authoring boundary', () => {
+  it('仅在 Graph 编写边界添加 Graph 定义', () => {
     const graph = PreviewGraph.createInputEmbedProps?.(
       {},
       { id: 'preview', kind: PreviewGraph.inputEmbedAdapter.kind },
@@ -312,7 +312,7 @@ describe('ComponentPreview global theme', () => {
     }
   });
 
-  it('renders a standalone Entity Vanilla preview with a named Graph theme', () => {
+  it('使用命名的 Graph 主题渲染独立的 Entity Vanilla 预览', () => {
     const preview = buildPreviewIR(() => (
       <Layout>
         <PreviewEntity role="participant" position={[40, 40]} />

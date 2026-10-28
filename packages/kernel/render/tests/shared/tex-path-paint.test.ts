@@ -26,7 +26,7 @@ const scene: Scene = {
   ],
 };
 
-describe('TeX lowered PathPrimitive renderer parity', () => {
+describe('TeX 下沉了 PathPrimitive 渲染器等价性', () => {
   it('SVG 保留多通道 paint 与 opacity', () => {
     const svg = renderToSvgString(scene, { idPrefix: 'tex' });
 
@@ -51,7 +51,7 @@ describe('TeX lowered PathPrimitive renderer parity', () => {
   });
 });
 
-it('compiled grouped opacity reaches both SVG attributes and Canvas alpha', () => {
+it('编译后的分组不透明度同时达到 SVG 属性和 Canvas alpha', () => {
   const compiled = compileToScene({
     version: 1,
     type: 'scene',

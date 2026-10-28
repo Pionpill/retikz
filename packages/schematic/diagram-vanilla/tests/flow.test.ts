@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import * as FlowVanilla from '../src/flow';
 
-it('removes and restores Group captions and labels during retained updates', () => {
+it('在保留模式更新期间删除并恢复 Group 标题和标签', () => {
   const source = (visible: boolean) => ({
     children: [
       FlowVanilla.flowDiagram({
@@ -47,7 +47,7 @@ it('removes and restores Group captions and labels during retained updates', () 
   }
 });
 
-it('preserves local Layout exclusion through Vanilla authoring', () => {
+it('通过 Vanilla 编写保留本地 Layout 排除', () => {
   const input: FlowVanilla.InputFlowDiagram = {
     entities: [
       { id: 'canvas', text: 'Canvas' },
@@ -83,8 +83,8 @@ const functionExport = <TFunction extends (...arguments_: never) => unknown>(nam
 
 const adapterExport = (): SynchronousInputEmbedAdapter<Readonly<Record<string, unknown>>> | undefined => {
   const value: unknown = FlowVanilla;
-  if (typeof value !== 'object' || value === null || !('FlowDiagramInputEmbedAdapter' in value)) return undefined;
-  return value.FlowDiagramInputEmbedAdapter as SynchronousInputEmbedAdapter<Readonly<Record<string, unknown>>>;
+  if (typeof value !== 'object' || value === null || !('flowDiagramInputEmbedAdapter' in value)) return undefined;
+  return value.flowDiagramInputEmbedAdapter as SynchronousInputEmbedAdapter<Readonly<Record<string, unknown>>>;
 };
 
 const context: InputEmbedContext = {
@@ -135,7 +135,7 @@ const artifactValueOf = (
 ) => result.artifacts.find(artifact => artifact.namespace === 'diagram' && artifact.type === 'flow')?.value;
 
 describe('@retikz/diagram-vanilla/flow', () => {
-  it.each(['-|', '|-'] as const)('compiles %s routing through the public Vanilla adapter', kind => {
+  it.each(['-|', '|-'] as const)('通过公共 Vanilla 适配器编译 %s 路由', kind => {
     const result = processToStaticInputResult(
       {
         children: [
@@ -155,14 +155,14 @@ describe('@retikz/diagram-vanilla/flow', () => {
     expect(artifactValueOf(result)).toMatchObject({ relations: [{ route: { kind, cornerRadius: 0 } }] });
   });
 
-  it('exports the complete Flow authoring surface from the explicit subpath', () => {
+  it('从显式子路径导出完整的 Flow 编写表面', () => {
     expect(functionExport('normalizeFlowDiagram')).toBeDefined();
     expect(functionExport('flowDiagram')).toBeDefined();
     expect(functionExport('createFlowDiagramVanillaAdapters')).toBeDefined();
     expect(adapterExport()).toBeDefined();
   });
 
-  it('normalizes flat authoring input to the exact Direct Flow Source without adding defaults', () => {
+  it('将平面编写输入标准化为精确的 Direct Flow Source，而不添加默认值', () => {
     const normalizeFlowDiagram = functionExport<NormalizeFlowDiagram>('normalizeFlowDiagram');
 
     expect(normalizeFlowDiagram).toBeDefined();
@@ -175,7 +175,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
     expect(Object.keys(source).at(-1)).toBe('children');
   });
 
-  it('normalizes a Core-compatible Entity text block and Source text layout without adapter defaults', () => {
+  it('标准化 Core 兼容的 Entity 文本块和 Source 文本布局，无需适配器默认值', () => {
     const normalizeFlowDiagram = functionExport<NormalizeFlowDiagram>('normalizeFlowDiagram');
 
     expect(normalizeFlowDiagram).toBeDefined();
@@ -196,7 +196,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
     expect(normalizeFlowDiagram(input)).toEqual({ namespace: 'diagram', type: 'flow', ...input });
   });
 
-  it('preserves id-keyed Grid placements in typed Vanilla authoring', () => {
+  it('在键入的 Vanilla 编写中保留 id 键控的 Grid 位置', () => {
     const normalizeFlowDiagram = functionExport<NormalizeFlowDiagram>('normalizeFlowDiagram');
 
     expect(normalizeFlowDiagram).toBeDefined();
@@ -225,7 +225,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
     expect(normalizeFlowDiagram(input)).toEqual({ namespace: 'diagram', type: 'flow', ...input });
   });
 
-  it('keeps definition options out of Source and contributes the same Flow provider root', () => {
+  it('将定义选项保留在 Source 之外，并提供相同的 Flow 提供者根', () => {
     const flowDiagram = functionExport<CreateFlowDiagramEmbed>('flowDiagram');
     const adapter = adapterExport();
 
@@ -240,10 +240,10 @@ describe('@retikz/diagram-vanilla/flow', () => {
 
     expect(contribution.node).toEqual(expectedSource);
     expect(contribution.node).not.toHaveProperty('flowThemeDefinitions');
-    expect(contribution.providerDependencies.roots).toEqual([DiagramFlow.FlowDiagramProviderKey]);
+    expect(contribution.providerDependencies.roots).toEqual([DiagramFlow.flowDiagramProviderKey]);
   });
 
-  it('compiles the normalized Source to the public Flow artifact through the contributed providers', () => {
+  it('通过贡献的提供者将规范化的 Source 编译为公共 Flow 产物', () => {
     const flowDiagram = functionExport<CreateFlowDiagramEmbed>('flowDiagram');
     const adapter = adapterExport();
 

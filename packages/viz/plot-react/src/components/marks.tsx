@@ -1,7 +1,5 @@
 import type { IRPlotPathStep } from '@retikz/plot';
 import type {
-  InputPlotCoreNodeChannels,
-  InputPlotCorePathChannels,
   InputPlotDatumLabel,
   InputPlotIntervalMark,
   InputPlotPathMark,
@@ -24,10 +22,6 @@ export type PointMarkProps = InputPlotPointMark;
 export type IntervalMarkProps = InputPlotIntervalMark;
 
 export type RelationMarkProps = InputPlotRelationMark;
-
-export type CoreNodeChannelProps = InputPlotCoreNodeChannels;
-
-export type CorePathChannelProps = InputPlotCorePathChannels;
 
 export type DatumLabelProps = InputPlotDatumLabel;
 

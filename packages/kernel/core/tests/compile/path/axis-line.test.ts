@@ -7,7 +7,7 @@ import { pathArrows } from '../../helpers/path-arrows';
 import { line, move } from '../../helpers/path-command-factory';
 import { findPathPrim, pathCommands } from './helpers';
 
-describe('compile path: axis-line', () => {
+describe('编译路径：轴线', () => {
   it('按当前 host 局部轴投影 horizontal / vertical endpoint', () => {
     expect(
       pathCommands([

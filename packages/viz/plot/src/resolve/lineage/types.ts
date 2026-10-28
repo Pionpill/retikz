@@ -3,7 +3,7 @@ import type { DataLineageOptions } from '@retikz/data';
 import type { PlotLineageOptions, PlotRowValueOptions } from '../../contract';
 
 /** 单次运行调用中已解析默认值的绘图溯源选项 */
-export type EffectivePlotLineageOptions = {
+export type CanonicalPlotLineageOptions = {
   /** 已补齐的数据层来源追踪开关 */
   data: DataLineageOptions;
   /** 是否记录作者指定的 mark id */

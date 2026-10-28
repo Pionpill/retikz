@@ -3,7 +3,7 @@ import type {
   IRDropShadow,
   PaintValue,
   PathPrimitive,
-  ResolvedArrowEnd,
+  CompiledArrowEnd,
   ScenePrimitive,
 } from '@retikz/core';
 
@@ -20,19 +20,19 @@ type DominantBaseline = 'text-before-edge' | 'central' | 'text-after-edge' | 'al
  * builder 上下文——容器侧把「全 SVG 共享」的资源 id 回调向下传给 buildPrim
  * @description 资源缺省时回退裸 `url(#id)`（无实例前缀）；arrow marker 缺省不引用
  */
-export type BuildContext = {
+export type SvgPrimitiveBuildContext = {
   /** 文档容器定位箭头后，复用普通图元绘制内容 */
   arrowContentFor?: (primitive: PathPrimitive) => Array<SvgNode>;
   /** 资源局部绘制上下文中最近路径的描边 */
   contextStroke?: PaintValue;
   /** 解析主树图元所属的宿主上下文 */
-  forPrimitive?: (primitive: ScenePrimitive) => BuildContext;
+  forPrimitive?: (primitive: ScenePrimitive) => SvgPrimitiveBuildContext;
   /** 资源内容不将局部身份写入宿主 DOM 索引 */
   isResourceContent?: boolean;
   /** 资源使用处继承的播放宿主 */
   hostId?: string;
   /** 按 arrow 端点 spec 查 `<marker id>` id 的回调（按 detail hash 区分起末异形 / 异色） */
-  arrowMarkerIdFor?: (spec: ResolvedArrowEnd) => string;
+  arrowMarkerIdFor?: (spec: CompiledArrowEnd) => string;
   /** paint 资源 id → `url(#...)` 引用（加实例前缀避免跨实例撞）；缺省 `url(#id)` */
   paintRefUrl?: (id: string) => string;
   /** clip 资源 id → `url(#...)` 引用（GroupPrimitive.clipRef 物化用）；缺省 `url(#id)` */
@@ -127,7 +127,7 @@ const shadowFilterRef = (
  * @description 不读 IR，只读 Scene。属性名一律 SVG 真名（呈现属性 kebab、结构属性规范拼写）；含 `var()` 的
  *   颜色值落 `style`、其余落 `attrs`。group 递归并跳过 undefined 子槽位（防御非法 Scene）
  */
-const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
+const buildPrimRaw = (p: ScenePrimitive, context: SvgPrimitiveBuildContext): SvgNode => {
   const paintRefUrl = context.paintRefUrl ?? ((id: string) => `url(#${id})`);
   const bindPaint = (paint: PaintValue | undefined): PaintValue | undefined =>
     typeof paint === 'object' && paint.kind === 'contextStroke' && context.contextStroke !== undefined
@@ -298,7 +298,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
  * @description 先建静态 base 节点（buildPrimRaw），再经 context.decorate 挂动画（CSS class / WAAPI data /
  *   transform wrapper `<g>`）；无 decorate（动画关闭或无 animations）时原样返回 base
  */
-export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNode => {
+export const buildPrim = (p: ScenePrimitive, context: SvgPrimitiveBuildContext = {}): SvgNode => {
   context = context.forPrimitive?.(p) ?? context;
   let node = buildPrimRaw(p, context);
   if (p.type === 'path' && context.arrowContentFor && (p.arrowStart || p.arrowEnd)) {

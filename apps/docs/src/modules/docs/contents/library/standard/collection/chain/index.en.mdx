@@ -27,11 +27,11 @@ import { Chain } from '@retikz/standard-react/collection';
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { chain, chainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 renderToSvgString(scene({ children: [chain({ items: ['A', 'B', 'C'] })] }), {
-  adapters: [ChainInputEmbedAdapter],
+  adapters: [chainInputEmbedAdapter],
 });
 ```
 
@@ -42,7 +42,7 @@ renderToSvgString(scene({ children: [chain({ items: ['A', 'B', 'C'] })] }), {
 { "namespace": "standard", "type": "chain", "items": ["A", "B", "C"] }
 ```
 
-Direct IR needs ChainProvider and PathClipProvider, plus content dependencies. Expanded data also needs ArrayProvider and MapProvider.
+Direct IR needs chainProvider and pathClipProvider, plus content dependencies. Expanded data also needs arrayProvider and mapProvider.
 
 </DocTab>
 </DocTabs>

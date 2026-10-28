@@ -62,7 +62,7 @@ const resolveBoundary = (boundary: Parameters<typeof resolveBoundaryReference>[0
   );
 
 describe('resolveBoundary', () => {
-  it("'shape' / undefined → visual def + rect", () => {
+  it("'shape' 或 undefined 使用视觉定义和矩形", () => {
     const r = resolveBoundary('shape', resolveContext());
 
     expect(r.def).toBe(rectangle);
@@ -70,12 +70,12 @@ describe('resolveBoundary', () => {
     expect(resolveBoundary(undefined, resolveContext()).def).toBe(rectangle);
   });
 
-  it("'rectangle' / 'ellipse' → builtin boundary providers on visual AABB", () => {
+  it("'rectangle' / 'ellipse' → 视觉 AABB 上的内置边界提供者", () => {
     expect(resolveBoundary('rectangle', resolveContext({ visualDef: ellipseShape })).def.name).toBe('rectangle');
     expect(resolveBoundary('ellipse', resolveContext()).def.name).toBe('ellipse');
   });
 
-  it("'circle' → circle boundary provider uses the visual AABB circumcircle", () => {
+  it("'circle' → 圆边界提供者使用视觉 AABB 外接圆", () => {
     const r = resolveBoundary('circle', resolveContext());
 
     expect(r.def.name).toBe('circle');
@@ -85,7 +85,7 @@ describe('resolveBoundary', () => {
     expect(r.rect.x).toBe(0);
   });
 
-  it("'circle' → connection surface circumscribes the visual AABB", () => {
+  it("'circle'→连接面外接视觉 AABB", () => {
     const r = resolveBoundary('circle', resolveContext());
     const corner = r.def.computeBoundaryPoint(r.rect, [20, 10], r.params);
     const right = r.def.computeBoundaryPoint(r.rect, [100, 0], r.params);
@@ -96,7 +96,7 @@ describe('resolveBoundary', () => {
     expect(right[1]).toBeCloseTo(0);
   });
 
-  it("'circle' → rotated surface preserves corner enclosure and standard anchors", () => {
+  it("'circle' 旋转连接面仍包围各角点并保留标准锚点", () => {
     const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
     const r = resolveBoundary('circle', resolveContext({ visualRect: rotatedRect }));
     const corner = r.def.computeBoundaryPoint(r.rect, [-5, 13], r.params);
@@ -108,7 +108,7 @@ describe('resolveBoundary', () => {
     expect(top?.[1]).toBeCloseTo(-7);
   });
 
-  it("'ellipse' → connection surface circumscribes the visual AABB", () => {
+  it("'ellipse'→连接面外接视觉 AABB", () => {
     const r = resolveBoundary('ellipse', resolveContext());
     const corner = r.def.computeBoundaryPoint(r.rect, [20, 10], r.params);
     const right = r.def.computeBoundaryPoint(r.rect, [100, 0], r.params);
@@ -119,7 +119,7 @@ describe('resolveBoundary', () => {
     expect(right[1]).toBeCloseTo(0);
   });
 
-  it("'ellipse' → rotated surface preserves corner enclosure and standard anchors", () => {
+  it("'ellipse' 旋转连接面仍包围各角点并保留标准锚点", () => {
     const rotatedRect: CenteredBox = { x: 5, y: -7, width: 40, height: 20, rotate: Math.PI / 2 };
     const r = resolveBoundary('ellipse', resolveContext({ visualRect: rotatedRect }));
     const corner = r.def.computeBoundaryPoint(r.rect, [-5, 13], r.params);
@@ -131,7 +131,7 @@ describe('resolveBoundary', () => {
     expect(top?.[1]).toBeCloseTo(-7);
   });
 
-  it('builtin {type, params} → boundary provider + parsed params', () => {
+  it('内置 {type, params} 使用边界提供者及解析后的参数', () => {
     const r = resolveBoundary({ type: 'ellipse' }, resolveContext());
 
     expect(r.def.name).toBe('ellipse');
@@ -237,7 +237,7 @@ describe('resolveBoundary', () => {
     ).toThrow(/finite|invalid rect/i);
   });
 
-  it('boundary provider beats registered same-name shape fallback', () => {
+  it('边界提供者优先于已注册的同名形状回退', () => {
     const fakeCircle = { ...ellipseShape, name: 'circle' };
     const r = resolveBoundary(
       'circle',
@@ -250,7 +250,7 @@ describe('resolveBoundary', () => {
 });
 
 describe('boundaryKey', () => {
-  it('stable per boundary', () => {
+  it('各边界保持稳定', () => {
     expect(boundaryKey('shape')).toBe(boundaryKey('shape'));
     expect(boundaryKey('circle')).not.toBe(boundaryKey('shape'));
     expect(boundaryKey({ type: 'star', params: { points: 5 } })).toContain('star');

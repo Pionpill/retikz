@@ -7,4 +7,4 @@ import type { AxesSchema } from './schema';
 export type IRAxes = Omit<ZodInput<typeof AxesSchema>, keyof IRScopeProps> & IRScopeProps;
 
 /** 创建 Axes 时允许省略固定 discriminator 的输入 */
-export type AxesInput = Omit<IRAxes, 'namespace' | 'type'>;
+export type InputAxes = Omit<IRAxes, 'namespace' | 'type'>;

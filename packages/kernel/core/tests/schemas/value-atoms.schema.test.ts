@@ -15,8 +15,8 @@ import {
   TextAlignSchema,
 } from '../../src';
 
-describe('Core value atom schemas', () => {
-  it('preserves non-blank CSS color strings and rejects blank values', () => {
+describe('Core 值原子 schema', () => {
+  it('保留非空白 CSS 颜色字符串并拒绝空白值', () => {
     expect(CssColorSchema.parse(' currentColor ')).toBe(' currentColor ');
 
     for (const color of ['', '   ']) {
@@ -24,7 +24,7 @@ describe('Core value atom schemas', () => {
     }
   });
 
-  it('accepts normalized numeric weights only in contextual color atoms', () => {
+  it('仅在上下文颜色原子中接受标准化数字权重', () => {
     for (const color of ['currentColor', '#336699', 0, 0.4, 1]) {
       expect(ContextualColorSchema.safeParse(color).success).toBe(true);
     }
@@ -36,7 +36,7 @@ describe('Core value atom schemas', () => {
     expect(PaintValueSchema.parse(0.4)).toBe(0.4);
   });
 
-  it('keeps graphic masters and paint-internal colors string-only', () => {
+  it('仅保留图形母版和绘制内部颜色字符串', () => {
     expect(
       NodeSchema.safeParse({
         type: 'node',
@@ -55,7 +55,7 @@ describe('Core value atom schemas', () => {
     ).toBe(false);
   });
 
-  it('parses font family, weight, and style with the existing Font contract', () => {
+  it('使用现有的 Font 契约解析字体系列、粗细和样式', () => {
     for (const family of ['', 'serif', 'Inter, sans-serif']) {
       expect(FontFamilySchema.safeParse(family).success).toBe(true);
     }
@@ -75,7 +75,7 @@ describe('Core value atom schemas', () => {
     expect(FontStyleSchema.safeParse('slanted').success).toBe(false);
   });
 
-  it('parses text alignment and line height with the existing Node contract', () => {
+  it('使用现有的 Node 契约解析文本对齐和行高', () => {
     for (const align of ['start', 'middle', 'end']) {
       expect(TextAlignSchema.safeParse(align).success).toBe(true);
     }
@@ -87,14 +87,14 @@ describe('Core value atom schemas', () => {
     expect(LineHeightSchema.safeParse(-1).success).toBe(false);
   });
 
-  it('parses stroke width with the existing shared stroke contract', () => {
+  it('使用现有的共享描边契约解析描边宽度', () => {
     expect(StrokeWidthSchema.safeParse(0).success).toBe(true);
     expect(StrokeWidthSchema.safeParse(2).success).toBe(true);
     expect(StrokeWidthSchema.safeParse(-1).success).toBe(false);
     expect(StrokeWidthSchema.safeParse('2').success).toBe(false);
   });
 
-  it('reuses the named atoms in compatibility aggregate schemas', () => {
+  it('在兼容性聚合 schema 中重用命名原子', () => {
     expect(FontSchema.shape.family.unwrap()).toBe(FontFamilySchema);
     expect(FontSchema.shape.weight.unwrap()).toBe(FontWeightSchema);
     expect(FontSchema.shape.style.unwrap()).toBe(FontStyleSchema);

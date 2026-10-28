@@ -1,4 +1,4 @@
-import { BarArrowDefinition } from '@retikz/extension';
+import { barArrowDefinition } from '@retikz/extension';
 import { Draw, Layout } from '@retikz/react';
 
 /** 图形参数 */
@@ -11,7 +11,7 @@ export type BarArrowPreviewValues = {
 
 /** 绘制示例图形 */
 export const renderBarArrowPreview = (values: BarArrowPreviewValues) => (
-  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} extensions={{ arrows: [BarArrowDefinition] }}>
+  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} extensions={{ arrows: [barArrowDefinition] }}>
     <Draw
       way={[
         [-120, 0],

@@ -40,11 +40,11 @@ const TableBaseSchema = CompositeBaseSchema.extend({
   ),
 });
 
-type TableRootSemanticInput = Readonly<{
+type InputTableRootSemantic = Readonly<{
   encodings?: ReadonlyArray<Readonly<{ id: string; legend?: false | Readonly<{ title?: string }> }>>;
 }>;
 
-const validateTableRoot = (spec: TableRootSemanticInput, context: RefinementCtx): void => {
+const refineTableRoot = (spec: InputTableRootSemantic, context: RefinementCtx): void => {
   const seen = new Set<string>();
   spec.encodings?.forEach((encoding, index) => {
     if (seen.has(encoding.id)) {
@@ -66,7 +66,7 @@ export const DetailTableSchema = TableBaseSchema.extend({
   ),
   structure: DetailTableStructureSchema.describe('Record-per-row detail structure for this Table.'),
 })
-  .superRefine(validateTableRoot)
+  .superRefine(refineTableRoot)
   .describe('JSON-safe detail Table composite specification bound to external data.');
 
 /** 校验直接编写内容的表格组合节点，拒绝外部数据与数据执行选项 */
@@ -76,7 +76,7 @@ export const ManualTableSchema = TableBaseSchema.extend({
   data: never().optional().describe('Manual Table specifications do not accept an external dataset reference.'),
   structure: ManualTableStructureSchema.describe('Explicit row-major Cell matrix for this manual Table.'),
 })
-  .superRefine(validateTableRoot)
+  .superRefine(refineTableRoot)
   .describe('JSON-safe manual Table composite specification with explicit content.');
 
 /** 校验通过注册结构能力解析、可选择绑定外部数据的表格组合节点 */
@@ -90,7 +90,7 @@ export const CustomTableSchema = TableBaseSchema.extend({
   ),
   structure: CustomTableStructureSchema.describe('Custom Table structure operation resolved through the registry.'),
 })
-  .superRefine(validateTableRoot)
+  .superRefine(refineTableRoot)
   .describe('JSON-safe custom Table composite specification resolved by a structure definition.');
 
 type TableSchemaOutput =

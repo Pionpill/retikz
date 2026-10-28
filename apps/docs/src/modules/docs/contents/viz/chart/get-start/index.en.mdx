@@ -43,7 +43,7 @@ Prepare `<div id="chart"></div>` in your HTML and place this code in your TypeSc
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { scatterChart, scatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 
 const rows = [
   { x: 1, y: 2 },
@@ -59,7 +59,7 @@ const chart = scatterChart({
   properties: { size: 8 },
 });
 
-document.getElementById('chart')!.innerHTML = renderChart(chart, { adapters: [ScatterChartInputEmbedAdapter] }).svg;
+document.getElementById('chart')!.innerHTML = renderChart(chart, { adapters: [scatterChartInputEmbedAdapter] }).svg;
 ```
 
 </DocTab>

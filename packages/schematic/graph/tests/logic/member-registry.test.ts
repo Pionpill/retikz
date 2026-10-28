@@ -3,8 +3,8 @@ import { boolean, strictObject } from 'zod';
 
 import * as Graph from '../../src';
 
-describe('Relation definition registry', () => {
-  it('registers role defaults without any implicit kinds', () => {
+describe('Relation 定义注册表', () => {
+  it('注册角色默认值，没有任何隐式类型', () => {
     const roles = Graph.resolveRelationRoleRegistry();
     const kinds = Graph.resolveRelationKindRegistry(undefined, roles);
 
@@ -39,7 +39,7 @@ describe('Relation definition registry', () => {
     expect([...kinds.keys()]).toEqual([]);
   });
 
-  it('keeps Relation role/kind/predicate structure in semantic definitions', () => {
+  it('在语义定义中保留 Relation 角色/种类/谓词结构', () => {
     const role = Graph.defineRelationRole({
       role: 'ownership',
       description: 'Ownership relation',

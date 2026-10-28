@@ -8,7 +8,7 @@ const lowerSvgForTest = (svg: string, fontSize: number) => {
   return result.value;
 };
 
-describe('[lower-mathjax-svg] drawable paint contract', () => {
+describe('[lower-mathjax-svg] 可绘制绘制契约', () => {
   it('按文档顺序输出 path / rect / line / polygon，并物化 paint 三态', () => {
     const result = lowerSvgForTest(
       '<svg viewBox="0 0 100 100" color="purple">' +

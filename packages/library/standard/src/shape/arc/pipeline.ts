@@ -6,7 +6,7 @@ import type { IRArc } from './types';
 /** 将 Arc 意图下沉为单一 Core Path */
 export const lowerArc = (source: IRArc): IRPath => {
   const angles = shapeAngles(source)!;
-  const close = ShapeArcCloseSchema.parse(source.close);
+  const close = source.close ?? ShapeArcCloseSchema.parse(undefined);
   const { label: _hostLabel, ...properties } = shapePathProperties(source);
   void _hostLabel;
   const { label } = source;

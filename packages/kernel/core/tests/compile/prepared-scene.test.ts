@@ -1,13 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IRScene } from '../../src';
-import {
-  compileToScene,
-  createCompositeInputBindings,
-  prepareSceneCompilation,
-  RetikzCoreErrorCode,
-  assertCompositeInputBindings,
-} from '../../src';
+import { compileToScene, createCompositeInputBindings, prepareSceneCompilation, RetikzCoreErrorCode } from '../../src';
 
 const scene: IRScene = {
   version: 1,
@@ -60,11 +54,10 @@ describe('静态编译准备', () => {
     }
   });
 
-  it('配对检查不编译并拒绝过期绑定', () => {
+  it('编译入口接受配对绑定并拒绝过期绑定', () => {
     const bindings = createCompositeInputBindings(scene, []);
-    expect(assertCompositeInputBindings(scene, bindings)).toBeUndefined();
-    expect(assertCompositeInputBindings(scene, undefined)).toBeUndefined();
-    expect(() => assertCompositeInputBindings({ ...scene, children: [] }, bindings)).toThrow(
+    expect(compileToScene(scene, { compositeInputs: bindings })).toEqual(compileToScene(scene));
+    expect(() => compileToScene({ ...scene, children: [] }, { compositeInputs: bindings })).toThrow(
       expect.objectContaining({ code: RetikzCoreErrorCode.CompositeContractViolation }),
     );
   });

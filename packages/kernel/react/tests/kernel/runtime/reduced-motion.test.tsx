@@ -87,7 +87,7 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-describe('React SVG reduced motion', () => {
+describe('React SVG 的减少动态效果设置', () => {
   it('初始 prefers-reduced-motion → 无 CSS / WAAPI 动画', async () => {
     stubReducedMotion(true);
     const container = await mount(

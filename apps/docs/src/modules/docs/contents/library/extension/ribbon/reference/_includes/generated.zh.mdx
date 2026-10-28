@@ -141,7 +141,7 @@ export type RibbonCapDefinition<TParams extends JsonObject = JsonObject> = Reado
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RibbonWidthProfileDefinitionInput"} path={"packages/library/extension/src/ribbon/profile-types.ts"} startLine={21}>RibbonWidthProfileDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRibbonWidthProfileDefinition"} path={"packages/library/extension/src/ribbon/profile-types.ts"} startLine={21}>InputRibbonWidthProfileDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -163,7 +163,7 @@ export type RibbonCapDefinition<TParams extends JsonObject = JsonObject> = Reado
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonObject> = {
+export type InputRibbonWidthProfileDefinition<TParams extends JsonObject = JsonObject> = {
   name: string;
   paramsSchema?: ZodType<TParams>;
   widthAt: (ctx: RibbonWidthProfileContext<TParams>) => number;
@@ -174,12 +174,12 @@ export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonO
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RibbonPathDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={47}>RibbonPathDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ribbonPathDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={47}>ribbonPathDefinition</ApiSourceLink>
 
 需要在当前图的 paths 中显式装配，不自动注册
 
 ```ts
-export const RibbonPathDefinition = createDefinition([], []);
+export const ribbonPathDefinition = createDefinition([], []);
 ```
 
 #### <ApiSourceLink label={"createRibbonPathDefinition"} path={"packages/library/extension/src/ribbon/definition.ts"} startLine={55}>createRibbonPathDefinition</ApiSourceLink>
@@ -215,7 +215,7 @@ export declare const createRibbonPathDefinition: (
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createRibbonProviderContribution"} path={"packages/library/extension/src/ribbon/provider.ts"} startLine={32}>createRibbonProviderContribution</ApiSourceLink>
+#### <ApiSourceLink label={"createRibbonProviderContribution"} path={"packages/library/extension/src/ribbon/provider.ts"} startLine={39}>createRibbonProviderContribution</ApiSourceLink>
 
 包含 ribbon 根依赖与内置定义，调用方可追加宽度函数和端帽；不自动注入编译器
 
@@ -291,7 +291,7 @@ export declare const defineRibbonCap: <TParams extends JsonObject>(
 | 类别   | 名称         | 类型 / 签名                                  | 说明                                                                |
 | ------ | ------------ | -------------------------------------------- | ------------------------------------------------------------------- |
 | 泛型   | `TParams`    | `extends JsonObject = JsonObject`            | 宽度函数参数的 JSON 对象类型，关联可选参数解析结果与 widthAt 上下文 |
-| 参数   | `definition` | `RibbonWidthProfileDefinitionInput<TParams>` | 宽度函数名称、可选参数 schema 与采样回调；不执行参数解析或采样      |
+| 参数   | `definition` | `InputRibbonWidthProfileDefinition<TParams>` | 宽度函数名称、可选参数 schema 与采样回调；不执行参数解析或采样      |
 | 返回值 | —            | `RibbonWidthProfileDefinition`               | 原 definition 对象，参数泛型被擦除以便统一装入宽度函数注册表        |
 
 </ApiTable>
@@ -302,7 +302,7 @@ export declare const defineRibbonCap: <TParams extends JsonObject>(
 
 ```ts
 export declare const defineRibbonWidthProfile: <TParams extends JsonObject = JsonObject>(
-  definition: RibbonWidthProfileDefinitionInput<TParams>,
+  definition: InputRibbonWidthProfileDefinition<TParams>,
 ) => RibbonWidthProfileDefinition;
 ```
 

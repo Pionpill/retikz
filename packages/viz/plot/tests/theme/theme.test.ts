@@ -3,7 +3,7 @@ import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retik
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots } from '../../src/pipeline';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import {
   resolveAxisGuideTokens,
   resolveLegendGuideTokens,
@@ -22,7 +22,8 @@ const ROWS = [
 ];
 
 const expandOf = (spec: IRPlot): IRScope =>
-  lowerPlot(spec, { d: ROWS }, { layout: { width: 480, height: 300 }, textMeasurer: measureLabel }) as IRScope;
+  lowerPlotWithDataArtifact(spec, { d: ROWS }, { layout: { width: 480, height: 300 }, textMeasurer: measureLabel })
+    .child as IRScope;
 
 const baseSpec = (override: Partial<IRPlot> = {}): IRPlot =>
   PlotSchema.parse({
@@ -115,14 +116,14 @@ const resolveAxis = (
   return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(resolution, guide.dimension), guide);
 };
 
-describe('Plot Source defaults and guide lowering', () => {
-  it('keeps an explicit axis grid when the theme default disables grids', () => {
+describe('Plot Source 默认并引导下降', () => {
+  it('当主题默认禁用网格时，保留显式轴网格', () => {
     const guide = resolveAxis({ defaultPlot: { axis: { grid: false } } }, { type: 'axis', dimension: 'y', grid: true });
 
     expect(guide.grid).toBe(true);
   });
 
-  it('background emits the effective plot area before plot content', () => {
+  it('背景在绘图内容之前发出有效绘图区域', () => {
     const root = expandOf(
       baseSpec({
         id: 'background-plot',
@@ -142,7 +143,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(background.layout?.minimumSize).toEqual(plotAreaCarrier.layout?.minimumSize);
   });
 
-  it('draws a plot area border over marks and below axes without a fill', () => {
+  it('在标记上方和轴下方绘制绘图区域边框，但不填充', () => {
     const root = expandOf(
       baseSpec({
         id: 'border-plot',
@@ -170,7 +171,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(border.layout?.minimumSize).toEqual(carrier.layout?.minimumSize);
   });
 
-  it('polar background uses the coordinate circle instead of the plot rectangle', () => {
+  it('极地背景使用坐标圆而不是绘图矩形', () => {
     const root = expandOf(
       baseSpec({
         coordinate: { type: 'polar2D', angle: 'x', radius: 'y' },
@@ -187,7 +188,7 @@ describe('Plot Source defaults and guide lowering', () => {
     });
   });
 
-  it('polar plot area border follows the coordinate circle', () => {
+  it('极坐标图区域边界遵循坐标圆', () => {
     const root = expandOf(
       baseSpec({
         coordinate: { type: 'polar2D', angle: 'x', radius: 'y' },
@@ -208,7 +209,7 @@ describe('Plot Source defaults and guide lowering', () => {
   it.each([
     ['cartesian1D', { type: 'cartesian1D', x: 'x' }, { type: 'point', encodings: { position: { x: { field: 'x' } } } }],
     ['polar1D', { type: 'polar1D', angle: 'x' }, { type: 'point', encodings: { position: { x: { field: 'x' } } } }],
-  ] as const)('%s does not emit a plot area', (_name, coordinate, mark) => {
+  ] as const)('%s 不发出绘图区域', (_name, coordinate, mark) => {
     const fill = '#f8fafc';
     const root = expandOf(baseSpec({ coordinate, marks: [mark], defaultPlot: { plotArea: { fill, border: {} } } }));
 
@@ -217,7 +218,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(nodesOf(root).some(node => node.id?.endsWith('.plotArea'))).toBe(false);
   });
 
-  it('Scene and Scope effective Theme reach Plot palette defaults', () => {
+  it('Scene 和 Scope 有效主题达到 Plot 调色板默认值', () => {
     const scene = compileToScene(
       {
         version: 1,
@@ -240,7 +241,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(fills).toContain(resolveDefaultCoreThemeColors(ThemeMode.Light).categorical[0]);
   });
 
-  it('facet panels receive plot area defaults independently', () => {
+  it('小平面面板独立接收绘图区域默认值', () => {
     const root = expandOf(
       PlotSchema.parse({
         namespace: 'plot',
@@ -285,7 +286,7 @@ describe('Plot Source defaults and guide lowering', () => {
     ).toBe(true);
   });
 
-  it('defaultPlot palette categorical drives an ordinal scale', () => {
+  it('defaultPlot 调色板类别驱动顺序比例', () => {
     const root = expandOf(baseSpec({ defaultPlot: { palette: { categorical: ['#111111', '#222222'] } } }));
     const markLayer = root.children[0] as IRScope;
     const colorScopes = markLayer.children as Array<IRScope>;
@@ -293,7 +294,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(colorScopes.map(scope => scope.defaults?.node?.style?.fill)).toEqual(['#111111', '#222222']);
   });
 
-  it('explicit scale range beats defaultPlot palette', () => {
+  it('显式比例尺值域优先于 defaultPlot 调色板', () => {
     const root = expandOf(
       baseSpec({
         scales: [
@@ -310,7 +311,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(colorScopes.map(scope => scope.defaults?.node?.style?.fill)).toEqual(['#aaaaaa', '#bbbbbb']);
   });
 
-  it('defaultPlot series drives marks without color encoding', () => {
+  it('defaultPlot 系列驱动器不带颜色编码的标记', () => {
     const root = expandOf(
       baseSpec({
         marks: [
@@ -326,7 +327,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(intervalLayer.defaults?.node?.style?.fill).toBe('#f97316');
   });
 
-  it('axis defaults merge with local guide fields while preserving source field precedence', () => {
+  it('轴默认与本地引导字段合并，同时保留源字段优先级', () => {
     const root = expandOf(
       baseSpec({
         guides: [
@@ -364,7 +365,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(labels.every(label => label.style?.font?.size === 10)).toBe(true);
   });
 
-  it('Axis rules match open dimensions and later rules win', () => {
+  it('轴规则与开放维度匹配，后面的规则获胜', () => {
     const input = {
       plotRules: [
         {
@@ -393,7 +394,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(radius.grid).toMatchObject({ stroke: '#94a3b8' });
   });
 
-  it('Plot defaults reject structural Axis controls owned by guides', () => {
+  it('Plot 默认拒绝参考线拥有的结构轴控件', () => {
     const invalidDefaults = [
       { axis: { crossing: { tick: 'hide' } } },
       { axis: { ticks: { endpoint: { hideWhenArrow: true } } } },
@@ -410,7 +411,7 @@ describe('Plot Source defaults and guide lowering', () => {
     }
   });
 
-  it('typography defaults supply guide text while specialized and explicit fonts replace as whole values', () => {
+  it('版式默认提供辅助线文本，而专用和显式字体则替换为整体值', () => {
     const root = expandOf(
       baseSpec({
         guides: [
@@ -441,7 +442,7 @@ describe('Plot Source defaults and guide lowering', () => {
     });
   });
 
-  it('axis local layout, orientation and padding override Plot defaults', () => {
+  it('轴局部布局、方向和填充覆盖 Plot 默认值', () => {
     const root = expandOf(
       baseSpec({
         guides: [
@@ -466,7 +467,7 @@ describe('Plot Source defaults and guide lowering', () => {
     ).toMatchObject({ padding: 4 });
   });
 
-  it('Axis defaults preserve local minor grid semantics', () => {
+  it('轴默认保留本地次要网格语义', () => {
     const grid = resolveAxis(
       {},
       { type: 'axis', dimension: 'x', grid: { minor: { ticks: { values: [0.5] }, dashOffset: 3 } } },
@@ -475,7 +476,7 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(grid).toMatchObject({ includeDomain: true, minor: { ticks: { values: [0.5] }, dashOffset: 3 } });
   });
 
-  it('legend local style overrides Plot legend defaults', () => {
+  it('图例本地样式覆盖 Plot 图例默认值', () => {
     const resolution = resolvePlotTheme(
       { mode: ThemeMode.Light, colors: resolveDefaultCoreThemeColors(ThemeMode.Light) },
       { defaultPlot: { legend: { swatchSize: 20, label: { textColor: '#475569' } } } },

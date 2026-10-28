@@ -30,8 +30,8 @@ const selection = {
   ],
 };
 
-describe('Inspection compile driver', () => {
-  it('uses the admitted Source value when an option parser changes its representation', () => {
+describe('检查编译驱动程序', () => {
+  it('当选项解析器更改其表示形式时，使用承认的 Source 值', () => {
     const inspector = defineInspector({
       ...key,
       owner,
@@ -49,7 +49,7 @@ describe('Inspection compile driver', () => {
     expect(JSON.stringify(result.inspection)).not.toContain('once!!');
   });
 
-  it('keeps resolver failure atomic and preserves its selection origin and cause', () => {
+  it('保持解析器故障原子性并保留其选择来源和原因', () => {
     const cause = new Error('Cannot resolve options');
     const inspector = defineInspector({
       ...key,
@@ -75,7 +75,7 @@ describe('Inspection compile driver', () => {
     );
   });
 
-  it('resolves appearance from the captured occurrence Theme', () => {
+  it('解析捕获的实例主题的外观', () => {
     let appearance:
       | {
           colorScope: number;
@@ -121,7 +121,7 @@ describe('Inspection compile driver', () => {
     expect(Object.isFrozen(appearance?.semanticColors)).toBe(true);
   });
 
-  it('validates the subject and compiles each dense output into a sealed entry', () => {
+  it('校验检查对象并将每份稠密输出编译为封闭条目', () => {
     const registry = createInspectorRegistry([
       defineInspector({
         ...key,
@@ -155,7 +155,7 @@ describe('Inspection compile driver', () => {
     expect(Object.isFrozen(result.inspection?.entries)).toBe(true);
   });
 
-  it('keeps a selected empty callback color scope without creating a plane', () => {
+  it('保留选定的空回调颜色范围而不创建平面', () => {
     const registry = createInspectorRegistry([
       defineInspector({
         ...key,
@@ -174,7 +174,7 @@ describe('Inspection compile driver', () => {
     expect(Object.isFrozen(result.diagnostics)).toBe(true);
   });
 
-  it('captures selection before traversal so provider code cannot change final resolution', () => {
+  it('在遍历之前捕获选择，因此提供者代码无法更改最终解析结果', () => {
     const mutableSelection = {
       rules: [
         {
@@ -215,7 +215,7 @@ describe('Inspection compile driver', () => {
     expect(result.inspection?.entries).toHaveLength(1);
   });
 
-  it('passes the typed owner output directly to the Inspector callback', () => {
+  it('将类型化所属模块输出直接传递给 Inspector 回调', () => {
     const subjects: Array<unknown> = [];
     const registry = createInspectorRegistry([
       defineInspector<{ label: string }>({
@@ -231,7 +231,7 @@ describe('Inspection compile driver', () => {
     expect(subjects).toEqual([{ label: 'settled' }]);
   });
 
-  it('rejects a cross-primary fragment reference with a fragment origin', () => {
+  it('拒绝具有片段来源的交叉主片段引用', () => {
     const registry = createInspectorRegistry([
       defineInspector({
         ...key,
@@ -262,7 +262,7 @@ describe('Inspection compile driver', () => {
     }
   });
 
-  it('places mixed local and scene fragments independently and preserves context warnings', () => {
+  it('独立放置混合的本地和场景片段并保留上下文警告', () => {
     const nodeScene: IRScene = {
       version: 1,
       type: 'scene',

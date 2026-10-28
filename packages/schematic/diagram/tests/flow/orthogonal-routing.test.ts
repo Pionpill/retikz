@@ -3,14 +3,14 @@ import type { CompileWarning } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '../../src/flow';
-import { FlowRoutingSchema, LayeredFlowLayoutDefinition } from '../../src/flow';
-import type { FlowLayoutInput, FlowLayoutOutput } from '../../src/flow';
+import { FlowRoutingSchema, layeredFlowLayoutDefinition } from '../../src/flow';
+import type { InputFlowLayoutComputation, FlowLayoutOutput } from '../../src/flow';
 import { routeFlowRelations } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { evaluateFlowOrthogonalConflicts } from '../../src/flow/providers';
 import { resolveEffectiveFlowLayout } from '../../src/flow/resolve';
 
-const input = (): FlowLayoutInput => ({
+const input = (): InputFlowLayoutComputation => ({
   layout: { direction: 'right', nodeGap: 48, rankGap: 48, routing: { kind: 'orthogonal', cornerRadius: 8 } },
   elements: ['a', 'b', 'obstacle'].map(id => ({
     kind: 'leaf',
@@ -33,8 +33,8 @@ const elements: FlowLayoutOutput['elements'] = [
   { id: 'b', bounds: { x: 200, y: 160, width: 20, height: 20 } },
   { id: 'obstacle', bounds: { x: 100, y: 70, width: 20, height: 20 } },
 ];
-describe('Flow orthogonal routing', () => {
-  it('accepts only supported orthogonal fractions and preserves JSON intent', () => {
+describe('Flow 正交布线', () => {
+  it('仅接受支持的正交分数并保留 JSON 意图', () => {
     for (const turnPosition of [0.25, 0.5, 0.75]) {
       const source = { kind: 'orthogonal', turnPosition };
 
@@ -47,7 +47,7 @@ describe('Flow orthogonal routing', () => {
     expect(FlowRoutingSchema.safeParse({ kind: '-|', turnPosition: 0.5 }).success).toBe(false);
   });
 
-  it('prefers the midpoint when clear and selects the quarter lane around an obstacle', () => {
+  it('路径畅通时优先使用中点，否则选择绕过障碍的四分之一位置通道', () => {
     const source = input();
     const before = structuredClone({ source, elements });
     routeFlowRelations(source, elements);
@@ -70,9 +70,9 @@ describe('Flow orthogonal routing', () => {
     ]);
   });
 
-  it('preserves an explicit colliding midpoint', () => {
+  it('保留显式碰撞中点', () => {
     const source = input();
-    const explicit: FlowLayoutInput = {
+    const explicit: InputFlowLayoutComputation = {
       ...source,
       relations: [{ ...source.relations[0], routing: { kind: 'orthogonal', cornerRadius: 8, turnPosition: 0.5 } }],
     };
@@ -80,7 +80,7 @@ describe('Flow orthogonal routing', () => {
     expect(routeFlowRelations(explicit, elements)[0].route.points[1]).toEqual([110, 10]);
   });
 
-  it.each(['horizontal', 'vertical'])('keeps aligned %s endpoints straight even with an obstacle', axis => {
+  it.each(['horizontal', 'vertical'])('即使有障碍物，也能保持 %s 端点直线对齐', axis => {
     const placed = elements.map(e =>
       e.id === 'b'
         ? {
@@ -94,26 +94,26 @@ describe('Flow orthogonal routing', () => {
     expect(routeFlowRelations(input(), placed)[0].route.points).toHaveLength(2);
   });
 
-  it('inherits a fraction only within orthogonal routing and permits overrides', () => {
-    const ancestor = resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, undefined, {
+  it('仅在正交路由内继承分数并允许覆盖', () => {
+    const ancestor = resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, undefined, {
       kind: 'orthogonal',
       turnPosition: 0.75,
     });
 
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, ancestor, { kind: 'orthogonal' }).routing,
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, ancestor, { kind: 'orthogonal' }).routing,
     ).toMatchObject({ turnPosition: 0.75 });
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, ancestor, { kind: 'orthogonal', turnPosition: 0.25 })
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, ancestor, { kind: 'orthogonal', turnPosition: 0.25 })
         .routing,
     ).toMatchObject({ turnPosition: 0.25 });
     expect(
-      resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, ancestor, { kind: '-|' }).routing,
+      resolveEffectiveFlowLayout(layeredFlowLayoutDefinition, {}, ancestor, { kind: '-|' }).routing,
     ).not.toHaveProperty('turnPosition');
   });
 });
 
-it.each(['right', 'left', 'down', 'up'] as const)('uses source-relative quarter positions in %s layouts', direction => {
+it.each(['right', 'left', 'down', 'up'] as const)('在 %s 布局中使用源相对四分之一位置', direction => {
   const source = input();
   const horizontal = direction === 'right' || direction === 'left';
   const sign = direction === 'right' || direction === 'down' ? 1 : -1;
@@ -124,7 +124,7 @@ it.each(['right', 'left', 'down', 'up'] as const)('uses source-relative quarter 
 
     return { ...element, bounds: { x: x - 10, y: y - 10, width: 20, height: 20 } };
   });
-  const configured: FlowLayoutInput = {
+  const configured: InputFlowLayoutComputation = {
     ...source,
     layout: { ...source.layout, direction },
     relations: [{ ...source.relations[0], routing: { kind: 'orthogonal', cornerRadius: 0, turnPosition: 0.25 } }],
@@ -133,9 +133,12 @@ it.each(['right', 'left', 'down', 'up'] as const)('uses source-relative quarter 
 
   expect(route.points[1][horizontal ? 0 : 1]).toBe(65 * sign);
 });
-it('preserves outer feedback lanes and skips aligned feedback detours', () => {
+it('保留外部反馈通道并跳过对齐的反馈绕路', () => {
   const source = input();
-  const configured: FlowLayoutInput = { ...source, relations: [{ ...source.relations[0], direction: 'reverse' }] };
+  const configured: InputFlowLayoutComputation = {
+    ...source,
+    relations: [{ ...source.relations[0], direction: 'reverse' }],
+  };
   const route = routeFlowRelations(configured, elements)[0].route;
 
   expect(route.points[1][0]).toBeGreaterThan(220);
@@ -144,15 +147,15 @@ it('preserves outer feedback lanes and skips aligned feedback detours', () => {
 
   expect(routeFlowRelations(configured, aligned)[0].route.points).toHaveLength(2);
 });
-it('chooses the remaining three-quarter candidate when two lanes are blocked', () => {
+it('两个通道被阻挡时选择剩余的四分之三位置候选', () => {
   const source = input();
   const extra = { ...source.elements[2], id: 'second' };
-  const configured: FlowLayoutInput = { ...source, elements: [...source.elements, extra] };
+  const configured: InputFlowLayoutComputation = { ...source, elements: [...source.elements, extra] };
   const placed = [...elements, { id: 'second', bounds: { x: 55, y: 70, width: 20, height: 20 } }];
 
   expect(routeFlowRelations(configured, placed)[0].route.points[1]).toEqual([155, 10]);
 });
-it('scores actual penetration, tangencies and endpoint reentry independently', () => {
+it('独立对实际穿透、切线和端点重入进行评分', () => {
   const relation = input().relations[0];
   const route = {
     kind: 'orthogonal' as const,
@@ -205,14 +208,14 @@ it('scores actual penetration, tangencies and endpoint reentry independently', (
     evaluateFlowOrthogonalConflicts(route, relation, [], [{ bounds: { x: 90, y: 20, width: 20, height: 30 } }]).score,
   ).toEqual([0, 0, 1]);
 });
-it('rejects a provider that echoes a locked fraction but returns another lane', () => {
+it('拒绝回显锁定分数但返回另一通道的提供者', () => {
   const source = input();
-  const configured: FlowLayoutInput = {
+  const configured: InputFlowLayoutComputation = {
     ...source,
     relations: [{ ...source.relations[0], routing: { kind: 'orthogonal', cornerRadius: 8, turnPosition: 0.75 } }],
   };
   const definition = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     layout: () => ({
       elements,
       relations: [
@@ -237,11 +240,11 @@ it('rejects a provider that echoes a locked fraction but returns another lane', 
 
   expect(() => executeFlowLayout(definition, configured)).toThrow('orthogonal points');
 });
-it.each([false, true])('retains a drawable blocked route and omits avoidance warnings when aligned=%s', aligned => {
+it.each([false, true])('保留可绘制的阻塞路线，并在 aligned=%s 时省略回避警告', aligned => {
   const provider = {
-    ...LayeredFlowLayoutDefinition,
+    ...layeredFlowLayoutDefinition,
     name: 'fixed-orthogonal',
-    layout: (source: FlowLayoutInput) => {
+    layout: (source: InputFlowLayoutComputation) => {
       const centers = aligned
         ? [
             [0, 0],

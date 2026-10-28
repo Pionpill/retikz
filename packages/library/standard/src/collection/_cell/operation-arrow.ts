@@ -9,11 +9,15 @@ export const createOperationArrow = (
   points: Array<[number, number]>,
 ): IRPath => {
   const options = typeof config === 'object' ? config : {};
+  const styleSchema = OperationArrowSchema.unwrap().options[1].shape.style.unwrap().shape;
   return {
     type: 'path',
-    style: OperationArrowSchema.unwrap()
-      .options[1].shape.style.unwrap()
-      .parse(options.style ?? {}),
+    style: {
+      ...options.style,
+      stroke: options.style?.stroke ?? styleSchema.stroke.parse(undefined),
+      strokeWidth: options.style?.strokeWidth ?? styleSchema.strokeWidth.parse(undefined),
+      fill: options.style?.fill ?? styleSchema.fill.parse(undefined),
+    },
     arrow: { end: { ...options.arrowDetail } },
     children: points.map((point, index) => ({ type: 'step', kind: index === 0 ? 'move' : 'line', to: point })),
   };

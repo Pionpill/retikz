@@ -2,20 +2,20 @@ import type {
   GroupPrimitive,
   PathPrimitive,
   RectPrimitive,
-  ResolvedArrowEnd,
+  CompiledArrowEnd,
   ScenePrimitive,
   TextPrimitive,
 } from '@retikz/core';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { renderPrim } from '../../../src/render/svg';
+import { renderPrim } from './helpers';
 
 /** 测试在 node env 跑，不实际挂载——只检查返回的 React element 类型 / props 是否正确 */
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
-/** 构造一个已解析 ResolvedArrowEnd（emit-in-compile 后的 PathPrimitive.arrowStart / arrowEnd 形态） */
-const resolvedSpec = (shape: string): ResolvedArrowEnd => ({
+/** 构造一个已解析 CompiledArrowEnd（emit-in-compile 后的 PathPrimitive.arrowStart / arrowEnd 形态） */
+const resolvedSpec = (shape: string): CompiledArrowEnd => ({
   shape,
   baseSize: 10,
   refX: 0,
@@ -24,7 +24,7 @@ const resolvedSpec = (shape: string): ResolvedArrowEnd => ({
   marker: [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }] }],
 });
 
-describe('renderPrim: rect', () => {
+describe('renderPrim：矩形', () => {
   const base: RectPrimitive = {
     type: 'rect',
     x: 1,
@@ -59,7 +59,7 @@ describe('renderPrim: rect', () => {
   });
 });
 
-describe('renderPrim: ellipse', () => {
+describe('renderPrim：椭圆', () => {
   it('rotate 缺省时 transform=undefined（避免冗余属性）', () => {
     const el = renderPrim({ type: 'ellipse', cx: 0, cy: 0, rx: 10, ry: 5 }, 0) as AnyEl;
 
@@ -74,7 +74,7 @@ describe('renderPrim: ellipse', () => {
   });
 });
 
-describe('renderPrim: path', () => {
+describe('renderPrim：路径', () => {
   const base: PathPrimitive = {
     type: 'path',
     commands: [
@@ -110,7 +110,7 @@ describe('renderPrim: path', () => {
   });
 });
 
-describe('renderPrim: text', () => {
+describe('renderPrim：文本', () => {
   const base: TextPrimitive = {
     type: 'text',
     x: 0,
@@ -171,7 +171,7 @@ describe('renderPrim: text', () => {
   });
 });
 
-describe('renderPrim: group', () => {
+describe('renderPrim：组', () => {
   it('group prim → <g transform=...>，children 递归 renderPrim', () => {
     const group: GroupPrimitive = {
       type: 'group',

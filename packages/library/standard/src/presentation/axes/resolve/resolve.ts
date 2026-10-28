@@ -3,7 +3,7 @@ import { RetikzStandardError, RetikzStandardErrorCode } from '../../../shared/er
 import { getLatticeRangeError } from '../../shared/lattice';
 import { AxesTickSourceKind } from '../constants';
 import { AxesSchema } from '../schema';
-import { axesTickRangeOf, enumerateAxesTickValues, normalizeAxesExtent } from '../ticks';
+import { axesTickRangeOf, enumerateAxesTickValues, resolveAxesExtent } from '../ticks';
 import type { CanonicalAxes, CanonicalAxesAxis, CanonicalAxesTicks } from './types';
 
 /** 补全 Axes 的作者配置，保留 Source 缺省信息 */
@@ -59,7 +59,7 @@ const resolveAxis = (source: IRAxes['x'], key: 'x' | 'y'): CanonicalAxesAxis => 
   };
   const canonical: CanonicalAxesAxis = {
     ...source,
-    extent: normalizeAxesExtent(source.extent),
+    extent: resolveAxesExtent(source.extent),
     line:
       source.line === false
         ? false

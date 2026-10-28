@@ -4,8 +4,8 @@ import { CustomPositionAdjustmentSchema, MarkSchema, PointMarkSchema } from '../
 
 const point = { type: 'point', encodings: { position: { x: { field: 'category' }, y: { field: 'value' } } } };
 
-describe('Position Adjustment schema', () => {
-  it('accepts JSON-safe numeric and ratio jitter on Point', () => {
+describe('位置调整方案', () => {
+  it('接受 Point 上的 JSON 安全数字和比率抖动', () => {
     const operations = [
       { kind: 'jitter', role: 'x', span: 12, seed: 7 },
       { kind: 'jitter', span: { kind: 'ratio', value: 1 } },
@@ -15,7 +15,7 @@ describe('Position Adjustment schema', () => {
     expect(JSON.parse(JSON.stringify(parsed.properties?.placement?.adjustments))).toEqual(operations);
   });
 
-  it('accepts uniform and normal jitter distributions as JSON-safe values', () => {
+  it('接受均匀且正态的抖动分布作为 JSON 安全值', () => {
     const operations = [
       { kind: 'jitter', role: 'x', distribution: { kind: 'uniform' } },
       { kind: 'jitter', role: 'x', distribution: { kind: 'normal' } },
@@ -26,7 +26,7 @@ describe('Position Adjustment schema', () => {
     expect(JSON.parse(JSON.stringify(parsed.properties?.placement?.adjustments))).toEqual(operations);
   });
 
-  it('rejects unknown distribution fields, kinds, and invalid normal sigma', () => {
+  it('拒绝未知的分布字段、种类和无效的正态西格玛', () => {
     const invalidOperations = [
       { kind: 'jitter', distribution: { kind: 'uniform', sigma: 0.5 } },
       { kind: 'jitter', distribution: { kind: 'normal', extra: true } },
@@ -44,7 +44,7 @@ describe('Position Adjustment schema', () => {
     }
   });
 
-  it('rejects invalid ratio and extra built-in fields', () => {
+  it('拒绝无效比率和额外的内置字段', () => {
     expect(() =>
       PointMarkSchema.parse({
         ...point,
@@ -59,7 +59,7 @@ describe('Position Adjustment schema', () => {
     ).toThrow();
   });
 
-  it('preserves custom JSON operations and rejects non-JSON values', () => {
+  it('保留自定义 JSON 操作并拒绝非 JSON 值', () => {
     const parsed = PointMarkSchema.parse({
       ...point,
       properties: { placement: { adjustments: [{ kind: 'screen-nudge', dx: 4 }] } },
@@ -74,7 +74,7 @@ describe('Position Adjustment schema', () => {
     ).toThrow();
   });
 
-  it('reports a custom non-JSON leaf through the native Zod catchall path', () => {
+  it('通过本机 Zod 包罗万象的路径报告自定义非 JSON 叶', () => {
     const result = CustomPositionAdjustmentSchema.safeParse({
       kind: 'screen-nudge',
       payload: { nested: [0, { bad: BigInt(1) }] },
@@ -85,7 +85,7 @@ describe('Position Adjustment schema', () => {
     if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
   });
 
-  it('does not add placement to unsupported built-in marks', () => {
+  it('不向不支持的内置标记添加放置', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'interval',

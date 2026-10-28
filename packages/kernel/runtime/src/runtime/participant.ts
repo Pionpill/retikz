@@ -2,7 +2,7 @@ import type { RuntimeComputationDefinition, RuntimeComputationToken } from '../c
 import { RuntimeComputationPhase } from '../computation';
 import type { RuntimeDiagnostic } from '../diagnostic';
 import { BuiltinRuntimeDiagnosticCode } from '../diagnostic';
-import { RuntimeTraceDiagnosticCodes, getRuntimeDiagnosticMessage } from '../diagnostic/internal';
+import { runtimeTraceDiagnosticCodes, getRuntimeDiagnosticMessage } from '../diagnostic/internal';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type {
   RuntimeCommitParticipantToken,
@@ -84,7 +84,7 @@ const mapParticipantTraceDiagnostic = (
   diagnostic: PerformanceTraceDiagnostic,
 ): RuntimeDiagnostic =>
   Object.freeze({
-    code: RuntimeTraceDiagnosticCodes[diagnostic.code],
+    code: runtimeTraceDiagnosticCodes[diagnostic.code],
     phase: 'trace',
     severity: 'error',
     message: `Runtime trace reporter rejected a ${diagnostic.code} record during ${diagnostic.phase}`,

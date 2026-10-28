@@ -27,11 +27,11 @@ import { Tree } from '@retikz/standard-react/collection';
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { tree, TreeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { tree, treeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 renderToSvgString(scene({ children: [tree({ root: { content: 'A', children: ['B', 'C'] } })] }), {
-  adapters: [TreeInputEmbedAdapter],
+  adapters: [treeInputEmbedAdapter],
 });
 ```
 
@@ -42,7 +42,7 @@ renderToSvgString(scene({ children: [tree({ root: { content: 'A', children: ['B'
 { "namespace": "standard", "type": "tree", "root": { "content": "A", "children": ["B", "C"] } }
 ```
 
-直接编译 IR 时注册 TreeProvider；节点形状和箭头沿用 Core 的注册能力。
+直接编译 IR 时注册 treeProvider；节点形状和箭头沿用 Core 的注册能力。
 
 </DocTab>
 </DocTabs>

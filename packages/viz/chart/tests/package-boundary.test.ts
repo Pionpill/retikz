@@ -71,7 +71,7 @@ const packageImportsOf = async (relativeDirectoryUrl: string): Promise<Array<str
 };
 
 const publicProviderExportPattern =
-  /export\s*(?:\{[^}]*\b(?:SurfaceProvider|FlexLayoutProvider|ChartProvider|PlotProvider)\b|const\s+(?:SurfaceProvider|FlexLayoutProvider|ChartProvider|PlotProvider)|\*\s+from\s+['"]@retikz\/(?:standard|layout|plot|chart)(?:\/[^'"]+)?['"])/;
+  /export\s*(?:\{[^}]*\b(?:surfaceProvider|flexLayoutProvider|ChartProvider|PlotProvider)\b|const\s+(?:surfaceProvider|flexLayoutProvider|ChartProvider|PlotProvider)|\*\s+from\s+['"]@retikz\/(?:standard|layout|plot|chart)(?:\/[^'"]+)?['"])/;
 
 const publicSourceOf = async (relativeDirectoryUrl: string): Promise<string> => {
   const sourceFiles = await sourceFilesOf(new URL(relativeDirectoryUrl, import.meta.url));
@@ -129,19 +129,19 @@ const publishablePackageExpectations = {
   },
 } as const;
 
-describe('published Chart release-group boundaries', () => {
+describe('已发布的 Chart 发布组边界', () => {
   it.each([
     ['Chart', publishablePackageExpectations.chart],
     ['React', publishablePackageExpectations.react],
     ['Vanilla', publishablePackageExpectations.vanilla],
-  ])('publishes only the root and Point family entries for %s', async (_name, expectation) => {
+  ])('仅发布 %s 的根和点族条目', async (_name, expectation) => {
     const manifest = await readManifest(expectation.manifest);
 
     expect(Object.keys(manifest.exports ?? {})).toEqual(['.', './point']);
     expect(Object.keys(manifest.publishConfig?.exports ?? {})).toEqual(['.', './point']);
   });
 
-  it('publishes the core package with the exact Chart group dependency map', async () => {
+  it('发布具有精确 Chart 组依赖关系图的核心包', async () => {
     const manifest = await readManifest('../package.json');
 
     expect(manifest.private).toBeUndefined();
@@ -171,7 +171,7 @@ describe('published Chart release-group boundaries', () => {
   it.each([
     ['React', publishablePackageExpectations.react],
     ['Vanilla', publishablePackageExpectations.vanilla],
-  ])('declares every %s adapter source import without re-exporting foreign providers', async (_name, expectation) => {
+  ])('声明每个 %s 适配器源导入，无需重新导出外部提供者', async (_name, expectation) => {
     const manifest = await readManifest(expectation.manifest);
     const importedPackages = await packageImportsOf(expectation.sourceDirectory);
     const publicSource = await publicSourceOf(expectation.sourceDirectory);
@@ -187,7 +187,7 @@ describe('published Chart release-group boundaries', () => {
   it.each([
     ['React', publishablePackageExpectations.react, './src/point/index.ts', './dist/point/index.js'],
     ['Vanilla', publishablePackageExpectations.vanilla, './src/point/index.ts', './dist/point/index.js'],
-  ])('publishes the %s Point family subpath', async (_name, expectation, sourcePath, distPath) => {
+  ])('发布 %s 点族子路径', async (_name, expectation, sourcePath, distPath) => {
     const manifest = await readManifest(expectation.manifest);
 
     expect(manifest.exports?.['./point']).toEqual({ types: sourcePath, default: sourcePath });

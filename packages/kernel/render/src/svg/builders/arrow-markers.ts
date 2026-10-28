@@ -1,9 +1,9 @@
-import type { ResolvedArrowEnd } from '@retikz/core';
+import type { CompiledArrowEnd } from '@retikz/core';
 
 import type { SvgNode } from '../types';
 import { compact } from './attrs';
 import { buildPrim } from './prim';
-import type { BuildContext } from './prim';
+import type { SvgPrimitiveBuildContext } from './prim';
 
 /**
  * 端点级已解析 marker spec → `<marker>` SvgNode
@@ -11,7 +11,11 @@ import type { BuildContext } from './prim';
  *   wrapper 参数来自 `spec.baseSize`（viewBox `0 0 baseSize baseSize` + refY = baseSize/2）/ `spec.refX` /
  *   `spec.markerWidth` / `spec.markerHeight`。`overflow=visible` 允许空心描边落在标准几何边界外
  */
-export const buildArrowMarker = (id: string, spec: ResolvedArrowEnd, context: BuildContext = {}): SvgNode => ({
+export const buildArrowMarker = (
+  id: string,
+  spec: CompiledArrowEnd,
+  context: SvgPrimitiveBuildContext = {},
+): SvgNode => ({
   tag: 'marker',
   attrs: compact({
     id,

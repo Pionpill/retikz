@@ -19,8 +19,8 @@ const applyTransforms = (
 
 const densityOperation = (operation: unknown) => TransformSchema.parse(operation);
 
-describe('density transform schema (contract)', () => {
-  it('accepts density transform and preserves JSON round trip', () => {
+describe('密度变换 schema（契约）', () => {
+  it('接受密度变换并保留 JSON 往返', () => {
     const operation = {
       kind: 'density',
       params: {
@@ -37,7 +37,7 @@ describe('density transform schema (contract)', () => {
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
-  it('rejects malformed density JSON with useful zod errors', () => {
+  it('拒绝具有有用的 zod 错误的畸形密度 JSON', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'density',
@@ -64,7 +64,7 @@ describe('density transform schema (contract)', () => {
   });
 });
 
-describe('density transform behavior (contract)', () => {
+describe('密度变换行为（契约）', () => {
   const rows: Array<ExternalRow> = [
     { species: 'setosa', value: 0 },
     { species: 'setosa', value: 4 },
@@ -72,7 +72,7 @@ describe('density transform behavior (contract)', () => {
     { species: 'virginica', value: 14 },
   ];
 
-  it('computes explicit-bandwidth density samples over explicit extent', () => {
+  it('计算显式范围内的显式带宽密度样本', () => {
     const out = applyTransforms(rows.slice(0, 2), [
       densityOperation({
         kind: 'density',
@@ -96,7 +96,7 @@ describe('density transform behavior (contract)', () => {
     expect(out[1].density).toBeGreaterThan(out[4].density as number);
   });
 
-  it('uses Silverman bandwidth by default and emits sorted samples', () => {
+  it('默认使用 Silverman 带宽并发出排序样本', () => {
     const out = applyTransforms(
       [{ value: 0 }, { value: 1 }, { value: 2 }, { value: 4 }, { value: 8 }],
       [densityOperation({ kind: 'density', params: { field: 'value', xAs: 'densityX', densityAs: 'density' } })],
@@ -112,7 +112,7 @@ describe('density transform behavior (contract)', () => {
     expect(out.every(row => Number.isFinite(row.density))).toBe(true);
   });
 
-  it('computes density independently per group and preserves group keys', () => {
+  it('独立计算每个组的密度并保留组键', () => {
     const out = applyTransforms(rows, [
       densityOperation({
         kind: 'density',
@@ -140,7 +140,7 @@ describe('density transform behavior (contract)', () => {
     ]);
   });
 
-  it('allows explicit bandwidth for single-value and identical-value groups', () => {
+  it('允许单值和同值组的显式带宽', () => {
     const single = applyTransforms(
       [{ value: 5 }],
       [
@@ -179,7 +179,7 @@ describe('density transform behavior (contract)', () => {
     expect(identical.map(row => row.x)).toEqual([-2, 10]);
   });
 
-  it('fails loud when default Silverman bandwidth cannot be computed', () => {
+  it('当无法计算默认 Silverman 带宽时，会失败', () => {
     expect(() =>
       applyTransforms(
         [{ value: 5 }],
@@ -200,7 +200,7 @@ describe('density transform behavior (contract)', () => {
     ).toThrow(/finite/i);
   });
 
-  it('records group-level provenance source indices', () => {
+  it('记录组级种源索引', () => {
     const tagged = tagSourceIndex(rows);
     const out = applyTransforms(tagged, [
       densityOperation({
@@ -220,7 +220,7 @@ describe('density transform behavior (contract)', () => {
     expect(readSourceIndices(out[2])).toEqual([2, 3]);
   });
 
-  it('rejects custom transform registration collisions with density', () => {
+  it('拒绝自定义变换注册与密度的冲突', () => {
     const collision = defineTransform({
       kind: 'density',
       paramsSchema: object({}),

@@ -36,13 +36,13 @@ The default categorical palette contains 16 colors. Light and dark modes preserv
 
 ## Data Structure
 
-Theme has two data representations with different purposes: `IRTheme` stores author selections, while `ResolvedTheme` is the effective environment available to composites at the current compilation location.
+Theme has two data representations with different purposes: `IRTheme` stores author selections, while `CanonicalTheme` is the effective environment available to composites at the current compilation location.
 
-| Data                  | Fields                    | Meaning                                               |
-| --------------------- | ------------------------- | ----------------------------------------------------- |
-| `IRTheme`             | `name?`, `mode?`          | Sparse selections; omitted fields inherit             |
-| `ResolvedTheme`       | `name?`, `mode`, `colors` | Read-only result of inheritance and style resolution  |
-| `ResolvedThemeColors` | `semantic`, `categorical` | Shared semantic colors and active categorical palette |
+| Data                   | Fields                    | Meaning                                               |
+| ---------------------- | ------------------------- | ----------------------------------------------------- |
+| `IRTheme`              | `name?`, `mode?`          | Sparse selections; omitted fields inherit             |
+| `CanonicalTheme`       | `name?`, `mode`, `colors` | Read-only result of inheritance and style resolution  |
+| `CanonicalThemeColors` | `semantic`, `categorical` | Shared semantic colors and active categorical palette |
 
 This outline shows only the data shape. `Color` means a CSS color string, not an additional public type:
 
@@ -51,7 +51,7 @@ IRTheme
   style?: string
   mode?: 'light' | 'dark'
 
-ResolvedTheme
+CanonicalTheme
   style?: string
   mode: 'light' | 'dark'
   colors

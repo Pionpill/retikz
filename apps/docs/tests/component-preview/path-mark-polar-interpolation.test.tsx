@@ -23,8 +23,8 @@ const renderWithValues = (values: Readonly<PreviewControlValues>): string =>
     </PreviewControlStateContext.Provider>,
   );
 
-describe('PathMark polar interpolation controls', () => {
-  it('gives each plot an independent coordinate interpolation with chord and polar as the canonical comparison', () => {
+describe('PathMark 极坐标插值控件', () => {
+  it('为各图提供独立的坐标插值并以 chord 与 polar 作为标准对比', () => {
     const fields = getPreviewControlFields(chineseContract.controls);
 
     expect(fields.map(field => field.id)).toEqual([

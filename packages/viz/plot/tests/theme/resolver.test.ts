@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -8,13 +8,13 @@ import { getNeutralPlotDefaults } from '../../src/providers/theme';
 import { resolvePlotAxisDefaults } from '../../src/resolve/theme';
 import { PlotDefaultsSchema, PlotThemeResolutionSchema } from '../../src/schemas';
 
-const themeOf = (name: string | undefined, mode: ResolvedTheme['mode']): ResolvedTheme => ({
+const themeOf = (name: string | undefined, mode: CanonicalTheme['mode']): CanonicalTheme => ({
   ...(name === undefined ? {} : { name }),
   mode,
   colors: resolveDefaultCoreThemeColors(mode),
 });
 
-describe('Plot defaults resolver', () => {
+describe('Plot 默认解析器', () => {
   it('让 style defaults 高于 Core shared categorical colors，并记录实际来源 layer', () => {
     const style = plot.definePlotTheme({
       name: 'brand',

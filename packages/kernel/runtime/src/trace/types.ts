@@ -62,7 +62,7 @@ export type RuntimeTraceReporter<TOwner extends string = string> = Readonly<{
  * 创建 trace reporter 的配置
  * @template TOwner 报告器固定绑定的来源名称类型，保留 owner 的字面量信息；默认沿用 string
  */
-export type CreateRuntimeTraceReporterInput<TOwner extends string = string> = Readonly<{
+export type InputRuntimeTraceReporter<TOwner extends string = string> = Readonly<{
   /** reporter 固定绑定的 owner */
   owner: TOwner;
   /** owner 可以报告的阶段定义 */

@@ -1,4 +1,4 @@
-import { TrapezoidShapeDefinition } from '@retikz/extension';
+import { trapezoidShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 /** 图形参数 */
@@ -10,7 +10,7 @@ export type TrapezoidExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderTrapezoidExamplePreview = (values: TrapezoidExamplePreviewValues) => (
-  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} extensions={{ shapes: [TrapezoidShapeDefinition] }}>
+  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} extensions={{ shapes: [trapezoidShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{

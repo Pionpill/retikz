@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { NodeDefaultSchema, NodeSchema } from '../../src/schemas';
 
-describe('Node dashPattern schema', () => {
+describe('Node 的 dashPattern schema', () => {
   it('接受 dashPattern 作为节点显式虚线字段', () => {
     expect(
       NodeSchema.safeParse({

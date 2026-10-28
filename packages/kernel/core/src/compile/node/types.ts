@@ -11,10 +11,10 @@ import type {
 } from '../../resolve';
 import type { IRFont } from '../../schemas';
 import type { CompileWarningCode } from '../constants';
-import type { InlineLineLayout, LowerTex, TextFont, TextMeasurer } from '../text';
+import type { InlineLineLayout, TexLowerer, TextFont, TextMeasurer } from '../text';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
-export type NodeFontWeight = NonNullable<IRFont['weight']>;
+type NodeFontWeight = NonNullable<IRFont['weight']>;
 
 /** 连接面 provider 的几何实现契约 */
 export type BoundaryGeometryDefinition = {
@@ -97,7 +97,7 @@ export type NodeCompilation = {
   /** 当前有效语义属性 */
   properties: NodeResolvedProperties;
   /** 已计算的几何与排版结果 */
-  layout: NodeLayout;
+  layout: CompiledNodeLayout;
 };
 
 /** 物理行排版与其作者行的对应关系 */
@@ -134,7 +134,7 @@ export type NodeTextLayout = {
 );
 
 /** 节点完成测量和定位后的消费结果 */
-export type NodeLayout = {
+export type CompiledNodeLayout = {
   /** 用于匹配已解析连接面的作者配置 */
   boundarySource?: CanonicalNode['boundary'];
   /** 已绑定的形状定义和参数 */
@@ -174,7 +174,7 @@ export type NodeLabelLayout = MeasuredNodeLabel & {
 /** 公式渲染上下文 */
 export type TexLoweringContext = {
   /** 将公式源码转换为可参与文本布局的结果；未提供时由公式布局分支处理缺失能力 */
-  lowerTex?: LowerTex;
+  lowerTex?: TexLowerer;
   /** 分发公式降级或布局过程中产生的编译诊断 */
   warn: (code: CompileWarningCode, message: string) => void;
 };

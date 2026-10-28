@@ -60,10 +60,10 @@ type SectorGeometry = {
   boundaryOriginOffset: Position;
 };
 
-type SectorGeometryInput = Pick<SectorShapeParams, 'innerRadius' | 'outerRadius' | 'startAngle' | 'endAngle'>;
+type InputSectorGeometry = Pick<SectorShapeParams, 'innerRadius' | 'outerRadius' | 'startAngle' | 'endAngle'>;
 
 /** 计算 Sector 的极坐标范围、AABB 和局部参考点 */
-const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
+const computeSectorGeometry = (params: InputSectorGeometry): SectorGeometry => {
   const { innerRadius, outerRadius } = params;
   const range = normalizeAngleRange(params.startAngle, params.endAngle);
   const apex: Position = [0, 0];
@@ -209,13 +209,12 @@ const openSectorBoundaryPoint = (rect: CenteredBox, toward: Position, params: Se
 };
 
 /** 可选 Sector 形状 Definition */
-export const SectorShapeDefinition = defineShape<SectorShapeParams>({
+export const sectorShapeDefinition = defineShape<SectorShapeParams>({
   name: BuiltinExtensionShapeName.Sector,
   paramsSchema: SectorShapeParamsSchema,
-  computeCircumscribedHalfAxes: (_halfWidth, _halfHeight, params) => computeSectorGeometry(params).aabbHalfAxes,
-  computeCircumscribedOffset: params => {
-    const { apexOffset } = computeSectorGeometry(params);
-    return [-apexOffset[0], -apexOffset[1]];
+  computeCircumscribedGeometry: (_halfWidth, _halfHeight, params) => {
+    const { aabbHalfAxes, apexOffset } = computeSectorGeometry(params);
+    return { ...aabbHalfAxes, offset: [-apexOffset[0], -apexOffset[1]] };
   },
   computeBoundaryPoint: (rect, toward, params) => {
     if (params.innerRadius === params.outerRadius) return openSectorBoundaryPoint(rect, toward, params);
@@ -296,9 +295,7 @@ export const SectorShapeDefinition = defineShape<SectorShapeParams>({
 });
 
 /** Sector 的静态 Core provider */
-export const SectorShapeProvider: CoreDependencyProvider = Object.freeze({
-  key: { capability: 'shape', name: SectorShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
-  makeDefinition: () => SectorShapeDefinition,
+export const sectorShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
+  key: { capability: 'shape', name: sectorShapeDefinition.name },
+  makeDefinition: () => sectorShapeDefinition,
 });

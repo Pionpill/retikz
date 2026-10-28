@@ -20,7 +20,7 @@ export const lowerCircle = (source: IRCircle): IRPath => {
     const box = shapeBoxGeometry(source);
     center = box.center;
     radius =
-      (ShapeFitSchema.parse(source.fit) === 'cover'
+      ((source.fit ?? ShapeFitSchema.parse(undefined)) === 'cover'
         ? Math.max(box.width, box.height)
         : Math.min(box.width, box.height)) / 2;
   }
@@ -36,7 +36,7 @@ export const lowerCircle = (source: IRCircle): IRPath => {
         type: 'step',
         kind: 'circlePath',
         radius,
-        ...(angles ? { ...angles, closed: ShapeClosedSchema.parse(source.closed) } : {}),
+        ...(angles ? { ...angles, closed: source.closed ?? ShapeClosedSchema.parse(undefined) } : {}),
       },
     ],
   };

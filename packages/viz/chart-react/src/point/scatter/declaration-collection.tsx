@@ -10,7 +10,7 @@ import type { ScatterPropertiesProps } from './ScatterProperties';
 import { ScatterProperties } from './ScatterProperties';
 
 /** ScatterChart direct-child declarations 的完整收集结果 */
-export type CollectedScatterChartDeclarations = CollectedPointChartDeclarations<
+type CollectedScatterChartDeclarations = CollectedPointChartDeclarations<
   ScatterEncodingsProps,
   ScatterPropertiesProps,
   ScatterChartMark

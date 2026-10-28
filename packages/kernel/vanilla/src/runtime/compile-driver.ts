@@ -8,7 +8,7 @@ import type {
 import { compileToScene, observeCompileToScene } from '@retikz/core';
 import type { ReconcilerOutput } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
-import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '@retikz/render/runtime';
+import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputAuthoringSite } from '../normalize';
@@ -31,7 +31,7 @@ const compileDriverError = (message: string, cause: unknown): RetikzVanillaError
   });
 
 /** 创建 Vanilla 编译驱动 session 时可读取的领域中立宿主输入 */
-export type VanillaCompileDriverInput = Readonly<{
+export type InputVanillaCompileDriver = Readonly<{
   /** 区分复用同一驱动对象的多个运行实例的稳定 identity */
   instance: object;
   /** 本次执行的 canonical Core IR */
@@ -67,7 +67,7 @@ export type VanillaCompileDriverSession = Readonly<{
 /** Vanilla 的领域中立可选编译驱动 */
 export type VanillaCompileDriver = Readonly<{
   /** 根据当前 source、authored sites 与 Core options 创建隔离 session */
-  create: (input: VanillaCompileDriverInput) => VanillaCompileDriverSession;
+  create: (input: InputVanillaCompileDriver) => VanillaCompileDriverSession;
 }>;
 
 /** 保持同一驱动原始 session 在多次执行间具有稳定的规范化 identity */
@@ -81,7 +81,7 @@ const RESOLVED_VANILLA_COMPILE_OUTPUTS = new WeakMap<
 /** 校验并脱离驱动返回的 session */
 export const createVanillaCompileDriverSession = (
   driver: VanillaCompileDriver,
-  input: VanillaCompileDriverInput,
+  input: InputVanillaCompileDriver,
 ): VanillaCompileDriverSession => {
   try {
     const session = driver.create(input);
@@ -122,7 +122,7 @@ export const resolveVanillaCompileOutput = (
     const normalized = Object.freeze({
       primary: output.primary,
       observerOutputs: output.observerOutputs,
-      layers: validateReadonlyLayers(output.layers),
+      layers: snapshotReadonlyLayers(output.layers),
       diagnostics: Object.freeze([...output.diagnostics]),
     });
     let sessionOutputs = RESOLVED_VANILLA_COMPILE_OUTPUTS.get(session);
@@ -142,7 +142,7 @@ export const resolveVanillaCompileOutput = (
 
 /** 为 static/SSR 执行与 retained Computation 同构的一次驱动编译 */
 export const compileVanillaWithDriver = (
-  input: VanillaCompileDriverInput,
+  input: InputVanillaCompileDriver,
   session: VanillaCompileDriverSession,
 ): VanillaCompileOutput => {
   const coreOutput: VanillaReconcilerOutput =

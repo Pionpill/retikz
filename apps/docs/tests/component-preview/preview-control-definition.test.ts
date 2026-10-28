@@ -44,7 +44,7 @@ const panelDefinition = definePreviewControls({
   ],
 });
 
-describe('preview controls definition', () => {
+describe('预览控制定义', () => {
   it('扁平化 section 并生成唯一默认值', () => {
     expect(getPreviewControlFields(panelDefinition)).toHaveLength(7);
     expect(buildPreviewControlDefaults(panelDefinition)).toEqual({

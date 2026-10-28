@@ -12,37 +12,27 @@ import {
   resolvePointScaleDefaults,
   sizeGuideOf,
 } from '../shared';
-import { BubbleMarkDefinition, resolveBubbleMark } from './mark';
+import { bubbleMarkDefinition, resolveBubbleMark } from './mark';
 import type { IRBubbleChart } from './schema';
 import { BubbleChartSchema } from './schema';
 
 /** Bubble exact schema、调度与消费检查共用的 encoding 顺序 */
-export const BubbleChartEncodingSlots = [
-  'x',
-  'y',
-  'size',
-  'color',
-  'opacity',
-  'shape',
-  'row',
-  'column',
-  'facet',
-] as const;
+const bubbleChartEncodingSlots = ['x', 'y', 'size', 'color', 'opacity', 'shape', 'row', 'column', 'facet'] as const;
 
 const bubblePropertySlots = [...pointPropertySlotsWithoutSize, 'domainPadding'] as const;
 
 /** Bubble Chart 的内建 semantic recipe Definition */
-export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defineChartRecipe({
+export const bubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defineChartRecipe({
   chartType: ChartType.Bubble,
-  encodingSlots: BubbleChartEncodingSlots,
+  encodingSlots: bubbleChartEncodingSlots,
   schema: BubbleChartSchema,
   consumes: {
-    encodings: BubbleChartEncodingSlots,
+    encodings: bubbleChartEncodingSlots,
     properties: bubblePropertySlots,
   },
   marks: [
     {
-      definition: BubbleMarkDefinition,
+      definition: bubbleMarkDefinition,
       inherit: {
         encodings: ['x', 'y', 'size', 'color', 'opacity', 'shape'],
         properties: pointPropertySlotsWithoutSize,
@@ -52,7 +42,7 @@ export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defin
   resolveEncodings: context => {
     const resolution = resolveChartEncodingMappings(
       context,
-      BubbleChartEncodingSlots,
+      bubbleChartEncodingSlots,
       pointFieldConsumersOf(ChartType.Bubble),
     );
     const spatial = pointSpatialResolutionOf(ChartType.Bubble, context.encodings);

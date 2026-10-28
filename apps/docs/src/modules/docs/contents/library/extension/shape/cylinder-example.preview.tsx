@@ -1,4 +1,4 @@
-import { CylinderShapeDefinition } from '@retikz/extension';
+import { cylinderShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 /** 图形参数 */
@@ -9,7 +9,7 @@ export type CylinderExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderCylinderExamplePreview = (values: CylinderExamplePreviewValues) => (
-  <Layout viewBox={{ x: -120, y: -90, width: 240, height: 180 }} extensions={{ shapes: [CylinderShapeDefinition] }}>
+  <Layout viewBox={{ x: -120, y: -90, width: 240, height: 180 }} extensions={{ shapes: [cylinderShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'cylinder', params: { axis: values.axis, capDepth: values.capDepth } }}

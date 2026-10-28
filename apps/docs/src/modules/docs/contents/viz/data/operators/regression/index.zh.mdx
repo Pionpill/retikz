@@ -13,7 +13,7 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 `linear` 用最小二乘法拟合直线 $y=a+bx$，适合描述近似恒定的变化速率。至少需要两对有效观测，且 $x$ 有变化。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Linear"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Linear</ApiSourceLink>
+#### <ApiSourceLink label={"BUILTIN_REGRESSION_METHOD_SCHEMAS.Linear"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BUILTIN_REGRESSION_METHOD_SCHEMAS.Linear</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -54,7 +54,7 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 `quadratic` 用最小二乘法拟合二次曲线 $y=a+bx+cx^2$，可以描述弯曲趋势或一个转折。至少需要三个不同的 $x$。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Quadratic"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Quadratic</ApiSourceLink>
+#### <ApiSourceLink label={"BUILTIN_REGRESSION_METHOD_SCHEMAS.Quadratic"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BUILTIN_REGRESSION_METHOD_SCHEMAS.Quadratic</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -95,7 +95,7 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 `polynomial` 拟合 $y=a_0+a_1x+\cdots+a_dx^d$，其中 `order` 指定最高阶数 $d$，系数由最小二乘法求出。$d$ 阶拟合至少需要 $d+1$ 个不同的 $x$；更高阶可能增加点间或观测范围外的波动，并不一定更合适。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Polynomial"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Polynomial</ApiSourceLink>
+#### <ApiSourceLink label={"BUILTIN_REGRESSION_METHOD_SCHEMAS.Polynomial"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BUILTIN_REGRESSION_METHOD_SCHEMAS.Polynomial</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -138,7 +138,7 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 `logarithmic` 拟合 $y=a+b\ln x$，适合描述变化逐渐放缓的趋势。它对 $x$ 取对数后做线性最小二乘拟合，预测仍返回原空间的 $y$。至少需要两对有效观测，且 $x$ 有变化；观测与预测位置都必须满足 $x>0$。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Logarithmic"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Logarithmic</ApiSourceLink>
+#### <ApiSourceLink label={"BUILTIN_REGRESSION_METHOD_SCHEMAS.Logarithmic"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BUILTIN_REGRESSION_METHOD_SCHEMAS.Logarithmic</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -179,7 +179,7 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 `exponential` 拟合 $y=ae^{bx}$，适合描述按比例增长或衰减的趋势。它对 $y$ 取对数后做线性最小二乘拟合，再将预测还原到原空间；误差是在对数空间中最小化的。至少需要两对有效观测，且 $x$ 有变化，观测必须满足 $y>0$。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Exponential"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Exponential</ApiSourceLink>
+#### <ApiSourceLink label={"BUILTIN_REGRESSION_METHOD_SCHEMAS.Exponential"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BUILTIN_REGRESSION_METHOD_SCHEMAS.Exponential</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -220,7 +220,7 @@ description: 使用六种内置方法拟合预测模型，逐项比较曲线与�
 
 `power` 拟合 $y=ax^b$，适合描述幂律关系。它对 $x$、$y$ 都取对数后做线性最小二乘拟合，再将预测还原到原空间；误差是在对数空间中最小化的。至少需要两对有效观测，且 $x$ 有变化；观测必须满足 $x,y>0$，预测位置必须满足 $x>0$。参数与校验约束可在下方页签中切换查看。
 
-#### <ApiSourceLink label={"BuiltinRegressionMethodSchemas.Power"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BuiltinRegressionMethodSchemas.Power</ApiSourceLink>
+#### <ApiSourceLink label={"BUILTIN_REGRESSION_METHOD_SCHEMAS.Power"} path={"packages/viz/data/src/operators/regression/schema.ts"} startLine={29}>BUILTIN_REGRESSION_METHOD_SCHEMAS.Power</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

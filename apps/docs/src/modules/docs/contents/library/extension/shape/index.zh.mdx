@@ -9,8 +9,8 @@ description: 从 @retikz/extension 按需引入可选节点形状，并分别在
 
 本页支持两种导入方式：
 
-- 按需导入特定 Definition，例如 `CrossShapeDefinition`，只把当前图需要的官方扩展传入 `Layout` 或 `compile`
-- 整体使用官方扩展，例如 `ExtensionShapeDefinitions`，一次包含该能力族的全部 Definition；组装 provider graph 时，对应使用 `ExtensionShapeProviders`
+- 按需导入特定 Definition，例如 `crossShapeDefinition`，只把当前图需要的官方扩展传入 `Layout` 或 `compile`
+- 整体使用官方扩展，例如 `extensionShapeDefinitions`，一次包含该能力族的全部 Definition；组装 provider graph 时，对应使用 `extensionShapeProviders`
 
 两种方式都只是当前图的显式装配，不会因为 import 自动全局注册形状。
 
@@ -22,11 +22,11 @@ description: 从 @retikz/extension 按需引入可选节点形状，并分别在
 <DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-import { CrossShapeDefinition } from '@retikz/extension';
+import { crossShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ shapes: [CrossShapeDefinition] }}>
+  <Layout extensions={{ shapes: [crossShapeDefinition] }}>
     <Node
       shape="cross"
       layout={{ minimumSize: { width: 80, height: 80 } }}
@@ -41,7 +41,7 @@ export const Example = () => (
 
 ```tsx
 import type { IRScene } from '@retikz/core';
-import { CrossShapeDefinition } from '@retikz/extension';
+import { crossShapeDefinition } from '@retikz/extension';
 import { Layout } from '@retikz/react';
 
 const ir: IRScene = {
@@ -56,14 +56,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ shapes: [CrossShapeDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ shapes: [crossShapeDefinition] }} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { CrossShapeDefinition } from '@retikz/extension';
+import { crossShapeDefinition } from '@retikz/extension';
 import { node, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
@@ -75,7 +75,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { compile: { shapes: [CrossShapeDefinition] } });
+const svg = renderToSvgString(input, { compile: { shapes: [crossShapeDefinition] } });
 console.log(svg);
 ```
 
@@ -84,7 +84,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { CrossShapeDefinition } from '@retikz/extension';
+import { crossShapeDefinition } from '@retikz/extension';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -99,7 +99,7 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { shapes: [CrossShapeDefinition] } });
+const svg = renderToSvgString(ir, { compile: { shapes: [crossShapeDefinition] } });
 console.log(svg);
 ```
 
@@ -118,13 +118,13 @@ console.log(svg);
   defaultSourceFile="cross-example.preview.tsx"
 />
 
-#### <ApiSourceLink label={"CrossShapeParams"} path={"packages/library/extension/src/node-shape/definitions/cross.ts"} startLine={45}>CrossShapeParams</ApiSourceLink> / <ApiSourceLink label={"CrossShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/cross.ts"} startLine={35}>CrossShapeParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CrossShapeParams"} path={"packages/library/extension/src/node-shape/definitions/cross.ts"} startLine={44}>CrossShapeParams</ApiSourceLink> / <ApiSourceLink label={"CrossShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/cross.ts"} startLine={34}>CrossShapeParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-使用 `shape={{ type: 'cross', params }}` 并注入 `CrossShapeDefinition`。`width` 或 `height` 可以直接使用数字，也可以使用对象；对象字段按“方向 > 轴向 > default”解析，即 `top/right/bottom/left` 优先于 `horizontal/vertical`，再回退到 `default`。
+使用 `shape={{ type: 'cross', params }}` 并注入 `crossShapeDefinition`。`width` 或 `height` 可以直接使用数字，也可以使用对象；对象字段按“方向 > 轴向 > default”解析，即 `top/right/bottom/left` 优先于 `horizontal/vertical`，再回退到 `default`。
 
 | 字段      | 类型                                                                                                                                  | 说明                                       |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
@@ -182,7 +182,7 @@ export type CrossShapeParams = ZodInfer<typeof CrossShapeParamsSchema>;
 
 <DocTab value="members" label="属性">
 
-节点注入 `TrapezoidShapeDefinition`，参数类型为 `TrapezoidShapeParams`：
+节点注入 `trapezoidShapeDefinition`，参数类型为 `TrapezoidShapeParams`：
 
 | 字段              | 类型                                     | 说明                                           |
 | ----------------- | ---------------------------------------- | ---------------------------------------------- |
@@ -231,7 +231,7 @@ export type TrapezoidShapeParams = ZodInfer<typeof TrapezoidShapeParamsSchema>;
 
 <DocTab value="members" label="属性">
 
-节点注入 `ParallelogramShapeDefinition`，参数类型为 `ParallelogramShapeParams`：
+节点注入 `parallelogramShapeDefinition`，参数类型为 `ParallelogramShapeParams`：
 
 | 字段              | 类型                | 说明                                  |
 | ----------------- | ------------------- | ------------------------------------- |
@@ -280,7 +280,7 @@ export type ParallelogramShapeParams = ZodInfer<typeof ParallelogramShapeParamsS
 
 <DocTab value="members" label="属性">
 
-节点注入 `HexagonShapeDefinition`，参数类型为 `HexagonShapeParams`：
+节点注入 `hexagonShapeDefinition`，参数类型为 `HexagonShapeParams`：
 
 | 字段             | 类型     | 说明                                          |
 | ---------------- | -------- | --------------------------------------------- |
@@ -321,13 +321,13 @@ export type HexagonShapeParams = ZodInfer<typeof HexagonShapeParamsSchema>;
   defaultSourceFile="cylinder-example.preview.tsx"
 />
 
-#### <ApiSourceLink label={"CylinderShapeParams"} path={"packages/library/extension/src/node-shape/definitions/cylinder.ts"} startLine={23}>CylinderShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParams"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={15}>EllipticCapShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={9}>EllipticCapShapeParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"CylinderShapeParams"} path={"packages/library/extension/src/node-shape/definitions/cylinder.ts"} startLine={23}>CylinderShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParams"} path={"packages/library/extension/src/node-shape/definitions/elliptic-cap.ts"} startLine={15}>EllipticCapShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/elliptic-cap.ts"} startLine={9}>EllipticCapShapeParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-节点注入 `CylinderShapeDefinition`，参数类型为 `CylinderShapeParams`：
+节点注入 `cylinderShapeDefinition`，参数类型为 `CylinderShapeParams`：
 
 | 字段        | 类型                         | 说明                        |
 | ----------- | ---------------------------- | --------------------------- |
@@ -370,13 +370,13 @@ export type CylinderShapeParams = EllipticCapShapeParams;
   defaultSourceFile="elliptic-capsule-example.preview.tsx"
 />
 
-#### <ApiSourceLink label={"EllipticCapsuleShapeParams"} path={"packages/library/extension/src/node-shape/definitions/elliptic-capsule.ts"} startLine={23}>EllipticCapsuleShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParams"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={15}>EllipticCapShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/\_elliptic-cap.ts"} startLine={9}>EllipticCapShapeParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"EllipticCapsuleShapeParams"} path={"packages/library/extension/src/node-shape/definitions/elliptic-capsule.ts"} startLine={23}>EllipticCapsuleShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParams"} path={"packages/library/extension/src/node-shape/definitions/elliptic-cap.ts"} startLine={15}>EllipticCapShapeParams</ApiSourceLink> / <ApiSourceLink label={"EllipticCapShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/elliptic-cap.ts"} startLine={9}>EllipticCapShapeParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-节点注入 `EllipticCapsuleShapeDefinition`，参数类型为 `EllipticCapsuleShapeParams`：
+节点注入 `ellipticCapsuleShapeDefinition`，参数类型为 `EllipticCapsuleShapeParams`：
 
 | 字段        | 类型                         | 说明                        |
 | ----------- | ---------------------------- | --------------------------- |
@@ -425,7 +425,7 @@ export type EllipticCapsuleShapeParams = EllipticCapShapeParams;
 
 <DocTab value="members" label="属性">
 
-节点使用 `shape={{ type: 'sector', params }}`，并注入 `SectorShapeDefinition`。`params` 类型为 `SectorShapeParams`：
+节点使用 `shape={{ type: 'sector', params }}`，并注入 `sectorShapeDefinition`。`params` 类型为 `SectorShapeParams`：
 
 | 字段            | 类型     | 说明                                                   |
 | --------------- | -------- | ------------------------------------------------------ |
@@ -472,13 +472,13 @@ export type SectorShapeParams = ZodInfer<typeof SectorShapeParamsSchema>;
   defaultSourceFile="star-example.preview.tsx"
 />
 
-#### <ApiSourceLink label={"StarShapeParams"} path={"packages/library/extension/src/node-shape/definitions/star.ts"} startLine={42}>StarShapeParams</ApiSourceLink> / <ApiSourceLink label={"StarShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/star.ts"} startLine={21}>StarShapeParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"StarShapeParams"} path={"packages/library/extension/src/node-shape/definitions/star.ts"} startLine={41}>StarShapeParams</ApiSourceLink> / <ApiSourceLink label={"StarShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/star.ts"} startLine={20}>StarShapeParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-节点使用 `shape={{ type: 'star', params }}`，并注入 `StarShapeDefinition`。`params` 类型为 `StarShapeParams`：
+节点使用 `shape={{ type: 'star', params }}`，并注入 `starShapeDefinition`。`params` 类型为 `StarShapeParams`：
 
 | 字段            | 类型     | 说明                               |
 | --------------- | -------- | ---------------------------------- |
@@ -525,13 +525,13 @@ export type StarShapeParams = ZodInfer<typeof StarShapeParamsSchema>;
   defaultSourceFile="contour-example.preview.tsx"
 />
 
-#### <ApiSourceLink label={"ContourShapeParams"} path={"packages/library/extension/src/node-shape/definitions/contour.ts"} startLine={30}>ContourShapeParams</ApiSourceLink> / <ApiSourceLink label={"ContourShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/contour.ts"} startLine={20}>ContourShapeParamsSchema</ApiSourceLink>
+#### <ApiSourceLink label={"ContourShapeParams"} path={"packages/library/extension/src/node-shape/definitions/contour.ts"} startLine={29}>ContourShapeParams</ApiSourceLink> / <ApiSourceLink label={"ContourShapeParamsSchema"} path={"packages/library/extension/src/node-shape/definitions/contour.ts"} startLine={19}>ContourShapeParamsSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-节点使用 `shape={{ type: 'contour', params }}`，并注入 `ContourShapeDefinition`。`params` 类型为 `ContourShapeParams`：
+节点使用 `shape={{ type: 'contour', params }}`，并注入 `contourShapeDefinition`。`params` 类型为 `ContourShapeParams`：
 
 | 字段            | 类型                      | 说明                                                                     |
 | --------------- | ------------------------- | ------------------------------------------------------------------------ |

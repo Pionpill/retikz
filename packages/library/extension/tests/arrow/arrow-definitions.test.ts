@@ -3,26 +3,26 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import {
-  BarArrowDefinition,
-  BarArrowProvider,
-  CrowFootArrowDefinition,
-  CrowFootArrowProvider,
-  DiamondArrowDefinition,
-  DiamondArrowProvider,
-  KiteArrowDefinition,
-  KiteArrowProvider,
-  OpenDiamondArrowDefinition,
-  OpenDiamondArrowProvider,
-  OpenKiteArrowDefinition,
-  OpenKiteArrowProvider,
-  OpenSquareArrowDefinition,
-  OpenSquareArrowProvider,
-  SquareArrowDefinition,
-  SquareArrowProvider,
-  ExtensionArrowDefinitions,
-  ExtensionArrowProviders,
-  StraightBarbArrowDefinition,
-  StraightBarbArrowProvider,
+  barArrowDefinition,
+  barArrowProvider,
+  crowFootArrowDefinition,
+  crowFootArrowProvider,
+  diamondArrowDefinition,
+  diamondArrowProvider,
+  kiteArrowDefinition,
+  kiteArrowProvider,
+  openDiamondArrowDefinition,
+  openDiamondArrowProvider,
+  openKiteArrowDefinition,
+  openKiteArrowProvider,
+  openSquareArrowDefinition,
+  openSquareArrowProvider,
+  squareArrowDefinition,
+  squareArrowProvider,
+  extensionArrowDefinitions,
+  extensionArrowProviders,
+  straightBarbArrowDefinition,
+  straightBarbArrowProvider,
 } from '../../src/arrow';
 
 const arrowScene = (shape: string): IRScene => ({
@@ -52,18 +52,18 @@ const firstPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrimitive | u
   return undefined;
 };
 
-describe('Extension optional arrow definitions', () => {
-  it('keeps every explicit optional arrow definition as its own compiled marker geometry', () => {
+describe('扩展可选箭头定义', () => {
+  it('将每个显式可选箭头定义保留为其自己编译的标记几何形状', () => {
     const definitions = [
-      DiamondArrowDefinition,
-      OpenDiamondArrowDefinition,
-      BarArrowDefinition,
-      CrowFootArrowDefinition,
-      StraightBarbArrowDefinition,
-      KiteArrowDefinition,
-      OpenKiteArrowDefinition,
-      SquareArrowDefinition,
-      OpenSquareArrowDefinition,
+      diamondArrowDefinition,
+      openDiamondArrowDefinition,
+      barArrowDefinition,
+      crowFootArrowDefinition,
+      straightBarbArrowDefinition,
+      kiteArrowDefinition,
+      openKiteArrowDefinition,
+      squareArrowDefinition,
+      openSquareArrowDefinition,
     ];
     const compiled = definitions.map(definition =>
       firstPath(compileToScene(arrowScene(definition.name), { arrows: [definition] }).scene.primitives),
@@ -112,7 +112,7 @@ describe('Extension optional arrow definitions', () => {
     });
   });
 
-  it('emits TikZ diamond and kite families with their frozen solid and open geometry', () => {
+  it('发射 TikZ 钻石和风筝系列，具有冻结的固体和开放的几何形状', () => {
     const context = {
       params: {},
       stroke: '#123456',
@@ -121,7 +121,7 @@ describe('Extension optional arrow definitions', () => {
       round: (value: number): number => value,
     };
 
-    expect([...DiamondArrowDefinition.emit(context)]).toEqual([
+    expect([...diamondArrowDefinition.emit(context)]).toEqual([
       {
         type: 'path',
         commands: [
@@ -135,7 +135,7 @@ describe('Extension optional arrow definitions', () => {
         stroke: '#123456',
       },
     ]);
-    expect([...OpenDiamondArrowDefinition.emit(context)]).toEqual([
+    expect([...openDiamondArrowDefinition.emit(context)]).toEqual([
       {
         type: 'path',
         commands: [
@@ -151,7 +151,7 @@ describe('Extension optional arrow definitions', () => {
         lineJoin: 'round',
       },
     ]);
-    expect([...KiteArrowDefinition.emit(context)]).toEqual([
+    expect([...kiteArrowDefinition.emit(context)]).toEqual([
       {
         type: 'path',
         commands: [
@@ -165,7 +165,7 @@ describe('Extension optional arrow definitions', () => {
         stroke: '#123456',
       },
     ]);
-    expect([...OpenKiteArrowDefinition.emit(context)]).toEqual([
+    expect([...openKiteArrowDefinition.emit(context)]).toEqual([
       {
         type: 'path',
         commands: [
@@ -181,13 +181,13 @@ describe('Extension optional arrow definitions', () => {
         lineJoin: 'round',
       },
     ]);
-    expect(DiamondArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
-    expect(OpenDiamondArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
-    expect(KiteArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
-    expect(OpenKiteArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
+    expect(diamondArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
+    expect(openDiamondArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
+    expect(kiteArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
+    expect(openKiteArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
   });
 
-  it('emits TikZ square solid and open geometry with independent length and width scaling', () => {
+  it('发出 TikZ 方形实体和开放几何形状，具有独立的长度和宽度缩放', () => {
     const context = {
       params: {},
       stroke: '#123456',
@@ -196,7 +196,7 @@ describe('Extension optional arrow definitions', () => {
       round: (value: number): number => value,
     };
 
-    expect([...SquareArrowDefinition.emit(context)]).toEqual([
+    expect([...squareArrowDefinition.emit(context)]).toEqual([
       {
         type: 'path',
         commands: [
@@ -210,7 +210,7 @@ describe('Extension optional arrow definitions', () => {
         stroke: '#123456',
       },
     ]);
-    expect([...OpenSquareArrowDefinition.emit(context)]).toEqual([
+    expect([...openSquareArrowDefinition.emit(context)]).toEqual([
       {
         type: 'path',
         commands: [
@@ -242,18 +242,18 @@ describe('Extension optional arrow definitions', () => {
       ],
     };
     const customized = firstPath(
-      compileToScene(customizedScene, { arrows: [OpenSquareArrowDefinition] }).scene.primitives,
+      compileToScene(customizedScene, { arrows: [openSquareArrowDefinition] }).scene.primitives,
     );
 
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [89.7, 0] });
     expect(customized?.arrowEnd).toMatchObject({ markerWidth: 12, markerHeight: 18 });
     // 半线宽接缝换算到 marker 局部坐标，保持箭头尖端位置
     expect(customized?.arrowEnd?.refX).toBeCloseTo((0.5 * 10) / 12);
-    expect(SquareArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
-    expect(OpenSquareArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
+    expect(squareArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
+    expect(openSquareArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
   });
 
-  it('places the new solid and open families at both ends of a reversed route', () => {
+  it('将新的实体和开放族放置在反向路线的两端', () => {
     const reversed = firstPath(
       compileToScene(
         {
@@ -270,7 +270,7 @@ describe('Extension optional arrow definitions', () => {
             },
           ],
         },
-        { arrows: [KiteArrowDefinition, OpenSquareArrowDefinition] },
+        { arrows: [kiteArrowDefinition, openSquareArrowDefinition] },
       ).scene.primitives,
     );
 
@@ -282,7 +282,7 @@ describe('Extension optional arrow definitions', () => {
     expect(reversed?.arrowEnd?.shape).toBe('openSquare');
   });
 
-  it('emits bar and crowFoot as deterministic open stroke geometry', () => {
+  it('将条形和 crowFoot 发出为确定性开放描边几何形状', () => {
     const context = {
       params: {},
       stroke: { kind: 'contextStroke' } as const,
@@ -291,7 +291,7 @@ describe('Extension optional arrow definitions', () => {
       round: (value: number): number => value,
     };
 
-    expect([...BarArrowDefinition.emit(context)]).toEqual([
+    expect([...barArrowDefinition.emit(context)]).toEqual([
       {
         type: 'path',
         commands: [
@@ -303,7 +303,7 @@ describe('Extension optional arrow definitions', () => {
         strokeWidth: 2,
       },
     ]);
-    expect([...CrowFootArrowDefinition.emit(context)]).toEqual([
+    expect([...crowFootArrowDefinition.emit(context)]).toEqual([
       {
         type: 'path',
         commands: [
@@ -319,12 +319,12 @@ describe('Extension optional arrow definitions', () => {
         strokeWidth: 2,
       },
     ]);
-    expect(BarArrowDefinition).toMatchObject({ backX: 9, hollow: true, lineContactX: 9, tipX: 9 });
-    expect(CrowFootArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
+    expect(barArrowDefinition).toMatchObject({ backX: 9, hollow: true, lineContactX: 9, tipX: 9 });
+    expect(crowFootArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
   });
 
-  it('emits straightBarb as one continuous open stroke path', () => {
-    const definition = ExtensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
+  it('将 straightBarb 作为一个连续的开放行程路径发出', () => {
+    const definition = extensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
 
     expect(definition).toBeDefined();
 
@@ -354,8 +354,8 @@ describe('Extension optional arrow definitions', () => {
     expect(definition).toMatchObject({ hollow: true, lineContactX: 9, tipX: 9 });
   });
 
-  it('places straightBarb at forward, reverse, and double endpoints through Core marker geometry', () => {
-    const definition = ExtensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
+  it('通过 Core 标记几何体将 straightBarb 放置在正向、反向和双端点处', () => {
+    const definition = extensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
 
     expect(definition).toBeDefined();
 
@@ -438,9 +438,9 @@ describe('Extension optional arrow definitions', () => {
     ]);
   });
 
-  it('publishes straightBarb through the Extension arrow collections', () => {
-    const definition = ExtensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
-    const provider = ExtensionArrowProviders.find(
+  it('通过扩展箭头集合发布 straightBarb', () => {
+    const definition = extensionArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
+    const provider = extensionArrowProviders.find(
       candidate => candidate.key.capability === 'arrow' && candidate.key.name === 'straightBarb',
     );
 
@@ -449,10 +449,10 @@ describe('Extension optional arrow definitions', () => {
 
     if (definition === undefined || provider === undefined) return;
 
-    expect(provider.makeDefinition({})).toBe(definition);
+    expect(provider.makeDefinition([])).toBe(definition);
   });
 
-  it('uses Core marker placement for visual overrides, reverse routes, and double endpoints', () => {
+  it('使用 Core 标记放置来实现视觉覆盖、反向路线和双端点', () => {
     const customizedScene: IRScene = {
       type: 'scene',
       version: 1,
@@ -467,7 +467,7 @@ describe('Extension optional arrow definitions', () => {
         },
       ],
     };
-    const customized = firstPath(compileToScene(customizedScene, { arrows: [BarArrowDefinition] }).scene.primitives);
+    const customized = firstPath(compileToScene(customizedScene, { arrows: [barArrowDefinition] }).scene.primitives);
 
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [99.3, 0] });
     expect(customized?.arrowEnd).toMatchObject({ markerWidth: 12, markerHeight: 18, opacity: 0.4 });
@@ -489,7 +489,7 @@ describe('Extension optional arrow definitions', () => {
             },
           ],
         },
-        { arrows: [CrowFootArrowDefinition] },
+        { arrows: [crowFootArrowDefinition] },
       ).scene.primitives,
     );
 
@@ -511,7 +511,7 @@ describe('Extension optional arrow definitions', () => {
             },
           ],
         },
-        { arrows: [BarArrowDefinition, CrowFootArrowDefinition] },
+        { arrows: [barArrowDefinition, crowFootArrowDefinition] },
       ).scene.primitives,
     );
 
@@ -522,9 +522,9 @@ describe('Extension optional arrow definitions', () => {
   });
 
   it.each([
-    { definition: BarArrowDefinition, shape: 'bar' },
-    { definition: CrowFootArrowDefinition, shape: 'crowFoot' },
-  ])('uses the shared Core visual-back placement for $shape', ({ definition, shape }) => {
+    { definition: barArrowDefinition, shape: 'bar' },
+    { definition: crowFootArrowDefinition, shape: 'crowFoot' },
+  ])('使用 $shape 的共享 Core 视觉后置位置', ({ definition, shape }) => {
     const scene: IRScene = {
       type: 'scene',
       version: 1,
@@ -544,17 +544,17 @@ describe('Extension optional arrow definitions', () => {
     expect(primitive?.commands.at(-1)).toEqual({ kind: 'line', to: [100, 0] });
   });
 
-  it('exports every optional arrow definition and static provider without implicit registration', () => {
+  it('导出每个可选箭头定义和静态提供者，无需隐式注册', () => {
     const definitions = [
-      DiamondArrowDefinition,
-      OpenDiamondArrowDefinition,
-      BarArrowDefinition,
-      CrowFootArrowDefinition,
-      StraightBarbArrowDefinition,
-      KiteArrowDefinition,
-      OpenKiteArrowDefinition,
-      SquareArrowDefinition,
-      OpenSquareArrowDefinition,
+      diamondArrowDefinition,
+      openDiamondArrowDefinition,
+      barArrowDefinition,
+      crowFootArrowDefinition,
+      straightBarbArrowDefinition,
+      kiteArrowDefinition,
+      openKiteArrowDefinition,
+      squareArrowDefinition,
+      openSquareArrowDefinition,
     ];
 
     expect(definitions.map(definition => definition.name)).toEqual([
@@ -568,14 +568,14 @@ describe('Extension optional arrow definitions', () => {
       'square',
       'openSquare',
     ]);
-    expect(DiamondArrowProvider.makeDefinition({})).toBe(DiamondArrowDefinition);
-    expect(OpenDiamondArrowProvider.makeDefinition({})).toBe(OpenDiamondArrowDefinition);
-    expect(BarArrowProvider.makeDefinition({})).toBe(BarArrowDefinition);
-    expect(CrowFootArrowProvider.makeDefinition({})).toBe(CrowFootArrowDefinition);
-    expect(StraightBarbArrowProvider.makeDefinition({})).toBe(StraightBarbArrowDefinition);
-    expect(KiteArrowProvider.makeDefinition({})).toBe(KiteArrowDefinition);
-    expect(OpenKiteArrowProvider.makeDefinition({})).toBe(OpenKiteArrowDefinition);
-    expect(SquareArrowProvider.makeDefinition({})).toBe(SquareArrowDefinition);
-    expect(OpenSquareArrowProvider.makeDefinition({})).toBe(OpenSquareArrowDefinition);
+    expect(diamondArrowProvider.makeDefinition([])).toBe(diamondArrowDefinition);
+    expect(openDiamondArrowProvider.makeDefinition([])).toBe(openDiamondArrowDefinition);
+    expect(barArrowProvider.makeDefinition([])).toBe(barArrowDefinition);
+    expect(crowFootArrowProvider.makeDefinition([])).toBe(crowFootArrowDefinition);
+    expect(straightBarbArrowProvider.makeDefinition([])).toBe(straightBarbArrowDefinition);
+    expect(kiteArrowProvider.makeDefinition([])).toBe(kiteArrowDefinition);
+    expect(openKiteArrowProvider.makeDefinition([])).toBe(openKiteArrowDefinition);
+    expect(squareArrowProvider.makeDefinition([])).toBe(squareArrowDefinition);
+    expect(openSquareArrowProvider.makeDefinition([])).toBe(openSquareArrowDefinition);
   });
 });

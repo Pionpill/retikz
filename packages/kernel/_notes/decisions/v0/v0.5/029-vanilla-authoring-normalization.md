@@ -67,7 +67,9 @@ declare const normalizeScene: (input: InputScene, options?: InputNormalizeOption
 
 `InputPosition`、`InputTarget`、`InputTransform`、`InputNodeLabel`、`InputStepLabel`、`InputStep` 与其它实际存在的 authoring 子结构遵循同一规则：以最窄的 Source IR 类型派生，只在 authoring 形态确实不同处放宽。无差异的 Source IR 字段直接复用 `IRXxx`，不为命名完整性制造平行类型。
 
-Core 的公开 schema 与类型只描述持久化 IR：`XxxSchema` 和由其推导的 `IRXxx`。目前仅为 authoring 宽松写法存在的 Core `*Input` 类型和同义输入 helper 从 Core 公共面移除，不保留别名、deprecated bridge、fallback 或双轨入口。Core compile 仍只接收 `IRScene`。若某个 Core parser 是独立的文本或 DSL 入口，它保留自己的 parser grammar 类型，但不得再借用 `IR*Input` 命名表达框架 authoring Input。
+Core 的公开 schema 与类型只描述持久化 IR：`XxxSchema` 和由其推导的 `IRXxx`。目前仅为 authoring 宽松写法存在的 Core `*Input` 类型和同义输入 helper 从 Core 公共面移除，不保留别名、deprecated bridge、fallback 或双轨入口。Core compile 仍只接收 `IRScene`。独立的文本或 DSL parser 可保留自己的 grammar 类型，但其包归属由输入契约决定，不因输出 Core IR 就归 Core。
+
+节点引用字符串（如 `A.top`、`A.30`）、相对目标简写与 Way 路径 DSL 属于 Vanilla authoring 输入。`parseNodeTarget`、`parseTargetSugar`、`parseWay`、`parseWayWithTargets` 及 Way grammar 类型和 `DrawWay` 由 Vanilla 公开提供；React 和领域 Vanilla adapter 复用同一入口。结果仍是既有 Core 目标对象与有序 Step，不增加持久化简写或平行 IR。语法与组合错误由 `RetikzVanillaError` 的 `Normalize` code 报告，Core 不保留这些 authoring 入口的转导出。动画预设工厂的归属仍按原动画决策处理。
 
 Vanilla 根入口同时拥有不依赖 DOM 的处理链。它以 `InputScene | IRScene` 创建 framework-neutral processing controller；两者都是可更新的 source，`InputScene` 先经 Vanilla normalize，`IRScene` 不重复经 Input 或 schema parse。controller 创建时接收固定 processing configuration，更新时只接收下一个 source 与明确可更新的 processing configuration；浏览器宿主可在该 configuration 中注入文字度量等能力，但不得以此重建 compile driver 或 session。
 

@@ -28,8 +28,8 @@ const createContext = (): CanvasRenderingContext2D & { calls: Array<Call> } => {
   } as unknown as CanvasRenderingContext2D & { calls: Array<Call> };
 };
 
-describe('canvas canonical clip paths', () => {
-  it('applies path clip commands with fillRule', () => {
+describe('画布规范裁剪路径', () => {
+  it('使用 fillRule 应用路径裁剪命令', () => {
     const ctx = createContext();
     const path: SceneClipPath = {
       fillRule: 'evenodd',
@@ -46,7 +46,7 @@ describe('canvas canonical clip paths', () => {
     expect(ctx.calls.at(-1)).toEqual({ name: 'clip', args: ['evenodd'] });
   });
 
-  it('applies accumulated subpaths with one canonical fill rule', () => {
+  it('应用具有一种规范填充规则的累积子路径', () => {
     const ctx = createContext();
     const path: SceneClipPath = {
       commands: [
@@ -78,7 +78,7 @@ describe('canvas canonical clip paths', () => {
     expect(ctx.calls.at(-1)).toEqual({ name: 'clip', args: ['nonzero'] });
   });
 
-  it('starts an arc after close with a new moveTo at the declared arc start', () => {
+  it('关闭后在声明的弧起点处使用新的 moveTo 开始弧', () => {
     const ctx = createContext();
     const path: SceneClipPath = {
       commands: [

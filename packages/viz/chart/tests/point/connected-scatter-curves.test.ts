@@ -6,10 +6,10 @@ import { describe, expect, it } from 'vitest';
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveSelectedChart } from '../../src/_chart/resolve';
 import { ConnectedScatterChartSchema } from '../../src/point/connected-scatter';
-import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
+import { connectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
 
 const runtime = resolveChartProviderRegistry([
-  { family: 'point', recipe: ConnectedScatterChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: connectedScatterChartDefinition, chartThemeDefinitions: [] },
 ]).runtime;
 
 const plotOf = (path: Record<string, unknown> = {}, marks: Array<Record<string, unknown>> = []) => {
@@ -30,7 +30,7 @@ const plotOf = (path: Record<string, unknown> = {}, marks: Array<Record<string, 
 
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
-    recipe: ConnectedScatterChartDefinition,
+    recipe: connectedScatterChartDefinition,
     chartThemeDefinitions: [],
     runtime,
   }).plot;
@@ -43,7 +43,7 @@ const isPath = (child: IRChild): child is IRPath => child.type === 'path';
 const pathsOf = (children: Array<IRChild>): Array<IRPath> =>
   children.flatMap(child => (isScope(child) ? pathsOf(child.children) : isPath(child) ? [child] : []));
 
-describe('Connected Scatter connection curves', () => {
+describe('连接的散点连接曲线', () => {
   it('仅为排序后各序列内部的缺口生成独立描边，保留曲线与观测点', () => {
     const plot = plotOf({ curve: 'catmullRom', connectNulls: { stroke: '#ff0000', strokeWidth: 4 } });
     const path = plot.marks[0];
@@ -75,7 +75,7 @@ describe('Connected Scatter connection curves', () => {
     expect(plot.marks[1]).toEqual(plotOf().marks[1]);
   });
 
-  it('preserves the linear default and inherits or overrides the recipe curve', () => {
+  it('保留线性默认值并继承或覆盖配方曲线', () => {
     expect(plotOf().marks[0]).not.toHaveProperty('properties.curve');
     expect(plotOf({ curve: 'catmullRom' }, [{ kind: 'connected-scatter', override: true }]).marks[0]).toMatchObject({
       type: 'path',
@@ -93,7 +93,7 @@ describe('Connected Scatter connection curves', () => {
     expect(() => plotOf({ curve: 'unsupported' })).toThrow();
   });
 
-  it('changes path geometry while keeping point marks and ordering intact', () => {
+  it('更改路径几何形状，同时保持点标记和顺序不变', () => {
     const linear = plotOf();
     const smooth = plotOf({ curve: 'catmullRom' });
 

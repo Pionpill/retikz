@@ -9,7 +9,7 @@ import { createRuntime } from '../../src/runtime';
 import { defineRuntimeSource } from '../../src/source';
 import { createRuntimeSourceInput, createRuntimeSourceUpdate } from '../../src/transaction';
 
-describe('runtime runtime failure isolation', () => {
+describe('Runtime 运行时故障隔离', () => {
   it('initial Computation run throw 即使伪造 RetikzRuntimeError 仍固定映射，并反向释放已捕获 owner', () => {
     const cause = new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.RevisionStale,

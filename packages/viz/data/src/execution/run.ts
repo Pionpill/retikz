@@ -1,7 +1,7 @@
 import { RetikzDataError } from '../error';
 import type { DataTransformResult } from '../model';
 import { createDataLineageRecorder, importDataLineageEvents } from '../provenance';
-import type { DataTransformExecution, DataTransformStageInput } from './contract';
+import type { DataTransformExecution, InputDataTransformStage } from './contract';
 import type { PreparedTransformPlan } from './prepared-plan';
 import { assertDataExecutionActive, assertDataTransformResult } from './result';
 
@@ -14,7 +14,7 @@ export class TransformExecution<TSource> implements DataTransformExecution {
 
   constructor(
     private readonly plan: PreparedTransformPlan<TSource>,
-    private readonly input: DataTransformStageInput<TSource>,
+    private readonly input: InputDataTransformStage<TSource>,
   ) {}
 
   /** 重复调用同步抛错；异步等待、失败与取消均不恢复执行权 */

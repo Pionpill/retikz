@@ -1,4 +1,4 @@
-import { StarShapeDefinition } from '@retikz/extension';
+import { starShapeDefinition } from '@retikz/extension';
 import { PlotAxis, PointMark, RelationMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
@@ -33,7 +33,7 @@ export type PointNodeShapePreviewValues = {
 
 /** 绘制示例图形 */
 export const PointNodeShapePreview = (values: PointNodeShapePreviewValues) => (
-  <Layout viewBox={{ x: -50, y: -70, width: 540, height: 408 }} extensions={{ shapes: [StarShapeDefinition] }}>
+  <Layout viewBox={{ x: -50, y: -70, width: 540, height: 408 }} extensions={{ shapes: [starShapeDefinition] }}>
     <Plot
       data={shapePoints}
       width={400}

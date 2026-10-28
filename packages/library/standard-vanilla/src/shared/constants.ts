@@ -1,35 +1,35 @@
 /** Standard Axes embed 的稳定 kind */
-export const StandardAxesEmbedKind = 'standard.axes';
+export const standardAxesEmbedKind = 'standard.axes';
 
 /** Standard Frame embed 的稳定 kind */
-export const StandardFrameEmbedKind = 'standard.frame';
+export const standardFrameEmbedKind = 'standard.frame';
 
 /** Standard Grid embed 的稳定 kind */
-export const StandardGridEmbedKind = 'standard.grid';
+export const standardGridEmbedKind = 'standard.grid';
 
 /** Standard Legend embed 的稳定 kind */
-export const StandardLegendEmbedKind = 'standard.legend';
+export const standardLegendEmbedKind = 'standard.legend';
 
 /** Standard Surface embed 的稳定 kind */
-export const StandardSurfaceEmbedKind = 'standard.surface';
+export const standardSurfaceEmbedKind = 'standard.surface';
 
 /** Standard Array embed 的稳定 kind */
-export const StandardArrayEmbedKind = 'standard.array';
+export const standardArrayEmbedKind = 'standard.array';
 
 /** Standard Map embed 的稳定 kind */
-export const StandardMapEmbedKind = 'standard.map';
+export const standardMapEmbedKind = 'standard.map';
 
 /** Standard Matrix embed 的稳定 kind */
-export const StandardMatrixEmbedKind = 'standard.matrix';
+export const standardMatrixEmbedKind = 'standard.matrix';
 
 /** Standard Chain embed 的稳定 kind */
-export const StandardChainEmbedKind = 'standard.chain';
+export const standardChainEmbedKind = 'standard.chain';
 
 /** Standard Stack embed 的稳定 kind */
-export const StandardStackEmbedKind = 'standard.stack';
+export const standardStackEmbedKind = 'standard.stack';
 
 /** Queue authoring embed 标识 */
-export const StandardQueueEmbedKind = 'standard.queue';
+export const standardQueueEmbedKind = 'standard.queue';
 
 /** Tree authoring embed 判别 */
-export const StandardTreeEmbedKind = 'standard.tree';
+export const standardTreeEmbedKind = 'standard.tree';

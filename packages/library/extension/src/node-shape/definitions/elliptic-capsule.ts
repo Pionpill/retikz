@@ -10,23 +10,23 @@ import {
 import { localToWorld } from '@retikz/math';
 
 import { BuiltinExtensionShapeName } from '../constants';
-import type { EllipticCapShapeParams } from './_elliptic-cap';
+import type { EllipticCapShapeParams } from './elliptic-cap';
 import {
   EllipticCapShapeParamsSchema,
   circumscribeEllipticCaps,
   ellipticCapCommands,
   ellipticCapLocalBoundary,
   scaleEllipticCapParams,
-} from './_elliptic-cap';
+} from './elliptic-cap';
 
 /** Elliptic Capsule 形状参数 */
 export type EllipticCapsuleShapeParams = EllipticCapShapeParams;
 
 /** 仅由闭合半椭圆端外轮廓组成的 Elliptic Capsule Definition */
-export const EllipticCapsuleShapeDefinition = defineShape<EllipticCapsuleShapeParams>({
+export const ellipticCapsuleShapeDefinition = defineShape<EllipticCapsuleShapeParams>({
   name: BuiltinExtensionShapeName.EllipticCapsule,
   paramsSchema: EllipticCapShapeParamsSchema,
-  computeCircumscribedHalfAxes: circumscribeEllipticCaps,
+  computeCircumscribedGeometry: circumscribeEllipticCaps,
   computeBoundaryPoint: (bounds, toward, params) =>
     localToWorld(bounds, ellipticCapLocalBoundary(bounds, toward, params)),
   resolveAnchor: (bounds, name) => {
@@ -41,9 +41,7 @@ export const EllipticCapsuleShapeDefinition = defineShape<EllipticCapsuleShapePa
 });
 
 /** Elliptic Capsule 的静态 Core provider */
-export const EllipticCapsuleShapeProvider: CoreDependencyProvider = Object.freeze({
-  key: { capability: 'shape', name: EllipticCapsuleShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
-  makeDefinition: () => EllipticCapsuleShapeDefinition,
+export const ellipticCapsuleShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
+  key: { capability: 'shape', name: ellipticCapsuleShapeDefinition.name },
+  makeDefinition: () => ellipticCapsuleShapeDefinition,
 });

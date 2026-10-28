@@ -24,7 +24,7 @@ describe('point / vector2 原语', () => {
     expect(isFinitePoint([1, Infinity])).toBe(false);
   });
 
-  it('add / sub / scale', () => {
+  it('向量加法、减法与缩放', () => {
     expect(vector2.add([1, 2], [3, 4])).toEqual([4, 6]);
     expect(vector2.sub([3, 4], [1, 2])).toEqual([2, 2]);
     expect(vector2.scale([1, 2], 3)).toEqual([3, 6]);
@@ -36,7 +36,7 @@ describe('point / vector2 原语', () => {
     expect(vector2.normalize([0, 5])).toEqual([0, 1]);
   });
 
-  it('dot / cross', () => {
+  it('点/十字', () => {
     expect(vector2.dot([1, 2], [3, 4])).toBe(11);
     expect(vector2.cross([1, 0], [0, 1])).toBe(1);
   });

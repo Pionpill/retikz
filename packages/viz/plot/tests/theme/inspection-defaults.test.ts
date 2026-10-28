@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { definePlotTheme, resolvePlotTheme } from '../../src';
 
-describe('Plot defaults inspection', () => {
+describe('Plot 默认检查', () => {
   it('记录 Neutral、style、Source 的真实 defaults/rules/palette 来源', () => {
     const style = definePlotTheme({
       name: 'inspection-style',

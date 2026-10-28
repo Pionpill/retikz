@@ -1,13 +1,13 @@
 import type { CompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
-import { PathClipProvider } from '@retikz/extension';
+import { pathClipProvider } from '@retikz/extension';
 
 import { compileMap } from './pipeline';
 import { MapSchema } from './schema';
 import type { IRMap } from './schema';
 
 /** Standard Map 的布局感知 Definition */
-export const MapDefinition: CompositeDefinition<IRMap, 'standard', 'map'> = defineComposite({
+export const mapDefinition: CompositeDefinition<IRMap, 'standard', 'map'> = defineComposite({
   namespace: 'standard',
   type: 'map',
   schema: MapSchema,
@@ -18,9 +18,8 @@ export const MapDefinition: CompositeDefinition<IRMap, 'standard', 'map'> = defi
 export const createMap = (input: IRMap): IRMap => ({ ...input });
 
 /** Map 与单元格 lower target 的按需依赖声明 */
-export const MapProvider: CoreDependencyProvider = {
+export const mapProvider: CoreDependencyProvider = {
   key: { capability: 'composite', namespace: 'standard', type: 'map' },
-  dependencies: [PathClipProvider.key],
-  datasets: {},
-  makeDefinition: () => MapDefinition,
+  dependencies: [pathClipProvider.key],
+  makeDefinition: () => mapDefinition,
 };

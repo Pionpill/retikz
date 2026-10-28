@@ -31,25 +31,25 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { RectangleDefinition } from '@retikz/standard/shape';
+import { rectangleDefinition } from '@retikz/standard/shape';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [{ namespace: 'standard', type: 'rectangle', center: [0, 0], width: 80, height: 48, cornerRadius: 6 }],
 };
-export const Example = () => <Layout ir={ir} composites={[RectangleDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[rectangleDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { shape, RectangleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { shape, rectangleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [shape.rectangle({ center: [0, 0], width: 80, height: 48, cornerRadius: 6 })] });
-const svg = renderToSvgString(input, { adapters: [RectangleInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [rectangleInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -58,7 +58,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { RectangleDefinition } from '@retikz/standard/shape';
+import { rectangleDefinition } from '@retikz/standard/shape';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -66,7 +66,7 @@ const ir: IRScene = {
   version: 1,
   children: [{ namespace: 'standard', type: 'rectangle', center: [0, 0], width: 80, height: 48, cornerRadius: 6 }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [RectangleDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [rectangleDefinition] } });
 console.log(svg);
 ```
 

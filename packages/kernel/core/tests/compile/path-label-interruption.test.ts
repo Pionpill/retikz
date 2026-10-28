@@ -65,8 +65,8 @@ const coversX = (paths: ReadonlyArray<PathPrimitive>, x: number): boolean =>
     return from[1] === 0 && to[1] === 0 && Math.min(from[0], to[0]) <= x && x <= Math.max(from[0], to[0]);
   });
 
-describe('Stroke Path label interruption', () => {
-  it('splits an unfilled centered host label around its measured visual box', () => {
+describe('行程 Path 标签中断', () => {
+  it('在其测量的视觉框周围分割未填充的居中宿主标签', () => {
     const scene = compile(horizontalHostLabelPath({ text: 'host', sloped: true }));
     const fragments = strokeFragments(scene.primitives).sort((left, right) => firstMove(left)[0] - firstMove(right)[0]);
 
@@ -77,7 +77,7 @@ describe('Stroke Path label interruption', () => {
     expect(flattenPrims(scene.primitives).some(primitive => 'id' in primitive && primitive.id === 'edge')).toBe(true);
   });
 
-  it('adds the default four-unit clearance to both sides of an interrupted label gap', () => {
+  it('在中断标签间隙的两侧添加默认的四单位间隙', () => {
     const defaultGap = compile(horizontalHostLabelPath({ text: 'default', sloped: true }));
     const noGap = compile(horizontalHostLabelPath({ text: 'none', sloped: true, gap: 0 }));
     const explicitGap = compile(horizontalHostLabelPath({ text: 'wide', sloped: true, gap: 8 }));
@@ -129,7 +129,7 @@ describe('Stroke Path label interruption', () => {
     else expect(boundaries[0]).toBeGreaterThan(50);
   });
 
-  it('keeps fragments under one logical path owner with id, meta, and animations', () => {
+  it('将片段保留在一个具有 id、元和动画的逻辑路径所属模块之下', () => {
     const animation = {
       property: 'opacity' as const,
       keyframes: [
@@ -172,7 +172,7 @@ describe('Stroke Path label interruption', () => {
     }
   });
 
-  it('keeps above labels and explicit false overrides as one continuous stroke', () => {
+  it('将上述标签和显式错误覆盖保留为一笔连续描边', () => {
     const above = compile(horizontalHostLabelPath({ text: 'above', side: 'top' }));
     const disabled = compile(horizontalHostLabelPath({ text: 'disabled', sloped: true, interrupt: false }));
 
@@ -180,7 +180,7 @@ describe('Stroke Path label interruption', () => {
     expect(strokeFragments(disabled.primitives)).toHaveLength(1);
   });
 
-  it('applies the same interruption behavior to host and step labels', () => {
+  it('对宿主和步骤标签应用相同的中断行为', () => {
     const host = compile(horizontalHostLabelPath({ text: 'host', sloped: true }));
     const step = compile({
       version: 1,
@@ -201,7 +201,7 @@ describe('Stroke Path label interruption', () => {
     expect(strokeFragments(step.primitives)).toHaveLength(2);
   });
 
-  it('merges overlapping label gaps instead of creating an intermediate fragment', () => {
+  it('合并重叠的标签间隙而不是创建中间片段', () => {
     const scene = compile(
       horizontalHostLabelPath([
         { text: 'first', position: 0.45, sloped: true },
@@ -212,7 +212,7 @@ describe('Stroke Path label interruption', () => {
     expect(strokeFragments(scene.primitives)).toHaveLength(2);
   });
 
-  it('uses the whole multi-line label block for a sloped interruption', () => {
+  it('使用整个多行标签块进行倾斜中断', () => {
     const vertical = (text: string | Array<string>) => {
       const ir: IRScene = {
         version: 1,
@@ -252,7 +252,7 @@ describe('Stroke Path label interruption', () => {
     expect(textPrim(hardBreakScene.primitives, 'second label')).toBeDefined();
   });
 
-  it('clamps an endpoint label gap without retaining visible stroke through its text box', () => {
+  it('夹住端点标签间隙，而不保留通过其文本框的可见描边', () => {
     const scene = compile(horizontalHostLabelPath({ text: 'start', position: 0, sloped: true }));
     const fragments = strokeFragments(scene.primitives);
 
@@ -260,7 +260,7 @@ describe('Stroke Path label interruption', () => {
     expect(firstMove(fragments[0])[0]).toBeGreaterThanOrEqual(10);
   });
 
-  it('omits a short stroke when its centered label interruption covers the complete logical segment', () => {
+  it('当其居中标签中断覆盖整个逻辑段时，省略短描边', () => {
     const scene = compile({
       version: 1,
       type: 'scene',
@@ -372,14 +372,14 @@ describe('Stroke Path label interruption', () => {
         ],
       } satisfies IRScene,
     },
-  ])('$name keeps its command form in both visible fragments', ({ commandKind, ir }) => {
+  ])('$name 在两个可见片段中都保留其命令形式', ({ commandKind, ir }) => {
     const fragments = strokeFragments(compile(ir).primitives);
 
     expect(fragments).toHaveLength(2);
     expect(fragments.every(fragment => fragment.commands.some(command => command.kind === commandKind))).toBe(true);
   });
 
-  it('expands a fragmented closing edge to lines instead of leaving a close command that redraws the gap', () => {
+  it('将碎片闭合边缘扩展为线，而不是留下重绘间隙的闭合命令', () => {
     const scene = compile({
       version: 1,
       type: 'scene',
@@ -403,7 +403,7 @@ describe('Stroke Path label interruption', () => {
     expect(fragments.flatMap(fragment => fragment.commands).some(command => command.kind === 'close')).toBe(false);
   });
 
-  it('keeps duplicate line occurrences separate when each step owns a different gap', () => {
+  it('当每个步骤拥有不同的间隙时，将重复的行出现分开', () => {
     const scene = compile({
       version: 1,
       type: 'scene',

@@ -17,7 +17,7 @@ import { ChannelDefinitionKind, markChannelEncoding, definePathChannel } from '.
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotMark, IRPlotChannel } from '../../../schemas';
 import {} from '../../../schemas';
-import { makeMarkValueResolver, resolveNumericChannel } from '../shared';
+import { createMarkValueResolver, resolveNumericChannel } from '../shared';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
 
 const jsonValue = (value: unknown): JsonValue | undefined =>
@@ -45,7 +45,7 @@ const defineSimplePathChannel = <T extends JsonValue>(
     channel,
     output,
     resolve: (ctx, mark) =>
-      makeMarkValueResolver<T>(markChannelEncoding(mark, channel), ctx.model, {
+      createMarkValueResolver<T>(markChannelEncoding(mark, channel), ctx.model, {
         channelName: channel,
         parse,
       }),
@@ -229,7 +229,7 @@ export const BUILTIN_PATH_CHANNELS = {
     channel: 'lineCap',
     output: { outputKind: 'symbol', palette: [...lineCapValues] },
     resolve: (ctx, mark) => {
-      return makeMarkValueResolver<PathLineCap>(markChannelEncoding(mark, 'lineCap'), ctx.model, {
+      return createMarkValueResolver<PathLineCap>(markChannelEncoding(mark, 'lineCap'), ctx.model, {
         channelName: 'lineCap',
         parse: value => (typeof value === 'string' && lineCapValues.has(value) ? (value as PathLineCap) : undefined),
       });
@@ -242,7 +242,7 @@ export const BUILTIN_PATH_CHANNELS = {
     channel: 'lineJoin',
     output: { outputKind: 'symbol', palette: [...lineJoinValues] },
     resolve: (ctx, mark) => {
-      return makeMarkValueResolver<PathLineJoin>(markChannelEncoding(mark, 'lineJoin'), ctx.model, {
+      return createMarkValueResolver<PathLineJoin>(markChannelEncoding(mark, 'lineJoin'), ctx.model, {
         channelName: 'lineJoin',
         parse: value => (typeof value === 'string' && lineJoinValues.has(value) ? (value as PathLineJoin) : undefined),
       });

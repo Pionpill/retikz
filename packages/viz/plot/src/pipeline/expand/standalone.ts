@@ -8,7 +8,7 @@ import { PLOT_NAMESPACE, PlotSchema } from '../../schemas';
 import { createPlotTextMeasurer } from '../../shared';
 import type { PlotDataArtifactLowerResult } from './lower';
 import { lowerPlotWithDataArtifact } from './lower';
-import type { LowerPlotsOptions } from './types';
+import type { PlotsLoweringOptions } from './types';
 
 /** 独立下沉所用的 Core 环境，调用方应与实际绘制保持一致 */
 export type PlotCompileEnvironment = {
@@ -21,7 +21,7 @@ export type PlotCompileEnvironment = {
 };
 
 /** 独立入口必须显式选择 Core 环境，空对象表示采用 Core 默认环境 */
-export type PlotStandaloneOptions = LowerPlotsOptions & {
+export type PlotStandaloneOptions = PlotsLoweringOptions & {
   /** 本次下沉的 Core 环境 */
   environment: PlotCompileEnvironment;
 };
