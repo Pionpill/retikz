@@ -1,8 +1,8 @@
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { resolveCoreThemeColors, resolveDefaultCoreThemeColors, resolveThemeRegistry } from '../../providers';
-import type { IRTheme } from '../../schemas';
-import type { CanonicalTheme } from '../../shared';
-import { ThemeMode } from '../../shared';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import { resolveCoreThemeColors, resolveDefaultCoreThemeColors, resolveThemeRegistry } from '../providers';
+import type { IRTheme } from '../schemas';
+import type { CanonicalTheme } from '../shared';
+import { ThemeMode } from '../shared';
 
 /** 未指定主题名称时使用的浅色主题与默认配色 */
 export const DEFAULT_RESOLVED_THEME: CanonicalTheme = Object.freeze({

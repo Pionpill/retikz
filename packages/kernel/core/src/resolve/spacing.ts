@@ -1,7 +1,7 @@
 import type { BoundsInsets } from '@retikz/math';
 
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { IRBoxSpacing } from '../../schemas';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import type { IRBoxSpacing } from '../schemas';
 
 /** 构造上下左右间距相同的结果 */
 const buildUniformBoxInsets = (value: number): BoundsInsets => ({

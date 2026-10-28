@@ -2,7 +2,7 @@ import type { Position } from '@retikz/math';
 
 import type { ScenePrimitive } from '../contract';
 import { createCompositeContractError } from '../resolve/diagnostics';
-import { withProviderOutputValidationBoundary as validateProviderOutput } from '../resolve/provider-validation';
+import { withProviderOutputValidationBoundary as validateProviderOutput } from '../resolve/provider';
 import { BlendMode, FontStyle, PathFillRule, PathLineCap, PathLineJoin } from '../schemas';
 
 /**

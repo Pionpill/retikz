@@ -54,7 +54,7 @@ export const createProviderRegistry = <TDefinition>({
  * @template TDefinition 注册项及返回定义的类型
  * @throws RetikzCoreError 未找到定义时抛出，并提供已注册名称
  */
-export const providerDefinitionOf = <TDefinition>(
+export const getProviderDefinition = <TDefinition>(
   registry: ProviderRegistry<TDefinition>,
   key: string,
 ): TDefinition => {

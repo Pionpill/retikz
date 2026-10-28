@@ -4,11 +4,8 @@ import type { BoundaryDefinition, ShapeDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { ProviderRegistry } from '../../providers';
 import type { IRBoundary } from '../../schemas';
-import { parseProviderPayload } from '../provider-payload';
+import { parseProviderPayload } from '../provider';
 import type { BoundaryReferenceResolution } from './types';
-
-/** 保留字：连接面 = 节点自身视觉形状 */
-const SELF = 'shape';
 
 /** 解析连接面所需的节点形状与定义注册表 */
 type BoundaryReferenceResolveContext = {
@@ -38,7 +35,7 @@ export const resolveBoundaryReference = (
   boundary: IRBoundary | undefined,
   context: BoundaryReferenceResolveContext,
 ): BoundaryReferenceResolution => {
-  if (boundary === undefined || boundary === SELF) {
+  if (boundary === undefined || boundary === 'shape') {
     return {
       name: context.visualDef.name,
       definition: context.visualDef,
@@ -92,7 +89,7 @@ export const resolveBoundaryReference = (
 
 /** 将连接面声明序列化为锚点缓存键，省略值与 shape 使用相同键 */
 export const boundaryKey = (boundary: IRBoundary | undefined): string => {
-  if (boundary === undefined) return SELF;
+  if (boundary === undefined) return 'shape';
   if (typeof boundary === 'string') return boundary;
   return `${boundary.type}:${JSON.stringify(boundary.params ?? {})}`;
 };

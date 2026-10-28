@@ -7,8 +7,8 @@ const translations: Partial<Record<string, string>> = {
   '可注册的 pattern 定义': 'A registrable pattern definition',
   '描述默认基础尺寸和 motif 几何生成能力；定义本身不进入 IR':
     'Defines the default base size and motif geometry generator; the definition itself does not enter IR',
-  '`pattern.size` 省略时的基础尺寸（user units）；最终 tile 周期可由 emit 结果改写':
-    'Base size in user units when `pattern.size` is omitted; the emit result may change the final tile period',
+  '`pattern.size` 省略时的基础尺寸（user units），必须为有限正数；最终 tile 周期可由 emit 结果改写':
+    'Finite positive base size in user units when `pattern.size` is omitted; the emit result may change the final tile period',
   '局部 tile 坐标中的 motif 几何': 'Motif geometry in local tile coordinates',
   'pattern 名称，由 IR pattern paint 的 `shape` 引用': 'Pattern name referenced by the IR pattern paint `shape`',
   透明背景: 'Transparent background',
@@ -43,7 +43,9 @@ const translations: Partial<Record<string, string>> = {
     'Built-in pattern motif names, using a const object and ValueOf rather than a TypeScript enum',
   '内置 3 motif：`lines`（横向阴影线）/ `dots`（波点）/ `grid`（横竖网格）。\n  各 motif 的 tile 几何由 `BUILTIN_PATTERNS` 的 `PatternDefinition.emit` 在 compile 期产出':
     'Three built-in motifs: `lines` (horizontal hatching), `dots`, and `grid`. Their tile geometry is emitted at compile time by PatternDefinition.emit in BUILTIN_PATTERNS.',
-  '定义 pattern motif 注册项': 'Define a pattern motif registration',
+  '校验默认尺寸并返回 pattern motif 注册项': 'Validate the default size and return a pattern motif registration',
+  'RetikzCoreError 显式 defaultSize 不是有限正数时抛出':
+    'RetikzCoreError if an explicit defaultSize is not a finite positive number',
   '当前是 typed identity；保留入口用于对齐 registry API，并为未来校验或归一化预留空间':
     'Currently a typed identity function; provides a consistent registry API entry and a location for future validation or normalization',
   'IR shadow 对象分支（可带 preset 与显式字段覆盖）':

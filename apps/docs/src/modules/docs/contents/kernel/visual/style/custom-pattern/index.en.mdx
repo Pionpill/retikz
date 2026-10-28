@@ -7,6 +7,8 @@ description: Custom patterns emit a repeating tile through PatternDefinition and
 
 Import definePattern from `@retikz/core`. Supply a name, optional defaultSize, and emit. Emit receives resolved size, color, and line styles and returns ScenePrimitive geometry in tile-local coordinates.
 
+`defaultSize` must be a finite positive number. `definePattern` checks it when the definition is created and throws immediately for invalid values. When supplying a definition object directly, the author is responsible for meeting the same constraint.
+
 This example defines cross, registers it through Layout.extensions.patterns, and references the same name in fill.shape.
 
 <ComponentPreview files="custom-pattern-basic" size="sm" />

@@ -36,13 +36,13 @@ describe('解析源结构', () => {
   it('使节点布局不受提供者查找编排的影响', () => {
     const text = source('src/compile/node/layout.ts');
 
-    expect(text).not.toContain('providerDefinitionOf(');
+    expect(text).not.toContain('getProviderDefinition(');
     expect(text).not.toContain('resolveShapeRegistry(');
   });
 
   it('使所有路径编译文件免于直接提供者查找', () => {
     const offenders = sourceFiles('src/compile/path')
-      .filter(path => /providerDefinitionOf\(|resolve[A-Z][A-Za-z]*Registry\s*\(/u.test(source(path)))
+      .filter(path => /getProviderDefinition\(|resolve[A-Z][A-Za-z]*Registry\s*\(/u.test(source(path)))
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
 
     expect(offenders).toEqual([]);

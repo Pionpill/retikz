@@ -1,3 +1,4 @@
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
 import type { ScenePrimitive } from '../scene';
 
@@ -85,7 +86,7 @@ export type PatternDefinition = {
   /** pattern 名称，由 IR pattern paint 的 `shape` 引用 */
   name: string;
   /**
-   * `pattern.size` 省略时的基础尺寸（user units）；最终 tile 周期可由 emit 结果改写
+   * `pattern.size` 省略时的基础尺寸（user units），必须为有限正数；最终 tile 周期可由 emit 结果改写
    * @default 8
    */
   defaultSize?: number;
@@ -94,7 +95,16 @@ export type PatternDefinition = {
 };
 
 /**
- * 定义 pattern motif 注册项
- * @remarks 当前是 typed identity；保留入口用于对齐 registry API，并为未来校验或归一化预留空间
+ * 校验默认尺寸并返回 pattern motif 注册项
+ * @throws RetikzCoreError 显式 defaultSize 不是有限正数时抛出
  */
-export const definePattern = (def: PatternDefinition): PatternDefinition => def;
+export const definePattern = (def: PatternDefinition): PatternDefinition => {
+  if (def.defaultSize !== undefined && (!Number.isFinite(def.defaultSize) || def.defaultSize <= 0)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      `Pattern '${def.name}' defaultSize must be a finite number greater than 0.`,
+    );
+  }
+
+  return def;
+};

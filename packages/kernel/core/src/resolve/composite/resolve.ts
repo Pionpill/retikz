@@ -1,5 +1,5 @@
 import type { IRComposite } from '../../schemas';
-import { parseProviderPayload } from '../provider-payload';
+import { parseProviderPayload } from '../provider';
 import type { CompositeBinding, CompositeRegistry, CompositeResolution, RegisteredCompositeBinding } from './types';
 
 /** 按命名空间和类型查找复合组件定义，返回已注册绑定或未注册标记 */

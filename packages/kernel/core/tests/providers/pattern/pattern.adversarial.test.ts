@@ -9,17 +9,11 @@ import type {
   CompiledPatternTile,
   SceneResource,
 } from '../../../src/contract';
+import { definePattern } from '../../../src/contract';
+import { PatternPaintSchema } from '../../../src/schemas';
 import type { IRPaint, IRScene } from '../../../src/schemas';
 
-/**
- * Pattern 注册面 emit-in-compile 对抗回归。
- *
- * 来自 Bug Hunter 的边角 IR / pattern def。`compileToScene` 直接消费 IR、不再跑 zod schema，故
- * size / lineWidth / rotation 的 number / positive 校验在手搓 IR 时被绕过——现在 compile 是唯一关口，
- * 非 finite / 非正 size / rotation 在 `resolvePatternTile` 抛清晰错，motif 非 finite 坐标由共享
- * `materializeScenePrimitives` 的 finite 栅栏拦下（与 arrow 路径对齐），守 Scene 100% JSON 可序列化。
- * 可接受的边角（空 motif / dedup / override / 错误质量 / 交叉资源 / background 透传）保持稳定行为
- */
+/** 验证图案输入边界、生成几何约束及资源行为 */
 
 const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
   version: 1,
@@ -57,17 +51,30 @@ const compilePattern = (spec: IRPaint, opts?: CompileOptions): void => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 攻击面 1：非 finite size / lineWidth / rotation → 编译期抛（守 Scene finite）
+// 攻击面 1：输入边界与生成几何约束
 // ─────────────────────────────────────────────────────────────────────────────
-describe('ADV — 非 finite size / lineWidth / rotation 抛', () => {
-  it('size_infinity → 抛 invalid size', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: Infinity })).toThrow(/invalid size/i);
+describe('图案输入边界', () => {
+  it.each([NaN, Infinity, -Infinity, 0, -8])('定义入口拒绝非法默认尺寸 %s', defaultSize => {
+    expect(() => definePattern({ name: 'custom', defaultSize, emit: () => [] })).toThrow(
+      /defaultSize.*finite.*greater than 0/,
+    );
   });
 
-  it('size_nan → 抛 invalid size', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: NaN })).toThrow(/invalid size/i);
+  it.each([undefined, 0.5, 8])('定义入口保留合法默认尺寸 %s', defaultSize => {
+    const definition = { name: 'custom', defaultSize, emit: () => [] };
+    expect(definePattern(definition)).toBe(definition);
   });
 
+  it.each([NaN, Infinity, -Infinity, 0, -8])('schema 拒绝非法显式尺寸 %s', size => {
+    expect(PatternPaintSchema.safeParse({ kind: 'pattern', shape: 'lines', size }).success).toBe(false);
+  });
+
+  it.each([NaN, Infinity, -Infinity])('schema 拒绝非有限旋转值 %s', rotation => {
+    expect(PatternPaintSchema.safeParse({ kind: 'pattern', shape: 'lines', rotation }).success).toBe(false);
+  });
+});
+
+describe('ADV — motif 非有限线宽与半径', () => {
   it('linewidth_infinity → motif 的非有限 strokeWidth 被拒绝', () => {
     expect(() => compilePattern({ kind: 'pattern', shape: 'lines', lineWidth: Infinity })).toThrow(
       /motif.*non-finite number/i,
@@ -79,26 +86,12 @@ describe('ADV — 非 finite size / lineWidth / rotation 抛', () => {
       /motif.*non-finite number/i,
     );
   });
-
-  it('rotation_nan → 抛 non-finite rotation', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', rotation: NaN })).toThrow(/non-finite rotation/i);
-  });
-
-  it('rotation_infinity → 抛 non-finite rotation', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', rotation: Infinity })).toThrow(
-      /non-finite rotation/i,
-    );
-  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 攻击面 2：round-trip——非 finite 源头被拦，干净 pattern Scene round-trip 无损
+// 攻击面 2：合法 pattern Scene round-trip 无损
 // ─────────────────────────────────────────────────────────────────────────────
 describe('ADV — JSON 往返', () => {
-  it('infinity_size_rejected_before_scene：Infinity size 不进 Scene（编译期抛）', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: Infinity })).toThrow();
-  });
-
   it('clean_pattern_scene_roundtrip：合法 pattern Scene round-trip 等价 + 全 finite', () => {
     const scene = compileToScene(patternNodeIR({ kind: 'pattern', shape: 'dots', size: 10 })).scene;
 
@@ -108,9 +101,9 @@ describe('ADV — JSON 往返', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 攻击面 3：极端 / 非正 size → 抛
+// 攻击面 3：合法尺寸经过计算后溢出
 // ─────────────────────────────────────────────────────────────────────────────
-describe('ADV — 极端 / 非正 size', () => {
+describe('ADV — 极端尺寸计算溢出', () => {
   it('size_huge_overflow：size=1e308 + emit 做 size×1e10 溢出 Infinity 坐标 → finite 栅栏抛', () => {
     const overflowPattern: PatternDefinition = {
       name: 'overflowPattern',
@@ -125,14 +118,6 @@ describe('ADV — 极端 / 非正 size', () => {
         },
       ),
     ).toThrow(/non-finite number/i);
-  });
-
-  it('size_negative：size=-8 → 抛 invalid size（compile 是 positive 的唯一关口）', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: -8 })).toThrow(/invalid size/i);
-  });
-
-  it('size_zero：size=0 → 抛 invalid size', () => {
-    expect(() => compilePattern({ kind: 'pattern', shape: 'lines', size: 0 })).toThrow(/invalid size/i);
   });
 });
 

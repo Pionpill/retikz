@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { defineTheme, RetikzCoreError, RetikzCoreErrorCode, resolveThemeRegistry } from '../../src';
 import { BUILTIN_CLIPS } from '../../src/providers/clip';
-import { providerDefinitionOf, createProviderRegistry } from '../../src/providers/registry';
+import { getProviderDefinition, createProviderRegistry } from '../../src/providers/registry';
 
 type MockProvider = {
   name: string;
@@ -36,7 +36,7 @@ describe('提供者注册契约', () => {
     expect([...registry.keys()]).toEqual(['builtin', 'custom']);
     expect([...builtins.keys()]).toEqual(['builtin']);
     expect(registry.get('builtin')).toBe(builtins.get('builtin'));
-    expect(providerDefinitionOf(registry, 'custom')).toEqual(provider('custom'));
+    expect(getProviderDefinition(registry, 'custom')).toEqual(provider('custom'));
   });
 
   it('自定义定义与内置定义冲突时明确报错', () => {
@@ -68,7 +68,7 @@ describe('提供者注册契约', () => {
       keyOf: def => def.name,
     });
 
-    expect(() => providerDefinitionOf(registry, 'gamma')).toThrow(/Unknown provider 'gamma'.*available: alpha, beta/s);
+    expect(() => getProviderDefinition(registry, 'gamma')).toThrow(/Unknown provider 'gamma'.*available: alpha, beta/s);
   });
 
   it('默认省略的集合为空注册表', () => {

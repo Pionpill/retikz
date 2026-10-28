@@ -3,11 +3,10 @@ import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { ShapeDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { ProviderRegistry } from '../../providers';
-import { providerDefinitionOf } from '../../providers';
+import { getProviderDefinition } from '../../providers';
 import type { IRNode, IRShapeRef } from '../../schemas';
 import { BuiltinShape } from '../../schemas';
-import { parseProviderPayload } from '../provider-payload';
-import { withProviderOutputValidationBoundary } from '../provider-validation';
+import { parseProviderPayload, withProviderOutputValidationBoundary } from '../provider';
 import type { ShapeResolution } from './types';
 
 /** 节点形状解析所需的输入与缩放参数 */
@@ -81,7 +80,7 @@ export const resolveNodeShape = (input: InputNodeShapeResolve): ShapeResolution 
   const { node, shapeRegistry, scaleX, scaleY, irPath = 'node' } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
   const shapeParamsPath = `${irPath}.shape.params`;
-  const shapeDefinition = providerDefinitionOf(shapeRegistry, shapeName);
+  const shapeDefinition = getProviderDefinition(shapeRegistry, shapeName);
   const parsedShapeParams: JsonObject = parseProviderPayload({
     capability: 'shape',
     providerName: shapeName,

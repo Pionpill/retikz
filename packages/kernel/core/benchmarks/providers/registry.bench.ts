@@ -20,7 +20,7 @@ import { strictObject, string } from 'zod';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
 import { resolveMarkRegistry } from '../../src/providers/mark';
-import { createProviderRegistry, providerDefinitionOf } from '../../src/providers/registry';
+import { createProviderRegistry, getProviderDefinition } from '../../src/providers/registry';
 
 /** 表规模表示一次编译初始化所注册的 definition 数；128 项为探索规模，不是业务预算 */
 const registerRegistry = <T>(
@@ -152,7 +152,7 @@ for (const count of [8, 128]) {
   defineBenchmark(
     { id: `providers/registry/lookup/${count}`, dimensions: ['Registry lookup', '命中', `${count}项`] },
     () => ({
-      run: () => providerDefinitionOf(registry, custom[count - 1].name),
+      run: () => getProviderDefinition(registry, custom[count - 1].name),
       verify: result => expect(result).toBe(custom[count - 1]),
     }),
   );
