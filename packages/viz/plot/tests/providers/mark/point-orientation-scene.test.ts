@@ -31,13 +31,12 @@ it('坐标对齐共享旋转节点几何形状、连接端点和来源追溯', (
           },
         },
         {
-          type: 'relation',
-          encodings: { source: { anchorId: 'name' }, target: { anchorId: 'next' } },
-          properties: {
-            source: { anchorId: { prefix: 'point' } },
-            target: { anchorId: { prefix: 'point' } },
-            geometry: { kind: 'path' },
+          type: 'path',
+          encodings: {
+            from: { mark: 'points', key: { field: 'name' } },
+            to: { mark: 'points', key: { field: 'next' } },
           },
+          properties: {},
         },
       ],
       guides: [],

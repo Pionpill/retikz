@@ -26,7 +26,7 @@ describe('@retikz/plot-react 公开接口', () => {
   it('保持 Plot 根和 Mark 声明名称不变', () => {
     const publicSurface = plotReact as Record<string, unknown>;
 
-    for (const name of ['Plot', 'PathMark', 'PointMark', 'IntervalMark', 'RelationMark']) {
+    for (const name of ['Plot', 'PathMark', 'PointMark', 'IntervalMark']) {
       expect(publicSurface[name], `${name} must remain exported`).toBeTypeOf('function');
     }
   });

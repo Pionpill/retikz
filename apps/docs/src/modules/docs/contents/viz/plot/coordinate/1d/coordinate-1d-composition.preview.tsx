@@ -1,5 +1,4 @@
-import type { IRPlotRelationRouting } from '@retikz/plot';
-import { Plot, PlotAxis, PlotScale, PointMark, RelationMark } from '@retikz/plot-react';
+﻿import { Plot, PlotAxis, PlotScale, PlotPathStep, PointMark, PathMark } from '@retikz/plot-react';
 
 import { coordinate1DCompositionOperation } from './coordinate-1d-composition.controls';
 import { coordinate1DCompositionRows } from './coordinate-1d-composition.zh.data';
@@ -27,24 +26,11 @@ export type Coordinate1dCompositionPreviewValues = {
 
 /** 绘制示例图形 */
 export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPreviewValues) => {
-  const routing: IRPlotRelationRouting =
-    values.routing === 'line'
-      ? { kind: 'line' }
-      : values.routing === 'orthogonal'
-        ? {
-            kind: 'orthogonal',
-            via: values.orthogonalVia,
-          }
-        : {
-            kind: 'bend',
-            bendDirection: values.bendDirection,
-            bendAngle: values.bendAngle,
-          };
-
   return (
     <Plot data={coordinate1DCompositionRows} coordinate="cartesian1D" width={560} height={250}>
       <PlotScale dimension="x" type="linear" domain={[0, 12.5]} />
       <PointMark
+        id="thing"
         encodings={{
           anchorId: 'thingId',
           fill: 'relationColor',
@@ -72,6 +58,7 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
         }}
       />
       <PointMark
+        id="practice"
         transforms={[{ operation: coordinate1DCompositionOperation }]}
         encodings={{
           anchorId: 'practiceId',
@@ -104,17 +91,32 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
           }}
         />
       ) : null}
-      <RelationMark
-        encodings={{ source: { anchorId: 'thingId' }, target: { anchorId: 'practiceId' }, color: 'relationColor' }}
+      <PathMark
+        encodings={{ color: 'relationColor' }}
         properties={{
-          source: { anchorId: { prefix: 'thing' } },
-          target: { anchorId: { prefix: 'practice' } },
           strokeWidth: values.relationStrokeWidth,
           zIndex: 1,
           opacity: { overall: values.relationOpacity },
-          geometry: { kind: 'path', routing },
         }}
-      />
+      >
+        <PlotPathStep kind="move" to={{ mark: 'thing', key: { field: 'thingId' } }} />
+        {values.routing === 'line' ? (
+          <PlotPathStep kind="line" to={{ mark: 'practice', key: { field: 'practiceId' } }} />
+        ) : values.routing === 'orthogonal' ? (
+          <PlotPathStep
+            kind="fold"
+            via={values.orthogonalVia}
+            to={{ mark: 'practice', key: { field: 'practiceId' } }}
+          />
+        ) : (
+          <PlotPathStep
+            kind="bend"
+            to={{ mark: 'practice', key: { field: 'practiceId' } }}
+            bendDirection={values.bendDirection}
+            bendAngle={values.bendAngle}
+          />
+        )}
+      </PathMark>
       {values.axisVisible ? (
         <PlotAxis
           dimension="x"

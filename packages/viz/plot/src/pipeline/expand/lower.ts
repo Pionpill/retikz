@@ -1395,7 +1395,6 @@ export const lowerPlotWithDataArtifact = (
           })
           .filter((layer): layer is IRChild => layer !== null);
 
-        panelAnchors.assertResolved();
         const meta: JsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
         if (panel.row !== undefined) meta.row = panel.row;
         if (panel.column !== undefined) meta.column = panel.column;
@@ -1441,7 +1440,6 @@ export const lowerPlotWithDataArtifact = (
       },
     );
 
-    anchorRegistry.assertResolved();
     const children: Array<IRChild> = [...panelScopes, ...facetLabelScopes];
     if (node.id === undefined) {
       const base: IRScope = { type: 'scope', localNamespace: true, children };
@@ -1537,8 +1535,6 @@ export const lowerPlotWithDataArtifact = (
   const markLayers: Array<IRChild> = markLayerEntries
     .sort((a, b) => a.zIndex - b.zIndex || a.markIndex - b.markIndex)
     .map(entry => entry.layer);
-
-  anchorRegistry.assertResolved();
 
   // 收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。
   // 占位（band 计算 / plotArea 收窄）见 reserveLegendBands；fail-loud（多 scale 未消歧 / scale 不存在）在 buildLegendLayers 内。

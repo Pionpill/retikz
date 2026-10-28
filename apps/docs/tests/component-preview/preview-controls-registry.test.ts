@@ -736,36 +736,6 @@ describe('预览控制注册表', () => {
     }
   });
 
-  it('RelationMark 每个 demo 都提供与示例职责对应的可写控件并消费实时值', () => {
-    const segments = ['viz', 'plot', 'mark', 'relation'];
-    const cases = [
-      { name: 'relation-scatter', writableIds: ['relation-scatter-routing'] },
-      { name: 'relation-sankey', writableIds: ['relation-sankey-samples', 'relation-sankey-opacity'] },
-      { name: 'relation-bubble', writableIds: ['relation-bubble-stroke-width'] },
-      { name: 'relation-path-extremes', writableIds: ['relation-path-anchor'] },
-      { name: 'relation-interval', writableIds: ['relation-interval-offset'] },
-    ];
-
-    for (const { name, writableIds } of cases) {
-      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
-        const controls = resolvePreviewControls(controlModules[key]);
-
-        expect(controls?.presentation, key).toBe('panel');
-
-        if (!controls || controls.presentation !== 'panel') continue;
-
-        const actualIds = controls.sections
-          .flatMap(section => section.controls)
-          .filter(control => control.kind !== 'table')
-          .map(control => control.id);
-
-        expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
-      }
-
-      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
-    }
-  });
-
   it('Node playground 的中英文 panel definition 保持运行时契约一致', () => {
     const segments = ['kernel', 'components', 'node', 'usage'];
     const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-styled')]);
@@ -1674,20 +1644,14 @@ describe('预览控制注册表', () => {
         language,
       ).not.toEqual(expect.arrayContaining(['axisStroke', 'axisStrokeWidth']));
 
-      const source = demoSourceOf(segments, name, language);
-
-      expect(source, language).toContain('defineControlledPreview(previewControlContract');
-      expect(source, language).toContain("anchorId={{ prefix: 'thing', field: 'thingId' }}");
-      expect(source, language).toContain("anchorId={{ prefix: 'practice', field: 'practiceId' }}");
-      expect(source, language).toContain('transform={[{ operation: coordinate1DCompositionOperation }]}');
-      expect(source, language).toContain('text="practiceGlyph"');
-      expect(source, language).toContain('path={{ routing }}');
-      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.relationStrokeWidth');
-      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisVisible');
-      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStroke');
-      expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStrokeWidth');
-      expect(source, language).toContain('<RelationMark');
-      expect(source, language).toContain('<PlotAxis');
+      const line = renderControlledDemo(segments, name, language, { routing: 'line' });
+      const bend = renderControlledDemo(segments, name, language, { routing: 'bend' });
+      const fold = renderControlledDemo(segments, name, language, { routing: 'orthogonal' });
+      expect(viewBoxArea(line)).toBeGreaterThan(0);
+      expect(viewBoxArea(bend)).toBeGreaterThan(0);
+      expect(viewBoxArea(fold)).toBeGreaterThan(0);
+      expect(bend).not.toBe(line);
+      expect(fold).not.toBe(line);
     }
   });
 

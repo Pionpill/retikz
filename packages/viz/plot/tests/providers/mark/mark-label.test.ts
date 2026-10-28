@@ -125,17 +125,17 @@ describe('契约标记宿主标签下沉', () => {
     });
   });
 
-  it('relation-path-host-label：RelationMark 顶层 label lowering 到 core Path.label', () => {
+  it('endpoint-path-host-label：PathMark 顶层 label lowering 到 core Path.label', () => {
     const root = expandOf(
       baseSpec([
         {
-          type: 'relation',
+          type: 'path',
           encodings: {
             label: { text: 'label' },
-            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
-            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            from: { x: { field: 'sourceX' }, y: { field: 'sourceY' } },
+            to: { x: { field: 'targetX' }, y: { field: 'targetY' } },
           },
-          properties: { label: { position: 0.5, side: 'top' }, geometry: { kind: 'path' } },
+          properties: { label: { position: 0.5, side: 'top' } },
         },
       ]),
       {
@@ -149,18 +149,19 @@ describe('契约标记宿主标签下沉', () => {
     expect(path.children.some(step => 'label' in step && step.label !== undefined)).toBe(false);
   });
 
-  it('RelationMark 标签下沉到 Ribbon kindOptions.label', () => {
+  it('PathMark 标签下沉到 Ribbon kindOptions.label', () => {
     const root = expandOf(
       baseSpec([
         {
-          type: 'relation',
+          type: 'path',
           encodings: {
-            source: { position: { x: { field: 'sourceX' }, y: { field: 'sourceY' } } },
-            target: { position: { x: { field: 'targetX' }, y: { field: 'targetY' } } },
+            from: { x: { field: 'sourceX' }, y: { field: 'sourceY' } },
+            to: { x: { field: 'targetX' }, y: { field: 'targetY' } },
           },
           properties: {
             label: { text: 'flow', position: 'midway', side: 'center', sloped: true },
-            geometry: { kind: 'ribbon', width: 12 },
+            kind: 'ribbon',
+            ribbon: { width: { kind: 'fixed', value: 12 } },
           },
         },
       ]),

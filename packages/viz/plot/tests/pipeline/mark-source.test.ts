@@ -57,43 +57,46 @@ describe('标记字段和属性下沉', () => {
     ]);
     expect(point).toMatchObject({ position: annotation.type === 'node' ? annotation.position : undefined });
   });
-  it.each([undefined, { kind: 'baseline', baseline: 0 }])('在相同的最终范围上投影路径边缘和闭合：%j', closure => {
-    const rows = [{ y: 2 }, { y: 8 }];
-    const [path] = render(
-      [
-        {
-          type: 'path',
-          encodings: { position: { x: { edge: 'end' }, y: { field: 'y' } } },
-          properties: { ...(closure === undefined ? {} : { closure }) },
-        },
-      ],
-      rows,
-    );
-    const [expected] = render(
-      [
-        {
-          type: 'path',
-          encodings: { position: { x: { value: 10 }, y: { field: 'y' } } },
-          properties: { ...(closure === undefined ? {} : { closure }) },
-        },
-      ],
-      rows,
-    );
-    expect(path).toBeDefined();
-    expect(path).toEqual(expected);
-  });
-  it('通过最终坐标范围投影固定关系目标边', () => {
-    const relation = (x: { value: number } | { edge: 'end' }) => ({
-      type: 'relation',
+  it.each([undefined, { kind: 'baseline', baseline: 0 }])(
+    'projects path edges and closure on the same final range: %j',
+    closure => {
+      const rows = [{ y: 2 }, { y: 8 }];
+      const [path] = render(
+        [
+          {
+            type: 'path',
+            encodings: { position: { x: { edge: 'end' }, y: { field: 'y' } } },
+            properties: { ...(closure === undefined ? {} : { closure }) },
+          },
+        ],
+        rows,
+      );
+      const [expected] = render(
+        [
+          {
+            type: 'path',
+            encodings: { position: { x: { value: 10 }, y: { field: 'y' } } },
+            properties: { ...(closure === undefined ? {} : { closure }) },
+          },
+        ],
+        rows,
+      );
+      expect(path).toBeDefined();
+      expect(path).toEqual(expected);
+    },
+  );
+  it('projects fixed path endpoint edges through the final coordinate range', () => {
+    const path = (x: { value: number } | { edge: 'end' }) => ({
+      type: 'path',
       encodings: {
-        source: { position: { x: { value: 0 }, y: { field: 'start' } } },
-        target: { position: { x, y: { field: 'end' } } },
+        from: { x: { value: 0 }, y: { field: 'start' } },
+        to: { x, y: { field: 'end' } },
       },
-      properties: { source: {}, target: {}, geometry: { kind: 'path' } },
+      properties: {},
     });
     const rows = [{ start: 2, end: 8 }];
-    const actual = render([relation({ edge: 'end' })], rows);
-    const expected = render([relation({ value: 10 })], rows);
+    const actual = render([path({ edge: 'end' })], rows);
+    const expected = render([path({ value: 10 })], rows);
     expect(expected).toHaveLength(1);
     expect(actual).toEqual(expected);
   });
@@ -110,16 +113,15 @@ describe('标记字段和属性下沉', () => {
       ],
       marks: [
         {
-          type: 'relation',
+          type: 'path',
           encodings: {
-            source: { position: { x: { value: 1 }, y: { value: 2 } } },
-            target: { position: { x: { value: 8 }, y: { value: 6 } } },
-            geometry: { width: { field: 'amount', scale: 'width' } },
+            from: { x: { value: 1 }, y: { value: 2 } },
+            to: { x: { value: 8 }, y: { value: 6 } },
+            ribbon: { width: { field: 'amount', scale: 'width' } },
           },
           properties: {
-            source: {},
-            target: {},
-            geometry: { kind: 'ribbon', width: 99 },
+            kind: 'ribbon',
+            ribbon: { width: { kind: 'fixed', value: 99 } },
           },
         },
       ],

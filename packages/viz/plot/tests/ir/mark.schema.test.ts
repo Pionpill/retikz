@@ -11,20 +11,7 @@ const gradientPaint = {
   ],
 };
 
-describe('MarkSchema（契约）', () => {
-  it.each(['source', 'target'])('拒绝与 %s 目标相关的直接核心 ID', role => {
-    const properties = {
-      source: { anchorId: { template: 'pt.A' } },
-      target: { anchorId: { template: 'pt.B' } },
-      geometry: { kind: 'path' },
-    };
-    expect(MarkSchema.safeParse({ type: 'relation', properties }).success).toBe(true);
-    for (const target of [{ id: 'A' }, { id: 'A', anchorId: { template: 'pt.A' } }]) {
-      expect(MarkSchema.safeParse({ type: 'relation', properties: { ...properties, [role]: target } }).success).toBe(
-        false,
-      );
-    }
-  });
+describe('MarkSchema (contract)', () => {
   it('点方向契约可 JSON round-trip，非法方向声明被拒绝', () => {
     const mark = {
       type: 'point',
@@ -899,140 +886,7 @@ describe('MarkSchema（契约）', () => {
     ).toThrow();
   });
 
-  it('标记关系标签有效和 json 往返', () => {
-    const m = {
-      type: 'relation',
-      encodings: { label: { text: 'label' } },
-      properties: {
-        autoPadding: false,
-        label: { position: 0.5, side: 'center' },
-        source: { anchorId: { template: 'A' } },
-        target: { anchorId: { template: 'B' } },
-        geometry: { kind: 'path' },
-      },
-    };
-
-    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual({
-      ...m,
-      contributeToDomain: true,
-    });
-  });
-
-  it('路径标签编码不接受节点专属 placement', () => {
-    expect(
-      MarkSchema.safeParse({
-        type: 'relation',
-        encodings: { label: { placement: 'labelPlacement' } },
-        properties: { source: { id: 'A' }, target: { id: 'B' }, geometry: { kind: 'path' } },
-      }).success,
-    ).toBe(false);
-  });
-
-  it('标记关系接受投影端点字形', () => {
-    const mark = {
-      type: 'relation',
-      encodings: {
-        source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
-        target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
-      },
-      properties: {
-        autoPadding: false,
-        endpoints: {
-          source: { shape: 'circle', size: 5 },
-          target: { shape: 'diamond', size: 6 },
-        },
-        geometry: { kind: 'path' },
-      },
-    };
-
-    expect(MarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual({ ...mark, contributeToDomain: true });
-  });
-
-  it('标记关系拒绝普通投影路径之外的端点字形', () => {
-    const endpoints = { source: {}, target: {} };
-
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        properties: {
-          endpoints,
-          autoPadding: false,
-          source: { anchorId: { template: 'A' } },
-          target: { anchorId: { template: 'B' } },
-          geometry: { kind: 'path' },
-        },
-      }),
-    ).toThrow(/projected/);
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        encodings: {
-          source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
-          target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
-        },
-        properties: { endpoints, autoPadding: false, geometry: { kind: 'ribbon', width: 8 } },
-      }),
-    ).toThrow(/path geometry/);
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        encodings: {
-          source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
-          target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
-          geometry: { via: [{ position: { x: { value: 1 }, y: { value: 2 } } }] },
-        },
-        properties: {
-          autoPadding: false,
-          endpoints,
-          geometry: { kind: 'path', via: [{}] },
-        },
-      }),
-    ).toThrow(/via or route/);
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        encodings: {
-          source: { position: { x: { field: 'start' }, y: { field: 'category' } } },
-          target: { position: { x: { field: 'end' }, y: { field: 'category' } } },
-        },
-        properties: {
-          autoPadding: false,
-          endpoints: { source: { zIndex: { kind: 'constant', value: 2 } } },
-          geometry: { kind: 'path' },
-        },
-      }),
-    ).toThrow();
-  });
-
-  it('标记关系显式路线接受三腿核心折叠', () => {
-    const mark = {
-      type: 'relation',
-      properties: {
-        autoPadding: false,
-        source: { anchorId: { template: 'A' } },
-        target: { anchorId: { template: 'B' } },
-        geometry: { kind: 'path', route: [{ kind: 'fold', via: '-|-' }] },
-      },
-    };
-
-    expect(MarkSchema.parse(mark)).toEqual({ ...mark, contributeToDomain: true });
-  });
-
-  it('Relation 的算法正交路由拒绝三段折线配置', () => {
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        properties: {
-          autoPadding: false,
-          source: { anchorId: { template: 'A' } },
-          target: { anchorId: { template: 'B' } },
-          geometry: { kind: 'path', routing: { kind: 'orthogonal', via: '-|-' } },
-        },
-      }),
-    ).toThrow();
-  });
-
-  it('标记点接受局部变换', () => {
+  it('mark_point_accepts_local_transform', () => {
     const m = {
       type: 'point',
       transforms: [{ operation: { kind: 'sort', params: { field: 'score', order: 'descending' } } }],
@@ -1064,51 +918,10 @@ describe('MarkSchema（契约）', () => {
   });
 });
 
-describe('极坐标插值契约', () => {
-  it.each(['polar', 'chord'] as const)('支持标记的往返插值=%s', interpolation => {
-    const marks = [
-      {
-        type: 'path',
-        properties: { connection: 'coordinate', interpolation },
-        encodings: { position: { x: { field: 'angle' }, y: { field: 'radius' } } },
-      },
-      {
-        type: 'interval',
-        properties: { connection: 'coordinate', interpolation },
-        encodings: { position: { x: { field: 'angle' }, y: { field: 'radius' } } },
-      },
-      {
-        type: 'relation',
-        encodings: {
-          source: { position: { x: { field: 'sourceAngle' }, y: { field: 'sourceRadius' } } },
-          target: { position: { x: { field: 'targetAngle' }, y: { field: 'targetRadius' } } },
-        },
-        properties: { autoPadding: false, geometry: { kind: 'path' } },
-      },
-    ];
-
-    for (const mark of marks) {
-      expect(MarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual({ ...mark, contributeToDomain: true });
-    }
-  });
-
-  it.each(['path', 'interval'] as const)('拒绝未知的 %s 插值', type => {
+describe('Polar interpolation mark contract', () => {
+  it.each(['path', 'interval'] as const)('rejects unknown %s interpolation', type => {
     const encoding = { x: { field: 'x' }, y: { field: 'y' } };
 
     expect(() => MarkSchema.parse({ type, interpolation: 'spline', encoding })).toThrow();
-  });
-
-  it('拒绝未知关系路径插值', () => {
-    expect(() =>
-      MarkSchema.parse({
-        type: 'relation',
-        properties: {
-          autoPadding: false,
-          source: { anchorId: { template: 'A' } },
-          target: { anchorId: { template: 'B' } },
-          geometry: { kind: 'path', interpolation: 'spline' },
-        },
-      }),
-    ).toThrow();
   });
 });

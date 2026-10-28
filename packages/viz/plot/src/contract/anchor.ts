@@ -38,16 +38,10 @@ export type AnchorOwner = {
 export type AnchorRegistry = {
   /** 一次求值同时取得实例身份和 Core 标识 */
   identify: (spec: IRPlotAnchorId, instance: MarkInstance, owner: AnchorOwner, field?: string) => MarkAnchorIdentity;
-  /** 按常量、字段或生成规则计算当前数据目标的锚点标识 */
-  makeId: (spec: IRPlotAnchorId, instance: MarkInstance, owner: AnchorOwner, field?: string) => string;
   /** 登记锚点归属，并拒绝重复标识 */
   register: (id: string, owner: AnchorOwner) => void;
-  /** 记录待校验的锚点引用及引用者 */
-  reference: (id: string, owner: AnchorOwner) => void;
   /** 登记锚点并生成给定位置的 Core Coordinate */
   coordinate: (id: string, position: [number, number], owner: AnchorOwner) => IRCoordinate;
-  /** 在收集结束后检查全部引用是否具有对应锚点 */
-  assertResolved: () => void;
 };
 
 /** 目标侧身份求值结果，不持久化 */
