@@ -228,14 +228,6 @@ export const resolveFlexLineMainSizes = (
     });
   }
 
-  if (!Number.isFinite(gap) || gap < 0) {
-    throw new RetikzLayoutError({
-      code: RetikzLayoutErrorCode.GeometryInvalid,
-      message: 'Flex line gap must be finite and non-negative',
-      details: { gap },
-    });
-  }
-
   const outerFixed = compensatedLayoutSum([
     ...items.flatMap(item => [item.marginStart, item.marginEnd]),
     gap * Math.max(0, items.length - 1),

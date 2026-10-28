@@ -48,9 +48,8 @@ export const groupBodyAllocationProvider: CoreDependencyProvider = Object.freeze
 });
 
 /** 创建无绘制、无 identity 且只声明精确 Group body allocation 的 compile child */
-export const createGroupBodyAllocation = (bounds: Readonly<BoundsRect>): IRChild =>
-  GroupBodyAllocationSchema.parse({
-    namespace: GRAPH_NAMESPACE,
-    type: GROUP_BODY_ALLOCATION_TYPE,
-    bounds,
-  });
+export const createGroupBodyAllocation = (bounds: Readonly<BoundsRect>): IRChild => ({
+  namespace: GRAPH_NAMESPACE,
+  type: GROUP_BODY_ALLOCATION_TYPE,
+  bounds,
+});

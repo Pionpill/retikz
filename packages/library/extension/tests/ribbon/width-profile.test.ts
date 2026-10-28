@@ -8,6 +8,7 @@ import {
   defineRibbonWidthProfile,
   ribbonPathDefinition,
 } from '../../src/ribbon';
+import { widthFunction } from '../../src/ribbon/geometry/width';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -42,6 +43,39 @@ const compileToRibbonScene = (input: IRScene, options: Parameters<typeof compile
 };
 
 describe('延长色带宽度轮廓', () => {
+  it('独立宽度采样保留端点零值，并在创建时拒绝非法控制值', () => {
+    const sample = widthFunction(
+      {
+        width: {
+          kind: 'stops',
+          interpolation: 'linear',
+          stops: [
+            { offset: 0.25, value: 0 },
+            { offset: 0.75, value: 8 },
+          ],
+        },
+      },
+      20,
+    );
+
+    expect([sample(0), sample(0.5), sample(1)]).toEqual([0, 4, 8]);
+    expect(() =>
+      widthFunction(
+        {
+          width: {
+            kind: 'stops',
+            interpolation: 'linear',
+            stops: [
+              { offset: 0, value: -1 },
+              { offset: 1, value: 8 },
+            ],
+          },
+        },
+        20,
+      ),
+    ).toThrow(/finite nonnegative/);
+  });
+
   it('内置凸起，无选项和峰值中点', () => {
     expect(BUILTIN_RIBBON_WIDTH_PROFILES.map(definition => definition.name)).toContain('bulge');
 

@@ -1,5 +1,6 @@
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
+import { strictObject } from 'zod';
 
 import * as Graph from '../../src';
 
@@ -26,6 +27,45 @@ const realization = Graph.defineRelationKind({
 });
 
 describe('Relation 数据解析结果', () => {
+  it('直接上下文仍诊断缺失的方向配方', () => {
+    const context = Graph.resolveGraphDefinitionOptions();
+    const role: Graph.RelationRoleDefinition = {
+      role: 'custom',
+      description: 'Custom role',
+      defaultDirection: 'forward',
+      allowedDirections: ['forward'],
+      directions: {},
+    };
+    const canonical = Graph.resolveRelation(relation({ role: 'custom' }), {
+      ...context,
+      relationRoles: new Map([['custom', role]]),
+    });
+
+    expect(() => Graph.resolveRelationStructure(canonical, { ...context, theme })).toThrow(/no structure/);
+  });
+
+  it('拒绝 predicate 返回的空覆盖与非法标记尺寸', () => {
+    const overrides: Array<Graph.IRGraphRelationStructureTokenOverrides> = [
+      {},
+      { targetMarker: { shape: 'open', scale: -1 } },
+    ];
+    for (const override of overrides) {
+      const predicate = Graph.defineRelationPredicate({
+        name: 'custom',
+        role: 'association',
+        description: 'Custom predicate',
+        paramsSchema: strictObject({}),
+        resolveStructure: () => override,
+      });
+      const context = Graph.resolveGraphDefinitionOptions({ relationPredicates: [predicate] });
+      const canonical = Graph.resolveRelation(relation({ predicate: { name: 'custom' } }), context);
+
+      expect(() => Graph.resolveRelationStructure(canonical, { ...context, theme })).toThrow(
+        /structure resolution failed/,
+      );
+    }
+  });
+
   it('默认关联到正向导航，同时保留明确的方向', () => {
     const context = Graph.resolveGraphDefinitionOptions();
 

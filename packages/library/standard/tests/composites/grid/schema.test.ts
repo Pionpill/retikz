@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createGrid, GridSchema } from '../../../src/presentation';
+import { createGrid, GridSchema, lowerGrid } from '../../../src/presentation';
 import { resolveGrid } from '../../../src/presentation/grid/resolve';
 import { fullScopeProps } from '../presentation/scope-props';
 
@@ -27,7 +27,10 @@ describe('GridSchema', () => {
 
     const excessive = GridSchema.parse(base({ line: { spacing: 0.000001 } }));
 
-    expect(() => resolveGrid(excessive)).toThrow(/exceeds/);
+    expect(() => lowerGrid(excessive)).toThrow(/exceeds/);
+    expect(() =>
+      lowerGrid(createGrid({ bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 0.000001 } })),
+    ).toThrow(/exceeds/);
   });
 
   it('重用完整的 Core Scope 编写的曲面', () => {

@@ -121,7 +121,22 @@ const resolvePredicateStructure = (relation: CanonicalRelation): IRGraphRelation
   if (predicate === undefined || callback === undefined) return undefined;
 
   try {
-    return GraphRelationStructureTokenOverridesSchema.parse(callback(predicate.params));
+    const structure = callback(predicate.params);
+    if (Object.keys(structure).length === 0) {
+      throw new RetikzGraphError({
+        code: RetikzGraphErrorCode.ResolveInvalid,
+        message: 'Relation structure overrides require at least one field.',
+        details: { capability: 'relation-predicate', key: predicate.definition.name },
+      });
+    }
+
+    // 回调保证对象结构；标记尺寸、开放名称与虚线值域仍需在计算结果产生后检查
+    const fields = GraphRelationStructureTokenOverridesSchema.shape;
+    if (structure.sourceMarker !== undefined) fields.sourceMarker.parse(structure.sourceMarker);
+    if (structure.targetMarker !== undefined) fields.targetMarker.parse(structure.targetMarker);
+    if (structure.dashPattern !== undefined) fields.dashPattern.parse(structure.dashPattern);
+
+    return structure;
   } catch (cause) {
     throw new RetikzGraphError({
       code: RetikzGraphErrorCode.DefinitionCallbackFailed,

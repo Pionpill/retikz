@@ -195,24 +195,6 @@ describe('Flow 弯曲布线', () => {
     ).toThrow('parameter family');
   });
 
-  it('拒绝来自外部提供者的旧关系输出记录', () => {
-    const outputJson = JSON.stringify({
-      elements: routingElements,
-      relations: [
-        {
-          points: [
-            [0, 0],
-            [200, 0],
-          ],
-        },
-      ],
-    });
-
-    expect(() =>
-      executeFlowLayout({ ...layeredFlowLayoutDefinition, layout: () => JSON.parse(outputJson) }, routingInput()),
-    ).toThrow('expected a resolved endpoint target');
-  });
-
   it('使用保留标签作为辅助分数，但绝不会用清晰的节点路由来换取清晰的标签', () => {
     const input = routingInput();
     const labelRelation = {

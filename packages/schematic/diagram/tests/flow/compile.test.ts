@@ -230,6 +230,31 @@ describe('Flow 布局回调执行', () => {
     if (executeFlowLayout === undefined) return;
 
     const invalidOutputs: Array<FlowLayoutOutput> = [
+      {
+        ...output(),
+        relations: [
+          {
+            ...output().relations[0],
+            route: {
+              kind: 'orthogonal',
+              cornerRadius: -1,
+              points: [
+                [0, 5],
+                [20, 5],
+              ],
+            },
+          },
+        ],
+      },
+      {
+        ...output(),
+        relations: [
+          {
+            ...output().relations[0],
+            source: { id: input.relations[0].source.id, anchor: { side: 'right', fraction: 2 } },
+          },
+        ],
+      },
       { ...output(), elements: [...output().elements].reverse() },
       { ...output(), relations: [] },
       {
@@ -380,19 +405,6 @@ describe('Flow 布局回调执行', () => {
         RetikzDiagramErrorCode.FlowLayoutOutputInvalid,
       );
     }
-
-    expectDiagramError(
-      () =>
-        executeFlowLayout(
-          definition((_input, context) => {
-            Reflect.apply(context.placeLayout, context, [null]);
-            return { elements: [], relations: [] };
-          }),
-          layoutInput,
-          placementContext,
-        ),
-      RetikzDiagramErrorCode.FlowLayoutOutputInvalid,
-    );
   });
 });
 

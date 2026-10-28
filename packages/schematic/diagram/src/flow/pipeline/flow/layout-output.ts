@@ -1,5 +1,14 @@
-import { cloneAndFreezeJson } from '@retikz/foundation';
+import {
+  AnchorRefSchema,
+  BendAngleSchema,
+  BendInAngleSchema,
+  BendLoosenessSchema,
+  BendOutAngleSchema,
+  SmoothTensionSchema,
+} from '@retikz/core';
+import { cloneAndFreezeJson, jsonStructuralEquals } from '@retikz/foundation';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
+import type { ZodType } from 'zod';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
@@ -16,26 +25,9 @@ import type {
 } from '../../contract';
 import { coincidentFlowEndpoints, resolveFlowEndpointPosition, createFlowOrthogonalCandidates } from '../../providers';
 import { flowBendGeometryFailure, flowRouteLabelBounds } from '../../providers';
-import { FlowEndpointTargetSchema, FlowRouteArtifactSchema } from '../../schemas';
 import type { FlowEndpointTarget } from '../../schemas';
 import { FlowRoutingKind } from '../../shared';
 import { FLOW_BEND_ANGLES } from '../../shared/geometry';
-
-type PlainRecord = Readonly<Record<string, unknown>>;
-
-const isPlainRecord = (value: unknown): value is PlainRecord =>
-  value !== null && typeof value === 'object' && !Array.isArray(value);
-
-const hasExactKeys = (
-  value: PlainRecord,
-  required: ReadonlyArray<string>,
-  optional: ReadonlyArray<string> = [],
-): boolean => {
-  const keys = Object.keys(value);
-  return (
-    required.every(key => keys.includes(key)) && keys.every(key => required.includes(key) || optional.includes(key))
-  );
-};
 
 const invalidOutput = (
   definition: FlowLayoutDefinition,
@@ -66,30 +58,27 @@ const callbackFailed = (definition: FlowLayoutDefinition, reason: string, cause?
   });
 };
 
-const parseFiniteNumber = (
-  value: unknown,
+/** 检查布局计算后才产生的有限数值约束 */
+const resolveFiniteNumber = (
+  value: number,
   definition: FlowLayoutDefinition,
   path: ReadonlyArray<string | number>,
 ): number => {
-  if (typeof value !== 'number') return invalidOutput(definition, path, 'expected a finite number.');
   if (!Number.isFinite(value)) return invalidOutput(definition, path, 'expected a finite number.');
   return value;
 };
 
-const parseBounds = (
-  value: unknown,
+/** 消费类型化边界，并检查计算结果的有限性与非负尺寸 */
+const resolveBounds = (
+  value: Readonly<BoundsRect>,
   definition: FlowLayoutDefinition,
   path: ReadonlyArray<string | number>,
 ): Readonly<BoundsRect> => {
-  if (!isPlainRecord(value) || !hasExactKeys(value, ['x', 'y', 'width', 'height'])) {
-    return invalidOutput(definition, path, 'expected a closed bounds record.');
-  }
-
   const bounds = {
-    x: parseFiniteNumber(value.x, definition, [...path, 'x']),
-    y: parseFiniteNumber(value.y, definition, [...path, 'y']),
-    width: parseFiniteNumber(value.width, definition, [...path, 'width']),
-    height: parseFiniteNumber(value.height, definition, [...path, 'height']),
+    x: resolveFiniteNumber(value.x, definition, [...path, 'x']),
+    y: resolveFiniteNumber(value.y, definition, [...path, 'y']),
+    width: resolveFiniteNumber(value.width, definition, [...path, 'width']),
+    height: resolveFiniteNumber(value.height, definition, [...path, 'height']),
   };
   if (bounds.width < 0 || bounds.height < 0) invalidOutput(definition, path, 'bounds size must be non-negative.');
 
@@ -230,61 +219,11 @@ type PlacementRecord = Readonly<{
   output: FlowLayoutPlacementOutput;
 }>;
 
-/** 判断 provider 回传的 Grid placement 是否保留原始矩阵或对象结构 */
-const hasMatchingGridPlacements = (
-  actual: unknown,
-  expected:
-    | ReadonlyArray<ReadonlyArray<string | null>>
-    | Readonly<Record<string, Readonly<{ row: number; column: number }>>>,
-): boolean => {
-  if (Array.isArray(expected))
-    return (
-      Array.isArray(actual) &&
-      actual.length === expected.length &&
-      actual.every(
-        (actualRow, rowIndex) =>
-          Array.isArray(actualRow) &&
-          actualRow.length === expected[rowIndex].length &&
-          actualRow.every((actualCell, columnIndex) => actualCell === expected[rowIndex][columnIndex]),
-      )
-    );
-
-  return (
-    isPlainRecord(actual) &&
-    hasExactKeys(actual, Object.keys(expected)) &&
-    Object.entries(expected).every(([id, cell]) => {
-      const actualCell = actual[id];
-      return (
-        isPlainRecord(actualCell) &&
-        hasExactKeys(actualCell, ['row', 'column']) &&
-        actualCell.row === cell.row &&
-        actualCell.column === cell.column
-      );
-    })
-  );
-};
-
 const assertPlacementInput = (
   definition: FlowLayoutDefinition,
   expected: Extract<InputFlowLayoutElement, { kind: 'layout' }>,
   input: InputFlowLayoutPlacement,
 ): void => {
-  if (
-    !isPlainRecord(input) ||
-    !hasExactKeys(input, ['layout', 'elements']) ||
-    !isPlainRecord(input.layout) ||
-    !hasExactKeys(
-      input.layout,
-      expected.placement.kind === 'linear'
-        ? ['kind', 'id', 'direction', 'gap', 'align']
-        : ['kind', 'id', 'gap', 'reserveLabelSpace', 'placements'],
-      ['excludeFromBounds'],
-    ) ||
-    !Array.isArray(input.elements)
-  ) {
-    return invalidOutput(definition, ['layouts', expected.id], 'expected a closed Layout placement input.');
-  }
-
   if (input.layout.id !== expected.id || input.layout.kind !== expected.placement.kind) {
     invalidOutput(definition, ['layouts', expected.id, 'layout'], 'Layout placement configuration must match input.', [
       expected.id,
@@ -307,11 +246,9 @@ const assertPlacementInput = (
       ? actual.direction === placement.direction && actual.gap === placement.gap && actual.align === placement.align
       : actual.kind === 'grid' &&
         placement.kind === 'grid' &&
-        isPlainRecord(actual.gap) &&
-        hasExactKeys(actual.gap, ['row', 'column']) &&
         actual.gap.row === placement.gap.row &&
         actual.gap.column === placement.gap.column &&
-        hasMatchingGridPlacements(actual.placements, placement.placements);
+        jsonStructuralEquals(actual.placements, placement.placements);
   if (!matches)
     invalidOutput(definition, ['layouts', expected.id, 'layout'], 'Layout placement configuration must match input.', [
       expected.id,
@@ -333,13 +270,9 @@ const assertPlacementInput = (
 const resolvePlacementOutput = (
   definition: FlowLayoutDefinition,
   input: InputFlowLayoutPlacement,
-  value: unknown,
+  value: FlowLayoutPlacementOutput,
 ): FlowLayoutPlacementOutput => {
   const path = ['layouts', input.layout.id] as const;
-  if (!isPlainRecord(value) || !hasExactKeys(value, ['bounds', 'elements']) || !Array.isArray(value.elements)) {
-    return invalidOutput(definition, path, 'expected a closed Layout placement output.', [input.layout.id]);
-  }
-
   if (value.elements.length !== input.elements.length) {
     invalidOutput(definition, [...path, 'elements'], 'Layout placement coverage must match direct children.', [
       input.layout.id,
@@ -349,13 +282,13 @@ const resolvePlacementOutput = (
   const elements = value.elements.map((element, index) => {
     const elementPath = [...path, 'elements', index] as const;
     const expected = input.elements[index];
-    if (!isPlainRecord(element) || !hasExactKeys(element, ['id', 'bounds']) || element.id !== expected.id) {
+    if (element.id !== expected.id) {
       return invalidOutput(definition, elementPath, 'Layout placement child ids and order must match input.', [
         expected.id,
       ]);
     }
 
-    const bounds = parseBounds(element.bounds, definition, [...elementPath, 'bounds']);
+    const bounds = resolveBounds(element.bounds, definition, [...elementPath, 'bounds']);
     if (bounds.width !== expected.size.width || bounds.height !== expected.size.height) {
       invalidOutput(definition, [...elementPath, 'bounds'], 'Layout placement must preserve measured child size.', [
         expected.id,
@@ -365,7 +298,7 @@ const resolvePlacementOutput = (
     return { id: expected.id, bounds };
   });
 
-  return { bounds: parseBounds(value.bounds, definition, [...path, 'bounds']), elements };
+  return { bounds: resolveBounds(value.bounds, definition, [...path, 'bounds']), elements };
 };
 
 const assertRecordedPlacements = (
@@ -593,7 +526,7 @@ const resolveFlowLayoutOutput = (
       ]);
     }
 
-    return { id: expected.id, bounds: parseBounds(elementValue.bounds, definition, [...path, 'bounds']) };
+    return { id: expected.id, bounds: resolveBounds(elementValue.bounds, definition, [...path, 'bounds']) };
   });
   const boundsById = new Map(elements.map(element => [element.id, element.bounds]));
   assertElementGeometry(input.elements, boundsById, definition);
@@ -606,19 +539,20 @@ const resolveFlowLayoutOutput = (
     const path = ['relations', index] as const;
     const expected = input.relations[index];
 
-    const parseEndpoint = (end: 'source' | 'target'): FlowEndpointTarget => {
-      const result = FlowEndpointTargetSchema.safeParse(relationValue[end]);
-      if (!result.success)
-        return invalidOutput(
-          definition,
-          [...path, end],
-          'expected a resolved endpoint target.',
-          undefined,
-          result.error,
-        );
-
+    const resolveEndpoint = (end: 'source' | 'target'): FlowEndpointTarget => {
       const requested = expected[end];
-      const actual = result.data;
+      const actual = relationValue[end];
+      if (actual.anchor !== undefined) {
+        const result = AnchorRefSchema.safeParse(actual.anchor);
+        if (!result.success)
+          return invalidOutput(
+            definition,
+            [...path, end, 'anchor'],
+            'expected a valid resolved anchor.',
+            undefined,
+            result.error,
+          );
+      }
       if (actual.id !== requested.id) invalidOutput(definition, [...path, end], 'endpoint id must match input.');
       if (
         requested.anchor !== undefined &&
@@ -638,36 +572,70 @@ const resolveFlowLayoutOutput = (
       return actual;
     };
 
-    const endpoints = { source: parseEndpoint('source'), target: parseEndpoint('target') };
-    const parsed = FlowRouteArtifactSchema.safeParse(relationValue.route);
-    if (!parsed.success)
-      return invalidOutput(
-        definition,
-        [...path, 'route'],
-        'expected a complete discriminated route.',
-        [expected.source.id, expected.target.id],
-        parsed.error,
+    const endpoints = { source: resolveEndpoint('source'), target: resolveEndpoint('target') };
+    const resolvedRoute = relationValue.route;
+    /** 复用权威标量值域，不重新解析布局回调的整个结构 */
+    const assertNumericParameter = (parameter: number, schema: ZodType<number>, key: string): void => {
+      const result = schema.safeParse(parameter);
+      if (!result.success)
+        invalidOutput(
+          definition,
+          [...path, 'route', key],
+          'route parameter is outside its numeric domain.',
+          undefined,
+          result.error,
+        );
+    };
+    if (resolvedRoute.kind === 'smooth') {
+      assertNumericParameter(resolvedRoute.tension, SmoothTensionSchema.unwrap(), 'tension');
+      if (resolvedRoute.points.length < 3)
+        invalidOutput(definition, [...path, 'route', 'points'], 'smooth route must contain at least three knots.');
+    } else if (resolvedRoute.kind === 'bend') {
+      if ('outAngle' in resolvedRoute) {
+        assertNumericParameter(resolvedRoute.outAngle, BendOutAngleSchema.unwrap(), 'outAngle');
+        assertNumericParameter(resolvedRoute.inAngle, BendInAngleSchema.unwrap(), 'inAngle');
+        assertNumericParameter(resolvedRoute.looseness, BendLoosenessSchema.unwrap(), 'looseness');
+      } else assertNumericParameter(resolvedRoute.bendAngle, BendAngleSchema.unwrap(), 'bendAngle');
+    }
+    if (
+      'cornerRadius' in resolvedRoute &&
+      (!Number.isFinite(resolvedRoute.cornerRadius) || resolvedRoute.cornerRadius < 0)
+    ) {
+      invalidOutput(definition, [...path, 'route', 'cornerRadius'], 'corner radius must be finite and non-negative.');
+    }
+    const controlPoints =
+      resolvedRoute.kind === 'curve'
+        ? [resolvedRoute.control]
+        : resolvedRoute.kind === 'cubic'
+          ? [resolvedRoute.control1, resolvedRoute.control2]
+          : [];
+    [...resolvedRoute.points, ...controlPoints].forEach((point, pointIndex) => {
+      point.forEach((coordinate, axis) =>
+        resolveFiniteNumber(coordinate, definition, [...path, 'route', 'points', pointIndex, axis]),
       );
-
-    const roundLayoutPoint = (point: Position): Position => [
+    });
+    const roundLayoutPoint = (point: Readonly<Position>): Position => [
       point[0] === 0 ? 0 : point[0],
       point[1] === 0 ? 0 : point[1],
     ];
     const route: FlowLayoutRoute =
-      parsed.data.kind === 'bend' || parsed.data.kind === 'curve' || parsed.data.kind === 'cubic'
-        ? { ...parsed.data, points: [roundLayoutPoint(parsed.data.points[0]), roundLayoutPoint(parsed.data.points[1])] }
+      resolvedRoute.kind === 'bend' || resolvedRoute.kind === 'curve' || resolvedRoute.kind === 'cubic'
+        ? {
+            ...resolvedRoute,
+            points: [roundLayoutPoint(resolvedRoute.points[0]), roundLayoutPoint(resolvedRoute.points[1])],
+          }
         : {
-            ...parsed.data,
+            ...resolvedRoute,
             points:
-              parsed.data.kind === 'smooth'
-                ? parsed.data.points.map(roundLayoutPoint)
-                : collapsePoints(parsed.data.points.map(roundLayoutPoint)),
+              resolvedRoute.kind === 'smooth'
+                ? resolvedRoute.points.map(roundLayoutPoint)
+                : collapsePoints(resolvedRoute.points.map(roundLayoutPoint)),
           };
 
     const labelBounds =
       relationValue.labelBounds === undefined
         ? undefined
-        : parseBounds(relationValue.labelBounds, definition, [...path, 'labelBounds']);
+        : resolveBounds(relationValue.labelBounds, definition, [...path, 'labelBounds']);
     assertRoute(expected, route, labelBounds, boundsById, definition, index, endpoints, elements, context);
     if (
       route.kind === 'orthogonal' &&
@@ -762,10 +730,6 @@ export const executeFlowLayout = (
       return cloneAndFreezeJson(placementContext.resolveRoutePoints(cloneAndFreezeJson(query)));
     },
     placeLayout: value => {
-      if (!isPlainRecord(value) || !isPlainRecord(value.layout) || typeof value.layout.id !== 'string') {
-        return invalidOutput(definition, ['layouts'], 'expected a closed Layout placement input.');
-      }
-
       const layoutId = value.layout.id;
       const expected = layouts.get(layoutId);
       if (expected === undefined) {

@@ -23,14 +23,25 @@ type CanonicalStack = Omit<IRStack, 'items' | 'data' | 'skeleton' | 'dataExpand'
 export const resolveStack = (source: IRStack): CanonicalStack => {
   const { items, data, dataExpand, skeleton, layout, border, padding, ...common } = source;
   const cells = items ?? expandLinearCells(data !== undefined ? { data, dataExpand } : { skeleton });
-  const path = StackBorderSchema.parse(typeof border === 'object' ? border : {});
-  const style = StackBorderSchema.shape.style.unwrap().parse(path.style ?? {});
+  const path = typeof border === 'object' ? border : {};
+  const styleSchema = StackBorderSchema.shape.style.unwrap().shape;
+  const style = {
+    ...path.style,
+    stroke: path.style?.stroke ?? styleSchema.stroke.parse(undefined),
+    strokeWidth: path.style?.strokeWidth ?? styleSchema.strokeWidth.parse(undefined),
+    fill: path.style?.fill ?? styleSchema.fill.parse(undefined),
+  };
   return {
     ...common,
     items: cells.map(cell =>
       resolveCell(cell, { overallStyle: source.defaultCell?.style, overallLayout: source.defaultCell?.layout }),
     ),
-    layout: StackLayoutSchema.parse(layout ?? {}),
+    layout: {
+      ...layout,
+      direction: layout?.direction ?? StackLayoutSchema.shape.direction.parse(undefined),
+      reverseArrows: layout?.reverseArrows ?? StackLayoutSchema.shape.reverseArrows.parse(undefined),
+      gap: layout?.gap ?? StackLayoutSchema.shape.gap.parse(undefined),
+    },
     padding: resolveBoxSpacing(padding ?? StackSchema.options[0].shape.padding.parse(undefined), 0),
     ...(border === false ? {} : { border: { ...path, style } }),
   };

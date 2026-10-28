@@ -49,9 +49,11 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
   if (width.kind === 'stops') {
     const stops = width.stops;
     const mode = width.interpolation;
+    // 独立调用也可构造 width resolution；静态值在创建采样函数时准入一次
+    for (const stop of stops) assertFiniteWidth(stop.value, 'stop');
 
     return offset => {
-      if (offset <= stops[0].offset) return assertFiniteWidth(stops[0].value, 'first stop');
+      if (offset <= stops[0].offset) return stops[0].value;
 
       for (let i = 1; i < stops.length; i += 1) {
         const prev = stops[i - 1];
@@ -67,7 +69,7 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
         }
       }
 
-      return assertFiniteWidth(stops[stops.length - 1].value, 'last stop');
+      return stops[stops.length - 1].value;
     };
   }
 

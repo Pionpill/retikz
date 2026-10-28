@@ -2,6 +2,7 @@ import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { BranchDiagramSchema, createBranchDiagramProviderContribution } from '../../src/branch';
+import { resolveBranchDiagram } from '../../src/branch/resolve';
 
 const compile = (source: Record<string, unknown>) =>
   compileToScene(
@@ -18,6 +19,23 @@ const compile = (source: Record<string, unknown>) =>
   );
 
 describe('分支编译', () => {
+  it('直接类型化输入补全布局与标记默认，保留显式零间距', () => {
+    const resolved = resolveBranchDiagram({
+      namespace: 'diagram',
+      type: 'branch',
+      nodes: [{ id: 'a' }],
+      branches: [{ id: 'main', nodes: ['a'] }],
+      layout: { nodeGap: 0 },
+    });
+
+    expect(resolved.layout).toEqual({ direction: 'right', nodeGap: 0, laneGap: 48 });
+    expect(resolved.nodes[0]).toMatchObject({
+      id: 'a',
+      shape: 'circle',
+      layout: { minimumSize: 10, padding: 0, margin: 0 },
+    });
+  });
+
   it('使用组装的参考产物编译共享分叉和合并节点', () => {
     const result = compile({
       nodes: ['a', 'b', 'c'].map(id => ({ id, labels: [{ text: `label-${id}` }] })),
