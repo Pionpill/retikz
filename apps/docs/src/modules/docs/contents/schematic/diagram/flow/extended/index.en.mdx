@@ -173,7 +173,7 @@ Set `excludeFromBounds` on a Layout when attached nodes should still draw but mu
 <ComponentPreview
   files="flow-bounds"
   size="md"
-  caption="The gray dashed frame encloses the footprint canvas-output reports to its parent. Toggle exclusion of formats: PNG and JPEG remain visible while the frame changes with the footprint."
+  caption="Toggle exclusion of formats and observe the placement of SVG and Canvas outputs. PNG and JPEG remain visible but can be excluded from the parent layout footprint."
 />
 
 React `<FlowLayout excludeFromBounds={['formats']}>` and `{ excludeFromBounds: ['formats'] }` in Vanilla `layouts` express the same configuration; compare them in the preview source. Only direct child ids of this Layout are allowed. Omission or an empty array preserves existing behavior; duplicate ids, descendants, ids from another container, and excluding every child fail. The list is not inherited by nested layouts.

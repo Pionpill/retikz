@@ -10,8 +10,8 @@ import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type {
   FlowLayoutDefinition,
   FlowLayoutExecutionContext,
-  InputFlowLayoutComputation,
   FlowLayoutOutput,
+  InputFlowLayoutComputation,
   IRFlowEntity,
 } from '../../src/flow';
 import * as Flow from '../../src/flow';
@@ -448,7 +448,7 @@ describe('Flow Diagram 编译事务', () => {
       },
     );
     const flowArtifact = Flow.FlowDiagramArtifactSchema.parse(
-      result.artifacts.find(envelope => envelope.kind === 'composite' && envelope.namespace === 'diagram')?.value,
+      result.artifacts.find(envelope => envelope.namespace === 'diagram')?.value,
     );
     const lane = flowArtifact.elements[0];
     if (lane.kind !== 'layout') throw new Error('expected root Flow Layout artifact');
@@ -502,9 +502,7 @@ describe('Flow Diagram 编译事务', () => {
       maxTextWidth: 160,
     });
     const artifactOf = (result: ReturnType<typeof compileToScene>) =>
-      Flow.FlowDiagramArtifactSchema.parse(
-        result.artifacts.find(artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram')?.value,
-      );
+      Flow.FlowDiagramArtifactSchema.parse(result.artifacts.find(artifact => artifact.namespace === 'diagram')?.value);
 
     const text = textPrimitive(rich.scene.primitives, 'Frontend form');
 
@@ -589,10 +587,9 @@ describe('Flow Diagram 编译事务', () => {
       },
     );
     const artifactEnvelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+      artifact => artifact.namespace === 'diagram' && artifact.type === 'flow',
     );
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
-    const elementHandles = result.spatialHandles.entries.filter(entry => ['entity', 'group'].includes(entry.role));
     const serializedScene = JSON.stringify(result.scene);
     const relationPath = flattenPrimitives(result.scene.primitives).find(
       primitive => primitive.type === 'path' && primitive.stroke === '#c026d3',
@@ -603,7 +600,6 @@ describe('Flow Diagram 编译事务', () => {
     expect(artifact.relations).toHaveLength(1);
     expect(artifact.relations[0]).not.toHaveProperty('id');
     expect(artifact.regions.drawing.allocationBounds.width).toBeGreaterThan(0);
-    expect(elementHandles.map(entry => entry.id)).toEqual(['element:source', 'element:target']);
     expect(relationPath).toBeDefined();
     expect(relationPath?.id).toBeUndefined();
     expect(serializedScene).toContain('Source');
@@ -693,7 +689,7 @@ describe('Flow Diagram 编译事务', () => {
       },
     );
     const artifactEnvelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+      artifact => artifact.namespace === 'diagram' && artifact.type === 'flow',
     );
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
 
@@ -733,7 +729,7 @@ describe('Flow Diagram 编译事务', () => {
       },
     );
     const artifactEnvelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+      artifact => artifact.namespace === 'diagram' && artifact.type === 'flow',
     );
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
 
@@ -769,7 +765,7 @@ describe('Flow Diagram 编译事务', () => {
       },
     );
     const artifactEnvelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+      artifact => artifact.namespace === 'diagram' && artifact.type === 'flow',
     );
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
 
@@ -801,7 +797,7 @@ describe('Flow Diagram 编译事务', () => {
       },
     );
     const artifactEnvelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+      artifact => artifact.namespace === 'diagram' && artifact.type === 'flow',
     );
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
     const route = artifact.relations[0].route;
@@ -861,7 +857,7 @@ describe('Flow Diagram 编译事务', () => {
       },
     );
     const artifactEnvelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+      artifact => artifact.namespace === 'diagram' && artifact.type === 'flow',
     );
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
     const drawing = artifact.regions.drawing.allocationBounds;
@@ -933,14 +929,11 @@ describe('Flow Diagram 编译事务', () => {
         },
       );
       const flowArtifactEnvelope = result.artifacts.find(
-        artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+        artifact => artifact.namespace === 'diagram' && artifact.type === 'flow',
       );
       const flowArtifact = Flow.FlowDiagramArtifactSchema.parse(flowArtifactEnvelope?.value);
       const mainFlexArtifact = result.artifacts
-        .filter(
-          artifact =>
-            artifact.kind === 'composite' && artifact.namespace === 'layout' && artifact.type === 'flexLayout',
-        )
+        .filter(artifact => artifact.namespace === 'layout' && artifact.type === 'flexLayout')
         .map(artifact => FlexLayoutArtifactSchema.parse(artifact.value))
         .find(
           artifact =>
@@ -970,23 +963,6 @@ describe('Flow Diagram 编译事务', () => {
         width: actualLegend.allocationBounds.width,
         height: actualLegend.allocationBounds.height,
       });
-
-      for (const [key, expectedBounds] of [
-        ['region:drawing', flowArtifact.regions.drawing.allocationBounds],
-        ['region:legend', flowArtifact.regions.legend?.allocationBounds],
-      ] as const) {
-        const handleBounds = result.spatialHandles.entries.find(entry => entry.id === key)?.geometry.bounds;
-
-        expect(handleBounds).toBeDefined();
-        expect(expectedBounds).toBeDefined();
-
-        if (handleBounds === undefined || expectedBounds === undefined) continue;
-
-        expect(handleBounds.x).toBeCloseTo(expectedBounds.x, 2);
-        expect(handleBounds.y).toBeCloseTo(expectedBounds.y, 2);
-        expect(handleBounds.width).toBeCloseTo(expectedBounds.width, 2);
-        expect(handleBounds.height).toBeCloseTo(expectedBounds.height, 2);
-      }
     },
   );
 
@@ -1314,7 +1290,7 @@ describe('Flow Diagram 编译事务', () => {
       },
     );
     const artifactEnvelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+      artifact => artifact.namespace === 'diagram' && artifact.type === 'flow',
     );
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
     const group = artifact.elements[0];
@@ -1332,9 +1308,6 @@ describe('Flow Diagram 编译事务', () => {
       labelReservation: { width: 56 },
     });
     expect(artifact.relations[0]?.labelReservation?.height).toBeGreaterThan(0);
-    expect(result.spatialHandles.entries.map(entry => entry.id)).toEqual(
-      expect.arrayContaining(['element:group', 'element:nested', 'element:outside']),
-    );
     expect(JSON.stringify(result.scene)).toContain('crosses');
   });
 
@@ -1397,20 +1370,15 @@ describe('Flow Diagram 编译事务', () => {
       },
     );
     const artifactEnvelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+      artifact => artifact.namespace === 'diagram' && artifact.type === 'flow',
     );
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
     const layoutArtifact = artifact.elements[0];
-    const layoutHandle = result.spatialHandles.entries.find(entry => entry.id === 'element:layout-only');
 
     expect(layoutArtifact).toMatchObject({
       id: 'layout-only',
       kind: 'layout',
       elements: [{ id: 'nested', kind: 'entity' }],
-    });
-    expect(layoutHandle).toMatchObject({
-      role: 'layout',
-      payload: { id: 'layout-only', kind: 'layout' },
     });
     expect(JSON.stringify(result.scene)).not.toContain('layout-only');
     expect(JSON.stringify(result.scene)).toContain('Nested');
@@ -1446,7 +1414,7 @@ describe('Flow Diagram 编译事务', () => {
       },
     );
     const artifactEnvelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
+      artifact => artifact.namespace === 'diagram' && artifact.type === 'flow',
     );
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
     const lane = artifact.elements[0];
@@ -1459,9 +1427,6 @@ describe('Flow Diagram 编译事务', () => {
 
     expect(Math.sign(mainDelta)).toBe(sign);
     expect(shortCrossEnd).toBe(longCrossEnd);
-    expect(result.spatialHandles.entries).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: 'element:lane', role: 'layout' })]),
-    );
   });
 });
 

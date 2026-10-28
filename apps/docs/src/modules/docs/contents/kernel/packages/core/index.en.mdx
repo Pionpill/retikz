@@ -76,7 +76,7 @@ const result = compileToScene(ir);
 console.log(result.scene);
 ```
 
-`compileToScene` synchronously returns a `CompileResult`. Its `scene` can be passed to a renderer; `artifacts` and `spatialHandles` carry additional artifacts and spatial handles. See [Compilation Output](/kernel/packages/core/compilation-output) for details. This call compiles the drawing; Render or an adapter handles its display.
+`compileToScene` synchronously returns a `CompileResult`. Its `scene` can be passed to a renderer; `artifacts` carries domain values returned by composites. See [Compilation Output](/kernel/packages/core/compilation-output) for details. This call compiles the drawing; Render or an adapter handles its display.
 
 The entry accepts typed IR. External input such as JSON should first pass through the appropriate schema validation. Compile options can supply text measurement, formula handling and extension definitions.
 

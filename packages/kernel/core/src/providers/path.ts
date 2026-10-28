@@ -1,20 +1,14 @@
-import type { AnyPathDefinition, StrokePathOwnerOutput } from '../contract';
+import type { AnyPathDefinition } from '../contract';
 import { definePath } from '../contract';
 import type { IRPathBase } from '../schemas';
 import { BuiltinPath, StrokePathSchema } from '../schemas';
 import { createProviderRegistry } from './registry';
 
 /** 标准描边 path：复用 core 的 stroke emission */
-const strokePath = definePath<IRPathBase, StrokePathOwnerOutput>({
+const strokePath = definePath<IRPathBase>({
   name: BuiltinPath.Stroke,
   schema: StrokePathSchema,
-  ownerOutput: true,
-  compile: context =>
-    context.ownerOutput.requested
-      ? context.emitStroke(context.path, {
-          captureOwnerOutput: value => context.ownerOutput.publish(value),
-        })
-      : context.emitStroke(context.path),
+  compile: context => context.emitStroke(context.path),
 });
 
 /** 内置 path provider 注册项 */

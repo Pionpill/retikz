@@ -5,9 +5,16 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
-import { defineTransformImplementation, defineRegressionImplementation, defineRegression } from '@retikz/data';
 import type { ExternalDatasets } from '@retikz/data';
-import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
+import {
+  DataTransformBindingClass,
+  DataTransformFieldEffect,
+  DataTransformPhase,
+  defineRegression,
+  defineRegressionImplementation,
+  defineTransform,
+  defineTransformImplementation,
+} from '@retikz/data';
 import { pathClipProvider } from '@retikz/extension';
 import type { JsonObject } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -15,8 +22,7 @@ import { FlexLayoutArtifactSchema } from '@retikz/layout';
 import type { PlotsLoweringOptions } from '@retikz/plot';
 import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
-import { number } from 'zod';
-import { array, boolean, literal, strictObject, string } from 'zod';
+import { array, boolean, literal, number, strictObject, string } from 'zod';
 
 import { ChartWarningCode } from '../../src';
 import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
@@ -803,7 +809,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     }
 
     const result = compileToScene(sceneOf(source), definitions);
-    const artifact = result.artifacts.find(value => value.kind === 'composite' && value.type === 'flexLayout');
+    const artifact = result.artifacts.find(value => value.type === 'flexLayout');
     if (artifact === undefined) throw new Error('Expected Chart presentation FlexLayout compile artifact');
 
     const flex = FlexLayoutArtifactSchema.parse(artifact.value);

@@ -1,4 +1,3 @@
-import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { number, strictObject } from 'zod';
 
@@ -53,20 +52,6 @@ const fixedBoundary = (name: string, x: number): BoundaryDefinition =>
     name,
     paramsSchema: strictObject({}),
     computeBoundaryPoint: rect => [rect.x + x, rect.y],
-  });
-
-const outlinedBoundary = (): BoundaryDefinition =>
-  defineBoundary({
-    name: 'outlined',
-    paramsSchema: strictObject({}),
-    computeBoundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
-    computeOutline: rect => [
-      { kind: 'move', to: [rect.x - rect.width / 2, rect.y - rect.height / 2] },
-      { kind: 'line', to: [rect.x + rect.width / 2, rect.y - rect.height / 2] },
-      { kind: 'line', to: [rect.x + rect.width / 2, rect.y + rect.height / 2] },
-      { kind: 'line', to: [rect.x - rect.width / 2, rect.y + rect.height / 2] },
-      { kind: 'close' },
-    ],
   });
 
 describe('边界提供者契约', () => {
@@ -141,29 +126,5 @@ describe('边界提供者契约', () => {
     const boundary = { type: 'pin', params: { offset: 11 } };
 
     expect(BoundarySchema.parse(JSON.parse(JSON.stringify(boundary)))).toEqual(boundary);
-  });
-
-  it('自定义边界可以发布显式的闭合轮廓', () => {
-    const boundary = outlinedBoundary();
-    const rect: CenteredBox = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
-
-    expect(boundary.computeOutline?.(rect, {})).toEqual([
-      { kind: 'move', to: [-1, 2] },
-      { kind: 'line', to: [9, 2] },
-      { kind: 'line', to: [9, 8] },
-      { kind: 'line', to: [-1, 8] },
-      { kind: 'close' },
-    ]);
-  });
-
-  it('内置圆形、矩形和椭圆形边界发布显式闭合轮廓', () => {
-    const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
-
-    for (const boundary of BUILTIN_BOUNDARIES.values()) {
-      const outline = boundary.computeOutline?.(rect, { fit: 'tight', gap: 0 });
-
-      expect(outline).toBeDefined();
-      expect(outline?.at(-1)).toEqual({ kind: 'close' });
-    }
   });
 });

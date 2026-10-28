@@ -4,6 +4,7 @@ import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
 import { arrayDefinition, ArraySchema, mapDefinition, MapSchema } from '../../../src/collection';
+import { sceneNodes } from '../../helpers/scene-geometry';
 
 const compile = (child: IRChild) =>
   compileToScene(
@@ -74,9 +75,11 @@ describe('JSON 数据呈现', () => {
           .filter(node => node.type === 'text')
           .flatMap(node => node.lines.map(line => line.text)),
       ).toEqual(texts);
-      expect(result.spatialHandles.entries.filter(entry => entry.role === 'array-cell').map(entry => entry.id)).toEqual(
-        ['cell:values-0', 'cell:values-1'],
-      );
+      expect(
+        sceneNodes(result.scene)
+          .flatMap(node => (node.id === undefined ? [] : [node.id]))
+          .filter(id => /^(?:values|vector|m)-/.test(id)),
+      ).toEqual(['values-0', 'values-1']);
       expect(JSON.stringify(source)).toBe(before);
     }
 
@@ -162,9 +165,7 @@ describe('JSON 数据呈现', () => {
         .filter(node => node.type === 'text')
         .flatMap(node => node.lines.map(line => line.text)),
     ).toEqual(['""', '"null"', 'null', 'false', '0', '"a\\n\\"b"', '{}', '[]', '"same"', '"same"']);
-    expect(
-      result.spatialHandles.entries.filter(entry => ['array-cell', 'map-key', 'map-value'].includes(entry.role)),
-    ).toEqual([]);
+    expect(sceneNodes(result.scene).filter(node => node.id !== undefined)).toEqual([]);
     expect(JSON.stringify(source)).toBe(before);
   });
 

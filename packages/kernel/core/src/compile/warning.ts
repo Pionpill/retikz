@@ -1,22 +1,10 @@
-import type { CompileObservationOwner, CompileOccurrenceLocator } from '../contract';
 import type { CompileWarningCode } from './constants';
 
 /** 编译 warning 的领域中立结构化来源 */
-export type CompileWarningOrigin =
-  | Readonly<{
-      /** 区分主编译诊断与观测辅助编译诊断 */
-      kind: 'primary';
-    }>
-  | Readonly<{
-      /** 区分主编译诊断与观测辅助编译诊断 */
-      kind: 'observation';
-      /** 产生观测诊断的所属者 */
-      owner: CompileObservationOwner;
-      /** 观测目标在编译树中的完整位置 */
-      occurrence: CompileOccurrenceLocator;
-      /** 诊断发生于所属者编译还是辅助片段编译 */
-      stage: 'owner' | 'fragment';
-    }>;
+export type CompileWarningOrigin = Readonly<{
+  /** 主编译诊断 */
+  kind: 'primary';
+}>;
 
 /** 编译内部创建 warning 时使用的未完成输入 */
 export type InputCompileWarning = {
@@ -32,7 +20,7 @@ export type InputCompileWarning = {
 
 /** 编译期 warning：不影响 Scene 产物，交给调用方收集或展示 */
 export type CompileWarning = Omit<InputCompileWarning, 'origin'> & {
-  /** warning 所属主 Scene 或 observation 阶段 */
+  /** warning 的主编译来源 */
   origin: CompileWarningOrigin;
 };
 

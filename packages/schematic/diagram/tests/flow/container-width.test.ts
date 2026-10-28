@@ -62,9 +62,7 @@ const compile = (input: unknown) => {
       measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
     },
   );
-  const artifact = FlowDiagramArtifactSchema.parse(
-    result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram')?.value,
-  );
+  const artifact = FlowDiagramArtifactSchema.parse(result.artifacts.find(item => item.namespace === 'diagram')?.value);
   const root = artifact.elements[0];
   if (root.kind !== 'layout') throw new Error('Expected layout');
 
@@ -105,7 +103,7 @@ describe('Flow 容器宽度', () => {
       },
     );
     const artifact = FlowDiagramArtifactSchema.parse(
-      result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram')?.value,
+      result.artifacts.find(item => item.namespace === 'diagram')?.value,
     );
     const root = artifact.elements[0];
     if (root.kind !== 'layout') throw new Error('Expected layout');
@@ -242,7 +240,7 @@ describe('Flow 容器宽度边界', () => {
       resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
     );
     const artifact = FlowDiagramArtifactSchema.parse(
-      result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram')?.value,
+      result.artifacts.find(item => item.namespace === 'diagram')?.value,
     );
     const root = artifact.elements[0];
     if (root.kind !== 'layout') throw new Error('Expected Layout');

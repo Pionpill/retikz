@@ -17,11 +17,11 @@ afterEach(() => {
 });
 
 describe('<Layout onArtifacts>', () => {
-  it('渲染期间不调用用户观察者', () => {
+  it('渲染期间不调用用户回调', () => {
     const onArtifacts = vi.fn();
 
     renderToStaticMarkup(
-      <Layout artifacts={{ nodeLayouts: true }} onArtifacts={onArtifacts}>
+      <Layout onArtifacts={onArtifacts}>
         <Node id="a" position={[0, 0]} text="A" />
       </Layout>,
     );
@@ -29,7 +29,7 @@ describe('<Layout onArtifacts>', () => {
     expect(onArtifacts).not.toHaveBeenCalled();
   });
 
-  it('提交后通知不可变的编译产物', async () => {
+  it('普通 Node 编译后通知空的不可变产物数组', async () => {
     const onArtifacts = vi.fn();
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -37,36 +37,21 @@ describe('<Layout onArtifacts>', () => {
 
     await act(() => {
       root.render(
-        <Layout artifacts={{ nodeLayouts: true }} onArtifacts={onArtifacts}>
+        <Layout onArtifacts={onArtifacts}>
           <Node id="a" position={[0, 0]} text="A" />
         </Layout>,
       );
     });
 
     expect(onArtifacts).toHaveBeenCalledTimes(1);
-    expect(onArtifacts.mock.calls[0][0]).toEqual([
-      expect.objectContaining({
-        kind: 'nodeLayout',
-        occurrence: { sourcePath: 'children[0].node', expansionPath: [] },
-        value: expect.objectContaining({
-          kind: 'node',
-          id: 'a',
-          content: expect.objectContaining({
-            size: expect.objectContaining({
-              width: expect.any(Number),
-              height: expect.any(Number),
-            }),
-          }),
-        }),
-      }),
-    ]);
+    expect(onArtifacts.mock.calls[0][0]).toEqual([]);
     expect(Object.isFrozen(onArtifacts.mock.calls[0][0])).toBe(true);
 
     root.unmount();
     container.remove();
   });
 
-  it('不会重新编译等效的内联产物选项', async () => {
+  it('父组件更新不重复通知相同输入的产物', async () => {
     const onArtifacts = vi.fn();
     const ir: IRScene = {
       version: 1,
@@ -78,7 +63,7 @@ describe('<Layout onArtifacts>', () => {
     const root = createRoot(container);
     const renderLayout = (tick: number) => (
       <div data-tick={tick}>
-        <Layout ir={ir} artifacts={{ nodeLayouts: true }} onArtifacts={onArtifacts} />
+        <Layout ir={ir} onArtifacts={onArtifacts} />
       </div>
     );
 
@@ -98,7 +83,7 @@ describe('<Layout onArtifacts>', () => {
     container.remove();
   });
 
-  it('只有内联观察者身份发生变化时，不再通知', async () => {
+  it('只有内联回调身份发生变化时，不再通知', async () => {
     let notificationCount = 0;
     const ir: IRScene = {
       version: 1,
@@ -112,7 +97,6 @@ describe('<Layout onArtifacts>', () => {
       <div data-tick={tick}>
         <Layout
           ir={ir}
-          artifacts={{ nodeLayouts: true }}
           onArtifacts={() => {
             notificationCount += 1;
           }}

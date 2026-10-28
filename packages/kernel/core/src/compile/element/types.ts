@@ -1,5 +1,4 @@
 import type {
-  CompileObservationAncestor,
   CompileOccurrenceLocator,
   GroupPrimitive,
   LayoutProposal,
@@ -8,15 +7,10 @@ import type {
   Transform,
 } from '../../contract';
 import type { MergedScopeDefaults } from '../../resolve';
-import type { IRPosition, CanonicalDropShadow } from '../../schemas';
+import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
 import type { CompileEnvironment } from '../environment';
-import type { NodeCompilation, CompiledNodeLayout } from '../node';
-import type {
-  CompileObservationContribution,
-  CompileObservationRuntime,
-  PendingNodeLayoutObservation,
-} from '../orchestration';
+import type { CompiledNodeLayout, NodeCompilation } from '../node';
 import type { CompileWarning } from '../warning';
 
 /** 元素接收到的有效样式与主题，不包含资源工作区 */
@@ -74,12 +68,8 @@ export type ElementCompileOptions = Readonly<{
   transforms?: ReadonlyArray<Transform>;
   /** 布局分配约束 */
   proposal?: LayoutProposal;
-  /** 本批独占的观察会话，不可跨次复用 */
-  observation?: CompileObservationRuntime;
   /** 存在 Composite 展开时的完整出现位置 */
   occurrence?: CompileOccurrenceLocator;
-  /** 逻辑容器祖先，供观察者读取 */
-  ancestors?: ReadonlyArray<CompileObservationAncestor>;
 }>;
 
 /** 元素本地可见边界的一项贡献，独立保留阴影语义 */
@@ -102,10 +92,6 @@ export type CompileOutput = Readonly<{
   resources: Array<SceneResource>;
   /** 可见边界贡献 */
   bounds: ReadonlyArray<CompileBounds>;
-  /** 选中的节点布局事实，组装时应用最终 Scope 变换 */
-  nodeLayouts?: ReadonlyArray<Readonly<PendingNodeLayoutObservation>>;
-  /** 选中的 owner 输出事实，组装时才调用观察会话 */
-  observations?: ReadonlyArray<Readonly<CompileObservationContribution>>;
 }>;
 
 /** 节点完整编译状态，布局与绘制使用同一次解析结果 */
@@ -124,8 +110,6 @@ export type CompiledCoordinate = Readonly<{
   id: string;
   /** 本地位置 */
   position: IRPosition;
-  /** 仅存在观察贡献时提供 */
-  output?: CompileOutput;
 }>;
 
 /** Path 完整编译状态，自定义路径不要求具有单一中心线 */

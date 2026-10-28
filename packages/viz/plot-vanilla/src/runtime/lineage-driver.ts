@@ -1,6 +1,6 @@
 import type { CompileResult } from '@retikz/core';
 import { lowerPlotWithLineage } from '@retikz/plot';
-import type { VanillaCompileDriver, VanillaCompileDriverSession, InputVanillaCompileDriver } from '@retikz/vanilla';
+import type { InputVanillaCompileDriver, VanillaCompileDriver, VanillaCompileDriverSession } from '@retikz/vanilla';
 
 import type { PreparedPlotLineageNotification } from '../spec';
 
@@ -28,7 +28,6 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
       let currentSites = sites;
       let currentInput = input;
       const session: VanillaCompileDriverSession = {
-        observers: [],
         resolve: output => {
           notifications.set(
             output.result,
@@ -47,7 +46,7 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
               return () => site.onLineage(result.lineage);
             }),
           );
-          return { primary: output.result, observerOutputs: output.observerOutputs, layers: [], diagnostics: [] };
+          return { primary: output.result, layers: [], diagnostics: [] };
         },
         commit: output => {
           for (const notify of notifications.get(output.primary) ?? []) {

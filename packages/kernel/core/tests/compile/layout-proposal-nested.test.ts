@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { enum as zodEnum, literal, strictObject } from 'zod';
+import { literal, strictObject, enum as zodEnum } from 'zod';
 
 import type {
   CompileResult,
@@ -11,14 +11,13 @@ import type {
   TextMeasurer,
 } from '../../src';
 import {
-  compileToScene,
   BuiltinCompileWarningCode,
+  BuiltinLayoutAlignmentGuideName,
+  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   formatCompileOccurrence,
-  isNodeLayoutCompileArtifact,
   LayoutAlignmentGuideDimension,
-  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -246,7 +245,7 @@ const runNestedFixture = (): FixtureRun => {
     composites: [failing, nested, parent],
     measureText: fixedMeasurer,
     padding: 0,
-    artifacts: { nodeLayouts: true },
+
     onWarn: warning => warnings.push(warning),
   });
 
@@ -301,13 +300,6 @@ describe('三层布局提案关闭', () => {
       [],
     );
 
-    const selectedNodeArtifact = run.result.artifacts.find(isNodeLayoutCompileArtifact);
-
-    expect(selectedNodeArtifact?.value.id).toBe('shared-identity');
-    expect(formatCompileOccurrence(selectedNodeArtifact?.occurrence ?? { sourcePath: '', expansionPath: [] })).toBe(
-      'children[0]::replay[0]::replay[0]',
-    );
-
     const referencePath = run.result.scene.primitives.find(primitive => primitive.type === 'path');
 
     expect(
@@ -322,23 +314,14 @@ describe('三层布局提案关闭', () => {
     expect(first.dispatches).toEqual({ parent: 1, nested: 2, failing: 2 });
     expect(second.dispatches).toEqual(first.dispatches);
     expect(second.result).toEqual(first.result);
-    expect(first.result.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(1);
 
-    const parentArtifact = first.result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.type === 'parent',
-    );
-    const nestedArtifact = first.result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.type === 'nested',
-    );
-    const selectedNodeArtifact = first.result.artifacts.find(isNodeLayoutCompileArtifact);
+    const parentArtifact = first.result.artifacts.find(artifact => artifact.type === 'parent');
+    const nestedArtifact = first.result.artifacts.find(artifact => artifact.type === 'nested');
 
     expect(parentArtifact?.value).toEqual({ role: 'parent' });
     expect(nestedArtifact?.value).toEqual({ role: 'nested', x: 'exact', y: 'intrinsic' });
     expect(formatCompileOccurrence(nestedArtifact?.occurrence ?? { sourcePath: '', expansionPath: [] })).toBe(
       'children[0]::replay[0]',
-    );
-    expect(formatCompileOccurrence(selectedNodeArtifact?.occurrence ?? { sourcePath: '', expansionPath: [] })).toBe(
-      'children[0]::replay[0]::replay[0]',
     );
   });
 

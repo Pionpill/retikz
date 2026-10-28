@@ -88,8 +88,8 @@ describe('toSceneResult 运行时元数据', () => {
       children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A' }],
     };
 
-    const compiled = toSceneResult(ir, { compile: { artifacts: { nodeLayouts: true } } });
-    const passedScene = toSceneResult(scene, { compile: { artifacts: { nodeLayouts: true } } });
+    const compiled = toSceneResult(ir, { compile: {} });
+    const passedScene = toSceneResult(scene, { compile: {} });
 
     expect(compiled.artifacts).toMatchObject([
       {
@@ -107,7 +107,7 @@ describe('toSceneResult 运行时元数据', () => {
     expect(() =>
       toSceneResult(scene, {
         compileDriver: {
-          create: () => ({ observers: [], resolve: output => output as never }),
+          create: () => ({ resolve: output => output as never }),
         },
       }),
     ).toThrow('Vanilla compile drivers require authored IR or an InputScene');

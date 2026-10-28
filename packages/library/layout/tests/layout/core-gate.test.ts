@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   CompileOptions,
   IRChild,
   IRScene,
@@ -9,22 +9,21 @@ import type {
 } from '@retikz/core';
 import {
   BUILTIN_SHAPES,
+  BuiltinLayoutAlignmentGuideName,
   ChildSchema,
   compileToScene,
   CompositeBaseSchema,
   defineComposite,
   defineShape,
   formatCompileOccurrence,
-  isNodeLayoutCompileArtifact,
   LayoutAlignmentGuideDimension,
-  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { enum as zodEnum, literal, strictObject } from 'zod';
+import { literal, strictObject, enum as zodEnum } from 'zod';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: [...text].length * 10,
@@ -389,17 +388,15 @@ describe('Layout Core 布局能力门', () => {
       shapes: [customShape],
       lowerTex,
       measureText: fixedMeasurer,
-      artifacts: { nodeLayouts: true },
       padding: 0,
     });
-    const nestedArtifacts = result.artifacts.filter(artifact => artifact.kind === 'composite');
+    const nestedArtifacts = result.artifacts;
 
     expect(nestedArtifacts).toHaveLength(1);
     expect(nestedArtifacts[0]?.value).toEqual({ proposal: 'exact' });
     expect(formatCompileOccurrence(nestedArtifacts[0]?.occurrence ?? { sourcePath: '', expansionPath: [] })).toBe(
       'children[0]::replay[0]',
     );
-    expect(result.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(1);
 
     const groups = groupsOf(result.scene.primitives);
     const outer = result.scene.primitives[0];
@@ -518,7 +515,6 @@ describe('Layout Core 布局能力门', () => {
     const warnings: Array<string> = [];
     const discarded = compileToScene(sceneOf({ namespace: 'layout-core-gate', type: 'discard-failure' }), {
       composites: [failure, discard],
-      artifacts: { nodeLayouts: true },
       onWarn: warning => warnings.push(warning.code),
     });
 

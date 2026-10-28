@@ -1,16 +1,21 @@
 import type {
   AnyCompositeDefinition,
-  CompileArtifact,
   CompileOptions,
   CompileResult,
+  CompositeArtifact,
   IRScene,
   Scene,
 } from '@retikz/core';
 import type { ReconcilerUpdateStrategy } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
-import type { InputAuthoringSite, InputNormalizeOptions, InputRuntimeMeta, InputScene } from '../normalize';
-import type { AnyInputEmbedAdapter } from '../normalize';
+import type {
+  AnyInputEmbedAdapter,
+  InputAuthoringSite,
+  InputNormalizeOptions,
+  InputRuntimeMeta,
+  InputScene,
+} from '../normalize';
 import type { VanillaCompileDriver } from '../runtime/compile-driver';
 
 /** 可进入 Vanilla 框架无关 processing 的作者输入 */
@@ -51,7 +56,7 @@ export type ProcessingResult = Readonly<{
   /** authored source 的完整 Core compile result */
   compileResult: CompileResult;
   /** 与 Scene 同 revision 的 artifacts */
-  artifacts: ReadonlyArray<CompileArtifact>;
+  artifacts: ReadonlyArray<CompositeArtifact>;
   /** compile driver 产生的只读图层 */
   layers: ReadonlyArray<RenderReadonlyLayer>;
   /** processing 收集的诊断 */

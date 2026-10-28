@@ -2,19 +2,18 @@ import type {
   AnyCompositeDefinition,
   AnyPathDefinition,
   ArrowDefinition,
-  MarkDefinition,
   BoundaryDefinition,
   ClipDefinition,
-  CompileArtifact,
-  CompileArtifactOptions,
   CompileOptions,
   CompileResult,
+  CompositeArtifact,
   IRAnimationTrack,
   IRScene,
   IRViewBox,
-  TexLowerer,
+  MarkDefinition,
   PatternDefinition,
   ShapeDefinition,
+  TexLowerer,
   TextMeasurer,
   ThemeDefinition,
 } from '@retikz/core';
@@ -297,10 +296,8 @@ export type LayoutProps = {
   extensions?: LayoutExtensions;
   /** 公式下沉能力 */
   lowerTex?: TexLowerer;
-  /** 请求生成的编译附加产物 */
-  artifacts?: CompileArtifactOptions;
   /** 编译附加产物成功提交后的通知 */
-  onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
+  onArtifacts?: (artifacts: ReadonlyArray<CompositeArtifact>) => void;
   /** Core 完整编译结果通知 */
   onCompileResult?: (result: CompileResult) => void;
 };
@@ -429,7 +426,6 @@ export const Layout: FC<LayoutProps> = props => {
     fontSize,
     extensions,
     lowerTex,
-    artifacts,
     onArtifacts,
     onCompileResult,
     rootScope,
@@ -510,10 +506,6 @@ export const Layout: FC<LayoutProps> = props => {
   }, [ambientTheme, irFromProp, reactInput, rootAnimations, theme, viewBox]);
 
   const defaultFontFamily = styleFontFamily(style);
-  const compileArtifacts = useMemo<CompileArtifactOptions | undefined>(
-    () => (artifacts?.nodeLayouts === true ? { nodeLayouts: true } : undefined),
-    [artifacts?.nodeLayouts],
-  );
 
   const processingOptions = useMemo<ProcessingOptions | AsyncProcessingOptions>(
     () => ({
@@ -536,7 +528,6 @@ export const Layout: FC<LayoutProps> = props => {
         composites: stableComposites,
         themeDefinitions: stableThemeDefinitions,
         lowerTex,
-        artifacts: compileArtifacts,
       } satisfies CompileOptions,
     }),
     [
@@ -559,7 +550,6 @@ export const Layout: FC<LayoutProps> = props => {
       stableComposites,
       stableThemeDefinitions,
       lowerTex,
-      compileArtifacts,
     ],
   );
 

@@ -5,16 +5,16 @@ import type {
   IRChild,
   IRScope,
 } from '@retikz/core';
-import { CURRENT_IR_VERSION, BuiltinPath } from '@retikz/core';
+import { CURRENT_IR_VERSION } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type {
   AnyInputEmbed,
+  EmbedChildrenNormalizationResult,
   InputEmbedAuthoringSite,
   InputEmbedContext,
-  InputEmbedThemeContext,
   InputEmbedContribution,
-  EmbedChildrenNormalizationResult,
+  InputEmbedThemeContext,
 } from '../embed';
 import type { InputNode } from '../node';
 import { normalizeNode } from '../node';
@@ -416,7 +416,6 @@ const normalizeEmbeddedChildren = (
     sites.push(
       Object.freeze({
         kind: site.kind,
-        ...(site.owner === undefined ? {} : { owner: site.owner }),
         type: site.type,
         authoring: site.authoring,
       }),
@@ -490,15 +489,7 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: SceneNormali
     Object.freeze({
       kind: 'embeddable',
       sourcePath: ctx.sourcePath,
-      ...('namespace' in contribution.node
-        ? {
-            owner: {
-              kind: 'composite' as const,
-              namespace: contribution.node.namespace,
-              type: contribution.node.type,
-            },
-          }
-        : {}),
+      ...('namespace' in contribution.node ? {} : {}),
       type: input.kind,
       authoring: input.authoring,
     }),
@@ -549,7 +540,6 @@ const normalizeChild = (input: InputChild, ctx: SceneNormalizeContext): IRChild 
       Object.freeze({
         kind: 'path',
         sourcePath: `${ctx.sourcePath}.path`,
-        owner: { kind: 'path', name: path.kind ?? BuiltinPath.Stroke },
         type: 'path',
         authoring: input.authoring,
       }),
@@ -593,7 +583,6 @@ const normalizeChild = (input: InputChild, ctx: SceneNormalizeContext): IRChild 
         kind: 'node',
         type: 'node',
         sourcePath: `${ctx.sourcePath}.node`,
-        owner: { kind: 'node' },
         authoring: input.authoring,
       }),
     );
@@ -607,7 +596,6 @@ const normalizeChild = (input: InputChild, ctx: SceneNormalizeContext): IRChild 
         kind: 'coordinate',
         type: 'coordinate',
         sourcePath: `${ctx.sourcePath}.coordinate`,
-        owner: { kind: 'coordinate' },
         authoring,
       }),
     );

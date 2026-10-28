@@ -1,16 +1,16 @@
 import type {
   CompileWarning,
+  CompositeCompileContext,
   IRChild,
   IRScene,
   LayoutChildResult,
-  CompositeCompileContext,
   LayoutProposal,
   TextMeasurer,
 } from '@retikz/core';
 import {
+  BuiltinCompileWarningCode,
   ChildSchema,
   compileToScene,
-  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
@@ -93,7 +93,7 @@ describe('盒子 Layout 综合契约', () => {
       measureText: fixedMeasurer,
       padding: 0,
     });
-    const artifact = result.artifacts.find(value => value.kind === 'composite');
+    const artifact = result.artifacts.at(0);
 
     expect(artifact?.value).toEqual({
       allocationWidth: 10,
@@ -136,7 +136,7 @@ describe('盒子 Layout 综合契约', () => {
       composites: [definition],
     });
 
-    expect(result.artifacts.find(value => value.kind === 'composite')?.value).toEqual({
+    expect(result.artifacts.at(0)?.value).toEqual({
       allocationWidth: 10,
       allocationHeight: 19.2,
       slotWidth: 10,
@@ -182,7 +182,7 @@ describe('盒子 Layout 综合契约', () => {
       composites: [definition],
       measureText: fixedMeasurer,
     });
-    const artifact = result.artifacts.find(value => value.kind === 'composite');
+    const artifact = result.artifacts.at(0);
 
     expect(artifact?.value).toEqual({ exactWidth: 0, boundedHeight: 0, indefiniteHeight: 19.2 });
   });
@@ -252,7 +252,7 @@ describe('盒子 Layout 综合契约', () => {
       composites: [nested, parent],
       padding: 0,
     });
-    const artifacts = result.artifacts.filter(value => value.kind === 'composite');
+    const artifacts = result.artifacts;
 
     expect(artifacts).toEqual(
       expect.arrayContaining([
@@ -310,7 +310,7 @@ describe('盒子 Layout 综合契约', () => {
       composites: [empty, parent],
     });
 
-    expect(result.artifacts.find(value => value.kind === 'composite')?.value).toEqual({
+    expect(result.artifacts.at(0)?.value).toEqual({
       x: 2,
       y: 3,
       width: 40,
@@ -351,7 +351,7 @@ describe('盒子 Layout 综合契约', () => {
       padding: 0,
     });
 
-    expect(result.artifacts.find(value => value.kind === 'composite')?.value).toEqual({
+    expect(result.artifacts.at(0)?.value).toEqual({
       x: 0,
       y: 0,
       width: 10,
@@ -397,8 +397,8 @@ describe('盒子 Layout 综合契约', () => {
       measureText: fixedMeasurer,
       padding: 0,
     });
-    const artifact = result.artifacts.find(value => value.kind === 'composite');
-    if (artifact?.kind !== 'composite') throw new Error('Expected exact width artifact');
+    const artifact = result.artifacts.at(0);
+    if (artifact === undefined) throw new Error('Expected exact width artifact');
 
     const value = artifact.value;
 
@@ -451,7 +451,7 @@ describe('盒子 Layout 综合契约', () => {
 
     expect(receivedFrozenConstraint).toBe(true);
     expect(mutationSucceeded).toBe(false);
-    expect(result.artifacts.find(value => value.kind === 'composite')?.value).toEqual({ slotWidth: 20 });
+    expect(result.artifacts.at(0)?.value).toEqual({ slotWidth: 20 });
   });
 
   it('标准化槽大小中的负零', () => {
@@ -552,7 +552,7 @@ describe('盒子 Layout 综合契约', () => {
       transforms: [{ kind: 'translate', x: 10, y: 20 }],
     });
 
-    const allocation = result.artifacts.find(value => value.kind === 'composite')?.value;
+    const allocation = result.artifacts.at(0)?.value;
 
     expect(allocation?.width).toBe(10);
     expect(allocation?.height).toBeCloseTo(19.2);
@@ -749,7 +749,7 @@ describe('盒子 Layout 综合契约', () => {
       composites: [child, parent],
     });
 
-    expect(result.artifacts.find(value => value.kind === 'composite')?.value).toEqual({ width: 20 });
+    expect(result.artifacts.at(0)?.value).toEqual({ width: 20 });
     expect(widthReads).toBe(1);
   });
 
@@ -801,7 +801,6 @@ describe('盒子 Layout 综合契约', () => {
     expect(artifact.compilation).toMatchObject({
       result: freshResult,
       diagnostics: freshDiagnostics,
-      observerOutputs: [],
     });
     expect(artifact.compilation.diagnostics.map(warning => warning.code)).toContain(
       BuiltinCompileWarningCode.DuplicateNodeId,

@@ -1,11 +1,11 @@
 import type { IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive, TranslateTransform } from '@retikz/core';
 import {
+  BuiltinLayoutAlignmentGuideName,
   ChildSchema,
   compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAlignmentGuideDimension,
-  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
@@ -195,7 +195,7 @@ const translationOf = (primitives: ReadonlyArray<ScenePrimitive>, id: string): R
 };
 
 const flexArtifactOf = (output: ReturnType<typeof compileToScene>): FlexLayoutCompileArtifact => {
-  const artifact = output.artifacts.find(value => value.kind === 'composite' && value.type === 'flexLayout');
+  const artifact = output.artifacts.find(value => value.type === 'flexLayout');
   if (artifact === undefined) throw new Error('Expected FlexLayout compile artifact');
   return artifact as FlexLayoutCompileArtifact;
 };

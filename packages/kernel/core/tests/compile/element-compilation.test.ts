@@ -1,22 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import { literal } from 'zod';
 
-import type { CompileBinding, CompileOutput, IRPathBase } from '../../src';
-import { definePath, PathSchema } from '../../src';
-import { BUILTIN_SHAPES } from '../../src';
-import type { IRScope, ShapeDefinition } from '../../src';
-import { createCompileObservationRuntime, observeCompileToScene, projectCompileReference } from '../../src';
-import type { CompileObservation, CompileObserverDefinition, CompileNamespace, IRCoordinate } from '../../src';
+import type {
+  CompileBinding,
+  CompileNamespace,
+  CompileOutput,
+  IRCoordinate,
+  IRNode,
+  IRPathBase,
+  IRScope,
+  ShapeDefinition,
+} from '../../src';
 import {
+  assembleSceneCompilation,
+  assembleScopeOutput,
+  BUILTIN_SHAPES,
   compileCoordinate,
   compileNode,
   compilePath,
+  compileScope,
   compileToScene,
   createCompileEnvironment,
+  prepareScopeCompilation,
+  projectCompileReference,
   resolveScopeContext,
 } from '../../src';
-import type { IRNode } from '../../src';
-import { assembleSceneCompilation, assembleScopeOutput, compileScope, prepareScopeCompilation } from '../../src';
 
 describe('独立元素编译', () => {
   it('顶层 Path 等待两个 Scope 的节点投影后编译，保持声明绘制顺序', () => {
@@ -65,82 +72,6 @@ describe('独立元素编译', () => {
       compileToScene({ type: 'scene', version: 1, children: [pathInput, ...scopes] }).scene,
     );
     expect(new Set(path.reads.map(read => read.name))).toEqual(new Set(['a', 'b']));
-  });
-
-  it('自定义 Path 的 owner 输出随局部片段发布且组装不重算', () => {
-    const seen: Array<CompileObservation> = [];
-    const observer: CompileObserverDefinition = {
-      key: 'custom-path',
-      createSession: () => ({
-        select: site => site.owner.kind === 'path',
-        observe: value => {
-          seen.push(value);
-        },
-        complete: () => null,
-      }),
-    };
-    let calls = 0;
-    const kind = definePath({
-      name: 'cached-path',
-      schema: PathSchema.extend({ kind: literal('cached-path') }),
-      ownerOutput: true,
-      compile: context => {
-        calls += 1;
-        if (context.ownerOutput.requested) context.ownerOutput.publish({ label: 'cached' });
-        return {
-          primitives: [{ type: 'rect', x: 0, y: 0, width: 10, height: 1 }],
-          boundsPoints: [
-            [0, 0],
-            [10, 1],
-          ],
-        };
-      },
-    });
-    const environment = createCompileEnvironment({ paths: [kind] });
-    const observation = createCompileObservationRuntime([observer]);
-    const result = compilePath(
-      {
-        type: 'path',
-        kind: 'cached-path',
-        children: [
-          { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'line', to: [10, 0] },
-        ],
-      },
-      {
-        environment,
-        observation,
-        context: resolveScopeContext({}, environment),
-        irPath: 'children[0].path',
-      },
-    );
-    if (result.status !== 'compiled') throw new Error('expected path');
-    const count = calls;
-    const assembled = assembleSceneCompilation({}, [result.compiled.output], environment, { observation });
-    expect(assembled.result.scene.primitives).toHaveLength(1);
-    expect(seen).toHaveLength(1);
-    expect(calls).toBe(count);
-    const isolated = [...seen];
-    seen.length = 0;
-    observeCompileToScene(
-      {
-        type: 'scene',
-        version: 1,
-        children: [
-          {
-            type: 'path',
-            kind: 'cached-path',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [10, 0] },
-            ],
-          },
-        ],
-      },
-      { paths: [kind] },
-      [observer],
-    );
-    expect(isolated).toEqual(seen);
   });
 
   it('复用绘制片段不再次调用自定义 shape provider，引用投影不修改旧布局', () => {
@@ -262,59 +193,6 @@ describe('独立元素编译', () => {
       assembleSceneCompilation({}, [first.compiled.output, second.compiled.output], environment).result.scene,
     ).toEqual(compileToScene({ type: 'scene', version: 1, children: [a, b] }).scene);
     expect(assembleSceneCompilation({}, [], environment).result.scene.resources).toBeUndefined();
-  });
-
-  it('Scope 变换后观察输出和布局产物与全量编译一致', () => {
-    const observed: Array<CompileObservation> = [];
-    const observer: CompileObserverDefinition = {
-      key: 'elements',
-      createSession: () => ({
-        select: () => true,
-        observe: value => {
-          observed.push(value);
-        },
-        complete: () => null,
-      }),
-    };
-    const observation = createCompileObservationRuntime([observer]);
-    const environment = createCompileEnvironment({ artifacts: { nodeLayouts: true } });
-    const input: IRNode = { type: 'node', id: 'a', position: [12, 24], text: 'hello' };
-    const scopeInput = { type: 'scope' as const, position: [30, 40] as [number, number] };
-    const occurrence = { sourcePath: 'children[0].scope', expansionPath: [] };
-    const context = {
-      environment,
-      observation,
-      context: resolveScopeContext({}, environment),
-      irPath: occurrence.sourcePath,
-      occurrence,
-    };
-    const prepared = prepareScopeCompilation(scopeInput, context);
-    if (prepared.status !== 'compiled') throw new Error('expected preparation');
-    const node = compileNode(input, {
-      ...context,
-      context: prepared.compiled.scope,
-      irPath: 'children[0].scope.children[0].node',
-      occurrence: { sourcePath: 'children[0].scope.children[0].node', expansionPath: [] },
-      ancestors: [{ owner: { kind: 'scope' }, occurrence }],
-    });
-    if (node.status !== 'compiled') throw new Error('expected node');
-    const scope = compileScope(scopeInput, prepared.compiled, [node.compiled.layout], context);
-    if (scope.status !== 'compiled') throw new Error('expected scope');
-    const result = assembleSceneCompilation(
-      {},
-      [assembleScopeOutput(scope.compiled, [node.compiled.output], environment)],
-      environment,
-      { observation },
-    );
-    const incrementalObservations = [...observed];
-    observed.length = 0;
-    const full = observeCompileToScene(
-      { type: 'scene', version: 1, children: [{ ...scopeInput, children: [input] }] },
-      { artifacts: { nodeLayouts: true } },
-      [observer],
-    );
-    expect(incrementalObservations).toEqual(observed);
-    expect(result.result.artifacts).toEqual(full.primary.artifacts);
   });
 
   it('已编译 Scope 与子节点组装后等价于全量输出', () => {

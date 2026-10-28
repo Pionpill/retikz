@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
-import type { IRChild, IRPaint, IRScene, LayoutChildResult, CompositeCompileContext, LayoutProposal } from '../../src';
+import type { CompositeCompileContext, IRChild, IRPaint, IRScene, LayoutChildResult, LayoutProposal } from '../../src';
 import {
-  compileToScene,
   BuiltinCompileWarningCode,
+  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   formatCompileOccurrence,
-  isNodeLayoutCompileArtifact,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -93,7 +92,6 @@ describe('布局感知的复合事务和产物', () => {
 
     const result = compileToScene(scene([{ namespace: 'test', type: 'multiProposalIsolation' }]), {
       composites: [definition],
-      artifacts: { nodeLayouts: true },
     });
     const serialized = JSON.stringify(result);
 
@@ -101,7 +99,7 @@ describe('布局感知的复合事务和产物', () => {
     expect(serialized).not.toContain('minimum-only');
     expect(serialized).not.toContain('natural-only');
     expect(result.scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: gradient('#500', '#600') }]);
-    expect(result.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(1);
+    expect(result.artifacts).toEqual([]);
   });
 
   it('仅发布回放的资源并保留最终的资源排序', () => {
@@ -174,7 +172,7 @@ describe('布局感知的复合事务和产物', () => {
     });
   });
 
-  it('丢弃在失败的子项之前创建的资源、警告、身份、观察结果和产物', () => {
+  it('丢弃在失败的子项之前创建的资源、警告、身份和产物', () => {
     const failure = defineComposite({
       namespace: 'test',
       type: 'lateProbeFailure',
@@ -217,7 +215,7 @@ describe('布局感知的复合事务和产物', () => {
 
     const result = compileToScene(scene([{ namespace: 'test', type: 'failedSideEffectIsolation' }]), {
       composites: [failure, parent],
-      artifacts: { nodeLayouts: true },
+
       onWarn: warning => warnings.push(warning),
     });
 
@@ -372,12 +370,10 @@ describe('布局感知的复合事务和产物', () => {
 
     expect(result.artifacts).toMatchObject([
       {
-        kind: 'composite',
         type: 'parent',
         occurrence: { sourcePath: 'children[0]', expansionPath: [] },
       },
       {
-        kind: 'composite',
         type: 'child',
         occurrence: {
           sourcePath: 'children[0]',
@@ -520,7 +516,7 @@ describe('布局感知的复合事务和产物', () => {
     expect(formatCompileOccurrence(result.artifacts[0].occurrence)).toBe('children[0]::replay[0]::scopeChild[0]');
   });
 
-  it('返回已分离且不可变的产物并仅在显式启用时输出 Node 布局', () => {
+  it('返回已分离且不可变的领域产物', () => {
     const payload = { width: 10 };
     const definition = defineComposite({
       namespace: 'test',
@@ -544,68 +540,5 @@ describe('布局感知的复合事务和产物', () => {
     expect(withoutLayouts.artifacts[0]?.value).toEqual({ width: 10 });
     expect(Object.isFrozen(withoutLayouts.artifacts)).toBe(true);
     expect(Object.isFrozen(withoutLayouts.artifacts[0]?.value)).toBe(true);
-
-    const withLayouts = compileToScene(ir, {
-      composites: [definition],
-      artifacts: { nodeLayouts: true },
-    });
-
-    expect(withLayouts.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(1);
-  });
-
-  it('仅发布一次回放的 Node 布局产物', () => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'replayedNodeLayout',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('replayedNodeLayout'),
-      }),
-      compile: (_node, context) => {
-        const laid = resolvedResultOf(context, { type: 'node', id: 'replayed', position: [0, 0], text: 'N' });
-        return { children: [context.replay(laid)] };
-      },
-    });
-
-    const result = compileToScene(scene([{ namespace: 'test', type: 'replayedNodeLayout' }]), {
-      composites: [definition],
-      artifacts: { nodeLayouts: true },
-    });
-
-    expect(result.artifacts.filter(isNodeLayoutCompileArtifact)).toEqual([
-      expect.objectContaining({
-        kind: 'nodeLayout',
-        occurrence: {
-          sourcePath: 'children[0]',
-          expansionPath: [{ kind: 'replay', index: 0 }],
-        },
-      }),
-    ]);
-  });
-
-  it('按逻辑发生预序对 Node 布局和复合产物进行排序', () => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'laterArtifact',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('laterArtifact'),
-      }),
-      artifactSchema: strictObject({ value: literal('later') }),
-      compile: () => ({ children: [], artifact: { value: 'later' } }),
-    });
-
-    const result = compileToScene(
-      scene([
-        { type: 'node', id: 'first', position: [0, 0], text: 'N' },
-        { namespace: 'test', type: 'laterArtifact' },
-      ]),
-      {
-        composites: [definition],
-        artifacts: { nodeLayouts: true },
-      },
-    );
-
-    expect(result.artifacts.map(artifact => artifact.kind)).toEqual(['nodeLayout', 'composite']);
   });
 });

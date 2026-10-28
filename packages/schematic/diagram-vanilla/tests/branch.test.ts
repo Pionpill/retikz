@@ -16,7 +16,7 @@ it('通过同步 Vanilla 嵌入编译 Branch', () => {
     { adapters: [branchDiagramInputEmbedAdapter] },
   );
 
-  expect(result.artifacts.some(artifact => artifact.kind === 'composite' && artifact.type === 'branch')).toBe(true);
+  expect(result.artifacts.some(artifact => artifact.type === 'branch')).toBe(true);
   expect(JSON.stringify(result.scene)).toContain('A');
 });
 

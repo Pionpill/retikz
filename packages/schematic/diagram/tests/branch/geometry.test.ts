@@ -1,7 +1,8 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import type { IRChild } from '@retikz/core';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { expect, it } from 'vitest';
 
+import type { BranchDiagramDefinitionOptions, BranchLayoutOutput } from '../../src/branch';
 import {
   BranchDiagramArtifactSchema,
   BranchDiagramSchema,
@@ -9,7 +10,7 @@ import {
   defineBranchLayout,
   lanesBranchLayoutDefinition,
 } from '../../src/branch';
-import type { BranchDiagramDefinitionOptions, BranchLayoutOutput } from '../../src/branch';
+import { sceneNodes } from '../helpers/scene-geometry';
 
 const compile = (source: Record<string, unknown>, options: BranchDiagramDefinitionOptions = {}) =>
   compileToScene(
@@ -20,7 +21,6 @@ const compile = (source: Record<string, unknown>, options: BranchDiagramDefiniti
     },
     {
       ...resolveCoreProviderDependencies({ contributions: [createBranchDiagramProviderContribution(options)] }),
-      artifacts: { nodeLayouts: true },
       padding: 0,
       measureText: text => ({ width: text.length * 8, height: 10, ascent: 8, descent: 2 }),
     },
@@ -41,9 +41,7 @@ it('当目录顺序与分支进度不同时，保持布局确定性', () => {
 
   expect(compile(reversed).artifacts).toEqual(first.artifacts);
 
-  const artifact = BranchDiagramArtifactSchema.parse(
-    first.artifacts.find(value => value.kind === 'composite' && value.type === 'branch')?.value,
-  );
+  const artifact = BranchDiagramArtifactSchema.parse(first.artifacts.find(value => value.type === 'branch')?.value);
   const positions = new Map(artifact.nodes.map(node => [node.id, node.position[0]]));
 
   expect(positions.get('a')).toBeLessThan(positions.get('b')!);
@@ -104,9 +102,7 @@ it.each(['right', 'left', 'up', 'down'])('将共享标记几何体与 %s 方向�
     presentation: { title: { text: 'Title' }, description: { text: 'Caption' } },
     frame: { padding: 16 },
   });
-  const envelope = result.artifacts.find(
-    artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'branch',
-  );
+  const envelope = result.artifacts.find(artifact => artifact.namespace === 'diagram' && artifact.type === 'branch');
   const artifact = BranchDiagramArtifactSchema.parse(envelope?.value);
 
   expect(artifact.nodes).toHaveLength(3);
@@ -117,15 +113,10 @@ it.each(['right', 'left', 'up', 'down'])('将共享标记几何体与 %s 方向�
     expect(node.markerBounds.width).toBe(10);
     expect(node.visualBounds.width).toBeGreaterThan(10);
 
-    const observations = result.artifacts.filter(value => value.kind === 'nodeLayout' && value.value.id === node.id);
-
-    expect(observations).toHaveLength(1);
-
-    const observed = observations[0];
-    if (observed.kind !== 'nodeLayout') throw new Error('Expected node layout');
-
-    expect(observed.value.rect.x).toBeCloseTo(node.position[0]);
-    expect(observed.value.rect.y).toBeCloseTo(node.position[1]);
+    const observed = sceneNodes(result.scene).find(primitive => primitive.id === node.id);
+    if (observed === undefined) throw new Error('Missing node primitive');
+    expect(observed.rect.x).toBeCloseTo(node.position[0]);
+    expect(observed.rect.y).toBeCloseTo(node.position[1]);
   }
 });
 
@@ -137,9 +128,7 @@ it('合并相同的有向线段，同时保留两个分支对应关系', () => {
       { id: 'y', nodes: ['a', 'b'], style: { strokeWidth: 2, stroke: 'red' } },
     ],
   });
-  const artifact = BranchDiagramArtifactSchema.parse(
-    result.artifacts.find(value => value.kind === 'composite' && value.type === 'branch')?.value,
-  );
+  const artifact = BranchDiagramArtifactSchema.parse(result.artifacts.find(value => value.type === 'branch')?.value);
 
   expect(artifact.segments).toHaveLength(1);
   expect(artifact.branches.map(branch => branch.segments)).toEqual([[0], [0]]);
@@ -172,9 +161,7 @@ it('支持独立节点并保持本地命名空间独立', () => {
     resolveCoreProviderDependencies({ contributions: [createBranchDiagramProviderContribution()] }),
   );
 
-  expect(result.artifacts.filter(artifact => artifact.kind === 'composite' && artifact.type === 'branch')).toHaveLength(
-    2,
-  );
+  expect(result.artifacts.filter(artifact => artifact.type === 'branch')).toHaveLength(2);
 });
 
 it('保留显式根默认值并在根变换后发布几何体', () => {
@@ -183,15 +170,13 @@ it('保留显式根默认值并在根变换后发布几何体', () => {
     defaults: { node: { style: { stroke: 'red', font: { size: 24 } } } },
     transforms: [{ kind: 'translate', x: 100, y: 50 }],
   });
-  const artifact = BranchDiagramArtifactSchema.parse(
-    result.artifacts.find(value => value.kind === 'composite' && value.type === 'branch')?.value,
-  );
+  const artifact = BranchDiagramArtifactSchema.parse(result.artifacts.find(value => value.type === 'branch')?.value);
 
   for (const node of artifact.nodes) {
-    const handle = result.spatialHandles.entries.find(value => value.id === `node:${node.id}`);
+    const marker = sceneNodes(result.scene).find(primitive => primitive.id === node.id);
 
-    expect(handle?.geometry.bounds.x).toBeCloseTo(node.visualBounds.x + 100);
-    expect(handle?.geometry.bounds.y).toBeCloseTo(node.visualBounds.y + 50);
+    expect(marker?.rect.x).toBeCloseTo(node.position[0] + 100);
+    expect(marker?.rect.y).toBeCloseTo(node.position[1] + 50);
   }
 
   expect(JSON.stringify(result.scene)).toContain('red');

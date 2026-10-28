@@ -1,10 +1,9 @@
 import type {
-  EmitStrokeOwnerOutputOptions,
+  CompiledPathAppearance,
   InputPathBoundaryLabel,
+  InputPathLabel,
   PathCompileContext,
   PathCompileResult,
-  InputPathLabel,
-  CompiledPathAppearance,
   ScenePrimitive,
   Transform,
 } from '../../contract';
@@ -15,13 +14,11 @@ import {
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
 } from '../../resolve';
-import { createCompositeContractError } from '../../resolve/diagnostics';
 import type { IRPathBase, IRPosition, IRStep } from '../../schemas';
-import { formatCompileOccurrence } from '../artifact';
 import type { CompileEnvironment } from '../environment';
 import type { NodeGeometryContext } from '../node';
-import type { CompileObservationRuntime, PendingPathEmission } from '../orchestration';
-import { createOwnerOutputPublisher, freezeOccurrence, pathTargetViewOf } from '../orchestration';
+import type { PendingPathEmission } from '../orchestration';
+import { pathTargetViewOf } from '../orchestration';
 import type { ClipRegistry, PaintRegistry } from '../resource';
 import {
   snapshotProviderPosition,
@@ -46,8 +43,6 @@ type PathCompileHost = Pick<
   clip: ClipRegistry;
   /** 本次诊断收集器 */
   onWarn: (warning: InputCompileWarning) => void;
-  /** 本次观察会话 */
-  observation: CompileObservationRuntime | undefined;
   /** Core 提供的坐标变换解析 */
   resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform;
 };
@@ -70,10 +65,7 @@ const assertPathCompileResult = (kind: string, value: PathCompileResult | null) 
 
 /** 消费 resolve/path 已绑定的 path，并提供内置 stroke emit 回调 */
 export const emitDefinedPath = (
-  pendingPath: Pick<
-    PendingPathEmission,
-    'path' | 'scopeChain' | 'irPath' | 'occurrence' | 'scopeDefaults' | 'theme' | 'ancestors' | 'observationSink'
-  >,
+  pendingPath: Pick<PendingPathEmission, 'path' | 'scopeChain' | 'irPath' | 'occurrence' | 'scopeDefaults' | 'theme'>,
   resolution: PathResolution,
   targetResolver: PathTargetResolver,
   context: PathCompileHost,
@@ -85,13 +77,6 @@ export const emitDefinedPath = (
   const targetView = pathTargetViewOf(resolution.targets, targetWarn, context.nodeGeometry, context.resolveTransform);
   const { definition } = resolution;
   const kind = definition.name;
-  const observationOwner = Object.freeze({ kind: 'path' as const, name: kind });
-  const ownerOutput = createOwnerOutputPublisher(
-    observationOwner,
-    pendingPath.occurrence.sourcePath,
-    definition.ownerOutput,
-    context.observation,
-  );
 
   const emitOptions = {
     resources: () => [...context.paint.resources(), ...context.clip.resources()],
@@ -118,7 +103,7 @@ export const emitDefinedPath = (
           irPath,
         });
 
-  const emitStroke = (nextPath?: IRPathBase, request?: EmitStrokeOwnerOutputOptions) => {
+  const emitStroke = (nextPath?: IRPathBase) => {
     const source = nextPath ?? path;
     const sourceResolution = resolutionOf(source);
     const strokeResolution = resolveStrokePathProviders(sourceResolution, {
@@ -142,7 +127,6 @@ export const emitDefinedPath = (
       measureText: context.measureText,
       options: {
         ...emitOptions,
-        ...(request === undefined ? {} : { captureOwnerOutput: request.captureOwnerOutput }),
       },
     });
 
@@ -264,7 +248,6 @@ export const emitDefinedPath = (
   const compilePath = definition.compile as (context: PathCompileContext) => PathCompileResult | null;
   const produced = compilePath({
     path: resolution.source,
-    ownerOutput: ownerOutput.publisher,
     materializePath,
     emitStroke,
     emitHostLabels,
@@ -291,34 +274,7 @@ export const emitDefinedPath = (
 
   const validated = assertPathCompileResult(kind, produced);
   if (validated === null) {
-    if (ownerOutput.publisher.requested && ownerOutput.hasPublished()) {
-      throw createCompositeContractError(
-        `Path '${kind}' at ${formatCompileOccurrence(pendingPath.occurrence)} must not publish owner output when it returns null.`,
-      );
-    }
-
     return null;
-  }
-
-  const value = ownerOutput.value();
-  if (ownerOutput.publisher.requested && value === undefined) {
-    throw createCompositeContractError(
-      `Path '${kind}' at ${formatCompileOccurrence(pendingPath.occurrence)} must publish its owner output exactly once.`,
-    );
-  }
-
-  if (value !== undefined) {
-    pendingPath.observationSink.push({
-      owner: observationOwner,
-      ancestors: pendingPath.ancestors,
-      occurrence: freezeOccurrence(pendingPath.occurrence),
-      origin: freezeOccurrence(pendingPath.occurrence),
-      scopeChain,
-      value,
-      observerKeys: ownerOutput.keys,
-      theme: pendingPath.theme,
-      scopeDefaults: pendingPath.scopeDefaults,
-    });
   }
 
   return validated.result;

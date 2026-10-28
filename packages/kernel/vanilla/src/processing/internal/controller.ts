@@ -1,12 +1,11 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { ReconcilerOutput } from '@retikz/reconciler';
+import type { ReconcilerCommitTarget, ReconcilerOutput } from '@retikz/reconciler';
 import { ReconcilerSession } from '@retikz/reconciler';
-import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type {
-  VanillaCompileDriver,
   InputVanillaCompileDriver,
+  VanillaCompileDriver,
   VanillaCompileDriverSession,
 } from '../../runtime/compile-driver';
 import {
@@ -20,8 +19,8 @@ import { prepareProcessingInput } from '../prepare';
 import type { InputPreparedProcessing, ProcessingOptions, ProcessingResult, ProcessingSource } from '../types';
 import type {
   InternalProcessingController,
-  ProcessingTransactionParticipantFactory,
   PreparedInputProcessingController,
+  ProcessingTransactionParticipantFactory,
 } from './types';
 
 /** 复制 retained 生命周期内继续读取的处理配置 */
@@ -144,7 +143,6 @@ const createRetainedProcessingState = (
     dispose: () => participant?.target.dispose?.(),
   };
   const session = new ReconcilerSession(initial.coreOptions, {
-    observers: compileSession.observers,
     captureProvenance: participant !== undefined,
     target,
   });

@@ -3,8 +3,7 @@ import { boundsToRect } from '@retikz/math';
 import type { ScenePrimitive } from '../../contract';
 import type { CompileEnvironment } from '../environment';
 import type { CompileProvenanceTracker, CompileSemanticOwner } from '../orchestration';
-import { collectLayoutBounds } from '../orchestration';
-import { optionalVisualBoundsOfPrimitives } from '../orchestration';
+import { collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../orchestration';
 import { createClipRegistry, createPaintRegistry, importSceneResources, remapPrimitiveResources } from '../resource';
 import { applyTransformChain } from '../transform';
 import type { CompiledScope, CompileOutput } from './types';
@@ -19,8 +18,6 @@ export const assembleCompileOutputs = (
   const clip = createClipRegistry(environment.round, environment.maxClipDepth);
   const fragments: Array<{ zIndex: number; primitives: Array<ScenePrimitive> }> = [];
   const bounds: Array<CompileOutput['bounds'][number]> = [];
-  const nodeLayouts: Array<NonNullable<CompileOutput['nodeLayouts']>[number]> = [];
-  const observations: Array<NonNullable<CompileOutput['observations']>[number]> = [];
   for (const output of outputs) {
     const ids = importSceneResources(output.resources, paint, clip);
     const primitives = output.primitives.map(primitive => remapPrimitiveResources(primitive, ids));
@@ -30,15 +27,11 @@ export const assembleCompileOutputs = (
       primitives,
     });
     bounds.push(...output.bounds);
-    nodeLayouts.push(...(output.nodeLayouts ?? []));
-    observations.push(...(output.observations ?? []));
   }
   return Object.freeze({
     primitives: fragments.sort((a, b) => a.zIndex - b.zIndex).flatMap(fragment => fragment.primitives),
     resources: [...paint.resources(), ...clip.resources()],
     bounds,
-    nodeLayouts,
-    observations,
   });
 };
 
@@ -118,7 +111,5 @@ export const assembleScopeOutput = (
     resources: merged.resources,
     bounds,
     zIndex: scope.output.zIndex,
-    nodeLayouts: merged.nodeLayouts?.map(entry => ({ ...entry, scopeChain: [...transforms, ...entry.scopeChain] })),
-    observations: merged.observations?.map(entry => ({ ...entry, scopeChain: [...transforms, ...entry.scopeChain] })),
   });
 };

@@ -37,12 +37,11 @@ describe('Table 布局感知下沉', () => {
 
   it('编译一个规范根并返回其精确类型化的产物值', () => {
     const result = compileTable(manualSpec('people'), {}, { compile: { padding: 0 } });
-    const tableArtifacts = result.artifacts.filter(artifact => artifact.kind === 'composite');
+    const tableArtifacts = result.artifacts;
 
     expect(result.scene.layout).toEqual({ x: 0, y: 0, width: 120, height: 32 });
     expect(tableArtifacts).toHaveLength(1);
     expect(tableArtifacts[0]).toMatchObject({
-      kind: 'composite',
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       occurrence: { sourcePath: 'children[0]', expansionPath: [] },

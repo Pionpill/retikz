@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CompileObserverDefinition, IRScene } from '@retikz/core';
+import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import type { ReconcilerOutput } from '@retikz/reconciler';
@@ -28,16 +28,6 @@ const source: IRScene = {
     },
   ],
 };
-
-const observer: CompileObserverDefinition<string> = Object.freeze({
-  key: 'fixture/vanilla-driver',
-  createSession: () =>
-    Object.freeze({
-      select: () => false,
-      observe: () => undefined,
-      complete: () => 'same-revision',
-    }),
-});
 
 describe('Vanilla 编译驱动程序', () => {
   it('使用共享的 Retikz 错误契约', () => {
@@ -71,7 +61,7 @@ describe('Vanilla 编译驱动程序', () => {
     );
   });
 
-  it('默认 driver 使用普通 Core compile、空 observers、空 diagnostics 与冻结空 readonly layers', () => {
+  it('默认 driver 使用普通 Core compile、空 diagnostics 与冻结空 readonly layers', () => {
     const input = Object.freeze({
       instance: {},
       source,
@@ -80,20 +70,16 @@ describe('Vanilla 编译驱动程序', () => {
     });
     const session = createVanillaCompileDriverSession(defaultVanillaCompileDriver, input);
     const output = compileVanillaWithDriver(input, session);
-
-    expect(session.observers).toEqual([]);
     expect(output.primary).toEqual(compileToScene(source, {}));
-    expect(output.observerOutputs).toEqual([]);
     expect(output.layers).toEqual([]);
     expect(output.diagnostics).toEqual([]);
     expect(Object.isFrozen(output.layers)).toBe(true);
   });
 
-  it('同 revision output 保留 Core primary/observerOutputs 并校验 readonly layers', () => {
+  it('同 revision output 保留 Core primary 并校验 readonly layers', () => {
     const coreOutput: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>> = Object.freeze({
       result: compileToScene(source, {}),
       diagnostics: Object.freeze([]),
-      observerOutputs: Object.freeze([{ key: observer.key, value: 'same-revision' }]),
     });
     const layer: RenderReadonlyLayer = Object.freeze({
       key: 'fixture-layer',
@@ -102,11 +88,9 @@ describe('Vanilla 编译驱动程序', () => {
     });
     const driver: VanillaCompileDriver = Object.freeze({
       create: () => ({
-        observers: [observer],
         resolve: output =>
           Object.freeze({
             primary: output.result,
-            observerOutputs: output.observerOutputs,
             layers: Object.freeze([layer]),
             diagnostics: Object.freeze(['same-revision']),
           }),
@@ -117,13 +101,12 @@ describe('Vanilla 编译驱动程序', () => {
 
     expect(resolveVanillaCompileOutput(session, coreOutput)).toEqual({
       primary: coreOutput.result,
-      observerOutputs: coreOutput.observerOutputs,
       layers: [layer],
       diagnostics: ['same-revision'],
     } satisfies VanillaCompileOutput);
   });
 
-  it('static observed driver 保留 Core onWarn 通知', () => {
+  it('static driver 保留 Core onWarn 通知', () => {
     const onWarn = vi.fn();
     const input = Object.freeze({
       instance: {},
@@ -137,7 +120,7 @@ describe('Vanilla 编译驱动程序', () => {
     });
     const session = createVanillaCompileDriverSession(
       Object.freeze({
-        create: () => ({ observers: [observer], resolve: defaultVanillaCompileDriver.create(input).resolve }),
+        create: () => ({ resolve: defaultVanillaCompileDriver.create(input).resolve }),
       }),
       input,
     );
@@ -151,14 +134,11 @@ describe('Vanilla 编译驱动程序', () => {
     const coreOutput: ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>> = Object.freeze({
       result: compileToScene(source, {}),
       diagnostics: Object.freeze([]),
-      observerOutputs: Object.freeze([]),
     });
     const session = Object.freeze({
-      observers: Object.freeze([]),
       resolve: () =>
         Object.freeze({
           primary: compileToScene(source, {}),
-          observerOutputs: coreOutput.observerOutputs,
           layers: Object.freeze([]),
           diagnostics: Object.freeze([]),
         }),

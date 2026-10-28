@@ -1,16 +1,16 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import type { CompileWarning, IRTarget } from '@retikz/core';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import type { FlowLayoutDefinition } from '../../src/flow';
 import {
-  FlowRoutingSchema,
-  FlowScopeRoutingSchema,
-  FlowDiagramSchema,
   createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,
+  FlowDiagramSchema,
+  FlowRoutingSchema,
+  FlowScopeRoutingSchema,
   layeredFlowLayoutDefinition,
 } from '../../src/flow';
-import type { FlowLayoutDefinition } from '../../src/flow';
 import { flowRouteLabelBounds, flowSmoothConflicts } from '../../src/flow/providers';
 
 describe('顺利的编写契约', () => {
@@ -84,8 +84,7 @@ const compileSmooth = (
     },
   );
   const artifact = FlowDiagramArtifactSchema.parse(
-    result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-      ?.value,
+    result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
   );
 
   return { result, artifact, warnings };

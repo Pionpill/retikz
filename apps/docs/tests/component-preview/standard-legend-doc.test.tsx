@@ -11,12 +11,12 @@ import { buildPreviewIR } from '@/modules/docs/components/component-preview/util
 import LegendBasicEnDemo from '@/modules/docs/contents/library/standard/presentation/legend/legend-basic.en.demo';
 import LegendBasicZhDemo from '@/modules/docs/contents/library/standard/presentation/legend/legend-basic.zh.demo';
 import {
-  legendPlaygroundControls,
   previewControlContract as legendPlaygroundContract,
+  legendPlaygroundControls,
 } from '@/modules/docs/contents/library/standard/presentation/legend/legend-playground.controls';
 import {
-  legendPlaygroundEnControls,
   previewControlContract as legendPlaygroundEnContract,
+  legendPlaygroundEnControls,
 } from '@/modules/docs/contents/library/standard/presentation/legend/legend-playground.en.controls';
 import { LegendPlaygroundPreview } from '@/modules/docs/contents/library/standard/presentation/legend/legend-playground.preview';
 import LegendRampEnDemo from '@/modules/docs/contents/library/standard/presentation/legend/legend-ramp.en.demo';
@@ -50,7 +50,7 @@ const legendHorizontalCenterDelta = (Preview: FC): number => {
   const preview = buildPreviewIR(Preview);
   const output = compileToScene(preview.ir, { composites: [legendDefinition], padding: 0 });
   const viewBox = output.scene.layout;
-  const envelope = output.artifacts.find(artifact => artifact.kind === 'composite');
+  const envelope = output.artifacts.at(0);
   if (envelope === undefined) throw new Error('Expected a Legend compile artifact');
 
   const artifact = LegendArtifactSchema.parse(envelope.value);
@@ -68,10 +68,14 @@ describe('Standard Legend 文档', () => {
 
     expect(headings(zh).map(heading => heading.replace(/^## /, ''))).toHaveLength(headings(en).length);
 
-    for (const source of [zh, en]) {
+    for (const language of ['zh', 'en'] as const) {
+      const source = readPage(language);
+      expect(source).toContain('@include library/standard/presentation/legend/generated');
+      const generated = readLegendFile(`_includes/generated.${language}.mdx`);
+      expect(source).toMatch(/^### LegendArtifactSchema$/m);
+      expect(generated).toMatch(/^#### <ApiSourceLink[^\n]+>LegendSchema<\/ApiSourceLink>$/m);
       for (const schema of ['LegendSchema', 'LegendArtifactSchema']) {
-        expect(source).toMatch(new RegExp(`^#{3,4} ${schema}$`, 'm'));
-        expect(source).toMatch(new RegExp(`<ZodSchema\\s+name="${schema}"\\s+expandNested`));
+        expect(source + generated).toContain(`<ZodSchema name="${schema}" expandNested />`);
       }
     }
   });

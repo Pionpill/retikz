@@ -3,7 +3,7 @@ title: 实现原理
 description: 追踪一次 Flow Source 从语义解析、测量、布局到 Scene 和 artifact 的转换。
 ---
 
-本页以已读[基础用法](/schematic/diagram/flow/usage)为前提，追踪一次 Flow 编译。输入是一份可序列化的 Source 和当前宿主的 Definition / Theme；输出是可渲染的 Diagram Scene、`FlowDiagramArtifact` 与空间句柄。任一阶段失败会终止这次编译，不交付部分几何。
+本页以已读[基础用法](/schematic/diagram/flow/usage)为前提，追踪一次 Flow 编译。输入是一份可序列化的 Source 和当前宿主的 Definition / Theme；输出是可渲染的 Diagram Scene与 `FlowDiagramArtifact`。任一阶段失败会终止这次编译，不交付部分几何。
 
 ## 整体流程
 

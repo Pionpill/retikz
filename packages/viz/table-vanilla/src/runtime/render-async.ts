@@ -1,4 +1,4 @@
-import type { CompileArtifact } from '@retikz/core';
+import type { CompositeArtifact } from '@retikz/core';
 import type { IRTable, TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import { processToStaticInputResultAsync, renderToSvgString, scene } from '@retikz/vanilla';
@@ -6,11 +6,10 @@ import { processToStaticInputResultAsync, renderToSvgString, scene } from '@reti
 import { tableInputEmbedAdapter } from '../adapter';
 import { RetikzTableVanillaError } from '../error';
 import { embedTable } from '../spec';
-import type { AsyncTableRenderer, TableRenderAsyncCommonOptions, TableRenderArtifactResult } from './types';
+import type { AsyncTableRenderer, TableRenderArtifactResult, TableRenderAsyncCommonOptions } from './types';
 
 /** 只选择本次根Table的实际编译产物 */
-const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
-  artifact.kind === 'composite' &&
+const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableCompileArtifact =>
   artifact.namespace === TABLE_NAMESPACE &&
   artifact.type === TableComposite.Table &&
   artifact.occurrence.sourcePath === 'children[0]' &&

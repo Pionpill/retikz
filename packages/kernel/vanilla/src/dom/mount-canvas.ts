@@ -1,4 +1,4 @@
-import type { CompileArtifact, CompileResult, Scene } from '@retikz/core';
+import type { CompileResult, CompositeArtifact, Scene } from '@retikz/core';
 import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
 import {
   createClock,
@@ -31,12 +31,12 @@ import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
 import type {
   CanvasView,
   HydrateOptions,
+  InputRender,
+  InputRetainedRender,
   MountCanvasOptions,
   RawStaticMountCanvasOptions,
-  InputRender,
   RetainedCanvasView,
   RetainedMountCanvasOptions,
-  InputRetainedRender,
   ScenePoint,
   StaticCanvasView,
   StaticMountCanvasOptions,
@@ -88,7 +88,7 @@ const mountStaticCanvas = (
 
   let currentScene: Scene;
   let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
-  let currentArtifacts: ReadonlyArray<CompileArtifact> = Object.freeze([]);
+  let currentArtifacts: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
   let currentCompileResult: CompileResult | undefined;
   let currentRuntimeMeta: InputRuntimeMeta = createEmptyRuntimeMeta();
 

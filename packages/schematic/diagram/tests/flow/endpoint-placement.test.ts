@@ -2,8 +2,13 @@ import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowLayoutDefinition, IRFlowRelation, IRFlowRouting } from '../../src/flow';
-import { layeredFlowLayoutDefinition, FlowEndpointSchema } from '../../src/flow';
-import { FlowDiagramSchema, FlowDiagramArtifactSchema, createFlowDiagramProviderContribution } from '../../src/flow';
+import {
+  FlowDiagramArtifactSchema,
+  FlowDiagramSchema,
+  FlowEndpointSchema,
+  createFlowDiagramProviderContribution,
+  layeredFlowLayoutDefinition,
+} from '../../src/flow';
 
 const compileEndpoints = (count: number, shared = false) => {
   const source = FlowDiagramSchema.parse({
@@ -26,9 +31,7 @@ const compileEndpoints = (count: number, shared = false) => {
     resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
   );
 
-  return FlowDiagramArtifactSchema.parse(
-    result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram')?.value,
-  );
+  return FlowDiagramArtifactSchema.parse(result.artifacts.find(item => item.namespace === 'diagram')?.value);
 };
 
 describe('Flow 端点等分', () => {
@@ -84,9 +87,7 @@ const compileRelations = (
     }),
   );
 
-  return FlowDiagramArtifactSchema.parse(
-    result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram')?.value,
-  );
+  return FlowDiagramArtifactSchema.parse(result.artifacts.find(item => item.namespace === 'diagram')?.value);
 };
 
 it('字符串继承端点默认，局部 allow 可覆盖 separate', () => {

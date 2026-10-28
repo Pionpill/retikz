@@ -786,9 +786,7 @@ describe('@retikz/diagram-react/flow', () => {
         measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
       },
     });
-    const artifact = result.artifacts.find(
-      entry => entry.kind === 'composite' && entry.namespace === 'diagram' && entry.type === 'flow',
-    );
+    const artifact = result.artifacts.find(entry => entry.namespace === 'diagram' && entry.type === 'flow');
 
     expect(artifact?.value).toMatchObject({ elements: [{ id: 'only', kind: 'entity' }] });
   });

@@ -1,4 +1,4 @@
-import type { CompileArtifact, CompileResult, Scene } from '@retikz/core';
+import type { CompileResult, CompositeArtifact, Scene } from '@retikz/core';
 import type { AnimationControls } from '@retikz/render/animation';
 import {
   bindWaapiDescriptors,
@@ -25,11 +25,11 @@ import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
 import type {
   HydrateOptions,
   HydrationHandle,
+  InputRender,
+  InputRetainedRender,
   MountOptions,
   RawStaticMountOptions,
-  InputRender,
   RetainedMountOptions,
-  InputRetainedRender,
   RetainedSvgView,
   StaticMountOptions,
   StaticRawSvgView,
@@ -62,7 +62,7 @@ const mountStaticSvg = (
   const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
   let animationControls: AnimationControls | undefined;
   let currentScene: Scene;
-  let currentArtifacts: ReadonlyArray<CompileArtifact> = Object.freeze([]);
+  let currentArtifacts: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
   let currentCompileResult: CompileResult | undefined;
   let currentRuntimeMeta: InputRuntimeMeta = createEmptyRuntimeMeta();
   const liveHydrationDisposers = new Set<() => void>();

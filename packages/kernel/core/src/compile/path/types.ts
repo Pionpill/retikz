@@ -1,5 +1,4 @@
 import type { SceneResource, Transform } from '../../contract';
-import type { StrokePathOwnerOutput } from '../../contract';
 import type { PathTargetView } from '../../resolve';
 import type { PaintResolver } from '../resource';
 import type { TexLowerer } from '../text';
@@ -27,6 +26,4 @@ export type PathEmitOptions = {
   lowerTex?: TexLowerer;
   /** preset 与 rem 字号解析的根字号 */
   rootFontSize?: number;
-  /** 仅在 owner 明确请求时接收最终 settled command snapshot */
-  captureOwnerOutput?: (subject: StrokePathOwnerOutput) => void;
 };

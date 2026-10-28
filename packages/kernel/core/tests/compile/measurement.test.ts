@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
+import type { CompositeEvaluationResult, LayoutContribution } from '../../src';
 import {
   ChildSchema,
-  createCompositeInputBindings,
   compileToScene,
   CompositeBaseSchema,
+  createCompositeInputBindings,
   defineComposite,
   naturalLayoutProposal,
 } from '../../src';
-import type { CompositeEvaluationResult, LayoutContribution } from '../../src';
 
 const schema = <const TType extends string>(type: TType) =>
   CompositeBaseSchema.extend({ namespace: literal('measurement-test'), type: literal(type) });
@@ -396,11 +396,11 @@ it('隔离完整的回退候选者并仅发布独立的最终回放', () => {
         },
       ],
     },
-    { composites: [host, leaf], artifacts: { nodeLayouts: true } },
+    { composites: [host, leaf] },
   );
   const expected = compileToScene(
     { version: 1, type: 'scene', children: [{ namespace: 'measurement-test', type: 'fallback' }] },
-    { composites: [leaf], artifacts: { nodeLayouts: true } },
+    { composites: [leaf] },
   );
   expect(output.scene).toEqual(expected.scene);
   expect(output.artifacts).toHaveLength(expected.artifacts.length);

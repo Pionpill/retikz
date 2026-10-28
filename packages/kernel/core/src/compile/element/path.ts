@@ -1,8 +1,6 @@
 import { resolvePath } from '../../resolve';
 import type { IRPathBase } from '../../schemas';
-import { filterAnimations } from '../orchestration';
-import { bindPathTarget } from '../orchestration';
-import type { CompileObservationContribution } from '../orchestration';
+import { bindPathTarget, filterAnimations } from '../orchestration';
 import { emitDefinedPath } from '../path';
 import { composeScopeTransform } from '../transform';
 import { runElementCompilation } from './context';
@@ -44,7 +42,6 @@ export const compilePath = (
       targetResolver,
       irPath: context.irPath,
     });
-    const observations: Array<CompileObservationContribution> = [];
     const result = emitDefinedPath(
       {
         path,
@@ -53,15 +50,12 @@ export const compilePath = (
         scopeDefaults: context.context.defaults,
         theme: context.context.theme,
         occurrence: context.occurrence ?? { sourcePath: context.irPath, expansionPath: [] },
-        ancestors: context.ancestors ?? [],
-        observationSink: observations,
       },
       resolution,
       targetResolver,
       {
         ...context.environment,
         ...workspace,
-        observation: context.observation,
         resolveTransform: composeScopeTransform,
       },
     );
@@ -71,7 +65,6 @@ export const compilePath = (
         zIndex: input.zIndex,
         primitives: result?.primitives ?? [],
         resources: workspace.paint.resources(),
-        observations: observations.map(observation => ({ ...observation, scopeChain: [] })),
         bounds: result === null ? [] : [{ boundsPoints: result.boundsPoints, shadow: resolution.path.shadow }],
       }),
     });

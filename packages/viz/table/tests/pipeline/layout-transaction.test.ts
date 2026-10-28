@@ -1,4 +1,4 @@
-import type { CompositeCompileContext, NodeLayoutCompileArtifact } from '@retikz/core';
+import type { CompositeCompileContext, ScenePrimitive, Transform } from '@retikz/core';
 import {
   compileToScene,
   CompositeBaseSchema,
@@ -10,7 +10,7 @@ import {
 } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { enum as zodEnum, literal, number, strictObject } from 'zod';
+import { literal, number, strictObject, enum as zodEnum } from 'zod';
 
 import type { IRTable, TableCompileArtifact } from '../../src';
 import {
@@ -28,7 +28,7 @@ import { CLEAN_TABLE_DEFAULTS } from '../fixtures/clean-table-defaults';
 const tableArtifactsOf = (artifacts: ReturnType<typeof compileTable>['artifacts']): Array<TableCompileArtifact> =>
   artifacts.filter(
     (artifact): artifact is TableCompileArtifact =>
-      artifact.kind === 'composite' && artifact.namespace === TABLE_NAMESPACE && artifact.type === TableComposite.Table,
+      artifact.namespace === TABLE_NAMESPACE && artifact.type === TableComposite.Table,
   );
 
 /** 收集错误及其 cause 链，验证 transaction 包装没有丢失根错误 */
@@ -147,20 +147,46 @@ describe('Table 布局事务', () => {
       {},
       {
         theme: { mode: 'light' },
-        compile: { padding: 0, artifacts: { nodeLayouts: true } },
+        compile: { padding: 0 },
       },
     );
     const cell = result.manifest.cells[0];
-    const nodeArtifact = result.artifacts.find(
-      (artifact): artifact is NodeLayoutCompileArtifact =>
-        artifact.kind === 'nodeLayout' && artifact.value.id === 'probe-node',
-    );
+    const rectangles: Array<{ x: number; y: number; width: number; height: number }> = [];
+    const visit = (
+      primitives: ReadonlyArray<ScenePrimitive>,
+      transforms: ReadonlyArray<Transform>,
+      id?: string,
+    ): void => {
+      for (const primitive of primitives) {
+        if (primitive.type === 'group') {
+          visit(primitive.children, [...transforms, ...(primitive.transforms ?? [])], primitive.id ?? id);
+        } else if (primitive.type === 'rect' && (primitive.id ?? id) === 'probe-node') {
+          let x = primitive.x + primitive.width / 2,
+            y = primitive.y + primitive.height / 2;
+          let width = primitive.width,
+            height = primitive.height;
+          for (const transform of [...transforms].reverse()) {
+            if (transform.kind === 'translate') {
+              x += transform.x;
+              y += transform.y;
+            } else if (transform.kind === 'scale') {
+              x *= transform.x;
+              y *= transform.y ?? transform.x;
+              width *= transform.x;
+              height *= transform.y ?? transform.x;
+            } else throw new Error('Unexpected rotation in table scaling fixture');
+          }
+          rectangles.push({ x, y, width, height });
+        }
+      }
+    };
+    visit(result.scene.primitives, []);
 
     expect(cell.sourceAllocationBounds).toEqual({ x: -40, y: -5, width: 100, height: 20 });
     expect(cell.contentBox).toEqual({ x: 5, y: 5, width: 50, height: 40 });
     expect(cell.contentAllocationBounds).toEqual({ x: 5, y: 20, width: 50, height: 10 });
     expect(cell.visualOverflowBounds).toEqual({ x: 5, y: 19.75, width: 50, height: 10.5 });
-    expect(nodeArtifact?.value.rect).toMatchObject({ x: 30, y: 25, width: 50, height: 10 });
+    expect(rectangles).toEqual([{ x: 30, y: 25, width: 50, height: 10 }]);
   });
 
   it('使用完整的有限范围提案作为选定的包装回放并发布其嵌套产物一次', () => {
@@ -223,9 +249,7 @@ describe('Table 布局事务', () => {
         compile: { composites: [probe], padding: 0 },
       },
     );
-    const probeArtifacts = result.artifacts.filter(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'fixture',
-    );
+    const probeArtifacts = result.artifacts.filter(artifact => artifact.namespace === 'fixture');
 
     expect(calls).toEqual([
       naturalLayoutProposal,
@@ -282,9 +306,7 @@ describe('Table 布局事务', () => {
       },
       { composites: [...lowerTables({}), outer], padding: 0 },
     );
-    const tableArtifact = result.artifacts.find(
-      (artifact): artifact is TableCompileArtifact => artifact.kind === 'composite',
-    );
+    const tableArtifact = result.artifacts.at(0);
 
     expect(tableArtifact?.value.allocationBounds).toEqual({ x: 0, y: 0, width: 60, height: 10 });
     expect(tableArtifact?.value.columns.map(column => column.size)).toEqual([28, 28]);
@@ -345,9 +367,7 @@ describe('Table 布局事务', () => {
       },
       { composites: [...lowerTables({}), outer], padding: 0 },
     );
-    const tableArtifact = result.artifacts.find(
-      (artifact): artifact is TableCompileArtifact => artifact.kind === 'composite',
-    );
+    const tableArtifact = result.artifacts.at(0);
 
     expect(tableArtifact?.value.allocationBounds.width).toBe(expectedWidth);
   });
@@ -379,7 +399,7 @@ describe('Table 布局事务', () => {
         rowSize: { kind: 'fixed', value: 0 },
       },
     };
-    const result = compileTable(spec, {}, { compile: { padding: 0, artifacts: { nodeLayouts: true } } });
+    const result = compileTable(spec, {}, { compile: { padding: 0 } });
 
     expect(result.manifest.cells[0]).toMatchObject({
       cellId: 'zero',
@@ -388,9 +408,7 @@ describe('Table 布局事务', () => {
       visualOverflowBounds: { x: 0, y: 0, width: 0, height: 0 },
     });
     expect(result.manifest.visualOverflowBounds).toEqual({ x: 0, y: 0, width: 0, height: 0 });
-    expect(result.artifacts.some(artifact => artifact.kind === 'nodeLayout' && artifact.value.id === 'discarded')).toBe(
-      false,
-    );
+    expect(JSON.stringify(result.scene.primitives)).not.toContain('discarded');
   });
 
   it('当嵌套 Table 重用相同的公共 id 时，选择规范根清单', () => {

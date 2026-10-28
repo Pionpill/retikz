@@ -9,6 +9,8 @@ keywords: 'Node、layout、measurement、surface、NodeLayout、compileToScene�
 - 决策日期：2026-07-07
 - 关联：[compile structure ADR](./035-compile-structure-convention.md)
 
+> 公共节点测量观测路线已由 [077](../v0.5/077-compile-output-contract.md) 结束。内部测量继续服务正常绘图、布局和引用，不作为 Node 产物公开。
+
 ## 背景
 
 普通文本和 TeX 混排都在 compile 阶段参与 Node 内容布局、shape circumscribe、label 布局和 Scene emit，但内部 `NodeLayout` 含有 provider、registry 等实现对象，不能作为稳定观测面。混排 Node 也无法仅从多个 Scene primitive 可靠反推出整体内容尺寸

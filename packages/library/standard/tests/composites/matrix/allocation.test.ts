@@ -1,11 +1,12 @@
 import type { AnyCompositeDefinition, IRChild, LayoutChildResult, LayoutProposal } from '@retikz/core';
-import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
+import { ChildSchema, compileToScene, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
 import { intrinsicLayoutProposal } from '@retikz/layout/compose';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { arrayDefinition, mapDefinition, matrixDefinition } from '../../../src/collection';
+import { sceneCellBounds } from '../../helpers/scene-geometry';
 
 const compile = (
   child: IRChild,
@@ -57,9 +58,7 @@ describe('Matrix 父分配', () => {
     const result = compile(source, { x: { kind: 'exact', value: 100 }, y: { kind: 'range', min: 80, max: 100 } });
 
     expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 100, height: 80 });
-    expect(
-      result.scene.spatialHandles.entries.filter(e => e.role === 'matrix-cell').map(e => e.geometry.bounds),
-    ).toEqual([
+    expect(sceneCellBounds(result.scene.scene)).toEqual([
       { x: 0, y: 0, width: 30, height: 20 },
       { x: 32, y: 0, width: 30, height: 20 },
       { x: 0, y: 22, width: 30, height: 20 },

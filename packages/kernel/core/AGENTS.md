@@ -5,9 +5,9 @@
 ## 包职责契约
 
 - **解决的问题**：为所有上层 DSL、Tier 2 能力和 renderer 提供后端中立、可序列化、可扩展的二维绘图表达与确定性编译
-- **拥有的契约**：Core IR / Zod schema、Drawing definitions / registries、Composite dependency provider graph、纯 parser、IR / composite lowering、`compileToScene`、qualified spatial handle sidecar、Scene / Scope Theme selector、Core style definition / registry 与 shared colors、Scene / manifest 语义与绘图诊断
+- **拥有的契约**：Core IR / Zod schema、Drawing definitions / registries、Composite dependency provider graph、纯 parser、IR / composite lowering、`compileToScene`、Composite 领域产物、Scene / Scope Theme selector、Core style definition / registry 与 shared colors、Scene / manifest 语义与绘图诊断
 - **不拥有的能力**：跨次身份、增量复用与 Runtime 事务接线、通用计算几何算法、SVG / Canvas 执行、React / Vanilla authoring Input 或 framework-neutral processing、数据处理与可视化语法、TeX 引擎或应用交互状态
-- **输入与输出**：接收 JSON-safe Core IR、compile options 与运行时 definitions（包括 `themeStyles`），输出 renderer-agnostic Scene、artifact / spatial sidecar、manifest 和 diagnostics；不直接输出 DOM、SVG 字符串或 Canvas 像素
+- **输入与输出**：接收 JSON-safe Core IR、compile options 与运行时 definitions（包括 `themeStyles`），输出 renderer-agnostic Scene、Composite artifacts、manifest 和 diagnostics；不直接输出 DOM、SVG 字符串或 Canvas 像素
 - **缺口流向**：通用纯几何下沉 `@retikz/math`；后端实现进入 `@retikz/render`；增量编译接线进入 `@retikz/reconciler`，authoring 接线上移 adapter；数据可视化与领域 theme token / preset / style definition 具体值进入对应 viz 能力域；可选公式集成进入 `@retikz/tex`
 
 新增或改变图形能力前，先按 [`core-drawing-complete.md`](../_notes/architecture/core-drawing-complete.md) 确认 Drawing Complete 的能力面、主责 / 协作包和端到端闭环。
@@ -20,7 +20,6 @@
 - 任何可能进入 IR 的数据都必须 JSON 可序列化，禁止函数、ref、closure、class 实例。
 - `compileToScene` 必须保持纯函数：相同 IR + options 产生相同 Scene；禁止 `Math.random()`、`Date.now()`、module-level mutable state。
 - Composite provider graph 只解析当前调用显式提供的 roots / providers；不得做动态 import、包发现、全局注册或 adapter 专用 conflict fallback。
-- qualified spatial handle index 与 Scene 同 revision 生成，但不得进入 Scene、renderer descriptor、DOM attribute 或 Canvas 私有表。
 
 ## 目录分层
 
@@ -51,7 +50,7 @@ parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 - `PathPrimitive.commands` 与 `GroupPrimitive.transforms` 必须是结构化数组，不输出 SVG `d` / `transform` 字符串。
 - `circlePath` / `ellipsePath` 可在 IR 编译为结构化 `ellipseArc`；后端自行映射为原生 API。
 - 文本在 Scene 编译完成时必须已有度量结果；度量函数通过 `CompileOptions.measureText` 注入，缺省走 fallback。
-- Composite 声明的 local spatial bounds 只由 Core 根据最终 Scope / placement / replay transform 发布 world-space sidecar；renderer 不做二次变换或语义推断。
+- Composite artifacts 的字段与坐标语义由领域包定义；Core 仅随最终输出收集，不提供通用空间索引或检查专用输出。
 
 ## Registry 与 Shape
 

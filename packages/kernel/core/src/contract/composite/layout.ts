@@ -1,10 +1,9 @@
-import type { ValueOf, JsonValue } from '@retikz/foundation';
+import type { JsonValue, ValueOf } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
 import type { IRChild, IRClip, IRPosition, IRScopeProps, IRTarget } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
 import type { Transform } from '../scene';
-import type { SpatialHandleDeclaration } from '../spatial-handle';
 import type { CompositeBoundChild, CompositeRuntimeInputContext } from './input';
 
 /** 单轴布局提案的判别值 */
@@ -296,12 +295,10 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
      * @description props 沿普通 Scope orchestration 消费；replay child 仍只通过 replay wrapper 接收布局提交变换与裁剪
      * @param props 完整 authored Scope props
      * @param children 普通 IR child 或当前 callback 创建的 opaque child
-     * @param spatialHandles 附着到该 Scope 局部坐标并在最终可达 output tree 中发布的空间声明
      */
     createScope: (
       props: CompositeCompileScopeProps,
       children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>,
-      spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>,
     ) => CompositeCompileChild;
   }>;
 
@@ -312,8 +309,6 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
 export type CompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
   /** 普通 IR、绑定子项或当前回调创建的运行时输出 */
   children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
-  /** 当前组件局部坐标中的空间声明；输出含带位置或变换的普通 Scope 时改用 createScope() 的局部声明 */
-  spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
   /** 组件对父布局声明的布局占用；省略时合并最终子项 */
   allocationBounds?: Readonly<BoundsRect>;
   /** 当前组件局部坐标中的对齐线 */

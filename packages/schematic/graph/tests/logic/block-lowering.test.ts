@@ -1,7 +1,7 @@
 import type { CompileWarning, IRNode, LayoutProposal } from '@retikz/core';
 import {
-  compileToScene,
   BuiltinCompileWarningCode,
+  compileToScene,
   defineTheme,
   LayoutAxisProposalKind,
   resolveCoreProviderDependencies,
@@ -34,7 +34,7 @@ const flexArtifactWithKeys = (
   keys: ReadonlyArray<string>,
 ): FlexLayoutCompileArtifact => {
   const artifact = output.artifacts
-    .filter(candidate => candidate.kind === 'composite' && candidate.type === 'flexLayout')
+    .filter(candidate => candidate.type === 'flexLayout')
     .map(candidate => candidate as FlexLayoutCompileArtifact)
     .find(candidate => candidate.value.items.map(item => item.key).join('|') === keys.join('|'));
   if (artifact === undefined) throw new Error(`Expected FlexLayout artifact for keys '${keys.join(', ')}'`);
@@ -377,7 +377,7 @@ describe('Block 系列布局感知下沉', () => {
         Graph.createGraphDefinitions(),
       );
       const artifact = compiled.output.artifacts
-        .filter(candidate => candidate.kind === 'composite' && candidate.type === 'flexLayout')
+        .filter(candidate => candidate.type === 'flexLayout')
         .map(candidate => candidate as FlexLayoutCompileArtifact)
         .find(candidate => candidate.value.items.length === labels.length);
       if (artifact === undefined) throw new Error(`Expected Row FlexLayout artifact with ${labels.length} items`);
@@ -474,7 +474,7 @@ describe('Block 系列布局感知下沉', () => {
 
     const rowHeights = (output: ReturnType<typeof compileToScene>, keys: ReadonlyArray<string>) =>
       output.artifacts
-        .filter(candidate => candidate.kind === 'composite' && candidate.type === 'flexLayout')
+        .filter(candidate => candidate.type === 'flexLayout')
         .map(candidate => candidate as FlexLayoutCompileArtifact)
         .filter(candidate => candidate.value.items.map(item => item.key).join('|') === keys.join('|'))
         .map(candidate => candidate.value.container.allocationBounds.height);

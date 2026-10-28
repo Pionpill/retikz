@@ -1,17 +1,11 @@
 // @vitest-environment jsdom
 import type { CompileResult } from '@retikz/core';
-import {
-  compileToScene,
-  CompositeBaseSchema,
-  defineComposite,
-  resolveSpatialHandle,
-  selectSpatialHandles,
-} from '@retikz/core';
+import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { literal, number } from 'zod';
+import { literal, number, strictObject } from 'zod';
 
 import { Layout } from '../../../src';
 
@@ -23,9 +17,10 @@ const card = defineComposite({
     type: literal('card'),
     width: number(),
   }),
+  artifactSchema: strictObject({ width: number() }),
   compile: node => ({
-    children: [{ type: 'node', position: [0, 0], minimumWidth: node.width, minimumHeight: 10 }],
-    spatialHandles: [{ id: 'body', role: 'card', bounds: { x: 0, y: 0, width: node.width, height: 10 } }],
+    children: [{ type: 'node', position: [0, 0], layout: { minimumSize: { width: node.width, height: 10 } } }],
+    artifact: { width: node.width },
   }),
 });
 
@@ -75,12 +70,12 @@ describe('<Layout onCompileResult>', () => {
     );
 
     expect(onCompileResult).toHaveBeenCalledTimes(1);
-    expect(onCompileResult.mock.calls[0]?.[0].spatialHandles.entries[0]?.geometry.bounds.width).toBe(10);
+    expect(onCompileResult.mock.calls[0]?.[0].artifacts[0]?.value.width).toBe(10);
 
     await act(() => root.unmount());
   });
 
-  it('保留直接编译的空间条目和查询结果', async () => {
+  it('保留直接编译的Scene 和领域产物', async () => {
     const direct = compileToScene(scene(10), { composites: [card] });
     const onCompileResult = vi.fn();
     const container = document.createElement('div');
@@ -98,16 +93,7 @@ describe('<Layout onCompileResult>', () => {
     );
 
     const reactResult = onCompileResult.mock.calls[0]?.[0] as CompileResult;
-    const selector = { owner: { namespace: 'third', type: 'card' }, id: 'body' } as const;
-
-    expect(reactResult.spatialHandles.entries).toEqual(direct.spatialHandles.entries);
-    expect(selectSpatialHandles(reactResult.spatialHandles, selector)).toEqual(
-      selectSpatialHandles(direct.spatialHandles, selector),
-    );
-    expect(resolveSpatialHandle(reactResult.spatialHandles, selector)).toEqual(
-      resolveSpatialHandle(direct.spatialHandles, selector),
-    );
-
+    expect(reactResult).toEqual(direct);
     await act(() => root.unmount());
   });
 
@@ -125,8 +111,8 @@ describe('<Layout onCompileResult>', () => {
     );
 
     expect(onCompileResult).toHaveBeenCalledTimes(2);
-    expect(initial?.spatialHandles.entries[0]?.geometry.bounds.width).toBe(10);
-    expect(onCompileResult.mock.calls[1]?.[0].spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
+    expect(initial?.artifacts[0]?.value.width).toBe(10);
+    expect(onCompileResult.mock.calls[1]?.[0].artifacts[0]?.value.width).toBe(20);
     expect(onCompileResult.mock.calls[1]?.[0]).not.toBe(initial);
 
     await act(() => root.unmount());
@@ -139,7 +125,7 @@ describe('<Layout onCompileResult>', () => {
     let committed: CompileResult | undefined;
     const onCompileResult = vi.fn((result: CompileResult) => {
       committed = result;
-      (result.spatialHandles.entries as Array<unknown>).push(result.spatialHandles.entries[0]);
+      throw new Error('callback failed');
     });
 
     await act(() =>
@@ -148,8 +134,8 @@ describe('<Layout onCompileResult>', () => {
 
     expect(container.querySelector('svg')).not.toBeNull();
     expect(onCompileResult).toHaveBeenCalledTimes(1);
-    expect(committed?.spatialHandles.entries).toHaveLength(1);
-    expect(Object.isFrozen(committed?.spatialHandles.entries)).toBe(true);
+    expect(committed?.artifacts).toHaveLength(1);
+    expect(Object.isFrozen(committed?.artifacts)).toBe(true);
     expect(warning).toHaveBeenCalledWith(expect.stringContaining('onCompileResult callback failed'), expect.any(Error));
 
     await act(() => root.unmount());

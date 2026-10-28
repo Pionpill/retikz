@@ -1,6 +1,6 @@
 ---
 title: 编译产物
-description: 追踪 Core 如何汇总 Scene、资源与画布，并交付领域产物、空间句柄、观测结果和诊断。
+description: 追踪 Core 如何汇总 Scene、资源与画布，并交付领域产物和诊断。
 ---
 
 [节点编译](/kernel/packages/core/node-compilation)、[路径编译](/kernel/packages/core/path-compilation)和[复合编译](/kernel/packages/core/composite-compilation)解释了图元怎样产生。本页从这些局部结果出发，追踪一次完整编译怎样收尾，以及调用方最终拿到什么。阅读前需要了解[编译流程](/kernel/packages/core/compilation)中的遍历与延迟路径回填。
@@ -9,37 +9,32 @@ description: 追踪 Core 如何汇总 Scene、资源与画布，并交付领域�
 
 ## 整体流程
 
-普通入口 `compileToScene` 返回三类用途不同的数据：
+普通入口 `compileToScene` 返回 Scene 与 Composite 领域产物：
 
-- 场景（`scene`）：交给渲染器的图元、画布和绘制资源。
-- 附加产物（`artifacts`）：供应用读取的领域结果，或显式请求的节点布局摘要。
-- 空间句柄（`spatialHandles`）：复合组件声明的可查询区域，最终用世界坐标表示。
+- `scene`：交给渲染器的图元、画布和绘制资源。
+- `artifacts`：复合组件主动返回的领域结果，例如 Layout 的容器、分行与间距。
 
-另外两类数据通过独立出口交付：
+`onWarn` 接收本次编译的警告。编译准备入口还可单独交付诊断与来源信息。
 
-- 观测结果（`observerOutputs`）：使用 `observeCompileToScene` 时，观察器读取选中的编译输出后生成的独立结果。
-- 诊断回调（`onWarn`）：接收本次编译派发的警告。
-
-普通返回值的结构如下，复合产物泛型按默认类型简化；各字段的具体结构在后文展开。
+`CompileResult` 的结构如下，产物泛型按默认类型简化：
 
 ```ts
 type CompileResult = Readonly<{
   scene: Scene;
-  artifacts: ReadonlyArray<CompileArtifact>;
-  spatialHandles: SpatialHandleIndex;
+  artifacts: ReadonlyArray<CompositeArtifact>;
 }>;
 ```
 
-图中主线先完成遍历，再装配场景，最后交付普通返回值中的三类数据；资源在遍历期间登记，在装配时统一取出。
+遍历生成图元并登记资源，随后装配场景并交付结果。应用和可选检查工具消费已经完成的结果，不参与主图编译。
 
 <ComponentPreview files="output-overview" size="xs" hideCode type="flow" />
 
-用两张矩形卡片贯穿后面的说明：两张卡片采用相同渐变，放在一个向右下平移的 Scope 中。渲染器需要卡片图元和渐变资源；应用可能需要文字布局摘要；如果这两张卡片由复合组件生成，组件还可以声明一个代表整个卡片区域的空间句柄。不同消费者读取各自需要的数据。
+后文以放在平移 Scope 中、共享同一渐变的两张矩形卡片说明 Scene 的组装。若卡片由复合组件生成，组件还可返回领域布局信息；这些信息的坐标含义由该组件定义。
 
 <SourceLinks
   sources={[
-    { label: '完整编译与公开返回值', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: 'CompileResult 与产物分类', path: 'packages/kernel/core/src/compile/types.ts' },
+    { label: '完整编译', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: '结果类型', path: 'packages/kernel/core/src/compile/types.ts' },
   ]}
 />
 
@@ -319,53 +314,16 @@ Core 在编译时筛选轨道所属层级：根级的非 `viewBox` 轨道、元�
 
 ## 附加产物
 
-`artifacts` 保存复合产物和显式请求的节点产物，与 `scene`、`spatialHandles` 同属编译结果的顶层字段。没有产物时仍返回 `artifacts: []`。
+`artifacts` 只保存 Composite 领域结果，没有产物时返回空数组。同一组件的不同实例各自保留记录，按最终逻辑树的出现顺序排列。
 
-```ts
-type CompileArtifact = CompositeCompileArtifact | NodeLayoutCompileArtifact;
-```
-
-复合产物和节点产物都携带 `occurrence`，用于定位产生这条记录的对象在本次编译中的最终出现位置。两者共用以下定位结构，展开类别以取值联合展示：
-
-```ts
-type CompileOccurrenceLocator = Readonly<{
-  // 最近的原始输入 IR 出现位置
-  sourcePath: string;
-  // 从原始出现位置到产物的结构化索引链
-  expansionPath: ReadonlyArray<CompileExpansionSegment>;
-}>;
-
-type CompileExpansionSegment = Readonly<{
-  // 路径段类别
-  kind: CompileExpansionKind;
-  // 同类输出中的稳定索引
-  index: number;
-}>;
-
-type CompileExpansionKind = 'output' | 'probe' | 'replay' | 'scopeChild' | 'clip';
-```
-
-`kind` 表示展开路径中这一步的来源，`index` 是该步骤内的局部序号，从 0 开始：
-
-| `kind`       | 含义                           | `index` 对应的位置                     |
-| ------------ | ------------------------------ | -------------------------------------- |
-| `output`     | 复合组件直接返回的子项         | 返回的 `children` 中的子项序号         |
-| `probe`      | 编译期间对子项进行的布局试算   | 当前复合编译回调中的试算序号           |
-| `replay`     | 将选中的试算结果重放到最终输出 | 重放项在返回的 `children` 中的序号     |
-| `scopeChild` | 进入生成的 Scope 内部继续编译  | 该 Scope 的 `children` 中的子项序号    |
-| `clip`       | 编译一次逻辑裁剪应用           | 该裁剪应用的稳定序号，当前实现使用 `0` |
-
-这些值标记路径经过的不同展开步骤，并非每条路径都包含全部类别。例如 `{ kind: 'output', index: 1 }` 表示复合输出的第二个子项；后接 `{ kind: 'scopeChild', index: 0 }`，则进一步定位到该子项生成的 Scope 中的第一个子项。试算候选被重放时，最终位置使用 `replay` 路径，未被选中的试算不会因此成为最终产物。
-
-`occurrence` 表示一个对象在本次编译中的出现位置，由 Source 路径和展开路径共同定位。复合组件展开或重放子图后，同一份声明可能在不同位置出现，单靠用户 id 无法描述这些关系。artifact 记录最终出现位置，便于把结果对应回实际提交的对象。
+`occurrence` 由 Source 路径和结构化展开路径组成，用于区分本次编译中的出现位置，不保证跨 revision 的稳定身份。产物值与作者对象隔离并冻结；缺省 `artifact` 不生成记录，`null` 则是合法领域值。
 
 ### 复合产物
 
 复合组件通过 `artifactSchema` 声明领域结果类型，回调作者负责满足该契约。Core 不对已类型化产物重新执行 Schema 解析，只保留 JSON 快照隔离，并将结果包装为以下记录；这里将泛型简化为默认类型：
 
 ```ts
-type CompositeCompileArtifact = Readonly<{
-  kind: 'composite';
+type CompositeArtifact = Readonly<{
   namespace: string;
   type: string;
   occurrence: CompileOccurrenceLocator;
@@ -402,7 +360,7 @@ return {
 };
 ```
 
-`children` 交回 Core 继续编译，`artifact` 则保留容器边界、各子项的布局与位移、分行和间距信息。Core 将它包装为 `kind: 'composite'` 的记录，`namespace` 为 `layout`，`type` 为 `flexLayout`；内层 `value.kind: 'flex'` 是 Layout 包自己的产物分类。
+`children` 交回 Core 继续编译，`artifact` 则保留容器边界、各子项的布局与位移、分行和间距信息。Core 将它包装为领域产物记录，`namespace` 为 `layout`，`type` 为 `flexLayout`；内层 `value.kind: 'flex'` 是 Layout 包自己的产物分类。
 
 下面编译一个包含两个节点的 FlexLayout，并从返回数组中读取产物。注册的 Definition 同时让返回值保留具体的产物类型：
 
@@ -424,7 +382,7 @@ const result = compileToScene(
 );
 
 for (const artifact of result.artifacts) {
-  if (artifact.kind !== 'composite' || artifact.type !== 'flexLayout') continue;
+  if (artifact.type !== 'flexLayout') continue;
   console.log(artifact.namespace); // 'layout'
   console.log(artifact.occurrence); // { sourcePath: 'children[0]', expansionPath: [] }
   console.log(artifact.value.kind); // 'flex'
@@ -436,345 +394,36 @@ for (const artifact of result.artifacts) {
 
 这个例子返回两个子项和一行布局。`container` 描述容器的分配、内容和视觉等边界；`items` 保存各子项的边界、位移与溢出信息；`lines` 记录行与子项的对应关系；`spacing` 描述间距区域。几何数值由节点测量与布局配置决定，应用可直接读取这些结果，无需从 Scene 图元反推布局。
 
-复合产物无需开启 `nodeLayouts`；选中候选重放时才随最终放置提交，未采用候选的产物不会进入最终数组。
-
-### 节点产物
-
-<ComponentAlert
-  type="warn"
-  title="产物契约尚不稳定"
-  description="目前节点产物及 Core 对外暴露的产物内容尚未稳定，字段、结构与获取方式可能调整。暂不建议将其作为生产环境的稳定依赖；试验性使用时，请固定版本并在升级时核对契约变化。"
-/>
-
-节点产物使用 `kind: 'nodeLayout'`，其 `value` 保存真实 Node 的布局摘要：
-
-```ts
-type NodeLayoutCompileArtifact = Readonly<{
-  kind: 'nodeLayout';
-  occurrence: CompileOccurrenceLocator;
-  value: NodeLayoutObservation;
-}>;
-```
-
-```ts
-type NodeLayoutObservation = {
-  kind: 'node';
-  id?: string;
-  content: {
-    center: [number, number];
-    size: { width: number; height: number };
-    bounds: { x: number; y: number; width: number; height: number };
-  };
-  rect: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotate: number;
-  };
-  text: {
-    hasInlineTex: boolean;
-    lineCount: number;
-  };
-};
-```
-
-`content.center` 与 `content.bounds` 已应用当前 Scope 变换，其中 `bounds` 是内容四角变换后的全局轴对齐包围盒；`content.size` 保留节点排版轴上的内容尺寸。`rect.x` / `rect.y` 表示外框中心，`rotate` 使用弧度。`text` 记录是否产出 TeX glyph 以及正文行数。
-
-普通编译默认不收集节点产物，需要传入 `artifacts: { nodeLayouts: true }`。返回数组可能同时包含复合产物，应先按 `kind` 筛选：
-
-```ts
-import { compileToScene } from '@retikz/core';
-
-const result = compileToScene(
-  {
-    type: 'scene',
-    version: 1,
-    children: [{ type: 'node', id: 'card', position: [0, 0], text: 'Card' }],
-  },
-  { artifacts: { nodeLayouts: true } },
-);
-
-for (const artifact of result.artifacts) {
-  if (artifact.kind !== 'nodeLayout') continue;
-  const { id, content, rect, text } = artifact.value;
-  console.log(id, content, rect, text, artifact.occurrence);
-}
-```
-
-产物中的 `id` 可选，`occurrence` 用于定位节点的最终出现位置；同一声明展开或重放多次时，不应仅凭 id 区分记录。
-
-<SourceLinks
-  sources={[
-    { label: '产物与节点布局类型', path: 'packages/kernel/core/src/compile/types.ts' },
-    { label: '出现位置与展开路径', path: 'packages/kernel/core/src/contract/occurrence.ts' },
-    { label: 'FlexLayout 产物声明', path: 'packages/library/layout/src/composites/flex-layout/composite.ts' },
-    { label: 'FlexLayout 产物返回', path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts' },
-    { label: 'FlexLayout 产物结构', path: 'packages/library/layout/src/composites/flex-layout/schema.ts' },
-  ]}
-/>
-
-## 空间句柄
-
-空间句柄是组件主动声明的语义区域，例如卡片主体、绘图区或布局槽位。声明包含 id、role 和局部矩形，也可携带 tags、payload；它不要求存在一个对应的可见矩形图元。
-
-索引与条目的关键字段如下，省略别名、标签和载荷的展示。
-
-```ts
-type SpatialHandleIndex = Readonly<{
-  entries: ReadonlyArray<QualifiedSpatialHandle>;
-}>;
-
-type QualifiedSpatialHandle = Readonly<{
-  ownerPath: ReadonlyArray<SpatialHandleOwner>;
-  id: string;
-  role: string;
-  geometry: Readonly<{
-    kind: 'rect';
-    bounds: Readonly<BoundsRect>;
-  }>;
-  finalOccurrence: CompileOccurrenceLocator;
-  originOccurrence: CompileOccurrenceLocator;
-  // 省略 aliasIds、tags、payload
-}>;
-```
-
-假设卡片组件声明局部区域 `{ x: 0, y: 0, width: 100, height: 20 }`。该声明沿 Scope 与重放路径携带最终变换链，完整编译收尾时再转换为世界空间。下图突出相同区域的坐标变化。
-
-<ComponentPreview files="output-spatial" size="lg" hideCode type="illustration" />
-
-平移 `[20, 30]` 后，句柄的世界边界成为 `{ x: 20, y: 30, width: 100, height: 20 }`。有旋转或缩放时，Core 变换矩形四角，再取轴对齐包围盒，因此结果仍是矩形，可能比旋转后的实际区域更大。
-
-最终条目还保留从外到内的 `ownerPath`，以及首次声明和最终提交的 `originOccurrence`、`finalOccurrence`。读取时应结合 owner 与 id 理解身份，不能假定所有组件的局部 `body` 都是同一个区域。没有声明时返回 `{ entries: [] }`；Core 不会自动把每个 Node 的边界变成空间句柄。
-
-下面用一个最小卡片复合组件实现图中的平移：回调返回可见节点，并在同一局部坐标系声明 `body` 区域；外层 Scope 将两者一起平移。空间声明通过返回值的 `spatialHandles` 交给 Core，无需开启节点产物或观测。
-
-```ts
-import {
-  compileToScene,
-  CompositeBaseSchema,
-  defineComposite,
-  resolveSpatialHandle,
-  selectSpatialHandles,
-} from '@retikz/core';
-import { literal } from 'zod';
-
-const CardDefinition = defineComposite({
-  namespace: 'demo',
-  type: 'card',
-  schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('card') }),
-  compile: () => ({
-    children: [
-      {
-        type: 'node',
-        position: [50, 10],
-        layout: { minimumSize: { width: 100, height: 20 }, padding: 0, margin: 0 },
-      },
-    ],
-    spatialHandles: [
-      {
-        id: 'body',
-        role: 'card-body',
-        bounds: { x: 0, y: 0, width: 100, height: 20 },
-      },
-    ],
-  }),
-});
-
-const result = compileToScene(
-  {
-    type: 'scene',
-    version: 1,
-    children: [
-      {
-        type: 'scope',
-        position: [20, 30],
-        children: [{ namespace: 'demo', type: 'card' }],
-      },
-    ],
-  },
-  { composites: [CardDefinition] },
-);
-
-const bodies = selectSpatialHandles(result.spatialHandles, { role: 'card-body' });
-const body = resolveSpatialHandle(result.spatialHandles, {
-  owner: { namespace: 'demo', type: 'card' },
-  id: 'body',
-});
-console.log(bodies.length); // 1
-console.log(body.geometry.bounds); // { x: 20, y: 30, width: 100, height: 20 }
-```
-
-`selectSpatialHandles` 返回所有匹配条目，没有匹配时返回空数组；`resolveSpatialHandle` 要求恰好一个匹配，没有匹配或匹配多个都会抛错。例子中只有一张卡片，所以 owner 类型与局部 id 足以唯一定位；存在多张同类卡片时，还需用 owner 的 `instanceId`、`occurrence` 或祖先条件 `within` 缩小范围。`instanceId` 来自组件声明并由其 schema 接受的 `id`，不能仅靠 Definition 类型区分实例。
-
-这里的矩形由组件主动声明，Core 不会从节点图元自动推导它。若区域属于回调生成的带变换 Scope，应通过 `context.createScope(props, children, spatialHandles)` 将声明附着到该 Scope 的局部坐标，而不是把 Scope 内的局部矩形直接放到复合结果顶层。
-
-实际消费可参考 [Flow 的边界示例](/schematic/diagram/flow/extended)：示例从编译结果中读取元素的空间边界，用于显示边界辅助信息。应用同样可以用查询结果放置选中框或定位浮层，无需扫描 Scene 图元反推组件区域。
-
-<SourceLinks
-  sources={[
-    { label: '空间索引与条目', path: 'packages/kernel/core/src/contract/spatial-handle/handle.ts' },
-    { label: '空间声明与 Scope 归属', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
-    { label: '筛选与唯一查询', path: 'packages/kernel/core/src/contract/spatial-handle/query.ts' },
-    {
-      label: 'Flow 边界的实际消费',
-      path: 'apps/docs/src/modules/docs/contents/schematic/diagram/flow/extended/flow-bounds.tsx',
-    },
-    { label: '空间声明的最终投影', path: 'packages/kernel/core/src/compile/orchestration/spatial-handle.ts' },
-    { label: '嵌套 owner、Scope 与重放测试', path: 'packages/kernel/core/tests/compile/spatial-handle.test.ts' },
-  ]}
-/>
-
-## 观测
-
-<ComponentAlert
-  type="warn"
-  title="实验性功能"
-  description="Core 的观测 API 与观测输出契约尚不稳定，接口、数据结构及行为可能调整。暂不建议将其作为生产环境的稳定依赖。"
-/>
-
-观测入口把普通编译结果放在 `primary`，观察器的输出另存。
-
-```ts
-type ObservedCompileResult<TOutput = unknown> = Readonly<{
-  primary: CompileResult;
-  observerOutputs: ReadonlyArray<CompileObserverOutput<TOutput>>;
-}>;
-
-type CompileObserverOutput<TOutput = unknown> = Readonly<{
-  key: string;
-  value: TOutput;
-}>;
-```
-
-以 Inspect 检查一个文字为 `Hello` 的节点为例：开启节点的 `box` 与 `content` 检查后，画面会叠加节点布局框和文字内容框。这两个框使用 Core 已经算好的几何信息。
-
-在 Core 层，通过 `observeCompileToScene(ir, options, observers)` 开启观测：第三个参数传入观察器定义；下面没有额外编译选项，因此第二个参数传 `undefined`。这个最小例子只读取节点几何，尚未绘制检查框。
-
-```ts
-import { type NodeOwnerOutput, observeCompileToScene } from '@retikz/core';
-import type { CompileObservation, CompileObserverDefinition } from '@retikz/core';
-
-const nodeObserver: CompileObserverDefinition<ReadonlyArray<CompileObservation>> = {
-  key: 'example/node-geometry',
-  createSession: () => {
-    const observations: Array<CompileObservation> = [];
-    return {
-      select: site => site.owner.kind === 'node',
-      observe: observation => {
-        const node = observation.value as NodeOwnerOutput;
-        console.log(node.rect, node.content?.corners);
-        observations.push(observation);
-      },
-      complete: () => observations,
-    };
-  },
-};
-
-const result = observeCompileToScene(
-  {
-    type: 'scene',
-    version: 1,
-    children: [{ type: 'node', id: 'card', position: [0, 0], text: 'Hello' }],
-  },
-  undefined,
-  [nodeObserver],
-);
-
-console.log(result.primary.scene);
-console.log(result.observerOutputs[0]);
-```
-
-`select` 选中所有节点，`observe` 接收每个最终节点的输出，并按 `NodeOwnerOutput` 类型读取节点几何，不重复解析内部产物。`createSession` 内的数组只属于本次编译，`complete` 返回它作为观察器结果。因此 `observerOutputs[0]` 的 `key` 为 `example/node-geometry`，`value` 是收集到的观测事件数组；原图在 `primary.scene`。
-
-Inspect 在这套 Core API 上继续生成检查框，具体过程如下：
-
-1. **选择节点**：Inspect 注册观察器，通过 `select` 选择本次需要检查的节点。
-2. **接收编译数据**：Core 完成节点测量与布局，等最终出现位置确定后，通过 `observe` 交付节点输出。其中 `rect` 描述节点布局框，`content.corners` 描述内容区域的四角；事件还携带节点的变换和来源信息。
-3. **生成检查框**：Inspect 收集这些输出，在 `complete` 阶段调用节点检查器。检查器读取上述几何数据，生成两组虚线路径，再通过观察上下文的 `compileFragment` 编译成辅助 Scene。
-4. **叠加显示**：原图保留在 `primary.scene`，Inspect 生成的辅助 Scene 随其观察器结果进入 `observerOutputs`。Inspect 将辅助 Scene 与对应变换组装为只读渲染层，叠加在原图上。
-
-因此，在这个例子中，观察器收到的是“节点已经算出的布局框和内容区域”，生成的是“用来标出这两个区域的辅助图形”。当前 Inspect 从观测输出读取这些信息，并不读取前文的节点产物。
-
-观察器用于读取选中的编译对象并生成另一份结果。`observeCompileToScene` 为每次调用建立独立 session：`select` 选择需要观察的对象，最终输出就绪后调用 `observe`，最后用 `complete` 汇总。普通 `compileToScene` 不创建这条观察会话。
-
-观察事件在最终出现位置确定后排序派发，带有 owner、祖先关系、输出值、变换以及来源信息。因此观察器可以把卡片的局部几何对应到最终放置处；未被提交的试算候选不会作为最终对象发布。观察器返回值按传入的 Definition 顺序放入 `observerOutputs`，主编译结果则位于 `primary`。
-
-<SourceLinks
-  sources={[
-    { label: '节点检查器', path: 'packages/kernel/inspect/src/providers/node.ts' },
-    { label: '检查辅助图形编译', path: 'packages/kernel/inspect/src/compile/driver.ts' },
-    { label: '观察器输出', path: 'packages/kernel/core/src/contract/observation.ts' },
-    { label: '观察会话建立、选择与完成', path: 'packages/kernel/core/src/compile/orchestration/observation.ts' },
-    { label: '最终事件排序与派发', path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts' },
-  ]}
-/>
+复合产物始终收集；选中候选重放时才随最终放置提交，未采用候选的产物不会进入最终数组。
 
 ## 诊断
 
-`onWarn` 是编译选项中的回调，接收的警告结构如下；其他宿主选项省略。
-
-```ts
-type CompileHostOptions = {
-  onWarn?: (warning: CompileWarning) => void;
-  // 省略 measureText、lowerTex
-};
-
-type CompileWarning = {
-  code: CompileWarningCode;
-  message: string;
-  path: string;
-  origin: CompileWarningOrigin;
-};
-```
-
-警告走另一条出口。编译内部先收集诊断，完整快照成功后排序，并通过公开入口的 `onWarn` 派发。未提供回调时，默认出口在非生产环境写入 `console.warn`。警告表示相应分支按既定规则继续或降级；抛出的错误会终止调用，不会返回一个带错误标记的半成品 `CompileResult`。
-
-| 调用方读取的位置                      | 内容                                   |
-| ------------------------------------- | -------------------------------------- |
-| `compileToScene(...)` 的返回值        | `scene`、`artifacts`、`spatialHandles` |
-| `observeCompileToScene(...)` 的返回值 | `primary` 与 `observerOutputs`         |
-| `onWarn` 回调                         | 本次完整编译派发的警告                 |
-
-这些出口分别交付绘图结果、观测结果与编译警告。
-
-<SourceLinks
-  sources={[
-    { label: '警告结构', path: 'packages/kernel/core/src/compile/warning.ts' },
-    { label: '公开入口与诊断派发时机', path: 'packages/kernel/core/src/compile/compile.ts' },
-  ]}
-/>
+普通入口通过 `onWarn` 派发警告；没有自定义出口时沿用默认警告行为。绘图错误仍终止本次编译，失败候选不会交付部分资源或领域产物。
 
 ## 编译准备与来源
 
-需要延后派发警告或关联图元来源时，可从 `@retikz/core` 调用 `prepareSceneCompilation(ir, options, execution)`。它执行一次静态编译，返回 `result`、`diagnostics` 与 `observerOutputs`，不调用 `onWarn` 或默认警告出口；`options` 不包含 `onWarn`，`execution.observers` 可提供编译观察器。
-
-默认不收集来源。设置 `execution.captureProvenance: true` 后，返回的 `provenance` 记录本次编译中的实体来源、命名空间注册和最终图元发射关系。其不透明键只在本次结果内有效。Reconciler 用这些事实建立跨版本身份和 Scene Patch，Core 本身不持有增量状态。
+`prepareSceneCompilation(ir, options, execution)` 返回 `result`、`diagnostics` 和按需收集的 `provenance`，不派发警告。`options` 不包含 `onWarn`；`execution.captureProvenance` 控制是否收集来源。来源信息用于图元身份关联与提交，内部布局继续服务测量、引用和重放。
 
 <SourceLinks
   sources={[
     { label: '编译准备入口', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: '来源信息契约', path: 'packages/kernel/core/src/compile/provenance.ts' },
-    { label: 'Composite 绑定校验', path: 'packages/kernel/core/src/contract/composite/input.ts' },
+    { label: '来源契约', path: 'packages/kernel/core/src/compile/provenance.ts' },
   ]}
 />
 
 ## 完整实现流程
 
-沿下面的成员名阅读，可以把前面的数据分类对应到实际收尾顺序。图从上下文准备好之后开始；观察派发在 Scene 装配后执行，空间句柄随后物化，最后由公开入口派发警告并返回结果。
+`compileChildrenToPrimitives` 完成遍历、延迟路径回填、布局汇总和最终领域产物排序。`assemblePreparedScene` 汇总图元、资源与画布；`prepareSceneCompilation` 返回完整快照；`compileToScene` 再派发警告并返回 `scene` 与 `artifacts`。
 
-在装配 Scene 之前，遍历器会完成延迟路径回填，检查是否仍有未解决的占位项，再按 `zIndex` 稳定排序。相同层级的相同 `zIndex` 保持原先顺序。最终 Scene 中不需要渲染器继续查找 Node 引用或求解连线端点。
+<ComponentPreview files="output-implementation" size="sm" hideCode type="flow" />
 
-<ComponentPreview files="output-implementation" size="xl" hideCode type="flow" />
-
-前三个阶段自上而下执行，再向右形成完整快照，末端分列交付内容：`scene`、`artifacts` 与 `spatialHandles` 属于普通编译结果；开启观测时另有 `observerOutputs`，警告通过 `onWarn` 回调派发。图中的“观测与空间索引”依次包含最终观测派发和空间句柄物化。
-
-先读 `prepareSceneCompilation` 看各项输出怎样组装，再到 `compileChildrenToPrimitives` 的末尾查看路径回填、布局汇总、节点产物与排序。资源、空间投影和观察派发只需沿本页对应入口继续追踪。`compileToScene` 与 `observeCompileToScene` 决定最终向调用方暴露哪一层结果。
+从编译准备入口开始，沿遍历与 Scene 装配阅读即可追踪收尾流程。Core 不创建检查会话，不为检查工具捕获内部上下文或额外几何。
 
 <SourceLinks
   sources={[
-    { label: '收尾主线', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: '遍历结果形成', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '编译入口', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: '遍历与重放', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Scene 装配', path: 'packages/kernel/core/src/compile/output.ts' },
   ]}
 />
 
@@ -787,7 +436,6 @@ type CompileWarning = {
       description: '理解局部坐标、世界坐标与 Scope 的最终定位',
       url: '/kernel/packages/core/coordinates',
     },
-    { title: '编译观测 · inspect', description: '了解观测结果怎样被检查工具消费', url: '/kernel/packages/inspect' },
     {
       title: '渲染后端 · render',
       description: '了解 Scene 交付后的渲染入口与后端职责',

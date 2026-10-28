@@ -2,9 +2,9 @@ import type { JsonObject, OpenString } from '@retikz/foundation';
 import type { CenteredBox, Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { IRGraphicStyle, IRPathBase, CanonicalDropShadow } from '../../schemas';
+import type { CanonicalDropShadow, IRGraphicStyle, IRPathBase } from '../../schemas';
 import type { Anchor, Side } from '../../shared';
-import type { PaintValue, PathCommand, ScenePrimitive } from '../scene';
+import type { PaintValue, ScenePrimitive } from '../scene';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段 */
 type CompiledShapeStyleFields = Pick<IRGraphicStyle, 'strokeWidth' | 'blendMode'> & {
@@ -26,14 +26,6 @@ export type ConnectionEnvelope = {
   /** 局部 y 轴半径 */
   halfHeight: number;
 };
-
-/** Shape provider 提供的命名结构关键点 */
-export type GeometryKeyPoint = Readonly<{
-  /** 当前 shape 实例内唯一的关键点名称 */
-  name: string;
-  /** 关键点在传入 rect 坐标系中的位置 */
-  position: Position;
-}>;
 
 /**
  * emit 需要的已解析视觉样式子集
@@ -156,11 +148,6 @@ export type InputShapeDefinition<TParams extends JsonObject> = {
     kind: ConnectionEnvelopeKind,
     params: TParams,
   ) => ConnectionEnvelope | undefined;
-  // TODO: 随 Inspect 与所属者产物契约调整，统一评估轮廓和关键点的归属及按需计算
-  /** 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何 */
-  computeOutline?: (rect: CenteredBox, params: TParams) => ReadonlyArray<PathCommand>;
-  /** 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一 */
-  computeKeyPoints?: (rect: CenteredBox, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
   /**
    * 解析标准 side 上 `t ∈ [0, 1]` 的比例点
    * @description `rect` 可包含旋转；未实现表示该 shape 不支持 side anchor

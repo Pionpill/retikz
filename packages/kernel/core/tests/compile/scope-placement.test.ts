@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrimitive, IRScene, ScenePrimitive } from '../../src';
-import { compileToScene, isNodeLayoutCompileArtifact } from '../../src';
+import { compileToScene } from '../../src';
 import { applyTransformChain } from '../../src/compile/transform';
+import { sceneRectangles } from '../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({
   type: 'scene',
@@ -235,10 +236,10 @@ describe('Scope anchor position 两阶段布局', () => {
           ],
         },
       ]),
-      { padding: 0, artifacts: { nodeLayouts: true } },
+      { padding: 0 },
     );
     const compiled = result.scene;
-    const observed = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
+    const observed = sceneRectangles(result.scene);
     const group = firstGroup(compiled.primitives);
     const expectedCenter = applyTransformChain([10, 20], group.transforms ?? []);
     const path = compiled.primitives.find(
@@ -277,10 +278,10 @@ describe('Scope anchor position 两阶段布局', () => {
           ],
         },
       ]),
-      { artifacts: { nodeLayouts: true } },
+      {},
     );
     const compiled = result.scene;
-    const observed = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
+    const observed = sceneRectangles(result.scene);
     const path = compiled.primitives.find(
       (primitive): primitive is Extract<ScenePrimitive, { type: 'path' }> => primitive.type === 'path',
     );

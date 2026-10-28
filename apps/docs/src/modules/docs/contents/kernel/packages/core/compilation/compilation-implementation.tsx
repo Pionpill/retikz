@@ -32,7 +32,7 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
     { id: 'paths', name: 'PathPrimitive / GroupPrimitive', detail: text.paths },
     { id: 'primitives', name: 'ScenePrimitive[]', detail: text.primitives },
     { id: 'scene', name: 'Scene', detail: text.scene },
-    { id: 'extras', name: 'artifacts / spatialHandles', detail: text.extras },
+    { id: 'extras', name: 'artifacts', detail: text.extras },
   ];
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>

@@ -1,16 +1,16 @@
 import type {
+  CompositeCompileContext,
+  CompositeCompileResult,
   IRChild,
   IRPath,
   IRStep,
   LayoutChildResult,
-  CompositeCompileContext,
-  CompositeCompileResult,
 } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe, resolveLayoutAxisSize } from '@retikz/layout/compose';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/errors';
-import { resolveTree } from './resolve';
 import type { CanonicalTreeItem } from './resolve';
+import { resolveTree } from './resolve';
 import type { IRTree } from './schema';
 
 /** 测量后的节点与所属子树包络 */
@@ -187,8 +187,6 @@ export const compileTree = (source: IRTree, context: CompositeCompileContext): C
     });
   return {
     allocationBounds,
-    children: [
-      context.createScope(scope, children, [{ id: 'container', role: 'container', bounds: allocationBounds }]),
-    ],
+    children: [context.createScope(scope, children)],
   };
 };

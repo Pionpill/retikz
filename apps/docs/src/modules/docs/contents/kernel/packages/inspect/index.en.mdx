@@ -3,6 +3,12 @@ title: Compilation Inspection · inspect
 description: Add on-demand observation and readonly auxiliary layers to completed compilation without changing the primary figure
 ---
 
+<ComponentAlert
+  type="warning"
+  title="Migration in progress"
+  description="Core no longer exposes compile observers or spatial handles. Inspect has not yet been reconnected to ordinary compilation results, so the previous usage on this page is currently unavailable. Its consumption and drawing flow will be updated separately."
+/>
+
 `@retikz/inspect` adds optional observation to a completed Core compile. An Inspector reads final occurrences and owner output, then produces independent readonly auxiliary content. Control points, layout bounds, and alignment guides are concrete uses of that observation.
 
 It explains final results only: it does not repair input, participate in layout solving, or mutate the primary figure. Ordinary drawing, compilation, and rendering do not require this package, and no auxiliary fragment exists when no Inspector matches.

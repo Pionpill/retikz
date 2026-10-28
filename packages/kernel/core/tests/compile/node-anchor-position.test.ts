@@ -2,31 +2,27 @@ import type { CenteredBox } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import type { CompileOptions, NodeLayoutObservation } from '../../src/compile';
-import { compileToScene, isNodeLayoutCompileArtifact } from '../../src/compile';
+import type { CompileOptions } from '../../src/compile';
+import { compileToScene } from '../../src/compile';
 import type { RectPrimitive } from '../../src/contract';
 import { defineBoundary } from '../../src/contract';
 import type { IRNode, IRScene } from '../../src/schemas';
 import { rect as rectOps } from '../../src/shared/geometry';
 import { flattenPrims } from '../helpers/flatten';
+import { sceneRectangles } from '../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({ type: 'scene', version: 1, children });
 
-const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, NodeLayoutObservation> => {
-  const layouts = new Map<string, NodeLayoutObservation>();
-  const result = compileToScene(ir, {
-    ...options,
-    artifacts: { nodeLayouts: true },
-  });
-
-  for (const artifact of result.artifacts.filter(isNodeLayoutCompileArtifact)) {
-    if (artifact.value.id !== undefined) layouts.set(artifact.value.id, artifact.value);
+type RectangleGeometry = { id?: string; rect: CenteredBox };
+const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, RectangleGeometry> => {
+  const layouts = new Map<string, RectangleGeometry>();
+  for (const rectangle of sceneRectangles(compileToScene(ir, { precision: 12, ...options }).scene)) {
+    if (rectangle.id !== undefined) layouts.set(rectangle.id, rectangle);
   }
-
   return layouts;
 };
 
-const inflatedRect = (layout: NodeLayoutObservation, marginX: number, marginY = marginX): CenteredBox => ({
+const inflatedRect = (layout: RectangleGeometry, marginX: number, marginY = marginX): CenteredBox => ({
   ...layout.rect,
   width: layout.rect.width + marginX * 2,
   height: layout.rect.height + marginY * 2,
@@ -303,9 +299,9 @@ describe('Node 锚点到锚点位置', () => {
           layout: { minimumSize: 10, padding: 0 },
         },
       ]),
-      { artifacts: { nodeLayouts: true } },
+      {},
     );
-    const observed = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
+    const observed = sceneRectangles(result.scene);
 
     expect(observed[1].id).toBeUndefined();
     expect(observed[1].rect).toMatchObject({ x: 18, y: 27 });
@@ -360,10 +356,10 @@ describe('Node 锚点到锚点位置', () => {
           layout: { minimumSize: 20, padding: 0 },
         },
       ]),
-      { padding: 0, artifacts: { nodeLayouts: true } },
+      { padding: 0 },
     );
     const output = result.scene;
-    const observed = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
+    const observed = sceneRectangles(result.scene);
     const currentPrimitive = flattenPrims(output.primitives).find(
       (primitive): primitive is RectPrimitive => primitive.type === 'rect' && primitive.id === 'current',
     );

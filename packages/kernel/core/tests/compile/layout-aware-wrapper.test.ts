@@ -3,24 +3,23 @@ import { boolean, literal, number, strictObject } from 'zod';
 
 import type {
   CompositeCompileChild,
+  CompositeCompileContext,
   IRAnimationTrack,
   IRChild,
   IRPaint,
   IRScene,
   LayoutChildResult,
-  CompositeCompileContext,
   LayoutProposal,
   ScenePrimitive,
 } from '../../src';
 import {
+  BuiltinCompileWarningCode,
   ChildSchema,
   compileToScene,
-  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineClip,
   defineComposite,
   formatCompileOccurrence,
-  isNodeLayoutCompileArtifact,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -31,6 +30,7 @@ import { createCompileContext } from '../../src/compile/orchestration/context';
 import { createCompileProvenanceTracker } from '../../src/compile/orchestration/provenance';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 import type { CompositeCompileSession } from '../../src/compile/orchestration/types';
+import { sceneRectangles } from '../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -227,23 +227,19 @@ describe('布局感知复合运行时包装树', () => {
 
     const result = compileToScene(scene([{ namespace: 'test', type: 'referencedWrapper' }]), {
       composites: [definition],
-      artifacts: { nodeLayouts: true },
+
       padding: 0,
     });
-    const targetArtifact = result.artifacts.find(
-      artifact => isNodeLayoutCompileArtifact(artifact) && artifact.value.id === 'target',
-    );
-    const rawArtifact = result.artifacts.find(
-      artifact => isNodeLayoutCompileArtifact(artifact) && artifact.value.id === 'raw',
-    );
+    const targetArtifact = sceneRectangles(result.scene).find(rectangle => rectangle.id === 'target');
+    const rawArtifact = sceneRectangles(result.scene).find(rectangle => rectangle.id === 'raw');
     const wrapper = result.scene.primitives.find(primitive => primitive.type === 'group');
     const path = result.scene.primitives.find(primitive => primitive.type === 'path');
     const move = path?.type === 'path' ? path.commands.find(command => command.kind === 'move') : undefined;
     const line = path?.type === 'path' ? path.commands.find(command => command.kind === 'line') : undefined;
 
     expect(wrapper).toMatchObject({ transforms: [{ kind: 'translate', x: 10, y: 0 }] });
-    expect(targetArtifact?.value.rect.x).toBe(11);
-    expect(rawArtifact?.value.rect.x).toBe(12);
+    expect(targetArtifact?.rect.x).toBe(11);
+    expect(rawArtifact?.rect.x).toBe(12);
     expect(move).toMatchObject({ to: [12, 0] });
     expect(line).toMatchObject({ to: [11, 0] });
     expect(result.scene.layout).toEqual({ x: 7, y: -4, width: 9, height: 8 });
@@ -566,7 +562,7 @@ describe('布局感知复合运行时包装树', () => {
     const options = {
       composites: [artifactLeaf, definition],
       clips: [conditionalClip],
-      artifacts: { nodeLayouts: true },
+
       onWarn: (warning: { code: string }): void => {
         warnings.push(warning);
       },
@@ -612,7 +608,6 @@ describe('布局感知复合运行时包装树', () => {
     expect(transaction?.artifacts.length).toBeGreaterThan(0);
     expect(transaction?.namespaceChanges.length).toBeGreaterThan(0);
     expect(transaction?.topologyIdentityIds.length).toBeGreaterThan(0);
-    expect(transaction?.observations.length).toBeGreaterThan(0);
 
     const committed = compileToScene(
       scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: false }]),
@@ -622,7 +617,6 @@ describe('布局感知复合运行时包装树', () => {
     expect(committed.scene.primitives).toHaveLength(2);
     expect(committed.scene.resources?.map(resource => resource.kind)).toEqual(['paint', 'clip']);
     expect(warnings.map(warning => warning.code)).toContain(BuiltinCompileWarningCode.DuplicateNodeId);
-    expect(committed.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(2);
     expect(clipLowerCalls).toBe(2);
   });
 
@@ -830,25 +824,14 @@ describe('布局感知复合运行时包装树', () => {
 
     const result = compileToScene(scene([{ namespace: 'test', type: 'artifactParent' }]), {
       composites: [leaf, parent],
-      artifacts: { nodeLayouts: true },
     });
-    const leafArtifact = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.type === 'artifactLeaf',
-    );
-    const nodeArtifact = result.artifacts.find(isNodeLayoutCompileArtifact);
+    const leafArtifact = result.artifacts.find(artifact => artifact.type === 'artifactLeaf');
 
     expect(leafArtifact?.occurrence.expansionPath).toEqual([
       { kind: 'output', index: 0 },
       { kind: 'scopeChild', index: 0 },
       { kind: 'replay', index: 0 },
       { kind: 'scopeChild', index: 0 },
-    ]);
-    expect(nodeArtifact?.occurrence.expansionPath).toEqual([
-      { kind: 'output', index: 0 },
-      { kind: 'scopeChild', index: 0 },
-      { kind: 'replay', index: 0 },
-      { kind: 'scopeChild', index: 0 },
-      { kind: 'output', index: 0 },
     ]);
     expect(formatCompileOccurrence(leafArtifact!.occurrence)).toBe(
       'children[0]::output[0]::scopeChild[0]::replay[0]::scopeChild[0]',
@@ -1045,7 +1028,6 @@ describe('布局感知复合运行时包装树', () => {
     });
 
     const artifact = result.artifacts[0];
-    if (artifact.kind !== 'composite') throw new Error('expected replay coordinate artifact');
 
     expect(artifact.value.before).toEqual(artifact.value.after);
     expect(result.scene.layout).toEqual({ x: 18, y: -4.5, width: 4, height: 9 });
@@ -1120,7 +1102,6 @@ describe('布局感知复合运行时包装树', () => {
 
     const result = compileToScene(scene([{ namespace: 'test', type: 'tableLike' }]), {
       composites: [borderLeaf, definition],
-      artifacts: { nodeLayouts: true },
     });
     const root = result.scene.primitives[0];
 
@@ -1135,15 +1116,8 @@ describe('布局感知复合运行时包装树', () => {
     expect(JSON.stringify(root.children).match(/content/g)).toHaveLength(1);
     expect(JSON.stringify(root.children).match(/border/g)).toHaveLength(1);
 
-    const occurrences = result.artifacts
-      .filter(isNodeLayoutCompileArtifact)
-      .map(artifact => formatCompileOccurrence(artifact.occurrence));
+    const borderArtifact = result.artifacts[0];
 
-    expect(new Set(occurrences).size).toBe(occurrences.length);
-    expect(occurrences.some(value => value.includes('scopeChild[1]::scopeChild[0]::replay[0]'))).toBe(true);
-
-    const borderArtifact = result.artifacts.find(artifact => artifact.kind === 'composite');
-
-    expect(formatCompileOccurrence(borderArtifact!.occurrence)).toBe('children[0]::output[0]::replay[2]');
+    expect(formatCompileOccurrence(borderArtifact.occurrence)).toBe('children[0]::output[0]::replay[2]');
   });
 });

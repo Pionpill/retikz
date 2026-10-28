@@ -5,13 +5,15 @@ import { expect, it } from 'vitest';
 
 import {
   arrayDefinition,
+  chainDefinition,
   mapDefinition,
   matrixDefinition,
-  chainDefinition,
   treeDefinition,
 } from '../../../src/collection';
 import { createDataCell } from '../../../src/collection/_cell/data';
 import { resolveCell } from '../../../src/collection/_cell/resolve';
+import { compileMeasured } from '../../helpers/compile-measured';
+import { sceneNodeBounds } from '../../helpers/scene-geometry';
 
 const nested: Array<IRChild> = [
   { namespace: 'standard', type: 'array', items: ['A'] },
@@ -94,19 +96,16 @@ it('嵌套集合的外层 Cell 保留身份，默认尺寸与子集合一致，�
   for (const content of nested) {
     const child = { ...content, id: 'inner' };
     const result = compile(child);
-    const outer = result.spatialHandles.entries.find(entry => entry.id === 'cell:outer')!.geometry.bounds;
-    const standalone = compileToScene(
-      { type: 'scene', version: 1, children: [child] },
-      {
-        composites: [arrayDefinition, mapDefinition, matrixDefinition, chainDefinition, treeDefinition],
-        clips: [pathClipDefinition],
-        padding: 0,
-      },
-    );
-    const inner = standalone.spatialHandles.entries.find(entry => entry.role === 'container')!.geometry.bounds;
+    const outer = sceneNodeBounds(result.scene, 'outer');
+    const standalone = compileMeasured(child, {
+      composites: [arrayDefinition, mapDefinition, matrixDefinition, chainDefinition, treeDefinition],
+      clips: [pathClipDefinition],
+      padding: 0,
+    });
+    const inner = standalone.allocationBounds;
     expect(outer.width).toBeCloseTo(inner.width);
     expect(outer.height).toBeCloseTo(inner.height);
-    const padded = compile(child, 5).spatialHandles.entries.find(entry => entry.id === 'cell:outer')!.geometry.bounds;
+    const padded = sceneNodeBounds(compile(child, 5).scene, 'outer');
     expect(padded.width).toBeCloseTo(outer.width + 10);
     expect(padded.height).toBeCloseTo(outer.height + 10);
   }

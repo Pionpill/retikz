@@ -35,7 +35,7 @@ export const compilationImplementationI18n: Record<
     paths: '替换原位置的路径占位',
     primitives: '已完成回填的有序图元',
     scene: '图元、画布边界与绘制资源',
-    extras: '附属产物与具名空间索引',
+    extras: 'Composite 领域产物',
   },
   en: {
     entry: 'Enter full compilation',
@@ -51,6 +51,6 @@ export const compilationImplementationI18n: Record<
     paths: 'Replace original path slots',
     primitives: 'Resolved drawing order',
     scene: 'Primitives, bounds, resources',
-    extras: 'Artifacts and spatial index',
+    extras: 'Composite domain artifacts',
   },
 };

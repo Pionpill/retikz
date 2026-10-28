@@ -9,7 +9,7 @@
 | 重点能力       | 目标                                                                   | 相关 ADR                                                                                                                                                                                                                                                                                              |
 | -------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 几何与文字     | 完善锚点、单轴连接、标签间距、对比色、TeX 与固定宽度                   | [001](./001-node-anchor-position.md)、[002](./002-scope-anchor-and-transform-pivot.md)、[003](./003-single-axis-path-connection.md)、[004](./004-node-text-auto-contrast.md)、[005](./005-node-label-box-spacing.md)、[006](./006-tex-math-syntax-compatibility.md)、[038](./038-node-fixed-width.md) |
-| 布局与组合     | 支持上下文布局、完整 Scope 输出及跨 namespace 空间引用                 | [007](./007-layout-aware-composite.md)、[009](./009-contextual-composite-layout.md)、[017](./017-layout-proposal-probe-contract.md)、[020](./020-layout-aware-scope-output.md)、[028](./028-qualified-spatial-handles.md)                                                                             |
+| 布局与组合     | 支持上下文布局、完整 Scope 输出及 Composite 领域产物                   | [007](./007-layout-aware-composite.md)、[009](./009-contextual-composite-layout.md)、[017](./017-layout-proposal-probe-contract.md)、[020](./020-layout-aware-scope-output.md)、[077](./077-compile-output-contract.md)                                                                               |
 | 增量运行时     | 完成 Reconciler 编译树、依赖响应与同步增量计算闭环                     | [011](./011-runtime-identity-source-registry.md)、[012](./012-computation-transaction-lifecycle.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-retained-renderer.md)、[016](./016-runtime-execution-policy.md)                                                                |
 | 基础契约与入口 | 建立 Foundation、统一 authoring 与能力依赖接入                         | [019](./019-core-atomic-contracts.md)、[023](./023-foundation-package.md)、[026](./026-foundation-schema-primitives.md)、[027](./027-composite-dependency-provider-graph.md)、[029](./029-vanilla-authoring-normalization.md)                                                                         |
 | 颜色与 Source  | 统一颜色解析、Theme 来源、Source 分组与 schema 边界                    | [024](./024-lightweight-theme-resolution.md)、[032](./032-contextual-color-resolution.md)、[035](./035-json-undefined-field-contracts.md)、[036](./036-source-ir-semantic-grouping.md)、[037](./037-theme-source-fragments.md)、[071](./071-macro-visual-property-resolution.md)                      |
@@ -41,12 +41,12 @@
 主要场景：
 
 - 嵌套 composite 要在父容器约束下完成布局。
-- 一个组合需要引用另一个 namespace 中公开的空间位置。
+- 组合通过普通引用与领域产物协作。
 
 规划内容：
 
 - 统一上下文布局、proposal / probe 和完整 Scope 输出；作者主位置由 `position` 承担，局部变换保持辅助职责：[049](./049-scope-position-contract.md)。
-- 支持空间引用与跨组合装配，保留真实布局边界及公开职责。
+- 支持普通引用与跨组合装配，保留真实布局边界及公开职责。
 - 支持按需尺寸贡献查询与同次编译跨试算缓存，减少嵌套布局重复求值：[053](./053-layout-measurement-reuse.md)。
 - 复用同次回调中的真实几何查询环境，减少端点与路线验证的重复编译：[054](./054-geometry-query-reuse.md)。
 
@@ -80,7 +80,7 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 | 2. 编译接入与最小更新闭环 | 重构 Core，为各类基础元素提供与 NodeLayout 同等职责的可缓存编译状态；构建 Weave 树 并接入完整输入、权威局部更新、同步计算与单目标输出提交，实现定点 Node 更新 | Core 明确只读编译状态的类型、跨次有效性及公开获取契约，替换阶段一的 compiled 类型占位；不通过根 IR 深比较完成局部编译和 Patch；整批计算完成后发布输出，失败不发布部分输出；失败时保留 current 并丢弃 pending，明确未提交更新的重试、完整编译回退及完整结果读取语义 |
 | 3. 依赖响应               | 记录语义读取依赖，传播失效，按需重算并以输出版本停止无效传播                                                                                                  | Node 几何变化更新实际关联的 Path；输出未变时复用下游结果，不默认建立属性级响应式状态                                                                                                                                                                               |
 | 4. 结构与 Scope           | 支持插入、删除、重排、Scope 上下文、名称解析与布局边界                                                                                                        | 正确处理前向引用、未命中后新增、同名遮蔽与跨 Scope 引用；Scope 可作组织边界，但不强制整组重算                                                                                                                                                                      |
-| 5. 完整产物与扩展         | 纳入资源、文本度量、空间句柄、artifacts、诊断、Composite 与观察能力                                                                                           | 全部可观察产物保持同 revision 一致；不跨次复用 compile-local token；内置和自定义能力共用契约，无法安全细分的边界明确重算                                                                                                                                           |
+| 5. 完整产物与扩展         | 纳入资源、文本度量、Composite artifacts、诊断与正常编译扩展                                                                                                   | 全部可观察产物保持同 revision 一致；不跨次复用 compile-local token；内置和自定义能力共用契约，无法安全细分的边界明确重算                                                                                                                                           |
 | 6. 上层接入契约           | 预留完整输入、局部命令、身份映射、领域贡献与失效信息的交接契约                                                                                                | Kernel 内验证契约闭环；Vanilla、React、Plot 等上层包的实际接入与领域优化不作为本版本完成条件                                                                                                                                                                       |
 | 7. 性能与版本收口         | 验证静态与 retained 首次计算、局部更新、完整替换、内存与失败恢复；同步文档并收敛旧路径                                                                        | 局部计算成本主要随变化及真实依赖范围增长；明确剩余全量成本，保证与完整编译可观察等价，不承诺 retained 首次计算快于 static                                                                                                                                          |
 
@@ -172,10 +172,7 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 规划内容：
 
 - 保留 Headless Interaction、Concurrent、渐进物化与生成会话候选。
-- Inspect 与编译产物调整（后续规划）：替换现有编译观察机制，统一明确节点、路径所属者产物与 Inspect 的职责边界，替代方案与能力闭环待设计。
-- 关联审视 [observation.ts](../../../../core/src/contract/observation.ts) 的观察协议、所属者产物发布及隔离片段编译契约，同步评估 Vanilla / Reconciler 的接线；[occurrence.ts](../../../../core/src/contract/occurrence.ts) 的编译来源定位职责独立保留，不随观察机制直接删除。
-- 同轮评估 Shape / Boundary 精确轮廓与 Shape 结构关键点的契约归属、是否统一输出及按需计算，避免只请求关键点却额外计算完整轮廓；保留正常绘制、连线边界与观察能力的独立性。
-- 随所属者产物契约调整，一并优化 `definePath` 的重载与泛型推断，收敛发布与不发布产物两种声明方式，保持路径类型与产物类型关联；具体签名随产物契约确定。
+- 编译输出收敛为 Scene 与 Composite artifacts，删除 Core 观测、节点公共产物与空间句柄：[077](./077-compile-output-contract.md)。Inspect 从普通结果生成辅助绘图的接入方案独立设计。
 - 候选不作为必交项；设计接受、实现授权与实际交付分别判断。
 
 预期效果：

@@ -1,10 +1,11 @@
 import type { IRChild } from '@retikz/core';
-import { compileToScene, resolveSpatialHandle, selectSpatialHandles } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { getArrayCellId, arrayDefinition, ArraySchema, mapDefinition } from '../../../src/collection';
+import { arrayDefinition, ArraySchema, getArrayCellId, mapDefinition } from '../../../src/collection';
 import { RetikzStandardError } from '../../../src/shared/errors';
+import { sceneCellBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const base = { namespace: 'standard', type: 'array', id: 'array', cellIdMode: 'index' };
 
@@ -37,7 +38,6 @@ describe('Array 直接小区标识', () => {
       path('map'),
     ]);
     expect(positioned.scene).toEqual(translated.scene);
-    expect(positioned.spatialHandles).toEqual(translated.spatialHandles);
   });
 
   it('格式化从零开始的 id 并拒绝无效的辅助参数', () => {
@@ -61,34 +61,24 @@ describe('Array 直接小区标识', () => {
     expect(ArraySchema.parse(JSON.parse(JSON.stringify(source))).items).toEqual(source.items);
   });
 
-  it('发布生成的显式 ID 的一条记录，并删除重复的名称', () => {
-    const result = compile([
-      {
-        ...base,
-        items: [
-          { id: 'named', content: 'a' },
-          { id: 'array-1', content: 'b' },
-        ],
-      },
-    ]);
-    const handles = selectSpatialHandles(result.spatialHandles, { role: 'array-cell' });
-
-    expect(handles).toHaveLength(2);
-    expect(handles[0]).toMatchObject({ id: 'cell:array-0', aliasIds: ['cell:named'] });
-    expect(handles[1]).not.toHaveProperty('aliasIds');
-    expect(resolveSpatialHandle(result.spatialHandles, { id: 'cell:named' })).toBe(handles[0]);
-    expect(resolveSpatialHandle(result.spatialHandles, { id: 'cell:array-0' })).toBe(handles[0]);
-    expect(Object.isFrozen(handles[0]?.aliasIds)).toBe(true);
+  it('显式别名与生成 id 引用同一格，不重复绘图', () => {
+    const child = {
+      ...base,
+      items: [
+        { id: 'named', content: 'a' },
+        { id: 'array-1', content: 'b' },
+      ],
+    };
+    expect(compile([child, path('named')]).scene).toEqual(compile([child, path('array-0')]).scene);
+    expect(sceneNodes(compile([child]).scene).filter(node => node.id === 'array-0')).toHaveLength(1);
   });
 
   it('仅将 id 分配给直接数据单元格，与显示的编号无关', () => {
     const result = compile([{ ...base, data: ['a', ['b', 'c'], { nested: [1, 2] }], index: { start: 100 } }]);
-    const handles = selectSpatialHandles(result.spatialHandles, { role: 'array-cell' });
+    const ids = sceneNodes(result.scene).flatMap(node => (node.id?.startsWith('array-') ? [node.id] : []));
 
-    expect(handles.map(handle => handle.id)).toEqual(['cell:array-0', 'cell:array-1', 'cell:array-2']);
-    expect(
-      selectSpatialHandles(compile([{ ...base, data: [], index: true }]).spatialHandles, { role: 'array-cell' }),
-    ).toEqual([]);
+    expect(ids).toEqual(['array-0', 'array-1', 'array-2']);
+    expect(sceneCellBounds(compile([{ ...base, data: [], index: true }]).scene)).toEqual([]);
   });
 
   it('通过转换后的布局回放来解析两个 id，而无需重复的几何图形', () => {
@@ -116,8 +106,5 @@ describe('Array 直接小区标识', () => {
 
     expect(withAlias.scene).toEqual(withoutAlias.scene);
     expect(withAlias.artifacts).toEqual(withoutAlias.artifacts);
-    expect(withAlias.spatialHandles.entries.map(entry => entry.geometry)).toEqual(
-      withoutAlias.spatialHandles.entries.map(entry => entry.geometry),
-    );
   });
 });

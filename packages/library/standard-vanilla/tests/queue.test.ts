@@ -3,7 +3,7 @@ import { normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { standardInputEmbedAdapters } from '../src';
-import { queue, array } from '../src/collection';
+import { array, queue } from '../src/collection';
 
 it('三入口及嵌套内容自动装配依赖，源输入保持稀疏', () => {
   for (const child of [
@@ -16,7 +16,7 @@ it('三入口及嵌套内容自动装配依赖，源输入保持稀疏', () => {
       normalized.ir,
       resolveCoreProviderDependencies({ contributions: normalized.contributions }),
     );
-    expect(result.spatialHandles.entries.filter(entry => entry.role === 'container').length).toBeGreaterThan(0);
+    expect(result.scene.layout.width).toBeGreaterThan(0);
     expect(normalized.ir.children[0]).not.toHaveProperty('padding');
     expect(result.scene.primitives.length).toBeGreaterThan(0);
   }
@@ -37,5 +37,4 @@ it('直接IR与Vanilla保持相同的开放框及单格空间', () => {
     options,
   );
   expect(actual.scene).toEqual(expected.scene);
-  expect(actual.spatialHandles).toEqual(expected.spatialHandles);
 });

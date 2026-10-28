@@ -13,7 +13,7 @@ For initial setup, see [Basic usage](/kernel/components/layout/usage). React pro
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={406}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={227}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={403}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={226}>LayoutProps</ApiSourceLink>
 
 Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use retained mode by default; runtime can select static mode for full compilation.
 
@@ -23,35 +23,34 @@ Declare drawings through children or pass a complete scene through ir; ir takes 
 
 <ApiTable grouped>
 
-| Group      | Member             | Type                                                  | Default                       | Description                                                                                                                                                                              |
-| ---------- | ------------------ | ----------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main       | `children?`        | `ReactNode`                                           | —                             | Drawing content declared with JSX                                                                                                                                                        |
-|            | `ir?`              | `IRScene`                                             | —                             | Persisted Source IR, used instead of children                                                                                                                                            |
-| Layout     | `nodeDistance?`    | `number`                                              | `24`                          | Default relative node distance in drawing units; applies when position uses direction/of without distance                                                                                |
-| Style      | `fontSize?`        | `number`                                              | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes                                   |
-|            | `rootScope?`       | `Pick<InputScope, 'defaults'>`                        | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
-|            | `theme?`           | `IRScene['theme']`                                    | —                             | Theme written to the Scene root and inherited by descendant Composites                                                                                                                   |
-| Rendering  | `className?`       | `string`                                              | —                             | Host className                                                                                                                                                                           |
-|            | `height?`          | `number \| string`                                    | `computeDisplaySize`          | CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout |
-|            | `idPrefix?`        | `string`                                              | `useId`                       | SVG resource ID prefix; generated from React useId when omitted                                                                                                                          |
-|            | `renderer?`        | `'svg' \| 'canvas'`                                   | `'svg'`                       | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided                                         |
-|            | `style?`           | `CSSProperties`                                       | —                             | Host inline styles                                                                                                                                                                       |
-|            | `viewBox?`         | `IRViewBox`                                           | —                             | Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none                                   |
-|            | `width?`           | `number \| string`                                    | `computeDisplaySize`          | CSS width of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout  |
-| Callbacks  | `handlers?`        | `HydrationHandlers`                                   | —                             | Event handlers used when ir is supplied directly                                                                                                                                         |
-| Animation  | `animate?`         | `boolean`                                             | `resolveAnimationEnabled`     | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference                                     |
-|            | `animationRef?`    | `Ref<AnimationControls \| null>`                      | —                             | Animation controller ref                                                                                                                                                                 |
-|            | `animations?`      | `ReadonlyArray<IRAnimationTrack>`                     | —                             | Scene-root animations                                                                                                                                                                    |
-|            | `snapshotAt?`      | `number`                                              | —                             | Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate                                                             |
-| Runtime    | `authoring?`       | `unknown`                                             | —                             | JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR                                                                          |
-|            | `runtime?`         | `LayoutRuntimeOptions`                                | `captureLayoutRuntimeOptions` | Select retained incremental updates or static full compilation; defaults to retained                                                                                                     |
-| Output     | `artifacts?`       | `CompileArtifactOptions`                              | —                             | Requested compilation artifacts                                                                                                                                                          |
-|            | `onArtifacts?`     | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —                             | Notification after compilation artifacts are committed successfully                                                                                                                      |
-|            | `onCompileResult?` | `(result: CompileResult) => void`                     | —                             | Notification of the complete Core compilation result                                                                                                                                     |
-| Extensions | `compileDriver?`   | `VanillaCompileDriver`                                | —                             | Compile driver that processes authoring input                                                                                                                                            |
-|            | `extensions?`      | `LayoutExtensions`                                    | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                            |
-|            | `lowerTex?`        | `TexLowerer`                                          | —                             | Formula lowering capability                                                                                                                                                              |
-|            | `measureText?`     | `TextMeasurer`                                        | —                             | Custom text measurement; omitted uses Vanilla environment measurement with estimation when unavailable                                                                                   |
+| Group      | Member             | Type                                                    | Default                       | Description                                                                                                                                                                              |
+| ---------- | ------------------ | ------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main       | `children?`        | `ReactNode`                                             | —                             | Drawing content declared with JSX                                                                                                                                                        |
+|            | `ir?`              | `IRScene`                                               | —                             | Persisted Source IR, used instead of children                                                                                                                                            |
+| Layout     | `nodeDistance?`    | `number`                                                | `24`                          | Default relative node distance in drawing units; applies when position uses direction/of without distance                                                                                |
+| Style      | `fontSize?`        | `number`                                                | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes                                   |
+|            | `rootScope?`       | `Pick<InputScope, 'defaults'>`                          | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
+|            | `theme?`           | `IRScene['theme']`                                      | —                             | Theme written to the Scene root and inherited by descendant Composites                                                                                                                   |
+| Rendering  | `className?`       | `string`                                                | —                             | Host className                                                                                                                                                                           |
+|            | `height?`          | `number \| string`                                      | `computeDisplaySize`          | CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout |
+|            | `idPrefix?`        | `string`                                                | `useId`                       | SVG resource ID prefix; generated from React useId when omitted                                                                                                                          |
+|            | `renderer?`        | `'svg' \| 'canvas'`                                     | `'svg'`                       | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided                                         |
+|            | `style?`           | `CSSProperties`                                         | —                             | Host inline styles                                                                                                                                                                       |
+|            | `viewBox?`         | `IRViewBox`                                             | —                             | Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none                                   |
+|            | `width?`           | `number \| string`                                      | `computeDisplaySize`          | CSS width of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout  |
+| Callbacks  | `handlers?`        | `HydrationHandlers`                                     | —                             | Event handlers used when ir is supplied directly                                                                                                                                         |
+| Animation  | `animate?`         | `boolean`                                               | `resolveAnimationEnabled`     | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference                                     |
+|            | `animationRef?`    | `Ref<AnimationControls \| null>`                        | —                             | Animation controller ref                                                                                                                                                                 |
+|            | `animations?`      | `ReadonlyArray<IRAnimationTrack>`                       | —                             | Scene-root animations                                                                                                                                                                    |
+|            | `snapshotAt?`      | `number`                                                | —                             | Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate                                                             |
+| Runtime    | `authoring?`       | `unknown`                                               | —                             | JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR                                                                          |
+|            | `runtime?`         | `LayoutRuntimeOptions`                                  | `captureLayoutRuntimeOptions` | Select retained incremental updates or static full compilation; defaults to retained                                                                                                     |
+| Output     | `onArtifacts?`     | `(artifacts: ReadonlyArray<CompositeArtifact>) => void` | —                             | Notification after compilation artifacts are committed successfully                                                                                                                      |
+|            | `onCompileResult?` | `(result: CompileResult) => void`                       | —                             | Notification of the complete Core compilation result                                                                                                                                     |
+| Extensions | `compileDriver?`   | `VanillaCompileDriver`                                  | —                             | Compile driver that processes authoring input                                                                                                                                            |
+|            | `extensions?`      | `LayoutExtensions`                                      | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                            |
+|            | `lowerTex?`        | `TexLowerer`                                            | —                             | Formula lowering capability                                                                                                                                                              |
+|            | `measureText?`     | `TextMeasurer`                                          | —                             | Custom text measurement; omitted uses Vanilla environment measurement with estimation when unavailable                                                                                   |
 
 </ApiTable>
 
@@ -87,8 +86,7 @@ export type LayoutProps = {
   fontSize?: number;
   extensions?: LayoutExtensions;
   lowerTex?: TexLowerer;
-  artifacts?: CompileArtifactOptions;
-  onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
+  onArtifacts?: (artifacts: ReadonlyArray<CompositeArtifact>) => void;
   onCompileResult?: (result: CompileResult) => void;
 };
 ```
@@ -99,7 +97,7 @@ export type LayoutProps = {
 
 ## Execution and supporting contracts
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={181}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={180}>LayoutExtensions</ApiSourceLink>
 
 Pass these options through the extensions prop of Layout. Each field accepts an array of definitions; these runtime definitions are excluded from persisted scene data.
 
@@ -343,7 +341,7 @@ export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
 
 ## Direct calls
 
-#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={29}>InputLayer</ApiSourceLink>
+#### <ApiSourceLink label={"InputLayer"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={28}>InputLayer</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -379,7 +377,7 @@ export type InputLayer = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={90}>InputScene</ApiSourceLink>
+#### <ApiSourceLink label={"InputScene"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={89}>InputScene</ApiSourceLink>
 
 **Common members**
 
@@ -437,7 +435,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={74}>InputSceneChildren</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneChildren"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={73}>InputSceneChildren</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -474,7 +472,7 @@ export type InputSceneChildren = InputSceneBase & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={82}>InputSceneLayers</ApiSourceLink>
+#### <ApiSourceLink label={"InputSceneLayers"} path={"packages/kernel/vanilla/src/normalize/scene/types.ts"} startLine={81}>InputSceneLayers</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 

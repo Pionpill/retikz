@@ -9,7 +9,6 @@ it('保留完整 Path definition，并在 static 与 retained processing 中执�
   const definition: AnyPathDefinition = {
     name: 'retained-fixture',
     schema: PathSchema.extend({ kind: literal('retained-fixture') }),
-    ownerOutput: true,
     compile: () => ({
       primitives: [{ type: 'ellipse', cx: 3, cy: 5, rx: 2, ry: 4 }],
       boundsPoints: [

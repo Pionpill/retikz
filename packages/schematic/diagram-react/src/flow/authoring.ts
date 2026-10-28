@@ -43,7 +43,6 @@ export type FlowDiagramLayoutHostProps = Pick<
   | 'composites'
   | 'themeDefinitions'
   | 'lowerTex'
-  | 'artifacts'
   | 'onArtifacts'
   | 'onCompileResult'
 >;
@@ -76,7 +75,6 @@ const flowDiagramLayoutHostPropKeys = [
   'composites',
   'themeDefinitions',
   'lowerTex',
-  'artifacts',
   'onArtifacts',
   'onCompileResult',
 ] as const satisfies ReadonlyArray<keyof FlowDiagramLayoutHostProps>;
@@ -337,7 +335,6 @@ export const collectFlowDiagramInput = (
     composites: _composites,
     themeDefinitions: _themeDefinitions,
     lowerTex: _lowerTex,
-    artifacts: _artifacts,
     onArtifacts: _onArtifacts,
     onCompileResult: _onCompileResult,
     ...input
@@ -368,7 +365,6 @@ export const collectFlowDiagramInput = (
   void _composites;
   void _themeDefinitions;
   void _lowerTex;
-  void _artifacts;
   void _onArtifacts;
   void _onCompileResult;
 

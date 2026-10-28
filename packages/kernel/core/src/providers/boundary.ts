@@ -1,8 +1,8 @@
 import type { CenteredBox } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
-import { enum as zodEnum, number, strictObject } from 'zod';
+import { number, strictObject, enum as zodEnum } from 'zod';
 
-import type { BoundaryDefinition, PathCommand, ShapeDefinition } from '../contract';
+import type { BoundaryDefinition } from '../contract';
 import { defineBoundary } from '../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { BoundaryFit, BuiltinShape } from '../schemas';
@@ -50,18 +50,6 @@ const boundsEllipseHalfAxes = (rect: CenteredBox): { halfWidth: number; halfHeig
   halfHeight: (rect.height / 2) * Math.SQRT2,
 });
 
-/** 复用已解析 Shape provider 的精确轮廓能力，避免 Boundary 维护第二套几何公式 */
-const outlineFromShape = (shape: ShapeDefinition, rect: CenteredBox): ReadonlyArray<PathCommand> => {
-  if (shape.computeOutline === undefined) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.CompositeContractViolation,
-      `Builtin shape '${shape.name}' must provide an outline for its builtin boundary.`,
-    );
-  }
-
-  return shape.computeOutline(rect, {});
-};
-
 /** 圆形连接面：通过视觉外接矩形的外接圆复用 ellipse shape 几何 */
 const circleBoundary = defineBoundary({
   name: BuiltinShape.Circle,
@@ -77,7 +65,6 @@ const circleBoundary = defineBoundary({
   },
   computeBoundaryPoint: ellipseShape.computeBoundaryPoint,
   resolveAnchor: ellipseShape.resolveAnchor,
-  computeOutline: rect => outlineFromShape(ellipseShape, rect),
 });
 
 /** 矩形连接面：直接复用 rectangle shape 的连接面实现 */
@@ -95,7 +82,6 @@ const rectangleBoundary = defineBoundary({
   },
   computeBoundaryPoint: rectangle.computeBoundaryPoint,
   resolveAnchor: rectangle.resolveAnchor,
-  computeOutline: rect => outlineFromShape(rectangle, rect),
 });
 
 /** 椭圆连接面：通过视觉外接矩形的外接椭圆复用 ellipse shape 几何 */
@@ -113,7 +99,6 @@ const ellipseBoundary = defineBoundary({
   },
   computeBoundaryPoint: ellipseShape.computeBoundaryPoint,
   resolveAnchor: ellipseShape.resolveAnchor,
-  computeOutline: rect => outlineFromShape(ellipseShape, rect),
 });
 
 /** 内置 boundary provider 注册项 */

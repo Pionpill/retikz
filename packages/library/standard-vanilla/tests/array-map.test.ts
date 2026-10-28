@@ -100,8 +100,6 @@ it('骨架与空单元格通过公开 adapter 装配裁切依赖并保留输入'
     );
 
     expect(normalized.ir.children[0]).toMatchObject(child.props);
-    expect(
-      result.spatialHandles.entries.find(entry => entry.role === 'container')?.geometry.bounds.width,
-    ).toBeGreaterThan(0);
+    expect(result.scene.layout.width).toBeGreaterThan(0);
   }
 });

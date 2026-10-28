@@ -3,8 +3,9 @@ import { compileToScene } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { arrayDefinition, ArraySchema, mapDefinition, MapSchema } from '../../../src/collection';
 import type { IRArray, IRMap } from '../../../src/collection';
+import { arrayDefinition, ArraySchema, mapDefinition, MapSchema } from '../../../src/collection';
+import { sceneCellBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? [node, ...flat(node.children)] : [node]));
@@ -92,9 +93,7 @@ describe('Array / Map 容器标签', () => {
         path,
       ]);
 
-      expect(after.spatialHandles.entries.map(entry => ({ role: entry.role, geometry: entry.geometry }))).toEqual(
-        before.spatialHandles.entries.map(entry => ({ role: entry.role, geometry: entry.geometry })),
-      );
+      expect(sceneCellBounds(after.scene)).toEqual(sceneCellBounds(before.scene));
       expect(
         flat(after.scene.primitives)
           .filter(node => node.type === 'path')
@@ -146,7 +145,14 @@ describe('Array / Map 容器标签', () => {
       ]);
 
       expect(flat(result.scene.primitives).filter(node => node.type === 'text')).toHaveLength(1);
-      expect(result.spatialHandles.entries.find(entry => entry.role === 'container')?.geometry.bounds).toEqual({
+      expect(
+        sceneNodes(result.scene).map(node => ({
+          x: node.rect.x,
+          y: node.rect.y,
+          width: node.rect.width,
+          height: node.rect.height,
+        }))[0],
+      ).toEqual({
         x: 10,
         y: 20,
         width: 0,

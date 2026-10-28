@@ -1,9 +1,9 @@
 import type {
   AnyPathDefinition,
   ArrowDefinition,
-  MarkDefinition,
   BoundaryDefinition,
   ClipDefinition,
+  MarkDefinition,
   PatternDefinition,
   ShapeDefinition,
   ThemeDefinition,
@@ -11,10 +11,10 @@ import type {
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import {
   resolveArrowRegistry,
-  resolveMarkRegistry,
   resolveBoundaryRegistry,
   resolveClipRegistry,
   resolveCompositeRegistry,
+  resolveMarkRegistry,
   resolvePathRegistry,
   resolvePatternRegistry,
   resolveShapeRegistry,
@@ -45,8 +45,7 @@ export type CompileEnvironment = Readonly<{
   composites: CompositeRegistry;
   /** 复合编译的嵌套深度上限 */
   maxCompositeDepth: number;
-  /** 本次请求的 artifact 开关 */
-  artifacts: CompileOptions['artifacts'];
+
   /** Scene 输出 rounder */
   round: (n: number) => number;
   /** 自动 layout padding */
@@ -117,7 +116,7 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
     lowerTex: options.lowerTex,
     composites,
     maxCompositeDepth: options.maxCompositeDepth ?? DEFAULT_MAX_COMPOSITE_DEPTH,
-    artifacts: options.artifacts,
+
     round,
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,
     nodeDistance: options.nodeDistance ?? DEFAULT_NODE_DISTANCE,

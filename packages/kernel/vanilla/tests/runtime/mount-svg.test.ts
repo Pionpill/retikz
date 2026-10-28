@@ -82,7 +82,7 @@ describe('@retikz/vanilla mountSvg', () => {
       children: [{ type: 'node', id: 'first', position: [0, 0], text: 'A' }],
     };
     const c = document.createElement('div');
-    const view = mountSvg(c, ir, { compile: { artifacts: { nodeLayouts: true } } });
+    const view = mountSvg(c, ir, { compile: {} });
 
     expect(view.artifacts).toMatchObject([{ kind: 'nodeLayout', value: { id: 'first' } }]);
 

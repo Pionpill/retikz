@@ -1,8 +1,7 @@
-import type { CompileObserverDefinition, CompileWarning, IRScene } from '@retikz/core';
+import type { CompileWarning, IRScene } from '@retikz/core';
 import { BUILTIN_SHAPES, compileToScene, CompositeBaseSchema, defineComposite, defineShape } from '@retikz/core';
-import type { RuntimeScenePrimitive } from '@retikz/reconciler';
-import { ReconcilerSession, createFullSceneRuntimeSnapshot } from '@retikz/reconciler';
-import type { ReconcilerResult } from '@retikz/reconciler';
+import type { ReconcilerResult, RuntimeScenePrimitive } from '@retikz/reconciler';
+import { createFullSceneRuntimeSnapshot, ReconcilerSession } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
@@ -124,105 +123,34 @@ describe('Core Runtime 计算初始完整运行', () => {
   });
 });
 
-describe('Core Runtime 计算观测输出', () => {
-  const observedComposite = defineComposite({
+describe('Core Runtime 领域产物事务', () => {
+  const definition = defineComposite({
     namespace: 'test',
-    type: 'program-observed',
-    schema: CompositeBaseSchema.extend({
-      namespace: literal('test'),
-      type: literal('program-observed'),
-      label: string(),
-    }),
+    type: 'artifact',
+    schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('artifact'), label: string() }),
     artifactSchema: strictObject({ label: string() }),
-    compile: node => ({
-      artifact: { label: node.label },
-      children: [{ type: 'node', position: [0, 0], text: node.label }],
-    }),
+    compile: node => {
+      if (node.label === 'fail') throw new Error('domain compilation failed');
+      return { artifact: { label: node.label }, children: [{ type: 'node', text: node.label }] };
+    },
   });
-
-  const sourceWithLabel = (label: string): IRScene => ({
+  const source = (label: string): IRScene => ({
     version: 1,
     type: 'scene',
-    children: [{ namespace: 'test', type: 'program-observed', label }],
+    children: [{ namespace: 'test', type: 'artifact', label }],
   });
-
-  const observer: CompileObserverDefinition = {
-    key: 'program-observer',
-    createSession: () => {
-      const labels: Array<string> = [];
-      return {
-        select: site => site.owner.kind === 'composite',
-        observe: observation => {
-          const value = observation.value as { label: string };
-          labels.push(value.label);
-        },
-        complete: () => labels,
-      };
-    },
-  };
-
-  it('提交来自一个完整候选修订版的主要和观察者输出', () => {
-    const session = new ReconcilerSession(
-      { composites: [observedComposite], onWarn: () => {} },
-      { observers: [observer] },
-    );
-
-    session.mount(sourceWithLabel('A'));
+  it('Scene 和领域产物同次提交，失败保留上一 revision', () => {
+    const session = new ReconcilerSession({ composites: [definition] });
+    session.mount(source('A'));
     const before = session.read();
-    session.replace(sourceWithLabel('B'));
+    session.replace(source('B'));
     const after = session.read();
-
-    expect(after.compilation.observerOutputs).toEqual([{ key: 'program-observer', value: ['B'] }]);
-    expect(after.compilation.result.scene).toEqual(
-      compileToScene(sourceWithLabel('B'), { composites: [observedComposite], onWarn: () => {} }).scene,
-    );
-    expect(after.revision).toBe(session.read().revision);
-
-    expect(after.compilation.result).not.toBe(before.compilation.result);
-  });
-
-  it('当观察者完成失败时回滚整个候选者', () => {
-    let shouldFail = false;
-    const failingObserver: CompileObserverDefinition = {
-      key: 'failing-program-observer',
-      createSession: () => ({
-        select: () => false,
-        observe: () => undefined,
-        complete: () => {
-          if (shouldFail) throw new Error('observer completion failed');
-          return null;
-        },
-      }),
-    };
-    const session = new ReconcilerSession(
-      { composites: [observedComposite], onWarn: () => {} },
-      { observers: [failingObserver] },
-    );
-
-    session.mount(sourceWithLabel('A'));
-    const before = session.read();
-    const baseRevision = session.read().revision;
-    shouldFail = true;
-
-    expect(() => session.replace(sourceWithLabel('B'))).toThrowError(
-      expect.objectContaining({
-        cause: expect.objectContaining({ message: 'observer completion failed' }),
-      }),
-    );
-    expect(session.read().revision).toBe(baseRevision);
-    expect(session.read()).toBe(before);
-  });
-
-  it('当观察者为空时准备一致的替换', () => {
-    const session = new ReconcilerSession({ onWarn: () => {} }, { observers: [] });
-
-    const initial = sceneWithText('A');
-    const next: IRScene = { ...initial, children: [{ ...initial.children[0], style: { fill: '#22c55e' } }] };
-    session.mount(initial);
-
-    session.replace(next);
-
-    expect(session.read().compilation.observerOutputs).toEqual([]);
+    expect(after.compilation.result).toEqual(compileToScene(source('B'), { composites: [definition] }));
+    expect(after.compilation.result.artifacts[0].value).toEqual({ label: 'B' });
+    expect(before.compilation.result.artifacts[0].value).toEqual({ label: 'A' });
+    expect(after.revision).not.toBe(before.revision);
+    expect(() => session.replace(source('fail'))).toThrow();
+    expect(session.read()).toBe(after);
   });
 });
 

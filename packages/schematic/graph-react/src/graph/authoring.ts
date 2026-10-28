@@ -45,7 +45,6 @@ export type GraphLayoutHostProps = Pick<
   | 'composites'
   | 'themeDefinitions'
   | 'lowerTex'
-  | 'artifacts'
   | 'onArtifacts'
   | 'onCompileResult'
 >;
@@ -77,7 +76,6 @@ export const graphLayoutHostPropKeys = [
   'composites',
   'themeDefinitions',
   'lowerTex',
-  'artifacts',
   'onArtifacts',
   'onCompileResult',
 ] as const satisfies ReadonlyArray<keyof GraphLayoutHostProps>;

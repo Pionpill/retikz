@@ -40,7 +40,6 @@ export type BranchDiagramLayoutHostProps = Pick<
   | 'composites'
   | 'themeDefinitions'
   | 'lowerTex'
-  | 'artifacts'
   | 'onArtifacts'
   | 'onCompileResult'
 >;
@@ -73,7 +72,6 @@ const branchDiagramLayoutHostPropKeys = [
   'composites',
   'themeDefinitions',
   'lowerTex',
-  'artifacts',
   'onArtifacts',
   'onCompileResult',
 ] as const satisfies ReadonlyArray<keyof BranchDiagramLayoutHostProps>;
@@ -148,7 +146,6 @@ export const collectBranchDiagramInput = (
     composites: _composites,
     themeDefinitions: _themeDefinitions,
     lowerTex: _lowerTex,
-    artifacts: _artifacts,
     onArtifacts: _onArtifacts,
     onCompileResult: _onCompileResult,
     ...input
@@ -179,7 +176,6 @@ export const collectBranchDiagramInput = (
   void _composites;
   void _themeDefinitions;
   void _lowerTex;
-  void _artifacts;
   void _onArtifacts;
   void _onCompileResult;
 

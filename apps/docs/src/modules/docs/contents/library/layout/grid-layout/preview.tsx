@@ -2,8 +2,8 @@ import { compileToScene } from '@retikz/core';
 import type { InspectionSelection } from '@retikz/inspect';
 import { GridLayoutArtifactSchema, gridLayoutDefinition } from '@retikz/layout';
 import type { LayoutProps } from '@retikz/react';
-import { cloneElement } from 'react';
 import type { ReactElement } from 'react';
+import { cloneElement } from 'react';
 
 import type {
   PreviewControlsDefinition,
@@ -29,7 +29,6 @@ export const defineGridPreview = <const TDefinition extends PreviewControlsDefin
       const rectangles = [output.scene.layout];
 
       for (const artifact of output.artifacts) {
-        if (artifact.kind !== 'composite') continue;
         const { container } = GridLayoutArtifactSchema.parse(artifact.value);
         rectangles.push(container.allocationBounds);
       }

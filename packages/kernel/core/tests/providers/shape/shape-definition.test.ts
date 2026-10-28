@@ -1,9 +1,9 @@
-import { localToWorld, worldToLocal } from '@retikz/math';
 import type { CenteredBox } from '@retikz/math';
+import { localToWorld, worldToLocal } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import type { PathCommand, CompiledShapeStyle, ScenePrimitive, ShapeDefinition } from '../../../src/contract';
+import type { CompiledShapeStyle, PathCommand, ScenePrimitive, ShapeDefinition } from '../../../src/contract';
 import { defineShape } from '../../../src/contract';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';
 
@@ -144,14 +144,6 @@ describe('自定义 ShapeDefinition 是一个普通对象（工厂友好）', ()
         return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
       },
       resolveAnchor: (rect, name) => (name === 'origin' ? [rect.x, rect.y] : undefined),
-      computeOutline: rect => [
-        { kind: 'move', to: [rect.x - rect.width / 2, rect.y - rect.height / 2] },
-        { kind: 'line', to: [rect.x + rect.width / 2, rect.y - rect.height / 2] },
-        { kind: 'line', to: [rect.x + rect.width / 2, rect.y + rect.height / 2] },
-        { kind: 'line', to: [rect.x - rect.width / 2, rect.y + rect.height / 2] },
-        { kind: 'close' },
-      ],
-      computeKeyPoints: rect => [{ name: 'origin', position: [rect.x, rect.y] }],
       *emit(rect, style): Iterable<ScenePrimitive> {
         yield {
           type: 'path',
@@ -179,50 +171,6 @@ describe('自定义 ShapeDefinition 是一个普通对象（工厂友好）', ()
     const poly = createPolygonShape();
 
     expect(poly.computeEdgePoint).toBeUndefined();
-  });
-
-  it('轮廓和 keyPoints 是可选的几何功能，具有 JSON 安全结果', () => {
-    const poly = createPolygonShape();
-    const rect: CenteredBox = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
-
-    expect(poly.computeOutline?.(rect, NO_PARAMS)).toEqual([
-      { kind: 'move', to: [-1, 2] },
-      { kind: 'line', to: [9, 2] },
-      { kind: 'line', to: [9, 8] },
-      { kind: 'line', to: [-1, 8] },
-      { kind: 'close' },
-    ]);
-    expect(poly.computeKeyPoints?.(rect, NO_PARAMS)).toEqual([{ name: 'origin', position: [4, 5] }]);
-  });
-});
-
-describe('BUILTIN_SHAPES 大纲契约', () => {
-  const rect: CenteredBox = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
-
-  it('发布矩形、椭圆形和多边形的显式闭合轮廓', () => {
-    const rectangleOutline = BUILTIN_SHAPES.get('rectangle')!.computeOutline?.(rect, NO_PARAMS);
-    const ellipseOutline = BUILTIN_SHAPES.get('ellipse')!.computeOutline?.(rect, NO_PARAMS);
-    const polygonOutline = BUILTIN_SHAPES.get('polygon')!.computeOutline?.(rect, DIAMOND_PARAMS);
-
-    expect(rectangleOutline).toBeDefined();
-    expect(ellipseOutline).toBeDefined();
-    expect(polygonOutline).toBeDefined();
-    expect(rectangleOutline?.at(-1)).toEqual({ kind: 'close' });
-    expect(ellipseOutline?.at(-1)).toEqual({ kind: 'close' });
-    expect(polygonOutline?.at(-1)).toEqual({ kind: 'close' });
-  });
-
-  it('为内置形状族发布稳定的命名关键点', () => {
-    const rectangleKeyPoints = BUILTIN_SHAPES.get('rectangle')!.computeKeyPoints?.(rect, NO_PARAMS);
-    const ellipseKeyPoints = BUILTIN_SHAPES.get('ellipse')!.computeKeyPoints?.(rect, NO_PARAMS);
-    const polygonKeyPoints = BUILTIN_SHAPES.get('polygon')!.computeKeyPoints?.(rect, DIAMOND_PARAMS);
-
-    expect(rectangleKeyPoints).toBeDefined();
-    expect(ellipseKeyPoints).toBeDefined();
-    expect(polygonKeyPoints).toBeDefined();
-    expect(new Set(rectangleKeyPoints?.map(point => point.name)).size).toBe(rectangleKeyPoints?.length);
-    expect(new Set(ellipseKeyPoints?.map(point => point.name)).size).toBe(ellipseKeyPoints?.length);
-    expect(new Set(polygonKeyPoints?.map(point => point.name)).size).toBe(polygonKeyPoints?.length);
   });
 });
 

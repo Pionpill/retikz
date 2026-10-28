@@ -4,6 +4,7 @@ import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
 import { arrayDefinition, mapDefinition } from '../../../src/collection';
+import { sceneCellBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const content: IRChild = {
   type: 'node',
@@ -98,7 +99,7 @@ describe('Array / Map 外观和身份', () => {
           ),
         ),
     ).toBe(true);
-    expect(result.spatialHandles.entries.find(entry => entry.role === 'array-cell')?.geometry.bounds).toEqual({
+    expect(sceneCellBounds(result.scene)[0]).toEqual({
       x: 0,
       y: 0,
       width: 12,
@@ -152,7 +153,7 @@ describe('Array / Map 外观和身份', () => {
       },
     ]);
 
-    expect(result.spatialHandles.entries.find(entry => entry.role === 'array-cell')?.geometry.bounds).toEqual({
+    expect(sceneCellBounds(result.scene)[0]).toEqual({
       x: 10,
       y: 20,
       width: 100,
@@ -168,7 +169,7 @@ describe('Array / Map 外观和身份', () => {
   it('如果没有编写的 ID，则不会创建单元格句柄，包括索引列表', () => {
     const result = compile([{ namespace: 'standard', type: 'array', index: { start: 4 }, items: [{ content }] }]);
 
-    expect(result.spatialHandles.entries.filter(entry => entry.role === 'array-cell')).toHaveLength(0);
+    expect(sceneNodes(result.scene).filter(node => node.id !== undefined)).toHaveLength(0);
     expect(flat(result.scene.primitives).filter(node => node.type === 'text')).toEqual(
       expect.arrayContaining([expect.objectContaining({ lines: [{ text: '4' }] })]),
     );
@@ -194,9 +195,7 @@ describe('Array / Map 外观和身份', () => {
         .every(node => node.fontSize === 30),
     ).toBe(true);
     expect(result.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
-    expect(result.spatialHandles.entries.find(entry => entry.role === 'array-cell')?.geometry.bounds.width).toBeCloseTo(
-      82,
-    );
+    expect(sceneCellBounds(result.scene)[0].width).toBeCloseTo(82);
   });
 });
 
@@ -278,6 +277,6 @@ it('完全像显式未修饰节点一样编译持久文本单元，而无需重�
   ]);
 
   expect(actual.scene.primitives).toEqual(explicit.scene.primitives);
-  expect(actual.spatialHandles).toEqual(explicit.spatialHandles);
+
   expect(JSON.stringify(source)).toBe(before);
 });

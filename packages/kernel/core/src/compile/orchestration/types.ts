@@ -1,9 +1,6 @@
-import type { JsonValue } from '@retikz/foundation';
 import type { AxisAlignedBounds } from '@retikz/math';
 
 import type {
-  CompileObservationAncestor,
-  CompileObservationOwner,
   CompileOccurrenceLocator,
   CompositeBoundChild,
   CompositeCompileChild,
@@ -17,29 +14,23 @@ import type {
   SceneClipPath,
   ScenePrimitive,
   SceneResource,
-  SpatialHandleDeclaration,
-  SpatialHandleOwner,
   Transform,
 } from '../../contract';
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import type { MergedScopeDefaults } from '../../resolve';
-import type { IRChild, IRPathBase, IRPosition, CanonicalDropShadow } from '../../schemas';
+import type { CanonicalDropShadow, IRChild, IRPathBase, IRPosition } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { CompiledNodeLayout } from '../node';
 import type { LayoutProbeFailureEntry } from '../probe-failure';
 import type { CompileOwnerKey, CompileProvenance } from '../provenance';
-import type { CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../types';
+import type { CompositeArtifact } from '../types';
 import type { InputCompileWarning } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive, PathPlaceholder, PrimitiveZIndexTable } from './primitive';
-import type { PendingSpatialHandle } from './spatial-handle';
 
 /** 等待命名引用完成注册后再 emit 的 path 任务 */
 export type PendingPathEmission = {
-  /** 最终逻辑容器祖先 */
-  ancestors: ReadonlyArray<CompileObservationAncestor>;
-
   /** path Source IR，样式与动态 target 解析延迟到 resolving phase */
   path: IRPathBase;
   /** warning 与诊断使用的 IR locator */
@@ -61,10 +52,6 @@ export type PendingPathEmission = {
   };
   /** path 的完整 canonical occurrence */
   occurrence: CompileOccurrenceLocator;
-  /** Path owner output observation 的最终输出容器 */
-  observationSink: Array<CompileObservationContribution>;
-  /** 当前 authored Path site 选中的 observer keys */
-  observerKeys?: ReadonlyArray<string>;
   /** Path occurrence 捕获的有效 Theme */
   theme: CanonicalTheme;
   /** Path occurrence 捕获的有效默认配置 */
@@ -91,14 +78,8 @@ export type TraversalResult = {
   bounds: Array<LayoutBoundsContribution>;
   /** 顶层父布局 allocation 几何贡献 */
   allocations: Array<LayoutBoundsContribution>;
-  /** 顶层真实 Node 布局观测 */
-  observations: Array<PendingNodeLayoutObservation>;
   /** 本次 traversal 最终逻辑树的 artifacts */
-  artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
-  /** 本次 traversal 最终逻辑树的 compile observation entries */
-  compileObservations: Array<CompileObservationContribution>;
-  /** world-space 物化前的 qualified spatial handle records */
-  spatialHandles: Array<PendingSpatialHandle>;
+  artifacts: Array<CompositeArtifact>;
   /** 顶层 child 向父布局暴露的无歧义 alignment guides */
   alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
 };
@@ -131,8 +112,6 @@ export type CompositeReplayTransaction = {
   bounds: Array<LayoutBoundsContribution>;
   /** probe allocation 几何贡献 */
   allocations: Array<LayoutBoundsContribution>;
-  /** probe Node layout 观测 */
-  observations: Array<PendingNodeLayoutObservation>;
   /** probe namespace 当前 frame 变更 */
   namespaceChanges: Array<NamespaceFrameChange>;
   /** 与 namespaceChanges 对齐的最终注册 occurrence */
@@ -151,11 +130,7 @@ export type CompositeReplayTransaction = {
   /** 仅在 replay 时发布的 warning */
   warnings: Array<InputCompileWarning>;
   /** 仅在 replay 时发布的 artifacts */
-  artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
-  /** 仅在 replay 时发布的 compile observation entries */
-  compileObservations: Array<CompileObservationContribution>;
-  /** probe 内仅在 replay commit 时发布的 spatial handle records */
-  spatialHandles: Array<PendingSpatialHandle>;
+  artifacts: Array<CompositeArtifact>;
   /** probe 时的有效样式语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
   styleFingerprint: string;
   /** probe 时的有效 Theme 语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
@@ -191,8 +166,6 @@ export type CompositeRuntimeOutputChild =
       props: CompositeCompileScopeProps;
       /** 按输出顺序排列的作用域子项 */
       children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
-      /** 作用域公开的空间句柄声明 */
-      spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
     }>;
 
 /** 单个 layout-aware composite callback 的 runtime owner */
@@ -248,8 +221,6 @@ export type TraversalCompileOptions = {
   captureScopeTargets?: (child: ScopeChild, namespace: NamespaceStack, chain: ReadonlyArray<Transform>) => void;
   /** probe 或显式绑定子项的局部运行时输入 */
   runtimeInputs?: CompositeRuntimeInputScope;
-  /** 隔离 traversal 继承的逻辑容器祖先 */
-  ancestors?: ReadonlyArray<CompileObservationAncestor>;
   /** 当前 traversal 是否为 layoutChild 隔离 probe */
   probe?: boolean;
   /** probe 继承的 namespace snapshot */
@@ -274,12 +245,8 @@ export type TraversalCompileOptions = {
   provenanceTracker?: CompileProvenanceTracker;
   /** 隔离 traversal 继承的 semantic owner */
   semanticOwner?: CompileSemanticOwner;
-  /** 当前 traversal 根的 composite owner path */
-  spatialOwnerPath?: ReadonlyArray<SpatialHandleOwner>;
   /** 向隔离 namespace callback 暴露当前 warning occurrence */
   observeWarningOccurrence?: (occurrence: CompileOccurrenceLocator | undefined) => void;
-  /** 向辅助编译边界暴露最接近失败点的 child IR path */
-  observeFailurePath?: (path: string) => void;
 };
 
 /** 整棵 child 树遍历期间共享的可变状态 */
@@ -320,8 +287,6 @@ type TraversalContext = Pick<
   | 'clip'
   | 'composites'
   | 'maxCompositeDepth'
-  | 'artifacts'
-  | 'observation'
 > & {
   /** 当前 traversal 接收到的完整双轴 proposal */
   proposal: LayoutProposal;
@@ -341,8 +306,6 @@ export type TraversalRuntime = {
 export type TraversalFrame = {
   /** 当前 Source 容器的局部实例输入，生成普通 child 不继承 */
   runtimeInputs?: CompositeRuntimeInputScope;
-  /** 当前 child 的外层逻辑容器，不含自身 */
-  ancestors: ReadonlyArray<CompileObservationAncestor>;
   /** 只供当前直接 child 消费的父 proposal；递归 Scope 不向普通后代广播 */
   childProposal?: LayoutProposal;
   /** 当前 scope 累计 transform */
@@ -369,16 +332,8 @@ export type TraversalFrame = {
   alignmentGuideSink: Array<LayoutAlignmentGuide>;
   /** 最近一层显式 composite allocation boundary */
   allocationBoundary?: object;
-  /** 延迟到完整 Scope chain 冻结后发布的 Node layout observer 记录 */
-  observationSink: Array<PendingNodeLayoutObservation>;
   /** 最终逻辑树 artifact 输出容器 */
-  artifactSink: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
-  /** 最终逻辑树 compile observation 输出容器 */
-  compileObservationSink: Array<CompileObservationContribution>;
-  /** 最终 traversal 的 spatial handle 输出容器 */
-  spatialHandleSink: Array<PendingSpatialHandle>;
-  /** 当前 child 所在的外层 composite owner path */
-  spatialOwnerPath: ReadonlyArray<SpatialHandleOwner>;
+  artifactSink: Array<CompositeArtifact>;
   /** 当前 frame 的编译来源 */
   semanticOwner?: CompileSemanticOwner;
 };
@@ -466,38 +421,4 @@ type LayoutBoundsContribution = {
   shadow?: CanonicalDropShadow;
   /** 位于该显式 composite allocation boundary 内时不直接贡献到外层 */
   allocationBoundary?: object;
-};
-
-/** 等完整 Scope chain 冻结后再发送的节点布局观测记录 */
-export type PendingNodeLayoutObservation = {
-  /** 观察对象身份，独立于可复用布局 */
-  id?: string;
-  /** 节点自身局部 layout */
-  layout: CompiledNodeLayout;
-  /** 从节点所在 frame 到 world 的最终只读 chain；Scope 收尾时替换链引用 */
-  scopeChain: ReadonlyArray<Transform>;
-  /** 节点在逻辑树中的出现位置 */
-  occurrence: CompileOccurrenceLocator;
-};
-
-/** 等最终 Scope/replay transform 与 occurrence remap 完成后发布的 observation entry */
-export type CompileObservationContribution = {
-  /** 与 occurrence 同步提交的最终逻辑容器祖先 */
-  ancestors: ReadonlyArray<CompileObservationAncestor>;
-  /** 产生辅助内容的语义 owner */
-  owner: CompileObservationOwner;
-  /** 最终 owner occurrence locator */
-  occurrence: CompileOccurrenceLocator;
-  /** replay remap 前的所属者 occurrence */
-  origin: CompileOccurrenceLocator;
-  /** 从当前 subject local coordinate 到 root 的 transform chain */
-  scopeChain: ReadonlyArray<Transform>;
-  /** 已按 owner schema 解析并冻结的最终产物 */
-  value: JsonValue;
-  /** 选中该 authored site 的 observer keys */
-  observerKeys: ReadonlyArray<string>;
-  /** owner occurrence 捕获的有效 Theme */
-  theme: CanonicalTheme;
-  /** owner occurrence 捕获的有效默认配置 */
-  scopeDefaults: MergedScopeDefaults;
 };

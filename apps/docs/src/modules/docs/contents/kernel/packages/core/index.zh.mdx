@@ -76,7 +76,7 @@ const result = compileToScene(ir);
 console.log(result.scene);
 ```
 
-`compileToScene` 同步返回 `CompileResult`。其中 `scene` 可交给渲染器；`artifacts` 与 `spatialHandles` 分别承载附加产物和空间句柄，具体内容见[编译产物](/kernel/packages/core/compilation-output)。这次调用只完成编译，画面绘制由 Render 或适配层继续完成。
+`compileToScene` 同步返回 `CompileResult`。其中 `scene` 可交给渲染器；`artifacts` 承载 Composite 返回的领域产物，具体内容见[编译产物](/kernel/packages/core/compilation-output)。这次调用只完成编译，画面绘制由 Render 或适配层继续完成。
 
 入口接收已类型化的 IR。来自 JSON 等外部输入的数据应先经过对应 schema 校验；文字测量、公式处理和扩展定义等能力可通过编译选项接入。
 

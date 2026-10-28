@@ -1,10 +1,9 @@
-import type { LayoutAxisProposal, CompositeCompileContext, CompositeCompileResult, LayoutProposal } from '@retikz/core';
+import type { CompositeCompileContext, CompositeCompileResult, LayoutAxisProposal, LayoutProposal } from '@retikz/core';
 import { LayoutAxisProposalKind } from '@retikz/core';
 import { LayoutOverflow, requiredLayoutProbe } from '@retikz/layout/compose';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/errors';
 import { surfaceBoundaryPath, surfaceClip } from '../../shared/surface-geometry';
-import { SURFACE_HANDLE_ID, SURFACE_HANDLE_ROLE } from './constants';
 import type { CanonicalSurface } from './resolve';
 import { resolveSurface } from './resolve';
 import type { IRSurface } from './types';
@@ -131,18 +130,6 @@ export const compileSurface = (sourceSurface: IRSurface, context: CompositeCompi
 
   return {
     allocationBounds,
-    children: [
-      context.createScope(
-        scopeProps,
-        [...background, content, ...border],
-        [
-          {
-            id: SURFACE_HANDLE_ID,
-            role: SURFACE_HANDLE_ROLE,
-            bounds: allocationBounds,
-          },
-        ],
-      ),
-    ],
+    children: [context.createScope(scopeProps, [...background, content, ...border])],
   };
 };

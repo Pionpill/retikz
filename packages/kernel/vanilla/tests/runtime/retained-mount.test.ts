@@ -3,14 +3,14 @@ import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import type {
+  InputRetainedRendererFactory,
   RenderFrameSnapshot,
   RenderRuntimeConfig,
   RetainedRendererFactory,
-  InputRetainedRendererFactory,
 } from '@retikz/render/runtime';
 import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { enum as zodEnum, literal, strictObject, string } from 'zod';
+import { literal, strictObject, string, enum as zodEnum } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver } from '../../src';
 import { InputLayerCache } from '../../src';
@@ -201,13 +201,11 @@ const createLayerDriver = (): VanillaCompileDriver => {
 
       let currentAuthoring = authoring;
       const session = Object.freeze({
-        observers: Object.freeze([]),
         resolve: (coreOutput: Parameters<ReturnType<VanillaCompileDriver['create']>['resolve']>[0]) => {
           if (currentAuthoring === 'fail') throw new Error('expected compile driver failure');
 
           return Object.freeze({
             primary: coreOutput.result,
-            observerOutputs: coreOutput.observerOutputs,
             layers:
               currentAuthoring === true
                 ? Object.freeze([
@@ -773,7 +771,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'), {
       runtime: { mode: 'static' },
-      compile: { artifacts: { nodeLayouts: true } },
+      compile: {},
     });
     const root = view.root;
 
@@ -844,7 +842,7 @@ describe('@retikz/vanilla 保留安装座', () => {
   it('raw static compile 失败保留旧 view，materialization 失败同步抛出', () => {
     const view = mountSvg(document.createElement('div'), source('#ef4444'), {
       runtime: { mode: 'static' },
-      compile: { artifacts: { nodeLayouts: true } },
+      compile: {},
     });
     const html = view.root.innerHTML;
     const artifacts = view.artifacts;
@@ -991,7 +989,7 @@ describe('@retikz/vanilla 保留安装座', () => {
   it('renderer update 失败时保留 committed artifacts 与 runtimeMeta identity', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'), {
-      compile: { artifacts: { nodeLayouts: true } },
+      compile: {},
       runtime: { rendererFactory: createMemoryRendererFactory('entity', true) },
     });
     const artifacts = view.artifacts;

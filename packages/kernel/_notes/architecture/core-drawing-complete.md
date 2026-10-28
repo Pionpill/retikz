@@ -124,7 +124,7 @@ docs / notes 可解释
 - 是否需要新 IR / contract / registry：
 - Scene / manifest 如何承载：
 - Composite assembly 与跨 namespace 依赖如何闭环：
-- qualified spatial handle、owner path 与 Scene 边界是否适用：
+- Composite 领域产物的坐标语义及 Scene 消费边界是否明确：
 - renderer 实现或诊断降级：
 - Vanilla authoring / processing 与 React 等框架宿主如何等价暴露：
 - Interaction Readiness 是否适用：

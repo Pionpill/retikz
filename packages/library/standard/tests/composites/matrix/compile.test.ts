@@ -1,18 +1,20 @@
 import type { IRChild, ScenePrimitive } from '@retikz/core';
-import { compileToScene, resolveSpatialHandle } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
 import { expect, it } from 'vitest';
 
 import { arrayDefinition, mapDefinition } from '../../../src/collection';
-import { matrixDefinition, createMatrix, getMatrixCellId } from '../../../src/collection/matrix';
+import { createMatrix, getMatrixCellId, matrixDefinition } from '../../../src/collection/matrix';
+import { compileMeasured } from '../../helpers/compile-measured';
+import { sceneCellBounds, sceneNodeBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const base = { namespace: 'standard', type: 'matrix' } as const;
 
 const compile = (child: IRChild) =>
-  compileToScene(
-    { type: 'scene', version: 1, children: [child] },
-    { composites: [matrixDefinition, arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
-  );
+  compileMeasured(child, {
+    composites: [matrixDefinition, arrayDefinition, mapDefinition],
+    clips: [pathClipDefinition],
+    padding: 0,
+  });
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? flat(node.children) : [node]));
@@ -44,13 +46,12 @@ it('骨架与显式格输出相同，行列坐标身份独立于标号', () => {
   });
 
   expect(actual.scene).toEqual(expected.scene);
-  expect(actual.spatialHandles).toEqual(expected.spatialHandles);
-  expect(actual.spatialHandles.entries.filter(e => e.role === 'matrix-cell').map(e => e.id)).toEqual([
-    'cell:m-0-0',
-    'cell:m-0-1',
-    'cell:m-1-0',
-    'cell:m-1-1',
-  ]);
+
+  expect(
+    sceneNodes(actual.scene)
+      .flatMap(node => (node.id === undefined ? [] : [node.id]))
+      .filter(id => /^(?:values|vector|m)-/.test(id)),
+  ).toEqual(['m-0-0', 'm-0-1', 'm-1-0', 'm-1-1']);
   expect(getMatrixCellId('m', 2, 3)).toBe('m-2-3');
 });
 it('共享轨道按最大需求确定，固定小格不拉伸，空内容仅保留padding', () => {
@@ -64,7 +65,7 @@ it('共享轨道按最大需求确定，固定小格不拉伸，空内容仅保�
     ],
     layout: { gap: { row: 3, column: 5 } },
   });
-  const cells = result.spatialHandles.entries.filter(e => e.role === 'matrix-cell').map(e => e.geometry.bounds);
+  const cells = sceneCellBounds(result.scene);
 
   expect(cells).toEqual([
     { x: 0, y: 0, width: 10, height: 20 },
@@ -79,7 +80,7 @@ it('零轴不生成格子、索引或gap', () => {
     const result = compile({ ...base, skeleton, index: true });
 
     expect(flat(result.scene.primitives)).toEqual([]);
-    expect(result.spatialHandles.entries.find(e => e.role === 'container')?.geometry.bounds).toEqual({
+    expect(result.allocationBounds).toEqual({
       x: 0,
       y: 0,
       width: 0,
@@ -97,7 +98,7 @@ it('空标号和空索引对象不留下额外空间', () => {
 it('JSON只解释格内结构，展开选择不改变矩阵形状', () => {
   const result = compile({ ...base, id: 'm', cellIdMode: 'index', data: [[{ a: [1] }, null]], dataExpand: false });
 
-  expect(result.spatialHandles.entries.filter(e => e.role === 'matrix-cell')).toHaveLength(2);
+  expect(sceneCellBounds(result.scene)).toHaveLength(2);
   expect(
     flat(result.scene.primitives)
       .filter(p => p.type === 'text')
@@ -115,10 +116,8 @@ it('索引带只偏移对应轴，前后位置保持相同总尺寸', () => {
     defaultCell: { layout: { width: 30, height: 20 } },
   };
   const plain = compile(source);
-  const root = (result: ReturnType<typeof compile>) =>
-    result.spatialHandles.entries.find(e => e.role === 'container')!.geometry.bounds;
-  const cell = (result: ReturnType<typeof compile>) =>
-    result.spatialHandles.entries.find(e => e.role === 'matrix-cell')!.geometry.bounds;
+  const root = (result: ReturnType<typeof compile>) => result.allocationBounds;
+  const cell = (result: ReturnType<typeof compile>) => sceneCellBounds(result.scene)[0];
   const before = compile({ ...source, index: true });
   const after = compile({ ...source, index: { row: { position: 'after' }, column: { position: 'after' } } });
 
@@ -154,10 +153,6 @@ it('空根保留标签，别名与生成身份经过变换仍共用一个格子�
     transforms: [{ kind: 'translate', x: 7, y: 11 }],
     defaultCell: { layout: { width: 30, height: 20 } },
   });
-  const generated = resolveSpatialHandle(result.spatialHandles, { id: 'cell:m-0-0' });
-
-  expect(resolveSpatialHandle(result.spatialHandles, { id: 'cell:named' })).toBe(generated);
-  expect(generated.geometry.bounds).toEqual({ x: 7, y: 11, width: 30, height: 20 });
-  expect(result.spatialHandles.entries.filter(e => e.role === 'matrix-cell')).toHaveLength(2);
-  expect(resolveSpatialHandle(result.spatialHandles, { id: 'cell:m-0-1' })).not.toHaveProperty('aliasIds');
+  expect(sceneNodeBounds(result.scene, 'm-0-0')).toEqual({ x: 7, y: 11, width: 30, height: 20 });
+  expect(sceneCellBounds(result.scene)).toHaveLength(2);
 });

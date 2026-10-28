@@ -3,10 +3,10 @@ import { boolean, literal, number, strictObject } from 'zod';
 
 import type {
   CompileWarning,
+  CompositeCompileContext,
   IRChild,
   IRScene,
   LayoutChildResult,
-  CompositeCompileContext,
   LayoutProposal,
   ScenePrimitive,
   TextMeasurer,
@@ -275,7 +275,6 @@ describe('布局感知复合', () => {
     expect(result.scene.primitives).not.toHaveLength(0);
     expect(result.artifacts).toEqual([
       {
-        kind: 'composite',
         namespace: 'test',
         type: 'layout',
         occurrence: { sourcePath: 'children[0]', expansionPath: [] },
@@ -343,7 +342,6 @@ describe('布局感知复合', () => {
 
     expect(result.artifacts).toEqual([
       {
-        kind: 'composite',
         namespace: 'test',
         type: 'nestedConstraint',
         occurrence: {

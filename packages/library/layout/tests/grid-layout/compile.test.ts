@@ -1,11 +1,11 @@
 import type { IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive, TranslateTransform } from '@retikz/core';
 import {
+  BuiltinLayoutAlignmentGuideName,
   ChildSchema,
   compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAlignmentGuideDimension,
-  BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
@@ -183,7 +183,7 @@ const translationOf = (primitives: ReadonlyArray<ScenePrimitive>, id: string): R
 };
 
 const gridArtifactOf = (output: ReturnType<typeof compileToScene>): GridLayoutCompileArtifact => {
-  const artifact = output.artifacts.find(value => value.kind === 'composite' && value.type === 'gridLayout');
+  const artifact = output.artifacts.find(value => value.type === 'gridLayout');
   if (artifact === undefined) throw new Error('Expected GridLayout compile artifact');
   return artifact as GridLayoutCompileArtifact;
 };

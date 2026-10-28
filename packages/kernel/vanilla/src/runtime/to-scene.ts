@@ -1,4 +1,4 @@
-import type { CompileArtifact, CompileResult, Scene } from '@retikz/core';
+import type { CompileResult, CompositeArtifact, Scene } from '@retikz/core';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 
@@ -16,7 +16,7 @@ export type SceneResult = {
   /** 主 Scene */
   scene: Scene;
   /** 主编译产出的 artifacts */
-  artifacts: ReadonlyArray<CompileArtifact>;
+  artifacts: ReadonlyArray<CompositeArtifact>;
   /** authored input 的完整 Core compile result；预编译 Scene 输入为 undefined */
   compileResult: CompileResult | undefined;
   /** 与主 Scene 同 revision 的后置只读图层 */
@@ -27,7 +27,7 @@ export type SceneResult = {
   runtimeMeta: InputRuntimeMeta;
 };
 
-const EMPTY_ARTIFACTS: ReadonlyArray<CompileArtifact> = Object.freeze([]);
+const EMPTY_ARTIFACTS: ReadonlyArray<CompositeArtifact> = Object.freeze([]);
 
 const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
 

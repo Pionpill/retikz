@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { isNodeLayoutCompileArtifact } from '../../src/compile/artifact';
 import { compileToScene } from '../../src/compile/compile';
 import { BuiltinCompileWarningCode } from '../../src/compile/constants';
 import type { TexLowerer, TextMeasurer, TextMetrics } from '../../src/compile/text';
@@ -11,6 +10,7 @@ import { RetikzCoreError } from '../../src/error';
 import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';
 import { NodeLabelSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
+import { sceneRectangles } from '../helpers/scene-rectangles';
 
 const LABEL_METRICS: TextMetrics = {
   width: 40,
@@ -357,11 +357,8 @@ describe('Node 标签 pin 和边界', () => {
     const result = compileToScene(ir, {
       measureText: fixedMeasure,
       padding: 0,
-      artifacts: { nodeLayouts: true },
     });
-    const markerX = result.artifacts.find(
-      artifact => isNodeLayoutCompileArtifact(artifact) && artifact.value.id === 'marker',
-    )?.value.rect.x;
+    const markerX = sceneRectangles(result.scene).find(rectangle => rectangle.id === 'marker')?.rect.x;
 
     expect(markerX).toBeCloseTo(50);
   });

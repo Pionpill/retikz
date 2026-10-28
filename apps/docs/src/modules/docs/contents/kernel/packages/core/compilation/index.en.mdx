@@ -13,13 +13,12 @@ IR stores drawing declarations such as “place a node here” and “connect A 
 compileToScene(ir: IRScene, options?: CompileOptions): CompileResult
 ```
 
-| Input / output          | Meaning in this page                                                            |
-| ----------------------- | ------------------------------------------------------------------------------- |
-| `ir`                    | A complete drawing declaration conforming to the Core contract                  |
-| `options`               | Measurement, extension definitions, and output settings for this call; optional |
-| `result.scene`          | Laid-out primitives, the canvas bounds, and drawing resources                   |
-| `result.artifacts`      | Composite outputs and explicitly requested node layout data                     |
-| `result.spatialHandles` | Named spatial regions collected during this compilation                         |
+| Input / output     | Meaning in this page                                                            |
+| ------------------ | ------------------------------------------------------------------------------- |
+| `ir`               | A complete drawing declaration conforming to the Core contract                  |
+| `options`          | Measurement, extension definitions, and output settings for this call; optional |
+| `result.scene`     | Laid-out primitives, the canvas bounds, and drawing resources                   |
+| `result.artifacts` | Composite outputs and explicitly requested node layout data                     |
 
 `compileToScene` accepts typed IR; it does not call `SceneSchema.parse` on the entire tree at entry. External data such as JSON should pass through the schema boundary first. Compilation still checks constraints that require a Definition or layout context.
 
@@ -350,131 +349,7 @@ The example's content spans `[-30, -20]` to `[210, 20]`. Adding 10 units on all 
 
 This step determines the canvas bounds without moving A or B again. The output `primitives` are the path, Group A, and Group B, in that order. This example has no gradient or clip resources, so `resources` is omitted.
 
-Alongside Scene, the result carries `artifacts` and `spatialHandles`. The former contains composite outputs or requested node layouts; the latter contains named spatial regions. Both correspond to this compilation's Scene. The renderer does not use them to rerun node layout. Ordinary `compileToScene` does not create an observer session; the explicit observation entry dispatches final observations as part of the same full compilation.
-
-| Property         | Type                                                             | Purpose                                                                                                                                                                                                      |
-| ---------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `scene`          | `Scene`                                                          | Holds laid-out primitives in drawing order, canvas bounds, optional resources, and root timeline animations for the renderer.                                                                                |
-| `artifacts`      | `ReadonlyArray<TCompositeArtifact \| NodeLayoutCompileArtifact>` | Holds domain artifacts returned by composites and explicitly requested node layout results for callers to inspect or process. Empty when no artifacts are produced.                                          |
-| `spatialHandles` | `SpatialHandleIndex`                                             | Holds named spatial regions declared by composites, including their owners, world-space bounds, roles, and tags, for callers to query and locate. Its `entries` array is empty when no regions are declared. |
-
-The tabs below show the source types for the result and its main fields, with comments omitted. Other referenced types are not expanded.
-
-<DocTabs defaultValue="compile-result">
-
-<DocTab value="compile-result" label="CompileResult">
-
-```ts
-export type CompileResult<TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact> = Readonly<{
-  scene: Scene;
-  artifacts: ReadonlyArray<TCompositeArtifact | NodeLayoutCompileArtifact>;
-  spatialHandles: SpatialHandleIndex;
-}>;
-```
-
-</DocTab>
-
-<DocTab value="scene" label="Scene">
-
-```ts
-export type Scene = {
-  primitives: Array<ScenePrimitive>;
-  layout: BoundsRect;
-  resources?: Array<SceneResource>;
-  animations?: Array<IRAnimationTrack>;
-};
-
-export type ScenePrimitive = RectPrimitive | EllipsePrimitive | TextPrimitive | PathPrimitive | GroupPrimitive;
-```
-
-</DocTab>
-
-<DocTab value="artifacts" label="artifacts">
-
-```ts
-export type CompositeCompileArtifact<
-  TNamespace extends string = string,
-  TType extends string = string,
-  TValue extends JsonValue = JsonValue,
-> = Readonly<{
-  kind: 'composite';
-  namespace: TNamespace;
-  type: TType;
-  occurrence: CompileOccurrenceLocator;
-  value: TValue;
-}>;
-
-export type NodeLayoutCompileArtifact = Readonly<{
-  kind: 'nodeLayout';
-  occurrence: CompileOccurrenceLocator;
-  value: NodeLayoutObservation;
-}>;
-
-export type NodeLayoutObservation = {
-  kind: 'node';
-  id?: string;
-  content: {
-    center: [number, number];
-    size: {
-      width: number;
-      height: number;
-    };
-    bounds: {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    };
-  };
-  rect: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotate: number;
-  };
-  text: {
-    hasInlineTex: boolean;
-    lineCount: number;
-  };
-};
-```
-
-</DocTab>
-
-<DocTab value="spatial-handles" label="spatialHandles">
-
-```ts
-export type SpatialHandleIndex = Readonly<{
-  entries: ReadonlyArray<QualifiedSpatialHandle>;
-}>;
-
-export type QualifiedSpatialHandle = Readonly<{
-  ownerPath: ReadonlyArray<SpatialHandleOwner>;
-  id: string;
-  aliasIds?: ReadonlyArray<string>;
-  role: string;
-  geometry: Readonly<{
-    kind: 'rect';
-    bounds: Readonly<BoundsRect>;
-  }>;
-  tags: ReadonlyArray<string>;
-  payload?: Readonly<JsonObject>;
-  finalOccurrence: CompileOccurrenceLocator;
-  originOccurrence: CompileOccurrenceLocator;
-}>;
-
-export type SpatialHandleOwner = Readonly<{
-  namespace: string;
-  type: string;
-  instanceId?: string;
-  occurrence: CompileOccurrenceLocator;
-}>;
-```
-
-</DocTab>
-
-</DocTabs>
+Alongside Scene, `artifacts` contains domain values returned by composites and is empty when none are produced. The result contains only `scene` and `artifacts`, both from the same compilation. See [Compilation output](/kernel/packages/core/compilation-output) for the fields and domain coordinate conventions.
 
 Warnings and fatal errors have different outcomes. Recoverable cases follow the capability's degradation rules: for example, a missing path target can produce a warning and remove that path's placeholder. The synchronous entry dispatches collected warnings only after full compilation succeeds. A fatal error terminates the call without returning a partial Scene.
 
@@ -482,7 +357,6 @@ Warnings and fatal errors have different outcomes. Recoverable cases follow the 
   sources={[
     { label: 'Scene assembly and warning dispatch', path: 'packages/kernel/core/src/compile/compile.ts' },
     { label: 'Compile result and artifact types', path: 'packages/kernel/core/src/compile/types.ts' },
-    { label: 'Spatial index types', path: 'packages/kernel/core/src/contract/spatial-handle/handle.ts' },
     { label: 'Automatic canvas bounds', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
     { label: 'Renderer-neutral Scene contract', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
   ]}
@@ -605,7 +479,7 @@ The internal Weave reconciler accepts WeaveBatch on a mounted Root: it applies i
 
 Updates return complete output with commit, finish and rollback operations. Preparation preserves committed state; rollback remains available after commit until final confirmation releases recovery references. Rebuilding name indexes, provenance and output may still traverse the whole tree, so local compilation does not imply local total update cost.
 
-Reconciler `replace` accepts complete IR and recompiles it; `update` accepts a `WeaveBatch` for an existing basic-element tree. A batch must belong to the current session result, and Composite scenes do not support that entry. Ordinary React and Vanilla input updates still use complete replacement. The Render commit target converts changed compilation output to `replaceScene`; this does not imply fine-grained backend Patch updates. Composite input uses Core full preparation, preserving probes, instance inputs, artifacts and spatial handles.
+Reconciler `replace` accepts complete IR and recompiles it; `update` accepts a `WeaveBatch` for an existing basic-element tree. A batch must belong to the current session result, and Composite scenes do not support that entry. Ordinary React and Vanilla input updates still use complete replacement. The Render commit target converts changed compilation output to `replaceScene`; this does not imply fine-grained backend Patch updates. Composite input uses Core full preparation, preserving probes, instance inputs, artifacts.
 
 <SourceLinks
   sources={[

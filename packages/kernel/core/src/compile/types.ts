@@ -3,131 +3,45 @@ import type { ZodType } from 'zod';
 
 import type {
   AnyCompositeDefinition,
-  CompileObserverOutput,
   CompileOccurrenceLocator,
   CompositeInputBindings,
+  CoreProviderDefinitions,
   Scene,
-  SpatialHandleIndex,
+  ThemeDefinition,
 } from '../contract';
-import type { CoreProviderDefinitions, ThemeDefinition } from '../contract';
 import type { TexLowerer, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
-
-/** 编译期节点布局观测结果 */
-export type NodeLayoutObservation = {
-  /** 布局对象类型 */
-  kind: 'node';
-  /** 节点 id */
-  id?: string;
-  /** 节点正文内容盒测量 */
-  content: {
-    /** 内容盒中心点，已应用当前 scope transform */
-    center: [number, number];
-    /** 内容盒在节点排版轴上的尺寸 */
-    size: {
-      /** 内容盒宽度 */
-      width: number;
-      /** 内容盒高度 */
-      height: number;
-    };
-    /** 内容盒四角经过当前 scope transform 后得到的全局 AABB */
-    bounds: {
-      /** AABB 左上角 x */
-      x: number;
-      /** AABB 左上角 y */
-      y: number;
-      /** AABB 宽度 */
-      width: number;
-      /** AABB 高度 */
-      height: number;
-    };
-  };
-  /** 节点视觉外框布局结果 */
-  rect: {
-    /** 外框中心 x */
-    x: number;
-    /** 外框中心 y */
-    y: number;
-    /** 外框宽度 */
-    width: number;
-    /** 外框高度 */
-    height: number;
-    /** 旋转角，单位为弧度 */
-    rotate: number;
-  };
-  /** 节点正文文本布局摘要 */
-  text: {
-    /** 本次布局是否产出 TeX glyph */
-    hasInlineTex: boolean;
-    /** 正文行数 */
-    lineCount: number;
-  };
-};
 
 /**
  * layout-aware composite 返回的显式领域产物
  * @template TNamespace 产生该产物的复合组件命名空间
  * @template TType 产生该产物的复合组件类型标识
- * @template TValue 由复合组件产物 schema 校验的 JSON 值类型
+ * @template TValue 复合组件声明的 JSON 值类型
  */
-export type CompositeCompileArtifact<
+export type CompositeArtifact<
   TNamespace extends string = string,
   TType extends string = string,
   TValue extends JsonValue = JsonValue,
 > = Readonly<{
-  /** 标识复合组件领域产物 */
-  kind: 'composite';
   /** 产物所属复合组件的注册命名空间 */
   namespace: TNamespace;
   /** 产物所属复合组件的注册类型 */
   type: TType;
   /** 产生该产物的最终编译出现位置 */
   occurrence: CompileOccurrenceLocator;
-  /** 通过组件产物 schema 校验的领域结果 */
+  /** 组件声明的领域结果 */
   value: TValue;
-}>;
-
-/** 真实 Node 的 opt-in 布局产物 */
-export type NodeLayoutCompileArtifact = Readonly<{
-  /** 标识真实节点的布局观测产物 */
-  kind: 'nodeLayout';
-  /** 被观测节点的最终编译出现位置 */
-  occurrence: CompileOccurrenceLocator;
-  /** 节点的正文测量、视觉外框及文本布局结果 */
-  value: NodeLayoutObservation;
-}>;
-
-/** compile 返回的通用 artifact envelope */
-export type CompileArtifact = CompositeCompileArtifact | NodeLayoutCompileArtifact;
-
-/** compile artifact 开关 */
-export type CompileArtifactOptions = Readonly<{
-  /** 是否返回真实 Node 的布局 DTO */
-  nodeLayouts?: boolean;
 }>;
 
 /**
  * `compileToScene()` 的显式 Scene + artifact 结果
  * @template TCompositeArtifact 本次编译可返回的复合组件产物联合
  */
-export type CompileResult<TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact> = Readonly<{
+export type CompileResult<TCompositeArtifact extends CompositeArtifact = CompositeArtifact> = Readonly<{
   /** 可由渲染器直接消费的完整场景 */
   scene: Scene;
-  /** 本次编译收集的复合组件产物及显式请求的节点布局产物 */
-  artifacts: ReadonlyArray<TCompositeArtifact | NodeLayoutCompileArtifact>;
-  /** 与 Scene / artifacts 同 revision 的 renderer-neutral world-space 空间索引 */
-  spatialHandles: SpatialHandleIndex;
-}>;
-
-/**
- * 显式 observed compile 的主结果与 observer outputs
- * @template TOutput 观察会话完成时产生的结果类型
- */
-export type ObservedCompileResult<TOutput = unknown> = Readonly<{
-  /** 与普通 compile 等价的 primary result */
-  primary: CompileResult;
-  /** 按 observer definitions 输入顺序排列的输出 */
-  observerOutputs: ReadonlyArray<CompileObserverOutput<TOutput>>;
+  /** 本次编译收集的复合组件产物 */
+  artifacts: ReadonlyArray<TCompositeArtifact>;
 }>;
 
 /**
@@ -139,7 +53,7 @@ export type CompositeArtifactOf<TDefinition> = TDefinition extends {
   type: infer TType extends string;
   artifactSchema: ZodType<infer TArtifact extends JsonValue>;
 }
-  ? CompositeCompileArtifact<TNamespace, TType, TArtifact>
+  ? CompositeArtifact<TNamespace, TType, TArtifact>
   : never;
 
 /** 宿主环境注入的 compile 能力 */
@@ -239,6 +153,4 @@ export type CompileOptions<
      * @default 32
      */
     maxClipDepth?: number;
-    /** 本次 compile 请求的 opt-in artifacts */
-    artifacts?: CompileArtifactOptions;
   };

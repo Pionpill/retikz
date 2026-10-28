@@ -2,10 +2,9 @@ import { isFinitePoint } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalStep, PathTargetView, PathResolution, StrokePathResolution } from '../../../resolve';
+import type { CanonicalStep, PathResolution, PathTargetView, StrokePathResolution } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
-import { cloneAndFreezeJson } from '../../../shared/json';
 import { BuiltinCompileWarningCode } from '../../constants';
 import { optionalVisualBoundsOfPrimitives } from '../../orchestration';
 import type { PaintResolver } from '../../resource';
@@ -15,7 +14,7 @@ import { emitLabelPrimitive, pointOfTarget } from '../host';
 import type { PathEmitOptions } from '../types';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
-import { emitPathMarks, emitPathEndpointArrows, pathEndpointArrows } from './decorations';
+import { emitPathEndpointArrows, emitPathMarks, pathEndpointArrows } from './decorations';
 import type { StrokeInterruptionProtectedRange } from './interruption';
 import {
   createStrokeInterruptionIntervals,
@@ -29,7 +28,6 @@ import { isStrokeSegmentStep, lowerSegmentStep } from './segments';
 import { isStrokeShapeStep, lowerShapeStep } from './shapes';
 import { applyArrowShrinks } from './shrink';
 import { emitInterruptedPathFragments, splitSubPathsForEndpointArrows } from './split';
-import { bboxCenter, buildPathOwnerOutputTransforms } from './transform';
 
 /** 普通 path emit 所需的编译上下文 */
 type EmitPathPrimitiveContext = {
@@ -453,28 +451,6 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
     }
 
     primitive = emitInterruptedPathFragments(fragments, baseProps, endpointSpecs);
-  }
-
-  if (pathEmitOptions.captureOwnerOutput !== undefined) {
-    const ownerCommands = fragments.length === 0 ? commands : commands.map(command => ({ ...command }));
-    if (fragments.length > 0) applyArrowShrinks(ownerCommands, { shrinkStart, shrinkEnd, strokeWidth, round });
-    pathEmitOptions.captureOwnerOutput(
-      cloneAndFreezeJson(
-        {
-          commands: ownerCommands,
-          transforms:
-            boundsPoints.length === 0
-              ? []
-              : buildPathOwnerOutputTransforms({
-                  rotate: path.rotate,
-                  scale: path.scale,
-                  center: bboxCenter(boundsPoints),
-                  round,
-                }),
-        },
-        'Stroke Path owner output',
-      ),
-    );
   }
 
   const bodyPrims: Array<ScenePrimitive> = [

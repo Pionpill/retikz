@@ -1,23 +1,21 @@
 import type { IRChild, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
+import type { IRArray } from '../../../src/collection';
 import {
-  createArray,
-  createMap,
   arrayDefinition,
   ArraySchema,
+  createArray,
+  createMap,
   mapDefinition,
   MapSchema,
 } from '../../../src/collection';
-import type { IRArray } from '../../../src/collection';
+import { compileMeasured } from '../../helpers/compile-measured';
+import { sceneNodes } from '../../helpers/scene-geometry';
 
 const compile = (child: IRChild) =>
-  compileToScene(
-    { type: 'scene', version: 1, children: [child] },
-    { composites: [arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
-  );
+  compileMeasured(child, { composites: [arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 });
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? flat(node.children) : [node]));
@@ -129,10 +127,12 @@ describe('示意骨架的布局、文字与身份', () => {
       const explicit = compile({ ...props, items });
 
       expect(actual.scene).toEqual(explicit.scene);
-      expect(actual.spatialHandles).toEqual(explicit.spatialHandles);
-      expect(actual.spatialHandles.entries.filter(entry => entry.role === 'array-cell').map(entry => entry.id)).toEqual(
-        ['cell:vector-0', 'cell:vector-1', 'cell:vector-2'],
-      );
+
+      expect(
+        sceneNodes(actual.scene)
+          .flatMap(node => (node.id === undefined ? [] : [node.id]))
+          .filter(id => /^(?:values|vector|m)-/.test(id)),
+      ).toEqual(['vector-0', 'vector-1', 'vector-2']);
     }
   });
 
@@ -148,9 +148,7 @@ describe('示意骨架的布局、文字与身份', () => {
     const explicit = compile({ ...props, entries: ['k', '', 'k'].map(key => ({ key, value: {} })) });
 
     expect(actual.scene).toEqual(explicit.scene);
-    expect(actual.spatialHandles.entries.some(entry => entry.role === 'map-key' || entry.role === 'map-value')).toBe(
-      false,
-    );
+    expect(sceneNodes(actual.scene).some(node => node.id !== undefined)).toBe(false);
   });
 
   it('无内容不产生文字图元，默认 padding 和零 padding 都有效', () => {
@@ -165,7 +163,7 @@ describe('示意骨架的布局、文字与身份', () => {
 
       const side = (padding ?? 8) * 2;
 
-      expect(actual.spatialHandles.entries.find(entry => entry.role === 'container')?.geometry.bounds).toEqual({
+      expect(actual.allocationBounds).toEqual({
         x: 0,
         y: 0,
         width: side,
@@ -183,7 +181,7 @@ describe('示意骨架的布局、文字与身份', () => {
       const actual = compile(child);
 
       expect(flat(actual.scene.primitives)).toEqual([]);
-      expect(actual.spatialHandles.entries.find(entry => entry.role === 'container')?.geometry.bounds).toEqual({
+      expect(actual.allocationBounds).toEqual({
         x: 0,
         y: 0,
         width: 0,
@@ -210,6 +208,5 @@ describe('示意骨架的布局、文字与身份', () => {
     const blanks = compile({ ...base, index: { labels: ['', '', ''] } });
 
     expect(blanks.scene).toEqual(hidden.scene);
-    expect(blanks.spatialHandles).toEqual(hidden.spatialHandles);
   });
 });

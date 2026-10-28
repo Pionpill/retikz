@@ -1,7 +1,7 @@
-import { RAD_TO_DEG } from '@retikz/math';
 import type { CenteredBox } from '@retikz/math';
+import { RAD_TO_DEG } from '@retikz/math';
 
-import type { GroupPrimitive, CompiledShapeStyle, ScenePrimitive, TextLine } from '../../contract';
+import type { CompiledShapeStyle, GroupPrimitive, ScenePrimitive, TextLine } from '../../contract';
 import type { CanonicalNode } from '../../resolve';
 import {
   createLayoutProbeRecoverableError,
@@ -15,10 +15,10 @@ import { emitInlineLine, inlineSegmentPaintsOf, toAlphabeticBaselineY } from '..
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
 import type {
+  CompiledNodeLayout,
   NodeCompilation,
   NodeLabelLayout,
   NodeLabelResolution,
-  CompiledNodeLayout,
   NodeResolvedProperties,
 } from './types';
 
@@ -42,24 +42,17 @@ type NodeShapeProperties = Pick<
 
 type Round = (n: number) => number;
 
-type NodeBaselineYs = Readonly<{
-  /** 传给 TextPrimitive / emitInlineLine 的原始 baseline y */
-  emitted: Array<number>;
-  /** 与已 emit 的物理行对应、已按 Scene precision 圆整的 baseline y */
-  observed: Array<number>;
-}>;
-
-/** 计算 Node 正文实际 emit 与 observation 共用的每条物理行 alphabetic baseline y */
-export const nodeBaselineYsOf = (layout: CompiledNodeLayout, round: Round): NodeBaselineYs => {
+/** 计算 Node 正文绘制所用的物理行 alphabetic baseline y */
+const nodeBaselineYsOf = (layout: CompiledNodeLayout, round: Round): Array<number> => {
   const text = layout.text;
-  if (text === undefined) return { emitted: [], observed: [] };
+  if (text === undefined) return [];
   const lineCount = text.lines.length;
-  if (lineCount === 0) return { emitted: [], observed: [] };
+  if (lineCount === 0) return [];
 
   const blockTop = layout.geometry.contentCenter[1] - layout.geometry.contentSize.height / 2;
   if (text.kind === 'inline') {
     const emitted = text.lines.map(line => blockTop + line.baselineOffset);
-    return { emitted, observed: emitted.map(round) };
+    return emitted;
   }
 
   const emittedLineHeight = round(text.lineHeight);
@@ -74,12 +67,8 @@ export const nodeBaselineYsOf = (layout: CompiledNodeLayout, round: Round): Node
           lineHeight: emittedLineHeight,
           fontSize: text.font.size,
         });
-  const observedFirstBaseline = round(firstBaseline);
 
-  return {
-    emitted: [firstBaseline],
-    observed: Array.from({ length: lineCount }, (_value, index) => observedFirstBaseline + index * emittedLineHeight),
-  };
+  return [firstBaseline];
 };
 
 /** 从 CompiledNodeLayout 收敛 shape emit 所需的视觉样式 */
@@ -137,7 +126,7 @@ const emitNodeContentPrimitives = (
   const text = layout.text;
   if (text === undefined) return [];
   if (text.kind === 'inline') {
-    const baselineYs = nodeBaselineYsOf(layout, round).emitted;
+    const baselineYs = nodeBaselineYsOf(layout, round);
     const halfBlockW = layout.geometry.contentSize.width / 2;
 
     return text.lines.flatMap(({ laid }, index) => {
@@ -164,7 +153,7 @@ const emitNodeContentPrimitives = (
   const halfBlockW = layout.geometry.contentSize.width / 2;
   const xOffset = text.align === 'start' ? -halfBlockW : text.align === 'end' ? halfBlockW : 0;
   const lineHeight = round(text.lineHeight);
-  const baselineYs = nodeBaselineYsOf(layout, round).emitted;
+  const baselineYs = nodeBaselineYsOf(layout, round);
 
   /** 用现有 grouped TextPrimitive 合同发出 authoritative physical-line baselines */
   const textPrimitive = (lines: Array<TextLine>, baselineY: number, measuredHeight: number): ScenePrimitive => ({

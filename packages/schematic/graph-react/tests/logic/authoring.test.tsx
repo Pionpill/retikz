@@ -246,7 +246,6 @@ const hostPropKeys = [
   'composites',
   'themeDefinitions',
   'lowerTex',
-  'artifacts',
   'onArtifacts',
   'onCompileResult',
 ] as const;
@@ -692,7 +691,6 @@ describe('Graph 独立式和嵌入式宿主分类', () => {
       composites: undefined,
       themeDefinitions: undefined,
       lowerTex: undefined,
-      artifacts: undefined,
       onArtifacts: undefined,
       onCompileResult: undefined,
       theme: { mode: 'dark' as const },

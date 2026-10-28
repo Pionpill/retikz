@@ -22,9 +22,7 @@ const compileFlow = (source: unknown, options: Flow.FlowDiagramDefinitionOptions
 };
 
 const artifactOf = (output: ReturnType<typeof compileFlow>) => {
-  const envelope = output.artifacts.find(
-    artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'flow',
-  );
+  const envelope = output.artifacts.find(artifact => artifact.namespace === 'diagram' && artifact.type === 'flow');
   return Flow.FlowDiagramArtifactSchema.parse(envelope?.value);
 };
 

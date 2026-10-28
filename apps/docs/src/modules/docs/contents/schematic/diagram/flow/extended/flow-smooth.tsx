@@ -5,14 +5,11 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract, previewControls } from './flow-smooth.controls';
 import { renderFlowSmoothPreview } from './flow-smooth.preview';
-import { FlowCurveViewport } from './FlowCurveViewport';
 
 export { previewControls };
 const createPreview = (lang: Lang) => {
   const contract = createPreviewControlContract(lang);
-  const controlled = defineControlledPreview(contract, values => (
-    <FlowCurveViewport diagram={renderFlowSmoothPreview(values, lang)} />
-  ));
+  const controlled = defineControlledPreview(contract, values => renderFlowSmoothPreview(values, lang));
 
   return {
     ...controlled,

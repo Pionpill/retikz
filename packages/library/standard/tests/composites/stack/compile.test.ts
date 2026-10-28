@@ -1,22 +1,30 @@
-import type { IRChild, ScenePrimitive, LayoutChildResult, LayoutProposal } from '@retikz/core';
-import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
+import type { IRChild, Scene, LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
+import { ChildSchema, compileToScene, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
+import type { BoundsRect } from '@retikz/math';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { arrayDefinition, mapDefinition } from '../../../src/collection';
 import { stackDefinition } from '../../../src/collection/stack';
+import { compileMeasured } from '../../helpers/compile-measured';
+import { sceneCellBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const base = { namespace: 'standard', type: 'stack' } as const;
-const compile = (child: IRChild) =>
-  compileToScene(
-    { type: 'scene', version: 1, children: [child] },
-    { composites: [stackDefinition, arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
-  );
+const compile = (child: IRChild) => {
+  const options = {
+    composites: [stackDefinition, arrayDefinition, mapDefinition],
+    clips: [pathClipDefinition],
+    padding: 0,
+  };
+  return 'namespace' in child
+    ? compileMeasured(child, options)
+    : compileToScene({ version: 1, type: 'scene', children: [child] }, options);
+};
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(n => (n.type === 'group' ? flat(n.children) : [n]));
-const bounds = (result: ReturnType<typeof compile>, role: string) =>
-  result.spatialHandles.entries.filter(e => e.role === role).map(e => e.geometry.bounds);
+const bounds = (result: { scene: Scene; allocationBounds?: BoundsRect }, role: string) =>
+  role === 'container' ? [result.allocationBounds ?? result.scene.layout] : sceneCellBounds(result.scene);
 
 it('父布局额外空间不拉伸单元或开放边框，过小的proposal失败', () => {
   const probe = (proposal: LayoutProposal) => {
@@ -202,7 +210,7 @@ it('开放边框与外部连接分别使用容器和变换后的单格边界', (
   const path = flat(result.scene.primitives).find(p => p.type === 'path' && p.meta?.external === true);
   expect(path?.type).toBe('path');
   if (path?.type === 'path') expect(path.commands.at(-1)).toEqual({ kind: 'line', to: [35, 24] });
-  expect(result.spatialHandles.entries.filter(e => e.id === 'cell:target')).toHaveLength(2);
+  expect(sceneNodes(result.scene).filter(node => node.id === 'target')).toHaveLength(2);
 });
 it('嵌套Stack不叠加外层padding，显式覆盖仍然优先', () => {
   const child = { ...base, items: ['A'], defaultCell: { layout: { width: 20, height: 10 } } };
@@ -310,7 +318,7 @@ it.each([
   expect(flat(swapped.scene.primitives).filter(p => p.type === 'path')).toEqual(
     flat(swappedExpected.scene.primitives).filter(p => p.type === 'path'),
   );
-  expect(swapped.spatialHandles.entries).toEqual(actual.spatialHandles.entries);
+  expect(sceneCellBounds(swapped.scene)).toEqual(sceneCellBounds(actual.scene));
 });
 it('空集合抑制箭头，每个自定义箭头可以独立禁用', () => {
   const props = {

@@ -1,8 +1,7 @@
 import type { GroupPrimitive, IRChild, PathPrimitive, ScenePrimitive } from '@retikz/core';
-import { compileToScene, CompositeBaseSchema, defineComposite, resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { pathClipDefinition, pathClipProvider } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
-import { literal, string } from 'zod';
 
 import { createSurface, surfaceDefinition, surfaceProvider } from '../../../src/presentation';
 
@@ -22,7 +21,7 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive
     primitive.type === 'group' ? pathsOf(primitive.children) : primitive.type === 'path' ? [primitive] : [],
   );
 
-describe('Surface 外观、Scope 和空间标识', () => {
+describe('Surface 外观与 Scope', () => {
   it('通过 Surface 提供者图解决路径裁剪依赖关系', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [surfaceProvider.key], providers: [surfaceProvider, pathClipProvider] }],
@@ -64,7 +63,6 @@ describe('Surface 外观、Scope 和空间标识', () => {
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'surface-root');
     const paths = pathsOf(root?.children ?? []);
-    const handle = result.spatialHandles.entries.find(entry => entry.role === 'surface');
 
     expect(root?.children.map(child => child.type)).toEqual(['path', 'group', 'path']);
     expect(paths).toHaveLength(2);
@@ -75,7 +73,7 @@ describe('Surface 外观、Scope 和空间标识', () => {
     expect(paths.flatMap(path => path.commands).filter(command => command.kind === 'arc')).toEqual(
       expect.arrayContaining([expect.objectContaining({ radius: 7 })]),
     );
-    expect(handle?.geometry.bounds).toEqual({ x: 0, y: 0, width: 24, height: 14 });
+    expect(result.scene.layout).toEqual({ x: 0, y: 0, width: 24, height: 14 });
     expect(result.scene.layout).toEqual({ x: 0, y: 0, width: 24, height: 14 });
   });
 
@@ -149,7 +147,6 @@ describe('Surface 外观、Scope 和空间标识', () => {
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'styled-surface');
     const border = pathsOf(root?.children ?? []).find(path => path.stroke !== undefined);
-    const handle = result.spatialHandles.entries.find(entry => entry.role === 'surface');
 
     expect(root).toMatchObject({
       id: 'styled-surface',
@@ -158,60 +155,7 @@ describe('Surface 外观、Scope 和空间标识', () => {
     });
     expect(root?.animations).toHaveLength(1);
     expect(border?.strokeWidth).toBe(3);
-    expect(handle?.geometry.bounds).toEqual({ x: 10, y: 20, width: 20, height: 10 });
-  });
-
-  it('为后代句柄添加前缀，而不复制其键、角色、标签或有效负载', () => {
-    const card = defineComposite({
-      namespace: 'third',
-      type: 'card',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('third'),
-        type: literal('card'),
-        id: string(),
-      }),
-      compile: (value, context) => ({
-        allocationBounds: { x: 0, y: 0, width: 10, height: 6 },
-        children: [
-          context.createScope(
-            { id: value.id },
-            [],
-            [
-              {
-                id: 'body',
-                role: 'card',
-                bounds: { x: 0, y: 0, width: 10, height: 6 },
-                tags: ['content'],
-                payload: { domainId: 'a' },
-              },
-            ],
-          ),
-        ],
-      }),
-    });
-    const surface = createSurface({
-      namespace: 'standard',
-      type: 'surface',
-      id: 'surface-a',
-      child: { namespace: 'third', type: 'card', id: 'card-a' },
-    });
-    const result = compileToScene(
-      { type: 'scene', version: 1, children: [surface] },
-      { composites: [surfaceDefinition, card], padding: 0 },
-    );
-    const descendant = result.spatialHandles.entries.find(entry => entry.role === 'card');
-
-    expect(result.spatialHandles.entries.map(entry => entry.role)).toEqual(['surface', 'card']);
-    expect(descendant).toMatchObject({
-      ownerPath: [
-        { namespace: 'standard', type: 'surface', instanceId: 'surface-a' },
-        { namespace: 'third', type: 'card', instanceId: 'card-a' },
-      ],
-      id: 'body',
-      role: 'card',
-      tags: ['content'],
-      payload: { domainId: 'a' },
-    });
+    expect(result.scene.layout).toEqual({ x: 10, y: 20, width: 20, height: 10 });
   });
 
   it('使高 z 子级在背景层和边框层之间保持隔离', () => {

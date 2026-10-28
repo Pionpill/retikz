@@ -1,18 +1,15 @@
 import type { GroupPrimitive } from '../../contract';
-import { CompileExpansionKind } from '../../contract';
 import { resolveClip } from '../../resolve/resource';
-import { ScopeBoundingShape } from '../../schemas';
 import type { CompiledNodeLayout } from '../node';
 import { filterAnimations } from '../orchestration';
+import type { InputScopeCompile } from '../scope';
 import {
   createIntrinsicScopeLayout,
   resolveFinalScopeTransforms,
   resolvePreliminaryScopeTransforms,
   resolveScopePositionTarget,
 } from '../scope';
-import type { InputScopeCompile } from '../scope';
 import { resolveScopeContext, runElementCompilation } from './context';
-import { collectElementObservation } from './observation';
 import type { CompiledScope, ElementCompileOptions, ElementCompileResult, ScopeCompilationPreparation } from './types';
 
 /** Scope 自身编译上下文，子布局由调用者按依赖就绪顺序提供 */
@@ -66,24 +63,6 @@ export const compileScope = (
         }),
       );
     }
-    const occurrence = context.occurrence ?? { sourcePath: context.irPath, expansionPath: [] };
-    const clipResource = workspace.clip.resources().find(resource => resource.id === group.clipRef);
-    const clipObservations =
-      clipResource === undefined
-        ? []
-        : collectElementObservation(
-            {
-              ...context,
-              context: preparation.scope,
-              occurrence: {
-                ...occurrence,
-                expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Clip, index: 0 }],
-              },
-              ancestors: [...(context.ancestors ?? []), { owner: { kind: 'scope' }, occurrence }],
-            },
-            { kind: 'clip' },
-            () => ({ path: clipResource.path }),
-          );
     return Object.freeze({
       irPath: context.irPath,
       envelope,
@@ -93,18 +72,6 @@ export const compileScope = (
         primitives: [],
         resources: [...workspace.paint.resources(), ...workspace.clip.resources()],
         bounds: [],
-        observations: [
-          ...clipObservations,
-          ...collectElementObservation({ ...context, context: preparation.scope }, { kind: 'scope' }, () => ({
-            envelope:
-              layouts.length === 0
-                ? null
-                : {
-                    shape: input.boundingShape === ScopeBoundingShape.Circle ? 'circle' : 'rectangle',
-                    rect: envelope.geometry.rect,
-                  },
-          })),
-        ],
       }),
     });
   });

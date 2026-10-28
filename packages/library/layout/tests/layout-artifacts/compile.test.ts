@@ -1,10 +1,10 @@
 import type { IRChild, IRScene, LayoutChildResult } from '@retikz/core';
 import {
+  BuiltinLayoutAlignmentGuideName,
   compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAlignmentGuideDimension,
-  BuiltinLayoutAlignmentGuideName,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, number, string } from 'zod';
@@ -133,8 +133,7 @@ const compileWithWarnings = (children: IRScene['children']) => {
 
 const compile = (children: IRScene['children']) => compileWithWarnings(children).output;
 
-const compositeArtifacts = (output: ReturnType<typeof compile>) =>
-  output.artifacts.filter(artifact => artifact.kind === 'composite');
+const compositeArtifacts = (output: ReturnType<typeof compile>) => output.artifacts;
 
 describe('布局编译产物', () => {
   it('按轴、物理坐标、种类和稳定生成顺序对间距进行排序', () => {

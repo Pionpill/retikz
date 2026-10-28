@@ -1,11 +1,5 @@
-import type {
-  AnyCompositeDefinition,
-  CompileObserverDefinition,
-  CompileObserverOutput,
-  CompileOptions,
-  IRScene,
-} from '@retikz/core';
-import { compileToScene, observeCompileToScene } from '@retikz/core';
+import type { AnyCompositeDefinition, CompileOptions, IRScene } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import type { ReconcilerOutput } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '@retikz/render/runtime';
@@ -14,10 +8,6 @@ import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputAuthoringSite } from '../normalize';
 
 type VanillaReconcilerOutput = ReconcilerOutput<ReadonlyArray<AnyCompositeDefinition>>;
-
-const EMPTY_OBSERVERS: ReadonlyArray<CompileObserverDefinition> = Object.freeze([]);
-
-const EMPTY_OBSERVER_OUTPUTS: ReadonlyArray<CompileObserverOutput> = Object.freeze([]);
 
 const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
 
@@ -42,12 +32,10 @@ export type InputVanillaCompileDriver = Readonly<{
   coreOptions: CompileOptions;
 }>;
 
-/** 同 revision 的 Core primary、observer outputs、只读图层与扩展诊断 */
+/** 同 revision 的 Core primary、只读图层与扩展诊断 */
 export type VanillaCompileOutput = Readonly<{
   /** Core 同次 compile 的 primary result */
   primary: VanillaReconcilerOutput['result'];
-  /** Core 同次 compile 的完整 observer outputs */
-  observerOutputs: ReadonlyArray<CompileObserverOutput>;
   /** 在 primary 后执行的领域中立只读图层 */
   layers: ReadonlyArray<RenderReadonlyLayer>;
   /** 驱动拥有并在成功提交后发布的诊断 */
@@ -56,8 +44,6 @@ export type VanillaCompileOutput = Readonly<{
 
 /** 一次 source/authoring 配置独占的 Vanilla 编译驱动 session */
 export type VanillaCompileDriverSession = Readonly<{
-  /** 注入 retained Core Computation 或 static observed compile 的 observers */
-  observers: ReadonlyArray<CompileObserverDefinition>;
   /** 从同一 Core output 原子解析 primary、图层与扩展诊断 */
   resolve: (coreOutput: VanillaReconcilerOutput) => VanillaCompileOutput;
   /** 整帧成功提交后的可选通知 */
@@ -89,7 +75,6 @@ export const createVanillaCompileDriverSession = (
     if (cached !== undefined) return cached;
 
     const normalized = Object.freeze({
-      observers: Object.freeze([...session.observers]),
       resolve: session.resolve,
       ...(session.commit === undefined ? {} : { commit: session.commit }),
     });
@@ -112,16 +97,15 @@ export const resolveVanillaCompileOutput = (
 
   try {
     const output = session.resolve(coreOutput);
-    if (output.primary !== coreOutput.result || output.observerOutputs !== coreOutput.observerOutputs) {
+    if (output.primary !== coreOutput.result) {
       throw new RetikzVanillaError(
         RetikzVanillaErrorCode.Runtime,
-        'Vanilla compile driver must preserve the same-revision Core primary and observer outputs',
+        'Vanilla compile driver must preserve the same-revision Core primary',
       );
     }
 
     const normalized = Object.freeze({
       primary: output.primary,
-      observerOutputs: output.observerOutputs,
       layers: snapshotReadonlyLayers(output.layers),
       diagnostics: Object.freeze([...output.diagnostics]),
     });
@@ -145,21 +129,10 @@ export const compileVanillaWithDriver = (
   input: InputVanillaCompileDriver,
   session: VanillaCompileDriverSession,
 ): VanillaCompileOutput => {
-  const coreOutput: VanillaReconcilerOutput =
-    session.observers.length === 0
-      ? Object.freeze({
-          result: compileToScene(input.source, input.coreOptions),
-          diagnostics: EMPTY_DIAGNOSTICS,
-          observerOutputs: EMPTY_OBSERVER_OUTPUTS,
-        })
-      : (() => {
-          const observed = observeCompileToScene(input.source, input.coreOptions, session.observers);
-          return Object.freeze({
-            result: observed.primary,
-            diagnostics: EMPTY_DIAGNOSTICS,
-            observerOutputs: observed.observerOutputs,
-          });
-        })();
+  const coreOutput: VanillaReconcilerOutput = Object.freeze({
+    result: compileToScene(input.source, input.coreOptions),
+    diagnostics: EMPTY_DIAGNOSTICS,
+  });
   return resolveVanillaCompileOutput(session, coreOutput);
 };
 
@@ -176,17 +149,15 @@ export const commitVanillaCompileOutput = (
 };
 
 const DEFAULT_VANILLA_COMPILE_SESSION: VanillaCompileDriverSession = Object.freeze({
-  observers: EMPTY_OBSERVERS,
   resolve: coreOutput =>
     Object.freeze({
       primary: coreOutput.result,
-      observerOutputs: coreOutput.observerOutputs,
       layers: EMPTY_READONLY_LAYERS,
       diagnostics: EMPTY_DIAGNOSTICS,
     }),
 });
 
-/** 缺省驱动：普通 Core compile、零 observers、零只读图层 */
+/** 缺省驱动：普通 Core compile、零只读图层 */
 export const defaultVanillaCompileDriver: VanillaCompileDriver = Object.freeze({
   create: () => DEFAULT_VANILLA_COMPILE_SESSION,
 });

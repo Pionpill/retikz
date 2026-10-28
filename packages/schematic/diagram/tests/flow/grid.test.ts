@@ -61,8 +61,7 @@ const compile = (
     },
   );
   const artifact = FlowDiagramArtifactSchema.parse(
-    result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-      ?.value,
+    result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
   );
   const gridArtifact = artifact.elements[0];
   if (gridArtifact.kind !== 'layout') throw new Error('Expected Layout artifact');

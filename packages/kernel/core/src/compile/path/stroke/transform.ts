@@ -2,7 +2,7 @@ import { boundsOf, centerOfBounds, isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { IRPathScale, IRPosition, IRTransform } from '../../../schemas';
+import type { IRPathScale, IRPosition } from '../../../schemas';
 import { applyTransformChain } from '../../transform';
 
 /** 一组点的 axis-aligned 包围盒中心 */
@@ -43,25 +43,6 @@ export const buildPathTransforms = ({ rotate, scale, center, round }: InputPathT
       x: round(-center[0]),
       y: round(-center[1]),
     });
-  }
-
-  return out;
-};
-
-/** 构造可由所属者产物复用的 Path 自身变换 */
-export const buildPathOwnerOutputTransforms = ({
-  rotate,
-  scale,
-  center,
-  round,
-}: InputPathTransforms): Array<IRTransform> => {
-  const pivot: IRPosition = [round(center[0]), round(center[1])];
-  const out: Array<IRTransform> = [];
-  if (rotate !== undefined) out.push({ kind: 'rotate', degrees: rotate, pivot });
-  if (scale !== undefined) {
-    out.push(
-      typeof scale === 'number' ? { kind: 'scale', x: scale, pivot } : { kind: 'scale', x: scale.x, y: scale.y, pivot },
-    );
   }
 
   return out;

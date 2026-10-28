@@ -1,5 +1,6 @@
 import type {
   CompileCompositeOptions,
+  CompiledNodeLayout,
   CompileNamespaceRegistry,
   CompileOccurrenceLocator,
   CompileOptions,
@@ -11,7 +12,6 @@ import type {
   IRChild,
   IRScene,
   IRScope,
-  CompiledNodeLayout,
   PreparedSceneCompilation,
   SceneCompilationPreparationOptions,
   Transform,
@@ -25,7 +25,6 @@ import {
   compileScope,
   createCompileEnvironment,
   createCompileNamespaceRegistry,
-  createCompileObservationRuntime,
   createCompileProvenanceTracker,
   formatCompileChildPath,
   prepareScopeCompilation,
@@ -89,7 +88,7 @@ type WeaveContainerCompileContext = {
   /** 当前命名空间的用户 id 索引，key 为声明 id，value 为对应的稳定节点对象 */
   ids: Map<string, WeaveNode>;
   /** 子元素共享的继承、变换与祖先约束 */
-  options: Omit<ElementCompileOptions, 'environment' | 'observation'>;
+  options: Omit<ElementCompileOptions, 'environment'>;
   /** 容器的来源归属 */
   owner: CompileOwnerKey;
   /** 子声明路径前缀 */
@@ -119,7 +118,6 @@ export const isWeaveScene = (source: IRScene): boolean => {
 /** 协调声明树、Core 编译与依赖记录；当前每次准备独占可变状态 */
 export class WeaveReconciler {
   private readonly environment: ReturnType<typeof createCompileEnvironment>;
-  private observation: ReturnType<typeof createCompileObservationRuntime> | undefined;
   private provenance = createCompileProvenanceTracker();
   /** 本次准备结果的警告列表，收集编译与名称注册警告，在重新编译前重置 */
   private diagnostics: Array<CompileWarning> = [];
@@ -147,8 +145,6 @@ export class WeaveReconciler {
     private readonly execution: SceneCompilationPreparationOptions = {},
   ) {
     this.environment = createCompileEnvironment(options);
-    this.observation =
-      execution.observers === undefined ? undefined : createCompileObservationRuntime(execution.observers);
     this.treeId = `weave-${nextTreeId++}`;
     const { children, ...own } = source;
     void children;
@@ -179,7 +175,6 @@ export class WeaveReconciler {
     try {
       const result = this.reconcileChildren();
       const compilation = assembleSceneCompilation(this.source, result.outputs(), this.environment, {
-        observation: this.observation,
         diagnostics: this.diagnostics,
         provenanceTracker: this.provenance,
       });
@@ -237,16 +232,11 @@ export class WeaveReconciler {
         this.provenance = createCompileProvenanceTracker();
         this.diagnostics = [];
         this.namespace = createCompileNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
-        this.observation =
-          this.execution.observers === undefined
-            ? undefined
-            : createCompileObservationRuntime(this.execution.observers);
         this.visited = 0;
         // 输出遍历重放名称声明，避免把最终名称表当成声明位置的引用环境
         this.transaction.editNode(this.root).ids = new Map();
         const result = this.reconcileChildren();
         const compilation = assembleSceneCompilation(this.source, result.outputs(), this.environment, {
-          observation: this.observation,
           diagnostics: this.diagnostics,
           provenanceTracker: this.provenance,
         });
@@ -280,14 +270,7 @@ export class WeaveReconciler {
 
   /** 校验当前位置的缓存输入及实际名称绑定，不用旧索引推断新引用 */
   private canNodeReuse(node: WeaveNode, compileOptions: ElementCompileOptions): boolean {
-    if (
-      this.forceFull ||
-      !this.updating ||
-      node.current === null ||
-      this.tracker.isNodeDirty(node) ||
-      this.observation !== undefined
-    )
-      return false;
+    if (this.forceFull || !this.updating || node.current === null || this.tracker.isNodeDirty(node)) return false;
     if (
       this.previousNodeIrPaths.get(node) !== compileOptions.irPath ||
       !jsonStructuralEquals(node.current.input.context, compileOptions.context)
@@ -433,13 +416,13 @@ export class WeaveReconciler {
     };
   }
 
-  /** 编译 Coordinate，登记读取与引用并准备局部输出 */
+  /** 编译 Coordinate，登记读取与引用 */
   private reconcileCoordinate(
     node: WeaveCoordinateNode,
     element: WeaveElementCompileContext,
   ): { output: CompileOutput | undefined; layout: CompiledNodeLayout; publication: Publication } {
     const state = this.transaction.editNode(node);
-    const { options, container, owner } = element;
+    const { options, container } = element;
     if (!this.canNodeReuse(node, options) || state.compiled === null) {
       this.tracker.invalidateNode(node);
       this.visited++;
@@ -449,7 +432,7 @@ export class WeaveReconciler {
     state.pendingInputs = [];
     this.registerReference(node, state.compiled.id, `${options.irPath}.id`, element);
     return {
-      output: this.collectOutput(state.compiled.output, 'coordinate', owner),
+      output: undefined,
       layout: this.projectNodeReference(node, []),
       publication: {
         namespaceRegistry: container.namespaceRegistry,
@@ -521,7 +504,6 @@ export class WeaveReconciler {
         context: prepared.scope,
         transforms: [...(context.transforms ?? []), ...preliminary],
         ancestorScopes: new Set([...(context.ancestorScopes ?? []), node]),
-        ancestors: [...(context.ancestors ?? []), { owner: { kind: 'scope' }, occurrence }],
       },
       owner: semanticOwner,
       prefix: `${irPath}.`,
@@ -612,7 +594,6 @@ export class WeaveReconciler {
       const compileOptions: WeaveElementCompileContext['options'] = {
         ...context,
         environment: this.environment,
-        observation: this.observation,
         namespace: namespaceRegistry.namespace,
         irPath,
         occurrence,

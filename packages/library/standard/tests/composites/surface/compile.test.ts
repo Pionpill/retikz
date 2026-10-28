@@ -12,6 +12,7 @@ import { boolean, literal, number, string } from 'zod';
 
 import type { InputSurfaceConfig } from '../../../src/presentation';
 import { createSurface, surfaceDefinition } from '../../../src/presentation';
+import { sceneNodeBounds } from '../../helpers/scene-geometry';
 
 type ProbeLog = Readonly<{ id: string; proposal: LayoutProposal }>;
 
@@ -43,22 +44,19 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
           height: node.height,
         },
         children: [
-          context.createScope(
-            { id: node.id },
-            [],
-            [
-              {
-                id: 'leaf',
-                role: 'leaf',
-                bounds: {
-                  x: node.originX,
-                  y: node.originY,
-                  width: node.width,
-                  height: node.height,
-                },
+          context.createScope({ id: node.id }, [
+            {
+              type: 'node',
+              id: node.id,
+              position: [node.originX + node.width / 2, node.originY + node.height / 2],
+              layout: {
+                width: node.width,
+                minimumSize: { width: node.width, height: node.height },
+                padding: 0,
+                margin: 0,
               },
-            ],
-          ),
+            },
+          ]),
         ],
       };
     },
@@ -135,7 +133,7 @@ describe('Surface 布局编译', () => {
     expect(result.logs).toEqual([{ id: 'content', proposal: naturalProposal() }]);
     expect(result.observed.slotSize).toEqual({ width: 28, height: 16 });
     expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 28, height: 16 });
-    expect(result.output.spatialHandles.entries.find(entry => entry.role === 'leaf')?.geometry.bounds).toEqual({
+    expect(sceneNodeBounds(result.output.scene, 'content')).toEqual({
       x: 3,
       y: 2,
       width: 20,

@@ -3,6 +3,11 @@ title: 实现原理
 description: 沿一次观测编译理解选择准入、最终产物收集、实例匹配和辅助场景输出，并定位关键源码
 ---
 
+<ComponentAlert
+  type="warning"
+  description="Core 已删除编译观测通知与隔离片段入口。以下为尚未迁移的旧机制，当前不可用；Inspect 将另行改为消费普通编译产物。"
+/>
+
 默认你已读过 [Inspect 用法](/kernel/packages/inspect) 与 [内置观测](/kernel/packages/inspect/builtins)。本页追踪“给一条曲线显示控制点”的一次编译：输入是主图 IR、观测规则和可用的观测实现，输出是主图、辅助内容与诊断；宿主再把辅助内容接为只读图层。
 
 例子始终是一条曲线及其控制点观测。下文内部函数是源码阅读入口，不是可导入的公共 API；主线止于辅助图层交付，不展开 renderer 的绘制实现。
@@ -92,13 +97,6 @@ Core 遍历候选站点时，通过 observer 的 `select()` 调用 `canInspectio
 曲线例子只使用 `path`；以下是 Core 当前支持的 observation owner 清单：`path`（按名称区分的最终 Path）、`node`（Node 的几何与正文布局）、`scope`（Scope 固有包络）、`coordinate`（已解析坐标点）、`clip`（一次逻辑 Clip application）和 `composite`（按命名空间与类型区分的复合组件）。内置 Inspector 分别绑定这些 owner；owner 没有发布最终产物时，注册 Inspector 也不会凭空增加观测。
 
 每条 observation 还带有从外到内排列的 `ancestors`，记录它所在的 Scope / composite 链条及各自 occurrence。Inspector 可以用它解释层级或区分同一 owner 在不同容器中的实例，而不必从 source path 猜测父级。
-
-<SourceLinks
-  sources={[
-    { label: 'Core 观测上下文与隔离编译契约', path: 'packages/kernel/core/src/contract/observation.ts' },
-    { label: 'Core 最终观测通知的派发', path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts' },
-  ]}
-/>
 
 <SourceLinks
   sources={[{ label: 'select、observe 与 complete 的会话接线', path: 'packages/kernel/inspect/src/compile/driver.ts' }]}

@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import type { NodeLayoutObservation, IRScene, ScenePrimitive, TextMeasurer, TextPrimitive } from '@retikz/core';
-import { compileToScene, fallbackMeasurer, isNodeLayoutCompileArtifact } from '@retikz/core';
+import type { IRScene, ScenePrimitive, TextMeasurer, TextPrimitive } from '@retikz/core';
+import { compileToScene, fallbackMeasurer } from '@retikz/core';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -42,6 +42,7 @@ import {
 } from '../../src/modules/docs/components/component-preview/utils';
 import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/usage/node-geometry.controls';
 import { textRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-text.data';
+import { sceneNodes } from '../helpers/scene-geometry';
 import { controlModules, demoModules, demoSources, localSourceFiles } from './load-preview-registry';
 
 /** Source views include the authoring wrapper and its shared preview implementation */
@@ -185,10 +186,7 @@ type NodeGeometryValues = {
 };
 
 /** 通过 Core 的真实布局链路编译几何 playground 可调节点 */
-const compileGeometryNode = (
-  values: NodeGeometryValues,
-  measureText: TextMeasurer = fallbackMeasurer,
-): { layout: NodeLayoutObservation; bounds: ReturnType<typeof compileToScene>['scene']['layout'] } => {
+const compileGeometryNode = (values: NodeGeometryValues, measureText: TextMeasurer = fallbackMeasurer) => {
   const result = compileToScene(
     {
       type: 'scene',
@@ -212,14 +210,12 @@ const compileGeometryNode = (
     } satisfies IRScene,
     {
       measureText,
-      artifacts: { nodeLayouts: true },
       padding: 0,
       precision: 6,
     },
   );
   const scene = result.scene;
-  const artifact = result.artifacts.find(isNodeLayoutCompileArtifact);
-  const layout = artifact?.value;
+  const layout = sceneNodes(scene).at(0);
   if (!layout) throw new Error('Missing compiled Node geometry layout');
 
   return { layout, bounds: scene.layout };
@@ -242,7 +238,7 @@ const findTextPrimitive = (primitives: ReadonlyArray<ScenePrimitive>): TextPrimi
 const compileBuiltinText = (
   text: string,
   values: { align: 'start' | 'middle' | 'end'; fontSize: number; lineHeight: number; maxTextWidth: number },
-): { layout: NodeLayoutObservation; text: TextPrimitive } => {
+) => {
   const result = compileToScene(
     {
       type: 'scene',
@@ -258,15 +254,13 @@ const compileBuiltinText = (
       ],
     } satisfies IRScene,
     {
-      artifacts: { nodeLayouts: true },
       padding: 0,
     },
   );
-  const layout = result.artifacts.find(isNodeLayoutCompileArtifact)?.value;
   const textPrimitive = findTextPrimitive(result.scene.primitives);
-  if (!layout || !textPrimitive) throw new Error('Missing compiled builtin text layout');
+  if (!textPrimitive) throw new Error('Missing compiled builtin text layout');
 
-  return { layout, text: textPrimitive };
+  return { text: textPrimitive };
 };
 
 describe('预览控制注册表', () => {
@@ -523,8 +517,9 @@ describe('预览控制注册表', () => {
     ];
 
     for (const { name, writableIds } of cases) {
-      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
-        const controls = resolvePreviewControls(controlModules[key]);
+      for (const lang of ['zh', 'en'] as const) {
+        const key = resolveControlsKey(segments, name, lang);
+        const controls = resolvePreviewControls(controlModules[key], lang);
 
         expect(controls?.presentation, key).toBe('panel');
 
@@ -538,18 +533,18 @@ describe('预览控制注册表', () => {
         expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
       }
 
-      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+      expect(demoSources[resolveDemoKey(segments, name, 'zh')], name).toContain(
+        'defineControlledPreview(previewControlContract',
+      );
     }
   });
 
   it('PointMark 标签 controls 覆盖中心、四边与四角位置', () => {
     const values = ['center', 'top', 'top-right', 'right', 'bottom-right', 'bottom', 'bottom-left', 'left', 'top-left'];
 
-    for (const key of [
-      buildControlsKey(['viz', 'plot', 'mark', 'point'], 'point-text'),
-      buildLangControlsKey(['viz', 'plot', 'mark', 'point'], 'point-text', 'en'),
-    ]) {
-      const definition = resolvePreviewControls(controlModules[key]);
+    for (const lang of ['zh', 'en'] as const) {
+      const key = resolveControlsKey(['viz', 'plot', 'mark', 'point'], 'point-text', lang);
+      const definition = resolvePreviewControls(controlModules[key], lang);
       if (definition?.presentation !== 'panel') throw new Error(`${key} must use panel controls`);
 
       const position = definition.sections
@@ -570,8 +565,9 @@ describe('预览控制注册表', () => {
   it('PointMark 居中标签隐藏无效的距离与引线 controls', () => {
     const segments = ['viz', 'plot', 'mark', 'point'];
 
-    for (const key of [buildControlsKey(segments, 'point-text'), buildLangControlsKey(segments, 'point-text', 'en')]) {
-      const definition = resolvePreviewControls(controlModules[key]);
+    for (const lang of ['zh', 'en'] as const) {
+      const key = resolveControlsKey(segments, 'point-text', lang);
+      const definition = resolvePreviewControls(controlModules[key], lang);
       if (definition?.presentation !== 'panel') throw new Error(`${key} must use panel controls`);
 
       const visibleFieldIds = (values: PreviewControlValues) =>
@@ -630,13 +626,13 @@ describe('预览控制注册表', () => {
     for (const [page, names] of Object.entries(cases)) {
       for (const entry of names) {
         const [name, controlsName] = Array.isArray(entry) ? entry : [entry, entry];
-        const key = buildKey(['viz', 'plot', 'mark', page], name);
+        const key = resolveDemoKey(['viz', 'plot', 'mark', page], name, 'zh');
         const demoModule = demoModules[key] as Record<string, unknown> | undefined;
         const controls = resolvePreviewControls(
           controlModules[buildControlsKey(['viz', 'plot', 'mark', page], controlsName)],
         );
 
-        expect(demoModule?.previewControls, key).toBe(controls);
+        expect(demoModule?.previewControls, key).toEqual(controls);
       }
     }
   });
@@ -663,8 +659,9 @@ describe('预览控制注册表', () => {
     ];
 
     for (const { name, writableIds } of cases) {
-      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
-        const controls = resolvePreviewControls(controlModules[key]);
+      for (const lang of ['zh', 'en'] as const) {
+        const key = resolveControlsKey(segments, name, lang);
+        const controls = resolvePreviewControls(controlModules[key], lang);
 
         expect(controls?.presentation, key).toBe('panel');
 
@@ -678,7 +675,9 @@ describe('预览控制注册表', () => {
         expect(actualIds, key).toEqual(expect.arrayContaining(writableIds));
       }
 
-      expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
+      expect(demoSources[resolveDemoKey(segments, name, 'zh')], name).toContain(
+        'defineControlledPreview(previewControlContract',
+      );
     }
   });
 
@@ -1401,7 +1400,7 @@ describe('预览控制注册表', () => {
 
       if (padding?.kind !== 'range' || minimumSize?.kind !== 'range') continue;
 
-      const compileGlyph = (paddingValue: number): NodeLayoutObservation => {
+      const compileGlyph = (paddingValue: number) => {
         const result = compileToScene(
           {
             type: 'scene',
@@ -1416,11 +1415,10 @@ describe('预览控制注册表', () => {
             ],
           } satisfies IRScene,
           {
-            artifacts: { nodeLayouts: true },
             padding: 0,
           },
         );
-        const layout = result.artifacts.find(isNodeLayoutCompileArtifact)?.value;
+        const layout = sceneNodes(result.scene).at(0);
         if (!layout) throw new Error('Missing compiled point glyph layout');
 
         return layout;
@@ -1453,7 +1451,7 @@ describe('预览控制注册表', () => {
     });
     const lineLengths = new Set(compiled.text.lines.map(line => line.text.length));
 
-    expect(compiled.layout.text.lineCount).toBeGreaterThan(1);
+    expect(compiled.text.lines.length).toBeGreaterThan(1);
     expect(lineLengths.size).toBeGreaterThan(1);
   });
 
@@ -1475,8 +1473,8 @@ describe('预览控制注册表', () => {
       maxTextWidth: defaults.maxTextWidth as number,
     });
 
-    expect(compiled.layout.text.lineCount).toBeGreaterThan(1);
-    expect(compiled.layout.content.size.height / compiled.layout.text.lineCount).toBeGreaterThanOrEqual(
+    expect(compiled.text.lines.length).toBeGreaterThan(1);
+    expect(compiled.text.measuredHeight / compiled.text.lines.length).toBeGreaterThanOrEqual(
       defaults.fontSize as number,
     );
   });
@@ -1523,7 +1521,7 @@ describe('预览控制注册表', () => {
       maxTextWidth: maxTextWidth.max,
     });
 
-    expect(narrow.layout.text.lineCount).toBeGreaterThan(wide.layout.text.lineCount);
+    expect(narrow.text.lines.length).toBeGreaterThan(wide.text.lines.length);
   });
 
   it('内置路径 playground 仅在尖折点下显示连接样式', () => {

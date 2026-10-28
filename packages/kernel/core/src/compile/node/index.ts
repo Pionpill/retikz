@@ -6,7 +6,6 @@ export * from './geometry-context';
 export * from './label/geometry';
 export * from './layout';
 export * from './layout-metrics';
-export * from './observation';
 export * from './reference';
 export * from './synthetic';
 export * from './types';

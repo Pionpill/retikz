@@ -1,4 +1,4 @@
-import type { IRScope, CompositeCompileContext, CompositeCompileResult } from '@retikz/core';
+import type { CompositeCompileContext, CompositeCompileResult, IRScope } from '@retikz/core';
 import { RetikzCoreError } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
 import type { Position } from '@retikz/math';
@@ -10,20 +10,20 @@ import type { FlowDiagramDefinitionRegistries } from '../../providers';
 import {
   evaluateFlowBezierConflicts,
   evaluateFlowOrthogonalConflicts,
-  flowPriorLabelReservations,
-  isFlowAutomaticRouting,
   flowBendGeometryFailure,
+  flowPriorLabelReservations,
   flowRelationObstacles,
-  scoreFlowBendNodes,
   flowSmoothConflicts,
+  isFlowAutomaticRouting,
+  scoreFlowBendNodes,
 } from '../../providers';
 import type { CanonicalFlowDiagram } from '../../resolve';
 import { assertFlowLayoutCapabilities, resolveFlowDiagram } from '../../resolve';
 import type { FlowDiagramArtifact, IRFlowDiagram } from '../../schemas';
-import { createFlowDiagramArtifact, createFlowSpatialHandles } from './artifact';
+import { createFlowDiagramArtifact } from './artifact';
 import { executeFlowLayout } from './layout-output';
 import { createFlowLayoutExecutionContext } from './layout-placement';
-import { materializeFlowGraph, materializeFlowElements } from './materialize';
+import { materializeFlowElements, materializeFlowGraph } from './materialize';
 import { measureFlowDiagram } from './measure';
 
 const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children'> => {
@@ -319,15 +319,9 @@ export const createCompileFlowDiagram =
       relations: diagram.relations,
       output,
     });
-    const spatialHandles = createFlowSpatialHandles(
-      foundation.frame.allocationBounds,
-      artifact.regions,
-      artifact.elements,
-    );
-
     return {
       allocationBounds: foundation.frame.allocationBounds,
-      children: [context.createScope(flowScopeProps(source), [context.replay(foundation.frame)], spatialHandles)],
+      children: [context.createScope(flowScopeProps(source), [context.replay(foundation.frame)])],
       artifact,
     };
   };

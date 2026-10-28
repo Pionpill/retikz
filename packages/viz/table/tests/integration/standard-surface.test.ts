@@ -7,7 +7,7 @@ import type { IRTable } from '../../src';
 import { createTableRuntimeContribution, TABLE_NAMESPACE, TableComposite } from '../../src';
 
 describe('Standard Surface 里面的 Table', () => {
-  it('使用真实的 Table 子项关闭提供者、布局、Scene、产物和 Surface 空间输出', () => {
+  it('使用真实的 Table 子项贯通提供者、布局、Scene 和领域产物', () => {
     const table: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -42,15 +42,8 @@ describe('Standard Surface 里面的 Table', () => {
     ]);
     expect(JSON.stringify(result.scene.primitives)).toContain('Ada');
     expect(result.artifacts).toEqual(
-      expect.arrayContaining([expect.objectContaining({ kind: 'composite', namespace: 'table', type: 'table' })]),
+      expect.arrayContaining([expect.objectContaining({ namespace: 'table', type: 'table' })]),
     );
-    expect(result.spatialHandles.entries).toEqual([
-      expect.objectContaining({
-        ownerPath: [expect.objectContaining({ namespace: 'standard', type: 'surface', instanceId: 'table-panel' })],
-        id: 'surface',
-        role: 'surface',
-        geometry: { kind: 'rect', bounds: { x: 0, y: 0, width: 128, height: 40 } },
-      }),
-    ]);
+    expect(result.scene.layout).toEqual({ x: 4, y: 4, width: 120, height: 32 });
   });
 });

@@ -13,13 +13,12 @@ IR 是可保存的图形声明，例如“在这里放一个节点”“连接 A
 compileToScene(ir: IRScene, options?: CompileOptions): CompileResult
 ```
 
-| 输入 / 输出             | 本页追踪的含义                                   |
-| ----------------------- | ------------------------------------------------ |
-| `ir`                    | 完整、符合 Core 契约的图形声明                   |
-| `options`               | 本次使用的测量能力、扩展定义和输出设置；可以省略 |
-| `result.scene`          | 已布局的图元、画布范围与绘制资源                 |
-| `result.artifacts`      | 复合组件产物及显式请求的节点布局数据             |
-| `result.spatialHandles` | 本次编译收集的具名空间区域索引                   |
+| 输入 / 输出        | 本页追踪的含义                                   |
+| ------------------ | ------------------------------------------------ |
+| `ir`               | 完整、符合 Core 契约的图形声明                   |
+| `options`          | 本次使用的测量能力、扩展定义和输出设置；可以省略 |
+| `result.scene`     | 已布局的图元、画布范围与绘制资源                 |
+| `result.artifacts` | 复合组件产物及显式请求的节点布局数据             |
 
 `compileToScene` 接收已类型化的 IR；它不会在入口对整棵树调用 `SceneSchema.parse`。来自 JSON 等外部输入的数据应先经过 schema 入口校验。编译过程中仍会检查需要 Definition 或布局上下文才能判断的约束。
 
@@ -336,131 +335,7 @@ Scene 输出可以保留局部几何和 Group 变换。命名查询使用所需�
 
 这一步决定最终画布范围，不会再次移动 A、B。输出中的 `primitives` 依次为路径、Group A、Group B；本例没有渐变或裁剪资源，因此不产生 `resources` 字段。
 
-Scene 之外，编译结果还携带 `artifacts` 与 `spatialHandles`。前者保存复合组件产物或按需输出的节点布局；后者保存具名空间区域。它们与同次编译的 Scene 对应，渲染器无需据此重新执行节点布局。普通 `compileToScene` 不建立 observer 会话；显式观测入口会在同一完整编译过程中派发最终观测结果。
-
-| 属性             | 类型                                                             | 作用                                                                                                                                   |
-| ---------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `scene`          | `Scene`                                                          | 保存已布局、按绘制顺序排列的图元，以及画布边界、可选资源和根时间轴动画，交给渲染器绘制。                                               |
-| `artifacts`      | `ReadonlyArray<TCompositeArtifact \| NodeLayoutCompileArtifact>` | 保存复合组件返回的领域产物，以及显式请求的节点布局结果，供调用方读取和后续处理。未产生产物时为空数组。                                 |
-| `spatialHandles` | `SpatialHandleIndex`                                             | 保存复合组件声明的具名空间区域，包含所属组件、世界坐标边界、角色和标签等信息，供调用方查询与定位。没有空间区域时，`entries` 为空数组。 |
-
-以下为返回结果及主要字段的类型源码，省略注释；引用的其他类型不再展开。
-
-<DocTabs defaultValue="compile-result">
-
-<DocTab value="compile-result" label="CompileResult">
-
-```ts
-export type CompileResult<TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact> = Readonly<{
-  scene: Scene;
-  artifacts: ReadonlyArray<TCompositeArtifact | NodeLayoutCompileArtifact>;
-  spatialHandles: SpatialHandleIndex;
-}>;
-```
-
-</DocTab>
-
-<DocTab value="scene" label="Scene">
-
-```ts
-export type Scene = {
-  primitives: Array<ScenePrimitive>;
-  layout: BoundsRect;
-  resources?: Array<SceneResource>;
-  animations?: Array<IRAnimationTrack>;
-};
-
-export type ScenePrimitive = RectPrimitive | EllipsePrimitive | TextPrimitive | PathPrimitive | GroupPrimitive;
-```
-
-</DocTab>
-
-<DocTab value="artifacts" label="artifacts">
-
-```ts
-export type CompositeCompileArtifact<
-  TNamespace extends string = string,
-  TType extends string = string,
-  TValue extends JsonValue = JsonValue,
-> = Readonly<{
-  kind: 'composite';
-  namespace: TNamespace;
-  type: TType;
-  occurrence: CompileOccurrenceLocator;
-  value: TValue;
-}>;
-
-export type NodeLayoutCompileArtifact = Readonly<{
-  kind: 'nodeLayout';
-  occurrence: CompileOccurrenceLocator;
-  value: NodeLayoutObservation;
-}>;
-
-export type NodeLayoutObservation = {
-  kind: 'node';
-  id?: string;
-  content: {
-    center: [number, number];
-    size: {
-      width: number;
-      height: number;
-    };
-    bounds: {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    };
-  };
-  rect: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotate: number;
-  };
-  text: {
-    hasInlineTex: boolean;
-    lineCount: number;
-  };
-};
-```
-
-</DocTab>
-
-<DocTab value="spatial-handles" label="spatialHandles">
-
-```ts
-export type SpatialHandleIndex = Readonly<{
-  entries: ReadonlyArray<QualifiedSpatialHandle>;
-}>;
-
-export type QualifiedSpatialHandle = Readonly<{
-  ownerPath: ReadonlyArray<SpatialHandleOwner>;
-  id: string;
-  aliasIds?: ReadonlyArray<string>;
-  role: string;
-  geometry: Readonly<{
-    kind: 'rect';
-    bounds: Readonly<BoundsRect>;
-  }>;
-  tags: ReadonlyArray<string>;
-  payload?: Readonly<JsonObject>;
-  finalOccurrence: CompileOccurrenceLocator;
-  originOccurrence: CompileOccurrenceLocator;
-}>;
-
-export type SpatialHandleOwner = Readonly<{
-  namespace: string;
-  type: string;
-  instanceId?: string;
-  occurrence: CompileOccurrenceLocator;
-}>;
-```
-
-</DocTab>
-
-</DocTabs>
+Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物时为空数组。结果只包含 `scene` 与 `artifacts`，两者对应同次编译。完整字段与领域坐标约定见[编译产物](/kernel/packages/core/compilation-output)。
 
 警告与致命错误也有不同结果：可恢复情况按对应能力的规则降级，例如路径目标不存在时可发出警告并移除该路径占位；完整编译成功后，同步入口才派发收集的警告。致命错误会终止调用，不返回半成品 Scene。
 
@@ -468,7 +343,6 @@ export type SpatialHandleOwner = Readonly<{
   sources={[
     { label: 'Scene 汇总与警告派发', path: 'packages/kernel/core/src/compile/compile.ts' },
     { label: '编译结果与产物类型', path: 'packages/kernel/core/src/compile/types.ts' },
-    { label: '空间索引类型', path: 'packages/kernel/core/src/contract/spatial-handle/handle.ts' },
     { label: '自动画布范围', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
     { label: 'Scene 的渲染中立契约', path: 'packages/kernel/core/src/contract/scene/scene.ts' },
   ]}
@@ -584,7 +458,7 @@ Reconciler 会话通过 Weave 协调器持有稳定 WeaveRoot，作为整棵树�
 
 更新返回完整输出和提交、确认、回滚操作。准备期间旧状态保持不变；提交后仍可恢复，最终确认才释放恢复依据。名称索引恢复、来源与输出组装仍可能遍历完整树，局部编译不等于整次更新具有局部成本。
 
-Reconciler 的 `replace` 接收完整 IR 并重新编译，`update` 接收已有基础元素树的 `WeaveBatch`；批次必须绑定当前会话结果，Composite 场景不支持该批次入口。React 与 Vanilla 的普通输入更新仍调用完整替换。Render 提交目标将新的编译结果转换为 `replaceScene`，不能据此推断后端已执行细粒度 Patch 更新。含 Composite 的输入使用 Core 完整准备路径，保留 probe、实例输入、artifacts 与空间句柄。
+Reconciler 的 `replace` 接收完整 IR 并重新编译，`update` 接收已有基础元素树的 `WeaveBatch`；批次必须绑定当前会话结果，Composite 场景不支持该批次入口。React 与 Vanilla 的普通输入更新仍调用完整替换。Render 提交目标将新的编译结果转换为 `replaceScene`，不能据此推断后端已执行细粒度 Patch 更新。含 Composite 的输入使用 Core 完整准备路径，保留 probe、实例输入、artifacts。
 
 <SourceLinks
   sources={[

@@ -1,12 +1,6 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
-import { useTheme, useThemeDefinitions } from '@retikz/react';
 import type { FC } from 'react';
-import { useMemo } from 'react';
 
 import type { Lang } from '@/i18n';
-import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
-import { browserMeasurer } from '@/modules/docs/components/component-preview/vanilla-preview';
-import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract, previewControls } from './flow-routing.controls';
@@ -14,35 +8,9 @@ import { renderFlowRoutingPreview } from './flow-routing.preview';
 
 export { previewControls };
 
-/** 路由试验场的实时参数 */
-export type RoutingSceneProps = Readonly<{ values: PreviewControlValuesFor<typeof previewControls> }>;
-
-/** 绘制前同步测量 A，路径与取景使用同一组参数 */
-const RoutingScene: FC<RoutingSceneProps> = props => {
-  const { values } = props;
-  const theme = useTheme();
-  const themeDefinitions = useThemeDefinitions();
-  const viewBox = useMemo(() => {
-    const { ir, contributions } = buildPreviewIR(() => renderFlowRoutingPreview(values));
-    const result = compileToScene(
-      { ...ir, theme },
-      {
-        ...resolveCoreProviderDependencies({ contributions }),
-        themeDefinitions,
-        measureText: browserMeasurer,
-      },
-    );
-    const bounds = result.spatialHandles.entries.find(handle => handle.id === 'element:a')!.geometry.bounds;
-
-    return { x: bounds.x + bounds.width / 2 - 120, y: bounds.y + bounds.height / 2 - 140, width: 400, height: 330 };
-  }, [values, theme, themeDefinitions]);
-
-  return renderFlowRoutingPreview(values, { viewBox });
-};
-
 const createPreview = (lang: Lang) => {
   const contract = createPreviewControlContract(lang);
-  const controlled = defineControlledPreview(contract, values => <RoutingScene values={values} />);
+  const controlled = defineControlledPreview(contract, values => renderFlowRoutingPreview(values));
 
   return {
     ...controlled,

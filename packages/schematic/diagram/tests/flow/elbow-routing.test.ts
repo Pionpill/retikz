@@ -4,7 +4,7 @@ import type { Position } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramErrorCode } from '../../src/errors';
-import type { InputFlowLayoutComputation, FlowLayoutOutput } from '../../src/flow';
+import type { FlowLayoutOutput, InputFlowLayoutComputation } from '../../src/flow';
 import {
   createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,
@@ -81,8 +81,7 @@ describe('Flow 单弯头铣削', () => {
       );
     const result = compile(provider);
     const artifact = FlowDiagramArtifactSchema.parse(
-      result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-        ?.value,
+      result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
     );
 
     expect(
@@ -149,9 +148,7 @@ describe('Flow 单弯头铣削', () => {
           },
         );
         const artifact = FlowDiagramArtifactSchema.parse(
-          result.artifacts.find(
-            item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow',
-          )?.value,
+          result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
         );
 
         expect(artifact.relations[0].route).toMatchObject({ kind, cornerRadius });

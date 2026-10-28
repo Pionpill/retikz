@@ -12,9 +12,9 @@ import type {
   LayoutChildFailure,
   LayoutChildResult,
   LayoutProposal,
-  TexLowerer,
   SceneClipPath,
   ScenePrimitive,
+  TexLowerer,
   TextMeasurer,
 } from '../../src';
 import {
@@ -292,7 +292,6 @@ describe('布局感知的复契约束和边界', () => {
 
     expect(result.artifacts).toMatchObject([
       {
-        kind: 'composite',
         namespace: 'test',
         type: 'nestedConstraint',
         value: { xValue: 25, yMin: 3, yHasMax: false, frozen: true },
@@ -323,10 +322,6 @@ describe('布局感知的复契约束和边界', () => {
     expect(artifact.value).toMatchObject({
       allocation: { x: 0, y: 0, width: 100, height: 0 },
     });
-
-    if (artifact.kind !== 'composite') {
-      throw new Error('Expected bounds artifact');
-    }
 
     const { allocation, visual } = artifact.value;
 
@@ -589,7 +584,7 @@ describe('布局感知的复契约束和边界', () => {
     expect(Object.is(received?.x.kind === 'exact' ? received.x.value : undefined, -0)).toBe(false);
     expect(result.artifacts[0]?.value).toEqual({ width: 0, height: 0 });
 
-    const size = result.artifacts[0]?.value as { width: number; height: number };
+    const size = result.artifacts[0]?.value;
 
     expect(Object.is(size.width, -0)).toBe(false);
     expect(Object.is(size.height, -0)).toBe(false);
@@ -3141,7 +3136,7 @@ describe('布局感知的复合回放所有权', () => {
     ).toThrow(/test\.copiedLayoutResult.*children\[0\].*(invalid|forged).*layout result/i);
   });
 
-  it('将回放转换应用于分配、Scene、命名空间和 Node 产物', () => {
+  it('将回放转换应用于分配、Scene、命名空间', () => {
     const moved = defineComposite({
       namespace: 'test',
       type: 'moved',
@@ -3190,7 +3185,7 @@ describe('布局感知的复合回放所有权', () => {
       ),
       {
         composites: [moved, outer],
-        artifacts: { nodeLayouts: true },
+
         padding: 0,
       },
     );
@@ -3201,15 +3196,7 @@ describe('布局感知的复合回放所有权', () => {
       width: 10,
       height: 10,
     });
-    expect(result.artifacts).toContainEqual(
-      expect.objectContaining({
-        kind: 'nodeLayout',
-        value: expect.objectContaining({
-          id: 'moved-node',
-          rect: expect.objectContaining({ x: 20, y: 30 }),
-        }),
-      }),
-    );
+
     expect(result.scene.primitives.some(primitive => primitive.type === 'path')).toBe(true);
   });
 });
@@ -3276,8 +3263,6 @@ describe('布局感知复合组件的产物与下沉错误', () => {
     const artifact = compileToScene(sceneOf({ namespace: 'test', type: 'specialArtifactKeys' }), {
       composites: [definition],
     }).artifacts[0];
-
-    expect(artifact.kind).toBe('composite');
     expect(Object.hasOwn(artifact.value as object, '__proto__')).toBe(true);
     expect(JSON.stringify(artifact.value)).toBe('{"__proto__":{"safe":true}}');
   });

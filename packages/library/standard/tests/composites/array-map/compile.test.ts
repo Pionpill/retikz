@@ -1,11 +1,12 @@
 import type { AnyCompositeDefinition, IRChild, LayoutChildResult, LayoutProposal } from '@retikz/core';
-import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
+import { ChildSchema, compileToScene, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
 import { intrinsicLayoutProposal } from '@retikz/layout/compose';
 import { describe, expect, it } from 'vitest';
-import { literal, boolean } from 'zod';
+import { boolean, literal } from 'zod';
 
 import { arrayDefinition, mapDefinition } from '../../../src/collection';
+import { sceneCellBounds, sceneNodeBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const cell = (id: string, width: number, height: number) => ({
   id,
@@ -63,9 +64,7 @@ describe('Array / Map 分配', () => {
       layout: { direction, gap: 2 },
       defaultCell: { layout: { width: 'content', height: 20, padding: 4 } },
     });
-    const bounds = result.scene.spatialHandles.entries
-      .filter(entry => entry.role === 'array-cell')
-      .map(entry => entry.geometry.bounds);
+    const bounds = sceneCellBounds(result.scene.scene);
 
     expect(bounds).toEqual(
       direction === 'row'
@@ -96,11 +95,7 @@ describe('Array / Map 分配', () => {
       defaultCell: { layout: { width: 'content', height: 20, padding: 0 } },
     });
 
-    expect(
-      result.scene.spatialHandles.entries
-        .filter(entry => entry.role === 'array-cell')
-        .map(entry => entry.geometry.bounds),
-    ).toEqual([
+    expect(sceneCellBounds(result.scene.scene)).toEqual([
       { x: 0, y: 0, width: 20, height: 20 },
       { x: 22, y: 0, width: 40, height: 20 },
       { x: 64, y: 0, width: 10, height: 20 },
@@ -118,13 +113,11 @@ describe('Array / Map 分配', () => {
       layout: { gap: 2 },
       defaultCell: { layout: { width: 'content', padding: 4 } },
     });
-    const cells = result.scene.spatialHandles.entries
-      .filter(entry => entry.role === 'array-cell')
-      .map(entry => entry.geometry.bounds);
+    const cells = sceneCellBounds(result.scene.scene);
 
     expect(cells[0].width).toBeLessThan(cells[1].width);
-    expect(cells[1].x).toBe(cells[0].width + 2);
-    expect(result.observed.allocationBounds.width).toBe(cells[0].width + cells[1].width + 2);
+    expect(cells[1].x).toBeCloseTo(cells[0].width + 2);
+    expect(result.observed.allocationBounds.width).toBeCloseTo(cells[0].width + cells[1].width + 2);
   });
 
   it('让内容单元覆盖自动宽度 Array', () => {
@@ -136,22 +129,20 @@ describe('Array / Map 分配', () => {
       defaultCell: { layout: { width: 'auto', height: 20, padding: 0 } },
     });
 
-    expect(
-      result.scene.spatialHandles.entries
-        .filter(entry => entry.role === 'array-cell')
-        .map(entry => entry.geometry.bounds.width),
-    ).toEqual([20, 40]);
+    expect(sceneCellBounds(result.scene.scene).map(bounds => bounds.width)).toEqual([20, 40]);
   });
 
   it('仅在请求时发布字符串单元格标识', () => {
     const base = { namespace: 'standard', type: 'array', items: ['A', 'A'] };
-    const withoutIds = compile(base).scene.spatialHandles.entries;
+    const withoutIds = sceneNodes(compile(base).scene.scene).filter(node => node.id !== undefined);
 
-    expect(withoutIds.filter(entry => entry.role === 'array-cell')).toHaveLength(0);
+    expect(withoutIds).toHaveLength(0);
 
-    const withIds = compile({ ...base, items: ['A', 'B'], cellIdMode: 'string' }).scene.spatialHandles.entries;
+    const withIds = sceneNodes(compile({ ...base, items: ['A', 'B'], cellIdMode: 'string' }).scene.scene).filter(
+      node => node.id !== undefined,
+    );
 
-    expect(withIds.filter(entry => entry.role === 'array-cell').map(entry => entry.id)).toEqual(['cell:A', 'cell:B']);
+    expect(withIds.map(node => node.id)).toEqual(['A', 'B']);
   });
 
   it.each(['row', 'column'] as const)('将索引条放置在 %s 的两侧，而不调整单元格大小', direction => {
@@ -165,10 +156,7 @@ describe('Array / Map 分配', () => {
     const before = compile({ ...base, index: { position: 'before', style: { font: { size: 24 } } } });
     const after = compile({ ...base, index: { position: 'after', style: { font: { size: 24 } } } });
     const hidden = compile({ ...base, index: false });
-    const bounds = (result: ReturnType<typeof compile>) =>
-      result.scene.spatialHandles.entries
-        .filter(entry => entry.role === 'array-cell')
-        .map(entry => entry.geometry.bounds);
+    const bounds = (result: ReturnType<typeof compile>) => sceneCellBounds(result.scene.scene);
 
     expect(before.observed.slotSize).toEqual(after.observed.slotSize);
 
@@ -209,9 +197,7 @@ describe('Array / Map 分配', () => {
     };
     const before = JSON.stringify(source);
     const result = compile(source);
-    const bounds = result.scene.spatialHandles.entries
-      .filter(entry => entry.role === 'array-cell')
-      .map(entry => entry.geometry.bounds);
+    const bounds = sceneCellBounds(result.scene.scene);
 
     expect(bounds).toEqual(
       direction === 'row'
@@ -244,11 +230,7 @@ describe('Array / Map 分配', () => {
       },
     });
 
-    expect(
-      result.scene.spatialHandles.entries
-        .filter(entry => entry.role === 'map-key' || entry.role === 'map-value')
-        .map(entry => entry.geometry.bounds),
-    ).toEqual([
+    expect(sceneCellBounds(result.scene.scene)).toEqual([
       { x: 0, y: 0, width: 5, height: 7 },
       { x: 12, y: 0, width: 50, height: 25 },
       { x: 0, y: 27, width: 10, height: 20 },
@@ -334,18 +316,30 @@ const custom = defineComposite({
     type: literal('foreign'),
     reject: boolean().default(false),
   }),
-  compile: (node, context) => {
+  compile: node => {
     if (node.reject) throw new Error('foreign child rejected content');
 
     const bounds = { x: -12, y: 6, width: 20, height: 10 };
 
     return {
       allocationBounds: bounds,
-      children: [context.createScope({}, [], [{ id: 'content', role: 'foreign', bounds }])],
+      children: [
+        {
+          type: 'node',
+          id: 'foreign-content',
+          position: [bounds.x + bounds.width / 2, bounds.y + bounds.height / 2],
+          layout: {
+            width: bounds.width,
+            minimumSize: { width: bounds.width, height: bounds.height },
+            padding: 0,
+            margin: 0,
+          },
+        },
+      ],
     };
   },
 });
-it('以负原点居中第三方内容并保留其自己的空间句柄', () => {
+it('以负原点居中第三方内容并保持绘制位置', () => {
   const result = compile(
     {
       namespace: 'standard',
@@ -357,13 +351,13 @@ it('以负原点居中第三方内容并保留其自己的空间句柄', () => {
     [custom],
   );
 
-  expect(result.scene.spatialHandles.entries.find(entry => entry.role === 'foreign')?.geometry.bounds).toEqual({
+  expect(sceneNodeBounds(result.scene.scene, 'foreign-content')).toEqual({
     x: 20,
     y: 20,
     width: 20,
     height: 10,
   });
-  expect(result.scene.spatialHandles.entries.find(entry => entry.role === 'array-cell')?.geometry.bounds).toEqual({
+  expect(sceneCellBounds(result.scene.scene)[0]).toEqual({
     x: 0,
     y: 0,
     width: 60,
@@ -385,7 +379,7 @@ it('将固定槽几何形状保持在有限范围范围内', () => {
   const result = compile(source, { x: { kind: 'range', min: 100, max: 120 }, y: { kind: 'range', min: 60, max: 80 } });
 
   expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 100, height: 60 });
-  expect(result.scene.spatialHandles.entries.find(entry => entry.role === 'array-cell')?.geometry.bounds).toEqual({
+  expect(sceneCellBounds(result.scene.scene)[0]).toEqual({
     x: 0,
     y: 0,
     width: 36,

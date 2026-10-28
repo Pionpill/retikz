@@ -1,11 +1,11 @@
 import type { ChartLayoutProps } from '@retikz/chart-react';
 import { ChartLayout } from '@retikz/chart-react';
 import {
-  ScatterChart,
   BubbleChart,
   ConnectedScatterChart,
   RangedDotChart,
   RegressionChart,
+  ScatterChart,
   StripChart,
 } from '@retikz/chart-react/point';
 import { BranchDiagram } from '@retikz/diagram-react/branch';
@@ -70,7 +70,6 @@ const FLOW_HOST_PROP_KEYS = [
   'composites',
   'themeDefinitions',
   'lowerTex',
-  'artifacts',
   'onArtifacts',
   'onCompileResult',
 ] as const satisfies ReadonlyArray<keyof FlowDiagramLayoutHostProps>;

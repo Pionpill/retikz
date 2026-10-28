@@ -3,6 +3,11 @@ title: Inspection mechanism
 description: Follow one observed compile through selection admission, final-result capture, instance matching, and auxiliary-scene output with source entry points
 ---
 
+<ComponentAlert
+  type="warning"
+  description="Core has removed compile observations and isolated fragment compilation. The legacy mechanism below is unavailable; Inspect will be reconnected to ordinary compilation results separately."
+/>
+
 Read [Inspect usage](/kernel/packages/inspect) and [Built-in inspection](/kernel/packages/inspect/builtins) first. This page follows one compile that adds control points to a curve: primary IR, inspection rules, and available inspection implementations enter; the primary figure, auxiliary content, and diagnostics leave together. The host then adapts the auxiliary content into readonly layers.
 
 The running example is one curve and its control-point inspection. Internal functions below are source-reading anchors, not importable public APIs. The flow stops at auxiliary-layer delivery rather than renderer execution.
@@ -98,19 +103,6 @@ A custom Inspector therefore requires the corresponding object to publish final 
 The curve example only uses `path`; Core's full observation-owner list is: `path` (a named final Path), `node` (Node geometry and text layout), `scope` (the intrinsic Scope envelope), `coordinate` (a resolved coordinate point), `clip` (one logical Clip application), and `composite` (a composite owner identified by namespace and type). Built-in Inspectors bind to these owners; registering an Inspector cannot create an observation for an owner that publishes no final output.
 
 Each observation also carries `ancestors`, an outside-in chain of the Scope and composite containers with their occurrences. An Inspector can use it to explain hierarchy or distinguish the same owner in different containers without guessing parentage from a source path.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Core observation context and isolated compilation',
-      path: 'packages/kernel/core/src/contract/observation.ts',
-    },
-    {
-      label: 'Core dispatch of final observations',
-      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
-    },
-  ]}
-/>
 
 <SourceLinks
   sources={[

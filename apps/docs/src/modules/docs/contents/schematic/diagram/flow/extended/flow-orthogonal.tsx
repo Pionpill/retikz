@@ -5,14 +5,11 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract, previewControls } from './flow-orthogonal.controls';
 import { renderFlowOrthogonalPreview } from './flow-orthogonal.preview';
-import { FlowCurveViewport } from './FlowCurveViewport';
 
 export { previewControls };
 const createPreview = (lang: Lang) => {
   const contract = createPreviewControlContract(lang);
-  const controlled = defineControlledPreview(contract, values => (
-    <FlowCurveViewport orthogonal diagram={renderFlowOrthogonalPreview(values, lang)} />
-  ));
+  const controlled = defineControlledPreview(contract, values => renderFlowOrthogonalPreview(values, lang));
 
   return {
     ...controlled,

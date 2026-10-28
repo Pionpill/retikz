@@ -3,16 +3,15 @@ import { resolveCompositeInputScope } from '../../contract/composite';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
 import type { IRScene } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
-import { createCompileEnvironment } from '../environment';
 import type { CompileEnvironment } from '../environment';
-import { createNodeGeometryContext } from '../node';
+import { createCompileEnvironment } from '../environment';
 import type { NodeGeometryContext } from '../node';
+import { createNodeGeometryContext } from '../node';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { createTextMeasurement } from '../text';
 import type { CompileOptions } from '../types';
 import type { InputCompileWarning } from '../warning';
 import { formatCompileWarning } from '../warning';
-import type { CompileObservationRuntime } from './observation';
 
 /** 本次全量编译的独占工作区，稳定能力来自环境 */
 export type CompileContext = CompileEnvironment & {
@@ -26,8 +25,6 @@ export type CompileContext = CompileEnvironment & {
   theme: CanonicalTheme;
   /** 本次诊断收集器 */
   onWarn: (warning: InputCompileWarning) => void;
-  /** 本次观察会话 */
-  observation: CompileObservationRuntime | undefined;
   /** 本次绘制资源注册表 */
   paint: ReturnType<typeof createPaintRegistry>;
   /** 本次裁剪资源注册表 */
@@ -36,7 +33,6 @@ export type CompileContext = CompileEnvironment & {
 
 type CompileContextOptions = Omit<CompileOptions, 'onWarn'> & {
   onWarn?: (warning: InputCompileWarning) => void;
-  observation?: CompileObservationRuntime;
 };
 
 /** 从稳定环境创建独占编译工作区，文本缓存不跨次共享 */
@@ -60,7 +56,6 @@ export const createCompileContext = (
     theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', environment.themeDefinitions),
     measureText,
     onWarn,
-    observation: options.observation,
     paint: createPaintRegistry(environment.round),
     clip: createClipRegistry(environment.round, environment.maxClipDepth),
   };

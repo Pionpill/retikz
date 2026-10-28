@@ -1,15 +1,15 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import type { CompileWarning, ScenePrimitive } from '@retikz/core';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import type { FlowLayoutOutput, FlowLayoutRoute, InputFlowLayoutComputation } from '../../src/flow';
 import {
   createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,
   FlowDiagramSchema,
+  FlowRouteArtifactSchema,
   layeredFlowLayoutDefinition,
 } from '../../src/flow';
-import type { InputFlowLayoutComputation, FlowLayoutRoute, FlowLayoutOutput } from '../../src/flow';
-import { FlowRouteArtifactSchema } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { createFlowBendCurve, flowRelationObstacles, scoreFlowBendNodes } from '../../src/flow/providers';
 import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
@@ -259,8 +259,7 @@ describe('Flow 弯曲布线', () => {
       }),
     );
     const artifact = FlowDiagramArtifactSchema.parse(
-      result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-        ?.value,
+      result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
     );
     if (output === undefined) throw new Error('expected layout output');
 
@@ -740,8 +739,7 @@ describe('Flow 弯曲布线', () => {
       resolveCoreProviderDependencies({ contributions: [createFlowDiagramProviderContribution()] }),
     );
     const artifact = FlowDiagramArtifactSchema.parse(
-      result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-        ?.value,
+      result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
     );
 
     expect(artifact.relations[0].route).toMatchObject({ kind: 'bend', bendDirection: 'right', bendAngle: 60 });

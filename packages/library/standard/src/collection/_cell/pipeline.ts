@@ -1,12 +1,11 @@
 import type {
   CompositeCompileChild,
+  CompositeCompileContext,
+  CompositeCompileResult,
   CompositeCompileScopeProps,
   IRChild,
   IRNode,
   LayoutChildResult,
-  CompositeCompileContext,
-  CompositeCompileResult,
-  SpatialHandleDeclaration,
 } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe, resolveLayoutAxisSize } from '@retikz/layout/compose';
 
@@ -216,7 +215,6 @@ export const compileCells = (
       details: { width, height, allocation: allocationBounds },
     });
 
-  const handles: Array<SpatialHandleDeclaration> = [{ id: 'container', role: 'container', bounds: allocationBounds }];
   const children: Array<IRChild | CompositeCompileChild> = cells.map(cell => emitCell(cell, context));
   children.push(...extra);
   if (decoration.label !== undefined || scope.id !== undefined) {
@@ -257,7 +255,6 @@ export const compileCells = (
 
   for (const {
     measured: { cell },
-    role,
     x,
     y,
     width: cellWidth,
@@ -266,12 +263,6 @@ export const compileCells = (
     if (cell.id === undefined) continue;
 
     const bounds = { x, y, width: cellWidth, height: cellHeight };
-    handles.push({
-      id: `cell:${cell.id}`,
-      ...(cell.aliasIds === undefined ? {} : { aliasIds: cell.aliasIds.map(id => `cell:${id}`) }),
-      role,
-      bounds,
-    });
     children.push({
       type: 'scope',
       defaults: { reset: ['node'] },
@@ -279,5 +270,5 @@ export const compileCells = (
     });
   }
 
-  return { allocationBounds, children: [context.createScope(scope, children, handles)] };
+  return { allocationBounds, children: [context.createScope(scope, children)] };
 };

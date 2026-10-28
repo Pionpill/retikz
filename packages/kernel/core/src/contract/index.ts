@@ -9,12 +9,10 @@ export type {
 } from './composite/input';
 export * from './composite/layout';
 export * from './node';
-export * from './observation';
 export * from './occurrence';
 export * from './path';
 export * from './provider';
 export * from './scene';
 export * from './scope';
-export * from './spatial-handle';
 export * from './style';
 export * from './theme';

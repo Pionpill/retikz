@@ -1,4 +1,3 @@
-import { formatCompileWarning, prepareSceneCompilation } from '@retikz/core';
 import type {
   AnyCompositeDefinition,
   CompileOptions,
@@ -6,13 +5,14 @@ import type {
   PreparedSceneCompilation,
   SceneCompilationPreparationOptions,
 } from '@retikz/core';
-import { RetikzError } from '@retikz/foundation';
+import { formatCompileWarning, prepareSceneCompilation } from '@retikz/core';
 import type { PerformanceTraceSink } from '@retikz/foundation';
+import { RetikzError } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from './error';
 import { ReconcilerTracePhase, ReconcilerTraceUnit } from './trace';
-import { isWeaveScene, WeaveReconciler } from './weave';
 import type { WeaveBatch, WeavePreparedUpdate, WeaveRoot } from './weave';
+import { isWeaveScene, WeaveReconciler } from './weave';
 
 /** 同一会话发布的完整编译结果 */
 export type ReconcilerResult = Readonly<{
@@ -308,4 +308,4 @@ export type ReconcilerUpdateStrategy = (typeof ReconcilerUpdateStrategy)[keyof t
 /** 下游消费的完整编译输出 */
 export type ReconcilerOutput<
   TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
-> = Pick<PreparedSceneCompilation<TComposites>, 'result' | 'diagnostics' | 'observerOutputs'>;
+> = Pick<PreparedSceneCompilation<TComposites>, 'result' | 'diagnostics'>;

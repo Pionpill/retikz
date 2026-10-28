@@ -17,7 +17,6 @@ describe('静态编译准备', () => {
     const prepared = prepareSceneCompilation(scene);
     expect(prepared.result).toEqual(compileToScene(scene));
     expect(prepared.provenance).toBeUndefined();
-    expect(prepared.observerOutputs).toEqual([]);
   });
 
   it('来源逐项对应最终图元，且相同名称的注册不会合并', () => {

@@ -5,14 +5,11 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract, previewControls } from './flow-bend.controls';
 import { renderFlowBendPreview } from './flow-bend.preview';
-import { FlowCurveViewport } from './FlowCurveViewport';
 
 export { previewControls };
 const createPreview = (lang: Lang) => {
   const contract = createPreviewControlContract(lang);
-  const controlled = defineControlledPreview(contract, values => (
-    <FlowCurveViewport diagram={renderFlowBendPreview(values, lang)} />
-  ));
+  const controlled = defineControlledPreview(contract, values => renderFlowBendPreview(values, lang));
 
   return {
     ...controlled,

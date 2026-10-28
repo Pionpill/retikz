@@ -676,7 +676,7 @@ export const collectLayoutPreviewDefinitions = (
 
 const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
-  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}InputEmbedAdapter`;
+  const adapterName = `${record.type}InputEmbedAdapter`;
   if (
     !(STANDARD_HELPER_ORDER.includes(record.type) || STANDARD_SHAPE_KINDS.includes(record.type)) ||
     !STANDARD_ADAPTER_ORDER.includes(adapterName)
@@ -770,7 +770,7 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
 
 const layoutCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
-  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}InputEmbedAdapter`;
+  const adapterName = `${record.type}InputEmbedAdapter`;
   if (!LAYOUT_HELPER_ORDER.includes(record.type) || !LAYOUT_ADAPTER_ORDER.includes(adapterName)) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
@@ -942,7 +942,7 @@ const blockRowAuthoringCode = (row: IRBlockRow, indent: number, ctx: Ctx): strin
 const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string };
   const helperName = record.type;
-  const adapterName = `${helperName.charAt(0).toUpperCase()}${helperName.slice(1)}InputEmbedAdapter`;
+  const adapterName = `${helperName}InputEmbedAdapter`;
   if (!GRAPH_HELPER_ORDER.includes(helperName) || !GRAPH_ADAPTER_ORDER.includes(adapterName)) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
@@ -1119,9 +1119,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     new Set(ctx.graphCounts.keys()),
   );
   if (standardHelpers.length > 0) {
-    const shapeAdapters = new Set(
-      STANDARD_SHAPE_KINDS.map(kind => `${kind.charAt(0).toUpperCase()}${kind.slice(1)}InputEmbedAdapter`),
-    );
+    const shapeAdapters = new Set(STANDARD_SHAPE_KINDS.map(kind => `${kind}InputEmbedAdapter`));
     const members = [...standardHelpers, ...standardAdapters];
     const shapeMembers = members.filter(name => name === 'shape' || shapeAdapters.has(name));
     const collectionMemberNames = new Set<string>([

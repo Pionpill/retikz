@@ -33,8 +33,7 @@ const primitives = (values: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive
 
 const artifact = (output: ReturnType<typeof compile>) =>
   Flow.FlowDiagramArtifactSchema.parse(
-    output.artifacts.find(value => value.kind === 'composite' && value.namespace === 'diagram' && value.type === 'flow')
-      ?.value,
+    output.artifacts.find(value => value.namespace === 'diagram' && value.type === 'flow')?.value,
   );
 
 describe('Flow Group Graph 曲面', () => {

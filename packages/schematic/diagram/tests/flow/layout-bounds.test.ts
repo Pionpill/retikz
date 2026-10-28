@@ -21,8 +21,7 @@ const compile = (source: unknown, options: FlowDiagramDefinitionOptions = {}) =>
     },
   );
   return FlowDiagramArtifactSchema.parse(
-    result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-      ?.value,
+    result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
   );
 };
 

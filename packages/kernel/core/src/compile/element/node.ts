@@ -1,9 +1,8 @@
 import type { IRNode } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect } from '../../shared/geometry';
-import { compileNodeState, emitNodePrimitives, labelExtentPoints, outerRectOf, projectNodeOwnerOutput } from '../node';
+import { compileNodeState, emitNodePrimitives, labelExtentPoints, outerRectOf } from '../node';
 import { runElementCompilation } from './context';
-import { collectElementObservation } from './observation';
 import type { CompiledNode, ElementCompileOptions, ElementCompileResult } from './types';
 
 /** 节点单元素编译上下文 */
@@ -30,19 +29,6 @@ export const compileNode = (input: IRNode, context: NodeCompileContext): Element
         zIndex: input.zIndex,
         primitives,
         resources: workspace.paint.resources(),
-        nodeLayouts: context.environment.artifacts?.nodeLayouts
-          ? [
-              {
-                layout,
-                id: properties.id,
-                scopeChain: [],
-                occurrence: context.occurrence ?? { sourcePath: context.irPath, expansionPath: [] },
-              },
-            ]
-          : [],
-        observations: collectElementObservation(context, { kind: 'node' }, () =>
-          projectNodeOwnerOutput(layout, context.environment.round, workspace.nodeGeometry),
-        ),
         bounds: [
           {
             boundsPoints: [Anchor.TopLeft, Anchor.TopRight, Anchor.BottomLeft, Anchor.BottomRight].map(anchor =>

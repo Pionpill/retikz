@@ -1,4 +1,4 @@
-import type { CompositeCompileArtifact } from '@retikz/core';
+import type { CompositeArtifact } from '@retikz/core';
 import type { infer as ZodInfer } from 'zod';
 
 import type {
@@ -37,4 +37,4 @@ export type FlowRelationArtifact = ZodInfer<typeof FlowRelationArtifactSchema>;
 export type FlowDiagramArtifact = ZodInfer<typeof FlowDiagramArtifactSchema>;
 
 /** Core 编译结果中的 Flow Diagram typed artifact envelope */
-export type FlowDiagramCompileArtifact = CompositeCompileArtifact<'diagram', 'flow', FlowDiagramArtifact>;
+export type FlowDiagramCompileArtifact = CompositeArtifact<'diagram', 'flow', FlowDiagramArtifact>;

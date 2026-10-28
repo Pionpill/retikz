@@ -1,5 +1,3 @@
-import type { CompileObservationOwner } from '@retikz/core';
-
 /** React 声明位置的领域中立类别 */
 export type LayoutAuthoringSiteKind = 'scene' | 'scope' | 'path' | 'embeddable';
 
@@ -12,8 +10,6 @@ export type LayoutAuthoringSite = Readonly<{
   kind: LayoutAuthoringSiteKind;
   /** 与 Core 编译实例对齐的声明来源路径；场景根为空字符串 */
   sourcePath: string;
-  /** 声明位置对应的可观察所属者；场景与作用域等无所属者的容器可省略 */
-  owner?: CompileObservationOwner;
   /** 原始 React 元素类型；基础适配器不读取其扩展语义 */
   elementType: unknown;
   /** 由可选包装组件写入且基础适配器不解释的属性 */

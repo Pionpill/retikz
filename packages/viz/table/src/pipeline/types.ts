@@ -2,8 +2,8 @@ import type {
   AnyCompositeDefinition,
   CompileOptions,
   CompileResult,
+  CompositeArtifact,
   CompositeArtifactOf,
-  CompositeCompileArtifact,
   IRScene,
 } from '@retikz/core';
 import type { output as ZodOutput } from 'zod';
@@ -13,10 +13,10 @@ import type {
   AnyCellPresentationDefinition,
   AnyCellVisualScaleDefinition,
   AnyTableStructureDefinition,
+  TableDataOptions,
   TableLayoutManifest,
   TableLayoutManifestSchema,
   TableThemeDefinition,
-  TableDataOptions,
 } from '../contract';
 import type { TABLE_NAMESPACE } from '../schemas';
 
@@ -36,7 +36,7 @@ export type TablesLoweringOptions = TableDataOptions &
   }>;
 
 /** Table layout-aware composite 的 typed artifact */
-export type TableCompileArtifact = CompositeCompileArtifact<
+export type TableCompileArtifact = CompositeArtifact<
   typeof TABLE_NAMESPACE,
   'table',
   ZodOutput<typeof TableLayoutManifestSchema>

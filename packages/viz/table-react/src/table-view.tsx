@@ -1,4 +1,4 @@
-import type { CompileArtifact } from '@retikz/core';
+import type { CompositeArtifact } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import { Layout } from '@retikz/react';
 import type { TableCompileArtifact } from '@retikz/table';
@@ -27,8 +27,7 @@ TableRuntimeEmbed.displayName = 'TableRuntimeEmbed';
 TableRuntimeEmbed.isTier2Embeddable = true;
 TableRuntimeEmbed.inputEmbedAdapter = tableInputEmbedAdapter;
 
-const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
-  artifact.kind === 'composite' &&
+const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableCompileArtifact =>
   artifact.namespace === TABLE_NAMESPACE &&
   artifact.type === TableComposite.Table &&
   artifact.occurrence.sourcePath === 'children[0]' &&
@@ -136,7 +135,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
 
   const notifiedManifestKey = useRef<string>();
   const handleArtifacts = useCallback(
-    (artifacts: ReadonlyArray<CompileArtifact>): void => {
+    (artifacts: ReadonlyArray<CompositeArtifact>): void => {
       const matches = artifacts.filter(isRootTableArtifact);
       if (matches.length !== 1) {
         throw new RetikzTableReactError(

@@ -1,24 +1,15 @@
-import type { ScenePrimitive } from '@retikz/core';
-import type { LayoutProposal, PathPrimitive } from '@retikz/core';
-import {
-  ChildSchema,
-  CompositeBaseSchema,
-  compileToScene,
-  defineComposite,
-  LayoutChildProbeKind,
-  resolveSpatialHandle,
-} from '@retikz/core';
+import type { LayoutProposal, PathPrimitive, ScenePrimitive } from '@retikz/core';
+import { ChildSchema, compileToScene, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { chainDefinition, createChain } from '../../../src/collection/chain';
+import { compileMeasured } from '../../helpers/compile-measured';
+import { sceneCellBounds, sceneNodeBounds, sceneNodes } from '../../helpers/scene-geometry';
 
 const compile = (input: Parameters<typeof createChain>[0]) =>
-  compileToScene(
-    { type: 'scene', version: 1, children: [createChain(input)] },
-    { composites: [chainDefinition], clips: [pathClipDefinition], padding: 0 },
-  );
+  compileMeasured(createChain(input), { composites: [chainDefinition], clips: [pathClipDefinition], padding: 0 });
 
 const base = { namespace: 'standard', type: 'chain' } as const;
 it('奇数空轨道留在末端，JSON 数据不猜测分支结构', () => {
@@ -38,8 +29,8 @@ it('奇数空轨道留在末端，JSON 数据不猜测分支结构', () => {
     layout: { gap: 10, justify: 'center' },
     defaultCell: { layout: { width: 20, height: 10 } },
   });
-  const first = resolveSpatialHandle(result.spatialHandles, { id: 'cell:first' }).geometry.bounds;
-  const short = resolveSpatialHandle(result.spatialHandles, { id: 'cell:short' }).geometry.bounds;
+  const first = sceneNodeBounds(result.scene, 'first');
+  const short = sceneNodeBounds(result.scene, 'short');
 
   expect(short.x - first.x).toBe(30);
 
@@ -88,7 +79,7 @@ it('外部路径连接显式单元边框，局部命名空间隔离同名内容'
 
   if (path?.type === 'path') expect(path.commands.at(-1)).toEqual({ kind: 'line', to: [27, 16] });
 
-  expect(result.spatialHandles.entries.filter(e => e.id === 'cell:target')).toHaveLength(2);
+  expect(sceneNodes(result.scene).filter(node => node.id === 'target')).toHaveLength(2);
 });
 it('共享轨道采用实际相邻项的间距需求，允许嵌套块缩小局部间距', () => {
   const result = compile({
@@ -117,8 +108,8 @@ it('共享轨道采用实际相邻项的间距需求，允许嵌套块缩小局�
     layout: { gap: 24 },
     defaultCell: { layout: { width: 20, height: 10 } },
   });
-  const last = resolveSpatialHandle(result.spatialHandles, { id: 'cell:last' }).geometry.bounds;
-  const after = resolveSpatialHandle(result.spatialHandles, { id: 'cell:after' }).geometry.bounds;
+  const last = sceneNodeBounds(result.scene, 'last');
+  const after = sceneNodeBounds(result.scene, 'after');
 
   expect(after.x - last.x - last.width).toBe(6);
 });
@@ -165,8 +156,8 @@ it('父约束不足时失败，充足空间不拉伸单元或间距', () => {
   expect(() => run({ x: { kind: 'exact', value: 40 }, y: { kind: 'exact', value: 20 } })).toThrow();
 
   const result = run({ x: { kind: 'exact', value: 100 }, y: { kind: 'exact', value: 20 } });
-  const first = resolveSpatialHandle(result.spatialHandles, { id: 'cell:a' }).geometry.bounds;
-  const second = resolveSpatialHandle(result.spatialHandles, { id: 'cell:b' }).geometry.bounds;
+  const first = sceneNodeBounds(result.scene, 'a');
+  const second = sceneNodeBounds(result.scene, 'b');
 
   expect(first.width).toBe(20);
   expect(second.x - first.x).toBe(30);
@@ -194,14 +185,14 @@ it('不等尺寸步骤保持中心对齐且嵌套块不摊平成全局轨道', (
     layout: { gap: 10, branchGap: 10 },
     defaultCell: { layout: { width: 20, height: 10 } },
   });
-  const wide = resolveSpatialHandle(result.spatialHandles, { id: 'cell:wide' }).geometry.bounds;
-  const small = resolveSpatialHandle(result.spatialHandles, { id: 'cell:small' }).geometry.bounds;
+  const wide = sceneNodeBounds(result.scene, 'wide');
+  const small = sceneNodeBounds(result.scene, 'small');
 
   expect(small.x + small.width / 2).toBe(wide.x + wide.width / 2);
   expect(small.width).toBe(20);
   expect(wide.width).toBe(80);
   expect(small.y).toBeGreaterThanOrEqual(wide.y + wide.height + 10);
-  expect(result.spatialHandles.entries.filter(e => e.role === 'chain-cell')).toHaveLength(2);
+  expect(sceneCellBounds(result.scene)).toHaveLength(10);
   expect(flat(result.scene.primitives).filter(p => p.type === 'text')).toHaveLength(8);
 });
 
@@ -288,7 +279,7 @@ it('局部连接覆盖保留样式字段并显式移除箭头', () => {
 it('空根保持零 allocation 与标签，单单元无连接，变换保留真实引用', () => {
   const empty = compile({ ...base, items: [], label: { text: 'Chain', position: 'top' } });
 
-  expect(empty.spatialHandles.entries.find(e => e.role === 'container')!.geometry.bounds).toMatchObject({
+  expect(empty.allocationBounds).toMatchObject({
     width: 0,
     height: 0,
   });
@@ -304,7 +295,7 @@ it('空根保持零 allocation 与标签，单单元无连接，变换保留真�
 
   expect(connections(single)).toHaveLength(0);
 
-  const bounds = resolveSpatialHandle(single.spatialHandles, { id: 'cell:only' }).geometry.bounds;
+  const bounds = sceneNodeBounds(single.scene, 'only');
 
   expect(bounds.width).toBeCloseTo(10);
   expect(bounds.height).toBeCloseTo(30);
@@ -337,11 +328,11 @@ it('分叉占共享步骤，汇合回主干且只注册真实单元', () => {
     layout: { gap: 10, branchGap: 10 },
     defaultCell: { layout: { width: 20, height: 10 } },
   });
-  const cells = result.spatialHandles.entries.filter(e => e.role === 'chain-cell');
+  const cells = sceneCellBounds(result.scene);
 
   expect(cells).toHaveLength(5);
 
-  const bounds = (id: string) => cells.find(e => e.id === `cell:${id}`)!.geometry.bounds;
+  const bounds = (id: string) => sceneNodeBounds(result.scene, id);
 
   expect(bounds('a').y).toBe(bounds('e').y);
   expect(bounds('b').x).toBe(bounds('d').x);
@@ -364,7 +355,7 @@ it('短分支对齐在独立与步骤布局下保持真实单元数量', () => {
         layout: { gap: 10, spacing, justify },
         defaultCell: { layout: { width: 20, height: 10 } },
       });
-      const find = (id: string) => result.spatialHandles.entries.find(e => e.id === `cell:${id}`)!.geometry.bounds;
+      const find = (id: string) => sceneNodeBounds(result.scene, id);
 
       expect(find('s').x - find('b').x).toBe(justify === 'start' ? 0 : justify === 'center' ? 30 : 60);
     }
@@ -384,7 +375,7 @@ it('主干和端部对齐以完整支路包围盒为准', () => {
       layout: { branchGap: 10, branchAlign },
       defaultCell: { layout: { width: 20, height: 10 } },
     });
-    const find = (id: string) => result.spatialHandles.entries.find(e => e.id === `cell:${id}`)!.geometry.bounds;
+    const find = (id: string) => sceneNodeBounds(result.scene, id);
 
     expect(find('a').y - find('b').y).toBe(branchAlign === 'start' ? 0 : branchAlign === 'center' ? 10 : 20);
   }
@@ -399,7 +390,7 @@ it('纵向布局交换主轴但保留单元物理宽高', () => {
     layout: { direction: 'down', gap: 12 },
     defaultCell: { layout: { width: 30, height: 10 } },
   });
-  const cells = result.spatialHandles.entries.filter(e => e.role === 'chain-cell').map(e => e.geometry.bounds);
+  const cells = sceneCellBounds(result.scene);
 
   expect(cells[0]).toMatchObject({ width: 30, height: 10 });
   expect(cells[1].y - cells[0].y).toBe(22);
@@ -419,7 +410,7 @@ it('嵌套并行块局部字段不重置继承的对齐', () => {
     layout: { spacing: 'independent', justify: 'end' },
     defaultCell: { layout: { width: 20, height: 10 } },
   });
-  const find = (id: string) => result.spatialHandles.entries.find(e => e.id === `cell:${id}`)!.geometry.bounds;
+  const find = (id: string) => sceneNodeBounds(result.scene, id);
 
   expect(find('short').x - find('long').x).toBe(50);
 });
@@ -553,7 +544,7 @@ it('嵌套不等宽分支平移后，连接仍贴合最终单元边界', () => {
       layout: { direction, gap: 10, branchGap: 10 },
       defaultCell: { layout: { width: 20, height: 20 } },
     });
-    const bounds = (id: string) => resolveSpatialHandle(result.spatialHandles, { id: `cell:${id}` }).geometry.bounds;
+    const bounds = (id: string) => sceneNodeBounds(result.scene, id);
     const paths = connections(result);
     expect(paths).toHaveLength(8);
     for (const [from, to] of [

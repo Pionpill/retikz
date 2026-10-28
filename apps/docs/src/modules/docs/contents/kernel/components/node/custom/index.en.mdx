@@ -28,8 +28,6 @@ A boundary owns only “where the connection stops” and “where standard dire
 
 Use `defineBoundary` to declare a stable registry key, parameter schema, and ray intersection. Even parameterless definitions provide `z.strictObject({})`, so every payload follows the same validation path.
 
-The optional `computeOutline` method is primarily used by Inspect to visualize the boundary for debugging and can usually be omitted. Omitting it does not affect connection point or anchor calculations for ordinary connections; Inspect simply cannot display the exact boundary outline. Implementing it does not make the boundary visible during normal rendering.
-
 ```ts
 import { defineBoundary } from '@retikz/core';
 import { z } from 'zod';

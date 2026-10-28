@@ -29,11 +29,11 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 
 ## 读取编译产物
 
-需要在图外显示节点的排版尺寸时，用 `artifacts={{ nodeLayouts: true }}` 请求节点布局快照，再通过 `onArtifacts` 读取结果。回调在 React commit 后通知同次编译结果；快照不会随之后的更新而原地变化。
+通过 `onArtifacts` 读取 Composite 返回的领域产物，例如 FlexLayout 的容器与子项布局。产物随编译自动收集，回调在 React commit 后通知同次结果；后续更新不会改变此前收到的快照。
 
 <ComponentPreview files="layout-artifacts" size="xs" />
 
-示例把节点数量和正文宽度显示在图外。快照描述编译后的几何信息，不是实时 DOM 测量，也不能用于修改图形输入。
+示例在图外显示 Composite 产物数量和 FlexLayout 的领域值。字段及坐标语义由对应组件定义；普通 Node 不提供独立布局产物。
 
 ## 执行模式与更新策略
 
@@ -79,15 +79,9 @@ retained 模式处理后续输入失败时，继续显示上一次成功结果�
       description: '向 React Layout 注入自定义定义，包括裁剪区、连接面和路径能力',
     },
     {
-      name: 'artifacts',
-      kind: 'property',
-      type: 'CompileArtifactOptions',
-      description: '声明需要从编译结果中收集的 artifact 类型',
-    },
-    {
       name: 'onArtifacts',
       kind: 'property',
-      type: '(artifacts: ReadonlyArray<CompileArtifact>) => void',
+      type: '(artifacts: ReadonlyArray<CompositeArtifact>) => void',
       description: '在 artifact 收集完成后接收结果',
     },
     {

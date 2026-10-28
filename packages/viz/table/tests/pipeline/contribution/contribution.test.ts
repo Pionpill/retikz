@@ -5,11 +5,13 @@ import {
   defineComposite,
   defineTheme,
   resolveCoreProviderDependencies,
+  RetikzCoreError,
+  RetikzCoreErrorCode,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import type { TablesLoweringOptions, TableProviderParams, TableStructureOutput } from '../../../src';
+import type { TableProviderParams, TablesLoweringOptions, TableStructureOutput } from '../../../src';
 import {
   createTableRuntimeContribution,
   defineCellFormatter,
@@ -92,6 +94,22 @@ const tableProviderOf = (contribution: ReturnType<typeof createTableRuntimeContr
       provider.key.type === 'table',
   ) as CoreDependencyProvider<TableProviderParams> | undefined;
 
+/** 验证 provider 边界包装错误，同时保留领域冲突原因 */
+const expectProviderFailure = (action: () => unknown, message: RegExp): void => {
+  let failure: unknown;
+  try {
+    action();
+  } catch (error) {
+    failure = error;
+  }
+  expect(failure).toBeInstanceOf(RetikzCoreError);
+  if (!(failure instanceof RetikzCoreError)) throw new Error('Expected provider failure');
+  expect(failure.code).toBe(RetikzCoreErrorCode.Provider);
+  expect(failure.cause).toBeInstanceOf(Error);
+  if (!(failure.cause instanceof Error)) throw new Error('Expected original domain failure');
+  expect(failure.cause.message).toMatch(message);
+};
+
 describe('Table 运行时贡献', () => {
   it('复用同名行数组，拒绝不同引用覆盖同名数据集', () => {
     const rows = [{ value: 1 }];
@@ -100,7 +118,7 @@ describe('Table 运行时贡献', () => {
     const conflict = createTableRuntimeContribution({ data: { sales: [...rows] } });
 
     expect(definitionsOf(first, shared).composites).toHaveLength(1);
-    expect(() => definitionsOf(first, conflict)).toThrow(/sales.*conflicts by identity/);
+    expectProviderFailure(() => definitionsOf(first, conflict), /sales.*conflicts by identity/);
   });
 
   it('使用稳定的工厂参考，同时保留数据集身份', () => {
@@ -187,11 +205,9 @@ describe('Table 运行时贡献', () => {
         ],
       },
     );
-    const manifest = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === TABLE_NAMESPACE,
-    );
+    const manifest = result.artifacts.find(artifact => artifact.namespace === TABLE_NAMESPACE);
 
-    expect(manifest?.kind === 'composite' ? manifest.value : undefined).toMatchObject({
+    expect(manifest?.value).toMatchObject({
       style: { name: 'brand', themeMode: 'light' },
     });
   });
@@ -252,7 +268,7 @@ describe('Table 运行时贡献', () => {
     const first = createTableRuntimeContribution({ lowerOptions: firstOptions });
     const second = createTableRuntimeContribution({ lowerOptions: secondOptions });
 
-    expect(() => definitionsOf(first, second)).toThrow(/conflict/i);
+    expectProviderFailure(() => definitionsOf(first, second), /conflict/i);
   });
 
   it('对于具有不同对象的相同复合键，明确报错', () => {
@@ -263,7 +279,7 @@ describe('Table 运行时贡献', () => {
       composites: [compositeOf('fixture', 'same')],
     });
 
-    expect(() => definitionsOf(first, second)).toThrow(/nested definition conflict/i);
+    expectProviderFailure(() => definitionsOf(first, second), /nested definition conflict/i);
   });
 
   it('需要未来的非定义下沉选项来共享相同的对象标识', () => {
@@ -274,7 +290,7 @@ describe('Table 运行时贡献', () => {
     const conflict = createTableRuntimeContribution({ lowerOptions: optionsOf({}) });
 
     expect(() => definitionsOf(first, second)).not.toThrow();
-    expect(() => definitionsOf(first, conflict)).toThrow(/lower option.*futureMode/i);
+    expectProviderFailure(() => definitionsOf(first, conflict), /lower option.*futureMode/i);
   });
 
   it('创建贡献时防御性地复制格式化程序定义数组', () => {

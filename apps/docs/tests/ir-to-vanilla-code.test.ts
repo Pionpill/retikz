@@ -163,7 +163,7 @@ describe('irToVanillaCode', () => {
       ]),
     );
 
-    expect(code).toContain("path({ way: [[0, 0], [50, 50]], arrow: '->' })");
+    expect(code).toContain('path({ way: [[0, 0], [50, 50]], arrow: { end: {} } })');
   });
 
   it('draw-way-fold-cycle：fold(-|) + cycle → 字面量 + DrawWay.Cycle + vanilla import', () => {

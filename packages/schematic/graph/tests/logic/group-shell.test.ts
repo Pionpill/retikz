@@ -1,4 +1,4 @@
-import type { IRChild, CompositeCompileContext } from '@retikz/core';
+import type { CompositeCompileContext, IRChild } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
@@ -71,10 +71,9 @@ const compileMeasurement = (
     },
   );
   const artifact = output.artifacts.find(
-    candidate =>
-      candidate.kind === 'composite' && candidate.namespace === 'graph-shell-test' && candidate.type === 'measurement',
+    candidate => candidate.namespace === 'graph-shell-test' && candidate.type === 'measurement',
   );
-  if (artifact === undefined || artifact.kind !== 'composite') throw new Error('Expected Group shell metrics');
+  if (artifact === undefined) throw new Error('Expected Group shell metrics');
 
   return metricSchema.parse(artifact.value);
 };
@@ -169,7 +168,6 @@ describe('Graph、Group 外壳组成', () => {
     expect(result.slotSize).toEqual({ width: 120, height: 80 });
     expect(primitivesOf(output.scene.primitives)).toEqual([]);
     expect(output.artifacts).toEqual([]);
-    expect(output.spatialHandles.entries).toEqual([]);
     expect(JSON.stringify(output)).not.toContain('group-body-allocation');
   });
 });

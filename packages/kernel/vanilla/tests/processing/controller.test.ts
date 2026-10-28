@@ -309,10 +309,8 @@ describe('Vanilla 处理', () => {
         if (existing !== undefined) return existing;
 
         const session = {
-          observers: [],
           resolve: (output: Parameters<VanillaCompileDriverSession['resolve']>[0]) => ({
             primary: output.result,
-            observerOutputs: output.observerOutputs,
             layers: [],
             diagnostics: [],
           }),
@@ -348,10 +346,9 @@ describe('Vanilla 处理', () => {
   it('compile driver 解析失败时不发布 retained candidate，并恢复上一份 driver 输入', () => {
     let reject = false;
     const session: VanillaCompileDriverSession = {
-      observers: [],
       resolve: output => {
         if (reject) throw new Error('expected driver resolution failure');
-        return { primary: output.result, observerOutputs: output.observerOutputs, layers: [], diagnostics: [] };
+        return { primary: output.result, layers: [], diagnostics: [] };
       },
     };
     const driver: VanillaCompileDriver = {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { FlowRoutingSchema, FlowDiagramSchema } from '../../src/flow';
+import { FlowDiagramSchema, FlowRoutingSchema } from '../../src/flow';
 import { evaluateFlowBezierConflicts, flowRouteLabelBounds } from '../../src/flow/providers';
 
 describe('贝塞尔曲线编写契约', () => {
@@ -47,7 +47,7 @@ describe('贝塞尔曲线编写契约', () => {
 });
 
 // 布局层契约：形状、避让、确定性与不可变作者点
-import type { InputFlowLayoutComputation, FlowLayoutOutput } from '../../src/flow';
+import type { FlowLayoutOutput, InputFlowLayoutComputation } from '../../src/flow';
 import { layeredFlowLayoutDefinition } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
@@ -164,11 +164,11 @@ describe('贝塞尔曲线布局', () => {
   });
 });
 
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import type { CompileWarning, ScenePrimitive } from '@retikz/core';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 
-import { createFlowDiagramProviderContribution, FlowDiagramArtifactSchema } from '../../src/flow';
 import type { FlowLayoutDefinition, IRFlowRouting } from '../../src/flow';
+import { createFlowDiagramProviderContribution, FlowDiagramArtifactSchema } from '../../src/flow';
 
 const flatten = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
@@ -215,8 +215,7 @@ const compileBezier = (
     },
   );
   const artifact = FlowDiagramArtifactSchema.parse(
-    result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
-      ?.value,
+    result.artifacts.find(item => item.namespace === 'diagram' && item.type === 'flow')?.value,
   );
 
   return { result, artifact, warnings };

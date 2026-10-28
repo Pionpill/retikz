@@ -29,9 +29,12 @@ import {
   BlockStylePreview,
   previewSource as blockStylePreviewSource,
 } from '../src/modules/docs/contents/schematic/graph/block/usage/block-style';
-import { previewControlContract as blockStyleContract } from '../src/modules/docs/contents/schematic/graph/block/usage/block-style.controls';
-import { createPreviewControlContract as createBlockStyleContract } from '../src/modules/docs/contents/schematic/graph/block/usage/block-style.controls';
+import {
+  previewControlContract as blockStyleContract,
+  createPreviewControlContract as createBlockStyleContract,
+} from '../src/modules/docs/contents/schematic/graph/block/usage/block-style.controls';
 import { createGraphPreviewSource } from '../src/modules/docs/preview';
+import { sceneSurfaceBounds } from './helpers/scene-geometry';
 
 const BlockBuiltinPreviewEn = (values: Parameters<typeof BlockBuiltinPreview>[0]) => BlockBuiltinPreview(values, 'en');
 
@@ -615,22 +618,13 @@ describe('Graph Block 文档', () => {
       (primitive): primitive is Extract<ScenePrimitive, { type: 'path' }> =>
         primitive.type === 'path' && primitive.arrowEnd !== undefined,
     );
-    const surfaceBounds = (instanceId: string) =>
-      result.spatialHandles.entries.find(
-        entry =>
-          entry.role === 'surface' &&
-          entry.ownerPath.at(-1)?.namespace === 'standard' &&
-          entry.ownerPath.at(-1)?.type === 'surface' &&
-          entry.ownerPath.at(-1)?.instanceId === instanceId,
-      )?.geometry.bounds;
+    const surfaceBounds = (instanceId: string) => sceneSurfaceBounds(result.scene, instanceId);
     const blockBounds = surfaceBounds('user');
     const sectionBounds = surfaceBounds('user.fields');
 
     expect(arrowPaths).toHaveLength(2);
     expect(blockBounds).toBeDefined();
     expect(sectionBounds).toBeDefined();
-
-    if (blockBounds === undefined || sectionBounds === undefined) return;
 
     const blockTip = arrowTipOf(arrowPaths[0]);
     const sectionTip = arrowTipOf(arrowPaths[1]);

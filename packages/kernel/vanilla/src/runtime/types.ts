@@ -1,10 +1,10 @@
-import type { CompileArtifact, CompileOptions, CompileResult, IRScene, Scene } from '@retikz/core';
+import type { CompileOptions, CompileResult, CompositeArtifact, IRScene, Scene } from '@retikz/core';
 import type { ReconcilerDiagnostic, ReconcilerUpdateStrategy } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
 
-import type { SynchronousInputEmbedAdapter, InputRuntimeMeta, InputScene } from '../normalize';
+import type { InputRuntimeMeta, InputScene, SynchronousInputEmbedAdapter } from '../normalize';
 import type { ProcessingOptions } from '../processing';
 import type { VanillaCompileDriver } from './compile-driver';
 import type { VanillaViewMode } from './constants';
@@ -166,7 +166,7 @@ export type VanillaViewState<TRoot extends SVGSVGElement | HTMLCanvasElement> = 
   /** 当前 InputScene normalization metadata；IR / Scene 输入时为空 metadata */
   readonly runtimeMeta: InputRuntimeMeta;
   /** 当前输入同次 compile 产出的 immutable artifacts；Scene 输入固定为空数组 */
-  readonly artifacts: ReadonlyArray<CompileArtifact>;
+  readonly artifacts: ReadonlyArray<CompositeArtifact>;
   /** authored input 的当前 committed 完整 compile result；Scene 输入为 undefined */
   readonly compileResult: CompileResult | undefined;
 }>;

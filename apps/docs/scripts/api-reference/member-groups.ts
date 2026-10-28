@@ -203,7 +203,6 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
       runtime: 'Runtime',
       authoring: 'Runtime',
       compileDriver: 'Extensions',
-      artifacts: 'Output',
       extensions: 'Extensions',
       lowerTex: 'Extensions',
     },

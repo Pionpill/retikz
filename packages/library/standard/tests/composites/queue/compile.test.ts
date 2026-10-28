@@ -1,22 +1,30 @@
-import type { IRChild, ScenePrimitive, LayoutChildResult, LayoutProposal } from '@retikz/core';
-import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
+import type { IRChild, Scene, LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
+import { ChildSchema, compileToScene, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
+import type { BoundsRect } from '@retikz/math';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { arrayDefinition, mapDefinition } from '../../../src/collection';
 import { queueDefinition } from '../../../src/collection/queue';
+import { compileMeasured } from '../../helpers/compile-measured';
+import { sceneCellBounds } from '../../helpers/scene-geometry';
 
 const base = { namespace: 'standard', type: 'queue' } as const;
-const compile = (child: IRChild) =>
-  compileToScene(
-    { type: 'scene', version: 1, children: [child] },
-    { composites: [queueDefinition, arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
-  );
+const compile = (child: IRChild) => {
+  const options = {
+    composites: [queueDefinition, arrayDefinition, mapDefinition],
+    clips: [pathClipDefinition],
+    padding: 0,
+  };
+  return 'namespace' in child
+    ? compileMeasured(child, options)
+    : compileToScene({ version: 1, type: 'scene', children: [child] }, options);
+};
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(n => (n.type === 'group' ? flat(n.children) : [n]));
-const bounds = (result: ReturnType<typeof compile>, role: string) =>
-  result.spatialHandles.entries.filter(e => e.role === role).map(e => e.geometry.bounds);
+const bounds = (result: { scene: Scene; allocationBounds?: BoundsRect }, role: string) =>
+  role === 'container' ? [result.allocationBounds ?? result.scene.layout] : sceneCellBounds(result.scene);
 
 it.each([
   ['right', [8, 8, 46, 8]],

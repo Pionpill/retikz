@@ -1,6 +1,5 @@
-import { compileToScene, prepareSceneCompilation } from '@retikz/core';
-import type { IRPath, ScenePrimitive, IRScene, CompileObservation, CompileObserverDefinition } from '@retikz/core';
-import type { MarkEmitContext } from '@retikz/core';
+import type { IRPath, IRScene, MarkEmitContext, ScenePrimitive } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
@@ -61,42 +60,6 @@ describe('Weave 批次更新', () => {
     expect(readWeaveCurrent(root)).toBe(originalRoot);
     expect(readWeaveCurrent(scope).dependencies.has(nestedScope)).toBe(true);
     expect(readWeaveCurrent(nestedScope).consumers.has(scope)).toBe(true);
-  });
-
-  it('结构变化后的来源、布局产物与新观察会话和全量编译一致', () => {
-    const events: Array<CompileObservation> = [];
-    const observer: CompileObserverDefinition = {
-      key: 'update-observer',
-      createSession: () => ({
-        select: () => true,
-        observe: event => {
-          events.push(event);
-        },
-        complete: () => null,
-      }),
-    };
-    const options = { artifacts: { nodeLayouts: true } };
-    const session = new WeaveReconciler(scene, options, { observers: [observer] });
-    const mounted = session.mount();
-    const previous = JSON.stringify(mounted.compilation.result);
-    events.length = 0;
-    const added = { type: 'node' as const, id: 'prefix', text: 'new' };
-    const prepared = session.update({
-      operations: [{ kind: 'insert', parentId: mounted.root.scopeId, index: 0, elements: [added] }],
-    });
-    const actualEvents = [...events];
-    events.length = 0;
-    const full = prepareSceneCompilation({ ...scene, children: [added, ...scene.children] }, options, {
-      observers: [observer],
-      captureProvenance: true,
-    });
-    expect(prepared.compilation.result).toEqual(full.result);
-    expect(prepared.compilation.provenance?.emissions.map(entry => entry.primitivePath)).toEqual(
-      full.provenance?.emissions.map(entry => entry.primitivePath),
-    );
-    expect(actualEvents).toEqual(events);
-    prepared.rollback();
-    expect(JSON.stringify(mounted.compilation.result)).toBe(previous);
   });
   it('插入后同批删除不提交未编译节点，空插入仍验证位置', () => {
     const session = new WeaveReconciler(scene);

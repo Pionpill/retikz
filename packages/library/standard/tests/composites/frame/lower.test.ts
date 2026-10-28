@@ -1,9 +1,10 @@
-import type { NodeLayoutObservation, GroupPrimitive, PathPrimitive, ScenePrimitive } from '@retikz/core';
-import { compileToScene, isNodeLayoutCompileArtifact, rect as rectOps } from '@retikz/core';
+import type { GroupPrimitive, PathPrimitive, ScenePrimitive } from '@retikz/core';
+import { compileToScene, rect as rectOps } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { InputFrameConfig } from '../../../src/presentation';
 import { createFrame, frameDefinition, FrameHeaderDirection } from '../../../src/presentation';
+import { sceneNodes } from '../../helpers/scene-geometry';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrimitive> =>
@@ -14,61 +15,47 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive
     primitive.type === 'group' ? pathsOf(primitive.children) : primitive.type === 'path' ? [primitive] : [],
   );
 
-const compileFrameScene = (input: InputFrameConfig, nodeLayouts = false) =>
+const compileFrameScene = (input: InputFrameConfig) =>
   compileToScene(
     { type: 'scene', version: 1, children: [createFrame(input)] },
     {
       composites: [frameDefinition],
       padding: 0,
-      ...(nodeLayouts ? { artifacts: { nodeLayouts: true } } : {}),
+      precision: 12,
     },
   );
 
-const nodeLayoutsById = (result: ReturnType<typeof compileFrameScene>): Map<string, NodeLayoutObservation> => {
-  const layouts = new Map<string, NodeLayoutObservation>();
-
-  for (const artifact of result.artifacts) {
-    if (isNodeLayoutCompileArtifact(artifact) && artifact.value.id !== undefined) {
-      layouts.set(artifact.value.id, artifact.value);
-    }
-  }
-
-  return layouts;
-};
+const nodesById = (result: ReturnType<typeof compileFrameScene>) =>
+  new Map(sceneNodes(result.scene).flatMap(node => (node.id === undefined ? [] : [[node.id, node] as const])));
 
 const body = { type: 'node' as const, position: [40, 50] as [number, number], text: 'Body' };
 
 describe('框架布局编译', () => {
   it('编译匿名框架而不合成根、主体或头部 ID', () => {
-    const result = compileFrameScene(
-      { title: { text: 'Title' }, description: { text: 'Description' }, children: [body] },
-      true,
-    );
+    const result = compileFrameScene({
+      title: { text: 'Title' },
+      description: { text: 'Description' },
+      children: [body],
+    });
 
     expect(groupsOf(result.scene.primitives).every(group => group.id === undefined)).toBe(true);
-    expect(
-      result.artifacts.filter(isNodeLayoutCompileArtifact).every(artifact => artifact.value.id === undefined),
-    ).toBe(true);
     expect(JSON.stringify(result.scene)).not.toMatch(/\/content|\/title|\/description/);
   });
 
   it('保留显式的根、主体和头部 ID，而不派生结构后缀', () => {
-    const result = compileFrameScene(
-      {
-        id: 'frame-root',
-        title: { id: 'heading', text: 'Title' },
-        description: { id: 'summary', text: 'Description' },
-        children: [{ ...body, id: 'body' }],
-      },
-      true,
-    );
+    const result = compileFrameScene({
+      id: 'frame-root',
+      title: { id: 'heading', text: 'Title' },
+      description: { id: 'summary', text: 'Description' },
+      children: [{ ...body, id: 'body' }],
+    });
     const ids = groupsOf(result.scene.primitives).flatMap(group => (group.id === undefined ? [] : [group.id]));
 
     expect(ids).toEqual(expect.arrayContaining(['frame-root', 'body', 'heading', 'summary']));
     expect(ids).not.toEqual(
       expect.arrayContaining(['frame-root/content', 'frame-root/title', 'frame-root/description']),
     );
-    expect([...nodeLayoutsById(result).keys()]).toEqual(expect.arrayContaining(['body', 'heading', 'summary']));
+    expect([...nodesById(result).keys()]).toEqual(expect.arrayContaining(['body', 'heading', 'summary']));
   });
 
   it('保留根上编写的 Scope 属性和边框 Path 上的边框样式', () => {
@@ -90,21 +77,18 @@ describe('框架布局编译', () => {
   });
 
   it('将水平标题放置在实际 Node 布局的正文上方', () => {
-    const result = compileFrameScene(
-      {
-        gap: 5,
-        title: {
-          id: 'title',
-          text: 'A long title',
-          scale: 1.2,
-          layout: { padding: 3 },
-        },
-        description: { id: 'description', text: 'Description' },
-        children: [{ ...body, id: 'body' }],
+    const result = compileFrameScene({
+      gap: 5,
+      title: {
+        id: 'title',
+        text: 'A long title',
+        scale: 1.2,
+        layout: { padding: 3 },
       },
-      true,
-    );
-    const layouts = nodeLayoutsById(result);
+      description: { id: 'description', text: 'Description' },
+      children: [{ ...body, id: 'body' }],
+    });
+    const layouts = nodesById(result);
     const bodyLayout = layouts.get('body');
     const title = layouts.get('title');
     const description = layouts.get('description');
@@ -122,17 +106,14 @@ describe('框架布局编译', () => {
   });
 
   it('按标题、描述、正文阅读顺序放置垂直标题', () => {
-    const result = compileFrameScene(
-      {
-        gap: 6,
-        headerDirection: FrameHeaderDirection.Vertical,
-        title: { id: 'title', text: 'Title' },
-        description: { id: 'description', text: 'Description' },
-        children: [{ ...body, id: 'body' }],
-      },
-      true,
-    );
-    const layouts = nodeLayoutsById(result);
+    const result = compileFrameScene({
+      gap: 6,
+      headerDirection: FrameHeaderDirection.Vertical,
+      title: { id: 'title', text: 'Title' },
+      description: { id: 'description', text: 'Description' },
+      children: [{ ...body, id: 'body' }],
+    });
+    const layouts = nodesById(result);
     const bodyLayout = layouts.get('body');
     const title = layouts.get('title');
     const description = layouts.get('description');
@@ -143,8 +124,10 @@ describe('框架布局编译', () => {
     const descriptionTopLeft = rectOps.anchor(description.rect, 'top-left');
     const titleBottomLeft = rectOps.anchor(title.rect, 'bottom-left');
 
-    expect(descriptionBottomLeft).toEqual([bodyTopLeft[0], bodyTopLeft[1] - 6]);
-    expect(titleBottomLeft).toEqual([descriptionTopLeft[0], descriptionTopLeft[1] - 6]);
+    expect(descriptionBottomLeft[0]).toBeCloseTo(bodyTopLeft[0], 8);
+    expect(descriptionBottomLeft[1]).toBeCloseTo(bodyTopLeft[1] - 6, 8);
+    expect(titleBottomLeft[0]).toBeCloseTo(descriptionTopLeft[0], 8);
+    expect(titleBottomLeft[1]).toBeCloseTo(descriptionTopLeft[1] - 6, 8);
   });
 
   it('将头部默认值与显式 Node 字段合并，同时保留显式 id', () => {

@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRChild } from '../../src';
-import { compileToScene, BuiltinCompileWarningCode, NodeSchema } from '../../src';
+import { BuiltinCompileWarningCode, compileToScene, NodeSchema } from '../../src';
 
 const node = (id = 'primary', aliasIds = ['alternate']) =>
   NodeSchema.parse({ type: 'node', id, aliasIds, position: [30, 40], text: 'one' });
 
-const compile = (children: Array<IRChild>) =>
-  compileToScene({ type: 'scene', version: 1, children }, { artifacts: { nodeLayouts: true } });
+const compile = (children: Array<IRChild>) => compileToScene({ type: 'scene', version: 1, children }, {});
 
 const path = (id: string): IRChild => ({
   type: 'path',

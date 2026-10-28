@@ -10,8 +10,6 @@ export const CompileExpansionKind = {
   Replay: 'replay',
   /** 生成 scope 子节点中的 child 序号 */
   ScopeChild: 'scopeChild',
-  /** 一次逻辑 Clip 应用中的稳定序号 */
-  Clip: 'clip',
 } as const;
 
 /** compile occurrence 展开路径的阶段类别取值 */

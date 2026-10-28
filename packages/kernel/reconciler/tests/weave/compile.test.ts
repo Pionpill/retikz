@@ -1,4 +1,4 @@
-import type { CompileObservation, CompileObserverDefinition, IRScene, ScenePrimitive } from '@retikz/core';
+import type { IRScene, ScenePrimitive } from '@retikz/core';
 import { compileToScene, definePath, PathSchema, prepareSceneCompilation } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
@@ -161,8 +161,8 @@ describe('Weave 与 Core 可观察等价', () => {
     },
   ];
   it.each(inputs)('保持引用、变换、排序、诊断与发射归属', input => {
-    const full = prepareSceneCompilation(input, { artifacts: { nodeLayouts: true } }, { captureProvenance: true });
-    const weave = new WeaveReconciler(input, { artifacts: { nodeLayouts: true } }).mount().compilation;
+    const full = prepareSceneCompilation(input, {}, { captureProvenance: true });
+    const weave = new WeaveReconciler(input, {}).mount().compilation;
     expect(weave.result).toEqual(full.result);
     expect(weave.diagnostics).toEqual(full.diagnostics);
     expect(
@@ -237,33 +237,9 @@ it('嵌套旋转缩放后的引用、渐变资源与观察结果保持同版本'
       },
     ],
   };
-  const full = prepareSceneCompilation(input, { artifacts: { nodeLayouts: true } });
-  const weave = new WeaveReconciler(input, { artifacts: { nodeLayouts: true } }).mount().compilation;
+  const full = prepareSceneCompilation(input, {});
+  const weave = new WeaveReconciler(input, {}).mount().compilation;
   expect(weave.result).toEqual(full.result);
-});
-
-it('观察、节点布局产物与完整编译一致，重建使用独立观察会话', () => {
-  const events: Array<CompileObservation> = [];
-  const observer: CompileObserverDefinition = {
-    key: 'weave-observation',
-    createSession: () => ({
-      select: () => true,
-      observe: event => {
-        events.push(event);
-      },
-      complete: () => null,
-    }),
-  };
-  const options = { artifacts: { nodeLayouts: true } };
-  const full = prepareSceneCompilation(scene, options, { observers: [observer] });
-  const expected = [...events];
-  events.length = 0;
-  const actual = new WeaveReconciler(scene, options, { observers: [observer] }).mount();
-  expect(actual.compilation.result).toEqual(full.result);
-  expect(events).toEqual(expected);
-  events.length = 0;
-  new WeaveReconciler(scene, options, { observers: [observer] }).mount();
-  expect(events).toEqual(expected);
 });
 
 it('新环境的测量服务生效，空树不携带旧资源或读取记录', () => {

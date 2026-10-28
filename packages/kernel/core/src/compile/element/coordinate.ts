@@ -2,7 +2,6 @@ import { createLayoutProbeRecoverableError } from '../../resolve/diagnostics';
 import { resolvePosition } from '../../resolve/position';
 import type { IRCoordinate } from '../../schemas';
 import { runElementCompilation } from './context';
-import { collectElementObservation } from './observation';
 import type { CompiledCoordinate, ElementCompileOptions, ElementCompileResult } from './types';
 
 /** 坐标单元素编译上下文 */
@@ -20,11 +19,9 @@ export const compileCoordinate = (
         `Cannot resolve position for coordinate ${input.id}; polar.origin or at.of may reference an undefined node`,
       );
     }
-    const observations = collectElementObservation(context, { kind: 'coordinate' }, () => ({ id: input.id, position }));
     return Object.freeze({
       irPath: context.irPath,
       id: input.id,
       position,
-      ...(observations.length === 0 ? {} : { output: { primitives: [], resources: [], bounds: [], observations } }),
     });
   });

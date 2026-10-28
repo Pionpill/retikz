@@ -1,14 +1,14 @@
-import { compileToScene, ChildSchema, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
-import type { ScenePrimitive, LayoutProposal, LayoutChildResult } from '@retikz/core';
+import type { LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
+import { ChildSchema, compileToScene, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { treeDefinition } from '../../../src/collection/tree';
 import type { IRTree } from '../../../src/collection/tree/schema';
+import { compileMeasured } from '../../helpers/compile-measured';
 
 const base = { namespace: 'standard', type: 'tree' } as const;
-const compile = (tree: IRTree) =>
-  compileToScene({ type: 'scene', version: 1, children: [tree] }, { composites: [treeDefinition], padding: 0 });
+const compile = (tree: IRTree) => compileMeasured(tree, { composites: [treeDefinition], padding: 0 });
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(n => (n.type === 'group' ? flat(n.children) : [n]));
 it('字符串叶节点与对象配置产生相同图形', () => {
@@ -25,7 +25,11 @@ it.each(['down', 'up', 'right', 'left'] as const)('%s保留空子槽，连接隐
   };
   const result = compile(source);
   const hidden = compile({ ...source, defaultConnection: false });
-  expect(result.spatialHandles).toEqual(hidden.spatialHandles);
+  expect(hidden.allocationBounds).toEqual(result.allocationBounds);
+  expect(flat(hidden.scene.primitives).filter(node => node.type === 'text')).toEqual(
+    flat(result.scene.primitives).filter(node => node.type === 'text'),
+  );
+
   const texts = flat(result.scene.primitives).filter(n => n.type === 'text');
   expect(texts).toHaveLength(2);
 });
@@ -405,7 +409,7 @@ it.each(['down', 'up', 'right', 'left'] as const)('%s 父节点居于直属子�
 });
 it('默认单字圆形节点保持 32 的最小尺寸', () => {
   const result = compile({ ...base, root: 'A' });
-  expect(result.spatialHandles.entries.find(entry => entry.role === 'container')?.geometry.bounds).toEqual({
+  expect(result.allocationBounds).toEqual({
     x: 0,
     y: 0,
     width: 32,

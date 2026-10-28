@@ -8,9 +8,9 @@ import type {
   TranslateTransform,
 } from '@retikz/core';
 import {
+  BuiltinCompileWarningCode,
   ChildSchema,
   compileToScene,
-  BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
@@ -21,15 +21,14 @@ import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, strictObject, string } from 'zod';
 
 import type { LegendCompileArtifact } from '../../src/presentation/legend/composite';
-import { legendDefinition, createLegend } from '../../src/presentation/legend/composite';
+import { createLegend, legendDefinition } from '../../src/presentation/legend/composite';
 import {
   LegendContentKind,
   LegendDirection,
   LegendSampleAlignment,
   LegendWrap,
 } from '../../src/presentation/legend/constants';
-import type { LegendItemsArtifact } from '../../src/presentation/legend/types';
-import type { InputLegendConfig } from '../../src/presentation/legend/types';
+import type { InputLegendConfig, LegendItemsArtifact } from '../../src/presentation/legend/types';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const LeafSchema = CompositeBaseSchema.extend({
@@ -153,7 +152,7 @@ const compileLegend = (child: IRChild, proposal: LayoutProposal = naturalProposa
 };
 
 const legendArtifactOf = (output: ReturnType<typeof compileToScene>): LegendItemsArtifact => {
-  const artifact = output.artifacts.find(value => value.kind === 'composite' && value.type === 'legend');
+  const artifact = output.artifacts.find(value => value.type === 'legend');
   if (artifact === undefined) throw new Error('Expected Legend compile artifact');
 
   const value = (artifact as LegendCompileArtifact).value;
@@ -741,12 +740,12 @@ describe('Legend 项目编译契约', () => {
       },
       { composites: [legendDefinition, typedSampleDefinition], padding: 0 },
     );
-    const compositeArtifacts = output.artifacts.filter(artifact => artifact.kind === 'composite');
+    const compositeArtifacts = output.artifacts;
     const samplePlacement = legendArtifactOf(output).items[0]?.sample;
 
     expect(compositeArtifacts).toMatchObject([
-      { kind: 'composite', namespace: 'standard', type: 'legend' },
-      { kind: 'composite', namespace: 'legend-test', type: 'typed-sample', value: { role: 'sample' } },
+      { namespace: 'standard', type: 'legend' },
+      { namespace: 'legend-test', type: 'typed-sample', value: { role: 'sample' } },
     ]);
     expect(samplePlacement).not.toHaveProperty('role');
   });

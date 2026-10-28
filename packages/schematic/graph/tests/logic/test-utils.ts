@@ -166,10 +166,8 @@ export const compileInHarness = (
 
 /** 读取指定类型的 Graph 产物；缺失时使测试失败 */
 export const compositeArtifact = (output: LogicCompileOutput, type: string): Readonly<{ value: unknown }> => {
-  const artifact = output.artifacts.find(
-    candidate => candidate.kind === 'composite' && candidate.namespace === 'graph' && candidate.type === type,
-  );
-  if (artifact === undefined || artifact.kind !== 'composite') {
+  const artifact = output.artifacts.find(candidate => candidate.namespace === 'graph' && candidate.type === type);
+  if (artifact === undefined) {
     throw new Error(`Expected Graph composite artifact '${type}'`);
   }
 
