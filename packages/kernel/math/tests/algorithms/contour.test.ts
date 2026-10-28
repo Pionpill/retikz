@@ -11,6 +11,23 @@ const square: Array<ContourSegment> = [
 ];
 
 describe('中立轮廓几何', () => {
+  it('直线接圆弧的圆角切点同时落在原轮廓与圆角圆上', () => {
+    const segments: Array<ContourSegment> = [
+      { kind: 'line', from: [0, -20], to: [0, -10] },
+      { kind: 'arc', center: [0, 0], radius: 10, startAngle: -90, endAngle: 0 },
+    ];
+    const fillet = solveContourFillets(segments, 1, false)![0];
+    expect(fillet.clampedToZero).toBe(false);
+    expect(fillet.radius).toBeCloseTo(1);
+    expect(fillet.tangentInPoint[0]).toBeCloseTo(0);
+    expect(fillet.tangentInPoint[1]).toBeGreaterThanOrEqual(-20);
+    expect(fillet.tangentInPoint[1]).toBeLessThanOrEqual(-10);
+    expect(Math.hypot(...fillet.tangentOutPoint)).toBeCloseTo(10);
+    for (const tangent of [fillet.tangentInPoint, fillet.tangentOutPoint]) {
+      expect(Math.hypot(tangent[0] - fillet.center[0], tangent[1] - fillet.center[1])).toBeCloseTo(fillet.radius);
+    }
+  });
+
   it('四角相切且过大半径夹紧至半边长', () => {
     const fillets = solveContourFillets(square, 20)!;
     expect(fillets).toHaveLength(4);

@@ -9,6 +9,35 @@ import { flattenPrims } from '../../helpers/flatten';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
+describe('polygon 圆连接包络', () => {
+  it.each([
+    { sides: 3, rotate: 17 },
+    { sides: 5, rotate: -23 },
+    { sides: 6, rotate: 30 },
+    { sides: 1024, rotate: 11 },
+    { sides: 4, aspectRatio: 2 },
+  ])('圆包络与实际轮廓最远顶点一致：%j', source => {
+    const params = polygon.paramsSchema.parse(source);
+    const bounds = { x: 13, y: -7, width: 120, height: 80, rotate: 0.3 };
+    const commands = [...polygon.emit(bounds, {}, value => value, params)].flatMap(primitive =>
+      primitive.type === 'path' ? primitive.commands : [],
+    );
+    const radii = commands.flatMap(command =>
+      command.kind === 'move' || command.kind === 'line'
+        ? [Math.hypot(command.to[0] - bounds.x, command.to[1] - bounds.y)]
+        : [],
+    );
+    const envelope = polygon.computeConnectionEnvelope!(bounds, 'circle', params);
+    expect(envelope?.halfWidth).toBeCloseTo(Math.max(...radii), 9);
+    expect(envelope?.halfHeight).toBe(envelope?.halfWidth);
+  });
+
+  it('退化零尺寸圆包络仍拒绝无效半径', () => {
+    const params = polygon.paramsSchema.parse({ sides: 6 });
+    expect(() => polygon.computeConnectionEnvelope!({ x: 0, y: 0, width: 0, height: 0 }, 'circle', params)).toThrow();
+  });
+});
+
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,
   type: T,

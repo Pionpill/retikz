@@ -1,6 +1,6 @@
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { DEG_TO_RAD, localToWorld, verticesToSegments } from '@retikz/math';
 import type { CenteredBox, ContourSegment, Position } from '@retikz/math';
+import { DEG_TO_RAD, localToWorld, verticesToSegments } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
 
@@ -54,22 +54,14 @@ const polygonParamsSchema = strictObject({
 
 type PolygonParams = ZodInfer<typeof polygonParamsSchema>;
 
-/** 顶点角集合（度）：第 k 个顶点角 = rotate + k·(360/sides) */
-const vertexAngles = (params: PolygonParams): Array<number> => {
-  const startDeg = params.rotate ?? 0;
-  const stepDeg = 360 / params.sides;
-  const out: Array<number> = [];
-
-  for (let k = 0; k < params.sides; k++) out.push(startDeg + k * stepDeg);
-
-  return out;
-};
-
 /** 顶点角的 |cos| 最大值，用于由 AABB 半宽反推外接半径 */
 const maxAbsCos = (params: PolygonParams): number => {
   let max = 0;
+  const startDeg = params.rotate ?? 0;
+  const stepDeg = 360 / params.sides;
 
-  for (const angle of vertexAngles(params)) {
+  for (let index = 0; index < params.sides; index++) {
+    const angle = startDeg + index * stepDeg;
     const value = Math.abs(Math.cos(angle * DEG_TO_RAD));
     if (value > max) max = value;
   }
@@ -115,11 +107,17 @@ const isAspectRatioDiamond = (params: PolygonParams): params is PolygonParams & 
  * 正多边形顶点的局部坐标
  * @description 顶点均布在外接圆上，按 params.rotate 自旋
  */
-const polygonLocalVertices = (radius: number, params: PolygonParams): Array<Position> =>
-  vertexAngles(params).map(deg => {
+const polygonLocalVertices = (radius: number, params: PolygonParams): Array<Position> => {
+  const startDeg = params.rotate ?? 0;
+  const stepDeg = 360 / params.sides;
+  const vertices: Array<Position> = [];
+  for (let index = 0; index < params.sides; index++) {
+    const deg = startDeg + index * stepDeg;
     const a = deg * DEG_TO_RAD;
-    return [radius * Math.cos(a), radius * Math.sin(a)];
-  });
+    vertices.push([radius * Math.cos(a), radius * Math.sin(a)]);
+  }
+  return vertices;
+};
 
 /** 从 shape AABB 得到 polygon 的局部顶点；扁菱形使用两条独立半对角线 */
 const polygonLocalVerticesForBounds = (bounds: CenteredBox, params: PolygonParams): Array<Position> => {
@@ -154,11 +152,13 @@ export const polygon = defineShape<PolygonParams>({
     if (isAspectRatioDiamond(params)) return diamondHalfAxesFor(hw, hh, params.aspectRatio);
 
     const radius = circumradiusFor(hw, hh, params);
-    const angles = vertexAngles(params);
+    const startDeg = params.rotate ?? 0;
+    const stepDeg = 360 / params.sides;
     let halfWidth = 0;
     let halfHeight = 0;
 
-    for (const angle of angles) {
+    for (let index = 0; index < params.sides; index++) {
+      const angle = startDeg + index * stepDeg;
       const rad = angle * DEG_TO_RAD;
       halfWidth = Math.max(halfWidth, Math.abs(radius * Math.cos(rad)));
       halfHeight = Math.max(halfHeight, Math.abs(radius * Math.sin(rad)));
@@ -180,6 +180,13 @@ export const polygon = defineShape<PolygonParams>({
     return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
   },
   computeConnectionEnvelope: (bounds, kind, params) => {
+    if (kind === 'circle') {
+      const radius = isAspectRatioDiamond(params)
+        ? Math.max(Math.abs(bounds.width / 2), Math.abs(bounds.height / 2))
+        : Math.abs(circumradiusFromRect(bounds, params));
+      // 复用既有包络入口的正半径校验，避免重新生成整圈顶点
+      return pointsConnectionEnvelope([[radius, 0]], kind);
+    }
     return pointsConnectionEnvelope(polygonLocalVerticesForBounds(bounds, params), kind);
   },
   *emit(bounds: CenteredBox, style, round, params): Iterable<ScenePrimitive> {
