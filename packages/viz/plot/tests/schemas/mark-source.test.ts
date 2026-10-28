@@ -116,22 +116,6 @@ describe('标记 Source 字段编码和固定属性', () => {
     expect(MarkSchema.parse(input)).toEqual({ ...input, contributeToDomain: true });
   });
 
-  it('使用独立于标记构造的关系几何判别字段', () => {
-    const input = {
-      type: 'relation',
-      properties: {
-        source: { anchorId: { template: 'a' } },
-        target: { anchorId: { template: 'b' } },
-        geometry: { kind: 'path' },
-      },
-    };
-    expect(MarkSchema.parse(input)).toEqual({
-      ...input,
-      contributeToDomain: true,
-      properties: { ...input.properties, autoPadding: false },
-    });
-  });
-
   it.each([
     { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
     { type: 'point', color: { kind: 'constant', value: 'red' }, encoding: {} },
@@ -143,14 +127,7 @@ describe('标记 Source 字段编码和固定属性', () => {
       transform: [],
       contributeToDomain: false,
     },
-    {
-      type: 'relation',
-      kind: 'ribbon',
-      source: { anchorId: { template: 'a' } },
-      target: { anchorId: { template: 'b' } },
-      ribbon: { width: 2 },
-    },
-  ])('拒绝过时的外部标记结构 %j', input => {
+  ])('rejects obsolete external mark structures %j', input => {
     expect(MarkSchema.safeParse(input).success).toBe(false);
   });
 
@@ -191,59 +168,6 @@ describe('标记 Source 字段编码和固定属性', () => {
     { encodings: { channels: { custom: 'value' } } },
   ])('拒绝过时的包装器或未声明的嵌套目标 %j', fragment => {
     expect(PointMarkSchema.safeParse({ type: 'point', ...fragment }).success).toBe(false);
-  });
-
-  it('对关系投影进行编码，而不将字段名称放入固定目标中', () => {
-    const input = {
-      type: 'relation',
-      encodings: {
-        source: { position: { x: { field: 'fromX' }, y: { field: 'fromY' } } },
-        target: { position: { x: { field: 'toX' }, y: { field: 'toY' } } },
-        geometry: { width: 'flow' },
-      },
-      properties: { geometry: { kind: 'ribbon' } },
-    };
-    expect(MarkSchema.parse(input)).toMatchObject(input);
-  });
-
-  it.each([
-    { kind: 'path', route: [{ kind: 'line' }], routing: { kind: 'line' } },
-    { kind: 'path', route: [{ kind: 'line' }], via: [{ id: 'c' }] },
-    { kind: 'ribbon' },
-    { kind: 'ribbon', width: 2, options: { interpolation: 'linear' } },
-  ])('保留关系几何验证 %j', geometry => {
-    expect(
-      MarkSchema.safeParse({
-        type: 'relation',
-        properties: { source: { anchorId: { template: 'a' } }, target: { anchorId: { template: 'b' } }, geometry },
-      }).success,
-    ).toBe(false);
-  });
-
-  it('拒绝非投影位置的参考上的端点字形', () => {
-    expect(
-      MarkSchema.safeParse({
-        type: 'relation',
-        properties: {
-          source: { anchorId: { template: 'a' } },
-          target: { anchorId: { template: 'b' } },
-          geometry: { kind: 'path' },
-          endpoints: { source: { size: 3 } },
-        },
-      }).success,
-    ).toBe(false);
-  });
-
-  it('接受具有直接常量属性的投影端点字形', () => {
-    const input = {
-      type: 'relation',
-      encodings: {
-        source: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-        target: { position: { x: { field: 'u' }, y: { field: 'v' } } },
-      },
-      properties: { endpoints: { source: { size: 3, fill: 'red' } }, geometry: { kind: 'path' } },
-    };
-    expect(MarkSchema.parse(input)).toMatchObject(input);
   });
 });
 

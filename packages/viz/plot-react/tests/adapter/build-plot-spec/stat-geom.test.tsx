@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { boxplotOutside, boxplotSummary } from '../../../../plot/tests/helpers/plot-spec-fixtures';
 import { buildPlotIR } from '../../../src/adapter';
-import { IntervalMark, PointMark, RelationMark } from '../../../src/components/marks';
+import { IntervalMark, PointMark, PathMark } from '../../../src/components/marks';
 
 describe('buildPlotIR stat-geom 结构组合', () => {
   it('箱线图合成使用现有标记和标记局部变换', () => {
@@ -25,20 +25,20 @@ describe('buildPlotIR stat-geom 结构组合', () => {
             },
           }}
         />
-        <RelationMark
-          properties={{ geometry: { kind: 'path' } }}
+        <PathMark
+          properties={{}}
           transforms={[{ operation: boxplotSummary }]}
           encodings={{
-            source: { position: { x: { field: 'boxX0' }, y: { field: 'median' } } },
-            target: { position: { x: { field: 'boxX1' }, y: { field: 'median' } } },
+            from: { x: { field: 'boxX0' }, y: { field: 'median' } },
+            to: { x: { field: 'boxX1' }, y: { field: 'median' } },
           }}
         />
-        <RelationMark
-          properties={{ geometry: { kind: 'path' } }}
+        <PathMark
+          properties={{}}
           transforms={[{ operation: boxplotSummary }]}
           encodings={{
-            source: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMin' } } },
-            target: { position: { x: { field: 'boxX' }, y: { field: 'whiskerMax' } } },
+            from: { x: { field: 'boxX' }, y: { field: 'whiskerMin' } },
+            to: { x: { field: 'boxX' }, y: { field: 'whiskerMax' } },
           }}
         />
         <PointMark
@@ -50,7 +50,7 @@ describe('buildPlotIR stat-geom 结构组合', () => {
       { deferPositionScaleInference: true },
     );
 
-    expect(spec.marks.map(mark => mark.type)).toEqual(['interval', 'relation', 'relation', 'point']);
+    expect(spec.marks.map(mark => mark.type)).toEqual(['interval', 'path', 'path', 'point']);
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
       transforms: [{ operation: boxplotSummary }],

@@ -8,7 +8,7 @@ keywords: PathMark、ribbon、带状连接、桑基图、width、RelationMark
 - 状态：Accepted
 - 决策日期：2026-10-26
 - 关联：[roadmap](./roadmap.md)、[026](./026-mark-target-endpoints.md)、[027](./027-path-step-construction.md)、[023](./023-closed-mark-vocabulary.md)、[Plot 可视化完备设计](../../../../architecture/plot-visualization-complete.md)
-- 前置：[Relation ribbon](../../v0.1/073-relation-ribbon.md)；本决策定义其在统一 PathMark 中的替代契约，草案阶段不改变旧入口状态
+- 前置：[Relation ribbon](../../v0.1/073-relation-ribbon.md)；本决策定义其在统一 PathMark 中的替代契约，RelationMark 旧入口移除
 
 ## 背景与目标
 
@@ -81,4 +81,10 @@ React PathMark 与 Vanilla 路径图元输入接受相同 `properties.kind`、`p
 - 引用图元继续遵守声明顺序与当前视图作用域；缺失目标报错，不自动重排。实例 provenance 来自流带数据，不能被端点图元的数据身份替换。
 - 桑基图的一条节点边上可有多个连接槽位；节点 anchor 不替代槽位分配。布局产出的坐标端点可以直接使用，显式图元目标只定位作者指定的锚点与偏移。
 - 文档在关系用法中增加带状连接，使用 PathMark 的矩形步骤与 ribbon 构成桑基示例，展示布局产物、流带宽度和路径构造的关系；React 与 Vanilla 同步说明。
-- 迁移现有桑基展示至统一 PathMark。RelationMark 整体删除仍需其余关系能力与消费方完成替代，不因 ribbon 接入而删除尚未承接的功能，也不新增旧入口别名或兼容转换层。
+- 桑基展示使用统一 PathMark；关系消费方遵循下述组合契约，不新增旧入口别名或兼容转换层。
+
+## 关系图元收敛
+
+RelationMark 的 schema、组件、归一化和下沉入口移除，不保留兼容别名。连接使用 PathMark 的端点或步骤，端点 glyph 使用独立 PointMark，流带使用 ribbon kind；数据关系变换继续由 Data 提供。组合遵循各图元自身的 domain、留白、实例身份和失败语义，非法端点明确报错，不保留整行静默跳过。
+
+标签使用整条路径的字段绑定或固定步骤声明；逐段字段标签、正交路径最长段／最后一段自动选段不在当前契约内。

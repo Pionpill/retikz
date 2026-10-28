@@ -32,10 +32,7 @@
 - [`decisions/data/v0/roadmap.md`](./decisions/data/v0/roadmap.md)：data v0 总路线。
 - [`decisions/chart/v0/v0.1/roadmap.md`](./decisions/chart/v0/v0.1/roadmap.md)：chart v0.1 路线与 Tier 3 `IRChart` 边界。
 - [`decisions/_template.md`](./decisions/_template.md)：viz ADR 模板。
-- [`analysis/plot-compare-analysis.md`](./analysis/plot-compare-analysis.md)：plot 横向对比。
-- [`analysis/plot-rendering-performance.md`](./analysis/plot-rendering-performance.md)：plot 渲染性能分析。
-- [`analysis/chart-compare-analysis.md`](./analysis/chart-compare-analysis.md)：chart 类型封装、type taxonomy 与文档分类横向分析。
-- [`analysis/table-compare-analysis.md`](./analysis/table-compare-analysis.md)：table 竞品与能力差距分析。
+- [Viz 功能比较 prompt](analysis/viz-compare-analysis.md)：Data、Plot、Chart、Table 独立比较。
 
 ## 规则
 

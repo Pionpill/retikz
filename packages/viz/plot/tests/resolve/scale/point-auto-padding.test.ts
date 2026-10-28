@@ -140,28 +140,6 @@ describe('Point 自动留白', () => {
     expect(200 - y.coordinate(10)).toBeCloseTo(18, 1);
   });
 
-  it('Relation 只在启用策略时保护实际端点节点', () => {
-    const relation = {
-      type: 'relation',
-      encodings: {
-        source: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-        target: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-      },
-      properties: {
-        endpoints: {
-          source: { size: 8 },
-          target: { size: 15 },
-        },
-        geometry: { kind: 'path' },
-      },
-    };
-    const off = framesOf([relation])[0].roleScales!.x!;
-    expect(off.coordinate(0)).toBe(off.range()[0]);
-    const on = framesOf([{ ...relation, properties: { ...relation.properties, autoPadding: 'max-radius' } }])[0]
-      .roleScales!.x!;
-    expect(on.coordinate(0) - on.range()[0]).toBeCloseTo(15);
-  });
-
   it('无法确定尺寸上界时由 Plot 报错，显式尺度覆盖可跳过自动计算', () => {
     expect(() => framesOf([point(-1)])).toThrow();
     const mark = point(1, 'max-radius', { encodings: { size: { field: 'x', scale: 'unknown' } } });

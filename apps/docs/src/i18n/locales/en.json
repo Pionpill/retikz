@@ -392,7 +392,6 @@
     "compPathMark": "PathMark",
     "compPointMark": "PointMark",
     "compIntervalMark": "IntervalMark",
-    "compRelationMark": "RelationMark",
     "compAxis": "Axis",
     "compLegend": "Legend"
   },

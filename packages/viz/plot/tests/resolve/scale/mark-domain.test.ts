@@ -390,34 +390,6 @@ describe('标记填充最终几何形状', () => {
   it('报告不可能的范围，而不是渲染剪裁的自动边缘', () => {
     expect(() => frameOf({ ...plotOf(), width: 40 })).toThrow(/feasible/);
   });
-
-  it('独立保护投影关系端点', () => {
-    const base = plotOf();
-    const spec = {
-      ...base,
-      marks: [
-        {
-          id: 'dots',
-          type: 'relation',
-          encodings: {
-            source: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-            target: { position: { x: { field: 'x' }, y: { field: 'y' } } },
-          },
-          properties: {
-            endpoints: {
-              source: { size: 8 },
-              target: { size: 12 },
-            },
-            geometry: { kind: 'path' },
-          },
-        },
-      ],
-    };
-    const scale = frameOf(spec).roleScales!.x!;
-
-    expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(12);
-    expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(12);
-  });
 });
 
 describe('标记填充功能', () => {

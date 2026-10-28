@@ -278,30 +278,4 @@ export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = [
       };
     },
   })),
-  ...(['width', 'endWidth'] as const).map((target): AnyChannelDefinition => ({
-    channel: `geometry.${target}`,
-    kind: ChannelDefinitionKind.Mark,
-    resolve: (context, mark) => {
-      if (mark.type !== 'relation' || mark.properties.geometry.kind !== 'ribbon') return undefined;
-      const binding = mark.encodings?.geometry?.[target];
-      const fixed = mark.properties.geometry[target];
-      if (binding === undefined) return fixed === undefined ? undefined : { resolver: () => fixed };
-      const resolution = resolveNumericChannel(
-        context.node,
-        context.rows,
-        context.model,
-        binding,
-        `geometry.${target}`,
-      );
-      if (resolution === undefined) return undefined;
-      return {
-        resolver: row => {
-          const width = resolution.resolver(row);
-          if (width === undefined || !Number.isFinite(width) || width <= 0)
-            throw new RetikzPlotError(`Relation geometry.${target} must map to a positive finite width`);
-          return width;
-        },
-      };
-    },
-  })),
 ];

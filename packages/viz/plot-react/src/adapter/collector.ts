@@ -24,7 +24,6 @@ import {
   PlotTrack,
   PlotTransform,
   PointMark,
-  RelationMark,
 } from '../components';
 import { RetikzPlotReactError } from '../error';
 
@@ -35,7 +34,6 @@ const declarationKindOf = (element: ReactElement): PlotDeclarationKind | undefin
   if (element.type === PathMark) return 'path-mark';
   if (element.type === PointMark) return 'point-mark';
   if (element.type === IntervalMark) return 'interval-mark';
-  if (element.type === RelationMark) return 'relation-mark';
   if (element.type === PlotAxis) return 'axis';
   if (element.type === PlotLegend) return 'legend';
   if (element.type === PlotScale) return 'scale';

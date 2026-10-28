@@ -2381,41 +2381,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'IntervalBounds',
     url: '/viz/plot/reference/mark#intervalboundsschema',
   },
-  RelationMarkSchema: {
-    schema: IRPlot.RelationMarkSchema,
-    label: 'RelationMark',
-    url: '/viz/plot/reference/mark#relationmarkschema',
-  },
-  RelationPrimitiveStyleSchema: {
-    schema: IRPlot.RelationPrimitiveStyleSchema,
-    label: 'RelationPrimitiveStyle',
-    url: '/viz/plot/reference/mark#relationprimitivestyleschema',
-  },
-  RelationPathGeometrySchema: {
-    schema: IRPlot.RelationPathGeometrySchema,
-    label: 'RelationPathGeometry',
-    url: '/viz/plot/reference/mark#relationpathgeometryschema',
-  },
-  RelationRibbonOptionsSchema: {
-    schema: IRPlot.RelationRibbonOptionsSchema,
-    label: 'RelationRibbonOptions',
-    url: '/viz/plot/reference/mark#relationribbonoptionsschema',
-  },
-  RelationRouteStepSchema: {
-    schema: IRPlot.RelationRouteStepSchema,
-    label: 'RelationRouteStep',
-    url: '/viz/plot/reference/mark#relationroutestepschema',
-  },
-  PlotTargetRefSchema: {
-    schema: IRPlot.PlotTargetRefSchema,
-    label: 'PlotTargetRef',
-    url: '/viz/plot/reference/mark#plottargetrefschema',
-  },
-  RelationRoutingSchema: {
-    schema: IRPlot.RelationRoutingSchema,
-    label: 'RelationRouting',
-    url: '/viz/plot/reference/mark#relationroutingschema',
-  },
   PathClosureSchema: {
     schema: IRPlot.PathClosureSchema,
     label: 'PathClosure',

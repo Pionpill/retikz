@@ -315,7 +315,7 @@ recipe: {
 - `properties.endPoint`：覆盖终点形状和半径。
 - `properties.range`：设置连接线宽度。
 
-这是整组替换中的局部外观覆盖，不会把终点拆成独立数据行。起点、终点仍共同接受缺值检查。
+这是整组替换中的局部外观覆盖。起点和终点分别由 PointMark 绘制，读取同一数据行中的不同字段。
 
 <ComponentPreview
   hideCode
@@ -360,7 +360,7 @@ recipe: {
 ## 错误与限制
 
 - category 固定映射 y，start / end 固定共用 x，不通过交换字段改变图形方向。
-- 任一端点缺失或无法投影时整行跳过；相等端点保持重合，不人为展开。
+- 任一端点缺失或无法投影时，连接路径报错；请在传入数据前清理缺值。相等端点保持重合，不人为展开。
 - 显式声明两个不同的端点尺度名会失败。成员外观不建立独立字段尺度。
 
 React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，否则报错。
@@ -373,21 +373,22 @@ React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，�
 
 ### 图形构建
 
-Chart 将一个范围点图元解析为 Plot `RelationMark`，由它承载两端位置、连接线和端点外观。下表只列范围点图特有的转换。
+Chart 将一个范围点图元展开为一个 PathMark 和两个 PointMark：路径连接两端，两个点分别读取起点和终点字段，并覆盖在线条上方。三者属于同一 Chart 语义组，图元覆盖会整组替换。
 
-| 分组 | `@retikz/chart`                   | `@retikz/plot`                         | 描述                                                                 |
-| ---- | --------------------------------- | -------------------------------------- | -------------------------------------------------------------------- |
-| 映射 | `category`、`start`、`end`        | `source.project`、`target.project`     | `start` 和 `end` 分别提供两端的 x 值，`category` 提供共用的 y 行位置 |
-| 属性 | `range`                           | `style`、`path`                        | 把连接线的颜色、线宽与路径样式应用到关系路径                         |
-|      | `point`、`startPoint`、`endPoint` | `endpoints.source`、`endpoints.target` | 先合并共享端点外观，再分别设置起点与终点的形状、大小和颜色           |
-| 图元 | `IRRangedDotMark`                 | `IRPlotRelationMark`                   | 将一组起点、终点和连接线作为一条关系处理                             |
+| 分组 | `@retikz/chart`                   | `@retikz/plot`                              | 描述                                                                 |
+| ---- | --------------------------------- | ------------------------------------------- | -------------------------------------------------------------------- |
+| 映射 | `category`、`start`、`end`        | Path 的 `from`、`to` 与 Point 的 `position` | `start` 和 `end` 分别提供两端的 x 值，`category` 提供共用的 y 行位置 |
+| 属性 | `range`                           | Path 的 `properties`                        | 设置连接线的颜色、线宽和描边样式                                     |
+|      | `point`、`startPoint`、`endPoint` | 两个 Point 的 `properties`                  | 合并共享与独立端点外观，分别设置形状、大小、颜色和自动留白           |
+| 图元 | `IRRangedDotMark`                 | `IRPlotPathMark`、两个 `IRPlotPointMark`    | 按连接线、起点、终点的顺序生成图元                                   |
 
 Plot 对每行有效数据输出一条 Core `Path` 和两个端点 `Node`，分别绘制连接线与两个点。
 
 <SourceLinks
   sources={[
-    { path: 'packages/viz/chart/src/point/ranged-dot/mark.ts', label: 'Relation 图元构建' },
-    { path: 'packages/viz/plot/src/providers/mark/features/relation.ts', label: 'Path 与端点 Node 的下沉' },
+    { path: 'packages/viz/chart/src/point/ranged-dot/mark.ts', label: 'Path 与 Point 图元构建' },
+    { path: 'packages/viz/plot/src/providers/mark/features/path-instances.ts', label: '连接路径下沉' },
+    { path: 'packages/viz/plot/src/providers/mark/features/point.ts', label: '端点下沉' },
   ]}
 />
 

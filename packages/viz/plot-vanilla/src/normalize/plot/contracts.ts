@@ -281,7 +281,6 @@ export type PlotDeclarationKind =
   | 'path-mark'
   | 'point-mark'
   | 'interval-mark'
-  | 'relation-mark'
   | 'axis'
   | 'legend'
   | 'scale'

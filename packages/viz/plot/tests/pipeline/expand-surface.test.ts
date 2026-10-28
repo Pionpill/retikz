@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies, RetikzCoreErrorCode } from '@retikz/core';
 import { BUILTIN_RIBBON_WIDTH_PROFILES, ribbonPathDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
@@ -15,7 +15,10 @@ describe('扩大管线稳定面', () => {
 
     expect(resolveCoreProviderDependencies({ contributions: [first, shared] }).composites).toHaveLength(1);
     expect(() => resolveCoreProviderDependencies({ contributions: [first, conflict] })).toThrow(
-      /sales.*conflicts by identity/,
+      expect.objectContaining({
+        code: RetikzCoreErrorCode.Provider,
+        cause: expect.objectContaining({ message: expect.stringMatching(/sales.*conflicts by identity/) }),
+      }),
     );
   });
 
@@ -48,7 +51,12 @@ describe('扩大管线稳定面', () => {
       resolveCoreProviderDependencies({
         contributions: [createPlotProviderContribution({}, first), createPlotProviderContribution({}, second)],
       }),
-    ).toThrow(field);
+    ).toThrow(
+      expect.objectContaining({
+        code: RetikzCoreErrorCode.Provider,
+        cause: expect.objectContaining({ message: expect.stringContaining(field) }),
+      }),
+    );
   });
 
   it('明确贡献 Standard 色带路径及其配置参数', () => {

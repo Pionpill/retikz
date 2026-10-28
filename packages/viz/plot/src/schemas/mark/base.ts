@@ -9,8 +9,7 @@ import { PlotLayerSchema } from '../plot/layer';
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
  * @description discriminated union 判别字段，成员里写 z.literal(BuiltinPlotMark.x)（不用 z.enum）。
- *   4 个抽象 mark = 3 个维度 mark（point / path / interval，描述数据在坐标空间的 k 维几何）
- *   + 1 个关系 mark（relation，连接 source / target）
+ *   3 个抽象 mark（point / path / interval，描述数据在坐标空间的 k 维几何）
  */
 export const BuiltinPlotMark = {
   /** 维度 mark / 0D：坐标元组上的实体 / glyph / 文本 anchor（散点 + 文本标签） */
@@ -19,8 +18,6 @@ export const BuiltinPlotMark = {
   Path: 'path',
   /** 维度 mark / 区间积：各位置 role 正交区间积，经坐标系投影成段 / 矩形 / 扇区 / cell（柱 / histogram / heatmap / 径向柱 / 饼环） */
   Interval: 'interval',
-  /** 特殊 mark / relation：source→target 关系路径，降低为 core Path */
-  Relation: 'relation',
 } as const;
 
 /** 视觉值来自字段、常量或其它显式映射的判别方式 */

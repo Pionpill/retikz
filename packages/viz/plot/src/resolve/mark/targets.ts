@@ -41,10 +41,7 @@ export const resolveMarkTargets = (marks: Array<IRPlotMark>, declarationOrder = 
       if (declaration === undefined) throw new RetikzPlotError(`Unknown target mark: ${context}`);
       if (declarationOrder.indexOf(declaration) >= declarationOrder.indexOf(mark))
         throw new RetikzPlotError(`Target mark must be declared before the connection: ${context}`);
-      if (
-        declaration.type === 'relation' ||
-        (declaration.type === 'path' && declaration.encodings.position === undefined)
-      )
+      if (declaration.type === 'path' && declaration.encodings.position === undefined)
         throw new RetikzPlotError(`Unsupported whole-path mark target: ${context}`);
       if (declaration.properties?.anchorId === undefined && declaration.encodings?.anchorId === undefined)
         throw new RetikzPlotError(`Target mark does not expose anchorId: ${context}`);

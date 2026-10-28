@@ -369,12 +369,11 @@ describe('Chart 提供者通过 Core 编译', () => {
     expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
   });
 
-  it('以原子方式编译具有共享字段颜色和保留范围方向的混合范围点行', () => {
+  it('compiles Ranged Dot Points and Paths with shared colors, reversed and zero-length ranges', () => {
     const rangedRows = [
       { category: 'Forward', start: 1, end: 3, group: 'A' },
       { category: 'Reverse', start: 5, end: 2, group: 'B' },
       { category: 'Zero', start: 4, end: 4, group: 'A' },
-      { category: 'Invalid', start: null, end: 6, group: 'B' },
     ];
     const source = RangedDotChartSchema.parse({
       namespace: 'chart',
@@ -424,7 +423,29 @@ describe('Chart 提供者通过 Core 编译', () => {
     expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
   });
 
-  it('通过 Point + mark-local Smooth Path 编译分组回归，输出有限 Scene', () => {
+  it.each(['start', 'end'])('rejects a missing Ranged Dot %s through the Path endpoint contract', endpoint => {
+    const source = RangedDotChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'ranged.invalid' },
+      recipe: {
+        chartType: 'ranged-dot',
+        encodings: { category: 'category', start: 'start', end: 'end' },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createRangedDotChartProviderContribution(),
+        createPlotProviderContribution({
+          'ranged.invalid': [{ category: 'A', start: 1, end: 2, [endpoint]: null }],
+        }),
+        { roots: [pathClipProvider.key], providers: [pathClipProvider] },
+      ],
+    });
+    expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/Path endpoint cannot map role x/);
+  });
+
+  it('compiles grouped Regression through Point + mark-local Smooth Path with finite Scene output', () => {
     const regressionRows = [
       { series: 'A', x: 1, y: 2 },
       { series: 'A', x: 2, y: 4 },
