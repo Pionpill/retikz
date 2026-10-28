@@ -1,14 +1,9 @@
-import type {
-  CompositeCoreProviderKey,
-  CoreDependencyProvider,
-  CoreProviderContribution,
-  ResolvedTheme,
-} from '@retikz/core';
+import type { CoreDependencyProvider, CoreProviderContribution, CanonicalTheme } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
-import { FlexLayoutProvider } from '@retikz/layout';
-import type { LowerPlotsOptions, PlotDataPreparationOptions } from '@retikz/plot';
-import { PlotProviderKey, preparePlotData } from '@retikz/plot';
-import { SurfaceProvider } from '@retikz/standard/presentation';
+import { flexLayoutProvider } from '@retikz/layout';
+import type { PlotsLoweringOptions, PlotDataPreparationOptions } from '@retikz/plot';
+import { plotProviderKey, preparePlotData } from '@retikz/plot';
+import { surfaceProvider } from '@retikz/standard/presentation';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';
@@ -19,38 +14,12 @@ import { resolveChartProviderRegistry } from './registry';
 import { resolveChartFromProvider } from './resolve';
 import type { ChartProviderContribution, ChartRecipeProviderContribution } from './types';
 
-const ChartRecipeProviderEnvelopeKey = Symbol('retikz.chart.recipeProvider');
-
-const ChartRecipeProviderReferencePrefix = '@@retikz/chart/recipeProvider/';
-
-type ChartRecipeProviderEnvelope = Readonly<{
-  [ChartRecipeProviderEnvelopeKey]: ChartRecipeProviderContribution;
-}>;
-
-let chartRecipeProviderReferenceSeed = 0;
-
-/** 只识别当前 Chart provider 自己的数据集 envelope */
-const recipeContributionOf = (value: unknown): ChartRecipeProviderContribution | undefined => {
-  if (value === null || typeof value !== 'object' || !(ChartRecipeProviderEnvelopeKey in value)) return undefined;
-  return (value as ChartRecipeProviderEnvelope)[ChartRecipeProviderEnvelopeKey];
-};
-
-/** Core 合并后共享的 Chart composite Definition maker；所有 chartType provider 必须引用同一个函数 */
-const makeChartDefinition: CoreDependencyProvider['makeDefinition'] = mergedDatasets => {
-  const contributions: Array<ChartRecipeProviderContribution> = [];
-
-  for (const value of Object.values(mergedDatasets)) {
-    const contribution = recipeContributionOf(value);
-    if (contribution !== undefined) contributions.push(contribution);
-  }
-
-  const registry = resolveChartProviderRegistry(contributions);
-
-  return createChartDefinition(registry);
-};
+/** 从同键的 recipe 参数物化 Chart family 定义 */
+const makeChartDefinition: CoreDependencyProvider<ChartRecipeProviderContribution>['makeDefinition'] = contributions =>
+  createChartDefinition(resolveChartProviderRegistry(contributions));
 
 /** 当前 Chart provider 使用的稳定依赖顺序 */
-const chartProviderDependencies = Object.freeze([SurfaceProvider.key, FlexLayoutProvider.key, PlotProviderKey]);
+const chartProviderDependencies = Object.freeze([surfaceProvider.key, flexLayoutProvider.key, plotProviderKey]);
 
 /**
  * 为一个具体 chartType 创建只携带自身 recipe 的 provider contribution
@@ -65,7 +34,7 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
     /** 当前编译边界可见的命名 Theme Definition */
     chartThemeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
     /** 与Plot provider共享的lowering runtime Definition */
-    lowerOptions?: LowerPlotsOptions;
+    lowerOptions?: PlotsLoweringOptions;
   }>,
 ): ChartProviderContribution => {
   if (input.family.length === 0) {
@@ -102,28 +71,18 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
     }),
   });
 
-  const runtimeReference = `${ChartRecipeProviderReferencePrefix}${chartRecipeProviderReferenceSeed}`;
-  chartRecipeProviderReferenceSeed += 1;
-
-  const provider: CoreDependencyProvider = Object.freeze({
+  const provider: CoreDependencyProvider<ChartRecipeProviderContribution> = Object.freeze({
     key: chartProviderKeyOf(input.family),
     dependencies: chartProviderDependencies,
-    datasets: Object.freeze({
-      [runtimeReference]: Object.freeze({
-        [ChartRecipeProviderEnvelopeKey]: contribution,
-      } satisfies ChartRecipeProviderEnvelope),
-    }),
+    params: contribution,
     makeDefinition: makeChartDefinition,
   });
 
   return Object.freeze({
     roots: Object.freeze([provider.key]),
-    providers: Object.freeze([SurfaceProvider, FlexLayoutProvider, provider]),
+    providers: Object.freeze([surfaceProvider, flexLayoutProvider, provider]),
   });
 };
-
-/** 公开给具体 recipe provider 使用的 Core key 工厂 */
-export const chartProviderKeyOfFamily = (family: string): CompositeCoreProviderKey => chartProviderKeyOf(family);
 
 /**
  * 复用具体 Chart provider 的精确语义与 Theme，先准备生成 Plot 的全部数据作用域
@@ -133,15 +92,15 @@ export const prepareChartData = async <TSource = never>(
   source: IRChartSource,
   request: PlotDataPreparationOptions<TSource>,
   contribution: CoreProviderContribution,
-  theme: ResolvedTheme = DEFAULT_RESOLVED_THEME,
-  lowerOptions: LowerPlotsOptions = {},
+  theme: CanonicalTheme = DEFAULT_RESOLVED_THEME,
+  lowerOptions: PlotsLoweringOptions = {},
 ) => {
   const contributions: Array<ChartRecipeProviderContribution> = [];
 
   for (const provider of contribution.providers) {
-    for (const value of Object.values(provider.datasets)) {
-      const recipe = recipeContributionOf(value);
-      if (recipe !== undefined) contributions.push(recipe);
+    if (provider.makeDefinition === makeChartDefinition && provider.params !== undefined) {
+      // 工厂身份关联其精确参数类型，避免通过参数结构识别其它 owner 的提供者
+      contributions.push(provider.params as ChartRecipeProviderContribution);
     }
   }
 

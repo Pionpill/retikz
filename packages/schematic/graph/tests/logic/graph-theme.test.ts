@@ -1,4 +1,4 @@
-import type { CompileWarning, ResolvedTheme } from '@retikz/core';
+import type { CompileWarning, CanonicalTheme } from '@retikz/core';
 import {
   compileToScene,
   DEFAULT_RESOLVED_THEME,
@@ -12,17 +12,17 @@ import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
 
-const themeWithName = (name: string): ResolvedTheme => ({ ...DEFAULT_RESOLVED_THEME, name });
+const themeWithName = (name: string): CanonicalTheme => ({ ...DEFAULT_RESOLVED_THEME, name });
 
 const styleRegistry = (definition: Graph.GraphThemeDefinition): ReadonlyMap<string, Graph.GraphThemeDefinition> =>
   new Map([[definition.name, definition]]);
 
-describe('Graph Scope and Theme compile semantics', () => {
+describe('Graph Scope 和 Theme 编译语义', () => {
   it.each([
     { mode: ThemeMode.Light, color: '#777777' },
     { mode: ThemeMode.Dark, color: '#888888' },
-  ])('provides the complete mode-aware Neutral Entity baseline in $mode mode', ({ mode, color }) => {
-    const theme: ResolvedTheme = {
+  ])('在 $mode 模式下提供完整的模式感知中性 Entity 基线', ({ mode, color }) => {
+    const theme: CanonicalTheme = {
       ...DEFAULT_RESOLVED_THEME,
       mode,
       colors: resolveDefaultCoreThemeColors(mode),
@@ -48,9 +48,9 @@ describe('Graph Scope and Theme compile semantics', () => {
     });
   });
 
-  it('materializes a static Entity master into same-color stroke, opaque light fill, and contrast text', () => {
+  it('将静态 Entity 母版具体化为同色描边、不透明光填充和对比文本', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
     const warnings: Array<CompileWarning> = [];
     const output = compileToScene(
@@ -79,9 +79,9 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('fails loudly for a non-static Entity master until both contextual paint channels are overridden', () => {
+  it('非静态 Entity 母版会明确报错，直到两个上下文绘制通道都被覆盖', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
     const source = {
       namespace: 'graph',
@@ -128,7 +128,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [
         {
-          roots: [Graph.EntityProviderKey],
+          roots: [Graph.entityProviderKey],
           providers: Graph.createGraphProviders({ graphThemeDefinitions: [definition] }),
         },
       ],
@@ -175,7 +175,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [
         {
-          roots: [Graph.RelationProviderKey],
+          roots: [Graph.relationProviderKey],
           providers: Graph.createGraphProviders({ graphThemeDefinitions: [definition] }),
         },
       ],
@@ -208,7 +208,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(scene).toContain('#ccd9e6');
   });
 
-  it('compiles Graph Core Theme/default channels and Graph rules through the emitted Scope', () => {
+  it('通过发出的 Scope 编译 Graph Core 主题/默认通道和 Graph 规则', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -267,7 +267,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('honors Core reset on Graph while preserving Graph author defaults', () => {
+  it('尊重 Graph 上的 Core 重置，同时保留 Graph 作者默认值', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -304,7 +304,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(scene).toContain('#ef4444');
   });
 
-  it('fills omitted Entity style fields from the mode-aware default preset', () => {
+  it('填充模式感知默认预设中省略的 Entity 样式字段', () => {
     const definition = Graph.defineGraphTheme({
       name: 'entity-color-only',
       resolve: () => ({ defaults: { entity: { style: { color: '#2563eb' } } } }),
@@ -320,7 +320,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(resolved.rules).toEqual(defaults.rules);
   });
 
-  it('fills omitted Relation style fields from the mode-aware default preset', () => {
+  it('填充模式感知默认预设中省略的 Relation 样式字段', () => {
     const definition = Graph.defineGraphTheme({
       name: 'relation-stroke-only',
       resolve: () => ({ defaults: { relation: { style: { stroke: '#16a34a' } } } }),
@@ -339,7 +339,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(resolved.rules).toEqual(defaults.rules);
   });
 
-  it('fills omitted Group and Block shell fields from the Neutral preset', () => {
+  it('填充中性预设中省略的 Group 和 Block 外壳字段', () => {
     const definition = Graph.defineGraphTheme({
       name: 'container-shells',
       resolve: () => ({
@@ -363,7 +363,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(resolved.rules).toEqual(defaults.rules);
   });
 
-  it('keeps the Neutral baseline when a custom style provides an empty rule list', () => {
+  it('当自定义样式提供空规则列表时，保持中性基线', () => {
     const definition = Graph.defineGraphTheme({
       name: 'empty-rule-list',
       resolve: () => ({ rules: [] }),
@@ -374,7 +374,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).rules).toEqual(defaults.rules);
   });
 
-  it('applies custom Entity rules by semantic selector without a visual selector key', () => {
+  it('通过语义选择器应用自定义 Entity 规则，无需可视选择器键', () => {
     const definition = Graph.defineGraphTheme({
       name: 'fill-rule-override',
       resolve: () => ({
@@ -403,7 +403,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     });
   });
 
-  it('accepts an explicitly empty style defaults fragment as no override', () => {
+  it('接受显式空样式默认片段作为不覆盖', () => {
     const definition = Graph.defineGraphTheme({
       name: 'empty-entity-defaults',
       resolve: () => ({ defaults: { entity: { style: {} } } }),
@@ -415,7 +415,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(Graph.resolveGraphTheme(theme, styleRegistry(definition))).toEqual(baseline);
   });
 
-  it.each(['group', 'block'] as const)('accepts explicitly empty %s defaults as no override', member => {
+  it.each(['group', 'block'] as const)('接受显式空的 %s 默认值，因为不覆盖', member => {
     const definition = {
       name: `empty-${member}-defaults`,
       resolve: () => ({ defaults: { [member]: {} } }),
@@ -428,7 +428,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     );
   });
 
-  it('wraps a Graph Theme callback exception without replacing its cause', () => {
+  it('包装 Graph 主题回调异常而不替换其原因', () => {
     const cause = new Error('custom style failed');
     const definition = Graph.defineGraphTheme({
       name: 'throwing-style',
@@ -449,7 +449,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     }
   });
 
-  it('projects Graph Theme object outputs through the owner schema', () => {
+  it('通过所属模块 schema 投影 Graph 主题对象输出', () => {
     class EntityStyleOutput {
       readonly color = '#2563eb';
     }
@@ -477,7 +477,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     }
   });
 
-  it('ignores an explicitly undefined Graph style field during the owner merge', () => {
+  it('在所属模块合并期间忽略显式 undefined 的 Graph 样式字段', () => {
     const style = { color: undefined };
     const definition = { name: 'undefined-style-field', resolve: () => ({ defaults: { entity: { style } } }) };
     const theme = themeWithName(definition.name);
@@ -487,7 +487,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     );
   });
 
-  it('ignores an explicitly undefined Group shell field during the owner merge', () => {
+  it('在所属模块合并期间忽略显式 undefined 的 Group shell 字段', () => {
     const defaults = { cornerRadius: undefined };
     const definition = { name: 'undefined-group-field', resolve: () => ({ defaults: { group: defaults } }) };
     const theme = themeWithName(definition.name);
@@ -497,7 +497,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     );
   });
 
-  it('keeps the unregistered Graph Theme diagnostic unchanged', () => {
+  it('保持未注册的 Graph 主题诊断不变', () => {
     try {
       Graph.resolveGraphTheme(themeWithName('missing-style'), new Map());
       throw new Error('Expected Graph Theme lookup to fail.');
@@ -510,7 +510,7 @@ describe('Graph Scope and Theme compile semantics', () => {
   });
 });
 
-it('Graph style layers inherit opacity factors independently', () => {
+it('Graph 样式图层独立继承不透明度因子', () => {
   const merged = Graph.mergeGraphDefaults(
     {
       entity: { style: { opacity: { fill: 0.4, stroke: 0.8 } } },

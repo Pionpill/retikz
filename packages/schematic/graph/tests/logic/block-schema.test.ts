@@ -6,8 +6,8 @@ import * as Graph from '../../src';
 
 const textChild = (text: string): IRNode => ({ type: 'node', position: [0, 0], text });
 
-describe('Block-family Source schemas', () => {
-  it('keeps an empty Block sparse while accepting the complete Core Scope surface', () => {
+describe('Block 系列 Source schema', () => {
+  it('保持空的 Block 稀疏，同时接受完整的 Core Scope 曲面', () => {
     const block = Graph.createBlock({
       id: 'service',
       localNamespace: true,
@@ -49,7 +49,7 @@ describe('Block-family Source schemas', () => {
     expect(block).not.toHaveProperty('minWidth');
   });
 
-  it('accepts arbitrary ordered children without classifying their roles', () => {
+  it('接受任意排序的子级，而不对其角色进行分类', () => {
     const node = textChild('core');
     const group = Graph.createGroup({ children: [textChild('group')] });
     const section = Graph.createBlockSection({ children: [textChild('section')] });
@@ -61,7 +61,7 @@ describe('Block-family Source schemas', () => {
     });
   });
 
-  it('creates Header, Section and Row as independent Graph composites', () => {
+  it('将 Header、Section 和 Row 创建为独立的 Graph 复合组件', () => {
     expect(
       Graph.createBlockHeader({
         icon: textChild('icon'),
@@ -137,7 +137,7 @@ describe('Block-family Source schemas', () => {
     });
   });
 
-  it('keeps Row text content sparse and rejects a second content source', () => {
+  it('保持 Row 文本内容稀疏并拒绝第二个内容源', () => {
     expect(Graph.BlockRowSchema.parse({ namespace: 'graph', type: 'blockRow', content: 'name' })).toEqual({
       namespace: 'graph',
       type: 'blockRow',
@@ -166,7 +166,7 @@ describe('Block-family Source schemas', () => {
     ).toBe(false);
   });
 
-  it('keeps styled Row text items sparse across JSON round-trip', () => {
+  it('在 JSON 往返过程中保持样式化的 Row 文本项稀疏', () => {
     const content = [
       'name',
       {
@@ -191,7 +191,7 @@ describe('Block-family Source schemas', () => {
     });
   });
 
-  it('rejects Core Node shell fields from Row text objects', () => {
+  it('拒绝 Row 文本对象中的 Core Node shell 字段', () => {
     expect(
       Graph.BlockRowSchema.safeParse({
         namespace: 'graph',
@@ -201,7 +201,7 @@ describe('Block-family Source schemas', () => {
     ).toBe(false);
   });
 
-  it('accepts string shorthand for Header and Section text', () => {
+  it('接受 Header 和 Section 文本的字符串简写', () => {
     expect(
       Graph.createBlockHeader({
         title: 'Service',
@@ -220,7 +220,7 @@ describe('Block-family Source schemas', () => {
     });
   });
 
-  it('keeps Header text direction sparse while accepting both supported layouts', () => {
+  it('保持 Header 文本方向稀疏，同时接受两种支持的布局', () => {
     expect(Graph.createBlockHeader({ title: { text: 'Default' } })).toEqual({
       namespace: 'graph',
       type: 'blockHeader',
@@ -248,7 +248,7 @@ describe('Block-family Source schemas', () => {
     ).toBe(false);
   });
 
-  it('keeps Header text spacing sparse while reusing the closed Flex main-distribution values', () => {
+  it('保持 Header 文本间距稀疏，同时重用封闭的 Flex 主分布值', () => {
     expect(Graph.createBlockHeader({ title: { text: 'Default' } })).toEqual({
       namespace: 'graph',
       type: 'blockHeader',
@@ -284,7 +284,7 @@ describe('Block-family Source schemas', () => {
     ).toBe(false);
   });
 
-  it('allows empty Section and Row while keeping Row children direct', () => {
+  it('允许空 Section 和 Row，同时保持 Row 子项直接', () => {
     expect(Graph.BlockSectionSchema.parse({ namespace: 'graph', type: 'blockSection' })).toEqual({
       namespace: 'graph',
       type: 'blockSection',
@@ -313,7 +313,7 @@ describe('Block-family Source schemas', () => {
     expect(Graph.GraphType).not.toHaveProperty('BlockCell');
   });
 
-  it('accepts outer width constraints and preserves explicit zero values', () => {
+  it('接受外部宽度约束并保留显式零值', () => {
     expect(
       Graph.BlockSchema.parse({
         namespace: 'graph',
@@ -331,7 +331,7 @@ describe('Block-family Source schemas', () => {
     );
   });
 
-  it('rejects the superseded fixed grammar and unknown Block-family fields', () => {
+  it('拒绝被取代的固定语法和未知的 Block 系列字段', () => {
     expect(
       Graph.BlockSchema.safeParse({
         namespace: 'graph',
@@ -364,7 +364,7 @@ describe('Block-family Source schemas', () => {
     ).toBe(false);
   });
 
-  it('round-trips JSON-safe Source facts and materializes Scope position defaults', () => {
+  it('往返 JSON 安全的 Source 事实并实现 Scope 头寸默认值', () => {
     const sources = [
       Graph.createBlock({ children: [textChild('content')] }),
       Graph.createBlockHeader({ title: { text: 'Header' } }),

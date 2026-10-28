@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuntimeCommitParticipantDefinitionInput, RuntimeDiagnostic } from '../../src';
+import type { InputRuntimeCommitParticipantDefinition, RuntimeDiagnostic } from '../../src';
 import {
   createRuntimeSourceInput,
   createRuntimeSourceRegistry,
@@ -25,7 +25,7 @@ const defineCounterSource = () =>
     },
   });
 
-describe('runtime runtime participant failure lifecycle', () => {
+describe('Runtime 运行时参与者失败生命周期', () => {
   it.each([
     ['prepare', RetikzRuntimeErrorCode.ParticipantPrepareFailed] as const,
     ['commit', RetikzRuntimeErrorCode.ParticipantCommitFailed] as const,
@@ -355,7 +355,7 @@ describe('runtime runtime participant failure lifecycle', () => {
 
     const define = (key: string, rollbackFailure?: Error) => {
       let live = 1;
-      const input: RuntimeCommitParticipantDefinitionInput<Readonly<{ value: number }>> = {
+      const input: InputRuntimeCommitParticipantDefinition<Readonly<{ value: number }>> = {
         key,
         sources: [owner],
         computations: [],

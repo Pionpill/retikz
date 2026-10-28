@@ -14,7 +14,7 @@ const defineSource = (key: string, capture = (value: number) => value) =>
     value: { capture, read: value => value, equals: (left, right) => left === right },
   });
 
-describe('runtime runtime validation', () => {
+describe('Runtime 运行时验证', () => {
   it('在 capture 前拒绝 Computation/Source registry identity mismatch', () => {
     const capture = vi.fn((value: number) => value);
     const owner = defineSource('counter', capture);

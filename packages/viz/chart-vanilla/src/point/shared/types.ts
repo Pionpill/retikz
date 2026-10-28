@@ -1,7 +1,7 @@
 import type { ChartThemeDefinition, IRChartSource } from '@retikz/chart';
 import type { IRScene, ThemeDefinition } from '@retikz/core';
 import type { ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
-import type { LowerPlotsOptions } from '@retikz/plot';
+import type { PlotsLoweringOptions } from '@retikz/plot';
 
 import type { InputChartCoordinate, InputChartPresentation } from '../../normalize/chart';
 import type { InputChartPanel } from '../../shared';
@@ -11,7 +11,7 @@ import type { InputChartPanel } from '../../shared';
  * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-export type TypedChartCommonInput<TSource extends IRChartSource, TNative = never> = InputChartPresentation &
+export type InputChartCommon<TSource extends IRChartSource, TNative = never> = InputChartPresentation &
   (
     | {
         /** 直接输入的行数据，与 dataBindings 互斥 */
@@ -50,7 +50,7 @@ export type TypedChartCommonInput<TSource extends IRChartSource, TNative = never
     /** 当前编译边界可见的命名 Chart Theme Definition */
     chartThemeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
     /** Plot lowering 的运行时选项 */
-    lowerOptions?: LowerPlotsOptions;
+    lowerOptions?: PlotsLoweringOptions;
     /** Chart Source 外层宿主 Scope */
     panel?: InputChartPanel;
     /** Core 宿主的主题定义 */

@@ -31,7 +31,7 @@ const INTERNAL_RENDER_EXPORTS = [
   'formatViewBox',
 ];
 
-describe('@retikz/react public API', () => {
+describe('@retikz/react 公共 API', () => {
   it('保留 Kernel、Sugar 与公开 runtime 能力', () => {
     for (const name of PUBLIC_RUNTIME_EXPORTS) {
       expect(react).toHaveProperty(name);

@@ -4,8 +4,8 @@ import { literal, strictObject } from 'zod';
 
 import type { CoordinateFrame, ScreenPositionAdjustmentDefinition } from '../../../src/contract';
 import { createCoordinateFrame, defineCoordinate } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlotPointMark } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
@@ -19,7 +19,7 @@ const nodesOf = (child: IRChild): Array<IRNode> => {
 const render = (
   extra: Partial<IRPlotPointMark> = {},
   coordinate: Record<string, unknown> = { type: 'polar2D', angle: 'x', radius: 'y', startAngle: 0, endAngle: 360 },
-  options: LowerPlotsOptions = {},
+  options: PlotsLoweringOptions = {},
   rows = [{ angle: 90, radius: 50, rotation: 15, text: 'A' }],
 ) => {
   const spec = PlotSchema.parse({
@@ -42,7 +42,7 @@ const render = (
     guides: [],
   });
   return nodesOf(
-    lowerPlot(
+    lowerPlotWithDataArtifact(
       spec,
       { d: rows },
       {
@@ -50,11 +50,11 @@ const render = (
         ...options,
         textMeasurer: measureLabel,
       },
-    ),
+    ).child,
   );
 };
 
-describe('PointMark coordinate orientation', () => {
+describe('PointMark 坐标方向', () => {
   it('沿角向切线及正法向旋转，并叠加常量角', () => {
     expect(
       render({ properties: { orientation: { kind: 'coordinate', role: 'x', align: 'tangent' }, rotate: 15 } })[0]

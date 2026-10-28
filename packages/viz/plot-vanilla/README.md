@@ -43,17 +43,17 @@ normalizes the former and preserves the latter.
 ## Compose in a Vanilla scene
 
 ```ts
-import { PlotInputEmbedAdapter, embedPlot } from '@retikz/plot-vanilla';
+import { plotInputEmbedAdapter, embedPlot } from '@retikz/plot-vanilla';
 import { renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene([embedPlot({ spec }, { sales })]);
 const svg = renderToSvgString(input, {
-  adapters: [PlotInputEmbedAdapter],
+  adapters: [plotInputEmbedAdapter],
   output: { width: 360, height: 200 },
 });
 ```
 
-Datasets and runtime callbacks stay outside `IRPlot`. `PlotInputEmbedAdapter`
+Datasets and runtime callbacks stay outside `IRPlot`. `plotInputEmbedAdapter`
 receives the typed `InputPlotEmbed` during the single Vanilla scene-normalization
 traversal, then delegates Plot IR lowering to `@retikz/plot`.
 

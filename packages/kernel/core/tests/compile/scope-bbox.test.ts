@@ -3,8 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import type { NodeLayout } from '../../src/compile/node';
-import { boxInsets } from '../../src/compile/node';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { createScopeRectangleLayout } from '../../src/compile/node';
 import { computeScopeBoundingBox } from '../../src/compile/scope';
 import type { TextMeasurer } from '../../src/compile/text';
@@ -30,12 +29,12 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 };
 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout，供 computeScopeBoundingBox 单元测试 */
-const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => ({
+const layoutAt = (cx: number, cy: number, w: number, h: number): CompiledNodeLayout => ({
   shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
   geometry: {
     rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
     contentCenter: [cx, cy],
-    margin: boxInsets(0),
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
     contentSize: { width: w, height: h },
   },
   boundary: {
@@ -83,7 +82,7 @@ describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', ()
     expect(layout.geometry.rect.width).toBe(0);
     expect(layout.geometry.rect.height).toBe(0);
     expect(layout.geometry.rect.rotate).toBe(0);
-    expect(layout.geometry.margin).toEqual(boxInsets(0));
+    expect(layout.geometry.margin).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
     expect(layout.text).toBeUndefined();
   });
 
@@ -103,7 +102,7 @@ describe('computeScopeBoundingBox / createScopeRectangleLayout 单元测试', ()
   });
 });
 
-describe('scope.id bbox happy path', () => {
+describe('scope.id bbox 正常流程', () => {
   it('scope_id_bbox_basic：scope id="g" 内 3 node A/B/C → bbox 包 3 节点全局 4 角 AABB', () => {
     const ir = scene([
       {
@@ -200,7 +199,7 @@ describe('scope.id bbox happy path', () => {
     expect(Math.abs(end![1] - 25)).toBeLessThan(20);
   });
 
-  it('scope_id_numeric_anchor_30：path to="g.30" → bbox 30° boundaryPoint', () => {
+  it('路径 to="g.30" 使用 Scope 包围盒 30° 的边界点', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -228,7 +227,7 @@ describe('scope.id bbox happy path', () => {
     expect(end![1]).toBeGreaterThan(0);
   });
 
-  it('scope_id_numeric_anchor_negative：path to="g.-45" → bbox -45° boundaryPoint', () => {
+  it('路径 to="g.-45" 使用 Scope 包围盒 -45° 的边界点', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -592,7 +591,7 @@ describe('scope.id bbox 错误路径', () => {
     expect(dups.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('scope_id_collision_with_coordinate：scope id="A" + coordinate id="A" → DUPLICATE_NODE_ID warn', () => {
+  it('Scope 和 Coordinate 均使用 id="A" 时发出 DUPLICATE_NODE_ID 警告', () => {
     const ir = scene([
       { type: 'scope', id: 'A', children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'i' }] },
       { type: 'coordinate', id: 'A', position: [100, 0] },
@@ -841,7 +840,7 @@ describe('scope.id bbox 交互', () => {
     expect(eRot![0]).toBeGreaterThan(eBase![0] + 1);
   });
 
-  it('rejects an inner Path targeting its ancestor Scope envelope', () => {
+  it('拒绝针对其祖先 Scope 信封的内部 Path', () => {
     expect(() =>
       compileToScene(
         scene([

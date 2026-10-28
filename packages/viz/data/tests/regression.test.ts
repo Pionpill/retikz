@@ -21,8 +21,8 @@ const customImplementation = defineRegressionImplementation({
   definition: custom,
   fit: (_pairs, operation) => ({ predict: x => x ** operation.degree }),
 });
-describe('regression registry', () => {
-  it('roundtrips JSON methods and resolves exact defaults once', () => {
+describe('回归注册表', () => {
+  it('往返 JSON 方法并解析一次精确的默认值', () => {
     const operation = { kind: 'custom-fit' };
 
     expect(RegressionMethodSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
@@ -44,7 +44,7 @@ describe('regression registry', () => {
     ).toThrow(RetikzDataError);
   });
 
-  it('rejects missing, duplicate, and blank registrations', () => {
+  it('拒绝缺失、重复和空白注册', () => {
     expect(() => resolveRegression({ kind: 'missing' })).toThrow(/not registered/);
     expect(() => resolveRegressionRegistry([custom, custom])).toThrow(/duplicate/);
     expect(() =>
@@ -55,7 +55,7 @@ describe('regression registry', () => {
     ).toThrow(/non-blank/);
   });
 
-  it('fits built-ins through the same consumer', () => {
+  it('通过同一用户安装内置设备', () => {
     for (const kind of ['linear', 'quadratic', 'polynomial'])
       expect(resolveRegression({ kind }).fit(pairs).predict(1.5)).toBeCloseTo(4);
     const xs = [1, 2, 3, 4];
@@ -75,7 +75,7 @@ describe('regression registry', () => {
     expect(() => resolveRegression({ kind: 'logarithmic' }).validateExtent([-1, 2])).toThrow(/positive/);
   });
 
-  it('preserves callback causes and rejects non-finite predictions', () => {
+  it('保留回调原因并拒绝非有限预测', () => {
     const cause = new Error('custom failure');
     const bad = defineRegression({ schema: strictObject({ kind: literal('bad') }) });
     const badImplementation = defineRegressionImplementation({
@@ -116,7 +116,7 @@ describe('regression registry', () => {
   });
 });
 
-it('parses defaults once for repeated groups', () => {
+it('为重复组解析一次默认值', () => {
   let parses = 0;
   const definition = defineRegression({
     schema: strictObject({ kind: literal('observed-schema'), exponent: number().default(2) }).superRefine(() => {

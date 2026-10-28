@@ -39,7 +39,7 @@ export const roundedRectPath = (
 };
 
 /** 把一条场景路径命令追加到当前 Canvas 路径，角度统一换算为弧度 */
-export const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand): void => {
+const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand): void => {
   switch (command.kind) {
     case 'move':
       ctx.moveTo(command.to[0], command.to[1]);

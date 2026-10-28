@@ -103,7 +103,7 @@ export const flowApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       'FlowDiagramInputEmbedProps',
       'normalizeFlowDiagram',
       'InputFlowDiagram',
-      'FlowDiagramInputEmbedAdapter',
+      'flowDiagramInputEmbedAdapter',
     ],
     pairs: [
       ['flowDiagram', 'FlowDiagramInputEmbedProps'],
@@ -129,7 +129,7 @@ export const flowApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       'IRFlowEndpoint',
       'FlowLayoutEndpoint',
       'FlowEndpointTarget',
-      'FlowLayoutRelationInput',
+      'InputFlowLayoutRelation',
       'FlowLayoutRelationOutput',
       'FlowDiagramDefinitionOptions',
       'createFlowDiagramProviderContribution',

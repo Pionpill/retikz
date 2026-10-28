@@ -11,7 +11,10 @@ export type ClipLowerContext = {
   lower: (clip: IRClip) => SceneClipPath;
 };
 
-/** 裁剪能力定义 */
+/**
+ * 裁剪能力定义
+ * @template TClip 经 schema 解析的裁剪声明类型，决定 kind 和 lower 回调的输入；默认使用 IRClip
+ */
 export type ClipDefinition<TClip extends IRClip = IRClip> = Readonly<{
   /** 裁剪名称，与输入的 kind 一致 */
   kind: TClip['kind'];

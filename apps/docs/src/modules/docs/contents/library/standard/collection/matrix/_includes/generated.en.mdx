@@ -339,10 +339,10 @@ export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
 
 </DocTabs>
 
-#### <ApiSourceLink label={"MatrixInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={38}>MatrixInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"matrixInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/collection/matrix.ts"} startLine={38}>matrixInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix>;
+export declare const matrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix>;
 ```
 
 **Persistent configuration**
@@ -518,10 +518,10 @@ export type IRMatrixAxisIndex = input<typeof MatrixAxisIndexSchema>;
 
 **Extension definitions and registration**
 
-#### <ApiSourceLink label={"MatrixDefinition"} path={"packages/library/standard/src/collection/matrix/composite.ts"} startLine={10}>MatrixDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"matrixDefinition"} path={"packages/library/standard/src/collection/matrix/composite.ts"} startLine={10}>matrixDefinition</ApiSourceLink>
 
 ```ts
-export const MatrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix'> = defineComposite({
+export const matrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix'> = defineComposite({
   namespace: 'standard',
   type: 'matrix',
   schema: MatrixSchema,
@@ -529,10 +529,10 @@ export const MatrixDefinition: CompositeDefinition<IRMatrix, 'standard', 'matrix
 });
 ```
 
-#### <ApiSourceLink label={"MatrixProvider"} path={"packages/library/standard/src/collection/matrix/composite.ts"} startLine={25}>MatrixProvider</ApiSourceLink>
+#### <ApiSourceLink label={"matrixProvider"} path={"packages/library/standard/src/collection/matrix/composite.ts"} startLine={25}>matrixProvider</ApiSourceLink>
 
 ```ts
-export declare const MatrixProvider: CoreDependencyProvider;
+export declare const matrixProvider: CoreDependencyProvider;
 ```
 
 **Execution and supporting contracts**
@@ -578,7 +578,7 @@ export declare const createMatrix: (input: IRMatrix) => IRMatrix;
 |            | `row`      | `number`         | Nonnegative safe integer row coordinate                                       |
 |            | `column`   | `number`         | Nonnegative safe integer column coordinate                                    |
 | Returns    | —          | `string`         | A cell id composed of the Matrix id and zero-based row and column coordinates |
-| Throws     | —          | —                | Throws RetikzStandardError for invalid arguments                              |
+| Throws     | —          | —                | Throws RetikzStandardError when the index is not a non-negative integer       |
 
 </ApiTable>
 

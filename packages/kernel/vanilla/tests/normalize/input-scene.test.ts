@@ -81,7 +81,9 @@ const boxComposite = defineComposite({
 });
 
 const createBoxAdapter = (
-  makeDefinition = vi.fn<(datasets: Readonly<Record<string, unknown>>) => AnyCompositeDefinition>(() => boxComposite),
+  makeDefinition = vi.fn<(contributions: ReadonlyArray<{ shared: object }>) => AnyCompositeDefinition>(
+    () => boxComposite,
+  ),
 ): SynchronousInputEmbedAdapter<{ text: string; data: object }> => ({
   kind: 'fixture-box',
   lower: props => ({
@@ -91,8 +93,7 @@ const createBoxAdapter = (
       providers: [
         {
           key: { capability: 'composite', namespace: 'fixture', type: 'box' },
-          dependencies: [],
-          datasets: { shared: props.data },
+          params: { shared: props.data },
           makeDefinition,
         },
       ],

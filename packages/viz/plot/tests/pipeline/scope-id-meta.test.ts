@@ -3,9 +3,9 @@ import { compileToScene } from '@retikz/core';
 import { SOURCE_INDEX } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../src/pipeline/expand';
 import { lowerPlots } from '../../src/pipeline/expand';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
@@ -18,8 +18,8 @@ import { measureLabel } from '../helpers/text-measurement';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope => {
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 /**
@@ -30,7 +30,7 @@ const contentScope = (outer: IRScope): IRScope =>
   outer.id !== undefined && outer.localNamespace !== true ? (outer.children[0] as IRScope) : outer;
 
 /** 取第一个 mark 图层 scope（内容 scope 的第一个子 scope） */
-const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: PlotsLoweringOptions): IRScope =>
   contentScope(expandOf(spec, datasets, options)).children[0] as IRScope;
 
 /** 递归收集 IRChild 树里所有带 meta 的元素（id 一并带出，便于断言） */
@@ -73,7 +73,7 @@ const collectSceneMeta = (
   return out;
 };
 
-const opts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const opts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const SALES = [
   { month: 0, revenue: 10 },
@@ -120,8 +120,8 @@ const pointSpec = (over: { id?: string } = {}): IRPlot =>
 // =====================================================================
 // Happy path
 // =====================================================================
-describe('scope id/meta — happy path', () => {
-  it('root_id_to_scope_id', () => {
+describe('范围 id/meta — 快乐路径', () => {
+  it('根 id 到范围 id', () => {
     // <Plot id="sales"> + provenance:true → 外层 panel scope.id='sales'，内层 localNamespace 承载内容 meta
     const outer = expandOf(barSpec({ id: 'sales' }), { sales: SALES }, { ...opts, provenance: true });
 
@@ -138,7 +138,7 @@ describe('scope id/meta — happy path', () => {
     expect(outer.children.some(c => (c as { id?: string }).id === 'sales.plotArea')).toBe(true);
   });
 
-  it('mark_layer_id_meta', () => {
+  it('标记层 id 元', () => {
     // bar mark[0] → 图层 scope.id='sales.mark.0'、meta {source:'plot',layer:'mark',mark:'interval',markIndex:0}
     const layer = firstLayer(barSpec({ id: 'sales' }), { sales: SALES }, { ...opts, provenance: true });
 
@@ -147,7 +147,7 @@ describe('scope id/meta — happy path', () => {
     expect(layer.meta).toEqual({ source: 'plot', layer: 'mark', mark: 'interval', markIndex: 0 });
   });
 
-  it('mark_layer_uses_user_mark_id', () => {
+  it('标记层使用用户标记 id', () => {
     // 用户给 mark.id='bars' → 用户句柄优先，layer scope.id='sales.bars'
     const layer = firstLayer(barSpec({ id: 'sales', markId: 'bars' }), { sales: SALES }, { ...opts, provenance: true });
 
@@ -155,14 +155,14 @@ describe('scope id/meta — happy path', () => {
     expect((layer.meta as { markIndex?: number }).markIndex).toBe(0);
   });
 
-  it('mark_layer_uses_user_mark_id_without_provenance', () => {
+  it('标记层使用用户标记 ID，没有来源追溯', () => {
     const layer = firstLayer(barSpec({ id: 'sales', markId: 'bars' }), { sales: SALES }, opts);
 
     expect(layer.id).toBe('sales.bars');
     expect(layer.meta).toBeUndefined();
   });
 
-  it('line_series_scope_id_meta', () => {
+  it('线路系列范围 id 元', () => {
     // line 多系列 → 每条 series 形成独立 Scope，稳定 id/meta 落在 series owner 上
     const TREND = [
       { t: 0, v: 1, city: 'X' },
@@ -205,7 +205,7 @@ describe('scope id/meta — happy path', () => {
     expect(seriesY.children.every(child => child.type === 'path')).toBe(true);
   });
 
-  it('datum_provenance_on', () => {
+  it('基准来源开启', () => {
     // datumProvenance:true → 每个 datum Node 带 meta {source,dataReference,mark,markIndex,transformedIndex,sourceIndex,series?}
     const layer = firstLayer(
       barSpec({ id: 'sales' }),
@@ -241,8 +241,8 @@ describe('scope id/meta — happy path', () => {
 // =====================================================================
 // 边界
 // =====================================================================
-describe('scope id/meta — boundary', () => {
-  it('provenance_off_byte_identical', () => {
+describe('范围 id/meta — 边界', () => {
+  it('关闭来源追溯时字节输出保持一致', () => {
     // 默认（provenance 关）→ lowering 产物不写任何 meta / 合成 id key
     // 用「无 root id / 无 mark id」spec（point + bar）作代表，逐字结构比对 off vs 显式 off
     for (const spec of [pointSpec(), barSpec()]) {
@@ -258,7 +258,7 @@ describe('scope id/meta — boundary', () => {
     }
   });
 
-  it('provenance_off_polar_byte_identical', () => {
+  it('极坐标关闭来源追溯时字节输出保持一致', () => {
     // polar 代表（sector 饼图）同样：默认关 → 无 meta / 无合成 id
     const pieSpec = PlotSchema.parse({
       namespace: 'plot',
@@ -288,7 +288,7 @@ describe('scope id/meta — boundary', () => {
     expect(collectIds(off)).toEqual([]);
   });
 
-  it('no_root_id_anonymous', () => {
+  it('无 root id 匿名', () => {
     // provenance:true 但 root 无 id → 内部 scope 匿名（无合成 id）；meta 省 plotId（无 dataReference 之外的 plotId 字段）
     const outer = expandOf(barSpec(), { sales: SALES }, { ...opts, provenance: true, datumProvenance: true });
 
@@ -305,7 +305,7 @@ describe('scope id/meta — boundary', () => {
     }
   });
 
-  it('series_value_slug', () => {
+  it('系列值生成 slug', () => {
     // series 值含 '.' → id 路径确定性 slug。断言稳定性 + 可寻址，不锁死精确串
     const TREND = [
       { t: 0, v: 1, region: 'north.west' },
@@ -350,7 +350,7 @@ describe('scope id/meta — boundary', () => {
     expect((seriesScopes[0].meta as { series?: unknown }).series).toBe('north.west');
   });
 
-  it('series_slug_collision_throws', () => {
+  it('系列弹头碰撞投掷', () => {
     // 两个不同 series 值 slug 后撞同一 id（'a.b' 与 'a_b' 都 → 'a_b'）→ fail loud（与 datumIdField 重复同策）
     const TREND = [
       { t: 0, v: 1, region: 'a.b' },
@@ -379,7 +379,7 @@ describe('scope id/meta — boundary', () => {
     expect(() => expandOf(spec, { t: TREND }, { ...opts, provenance: true })).toThrow();
   });
 
-  it('transformed_vs_source_index', () => {
+  it('转换后的索引与源索引', () => {
     // spec 带 sort transform → datum meta transformedIndex=渲染序、sourceIndex=原 dataset 行序，二者不同且都正确
     const rows = [
       { month: 2, revenue: 9 }, // source 0
@@ -418,8 +418,8 @@ describe('scope id/meta — boundary', () => {
 // =====================================================================
 // 错误路径
 // =====================================================================
-describe('scope id/meta — errors', () => {
-  it('datum_id_field_missing', () => {
+describe('范围 id/元 — 错误', () => {
+  it('缺少数据 ID 字段', () => {
     // datumIdField 指向某行不存在的字段 → 抛清晰错误（fail loud，不静默跳过）
     const rows = [
       { month: 0, revenue: 10, key: 'a' },
@@ -436,7 +436,7 @@ describe('scope id/meta — errors', () => {
     ).toThrow();
   });
 
-  it('duplicate_datum_id', () => {
+  it('重复数据 ID', () => {
     // datumIdField 值在两行重复 → 抛清晰错误（不 last-wins，保 anchor 稳定）
     const rows = [
       { month: 0, revenue: 10, key: 'dup' },
@@ -457,8 +457,8 @@ describe('scope id/meta — errors', () => {
 // =====================================================================
 // 交互
 // =====================================================================
-describe('scope id/meta — interaction', () => {
-  it('polar_id_meta_parity', () => {
+describe('范围 id/元 — 交互', () => {
+  it('极坐标的 id 和元数据保持等价', () => {
     // polar 下 interval→sector 径向柱层 id / meta 与 cartesian 同构（layer scope id + meta layer:mark）
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -483,7 +483,7 @@ describe('scope id/meta — interaction', () => {
     expect(layer.meta).toEqual({ source: 'plot', layer: 'mark', mark: 'interval', markIndex: 0 });
   });
 
-  it('polar_sector_datum_meta', () => {
+  it('极坐标扇区保留数据项元数据', () => {
     // polar sector(饼图) datum node per-datum meta（datumProvenance 开）
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -522,7 +522,7 @@ describe('scope id/meta — interaction', () => {
     }
   });
 
-  it('compile_meta_reaches_scene', () => {
+  it('编译元到达场景', () => {
     // 含 meta 的 lowering 产物 → compileToScene → Scene 图元保留同款 meta
     const spec = barSpec({ id: 'sales' });
     const scene = compileToScene(
@@ -543,7 +543,7 @@ describe('scope id/meta — interaction', () => {
     expect((datumMetas[0].meta as { dataReference?: string }).dataReference).toBe('sales');
   });
 
-  it('compile_meta_render_neutral', () => {
+  it('编译元渲染中性', () => {
     // meta 渲染中立：开 provenance 与关 provenance 的 Scene 图元几何不变（除 id/meta key 外结构等价）
     const spec = () => barSpec({ id: 'sales' });
     const sceneOff = compileToScene(
@@ -565,7 +565,7 @@ describe('scope id/meta — interaction', () => {
     expect((sceneOn as { viewBox?: unknown }).viewBox).toEqual((sceneOff as { viewBox?: unknown }).viewBox);
   });
 
-  it('id_meta_coexist', () => {
+  it('id 元共存', () => {
     // root+mark id 与 meta 共存、互不影响：layer scope 同时带 id 与 meta
     const layer = firstLayer(barSpec({ id: 'sales' }), { sales: SALES }, { ...opts, provenance: true });
 
@@ -591,7 +591,7 @@ describe('scope id/meta — interaction', () => {
     expect((markGroup!.meta as { layer?: string }).layer).toBe('mark');
   });
 
-  it('datum_id_field_binds_node_id', () => {
+  it('数据 id 字段绑定节点 id', () => {
     // datumIdField 设 → datum Node.id = '<plotId>.datum.<fieldValue>'
     const rows = [
       { month: 0, revenue: 10, q: 'Q1' },
@@ -608,7 +608,7 @@ describe('scope id/meta — interaction', () => {
     expect(ids).toEqual(['sales.datum.Q1', 'sales.datum.Q2', 'sales.datum.Q3']);
   });
 
-  it('guide_layer_id_meta', () => {
+  it('引导层 id 元', () => {
     // guide 层 scope → '<plotId>.' 前缀 id + meta {source:'plot',layer:'axis'|'grid',dimension}
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -636,7 +636,7 @@ describe('scope id/meta — interaction', () => {
     expect(axisMeta!.id).toBe('sales.xaxis');
   });
 
-  it('legend_layer_id_is_plot_local_across_scene', () => {
+  it('图例图层 ID 是跨场景的局部绘图', () => {
     const legendSpec = (id: string, dataReference: string): IRPlot =>
       PlotSchema.parse({
         namespace: 'plot',
@@ -679,8 +679,8 @@ describe('scope id/meta — interaction', () => {
 // =====================================================================
 // Bug Hunter 回归（stage 3 对抗提升为正式测试）
 // =====================================================================
-describe('scope id/meta — bug hunter regressions', () => {
-  it('middle_skipped_row_index_integrity', () => {
+describe('范围 id/meta — bug 猎人回归', () => {
+  it('中间跳过行索引完整性', () => {
     // 中间行被跳过（非有限投影）时，存活 datum 的 transformedIndex / sourceIndex 必须反映「原始行位置」，
     // 而非压缩后的 placed 数组位置（经典 off-by-one 陷阱）。row1 的 y=NaN → 跳过，存活 row0/row2 应得 index 0/2
     const rows = [
@@ -703,7 +703,7 @@ describe('scope id/meta — bug hunter regressions', () => {
     expect(idx.map(m => m.sourceIndex)).toEqual([0, 2]);
   });
 
-  it('datum_provenance_implies_provenance', () => {
+  it('数据来源追溯意味着来源追溯', () => {
     // datumProvenance / datumIdField 任一开即蕴含 provenance：不显式传 provenance:true 也应写 per-datum meta / 绑 datum id，
     // 不能静默无效（修复：原实现仅 options.provenance truthy 才启用，致 datumProvenance 单开被吞）
     const rows = [
@@ -724,7 +724,7 @@ describe('scope id/meta — bug hunter regressions', () => {
     expect(ids).toEqual(['sales.datum.Q1', 'sales.datum.Q2']);
   });
 
-  it('provenance_does_not_mutate_input', () => {
+  it('来源追溯不会改变输入', () => {
     // SOURCE_INDEX 标记必须打在克隆行上，绝不污染调用方原始数据对象
     const rows = [
       { month: 0, revenue: 10 },

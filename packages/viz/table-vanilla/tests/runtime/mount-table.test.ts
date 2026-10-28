@@ -3,7 +3,7 @@ import { layer, scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { detailTable, embedTable, TableInputEmbedAdapter } from '../../src';
+import { detailTable, embedTable, tableInputEmbedAdapter } from '../../src';
 
 const createCanvasContext = (): CanvasRenderingContext2D => {
   const target: Record<string | symbol, unknown> = {
@@ -32,8 +32,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Table Vanilla mounted runtime', () => {
-  it('updates SVG data while preserving root identity and supports the Canvas host', () => {
+describe('Table Vanilla 安装运行时', () => {
+  it('更新 SVG 数据，同时保留根身份并支持 Canvas 宿主', () => {
     const spec = detailTable({
       dataRef: 'people',
       header: false,
@@ -44,7 +44,7 @@ describe('Table Vanilla mounted runtime', () => {
         layers: [layer({ id: 'content', children: [embedTable(spec, { data: { people: [{ name }] } })] })],
       });
     const svgContainer = document.createElement('div');
-    const svgView = mount(svgContainer, tableFigure('Ada'), { adapters: [TableInputEmbedAdapter] });
+    const svgView = mount(svgContainer, tableFigure('Ada'), { adapters: [tableInputEmbedAdapter] });
     const svgRoot = svgView.root;
 
     expect(svgRoot.textContent).toContain('Ada');
@@ -57,7 +57,7 @@ describe('Table Vanilla mounted runtime', () => {
     const canvasContainer = document.createElement('div');
     const canvasView = mount(canvasContainer, tableFigure('Lin'), {
       renderer: 'canvas',
-      adapters: [TableInputEmbedAdapter],
+      adapters: [tableInputEmbedAdapter],
     });
     const canvasRoot = canvasView.root;
     canvasView.update(tableFigure('Edsger'));

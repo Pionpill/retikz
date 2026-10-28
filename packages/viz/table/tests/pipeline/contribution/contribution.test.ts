@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import {
   compileToScene,
   CompositeBaseSchema,
@@ -9,7 +9,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import type { LowerTablesOptions, TableStructureOutput } from '../../../src';
+import type { TablesLoweringOptions, TableProviderParams, TableStructureOutput } from '../../../src';
 import {
   createTableRuntimeContribution,
   defineCellFormatter,
@@ -90,16 +90,25 @@ const tableProviderOf = (contribution: ReturnType<typeof createTableRuntimeContr
       provider.key.capability === 'composite' &&
       provider.key.namespace === TABLE_NAMESPACE &&
       provider.key.type === 'table',
-  );
+  ) as CoreDependencyProvider<TableProviderParams> | undefined;
 
-describe('Table runtime contribution', () => {
-  it('uses a stable maker reference and an encoded runtime reference while preserving dataset identities', () => {
+describe('Table 运行时贡献', () => {
+  it('复用同名行数组，拒绝不同引用覆盖同名数据集', () => {
+    const rows = [{ value: 1 }];
+    const first = createTableRuntimeContribution({ data: { sales: rows } });
+    const shared = createTableRuntimeContribution({ data: { sales: rows } });
+    const conflict = createTableRuntimeContribution({ data: { sales: [...rows] } });
+
+    expect(definitionsOf(first, shared).composites).toHaveLength(1);
+    expect(() => definitionsOf(first, conflict)).toThrow(/sales.*conflicts by identity/);
+  });
+
+  it('使用稳定的工厂参考，同时保留数据集身份', () => {
     const rows: Array<Record<string, unknown>> = [{ value: 1 }];
     const contribution = createTableRuntimeContribution({
-      reference: 'panel/a b',
       data: { sales: rows },
     });
-    const another = createTableRuntimeContribution({ reference: 'panel/b' });
+    const another = createTableRuntimeContribution({});
 
     const provider = tableProviderOf(contribution);
     const anotherProvider = tableProviderOf(another);
@@ -108,38 +117,15 @@ describe('Table runtime contribution', () => {
     expect(contribution.roots).toEqual([
       { capability: 'composite', namespace: TABLE_NAMESPACE, type: TableComposite.Table },
     ]);
-    expect(provider?.dependencies).toEqual([]);
-    expect(provider?.datasets.sales).toBe(rows);
-    expect(Object.keys(provider?.datasets ?? {})).toEqual(['sales', '@@retikz/table/runtime/panel%2Fa%20b']);
+    expect(provider?.dependencies ?? []).toEqual([]);
+    expect(provider?.params?.datasets.sales).toBe(rows);
+    expect(Object.keys(provider?.params?.datasets ?? {})).toEqual(['sales']);
   });
 
-  it('rejects collisions with the reserved runtime dataset key', () => {
-    expect(() =>
-      createTableRuntimeContribution({
-        reference: 'panel',
-        data: { '@@retikz/table/runtime/panel': [] },
-      }),
-    ).toThrow(/dataset.*conflict/i);
-  });
-
-  it('encodes lone surrogate references without collapsing JSON string identities', () => {
-    const highSurrogate = String.fromCharCode(0xd800);
-    const replacementCharacter = '\ufffd';
-    const highContribution = createTableRuntimeContribution({ reference: highSurrogate });
-    const replacementContribution = createTableRuntimeContribution({ reference: replacementCharacter });
-    const highReference = Object.keys(tableProviderOf(highContribution)?.datasets ?? {})[0];
-    const replacementReference = Object.keys(tableProviderOf(replacementContribution)?.datasets ?? {})[0];
-
-    expect(highReference).toBe('@@retikz/table/runtime/%uD800');
-    expect(replacementReference).toBe('@@retikz/table/runtime/%EF%BF%BD');
-    expect(highReference).not.toBe(replacementReference);
-  });
-
-  it('strips runtime envelopes, lowers clean datasets, and orders Table definitions before extras', () => {
+  it('下沉数据集并在附加项之前排序 Table 定义', () => {
     const extra = compositeOf('fixture', 'badge');
     const rows = [{ name: 'Ada' }];
     const contribution = createTableRuntimeContribution({
-      reference: 'people-table',
       data: { people: rows },
       composites: [extra],
     });
@@ -173,10 +159,9 @@ describe('Table runtime contribution', () => {
     expect(JSON.stringify(result.scene)).toContain('Ada');
   });
 
-  it('carries a custom Table style definition through the embedded runtime envelope', () => {
+  it('通过嵌入运行时参数传递自定义 Table 样式定义', () => {
     const tableStyle = themeNameOf('brand');
     const contribution = createTableRuntimeContribution({
-      reference: 'brand-table',
       lowerOptions: { tableThemeDefinitions: [tableStyle] },
     });
     const result = compileToScene(
@@ -211,7 +196,7 @@ describe('Table runtime contribution', () => {
     });
   });
 
-  it('merges definitions and composites in first-contribution order and deduplicates the same objects', () => {
+  it('按首次贡献顺序合并定义和组合，并对相同对象进行去重', () => {
     const structureA = structureOf('fixture-a');
     const structureB = structureOf('fixture-b');
     const presentationA = presentationOf('fixture-a');
@@ -225,7 +210,6 @@ describe('Table runtime contribution', () => {
     const compositeA = compositeOf('fixture', 'a');
     const compositeB = compositeOf('fixture', 'b');
     const first = createTableRuntimeContribution({
-      reference: 'first',
       lowerOptions: {
         structureDefinitions: [structureA],
         formatterDefinitions: [formatterA],
@@ -236,7 +220,6 @@ describe('Table runtime contribution', () => {
       composites: [compositeA],
     });
     const second = createTableRuntimeContribution({
-      reference: 'second',
       lowerOptions: {
         structureDefinitions: [structureA, structureB],
         formatterDefinitions: [formatterA, formatterB],
@@ -265,69 +248,62 @@ describe('Table runtime contribution', () => {
       { visualScaleDefinitions: [visualScaleOf('same')] },
     ],
     ['theme', { tableThemeDefinitions: [themeNameOf('same')] }, { tableThemeDefinitions: [themeNameOf('same')] }],
-  ] as const)(
-    'fails loud for the same %s key with different definition objects',
-    (_label, firstOptions, secondOptions) => {
-      const first = createTableRuntimeContribution({ reference: 'first', lowerOptions: firstOptions });
-      const second = createTableRuntimeContribution({ reference: 'second', lowerOptions: secondOptions });
+  ] as const)('对于具有不同定义对象的相同 %s 键，明确报错', (_label, firstOptions, secondOptions) => {
+    const first = createTableRuntimeContribution({ lowerOptions: firstOptions });
+    const second = createTableRuntimeContribution({ lowerOptions: secondOptions });
 
-      expect(() => definitionsOf(first, second)).toThrow(/conflict/i);
-    },
-  );
+    expect(() => definitionsOf(first, second)).toThrow(/conflict/i);
+  });
 
-  it('fails loud for the same composite key with different objects', () => {
+  it('对于具有不同对象的相同复合键，明确报错', () => {
     const first = createTableRuntimeContribution({
-      reference: 'first',
       composites: [compositeOf('fixture', 'same')],
     });
     const second = createTableRuntimeContribution({
-      reference: 'second',
       composites: [compositeOf('fixture', 'same')],
     });
 
-    expect(() => definitionsOf(first, second)).toThrow(/dataset.*conflict.*identity/i);
+    expect(() => definitionsOf(first, second)).toThrow(/nested definition conflict/i);
   });
 
-  it('requires future non-definition lower options to share the same object identity', () => {
+  it('需要未来的非定义下沉选项来共享相同的对象标识', () => {
     const shared = {};
-    const optionsOf = (futureMode: object) => ({ futureMode }) as LowerTablesOptions & { futureMode: object };
-    const first = createTableRuntimeContribution({ reference: 'first', lowerOptions: optionsOf(shared) });
-    const second = createTableRuntimeContribution({ reference: 'second', lowerOptions: optionsOf(shared) });
-    const conflict = createTableRuntimeContribution({ reference: 'conflict', lowerOptions: optionsOf({}) });
+    const optionsOf = (futureMode: object) => ({ futureMode }) as TablesLoweringOptions & { futureMode: object };
+    const first = createTableRuntimeContribution({ lowerOptions: optionsOf(shared) });
+    const second = createTableRuntimeContribution({ lowerOptions: optionsOf(shared) });
+    const conflict = createTableRuntimeContribution({ lowerOptions: optionsOf({}) });
 
     expect(() => definitionsOf(first, second)).not.toThrow();
     expect(() => definitionsOf(first, conflict)).toThrow(/lower option.*futureMode/i);
   });
 
-  it('defensively copies formatter definition arrays when creating a contribution', () => {
+  it('创建贡献时防御性地复制格式化程序定义数组', () => {
     const original = formatterOf('original');
     const late = formatterOf('late');
     const formatterDefinitions = [original];
-    const first = createTableRuntimeContribution({ reference: 'first', lowerOptions: { formatterDefinitions } });
+    const first = createTableRuntimeContribution({ lowerOptions: { formatterDefinitions } });
     formatterDefinitions.push(late);
     const second = createTableRuntimeContribution({
-      reference: 'second',
       lowerOptions: { formatterDefinitions: [formatterOf('late')] },
     });
 
     expect(() => definitionsOf(first, second)).not.toThrow();
   });
 
-  it('defensively copies visual scale definition arrays when creating a contribution', () => {
+  it('创建贡献时防御性地复制视觉比例定义数组', () => {
     const original = visualScaleOf('original');
     const late = visualScaleOf('late');
     const visualScaleDefinitions = [original];
-    const first = createTableRuntimeContribution({ reference: 'first', lowerOptions: { visualScaleDefinitions } });
+    const first = createTableRuntimeContribution({ lowerOptions: { visualScaleDefinitions } });
     visualScaleDefinitions.push(late);
     const second = createTableRuntimeContribution({
-      reference: 'second',
       lowerOptions: { visualScaleDefinitions: [visualScaleOf('late')] },
     });
 
     expect(() => definitionsOf(first, second)).not.toThrow();
   });
 
-  it('freezes copied runtime containers without cloning or freezing caller definitions', () => {
+  it('冻结复制的运行时容器，而不克隆或冻结调用者定义', () => {
     const structure = structureOf('original-structure');
     const formatter = formatterOf('original-formatter');
     const presentation = presentationOf('original-presentation');
@@ -345,7 +321,6 @@ describe('Table runtime contribution', () => {
     );
 
     const contribution = createTableRuntimeContribution({
-      reference: 'frozen',
       lowerOptions: {
         structureDefinitions,
         formatterDefinitions,
@@ -355,9 +330,9 @@ describe('Table runtime contribution', () => {
       },
       composites,
     });
-    const envelope = tableProviderOf(contribution)?.datasets['@@retikz/table/runtime/frozen'] as Readonly<{
-      lowerOptions: LowerTablesOptions;
-    }>;
+    const params = tableProviderOf(contribution)!.params;
+    expect(params).toBeDefined();
+    if (params === undefined) throw new Error('Table provider must contribute its parameters');
 
     structureDefinitions.push(structureOf('late-structure'));
     formatterDefinitions.push(formatterOf('late-formatter'));
@@ -366,23 +341,23 @@ describe('Table runtime contribution', () => {
     tableThemeDefinitions.push(themeNameOf('late-style'));
     composites.push(compositeOf('fixture', 'late'));
 
-    expect(Object.isFrozen(envelope)).toBe(true);
-    expect(Object.isFrozen(envelope.lowerOptions)).toBe(true);
-    expect(Object.isFrozen(envelope.lowerOptions.structureDefinitions)).toBe(true);
-    expect(Object.isFrozen(envelope.lowerOptions.formatterDefinitions)).toBe(true);
-    expect(Object.isFrozen(envelope.lowerOptions.presentationDefinitions)).toBe(true);
-    expect(Object.isFrozen(envelope.lowerOptions.visualScaleDefinitions)).toBe(true);
-    expect(Object.isFrozen(envelope.lowerOptions.tableThemeDefinitions)).toBe(true);
-    expect(envelope.lowerOptions.structureDefinitions).toEqual([structure]);
-    expect(envelope.lowerOptions.formatterDefinitions).toEqual([formatter]);
-    expect(envelope.lowerOptions.presentationDefinitions).toEqual([presentation]);
-    expect(envelope.lowerOptions.visualScaleDefinitions).toEqual([visualScale]);
-    expect(envelope.lowerOptions.tableThemeDefinitions).toEqual([themeName]);
-    expect(envelope.lowerOptions.structureDefinitions?.[0]).toBe(structure);
-    expect(envelope.lowerOptions.formatterDefinitions?.[0]).toBe(formatter);
-    expect(envelope.lowerOptions.presentationDefinitions?.[0]).toBe(presentation);
-    expect(envelope.lowerOptions.visualScaleDefinitions?.[0]).toBe(visualScale);
-    expect(envelope.lowerOptions.tableThemeDefinitions?.[0]).toBe(themeName);
+    expect(Object.isFrozen(params)).toBe(true);
+    expect(Object.isFrozen(params.lowerOptions)).toBe(true);
+    expect(Object.isFrozen(params.lowerOptions.structureDefinitions)).toBe(true);
+    expect(Object.isFrozen(params.lowerOptions.formatterDefinitions)).toBe(true);
+    expect(Object.isFrozen(params.lowerOptions.presentationDefinitions)).toBe(true);
+    expect(Object.isFrozen(params.lowerOptions.visualScaleDefinitions)).toBe(true);
+    expect(Object.isFrozen(params.lowerOptions.tableThemeDefinitions)).toBe(true);
+    expect(params.lowerOptions.structureDefinitions).toEqual([structure]);
+    expect(params.lowerOptions.formatterDefinitions).toEqual([formatter]);
+    expect(params.lowerOptions.presentationDefinitions).toEqual([presentation]);
+    expect(params.lowerOptions.visualScaleDefinitions).toEqual([visualScale]);
+    expect(params.lowerOptions.tableThemeDefinitions).toEqual([themeName]);
+    expect(params.lowerOptions.structureDefinitions?.[0]).toBe(structure);
+    expect(params.lowerOptions.formatterDefinitions?.[0]).toBe(formatter);
+    expect(params.lowerOptions.presentationDefinitions?.[0]).toBe(presentation);
+    expect(params.lowerOptions.visualScaleDefinitions?.[0]).toBe(visualScale);
+    expect(params.lowerOptions.tableThemeDefinitions?.[0]).toBe(themeName);
     expect(definitionsOf(contribution).composites?.slice(1)).toEqual([composite]);
     expect(
       [structure, formatter, presentation, visualScale, themeName, composite].map(value => Object.isFrozen(value)),

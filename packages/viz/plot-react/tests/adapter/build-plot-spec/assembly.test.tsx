@@ -109,7 +109,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('point extension fields remain in encodings', () => {
+  it('点扩展字段保留在编码中', () => {
     const spec = buildPlotIR(
       <PointMark
         encodings={{ intensity: 'score', threshold: 'limit', position: { x: { field: 'x' }, y: { field: 'y' } } }}
@@ -123,7 +123,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('layer prop forwards to marks and guides', () => {
+  it('图层支柱转发到标记和参考线', () => {
     const spec = buildPlotIR(
       <>
         <PointMark
@@ -176,7 +176,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('point node style props pass through to mark IR', () => {
+  it('点节点样式 props 通过来标记 IR', () => {
     const spec = buildPlotIR(
       <PointMark
         encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
@@ -210,7 +210,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('path core style props pass through to mark IR', () => {
+  it('路径核心样式 props 通过标记 IR', () => {
     const spec = buildPlotIR(
       <PathMark
         encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }}
@@ -240,7 +240,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('interval core node style props pass through to mark IR', () => {
+  it('区间核心节点样式 props 通过标记 IR', () => {
     const spec = buildPlotIR(
       <IntervalMark
         encodings={{ strokeWidth: 'weight', position: { x: { field: 'month' }, y: { field: 'revenue' } } }}
@@ -257,7 +257,7 @@ describe('buildPlotIR 装配', () => {
     });
   });
 
-  it('interval padAngle forwards to interval mark', () => {
+  it('区间 padAngle 转发到区间标记', () => {
     const spec = buildPlotIR(<IntervalMark angle="value" properties={{ padAngle: 4 }} />, '__plot', {
       coordinate: 'polar2D',
     });
@@ -265,7 +265,7 @@ describe('buildPlotIR 装配', () => {
     expect(spec.marks[0]).toMatchObject({ type: 'interval', properties: { padAngle: 4 } });
   });
 
-  it('interval pull forwards numeric and field values to interval mark', () => {
+  it('间隔将数字和字段值前移到间隔标记', () => {
     const numeric = buildPlotIR(<IntervalMark angle="value" properties={{ pull: 12 }} />, '__plot', {
       coordinate: 'polar2D',
     });
@@ -360,7 +360,7 @@ describe('buildPlotIR 装配', () => {
     ]);
   });
 
-  it('dsl_axis_with_grid：<PlotAxis dimension="y" grid/> → grid:true', () => {
+  it('PlotAxis 的 grid 简写生成 grid:true', () => {
     const spec = buildPlotIR(
       <>
         <PathMark encodings={{ position: { x: { field: 'm' }, y: { field: 'r' } } }} />

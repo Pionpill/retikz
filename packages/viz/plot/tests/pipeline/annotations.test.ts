@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { MarkChannels } from '../../src/contract';
 import type { CoordinateFrame, PositionScale } from '../../src/contract';
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { preparePlotData } from '../../src/pipeline/expand/preparation';
 import { lowerPlotWithLineage } from '../../src/pipeline/lineage';
 import { lowerMark, MARK_REGISTRY } from '../../src/providers';
@@ -39,7 +39,7 @@ const nodes = (child: IRChild): Array<IRNode> =>
 const paths = (child: IRChild): Array<IRPath> =>
   child.type === 'path' ? [child as IRPath] : child.type === 'scope' ? (child as IRScope).children.flatMap(paths) : [];
 
-describe('independent annotations', () => {
+describe('独立注释', () => {
   it.each([
     { name: 'label only', properties: {}, encodings: undefined, expected: undefined },
     { name: 'fixed body text', properties: { text: 'Body' }, encodings: undefined, expected: 'Body' },
@@ -50,7 +50,7 @@ describe('independent annotations', () => {
       encodings: { text: 'missing' },
       expected: undefined,
     },
-  ])('keeps point annotation body and attached label separate: $name', ({ properties, encodings, expected }) => {
+  ])('将点注释主体和附加标签分开：$name', ({ properties, encodings, expected }) => {
     const source = plot([
       {
         type: 'point',
@@ -63,13 +63,15 @@ describe('independent annotations', () => {
         contributeToDomain: false,
       },
     ]);
-    const output = nodes(lowerPlot(source, { data: [{ title: 'Bound body' }] }, { textMeasurer: measureLabel }));
+    const output = nodes(
+      lowerPlotWithDataArtifact(source, { data: [{ title: 'Bound body' }] }, { textMeasurer: measureLabel }).child,
+    );
     expect(output).toHaveLength(1);
     expect(output[0].text).toBe(expected);
     expect(output[0].label).toMatchObject({ text: 'A', position: 'top', distance: 8 });
   });
 
-  it('uses coordinate connections by default and preserves explicit straight connections in JSON', () => {
+  it('默认使用坐标连接，并保留 JSON 中的显式直线连接', () => {
     const path = {
       type: 'path',
       encodings: { from: { x: { value: 0 }, y: { value: 5 } }, to: { x: { value: 5 }, y: { value: 5 } } },
@@ -86,7 +88,7 @@ describe('independent annotations', () => {
     expect(MarkSchema.safeParse({ ...path, connection: 'invalid' }).success).toBe(false);
   });
 
-  it('passes through intermediate categories for paths and includes both interval boundaries', () => {
+  it('穿过路径的中间类别并包括两个区间边界', () => {
     const source = plot([
       {
         type: 'path',
@@ -117,7 +119,11 @@ describe('independent annotations', () => {
       paddingInner: 0,
       paddingOuter: 0,
     };
-    const output = lowerPlot(PlotSchema.parse(source), { data: [] }, { textMeasurer: measureLabel });
+    const output = lowerPlotWithDataArtifact(
+      PlotSchema.parse(source),
+      { data: [] },
+      { textMeasurer: measureLabel },
+    ).child;
     const steps = paths(output)[0].children;
     expect(steps).toHaveLength(3);
     expect(steps[1]).toMatchObject({ kind: 'line', to: nodes(output)[0].position });
@@ -132,11 +138,12 @@ describe('independent annotations', () => {
       properties: { ...source.marks[0].properties, connection: 'straight' },
     });
     expect(
-      paths(lowerPlot(PlotSchema.parse(source), { data: [] }, { textMeasurer: measureLabel }))[0].children,
+      paths(lowerPlotWithDataArtifact(PlotSchema.parse(source), { data: [] }, { textMeasurer: measureLabel }).child)[0]
+        .children,
     ).toHaveLength(2);
   });
 
-  it('uses declared coordinate roles and final reversed ranges for edges', () => {
+  it('使用声明的坐标角色和边缘的最终反转范围', () => {
     const scale: PositionScale = {
       coordinate: value => Number(value) * 10,
       domain: () => [0, 10],
@@ -159,7 +166,7 @@ describe('independent annotations', () => {
     expect(() => lowerGeometry(mark, unsupported, {})).toThrow(/projection/i);
   });
 
-  it('does not let a reference constant expand the data domain unless opted in', () => {
+  it('除非选择加入，否则不会让引用常量扩展数据域', () => {
     const dataMark = {
       type: 'point',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -183,7 +190,7 @@ describe('independent annotations', () => {
         { x: 10, y: 10 },
       ],
     };
-    const without = nodes(lowerPlot(source, data, { textMeasurer: measureLabel }));
+    const without = nodes(lowerPlotWithDataArtifact(source, data, { textMeasurer: measureLabel }).child);
     source.marks[1] = PointMarkSchema.parse({
       ...point,
       contributeToDomain: true,
@@ -191,10 +198,10 @@ describe('independent annotations', () => {
       encodings: { position: { x: { value: 5 }, y: { value: 100 } } },
       properties: { ...point.properties },
     });
-    const withContribution = nodes(lowerPlot(source, data, { textMeasurer: measureLabel }));
+    const withContribution = nodes(lowerPlotWithDataArtifact(source, data, { textMeasurer: measureLabel }).child);
     expect(without[1].position).not.toEqual(withContribution[1].position);
   });
-  it('retains declaration identity without claiming row values or transform lineage', () => {
+  it('保留声明标识，而不声明行值或转换血缘', () => {
     const source = plot([{ ...point, id: 'reference', properties: { ...point.properties } }]);
     const result = lowerPlotWithLineage(
       source,
@@ -210,7 +217,7 @@ describe('independent annotations', () => {
     expect(result.lineage.data.marks).toEqual([]);
   });
 
-  it('draws once per actual facet without fabricating missing partitions', () => {
+  it('每个实际分面仅绘制一次且不生成缺失分区', () => {
     const source = plot([{ ...point, id: 'reference', properties: { ...point.properties } }]);
     delete source.coordinate;
     source.composition = {
@@ -218,19 +225,19 @@ describe('independent annotations', () => {
       views: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'x', y: 'y' } }],
       arrangements: [{ kind: 'facet', id: 'groups', view: 'main', column: { field: 'group' } }],
     };
-    const output = lowerPlot(
+    const output = lowerPlotWithDataArtifact(
       source,
       { data: [{ group: 'a' }, { group: 'a' }, { group: 'b' }] },
       { textMeasurer: measureLabel },
-    );
+    ).child;
     expect(nodes(output).filter(node => node.text === 'target')).toHaveLength(2);
     expect(() => compileToScene({ type: 'scene', version: 1, children: [output] })).not.toThrow();
   });
-  it('emits JSON-safe Kernel IR that compiles without a separate renderer', () => {
-    const output = lowerPlot(plot(), { data: [] }, { textMeasurer: measureLabel });
+  it('发出 JSON 安全内核 IR，无需单独的渲染器即可编译', () => {
+    const output = lowerPlotWithDataArtifact(plot(), { data: [] }, { textMeasurer: measureLabel }).child;
     expect(() => compileToScene({ type: 'scene', version: 1, children: [output] })).not.toThrow();
   });
-  it('executes only the root data scope for annotation-only plots', async () => {
+  it('仅执行仅注释图的根数据范围', async () => {
     const executor = createDataTransformExecutor();
     const prepare = vi.spyOn(executor, 'prepare');
     const preparation = await preparePlotData(plot(), {
@@ -243,7 +250,7 @@ describe('independent annotations', () => {
     expect(result.root.rows).toEqual([]);
   });
 
-  it('draws a reference line across the final view edges and an independent region', () => {
+  it('绘制一条穿过最终视图边缘和独立区域的参考线', () => {
     const source = plot([
       {
         type: 'path',
@@ -260,7 +267,7 @@ describe('independent annotations', () => {
         contributeToDomain: false,
       },
     ]);
-    const output = lowerPlot(source, { data: [] }, { textMeasurer: measureLabel });
+    const output = lowerPlotWithDataArtifact(source, { data: [] }, { textMeasurer: measureLabel }).child;
     expect(paths(output)).toHaveLength(1);
     expect(paths(output)[0].children).toHaveLength(2);
     expect(paths(output)[0].style?.stroke).toBe('red');
@@ -268,7 +275,7 @@ describe('independent annotations', () => {
     expect((output as IRScope).children[1]).toMatchObject({ defaults: { node: { style: { fill: 'blue' } } } });
   });
 
-  it('preserves polar interpolation and projects intervals as sectors', () => {
+  it('保留极坐标插值并将间隔投影为扇区', () => {
     const source = plot([
       {
         type: 'path',
@@ -286,25 +293,27 @@ describe('independent annotations', () => {
       },
     ]);
     source.coordinate = { type: 'polar2D', angle: 'x', radius: 'y' };
-    const output = lowerPlot(source, { data: [] }, { textMeasurer: measureLabel });
+    const output = lowerPlotWithDataArtifact(source, { data: [] }, { textMeasurer: measureLabel }).child;
     expect(paths(output)[0].children.length).toBeGreaterThan(2);
     expect(nodes(output)[0].shape).toMatchObject({ type: 'sector' });
   });
 
-  it('uses explicit literal domain contributions without requiring rows', () => {
+  it('使用显式字面量域贡献而不需要行', () => {
     const source = plot([{ ...point, contributeToDomain: true, properties: { ...point.properties } }]);
     source.scales = [
       { type: 'linear', name: 'x', domainPadding: 0 },
       { type: 'linear', name: 'y', domainPadding: 0 },
     ];
-    expect(nodes(lowerPlot(source, { data: [] }, { textMeasurer: measureLabel }))).toHaveLength(1);
+    expect(nodes(lowerPlotWithDataArtifact(source, { data: [] }, { textMeasurer: measureLabel }).child)).toHaveLength(
+      1,
+    );
   });
-  it('round-trips direct constants without interpreting strings as fields', () => {
+  it('往返直接常量，而不将字符串解释为字段', () => {
     const parsed = MarkSchema.parse(point);
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it.each(['encoding', 'field', 'dataset', 'series', 'order'])('rejects unsupported property %s', key => {
+  it.each(['encoding', 'field', 'dataset', 'series', 'order'])('拒绝不支持的属性 %s', key => {
     expect(MarkSchema.safeParse({ ...point, [key]: 'value' }).success).toBe(false);
   });
 
@@ -316,25 +325,27 @@ describe('independent annotations', () => {
         { x: 3, y: 4 },
       ],
     },
-  ])('creates exactly one point with bound rows $rows', ({ rows }) => {
-    const result = lowerPlot(plot(), { data: rows }, { textMeasurer: measureLabel });
+  ])('使用绑定行 $rows 创建一个点', ({ rows }) => {
+    const result = lowerPlotWithDataArtifact(plot(), { data: rows }, { textMeasurer: measureLabel }).child;
     expect(nodes(result)).toHaveLength(1);
     expect(nodes(result)[0].text).toBe('target');
   });
 
-  it('requires a root data declaration even with only annotations', () => {
+  it('即使只有注释也需要根数据声明', () => {
     const { data: _data, ...source } = plot();
     expect(PlotSchema.safeParse(source).success).toBe(false);
   });
 
-  it('rejects missing root binding in synchronous and asynchronous entry points', async () => {
-    expect(() => lowerPlot(plot(), {}, { textMeasurer: measureLabel })).toThrow(/data|binding|reference/i);
+  it('拒绝同步和异步入口点中缺失的根绑定', async () => {
+    expect(() => lowerPlotWithDataArtifact(plot(), {}, { textMeasurer: measureLabel }).child).toThrow(
+      /data|binding|reference/i,
+    );
     await expect(preparePlotData(plot(), { dataBindings: {} })).rejects.toThrow(/binding/i);
   });
 
-  it('maps point constants through the same coordinate frame as data marks', () => {
-    const annotation = lowerPlot(plot(), { data: [] }, { textMeasurer: measureLabel });
-    const data = lowerPlot(
+  it('通过与数据标记相同的坐标系映射点常量', () => {
+    const annotation = lowerPlotWithDataArtifact(plot(), { data: [] }, { textMeasurer: measureLabel }).child;
+    const data = lowerPlotWithDataArtifact(
       plot([
         {
           type: 'point',
@@ -344,18 +355,19 @@ describe('independent annotations', () => {
       ]),
       { data: [{ x: 5, y: 5 }] },
       { textMeasurer: measureLabel },
-    );
+    ).child;
     expect(nodes(annotation)[0].position).toEqual(nodes(data)[0].position);
   });
 
-  it('rejects missing and unknown coordinate roles', () => {
+  it('拒绝丢失和未知的坐标角色', () => {
     for (const position of [{ x: 5 }, { x: 5, y: 5, z: 1 }]) {
-      expect(() =>
-        lowerPlot(
-          plot([{ ...point, position, properties: { ...point.properties } }]),
-          { data: [] },
-          { textMeasurer: measureLabel },
-        ),
+      expect(
+        () =>
+          lowerPlotWithDataArtifact(
+            plot([{ ...point, position, properties: { ...point.properties } }]),
+            { data: [] },
+            { textMeasurer: measureLabel },
+          ).child,
       ).toThrow(/role|position/i);
     }
   });

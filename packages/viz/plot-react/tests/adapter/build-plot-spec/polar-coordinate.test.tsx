@@ -8,8 +8,8 @@ import { PlotAxis } from '../../../src/components/guides';
 import { IntervalMark, PathMark } from '../../../src/components/marks';
 import { PlotScale } from '../../../src/components/scales';
 
-describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius', () => {
-  it('forwards coordinate and interpolation-sensitive mark overrides unchanged', () => {
+describe('buildPlotIR 极坐标/扇形/面积/闭合/角度·半径', () => {
+  it('转发坐标和插值敏感标记覆盖不变', () => {
     const spec = buildPlotIR(
       <>
         <PathMark
@@ -83,7 +83,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     expect(PlotSchema.parse(spec)).toEqual(PlotSchema.parse(expected));
   });
 
-  it('radial_bar_explicit_band_scale_forwards_gap_options', () => {
+  it('径向条显式带标度向前间隙选项', () => {
     const spec = buildPlotIR(
       <>
         <IntervalMark encodings={{ position: { x: { field: 'month' }, y: { field: 'amount' } } }} />

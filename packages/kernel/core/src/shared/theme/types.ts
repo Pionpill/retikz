@@ -25,7 +25,7 @@ export type CoreSemanticColors = Readonly<{
 }>;
 
 /** Core 为当前 Theme 派生的 shared semantic colors 与 active categorical palette */
-export type ResolvedThemeColors = Readonly<{
+export type CanonicalThemeColors = Readonly<{
   /** 跨领域共享的语义颜色角色 */
   semantic: CoreSemanticColors;
   /** 当前生效的非空 categorical palette */
@@ -33,11 +33,11 @@ export type ResolvedThemeColors = Readonly<{
 }>;
 
 /** 编译当前位置完整、只读的有效 Theme */
-export type ResolvedTheme = Readonly<{
+export type CanonicalTheme = Readonly<{
   /** 当前视觉人格 */
   name?: ThemeName;
   /** 当前明暗环境 */
   mode: ThemeMode;
   /** 由 selector 派生的 shared color view */
-  colors: ResolvedThemeColors;
+  colors: CanonicalThemeColors;
 }>;

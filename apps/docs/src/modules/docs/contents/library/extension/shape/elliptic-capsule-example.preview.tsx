@@ -1,4 +1,4 @@
-import { EllipticCapsuleShapeDefinition } from '@retikz/extension';
+import { ellipticCapsuleShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 /** 图形参数 */
@@ -11,7 +11,7 @@ export type EllipticCapsuleExamplePreviewValues = {
 export const renderEllipticCapsuleExamplePreview = (values: EllipticCapsuleExamplePreviewValues) => (
   <Layout
     viewBox={{ x: -120, y: -90, width: 240, height: 180 }}
-    extensions={{ shapes: [EllipticCapsuleShapeDefinition] }}
+    extensions={{ shapes: [ellipticCapsuleShapeDefinition] }}
   >
     <Node
       position={[0, 0]}

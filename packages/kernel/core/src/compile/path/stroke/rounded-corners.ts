@@ -5,7 +5,7 @@ import type { PathCommand } from '../../../contract';
 import { contourCommands, filletContour } from '../../../shared/geometry';
 
 /** 单条 emit 命令的来源 step kind（用于判定接缝两侧是否均为 line step） */
-export type CommandProvenance = string;
+type CommandProvenance = string;
 
 /**
  * ContourCommand → PathCommand（圆角后只可能是 move / line / arc / close 子集）
@@ -52,7 +52,7 @@ type LineRun = {
 };
 
 /** line-step 圆角改写输入 */
-export type ApplyRoundedCornersInput = {
+type InputRoundedCorners = {
   /** 需要应用圆角的路径命令序列 */
   commands: Array<PathCommand>;
   /** 与命令对应的生成来源，用于识别可圆角连接 */
@@ -66,7 +66,7 @@ export type ApplyRoundedCornersInput = {
 };
 
 /** 圆角改写后的 command 与其 source step 映射 */
-export type RoundedCommandsResult = {
+type RoundedCommandsResult = {
   /** 应用圆角后的路径命令序列 */
   commands: Array<PathCommand>;
   /** 与输出命令逐项对应的原始步骤索引 */
@@ -120,7 +120,7 @@ export const applyRoundedCorners = ({
   sourceStepIndexes,
   radius,
   round,
-}: ApplyRoundedCornersInput): RoundedCommandsResult => {
+}: InputRoundedCorners): RoundedCommandsResult => {
   // 收集合格 run：连续 line-step 的 line 命令。move / 非 line step 命令打断 run。
   const out: Array<PathCommand> = [];
   const outStepIndexes: Array<number> = [];
@@ -227,7 +227,7 @@ export const applyRoundedCorners = ({
 export type { FilletSolution };
 
 /** 倒角后命令采样结果：pos∈[0,1] 处的点 + 归一化切线（与 CurveSegmentSample 同形态） */
-export type CommandSample = {
+type CommandSample = {
   /** 点坐标 */
   point: [number, number];
   /** 归一化切线 */

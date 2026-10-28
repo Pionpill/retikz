@@ -10,8 +10,8 @@ const root = resolve(here, '../..');
 
 const source = (path: string): string => readFileSync(resolve(root, path), 'utf8');
 
-describe('resolve source structure', () => {
-  it('keeps Channel and Mark domain resolution out of providers', () => {
+describe('解析源结构', () => {
+  it('将频道和标记域解析排除在提供者之外', () => {
     for (const path of [
       'src/resolve/channel/index.ts',
       'src/resolve/channel/types.ts',
@@ -30,7 +30,7 @@ describe('resolve source structure', () => {
     }
   });
 
-  it('does not let pipeline directly look up Channel or Mark registries', () => {
+  it('不允许管线直接查找 Channel 或 Mark 注册表', () => {
     for (const path of [
       'src/pipeline/source-fields.ts',
       'src/pipeline/expand/lower.ts',

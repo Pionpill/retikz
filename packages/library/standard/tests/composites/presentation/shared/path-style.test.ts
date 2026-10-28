@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { StandardPathBorderStyleSchema, StandardPathStrokeStyleSchema } from '../../../../src/shared/schemas';
 
-describe('Standard presentation path style fragments', () => {
-  it('keeps the existing stroke style field set and constraints', () => {
+describe('Standard 呈现路径样式片段', () => {
+  it('保留现有描边样式字段集和约束', () => {
     const value = {
       color: 'red',
       stroke: '#111827',
@@ -24,7 +24,7 @@ describe('Standard presentation path style fragments', () => {
     expect(StandardPathStrokeStyleSchema.safeParse({ ...value, unknown: true }).success).toBe(false);
   });
 
-  it('adds only fill semantics to the border composite and remains strict', () => {
+  it('仅向边框组合添加填充语义并保持严格', () => {
     const value = {
       color: 'red',
       stroke: '#111827',
@@ -41,7 +41,7 @@ describe('Standard presentation path style fragments', () => {
     expect(StandardPathBorderStyleSchema.safeParse({ ...value, zIndex: 1.5 }).success).toBe(false);
   });
 
-  it('round-trips Standard path style through JSON', () => {
+  it('通过 JSON 往返 Standard 路径样式', () => {
     const value = { stroke: 'teal', strokeWidth: 1.5, opacity: 0.7, zIndex: 2 };
 
     expect(StandardPathStrokeStyleSchema.parse(JSON.parse(JSON.stringify(value)))).toEqual(value);

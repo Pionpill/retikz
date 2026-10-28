@@ -11,6 +11,8 @@ import type { ApiReferencePackageConfig } from './tex';
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
 const translations: Record<string, string> = {
+  '下标不是非负整数时抛出 RetikzStandardError':
+    'Throws RetikzStandardError when the index is not a non-negative integer',
   'Tree 使用 root 递归描述文字叶节点与对象配置':
     'Tree describes text leaves and configured nodes recursively through root',
   '静态树结构，节点与连接交由 Standard 编译': 'Static tree with nodes and connections compiled by Standard',
@@ -286,7 +288,7 @@ export const writeStandardCollectionApiReferences = async (
       {
         suffix: '-vanilla',
         title: { zh: '`@retikz/standard-vanilla`', en: '`@retikz/standard-vanilla`' },
-        symbols: [slug, `Input${name}`, `${name}InputEmbedAdapter`],
+        symbols: [slug, `Input${name}`, `${name[0].toLowerCase()}${name.slice(1)}InputEmbedAdapter`],
       },
       {
         suffix: '',
@@ -296,8 +298,8 @@ export const writeStandardCollectionApiReferences = async (
           ...(name === 'Array' ? ['IRArrayCell', 'IRArrayIndexOptions', 'IRArrayIndexStyle', 'getArrayCellId'] : []),
           ...(name === 'Matrix' ? ['IRMatrixAxisIndex', 'getMatrixCellId'] : []),
           `create${name}`,
-          `${name}Definition`,
-          `${name}Provider`,
+          `${name[0].toLowerCase()}${name.slice(1)}Definition`,
+          `${name[0].toLowerCase()}${name.slice(1)}Provider`,
         ],
       },
     ];

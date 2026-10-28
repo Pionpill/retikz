@@ -1,23 +1,23 @@
 /** Graph Source root embed 的稳定 kind */
-export const GraphEmbedKind = 'graph.graph';
+export const graphEmbedKind = 'graph.graph';
 
 /** Group Source embed 的稳定 kind */
-export const GroupEmbedKind = 'graph.group';
+export const groupEmbedKind = 'graph.group';
 
 /** Block Source embed 的稳定 kind */
-export const BlockEmbedKind = 'graph.block';
+export const blockEmbedKind = 'graph.block';
 
 /** Block Header Source embed 的稳定 kind */
-export const BlockHeaderEmbedKind = 'graph.blockHeader';
+export const blockHeaderEmbedKind = 'graph.blockHeader';
 
 /** Block Section Source embed 的稳定 kind */
-export const BlockSectionEmbedKind = 'graph.blockSection';
+export const blockSectionEmbedKind = 'graph.blockSection';
 
 /** Block Row Source embed 的稳定 kind */
-export const BlockRowEmbedKind = 'graph.blockRow';
+export const blockRowEmbedKind = 'graph.blockRow';
 
 /** Entity Source embed 的稳定 kind */
-export const EntityEmbedKind = 'graph.entity';
+export const entityEmbedKind = 'graph.entity';
 
 /** Relation Source embed 的稳定 kind */
-export const RelationEmbedKind = 'graph.relation';
+export const relationEmbedKind = 'graph.relation';

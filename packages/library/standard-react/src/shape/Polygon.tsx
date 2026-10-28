@@ -1,6 +1,6 @@
 import type { HydrationEventProps } from '@retikz/react';
 import type { InputPolygon } from '@retikz/standard-vanilla/shape';
-import { PolygonInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { polygonInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
@@ -19,5 +19,5 @@ const PolygonComponent: FC<PolygonProps> = () => null;
 export const Polygon = PolygonComponent as StandardEmbeddableComponent<PolygonProps>;
 Polygon.displayName = 'Polygon';
 Polygon.isTier2Embeddable = true;
-Polygon.inputEmbedAdapter = PolygonInputEmbedAdapter;
+Polygon.inputEmbedAdapter = polygonInputEmbedAdapter;
 Polygon.createInputEmbedProps = shapeEmbedProps;

@@ -1,14 +1,14 @@
 import type { IRChild } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { expect, it } from 'vitest';
 
 import {
-  ArrayDefinition,
-  MapDefinition,
-  MatrixDefinition,
-  ChainDefinition,
-  TreeDefinition,
+  arrayDefinition,
+  mapDefinition,
+  matrixDefinition,
+  chainDefinition,
+  treeDefinition,
 } from '../../../src/collection';
 import { createDataCell } from '../../../src/collection/_cell/data';
 import { resolveCell } from '../../../src/collection/_cell/resolve';
@@ -86,8 +86,8 @@ it('嵌套集合的外层 Cell 保留身份，默认尺寸与子集合一致，�
         ],
       },
       {
-        composites: [ArrayDefinition, MapDefinition, MatrixDefinition, ChainDefinition, TreeDefinition],
-        clips: [PathClipDefinition],
+        composites: [arrayDefinition, mapDefinition, matrixDefinition, chainDefinition, treeDefinition],
+        clips: [pathClipDefinition],
         padding: 0,
       },
     );
@@ -98,8 +98,8 @@ it('嵌套集合的外层 Cell 保留身份，默认尺寸与子集合一致，�
     const standalone = compileToScene(
       { type: 'scene', version: 1, children: [child] },
       {
-        composites: [ArrayDefinition, MapDefinition, MatrixDefinition, ChainDefinition, TreeDefinition],
-        clips: [PathClipDefinition],
+        composites: [arrayDefinition, mapDefinition, matrixDefinition, chainDefinition, treeDefinition],
+        clips: [pathClipDefinition],
         padding: 0,
       },
     );

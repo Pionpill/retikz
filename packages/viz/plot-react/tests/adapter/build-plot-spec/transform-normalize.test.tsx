@@ -6,7 +6,7 @@ import { IntervalMark, PointMark } from '../../../src/components/marks';
 import { PlotTransform } from '../../../src/components/transform';
 
 describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经同一 <PlotTransform> 透传）', () => {
-  it('normalize_then_stack_percentage_via_transform', () => {
+  it('通过变换标准化然后堆叠百分比', () => {
     // 百分比堆叠：显式 [normalize, stack] 两步链 + <IntervalMark stack>（柱读累积界 y0/y1）；
     // 显式 stack 与 mark shortcut stack 同签名 → shortcut stack 被去重抑制（最终只一条 stack，不二次堆叠）
     const spec = buildPlotIR(
@@ -47,7 +47,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     });
   });
 
-  it('shortcut_stack_with_different_signature_is_kept', () => {
+  it('保留具有不同签名的快捷方式堆叠', () => {
     // P1 回归：显式 stack 只去重「同签名」的 shortcut stack；签名不同的 <IntervalMark series stack> 的 shortcut stack 必须保留，
     // 否则该 mark 仍是 stacked interval 却无对应 y0/y1，lower 阶段读空累积界出错
     const spec = buildPlotIR(
@@ -76,7 +76,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     expect(spec.marks.every(m => m.type === 'interval' && m.properties?.bounds?.y?.kind === 'extent')).toBe(true);
   });
 
-  it('derive_interval_declared_to_ir', () => {
+  it('导出声明​​给 ir 的间隔', () => {
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'derive-interval', params: { startFrom: 'start', endFrom: 'end' } }} />
@@ -90,7 +90,7 @@ describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经
     ]);
   });
 
-  it('jitter_declared_to_ir', () => {
+  it('向 ir 声明的抖动', () => {
     const spec = buildPlotIR(
       <>
         <PlotTransform operation={{ kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 42 } }} />

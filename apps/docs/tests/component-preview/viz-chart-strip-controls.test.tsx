@@ -87,7 +87,7 @@ const textVisualCenterOf = (markup: string, text: string): [number, number] => {
   return [centerX, Number(y)];
 };
 
-describe('Strip Chart controls', () => {
+describe('Strip Chart 控件', () => {
   it('扩展散布示例默认使用极坐标并能完整渲染', () => {
     const chart = stripDistributionSource.canonicalRender('zh');
 

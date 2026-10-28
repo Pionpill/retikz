@@ -106,7 +106,7 @@ const writeShowcaseTaxonomy = fixture =>
     `export const ShowcaseFamily = { Point: 'point' } as const;\nexport const ShowcaseUsage = { Distribution: 'distribution' } as const;\n`,
   );
 
-test('accepts a structurally aligned bilingual page', async () => {
+test('接受结构对齐的双语页面', async () => {
   const fixture = await createFixture();
 
   try {
@@ -131,7 +131,7 @@ test('accepts a structurally aligned bilingual page', async () => {
   }
 });
 
-test('accepts a single localized ComponentPreview figure', async () => {
+test('接受单个本地化的 ComponentPreview 插图', async () => {
   const fixture = await createFixture();
 
   try {
@@ -155,7 +155,7 @@ test('accepts a single localized ComponentPreview figure', async () => {
   }
 });
 
-test('reports a missing English peer outside blog', async () => {
+test('报告博客以外页面缺少对应英文页面的问题', async () => {
   const fixture = await createFixture();
 
   try {
@@ -176,7 +176,7 @@ test('reports a missing English peer outside blog', async () => {
   }
 });
 
-test('reports broken internal anchors', async () => {
+test('报告内部锚点损坏', async () => {
   const fixture = await createFixture();
 
   try {
@@ -201,7 +201,7 @@ test('reports broken internal anchors', async () => {
   }
 });
 
-test('accepts an explicit HTML id as an anchor target', async () => {
+test('接受显式 HTML id 作为锚点目标', async () => {
   const fixture = await createFixture();
 
   try {
@@ -229,7 +229,7 @@ test('accepts an explicit HTML id as an anchor target', async () => {
   }
 });
 
-test('accepts a registered data-driven route without an MDX file', async () => {
+test('接受已注册且没有 MDX 文件的数据驱动路由', async () => {
   const fixture = await createFixture();
 
   try {
@@ -261,7 +261,7 @@ description: Example page
   }
 });
 
-test('reports SourceLinks ranges beyond the target file', async () => {
+test('报告 SourceLinks 范围超出目标文件', async () => {
   const fixture = await createFixture();
 
   try {
@@ -286,7 +286,7 @@ test('reports SourceLinks ranges beyond the target file', async () => {
   }
 });
 
-test('reports a missing ComponentPreview demo file', async () => {
+test('报告缺少 ComponentPreview 演示文件', async () => {
   const fixture = await createFixture();
 
   try {
@@ -307,7 +307,7 @@ test('reports a missing ComponentPreview demo file', async () => {
   }
 });
 
-test('reports a Showcase metadata preview that does not resolve in the page directory', async () => {
+test('报告在页面目录中无法解析的 Showcase 元数据预览', async () => {
   const fixture = await createFixture();
 
   try {
@@ -348,7 +348,7 @@ test('reports a Showcase metadata preview that does not resolve in the page dire
   }
 });
 
-test('reports missing Showcase Gallery attached files and localized controls with field paths', async () => {
+test('报告 Showcase Gallery 缺少附属文件或本地化控件的问题并给出字段路径', async () => {
   const fixture = await createFixture();
 
   try {
@@ -379,7 +379,7 @@ test('reports missing Showcase Gallery attached files and localized controls wit
   }
 });
 
-test('reports invalid Showcase frontmatter taxonomy values with field paths', async () => {
+test('报告 Showcase frontmatter 分类值无效的问题并给出字段路径', async () => {
   const fixture = await createFixture();
 
   try {
@@ -419,7 +419,7 @@ test('reports invalid Showcase frontmatter taxonomy values with field paths', as
   }
 });
 
-test('reports Showcase layout without showcase metadata in docs data', async () => {
+test('报告使用 Showcase 布局但文档数据缺少 showcase 元数据的问题', async () => {
   const fixture = await createFixture();
 
   try {
@@ -444,7 +444,7 @@ test('reports Showcase layout without showcase metadata in docs data', async () 
   }
 });
 
-test('reports Showcase metadata without a static preview in docs data', async () => {
+test('报告存在 Showcase 元数据但文档数据缺少静态预览的问题', async () => {
   const fixture = await createFixture();
 
   try {
@@ -469,7 +469,7 @@ test('reports Showcase metadata without a static preview in docs data', async ()
   }
 });
 
-test('reports missing English Showcase controls instead of falling back to the Chinese base file', async () => {
+test('报告缺少英文 Showcase 控件，而不是回退到中文基本文件', async () => {
   const fixture = await createFixture();
 
   try {
@@ -506,7 +506,7 @@ test('reports missing English Showcase controls instead of falling back to the C
   }
 });
 
-test('reports Showcase example syntax that cannot be checked statically', async () => {
+test('报告无法静态检查的 Showcase 示例语法', async () => {
   const fixture = await createFixture();
 
   try {

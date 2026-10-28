@@ -3,8 +3,8 @@ import { z } from 'zod';
 
 import { walk, walkType } from '@/modules/docs/components';
 
-describe('walker — primitives & literal', () => {
-  it('preserves prefault field types and constraints', () => {
+describe('walker — 基元和字面量', () => {
+  it('保留 prefault 字段类型及约束', () => {
     const result = walk(z.strictObject({ value: z.number().min(2).prefault(3).optional() }));
 
     expect(result).toMatchObject({
@@ -20,40 +20,40 @@ describe('walker — primitives & literal', () => {
     });
   });
 
-  it('walks z.string() to primitive', () => {
+  it('将 z.string() 遍历为基础类型', () => {
     expect(walkType(z.string())).toEqual({ kind: 'primitive', name: 'string' });
   });
 
-  it('walks z.number() to primitive', () => {
+  it('将 z.number() 遍历为基础类型', () => {
     expect(walkType(z.number())).toEqual({ kind: 'primitive', name: 'number' });
   });
 
-  it('walks z.boolean() to primitive', () => {
+  it('将 z.boolean() 遍历为基础类型', () => {
     expect(walkType(z.boolean())).toEqual({ kind: 'primitive', name: 'boolean' });
   });
 
-  it('walks z.null() to a null literal', () => {
+  it('将 z.null() 遍历为 null 字面量', () => {
     expect(walkType(z.null())).toEqual({ kind: 'literal', value: null });
   });
 
-  it('walks z.literal("coordinate") to literal', () => {
+  it('将 z.literal("coordinate") 遍历为字面量', () => {
     expect(walkType(z.literal('coordinate'))).toEqual({ kind: 'literal', value: 'coordinate' });
   });
 
-  it('walks z.literal(1) to literal', () => {
+  it('将 z.literal(1) 遍历为字面量', () => {
     expect(walkType(z.literal(1))).toEqual({ kind: 'literal', value: 1 });
   });
 });
 
-describe('walker — enum / nativeEnum / array', () => {
-  it('walks z.enum to enum repr', () => {
+describe('walker — 枚举/nativeEnum/数组', () => {
+  it('将 z.enum 遍历为枚举表示', () => {
     expect(walkType(z.enum(['a', 'b', 'c']))).toEqual({
       kind: 'enum',
       values: ['a', 'b', 'c'],
     });
   });
 
-  it('walks z.nativeEnum to enum repr', () => {
+  it('将 z.nativeEnum 遍历为枚举表示', () => {
     const E = { Red: 'red', Blue: 'blue' } as const;
     const r = walkType(z.nativeEnum(E));
 
@@ -62,7 +62,7 @@ describe('walker — enum / nativeEnum / array', () => {
     if (r.kind === 'enum') expect(new Set(r.values)).toEqual(new Set(['red', 'blue']));
   });
 
-  it('walks z.array of primitive', () => {
+  it('遍历基础类型元素的 z.array', () => {
     expect(walkType(z.array(z.number()))).toEqual({
       kind: 'array',
       element: { kind: 'primitive', name: 'number' },
@@ -70,7 +70,7 @@ describe('walker — enum / nativeEnum / array', () => {
     });
   });
 
-  it('walks z.array with .min(2) constraint', () => {
+  it('遍历带有 .min(2) 约束的 z.array', () => {
     const r = walkType(z.array(z.string()).min(2));
 
     expect(r).toEqual({
@@ -81,8 +81,8 @@ describe('walker — enum / nativeEnum / array', () => {
   });
 });
 
-describe('walker — tuple / lazy / union / discriminatedUnion', () => {
-  it('walks z.tuple to tuple repr', () => {
+describe('walker — 元组/惰性/联合/discriminatedUnion', () => {
+  it('将 z.tuple 遍历为元组表示', () => {
     expect(walkType(z.tuple([z.number(), z.number()]))).toEqual({
       kind: 'tuple',
       elements: [
@@ -92,13 +92,13 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     });
   });
 
-  it('walks z.lazy by unwrapping the inner schema', () => {
+  it('通过展开内部 schema 来遍历 z.lazy', () => {
     const Lazy = z.lazy(() => z.string());
 
     expect(walkType(Lazy)).toEqual({ kind: 'primitive', name: 'string' });
   });
 
-  it('walks z.union members recursively', () => {
+  it('递归遍历 z.union 成员', () => {
     const r = walkType(z.union([z.string(), z.number()]));
 
     expect(r).toEqual({
@@ -110,7 +110,7 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     });
   });
 
-  it('preserves registered names within top-level unions', async () => {
+  it('保留顶级联合内的注册名称', async () => {
     const { TransformSchema } = await import('@retikz/core');
     const r = walk(TransformSchema);
 
@@ -124,7 +124,7 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     });
   });
 
-  it('walks intersections so custom clip branches retain both contracts', async () => {
+  it('遍历交叉类型以保留自定义裁剪分支的两份契约', async () => {
     const { ClipSchema } = await import('@retikz/core');
     const r = walk(ClipSchema);
 
@@ -141,7 +141,7 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     });
   });
 
-  it('walks z.discriminatedUnion same as union', () => {
+  it('以与 union 相同的方式遍历 z.discriminatedUnion', () => {
     const A = z.object({ type: z.literal('a'), x: z.number() });
     const B = z.object({ type: z.literal('b'), y: z.string() });
     const r = walkType(z.discriminatedUnion('type', [A, B]));
@@ -151,7 +151,7 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     if (r.kind === 'union') expect(r.members).toHaveLength(2);
   });
 
-  it('falls back to a transform pipe input when the output is opaque', () => {
+  it('当输出不透明时，回退到变换管线输入', () => {
     const schema = z
       .union([z.number(), z.strictObject({ row: z.number(), column: z.number() })])
       .transform(value => (typeof value === 'number' ? { row: value, column: value } : value));
@@ -166,7 +166,7 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     });
   });
 
-  it('resolves union members to ref when registered', async () => {
+  it('在注册时解析联合成员以进行引用', async () => {
     // 用 IR 真实 schema 验证：CoordinateSchema.position 是 union of Position / PolarPosition / AtPosition / OffsetPosition / BetweenPosition，五者均注册
     const { CoordinateSchema } = await import('@retikz/core');
     const positionField = CoordinateSchema.shape.position;
@@ -188,8 +188,8 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
   });
 });
 
-describe('walker — top-level entry + object + optional + constraints', () => {
-  it('walks top-level z.object to SchemaRepr kind=object', async () => {
+describe('walker — 顶级条目+对象+可选+约束', () => {
+  it('将顶级 z.object 遍历到 SchemaRepr kind=object', async () => {
     const { CoordinateSchema } = await import('@retikz/core');
     const r = walk(CoordinateSchema);
 
@@ -204,7 +204,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     }
   });
 
-  it('top-level non-object emits SchemaRepr kind=alias', async () => {
+  it('顶级非对象发出 SchemaRepr kind=alias', async () => {
     const { PositionSchema } = await import('@retikz/core');
     const r = walk(PositionSchema);
 
@@ -216,7 +216,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     }
   });
 
-  it('marks optional fields', () => {
+  it('标记可选字段', () => {
     const S = z.object({
       a: z.string(),
       b: z.string().optional(),
@@ -228,7 +228,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     expect(r.fields[1].optional).toBe(true);
   });
 
-  it('extracts numeric constraints', () => {
+  it('提取数字约束', () => {
     const S = z.object({
       ratio: z.number().min(0).max(1),
       size: z.number().positive(),
@@ -246,7 +246,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     expect(cmap.tag).toContain('min 1');
   });
 
-  it('captures .describe() per field', async () => {
+  it('捕获每个字段的 .describe()', async () => {
     const { CoordinateSchema } = await import('@retikz/core');
     const r = walk(CoordinateSchema);
     if (r.kind !== 'object') throw new Error('expected object');
@@ -256,7 +256,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     expect(idField.description).toMatch(/Required unique id/);
   });
 
-  it('inline-expands anonymous nested object', () => {
+  it('内联扩展匿名嵌套对象', () => {
     const S = z.object({
       meta: z.object({
         x: z.number(),
@@ -275,7 +275,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     }
   });
 
-  it('inline-expands anonymous object inside a union', () => {
+  it('内联扩展联合内的匿名对象', () => {
     // 对应 LineSchema 那种"union 里夹一个匿名 object"
     const S = z.union([z.string(), z.object({ text: z.string(), color: z.string().optional() })]);
     const r = walkType(S);
@@ -289,7 +289,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     }
   });
 
-  it('marks a loose object as allowing additional properties', () => {
+  it('将松散对象标记为允许附加属性', () => {
     const r = walkType(z.looseObject({ kind: z.string() }));
 
     expect(r).toMatchObject({
@@ -298,7 +298,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     });
   });
 
-  it('walks a top-level owner schema while preserving its description', async () => {
+  it('遍历顶级所属模块 schema，同时保留其描述', async () => {
     const { ThemeSchema } = await import('@retikz/core');
     const r = walk(ThemeSchema);
 
@@ -310,7 +310,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     expect(r.fields.map(field => field.name)).toEqual(['style', 'mode']);
   });
 
-  it('prefers a field wrapper description over the referenced schema description', async () => {
+  it('字段包装器的描述优先于引用 schema 的描述', async () => {
     const { SceneSchema, ScopeSchema } = await import('@retikz/core');
     const scene = walk(SceneSchema);
     const scope = walk(ScopeSchema);
@@ -334,7 +334,7 @@ it('保留具名 union 子类型与共享节点几何名称', async () => {
   expect(layout).toContain('BoxSpacingSchema');
 });
 
-it('shows required and readonly fields plus forbidden union inputs accurately', () => {
+it('准确显示必填字段和只读字段以及禁止的联合输入', () => {
   const schema = z
     .strictObject({
       data: z.array(z.string()).readonly().optional(),

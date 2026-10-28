@@ -145,7 +145,7 @@ describe("compile path: 'cycle' 闭合", () => {
     ]);
   });
 
-  it('closing edge label interruption expands close and retains endpoint arrow ownership once', () => {
+  it('关闭边缘标签中断扩展关闭并保留端点箭头所有权一次', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

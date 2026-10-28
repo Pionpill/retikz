@@ -23,10 +23,10 @@ const entity = (input: Record<string, unknown> = {}) =>
     ...input,
   });
 
-describe('Entity lowering', () => {
-  it.each(['IR', 'Source IR\nCanonical IR'])('keeps resource caps aligned with activity bounds for %s', text => {
+describe('Entity 下降', () => {
+  it.each(['IR', 'Source IR\nCanonical IR'])('%s 的资源端帽与活动边界保持对齐', text => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
     const boundsOf = (role: string) =>
       compileToScene({ type: 'scene', version: 1, children: [entity({ role, text })] }, { ...definitions, padding: 0 })
@@ -54,7 +54,7 @@ describe('Entity lowering', () => {
     ).toBe(true);
   });
 
-  it('resolves and lowers one independent Entity to one Core Node', () => {
+  it('将 1 个独立的 Entity 解析并下沉为 1 个 Core Node', () => {
     const options = Graph.resolveGraphDefinitionOptions();
     const canonical = Graph.resolveEntity(
       entity({
@@ -84,9 +84,9 @@ describe('Entity lowering', () => {
     });
   });
 
-  it('compiles a direct Entity Scene child and preserves omitted id', () => {
+  it('编译直接 Entity Scene 子级并保留省略的 id', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+      contributions: [{ roots: [Graph.entityProviderKey], providers: Graph.createGraphProviders() }],
     });
     const output = compileToScene(
       { type: 'scene', version: 1, children: [entity({ role: 'activity', text: 'work' })] },
@@ -104,25 +104,22 @@ describe('Entity lowering', () => {
     { status: 'success', color: theme.colors.semantic.success, dashPattern: undefined },
     { status: 'warning', color: theme.colors.semantic.warning, dashPattern: undefined },
     { status: 'disabled', color: theme.colors.semantic.guide, dashPattern: [6, 4] },
-  ] as const)(
-    'resolves the Neutral $status status to the Core semantic Entity appearance family',
-    ({ status, color, dashPattern }) => {
-      const options = Graph.resolveGraphDefinitionOptions();
-      const canonical = Graph.resolveEntity(entity({ status }), options);
+  ] as const)('将中性 $status 状态解析为 Core 语义 Entity 外观系列', ({ status, color, dashPattern }) => {
+    const options = Graph.resolveGraphDefinitionOptions();
+    const canonical = Graph.resolveEntity(entity({ status }), options);
 
-      const appearance = Graph.resolveEntityAppearance(canonical, { ...options, theme });
+    const appearance = Graph.resolveEntityAppearance(canonical, { ...options, theme });
 
-      expect(appearance).toMatchObject({ style: { color } });
-      expect(appearance.style?.dashPattern).toEqual(dashPattern);
+    expect(appearance).toMatchObject({ style: { color } });
+    expect(appearance.style?.dashPattern).toEqual(dashPattern);
 
-      const lowered = Graph.lowerEntity(canonical, appearance);
+    const lowered = Graph.lowerEntity(canonical, appearance);
 
-      expect(lowered.style?.dashPattern).toEqual(dashPattern);
-      expect(lowered).not.toHaveProperty('status');
-    },
-  );
+    expect(lowered.style?.dashPattern).toEqual(dashPattern);
+    expect(lowered).not.toHaveProperty('status');
+  });
 
-  it('lets Graph author defaults outrank generated semantic status colors', () => {
+  it('让 Graph 作者默认优先生成的语义状态颜色', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -156,7 +153,7 @@ describe('Entity lowering', () => {
     expect(scene).not.toContain(theme.colors.semantic.error);
   });
 
-  it('lets authored Entity appearance override the status Theme while retaining the semantic status', () => {
+  it('让编写的 Entity 外观覆盖状态主题，同时保留语义状态', () => {
     const options = Graph.resolveGraphDefinitionOptions();
     const canonical = Graph.resolveEntity(
       entity({
@@ -174,7 +171,7 @@ describe('Entity lowering', () => {
     );
   });
 
-  it('fails only at lowering when position is absent without inventing an undefined identity', () => {
+  it('仅在位置不存在时下沉失败，而不会发明 undefined 的身份', () => {
     const options = Graph.resolveGraphDefinitionOptions();
     const canonical = Graph.resolveEntity(entity({ role: 'activity', position: undefined }), options);
 
@@ -188,7 +185,7 @@ describe('Entity lowering', () => {
     );
   });
 
-  it('fails through the Core Shape registry when a custom role references an unregistered shape', () => {
+  it('当自定义角色引用未注册的形状时，Core 形状注册表失败', () => {
     const customRole = Graph.defineEntityRole({
       role: 'custom',
       description: 'Custom shape owner',
@@ -198,7 +195,7 @@ describe('Entity lowering', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [
         {
-          roots: [Graph.EntityProviderKey],
+          roots: [Graph.entityProviderKey],
           providers: Graph.createGraphProviders({ entityRoles: [customRole] }),
         },
       ],

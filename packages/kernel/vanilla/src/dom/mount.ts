@@ -8,11 +8,11 @@ import type {
   MountOptions,
   RawStaticMountCanvasOptions,
   RawStaticMountOptions,
-  RenderInput,
+  InputRender,
   RetainedCanvasView,
   RetainedMountCanvasOptions,
   RetainedMountOptions,
-  RetainedRenderInput,
+  InputRetainedRender,
   RetainedSvgView,
   StaticCanvasView,
   StaticMountCanvasOptions,
@@ -52,23 +52,23 @@ type MountFn = {
   (container: Element, input: Scene, options: StaticMountUnifiedOptions & { renderer: 'canvas' }): StaticCanvasView;
   (
     container: Element,
-    input: RetainedRenderInput,
+    input: InputRetainedRender,
     options: RawStaticMountUnifiedOptions & { renderer: 'canvas' },
   ): StaticRawCanvasView;
   (
     container: Element,
-    input: RetainedRenderInput,
+    input: InputRetainedRender,
     options: RetainedMountUnifiedOptions & { renderer: 'canvas' },
   ): RetainedCanvasView;
   (container: Element, input: Scene, options?: StaticMountUnifiedOptions & { renderer?: 'svg' }): StaticSvgView;
   (
     container: Element,
-    input: RetainedRenderInput,
+    input: InputRetainedRender,
     options: RawStaticMountUnifiedOptions & { renderer?: 'svg' },
   ): StaticRawSvgView;
   (
     container: Element,
-    input: RetainedRenderInput,
+    input: InputRetainedRender,
     options?: RetainedMountUnifiedOptions & { renderer?: 'svg' },
   ): RetainedSvgView;
 };
@@ -76,7 +76,7 @@ type MountFn = {
 /** 按 renderer 把输入挂载为 SVG 或 Canvas view；缺省使用 SVG */
 export const mount: MountFn = ((
   container: Element,
-  input: RenderInput,
+  input: InputRender,
   options: StaticMountUnifiedOptions | MountUnifiedOptions = {},
 ): VanillaView | CanvasView => {
   if ('primitives' in input) {
@@ -88,12 +88,12 @@ export const mount: MountFn = ((
   const rawOptions = options as MountUnifiedOptions;
   const mountRawCanvas = mountCanvas as (
     target: Element,
-    source: RetainedRenderInput,
+    source: InputRetainedRender,
     mountOptions: MountCanvasOptions,
   ) => CanvasView;
   const mountRawSvg = mountSvg as (
     target: Element,
-    source: RetainedRenderInput,
+    source: InputRetainedRender,
     mountOptions: MountOptions,
   ) => VanillaView;
   if (rawOptions.renderer === 'canvas') return mountRawCanvas(container, input, rawOptions);

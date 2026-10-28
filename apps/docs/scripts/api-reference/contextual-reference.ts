@@ -27,8 +27,8 @@ export const contextualReferencePages = [
 const schemaTitle = (name: string, hints: ReadonlyArray<string>): string => {
   if (name.startsWith('BuiltinRegression.')) {
     const branch = name.split('.')[1];
-    const label = `BuiltinRegressionMethodSchemas.${branch[0].toUpperCase()}${branch.slice(1)}`;
-    const declaration = referenceDeclaration('BuiltinRegressionMethodSchemas', hints);
+    const label = `BUILTIN_REGRESSION_METHOD_SCHEMAS.${branch[0].toUpperCase()}${branch.slice(1)}`;
+    const declaration = referenceDeclaration('BUILTIN_REGRESSION_METHOD_SCHEMAS', hints);
     return `<ApiSourceLink label={${JSON.stringify(label)}} path={${JSON.stringify(declaration.path)}} startLine={${declaration.startLine}}>${label}</ApiSourceLink>`;
   }
   const [base, branch] = name.split('.');

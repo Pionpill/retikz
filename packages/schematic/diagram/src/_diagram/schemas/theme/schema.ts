@@ -4,7 +4,7 @@ import { DiagramFrameBaseSchema } from '../frame';
 import { DiagramPresentationTextSchema } from '../presentation';
 
 /** Diagram defaults 中可主题化的 Frame 字段 */
-export const DiagramDefaultsFrameSchema = DiagramFrameBaseSchema.pick({
+const DiagramDefaultsFrameSchema = DiagramFrameBaseSchema.pick({
   padding: true,
   titleDescriptionGap: true,
   headingMainGap: true,
@@ -20,7 +20,7 @@ export const DiagramDefaultsPresentationTextSchema = DiagramPresentationTextSche
 );
 
 /** Diagram defaults 中的 Presentation 区域字段 */
-export const DiagramDefaultsPresentationSchema = strictObject({
+const DiagramDefaultsPresentationSchema = strictObject({
   title: DiagramDefaultsPresentationTextSchema.optional().describe('Optional title text defaults.'),
   description: DiagramDefaultsPresentationTextSchema.optional().describe('Optional description text defaults.'),
 }).describe('Sparse Diagram presentation defaults without region content.');

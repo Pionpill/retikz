@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 
 import type { IRDiagramDefaults } from '../../schemas';
 
@@ -7,5 +7,5 @@ export type DiagramThemeDefinition = Readonly<{
   /** 在 Diagram 主题样式注册表中唯一的名称 */
   name: string;
   /** 根据有效 Core 主题生成 Diagram 稀疏默认片段 */
-  resolve: (theme: ResolvedTheme) => IRDiagramDefaults;
+  resolve: (theme: CanonicalTheme) => IRDiagramDefaults;
 }>;

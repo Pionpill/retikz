@@ -4,7 +4,7 @@ import type { ZodType } from 'zod';
 import type {
   RelationKindDefinition,
   RelationPredicateDefinition,
-  RelationPredicateDefinitionInput,
+  InputRelationPredicateDefinition,
   RelationRoleDefinition,
 } from './types';
 
@@ -29,5 +29,5 @@ export const defineRelationKind = (definition: RelationKindDefinition): Relation
  * @returns 原样返回 definition，不复制或修改输入对象
  */
 export const defineRelationPredicate = <TSchema extends ZodType<JsonObject>>(
-  definition: RelationPredicateDefinitionInput<TSchema>,
+  definition: InputRelationPredicateDefinition<TSchema>,
 ): RelationPredicateDefinition => definition as unknown as RelationPredicateDefinition;

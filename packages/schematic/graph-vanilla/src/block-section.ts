@@ -1,7 +1,7 @@
-import { BlockSectionProviderKey } from '@retikz/graph';
+import { blockSectionProviderKey } from '@retikz/graph';
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { BlockSectionEmbedKind } from './constants';
+import { blockSectionEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
 import type { InputBlockSection, WithoutInputType } from './normalize';
 import { normalizeBlockSection } from './normalize';
@@ -12,8 +12,8 @@ import { normalizeGraphAuthoringChildren } from './semantic-children';
 export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 
 /** Block Section Source 的 InputEmbed adapter */
-export const BlockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSectionInputEmbedProps> = {
-  kind: BlockSectionEmbedKind,
+export const blockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSectionInputEmbedProps> = {
+  kind: blockSectionEmbedKind,
   lower: (props, context) => {
     const inputOf = (inputProps: BlockSectionInputEmbedProps): InputBlockSection => {
       return { type: 'blockSection', ...inputProps };
@@ -21,7 +21,7 @@ export const BlockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSe
 
     const input = inputOf(props);
     const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'BlockSection.children');
-    const dependencies = createGraphProviderDependencies(BlockSectionProviderKey);
+    const dependencies = createGraphProviderDependencies(blockSectionProviderKey);
 
     return {
       node: normalizeBlockSection({
@@ -43,4 +43,4 @@ export const BlockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSe
 
 /** 创建 Block Section Source 的 authoring embed 节点 */
 export const blockSection = (input: BlockSectionInputEmbedProps) =>
-  createGraphInputEmbed(BlockSectionEmbedKind, input, input.id);
+  createGraphInputEmbed(blockSectionEmbedKind, input, input.id);

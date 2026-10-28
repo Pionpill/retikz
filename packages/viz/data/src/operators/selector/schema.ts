@@ -33,30 +33,6 @@ export const BuiltinSelectorOperationKind = {
   OutsideQuantileBand: 'outside-quantile-band',
 } as const;
 
-/** 按数值字段取极值的 row selector operation kind 子集 */
-export const BuiltinMinMaxSelectorOperationKind = {
-  /** 选择排序字段最小的行 */
-  Min: BuiltinSelectorOperationKind.Min,
-  /** 选择排序字段最大的行 */
-  Max: BuiltinSelectorOperationKind.Max,
-} as const;
-
-/** 按现有顺序或显式排序取行的 row selector operation kind 子集 */
-export const BuiltinFirstLastSelectorOperationKind = {
-  /** 选择当前顺序或显式排序后的第一行 */
-  First: BuiltinSelectorOperationKind.First,
-  /** 选择当前顺序或显式排序后的最后一行 */
-  Last: BuiltinSelectorOperationKind.Last,
-} as const;
-
-/** 按排序名次取行的 row selector operation kind 子集 */
-export const BuiltinTopBottomSelectorOperationKind = {
-  /** 选择排序字段最高名次的行 */
-  Top: BuiltinSelectorOperationKind.Top,
-  /** 选择排序字段最低名次的行 */
-  Bottom: BuiltinSelectorOperationKind.Bottom,
-} as const;
-
 /** row selector 平局处理策略 */
 export const RowSelectorTie = {
   /** 平局时只保留第一行 */
@@ -68,21 +44,10 @@ export const RowSelectorTie = {
 } as const;
 
 /** row selector operation 保留 kind 集合；供 external 开放配置排除内置判别串 */
-export const RESERVED_SELECTOR_OPERATION_KINDS: ReadonlySet<string> = new Set(
-  Object.values(BuiltinSelectorOperationKind),
-);
+const RESERVED_SELECTOR_OPERATION_KINDS: ReadonlySet<string> = new Set(Object.values(BuiltinSelectorOperationKind));
 
 /** 内置 row selector operation kind 取值 */
 export type BuiltinSelectorOperationKind = ValueOf<typeof BuiltinSelectorOperationKind>;
-
-/** 按数值字段取极值的 row selector operation kind 取值 */
-export type BuiltinMinMaxSelectorOperationKind = ValueOf<typeof BuiltinMinMaxSelectorOperationKind>;
-
-/** 按现有顺序或显式排序取行的 row selector operation kind 取值 */
-export type BuiltinFirstLastSelectorOperationKind = ValueOf<typeof BuiltinFirstLastSelectorOperationKind>;
-
-/** 按排序名次取行的 row selector operation kind 取值 */
-export type BuiltinTopBottomSelectorOperationKind = ValueOf<typeof BuiltinTopBottomSelectorOperationKind>;
 
 /** row selector 平局处理策略值 */
 export type RowSelectorTie = ValueOf<typeof RowSelectorTie>;
@@ -144,7 +109,7 @@ export const OutsideQuantileBandSelectorOperationSchema = strictObject({
   .describe('Outside quantile-band row selector operation');
 
 /** 内置 selector operation 的 schema 单一真源；aggregate schema 与 provider definition 共用这些实例 */
-export const BuiltinSelectorOperationSchemas = Object.freeze({
+export const BUILTIN_SELECTOR_OPERATION_SCHEMAS = Object.freeze({
   Min: createMinMaxSelectorOperationSchema(BuiltinSelectorOperationKind.Min),
   Max: createMinMaxSelectorOperationSchema(BuiltinSelectorOperationKind.Max),
   First: createFirstLastSelectorOperationSchema(BuiltinSelectorOperationKind.First),
@@ -165,20 +130,20 @@ const ExternalSelectorOperationObjectSchema = looseObject({
 });
 
 /** 校验带 JSON 配置的自定义数据选择操作 */
-export const ExternalSelectorOperationSchema = ExternalSelectorOperationObjectSchema.catchall(JsonValueSchema).describe(
+const ExternalSelectorOperationSchema = ExternalSelectorOperationObjectSchema.catchall(JsonValueSchema).describe(
   'Custom selector operation with JSON config',
 );
 
 /** 内置 row selector operation schema */
-export const BuiltinSelectorOperationSchema = union([
-  BuiltinSelectorOperationSchemas.Min,
-  BuiltinSelectorOperationSchemas.Max,
-  BuiltinSelectorOperationSchemas.First,
-  BuiltinSelectorOperationSchemas.Last,
-  BuiltinSelectorOperationSchemas.Top,
-  BuiltinSelectorOperationSchemas.Bottom,
-  BuiltinSelectorOperationSchemas.Nth,
-  BuiltinSelectorOperationSchemas.OutsideQuantileBand,
+const BuiltinSelectorOperationSchema = union([
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Min,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Max,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.First,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Last,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Top,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Bottom,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Nth,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.OutsideQuantileBand,
 ]).describe('Built-in row selector operation');
 
 /** row selector operation schema；包含内置 kind 与外部注册 kind 开放配置对象 */

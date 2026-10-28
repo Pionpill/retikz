@@ -1,6 +1,6 @@
 import type { IRScope } from '@retikz/core';
 
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
 import { resolveGraph } from '../../resolve';
 import type { IRGraph } from '../../schemas';
 
@@ -24,7 +24,7 @@ export const graphScopeProps = (source: IRGraph): Omit<IRScope, 'type' | 'childr
 };
 
 /** 把 Graph Source root 下沉为一个保留完整 Scope 语义的普通 Core Scope */
-export const lowerGraph = (source: IRGraph, options: ResolvedGraphDefinitionOptions): IRScope => ({
+export const lowerGraph = (source: IRGraph, options: GraphDefinitionRegistries): IRScope => ({
   type: 'scope',
   ...graphScopeProps(source),
   children: resolveGraph(source, options),

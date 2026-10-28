@@ -1,16 +1,16 @@
-import type { LowerTex } from '@retikz/core';
+import type { TexLowerer } from '@retikz/core';
 
 import type { MathJaxSvgEngine } from '../mathjax';
 import { lowerMathJaxSvg } from '../svg';
-import type { LowerTexOptions, TexLoweringResult } from './types';
+import type { TexLoweringOptions, TexLoweringResult } from './types';
 
 /**
- * 把同步 SVG engine 适配为 Core `LowerTex`，并缓存确定的解析结果
+ * 把同步 SVG engine 适配为 Core `TexLowerer`，并缓存确定的解析结果
  *
  * @description 接收能输出受支持 SVG 子集的引擎与可选诊断回调，返回可直接注入 Core 文本编译流程的同步 lowerer。该函数负责 TeX → SVG → 路径的降解和结果缓存，不负责初始化引擎或渲染公式
  * @param engine 提供同步 TeX → SVG 转换能力的引擎
  * @param options 控制 lowering 失败诊断的可选配置
- * @returns 同步 LowerTex；转换失败时返回 null 并通知 onDiagnostic，缓存命中的失败也会再次通知
+ * @returns 同步 TexLowerer；转换失败时返回 null 并通知 onDiagnostic，缓存命中的失败也会再次通知
  *
  * @example
  * import { createLowerTex, createMathJaxEngine, MathJaxProfile } from '@retikz/tex';
@@ -20,8 +20,8 @@ import type { LowerTexOptions, TexLoweringResult } from './types';
  *   onDiagnostic: diagnostic => console.warn(diagnostic.message),
  * });
  */
-export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptions): LowerTex => {
-  const cache = new Map<string, TexLoweringResult<NonNullable<ReturnType<LowerTex>>>>();
+export const createLowerTex = (engine: MathJaxSvgEngine, options?: TexLoweringOptions): TexLowerer => {
+  const cache = new Map<string, TexLoweringResult<NonNullable<ReturnType<TexLowerer>>>>();
   return (content, style) => {
     const key = JSON.stringify([style.fontSize, content.displayMode ?? false, content.tex]);
     const cached = cache.get(key);
@@ -30,7 +30,7 @@ export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptio
       return cached.ok ? cached.value : null;
     }
 
-    let result: TexLoweringResult<NonNullable<ReturnType<LowerTex>>>;
+    let result: TexLoweringResult<NonNullable<ReturnType<TexLowerer>>>;
 
     try {
       const svg = engine.convert(content.tex, { display: content.displayMode ?? false });

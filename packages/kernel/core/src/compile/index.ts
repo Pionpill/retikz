@@ -7,7 +7,7 @@ export type {
   LoweredTex,
   LoweredTexPaint,
   LoweredTexPath,
-  LowerTex,
+  TexLowerer,
   TextFont,
   TextMeasurer,
   TextMetrics,
@@ -41,4 +41,4 @@ export type { SceneCompilationMetadata } from './output';
 
 export { createCompileObservationRuntime, createCompileProvenanceTracker } from './orchestration';
 export type { CompileObservationRuntime, CompileProvenanceTracker } from './orchestration';
-export type { NodeCompilation, NodeLabelResolution, NodeLayout, NodeResolvedProperties } from './node';
+export type { NodeCompilation, NodeLabelResolution, CompiledNodeLayout, NodeResolvedProperties } from './node';

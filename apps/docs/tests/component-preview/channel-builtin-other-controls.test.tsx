@@ -24,8 +24,8 @@ const renderWithValues = (Component: FC, values: Readonly<PreviewControlValues>)
     </PreviewControlStateContext.Provider>,
   );
 
-describe('builtin other-channel controls', () => {
-  it('exposes complete bilingual controls for zIndex, order, and series', () => {
+describe('内置其他通道控件', () => {
+  it('为 zIndex、order 和 series 提供完整的双语控件', () => {
     const writableFields = getPreviewControlFields(chineseContract.controls);
 
     expect(
@@ -50,7 +50,7 @@ describe('builtin other-channel controls', () => {
     expect(englishContract.relatedApis).toEqual(chineseContract.relatedApis);
   });
 
-  it('changes the rendered plot when each channel control changes', () => {
+  it('当每个通道控制发生变化时，更改渲染图', () => {
     const baseline = renderWithValues(BuiltinOtherDemo, chineseContract.canonicalValues);
 
     expect(

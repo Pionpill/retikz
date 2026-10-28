@@ -3,7 +3,7 @@ import type { DataTransformModel, DataTransformResult, DataView } from '../model
 import { createDataView, resolveFieldPath } from '../model';
 import { readSourceIndex, readSourceIndices } from '../provenance';
 import type { DataTransformResolution } from '../transform';
-import type { DataTransformStageInput } from './contract';
+import type { InputDataTransformStage } from './contract';
 
 /** 检查完整模型和已证明字段类型，不重复应用源 parser */
 export const assertDataTransformModel = (expected: DataTransformModel, actual: DataTransformModel): void => {
@@ -65,6 +65,6 @@ export const assertDataExecutionActive = (signal?: AbortSignal): void => {
 };
 
 /** 检查实际输入是否携带需要预检保障的行级或组级来源 */
-export const hasDataProvenance = <TSource>(input: DataTransformStageInput<TSource>): boolean =>
+export const hasDataProvenance = <TSource>(input: InputDataTransformStage<TSource>): boolean =>
   input.kind === 'result' &&
   input.result.rows.some(row => readSourceIndex(row) !== undefined || readSourceIndices(row) !== undefined);

@@ -11,7 +11,7 @@ import type { SceneRevision } from './identity-value';
  * 递归冻结 Computation 新创建且尚未对外暴露的 plain output
  * @template T 递归冻结且原样返回的计算输出类型
  */
-export const freezeComputationOutput = <T>(value: T): T => {
+const freezeComputationOutput = <T>(value: T): T => {
   if (value === null || typeof value !== 'object') return value;
   if (Array.isArray(value)) {
     value.forEach(item => freezeComputationOutput(item));

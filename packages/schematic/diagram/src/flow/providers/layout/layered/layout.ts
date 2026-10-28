@@ -2,13 +2,13 @@ import type { BoundsInsets, BoundsRect } from '@retikz/math';
 import { boundsToRect, mergeBounds, rectToBounds } from '@retikz/math';
 
 import type {
-  EffectiveFlowLayout,
-  FlowLayoutElementInput,
+  CanonicalFlowLayoutOptions,
+  InputFlowLayoutElement,
   FlowLayoutElementOutput,
   FlowLayoutExecutionContext,
-  FlowLayoutInput,
+  InputFlowLayoutComputation,
   FlowLayoutOutput,
-  FlowLayoutRelationInput,
+  InputFlowLayoutRelation,
 } from '../../../contract';
 import type { FlowDirection } from '../../../shared';
 import { routeFlowRelations } from '../routing';
@@ -17,11 +17,11 @@ import { resolveLayeredRanks } from './topology';
 
 type LayeredInputIndex = Readonly<{
   scopes: ReadonlyMap<string, ReadonlyArray<string>>;
-  kinds: ReadonlyMap<string, FlowLayoutElementInput['kind']>;
+  kinds: ReadonlyMap<string, InputFlowLayoutElement['kind']>;
 }>;
 
 type SizedElement = Readonly<{
-  input: FlowLayoutElementInput;
+  input: InputFlowLayoutElement;
   width: number;
   height: number;
   margin: Readonly<BoundsInsets>;
@@ -29,7 +29,7 @@ type SizedElement = Readonly<{
 }>;
 
 type PlacedElement = Readonly<{
-  input: FlowLayoutElementInput;
+  input: InputFlowLayoutElement;
   bounds: Readonly<BoundsRect>;
   children?: ScopeLayoutResult;
 }>;
@@ -77,11 +77,11 @@ const encloseGroupContent = (content: ScopeLayoutResult): ScopeLayoutResult => {
   };
 };
 
-const buildInputIndex = (elements: ReadonlyArray<FlowLayoutElementInput>): LayeredInputIndex => {
+const buildInputIndex = (elements: ReadonlyArray<InputFlowLayoutElement>): LayeredInputIndex => {
   const scopes = new Map<string, ReadonlyArray<string>>();
-  const kinds = new Map<string, FlowLayoutElementInput['kind']>();
+  const kinds = new Map<string, InputFlowLayoutElement['kind']>();
 
-  const visit = (items: ReadonlyArray<FlowLayoutElementInput>, ancestors: ReadonlyArray<string>): void => {
+  const visit = (items: ReadonlyArray<InputFlowLayoutElement>, ancestors: ReadonlyArray<string>): void => {
     for (const item of items) {
       scopes.set(item.id, ancestors);
       kinds.set(item.id, item.kind);
@@ -113,7 +113,7 @@ const directChildId = (endpoint: string, scopes: ReadonlyArray<string>, scopeId:
 };
 
 const rankEdgesForScope = (
-  relations: ReadonlyArray<FlowLayoutRelationInput>,
+  relations: ReadonlyArray<InputFlowLayoutRelation>,
   index: LayeredInputIndex,
   scopeId: string | undefined,
 ): ReadonlyArray<LayeredRankEdge> =>
@@ -137,8 +137,8 @@ const rankEdgesForScope = (
 /** 将标签主轴尺寸均分到两端 child margin，同侧取最大预留并保留作者 gap 作为净空 */
 const withLayoutLabelMargins = (
   children: ReadonlyArray<SizedElement>,
-  layout: EffectiveFlowLayout,
-  relations: ReadonlyArray<FlowLayoutRelationInput>,
+  layout: CanonicalFlowLayoutOptions,
+  relations: ReadonlyArray<InputFlowLayoutRelation>,
   index: LayeredInputIndex,
   layoutId: string,
 ): ReadonlyArray<SizedElement> => {
@@ -199,8 +199,8 @@ const withLayoutLabelMargins = (
 };
 
 const sizeElement = (
-  input: FlowLayoutElementInput,
-  relations: ReadonlyArray<FlowLayoutRelationInput>,
+  input: InputFlowLayoutElement,
+  relations: ReadonlyArray<InputFlowLayoutRelation>,
   index: LayeredInputIndex,
   context: Pick<FlowLayoutExecutionContext, 'placeLayout'>,
 ): SizedElement => {
@@ -312,7 +312,7 @@ const transformBounds = (
 
 /** 为跨越 rank 的关系标签在 canonical 主轴上预留完整的测量尺寸 */
 const rankGapsForScope = (
-  relations: ReadonlyArray<FlowLayoutRelationInput>,
+  relations: ReadonlyArray<InputFlowLayoutRelation>,
   index: LayeredInputIndex,
   scopeId: string | undefined,
   ranks: ReadonlyMap<string, number>,
@@ -349,9 +349,9 @@ const rankGapsForScope = (
 };
 
 const layoutScope = (
-  inputs: ReadonlyArray<FlowLayoutElementInput>,
-  layout: EffectiveFlowLayout,
-  relations: ReadonlyArray<FlowLayoutRelationInput>,
+  inputs: ReadonlyArray<InputFlowLayoutElement>,
+  layout: CanonicalFlowLayoutOptions,
+  relations: ReadonlyArray<InputFlowLayoutRelation>,
   index: LayeredInputIndex,
   scopeId: string | undefined,
   context: Pick<FlowLayoutExecutionContext, 'placeLayout'>,
@@ -467,7 +467,10 @@ const flattenElements = (
 };
 
 /** 执行内置确定性 layered layout */
-export const layoutLayeredFlow = (input: FlowLayoutInput, context: FlowLayoutExecutionContext): FlowLayoutOutput => {
+export const layoutLayeredFlow = (
+  input: InputFlowLayoutComputation,
+  context: FlowLayoutExecutionContext,
+): FlowLayoutOutput => {
   const index = buildInputIndex(input.elements);
   const root = layoutScope(input.elements, input.layout, input.relations, index, undefined, context);
   const elements: Array<FlowLayoutElementOutput> = [];
@@ -482,8 +485,8 @@ export const layoutLayeredFlow = (input: FlowLayoutInput, context: FlowLayoutExe
 
 /** 测量作者布局子树的自然占位，复用正式排列与标签预留规则 */
 export const measureFlowLayoutElement = (
-  element: FlowLayoutElementInput,
-  input: FlowLayoutInput,
+  element: InputFlowLayoutElement,
+  input: InputFlowLayoutComputation,
   context: Pick<FlowLayoutExecutionContext, 'placeLayout'>,
 ): Readonly<{ width: number; height: number }> => {
   const measured = sizeElement(element, input.relations, buildInputIndex(input.elements), context);

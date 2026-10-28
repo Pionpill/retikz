@@ -33,8 +33,8 @@ const scene = (width: number): IRScene => ({
   children: [{ namespace: 'third', type: 'card', width }],
 });
 
-describe('Vanilla compile result spatial sidecar', () => {
-  it('exposes the full compile result for authored input and undefined for Scene input', () => {
+describe('Vanilla 编译结果空间 sidecar', () => {
+  it('公开编写输入的完整编译结果，并为 Scene 输入公开 undefined 的结果', () => {
     const authored = toSceneResult(scene(10), { compile: { composites: [card] } });
     const passedScene = toSceneResult(authored.scene, {});
 
@@ -42,7 +42,7 @@ describe('Vanilla compile result spatial sidecar', () => {
     expect(passedScene.compileResult).toBeUndefined();
   });
 
-  it('preserves direct compile spatial entries and query results', () => {
+  it('保留直接编译的空间条目和查询结果', () => {
     const direct = compileToScene(scene(10), { composites: [card] });
     const vanilla = toSceneResult(scene(10), { compile: { composites: [card] } });
     const selector = { owner: { namespace: 'third', type: 'card' }, id: 'body' } as const;
@@ -56,7 +56,7 @@ describe('Vanilla compile result spatial sidecar', () => {
     );
   });
 
-  it('keeps the live static view compileResult current', () => {
+  it('静态实时视图的 compileResult 保持最新', () => {
     const view = mountSvg(document.createElement('div'), scene(10), {
       compile: { composites: [card] },
       runtime: { mode: 'static' },
@@ -72,7 +72,7 @@ describe('Vanilla compile result spatial sidecar', () => {
     view.dispose();
   });
 
-  it('keeps the live retained view compileResult current', () => {
+  it('保持实时保留视图 compileResult 为最新', () => {
     const view = mountSvg(document.createElement('div'), scene(10), { compile: { composites: [card] } });
     const first = view.compileResult;
 
@@ -85,7 +85,7 @@ describe('Vanilla compile result spatial sidecar', () => {
     view.dispose();
   });
 
-  it('preserves the retained compileResult identity when a candidate fails', () => {
+  it('当候选失败时保留保留的 compileResult 身份', () => {
     const view = mountSvg(document.createElement('div'), scene(10), { compile: { composites: [card] } });
     const committed = view.compileResult;
 

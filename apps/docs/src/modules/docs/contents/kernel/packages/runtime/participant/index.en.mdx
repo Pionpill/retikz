@@ -36,7 +36,7 @@ Participants receive candidate data before publication. Only after all participa
 
 ```ts
 declare const defineRuntimeCommitParticipant: <TRead>(
-  options: RuntimeCommitParticipantDefinitionInput<TRead>,
+  options: InputRuntimeCommitParticipantDefinition<TRead>,
 ) => RuntimeCommitParticipant<TRead>;
 ```
 
@@ -60,7 +60,7 @@ declare const defineRuntimeCommitParticipant: <TRead>(
 <DocTab value="definition" label="Type definition">
 
 ```ts
-type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
+type InputRuntimeCommitParticipantDefinition<TRead> = Readonly<{
   key: string;
   sources?: ReadonlyArray<RuntimeSourceToken>;
   computations?: ReadonlyArray<RuntimeComputationToken>;
@@ -367,7 +367,7 @@ Only public members used in this chapter are listed; follow the source links bel
     {
       name: 'defineRuntimeCommitParticipant',
       kind: 'function',
-      type: '<TRead>(input: RuntimeCommitParticipantDefinitionInput<TRead>) => RuntimeCommitParticipant<TRead>',
+      type: '<TRead>(input: InputRuntimeCommitParticipantDefinition<TRead>) => RuntimeCommitParticipant<TRead>',
       description:
         'Requires key, revisionPolicy, prepare, read and dispose; optional sources, computations and tracePhases default to []. The instance exclusively owns the token.',
     },

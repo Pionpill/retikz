@@ -19,8 +19,8 @@ import {
 const input: Array<ExternalRow> = [{ value: 3 }, { value: 1 }];
 const sort: IRDataTransform = { kind: 'sort', params: { field: 'value' } };
 
-describe('synchronous transform entry', () => {
-  it.each([undefined, false])('preserves untouched input references for an empty chain with lineage=%s', lineage => {
+describe('同步变换入口', () => {
+  it.each([undefined, false])('为血缘 = %s 的空链保留未触及的输入引用', lineage => {
     const result = applyTransforms(input, [], { lineage });
     expect(result.rows).toBe(input);
     expect(result.lineage).toBeUndefined();
@@ -35,7 +35,7 @@ describe('synchronous transform entry', () => {
     { provenance: true, recordEvents: false },
     { provenance: false, recordEvents: true },
     { provenance: true, recordEvents: true },
-  ])('keeps provenance=$provenance independent from events=$recordEvents', ({ provenance, recordEvents }) => {
+  ])('保持来源追溯 = $provenance 独立于事件 = $recordEvents', ({ provenance, recordEvents }) => {
     const result = applyTransforms(input, [sort], {
       provenance,
       lineage: recordEvents,
@@ -51,7 +51,7 @@ describe('synchronous transform entry', () => {
     } else expect(result.lineage).toBeUndefined();
   });
 
-  it('preserves existing single-row and group sources regardless of the provenance option', () => {
+  it('保留现有的单行和组源，无论来源选项如何', () => {
     const marked = [
       { value: 3, [SOURCE_INDEX]: 8 },
       { value: 1, [SOURCE_INDICES]: [4, 6] },
@@ -63,7 +63,7 @@ describe('synchronous transform entry', () => {
     }
   });
 
-  it('applies provenance and records source events even without transforms', () => {
+  it('即使没有转换，也可以应用来源并记录源事件', () => {
     const view = createDataView(input, [{ name: 'value', type: 'continuous' }]);
     const result = applyTransformsToDataView(view, [], { provenance: true, lineage: true });
     expect(result.dataView.rows.map(readSourceIndex)).toEqual([0, 1]);
@@ -72,7 +72,7 @@ describe('synchronous transform entry', () => {
     expect(input.map(readSourceIndex)).toEqual([undefined, undefined]);
   });
 
-  it('uses the same capped defaults for true and an empty configuration', () => {
+  it('true 与空配置使用相同的数量限制默认值', () => {
     const rows = Array.from({ length: 21 }, (_, value) => ({ value }));
     const enabled = applyTransforms(rows, [sort], { provenance: true, lineage: true });
     const configured = applyTransforms(rows, [sort], { provenance: true, lineage: {} });
@@ -88,7 +88,7 @@ describe('synchronous transform entry', () => {
     });
   });
 
-  it('propagates newly established sources through an aggregate without recording events', () => {
+  it('通过聚合传播新建立的源，而不记录事件', () => {
     const { rows, lineage } = applyTransforms(
       input,
       [{ kind: 'summarize', params: { metrics: [{ kind: 'sum', field: 'value', as: 'total' }] } }],
@@ -99,7 +99,7 @@ describe('synchronous transform entry', () => {
     expect(lineage).toBeUndefined();
   });
 
-  it('throws on computation failure while preserving events already delivered to the sink', () => {
+  it('在保留已传递到接收器的事件的同时引发计算失败', () => {
     const failure = new Error('external computation failed');
     const definition = defineTransform({
       kind: 'failingTransform',

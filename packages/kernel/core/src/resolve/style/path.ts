@@ -1,12 +1,12 @@
-import { mergeProperties } from '@retikz/foundation';
+import { mergeDefinedProperties } from '@retikz/foundation';
 
 import type { IRPathLabelDefault, IRPathLabel, IRPathBase, IRPathStyle, IRStep } from '../../schemas';
 import { resolvePathArrows, resolvePathMarks } from './arrow';
 import { resolvePathLabel } from './label';
 import { mergeGraphicStyle } from './opacity';
-import type { EffectiveScopeDefaults } from './types';
+import type { MergedScopeDefaults } from './types';
 
-/** 替换 path children 中各 step 的 label 为已解析 effective label */
+/** 为每个步骤已有的标签合入默认配置 */
 const resolveStepLabels = (
   children: ReadonlyArray<IRStep>,
   labelDefault: IRPathLabelDefault,
@@ -20,6 +20,7 @@ const resolveStepLabels = (
     return step;
   });
 
+/** 为单个或多个路径标签合入默认配置，保留输入的单值或数组形式 */
 const resolvePathLabelField = (
   label: IRPathLabel | Array<IRPathLabel> | undefined,
   labelDefault: IRPathLabelDefault,
@@ -33,29 +34,28 @@ const resolvePathLabelField = (
   return resolvePathLabel(label, labelDefault, masterColor);
 };
 
-/** 解析 path 的最终样式 */
-export const resolveEffectivePath = (path: IRPathBase, scopeDefaults: EffectiveScopeDefaults): IRPathBase => {
+/** 合并路径几何与外观默认值，并为已有标签、箭头和沿线标记补齐配置 */
+export const mergePathStyle = (path: IRPathBase, scopeDefaults: MergedScopeDefaults): IRPathBase => {
   const defaults = scopeDefaults.path;
   const style = mergeGraphicStyle<IRPathStyle>(defaults?.style, path.style);
   const masterColor = style.color;
-  const effective: IRPathBase = {
-    ...defaults?.geometry,
-    ...mergeProperties([path], { shouldOverride: value => value !== undefined }),
+  const mergedPath: IRPathBase = {
+    ...mergeDefinedProperties([defaults?.geometry, path]),
     type: path.type,
     style,
   };
 
   const labelDefault = scopeDefaults.path?.label ?? {};
-  effective.marks = resolvePathMarks(path.marks, scopeDefaults, masterColor);
-  effective.arrow = resolvePathArrows(path.arrow, scopeDefaults, masterColor);
+  mergedPath.marks = resolvePathMarks(path.marks, scopeDefaults, masterColor);
+  mergedPath.arrow = resolvePathArrows(path.arrow, scopeDefaults, masterColor);
   if (path.children !== undefined) {
-    effective.children = resolveStepLabels(path.children, labelDefault, masterColor);
+    mergedPath.children = resolveStepLabels(path.children, labelDefault, masterColor);
   } else {
-    delete effective.children;
+    delete mergedPath.children;
   }
 
   const label = resolvePathLabelField(path.label, labelDefault, masterColor);
-  if (label !== undefined) effective.label = label;
+  if (label !== undefined) mergedPath.label = label;
 
-  return effective;
+  return mergedPath;
 };

@@ -2,7 +2,7 @@ import type { IRChild } from '@retikz/core';
 import { ChildSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { FlexLayoutInput, FlexLayoutItemInput } from '../../src';
+import type { InputFlexLayoutConfig, InputFlexLayoutItemConfig } from '../../src';
 import {
   createFlexLayout,
   FlexLayoutDirection,
@@ -21,15 +21,15 @@ const child: IRChild = { type: 'node', position: [0, 0], text: 'Revenue' };
 const parseFlexLayout = (input: Record<string, unknown>) =>
   FlexLayoutSchema.parse({ namespace: 'layout', type: 'flexLayout', ...input });
 
-describe('FlexLayout schema and factory', () => {
-  it('describes the public layout and item object contracts', () => {
+describe('FlexLayout schema 和工厂', () => {
+  it('描述公共布局和项目对象契约', () => {
     expect(FlexLayoutSchema.description).toBe('Sparse JSON-safe Layout FlexLayout composite.');
     expect(FlexLayoutItemSchema.description).toBe('Sparse JSON-safe item owned by FlexLayout.');
   });
 
-  it('creates canonical JSON IR from author input defaults', () => {
-    const item = { kind: LayoutItemKind.Flex, key: 'label', child } satisfies FlexLayoutItemInput;
-    const input = { children: [item] } satisfies FlexLayoutInput;
+  it('根据作者输入默认值创建规范的 JSON IR', () => {
+    const item = { kind: LayoutItemKind.Flex, key: 'label', child } satisfies InputFlexLayoutItemConfig;
+    const input = { children: [item] } satisfies InputFlexLayoutConfig;
     const source = createFlexLayout(input);
 
     expect(source).toEqual({ namespace: 'layout', type: 'flexLayout', ...input });
@@ -65,7 +65,7 @@ describe('FlexLayout schema and factory', () => {
     expect(ChildSchema.safeParse(parsed.children[0]?.child).success).toBe(true);
   });
 
-  it('normalizes uniform gap shorthand while preserving independent physical axes', () => {
+  it('标准化均匀间隙简写，同时保留独立的物理轴', () => {
     const uniform = parseFlexLayout({ gap: 6 });
     const independent = parseFlexLayout({ gap: { column: 4, row: 8 } });
     const zero = parseFlexLayout({ gap: 0 });
@@ -77,14 +77,14 @@ describe('FlexLayout schema and factory', () => {
     expect(resolveFlexLayout(zero).gap).toEqual({ column: 0, row: 0 });
   });
 
-  it('keeps an omitted item key out of Source IR', () => {
+  it('将省略的项目键保留在 Source IR 之外', () => {
     const parsed = parseFlexLayout({ children: [{ kind: LayoutItemKind.Flex, child }] });
 
     expect(parsed.children[0]).not.toHaveProperty('key');
   });
 
-  it('keeps every nested object strict and rejects invalid numeric contracts', () => {
-    const base = { children: [{ kind: 'flex', key: 'label', child }] } satisfies FlexLayoutInput;
+  it('严格保持每个嵌套对象并拒绝无效的数字约定', () => {
+    const base = { children: [{ kind: 'flex', key: 'label', child }] } satisfies InputFlexLayoutConfig;
 
     expect(FlexLayoutSchema.safeParse({ namespace: 'layout', type: 'flexLayout', ...base, extra: true }).success).toBe(
       false,
@@ -122,7 +122,7 @@ describe('FlexLayout schema and factory', () => {
     expect(() => parseFlexLayout({ children: [{ ...base.children[0], min: 20, max: 10 }] })).toThrow();
   });
 
-  it('rejects duplicate keys and non-flex item kinds at precise child paths', () => {
+  it('拒绝精确子路径上的重复键和非弹性项目类型', () => {
     const duplicate = FlexLayoutSchema.safeParse({
       namespace: 'layout',
       type: 'flexLayout',
@@ -148,7 +148,7 @@ describe('FlexLayout schema and factory', () => {
       expect(wrongKind.error.issues.some(issue => issue.path.join('.') === 'children.0.kind')).toBe(true);
   });
 
-  it('allows baseline alignment only when the physical cross axis is y', () => {
+  it('仅当物理横轴为 y 时才允许基线对齐', () => {
     expect(() =>
       parseFlexLayout({
         direction: FlexLayoutDirection.Column,

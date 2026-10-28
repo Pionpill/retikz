@@ -8,7 +8,7 @@ import type { NamespaceEntry } from '../namespace';
 import { nodeReferenceViewOf } from '../node';
 import type { NodeGeometryContext } from '../node';
 import { resolveAnchorRef } from '../reference';
-import type { EffectiveScopeTransform } from '../transform';
+import type { ComposedScopeTransform } from '../transform';
 import { applyScopeTransform, inverseScopeTransform, composeScopeTransform } from '../transform';
 
 /** 把视觉 shape 绑定为默认连接面 resolution */
@@ -38,7 +38,7 @@ const targetBoundaryResolutionOf = (
 };
 
 /** 创建 position resolver context 所需的 compile 状态投影 */
-export type CreatePositionResolveContextInput = Readonly<{
+type InputPositionResolveContext = Readonly<{
   /** 当前命名空间 */
   lookupReference: (id: string) => NamespaceEntry | undefined;
   /** 与节点布局及路径裁剪共享的几何消费状态 */
@@ -48,21 +48,19 @@ export type CreatePositionResolveContextInput = Readonly<{
   /** 当前 Scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
   /** traversal 已合成的当前 Scope 变换 */
-  effectiveTransform?: EffectiveScopeTransform;
+  composedTransform?: ComposedScopeTransform;
   /** 显式连接面绑定能力 */
   resolveExplicitBoundary?: BoundaryReferenceResolver;
 }>;
 
 /**
  * 从 compile 动态状态创建窄 Position/Target resolver context
- * @description NamespaceStack、NodeLayout 与 transform helper 不会越过该适配边界进入 resolve
+ * @description NamespaceStack、CompiledNodeLayout 与 transform helper 不会越过该适配边界进入 resolve
  */
-export const createPositionResolveContext = (
-  input: CreatePositionResolveContextInput,
-): PositionTargetResolveContext => {
+export const createPositionResolveContext = (input: InputPositionResolveContext): PositionTargetResolveContext => {
   const { nodeDistance, scopeChain = [], resolveExplicitBoundary } = input;
 
-  const transform = input.effectiveTransform ?? composeScopeTransform(scopeChain);
+  const transform = input.composedTransform ?? composeScopeTransform(scopeChain);
 
   const lookupReference = (id: string): PositionReferenceView | undefined => {
     const entry = input.lookupReference(id);

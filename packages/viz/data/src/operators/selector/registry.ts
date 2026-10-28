@@ -130,10 +130,3 @@ export const resolveSelectorComputation = (
     return out;
   };
 };
-
-/** 独立调用时解析参数后执行一次计算 */
-export const applySelectorOperation = (
-  rows: Array<ExternalRow>,
-  operation: IRDataSelectorOperation,
-  context: TransformContext,
-): Array<RowSelection> => resolveSelectorComputation(operation, context)(rows);

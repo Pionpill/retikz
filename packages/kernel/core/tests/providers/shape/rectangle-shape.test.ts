@@ -59,7 +59,7 @@ describe('rectangle — 错误路径（strictObject）', () => {
     expect(() => rectangle.paramsSchema.parse({ foo: 1 })).toThrow();
   });
 
-  it('rectangle_negative_rounded_rejected：cornerRadius:-3 → nonnegative() reject', () => {
+  it('拒绝矩形负圆角 cornerRadius:-3', () => {
     expect(() => rectangle.paramsSchema.parse({ cornerRadius: -3 })).toThrow();
   });
 });
@@ -89,7 +89,7 @@ describe('rectangle — 顶层 cornerRadius 迁移期兼容', () => {
 
 // ─────────────────────────── round-trip + scaleParams ───────────────────────────
 
-describe('rectangle — round-trip / scaleParams', () => {
+describe('矩形 — 往返/scaleParams', () => {
   it('roundtrip_nested_params：含 rectangle {cornerRadius} 的 IR → JSON → parse 等价', () => {
     const node = {
       type: 'node',

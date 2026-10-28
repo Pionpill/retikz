@@ -17,7 +17,7 @@ export const RetikzTexErrorCode = {
 export type RetikzTexErrorCode = ValueOf<typeof RetikzTexErrorCode>;
 
 /** TeX 包错误的结构化构造参数 */
-export type RetikzTexErrorOptions = Readonly<{
+type RetikzTexErrorOptions = Readonly<{
   /** 稳定错误码 */
   code: RetikzTexErrorCode;
   /** 面向调用方的原始错误消息 */

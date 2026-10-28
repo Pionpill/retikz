@@ -27,7 +27,7 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
   const products = [
     { id: 'input', name: 'IRScene + CompileOptions', detail: text.input },
     { id: 'dependencies', name: 'CompileContext', detail: text.dependencies },
-    { id: 'layouts', name: 'NodeLayout', detail: text.layouts },
+    { id: 'layouts', name: 'CompiledNodeLayout', detail: text.layouts },
     { id: 'pending', name: 'PendingPathEmission', detail: text.pending },
     { id: 'paths', name: 'PathPrimitive / GroupPrimitive', detail: text.paths },
     { id: 'primitives', name: 'ScenePrimitive[]', detail: text.primitives },

@@ -17,7 +17,7 @@ export type PointPaddingResolution = {
 };
 
 /** 读取 Point 的自动策略，忽略没有节点半径语义的其它图元 */
-export const pointAutoPaddingOf = (view: MarkDataView): IRPlotPointAutoPadding => {
+const pointAutoPaddingOf = (view: MarkDataView): IRPlotPointAutoPadding => {
   const mark = view.mark;
 
   if (mark.type === 'point')

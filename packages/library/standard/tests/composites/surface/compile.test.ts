@@ -10,8 +10,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 
-import type { SurfaceInput } from '../../../src/presentation';
-import { createSurface, SurfaceDefinition } from '../../../src/presentation';
+import type { InputSurfaceConfig } from '../../../src/presentation';
+import { createSurface, surfaceDefinition } from '../../../src/presentation';
 
 type ProbeLog = Readonly<{ id: string; proposal: LayoutProposal }>;
 
@@ -81,8 +81,8 @@ const naturalProposal = (): LayoutProposal => ({
 const compileSurface = (
   child: IRChild,
   proposal: LayoutProposal = naturalProposal(),
-  padding: SurfaceInput['padding'] = 0,
-  appearance: Pick<SurfaceInput, 'background' | 'border' | 'cornerRadius' | 'overflow'> = {},
+  padding: InputSurfaceConfig['padding'] = 0,
+  appearance: Pick<InputSurfaceConfig, 'background' | 'border' | 'cornerRadius' | 'overflow'> = {},
 ) => {
   const logs: Array<ProbeLog> = [];
   let observed: LayoutChildResult | undefined;
@@ -116,15 +116,15 @@ const compileSurface = (
       version: 1,
       children: [{ namespace: 'surface-test', type: 'harness', child: surface }],
     },
-    { composites: [SurfaceDefinition, createLeafDefinition(logs), harness], padding: 0 },
+    { composites: [surfaceDefinition, createLeafDefinition(logs), harness], padding: 0 },
   );
   if (observed === undefined) throw new Error('Expected Surface probe to resolve');
 
   return { logs, observed, output };
 };
 
-describe('Surface layout compile', () => {
-  it('adds padding to intrinsic slot and aligns a non-zero child allocation origin', () => {
+describe('Surface 布局编译', () => {
+  it('向内在槽添加填充并对齐非零子分配原点', () => {
     const result = compileSurface(leaf({ originX: -5, originY: 3 }), naturalProposal(), {
       top: 2,
       right: 5,
@@ -143,7 +143,7 @@ describe('Surface layout compile', () => {
     });
   });
 
-  it('subtracts padding from range proposals and clamps child minimum at zero', () => {
+  it('从范围建议中减去填充并将子最小值固定为零', () => {
     const proposal: LayoutProposal = {
       x: { kind: LayoutAxisProposalKind.Range, min: 30, max: 40 },
       y: { kind: LayoutAxisProposalKind.Range, min: 4 },
@@ -157,7 +157,7 @@ describe('Surface layout compile', () => {
     expect(result.observed.slotSize).toEqual({ width: 30, height: 16 });
   });
 
-  it('subtracts padding from exact proposals while preserving the parent fixed slot', () => {
+  it('从精确提案中减去填充，同时保留父固定槽', () => {
     const proposal: LayoutProposal = {
       x: { kind: LayoutAxisProposalKind.Exact, value: 50 },
       y: { kind: LayoutAxisProposalKind.Exact, value: 30 },
@@ -187,7 +187,7 @@ describe('Surface layout compile', () => {
         y: { kind: LayoutAxisProposalKind.Intrinsic, mode: 'natural' },
       } satisfies LayoutProposal,
     },
-  ])('fails $label proposals smaller than horizontal padding before probing the child', ({ proposal }) => {
+  ])('在探测子级之前，小于水平填充的 $label 提案失败', ({ proposal }) => {
     const logs: Array<ProbeLog> = [];
     const harness = defineComposite({
       namespace: 'surface-test',
@@ -217,17 +217,17 @@ describe('Surface layout compile', () => {
           version: 1,
           children: [{ namespace: 'surface-test', type: 'failure-harness', child: surface }],
         },
-        { composites: [SurfaceDefinition, createLeafDefinition(logs), harness] },
+        { composites: [surfaceDefinition, createLeafDefinition(logs), harness] },
       ),
     ).toThrow(/surface.*x.*padding/i);
     expect(logs).toEqual([]);
   });
 
-  it('propagates child probe failure without substituting intrinsic layout', () => {
+  it('传播子探测故障而不替换内在布局', () => {
     expect(() => compileSurface(leaf({ reject: true }))).toThrow(/Leaf 'content' rejected/);
   });
 
-  it('keeps allocation at the border box while reporting border stroke as visual overflow', () => {
+  it('保留边界框的分配，同时将边界描边报告为视觉溢出', () => {
     const result = compileSurface(leaf(), naturalProposal(), 2, {
       border: { stroke: '#0f172a', strokeWidth: 6 },
     });
@@ -248,7 +248,7 @@ it('Surface 完整 Scope 属性透传独立外框', () => {
   });
   const { scene } = compileToScene(
     { version: 1, type: 'scene', children: [surface] },
-    { composites: [SurfaceDefinition] },
+    { composites: [surfaceDefinition] },
   );
   const serialized = JSON.stringify(scene.primitives);
 

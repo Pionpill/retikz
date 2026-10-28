@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSchema } from '../../../src/schemas';
 
-it('coordinate alignment shares rotated node geometry, connection endpoints and provenance', () => {
+it('坐标对齐共享旋转节点几何形状、连接端点和来源追溯', () => {
   const compile = (aligned: boolean) => {
     const spec = PlotSchema.parse({
       type: 'plot',

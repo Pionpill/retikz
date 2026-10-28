@@ -34,7 +34,7 @@ export const Example = () => (
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { matrix, MatrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { matrix, matrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const svg = renderToSvgString(
@@ -48,7 +48,7 @@ const svg = renderToSvgString(
       }),
     ],
   }),
-  { adapters: [MatrixInputEmbedAdapter] },
+  { adapters: [matrixInputEmbedAdapter] },
 );
 ```
 
@@ -56,8 +56,8 @@ const svg = renderToSvgString(
 <DocTab value="ir" label="IR">
 
 ```ts
-import { MatrixDefinition } from '@retikz/standard/collection';
-import { PathClipDefinition } from '@retikz/extension';
+import { matrixDefinition } from '@retikz/standard/collection';
+import { pathClipDefinition } from '@retikz/extension';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const svg = renderToSvgString(
@@ -75,7 +75,7 @@ const svg = renderToSvgString(
       },
     ],
   },
-  { compile: { composites: [MatrixDefinition], clips: [PathClipDefinition] } },
+  { compile: { composites: [matrixDefinition], clips: [pathClipDefinition] } },
 );
 ```
 
@@ -176,7 +176,7 @@ React 的 items 只放文字配置，嵌套组件使用 JSX；Vanilla 的 conten
 
 展开选择递归沿用，转为文本的整个子树不再展开；空对象和空数组显示为 `{}` / `[]`。更深的二维数组仍嵌套为 Array，不自动推断 Matrix，也没有 matrix 展开选项。defaultCell.style / defaultCell.layout 只控制当前层，字体与文本颜色沿内容继承。
 
-直接 IR 使用 data 时额外注入 ArrayDefinition、MapDefinition；使用裁切时注入 PathClipDefinition。React 与 Vanilla 自动装配这些依赖。
+直接 IR 使用 data 时额外注入 arrayDefinition、mapDefinition；使用裁切时注入 pathClipDefinition。React 与 Vanilla 自动装配这些依赖。
 
 ### 引用格子、裁切内容与添加标签
 

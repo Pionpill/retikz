@@ -54,7 +54,7 @@ export const dataModelApiReferenceConfig: ApiReferencePackageConfig = {
         'resolveFieldOrderRegistry',
         'BUILTIN_FIELD_ORDERS',
         'resolveCategoryDomain',
-        'ResolveField',
+        'FieldResolver',
         'FieldResolution',
       ],
     },

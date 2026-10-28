@@ -1,19 +1,19 @@
 import type { IRCoordinate, IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const opts: LowerPlotsOptions = { layout: { width: 200, height: 100 } };
+const opts: PlotsLoweringOptions = { layout: { width: 200, height: 100 } };
 const expandOf = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = opts,
+  options: PlotsLoweringOptions = opts,
 ): IRScope => {
-  return lowerPlot(spec, datasets, { ...options, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...options, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const markLayer = (root: IRScope, index: number): IRScope => root.children[index] as IRScope;

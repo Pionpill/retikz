@@ -25,8 +25,8 @@ const comparableContract = (contract: PreviewControlContract) => ({
   relatedApis: contract.relatedApis,
 });
 
-describe('Viz Data Plot lineage controls', () => {
-  it('keeps the bilingual panel contract structurally identical and complete', () => {
+describe('可视化数据 Plot 血缘控件', () => {
+  it('保持双语面板契约结构相同、完整', () => {
     expect(comparableContract(plotLineageZh)).toEqual(comparableContract(plotLineageEn));
     expect(plotLineageZh.controls.presentation).toBe('panel');
     expect(plotLineageZh.controls.sections[0]).toMatchObject({ defaultCollapsed: true });
@@ -53,7 +53,7 @@ describe('Viz Data Plot lineage controls', () => {
     }
   });
 
-  it('maps every writable control to the public lineage options', () => {
+  it('将每个可写控件映射到公共血缘选项', () => {
     expect(
       buildPlotLineageOptions({
         markIdentity: false,
@@ -69,7 +69,7 @@ describe('Viz Data Plot lineage controls', () => {
     });
   });
 
-  it('omits disabled root and mark transforms', () => {
+  it('忽略禁用的根和标记变换', () => {
     const buildTransforms = Reflect.get(plotLineageOptions, 'buildPlotLineageTransforms');
 
     expect(buildTransforms).toBeTypeOf('function');
@@ -86,7 +86,7 @@ describe('Viz Data Plot lineage controls', () => {
     ).toEqual({ root: [], mark: [] });
   });
 
-  it('maps enabled controls to root sort and mark-local top-N transforms', () => {
+  it('将启用的控件映射到根排序和标记本地前 N 变换', () => {
     const buildTransforms = Reflect.get(plotLineageOptions, 'buildPlotLineageTransforms');
 
     expect(buildTransforms).toBeTypeOf('function');
@@ -106,7 +106,7 @@ describe('Viz Data Plot lineage controls', () => {
     });
   });
 
-  it('extracts root and mark transform-step row counts from the real lineage artifact', () => {
+  it('从实际血缘产物中提取根级和标记级变换步骤的行数', () => {
     const summarizeTransformSteps = Reflect.get(plotLineageOptions, 'summarizePlotLineageTransformSteps');
     const lineage = {
       plotId: 'salesPlot',
@@ -155,7 +155,7 @@ describe('Viz Data Plot lineage controls', () => {
     ]);
   });
 
-  it('keeps the chart and lineage summary side by side with the summary using the full preview height', () => {
+  it('图表与血缘摘要并排展示且摘要使用完整预览高度', () => {
     const source = readFileSync(
       resolve('src/modules/docs/contents/viz/plot/provenance/plot-lineage.preview.tsx'),
       'utf8',
@@ -173,7 +173,7 @@ describe('Viz Data Plot lineage controls', () => {
     expect(304).toBeGreaterThan(156);
   });
 
-  it('replaces the duplicated React code block with the controlled preview in both locales', () => {
+  it('用两个区域设置中的受控预览替换重复的 React 代码块', () => {
     for (const locale of ['zh', 'en']) {
       const source = readFileSync(resolve(`src/modules/docs/contents/viz/plot/provenance/index.${locale}.mdx`), 'utf8');
 

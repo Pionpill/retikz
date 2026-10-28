@@ -14,12 +14,11 @@ import { literal, strictObject } from 'zod';
 
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveChartEncodingMappings, resolveSelectedChart } from '../../src/_chart/resolve';
-import { qualifyScatterChartLocatorOptions } from '../../src/point/scatter/locator';
-import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
+import { scatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
 
 const registry = resolveChartProviderRegistry([
-  { family: 'point', recipe: ScatterChartDefinition, chartThemeDefinitions: [] },
+  { family: 'point', recipe: scatterChartDefinition, chartThemeDefinitions: [] },
 ]);
 
 const resolveScatter = (
@@ -36,7 +35,7 @@ const resolveScatter = (
   });
   return resolveSelectedChart(source, {
     theme: DEFAULT_RESOLVED_THEME,
-    recipe: ScatterChartDefinition,
+    recipe: scatterChartDefinition,
     chartThemeDefinitions: [],
     runtime,
   });
@@ -69,8 +68,8 @@ const resolveOrdinalFallback = (color: unknown) => {
   );
 };
 
-describe('Scatter Chart encoding resolution', () => {
-  it('merges aggregate mappings by ordered slots and groups only direct post-summary fields', () => {
+describe('分散 Chart 编码解析结果', () => {
+  it('按有序槽合并聚合映射，并仅对直接后汇总字段进行分组', () => {
     const result = resolveScatter({
       encodings: {
         color: { aggregate: { kind: 'max', field: 'intensity', as: 'maxIntensity' } },
@@ -103,7 +102,7 @@ describe('Scatter Chart encoding resolution', () => {
     });
   });
 
-  it('keeps ordered hierarchy dimensions in aggregate groupBy', () => {
+  it('在聚合 groupBy 中保留有序的层次结构维度', () => {
     const result = resolveScatter({
       encodings: {
         x: { aggregate: { kind: 'mean', field: 'amount', as: 'meanAmount' } },
@@ -126,7 +125,7 @@ describe('Scatter Chart encoding resolution', () => {
     ]);
   });
 
-  it('preserves authored Data transform order and binds output fields', () => {
+  it('保留编写的数据转换顺序并绑定输出字段', () => {
     const transform = [
       { operation: { kind: 'normalize', params: { field: 'amount', as: 'amountShare' } } },
       { operation: { kind: 'jitter', params: { axis: 'y', yField: 'margin', amount: 0.5 } } },
@@ -138,7 +137,7 @@ describe('Scatter Chart encoding resolution', () => {
     });
   });
 
-  it('rejects sibling aggregate dependencies', () => {
+  it('拒绝同级聚合依赖关系', () => {
     expect(() =>
       resolveScatter({
         encodings: {
@@ -149,7 +148,7 @@ describe('Scatter Chart encoding resolution', () => {
     ).toThrow(/sibling aggregate output/);
   });
 
-  it('rejects aggregate outputs already produced by the explicit Data chain', () => {
+  it('拒绝显式数据链已经产生的聚合输出', () => {
     expect(() =>
       resolveScatter(
         {
@@ -167,7 +166,7 @@ describe('Scatter Chart encoding resolution', () => {
     );
   });
 
-  it('connects named scales once and replaces only the authored position fallback', () => {
+  it('连接命名比例一次并仅替换编写的位置回退', () => {
     const result = resolveScatter({
       encodings: {
         x: {
@@ -210,7 +209,7 @@ describe('Scatter Chart encoding resolution', () => {
     });
   });
 
-  it('resolves and independently replaces an ordinal recipe fallback for a channel consumer', () => {
+  it('解决并独立替换通道消费者的序数配方回退', () => {
     const inherited = resolveOrdinalFallback({
       field: 'group',
       scale: { reference: '__chart.regression.scale.series' },
@@ -233,7 +232,7 @@ describe('Scatter Chart encoding resolution', () => {
     expect([...replaced.removedRecipeScales]).toEqual(['__chart.regression.scale.series']);
   });
 
-  it('rejects a non-ordinal scale for an ordinal channel fallback consumer', () => {
+  it('拒绝序数通道回退消费者的非序数比例尺', () => {
     expect(() =>
       resolveOrdinalFallback({
         field: 'group',
@@ -246,7 +245,7 @@ describe('Scatter Chart encoding resolution', () => {
     );
   });
 
-  it('rejects duplicate scale sources and missing references', () => {
+  it('拒绝重复的比例源和缺失的参考', () => {
     expect(() =>
       resolveScatter(
         {
@@ -273,7 +272,7 @@ describe('Scatter Chart encoding resolution', () => {
     );
   });
 
-  it('rejects cross-slot recipe fallback references', () => {
+  it('拒绝跨槽配方回退引用', () => {
     for (const encodings of [
       {
         x: { field: 'amount', scale: { reference: '__chart.scatter.scale.y' } },
@@ -294,7 +293,7 @@ describe('Scatter Chart encoding resolution', () => {
     }
   });
 
-  it('assembles facet composition from Plot-owned atoms', () => {
+  it('从 Plot 拥有的原子组装面组成', () => {
     const facet = resolveScatter({
       encodings: {
         x: 'amount',
@@ -320,7 +319,7 @@ describe('Scatter Chart encoding resolution', () => {
     });
   });
 
-  it('projects rich root mappings before authored marks inherit them', () => {
+  it('在编写标记继承它们之前投影丰富的根映射', () => {
     const result = resolveScatter({
       encodings: {
         x: 'species',
@@ -345,17 +344,7 @@ describe('Scatter Chart encoding resolution', () => {
     }
   });
 
-  it('qualifies Chart-facing facet locators with fixed Scatter identity', () => {
-    expect(qualifyScatterChartLocatorOptions({ facet: { row: 'north', column: [2025, 2026] } })).toEqual({
-      facet: {
-        id: '__chart.scatter.composition.facet',
-        row: 'north',
-        column: [2025, 2026],
-      },
-    });
-  });
-
-  it('resolves custom transform, reducer and scale operations through owner Definitions', () => {
+  it('通过所属模块定义解决自定义转换、归约器和缩放操作', () => {
     const copyField = defineTransform({
       kind: 'copy-chart-field',
       paramsSchema: strictObject({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
@@ -398,7 +387,7 @@ describe('Scatter Chart encoding resolution', () => {
     const customRegistry = resolveChartProviderRegistry([
       {
         family: 'point',
-        recipe: ScatterChartDefinition,
+        recipe: scatterChartDefinition,
         chartThemeDefinitions: [],
         runtimeDefinitions: { transforms: [copyField], statisticsReducers: [range], scales: [mono] },
       },
@@ -463,7 +452,7 @@ describe('Scatter Chart encoding resolution', () => {
     ]);
   });
 
-  it('rejects Scale Definition schemas that rewrite the registered operation identity', () => {
+  it('拒绝重写已注册操作标识的 Scale Definition schema', () => {
     const renamed = defineScale({
       family: 'channel',
       schema: strictObject({
@@ -482,7 +471,7 @@ describe('Scatter Chart encoding resolution', () => {
     const customRegistry = resolveChartProviderRegistry([
       {
         family: 'point',
-        recipe: ScatterChartDefinition,
+        recipe: scatterChartDefinition,
         chartThemeDefinitions: [],
         runtimeDefinitions: { scales: [renamed] },
       },
@@ -518,7 +507,7 @@ describe('Scatter Chart encoding resolution', () => {
     }
   });
 
-  it('locates unregistered custom operations at the concrete encoding mapping', () => {
+  it('在具体编码映射处定位未注册的自定义操作', () => {
     expect(() =>
       resolveScatter({
         encodings: {

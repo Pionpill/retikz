@@ -37,7 +37,7 @@ const defineParticipant = (
     dispose: onDispose,
   });
 
-describe('runtime runtime participant preflight', () => {
+describe('Runtime 运行时参与者预检', () => {
   it('拒绝重复 key，且不触碰 executor', () => {
     const owner = defineCounterSource('counter');
     const sources = createRuntimeSourceRegistry([owner]);

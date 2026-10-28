@@ -18,7 +18,7 @@ export type BoundaryFitContext = {
  * boundary definition 的作者侧输入形态
  * @template TParams 由 paramsSchema 解析得到的 JSON 对象类型，各连接面回调接收同一参数类型
  */
-export type BoundaryDefinitionInput<TParams extends JsonObject> = {
+export type InputBoundaryDefinition<TParams extends JsonObject> = {
   /** 注册表 key，由 IR `boundary` 引用 */
   name: string;
   /** 运行时连接面参数的 schema */
@@ -46,7 +46,7 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 };
 
 /** Boundary 定义的擦除形态：registry 存这个 */
-export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
+export type BoundaryDefinition = InputBoundaryDefinition<JsonObject>;
 
 /**
  * 创建可注入编译配置的连接面定义，保留定义时的参数类型检查
@@ -55,5 +55,5 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
  * @param def 连接面名称、参数 schema 与连接几何回调
  * @returns 原定义对象，类型转换为可存入连接面注册表的 BoundaryDefinition；不复制或修改输入
  */
-export const defineBoundary = <TParams extends JsonObject>(def: BoundaryDefinitionInput<TParams>): BoundaryDefinition =>
+export const defineBoundary = <TParams extends JsonObject>(def: InputBoundaryDefinition<TParams>): BoundaryDefinition =>
   def as unknown as BoundaryDefinition;

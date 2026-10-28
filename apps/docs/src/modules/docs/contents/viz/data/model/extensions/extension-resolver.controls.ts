@@ -14,5 +14,5 @@ export const extensionResolverControls = definePreviewControls({
 export const previewControlContract = {
   controls: extensionResolverControls,
   canonicalValues: {},
-  relatedApis: ['Plot.resolveField', 'ResolveField'],
+  relatedApis: ['Plot.resolveField', 'FieldResolver'],
 } satisfies PreviewControlContract;

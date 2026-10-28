@@ -36,7 +36,7 @@ const normalizeReactChildren = (children: ReactNode) => {
   return normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) });
 };
 
-describe('parseRetikzJsx — happy path', () => {
+describe('parseRetikzJsx — 正常流程', () => {
   it('解析空 Layout（顶层容器，可作根）', () => {
     const element = parseOk('<Layout />');
 
@@ -174,7 +174,7 @@ describe('parseRetikzJsx — happy path', () => {
   });
 });
 
-describe('parseRetikzJsx — error cases', () => {
+describe('parseRetikzJsx — 错误情况', () => {
   it('空源码', () => {
     expect(parseErr('')).toMatch(/源码为空/);
     expect(parseErr('   \n  ')).toMatch(/源码为空/);

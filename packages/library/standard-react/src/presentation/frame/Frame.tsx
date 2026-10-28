@@ -1,8 +1,8 @@
 import type { HydrationEventProps, NodeProps, ReactInputEmbedContext } from '@retikz/react';
 import { createInputScene, Node, withInputEmbedAdapters } from '@retikz/react';
 import type { InputFrame, InputFrameHeaders } from '@retikz/standard-vanilla/presentation';
-import { FrameInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
-import type { FrameInput } from '@retikz/standard/presentation';
+import { frameInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import type { InputFrameConfig } from '@retikz/standard/presentation';
 import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/presentation';
 import type { InputNode } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
@@ -11,7 +11,7 @@ import { Children, createElement, Fragment, isValidElement } from 'react';
 import type { StandardEmbeddableComponent } from '../../shared';
 
 /** React Frame 组件接受的 Standard authoring 输入 */
-export type FrameProps = Omit<FrameInput, 'children' | 'title' | 'description'> & {
+export type FrameProps = Omit<InputFrameConfig, 'children' | 'title' | 'description'> & {
   /** FrameTitle、FrameDescription 与参与 body bounds 的 Core Node children */
   children: ReactNode;
 };
@@ -145,7 +145,7 @@ export const Frame = FrameComponent as StandardEmbeddableComponent<FrameProps>;
 
 Frame.displayName = 'Frame';
 Frame.isTier2Embeddable = true;
-Frame.inputEmbedAdapter = FrameInputEmbedAdapter;
+Frame.inputEmbedAdapter = frameInputEmbedAdapter;
 Frame.createInputEmbedProps = createFrameInput;
 
 /** 声明 Frame 的 Node-like 主标题，只能作为 Frame 的直接 child */

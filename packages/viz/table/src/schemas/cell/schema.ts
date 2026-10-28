@@ -91,7 +91,7 @@ export const TableCellPayloadSchema = discriminatedUnion('kind', [
   TableCellContentPayloadSchema,
 ]).describe('Table Cell payload: a scalar value presentation or direct Core child content.');
 
-const ManualTableCellSharedShape = {
+const manualTableCellSharedShape = {
   id: NonBlankStringSchema.optional().describe('Optional stable Cell id.'),
   location: TableCellLocationSchema.optional().describe(
     'Optional semantic location. Omitted fields derive from the containing row kind.',
@@ -106,7 +106,7 @@ const ManualTableCellSharedShape = {
 
 /** 校验显式表格中以标量值编写的单元格 */
 export const ManualTableValueCellSchema = strictObject({
-  ...ManualTableCellSharedShape,
+  ...manualTableCellSharedShape,
   value: ScalarValueSchema.describe('JSON scalar value presented as Core content at runtime.'),
   formatter: TableFormatterRefSchema.optional().describe(
     'Optional formatter provider reference. Omitted fields use the built-in identity formatter.',
@@ -118,7 +118,7 @@ export const ManualTableValueCellSchema = strictObject({
 
 /** 校验显式表格中直接编写 Core 内容的单元格 */
 export const ManualTableContentCellSchema = strictObject({
-  ...ManualTableCellSharedShape,
+  ...manualTableCellSharedShape,
   content: ChildSchema.describe('Direct JSON-safe Core or Tier 2 child authored in Cell-local coordinates.'),
 }).describe('Manual Table Cell authored from direct Core child content.');
 

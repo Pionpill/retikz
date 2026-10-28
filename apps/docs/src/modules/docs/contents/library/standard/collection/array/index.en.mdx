@@ -7,7 +7,7 @@ description: Use Array to display one-dimensional content, configure cells, comp
 
 ## Getting started
 
-After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `PathClipDefinition` from `@retikz/extension`.
+After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `pathClipDefinition` from `@retikz/extension`.
 
 <ComponentPreview files="array-basic" hideCode size="sm" />
 
@@ -31,7 +31,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { ArrayDefinition } from '@retikz/standard/collection';
+import { arrayDefinition } from '@retikz/standard/collection';
 
 const ir: IRScene = {
   type: 'scene',
@@ -44,14 +44,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} composites={[ArrayDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[arrayDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { array, ArrayInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { array, arrayInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -61,7 +61,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [ArrayInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [arrayInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -70,7 +70,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { ArrayDefinition } from '@retikz/standard/collection';
+import { arrayDefinition } from '@retikz/standard/collection';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -85,7 +85,7 @@ const ir: IRScene = {
   ],
 };
 const svg = renderToSvgString(ir, {
-  compile: { composites: [ArrayDefinition] },
+  compile: { composites: [arrayDefinition] },
 });
 console.log(svg);
 ```
@@ -273,7 +273,7 @@ An empty root has zero natural size. Objects follow own enumerable string-key or
 
 Data does not generate cell ids by default, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. Use explicit cells for per-cell customization. defaultCell.style / defaultCell.layout affects the current level only, except that `defaultCell.layout.width: 'content'` in `data` mode passes through the automatically generated Array / Map data tree to descendant Arrays, sizing cells at each level to their own content. Hand-authored nested components do not inherit it. Font and text color inherit through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
 
-React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ArrayDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
+React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `arrayDefinition` and `mapDefinition` in `composites` and `pathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
 
 ### Reference cells and control overflow
 
@@ -308,7 +308,7 @@ Identity indices always start at zero, independently of the displayed `index.sta
   }
 />
 
-Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `defaultCell.layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `PathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
+Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `defaultCell.layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `pathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
 
 <ComponentPreview
   files="array-overflow"

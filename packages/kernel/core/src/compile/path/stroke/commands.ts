@@ -5,7 +5,7 @@ import type { IRPosition } from '../../../schemas';
 import { samePoint } from '../host';
 
 /** 向路径追加三次贝塞尔曲线所需的控制点和终点 */
-export type EmitCubicCommandInput = {
+type InputCubicCommandEmission = {
   /** 靠近当前路径端点的第一控制点 */
   control1: IRPosition;
   /** 靠近曲线终点的第二控制点 */
@@ -20,7 +20,7 @@ export type EmitCubicCommandInput = {
 };
 
 /** 以圆心、半径及角度范围描述待追加的圆弧 */
-export type EmitArcCommandInput = {
+type InputArcCommandEmission = {
   /** 圆弧圆心，使用当前路径坐标系 */
   center: IRPosition;
   /** 圆弧半径 */
@@ -32,7 +32,7 @@ export type EmitArcCommandInput = {
 };
 
 /** 以轴向半径及角度范围描述待追加的椭圆弧 */
-export type EmitEllipseArcCommandInput = {
+type InputEllipseArcCommandEmission = {
   /** 椭圆中心，使用当前路径坐标系 */
   center: IRPosition;
   /** 椭圆沿 x 轴的半径 */
@@ -75,17 +75,17 @@ export type PathCommandEmitter = {
   /** 追加二次贝塞尔曲线并记录控制点与终点 */
   emitQuad: (control: IRPosition, p: IRPosition, sourceAutoBoundary?: boolean) => void;
   /** 追加三次贝塞尔曲线并记录两控制点与终点 */
-  emitCubic: (input: EmitCubicCommandInput) => void;
+  emitCubic: (input: InputCubicCommandEmission) => void;
   /** 追加圆弧并把终止角对应点设为当前端点 */
-  emitArc: (input: EmitArcCommandInput) => void;
+  emitArc: (input: InputArcCommandEmission) => void;
   /** 追加椭圆弧并把终止参数角对应点设为当前端点 */
-  emitEllipseArc: (input: EmitEllipseArcCommandInput) => void;
+  emitEllipseArc: (input: InputEllipseArcCommandEmission) => void;
   /** 给定点与当前端点不重合时追加 move，否则保留现有子路径 */
   startSegment: (p: IRPosition, sourceAutoBoundary?: boolean) => void;
 };
 
 /** 路径命令数值舍入与源步骤追踪所需的回调 */
-export type CreatePathCommandEmitterInput = {
+type InputPathCommandEmitter = {
   /** 舍入输出命令中的坐标和半径，角度及内部端点保持原值 */
   round: (n: number) => number;
   /** 每次追加命令时读取其来源步骤种类 */
@@ -99,7 +99,7 @@ export const createPathCommandEmitter = ({
   round,
   currentStepKind,
   currentStepIndex,
-}: CreatePathCommandEmitterInput): PathCommandEmitter => {
+}: InputPathCommandEmitter): PathCommandEmitter => {
   const commands: Array<PathCommand> = [];
   const provenance: Array<string> = [];
   const stepIndexes: Array<number> = [];
@@ -163,7 +163,7 @@ export const createPathCommandEmitter = ({
     lastEnd = p;
   };
 
-  const emitCubic = ({ control1, control2, to, sourceAutoBoundary = false }: EmitCubicCommandInput): void => {
+  const emitCubic = ({ control1, control2, to, sourceAutoBoundary = false }: InputCubicCommandEmission): void => {
     noteEndpointSource(sourceAutoBoundary);
     const rc1 = roundPoint(control1);
     const rc2 = roundPoint(control2);
@@ -182,7 +182,7 @@ export const createPathCommandEmitter = ({
     lastEnd = to;
   };
 
-  const emitArc = ({ center, radius, startAngle, endAngle }: EmitArcCommandInput): void => {
+  const emitArc = ({ center, radius, startAngle, endAngle }: InputArcCommandEmission): void => {
     noteEndpointSource(false);
     const rc = roundPoint(center);
     commands.push({
@@ -199,7 +199,7 @@ export const createPathCommandEmitter = ({
     lastEnd = endPoint;
   };
 
-  const emitEllipseArc = ({ center, radiusX, radiusY, startAngle, endAngle }: EmitEllipseArcCommandInput): void => {
+  const emitEllipseArc = ({ center, radiusX, radiusY, startAngle, endAngle }: InputEllipseArcCommandEmission): void => {
     noteEndpointSource(false);
     const rc = roundPoint(center);
     commands.push({

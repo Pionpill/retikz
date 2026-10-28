@@ -15,8 +15,8 @@ const defineObserver = (definition: CompileObserverDefinition): CompileObserverD
   return factory(definition);
 };
 
-describe('Core observation definition contract', () => {
-  it('accepts a stable key and creates an isolated session', () => {
+describe('Core 观测定义契约', () => {
+  it('接受稳定键并创建隔离会话', () => {
     let completed = 0;
     const definition = defineObserver({
       key: 'test/observer',
@@ -35,7 +35,7 @@ describe('Core observation definition contract', () => {
     expect(completed).toBe(0);
   });
 
-  it('does not turn owner output schemas into Inspector contracts', () => {
+  it('不将所属模块输出 schema 转换为 Inspector 契约', () => {
     expect('Inspector' in core).toBe(false);
   });
 });

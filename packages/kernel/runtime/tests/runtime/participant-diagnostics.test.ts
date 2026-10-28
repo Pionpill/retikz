@@ -2,18 +2,17 @@ import { describe, expect, it } from 'vitest';
 
 import type { RuntimeDiagnostic, RuntimeParticipantContext } from '../../src';
 import {
+  BuiltinRuntimeDiagnosticCode,
+  createRuntime,
+  createRuntimeComputationRegistry,
   createRuntimeSourceInput,
   createRuntimeSourceRegistry,
-  createRuntimeComputationRegistry,
-  createRuntime,
   defineRuntimeCommitParticipant,
   defineRuntimeSource,
   PerformanceTraceOutcome,
   RetikzRuntimeError,
   RetikzRuntimeErrorCode,
-  BuiltinRuntimeDiagnosticCode,
 } from '../../src';
-import { getRuntimeTraceReporterDiagnosticDrainCount } from '../../src/trace/internal';
 
 const defineCounterSource = (key = 'counter') =>
   defineRuntimeSource<number, number, number, never>({
@@ -25,7 +24,7 @@ const defineCounterSource = (key = 'counter') =>
     },
   });
 
-describe('runtime runtime participant diagnostics', () => {
+describe('Runtime 运行时参与者诊断', () => {
   it('trace facade 不暴露 drain，Runtime 在 diagnose/callback 后归属 reporter diagnostics', () => {
     const owner = defineCounterSource();
     const sources = createRuntimeSourceRegistry([owner]);
@@ -74,9 +73,6 @@ describe('runtime runtime participant diagnostics', () => {
 
     if (capturedContext === undefined) throw new Error('expected participant context');
 
-    const report = capturedContext.trace.report;
-
-    expect(getRuntimeTraceReporterDiagnosticDrainCount(report)).toBe(4);
     const diagnostics = runtime.diagnostics();
     expect(diagnostics[0]?.phase).toBe('trace');
     expect(diagnostics[0]?.message).toContain('backend-reconcile');
@@ -86,8 +82,6 @@ describe('runtime runtime participant diagnostics', () => {
     ]);
 
     runtime.dispose();
-
-    expect(getRuntimeTraceReporterDiagnosticDrainCount(report)).toBe(5);
   });
 
   it('warning getter 异常转 execution diagnostic，不向 callback 反抛', () => {

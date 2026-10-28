@@ -1,8 +1,8 @@
 import type { DataInputBindings, ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { PlotCompileEnvironment } from '@retikz/plot';
-import type { IRPlot, LowerPlotsOptions, PlotLineageRun } from '@retikz/plot';
+import type { IRPlot, PlotsLoweringOptions, PlotLineageRun } from '@retikz/plot';
 import { lowerPlotWithLineage } from '@retikz/plot';
-import type { ResolveLabelMap } from '@retikz/plot-vanilla';
+import type { LabelResolverByField } from '@retikz/plot-vanilla';
 import { normalizePlotIR, resolveLabelOf } from '@retikz/plot-vanilla';
 
 import { collectPlotDeclarations } from './adapter';
@@ -13,12 +13,12 @@ import type { PlotProps } from './Plot';
  * `Plot` props 的完整 authoring 结果
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type ResolvedPlotAuthoring<TSource = never> = Readonly<{
+export type PlotAuthoringResolution<TSource = never> = Readonly<{
   /** 完整 Plot Source IR */
   spec: IRPlot;
 
   /** 将绘图描述降低为 Core 图元时的运行时选项 */
-  lowerOptions: LowerPlotsOptions;
+  lowerOptions: PlotsLoweringOptions;
 }> &
   (
     | Readonly<{
@@ -34,7 +34,7 @@ export type ResolvedPlotAuthoring<TSource = never> = Readonly<{
   );
 
 /** `resolvePlotAuthoring` 的可选嵌入与默认数据引用配置 */
-export type ResolvePlotAuthoringOptions = Readonly<{
+export type PlotAuthoringResolveOptions = Readonly<{
   /** 是否为 Tier 2 embedded authoring */
   embedded?: boolean;
   /** DSL 缺省时使用的稳定数据引用 */
@@ -61,9 +61,9 @@ const embeddedDataRefFor = (rows: Array<ExternalRow>): string => {
 
 const lowerPlotOptionsOf = <TSource>(
   props: PlotProps<TSource>,
-  effectiveDatasetFieldMaps: LowerPlotsOptions['datasetFieldMaps'],
-  collectedResolveLabel: ResolveLabelMap | undefined,
-): LowerPlotsOptions => {
+  effectiveDatasetFieldMaps: PlotsLoweringOptions['datasetFieldMaps'],
+  collectedResolveLabel: LabelResolverByField | undefined,
+): PlotsLoweringOptions => {
   const {
     layout,
     definitions,
@@ -152,8 +152,8 @@ const applyPlotPropsToSpec = (
  */
 export const resolvePlotAuthoring = <TSource = never>(
   props: PlotProps<TSource>,
-  options: ResolvePlotAuthoringOptions = {},
-): ResolvedPlotAuthoring<TSource> => {
+  options: PlotAuthoringResolveOptions = {},
+): PlotAuthoringResolution<TSource> => {
   const dataRef = !props.spec
     ? (props.dataRef ??
       options.defaultDataReference ??
@@ -168,7 +168,7 @@ export const resolvePlotAuthoring = <TSource = never>(
   let effectiveDatasetFieldMaps = props.datasetFieldMaps;
 
   // DSL 入口 buildPlotIR 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
-  let collectedResolveLabel: ResolveLabelMap | undefined;
+  let collectedResolveLabel: LabelResolverByField | undefined;
   if (props.spec) {
     spec = applyPlotPropsToSpec(props.spec, props);
     datasets = props.data ?? {};

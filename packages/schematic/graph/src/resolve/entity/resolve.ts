@@ -4,11 +4,11 @@ import type { EntityKindRegistry } from '../../providers';
 import { entityKindDefinitionOf, entityKindKeys } from '../../providers';
 import type { IRGraphEntity, IRGraphEntityDefaults, IRGraphEntityRule } from '../../schemas';
 import { mergeGraphDefaults } from '../theme';
-import { matchesGraphThemeSelector, resolveGraphTheme, validateGraphThemeSelector } from '../theme';
+import { matchesGraphThemeSelector, resolveGraphTheme, assertGraphThemeSelector } from '../theme';
 import type {
   CanonicalEntity,
   CanonicalEntityPredicate,
-  EffectiveEntityAppearance,
+  MergedEntityAppearance,
   EntityAppearanceResolveContext,
   EntityGraphLayerResolveContext,
   EntityResolveContext,
@@ -91,9 +91,9 @@ export const resolveEntity = (source: IRGraphEntity, context: EntityResolveConte
 };
 
 const mergeEntityAppearance = (
-  current: EffectiveEntityAppearance | undefined,
+  current: MergedEntityAppearance | undefined,
   override: IRGraphEntityDefaults | undefined,
-): EffectiveEntityAppearance =>
+): MergedEntityAppearance =>
   mergeGraphDefaults(
     current === undefined ? undefined : { entity: current },
     override === undefined ? undefined : { entity: override },
@@ -123,23 +123,23 @@ const entitySubjectOf = (entity: CanonicalEntity) => ({
 const matchingEntityRule = (
   rule: IRGraphEntityRule,
   subject: Parameters<typeof matchesGraphThemeSelector>[1],
-): EffectiveEntityAppearance =>
+): MergedEntityAppearance =>
   rule.style === undefined || !matchesGraphThemeSelector(rule.selector, subject) ? {} : { style: rule.style };
 
 const resolveEntityAuthorAppearance = (
   entity: CanonicalEntity,
   context: EntityGraphLayerResolveContext,
-): EffectiveEntityAppearance => {
+): MergedEntityAppearance => {
   const selectorContext = selectorContextOf(context);
   const subject = entitySubjectOf(entity);
-  let appearance: EffectiveEntityAppearance = {};
+  let appearance: MergedEntityAppearance = {};
 
   for (const layer of context.layers) {
     appearance = mergeEntityAppearance(appearance, layer.defaults?.entity);
 
     for (const rule of layer.rules ?? []) {
       if (rule.type !== 'entity') continue;
-      validateGraphThemeSelector(rule.selector, selectorContext);
+      assertGraphThemeSelector(rule.selector, selectorContext);
       appearance = mergeEntityAppearance(appearance, matchingEntityRule(rule, subject));
     }
   }
@@ -168,15 +168,15 @@ export const projectEntityGraphLayers = (
 export const resolveEntityAppearance = (
   entity: CanonicalEntity,
   context: EntityAppearanceResolveContext,
-): EffectiveEntityAppearance => {
+): MergedEntityAppearance => {
   const graphTheme = resolveGraphTheme(context.theme, context.graphThemeDefinitions);
   const selectorContext = selectorContextOf(context);
   const subject = entitySubjectOf(entity);
-  let appearance: EffectiveEntityAppearance = graphTheme.defaults.entity ?? {};
+  let appearance: MergedEntityAppearance = graphTheme.defaults.entity ?? {};
 
   for (const rule of graphTheme.rules) {
     if (rule.type !== 'entity') continue;
-    validateGraphThemeSelector(rule.selector, selectorContext);
+    assertGraphThemeSelector(rule.selector, selectorContext);
     appearance = mergeEntityAppearance(appearance, matchingEntityRule(rule, subject));
   }
 

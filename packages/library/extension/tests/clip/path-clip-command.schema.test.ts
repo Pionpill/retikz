@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { PathClipCommandSchema } from '../../src/clip';
 
-describe('PathClipCommandSchema strict object behavior', () => {
-  it('move command rejects unknown fields', () => {
+describe('PathClipCommandSchema 严格的对象行为', () => {
+  it('移动命令拒绝未知字段', () => {
     expect(PathClipCommandSchema.safeParse({ kind: 'move', to: [0, 0], typo: true }).success).toBe(false);
   });
 
-  it('arc command rejects unknown fields', () => {
+  it('arc 命令拒绝未知字段', () => {
     expect(
       PathClipCommandSchema.safeParse({
         kind: 'arc',
@@ -20,7 +20,7 @@ describe('PathClipCommandSchema strict object behavior', () => {
     ).toBe(false);
   });
 
-  it('close command rejects unknown fields', () => {
+  it('关闭命令拒绝未知字段', () => {
     expect(PathClipCommandSchema.safeParse({ kind: 'close', reason: 'done' }).success).toBe(false);
   });
 });

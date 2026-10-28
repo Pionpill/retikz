@@ -4,7 +4,7 @@
 
 ## 职责
 
-- 定义 `XxxDefinition`、必要的 `XxxDefinitionInput`、`AnyXxxDefinition`。
+- 定义 `XxxDefinition`、必要的 `InputXxxDefinition`、`AnyXxxDefinition`。
 - 提供作者侧入口 `defineXxx()`。
 - 定义能力函数 context：`XxxResolveContext`、`XxxEmitContext`、`XxxCompileContext` 等。
 - 放能力无关、无具体内置绑定的 helper。
@@ -13,7 +13,7 @@
 
 ## 组织与命名
 
-目录、文件和符号名以 `standard-name` 为唯一真源。`XxxDefinitionInput` 只在 Definition 作者侧输入不同于存储契约时定义，不能与 Vanilla 的 `InputXxx` 混用；擦除泛型的异构 definition 不是任意 JSON。
+目录、文件和符号名以 `standard-name` 为唯一真源。`InputXxxDefinition` 只在 Definition 作者侧输入不同于存储契约时定义，与 Vanilla authoring 输入共用 Input 前缀，但保持各自契约与 owner；擦除泛型的异构 definition 不是任意 JSON。
 
 `defineXxx()` 即使暂时只是 typed identity，也保留为稳定 contract hook；不要写成 `@todo`。
 

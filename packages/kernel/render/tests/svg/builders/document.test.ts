@@ -1,4 +1,4 @@
-import type { PathPrimitive, RectPrimitive, ResolvedArrowEnd, Scene, SceneResource } from '@retikz/core';
+import type { PathPrimitive, RectPrimitive, CompiledArrowEnd, Scene, SceneResource } from '@retikz/core';
 import type { SvgNode } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 
@@ -7,7 +7,7 @@ import { renderToSvgString } from '../../../src/svg/serialize/to-string';
 
 const layout = { x: 0, y: 0, width: 10, height: 10 };
 
-const arrowSpec: ResolvedArrowEnd = {
+const arrowSpec: CompiledArrowEnd = {
   shape: 'stealth',
   baseSize: 10,
   refX: 8,
@@ -51,7 +51,7 @@ describe('buildSvgDocument —— 边界', () => {
 });
 
 describe('buildSvgDocument —— 交互', () => {
-  it('places both arrow ends in the owning path container', () => {
+  it('将箭头两端放置在所属路径容器中', () => {
     const path: PathPrimitive = {
       type: 'path',
       commands: [
@@ -109,7 +109,7 @@ describe('buildSvgDocument —— 交互', () => {
     expect(b1).not.toContain('retikz-paint-a-');
   });
 
-  it('unsafe idPrefix is normalized before resource ids and url fragments are emitted', () => {
+  it('不安全的 idPrefix 在发出资源 ID 和 url 片段之前已标准化', () => {
     const gradient: SceneResource = {
       kind: 'paint',
       id: 'paint-1',

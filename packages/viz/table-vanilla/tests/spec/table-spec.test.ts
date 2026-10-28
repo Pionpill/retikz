@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { detailTable, embedTable, manualTable } from '../../src';
 
-describe('Table Vanilla plain authoring', () => {
-  it('delegates detail and manual helpers to the shared Table constructors without modifying inputs', () => {
+describe('Table Vanilla 简单编写', () => {
+  it('detail 和 manual 辅助函数委托共享 Table 构造器且不修改输入', () => {
     const detailInput = {
       id: 'people',
       dataRef: 'people',
@@ -42,7 +42,7 @@ describe('Table Vanilla plain authoring', () => {
     expect(JSON.parse(JSON.stringify(manualSpec))).toEqual(manualSpec);
   });
 
-  it('preserves anonymous Source and reuses an explicit Source id for the embed', () => {
+  it('保留匿名 Source 并重用嵌入的显式 Source id', () => {
     const spec = manualTable({ rows: [[null]] });
 
     expect(embedTable(spec, { data: {} })).toEqual({

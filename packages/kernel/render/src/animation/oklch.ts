@@ -159,22 +159,3 @@ export const lerpColorOklch = (from: string, to: string, t: number): string => {
 
   return oklchToHex(lerpOklch(a, b, t));
 };
-
-/**
- * 在 from→to 之间按 oklch 预采样 N 个等分颜色（含两端点，共 N+1 个），返回 sRGB hex 数组
- * @description SVG CSS 预采样用：把感知均匀的 oklch 路径退化成 sRGB 分段折线，写进 @keyframes，兼容性满分。
- *   端点无法解析 oklch 时回退为 [from, to]（不采样）
- */
-export const sampleColorOklch = (from: string, to: string, segments: number): Array<string> => {
-  const a = colorToOklch(from);
-  const b = colorToOklch(to);
-  if (!a || !b || segments < 1) return [from, to];
-
-  const out: Array<string> = [];
-
-  for (let i = 0; i <= segments; i++) {
-    out.push(oklchToHex(lerpOklch(a, b, i / segments)));
-  }
-
-  return out;
-};

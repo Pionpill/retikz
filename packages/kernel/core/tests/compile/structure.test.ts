@@ -12,8 +12,8 @@ const root = resolve(here, '../..');
 
 const source = (path: string): string => readFileSync(resolve(root, path), 'utf8');
 
-describe('compile source structure', () => {
-  it('compile barrel exposes only stable runtime entries', () => {
+describe('编译源结构', () => {
+  it('编译聚合入口仅公开稳定的运行时条目', () => {
     expect(Object.keys(compile).sort()).toEqual([
       'BuiltinCompileWarningCode',
       'assembleCompileOutputs',
@@ -45,7 +45,7 @@ describe('compile source structure', () => {
     ]);
   });
 
-  it('node resolve stays free of compile dependencies', () => {
+  it('节点解析不受编译依赖关系的影响', () => {
     for (const path of ['src/resolve/node/shape.ts', 'src/resolve/node/boundary.ts']) {
       expect(source(path)).not.toContain('/compile/');
     }

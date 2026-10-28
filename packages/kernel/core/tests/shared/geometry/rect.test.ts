@@ -6,8 +6,8 @@ import { rect } from '../../../src/shared/geometry/rect';
 
 const r10x6: CenteredBox = { x: 0, y: 0, width: 10, height: 6 };
 
-describe('anchor vocabularies', () => {
-  it('keeps only canonical anchor and side names in shared', () => {
+describe('锚定词汇', () => {
+  it('仅在共享中保留规范的锚点和侧面名称', () => {
     expect(CenterAnchor).toEqual({ Center: 'center' });
     expect(Side).toEqual({
       Top: 'top',
@@ -27,7 +27,7 @@ describe('anchor vocabularies', () => {
     });
   });
 
-  it('recognizes canonical names without accepting aliases', () => {
+  it('识别规范名称而不接受别名', () => {
     expect(isAnchor(CenterAnchor.Center)).toBe(true);
     expect(isAnchor(Anchor.BottomRight)).toBe(true);
     expect(isDirectionalAnchor(Anchor.TopLeft)).toBe(true);
@@ -39,7 +39,7 @@ describe('anchor vocabularies', () => {
 });
 
 describe('rect.anchor', () => {
-  it('returns the 8 directional anchors without rotation', () => {
+  it('返回不旋转的 8 个方向锚点', () => {
     expect(rect.anchor(r10x6, Anchor.Top)).toEqual([0, -3]);
     expect(rect.anchor(r10x6, Anchor.Bottom)).toEqual([0, 3]);
     expect(rect.anchor(r10x6, Anchor.Right)).toEqual([5, 0]);
@@ -50,13 +50,13 @@ describe('rect.anchor', () => {
     expect(rect.anchor(r10x6, Anchor.BottomLeft)).toEqual([-5, 3]);
   });
 
-  it('offsets anchors by rectangle center', () => {
+  it('按矩形中心偏移锚点', () => {
     const r: CenteredBox = { x: 100, y: 50, width: 10, height: 6 };
 
     expect(rect.anchor(r, Anchor.TopRight)).toEqual([105, 47]);
   });
 
-  it('rotates top and right anchors with the rectangle', () => {
+  it('使用矩形旋转顶部和右侧锚点', () => {
     const r: CenteredBox = { ...r10x6, rotate: Math.PI / 2 };
     const [topX, topY] = rect.anchor(r, Anchor.Top);
 
@@ -69,7 +69,7 @@ describe('rect.anchor', () => {
     expect(rightY).toBeCloseTo(5);
   });
 
-  it('maps top under 180 degree rotation to the unrotated bottom anchor', () => {
+  it('将 180 度旋转下的顶部映射到未旋转的底部锚点', () => {
     const rRot: CenteredBox = { ...r10x6, rotate: Math.PI };
     const [x, y] = rect.anchor(rRot, Anchor.Top);
     const [sx, sy] = rect.anchor(r10x6, Anchor.Bottom);

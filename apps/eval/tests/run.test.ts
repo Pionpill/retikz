@@ -62,7 +62,7 @@ describe('runEval', () => {
   });
 });
 
-describe('runEval L2', () => {
+describe('runEval 的 L2 评测', () => {
   const helloIr = JSON.stringify({
     version: 1,
     type: 'scene',

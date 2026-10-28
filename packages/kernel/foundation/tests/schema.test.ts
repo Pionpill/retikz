@@ -20,8 +20,8 @@ const TestRole = {
 
 const TestRoleSchema = createOpenStringSchema(TestRole);
 
-describe('JSON schemas', () => {
-  it('accepts recursive JSON values and objects', () => {
+describe('JSON 数据 schema', () => {
+  it('接受递归 JSON 值和对象', () => {
     const object: JsonObject = {
       scalar: 'value',
       list: [1, true, null, { nested: ['deep'] }],
@@ -32,7 +32,7 @@ describe('JSON schemas', () => {
     expect(JsonObjectSchema.parse({})).toEqual({});
   });
 
-  it('accepts readonly const JSON at the unknown parse boundary', () => {
+  it('在未知解析边界处接受只读 const JSON', () => {
     const source = { list: [1, { nested: ['value'] }] } as const;
 
     expect(JsonObjectSchema.parse(source)).toEqual(source);
@@ -48,11 +48,11 @@ describe('JSON schemas', () => {
     { nested: [0, { invalid: undefined }] },
     { invalid: new Date(0) },
     { invalid: new Map([['key', 'value']]) },
-  ])('rejects non-JSON input %#', value => {
+  ])('拒绝非 JSON 输入 %#', value => {
     expect(JsonObjectSchema.safeParse(value).success).toBe(false);
   });
 
-  it('round-trips persisted JSON without changing its value', () => {
+  it('往返持续 JSON 而不改变其值', () => {
     const original: JsonObject = {
       coefficient: 2.5,
       labels: ['p', 'q'],
@@ -62,7 +62,7 @@ describe('JSON schemas', () => {
     expect(JsonObjectSchema.parse(JSON.parse(JSON.stringify(original)))).toEqual(original);
   });
 
-  it('remains convertible to JSON Schema', () => {
+  it('仍然可转换为 JSON schema', () => {
     expect(toJSONSchema(JsonValueSchema)).toMatchObject({
       $ref: '#/$defs/__schema0',
       $defs: {
@@ -73,26 +73,26 @@ describe('JSON schemas', () => {
 });
 
 describe('NonBlankStringSchema', () => {
-  it('preserves non-blank input verbatim', () => {
+  it('逐字保留非空白输入', () => {
     expect(NonBlankStringSchema.parse(' alpha ')).toBe(' alpha ');
   });
 
-  it.each(['', ' ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])('rejects blank value %j', value => {
+  it.each(['', ' ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])('拒绝空白值 %j', value => {
     expect(NonBlankStringSchema.safeParse(value).success).toBe(false);
   });
 });
 
 describe('createOpenStringSchema', () => {
-  it('preserves built-in and custom non-blank strings with an OpenString result type', () => {
+  it('保留具有 OpenString 结果类型的内置和自定义非空白字符串', () => {
     expect(TestRoleSchema.parse(TestRole.Participant)).toBe(TestRole.Participant);
     expect(TestRoleSchema.parse(' custom.role ')).toBe(' custom.role ');
   });
 
-  it.each(['', ' ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])('rejects blank value %j', value => {
+  it.each(['', ' ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])('拒绝空白值 %j', value => {
     expect(TestRoleSchema.safeParse(value).success).toBe(false);
   });
 
-  it('keeps built-in enum hints and an open non-empty string branch in JSON Schema', () => {
+  it('在 JSON schema 中保留内置枚举提示和开放的非空字符串分支', () => {
     expect(toJSONSchema(TestRoleSchema)).toMatchObject({
       anyOf: [
         { type: 'string', enum: ['participant', 'activity'] },
@@ -102,52 +102,52 @@ describe('createOpenStringSchema', () => {
   });
 });
 
-describe('number schemas', () => {
+describe('数字 schema', () => {
   it.each([Number.NEGATIVE_INFINITY, -1, -0, 0, Number.POSITIVE_INFINITY, Number.NaN, '1'])(
-    'PositiveNumberSchema rejects %j',
+    'PositiveNumberSchema 拒绝 %j',
     value => {
       expect(PositiveNumberSchema.safeParse(value).success).toBe(false);
     },
   );
 
-  it('PositiveNumberSchema accepts finite positive numbers', () => {
+  it('PositiveNumberSchema 接受有限正数', () => {
     expect(PositiveNumberSchema.parse(Number.MIN_VALUE)).toBe(Number.MIN_VALUE);
     expect(PositiveNumberSchema.parse(1.5)).toBe(1.5);
   });
 
-  it.each([-0, 0, 1.5])('NonNegativeNumberSchema accepts %j', value => {
+  it.each([-0, 0, 1.5])('NonNegativeNumberSchema 接受 %j', value => {
     expect(NonNegativeNumberSchema.parse(value)).toBe(value);
   });
 
   it.each([Number.NEGATIVE_INFINITY, -1, Number.POSITIVE_INFINITY, Number.NaN])(
-    'NonNegativeNumberSchema rejects %j',
+    'NonNegativeNumberSchema 拒绝 %j',
     value => {
       expect(NonNegativeNumberSchema.safeParse(value).success).toBe(false);
     },
   );
 
-  it.each([1, Number.MAX_SAFE_INTEGER])('PositiveIntegerSchema accepts %j', value => {
+  it.each([1, Number.MAX_SAFE_INTEGER])('PositiveIntegerSchema 接受 %j', value => {
     expect(PositiveIntegerSchema.parse(value)).toBe(value);
   });
 
-  it.each([-1, -0, 0, 1.5, Number.MAX_SAFE_INTEGER + 1])('PositiveIntegerSchema rejects %j', value => {
+  it.each([-1, -0, 0, 1.5, Number.MAX_SAFE_INTEGER + 1])('PositiveIntegerSchema 拒绝 %j', value => {
     expect(PositiveIntegerSchema.safeParse(value).success).toBe(false);
   });
 
-  it.each([-0, 0, 1, Number.MAX_SAFE_INTEGER])('NonNegativeIntegerSchema accepts %j', value => {
+  it.each([-0, 0, 1, Number.MAX_SAFE_INTEGER])('NonNegativeIntegerSchema 接受 %j', value => {
     expect(NonNegativeIntegerSchema.parse(value)).toBe(value);
   });
 
-  it.each([-1, 1.5, Number.MAX_SAFE_INTEGER + 1])('NonNegativeIntegerSchema rejects %j', value => {
+  it.each([-1, 1.5, Number.MAX_SAFE_INTEGER + 1])('NonNegativeIntegerSchema 拒绝 %j', value => {
     expect(NonNegativeIntegerSchema.safeParse(value).success).toBe(false);
   });
 
-  it.each([0, 0.5, 1])('NormalizedFractionSchema accepts %j', value => {
+  it.each([0, 0.5, 1])('NormalizedFractionSchema 接受 %j', value => {
     expect(NormalizedFractionSchema.parse(value)).toBe(value);
   });
 
   it.each([Number.NEGATIVE_INFINITY, -0.1, 1.1, Number.POSITIVE_INFINITY, Number.NaN])(
-    'NormalizedFractionSchema rejects %j',
+    'NormalizedFractionSchema 拒绝 %j',
     value => {
       expect(NormalizedFractionSchema.safeParse(value).success).toBe(false);
     },

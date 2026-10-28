@@ -1,7 +1,7 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
-import type { RenderHandlerContribution, RenderRuntimeConfigInput, RetainedRendererRead } from '@retikz/render/runtime';
+import type { RenderHandlerContribution, InputRenderRuntimeConfig, RetainedRendererRead } from '@retikz/render/runtime';
 import { builtinRetainedRendererFactory, createRetainedRenderTarget, RenderCachePolicy } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
@@ -11,7 +11,7 @@ import { createEmptyInputRuntimeMetaSnapshot } from '../normalize/scene/runtime-
 import { createDomProcessingController } from '../processing/internal/controller';
 import type {
   InternalProcessingController,
-  ProcessingParticipantUpdateInput,
+  InputProcessingParticipantUpdate,
   ProcessingTransactionParticipant,
   ProcessingTransactionParticipantFactory,
 } from '../processing/internal/types';
@@ -25,7 +25,7 @@ import type {
   RetainedCanvasUpdateOptions,
   RetainedMountCanvasOptions,
   RetainedMountOptions,
-  RetainedRenderInput,
+  InputRetainedRender,
   RetainedSvgUpdateOptions,
   RetainedVanillaCanvasUpdateOptions,
   VanillaAnimationOptions,
@@ -70,13 +70,13 @@ type RetainedRuntimeState = Readonly<{
   runtimeMeta: InputRuntimeMeta;
 }>;
 
-type CreateSvgRetainedRuntimeOptions = Readonly<{
+type SvgRetainedRuntimeOptions = Readonly<{
   /** 要创建的 renderer 后端 */
   backend: 'svg';
   /** retained renderer 独占的宿主根元素 */
   host: SVGSVGElement;
   /** 初始完整 IR 或 InputScene */
-  input: RetainedRenderInput;
+  input: InputRetainedRender;
   /** runtime-lifetime mount 配置 */
   options: RetainedMountOptions;
   /** 已在宿主创建前校验并复制的 Runtime 配置 */
@@ -85,13 +85,13 @@ type CreateSvgRetainedRuntimeOptions = Readonly<{
   idPrefix: string;
 }>;
 
-type CreateCanvasRetainedRuntimeOptions = Readonly<{
+type CanvasRetainedRuntimeOptions = Readonly<{
   /** 要创建的 renderer 后端 */
   backend: 'canvas';
   /** retained renderer 独占的宿主根元素 */
   host: HTMLCanvasElement;
   /** 初始完整 IR 或 InputScene */
-  input: RetainedRenderInput;
+  input: InputRetainedRender;
   /** runtime-lifetime mount 配置 */
   options: RetainedMountCanvasOptions;
   /** 已在宿主创建前校验并复制的 Runtime 配置 */
@@ -102,20 +102,20 @@ type CreateCanvasRetainedRuntimeOptions = Readonly<{
   devicePixelRatio?: number;
 }>;
 
-type CreateRetainedRuntimeOptions = CreateSvgRetainedRuntimeOptions | CreateCanvasRetainedRuntimeOptions;
+type RetainedRuntimeOptions = SvgRetainedRuntimeOptions | CanvasRetainedRuntimeOptions;
 
-type CreateRetainedProcessingController = {
+type RetainedProcessingControllerFactory = {
   /** 创建 SVG retained processing controller */
-  (options: CreateSvgRetainedRuntimeOptions): DomRetainedProcessingController<RetainedSvgUpdateOptions>;
+  (options: SvgRetainedRuntimeOptions): DomRetainedProcessingController<RetainedSvgUpdateOptions>;
   /** 创建 Canvas retained processing controller */
-  (options: CreateCanvasRetainedRuntimeOptions): DomRetainedProcessingController<RetainedCanvasUpdateOptions>;
+  (options: CanvasRetainedRuntimeOptions): DomRetainedProcessingController<RetainedCanvasUpdateOptions>;
 };
 
 /** DOM 子入口使用的 retained processing 控制面 */
 type DomRetainedProcessingController<TUpdateOptions extends RetainedSvgUpdateOptions | RetainedCanvasUpdateOptions> =
   Readonly<{
     /** 原子提交下一份 InputScene 或 Source IR 与 renderer 可变配置 */
-    update: (source: RetainedRenderInput, options?: TUpdateOptions) => void;
+    update: (source: InputRetainedRender, options?: TUpdateOptions) => void;
     /** 向当前提交帧注册 hydration handlers */
     hydrate: (options: HydrateOptions) => HydrationHandle;
     /** 释放 processing runtime 与已挂载 renderer */
@@ -138,8 +138,8 @@ const captureHydrationHandlers = (handlers: HydrateOptions['handlers']): Hydrate
 const createRenderConfig = (
   state: RetainedRuntimeState,
   handlers: ReadonlyArray<RenderHandlerContribution>,
-  canvas: RenderRuntimeConfigInput['canvas'],
-): RenderRuntimeConfigInput => {
+  canvas: InputRenderRuntimeConfig['canvas'],
+): InputRenderRuntimeConfig => {
   /** 把 Vanilla layer hints 保守折叠为 Render cache policy */
   const resolveCachePolicy = (runtimeMeta: InputRuntimeMeta): 'auto' | 'static' | 'dynamic' => {
     if (runtimeMeta.layers.some(layer => layer.cache === InputLayerCache.Dynamic)) return RenderCachePolicy.Dynamic;
@@ -163,21 +163,21 @@ const createRenderConfig = (
 
 /** 创建 DOM 子入口固定注入的 Render participant factory */
 const createRenderParticipantFactory = (
-  options: CreateRetainedRuntimeOptions,
+  options: RetainedRuntimeOptions,
   initialState: RetainedRuntimeState,
-  canvas: RenderRuntimeConfigInput['canvas'],
+  canvas: InputRenderRuntimeConfig['canvas'],
   state: () => RetainedRuntimeState,
   handlers: () => ReadonlyArray<RenderHandlerContribution>,
 ): Readonly<{
   factory: ProcessingTransactionParticipantFactory;
   read: () => RetainedRendererRead;
-  updateConfig: (input: ProcessingParticipantUpdateInput) => void;
+  updateConfig: (input: InputProcessingParticipantUpdate) => void;
 }> => {
   let lease: ReturnType<typeof createRetainedRenderTarget>['lease'] | undefined;
   let active:
     | Readonly<{
         read: () => RetainedRendererRead;
-        updateConfig: (input: ProcessingParticipantUpdateInput) => void;
+        updateConfig: (input: InputProcessingParticipantUpdate) => void;
       }>
     | undefined;
 
@@ -210,7 +210,7 @@ const createRenderParticipantFactory = (
     let current = Object.freeze({ ...initialState, runtimeMeta: context.initial.runtimeMeta });
     let currentHandlers = handlers();
 
-    const updateConfig = (input: ProcessingParticipantUpdateInput): void => {
+    const updateConfig = (input: InputProcessingParticipantUpdate): void => {
       current =
         input.kind === 'source' ? Object.freeze({ ...state(), runtimeMeta: input.prepared.runtimeMeta }) : state();
       currentHandlers = handlers();
@@ -245,7 +245,7 @@ const createRenderParticipantFactory = (
 
 /** 创建 DOM 子入口使用的 retained processing controller */
 const createRetainedProcessingControllerImplementation = (
-  options: CreateRetainedRuntimeOptions,
+  options: RetainedRuntimeOptions,
 ): DomRetainedProcessingController<RetainedSvgUpdateOptions | RetainedCanvasUpdateOptions> => {
   /** 构造 runtime-lifetime processing options */
   const toProcessingOptions = (
@@ -388,4 +388,4 @@ const createRetainedProcessingControllerImplementation = (
 
 /** 创建与后端匹配 update options 的 retained processing controller */
 export const createRetainedProcessingController =
-  createRetainedProcessingControllerImplementation as CreateRetainedProcessingController;
+  createRetainedProcessingControllerImplementation as RetainedProcessingControllerFactory;

@@ -3,7 +3,7 @@ import { DataFieldType } from '@retikz/data';
 import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { prepareRows } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
@@ -32,7 +32,7 @@ const specWithField = (field: { name: string } & Record<string, unknown>): IRPlo
 const parseFirst = (
   spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
-  options: LowerPlotsOptions = {},
+  options: PlotsLoweringOptions = {},
 ): unknown => {
   const ingested = tagSourceIndex(datasets.d);
   const { normalized } = prepareRows(spec, datasets, options, ingested);
@@ -40,17 +40,17 @@ const parseFirst = (
 };
 
 describe('ISO 识别器扩宽（contract）— happy path', () => {
-  it('space_tz_inferred_temporal', () => {
+  it('空间 tz 推断时间', () => {
     // 空格分隔 + Z 时区（SQL 时间戳）→ 推断 temporal
     expect(inferOne(['2024-01-01 12:00:00Z', '2024-06-30 08:30:00Z'])).toBe(DataFieldType.Temporal);
   });
 
-  it('space_offset_inferred_temporal', () => {
+  it('空间偏移推断时间', () => {
     // 空格分隔 + ±HH:MM offset → 推断 temporal
     expect(inferOne(['2024-01-01 12:00:00+08:00'])).toBe(DataFieldType.Temporal);
   });
 
-  it('space_form_parses_equal_to_T', () => {
+  it('空间形式解析等于 T', () => {
     // 空格形与等价 T 形解析出同一 epoch ms
     expect(coerceTimestamp('2024-01-01 12:00:00Z')).toBe(coerceTimestamp('2024-01-01T12:00:00Z'));
     expect(coerceTimestamp('2024-01-01 12:00:00Z')).toBe(Date.UTC(2024, 0, 1, 12, 0, 0));
@@ -58,19 +58,19 @@ describe('ISO 识别器扩宽（contract）— happy path', () => {
 });
 
 describe('ISO 识别器扩宽（contract）— 边界', () => {
-  it('date_only_unchanged', () => {
+  it('仅日期未更改', () => {
     // 纯日期正则不动，仍 temporal
     expect(isIsoDateString('2024-01-01')).toBe(true);
     expect(inferOne(['2024-01-01', '2024-12-31'])).toBe(DataFieldType.Temporal);
   });
 
-  it('strict_T_datetime_unchanged', () => {
+  it('严格的 T 日期时间不变', () => {
     // 既有 T 分隔带时区行为不变
     expect(isIsoDateString('2024-01-01T12:00:00Z')).toBe(true);
     expect(coerceTimestamp('2024-01-01T12:00:00Z')).toBe(Date.UTC(2024, 0, 1, 12, 0, 0));
   });
 
-  it('fractional_seconds_space', () => {
+  it('小数秒空间', () => {
     // 空格 + 小数秒 + Z → 正确解析
     expect(isIsoDateString('2024-01-01 12:00:00.123Z')).toBe(true);
     expect(coerceTimestamp('2024-01-01 12:00:00.123Z')).toBe(Date.UTC(2024, 0, 1, 12, 0, 0, 123));
@@ -78,20 +78,20 @@ describe('ISO 识别器扩宽（contract）— 边界', () => {
 });
 
 describe('ISO 识别器扩宽（contract）— 错误路径（歧义形态仍拒）', () => {
-  it('no_timezone_space_rejected', () => {
+  it('没有拒绝时区空间', () => {
     // 无时区（本地歧义）→ 非 temporal、不解析
     expect(isIsoDateString('2024-01-01 12:00:00')).toBe(false);
     expect(coerceTimestamp('2024-01-01 12:00:00')).toBe(null);
     expect(inferOne(['2024-01-01 12:00:00'])).toBe(DataFieldType.Categorical);
   });
 
-  it('slash_still_not_temporal', () => {
+  it('斜杠仍然不是临时的', () => {
     // 斜杠日期仍走声明、非自动 temporal
     expect(isIsoDateString('2024/01/01')).toBe(false);
     expect(inferOne(['2024/01/01', '2024/02/01'])).toBe(DataFieldType.Categorical);
   });
 
-  it('compact_numeric_not_temporal', () => {
+  it('紧凑数值不推断为时间类型', () => {
     // 紧凑数字串与裸数字歧义，不收
     expect(isIsoDateString('20240101')).toBe(false);
     expect(inferOne(['20240101', '20240102'])).toBe(DataFieldType.Categorical);
@@ -99,14 +99,14 @@ describe('ISO 识别器扩宽（contract）— 错误路径（歧义形态仍拒
 });
 
 describe('ISO 识别器扩宽（contract）— 交互（经 lowering / format）', () => {
-  it('declared_temporal_space_value_parses', () => {
+  it('声明的时间空间值解析', () => {
     // 声明 temporal + 空格带时区值 → 经 lowering 得正确 epoch ms
     const spec = specWithField({ name: 'v', type: 'temporal' });
 
     expect(parseFirst(spec, { d: [{ v: '2024-01-01 12:00:00Z', y: 1 }] })).toBe(Date.UTC(2024, 0, 1, 12, 0, 0));
   });
 
-  it('format_iso_accepts_space', () => {
+  it('iso 格式接受空格', () => {
     // format:'iso' 经 coerceTimestamp，自动继承空格分隔
     const spec = specWithField({ name: 'v', type: 'temporal', format: 'iso' });
 

@@ -46,7 +46,7 @@ React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `i
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { OverlayLayoutDefinition } from '@retikz/layout';
+import { overlayLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -64,7 +64,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ composites: [OverlayLayoutDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ composites: [overlayLayoutDefinition] }} />;
 ```
 
 </DocTab>
@@ -72,7 +72,7 @@ export const Example = () => <Layout ir={ir} extensions={{ composites: [OverlayL
 
 ```ts
 import { scene, renderToSvgString } from '@retikz/vanilla';
-import { overlayLayout, OverlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { overlayLayout, overlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 
 const input = scene({
   children: [
@@ -86,7 +86,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { adapters: [OverlayLayoutInputEmbedAdapter] }));
+console.log(renderToSvgString(input, { adapters: [overlayLayoutInputEmbedAdapter] }));
 ```
 
 </DocTab>
@@ -95,7 +95,7 @@ console.log(renderToSvgString(input, { adapters: [OverlayLayoutInputEmbedAdapter
 ```ts
 import type { IRScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
-import { OverlayLayoutDefinition } from '@retikz/layout';
+import { overlayLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
   type: 'scene',
@@ -113,7 +113,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { composites: [OverlayLayoutDefinition] } }));
+console.log(renderToSvgString(ir, { compile: { composites: [overlayLayoutDefinition] } }));
 ```
 
 </DocTab>
@@ -165,7 +165,7 @@ demo 中第一项保持不动。先切换第二项的纵向对齐，再调整 x 
     {
       name: 'size',
       kind: 'property',
-      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      type: '{ x?: InputLayoutAxisSize; y?: InputLayoutAxisSize }',
       description:
         '容器分配尺寸与内容区内缩 每个轴支持 `{ kind: "content", min?, max? }` 内容策略、`{ kind: "fixed", value }` 固定尺寸或 `{ kind: "fill", min?, max? }` 填充父级有限空间。',
       defaultValue: 'content / content',
@@ -194,7 +194,7 @@ demo 中第一项保持不动。先切换第二项的纵向对齐，再调整 x 
     {
       name: 'placement',
       kind: 'property',
-      type: 'OverlayPlacementInput',
+      type: 'InputOverlayPlacement',
       description:
         '以共享内容区为参照 `{ kind: "aligned" }` 参照内容区；`{ kind: "positioned", at: { x, y }, anchor?: { x?, y? }, width?, height? }` 将槽位归一化锚点贴到局部目标。',
       defaultValue: '{ kind: "aligned" }',

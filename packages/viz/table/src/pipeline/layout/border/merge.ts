@@ -1,7 +1,7 @@
-import type { ResolvedTableBorderLine } from '../../../contract/manifest';
+import type { TableBorderLine } from '../../../contract/manifest';
 import { RetikzTableError } from '../../../error';
 import { deepFreeze } from '../../../shared';
-import type { ResolvedTableBorderAtom, TableBorderEdge, TableBorderVertex } from './types';
+import type { CompiledTableBorderAtom, TableBorderEdge, TableBorderVertex } from './types';
 
 /** 递归比较 JSON-safe style，忽略对象属性插入顺序 */
 const equalJson = (left: unknown, right: unknown): boolean => {
@@ -26,7 +26,7 @@ const equalJson = (left: unknown, right: unknown): boolean => {
 };
 
 /** 判断 style 是否允许保持 paint bbox 与 dash phase 不变地合并 */
-const isMergeableSolidStyle = (style: ResolvedTableBorderLine): boolean =>
+const isMergeableSolidStyle = (style: TableBorderLine): boolean =>
   typeof style.stroke === 'string' && style.stroke !== 'none' && style.dashPattern === undefined;
 
 const vertexKey = (vertex: TableBorderVertex): string => `${vertex.x}:${vertex.y}`;
@@ -35,10 +35,10 @@ const vertexKey = (vertex: TableBorderVertex): string => `${vertex.x}:${vertex.y
 const isTableBorderMode = (value: unknown): value is 'collapse' | 'separate' =>
   value === 'collapse' || value === 'separate';
 
-const SideRank = { top: 0, right: 1, bottom: 2, left: 3 } as const;
+const sideRank = { top: 0, right: 1, bottom: 2, left: 3 } as const;
 
 /** 按 orientation、numeric boundary 或 separate side 排列 draw order */
-const compareVisibleAtoms = (left: ResolvedTableBorderAtom, right: ResolvedTableBorderAtom): number => {
+const compareVisibleAtoms = (left: CompiledTableBorderAtom, right: CompiledTableBorderAtom): number => {
   if (left.orientation !== right.orientation && left.key.startsWith('c:') && right.key.startsWith('c:')) {
     return left.orientation === 'horizontal' ? -1 : 1;
   }
@@ -57,7 +57,7 @@ const compareVisibleAtoms = (left: ResolvedTableBorderAtom, right: ResolvedTable
     const column = Number(leftParts[2]) - Number(rightParts[2]);
     if (column !== 0) return column;
 
-    return SideRank[leftParts[3] as keyof typeof SideRank] - SideRank[rightParts[3] as keyof typeof SideRank];
+    return sideRank[leftParts[3] as keyof typeof sideRank] - sideRank[rightParts[3] as keyof typeof sideRank];
   }
 
   if (left.orientation !== right.orientation) return left.orientation === 'horizontal' ? -1 : 1;
@@ -66,7 +66,7 @@ const compareVisibleAtoms = (left: ResolvedTableBorderAtom, right: ResolvedTable
 };
 
 /** 把单个可见 atom 转成未合并 edge */
-const edgeOf = (atom: ResolvedTableBorderAtom): TableBorderEdge => {
+const edgeOf = (atom: CompiledTableBorderAtom): TableBorderEdge => {
   if (atom.winner.kind !== 'line') {
     throw new RetikzTableError(`table: visible Border Graph atom "${atom.key}" must have a line winner`);
   }
@@ -89,7 +89,7 @@ const edgeOf = (atom: ResolvedTableBorderAtom): TableBorderEdge => {
 
 /** 把可见 resolved atoms 确定性合并为 lowering edges */
 export const mergeTableBorderAtoms = (
-  atoms: ReadonlyArray<ResolvedTableBorderAtom>,
+  atoms: ReadonlyArray<CompiledTableBorderAtom>,
   mode: 'collapse' | 'separate',
 ): ReadonlyArray<TableBorderEdge> => {
   if (!isTableBorderMode(mode)) {

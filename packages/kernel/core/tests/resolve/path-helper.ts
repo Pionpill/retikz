@@ -3,14 +3,14 @@ import type { PathResolution, PathResolveContext, StrokePathResolution } from '.
 import { resolvePath, resolveStrokePathProviders } from '../../src/resolve/path';
 import type { IRPathBase } from '../../src/schemas';
 
-type BuiltinProviderContext = Omit<Partial<PathResolveContext>, 'paths' | 'arrows'> &
-  Partial<Pick<PathResolveContext, 'paths' | 'arrows' | 'patterns' | 'round'>>;
+type BuiltinProviderContext = Omit<Partial<PathResolveContext>, 'pathRegistry' | 'arrowRegistry'> &
+  Partial<Pick<PathResolveContext, 'pathRegistry' | 'arrowRegistry' | 'patternRegistry' | 'round'>>;
 
 const contextWithBuiltinProviders = (context: BuiltinProviderContext): PathResolveContext => ({
   mode: 'light',
-  paths: resolvePathRegistry(),
-  arrows: resolveArrowRegistry(),
-  patterns: resolvePatternRegistry(),
+  pathRegistry: resolvePathRegistry(),
+  arrowRegistry: resolveArrowRegistry(),
+  patternRegistry: resolvePatternRegistry(),
   round: value => value,
   ...context,
 });

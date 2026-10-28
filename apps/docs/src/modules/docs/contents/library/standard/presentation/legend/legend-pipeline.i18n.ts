@@ -4,7 +4,7 @@ import type { Lang } from '@/i18n';
 export const legendPipelineI18n: Record<Lang, Array<readonly [string, string]>> = {
   zh: [
     ['Standard JSON IR', 'items / ramp'],
-    ['LegendDefinition', '校验 + 结构 probe'],
+    ['legendDefinition', '校验 + 结构 probe'],
     ['求解 slot', 'title range / body exact'],
     ['replay', '已选 child 结果'],
     ['Core IR[]', '普通 children'],
@@ -12,7 +12,7 @@ export const legendPipelineI18n: Record<Lang, Array<readonly [string, string]>> 
   ],
   en: [
     ['Standard JSON IR', 'items / ramp'],
-    ['LegendDefinition', 'validate\nstructural probes'],
+    ['legendDefinition', 'validate\nstructural probes'],
     ['Resolve slot', 'title range / body exact'],
     ['replay', 'selected child\nresults'],
     ['Core IR[]', 'ordinary children'],

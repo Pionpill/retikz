@@ -1,6 +1,6 @@
-import { DrawWay } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import { Circle } from '@retikz/standard-react/shape';
+import { DrawWay } from '@retikz/vanilla';
 
 import { WayAccumulateStart, WayRelativeFirstOffset, WayRelativeStart, WayRelativeViewBox } from './way-relative.data';
 

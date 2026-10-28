@@ -6,8 +6,8 @@ import { buildPlotIR } from '../../../src/adapter';
 import { PathMark } from '../../../src/components/marks';
 import { PlotTransform } from '../../../src/components/transform';
 
-describe('buildPlotIR density transform forwarding', () => {
-  it('density_declared_to_ir', () => {
+describe('buildPlotIR 密度变换转发', () => {
+  it('密度声明至红外', () => {
     const spec = buildPlotIR(
       <>
         <PlotTransform

@@ -1,7 +1,7 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputMap } from '@retikz/standard-vanilla/collection';
-import { MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { mapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { IRMap } from '@retikz/standard/collection';
 import type { FC, ReactNode } from 'react';
 
@@ -84,5 +84,5 @@ const MapComponent: FC<MapProps> = () => null;
 export const Map = MapComponent as StandardEmbeddableComponent<MapProps>;
 Map.displayName = 'Map';
 Map.isTier2Embeddable = true;
-Map.inputEmbedAdapter = MapInputEmbedAdapter;
+Map.inputEmbedAdapter = mapInputEmbedAdapter;
 Map.createInputEmbedProps = createMapInput;

@@ -1,12 +1,12 @@
 import type { CanonicalFont, TextLineResolution } from '../../../resolve';
 import { resolveTextLine } from '../../../resolve';
-import type { InlineLineLayout, LineLayoutContext, TextFont, TextMeasurer } from '../../text';
-import { layoutInlineLine, normalizeTextMetrics } from '../../text';
+import type { InlineLineLayout, LineLayoutContext, TextFont } from '../../text';
+import { layoutInlineLine, resolveTextMetrics } from '../../text';
 import type { NodeTextLayoutContext, NodeTextLineLayout } from '../types';
 import { measureMinimumTextWidth, wrapText } from './text';
 
 /** 节点正文布局输入 */
-export type LayoutNodeContentInput = NodeTextLayoutContext & {
+type InputNodeContentLayout = NodeTextLayoutContext & {
   /** 基准字体大小 */
   fontSize: number;
   /** 未缩放前的节点基准字号 */
@@ -22,7 +22,7 @@ export type LayoutNodeContentInput = NodeTextLayoutContext & {
 };
 
 /** 节点正文排版与完整作者行解析结果 */
-export type NodeContentLayout = {
+type NodeContentLayout = {
   /** 普通文本行 */
   lines?: Array<NodeTextLineLayout>;
   /** 行内公式混排块 */
@@ -46,7 +46,7 @@ export type NodeContentLayout = {
 };
 
 /** 布局节点正文文本 */
-export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLayout => {
+export const layoutNodeContent = (input: InputNodeContentLayout): NodeContentLayout => {
   const {
     node,
     measureText,
@@ -74,24 +74,32 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
   const texGatingOn = texLowering?.lowerTex !== undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   if (rawLines) {
-    const scaledBlockFont: CanonicalFont = {
-      size: fontSize,
-      family: fontFamily,
-      weight: fontWeight,
-      style: fontStyle,
-    };
-    const resolved = rawLines.map(spec =>
-      resolveTextLine(spec, {
-        rootFontSize,
-        inheritedFont: scaledBlockFont,
-        gatingOn: texGatingOn,
-        warn: inlineWarn,
-        warningMessage: 'Unbalanced `$` in node text; the trailing fragment is kept literal.',
-      }),
-    );
     const anyMixed = rawLines.some(spec => typeof spec === 'object' && 'segments' in spec);
-    const anyMath = resolved.some(r => r.hasMath);
-    if (anyMath || anyMixed) {
+    let resolved: Array<TextLineResolution> = [];
+    if (
+      anyMixed ||
+      (texGatingOn &&
+        rawLines.some(spec =>
+          typeof spec === 'string' ? spec.includes('$') : 'text' in spec && spec.text.includes('$'),
+        ))
+    ) {
+      const scaledBlockFont: CanonicalFont = {
+        size: fontSize,
+        family: fontFamily,
+        weight: fontWeight,
+        style: fontStyle,
+      };
+      resolved = rawLines.map(spec =>
+        resolveTextLine(spec, {
+          rootFontSize,
+          inheritedFont: scaledBlockFont,
+          gatingOn: texGatingOn,
+          warn: inlineWarn,
+          warningMessage: 'Unbalanced `$` in node text; the trailing fragment is kept literal.',
+        }),
+      );
+    }
+    if (anyMixed || resolved.some(line => line.hasMath)) {
       const blockFont: TextFont = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
       const ctx: LineLayoutContext = {
         measureText,
@@ -114,10 +122,10 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
       textBaselineOffsets = blockLines.map(line => line.baselineOffset);
       textHeight = cursor;
     } else {
-      const metricsByFont = new Map<TextFont, Map<string, ReturnType<TextMeasurer>>>();
+      const metricsByFont = new Map<TextFont, Map<string, ReturnType<typeof resolveTextMetrics>>>();
 
       /** 在单次正文 layout 内复用同一 authored font/text 的真实测量结果 */
-      const measurePhysicalText: TextMeasurer = (text, font) => {
+      const measurePhysicalText = (text: string, font: TextFont): ReturnType<typeof resolveTextMetrics> => {
         let metricsByText = metricsByFont.get(font);
         if (metricsByText === undefined) {
           metricsByText = new Map();
@@ -127,7 +135,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         const cached = metricsByText.get(text);
         if (cached !== undefined) return cached;
 
-        const measured = normalizeTextMetrics(measureText(text, font));
+        const measured = resolveTextMetrics(measureText(text, font));
         metricsByText.set(text, measured);
 
         return measured;
@@ -145,12 +153,12 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
           gatingOn: texGatingOn,
         });
         const lineStyle = line.style;
-        const lineFontSize = lineStyle?.fontSize;
+        const lineFontSize = lineStyle?.font?.size;
         const font: TextFont = {
           size: lineFontSize !== undefined ? lineFontSize * fontScale : fontSize,
-          family: lineStyle?.fontFamily ?? fontFamily,
-          weight: lineStyle?.fontWeight ?? fontWeight,
-          style: lineStyle?.fontStyle ?? fontStyle,
+          family: lineStyle?.font?.family ?? fontFamily,
+          weight: lineStyle?.font?.weight ?? fontWeight,
+          style: lineStyle?.font?.style ?? fontStyle,
         };
 
         resolvedLines.push(line);
@@ -194,16 +202,16 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         );
 
         for (const ptext of physical) {
-          const m = normalizeTextMetrics(measurePhysicalText(ptext, font));
+          const m = measurePhysicalText(ptext, font);
           if (m.width > textWidth) textWidth = m.width;
           firstPlainBaselineOffset ??= (lineHeight - (m.ascent + m.descent)) / 2 + m.ascent;
           textBaselineOffsets.push(firstPlainBaselineOffset + lines.length * lineHeight);
           const out: NodeTextLineLayout = { text: ptext, sourceLineIndex };
           if (lineStyle !== undefined) {
             if (lineFontSize !== undefined) out.fontSize = lineFontSize * fontScale;
-            if (lineStyle.fontFamily !== undefined) out.fontFamily = lineStyle.fontFamily;
-            if (lineStyle.fontWeight !== undefined) out.fontWeight = lineStyle.fontWeight;
-            if (lineStyle.fontStyle !== undefined) out.fontStyle = lineStyle.fontStyle;
+            if (lineStyle.font?.family !== undefined) out.fontFamily = lineStyle.font.family;
+            if (lineStyle.font?.weight !== undefined) out.fontWeight = lineStyle.font.weight;
+            if (lineStyle.font?.style !== undefined) out.fontStyle = lineStyle.font.style;
           }
 
           lines.push(out);

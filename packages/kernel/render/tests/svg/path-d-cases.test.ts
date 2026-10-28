@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { buildPathD } from '../../src/svg';
 
 describe('buildPathD: 单 kind 构造', () => {
-  it('move → "M x y"', () => {
+  it('移动→"M x y"', () => {
     const commands: Array<PathCommand> = [{ kind: 'move', to: [3, 4] }];
 
     expect(buildPathD(commands)).toBe('M 3 4');
@@ -19,7 +19,7 @@ describe('buildPathD: 单 kind 构造', () => {
     expect(buildPathD(commands)).toBe('M 0 0 L 10 0');
   });
 
-  it('quad → "Q cx cy x y"', () => {
+  it('四元 → "Q cx cy x y"', () => {
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [0, 0] },
       { kind: 'quad', control: [5, 8], to: [10, 0] },
@@ -28,7 +28,7 @@ describe('buildPathD: 单 kind 构造', () => {
     expect(buildPathD(commands)).toBe('M 0 0 Q 5 8 10 0');
   });
 
-  it('cubic → "C c1x c1y c2x c2y x y"', () => {
+  it('立方→"C c1x c1y c2x c2y x y"', () => {
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [0, 0] },
       { kind: 'cubic', control1: [3, 3], control2: [7, -3], to: [10, 0] },
@@ -37,7 +37,7 @@ describe('buildPathD: 单 kind 构造', () => {
     expect(buildPathD(commands)).toBe('M 0 0 C 3 3 7 -3 10 0');
   });
 
-  it('close → "Z"', () => {
+  it('关闭→"Z"', () => {
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [0, 0] },
       { kind: 'line', to: [10, 0] },
@@ -48,7 +48,7 @@ describe('buildPathD: 单 kind 构造', () => {
     expect(buildPathD(commands)).toBe('M 0 0 L 10 0 L 10 10 Z');
   });
 
-  it('arc 0°→90° in unit circle → "M r 0 A r r 0 0 1 0 r"', () => {
+  it('单位圆内圆弧 0°→90°→"M r 0 A r r 0 0 1 0 r"', () => {
     const commands: Array<PathCommand> = [
       {
         kind: 'arc',
@@ -62,7 +62,7 @@ describe('buildPathD: 单 kind 构造', () => {
     expect(buildPathD(commands)).toBe('M 10 0 A 10 10 0 0 1 0 10');
   });
 
-  it('arc 0°→270°（large arc）→ largeArc flag = 1', () => {
+  it('圆弧 0°→270°（大圆弧）→ largeArc 标志=1', () => {
     const commands: Array<PathCommand> = [
       {
         kind: 'arc',
@@ -170,7 +170,7 @@ describe('buildPathD: 单 kind 构造', () => {
 });
 
 describe('buildPathD: 段组合', () => {
-  it('move + line + line → "M..L..L.."', () => {
+  it('移动+线+线→"M..L..L.."', () => {
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [0, 0] },
       { kind: 'line', to: [10, 0] },

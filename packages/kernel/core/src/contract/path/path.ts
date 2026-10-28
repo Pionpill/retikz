@@ -27,7 +27,7 @@ export type EmitStrokeOwnerOutputOptions = Readonly<{
 export type StrokeEmitter = (path?: IRPathBase, options?: EmitStrokeOwnerOutputOptions) => PathCompileResult | null;
 
 /** Path 可消费的宿主外观，不包含领域专属字段 */
-export type ResolvedPathAppearance = Readonly<
+export type CompiledPathAppearance = Readonly<
   {
     /** 宿主生效的主色，保留至选定的路径定义消费 */
     color?: NonNullable<IRPathBase['style']>['color'];
@@ -45,7 +45,7 @@ export type PathLabel = Omit<IRPathLabel, 'position' | 'side' | 'distance' | 'in
 };
 
 /** Path 请求宿主标签编译时提供的已定位几何信息 */
-export type PathLabelInput = Readonly<{
+export type InputPathLabel = Readonly<{
   /** 标签配置相对宿主的来源路径，用于诊断 */
   sourcePath: string;
   /** 按请求顺序排列的宿主标签 */
@@ -64,7 +64,7 @@ export type PathLabelInput = Readonly<{
 }>;
 
 /** 由宿主几何确定边界基点的标签请求 */
-export type PathBoundaryLabelInput = Readonly<{
+export type InputPathBoundaryLabel = Readonly<{
   /** Kernel 共享标签配置 */
   label: IRBoundaryLabel;
   /** 宿主局部坐标中的边界支撑点 */
@@ -95,16 +95,16 @@ export type PathCompileContext<TPath extends IRPathBase = IRPathBase, TOwnerOutp
   /** 合并宿主标签默认配置，供路径定义在采样前确定标签位置 */
   resolveHostLabel: (label: IRPathLabel) => IRPathLabel;
   /** 编译共享宿主标签，并支持路径定义提供侧向距离 */
-  emitHostLabels: (input: PathLabelInput) => ReadonlyArray<ScenePrimitive>;
+  emitHostLabels: (input: InputPathLabel) => ReadonlyArray<ScenePrimitive>;
   /** 通过 Kernel 共享布局编译已定位的边界标签 */
-  emitBoundaryLabels: (input: ReadonlyArray<PathBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
+  emitBoundaryLabels: (input: ReadonlyArray<InputPathBoundaryLabel>) => ReadonlyArray<ScenePrimitive>;
   /**
    * 包装自定义几何的完整输出，汇总宿主标签边界并应用 Path rotate / scale 与元数据
    * @description 在全部标签发射后调用一次并直接返回；emitStroke 的结果已包装，不应再次调用
    */
   wrapOutput: (output: PathCompileResult) => PathCompileResult;
   /** 已解析的 renderer-neutral 宿主外观 */
-  appearance: ResolvedPathAppearance;
+  appearance: CompiledPathAppearance;
   /** 与本次 compile 一致的取整函数 */
   round: (value: number) => number;
 };
@@ -123,7 +123,7 @@ export type PathDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput e
   compile: (context: PathCompileContext<TPath, TOwnerOutput>) => PathCompileResult | null;
 } & ([TOwnerOutput] extends [never] ? Readonly<{ ownerOutput?: never }> : Readonly<{ ownerOutput: true }>);
 
-/** registry 中擦除 subject 与 options 泛型后的 Path 定义 */
+/** 注册表中擦除路径声明与所属者产物泛型后的路径定义 */
 export type AnyPathDefinition = Readonly<{
   /** 非空 path registry key */
   name: string;

@@ -26,7 +26,7 @@ const textsOf = (scene: IRScene): Array<TextPrimitive> =>
 const textOf = (scene: IRScene, value: string): TextPrimitive =>
   textsOf(scene).find(text => text.lines.some(line => line.text === value))!;
 
-describe('Core contextual color compile', () => {
+describe('Core 上下文颜色编译', () => {
   it('子级主色不覆盖继承的具体描边，Node 和 Path 的文字使用子级主色', () => {
     const scene = sceneOf([
       {

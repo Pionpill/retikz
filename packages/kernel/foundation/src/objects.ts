@@ -1,6 +1,17 @@
 import { RetikzFoundationError, RetikzFoundationErrorCode } from './error';
 
 /**
+ * 从左到右浅合并非 undefined 属性，返回新对象
+ * @description 跳过 undefined 源和属性值，保留 null、false、0 和空字符串；后面的有效值优先，不递归合并或修改输入
+ * @param sources 按优先级从低到高排列的源对象
+ * @returns 过滤 undefined 属性后的新对象
+ * @throws 属性读取失败时抛出 RetikzFoundationError，原始异常保留为 cause
+ * @template T 被浅合并的对象类型
+ */
+export const mergeDefinedProperties = <T extends object>(sources: ReadonlyArray<Readonly<T> | undefined>): Partial<T> =>
+  mergeProperties(sources, { shouldOverride: value => value !== undefined });
+
+/**
  * 属性浅合并的写入策略
  *
  * @template T 被合并的对象类型

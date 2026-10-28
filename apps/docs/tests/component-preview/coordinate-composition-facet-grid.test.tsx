@@ -132,7 +132,7 @@ const visibleControlIds = (
     section.controls.map(control => control.id),
   );
 
-describe('coordinate composition grids', () => {
+describe('坐标组合网格', () => {
   it.each([
     [
       'dual y axes',
@@ -164,14 +164,14 @@ describe('coordinate composition grids', () => {
       englishCoordinateCompositionTracksControls,
       COORDINATE_COMPOSITION_TRACKS_CONTROL_IDS,
     ],
-  ] as const)('%s names grid controls by the visible line direction', (_name, chinese, english, ids) => {
+  ] as const)('%s 按可见线方向命名网格控件', (_name, chinese, english, ids) => {
     expect(controlLabel(chinese, ids.xGridVisible)).toBe('纵向网格（x 轴）');
     expect(controlLabel(chinese, ids.yGridVisible)).toBe('横向网格（y 轴）');
     expect(controlLabel(english, ids.xGridVisible)).toBe('Vertical grid (x-axis)');
     expect(controlLabel(english, ids.yGridVisible)).toBe('Horizontal grid (y-axis)');
   });
 
-  it('names polar grids by their radial and circular shapes', () => {
+  it('按径向线和圆形线区分极坐标网格的名称', () => {
     expect(
       controlLabel(
         coordinateCompositionTracksPolarControls,
@@ -211,7 +211,7 @@ describe('coordinate composition grids', () => {
       englishCoordinateCompositionTracksPolarControls,
       COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS,
     ],
-  ] as const)('%s tracks hide the local y grid when local axes are disabled', (_name, chinese, english, ids) => {
+  ] as const)('禁用局部坐标轴时 %s 轨道隐藏局部 y 网格', (_name, chinese, english, ids) => {
     for (const definition of [chinese, english]) {
       expect(visibleControlIds(definition, { [ids.localAxes]: false })).not.toContain(ids.yGridVisible);
       expect(visibleControlIds(definition, { [ids.localAxes]: true })).toContain(ids.yGridVisible);
@@ -225,12 +225,9 @@ describe('coordinate composition grids', () => {
     ['multi-level facet', multilevelPreviewSource, { x: [true], y: [true] }],
     ['cartesian tracks', tracksPreviewSource, { x: [true], y: [true, true, true] }],
     ['polar tracks', polarTracksPreviewSource, { x: [true], y: [true, true] }],
-  ] as const)(
-    '%s drives every visible default axis from its canonical grid value',
-    (_name, previewSource, expected) => {
-      expect(defaultAxisGrids(previewSource.canonicalRender?.())).toEqual(expected);
-    },
-  );
+  ] as const)('%s 从其规范网格值驱动每个可见的默认轴', (_name, previewSource, expected) => {
+    expect(defaultAxisGrids(previewSource.canonicalRender?.())).toEqual(expected);
+  });
 
   it.each([
     ['dual y axes', ScopesPreview, 'cartesian'],
@@ -239,7 +236,7 @@ describe('coordinate composition grids', () => {
     ['multi-level facet', MultilevelPreview, 'cartesian'],
     ['cartesian tracks', TracksPreview, 'cartesian'],
     ['polar tracks', PolarTracksPreview, 'polar'],
-  ] as const)('%s exposes independent x and y grid controls', (_name, Component, coordinate) => {
+  ] as const)('%s 公开独立的 x 和 y 网格控件', (_name, Component, coordinate) => {
     const baseline = renderWithGrids(Component, false, false);
     const xGridPaths = addedPathData(renderWithGrids(Component, true, false), baseline);
     const yGridPaths = addedPathData(renderWithGrids(Component, false, true), baseline);

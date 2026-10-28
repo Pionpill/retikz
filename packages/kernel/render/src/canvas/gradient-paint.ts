@@ -4,7 +4,7 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { gradientLineFromAngle } from '../shared';
 
 /** Canvas objectBoundingBox gradient 使用的局部几何 bbox */
-export type GradientBBox = {
+type GradientBBox = {
   /** 左上角 x 坐标 */
   x: number;
   /** 左上角 y 坐标 */
@@ -16,9 +16,9 @@ export type GradientBBox = {
 };
 
 /** Canvas 支持的 gradient paint */
-export type GradientPaint = Extract<IRPaint, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
+type GradientPaint = Extract<IRPaint, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
 
-type GradientCommonInput = {
+type InputGradientCommon = {
   /** 目标 Canvas context */
   ctx: CanvasRenderingContext2D;
   /** 渐变定义 */
@@ -32,7 +32,7 @@ type GradientCommonInput = {
 };
 
 /** 已构建 current path 上执行 gradient fill 的输入 */
-export type GradientFillInput = GradientCommonInput & {
+type InputGradientFill = InputGradientCommon & {
   /** 本次填充透明度 */
   fillOpacity: number | undefined;
   /** 执行一次 current path fill */
@@ -40,7 +40,7 @@ export type GradientFillInput = GradientCommonInput & {
 };
 
 /** gradient stroke style 构建输入 */
-export type GradientStrokeInput = GradientCommonInput & {
+type InputGradientStroke = InputGradientCommon & {
   /** 创建离屏 Canvas context 的宿主工厂 */
   createOffscreen: ((width: number, height: number) => CanvasRenderingContext2D | null) | undefined;
   /** 描边相对几何 bbox 的最大外扩 */
@@ -72,7 +72,7 @@ const warnInvalidBBox = (warn: (message: string) => void): void => {
 const addStops = (
   gradient: CanvasGradient,
   spec: GradientPaint,
-  resolveStopColor: GradientCommonInput['resolveStopColor'],
+  resolveStopColor: InputGradientCommon['resolveStopColor'],
 ): CanvasGradient => {
   for (const stop of spec.stops) gradient.addColorStop(stop.offset, resolveStopColor(stop.color, stop.opacity));
   return gradient;
@@ -82,8 +82,8 @@ const addStops = (
 const buildUnitGradient = (
   ctx: CanvasRenderingContext2D,
   spec: GradientPaint,
-  resolveStopColor: GradientCommonInput['resolveStopColor'],
-  warn: GradientCommonInput['warn'],
+  resolveStopColor: InputGradientCommon['resolveStopColor'],
+  warn: InputGradientCommon['warn'],
 ): CanvasGradient | undefined => {
   let gradient: CanvasGradient;
   if (spec.kind === 'linearGradient') {
@@ -113,8 +113,8 @@ const buildNativeGradient = (
   ctx: CanvasRenderingContext2D,
   spec: GradientPaint,
   bbox: GradientBBox,
-  resolveStopColor: GradientCommonInput['resolveStopColor'],
-  warn: GradientCommonInput['warn'],
+  resolveStopColor: InputGradientCommon['resolveStopColor'],
+  warn: InputGradientCommon['warn'],
 ): CanvasGradient | undefined => {
   let gradient: CanvasGradient;
   if (spec.kind === 'linearGradient') {
@@ -152,7 +152,7 @@ const buildNativeGradient = (
 };
 
 /** 在已构建的 current path 上按 objectBoundingBox 语义执行一次 gradient fill */
-export const fillObjectGradient = (input: GradientFillInput): void => {
+export const fillObjectGradient = (input: InputGradientFill): void => {
   const { ctx, spec, bbox, fillOpacity, drawFill, resolveStopColor, warn } = input;
   if (!validBBox(bbox)) {
     warnInvalidBBox(warn);
@@ -171,7 +171,7 @@ export const fillObjectGradient = (input: GradientFillInput): void => {
   ctx.restore();
 };
 
-const normalizedAngle = (angle: number | undefined): number => {
+const normalizeGradientAngle = (angle: number | undefined): number => {
   const value = (angle ?? 0) % 360;
   return value < 0 ? value + 360 : value;
 };
@@ -181,7 +181,7 @@ const requiresTexture = (spec: GradientPaint, bbox: GradientBBox): boolean => {
   if (Math.abs(bbox.w - bbox.h) <= 1e-7 * bboxScale) return false;
   if (spec.kind !== 'linearGradient') return true;
 
-  const angle = normalizedAngle(spec.angle);
+  const angle = normalizeGradientAngle(spec.angle);
 
   return ![0, 90, 180, 270, 360].some(axis => Math.abs(angle - axis) <= 1e-7);
 };
@@ -200,7 +200,7 @@ const textureSize = (width: number, height: number): { width: number; height: nu
 };
 
 /** 构建保持 objectBoundingBox 映射且不缩放描边几何的 Canvas stroke style */
-export const buildGradientStrokeStyle = (input: GradientStrokeInput): CanvasGradient | CanvasPattern | undefined => {
+export const buildGradientStrokeStyle = (input: InputGradientStroke): CanvasGradient | CanvasPattern | undefined => {
   const { ctx, spec, bbox, resolveStopColor, warn } = input;
   if (!validBBox(bbox)) {
     warnInvalidBBox(warn);

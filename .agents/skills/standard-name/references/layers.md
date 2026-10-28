@@ -29,16 +29,29 @@
 
 ## 按语义阶段命名符号
 
+按 [类型名称的组合](../SKILL.md#类型名称的组合)，resolve 与 compile / pipeline 阶段的数据类型遵循：**前缀表示数据处理阶段，主体及后缀表示数据是什么、用于什么**。阶段与用途独立组合，不把 `Layout`、`Style` 等用途词当作阶段。
+
+| 阶段前缀       | 保证                                                                     |
+| -------------- | ------------------------------------------------------------------------ |
+| `MergedXxx`    | 已处理继承、reset 和覆盖，仍可保留简写、相对值与待解析的上下文值         |
+| `CanonicalXxx` | 本领域所需的默认值、简写及值转换已完成，不要求嵌套的其他领域或布局也完成 |
+| `CompiledXxx`  | 本领域编译计算已完成，不要求整个场景或其他领域编译完成                   |
+
+- 主体及后缀使用领域与用途，如 `NodeLayout`、`NodeStyle`、`ScopeDefaults`；`MergedNodeLayout` 表示合并后的布局配置，`CompiledNodeLayout` 表示布局计算后的尺寸、位置等结果
+- `Context`、`Options`、`Result`、`Resolution`、`Compilation` 表示结构角色，不作为阶段标记；已有具体含义的调度任务如 `PendingPathEmission` 保留业务命名
+- 继承合并态使用 `Merged`，不再使用 `Effective`；其他合成操作按实际语义命名，不机械替换，如累计变换可用 `ComposedScopeTransform`
+- 仅为真实存在且需要区分的数据形态命名，不为凑齐阶段新增类型；局部中间值优先类型推导，必要时用具体业务名与简短注释，不新增 `ColorResolved`、`Materialized` 等全仓阶段前缀
+
 | 概念                            | 必须使用的名称                                                         | Owner                                                                                                                                                            |
 | ------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 持久化 IR schema 与类型         | `XxxSchema`、`IRXxx`                                                   | `schemas/`；允许省略默认字段的 Source 用 `z.input`，解析结果用 `z.output` / `z.infer`                                                                            |
 | 可复用 IR shape                 | `XxxBaseSchema`                                                        | `schemas/`；仅在实际复用或分阶段 refinement 时使用                                                                                                               |
-| Vanilla authoring input         | `InputXxx`                                                             | 仅 Vanilla / Plot Vanilla；只写 TypeScript                                                                                                                       |
-| 完整的内部确定形态              | 通常使用 `CanonicalXxx`                                                | 纵向领域 `resolve/<domain>/types.ts`；没有 Zod schema，不持久化                                                                                                  |
+| 具名输入契约                    | `InputXxx`                                                             | 由实际消费该输入的 owner 持有；Vanilla authoring 输入归 Vanilla API 包；只写 TypeScript                                                                          |
+| 本领域的内部确定形态            | 通常使用 `CanonicalXxx`                                                | 纵向领域 `resolve/<domain>/types.ts`；没有 Zod schema，不持久化                                                                                                  |
 | resolver 窄上下文               | `XxxResolveContext`                                                    | 纵向领域 `resolve/<domain>/types.ts`；由 pipeline / compile 按当前阶段提供                                                                                       |
-| cascade / 继承后的有效值        | `EffectiveXxx`                                                         | 使用准确领域名，不得使用泛化的 `ResolvedXxx`                                                                                                                     |
+| cascade / 继承后的有效值        | `MergedXxx`                                                            | 使用准确领域名，不得使用泛化的 `ResolvedXxx`                                                                                                                     |
 | 携带附加解析信息的结果          | `XxxResolution`                                                        | 仅在同时需要 value、provider、provenance 或 diagnostics 时使用                                                                                                   |
-| 扩展 contract 与作者输入        | `XxxDefinition`、`XxxDefinitionInput`、`AnyXxxDefinition`、`defineXxx` | `contract/`；Definition input 不是 Vanilla Input                                                                                                                 |
+| 扩展 contract 与作者输入        | `XxxDefinition`、`InputXxxDefinition`、`AnyXxxDefinition`、`defineXxx` | `contract/`；Definition 作者输入归 contract，不与 Vanilla authoring 输入混用                                                                                     |
 | Const object enum 与取值 union  | 对象与类型同名 `Xxx`                                                   | 对象与派生类型在同一文件定义导出，均用单数 PascalCase，成员用 PascalCase，类型用 `ValueOf<typeof Xxx>`；不以 `Value` / `Enum` 后缀区分，不使用 TypeScript `enum` |
 | 内置集合 / lookup               | `BUILTIN_XXXS`、`BUILTIN_XXX_DEFINITIONS_BY_<KEY>`                     | `providers/`；`<KEY>` 是实际 discriminator                                                                                                                       |
 | Registry 合并 / 直接索引 helper | `resolveXxxRegistry`、`xxxDefinitionOf`                                | `providers/`；直接索引 helper 不处理领域 fallback 或上下文优先级                                                                                                 |

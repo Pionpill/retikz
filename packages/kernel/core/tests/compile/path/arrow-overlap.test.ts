@@ -44,7 +44,7 @@ const startPoint = (commands: ReadonlyArray<PathCommand>): [number, number] => {
   return command.to;
 };
 
-describe('compile path: endpoint arrow overlap', () => {
+describe('编译路径：端点箭头重叠', () => {
   it.each([
     { overlap: undefined, expectedEndX: 92.5 },
     { overlap: 0, expectedEndX: 92.5 },

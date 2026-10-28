@@ -7,7 +7,7 @@ import type {
   IRPathBase,
   PathLineCap,
   PathLineJoin,
-  ResolvedDropShadow,
+  CanonicalDropShadow,
 } from '../../schemas';
 import type { PaintValue } from './paint';
 
@@ -54,7 +54,7 @@ export type ScenePrimitiveStroke = {
 /** 图元投影与混合效果 */
 export type ScenePrimitiveEffects = {
   /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
-  shadow?: ResolvedDropShadow;
+  shadow?: CanonicalDropShadow;
   /**
    * 混合模式：解析后值；undefined / normal = 普通 source-over
    * @default 'normal'

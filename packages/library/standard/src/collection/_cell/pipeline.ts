@@ -180,7 +180,7 @@ const emitCell = (placed: CellPlacement, context: CompositeCompileContext): Comp
 };
 
 /** 已排布单元格的整体输出配置 */
-export type CompileCellsOptions = {
+type CompileCellsOptions = {
   /** 集合排布需要的宽度 */
   width: number;
   /** 集合排布需要的高度 */

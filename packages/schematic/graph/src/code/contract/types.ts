@@ -1,4 +1,4 @@
-import type { IRChild, ResolvedTheme } from '@retikz/core';
+import type { IRChild, CanonicalTheme } from '@retikz/core';
 import type { ZodType } from 'zod';
 
 import type { CodeBlockTokens } from '../../contract/theme';
@@ -7,7 +7,7 @@ import type { IRCodeBlock } from '../schemas';
 /** 代码实体内容组合时已经生效的主题 */
 export type CodeBlockComposeContext = Readonly<{
   /** 当前 Core Scope 的有效主题 */
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   /** 当前 Graph style 的有限视觉 token */
   codeBlockTokens: CodeBlockTokens;
 }>;

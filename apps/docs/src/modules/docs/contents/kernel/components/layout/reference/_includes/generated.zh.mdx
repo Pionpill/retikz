@@ -13,7 +13,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={403}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={224}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={406}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={227}>LayoutProps</ApiSourceLink>
 
 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
 
@@ -50,7 +50,7 @@
 |        | `onCompileResult?` | `(result: CompileResult) => void`                     | —                             | Core 完整编译结果通知                                                                                    |
 | 扩展   | `compileDriver?`   | `VanillaCompileDriver`                                | —                             | 处理作者输入的编译驱动                                                                                   |
 |        | `extensions?`      | `LayoutExtensions`                                    | —                             | 按能力分类的运行时扩展注册，复用 Core 编译契约                                                           |
-|        | `lowerTex?`        | `LowerTex`                                            | —                             | 公式下沉能力                                                                                             |
+|        | `lowerTex?`        | `TexLowerer`                                          | —                             | 公式下沉能力                                                                                             |
 |        | `measureText?`     | `TextMeasurer`                                        | —                             | 自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级                                                  |
 
 </ApiTable>
@@ -86,7 +86,7 @@ export type LayoutProps = {
   nodeDistance?: number;
   fontSize?: number;
   extensions?: LayoutExtensions;
-  lowerTex?: LowerTex;
+  lowerTex?: TexLowerer;
   artifacts?: CompileArtifactOptions;
   onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
   onCompileResult?: (result: CompileResult) => void;
@@ -99,7 +99,7 @@ export type LayoutProps = {
 
 ## 执行与辅助契约
 
-#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={180}>LayoutExtensions</ApiSourceLink>
+#### <ApiSourceLink label={"LayoutExtensions"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={181}>LayoutExtensions</ApiSourceLink>
 
 通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据
 
@@ -115,6 +115,7 @@ export type LayoutProps = {
 | `readonly boundaries?`       | `ReadonlyArray<BoundaryDefinition>`     | `BUILTIN_BOUNDARIES`      | 连接表面定义              |
 | `readonly clips?`            | `ReadonlyArray<ClipDefinition>`         | `BUILTIN_CLIPS`           | 裁剪定义                  |
 | `readonly composites?`       | `ReadonlyArray<AnyCompositeDefinition>` | `[]`                      | Tier 2 composite 展开逻辑 |
+| `readonly marks?`            | `ReadonlyArray<MarkDefinition>`         | —                         | 沿路径放置的标记定义      |
 | `readonly paths?`            | `ReadonlyArray<AnyPathDefinition>`      | `BUILTIN_PATHS`           | 路径定义                  |
 | `readonly patterns?`         | `ReadonlyArray<PatternDefinition>`      | `BUILTIN_PATTERNS`        | 图案定义                  |
 | `readonly shapes?`           | `ReadonlyArray<ShapeDefinition>`        | `BUILTIN_SHAPES`          | 形状定义                  |
@@ -132,6 +133,7 @@ export type LayoutExtensions = Readonly<{
   boundaries?: ReadonlyArray<BoundaryDefinition>;
   clips?: ReadonlyArray<ClipDefinition>;
   arrows?: ReadonlyArray<ArrowDefinition>;
+  marks?: ReadonlyArray<MarkDefinition>;
   patterns?: ReadonlyArray<PatternDefinition>;
   paths?: ReadonlyArray<AnyPathDefinition>;
   composites?: ReadonlyArray<AnyCompositeDefinition>;

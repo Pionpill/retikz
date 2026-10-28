@@ -41,6 +41,8 @@ export const PathArrowEndSchema = ArrowStyleSchema.extend({
   endpointOverlap: NormalizedFractionSchema.optional().describe('Endpoint contact overlap ratio. Defaults to zero.'),
 });
 
+export type IRPathArrowEnd = ZodInfer<typeof PathArrowEndSchema>;
+
 /** 校验路径起点与终点的箭头声明 */
 export const PathArrowSchema = strictObject({
   start: PathArrowEndSchema.optional().describe('Arrow at the start of the path.'),

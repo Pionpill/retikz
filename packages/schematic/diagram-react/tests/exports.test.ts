@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import manifest from '../package.json';
 import * as diagramReactExports from '../src';
 
-describe('@retikz/diagram-react package shell', () => {
-  it('declares the Diagram adapter release metadata', () => {
+describe('@retikz/diagram-react 封装外壳', () => {
+  it('声明 Diagram 适配器版本元数据', () => {
     expect(manifest.name).toBe('@retikz/diagram-react');
     expect(manifest.version).toBe('0.1.0-alpha.2');
     expect(manifest.retikz).toEqual({
@@ -15,11 +15,11 @@ describe('@retikz/diagram-react package shell', () => {
     });
   });
 
-  it('keeps the public root empty before authoring design', () => {
+  it('在编写设计之前将公共根保留为空', () => {
     expect(Object.keys(diagramReactExports)).toEqual([]);
   });
 
-  it('publishes Flow authoring only from the explicit symmetric subpath', () => {
+  it('仅从显式对称子路径发布 Flow 编写', () => {
     expect(manifest.exports).toHaveProperty('./flow');
     expect(manifest.publishConfig.exports).toHaveProperty('./flow');
   });

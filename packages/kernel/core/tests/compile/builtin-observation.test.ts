@@ -5,8 +5,8 @@ import * as core from '../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
-describe('Core builtin observation contracts', () => {
-  it('compares every closed owner variant by its complete discriminator', () => {
+describe('Core 内置观测契约', () => {
+  it('通过完整的判别字段比较每个封闭所属模块变体', () => {
     const owners = [
       { kind: 'composite' as const, namespace: 'demo', type: 'card' },
       { kind: 'path' as const, name: 'stroke' },
@@ -27,11 +27,11 @@ describe('Core builtin observation contracts', () => {
     expect(core.isCompileObservationOwnerEqual(owners[4], owners[5])).toBe(false);
   });
 
-  it('publishes Clip as a stable occurrence expansion kind', () => {
+  it('将 Clip 发布为稳定的实例展开类型', () => {
     expect(core.CompileExpansionKind.Clip).toBe('clip');
   });
 
-  it('publishes one final Node owner output from a real observed compile', () => {
+  it('发布来自真实观察到的编译的最终 Node 所属模块输出', () => {
     const observations: Array<CompileObservation> = [];
     const observer: core.CompileObserverDefinition = {
       key: 'test/builtin-node',

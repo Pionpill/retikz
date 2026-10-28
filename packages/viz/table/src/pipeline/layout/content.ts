@@ -1,6 +1,5 @@
 import type { BoundsRect } from '@retikz/math';
 
-import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
 import type { TableCellAlignment, TableCellTranslation } from './cell';
 import { computeTableCellTranslation } from './cell';
@@ -11,7 +10,7 @@ import { computeTableCellFitScale, projectTableCellBounds } from './fit';
 export type TableCellOverflow = 'visible' | 'clip';
 
 /** Cell 内容 fit、alignment 与 overflow 的纯几何输入 */
-export type ComputeTableCellContentPlacementInput = Readonly<{
+type InputTableCellContentPlacement = Readonly<{
   /** replay-root local 的 fit 前 allocation bounds */
   sourceAllocationBounds: BoundsRect;
   /** replay-root local 的 fit 前 visual overflow bounds */
@@ -29,7 +28,7 @@ export type ComputeTableCellContentPlacementInput = Readonly<{
 }>;
 
 /** Cell 内容最终放置的纯数值结果 */
-export type TableCellContentPlacement = Readonly<{
+type TableCellContentPlacement = Readonly<{
   /** 相对重放根节点的局部缩放 */
   scale: TableCellFitScale;
   /** scale 后施加的 Table-local translation */
@@ -44,17 +43,8 @@ export type TableCellContentPlacement = Readonly<{
   replayContent: boolean;
 }>;
 
-/** 判断运行时输入是否为支持的 Cell overflow 策略 */
-const isTableCellOverflow = (value: unknown): value is TableCellOverflow => value === 'visible' || value === 'clip';
-
 /** 计算 Cell 内容的 fit、对齐与 overflow 放置结果 */
-export const computeTableCellContentPlacement = (
-  input: ComputeTableCellContentPlacementInput,
-): TableCellContentPlacement => {
-  if (!isTableCellOverflow(input.overflow)) {
-    throw new RetikzTableError('table: Cell overflow must be visible or clip');
-  }
-
+export const computeTableCellContentPlacement = (input: InputTableCellContentPlacement): TableCellContentPlacement => {
   const scale = computeTableCellFitScale(input.sourceAllocationBounds, input.contentBox, input.fit);
   const scaledAllocationBounds = projectTableCellBounds(input.sourceAllocationBounds, scale, { x: 0, y: 0 });
   const translation = computeTableCellTranslation({

@@ -1,4 +1,4 @@
-import type { IRPosition, PathCommand, PathPrimitive, ResolvedPathAppearance } from '@retikz/core';
+import type { IRPosition, PathCommand, PathPrimitive, CompiledPathAppearance } from '@retikz/core';
 
 import type { RibbonLike } from '../types';
 
@@ -9,7 +9,7 @@ import type { RibbonLike } from '../types';
 export const styledPrimitiveFromOutline = (
   ribbon: RibbonLike,
   outline: { commands: Array<PathCommand>; points: Array<IRPosition> },
-  appearance: ResolvedPathAppearance,
+  appearance: CompiledPathAppearance,
 ): PathPrimitive => {
   const strokeRequested = ribbon.style?.stroke !== undefined || ribbon.style?.strokeWidth !== undefined;
   const primitive: PathPrimitive = {

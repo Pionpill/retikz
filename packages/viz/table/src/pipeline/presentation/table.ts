@@ -11,7 +11,7 @@ import { resolveCellPresentationRegistry } from '../../providers';
 import { TableCellPayloadKind, BuiltinTableCellPresentation } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { applyTableCellContentStyle, presentCellValue } from './present';
-import type { PresentTableOptions, ResolvedTableCellPresentationInput } from './types';
+import type { PresentTableOptions, InputTableCellPresentation } from './types';
 
 /** 从 canonical Cell 构造 detached、递归冻结的 presentation context */
 const presentationContextOf = (cell: SemanticTableCell): TableCellContext =>
@@ -27,10 +27,7 @@ const presentationContextOf = (cell: SemanticTableCell): TableCellContext =>
   });
 
 /** 从 formatted / semantic model 构造本阶段默认 carrier */
-const defaultCarrierOf = (
-  formatted: FormattedTableCell,
-  semantic: SemanticTableCell,
-): ResolvedTableCellPresentationInput => {
+const defaultCarrierOf = (formatted: FormattedTableCell, semantic: SemanticTableCell): InputTableCellPresentation => {
   const appearance = structuredClone({
     ...(semantic.layout.borders === undefined ? {} : { borders: semantic.layout.borders }),
   });
@@ -59,7 +56,7 @@ const defaultCarrierOf = (
 const resolvePresentationCarriers = (
   model: FormattedTableModel,
   cells: PresentTableOptions['cells'],
-): ReadonlyArray<ResolvedTableCellPresentationInput> => {
+): ReadonlyArray<InputTableCellPresentation> => {
   if (model.semantic.cells.length !== model.cells.length) {
     throw new RetikzTableError('table: presentation Cell count differs from semantic model');
   }

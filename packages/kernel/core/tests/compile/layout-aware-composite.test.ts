@@ -20,7 +20,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
 
 const fixedMeasurer: TextMeasurer = text => ({
@@ -33,7 +33,7 @@ const fixedMeasurer: TextMeasurer = text => ({
 const resolvedResultOf = (
   context: CompositeCompileContext,
   child: IRChild,
-  proposal: LayoutProposal = NaturalLayoutProposal,
+  proposal: LayoutProposal = naturalLayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
@@ -55,12 +55,12 @@ const createLayoutDefinition = () =>
       rangeWidth: number(),
     }),
     compile: (node, context) => {
-      expect(context.proposal).toEqual(NaturalLayoutProposal);
+      expect(context.proposal).toEqual(naturalLayoutProposal);
       expect(Object.isFrozen(context.proposal)).toBe(true);
       expect(Object.isFrozen(context.proposal.x)).toBe(true);
       expect(Object.isFrozen(context.proposal.y)).toBe(true);
 
-      const naturalProbe = context.layoutChild(node.child, NaturalLayoutProposal);
+      const naturalProbe = context.layoutChild(node.child, naturalLayoutProposal);
 
       expect(naturalProbe.kind).toBe(LayoutChildProbeKind.Resolved);
 
@@ -87,8 +87,8 @@ const sceneOf = (child: IRChild): IRScene => ({
   children: [child],
 });
 
-describe('layout-aware composite', () => {
-  it('allows an external Composite query of a completed child Scope boundary', () => {
+describe('布局感知复合', () => {
+  it('允许对已完成的子 Scope 边界进行外部复合查询', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'scope-query',
@@ -110,7 +110,7 @@ describe('layout-aware composite', () => {
     compileToScene(sceneOf({ namespace: 'test', type: 'scope-query' }), { composites: [definition] });
   });
 
-  it('rejects ancestor references during isolated Composite measurement', () => {
+  it('在隔离复合测量期间拒绝祖先引用', () => {
     const definition = createLayoutDefinition();
     expect(() =>
       compileToScene(
@@ -161,7 +161,7 @@ describe('layout-aware composite', () => {
         const source = { namespace: 'test', type: 'themed-child' };
         const bound = context.bindChild(source, []);
         const local = context.withTheme({ name: 'compact' });
-        const probe = local.layoutChild(bound, NaturalLayoutProposal);
+        const probe = local.layoutChild(bound, naturalLayoutProposal);
         if (probe.kind === 'failed') return local.raise(probe.failure);
         expect(probe.result.allocationBounds.width).toBe(40);
         expect(resolvedResultOf(context, source).allocationBounds.width).toBe(80);
@@ -179,7 +179,7 @@ describe('layout-aware composite', () => {
       items.flatMap(item => (item.type === 'group' ? rectangles(item.children) : item.type === 'rect' ? [item] : []));
     expect(rectangles(result.scene.primitives).map(rect => rect.width)).toEqual([40]);
   });
-  it('routes a composite warning through onWarn with the current Source locator', () => {
+  it('使用当前 Source 定位器通过 onWarn 路由复合警告', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'warning',
@@ -208,7 +208,7 @@ describe('layout-aware composite', () => {
     ]);
   });
 
-  it('keeps nested composite warnings transactional until the selected probe is replayed', () => {
+  it('保持嵌套复合警告事务性，直到回放所选探测', () => {
     const child = defineComposite({
       namespace: 'test',
       type: 'warningChild',
@@ -230,7 +230,7 @@ describe('layout-aware composite', () => {
         replay: boolean(),
       }),
       compile: (node, context) => {
-        const probe = context.layoutChild({ namespace: 'test', type: 'warningChild' }, NaturalLayoutProposal);
+        const probe = context.layoutChild({ namespace: 'test', type: 'warningChild' }, naturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
         return { children: node.replay ? [context.replay(probe.result)] : [] };
       },
@@ -253,7 +253,7 @@ describe('layout-aware composite', () => {
     ]);
   });
 
-  it('measures intrinsic and constrained content, then replays the selected result without a third layout', () => {
+  it('测量固有内容及受约束内容后回放所选结果，不执行第三次布局', () => {
     const measureText = vi.fn<TextMeasurer>(fixedMeasurer);
     const definition = createLayoutDefinition();
     const result = compileToScene(
@@ -285,7 +285,7 @@ describe('layout-aware composite', () => {
     expect(measureText).toHaveBeenCalledTimes(2);
   });
 
-  it('forwards a range Scope proposal to nested layout-aware composites', () => {
+  it('将一系列 Scope 提案转发给嵌套的布局感知复合组件', () => {
     const nested = defineComposite({
       namespace: 'test',
       type: 'nestedConstraint',
@@ -358,7 +358,7 @@ describe('layout-aware composite', () => {
     ]);
   });
 
-  it('rejects duplicate replay placement', () => {
+  it('拒绝重复回放放置', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'duplicateReplay',

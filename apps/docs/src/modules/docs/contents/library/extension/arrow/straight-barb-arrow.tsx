@@ -1,4 +1,4 @@
-import { StraightBarbArrowDefinition } from '@retikz/extension';
+import { straightBarbArrowDefinition } from '@retikz/extension';
 import { Draw, Layout } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -14,7 +14,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Layout
       viewBox={{ x: -190, y: -55, width: 380, height: 110 }}
-      extensions={{ arrows: [StraightBarbArrowDefinition] }}
+      extensions={{ arrows: [straightBarbArrowDefinition] }}
     >
       <Draw
         way={[

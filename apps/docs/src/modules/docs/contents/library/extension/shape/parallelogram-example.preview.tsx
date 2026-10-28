@@ -1,4 +1,4 @@
-import { ParallelogramShapeDefinition } from '@retikz/extension';
+import { parallelogramShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 /** 图形参数 */
@@ -12,7 +12,7 @@ export type ParallelogramExamplePreviewValues = {
 export const renderParallelogramExamplePreview = (values: ParallelogramExamplePreviewValues) => (
   <Layout
     viewBox={{ x: -120, y: -80, width: 240, height: 160 }}
-    extensions={{ shapes: [ParallelogramShapeDefinition] }}
+    extensions={{ shapes: [parallelogramShapeDefinition] }}
   >
     <Node
       position={[0, 0]}

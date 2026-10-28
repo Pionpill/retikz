@@ -1,7 +1,7 @@
 import type { IRChild, IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
-import type { CoordinateFrame, MarkChannels, MarkInstanceInput, MarkLoweringContext } from '../../contract';
+import type { CoordinateFrame, MarkChannels, InputMarkInstance, MarkLoweringContext } from '../../contract';
 import type { IRPlotMark } from '../../schemas';
 import { BuiltinPlotMark } from '../../schemas';
 import { intervalMarkDefinition, pathMarkDefinition, pointMarkDefinition } from './features';
@@ -44,7 +44,7 @@ const applyScopeChannelDeliveries = (
  */
 export const lowerMark = (
   resolution: { definition: AnyMarkDefinition; operation: IRPlotMark },
-  instances: MarkInstanceInput,
+  instances: InputMarkInstance,
   frame: CoordinateFrame,
   channels: MarkChannels = {},
   markContext?: MarkLoweringContext,

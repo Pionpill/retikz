@@ -134,7 +134,7 @@ describe('arc 椭圆弧（radius: { x, y }）', () => {
   });
 });
 
-describe('arc malformed', () => {
+describe('圆弧无效输入', () => {
   it('缺少 radius → 整 path 跳过', () => {
     const ir = {
       version: 1,
@@ -155,7 +155,7 @@ describe('arc malformed', () => {
 });
 
 describe('arc 圆弧回归（输出与改造前一致）', () => {
-  it('move[0,0] + arc(0→90, r=10) → M(10,0) arc([0,0],10,0,90)', () => {
+  it('move[0,0] 与 arc(0→90, r=10) 编译为 M(10,0) 和 arc([0,0],10,0,90)', () => {
     const ir = scene([
       {
         type: 'path',

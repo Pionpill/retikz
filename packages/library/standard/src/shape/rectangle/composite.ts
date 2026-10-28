@@ -7,7 +7,7 @@ import { RectangleSchema } from './schema';
 import type { IRRectangle } from './types';
 
 /** Rectangle 的 Core composite 注册项 */
-export const RectangleDefinition = defineComposite({
+export const rectangleDefinition = defineComposite({
   namespace: 'standard',
   type: 'rectangle',
   schema: RectangleSchema,
@@ -22,9 +22,7 @@ export const createRectangle = (input: ShapeProperties<IRRectangle>): IRRectangl
 });
 
 /** Rectangle 的按需依赖贡献 */
-export const RectangleProvider: CoreDependencyProvider = Object.freeze({
+export const rectangleProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'composite', namespace: 'standard', type: 'rectangle' }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => RectangleDefinition,
+  makeDefinition: () => rectangleDefinition,
 });

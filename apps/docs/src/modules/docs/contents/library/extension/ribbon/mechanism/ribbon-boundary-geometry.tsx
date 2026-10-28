@@ -1,5 +1,5 @@
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import type { CubicBezierCurveSegment } from '@retikz/math';
 import { curve } from '@retikz/math';
 import { Draw, Layout, Node, Path, Scope, Step } from '@retikz/react';
@@ -40,7 +40,7 @@ const RibbonBoundaryGeometry: FC<RibbonBoundaryGeometryProps> = props => {
   };
 
   return (
-    <Layout style={{ maxWidth: '100%', height: 'auto' }} extensions={{ paths: [RibbonPathDefinition] }}>
+    <Layout style={{ maxWidth: '100%', height: 'auto' }} extensions={{ paths: [ribbonPathDefinition] }}>
       {t.stages.map((title, stage) => (
         <Scope key={title} position={[stage * 235, 0]}>
           <Node position={[77, -30]} text={title} style={{ stroke: 'none', font: { size: 14 } }} />

@@ -17,7 +17,7 @@ const ellipseArcOf = (commands: Array<PathCommand>) => {
   return command;
 };
 
-describe('applyArrowShrinks arc commands', () => {
+describe('applyArrowShrinks 圆弧命令', () => {
   it('按 rotation 计算 ellipseArc 收缩后的起点与 move', () => {
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [0, 8] },

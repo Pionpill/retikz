@@ -24,7 +24,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
 } from '../../src';
 import { NamespaceStack } from '../../src/compile/namespace';
 import { createCompileContext } from '../../src/compile/orchestration/context';
@@ -48,7 +48,7 @@ const node = (id: string, position: readonly [number, number] = [0, 0]): IRChild
 const resolvedResultOf = (
   context: CompositeCompileContext,
   child: IRChild,
-  proposal: LayoutProposal = NaturalLayoutProposal,
+  proposal: LayoutProposal = naturalLayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
@@ -78,8 +78,8 @@ const fade: IRAnimationTrack = {
   duration: 200,
 };
 
-describe('layout-aware composite runtime wrapper tree', () => {
-  it('forwards a parent proposal through a single Scope wrapper to its layout-aware child', () => {
+describe('布局感知复合运行时包装树', () => {
+  it('通过单个 Scope 包装器将父提案转发到其布局感知的子提案', () => {
     let receivedProposal: LayoutProposal | undefined;
     const leaf = defineComposite({
       namespace: 'test',
@@ -126,7 +126,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(Object.isFrozen(receivedProposal?.y)).toBe(true);
   });
 
-  it('keeps an outer clip/meta frame separate from the inner numeric placement frame', () => {
+  it('将外部裁剪/元框架与内部数字放置框架分开', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'wrappedNode',
@@ -200,7 +200,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     ]);
   });
 
-  it('projects runtime Scope transforms across mixed raw/replayed references, artifacts, and bounds', () => {
+  it('项目运行时 Scope 在混合的原始/回放引用、产物和边界之间进行转换', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'referencedWrapper',
@@ -249,7 +249,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(result.scene.layout).toEqual({ x: 7, y: -4, width: 9, height: 8 });
   });
 
-  it('preserves empty id/meta scopes and sorts a wrapper as one zIndex sibling unit', () => {
+  it('保留空的 id/meta 范围并将包装器排序为一个 zIndex 兄弟单元', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'emptyAndSorted',
@@ -276,7 +276,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     );
   });
 
-  it('keeps authored Scope transforms and the complete Scope fields', () => {
+  it('保留编写的 Scope 变换和完整的 Scope 字段', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'allFields',
@@ -327,7 +327,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     });
   });
 
-  it('applies authored Scope style inheritance to a replay child inside Core', () => {
+  it('将编写的 Scope 样式继承应用于 Core 内的回放子项', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'styledReplay',
@@ -377,7 +377,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(leaves.some(primitive => primitive.type === 'rect')).toBe(false);
   });
 
-  it('re-materializes a nested layout-aware Composite under replay Scope style', () => {
+  it('在回放 Scope 样式下重新物化嵌套的布局感知复合组件', () => {
     const leaf = defineComposite({
       namespace: 'test',
       type: 'styledReplayLeaf',
@@ -419,7 +419,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(rects).toContainEqual(expect.objectContaining({ id: 'nested-replayed', fill: 'purple' }));
   });
 
-  it('rejects the same replay when it is reached through sibling wrapper branches', () => {
+  it('当通过兄弟包装分支到达时，拒绝相同的回放', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'duplicateWrappedReplay',
@@ -444,7 +444,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     ).toThrow(/replay.*once|already.*replay/i);
   });
 
-  it('preflights the whole output tree before a valid replay can publish a warning or be consumed', () => {
+  it('在有效回放可以发布警告或被使用之前预检整个输出树', () => {
     const warnings: Array<{ code: string }> = [];
     const definition = defineComposite({
       namespace: 'test',
@@ -474,7 +474,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('preflights a nested runtime Scope clip before replay side effects become observable', () => {
+  it('在回放副作用变得可观察到之前预检嵌套运行时 Scope 裁剪', () => {
     let clipLowerCalls = 0;
     let replayHandle: CompositeCompileChild | undefined;
     let scopeHandle: CompositeCompileChild | undefined;
@@ -598,7 +598,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(clipLowerCalls).toBe(1);
     expect(context.paint.resources()).toEqual([]);
     expect(context.clip.resources()).toEqual([]);
-    expect(namespaceStack.lookup('same')).toBeUndefined();
+    expect(namespaceStack.lookupEntry('same')?.layout).toBeUndefined();
     expect(provenanceTracker.rootIdentityRegistrations()).toEqual([]);
     expect(session.outputChildren.get(replayHandle!)).toMatchObject({ used: false });
     expect(session.outputChildren.get(scopeHandle!)).toMatchObject({ used: false });
@@ -626,7 +626,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(clipLowerCalls).toBe(2);
   });
 
-  it('rejects a repeated runtime Scope handle during whole-tree preflight', () => {
+  it('在全树预检期间拒绝重复的运行时 Scope 句柄', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'repeatedScopeHandle',
@@ -642,7 +642,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     ).toThrow(/same output child|more than once|consum/i);
   });
 
-  it('rejects retained handles and layout results across compile sessions', () => {
+  it('拒绝跨编译会话保留的句柄和布局结果', () => {
     let retainedHandle: CompositeCompileChild | undefined;
     let retainedResult: LayoutChildResult | undefined;
     let run = 0;
@@ -671,7 +671,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     ).toThrow(/compile|session|forged|belong/i);
   });
 
-  it('rejects output handles from another callback in the same compile', () => {
+  it('拒绝同一编译中另一个回调的输出句柄', () => {
     let foreignHandle: CompositeCompileChild | undefined;
     let foreignResult: LayoutChildResult | undefined;
     const producer = defineComposite({
@@ -704,7 +704,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     ).toThrow(/does not belong to this composite callback|callback owner/i);
   });
 
-  it('rejects layout results from another callback in the same compile', () => {
+  it('拒绝同一编译中另一个回调的布局结果', () => {
     let foreignResult: LayoutChildResult | undefined;
     const producer = defineComposite({
       namespace: 'test',
@@ -733,7 +733,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     ).toThrow(/does not belong to this composite callback|callback owner/i);
   });
 
-  it('rejects forged output children and forged layout results', () => {
+  it('拒绝伪造的输出子项和伪造的布局结果', () => {
     const forgedChild = defineComposite({
       namespace: 'test',
       type: 'forgedChild',
@@ -759,7 +759,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     ).toThrow(/layout|replay|forged|belong/i);
   });
 
-  it('imports nested replay paint and clip resources once and remaps primitive references', () => {
+  it('仅导入一次嵌套回放的绘制及裁剪资源并重映射图元引用', () => {
     const paint: IRPaint = {
       kind: 'linearGradient',
       stops: [
@@ -803,7 +803,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     for (const id of ids) expect(serializedPrimitives).toContain(id);
   });
 
-  it('rebases replay artifacts from the probe origin through nested runtime scopes', () => {
+  it('通过嵌套运行时范围从探测源重新调整回放产物', () => {
     const leaf = defineComposite({
       namespace: 'test',
       type: 'artifactLeaf',
@@ -855,7 +855,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     );
   });
 
-  it('keeps replayed ids inside a runtime local namespace', () => {
+  it('将回放的 id 保留在运行时本地命名空间内', () => {
     const warnings: Array<{ code: string }> = [];
     const definition = defineComposite({
       namespace: 'test',
@@ -888,7 +888,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     );
   });
 
-  it('allows replayed ids to shadow outer ids inside a runtime local namespace', () => {
+  it('允许回放的 id 隐藏运行时本地命名空间内的外部 id', () => {
     const warnings: Array<{ code: string }> = [];
     const definition = defineComposite({
       namespace: 'test',
@@ -911,7 +911,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(warnings).not.toContainEqual(expect.objectContaining({ code: BuiltinCompileWarningCode.DuplicateNodeId }));
   });
 
-  it('preserves probe-local duplicate warnings when suppressing an obsolete parent collision', () => {
+  it('在抑制过时的父碰撞时保留探测本地重复警告', () => {
     const warnings: Array<{ code: string; message: string }> = [];
     const definition = defineComposite({
       namespace: 'test',
@@ -946,7 +946,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(duplicates[0].message).toContain('under <Scope localNamespace>');
   });
 
-  it('detaches every mutable wrapper input at builder time', () => {
+  it('在构建器时分离每个可变包装器输入', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'detachedWrapper',
@@ -1009,7 +1009,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(JSON.stringify(result.scene.primitives).match(/optional-fields/g)).toHaveLength(1);
   });
 
-  it('applies replay placement before a parent-allocation-coordinate clip without mutating result bounds', () => {
+  it('在父分配坐标裁剪之前应用回放放置，而不改变结果边界', () => {
     const BoundsSchema = strictObject({ x: number(), y: number(), width: number(), height: number() });
     const definition = defineComposite({
       namespace: 'test',
@@ -1051,7 +1051,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(result.scene.layout).toEqual({ x: 18, y: -4.5, width: 4, height: 9 });
   });
 
-  it('rejects a discarded layout result placed directly in runtime Scope output', () => {
+  it('拒绝直接放置在运行时 Scope 输出中的丢弃布局结果', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'discardedResultScope',
@@ -1067,7 +1067,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     ).toThrow(/invalid|forged|output child/i);
   });
 
-  it('expresses the Table-like root, Cell placement, content replay, and Border replay in one compile', () => {
+  it('在一次编译中表达类似 Table 的根、Cell 放置、内容回放和边框回放', () => {
     const borderLeaf = defineComposite({
       namespace: 'test',
       type: 'borderLeaf',

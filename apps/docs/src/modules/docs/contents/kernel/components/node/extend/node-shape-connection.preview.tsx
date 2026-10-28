@@ -1,5 +1,5 @@
 import type { IRBoundary, IRNodeTarget } from '@retikz/core';
-import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/extension';
+import { sectorShapeDefinition, starShapeDefinition } from '@retikz/extension';
 import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -85,7 +85,7 @@ export type NodeShapeConnectionPreviewValues = {
 /** 绘制示例图形 */
 export const NodeShapeConnectionPreview = (values: NodeShapeConnectionPreviewValues) => {
   return (
-    <Layout extensions={{ shapes: [boundaryGuideShape, SectorShapeDefinition, StarShapeDefinition] }}>
+    <Layout extensions={{ shapes: [boundaryGuideShape, sectorShapeDefinition, starShapeDefinition] }}>
       <Node
         id="A"
         position={[-150, 0]}

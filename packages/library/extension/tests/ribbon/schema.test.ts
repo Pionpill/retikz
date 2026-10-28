@@ -10,8 +10,8 @@ import {
   RibbonWidthProfileNameSchema,
 } from '../../src/ribbon';
 
-describe('Extension Ribbon schema', () => {
-  it('stores ribbon options under kindOptions on a complete Path subject', () => {
+describe('扩展功能区 schema', () => {
+  it('将功能区选项存储在完整的 Path 主题上的 kindOptions 下', () => {
     const result = RibbonPathSchema.safeParse({
       type: 'path',
       kind: 'ribbon',
@@ -25,12 +25,12 @@ describe('Extension Ribbon schema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('exports only the canonical Ribbon options schema name', () => {
+  it('仅导出规范的功能区选项 schema 名称', () => {
     expect(RibbonExports).toHaveProperty('RibbonPathOptionsSchema');
     expect(RibbonExports).not.toHaveProperty('PathRibbonOptionsSchema');
   });
 
-  it('hints the built-in width profile while preserving custom provider names', () => {
+  it('提示内置宽度配置，同时保留自定义提供者名称', () => {
     expect(toJSONSchema(RibbonWidthProfileNameSchema)).toMatchObject({
       anyOf: [
         { type: 'string', enum: Object.values(BuiltinRibbonWidthProfile) },
@@ -43,7 +43,7 @@ describe('Extension Ribbon schema', () => {
   });
 });
 
-describe('Ribbon discriminated width inputs', () => {
+describe('色带识别宽度输入', () => {
   it.each([
     { kind: 'fixed', value: 12 },
     { kind: 'taper', start: 12, end: 24 },
@@ -55,7 +55,7 @@ describe('Ribbon discriminated width inputs', () => {
       ],
     },
     { kind: 'profile', name: 'bulge', params: { base: 12, peak: 24 } },
-  ])('accepts $kind and retains its discriminator through JSON', width => {
+  ])('接受 $kind 并通过 JSON 保留其判别字段', width => {
     const result = RibbonWidthSchema.parse(JSON.parse(JSON.stringify(width)));
 
     expect(result.kind).toBe(width.kind);
@@ -70,11 +70,11 @@ describe('Ribbon discriminated width inputs', () => {
     { kind: 'taper', start: 12 },
     { kind: 'fixed', value: 12, end: 24 },
     { kind: 'profile', name: 'bulge', interpolation: 'linear' },
-  ])('rejects missing or mixed width branches: %j', width => {
+  ])('拒绝丢失或混合宽度分支：%j', width => {
     expect(RibbonWidthSchema.safeParse(width).success).toBe(false);
   });
 
-  it('materializes centerline defaults and rejects removed endpoint width fields', () => {
+  it('具体化中心线默认值并拒绝删除的端点宽度字段', () => {
     const width = { kind: 'fixed', value: 12 };
 
     expect(RibbonPathOptionsSchema.parse({ width })).toMatchObject({
@@ -87,7 +87,7 @@ describe('Ribbon discriminated width inputs', () => {
     expect(RibbonPathOptionsSchema.safeParse({}).success).toBe(false);
   });
 
-  it('materializes automatic direction and retains explicit directions through JSON', () => {
+  it('实现自动方向并通过 JSON 保留显式方向', () => {
     const width = { kind: 'fixed', value: 12 };
 
     expect(RibbonPathOptionsSchema.parse({ width })).toMatchObject({
@@ -104,7 +104,7 @@ describe('Ribbon discriminated width inputs', () => {
     expect(RibbonPathOptionsSchema.safeParse({ width, start: { direction: [0, 0] } }).success).toBe(false);
   });
 
-  it('requires boundary paths and rejects centerline-only fields in boundary mode', () => {
+  it('在边界模式下需要边界路径并拒绝仅中心线场', () => {
     const upper = [
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
@@ -123,8 +123,8 @@ describe('Ribbon discriminated width inputs', () => {
   });
 });
 
-describe('Ribbon source subject branches', () => {
-  it('requires centerline children and forbids boundary children', () => {
+describe('功能区源主题分支', () => {
+  it('需要中心线子代，禁止边界子代', () => {
     const children = [
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [10, 0] },
@@ -147,7 +147,7 @@ describe('Ribbon source subject branches', () => {
     ).toBe(false);
   });
 
-  it('projects each width branch with its own discriminator and required fields', () => {
+  it('用自己的判别字段和必需字段投影每个宽度分支', () => {
     const projected = toJSONSchema(RibbonWidthSchema, { io: 'input' });
 
     expect(projected).toMatchObject({

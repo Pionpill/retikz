@@ -39,7 +39,7 @@ const renderAt = (path: string, node: ReactNode): void => {
   });
 };
 
-describe('module navigation does not preload preview demos', () => {
+describe('模块导航不会预加载预览演示', () => {
   it('scoped Sidebar 不调用任何 demo module loader', () => {
     const original = new Map(Object.entries(demoModuleLoaders));
     const watched = Object.entries(demoModuleLoaders).flatMap(([key, loader]) => {

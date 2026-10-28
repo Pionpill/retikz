@@ -2,7 +2,7 @@ import type { IRNode, IRPath, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { AxesDefinition, createAxes, lowerAxes } from '../../../src/presentation';
+import { axesDefinition, createAxes, lowerAxes } from '../../../src/presentation';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const endpoints = (path: IRPath) => path.children.map(step => ('to' in step ? step.to : undefined));
@@ -18,7 +18,7 @@ const scenePathsOf = (children: ReadonlyArray<ScenePrimitive>): Array<ScenePrimi
 const hiddenAxis = { extent: 20, line: false, ticks: false, grid: false, label: false } as const;
 
 describe('lowerAxes', () => {
-  it('lowers asymmetric extents, independent grids, axes, ticks, and static labels in stable order', () => {
+  it('以稳定的顺序下沉不对称范围、独立网格、轴、刻度和静态标签', () => {
     const lowered = lowerAxesChildren(
       createAxes({
         origin: {
@@ -142,7 +142,7 @@ describe('lowerAxes', () => {
     ] satisfies Array<IRNode>);
   });
 
-  it('preserves authored Scope props on one stable root', () => {
+  it('在一个稳定的根上保留编写的 Scope props', () => {
     const lowered = lowerAxes(
       createAxes({
         ...fullScopeProps,
@@ -156,7 +156,7 @@ describe('lowerAxes', () => {
     expect(lowered.children.every(child => child.id === undefined)).toBe(true);
   });
 
-  it('places arrows at independently configured axis endpoints', () => {
+  it('将箭头放置在独立配置的轴端点处', () => {
     const lowered = lowerAxesChildren(
       createAxes({
         x: { extent: 20, line: { arrows: 'negative' }, label: false },
@@ -168,7 +168,7 @@ describe('lowerAxes', () => {
     expect(lowered[1]?.arrow).toEqual({ start: {}, end: {} });
   });
 
-  it('merges shared and endpoint arrow details onto negative and positive arrows', () => {
+  it('将共享和端点箭头详细信息合并到负箭头和正箭头上', () => {
     const lowered = lowerAxesChildren(
       createAxes({
         x: {
@@ -195,7 +195,7 @@ describe('lowerAxes', () => {
     });
   });
 
-  it('uses independent axis-local grid offsets without moving the shared origin or extents', () => {
+  it('使用独立的轴局部网格偏移，而不移动共享原点或范围', () => {
     const lowered = lowerAxesChildren(
       createAxes({
         origin: { position: [100, 80] },
@@ -252,7 +252,7 @@ describe('lowerAxes', () => {
     expect(lowered[4].style?.stroke).toBe('#3b82f6');
   });
 
-  it('supports a single number line and keeps ticks when its line is hidden', () => {
+  it('支持单数轴，并在其线隐藏时保持刻度', () => {
     const numberLine = lowerAxesChildren(
       createAxes({
         origin: { position: [50, 40] },
@@ -286,7 +286,7 @@ describe('lowerAxes', () => {
     expect((hiddenLine[0] as IRPath).marks).toBeUndefined();
   });
 
-  it('places tick segments on the configured perpendicular side and keeps labels on their default side', () => {
+  it('将刻度线段放置在配置的垂直边上，并将标签保留在其默认边上', () => {
     const lowered = lowerAxesChildren(
       createAxes({
         origin: { position: [50, 40] },
@@ -343,7 +343,7 @@ describe('lowerAxes', () => {
     ] satisfies Array<IRNode>);
   });
 
-  it('filters spacing and explicit ticks near either endpoint while preserving the exact gap boundary', () => {
+  it('过滤任一端点附近的间距和显式刻度，同时保留精确的间隙边界', () => {
     const lowered = lowerAxesChildren(
       createAxes({
         origin: { position: [30, 30] },
@@ -376,7 +376,7 @@ describe('lowerAxes', () => {
     ]);
   });
 
-  it('keeps endpoint ticks when endpointGap is zero', () => {
+  it('当 endpointGap 为零时保持端点刻度', () => {
     const lowered = lowerAxesChildren(
       createAxes({
         origin: { position: [30, 30] },
@@ -396,7 +396,7 @@ describe('lowerAxes', () => {
     ]);
   });
 
-  it('uses a ten-unit origin-label offset for shorthand text', () => {
+  it('对简写文本使用十个单位的原点标签偏移量', () => {
     const lowered = lowerAxesChildren(
       createAxes({
         origin: { position: [50, 40], label: '0' },
@@ -417,7 +417,7 @@ describe('lowerAxes', () => {
     ] satisfies Array<IRNode>);
   });
 
-  it('compiles through the registered Axes definition without diagnostics', () => {
+  it('通过注册的 Axes 定义进行编译，无需诊断', () => {
     const warnings: Array<string> = [];
     const scene = compileToScene(
       {
@@ -430,14 +430,14 @@ describe('lowerAxes', () => {
           }),
         ],
       },
-      { composites: [AxesDefinition], onWarn: warning => warnings.push(warning.code) },
+      { composites: [axesDefinition], onWarn: warning => warnings.push(warning.code) },
     ).scene;
 
     expect(warnings).toEqual([]);
     expect(scenePathsOf(scene.primitives)).toHaveLength(2);
   });
 
-  it('keeps Core diagnostics for direct Axes IR without its definition', () => {
+  it('保留直接 Axes IR 的 Core 诊断，而无需其定义', () => {
     const warnings: Array<string> = [];
     compileToScene(
       {

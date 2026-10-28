@@ -15,7 +15,7 @@ export type MeasuredChainItem =
     });
 
 /** 已确定端点与自动通道比例的连接，几何路径由 Core 生成 */
-export type ChainConnectionPlacement = {
+type ChainConnectionPlacement = {
   /** 前一块的出口格子 */
   from: ChainCellPlacement;
   /** 后一块的入口格子 */

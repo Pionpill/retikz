@@ -14,8 +14,8 @@ const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.me
 
 const packageRoot = fileURLToPath(new URL('../../', import.meta.url));
 
-describe('@retikz/layout optional inspect boundary', () => {
-  it('publishes independent root and inspect entries', () => {
+describe('@retikz/layout 可选检查边界', () => {
+  it('发布独立的根和检查条目', () => {
     expect(Object.keys(manifest.exports)).toEqual(['.', './compose', './inspect']);
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.', './compose', './inspect']);
     expect(readFileSync(new URL('../../src/index.ts', import.meta.url), 'utf8')).not.toMatch(/inspect/);

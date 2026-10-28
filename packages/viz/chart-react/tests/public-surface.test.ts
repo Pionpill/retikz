@@ -5,8 +5,8 @@ import * as point from '../src/point';
 
 const pointChartCases = ['Bubble', 'ConnectedScatter', 'RangedDot', 'Regression', 'Scatter', 'Strip'] as const;
 
-describe('@retikz/chart-react public surface', () => {
-  it('exports shared Chart declarations and presentation APIs from the root entry', () => {
+describe('@retikz/chart-react 公开接口', () => {
+  it('从根条目导出共享的 Chart 声明和表示 API', () => {
     expect(chart.ChartData).toBeDefined();
     expect(chart.ChartCoordinate).toBeDefined();
     expect(chart.ChartLayout).toBeDefined();
@@ -21,7 +21,7 @@ describe('@retikz/chart-react public surface', () => {
     expect(chart).not.toHaveProperty('ScatterEncodings');
   });
 
-  it('exports only precise Point components from the Point entry', () => {
+  it('仅从点条目中导出精确的点分量', () => {
     for (const prefix of pointChartCases) {
       expect(point).toHaveProperty(`${prefix}Chart`);
       expect(point).toHaveProperty(`${prefix}Encodings`);

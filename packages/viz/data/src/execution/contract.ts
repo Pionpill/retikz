@@ -28,7 +28,7 @@ export type DataTransformDiagnostic = Readonly<{
  * 实际阶段输入；原生源仅用于第一阶段
  * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源
  */
-export type DataTransformStageInput<TSource> =
+export type InputDataTransformStage<TSource> =
   | Readonly<{
       /** 区分首阶段原生源和前一阶段计算结果 */
       kind: 'source';
@@ -95,7 +95,7 @@ export type DataTransformStageImplementation<TSource> = Readonly<{
   /** 经过 adapter 明确适配的语义身份 */
   definition: AnyTransformDefinition;
   /** 消费本次实际输入，不重新查询原始 source */
-  execute: (input: DataTransformStageInput<TSource>) => DataTransformResult | Promise<DataTransformResult>;
+  execute: (input: InputDataTransformStage<TSource>) => DataTransformResult | Promise<DataTransformResult>;
 }>;
 
 /**
@@ -187,7 +187,7 @@ export type DataTransformPreparation<TSource> =
       /** 完整模型计划准备成功或不支持的判别值 */
       kind: 'ready';
       /** 把固定模型计划绑定到一个实际输入，创建单次执行权 */
-      bind: (input: DataTransformStageInput<TSource>) => DataTransformExecution;
+      bind: (input: InputDataTransformStage<TSource>) => DataTransformExecution;
     }>
   | Readonly<{
       /** 完整模型计划准备成功或不支持的判别值 */

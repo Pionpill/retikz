@@ -17,8 +17,8 @@ const bubble = {
   },
 } as const;
 
-describe('Bubble Chart exact Source schema', () => {
-  it('parses the exact Point family envelope and round-trips JSON', () => {
+describe('气泡 Chart 精确 Source schema', () => {
+  it('解析精确的 Point 系列包络和往返 JSON', () => {
     const parsed = BubbleChartSchema.parse(bubble);
 
     expect(parsed).toEqual({ ...bubble, recipe: { ...bubble.recipe, properties: { autoPadding: 'point-aware' } } });
@@ -27,7 +27,7 @@ describe('Bubble Chart exact Source schema', () => {
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
   });
 
-  it.each(['x', 'y', 'size'] as const)('requires a non-blank %s field mapping', role => {
+  it.each(['x', 'y', 'size'] as const)('需要非空白 %s 字段映射', role => {
     const encodings = { ...bubble.recipe.encodings };
     Reflect.deleteProperty(encodings, role);
 
@@ -35,7 +35,7 @@ describe('Bubble Chart exact Source schema', () => {
     expect(BubbleChartEncodingsSchema.safeParse({ ...bubble.recipe.encodings, [role]: '   ' }).success).toBe(false);
   });
 
-  it('accepts the Bubble field mapping roles and only sqrt-compatible size scales', () => {
+  it('接受 Bubble 字段映射角色并且仅接受 sqrt 兼容的大小比例', () => {
     expect(
       BubbleChartEncodingsSchema.safeParse({
         x: { field: 'income', scale: { operation: { type: 'log', name: 'incomeScale' } } },
@@ -70,7 +70,7 @@ describe('Bubble Chart exact Source schema', () => {
     ).toBe(true);
   });
 
-  it('keeps size field-bound and unavailable from Bubble properties', () => {
+  it('保持大小字段绑定并且从气泡属性中不可用', () => {
     expect(
       BubbleChartPropertiesSchema.safeParse({
         opacity: 0,
@@ -84,7 +84,7 @@ describe('Bubble Chart exact Source schema', () => {
     );
   });
 
-  it('rejects explicit size overrides from Bubble marks', () => {
+  it('拒绝气泡标记的显式大小覆盖', () => {
     for (const mark of [
       { kind: 'bubble', encodings: { size: 'otherPopulation' } },
       { kind: 'bubble', properties: { size: 8 } },
@@ -98,7 +98,7 @@ describe('Bubble Chart exact Source schema', () => {
     }
   });
 
-  it('enforces facet composition dependencies', () => {
+  it('强制执行构面组合依赖性', () => {
     expect(
       BubbleChartEncodingsSchema.safeParse({
         ...bubble.recipe.encodings,

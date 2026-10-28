@@ -71,8 +71,8 @@ const graph = {
   },
 } as const;
 
-describe('Graph Source data assembly', () => {
-  it('round-trips one strict Graph whose members directly own lower-facing fields', () => {
+describe('Graph Source 数据组装', () => {
+  it('往返一个严格的 Graph，其成员直接拥有面向下的字段', () => {
     const parsed = publicSchema('GraphSchema').parse(graph);
 
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(graph);
@@ -82,7 +82,7 @@ describe('Graph Source data assembly', () => {
     expect(() => publicSchema('GraphSchema').parse({ ...graph, meta: { invalid: () => 'not JSON' } })).toThrow();
   });
 
-  it('uses the complete Core child grammar without Graph-owned duplicate prevalidation', () => {
+  it('使用完整的 Core 子语法，没有 Graph 拥有的重复预验证', () => {
     const duplicate = { type: 'node', id: 'service', position: [240, 30] } as const;
     const thirdParty = { namespace: 'custom', type: 'badge', payload: { text: 'external' } } as const;
     const parsed = publicSchema('GraphSchema').parse({
@@ -94,7 +94,7 @@ describe('Graph Source data assembly', () => {
     expect(parsed.children.at(-1)).toEqual(thirdParty);
   });
 
-  it('keeps Core Theme and Graph-local rules in disjoint fields', () => {
+  it('将 Core 主题和 Graph 本地规则保留在不相交的字段中', () => {
     const schema = publicSchema('GraphSchema');
 
     expect(schema.parse(graph)).toMatchObject({ theme: { mode: 'dark' }, graphRules: graph.graphRules });
@@ -104,7 +104,7 @@ describe('Graph Source data assembly', () => {
     ).toThrow();
   });
 
-  it('strictly rejects the removed Variant fields in Source and Theme selectors', () => {
+  it('严格拒绝 Source 和主题选择器中删除的 Variant 字段', () => {
     expect(() => publicSchema('GraphSchema').parse({ ...graph, entityVariant: 'fill' })).toThrow();
     expect(() => publicSchema('EntitySchema').parse({ ...entity, variant: 'mixed' })).toThrow();
     expect(() => publicSchema('RelationSchema').parse({ ...relation, variant: 'default' })).toThrow();
@@ -116,7 +116,7 @@ describe('Graph Source data assembly', () => {
     ).toThrow();
   });
 
-  it('accepts the non-structural Core Node surface while rejecting role-owned structure', () => {
+  it('接受非结构 Core Node 曲面，同时拒绝角色拥有的结构', () => {
     const schema = publicSchema('EntitySchema');
     const nonStructuralEntity = {
       ...entity,
@@ -143,7 +143,7 @@ describe('Graph Source data assembly', () => {
     expect(() => schema.parse({ ...entity, cornerRadius: 8 })).toThrow();
   });
 
-  it('rejects removed Entity ports and reuses the complete Core NodeTarget endpoint', () => {
+  it('拒绝已删除的 Entity 端口并重新使用完整的 Core NodeTarget 端点', () => {
     const entitySchema = publicSchema('EntitySchema');
     const relationSchema = publicSchema('RelationSchema');
 
@@ -152,7 +152,7 @@ describe('Graph Source data assembly', () => {
     expect(() => relationSchema.parse({ ...relation, source: { entity: 'service' } })).toThrow();
   });
 
-  it('reuses the non-conflicting Core Path surface and full Geometry Labels', () => {
+  it('重复使用不冲突的 Core Path 表面和完整的几何标签', () => {
     const schema = publicSchema('RelationSchema');
     const pathCompatibleRelation = {
       ...relation,
@@ -198,7 +198,7 @@ describe('Graph Source data assembly', () => {
     ).toThrow();
   });
 
-  it('preserves a JSON-safe Relation color group while rejecting non-string values', () => {
+  it('保留 JSON 安全的 Relation 颜色组，同时拒绝非字符串值', () => {
     const schema = publicSchema('RelationSchema');
     const groupedRelation = { ...relation, group: '' } as const;
 
@@ -209,7 +209,7 @@ describe('Graph Source data assembly', () => {
     expect(() => schema.parse({ ...relation, group: 1 })).toThrow();
   });
 
-  it('preserves a JSON-safe Entity color group while rejecting non-string values', () => {
+  it('保留 JSON 安全的 Entity 颜色组，同时拒绝非字符串值', () => {
     const schema = publicSchema('EntitySchema');
     const groupedEntity = { ...entity, group: 'coordinate-chain' } as const;
 
@@ -220,7 +220,7 @@ describe('Graph Source data assembly', () => {
     expect(() => schema.parse({ ...entity, group: 1 })).toThrow();
   });
 
-  it('keeps Relation structure separate from Theme-owned appearance', () => {
+  it('将 Relation 结构与主题拥有的外观分开', () => {
     const relationRole = publicSchema('GraphRelationRoleTokenRecipeSchema');
     const relationStructure = publicSchema('GraphRelationStructureTokenOverridesSchema');
     const relationAppearance = publicSchema('GraphRelationDefaultsSchema');
@@ -243,7 +243,7 @@ describe('Graph Source data assembly', () => {
     expect(() => relationAppearance.parse({ dashPattern: [4, 2] })).toThrow();
   });
 
-  it('allows Graph semantic composites wherever Core children are valid', () => {
+  it('只要 Core 子项有效，就允许 Graph 语义组合', () => {
     const parsed = publicSchema('GraphSchema').parse({
       namespace: 'graph',
       type: 'graph',

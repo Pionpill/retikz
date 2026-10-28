@@ -2,17 +2,17 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { OPACITY_MIN } from '../../../src/providers';
 import type { IRPlot, IRPlotChannel } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
-const cartOpts: LowerPlotsOptions = { layout: { width: 480, height: 300 } };
+const cartOpts: PlotsLoweringOptions = { layout: { width: 480, height: 300 } };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
-  return lowerPlot(spec, datasets, { ...cartOpts, textMeasurer: measureLabel }) as IRScope;
+  return lowerPlotWithDataArtifact(spec, datasets, { ...cartOpts, textMeasurer: measureLabel }).child as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
@@ -59,9 +59,9 @@ const pointSpec = (opacity: IRPlotChannel | number | undefined): IRPlot =>
     ],
   });
 
-describe('opacity channel (contract)', () => {
+describe('不透明通道（契约）', () => {
   // Happy path：linear 映射到 [OPACITY_MIN, 1]。domain [0,10]：v=0→min、v=10→1、v=5→中点
-  it('opacity_field_maps_to_min_one', () => {
+  it('不透明度字段映射到最小值 1', () => {
     const data = [
       { x: 0, y: 0, d: 0 },
       { x: 1, y: 1, d: 5 },
@@ -75,7 +75,7 @@ describe('opacity channel (contract)', () => {
     expect(ops[1]).toBeCloseTo(OPACITY_MIN + 0.5 * (1 - OPACITY_MIN), 6);
   });
 
-  it('opacity_explicit_scale_ignores_position_domain_padding', () => {
+  it('不透明度显式比例忽略位置域填充', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -109,7 +109,7 @@ describe('opacity channel (contract)', () => {
     expect(opacityOf(nodes[1])).toBeCloseTo(1, 6);
   });
 
-  it('opacity_value_constant', () => {
+  it('不透明度值常量', () => {
     const data = [
       { x: 0, y: 0 },
       { x: 1, y: 1 },
@@ -121,7 +121,7 @@ describe('opacity channel (contract)', () => {
   });
 
   // 边界：field 越界 clamp 不报错（负值 → OPACITY_MIN）
-  it('opacity_field_out_of_range_clamps', () => {
+  it('不透明度字段超出范围钳位', () => {
     // domain 推断为 [-5, 5]；但加一个远离点测 clamp 不直观，这里验证不抛 + 落在 [min,1]
     const data = [
       { x: 0, y: 0, d: -5 },
@@ -134,7 +134,7 @@ describe('opacity channel (contract)', () => {
     ).toBe(true);
   });
 
-  it('opacity_no_channel_no_opacity', () => {
+  it('不透明度无通道无不透明度', () => {
     const data = [
       { x: 0, y: 0 },
       { x: 1, y: 1 },
@@ -145,7 +145,7 @@ describe('opacity channel (contract)', () => {
   });
 
   // 错误路径：temporal 字段 fail-loud
-  it('opacity_temporal_field_fails_loud', () => {
+  it('不透明时间场声音很大', () => {
     const data = [
       { x: 0, y: 0, t: '2024-01-01' },
       { x: 1, y: 1, t: '2024-02-01' },
@@ -155,7 +155,7 @@ describe('opacity channel (contract)', () => {
   });
 
   // 交互：size + opacity 共存，各自 per-node
-  it('opacity_with_size_both_per_node', () => {
+  it('每个节点的不透明度和大小', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -182,7 +182,7 @@ describe('opacity channel (contract)', () => {
   });
 });
 
-it('opacity members resolve independent fields and named scales', () => {
+it('不透明度成员解析独立字段和命名比例', () => {
   const spec = pointSpec(undefined);
   spec.scales.push(
     { type: 'linear', name: 'overall-alpha', domain: [0, 10] },

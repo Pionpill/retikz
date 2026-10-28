@@ -1,6 +1,11 @@
 import type { AnyCompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import { extractRegressionKind, extractStatisticOperation, extractTransformKind } from '@retikz/data';
+import {
+  extractRegressionKind,
+  extractStatisticOperation,
+  extractTransformKind,
+  mergeExternalDatasets,
+} from '@retikz/data';
 
 import type {
   AnyCellFormatterDefinition,
@@ -13,9 +18,7 @@ import { RetikzTableError } from '../../error';
 import { extractTableStructureKind } from '../../providers';
 import { TABLE_NAMESPACE, TableComposite } from '../../schemas';
 import { lowerTables } from '../resolve';
-import type { LowerTablesOptions } from '../types';
-
-const TableRuntimeEnvelopeMarker = Symbol('retikz.table.runtimeEnvelope');
+import type { TablesLoweringOptions } from '../types';
 
 const STRUCTURE_DEFINITIONS_KEY = 'structureDefinitions';
 
@@ -40,27 +43,20 @@ const DATA_OPTIONS_KEYS = new Set([
   'regressionImplementations',
 ]);
 
-const NestedDefinitionReference = '@@retikz/table/nested-definition';
-
-/** Table runtime-only envelope；只在宿主聚合阶段存在 */
-type TableRuntimeEnvelope = Readonly<{
-  [TableRuntimeEnvelopeMarker]: true;
-  lowerOptions: LowerTablesOptions;
+/** Table 提供者的运行时参数 */
+export type TableProviderParams = Readonly<{
+  /** 按引用名索引的行数据集 */
+  datasets: ExternalDatasets;
+  /** Table 编译选项 */
+  lowerOptions: TablesLoweringOptions;
 }>;
 
 /** Table Composite provider 的公开完整 key */
-export const TableProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const tableProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: TABLE_NAMESPACE,
   type: TableComposite.Table,
 });
-
-/** 判断聚合值是否为本模块创建的 runtime envelope */
-const runtimeEnvelopeOf = (value: unknown): TableRuntimeEnvelope | undefined => {
-  if (value === null || typeof value !== 'object') return undefined;
-  const envelope = value as Partial<TableRuntimeEnvelope>;
-  return envelope[TableRuntimeEnvelopeMarker] === true ? (envelope as TableRuntimeEnvelope) : undefined;
-};
 
 /** 按稳定 key 合并对象列表；同 key 只接受同一对象引用 */
 const mergeByIdentity = <T>(
@@ -86,7 +82,7 @@ const mergeByIdentity = <T>(
 };
 
 /** 合并当前与未来的非 definition lowering options */
-const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>): Record<string, unknown> => {
+const mergeSharedLowerOptions = (optionSets: ReadonlyArray<TablesLoweringOptions>): Record<string, unknown> => {
   const merged: Record<string, unknown> = {};
 
   for (const options of optionSets) {
@@ -113,9 +109,8 @@ const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>):
   return merged;
 };
 
-/** 合并多个 Table envelope 的 lowering options */
-const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): LowerTablesOptions => {
-  const optionSets = envelopes.map(envelope => envelope.lowerOptions);
+/** 合并多个 Table 贡献的编译选项 */
+const mergeLowerOptions = (optionSets: ReadonlyArray<TablesLoweringOptions>): TablesLoweringOptions => {
   const structureDefinitions = mergeByIdentity<AnyTableStructureDefinition>(
     optionSets.map(options => options.structureDefinitions),
     extractTableStructureKind,
@@ -202,49 +197,39 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
   };
 };
 
-/** 聚合 Table runtime envelopes 并生成唯一 table.table definition */
-const makeTableDefinition: CoreDependencyProvider['makeDefinition'] = mergedDatasets => {
-  const envelopes: Array<TableRuntimeEnvelope> = [];
-  const datasetEntries: Array<[string, unknown]> = [];
+/** 合并 Table 所属数据集与编译选项并物化唯一定义 */
+const makeTableDefinition: CoreDependencyProvider<TableProviderParams>['makeDefinition'] = contributions =>
+  lowerTables(
+    mergeExternalDatasets(contributions.map(params => params.datasets)),
+    mergeLowerOptions(contributions.map(params => params.lowerOptions)),
+  )[0];
 
-  for (const [reference, value] of Object.entries(mergedDatasets)) {
-    const envelope = runtimeEnvelopeOf(value);
-    if (envelope === undefined) datasetEntries.push([reference, value]);
-    else envelopes.push(envelope);
+/** 同键嵌套提供者只接受同一定义引用 */
+const makeNestedDefinition: CoreDependencyProvider<AnyCompositeDefinition>['makeDefinition'] = definitions => {
+  const definition = definitions[0];
+  if (definitions.some(candidate => candidate !== definition)) {
+    throw new RetikzTableError(`table: nested definition conflict for "${definition.namespace}.${definition.type}"`);
   }
-
-  const datasets = Object.fromEntries(datasetEntries) as ExternalDatasets;
-
-  return lowerTables(datasets, mergeLowerOptions(envelopes))[0];
+  return definition;
 };
 
-/** 从 reserved provider-local dataset entry 返回 exact nested definition */
-const makeNestedDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
-  datasets[NestedDefinitionReference] as AnyCompositeDefinition;
-
-/** 创建只生成 table.table 的稳定 runtime provider */
+/** 创建携带具名参数的 Table 提供者 */
 export const createTableProvider = (
   data: ExternalDatasets,
-  runtimeReference: string,
-  lowerOptions: LowerTablesOptions,
-): CoreDependencyProvider => {
-  const envelope: TableRuntimeEnvelope = Object.freeze({
-    [TableRuntimeEnvelopeMarker]: true,
-    lowerOptions,
-  });
-  return Object.freeze({
-    key: TableProviderKey,
-    dependencies: Object.freeze([]),
-    datasets: Object.freeze(Object.fromEntries([...Object.entries(data), [runtimeReference, envelope]])),
+  lowerOptions: TablesLoweringOptions,
+): CoreDependencyProvider<TableProviderParams> =>
+  Object.freeze({
+    key: tableProviderKey,
+    params: Object.freeze({ datasets: Object.freeze({ ...data }), lowerOptions }),
     makeDefinition: makeTableDefinition,
   });
-};
 
-/** 把一个 Cell nested definition 转成 exact-key provider */
-export const createTableNestedDefinitionProvider = (definition: AnyCompositeDefinition): CoreDependencyProvider =>
+/** 以参数直接携带 Cell 内嵌的复合定义 */
+export const createTableNestedDefinitionProvider = (
+  definition: AnyCompositeDefinition,
+): CoreDependencyProvider<AnyCompositeDefinition> =>
   Object.freeze({
     key: Object.freeze({ capability: 'composite', namespace: definition.namespace, type: definition.type }),
-    dependencies: Object.freeze([]),
-    datasets: Object.freeze({ [NestedDefinitionReference]: definition }),
+    params: definition,
     makeDefinition: makeNestedDefinition,
   });

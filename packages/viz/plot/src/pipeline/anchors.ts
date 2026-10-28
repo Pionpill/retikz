@@ -48,7 +48,7 @@ export const createAnchorRegistry = (options: {
 }): AnchorRegistry => {
   const registered = new Map<string, AnchorOwner>();
 
-  const makeScopedId = (prefix: string, raw: unknown): string => {
+  const formatScopedId = (prefix: string, raw: unknown): string => {
     const scoped = `${prefix}.${slug(raw)}`;
     return options.plotId === undefined ? scoped : `${options.plotId}.${scoped}`;
   };
@@ -67,7 +67,7 @@ export const createAnchorRegistry = (options: {
         throw new RetikzPlotError(`lowerPlots: anchorId field "${field}" missing for ${ownerText(owner)}`);
       }
 
-      return { id: makeScopedId(prefix, raw), key: raw };
+      return { id: formatScopedId(prefix, raw), key: raw };
     }
 
     if (spec.template !== undefined) {

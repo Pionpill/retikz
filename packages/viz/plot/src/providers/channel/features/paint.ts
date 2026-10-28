@@ -121,7 +121,7 @@ const colorResolveContext = (
 });
 
 /** 内置 paint 通道 definition 的按名称索引类型 */
-export type BuiltinPaintChannels = {
+type BuiltinPaintChannels = {
   /** 供 mark 消费的主颜色通道 */
   color: MarkChannelDefinition<PlotPaint>;
   /** 供 mark 消费的填充通道 */

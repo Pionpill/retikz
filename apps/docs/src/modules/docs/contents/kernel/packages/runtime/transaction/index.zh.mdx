@@ -55,7 +55,7 @@ declare const createRuntime: (options: RuntimeOptions) => Runtime;
 type RuntimeOptions = Readonly<{
   sources: RuntimeSourceRegistry;
   computations: RuntimeComputationRegistry;
-  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
+  initialSnapshots: ReadonlyArray<InputRuntimeSource>;
   updateStrategy?: 'auto' | 'full';
   participants?: ReadonlyArray<RuntimeCommitParticipantToken>;
   trace?: PerformanceTraceSink;
@@ -71,7 +71,7 @@ type RuntimeOptions = Readonly<{
 declare const createRuntimeSourceInput: <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,
-) => RuntimeSourceInput;
+) => InputRuntimeSource;
 ```
 
 下面的完整例子定义坐标来源和距离计算，并建立运行实例；后续代码沿用这里的变量：
@@ -379,7 +379,7 @@ Runtime 是同步且不可重入的：准备、通知或清理回调中不要再
     {
       name: 'createRuntimeSourceInput',
       kind: 'function',
-      type: '<TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>, value: TInput) => RuntimeSourceInput',
+      type: '<TInput, TValue, TRead, TChange>(source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>, value: TInput) => InputRuntimeSource',
       description: '配对来源与完整初始输入，捕获发生在创建实例时。',
     },
     {

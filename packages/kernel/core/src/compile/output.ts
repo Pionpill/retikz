@@ -31,7 +31,7 @@ import { materializeSpatialHandleIndex } from './orchestration/spatial-handle';
 import type { CompileProvenance } from './provenance';
 import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
 import type { CompileArtifact, CompileResult, CompositeArtifactOf } from './types';
-import type { CompileWarning, CompileWarningInput } from './warning';
+import type { CompileWarning, InputCompileWarning } from './warning';
 
 /** 与最终输出同版本的已完成附属贡献 */
 export type SceneCompilationMetadata = Readonly<{
@@ -60,7 +60,7 @@ export const assemblePreparedScene = <const TComposites extends ReadonlyArray<An
   environment: CompileEnvironment,
   metadata: SceneCompilationMetadata,
 ): PreparedSceneCompilation<TComposites> => {
-  const diagnostics: Array<CompileWarningInput> = [...(metadata.diagnostics ?? [])];
+  const diagnostics: Array<InputCompileWarning> = [...(metadata.diagnostics ?? [])];
   const animations = filterAnimations(root.animations, {
     target: 'root',
     irPath: 'scene',
@@ -103,7 +103,7 @@ export const assembleSceneCompilation = <const TComposites extends ReadonlyArray
     bounds = collectLayoutBounds(bounds, contribution.boundsPoints, contribution.shadow);
   }
   const artifacts = [...(metadata.artifacts ?? [])];
-  const diagnostics: Array<CompileWarningInput> = [...(metadata.diagnostics ?? [])];
+  const diagnostics: Array<InputCompileWarning> = [...(metadata.diagnostics ?? [])];
   for (const entry of output.nodeLayouts ?? []) {
     artifacts.push(
       freezeCompileArtifact({

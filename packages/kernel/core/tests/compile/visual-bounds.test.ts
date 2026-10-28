@@ -56,13 +56,13 @@ it('箭头中的已度量文本和裁剪共同决定可视边界', () => {
   expect(full.y).toBe(15);
 });
 
-describe('canonical visual bounds', () => {
+describe('规范的视觉边界', () => {
   it.each<{ baseline: TextPrimitive['baseline']; y: number }>([
     { baseline: 'alphabetic', y: 20 },
     { baseline: 'top', y: 30 },
     { baseline: 'middle', y: 13 },
     { baseline: 'bottom', y: -4 },
-  ])('positions multiline text by its $baseline anchor', ({ baseline, y }) => {
+  ])('通过 $baseline 锚点定位多行文本', ({ baseline, y }) => {
     expect(
       boundsOf([
         {
@@ -82,7 +82,7 @@ describe('canonical visual bounds', () => {
     ).toEqual({ x: 0, y, width: 40, height: 34 });
   });
 
-  it('uses measured Text alignment and baseline without remeasuring', () => {
+  it('使用测量的 Text 对齐和基线，无需重新测量', () => {
     expect(
       boundsOf([
         {
@@ -102,7 +102,7 @@ describe('canonical visual bounds', () => {
     ).toEqual({ x: 0, y: 20, width: 40, height: 10 });
   });
 
-  it('uses the closed-form AABB for rotated ellipses and ellipse arcs', () => {
+  it('使用闭合形式 AABB 来旋转椭圆和椭圆弧', () => {
     const ellipse = boundsOf([
       {
         type: 'ellipse',
@@ -144,7 +144,7 @@ describe('canonical visual bounds', () => {
     );
   });
 
-  it('takes curve control hulls and the canonical miter limit', () => {
+  it('采用曲线控制船体和规范斜接限制', () => {
     expect(
       boundsOf([
         {
@@ -179,7 +179,7 @@ describe('canonical visual bounds', () => {
     ).toEqual({ x: -10, y: -10, width: 30, height: 20 });
   });
 
-  it('uses the settled state while ignoring animation tracks and non-miter cap variants', () => {
+  it('使用固定状态，同时忽略动画轨道和非斜接帽变体', () => {
     const animation: IRAnimationTrack = {
       property: 'scaleX',
       keyframes: [
@@ -204,7 +204,7 @@ describe('canonical visual bounds', () => {
     expect(boundsOf([{ ...primitive, animations: undefined }])).toEqual(boundsOf([primitive]));
   });
 
-  it('applies canonical shadow expansion and suppresses explicit zero opacity', () => {
+  it('应用规范阴影扩展并抑制显式零不透明度', () => {
     expect(
       boundsOf([
         {
@@ -239,7 +239,7 @@ describe('canonical visual bounds', () => {
     ).toEqual({ x: 0, y: 0, width: 0, height: 0 });
   });
 
-  it('suppresses arrow marker bounds when the owning path has zero opacity', () => {
+  it('当所属路径的不透明度为零时，抑制箭头标记边界', () => {
     expect(
       boundsOf([
         {
@@ -274,7 +274,7 @@ describe('canonical visual bounds', () => {
     ).toEqual({ x: 0, y: 0, width: 0, height: 0 });
   });
 
-  it('uses endpoint-overlap commands when calculating path visual bounds', () => {
+  it('计算路径视觉边界时使用端点重叠命令', () => {
     const arrow = defineArrow({
       name: 'empty-overlap-probe',
       baseSize: 10,
@@ -308,7 +308,7 @@ describe('canonical visual bounds', () => {
     expect(maxX(1) - maxX(0)).toBeCloseTo(7.5, 8);
   });
 
-  it('clips in group-local coordinates and then applies transforms', () => {
+  it('在组局部坐标中进行裁剪，然后应用变换', () => {
     expect(
       boundsOf(
         [
@@ -370,7 +370,7 @@ describe('canonical visual bounds', () => {
       ],
     },
   ] satisfies Array<{ name: string; commands: Array<PathCommand> }>)(
-    'treats a $name clip path as an empty filled region',
+    '将 $name 裁剪路径视为空填充区域',
     ({ commands }) => {
       expect(
         boundsOf(
@@ -387,7 +387,7 @@ describe('canonical visual bounds', () => {
     },
   );
 
-  it('returns a finite immutable zero rectangle for empty output', () => {
+  it('返回一个有限的不可变零矩形作为空输出', () => {
     const bounds = boundsOf([]);
 
     expect(bounds).toEqual({ x: 0, y: 0, width: 0, height: 0 });

@@ -10,12 +10,12 @@ const root = resolve(here, '../..');
 
 const source = (path: string): string => readFileSync(resolve(root, path), 'utf8');
 
-describe('shared source structure', () => {
-  it('shared does not re-export math point types', () => {
+describe('共享源结构', () => {
+  it('共享不重新导出数学点类型', () => {
     expect(source('src/shared/position.ts')).not.toMatch(/export\s+type\s+\{[^}]*\b(Position|Vector2)\b/);
   });
 
-  it('core consumers import math point types from @retikz/math', () => {
+  it('核心消费者从 @retikz/math 导入数学点类型', () => {
     const offenders = [
       ...sourceFiles('src').filter(path => {
         const importLines = source(path)

@@ -1,5 +1,5 @@
 import { CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
-import type { CellPresentationInput } from '@retikz/table';
+import type { InputCellPresentation } from '@retikz/table';
 import {
   defineCellFormatter,
   TableSchema,
@@ -33,7 +33,7 @@ const cleanTableTheme = defineTableTheme({
 });
 
 describe('renderTable', () => {
-  it('renders anonymous manual specs without data and detail specs with runtime data in SSR', () => {
+  it('在 SSR 中渲染没有数据的匿名手动规格和带有运行时数据的详细规格', () => {
     const manual = manualTable({
       rows: [['Ada']],
     });
@@ -53,7 +53,7 @@ describe('renderTable', () => {
     expect(renderTable(detail, { data: { people: [{ name: 'Grace' }] } })).toContain('Grace');
   });
 
-  it('returns manifest artifacts only when requested and keeps output size outside Table geometry', () => {
+  it('仅在请求时返回清单产物，并将输出大小保持在 Table 几何之外', () => {
     const spec = manualTable({
       rows: [
         [null, null],
@@ -71,7 +71,7 @@ describe('renderTable', () => {
     expect(artifact.manifest.allocationBounds).toEqual({ x: 0, y: 0, width: 240, height: 64 });
   });
 
-  it('passes formatter definitions through the shared lowering options in SSR', () => {
+  it('通过 SSR 中的共享下沉选项传递格式化程序定义', () => {
     const prefix = defineCellFormatter({
       name: 'prefix',
       optionsSchema: strictObject({ prefix: string() }),
@@ -84,7 +84,7 @@ describe('renderTable', () => {
     expect(renderTable(spec, { lowerOptions: { formatterDefinitions: [prefix] } })).toContain('#7');
   });
 
-  it('keeps Core Theme, Table defaults, encodings, and custom visual scales in Vanilla SSR artifacts', () => {
+  it('在 Vanilla SSR 产物中保留 Core 主题、Table 默认值、编码和自定义视觉比例', () => {
     const visualScale = defineCellVisualScale({
       name: 'vanilla-palette',
       optionsSchema: strictObject({}),
@@ -135,7 +135,7 @@ describe('renderTable', () => {
     });
   });
 
-  it('keeps the light baseline distinct from explicit clean in SSR', () => {
+  it('保持灯光基线与 SSR 中的显式干净不同', () => {
     const baseline = renderTable(manualTable({ rows: [['Ada']] }), { artifacts: true });
     const clean = renderTable(manualTable({ rows: [['Ada']] }), {
       artifacts: true,
@@ -164,7 +164,7 @@ describe('renderTable', () => {
     });
   });
 
-  it('surfaces invalid custom Legend resolution diagnostics through Vanilla SSR', () => {
+  it('通过 Vanilla SSR 呈现无效的自定义 Legend 解析结果诊断', () => {
     const invalid = defineCellVisualScale({
       name: 'vanilla-invalid-legend',
       optionsSchema: strictObject({}),
@@ -193,8 +193,8 @@ describe('renderTable', () => {
     expect(() => renderTable(spec, { lowerOptions: { visualScaleDefinitions: [invalid] } })).toThrow(/legendForm/i);
   });
 
-  it('passes the new Presentation ABI and semantic border appearance through SSR', () => {
-    const observed: Array<CellPresentationInput> = [];
+  it('通过 SSR 传递新的 Presentation ABI 和语义边框外观', () => {
+    const observed: Array<InputCellPresentation> = [];
     const inspect = defineCellPresentation({
       name: 'inspect-appearance',
       optionsSchema: strictObject({}),
@@ -246,8 +246,8 @@ describe('renderTable', () => {
     );
   });
 
-  it('passes ordered root rules through plain authoring into SSR', () => {
-    const observed: Array<CellPresentationInput> = [];
+  it('通过简单编写将有序根规则传递到 SSR', () => {
+    const observed: Array<InputCellPresentation> = [];
     const inspect = defineCellPresentation({
       name: 'rule-inspect',
       optionsSchema: strictObject({}),
@@ -292,7 +292,7 @@ describe('renderTable', () => {
     );
   });
 
-  it('preserves shared content rewrite diagnostics in Vanilla SSR', () => {
+  it('在 Vanilla SSR 中保留共享内容重写诊断', () => {
     const spec = manualTable({
       rows: [[{ id: 'direct', content: { type: 'node', position: [0, 0], text: 'direct' } }]],
       rules: [{ selector: { cellIds: ['direct'] }, formatter: { name: 'identity' } }],
@@ -301,13 +301,13 @@ describe('renderTable', () => {
     expect(() => renderTable(spec)).toThrow(/rule 0.*direct.*formatter/i);
   });
 
-  it('accepts Core options under compile', () => {
+  it('编译时接受 Core 选项', () => {
     const spec = manualTable({ rows: [[null]] });
 
     expect(renderTable(spec, { compile: { padding: 0 }, animation: { enabled: false } })).toContain('<svg');
   });
 
-  it('compiles nested Tier 2 content through compile.composites in the same SSR result', () => {
+  it('通过 compile.composites 在相同的 SSR 结果中编译嵌套的第 2 层内容', () => {
     const badgeSchema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
       type: literal('badge'),
@@ -327,7 +327,7 @@ describe('renderTable', () => {
   });
 });
 
-it('passes category definitions through Table Vanilla without sorting rows', () => {
+it('通过 Table Vanilla 传递类别定义，而不对行进行排序', () => {
   const spec = TableSchema.parse({
     namespace: 'table',
     type: 'table',

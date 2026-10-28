@@ -50,7 +50,7 @@ const pathDataOf = (markup: string): Array<string> => [...markup.matchAll(/<path
 const moveCountOf = (pathData: string): number => pathData.match(/\bM /g)?.length ?? 0;
 
 describe('Axis 文档 playground', () => {
-  it('domain endpoint control is bilingual and part of the canonical contract', () => {
+  it('定义域端点控件提供双语支持并属于规范契约', () => {
     expect(fieldContractOf(englishAxisCartesianPlaygroundControls)).toEqual(
       fieldContractOf(axisCartesianPlaygroundControls),
     );
@@ -73,7 +73,7 @@ describe('Axis 文档 playground', () => {
     expect(englishPreviewControlContract.relatedApis).toEqual(previewControlContract.relatedApis);
   });
 
-  it('enabling domain endpoints adds the two missing boundary grid positions', () => {
+  it('启用定义域端点后添加两个缺失的边界网格位置', () => {
     const disabledPaths = pathDataOf(renderWithDomainEndpoints(false));
     const enabledPaths = pathDataOf(renderWithDomainEndpoints(true));
 

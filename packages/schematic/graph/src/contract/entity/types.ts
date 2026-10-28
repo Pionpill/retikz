@@ -34,7 +34,7 @@ export type EntityKindDefinition = Readonly<{
  * Entity predicate 作者侧的类型安全定义
  * @template TSchema 约束 paramsSchema 的 JSON 对象 Schema 类型，决定 predicate 参数的解析契约
  */
-export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
+export type InputEntityPredicateDefinition<TSchema extends ZodType<JsonObject>> = Readonly<{
   /** 全局唯一的 predicate definition name */
   name: string;
   /** predicate 所属的 Entity role */
@@ -48,4 +48,4 @@ export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> 
 }>;
 
 /** Entity predicate registry 保存的参数擦除定义 */
-export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<JsonObject>>;
+export type EntityPredicateDefinition = InputEntityPredicateDefinition<ZodType<JsonObject>>;

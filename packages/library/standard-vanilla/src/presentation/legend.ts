@@ -1,7 +1,7 @@
-import type { LegendInput } from '@retikz/standard/presentation';
+import type { InputLegendConfig } from '@retikz/standard/presentation';
 import {
   createLegend,
-  LegendProvider,
+  legendProvider,
   RetikzStandardError,
   RetikzStandardErrorCode,
 } from '@retikz/standard/presentation';
@@ -13,30 +13,30 @@ import type {
   InputEmbedContribution,
 } from '@retikz/vanilla';
 
-import { StandardLegendEmbedKind } from '../shared/constants';
+import { standardLegendEmbedKind } from '../shared/constants';
 
 type InputLegendChild = InputChild;
 
-type InputLegendItemsContent = Omit<Extract<LegendInput['content'], { kind: 'items' }>, 'items'> & {
+type InputLegendItemsContent = Omit<Extract<InputLegendConfig['content'], { kind: 'items' }>, 'items'> & {
   items: Array<
-    Omit<Extract<LegendInput['content'], { kind: 'items' }>['items'][number], 'sample' | 'label'> & {
+    Omit<Extract<InputLegendConfig['content'], { kind: 'items' }>['items'][number], 'sample' | 'label'> & {
       sample: InputLegendChild;
       label?: InputLegendChild;
     }
   >;
 };
 
-type InputLegendRampContent = Omit<Extract<LegendInput['content'], { kind: 'ramp' }>, 'sample' | 'ticks'> & {
+type InputLegendRampContent = Omit<Extract<InputLegendConfig['content'], { kind: 'ramp' }>, 'sample' | 'ticks'> & {
   sample: InputLegendChild;
   ticks: Array<
-    Omit<Extract<LegendInput['content'], { kind: 'ramp' }>['ticks'][number], 'label'> & {
+    Omit<Extract<InputLegendConfig['content'], { kind: 'ramp' }>['ticks'][number], 'label'> & {
       label?: InputLegendChild;
     }
   >;
 };
 
 /** Standard Legend 的 framework-neutral authoring 输入 */
-export type InputLegend = Omit<LegendInput, 'title' | 'content'> & {
+export type InputLegend = Omit<InputLegendConfig, 'title' | 'content'> & {
   /** 可选的图例标题，接受文本或绘制子内容 */
   title?: InputLegendChild;
   /** 互斥的离散图例项或连续色带内容 */
@@ -61,7 +61,7 @@ const normalizeLegendSlot = (
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
       message: 'Standard Legend inputs require Kernel Vanilla normalizeScene.',
-      details: { operation: 'LegendInputEmbedAdapter' },
+      details: { operation: 'legendInputEmbedAdapter' },
     });
   }
 
@@ -82,8 +82,8 @@ const normalizeLegendSlot = (
 };
 
 /** Standard Legend 的 InputEmbed adapter */
-export const LegendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> = {
-  kind: StandardLegendEmbedKind,
+export const legendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> = {
+  kind: standardLegendEmbedKind,
   lower: (props, context) => {
     const collected: CollectedLegendSlots = { roots: [], providers: [], authoringSites: [] };
     const { title: _title, content: _content, ...sourceProps } = props;
@@ -128,18 +128,18 @@ export const LegendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> 
         content,
       }),
       providerDependencies: {
-        roots: [LegendProvider.key, ...collected.roots],
-        providers: [LegendProvider, ...collected.providers],
+        roots: [legendProvider.key, ...collected.roots],
+        providers: [legendProvider, ...collected.providers],
       },
       ...(collected.authoringSites.length === 0 ? {} : { authoringSites: collected.authoringSites }),
     };
   },
 };
 
-/** 创建由 LegendInputEmbedAdapter 下沉的 Standard Legend embed */
+/** 创建由 legendInputEmbedAdapter 下沉的 Standard Legend embed */
 export const legend = (input: InputLegend): InputEmbed<InputLegend> => ({
   type: 'embed',
-  kind: StandardLegendEmbedKind,
+  kind: standardLegendEmbedKind,
   ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

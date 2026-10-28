@@ -14,7 +14,7 @@ Dimensions must be nonnegative. When width and minWidth are both provided, minWi
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Block"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={103}>Block</ApiSourceLink> / <ApiSourceLink label={"BlockProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={23}>BlockProps</ApiSourceLink>
+#### <ApiSourceLink label={"Block"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={86}>Block</ApiSourceLink> / <ApiSourceLink label={"BlockProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={23}>BlockProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -163,7 +163,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 | Member               | Type                   | Default | Description                                                      |
 | -------------------- | ---------------------- | ------- | ---------------------------------------------------------------- |
 | `readonly children?` | `never`                | —       | —                                                                |
-| `readonly content`   | `BlockRowContentInput` | —       | Shorthand row content, mutually exclusive with explicit children |
+| `readonly content`   | `InputBlockRowContent` | —       | Shorthand row content, mutually exclusive with explicit children |
 
 </ApiTable>
 
@@ -366,7 +366,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 | Member               | Type                   | Default | Description                                                      |
 | -------------------- | ---------------------- | ------- | ---------------------------------------------------------------- |
 | `readonly children?` | `never`                | —       | —                                                                |
-| `readonly content`   | `BlockRowContentInput` | —       | Shorthand row content, mutually exclusive with explicit children |
+| `readonly content`   | `InputBlockRowContent` | —       | Shorthand row content, mutually exclusive with explicit children |
 
 </ApiTable>
 
@@ -547,7 +547,7 @@ Common members apply to every branch; a value must also satisfy at least one bra
 | Member               | Type                   | Default | Description                                                      |
 | -------------------- | ---------------------- | ------- | ---------------------------------------------------------------- |
 | `readonly children?` | `never`                | —       | —                                                                |
-| `readonly content`   | `BlockRowContentInput` | —       | Shorthand row content, mutually exclusive with explicit children |
+| `readonly content`   | `InputBlockRowContent` | —       | Shorthand row content, mutually exclusive with explicit children |
 
 </ApiTable>
 
@@ -574,7 +574,7 @@ export declare const normalizeBlockRow: (input: InputBlockRow) => IRBlockRow;
 export type InputBlockRow = InputBlockRowFields &
   (
     | Readonly<{
-        content: BlockRowContentInput;
+        content: InputBlockRowContent;
         children?: never;
       }>
     | Readonly<{
@@ -588,31 +588,31 @@ export type InputBlockRow = InputBlockRowFields &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"BlockHeaderInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-header.ts"} startLine={19}>BlockHeaderInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"blockHeaderInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-header.ts"} startLine={15}>blockHeaderInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const BlockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHeaderInputEmbedProps>;
+export declare const blockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHeaderInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"BlockInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block.ts"} startLine={19}>BlockInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"blockInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block.ts"} startLine={19}>blockInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const BlockInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockInputEmbedProps>;
+export declare const blockInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"BlockRowInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={19}>BlockRowInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"blockRowInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={15}>blockRowInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const BlockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInputEmbedProps>;
+export declare const blockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"BlockSectionInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-section.ts"} startLine={19}>BlockSectionInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"blockSectionInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/block-section.ts"} startLine={15}>blockSectionInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const BlockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSectionInputEmbedProps>;
+export declare const blockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSectionInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={24}>createGraphVanillaAdapters</ApiSourceLink>
+#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -769,7 +769,7 @@ export type BlockRowCreateOptions = DistributiveOmit<IRBlockRow, 'namespace' | '
 | Member                     | Type              | Default | Description                               |
 | -------------------------- | ----------------- | ------- | ----------------------------------------- |
 | `readonly codeBlockTokens` | `CodeBlockTokens` | —       | Visual tokens for the current Graph style |
-| `readonly theme`           | `ResolvedTheme`   | —       | Effective theme of the current Core Scope |
+| `readonly theme`           | `CanonicalTheme`  | —       | Effective theme of the current Core Scope |
 
 </ApiTable>
 
@@ -779,7 +779,7 @@ export type BlockRowCreateOptions = DistributiveOmit<IRBlockRow, 'namespace' | '
 
 ```ts
 export type CodeBlockComposeContext = Readonly<{
-  theme: ResolvedTheme;
+  theme: CanonicalTheme;
   codeBlockTokens: CodeBlockTokens;
 }>;
 ```
@@ -801,7 +801,7 @@ export type CodeBlockComposeContext = Readonly<{
 | `readonly accentColor`        | `NonNullable<NonNullable<IRNode['style']>['textColor']>`                   | —       | Default icon color                                         |
 | `readonly codeFontFamily`     | `NonNullable<NonNullable<NonNullable<IRNode['style']>['font']>['family']>` | —       | Font for signatures and method names                       |
 | `readonly mutedTextColor`     | `NonNullable<NonNullable<IRNode['style']>['textColor']>`                   | —       | Color for descriptions, types, and default trail           |
-| `readonly sectionBackground?` | `SurfaceInput['background']`                                               | —       | Section background; omission uses the base Section default |
+| `readonly sectionBackground?` | `InputSurfaceConfig['background']`                                         | —       | Section background; omission uses the base Section default |
 | `readonly textColor`          | `NonNullable<NonNullable<IRNode['style']>['textColor']>`                   | —       | Color for titles, member names, and logic text             |
 
 </ApiTable>
@@ -816,7 +816,7 @@ export type CodeBlockTokens = Readonly<{
   mutedTextColor: NonNullable<NonNullable<IRNode['style']>['textColor']>;
   accentColor: NonNullable<NonNullable<IRNode['style']>['textColor']>;
   codeFontFamily: NonNullable<NonNullable<NonNullable<IRNode['style']>['font']>['family']>;
-  sectionBackground?: SurfaceInput['background'];
+  sectionBackground?: InputSurfaceConfig['background'];
 }>;
 ```
 
@@ -901,7 +901,7 @@ export type GraphDefinitionOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createCodeBlockContribution"} path={"packages/schematic/graph/src/code/pipeline/composite.ts"} startLine={97}>createCodeBlockContribution</ApiSourceLink>
+#### <ApiSourceLink label={"createCodeBlockContribution"} path={"packages/schematic/graph/src/code/pipeline/composite.ts"} startLine={100}>createCodeBlockContribution</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -969,10 +969,10 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 
 <ApiTable variant="parameters">
 
-| Category   | Name       | Type / signature                        | Description                                                                                                                                  |
-| ---------- | ---------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Parameters | `options?` | `GraphDefinitionOptions`                | Custom semantic and theme definitions; omission reuses built-in providers, and registration validation is deferred until dependency assembly |
-| Returns    | —          | `ReadonlyArray<CoreDependencyProvider>` | A readonly provider collection containing Graph elements and their required layout, shape, and arrow dependencies                            |
+| Category   | Name       | Type / signature                           | Description                                                                                                                                  |
+| ---------- | ---------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `options?` | `GraphDefinitionOptions`                   | Custom semantic and theme definitions; omission reuses built-in providers, and registration validation is deferred until dependency assembly |
+| Returns    | —          | `ReadonlyArray<AnyCoreDependencyProvider>` | A readonly provider collection containing Graph elements and their required layout, shape, and arrow dependencies                            |
 
 </ApiTable>
 
@@ -981,7 +981,9 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createGraphProviders: (options?: GraphDefinitionOptions) => ReadonlyArray<CoreDependencyProvider>;
+export declare const createGraphProviders: (
+  options?: GraphDefinitionOptions,
+) => ReadonlyArray<AnyCoreDependencyProvider>;
 ```
 
 </DocTab>

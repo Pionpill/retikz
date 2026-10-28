@@ -1,6 +1,6 @@
 import type { PlotLineageOptions, PlotRowValueOptions } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import type { EffectivePlotLineageOptions } from './types';
+import type { CanonicalPlotLineageOptions } from './types';
 
 /** 校验 rowValues，避免默认记录整行 */
 const resolvePlotRowValueOptions = (value: false | PlotRowValueOptions | undefined): false | PlotRowValueOptions => {
@@ -19,7 +19,7 @@ const resolvePlotRowValueOptions = (value: false | PlotRowValueOptions | undefin
 /** 解析 plot lineage 开关默认值 */
 export const resolvePlotLineageOptions = (
   options: false | PlotLineageOptions | undefined,
-): EffectivePlotLineageOptions => {
+): CanonicalPlotLineageOptions => {
   if (options === false) {
     return {
       data: { sourceIdentity: false, transformSteps: false },

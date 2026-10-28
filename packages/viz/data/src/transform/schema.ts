@@ -23,7 +23,7 @@ import {
 
 import { ReducerMetricsSchema, reducerOutputFieldsOf } from '../operators/reducer';
 import { RegressionMethodSchema } from '../operators/regression';
-import { BuiltinSelectorOperationSchemas, RowSelectorTie, SelectorOperationSchema } from '../operators/selector';
+import { BUILTIN_SELECTOR_OPERATION_SCHEMAS, RowSelectorTie, SelectorOperationSchema } from '../operators/selector';
 import { DataSortOrder } from '../order';
 import {
   BuiltinDataTransform,
@@ -37,7 +37,7 @@ import {
 import { createTransformSchema } from './factory';
 
 /** 校验分组字段列表，按字段顺序逐层分组，每层保留首次出现顺序；省略或空列表表示所有行属于同一组 */
-export const GroupBySchema = array(NonBlankStringSchema)
+const GroupBySchema = array(NonBlankStringSchema)
   .optional()
   .describe(
     'Group key fields in hierarchy order; each level retains first-seen order; omitted or empty means one group',
@@ -101,19 +101,19 @@ const AnnotateSelectorTieSchema = union([literal(RowSelectorTie.First), literal(
   .describe('Single-row tie-breaking strategy; default first');
 
 const AnnotateSelectorOperationSchema = discriminatedUnion('kind', [
-  BuiltinSelectorOperationSchemas.Min.extend({ tie: AnnotateSelectorTieSchema }),
-  BuiltinSelectorOperationSchemas.Max.extend({ tie: AnnotateSelectorTieSchema }),
-  BuiltinSelectorOperationSchemas.First,
-  BuiltinSelectorOperationSchemas.Last,
-  BuiltinSelectorOperationSchemas.Top.extend({
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Min.extend({ tie: AnnotateSelectorTieSchema }),
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Max.extend({ tie: AnnotateSelectorTieSchema }),
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.First,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Last,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Top.extend({
     n: literal(1).describe('Selected row count; fixed to one for annotation'),
     tie: AnnotateSelectorTieSchema,
   }),
-  BuiltinSelectorOperationSchemas.Bottom.extend({
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Bottom.extend({
     n: literal(1).describe('Selected row count; fixed to one for annotation'),
     tie: AnnotateSelectorTieSchema,
   }),
-  BuiltinSelectorOperationSchemas.Nth,
+  BUILTIN_SELECTOR_OPERATION_SCHEMAS.Nth,
 ]).describe('Built-in selector operation guaranteed to select at most one row');
 
 /** 校验单行选择器及写入注解结果的字段 */

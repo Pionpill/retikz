@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from '../../src/composites/internal';
 
-describe('shared weighted layout distribution', () => {
-  it('freezes an item at max and redistributes remaining growth by stable source order', () => {
+describe('共享加权布局分布', () => {
+  it('条目达到最大值时冻结尺寸并按稳定源码顺序重新分配剩余增长量', () => {
     const inputs = [
       { base: 20, min: 0, max: 30, weight: 1 },
       { base: 20, min: 0, weight: 3 },
@@ -16,7 +16,7 @@ describe('shared weighted layout distribution', () => {
     ]);
   });
 
-  it('freezes an item at min and redistributes the remaining deficit', () => {
+  it('在最小值处冻结一个项目并重新分配剩余的赤字', () => {
     expect(
       distributeWeightedLayoutSizes(
         [
@@ -28,7 +28,7 @@ describe('shared weighted layout distribution', () => {
     ).toEqual({ values: [30, 10], remaining: 0 });
   });
 
-  it('clamps every initial base through min and max before distributing', () => {
+  it('在分配之前通过最小值和最大值夹紧每个初始碱基', () => {
     expect(distributeWeightedLayoutSizes([{ base: 5, min: 10, weight: 0 }], 10)).toEqual({
       values: [10],
       remaining: 0,
@@ -45,7 +45,7 @@ describe('shared weighted layout distribution', () => {
     ).toEqual({ values: [10, 20, 12], remaining: 0 });
   });
 
-  it('leaves unavailable free space explicit when every weight is zero or every bound is frozen', () => {
+  it('当每个权重为零或每个边界都被冻结时，显式地留下不可用的自由空间', () => {
     expect(
       distributeWeightedLayoutSizes(
         [
@@ -61,14 +61,14 @@ describe('shared weighted layout distribution', () => {
     });
   });
 
-  it('uses compensated authored-order sums for long decimal and mixed-magnitude inputs', () => {
+  it('对长十进制和混合大小输入使用补偿的编写顺序和', () => {
     const decimals = Array.from({ length: 10_000 }, () => 0.1);
 
     expect(compensatedLayoutSum(decimals)).toBe(1000);
     expect(compensatedLayoutSum([1e16, 1, -1e16])).toBe(1);
   });
 
-  it('fails loudly when otherwise finite inputs overflow finite arithmetic', () => {
+  it('当有限输入溢出有限算术时，会明确报错', () => {
     expect(() => compensatedLayoutSum([Number.MAX_VALUE, Number.MAX_VALUE])).toThrow(/finite/i);
     expect(() =>
       distributeWeightedLayoutSizes(
@@ -81,7 +81,7 @@ describe('shared weighted layout distribution', () => {
     ).toThrow(/finite/i);
   });
 
-  it('uses a finite scale-aware epsilon without treating unbounded values as numbers', () => {
+  it('使用有限尺度感知 epsilon，而不将无界值视为数字', () => {
     expect(layoutEpsilon(1, 1)).toBe(Number.EPSILON * 64);
     expect(layoutEpsilon(1e9, 1e9 + 1)).toBeGreaterThan(Number.EPSILON * 64);
     expect(() => layoutEpsilon(Number.POSITIVE_INFINITY, 1)).toThrow(/finite/i);

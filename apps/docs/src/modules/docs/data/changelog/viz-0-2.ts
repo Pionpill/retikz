@@ -15,6 +15,13 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          content: {
+            zh: '移除 BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND 与 BUILTIN_FORMAT_DEFINITIONS_BY_NAME；需要按 key 查找时使用 resolveTransformRegistry() / resolveFormatRegistry()，内置列表仍保留。',
+            en: 'Removes BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND and BUILTIN_FORMAT_DEFINITIONS_BY_NAME. Use resolveTransformRegistry() / resolveFormatRegistry() for keyed lookup; builtin lists remain available.',
+          },
+        },
+        {
           label: { zh: '待发布：排序与分桶计算分组', en: 'Unreleased: grouped sorting and binning' },
           content: {
             zh: 'sort 与 bin 支持可选 params.groupBy，多个字段组成计算分组。sort 在组内稳定排序，组按字段层级及每层首次出现顺序输出；bin 各组独立分桶并保留组字段与类型，显式 extent 让所有组共用范围，来源证据仅包含实际桶成员。未指定分组时行为保持。行组织文档提供全局、team、item 和组合分组控件。',
@@ -105,6 +112,13 @@ export const vizV02: Release = {
         en: 'Reorganizes the Plot docs entry points around the grammar of graphics.',
       },
       highlights: [
+        {
+          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          content: {
+            zh: '移除 assertUniqueAxisDimension、toPolarVertex 与 channelForRole；轴唯一性继续按 placement 校验，坐标和位置通道由现行 definition 与 resolver 消费。Plot React 同步移除未使用的 CoreNodeChannelProps / CorePathChannelProps 别名。',
+            en: 'Removes assertUniqueAxisDimension, toPolarVertex, and channelForRole. Axis uniqueness remains placement-based; active definitions and resolvers consume coordinates and positional channels. Plot React also removes the unused CoreNodeChannelProps / CorePathChannelProps aliases.',
+          },
+        },
         {
           label: {
             zh: '待发布：Path 图元目标端点',
@@ -206,6 +220,13 @@ export const vizV02: Release = {
       version: 'v0.2',
       description: { zh: '补充 Vanilla 首次接入示例。', en: 'Adds a first-use example for Vanilla.' },
       highlights: [
+        {
+          label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
+          content: {
+            zh: '移除 createPlotProvider、resolvePlotContribution 及其专用请求/结果类型；通过 embedPlot 与 plotInputEmbedAdapter 接入，底层 provider contribution 仍由 @retikz/plot 提供。',
+            en: 'Removes createPlotProvider, resolvePlotContribution, and their request/result types. Use embedPlot and plotInputEmbedAdapter; @retikz/plot still owns the underlying provider contribution.',
+          },
+        },
         {
           label: { zh: '待发布：Vanilla 快速开始', en: 'Unreleased: Vanilla quick start' },
           content: {

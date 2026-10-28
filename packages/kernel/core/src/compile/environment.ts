@@ -1,5 +1,4 @@
 import type {
-  AnyCompositeDefinition,
   AnyPathDefinition,
   ArrowDefinition,
   MarkDefinition,
@@ -21,6 +20,7 @@ import {
   resolveShapeRegistry,
   resolveThemeRegistry,
 } from '../providers';
+import type { CompositeRegistry } from '../resolve';
 import {
   DEFAULT_FONT_SIZE,
   DEFAULT_LABEL_DISTANCE,
@@ -42,7 +42,7 @@ export type CompileEnvironment = Readonly<{
   /** 运行时注入的 TeX lowering 钩子 */
   lowerTex: CompileOptions['lowerTex'];
   /** layout-aware composite 注册表 */
-  composites: ReadonlyMap<string, AnyCompositeDefinition>;
+  composites: CompositeRegistry;
   /** 复合编译的嵌套深度上限 */
   maxCompositeDepth: number;
   /** 本次请求的 artifact 开关 */
@@ -89,6 +89,14 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
     );
   }
 
+  const rootFontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
+  if (!Number.isFinite(rootFontSize) || rootFontSize <= 0) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `CompileOptions.fontSize must be a positive finite number; received ${rootFontSize}.`,
+    );
+  }
+
   const clips = resolveClipRegistry(options.clips);
   const maxClipDepth = options.maxClipDepth ?? DEFAULT_MAX_CLIP_DEPTH;
   if (!Number.isSafeInteger(maxClipDepth) || maxClipDepth < 0) {
@@ -114,7 +122,7 @@ export const createCompileEnvironment = (options: CompileEnvironmentOptions = {}
     layoutPadding: options.padding ?? DEFAULT_LAYOUT_PADDING,
     nodeDistance: options.nodeDistance ?? DEFAULT_NODE_DISTANCE,
     labelDistance,
-    rootFontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+    rootFontSize,
     shapes: resolveShapeRegistry(options.shapes),
     boundaries: resolveBoundaryRegistry(options.boundaries),
     clips,

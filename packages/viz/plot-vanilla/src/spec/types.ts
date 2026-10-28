@@ -1,7 +1,7 @@
 import type { DataInputBindings, DataTransformExecutor, ExternalDatasets } from '@retikz/data';
 import type {
   IRPlot,
-  LowerPlotsOptions,
+  PlotsLoweringOptions,
   PlotHostLineageMetadata,
   PlotLineageOptions,
   PlotLineageRun,
@@ -58,7 +58,7 @@ export type InputPlotEmbed<TSource = never> = PlotSource &
     /** 同次完整帧提交后通知，不在 preparation 中调用 */
     onLineage?: (lineage: PlotLineageRun) => void;
     /** 将绘图描述降低为 Core 图元时的运行时选项 */
-    lowerOptions?: LowerPlotsOptions;
+    lowerOptions?: PlotsLoweringOptions;
     /** 作用于 Plot 根节点的可选 Core Scope */
     panel?: InputPlotPanel;
   }>;
@@ -70,7 +70,7 @@ export type PreparedPlotLineageNotification = Readonly<{
   /** 已完成的数据计算 */
   preparedData: PreparedPlotData;
   /** 同次 lowering 配置 */
-  lowerOptions?: LowerPlotsOptions;
+  lowerOptions?: PlotsLoweringOptions;
   /** 链路配置 */
   lineage: PlotLineageOptions;
   /** 元数据 */

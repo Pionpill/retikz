@@ -1,4 +1,4 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 
 import type { IRPlotAxisRule, IRPlotDefaults } from '../../schemas';
 
@@ -23,5 +23,5 @@ export type PlotThemeDefinition = Readonly<{
   /** 与 Core Theme 对齐的开放名称 */
   name: string;
   /** 从当前位置完整 Core Theme 解析 Plot defaults/rules 稀疏片段 */
-  resolve: (theme: ResolvedTheme) => PlotThemeSource;
+  resolve: (theme: CanonicalTheme) => PlotThemeSource;
 }>;

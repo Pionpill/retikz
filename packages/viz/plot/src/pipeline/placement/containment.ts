@@ -14,7 +14,7 @@ import { resolvePositionAdjustmentOperation } from '../../resolve/position-adjus
 import type { IRPlotMark, IRPlotMarkPlacement } from '../../schemas';
 
 /** 单个 Mark 对各 role 提出的最终 range inset */
-export type MarkPlacementRangeOverrides = Partial<Record<DimensionRole, readonly [number, number]>>;
+type MarkPlacementRangeOverrides = Partial<Record<DimensionRole, readonly [number, number]>>;
 
 /**
  * 在最终 Mark lowering 前解析 role-space containment，并提议收窄后的 role ranges

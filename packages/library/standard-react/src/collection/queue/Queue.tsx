@@ -1,7 +1,7 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputQueue } from '@retikz/standard-vanilla/collection';
-import { QueueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { queueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { IRQueue, IRCell } from '@retikz/standard/collection';
 import type { FC, ReactNode } from 'react';
 
@@ -73,5 +73,5 @@ const QueueComponent: FC<QueueProps> = () => null;
 export const Queue = QueueComponent as StandardEmbeddableComponent<QueueProps>;
 Queue.displayName = 'Queue';
 Queue.isTier2Embeddable = true;
-Queue.inputEmbedAdapter = QueueInputEmbedAdapter;
+Queue.inputEmbedAdapter = queueInputEmbedAdapter;
 Queue.createInputEmbedProps = createQueueInput;

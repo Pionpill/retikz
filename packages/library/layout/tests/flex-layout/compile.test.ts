@@ -15,7 +15,7 @@ import { boolean, literal, number, string } from 'zod';
 import type { FlexLayoutCompileArtifact } from '../../src';
 import {
   createFlexLayout,
-  FlexLayoutDefinition,
+  flexLayoutDefinition,
   FlexLayoutDirection,
   FlexLayoutWrap,
   LayoutAlignment,
@@ -153,7 +153,7 @@ const compileFlex = (child: IRChild, proposal: LayoutProposal) => {
       children: [{ namespace: 'flex-test', type: 'harness', child }],
     },
     {
-      composites: [FlexLayoutDefinition, createLeafDefinition(logs), harness],
+      composites: [flexLayoutDefinition, createLeafDefinition(logs), harness],
       padding: 0,
     },
   );
@@ -200,8 +200,8 @@ const flexArtifactOf = (output: ReturnType<typeof compileToScene>): FlexLayoutCo
   return artifact as FlexLayoutCompileArtifact;
 };
 
-describe('FlexLayout compile contract', () => {
-  it('normalizes authored Scope position into the parent slot once', () => {
+describe('FlexLayout 编译契约', () => {
+  it('将编写的 Scope 位置标准化到父槽中一次', () => {
     const compilePositioned = (position: [number, number]) =>
       compileFlex(
         createFlexLayout({
@@ -237,7 +237,7 @@ describe('FlexLayout compile contract', () => {
     );
   });
 
-  it('uses frozen grow slots, physical gaps and non-zero allocation origins for placement', () => {
+  it('使用冻结生长槽、物理间隙和非零分配源进行放置', () => {
     const result = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 30 } },
@@ -268,7 +268,7 @@ describe('FlexLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'b')).toEqual({ x: 30, y: 0 });
   });
 
-  it('wraps lines in layout traversal while preserving authored paint order', () => {
+  it('在布局遍历中换行，同时保留编写的绘制顺序', () => {
     const result = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 60 }, y: { kind: 'fixed', value: 50 } },
@@ -298,7 +298,7 @@ describe('FlexLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'a')).toEqual({ x: 30, y: 40 });
   });
 
-  it('wraps content-sized layouts for intrinsic minimum and authored natural maximum', () => {
+  it('包装内容大小的布局，以实现内在最小值和编写的自然最大值', () => {
     const children = ['a', 'b', 'c'].map(key => ({
       kind: LayoutItemKind.Flex,
       key,
@@ -339,7 +339,7 @@ describe('FlexLayout compile contract', () => {
     expect(translationOf(boundedNatural.output.scene.primitives, 'c')).toEqual({ x: 0, y: 30 });
   });
 
-  it('reverses physical placement once on row and column main axes', () => {
+  it('在行和列主轴上反转一次物理放置', () => {
     const children = ['a', 'b'].map(key => ({
       kind: LayoutItemKind.Flex,
       key,
@@ -372,7 +372,7 @@ describe('FlexLayout compile contract', () => {
     expect(translationOf(column.output.scene.primitives, 'b')).toEqual({ x: 0, y: 60 });
   });
 
-  it('records margins, a centered fixed gap, and space-between as distinct physical segments', () => {
+  it('将边距、居中固定间隙和间距记录为不同的物理段', () => {
     const compileDirection = (direction: 'row' | 'row-reverse') =>
       compileFlex(
         createFlexLayout({
@@ -404,7 +404,7 @@ describe('FlexLayout compile contract', () => {
     }
   });
 
-  it('records column and column-reverse spacing from the same final physical intervals', () => {
+  it('记录相同最终物理间隔的列和列反转间距', () => {
     const compileDirection = (direction: 'column' | 'column-reverse') =>
       compileFlex(
         createFlexLayout({
@@ -434,7 +434,7 @@ describe('FlexLayout compile contract', () => {
     }
   });
 
-  it('records wrap and wrap-reverse cross gaps with align-content distribution in physical order', () => {
+  it('按物理顺序记录换行和换行反转交叉间隙以及对齐内容分布', () => {
     const compileWrap = (wrap: 'wrap' | 'wrap-reverse') =>
       compileFlex(
         createFlexLayout({
@@ -463,7 +463,7 @@ describe('FlexLayout compile contract', () => {
     }
   });
 
-  it('does not duplicate align-content stretch or negative main free space as distributed segments', () => {
+  it('不会将对齐内容拉伸或负主可用空间复制为分布式段', () => {
     const stretched = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 100 } },
@@ -505,7 +505,7 @@ describe('FlexLayout compile contract', () => {
     ]);
   });
 
-  it('does not raise a discarded numeric basis probe failure', () => {
+  it('不会引发丢弃的数字基础探测失败', () => {
     const result = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 10 } },
@@ -527,7 +527,7 @@ describe('FlexLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'a')).toEqual({ x: 0, y: 0 });
   });
 
-  it('performs the final exact cross probe only after stretch line slots are known', () => {
+  it('仅在已知拉伸线槽后才执行最终精确交叉探测', () => {
     const result = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 50 }, y: { kind: 'fixed', value: 40 } },
@@ -541,7 +541,7 @@ describe('FlexLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'a')).toEqual({ x: 0, y: 0 });
   });
 
-  it('aligns real and fallback first baselines and returns outgoing row guides', () => {
+  it('对齐真实和回退第一基线并返回传出行参考线', () => {
     const result = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 50 }, y: { kind: 'content' } },
@@ -565,7 +565,7 @@ describe('FlexLayout compile contract', () => {
     ]);
   });
 
-  it('aligns a real baseline even when the child allocation refuses the structural cross slot', () => {
+  it('即使子分配拒绝结构交叉槽，也对齐真实基线', () => {
     const result = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 10 } },
@@ -586,7 +586,7 @@ describe('FlexLayout compile contract', () => {
     expect(result.observed.alignmentGuides?.find(guide => guide.name === 'last-baseline')?.position).toBe(10);
   });
 
-  it('keeps last-baseline descent anchored to the final expanded line end', () => {
+  it('将最后基线下降保持锚定到最终扩展线末端', () => {
     const result = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 30 } },
@@ -607,7 +607,7 @@ describe('FlexLayout compile contract', () => {
     expect(result.observed.alignmentGuides?.find(guide => guide.name === 'last-baseline')?.position).toBe(28);
   });
 
-  it('applies one container clip without changing the solved allocation', () => {
+  it('应用一个容器裁剪而不更改已解决的分配', () => {
     const result = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 0 }, y: { kind: 'fixed', value: 20 } },
@@ -626,7 +626,7 @@ describe('FlexLayout compile contract', () => {
     ).toBe(true);
   });
 
-  it('re-probes cross metrics after main shrink so responsive text-like children can grow in height', () => {
+  it('主要收缩后重新探测交叉指标，以便响应式文本的孩子可以长高', () => {
     const result = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 40 }, y: { kind: 'content' } },
@@ -652,7 +652,7 @@ describe('FlexLayout compile contract', () => {
     });
   });
 
-  it('measures a stretched responsive column child against the definite cross size', () => {
+  it('根据确定的交叉尺寸测量拉伸的响应列子项', () => {
     const result = compileFlex(
       createFlexLayout({
         direction: FlexLayoutDirection.Column,
@@ -680,7 +680,7 @@ describe('FlexLayout compile contract', () => {
     });
   });
 
-  it('stretches multiple wrapped line slots before issuing final exact-cross probes', () => {
+  it('在发出最终的精确交叉探测之前拉伸多个绕线槽', () => {
     const result = compileFlex(
       createFlexLayout({
         size: { x: { kind: 'fixed', value: 30 }, y: { kind: 'fixed', value: 40 } },
@@ -706,7 +706,7 @@ describe('FlexLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'b')).toEqual({ x: 0, y: 20 });
   });
 
-  it('supports nested FlexLayout through the same public Core proposal and replay path', () => {
+  it('通过相同的公共 Core 提案和回放路径支持嵌套 FlexLayout', () => {
     const inner = createFlexLayout({
       size: { x: { kind: 'fixed', value: 20 }, y: { kind: 'fixed', value: 10 } },
       children: [{ kind: LayoutItemKind.Flex, key: 'leaf', child: leaf('nested-leaf', 20, 10) }],
@@ -724,7 +724,7 @@ describe('FlexLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'nested-leaf')).toEqual({ x: 0, y: 0 });
   });
 
-  it('raises the selected final child failure instead of replaying an earlier candidate', () => {
+  it('引发选定的最终子节点失败，而不是回放较早的候选者', () => {
     expect(() =>
       compileFlex(
         createFlexLayout({
@@ -744,7 +744,7 @@ describe('FlexLayout compile contract', () => {
     ).toThrow(/rejected an exact proposal/);
   });
 
-  it('omits outgoing baseline guides for column directions', () => {
+  it('省略列方向的传出基线参考线', () => {
     const result = compileFlex(
       createFlexLayout({
         direction: FlexLayoutDirection.Column,
@@ -759,7 +759,7 @@ describe('FlexLayout compile contract', () => {
     expect(translationOf(result.output.scene.primitives, 'a')).toEqual({ x: 0, y: 0 });
   });
 
-  it('fails loudly with the physical axis when root fill has no finite parent allocation', () => {
+  it('当根填充没有有限的父分配时，物理轴会明确报错', () => {
     const proposal: LayoutProposal = {
       x: { kind: LayoutAxisProposalKind.Intrinsic, mode: 'natural' },
       y: { kind: LayoutAxisProposalKind.Intrinsic, mode: 'natural' },

@@ -1,2 +1,2 @@
-export * from './dependency-provider';
-export * from './resolve-dependencies';
+export * from './resolve';
+export * from './types';

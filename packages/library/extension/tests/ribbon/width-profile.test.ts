@@ -6,8 +6,9 @@ import {
   BUILTIN_RIBBON_WIDTH_PROFILES,
   createRibbonPathDefinition,
   defineRibbonWidthProfile,
-  RibbonPathDefinition,
+  ribbonPathDefinition,
 } from '../../src/ribbon';
+import { widthFunction } from '../../src/ribbon/geometry/width';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -33,7 +34,7 @@ const commandPoint = (command: PathPrimitive['commands'][number]): [number, numb
 
 const compileToRibbonScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
   const supplied = options.paths ?? [];
-  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathDefinition;
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? ribbonPathDefinition;
 
   return compileCoreToScene(input, {
     ...options,
@@ -41,8 +42,41 @@ const compileToRibbonScene = (input: IRScene, options: Parameters<typeof compile
   });
 };
 
-describe('Extension Ribbon width profile', () => {
-  it('builtin_bulge_without_options_and_peak_midpoint', () => {
+describe('延长色带宽度轮廓', () => {
+  it('独立宽度采样保留端点零值，并在创建时拒绝非法控制值', () => {
+    const sample = widthFunction(
+      {
+        width: {
+          kind: 'stops',
+          interpolation: 'linear',
+          stops: [
+            { offset: 0.25, value: 0 },
+            { offset: 0.75, value: 8 },
+          ],
+        },
+      },
+      20,
+    );
+
+    expect([sample(0), sample(0.5), sample(1)]).toEqual([0, 4, 8]);
+    expect(() =>
+      widthFunction(
+        {
+          width: {
+            kind: 'stops',
+            interpolation: 'linear',
+            stops: [
+              { offset: 0, value: -1 },
+              { offset: 1, value: 8 },
+            ],
+          },
+        },
+        20,
+      ),
+    ).toThrow(/finite nonnegative/);
+  });
+
+  it('内置凸起，无选项和峰值中点', () => {
     expect(BUILTIN_RIBBON_WIDTH_PROFILES.map(definition => definition.name)).toContain('bulge');
 
     const compiled = compileToRibbonScene(
@@ -75,7 +109,7 @@ describe('Extension Ribbon width profile', () => {
     ]);
   });
 
-  it('builds the profile registry once and rejects an official-name collision at definition creation', () => {
+  it('构建配置注册表一次，并在定义创建时拒绝官方名称冲突', () => {
     const duplicateBulge = defineRibbonWidthProfile({
       name: 'bulge',
       widthAt: () => 4,
@@ -84,7 +118,7 @@ describe('Extension Ribbon width profile', () => {
     expect(() => createRibbonPathDefinition({ profiles: [duplicateBulge] })).toThrow(/defined more than once/);
   });
 
-  it('bulge_peak_equals_base_and_peak_less_than_base', () => {
+  it('凸出峰等于基底且峰小于基底', () => {
     const commandsFor = (base: number, peak: number): Array<PathPrimitive['commands'][number]> =>
       firstPathPrim(
         compileToRibbonScene(
@@ -110,7 +144,7 @@ describe('Extension Ribbon width profile', () => {
     expect(commandsFor(12, 4)[1]).toMatchObject({ kind: 'cubic', to: [5, 2] });
   });
 
-  it('bulge_rejects_negative_base_or_peak', () => {
+  it('凸起拒绝负基值或峰值', () => {
     expect(
       () =>
         compileToRibbonScene(
@@ -146,7 +180,7 @@ describe('Extension Ribbon width profile', () => {
     ).toThrow();
   });
 
-  it('bulge_with_adaptive_sampling_and_align', () => {
+  it('具有自适应采样和对齐的凸起', () => {
     const compiled = compileToRibbonScene(
       scene([
         {

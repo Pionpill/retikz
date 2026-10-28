@@ -1,4 +1,4 @@
-import type { LowerTex } from '@retikz/core';
+import type { TexLowerer } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
 import type { FC } from 'react';
@@ -22,7 +22,7 @@ const Demo: FC<{ lang?: Lang }> = props => {
     return <Layout />;
   }
 
-  const lowerTex: LowerTex = lowerTexState.lowerTex;
+  const lowerTex: TexLowerer = lowerTexState.lowerTex;
 
   return (
     <Layout lowerTex={lowerTex}>

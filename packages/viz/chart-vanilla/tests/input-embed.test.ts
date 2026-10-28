@@ -1,7 +1,7 @@
 import { renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { scatterChart, ScatterChartInputEmbedAdapter, bubbleChart, BubbleChartInputEmbedAdapter } from '../src/point';
+import { scatterChart, scatterChartInputEmbedAdapter, bubbleChart, bubbleChartInputEmbedAdapter } from '../src/point';
 
 const input = {
   id: 'scatter',
@@ -12,24 +12,24 @@ const input = {
   encodings: { x: 'x', y: 'y' },
 };
 
-describe('Chart Vanilla standard composition', () => {
-  it('preserves raw authoring input in a standard embed', () => {
+describe('Chart Vanilla 标准组成', () => {
+  it('在标准嵌入中保留原始编写输入', () => {
     const chart = scatterChart(input);
 
-    expect(chart).toEqual({ type: 'embed', kind: ScatterChartInputEmbedAdapter.kind, id: 'scatter', props: input });
+    expect(chart).toEqual({ type: 'embed', kind: scatterChartInputEmbedAdapter.kind, id: 'scatter', props: input });
     expect(chart.props).toBe(input);
   });
 
-  it('renders as a child of the shared Vanilla scene', () => {
+  it('渲染为共享 Vanilla 场景的子级', () => {
     const svg = renderToSvgString(scene({ children: [scatterChart(input)] }), {
-      adapters: [ScatterChartInputEmbedAdapter],
+      adapters: [scatterChartInputEmbedAdapter],
     });
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('scatter');
   });
 
-  it('composes different chart types through the shared provider aggregation', () => {
+  it('通过共享提供者聚合组成不同的图表类型', () => {
     const bubble = bubbleChart({
       id: 'bubble',
       dataRef: 'bubble.rows',
@@ -38,14 +38,14 @@ describe('Chart Vanilla standard composition', () => {
       panel: { position: [700, 0] },
     });
     const svg = renderToSvgString(scene({ children: [scatterChart(input), bubble] }), {
-      adapters: [ScatterChartInputEmbedAdapter, BubbleChartInputEmbedAdapter],
+      adapters: [scatterChartInputEmbedAdapter, bubbleChartInputEmbedAdapter],
     });
 
     expect(svg).toContain('scatter');
     expect(svg).toContain('bubble');
   });
 
-  it('reports a missing adapter through the Vanilla processing boundary', () => {
+  it('通过 Vanilla 处理边界报告缺失的适配器', () => {
     expect(() => renderToSvgString(scene({ children: [scatterChart(input)] }))).toThrow(/adapter/i);
   });
 });

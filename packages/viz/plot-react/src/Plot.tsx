@@ -10,7 +10,7 @@ import type {
 import type { AssertEqual } from '@retikz/foundation';
 import type {
   IRPlot,
-  LowerPlotsOptions,
+  PlotsLoweringOptions,
   PlotHostLineageMetadata,
   PlotLineageOptions,
   PlotLineageRun,
@@ -21,7 +21,7 @@ import type {
   InputPlotPanel,
   MarkTransformShortcutDefinition,
 } from '@retikz/plot-vanilla';
-import { PlotInputEmbedAdapter, createPlotLineageCompileDriver } from '@retikz/plot-vanilla';
+import { plotInputEmbedAdapter, createPlotLineageCompileDriver } from '@retikz/plot-vanilla';
 import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import { Layout } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
@@ -74,7 +74,7 @@ void plotStandalonePropKeysCheck;
 export type PlotCommonProps<TSource = never> = PlotStandaloneProps &
   PlotPanelProps &
   Pick<IRPlot, 'width' | 'height'> &
-  LowerPlotsOptions & {
+  PlotsLoweringOptions & {
     /** 通用执行器的最低优先级配置 */
     dataTransformExecutor?: DataTransformExecutor<TSource>;
     /** 请求取消信号 */
@@ -223,7 +223,7 @@ type InputEmbeddablePlotComponent = (<TSource = never>(
   props: PlotProps<TSource>,
 ) => ReturnType<FC<PlotProps<TSource>>>) & {
   isTier2Embeddable: true;
-  inputEmbedAdapter: typeof PlotInputEmbedAdapter;
+  inputEmbedAdapter: typeof plotInputEmbedAdapter;
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => InputPlotEmbed<unknown>;
   displayName?: string;
 };
@@ -233,7 +233,7 @@ const PlotContent: FC<InputPlotEmbed<unknown>> = () => null;
 
 const EmbeddablePlotContent = Object.assign(PlotContent, {
   isTier2Embeddable: true as const,
-  inputEmbedAdapter: PlotInputEmbedAdapter,
+  inputEmbedAdapter: plotInputEmbedAdapter,
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => props,
 });
 
@@ -284,5 +284,5 @@ export const Plot = PlotComponent as InputEmbeddablePlotComponent;
 
 Plot.displayName = 'Plot';
 Plot.isTier2Embeddable = true;
-Plot.inputEmbedAdapter = PlotInputEmbedAdapter;
+Plot.inputEmbedAdapter = plotInputEmbedAdapter;
 Plot.createInputEmbedProps = createPlotInput;

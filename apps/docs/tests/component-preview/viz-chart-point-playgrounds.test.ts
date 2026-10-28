@@ -112,9 +112,9 @@ const demos: Record<string, () => Promise<Playground>> = {
   'strip/strip-distribution': () => import('../../src/modules/docs/contents/viz/chart/points/strip/strip-distribution'),
 };
 
-describe('Point chart playground interactions', () => {
+describe('点图交互演示交互', () => {
   for (const [name, load] of Object.entries(demos)) {
-    it(`${name}: bilingual controls change chart input and reset to canonical source`, async () => {
+    it(`${name}：双语控件更改图表输入并重置为规范源`, async () => {
       const demo = await load();
       const zh = demo.createPreviewControlContract('zh');
       const en = demo.createPreviewControlContract('en');

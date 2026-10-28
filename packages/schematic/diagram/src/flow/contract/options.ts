@@ -20,7 +20,7 @@ export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
     flowLayouts?: ReadonlyArray<FlowLayoutDefinition>;
     /**
      * 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局
-     * @default LayeredFlowLayoutDefinition.name
+     * @default layeredFlowLayoutDefinition.name
      */
     defaultFlowLayout?: string;
   }>;

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { getDefaultTableDefaults, TableDefaultsSchema } from '../../src';
 
-describe('default Table Source defaults', () => {
-  it('provides two detached defaults fragments', () => {
+describe('默认 Table 默认 Source', () => {
+  it('提供两个分离的默认片段', () => {
     for (const mode of Object.values(ThemeMode)) {
       const defaults = getDefaultTableDefaults(mode);
 
@@ -15,7 +15,7 @@ describe('default Table Source defaults', () => {
     }
   });
 
-  it('keeps the observable default values', () => {
+  it('保留可观察的默认值', () => {
     expect(getDefaultTableDefaults(ThemeMode.Light)).toMatchObject({
       defaultAppearance: {
         body: {

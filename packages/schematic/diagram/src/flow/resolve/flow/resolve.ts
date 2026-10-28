@@ -42,7 +42,7 @@ type FlowContainmentOwner = Readonly<{
   path: FlowSourcePath;
 }>;
 
-type ResolveState = Readonly<{
+type FlowResolveState = Readonly<{
   graph: ReturnType<typeof resolveGraphDefinitionOptions>;
   defaults: IRFlowDefaults;
   ids: Map<string, FlowSourcePath>;
@@ -53,7 +53,7 @@ type ResolveState = Readonly<{
   elementPaths: Map<string, FlowSourcePath>;
 }>;
 
-const registerId = (state: ResolveState, id: string, path: FlowSourcePath): void => {
+const registerId = (state: FlowResolveState, id: string, path: FlowSourcePath): void => {
   if (state.ids.has(id)) {
     throw new RetikzDiagramError({
       code: RetikzDiagramErrorCode.FlowDuplicateId,
@@ -66,7 +66,7 @@ const registerId = (state: ResolveState, id: string, path: FlowSourcePath): void
   state.elementPaths.set(id, path);
 };
 
-const registerCatalogs = (source: FlowCatalogSource, state: ResolveState): void => {
+const registerCatalogs = (source: FlowCatalogSource, state: FlowResolveState): void => {
   source.entities.forEach((entity, entityIndex) => {
     const path: FlowSourcePath = ['entities', entityIndex];
     registerId(state, entity.id, path);
@@ -98,7 +98,7 @@ const containmentFailure = (
 };
 
 const registerChildren = (
-  state: ResolveState,
+  state: FlowResolveState,
   children: ReadonlyArray<string>,
   path: FlowSourcePath,
   ownerId?: string,
@@ -139,7 +139,7 @@ const registerChildren = (
   });
 };
 
-const assertAcyclicScopes = (source: FlowCatalogSource, state: ResolveState): void => {
+const assertAcyclicScopes = (source: FlowCatalogSource, state: FlowResolveState): void => {
   const visiting = new Set<string>();
   const visited = new Set<string>();
   const scopes = [...source.groups, ...source.layouts];
@@ -171,7 +171,7 @@ const assertAcyclicScopes = (source: FlowCatalogSource, state: ResolveState): vo
   scopes.forEach(visitScope);
 };
 
-const assertCompleteContainment = (source: FlowCatalogSource, state: ResolveState): void => {
+const assertCompleteContainment = (source: FlowCatalogSource, state: FlowResolveState): void => {
   registerChildren(state, source.children, ['children']);
   source.groups.forEach((group, groupIndex) => {
     registerChildren(state, group.children, ['groups', groupIndex, 'children'], group.id);
@@ -206,7 +206,11 @@ const entityDefaultsOf = (defaults: IRFlowDefaults['entity'], source: IRFlowEnti
   return mergeGraphDefaults(defaults === undefined ? undefined : { entity: defaults }, sourceOverride)?.entity;
 };
 
-const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: ResolveState): CanonicalFlowEntity => {
+const resolveEntityRecord = (
+  source: IRFlowEntity,
+  path: FlowSourcePath,
+  state: FlowResolveState,
+): CanonicalFlowEntity => {
   const defaults = entityDefaultsOf(state.defaults.entity, source);
   const style = defaults?.style ?? {};
   const layout = defaults?.layout ?? {};
@@ -267,7 +271,7 @@ const groupDefaultsOverrideOf = (source: IRFlowGroup): IRFlowDefaults => {
   };
 };
 
-const resolveGroupRecord = (source: IRFlowGroup, path: FlowSourcePath, state: ResolveState): CanonicalFlowGroup => {
+const resolveGroupRecord = (source: IRFlowGroup, path: FlowSourcePath, state: FlowResolveState): CanonicalFlowGroup => {
   const groupDefaults = mergeFlowDefaults(state.defaults, groupDefaultsOverrideOf(source)).group ?? {};
   const { title, description, ...arrangement } = groupDefaults.caption ?? {};
   const caption =
@@ -319,7 +323,7 @@ const resolveGroupRecord = (source: IRFlowGroup, path: FlowSourcePath, state: Re
   };
 };
 
-const resolveElementRecord = (id: string, state: ResolveState): CanonicalFlowElement => {
+const resolveElementRecord = (id: string, state: FlowResolveState): CanonicalFlowElement => {
   const entity = state.entities.get(id);
   const path = state.elementPaths.get(id)!;
   if (entity !== undefined) return resolveEntityRecord(entity, path, state);
@@ -364,7 +368,7 @@ const relationDefaultsOf = (defaults: IRFlowDefaults['relation'], source: IRFlow
 };
 
 /** 只检查 Flow 引用域，坐标求值交由 Core */
-const assertWaypointReferences = (target: IRTarget | string, path: FlowSourcePath, state: ResolveState): void => {
+const assertWaypointReferences = (target: IRTarget | string, path: FlowSourcePath, state: FlowResolveState): void => {
   if (typeof target === 'string' || (!Array.isArray(target) && 'id' in target)) {
     const id = typeof target === 'string' ? target : target.id;
     if (!state.ids.has(id) || state.layouts.has(id))
@@ -385,7 +389,11 @@ const assertWaypointReferences = (target: IRTarget | string, path: FlowSourcePat
     assertWaypointReferences(target.origin, [...path, 'origin'], state);
 };
 
-const resolveRelationRecord = (authored: IRFlowRelation, index: number, state: ResolveState): CanonicalFlowRelation => {
+const resolveRelationRecord = (
+  authored: IRFlowRelation,
+  index: number,
+  state: FlowResolveState,
+): CanonicalFlowRelation => {
   const resolveEndpoint = (key: 'source' | 'target'): FlowLayoutEndpoint => {
     const value = authored[key];
     const fields = typeof value === 'string' ? { id: value } : value;
@@ -491,7 +499,7 @@ const projectFlowElementGraphs = (
 const projectFlowGroups = (
   elements: ReadonlyArray<CanonicalFlowElement>,
   relations: ReadonlyArray<CanonicalFlowRelation>,
-  state: ResolveState,
+  state: FlowResolveState,
   theme: FlowResolveContext['theme'],
   graphRules: IRFlowDiagram['graphRules'],
 ): Readonly<{ elements: Array<CanonicalFlowElement>; relations: Array<CanonicalFlowRelation> }> => {
@@ -530,7 +538,7 @@ const projectFlowGroups = (
 /** 把 Flow Source 与 definitions 确定为唯一 Canonical Flow */
 export const resolveFlowDiagram = (source: IRFlowDiagram, context: FlowResolveContext): CanonicalFlowDiagram => {
   const defaults = resolveFlowTheme(context.theme, context.flowThemeDefinitions, source.defaultFlow);
-  const state: ResolveState = {
+  const state: FlowResolveState = {
     graph: resolveGraphDefinitionOptions(context.graph),
     defaults,
     ids: new Map(),

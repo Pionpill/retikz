@@ -49,7 +49,7 @@ describe('scope.transforms lower 后生成 GroupPrimitive 的 Cartesian transfor
     expect(group?.transforms).toEqual([{ kind: 'translate', x: 50, y: 30 }]);
   });
 
-  it('polar-translate(0, 50) → translate(50, 0)', () => {
+  it('极坐标平移(0, 50) → 平移(50, 0)', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -102,7 +102,7 @@ describe('scope.transforms lower 后生成 GroupPrimitive 的 Cartesian transfor
     expect(t.y).toBeCloseTo(25, 6);
   });
 
-  it('at-translate(right of A, distance=20) → translate(20, 0)', () => {
+  it('at-平移（A 的右侧，距离=20）→平移（20, 0）', () => {
     const ir = scene([
       { type: 'node', id: 'A', position: [0, 0], text: 'A' },
       {
@@ -133,7 +133,7 @@ describe('scope.transforms lower 后生成 GroupPrimitive 的 Cartesian transfor
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 0, y: -15 });
   });
 
-  it('offset-translate(of A, offset=[10, 5]) → translate(10, 5)', () => {
+  it('偏移翻译（A，偏移=[10, 5]）→翻译（10, 5）', () => {
     const ir = scene([
       { type: 'node', id: 'A', position: [0, 0], text: 'A' },
       {
@@ -208,7 +208,7 @@ describe('scope.transforms lower 后生成 GroupPrimitive 的 Cartesian transfor
   });
 });
 
-describe('scope nested compose', () => {
+describe('范围嵌套组合', () => {
   it('嵌套 scope translate 复合：外 translate + 内 translate 各自一层 GroupPrimitive', () => {
     const ir = scene([
       {
@@ -710,7 +710,7 @@ describe('scope.id synthetic bbox 注册', () => {
 });
 
 describe('scope 内延迟 path 的 Scene layout', () => {
-  it('nested circlePath contributes its full bounds to the root layout', () => {
+  it('嵌套的 circlePath 将其完整边界贡献给根布局', () => {
     const compiled = compileToScene(
       scene([
         {

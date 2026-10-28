@@ -195,7 +195,7 @@ type PatternResource = {
   kind: 'paint';
   id: string;
   spec: Extract<IRPaint, { kind: 'pattern' }>;
-  tile: ResolvedPatternTile;
+  tile: CompiledPatternTile;
 };
 
 type ImageResource = {
@@ -376,7 +376,7 @@ type CompositeCompileArtifact = Readonly<{
 以 Layout 包的 FlexLayout 为例，其定义通过 `artifactSchema` 声明布局产物。
 
 ```ts
-const FlexLayoutDefinition = defineComposite({
+const flexLayoutDefinition = defineComposite({
   namespace: LAYOUT_NAMESPACE,
   type: 'flexLayout',
   schema: FlexLayoutSchema,
@@ -408,7 +408,7 @@ return {
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { createFlexLayout, FlexLayoutDefinition } from '@retikz/layout';
+import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
 
 const layout = createFlexLayout({
   gap: 12,
@@ -420,7 +420,7 @@ const layout = createFlexLayout({
 
 const result = compileToScene(
   { type: 'scene', version: 1, children: [layout] },
-  { composites: [FlexLayoutDefinition] },
+  { composites: [flexLayoutDefinition] },
 );
 
 for (const artifact of result.artifacts) {
@@ -750,8 +750,6 @@ type CompileWarning = {
 需要延后派发警告或关联图元来源时，可从 `@retikz/core` 调用 `prepareSceneCompilation(ir, options, execution)`。它执行一次静态编译，返回 `result`、`diagnostics` 与 `observerOutputs`，不调用 `onWarn` 或默认警告出口；`options` 不包含 `onWarn`，`execution.observers` 可提供编译观察器。
 
 默认不收集来源。设置 `execution.captureProvenance: true` 后，返回的 `provenance` 记录本次编译中的实体来源、命名空间注册和最终图元发射关系。其不透明键只在本次结果内有效。Reconciler 用这些事实建立跨版本身份和 Scene Patch，Core 本身不持有增量状态。
-
-与此配套，`assertCompositeInputBindings(ir, bindings)` 只检查 Composite 输入绑定与完整 IR 是否配对，不执行编译。未提供绑定时直接通过；不匹配时抛出 Core 的 `CompositeContractViolation` 错误。
 
 <SourceLinks
   sources={[

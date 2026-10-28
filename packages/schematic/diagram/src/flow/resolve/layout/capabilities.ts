@@ -102,7 +102,7 @@ const inheritedRoutingForScope = (
 };
 
 /** 从 Canonical Flow 推导当前调用真正需要的布局能力 */
-export const deriveFlowLayoutCapabilities = (
+const deriveFlowLayoutCapabilities = (
   definition: FlowLayoutDefinition,
   diagram: CanonicalFlowDiagram,
 ): ReadonlyArray<CapabilityEvidence> => {

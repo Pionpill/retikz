@@ -45,8 +45,8 @@ const adapter: InputEmbedAdapter<typeof source> = {
 
 const embed: InputEmbed<typeof source> = { type: 'embed', kind: adapter.kind, id: 'authoring', props: source };
 
-describe('Custom code block Vanilla authoring', () => {
-  it('preserves Source and uses the same providers and local theme as Direct IR', () => {
+describe('自定义代码块 Vanilla 编写', () => {
+  it('保留 Source 并使用与 Direct IR 相同的提供者和本地主题', () => {
     const input = { children: [embed] };
     const normalized = normalizeScene(input, { adapters: [adapter] });
 

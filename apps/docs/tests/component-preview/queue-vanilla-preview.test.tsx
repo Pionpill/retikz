@@ -9,7 +9,7 @@ import { renderQueuePreview as renderInputs } from '../../src/modules/docs/conte
 import { renderQueuePreview as renderLayout } from '../../src/modules/docs/contents/library/standard/collection/queue/queue-layout.preview';
 import { synchronousInputAdaptersOf } from '../../src/modules/docs/lib';
 
-it('Queue operation arrows toggle independently in SVG and retained updates', () => {
+it('Queue 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
   const input = (incoming: boolean, outgoing: boolean) =>
     createInputScene(
       renderLayout({
@@ -56,18 +56,18 @@ it('Queue operation arrows toggle independently in SVG and retained updates', ()
   }
 });
 
-it('Queue previews render all inputs and empty states through Vanilla adapters', () => {
+it('Queue 预览通过 Vanilla 适配器渲染所有输入和空状态', () => {
   for (const input of ['items', 'data', 'skeleton'] as const) {
     for (const empty of [false, true]) {
       const result = buildVanillaPreview(buildPreviewIR(() => renderInputs({ input, empty, expand: true })));
       expect(result.svg).toContain('<svg');
       expect(result.code).toContain('queue(');
-      expect(result.code).toContain('QueueInputEmbedAdapter');
+      expect(result.code).toContain('queueInputEmbedAdapter');
     }
   }
 });
 
-it('Queue preview preserves nested Matrix and external cell references', () => {
+it('Queue 预览保留嵌套的 Matrix 和外部单元格引用', () => {
   const result = buildVanillaPreview(
     buildPreviewIR(() => renderComposition({ matrix: true, dashed: true, connect: true })),
   );
@@ -76,7 +76,7 @@ it('Queue preview preserves nested Matrix and external cell references', () => {
   expect(result.code).toContain('selected');
 });
 
-it.each([true, false])('Queue dashed cell toggles in retained updates with matrix=%s', matrix => {
+it.each([true, false])('matrix=%s 时 Queue 虚线单元格在保留模式更新中可切换', matrix => {
   const input = (dashed: boolean) =>
     createInputScene(renderComposition({ matrix, dashed, connect: true }).props.children);
   const first = input(true);
@@ -91,7 +91,7 @@ it.each([true, false])('Queue dashed cell toggles in retained updates with matri
   }
 });
 
-it('Queue retained count changes remove and restore both operation arrows in every direction', () => {
+it('Queue 数量变化时保留模式更新可在各个方向移除并恢复两个操作箭头', () => {
   for (const direction of ['up', 'down', 'left', 'right'] as const) {
     const input = (count: '0' | '1' | '3') =>
       createInputScene(

@@ -1,10 +1,10 @@
 import type { CompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 import { defineComposite } from '@retikz/core';
-import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/extension';
+import { ellipticCapsuleShapeProvider, hexagonShapeProvider } from '@retikz/extension';
 
 import type { GraphDefinitionOptions } from '../../contract';
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import { resolveGraphDefinitionOptions, createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
+import { resolveGraphDefinitionOptions, resolveGraphRuntimeOptions } from '../../providers';
 import { resolveEntity, resolveEntityAppearance } from '../../resolve';
 import type { IRGraphEntity } from '../../schemas';
 import { EntitySchema } from '../../schemas';
@@ -13,7 +13,7 @@ import { lowerEntity } from './lower';
 
 /** 使用已解析 Graph definitions 创建独立 Entity Composite Definition */
 export const createEntityDefinitionFromOptions = (
-  options: ResolvedGraphDefinitionOptions,
+  options: GraphDefinitionRegistries,
 ): CompositeDefinition<IRGraphEntity, typeof GRAPH_NAMESPACE, typeof GraphType.Entity> =>
   defineComposite({
     namespace: GRAPH_NAMESPACE,
@@ -33,27 +33,29 @@ export const createEntityDefinition = (
   createEntityDefinitionFromOptions(resolveGraphDefinitionOptions(options));
 
 /** 使用内置 Graph definitions 的默认 Entity Composite Definition */
-export const EntityDefinition = createEntityDefinition();
+export const entityDefinition = createEntityDefinition();
 
 /** Entity Composite provider 的公开完整 key */
-export const EntityProviderKey: CompositeCoreProviderKey = Object.freeze({
+export const entityProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: GRAPH_NAMESPACE,
   type: GraphType.Entity,
 });
 
-/** 使用当前 provider key 已合并的 runtime datasets 创建唯一 Entity Definition */
-const makeEntityDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
-  createEntityDefinitionFromOptions(resolveGraphRuntimeOptions(datasets));
+/** 合并 Entity 提供者参数并创建唯一定义 */
+const makeEntityDefinition: CoreDependencyProvider<GraphDefinitionOptions>['makeDefinition'] = contributions =>
+  createEntityDefinitionFromOptions(resolveGraphRuntimeOptions(contributions));
 
 /** 创建携带当前 Graph definition options 的 Entity provider */
-export const createEntityProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
+export const createEntityProvider = (
+  options: GraphDefinitionOptions = {},
+): CoreDependencyProvider<GraphDefinitionOptions> =>
   Object.freeze({
-    key: EntityProviderKey,
-    dependencies: Object.freeze([HexagonShapeProvider.key, EllipticCapsuleShapeProvider.key]),
-    datasets: createGraphRuntimeDatasets(options),
+    key: entityProviderKey,
+    dependencies: Object.freeze([hexagonShapeProvider.key, ellipticCapsuleShapeProvider.key]),
+    params: options,
     makeDefinition: makeEntityDefinition,
   });
 
 /** 使用内置 Graph registries 的默认 Entity provider */
-export const EntityProvider = createEntityProvider();
+export const entityProvider = createEntityProvider();

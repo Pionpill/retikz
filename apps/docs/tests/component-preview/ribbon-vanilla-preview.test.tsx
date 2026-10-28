@@ -1,5 +1,5 @@
 import { compileToScene } from '@retikz/core';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { normalizeScene, path, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -12,8 +12,8 @@ import { svg as customProfileSvg } from '../../src/modules/docs/contents/library
 import { renderRibbonEndpointsPreview } from '../../src/modules/docs/contents/library/extension/ribbon/extended/ribbon-endpoints.preview';
 import RibbonBasicDemo from '../../src/modules/docs/contents/library/extension/ribbon/usage/ribbon-basic.demo';
 
-describe('Ribbon Vanilla preview', () => {
-  it('preserves independent endpoint directions through React and Vanilla authoring', () => {
+describe('Ribbon 的 Vanilla 预览', () => {
+  it('通过 React 和 Vanilla 编写保留独立的端点方向', () => {
     const preview = buildPreviewIR(() =>
       renderRibbonEndpointsPreview({
         centerline: 'line',
@@ -46,7 +46,7 @@ describe('Ribbon Vanilla preview', () => {
       ],
     });
     const compile = (ir: typeof preview.ir) =>
-      compileToScene(ir, { paths: [RibbonPathDefinition] }).scene.primitives.find(p => p.type === 'path');
+      compileToScene(ir, { paths: [ribbonPathDefinition] }).scene.primitives.find(p => p.type === 'path');
     const reactPath = compile(preview.ir);
 
     expect(reactPath?.type).toBe('path');
@@ -66,7 +66,7 @@ describe('Ribbon Vanilla preview', () => {
     expect(rendered.svg).toContain('<path');
   });
 
-  it('renders custom caps through both React preview and explicit Vanilla authoring', () => {
+  it('React 预览和显式 Vanilla 编写方式均可渲染自定义端帽', () => {
     const automatic = buildVanillaPreview(buildPreviewIR(() => renderRibbonCustomCapPreview({ depth: 24 })));
 
     expect(automatic.svg).toContain('<path');
@@ -75,21 +75,21 @@ describe('Ribbon Vanilla preview', () => {
     expect(customCapSvg).toContain('-174');
   });
 
-  it('carries the React demo Path into both generated source and SVG rendering', () => {
+  it('将 React 演示 Path 携带到生成的源和 SVG 渲染中', () => {
     const preview = buildPreviewIR(RibbonBasicDemo);
 
-    expect(preview.paths).toEqual([RibbonPathDefinition]);
+    expect(preview.paths).toEqual([ribbonPathDefinition]);
 
     const vanilla = buildVanillaPreview(preview);
 
-    expect(vanilla.code).toContain("import { RibbonPathDefinition } from '@retikz/extension';");
-    expect(vanilla.code).toContain('paths: [RibbonPathDefinition]');
+    expect(vanilla.code).toContain("import { ribbonPathDefinition } from '@retikz/extension';");
+    expect(vanilla.code).toContain('paths: [ribbonPathDefinition]');
     expect(vanilla.code).not.toContain('Failed to generate Vanilla preview');
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('<path');
   });
 
-  it('renders the custom profile from its explicit Vanilla source', () => {
+  it('从显式 Vanilla 源码渲染自定义轮廓', () => {
     expect(customProfileSvg).toContain('<svg');
     expect(customProfileSvg).toContain('<path');
 

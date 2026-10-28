@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   boundaryPointOf,
   createNodeGeometryContext,
-  compileResolvedNode,
+  compileNodeResolution,
   nodeReferenceViewOf,
 } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
@@ -25,22 +25,22 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
   const resolution = resolveNode(source, {
     scopeDefaults: {},
     mode: 'light',
-    shapes,
-    boundaries,
-    patterns: resolvePatternRegistry(),
+    shapeRegistry: shapes,
+    boundaryRegistry: boundaries,
+    patternRegistry: resolvePatternRegistry(),
     round: value => value,
     irPath: 'node',
     warn: () => {},
     labelDistance: 12,
   });
 
-  return compileResolvedNode(resolution, {
+  return compileNodeResolution(resolution, {
     measureText,
     positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
   }).layout;
 };
 
-describe('NodeLayout boundary / shapes', () => {
+describe('CompiledNodeLayout 边界/形状', () => {
   it('连接面消费上下文在布局投影和引用视图间共享缓存，并区分几何位置', () => {
     const shapes = new Map(resolveShapeRegistry());
     const rectangle = shapes.get('rectangle')!;
@@ -108,7 +108,7 @@ describe('NodeLayout boundary / shapes', () => {
     expect(layout.shape.definition).toBe(customShapes.get('rectangle'));
   });
 
-  it('resolved default boundary drives anchors and clipping without a layout resolver', () => {
+  it('解析后的默认边界直接驱动锚点及裁剪，无需布局解析器', () => {
     const layout = layoutOf({
       type: 'node',
       id: 'circle-boundary',

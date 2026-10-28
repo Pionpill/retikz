@@ -38,7 +38,7 @@ export type StrokeCommandOccurrence = {
 };
 
 /** 逻辑路径的连续 sub-path 距离范围 */
-export type StrokeSubPathGeometry = {
+type StrokeSubPathGeometry = {
   /** sub-path 下标 */
   index: number;
   /** 全局逻辑距离起点 */
@@ -58,7 +58,7 @@ export type StrokePathGeometry = {
 };
 
 /** 标签在逻辑路径上的已物化采样结果 */
-export type StrokeLabelSample = {
+type StrokeLabelSample = {
   /** 几何采样点与切线 */
   sample: CurveSegmentSample;
   /** 采样点在整条逻辑路径上的距离 */
@@ -68,7 +68,7 @@ export type StrokeLabelSample = {
 };
 
 /** 合并后的断口区间 */
-export type StrokeInterruptionInterval = {
+type StrokeInterruptionInterval = {
   /** 断口所属 sub-path */
   subPathIndex: number;
   /** 断口起点的全局逻辑距离 */
@@ -102,7 +102,7 @@ export type StrokeCommandFragment = {
 };
 
 /** interruption split 的可选终端输出语义 */
-export type SplitStrokePathOptions = {
+type SplitStrokePathOptions = {
   /** 末端箭头需要单独以最后一个非 close drawable command 结束 fragment */
   separateTerminalDrawable?: boolean;
 };

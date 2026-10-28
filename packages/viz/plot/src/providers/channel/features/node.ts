@@ -48,7 +48,7 @@ import type { IRPlot, IRPlotLinearScale, IRPlotMark, IRPlotChannel, IRPlotSqrtSc
 import { BuiltinPlotScale } from '../../../schemas';
 import { resolveLinearScale, resolveSqrtScale } from '../../scale';
 import { PLOT_SHAPE_PALETTE } from '../../theme';
-import { makeMarkValueResolver, booleanChannelValue } from '../shared';
+import { createMarkValueResolver, booleanChannelValue } from '../shared';
 
 /** opacity 通道连续映射的最小不透明度（range 下界，避免最小值全透明不可见）；契约常量，测试 import 断言 */
 export const OPACITY_MIN = 0.2;
@@ -60,13 +60,13 @@ export const STROKE_WIDTH_MIN = 0.5;
 export const STROKE_WIDTH_MAX = 4;
 
 /** size 通道最小 / 最大半径（px，user units；对齐散点默认直径 10 量级）；core 换算细节，不外泄 IR */
-export const SIZE_MIN_RADIUS = 2;
+const SIZE_MIN_RADIUS = 2;
 
 /** size 通道自动半径映射的默认最大值 */
 export const SIZE_MAX_RADIUS = 20;
 
 /** 数值 Node 通道 resolver 的 range、clamp 与整数化选项 */
-export type NumericNodeResolverOptions = {
+type NumericNodeResolverOptions = {
   /** 数值尺度的默认输出范围，可由命名尺度覆盖 */
   range?: readonly [number, number];
   /** 数值尺度的默认钳位策略，可由命名尺度覆盖 */
@@ -123,7 +123,7 @@ const defineSimpleNodeChannel = <T extends JsonValue>(
     channel,
     output,
     resolve: (ctx, mark) =>
-      makeMarkValueResolver<T>(markChannelEncoding(mark, channel), ctx.model, {
+      createMarkValueResolver<T>(markChannelEncoding(mark, channel), ctx.model, {
         channelName: channel,
         parse,
       }),
@@ -146,7 +146,7 @@ export const resolveNumericNodeChannel = (
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   if (!channel) return undefined;
 
-  const source = makeMarkValueResolver<number>(channel, model, {
+  const source = createMarkValueResolver<number>(channel, model, {
     channelName,
     expectedFieldType: DataFieldType.Continuous,
     parse: value => (isFiniteNumber(value) ? value : undefined),
@@ -305,7 +305,7 @@ export const resolveSizeChannel = (
  * @description 读取 mark 上结构化的 shape 字段。常量 value 直用；categorical 字段按 domain 索引从有效 shape palette
  *   循环取值。非 categorical 字段 fail-loud（形状是分类编码）
  */
-export const resolveShapeChannel = (
+const resolveShapeChannel = (
   ctx: NodeChannelDefinitionResolveContext,
   mark: IRPlotMark,
 ): ChannelResolution<JsonValue> | undefined => {
@@ -605,7 +605,7 @@ const textColorNodeChannel: NodeChannelDefinition<IRContextualColor> = defineNod
   channel: 'textColor',
   output: { outputKind: 'color' },
   resolve: (ctx, mark) =>
-    makeMarkValueResolver<IRContextualColor>(markChannelEncoding(mark, 'textColor'), ctx.model, {
+    createMarkValueResolver<IRContextualColor>(markChannelEncoding(mark, 'textColor'), ctx.model, {
       channelName: 'textColor',
       parse: value => {
         const parsed = ContextualColorSchema.safeParse(value);
@@ -638,7 +638,7 @@ const shapeNodeChannel: NodeChannelDefinition<JsonValue> = defineNodeChannel<Jso
 });
 
 /** 内置 Node 通道 definition 的按名称索引类型 */
-export type BuiltinNodeChannels = {
+type BuiltinNodeChannels = {
   /** 映射 Node 整体透明度 */
   opacity: NodeChannelDefinition<number>;
   /** 映射 Node 填充透明度 */

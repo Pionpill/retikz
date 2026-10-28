@@ -15,7 +15,7 @@ type GuideTickDensity = NonNullable<NonNullable<IRPlotAxisGuide['ticks']>['densi
 
 type GuideTickVisibilitySource = IRPlotGuideTickSource & { density?: GuideTickDensity };
 
-const normalizeExplicitTick = (scale: PositionScale, value: string | number): IRDataScalarValue => {
+const resolveExplicitTick = (scale: PositionScale, value: string | number): IRDataScalarValue => {
   if (scale.tickKind === 'category') return value;
   if (scale.tickKind === 'time') {
     const stamp = coerceTimestamp(value);
@@ -240,7 +240,7 @@ export const resolveGuideTicks = (
   labelFormat?: IRPlotGuideTickLabelFormat,
 ): TickSet => {
   if (source?.values !== undefined) {
-    const values = source.values.map(value => normalizeExplicitTick(scale, value));
+    const values = source.values.map(value => resolveExplicitTick(scale, value));
     const labels = values.map((value, index) =>
       formatLabel(scale, labelFormat?.format, value, String(source.values?.[index] ?? value)),
     );

@@ -8,7 +8,7 @@ import { expect, it } from 'vitest';
 import { Branch, BranchDiagram, BranchNode } from '../src/branch';
 import { collectBranchDiagramInput } from '../src/branch/authoring';
 
-it('keeps React key metadata out of persistent node and branch props', () => {
+it('将 React 关键元数据保留在持久节点和分支 props 之外', () => {
   const source = collectBranchDiagramInput(
     {
       children: [
@@ -23,7 +23,7 @@ it('keeps React key metadata out of persistent node and branch props', () => {
   expect(Object.getOwnPropertyNames(source.branches[0])).toEqual(['id', 'nodes']);
 });
 
-it('preserves shared ordered branches through the same Vanilla source', () => {
+it('通过相同的 Vanilla 源保留共享有序分支', () => {
   const input = createInputScene(
     <BranchDiagram mainBranch="main">
       <BranchNode id="a" labels={[{ text: 'A' }]} />
@@ -45,7 +45,7 @@ it('preserves shared ordered branches through the same Vanilla source', () => {
   expect(BranchDiagramSchema.parse(result.ir.children[0])).toEqual(BranchDiagramSchema.parse(vanilla));
 });
 
-it('rejects arbitrary child content and embedded host properties', () => {
+it('拒绝任意子内容和嵌入的宿主属性', () => {
   expect(() =>
     createInputScene(
       <BranchDiagram>

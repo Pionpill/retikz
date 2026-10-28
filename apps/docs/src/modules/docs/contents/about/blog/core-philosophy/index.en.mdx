@@ -148,7 +148,7 @@ retikz **adopts** a subset of TikZ syntax rather than inventing a fresh DSL. Tha
 - **AI dividend**: TikZ's volume in LLM training data is enormous, and zero-shot generation quality blows past any invented syntax. In the AI era, a graphics DSL that can reuse pretraining has a huge head start.
 - **Real migration**: retikz-supported TikZ code is planned to be copy-pasteable straight into LaTeX compilation; in reverse, `@retikz/codec` (v2.x plan) will export IR back to `.tex`, letting browser-drawn diagrams be pasted into papers.
 
-So `padding` / `margin` in IR map directly to TikZ's `inner sep` / `outer sep`, node anchors use strings like `north-west` / `45`, polar convention is 0° = +x rather than screen-coordinate 0° = right — all deliberately kept in the original vocabulary so TikZ users have zero learning cost and LLMs hit the training distribution.
+So `padding` / `margin` in IR map to TikZ's `inner sep` / `outer sep`, preserving familiar drawing concepts. Direction names follow Web conventions: node anchors use names such as `top-left` or numeric angles such as `45`, with string shorthands like `A.top-left` or `A.45`. Aliases such as `north-west` and `above-left` are not supported.
 
 ## References
 

@@ -36,7 +36,7 @@ const pathPrims = (ir: IRScene): Array<PathPrimitive> =>
     (primitive): primitive is PathPrimitive => primitive.type === 'path',
   );
 
-describe('Drawable shared style resolution', () => {
+describe('Drawable 共享样式解析结果', () => {
   it('稀疏透明度逐项继承，整体简写不清除填充与描边', () => {
     const primitives = pathPrims(
       scene([
@@ -129,7 +129,7 @@ describe('Drawable shared style resolution', () => {
     ).toBe(true);
   });
 
-  it('drawable-shared-path-default-fields-apply-to-stroke', () => {
+  it('可绘制对象的共享路径默认字段应用于描边', () => {
     const [prim] = pathPrims(
       scene([
         {

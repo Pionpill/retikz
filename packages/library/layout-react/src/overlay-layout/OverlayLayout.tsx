@@ -1,7 +1,7 @@
-import type { OverlayLayoutInput } from '@retikz/layout';
+import type { InputOverlayLayoutConfig } from '@retikz/layout';
 import { LayoutItemKind } from '@retikz/layout';
 import type { InputOverlayLayout } from '@retikz/layout-vanilla';
-import { OverlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { overlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
@@ -10,7 +10,7 @@ import type { LayoutEmbeddableComponent } from '../shared';
 import { createInputLayoutItems } from '../shared';
 
 /** Overlay 布局的 React 属性 */
-export type OverlayLayoutProps = Omit<OverlayLayoutInput, 'children'> &
+export type OverlayLayoutProps = Omit<InputOverlayLayoutConfig, 'children'> &
   Readonly<{
     /** 交给可选编译驱动解释的不透明声明数据 */
     authoring?: unknown;
@@ -39,5 +39,5 @@ export const OverlayLayout = OverlayLayoutComponent as LayoutEmbeddableComponent
 
 OverlayLayout.displayName = 'OverlayLayout';
 OverlayLayout.isTier2Embeddable = true;
-OverlayLayout.inputEmbedAdapter = OverlayLayoutInputEmbedAdapter;
+OverlayLayout.inputEmbedAdapter = overlayLayoutInputEmbedAdapter;
 OverlayLayout.createInputEmbedProps = createOverlayLayoutInput;

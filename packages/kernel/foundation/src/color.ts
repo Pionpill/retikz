@@ -168,7 +168,7 @@ const CSS_NAMED_COLOR_HEX: Readonly<Record<string, number>> = {
  * 静态 CSS 命名颜色对应的小写十六进制清单
  * @description 仅包含 `parseStaticCssColor()` 支持的命名颜色，不包含 transparent、函数和十六进制写法
  */
-export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>> = Object.freeze(
+export const staticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>> = Object.freeze(
   Object.fromEntries(
     Object.entries(CSS_NAMED_COLOR_HEX).map(([name, colorHex]): [string, `#${string}`] => [
       name,

@@ -114,7 +114,7 @@ export type PathCommand =
  * 端点级已解析的箭头 marker 描述
  * @description 包含 marker 内部几何与定位尺寸；纯 JSON 数据，无函数或注册表依赖
  */
-export type ResolvedArrowEnd = {
+export type CompiledArrowEnd = {
   /** 形状名：内置或经 `CompileOptions.arrows` 注册的扩展名，供标识 / 调试使用 */
   shape: ArrowShape;
   /** marker 局部坐标系的基准边长 */
@@ -151,9 +151,9 @@ export type PathPrimitiveContent = {
   /** 结构化路径命令序列，按数组顺序绘制 */
   commands: Array<PathCommand>;
   /** 起点箭头视觉规格；undefined = 无箭头 */
-  arrowStart?: ResolvedArrowEnd;
+  arrowStart?: CompiledArrowEnd;
   /** 终点箭头视觉规格；undefined = 无箭头 */
-  arrowEnd?: ResolvedArrowEnd;
+  arrowEnd?: CompiledArrowEnd;
 };
 
 /** 由结构化命令描述的路径图元 */

@@ -113,7 +113,7 @@ describe('resolvePositionTarget', () => {
 });
 
 describe('resolveTransformTranslation', () => {
-  it('resolves every translate transform through the position owner', () => {
+  it('通过位置所属模块解析每个平移变换', () => {
     const base = contextOf([reference('A', [120, 80]), reference('B', [140, 100])]);
     const context: PositionTargetResolveContext = {
       ...base,
@@ -139,7 +139,7 @@ describe('resolveTransformTranslation', () => {
     ]);
   });
 
-  it('returns null when a transform reference cannot be resolved', () => {
+  it('当无法解析转换引用时返回 null', () => {
     expect(
       resolveTransformTranslation({ kind: 'at-translate', direction: 'top', of: 'missing' }, contextOf()),
     ).toBeNull();

@@ -31,25 +31,25 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { CircleDefinition } from '@retikz/standard/shape';
+import { circleDefinition } from '@retikz/standard/shape';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [{ namespace: 'standard', type: 'circle', center: [0, 0], radius: 32 }],
 };
-export const Example = () => <Layout ir={ir} composites={[CircleDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[circleDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { shape, CircleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { shape, circleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [shape.circle({ center: [0, 0], radius: 32 })] });
-const svg = renderToSvgString(input, { adapters: [CircleInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [circleInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -58,7 +58,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { CircleDefinition } from '@retikz/standard/shape';
+import { circleDefinition } from '@retikz/standard/shape';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -66,7 +66,7 @@ const ir: IRScene = {
   version: 1,
   children: [{ namespace: 'standard', type: 'circle', center: [0, 0], radius: 32 }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [CircleDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [circleDefinition] } });
 console.log(svg);
 ```
 

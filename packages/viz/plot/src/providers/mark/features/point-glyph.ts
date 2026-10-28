@@ -8,7 +8,7 @@ import type { MarkPaint } from '../shared';
 export const POINT_DEFAULT_RADIUS = 5;
 
 /** Point 的 glyph 样式输入 */
-export type PointGlyphStyleSource = Pick<
+type PointGlyphStyleSource = Pick<
   NonNullable<IRPlotPointMark['properties']>,
   'padding' | 'minimumSize' | 'size' | 'stroke' | 'strokeWidth' | 'opacity' | 'rotate'
 >;

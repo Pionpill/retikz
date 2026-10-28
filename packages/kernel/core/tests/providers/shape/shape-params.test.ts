@@ -22,7 +22,7 @@ const ringShape = (): ShapeDefinition =>
   defineShape({
     name: 'ring',
     paramsSchema: strictObject({ r: number() }),
-    computeCircumscribedHalfAxes: (_hw, _hh, params) => ({ halfWidth: params.r, halfHeight: params.r }),
+    computeCircumscribedGeometry: (_hw, _hh, params) => ({ halfWidth: params.r, halfHeight: params.r }),
     computeBoundaryPoint: (rect: CenteredBox, _toward: Position, params): Position => [rect.x + params.r, rect.y],
     resolveAnchor: (rect: CenteredBox, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
     *emit(rect: CenteredBox, _style, _round, params): Iterable<ScenePrimitive> {
@@ -44,7 +44,7 @@ const looseShape = (): ShapeDefinition =>
   defineShape({
     name: 'loose',
     paramsSchema: object({}).passthrough() as unknown as ZodType<JsonObject>,
-    computeCircumscribedHalfAxes: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+    computeCircumscribedGeometry: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
     computeBoundaryPoint: (rect: CenteredBox): Position => [rect.x, rect.y],
     resolveAnchor: (rect: CenteredBox, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
     *emit(rect: CenteredBox): Iterable<ScenePrimitive> {
@@ -164,7 +164,7 @@ describe('shape 错误路径', () => {
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
-  it('shape_neither_string_nor_object：shape:42 → schema reject', () => {
+  it('schema 拒绝既非字符串也非对象的 shape:42', () => {
     const node = { type: 'node', id: 'A', position: [0, 0], shape: 42 };
 
     expect(NodeSchema.safeParse(node).success).toBe(false);

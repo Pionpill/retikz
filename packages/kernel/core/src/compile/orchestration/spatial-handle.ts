@@ -44,7 +44,7 @@ const isOccurrenceWithin = (candidate: CompileOccurrenceLocator, origin: Compile
   );
 
 /** 把 probe occurrence 的后缀映射到最终 replay site */
-export const remapSpatialOccurrenceForReplay = (
+const remapSpatialOccurrenceForReplay = (
   parent: CompileOccurrenceLocator,
   outputIndex: number,
   origin: CompileOccurrenceLocator,

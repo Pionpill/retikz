@@ -1,4 +1,6 @@
-import type { IRAxisLineTarget, IRPath, IRStep, IRStepLabel, IRTarget, WayDSL } from '@retikz/core';
+import type { IRAxisLineTarget, IRPath, IRStep, IRStepLabel, IRTarget } from '@retikz/core';
+
+import type { WayDSL } from './way';
 
 /** 作者侧路径步骤标签 */
 export type InputStepLabel = IRStepLabel;

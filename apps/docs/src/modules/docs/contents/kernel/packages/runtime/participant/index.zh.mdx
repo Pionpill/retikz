@@ -36,7 +36,7 @@ Source 保存输入，Computation 派生结果，Participant 消费这些数据�
 
 ```ts
 declare const defineRuntimeCommitParticipant: <TRead>(
-  options: RuntimeCommitParticipantDefinitionInput<TRead>,
+  options: InputRuntimeCommitParticipantDefinition<TRead>,
 ) => RuntimeCommitParticipant<TRead>;
 ```
 
@@ -60,7 +60,7 @@ declare const defineRuntimeCommitParticipant: <TRead>(
 <DocTab value="definition" label="类型定义">
 
 ```ts
-type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
+type InputRuntimeCommitParticipantDefinition<TRead> = Readonly<{
   key: string;
   sources?: ReadonlyArray<RuntimeSourceToken>;
   computations?: ReadonlyArray<RuntimeComputationToken>;
@@ -357,7 +357,7 @@ console.log(display.text); // ''
     {
       name: 'defineRuntimeCommitParticipant',
       kind: 'function',
-      type: '<TRead>(input: RuntimeCommitParticipantDefinitionInput<TRead>) => RuntimeCommitParticipant<TRead>',
+      type: '<TRead>(input: InputRuntimeCommitParticipantDefinition<TRead>) => RuntimeCommitParticipant<TRead>',
       description:
         '必填 key、revisionPolicy、prepare、read、dispose；可选 sources、computations、tracePhases 默认 []。Token 被实例独占接管。',
     },

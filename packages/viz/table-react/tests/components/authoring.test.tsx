@@ -11,7 +11,7 @@ import {
   TableSchema,
 } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
-import { manualTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { manualTable, tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 import { Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -45,17 +45,17 @@ type InputTableComponent = {
 
 /** 读取 React 根组件构造的唯一 Table Vanilla 输入 */
 const inputOf = <TProps,>(component: InputTableComponent, props: TProps): InputTable<unknown> => {
-  if (component.inputEmbedAdapter !== TableInputEmbedAdapter) throw new Error('expected Table Vanilla adapter');
+  if (component.inputEmbedAdapter !== tableInputEmbedAdapter) throw new Error('expected Table Vanilla adapter');
   if (component.createInputEmbedProps === undefined) throw new Error('expected Table Vanilla input factory');
   return component.createInputEmbedProps(props as Readonly<Record<string, unknown>>);
 };
 
 /** 经 Vanilla adapter 取得当前 React authoring 的 Core contribution */
 const contributionOf = <TProps,>(component: InputTableComponent, props: TProps, id: string) =>
-  TableInputEmbedAdapter.lower(inputOf(component, props), contextOf(id));
+  tableInputEmbedAdapter.lower(inputOf(component, props), contextOf(id));
 
-describe('Table React composition authoring collectors', () => {
-  it('collects ordered DetailColumn markers through Fragments, arrays, and empty nodes', () => {
+describe('Table React 组成编写收集器', () => {
+  it('通过 Fragments、数组和空节点收集有序的 DetailColumn 标记', () => {
     const columns = buildDetailColumns(
       <>
         <DetailColumn id="name" field="name" header="Name" headerLayout={{ padding: 2 }} />
@@ -83,7 +83,7 @@ describe('Table React composition authoring collectors', () => {
     );
   });
 
-  it('collects a rectangular row matrix and preserves explicit row kinds', () => {
+  it('收集矩形行矩阵并保留显式行类型', () => {
     const structure = buildManualStructure(
       <>
         <Row kind="columnHeader">
@@ -121,7 +121,7 @@ describe('Table React composition authoring collectors', () => {
     );
   });
 
-  it('pads empty Rows to the inferred width without emitting row kinds', () => {
+  it('将空行填充到推断的宽度，而不发出行类型', () => {
     expect(
       buildManualStructure(
         <>
@@ -137,7 +137,7 @@ describe('Table React composition authoring collectors', () => {
     ).toEqual({ rows: [[null], [{ value: 1 }]] });
   });
 
-  it('places span-aware markers at the first unoccupied slot and pads covered coordinates', () => {
+  it('将跨度感知标记放置在第一个未占用的槽位和焊盘覆盖的坐标处', () => {
     expect(
       buildManualStructure(
         <>
@@ -158,7 +158,7 @@ describe('Table React composition authoring collectors', () => {
     });
   });
 
-  it('rejects marker spans that overflow rows, cross row kinds, or overlap future occupancy', () => {
+  it('拒绝溢出行、跨行类型或重叠未来占用的标记跨度', () => {
     expect(() =>
       buildManualStructure(
         <Row>
@@ -191,7 +191,7 @@ describe('Table React composition authoring collectors', () => {
     ).toThrow(/span.*overlaps/i);
   });
 
-  it('rejects invalid DetailTable children', () => {
+  it('拒绝无效的 DetailTable 子项', () => {
     expect(() => buildDetailColumns(<span>name</span>)).toThrow(
       'table react: DetailTable children only accept DetailColumn',
     );
@@ -205,7 +205,7 @@ describe('Table React composition authoring collectors', () => {
     ).toThrow('table react: DetailTable children require at least one DetailColumn');
   });
 
-  it('rejects invalid ManualTable and Row child grammars', () => {
+  it('拒绝无效的 ManualTable 和 Row 子语法', () => {
     expect(() => buildManualStructure(<Cell value="orphan" />)).toThrow(
       'table react: ManualTable children only accept Row',
     );
@@ -218,12 +218,12 @@ describe('Table React composition authoring collectors', () => {
     ).toThrow('table react: Row children only accept Cell');
   });
 
-  it('rejects missing Rows and all-empty marker matrices whose width cannot be inferred', () => {
+  it('拒绝缺失行和宽度无法推断的全空标记矩阵', () => {
     expect(() => buildManualStructure(null)).toThrow(/require.*at least one Row/i);
     expect(() => buildManualStructure(<Row />)).toThrow(/require.*at least one Cell/i);
   });
 
-  it('treats an undefined content presentation as omitted', () => {
+  it('将 undefined 的内容呈现视为省略', () => {
     const withoutPresentation = buildManualStructure(
       <Row>
         <Cell content={content} />
@@ -239,8 +239,8 @@ describe('Table React composition authoring collectors', () => {
   });
 });
 
-describe('Table React composition root integration', () => {
-  it('keeps one sparse defaults fixture equivalent across Direct, Vanilla, and React authoring', () => {
+describe('Table React 组成根集成', () => {
+  it('在 Direct、Vanilla 和 React 编写中保留一个等效的稀疏默认测试数据', () => {
     const input = {
       id: 'sparse-defaults-parity',
       defaultCellLayout: { body: { padding: 3 }, columnHeader: { padding: 4 } },
@@ -263,7 +263,7 @@ describe('Table React composition root integration', () => {
     expect(compileTable(react, {}, { compile: { padding: 0 } })).toEqual(directResult);
   });
 
-  it('exports composition markers from the package root without exposing collectors', () => {
+  it('从包根导出合成标记而不暴露收集器', () => {
     expect(TableReact.DetailColumn).toBe(DetailColumn);
     expect(TableReact.Row).toBe(Row);
     expect(TableReact.Cell).toBe(Cell);
@@ -271,7 +271,7 @@ describe('Table React composition root integration', () => {
     expect(TableReact).not.toHaveProperty('buildManualStructure');
   });
 
-  it('normalizes DetailTable props and DetailColumn children to the same embedded node and standalone body', () => {
+  it('将 DetailTable props 和 DetailColumn 子项标准化为相同的嵌入节点和独立主体', () => {
     const propsMode = {
       id: 'detail-composition',
       dataRef: 'people',
@@ -299,7 +299,7 @@ describe('Table React composition root integration', () => {
     );
   });
 
-  it('preserves every DetailTable root prop in DetailColumn children mode', () => {
+  it('在 DetailColumn 儿童模式下保留每个 DetailTable 根 props', () => {
     const structureDefinitions = [
       defineTableStructure({
         schema: strictObject({ kind: literal('root-props-structure') }),
@@ -441,7 +441,7 @@ describe('Table React composition root integration', () => {
     });
   });
 
-  it('normalizes ManualTable props and Row children to the same embedded node and standalone values', () => {
+  it('将 ManualTable 属性和 Row 子项标准化为相同的嵌入节点和独立值', () => {
     const propsMode = {
       id: 'manual-composition',
       rows: [
@@ -475,7 +475,7 @@ describe('Table React composition root integration', () => {
     expect(output).toContain('98');
   });
 
-  it('preserves every ManualTable root authoring field in rows and marker modes', () => {
+  it('以行和标记模式保留每个 ManualTable 根编写字段', () => {
     const root = {
       id: 'manual-root-fields',
       rules: [
@@ -519,7 +519,7 @@ describe('Table React composition root integration', () => {
     });
   });
 
-  it('uses rule-selected custom formatter definitions in standalone rendering', () => {
+  it('在独立渲染中使用规则选择的自定义格式化程序定义', () => {
     const formatter = defineCellFormatter({
       name: 'rule-prefix',
       optionsSchema: strictObject({}),
@@ -536,7 +536,7 @@ describe('Table React composition root integration', () => {
     expect(output).toContain('#7');
   });
 
-  it('keeps DetailTable children data injection and embedded runtime reference', () => {
+  it('保留 DetailTable 子级数据注入和嵌入式运行时引用', () => {
     const props = {
       id: 'detail-runtime-reference',
       dataRef: 'people',
@@ -557,8 +557,7 @@ describe('Table React composition root integration', () => {
 
     const tableProvider = contribution.providerDependencies.providers[0];
 
-    expect(tableProvider.datasets).toMatchObject({ people: [{ name: 'Grace' }] });
-    expect(Object.keys(tableProvider.datasets)).toContain('@@retikz/table/runtime/detail-runtime-reference');
+    expect(tableProvider.params).toMatchObject({ datasets: { people: [{ name: 'Grace' }] } });
     expect(renderToStaticMarkup(<DetailTable {...props} />)).toContain('Grace');
   });
 });

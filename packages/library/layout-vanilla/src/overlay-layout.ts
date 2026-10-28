@@ -1,34 +1,34 @@
-import type { OverlayLayoutItemInput } from '@retikz/layout';
-import { createOverlayLayout, OverlayLayoutProvider } from '@retikz/layout';
+import type { InputOverlayLayoutItemConfig } from '@retikz/layout';
+import { createOverlayLayout, overlayLayoutProvider } from '@retikz/layout';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputOverlayLayout } from './normalize';
 import { normalizeLayoutItems, prepareLayoutItems } from './normalize';
 
 /** Vanilla Overlay 布局嵌入项的稳定类别 */
-const OverlayLayoutEmbedKind = 'layout.overlayLayout';
+const overlayLayoutEmbedKind = 'layout.overlayLayout';
 
 /** Layout Overlay 布局的 InputEmbed adapter */
-export const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
+export const overlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
   Required<Pick<SynchronousInputEmbedAdapter<InputOverlayLayout>, 'prepare'>> = {
-  kind: OverlayLayoutEmbedKind,
+  kind: overlayLayoutEmbedKind,
   lower: (props, context) => {
     const { children, ...input } = props;
-    const normalized = normalizeLayoutItems<OverlayLayoutItemInput>(children, context);
+    const normalized = normalizeLayoutItems<InputOverlayLayoutItemConfig>(children, context);
 
     return {
       runtimeInputs: normalized.runtimeInputs,
       node: createOverlayLayout({ ...input, children: normalized.items }),
       providerDependencies: {
-        roots: [OverlayLayoutProvider.key, ...normalized.providerDependencies.roots],
-        providers: [OverlayLayoutProvider, ...normalized.providerDependencies.providers],
+        roots: [overlayLayoutProvider.key, ...normalized.providerDependencies.roots],
+        providers: [overlayLayoutProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
     };
   },
   prepare: async (props, context) => {
     const { children, ...input } = props;
-    const execute = await prepareLayoutItems<OverlayLayoutItemInput>(children, context);
+    const execute = await prepareLayoutItems<InputOverlayLayoutItemConfig>(children, context);
 
     return {
       execute: async () => {
@@ -37,8 +37,8 @@ export const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputO
           node: createOverlayLayout({ ...input, children: normalized.items }),
           runtimeInputs: normalized.runtimeInputs,
           providerDependencies: {
-            roots: [OverlayLayoutProvider.key, ...normalized.providerDependencies.roots],
-            providers: [OverlayLayoutProvider, ...normalized.providerDependencies.providers],
+            roots: [overlayLayoutProvider.key, ...normalized.providerDependencies.roots],
+            providers: [overlayLayoutProvider, ...normalized.providerDependencies.providers],
           },
           ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
         };
@@ -54,7 +54,7 @@ export const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputO
  */
 export const overlayLayout = (input: InputOverlayLayout, authoring?: unknown): InputEmbed<InputOverlayLayout> => ({
   type: 'embed',
-  kind: OverlayLayoutEmbedKind,
+  kind: overlayLayoutEmbedKind,
   props: input,
   ...(authoring === undefined ? {} : { authoring }),
 });

@@ -1,4 +1,4 @@
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
 
 /** Graph context projector 的完整 definition 上下文 */
-export type GraphResolveContext = ResolvedGraphDefinitionOptions;
+export type GraphResolveContext = GraphDefinitionRegistries;

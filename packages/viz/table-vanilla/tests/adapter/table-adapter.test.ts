@@ -1,12 +1,12 @@
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { IRDetailTable } from '@retikz/table';
-import { createManualTableIR, RetikzTableError, TableSchema } from '@retikz/table';
+import { createManualTableIR, TableSchema } from '@retikz/table';
 import type { InputEmbedContext } from '@retikz/vanilla';
-import { embed, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { embedTable, inputTableFromIR, TableInputEmbedAdapter } from '../../src';
+import { embedTable, inputTableFromIR, tableInputEmbedAdapter } from '../../src';
 
 const contextOf = (id: string): InputEmbedContext => ({
   id,
@@ -22,26 +22,20 @@ const detailSpec = (): IRDetailTable => ({
   structure: { kind: 'detail', header: false, columns: [{ id: 'name', field: 'name' }] },
 });
 
-describe('Table Vanilla adapter', () => {
-  it('keeps runtime embed identity separate from optional Table model identity', () => {
+describe('Table Vanilla 适配器', () => {
+  it('将运行时嵌入标识与可选的 Table 模型标识分开', () => {
     const anonymous = createManualTableIR({ rows: [[null]] });
     const named = createManualTableIR({ id: 'scores', rows: [[null]] });
 
     expect(
-      TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf('panel')).node,
+      tableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf('panel')).node,
     ).not.toHaveProperty('id');
-    expect(TableInputEmbedAdapter.lower({ table: inputTableFromIR(named) }, contextOf('panel')).node).toMatchObject({
+    expect(tableInputEmbedAdapter.lower({ table: inputTableFromIR(named) }, contextOf('panel')).node).toMatchObject({
       id: 'scores',
     });
-    expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrowError(
-      RetikzTableError,
-    );
-    expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrow(
-      'table runtime contribution reference must be a non-empty string.',
-    );
   });
 
-  it('preserves explicit Table identity and all root authoring fields', () => {
+  it('保留显式的 Table 身份和所有根编写字段', () => {
     const spec = createManualTableIR({
       id: 'scores',
       rows: [[98]],
@@ -68,7 +62,7 @@ describe('Table Vanilla adapter', () => {
     });
 
     const lowered = TableSchema.parse(
-      TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('panel')).node,
+      tableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('panel')).node,
     );
 
     expect(lowered).toEqual(spec);
@@ -77,10 +71,10 @@ describe('Table Vanilla adapter', () => {
     expect(lowered.defaultAppearance).toEqual(spec.defaultAppearance);
   });
 
-  it('returns table.table roots and the shared stable provider maker for every lower call', () => {
+  it('返回 table.table 根和每个下沉调用的共享稳定提供者工厂', () => {
     const spec = createManualTableIR({ rows: [[null]] });
-    const first = TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('first'));
-    const second = TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('second'));
+    const first = tableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('first'));
+    const second = tableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('second'));
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
@@ -88,12 +82,10 @@ describe('Table Vanilla adapter', () => {
     expect(first.providerDependencies.providers[0]?.makeDefinition).toBe(
       second.providerDependencies.providers[0]?.makeDefinition,
     );
-    expect(Object.keys(first.providerDependencies.providers[0]?.datasets ?? {})).toContain(
-      '@@retikz/table/runtime/first',
-    );
+    expect(first.providerDependencies.providers[0]?.params).toHaveProperty('lowerOptions');
   });
 
-  it('enters scene/layer SSR and reads each embed runtime data', () => {
+  it('进入场景/图层 SSR 并读取每个嵌入运行时数据', () => {
     const spec = detailSpec();
     const inputScene = scene({
       layers: [
@@ -106,19 +98,19 @@ describe('Table Vanilla adapter', () => {
         }),
       ],
     });
-    const svg = renderToSvgString(inputScene, { adapters: [TableInputEmbedAdapter] });
+    const svg = renderToSvgString(inputScene, { adapters: [tableInputEmbedAdapter] });
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
 
-    const normalized = normalizeScene(inputScene, { adapters: [TableInputEmbedAdapter] });
+    const normalized = normalizeScene(inputScene, { adapters: [tableInputEmbedAdapter] });
 
     expect(new Set(normalized.runtimeMeta.layers[0].childIds).size).toBe(2);
 
     for (const child of normalized.ir.children) expect(child).not.toHaveProperty('id');
   });
 
-  it('passes extra composites through the shared adapter contribution', () => {
+  it('通过共享适配器贡献传递额外的复合组件', () => {
     const schema = CompositeBaseSchema.extend({
       namespace: literal('fixture'),
       type: literal('badge'),
@@ -135,22 +127,13 @@ describe('Table Vanilla adapter', () => {
     });
     const inputScene = scene([embedTable(spec, { composites: [badge] })]);
 
-    expect(renderToSvgString(inputScene, { adapters: [TableInputEmbedAdapter] })).toContain('Nested');
+    expect(renderToSvgString(inputScene, { adapters: [tableInputEmbedAdapter] })).toContain('Nested');
   });
 
-  it('rejects handwritten empty ids and keeps repeated anonymous embeds anonymous in Source', () => {
+  it('重复的匿名嵌入在 Source 中仍保持匿名', () => {
     const spec = createManualTableIR({ rows: [[null]] });
-    const handwritten = embed({ kind: 'table', id: '', props: { table: inputTableFromIR(spec) } });
-
-    expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrowError(
-      RetikzTableError,
-    );
-    expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrow(
-      'table runtime contribution reference must be a non-empty string.',
-    );
-
     const normalized = normalizeScene(scene([embedTable(spec), embedTable(spec)]), {
-      adapters: [TableInputEmbedAdapter],
+      adapters: [tableInputEmbedAdapter],
     });
 
     expect(normalized.ir.children).toEqual([spec, spec]);

@@ -6,16 +6,15 @@ import type { InputTable } from '../normalize/table';
 import { normalizeTable } from '../normalize/table';
 
 /** 可复用于多个 embed 与 update 周期的无状态 Table InputEmbed adapter */
-export const TableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unknown>> &
+export const tableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unknown>> &
   Required<Pick<SynchronousInputEmbedAdapter<InputTable<unknown>>, 'prepare'>> = {
   kind: TABLE_NAMESPACE,
-  lower: (props, context) => {
+  lower: props => {
     if (props.dataBindings !== undefined || props.dataTransformExecutor !== undefined || props.signal !== undefined)
       throw new RetikzTableVanillaError('Table bindings, executor or signal require async processing');
 
     const spec = normalizeTable(props.table);
     const contribution = createTableRuntimeContribution({
-      reference: context.id,
       data: props.data,
       lowerOptions: props.lowerOptions,
       composites: props.composites,
@@ -43,7 +42,6 @@ export const TableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable<unk
       props.lowerOptions,
     );
     const providerDependencies = createTableRuntimeContribution({
-      reference: context.id,
       lowerOptions: props.lowerOptions,
       composites: props.composites,
     });

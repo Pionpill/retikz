@@ -27,11 +27,11 @@ import { Stack } from '@retikz/standard-react/collection';
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { stack, StackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { stack, stackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 renderToSvgString(scene({ children: [stack({ items: ['A', 'B', 'C'] })] }), {
-  adapters: [StackInputEmbedAdapter],
+  adapters: [stackInputEmbedAdapter],
 });
 ```
 
@@ -42,7 +42,7 @@ renderToSvgString(scene({ children: [stack({ items: ['A', 'B', 'C'] })] }), {
 { "namespace": "standard", "type": "stack", "items": ["A", "B", "C"] }
 ```
 
-For direct IR, register StackProvider and PathClipProvider. Data expansion also requires ArrayProvider and MapProvider; explicit nested content supplies its own dependencies.
+For direct IR, register stackProvider and pathClipProvider. Data expansion also requires arrayProvider and mapProvider; explicit nested content supplies its own dependencies.
 
 </DocTab>
 </DocTabs>

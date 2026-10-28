@@ -11,7 +11,7 @@ const ENV = [
   'EVAL_ANTHROPIC_BASE_URL',
 ];
 
-describe('provider registry gating', () => {
+describe('提供者注册表门控', () => {
   let saved: Record<string, string | undefined>;
   beforeEach(() => {
     saved = Object.fromEntries(ENV.map(k => [k, process.env[k]]));

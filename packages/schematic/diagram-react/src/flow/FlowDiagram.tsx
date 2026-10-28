@@ -1,5 +1,5 @@
 import type { FlowDiagramInputEmbedProps } from '@retikz/diagram-vanilla/flow';
-import { FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
+import { flowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { Layout } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
@@ -28,7 +28,7 @@ const FlowRuntimeEmbed = (() => null) as unknown as FlowEmbeddableComponent<Flow
 
 FlowRuntimeEmbed.displayName = 'FlowRuntimeEmbed';
 FlowRuntimeEmbed.isTier2Embeddable = true;
-FlowRuntimeEmbed.inputEmbedAdapter = FlowDiagramInputEmbedAdapter;
+FlowRuntimeEmbed.inputEmbedAdapter = flowDiagramInputEmbedAdapter;
 FlowRuntimeEmbed.createInputEmbedProps = props => (props as FlowRuntimeEmbedProps).input;
 
 const FlowDiagramComponent: FC<FlowDiagramProps> = props => {
@@ -61,5 +61,5 @@ export const FlowDiagram = FlowDiagramComponent as FlowEmbeddableComponent<FlowD
 
 FlowDiagram.displayName = 'FlowDiagram';
 FlowDiagram.isTier2Embeddable = true;
-FlowDiagram.inputEmbedAdapter = FlowDiagramInputEmbedAdapter;
+FlowDiagram.inputEmbedAdapter = flowDiagramInputEmbedAdapter;
 FlowDiagram.createInputEmbedProps = createFlowDiagramInput;

@@ -76,10 +76,10 @@ const FlexLayoutBaseSchema = CompositeBaseSchema.extend({
   children: array(FlexLayoutItemSchema).default([]).describe('Authored flex items in stable paint order.'),
 });
 
-type FlexLayoutRefinementInput = ZodInfer<typeof FlexLayoutBaseSchema>;
+type InputFlexLayoutRefinement = ZodInfer<typeof FlexLayoutBaseSchema>;
 
 /** 校验 FlexLayout 跨字段方向、baseline 与本地 key 契约 */
-const refineFlexLayout = (layout: FlexLayoutRefinementInput, context: RefinementCtx): void => {
+const refineFlexLayout = (layout: InputFlexLayoutRefinement, context: RefinementCtx): void => {
   const isColumn =
     layout.direction === FlexLayoutDirection.Column || layout.direction === FlexLayoutDirection.ColumnReverse;
   const isBaseline = (value: string | undefined): boolean =>

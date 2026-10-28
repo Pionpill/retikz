@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { defineNodeChannel, markChannelEncoding, channelField } from '../../../src/contract';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { MarkSchema, PlotSchema } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
 
@@ -35,25 +35,26 @@ const specWithChannel = (channel: string) =>
     ],
   });
 
-describe('closed mark vocabulary and channel extensions', () => {
-  it('rejects unknown mark types at the JSON boundary', () => {
+describe('封闭标记词汇和通道扩展', () => {
+  it('拒绝 JSON 边界处的未知标记类型', () => {
     expect(MarkSchema.safeParse({ type: 'dot', encodings: { position: { x: { field: 'a' } } } }).success).toBe(false);
     expect(PlotSchema.safeParse({ ...specWithChannel('bareIntensity'), marks: [{ type: 'dot' }] }).success).toBe(false);
   });
 
-  it('rejects unregistered channels on builtin marks', () => {
-    expect(() =>
-      lowerPlot(
-        specWithChannel('ghost'),
-        { d: [{ cat: 'A', val: 3, intensity: 0.75 }] },
-        { textMeasurer: measureLabel },
-      ),
+  it('拒绝内置标记上未注册的通道', () => {
+    expect(
+      () =>
+        lowerPlotWithDataArtifact(
+          specWithChannel('ghost'),
+          { d: [{ cat: 'A', val: 3, intensity: 0.75 }] },
+          { textMeasurer: measureLabel },
+        ).child,
     ).toThrow(/channel "ghost" is not registered/);
   });
 
-  it('delivers registered extension channels on builtin marks', () => {
+  it('在内置标记上提供已注册的扩展通道', () => {
     const delivered: { value?: number } = {};
-    lowerPlot(
+    lowerPlotWithDataArtifact(
       specWithChannel('bareIntensity'),
       { d: [{ cat: 'A', val: 3, intensity: 0.75 }] },
       {

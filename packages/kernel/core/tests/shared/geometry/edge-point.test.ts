@@ -78,7 +78,7 @@ describe('ellipse.edgePoint：周长弧段', () => {
   const e = { x: 0, y: 0, rx: 30, ry: 20, rotate: 0 };
   const onEllipse = (p: readonly [number, number]): number => (p[0] / 30) ** 2 + (p[1] / 20) ** 2;
 
-  it('right t=0.5 = (rx, 0)', () => {
+  it('右 t=0.5 = (rx, 0)', () => {
     near(ellipse.edgePoint(e, Side.Right, 0.5), 30, 0);
   });
 

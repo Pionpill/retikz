@@ -1,21 +1,21 @@
 import type { IRChild, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { ArrayDefinition, ArraySchema, MapDefinition, MapSchema } from '../../../src/collection';
+import { arrayDefinition, ArraySchema, mapDefinition, MapSchema } from '../../../src/collection';
 
 const compile = (child: IRChild) =>
   compileToScene(
     { type: 'scene', version: 1, children: [child] },
-    { composites: [ArrayDefinition, MapDefinition], clips: [PathClipDefinition], padding: 0 },
+    { composites: [arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
   );
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? [node, ...flat(node.children)] : [node]));
 
-describe('JSON data presentation', () => {
-  it('shows nonempty objects as compact JSON text without expanding them into Maps', () => {
+describe('JSON 数据呈现', () => {
+  it('将非空对象显示为紧凑的 JSON 文本，而不将它们扩展到地图中', () => {
     const source = {
       namespace: 'standard',
       type: 'array',
@@ -33,7 +33,7 @@ describe('JSON data presentation', () => {
     expect(JSON.stringify(source)).toBe(before);
   });
 
-  it('keeps a Map data root and its keys while showing nested objects as text', () => {
+  it('保留 Map 数据根及其键，同时将嵌套对象显示为文本', () => {
     const result = compile({
       namespace: 'standard',
       type: 'map',
@@ -55,7 +55,7 @@ describe('JSON data presentation', () => {
     { dataExpand: ['map'], texts: ['a', '[1]', '[2,{"b":3}]'] },
     { dataExpand: ['array'], texts: ['{"a":[1]}', '2', '{"b":3}'] },
     { dataExpand: ['map', 'array'], texts: ['a', '1', '2', 'b', '3'] },
-  ])('selects nested components for $dataExpand and stops at text subtrees', ({ dataExpand, texts }) => {
+  ])('选择 $dataExpand 的嵌套组件并在文本子树处停止', ({ dataExpand, texts }) => {
     for (const width of ['auto', 'content']) {
       const source = {
         namespace: 'standard',
@@ -94,7 +94,7 @@ describe('JSON data presentation', () => {
     expect(rendered.filter(text => text === 'first' || text === 'second')).toEqual(['first', 'second']);
   });
 
-  it('treats component choices as a set and leaves empty structures as text', () => {
+  it('将组件选择视为一组，并将空结构保留为文本', () => {
     const source = { namespace: 'standard', type: 'array', data: [{ a: [1] }, [2], {}, []] };
     const expected = compile(source).scene;
 
@@ -113,7 +113,7 @@ describe('JSON data presentation', () => {
     }
   });
 
-  it('preserves compact JSON Source through parsing and rejects mixed or missing inputs', () => {
+  it('通过解析保留紧凑的 JSON Source 并拒绝混合或缺失的输入', () => {
     const data = {
       id: 'a',
       style: { fill: 'red' },
@@ -151,7 +151,7 @@ describe('JSON data presentation', () => {
       expect(ArraySchema.safeParse({ namespace: 'standard', type: 'array', data: [value] }).success).toBe(false);
   });
 
-  it('renders JSON literals, repeated strings and nested empty containers without cell identities', () => {
+  it('渲染 JSON 文字、重复字符串和没有单元格标识的嵌套空容器', () => {
     const data = ['', 'null', null, false, 0, 'a\n"b', {}, [], 'same', 'same'];
     const source = { namespace: 'standard', type: 'array', data };
     const before = JSON.stringify(source);
@@ -168,7 +168,7 @@ describe('JSON data presentation', () => {
     expect(JSON.stringify(source)).toBe(before);
   });
 
-  it('matches explicit nested structures including enumeration order and local-only layout overrides', () => {
+  it('匹配显式嵌套结构，包括枚举顺序和仅限本地布局覆盖', () => {
     const options = {
       layout: { gap: 7 },
       defaultCell: {
@@ -207,7 +207,7 @@ describe('JSON data presentation', () => {
     expect(actual.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
   });
 
-  it('passes content width through data-generated nested Arrays', () => {
+  it('通过数据生成的嵌套数组传递内容宽度', () => {
     const actual = compile({
       namespace: 'standard',
       type: 'array',
@@ -233,7 +233,7 @@ describe('JSON data presentation', () => {
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
   });
 
-  it('passes content width through data-generated Maps to deeper Arrays', () => {
+  it('通过数据生成的映射将内容宽度传递到更深的数组', () => {
     const actual = compile({
       namespace: 'standard',
       type: 'array',
@@ -270,7 +270,7 @@ describe('JSON data presentation', () => {
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
   });
 
-  it('passes content width through multiple data-generated Array levels', () => {
+  it('通过多个数据生成的 Array 级别传递内容宽度', () => {
     const actual = compile({
       namespace: 'standard',
       type: 'array',
@@ -305,7 +305,7 @@ describe('JSON data presentation', () => {
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
   });
 
-  it('does not pass content width to hand-authored children or from fixed-width data Arrays', () => {
+  it('不将内容宽度传递给手工编写的子级或固定宽度的数据数组', () => {
     const nested = { namespace: 'standard', type: 'array', data: ['A', 'longer'] };
     const authored = compile({
       namespace: 'standard',
@@ -338,7 +338,7 @@ describe('JSON data presentation', () => {
     expect(fixed.scene.primitives).toEqual(fixedWithAuto.scene.primitives);
   });
 
-  it('keeps root empty containers equivalent to empty explicit structures', () => {
+  it('保持根空容器等同于空显式结构', () => {
     expect(compile({ namespace: 'standard', type: 'map', data: {} }).scene).toEqual(
       compile({ namespace: 'standard', type: 'map', entries: [] }).scene,
     );

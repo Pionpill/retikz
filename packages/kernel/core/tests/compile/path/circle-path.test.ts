@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ellipseArc, line, move } from '../../helpers/path-command-factory';
 import { pathCommands } from './helpers';
 
-describe("compile path: 'circlePath'", () => {
+describe("编译路径：'circlePath'", () => {
   it('circlePath 在原点 r=10 → 两段半弧', () => {
     // circlePath 产 ellipseArc full sweep (0→360)；adapter 自行拆 SVG 两段
     expect(

@@ -64,8 +64,8 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
   });
 });
 
-describe('PathSchema: arrow sugar is outside core IR', () => {
-  it('rejects top-level arrow and arrowDetail fields', () => {
+describe('PathSchema：箭头糖在外核 IR', () => {
+  it('拒绝顶级箭头和 arrowDetail 字段', () => {
     const result = PathSchema.safeParse({
       type: 'path',
       arrow: '->',

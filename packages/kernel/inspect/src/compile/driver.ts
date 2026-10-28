@@ -34,7 +34,7 @@ import type {
   InspectionDiagnosticOrigin,
   InspectionPlaneEntry,
   InspectionSelection,
-  ResolvedInspectionRequest,
+  CanonicalInspectionRequest,
 } from './types';
 
 type CapturedObservation = Readonly<{ observation: CompileObservation; context: CompileObservationContext }>;
@@ -55,7 +55,7 @@ const createInspectionCompileError = (message: string, origin: InspectionDiagnos
 /** 创建 subject 快照或 Inspector 回调失败时使用的诊断来源 */
 const createInspectionDiagnosticOrigin = (
   stage: 'subject' | 'inspect',
-  request: ResolvedInspectionRequest,
+  request: CanonicalInspectionRequest,
 ): InspectionDiagnosticOrigin =>
   Object.freeze({ stage, inspector: request.inspector, owner: request.owner, occurrence: request.occurrence });
 
@@ -84,7 +84,7 @@ const compileInspectionObserverOutput = (
   /** 创建 Inspect 输出或 fragment 编译失败时使用的诊断来源 */
   const createInspectionOutputDiagnosticOrigin = (
     stage: 'output' | 'fragment',
-    request: ResolvedInspectionRequest,
+    request: CanonicalInspectionRequest,
     outputIndex: number,
   ): InspectionDiagnosticOrigin =>
     Object.freeze({

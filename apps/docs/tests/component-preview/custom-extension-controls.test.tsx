@@ -39,7 +39,7 @@ const expectNaturalSize = (markup: string): void => {
   expect(Number(root.match(/\sheight="([^"]+)"/)?.[1])).toBe(bounds?.[3]);
 };
 
-describe('custom extension demo controls', () => {
+describe('自定义扩展演示控件', () => {
   it('切换自定义通道的字段绑定与常量绑定会改变输出', () => {
     const canonical = {
       'custom-channel-binding-mode': 'field',

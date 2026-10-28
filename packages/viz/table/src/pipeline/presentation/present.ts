@@ -1,6 +1,6 @@
 import type { IRChild } from '@retikz/core';
 
-import type { AnyCellPresentationDefinition, CellPresentationInput } from '../../contract';
+import type { AnyCellPresentationDefinition, InputCellPresentation } from '../../contract';
 import { RetikzTableError } from '../../error';
 import { cellPresentationDefinitionOf } from '../../providers';
 import type { IRTableCellContentStyle, IRTablePresentationRef } from '../../schemas';
@@ -32,7 +32,7 @@ export const applyTableCellContentStyle = (
 
 /** 通过 presentation registry 把 formatted value 转成 Core 内容 */
 export const presentCellValue = (
-  input: CellPresentationInput,
+  input: InputCellPresentation,
   presentation: DeepReadonly<IRTablePresentationRef>,
   registry: ReadonlyMap<string, AnyCellPresentationDefinition>,
 ): IRChild => {

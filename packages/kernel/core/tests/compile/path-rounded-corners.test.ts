@@ -310,7 +310,7 @@ describe('cornerRadius 交互', () => {
     expect(gRounded?.transforms).not.toEqual(gSharp?.transforms);
   });
 
-  it('cornerRadius + centered label keeps its rounded arc while emitting split stroke fragments', () => {
+  it('cornerRadius + 居中标签保持其圆弧，同时发出分割描边片段', () => {
     const ir = pathWith(
       {
         cornerRadius: 12,
@@ -462,7 +462,7 @@ describe('cornerRadius 交互', () => {
 
 // ───────────────────────── JSON round-trip ─────────────────────────
 
-describe('cornerRadius JSON round-trip', () => {
+describe('cornerRadius JSON 往返', () => {
   it('含 cornerRadius 的 IRPath 经 JSON.stringify/parse 往返后 parse 深等于原 parse', () => {
     const original: IRPath = {
       type: 'path',

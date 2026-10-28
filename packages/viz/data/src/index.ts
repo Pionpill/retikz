@@ -28,16 +28,10 @@ export type {
   DataTransformProviderRegistration,
   DataTransformRequestOptions,
   DataTransformStageImplementation,
-  DataTransformStageInput,
+  InputDataTransformStage,
   DataTransformStageSupport,
 } from './execution';
-export {
-  BUILTIN_FORMATS,
-  BUILTIN_FORMAT_DEFINITIONS_BY_NAME,
-  collectFormatFields,
-  defineFieldFormat,
-  resolveFormatRegistry,
-} from './format';
+export { BUILTIN_FORMATS, collectFormatFields, defineFieldFormat, resolveFormatRegistry } from './format';
 export type { FieldFormatDefinition } from './format';
 export {
   BuiltinDataFieldFormat,
@@ -55,10 +49,10 @@ export {
   inferCategoryDomain,
   inferFieldType,
   isIsoDateString,
-  normalizeRows,
+  resolveDataRows,
   resolveFieldPath,
   resolveFieldTypes,
-  validateBoundData,
+  assertBoundData,
 } from './model';
 export type {
   DataFieldMap,
@@ -74,7 +68,7 @@ export type {
   IRDataReference,
   IRDataScalarValue,
   ParsedFieldValue,
-  ResolveField,
+  FieldResolver,
 } from './model';
 export { extractStatisticOperation } from './operators';
 export {
@@ -177,26 +171,26 @@ export type {
   DataLineageOptions,
   DataLineageRecorder,
   DataLineageReducerEvent,
-  DataLineageReducerInput,
+  InputDataLineageReducer,
   DataLineageRun,
   DataLineageSampleEvent,
   DataLineageSelectorEvent,
-  DataLineageSelectorInput,
+  InputDataLineageSelector,
   DataLineageSink,
   DataLineageSourceEvent,
   DataLineageTransformStepEvent,
-  DataLineageTransformStepInput,
+  InputDataLineageTransformStep,
   DataSourceIdentity,
   DataSourceIdentityOptions,
   DataValueSampleOptions,
 } from './provenance';
+export { mergeExternalDatasets } from './shared';
 export type { ExternalDatasets, ExternalRow } from './shared';
 export {
   AnnotateParamsSchema,
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
   BUILTIN_TRANSFORMS,
-  BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND,
   BUILTIN_TRANSFORM_IMPLEMENTATIONS,
   BinParamsSchema,
   BinTransformSchema,
@@ -277,7 +271,7 @@ export type {
   IRDataTransformDeclaration,
   TransformContext,
   TransformDefinition,
-  TransformDefinitionInput,
+  InputTransformDefinition,
   TransformImplementation,
   TransformSemanticContext,
 } from './transform';

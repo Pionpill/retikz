@@ -70,7 +70,7 @@ export type EntityProps = Omit<InputEntity, 'type'> &
 | Animation | `animations?`       | `Array<IRAnimationTrack>`                                                                        | —       | Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.                        |
 | Data      | `meta?`             | `Record<string, JsonValue>`                                                                      | —       | Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.                                                                 |
 |           | `input` (Parameter) | `EntityInputEmbedProps`                                                                          | —       | Entity authoring fields; custom semantics reference only keys registered through Graph                                                                                          |
-|           | Returns             | `InputEmbed<Omit<InputEntity, 'type'>>`                                                          | —       | An embed node for a Vanilla content tree, converted to Entity Source by EntityInputEmbedAdapter                                                                                 |
+|           | Returns             | `InputEmbed<Omit<InputEntity, 'type'>>`                                                          | —       | An embed node for a Vanilla content tree, converted to Entity Source by entityInputEmbedAdapter                                                                                 |
 
 </ApiTable>
 
@@ -137,13 +137,13 @@ export type InputEntity = EntityCreateOptions &
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EntityInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/entity.ts"} startLine={18}>EntityInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"entityInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/entity.ts"} startLine={18}>entityInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const EntityInputEmbedAdapter: SynchronousInputEmbedAdapter<EntityInputEmbedProps>;
+export declare const entityInputEmbedAdapter: SynchronousInputEmbedAdapter<EntityInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={24}>createGraphVanillaAdapters</ApiSourceLink>
+#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -255,14 +255,14 @@ export type EntityKindDefinition = Readonly<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<JsonObject>>;
+export type EntityPredicateDefinition = InputEntityPredicateDefinition<ZodType<JsonObject>>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"EntityPredicateDefinitionInput"} path={"packages/schematic/graph/src/contract/entity/types.ts"} startLine={37}>EntityPredicateDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputEntityPredicateDefinition"} path={"packages/schematic/graph/src/contract/entity/types.ts"} startLine={37}>InputEntityPredicateDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -286,7 +286,7 @@ export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<J
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
+export type InputEntityPredicateDefinition<TSchema extends ZodType<JsonObject>> = Readonly<{
   name: string;
   role: string;
   kinds?: ReadonlyArray<string>;
@@ -415,10 +415,10 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 
 <ApiTable variant="parameters">
 
-| Category   | Name       | Type / signature                        | Description                                                                                                                                  |
-| ---------- | ---------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Parameters | `options?` | `GraphDefinitionOptions`                | Custom semantic and theme definitions; omission reuses built-in providers, and registration validation is deferred until dependency assembly |
-| Returns    | —          | `ReadonlyArray<CoreDependencyProvider>` | A readonly provider collection containing Graph elements and their required layout, shape, and arrow dependencies                            |
+| Category   | Name       | Type / signature                           | Description                                                                                                                                  |
+| ---------- | ---------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `options?` | `GraphDefinitionOptions`                   | Custom semantic and theme definitions; omission reuses built-in providers, and registration validation is deferred until dependency assembly |
+| Returns    | —          | `ReadonlyArray<AnyCoreDependencyProvider>` | A readonly provider collection containing Graph elements and their required layout, shape, and arrow dependencies                            |
 
 </ApiTable>
 
@@ -427,7 +427,9 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createGraphProviders: (options?: GraphDefinitionOptions) => ReadonlyArray<CoreDependencyProvider>;
+export declare const createGraphProviders: (
+  options?: GraphDefinitionOptions,
+) => ReadonlyArray<AnyCoreDependencyProvider>;
 ```
 
 </DocTab>
@@ -472,7 +474,7 @@ export declare const defineEntityKind: (definition: EntityKindDefinition) => Ent
 | Category        | Name         | Type / signature                          | Description                                                                                                         |
 | --------------- | ------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Type parameters | `TSchema`    | `extends ZodType<JsonObject>`             | JSON object schema type constraining paramsSchema and defining how predicate parameters are parsed                  |
-| Parameters      | `definition` | `EntityPredicateDefinitionInput<TSchema>` | Definition supplied through GraphDefinitionOptions.entityPredicates; this function does not register or validate it |
+| Parameters      | `definition` | `InputEntityPredicateDefinition<TSchema>` | Definition supplied through GraphDefinitionOptions.entityPredicates; this function does not register or validate it |
 | Returns         | —            | `EntityPredicateDefinition`               | The original definition object, without copying or modifying it                                                     |
 
 </ApiTable>
@@ -483,7 +485,7 @@ export declare const defineEntityKind: (definition: EntityKindDefinition) => Ent
 
 ```ts
 export declare const defineEntityPredicate: <TSchema extends ZodType<JsonObject>>(
-  definition: EntityPredicateDefinitionInput<TSchema>,
+  definition: InputEntityPredicateDefinition<TSchema>,
 ) => EntityPredicateDefinition;
 ```
 

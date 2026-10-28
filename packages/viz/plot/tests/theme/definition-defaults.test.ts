@@ -1,12 +1,12 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { definePlotTheme, resolvePlotTheme } from '../../src';
 
-describe('Plot theme definition closure', () => {
-  it('custom definition receives the effective Core theme and contributes Source defaults/rules', () => {
-    let received: ResolvedTheme | undefined;
+describe('Plot 主题定义关闭', () => {
+  it('自定义接收有效的 Core 主题并贡献 Source 默认/规则', () => {
+    let received: CanonicalTheme | undefined;
     const style = definePlotTheme({
       name: 'definition-defaults',
       resolve: theme => {
@@ -17,7 +17,7 @@ describe('Plot theme definition closure', () => {
         };
       },
     });
-    const theme: ResolvedTheme = {
+    const theme: CanonicalTheme = {
       name: style.name,
       mode: ThemeMode.Dark,
       colors: {
@@ -36,7 +36,7 @@ describe('Plot theme definition closure', () => {
     });
   });
 
-  it('unknown style fails loud and no implicit base inheritance is accepted', () => {
+  it('未知样式失败，并且不接受隐式基继承', () => {
     const theme = {
       mode: ThemeMode.Light,
       colors: resolveDefaultCoreThemeColors(ThemeMode.Light),

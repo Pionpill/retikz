@@ -275,7 +275,7 @@ In the demo below, select polar coordinates and a rectangle, then change Orienta
 | `margin`       | Connection margin     | An offset outside the connection boundary; affects connections without changing the visible fill shape                                         |
 | `boundary`     | Connection boundary   | The connection contour: `shape`, `circle`, or a shape reference; independent of the visible `shape`                                            |
 
-The star shape is provided by `StarShapeDefinition` from `@retikz/extension`; this example registers it explicitly through Layout’s `extensions.shapes`.
+The star shape is provided by `starShapeDefinition` from `@retikz/extension`; this example registers it explicitly through Layout’s `extensions.shapes`.
 
 The example starts at size 18. Gray guide lines drawn by PathMark show how node margins (`margin`) affect connection endpoints. Turn off Show connections to hide these lines. Select a rectangle to compare corners, padding, and connection margins. Circle uses `fit: 'bounds'`, changing connection endpoints without changing the visible shape.
 

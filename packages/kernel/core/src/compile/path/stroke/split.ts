@@ -3,7 +3,7 @@ import type {
   PathPrimitive,
   PathPrimitiveAppearance,
   ScenePrimitiveBase,
-  ResolvedArrowEnd,
+  CompiledArrowEnd,
   ScenePrimitive,
 } from '../../../contract';
 import type { StrokeCommandFragment } from './interruption';
@@ -18,7 +18,7 @@ export type PathBaseProps = ScenePrimitiveBase & PathPrimitiveAppearance;
 export const splitSubPathsForEndpointArrows = (
   commands: Array<PathCommand>,
   baseProps: PathBaseProps,
-  endpointArrows: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd },
+  endpointArrows: { arrowStart?: CompiledArrowEnd; arrowEnd?: CompiledArrowEnd },
 ): { primitive: ScenePrimitive; isGrouped: boolean } => {
   const hasArrows = !!endpointArrows.arrowStart || !!endpointArrows.arrowEnd;
 
@@ -76,7 +76,7 @@ export const splitSubPathsForEndpointArrows = (
 export const emitInterruptedPathFragments = (
   fragments: ReadonlyArray<StrokeCommandFragment>,
   baseProps: PathBaseProps,
-  endpointArrows: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd },
+  endpointArrows: { arrowStart?: CompiledArrowEnd; arrowEnd?: CompiledArrowEnd },
 ): ScenePrimitive => {
   const pathPrimitives: Array<PathPrimitive> = fragments.map(fragment => {
     const dashOffset =

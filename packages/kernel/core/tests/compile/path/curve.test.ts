@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { close, line, move, quad } from '../../helpers/path-command-factory';
 import { pathCommands } from './helpers';
 
-describe("compile path: 'curve'", () => {
+describe("编译路径：'curve'", () => {
   it('curve 直接坐标 → M ... Q cx,cy x,y', () => {
     expect(
       pathCommands([

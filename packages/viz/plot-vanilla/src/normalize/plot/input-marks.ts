@@ -1,4 +1,4 @@
-import type { IRGraphicStyle, WayDSL } from '@retikz/core';
+import type { IRGraphicStyle } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type {
   IRPlotPointMark,
@@ -11,6 +11,7 @@ import type {
   IRPlotPathStepTarget,
   PathMarkAppearanceEncodingSchema,
 } from '@retikz/plot';
+import type { WayDSL } from '@retikz/vanilla';
 import type { InputPath } from '@retikz/vanilla';
 import type { infer as ZodInfer } from 'zod';
 
@@ -18,7 +19,7 @@ import type { infer as ZodInfer } from 'zod';
 export type InputPlotFieldName = string;
 
 /** 工厂的视图绑定糖，不进入 Plot Source */
-export type InputPlotCoordinateScope = {
+type InputPlotCoordinateScope = {
   coordinateView?: string;
   facetId?: string;
   trackId?: string;

@@ -14,7 +14,7 @@ import { STANDARD_NAMESPACE } from '../../shared';
 import { StandardPathStrokeStyleSchema } from '../../shared/schemas';
 import { getLatticeRangeError } from '../shared/lattice';
 import { AxesArrowMode, AxesLabelEnd, AxesTickExtent, AxesTickSide, AxesTickSourceKind } from './constants';
-import { axesTickRangeOf, enumerateAxesTickValues, normalizeAxesExtent } from './ticks';
+import { axesTickRangeOf, enumerateAxesTickValues, resolveAxesExtent } from './ticks';
 
 const AxesDirectionalExtentSchema = strictObject({
   negative: NonNegativeNumberSchema.describe('Drawing length in the negative axis direction.'),
@@ -135,17 +135,17 @@ const AxesBaseSchema = CompositeBaseSchema.extend({
   y: AxesAxisSchema.describe('Vertical axis configuration and its perpendicular grid projection.'),
 });
 
-type AxesRefinementInput = ZodInfer<typeof AxesBaseSchema>;
+type InputAxesRefinement = ZodInfer<typeof AxesBaseSchema>;
 
-type AxesAxisInput = AxesRefinementInput['x'];
+type InputAxesAxis = InputAxesRefinement['x'];
 
 const valuesEqual = (left: number, right: number): boolean =>
   Math.abs(left - right) <= Number.EPSILON * Math.max(1, Math.abs(left), Math.abs(right)) * 8;
 
-const refineAxisTicks = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: RefinementCtx): void => {
+const refineAxisTicks = (axis: InputAxesAxis, axisKey: 'x' | 'y', ctx: RefinementCtx): void => {
   if (axis.ticks === undefined || axis.ticks === false) return;
 
-  const extent = normalizeAxesExtent(axis.extent);
+  const extent = resolveAxesExtent(axis.extent);
   const ticks = axis.ticks;
   const source = ticks.source;
   if (source.kind === AxesTickSourceKind.Spacing) {
@@ -212,14 +212,14 @@ const refineAxisTicks = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: Refinemen
   });
 };
 
-const axisHasOutput = (axis: AxesAxisInput): boolean =>
+const axisHasOutput = (axis: InputAxesAxis): boolean =>
   axis.line !== false ||
   (axis.ticks !== undefined && axis.ticks !== false) ||
   (axis.grid !== undefined && axis.grid !== false) ||
   axis.label !== false;
 
-const refineAxis = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: RefinementCtx): void => {
-  const extent = normalizeAxesExtent(axis.extent);
+const refineAxis = (axis: InputAxesAxis, axisKey: 'x' | 'y', ctx: RefinementCtx): void => {
+  const extent = resolveAxesExtent(axis.extent);
   if (extent.negative === 0 && extent.positive === 0) {
     ctx.addIssue({
       code: 'custom',
@@ -244,7 +244,7 @@ const refineAxis = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: RefinementCtx)
   refineAxisTicks(axis, axisKey, ctx);
 };
 
-const refineAxes = (axes: AxesRefinementInput, ctx: RefinementCtx): void => {
+const refineAxes = (axes: InputAxesRefinement, ctx: RefinementCtx): void => {
   if (!axisHasOutput(axes.x) && !axisHasOutput(axes.y) && axes.origin.label === false) {
     ctx.addIssue({ code: 'custom', path: ['x'], message: 'Axes requires at least one visible axis artifact.' });
   }

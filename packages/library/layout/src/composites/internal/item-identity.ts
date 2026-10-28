@@ -2,7 +2,7 @@
  * 带有容器局部有效 key 的 Layout item
  * @template TItem 原始布局项类型，结果将其可选 key 收窄为必填
  */
-export type EffectiveLayoutItem<
+export type KeyedLayoutItem<
   TItem extends Readonly<{
     /** 保留作者显式值或补齐后保证唯一的布局项键 */
     key?: string;
@@ -19,11 +19,11 @@ export type EffectiveLayoutItem<
  */
 export const createEffectiveLayoutItems = <TItem extends Readonly<{ key?: string }>>(
   items: ReadonlyArray<TItem>,
-): Array<EffectiveLayoutItem<TItem>> => {
+): Array<KeyedLayoutItem<TItem>> => {
   const usedKeys = new Set(items.flatMap(item => (item.key === undefined ? [] : [item.key])));
 
   return items.map((item, sourceIndex) => {
-    if (item.key !== undefined) return item as EffectiveLayoutItem<TItem>;
+    if (item.key !== undefined) return item as KeyedLayoutItem<TItem>;
 
     const baseKey = `item:${sourceIndex}`;
     let effectiveKey = baseKey;

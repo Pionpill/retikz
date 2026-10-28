@@ -1,5 +1,5 @@
 export * from './composite/definition';
-export { assertCompositeInputBindings, createCompositeInputBindings } from './composite/input';
+export { createCompositeInputBindings } from './composite/input';
 export type {
   CompositeBoundChild,
   CompositeInputBinding,

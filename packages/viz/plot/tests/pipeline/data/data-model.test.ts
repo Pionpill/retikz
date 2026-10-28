@@ -25,25 +25,25 @@ const rowsOf = (...values: Array<unknown>): Array<Record<string, unknown>> => va
 
 describe('inferFieldType — 缺省推断（contract）', () => {
   // Happy path
-  it('infer_temporal_from_iso', () => {
+  it('从 iso 推断时间', () => {
     expect(inferFieldType(rowsOf('2024-01-01', '2024-02-01'), 'f')).toBe(DataFieldType.Temporal);
     expect(inferFieldType(rowsOf('2024-01-01T08:30:00Z'), 'f')).toBe(DataFieldType.Temporal);
   });
 
-  it('infer_temporal_from_date_instance', () => {
+  it('从日期实例推断时间', () => {
     expect(inferFieldType(rowsOf(new Date('2024-01-01'), new Date('2024-02-01')), 'f')).toBe(DataFieldType.Temporal);
   });
 
-  it('infer_continuous_from_number', () => {
+  it('从编号推断连续', () => {
     expect(inferFieldType(rowsOf(1, 2, 3.5), 'f')).toBe(DataFieldType.Continuous);
   });
 
-  it('infer_categorical_from_string', () => {
+  it('从字符串推断分类', () => {
     expect(inferFieldType(rowsOf('apple', 'banana'), 'f')).toBe(DataFieldType.Categorical);
   });
 
   // 边界
-  it('temporal_guard_rejects_bare_number', () => {
+  it('临时防护拒绝裸号码', () => {
     // 数值 5 → continuous；数字串 '5' → categorical（绝不误判 temporal）
     expect(inferFieldType(rowsOf(5, 6), 'f')).toBe(DataFieldType.Continuous);
     expect(inferFieldType(rowsOf('5', '6'), 'f')).toBe(DataFieldType.Categorical);
@@ -55,21 +55,21 @@ describe('inferFieldType — 缺省推断（contract）', () => {
     expect(inferFieldType(rowsOf('2024-01-01T08:30:00'), 'f')).toBe(DataFieldType.Categorical);
   });
 
-  it('empty_or_all_null_field', () => {
+  it('空或全部为空字段', () => {
     expect(inferFieldType(rowsOf(null, undefined), 'f')).toBe(DataFieldType.Categorical);
     expect(inferFieldType([], 'f')).toBe(DataFieldType.Categorical);
   });
 
-  it('mixed_types_fall_back_categorical', () => {
+  it('混合类型回退到分类', () => {
     expect(inferFieldType(rowsOf(1, 'two', 3), 'f')).toBe(DataFieldType.Categorical);
   });
 
-  it('non_scalar_values_skipped', () => {
+  it('非标量值被跳过', () => {
     // 非标量（对象 / 数组）跳过，剩余数值 → continuous
     expect(inferFieldType(rowsOf({ a: 1 }, 2, 3), 'f')).toBe(DataFieldType.Continuous);
   });
 
-  it('sampling_dual_threshold', () => {
+  it('采样双阈值', () => {
     // 前 1000 行全数值、第 1500 行才出现字符串 → 扫描封顶 1000，仍判 continuous
     const rows = Array.from({ length: 2000 }, (_, i) => ({ f: i < 1500 ? i : 'late-string' }));
 
@@ -78,7 +78,7 @@ describe('inferFieldType — 缺省推断（contract）', () => {
 });
 
 describe('isIsoDateString — 严格 ISO guard（contract）', () => {
-  it('iso_accept_reject', () => {
+  it('iso 接受拒绝', () => {
     expect(isIsoDateString('2024-01-01')).toBe(true);
     expect(isIsoDateString('2024-01-01T08:30:00Z')).toBe(true);
     expect(isIsoDateString('2024-01-01T08:30:00+08:00')).toBe(true);
@@ -90,7 +90,7 @@ describe('isIsoDateString — 严格 ISO guard（contract）', () => {
 });
 
 describe('collectSourceFields — 用户源字段集（contract）', () => {
-  it('collect_encoding_order_series', () => {
+  it('收集编码顺序系列', () => {
     const spec = buildSpec({
       marks: [
         {
@@ -112,7 +112,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('cat')).toBe(true);
   });
 
-  it('collect_transform_inputs', () => {
+  it('收集变换输入', () => {
     const spec = buildSpec({
       transform: [
         { operation: { kind: 'sort', params: { field: 'month' } } },
@@ -126,7 +126,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('product')).toBe(true);
   });
 
-  it('derived_fields_not_collected', () => {
+  it('派生字段未收集', () => {
     // stack 输出 startField/endField、interval y0Field/y1Field 是派生字段，不应进用户源集
     const spec = buildSpec({
       transform: [
@@ -149,7 +149,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('hi')).toBe(false);
   });
 
-  it('constant_value_channel_not_collected', () => {
+  it('常量值通道未收集', () => {
     const spec = buildSpec({
       marks: [
         {
@@ -163,7 +163,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(collectSourceFields(spec).has('red')).toBe(false);
   });
 
-  it('collect_label_and_text_content_fields_alpha11', () => {
+  it('收集标签及文本内容字段', () => {
     // 位置 mark 的 datum label 内容字段与 TextMark 的 text 内容字段都进入用户源字段集
     const spec = buildSpec({
       marks: [
@@ -181,7 +181,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('note')).toBe(true);
   });
 
-  it('collect_interval_extent_fields_without_constant_baseline', () => {
+  it('收集间隔范围范围字段而不使用常量基线', () => {
     // 各维区间端点字段进入用户源集，常量基线不作为字段
     const spec = buildSpec({
       marks: [
@@ -212,7 +212,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('90')).toBe(false);
   });
 
-  it('text_field_enters_strict_model_alpha11', () => {
+  it('文本字段输入严格模型 alpha11', () => {
     // 声明 model 时，TextMark text 引用的字段必须列入 model，否则 fail-loud（P1：之前被绕过、静默空文本）
     const spec = buildSpec({
       marks: [
@@ -227,7 +227,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   });
 
   // contract：bin / summarize 输入字段进、派生输出字段不进
-  it('bin_inputs_in_outputs_out', () => {
+  it('bin 输入输入输出输出', () => {
     const spec = buildSpec({
       transform: [
         {
@@ -263,7 +263,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('totalWeight')).toBe(false);
   });
 
-  it('bin_custom_output_fields_not_collected', () => {
+  it('未收集 bin 自定义输出字段', () => {
     const spec = buildSpec({
       transform: [
         {
@@ -294,7 +294,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('n')).toBe(false);
   });
 
-  it('summarize_inputs_in_output_out', () => {
+  it('汇总输入输入输出输出', () => {
     const spec = buildSpec({
       transform: [
         {
@@ -319,7 +319,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('total')).toBe(false);
   });
 
-  it('summarize_count_output_not_collected', () => {
+  it('未收集汇总计数输出', () => {
     const spec = buildSpec({
       transform: [
         {
@@ -334,7 +334,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
   });
 
   // contract：normalize / derive-interval / jitter 输入字段进、派生输出不进
-  it('normalize_inputs_in_as_out', () => {
+  it('normalize 的输入字段进入源集合且 as 输出字段排除在外', () => {
     const spec = buildSpec({
       transform: [
         {
@@ -353,7 +353,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('share')).toBe(false); // 派生输出
   });
 
-  it('normalize_overwrite_keeps_field', () => {
+  it('规范化覆盖保留字段', () => {
     // as 缺省（原位覆盖）→ field 仍是用户源字段（被读取）
     const spec = buildSpec({
       transform: [{ operation: { kind: 'normalize', params: { field: 'amount', groupBy: ['quarter'] } } }],
@@ -363,7 +363,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(collectSourceFields(spec).has('amount')).toBe(true);
   });
 
-  it('normalize_explicit_same_name_output_keeps_source_field', () => {
+  it('normalize 显式同名输出保留源字段', () => {
     const spec = buildSpec({
       transform: [{ operation: { kind: 'normalize', params: { field: 'amount', as: 'amount' } } }],
       marks: [{ type: 'point', encodings: { position: { x: { field: 'amount' }, y: { field: 'amount' } } } }],
@@ -372,7 +372,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(collectSourceFields(spec).has('amount')).toBe(true);
   });
 
-  it('chained_transform_outputs_do_not_become_source_fields', () => {
+  it('链式变换输出不会成为源字段', () => {
     const spec = buildSpec({
       transform: [
         { operation: { kind: 'normalize', params: { field: 'amount', as: 'share' } } },
@@ -384,7 +384,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect([...collectSourceFields(spec)]).toEqual(['amount']);
   });
 
-  it('mark_local_outputs_do_not_hide_another_mark_source_field', () => {
+  it('标记本地输出不隐藏另一个标记源字段', () => {
     const spec = buildSpec({
       marks: [
         {
@@ -399,7 +399,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect([...collectSourceFields(spec)].sort()).toEqual(['derived', 'value']);
   });
 
-  it('derive_interval_inputs_in_outputs_out', () => {
+  it('派生区间的输入字段进入源集合且输出字段排除在外', () => {
     const spec = buildSpec({
       transform: [
         {
@@ -428,7 +428,7 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
     expect(fields.has('hi')).toBe(false);
   });
 
-  it('jitter_field_enters_source_set', () => {
+  it('jitter 字段进入源字段集合', () => {
     // jitter 原位覆盖被抖连续数值字段（读+写同字段）→ 是用户源字段，须进 strict 集
     const spec = buildSpec({
       transform: [{ operation: { kind: 'jitter', params: { axis: 'x', xField: 'dose', amount: 0.3, seed: 1 } } }],
@@ -442,14 +442,14 @@ describe('collectSourceFields — 用户源字段集（contract）', () => {
 describe('resolveFieldTypes — 类型解析 + strict 校验（contract）', () => {
   const rows = [{ month: '2024-01-01', revenue: 10, cat: 'A' }];
 
-  it('model_type_overrides_inference', () => {
+  it('模型类型覆盖推理', () => {
     // model 声明 categorical、数据是数值 → 用声明类型，不推 continuous
     const map = resolveFieldTypes([{ name: 'revenue', type: 'categorical' }], [{ revenue: 5 }], new Set(['revenue']));
 
     expect(map.get('revenue')).toBe(DataFieldType.Categorical);
   });
 
-  it('no_model_infers_all', () => {
+  it('没有型号可以推断全部', () => {
     const map = resolveFieldTypes(undefined, rows, new Set(['month', 'revenue', 'cat']));
 
     expect(map.get('month')).toBe(DataFieldType.Temporal);
@@ -457,7 +457,7 @@ describe('resolveFieldTypes — 类型解析 + strict 校验（contract）', () 
     expect(map.get('cat')).toBe(DataFieldType.Categorical);
   });
 
-  it('resolved_map_covers_all_fields', () => {
+  it('已解决的地图覆盖所有字段', () => {
     const map = resolveFieldTypes(
       [
         { name: 'month', type: 'temporal' },
@@ -471,13 +471,13 @@ describe('resolveFieldTypes — 类型解析 + strict 校验（contract）', () 
   });
 
   // 错误路径
-  it('strict_unknown_field_throws', () => {
+  it('严格未知字段抛出', () => {
     expect(() => resolveFieldTypes([{ name: 'month', type: 'temporal' }], rows, new Set(['quater']))).toThrow(
       /unknown field/i,
     );
   });
 
-  it('duplicate_field_name_throws', () => {
+  it('重复字段名称抛出', () => {
     expect(() =>
       resolveFieldTypes(
         [
@@ -490,7 +490,7 @@ describe('resolveFieldTypes — 类型解析 + strict 校验（contract）', () 
     ).toThrow(/duplicate field/i);
   });
 
-  it('no_model_skips_reference_check', () => {
+  it('没有模型跳过参考检查', () => {
     // 无 model：引用任意字段不报错（全推断）
     expect(() => resolveFieldTypes(undefined, rows, new Set(['anything', 'whatever']))).not.toThrow();
   });
@@ -499,7 +499,7 @@ describe('resolveFieldTypes — 类型解析 + strict 校验（contract）', () 
 describe('resolveFieldTypes — 部分声明 model（type 可选，contract）', () => {
   const rows = [{ month: '2024-01-01', revenue: 10, cat: 'A' }];
 
-  it('partial_model_infers_untyped', () => {
+  it('部分模型推断为无类型', () => {
     // month 显式 temporal、revenue 仅 name → 推断 continuous
     const map = resolveFieldTypes(
       [{ name: 'month', type: 'temporal' }, { name: 'revenue' }],
@@ -511,7 +511,7 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，contract）',
     expect(map.get('revenue')).toBe(DataFieldType.Continuous);
   });
 
-  it('typed_field_uses_declaration_in_partial_model', () => {
+  it('在部分模型中键入字段使用声明', () => {
     // 部分 model 里带 type 的字段用声明（不被数据推断盖）：revenue 数值但声明 categorical
     const map = resolveFieldTypes(
       [{ name: 'revenue', type: 'categorical' }, { name: 'month' }],
@@ -523,7 +523,7 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，contract）',
     expect(map.get('month')).toBe(DataFieldType.Temporal);
   });
 
-  it('name_only_satisfies_strict', () => {
+  it('仅名称满足严格', () => {
     // 字段仅给 name → 满足 strict、不抛，类型推断
     expect(() => resolveFieldTypes([{ name: 'revenue' }], [{ revenue: 5 }], new Set(['revenue']))).not.toThrow();
 
@@ -532,7 +532,7 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，contract）',
     expect(map.get('revenue')).toBe(DataFieldType.Continuous);
   });
 
-  it('all_name_only_equals_infer', () => {
+  it('所有名称仅等于推断', () => {
     // 全 name-only model → 类型结果与无 model 推断一致
     const partial = resolveFieldTypes(
       [{ name: 'month' }, { name: 'revenue' }, { name: 'cat' }],
@@ -544,7 +544,7 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，contract）',
     expect(partial).toEqual(inferred);
   });
 
-  it('name_only_empty_data_falls_categorical', () => {
+  it('仅命名空数据属于分类', () => {
     // name-only 字段数据空 → 推断默认 categorical
     const map = resolveFieldTypes([{ name: 'x' }], [], new Set(['x']));
 
@@ -552,12 +552,12 @@ describe('resolveFieldTypes — 部分声明 model（type 可选，contract）',
   });
 
   // 错误路径：type 可选不削弱 strict
-  it('name_only_does_not_weaken_strict', () => {
+  it('仅名称不削弱严格', () => {
     // model 仅含 name-only 字段，但引用了未列字段 → 仍抛 unknown
     expect(() => resolveFieldTypes([{ name: 'month' }], rows, new Set(['quater']))).toThrow(/unknown field/i);
   });
 
-  it('duplicate_name_throws_regardless_of_type', () => {
+  it('名称重复时无论类型如何均抛出错误', () => {
     // 重名（一条带 type、一条 name-only）→ 抛 duplicate
     expect(() =>
       resolveFieldTypes([{ name: 'month', type: 'temporal' }, { name: 'month' }], rows, new Set(['month'])),

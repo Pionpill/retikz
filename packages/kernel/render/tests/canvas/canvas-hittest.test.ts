@@ -228,7 +228,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
 
 const ctx = (): CanvasRenderingContext2D => createGeometryContext();
 
-describe('Canvas hitTest', () => {
+describe('Canvas 命中测试', () => {
   it('hit-top-of-overlap：两个重叠 rect，点落重叠区 → 返回上层（逆 z-order）id', () => {
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },
@@ -339,7 +339,7 @@ describe('Canvas hitTest', () => {
     expect(hitTest(scene, { x: 10, y: 10 }, { context2d: ctx() })).toBeNull();
   });
 
-  it('centered label interruption makes the real stroke gap non-hittable while visible fragments retain their owner id', () => {
+  it('居中标签中断使真实描边间隙不可命中，而可见片段保留其所属模块 ID', () => {
     const scene = compileToScene(
       {
         version: 1,
@@ -365,7 +365,7 @@ describe('Canvas hitTest', () => {
     expect(hitTest(scene, { x: 80, y: 0 }, { context2d: ctx() })).toBe('edge');
   });
 
-  it('endpoint arrow overlap makes the extended Scene stroke hittable without renderer-specific placement', () => {
+  it('端点箭头重叠使扩展的 Scene 描边可命中，无需渲染器特定的放置', () => {
     const arrow = defineArrow({
       name: 'empty-overlap-probe',
       baseSize: 10,
@@ -439,7 +439,7 @@ it.each<ScenePrimitive>([
     baseline: 'top',
     fill: 'red',
   },
-])('arrow $type content hits its host and excludes disabled local subtrees', content => {
+])('箭头 $type 内容命中其宿主并排除禁用的本地子树', content => {
   const scene: Scene = {
     layout: { x: 0, y: 0, width: 100, height: 100 },
     primitives: [

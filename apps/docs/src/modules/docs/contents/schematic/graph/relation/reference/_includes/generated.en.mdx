@@ -74,7 +74,7 @@ export type RelationProps = Omit<InputRelation, 'type'> &
 | `targetMarker?`        | `RelationInputEmbedProps["targetMarker"]`                                                                                                                                                             | —       | Target marker appearance fields.                                                                                                                                             |
 | `zIndex?`              | `number`                                                                                                                                                                                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 | `input` (Parameter)    | `RelationInputEmbedProps`                                                                                                                                                                             | —       | Relation authoring fields; endpoints accept id strings and paths accept way                                                                                                  |
-| Returns                | `InputEmbed<RelationInputEmbedProps>`                                                                                                                                                                 | —       | An embed for Vanilla content trees, converted to Relation Source by RelationInputEmbedAdapter                                                                                |
+| Returns                | `InputEmbed<RelationInputEmbedProps>`                                                                                                                                                                 | —       | An embed for Vanilla content trees, converted to Relation Source by relationInputEmbedAdapter                                                                                |
 
 </ApiTable>
 
@@ -268,13 +268,13 @@ export type InputRelationWay = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RelationInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/relation.ts"} startLine={18}>RelationInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"relationInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/relation.ts"} startLine={18}>relationInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const RelationInputEmbedAdapter: SynchronousInputEmbedAdapter<RelationInputEmbedProps>;
+export declare const relationInputEmbedAdapter: SynchronousInputEmbedAdapter<RelationInputEmbedProps>;
 ```
 
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={24}>createGraphVanillaAdapters</ApiSourceLink>
+#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -433,14 +433,14 @@ export type RelationKindDefinition = Readonly<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodType<JsonObject>>;
+export type RelationPredicateDefinition = InputRelationPredicateDefinition<ZodType<JsonObject>>;
 ```
 
 </DocTab>
 
 </DocTabs>
 
-#### <ApiSourceLink label={"RelationPredicateDefinitionInput"} path={"packages/schematic/graph/src/contract/relation/types.ts"} startLine={44}>RelationPredicateDefinitionInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputRelationPredicateDefinition"} path={"packages/schematic/graph/src/contract/relation/types.ts"} startLine={44}>InputRelationPredicateDefinition</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -465,7 +465,7 @@ export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodTy
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type RelationPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
+export type InputRelationPredicateDefinition<TSchema extends ZodType<JsonObject>> = Readonly<{
   name: string;
   role: string;
   kinds?: ReadonlyArray<string>;
@@ -551,10 +551,10 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 
 <ApiTable variant="parameters">
 
-| Category   | Name       | Type / signature                        | Description                                                                                                                                  |
-| ---------- | ---------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Parameters | `options?` | `GraphDefinitionOptions`                | Custom semantic and theme definitions; omission reuses built-in providers, and registration validation is deferred until dependency assembly |
-| Returns    | —          | `ReadonlyArray<CoreDependencyProvider>` | A readonly provider collection containing Graph elements and their required layout, shape, and arrow dependencies                            |
+| Category   | Name       | Type / signature                           | Description                                                                                                                                  |
+| ---------- | ---------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `options?` | `GraphDefinitionOptions`                   | Custom semantic and theme definitions; omission reuses built-in providers, and registration validation is deferred until dependency assembly |
+| Returns    | —          | `ReadonlyArray<AnyCoreDependencyProvider>` | A readonly provider collection containing Graph elements and their required layout, shape, and arrow dependencies                            |
 
 </ApiTable>
 
@@ -563,7 +563,9 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createGraphProviders: (options?: GraphDefinitionOptions) => ReadonlyArray<CoreDependencyProvider>;
+export declare const createGraphProviders: (
+  options?: GraphDefinitionOptions,
+) => ReadonlyArray<AnyCoreDependencyProvider>;
 ```
 
 </DocTab>
@@ -608,7 +610,7 @@ export declare const defineRelationKind: (definition: RelationKindDefinition) =>
 | Category        | Name         | Type / signature                            | Description                                                                                                           |
 | --------------- | ------------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Type parameters | `TSchema`    | `extends ZodType<JsonObject>`               | JSON object schema type constraining paramsSchema and defining how predicate parameters are parsed                    |
-| Parameters      | `definition` | `RelationPredicateDefinitionInput<TSchema>` | Definition supplied through GraphDefinitionOptions.relationPredicates; this function does not register or validate it |
+| Parameters      | `definition` | `InputRelationPredicateDefinition<TSchema>` | Definition supplied through GraphDefinitionOptions.relationPredicates; this function does not register or validate it |
 | Returns         | —            | `RelationPredicateDefinition`               | The original definition object, without copying or modifying it                                                       |
 
 </ApiTable>
@@ -619,7 +621,7 @@ export declare const defineRelationKind: (definition: RelationKindDefinition) =>
 
 ```ts
 export declare const defineRelationPredicate: <TSchema extends ZodType<JsonObject>>(
-  definition: RelationPredicateDefinitionInput<TSchema>,
+  definition: InputRelationPredicateDefinition<TSchema>,
 ) => RelationPredicateDefinition;
 ```
 
@@ -722,12 +724,12 @@ Without route, source connects directly to target. With route, supply the comple
 
 <ApiTable>
 
-| Member       | Type                                                                 | Default | Description                                                                                                            |
-| ------------ | -------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `color?`     | `string \| number`                                                   | —       | Arrow color override. A number derives from the effective path color; omitted arrows inherit the path stroke.          |
-| `fill?`      | `ZodInfer<typeof GraphRelationMarkerAppearanceSchema.shape["fill"]>` | —       | Fill override for solid arrow shapes. A number derives from the effective arrow color; hollow definitions ignore fill. |
-| `lineWidth?` | `number`                                                             | —       | Outline width for hollow arrow definitions, in user units. Solid arrow definitions ignore this field.                  |
-| `opacity?`   | `number`                                                             | —       | Arrow-only opacity. When omitted, the arrow follows the path opacity.                                                  |
+| Member       | Type                                                                 | Default | Description                                                                                                                                                                                                       |
+| ------------ | -------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `color?`     | `string \| number`                                                   | —       | Mark master color when the path has no effective color. The effective path color overrides this field; explicit mark stroke and fill take precedence. Without either master color, marks inherit the path stroke. |
+| `fill?`      | `ZodInfer<typeof GraphRelationMarkerAppearanceSchema.shape["fill"]>` | —       | Fill override for solid mark shapes. A number derives from the effective mark color; hollow definitions ignore fill.                                                                                              |
+| `lineWidth?` | `number`                                                             | —       | Outline width for hollow mark definitions, in user units. Solid mark definitions ignore this field.                                                                                                               |
+| `opacity?`   | `number`                                                             | —       | Mark-only opacity. When omitted, the mark follows the path opacity.                                                                                                                                               |
 
 </ApiTable>
 
@@ -759,12 +761,12 @@ This only styles an existing marker. It does not create a marker, choose its sha
 
 <ApiTable>
 
-| Member    | Type                                                                                                                                                                                                         | Default | Description                                                                                             |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------- |
-| `length?` | `number`                                                                                                                                                                                                     | —       | Arrow-tip length along the path direction, in user units. Defaults to the shape definition value, or 8. |
-| `scale?`  | `number`                                                                                                                                                                                                     | —       | Uniform arrow-tip scale applied to both `length` and `width`. Defaults to 1.                            |
-| `shape`   | `OpenString<ValueOf<{ readonly Normal: "normal"; readonly Open: "open"; readonly Stealth: "stealth"; readonly OpenStealth: "openStealth"; readonly Circle: "circle"; readonly OpenCircle: "openCircle"; }>>` | —       | Registered Core Arrow provider name.                                                                    |
-| `width?`  | `number`                                                                                                                                                                                                     | —       | Arrow-tip width perpendicular to the path, in user units. Defaults to the shape definition value, or 8. |
+| Member    | Type                                                                                                                                                                                                         | Default | Description                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------- |
+| `length?` | `number`                                                                                                                                                                                                     | —       | Mark length along the path direction, in user units. Defaults to the shape definition value, or 8. |
+| `scale?`  | `number`                                                                                                                                                                                                     | —       | Uniform mark scale applied to both `length` and `width`. Defaults to 1.                            |
+| `shape`   | `OpenString<ValueOf<{ readonly Normal: "normal"; readonly Open: "open"; readonly Stealth: "stealth"; readonly OpenStealth: "openStealth"; readonly Circle: "circle"; readonly OpenCircle: "openCircle"; }>>` | —       | Registered Core Arrow provider name.                                                               |
+| `width?`  | `number`                                                                                                                                                                                                     | —       | Mark width perpendicular to the path, in user units. Defaults to the shape definition value, or 8. |
 
 </ApiTable>
 

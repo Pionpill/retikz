@@ -6,7 +6,7 @@ import {
   createCompositeInputBindings,
   defineComposite,
   LayoutChildProbeKind,
-  NaturalLayoutProposal,
+  naturalLayoutProposal,
   RetikzCoreError,
 } from '@retikz/core';
 import { ReconcilerSession } from '@retikz/reconciler';
@@ -31,7 +31,7 @@ const prepared = defineComposite({
 });
 
 const probe = (context: CompositeCompileContext, child: CompositeBoundChild) => {
-  const result = context.layoutChild(child, NaturalLayoutProposal);
+  const result = context.layoutChild(child, naturalLayoutProposal);
   if (result.kind === LayoutChildProbeKind.Failed) return context.raise(result.failure);
   return result.result;
 };
@@ -55,8 +55,8 @@ const container = defineComposite({
   },
 });
 
-describe('composite instance runtime input', () => {
-  it('separates identical anonymous sources without serializing runtime input', () => {
+describe('复合实例运行时输入', () => {
+  it('分离相同的匿名源而不序列化运行时输入', () => {
     const source = sceneOf([leaf(), leaf()]);
     const original = JSON.stringify(source);
     const compositeInputs = createCompositeInputBindings(source, [
@@ -71,7 +71,7 @@ describe('composite instance runtime input', () => {
     expect(JSON.stringify(output)).not.toContain('runtimeInput');
   });
 
-  it('carries authored child bindings through schema parsing, repeated probes and themed replay', () => {
+  it('通过 schema 解析、重复探测和主题回放来承载编写的子绑定', () => {
     const source = sceneOf([{ namespace: 'fixture', type: 'container', child: leaf() }]);
     const compositeInputs = createCompositeInputBindings(source, [
       { path: ['children', 0, 'child'], input: 'nested-prepared' },
@@ -82,7 +82,7 @@ describe('composite instance runtime input', () => {
     expect(JSON.stringify(output.scene)).not.toContain('unbound');
   });
 
-  it('forwards generated input explicitly while ordinary generated children remain unbound', () => {
+  it('显式转发生成的输入，而普通生成的子项保持未绑定状态', () => {
     const generated = defineComposite({
       namespace: 'fixture',
       type: 'generated',
@@ -102,7 +102,7 @@ describe('composite instance runtime input', () => {
     expect(JSON.stringify(output.scene)).not.toContain('parent-only');
   });
 
-  it('keeps same names in local namespaces independent', () => {
+  it('在本地命名空间中保持相同的名称独立', () => {
     const source = sceneOf([
       { type: 'scope', id: 'a', localNamespace: true, children: [{ ...leaf(), id: 'shared' }] },
       { type: 'scope', id: 'b', localNamespace: true, children: [{ ...leaf(), id: 'shared' }] },
@@ -119,7 +119,7 @@ describe('composite instance runtime input', () => {
     expect(JSON.stringify(output.scene)).toContain('scope-b');
   });
 
-  it('rejects duplicate, missing and non-composite binding paths', () => {
+  it('拒绝重复、缺失和非复合的绑定路径', () => {
     const source = sceneOf([leaf(), { type: 'node', text: 'plain' }]);
 
     expect(() =>
@@ -132,7 +132,7 @@ describe('composite instance runtime input', () => {
     expect(() => createCompositeInputBindings(source, [{ path: ['children', 1], input: 1 }])).toThrow(/composite/i);
   });
 
-  it('rejects a binding set paired with a changed Source but accepts retained JSON capture', () => {
+  it('拒绝与更改的 Source 配对的绑定集，但接受保留的 JSON 捕获', () => {
     const source = sceneOf([leaf()]);
     const compositeInputs = createCompositeInputBindings(source, [{ path: ['children', 0], input: 'ready' }]);
 
@@ -146,7 +146,7 @@ describe('composite instance runtime input', () => {
     );
   });
 
-  it('rejects placing one bound child twice', () => {
+  it('拒绝将一个绑定子项放置两次', () => {
     const duplicate = defineComposite({
       namespace: 'fixture',
       type: 'duplicate',
@@ -162,7 +162,7 @@ describe('composite instance runtime input', () => {
     ).toThrow(/more than once/i);
   });
 
-  it('rejects cloned and cross-callback bound handles', () => {
+  it('拒绝克隆和交叉回调绑定句柄', () => {
     for (const cloned of [false, true]) {
       let previous: CompositeBoundChild | undefined;
       const holder = defineComposite({
@@ -188,7 +188,7 @@ describe('composite instance runtime input', () => {
     }
   });
 
-  it('rejects repeated author placement in both compilation paths', () => {
+  it('拒绝两个编译路径中重复的作者放置', () => {
     const duplicate = defineComposite({
       namespace: 'fixture',
       type: 'duplicateSource',
@@ -206,7 +206,7 @@ describe('composite instance runtime input', () => {
     expect(() => compileToScene(source, { composites: [duplicate, prepared] })).toThrow(/more than once/i);
   });
 
-  it('preserves the spatial Scope restriction for bound expand output', () => {
+  it('保留绑定扩展输出的空间 Scope 限制', () => {
     const spatial = defineComposite({
       namespace: 'fixture',
       type: 'boundSpatial',
@@ -226,7 +226,7 @@ describe('composite instance runtime input', () => {
     ).toThrow(/Scope with placement or transforms/);
   });
 
-  it('recompiles changed inputs for identical JSON and rolls back a mismatched candidate', () => {
+  it('重新编译相同 JSON 的更改输入并回滚不匹配的候选者', () => {
     const source = sceneOf([leaf()]);
     const inputs = (text: string) => createCompositeInputBindings(source, [{ path: ['children', 0], input: text }]);
     const session = new ReconcilerSession({ composites: [prepared], compositeInputs: inputs('initial-ready') });

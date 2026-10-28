@@ -113,7 +113,7 @@ describe('marks → 中段 marker primitive', () => {
     expect(withMark).toBeGreaterThan(without);
   });
 
-  it('centered label interruption leaves a middle mark sampled on the logical path', () => {
+  it('居中标签中断在逻辑路径上留下采样的中间标记', () => {
     const base: IRScene = {
       version: 1,
       type: 'scene',

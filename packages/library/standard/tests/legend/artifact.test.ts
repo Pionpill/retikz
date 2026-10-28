@@ -38,14 +38,14 @@ const itemsArtifact = {
   items: [],
 } as const;
 
-describe('Legend artifact schema', () => {
-  it('parses the strict canonical items artifact and derives public types from the schemas', () => {
+describe('Legend 产物 schema', () => {
+  it('解析严格的规范项产物并从 schema 中派生公共类型', () => {
     const parsed = LegendArtifactSchema.parse(itemsArtifact);
 
     expect(parsed).toEqual(itemsArtifact);
   });
 
-  it('rejects root, geometry, and placed-child fields outside the public artifact contract', () => {
+  it('拒绝公共产物契约之外的根、几何图形和放置子字段', () => {
     expect(LegendArtifactSchema.safeParse({ ...itemsArtifact, extra: true }).success).toBe(false);
     expect(LegendArtifactGeometrySchema.safeParse({ ...geometry, slotBounds: rect }).success).toBe(false);
     expect(LegendPlacedChildArtifactSchema.safeParse({ ...placed, key: 'private' }).success).toBe(false);
@@ -59,7 +59,7 @@ describe('Legend artifact schema', () => {
     ).toBe(false);
   });
 
-  it('keeps item identity outside reusable child geometry and preserves nullable visible bounds', () => {
+  it('将项目标识保留在可重用子几何体之外，并保留可为空的可见边界', () => {
     const parsed = LegendItemsArtifactSchema.parse({
       ...itemsArtifact,
       bodyBounds: rect,
@@ -80,7 +80,7 @@ describe('Legend artifact schema', () => {
     expect(parsed.items[0]?.label).toBeNull();
   });
 
-  it('rejects duplicate item keys and non-contiguous item source order', () => {
+  it('拒绝重复的项目键和不连续的项目源顺序', () => {
     const item = {
       key: 'item',
       sourceIndex: 0,
@@ -105,7 +105,7 @@ describe('Legend artifact schema', () => {
     ).toBe(false);
   });
 
-  it('parses ramp anchors and tick identity without domain payload', () => {
+  it('在没有域负载的情况下解析斜坡锚点和刻度标识', () => {
     const ramp = {
       kind: 'ramp',
       container,
@@ -130,7 +130,7 @@ describe('Legend artifact schema', () => {
     ).toBe(false);
   });
 
-  it('rejects duplicate tick keys and non-contiguous tick source order', () => {
+  it('拒绝重复的刻度键和不连续的刻度源顺序', () => {
     const tick = { key: 'tick', sourceIndex: 0, anchor: { x: 0, y: 8 }, label: null } as const;
     const ramp = {
       kind: 'ramp',

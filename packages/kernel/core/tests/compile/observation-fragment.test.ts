@@ -20,8 +20,8 @@ const observableComposite = core.defineComposite({
   }),
 });
 
-describe('Core isolated observation fragments', () => {
-  it('compiles generated nested fragments without inheriting primary Source bindings', () => {
+describe('Core 孤立的观察片段', () => {
+  it('编译生成的嵌套片段，而不继承主 Source 绑定', () => {
     const prepared = core.defineComposite({
       namespace: 'test',
       type: 'fragment-input',
@@ -64,7 +64,7 @@ describe('Core isolated observation fragments', () => {
     expect(fragments[0]).not.toContain('primary-secret');
   });
 
-  it('inherits compile context while isolating resources, artifacts, and observers', () => {
+  it('继承编译上下文，同时隔离资源、产物和观察者', () => {
     let selectionCalls = 0;
     const observer: CompileObserverDefinition = {
       key: 'fragment-test',
@@ -126,7 +126,7 @@ describe('Core isolated observation fragments', () => {
     expect(result.observerOutputs).toEqual([{ key: 'fragment-test', value: { selectionCalls: 2 } }]);
   });
 
-  it('does not allow a fragment to read the primary namespace', () => {
+  it('不允许片段读取主命名空间', () => {
     const observer: CompileObserverDefinition = {
       key: 'fragment-namespace',
       createSession: () => ({

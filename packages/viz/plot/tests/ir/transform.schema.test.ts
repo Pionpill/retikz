@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { PlotSchema } from '../../src/schemas';
 
-describe('TransformSchema external operations', () => {
-  it('plot_spec_transform_accepts_custom_operation', () => {
+describe('TransformSchema 外部操作', () => {
+  it('绘图规范转换接受自定义操作', () => {
     const spec = {
       namespace: 'plot',
       type: 'plot',

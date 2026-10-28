@@ -18,7 +18,7 @@ Source omits positions and routes derived by layout. Runtime Definition defaults
 
 ## Component declarations
 
-#### <ApiSourceLink label={"FlowDiagram"} path={"packages/schematic/diagram-react/src/flow/FlowDiagram.tsx"} startLine={71}>FlowDiagram</ApiSourceLink> / <ApiSourceLink label={"FlowDiagramProps"} path={"packages/schematic/diagram-react/src/flow/authoring.ts"} startLine={295}>FlowDiagramProps</ApiSourceLink>
+#### <ApiSourceLink label={"FlowDiagram"} path={"packages/schematic/diagram-react/src/flow/FlowDiagram.tsx"} startLine={60}>FlowDiagram</ApiSourceLink> / <ApiSourceLink label={"FlowDiagramProps"} path={"packages/schematic/diagram-react/src/flow/authoring.ts"} startLine={290}>FlowDiagramProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -212,6 +212,7 @@ export declare const FlowEntity: {
               | number
               | { overall?: number | undefined; fill?: number | undefined; stroke?: number | undefined }
               | undefined;
+            dashOffset?: number | undefined;
             stroke?:
               | string
               | number
@@ -296,7 +297,6 @@ export declare const FlowEntity: {
             dashed?: boolean | undefined;
             dotted?: boolean | undefined;
             dashPattern?: Array<number> | undefined;
-            dashOffset?: number | undefined;
             shadow?:
               | 'none'
               | 'sm'
@@ -775,8 +775,8 @@ export declare const FlowRelation: {
         | {
             kind: 'smooth';
             points: Array<
-              | SharedPolarPosition
               | [number, number]
+              | { angle: number; radius: number; origin?: string | SharedPolarPosition | [number, number] | undefined }
               | {
                   id: string;
                   anchor?:
@@ -822,8 +822,18 @@ export declare const FlowRelation: {
                       }
                     | undefined;
                 }
-              | { of: string | SharedPolarPosition | [number, number]; offset: [number, number] }
-              | IRBetweenPosition
+              | {
+                  of:
+                    | string
+                    | [number, number]
+                    | {
+                        angle: number;
+                        radius: number;
+                        origin?: string | SharedPolarPosition | [number, number] | undefined;
+                      };
+                  offset: [number, number];
+                }
+              | { between: [IRAbsoluteTarget, IRAbsoluteTarget]; fraction: number }
               | { relative: [number, number] }
               | { relativeAccumulate: [number, number] }
             >;
@@ -946,8 +956,6 @@ export declare const FlowRelation: {
       status?: 'error' | 'success' | 'warning' | 'disabled' | undefined;
       style?:
         | {
-            lineCap?: 'butt' | 'round' | 'square' | undefined;
-            lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
             strokeWidth?: number | undefined;
             dashPattern?: Array<number> | undefined;
             dashOffset?: number | undefined;
@@ -1030,6 +1038,8 @@ export declare const FlowRelation: {
                 }
               | { kind: 'image'; href: string; fit?: 'fill' | 'contain' | 'cover' | undefined }
               | undefined;
+            lineCap?: 'butt' | 'round' | 'square' | undefined;
+            lineJoin?: 'round' | 'miter' | 'bevel' | undefined;
             shadow?:
               | 'none'
               | 'sm'
@@ -1248,7 +1258,7 @@ export type FlowRelationsProps = Readonly<{
 | `clip?`                             | `{ kind: string; params: Record<string, JsonValue>; } \| { kind: "rect"; params: { x: number; y: number; width: number; height: number; }; }` | —                                  | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
 | `defaultDiagram?`                   | `InputFlowDiagram['defaultDiagram']`                                                                                                          | —                                  | Optional Diagram Source defaults.                                                                                                               |
 | `defaultFlow?`                      | `InputFlowDiagram['defaultFlow']`                                                                                                             | —                                  | Optional Flow Source defaults.                                                                                                                  |
-| `readonly defaultFlowLayout?`       | `string`                                                                                                                                      | `LayeredFlowLayoutDefinition.name` | The registered layout name used for compilation; omission selects the built-in layered layout                                                   |
+| `readonly defaultFlowLayout?`       | `string`                                                                                                                                      | `layeredFlowLayoutDefinition.name` | The registered layout name used for compilation; omission selects the built-in layered layout                                                   |
 | `defaults?`                         | `InputFlowDiagram['defaults']`                                                                                                                | —                                  | Named descendant defaults and their inheritance barrier.                                                                                        |
 | `readonly diagramThemeDefinitions?` | `ReadonlyArray<DiagramThemeDefinition>`                                                                                                       | `[]`                               | Diagram Theme definitions with the same name as a Core Theme; a named theme requires a matching definition                                      |
 | `entities`                          | `InputFlowDiagram['entities']`                                                                                                                | —                                  | Non-empty flat Flow Entity declaration catalog.                                                                                                 |
@@ -1324,10 +1334,10 @@ export type InputFlowDiagram = Omit<IRFlowDiagram, 'namespace' | 'type'>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowDiagramInputEmbedAdapter"} path={"packages/schematic/diagram-vanilla/src/flow/flow-diagram.ts"} startLine={44}>FlowDiagramInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"flowDiagramInputEmbedAdapter"} path={"packages/schematic/diagram-vanilla/src/flow/flow-diagram.ts"} startLine={44}>flowDiagramInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<FlowDiagramInputEmbedProps>;
+export declare const flowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<FlowDiagramInputEmbedProps>;
 ```
 
 ## Execution and supporting contracts
@@ -1644,7 +1654,7 @@ export type FlowLayoutEndpoint = Readonly<{
 
 | Member                        | Type                                                                                                                                              | Default | Description                                                                                           |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| `readonly placeLayout`        | `(input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput`                                                                                  | —       | Execute authored placement using measured sizes and return container-local bounds and child positions |
+| `readonly placeLayout`        | `(input: InputFlowLayoutPlacement) => FlowLayoutPlacementOutput`                                                                                  | —       | Execute authored placement using measured sizes and return container-local bounds and child positions |
 | `readonly resolveEndpoint`    | `(query: Readonly<{`<br />`target: FlowEndpointTarget;`<br />`elements: ReadonlyArray<FlowLayoutElementOutput>;`<br />`}>) => Readonly<Position>` | —       | Query positioned endpoints against real Core boundaries                                               |
 | `readonly resolveRoutePoints` | `(query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>`                                                                              | —       | Resolve waypoints against real Graph geometry, returning a root-local chain including endpoints       |
 
@@ -1663,7 +1673,7 @@ export type FlowLayoutExecutionContext = Readonly<{
     }>,
   ) => Readonly<Position>;
   resolveRoutePoints: (query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>;
-  placeLayout: (input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput;
+  placeLayout: (input: InputFlowLayoutPlacement) => FlowLayoutPlacementOutput;
 }>;
 ```
 
@@ -1702,7 +1712,7 @@ export type FlowLayoutLabelPlacement = Readonly<Omit<IRPathLabel, 'text' | 'text
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FlowLayoutRelationInput"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={381}>FlowLayoutRelationInput</ApiSourceLink>
+#### <ApiSourceLink label={"InputFlowLayoutRelation"} path={"packages/schematic/diagram/src/flow/contract/layout/types.ts"} startLine={381}>InputFlowLayoutRelation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1726,7 +1736,7 @@ export type FlowLayoutLabelPlacement = Readonly<Omit<IRPathLabel, 'text' | 'text
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type FlowLayoutRelationInput = Readonly<{
+export type InputFlowLayoutRelation = Readonly<{
   source: FlowLayoutEndpoint;
   target: FlowLayoutEndpoint;
   direction: RelationDirection;
@@ -2097,7 +2107,7 @@ export type FlowSmoothRouting = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"getFlowLayoutCatalog"} path={"packages/schematic/diagram/src/flow/providers/layout/registry.ts"} startLine={229}>getFlowLayoutCatalog</ApiSourceLink>
+#### <ApiSourceLink label={"getFlowLayoutCatalog"} path={"packages/schematic/diagram/src/flow/providers/layout/registry.ts"} startLine={141}>getFlowLayoutCatalog</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -2137,7 +2147,7 @@ export declare const getFlowLayoutCatalog: (
 
 | Category   | Name       | Type / signature                          | Description                                                                                                |
 | ---------- | ---------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Parameters | `input`    | `FlowLayoutInput`                         | Measured layout input; relation outputs retain input order                                                 |
+| Parameters | `input`    | `InputFlowLayoutComputation`              | Measured layout input; relation outputs retain input order                                                 |
 |            | `elements` | `ReadonlyArray<FlowLayoutElementOutput>`  | Final root-local bounds for all elements, identical to the returned layout elements                        |
 |            | `context?` | `FlowLayoutExecutionContext`              | Layout execution context, required for resolving smooth waypoints                                          |
 | Returns    | —          | `ReadonlyArray<FlowLayoutRelationOutput>` | Routes in input relation order, returned together with elements by the caller for layout output validation |
@@ -2150,7 +2160,7 @@ export declare const getFlowLayoutCatalog: (
 
 ```ts
 export declare const routeFlowRelations: (
-  input: FlowLayoutInput,
+  input: InputFlowLayoutComputation,
   elements: ReadonlyArray<FlowLayoutElementOutput>,
   context?: FlowLayoutExecutionContext,
 ) => ReadonlyArray<FlowLayoutRelationOutput>;
@@ -2172,7 +2182,7 @@ export declare const routeFlowRelations: (
 
 | Member                              | Type                                         | Default                            | Description                                                                                                |
 | ----------------------------------- | -------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `readonly defaultFlowLayout?`       | `string`                                     | `LayeredFlowLayoutDefinition.name` | The registered layout name used for compilation; omission selects the built-in layered layout              |
+| `readonly defaultFlowLayout?`       | `string`                                     | `layeredFlowLayoutDefinition.name` | The registered layout name used for compilation; omission selects the built-in layered layout              |
 | `readonly diagramThemeDefinitions?` | `ReadonlyArray<DiagramThemeDefinition>`      | `[]`                               | Diagram Theme definitions with the same name as a Core Theme; a named theme requires a matching definition |
 | `readonly entityKinds?`             | `ReadonlyArray<EntityKindDefinition>`        | `[]`                               | Custom Entity kind definitions                                                                             |
 | `readonly entityPredicates?`        | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`                               | Custom Entity predicate definitions                                                                        |
@@ -2212,13 +2222,13 @@ export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
 
 <ApiTable>
 
-| Member                  | Type                                                                                | Default | Description                                                                                                                                                             |
-| ----------------------- | ----------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly capabilities` | `FlowLayoutCapabilities`                                                            | —       | Structures, arrow directions, and routing supported by this layout, used to check input before layout execution                                                         |
-| `readonly defaults`     | `FlowLayoutDefaults`                                                                | —       | Direction, spacing, and routing used when neither Source nor ancestor configuration specifies a value                                                                   |
-| `readonly description`  | `string`                                                                            | —       | A non-empty description of the layout purpose for catalogs, tools, and LLMs                                                                                             |
-| `readonly layout`       | `(input: FlowLayoutInput, context: FlowLayoutExecutionContext) => FlowLayoutOutput` | —       | Synchronously compute geometry after measurement: return bounds for every element and relations in input order, and call context.placeLayout once for each fixed Layout |
-| `readonly name`         | `string`                                                                            | —       | A unique, non-empty registration name selected through defaultFlowLayout                                                                                                |
+| Member                  | Type                                                                                           | Default | Description                                                                                                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly capabilities` | `FlowLayoutCapabilities`                                                                       | —       | Structures, arrow directions, and routing supported by this layout, used to check input before layout execution                                                         |
+| `readonly defaults`     | `FlowLayoutDefaults`                                                                           | —       | Direction, spacing, and routing used when neither Source nor ancestor configuration specifies a value                                                                   |
+| `readonly description`  | `string`                                                                                       | —       | A non-empty description of the layout purpose for catalogs, tools, and LLMs                                                                                             |
+| `readonly layout`       | `(input: InputFlowLayoutComputation, context: FlowLayoutExecutionContext) => FlowLayoutOutput` | —       | Synchronously compute geometry after measurement: return bounds for every element and relations in input order, and call context.placeLayout once for each fixed Layout |
+| `readonly name`         | `string`                                                                                       | —       | A unique, non-empty registration name selected through defaultFlowLayout                                                                                                |
 
 </ApiTable>
 
@@ -2232,7 +2242,7 @@ export type FlowLayoutDefinition = Readonly<{
   description: string;
   capabilities: FlowLayoutCapabilities;
   defaults: FlowLayoutDefaults;
-  layout: (input: FlowLayoutInput, context: FlowLayoutExecutionContext) => FlowLayoutOutput;
+  layout: (input: InputFlowLayoutComputation, context: FlowLayoutExecutionContext) => FlowLayoutOutput;
 }>;
 ```
 

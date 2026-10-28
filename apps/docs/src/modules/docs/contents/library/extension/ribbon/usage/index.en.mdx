@@ -9,7 +9,7 @@ Ribbon reuses Path commands, styles, centerline labels, and transforms. See the 
 
 ## Using this topic
 
-Use Ribbon for connections that need changing thickness or inside labels. Explicitly assemble `RibbonPathDefinition`, then set `kind="ribbon"` on Path. This result uses one open centerline and endpoint widths. Importing a Definition does not register it globally.
+Use Ribbon for connections that need changing thickness or inside labels. Explicitly assemble `ribbonPathDefinition`, then set `kind="ribbon"` on Path. This result uses one open centerline and endpoint widths. Importing a Definition does not register it globally.
 
 <ComponentPreview files="ribbon-basic" hideCode size="xs" />
 
@@ -27,11 +27,11 @@ Layout
 
 ```tsx
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { Layout, Path, Step } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ paths: [RibbonPathDefinition] }}>
+  <Layout extensions={{ paths: [ribbonPathDefinition] }}>
     <Path
       kind="ribbon"
       kindOptions={{ width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions}
@@ -50,7 +50,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { Layout } from '@retikz/react';
 
 const ir: IRScene = {
@@ -70,7 +70,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ paths: [RibbonPathDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ paths: [ribbonPathDefinition] }} />;
 ```
 
 </DocTab>
@@ -78,7 +78,7 @@ export const Example = () => <Layout ir={ir} extensions={{ paths: [RibbonPathDef
 
 ```ts
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { path, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
@@ -95,7 +95,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { compile: { paths: [RibbonPathDefinition] } }));
+console.log(renderToSvgString(input, { compile: { paths: [ribbonPathDefinition] } }));
 ```
 
 </DocTab>
@@ -104,7 +104,7 @@ console.log(renderToSvgString(input, { compile: { paths: [RibbonPathDefinition] 
 ```ts
 import type { IRScene } from '@retikz/core';
 import type { IRRibbonPathOptions } from '@retikz/extension';
-import { RibbonPathDefinition } from '@retikz/extension';
+import { ribbonPathDefinition } from '@retikz/extension';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -124,7 +124,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { paths: [RibbonPathDefinition] } }));
+console.log(renderToSvgString(ir, { compile: { paths: [ribbonPathDefinition] } }));
 ```
 
 </DocTab>

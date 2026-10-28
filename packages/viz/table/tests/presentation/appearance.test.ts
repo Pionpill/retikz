@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
+import { resolveTableStructure } from '../../src/pipeline/structure';
 import { formatDefaultTable } from '../utils/stages';
 
 const formatted = () =>
   formatDefaultTable(
-    normalizeTableStructure({
+    resolveTableStructure({
       kind: 'manual',
       rows: [
         [
@@ -24,15 +24,15 @@ const formatted = () =>
     }),
   );
 
-describe('Table Cell content appearance', () => {
-  it('keeps empty content style free of an anonymous Scope wrapper', () => {
+describe('Table Cell 内容外观', () => {
+  it('保持空内容样式不受匿名 Scope 包装器的影响', () => {
     const presented = presentTable(formatted());
 
     expect(presented.cells[0].content).toMatchObject({ type: 'node', text: 'value' });
     expect(presented.cells[1].content).toMatchObject({ type: 'node', text: 'direct' });
   });
 
-  it('wraps value and direct content in one anonymous Core Scope with exact style defaults', () => {
+  it('将值和直接内容包装在一个匿名 Core Scope 中，并具有精确的默认样式', () => {
     const content = {
       defaults: {
         style: { color: '#9a4d00', strokeWidth: 2 },

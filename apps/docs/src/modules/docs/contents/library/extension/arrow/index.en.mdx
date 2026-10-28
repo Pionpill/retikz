@@ -7,7 +7,7 @@ These arrow Definitions add six optional geometries to path endpoints. After cho
 
 ## Using this topic
 
-Import Definitions such as `DiamondArrowDefinition` on demand from `@retikz/extension`, or use `ExtensionArrowDefinitions` for the full family. Imports do not register endpoints globally. React uses `Layout.extensions.arrows`; Vanilla uses `compile.arrows`.
+Import Definitions such as `diamondArrowDefinition` on demand from `@retikz/extension`, or use `extensionArrowDefinitions` for the full family. Imports do not register endpoints globally. React uses `Layout.extensions.arrows`; Vanilla uses `compile.arrows`.
 
 <ComponentPreview files="entry" size="xs" hideCode />
 
@@ -15,11 +15,11 @@ Import Definitions such as `DiamondArrowDefinition` on demand from `@retikz/exte
 <DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-import { DiamondArrowDefinition } from '@retikz/extension';
+import { diamondArrowDefinition } from '@retikz/extension';
 import { Draw, Layout } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ arrows: [DiamondArrowDefinition] }}>
+  <Layout extensions={{ arrows: [diamondArrowDefinition] }}>
     <Draw
       way={[
         [0, 0],
@@ -36,7 +36,7 @@ export const Example = () => (
 
 ```tsx
 import type { IRScene } from '@retikz/core';
-import { DiamondArrowDefinition } from '@retikz/extension';
+import { diamondArrowDefinition } from '@retikz/extension';
 import { Layout } from '@retikz/react';
 
 const ir: IRScene = {
@@ -54,14 +54,14 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ arrows: [DiamondArrowDefinition] }} />;
+export const Example = () => <Layout ir={ir} extensions={{ arrows: [diamondArrowDefinition] }} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { DiamondArrowDefinition } from '@retikz/extension';
+import { diamondArrowDefinition } from '@retikz/extension';
 import { path, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
@@ -75,7 +75,7 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { compile: { arrows: [DiamondArrowDefinition] } });
+const svg = renderToSvgString(input, { compile: { arrows: [diamondArrowDefinition] } });
 console.log(svg);
 ```
 
@@ -84,7 +84,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { DiamondArrowDefinition } from '@retikz/extension';
+import { diamondArrowDefinition } from '@retikz/extension';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -102,7 +102,7 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { arrows: [DiamondArrowDefinition] } });
+const svg = renderToSvgString(ir, { compile: { arrows: [diamondArrowDefinition] } });
 console.log(svg);
 ```
 
@@ -122,14 +122,14 @@ console.log(svg);
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
 
-#### DiamondArrowDefinition / OpenDiamondArrowDefinition
+#### diamondArrowDefinition / openDiamondArrowDefinition
 
 Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                   | `shape`       | Default length × width |
 | ---------------------------- | ------------- | ---------------------- |
-| `DiamondArrowDefinition`     | `diamond`     | 11 × 6                 |
-| `OpenDiamondArrowDefinition` | `openDiamond` | 11 × 6                 |
+| `diamondArrowDefinition`     | `diamond`     | 11 × 6                 |
+| `openDiamondArrowDefinition` | `openDiamond` | 11 × 6                 |
 
 #### IRArrowStyle
 
@@ -155,14 +155,14 @@ Change color, scale, and hollow stroke width to compare their paint.
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
 
-#### KiteArrowDefinition / OpenKiteArrowDefinition
+#### kiteArrowDefinition / openKiteArrowDefinition
 
 Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                | `shape`    | Default length × width |
 | ------------------------- | ---------- | ---------------------- |
-| `KiteArrowDefinition`     | `kite`     | 11 × 6                 |
-| `OpenKiteArrowDefinition` | `openKite` | 11 × 6                 |
+| `kiteArrowDefinition`     | `kite`     | 11 × 6                 |
+| `openKiteArrowDefinition` | `openKite` | 11 × 6                 |
 
 #### IRArrowStyle
 
@@ -188,14 +188,14 @@ Change length and width to see both filled and hollow contours stretch.
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
 
-#### SquareArrowDefinition / OpenSquareArrowDefinition
+#### squareArrowDefinition / openSquareArrowDefinition
 
 Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                  | `shape`      | Default length × width |
 | --------------------------- | ------------ | ---------------------- |
-| `SquareArrowDefinition`     | `square`     | 8 × 8                  |
-| `OpenSquareArrowDefinition` | `openSquare` | 8 × 8                  |
+| `squareArrowDefinition`     | `square`     | 8 × 8                  |
+| `openSquareArrowDefinition` | `openSquare` | 8 × 8                  |
 
 #### IRArrowStyle
 
@@ -221,13 +221,13 @@ Adjust length, width, and hollow stroke to compare the two square endpoints.
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
 
-#### StraightBarbArrowDefinition
+#### straightBarbArrowDefinition
 
 Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                    | `shape`        | Default length × width |
 | ----------------------------- | -------------- | ---------------------- |
-| `StraightBarbArrowDefinition` | `straightBarb` | 8 × 8                  |
+| `straightBarbArrowDefinition` | `straightBarb` | 8 × 8                  |
 
 #### IRArrowStyle
 
@@ -253,13 +253,13 @@ Change length, width, and stroke width to inspect the open barb and its path con
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
 
-#### BarArrowDefinition
+#### barArrowDefinition
 
 Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition           | `shape` | Default length × width |
 | -------------------- | ------- | ---------------------- |
-| `BarArrowDefinition` | `bar`   | 8 × 8                  |
+| `barArrowDefinition` | `bar`   | 8 × 8                  |
 
 #### IRArrowStyle
 
@@ -289,13 +289,13 @@ Length sets the span along the path, width sets the bar span, and line width aff
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
 
-#### CrowFootArrowDefinition
+#### crowFootArrowDefinition
 
 Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                | `shape`    | Default length × width |
 | ------------------------- | ---------- | ---------------------- |
-| `CrowFootArrowDefinition` | `crowFoot` | 8 × 8                  |
+| `crowFootArrowDefinition` | `crowFoot` | 8 × 8                  |
 
 #### IRArrowStyle
 

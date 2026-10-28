@@ -1,5 +1,5 @@
 import type { IRArc } from '@retikz/standard/shape';
-import { ArcProvider, createArc } from '@retikz/standard/shape';
+import { arcProvider, createArc } from '@retikz/standard/shape';
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputShape } from './shared';
@@ -9,10 +9,10 @@ import { normalizeShapeInput } from './shared';
 export type InputArc = InputShape<IRArc>;
 
 /** 将 Arc 作者输入归一为持久化的 Standard 意图 */
-export const ArcInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArc & { id?: string }> = {
+export const arcInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArc & { id?: string }> = {
   kind: 'standard.arc',
   lower: props => ({
     node: createArc(normalizeShapeInput<IRArc>(props)),
-    providerDependencies: { roots: [ArcProvider.key], providers: [ArcProvider] },
+    providerDependencies: { roots: [arcProvider.key], providers: [arcProvider] },
   }),
 };

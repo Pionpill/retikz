@@ -1,6 +1,6 @@
 import { curve, point, vector2 } from '@retikz/math';
 
-import type { PathCommand, ResolvedArrowEnd } from '../../../contract';
+import type { PathCommand, CompiledArrowEnd } from '../../../contract';
 import type { IRPosition } from '../../../schemas';
 import { createStrokePathGeometry, curveSegmentOfOccurrence, sliceOccurrenceCommand } from './interruption';
 import type { StrokeCommandOccurrence } from './interruption';
@@ -8,9 +8,9 @@ import type { StrokeCommandOccurrence } from './interruption';
 /** 路径首尾箭头 */
 export type EndpointArrowSpecs = {
   /** 首端箭头及其局部几何 */
-  arrowStart?: ResolvedArrowEnd;
+  arrowStart?: CompiledArrowEnd;
   /** 末端箭头及其局部几何 */
-  arrowEnd?: ResolvedArrowEnd;
+  arrowEnd?: CompiledArrowEnd;
 };
 
 /** 接合点在原始路径中的参数位置 */
@@ -83,11 +83,11 @@ const findContact = (
 
 /** 在 marker 局部坐标中补偿宿主切线，使箭头连接原曲线断点与目标 */
 const orientArrow = (
-  spec: ResolvedArrowEnd | undefined,
+  spec: CompiledArrowEnd | undefined,
   contact: EndpointContact,
   tangent: IRPosition,
   start: boolean,
-): ResolvedArrowEnd | undefined => {
+): CompiledArrowEnd | undefined => {
   if (spec === undefined || contact.scale <= 1e-10) return undefined;
   const nativeAngle = Math.atan2(tangent[1], tangent[0]) + (start ? Math.PI : 0);
   const angle = Math.atan2(contact.direction[1], contact.direction[0]) - nativeAngle;

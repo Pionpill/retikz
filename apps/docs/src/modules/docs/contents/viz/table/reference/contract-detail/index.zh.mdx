@@ -74,7 +74,7 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
   }}
 />
 
-作者侧 `TableDetailColumnInput` 额外允许把 `header` 写成字符串；`createDetailTableIR()`、`DetailTable` 和 `detailTable()` 会把它规范化为 `{ kind: 'value', value: header }`。
+作者侧 `InputTableDetailColumn` 额外允许把 `header` 写成字符串；`createDetailTableIR()`、`DetailTable` 和 `detailTable()` 会把它规范化为 `{ kind: 'value', value: header }`。
 `headerLayout` / `bodyLayout` 共用 [TableCellLayoutSchema](/viz/table/reference/contract-layout#tablecelllayoutschema)，可分别设置 padding、对齐、wrap、fit、overflow 与 border。
 
 列 `formatter` 是 body value Cell 的默认引用；根 `rules` 可以按 Cell selector 有序覆盖它。formatter 只改变显示 scalar，字段选择、visual encoding 和 value predicate 始终读取 formatter 前的原始值。

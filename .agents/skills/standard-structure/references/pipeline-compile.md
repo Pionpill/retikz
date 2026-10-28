@@ -30,7 +30,9 @@
 
 ## 命名
 
-目录、文件和符号名以 `standard-name` 为唯一真源。`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在纵向领域 `resolve/<domain>/types.ts`，由 `resolveXxx` 产出。pipeline / compile 只创建 context、维护动态状态并决定调用时机。若 context 产生独立概念，使用 `EffectiveXxx`、`XxxResolution` 或准确领域名，不使用泛化 `ResolvedXxx`。warning code 使用 const object enum 与同名 `ValueOf` 派生类型，message 写当前契约。
+compile / pipeline 阶段的类型，**前缀表示数据处理阶段，主体及后缀表示数据是什么、用于什么**；阶段含义和组合规则统一遵循 [分层命名](../../standard-name/references/layers.md#按语义阶段命名符号)。
+
+目录、文件和符号名以 `standard-name` 为唯一真源。`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在纵向领域 `resolve/<domain>/types.ts`，由 `resolveXxx` 产出。pipeline / compile 只创建 context、维护动态状态并决定调用时机。若 context 产生独立概念，按数据阶段与用途命名，继承合并态使用 `MergedXxx`，编译计算结果使用 `CompiledXxx`，其他概念使用准确领域名，不使用泛化 `ResolvedXxx`。warning code 使用 const object enum 与同名 `ValueOf` 派生类型，message 写当前契约。
 
 函数动词按 [阶段命名](../../standard-name/references/functions.md)；compileXxx 只用于跨阶段编排，不作为所有 helper 的前缀。
 

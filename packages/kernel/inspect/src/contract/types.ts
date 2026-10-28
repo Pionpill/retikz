@@ -114,7 +114,7 @@ export type InspectorDefinition<
  * @template TResolvedOptions callback 消费的已解析 options 类型
  * @template TSourceOptions 传入 options schema 前的原始 options 输入类型
  */
-export type InspectorDefinitionInput<
+export type InputInspectorDefinition<
   TSubject extends JsonValue = JsonValue,
   TParsedOptions extends JsonObject = Record<string, never>,
   TResolvedOptions extends JsonObject = TParsedOptions,
@@ -174,7 +174,7 @@ export type AnyInspectorDefinition = Readonly<{
 }>;
 
 /** registry 接收的异构作者定义，注册时统一补齐选项 schema 与 resolver */
-export type AnyInspectorDefinitionInput = WithOptionalProperties<
+export type InputAnyInspectorDefinition = WithOptionalProperties<
   AnyInspectorDefinition,
   'optionsSchema' | 'resolveOptions'
 >;

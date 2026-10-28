@@ -4,7 +4,7 @@ import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS, GridAutoFlow, GridOverlap } from './co
 import type { IRGridPlacement } from './types';
 
 /** Grid placement solver 接受的 authored item 摘要 */
-export type GridPlacementItem = Readonly<{
+type GridPlacementItem = Readonly<{
   /** 布局项的稳定身份键 */
   key: string;
   /** 布局项在作者输入数组中的零基索引 */
@@ -16,7 +16,7 @@ export type GridPlacementItem = Readonly<{
 }>;
 
 /** Grid item 求解后的零基 track 区域 */
-export type ResolvedGridPlacement = Readonly<{
+type CompiledGridPlacement = Readonly<{
   /** 已放置布局项的稳定身份键 */
   key: string;
   /** 对应作者输入数组的零基索引 */
@@ -32,13 +32,13 @@ export type ResolvedGridPlacement = Readonly<{
 }>;
 
 /** Grid placement solver 的完整 extent 与 authored-order 结果 */
-export type ResolvedGridPlacements = Readonly<{
+type GridPlacementResult = Readonly<{
   /** 包含自动扩展轨道的最终列数 */
   columnCount: number;
   /** 包含自动扩展轨道的最终行数 */
   rowCount: number;
   /** 保持作者顺序的逐项放置结果 */
-  items: ReadonlyArray<ResolvedGridPlacement>;
+  items: ReadonlyArray<CompiledGridPlacement>;
 }>;
 
 type OccupiedRect = Readonly<{
@@ -70,7 +70,7 @@ const guardedEnd = (start: number, span: number, axis: 'column' | 'row', key: st
 };
 
 /** 把已解析 placement 转为半开占位矩形 */
-const rectOf = (placement: ResolvedGridPlacement): OccupiedRect => ({
+const rectOf = (placement: CompiledGridPlacement): OccupiedRect => ({
   columnStart: placement.columnStart,
   columnEnd: placement.columnStart + placement.columnSpan,
   rowStart: placement.rowStart,
@@ -97,7 +97,7 @@ export const resolveGridPlacements = (
     autoFlow: GridAutoFlow;
     overlap: GridOverlap;
   }>,
-): ResolvedGridPlacements => {
+): GridPlacementResult => {
   const items = sourceItems.map(item => ({
     ...item,
     column: resolveGridPlacement(item.column),
@@ -122,9 +122,9 @@ export const resolveGridPlacements = (
   let columnCount = options.explicitColumns;
   let rowCount = Math.max(options.explicitRows, 1);
   const occupied: Array<OccupiedRect> = [];
-  const resolved: Array<ResolvedGridPlacement | undefined> = Array.from({ length: items.length });
+  const resolved: Array<CompiledGridPlacement | undefined> = Array.from({ length: items.length });
 
-  const register = (placement: ResolvedGridPlacement, allowOverlap = false): void => {
+  const register = (placement: CompiledGridPlacement, allowOverlap = false): void => {
     const rect = rectOf(placement);
     if (!allowOverlap && firstOverlap(rect, occupied) !== undefined) {
       throw new RetikzLayoutError({

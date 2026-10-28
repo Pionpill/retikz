@@ -1,21 +1,12 @@
 import type { ExternalRow } from '@retikz/data';
 
 import type { CoordinateFrame, DimensionRole, PositionScale } from '../../../contract';
-import { positionField, positionValue, mapPositionInput } from '../../../contract';
-import type { IRPlotChannel, IRPlotMark } from '../../../schemas';
-import type { IRPlotPositionInput } from '../../../schemas';
+import { mapPositionInput, positionValue } from '../../../contract';
+import type { IRPlotMark, IRPlotPositionInput } from '../../../schemas';
 
 /** 读取已声明的角色位置输入 */
-export const positionForRole = (mark: IRPlotMark, role: string): IRPlotPositionInput | undefined =>
+const positionForRole = (mark: IRPlotMark, role: string): IRPlotPositionInput | undefined =>
   (mark.encodings?.position as Partial<Record<string, IRPlotPositionInput>> | undefined)?.[role];
-
-/**
- * 取某 mark 在某位置角色下的 encoding 通道（投影时按 frame.roles 序逐角色取值）
- * @description polar 在坐标系内部把 x/y 解释为角向/径向；自定义坐标系按 definition.roles 消费位置通道
- */
-export const channelForRole = (mark: IRPlotMark, role: DimensionRole): IRPlotChannel | undefined => {
-  return positionField(positionForRole(mark, role));
-};
 
 /** 读取位置角色的有效固定值；字段绑定存在时不回退 */
 export const fixedRoleValue = (mark: IRPlotMark, role: DimensionRole) => {

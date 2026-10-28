@@ -1,8 +1,8 @@
-import type { ResolvedTableBorderLine, TableBorderContribution, TableBorderSource } from '../../../contract/manifest';
-import type { TableTrackLayout } from '../types';
+import type { TableBorderLine, TableBorderContribution, TableBorderSource } from '../../../contract/manifest';
+import type { CompiledTableTrackLayout } from '../types';
 
 /** resolved Border Graph 输入候选 */
-export type ResolvedTableBorderCandidate =
+export type TableBorderCandidateResolution =
   | Readonly<{
       /** 显式关闭边框或使用线条的判别值 */
       kind: 'none';
@@ -20,7 +20,7 @@ export type ResolvedTableBorderCandidate =
       /** 边框冲突决策采用的优先级 */
       priority: number;
       /** 已解析的边框线条样式 */
-      line: ResolvedTableBorderLine;
+      line: TableBorderLine;
       /** 当前边框候选对应的默认值来源 */
       defaults?: Readonly<{
         /** 用于诊断与溯源的默认值路径 */
@@ -40,7 +40,7 @@ export type TableBorderVertex = Readonly<{
 }>;
 
 /** 单个 canonical Cell 的 Border Graph 输入 */
-export type TableBorderCellInput = Readonly<{
+export type InputTableBorderCell = Readonly<{
   /** 可选的单元格语义标识 */
   cellId?: string;
   /** 单元格起始位置的规范行下标 */
@@ -52,31 +52,31 @@ export type TableBorderCellInput = Readonly<{
   /** 连续覆盖的 column 数量 */
   columnSpan: number;
   /** 可选 resolved Cell side 候选 */
-  borders?: Readonly<Partial<Record<TableBorderSide, ResolvedTableBorderCandidate>>>;
+  borders?: Readonly<Partial<Record<TableBorderSide, TableBorderCandidateResolution>>>;
 }>;
 
 /** 边框图使用的已解析表格默认样式 */
-export type TableBorderDefaultsInput = Readonly<{
+type InputTableBorderDefaults = Readonly<{
   /** Table 外轮廓默认候选 */
-  outer?: Readonly<Partial<Record<TableBorderSide, ResolvedTableBorderCandidate>>>;
+  outer?: Readonly<Partial<Record<TableBorderSide, TableBorderCandidateResolution>>>;
   /** row 间默认候选 */
-  horizontal?: ResolvedTableBorderCandidate;
+  horizontal?: TableBorderCandidateResolution;
   /** column 间默认候选 */
-  vertical?: ResolvedTableBorderCandidate;
+  vertical?: TableBorderCandidateResolution;
 }>;
 
 /** Border Graph 构造输入 */
-export type BuildTableBorderGraphInput = Readonly<{
+export type InputTableBorderGraph = Readonly<{
   /** 规范化后的行轨道 */
-  rows: ReadonlyArray<TableTrackLayout>;
+  rows: ReadonlyArray<CompiledTableTrackLayout>;
   /** 规范化后的列轨道 */
-  columns: ReadonlyArray<TableTrackLayout>;
+  columns: ReadonlyArray<CompiledTableTrackLayout>;
   /** 规范化后互不重叠的单元格 */
-  cells: ReadonlyArray<TableBorderCellInput>;
+  cells: ReadonlyArray<InputTableBorderCell>;
   /** collapse 或 separate 拓扑 */
   mode: 'collapse' | 'separate';
   /** resolved Table 默认候选 */
-  defaults: TableBorderDefaultsInput;
+  defaults: InputTableBorderDefaults;
 }>;
 
 /** resolve 前的单个 Border Graph atom */
@@ -94,7 +94,7 @@ export type TableBorderAtom = Readonly<{
 }>;
 
 /** conflict resolution 后的 Border Graph atom */
-export type ResolvedTableBorderAtom = Readonly<
+export type CompiledTableBorderAtom = Readonly<
   TableBorderAtom & {
     /** 边框冲突决策选中的样式 */
     winner: TableBorderContribution;
@@ -114,7 +114,7 @@ export type TableBorderEdge = Readonly<{
   /** 表格局部坐标中的终点 */
   end: TableBorderVertex;
   /** 完整 resolved line style */
-  style: ResolvedTableBorderLine;
+  style: TableBorderLine;
   /** 按 canonical key 保留的逐 atom provenance */
   atoms: ReadonlyArray<
     Readonly<{
@@ -131,7 +131,7 @@ export type TableBorderEdge = Readonly<{
 /** 完整 Border Graph 纯数据结果 */
 export type TableBorderGraph = Readonly<{
   /** 所有有候选的 resolved atoms，包括隐藏 winner */
-  atoms: ReadonlyArray<ResolvedTableBorderAtom>;
+  atoms: ReadonlyArray<CompiledTableBorderAtom>;
   /** 确定 draw order 的可见 edges */
   edges: ReadonlyArray<TableBorderEdge>;
 }>;

@@ -1,4 +1,5 @@
 const translations: Partial<Record<string, string>> = {
+  '格式名称与内置、自定义名称重复': 'A format name duplicates a built-in or custom name',
   外部数据集表: 'External datasets',
   '数据集名 -> 行数组；data.reference 按名查此表':
     'Maps dataset names to row arrays; data.reference looks up a dataset by name',

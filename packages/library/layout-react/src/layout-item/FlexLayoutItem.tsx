@@ -1,11 +1,11 @@
-import type { FlexLayoutItemInput } from '@retikz/layout';
+import type { InputFlexLayoutItemConfig } from '@retikz/layout';
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import type { FC } from 'react';
 
 import type { LayoutItemChildSource } from './types';
 
 /** FlexLayout 直属 item 的 React authoring props */
-export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'kind'> &
+export type FlexLayoutItemProps = Omit<InputFlexLayoutItemConfig, 'child' | 'key' | 'kind'> &
   Readonly<{
     /** 容器内稳定身份；省略时内部按位置生成，不读取 React key */
     itemKey?: string;

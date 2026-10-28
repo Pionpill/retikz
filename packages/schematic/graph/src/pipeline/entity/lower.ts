@@ -1,7 +1,7 @@
 import type { IRNode } from '@retikz/core';
 
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
-import type { CanonicalEntity, EffectiveEntityAppearance } from '../../resolve';
+import type { CanonicalEntity, MergedEntityAppearance } from '../../resolve';
 import type { IRGraphEntity } from '../../schemas';
 
 type NodeMinimumSize = NonNullable<IRNode['layout']>['minimumSize'];
@@ -47,7 +47,7 @@ const definedNodeFields = (source: IRGraphEntity): Partial<IRNode> =>
   Object.fromEntries(Object.entries(source).filter(isDefinedNodeField));
 
 /** 把 Canonical Entity、role structure 与 Theme appearance 下沉为一个 Core Node */
-export const lowerEntity = (entity: CanonicalEntity, appearance: EffectiveEntityAppearance): IRNode => {
+export const lowerEntity = (entity: CanonicalEntity, appearance: MergedEntityAppearance): IRNode => {
   const source = entity.source;
   if (source.position === undefined) {
     const label = source.id === undefined ? 'Entity' : `Entity '${source.id}'`;

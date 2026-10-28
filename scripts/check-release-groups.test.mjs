@@ -370,7 +370,7 @@ const basePackages = [
   },
 ];
 
-test('valid root and subpath ESM publish contracts have no diagnostics', () => {
+test('有效的根和子路径 ESM 发布契约没有诊断', () => {
   const rootManifest = {
     ...createRootPublishContract(),
     name: '@retikz/core',
@@ -401,7 +401,7 @@ test('valid root and subpath ESM publish contracts have no diagnostics', () => {
   assert.deepEqual(validateEsmPublishContract(renderManifest), []);
 });
 
-test('legacy or inconsistent ESM publish contracts are reported', () => {
+test('报告遗留或不一致的 ESM 发布契约', () => {
   const invalidCases = [
     {
       label: 'package type',
@@ -486,7 +486,7 @@ test('legacy or inconsistent ESM publish contracts are reported', () => {
   }
 });
 
-test('packages without a root export reject publish-time root fields', () => {
+test('没有根导出的包拒绝发布时根字段', () => {
   const manifest = {
     name: '@retikz/render',
     type: 'module',
@@ -511,7 +511,7 @@ test('packages without a root export reject publish-time root fields', () => {
   assert.ok(validateEsmPublishContract(manifest).some(diagnostic => diagnostic.includes('must not declare')));
 });
 
-test('valid package topology has no release group diagnostics', () => {
+test('有效的包拓扑没有版本组诊断', () => {
   const diagnostics = validateReleaseGroupPackages({
     releaseGroups: baseGroups,
     packageRecords: basePackages,
@@ -520,7 +520,7 @@ test('valid package topology has no release group diagnostics', () => {
   assert.deepEqual(diagnostics, []);
 });
 
-test('cross-group workspace:* dependency is reported', () => {
+test('报告跨发布组的 workspace:* 依赖', () => {
   const packages = structuredClone(basePackages);
   packages.find(({ manifest }) => manifest.name === '@retikz/plot').manifest.dependencies['@retikz/data'] =
     'workspace:*';
@@ -535,7 +535,7 @@ test('cross-group workspace:* dependency is reported', () => {
   );
 });
 
-test('viz feature release groups can depend on library feature release groups', () => {
+test('即功能发布组可以依赖于库功能发布组', () => {
   const packages = structuredClone(basePackages);
   packages.find(({ manifest }) => manifest.name === '@retikz/plot').manifest.dependencies['@retikz/standard'] =
     'workspace:^';
@@ -575,7 +575,7 @@ const withChartTopology = ({ dependsOn, dependencies } = {}) => ({
   packageRecords: [...structuredClone(basePackages), chartPackage(dependencies)],
 });
 
-test('an explicit Chart-to-Plot feature dependency is valid when a package consumes Plot', () => {
+test('当包使用 Plot 时，显式 Chart 到 Plot 功能依赖项有效', () => {
   const { releaseGroups, packageRecords } = withChartTopology({
     dependsOn: ['plot'],
     dependencies: { '@retikz/plot': 'workspace:^' },
@@ -584,14 +584,14 @@ test('an explicit Chart-to-Plot feature dependency is valid when a package consu
   assert.deepEqual(validateReleaseGroupPackages({ releaseGroups, packageRecords }), []);
 });
 
-test('an explicit feature dependency must name an existing release group', () => {
+test('显式功能依赖项必须命名现有版本组', () => {
   const { releaseGroups, packageRecords } = withChartTopology({ dependsOn: ['missing'] });
   const diagnostics = validateReleaseGroupPackages({ releaseGroups, packageRecords });
 
   assert.ok(diagnostics.some(diagnostic => diagnostic.includes('chart dependsOn references unknown group missing')));
 });
 
-test('an explicit feature dependency must not repeat a release group', () => {
+test('显式功能依赖项不得重复发布组', () => {
   const { releaseGroups, packageRecords } = withChartTopology({
     dependsOn: ['plot', 'plot'],
     dependencies: { '@retikz/plot': 'workspace:^' },
@@ -603,14 +603,14 @@ test('an explicit feature dependency must not repeat a release group', () => {
   );
 });
 
-test('an explicit feature dependency must not target its own release group', () => {
+test('显式功能依赖项不得针对其自己的版本组', () => {
   const { releaseGroups, packageRecords } = withChartTopology({ dependsOn: ['chart'] });
   const diagnostics = validateReleaseGroupPackages({ releaseGroups, packageRecords });
 
   assert.ok(diagnostics.some(diagnostic => diagnostic.includes('chart dependsOn must not reference itself')));
 });
 
-test('the explicit feature dependency graph must be acyclic', () => {
+test('显式特征依赖图必须是非循环的', () => {
   const { releaseGroups, packageRecords } = withChartTopology({
     dependsOn: ['plot'],
     dependencies: { '@retikz/plot': 'workspace:^' },
@@ -624,7 +624,7 @@ test('the explicit feature dependency graph must be acyclic', () => {
   assert.ok(diagnostics.some(diagnostic => diagnostic.includes('release group dependsOn contains a cycle')));
 });
 
-test('an explicit feature dependency must be backed by a real package dependency', () => {
+test('显式的功能依赖必须由真正的包依赖支持', () => {
   const { releaseGroups, packageRecords } = withChartTopology({ dependsOn: ['plot'] });
   const diagnostics = validateReleaseGroupPackages({ releaseGroups, packageRecords });
 
@@ -635,7 +635,7 @@ test('an explicit feature dependency must be backed by a real package dependency
   );
 });
 
-test('a real feature dependency must be declared directly by its release group', () => {
+test('真正的功能依赖必须由其发布组直接声明', () => {
   const { releaseGroups, packageRecords } = withChartTopology({
     dependencies: { '@retikz/plot': 'workspace:^' },
   });
@@ -644,7 +644,7 @@ test('a real feature dependency must be declared directly by its release group',
   assert.ok(diagnostics.some(diagnostic => diagnostic.includes('chart has an undeclared feature dependency on plot')));
 });
 
-test('Foundation belongs to the kernel release group with its Zod-only publish contract', async () => {
+test('Foundation 属于 kernel 发布组且发布契约仅依赖 Zod', async () => {
   assert.ok(releaseGroups.kernel.packages.includes('@retikz/foundation'));
 
   const packageRecords = await readPackageRecords();
@@ -665,7 +665,7 @@ test('Foundation belongs to the kernel release group with its Zod-only publish c
   assert.ok(kernelRecords.every(({ manifest }) => manifest.version === foundationRecord.manifest.version));
 });
 
-test('Diagram is a Schematic feature release group above Graph', async () => {
+test('Diagram 是 Graph 之上的 Schematic 功能发布组', async () => {
   assert.deepEqual(releaseGroups.diagram, {
     domain: 'schematic',
     kind: 'feature',

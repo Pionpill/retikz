@@ -5,8 +5,8 @@ import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { createFieldCollector } from '../../../src/providers/channel/shared';
 import { PlotSchema } from '../../../src/schemas/plot';
 
-describe('quantile-band statistics schema (contract)', () => {
-  it('accepts quantile-band reducer and preserves JSON round trip', () => {
+describe('分位数带统计 schema（契约）', () => {
+  it('接受分位数带归约器并保留 JSON 往返行程', () => {
     const operation = {
       kind: 'summarize',
       params: {
@@ -37,7 +37,7 @@ describe('quantile-band statistics schema (contract)', () => {
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
-  it('accepts outside-quantile-band selector and preserves JSON round trip', () => {
+  it('接受分位数带外选择器并保留 JSON 往返', () => {
     const operation = {
       kind: 'select',
       params: {
@@ -56,7 +56,7 @@ describe('quantile-band statistics schema (contract)', () => {
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
-  it('rejects invalid probability order', () => {
+  it('拒绝无效的概率顺序', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'summarize',
@@ -89,7 +89,7 @@ describe('quantile-band statistics schema (contract)', () => {
     ).toThrow();
   });
 
-  it('rejects duplicate output fields inside and across metrics', () => {
+  it('拒绝指标内部和跨指标的重复输出字段', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'summarize',
@@ -129,7 +129,7 @@ describe('quantile-band statistics schema (contract)', () => {
     ).toThrow();
   });
 
-  it('rejects negative spread factors', () => {
+  it('拒绝负价差因子', () => {
     expect(() =>
       TransformSchema.parse({
         kind: 'summarize',
@@ -165,7 +165,7 @@ describe('quantile-band statistics schema (contract)', () => {
   });
 });
 
-describe('quantile-band statistics behavior (contract)', () => {
+describe('分位数带统计行为（契约）', () => {
   const rows = [
     { group: 'A', value: 0 },
     { group: 'A', value: 2 },
@@ -177,7 +177,7 @@ describe('quantile-band statistics behavior (contract)', () => {
     { group: 'B', value: 30 },
   ];
 
-  it('computes boxplot-shaped quantile band fields', () => {
+  it('计算箱线图形状的分位数带字段', () => {
     const out = applyTransforms(rows, [
       {
         kind: 'summarize',
@@ -237,7 +237,7 @@ describe('quantile-band statistics behavior (contract)', () => {
     ]);
   });
 
-  it('computes central 80 percent band without q1 or q3 fields', () => {
+  it('计算没有 q1 或 q3 字段的中心 80% 频带', () => {
     const out = applyTransforms(rows, [
       {
         kind: 'summarize',
@@ -264,7 +264,7 @@ describe('quantile-band statistics behavior (contract)', () => {
     expect(out[0]).toMatchObject({ group: 'A', p10: 0.8, p50: 4, p90: 7.2, p80Spread: 6.4 });
   });
 
-  it('uses minMax whisker strategy when requested', () => {
+  it('根据要求使用 minMax 晶须策略', () => {
     const out = applyTransforms(rows, [
       {
         kind: 'summarize',
@@ -287,7 +287,7 @@ describe('quantile-band statistics behavior (contract)', () => {
     expect(out[0]).toMatchObject({ group: 'A', low: 2, high: 6, whiskerMin: 0, whiskerMax: 8 });
   });
 
-  it('handles single-value groups and marks empty finite groups invalid', () => {
+  it('处理单值组并将空的有限组标记为无效', () => {
     const out = applyTransforms(
       [
         { group: 'A', value: 5 },
@@ -326,7 +326,7 @@ describe('quantile-band statistics behavior (contract)', () => {
     for (const field of ['low', 'high', 'mid', 'min', 'max']) expect(Number.isNaN(out[1][field])).toBe(true);
   });
 
-  it('selects rows outside quantile band boundaries in source order', () => {
+  it('按源顺序选择分位数带边界之外的行', () => {
     const out = applyTransforms(rows, [
       {
         kind: 'select',
@@ -352,7 +352,7 @@ describe('quantile-band statistics behavior (contract)', () => {
     ]);
   });
 
-  it('selects rows outside spread fence', () => {
+  it('选择展开栅栏之外的行', () => {
     const out = applyTransforms(
       [
         { group: 'A', value: 0 },
@@ -381,7 +381,7 @@ describe('quantile-band statistics behavior (contract)', () => {
     expect(out).toEqual([expect.objectContaining({ group: 'A', value: 100 })]);
   });
 
-  it('reports input and output fields for strict model collection', () => {
+  it('报告输入和输出字段以进行严格的模型收集', () => {
     const fields = new Set<string>();
     const derivedOutputs = new Set<string>();
 
@@ -410,7 +410,7 @@ describe('quantile-band statistics behavior (contract)', () => {
     expect([...derivedOutputs].sort()).toEqual(['boxHigh', 'boxLow', 'median']);
   });
 
-  it('strict model accepts quantile-band output fields as derived fields', () => {
+  it('严格模型接受分位数带输出字段作为派生字段', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',

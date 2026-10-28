@@ -7,7 +7,7 @@ import { PlotAxis } from '../../../src/components/guides';
 import { IntervalMark, PointMark } from '../../../src/components/marks';
 import { PlotScale } from '../../../src/components/scales';
 
-describe('buildPlotIR composition adapter surface', () => {
+describe('buildPlotIR 组成适配器表面', () => {
   const composition: NonNullable<IRPlot['composition']> = {
     defaultView: 'temp',
     views: [
@@ -20,7 +20,7 @@ describe('buildPlotIR composition adapter surface', () => {
     ],
   };
 
-  it('passes composition coordinateView and axis placement through schema', () => {
+  it('通过 schema 传递组合 coordinateView 和轴放置', () => {
     const spec = buildPlotIR(
       <>
         <PointMark
@@ -50,7 +50,7 @@ describe('buildPlotIR composition adapter surface', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('passes axis grid target selectors through schema', () => {
+  it('通过 schema 传递轴网格目标选择器', () => {
     const spec = buildPlotIR(
       <>
         <PointMark
@@ -81,7 +81,7 @@ describe('buildPlotIR composition adapter surface', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('fills composition view coordinate scale bindings from declared scales', () => {
+  it('从声明的比例填充合成视图坐标比例绑定', () => {
     const spec = buildPlotIR(
       <>
         <PlotScale dimension="x" type="linear" />
@@ -111,7 +111,7 @@ describe('buildPlotIR composition adapter surface', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('fills shared scaffold coordinate scale bindings from declared scales', () => {
+  it('从声明的比例填充共享基础结构坐标比例绑定', () => {
     const spec = buildPlotIR(
       <>
         <PlotScale dimension="x" type="linear" />

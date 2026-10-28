@@ -5,9 +5,9 @@ import type { ReconcilerCommitTarget, ReconcilerResult, ScenePatch } from '@reti
 import type { AnimationControls } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import { captureRuntimeConfig } from './config';
-import type { RenderRuntimeConfigInput } from './config';
+import type { InputRenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
-import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from './readonly-layer';
+import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from './readonly-layer';
 import type { RenderReadonlyLayer } from './readonly-layer';
 import { getRetainedRendererExecutor, isRetainedRenderer, isSvgHost, isCanvasHost } from './renderer';
 import type {
@@ -18,7 +18,7 @@ import type {
   RetainedCanvasRendererImmutableOptions,
 } from './renderer';
 import { runtimeStructuralEquals } from './shared';
-import { validateSceneRuntimeSnapshot, sceneRuntimeSnapshotEquals, validateScenePatch } from './validator';
+import { assertSceneRuntimeSnapshot, sceneRuntimeSnapshotEquals, assertScenePatch } from './validator';
 
 /** 同一宿主重建编译会话时交接 renderer 的句柄 */
 export type RetainedRenderLease = Readonly<{ renderer: RetainedRenderer }>;
@@ -32,7 +32,7 @@ export type RetainedRenderTargetOptions = Readonly<{
   /** 重建会话时可接管的现有后端 */
   rendererLease?: RetainedRenderLease;
   /** 每次准备读取本次输出配置 */
-  configuration: () => RenderRuntimeConfigInput;
+  configuration: () => InputRenderRuntimeConfig;
   /** 从同一编译结果解析只读图层 */
   resolveReadonlyLayers?: (output: ReconcilerResult['compilation']) => ReadonlyArray<RenderReadonlyLayer>;
   /** 首次建立新宿主或接管已有宿主 */
@@ -114,7 +114,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
             : createFullSceneRuntimeSnapshot(candidate.compilation.result.scene, revision, provenance!);
         const frame: RenderFrameSnapshot = Object.freeze({
           primary,
-          layers: validateReadonlyLayers(
+          layers: snapshotReadonlyLayers(
             options.resolveReadonlyLayers?.(candidate.compilation) ?? EMPTY_READONLY_LAYERS,
           ),
         });
@@ -129,7 +129,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
           };
           if (
             !runtimeStructuralEquals(normalized, primary.scene) ||
-            !runtimeStructuralEquals(validateReadonlyLayers(expected.layers), frame.layers)
+            !runtimeStructuralEquals(snapshotReadonlyLayers(expected.layers), frame.layers)
           )
             throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInitialFrameMismatch });
         }
@@ -142,7 +142,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
                 nextRevision: revision,
                 operations: sameCompilation ? [] : [{ kind: 'replaceScene', snapshot: primary }],
               };
-        if (patch !== undefined && prior !== undefined) validateScenePatch(prior.primary, patch, primary);
+        if (patch !== undefined && prior !== undefined) assertScenePatch(prior.primary, patch, primary);
         const token =
           patch === undefined
             ? executor.prepareMount(frame, config, options.mountMode ?? 'create')
@@ -151,7 +151,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
         return {
           commit: () => {
             token.commit();
-            committedRead = normalizeRendererRead(executor.read(), frame, animationControlsCache);
+            committedRead = snapshotRendererRead(executor.read(), frame, animationControlsCache);
             currentFrame = frame;
             leaseOwners.set(lease, owner);
             committed = true;
@@ -320,7 +320,7 @@ const freezeAnimationControls = (
   return frozen;
 };
 
-const normalizeRendererReadUnsafe = (
+const snapshotRendererReadUnsafe = (
   value: RetainedRendererRead,
   lineage: RenderFrameSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
@@ -343,7 +343,7 @@ const normalizeRendererReadUnsafe = (
   }
 
   const frame = rawFrame as RenderFrameSnapshot;
-  validateSceneRuntimeSnapshot(frame.primary);
+  assertSceneRuntimeSnapshot(frame.primary);
   if (
     !sceneRuntimeSnapshotEquals(frame.primary, lineage.primary) ||
     !runtimeStructuralEquals(frame.layers, lineage.layers)
@@ -360,13 +360,13 @@ const normalizeRendererReadUnsafe = (
   });
 };
 
-const normalizeRendererRead = (
+const snapshotRendererRead = (
   value: RetainedRendererRead,
   lineage: RenderFrameSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
 ): RetainedRendererRead => {
   try {
-    return normalizeRendererReadUnsafe(value, lineage, animationControlsCache);
+    return snapshotRendererReadUnsafe(value, lineage, animationControlsCache);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;
     throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch, cause });

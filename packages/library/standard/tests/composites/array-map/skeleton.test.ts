@@ -1,14 +1,14 @@
 import type { IRChild, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
 import {
   createArray,
   createMap,
-  ArrayDefinition,
+  arrayDefinition,
   ArraySchema,
-  MapDefinition,
+  mapDefinition,
   MapSchema,
 } from '../../../src/collection';
 import type { IRArray } from '../../../src/collection';
@@ -16,7 +16,7 @@ import type { IRArray } from '../../../src/collection';
 const compile = (child: IRChild) =>
   compileToScene(
     { type: 'scene', version: 1, children: [child] },
-    { composites: [ArrayDefinition, MapDefinition], clips: [PathClipDefinition], padding: 0 },
+    { composites: [arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
   );
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>

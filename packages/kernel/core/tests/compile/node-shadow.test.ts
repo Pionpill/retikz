@@ -23,7 +23,7 @@ const bottomOf = (layout: { y: number; height: number }): number => layout.y + l
 
 // ════════════════ Happy ════════════════
 
-describe('[shadow] Happy', () => {
+describe('[影子]快乐', () => {
   it('node-shape-shadow：Node + 显式对象 → shape 几何图元带 resolved shadow', () => {
     const compiled = compileNode({
       shape: 'rectangle',
@@ -215,7 +215,7 @@ describe('[shadow] 交互', () => {
 
 // ════════════════ round-trip ════════════════
 
-describe('[shadow] round-trip', () => {
+describe('[阴影]往返', () => {
   it('含 shadow（对象）的 IRNode JSON 往返 parse 深等', () => {
     const node = {
       type: 'node',

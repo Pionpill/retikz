@@ -29,15 +29,30 @@ export type MarkEmitContext = {
 export type MarkDefinition = {
   /** 注册名称 */
   name: string;
-  /** 局部基准正方形边长，默认 10 */
+  /**
+   * 局部基准正方形边长
+   * @default 10
+   */
   baseSize?: number;
-  /** 局部放置锚点，默认基准正方形中心 */
+  /**
+   * 局部放置锚点，省略时使用基准正方形中心
+   * @default resolveMarkStyle
+   */
   anchor?: IRPosition;
-  /** 是否通过描边表达空心轮廓，默认 false */
+  /**
+   * 是否通过描边表达空心轮廓
+   * @default false
+   */
   hollow?: boolean;
-  /** 默认长度参数，默认 8 */
+  /**
+   * 实例未指定长度时使用的默认长度
+   * @default ARROW_MARKER_DEFAULT_SIZE
+   */
   defaultLength?: number;
-  /** 默认宽度参数，默认 8 */
+  /**
+   * 实例未指定宽度时使用的默认宽度
+   * @default ARROW_MARKER_DEFAULT_SIZE
+   */
   defaultWidth?: number;
   /** 根据已解析的样式和参数生成局部基础图元 */
   emit: (context: MarkEmitContext) => Iterable<ScenePrimitive>;

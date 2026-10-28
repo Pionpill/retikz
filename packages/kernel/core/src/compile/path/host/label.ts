@@ -7,13 +7,13 @@ import { resolveFont, resolveTextLine } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { DEFAULT_FONT_SIZE } from '../../constants';
 import type { CompileWarningCode } from '../../constants';
-import type { LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
+import type { LineLayoutContext, TexLowerer, TextMeasurer } from '../../text';
 import {
   combineOpacity,
   emitInlineLine,
   inlineSegmentPaintsOf,
   layoutInlineLine,
-  normalizeTextMetrics,
+  resolveTextMetrics,
   toAlphabeticBaselineY,
 } from '../../text';
 
@@ -21,9 +21,9 @@ import {
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 
 /** 边标注公式上下文 */
-export type LabelTexContext = {
+type LabelTexContext = {
   /** 注入的 TeX 降解能力 */
-  lowerTex?: LowerTex;
+  lowerTex?: TexLowerer;
   /** `$...$` 解析门控 */
   gatingOn: boolean;
   /** 接收公式解析与排版产生的编译诊断 */
@@ -31,7 +31,7 @@ export type LabelTexContext = {
 };
 
 /** step label 放置时额外需要的宿主几何信息 */
-export type LabelPlacementContext = {
+type LabelPlacementContext = {
   /** 宿主计算的侧向距离，省略时使用标签自身的 distance */
   sideOffset?: number;
 };
@@ -199,7 +199,7 @@ export const emitLabelPrimitive = (
   const resolved = resolvedLines[0];
   const text = resolved.plainText;
   const lineHeight = fontSize * LABEL_LINE_HEIGHT_FACTOR;
-  const m = normalizeTextMetrics(measureText(text, font));
+  const m = resolveTextMetrics(measureText(text, font));
   const measuredWidth = m.width;
   const measuredHeight = m.height || lineHeight;
 

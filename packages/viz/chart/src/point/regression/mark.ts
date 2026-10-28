@@ -146,7 +146,7 @@ export const resolveRegressionMarkGroup = (
 };
 
 /** 回归标记的作者定义 */
-export const RegressionMarkDefinition: ChartMarkDefinition = defineChartMark({
+export const regressionMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'regression',
   schema: RegressionChartMarkSchema,
   resolve: context => {

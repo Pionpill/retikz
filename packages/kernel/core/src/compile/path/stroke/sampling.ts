@@ -3,16 +3,16 @@ import type { CurveSegmentSample } from '@retikz/math';
 import type { PathCommand, ScenePrimitive } from '../../../contract';
 import type { CanonicalPathLabel, CanonicalStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import type { LowerTex, TextMeasurer } from '../../text';
+import type { TexLowerer, TextMeasurer } from '../../text';
 import { emitLabelPrimitive } from '../host';
 import { sampleStrokePathGeometry, sampleStrokeStepParameterGeometry } from './interruption';
 import { sampleRoundedCommands } from './rounded-corners';
 
 /** stroke step 的几何采样函数 */
-export type StrokeSegmentSampler = (t: number) => CurveSegmentSample;
+type StrokeSegmentSampler = (t: number) => CurveSegmentSample;
 
 /** stroke 整体路径采样输入 */
-export type SampleStrokePathInput = {
+type InputStrokePathSampling = {
   /** 圆角处理后的最终路径命令 */
   commands: ReadonlyArray<PathCommand>;
   /** 按声明顺序排列的绘制段采样函数 */
@@ -32,7 +32,7 @@ export const sampleStrokePath = ({
   segmentSamplers,
   roundedCommands,
   position,
-}: SampleStrokePathInput): CurveSegmentSample | undefined => {
+}: InputStrokePathSampling): CurveSegmentSample | undefined => {
   if (segmentSamplers.length === 0) return undefined;
   if (roundedCommands) return sampleRoundedCommands(commands, position);
 
@@ -68,7 +68,7 @@ export type StrokeSamplingCollector = {
 };
 
 /** 已在完整逻辑路径上 materialize 的 Stroke label */
-export type StrokeLabelMaterialization = {
+type StrokeLabelMaterialization = {
   /** 原 canonical label */
   label: CanonicalPathLabel;
   /** 产生的 Scene primitive */
@@ -80,7 +80,7 @@ export type StrokeLabelMaterialization = {
 };
 
 /** host label 的视觉与逻辑采样对 */
-export type StrokeHostLabelSample = {
+type StrokeHostLabelSample = {
   /** 用于文字定位的视觉 sample。圆角路径直接使用最终逻辑几何 */
   visualSample: CurveSegmentSample;
   /** 对应真实 command occurrence 的逻辑距离 sample */
@@ -99,7 +99,7 @@ const parameterBoundaryOwnerOfStep = (stepKind: CanonicalStep['kind']): 'previou
   stepKind === 'fold' ? 'previous' : 'next';
 
 /** 创建 stroke sampling collector 所需的上下文 */
-export type CreateStrokeSamplingCollectorInput = {
+type InputStrokeSamplingCollector = {
   /** 追加 label 几何边界的 path bounds 数组 */
   boundsPoints: Array<IRPosition>;
   /** 文本测量函数 */
@@ -111,7 +111,7 @@ export type CreateStrokeSamplingCollectorInput = {
   /** preset/rem 字号解析根字号 */
   rootFontSize?: number;
   /** 可选 TeX 降级能力 */
-  lowerTex?: LowerTex;
+  lowerTex?: TexLowerer;
   /** path warning 收集器 */
   warn: (code: string, message: string, subPath?: string) => void;
 };
@@ -128,7 +128,7 @@ export const createStrokeSamplingCollector = ({
   rootFontSize,
   lowerTex,
   warn,
-}: CreateStrokeSamplingCollectorInput): StrokeSamplingCollector => {
+}: InputStrokeSamplingCollector): StrokeSamplingCollector => {
   const labelPrimitives: Array<ScenePrimitive> = [];
   const segmentSamplers: Array<StrokeSegmentSampler> = [];
   const samplerRecords: Array<StrokeSamplerRecord> = [];

@@ -5,7 +5,7 @@ import type { IRScene } from '../../../src/schemas';
 import { cubic, line, move } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
-describe("compile path: 'bend'", () => {
+describe("编译路径：'bend'", () => {
   it('bend left 30° on horizontal chord → C 命令，控制点 y < 0', () => {
     const ir: IRScene = {
       version: 1,

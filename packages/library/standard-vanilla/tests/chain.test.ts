@@ -2,12 +2,12 @@ import { createProcessingController, normalizeScene, scene } from '@retikz/vanil
 import type { InputPath } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
-import { StandardInputEmbedAdapters } from '../src';
+import { standardInputEmbedAdapters } from '../src';
 import { chain, matrix } from '../src/collection';
 
 it('嵌套内容失败时保留上一次完整链，随后可正常更新', () => {
   const controller = createProcessingController(scene({ children: [chain({ items: ['A', 'B'] })] }), {
-    adapters: StandardInputEmbedAdapters,
+    adapters: standardInputEmbedAdapters,
   });
   const previous = controller.read();
 
@@ -38,7 +38,7 @@ it('三入口和嵌套内容进入 retained 时保持 JSON-safe', () => {
     chain({ skeleton: { items: ['a', { branches: [['b'], ['c']] }, 'd'] } }),
   ]) {
     const controller = createProcessingController(scene({ children: [child] }), {
-      adapters: StandardInputEmbedAdapters,
+      adapters: standardInputEmbedAdapters,
     });
 
     expect(controller.read().scene.primitives.length).toBeGreaterThan(0);
@@ -49,7 +49,7 @@ it('三入口和嵌套内容进入 retained 时保持 JSON-safe', () => {
 it('显式空箭头与空 marks 均被保留', () => {
   for (const path of [{ arrow: {} }, { arrow: {}, marks: [] }]) {
     const result = normalizeScene(scene({ children: [chain({ items: ['a', 'b'], defaultConnection: { path } })] }), {
-      adapters: StandardInputEmbedAdapters,
+      adapters: standardInputEmbedAdapters,
     });
 
     expect(JSON.stringify(result.ir)).toContain('"arrow":{}');
@@ -59,7 +59,7 @@ it('显式空箭头与空 marks 均被保留', () => {
 it('连接箭头方向简写与端点对象经 Kernel 归一化后等价', () => {
   const normalize = (arrow: InputPath['arrow']) =>
     normalizeScene(scene({ children: [chain({ items: ['a', 'b'], defaultConnection: { path: { arrow } } })] }), {
-      adapters: StandardInputEmbedAdapters,
+      adapters: standardInputEmbedAdapters,
     }).ir;
   expect(normalize('->')).toEqual(normalize({ end: {} }));
 });

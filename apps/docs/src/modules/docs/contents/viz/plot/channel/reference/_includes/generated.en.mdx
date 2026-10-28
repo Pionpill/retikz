@@ -1001,7 +1001,7 @@ export type ChannelBindingResolver = (mark: IRPlotMark) => IRPlotChannel | undef
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ResolveLabel"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={48}>ResolveLabel</ApiSourceLink>
+#### <ApiSourceLink label={"LabelResolver"} path={"packages/viz/plot/src/contract/channel.ts"} startLine={48}>LabelResolver</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1021,7 +1021,7 @@ export type ChannelBindingResolver = (mark: IRPlotMark) => IRPlotChannel | undef
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type ResolveLabel = (row: ExternalRow) => string;
+export type LabelResolver = (row: ExternalRow) => string;
 ```
 
 </DocTab>
@@ -1720,7 +1720,7 @@ resolveLabel takes precedence; reads the encoded field when present, otherwise u
 | Parameters | `text`           | `IRNodeLabel['text'] \| undefined`           | Fixed text content                                                                   |
 |            | `row`            | `ExternalRow`                                | Data row used by the current mark                                                    |
 |            | `fieldType?`     | `DataFieldType`                              | Field type; temporal fields use UTC date formatting, others use numeric formatting   |
-|            | `resolveLabel?`  | `ResolveLabel`                               | Runtime label callback taking precedence over declared content; omitted to read text |
+|            | `resolveLabel?`  | `LabelResolver`                              | Runtime label callback taking precedence over declared content; omitted to read text |
 |            | `field?`         | `string`                                     | Optional field encoding; invalid values do not fall back to fixed content            |
 |            | `displayFormat?` | `string`                                     | Display format for field values                                                      |
 | Returns    | —                | `IRNodeLabel['text'] \| string \| undefined` | Formatted text or constant content; undefined for an empty field or absent content   |
@@ -1736,7 +1736,7 @@ export declare const labelOf: (
   text: IRNodeLabel['text'] | undefined,
   row: ExternalRow,
   fieldType?: DataFieldType,
-  resolveLabel?: ResolveLabel,
+  resolveLabel?: LabelResolver,
   field?: string,
   displayFormat?: string,
 ) => IRNodeLabel['text'] | string | undefined;
@@ -1812,7 +1812,7 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"makeMarkValueResolver"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={44}>makeMarkValueResolver</ApiSourceLink>
+#### <ApiSourceLink label={"createMarkValueResolver"} path={"packages/viz/plot/src/providers/channel/shared/common.ts"} startLine={44}>createMarkValueResolver</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1836,7 +1836,7 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const makeMarkValueResolver: <T>(
+export declare const createMarkValueResolver: <T>(
   encoding: IRPlotChannel | undefined,
   model: DataTransformModel,
   options: MarkValueResolverOptions<T>,

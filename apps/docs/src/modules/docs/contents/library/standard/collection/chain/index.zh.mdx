@@ -27,11 +27,11 @@ import { Chain } from '@retikz/standard-react/collection';
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { chain, chainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 renderToSvgString(scene({ children: [chain({ items: ['A', 'B', 'C'] })] }), {
-  adapters: [ChainInputEmbedAdapter],
+  adapters: [chainInputEmbedAdapter],
 });
 ```
 
@@ -42,7 +42,7 @@ renderToSvgString(scene({ children: [chain({ items: ['A', 'B', 'C'] })] }), {
 { "namespace": "standard", "type": "chain", "items": ["A", "B", "C"] }
 ```
 
-直接 IR 注册 ChainProvider 及 PathClipProvider；嵌套内容提供自己的依赖，data 展开还需 ArrayProvider、MapProvider。
+直接 IR 注册 chainProvider 及 pathClipProvider；嵌套内容提供自己的依赖，data 展开还需 arrayProvider、mapProvider。
 
 </DocTab>
 </DocTabs>

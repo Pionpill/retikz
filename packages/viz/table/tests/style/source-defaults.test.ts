@@ -59,8 +59,8 @@ const parseTable = (source: unknown) => TableSchema.parse(JSON.parse(JSON.string
 const compileSource = (source: unknown) =>
   compileTable(parseTable(source), {}, { theme: { mode: 'light' }, compile: { padding: 0 } });
 
-describe('Table Source defaults', () => {
-  it('accepts sparse appearance, side-specific border, visual, and table defaults', () => {
+describe('默认为 Table Source', () => {
+  it('接受稀疏外观、特定于侧面的边框、视觉和表格默认值', () => {
     const source = { ...baseManual, ...sparseDefaults };
     const parsed = parseTable(source);
 
@@ -69,7 +69,7 @@ describe('Table Source defaults', () => {
     expect(parsed.layout?.borders?.outer).toEqual(source.layout.borders.outer);
   });
 
-  it('rejects legacy token bags, a single outer candidate, and non-default table fields', () => {
+  it('拒绝遗留令牌包、单个外部候选者和非默认表字段', () => {
     const legacy = TableSchema.safeParse({ ...baseManual, tableThemeTokens: { 'cell.content.color': '#111' } });
 
     expect(legacy.success).toBe(false);
@@ -95,7 +95,7 @@ describe('Table Source defaults', () => {
     }
   });
 
-  it('keeps the cascade at formal field granularity and creates no objects for empty tables', () => {
+  it('将级联保持在正式字段粒度，并且不为空表创建对象', () => {
     const result = compileSource({
       ...baseManual,
       id: 'cascade',
@@ -136,7 +136,7 @@ describe('Table Source defaults', () => {
     expect(empty.manifest.legendDescriptors).toEqual([]);
   });
 
-  it('allows cleared visual defaults when no encoding consumes them', () => {
+  it('当没有编码消费它们时，允许清除视觉默认值', () => {
     const result = compileSource({
       ...baseManual,
       defaultVisual: { categorical: null, sequential: null },
@@ -146,7 +146,7 @@ describe('Table Source defaults', () => {
     expect(result.manifest.legendDescriptors).toEqual([]);
   });
 
-  it('uses formal palettes in builtin scales and keeps explicit ranges highest', () => {
+  it('使用内置比例的正式调色板，并保持显式范围最高', () => {
     const result = compileSource({
       ...baseManual,
       id: 'consumer',
@@ -196,7 +196,7 @@ describe('Table Source defaults', () => {
   });
 });
 
-describe('Cell padding defaults', () => {
+describe('Cell 填充默认值', () => {
   const options = {
     theme: { name: 'padding', mode: 'light' },
     lower: {
@@ -210,7 +210,7 @@ describe('Cell padding defaults', () => {
     compile: { padding: 0, themeDefinitions: [defineTheme({ name: 'padding', resolve: () => ({}) })] },
   } as const;
 
-  it('preserves sparse JSON padding defaults and rejects invalid padding and unrelated fields', () => {
+  it('保留稀疏 JSON 填充默认值并拒绝无效填充和不相关字段', () => {
     const source = {
       ...baseManual,
       defaultCellLayout: { body: { padding: 0 }, columnHeader: { padding: { left: 4 } } },
@@ -221,7 +221,7 @@ describe('Cell padding defaults', () => {
     }
   });
 
-  it('applies theme padding to detail Cells, preserves explicit zero and records resolved defaults', () => {
+  it('将主题填充应用于详细单元格，保留显式零并记录解析的默认值', () => {
     const source = parseTable({
       namespace: 'table',
       type: 'table',
@@ -249,7 +249,7 @@ describe('Cell padding defaults', () => {
     expect(JSON.stringify(source)).not.toContain('defaultCellLayout');
   });
 
-  it('lets Source override defaultTable and Cell override Source without changing other regions', () => {
+  it('让 Source 覆盖 defaultTable 和 Cell 覆盖 Source 而不更改其他区域', () => {
     const result = compileTable(
       parseTable({
         ...baseManual,
@@ -272,7 +272,7 @@ describe('Cell padding defaults', () => {
     });
   });
 
-  it('replaces spacing objects as units and clears inherited padding with null', () => {
+  it('将间距对象替换为单位，并用 null 清除继承的填充', () => {
     const current = { defaultCellLayout: { body: { padding: { left: 9, right: 8 } } } };
     expect(
       mergeTableDefaults(current, { defaultCellLayout: { body: { padding: { top: 2 } } } }).defaultCellLayout,
@@ -283,7 +283,7 @@ describe('Cell padding defaults', () => {
     }
   });
 
-  it('includes theme padding in auto track contributions without creating Cells', () => {
+  it('在自动跟踪贡献中包含主题填充，而无需创建单元格', () => {
     const source = parseTable({
       ...baseManual,
       structure: { kind: 'manual', rows: [['x']] },
@@ -300,8 +300,8 @@ describe('Cell padding defaults', () => {
   });
 });
 
-describe('Core graphic defaults in Table content', () => {
-  it('inherits stroke and effect leaves while null clears only the selected leaf', () => {
+describe('Core 图形默认在 Table 内容中', () => {
+  it('继承描边和效果叶，而 null 仅清除选定的叶', () => {
     const source = {
       ...baseManual,
       defaultTable: {

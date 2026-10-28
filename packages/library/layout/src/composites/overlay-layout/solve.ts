@@ -9,7 +9,7 @@ import type { LayoutAlignment } from '../shared';
 import { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
 
 /** Overlay 单个 profile 的结构输入 */
-export type OverlayProfileItem = Readonly<{
+type OverlayProfileItem = Readonly<{
   /** 对应作者输入数组的零基索引 */
   sourceIndex: number;
   /** 已解析的对齐式或坐标式放置策略 */
@@ -34,7 +34,7 @@ export type OverlayProfileItem = Readonly<{
 }>;
 
 /** Overlay baseline group 的结构 ascent/descent */
-export type OverlayBaselineMetric = Readonly<{
+type OverlayBaselineMetric = Readonly<{
   /** 包含外边距的基线上方最大结构高度 */
   ascent: number;
   /** 包含外边距的基线下方最大结构高度 */
@@ -42,7 +42,7 @@ export type OverlayBaselineMetric = Readonly<{
 }>;
 
 /** Overlay 单个 intrinsic profile 的 content-box contribution */
-export type OverlayProfile = Readonly<{
+type OverlayProfile = Readonly<{
   /** 参与固有尺寸计算的内容总尺寸 */
   contentSize: Readonly<{
     /** 容器内容区域所需的宽度 */
@@ -57,7 +57,7 @@ export type OverlayProfile = Readonly<{
 }>;
 
 /** Overlay item placement 的纯求解输入 */
-export type PlaceOverlayItemInput = Readonly<{
+type InputOverlayItemPlacement = Readonly<{
   /** 已解析的对齐式或坐标式放置策略 */
   placement: CanonicalOverlayPlacement;
   /** 容器中可用于放置子项的内容矩形 */
@@ -80,7 +80,7 @@ export type PlaceOverlayItemInput = Readonly<{
 }>;
 
 /** Overlay item 的无 margin slot 与真实 allocation translation */
-export type PlacedOverlayGeometry = Readonly<{
+type PlacedOverlayGeometry = Readonly<{
   /** 已扣除外边距的结构槽位 */
   slot: LayoutRect;
   /** 把子项真实分配边界定位到槽位的平移量 */
@@ -190,7 +190,7 @@ export const resolveOverlayProfile = (items: ReadonlyArray<OverlayProfileItem>):
 };
 
 /** 求解 aligned content slot 或 positioned anchored slot 的真实 allocation translation */
-export const placeOverlayItem = (input: PlaceOverlayItemInput): PlacedOverlayGeometry => {
+export const placeOverlayItem = (input: InputOverlayItemPlacement): PlacedOverlayGeometry => {
   const slot: LayoutRect =
     input.placement.kind === OverlayPlacementKind.Aligned
       ? Object.freeze({

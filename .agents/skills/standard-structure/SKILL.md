@@ -12,7 +12,7 @@ description: Use when changing Retikz package structure, dependencies, schemas, 
 - 顶级成员声明之间留一个空行；成员有 JSDoc 或前置注释时，空行放在注释之前，注释紧贴对应声明。
 - 函数、类等成员内部，职责或处理阶段明确不同的逻辑段之间留一个空行；同一逻辑段内不逐句插入空行。逻辑分段由 LLM 自审，不以格式化通过代替检查。
 - 领域包拥有 schema、resolve、lowering 与 Scene 语义；Vanilla 组装 Input → IR，React 等 adapter 调度 Vanilla，不绕开它新建 IR builder。
-- 外部 unknown 在 parse/schema 边界校验；内部按类型契约消费，仅保留补全后不变量与真实上下文错误。
+- 添加校验前先追踪数据来源，尽量在 schema、parse、定义或注册等最早具备完整信息的上游入口建立约束；上游已保证的约束，下游不得重复校验。仅当后续变换可能破坏该约束，或出现新的领域不变量、真实上下文错误时检查，并明确检查依据。外部 unknown 在入口校验，内部按类型契约消费。
 - schema 声明默认值；resolve 处理继承优先级、上下文 lookup 与默认应用时机；pipeline/compile 管理上下文及调度。
 - 依赖沿 shared → schemas → contract → providers → resolve → pipeline/compile，不反向导入。
 - 同一 composite 的具体 Definition、创建工厂与依赖 Provider 合并为 owner-local `composite.ts`；schema、resolve、编译算法及独立 registry / 数据准备保持各自边界，`index.ts` 仍只做导出。合并时保持公开符号、初始化顺序与依赖方向，不跨包合并 adapter 工厂；删除原文件与遗留空目录，不保留转发层。

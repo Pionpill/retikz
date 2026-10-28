@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { plot, renderPlot } from '../src';
 
-describe('constant mark rendering', () => {
-  it('renders three mark geometries through SVG with an explicit empty binding', () => {
+describe('常量标记渲染', () => {
+  it('通过 SVG 使用显式空绑定渲染三个标记几何形状', () => {
     const source = plot({
       data: { reference: 'rows' },
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },

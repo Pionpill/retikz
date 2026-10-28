@@ -2,15 +2,15 @@ import type { CoreDependencyProvider } from '@retikz/core';
 import { defineArrow } from '@retikz/core';
 
 import { BuiltinExtensionArrowName } from '../constants';
-import { filledPath, hollowPath } from './_utils';
+import { buildFilledPath, buildHollowPath } from './marker-path';
 
 /** 可选实心方形箭头 Definition */
-export const SquareArrowDefinition = defineArrow({
+export const squareArrowDefinition = defineArrow({
   name: BuiltinExtensionArrowName.Square,
   backX: 0,
   lineContactX: 0,
   emit: context => [
-    filledPath(context, [
+    buildFilledPath(context, [
       [0, 0],
       [10, 0],
       [10, 10],
@@ -20,22 +20,20 @@ export const SquareArrowDefinition = defineArrow({
 });
 
 /** Square 箭头的静态 Core provider */
-export const SquareArrowProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'arrow', name: SquareArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => SquareArrowDefinition,
+export const squareArrowProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'arrow', name: squareArrowDefinition.name }),
+  makeDefinition: () => squareArrowDefinition,
 });
 
 /** 可选空心方形箭头 Definition */
-export const OpenSquareArrowDefinition = defineArrow({
+export const openSquareArrowDefinition = defineArrow({
   name: BuiltinExtensionArrowName.OpenSquare,
   hollow: true,
   backX: 1,
   lineContactX: 1,
   tipX: 9,
   emit: context => [
-    hollowPath(
+    buildHollowPath(
       context,
       [
         [1, 1],
@@ -49,9 +47,7 @@ export const OpenSquareArrowDefinition = defineArrow({
 });
 
 /** OpenSquare 箭头的静态 Core provider */
-export const OpenSquareArrowProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'arrow', name: OpenSquareArrowDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: () => OpenSquareArrowDefinition,
+export const openSquareArrowProvider: CoreDependencyProvider = Object.freeze({
+  key: Object.freeze({ capability: 'arrow', name: openSquareArrowDefinition.name }),
+  makeDefinition: () => openSquareArrowDefinition,
 });

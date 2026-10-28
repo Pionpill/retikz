@@ -61,15 +61,15 @@ const context = (restart: (id?: string) => void): HydrationContext => ({
   scene,
 });
 
-describe('Canvas animation trigger helpers', () => {
-  it('collects onEvent and visible trigger ids from Scene primitives', () => {
+describe('Canvas 动画触发助手', () => {
+  it('从 Scene 原语收集 onEvent 和可见触发器 id', () => {
     const events = collectCanvasAnimationEventTriggers(scene);
 
     expect(events.get('box')?.has('click')).toBe(true);
     expect(collectCanvasVisibleAnimationIds(scene).has('box')).toBe(true);
   });
 
-  it('synthesizes onEvent handlers that restart the hit id before user handler', () => {
+  it('合成 onEvent 处理程序，在用户处理程序之前重新启动命中 ID', () => {
     const order: Array<string> = [];
     const restart = vi.fn(() => order.push('restart'));
     const user = vi.fn(() => order.push('user'));
@@ -83,7 +83,7 @@ describe('Canvas animation trigger helpers', () => {
     expect(order).toEqual(['restart', 'user']);
   });
 
-  it('adds an internal onEvent handler even when the user registered none', () => {
+  it('即使用户未注册，也会添加内部 onEvent 处理程序', () => {
     const restart = vi.fn();
     const merged = withCanvasAnimationEventHandlers(scene, undefined);
 
@@ -92,7 +92,7 @@ describe('Canvas animation trigger helpers', () => {
     expect(restart).toHaveBeenCalledWith('box');
   });
 
-  it('preserves special-key ids without writing animation handlers to Object.prototype', () => {
+  it('保留特殊键 ID，而不将动画处理程序写入 Object.prototype', () => {
     const specialId = '__proto__';
     const user = vi.fn();
     const restart = vi.fn();
@@ -117,7 +117,7 @@ describe('Canvas animation trigger helpers', () => {
     }
   });
 
-  it('maps an id bbox through meet-fit and detects viewport intersection', () => {
+  it('通过 meet-fit 映射一个 id bbox 并检测视口相交', () => {
     const canvas = document.createElement('canvas');
     vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
       x: 0,

@@ -1,11 +1,11 @@
-import type { OverlayLayoutItemInput } from '@retikz/layout';
+import type { InputOverlayLayoutItemConfig } from '@retikz/layout';
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import type { FC } from 'react';
 
 import type { LayoutItemChildSource } from './types';
 
 /** OverlayLayout 直属 item 的 React authoring props */
-export type OverlayLayoutItemProps = Omit<OverlayLayoutItemInput, 'child' | 'key' | 'kind'> &
+export type OverlayLayoutItemProps = Omit<InputOverlayLayoutItemConfig, 'child' | 'key' | 'kind'> &
   Readonly<{
     /** 容器内稳定身份；省略时内部按位置生成，不读取 React key */
     itemKey?: string;

@@ -30,7 +30,7 @@ export const lowerEllipse = (source: IREllipse): IRPath => {
         type: 'step',
         kind: 'ellipsePath',
         radius,
-        ...(angles ? { ...angles, closed: ShapeClosedSchema.parse(source.closed) } : {}),
+        ...(angles ? { ...angles, closed: source.closed ?? ShapeClosedSchema.parse(undefined) } : {}),
       },
     ],
   };

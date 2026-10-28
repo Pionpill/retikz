@@ -8,15 +8,15 @@ import {
   createLayoutArtifactContainer,
   createLayoutArtifactItem,
   layoutClipOf,
-  normalizeLayoutSpacing,
+  resolveLayoutSpacing,
   resolveLayoutAxisSize,
   unionLayoutArtifactRects,
 } from '../../src/compose';
 
-describe('Layout public layout composition contract', () => {
-  it('exposes the canonical compiler and atomic layout helpers', () => {
+describe('Layout 公共布局组合契约', () => {
+  it('公开规范编译器和原子布局助手', () => {
     expect(compileFlexLayout).toBeTypeOf('function');
-    expect(normalizeLayoutSpacing).toBeTypeOf('function');
+    expect(resolveLayoutSpacing).toBeTypeOf('function');
     expect(contentRectOf).toBeTypeOf('function');
     expect(resolveLayoutAxisSize).toBeTypeOf('function');
     expect(alignAllocationInSlot).toBeTypeOf('function');
@@ -26,8 +26,8 @@ describe('Layout public layout composition contract', () => {
     expect(unionLayoutArtifactRects).toBeTypeOf('function');
   });
 
-  it('keeps the canonical geometry and failure semantics', () => {
-    expect(normalizeLayoutSpacing({ default: 1, x: 2, y: 3, left: 4 })).toEqual({
+  it('保留规范几何和故障语义', () => {
+    expect(resolveLayoutSpacing({ default: 1, x: 2, y: 3, left: 4 })).toEqual({
       top: 3,
       right: 2,
       bottom: 3,

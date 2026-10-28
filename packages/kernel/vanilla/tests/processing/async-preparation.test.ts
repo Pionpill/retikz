@@ -22,8 +22,8 @@ const contribution = (id: string, x = 0): InputEmbedContribution => ({
 
 const source = (x = 0): InputSceneChildren => ({ children: [{ type: 'embed', kind: 'async-node', props: { x } }] });
 
-describe('shared async authoring preparation', () => {
-  it('does not begin static compilation when the driver creation callback cancels the request', async () => {
+describe('共享异步编写准备', () => {
+  it('当驱动程序创建回调取消请求时，不开始静态编译', async () => {
     const abort = new AbortController();
     let resolutions = 0;
 
@@ -55,7 +55,7 @@ describe('shared async authoring preparation', () => {
     expect(resolutions).toBe(0);
   });
 
-  it('rejects cancellation from synchronous compile callbacks before an initial controller commits', async () => {
+  it('在初始控制器提交之前拒绝取消同步编译回调', async () => {
     for (const phase of ['create', 'resolve'] as const) {
       const abort = new AbortController();
       let commits = 0;
@@ -82,7 +82,7 @@ describe('shared async authoring preparation', () => {
     }
   });
 
-  it('supersedes an update invalidated from a synchronous compile callback without publishing its revision', async () => {
+  it('取代同步编译回调中无效的更新，而不发布其修订版本', async () => {
     let invalidate: (() => void) | undefined;
     let commits = 0;
     const session: VanillaCompileDriverSession = {
@@ -119,7 +119,7 @@ describe('shared async authoring preparation', () => {
     controller.dispose();
   });
 
-  it('gives multiple nested slots distinct authored positions with synchronous identity parity', async () => {
+  it('为多个嵌套槽提供具有同步身份等价性的不同编写位置', async () => {
     const inner = {
       kind: 'async-node',
       lower: (props: { x: number }, context: { id: string }) => contribution(context.id, props.x),
@@ -172,7 +172,7 @@ describe('shared async authoring preparation', () => {
     expect(group.children).toHaveLength(2);
   });
 
-  it('rejects nested execution during prepare, unknown adapters and duplicate kinds without computing', async () => {
+  it('拒绝准备期间的嵌套执行、未知适配器和重复类型而不进行计算', async () => {
     let executed = 0;
     const inner = {
       kind: 'async-node',
@@ -203,7 +203,7 @@ describe('shared async authoring preparation', () => {
     await expect(processToStaticInputResultAsync(source())).rejects.toThrow(/no prepare adapter/);
   });
 
-  it('keeps layer, Scope and Theme contexts identical across preparation and lowering', async () => {
+  it('在准备和下沉过程中保持图层、Scope 和主题上下文相同', async () => {
     const syncContexts: Array<{ id: string; identityPath: Array<string>; mode?: string }> = [];
     const asyncContexts: typeof syncContexts = [];
     const adapter = {
@@ -251,7 +251,7 @@ describe('shared async authoring preparation', () => {
     expect([...asynchronous.runtimeMeta.identityIndex]).toEqual([...sync.runtimeMeta.identityIndex]);
   });
 
-  it('disposes on lifecycle cancellation and prevents late ignored-signal results from publishing', async () => {
+  it('处理生命周期取消并防止发布后期忽略信号结果', async () => {
     let complete: ((value: InputEmbedContribution) => void) | undefined;
     const abort = new AbortController();
     const adapter = {
@@ -281,7 +281,7 @@ describe('shared async authoring preparation', () => {
     expect(() => controller.subscribe(() => undefined)).toThrow(/disposed/);
   });
 
-  it('prepares the entire authoring tree before any contribution executes', async () => {
+  it('在执行任何贡献之前准备整个编写树', async () => {
     const calls: Array<string> = [];
     const adapter = {
       kind: 'async-node',
@@ -307,7 +307,7 @@ describe('shared async authoring preparation', () => {
     expect(calls).toEqual(['prepare:1', 'prepare:2']);
   });
 
-  it('uses the same anonymous identity, theme and nested authoring contribution in synchronous and async paths', async () => {
+  it('在同步和异步路径中使用相同的匿名身份、主题和嵌套编写贡献', async () => {
     const inner = {
       kind: 'async-node',
       lower: (props: { x: number }, context: { id: string }) => contribution(context.id, props.x),
@@ -355,7 +355,7 @@ describe('shared async authoring preparation', () => {
     expect([...asyncResult.runtimeMeta.parentIndex]).toEqual([...sync.runtimeMeta.parentIndex]);
   });
 
-  it('makes discard and commit mutually exclusive terminal states', async () => {
+  it('使丢弃和提交互斥的终止状态', async () => {
     const adapter = {
       kind: 'async-node',
       prepare: (props: { x: number }, context: { id: string }) => ({
@@ -383,7 +383,7 @@ describe('shared async authoring preparation', () => {
     cancelled.discard();
   });
 
-  it('consumes candidate commit before reentrant driver callbacks', async () => {
+  it('在可重入驱动程序回调之前消费候选提交', async () => {
     let commits = 0;
     let discardCause: unknown;
     const candidate: Awaited<ReturnType<typeof prepareStaticProcessingAsync>> = await prepareStaticProcessingAsync(
@@ -419,7 +419,7 @@ describe('shared async authoring preparation', () => {
     expect(discardCause).toBeInstanceOf(RetikzVanillaError);
   });
 
-  it('publishes only the current complete update and preserves committed revisions on failure', async () => {
+  it('仅发布当前完整更新并在失败时保留已提交的修订', async () => {
     const completions = new Map<
       number,
       { resolve: (value: InputEmbedContribution) => void; reject: (cause: unknown) => void }

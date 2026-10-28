@@ -51,8 +51,8 @@ const expectDeclarationError = (
   });
 };
 
-describe('Plot chart-extension declaration normalization', () => {
-  it('preserves the declaration error contract and maps details without a cause', () => {
+describe('Plot 图表扩展声明规范化', () => {
+  it('保留声明错误契约并无原因地映射细节', () => {
     const path = ['children', 0] as const;
     const conflictingPath = ['props', 'guides'] as const;
     const error = new RetikzPlotVanillaError({
@@ -83,7 +83,7 @@ describe('Plot chart-extension declaration normalization', () => {
     expect(omittedConflict.cause).toBeUndefined();
   });
 
-  it('emits only explicit JSON-safe members and preserves their authored order', () => {
+  it('仅发出显式 JSON 安全成员并保留其编写顺序', () => {
     const result = normalizeExtension(
       [
         <PlotTransform key="sort" operation={{ kind: 'sort', params: { field: 'amount', order: 'descending' } }} />,
@@ -126,7 +126,7 @@ describe('Plot chart-extension declaration normalization', () => {
     expect(JSON.stringify(result.fragment)).not.toContain('rows');
   });
 
-  it('passes source-aware explicit collections and composition through canonical binding normalization', () => {
+  it('通过规范绑定规范化传递源感知显式集合和组合', () => {
     const scales: Array<IRPlotScaleOperation> = [{ type: 'linear', name: 'recipe.x' }];
     const guides: Array<IRPlotGuide> = [{ type: 'axis', dimension: 'x' }];
     const composition: PlotComposition = {
@@ -153,7 +153,7 @@ describe('Plot chart-extension declaration normalization', () => {
     });
   });
 
-  it('preserves Plot runtime sidecars without serializing them into the member fragment', () => {
+  it('保留 Plot 运行时 sidecar，而不将它们序列化到成员片段中', () => {
     const resolveLabel = (row: ExternalRow): string => String(row.label);
     const result = normalizeExtension(
       <PointMark
@@ -170,7 +170,7 @@ describe('Plot chart-extension declaration normalization', () => {
     expect(JSON.stringify(result.fragment)).not.toContain('resolveLabel');
   });
 
-  it('rejects duplicate JSX and typed mark sources with their original paths', () => {
+  it('拒绝重复的 JSX 和键入的标记源及其原始路径', () => {
     const marks: PlotDeclarationSource<ReadonlyArray<NonNullable<PlotAuthoringContext['marks']>['value'][number]>> = {
       value: [{ type: 'point', encodings: { position: { x: { field: 'amount' }, y: { field: 'margin' } } } }],
       path: ['props', 'marks'],
@@ -223,11 +223,11 @@ describe('Plot chart-extension declaration normalization', () => {
       code: 'PLOT_VANILLA_UNSUPPORTED_CHART_CHILD' as const,
       path: ['children', 0] as const,
     },
-  ])('rejects $name with a canonical code and raw path', ({ children, code, path }) => {
+  ])('使用规范代码和原始路径拒绝 $name', ({ children, code, path }) => {
     expectDeclarationError(() => normalizeExtension(children), code, path);
   });
 
-  it('reports the second nested composition declaration and the context source it conflicts with', () => {
+  it('报告第二个嵌套组合声明及其与之冲突的上下文源', () => {
     const children = [
       <PointMark key="point" encodings={{ position: { x: { field: 'x' }, y: { field: 'y' } } }} />,
       <>
@@ -255,7 +255,7 @@ describe('Plot chart-extension declaration normalization', () => {
     );
   });
 
-  it('rejects a child composition when the context already owns coordinate', () => {
+  it('当上下文已经拥有坐标时拒绝子组合', () => {
     expectDeclarationError(
       () =>
         normalizeExtension(
@@ -275,7 +275,7 @@ describe('Plot chart-extension declaration normalization', () => {
     );
   });
 
-  it('reports JSX guides and scales as second sources of context collections', () => {
+  it('将 JSX 辅助线和缩放报告为上下文集合的第二个来源', () => {
     expectDeclarationError(
       () =>
         normalizeExtension(<PlotAxis dimension="x" />, {

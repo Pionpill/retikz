@@ -42,7 +42,7 @@ const Release = z.object({
   packages: z.array(PackageBlock),
 });
 
-describe('changelog data', () => {
+describe('变更日志数据', () => {
   it('符合 schema(含 description ≤200 / 合法 pkg / YYYY-MM-DD)', () => {
     expect(() => z.array(Release).parse(changelog)).not.toThrow();
   });

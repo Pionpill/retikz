@@ -40,7 +40,7 @@ export type SemanticTableColumn = Readonly<{
 }>;
 
 /** 已物化默认值的 Cell 矩形跨度 */
-export type ResolvedTableCellSpan = Readonly<{
+export type CanonicalTableCellSpan = Readonly<{
   /** 连续覆盖的 row 数量 */
   rows: number;
   /** 连续覆盖的 column 数量 */
@@ -48,7 +48,7 @@ export type ResolvedTableCellSpan = Readonly<{
 }>;
 
 /** 已物化默认值的 Cell 布局策略 */
-export type ResolvedTableCellLayout = Readonly<{
+export type CanonicalTableCellLayout = Readonly<{
   /** Core 同源的四边 padding */
   padding: Readonly<BoundsInsets>;
   /** content box 内横向对齐 */
@@ -84,9 +84,9 @@ export type SemanticTableCell = Readonly<{
   /** Cell value 或直接内容 */
   payload: DeepReadonly<IRTableCellPayload>;
   /** 已解析的矩形跨度 */
-  span: ResolvedTableCellSpan;
+  span: CanonicalTableCellSpan;
   /** 已解析的 Cell 布局策略 */
-  layout: ResolvedTableCellLayout;
+  layout: CanonicalTableCellLayout;
   /** 可用的最小来源信息 */
   source?: TableCellSource;
 }>;

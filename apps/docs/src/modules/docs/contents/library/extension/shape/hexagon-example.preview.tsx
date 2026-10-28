@@ -1,4 +1,4 @@
-import { HexagonShapeDefinition } from '@retikz/extension';
+import { hexagonShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 /** 图形参数 */
@@ -9,7 +9,7 @@ export type HexagonExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderHexagonExamplePreview = (values: HexagonExamplePreviewValues) => (
-  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} extensions={{ shapes: [HexagonShapeDefinition] }}>
+  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} extensions={{ shapes: [hexagonShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'hexagon', params: { shoulderDepth: values.shoulderDepth, cornerRadius: values.cornerRadius } }}

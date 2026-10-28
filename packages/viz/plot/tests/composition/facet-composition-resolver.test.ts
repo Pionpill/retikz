@@ -15,7 +15,7 @@ const plotFacetCompositionResolver = (): FacetCompositionResolver => {
 };
 
 describe('resolvePlotFacetComposition', () => {
-  it('builds a complete composition around the recipe coordinate', () => {
+  it('围绕配方坐标构建完整的合成', () => {
     const coordinate = { type: 'cartesian2D', x: 'billLength', y: 'flipperLength' };
 
     expect(
@@ -38,7 +38,7 @@ describe('resolvePlotFacetComposition', () => {
     });
   });
 
-  it('keeps Plot-only template and panel controls in resolver context', () => {
+  it('在解析器上下文中保留仅 Plot 的模板和面板控件', () => {
     const coordinate = { type: 'cartesian2D', x: 'xScale', y: 'yScale' };
     const panelCoordinate = { type: 'polar2D', angle: 'xScale', radius: 'yScale' };
 

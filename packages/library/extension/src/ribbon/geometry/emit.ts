@@ -17,7 +17,7 @@ import type { RibbonEmitOptions, RibbonLike, RibbonSegment } from './types';
 import { widthFunction, resolveSampleCount } from './width';
 
 /** ribbon path emit 所需的 Extension 编排上下文 */
-export type EmitRibbonPrimitiveContext = RibbonEmitOptions;
+type EmitRibbonPrimitiveContext = RibbonEmitOptions;
 
 const LABEL_POSITION: Record<string, number> = {
   'at-start': 0,
@@ -29,9 +29,9 @@ const LABEL_POSITION: Record<string, number> = {
   'at-end': 1,
 };
 
-type ResolvedRibbonLabel = PathLabel & Pick<IRRibbonLabel, 'placement'>;
+type CompiledRibbonLabel = PathLabel & Pick<IRRibbonLabel, 'placement'>;
 
-const canonicalizeLabel = (label: IRRibbonLabel): ResolvedRibbonLabel => ({
+const canonicalizeLabel = (label: IRRibbonLabel): CompiledRibbonLabel => ({
   ...label,
   position:
     label.position === undefined
@@ -46,7 +46,7 @@ const canonicalizeLabel = (label: IRRibbonLabel): ResolvedRibbonLabel => ({
 const labelsOf = (
   label: IRRibbonLabel | Array<IRRibbonLabel> | undefined,
   context: EmitRibbonPrimitiveContext,
-): Array<ResolvedRibbonLabel> => {
+): Array<CompiledRibbonLabel> => {
   if (label === undefined) return [];
   const labels = Array.isArray(label) ? label : [label];
   return labels.map(({ placement, ...source }) =>
@@ -57,7 +57,7 @@ const labelsOf = (
 const materializedSamples = (
   segments: ReadonlyArray<RibbonSegment>,
   totalLength: number,
-  labels: ReadonlyArray<ResolvedRibbonLabel>,
+  labels: ReadonlyArray<CompiledRibbonLabel>,
   widthAt: (offset: number) => number,
   endpointAxes: { start?: [number, number]; end?: [number, number] },
   align: 'center' | 'left' | 'right',

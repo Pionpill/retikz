@@ -464,7 +464,7 @@ describe('<Plot spec data> 薄包装', () => {
   });
 });
 
-it('keeps label shorthand and nested styles equivalent to Vanilla', async () => {
+it('保持与 Vanilla 等效的标签简写和嵌套样式', async () => {
   const { plot } = await import('@retikz/plot-vanilla');
   const rows = [{ x: 1, y: 2, name: 'A', size: 18 }];
   const encodings = { position: { x: { field: 'x' }, y: { field: 'y' } }, label: ['name', { font: { size: 'size' } }] };

@@ -29,7 +29,7 @@ describe('MarkSchema (contract)', () => {
     }
   });
   // Happy path
-  it('mark_point_valid', () => {
+  it('标记点有效', () => {
     const m = {
       type: 'point',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -39,7 +39,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_path_with_order_valid', () => {
+  it('标记顺序有效的路径', () => {
     const m = {
       type: 'path',
       id: 'trend',
@@ -50,13 +50,13 @@ describe('MarkSchema (contract)', () => {
   });
 
   // 边界
-  it('mark_path_omits_order_valid', () => {
+  it('标记路径省略顺序有效', () => {
     const m = { type: 'path', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } };
 
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_id_optional_valid', () => {
+  it('标记 id 可省略', () => {
     const withId = {
       type: 'point',
       id: 'p',
@@ -73,7 +73,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(noId)).toEqual({ ...noId, contributeToDomain: true });
   });
 
-  it('mark_default_color_group_is_json_safe_and_non_blank', () => {
+  it('标记默认颜色组是 json 安全且非空白', () => {
     const mark = {
       type: 'point',
       defaultColorGroup: 'observations',
@@ -91,7 +91,7 @@ describe('MarkSchema (contract)', () => {
   });
 
   // 错误路径
-  it('mark_accepts_layer_zindex', () => {
+  it('标记接受图层 zindex', () => {
     const mark = {
       type: 'point',
       layer: { zIndex: 120 },
@@ -102,7 +102,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(mark)).toEqual({ ...mark, contributeToDomain: true });
   });
 
-  it('mark_layer_rejects_fractional_zindex_and_unknown_fields', () => {
+  it('标记层拒绝分数 zindex 和未知字段', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'point',
@@ -121,16 +121,16 @@ describe('MarkSchema (contract)', () => {
     ).toThrow();
   });
 
-  it('mark_unknown_type_rejected', () => {
+  it('标记未知类型被拒绝', () => {
     expect(() => MarkSchema.parse({ type: 'bar', kind: 'data' })).toThrow();
   });
 
-  it('mark_missing_type_rejected', () => {
+  it('标记缺失类型被拒绝', () => {
     expect(() => MarkSchema.parse({ kind: 'data' })).toThrow();
   });
 
   // 交互：两 mark 各自 encoding 互不依赖
-  it('marks_distinct_encoding_valid', () => {
+  it('标记不同的编码有效', () => {
     const path = { type: 'path', encodings: { position: { x: { field: 'a' }, y: { field: 'b' } } } };
     const point = {
       type: 'point',
@@ -143,24 +143,24 @@ describe('MarkSchema (contract)', () => {
   });
 
   // contract：interval(bar)
-  it('mark_interval_valid', () => {
+  it('标记间隔有效', () => {
     const m = { type: 'interval', encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } } };
 
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_interval_with_id_valid', () => {
+  it('标记 id 有效的区间', () => {
     const m = { type: 'interval', id: 'bars', encodings: { position: { x: { field: 'm' }, y: { field: 'r' } } } };
 
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_interval_omitted_encoding_is_left_to_geometry_resolution', () => {
+  it('interval 标记省略编码时交由几何解析处理', () => {
     expect(() => MarkSchema.parse({ type: 'interval' })).not.toThrow();
   });
 
   // contract：relation（series / bounds）
-  it('mark_interval_series_dodge_valid', () => {
+  it('标记区间系列闪避有效', () => {
     const m = {
       type: 'interval',
       encodings: {
@@ -174,7 +174,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_interval_stack_valid', () => {
+  it('标记区间堆叠有效', () => {
     const m = {
       type: 'interval',
       encodings: {
@@ -188,7 +188,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_interval_bounds_bad_rejected', () => {
+  it('标记间隔边界不良被拒绝', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'interval',
@@ -198,7 +198,7 @@ describe('MarkSchema (contract)', () => {
     ).toThrow();
   });
 
-  it('mark_interval_bounds_whitespace_role_rejected', () => {
+  it('标记间隔边界，空白角色被拒绝', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'interval',
@@ -208,12 +208,12 @@ describe('MarkSchema (contract)', () => {
     ).toThrow();
   });
 
-  it('mark_interval_bounds_reject_unknown_nested_fields_after_role_key_validation', () => {
+  it('标记间隔边界在角色键验证后拒绝未知的嵌套字段', () => {
     expect(IntervalBoundsSchema.safeParse({ custom: { kind: 'full', extra: true } }).success).toBe(false);
   });
 
   // contract：histogram 连续 x 区间柱（extent bound）
-  it('mark_interval_extent_histogram_valid', () => {
+  it('标记区间范围直方图有效', () => {
     const m = {
       type: 'interval',
       encodings: {
@@ -226,7 +226,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_interval_extent_empty_from_rejected', () => {
+  it('将间隔范围标记为空，以免被拒绝', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'interval',
@@ -239,7 +239,7 @@ describe('MarkSchema (contract)', () => {
     ).toThrow();
   });
 
-  it('mark_path_series_valid', () => {
+  it('标记路径系列有效', () => {
     const m = {
       type: 'path',
       encodings: { series: 'city', order: 't', position: { x: { field: 't' }, y: { field: 'v' } } },
@@ -249,7 +249,7 @@ describe('MarkSchema (contract)', () => {
   });
 
   // contract：sector(pie / donut) → interval (extent×full)
-  it('mark_sector_valid', () => {
+  it('标记扇区有效', () => {
     const m = {
       type: 'interval',
       encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'label' },
@@ -259,7 +259,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_sector_custom_bound_fields_valid', () => {
+  it('标记扇区自定义绑定字段有效', () => {
     const m = {
       type: 'interval',
       encodings: { bounds: { x: { from: { field: 'lo' }, to: { field: 'hi' } } }, color: 'label' },
@@ -269,7 +269,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_sector_with_id_valid', () => {
+  it('标记 id 有效的扇区', () => {
     const m = {
       type: 'interval',
       id: 'pie',
@@ -280,7 +280,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_sector_union_discriminates', () => {
+  it('标记扇区联合判别', () => {
     const parsed = MarkSchema.parse({
       type: 'interval',
       encodings: { bounds: { x: { from: { field: 'lo' }, to: { field: 'hi' } } }, color: '#333' },
@@ -291,7 +291,7 @@ describe('MarkSchema (contract)', () => {
     expect(parsed.encodings?.bounds).toMatchObject({ x: { from: { field: 'lo' } } });
   });
 
-  it('mark_sector_json_round_trip', () => {
+  it('标记扇区 json 往返', () => {
     const m = {
       type: 'interval',
       encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'label' },
@@ -304,7 +304,7 @@ describe('MarkSchema (contract)', () => {
     });
   });
 
-  it('mark_sector_pull_constant_valid', () => {
+  it('标志扇区拉常数有效', () => {
     const m = {
       type: 'interval',
       encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, color: 'label' },
@@ -314,7 +314,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_sector_pull_field_json_round_trip', () => {
+  it('标记扇区拉字段 json 往返', () => {
     const m = {
       type: 'interval',
       encodings: { bounds: { x: { from: { field: 'y0' }, to: { field: 'y1' } } }, pull: 'offset', color: 'label' },
@@ -327,7 +327,7 @@ describe('MarkSchema (contract)', () => {
     });
   });
 
-  it('mark_sector_pull_negative_rejected', () => {
+  it('标记扇区拉负拒绝', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'interval',
@@ -337,7 +337,7 @@ describe('MarkSchema (contract)', () => {
     ).toThrow();
   });
 
-  it('mark_sector_omitted_encoding_is_left_to_geometry_resolution', () => {
+  it('标记扇区省略编码是左到几何解析结果', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'interval',
@@ -347,11 +347,11 @@ describe('MarkSchema (contract)', () => {
     ).not.toThrow();
   });
 
-  it('mark_sector_typo_type_rejected', () => {
+  it('标记扇区拼写错误类型被拒绝', () => {
     expect(() => MarkSchema.parse({ type: 'sektor', encodings: { color: 'label' } })).toThrow();
   });
 
-  it('mark_sector_empty_start_field_rejected', () => {
+  it('标记扇区空起始字段被拒绝', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'interval',
@@ -364,7 +364,7 @@ describe('MarkSchema (contract)', () => {
   // 错误路径：baseline 必须有限（.finite 防 Infinity 破坏 JSON round-trip）
 
   // contract：path 加 closed（雷达多边形）
-  it('mark_path_closed_valid', () => {
+  it('接受 Path 标记的 closed 配置', () => {
     const m = {
       type: 'path',
       encodings: { position: { x: { field: 'dim' }, y: { field: 'value' } } },
@@ -374,14 +374,14 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_path_closed_omitted_valid', () => {
+  it('Path 标记可省略 closed', () => {
     const m = { type: 'path', encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } } };
     const parsed = MarkSchema.parse(m);
 
     expect(parsed).not.toHaveProperty('closed');
   });
 
-  it('mark_path_closed_bad_type_rejected', () => {
+  it('拒绝 Path 标记中类型错误的 closed', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'path',
@@ -391,7 +391,7 @@ describe('MarkSchema (contract)', () => {
     ).toThrow();
   });
 
-  it('mark_path_closed_json_round_trip', () => {
+  it('标记路径封闭的 json 往返', () => {
     const m = {
       type: 'path',
       encodings: { order: 'dim', position: { x: { field: 'dim' }, y: { field: 'value' } } },
@@ -404,7 +404,7 @@ describe('MarkSchema (contract)', () => {
     });
   });
 
-  it('mark_path_connect_nulls_valid', () => {
+  it('标记路径连接空值有效', () => {
     const m = {
       type: 'path',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -426,7 +426,7 @@ describe('MarkSchema (contract)', () => {
     }
   });
 
-  it('mark_path_closure_cycle_valid', () => {
+  it('标记路径闭合循环有效', () => {
     const m = {
       type: 'path',
       encodings: { position: { x: { field: 'dim' }, y: { field: 'value' } } },
@@ -436,7 +436,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_path_closure_baseline_valid', () => {
+  it('标记路径闭合基线有效', () => {
     const m = {
       type: 'path',
       encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
@@ -446,7 +446,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_path_closure_stack_valid', () => {
+  it('标记路径闭合堆叠有效', () => {
     const m = {
       type: 'path',
       encodings: { closure: { baseline: 'y0' }, position: { x: { field: 'month' }, y: { field: 'y1' } } },
@@ -456,7 +456,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_path_closure_stack_empty_baseline_field_rejected', () => {
+  it('标记路径闭合堆叠空基线字段被拒绝', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'path',
@@ -466,7 +466,7 @@ describe('MarkSchema (contract)', () => {
     ).toThrow();
   });
 
-  it('mark_path_closure_baseline_nan_rejected', () => {
+  it('标记路径闭合基线 nan 被拒绝', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'path',
@@ -477,7 +477,7 @@ describe('MarkSchema (contract)', () => {
   });
 
   // contract：size 通道仅 PointMark
-  it('mark_point_with_size_field_valid', () => {
+  it('尺寸字段有效的标记点', () => {
     const m = {
       type: 'point',
       encodings: { size: 'pop', position: { x: { field: 'lng' }, y: { field: 'lat' } } },
@@ -487,7 +487,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_point_with_size_value_valid', () => {
+  it('尺寸值有效的标记点', () => {
     const m = {
       type: 'point',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -497,7 +497,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_interval_rejects_unknown_position_role_size', () => {
+  it('标记间隔拒绝未知位置角色大小', () => {
     const parsed = MarkSchema.safeParse({
       type: 'interval',
       encodings: { position: { x: { field: 'c' }, y: { field: 'v' }, size: { field: 'p' } } },
@@ -507,7 +507,7 @@ describe('MarkSchema (contract)', () => {
   });
 
   // contract：opacity 通道仅 PointMark
-  it('mark_point_with_opacity_valid', () => {
+  it('不透明度有效的标记点', () => {
     const m = {
       type: 'point',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, opacity: { overall: 'd' } },
@@ -517,7 +517,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_interval_rejects_unknown_position_role_opacity', () => {
+  it('标记间隔拒绝未知位置角色不透明度', () => {
     const parsed = MarkSchema.safeParse({
       type: 'interval',
       encodings: { position: { x: { field: 'c' }, y: { field: 'v' }, opacity: { field: 'd' } } },
@@ -527,7 +527,7 @@ describe('MarkSchema (contract)', () => {
   });
 
   // contract：shape 通道仅 PointMark
-  it('mark_point_with_shape_valid', () => {
+  it('形状有效的标记点', () => {
     const m = {
       type: 'point',
       encodings: { shape: 'cat', position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -537,7 +537,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_point_with_constant_node_style_valid', () => {
+  it('常量节点样式的标记点有效', () => {
     const m = {
       type: 'point',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -558,7 +558,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_point_with_stroke_channels_valid', () => {
+  it('Point 标记接受描边通道', () => {
     const m = {
       type: 'point',
       encodings: {
@@ -573,7 +573,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_point_accepts_paint_fill_and_stroke', () => {
+  it('Point 标记接受绘制资源填充和描边', () => {
     const m = {
       type: 'point',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -583,7 +583,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_interval_with_node_style_channels_valid', () => {
+  it('标记间隔，节点样式通道有效', () => {
     const m = {
       type: 'interval',
       encodings: {
@@ -597,7 +597,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_interval_rejects_unknown_position_role_shape', () => {
+  it('标记区间拒绝未知位置角色形状', () => {
     const parsed = MarkSchema.safeParse({
       type: 'interval',
       encodings: { position: { x: { field: 'c' }, y: { field: 'v' }, shape: { field: 'cat' } } },
@@ -607,7 +607,7 @@ describe('MarkSchema (contract)', () => {
   });
 
   // contract：rect(heatmap) → interval (band×band)
-  it('mark_rect_with_color_valid', () => {
+  it('将颜色标记为有效的矩形', () => {
     const m = {
       type: 'interval',
       encodings: {
@@ -620,7 +620,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_rect_without_color_valid', () => {
+  it('标记没有颜色的矩形有效', () => {
     // 缺 color → 纯网格（值映射可选）；x / y 必填性 + band 约束下放 lowering，schema 仅解析通过
     const m = {
       type: 'interval',
@@ -631,7 +631,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_rect_with_id_valid', () => {
+  it('将 id 有效的矩形标记为有效', () => {
     const m = {
       type: 'interval',
       id: 'heat',
@@ -642,7 +642,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_rect_omitted_encoding_is_left_to_geometry_resolution', () => {
+  it('rect 标记省略编码时交由几何解析处理', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'interval',
@@ -651,13 +651,13 @@ describe('MarkSchema (contract)', () => {
     ).not.toThrow();
   });
 
-  it('mark_rect_typo_type_rejected', () => {
+  it('标记拒绝的拼写错误类型', () => {
     expect(() =>
       MarkSchema.parse({ type: 'rekt', encodings: { position: { x: { field: 'r' }, y: { field: 'c' } } } }),
     ).toThrow();
   });
 
-  it('mark_rect_union_discriminates', () => {
+  it('标记直联判别', () => {
     const parsed = MarkSchema.parse({
       type: 'interval',
       encodings: { position: { x: { field: 'r' }, y: { field: 'c' } } },
@@ -667,7 +667,7 @@ describe('MarkSchema (contract)', () => {
     expect(parsed.type).toBe('interval');
   });
 
-  it('mark_rect_rejects_unknown_position_role_size', () => {
+  it('标记矩形拒绝未知位置角色大小', () => {
     const parsed = MarkSchema.safeParse({
       type: 'interval',
       encodings: { position: { x: { field: 'r' }, y: { field: 'c' }, size: { field: 'p' } } },
@@ -677,7 +677,7 @@ describe('MarkSchema (contract)', () => {
     expect(parsed.success).toBe(false);
   });
 
-  it('mark_rect_json_round_trip', () => {
+  it('标记矩形 json 往返', () => {
     const m = {
       type: 'interval',
       id: 'heat',
@@ -691,14 +691,14 @@ describe('MarkSchema (contract)', () => {
     });
   });
 
-  it('rejects unsupported built-in mark discriminators', () => {
+  it('拒绝不支持的内置标记判别字段', () => {
     expect(MarkSchema.safeParse({ type: 'reference', properties: { position: { y: { value: 70 } } } }).success).toBe(
       false,
     );
   });
 
   // contract：text → point (encoding.text) + 位置 mark label
-  it('mark_text_union_discriminates', () => {
+  it('标记文本联合判别', () => {
     const parsed = MarkSchema.parse({
       type: 'point',
       encodings: { text: 'label', position: { x: { field: 'px' }, y: { field: 'py' } } },
@@ -708,7 +708,7 @@ describe('MarkSchema (contract)', () => {
     expect(parsed.type).toBe('point');
   });
 
-  it('mark_text_dx_dy_valid', () => {
+  it('标记文本 dx dy 有效', () => {
     const m = {
       type: 'point',
       encodings: { text: 'lbl', position: { x: { field: 'px' }, y: { field: 'py' } } },
@@ -718,7 +718,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_text_channel_both_rejected', () => {
+  it('标记文本通道均被拒绝', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'point',
@@ -728,13 +728,13 @@ describe('MarkSchema (contract)', () => {
     ).toThrow();
   });
 
-  it('mark_text_typo_type_rejected', () => {
+  it('标记拒绝的文本拼写错误类型', () => {
     expect(() =>
       MarkSchema.parse({ type: 'txt', encodings: { text: 'a', position: { x: { field: 'px' }, y: { field: 'py' } } } }),
     ).toThrow();
   });
 
-  it('mark_text_json_round_trip', () => {
+  it('标记文本 json 往返', () => {
     const m = {
       type: 'point',
       id: 't',
@@ -748,7 +748,7 @@ describe('MarkSchema (contract)', () => {
     });
   });
 
-  it('mark_interval_label_valid', () => {
+  it('标记间隔标签有效', () => {
     const m = {
       type: 'interval',
       encodings: { label: { text: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
@@ -761,7 +761,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_path_host_geometry_label_valid', () => {
+  it('标记路径宿主几何标签有效', () => {
     const m = {
       type: 'path',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -778,7 +778,7 @@ describe('MarkSchema (contract)', () => {
     });
   });
 
-  it('mark_label_core_style_fields_valid', () => {
+  it('标记标签核心样式字段有效', () => {
     const m = {
       type: 'interval',
       encodings: { label: { text: 'revenue' }, position: { x: { field: 'month' }, y: { field: 'revenue' } } },
@@ -798,7 +798,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_path_with_core_path_style_channels_valid', () => {
+  it('标记具有核心路径样式通道的路径有效', () => {
     const m = {
       type: 'path',
       encodings: {
@@ -812,7 +812,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_path_accepts_paint_fill_and_stroke', () => {
+  it('Path 标记接受绘制资源填充和描边', () => {
     const m = {
       type: 'path',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -822,7 +822,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_interval_accepts_paint_fill_and_stroke', () => {
+  it('interval 标记接受绘制资源填充和描边', () => {
     const m = {
       type: 'interval',
       encodings: { position: { x: { field: 'month' }, y: { field: 'revenue' } } },
@@ -832,7 +832,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_style_colors_reject_whitespace_only_strings', () => {
+  it('标记样式颜色拒绝仅包含空格的字符串', () => {
     expect(
       MarkSchema.safeParse({
         type: 'point',
@@ -856,7 +856,7 @@ describe('MarkSchema (contract)', () => {
     ).toBe(false);
   });
 
-  it('mark_point_label_numeric_position_valid', () => {
+  it('标记点标签数字位置有效', () => {
     const m = {
       type: 'point',
       encodings: { position: { x: { field: 'px' }, y: { field: 'py' } } },
@@ -866,7 +866,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_label_content_neither_rejected', () => {
+  it('标记标签内容既不拒绝', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'interval',
@@ -876,7 +876,7 @@ describe('MarkSchema (contract)', () => {
     ).toThrow();
   });
 
-  it('mark_path_rejects_node_only_label_pin', () => {
+  it('标记路径拒绝仅节点标签 pin', () => {
     expect(() =>
       MarkSchema.parse({
         type: 'path',
@@ -897,7 +897,7 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual({ ...m, contributeToDomain: true });
   });
 
-  it('mark_path_accepts_local_transform', () => {
+  it('标记路径接受本地变换', () => {
     const m = {
       type: 'path',
       transforms: [

@@ -44,7 +44,7 @@ import { legendReserveOf } from '../legend';
 import type { PlotLayoutOptions } from '../types';
 
 /** scoped/scaffold frame 解析所需的显式上下文 */
-export type ScopedFramesResolveContext = {
+type ScopedFramesResolveContext = {
   /** 一次 lowering 内的共享留白状态 */
   markPadding?: MarkPaddingContext;
   /** 当前待下沉的 Plot 源描述 */
@@ -91,7 +91,7 @@ export type ScopedFramesResolveContext = {
 };
 
 /** scoped/scaffold frame 解析结果及后续 facet/mark lowering 需要的 scope 查询 */
-export type ScopedFramesResolution = {
+type ScopedFramesResolution = {
   /** 完成解析的坐标视图注册表 */
   coordinateScopes: CoordinateScopeRegistry;
   /** 按视图身份索引的坐标作用域 */

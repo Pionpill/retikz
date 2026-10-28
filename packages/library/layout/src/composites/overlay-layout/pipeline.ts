@@ -17,7 +17,7 @@ import {
 
 import type { CanonicalOverlayLayout, CanonicalOverlayLayoutItem } from '../../resolve/overlay-layout';
 import { resolveOverlayLayout } from '../../resolve/overlay-layout';
-import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
+import type { KeyedLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import {
   alignResolvedLayoutSlot,
   compensatedLayoutSum,
@@ -48,7 +48,7 @@ import type { IROverlayLayout } from './types';
 type IntrinsicMode = 'minimum' | 'natural';
 
 type MeasuredOverlayItem = Readonly<{
-  authored: EffectiveLayoutItem<CanonicalOverlayLayoutItem>;
+  authored: KeyedLayoutItem<CanonicalOverlayLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
 }>;
@@ -59,7 +59,7 @@ type OverlayProfileResults = Readonly<{
 }>;
 
 type PlacedOverlayItem = Readonly<{
-  authored: EffectiveLayoutItem<CanonicalOverlayLayoutItem>;
+  authored: KeyedLayoutItem<CanonicalOverlayLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
   slotBounds: LayoutRect;

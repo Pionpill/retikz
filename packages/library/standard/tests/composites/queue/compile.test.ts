@@ -1,17 +1,17 @@
 import type { IRChild, ScenePrimitive, LayoutChildResult, LayoutProposal } from '@retikz/core';
 import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
-import { PathClipDefinition } from '@retikz/extension';
+import { pathClipDefinition } from '@retikz/extension';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { ArrayDefinition, MapDefinition } from '../../../src/collection';
-import { QueueDefinition } from '../../../src/collection/queue';
+import { arrayDefinition, mapDefinition } from '../../../src/collection';
+import { queueDefinition } from '../../../src/collection/queue';
 
 const base = { namespace: 'standard', type: 'queue' } as const;
 const compile = (child: IRChild) =>
   compileToScene(
     { type: 'scene', version: 1, children: [child] },
-    { composites: [QueueDefinition, ArrayDefinition, MapDefinition], clips: [PathClipDefinition], padding: 0 },
+    { composites: [queueDefinition, arrayDefinition, mapDefinition], clips: [pathClipDefinition], padding: 0 },
   );
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(n => (n.type === 'group' ? flat(n.children) : [n]));
@@ -189,7 +189,7 @@ it('父布局额外空间不拉伸单元或开放边框，过小的proposal失�
           },
         ],
       },
-      { composites: [harness, QueueDefinition], clips: [PathClipDefinition], padding: 0 },
+      { composites: [harness, queueDefinition], clips: [pathClipDefinition], padding: 0 },
     );
     return { result, observed };
   };
@@ -252,38 +252,35 @@ it.each([
       [18, 58],
     ],
   ],
-] as const)(
-  '%s operation paths match manual Core geometry and preserve allocation',
-  (direction, incoming, outgoing) => {
-    const source = {
-      ...base,
-      items: [{ id: 'cell' }],
-      layout: { direction },
-      defaultCell: { layout: { width: 20, height: 10 } },
-    };
-    const actual = compile({ ...source, arrow: { input: true, output: true } });
-    const disabled = compile({ ...source, arrow: { input: false, output: false } });
-    const path = (points: ReadonlyArray<readonly [number, number]>) => ({
-      type: 'path' as const,
-      style: { stroke: 'currentColor', strokeWidth: 1, fill: 'none' },
-      arrow: { end: {} },
-      children: points.map((point, index) => ({
-        type: 'step' as const,
-        kind: index === 0 ? ('move' as const) : ('line' as const),
-        to: [point[0], point[1]] as [number, number],
-      })),
-    });
-    const expected = compile({
-      type: 'scope',
-      children: [{ ...source, arrow: { input: false, output: false } }, path(incoming), path(outgoing)],
-    });
-    expect(flat(actual.scene.primitives).filter(p => p.type === 'path')).toEqual(
-      flat(expected.scene.primitives).filter(p => p.type === 'path'),
-    );
-    expect(bounds(actual, 'container')).toEqual(bounds(disabled, 'container'));
-  },
-);
-it('empty collections suppress arrows and each custom arrow can be independently disabled', () => {
+] as const)('%s 操作路径与手动 Core 几何形状匹配并保留分配', (direction, incoming, outgoing) => {
+  const source = {
+    ...base,
+    items: [{ id: 'cell' }],
+    layout: { direction },
+    defaultCell: { layout: { width: 20, height: 10 } },
+  };
+  const actual = compile({ ...source, arrow: { input: true, output: true } });
+  const disabled = compile({ ...source, arrow: { input: false, output: false } });
+  const path = (points: ReadonlyArray<readonly [number, number]>) => ({
+    type: 'path' as const,
+    style: { stroke: 'currentColor', strokeWidth: 1, fill: 'none' },
+    arrow: { end: {} },
+    children: points.map((point, index) => ({
+      type: 'step' as const,
+      kind: index === 0 ? ('move' as const) : ('line' as const),
+      to: [point[0], point[1]] as [number, number],
+    })),
+  });
+  const expected = compile({
+    type: 'scope',
+    children: [{ ...source, arrow: { input: false, output: false } }, path(incoming), path(outgoing)],
+  });
+  expect(flat(actual.scene.primitives).filter(p => p.type === 'path')).toEqual(
+    flat(expected.scene.primitives).filter(p => p.type === 'path'),
+  );
+  expect(bounds(actual, 'container')).toEqual(bounds(disabled, 'container'));
+});
+it('空集合抑制箭头，每个自定义箭头可以独立禁用', () => {
   const props = {
     ...base,
     items: [{}],
@@ -306,7 +303,7 @@ it('empty collections suppress arrows and each custom arrow can be independently
   expect(empty).not.toContain('red');
 });
 
-it('operation arrows are absent by default and explicitly enabled without changing cells', () => {
+it('默认情况下不存在操作箭头，并且在不更改单元格的情况下显式启用', () => {
   const source = { ...base, items: ['A'] };
   const plain = compile(source);
   expect(plain.scene).toEqual(compile({ ...source, arrow: { input: false, output: false } }).scene);
@@ -318,7 +315,7 @@ it('operation arrows are absent by default and explicitly enabled without changi
   ).toHaveLength(2);
 });
 
-it('arrow shorthand and omitted sides preserve independent operation semantics', () => {
+it('箭头简写和省略的边保留独立的操作语义', () => {
   const source = { ...base, items: ['A', 'B'] };
   expect(compile({ ...source, arrow: true }).scene).toEqual(
     compile({ ...source, arrow: { input: true, output: true } }).scene,

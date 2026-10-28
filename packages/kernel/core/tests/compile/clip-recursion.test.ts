@@ -39,8 +39,8 @@ const OperationCycleDefinition = defineClip({
   schema: strictObject({ kind: literal('operationCycle'), params: strictObject({}) }),
   lower: (spec, context) => context.lower(spec),
 });
-describe('clip recursion guard', () => {
-  it('shares the budget across siblings and permits a completed child to be reused', () => {
+describe('裁剪递归防护', () => {
+  it('在同级节点之间共享预算并允许重复使用已完成的子级', () => {
     const child: IRClip = { kind: 'recursive', params: { depth: 0 } };
     const pair = defineClip({
       kind: 'pair',
@@ -59,7 +59,7 @@ describe('clip recursion guard', () => {
     expect(() => compileToScene(scene, { clips, maxClipDepth: 2 })).toThrow(/maxClipDepth.*2/i);
   });
 
-  it('counts each clip conversion once', () => {
+  it('对每个裁剪转换计数一次', () => {
     expect(
       compileToScene(clippedIr({ kind: 'recursive', params: { depth: 2 } }), {
         clips: [RecursiveClipDefinition],
@@ -75,7 +75,7 @@ describe('clip recursion guard', () => {
     ).toThrow(/maxClipDepth.*2/i);
   });
 
-  it('does not spend the budget again when a runtime Scope imports its prepared path', () => {
+  it('当运行时 Scope 导入其准备好的路径时，不会再次花费预算', () => {
     const runtimeScope = defineComposite({
       namespace: 'test',
       type: 'runtimeScopeClip',
@@ -113,7 +113,7 @@ describe('clip recursion guard', () => {
     ).toThrow(/maxClipDepth.*2/i);
   });
 
-  it('uses a default budget of 32 clip conversions', () => {
+  it('使用 32 个裁剪转换的默认预算', () => {
     expect(
       compileToScene(clippedIr({ kind: 'recursive', params: { depth: 31 } }), { clips: [RecursiveClipDefinition] })
         .scene.resources,
@@ -123,7 +123,7 @@ describe('clip recursion guard', () => {
     ).toThrow(/maxClipDepth.*32/i);
   });
 
-  it('rejects an active operation object cycle before depth overflow', () => {
+  it('拒绝深度溢出之前的活动操作对象循环', () => {
     expect(() =>
       compileToScene(clippedIr({ kind: 'operationCycle', params: {} }), {
         clips: [OperationCycleDefinition],
@@ -133,14 +133,14 @@ describe('clip recursion guard', () => {
   });
 });
 
-describe('clip failure boundaries', () => {
-  it('reports missing definitions with available registry keys', () => {
+describe('裁剪失败边界', () => {
+  it('报告缺失定义并列出可用注册表键', () => {
     expect(() => compileToScene(clippedIr({ kind: 'missingOperation', params: {} }))).toThrow(
       /Unknown provider .*available: rect/i,
     );
   });
 
-  it('keeps malformed lower output as a fatal provider contract error', () => {
+  it('将格式错误的下沉输出保留为致命的提供者契约错误', () => {
     const malformed = defineClip({
       kind: 'malformed',
       schema: strictObject({ kind: literal('malformed'), params: strictObject({}) }),

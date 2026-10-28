@@ -81,6 +81,8 @@ Path 的有效 `color` 覆盖箭头自身的 `color`；箭头具体 `stroke` / `
 
 React 通过 `<Layout extensions={{ arrows }}>` 注入；直接调用 core 时使用 `CompileOptions.arrows`。随后在端点或沿线 mark 中引用注册名。
 
+注册时会检查定义中的几何数值：`backX`、`lineContactX`、显式 `tipX` 和 `outerInset` 必须有限，显式 `baseSize` 必须为有限正数，并满足 `backX <= lineContactX <= tipX`。省略 `tipX` 时用 `baseSize`，两者都省略时用 `10`。即使当前图形没有引用该箭头，非法定义也会在注册时被拒绝；缩放等运算产生的非有限结果仍在编译时检查。
+
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
 

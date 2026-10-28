@@ -1,10 +1,9 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { CanonicalTheme } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { DiagramThemeDefinition } from '../src/_diagram';
 import {
-  defineDiagramTheme,
   DiagramDefaultsSchema,
   getDefaultDiagramTheme,
   resolveDiagramDefinitionOptions,
@@ -13,7 +12,7 @@ import {
 } from '../src/_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../src/errors';
 
-const themeWith = (overrides: Partial<ResolvedTheme>): ResolvedTheme => ({
+const themeWith = (overrides: Partial<CanonicalTheme>): CanonicalTheme => ({
   ...DEFAULT_RESOLVED_THEME,
   ...overrides,
 });
@@ -22,21 +21,12 @@ const registryOf = (
   ...definitions: ReadonlyArray<DiagramThemeDefinition>
 ): ReadonlyMap<string, DiagramThemeDefinition> => resolveDiagramThemeRegistry(definitions);
 
-describe('Diagram Theme Definition and registry', () => {
-  it('keeps the exact Definition object as a typed identity', () => {
-    const definition: DiagramThemeDefinition = {
+describe('Diagram 主题 Definition 和注册表', () => {
+  it('将 Definition 选项解析到共享只读样式注册表中', () => {
+    const definition = {
       name: 'brand',
       resolve: () => ({ presentation: { title: { style: { textColor: '#123456' } } } }),
-    };
-
-    expect(defineDiagramTheme(definition)).toBe(definition);
-  });
-
-  it('resolves Definition options once into the shared read-only style registry', () => {
-    const definition = defineDiagramTheme({
-      name: 'brand',
-      resolve: () => ({ presentation: { title: { style: { textColor: '#123456' } } } }),
-    });
+    } satisfies DiagramThemeDefinition;
 
     const resolved = resolveDiagramDefinitionOptions({ diagramThemeDefinitions: [definition] });
 
@@ -45,15 +35,15 @@ describe('Diagram Theme Definition and registry', () => {
     expect(resolveDiagramDefinitionOptions().diagramThemeDefinitions.size).toBe(0);
   });
 
-  it('rejects duplicate Definition names with Diagram-owned diagnostics', () => {
-    const first = defineDiagramTheme({
+  it('使用 Diagram 拥有的诊断拒绝重复的 Definition 名称', () => {
+    const first = {
       name: 'brand',
       resolve: () => ({ presentation: { title: { style: { opacity: 1 } } } }),
-    });
-    const second = defineDiagramTheme({
+    } satisfies DiagramThemeDefinition;
+    const second = {
       name: 'brand',
       resolve: () => ({ presentation: { description: { style: { opacity: 1 } } } }),
-    });
+    } satisfies DiagramThemeDefinition;
 
     for (const run of [() => resolveDiagramThemeRegistry([first, second])]) {
       try {
@@ -73,8 +63,8 @@ describe('Diagram Theme Definition and registry', () => {
   });
 });
 
-describe('Diagram Neutral Theme', () => {
-  it('resolves the exact Light baseline and keeps unspecified fields absent', () => {
+describe('Diagram 中性主题', () => {
+  it('解析精确的光基线并保持未指定的字段不存在', () => {
     const neutral = getDefaultDiagramTheme(themeWith({ mode: ThemeMode.Light }));
 
     expect(neutral).toEqual({
@@ -103,7 +93,7 @@ describe('Diagram Neutral Theme', () => {
     expect(neutral.presentation?.title?.layout).not.toHaveProperty('maxTextWidth');
   });
 
-  it('resolves the exact Dark title and current Core semantic guide color', () => {
+  it('解析确切的深色标题和当前的 Core 语义引导颜色', () => {
     const theme = themeWith({
       mode: ThemeMode.Dark,
       colors: {
@@ -122,9 +112,9 @@ describe('Diagram Neutral Theme', () => {
   });
 });
 
-describe('Diagram Theme cascade', () => {
-  it('applies named defaults then author defaults with whole-font replacement', () => {
-    const definition = defineDiagramTheme({
+describe('Diagram 主题级联', () => {
+  it('应用命名默认值，然后应用作者默认值并进行整个字体替换', () => {
+    const definition = {
       name: 'brand',
       resolve: theme => ({
         frame: {
@@ -136,7 +126,7 @@ describe('Diagram Theme cascade', () => {
           title: { style: { textColor: '#1d4ed8', font: { family: 'Inter', weight: 700, style: 'italic' } } },
         },
       }),
-    });
+    } satisfies DiagramThemeDefinition;
     const inline = DiagramDefaultsSchema.parse({
       frame: {
         background: { fill: '#f8fafc', opacity: { fill: 0.8 } },
@@ -157,14 +147,14 @@ describe('Diagram Theme cascade', () => {
     });
   });
 
-  it('ignores empty and undefined author groups without discarding the named defaults', () => {
-    const definition = defineDiagramTheme({
+  it('忽略空和 undefined 的作者组，而不丢弃指定的默认值', () => {
+    const definition = {
       name: 'paper',
       resolve: () => ({
         frame: { padding: 12 },
         presentation: { title: { style: { font: { family: 'serif', size: 24 } } } },
       }),
-    });
+    } satisfies DiagramThemeDefinition;
     const theme = themeWith({ name: 'paper' });
     const baseline = resolveDiagramTheme(theme, registryOf(definition));
     const empty = resolveDiagramTheme(theme, registryOf(definition), {
@@ -175,7 +165,7 @@ describe('Diagram Theme cascade', () => {
     expect(empty).toEqual(baseline);
   });
 
-  it('fails when the effective Core style lacks a same-named Diagram Definition', () => {
+  it('当有效的 Core 样式缺少同名的 Diagram Definition 时失败', () => {
     try {
       resolveDiagramTheme(themeWith({ name: 'missing' }), registryOf());
 
@@ -192,14 +182,14 @@ describe('Diagram Theme cascade', () => {
     }
   });
 
-  it('preserves callback exceptions as the cause of a Diagram error', () => {
+  it('保留回调异常作为 Diagram 错误的原因', () => {
     const cause = new Error('external callback failed');
-    const definition = defineDiagramTheme({
+    const definition = {
       name: 'broken',
       resolve: () => {
         throw cause;
       },
-    });
+    } satisfies DiagramThemeDefinition;
 
     try {
       resolveDiagramTheme(themeWith({ name: 'broken' }), registryOf(definition));
@@ -213,8 +203,8 @@ describe('Diagram Theme cascade', () => {
     }
   });
 
-  it('accepts empty Definition defaults as a no-op', () => {
-    const definition = defineDiagramTheme({ name: 'empty', resolve: () => ({}) });
+  it('接受空 Definition 默认值作为无操作', () => {
+    const definition = { name: 'empty', resolve: () => ({}) } satisfies DiagramThemeDefinition;
 
     expect(resolveDiagramTheme(themeWith({ name: 'empty' }), registryOf(definition))).toEqual(
       resolveDiagramTheme(themeWith({}), registryOf()),

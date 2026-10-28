@@ -29,9 +29,9 @@ import { deepFreeze } from '../../shared';
 import { cascadeTableCellAppearance } from './cascade';
 import { matchesTableCellSelector } from './match';
 import type {
-  ResolvedTableCellPlan,
-  ResolvedTablePlan,
-  ResolveTableCellPlansOptions,
+  TableCellPlanResolution,
+  TablePlanResolution,
+  TableCellPlansResolveOptions,
   TableCellAppearanceTrace,
 } from './types';
 
@@ -75,7 +75,7 @@ const hasOwnPath = (value: unknown, path: ReadonlyArray<string>): boolean => {
 };
 
 /** 找到某个 defaults Source 字段最终采用的来源层 */
-const defaultsSourceOf = (options: ResolveTableCellPlansOptions, path: ReadonlyArray<string>): TableCellPlanSource => {
+const defaultsSourceOf = (options: TableCellPlansResolveOptions, path: ReadonlyArray<string>): TableCellPlanSource => {
   const layers = options.defaultTable?.layers ?? [];
 
   for (let index = layers.length - 1; index >= 0; index -= 1) {
@@ -93,7 +93,7 @@ const traceAppearanceLeaves = (
   value: unknown,
   appearancePath: ReadonlyArray<string>,
   defaultsPath: ReadonlyArray<string>,
-  options: ResolveTableCellPlansOptions,
+  options: TableCellPlansResolveOptions,
   trace: Partial<Record<TableCellAppearanceTracePath, TableCellPlanSource>>,
 ): void => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
@@ -112,7 +112,7 @@ const traceAppearanceLeaves = (
 /** 从 resolved Table defaults 构造 Cell appearance 与逐叶 winner */
 const styleAppearanceOf = (
   cell: SemanticTableCell,
-  options: ResolveTableCellPlansOptions,
+  options: TableCellPlansResolveOptions,
 ): Readonly<{ appearance: IRTableCellAppearance; trace: TableCellAppearanceTrace }> => {
   const location = cell.location === TableCellLocation.ColumnHeader ? 'columnHeader' : 'body';
   const defaults = options.defaultTable?.defaults.defaultAppearance?.[location];
@@ -164,7 +164,7 @@ const styleAppearanceOf = (
 /** 从 style seed 与 semantic border 构造初始 appearance */
 const initialAppearanceOf = (
   cell: SemanticTableCell,
-  options: ResolveTableCellPlansOptions,
+  options: TableCellPlansResolveOptions,
 ): Readonly<{ appearance: IRTableCellAppearance; trace: TableCellAppearanceTrace }> => {
   const style = styleAppearanceOf(cell, options);
   if (cell.layout.borders === undefined) return deepFreeze(style);
@@ -178,7 +178,7 @@ const initialAppearanceOf = (
 };
 
 /** 为单个 canonical Cell 建立 default / structure / style plan */
-const initialPlanOf = (cell: SemanticTableCell, options: ResolveTableCellPlansOptions): MutablePlan => {
+const initialPlanOf = (cell: SemanticTableCell, options: TableCellPlansResolveOptions): MutablePlan => {
   const initial = initialAppearanceOf(cell, options);
   if (cell.payload.kind === TableCellPayloadKind.Content) {
     return {
@@ -274,8 +274,8 @@ const applyRule = (plan: MutablePlan, rule: IRTableCellRule, ruleIndex: number, 
 /** 解析所有 canonical Cells 的 style、encoding、rule 与 descriptor */
 export const resolveTableCellPlans = (
   model: SemanticTableModel,
-  options: ResolveTableCellPlansOptions,
-): ResolvedTablePlan => {
+  options: TableCellPlansResolveOptions,
+): TablePlanResolution => {
   const parsedRules = options.rules ?? [];
   const parsedEncodings = options.encodings ?? [];
   const registry = resolveCellVisualScaleRegistry(options.visualScaleDefinitions);
@@ -335,7 +335,7 @@ export const resolveTableCellPlans = (
   });
 
   return deepFreeze({
-    cells: plans satisfies Array<ResolvedTableCellPlan>,
+    cells: plans satisfies Array<TableCellPlanResolution>,
     legendDescriptors,
     encodings: encodingSummaries,
   });

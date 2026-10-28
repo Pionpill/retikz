@@ -2,13 +2,13 @@ import {
   createFlexLayout,
   createGridLayout,
   createOverlayLayout,
-  FlexLayoutDefinition,
-  FlexLayoutProvider,
-  GridLayoutDefinition,
-  GridLayoutProvider,
+  flexLayoutDefinition,
+  flexLayoutProvider,
+  gridLayoutDefinition,
+  gridLayoutProvider,
   LayoutItemKind,
-  OverlayLayoutDefinition,
-  OverlayLayoutProvider,
+  overlayLayoutDefinition,
+  overlayLayoutProvider,
 } from '@retikz/layout';
 import {
   FlexLayout,
@@ -50,8 +50,8 @@ const normalizeReactInput = (children: ReactNode) => {
   return normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 };
 
-describe('Layout React layout family', () => {
-  it('converts nested Flex/Grid/Overlay JSX and forwards one ordered Layout contribution', () => {
+describe('Layout React 布局系列', () => {
+  it('转换嵌套的 Flex/Grid/Overlay JSX 并转发一个有序的 Layout 贡献', () => {
     const result = normalizeReactInput(
       <FlexLayout direction="row" gap={{ column: 4, row: 8 }}>
         <FlexLayoutItem itemKey="grid" grow={1}>
@@ -101,17 +101,17 @@ describe('Layout React layout family', () => {
     ]);
     expect(result.contributions).toHaveLength(1);
     expect(result.contributions[0]?.roots).toEqual([
-      FlexLayoutProvider.key,
-      GridLayoutProvider.key,
-      OverlayLayoutProvider.key,
+      flexLayoutProvider.key,
+      gridLayoutProvider.key,
+      overlayLayoutProvider.key,
     ]);
-    expect(result.contributions[0]?.providers).toEqual([FlexLayoutProvider, GridLayoutProvider, OverlayLayoutProvider]);
-    expect(FlexLayoutProvider.makeDefinition({})).toBe(FlexLayoutDefinition);
-    expect(GridLayoutProvider.makeDefinition({})).toBe(GridLayoutDefinition);
-    expect(OverlayLayoutProvider.makeDefinition({})).toBe(OverlayLayoutDefinition);
+    expect(result.contributions[0]?.providers).toEqual([flexLayoutProvider, gridLayoutProvider, overlayLayoutProvider]);
+    expect(flexLayoutProvider.makeDefinition([])).toBe(flexLayoutDefinition);
+    expect(gridLayoutProvider.makeDefinition([])).toBe(gridLayoutDefinition);
+    expect(overlayLayoutProvider.makeDefinition([])).toBe(overlayLayoutDefinition);
   });
 
-  it('uses itemKey instead of the reserved React key and accepts explicit IR as the sole child source', () => {
+  it('使用 itemKey 而不是保留的 React 键，并接受显式 IR 作为唯一子源', () => {
     const result = normalizeReactInput(
       <FlexLayout>
         <FlexLayoutItem key="react-key" itemKey="ir-key" ir={{ type: 'node', position: [1, 2] }} />
@@ -124,7 +124,7 @@ describe('Layout React layout family', () => {
     });
   });
 
-  it('keeps an omitted itemKey out of Source IR', () => {
+  it('将省略的 itemKey 保留在 Source IR 之外', () => {
     const result = normalizeReactInput(
       <FlexLayout>
         <FlexLayoutItem ir={{ type: 'node', position: [1, 2] }} />
@@ -140,21 +140,21 @@ describe('Layout React layout family', () => {
     );
   });
 
-  it('roots only the authored container and reuses its stable single-key provider', () => {
+  it('仅将显式容器作为根并复用稳定的单键提供者', () => {
     const flex = normalizeReactInput(<FlexLayout />);
     const grid = normalizeReactInput(<GridLayout columns={[{ kind: 'fixed', value: 10 }]} />);
     const overlay = normalizeReactInput(<OverlayLayout />);
 
-    expect(flex.contributions[0]).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
-    expect(grid.contributions[0]).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
+    expect(flex.contributions[0]).toEqual({ roots: [flexLayoutProvider.key], providers: [flexLayoutProvider] });
+    expect(grid.contributions[0]).toEqual({ roots: [gridLayoutProvider.key], providers: [gridLayoutProvider] });
     expect(overlay.contributions[0]).toEqual({
-      roots: [OverlayLayoutProvider.key],
-      providers: [OverlayLayoutProvider],
+      roots: [overlayLayoutProvider.key],
+      providers: [overlayLayoutProvider],
     });
-    expect(normalizeReactInput(<FlexLayout />).contributions[0]?.providers[0]).toBe(FlexLayoutProvider);
+    expect(normalizeReactInput(<FlexLayout />).contributions[0]?.providers[0]).toBe(flexLayoutProvider);
   });
 
-  it('fails loudly for standalone, ordinary direct, mismatched and multiple children', () => {
+  it('对于独立、普通直接、不匹配和多个孩子来说，明确报错', () => {
     expect(() =>
       normalizeReactInput(<FlexLayoutItem itemKey="loose" ir={{ type: 'node', position: [0, 0] }} />),
     ).toThrow(/FlexLayoutItem must be a direct child of FlexLayout/i);
@@ -184,7 +184,7 @@ describe('Layout React layout family', () => {
     ).toThrow(/exactly one authoring child/i);
   });
 
-  it('preserves item order through fragments, arrays and empty conditional children', () => {
+  it('通过片段、数组和空条件子项保留项目顺序', () => {
     const result = normalizeReactInput(
       <GridLayout columns={[{ kind: 'fixed', value: 20 }]}>
         <>
@@ -205,7 +205,7 @@ describe('Layout React layout family', () => {
     });
   });
 
-  it('rejects mismatched items in Grid and Overlay containers', () => {
+  it('拒绝 Grid 和 Overlay 容器中不匹配的项目', () => {
     expect(() =>
       normalizeReactInput(
         <GridLayout columns={[{ kind: 'fixed', value: 20 }]}>
@@ -222,7 +222,7 @@ describe('Layout React layout family', () => {
     ).toThrow(/expects OverlayLayoutItem/i);
   });
 
-  it('forwards foreign Tier 2 child input through Vanilla', () => {
+  it('通过 Vanilla 转发外部 Tier 2 子输入', () => {
     const result = normalizeReactInput(
       <FlexLayout>
         <FlexLayoutItem itemKey="foreign">

@@ -34,7 +34,7 @@ export const Example = () => (
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { matrix, MatrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { matrix, matrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const svg = renderToSvgString(
@@ -48,7 +48,7 @@ const svg = renderToSvgString(
       }),
     ],
   }),
-  { adapters: [MatrixInputEmbedAdapter] },
+  { adapters: [matrixInputEmbedAdapter] },
 );
 ```
 
@@ -56,8 +56,8 @@ const svg = renderToSvgString(
 <DocTab value="ir" label="IR">
 
 ```ts
-import { MatrixDefinition } from '@retikz/standard/collection';
-import { PathClipDefinition } from '@retikz/extension';
+import { matrixDefinition } from '@retikz/standard/collection';
+import { pathClipDefinition } from '@retikz/extension';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const svg = renderToSvgString(
@@ -75,7 +75,7 @@ const svg = renderToSvgString(
       },
     ],
   },
-  { compile: { composites: [MatrixDefinition], clips: [PathClipDefinition] } },
+  { compile: { composites: [matrixDefinition], clips: [pathClipDefinition] } },
 );
 ```
 
@@ -176,7 +176,7 @@ DataExpand applies only to data and controls structures inside each cell:
 
 The selection propagates recursively. A structure rendered as text retains its entire subtree as compact JSON. Empty objects and arrays display as {} and []. Deeper rectangular arrays still become nested Array components; Matrix is never inferred, and there is no matrix selector. defaultCell.style / defaultCell.layout affects only this level, while font and text color inherit through content.
 
-Direct IR using data also registers ArrayDefinition and MapDefinition; clipping requires PathClipDefinition. React and Vanilla collect these automatically.
+Direct IR using data also registers arrayDefinition and mapDefinition; clipping requires pathClipDefinition. React and Vanilla collect these automatically.
 
 ### Reference cells, clip content, and label containers
 

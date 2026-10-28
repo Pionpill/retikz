@@ -12,7 +12,7 @@ import type {
   FieldCollector,
   IntervalContext,
   MarkChannels,
-  MarkInstanceInput,
+  InputMarkInstance,
   MarkLoweringContext,
   PositionScale,
 } from '../../../contract';
@@ -549,7 +549,7 @@ const moveSectorCornerRadiusToShapeParams = (node: IRNode): void => {
  */
 const lowerCells = (
   mark: IRPlotIntervalMark,
-  instances: MarkInstanceInput,
+  instances: InputMarkInstance,
   frame: CoordinateFrame,
   intervalContext: IntervalContext | undefined,
   colorOf: ChannelValueResolver<string> | undefined,
@@ -630,7 +630,7 @@ const lowerCells = (
 /** interval mark 图层下沉：坐标系守卫 + IntervalContext + lowerCells（cell 类单路径） */
 export const lowerIntervalLayer = (
   mark: IRPlotMark,
-  instances: MarkInstanceInput,
+  instances: InputMarkInstance,
   frame: CoordinateFrame,
   channels: MarkChannels,
   ctx: MarkLoweringContext | undefined,

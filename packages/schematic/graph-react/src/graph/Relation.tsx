@@ -1,5 +1,5 @@
 import type { InputRelation } from '@retikz/graph-vanilla';
-import { RelationInputEmbedAdapter } from '@retikz/graph-vanilla';
+import { relationInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
@@ -23,5 +23,5 @@ export const Relation = RelationComponent as GraphEmbeddableComponent<RelationPr
 
 Relation.displayName = 'Relation';
 Relation.isTier2Embeddable = true;
-Relation.inputEmbedAdapter = RelationInputEmbedAdapter;
+Relation.inputEmbedAdapter = relationInputEmbedAdapter;
 Relation.createInputEmbedProps = createRelationInput;

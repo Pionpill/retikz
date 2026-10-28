@@ -1,4 +1,4 @@
-import type { IRChild, IRScope, ResolvedTheme } from '@retikz/core';
+import type { IRChild, IRScope, CanonicalTheme } from '@retikz/core';
 import { categoricalColorAt, DEFAULT_RESOLVED_THEME } from '@retikz/core';
 
 import type {
@@ -23,8 +23,8 @@ type GraphProjectionContext = Readonly<{
 }>;
 
 type GroupColorContext = {
-  palette: ResolvedTheme['colors']['categorical'];
-  colorByGroup: Map<string, ResolvedTheme['colors']['categorical'][number]>;
+  palette: CanonicalTheme['colors']['categorical'];
+  colorByGroup: Map<string, CanonicalTheme['colors']['categorical'][number]>;
   nextGroupIndex: number;
 };
 
@@ -174,7 +174,7 @@ const projectChildren = (
   });
 
 /** 创建当前 Graph 根范围内 Entity 与 Relation 分组颜色的稳定分配上下文 */
-const createGroupColorContext = (theme: ResolvedTheme): GroupColorContext => ({
+const createGroupColorContext = (theme: CanonicalTheme): GroupColorContext => ({
   palette: theme.colors.categorical,
   colorByGroup: new Map(),
   nextGroupIndex: 0,
@@ -184,7 +184,7 @@ const createGroupColorContext = (theme: ResolvedTheme): GroupColorContext => ({
 const resolveGroupColor = (
   group: string,
   context: GroupColorContext,
-): ResolvedTheme['colors']['categorical'][number] => {
+): CanonicalTheme['colors']['categorical'][number] => {
   const existingColor = context.colorByGroup.get(group);
   if (existingColor !== undefined) return existingColor;
 
@@ -269,7 +269,7 @@ const projectGroupColors = (children: ReadonlyArray<IRChild>, context: GroupColo
 export const resolveGraph = (
   source: IRGraph,
   options: GraphResolveContext,
-  theme: ResolvedTheme = DEFAULT_RESOLVED_THEME,
+  theme: CanonicalTheme = DEFAULT_RESOLVED_THEME,
 ): Array<IRChild> =>
   projectGroupColors(
     projectChildren(source.children ?? [], graphContext(source, { layers: [] }), options),

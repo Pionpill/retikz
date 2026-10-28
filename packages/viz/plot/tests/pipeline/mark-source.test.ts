@@ -1,7 +1,7 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lowerPlot } from '../../src/pipeline/expand/lower';
+import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 import { measureLabel } from '../helpers/text-measurement';
 
@@ -16,7 +16,7 @@ const leaves = (child: IRChild): Array<IRNode | IRPath> =>
 
 const render = (marks: Array<unknown>, rows: Array<Record<string, string | number>> = []) =>
   leaves(
-    lowerPlot(
+    lowerPlotWithDataArtifact(
       PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
@@ -31,11 +31,11 @@ const render = (marks: Array<unknown>, rows: Array<Record<string, string | numbe
       }),
       { rows },
       { textMeasurer: measureLabel },
-    ),
+    ).child,
   );
 
-describe('mark field and property lowering', () => {
-  it('uses the same final range edge for data points and annotations', () => {
+describe('标记字段和属性下沉', () => {
+  it('对数据点和注释使用相同的最终范围边缘', () => {
     const properties = { autoPadding: false };
     const [point] = render(
       [
@@ -100,7 +100,7 @@ describe('mark field and property lowering', () => {
     expect(expected).toHaveLength(1);
     expect(actual).toEqual(expected);
   });
-  it('maps ribbon widths through their named scale', () => {
+  it('通过其命名比例映射色带宽度', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -126,10 +126,12 @@ describe('mark field and property lowering', () => {
         },
       ],
     });
-    const [path] = leaves(lowerPlot(spec, { rows: [{ amount: 5 }] }, { textMeasurer: measureLabel }));
+    const [path] = leaves(
+      lowerPlotWithDataArtifact(spec, { rows: [{ amount: 5 }] }, { textMeasurer: measureLabel }).child,
+    );
     expect(path).toMatchObject({ kind: 'ribbon', kindOptions: { width: { kind: 'fixed', value: 7 } } });
   });
-  it('combines data point field positions with fixed data-space positions', () => {
+  it('将数据点字段位置与固定数据空间位置相结合', () => {
     const [actual] = render(
       [
         {
@@ -152,7 +154,7 @@ describe('mark field and property lowering', () => {
     );
     expect(actual).toMatchObject({ position: expected.type === 'node' ? expected.position : undefined });
   });
-  it('keeps constant marks independent with an omitted or empty transform chain', () => {
+  it('保持常数标记与省略或空的变换链无关', () => {
     const mark = {
       type: 'point',
       encodings: { position: { x: { value: 2 }, y: { value: 3 } } },
@@ -164,7 +166,7 @@ describe('mark field and property lowering', () => {
     expect(render([{ ...mark, transforms: [] }], [{ x: 1 }, { x: 2 }])).toHaveLength(1);
   });
 
-  it('combines field and fixed roles without treating fixed positions as pixels', () => {
+  it('结合了场和固定角色，而不将固定位置视为像素', () => {
     const source = {
       type: 'point',
       encodings: { position: { y: { value: 3 }, x: { field: 'value' } } },
@@ -183,7 +185,7 @@ describe('mark field and property lowering', () => {
     expect(actual).toMatchObject({ position: expected.type === 'node' ? expected.position : undefined });
   });
 
-  it('resolves each label at its corresponding property index', () => {
+  it('解析每个标签对应的属性索引', () => {
     const [node] = render(
       [
         {
@@ -205,7 +207,7 @@ describe('mark field and property lowering', () => {
     });
   });
 
-  it('uses nonposition annotation encodings to determine row instances', () => {
+  it('使用非位置注释编码来确定行实例', () => {
     const nodes = render(
       [
         {
@@ -220,7 +222,7 @@ describe('mark field and property lowering', () => {
     expect(nodes.map(node => (node.type === 'node' ? node.text : undefined))).toEqual(['one', 'two']);
   });
 
-  it('does not fall back to fixed positions for missing encoded values', () => {
+  it('对于缺失的编码值，不会回退到固定位置', () => {
     expect(() =>
       render(
         [

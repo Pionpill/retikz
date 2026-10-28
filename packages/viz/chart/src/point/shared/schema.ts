@@ -2,10 +2,10 @@ import {
   BoxSpacingSchema,
   CssColorSchema,
   GraphicOpacityValueSchema,
-  StrokeWidthSchema,
+  ShapeNameSchema,
   StrokeDashPatternSchema,
+  StrokeWidthSchema,
 } from '@retikz/core';
-import { ShapeNameSchema } from '@retikz/core';
 import {
   JsonObjectSchema,
   NonBlankStringSchema,
@@ -13,9 +13,8 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import { MarkNodeLabelListSchema, PlotDomainPaddingKind, PointAutoPaddingSchema } from '@retikz/plot';
-import type { infer as ZodInfer } from 'zod';
-import type { ZodType } from 'zod';
-import { boolean, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
+import type { infer as ZodInfer, ZodType } from 'zod';
+import { boolean, discriminatedUnion, literal, number, strictObject, union, enum as zodEnum } from 'zod';
 
 export { PointAutoPaddingSchema } from '@retikz/plot';
 
@@ -57,23 +56,6 @@ export const PointPositionDomainPaddingSchema = union([
   NonNegativeNumberSchema,
   PointPositionDomainPaddingObjectSchema,
 ]).describe('Shared or per-role continuous position domain padding');
-
-/** Point recipe 中可复用的字段绑定通道
- *
- * Chart Source 只保存字段名；resolver 在进入 Plot 前把字段名转换为 Plot
- * 的 `{ kind: 'field', value }` 通道
- */
-export const PointEncodingFieldsShape = {
-  x: NonBlankStringSchema.describe('Field bound to the horizontal position role'),
-  y: NonBlankStringSchema.describe('Field bound to the vertical position role'),
-  color: NonBlankStringSchema.optional().describe('Field bound to the color role'),
-  size: NonBlankStringSchema.optional().describe('Field bound to the size role'),
-  opacity: NonBlankStringSchema.optional().describe('Field bound to the opacity role'),
-  shape: NonBlankStringSchema.optional().describe('Field bound to the shape role'),
-} as const;
-
-/** Point recipe 的位置与视觉字段绑定 */
-export const PointEncodingSchema = strictObject(PointEncodingFieldsShape).describe('Point Chart field-bound encodings');
 
 /** Point mark 可选的字段绑定角色
  *
@@ -162,10 +144,6 @@ export const createPointChartMarkSchema = <
     encodings: encodingsSchema.optional(),
     properties: propertiesSchema.optional(),
   });
-
-export type IRPointEncoding = ZodInfer<typeof PointEncodingSchema>;
-
-export type IRPointMarkEncoding = ZodInfer<typeof PointMarkEncodingSchema>;
 
 export type IRPointProperties = ZodInfer<typeof PointPropertiesSchema>;
 

@@ -1,7 +1,7 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type { RelationKindDefinition, RelationPredicateDefinition, RelationRoleDefinition } from '../../contract';
-import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import type { GraphDefinitionRegistries } from '../../providers';
 import type { IRGraphRelation, IRGraphRelationDefaults, RelationDirection } from '../../schemas';
 import type { IRGraphRelationRoleTokenRecipe } from '../../schemas';
 import type { GraphAuthorLayer, GraphMemberAppearanceResolveContext } from '../theme';
@@ -16,7 +16,7 @@ export type CanonicalRelationPredicate = Readonly<{
 
 /** Relation data resolver 的窄上下文 */
 export type RelationResolveContext = Pick<
-  ResolvedGraphDefinitionOptions,
+  GraphDefinitionRegistries,
   'relationRoles' | 'relationKinds' | 'relationPredicates'
 >;
 
@@ -48,7 +48,7 @@ export type RelationGraphLayerResolveContext = RelationResolveContext &
   }>;
 
 /** Relation role、kind 与 predicate 解析后的完整结构 */
-export type EffectiveRelationStructure = IRGraphRelationRoleTokenRecipe;
+export type MergedRelationStructure = IRGraphRelationRoleTokenRecipe;
 
 /** Relation Theme 级联后的完整有效外观 */
-export type EffectiveRelationAppearance = Readonly<IRGraphRelationDefaults>;
+export type MergedRelationAppearance = Readonly<IRGraphRelationDefaults>;

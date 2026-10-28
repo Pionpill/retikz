@@ -163,7 +163,7 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
  * @template TKind 变换操作的固定注册名称
  * @template TParamsSchema 参数对象的输入与解析契约，决定回调中 params 的类型
  */
-export type TransformDefinitionInput<
+export type InputTransformDefinition<
   TKind extends string,
   TParamsSchema extends ZodType<Record<string, JsonValue>, Record<string, JsonValue>>,
 > = Omit<TransformDefinition<{ kind: TKind; params: output<TParamsSchema> }>, 'schema'> & {
@@ -184,7 +184,7 @@ export const defineTransform = <
   const TKind extends string,
   TParamsSchema extends ZodType<Record<string, JsonValue>, Record<string, JsonValue>>,
 >(
-  def: TransformDefinitionInput<TKind, TParamsSchema>,
+  def: InputTransformDefinition<TKind, TParamsSchema>,
 ) => {
   const { kind, paramsSchema, ...semantics } = def;
   return { ...semantics, schema: createTransformSchema(kind, paramsSchema) };

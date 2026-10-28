@@ -78,7 +78,7 @@ const LegendBaseSchema = CompositeBaseSchema.extend({
   content: LegendContentSchema.describe('Already-resolved discrete or continuous legend presentation.'),
 });
 
-type LegendRefinementInput = ZodInfer<typeof LegendBaseSchema>;
+type InputLegendRefinement = ZodInfer<typeof LegendBaseSchema>;
 
 const refineLegendKeys = (
   entries: ReadonlyArray<{ key: string }>,
@@ -100,7 +100,7 @@ const refineLegendKeys = (
   });
 };
 
-const refineLegend = (legend: LegendRefinementInput, context: RefinementCtx): void => {
+const refineLegend = (legend: InputLegendRefinement, context: RefinementCtx): void => {
   if (legend.content.kind === LegendContentKind.Items) {
     refineLegendKeys(legend.content.items, 'items', context);
     return;

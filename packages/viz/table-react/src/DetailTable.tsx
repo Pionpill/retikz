@@ -1,5 +1,5 @@
-import type { DetailTableInput, TableDetailColumnInput } from '@retikz/table';
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import type { InputDetailTableConfig, InputTableDetailColumn } from '@retikz/table';
+import { tableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { FC, ReactNode } from 'react';
 
 import type { InputEmbeddableDataTableComponent, TableCommonProps, DetailTableDatasetProps } from './Table';
@@ -8,11 +8,11 @@ import { TableRuntimeView } from './table-view';
 
 type DetailTableRootProps<TSource = never> = TableCommonProps &
   DetailTableDatasetProps<TSource> &
-  Omit<DetailTableInput, 'columns'>;
+  Omit<InputDetailTableConfig, 'columns'>;
 
 type DetailTableColumnPropsMode = {
   /** 按显示顺序声明的完整明细列输入，与 children 互斥 */
-  columns: Array<TableDetailColumnInput>;
+  columns: Array<InputTableDetailColumn>;
   /** 使用 columns 时不得传入 DetailColumn children */
   children?: never;
 };
@@ -39,6 +39,6 @@ const DetailTableComponent: FC<DetailTableProps<unknown>> = props => (
 export const DetailTable = DetailTableComponent as InputEmbeddableDataTableComponent<DetailTableProps<unknown>>;
 DetailTable.displayName = 'DetailTable';
 DetailTable.isTier2Embeddable = true;
-DetailTable.inputEmbedAdapter = TableInputEmbedAdapter;
+DetailTable.inputEmbedAdapter = tableInputEmbedAdapter;
 DetailTable.createInputEmbedProps = props =>
   createReactTableInput(ReactTableRuntimeKind.Detail, props as DetailTableProps<unknown>);

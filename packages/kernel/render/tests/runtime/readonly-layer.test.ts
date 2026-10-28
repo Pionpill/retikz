@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { RenderReadonlyLayer } from '../../src/runtime';
 import * as runtime from '../../src/runtime';
-import { validateReadonlyLayers } from '../../src/runtime';
+import { snapshotReadonlyLayers } from '../../src/runtime';
 
 const makeScene = (overrides: Partial<Scene> = {}): Scene => ({
   layout: { x: 0, y: 0, width: 10, height: 10 },
@@ -21,16 +21,16 @@ const makeLayer = (overrides: Partial<RenderReadonlyLayer> = {}): RenderReadonly
   ...overrides,
 });
 
-describe('readonly render layer contract', () => {
-  it('does not expose or retain the removed inspection-specific Render contract', () => {
+describe('只读渲染层契约', () => {
+  it('不公开或保留已删除的特定于检查的渲染契约', () => {
     expect('RetainedRendererInspectionCapability' in runtime).toBe(false);
     expect('RetainedRendererInspectionUnsupported' in runtime.RetikzRenderErrorCode).toBe(false);
     expect(existsSync(fileURLToPath(new URL('../../src/svg/builders/inspection.ts', import.meta.url)))).toBe(false);
     expect(existsSync(fileURLToPath(new URL('../../src/canvas/draw-inspection.ts', import.meta.url)))).toBe(false);
   });
 
-  it('canonicalizes a valid ordered layer sequence as deeply frozen data', () => {
-    const layers = validateReadonlyLayers([makeLayer()]);
+  it('将有效的有序层序列规范化为深度冻结数据', () => {
+    const layers = snapshotReadonlyLayers([makeLayer()]);
 
     expect(layers).toHaveLength(1);
     expect(Object.isFrozen(layers)).toBe(true);
@@ -39,28 +39,25 @@ describe('readonly render layer contract', () => {
     expect(Object.isFrozen(layers[0]?.scene)).toBe(true);
   });
 
-  it('deeply freezes mutable children even when the layer envelope is already frozen', () => {
+  it('即使层封套已经冻结，也会深度冻结可变子项', () => {
     const scene = makeScene();
     const layer = Object.freeze(makeLayer({ scene }));
 
-    const layers = validateReadonlyLayers([layer]);
+    const layers = snapshotReadonlyLayers([layer]);
 
     expect(Object.isFrozen(layers[0]?.scene)).toBe(true);
     expect(Object.isFrozen(layers[0]?.scene.primitives)).toBe(true);
   });
 
-  it('rejects duplicate layer keys within one frame', () => {
-    expect(() => validateReadonlyLayers([makeLayer(), makeLayer()])).toThrow();
+  it('拒绝一帧内重复的图层关键点', () => {
+    expect(() => snapshotReadonlyLayers([makeLayer(), makeLayer()])).toThrow();
   });
 
-  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
-    'rejects non-finite transform component %s',
-    value => {
-      expect(() => validateReadonlyLayers([makeLayer({ transform: [1, 0, 0, 1, value, 0] })])).toThrow();
-    },
-  );
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])('拒绝非有限变换分量 %s', value => {
+    expect(() => snapshotReadonlyLayers([makeLayer({ transform: [1, 0, 0, 1, value, 0] })])).toThrow();
+  });
 
-  it('rejects public primitive identity and metadata in layer Scenes', () => {
+  it('拒绝层场景中的公共原始标识和元数据', () => {
     const withId = makeScene({
       primitives: [{ type: 'rect', id: 'public', x: 0, y: 0, width: 1, height: 1 }],
     });
@@ -68,11 +65,11 @@ describe('readonly render layer contract', () => {
       primitives: [{ type: 'rect', meta: { source: 'layer' }, x: 0, y: 0, width: 1, height: 1 }],
     });
 
-    expect(() => validateReadonlyLayers([makeLayer({ scene: withId })])).toThrow();
-    expect(() => validateReadonlyLayers([makeLayer({ scene: withMeta })])).toThrow();
+    expect(() => snapshotReadonlyLayers([makeLayer({ scene: withId })])).toThrow();
+    expect(() => snapshotReadonlyLayers([makeLayer({ scene: withMeta })])).toThrow();
   });
 
-  it('rejects primitive and root animation semantics in layer Scenes', () => {
+  it('拒绝图层场景中的原始和根动画语义', () => {
     const animation = {
       property: 'opacity' as const,
       keyframes: [
@@ -86,7 +83,7 @@ describe('readonly render layer contract', () => {
     });
     const rootAnimation = makeScene({ animations: [animation] });
 
-    expect(() => validateReadonlyLayers([makeLayer({ scene: primitiveAnimation })])).toThrow();
-    expect(() => validateReadonlyLayers([makeLayer({ scene: rootAnimation })])).toThrow();
+    expect(() => snapshotReadonlyLayers([makeLayer({ scene: primitiveAnimation })])).toThrow();
+    expect(() => snapshotReadonlyLayers([makeLayer({ scene: rootAnimation })])).toThrow();
   });
 });

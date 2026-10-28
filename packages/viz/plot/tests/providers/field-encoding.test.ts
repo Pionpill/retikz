@@ -9,8 +9,8 @@ import { isSingleMark, collectMarkFields } from '../../src/resolve/mark';
 const markContext = { registry: MARK_REGISTRY };
 import { PointMarkSchema } from '../../src/schemas';
 
-describe('field encoding consumption', () => {
-  it('reads the same field path from shorthand and named-scale bindings', () => {
+describe('字段编码的消费', () => {
+  it('从简写和命名比例绑定读取相同的字段路径', () => {
     const row = { metrics: { value: 7 } };
     expect(channelValue('metrics.value', row)).toBe(7);
     expect(channelValue({ field: 'metrics.value', scale: 'radius' }, row)).toBe(7);
@@ -19,7 +19,7 @@ describe('field encoding consumption', () => {
     expect(channelScale({ field: 'metrics.value', scale: 'radius' })).toBe('radius');
   });
 
-  it('collects field dependencies without treating scale names as data fields', () => {
+  it('收集字段依赖关系，而不将比例名称视为数据字段', () => {
     const fields = new Set<string>();
     const collector = createFieldCollector(fields);
     collector.addChannel('value');
@@ -29,22 +29,22 @@ describe('field encoding consumption', () => {
     expect([...fields]).toEqual(['value', 'group']);
   });
 
-  it('uses literal property text without interpreting it as a field path', () => {
+  it('使用字面量属性文本，而不将其解释为字段路径', () => {
     expect(labelOf('name', { name: 'Alice' })).toBe('name');
     expect(labelOf('name', { name: 'Alice' }, undefined, undefined, 'name')).toBe('Alice');
   });
 
-  it('does not fall back to fixed text when an effective encoding has no value', () => {
+  it('当有效编码没有值时，不会回退到固定文本', () => {
     expect(labelOf('fallback', {}, undefined, undefined, 'missing')).toBeUndefined();
     expect(labelOf('fallback', { value: null }, undefined, undefined, 'value')).toBeUndefined();
   });
 
-  it('formats encoded values and preserves the explicit runtime label override', () => {
+  it('格式化编码值并保留显式运行时标签覆盖', () => {
     expect(labelOf(undefined, { value: 1.234 }, 'continuous', undefined, 'value', '.2f')).toBe('1.23');
     expect(labelOf('fixed', { value: 1 }, 'continuous', () => 'runtime', 'value', '.2f')).toBe('runtime');
   });
 
-  it('treats a non-position field as a data dependency for annotations', () => {
+  it('将非位置字段视为注释的数据依赖项', () => {
     const mark = PointMarkSchema.parse({
       type: 'point',
       properties: {},
@@ -61,7 +61,7 @@ describe('field encoding consumption', () => {
     expect([...fields].sort()).toEqual(['alpha', 'group']);
   });
 
-  it('treats omitted transforms and an empty data chain as the same instance source', () => {
+  it('将省略的转换和空数据链视为相同的实例源', () => {
     const source = {
       type: 'point',
       encodings: { position: { x: { value: 1 }, y: { value: 2 } } },
@@ -72,14 +72,14 @@ describe('field encoding consumption', () => {
     expect(isSingleMark(PointMarkSchema.parse({ ...source, transforms: [] }), markContext)).toBe(true);
   });
 
-  it('does not treat objects in data cells as annotation position instructions', () => {
+  it('不将数据单元格中的对象视为注释位置指令', () => {
     expect(positionValue({ field: 'value' }, { value: 5 })).toBe(5);
     expect(positionValue({ edge: 'end' })).toBeUndefined();
     expect(positionValue({ field: 'value' }, { value: { edge: 'end' } })).toEqual({ edge: 'end' });
     expect(positionValue({ field: 'value' }, {})).toBeUndefined();
   });
 
-  it('suppresses only the fixed property addressed by an effective field encoding', () => {
+  it('仅抑制有效字段编码所寻址的固定属性', () => {
     const mark = PointMarkSchema.parse({
       type: 'point',
       encodings: { color: 'missing', opacity: { overall: 'alpha' }, position: { x: { value: 1 }, y: { value: 2 } } },

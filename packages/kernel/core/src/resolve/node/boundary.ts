@@ -4,37 +4,38 @@ import type { BoundaryDefinition, ShapeDefinition } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { ProviderRegistry } from '../../providers';
 import type { IRBoundary } from '../../schemas';
-import { parseProviderPayload } from '../provider-payload';
+import { parseProviderPayload } from '../provider';
 import type { BoundaryReferenceResolution } from './types';
 
-/** 保留字：连接面 = 节点自身视觉形状 */
-const SELF = 'shape';
-
-/** 连接面引用解析所需的 provider 与视觉 shape 上下文 */
-export type BoundaryReferenceResolveContext = {
-  /** 节点视觉形状 definition */
+/** 解析连接面所需的节点形状与定义注册表 */
+type BoundaryReferenceResolveContext = {
+  /** 节点视觉形状定义 */
   visualDef: ShapeDefinition;
   /** 节点视觉形状参数 */
   visualParams: JsonObject;
-  /** shape 注册表 */
+  /** 形状定义注册表 */
   shapeRegistry: ProviderRegistry<ShapeDefinition>;
-  /** boundary 注册表 */
+  /** 连接面定义注册表 */
   boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
-  /** 当前 node 的 IR 路径，用于 provider payload 诊断 */
+  /** 当前节点的 IR 路径，用于参数校验错误定位 */
   irPath?: string;
 };
 
+/** 按名称排序列出已注册定义，供未知连接面的错误信息使用 */
 const registeredNames = <TDefinition>(registry: ProviderRegistry<TDefinition>): string => {
   const names = [...registry.keys()];
   return names.sort().join(', ') || '(none registered)';
 };
 
-/** 解析连接面引用，绑定 provider definition 与参数，延迟依赖视觉 rect 的几何计算 */
+/**
+ * 为连接面选择定义并解析参数，几何计算留到节点尺寸确定之后
+ * @description 未指定或指定 shape 时沿用节点自身形状；其余名称先查询连接面注册表，再查询形状注册表
+ */
 export const resolveBoundaryReference = (
   boundary: IRBoundary | undefined,
   context: BoundaryReferenceResolveContext,
 ): BoundaryReferenceResolution => {
-  if (boundary === undefined || boundary === SELF) {
+  if (boundary === undefined || boundary === 'shape') {
     return {
       name: context.visualDef.name,
       definition: context.visualDef,
@@ -86,9 +87,9 @@ export const resolveBoundaryReference = (
   );
 };
 
-/** 连接面的稳定字符串判别（anchor cache key 用） */
+/** 将连接面声明序列化为锚点缓存键，省略值与 shape 使用相同键 */
 export const boundaryKey = (boundary: IRBoundary | undefined): string => {
-  if (boundary === undefined) return SELF;
+  if (boundary === undefined) return 'shape';
   if (typeof boundary === 'string') return boundary;
   return `${boundary.type}:${JSON.stringify(boundary.params ?? {})}`;
 };

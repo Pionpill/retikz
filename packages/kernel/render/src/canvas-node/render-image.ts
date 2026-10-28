@@ -5,7 +5,7 @@ import type { Scene } from '@retikz/core';
 import { drawScene } from '../canvas';
 import { createCssColorNormalizer, sceneFitMatrix } from '../canvas/internal';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
-import type { CanvasNodeImageFormat, RenderSceneToImageOptions } from './types';
+import type { CanvasNodeImageFormat, SceneImageRenderOptions } from './types';
 
 type NapiCanvas = {
   width: number;
@@ -34,7 +34,7 @@ const assertPositiveFinite = (name: string, value: number): void => {
   }
 };
 
-const getDevicePixelRatio = (options: RenderSceneToImageOptions): number => {
+const getDevicePixelRatio = (options: SceneImageRenderOptions): number => {
   if (options.devicePixelRatio !== undefined) {
     return Number.isFinite(options.devicePixelRatio) && options.devicePixelRatio > 0 ? options.devicePixelRatio : 1;
   }
@@ -102,7 +102,7 @@ const encodeCanvas = async (
  * 将编译后的 Scene 绘制并编码为 Node 图片缓冲区
  * @description 需要安装可选 peer dependency `@napi-rs/canvas`；输出尺寸与 Scene 布局会在加载该依赖前完成校验
  */
-export const renderSceneToImage = async (scene: Scene, options: RenderSceneToImageOptions): Promise<Buffer> => {
+export const renderSceneToImage = async (scene: Scene, options: SceneImageRenderOptions): Promise<Buffer> => {
   assertPositiveFinite('width', options.width);
   assertPositiveFinite('height', options.height);
   assertSceneLayout(scene);

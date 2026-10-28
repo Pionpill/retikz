@@ -1,5 +1,5 @@
 import type { BranchDiagramInputEmbedProps } from '@retikz/diagram-vanilla/branch';
-import { BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';
+import { branchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { Layout } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
@@ -28,7 +28,7 @@ const BranchRuntimeEmbed = (() => null) as unknown as BranchEmbeddableComponent<
 
 BranchRuntimeEmbed.displayName = 'BranchRuntimeEmbed';
 BranchRuntimeEmbed.isTier2Embeddable = true;
-BranchRuntimeEmbed.inputEmbedAdapter = BranchDiagramInputEmbedAdapter;
+BranchRuntimeEmbed.inputEmbedAdapter = branchDiagramInputEmbedAdapter;
 BranchRuntimeEmbed.createInputEmbedProps = props => (props as BranchRuntimeEmbedProps).input;
 
 const BranchDiagramComponent: FC<BranchDiagramProps> = props => {
@@ -61,5 +61,5 @@ export const BranchDiagram = BranchDiagramComponent as BranchEmbeddableComponent
 
 BranchDiagram.displayName = 'BranchDiagram';
 BranchDiagram.isTier2Embeddable = true;
-BranchDiagram.inputEmbedAdapter = BranchDiagramInputEmbedAdapter;
+BranchDiagram.inputEmbedAdapter = branchDiagramInputEmbedAdapter;
 BranchDiagram.createInputEmbedProps = createBranchDiagramInput;

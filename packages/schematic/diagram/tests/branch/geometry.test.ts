@@ -7,7 +7,7 @@ import {
   BranchDiagramSchema,
   createBranchDiagramProviderContribution,
   defineBranchLayout,
-  LanesBranchLayoutDefinition,
+  lanesBranchLayoutDefinition,
 } from '../../src/branch';
 import type { BranchDiagramDefinitionOptions, BranchLayoutOutput } from '../../src/branch';
 
@@ -35,7 +35,7 @@ const source = {
   mainBranch: 'main',
 };
 
-it('keeps layout deterministic when catalog order differs from branch progression', () => {
+it('当目录顺序与分支进度不同时，保持布局确定性', () => {
   const reversed = { ...source, nodes: [...source.nodes].reverse() };
   const first = compile(reversed);
 
@@ -87,52 +87,49 @@ const invalidOutputs: Array<{
   },
 ];
 
-it.each(invalidOutputs)('rejects custom layout output: $name', ({ change }) => {
+it.each(invalidOutputs)('拒绝自定义布局输出：$name', ({ change }) => {
   const definition = defineBranchLayout({
     name: 'invalid',
     description: 'Invalid geometry fixture',
-    layout: input => change(LanesBranchLayoutDefinition.layout(input)),
+    layout: input => change(lanesBranchLayoutDefinition.layout(input)),
   });
 
   expect(() => compile(source, { branchLayouts: [definition], defaultBranchLayout: definition.name })).toThrow();
 });
 
-it.each(['right', 'left', 'up', 'down'])(
-  'aligns shared marker geometry with assembled Scene in %s direction',
-  direction => {
-    const result = compile({
-      ...source,
-      layout: { direction },
-      presentation: { title: { text: 'Title' }, description: { text: 'Caption' } },
-      frame: { padding: 16 },
-    });
-    const envelope = result.artifacts.find(
-      artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'branch',
-    );
-    const artifact = BranchDiagramArtifactSchema.parse(envelope?.value);
+it.each(['right', 'left', 'up', 'down'])('将共享标记几何体与 %s 方向上组装的 Scene 对齐', direction => {
+  const result = compile({
+    ...source,
+    layout: { direction },
+    presentation: { title: { text: 'Title' }, description: { text: 'Caption' } },
+    frame: { padding: 16 },
+  });
+  const envelope = result.artifacts.find(
+    artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'branch',
+  );
+  const artifact = BranchDiagramArtifactSchema.parse(envelope?.value);
 
-    expect(artifact.nodes).toHaveLength(3);
-    expect(artifact.segments).toHaveLength(3);
-    expect(artifact.nodes.find(node => node.id === 'a')?.lane).toBe(artifact.nodes.find(node => node.id === 'c')?.lane);
+  expect(artifact.nodes).toHaveLength(3);
+  expect(artifact.segments).toHaveLength(3);
+  expect(artifact.nodes.find(node => node.id === 'a')?.lane).toBe(artifact.nodes.find(node => node.id === 'c')?.lane);
 
-    for (const node of artifact.nodes) {
-      expect(node.markerBounds.width).toBe(10);
-      expect(node.visualBounds.width).toBeGreaterThan(10);
+  for (const node of artifact.nodes) {
+    expect(node.markerBounds.width).toBe(10);
+    expect(node.visualBounds.width).toBeGreaterThan(10);
 
-      const observations = result.artifacts.filter(value => value.kind === 'nodeLayout' && value.value.id === node.id);
+    const observations = result.artifacts.filter(value => value.kind === 'nodeLayout' && value.value.id === node.id);
 
-      expect(observations).toHaveLength(1);
+    expect(observations).toHaveLength(1);
 
-      const observed = observations[0];
-      if (observed.kind !== 'nodeLayout') throw new Error('Expected node layout');
+    const observed = observations[0];
+    if (observed.kind !== 'nodeLayout') throw new Error('Expected node layout');
 
-      expect(observed.value.rect.x).toBeCloseTo(node.position[0]);
-      expect(observed.value.rect.y).toBeCloseTo(node.position[1]);
-    }
-  },
-);
+    expect(observed.value.rect.x).toBeCloseTo(node.position[0]);
+    expect(observed.value.rect.y).toBeCloseTo(node.position[1]);
+  }
+});
 
-it('merges identical directed segments while retaining both branch correspondences', () => {
+it('合并相同的有向线段，同时保留两个分支对应关系', () => {
   const result = compile({
     nodes: [{ id: 'a' }, { id: 'b' }],
     branches: [
@@ -148,8 +145,8 @@ it('merges identical directed segments while retaining both branch correspondenc
   expect(artifact.branches.map(branch => branch.segments)).toEqual([[0], [0]]);
 });
 
-it('uses custom layout through the same registry and rejects omitted geometry', () => {
-  const custom = defineBranchLayout({ ...LanesBranchLayoutDefinition, name: 'custom' });
+it('通过相同的注册表使用自定义布局并拒绝省略的几何图形', () => {
+  const custom = defineBranchLayout({ ...lanesBranchLayoutDefinition, name: 'custom' });
 
   expect(
     compile(source, { branchLayouts: [custom], defaultBranchLayout: custom.name }).scene.primitives.length,
@@ -162,7 +159,7 @@ it('uses custom layout through the same registry and rejects omitted geometry', 
   expect(() => compile(source, { branchLayouts: [{ ...custom, name: 'lanes' }] })).toThrow();
 });
 
-it('supports standalone nodes and keeps local namespaces independent', () => {
+it('支持独立节点并保持本地命名空间独立', () => {
   const child: IRChild = BranchDiagramSchema.parse({
     namespace: 'diagram',
     type: 'branch',
@@ -180,7 +177,7 @@ it('supports standalone nodes and keeps local namespaces independent', () => {
   );
 });
 
-it('preserves explicit root defaults and publishes geometry after the root transform', () => {
+it('保留显式根默认值并在根变换后发布几何体', () => {
   const result = compile({
     ...source,
     defaults: { node: { style: { stroke: 'red', font: { size: 24 } } } },

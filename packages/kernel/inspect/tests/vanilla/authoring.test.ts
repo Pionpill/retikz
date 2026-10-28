@@ -40,7 +40,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('@retikz/inspect/vanilla authoring and driver', () => {
+describe('@retikz/inspect/vanilla 编写和驱动程序', () => {
   it('Node 与 Coordinate authored self 请求只选择各自实例', () => {
     const onCommit = vi.fn();
     const svg = renderToSvgString(

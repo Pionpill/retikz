@@ -2,19 +2,18 @@ import type { GroupPrimitive, SceneClipPath, SceneResource } from '@retikz/core'
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { ClipDefs } from '../../../src/render/svg';
-import { renderPrim } from '../../../src/render/svg';
+import { renderClipDefs, renderPrim } from './helpers';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
 /**
  * clip 物化对抗测试（破坏视角）
- * @description clipRef 指向不存在资源、ClipDefs 收纯 paint / 空表 / 混合资源、polygon points 序列化边界。
+ * @description clipRef 指向不存在资源、renderClipDefs 收纯 paint / 空表 / 混合资源、polygon points 序列化边界。
  *   主张：物化不抛、不串话、按 kind 严格分流
  */
 
 const clipPathsOf = (resources: Array<SceneResource>): Array<AnyEl> => {
-  const frag = ClipDefs({ resources, idFor: (id: string) => `c-${id}` }) as AnyEl;
+  const frag = renderClipDefs({ resources, idFor: (id: string) => `c-${id}` }) as AnyEl;
   return (frag.props.children as Array<AnyEl>).filter(Boolean);
 };
 
@@ -31,7 +30,7 @@ const rectPath = (size: number): SceneClipPath => ({
   fillRule: 'nonzero',
 });
 
-describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
+describe('renderClipDefs 对抗：非 clip / 空 / 混合资源', () => {
   it('资源表全是 paint → 物化 0 个 clipPath（严格按 kind 分流）', () => {
     const cps = clipPathsOf([
       {

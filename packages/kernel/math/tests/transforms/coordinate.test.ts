@@ -94,7 +94,7 @@ describe('localToWorld / worldToLocal 带旋转往返还原', () => {
   ];
 
   for (const { rotate, label } of cases) {
-    it(`rotate=${label} 时 localToWorld∘worldToLocal 还原世界点`, () => {
+    it(`旋转=${label} 时 localToWorld∘worldToLocal 还原世界点`, () => {
       const s: CenteredShape = { x: -2.5, y: 6.25, rotate };
       const world: [number, number] = [13.5, -4.75];
       const local = worldToLocal(s, world);
@@ -104,7 +104,7 @@ describe('localToWorld / worldToLocal 带旋转往返还原', () => {
       expect(back[1]).toBeCloseTo(world[1]);
     });
 
-    it(`rotate=${label} 时 worldToLocal∘localToWorld 还原本地点`, () => {
+    it(`旋转=${label} 时 worldToLocal∘localToWorld 还原本地点`, () => {
       const s: CenteredShape = { x: -2.5, y: 6.25, rotate };
       const local: [number, number] = [4, -9];
       const world = localToWorld(s, local);

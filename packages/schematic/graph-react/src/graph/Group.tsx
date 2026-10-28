@@ -1,5 +1,5 @@
 import type { InputGroup } from '@retikz/graph-vanilla';
-import { GroupInputEmbedAdapter } from '@retikz/graph-vanilla';
+import { groupInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
@@ -26,5 +26,5 @@ export const Group = GroupComponent as GraphEmbeddableComponent<GroupProps>;
 
 Group.displayName = 'Group';
 Group.isTier2Embeddable = true;
-Group.inputEmbedAdapter = GroupInputEmbedAdapter;
+Group.inputEmbedAdapter = groupInputEmbedAdapter;
 Group.createInputEmbedProps = createGroupInput;

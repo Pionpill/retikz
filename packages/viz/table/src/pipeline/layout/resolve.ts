@@ -1,27 +1,34 @@
 import { RetikzTableError } from '../../error';
 import type { IRTableLayout, IRTableTrackOverride, IRTableTrackSize } from '../../schemas';
 import { TableTrackSizeKind } from '../../schemas';
-import { DEFAULT_TABLE_COLUMN_WIDTH, DEFAULT_TABLE_ROW_HEIGHT, DEFAULT_TABLE_TRACK_GAP } from '../../shared';
-import type { ResolvedTableLayout, ResolvedTableTrackSize } from './types';
+import {
+  DEFAULT_TABLE_COLUMN_WIDTH,
+  DEFAULT_TABLE_ROW_HEIGHT,
+  DEFAULT_TABLE_TRACK_GAP,
+  deepFreeze,
+} from '../../shared';
+import { expandTableTrackSize, applyTableTrackOverrides } from './track-resolution';
+import { assertTableTrackSize } from './track-validation';
+import type { CanonicalTableLayout, CanonicalTableTrackSize } from './types';
 
-/** 物化单个轨道尺寸的运行时默认值并递归冻结 */
-export const resolveTableTrackSize = (size: IRTableTrackSize): ResolvedTableTrackSize => {
-  const parsed = size;
+/** 补齐轨道默认值并在首次确定化时建立数值保证 */
+const resolveTableTrackSize = (size: IRTableTrackSize): CanonicalTableTrackSize => {
+  const track = expandTableTrackSize(size);
+  assertTableTrackSize(track, 0);
+  return track;
+};
 
-  switch (parsed.kind) {
-    case TableTrackSizeKind.Fixed:
-      return Object.freeze({ kind: parsed.kind, value: parsed.value });
-    case TableTrackSizeKind.Auto:
-      return Object.freeze({ kind: parsed.kind });
-    case TableTrackSizeKind.Fraction:
-      return Object.freeze({ kind: parsed.kind, weight: parsed.weight ?? 1 });
-    case TableTrackSizeKind.Minmax:
-      return Object.freeze({
-        kind: parsed.kind,
-        min: resolveTableTrackSize(parsed.min) as ResolvedTableTrackSize & ({ kind: 'fixed' } | { kind: 'auto' }),
-        max: resolveTableTrackSize(parsed.max) as ResolvedTableTrackSize &
-          ({ kind: 'fixed' } | { kind: 'auto' } | { kind: 'fraction' }),
-      });
+/** 在实际轨道数量确定前检查覆盖声明的独立约束 */
+const assertTableTrackOverrides = (overrides: ReadonlyArray<IRTableTrackOverride>): void => {
+  const indexes = new Set<number>();
+  for (const override of overrides) {
+    if (!Number.isInteger(override.index) || override.index < 0) {
+      throw new RetikzTableError(`table: track override index ${String(override.index)} must be a nonnegative integer`);
+    }
+    if (indexes.has(override.index))
+      throw new RetikzTableError(`table: duplicate track override index ${override.index}`);
+    indexes.add(override.index);
+    resolveTableTrackSize(override.size);
   }
 };
 
@@ -29,36 +36,21 @@ export const resolveTableTrackSize = (size: IRTableTrackSize): ResolvedTableTrac
 export const resolveTableTrackSizes = (
   defaults: ReadonlyArray<IRTableTrackSize>,
   overrides: ReadonlyArray<IRTableTrackOverride> = [],
-): ReadonlyArray<ResolvedTableTrackSize> => {
-  const indexes = new Set<number>();
-
-  for (const override of overrides) {
-    if (!Number.isInteger(override.index) || override.index < 0) {
-      throw new RetikzTableError(`table: track override index ${String(override.index)} must be a nonnegative integer`);
-    }
-
-    if (indexes.has(override.index)) {
-      throw new RetikzTableError(`table: duplicate track override index ${override.index}`);
-    }
-
-    if (override.index >= defaults.length) {
-      throw new RetikzTableError(
-        `table: track override index ${override.index} is out of range for ${defaults.length} tracks`,
-      );
-    }
-
-    indexes.add(override.index);
-  }
-
-  const parsedOverrides = overrides;
-  const overrideByIndex = new Map(parsedOverrides.map(override => [override.index, override.size]));
-
-  return Object.freeze(defaults.map((size, index) => resolveTableTrackSize(overrideByIndex.get(index) ?? size)));
+): ReadonlyArray<CanonicalTableTrackSize> => {
+  assertTableTrackOverrides(overrides);
+  return applyTableTrackOverrides(defaults.map(resolveTableTrackSize), overrides);
 };
 
 /** 解析 Table layout 并物化稳定默认值 */
-export const resolveTableLayout = (spec?: IRTableLayout): ResolvedTableLayout => {
+export const resolveTableLayout = (spec?: IRTableLayout): CanonicalTableLayout => {
   const parsed = spec ?? {};
+  assertTableTrackOverrides(parsed.columns ?? []);
+  assertTableTrackOverrides(parsed.rows ?? []);
+  for (const gap of [parsed.columnGap, parsed.rowGap]) {
+    if (gap !== undefined && (!Number.isFinite(gap) || gap < 0)) {
+      throw new RetikzTableError('table: gap must be a finite nonnegative number');
+    }
+  }
   const rowSize = resolveTableTrackSize(
     parsed.rowSize ?? { kind: TableTrackSizeKind.Fixed, value: DEFAULT_TABLE_ROW_HEIGHT },
   );
@@ -69,8 +61,8 @@ export const resolveTableLayout = (spec?: IRTableLayout): ResolvedTableLayout =>
     ),
     rowSize,
     headerRowSize: parsed.headerRowSize === undefined ? rowSize : resolveTableTrackSize(parsed.headerRowSize),
-    columns: Object.freeze([...(parsed.columns ?? [])]),
-    rows: Object.freeze([...(parsed.rows ?? [])]),
+    columns: deepFreeze(structuredClone(parsed.columns ?? [])),
+    rows: deepFreeze(structuredClone(parsed.rows ?? [])),
     columnGap: parsed.columnGap ?? DEFAULT_TABLE_TRACK_GAP,
     rowGap: parsed.rowGap ?? DEFAULT_TABLE_TRACK_GAP,
     ...(parsed.borders === undefined ? {} : { borders: parsed.borders }),

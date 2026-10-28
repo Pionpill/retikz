@@ -2,17 +2,17 @@ import type { IRTable } from '@retikz/table';
 import { compileTable } from '@retikz/table';
 import { renderToSvgString } from '@retikz/vanilla';
 
-import type { RenderTable, RenderTableArtifactOptions, RenderTableArtifactResult, RenderTableOptions } from './types';
+import type { TableRenderer, TableRenderArtifactOptions, TableRenderArtifactResult, TableRenderOptions } from './types';
 
 /** 执行 Table schema 校验、lowering、Core compile 与 SVG 输出 */
 const renderTableImpl = (
   spec: IRTable,
-  options: RenderTableOptions | RenderTableArtifactOptions = {},
-): string | RenderTableArtifactResult => {
+  options: TableRenderOptions | TableRenderArtifactOptions = {},
+): string | TableRenderArtifactResult => {
   /** 判断 renderTable 是否请求 artifact sidecar */
   const requestsArtifacts = (
-    renderOptions: RenderTableOptions | RenderTableArtifactOptions,
-  ): renderOptions is RenderTableArtifactOptions => renderOptions.artifacts === true;
+    renderOptions: TableRenderOptions | TableRenderArtifactOptions,
+  ): renderOptions is TableRenderArtifactOptions => renderOptions.artifacts === true;
 
   const data = options.data ?? {};
   const lowerOptions = options.lowerOptions ?? {};
@@ -28,4 +28,4 @@ const renderTableImpl = (
 };
 
 /** 把单个 Table spec 一次性渲染为 SSR SVG，并可返回 layout manifest */
-export const renderTable = renderTableImpl as RenderTable;
+export const renderTable = renderTableImpl as TableRenderer;

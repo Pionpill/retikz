@@ -19,12 +19,12 @@ import { literal, strictObject } from 'zod';
 
 import { renderChart } from '../src';
 import {
-  ScatterChartInputEmbedAdapter,
-  BubbleChartInputEmbedAdapter,
-  ConnectedScatterChartInputEmbedAdapter,
-  RangedDotChartInputEmbedAdapter,
-  RegressionChartInputEmbedAdapter,
-  StripChartInputEmbedAdapter,
+  scatterChartInputEmbedAdapter,
+  bubbleChartInputEmbedAdapter,
+  connectedScatterChartInputEmbedAdapter,
+  rangedDotChartInputEmbedAdapter,
+  regressionChartInputEmbedAdapter,
+  stripChartInputEmbedAdapter,
 } from '../src/point';
 import {
   bubbleChart,
@@ -36,12 +36,12 @@ import {
 } from '../src/point';
 
 const adapters = [
-  ScatterChartInputEmbedAdapter,
-  BubbleChartInputEmbedAdapter,
-  ConnectedScatterChartInputEmbedAdapter,
-  RangedDotChartInputEmbedAdapter,
-  RegressionChartInputEmbedAdapter,
-  StripChartInputEmbedAdapter,
+  scatterChartInputEmbedAdapter,
+  bubbleChartInputEmbedAdapter,
+  connectedScatterChartInputEmbedAdapter,
+  rangedDotChartInputEmbedAdapter,
+  regressionChartInputEmbedAdapter,
+  stripChartInputEmbedAdapter,
 ];
 
 const sourceOf = (chart: AnyInputEmbed): IRChartSource =>
@@ -70,8 +70,8 @@ const sceneIdsOf = (primitives: ReadonlyArray<ScenePrimitiveLike>): Array<string
     ...sceneIdsOf(primitive.children ?? []),
   ]);
 
-describe('Chart Vanilla authoring', () => {
-  it('creates Bubble Source, one runtime dataset, and its concrete provider contribution', () => {
+describe('Chart Vanilla 编写', () => {
+  it('创建 Bubble Source、一个运行时数据集及其具体提供者贡献', () => {
     const chart = bubbleChart({
       data: rows,
       dataRef: 'bubble.rows',
@@ -86,7 +86,7 @@ describe('Chart Vanilla authoring', () => {
     expect({ [chart.props.dataRef ?? 'chart.data']: chart.props.data }).toEqual({ 'bubble.rows': rows });
   });
 
-  it('renders Bubble through the same SSR path as other Point charts', () => {
+  it('通过与其他点图相同的 SSR 路径渲染气泡', () => {
     const chart = bubbleChart({
       id: 'bubble',
       data: rows,
@@ -98,7 +98,7 @@ describe('Chart Vanilla authoring', () => {
     expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toContain('bubble');
   });
 
-  it('creates Regression Source, dataset binding, and its concrete provider contribution', () => {
+  it('创建回归 Source、数据集绑定及其具体提供者贡献', () => {
     const chart = regressionChart({
       data: regressionRows,
       dataRef: 'regression.rows',
@@ -119,7 +119,7 @@ describe('Chart Vanilla authoring', () => {
     expect({ [chart.props.dataRef ?? 'chart.data']: chart.props.data }).toEqual({ 'regression.rows': regressionRows });
   });
 
-  it('renders grouped Regression through SSR without serializing runtime Definitions', () => {
+  it('通过 SSR 渲染分组回归，无需序列化运行时定义', () => {
     const chart = regressionChart({
       id: 'regression',
       data: regressionRows,
@@ -137,14 +137,14 @@ describe('Chart Vanilla authoring', () => {
     expect(JSON.parse(serializedSource)).toEqual(sourceOf(chart));
   });
 
-  it('does not expose a generic Chart authoring path', async () => {
+  it('不公开通用 Chart 编写路径', async () => {
     const module = await import('../src');
 
     expect(module).not.toHaveProperty('createChart');
     expect(module).not.toHaveProperty('normalizeChart');
   });
 
-  it('forwards named Theme definitions and Plot lowering options without putting them in Source', () => {
+  it('转发命名主题定义和 Plot 下沉选项，而不将它们放入 Source 中', () => {
     const chartThemeDefinitions = [defineChartTheme({ name: 'scatter-theme', defaults: { layout: { gap: 8 } } })];
     const lowerOptions = { datasetFieldMaps: { rows: { x: 'x' } } } as const;
     const result = scatterChart({
@@ -159,7 +159,7 @@ describe('Chart Vanilla authoring', () => {
     expect(sourceOf(result)).not.toHaveProperty('chartThemeDefinitions');
   });
 
-  it('keeps the Core host Theme and Theme definitions in the authoring result and SSR', () => {
+  it('在编写结果和 SSR 中保留 Core 宿主主题和主题定义', () => {
     const hostTheme = defineTheme({
       name: 'host-style',
       resolve: () => ({ categorical: ['#123456'] }),
@@ -187,7 +187,7 @@ describe('Chart Vanilla authoring', () => {
     expect(renderChart(result, { adapters }).svg).toContain('#123456');
   });
 
-  it('writes explicit Chart defaults into Source while keeping Core theme in the host result', () => {
+  it('将显式 Chart 默认值写入 Source，同时在宿主结果中保留 Core 主题', () => {
     const result = scatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y' },
@@ -198,7 +198,7 @@ describe('Chart Vanilla authoring', () => {
     expect(result).not.toHaveProperty('theme');
   });
 
-  it('forwards sparse Point recipe guide controls through concrete factories', () => {
+  it('通过具体工厂转发稀疏点配方辅助线控制', () => {
     const scatter = scatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y', size: 'size' },
@@ -217,7 +217,7 @@ describe('Chart Vanilla authoring', () => {
     expect(sourceOf(strip).recipe.guides).toEqual({ grid: false });
   });
 
-  it('routes Core host Theme metadata through the shared helper for every Point factory', () => {
+  it('通过每个点工厂的共享帮助程序路由 Core 宿主主题元数据', () => {
     const factories = [
       () => scatterChart({ data: rows, encodings: { x: 'x', y: 'y' }, theme: { mode: 'dark' } }),
       () => bubbleChart({ data: rows, encodings: { x: 'x', y: 'y', size: 'size' }, theme: { mode: 'dark' } }),
@@ -250,7 +250,7 @@ describe('Chart Vanilla authoring', () => {
     }
   });
 
-  it('shares custom transform Definitions with Chart resolution and Plot lowering without serializing runtime', () => {
+  it('与 Chart 解析结果和 Plot 下沉共享自定义转换定义，无需序列化运行时', () => {
     const copyField = defineTransform({
       kind: 'copy-chart-field',
       paramsSchema: strictObject({ field: NonBlankStringSchema, as: NonBlankStringSchema }),
@@ -307,14 +307,14 @@ describe('Chart Vanilla authoring', () => {
     expect(sourceOf(fromResult).plotExtension).toBeUndefined();
   });
 
-  it('normalizes typed Point factories to family plus chartType Source IR', () => {
+  it('将类型化点工厂标准化为族加上 chartType Source IR', () => {
     const scatter = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
 
     expect(sourceOf(scatter)).toMatchObject({ type: 'point', recipe: { chartType: 'scatter' } });
     expect(sourceOf(scatter)).not.toHaveProperty('config');
   });
 
-  it('preserves Chart, derived Plot, mark, and Plot-area identity through the Core adapter', () => {
+  it('通过 Core 适配器保留 Chart、派生 Plot、标记和 Plot 区域标识', () => {
     const chart = scatterChart({
       id: 'scatter',
       data: rows,
@@ -356,7 +356,7 @@ describe('Chart Vanilla authoring', () => {
     expect(automatic.height).toBeCloseTo(unpadded.height + 20);
   });
 
-  it('does not synthesize Scene ids for an anonymous Chart without provenance', () => {
+  it('不会为没有来源追溯的匿名 Chart 合成 Scene id', () => {
     const chart = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
     const rendered = renderChart(chart, { adapters });
 
@@ -364,8 +364,8 @@ describe('Chart Vanilla authoring', () => {
   });
 });
 
-describe('custom regression SSR', () => {
-  it('consumes runtime definitions and leaves only JSON method parameters in Source', () => {
+describe('自定义回归 SSR', () => {
+  it('消费运行时定义并仅在 Source 中保留 JSON 方法参数', () => {
     const definition = defineRegression({ schema: strictObject({ kind: literal('identity-fit') }) });
     const definitionImplementation = defineRegressionImplementation({
       definition,

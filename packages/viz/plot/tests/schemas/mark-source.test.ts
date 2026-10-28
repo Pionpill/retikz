@@ -3,8 +3,8 @@ import { treeifyError } from 'zod';
 
 import { ChannelSchema, MarkSchema, PointMarkSchema, PositionEncodingSchema } from '../../src';
 
-describe('Mark Source field encodings and fixed properties', () => {
-  it('preserves field strings and explicitly scaled bindings through JSON', () => {
+describe('标记 Source 字段编码和固定属性', () => {
+  it('保留字段字符串并通过 JSON 显式缩放绑定', () => {
     const input = {
       type: 'point',
       encodings: {
@@ -24,7 +24,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('accepts a field name or an explicit field and scale pair', () => {
+  it('接受字段名称或显式字段和比例对', () => {
     expect(ChannelSchema.parse('region')).toBe('region');
     expect(ChannelSchema.parse({ field: 'region', scale: 'palette' })).toEqual({
       field: 'region',
@@ -39,11 +39,11 @@ describe('Mark Source field encodings and fixed properties', () => {
     { field: 'region', scale: '' },
     { value: 'red' },
     { field: 'region', scale: 'palette', value: 'red' },
-  ])('rejects non-field or incomplete external channel input %j', input => {
+  ])('拒绝非现场或不完整的外部通道输入 %j', input => {
     expect(ChannelSchema.safeParse(input).success).toBe(false);
   });
 
-  it('restricts coordinate roles to x/y/z and rejects scaled position inputs', () => {
+  it('将坐标角色限制为 x/y/z 并拒绝缩放位置输入', () => {
     expect(PositionEncodingSchema.safeParse({ longitude: { field: 'lon' }, latitude: { field: 'lat' } }).success).toBe(
       false,
     );
@@ -53,7 +53,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     if (!result.success) expect(treeifyError(result.error).properties).toHaveProperty('x');
   });
 
-  it('retains both authored sources so resolution can apply encoding precedence', () => {
+  it('保留两个编写源，因此解析结果可以应用编码优先级', () => {
     const input = {
       type: 'point',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, color: 'group', opacity: { overall: 'alpha' } },
@@ -66,7 +66,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     });
   });
 
-  it('accepts mixed fixed and encoded annotation positions without binding wrappers', () => {
+  it('接受混合固定和编码注释位置，无需绑定包装器', () => {
     const input = {
       type: 'point',
       encodings: { color: 'group', position: { x: { edge: 'end' }, y: { field: 'mean' } } },
@@ -79,7 +79,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('keeps transforms omission distinct from an explicit empty chain', () => {
+  it('保持变换省略与显式空链的区别', () => {
     const input = {
       type: 'point',
       encodings: { position: { x: { value: 1 }, y: { value: 2 } } },
@@ -90,7 +90,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(MarkSchema.parse({ ...input, transforms: [] })).toHaveProperty('transforms', []);
   });
 
-  it('keeps path geometry properties separate from series and order roles', () => {
+  it('将路径几何属性与系列和顺序角色分开', () => {
     const input = {
       type: 'path',
       encodings: {
@@ -104,7 +104,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(MarkSchema.parse(input)).toEqual({ ...input, contributeToDomain: true });
   });
 
-  it('places interval construction modes in properties and endpoints in encodings', () => {
+  it('将区间构造模式放置在属性中，并将端点放置在编码中', () => {
     const input = {
       type: 'interval',
       encodings: {
@@ -131,7 +131,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(MarkSchema.safeParse(input).success).toBe(false);
   });
 
-  it('validates extension binding shape without silently dropping malformed input', () => {
+  it('验证扩展绑定形状，而不会默默地丢弃格式错误的输入', () => {
     const result = PointMarkSchema.safeParse({
       type: 'point',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, custom: { value: 2 } },
@@ -140,7 +140,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     if (!result.success) expect(result.error.issues.some(issue => issue.path[0] === 'encodings')).toBe(true);
   });
 
-  it('retains extension field bindings for registry validation', () => {
+  it('保留扩展字段绑定以进行注册表验证', () => {
     const input = {
       type: 'point',
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } }, custom: 'value' },
@@ -148,7 +148,7 @@ describe('Mark Source field encodings and fixed properties', () => {
     expect(PointMarkSchema.parse(input)).toEqual({ ...input, contributeToDomain: true });
   });
 
-  it('separates ordered label content from its fixed host configuration', () => {
+  it('将有序标签内容与其固定宿主配置分开', () => {
     const input = {
       type: 'point',
       encodings: {
@@ -166,13 +166,13 @@ describe('Mark Source field encodings and fixed properties', () => {
     { encodings: { opacity: { unsupported: 'alpha' } } },
     { encodings: { color: { field: 'group' } } },
     { encodings: { channels: { custom: 'value' } } },
-  ])('rejects obsolete wrappers or undeclared nested targets %j', fragment => {
+  ])('拒绝过时的包装器或未声明的嵌套目标 %j', fragment => {
     expect(PointMarkSchema.safeParse({ type: 'point', ...fragment }).success).toBe(false);
   });
 });
 
-describe('Core graphic style input contract', () => {
-  it.each(['point', 'path', 'interval'])('preserves contextual paint and scalar opacity for %s through JSON', type => {
+describe('Core 图形样式输入契约', () => {
+  it.each(['point', 'path', 'interval'])('保留 %s 到 JSON 的上下文绘制和标量不透明度', type => {
     const parsed = MarkSchema.parse({
       type,
       encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } },
@@ -205,7 +205,7 @@ describe('Core graphic style input contract', () => {
     { dashOffset: Infinity },
     { lineCap: 'triangle' },
     { lineJoin: 'smooth' },
-  ])('rejects invalid external graphic style %j', properties => {
+  ])('拒绝无效的外部图形样式 %j', properties => {
     for (const type of ['point', 'path', 'interval']) {
       expect(
         MarkSchema.safeParse({ type, encodings: { position: { x: { field: 'x' }, y: { field: 'y' } } }, properties })

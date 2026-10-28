@@ -1,4 +1,4 @@
-import type { ResolvedArrowEnd, Scene, SceneResource } from '@retikz/core';
+import type { CompiledArrowEnd, Scene, SceneResource } from '@retikz/core';
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -7,7 +7,7 @@ import { svgToReact } from '../../../src/render/svg';
 
 type AnyElement = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
-const arrowSpec: ResolvedArrowEnd = {
+const arrowSpec: CompiledArrowEnd = {
   shape: 'stealth',
   baseSize: 10,
   refX: 8,
@@ -108,7 +108,7 @@ const findChild = (element: AnyElement, type: string): AnyElement => {
   return child as AnyElement;
 };
 
-describe('string-react-parity', () => {
+describe('字符串反应等价性', () => {
   it('字符串序列化与 React 映射保持同一份 SVG 语义', () => {
     const idPrefix = 'parity';
     const svgString = renderToSvgString(scene, { idPrefix });

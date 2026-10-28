@@ -25,19 +25,19 @@ import type {
   IRStripChart,
 } from '@retikz/chart/point';
 import type { IRChild, IRScene, IRScope } from '@retikz/core';
-import { BranchDiagramEmbedKind, normalizeBranchDiagram } from '@retikz/diagram-vanilla/branch';
+import { branchDiagramEmbedKind, normalizeBranchDiagram } from '@retikz/diagram-vanilla/branch';
 import type { InputBranchDiagram } from '@retikz/diagram-vanilla/branch';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
-import { FlowDiagramEmbedKind, normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
+import { flowDiagramEmbedKind, normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import type { InputGraphChild, InputGraphMember } from '@retikz/graph-vanilla';
 import {
-  BlockEmbedKind,
-  BlockHeaderEmbedKind,
-  BlockRowEmbedKind,
-  BlockSectionEmbedKind,
-  EntityEmbedKind,
-  GraphEmbedKind,
-  GroupEmbedKind,
+  blockEmbedKind,
+  blockHeaderEmbedKind,
+  blockRowEmbedKind,
+  blockSectionEmbedKind,
+  entityEmbedKind,
+  graphEmbedKind,
+  groupEmbedKind,
   normalizeBlock,
   normalizeBlockHeader,
   normalizeBlockRow,
@@ -46,7 +46,7 @@ import {
   normalizeGraph,
   normalizeGroup,
   normalizeRelation,
-  RelationEmbedKind,
+  relationEmbedKind,
 } from '@retikz/graph-vanilla';
 import type {
   AnyInputEmbed,
@@ -244,50 +244,50 @@ const sourceGraphEmbedOf = (
   const props = sourcePropsOf(input.props);
 
   switch (input.kind) {
-    case BranchDiagramEmbedKind:
+    case branchDiagramEmbedKind:
       return normalizeBranchDiagram(props as InputBranchDiagram);
-    case FlowDiagramEmbedKind:
+    case flowDiagramEmbedKind:
       return normalizeFlowDiagram(props as InputFlowDiagram);
-    case GraphEmbedKind:
+    case graphEmbedKind:
       return sourceGraphMemberOf(
         { ...props, type: 'graph', children: graphInputChildrenOf(props) },
         runtime,
         chartSources,
         chartIndex,
       );
-    case GroupEmbedKind:
+    case groupEmbedKind:
       return sourceGraphMemberOf(
         { ...props, type: 'group', children: graphInputChildrenOf(props) },
         runtime,
         chartSources,
         chartIndex,
       );
-    case BlockEmbedKind:
+    case blockEmbedKind:
       return sourceGraphMemberOf(
         { ...props, type: 'block', children: graphInputChildrenOf(props) },
         runtime,
         chartSources,
         chartIndex,
       );
-    case BlockHeaderEmbedKind:
+    case blockHeaderEmbedKind:
       return sourceGraphMemberOf(
         { ...props, type: 'blockHeader' } as InputGraphMember,
         runtime,
         chartSources,
         chartIndex,
       );
-    case BlockSectionEmbedKind:
+    case blockSectionEmbedKind:
       return sourceGraphMemberOf(
         { ...props, type: 'blockSection', children: graphInputChildrenOf(props) },
         runtime,
         chartSources,
         chartIndex,
       );
-    case BlockRowEmbedKind:
+    case blockRowEmbedKind:
       return sourceGraphMemberOf({ ...props, type: 'blockRow' }, runtime, chartSources, chartIndex);
-    case EntityEmbedKind:
+    case entityEmbedKind:
       return sourceGraphMemberOf({ ...props, type: 'entity' } as InputGraphMember, runtime, chartSources, chartIndex);
-    case RelationEmbedKind:
+    case relationEmbedKind:
       return sourceGraphMemberOf({ ...props, type: 'relation' } as InputGraphMember, runtime, chartSources, chartIndex);
     default:
       return undefined;

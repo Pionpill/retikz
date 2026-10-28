@@ -52,7 +52,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('ZodSchema deep expansion', () => {
+describe('ZodSchema 深度扩展', () => {
   it('Array 的超长 items 类型只显示所属 Schema 字段路径', () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>
@@ -82,7 +82,7 @@ describe('ZodSchema deep expansion', () => {
     expect(coordinateRow).toContain('✓');
   });
 
-  it('renders JsonObjectSchema as a string-keyed JsonValue record', () => {
+  it('将 JsonObjectSchema 呈现为字符串键控的 JsonValue 记录', () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>
         <ZodSchema name="JsonObjectSchema" />
@@ -94,7 +94,7 @@ describe('ZodSchema deep expansion', () => {
     expect(markup).not.toContain('unhandled: record');
   });
 
-  it('round-trips typed paths without collisions for reserved keys and discriminator types', () => {
+  it('往返类型化路径，不会与保留键和判别字段类型发生冲突', () => {
     const paths = [
       [field('meta./[]<>=~'), field('rows'), { kind: 'array' as const }, caseOf('1'), field('label')],
       [field('meta./[]<>=~'), field('rows'), { kind: 'array' as const }, caseOf(1), field('value')],
@@ -108,7 +108,7 @@ describe('ZodSchema deep expansion', () => {
     serialized.forEach((path, index) => expect(parseSchemaPath(path)).toEqual(paths[index]));
   });
 
-  it('renders arrays, tuples and union branches with canonical description overrides', () => {
+  it('使用规范描述覆盖来渲染数组、元组和联合分支', () => {
     SCHEMA_REGISTRY[entryName] = entry;
     const labelPath = serializeSchemaPath([
       field('meta./[]<>=~'),
@@ -166,7 +166,7 @@ describe('ZodSchema deep expansion', () => {
     for (const translation of ['标签。', '数值。', '标记。', '左值。']) expect(markup).toContain(translation);
   });
 
-  it('keeps value-only unions inline and expands only object branches of mixed unions', () => {
+  it('保持仅值联合内联并仅扩展混合联合的对象分支', () => {
     SCHEMA_REGISTRY[entryName] = {
       ...entry,
       schema: z.strictObject({
@@ -190,7 +190,7 @@ describe('ZodSchema deep expansion', () => {
     expect(markup).not.toContain('>reference<');
   });
 
-  it('renders a value-only root union as a type instead of an empty table', () => {
+  it('将纯值根联合呈现为类型而不是空表', () => {
     SCHEMA_REGISTRY[entryName] = { ...entry, schema: z.union([z.string(), z.number()]) };
     const markup = renderToStaticMarkup(
       <MemoryRouter>
@@ -202,7 +202,7 @@ describe('ZodSchema deep expansion', () => {
     expect(markup).toContain('number');
   });
 
-  it('warns for malformed, mistyped and missing deep description paths', () => {
+  it('警告格式错误、输入错误和缺少深度描述路径', () => {
     SCHEMA_REGISTRY[entryName] = entry;
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const wrongTypedSelector = serializeSchemaPath([
@@ -226,7 +226,7 @@ describe('ZodSchema deep expansion', () => {
     expect(warn.mock.calls.flat().join('\n')).toMatch(/invalid description path|has no field path|no override/);
   });
 
-  it('expands a top-level discriminated union instead of collapsing it to a compact alias', () => {
+  it('扩展顶级可判别联合，而不是将其折叠为紧凑别名', () => {
     SCHEMA_REGISTRY[aliasEntryName] = {
       schema: AliasSchema,
       label: 'DeepAliasSchemaFixture',
@@ -257,7 +257,7 @@ describe('ZodSchema deep expansion', () => {
     expect(markup).toContain('数量。');
   });
 
-  it('covers every visible Legend input and artifact path with registry-owned Chinese descriptions', () => {
+  it('使用注册表拥有的中文描述覆盖每个可见的 Legend 输入和产物路径', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const markup = renderToStaticMarkup(
       <MemoryRouter>
@@ -280,7 +280,7 @@ describe('ZodSchema deep expansion', () => {
     expect(markup).not.toContain('Stable authored tick identity.');
   });
 
-  it('uses source schema descriptions for the English Legend reference', async () => {
+  it('使用英语 Legend 参考的源 schema 描述', async () => {
     await i18n.changeLanguage('en');
     const markup = renderToStaticMarkup(
       <MemoryRouter>
@@ -294,7 +294,7 @@ describe('ZodSchema deep expansion', () => {
     expect(markup).not.toContain('稳定的刻度编写标识');
   });
 
-  it('renders defaulted and nullable Legend fields with their underlying public types', () => {
+  it('呈现默认和可为空的 Legend 字段及其底层公共类型', () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>
         <ZodSchema name="LegendSchema" expandNested />

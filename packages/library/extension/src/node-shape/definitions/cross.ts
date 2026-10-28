@@ -9,10 +9,9 @@ import {
   isDirectionalAnchor,
   pointsConnectionEnvelope,
   rect,
-  verticesToSegments,
 } from '@retikz/core';
 import { PositiveNumberSchema } from '@retikz/foundation';
-import { localToWorld } from '@retikz/math';
+import { localToWorld, verticesToSegments } from '@retikz/math';
 import type { CenteredBox, Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
 import { strictObject, union } from 'zod';
@@ -56,7 +55,7 @@ type CrossGeometry = {
 };
 
 /** 规范化 Cross 的方向高度，按方向、轴向、default 的顺序回退 */
-const normalizeCrossSideValue = (
+const resolveCrossSideValue = (
   value: number | CrossHeight | undefined,
   side: 'top' | 'right' | 'bottom' | 'left',
   axis: 'horizontal' | 'vertical',
@@ -73,7 +72,7 @@ const crossGeometry = (
   fallbackHalfHeight: number,
 ): CrossGeometry => {
   /** 规范化 Cross 的轴向宽度，按轴向值再回退到 default */
-  const normalizeCrossAxisValue = (
+  const resolveCrossAxisValue = (
     value: number | CrossDimension | CrossHeight | undefined,
     axis: 'horizontal' | 'vertical',
     fallback: number,
@@ -82,12 +81,12 @@ const crossGeometry = (
     return value?.[axis] ?? value?.default ?? fallback;
   };
 
-  const horizontalWidth = normalizeCrossAxisValue(params.width, 'horizontal', (fallbackHalfHeight * 2) / 3);
-  const verticalWidth = normalizeCrossAxisValue(params.width, 'vertical', (fallbackHalfWidth * 2) / 3);
-  const topHeight = normalizeCrossSideValue(params.height, 'top', 'vertical', fallbackHalfHeight);
-  const rightHeight = normalizeCrossSideValue(params.height, 'right', 'horizontal', fallbackHalfWidth);
-  const bottomHeight = normalizeCrossSideValue(params.height, 'bottom', 'vertical', fallbackHalfHeight);
-  const leftHeight = normalizeCrossSideValue(params.height, 'left', 'horizontal', fallbackHalfWidth);
+  const horizontalWidth = resolveCrossAxisValue(params.width, 'horizontal', (fallbackHalfHeight * 2) / 3);
+  const verticalWidth = resolveCrossAxisValue(params.width, 'vertical', (fallbackHalfWidth * 2) / 3);
+  const topHeight = resolveCrossSideValue(params.height, 'top', 'vertical', fallbackHalfHeight);
+  const rightHeight = resolveCrossSideValue(params.height, 'right', 'horizontal', fallbackHalfWidth);
+  const bottomHeight = resolveCrossSideValue(params.height, 'bottom', 'vertical', fallbackHalfHeight);
+  const leftHeight = resolveCrossSideValue(params.height, 'left', 'horizontal', fallbackHalfWidth);
   const halfHorizontalWidth = horizontalWidth / 2;
   const halfVerticalWidth = verticalWidth / 2;
   const halfWidth = Math.max((leftHeight + rightHeight) / 2, halfVerticalWidth);
@@ -126,14 +125,17 @@ const circumscribeCross = (halfWidth: number, halfHeight: number, params: CrossS
   crossGeometry(params, halfWidth * 3, halfHeight * 3);
 
 /** 可选 Cross 形状 Definition */
-export const CrossShapeDefinition = defineShape<CrossShapeParams>({
+export const crossShapeDefinition = defineShape<CrossShapeParams>({
   name: BuiltinExtensionShapeName.Cross,
   paramsSchema: CrossShapeParamsSchema,
-  computeCircumscribedHalfAxes: (halfWidth, halfHeight, params) => {
+  computeCircumscribedGeometry: (halfWidth, halfHeight, params) => {
     const geometry = circumscribeCross(halfWidth, halfHeight, params);
-    return { halfWidth: geometry.halfWidth, halfHeight: geometry.halfHeight };
+    return {
+      halfWidth: geometry.halfWidth,
+      halfHeight: geometry.halfHeight,
+      offset: circumscribeCross(0, 0, params).offset,
+    };
   },
-  computeCircumscribedOffset: params => circumscribeCross(0, 0, params).offset,
   computeBoundaryPoint: (bounds, toward, params) => {
     const center: Position = [bounds.x, bounds.y];
     return boundaryFromContour(verticesToSegments(crossVertices(bounds, params)), undefined, center, toward) ?? center;
@@ -151,9 +153,7 @@ export const CrossShapeDefinition = defineShape<CrossShapeParams>({
 });
 
 /** Cross 的静态 Core provider */
-export const CrossShapeProvider: CoreDependencyProvider = Object.freeze({
-  key: { capability: 'shape', name: CrossShapeDefinition.name },
-  dependencies: [],
-  datasets: {},
-  makeDefinition: () => CrossShapeDefinition,
+export const crossShapeProvider: CoreDependencyProvider = Object.freeze<CoreDependencyProvider>({
+  key: { capability: 'shape', name: crossShapeDefinition.name },
+  makeDefinition: () => crossShapeDefinition,
 });

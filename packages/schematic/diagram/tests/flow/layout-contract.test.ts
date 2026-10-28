@@ -54,8 +54,8 @@ const validDefinition = (overrides: Partial<FlowLayoutDefinition> = {}): FlowLay
   ...overrides,
 });
 
-describe('Flow Layout Definition contract', () => {
-  it('supports automatic bend without a default angle or axis radius', () => {
+describe('Flow Layout Definition 契约', () => {
+  it('支持无默认角度或轴半径的自动弯曲', () => {
     const base = validDefinition();
     const bend = {
       ...base,
@@ -66,7 +66,7 @@ describe('Flow Layout Definition contract', () => {
     expect(resolveFlowLayoutRegistry({ flowLayouts: [bend] }).layouts.get('custom')).toBe(bend);
   });
 
-  it.each([-1, NaN, Infinity])('rejects invalid physical-axis spacing: %s', vertical => {
+  it.each([-1, NaN, Infinity])('拒绝无效的物理轴间距：%s', vertical => {
     const definition = validDefinition();
 
     expect(() =>
@@ -81,13 +81,13 @@ describe('Flow Layout Definition contract', () => {
     ).toThrow('defaults.placementGap.vertical');
   });
 
-  it('keeps the exact Definition object as a typed identity', () => {
+  it('将确切的 Definition 对象保留为类型标识', () => {
     const definition = validDefinition();
 
     expect(defineFlowLayout(definition)).toBe(definition);
   });
 
-  it('registers a complete synchronous provider contract', () => {
+  it('注册一个完整的同步提供者契约', () => {
     const definition = validDefinition();
     const resolved = resolveFlowLayoutRegistry({ flowLayouts: [definition], defaultFlowLayout: 'custom' });
 
@@ -133,7 +133,7 @@ describe('Flow Layout Definition contract', () => {
         defaults: { ...validDefinition().defaults, routing: { kind: 'straight', orthogonalCornerRadius: 4 } },
       }),
     ],
-  ])('rejects %s during the shared registry validation path', (_label, definition) => {
+  ])('在共享注册表验证路径期间拒绝 %s', (_label, definition) => {
     try {
       resolveFlowLayoutRegistry({ flowLayouts: [definition] });
 

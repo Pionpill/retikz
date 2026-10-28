@@ -23,7 +23,7 @@ const rotateVector = (x: number, y: number, rotationDeg: number): Point => {
 };
 
 /** renderer 统一使用的有向弧扫描区间 */
-export type CommandArcSweep = {
+type CommandArcSweep = {
   /** 对齐后的起始角 */
   start: number;
   /** 沿指定方向对齐后的结束角 */

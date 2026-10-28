@@ -49,8 +49,6 @@ const themedBoxAdapter: InputEmbedAdapter = {
       providers: [
         {
           key: { capability: 'composite', namespace: 'theme-test', type: 'box' },
-          dependencies: [],
-          datasets: {},
           makeDefinition: makeThemedBoxDefinition,
         },
       ],
@@ -114,7 +112,7 @@ const themeProbe = defineComposite({
   },
 });
 
-describe('<Layout theme>', () => {
+describe('<Layout 主题>', () => {
   it('children 模式允许 Node textColor 使用 contextual color 权重', () => {
     const markup = renderToStaticMarkup(
       <Layout theme={{ mode: ThemeMode.Dark }} width={100} height={100}>

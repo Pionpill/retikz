@@ -11,13 +11,13 @@ import {
   TransformSchema,
 } from '../../src';
 
-describe('transform parameter contract', () => {
-  it('preserves the operation envelope through JSON round-trip', () => {
+describe('变换参数契约', () => {
+  it('通过 JSON 往返保留操作包络', () => {
     const operation = { kind: 'sort', params: { field: 'value', order: 'descending' } };
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
-  it('requires params and rejects additional envelope fields', () => {
+  it('需要参数并拒绝额外的包络字段', () => {
     expect(SortTransformSchema.safeParse({ kind: 'sort' }).success).toBe(false);
     expect(SortTransformSchema.safeParse({ kind: 'sort', params: { field: 'value' }, extra: true }).success).toBe(
       false,
@@ -26,7 +26,7 @@ describe('transform parameter contract', () => {
     expect(TransformSchema.safeParse({ kind: 'custom', params: { callback: () => 1 } }).success).toBe(false);
   });
 
-  it('locates cross-field parameter errors inside params', () => {
+  it('定位 params 内的跨字段参数错误', () => {
     const result = SummarizeTransformSchema.safeParse({
       kind: 'summarize',
       params: { groupBy: ['team'], metrics: [{ kind: 'count', as: 'team' }] },
@@ -35,7 +35,7 @@ describe('transform parameter contract', () => {
     if (!result.success) expect(result.error.issues[0]?.path).toEqual(['params', 'metrics', 0, 'as']);
   });
 
-  it('assembles a custom definition and applies parsed parameter defaults', () => {
+  it('组装自定义定义并应用解析的参数默认值', () => {
     const definition = defineTransform({
       kind: 'multiply',
       paramsSchema: strictObject({ factor: number().default(2) }),

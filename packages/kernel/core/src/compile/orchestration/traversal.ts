@@ -25,7 +25,7 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
-import { CompileExpansionKind, LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
+import { CompileExpansionKind, LayoutChildProbeKind, naturalLayoutProposal } from '../../contract';
 import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import { captureCompositeInputScope, selectCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
@@ -58,7 +58,7 @@ import { formatCompileChildPath, formatCompileOccurrence } from '../artifact';
 import { BuiltinCompileWarningCode } from '../constants';
 import { projectPublishedCompileLayout, projectScopeCompileLayouts } from '../element';
 import { NamespaceStack } from '../namespace';
-import type { NodeLayout } from '../node';
+import type { CompiledNodeLayout } from '../node';
 import {
   alignmentGuidesOfNode,
   compileNodeState,
@@ -75,7 +75,7 @@ import {
   createCompileInvariantError,
   createLayoutChildFailure,
   enrichLayoutProbeError,
-  normalizeLayoutProbeError,
+  wrapLayoutProbeError,
   raiseLayoutChildFailure,
 } from '../probe-failure';
 import { createClipRegistry, createPaintRegistry, importSceneResources, remapPrimitiveResources } from '../resource';
@@ -88,7 +88,7 @@ import {
 } from '../scope';
 import { createScopeTransformContext } from '../transform';
 import type { CompositeCompileArtifact } from '../types';
-import type { CompileWarningInput } from '../warning';
+import type { InputCompileWarning } from '../warning';
 import { cloneAlignmentGuides, resolveStructuralAlignmentGuides, transformAlignmentGuides } from './alignment-guide';
 import { filterAnimations } from './animation';
 import { freezeCompileArtifact, freezeOccurrence, orderCompileArtifacts } from './artifact';
@@ -99,7 +99,7 @@ import {
   createCompositeScopeChild,
   snapshotCompositeLayoutChild,
   snapshotCompositeOutputChild,
-  validateCompositeSpatialOutput,
+  resolveCompositeSpatialOutput,
 } from './composite-output';
 import type { CompileContext } from './context';
 import {
@@ -115,7 +115,7 @@ import { createPositionResolveContext } from './position-context';
 import type { InternalScenePrimitive } from './primitive';
 import {
   collectPlaceholderLocators,
-  makePathPlaceholder,
+  createPathPlaceholder,
   recordPrimitiveZIndex,
   sealSink,
   stableSortByZIndex,
@@ -191,7 +191,7 @@ export const compileChildrenToPrimitives = (
   let rootContribution: LayoutContribution | undefined;
   const warningOccurrences: Array<CompileOccurrenceLocator> = [];
 
-  const dispatchWarning = (warning: CompileWarningInput): void => {
+  const dispatchWarning = (warning: InputCompileWarning): void => {
     context.onWarn(withCompileWarningOccurrence(warning, warningOccurrences.at(-1)));
   };
 
@@ -232,7 +232,7 @@ export const compileChildrenToPrimitives = (
       maxCompositeDepth: context.maxCompositeDepth,
       artifacts: context.artifacts,
       observation: context.observation,
-      proposal: options.proposal ?? NaturalLayoutProposal,
+      proposal: options.proposal ?? naturalLayoutProposal,
       session,
     },
     state: {
@@ -266,7 +266,7 @@ export const compileChildrenToPrimitives = (
       nodeDistance: runtime.context.nodeDistance,
       scopeChain,
       resolveExplicitBoundary,
-      effectiveTransform: scopeTransformsContext.resolve(scopeChain),
+      composedTransform: scopeTransformsContext.resolve(scopeChain),
     });
 
   /** 为单次 Path resolve 创建复用 binding 的 target resolver，避免重复 provider lookup */
@@ -379,10 +379,10 @@ export const compileChildrenToPrimitives = (
             mode: pendingPath.theme.mode,
             scopeChain: pendingPath.scopeChain,
             targetResolver,
-            paths: runtime.context.paths,
-            arrows: runtime.context.arrows,
-            marks: runtime.context.marks,
-            patterns: runtime.context.patterns,
+            pathRegistry: runtime.context.paths,
+            arrowRegistry: runtime.context.arrows,
+            markRegistry: runtime.context.marks,
+            patternRegistry: runtime.context.patterns,
             round: runtime.context.round,
             irPath: pendingPath.irPath,
           });
@@ -441,7 +441,7 @@ export const compileChildrenToPrimitives = (
       mode: frame.theme.mode,
       scopeChain,
       positionContext: positionContextOf(scopeChain),
-      effectiveTransform: scopeTransformsContext.resolve(scopeChain),
+      composedTransform: scopeTransformsContext.resolve(scopeChain),
       childProposal: frame.childProposal,
     });
 
@@ -543,7 +543,7 @@ export const compileChildrenToPrimitives = (
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, pathSink, scopeDefaults } = frame;
     const pathIrPath = formatCompileChildPath(locatorPrefix, index, 'path');
-    const placeholder = makePathPlaceholder();
+    const placeholder = createPathPlaceholder();
     primitiveSink.push(placeholder);
     const pending: PendingPathEmission = {
       ancestors: frame.ancestors,
@@ -621,7 +621,7 @@ export const compileChildrenToPrimitives = (
       group.clipRef = runtime.context.clip.importPath(resolvedClipPath);
     } else if (child.clip !== undefined) {
       group.clipRef = runtime.context.clip.register(
-        resolveClipValue(child.clip, { clips: runtime.context.clips, irPath: `${scopeIrPath}.clip` }),
+        resolveClipValue(child.clip, { clipRegistry: runtime.context.clips, irPath: `${scopeIrPath}.clip` }),
       );
     }
 
@@ -683,9 +683,9 @@ export const compileChildrenToPrimitives = (
     }
 
     const scopePrimitiveSink: Array<InternalScenePrimitive> = [];
-    const scopeLayouts: Array<NodeLayout> = [];
+    const scopeLayouts: Array<CompiledNodeLayout> = [];
     const scopePendingPaths: Array<PendingPathEmission> = [];
-    const scopePublications: Array<NodeLayout> = [];
+    const scopePublications: Array<CompiledNodeLayout> = [];
     const scopeBounds: TraversalFrame['boundsSink'] = [];
     const scopeAllocations: TraversalFrame['allocationSink'] = [];
     const scopeAlignmentGuides: TraversalFrame['alignmentGuideSink'] = [];
@@ -909,7 +909,7 @@ export const compileChildrenToPrimitives = (
   ];
 
   /** 验证 layout-aware composite 显式声明的 container allocation */
-  const validateAllocationBounds = (
+  const snapshotAllocationBounds = (
     bounds: unknown,
     compositeKey: string,
     occurrence: CompileOccurrenceLocator,
@@ -970,7 +970,7 @@ export const compileChildrenToPrimitives = (
   }>;
 
   /** replay transaction 捕获的 primitive resource ref 必须在提交前完整可解析 */
-  const validateReplayResourceRefs = (transaction: CompositeReplayTransaction): void => {
+  const assertReplayResourceRefs = (transaction: CompositeReplayTransaction): void => {
     const replayResourceIds = new Set(transaction.resources.map(resource => resource.id));
 
     const visit = (primitive: ScenePrimitive): void => {
@@ -1022,7 +1022,7 @@ export const compileChildrenToPrimitives = (
             theme: frame.theme,
           })
         : prepared.transaction;
-    validateReplayResourceRefs(transaction);
+    assertReplayResourceRefs(transaction);
 
     const transforms = wrapper?.transforms;
     const authoredPreliminary = transaction.scopeChainApplied ? undefined : authoredPreliminaryTransforms;
@@ -1065,13 +1065,13 @@ export const compileChildrenToPrimitives = (
       );
     }
 
-    const suppressedNamespaceWarnings = new Set<CompileWarningInput>();
+    const suppressedNamespaceWarnings = new Set<InputCompileWarning>();
     const namespaceParentChain =
       authoredPreliminary === undefined
         ? frame.scopeChain
         : frame.scopeChain.slice(0, frame.scopeChain.length - authoredPreliminary.length);
     const namespaceTransforms = [...(authoredPreliminary ?? []), ...(transforms ?? [])];
-    const publishedLayouts = new Map<NodeLayout, NodeLayout>();
+    const publishedLayouts = new Map<CompiledNodeLayout, CompiledNodeLayout>();
 
     for (const [changeIndex, change] of transaction.namespaceChanges.entries()) {
       const previousLayout = change.entry.layout;
@@ -1320,7 +1320,7 @@ export const compileChildrenToPrimitives = (
           entry.child.props.clip === undefined
             ? undefined
             : runtime.context.clip.lower(
-                resolveClipValue(entry.child.props.clip, { clips: runtime.context.clips, irPath: 'clip' }),
+                resolveClipValue(entry.child.props.clip, { clipRegistry: runtime.context.clips, irPath: 'clip' }),
               );
         preparedOutputs.set(handle, {
           output: entry.child,
@@ -1362,9 +1362,9 @@ export const compileChildrenToPrimitives = (
         entry.child.wrapper?.clip === undefined
           ? undefined
           : runtime.context.clip.lower(
-              resolveClipValue(entry.child.wrapper.clip, { clips: runtime.context.clips, irPath: 'clip' }),
+              resolveClipValue(entry.child.wrapper.clip, { clipRegistry: runtime.context.clips, irPath: 'clip' }),
             );
-      validateReplayResourceRefs(transaction);
+      assertReplayResourceRefs(transaction);
       preparedReplays.set(entry.child.replay, {
         transaction,
         ...(wrapperClipPath === undefined ? {} : { wrapperClipPath }),
@@ -1623,10 +1623,10 @@ export const compileChildrenToPrimitives = (
       captureScopeTargets?: TraversalCompileOptions['captureScopeTargets'],
       measurementAxis?: LayoutMeasurementAxis,
     ) => {
-      const warnings: Array<CompileWarningInput> = [];
-      const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarningInput }> = [];
+      const warnings: Array<InputCompileWarning> = [];
+      const namespaceBaselineWarnings: Array<{ id: string; warning: InputCompileWarning }> = [];
 
-      const captureWarning = (warning: CompileWarningInput): void => {
+      const captureWarning = (warning: InputCompileWarning): void => {
         if (
           warning.code === BuiltinCompileWarningCode.UnresolvedNodeReference ||
           warning.code === BuiltinCompileWarningCode.OffsetBaseUnresolved ||
@@ -1748,7 +1748,7 @@ export const compileChildrenToPrimitives = (
       const resources: Array<SceneResource> = [...paint.resources(), ...clip.resources()];
       const namespaceChanges = namespaceStack.diffTopFrame(namespaceBaseline);
       const probeFrameDepth = namespaceStack.depth - 1;
-      const allocationBounds = validateAllocationBounds(boundsRectOf(laid), key, probeOccurrence);
+      const allocationBounds = snapshotAllocationBounds(boundsRectOf(laid), key, probeOccurrence);
       const layoutResult: LayoutChildResult = Object.freeze({
         allocationBounds,
         slotSize: resolveLayoutSlotSize(allocationBounds, clonedProposal),
@@ -1792,7 +1792,7 @@ export const compileChildrenToPrimitives = (
         theme,
         withTheme: override =>
           createLayoutContext(resolveTheme(theme, override, `${compositeIrPath}.theme`, context.themeDefinitions)),
-        proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
+        proposal: cloneLayoutProposal(frame.childProposal ?? naturalLayoutProposal, key, occurrence),
         evaluation:
           options.measurementAxis !== undefined && child === rootChildren[0]
             ? { kind: 'contribution', axis: options.measurementAxis }
@@ -1876,7 +1876,7 @@ export const compileChildrenToPrimitives = (
             const failure = createLayoutChildFailure(
               session.failures,
               owner,
-              normalizeLayoutProbeError(thrown),
+              wrapLayoutProbeError(thrown),
               'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type,
               probeOccurrence,
             );
@@ -1898,7 +1898,7 @@ export const compileChildrenToPrimitives = (
             let queryChain = frame.scopeChain;
             const probe = probeLayoutChild(
               queryChild,
-              NaturalLayoutProposal,
+              naturalLayoutProposal,
               occurrence,
               frame.scopeChain,
               frame.scopeDefaults,
@@ -1964,10 +1964,10 @@ export const compileChildrenToPrimitives = (
                   pointOfTarget: target => bindingOf(target)?.point ?? null,
                   bindTarget: target => bindingOf(target),
                 },
-                paths: context.paths,
-                arrows: context.arrows,
-                marks: context.marks,
-                patterns: context.patterns,
+                pathRegistry: context.paths,
+                arrowRegistry: context.arrows,
+                markRegistry: context.marks,
+                patternRegistry: context.patterns,
                 round: context.round,
                 irPath: 'query',
               },
@@ -2057,7 +2057,7 @@ export const compileChildrenToPrimitives = (
           } catch (thrown) {
             if (isFatalProbeError(thrown)) throw thrown;
 
-            const error = normalizeLayoutProbeError(thrown);
+            const error = wrapLayoutProbeError(thrown);
             const fallbackProviderKey =
               'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type;
             const failure = createLayoutChildFailure(
@@ -2151,7 +2151,7 @@ export const compileChildrenToPrimitives = (
         },
       );
 
-      const spatialHandles = validateCompositeSpatialOutput(
+      const spatialHandles = resolveCompositeSpatialOutput(
         owner.label,
         result.spatialHandles,
         children
@@ -2166,7 +2166,7 @@ export const compileChildrenToPrimitives = (
       const explicitAllocation =
         resultAllocationBounds === undefined
           ? undefined
-          : validateAllocationBounds(resultAllocationBounds, key, occurrence);
+          : snapshotAllocationBounds(resultAllocationBounds, key, occurrence);
       const explicitAlignmentGuides =
         resultAlignmentGuides === undefined
           ? undefined
@@ -2387,7 +2387,7 @@ export const compileChildrenToPrimitives = (
   compileChildren(
     rootChildren,
     {
-      childProposal: options.proposal ?? NaturalLayoutProposal,
+      childProposal: options.proposal ?? naturalLayoutProposal,
       runtimeInputs: options.runtimeInputs ?? context.runtimeInputs,
       ancestors: options.ancestors ?? [],
       scopeChain: options.scopeChain ?? [],

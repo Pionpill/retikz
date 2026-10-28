@@ -44,7 +44,7 @@ afterEach(() => {
 });
 
 describe('<Layout onCompileResult>', () => {
-  it('does not publish user callbacks during SSR render', () => {
+  it('在 SSR 渲染期间不发布用户回调', () => {
     const onCompileResult = vi.fn();
     renderToStaticMarkup(
       <Layout
@@ -58,7 +58,7 @@ describe('<Layout onCompileResult>', () => {
     expect(onCompileResult).not.toHaveBeenCalled();
   });
 
-  it.each(['static', 'retained'] as const)('publishes the committed full result in %s mode', async mode => {
+  it.each(['static', 'retained'] as const)('以 %s 模式发布提交的完整结果', async mode => {
     const onCompileResult = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -80,7 +80,7 @@ describe('<Layout onCompileResult>', () => {
     await act(() => root.unmount());
   });
 
-  it('preserves direct compile spatial entries and query results', async () => {
+  it('保留直接编译的空间条目和查询结果', async () => {
     const direct = compileToScene(scene(10), { composites: [card] });
     const onCompileResult = vi.fn();
     const container = document.createElement('div');
@@ -111,7 +111,7 @@ describe('<Layout onCompileResult>', () => {
     await act(() => root.unmount());
   });
 
-  it('publishes each successful retained update exactly once', async () => {
+  it('将每个成功的保留模式更新发布一次', async () => {
     const onCompileResult = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -132,7 +132,7 @@ describe('<Layout onCompileResult>', () => {
     await act(() => root.unmount());
   });
 
-  it('isolates callback failure after the retained host commit', async () => {
+  it('隔离保留宿主提交后的回调失败', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const container = document.createElement('div');
     const root = createRoot(container);

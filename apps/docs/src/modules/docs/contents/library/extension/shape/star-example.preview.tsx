@@ -1,4 +1,4 @@
-import { StarShapeDefinition } from '@retikz/extension';
+import { starShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 /** 图形参数 */
@@ -12,7 +12,7 @@ export type StarExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderStarExamplePreview = (values: StarExamplePreviewValues) => (
-  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} extensions={{ shapes: [StarShapeDefinition] }}>
+  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} extensions={{ shapes: [starShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'star', params: values }}

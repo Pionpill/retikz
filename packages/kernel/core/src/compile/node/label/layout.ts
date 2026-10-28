@@ -1,19 +1,19 @@
 import type { CanonicalFont } from '../../../resolve';
 import { resolveFont, resolveTextLine } from '../../../resolve';
 import type { TextMeasurer } from '../../text';
-import { layoutInlineLine, normalizeTextMetrics } from '../../text';
+import { layoutInlineLine, resolveTextMetrics } from '../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content/text';
 import type {
   MeasuredNodeLabel,
   NodeLabelResolution,
   NodeLabelLayout,
-  NodeLayout,
+  CompiledNodeLayout,
   NodeTextLayoutContext,
 } from '../types';
 import { resolveNodeLabelGeometry } from './geometry';
 
 /** 节点附属 label 布局输入 */
-export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
+type InputNodeLabelsLayout = NodeTextLayoutContext & {
   /** 基准字体大小 */
   baseFontSize: number;
   /** preset 与 rem 字号解析的根字号 */
@@ -24,11 +24,11 @@ export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
 const nodeLabelMeasurer =
   (measureText: TextMeasurer): TextMeasurer =>
   (text, font) =>
-    normalizeTextMetrics(measureText(text, font));
+    resolveTextMetrics(measureText(text, font));
 
 /** 测量节点附属 label，不读取 Node rect */
 export const measureNodeLabels = (
-  input: LayoutNodeLabelsInput,
+  input: InputNodeLabelsLayout,
 ): Array<{ layout: MeasuredNodeLabel; properties: NodeLabelResolution }> | undefined => {
   const { node, measureText, texLowering, baseFontSize, rootFontSize, fontScale, fontFamily, fontWeight, fontStyle } =
     input;
@@ -81,7 +81,7 @@ export const measureNodeLabels = (
     const metrics =
       laid && height !== undefined
         ? { width: Math.max(...laid.map(line => line.width)), height, ascent: height / 2, descent: height / 2 }
-        : normalizeTextMetrics(measureText(resolved[0].plainText, labTextFont));
+        : resolveTextMetrics(measureText(resolved[0].plainText, labTextFont));
 
     return {
       properties: { ...lab, text: resolved, font: labTextFont, textColor: labTextColor },
@@ -98,7 +98,7 @@ export const measureNodeLabels = (
 
 /** 把已测量 label 绑定到最终 Node rect */
 export const layoutNodeLabels = (
-  layout: NodeLayout,
+  layout: CompiledNodeLayout,
   labels: Array<{ layout: MeasuredNodeLabel; properties: NodeLabelResolution }> | undefined,
 ): Array<NodeLabelLayout> | undefined =>
   labels?.map(label => resolveNodeLabelGeometry(layout, label.layout, label.properties));

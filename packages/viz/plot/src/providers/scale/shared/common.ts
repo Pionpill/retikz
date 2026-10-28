@@ -98,7 +98,7 @@ export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
  * 建 scheme 解析器：先查内置 SCHEME_INTERPOLATORS、再查自定义 options.colorSchemes，未命中 throw
  * @description interpolator 函数不进 IR；IR 只存 scheme 名串，求值期经此解析为函数（含自定义命名配色）
  */
-export const makeColorSchemeResolver =
+export const createColorSchemeResolver =
   (custom?: Record<string, (t: number) => string>): ColorSchemeResolver =>
   name => {
     if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as BuiltinPlotColorScheme];

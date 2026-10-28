@@ -16,7 +16,7 @@ export type GridTrackConstraint = Readonly<{
 }>;
 
 /** Grid 单轴 intrinsic profiles 与最终物理分布 */
-export type SolvedGridTracks = Readonly<{
+type SolvedGridTracks = Readonly<{
   /** 每条轨道的最小内容尺寸，保持轨道顺序 */
   minimumProfile: ReadonlyArray<number>;
   /** 每条轨道的自然内容尺寸，保持轨道顺序 */

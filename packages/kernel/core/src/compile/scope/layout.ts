@@ -8,19 +8,19 @@ import { resolveTransformTranslation } from '../../resolve/position';
 import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
-import type { NodeLayout } from '../node';
+import type { CompiledNodeLayout } from '../node';
 import { outerRectOf } from '../node';
 import { createCompileInvariantError } from '../probe-failure';
 import { resolveAnchorRefUncached } from '../reference';
 
 /** scope transform lowering 所需的编译上下文 */
-export type LowerScopeTransformsContext = {
+type ScopeTransformsLoweringContext = {
   /** Position Source IR 确定化上下文 */
   positionContext: PositionTargetResolveContext;
   /** transform 引用解析失败时的回调 */
   onUnresolved?: (failed: IRTransform) => void;
   /** pivot 解析使用的 Scope 固有包络 layout */
-  intrinsicLayout?: NodeLayout;
+  intrinsicLayout?: CompiledNodeLayout;
 };
 
 /** 断言 self point / placement 计算结果是可发布的有限坐标 */
@@ -36,7 +36,10 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition =>
  * 在 Scope 固有包络上解析 self point
  * @description `origin` 与显式坐标不依赖包络；anchor 引用统一走现有 shape / boundary resolver
  */
-export const resolveScopeSelfPoint = (point: IRScopeSelfPoint, intrinsicLayout: NodeLayout | undefined): IRPosition => {
+const resolveScopeSelfPoint = (
+  point: IRScopeSelfPoint,
+  intrinsicLayout: CompiledNodeLayout | undefined,
+): IRPosition => {
   if (point === 'origin') return [0, 0];
   if (Array.isArray(point)) return assertFiniteScopePoint([point[0], point[1]], 'scope self point');
   if (intrinsicLayout === undefined) {
@@ -54,7 +57,7 @@ export const resolveScopeSelfPoint = (point: IRScopeSelfPoint, intrinsicLayout: 
  */
 export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
-  context: LowerScopeTransformsContext,
+  context: ScopeTransformsLoweringContext,
 ): Array<Transform> | null => {
   const { positionContext, onUnresolved, intrinsicLayout } = context;
   const out: Array<Transform> = [];
@@ -109,8 +112,8 @@ export const lowerScopeTransforms = (
   return out;
 };
 
-/** 收集一组 NodeLayout 的全局 4 角点，供 AABB / MEC 等包络复用 */
-export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Array<IRPosition> => {
+/** 收集一组 CompiledNodeLayout 的全局 4 角点，供 AABB / MEC 等包络复用 */
+export const collectScopeCornerPoints = (layouts: ReadonlyArray<CompiledNodeLayout>): Array<IRPosition> => {
   const points: Array<IRPosition> = [];
 
   for (const layout of layouts) {
@@ -127,7 +130,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
 };
 
 /** 计算一组 layout 的全局 AABB；空数组返回 null */
-export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): CenteredBox | null => {
+export const computeScopeBoundingBox = (layouts: ReadonlyArray<CompiledNodeLayout>): CenteredBox | null => {
   const bounds = boundsOf(collectScopeCornerPoints(layouts));
   if (bounds === undefined) return null;
 

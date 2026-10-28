@@ -31,25 +31,25 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { ArcDefinition } from '@retikz/standard/shape';
+import { arcDefinition } from '@retikz/standard/shape';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [{ namespace: 'standard', type: 'arc', center: [0, 0], radius: 40, startAngle: 0, endAngle: 90 }],
 };
-export const Example = () => <Layout ir={ir} composites={[ArcDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[arcDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { shape, ArcInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { shape, arcInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({ children: [shape.arc({ center: [0, 0], radius: 40, startAngle: 0, endAngle: 90 })] });
-const svg = renderToSvgString(input, { adapters: [ArcInputEmbedAdapter] });
+const svg = renderToSvgString(input, { adapters: [arcInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -58,7 +58,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { ArcDefinition } from '@retikz/standard/shape';
+import { arcDefinition } from '@retikz/standard/shape';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
@@ -66,7 +66,7 @@ const ir: IRScene = {
   version: 1,
   children: [{ namespace: 'standard', type: 'arc', center: [0, 0], radius: 40, startAngle: 0, endAngle: 90 }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [ArcDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [arcDefinition] } });
 console.log(svg);
 ```
 

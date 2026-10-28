@@ -45,16 +45,6 @@ export const DocsHome: FC = () => {
       },
     },
     {
-      id: 'flow',
-      span: { columns: 4, rows: 2 },
-      location: ['schematic', 'diagram', 'flow', 'usage'],
-      preview: {
-        files: 'flow-basic',
-        size: 'md' as const,
-        ...MODULE_LANDING_PREVIEW,
-      },
-    },
-    {
       id: 'karl-circle',
       span: { columns: 2, rows: 2 },
       location: ['kernel', 'galleries', 'karl-circle'],
@@ -80,6 +70,88 @@ export const DocsHome: FC = () => {
       location: ['viz', 'plot', 'coordinate', 'composition'],
       preview: {
         files: 'coordinate-composition-tracks-polar',
+        size: 'md' as const,
+        ...MODULE_LANDING_PREVIEW,
+      },
+    },
+    {
+      id: 'anchors-explicit',
+      span: { columns: 4, rows: 2 },
+      location: ['kernel', 'components', 'core', 'primitive-relations'],
+      preview: {
+        files: 'anchors-explicit',
+        size: 'md' as const,
+        ...MODULE_LANDING_PREVIEW,
+      },
+    },
+    {
+      id: 'tex-formulas',
+      span: { columns: 3, rows: 1 },
+      location: ['kernel', 'packages', 'tex', 'authoring'],
+      preview: {
+        files: 'tex-formula-basics',
+        size: 'md' as const,
+        ...MODULE_LANDING_PREVIEW,
+      },
+    },
+    {
+      id: 'regression-marks',
+      span: { columns: 4, rows: 2 },
+      location: ['viz', 'chart', 'points', 'regression'],
+      preview: {
+        files: 'regression-marks',
+        responsive: true,
+        size: 'md' as const,
+        ...MODULE_LANDING_PREVIEW,
+      },
+    },
+    {
+      id: 'connected-scatter-marks',
+      span: { columns: 4, rows: 2 },
+      location: ['viz', 'chart', 'points', 'connected-scatter'],
+      preview: {
+        files: 'connected-scatter-marks',
+        responsive: true,
+        size: 'md' as const,
+        ...MODULE_LANDING_PREVIEW,
+      },
+    },
+    {
+      id: 'radial-bars',
+      span: { columns: 2, rows: 2 },
+      location: ['viz', 'plot', 'mark', 'interval'],
+      preview: {
+        files: 'bar-radial',
+        size: 'md' as const,
+        ...MODULE_LANDING_PREVIEW,
+      },
+    },
+    {
+      id: 'line-curve',
+      span: { columns: 3, rows: 2 },
+      location: ['viz', 'plot', 'mark', 'path'],
+      preview: {
+        files: 'line-curve',
+        size: 'md' as const,
+        ...MODULE_LANDING_PREVIEW,
+      },
+    },
+    {
+      id: 'compilation-output',
+      span: { columns: 4, rows: 3 },
+      location: ['kernel', 'packages', 'core', 'compilation-output'],
+      preview: {
+        files: 'output-implementation',
+        size: 'md' as const,
+        ...MODULE_LANDING_PREVIEW,
+      },
+    },
+    {
+      id: 'coordinate-overview',
+      span: { columns: 2, rows: 3 },
+      location: ['kernel', 'packages', 'core', 'coordinates'],
+      preview: {
+        files: 'coordinate-overview',
         size: 'md' as const,
         ...MODULE_LANDING_PREVIEW,
       },

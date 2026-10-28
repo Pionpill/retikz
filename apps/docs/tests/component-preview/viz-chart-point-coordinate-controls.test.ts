@@ -91,7 +91,7 @@ const canonicalCoordinateProps = (source: PreviewSourceConfig): Record<string, u
   return chart.props;
 };
 
-describe('Viz Chart Point family coordinate controls', () => {
+describe('Viz Chart Point 系列坐标控件', () => {
   it('双语示例在数据表后提供坐标切换，默认使用笛卡尔坐标', () => {
     for (const scenario of scenarios) {
       for (const contract of [scenario.zh, scenario.en]) {

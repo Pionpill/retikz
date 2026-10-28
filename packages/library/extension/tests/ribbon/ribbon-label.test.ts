@@ -11,7 +11,7 @@ import { compileToScene as compileCoreToScene, PathLabelSchema } from '@retikz/c
 import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { RibbonLabelSchema, RibbonPathDefinition, RibbonPathSchema } from '../../src/ribbon';
+import { RibbonLabelSchema, ribbonPathDefinition, RibbonPathSchema } from '../../src/ribbon';
 
 const ASCENT_FACTOR = 0.8;
 
@@ -57,7 +57,7 @@ const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
 
 const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
   const supplied = options.paths ?? [];
-  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathDefinition;
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? ribbonPathDefinition;
 
   return compileCoreToScene(input, {
     ...options,
@@ -97,7 +97,7 @@ const slopedGroupOf = (primitives: ReadonlyArray<ScenePrimitive>, text: string):
 const pathPrims = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrimitive> =>
   flatten(primitives).filter((primitive): primitive is PathPrimitive => primitive.type === 'path');
 
-describe('Ribbon label schema', () => {
+describe('功能区标签 schema', () => {
   it('仅中心线参数接受标签，数组不能为空', () => {
     expect(RibbonSchema.safeParse({ ...ribbon(), label: { text: 'x' } }).success).toBe(false);
     expect(RibbonSchema.safeParse(ribbon({ label: [] })).success).toBe(false);
@@ -130,7 +130,7 @@ describe('Ribbon label schema', () => {
   });
 });
 
-describe('Ribbon label compile', () => {
+describe('功能区标签编译', () => {
   it('嵌套标签继承宿主位置与字体默认，并逐项覆盖样式和内外位置', () => {
     const compiled = compileToScene(
       scene([

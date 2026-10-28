@@ -46,12 +46,12 @@ const FlowThemeCanonicalDemo: FC = () => FlowThemePreviewSource.canonicalRender?
 
 const FlowThemeEnCanonicalDemo: FC = () => renderFlowThemePreview(createThemeContract('en').canonicalValues, 'en');
 
-describe('Flow Diagram ComponentPreview', () => {
-  it('keeps the highest-level Flow Source in executable Vanilla code', () => {
+describe('Flow Diagram 的 ComponentPreview 预览', () => {
+  it('将最高级别的 Flow Source 保留在可执行 Vanilla 代码中', () => {
     const code = irToVanillaCode(scene);
 
     expect(code).toContain('flowDiagram({');
-    expect(code).toContain('FlowDiagramInputEmbedAdapter');
+    expect(code).toContain('flowDiagramInputEmbedAdapter');
     expect(code).toContain('PreviewThemeDefinitionBundle.flow');
     expect(code).toContain('entities:');
     expect(code).toContain('groups: []');
@@ -62,7 +62,7 @@ describe('Flow Diagram ComponentPreview', () => {
     expect(code).not.toContain("namespace: 'graph'");
   });
 
-  it('renders the same Flow Source through the Vanilla preview path', () => {
+  it('通过 Vanilla 预览路径渲染相同的 Flow Source', () => {
     const preview: PreviewIR = {
       ir: scene,
       sourceIr: scene,
@@ -84,7 +84,7 @@ describe('Flow Diagram ComponentPreview', () => {
     expect(result.svg).toContain('Target');
   });
 
-  it('renders Graph-owned Group and Entity appearance through the docs logic bundle', () => {
+  it('通过文档逻辑包渲染 Graph 拥有的 Group 和 Entity 外观', () => {
     const themedSource = FlowDiagramSchema.parse({
       namespace: 'diagram',
       type: 'flow',
@@ -131,7 +131,7 @@ describe('Flow Diagram ComponentPreview', () => {
   it.each([
     ['basic', FlowBasicCanonicalDemo],
     ['IR-centric', IrCentricDemo],
-  ] as const)('derives the %s React demo as Flow Source without host props or geometry', (_name, Demo) => {
+  ] as const)('将 %s React 演示推导为不含宿主 props 或几何信息的 Flow Source', (_name, Demo) => {
     const preview = buildPreviewIR(Demo);
     const serialized = JSON.stringify(preview.sourceIr);
     const vanilla = buildVanillaPreview(preview, {
@@ -146,10 +146,10 @@ describe('Flow Diagram ComponentPreview', () => {
     expect(serialized).not.toContain('"width":720');
     expect(serialized).not.toContain('"width":760');
     expect(vanilla.svg).toContain('<svg');
-    expect(vanilla.code).toContain('FlowDiagramInputEmbedAdapter');
+    expect(vanilla.code).toContain('flowDiagramInputEmbedAdapter');
   });
 
-  it('uses bilingual controls to change the frontend form role, status, rich text, block typography, and Relation status in real Flow Source', () => {
+  it('使用双语控件更改真实 Flow Source 中的前端表单角色、状态、富文本、块排版和 Relation 状态', () => {
     const chinese = createBasicContract('zh');
     const english = createBasicContract('en');
 
@@ -317,7 +317,7 @@ describe('Flow Diagram ComponentPreview', () => {
     expect(withoutSubtitle.entities[1]).toMatchObject({ text: ['前端表单'] });
   });
 
-  it('uses bilingual controls to apply global Entity and Relation styles through Flow theme', () => {
+  it('使用双语控件通过 Flow 主题应用全局 Entity 和 Relation 样式', () => {
     const chinese = createThemeContract('zh');
     const english = createThemeContract('en');
 
@@ -378,7 +378,7 @@ describe('Flow Diagram ComponentPreview', () => {
     }
   });
 
-  it('uses bilingual controls to change visible Group layout intent and shell-free Layout placement', () => {
+  it('通过双语控件修改可见 Group 的布局意图及无外壳 Layout 的放置方式', () => {
     const chinese = createCompoundContract('zh');
     const english = createCompoundContract('en');
 

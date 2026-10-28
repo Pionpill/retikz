@@ -39,8 +39,8 @@ const area = (points: Array<Position>) =>
     }, 0),
   ) / 2;
 
-describe('coordinate connection geometry', () => {
-  it('interpolates mapped radii at intermediate categories and reverses the same path', () => {
+describe('坐标连接几何体', () => {
+  it('在中间类别处插入映射半径并反转相同的路径', () => {
     const frame = polar();
     const points = frame.projectSegment!([0, 20], [120, 80])!;
     expect(points).toHaveLength(3);
@@ -53,7 +53,7 @@ describe('coordinate connection geometry', () => {
     expect(full.at(-1)![1]).toBeCloseTo(full[0][1]);
   });
 
-  it('keeps a category range as an area while explicit straight corners can collapse', () => {
+  it('将类别范围保留为一个区域，而显式直角可能会折叠', () => {
     const frame = polar();
     const cell = { intervals: { x: [60, 240] as [number, number], y: [20, 80] as [number, number] } };
     const coordinate = frame.projectCell(cell, { connection: 'coordinate' });
@@ -71,7 +71,7 @@ describe('coordinate connection geometry', () => {
     if (full.kind === 'contour') expect(area(full.points)).toBeGreaterThan(10000);
   });
 
-  it('retains continuous polar arcs and sectors while allowing straight cell boundaries', () => {
+  it('保留连续的极弧和扇形，同时允许直线单元边界', () => {
     const frame = polar('polar');
     const points = frame.projectSegment!([0, 50], [120, 50])!;
     expect(points.length).toBeGreaterThan(3);
@@ -81,7 +81,7 @@ describe('coordinate connection geometry', () => {
     expect(frame.projectCell(cell, { connection: 'straight' }).kind).toBe('contour');
   });
 
-  it('uses custom coordinate capabilities and fails rather than silently drawing a straight path', () => {
+  it('使用自定义坐标功能并且失败而不是默默地绘制直线路径', () => {
     const frame = createCoordinateFrame('curved', ['x', 'y'], () => [0, 0], {
       roleScales: { x: scale, y: scale },
       projectMappedRoles: values => [values[0], values[1]],

@@ -36,6 +36,14 @@ export type LineSegment = {
   to: Position;
 };
 
+/**
+ * 按顶点顺序构造闭合有向线段环，末段连接最后一个顶点与首个顶点
+ * @description 空数组返回空数组；单顶点产生自连接线段，双顶点产生方向相反的两段
+ *   保留输入绕向与重复顶点，线段端点复用输入坐标，不修改或复制坐标
+ */
+export const verticesToSegments = (vertices: Array<Position>): Array<LineSegment> =>
+  vertices.map((from, index) => ({ kind: 'line', from, to: vertices[(index + 1) % vertices.length] }));
+
 /** 圆弧段：圆心、半径、起末角（度）与扫描方向 */
 export type ArcSegment = {
   /** 鉴别字面量 */
