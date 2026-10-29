@@ -105,15 +105,11 @@ const assertPathEndpointOverlapHost = (path: PathColorSource, irPath: string): v
   }
 };
 
-/**
- * 将标签位置简写换算为比例，并补齐方向、距离和断线配置
- * @description 默认位置为 0.5，距离和断口每侧留白均为 4；未指定 side 时，随线倾斜的标签居中，其余位于上方
- * @param canAutomaticallyInterrupt 宿主是否允许自动断线；为 true 且标签居中时，缺省的 interrupt 取 true，显式值始终优先
- */
-export const resolvePathLabelPlacement = (
-  label: PathLabelGeometryOptions,
+/** 一次复制补齐标签几何字段，并保留调用方携带的文本与外观类型 */
+const canonicalizeLabelPlacement = <TLabel extends PathLabelGeometryOptions>(
+  label: TLabel,
   canAutomaticallyInterrupt: boolean,
-): CanonicalPathLabelPlacement => {
+): Omit<TLabel, 'position' | 'side' | 'distance' | 'interrupt' | 'gap'> & CanonicalPathLabelPlacement => {
   const side = label.side ?? (label.sloped === true ? 'center' : 'top');
   return {
     ...label,
@@ -130,11 +126,19 @@ export const resolvePathLabelPlacement = (
   };
 };
 
+/**
+ * 将标签位置简写换算为比例，并补齐方向、距离和断线配置
+ * @description 默认位置为 0.5，距离和断口每侧留白均为 4；未指定 side 时，随线倾斜的标签居中，其余位于上方
+ * @param canAutomaticallyInterrupt 宿主是否允许自动断线；为 true 且标签居中时，缺省的 interrupt 取 true，显式值始终优先
+ */
+export const resolvePathLabelPlacement = (
+  label: PathLabelGeometryOptions,
+  canAutomaticallyInterrupt: boolean,
+): CanonicalPathLabelPlacement => canonicalizeLabelPlacement(label, canAutomaticallyInterrupt);
+
 /** 为已解析颜色的标签补齐放置与断线默认值 */
-const canonicalizeLabel = (label: PathLabelColorSource, canAutomaticallyInterrupt: boolean): CanonicalPathLabel => ({
-  ...label,
-  ...resolvePathLabelPlacement(label, canAutomaticallyInterrupt),
-});
+const canonicalizeLabel = (label: PathLabelColorSource, canAutomaticallyInterrupt: boolean): CanonicalPathLabel =>
+  canonicalizeLabelPlacement(label, canAutomaticallyInterrupt);
 
 /** 为路径步骤及其标签补齐静态默认值，保留目标引用供后续解析 */
 const canonicalizeStep = (step: StepColorSource, canAutomaticallyInterrupt: boolean): CanonicalStep => {
