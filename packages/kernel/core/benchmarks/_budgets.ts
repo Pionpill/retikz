@@ -83,6 +83,43 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
       default:
         throw new Error(`Missing Core provider budget: ${identity}`);
     }
+  } else if (layer === 'contract') {
+    const count = Number(scale);
+    switch (family) {
+      case 'scene':
+        policy = {
+          warningMs: count <= 100 ? 1 : 4,
+          errorMs: count <= 100 ? 4 : 16.6,
+          rationale:
+            'Render/Inspect 消费一次完整 Scene 内容遍历；假设一次交互处理100/1000宿主，分配1/4ms目标、4/16.6ms错误线，几何与绘制另计。嵌套8层或每宿主8项Pattern仍沿用同档交互预算；回调只计数，业务回调开销不含在内',
+        };
+        break;
+      case 'provider':
+        policy = {
+          warningMs: count <= 16 ? 0.5 : count <= 128 ? 2 : 4,
+          errorMs: count <= 16 ? 2 : count <= 128 ? 8 : 16.6,
+          rationale:
+            'Vanilla/Plot在一次环境准备中解析提供者依赖图；假设16/128/512个唯一提供者分别分配0.5/2/4ms目标与2/8/16.6ms错误线，不是逐图元查表。重复贡献固定8份；工厂返回预建定义，领域构建成本不包含',
+        };
+        break;
+      case 'composite':
+        policy = variant.startsWith('select-')
+          ? {
+              warningMs: count <= 100 ? 0.1 : 0.5,
+              errorMs: count <= 100 ? 0.5 : 2,
+              rationale:
+                'Composite一次子树选择；假设一次更新选择10个子树，100/1000项Source每次目标0.1/0.5ms、错误线0.5/2ms，整体约1/5ms目标。绑定扫描属于单次操作，计时不外包循环；深度8作为作者组合参考需求',
+            }
+          : {
+              warningMs: count <= 100 ? 1 : 4,
+              errorMs: count <= 100 ? 4 : 16.6,
+              rationale:
+                'Composite一次Source快照捕获或绑定配对检查；假设一次更新100/1000项Source，分别分配1/4ms目标与4/16.6ms错误线，后续编译另计。捕获含复制冻结，配对检查含结构比较；不包含作者运行时数据准备',
+            };
+        break;
+      default:
+        throw new Error(`Missing Core contract budget: ${identity}`);
+    }
   } else if (layer === 'resolve') {
     switch (family) {
       case 'path': {
