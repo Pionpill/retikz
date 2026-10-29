@@ -74,7 +74,7 @@ The diagram follows root `chart.point` to `layout.flexLayout`. Once the registry
     { label: 'Vanilla preparation entry', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     { label: 'Chart layout dependency', path: 'packages/viz/chart/src/_chart/providers/provider.ts' },
     { label: 'Chart title and plot column layout', path: 'packages/viz/chart/src/_chart/resolve/presentation.ts' },
-    { label: 'Registries in the compile context', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: 'Registries in the compile context', path: 'packages/kernel/core/src/compile/context/full.ts' },
     { label: 'Definition binding and input parsing', path: 'packages/kernel/core/src/resolve/composite/resolve.ts' },
   ]}
 />
@@ -391,7 +391,7 @@ This cache is released when the callback ends and is not shared across callbacks
       label: 'Isolated evaluation and contribution reuse',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
     },
-    { label: 'Compile-local text metrics', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: 'Host measurement service', path: 'packages/kernel/core/src/compile/context/shared.ts' },
     {
       label: 'Flow route and endpoint query reuse',
       path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts',

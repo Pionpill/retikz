@@ -69,7 +69,7 @@ Compilation uses the host measurement service stored in the environment. Node co
     { label: 'Plain-text wrapping', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
     { label: 'Content dimensions enter node sizing', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: 'Node connection boundaries', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
-    { label: 'Compile-context metric cache', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: 'Host measurement service', path: 'packages/kernel/core/src/compile/context/shared.ts' },
   ]}
 />
 
@@ -140,7 +140,7 @@ Start with `Layout`'s compile options to identify the measurer, then read `creat
   sources={[
     {
       label: 'Measurement enters the compile context',
-      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
+      path: 'packages/kernel/core/src/compile/context/full.ts',
     },
     { label: 'Content measurement and branches', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
     { label: 'Node sizing', path: 'packages/kernel/core/src/compile/node/layout.ts' },

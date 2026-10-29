@@ -63,7 +63,7 @@ Core 先确定文字的有效字体，再请求测量。返回的 `width` 用于
     { label: '普通文字折行', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
     { label: '正文尺寸进入节点求解', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: '节点连接边界', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
-    { label: '编译上下文内的度量缓存', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: '宿主测量服务', path: 'packages/kernel/core/src/compile/context/shared.ts' },
   ]}
 />
 
@@ -123,7 +123,7 @@ Core 先确定文字的有效字体，再请求测量。返回的 `width` 用于
 
 <SourceLinks
   sources={[
-    { label: '度量能力进入编译上下文', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: '度量能力进入编译上下文', path: 'packages/kernel/core/src/compile/context/full.ts' },
     { label: '正文度量与分支', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
     { label: '节点尺寸求解', path: 'packages/kernel/core/src/compile/node/layout.ts' },
   ]}

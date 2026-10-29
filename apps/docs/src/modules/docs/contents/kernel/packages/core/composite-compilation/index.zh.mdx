@@ -71,7 +71,7 @@ Definition 统一提供 `compile(node, context)`。`node` 是 schema 解析后�
     { label: 'Vanilla 编译准备入口', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     { label: 'Chart 的布局依赖', path: 'packages/viz/chart/src/_chart/providers/provider.ts' },
     { label: 'Chart 标题与绘图区的纵向排布', path: 'packages/viz/chart/src/_chart/resolve/presentation.ts' },
-    { label: '注册表进入编译上下文', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: '注册表进入编译上下文', path: 'packages/kernel/core/src/compile/context/full.ts' },
     { label: '定义绑定与输入解析', path: 'packages/kernel/core/src/resolve/composite/resolve.ts' },
   ]}
 />
@@ -363,7 +363,7 @@ export type LayoutMeasurementProbe =
   sources={[
     { label: '贡献与完整输出契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     { label: '隔离求值与贡献复用', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
-    { label: '编译内文字度量共享', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: '宿主测量服务', path: 'packages/kernel/core/src/compile/context/shared.ts' },
     { label: 'Flow 路线与端点查询复用', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
   ]}
 />
