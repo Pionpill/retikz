@@ -9,7 +9,7 @@ import type {
 import type { MergedScopeDefaults } from '../../resolve';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
-import type { CompileEnvironment } from '../environment';
+import type { SharedCompileContext } from '../context';
 import type { CompiledNodeLayout, NodeCompilation } from '../node';
 import type { CompileWarning } from '../warning';
 
@@ -55,7 +55,7 @@ export type CompileRead = Readonly<{
 /** 单元素调用共享的显式输入，不拥有调度器 */
 export type ElementCompileOptions = Readonly<{
   /** 稳定编译配置、能力定义与服务 */
-  environment: CompileEnvironment;
+  shared: SharedCompileContext;
   /** 父级有效上下文 */
   context: ElementCompileContext;
   /** 诊断位置，不作为元素身份 */

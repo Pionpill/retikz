@@ -55,7 +55,7 @@ Core 先确定文字的有效字体，再请求测量。返回的 `width` 用于
 
 有宽度约束时，结果可能表现为行数增加。普通文字分支按测量宽度折行，西文按词、CJK 按字寻找断点；不可断片段超过行宽时允许溢出。正文高度由实际行数和行高计算，随后参与节点尺寸求解。形状、显式尺寸和布局提案仍会影响最终边界，不能把上表的矩形公式套到所有节点。
 
-在一次编译上下文内，相同文字及字体组合的度量会复用。这个缓存避免重复调用测量器，不负责监听字体变化，也不等同于跨更新的增量计算。
+编译统一调用环境中的宿主测量服务。节点正文排版可以在局部计算中复用相同测量请求；上下文不维护跨节点或跨试算的文字度量缓存，也不负责监听字体变化。
 
 <SourceLinks
   sources={[
@@ -119,7 +119,7 @@ Core 先确定文字的有效字体，再请求测量。返回的 `width` 用于
 
 <ComponentPreview files="metrics-implementation" size="xxl" hideCode type="flow" />
 
-从 `Layout` 的编译选项开始，确认 `measureText` 的来源，再进入 `createCompileContext`、`layoutNodeContent` 和 `compileNodeResolution`。最后查看 Render 如何消费文字图元；节点求解与基线算法的完整展开留在 Core 文档。
+从 `Layout` 的编译选项开始，确认 `measureText` 的来源，再进入 `createFullCompileContext`、`layoutNodeContent` 和 `compileNodeResolution`。最后查看 Render 如何消费文字图元；节点求解与基线算法的完整展开留在 Core 文档。
 
 <SourceLinks
   sources={[

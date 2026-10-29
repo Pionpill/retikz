@@ -34,7 +34,7 @@ Core 负责整理缺失的状态，不由 Reconciler 从 Scene 反推几何或�
 
 内部继续按职责使用 `resolveXxx`、`layoutXxx`、`emitXxx`。仅在确有独立布局阶段产物时保留 `NodeLayout` 等类型；完整状态仅含布局时直接调整类型，不保留同义别名或单字段包装。不同元素不要求相同字段。
 
-稳定环境使用 `CompileEnvironment` / `createCompileEnvironment`，元素调用上下文按需使用 `NodeCompileContext`、`CoordinateCompileContext`、`PathCompileContext`、`ScopeCompileContext`。`resolveScopeContext` 负责子上下文解析，不合并 Scope 的前置准备与后置聚合阶段。既有观察 DTO 与完整编译缓存须在名称和职责上明确区分。
+稳定环境使用 `SharedCompileContext` / `createSharedCompileContext`，元素调用上下文按需使用 `NodeCompileContext`、`CoordinateCompileContext`、`PathCompileContext`、`ScopeCompileContext`。`resolveScopeContext` 负责子上下文解析，不合并 Scope 的前置准备与后置聚合阶段。既有观察 DTO 与完整编译缓存须在名称和职责上明确区分。
 
 ### 状态与输出边界
 

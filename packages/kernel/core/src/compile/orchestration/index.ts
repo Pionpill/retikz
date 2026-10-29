@@ -1,7 +1,6 @@
 export * from './animation';
 export * from './artifact';
 export * from './bounds';
-export * from './context';
 export * from './diagnostics';
 export * from './path-target';
 export * from './position-context';

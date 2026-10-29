@@ -6,7 +6,7 @@ import { resolvePositionTarget } from '../../resolve/position';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
 import type { NamespaceEntry } from '../namespace';
 import { createNodeReferenceGeometry } from '../node';
-import type { NodeGeometryContext } from '../node';
+import type { NodeBoundaryContext } from '../node';
 import { resolveAnchorRef } from '../reference';
 import type { ComposedScopeTransform } from '../transform';
 import { applyScopeTransform, inverseScopeTransform, composeScopeTransform } from '../transform';
@@ -42,7 +42,7 @@ type InputPositionResolveContext = Readonly<{
   /** 当前命名空间 */
   lookupReference: (id: string) => NamespaceEntry | undefined;
   /** 与节点布局及路径裁剪共享的几何消费状态 */
-  geometryContext?: NodeGeometryContext;
+  nodeBoundaryContext?: NodeBoundaryContext;
   /** 相对定位默认距离 */
   nodeDistance: number;
   /** 当前 Scope 累积 transform */
@@ -68,7 +68,7 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
       ? undefined
       : {
           state: entry.state,
-          node: createNodeReferenceGeometry(entry.layout, input.geometryContext, id, entry.irPath),
+          node: createNodeReferenceGeometry(entry.layout, input.nodeBoundaryContext, id, entry.irPath),
         };
   };
 
@@ -91,7 +91,7 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
       target.anchor,
       target.boundary ?? node.boundary,
       boundaryResolution,
-      input.geometryContext?.get(node),
+      input.nodeBoundaryContext?.get(node),
     );
   };
 

@@ -23,9 +23,9 @@ import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '
 import type { TextMeasurer } from '../text';
 import type { ComposedScopeTransform } from '../transform';
 import { composeScopeTransform, inverseScopeTransform, projectLayoutWithTransform } from '../transform';
+import { createNodeBoundaryContext } from './boundary-context';
+import type { NodeBoundaryContext } from './boundary-context';
 import { layoutNodeContent } from './content/layout';
-import { createNodeGeometryContext } from './geometry-context';
-import type { NodeGeometryContext } from './geometry-context';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
 import type { NodeCompilation, CompiledNodeLayout, TexLoweringContext } from './types';
 
@@ -63,7 +63,7 @@ const placeAnchorPositionedLayout = (
   provisional: CompiledNodeLayout,
   positionContext: PositionTargetResolveContext,
   transform: ComposedScopeTransform,
-  geometryContext: NodeGeometryContext,
+  nodeBoundaryContext: NodeBoundaryContext,
 ): CompiledNodeLayout => {
   if (node.id === position.target.id || node.aliasIds?.includes(position.target.id)) {
     throw new RetikzCoreError(
@@ -101,7 +101,7 @@ const placeAnchorPositionedLayout = (
     position.selfAnchor ?? CenterAnchor.Center,
     node.boundary,
     undefined,
-    geometryContext.get(provisional),
+    nodeBoundaryContext.get(provisional),
   );
   const deltaGlobal: IRPosition = [target.referencePoint[0] - selfPoint[0], target.referencePoint[1] - selfPoint[1]];
   const deltaLocal = localDeltaOf(deltaGlobal, [projected.geometry.rect.x, projected.geometry.rect.y], transform);
@@ -128,7 +128,7 @@ type NodeLayoutContext = {
   /** 文本测量函数 */
   measureText: TextMeasurer;
   /** 当前编译共享的连接面缓存与诊断状态 */
-  geometryContext?: NodeGeometryContext;
+  nodeBoundaryContext?: NodeBoundaryContext;
   /** Position/Target Source IR 确定化上下文 */
   positionContext: PositionTargetResolveContext;
   /** preset 与 rem 字号解析的根字号 */
@@ -156,7 +156,7 @@ export const compileNodeResolution = (resolution: NodeResolution, context: NodeL
     texLowering,
     warn,
     allocationWidthProposal,
-    geometryContext = createNodeGeometryContext(),
+    nodeBoundaryContext = createNodeBoundaryContext(),
   } = context;
 
   // 缩放影响节点尺寸与字体。
@@ -405,8 +405,8 @@ export const compileNodeResolution = (resolution: NodeResolution, context: NodeL
             },
     boundary: boundaryResolution,
   };
-  geometryContext.get(provisional).warn = warn;
-  geometryContext.get(provisional).irPath = resolution.irPath;
+  nodeBoundaryContext.get(provisional).warn = warn;
+  nodeBoundaryContext.get(provisional).irPath = resolution.irPath;
   const resolved: CompiledNodeLayout = {
     ...provisional,
     labels: layoutNodeLabels(provisional, measuredLabels),
@@ -419,7 +419,7 @@ export const compileNodeResolution = (resolution: NodeResolution, context: NodeL
         resolved,
         positionContext,
         context.composedTransform ?? composeScopeTransform(scopeChain),
-        geometryContext,
+        nodeBoundaryContext,
       )
     : resolved;
   return {

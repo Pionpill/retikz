@@ -1,5 +1,5 @@
 export { formatCompileChildPath, formatCompileOccurrence } from './artifact';
-export { compileToScene, prepareSceneCompilation } from './compile';
+export { compileToScene, compileSceneSnapshot } from './compile';
 export { BuiltinCompileWarningCode, type CompileWarningCode } from './constants';
 export { samplePathRoute } from './path';
 export { computeLayout } from './scene';
@@ -27,13 +27,22 @@ export type { CompileWarning } from './warning';
 
 export { formatCompileWarning } from './warning';
 
-export type { PreparedSceneCompilation, SceneCompilationPreparationOptions } from './compile';
+export type { ExecuteOptions, SceneCompilationSnapshot } from './compile';
 export * from './element';
-export * from './environment';
+export { createSharedCompileContext } from './context';
+export type {
+  CompileContextHost,
+  CompileContextLayout,
+  CompileContextLimits,
+  CompileContextRegistries,
+  SharedCompileContext,
+  SharedCompileContextOptions,
+} from './context';
 export { assembleSceneCompilation } from './output';
 export type { SceneCompilationMetadata } from './output';
 export * from './provenance';
 
 export type { CompiledNodeLayout, NodeCompilation, NodeLabelResolution, NodeResolvedProperties } from './node';
+
 export { createCompileProvenanceTracker } from './orchestration';
 export type { CompileProvenanceTracker } from './orchestration';

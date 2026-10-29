@@ -4,7 +4,7 @@ import type {
   CompositeCompileScopeProps,
   CompositeReplayWrapper,
 } from '../../contract';
-import type { CompositeRuntimeInputScope } from '../../contract/composite';
+import type { CompositeInputScope } from '../../contract/composite';
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import type { IRChild } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
@@ -132,7 +132,7 @@ export const createCompositeScopeChild = (
 export const createCompositeBoundChild = (
   session: CompositeCompileSession,
   owner: CompositeCompileOwner,
-  scope: CompositeRuntimeInputScope,
+  scope: CompositeInputScope,
 ): CompositeBoundChild => {
   const child = snapshotCompositeLayoutChild(owner.label, scope.source, 0);
   const handle = Object.freeze({}) as CompositeBoundChild;

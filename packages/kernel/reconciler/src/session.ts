@@ -1,11 +1,11 @@
 import type {
   AnyCompositeDefinition,
   CompileOptions,
+  ExecuteOptions,
   IRScene,
-  PreparedSceneCompilation,
-  SceneCompilationPreparationOptions,
+  SceneCompilationSnapshot,
 } from '@retikz/core';
-import { formatCompileWarning, prepareSceneCompilation } from '@retikz/core';
+import { compileSceneSnapshot, formatCompileWarning } from '@retikz/core';
 import type { PerformanceTraceSink } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
 
@@ -19,7 +19,7 @@ export type ReconcilerResult = Readonly<{
   /** 会话内的已提交版本，首次发布为零 */
   revision: number;
   /** Core 的完整编译产物，不强制生成渲染快照 */
-  compilation: PreparedSceneCompilation<ReadonlyArray<AnyCompositeDefinition>>;
+  compilation: SceneCompilationSnapshot<ReadonlyArray<AnyCompositeDefinition>>;
   /** 基础元素场景的稳定根，Composite 完整编译不提供此字段 */
   root?: WeaveRoot;
 }>;
@@ -43,7 +43,7 @@ export type ReconcilerCommitTarget = Readonly<{
 }>;
 
 /** 编译会话的输出接线 */
-export type ReconcilerSessionOptions = SceneCompilationPreparationOptions &
+export type ReconcilerSessionOptions = ExecuteOptions &
   Readonly<{
     /** 可选宿主目标；省略时仅提交计算状态 */
     target?: ReconcilerCommitTarget;
@@ -81,7 +81,7 @@ export class ReconcilerSession {
     try {
       const weave = isWeaveScene(source) ? new WeaveReconciler(source, options, this.execution) : undefined;
       const prepared = weave?.mount();
-      const compilation = prepared?.compilation ?? prepareSceneCompilation(source, options, this.execution);
+      const compilation = prepared?.compilation ?? compileSceneSnapshot(source, options, this.execution);
       const candidate: ReconcilerResult = {
         revision: this.nextRevision(),
         compilation,
@@ -307,4 +307,4 @@ export type ReconcilerUpdateStrategy = (typeof ReconcilerUpdateStrategy)[keyof t
 /** 下游消费的完整编译输出 */
 export type ReconcilerOutput<
   TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
-> = Pick<PreparedSceneCompilation<TComposites>, 'result' | 'diagnostics'>;
+> = Pick<SceneCompilationSnapshot<TComposites>, 'result' | 'diagnostics'>;

@@ -36,7 +36,7 @@ export type CompositeRuntimeInputContext = Readonly<{
 }>;
 
 /** 编译内部使用的 Source 子树及稀疏输入 */
-export type CompositeRuntimeInputScope = Readonly<{
+export type CompositeInputScope = Readonly<{
   /** 当前原始 Source 子树 */
   source: unknown;
   /** 当前子树在捕获 Source 中的位置；根节点省略 */
@@ -46,7 +46,7 @@ export type CompositeRuntimeInputScope = Readonly<{
 }>;
 
 /** 绑定句柄对应的 Source 快照 WeakMap，句柄释放后允许快照回收 */
-const inputScopeMap = new WeakMap<CompositeInputBindings, CompositeRuntimeInputScope>();
+const inputScopeMap = new WeakMap<CompositeInputBindings, CompositeInputScope>();
 
 /** 精确读取 Source 路径，不使用继承属性或模糊字段匹配 */
 const readSourceAtPath = (source: unknown, path: CompositeInputPath): unknown => {
@@ -78,7 +78,7 @@ const readSourceAtPath = (source: unknown, path: CompositeInputPath): unknown =>
 export const captureCompositeInputScope = (
   source: unknown,
   bindings: ReadonlyArray<CompositeInputBinding>,
-): CompositeRuntimeInputScope => {
+): CompositeInputScope => {
   const snapshot = cloneAndFreezeJson(source, 'Composite input Source');
   /** 本次捕获中已绑定的精确路径，用序列化形式检测重复 */
   const boundPaths = new Set<string>();
@@ -108,7 +108,7 @@ export const captureCompositeInputScope = (
 export const resolveCompositeInputScope = (
   source: IRScene,
   inputs: CompositeInputBindings | undefined,
-): CompositeRuntimeInputScope => {
+): CompositeInputScope => {
   if (inputs === undefined) return { source, bindings: [] };
 
   const snapshot = inputScopeMap.get(inputs);
@@ -123,9 +123,9 @@ export const resolveCompositeInputScope = (
 
 /** 从原始 Source 选择子树，并将其绑定重定位到局部路径 */
 export const selectCompositeInputScope = (
-  scope: CompositeRuntimeInputScope,
+  scope: CompositeInputScope,
   path: CompositeInputPath,
-): CompositeRuntimeInputScope => ({
+): CompositeInputScope => ({
   source: readSourceAtPath(scope.source, path),
   sourcePath: [...(scope.sourcePath ?? []), ...path],
   bindings: scope.bindings

@@ -1,5 +1,5 @@
 import type {
-  CompileEnvironment,
+  SharedCompileContext,
   CompileRead,
   CompileWarning,
   CompiledNode,
@@ -119,7 +119,7 @@ type WeaveRootState = {
   /** 有序顶层节点 */
   children: ReadonlyArray<WeaveNode>;
   /** Core 只读环境 */
-  environment: CompileEnvironment;
+  shared: SharedCompileContext;
   /** 用户 id 索引 */
   ids: ReadonlyMap<string, WeaveNode>;
   /** 根自身及所有 Scope 的定位索引 */

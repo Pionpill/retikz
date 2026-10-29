@@ -11,7 +11,7 @@ type AnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
 import { boundaryKey } from '../../resolve';
 import { isAnchor } from '../../shared';
 import { anchorOf, angleBoundaryOf, createNodeReferenceGeometry } from '../node';
-import type { NodeGeometryState } from '../node';
+import type { NodeBoundaryState } from '../node';
 import { snapshotProviderPosition } from '../scene-primitive';
 
 /** 单个 CompiledNodeLayout 生命周期内的 anchor 坐标缓存 */
@@ -29,7 +29,7 @@ const computeAnchor = (
   anchorName: string,
   boundary: IRBoundary | undefined,
   boundaryResolution?: BoundaryResolution,
-  state?: NodeGeometryState,
+  state?: NodeBoundaryState,
 ): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
     return positionToIR(angleBoundaryOf(layout, Number(anchorName), boundary, true, boundaryResolution, state));
@@ -70,7 +70,7 @@ export const resolveAnchorRefUncached = (
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryResolution,
-  state?: NodeGeometryState,
+  state?: NodeBoundaryState,
 ): IRPosition => {
   if (typeof anchor === 'number') return computeAnchor(layout, String(anchor), boundary, boundaryResolution, state);
   if (typeof anchor === 'string') return computeAnchor(layout, anchor, boundary, boundaryResolution, state);
@@ -83,7 +83,7 @@ export const resolveAnchor = (
   anchorName: string,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryResolution,
-  state?: NodeGeometryState,
+  state?: NodeBoundaryState,
 ): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
@@ -125,7 +125,7 @@ export const resolveAnchorRef = (
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryResolution,
-  state?: NodeGeometryState,
+  state?: NodeBoundaryState,
 ): IRPosition => {
   if (typeof anchor === 'number') return resolveAnchor(layout, String(anchor), boundary, boundaryResolution, state);
   if (typeof anchor === 'string') return resolveAnchor(layout, anchor, boundary, boundaryResolution, state);

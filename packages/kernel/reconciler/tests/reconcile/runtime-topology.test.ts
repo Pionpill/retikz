@@ -17,7 +17,7 @@ import {
   naturalLayoutProposal,
   PathSchema,
 } from '@retikz/core';
-import { prepareSceneCompilation } from '@retikz/core';
+import { compileSceneSnapshot } from '@retikz/core';
 import type { CompileOptions, AnyCompositeDefinition } from '@retikz/core';
 import type { SceneIdentity, SceneRevision } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
@@ -31,7 +31,7 @@ const compileWithTopology = <const T extends ReadonlyArray<AnyCompositeDefinitio
   options: CompileOptions<T>,
   execution: { candidateRevision: SceneRevision },
 ) => {
-  const compiled = prepareSceneCompilation(ir, options, { captureProvenance: true });
+  const compiled = compileSceneSnapshot(ir, options, { captureProvenance: true });
   if (compiled.provenance === undefined) throw new Error('Missing provenance');
   const snapshot = createFullSceneRuntimeSnapshot(
     compiled.result.scene,

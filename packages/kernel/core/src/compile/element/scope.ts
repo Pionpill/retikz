@@ -21,9 +21,13 @@ export const prepareScopeCompilation = (
   context: ScopeCompileContext,
 ): ElementCompileResult<ScopeCompilationPreparation> =>
   runElementCompilation(context, workspace => {
-    const geometry = { ...workspace, irPath: context.irPath };
+    const geometry = {
+      positionContext: workspace.positionContext,
+      onWarn: workspace.diagnostics.collect,
+      irPath: context.irPath,
+    };
     return Object.freeze({
-      scope: resolveScopeContext(input, context.environment, context.context, context.irPath),
+      scope: resolveScopeContext(input, context.shared, context.context, context.irPath),
       positionTarget: resolveScopePositionTarget(input, geometry),
       preliminaryTransforms: resolvePreliminaryScopeTransforms(input, geometry),
     });
@@ -37,10 +41,10 @@ export const compileScope = (
   context: ScopeCompileContext,
 ): ElementCompileResult<CompiledScope> =>
   runElementCompilation(context, workspace => {
-    const envelope = createIntrinsicScopeLayout(input, layouts, context.environment);
+    const envelope = createIntrinsicScopeLayout(input, layouts, context.shared);
     const transforms = resolveFinalScopeTransforms(
       input,
-      { ...workspace, irPath: context.irPath },
+      { positionContext: workspace.positionContext, onWarn: workspace.diagnostics.collect, irPath: context.irPath },
       envelope,
       preparation.positionTarget,
       preparation.preliminaryTransforms,
@@ -51,14 +55,14 @@ export const compileScope = (
     if (transforms.length > 0) group.transforms = transforms;
     const animations = filterAnimations(input.animations, {
       target: 'element',
-      onWarn: workspace.onWarn,
+      onWarn: workspace.diagnostics.collect,
       irPath: context.irPath,
     });
     if (animations !== undefined) group.animations = animations;
     if (input.clip !== undefined) {
-      group.clipRef = workspace.clip.register(
+      group.clipRef = workspace.clipRegistry.register(
         resolveClip(input.clip, {
-          clipRegistry: context.environment.clips,
+          clipRegistry: context.shared.registries.clipRegistry,
           irPath: `${context.irPath}.clip`,
         }),
       );
@@ -70,7 +74,7 @@ export const compileScope = (
       output: Object.freeze({
         zIndex: input.zIndex,
         primitives: [],
-        resources: [...workspace.paint.resources(), ...workspace.clip.resources()],
+        resources: [...workspace.paintRegistry.resources(), ...workspace.clipRegistry.resources()],
         bounds: [],
       }),
     });

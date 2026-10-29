@@ -25,8 +25,8 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../src';
+import { createFullCompileContext } from '../../src/compile/context';
 import { NamespaceStack } from '../../src/compile/namespace';
-import { createCompileContext } from '../../src/compile/orchestration/context';
 import { createCompileProvenanceTracker } from '../../src/compile/orchestration/provenance';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 import type { CompositeCompileSession } from '../../src/compile/orchestration/types';
@@ -569,7 +569,7 @@ describe('布局感知复合运行时包装树', () => {
     };
 
     const failingIr = scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: true }]);
-    const context = createCompileContext(failingIr, options);
+    const context = createFullCompileContext(failingIr, options);
     const namespaceStack = new NamespaceStack();
     const provenanceTracker = createCompileProvenanceTracker();
     const session: CompositeCompileSession = {
@@ -592,8 +592,9 @@ describe('布局感知复合运行时包装树', () => {
     ).toThrow(/runtime Scope clip failed/i);
     expect(warnings).toEqual([]);
     expect(clipLowerCalls).toBe(1);
-    expect(context.paint.resources()).toEqual([]);
-    expect(context.clip.resources()).toEqual([]);
+    expect(context.workspace.diagnostics.warnings).toEqual([]);
+    expect(context.workspace.paintRegistry.resources()).toEqual([]);
+    expect(context.workspace.clipRegistry.resources()).toEqual([]);
     expect(namespaceStack.lookupEntry('same')?.layout).toBeUndefined();
     expect(provenanceTracker.rootIdentityRegistrations()).toEqual([]);
     expect(session.outputChildren.get(replayHandle!)).toMatchObject({ used: false });

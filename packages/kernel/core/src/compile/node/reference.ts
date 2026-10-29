@@ -1,11 +1,11 @@
 import type { NodeReferenceGeometry } from '../../resolve';
-import type { NodeGeometryContext } from './geometry-context';
+import type { NodeBoundaryContext } from './boundary-context';
 import type { CompiledNodeLayout } from './types';
 
 /** 从节点布局提取供引用解析使用的几何信息 */
 export const createNodeReferenceGeometry = (
   layout: CompiledNodeLayout,
-  context?: NodeGeometryContext,
+  context?: NodeBoundaryContext,
   id?: string,
   irPath?: string,
 ): NodeReferenceGeometry => {

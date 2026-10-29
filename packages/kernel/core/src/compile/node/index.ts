@@ -2,7 +2,7 @@ export * from './anchors';
 export * from './boundary';
 export * from './compile';
 export * from './emit';
-export * from './geometry-context';
+export * from './boundary-context';
 export * from './label/geometry';
 export * from './layout';
 export * from './layout-metrics';

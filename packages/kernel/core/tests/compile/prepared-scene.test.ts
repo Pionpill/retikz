@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IRScene } from '../../src';
-import { compileToScene, createCompositeInputBindings, prepareSceneCompilation, RetikzCoreErrorCode } from '../../src';
+import { compileToScene, createCompositeInputBindings, compileSceneSnapshot, RetikzCoreErrorCode } from '../../src';
 
 const scene: IRScene = {
   version: 1,
@@ -14,7 +14,7 @@ const scene: IRScene = {
 
 describe('静态编译准备', () => {
   it('默认结果等价且不收集来源', () => {
-    const prepared = prepareSceneCompilation(scene);
+    const prepared = compileSceneSnapshot(scene);
     expect(prepared.result).toEqual(compileToScene(scene));
     expect(prepared.provenance).toBeUndefined();
   });
@@ -29,7 +29,7 @@ describe('静态编译准备', () => {
     };
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     try {
-      const prepared = prepareSceneCompilation(input, {}, { captureProvenance: true });
+      const prepared = compileSceneSnapshot(input, {}, { captureProvenance: true });
       const provenance = prepared.provenance!;
       expect(prepared.diagnostics.length).toBeGreaterThan(0);
       expect(warning).not.toHaveBeenCalled();

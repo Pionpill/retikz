@@ -2,20 +2,17 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { DEFAULT_RESOLVED_THEME, resolveScopeDefaults, resolveTheme } from '../../resolve';
 import { resolveNodeBoundary } from '../../resolve';
 import type { IRScope } from '../../schemas';
-import type { CompileEnvironment } from '../environment';
-import { createNodeGeometryContext } from '../node';
+import type { SharedCompileContext } from '../context';
+import { createWorkspaceCompileContext } from '../context';
 import { orderCompileWarnings, withCompileWarningOccurrence } from '../orchestration';
 import { createPositionResolveContext } from '../orchestration';
-import { createClipRegistry, createPaintRegistry } from '../resource';
-import { createTextMeasurement } from '../text';
 import { composeScopeTransform } from '../transform';
-import type { InputCompileWarning } from '../warning';
 import type { CompileRead, ElementCompileContext, ElementCompileOptions, ElementCompileResult } from './types';
 
 /** 解析 Scope 子元素继承上下文；不编译 children 或聚合几何 */
 export const resolveScopeContext = (
   scope: Pick<IRScope, 'defaults' | 'theme'>,
-  environment: CompileEnvironment,
+  shared: SharedCompileContext,
   parent?: ElementCompileContext,
   irPath = 'scene',
 ): ElementCompileContext =>
@@ -25,28 +22,22 @@ export const resolveScopeContext = (
       parent?.theme ?? DEFAULT_RESOLVED_THEME,
       scope.theme,
       `${irPath}.theme`,
-      environment.themeDefinitions,
+      shared.registries.themeRegistry,
     ),
   });
 
 /** 创建独占的资源、诊断与引用读取工作区 */
 const createElementWorkspace = (options: ElementCompileOptions) => {
-  const diagnostics: Array<InputCompileWarning> = [];
+  const workspace = createWorkspaceCompileContext(options.shared);
   const reads: Array<CompileRead> = [];
   const pending = new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Element dependency is pending');
-  const nodeGeometry = createNodeGeometryContext();
   const scopeChain = options.transforms ?? [];
   const composedTransform = composeScopeTransform(scopeChain);
-  const paint = createPaintRegistry(options.environment.round);
-  const clip = createClipRegistry(options.environment.round, options.environment.maxClipDepth);
-  const onWarn = (warning: InputCompileWarning): void => {
-    diagnostics.push(warning);
-  };
   const positionContext = createPositionResolveContext({
-    nodeDistance: options.environment.nodeDistance,
+    nodeDistance: options.shared.layout.nodeDistance,
     scopeChain,
     composedTransform,
-    geometryContext: nodeGeometry,
+    nodeBoundaryContext: workspace.nodeBoundaryContext,
     lookupReference: name => {
       for (let namespace = options.namespace; namespace !== undefined; namespace = namespace.parent) {
         const entry = namespace.bindings.get(name);
@@ -74,22 +65,17 @@ const createElementWorkspace = (options: ElementCompileOptions) => {
       resolveNodeBoundary(boundary, {
         visualDef: reference.visualDef,
         visualParams: reference.visualParams,
-        shapeRegistry: options.environment.shapes,
-        boundaryRegistry: options.environment.boundaries,
+        shapeRegistry: options.shared.registries.shapeRegistry,
+        boundaryRegistry: options.shared.registries.boundaryRegistry,
         irPath: reference.irPath,
       }),
   });
   return {
-    measureText: createTextMeasurement(options.environment.measureText),
-    diagnostics,
+    ...workspace,
     reads,
     pending,
-    nodeGeometry,
     scopeChain,
     composedTransform,
-    paint,
-    clip,
-    onWarn,
     positionContext,
   };
 };
@@ -111,7 +97,7 @@ export const runElementCompilation = <TCompiled>(
       reads: Object.freeze(workspace.reads),
       diagnostics: Object.freeze(
         orderCompileWarnings(
-          workspace.diagnostics.map(warning => withCompileWarningOccurrence(warning, options.occurrence)),
+          workspace.diagnostics.warnings.map(warning => withCompileWarningOccurrence(warning, options.occurrence)),
         ),
       ),
     });

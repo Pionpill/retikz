@@ -1,15 +1,12 @@
 import type { AnyCompositeDefinition } from '../contract';
 import type { IRScene } from '../schemas';
-import {
-  compileChildrenToPrimitives,
-  createCompileContext,
-  createCompileProvenanceTracker,
-  orderCompileWarnings,
-} from './orchestration';
-import { assemblePreparedScene } from './output';
+import { createFullCompileContext } from './context';
+import { compileChildrenToPrimitives, orderCompileWarnings } from './orchestration';
+import { createCompileProvenanceTracker } from './orchestration';
+import { assembleSceneCompilationSnapshot } from './output';
 import type { CompileProvenance } from './provenance';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from './types';
-import type { CompileWarning, InputCompileWarning } from './warning';
+import type { CompileWarning } from './warning';
 import { formatCompileWarning } from './warning';
 
 export { BuiltinCompileWarningCode, type CompileWarningCode } from './constants';
@@ -43,7 +40,7 @@ const dispatchCompileDiagnostics = (
  * 单次静态编译的产物、诊断与可选来源信息
  * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
  */
-export type PreparedSceneCompilation<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
+export type SceneCompilationSnapshot<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 完整 compile result */
   result: CompileResult<CompositeArtifactOf<TComposites[number]>>;
   /** 仅在完整 compile 成功后可提交的 canonical warnings */
@@ -52,8 +49,8 @@ export type PreparedSceneCompilation<TComposites extends ReadonlyArray<AnyCompos
   provenance?: CompileProvenance;
 }>;
 
-/** 单次静态编译的准备选项 */
-export type SceneCompilationPreparationOptions = Readonly<{
+/** 编译执行时的运行配置项 */
+export type ExecuteOptions = Readonly<{
   /** 是否收集编译来源信息，默认不收集 */
   captureProvenance?: boolean;
 }>;
@@ -62,30 +59,33 @@ export type SceneCompilationPreparationOptions = Readonly<{
  * 执行一次不派发 warning 的完整 Core compile
  * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
  */
-export const prepareSceneCompilation = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
+export const compileSceneSnapshot = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   ir: IRScene,
-  options?: Omit<CompileOptions<TComposites>, 'onWarn'>,
-  execution: SceneCompilationPreparationOptions = {},
-): PreparedSceneCompilation<TComposites> => {
-  const diagnostics: Array<InputCompileWarning> = [];
-  const context = createCompileContext(ir, {
-    ...(options ?? {}),
-    onWarn: warning => diagnostics.push(warning),
-  });
-  const { loweredIr, paint, clip } = context;
-  const provenanceTracker = execution.captureProvenance === true ? createCompileProvenanceTracker() : undefined;
+  compileOptions?: Omit<CompileOptions<TComposites>, 'onWarn'>,
+  executeOptions: ExecuteOptions = {},
+): SceneCompilationSnapshot<TComposites> => {
+  const context = createFullCompileContext(ir, compileOptions ?? {});
+  const { diagnostics, paintRegistry, clipRegistry } = context.workspace;
+  const provenanceTracker = executeOptions.captureProvenance === true ? createCompileProvenanceTracker() : undefined;
 
-  const { primitives, layoutBounds, artifacts } = compileChildrenToPrimitives(loweredIr.children, context, {
+  const { primitives, layoutBounds, artifacts } = compileChildrenToPrimitives(ir.children, context, {
     ...(provenanceTracker === undefined ? {} : { provenanceTracker }),
   });
-  const resources = [...paint.resources(), ...clip.resources()];
-  const prepared = assemblePreparedScene<TComposites>(loweredIr, primitives, resources, layoutBounds, context, {
-    artifacts,
-    diagnostics: orderCompileWarnings(diagnostics),
-    ...(provenanceTracker === undefined ? {} : { provenance: provenanceTracker.capture(primitives) }),
-  });
+  const resources = [...paintRegistry.resources(), ...clipRegistry.resources()];
+  const snapshot = assembleSceneCompilationSnapshot<TComposites>(
+    ir,
+    primitives,
+    resources,
+    layoutBounds,
+    context.shared,
+    {
+      artifacts,
+      diagnostics: orderCompileWarnings(diagnostics.warnings),
+      ...(provenanceTracker === undefined ? {} : { provenance: provenanceTracker.capture(primitives) }),
+    },
+  );
 
-  return prepared;
+  return snapshot;
 };
 
 /**
@@ -96,7 +96,7 @@ export const compileToScene = <const TComposites extends ReadonlyArray<AnyCompos
   ir: IRScene,
   options?: CompileOptions<TComposites>,
 ): CompileResult<CompositeArtifactOf<TComposites[number]>> => {
-  const snapshot = prepareSceneCompilation(ir, options);
+  const snapshot = compileSceneSnapshot(ir, options);
   dispatchCompileDiagnostics(snapshot.diagnostics, options?.onWarn);
   return snapshot.result;
 };

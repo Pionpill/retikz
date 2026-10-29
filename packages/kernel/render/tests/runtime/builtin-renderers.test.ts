@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
 import type { IRScene, Scene } from '@retikz/core';
-import { prepareSceneCompilation } from '@retikz/core';
+import { compileSceneSnapshot } from '@retikz/core';
 import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import {
   ReconcilerSession,
@@ -239,7 +239,7 @@ const createSession = (
 /** 编译一对固定 Runtime snapshot 与 canonical Patch，供内置 renderer 黑盒测试 */
 const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
   const [current, next] = [currentSource, nextSource].map((source, revision) => {
-    const compiled = prepareSceneCompilation(source, {}, { captureProvenance: true });
+    const compiled = compileSceneSnapshot(source, {}, { captureProvenance: true });
     return createFullSceneRuntimeSnapshot(compiled.result.scene, revision, compiled.provenance!);
   });
   // Renderer 的 entity patch 测试显式构造固定拓扑更新，不依赖编译器 diff 策略

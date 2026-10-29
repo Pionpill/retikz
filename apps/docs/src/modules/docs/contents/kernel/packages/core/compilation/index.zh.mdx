@@ -1,4 +1,4 @@
-﻿---
+---
 title: 编译流程
 description: 沿一次完整编译追踪 IR、节点布局和延迟路径，理解 Core 怎样汇总 Scene、资源与附属产物。
 ---
@@ -89,11 +89,26 @@ const result = compileToScene(ir, { padding: 10 });
 - Definition：一种形状、路径或复合组件的具体能力定义。
 - registry：本次编译按名称查找 Definition 的注册表。
 
-`createCompileEnvironment` 把内置能力与调用方注入的定义整理到只读注册表，并保存测量服务和数值配置。内部的 `createCompileContext` 基于这个环境准备单次工作区，解析根主题，建立独占的文本测量缓存、paint / clip 资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
+`createSharedCompileContext` 把内置能力与调用方注入的定义整理到只读注册表，并保存测量服务和数值配置。内部的 `createFullCompileContext` 基于这个环境准备单次工作区，解析根主题，建立独占的几何状态、paint / clip 资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
 
-内置定义与 CompileOptions 中的外部定义按能力注册到 context 对应的 registry，供编译时按名称查找和调用，而生成的 paint / clip 资源由上下文的 `paint`、`clip` 收集并写入 Scene 的资源表。
+`FullCompileContext` 顶层持有 `shared`、`workspace`、`compositeInputs` 和 `theme`。`shared` 持有可复用的 `registries`、`host`、`layout` 和 `limits`；`CompileContextRegistries` 包含 `shapeRegistry`、`boundaryRegistry`、`clipRegistry`、`arrowRegistry`、`markRegistry`、`patternRegistry`、`pathRegistry`、`compositeRegistry` 和 `themeRegistry`。输入配置仍使用 `shapes`、`clips` 等定义数组字段。
 
-本例没有额外定义，因此使用内置矩形和路径能力。上下文中的 `loweredIr` 在此处仍指向传入的 IR，复合组件会在后续遍历遇到时处理。
+全量编译、单元素编译和探测计算都通过 `createWorkspaceCompileContext` 创建独立的 `WorkspaceCompileContext`，统一持有 `nodeBoundaryContext`、`paintRegistry`、`clipRegistry` 和 `diagnostics`。诊断通过 `diagnostics.collect` 追加，通过只读的 `diagnostics.warnings` 查看；对外的 `CompileOptions.onWarn` 仍在成功后接收诊断。全量上下文在公共工作区之外持有根 `theme` 和 `compositeInputs`；单元素计算另带引用读取与位置解析状态。共享的是创建和消费方式，每次计算的可变状态仍然隔离；生成资源和诊断只随成功结果发布。
+
+环境按职责分为四组：
+
+| 分组         | 内容                                           |
+| ------------ | ---------------------------------------------- |
+| `registries` | 已合并内置与外部定义的注册表                   |
+| `host`       | 文字测量和 TeX lowering 服务                   |
+| `layout`     | 布局留白、节点和标签距离、根字号及输出 rounder |
+| `limits`     | 复合展开和裁剪转换的深度限制                   |
+
+编译通过 `shared.host.measureText` 使用宿主测量服务，消费测量结果时统一规范化指标。上下文不另设测量入口或编译级文字缓存。Weave 可在同一实例的增量更新中复用环境，资源工作区仍按计算调用隔离。输入侧 `CompileOptions` 的字段保持扁平，环境侧按分组保存已补齐的配置。
+
+创建共享上下文时会校验数值配置，即使场景为空也不跳过：`padding` 和 `labelDistance` 必须非负且有限，`fontSize` 必须大于零且有限；`nodeDistance` 必须有限，允许负值表示反方向偏移。`precision` 必须是非负整数且 `10 ** precision` 有限；这不保证任意极大坐标参与运算时都不会溢出。`maxCompositeDepth` 和 `maxClipDepth` 必须是非负安全整数，其中 `maxCompositeDepth: 0` 禁止展开复合组件。
+
+本例没有额外定义，因此使用内置矩形和路径能力。编译直接遍历传入的 IR，复合组件会在遍历遇到时处理。
 
 遍历还会建立本轮执行状态，包括已生成的图元、累计边界和命名空间。命名空间按 id 保存可查询的布局结果，使路径能由 A、B 找到对应几何。这些状态属于本次完整编译，不负责跨调用保留更新结果。
 
@@ -325,7 +340,7 @@ Scene 输出可以保留局部几何和 Group 变换。命名查询使用所需�
 
 ## 汇总编译结果
 
-子项编译完成后，`prepareSceneCompilation` 收集有序图元、paint 与 clip 资源，以及可用于根场景的动画配置。画布范围分两种情况：指定 `viewBox` 时直接使用该范围；否则根据累计布局边界加上 `padding` 计算。
+子项编译完成后，`compileSceneSnapshot` 收集有序图元、paint 与 clip 资源，以及可用于根场景的动画配置。画布范围分两种情况：指定 `viewBox` 时直接使用该范围；否则根据累计布局边界加上 `padding` 计算。
 
 本例的内容范围从 `[-30, -20]` 到 `[210, 20]`。四周增加 10 后，`result.scene.layout` 为：
 
@@ -350,11 +365,11 @@ Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物
 
 ## 完整实现流程
 
-下面用实际成员名对照前面的阶段。同步入口 `compileToScene` 调用 `prepareSceneCompilation`；图中路径回填和排序位于遍历内部，最后回到外层汇总 `CompileResult`。
+下面用实际成员名对照前面的阶段。同步入口 `compileToScene` 调用 `compileSceneSnapshot`；图中路径回填和排序位于遍历内部，最后回到外层汇总 `CompileResult`。
 
 <ComponentPreview files="compilation-implementation" size="xxl" hideCode type="flow" />
 
-阅读源码时，先在 `prepareSceneCompilation` 看清上下文、遍历与汇总的调用关系，再进入 `compileChildrenToPrimitives`：从末尾的根层 `compileChildren` 调用出发，回查 `compileChild` 的分派，沿 Node 的 resolve、layout、emit 三步读下去，最后追踪 Path 的入队与回填。Scope 和 Composite 是这条主线上的递归分支，可以在理解本例后继续深入。
+阅读源码时，先在 `compileSceneSnapshot` 看清上下文、遍历与汇总的调用关系，再进入 `compileChildrenToPrimitives`：从末尾的根层 `compileChildren` 调用出发，回查 `compileChild` 的分派，沿 Node 的 resolve、layout、emit 三步读下去，最后追踪 Path 的入队与回填。Scope 和 Composite 是这条主线上的递归分支，可以在理解本例后继续深入。
 
 <SourceLinks
   sources={[
@@ -393,7 +408,7 @@ Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物
 
 ## 独立编译与可复用状态
 
-需要自行调度元素时，调用方可持有 `CompileEnvironment`，并通过以下入口计算一个基础元素。它们复用全量编译的 resolve、layout 和 emit 实现，不递归编译其他元素，也不自动注册名称。
+需要自行调度元素时，调用方可持有 `SharedCompileContext`，并通过以下入口计算一个基础元素。它们复用全量编译的 resolve、layout 和 emit 实现，不递归编译其他元素，也不自动注册名称。
 
 | 入口                | 完成状态             | 保存的内容                                                              |
 | ------------------- | -------------------- | ----------------------------------------------------------------------- |
@@ -405,20 +420,20 @@ Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物
 `NodeLayoutObservation` 是面向调用方的节点布局观察投影，原名为 `CompiledNodeLayout`。它不包含重新绘制所需的完整编译状态；缓存应使用 `CompiledNode`。
 
 ```ts
-import { assembleSceneCompilation, compileNode, createCompileEnvironment, resolveScopeContext } from '@retikz/core';
+import { assembleSceneCompilation, compileNode, createSharedCompileContext, resolveScopeContext } from '@retikz/core';
 
-const environment = createCompileEnvironment();
+const shared = createSharedCompileContext();
 const result = compileNode(
   { type: 'node', id: 'A', position: [0, 0], text: 'A' },
   {
-    environment,
-    context: resolveScopeContext({}, environment),
+    shared,
+    context: resolveScopeContext({}, shared),
     irPath: 'children[0].node',
   },
 );
 
 if (result.status === 'compiled') {
-  const prepared = assembleSceneCompilation({}, [result.compiled.output], environment, {
+  const prepared = assembleSceneCompilation({}, [result.compiled.output], shared, {
     diagnostics: result.diagnostics,
   });
   // prepared.result.scene 可交给 renderer，diagnostics 尚未派发
@@ -436,7 +451,7 @@ Scope 分两步计算：先 `prepareScopeCompilation` 得到有效继承上下�
 <SourceLinks
   sources={[
     { label: '单元素类型与上下文', path: 'packages/kernel/core/src/compile/element/types.ts' },
-    { label: '稳定编译环境', path: 'packages/kernel/core/src/compile/environment.ts' },
+    { label: '稳定编译环境', path: 'packages/kernel/core/src/compile/context/shared.ts' },
     { label: '局部输出组装', path: 'packages/kernel/core/src/compile/element/output.ts' },
     { label: 'Scene 与附属产物组装', path: 'packages/kernel/core/src/compile/output.ts' },
   ]}

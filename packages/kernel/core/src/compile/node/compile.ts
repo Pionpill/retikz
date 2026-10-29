@@ -5,19 +5,18 @@ import type { PositionTargetResolveContext } from '../../resolve/position';
 import type { IRNode } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
 import type { CompileWarningCode } from '../constants';
-import type { CompileEnvironment } from '../environment';
+import type { WorkspaceCompileContext, SharedCompileContext } from '../context';
 import { filterAnimations } from '../orchestration';
 import type { ComposedScopeTransform } from '../transform';
-import type { InputCompileWarning } from '../warning';
-import type { NodeGeometryContext } from './geometry-context';
 import { compileNodeResolution } from './layout';
 import type { NodeCompilation } from './types';
 
 /** 节点解析与布局所需的显式调用环境 */
-type NodeLayoutCompileContext = Pick<
-  CompileEnvironment,
-  'shapes' | 'boundaries' | 'patterns' | 'round' | 'labelDistance' | 'measureText' | 'rootFontSize' | 'lowerTex'
-> & {
+type NodeLayoutCompileContext = {
+  /** 共享定义与配置 */
+  shared: SharedCompileContext;
+  /** 当前计算的公共工作区 */
+  workspace: WorkspaceCompileContext;
   /** 有效样式默认配置 */
   scopeDefaults: MergedScopeDefaults;
   /** 有效主题模式 */
@@ -28,12 +27,8 @@ type NodeLayoutCompileContext = Pick<
   composedTransform: ComposedScopeTransform;
   /** 父 Scope 的变换链 */
   scopeChain: ReadonlyArray<Transform>;
-  /** 本次独占的几何缓存 */
-  nodeGeometry: NodeGeometryContext;
   /** 当前布局约束 */
   childProposal?: LayoutProposal;
-  /** 本次诊断接收器 */
-  onWarn: (warning: InputCompileWarning) => void;
 };
 
 /** 从自身输入完成节点解析、测量和定位；不登记名称或写入外部输出容器 */
@@ -43,23 +38,24 @@ export const compileNodeState = (
   context: NodeLayoutCompileContext,
 ): NodeCompilation => {
   const scopeChain = context.scopeChain;
-  const warn = (code: CompileWarningCode, message: string): void => context.onWarn({ code, message, path: nodeIrPath });
+  const warn = (code: CompileWarningCode, message: string): void =>
+    context.workspace.diagnostics.collect({ code, message, path: nodeIrPath });
   const resolvedNode = resolveNode(child, {
     scopeDefaults: context.scopeDefaults,
     mode: context.mode,
-    shapeRegistry: context.shapes,
-    boundaryRegistry: context.boundaries,
-    patternRegistry: context.patterns,
-    round: context.round,
+    shapeRegistry: context.shared.registries.shapeRegistry,
+    boundaryRegistry: context.shared.registries.boundaryRegistry,
+    patternRegistry: context.shared.registries.patternRegistry,
+    round: context.shared.layout.round,
     irPath: nodeIrPath,
     warn,
-    labelDistance: context.labelDistance,
+    labelDistance: context.shared.layout.labelDistance,
   });
   const canonicalNode = {
     ...resolvedNode.node,
     animations: filterAnimations(resolvedNode.node.animations, {
       target: 'element',
-      onWarn: context.onWarn,
+      onWarn: context.workspace.diagnostics.collect,
       irPath: nodeIrPath,
     }),
   };
@@ -67,17 +63,17 @@ export const compileNodeState = (
   return compileNodeResolution(
     { ...resolvedNode, node: canonicalNode },
     {
-      measureText: context.measureText,
-      geometryContext: context.nodeGeometry,
+      measureText: context.shared.host.measureText,
+      nodeBoundaryContext: context.workspace.nodeBoundaryContext,
       positionContext: context.positionContext,
       composedTransform: context.composedTransform,
-      rootFontSize: context.rootFontSize,
+      rootFontSize: context.shared.layout.rootFontSize,
       scopeChain,
       warn,
       ...(context.childProposal?.x === undefined ? {} : { allocationWidthProposal: context.childProposal.x }),
       texLowering: {
-        lowerTex: context.lowerTex,
-        warn: (code, message) => context.onWarn({ code, message, path: nodeIrPath }),
+        lowerTex: context.shared.host.lowerTex,
+        warn: (code, message) => context.workspace.diagnostics.collect({ code, message, path: nodeIrPath }),
       },
     },
   );

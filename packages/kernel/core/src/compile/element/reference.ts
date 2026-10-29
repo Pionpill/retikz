@@ -1,6 +1,6 @@
 import type { Transform } from '../../contract';
 import type { IRScope, IRPosition } from '../../schemas';
-import type { CompileEnvironment } from '../environment';
+import type { SharedCompileContext } from '../context';
 import { createSyntheticRectangleLayout } from '../node';
 import type { CompiledNodeLayout } from '../node';
 import {
@@ -20,7 +20,7 @@ export type CompileReferenceSource =
 /** 将元素局部状态投影为可登记的引用布局，不修改原编译状态 */
 export const projectCompileReference = (
   source: CompileReferenceSource,
-  environment: CompileEnvironment,
+  shared: SharedCompileContext,
   parentTransforms: ReadonlyArray<Transform> = [],
 ): CompiledNodeLayout => {
   if (source.type === 'node') {
@@ -38,7 +38,7 @@ export const projectCompileReference = (
       id: source.compiled.id,
       rect: { x, y, width: 0, height: 0, rotate: 0 },
     },
-    environment,
+    { shapes: shared.registries.shapeRegistry, boundaries: shared.registries.boundaryRegistry },
   );
   return projectLayoutWithTransform(local, composeScopeTransform(parentTransforms));
 };

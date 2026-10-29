@@ -61,7 +61,7 @@ With another node fixed to the right, a horizontal connection and no arrow or ex
 
 A width constraint may instead increase the line count. The plain-text branch wraps using measured width, finding breaks between Western words or CJK characters. An indivisible segment wider than the limit may overflow. The actual line count and line height determine content height, which then participates in node sizing. Shape geometry, explicit sizes and layout proposals still affect the final boundary; the rectangular calculation above does not apply to every node.
 
-Within a compile context, metrics for identical text and font combinations are reused. This cache avoids repeated measurer calls. It does not watch fonts for changes, and its lifetime differs from incremental computation across updates.
+Compilation uses the host measurement service stored in the environment. Node content layout can reuse identical requests within a local calculation. The context maintains no text metric cache across nodes or probes and does not watch fonts for changes.
 
 <SourceLinks
   sources={[
@@ -134,7 +134,7 @@ The diagram follows metric sources through to node geometry. The top row lists p
 
 <ComponentPreview files="metrics-implementation" size="xxl" hideCode type="flow" />
 
-Start with `Layout`'s compile options to identify the measurer, then read `createCompileContext`, `layoutNodeContent` and `compileNodeResolution`. Finally, inspect how Render consumes text primitives. The full node-solving and baseline algorithms belong to the Core documentation.
+Start with `Layout`'s compile options to identify the measurer, then read `createFullCompileContext`, `layoutNodeContent` and `compileNodeResolution`. Finally, inspect how Render consumes text primitives. The full node-solving and baseline algorithms belong to the Core documentation.
 
 <SourceLinks
   sources={[

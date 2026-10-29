@@ -14,7 +14,7 @@ description: 追踪 Core 如何汇总 Scene、资源与画布，并交付领域�
 - `scene`：交给渲染器的图元、画布和绘制资源。
 - `artifacts`：复合组件主动返回的领域结果，例如 Layout 的容器、分行与间距。
 
-`onWarn` 接收本次编译的警告。编译准备入口还可单独交付诊断与来源信息。
+`onWarn` 接收本次编译的警告。编译快照入口还可单独交付诊断与来源信息。
 
 `CompileResult` 的结构如下，产物泛型按默认类型简化：
 
@@ -402,7 +402,7 @@ for (const artifact of result.artifacts) {
 
 ## 编译准备与来源
 
-`prepareSceneCompilation(ir, options, execution)` 返回 `result`、`diagnostics` 和按需收集的 `provenance`，不派发警告。`options` 不包含 `onWarn`；`execution.captureProvenance` 控制是否收集来源。来源信息用于图元身份关联与提交，内部布局继续服务测量、引用和重放。
+`compileSceneSnapshot(ir, options, execution)` 返回 `result`、`diagnostics` 和按需收集的 `provenance`，不派发警告。`options` 不包含 `onWarn`；`execution.captureProvenance` 控制是否收集来源。来源信息用于图元身份关联与提交，内部布局继续服务测量、引用和重放。
 
 <SourceLinks
   sources={[
@@ -413,11 +413,11 @@ for (const artifact of result.artifacts) {
 
 ## 完整实现流程
 
-`compileChildrenToPrimitives` 完成遍历、延迟路径回填、布局汇总和最终领域产物排序。`assemblePreparedScene` 汇总图元、资源与画布；`prepareSceneCompilation` 返回完整快照；`compileToScene` 再派发警告并返回 `scene` 与 `artifacts`。
+`compileChildrenToPrimitives` 完成遍历、延迟路径回填、布局汇总和最终领域产物排序。`assembleSceneCompilationSnapshot` 汇总图元、资源与画布；`compileSceneSnapshot` 返回完整快照；`compileToScene` 再派发警告并返回 `scene` 与 `artifacts`。
 
 <ComponentPreview files="output-implementation" size="sm" hideCode type="flow" />
 
-从编译准备入口开始，沿遍历与 Scene 装配阅读即可追踪收尾流程。Core 不创建检查会话，不为检查工具捕获内部上下文或额外几何。
+从编译快照入口开始，沿遍历与 Scene 装配阅读即可追踪收尾流程。Core 不创建检查会话，不为检查工具捕获内部上下文或额外几何。
 
 <SourceLinks
   sources={[

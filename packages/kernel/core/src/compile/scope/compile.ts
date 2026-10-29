@@ -5,7 +5,7 @@ import type { PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePositionTargetWorld } from '../../resolve/position';
 import type { IRScope, IRPosition, IRScopePositionTarget, IRScopeSelfPoint, IRTransform } from '../../schemas';
 import { ScopeBoundingShape } from '../../schemas';
-import type { CompileEnvironment } from '../environment';
+import type { SharedCompileContext } from '../context';
 import type { CompiledNodeLayout } from '../node';
 import { createScopeCircleLayout, createScopeRectangleLayout } from '../node';
 import { transformWarnCode } from '../orchestration';
@@ -79,17 +79,17 @@ export const resolveScopePositionTarget = (
 export const createIntrinsicScopeLayout = (
   child: InputScopeCompile,
   scopeLayouts: ReadonlyArray<CompiledNodeLayout>,
-  environment: Pick<CompileEnvironment, 'shapes' | 'boundaries'>,
+  shared: Pick<SharedCompileContext, 'registries'>,
 ): CompiledNodeLayout => {
   const id = child.id ?? '__anonymous_scope__';
   return child.boundingShape === ScopeBoundingShape.Circle
     ? createScopeCircleLayout(
         { id, cornerPoints: collectScopeCornerPoints(scopeLayouts), fallbackOrigin: [0, 0] },
-        { shapes: environment.shapes, boundaries: environment.boundaries },
+        { shapes: shared.registries.shapeRegistry, boundaries: shared.registries.boundaryRegistry },
       )
     : createScopeRectangleLayout(
         { id, bbox: computeScopeBoundingBox(scopeLayouts), fallbackOrigin: [0, 0] },
-        { shapes: environment.shapes, boundaries: environment.boundaries },
+        { shapes: shared.registries.shapeRegistry, boundaries: shared.registries.boundaryRegistry },
       );
 };
 

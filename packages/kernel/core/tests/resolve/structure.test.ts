@@ -50,7 +50,7 @@ describe('解析源结构', () => {
 
   it('保持位置解析独立于编译编排', () => {
     const offenders = sourceFiles('src/resolve/position')
-      .filter(path => /from\s+['"][^'"]*compile|NamespaceStack|CompileContext|TraversalFrame/u.test(source(path)))
+      .filter(path => /from\s+['"][^'"]*compile|NamespaceStack|FullCompileContext|TraversalFrame/u.test(source(path)))
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
 
     expect(offenders).toEqual([]);

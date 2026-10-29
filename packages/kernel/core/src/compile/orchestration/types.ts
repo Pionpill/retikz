@@ -16,17 +16,17 @@ import type {
   SceneResource,
   Transform,
 } from '../../contract';
-import type { CompositeRuntimeInputScope } from '../../contract/composite';
+import type { CompositeInputScope } from '../../contract/composite';
 import type { MergedScopeDefaults } from '../../resolve';
 import type { CanonicalDropShadow, IRChild, IRPathBase, IRPosition } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
+import type { WorkspaceCompileContext, SharedCompileContext } from '../context';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { CompiledNodeLayout } from '../node';
 import type { LayoutProbeFailureEntry } from '../probe-failure';
 import type { CompileOwnerKey, CompileProvenance } from '../provenance';
 import type { CompositeArtifact } from '../types';
 import type { InputCompileWarning } from '../warning';
-import type { CompileContext } from './context';
 import type { InternalScenePrimitive, PathPlaceholder, PrimitiveZIndexTable } from './primitive';
 
 /** 等待命名引用完成注册后再 emit 的 path 任务 */
@@ -149,7 +149,7 @@ export type CompositeRuntimeOutputChild =
       /** 绑定局部运行时输入的子项 IR */
       child: IRChild;
       /** 仅交给绑定子项消费的运行时输入 */
-      runtimeInputs: CompositeRuntimeInputScope;
+      runtimeInputs: CompositeInputScope;
     }>
   | Readonly<{
       /** 区分绑定输入的子项、布局重放与作用域输出 */
@@ -220,7 +220,7 @@ export type TraversalCompileOptions = {
   /** 查询 probe 在 Scope 出栈前读取最终引用环境，不向公共 context 暴露可变状态 */
   captureScopeTargets?: (child: ScopeChild, namespace: NamespaceStack, chain: ReadonlyArray<Transform>) => void;
   /** probe 或显式绑定子项的局部运行时输入 */
-  runtimeInputs?: CompositeRuntimeInputScope;
+  runtimeInputs?: CompositeInputScope;
   /** 当前 traversal 是否为 layoutChild 隔离 probe */
   probe?: boolean;
   /** probe 继承的 namespace snapshot */
@@ -266,28 +266,11 @@ type TraversalState = {
 };
 
 /** child 遍历期间使用的 compile 依赖 */
-type TraversalContext = Pick<
-  CompileContext,
-  | 'nodeGeometry'
-  | 'measureText'
-  | 'lowerTex'
-  | 'onWarn'
-  | 'round'
-  | 'nodeDistance'
-  | 'labelDistance'
-  | 'rootFontSize'
-  | 'shapes'
-  | 'boundaries'
-  | 'patterns'
-  | 'clips'
-  | 'arrows'
-  | 'marks'
-  | 'paths'
-  | 'paint'
-  | 'clip'
-  | 'composites'
-  | 'maxCompositeDepth'
-> & {
+type TraversalContext = {
+  /** 跨次共享的编译能力 */
+  shared: SharedCompileContext;
+  /** 当前遍历使用的计算工作区 */
+  workspace: WorkspaceCompileContext;
   /** 当前 traversal 接收到的完整双轴 proposal */
   proposal: LayoutProposal;
   /** 同次 compile 的 replay token 表 */
@@ -305,7 +288,7 @@ export type TraversalRuntime = {
 /** 递归处理一层 child 时的上下文 */
 export type TraversalFrame = {
   /** 当前 Source 容器的局部实例输入，生成普通 child 不继承 */
-  runtimeInputs?: CompositeRuntimeInputScope;
+  runtimeInputs?: CompositeInputScope;
   /** 只供当前直接 child 消费的父 proposal；递归 Scope 不向普通后代广播 */
   childProposal?: LayoutProposal;
   /** 当前 scope 累计 transform */

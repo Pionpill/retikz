@@ -1,5 +1,5 @@
 import type { IRScene, ScenePrimitive } from '@retikz/core';
-import { compileToScene, definePath, PathSchema, prepareSceneCompilation } from '@retikz/core';
+import { compileSceneSnapshot, compileToScene, definePath, PathSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -31,7 +31,7 @@ describe('Weave 编译构建', () => {
     expect(readWeaveCurrent(prepared.root).scopeIds.size).toBe(3);
     expect(readWeaveCurrent(prepared.root).children.every(node => readWeaveCurrent(node).compiled !== null)).toBe(true);
     expect(prepared.compilation.provenance?.emissions.map(entry => entry.primitivePath)).toEqual(
-      prepareSceneCompilation(scene, {}, { captureProvenance: true }).provenance?.emissions.map(
+      compileSceneSnapshot(scene, {}, { captureProvenance: true }).provenance?.emissions.map(
         entry => entry.primitivePath,
       ),
     );
@@ -161,7 +161,7 @@ describe('Weave 与 Core 可观察等价', () => {
     },
   ];
   it.each(inputs)('保持引用、变换、排序、诊断与发射归属', input => {
-    const full = prepareSceneCompilation(input, {}, { captureProvenance: true });
+    const full = compileSceneSnapshot(input, {}, { captureProvenance: true });
     const weave = new WeaveReconciler(input, {}).mount().compilation;
     expect(weave.result).toEqual(full.result);
     expect(weave.diagnostics).toEqual(full.diagnostics);
@@ -237,7 +237,7 @@ it('嵌套旋转缩放后的引用、渐变资源与观察结果保持同版本'
       },
     ],
   };
-  const full = prepareSceneCompilation(input, {});
+  const full = compileSceneSnapshot(input, {});
   const weave = new WeaveReconciler(input, {}).mount().compilation;
   expect(weave.result).toEqual(full.result);
 });
@@ -281,7 +281,7 @@ it('祖先 Scope 几何引用失败，未来声明不会提前对 Node 可见', 
       { type: 'node', id: 'future', position: [100, 0] },
     ],
   };
-  expect(() => prepareSceneCompilation(input)).toThrow(/Cannot resolve position/);
+  expect(() => compileSceneSnapshot(input)).toThrow(/Cannot resolve position/);
   expect(() => new WeaveReconciler(input).mount()).toThrow(/Cannot resolve position/);
 });
 

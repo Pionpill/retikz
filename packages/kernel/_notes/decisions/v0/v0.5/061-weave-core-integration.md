@@ -1,6 +1,6 @@
 ---
 description: 将 Core 单元素编译契约接入 Weave，确定节点缓存、树级环境、版本内绑定、声明树构建与完整输出准备边界
-keywords: Weave、Core、编译接入、compiled、CompileEnvironment、上下文、命名空间、Scope、候选隔离
+keywords: Weave、Core、编译接入、compiled、SharedCompileContext、上下文、命名空间、Scope、候选隔离
 ---
 
 # ADR-061：Weave 编译构建与 Core 接入
@@ -34,7 +34,7 @@ Core 的 `ElementCompileResult` 区分 compiled 与 pending。pending 只记录�
 
 | 内容                                                      | 持有位置与生命周期                                                                                          |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Core 编译配置、有效 Definition 注册表、文字测量与公式服务 | Root 状态的 environment 持有 `CompileEnvironment`；配置稳定时可共享只读环境                                 |
+| Core 编译配置、有效 Definition 注册表、文字测量与公式服务 | Root 状态的 shared 持有 `SharedCompileContext`；配置稳定时可共享只读上下文                                  |
 | Scene 自身配置                                            | Root 持有排除 children 的 Scene 输入；保留默认上下文、viewBox、animations 等最终编译所需事实                |
 | 元素自身输入、有效父级继承上下文                          | 节点 input.own 与 input.context；Scope own 不含 children                                                    |
 | Scope 子上下文与前置准备结果                              | 候选计算工作区持有 `ScopeCompilationPreparation`；子节点 input.context 接收其有效上下文，不再造一套合并配置 |
@@ -44,7 +44,7 @@ Core 的 `ElementCompileResult` 区分 compiled 与 pending。pending 只记录�
 | 元素读取事实与已完成诊断                                  | 归属对应版本、对应元素的编译记录；复用、失效或删除时一同处理                                                |
 | 资源导入、观察会话、输出收集与等待队列                    | 本次候选工作区；成功或失败后结束，不作为跨批可变缓存复用                                                    |
 
-环境由 `createCompileEnvironment` 准备，包含 shapes、boundaries、clips、arrows、patterns、pathGenerators、pathKinds、composites 和 themeStyles 等 Core 注册表。Weave 不逐节点复制注册表，不维护内置能力白名单。Definition 或服务行为改变必须显式替换环境；无法证明缓存仍有效时重新计算。
+环境由 `createSharedCompileContext` 准备，包含 shapes、boundaries、clips、arrows、patterns、pathGenerators、pathKinds、composites 和 themeStyles 等 Core 注册表。Weave 不逐节点复制注册表，不维护内置能力白名单。Definition 或服务行为改变必须显式替换环境；无法证明缓存仍有效时重新计算。
 
 input.context 表示元素消费的有效继承上下文，Scope 为其 children 解析出的上下文由 Core 产生。根上下文通过 `resolveScopeContext` 从 Scene 默认配置与主题建立。布局 proposal、祖先 Scope 约束、调用位置、坐标变换和 observation 不是该样式上下文的一部分，由调用工作区按 `ElementCompileOptions` 显式传入。
 

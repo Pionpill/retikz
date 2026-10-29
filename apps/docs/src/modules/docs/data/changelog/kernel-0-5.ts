@@ -502,8 +502,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '单元素编译与可复用状态', en: 'Element compilation and reusable state' },
           content: {
-            zh: 'Core 新增 compileNode / compileCoordinate / compilePath / compileScope 与对应 CompiledXxx 状态、显式 CompileEnvironment、引用读取和输出组装能力，供 Reconciler 持有与调度。Scope 保留准备与包络完成两个阶段；本次不实现 Weave 调度算法。',
-            en: 'Core adds compileNode / compileCoordinate / compilePath / compileScope, matching CompiledXxx states, explicit CompileEnvironment, reference reads and output assembly for Reconciler. Scope retains separate preparation and envelope completion phases; Weave scheduling is not implemented in this change.',
+            zh: 'Core 新增 compileNode / compileCoordinate / compilePath / compileScope 与对应 CompiledXxx 状态、显式 SharedCompileContext、引用读取和输出组装能力，供 Reconciler 持有与调度。Scope 保留准备与包络完成两个阶段；本次不实现 Weave 调度算法。',
+            en: 'Core adds compileNode / compileCoordinate / compilePath / compileScope, matching CompiledXxx states, explicit SharedCompileContext, reference reads and output assembly for Reconciler. Scope retains separate preparation and envelope completion phases; Weave scheduling is not implemented in this change.',
           },
         },
         {
@@ -526,8 +526,8 @@ export const kernelV05: Release = {
             en: 'Unreleased: BREAKING incremental APIs move to Reconciler',
           },
           content: {
-            zh: 'CoreSourceDefinition、CoreCompositeInputSourceDefinition、createCoreComputation、CoreChange、SceneRuntimeSnapshot、ScenePatch 及相关类型改从 @retikz/reconciler 导入，Core 不保留转发。Core 新增 prepareSceneCompilation 与 validateCompositeInputBindings，不再依赖 Runtime。增量输入捕获与装配错误改为 RetikzReconcilerError；更新 trace 常量改为 ReconcilerTracePhase / ReconcilerTraceUnit，ChangeSetMismatch 改由 CoreComputationDiagnosticCode 提供，原诊断码字符串与身份 owner 值保持不变。',
-            en: 'Import CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation, CoreChange, SceneRuntimeSnapshot, ScenePatch and related types from @retikz/reconciler; Core no longer forwards them. Core adds prepareSceneCompilation and validateCompositeInputBindings and drops its Runtime dependency. Incremental capture and assembly failures use RetikzReconcilerError. Update trace constants move to ReconcilerTracePhase / ReconcilerTraceUnit, and CoreComputationDiagnosticCode provides ChangeSetMismatch. Diagnostic strings and identity owner values remain unchanged.',
+            zh: 'CoreSourceDefinition、CoreCompositeInputSourceDefinition、createCoreComputation、CoreChange、SceneRuntimeSnapshot、ScenePatch 及相关类型改从 @retikz/reconciler 导入，Core 不保留转发。Core 新增 compileSceneSnapshot 与 validateCompositeInputBindings，不再依赖 Runtime。增量输入捕获与装配错误改为 RetikzReconcilerError；更新 trace 常量改为 ReconcilerTracePhase / ReconcilerTraceUnit，ChangeSetMismatch 改由 CoreComputationDiagnosticCode 提供，原诊断码字符串与身份 owner 值保持不变。',
+            en: 'Import CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation, CoreChange, SceneRuntimeSnapshot, ScenePatch and related types from @retikz/reconciler; Core no longer forwards them. Core adds compileSceneSnapshot and validateCompositeInputBindings and drops its Runtime dependency. Incremental capture and assembly failures use RetikzReconcilerError. Update trace constants move to ReconcilerTracePhase / ReconcilerTraceUnit, and CoreComputationDiagnosticCode provides ChangeSetMismatch. Diagnostic strings and identity owner values remain unchanged.',
           },
         },
         {

@@ -80,18 +80,19 @@ export type CompileHostOptions = {
 export type CompileLayoutOptions = {
   /**
    * layout 周围的留白
+   * @description 必须是非负有限数值
    * @default DEFAULT_LAYOUT_PADDING (10)
    */
   padding?: number;
   /**
    * 输出坐标的小数位精度
-   * @description 仅作用于 Scene 输出；内部几何保持 double 精度
+   * @description 仅作用于 Scene 输出；内部几何保持 double 精度。必须是非负整数，且 10 的对应次幂为有限数值
    * @default DEFAULT_PRECISION (2)
    */
   precision?: number;
   /**
    * 相对定位距离
-   * @description `Node.position` 为 `{ direction, of }` 且未自带 `distance` 时取此值
+   * @description `Node.position` 为 `{ direction, of }` 且未自带 `distance` 时取此值。必须是有限数值，负值表示反方向偏移
    * @default DEFAULT_NODE_DISTANCE (24)
    */
   nodeDistance?: number;
@@ -132,7 +133,7 @@ export type CompileCompositeOptions<
   composites?: TComposites;
   /**
    * composite 嵌套展开的最大深度
-   * @description 超限或环会 throw
+   * @description 必须是非负安全整数；零禁止展开 composite，超限或环会 throw
    * @default DEFAULT_MAX_COMPOSITE_DEPTH
    */
   maxCompositeDepth?: number;

@@ -19,7 +19,7 @@ export const compilePath = (
       ...input,
       animations: filterAnimations(input.animations, {
         target: 'element',
-        onWarn: workspace.onWarn,
+        onWarn: workspace.diagnostics.collect,
         irPath: context.irPath,
       }),
     };
@@ -31,11 +31,11 @@ export const compilePath = (
       bindTarget: (target: Parameters<typeof bindPathTarget>[0]) => bindPathTarget(target, workspace.positionContext),
     };
     const resolution = resolvePath(path, {
-      round: context.environment.round,
-      pathRegistry: context.environment.paths,
-      arrowRegistry: context.environment.arrows,
-      markRegistry: context.environment.marks,
-      patternRegistry: context.environment.patterns,
+      round: context.shared.layout.round,
+      pathRegistry: context.shared.registries.pathRegistry,
+      arrowRegistry: context.shared.registries.arrowRegistry,
+      markRegistry: context.shared.registries.markRegistry,
+      patternRegistry: context.shared.registries.patternRegistry,
       scopeDefaults: context.context.defaults,
       mode: context.context.theme.mode,
       scopeChain: workspace.scopeChain,
@@ -54,8 +54,8 @@ export const compilePath = (
       resolution,
       targetResolver,
       {
-        ...context.environment,
-        ...workspace,
+        shared: context.shared,
+        workspace,
         resolveTransform: composeScopeTransform,
       },
     );
@@ -64,7 +64,7 @@ export const compilePath = (
       output: Object.freeze({
         zIndex: input.zIndex,
         primitives: result?.primitives ?? [],
-        resources: workspace.paint.resources(),
+        resources: workspace.paintRegistry.resources(),
         bounds: result === null ? [] : [{ boundsPoints: result.boundsPoints, shadow: resolution.path.shadow }],
       }),
     });

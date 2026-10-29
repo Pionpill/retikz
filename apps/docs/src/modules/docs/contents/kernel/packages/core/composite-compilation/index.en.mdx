@@ -376,7 +376,7 @@ The lightweight path returns a `CompositeContributionResult`. Its `contribution`
 
 Within one compilation, Core reuses successful contributions for the same logical child, input, request, complete proposal, and effective environment. `selectSourceChild` preserves source identity across ancestor probes; children regenerated in separate callbacks are not merged merely because their content matches. Changes to style, theme, bindings, transforms, or visible references require reevaluation. The cache is bounded; eviction affects work only. Each compilation starts a new cache.
 
-Text measurement also shares successful metrics for identical text and font parameters within the compilation. Changed width still triggers wrapping, line-height, and baseline calculations. Neither cache contains a committable transaction: discarded candidates' resources, diagnostics, and artifacts do not enter the final Scene through a cache hit.
+Text measurement uses the host service from the environment, without a compilation-wide text cache shared across probes. Changed width still triggers wrapping, line-height, and baseline calculations. The contribution cache contains no committable transaction: discarded candidates' resources, diagnostics, and artifacts do not enter the final Scene through a cache hit.
 
 A parent may also need the coordinates of an anchor inside a child drawing. `context.resolvePathTargets({ child, source, points })` resolves a source and an ordered sequence of targets against real child geometry. It returns coordinates, not a replayable candidate. For example, Flow queries endpoints while routing multiple relations and again when validating the routes. Different targets may depend on exactly the same node layout.
 

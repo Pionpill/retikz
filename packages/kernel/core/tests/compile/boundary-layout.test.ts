@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   boundaryPointOf,
-  createNodeGeometryContext,
+  createNodeBoundaryContext,
   compileNodeResolution,
   createNodeReferenceGeometry,
 } from '../../src/compile/node';
@@ -47,7 +47,7 @@ describe('CompiledNodeLayout 边界/形状', () => {
     const envelope = vi.fn(() => ({ halfWidth: 30, halfHeight: 30 }));
     shapes.set('rectangle', { ...rectangle, computeConnectionEnvelope: envelope });
     const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
-    const context = createNodeGeometryContext();
+    const context = createNodeBoundaryContext();
     const projected = projectLayoutWithTransform(layout, composeScopeTransform([]));
     const reference = createNodeReferenceGeometry(projected, context);
     const first = boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout));
@@ -64,14 +64,14 @@ describe('CompiledNodeLayout 边界/形状', () => {
     shapes.set('rectangle', { ...shapes.get('rectangle')!, computeConnectionEnvelope: undefined });
     const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
     const warn = vi.fn();
-    const context = createNodeGeometryContext();
+    const context = createNodeBoundaryContext();
     context.get(layout).warn = warn;
     const moved = projectLayoutWithTransform(layout, composeScopeTransform([{ kind: 'translate', x: 10, y: 0 }]));
     boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout));
     boundaryPointOf(moved, [100, 0], 'circle', undefined, undefined, context.get(moved));
     expect(warn).toHaveBeenCalledTimes(1);
 
-    const another = createNodeGeometryContext();
+    const another = createNodeBoundaryContext();
     another.get(layout).warn = warn;
     boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, another.get(layout));
     expect(warn).toHaveBeenCalledTimes(2);

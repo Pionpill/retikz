@@ -410,7 +410,7 @@ The ordinary entry dispatches warnings through `onWarn`, or through its default 
 
 ## Compilation preparation and provenance
 
-`prepareSceneCompilation(ir, options, execution)` returns `result`, `diagnostics`, and optional `provenance` without dispatching warnings. `options` excludes `onWarn`; `execution.captureProvenance` enables provenance collection. Provenance supports primitive identity and commits; internal layout still supports measurement, references, and replay.
+`compileSceneSnapshot(ir, options, execution)` returns `result`, `diagnostics`, and optional `provenance` without dispatching warnings. `options` excludes `onWarn`; `execution.captureProvenance` enables provenance collection. Provenance supports primitive identity and commits; internal layout still supports measurement, references, and replay.
 
 <SourceLinks
   sources={[
@@ -421,11 +421,11 @@ The ordinary entry dispatches warnings through `onWarn`, or through its default 
 
 ## Implementation flow
 
-`compileChildrenToPrimitives` completes traversal, deferred paths, layout aggregation, and final artifact ordering. `assemblePreparedScene` assembles primitives, resources, and canvas bounds. `prepareSceneCompilation` returns the snapshot; `compileToScene` dispatches warnings and returns `scene` and `artifacts`.
+`compileChildrenToPrimitives` completes traversal, deferred paths, layout aggregation, and final artifact ordering. `assembleSceneCompilationSnapshot` assembles primitives, resources, and canvas bounds. `compileSceneSnapshot` returns the snapshot; `compileToScene` dispatches warnings and returns `scene` and `artifacts`.
 
 <ComponentPreview files="output-implementation" size="sm" hideCode type="flow" />
 
-Start at the preparation entry, then follow traversal and Scene assembly. Core creates no inspection session and captures no internal context or extra geometry for inspection tools.
+Start at the snapshot compilation entry, then follow traversal and Scene assembly. Core creates no inspection session and captures no internal context or extra geometry for inspection tools.
 
 <SourceLinks
   sources={[

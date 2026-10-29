@@ -1,4 +1,4 @@
-﻿---
+---
 title: Compilation Flow
 description: Follow IR, node layout, and deferred paths through one full Core compilation to Scene, resources, and associated outputs.
 ---
@@ -91,11 +91,26 @@ Core needs a way to measure text, resolve shapes, and collect shared drawing res
 - Definition: an implementation of a shape, path, or composite capability.
 - Registry: a lookup table used to find a Definition by name during this compilation.
 
-`createCompileEnvironment` assembles built-in and caller-provided definitions into read-only registries and retains measurement services and numeric settings. The internal `createCompileContext` uses that environment to create a per-call workspace: the root theme, an isolated text measurement cache, paint / clip resources, and warning collection. Without injected text measurement, it uses an approximate built-in measurer. Core itself does not read the DOM.
+`createSharedCompileContext` assembles built-in and caller-provided definitions into read-only registries and retains measurement services and numeric settings. The internal `createFullCompileContext` uses that shared context to create a per-call workspace: the root theme, isolated geometry state, paint / clip resources, and warning collection. Without injected text measurement, it uses an approximate built-in measurer. Core itself does not read the DOM.
 
-Built-in definitions and external definitions from CompileOptions are registered by capability in the context's registries for lookup and invocation during compilation, while generated paint and clip resources are collected by the context's `paint` and `clip` and written to the Scene resource table.
+`FullCompileContext` holds `shared`, `workspace`, `compositeInputs`, and `theme`. `shared` holds reusable `registries`, `host`, `layout`, and `limits`. `CompileContextRegistries` contains `shapeRegistry`, `boundaryRegistry`, `clipRegistry`, `arrowRegistry`, `markRegistry`, `patternRegistry`, `pathRegistry`, `compositeRegistry`, and `themeRegistry`. Input options still use definition-array fields such as `shapes` and `clips`.
 
-This example uses the built-in rectangle and path capabilities. The context's `loweredIr` still refers to the input IR here. Composites are processed when traversal reaches them.
+Full compilation, element compilation, and probes each create an isolated `WorkspaceCompileContext` through `createWorkspaceCompileContext`. It holds `nodeBoundaryContext`, `paintRegistry`, `clipRegistry`, and `diagnostics`. Diagnostics are appended through `diagnostics.collect` and exposed through the read-only `diagnostics.warnings`; the external `CompileOptions.onWarn` still receives diagnostics after success. The full context separately carries the root `theme` and `compositeInputs`; element computation adds reference-read and position-resolution state. Creation and consumption are unified, while mutable state stays isolated per computation. Generated resources and diagnostics are published only with successful results.
+
+The shared context has four groups:
+
+| Group        | Contents                                                                     |
+| ------------ | ---------------------------------------------------------------------------- |
+| `registries` | Registries combining built-in and external definitions                       |
+| `host`       | Text measurement and TeX lowering services                                   |
+| `layout`     | Layout padding, node and label distances, root font size, and output rounder |
+| `limits`     | Depth limits for composite expansion and clip conversion                     |
+
+Compilation uses the host measurement service through `shared.host.measureText` and normalizes metrics where they are consumed. The context has no separate measurement entry or compilation-wide text cache. Weave can reuse the shared context across incremental updates within one instance, while resource workspaces remain isolated per computation. Input fields in `CompileOptions` remain flat; the shared context groups the configuration after applying defaults.
+
+Shared context creation validates numeric options even for an empty scene: `padding` and `labelDistance` must be finite and nonnegative, and `fontSize` must be finite and positive. `nodeDistance` must be finite; negative values offset in the opposite direction. `precision` must be a nonnegative integer with a finite `10 ** precision`; this does not guarantee overflow-free arithmetic for arbitrarily large coordinates. `maxCompositeDepth` and `maxClipDepth` must be nonnegative safe integers; `maxCompositeDepth: 0` prevents composite expansion.
+
+This example uses the built-in rectangle and path capabilities. Compilation traverses the input IR directly; composites are processed when traversal reaches them.
 
 Traversal also creates state for this execution: emitted primitives, accumulated bounds, and a namespace. The namespace stores queryable layouts by id so that a path can find the geometry of A and B. This state belongs to one full compilation and does not retain update results across calls.
 
@@ -339,7 +354,7 @@ Composite entries join compilation through registered Definitions, and the basic
 
 ## Assemble the result
 
-After child compilation, `prepareSceneCompilation` collects ordered primitives, paint and clip resources, and supported root animation configuration. An explicit `viewBox` determines the canvas bounds directly. Otherwise, Core computes them from accumulated layout bounds and `padding`.
+After child compilation, `compileSceneSnapshot` collects ordered primitives, paint and clip resources, and supported root animation configuration. An explicit `viewBox` determines the canvas bounds directly. Otherwise, Core computes them from accumulated layout bounds and `padding`.
 
 The example's content spans `[-30, -20]` to `[210, 20]`. Adding 10 units on all sides produces this `result.scene.layout`:
 
@@ -364,11 +379,11 @@ Warnings and fatal errors have different outcomes. Recoverable cases follow the 
 
 ## Complete implementation flow
 
-This diagram maps the earlier stages to actual implementation members. The synchronous `compileToScene` entry calls `prepareSceneCompilation`. Path emission and sorting happen inside traversal, which returns to the outer function for `CompileResult` assembly.
+This diagram maps the earlier stages to actual implementation members. The synchronous `compileToScene` entry calls `compileSceneSnapshot`. Path emission and sorting happen inside traversal, which returns to the outer function for `CompileResult` assembly.
 
 <ComponentPreview files="compilation-implementation" size="xxl" hideCode type="flow" />
 
-Start in `prepareSceneCompilation` to see context creation, traversal, and assembly together. Then enter `compileChildrenToPrimitives`: begin with the root `compileChildren` call near its end, follow dispatch in `compileChild`, trace a Node through resolve, layout, and emit, and finally follow Path queuing and emission. Scope and Composite are recursive branches to explore after this example.
+Start in `compileSceneSnapshot` to see context creation, traversal, and assembly together. Then enter `compileChildrenToPrimitives`: begin with the root `compileChildren` call near its end, follow dispatch in `compileChild`, trace a Node through resolve, layout, and emit, and finally follow Path queuing and emission. Scope and Composite are recursive branches to explore after this example.
 
 <SourceLinks
   sources={[
@@ -414,7 +429,7 @@ Start in `prepareSceneCompilation` to see context creation, traversal, and assem
 
 ## Independent compilation and reusable state
 
-A caller that schedules elements itself can retain a `CompileEnvironment` and compile one basic element through these entries. They share resolve, layout and emit logic with full compilation, do not recursively compile other elements, and do not register names automatically.
+A caller that schedules elements itself can retain a `SharedCompileContext` and compile one basic element through these entries. They share resolve, layout and emit logic with full compilation, do not recursively compile other elements, and do not register names automatically.
 
 | Entry               | Completed state      | Retained data                                                                            |
 | ------------------- | -------------------- | ---------------------------------------------------------------------------------------- |
@@ -426,20 +441,20 @@ A caller that schedules elements itself can retain a `CompileEnvironment` and co
 `NodeLayoutObservation`, previously named `CompiledNodeLayout`, is a public observation projection. It lacks the complete state required for drawing reuse; cache `CompiledNode` instead.
 
 ```ts
-import { assembleSceneCompilation, compileNode, createCompileEnvironment, resolveScopeContext } from '@retikz/core';
+import { assembleSceneCompilation, compileNode, createSharedCompileContext, resolveScopeContext } from '@retikz/core';
 
-const environment = createCompileEnvironment();
+const shared = createSharedCompileContext();
 const result = compileNode(
   { type: 'node', id: 'A', position: [0, 0], text: 'A' },
   {
-    environment,
-    context: resolveScopeContext({}, environment),
+    shared,
+    context: resolveScopeContext({}, shared),
     irPath: 'children[0].node',
   },
 );
 
 if (result.status === 'compiled') {
-  const prepared = assembleSceneCompilation({}, [result.compiled.output], environment, {
+  const prepared = assembleSceneCompilation({}, [result.compiled.output], shared, {
     diagnostics: result.diagnostics,
   });
   // prepared.result.scene is ready for a renderer; diagnostics are not dispatched
@@ -452,12 +467,12 @@ Scope calculation has two stages. `prepareScopeCompilation` resolves inherited c
 
 Resource IDs are local to each output fragment. `assembleScopeOutput` / `assembleSceneCompilation` import and remap resources, stably order sibling zIndex values, apply final transforms, and assemble Scene. Selected node layout artifacts and owner observations travel with the fragments. Create an observation session with `createCompileObservationRuntime`, pass it to element calls and final assembly, and do not reuse it across batches after completion. Other completed Composite artifacts, spatial handles and provenance are supplied through metadata from the same version; assembly does not infer this orchestration data.
 
-These entries provide Core's scheduling primitives. Reconciler owns name mapping, dependency invalidation, version isolation and publication; the interface does not construct or update the Weave tree automatically. Callers must not mutate data reachable from published compiled state. Changes to environment definitions or measurement services invalidate affected caches. Compiled state containing Definitions and text emit functions cannot be serialized directly into Worker messages.
+These entries provide Core's scheduling primitives. Reconciler owns name mapping, dependency invalidation, version isolation and publication; the interface does not construct or update the Weave tree automatically. Callers must not mutate data reachable from published compiled state. Changes to shared definitions or measurement services invalidate affected caches. Compiled state containing Definitions and text emit functions cannot be serialized directly into Worker messages.
 
 <SourceLinks
   sources={[
     { label: 'Element types and context', path: 'packages/kernel/core/src/compile/element/types.ts' },
-    { label: 'Stable compilation environment', path: 'packages/kernel/core/src/compile/environment.ts' },
+    { label: 'Shared compilation context', path: 'packages/kernel/core/src/compile/context/shared.ts' },
     { label: 'Local output assembly', path: 'packages/kernel/core/src/compile/element/output.ts' },
     { label: 'Scene and metadata assembly', path: 'packages/kernel/core/src/compile/output.ts' },
   ]}
@@ -467,7 +482,7 @@ These entries provide Core's scheduling primitives. Reconciler owns name mapping
 
 Core and Weave share `formatCompileChildPath(prefix, index, type?)` to construct declaration source paths. The prefix is empty or ends with a dot; basic elements supply a type suffix, while Composite declarations omit it. These paths identify source locations for provenance and diagnostics, not identities across versions.
 
-Weave is the compilation tree retained by Reconciler. Each node holds its own input, effective context and Core compilation state. The root holds the environment, Scene configuration, container index and version-specific read records. Automatically assigned Scope addresses stay outside the IR and do not affect drawing envelopes.
+Weave is the compilation tree retained by Reconciler. Each node holds its own input, effective context and Core compilation state. The root holds the shared context, Scene configuration, container index and version-specific read records. Automatically assigned Scope addresses stay outside the IR and do not affect drawing envelopes.
 
 The Reconciler session holds a stable WeaveRoot through its Weave reconciler as the tree entry. Nodes and Root each retain committed current and candidate pending states; parent-child links, dependencies and indexes reference stable node objects. Candidate writes isolate the affected state and mutable collections while sharing unchanged Core products read-only. Changing a child’s properties does not copy its Scope’s children array; changing membership does. Commit switches the states touched by the batch and retains recovery references until confirmation. A node reference does not provide a historical snapshot.
 

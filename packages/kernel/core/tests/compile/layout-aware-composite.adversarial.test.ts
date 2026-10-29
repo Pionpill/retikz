@@ -36,8 +36,8 @@ import {
   naturalLayoutProposal,
   PathSchema,
 } from '../../src';
+import { createFullCompileContext } from '../../src/compile/context';
 import { NamespaceStack } from '../../src/compile/namespace';
-import { createCompileContext } from '../../src/compile/orchestration/context';
 import * as compileProvenance from '../../src/compile/orchestration/provenance';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 import { createCompileInvariantError, wrapLayoutProbeError } from '../../src/compile/probe-failure';
@@ -962,7 +962,7 @@ describe('布局感知的复契约束和边界', () => {
       },
     });
     const createProbeTracker = vi.spyOn(compileProvenance, 'createCompileProvenanceTracker').mockReturnValue(broken);
-    const context = createCompileContext(ir, { composites: [parent] });
+    const context = createFullCompileContext(ir, { composites: [parent] });
 
     expect(() => compileChildrenToPrimitives(ir.children, context, { provenanceTracker: outer })).toThrow(
       RetikzCoreError,

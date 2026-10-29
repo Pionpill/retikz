@@ -1,5 +1,5 @@
 ---
-description: 将 Core 专属增量执行与 Scene 更新协议迁入 Reconciler，以无 Runtime 依赖的静态编译准备和来源契约连接两包，保持既有执行行为
+description: 将 Core 专属增量执行与 Scene 更新协议迁入 Reconciler，以无 Runtime 依赖的静态编译快照和来源契约连接两包，保持既有执行行为
 keywords: Reconciler、Core、Runtime、迁移、编译来源、ScenePatch、静态编译、trace
 ---
 
@@ -30,11 +30,11 @@ Render 的 retained 能力消费 Reconciler 的公开输出契约，静态能力
 
 ## 基础数据结构与公开契约
 
-### Core 静态编译准备
+### Core 静态编译快照
 
-Core 保留 `compileToScene`、`observeCompileToScene` 及现有结果语义，新增 `prepareSceneCompilation` 作为需要延后派发 warning、读取编译来源的静态能力。它同步完成一次编译，不创建持续实例，不接收 revision、Runtime Source 或事务对象。
+Core 保留 `compileToScene`、`observeCompileToScene` 及现有结果语义，新增 `compileSceneSnapshot` 作为需要延后派发 warning、读取编译来源的静态能力。它同步完成一次编译，不创建持续实例，不接收 revision、Runtime Source 或事务对象。
 
-该入口接收 `IRScene`、不含 `onWarn` 的编译选项，以及包含 `observers` 与 `captureProvenance` 的准备选项；两者分别默认空列表和 `false`。返回 `PreparedSceneCompilation`：
+该入口接收 `IRScene`、不含 `onWarn` 的编译选项，以及包含 `observers` 与 `captureProvenance` 的快照收集选项；两者分别默认空列表和 `false`。返回 `SceneCompilationSnapshot`：
 
 | 字段              | 契约                                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------------- |
@@ -43,9 +43,9 @@ Core 保留 `compileToScene`、`observeCompileToScene` 及现有结果语义，�
 | `observerOutputs` | 本次显式观察器输出；未提供观察器时为空                                                      |
 | `provenance`      | 仅在请求收集时存在的 `CompileProvenance`；只关联本次结果，不承诺跨次身份                    |
 
-普通完整入口与准备入口消费同一绘图编译语义。普通入口保持成功后派发 warning 的行为；Reconciler 在候选内使用准备入口，成功提交后才派发 warning。观察器仍按已有编译观察语义执行，不因准备入口而获得宿主事务回滚能力。
+普通完整入口与快照入口消费同一绘图编译语义。普通入口保持成功后派发 warning 的行为；Reconciler 在候选内使用快照入口，成功提交后才派发 warning。观察器仍按已有编译观察语义执行，不因快照入口而获得宿主事务回滚能力。
 
-准备入口不是任意子树的脱离上下文编译器。现有孤立 Node 快路径只能在既有安全条件下构造独立输入；任意子树复用所需的上下文与依赖契约不由此自动成立。
+快照入口不是任意子树的脱离上下文编译器。现有孤立 Node 快路径只能在既有安全条件下构造独立输入；任意子树复用所需的上下文与依赖契约不由此自动成立。
 
 ### 编译来源与运行时身份分离
 

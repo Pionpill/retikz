@@ -4,7 +4,7 @@ import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryResolution, NodeReferenceGeometry } from '../../resolve';
 import type { IRBoundary } from '../../schemas';
-import type { NodeGeometryState } from './geometry-context';
+import type { NodeBoundaryState } from './boundary-context';
 import { createNodeReferenceGeometry } from './reference';
 import type { CompiledNodeLayout } from './types';
 
@@ -56,7 +56,7 @@ const resolveBoundaryOf = (
   boundary: IRBoundary | undefined,
   boundaryResolution?: BoundaryResolution,
   warn?: (code: string, message: string) => void,
-  state?: NodeGeometryState,
+  state?: NodeBoundaryState,
 ) => {
   const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const resolution =
@@ -90,7 +90,7 @@ export const boundaryPointOf = (
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryResolution,
   warn?: (code: string, message: string) => void,
-  state?: NodeGeometryState,
+  state?: NodeBoundaryState,
 ): Position => {
   const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
@@ -105,7 +105,7 @@ export const clipNodePolyline = (
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryResolution,
   warn?: (code: string, message: string) => void,
-  state?: NodeGeometryState,
+  state?: NodeBoundaryState,
 ): Array<Position> => {
   const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
@@ -146,7 +146,7 @@ export const anchorOf = (
   boundary?: IRBoundary,
   applyMargin = false,
   boundaryResolution?: BoundaryResolution,
-  state?: NodeGeometryState,
+  state?: NodeBoundaryState,
 ): Position => {
   const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   if (isAnchor(name)) {
@@ -212,7 +212,7 @@ export const angleBoundaryOf = (
   boundary?: IRBoundary,
   applyMargin = false,
   boundaryResolution?: BoundaryResolution,
-  state?: NodeGeometryState,
+  state?: NodeBoundaryState,
 ): Position => {
   const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const rad = angleDeg * DEG_TO_RAD;

@@ -368,7 +368,7 @@ Composite 内部展开、布局探测与 replay 不单独计数。`reused` 固�
 
 记录在成功发布后送达；提交失败不报告成功记录。接收函数抛错不会撤销已经发布的结果，异常可通过 `session.diagnostics()` 读取。Core 的领域诊断则保存在 `session.read().compilation.diagnostics`。
 
-直接调用 Core 的 `compileToScene` 或 `prepareSceneCompilation` 不提供 trace 选项。编译 observer 和 provenance 仍可按各自契约使用。
+直接调用 Core 的 `compileToScene` 或 `compileSceneSnapshot` 不提供 trace 选项。编译 observer 和 provenance 仍可按各自契约使用。
 
 Render 的后端阶段和单位分别使用 `RenderTracePhase` 与 `RenderTraceUnit.ScenePrimitive`，从对应的 `@retikz/render/svg`、`@retikz/render/canvas` 或 `@retikz/render/runtime` 入口导入。SVG / Canvas 继续按 `scene-primitive` 计数。比较记录时同时使用 owner、phase 和 unit，不合并不同单位的工作量。
 

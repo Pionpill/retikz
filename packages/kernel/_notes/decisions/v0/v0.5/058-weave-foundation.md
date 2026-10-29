@@ -19,7 +19,7 @@ keywords: Weave、WeaveNode、WeaveRoot、compiled、pendingInputs、依赖、�
 
 按 [062](./062-weave-node-state-isolation.md)，节点对象保留稳定 type 与 Scope 定位地址，以下输入、编译、声明及关联字段由 current / pending 状态持有。
 
-Scope、Node、Coordinate、Path 组成按 `type` 区分的联合，复用 Core 对应输入类型；Composite 展开后的基础元素进入该模型。Root 仅作声明入口，不承担 Layout 计算；Root 状态持有 Core 的 `CompileEnvironment`，节点不重复保存环境注册表。
+Scope、Node、Coordinate、Path 组成按 `type` 区分的联合，复用 Core 对应输入类型；Composite 展开后的基础元素进入该模型。Root 仅作声明入口，不承担 Layout 计算；Root 状态持有 Core 的 `SharedCompileContext`，节点不重复保存环境注册表。
 
 | 字段            | 形态与职责                                                                                 |
 | --------------- | ------------------------------------------------------------------------------------------ |

@@ -9,11 +9,11 @@ import type {
   CompileWarning,
   ElementCompileOptions,
   ElementCompileResult,
+  ExecuteOptions,
   IRChild,
   IRScene,
   IRScope,
-  PreparedSceneCompilation,
-  SceneCompilationPreparationOptions,
+  SceneCompilationSnapshot,
   Transform,
 } from '@retikz/core';
 import {
@@ -23,7 +23,7 @@ import {
   compileNode,
   compilePath,
   compileScope,
-  createCompileEnvironment,
+  createSharedCompileContext,
   createCompileNamespaceRegistry,
   createCompileProvenanceTracker,
   formatCompileChildPath,
@@ -54,7 +54,7 @@ type WeaveCompilation = {
   /** 已完成编译的声明根 */
   root: WeaveRoot;
   /** 可交给 Runtime 提交的完整输出 */
-  compilation: PreparedSceneCompilation<readonly []>;
+  compilation: SceneCompilationSnapshot<readonly []>;
   /** 本次实际执行元素编译的次数，不含缓存复用与 Scope 上下文准备 */
   visited: number;
 };
@@ -88,7 +88,7 @@ type WeaveContainerCompileContext = {
   /** 当前命名空间的用户 id 索引，key 为声明 id，value 为对应的稳定节点对象 */
   ids: Map<string, WeaveNode>;
   /** 子元素共享的继承、变换与祖先约束 */
-  options: Omit<ElementCompileOptions, 'environment'>;
+  options: Omit<ElementCompileOptions, 'shared'>;
   /** 容器的来源归属 */
   owner: CompileOwnerKey;
   /** 子声明路径前缀 */
@@ -117,7 +117,7 @@ export const isWeaveScene = (source: IRScene): boolean => {
 
 /** 协调声明树、Core 编译与依赖记录；当前每次准备独占可变状态 */
 export class WeaveReconciler {
-  private readonly environment: ReturnType<typeof createCompileEnvironment>;
+  private readonly shared: ReturnType<typeof createSharedCompileContext>;
   private provenance = createCompileProvenanceTracker();
   /** 本次准备结果的警告列表，收集编译与名称注册警告，在重新编译前重置 */
   private diagnostics: Array<CompileWarning> = [];
@@ -142,9 +142,9 @@ export class WeaveReconciler {
   constructor(
     private source: IRScene,
     options: Omit<CompileOptions, keyof CompileCompositeOptions> = {},
-    private readonly execution: SceneCompilationPreparationOptions = {},
+    private readonly execution: ExecuteOptions = {},
   ) {
-    this.environment = createCompileEnvironment(options);
+    this.shared = createSharedCompileContext(options);
     this.treeId = `weave-${nextTreeId++}`;
     const { children, ...own } = source;
     void children;
@@ -156,7 +156,7 @@ export class WeaveReconciler {
         parent: null,
         input: own,
         children: [],
-        environment: this.environment,
+        shared: this.shared,
         ids: new Map(),
         scopeIds: new Map(),
         records: new Map(),
@@ -174,7 +174,7 @@ export class WeaveReconciler {
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave is already mounted');
     try {
       const result = this.reconcileChildren();
-      const compilation = assembleSceneCompilation(this.source, result.outputs(), this.environment, {
+      const compilation = assembleSceneCompilation(this.source, result.outputs(), this.shared, {
         diagnostics: this.diagnostics,
         provenanceTracker: this.provenance,
       });
@@ -207,7 +207,7 @@ export class WeaveReconciler {
 
       let modified = false;
       for (const operation of batch.operations) {
-        const changes = this.editor.applyOperation(operation, resolveScopeContext(this.source, this.environment));
+        const changes = this.editor.applyOperation(operation, resolveScopeContext(this.source, this.shared));
         if (changes === undefined) continue;
         for (const node of changes.insertedNodes) this.tracker.registerNodeBinding(node);
         for (const node of changes.changedNodes) this.tracker.invalidateNode(node);
@@ -236,7 +236,7 @@ export class WeaveReconciler {
         // 输出遍历重放名称声明，避免把最终名称表当成声明位置的引用环境
         this.transaction.editNode(this.root).ids = new Map();
         const result = this.reconcileChildren();
-        const compilation = assembleSceneCompilation(this.source, result.outputs(), this.environment, {
+        const compilation = assembleSceneCompilation(this.source, result.outputs(), this.shared, {
           diagnostics: this.diagnostics,
           provenanceTracker: this.provenance,
         });
@@ -326,19 +326,18 @@ export class WeaveReconciler {
     switch (node.type) {
       case 'node': {
         const compiled = this.transaction.readNode(node).compiled;
-        if (compiled !== null) return projectCompileReference({ type: 'node', compiled }, this.environment, transforms);
+        if (compiled !== null) return projectCompileReference({ type: 'node', compiled }, this.shared, transforms);
         break;
       }
       case 'coordinate': {
         const compiled = this.transaction.readNode(node).compiled;
         if (compiled !== null)
-          return projectCompileReference({ type: 'coordinate', compiled }, this.environment, transforms);
+          return projectCompileReference({ type: 'coordinate', compiled }, this.shared, transforms);
         break;
       }
       case 'scope': {
         const compiled = this.transaction.readNode(node).compiled;
-        if (compiled !== null)
-          return projectCompileReference({ type: 'scope', compiled }, this.environment, transforms);
+        if (compiled !== null) return projectCompileReference({ type: 'scope', compiled }, this.shared, transforms);
         break;
       }
     }
@@ -551,7 +550,7 @@ export class WeaveReconciler {
     const output = assembleScopeOutput(
       state.compiled,
       nested.outputs([...(context.transforms ?? []), ...transforms]),
-      this.environment,
+      this.shared,
       this.provenance,
       semanticOwner,
     );
@@ -566,7 +565,7 @@ export class WeaveReconciler {
       parent: this.root,
       namespaceRegistry: this.namespace,
       ids: this.transaction.editNodeAttribute(this.root, 'ids'),
-      options: { context: resolveScopeContext(this.source, this.environment), irPath: 'scene' },
+      options: { context: resolveScopeContext(this.source, this.shared), irPath: 'scene' },
       owner: this.provenance.root,
       prefix: '',
     },
@@ -593,7 +592,7 @@ export class WeaveReconciler {
       const occurrence = { sourcePath: irPath, expansionPath: [] };
       const compileOptions: WeaveElementCompileContext['options'] = {
         ...context,
-        environment: this.environment,
+        shared: this.shared,
         namespace: namespaceRegistry.namespace,
         irPath,
         occurrence,

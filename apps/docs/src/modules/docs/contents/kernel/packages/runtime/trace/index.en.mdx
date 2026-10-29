@@ -380,7 +380,7 @@ Composite expansion, layout probes, and replay are not counted separately. `reus
 
 Records are delivered after successful publication; failed commits emit no success record. A throwing sink does not undo the published result. Read observation failures through `session.diagnostics()`. Core domain diagnostics are available in `session.read().compilation.diagnostics`.
 
-Direct calls to Core's `compileToScene` or `prepareSceneCompilation` have no trace option. Compilation observers and provenance remain available through their respective contracts.
+Direct calls to Core's `compileToScene` or `compileSceneSnapshot` have no trace option. Compilation observers and provenance remain available through their respective contracts.
 
 Render owns backend phases through `RenderTracePhase` and units through `RenderTraceUnit.ScenePrimitive`, exported from the corresponding `@retikz/render/svg`, `@retikz/render/canvas`, or `@retikz/render/runtime` entry. SVG / Canvas continue to count `scene-primitive` work. Compare owner, phase, and unit together; do not combine counts with different units.
 

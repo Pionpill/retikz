@@ -1,9 +1,10 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { TexLowerer, TextMeasurer } from '../../src/compile';
 import { BuiltinCompileWarningCode } from '../../src/compile';
+import { createFullCompileContext, createSharedCompileContext } from '../../src/compile/context';
 import type { CompiledNodeLayout } from '../../src/compile/node';
-import { compileChildrenToPrimitives, createCompileContext } from '../../src/compile/orchestration';
+import { compileChildrenToPrimitives } from '../../src/compile/orchestration';
 import type { InputCompileWarning } from '../../src/compile/warning';
 import type { TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -54,23 +55,48 @@ const collectLayouts = (
     measurer?: TextMeasurer;
     precision?: number;
   } = {},
-): { layouts: Array<CompiledNodeLayout>; warnings: Array<InputCompileWarning>; textPrims: Array<TextPrimitive> } => {
-  const warnings: Array<InputCompileWarning> = [];
-  const context = createCompileContext(ir, {
+): {
+  layouts: Array<CompiledNodeLayout>;
+  warnings: ReadonlyArray<InputCompileWarning>;
+  textPrims: Array<TextPrimitive>;
+} => {
+  const context = createFullCompileContext(ir, {
     measureText: options.measurer ?? measureText,
     precision: options.precision,
-    onWarn: warning => warnings.push(warning),
 
     ...(options.withTex === true ? { lowerTex } : {}),
   });
-  const out = compileChildrenToPrimitives(context.loweredIr.children, context);
+  const out = compileChildrenToPrimitives(ir.children, context);
   const layouts = out.layouts;
   const textPrims = flattenPrims(out.primitives).filter((prim): prim is TextPrimitive => prim.type === 'text');
 
-  return { layouts, warnings, textPrims };
+  return { layouts, warnings: context.workspace.diagnostics.warnings, textPrims };
 };
 
 describe('Node 内容测量', () => {
+  it('复用环境时，每次完整编译仍独立调用宿主测量并保持相同布局', () => {
+    let calls = 0;
+    const shared = createSharedCompileContext({
+      measureText: (text, font) => {
+        calls += 1;
+        return measureText(text, font);
+      },
+    });
+    const ir = scene([{ type: 'node', position: [0, 0], text: 'shared context' }]);
+    const firstContext = createFullCompileContext(ir, {}, shared);
+    const secondContext = createFullCompileContext(ir, {}, shared);
+    const first = compileChildrenToPrimitives(ir.children, firstContext);
+    const firstCalls = calls;
+    const second = compileChildrenToPrimitives(ir.children, secondContext);
+
+    expect(firstCalls).toBeGreaterThan(0);
+    expect(calls).toBe(firstCalls * 2);
+    expect(second.primitives).toEqual(first.primitives);
+    expect(second.layouts[0].geometry.contentSize).toEqual(first.layouts[0].geometry.contentSize);
+    expect(firstContext.workspace.diagnostics.warnings).toEqual([]);
+    expect(secondContext.workspace.diagnostics.warnings).toEqual([]);
+  });
+
   it('根据文本指标报告纯节点内容大小', () => {
     const { layouts, textPrims } = collectLayouts(
       scene([

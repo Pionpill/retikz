@@ -15,34 +15,24 @@ import {
   resolveStrokePathProviders,
 } from '../../resolve';
 import type { IRPathBase, IRPosition, IRStep } from '../../schemas';
-import type { CompileEnvironment } from '../environment';
-import type { NodeGeometryContext } from '../node';
+import type { WorkspaceCompileContext, SharedCompileContext } from '../context';
 import type { PendingPathEmission } from '../orchestration';
 import { pathTargetViewOf } from '../orchestration';
-import type { ClipRegistry, PaintRegistry } from '../resource';
 import {
   snapshotProviderPosition,
   snapshotScenePrimitives,
   withProviderOutputValidationBoundary,
 } from '../scene-primitive';
 import type { ComposedScopeTransform } from '../transform';
-import type { InputCompileWarning } from '../warning';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
 import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';
 
 /** Path 宿主编译所需的显式服务与本次工作区 */
-type PathCompileHost = Pick<
-  CompileEnvironment,
-  'round' | 'lowerTex' | 'rootFontSize' | 'paths' | 'arrows' | 'marks' | 'patterns' | 'measureText'
-> & {
-  /** 本次几何缓存 */
-  nodeGeometry: NodeGeometryContext;
-  /** 本次绘制资源 */
-  paint: PaintRegistry;
-  /** 本次裁剪资源 */
-  clip: ClipRegistry;
-  /** 本次诊断收集器 */
-  onWarn: (warning: InputCompileWarning) => void;
+type PathCompileHost = {
+  /** 共享定义与配置 */
+  shared: SharedCompileContext;
+  /** 当前计算的公共工作区 */
+  workspace: WorkspaceCompileContext;
   /** Core 提供的坐标变换解析 */
   resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform;
 };
@@ -73,19 +63,24 @@ export const emitDefinedPath = (
   const { path, scopeChain } = pendingPath;
   const { irPath } = resolution;
   const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
-    context.onWarn({ code, message, path: node?.irPath ?? irPath });
-  const targetView = pathTargetViewOf(resolution.targets, targetWarn, context.nodeGeometry, context.resolveTransform);
+    context.workspace.diagnostics.collect({ code, message, path: node?.irPath ?? irPath });
+  const targetView = pathTargetViewOf(
+    resolution.targets,
+    targetWarn,
+    context.workspace.nodeBoundaryContext,
+    context.resolveTransform,
+  );
   const { definition } = resolution;
   const kind = definition.name;
 
   const emitOptions = {
-    resources: () => [...context.paint.resources(), ...context.clip.resources()],
-    onWarn: context.onWarn,
+    resources: () => [...context.workspace.paintRegistry.resources(), ...context.workspace.clipRegistry.resources()],
+    onWarn: context.workspace.diagnostics.collect,
     scopeChain,
-    resolvePaint: context.paint.register,
+    resolvePaint: context.workspace.paintRegistry.register,
     targetView,
-    lowerTex: context.lowerTex,
-    rootFontSize: context.rootFontSize,
+    lowerTex: context.shared.host.lowerTex,
+    rootFontSize: context.shared.layout.rootFontSize,
   };
   const resolutionOf = (nextPath: IRPathBase): PathResolution =>
     nextPath === path
@@ -95,11 +90,11 @@ export const emitDefinedPath = (
           mode: pendingPath.theme.mode,
           scopeChain,
           targetResolver,
-          pathRegistry: context.paths,
-          arrowRegistry: context.arrows,
-          markRegistry: context.marks,
-          patternRegistry: context.patterns,
-          round: context.round,
+          pathRegistry: context.shared.registries.pathRegistry,
+          arrowRegistry: context.shared.registries.arrowRegistry,
+          markRegistry: context.shared.registries.markRegistry,
+          patternRegistry: context.shared.registries.patternRegistry,
+          round: context.shared.layout.round,
           irPath,
         });
 
@@ -108,23 +103,23 @@ export const emitDefinedPath = (
     const sourceResolution = resolutionOf(source);
     const strokeResolution = resolveStrokePathProviders(sourceResolution, {
       mode: pendingPath.theme.mode,
-      pathRegistry: context.paths,
-      arrowRegistry: context.arrows,
-      markRegistry: context.marks,
-      patternRegistry: context.patterns,
-      round: context.round,
+      pathRegistry: context.shared.registries.pathRegistry,
+      arrowRegistry: context.shared.registries.arrowRegistry,
+      markRegistry: context.shared.registries.markRegistry,
+      patternRegistry: context.shared.registries.patternRegistry,
+      round: context.shared.layout.round,
       irPath,
     });
     const emittedTargetView = pathTargetViewOf(
       strokeResolution.targets,
       targetWarn,
-      context.nodeGeometry,
+      context.workspace.nodeBoundaryContext,
       context.resolveTransform,
     );
     const emitted = emitPathPrimitive(strokeResolution, {
       targetView: emittedTargetView,
-      round: context.round,
-      measureText: context.measureText,
+      round: context.shared.layout.round,
+      measureText: context.shared.host.measureText,
       options: {
         ...emitOptions,
       },
@@ -153,11 +148,11 @@ export const emitDefinedPath = (
       targetView: pathTargetViewOf(
         emittedResolution.targets,
         targetWarn,
-        context.nodeGeometry,
+        context.workspace.nodeBoundaryContext,
         context.resolveTransform,
       ),
-      round: context.round,
-      measureText: context.measureText,
+      round: context.shared.layout.round,
+      measureText: context.shared.host.measureText,
       options: emitOptions,
     });
 
@@ -203,14 +198,14 @@ export const emitDefinedPath = (
         { ...styled, position: label.position, side, distance: label.distance, interrupt: false, gap: 0 },
         sample,
         {
-          measureText: context.measureText,
-          round: context.round,
-          rootFontSize: context.rootFontSize,
+          measureText: context.shared.host.measureText,
+          round: context.shared.layout.round,
+          rootFontSize: context.shared.layout.rootFontSize,
           hostOpacity: resolution.path.opacity,
           placement: { sideOffset: sample.sideOffset },
           tex: {
-            lowerTex: context.lowerTex,
-            gatingOn: context.lowerTex !== undefined,
+            lowerTex: context.shared.host.lowerTex,
+            gatingOn: context.shared.host.lowerTex !== undefined,
             warn: (code, message) => targetWarn(code, message, { irPath: sourcePath }),
           },
         },
@@ -229,13 +224,13 @@ export const emitDefinedPath = (
         `${irPath}.${request.sourcePath}`,
       );
       const emitted = emitBoundaryLabelPrimitive(request, styled, {
-        measureText: context.measureText,
-        round: context.round,
-        rootFontSize: context.rootFontSize,
+        measureText: context.shared.host.measureText,
+        round: context.shared.layout.round,
+        rootFontSize: context.shared.layout.rootFontSize,
         hostOpacity: resolution.path.opacity,
         tex: {
-          lowerTex: context.lowerTex,
-          gatingOn: context.lowerTex !== undefined,
+          lowerTex: context.shared.host.lowerTex,
+          gatingOn: context.shared.host.lowerTex !== undefined,
           warn: (code, message) => targetWarn(code, message, { irPath: `${irPath}.${request.sourcePath}` }),
         },
       });
@@ -265,11 +260,11 @@ export const emitDefinedPath = (
           primitive,
           bodyPrims: primitives,
           boundsPoints,
-          round: context.round,
+          round: context.shared.layout.round,
         });
       }),
     appearance,
-    round: context.round,
+    round: context.shared.layout.round,
   });
 
   const validated = assertPathCompileResult(kind, produced);

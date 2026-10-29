@@ -3,10 +3,10 @@ import type { AxisAlignedBounds } from '@retikz/math';
 import type { AnyCompositeDefinition, Scene, ScenePrimitive, SceneResource } from '../contract';
 import { visitSceneContent } from '../contract';
 import type { IRScene } from '../schemas';
-import type { PreparedSceneCompilation } from './compile';
+import type { SceneCompilationSnapshot } from './compile';
+import type { SharedCompileContext } from './context';
 import type { CompileOutput } from './element';
 import { assembleCompileOutputs } from './element';
-import type { CompileEnvironment } from './environment';
 import type { CompileProvenanceTracker } from './orchestration';
 import { orderCompileArtifacts } from './orchestration';
 import { filterAnimations } from './orchestration/animation';
@@ -30,14 +30,16 @@ export type SceneCompilationMetadata = Readonly<{
 }>;
 
 /** 完成 Scene 组装的共同底层，不执行元素编译 */
-export const assemblePreparedScene = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
+export const assembleSceneCompilationSnapshot = <
+  const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly [],
+>(
   root: Pick<IRScene, 'viewBox' | 'animations'>,
   primitives: Array<ScenePrimitive>,
   resources: Array<SceneResource>,
   layoutBounds: AxisAlignedBounds | undefined,
-  environment: CompileEnvironment,
+  shared: SharedCompileContext,
   metadata: SceneCompilationMetadata,
-): PreparedSceneCompilation<TComposites> => {
+): SceneCompilationSnapshot<TComposites> => {
   const diagnostics: Array<InputCompileWarning> = [...(metadata.diagnostics ?? [])];
   const animations = filterAnimations(root.animations, {
     target: 'root',
@@ -50,8 +52,8 @@ export const assemblePreparedScene = <const TComposites extends ReadonlyArray<An
     primitives,
     layout:
       root.viewBox === undefined
-        ? assertFiniteLayout(computeLayoutFromBounds(layoutBounds, environment.layoutPadding, environment.round))
-        : viewBoxToLayout(root.viewBox, environment.round),
+        ? assertFiniteLayout(computeLayoutFromBounds(layoutBounds, shared.layout.padding, shared.layout.round))
+        : viewBoxToLayout(root.viewBox, shared.layout.round),
     ...(resources.length === 0 ? {} : { resources }),
     ...(animations === undefined ? {} : { animations }),
   };
@@ -70,17 +72,17 @@ export const assemblePreparedScene = <const TComposites extends ReadonlyArray<An
 export const assembleSceneCompilation = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   root: Pick<IRScene, 'viewBox' | 'animations'>,
   outputs: ReadonlyArray<CompileOutput>,
-  environment: CompileEnvironment,
+  shared: SharedCompileContext,
   metadata: SceneCompilationMetadata = {},
-): PreparedSceneCompilation<TComposites> => {
-  const output = assembleCompileOutputs(outputs, environment, metadata.provenanceTracker);
+): SceneCompilationSnapshot<TComposites> => {
+  const output = assembleCompileOutputs(outputs, shared, metadata.provenanceTracker);
   let bounds: AxisAlignedBounds | undefined;
   for (const contribution of output.bounds) {
     bounds = collectLayoutBounds(bounds, contribution.boundsPoints, contribution.shadow);
   }
   const artifacts = [...(metadata.artifacts ?? [])];
   const diagnostics: Array<InputCompileWarning> = [...(metadata.diagnostics ?? [])];
-  return assemblePreparedScene<TComposites>(root, output.primitives, output.resources, bounds, environment, {
+  return assembleSceneCompilationSnapshot<TComposites>(root, output.primitives, output.resources, bounds, shared, {
     ...metadata,
     provenance: metadata.provenanceTracker?.capture(output.primitives) ?? metadata.provenance,
     artifacts: orderCompileArtifacts(artifacts),

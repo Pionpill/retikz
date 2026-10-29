@@ -1,4 +1,4 @@
-﻿import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -17,8 +17,8 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
   const lang = props.lang ?? ((i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en');
   const text = compilationImplementationI18n[lang];
   const stages = [
-    { id: 'entry', name: 'prepareSceneCompilation', detail: text.entry },
-    { id: 'context', name: 'createCompileContext', detail: text.context },
+    { id: 'entry', name: 'compileSceneSnapshot', detail: text.entry },
+    { id: 'context', name: 'createFullCompileContext', detail: text.context },
     { id: 'visit', name: 'compileChildrenToPrimitives', detail: text.visit },
     { id: 'flush', name: 'flushPendingPathEmissions', detail: text.flush },
     { id: 'sort', name: 'stableSortByZIndex', detail: text.sort },
@@ -26,7 +26,7 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
   ];
   const products = [
     { id: 'input', name: 'IRScene + CompileOptions', detail: text.input },
-    { id: 'dependencies', name: 'CompileContext', detail: text.dependencies },
+    { id: 'dependencies', name: 'FullCompileContext', detail: text.dependencies },
     { id: 'layouts', name: 'CompiledNodeLayout', detail: text.layouts },
     { id: 'pending', name: 'PendingPathEmission', detail: text.pending },
     { id: 'paths', name: 'PathPrimitive / GroupPrimitive', detail: text.paths },

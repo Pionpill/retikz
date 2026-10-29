@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { prepareSceneCompilation } from '@retikz/core';
+import { compileSceneSnapshot } from '@retikz/core';
 import type { ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import { createFullSceneRuntimeSnapshot, createSceneIdentity } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
@@ -31,7 +31,7 @@ const source = (fill: string): IRScene => ({
 
 const createIncrementalPair = () => {
   const snapshots = ['#ef4444', '#22c55e'].map((fill, revision) => {
-    const compiled = prepareSceneCompilation(source(fill), {}, { captureProvenance: true });
+    const compiled = compileSceneSnapshot(source(fill), {}, { captureProvenance: true });
     return createFullSceneRuntimeSnapshot(compiled.result.scene, revision, compiled.provenance!);
   });
   const [current, next] = snapshots;

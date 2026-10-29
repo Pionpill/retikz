@@ -12,14 +12,17 @@ export type NodeCompileContext = ElementCompileOptions;
 export const compileNode = (input: IRNode, context: NodeCompileContext): ElementCompileResult<CompiledNode> =>
   runElementCompilation(context, workspace => {
     const compilation = compileNodeState(input, context.irPath, {
-      ...context.environment,
-      ...workspace,
+      shared: context.shared,
+      workspace,
+      positionContext: workspace.positionContext,
+      scopeChain: workspace.scopeChain,
+      composedTransform: workspace.composedTransform,
       scopeDefaults: context.context.defaults,
       mode: context.context.theme.mode,
       childProposal: context.proposal,
     });
     const { layout, properties } = compilation;
-    const primitives = emitNodePrimitives(compilation, context.environment.round, workspace.paint.register);
+    const primitives = emitNodePrimitives(compilation, context.shared.layout.round, workspace.paintRegistry.register);
     const outer = outerRectOf(layout);
     return Object.freeze({
       irPath: compilation.irPath,
@@ -28,7 +31,7 @@ export const compileNode = (input: IRNode, context: NodeCompileContext): Element
       output: Object.freeze({
         zIndex: input.zIndex,
         primitives,
-        resources: workspace.paint.resources(),
+        resources: workspace.paintRegistry.resources(),
         bounds: [
           {
             boundsPoints: [Anchor.TopLeft, Anchor.TopRight, Anchor.BottomLeft, Anchor.BottomRight].map(anchor =>

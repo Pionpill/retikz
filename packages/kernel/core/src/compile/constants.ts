@@ -3,9 +3,6 @@ import type { ValueOf } from '@retikz/foundation';
 /** 相对定位默认距离 */
 export const DEFAULT_NODE_DISTANCE = 24;
 
-/** 自动 layout 默认留白 */
-export const DEFAULT_LAYOUT_PADDING = 10;
-
 /** Node label 与 node 边界的默认距离 */
 export const DEFAULT_LABEL_DISTANCE = 12;
 
@@ -40,6 +37,3 @@ export type BuiltinCompileWarningCode = ValueOf<typeof BuiltinCompileWarningCode
 
 /** 编译警告码，支持内置名称和扩展能力提供的自定义名称 */
 export type CompileWarningCode = BuiltinCompileWarningCode | (string & {});
-
-/** 复合组件递归深度上限 */
-export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;

@@ -1,9 +1,10 @@
 import { boundsToRect } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../contract';
-import type { CompileEnvironment } from '../environment';
-import type { CompileProvenanceTracker, CompileSemanticOwner } from '../orchestration';
+import type { SharedCompileContext } from '../context';
+import type { CompileProvenanceTracker } from '../orchestration';
 import { collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../orchestration';
+import type { CompileSemanticOwner } from '../orchestration';
 import { createClipRegistry, createPaintRegistry, importSceneResources, remapPrimitiveResources } from '../resource';
 import { applyTransformChain } from '../transform';
 import type { CompiledScope, CompileOutput } from './types';
@@ -11,11 +12,11 @@ import type { CompiledScope, CompileOutput } from './types';
 /** 按声明顺序导入局部输出及资源，不重新运行 provider */
 export const assembleCompileOutputs = (
   outputs: ReadonlyArray<CompileOutput>,
-  environment: CompileEnvironment,
+  shared: SharedCompileContext,
   provenance?: CompileProvenanceTracker,
 ): CompileOutput => {
-  const paint = createPaintRegistry(environment.round);
-  const clip = createClipRegistry(environment.round, environment.maxClipDepth);
+  const paint = createPaintRegistry(shared.layout.round);
+  const clip = createClipRegistry(shared.layout.round, shared.limits.maxClipDepth);
   const fragments: Array<{ zIndex: number; primitives: Array<ScenePrimitive> }> = [];
   const bounds: Array<CompileOutput['bounds'][number]> = [];
   for (const output of outputs) {
@@ -39,15 +40,15 @@ export const assembleCompileOutputs = (
 export const assembleScopeOutput = (
   scope: CompiledScope,
   children: ReadonlyArray<CompileOutput>,
-  environment: CompileEnvironment,
+  shared: SharedCompileContext,
   provenance?: CompileProvenanceTracker,
   owner?: CompileSemanticOwner,
 ): CompileOutput => {
   const ownGroup = { ...scope.group, children: scope.output.primitives };
-  const childOutput = assembleCompileOutputs(children, environment, provenance);
+  const childOutput = assembleCompileOutputs(children, shared, provenance);
   const merged = assembleCompileOutputs(
     [childOutput, { ...scope.output, zIndex: undefined, primitives: [ownGroup] }],
-    environment,
+    shared,
     provenance,
   );
   const group = merged.primitives[merged.primitives.length - 1] as typeof ownGroup;

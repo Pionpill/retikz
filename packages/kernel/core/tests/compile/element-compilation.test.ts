@@ -19,7 +19,7 @@ import {
   compilePath,
   compileScope,
   compileToScene,
-  createCompileEnvironment,
+  createSharedCompileContext,
   prepareScopeCompilation,
   projectCompileReference,
   resolveScopeContext,
@@ -27,8 +27,8 @@ import {
 
 describe('独立元素编译', () => {
   it('顶层 Path 等待两个 Scope 的节点投影后编译，保持声明绘制顺序', () => {
-    const environment = createCompileEnvironment();
-    const context = { environment, context: resolveScopeContext({}, environment), irPath: 'root' };
+    const shared = createSharedCompileContext();
+    const context = { shared, context: resolveScopeContext({}, shared), irPath: 'root' };
     const bindings = new Map<string, CompileBinding>();
     const outputs: Array<CompileOutput> = [];
     const scopes: Array<IRScope> = [];
@@ -52,11 +52,11 @@ describe('独立元素编译', () => {
         binding: {},
         layout: projectCompileReference(
           { type: 'node', compiled: node.compiled },
-          environment,
+          shared,
           scope.compiled.group.transforms,
         ),
       });
-      outputs.push(assembleScopeOutput(scope.compiled, [node.compiled.output], environment));
+      outputs.push(assembleScopeOutput(scope.compiled, [node.compiled.output], shared));
     }
     const pathInput: IRPathBase = {
       type: 'path',
@@ -68,7 +68,7 @@ describe('独立元素编译', () => {
     const path = compilePath(pathInput, { ...context, namespace: { bindings } });
     if (path.status !== 'compiled') throw new Error('expected path');
     expect(path.compiled.irPath).toBe(context.irPath);
-    expect(assembleSceneCompilation({}, [path.compiled.output, ...outputs], environment).result.scene).toEqual(
+    expect(assembleSceneCompilation({}, [path.compiled.output, ...outputs], shared).result.scene).toEqual(
       compileToScene({ type: 'scene', version: 1, children: [pathInput, ...scopes] }).scene,
     );
     expect(new Set(path.reads.map(read => read.name))).toEqual(new Set(['a', 'b']));
@@ -84,31 +84,29 @@ describe('独立元素编译', () => {
         return BUILTIN_SHAPES.get('rectangle')!.emit(...args);
       },
     };
-    const environment = createCompileEnvironment({ shapes: [definition] });
+    const shared = createSharedCompileContext({ shapes: [definition] });
     const result = compileNode(
       { type: 'node', position: [2, 3], shape: 'counted' },
       {
-        environment,
-        context: resolveScopeContext({}, environment),
+        shared,
+        context: resolveScopeContext({}, shared),
         irPath: 'children[0].node',
       },
     );
     if (result.status !== 'compiled') throw new Error('expected node');
     const rectangle = { ...result.compiled.layout.geometry.rect };
     const count = emitted;
-    const first = assembleSceneCompilation({}, [result.compiled.output], environment);
-    const next = assembleSceneCompilation({}, [result.compiled.output], environment);
-    projectCompileReference({ type: 'node', compiled: result.compiled }, environment, [
-      { kind: 'translate', x: 20, y: 30 },
-    ]);
+    const first = assembleSceneCompilation({}, [result.compiled.output], shared);
+    const next = assembleSceneCompilation({}, [result.compiled.output], shared);
+    projectCompileReference({ type: 'node', compiled: result.compiled }, shared, [{ kind: 'translate', x: 20, y: 30 }]);
     expect(result.compiled.layout.geometry.rect).toEqual(rectangle);
     expect(next.result.scene).toEqual(first.result.scene);
     expect(emitted).toBe(count);
   });
 
   it('嵌套作用域经过祖先裁剪时保持全量可见边界和资源语义', () => {
-    const environment = createCompileEnvironment();
-    const context = { environment, context: resolveScopeContext({}, environment), irPath: 'children[0].scope' };
+    const shared = createSharedCompileContext();
+    const context = { shared, context: resolveScopeContext({}, shared), irPath: 'children[0].scope' };
     const outer: Omit<IRScope, 'children'> = {
       type: 'scope',
       id: 'outer',
@@ -129,26 +127,26 @@ describe('独立元素编译', () => {
     const parent = compileScope(
       outer,
       a.compiled,
-      [projectCompileReference({ type: 'scope', compiled: child.compiled }, environment)],
+      [projectCompileReference({ type: 'scope', compiled: child.compiled }, shared)],
       context,
     );
     if (parent.status !== 'compiled') throw new Error('expected outer compiled');
     const output = assembleScopeOutput(
       parent.compiled,
-      [assembleScopeOutput(child.compiled, [node.compiled.output], environment)],
-      environment,
+      [assembleScopeOutput(child.compiled, [node.compiled.output], shared)],
+      shared,
     );
     const full = compileToScene({
       type: 'scene',
       version: 1,
       children: [{ ...outer, children: [{ ...inner, children: [input] }] }],
     });
-    expect(assembleSceneCompilation({}, [output], environment).result.scene).toEqual(full.scene);
+    expect(assembleSceneCompilation({}, [output], shared).result.scene).toEqual(full.scene);
   });
 
   it('引用跟踪保留未命中命名空间，pending 就绪后可重算且禁止祖先包络引用', () => {
-    const environment = createCompileEnvironment();
-    const context = { environment, context: resolveScopeContext({}, environment), irPath: 'a' };
+    const shared = createSharedCompileContext();
+    const context = { shared, context: resolveScopeContext({}, shared), irPath: 'a' };
     const input: IRCoordinate = { type: 'coordinate', id: 'c', position: { direction: 'right', of: 'a' } };
     const binding = {};
     const outer: CompileNamespace = { bindings: new Map([['a', { state: 'pending', binding }]]) };
@@ -169,7 +167,7 @@ describe('独立元素编译', () => {
           {
             state: 'ready',
             binding,
-            layout: projectCompileReference({ type: 'node', compiled: node.compiled }, environment),
+            layout: projectCompileReference({ type: 'node', compiled: node.compiled }, shared),
           },
         ],
       ]),
@@ -182,24 +180,24 @@ describe('独立元素编译', () => {
   });
 
   it('同层 zIndex 排序与删除资源不重算旧状态', () => {
-    const environment = createCompileEnvironment();
-    const context = { environment, context: resolveScopeContext({}, environment), irPath: 'a' };
+    const shared = createSharedCompileContext();
+    const context = { shared, context: resolveScopeContext({}, shared), irPath: 'a' };
     const a: IRNode = { type: 'node', id: 'a', position: [0, 0], zIndex: 3 };
     const b: IRNode = { type: 'node', id: 'b', position: [40, 0], zIndex: -1 };
     const first = compileNode(a, context);
     const second = compileNode(b, context);
     if (first.status !== 'compiled' || second.status !== 'compiled') throw new Error('expected nodes');
-    expect(
-      assembleSceneCompilation({}, [first.compiled.output, second.compiled.output], environment).result.scene,
-    ).toEqual(compileToScene({ type: 'scene', version: 1, children: [a, b] }).scene);
-    expect(assembleSceneCompilation({}, [], environment).result.scene.resources).toBeUndefined();
+    expect(assembleSceneCompilation({}, [first.compiled.output, second.compiled.output], shared).result.scene).toEqual(
+      compileToScene({ type: 'scene', version: 1, children: [a, b] }).scene,
+    );
+    expect(assembleSceneCompilation({}, [], shared).result.scene.resources).toBeUndefined();
   });
 
   it('已编译 Scope 与子节点组装后等价于全量输出', () => {
-    const environment = createCompileEnvironment();
-    const parent = resolveScopeContext({}, environment);
+    const shared = createSharedCompileContext();
+    const parent = resolveScopeContext({}, shared);
     const scopeInput = { type: 'scope' as const, position: [30, 40] as [number, number] };
-    const context = { environment, context: parent, irPath: 'scene.children[0].scope' };
+    const context = { shared, context: parent, irPath: 'scene.children[0].scope' };
     const prepared = prepareScopeCompilation(scopeInput, context);
     if (prepared.status !== 'compiled') throw new Error('expected scope preparation');
     const input: IRNode = { type: 'node', id: 'a', position: [12, 24], text: 'hello' };
@@ -211,15 +209,15 @@ describe('独立元素编译', () => {
     if (node.status !== 'compiled') throw new Error('expected node');
     const scope = compileScope(scopeInput, prepared.compiled, [node.compiled.layout], context);
     if (scope.status !== 'compiled') throw new Error('expected scope');
-    const output = assembleScopeOutput(scope.compiled, [node.compiled.output], environment);
-    const assembled = assembleSceneCompilation({}, [output], environment);
+    const output = assembleScopeOutput(scope.compiled, [node.compiled.output], shared);
+    const assembled = assembleSceneCompilation({}, [output], shared);
     const full = compileToScene({ version: 1, type: 'scene', children: [{ ...scopeInput, children: [input] }] });
     expect(assembled.result.scene).toEqual(full.scene);
   });
 
   it('资源局部编号在组装时重映射，旧片段保持不变', () => {
-    const environment = createCompileEnvironment();
-    const context = { environment, context: resolveScopeContext({}, environment), irPath: 'node' };
+    const shared = createSharedCompileContext();
+    const context = { shared, context: resolveScopeContext({}, shared), irPath: 'node' };
     const first = compileNode(
       {
         type: 'node',
@@ -256,7 +254,7 @@ describe('独立元素编译', () => {
     );
     if (first.status !== 'compiled' || second.status !== 'compiled') throw new Error('expected nodes');
     const before = structuredClone(first.compiled.output);
-    const output = assembleSceneCompilation({}, [first.compiled.output, second.compiled.output], environment);
+    const output = assembleSceneCompilation({}, [first.compiled.output, second.compiled.output], shared);
     expect(output.result.scene.primitives).toHaveLength(2);
     expect(output.result.scene.resources).toHaveLength(2);
     expect(first.compiled.output.resources[0].id).toBe(second.compiled.output.resources[0].id);
@@ -264,13 +262,13 @@ describe('独立元素编译', () => {
     expect(first.compiled.output).toEqual(before);
   });
   it('未就绪引用返回 pending，不暴露半成品', () => {
-    const environment = createCompileEnvironment();
+    const shared = createSharedCompileContext();
     const binding = {};
     const pending = compileCoordinate(
       { type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } },
       {
-        environment,
-        context: resolveScopeContext({}, environment),
+        shared,
+        context: resolveScopeContext({}, shared),
         irPath: 'b',
         namespace: { bindings: new Map([['a', { state: 'pending', binding }]]) },
       },
@@ -284,8 +282,8 @@ describe('独立元素编译', () => {
         ],
       },
       {
-        environment,
-        context: resolveScopeContext({}, environment),
+        shared,
+        context: resolveScopeContext({}, shared),
         irPath: 'path',
         namespace: { bindings: new Map([['a', { state: 'pending', binding }]]) },
       },
@@ -299,7 +297,7 @@ describe('独立元素编译', () => {
   });
 
   it('独立 Path 与全量路径生成相同输出', () => {
-    const environment = createCompileEnvironment();
+    const shared = createSharedCompileContext();
     const input = {
       type: 'path' as const,
       children: [
@@ -308,8 +306,8 @@ describe('独立元素编译', () => {
       ],
     };
     const result = compilePath(input, {
-      environment,
-      context: resolveScopeContext({}, environment),
+      shared,
+      context: resolveScopeContext({}, shared),
       irPath: 'scene.children[0].path',
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');
@@ -323,10 +321,10 @@ describe('独立元素编译', () => {
   });
   it('节点使用完整编译相同的测量与绘制语义', () => {
     const input: IRNode = { type: 'node', id: 'a', position: [12, 24], text: 'hello' };
-    const environment = createCompileEnvironment();
+    const shared = createSharedCompileContext();
     const result = compileNode(input, {
-      environment,
-      context: resolveScopeContext({}, environment),
+      shared,
+      context: resolveScopeContext({}, shared),
       irPath: 'scene.children[0].node',
     });
     expect(result.status).toBe('compiled');
@@ -340,12 +338,12 @@ describe('独立元素编译', () => {
   });
 
   it('Scope 默认样式经同一规则作用于节点', () => {
-    const environment = createCompileEnvironment();
+    const shared = createSharedCompileContext();
     const scope = { defaults: { node: { style: { fill: 'red' } } } };
     const input: IRNode = { type: 'node', position: [0, 0] };
     const result = compileNode(input, {
-      environment,
-      context: resolveScopeContext(scope, environment),
+      shared,
+      context: resolveScopeContext(scope, shared),
       irPath: 'scene.children[0].scope.children[0].node',
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');

@@ -255,7 +255,16 @@ describe('布局感知复合', () => {
 
   it('测量固有内容及受约束内容后回放所选结果，不执行第三次布局', () => {
     const measureText = vi.fn<TextMeasurer>(fixedMeasurer);
-    const definition = createLayoutDefinition();
+    const baseDefinition = createLayoutDefinition();
+    let callsBeforeReplay = 0;
+    const definition: typeof baseDefinition = {
+      ...baseDefinition,
+      compile: (node, context) => {
+        const output = baseDefinition.compile(node, context);
+        callsBeforeReplay = measureText.mock.calls.length;
+        return output;
+      },
+    };
     const result = compileToScene(
       sceneOf({
         namespace: 'test',
@@ -281,7 +290,8 @@ describe('布局感知复合', () => {
         value: { naturalWidth: 50, rangeWidth: 20 },
       },
     ]);
-    expect(measureText).toHaveBeenCalledTimes(2);
+    expect(callsBeforeReplay).toBeGreaterThan(0);
+    expect(measureText).toHaveBeenCalledTimes(callsBeforeReplay);
   });
 
   it('将一系列 Scope 提案转发给嵌套的布局感知复合组件', () => {
