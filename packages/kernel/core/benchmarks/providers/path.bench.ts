@@ -1,4 +1,4 @@
-﻿import { BUILTIN_PATHS } from '@retikz/core';
+import { BUILTIN_PATHS } from '@retikz/core';
 import type { IRPathBase, PathCompileContext, PathCompileResult, PathDefinition } from '@retikz/core';
 import { expect } from 'vitest';
 
@@ -8,17 +8,36 @@ import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
 const stroke = BUILTIN_PATHS.get('stroke')! as PathDefinition<IRPathBase>;
 for (const empty of [false, true]) {
   defineBenchmark(
-    { id: `providers/path/stroke/${empty}`, dimensions: ['Path dispatch', empty ? '空结果' : '固定宿主结果'] },
+    {
+      id: `providers/path/stroke/${empty}`,
+      dimensions: ['Path dispatch', empty ? '空结果' : '固定宿主结果', '单次委托'],
+    },
     () => {
       const path: IRPathBase = { type: 'path', children: [] };
-      const result: PathCompileResult | null = empty ? null : {
-        primitives: [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'line', to: [10, 0] }] }],
-        boundsPoints: [[0, 0], [10, 0]],
-      };
+      const result: PathCompileResult | null = empty
+        ? null
+        : {
+            primitives: [
+              {
+                type: 'path',
+                commands: [
+                  { kind: 'move', to: [0, 0] },
+                  { kind: 'line', to: [10, 0] },
+                ],
+              },
+            ],
+            boundsPoints: [
+              [0, 0],
+              [10, 0],
+            ],
+          };
       let receivedPath: IRPathBase | undefined;
       const context: PathCompileContext = {
         path,
-        emitStroke: subject => { receivedPath = subject; return result; },
+        emitStroke: subject => {
+          receivedPath = subject;
+          return result;
+        },
         materializePath: () => [],
         resolveHostLabel: label => label,
         emitHostLabels: () => [],
@@ -29,7 +48,10 @@ for (const empty of [false, true]) {
       };
       return {
         run: () => stroke.compile(context),
-        verify: actual => { expect(actual).toBe(result); expect(receivedPath).toBe(path); },
+        verify: actual => {
+          expect(actual).toBe(result);
+          expect(receivedPath).toBe(path);
+        },
       };
     },
   );

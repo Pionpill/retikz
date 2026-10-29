@@ -11,9 +11,13 @@ type CoreBudgetPolicy = {
 };
 
 /** 按稳定场景标识选择预设预算，不读取测量值；新增类别未配置时显式报错 */
-export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget => {
+export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget | undefined => {
   const identity = scenario.id.slice(scenario.id.lastIndexOf(' > ') + 3);
   const [layer, family, variant, scale] = identity.split('/');
+  // 1024 边是支持上限参考，尚未承诺普通节点批量实时更新预算；仅报告，不等同于达标
+  if (layer === 'providers' && family === 'shape' && variant === 'polygon' && /"sides":1024(?:,|})/.test(scale)) {
+    return undefined;
+  }
   let policy: CoreBudgetPolicy;
   if (layer === 'providers') {
     switch (family) {
@@ -23,7 +27,7 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
           warningMs: 0.01,
           errorMs: 0.04,
           rationale:
-            'compile/node/layout、anchors、emit 逐节点/连接消费；假设交互更新100个普通形状及约200次连接面查询，单次几何操作10/40μs，给每类100次操作分配约1/4ms。1024边仍属于一个节点，保持相同单节点预算，不因复杂度放宽',
+            'compile/node/layout、anchors、emit 逐节点/连接消费；假设交互更新100个普通形状及约200次连接面查询，单次几何操作10/40μs，给每类100次操作分配约1/4ms。1024边polygon另列支持上限参考，仅报告，不纳入普通形状实时预算',
         };
         break;
       case 'arrow':

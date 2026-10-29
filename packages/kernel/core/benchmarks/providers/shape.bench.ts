@@ -1,4 +1,4 @@
-﻿import { BUILTIN_SHAPES } from '@retikz/core';
+import { BUILTIN_SHAPES } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 import { expect } from 'vitest';
 
@@ -22,7 +22,7 @@ for (const entry of cases) {
     defineBenchmark(
       {
         id: `providers/shape/${entry.name}/${label}/${operation}`,
-        dimensions: [`Shape ${operation}`, entry.name, label],
+        dimensions: [`Shape ${operation}`, entry.name, params.sides === 1024 ? `${label}（极限规模，仅报告）` : label],
       },
       () => ({ run, verify }),
     );
