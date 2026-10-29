@@ -1,0 +1,16 @@
+---
+title: API 参考
+description: 查询 Data 比例尺的公开定义、解析入口与数学能力。
+---
+
+本页从 `@retikz/data` 的公开入口生成运行时参考。基本调用见[比例尺](/viz/data/scale)，注册示例见[自定义比例尺](/viz/data/scale/custom-scale)。
+
+声明由 `ScaleOperationSchema` 校验，`IRDataScaleOperation` 是其输入类型；`ScaleRangeSchema` 要求非空且同质的数值或字符串数组。公共声明包含 `type`、可选 domain/range/params。算法专有约束由对应定义的 paramsSchema 负责；读取外部配置时调用 parseScaleOperation。
+
+<SourceLinks
+  sources={[
+    { label: '映射声明与范围 Schema', path: 'packages/viz/data/src/scale/schema.ts', startLine: 1, endLine: 20 },
+  ]}
+/>
+
+{/* @include viz/data/scale/reference/generated */}

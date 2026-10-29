@@ -1,0 +1,356 @@
+{/* Generated reference. Do not edit manually. */}
+
+## 定义与注册
+
+#### <ApiSourceLink label={"BuiltinDataScale"} path={"packages/viz/data/src/scale/constants.ts"} startLine={4}>BuiltinDataScale</ApiSourceLink>
+
+```ts
+export const BuiltinDataScale = {
+  Linear: 'linear',
+  Log: 'log',
+  Pow: 'pow',
+  Sqrt: 'sqrt',
+  Symlog: 'symlog',
+  Radial: 'radial',
+  Time: 'time',
+  Band: 'band',
+  Point: 'point',
+  Ordinal: 'ordinal',
+  Quantize: 'quantize',
+  Quantile: 'quantile',
+  Threshold: 'threshold',
+  Sequential: 'sequential',
+  Diverging: 'diverging',
+} as const;
+
+export type BuiltinDataScale = ValueOf<typeof BuiltinDataScale>;
+```
+
+#### <ApiSourceLink label={"BUILTIN_SCALES"} path={"packages/viz/data/src/scale/builtins.ts"} startLine={503}>BUILTIN_SCALES</ApiSourceLink>
+
+```ts
+export const BUILTIN_SCALES: ReadonlyArray<ScaleDefinition> = [
+  linearDefinition,
+  logDefinition,
+  powDefinition,
+  sqrtDefinition,
+  symlogDefinition,
+  radialDefinition,
+  timeDefinition,
+  ordinalDefinition,
+  bandDefinition,
+  pointDefinition,
+  quantizeDefinition,
+  quantileDefinition,
+  thresholdDefinition,
+  sequentialDefinition,
+  divergingDefinition,
+];
+```
+
+#### <ApiSourceLink label={"InputScaleDefinition"} path={"packages/viz/data/src/scale/contract.ts"} startLine={60}>InputScaleDefinition</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                | 类型                                                                 | 默认值 | 说明                               |
+| ------------------- | -------------------------------------------------------------------- | ------ | ---------------------------------- |
+| `TParams` (泛型)    | `extends JsonObject`                                                 | —      | 实例参数的 JSON 对象类型           |
+| `isFieldCompatible` | `(fieldType: DataFieldType \| undefined) => boolean`                 | —      | 判断声明的字段语义是否兼容         |
+| `paramsSchema`      | `ZodType<TParams, TParams>`                                          | —      | 专有参数的外部解析契约             |
+| `resolve`           | `(context: ScaleResolveContext, params: TParams) => ScaleResolution` | —      | 根据公共输入和实例参数构建独立映射 |
+| `type`              | `string`                                                             | —      | 映射唯一注册类型                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type InputScaleDefinition<TParams extends JsonObject> = {
+  type: string;
+  paramsSchema: ZodType<TParams, TParams>;
+  isFieldCompatible: (fieldType: DataFieldType | undefined) => boolean;
+  resolve: (context: ScaleResolveContext, params: TParams) => ScaleResolution;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScaleDefinition"} path={"packages/viz/data/src/scale/contract.ts"} startLine={72}>ScaleDefinition</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                | 类型                                                                                   | 默认值 | 说明                               |
+| ------------------- | -------------------------------------------------------------------------------------- | ------ | ---------------------------------- |
+| `isFieldCompatible` | `(fieldType: DataFieldType \| undefined) => boolean`                                   | —      | 判断声明的字段语义是否兼容         |
+| `paramsSchema`      | `ScaleDefinition["paramsSchema"]`                                                      | —      | 专有参数的外部解析契约             |
+| `resolve`           | `(context: ScaleResolveContext, params: Record<string, JsonValue>) => ScaleResolution` | —      | 根据公共输入和实例参数构建独立映射 |
+| `type`              | `string`                                                                               | —      | 映射唯一注册类型                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ScaleDefinition = InputScaleDefinition<JsonObject>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"defineScale"} path={"packages/viz/data/src/scale/contract.ts"} startLine={78}>defineScale</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称         | 类型 / 签名                     | 说明                     |
+| ------ | ------------ | ------------------------------- | ------------------------ |
+| 泛型   | `TParams`    | `extends JsonObject`            | 实例参数的 JSON 对象类型 |
+| 参数   | `definition` | `InputScaleDefinition<TParams>` | —                        |
+| 返回值 | —            | `ScaleDefinition`               | —                        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const defineScale: <TParams extends JsonObject>(
+  definition: InputScaleDefinition<TParams>,
+) => ScaleDefinition;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"resolveScaleRegistry"} path={"packages/viz/data/src/scale/resolve.ts"} startLine={8}>resolveScaleRegistry</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称           | 类型 / 签名                            | 说明 |
+| ------ | -------------- | -------------------------------------- | ---- |
+| 参数   | `definitions?` | `ReadonlyArray<ScaleDefinition>`       | —    |
+| 返回值 | —              | `ReadonlyMap<string, ScaleDefinition>` | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const resolveScaleRegistry: (
+  definitions?: ReadonlyArray<ScaleDefinition>,
+) => ReadonlyMap<string, ScaleDefinition>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+## 解析与求值
+
+#### <ApiSourceLink label={"parseScaleOperation"} path={"packages/viz/data/src/scale/resolve.ts"} startLine={59}>parseScaleOperation</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称        | 类型 / 签名                            | 说明 |
+| ------ | ----------- | -------------------------------------- | ---- |
+| 参数   | `input`     | `unknown`                              | —    |
+|        | `registry?` | `ReadonlyMap<string, ScaleDefinition>` | —    |
+| 返回值 | —           | `IRDataScaleOperation`                 | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const parseScaleOperation: (
+  input: unknown,
+  registry?: ReadonlyMap<string, ScaleDefinition>,
+) => IRDataScaleOperation;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"resolveScale"} path={"packages/viz/data/src/scale/resolve.ts"} startLine={81}>resolveScale</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称        | 类型 / 签名                            | 说明                                                         |
+| ------ | ----------- | -------------------------------------- | ------------------------------------------------------------ |
+| 参数   | `operation` | `IRDataScaleOperation`                 | 映射声明                                                     |
+|        | `context?`  | `Partial<ScaleResolveContext>`         | 可选运行时输入；省略 values 等同空样本，定义回调始终收到数组 |
+|        | `registry?` | `ReadonlyMap<string, ScaleDefinition>` | 映射定义注册表，省略时使用内置定义                           |
+| 返回值 | —           | `ScaleResolution`                      | 独立的数学映射与算法结果                                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const resolveScale: (
+  operation: IRDataScaleOperation,
+  context?: Partial<ScaleResolveContext>,
+  registry?: ReadonlyMap<string, ScaleDefinition>,
+) => ScaleResolution;
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScaleResolveContext"} path={"packages/viz/data/src/scale/contract.ts"} startLine={43}>ScaleResolveContext</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员             | 类型                                                | 默认值 | 说明                                 |
+| ---------------- | --------------------------------------------------- | ------ | ------------------------------------ |
+| `defaultRange?`  | `IRDataScaleOperation['range']`                     | —      | 宿主选定的缺省范围                   |
+| `domain?`        | `IRDataScaleOperation['domain']`                    | —      | 显式域优先于样本推断                 |
+| `interpolators?` | `ReadonlyMap<string, (fraction: number) => string>` | —      | 命名字符串插值器；不携带主题对象     |
+| `range?`         | `IRDataScaleOperation['range']`                     | —      | 显式范围                             |
+| `values`         | `ReadonlyArray<IRDataScalarValue>`                  | —      | 参与映射训练的样本，保留真实重复观测 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ScaleResolveContext = {
+  values: ReadonlyArray<IRDataScalarValue>;
+  domain?: IRDataScaleOperation['domain'];
+  range?: IRDataScaleOperation['range'];
+  defaultRange?: IRDataScaleOperation['range'];
+  interpolators?: ReadonlyMap<string, (fraction: number) => string>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScaleResolution"} path={"packages/viz/data/src/scale/contract.ts"} startLine={21}>ScaleResolution</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型                                                    | 默认值 | 说明                                                   |
+| ------------- | ------------------------------------------------------- | ------ | ------------------------------------------------------ |
+| `bandwidth?`  | `number`                                                | —      | 分类区间的宽度，仅区间映射提供                         |
+| `domain`      | `ReadonlyArray<IRDataScalarValue>`                      | —      | 实际使用的输入域                                       |
+| `invert?`     | `(value: number) => number \| undefined`                | —      | 数值输出的反向映射；超出算法合法输入域时返回 undefined |
+| `map`         | `(value: IRDataScalarValue) => ScaleValue \| undefined` | —      | 输入标量到输出值；缺值返回 undefined                   |
+| `range`       | `ReadonlyArray<ScaleValue>`                             | —      | 实际输出范围                                           |
+| `rebuild?`    | `(options: ScaleRebuildOptions) => ScaleResolution`     | —      | 使用替换配置创建独立映射，不修改当前映射               |
+| `step?`       | `number`                                                | —      | 相邻分类位置的间隔                                     |
+| `thresholds?` | `ReadonlyArray<number>`                                 | —      | 分档映射的内部边界；无有效样本时省略                   |
+| `ticks?`      | `(count?: number) => ReadonlyArray<number>`             | —      | 算法生成的代表性输入值；不包含标签或坐标轴语义         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ScaleResolution = {
+  map: (value: IRDataScalarValue) => ScaleValue | undefined;
+  domain: ReadonlyArray<IRDataScalarValue>;
+  range: ReadonlyArray<ScaleValue>;
+  ticks?: (count?: number) => ReadonlyArray<number>;
+  invert?: (value: number) => number | undefined;
+  rebuild?: (options: ScaleRebuildOptions) => ScaleResolution;
+  bandwidth?: number;
+  step?: number;
+  thresholds?: ReadonlyArray<number>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"ScaleValue"} path={"packages/viz/data/src/scale/contract.ts"} startLine={8}>ScaleValue</ApiSourceLink>
+
+```ts
+export type ScaleValue = number | string;
+```
+
+#### <ApiSourceLink label={"ScaleRebuildOptions"} path={"packages/viz/data/src/scale/contract.ts"} startLine={11}>ScaleRebuildOptions</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员      | 类型                                               | 默认值 | 说明                             |
+| --------- | -------------------------------------------------- | ------ | -------------------------------- |
+| `clamp?`  | `boolean`                                          | —      | 替换钳位设置，省略时保留当前设置 |
+| `domain?` | `readonly [`<br />`number,`<br />`number`<br />`]` | —      | 替换输入域，省略时保留当前域     |
+| `range?`  | `readonly [`<br />`number,`<br />`number`<br />`]` | —      | 替换输出范围，省略时保留当前范围 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ScaleRebuildOptions = {
+  domain?: readonly [number, number];
+  range?: readonly [number, number];
+  clamp?: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>

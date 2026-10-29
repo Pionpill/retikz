@@ -1,0 +1,78 @@
+---
+title: 内置比例尺
+description: 按连续、分类和分档规则选择映射，并读取实际输出及数学能力。
+---
+
+先确定输入怎样变化、输出是否连续，再选择算法。下面所有类型都通过同一个 `resolveScale` 入口调用；domain、range 与运行时样本的关系见[比例尺](/viz/data/scale)。
+
+## 连续映射
+
+| 类型         | 计算规则                     | 关键参数或约束                                                     |
+| ------------ | ---------------------------- | ------------------------------------------------------------------ |
+| `linear`     | 等量输入变化对应等量输出变化 | `nice`、`clamp`；字符串颜色插值需显式设置 `interpolation: 'color'` |
+| `log`        | 按数量级映射                 | 正数域，`base` 默认 10                                             |
+| `pow`        | 幂变换                       | `exponent` 默认 2；非整数指数要求非负域                            |
+| `sqrt`       | 平方根变换                   | 非负域                                                             |
+| `symlog`     | 近零线性、远离零时对数变化   | `constant` 默认 1，可跨零                                          |
+| `radial`     | 输出半径的平方随输入变化     | 适合面积相关计算                                                   |
+| `time`       | 时间映射为数值               | UTC 日历刻度                                                       |
+| `sequential` | 单向字符串色带               | 两个颜色端点，或宿主提供的命名插值器                               |
+| `diverging`  | 围绕中点的发散色带           | 三个颜色端点，或宿主提供的命名插值器                               |
+
+参数位于 `params`。Data 不内置 Plot 的主题配色；使用 `scheme` 时，调用方通过上下文 `interpolators` 提供对应函数。`sequential` / `diverging` 的显式颜色 range 优先于插值器。
+
+```ts
+import { resolveScale } from '@retikz/data';
+
+const scale = resolveScale({ type: 'pow', domain: [0, 10], range: [0, 100], params: { exponent: 2 } });
+
+scale.map(5); // 25
+scale.ticks?.(5);
+```
+
+## 分类映射
+
+`ordinal` 按类别顺序分配数值或字符串；`band` 和 `point` 把类别排布到数值区间。band 返回各带的中心位置，带宽通过 `bandwidth` 读取；point 返回点位置，间距 `step` 不等于带宽。
+
+```ts
+import { resolveScale } from '@retikz/data';
+
+const scale = resolveScale({ type: 'ordinal', domain: ['low', 'high'], range: [4, 12] });
+
+scale.map('high'); // 12
+scale.map('other'); // undefined
+```
+
+ordinal 默认不扩展未知类别；显式设置 `params.unknown: 'extend'` 时，新类别会追加到实际 domain。`step` 与 `offset` 控制输出数组的循环索引。band 的 `paddingInner / paddingOuter`、point 的 `padding` 及二者的 `align` 控制分类排布。
+
+## 分档映射
+
+三种分档规则都可以输出数值或字符串，显式 range 决定各档输出。
+
+| 类型        | 边界来源             | 适用任务       |
+| ----------- | -------------------- | -------------- |
+| `quantize`  | 输入域等宽划分       | 等宽区间       |
+| `quantile`  | 有效样本的分位数     | 按样本分布分档 |
+| `threshold` | `params.breakpoints` | 业务阈值       |
+
+```ts
+import { resolveScale } from '@retikz/data';
+
+const scale = resolveScale({ type: 'threshold', range: [4, 8, 12], params: { breakpoints: [30, 70] } });
+
+scale.map(30); // 8
+scale.thresholds; // [30, 70]
+```
+
+等于阈值时进入右侧档。threshold 的输出数量必须比断点数多一；quantize / quantile 同时指定 `params.count` 和 range 时，count 必须等于 range 长度。quantile 保留真实重复样本，不用最小值与最大值替代分布；没有有效样本时 `thresholds` 为 undefined，消费方不能虚构分档边界。
+
+## 数学结果与消费边界
+
+映射直接提供算法支持的数学成员，例如 `scale.ticks?.(5)` 计算代表值，`scale.thresholds` 读取内部断点，`scale.rebuild?.({ range: [0, 1] })` 创建独立映射。可选成员缺失时，由消费方处理。Data 不提供刻度标签、图例形式或布局留白协议，也不判断字符串是否是合法图元形状、数字能否作为透明度。
+
+<LinkedSections
+  items={[
+    { title: '自定义比例尺', description: '按相同契约实现新的计算规则。', url: '/viz/data/scale/custom-scale' },
+    { title: 'API 参考', description: '查询映射声明与能力类型。', url: '/viz/data/scale/reference' },
+  ]}
+/>

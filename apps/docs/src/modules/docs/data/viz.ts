@@ -107,6 +107,27 @@ export const vizSection: Array<Section> = [
         ],
       },
       {
+        id: 'scale',
+        label: 'viz.dataScale',
+        sidebarGroup: 'viz.dataContents',
+        meta: { pageType: 'group', audience: 'user', capability: 'data.scale', sourceOfTruth: 'runtime' },
+        children: [
+          {
+            id: 'builtins',
+            label: 'viz.dataScaleBuiltins',
+            difficulty: DocDifficulty.Advanced,
+            meta: { pageType: 'guide', audience: 'user', capability: 'data.scale.builtins', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'custom-scale',
+            label: 'viz.dataScaleCustom',
+            difficulty: DocDifficulty.Advanced,
+            meta: extensionGuide('data.scale.custom'),
+          },
+          { id: 'reference', label: 'viz.dataScaleReference' },
+        ],
+      },
+      {
         id: 'provenance',
         label: 'viz.dataProvenance',
         sidebarGroup: 'viz.dataContents',

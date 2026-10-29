@@ -1,0 +1,82 @@
+---
+title: 自定义比例尺
+description: 用 defineScale 声明计算规则，通过 registry 和 JSON params 建立可求值的实例。
+---
+
+## 适用边界
+
+现有算法只需调整参数时，直接使用[内置比例尺](/viz/data/scale/builtins)。需要新的计算规则时，通过 `defineScale` 定义映射；定义保存在运行时，声明只通过 type 引用它。
+
+下面的映射把输入除以 `maximum`。参数为 200 时，输入 50 得到 0.25。
+
+## 定义能力
+
+```ts
+import { defineScale, resolveScale } from '@retikz/data';
+import { number, strictObject } from 'zod';
+
+const fractionScale = defineScale({
+  type: 'fraction',
+  paramsSchema: strictObject({ maximum: number().positive() }),
+  isFieldCompatible: fieldType => fieldType === 'continuous',
+  resolve: (context, params) =>
+    resolveScale({ type: 'linear', domain: [0, params.maximum], range: context.range ?? [0, 1] }, context),
+});
+```
+
+`paramsSchema` 描述实例参数，回调中的 params 与其类型关联。`isFieldCompatible` 供宿主判断字段语义是否适用；Data 不自动选择字段或图元属性。示例委托内置 linear，复用其刻度和独立范围重建能力。
+
+## 注入与使用
+
+将定义加入 registry，再用同一个 registry 解析外部声明并求值。这是独立 TypeScript API，不需要 React 或 Vanilla 绘图宿主。
+
+```ts
+import { parseScaleOperation, resolveScaleRegistry } from '@retikz/data';
+
+const registry = resolveScaleRegistry([fractionScale]);
+const operation = parseScaleOperation({ type: 'fraction', params: { maximum: 200 } }, registry);
+const scale = resolveScale(operation, { values: [50] }, registry);
+
+scale.map(50); // 0.25
+```
+
+只有 operation 可以保存为 JSON。definition 中的函数和 registry 不进入声明。Plot 接入同一个数学定义时，还要满足其[自定义比例尺](/viz/plot/scale/custom-scale)的位置消费策略。
+
+## 错误与限制
+
+重复 type（包括覆盖内置 type）和未注册类型会报错。`parseScaleOperation` 校验外部参数；typed resolve 不承担重复结构校验，因此调用方必须保证传入参数满足定义契约。自定义函数异常在 Data 边界包装，并保留原始 cause。
+
+自定义结果只需提供 map、domain、range。算法支持反向映射、刻度计算或独立重建时，再提供对应可选成员。是否能用于坐标位置、采用哪种图例、如何处理布局，由消费方自己的定义和策略决定。
+
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineScale',
+      kind: 'function',
+      type: 'InputScaleDefinition<TParams> → ScaleDefinition',
+      description: '关联参数类型与数学回调，不注册实例。',
+    },
+    {
+      name: 'resolveScaleRegistry',
+      kind: 'function',
+      type: '(definitions) → ReadonlyMap<string, ScaleDefinition>',
+      description: '合并内置与自定义定义，检查重复类型。',
+    },
+    { name: 'params', kind: 'property', type: 'JsonObject', description: '可持久化的实例参数，由 paramsSchema 解释。' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'API 参考', description: '查询 Definition、上下文和结果能力。', url: '/viz/data/scale/reference' },
+    {
+      title: 'Plot 自定义比例尺',
+      description: '把数学映射接入坐标角色或图元属性。',
+      url: '/viz/plot/scale/custom-scale',
+    },
+  ]}
+/>

@@ -1,0 +1,91 @@
+---
+title: Custom scales
+description: Define mapping rules with defineScale and resolve instances using a registry and JSON params.
+---
+
+## When to extend
+
+Use [built-in scales](/viz/data/scale/builtins) when changing parameters is sufficient. For a new calculation rule, use `defineScale`. Definitions stay at runtime and declarations reference them by type.
+
+The example divides its input by `maximum`. With maximum 200, input 50 maps to 0.25.
+
+## Define the capability
+
+```ts
+import { defineScale, resolveScale } from '@retikz/data';
+import { number, strictObject } from 'zod';
+
+const fractionScale = defineScale({
+  type: 'fraction',
+  paramsSchema: strictObject({ maximum: number().positive() }),
+  isFieldCompatible: fieldType => fieldType === 'continuous',
+  resolve: (context, params) =>
+    resolveScale({ type: 'linear', domain: [0, params.maximum], range: context.range ?? [0, 1] }, context),
+});
+```
+
+`paramsSchema` describes instance parameters and determines the callback's params type. Hosts use `isFieldCompatible` to check field semantics; Data does not select fields or mark properties. Delegating to linear reuses its ticks and independent range rebuilding.
+
+## Register and use
+
+Add the definition to a registry, then use that registry to parse an external declaration and resolve it. This standalone TypeScript API needs no React or Vanilla rendering host.
+
+```ts
+import { parseScaleOperation, resolveScaleRegistry } from '@retikz/data';
+
+const registry = resolveScaleRegistry([fractionScale]);
+const operation = parseScaleOperation({ type: 'fraction', params: { maximum: 200 } }, registry);
+const scale = resolveScale(operation, { values: [50] }, registry);
+
+scale.map(50); // 0.25
+```
+
+Only the operation is persisted as JSON. Definition functions and registries are not part of the declaration. Using the same mapping in Plot also requires its [custom scale](/viz/plot/scale/custom-scale) position policies where applicable.
+
+## Errors and limits
+
+Duplicate types, including attempts to override built-ins, and unregistered types fail. `parseScaleOperation` validates external parameters. Typed resolution does not repeat structural validation, so callers must supply parameters satisfying the definition contract. Data wraps callback errors and retains their original cause.
+
+Custom results only require map, domain, and range. Add optional inverse mapping, tick calculation, or independent rebuilding when the algorithm supports them. Consumers define whether a mapping can drive coordinates, which legend to display, and how layout should use it.
+
+## Related properties
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineScale',
+      kind: 'function',
+      type: 'InputScaleDefinition<TParams> → ScaleDefinition',
+      description: 'Connects parameter types to mathematical callbacks without registering instances.',
+    },
+    {
+      name: 'resolveScaleRegistry',
+      kind: 'function',
+      type: '(definitions) → ReadonlyMap<string, ScaleDefinition>',
+      description: 'Combines built-in and custom definitions and rejects duplicate types.',
+    },
+    {
+      name: 'params',
+      kind: 'property',
+      type: 'JsonObject',
+      description: 'Persistable instance parameters interpreted by paramsSchema.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'API Reference',
+      description: 'Inspect definitions, contexts, and result capabilities.',
+      url: '/viz/data/scale/reference',
+    },
+    {
+      title: 'Plot custom scales',
+      description: 'Use mappings for coordinate roles and mark properties.',
+      url: '/viz/plot/scale/custom-scale',
+    },
+  ]}
+/>

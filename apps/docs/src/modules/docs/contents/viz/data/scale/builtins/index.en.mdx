@@ -1,0 +1,86 @@
+---
+title: Built-in scales
+description: Choose continuous, categorical, or binned mappings and inspect their outputs and capabilities.
+---
+
+Choose an algorithm based on how inputs vary and whether outputs should be continuous. All types below use `resolveScale`; see [Scales](/viz/data/scale) for domains, ranges, and runtime samples.
+
+## Continuous mappings
+
+| Type         | Rule                                           | Parameters or constraints                                                     |
+| ------------ | ---------------------------------------------- | ----------------------------------------------------------------------------- |
+| `linear`     | Equal input changes yield equal output changes | `nice`, `clamp`; string color interpolation requires `interpolation: 'color'` |
+| `log`        | Map by orders of magnitude                     | Positive domain; `base` defaults to 10                                        |
+| `pow`        | Power transform                                | `exponent` defaults to 2; fractional exponents require a nonnegative domain   |
+| `sqrt`       | Square-root transform                          | Nonnegative domain                                                            |
+| `symlog`     | Linear near zero, logarithmic farther away     | `constant` defaults to 1; accepts domains crossing zero                       |
+| `radial`     | Squared output radius varies with input        | Area-related calculations                                                     |
+| `time`       | Map time to numbers                            | UTC calendar ticks                                                            |
+| `sequential` | One-directional string color ramp              | Two colors or a host-supplied named interpolator                              |
+| `diverging`  | Color ramp around a midpoint                   | Three colors or a host-supplied named interpolator                            |
+
+Parameters belong in `params`. Data does not include Plot theme palettes. When using `scheme`, supply its function through the context's `interpolators`. An explicit color range takes precedence for sequential and diverging mappings.
+
+```ts
+import { resolveScale } from '@retikz/data';
+
+const scale = resolveScale({ type: 'pow', domain: [0, 10], range: [0, 100], params: { exponent: 2 } });
+
+scale.map(5); // 25
+scale.ticks?.(5);
+```
+
+## Categorical mappings
+
+`ordinal` assigns numeric or string outputs in category order. `band` and `point` arrange categories within a numeric interval. Band maps to band centers and exposes bandwidth separately; point spacing is not bandwidth.
+
+```ts
+import { resolveScale } from '@retikz/data';
+
+const scale = resolveScale({ type: 'ordinal', domain: ['low', 'high'], range: [4, 12] });
+
+scale.map('high'); // 12
+scale.map('other'); // undefined
+```
+
+Ordinal does not extend unknown categories by default. With `params.unknown: 'extend'`, new categories are appended to the effective domain. `step` and `offset` control cyclic output indexing. Band's `paddingInner / paddingOuter`, point's `padding`, and their `align` parameter control category placement.
+
+## Binned mappings
+
+All three binning rules accept numeric or string outputs. An explicit range assigns each bin its output.
+
+| Type        | Boundaries                   | Use case                |
+| ----------- | ---------------------------- | ----------------------- |
+| `quantize`  | Equal-width domain intervals | Uniform intervals       |
+| `quantile`  | Quantiles of valid samples   | Distribution-based bins |
+| `threshold` | `params.breakpoints`         | Business thresholds     |
+
+```ts
+import { resolveScale } from '@retikz/data';
+
+const scale = resolveScale({ type: 'threshold', range: [4, 8, 12], params: { breakpoints: [30, 70] } });
+
+scale.map(30); // 8
+scale.thresholds; // [30, 70]
+```
+
+A value equal to a threshold enters the bin on its right. Threshold requires one more output than breakpoints. If quantize or quantile specifies both `params.count` and a range, count must match its length. Quantile preserves repeated observations instead of replacing the sample distribution with its extent. With no valid samples, thresholds is undefined; consumers must not invent boundaries.
+
+## Mathematical results and consumers
+
+Mappings expose the mathematical members supported by their algorithm: `scale.ticks?.(5)` computes representative values, `scale.thresholds` returns internal boundaries, and `scale.rebuild?.({ range: [0, 1] })` creates an independent mapping. Consumers handle absent optional members. Data provides no tick labels, legend forms, or layout padding protocol, and does not validate strings as mark shapes or numbers as opacity.
+
+<LinkedSections
+  items={[
+    {
+      title: 'Custom scales',
+      description: 'Implement new rules using the same contract.',
+      url: '/viz/data/scale/custom-scale',
+    },
+    {
+      title: 'API Reference',
+      description: 'Inspect operation and capability types.',
+      url: '/viz/data/scale/reference',
+    },
+  ]}
+/>

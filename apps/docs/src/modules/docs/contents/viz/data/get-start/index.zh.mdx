@@ -55,7 +55,20 @@ console.log(summary);
 
 `model` 与 `transforms` 可以保存为 JSON。`rows` 以及可能的自定义 parser、Definition 和 registry 则只在运行时参与处理。
 
-## 接下来
+## 独立使用比例尺
+
+只需把输入值映射到另一范围时，可以直接使用比例尺，无需先创建数据视图或运行变换：
+
+```ts
+import { resolveScale } from '@retikz/data';
+
+const score = resolveScale({ type: 'linear', domain: [0, 100], range: [0, 1] });
+score.map(75); // 0.75
+```
+
+更多映射规则与参数见[比例尺](/viz/data/scale)。
+
+## 继续阅读
 
 使用 `createDataView(rows, model)` 交付规范数据时，视图只包含 `rows` 和完整字段模型 `model`。通过 `view.model.find(field => field.name === name)` 查找字段：结果为 `undefined` 表示字段不存在，字段存在但 `type` 为 `undefined` 表示类型尚未确定。空数据保留模型中的显式类型与分类顺序，不为未定字段补入默认类型。
 

@@ -5,9 +5,9 @@
 ## 包职责契约
 
 - **解决的问题**：为 plot、未来 table / geo 等不同宿主提供统一、可序列化、可扩展的数据准备能力，避免宿主重复定义字段与 transform 语义
-- **拥有的契约**：Data IR / schema、字段与输入格式解析、通用 transform / statistics definitions 与 registries、apply pipeline、lineage / provenance 和数据诊断
-- **不拥有的能力**：视觉 channel / scale、mark / guide、可视化 layout / lowering、renderer、框架 authoring、数据库连接或业务实体模型
-- **输入与输出**：接收 Data IR、external rows、runtime definitions 与 pipeline options，输出规范化 data view、字段信息、lineage 和 diagnostics；不输出 Core IR 或视觉图元
+- **拥有的契约**：Data IR / schema、字段与输入格式解析、通用 transform / statistics / scale definitions 与 registries、值映射和数学能力、apply pipeline、lineage / provenance 和数据诊断
+- **不拥有的能力**：视觉 channel、scale 的宿主选型/绑定/主题/布局策略、mark / guide、可视化 layout / lowering、renderer、框架 authoring、数据库连接或业务实体模型
+- **输入与输出**：接收 Data IR、external rows、runtime definitions 与 pipeline options，输出规范化 data view、字段信息、lineage 和 diagnostics；通用 scale 接收映射声明、标量样本及资源，输出标量映射与数学能力，不要求生成 rows；不输出 Core IR 或视觉图元
 - **缺口流向**：宿主无关的 rows / fields / statistics 能力进入本包；依赖 mark / scale / coordinate / layout 的操作留在 `@retikz/plot`；通用几何下沉 math / core；数据源、权限和缓存留在应用或 source adapter
 
 新增或迁移数据能力前，先按 [`data-capability-complete.md`](../_notes/architecture/data-capability-complete.md) 确认 Data Complete 的宿主无关边界、扩展闭环和消费方责任。

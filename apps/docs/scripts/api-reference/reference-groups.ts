@@ -9,6 +9,30 @@ export type ReferenceGroup = {
 
 /** 显式分组清单，生成时拒绝成员遗漏、未知或重复 */
 export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<ReferenceGroup>>>> = {
+  'viz/data/scale': [
+    {
+      title: { zh: '定义与注册', en: 'Definitions and registration' },
+      members: [
+        'BuiltinDataScale',
+        'BUILTIN_SCALES',
+        'InputScaleDefinition',
+        'ScaleDefinition',
+        'defineScale',
+        'resolveScaleRegistry',
+      ],
+    },
+    {
+      title: { zh: '解析与求值', en: 'Resolution and evaluation' },
+      members: [
+        'parseScaleOperation',
+        'resolveScale',
+        'ScaleResolveContext',
+        'ScaleResolution',
+        'ScaleValue',
+        'ScaleRebuildOptions',
+      ],
+    },
+  ],
   'viz/plot/mark/interval': [
     {
       title: { zh: '组件属性', en: 'Component properties' },
