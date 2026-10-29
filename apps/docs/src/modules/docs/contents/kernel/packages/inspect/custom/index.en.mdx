@@ -1,123 +1,34 @@
 ---
-title: Custom usage
-description: Define an endpoint Inspector and register it in React or Vanilla to generate readonly markers
+title: Custom inspectors
+description: Define inspectors over Scene primitives or domain artifacts and produce guides with ordinary drawing input
 ---
 
-## Scope
+Custom and built-in inspectors share defineInspector, the registry, and the compilation flow. The subject selects a Scene primitive type or a Composite artifact namespace/type. The key identifies the inspector itself.
 
-Start with [Built-in inspection](/kernel/packages/inspect/builtins). Use built-in options to toggle control points, bounds, or labels. Define an Inspector when different auxiliary content is needed. This example reads final stroke Path commands and adds circles at explicit endpoints without changing the primary figure.
+## Endpoint markers
 
-<ComponentPreview files={['inspect-custom', 'endpoint-inspector.ts']} size="md" />
+This inspector reads final path commands and creates ordinary Nodes at explicit endpoints. Inspect applies the Scene group transform chain to local fragments; the author supplies no transform.
 
-## Define the capability
-
-The preview includes `endpoint-inspector.ts`, the shared definition for both hosts. Copy that file, then choose an integration below. `namespace` and `type` form the registry key. `owner: { kind: 'path', name: 'stroke' }` selects an existing stroke Path result, typed as `StrokePathOwnerOutput` by the author; the driver does not parse the output again. The callback reads commands and returns ordinary Core drawing elements for auxiliary compilation.
-
-This example has no custom configuration, so it omits `optionsSchema` and `resolveOptions`. Add a schema when options are needed; add a resolver only when consumption requires a different representation.
-
-The callback combines two inputs: geometry determines where to draw, and options determine what to show. Arrows express dependencies, not parallel execution.
-
-<ComponentPreview files="inspector-definition-flow" size="lg" type="flow" hideCode />
-
-## Inject and use
-
-Both forms register the same Definition and request its key. React displays a component; Vanilla returns SVG containing the markers.
-
-<DocTabs defaultValue="react">
-<DocTab value="react" label="React">
-
-```tsx
-import { createInspectorRegistry } from '@retikz/inspect';
-import { InspectLayout, InspectPath } from '@retikz/inspect/react';
-import { Step } from '@retikz/react';
-import { endpointInspector, endpointInspectorKey } from './endpoint-inspector';
-
-const registry = createInspectorRegistry([endpointInspector]);
-
-export const Diagram = () => (
-  <InspectLayout registry={registry}>
-    <InspectPath request={{ inspector: endpointInspectorKey, options: true }}>
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
-    </InspectPath>
-  </InspectLayout>
-);
-```
-
-</DocTab>
-<DocTab value="vanilla" label="Vanilla">
-
-```ts
-import { createInspectorRegistry } from '@retikz/inspect';
-import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
-import { path, renderToSvgString, scene } from '@retikz/vanilla';
-import { endpointInspector, endpointInspectorKey } from './endpoint-inspector';
-
-const registry = createInspectorRegistry([endpointInspector]);
-const input = scene({
-  children: [
-    path({
-      id: 'curve',
-      authoring: createInspectionVanillaAuthoring({ inspector: endpointInspectorKey, options: true }),
-      way: [
-        [0, 0],
-        {
-          cubic: [
-            [20, -30],
-            [80, 30],
-          ],
-        },
-        [100, 0],
-      ],
-    }),
-  ],
-});
-const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
-```
-
-</DocTab>
-</DocTabs>
-
-## Errors and limitations
-
-Duplicate registry keys, unregistered requests, and invalid options or subjects terminate inspection compilation. The Core owner must already publish final output; registration does not create an observation source. Read only available geometry, using `context.warn()` when optional data is missing while retaining other results.
-
-Ordinary returned elements use local coordinates. Use an `InspectorFragment` with `coordinateSpace: 'scene'` for scene coordinates to avoid applying a transform twice. Consult the reference and internals pages for complete context, output types, and stage rules.
-
-## Recommended conventions
-
-Follow the auxiliary visual language used by official Inspectors so that concurrent observations remain distinguishable without competing with the primary figure. These are authoring recommendations, not styles automatically added by the compiler.
-
-1. **Share one palette color within each observation.** Use `context.appearance.scopeColor` consistently for lines, markers, and labels instead of hardcoding the same color for every Inspector or maintaining a separate palette. The driver assigns categorical colors from the current theme per observation request, reducing confusion across nested scopes and concurrent observations. Colors repeat when the palette cycles, so also distinguish content with line patterns and labels. Use the corresponding `context.appearance.semanticColors` for explicit meanings such as warnings.
-
-2. **Prefer dashed or dotted auxiliary lines.** Express control handles, reference axes, and bounding boxes through `style.dashPattern`; different patterns can distinguish content sharing a color. Reserve solid lines for actual outlines that need continuity, such as the current built-in Clip outline, rather than turning every line into a dashed line mechanically.
-
-3. **Minimize obstruction of the primary figure.** Prefer thin, unfilled outlines and small point markers. Add fills only to communicate occupied areas, spacing, or warning regions, using low opacity or patterns to keep the underlying figure readable. Keep labels short, transparent, and slightly offset from their markers; place them late in the auxiliary output so auxiliary lines do not cover them.
-
-4. **Expose switches by observation content.** Provide options for independently meaningful content, such as Node outlines, key points, and content boxes, or Path control points and vertices. Control labels separately with `labels`, rather than making every color and line width configurable. Omit `optionsSchema` when there are no options, and omit `resolveOptions` when no conversion is needed.
-
-5. **Make style inheritance intentional.** Inspection fragments can inherit the environment at the observed site. For a stable auxiliary appearance, follow the built-ins: isolate primary defaults with an ordinary Scope using `defaults: { reset: true }`, then set the necessary styles explicitly. This prevents primary fills, fonts, or path defaults from changing the meaning of markers; it should not introduce another theme or rendering system.
-
-<SourceLinks
-  sources={[
-    { label: 'Inspector Definition and callback type source', path: 'packages/kernel/inspect/src/contract/types.ts' },
-    {
-      label: 'Built-in markers, labels, and style isolation',
-      path: 'packages/kernel/inspect/src/providers/geometry.ts',
-    },
-    { label: 'Node observation content and line patterns', path: 'packages/kernel/inspect/src/providers/node.ts' },
-    { label: 'Layout region fills and semantic colors', path: 'packages/library/layout/src/inspect/shared/output.ts' },
+<ComponentPreview
+  files={[
+    'inspect-custom',
+    'inspect-custom.preview.tsx',
+    'endpoint-inspector.ts',
+    'inspect-custom.controls.ts',
+    'inspect-custom.i18n.ts',
   ]}
+  defaultSourceFile="inspect-custom.preview.tsx"
+  size="lg"
 />
 
-## Further reading
+Callbacks return fragment arrays with coordinateSpace and child. An empty array means no guides. optionsSchema can declare options and defaults; omitting it permits only an empty object. Callbacks read isolated, read-only results and should not mutate the primary drawing or depend on authoring input.
 
-<LinkedSections
-  items={[
-    {
-      title: 'API reference',
-      description: 'Look up Definition and callback contracts',
-      url: '/kernel/packages/inspect/reference',
-    },
-  ]}
-/>
+## Domain artifacts
+
+An artifact subject uses its Composite namespace/type. The callback receives the complete artifact, including value and occurrence. The domain contract owns value structure and coordinates; occurrence cannot establish a spatial transform.
+
+Artifact fragments only support scene coordinates. If placement cannot be established, call context.warn('UnsupportedGeometry', message) and skip that item. Do not draw local boxes at the primary origin. Domain optional entry points own these semantics; Inspect has no domain whitelist.
+
+## Failure boundaries
+
+Callback or auxiliary compilation failure rejects the entire inspection; no partial plane is delivered. Errors retain their original cause. Auxiliary warnings remain separate from primary warnings. Guide IR cannot reference primary objects, and any required providers must be supplied through its independent compile configuration.

@@ -1,5 +1,4 @@
 import { GridLayout, GridLayoutItem } from '@retikz/layout-react';
-import { GRID_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -9,61 +8,40 @@ import { previewControlContract } from './grid-placement.controls';
 export { createPreviewControlContract } from './grid-placement.controls';
 export const previewControls = previewControlContract.controls;
 
-const preview = defineGridPreview(
-  previewControlContract,
-  values => (
-    <Layout>
-      <GridLayout
-        columns={[
-          { kind: 'fraction', factor: 1 },
-          { kind: 'fraction', factor: 1 },
-        ]}
-        size={{ x: { kind: 'fixed', value: 350 } }}
-        padding={12}
-        columnGap={12}
-        rowGap={12}
-        justifyItems="center"
-        alignItems="center"
-        rows={[
-          { kind: 'fixed', value: 60 },
-          { kind: 'fixed', value: 60 },
-        ]}
-        autoFlow={values.autoFlow}
-      >
-        <GridLayoutItem itemKey="0" column={{ start: 0, span: values.span }} row={{ start: 0 }}>
-          <Node text="First Node" style={{ stroke: 'dodgerblue' }} />
-        </GridLayoutItem>
-        <GridLayoutItem itemKey="1">
-          <Node text="Secondary Node" style={{ stroke: 'darkorange' }} />
-        </GridLayoutItem>
-        <GridLayoutItem itemKey="2">
-          <Node text="Third Node" style={{ stroke: 'seagreen' }} />
-        </GridLayoutItem>
-        <GridLayoutItem itemKey="3">
-          <Node text="Fourth Node" style={{ stroke: 'gray' }} />
-        </GridLayoutItem>
-      </GridLayout>
-    </Layout>
-  ),
-  () => ({
-    rules: [
-      {
-        kind: 'request',
-        inspector: GRID_LAYOUT_INSPECTOR_KEY,
-        target: { kind: 'scene' },
-        options: {
-          bounds: { container: true, content: false, slot: true, allocation: false, visual: false },
-          spacing: false,
-          tracks: true,
-          cells: false,
-          gaps: true,
-          spans: true,
-          alignmentGuides: false,
-        },
-      },
-    ],
-  }),
-);
+const preview = defineGridPreview(previewControlContract, values => (
+  <Layout>
+    <GridLayout
+      columns={[
+        { kind: 'fraction', factor: 1 },
+        { kind: 'fraction', factor: 1 },
+      ]}
+      size={{ x: { kind: 'fixed', value: 350 } }}
+      padding={12}
+      columnGap={12}
+      rowGap={12}
+      justifyItems="center"
+      alignItems="center"
+      rows={[
+        { kind: 'fixed', value: 60 },
+        { kind: 'fixed', value: 60 },
+      ]}
+      autoFlow={values.autoFlow}
+    >
+      <GridLayoutItem itemKey="0" column={{ start: 0, span: values.span }} row={{ start: 0 }}>
+        <Node text="First Node" style={{ stroke: 'dodgerblue' }} />
+      </GridLayoutItem>
+      <GridLayoutItem itemKey="1">
+        <Node text="Secondary Node" style={{ stroke: 'darkorange' }} />
+      </GridLayoutItem>
+      <GridLayoutItem itemKey="2">
+        <Node text="Third Node" style={{ stroke: 'seagreen' }} />
+      </GridLayoutItem>
+      <GridLayoutItem itemKey="3">
+        <Node text="Fourth Node" style={{ stroke: 'gray' }} />
+      </GridLayoutItem>
+    </GridLayout>
+  </Layout>
+));
 
 export const previewSource = preview.source;
 

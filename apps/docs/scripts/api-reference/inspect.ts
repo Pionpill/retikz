@@ -14,21 +14,14 @@ export const inspectApiReferenceConfig = {
     title: { zh: `\`@retikz/inspect${subpath}\``, en: `\`@retikz/inspect${subpath}\`` },
     source: path.resolve(packageRoot, `src${subpath}/index.ts`),
     declarationOnlySymbols: subpath === '' ? ['InspectorRegistry'] : [],
-    symbolPairs:
-      subpath === '/react'
-        ? ['InspectCoordinate', 'InspectLayout', 'InspectNode', 'InspectPath', 'InspectScope'].map(
-            name => [name, `${name}Props`] as const,
-          )
-        : [],
+    symbolPairs: subpath === '/react' ? ['InspectionOverlay'].map(name => [name, `${name}Props`] as const) : [],
     omitPairedCallDetails: true,
   })),
   translate: translateInspectApiReference,
   schemaReferences: {
     PathInspectOptionsSchema: '/kernel/packages/inspect/reference#pathinspectoptionsschema',
-    NodeInspectOptionsSchema: '/kernel/packages/inspect/reference#nodeinspectoptionsschema',
-    ScopeInspectOptionsSchema: '/kernel/packages/inspect/reference#scopeinspectoptionsschema',
+    GroupInspectOptionsSchema: '/kernel/packages/inspect/reference#groupinspectoptionsschema',
     ClipInspectOptionsSchema: '/kernel/packages/inspect/reference#clipinspectoptionsschema',
-    CoordinateInspectOptionsSchema: '/kernel/packages/inspect/reference#coordinateinspectoptionsschema',
   },
 };
 

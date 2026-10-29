@@ -1,6 +1,5 @@
 import type { IRChild, IRPathStyle, IRPosition, IRStep, PathCommand } from '@retikz/core';
-import { DEFAULT_EPSILON, DEG_TO_RAD, alignAngleSweep, applyAffine, localToWorld } from '@retikz/math';
-import type { AffineMatrix } from '@retikz/math';
+import { DEFAULT_EPSILON, DEG_TO_RAD, alignAngleSweep } from '@retikz/math';
 
 /** 由 Inspector 生成的普通 Path 子项样式 */
 type InspectionPathStyle = Readonly<{
@@ -32,10 +31,6 @@ const createPathChild = (children: Array<IRStep>, style: InspectionPathStyle): P
 /** 忽略三角函数浮点尾差，合并同一几何位置的辅助标记 */
 export const samePosition = (left: IRPosition, right: IRPosition): boolean =>
   Math.abs(left[0] - right[0]) <= DEFAULT_EPSILON && Math.abs(left[1] - right[1]) <= DEFAULT_EPSILON;
-
-/** 内置输出切断作者默认值；第三方 Inspector 仍保留原有片段环境 */
-export const isolateInspectionChildren = (children: ReadonlyArray<IRChild>): Array<IRChild> =>
-  children.map(child => ({ type: 'scope', defaults: { reset: true }, children: [child] }));
 
 /** 圆弧按参数角求点，角度约定与 Core PathCommand 一致 */
 export const pointAtArcCommand = (
@@ -239,60 +234,6 @@ export const pathCommandsToChildren = (
   flush();
 
   return output;
-};
-
-/** 以最终 Node rect 生成旋转后的四角 */
-export const cornersOfRect = (
-  rect: Readonly<{ x: number; y: number; width: number; height: number; rotate?: number }>,
-): [IRPosition, IRPosition, IRPosition, IRPosition] => {
-  const halfWidth = rect.width / 2;
-  const halfHeight = rect.height / 2;
-  const point = (x: number, y: number): IRPosition => localToWorld(rect, [x, y]);
-
-  return [
-    point(-halfWidth, -halfHeight),
-    point(halfWidth, -halfHeight),
-    point(halfWidth, halfHeight),
-    point(-halfWidth, halfHeight),
-  ];
-};
-
-/** 将四角转为闭合矩形 Path */
-export const rectCornersToPath = (
-  corners: readonly [IRPosition, IRPosition, IRPosition, IRPosition],
-  style: InspectionPathStyle,
-): IRChild => {
-  const [topLeft, topRight, bottomRight, bottomLeft] = corners;
-  return createPathChild(
-    [
-      { type: 'step', kind: 'move', to: topLeft },
-      { type: 'step', kind: 'line', to: topRight },
-      { type: 'step', kind: 'line', to: bottomRight },
-      { type: 'step', kind: 'line', to: bottomLeft },
-      { type: 'step', kind: 'cycle' },
-    ],
-    style,
-  );
-};
-
-/** 以 affine 正向投影矩形四角并求 Scene 轴向包络 */
-export const sceneBoundsOfRect = (
-  rect: Readonly<{ x: number; y: number; width: number; height: number; rotate?: number }>,
-  transform: AffineMatrix,
-): { corners: [IRPosition, IRPosition, IRPosition, IRPosition]; bounds: [number, number, number, number] } => {
-  const corners = cornersOfRect(rect).map(corner => applyAffine(transform, corner)) as [
-    IRPosition,
-    IRPosition,
-    IRPosition,
-    IRPosition,
-  ];
-  const xs = corners.map(corner => corner[0]);
-  const ys = corners.map(corner => corner[1]);
-
-  return {
-    corners,
-    bounds: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)],
-  };
 };
 
 /** 生成透明背景的文本标签 Node */

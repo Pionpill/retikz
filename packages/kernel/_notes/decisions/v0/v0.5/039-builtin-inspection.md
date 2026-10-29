@@ -10,7 +10,7 @@ keywords: 'Core、Inspector、outline、bounds、keyPoints、boundary'
 - 接受日期：2026-09-13
 - 关联：[当前 roadmap](./roadmap.md) · [Inspector 独立包](./021-extensible-inspector-content.md) · [Drawing Complete](../../../architecture/core-drawing-complete.md)
 
-> Core 内置观测与 Shape / Boundary 专用几何出口已由 [077](./077-compile-output-contract.md) 删除。原检查能力能否保留取决于公开编译产物，不要求逐项恢复。
+> 输入、选择、上下文、内置能力与失败语义已由 [078](./078-inspect-compiled-output.md) 替代；Core 观测及检查专用出口由 [077](./077-compile-output-contract.md) 删除。仅保留可选包、统一扩展与普通只读层原则。
 
 ## 背景与目标
 

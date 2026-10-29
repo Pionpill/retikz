@@ -2,9 +2,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview';
+import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import * as gridBounds from '../../src/modules/docs/contents/library/layout/grid-layout/extended/grid-bounds';
 import * as gridImplicit from '../../src/modules/docs/contents/library/layout/grid-layout/extended/grid-implicit';
-import * as gridInspection from '../../src/modules/docs/contents/library/layout/grid-layout/extended/grid-inspection';
 import * as gridOverlap from '../../src/modules/docs/contents/library/layout/grid-layout/extended/grid-overlap';
 import * as gridAlignment from '../../src/modules/docs/contents/library/layout/grid-layout/usage/grid-alignment';
 import * as gridItem from '../../src/modules/docs/contents/library/layout/grid-layout/usage/grid-item';
@@ -34,9 +34,8 @@ describe('Grid 功能预览', () => {
     ['grid-tracks', gridTracks],
     ['grid-bounds', gridBounds],
     ['grid-implicit', gridImplicit],
-    ['grid-inspection', gridInspection],
     ['grid-overlap', gridOverlap],
-  ])('%s 在 API 切换及控件边界保留检查图层', (_name, demo) => {
+  ])('%s 在 API 切换及控件边界绘制普通布局', (_name, demo) => {
     const zh = demo.createPreviewControlContract('zh');
     const en = demo.createPreviewControlContract('en');
 
@@ -44,16 +43,16 @@ describe('Grid 功能预览', () => {
     expect(en.controls.title).not.toEqual(zh.controls.title);
 
     const definition: PreviewControlsDefinition = zh.controls;
-    const controls = definition.sections.flatMap(section => section.controls);
+    const controls = getPreviewControlFields(definition);
     const canonical = demo.previewSource.buildViews!({ lang: 'zh' });
 
-    expect(canonical.vanilla?.files[0].code).toContain('createLayoutInspectionVanillaDriver');
+    expect(canonical.vanilla?.files[0].code).not.toContain('createLayoutInspectionVanillaDriver');
     expect(canonical.ir?.files[0].code).not.toContain('inspector');
 
     for (const view of [canonical.vanilla, canonical.ir]) {
       const svg = renderToStaticMarkup(view!.render!('svg'));
 
-      expect(svg).toContain('data-retikz-readonly-layer');
+      expect(svg).not.toContain('data-retikz-readonly-layer');
       expect(svg).toContain('<text');
     }
 
@@ -74,7 +73,7 @@ describe('Grid 功能预览', () => {
         });
         const svg = renderToStaticMarkup(views.vanilla!.render!('svg'));
 
-        expect(svg).toContain('data-retikz-readonly-layer');
+        expect(svg).not.toContain('data-retikz-readonly-layer');
         expect(svg).not.toContain('NaN');
       }
     }

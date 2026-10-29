@@ -21,10 +21,8 @@ Containers compose recursively: arrange panels with Flex, then divide each panel
   files="layout-nested"
   hideCode
   size="md"
-  caption="The inspection overlay is separate from the real figure: it does not expand layout bounds or participate in hit testing."
+  caption="Each nested container distributes and positions its own children."
 />
-
-This example uses `LayoutInspectLayout` from `@retikz/layout-react/inspect` to install the layout Inspectors, then selects individual occurrences with `InspectFlexLayout`, `InspectGridLayout`, and `InspectOverlayLayout`. Use `LayoutInspectScope request={false}` as a hard barrier when one authored subtree must not inherit inspection requests. The Layout root does not statically load the optional inspection capability.
 
 ## Two meanings of Layout
 
@@ -37,8 +35,6 @@ This example uses `LayoutInspectLayout` from `@retikz/layout-react/inspect` to i
 - `@retikz/layout-react`: compose containers and items in JSX
 - `@retikz/layout-vanilla`: describe layout as ordinary TypeScript input and connect it to Vanilla through adapters
 - `@retikz/layout`: validate layout data and use host-independent definitions and solving
-
-Optional inspection capabilities help visualize layout boundaries. They are not required for ordinary layout.
 
 ## Further reading
 

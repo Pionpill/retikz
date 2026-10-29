@@ -28,7 +28,7 @@ export const formatInspectorRegistryKey = (key: InspectorKey): string => JSON.st
  *
  * @param definitions 按注册顺序提供的 Inspector 定义；空数组创建空注册表
  * @returns 独立的只读注册表，定义在注册时补齐缺省选项并冻结
- * @throws 定义的 namespace、type 或所属者标识为空白，或存在重复 namespace/type 时抛出 RetikzInspectError
+ * @throws 定义的 namespace、type 或 subject 标识为空白，或存在重复 namespace/type 时抛出 RetikzInspectError
  */
 export const createInspectorRegistry = (definitions: ReadonlyArray<InputAnyInspectorDefinition>): InspectorRegistry => {
   const definitionsByKey = new Map<string, AnyInspectorDefinition>();
@@ -82,7 +82,7 @@ export const getResolvedInspectorRegistry = (registry: InspectorRegistry): Inspe
 
 /** 创建内置优先、第三方同路的默认 Inspector registry
  *
- * @param definitions 追加在五类内置 Inspector 之后的自定义定义，省略时仅注册内置定义
+ * @param definitions 追加在三类内置 Inspector 之后的自定义定义，省略时仅注册内置定义
  * @returns 包含内置与自定义定义的新只读注册表
  * @throws 自定义定义无效或与内置、自定义定义的 namespace/type 重复时抛出 RetikzInspectError
  */

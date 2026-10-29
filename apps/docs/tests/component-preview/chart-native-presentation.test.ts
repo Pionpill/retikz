@@ -47,7 +47,6 @@ describe('Chart 原生 Scatter 呈现', () => {
     expect(presentationLayoutZhContract.canonicalValues).toEqual(presentationLayoutEnContract.canonicalValues);
     expect('stateOnlyIds' in presentationLayoutZhContract).toBe(false);
     expect(presentationLayoutZhContract.canonicalValues).toEqual({
-      [CHART_PRESENTATION_CONTROL_IDS.inspect]: true,
       [CHART_PRESENTATION_CONTROL_IDS.showTitle]: true,
       [CHART_PRESENTATION_CONTROL_IDS.showSubtitle]: true,
       [CHART_PRESENTATION_CONTROL_IDS.showNote]: true,
@@ -82,7 +81,6 @@ describe('Chart 原生 Scatter 呈现', () => {
           note: 'Note',
           source: 'Source',
         },
-        inspect: false,
       }),
     );
 
@@ -93,7 +91,6 @@ describe('Chart 原生 Scatter 呈现', () => {
     const preview = buildPreviewIR(() =>
       createElement(ChartPresentationLayoutPreview, {
         copy: { title: 'Title', subtitle: 'Subtitle', note: 'Note', source: 'Source' },
-        inspect: false,
         dimensions: { width: 800, height: 408 },
       }),
     );
@@ -111,7 +108,6 @@ describe('Chart 原生 Scatter 呈现', () => {
           note: 'Note',
           source: 'Source',
         },
-        inspect: false,
         visibility: { title: false, subtitle: false, note: false, source: false },
       }),
     );

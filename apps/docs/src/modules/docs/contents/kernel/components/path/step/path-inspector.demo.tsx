@@ -1,51 +1,20 @@
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { InspectLayout, InspectPath } from '@retikz/inspect/react';
-import { Layout, Path, Step } from '@retikz/react';
+import { PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/preview';
+import { InspectionResultPreview } from '@/modules/docs/preview';
 
-const registry = createDefaultInspectorRegistry();
-
-const Curve: FC<{ inspect?: boolean }> = props => {
-  const { inspect = false } = props;
-  const children = (
-    <>
-      <Step kind="move" to={[-130, 35]} />
-      <Step kind="cubic" control1={[-70, -80]} control2={[75, 90]} to={[130, -30]} />
-    </>
-  );
-
-  return inspect ? (
-    <InspectPath
-      request={{
-        inspector: PATH_INSPECTOR_KEY,
-        options: { controlPoints: true, labels: true },
-      }}
-      style={{ stroke: 'dodgerblue', strokeWidth: 3 }}
-    >
-      {children}
-    </InspectPath>
-  ) : (
-    <Path style={{ stroke: 'dodgerblue', strokeWidth: 3 }}>{children}</Path>
-  );
-};
-
-/** 使用内置 Path Inspector 显示三次贝塞尔控制点 */
+/** 用最终 Scene 路径观察曲线控制柄 */
 const Demo: FC = () => (
-  <InspectLayout registry={registry}>
-    <Curve inspect />
-  </InspectLayout>
+  <InspectionResultPreview
+    requests={[{ inspector: PATH_INSPECTOR_KEY }]}
+    viewBox={{ x: -120, y: -100, width: 240, height: 200 }}
+  >
+    <Path style={{ stroke: 'dimgray', strokeWidth: 3 }}>
+      <Step kind="move" to={[-90, 30]} />
+      <Step kind="curve" control={[0, -70]} to={[90, 30]} />
+    </Path>
+  </InspectionResultPreview>
 );
-
-/** 源码面板只从持久化图形派生 IR，不包含运行时 Inspector 选择 */
-export const previewSource = {
-  deriveIR: false,
-  canonicalRender: () => (
-    <Layout>
-      <Curve />
-    </Layout>
-  ),
-} satisfies PreviewSourceConfig;
-
+export const previewSource = { deriveIR: false, canonicalRender: () => <Demo /> };
 export default Demo;

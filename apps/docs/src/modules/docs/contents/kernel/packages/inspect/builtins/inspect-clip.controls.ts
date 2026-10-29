@@ -29,10 +29,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
       {
         label: i18n.inspect,
-        controls: [
-          { id: 'outline', kind: 'switch', defaultValue: true, label: i18n.outline },
-          { id: 'labels', kind: 'switch', defaultValue: true, label: i18n.labels },
-        ],
+        controls: [{ id: 'outline', kind: 'switch', defaultValue: true, label: i18n.outline }],
       },
     ],
   });

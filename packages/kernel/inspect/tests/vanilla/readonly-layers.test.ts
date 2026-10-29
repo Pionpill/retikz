@@ -11,9 +11,7 @@ describe('检查平面 Vanilla 适配器', () => {
       entries: [
         {
           inspector: { namespace: 'test', type: 'points' },
-          owner: { kind: 'path', name: 'stroke' },
-          occurrence: { sourcePath: 'children[0].path', expansionPath: [] },
-          colorScope: 0,
+          target: { kind: 'primitive', path: [0] },
           scene,
           transform,
         },

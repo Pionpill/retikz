@@ -1,196 +1,86 @@
 ---
-title: Compilation Inspection · inspect
-description: Add on-demand observation and readonly auxiliary layers to completed compilation without changing the primary figure
+title: Result inspection · inspect
+description: Read ordinary compilation results and draw independent guides for final paths, groups, and clips
 ---
 
-<ComponentAlert
-  type="warning"
-  title="Migration in progress"
-  description="Core no longer exposes compile observers or spatial handles. Inspect has not yet been reconnected to ordinary compilation results, so the previous usage on this page is currently unavailable. Its consumption and drawing flow will be updated separately."
-/>
-
-`@retikz/inspect` adds optional observation to a completed Core compile. An Inspector reads final occurrences and owner output, then produces independent readonly auxiliary content. Control points, layout bounds, and alignment guides are concrete uses of that observation.
-
-It explains final results only: it does not repair input, participate in layout solving, or mutate the primary figure. Ordinary drawing, compilation, and rendering do not require this package, and no auxiliary fragment exists when no Inspector matches.
-
-<ComponentAlert
-  title="Optional drawing aid"
-  description="@retikz/inspect is not required for drawing or rendering. It only helps interpret completed figures and compilation results, making it useful for development, debugging, or teaching rather than as a routine production capability."
-/>
-
-## What inspection shows
-
-The ordinary curve is the primary figure; points and dashed lines form a separate auxiliary layer. Moving control points changes the curve, while disabling inspection only hides the auxiliary content. The same distinction applies to nodes, clipping, and scopes.
-
-<ComponentPreview files="/kernel/packages/inspect/builtins/inspect-basic" size="md" hideCode />
+`@retikz/inspect` is optional. Compile the primary drawing first, then pass its `CompileResult` to inspectors. Inspectors generate ordinary auxiliary IR and compile it independently. Disabling inspection or an inspection failure does not change the primary result.
 
 ## Installation and usage
 
 <PackageManagerInstall packages="@retikz/inspect" />
 
-A registry stores available inspectors; a request chooses a target and displayed content. Start with the default registry and enable control points for one curve.
+The registry describes available inspectors; requests select what to inspect. Registration alone produces no guides.
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { compileInspectionToScene, createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
+
+const primary = compileToScene({
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'curve', control: [40, -50], to: [80, 0] },
+      ],
+    },
+  ],
+});
+const auxiliary = compileInspectionToScene(primary, {
+  registry: createDefaultInspectorRegistry(),
+  requests: [{ inspector: PATH_INSPECTOR_KEY }],
+});
+```
+
+`auxiliary.inspection` contains an independent plane, or null for empty output. The primary result stays in primary; inspection never recompiles its authoring input.
+
+## Host integration
+
+React's `InspectionOverlay` consumes a completed result. Vanilla's `mountInspection` creates a separate SVG or Canvas surface. Position that surface over the primary drawing using the same viewport, width, and height. Guides do not affect fitting, hit testing, or animation.
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
-<DocSteps>
-<DocStep title="Imports">
-
-`@retikz/inspect` exports the default registry factory `createDefaultInspectorRegistry` and path inspector key `PATH_INSPECTOR_KEY`. `@retikz/inspect/react` exports `InspectLayout` and `InspectPath` to connect the registry and attach path inspection requests.
 
 ```tsx
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { InspectLayout, InspectPath } from '@retikz/inspect/react';
+import { InspectionOverlay } from '@retikz/inspect/react';
+
+<InspectionOverlay
+  result={primary}
+  options={{
+    registry: createDefaultInspectorRegistry(),
+    requests: [{ inspector: PATH_INSPECTOR_KEY }],
+    idPrefix: 'inspection',
+    viewport: primary.scene.layout,
+  }}
+/>;
 ```
 
-</DocStep>
-<DocStep title="Integrate and render">
-
-React imports optional wrappers from `@retikz/inspect/react`. `InspectLayout` receives the registry; `InspectPath`, `InspectNode`, `InspectScope`, and `InspectCoordinate` attach requests to the current Path, Node, Scope, or Coordinate:
-
-```tsx
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { InspectLayout, InspectPath } from '@retikz/inspect/react';
-import { Step } from '@retikz/react';
-
-const registry = createDefaultInspectorRegistry();
-
-export const InspectExample = () => (
-  <InspectLayout registry={registry}>
-    <InspectPath request={{ inspector: PATH_INSPECTOR_KEY, options: { controlPoints: true, labels: true } }}>
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
-    </InspectPath>
-  </InspectLayout>
-);
-```
-
-`InspectLayout` adds the optional inspection compile driver to the ordinary Layout runtime. `InspectPath` keeps ordinary Path authoring and turns its request into a runtime-only authoring marker.
-
-</DocStep>
-
-<DocStep title="Keep ordinary React components (optional)">
-
-Use this equivalent approach when keeping existing `Layout` / `Path` components. Choose it instead of the wrapper example above.
-
-The `/vanilla` subpath exposes driver and authoring-marker helpers that ordinary React components can also consume. The diagram is still authored in React; Inspect wrappers connect these helpers for you.
-
-```tsx
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
-import { Layout, Path, Step } from '@retikz/react';
-
-const registry = createDefaultInspectorRegistry();
-const compileDriver = createInspectionVanillaDriver({ registry });
-const pathInspection = createInspectionVanillaAuthoring({
-  inspector: PATH_INSPECTOR_KEY,
-  options: { controlPoints: true, labels: true },
-});
-
-export const ConfiguredInspectExample = () => (
-  <Layout compileDriver={compileDriver}>
-    <Path authoring={pathInspection}>
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
-    </Path>
-  </Layout>
-);
-```
-
-Both forms produce the same inspection requests and results for the same configuration; the wrappers simply handle the wiring. This configuration is fixed, so the driver lives outside the component. If it depends on React props or state, create it with `useMemo` inside the component and list those dependencies. Base components have no `inspect` prop, and `authoring` never enters Core IR.
-
-</DocStep>
-</DocSteps>
 </DocTab>
 <DocTab value="vanilla" label="Vanilla">
-<DocSteps>
-<DocStep title="Imports">
-
-`@retikz/inspect` exports the default registry factory and path inspector key. `@retikz/inspect/vanilla` exports `createInspectionVanillaAuthoring` and `createInspectionVanillaDriver` to create inspection markers and the compile driver that integrates inspection.
 
 ```ts
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
-```
+import { mountInspection } from '@retikz/inspect/vanilla';
 
-</DocStep>
-<DocStep title="Integrate and render">
-
-Vanilla creates an authoring marker and a compile driver separately: the marker declares that a path needs observation, and the driver adds the registry and auxiliary layers at the ordinary render entry:
-
-`authoring` attaches an inspection request without changing path geometry or becoming persistent IR.
-
-```ts
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
-import { path, renderToSvgString, scene } from '@retikz/vanilla';
-
-const registry = createDefaultInspectorRegistry();
-const input = scene({
-  children: [
-    path({
-      id: 'curve',
-      // Mark this authored Path for inspection; it never enters Core IR.
-      authoring: createInspectionVanillaAuthoring({
-        inspector: PATH_INSPECTOR_KEY,
-        options: { controlPoints: true, labels: true },
-      }),
-      way: [
-        [0, 0],
-        {
-          cubic: [
-            [20, -30],
-            [80, 30],
-          ],
-        },
-        [100, 0],
-      ],
-    }),
-  ],
+const overlay = mountInspection(overlayContainer, 'svg');
+const presentation = overlay.update(primary, {
+  registry: createDefaultInspectorRegistry(),
+  requests: [{ inspector: PATH_INSPECTOR_KEY }],
+  idPrefix: 'inspection',
 });
-
-const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
+if (presentation.error) console.error(presentation.error);
+// After a successful primary update, call overlay.update(...) with the new result.
+overlay.dispose();
 ```
 
-</DocStep>
-</DocSteps>
 </DocTab>
 </DocTabs>
 
-The root entry owns Definitions, registries, selection, and auxiliary compilation. React and Vanilla adapters come from `/react` and `/vanilla`; rendering remains the responsibility of `@retikz/render`. Start with Built-in inspection, then continue to extension or inspection details as needed. Configuration fields are listed in the [API Reference](/kernel/packages/inspect/reference).
+Use a unique idPrefix for each surface on a page. A Scene-only consumer can pass `{ scene, artifacts: [] }`; it has no domain artifacts.
 
-## Responsibilities at a glance
+## Available facts
 
-| Document            | Responsibility                                                             | Reach for it when                                       |
-| ------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Built-in inspection | See the five Inspectors Core currently provides and their auxiliary output | Quickly interpreting final compilation results          |
-| Custom usage        | Define, register, and request a third-party Inspector                      | Explaining final output from your own Core owner        |
-| Implementation      | Understand one compile's Core observation, fragments, and readonly layers  | Diagnosing behavior or deeper implementation boundaries |
-| API reference       | Query public APIs from the root, React, and Vanilla entries                | Looking up complete signatures and types                |
-| Schema reference    | Query label visibility and built-in Path inspection options                | Looking up fields, defaults, and validation structure   |
+Built-ins inspect final Path handles, Group coordinates, and Clip edges. See [built-in inspection](/kernel/packages/inspect/builtins). Node layout boxes, connection boundaries, Coordinate positions, authored Scope envelopes, and layout solver state are not exposed by the ordinary Scene and have no corresponding inspector.
 
-## Contents
-
-<LinkedSections
-  items={[
-    {
-      title: 'Built-in inspection',
-      description: 'The five built-in Inspectors Core currently supports and their auxiliary content',
-      url: '/kernel/packages/inspect/builtins',
-    },
-    {
-      title: 'Custom usage',
-      description: 'Observation interfaces, custom Inspectors, and registration',
-      url: '/kernel/packages/inspect/custom',
-    },
-    {
-      title: 'Implementation',
-      description: 'How Core observation, isolated compilation, and readonly layers cooperate',
-      url: '/kernel/packages/inspect/mechanism',
-    },
-    {
-      title: 'API reference',
-      description: 'Public types, functions, and components from the root, React, and Vanilla entries',
-      url: '/kernel/packages/inspect/reference',
-    },
-  ]}
-/>
+[Custom inspectors](/kernel/packages/inspect/custom) can consume Composite artifacts with reliable coordinate semantics. An occurrence identifies a location within one compilation; it does not establish world coordinates.

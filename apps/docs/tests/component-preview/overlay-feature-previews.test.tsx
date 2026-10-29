@@ -2,8 +2,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview';
+import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import * as overlayClipping from '../../src/modules/docs/contents/library/layout/overlay-layout/extended/overlay-clipping';
-import * as overlayInspection from '../../src/modules/docs/contents/library/layout/overlay-layout/extended/overlay-inspection';
 import * as overlayParticipation from '../../src/modules/docs/contents/library/layout/overlay-layout/extended/overlay-participation';
 import * as overlayPosition from '../../src/modules/docs/contents/library/layout/overlay-layout/extended/overlay-position';
 import * as overlayAlignment from '../../src/modules/docs/contents/library/layout/overlay-layout/usage/overlay-alignment';
@@ -31,10 +31,9 @@ describe('Overlay 功能预览', () => {
     ['overlay-box', overlayBox],
     ['overlay-offset', overlayOffset],
     ['overlay-clipping', overlayClipping],
-    ['overlay-inspection', overlayInspection],
     ['overlay-participation', overlayParticipation],
     ['overlay-position', overlayPosition],
-  ])('%s 在 API 切换及控件边界保留检查图层', (_name, demo) => {
+  ])('%s 在 API 切换及控件边界绘制普通布局', (_name, demo) => {
     const zh = demo.createPreviewControlContract('zh');
     const en = demo.createPreviewControlContract('en');
 
@@ -42,16 +41,16 @@ describe('Overlay 功能预览', () => {
     expect(en.controls.title).not.toEqual(zh.controls.title);
 
     const definition: PreviewControlsDefinition = zh.controls;
-    const controls = definition.sections.flatMap(section => section.controls);
+    const controls = getPreviewControlFields(definition);
     const canonical = demo.previewSource.buildViews!({ lang: 'zh' });
 
-    expect(canonical.vanilla?.files[0].code).toContain('createLayoutInspectionVanillaDriver');
+    expect(canonical.vanilla?.files[0].code).not.toContain('createLayoutInspectionVanillaDriver');
     expect(canonical.ir?.files[0].code).not.toContain('inspector');
 
     for (const view of [canonical.vanilla, canonical.ir]) {
       const svg = renderToStaticMarkup(view!.render!('svg'));
 
-      expect(svg).toContain('data-retikz-readonly-layer');
+      expect(svg).not.toContain('data-retikz-readonly-layer');
       expect(svg).toContain('<text');
     }
 
@@ -72,7 +71,7 @@ describe('Overlay 功能预览', () => {
         });
         const svg = renderToStaticMarkup(views.vanilla!.render!('svg'));
 
-        expect(svg).toContain('data-retikz-readonly-layer');
+        expect(svg).not.toContain('data-retikz-readonly-layer');
         expect(svg).not.toContain('NaN');
       }
     }

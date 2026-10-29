@@ -908,22 +908,30 @@ export const kernelV05: Release = {
       pkg: '@retikz/inspect',
       version: 'v0.5',
       description: {
-        zh: '通过可选检查工具查看几何边界与布局辅助信息；检查内容与主图隔离，不接入时不执行检查逻辑。',
-        en: 'Use optional inspection tools to view geometry boundaries and layout guides. Inspection stays separate from the main figure and does not run when unused.',
+        zh: '通过可选检查工具查看最终路径、分组坐标系与裁剪边缘；检查内容与主图隔离，不接入时不执行检查逻辑。',
+        en: 'Use optional inspection tools to view final paths, group coordinate systems, and clip boundaries. Inspection stays separate from the main figure and does not run when unused.',
       },
       highlights: [
         {
+          label: { zh: 'BREAKING：独立消费编译结果', en: 'BREAKING: independent compilation-result consumption' },
+          content: {
+            zh: 'Inspect 接收普通 CompileResult，只对生成的辅助 IR 独立编译。内置能力收敛为最终 Path、Group 与 Clip；React 使用 InspectionOverlay，Vanilla 使用独立呈现 helper。删除旧 authoring wrapper 与 observed compile driver，检查失败不回滚主图。',
+            en: 'Inspect consumes ordinary CompileResult values and independently compiles only generated auxiliary IR. Built-ins cover final Path, Group, and Clip. React uses InspectionOverlay and Vanilla uses independent presentation helpers. Old authoring wrappers and observed compilation drivers are removed; inspection failures never roll back the primary view.',
+          },
+        },
+
+        {
           label: { zh: '独立 Inspector 注册表', en: 'Independent Inspector registry' },
           content: {
-            zh: '`defineInspector()`、显式注册表、运行时 selection、选项合并、诊断与辅助平面全部位于可选包；五类内置 Inspector 与第三方定义使用同一条注册和编译路径。',
-            en: '`defineInspector()`, explicit registries, runtime selection, option merging, diagnostics, and inspection planes all live in the optional package. The five built-in Inspectors and third-party definitions share the same registration and compile path.',
+            zh: '`defineInspector()`、显式注册表、运行时 requests、选项解析、诊断与辅助平面全部位于可选包；三类内置 Inspector 与第三方定义使用同一条注册和编译路径。',
+            en: '`defineInspector()`, explicit registries, runtime requests, option parsing, diagnostics, and inspection planes all live in the optional package. The three built-in Inspectors and third-party definitions share the same registration and compile path.',
           },
         },
         {
           label: { zh: '按宿主选择入口', en: 'Host-specific optional entries' },
           content: {
-            zh: '根入口保持宿主无关；`/react` 与 `/vanilla` 接入只读图层和通用编译驱动，Render 适配由包内宿主使用，不公开 `/render` 子入口。未使用 Inspect 时，基础 Core、Render、React 与 Vanilla 不执行 Inspector 逻辑。',
-            en: 'The root entry remains host-independent. `/react` and `/vanilla` integrate readonly layers and generic compile drivers; internal host wiring uses Render adapters without a public `/render` subpath. Core, Render, React, and Vanilla run no Inspector logic when Inspect is unused.',
+            zh: '根入口保持宿主无关；`/react` 与 `/vanilla` 消费已完成结果并独立呈现只读图层，Render 适配由包内宿主使用，不公开 `/render` 子入口。未使用 Inspect 时，基础 Core、Render、React 与 Vanilla 不执行 Inspector 逻辑。',
+            en: 'The root entry remains host-independent. `/react` and `/vanilla` consume completed results and independently present readonly layers; internal host wiring uses Render adapters without a public `/render` subpath. Core, Render, React, and Vanilla run no Inspector logic when Inspect is unused.',
           },
         },
       ],

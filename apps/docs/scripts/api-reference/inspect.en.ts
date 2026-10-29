@@ -1,4 +1,105 @@
 const translations: Record<string, string> = {
+  '独立错误通知；通知抛错不影响主图':
+    'Independent error notification; notification failures do not affect the primary view',
+  检查请求及与主图一致的显式呈现配置:
+    'Inspection requests and explicit presentation settings matching the primary view',
+  辅助呈现后端: 'Auxiliary rendering backend',
+  主图宿主已完成的普通编译结果: 'Completed ordinary compilation result from the primary host',
+  本次检查与辅助编译的独立警告: 'Independent warnings from inspection and auxiliary compilation',
+  '独立检查失败，保留原始 cause': 'Independent inspection failure preserving its original cause',
+  '空主图加普通只读层；失败或无内容时为 null':
+    'Empty primary scene plus ordinary readonly layers; null on failure or without content',
+  '完整辅助平面；没有可绘制内容时为 null': 'Complete auxiliary plane; null when no drawable content exists',
+  '辅助 IR 使用的普通编译配置；省略遵循 Core 默认值':
+    'Ordinary compilation settings for auxiliary IR; uses Core defaults when omitted',
+  '主图显示高度，使用相同用户单位到 CSS 像素的映射':
+    'Primary display height, using the same user-unit to CSS-pixel mapping',
+  '辅助 SVG 资源的独立 id 前缀': 'Independent ID prefix for auxiliary SVG resources',
+  '本次可用的检查器定义，注册不等于启用': 'Available inspector definitions; registration does not enable inspection',
+  '按顺序执行的请求；空数组不产生辅助图': 'Requests executed in order; an empty array produces no auxiliary content',
+  '主图当前视口；省略时使用输入 Scene.layout': 'Current primary viewport; defaults to the input Scene.layout',
+  '主图显示宽度，使用相同用户单位到 CSS 像素的映射':
+    'Primary display width, using the same user-unit to CSS-pixel mapping',
+  '将当前对象转换为普通辅助 IR；空数组表示无输出':
+    'Converts the current object to ordinary auxiliary IR; an empty array produces no output',
+  '请求入口的选项解析；省略时仅接受空对象':
+    'Option parsing at the request boundary; omitting it accepts only an empty object',
+  '图元种类或领域产物的 namespace/type': 'Primitive category or domain artifact namespace/type',
+  请求及目标顺序确定的颜色序号: 'Color index determined by request and target order',
+  当前对象的辅助绘图颜色: 'Auxiliary drawing color for the current object',
+  辅助环境的共享语义色板: 'Shared semantic palette of the auxiliary environment',
+  '原始警告的代码、消息与可选路径': 'Original warning code, message, and optional path',
+  检查请求及片段定位: 'Inspection request and fragment location',
+  产生诊断的检查器键: 'Inspector key associated with the diagnostic',
+  回调输出片段的零基索引: 'Zero-based index of the callback output fragment',
+  当前请求的零基索引: 'Zero-based index of the current request',
+  产生诊断的消费阶段: 'Consumption stage that produced the diagnostic',
+  已确定的当前快照目标: 'Resolved target within the current snapshot',
+  生成该条目的检查器键: 'Inspector key that generated this entry',
+  '已清除公共身份、meta 与动画的独立辅助场景':
+    'Independent auxiliary scene with public identity, meta, and animations removed',
+  被检查对象在当前输入快照中的位置: 'Location of the inspected object within the current input snapshot',
+  '将辅助场景放置到主 Scene 坐标系的矩阵': 'Matrix placing the auxiliary scene in primary Scene coordinates',
+  已注册检查器的键: 'Registered inspector key',
+  '交给检查器选项 schema 的输入；省略等价于空对象':
+    'Input passed to the inspector option schema; omission is equivalent to an empty object',
+  '当前快照内的目标；省略时选择全部匹配对象':
+    'Target within the current snapshot; omission selects all matching objects',
+  'React 仅适配独立辅助呈现生命周期，不持有主图编译驱动':
+    'Adapts the independent overlay lifecycle to React without owning the primary compilation driver',
+  '已提交主图的可选辅助层；尺寸与 viewport 由主图宿主提供':
+    'Optional overlay for a committed primary result; the primary host supplies its dimensions and viewport',
+  '独立辅助呈现准备结果，不含主图提交': 'Prepared auxiliary presentation, independent of primary commits',
+  '显式主图视口；辅助图不自行 fit': 'Explicit primary viewport; auxiliary content does not determine fitting',
+  '独立 DOM 辅助视图；调用方在主图提交后传入结果':
+    'Independent DOM overlay view; the caller supplies results after the primary commit',
+  '创建无交互的辅助容器；更新先移除旧层，不调用主图更新':
+    'Creates a noninteractive auxiliary container; updates remove the previous overlay without updating the primary view',
+  '捕获辅助失败；输入主图已经成功，检查不能推翻它':
+    'Captures auxiliary failures without invalidating the successful primary result',
+  '在单独 Canvas 上执行普通只读图层，失败时清空旧图':
+    'Renders ordinary readonly layers on a separate Canvas and clears it on failure',
+  'SSR 与 DOM 共用的独立 SVG 输出，不包含主图内容':
+    'Independent SVG output shared by SSR and DOM hosts, excluding primary content',
+  注册表接受的异构定义: 'Heterogeneous definitions accepted by the registry',
+  内置与第三方共用的检查器定义: 'Inspector definition shared by built-in and third-party inspectors',
+  '辅助编译环境提供的色彩，不读取主图对象主题':
+    'Colors from the auxiliary compilation environment, independent of primary object themes',
+  '辅助编译配置，不参与主图编译': 'Auxiliary compilation configuration, independent of primary compilation',
+  '只交付辅助产物，不复制主图结果': 'Auxiliary output without a duplicate of the primary result',
+  '检查独立诊断，保留底层警告内容': 'Independent inspection diagnostic preserving underlying warning content',
+  '诊断定位到检查请求，不冒充作者输入路径':
+    'Diagnostic location within an inspection request, separate from authoring paths',
+  当前快照的完整辅助平面: 'Complete auxiliary plane for the current snapshot',
+  '已独立编译、可交给普通只读图层的结果': 'Independently compiled output suitable for ordinary readonly layers',
+  '已知对象递归只读，JSON 开放值保留递归边界':
+    'Recursively readonly objects with a recursive boundary for open JSON values',
+  '对当前编译结果的检查请求；省略目标表示所有匹配对象':
+    'Inspection request for the current result; omitting the target selects all matching objects',
+  '当前结果内的图元路径或领域产物下标，不是跨版本身份':
+    'Primitive path or artifact index within the current result, without cross-version identity',
+  '扩展只能读取当前快照；领域产物不具有隐式空间变换':
+    'Readonly access to the current snapshot; domain artifacts have no implicit spatial transform',
+  辅助内容坐标约定: 'Coordinate space for auxiliary content',
+  '由普通 Core 编译独立处理的辅助输入': 'Auxiliary input processed independently by ordinary Core compilation',
+  注册表中的检查器标识: 'Inspector identity in the registry',
+  空数组表示没有可绘制的辅助内容: 'An empty array produces no auxiliary content',
+  检查器消费的公开编译对象类别: 'Public compiled object category consumed by an inspector',
+  依据声明的对象类别取得回调输入: 'Callback input derived from the declared subject category',
+  'Scene 裁剪使用处的检查器标识': 'Inspector key for Scene clip applications',
+  当前分组引用的完整裁剪路径: 'Complete clip path referenced by the current group',
+  'Scene 分组检查器标识': 'Inspector key for Scene groups',
+  '最终 Scene 分组坐标系的检查选项': 'Inspection options for final Scene group coordinate systems',
+  '最终 Scene Path 检查器标识': 'Inspector key for final Scene paths',
+  '最终 Scene 路径的检查选项': 'Inspection options for final Scene paths',
+  '消费已完成的普通编译结果，仅编译检查器生成的独立辅助 IR':
+    'Consumes a completed ordinary compilation result and compiles only independent auxiliary IR generated by inspectors',
+  '追加在三类内置 Inspector 之后的自定义定义，省略时仅注册内置定义':
+    'Custom definitions appended after the three built-in inspectors; omitting them registers only built-ins',
+  '定义的 namespace、type 或 subject 标识为空白，或存在重复 namespace/type 时抛出 RetikzInspectError':
+    'Throws RetikzInspectError for blank namespace, type, or subject identifiers, or duplicate namespace/type keys',
+  '定义消费公开编译结果的检查器，保留图元类别与领域值类型':
+    'Defines an inspector consuming public compilation results while preserving primitive category and domain value types',
   '作者提供的 Inspector 定义；省略选项 schema 时仅接受空对象，省略 resolver 时直接使用解析结果':
     'Author-provided Inspector definition; omitting the options schema accepts only an empty object, and omitting the resolver uses the parsed options directly',
   '自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级':

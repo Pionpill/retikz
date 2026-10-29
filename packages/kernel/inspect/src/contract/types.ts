@@ -1,180 +1,119 @@
 import type {
-  CompileObservationAncestor,
-  CompileObservationOwner,
-  CompileOccurrenceLocator,
+  CompileResult,
+  CompositeArtifact,
   CoreSemanticColors,
   CssColorValue,
   IRChild,
+  ScenePrimitive,
 } from '@retikz/core';
-import type { JsonObject, JsonValue, WithOptionalProperties } from '@retikz/foundation';
+import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { AffineMatrix } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-/** Inspector registry 的公开复合键 */
-export type InspectorKey = Readonly<{
-  /** Inspector 所属命名空间 */
-  namespace: string;
-  /** 命名空间内类型 */
-  type: string;
-}>;
+/** 编译结果的递归只读视图，不改变原对象 */
+type InspectionJsonValue =
+  | null
+  | string
+  | number
+  | boolean
+  | ReadonlyArray<InspectionJsonValue>
+  | { readonly [key: string]: InspectionJsonValue };
 
-/** Inspector callback 输出所采用的坐标约定 */
+/** 已知对象递归只读，JSON 开放值保留递归边界 */
+export type InspectionReadonly<T> = JsonValue extends T
+  ? InspectionJsonValue
+  : T extends object
+    ? { readonly [K in keyof T]: InspectionReadonly<T[K]> }
+    : T;
+
+/** 注册表中的检查器标识 */
+export type InspectorKey = Readonly<{ namespace: string; type: string }>;
+
+/** 当前结果内的图元路径或领域产物下标，不是跨版本身份 */
+export type InspectionTarget =
+  | Readonly<{ kind: 'primitive'; path: ReadonlyArray<number> }>
+  | Readonly<{ kind: 'artifact'; index: number }>;
+
+/** 检查器消费的公开编译对象类别 */
+export type InspectorSubject =
+  | Readonly<{ kind: 'primitive'; type: ScenePrimitive['type'] }>
+  | Readonly<{ kind: 'artifact'; namespace: string; type: string }>;
+
+/** 依据声明的对象类别取得回调输入 */
+export type InspectorSubjectValue<
+  TSubject extends InspectorSubject,
+  TValue extends JsonValue = JsonValue,
+> = TSubject extends { kind: 'primitive'; type: infer TType }
+  ? InspectionReadonly<Extract<ScenePrimitive, { type: TType }>>
+  : TSubject extends { kind: 'artifact'; namespace: infer TNamespace extends string; type: infer TType extends string }
+    ? InspectionReadonly<CompositeArtifact<TNamespace, TType, TValue>>
+    : never;
+
+/** 辅助内容坐标约定 */
 export type InspectorCoordinateSpace = 'local' | 'scene';
 
-/** 带显式坐标空间的辅助片段 */
-export type InspectorFragment = Readonly<{
-  /** 辅助片段判别字段，不属于 Core IR */
-  type: 'fragment';
-  /** 当前片段采用的坐标空间 */
-  coordinateSpace: InspectorCoordinateSpace;
-  /** 交给 Core 隔离编译的普通 IR child */
-  child: IRChild;
-}>;
+/** 由普通 Core 编译独立处理的辅助输入 */
+export type InspectorFragment = Readonly<{ coordinateSpace: InspectorCoordinateSpace; child: IRChild }>;
 
-/** 裸 Core child 使用局部坐标；显式片段可逐项选择坐标空间 */
-export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
+/** 空数组表示没有可绘制的辅助内容 */
+export type InspectorOutput = ReadonlyArray<InspectorFragment>;
 
-/** Inspector callback 的稳定外观上下文 */
+/** 辅助编译环境提供的色彩，不读取主图对象主题 */
 export type InspectionAppearanceContext = Readonly<{
-  /** resolved request 连续序号 */
+  /** 请求及目标顺序确定的颜色序号 */
   colorScope: number;
-  /** 由当前 Theme categorical palette 派生的常规颜色 */
+  /** 当前对象的辅助绘图颜色 */
   scopeColor: CssColorValue;
-  /** 当前 Core Theme 的共享语义颜色 */
-  semanticColors: CoreSemanticColors;
+  /** 辅助环境的共享语义色板 */
+  semanticColors: InspectionReadonly<CoreSemanticColors>;
 }>;
 
-/**
- * Inspector callback 读取的最终 occurrence 上下文
- *
- * @template TOptions callback 消费的已解析 options 类型
- */
-export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
-  /** 按本次主图编译精度舍入数值 */
-  round: (value: number) => number;
-  /** 当前 Inspector key */
-  inspectorKey: InspectorKey;
-  /** 当前被观察的 Core owner */
-  owner: CompileObservationOwner;
-  /** 当前最终 occurrence */
-  occurrence: CompileOccurrenceLocator;
-  /** probe/replay 来源 */
-  provenance: Readonly<{
-    /** 探测或重放前产生被观察结果的位置 */
-    origin: CompileOccurrenceLocator;
-    /** 重放映射后被观察结果在最终逻辑树中的位置 */
-    final: CompileOccurrenceLocator;
-  }>;
-  /** observation-local 到主 Scene 的最终仿射变换 */
-  transform: AffineMatrix;
-  /** 从外到内排列的最终逻辑容器链条 */
-  ancestors: ReadonlyArray<CompileObservationAncestor>;
-  /** 规范化后可 JSON 序列化的选项 */
-  options: TOptions;
-  /** callback 前分配的外观上下文 */
-  appearance: InspectionAppearanceContext;
-  /** 声明当前 callback 可以省略的部分结果 */
-  warn: (code: string, message: string) => void;
-}>;
-
-/**
- * 独立于 Core owner Definition 的 Inspector 定义
- * @template TSubject 由所属者提供的观察对象类型
- * @template TParsedOptions optionsSchema 应用默认与变换后的选项类型
- * @template TResolvedOptions resolveOptions 输出、供 inspect 上下文消费的选项类型
- * @template TSourceOptions 合并前的原始选项输入类型，默认与 TParsedOptions 相同
- */
-export type InspectorDefinition<
-  TSubject extends JsonValue = JsonValue,
-  TParsedOptions extends JsonObject = JsonObject,
-  TResolvedOptions extends JsonObject = JsonObject,
-  TSourceOptions extends JsonObject = TParsedOptions,
+/** 扩展只能读取当前快照；领域产物不具有隐式空间变换 */
+export type InspectorContext<
+  TOptions extends JsonObject = JsonObject,
+  TSubject extends InspectorSubject = InspectorSubject,
 > = Readonly<{
-  /** registry 命名空间 */
-  namespace: string;
-  /** registry 类型 */
-  type: string;
-  /** 被观察的 Core owner */
-  owner: CompileObservationOwner;
-  /** 唯一 options 契约；合并原始输入后应用默认值与变换 */
-  optionsSchema: ZodType<TParsedOptions, TSourceOptions>;
-  /** 将 schema 解析后的有效 options 转为 callback 消费态 */
-  resolveOptions: (options: TParsedOptions) => TResolvedOptions;
-  /** 多层 sparse input 的可选合并规则 */
-  mergeOptionsInput?: (inheritedOptionsInput: TSourceOptions, localOptionsInput: TSourceOptions) => TSourceOptions;
-  /** 把 settled subject 转为普通 Core IR */
-  inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
-}>;
+  /** 当前检查器的注册键 */
+  inspectorKey: InspectorKey;
+  /** 当前快照内的对象定位 */
+  target: InspectionTarget;
+  /** 与调用方隔离的递归只读编译结果 */
+  result: InspectionReadonly<CompileResult>;
+  /** 已应用 schema 默认值与变换的独立选项 */
+  options: InspectionReadonly<TOptions>;
+  /** 辅助绘图色彩，不读取主图对象的主题 */
+  appearance: InspectionAppearanceContext;
+  /** 报告非致命缺口；不会中止其他受支持输出 */
+  warn: (code: string, message: string) => void;
+}> &
+  (TSubject extends { kind: 'primitive' } ? Readonly<{ transform: AffineMatrix }> : Readonly<{ transform?: never }>);
 
-/**
- * 作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段
- *
- * @template TSubject 由所属者提供的被观察对象类型
- * @template TParsedOptions options schema 解析后的 options 类型
- * @template TResolvedOptions callback 消费的已解析 options 类型
- * @template TSourceOptions 传入 options schema 前的原始 options 输入类型
- */
+/** 内置与第三方共用的检查器定义 */
 export type InputInspectorDefinition<
-  TSubject extends JsonValue = JsonValue,
-  TParsedOptions extends JsonObject = Record<string, never>,
-  TResolvedOptions extends JsonObject = TParsedOptions,
-  TSourceOptions extends JsonObject = TParsedOptions,
-> = WithOptionalProperties<
-  InspectorDefinition<TSubject, TParsedOptions, NoInfer<TResolvedOptions>, TSourceOptions>,
-  'optionsSchema' | 'resolveOptions'
-> &
-  (
-    | Readonly<{
-        /** 自定义选项的输入与解析输出契约 */
-        optionsSchema: ZodType<TParsedOptions, TSourceOptions>;
-      }>
-    | ([TParsedOptions, TSourceOptions] extends [Record<string, never>, Record<string, never>]
-        ? Readonly<{
-            /** 无自定义选项时省略，仅接受严格空对象
-             * @default z.strictObject({})
-             */
-            optionsSchema?: never;
-          }>
-        : never)
-  ) &
-  (
-    | Readonly<{
-        /** 将 schema 输出转换为 callback 消费态 */
-        resolveOptions: (options: TParsedOptions) => TResolvedOptions;
-      }>
-    | ([TParsedOptions] extends [TResolvedOptions]
-        ? Readonly<{
-            /** callback 直接消费 schema 输出时省略
-             * @default identity
-             */
-            resolveOptions?: never;
-          }>
-        : never)
-  );
-
-/** registry 内擦除具体泛型后的 Inspector 定义 */
-export type AnyInspectorDefinition = Readonly<{
-  /** 注册项的命名空间 */
-  namespace: string;
-  /** 注册项的类型 */
-  type: string;
-  /** 被观察的 Core owner */
-  owner: CompileObservationOwner;
-  /** 擦除后仍产出已应用默认值与变换的 JSON object options */
-  optionsSchema: Readonly<{
-    /** 校验合并后的原始选项并应用 schema 默认值与变换 */
-    parse: (value: unknown) => JsonObject;
+  TSubject extends InspectorSubject = InspectorSubject,
+  TOptions extends JsonObject = Record<string, never>,
+  TValue extends JsonValue = JsonValue,
+> = InspectorKey &
+  Readonly<{
+    /** 图元种类或领域产物的 namespace/type */
+    subject: TSubject;
+    /** 请求入口的选项解析；省略时仅接受空对象 */
+    optionsSchema?: ZodType<TOptions>;
+    /** 将当前对象转换为普通辅助 IR；空数组表示无输出 */
+    inspect: (
+      subject: InspectorSubjectValue<TSubject, TValue>,
+      context: InspectorContext<TOptions, TSubject>,
+    ) => InspectorOutput;
   }>;
-  /** 具体 options 类型由准入 schema 恢复 */
-  resolveOptions: (options: never) => JsonObject;
-  /** 合并已准入的原始 options，不消费 schema 变换后的结果 */
-  mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
-  /** subject 类型由所属者契约确定，context 类型由选项解析恢复 */
-  inspect: (subject: never, context: never) => InspectorOutput;
-}>;
 
-/** registry 接收的异构作者定义，注册时统一补齐选项 schema 与 resolver */
-export type InputAnyInspectorDefinition = WithOptionalProperties<
-  AnyInspectorDefinition,
-  'optionsSchema' | 'resolveOptions'
->;
+/** 注册时补全选项契约后的异构定义；回调参数由 subject 与选项解析恢复 */
+export type AnyInspectorDefinition = InspectorKey &
+  Readonly<{
+    subject: InspectorSubject;
+    optionsSchema: Readonly<{ parse: (input: unknown) => JsonObject }>;
+    inspect: (subject: never, context: never) => InspectorOutput;
+  }>;
+
+/** 注册表接受的异构定义 */
+export type InputAnyInspectorDefinition = Omit<AnyInspectorDefinition, 'optionsSchema'> &
+  Partial<Pick<AnyInspectorDefinition, 'optionsSchema'>>;

@@ -156,7 +156,8 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 - 完善裁剪、居中标签断线和箭头视觉重叠处理。
 - 分离端点箭头与沿线标记，支持普通图元标记和箭头外观复用，统一弧长定位：[075](./075-path-arrows-and-marks.md)。
 - 优化标签断线的编译开销：按实际断线需求选择处理路径，无需断线时跳过专用计算，有断线需求时才进入完整截断链路；保持标签定位、箭头与最终绘制结果一致。
-- 扩展 Inspect 内容与内置检查能力，不把诊断实现混入领域模型。
+- Inspect 从普通编译结果生成独立辅助绘图，按真实图元与领域产物限定能力，保持主图编译和提交独立：[078](./078-inspect-compiled-output.md)。
+- [ ] Inspect 重新设计与 Layout 检查支持：保留当前结果消费架构，单独设计可恢复的观测能力及 Layout 对 Inspect 的支持；只消费 compile / pipeline 已有产物，不为 Inspect 扩充主体契约或影响主体功能。
 
 预期效果：
 
@@ -172,7 +173,7 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 规划内容：
 
 - 保留 Headless Interaction、Concurrent、渐进物化与生成会话候选。
-- 编译输出收敛为 Scene 与 Composite artifacts，删除 Core 观测、节点公共产物与空间句柄：[077](./077-compile-output-contract.md)。Inspect 从普通结果生成辅助绘图的接入方案独立设计。
+- 编译输出收敛为 Scene 与 Composite artifacts，删除 Core 观测、节点公共产物与空间句柄：[077](./077-compile-output-contract.md)。Inspect 的结果消费方案见 [078](./078-inspect-compiled-output.md)。
 - 候选不作为必交项；设计接受、实现授权与实际交付分别判断。
 
 预期效果：

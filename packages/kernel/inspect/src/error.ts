@@ -13,8 +13,6 @@ export const RetikzInspectErrorCode = {
   Contract: 'INSPECTION_CONTRACT_ERROR',
   /** Inspector registry 无效 */
   Registry: 'INSPECTION_REGISTRY_ERROR',
-  /** Inspection Vanilla authoring 无效 */
-  Vanilla: 'INSPECTION_VANILLA_ERROR',
 } as const;
 
 /** Inspect 包稳定错误码取值 */

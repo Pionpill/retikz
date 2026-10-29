@@ -1,5 +1,4 @@
 import { OverlayLayout, OverlayLayoutItem } from '@retikz/layout-react';
-import { OVERLAY_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -9,41 +8,21 @@ import { previewControlContract } from './overlay-box.controls';
 export { createPreviewControlContract } from './overlay-box.controls';
 export const previewControls = previewControlContract.controls;
 
-const preview = defineOverlayPreview(
-  previewControlContract,
-  values => (
-    <Layout>
-      <OverlayLayout
-        size={{ x: { kind: 'fixed', value: values.width }, y: { kind: 'fixed', value: values.height } }}
-        padding={values.padding}
-      >
-        <OverlayLayoutItem justifySelf="start" alignSelf="start">
-          <Node text="First Node" style={{ stroke: 'dodgerblue' }} />
-        </OverlayLayoutItem>
-        <OverlayLayoutItem justifySelf="end" alignSelf="end">
-          <Node text="Secondary Node" style={{ stroke: 'darkorange' }} />
-        </OverlayLayoutItem>
-      </OverlayLayout>
-    </Layout>
-  ),
-  () => ({
-    rules: [
-      {
-        kind: 'request',
-        inspector: OVERLAY_LAYOUT_INSPECTOR_KEY,
-        target: { kind: 'scene' },
-        options: {
-          bounds: { container: true, content: false, slot: true, allocation: false, visual: false },
-          spacing: false,
-          anchors: true,
-          placements: true,
-          stacking: true,
-          alignmentGuides: false,
-        },
-      },
-    ],
-  }),
-);
+const preview = defineOverlayPreview(previewControlContract, values => (
+  <Layout>
+    <OverlayLayout
+      size={{ x: { kind: 'fixed', value: values.width }, y: { kind: 'fixed', value: values.height } }}
+      padding={values.padding}
+    >
+      <OverlayLayoutItem justifySelf="start" alignSelf="start">
+        <Node text="First Node" style={{ stroke: 'dodgerblue' }} />
+      </OverlayLayoutItem>
+      <OverlayLayoutItem justifySelf="end" alignSelf="end">
+        <Node text="Secondary Node" style={{ stroke: 'darkorange' }} />
+      </OverlayLayoutItem>
+    </OverlayLayout>
+  </Layout>
+));
 
 export const previewSource = preview.source;
 

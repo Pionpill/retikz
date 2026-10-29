@@ -1,17 +1,5 @@
 /** 布局输入与产物字段的中文说明；默认值仍从公开 Schema 读取 */
 export const layoutComponentSchemaLocalizations = {
-  OverlayLayoutInspectOptionsSchema: {
-    descriptions: {
-      bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
-      spacing: '独立控制 padding 与 margin 纹理。',
-      overflow: '是否显示溢出阴影。',
-      alignmentGuides: '是否显示对齐参考线。',
-      labels: '是否显示辅助标签。',
-      placements: '是否显示对齐或局部定位后的分配区域；默认开启。',
-      anchors: '是否显示 positioned 子项的目标点与锚点；默认开启。',
-      stacking: '是否显示稳定绘制顺序标签；默认关闭。',
-    },
-  },
   OverlayLayoutArtifactSchema: {
     descriptions: {
       kind: 'OverlayLayout 产物的判别字段。',
@@ -46,20 +34,6 @@ export const layoutComponentSchemaLocalizations = {
       justifyItems: '对齐或定位子项默认继承的水平对齐方式。',
       alignItems: '对齐或定位子项默认继承的垂直对齐方式。',
       children: '按稳定标识顺序排列、由作者声明的叠加子项。',
-    },
-  },
-  GridLayoutInspectOptionsSchema: {
-    descriptions: {
-      bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
-      spacing: '独立控制 padding 与 margin 纹理。',
-      overflow: '是否显示溢出阴影。',
-      alignmentGuides: '是否显示对齐参考线。',
-      labels: '是否显示辅助标签。',
-      tracks: '是否显示已求解的行列轨道；默认开启。',
-      cells: '是否显示每个网格单元格；默认关闭。',
-      gaps: '是否显示作者声明的固定轨道 gap；默认开启。',
-      distributedSpace: '是否以虚线边界显示内容分布产生的正自由空间；内部不填色，默认开启。',
-      spans: '是否显示跨轨道子项的范围；默认开启。',
     },
   },
   GridLayoutArtifactSchema: {
@@ -117,18 +91,6 @@ export const layoutComponentSchemaLocalizations = {
       children: '按稳定绘制顺序排列、由作者声明的网格子项。',
     },
   },
-  FlexLayoutInspectOptionsSchema: {
-    descriptions: {
-      bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
-      spacing: '独立控制 padding 与 margin 纹理。',
-      overflow: '是否显示溢出阴影。',
-      alignmentGuides: '是否显示对齐参考线。',
-      labels: '是否显示辅助标签。',
-      lines: '是否显示每条弹性布局行的区域；默认开启。',
-      gaps: '是否显示作者声明的固定 gap；默认开启。',
-      distributedSpace: '是否以虚线边界显示内容分布产生的正自由空间；内部不填色，默认开启。',
-    },
-  },
   FlexLayoutArtifactSchema: {
     descriptions: {
       kind: 'FlexLayout 产物的判别字段。',
@@ -170,30 +132,6 @@ export const layoutComponentSchemaLocalizations = {
       'bounds.y': '间距矩形的垂直原点。',
       'bounds.width': '间距矩形的非负宽度；x 主轴时必须为正。',
       'bounds.height': '间距矩形的非负高度；y 主轴时必须为正。',
-    },
-  },
-  BaseLayoutInspectOptionsSchema: {
-    descriptions: {
-      bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖容器、内容、父级分配、真实占用与视觉边界。',
-      spacing: 'false 关闭 padding 与 margin 纹理，true 恢复默认组合，对象形式逐项覆盖两种盒模型间距。',
-      overflow: '是否显示真实占用或视觉包络超出父级分配区域的阴影。',
-      alignmentGuides: '是否显示容器最终采用的对齐参考线。',
-      labels: '是否显示辅助层文字标签；默认关闭。',
-    },
-  },
-  LayoutInspectSpacingOptionsSchema: {
-    descriptions: {
-      padding: '是否为容器已解析的 padding 绘制阴影。',
-      margin: '是否为子项已解析的 margin 绘制阴影。',
-    },
-  },
-  LayoutInspectBoundsOptionsSchema: {
-    descriptions: {
-      container: '是否显示容器最终分配边界。',
-      content: '是否显示扣除内边距后的内容边界。',
-      slot: '是否显示父级给子项分配的 slot。',
-      allocation: '是否显示子项真实布局占用。',
-      visual: '是否显示包含描边与标签等效果的视觉包络。',
     },
   },
   FlexLayoutSchema: {

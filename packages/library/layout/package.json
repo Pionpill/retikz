@@ -41,10 +41,6 @@
     "./compose": {
       "types": "./src/compose/index.ts",
       "default": "./src/compose/index.ts"
-    },
-    "./inspect": {
-      "types": "./src/inspect/index.ts",
-      "default": "./src/inspect/index.ts"
     }
   },
   "publishConfig": {
@@ -61,11 +57,6 @@
         "types": "./dist/types/compose/index.d.ts",
         "import": "./dist/compose/index.js",
         "default": "./dist/compose/index.js"
-      },
-      "./inspect": {
-        "types": "./dist/types/inspect/index.d.ts",
-        "import": "./dist/inspect/index.js",
-        "default": "./dist/inspect/index.js"
       }
     }
   },
@@ -87,16 +78,7 @@
     "@retikz/math": "workspace:^",
     "zod": "catalog:"
   },
-  "peerDependencies": {
-    "@retikz/inspect": "workspace:^"
-  },
-  "peerDependenciesMeta": {
-    "@retikz/inspect": {
-      "optional": true
-    }
-  },
   "devDependencies": {
-    "@retikz/inspect": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

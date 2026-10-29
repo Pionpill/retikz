@@ -8,10 +8,17 @@ export const layoutV01: Release = {
       pkg: '@retikz/layout',
       version: 'v0.1',
       description: {
-        zh: '领域无关的排版布局库：提供 Flex、Grid、Overlay 的 JSON-safe schema、确定性求解、类型化产物与可选检查能力。',
-        en: 'Domain-neutral layout composition with JSON-safe Flex, Grid, and Overlay schemas, deterministic solving, typed artifacts, and optional inspection.',
+        zh: '领域无关的排版布局库：提供 Flex、Grid、Overlay 的 JSON-safe schema、确定性求解、类型化产物。',
+        en: 'Domain-neutral layout composition with JSON-safe Flex, Grid, and Overlay schemas, deterministic solving, typed artifacts.',
       },
       highlights: [
+        {
+          label: { zh: 'BREAKING：移除旧检查子入口', en: 'BREAKING: removed legacy inspection entries' },
+          content: {
+            zh: '删除 Layout、Layout React 与 Layout Vanilla 的 /inspect 子入口。局部布局产物不提供到 Scene 的可靠空间映射，因此不再绘制旧布局检查层；普通布局与产物保持不变。',
+            en: 'Removes /inspect entries from Layout, Layout React, and Layout Vanilla. Local layout artifacts do not provide a reliable mapping to Scene coordinates, so the old layout inspection overlays are removed. Ordinary layout and artifacts are unchanged.',
+          },
+        },
         {
           label: { zh: '按需布局测量', en: 'On-demand layout measurement' },
           content: {
@@ -22,8 +29,8 @@ export const layoutV01: Release = {
         {
           label: { zh: '独立能力边界', en: 'Independent capability boundary' },
           content: {
-            zh: 'Layout 只拥有容器排版、约束求解、placement、artifact 与 inspection；Core 继续拥有 proposal / probe / replay 和 Scene，算法布局仍在本包边界之外。',
-            en: 'Layout owns container arrangement, constraint solving, placement, artifacts, and inspection. Core retains proposal, probe, replay, and Scene contracts, while algorithmic graph layout remains out of scope.',
+            zh: 'Layout 只拥有容器排版、约束求解、placement 与 artifact；Core 继续拥有 proposal / probe / replay 和 Scene，算法布局仍在本包边界之外。',
+            en: 'Layout owns container arrangement, constraint solving, placement and artifacts. Core retains proposal, probe, replay, and Scene contracts, while algorithmic graph layout remains out of scope.',
           },
         },
         {
@@ -177,8 +184,8 @@ export const layoutV01: Release = {
       pkg: '@retikz/layout-react',
       version: 'v0.1',
       description: {
-        zh: 'Layout 的 React authoring：提供 FlexLayout、GridLayout、OverlayLayout、各自的专属子项与可选 Inspector JSX。',
-        en: 'React authoring for Layout with FlexLayout, GridLayout, OverlayLayout, their dedicated item components, and optional Inspector JSX.',
+        zh: 'Layout 的 React authoring：提供 FlexLayout、GridLayout、OverlayLayout、各自的专属子项。',
+        en: 'React authoring for Layout with FlexLayout, GridLayout, OverlayLayout, their dedicated item components.',
       },
       highlights: [
         {

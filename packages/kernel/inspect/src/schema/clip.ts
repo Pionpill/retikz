@@ -1,7 +1,6 @@
 import { boolean, strictObject } from 'zod';
 
-/** 内置 Clip Inspector 选项及默认值 */
+/** 当前分组引用的完整裁剪路径 */
 export const ClipInspectOptionsSchema = strictObject({
-  outline: boolean().default(true).describe('Whether the complete lowered Clip outline is visible.'),
-  labels: boolean().default(false).describe('Whether Clip application labels are visible.'),
-}).describe('Clip Inspector options; defaults apply after authored options are merged.');
+  outline: boolean().default(true).describe('Show the complete clip outline.'),
+});

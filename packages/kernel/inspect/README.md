@@ -1,6 +1,6 @@
-# @retikz/inspect
+﻿# @retikz/inspect
 
-Optional Inspector definitions, runtime selection, and host wiring for retikz compile outputs.
+Optional inspectors for completed retikz compilation results.
 
 ```bash
 pnpm add @retikz/inspect
@@ -8,23 +8,25 @@ pnpm add @retikz/inspect
 
 ```tsx
 import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { InspectLayout, InspectPath } from '@retikz/inspect/react';
+import { InspectionOverlay } from '@retikz/inspect/react';
 
-const registry = createDefaultInspectorRegistry();
-
-<InspectLayout registry={registry}>
-  <InspectPath request={{ inspector: PATH_INSPECTOR_KEY, options: true }}>{/* Path props */}</InspectPath>
-</InspectLayout>;
+// result is the ordinary CompileResult already displayed by the primary host.
+<InspectionOverlay
+  result={result}
+  options={{
+    registry: createDefaultInspectorRegistry(),
+    requests: [{ inspector: PATH_INSPECTOR_KEY }],
+    idPrefix: 'inspection',
+  }}
+/>;
 ```
 
-Entry points:
+Place the overlay over the primary view using the same viewport and dimensions. Primary compilation and commits remain independent of inspection.
 
-- `@retikz/inspect` provides Inspector definitions, registries, selection, diagnostics, and the built-in stroke Path Inspector
-- `@retikz/inspect/react` provides optional Layout, Scope, and Path wrappers plus the React compile driver
-- `@retikz/inspect/vanilla` provides opaque authoring markers and the Vanilla compile driver
+- `@retikz/inspect`: definitions, registries, requests, diagnostics, and auxiliary compilation; built-ins inspect final paths, groups, and clip boundaries
+- `@retikz/inspect/react`: the result-consuming `InspectionOverlay` component
+- `@retikz/inspect/vanilla`: independent SVG, Canvas, and DOM presentation helpers
 
-Host integration internally maps inspection planes to `@retikz/render` readonly layers; this adapter is not a public entry point.
+Inspect generates ordinary auxiliary IR from Scene primitives or Composite artifacts, then compiles that IR independently. It cannot recover missing authoring geometry or infer artifact coordinates from occurrence locators. Core and Reconciler provide no inspection hooks.
 
-Core remains domain-neutral: it publishes final owner outputs, observes final occurrences, and compiles isolated ordinary-IR fragments. This package owns Inspector-specific schemas, selection, palettes, diagnostics, and plane assembly. Selection is runtime-only and never enters IR, Scene, or Runtime snapshots. Ordinary Core, React, Vanilla, and Render usage does not require this package or run Inspector compilation.
-
-See the [Inspect package guide](https://pionpill.github.io/retikz/kernel/packages/inspect) for custom Definitions, Standard layout integration, and failure semantics.
+See the [Inspect package guide](https://pionpill.github.io/retikz/kernel/packages/inspect) for definitions, selection, coordinate spaces, and failure behavior.

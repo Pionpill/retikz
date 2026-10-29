@@ -130,15 +130,8 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import * as GraphIR from '@retikz/graph';
-import {
-  ClipInspectOptionsSchema,
-  CoordinateInspectOptionsSchema,
-  NodeInspectOptionsSchema,
-  PathInspectOptionsSchema,
-  ScopeInspectOptionsSchema,
-} from '@retikz/inspect';
+import { ClipInspectOptionsSchema, PathInspectOptionsSchema, GroupInspectOptionsSchema } from '@retikz/inspect';
 import * as LayoutIR from '@retikz/layout';
-import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as IRPlot from '@retikz/plot';
 import * as StandardCollectionIR from '@retikz/standard/collection';
 import * as StandardPresentationIR from '@retikz/standard/presentation';
@@ -479,25 +472,15 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   AxisScaleSchema: { schema: IR.AxisScaleSchema, label: 'AxisScaleSchema' },
   BoxSizeSchema: { schema: IR.BoxSizeSchema, label: 'BoxSizeSchema' },
   BoxSpacingSchema: { schema: IR.BoxSpacingSchema, label: 'BoxSpacingSchema' },
-  NodeInspectOptionsSchema: {
-    schema: NodeInspectOptionsSchema,
-    label: 'NodeInspectOptions',
-    url: '/kernel/packages/inspect/reference#nodeinspectoptionsschema',
-  },
-  ScopeInspectOptionsSchema: {
-    schema: ScopeInspectOptionsSchema,
-    label: 'ScopeInspectOptions',
-    url: '/kernel/packages/inspect/reference#scopeinspectoptionsschema',
+  GroupInspectOptionsSchema: {
+    schema: GroupInspectOptionsSchema,
+    label: 'GroupInspectOptions',
+    url: '/kernel/packages/inspect/reference#groupinspectoptionsschema',
   },
   ClipInspectOptionsSchema: {
     schema: ClipInspectOptionsSchema,
     label: 'ClipInspectOptions',
     url: '/kernel/packages/inspect/reference#clipinspectoptionsschema',
-  },
-  CoordinateInspectOptionsSchema: {
-    schema: CoordinateInspectOptionsSchema,
-    label: 'CoordinateInspectOptions',
-    url: '/kernel/packages/inspect/reference#coordinateinspectoptionsschema',
   },
   PathInspectOptionsSchema: {
     schema: PathInspectOptionsSchema,
@@ -1190,37 +1173,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.ArrowStyleSchema,
     label: 'ArrowStyle',
     url: '/kernel/components/path/reference#arrowenddetailschema',
-  },
-
-  LayoutInspectBoundsOptionsSchema: {
-    schema: LayoutInspectIR.LayoutInspectBoundsOptionsSchema,
-    label: 'LayoutInspectBoundsOptions',
-    url: '/library/layout/flex-layout/reference#layoutinspectboundsoptionsschema',
-  },
-  LayoutInspectSpacingOptionsSchema: {
-    schema: LayoutInspectIR.LayoutInspectSpacingOptionsSchema,
-    label: 'LayoutInspectSpacingOptions',
-    url: '/library/layout/flex-layout/reference#layoutinspectspacingoptionsschema',
-  },
-  BaseLayoutInspectOptionsSchema: {
-    schema: LayoutInspectIR.BaseLayoutInspectOptionsSchema,
-    label: 'BaseLayoutInspectOptions',
-    url: '/library/layout/flex-layout/reference#baselayoutinspectoptionsschema',
-  },
-  FlexLayoutInspectOptionsSchema: {
-    schema: LayoutInspectIR.FlexLayoutInspectOptionsSchema,
-    label: 'FlexLayoutInspectOptions',
-    url: '/library/layout/flex-layout/reference#flexlayoutinspectoptionsschema',
-  },
-  GridLayoutInspectOptionsSchema: {
-    schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
-    label: 'GridLayoutInspectOptions',
-    url: '/library/layout/grid-layout/reference#gridlayoutinspectoptionsschema',
-  },
-  OverlayLayoutInspectOptionsSchema: {
-    schema: LayoutInspectIR.OverlayLayoutInspectOptionsSchema,
-    label: 'OverlayLayoutInspectOptions',
-    url: '/library/layout/overlay-layout/reference#overlaylayoutinspectoptionsschema',
   },
 
   FlexLayoutSchema: {

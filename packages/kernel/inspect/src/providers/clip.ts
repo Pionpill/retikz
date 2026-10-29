@@ -1,67 +1,30 @@
-import type { ClipOwnerOutput, IRChild, IRPosition, PathCommand } from '@retikz/core';
-import { mergeDefinedProperties } from '@retikz/foundation';
-import type { output as ZodOutput } from 'zod';
+import type { PathCommand } from '@retikz/core';
 
-import type { InspectorContext } from '../contract';
 import { defineInspector } from '../contract';
 import { ClipInspectOptionsSchema } from '../schema';
-import { isolateInspectionChildren, labelNode, pathCommandsToChildren, pathStyle, pointAtArcCommand } from './geometry';
+import { pathCommandsToChildren, pathStyle } from './geometry';
 
-type ClipInspectorOptions = ZodOutput<typeof ClipInspectOptionsSchema>;
+/** Scene 裁剪使用处的检查器标识 */
+export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'inspect', type: 'clip' });
 
-/** 内置 Core Clip Inspector key */
-export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'clip' });
-
-/** 取最终 Clip 路径的第一个可见位置，供应用标签定位 */
-const firstPathPosition = (commands: ReadonlyArray<PathCommand>): IRPosition | undefined => {
-  let current: IRPosition | undefined;
-
-  for (const command of commands) {
-    switch (command.kind) {
-      case 'move':
-        return command.to;
-      case 'line':
-      case 'quad':
-      case 'cubic':
-        current = command.to;
-        break;
-      case 'arc':
-      case 'ellipseArc':
-        current = pointAtArcCommand(command, command.startAngle);
-        break;
-      case 'close':
-        break;
-    }
-
-    if (current !== undefined) return current;
-  }
-
-  return current;
-};
-
-/** 内置 Clip application Inspector */
+/** 显示分组使用的裁剪边缘，不应用主图裁剪 */
 export const CLIP_INSPECTOR = defineInspector({
   ...CLIP_INSPECTOR_KEY,
-  owner: { kind: 'clip' },
+  subject: { kind: 'primitive', type: 'group' },
   optionsSchema: ClipInspectOptionsSchema,
-  mergeOptionsInput: (inherited, local) => mergeDefinedProperties([inherited, local]),
-  inspect: (subject: ClipOwnerOutput, context: InspectorContext<ClipInspectorOptions>): Array<IRChild> => {
-    const output: Array<IRChild> = [];
-    if (context.options.outline) {
-      output.push(
-        ...pathCommandsToChildren(subject.path.commands, pathStyle(context.appearance.scopeColor), {
-          implicitClose: true,
-        }),
-      );
+  inspect: (subject, context) => {
+    if (!context.options.outline || subject.clipRef === undefined) return [];
+    const resource = context.result.scene.resources?.find(
+      candidate => candidate.kind === 'clip' && candidate.id === subject.clipRef,
+    );
+    if (resource?.kind !== 'clip') {
+      context.warn('UnsupportedGeometry', 'Clip resource is unavailable');
+      return [];
     }
-
-    if (context.options.labels) {
-      const position = firstPathPosition(subject.path.commands);
-      if (position !== undefined) {
-        output.push(labelNode([position[0] + 6, position[1] - 12], 'clip', context.appearance.scopeColor));
-      }
-    }
-
-    return isolateInspectionChildren(output);
+    return pathCommandsToChildren(
+      resource.path.commands as ReadonlyArray<PathCommand>,
+      pathStyle(context.appearance.scopeColor),
+      { implicitClose: true },
+    ).map(child => ({ coordinateSpace: 'local' as const, child }));
   },
 });

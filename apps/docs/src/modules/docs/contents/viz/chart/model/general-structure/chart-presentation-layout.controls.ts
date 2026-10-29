@@ -15,17 +15,6 @@ export const chartPresentationLayoutControls = definePreviewControls({
       controls: [{ kind: 'table', id: 'chart-presentation-data', label: '散点数据', rows: chartPresentationData }],
     },
     {
-      label: '布局检查',
-      controls: [
-        {
-          kind: 'switch',
-          id: CHART_PRESENTATION_CONTROL_IDS.inspect,
-          label: '显示 Flex 辅助层',
-          defaultValue: true,
-        },
-      ],
-    },
-    {
       label: '展示',
       controls: [
         { kind: 'switch', id: CHART_PRESENTATION_CONTROL_IDS.showTitle, label: '显示标题', defaultValue: true },
@@ -41,7 +30,6 @@ export const chartPresentationLayoutControls = definePreviewControls({
 export const previewControlContract = {
   controls: chartPresentationLayoutControls,
   canonicalValues: {
-    [CHART_PRESENTATION_CONTROL_IDS.inspect]: true,
     [CHART_PRESENTATION_CONTROL_IDS.showTitle]: true,
     [CHART_PRESENTATION_CONTROL_IDS.showSubtitle]: true,
     [CHART_PRESENTATION_CONTROL_IDS.showNote]: true,

@@ -1,196 +1,87 @@
 ---
-title: 编译观测 · inspect
-description: 为已完成的编译按需添加观测与只读辅助图层，不改变主图的语义或结果
+title: 结果检查 · inspect
+description: 读取普通编译结果，通过独立辅助图层观察最终路径、分组与裁剪
 ---
 
-<ComponentAlert
-  type="warning"
-  title="迁移中"
-  description="Core 已删除编译观测与空间句柄。当前 Inspect 尚未重新接入普通编译产物，本页旧用法暂不可用；新消费与绘制流程将在独立阶段更新。"
-/>
-
-`@retikz/inspect` 为已经完成的 Core 编译提供可选观测：Inspector 读取最终实例与所属者产物，再生成独立的只读辅助内容。控制点、布局边界和对齐参考线都是这种观测的具体用法。
-
-它只解释最终结果，不修正输入、不参与布局求解，也不改变主图。普通绘图、编译和渲染不需要安装本包；没有匹配的 Inspector 时也不会创建辅助片段。
-
-<ComponentAlert
-  title="可选的绘图辅助"
-  description="@retikz/inspect 不是绘图或渲染的必需依赖。它只帮助理解已经完成的图和编译结果，适合开发、调试或教学场景；通常不建议作为生产环境的常规能力。"
-/>
-
-## 观察什么
-
-普通曲线是主图，点和虚线是独立的辅助层。改变主图控制点会改变曲线几何；关闭检查只隐藏辅助内容，不改变曲线。这一区别也适用于节点边界、裁切和层级观测。
-
-<ComponentPreview files="/kernel/packages/inspect/builtins/inspect-basic" size="md" hideCode />
+`@retikz/inspect` 是可选包。主图先完成普通编译，检查器再读取 `CompileResult`，生成辅助 IR 并独立编译。关闭检查、无匹配目标或检查失败，都不改变主图。
 
 ## 安装与使用
 
 <PackageManagerInstall packages="@retikz/inspect" />
 
-注册表保存可用的观测器，请求选择目标和显示选项。先用默认注册表为一条曲线开启控制点。
-
-<DocTabs defaultValue="react">
-<DocTab value="react" label="React">
-<DocSteps>
-<DocStep title="导入内容">
-
-`@retikz/inspect` 导出默认注册表工厂 `createDefaultInspectorRegistry` 和路径观测标识 `PATH_INSPECTOR_KEY`；`@retikz/inspect/react` 导出 `InspectLayout` 和 `InspectPath`，分别接入注册表和附加路径观测请求。
-
-```tsx
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { InspectLayout, InspectPath } from '@retikz/inspect/react';
-```
-
-</DocStep>
-<DocStep title="接入渲染">
-
-React 从 `@retikz/inspect/react` 导入包装组件。`InspectLayout` 接收 registry；`InspectPath`、`InspectNode`、`InspectScope` 和 `InspectCoordinate` 分别把 request 附加到当前 Path、Node、Scope 或 Coordinate：
-
-```tsx
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { InspectLayout, InspectPath } from '@retikz/inspect/react';
-import { Step } from '@retikz/react';
-
-const registry = createDefaultInspectorRegistry();
-
-export const InspectExample = () => (
-  <InspectLayout registry={registry}>
-    <InspectPath request={{ inspector: PATH_INSPECTOR_KEY, options: { controlPoints: true, labels: true } }}>
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
-    </InspectPath>
-  </InspectLayout>
-);
-```
-
-`InspectLayout` 在普通 Layout 运行时接入可选 inspection compile driver；`InspectPath` 保持普通 Path 的内容写法，只把 request 转成 runtime-only authoring 标记。
-
-</DocStep>
-
-<DocStep title="保留普通 React 组件（可选）">
-
-需要保留现有 `Layout` / `Path` 时，使用下面的等价接法；与上面的包装组件写法二选一。
-
-这里的 `/vanilla` 子入口提供驱动与 authoring 标记 helper，普通 React 组件也能消费；仍然用 React 编写图形。Inspect 包装组件会代为接入这些 helper。
-
-```tsx
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
-import { Layout, Path, Step } from '@retikz/react';
-
-const registry = createDefaultInspectorRegistry();
-const compileDriver = createInspectionVanillaDriver({ registry });
-const pathInspection = createInspectionVanillaAuthoring({
-  inspector: PATH_INSPECTOR_KEY,
-  options: { controlPoints: true, labels: true },
-});
-
-export const ConfiguredInspectExample = () => (
-  <Layout compileDriver={compileDriver}>
-    <Path authoring={pathInspection}>
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
-    </Path>
-  </Layout>
-);
-```
-
-两种写法在相同配置下生成相同的观测请求与结果；包装组件只是代为完成接线。这里的配置固定，因此驱动放在组件外；若依赖 React props 或状态，在组件内用 `useMemo` 创建驱动并声明对应依赖。基础组件没有 `inspect` 属性，`authoring` 也不会写入 Core IR。
-
-</DocStep>
-</DocSteps>
-</DocTab>
-<DocTab value="vanilla" label="Vanilla">
-<DocSteps>
-<DocStep title="导入内容">
-
-`@retikz/inspect` 导出默认注册表工厂和路径观测标识；`@retikz/inspect/vanilla` 导出 `createInspectionVanillaAuthoring` 和 `createInspectionVanillaDriver`，分别创建观测标记和接入观测能力的编译驱动。
+注册表定义可以使用哪些检查器，requests 决定本次检查什么。仅创建注册表不会显示辅助图形。
 
 ```ts
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
-```
+import { compileToScene } from '@retikz/core';
+import { compileInspectionToScene, createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
 
-</DocStep>
-<DocStep title="接入渲染">
-
-Vanilla 分别创建 authoring 标记和编译驱动：前者说明当前路径需要观测，后者在普通渲染入口接入 registry 与辅助图层：
-
-`authoring` 只附加观测请求，不改变路径几何，也不会保存进 IR。
-
-```ts
-import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
-import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
-import { path, renderToSvgString, scene } from '@retikz/vanilla';
-
-const registry = createDefaultInspectorRegistry();
-const input = scene({
+const primary = compileToScene({
+  version: 1,
+  type: 'scene',
   children: [
-    path({
-      id: 'curve',
-      // 将当前 authored Path 标为要观测的目标；不会进入 Core IR
-      authoring: createInspectionVanillaAuthoring({
-        inspector: PATH_INSPECTOR_KEY,
-        options: { controlPoints: true, labels: true },
-      }),
-      way: [
-        [0, 0],
-        {
-          cubic: [
-            [20, -30],
-            [80, 30],
-          ],
-        },
-        [100, 0],
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'curve', control: [40, -50], to: [80, 0] },
       ],
-    }),
+    },
   ],
 });
 
-const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
+const auxiliary = compileInspectionToScene(primary, {
+  registry: createDefaultInspectorRegistry(),
+  requests: [{ inspector: PATH_INSPECTOR_KEY }],
+});
 ```
 
-</DocStep>
-</DocSteps>
+`auxiliary.inspection` 是独立辅助平面，空输出为 null。主图保持在 primary 中，Inspect 不再次编译主图输入。
+
+## 宿主接入
+
+React 的 `InspectionOverlay` 接收已经完成的结果；Vanilla 的 `mountInspection` 创建独立的 SVG 或 Canvas 辅助表面。调用方将它们叠放在主图上，提供相同 viewport、width 和 height。辅助层不参与主图 fit、命中或动画。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { InspectionOverlay } from '@retikz/inspect/react';
+
+<InspectionOverlay
+  result={primary}
+  options={{
+    registry: createDefaultInspectorRegistry(),
+    requests: [{ inspector: PATH_INSPECTOR_KEY }],
+    idPrefix: 'inspection',
+    viewport: primary.scene.layout,
+  }}
+/>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+```ts
+import { mountInspection } from '@retikz/inspect/vanilla';
+
+const overlay = mountInspection(overlayContainer, 'svg');
+const presentation = overlay.update(primary, {
+  registry: createDefaultInspectorRegistry(),
+  requests: [{ inspector: PATH_INSPECTOR_KEY }],
+  idPrefix: 'inspection',
+});
+if (presentation.error) console.error(presentation.error);
+// 主图更新成功后，再用新结果调用 overlay.update(...)
+overlay.dispose();
+```
+
 </DocTab>
 </DocTabs>
 
-根入口只提供 Definition、注册表、选择与辅助编译；React 与 Vanilla 适配分别从 `/react` 与 `/vanilla` 子入口导入，渲染仍由 `@retikz/render` 负责。先从“内置观测”看到第一个结果，再按需阅读拓展或实现原理。配置字段见 [API 参考](/kernel/packages/inspect/reference)。
+同一主图页面上的 idPrefix 应保持唯一。只拿到 Scene 时，可传入 `{ scene, artifacts: [] }`；它不包含领域产物。
 
-## 职责一览
+## 可检查的事实
 
-| 文档        | 职责                                                   | 适合何时查阅                         |
-| ----------- | ------------------------------------------------------ | ------------------------------------ |
-| 内置观测    | 查看 Core 当前支持的五类内置 Inspector 与其辅助内容    | 想快速理解最终编译结果时             |
-| 自定义用法  | 定义、注册并请求第三方 Inspector                       | 需要解释自己的 Core owner 最终产物时 |
-| 实现原理    | 理解 Core 观测、隔离片段和只读图层如何在同次编译中协作 | 诊断行为或深入实现边界时             |
-| API 参考    | 查询根入口、React 与 Vanilla 子路径的公开 API          | 需要完整签名与类型时                 |
-| Schema 参考 | 查询标签开关与内置 Path 观测配置                       | 需要字段、默认值与校验结构时         |
+内置支持最终 Path 控制柄、Group 坐标系与 Clip 边缘，详见[内置检查](/kernel/packages/inspect/builtins)。Node 布局盒、连接边界、Coordinate 点位、作者 Scope 包络以及布局求解过程不在普通 Scene 中，因此不提供对应检查器。
 
-## 章节内容
-
-<LinkedSections
-  items={[
-    {
-      title: '内置观测',
-      description: 'Core 当前提供的五类内置 Inspector 与辅助内容',
-      url: '/kernel/packages/inspect/builtins',
-    },
-    {
-      title: '自定义用法',
-      description: '观测接口、自定义 Inspector 与注册路径',
-      url: '/kernel/packages/inspect/custom',
-    },
-    {
-      title: '实现原理',
-      description: 'Core 观测、隔离编译和只读图层的协作流程',
-      url: '/kernel/packages/inspect/mechanism',
-    },
-    {
-      title: 'API 参考',
-      description: '根入口与 React、Vanilla 子路径的公开类型、函数和组件',
-      url: '/kernel/packages/inspect/reference',
-    },
-  ]}
-/>
+Composite artifact 可供[自定义检查器](/kernel/packages/inspect/custom)消费，但必须有可靠的坐标语义。occurrence 只是同次结果的来源定位，不能用它推导世界坐标。

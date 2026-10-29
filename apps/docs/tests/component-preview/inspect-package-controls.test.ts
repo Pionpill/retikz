@@ -1,44 +1,21 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/types';
-import { previewControlContract as inspectSelectionContract } from '../../src/modules/docs/contents/kernel/packages/inspect/mechanism/inspect-selection.controls';
-import { previewControlContract as inspectSelectionEnContract } from '../../src/modules/docs/contents/kernel/packages/inspect/mechanism/inspect-selection.en.controls';
+import { createPreviewControlContract } from '../../src/modules/docs/contents/kernel/packages/inspect/builtins/inspect-quadratic.controls';
 
-const fieldContractOf = (definition: PreviewControlsDefinition) =>
-  getPreviewControlFields(definition).map(field => ({
-    id: field.id,
-    kind: field.kind,
-    defaultValue: field.defaultValue,
-    optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
-  }));
-
-describe('@retikz/inspect 选择交互演示控件', () => {
-  it('target、Inspector 选项和 barrier 控件保持双语且稳定', () => {
-    const zhFields = fieldContractOf(inspectSelectionContract.controls);
-    const enFields = fieldContractOf(inspectSelectionEnContract.controls);
-
-    expect(inspectSelectionContract.controls.presentation).toBe('panel');
-    expect(inspectSelectionEnContract.controls.presentation).toBe('panel');
-    expect(enFields).toEqual(zhFields);
-    expect(zhFields).toEqual([
-      { id: 'target', kind: 'select', defaultValue: 'both', optionValues: ['left', 'right', 'both'] },
-      { id: 'controlPoints', kind: 'switch', defaultValue: true, optionValues: undefined },
-      { id: 'labels', kind: 'switch', defaultValue: true, optionValues: undefined },
-      { id: 'barrierRight', kind: 'switch', defaultValue: false, optionValues: undefined },
+describe('Inspect 路径检查控件', () => {
+  it('中英文公开同一组几何与检查参数，Reset 默认值一致', () => {
+    const zh = createPreviewControlContract('zh');
+    const en = createPreviewControlContract('en');
+    const fields = getPreviewControlFields(zh.controls);
+    expect(fields.map(field => ({ ...field, label: '' }))).toEqual(
+      getPreviewControlFields(en.controls).map(field => ({ ...field, label: '' })),
+    );
+    expect(en.canonicalValues).toEqual(zh.canonicalValues);
+    expect(fields.filter(field => field.kind === 'switch').map(field => field.id)).toEqual([
+      'controlPoints',
+      'vertices',
+      'labels',
     ]);
-    expect(inspectSelectionEnContract.canonicalValues).toEqual(inspectSelectionContract.canonicalValues);
-    expect(inspectSelectionContract.canonicalValues).toEqual({
-      target: 'both',
-      controlPoints: true,
-      labels: true,
-      barrierRight: false,
-    });
-    expect(inspectSelectionContract.relatedApis).toEqual([
-      'InspectPath.request',
-      'InspectScope.request',
-      'PathInspectOptionsSchema',
-    ]);
-    expect(inspectSelectionEnContract.relatedApis).toEqual(inspectSelectionContract.relatedApis);
   });
 });

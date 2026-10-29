@@ -10,7 +10,7 @@ keywords: 'Inspector、sourcePath、InspectorDefinition、inspect、IRChild'
 - 接受日期：2026-08-07
 - 关联：[Standard Layout Inspector ADR-012](../../../../../library/_notes/decisions/standard/v0/v0.1/012-layout-inspector.md) · [Standard Inspector 视觉语义 ADR-013](../../../../../library/_notes/decisions/standard/v0/v0.1/013-layout-inspector-visual-semantics.md)
 
-> Core 观测、所属者产物发布和检查专用上下文契约已由 [077](./077-compile-output-contract.md) 删除。Inspect 迁移到普通编译结果的独立消费方案另行定义；本篇不得作为恢复 Core 观测入口的依据。
+> 输入、选择、上下文、内置能力与失败语义已由 [078](./078-inspect-compiled-output.md) 替代；Core 观测及检查专用出口由 [077](./077-compile-output-contract.md) 删除。仅保留可选包、统一扩展与普通只读层原则。
 
 ## 背景与目标
 

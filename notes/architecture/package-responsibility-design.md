@@ -46,6 +46,14 @@ Plot 是数据可视化领域的唯一 owner。它定义 Plot Source IR schema �
 
 Plot 只通过 Core 的公开能力输出 Core IR，不复制 Core compile、Scene 或 renderer 语义。它不维护框架 authoring Input、DOM mount、React props / JSX 或独立 retained session。
 
+### 2.3 `@retikz/inspect`：可选的次级观测功能
+
+Inspect 是可有可无的次级功能，只读消费主体 compile / pipeline 已有的公开产物，例如 Scene 与 Composite artifacts；其能力边界由这些产物中可确定的事实决定。Core、Reconciler 与领域 pipeline 不感知 Inspect，不为它注册观测内容、保留中间状态，或增加专用字段、回调、空间句柄与执行分支。产物字段必须有主体功能的独立需求，不能以 Inspect 的需要为理由扩充。
+
+Inspect 从已有产物推导辅助内容，再通过普通 Core 编译与渲染能力独立生成观测层。辅助编译不重新执行主图的作者输入或领域 pipeline。启用、关闭或检查失败均不得改变主体编译结果、布局、资源、命中、交互与提交语义；辅助层不成为主图提交的前置条件，失败只影响辅助层及其独立诊断。
+
+缺少可靠事实或坐标映射时，Inspect 应明确不支持相应能力，不猜测作者语义，也不要求主体补充仅供观测的数据。圆弧构造辅助线、Layout 产物检查等被收缩的能力后续单独设计；恢复能力仍须遵守上述边界，不以恢复旧功能完整度为由重新侵入主体。当前结果消费架构保持不变，具体契约见 [ADR-078](../../packages/kernel/_notes/decisions/v0/v0.5/078-inspect-compiled-output.md)。
+
 ## 3. API 基础包
 
 ### 3.1 `@retikz/vanilla`
