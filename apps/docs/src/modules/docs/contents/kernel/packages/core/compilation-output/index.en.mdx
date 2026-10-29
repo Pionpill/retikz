@@ -414,6 +414,12 @@ Use `formatPropertyPath` for display, `isPropertyPathEqual` for comparison, and 
 
 ## Compilation snapshots and provenance
 
+`provenance` contains only the root entity key, `root`, and the source table, `ownerMap`. The table associates each entity key within a compilation with its record. Each record's `emissions` stores the primitive paths, roles, and ordinals emitted directly by that entity. The `parent` key links source records; `id` and `namespace` record the entity's name and its namespace. Entities with duplicate names retain separate records. Reusing an IR object at different positions also creates distinct entity keys. Entities that emit no primitives retain their records with empty `emissions`.
+
+A `CompileProvenanceTracker` instance manages mutable compilation state. Its `capture` method produces an independent snapshot using the final Scene order. Later collection does not change previously returned snapshots. Consumers query entities through a read-only Map without rebuilding an index from an array.
+
+Replaying a selected layout probe preserves its internal entities and primitive ownership, attaching the source tree beneath the enclosing Composite. The probe's root namespace joins the placement namespace; internal local namespaces are mapped independently. Added transform and clip wrappers belong to the enclosing Composite. Unselected probes contribute no final provenance. Replayed entities remain generated content with candidate-local identities in Reconciler, without a cross-version stability guarantee.
+
 `compileSceneSnapshot(ir, compileOptions, executeOptions)` returns `result`, `diagnostics`, and optional `provenance` without dispatching warnings. `compileOptions` excludes `onWarn`; `executeOptions.captureProvenance` enables provenance collection. Provenance supports primitive identity and commits; internal layout still supports measurement, references, and replay.
 
 <SourceLinks

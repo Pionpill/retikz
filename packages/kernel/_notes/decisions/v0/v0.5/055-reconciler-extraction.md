@@ -53,15 +53,18 @@ Core 公开 `validateCompositeInputBindings(source: IRScene, inputs: CompositeIn
 
 Core 提供只读 `CompileProvenance`，描述本次编译的来源事实，不提供 Runtime identity 或稳定性结论。其跨包数据由以下集合组成：
 
-| 集合        | 必需信息                                                                                                                                |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `owners`    | 编译内唯一的 `key`、可选父 `parent`、实体 `kind`、可选作者 `id`、输入位置 `index`、是否属于生成内容的 `generated`；文档根由 `root` 指定 |
-| `bindings`  | 名称注册所在的编译内 `namespace` 标识、名称 `name` 和来源 `owner`；保留注册顺序及重复注册，不提前去重                                   |
-| `emissions` | 最终 Scene 中图元 occurrence 的 `primitivePath`、来源 `owner`、发射 `role` 与同 owner/role 下的 `ordinal`                               |
+| 集合              | 必需信息                                                                                                                                                                                             |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ownerMap`        | 以编译内实体键索引来源记录；包含可选父 `parent`、实体 `kind`、可选作者 `id`、所属命名空间 `namespace`、输入位置 `index`、是否属于生成内容的 `generated` 和直接输出 `emissions`；文档根由 `root` 指定 |
+| `owner.emissions` | 最终 Scene 中该实体直接产生的图元 occurrence 的 `primitivePath`、发射 `role` 与同 owner/role 下的 `ordinal`；归属由所在实体记录表达                                                                  |
 
 编译内标识为不透明键，只能在同一份来源结果内关联。每个最终图元 occurrence 恰有一条 emission；provider 复用同一对象不会合并不同出现位置。最终顺序包含编译产生的排序和包装效果，嵌套贡献保留原来源。试算中未选中的输出不进入最终 emission；选中 replay 的名称注册与来源仍须准确记录。此 sidecar 不进入持久 IR 或 Scene schema，也不替代空间句柄和诊断 locator。
 
 Core 负责准确记录内置及自定义绘图能力的来源。Reconciler 根据这些事实及 candidate revision，沿用既有稳定身份和 candidate-local 身份规则，生成运行时拓扑。Render 不从 Scene 的 public id 或对象引用反推运行时身份。
+
+来源契约只保存根实体键与实体映射，不另存名称绑定或平行的全局发射表。名称归属由实体的 `id` 与 `namespace` 表达，同名实体分别保留；无图元输出的实体仍有来源记录。根及匿名实体保留所在命名空间，使来源迁移不依赖额外上下文。
+
+选中 replay 保留试算内部的实体父子关系与图元归属，导入时分配独立实体键并挂到所属 Composite。试算根命名空间映射到重放位置，内部局部命名空间保持隔离；外层新增包装图元归所属 Composite。内部实体作为生成内容使用版本内身份，不因保留细粒度来源获得跨版本稳定保证。未选中的试算不进入最终来源，重放继续只使用已选中的绘图结果。
 
 ### Reconciler 公开表面
 

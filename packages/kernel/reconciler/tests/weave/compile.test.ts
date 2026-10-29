@@ -1,9 +1,17 @@
-import type { IRScene, ScenePrimitive } from '@retikz/core';
+import type { CompileProvenance, IRScene, ScenePrimitive } from '@retikz/core';
 import { compileSceneSnapshot, compileToScene, definePath, PathSchema } from '@retikz/core';
+import { encodePropertyPath } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
+
+const readEmissions = (provenance: CompileProvenance) =>
+  [...provenance.ownerMap.values()]
+    .flatMap(owner => owner.emissions)
+    .sort((left, right) =>
+      encodePropertyPath(left.primitivePath).localeCompare(encodePropertyPath(right.primitivePath)),
+    );
 
 const scene: IRScene = {
   type: 'scene',
@@ -30,8 +38,8 @@ describe('Weave 编译构建', () => {
     expect(readWeaveCurrent(prepared.root).children.map(node => node.type)).toEqual(['path', 'scope', 'scope']);
     expect(readWeaveCurrent(prepared.root).scopeIds.size).toBe(3);
     expect(readWeaveCurrent(prepared.root).children.every(node => readWeaveCurrent(node).compiled !== null)).toBe(true);
-    expect(prepared.compilation.provenance?.emissions.map(entry => entry.primitivePath)).toEqual(
-      compileSceneSnapshot(scene, {}, { captureProvenance: true }).provenance?.emissions.map(
+    expect(readEmissions(prepared.compilation.provenance!).map(entry => entry.primitivePath)).toEqual(
+      readEmissions(compileSceneSnapshot(scene, {}, { captureProvenance: true }).provenance!).map(
         entry => entry.primitivePath,
       ),
     );
@@ -166,8 +174,10 @@ describe('Weave 与 Core 可观察等价', () => {
     expect(weave.result).toEqual(full.result);
     expect(weave.diagnostics).toEqual(full.diagnostics);
     expect(
-      weave.provenance?.emissions.map(({ primitivePath, role, ordinal }) => ({ primitivePath, role, ordinal })),
-    ).toEqual(full.provenance?.emissions.map(({ primitivePath, role, ordinal }) => ({ primitivePath, role, ordinal })));
+      readEmissions(weave.provenance!).map(({ primitivePath, role, ordinal }) => ({ primitivePath, role, ordinal })),
+    ).toEqual(
+      readEmissions(full.provenance!).map(({ primitivePath, role, ordinal }) => ({ primitivePath, role, ordinal })),
+    );
   });
 });
 
@@ -324,6 +334,6 @@ it('自定义 Path 重用相同图元对象时保留各自的发射来源', () =
   };
   const prepared = new WeaveReconciler(input, { paths: [kind] }).mount();
   expect(prepared.compilation.result).toEqual(compileToScene(input, { paths: [kind] }));
-  const owners = prepared.compilation.provenance?.emissions.map(emission => emission.owner);
-  expect(new Set(owners).size).toBe(2);
+  const owners = [...prepared.compilation.provenance!.ownerMap.values()].filter(owner => owner.emissions.length > 0);
+  expect(owners).toHaveLength(2);
 });

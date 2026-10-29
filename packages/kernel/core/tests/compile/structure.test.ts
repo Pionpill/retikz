@@ -16,6 +16,7 @@ describe('编译源结构', () => {
   it('编译聚合入口仅公开稳定的运行时条目', () => {
     expect(Object.keys(compile).sort()).toEqual([
       'BuiltinCompileWarningCode',
+      'CompileProvenanceTracker',
       'assembleCompileOutputs',
       'assembleSceneCompilation',
       'assembleScopeOutput',
@@ -28,7 +29,6 @@ describe('编译源结构', () => {
       'computeLayout',
       'createCompileChildPath',
       'createCompileNamespaceRegistry',
-      'createCompileProvenanceTracker',
       'createSharedCompileContext',
       'fallbackMeasurer',
       'formatCompileOccurrence',

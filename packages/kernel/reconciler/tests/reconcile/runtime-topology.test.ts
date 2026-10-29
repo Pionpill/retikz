@@ -45,7 +45,7 @@ const compileWithTopology = <const T extends ReadonlyArray<AnyCompositeDefinitio
     if (primitive !== undefined)
       primitiveRecords.set(primitive, { identity: node.identity, semanticOwner: node.semanticOwner });
   }
-  return { ...compiled, primitiveRecords };
+  return { ...compiled, primitiveRecords, snapshot };
 };
 
 const identityKey = (identity: { owner: string; path: ReadonlyArray<string> }): string =>
@@ -90,11 +90,8 @@ const recordsOf = (ir: IRScene) => {
 describe('Core 规范 Runtime 拓扑', () => {
   it('把 provider 重复返回的同一 primitive 对象物化为独立 occurrence identity', () => {
     const sharedPrimitive: ScenePrimitive = {
-      type: 'rect',
-      x: 0,
-      y: 0,
-      width: 10,
-      height: 10,
+      type: 'group',
+      children: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10 }],
     };
     const repeated = definePath({
       name: 'repeated',
@@ -138,6 +135,17 @@ describe('Core 规范 Runtime 拓扑', () => {
     expect(first).not.toBe(second);
     expect(firstRecord.semanticOwner).toEqual(secondRecord.semanticOwner);
     expect(firstRecord.identity).not.toEqual(secondRecord.identity);
+    const topology = compiled.snapshot.topology;
+    expect(topology.map(node => node.primitivePath)).toEqual([
+      ['primitives', 0],
+      ['primitives', 0, 'children', 0],
+      ['primitives', 1],
+      ['primitives', 1, 'children', 0],
+    ]);
+    expect(topology.map(node => node.order)).toEqual([0, 0, 1, 0]);
+    expect(topology[1].parent).toEqual(topology[0].identity);
+    expect(topology[3].parent).toEqual(topology[2].identity);
+    expect(topology[1].identity).not.toEqual(topology[3].identity);
   });
 
   it('从真实 semantic owner 与 emission role/ordinal 派生唯一 primitive identity', () => {
@@ -305,8 +313,8 @@ describe('Core 规范 Runtime 拓扑', () => {
         type: literal('topologyReplay'),
       }),
       compile: (_, context) => {
-        context.layoutChild({ type: 'node', position: [-100, 0] }, naturalLayoutProposal);
-        const selected = resolvedResultOf(context, { type: 'node', position: [0, 0] });
+        context.layoutChild({ type: 'node', id: 'discarded', position: [-100, 0] }, naturalLayoutProposal);
+        const selected = resolvedResultOf(context, { type: 'node', id: 'selected', position: [0, 0] });
 
         return {
           children: [context.replay(selected, { transforms: [{ kind: 'translate', x: 20, y: 30 }] })],
@@ -331,8 +339,81 @@ describe('Core 规范 Runtime 拓扑', () => {
 
     expect(primitives.map(primitive => primitive.type)).toEqual(['group', 'rect']);
     expect(new Set(records.map(record => identityKey(record.identity))).size).toBe(records.length);
-    expect(new Set(records.map(record => identityKey(record.semanticOwner))).size).toBe(1);
+    expect(new Set(records.map(record => identityKey(record.semanticOwner))).size).toBe(2);
     expect(records.every(record => record.semanticOwner.path.includes('candidate'))).toBe(true);
+    const owners = [...compiled.provenance!.ownerMap.entries()];
+    expect(owners.some(([, owner]) => owner.id === 'discarded')).toBe(false);
+    const selected = owners.find(([, owner]) => owner.id === 'selected')!;
+    expect(selected[1].generated).toBe(true);
+    expect(selected[1].emissions).toHaveLength(1);
+    const parent = compiled.provenance!.ownerMap.get(selected[1].parent!)!;
+    expect(parent.kind).toBe('composite:test:topologyReplay');
+    expect(parent.emissions).toHaveLength(1);
+  });
+
+  it.each([false, true])('嵌套重放保持实体来源并映射局部命名空间：%s', localNamespace => {
+    const inner = defineComposite({
+      namespace: 'test',
+      type: 'innerProvenanceReplay',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('innerProvenanceReplay') }),
+      compile: (_, context) => {
+        const selected = resolvedResultOf(context, {
+          type: 'scope',
+          localNamespace,
+          children: [
+            { type: 'node', id: 'same', position: [0, 0] },
+            { type: 'coordinate', id: 'point', position: [10, 0] },
+          ],
+        });
+        return { children: [context.replay(selected)] };
+      },
+    });
+    const outer = defineComposite({
+      namespace: 'test',
+      type: 'outerProvenanceReplay',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('outerProvenanceReplay') }),
+      compile: (_, context) => {
+        const first = resolvedResultOf(context, { namespace: 'test', type: 'innerProvenanceReplay' });
+        const second = resolvedResultOf(context, { namespace: 'test', type: 'innerProvenanceReplay' });
+        return {
+          children: [
+            context.replay(first),
+            context.replay(second, { transforms: [{ kind: 'translate', x: 30, y: 0 }] }),
+          ],
+        };
+      },
+    });
+    const compiled = compileWithTopology(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'same', position: [-30, 0] },
+          { namespace: 'test', type: 'outerProvenanceReplay' },
+        ],
+      },
+      { composites: [inner, outer] },
+      { candidateRevision: runtimeRevision },
+    );
+    const provenance = compiled.provenance!;
+    const owners = [...provenance.ownerMap.values()];
+    const namedOwners = owners.filter(owner => owner.id === 'same');
+    expect(namedOwners).toHaveLength(3);
+    expect(new Set(namedOwners.map(owner => owner.namespace)).size).toBe(localNamespace ? 3 : 1);
+    expect(namedOwners.filter(owner => owner.generated)).toHaveLength(2);
+    const coordinates = owners.filter(owner => owner.id === 'point');
+    expect(coordinates).toHaveLength(2);
+    expect(coordinates.every(owner => owner.emissions.length === 0)).toBe(true);
+    const innerOwners = owners.filter(owner => owner.kind === 'composite:test:innerProvenanceReplay');
+    expect(innerOwners.map(owner => owner.index).sort()).toEqual([0, 1]);
+    for (const owner of owners) {
+      if (owner.parent !== undefined) expect(provenance.ownerMap.has(owner.parent)).toBe(true);
+    }
+    const primitives = flattenPrimitives(compiled.result.scene.primitives);
+    const records = primitives.map(primitive => compiled.primitiveRecords.get(primitive)!);
+    expect(new Set(records.map(record => identityKey(record.identity))).size).toBe(primitives.length);
+    expect(records[0].semanticOwner.path.includes('candidate')).toBe(!localNamespace);
+    expect(records.slice(1).every(record => record.semanticOwner.path.includes('candidate'))).toBe(true);
   });
 
   it('Composite 生成的 anonymous 与 duplicate child 都留在 candidate-local boundary', () => {

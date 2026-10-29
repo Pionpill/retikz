@@ -467,7 +467,7 @@ Reconciler 会话通过 Weave 协调器持有稳定 WeaveRoot，作为整棵树�
 
 基础元素输入按声明顺序建立节点与名称绑定。Node 和 Coordinate 使用当前位置可见的引用；Scope 先准备上下文，再计算子元素和包络，最后完成所属路径。顶层 Path 可等到两侧 Scope 的节点发布后计算。名称注册由 `createCompileNamespaceRegistry` 保持同层覆盖诊断，`projectScopeCompileLayouts` 与 `projectPublishedCompileLayout` 复用 Core 的包络贡献和最终引用投影规则。
 
-编译完成后，Reconciler 通过 Core 组装完整输出。`createCompileProvenanceTracker` 保存图元来源，在资源重映射和 Scope 包装时转移到新图元；最终来源路径与排序后的 Scene 配对，不需要再次完整编译补齐。候选计算失败时，Reconciler 会话保留旧结果；成功后才发布配对的树与输出。
+编译完成后，Reconciler 通过 Core 组装完整输出。`CompileProvenanceTracker` 保存图元来源，在资源重映射和 Scope 包装时转移到新图元；最终来源路径与排序后的 Scene 配对，不需要再次完整编译补齐。候选计算失败时，Reconciler 会话保留旧结果；成功后才发布配对的树与输出。
 
 内部 Weave 协调器支持在已构建的 Root 上处理 WeaveBatch：先按顺序应用增删改，再基于最终输入计算。上下文沿声明结构传递，依赖失效沿消费者传播；Scope 准备、子布局、包络与最终投影遵守 Core 的计算顺序，Path 保留延后引用能力。未受影响且输入、声明位置和名称绑定仍有效的编译产物可以复用；启用观察会话或需要重新生成诊断时重新计算相关元素。当前采用保守失效，Scope 变化可能使整个子树重新计算，尚不按 style / layout 粒度过滤。
 

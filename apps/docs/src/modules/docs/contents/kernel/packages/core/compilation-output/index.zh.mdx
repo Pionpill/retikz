@@ -406,6 +406,12 @@ for (const artifact of result.artifacts) {
 
 ## 编译快照与来源
 
+`provenance` 只包含根实体键 `root` 和来源表 `ownerMap`。来源表以同次编译的实体键关联记录，每条记录的 `emissions` 保存该实体直接产生的图元路径、角色和序号。父子来源通过 `parent` 关联，名称及其所属命名空间保存在实体的 `id` 和 `namespace` 中。同名实体各有独立记录；同一个 IR 对象出现在不同位置时也拥有不同的实体键。没有生成图元的实体仍保留来源记录，`emissions` 为空。
+
+`CompileProvenanceTracker` 实例管理编译中的可变状态，`capture` 根据最终 Scene 顺序生成独立快照。后续收集不会修改已交付快照；消费者通过只读 Map 查询实体，无需重新从数组构建索引。
+
+选中的布局试算在重放时保留内部实体和图元的归属关系，并将来源树挂到所属 Composite 下。试算根命名空间接入重放位置，内部局部命名空间独立映射；新增的变换和裁剪包装图元归外层 Composite。未选中的试算不进入最终来源。重放实体属于生成内容，Reconciler 仍为其分配版本内身份，不承诺跨版本稳定。
+
 `compileSceneSnapshot(ir, compileOptions, executeOptions)` 返回 `result`、`diagnostics` 和按需收集的 `provenance`，不派发警告。`compileOptions` 不包含 `onWarn`；`executeOptions.captureProvenance` 控制是否收集来源。来源信息用于图元身份关联与提交，内部布局继续服务测量、引用和重放。
 
 <SourceLinks

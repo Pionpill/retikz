@@ -79,7 +79,7 @@ import {
   wrapLayoutProbeError,
 } from '../probe-failure';
 import type { CompileOwnerKey } from '../provenance';
-import { createCompileProvenanceTracker } from '../provenance';
+import { CompileProvenanceTracker } from '../provenance';
 import { importSceneResources, remapPrimitiveResources } from '../resource';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import {
@@ -218,6 +218,7 @@ export const compileChildrenToPrimitives = (
       namespaceStack:
         options.namespaceStack ??
         new NamespaceStack({
+          rootIdentity: options.provenanceTracker?.rootNamespace,
           onDuplicate: info => dispatchWarning(createDuplicateWarning(info)),
         }),
       zIndexOf: new WeakMap(),
@@ -579,7 +580,6 @@ export const compileChildrenToPrimitives = (
     const didPushNamespaceFrame = child.localNamespace === true;
     if (didPushNamespaceFrame) {
       runtime.state.namespaceStack.pushFrame();
-      runtime.state.provenanceTracker?.pushNamespaceFrame();
     }
 
     const scopePrimitiveSink: Array<InternalScenePrimitive> = [];
@@ -686,7 +686,6 @@ export const compileChildrenToPrimitives = (
       if (layoutPlaceholder.placeholderLayout !== undefined) runtime.state.namespaceStack.leaveScope();
       if (didPushNamespaceFrame) {
         runtime.state.namespaceStack.popFrame();
-        runtime.state.provenanceTracker?.popNamespaceFrame();
       }
     }
 
@@ -873,6 +872,16 @@ export const compileChildrenToPrimitives = (
     const wrapperClipRef =
       wrapperClipPath === undefined ? undefined : runtime.context.workspace.clipRegistry.importPath(wrapperClipPath);
     const replayedPrimitives = transaction.primitives.map(primitive => remapPrimitiveResources(primitive, resourceIds));
+    if (semanticOwner !== undefined && runtime.state.provenanceTracker !== undefined) {
+      if (transaction.provenance === undefined) throw createCompileInvariantError('Missing replay provenance');
+      runtime.state.provenanceTracker.importProvenance(
+        transaction.provenance,
+        replayedPrimitives,
+        semanticOwner,
+        outputIndex,
+        runtime.state.namespaceStack.identity,
+      );
+    }
     const committedPrimitives: Array<ScenePrimitive> = [];
     if ((transforms === undefined || transforms.length === 0) && wrapperClipRef === undefined) {
       replayedPrimitives.forEach((primitive, index) => {
@@ -898,9 +907,6 @@ export const compileChildrenToPrimitives = (
 
     if (semanticOwner !== undefined) {
       runtime.state.provenanceTracker?.recordPrimitives(committedPrimitives, semanticOwner, 'composite-replay');
-      transaction.topologyIdentityIds.forEach(id =>
-        runtime.state.provenanceTracker?.registerGeneratedIdentity(id, semanticOwner),
-      );
     }
 
     const suppressedNamespaceWarnings = new Set<InputCompileWarning>();
@@ -1169,7 +1175,13 @@ export const compileChildrenToPrimitives = (
         true,
         semanticOwner === undefined
           ? undefined
-          : runtime.state.provenanceTracker?.createGeneratedOwner(output.child, index, semanticOwner),
+          : runtime.state.provenanceTracker?.createOwner(
+              output.child,
+              index,
+              semanticOwner,
+              true,
+              runtime.state.namespaceStack.identity,
+            ),
       );
 
       return;
@@ -1193,7 +1205,13 @@ export const compileChildrenToPrimitives = (
     const scopeSemanticOwner =
       semanticOwner === undefined
         ? undefined
-        : runtime.state.provenanceTracker?.createGeneratedOwner(runtimeScopeChild, index, semanticOwner);
+        : runtime.state.provenanceTracker?.createOwner(
+            runtimeScopeChild,
+            index,
+            semanticOwner,
+            true,
+            runtime.state.namespaceStack.identity,
+          );
     const scopeOccurrence: CompileOccurrenceLocator = {
       sourcePath: parentOccurrence.sourcePath,
       expansionPath: [...parentOccurrence.expansionPath, { kind: scopeSegment, index }],
@@ -1224,7 +1242,13 @@ export const compileChildrenToPrimitives = (
               true,
               scopeSemanticOwner === undefined
                 ? undefined
-                : runtime.state.provenanceTracker?.createGeneratedOwner(child, childIndex, scopeSemanticOwner),
+                : runtime.state.provenanceTracker?.createOwner(
+                    child,
+                    childIndex,
+                    scopeSemanticOwner,
+                    true,
+                    runtime.state.namespaceStack.identity,
+                  ),
             );
             continue;
           }
@@ -1357,8 +1381,6 @@ export const compileChildrenToPrimitives = (
         workspace.diagnostics.collect(warning);
       };
 
-      const probeProvenanceTracker =
-        runtime.state.provenanceTracker === undefined ? undefined : createCompileProvenanceTracker();
       let probeWarningOccurrence = probeOccurrence;
       const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
       const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
@@ -1375,6 +1397,11 @@ export const compileChildrenToPrimitives = (
             freezeOccurrence(probeWarningOccurrence),
           ),
       });
+
+      const probeProvenanceTracker =
+        runtime.state.provenanceTracker === undefined
+          ? undefined
+          : new CompileProvenanceTracker(namespaceStack.identity);
 
       const sandboxContext: FullCompileContext = {
         shared: context.shared,
@@ -1485,7 +1512,9 @@ export const compileChildrenToPrimitives = (
         namespaceChangeOccurrences: namespaceChanges.map(
           change => registrationOccurrences.get(registrationKey(probeFrameDepth, change.id)) ?? probeOccurrence,
         ),
-        topologyIdentityIds: [...(probeProvenanceTracker?.rootIdentityRegistrations() ?? [])],
+        ...(probeProvenanceTracker === undefined
+          ? {}
+          : { provenance: probeProvenanceTracker.capture(laid.primitives) }),
         namespaceBaselineWarnings,
         resources,
         warnings: [...warnings],
@@ -1930,7 +1959,13 @@ export const compileChildrenToPrimitives = (
           true,
           semanticOwner === undefined
             ? undefined
-            : runtime.state.provenanceTracker?.createGeneratedOwner(output, outputIndex, semanticOwner),
+            : runtime.state.provenanceTracker?.createOwner(
+                output,
+                outputIndex,
+                semanticOwner,
+                true,
+                runtime.state.namespaceStack.identity,
+              ),
         );
         continue;
       }
@@ -2015,12 +2050,17 @@ export const compileChildrenToPrimitives = (
   ): void => {
     const generated =
       generatedScopeOccurrence !== undefined || (useProvidedOccurrence ? (options.generated ?? false) : false);
-    const semanticOwners =
-      runtime.state.provenanceTracker === undefined || frame.semanticOwner === undefined
-        ? undefined
-        : runtime.state.provenanceTracker.createChildOwners(children, frame.semanticOwner, generated);
-
     for (const [i, child] of children.entries()) {
+      const semanticOwner =
+        frame.semanticOwner === undefined
+          ? undefined
+          : runtime.state.provenanceTracker?.createOwner(
+              child,
+              i,
+              frame.semanticOwner,
+              generated,
+              runtime.state.namespaceStack.identity,
+            );
       const entityPath = createCompileChildPath(frame.locatorPrefix, i);
       const occurrence = generatedScopeOccurrence
         ? {
@@ -2042,7 +2082,7 @@ export const compileChildrenToPrimitives = (
           : frame.runtimeInputs === undefined
             ? undefined
             : selectCompositeInputScope(frame.runtimeInputs, ['children', i]);
-      compileChild(child, i, { ...frame, runtimeInputs }, occurrence, compositeDepth, generated, semanticOwners?.[i]);
+      compileChild(child, i, { ...frame, runtimeInputs }, occurrence, compositeDepth, generated, semanticOwner);
     }
   };
 

@@ -25,7 +25,7 @@ import {
   compileScope,
   createSharedCompileContext,
   createCompileNamespaceRegistry,
-  createCompileProvenanceTracker,
+  CompileProvenanceTracker,
   createCompileChildPath,
   prepareScopeCompilation,
   projectCompileReference,
@@ -120,10 +120,10 @@ export const isWeaveScene = (source: IRScene): boolean => {
 /** 协调声明树、Core 编译与依赖记录；当前每次准备独占可变状态 */
 export class WeaveReconciler {
   private readonly shared: ReturnType<typeof createSharedCompileContext>;
-  private provenance = createCompileProvenanceTracker();
   /** 本次准备结果的警告列表，收集编译与名称注册警告，在重新编译前重置 */
   private diagnostics: Array<CompileWarning> = [];
   private namespace = createCompileNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
+  private provenance = new CompileProvenanceTracker(this.namespace.identity);
   /** 本树固定的 scopeId 前缀，同时作为根节点的 scopeId */
   private readonly treeId: string;
   /** 本次实际执行元素编译的次数，缓存复用不计入 */
@@ -231,9 +231,9 @@ export class WeaveReconciler {
             .readNode(this.root)
             .children.map(node => this.editor.serializeNodeDeclaration(node)),
         };
-        this.provenance = createCompileProvenanceTracker();
         this.diagnostics = [];
         this.namespace = createCompileNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
+        this.provenance = new CompileProvenanceTracker(this.namespace.identity);
         this.visited = 0;
         // 输出遍历重放名称声明，避免把最终名称表当成声明位置的引用环境
         this.transaction.editNode(this.root).ids = new Map();
@@ -497,7 +497,6 @@ export class WeaveReconciler {
     const nestedNamespaceRegistry = child.localNamespace
       ? createCompileNamespaceRegistry(namespaceRegistry.namespace, warning => this.diagnostics.push(warning))
       : namespaceRegistry;
-    if (child.localNamespace) this.provenance.pushNamespaceFrame();
     const preliminary = prepared.preliminaryTransforms ?? [];
     const nested = this.reconcileChildren(child.children, {
       parent: node,
@@ -552,7 +551,6 @@ export class WeaveReconciler {
         irPath: state.compiled.irPath,
         layout: this.projectNodeReference(node, context.transforms ?? []),
       });
-    if (child.localNamespace) this.provenance.popNamespaceFrame();
     const layouts = projectScopeCompileLayouts(child, state.compiled.envelope, nested.layouts, transforms);
     const output = assembleScopeOutput(
       state.compiled,
@@ -587,7 +585,6 @@ export class WeaveReconciler {
     const publications: Array<Publication> = [];
     // path 编译队列，延后编译 path
     const pathCompileQueue: Array<(transforms?: ReadonlyArray<Transform>) => void> = [];
-    const owners = this.provenance.createChildOwners(input, owner, false);
 
     for (const [index, child] of input.entries()) {
       if ('namespace' in child)
@@ -604,7 +601,7 @@ export class WeaveReconciler {
         irPath,
         occurrence,
       };
-      const semanticOwner = owners[index];
+      const semanticOwner = this.provenance.createOwner(child, index, owner, false, namespaceRegistry.identity);
       const element: WeaveElementCompileContext = { container, options: compileOptions, owner: semanticOwner };
       const node = this.updating
         ? this.transaction.readNode(parent).children[index]

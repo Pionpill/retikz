@@ -25,7 +25,7 @@ import type { WorkspaceCompileContext, SharedCompileContext } from '../context';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { CompiledNodeLayout } from '../node';
 import type { LayoutProbeFailureEntry } from '../probe-failure';
-import type { CompileOwnerKey, CompileProvenanceTracker } from '../provenance';
+import type { CompileOwnerKey, CompileProvenance, CompileProvenanceTracker } from '../provenance';
 import type { CompositeArtifact } from '../types';
 import type { InputCompileWarning } from '../warning';
 import type { InternalScenePrimitive, PathPlaceholder, PrimitiveZIndexTable } from './primitive';
@@ -117,8 +117,8 @@ export type CompositeReplayTransaction = {
   namespaceChanges: Array<NamespaceFrameChange>;
   /** 与 namespaceChanges 对齐的最终注册 occurrence */
   namespaceChangeOccurrences: Array<CompileOccurrenceLocator>;
-  /** probe root namespace frame 内全部 Kernel identity registrations */
-  topologyIdentityIds: Array<string>;
+  /** 与 probe 图元树配对的完整来源，仅在选中重放时导入 */
+  provenance?: CompileProvenance;
   /** probe 中由 fork baseline collision 产生的 duplicate warning */
   namespaceBaselineWarnings: Array<{
     /** 与探测起始命名空间发生冲突的标识 */

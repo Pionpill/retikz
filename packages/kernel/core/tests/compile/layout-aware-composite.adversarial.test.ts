@@ -952,23 +952,18 @@ describe('布局感知的复契约束和边界', () => {
       },
     });
     const ir = sceneOf({ namespace: 'test', type: 'compileProvenanceInvariantParent' });
-    const outer = compileProvenance.createCompileProvenanceTracker();
-    const actual = compileProvenance.createCompileProvenanceTracker();
-    const broken = Object.freeze({
-      ...actual,
-      popNamespaceFrame: () => {
-        actual.popNamespaceFrame();
-        actual.popNamespaceFrame();
-      },
-    });
-    const createProbeTracker = vi.spyOn(compileProvenance, 'createCompileProvenanceTracker').mockReturnValue(broken);
+    const outer = new compileProvenance.CompileProvenanceTracker();
+    const invariant = createCompileInvariantError('Missing compile provenance');
+    const captureProbe = vi
+      .spyOn(compileProvenance.CompileProvenanceTracker.prototype, 'capture')
+      .mockImplementation(() => {
+        throw invariant;
+      });
     const context = createFullCompileContext(ir, { composites: [parent] });
 
-    expect(() => compileChildrenToPrimitives(ir.children, context, { provenanceTracker: outer })).toThrow(
-      RetikzCoreError,
-    );
+    expect(() => compileChildrenToPrimitives(ir.children, context, { provenanceTracker: outer })).toThrow(invariant);
 
-    createProbeTracker.mockRestore();
+    captureProbe.mockRestore();
   });
 
   it('不会将无效的 layoutChild 判别字段降级为失败的探测', () => {

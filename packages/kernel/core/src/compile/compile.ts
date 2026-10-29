@@ -4,7 +4,7 @@ import { createFullCompileContext } from './context';
 import { compileChildrenToPrimitives, orderCompileWarnings } from './orchestration';
 import { assembleSceneCompilationSnapshot } from './output';
 import type { CompileProvenance } from './provenance';
-import { createCompileProvenanceTracker } from './provenance';
+import { CompileProvenanceTracker } from './provenance';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from './types';
 import type { CompileWarning } from './warning';
 import { formatCompileWarning } from './warning';
@@ -66,7 +66,7 @@ export const compileSceneSnapshot = <const TComposites extends ReadonlyArray<Any
 ): SceneCompilationSnapshot<TComposites> => {
   const context = createFullCompileContext(ir, compileOptions ?? {});
   const { diagnostics, paintRegistry, clipRegistry } = context.workspace;
-  const provenanceTracker = executeOptions.captureProvenance === true ? createCompileProvenanceTracker() : undefined;
+  const provenanceTracker = executeOptions.captureProvenance === true ? new CompileProvenanceTracker() : undefined;
 
   const { primitives, layoutBounds, artifacts } = compileChildrenToPrimitives(ir.children, context, {
     ...(provenanceTracker === undefined ? {} : { provenanceTracker }),

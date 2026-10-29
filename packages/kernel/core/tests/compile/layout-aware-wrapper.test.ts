@@ -29,7 +29,7 @@ import { createFullCompileContext } from '../../src/compile/context';
 import { NamespaceStack } from '../../src/compile/namespace';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 import type { CompositeCompileSession } from '../../src/compile/orchestration/types';
-import { createCompileProvenanceTracker } from '../../src/compile/provenance';
+import { CompileProvenanceTracker } from '../../src/compile/provenance';
 import { sceneRectangles } from '../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -571,7 +571,7 @@ describe('布局感知复合运行时包装树', () => {
     const failingIr = scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: true }]);
     const context = createFullCompileContext(failingIr, options);
     const namespaceStack = new NamespaceStack();
-    const provenanceTracker = createCompileProvenanceTracker();
+    const provenanceTracker = new CompileProvenanceTracker(namespaceStack.identity);
     const session: CompositeCompileSession = {
       measurements: new Map(),
       measurementIdentities: new WeakMap(),
@@ -596,7 +596,7 @@ describe('布局感知复合运行时包装树', () => {
     expect(context.workspace.paintRegistry.resources()).toEqual([]);
     expect(context.workspace.clipRegistry.resources()).toEqual([]);
     expect(namespaceStack.lookupEntry('same')?.layout).toBeUndefined();
-    expect(provenanceTracker.rootIdentityRegistrations()).toEqual([]);
+    expect([...provenanceTracker.capture([]).ownerMap.values()].filter(owner => owner.id !== undefined)).toEqual([]);
     expect(session.outputChildren.get(replayHandle!)).toMatchObject({ used: false });
     expect(session.outputChildren.get(scopeHandle!)).toMatchObject({ used: false });
 
@@ -608,7 +608,7 @@ describe('布局感知复合运行时包装树', () => {
     expect(transaction?.warnings.length).toBeGreaterThan(0);
     expect(transaction?.artifacts.length).toBeGreaterThan(0);
     expect(transaction?.namespaceChanges.length).toBeGreaterThan(0);
-    expect(transaction?.topologyIdentityIds.length).toBeGreaterThan(0);
+    expect(transaction?.provenance?.ownerMap.size).toBeGreaterThan(0);
 
     const committed = compileToScene(
       scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: false }]),

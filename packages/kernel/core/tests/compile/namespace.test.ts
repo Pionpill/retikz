@@ -22,6 +22,27 @@ const makeLayout = (_id: string, x = 0, y = 0): CompiledNodeLayout => ({
 });
 
 describe('NamespaceStack 基本 register / lookup', () => {
+  it('作用域身份不随名称写入变化，fork 共享已有作用域并隔离新建作用域', () => {
+    const stack = new NamespaceStack();
+    const root = stack.identity;
+    stack.register('same', makeLayout('same'));
+    const fork = stack.fork();
+    fork.register('same', makeLayout('same', 20));
+    expect(stack.identity).toBe(root);
+    expect(fork.identity).toBe(root);
+    expect(stack.lookupEntry('same')?.layout.geometry.rect.x).toBe(0);
+
+    stack.pushFrame();
+    fork.pushFrame();
+    expect(stack.identity).not.toBe(root);
+    expect(fork.identity).not.toBe(stack.identity);
+    expect(stack.fork().identity).toBe(stack.identity);
+    stack.popFrame();
+    fork.popFrame();
+    expect(stack.identity).toBe(root);
+    expect(fork.identity).toBe(root);
+  });
+
   it('名称堆栈基本寄存器查找', () => {
     const stack = new NamespaceStack();
     const layout = makeLayout('A', 10, 20);

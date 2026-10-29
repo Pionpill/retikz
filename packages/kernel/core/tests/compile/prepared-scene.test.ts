@@ -1,7 +1,8 @@
 import { readPropertyPath } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { IRScene } from '../../src';
+import type { IRChild, IRScene, ScenePrimitive } from '../../src';
+import { CompileProvenanceTracker } from '../../src';
 import { compileSceneSnapshot, compileToScene, createCompositeInputBindings, RetikzCoreErrorCode } from '../../src';
 
 const scene: IRScene = {
@@ -14,6 +15,43 @@ const scene: IRScene = {
 };
 
 describe('静态编译快照', () => {
+  it('来源快照隔离后续收集，重复输入引用与嵌套发射保持各自归属', () => {
+    const tracker = new CompileProvenanceTracker();
+    const input: IRChild = { type: 'node', id: 'same', position: [0, 0] };
+    const first = tracker.createOwner(input, 0, tracker.root, false, tracker.rootNamespace);
+    const second = tracker.createOwner(input, 1, tracker.root, false, tracker.rootNamespace);
+    const generated = tracker.createOwner(input, 0, first, true, tracker.rootNamespace);
+    const child: ScenePrimitive = { type: 'group', children: [] };
+    const group: ScenePrimitive = { type: 'group', children: [child] };
+    tracker.recordPrimitives([child], generated, 'generated');
+    tracker.recordPrimitives([group], first, 'node');
+    const copied = tracker.materializePrimitives([group]);
+    tracker.transferPrimitives([group], copied);
+    const snapshot = tracker.capture(copied);
+
+    expect(first).not.toBe(second);
+    expect(snapshot.ownerMap.get(first)?.emissions).toEqual([
+      { primitivePath: ['primitives', 0], role: 'node:group', ordinal: 0 },
+    ]);
+    expect(snapshot.ownerMap.get(generated)).toMatchObject({
+      parent: first,
+      generated: true,
+      emissions: [{ primitivePath: ['primitives', 0, 'children', 0], role: 'generated:group', ordinal: 0 }],
+    });
+    expect(snapshot.ownerMap.get(second)?.emissions).toEqual([]);
+    expect(snapshot.ownerMap.get(tracker.root)?.emissions).toEqual([]);
+    const later: ScenePrimitive = { type: 'group', children: [] };
+    tracker.recordPrimitives([later], first, 'node');
+    tracker.createOwner(input, 1, first, true, tracker.rootNamespace);
+    const next = tracker.capture([later, ...copied]);
+    expect(next.ownerMap.get(first)?.emissions.map(emission => emission.ordinal)).toEqual([1, 0]);
+    expect(next.ownerMap.get(first)?.emissions[1].primitivePath).toEqual(['primitives', 1]);
+    expect(snapshot.ownerMap.size).toBe(4);
+    expect([...snapshot.ownerMap.values()].filter(owner => owner.id === 'same')).toHaveLength(3);
+    expect(snapshot.ownerMap.get(first)?.emissions[0].primitivePath).toEqual(['primitives', 0]);
+    expect(Object.isFrozen(snapshot.ownerMap.get(first)?.emissions)).toBe(true);
+  });
+
   it('默认结果等价且不收集来源', () => {
     const snapshot = compileSceneSnapshot(scene);
     expect(snapshot.result).toEqual(compileToScene(scene));
@@ -34,7 +72,7 @@ describe('静态编译快照', () => {
       const provenance = snapshot.provenance!;
       expect(snapshot.diagnostics.length).toBeGreaterThan(0);
       expect(warning).not.toHaveBeenCalled();
-      expect(provenance.bindings.filter(binding => binding.name === 'same')).toHaveLength(2);
+      expect([...provenance.ownerMap.values()].filter(owner => owner.id === 'same')).toHaveLength(2);
       const paths: Array<Array<string | number>> = [];
       const visit = (items: typeof snapshot.result.scene.primitives, parent: Array<string | number>): void => {
         items.forEach((primitive, index) => {
@@ -44,16 +82,18 @@ describe('静态编译快照', () => {
         });
       };
       visit(snapshot.result.scene.primitives, ['primitives']);
-      expect(provenance.emissions.map(emission => emission.primitivePath)).toEqual(paths);
-      for (const emission of provenance.emissions) {
+      const emissions = [...provenance.ownerMap.values()].flatMap(owner => owner.emissions);
+      expect(emissions).toHaveLength(paths.length);
+      expect(emissions.map(emission => emission.primitivePath)).toEqual(expect.arrayContaining(paths));
+      for (const emission of emissions) {
         const primitive = readPropertyPath(snapshot.result.scene, emission.primitivePath);
         expect(primitive).toHaveProperty('type');
         expect(Object.isFrozen(emission.primitivePath)).toBe(true);
       }
-      expect(provenance.owners.some(owner => owner.key === provenance.root)).toBe(true);
-      expect(
-        provenance.emissions.every(emission => provenance.owners.some(owner => owner.key === emission.owner)),
-      ).toBe(true);
+      expect(provenance.ownerMap.has(provenance.root)).toBe(true);
+      for (const owner of provenance.ownerMap.values()) {
+        if (owner.parent !== undefined) expect(provenance.ownerMap.has(owner.parent)).toBe(true);
+      }
     } finally {
       warning.mockRestore();
     }

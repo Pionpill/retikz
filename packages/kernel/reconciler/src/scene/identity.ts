@@ -1,61 +1,82 @@
 import type { CompileNamespaceKey, CompileOwnerKey, CompileProvenance } from '@retikz/core';
-import { encodePropertyPath } from '@retikz/foundation';
+import { formatPropertyPath, readPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 
 import { CORE_SOURCE_KEY } from '../constants';
+import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { createSceneIdentity } from './identity-value';
 import type { SceneIdentity, SceneRevision } from './identity-value';
+import type { RuntimeScenePrimitive } from './types';
 
 /** 从单次编译来源计算当前候选版本的图元身份 */
 export const createPrimitiveIdentityIndex = (
+  primitives: ReadonlyArray<RuntimeScenePrimitive>,
   provenance: CompileProvenance,
   revision: SceneRevision,
-): ReadonlyMap<string, Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity }>> => {
+): WeakMap<
+  RuntimeScenePrimitive,
+  Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity; primitivePath: PropertyPath }>
+> => {
   const candidates = new Set<CompileOwnerKey>();
-  const namespaces = new Map<CompileNamespaceKey, Map<string, Array<CompileOwnerKey>>>();
-  for (const binding of provenance.bindings) {
-    let names = namespaces.get(binding.namespace);
+  /** 每个作用域只记录名称的首次出现，遇到重复时将双方标为候选身份 */
+  const namespaces = new Map<CompileNamespaceKey, Map<string, CompileOwnerKey>>();
+  for (const [ownerKey, owner] of provenance.ownerMap) {
+    if (owner.id === undefined) continue;
+    let names = namespaces.get(owner.namespace);
     if (names === undefined) {
       names = new Map();
-      namespaces.set(binding.namespace, names);
+      namespaces.set(owner.namespace, names);
     }
-    const occurrences = names.get(binding.name) ?? [];
-    occurrences.push(binding.owner);
-    names.set(binding.name, occurrences);
-  }
-  for (const names of namespaces.values()) {
-    for (const occurrences of names.values()) {
-      if (occurrences.length > 1) occurrences.forEach(owner => candidates.add(owner));
+    const firstOwner = names.get(owner.id);
+    if (firstOwner === undefined) names.set(owner.id, ownerKey);
+    else {
+      candidates.add(firstOwner);
+      candidates.add(ownerKey);
     }
   }
   const identities = new Map<CompileOwnerKey, SceneIdentity>();
-  const owners = new Map(provenance.owners.map(owner => [owner.key, owner]));
   const identityOf = (key: CompileOwnerKey): SceneIdentity => {
     const cached = identities.get(key);
     if (cached !== undefined) return cached;
-    const owner = owners.get(key)!;
+    const owner = provenance.ownerMap.get(key)!;
     const parent = owner.parent === undefined ? undefined : identityOf(owner.parent);
     const path =
       parent === undefined
         ? ['root']
-        : owner.generated || owner.id === undefined || candidates.has(owner.key)
+        : owner.generated || owner.id === undefined || candidates.has(key)
           ? [...parent.path, 'candidate', String(revision), owner.kind, String(owner.index)]
           : [...parent.path, owner.kind, owner.id];
     const identity = createSceneIdentity(CORE_SOURCE_KEY, path);
     identities.set(key, identity);
     return identity;
   };
-  const result = new Map<string, Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity }>>();
-  for (const emission of provenance.emissions) {
-    const semanticOwner = identityOf(emission.owner);
-    result.set(encodePropertyPath(emission.primitivePath), {
-      semanticOwner,
-      identity: createSceneIdentity(CORE_SOURCE_KEY, [
-        ...semanticOwner.path,
-        'emission',
-        emission.role,
-        String(emission.ordinal),
-      ]),
-    });
+  const result = new WeakMap<
+    RuntimeScenePrimitive,
+    Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity; primitivePath: PropertyPath }>
+  >();
+  const source = { primitives };
+  for (const [key, owner] of provenance.ownerMap) {
+    if (owner.emissions.length === 0) continue;
+    const semanticOwner = identityOf(key);
+    for (const emission of owner.emissions) {
+      const primitive = readPropertyPath(source, emission.primitivePath) as RuntimeScenePrimitive | undefined;
+      if (primitive === undefined) {
+        throw new RetikzReconcilerError(
+          RetikzReconcilerErrorCode.Compile,
+          `Missing provenance primitive at ${formatPropertyPath(emission.primitivePath)}`,
+        );
+      }
+      result.set(primitive, {
+        primitivePath: emission.primitivePath,
+        semanticOwner,
+        identity: createSceneIdentity(CORE_SOURCE_KEY, [
+          ...semanticOwner.path,
+          'emission',
+          emission.role,
+          String(emission.ordinal),
+        ]),
+      });
+    }
   }
   return result;
 };

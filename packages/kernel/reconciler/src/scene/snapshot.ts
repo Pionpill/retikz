@@ -1,6 +1,4 @@
 import type { CompileProvenance, Scene } from '@retikz/core';
-import { encodePropertyPath } from '@retikz/foundation';
-import type { PropertyPath } from '@retikz/foundation';
 
 import { CORE_SOURCE_KEY } from '../constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
@@ -33,18 +31,13 @@ const createFullTopology = (
 ): ReadonlyArray<SceneRuntimeNode> => {
   const topology: Array<SceneRuntimeNode> = [];
 
-  const visit = (
-    items: ReadonlyArray<RuntimeScenePrimitive>,
-    parent: SceneRuntimeNode['parent'],
-    parentPath: PropertyPath,
-  ): void => {
+  const visit = (items: ReadonlyArray<RuntimeScenePrimitive>, parent: SceneRuntimeNode['parent']): void => {
     items.forEach((primitive, order) => {
-      const primitivePath = Object.freeze([...parentPath, order]);
-      const record = metadata.get(encodePropertyPath(primitivePath));
+      const record = metadata.get(primitive);
       if (record === undefined) {
         throw new RetikzReconcilerError(
           RetikzReconcilerErrorCode.Compile,
-          `createFullSceneRuntimeSnapshot: missing primitive identity at ${encodePropertyPath(primitivePath)}`,
+          'createFullSceneRuntimeSnapshot: missing primitive identity',
         );
       }
 
@@ -54,15 +47,15 @@ const createFullTopology = (
           semanticOwner: record.semanticOwner,
           parent,
           order,
-          primitivePath,
+          primitivePath: record.primitivePath,
           ...(primitive.id === undefined ? {} : { publicId: primitive.id }),
         }),
       );
-      if (primitive.type === 'group') visit(primitive.children, record.identity, [...primitivePath, 'children']);
+      if (primitive.type === 'group') visit(primitive.children, record.identity);
     });
   };
 
-  visit(primitives, rootIdentity, ['primitives']);
+  visit(primitives, rootIdentity);
 
   return Object.freeze(topology);
 };
@@ -83,6 +76,9 @@ export const createFullSceneRuntimeSnapshot = (
     revision,
     scene: runtimeScene,
     root: rootIdentity,
-    topology: createFullTopology(runtimeScene.primitives, createPrimitiveIdentityIndex(provenance, revision)),
+    topology: createFullTopology(
+      runtimeScene.primitives,
+      createPrimitiveIdentityIndex(runtimeScene.primitives, provenance, revision),
+    ),
   });
 };

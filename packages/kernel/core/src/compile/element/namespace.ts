@@ -2,11 +2,14 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompileOccurrenceLocator } from '../../contract';
 import { createDuplicateWarning, orderCompileWarnings, withCompileWarningOccurrence } from '../orchestration';
+import type { CompileNamespaceKey } from '../provenance';
 import type { CompileWarning } from '../warning';
 import type { CompileBinding, CompileNamespace } from './types';
 
 /** 一个调用方持有的名称 frame；更新仅作用于所属编译版本 */
 export type CompileNamespaceRegistry = {
+  /** 本 frame 的作用域身份，名称覆盖不改变身份 */
+  identity: CompileNamespaceKey;
   /** 供元素读取的命名空间视图 */
   namespace: CompileNamespace;
   /** 按声明顺序登记名称，保留 Core 同 frame last-wins 诊断 */
@@ -25,6 +28,7 @@ export const createCompileNamespaceRegistry = (
   let depth = 0;
   for (let outer = parent; outer !== undefined; outer = outer.parent) depth++;
   return {
+    identity: Object.freeze({}) as CompileNamespaceKey,
     namespace: { bindings, ...(parent === undefined ? {} : { parent }) },
     register: (name, binding, path, occurrence) => {
       if (bindings.has(name)) {
