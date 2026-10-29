@@ -149,15 +149,14 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
     try {
       onArtifactsRef.current?.(result.artifacts);
     } catch (cause) {
-      if (process.env.NODE_ENV !== 'production') console.warn('[retikz] <Layout> onArtifacts callback failed', cause);
+      if (__DEV__) console.warn('[retikz] <Layout> onArtifacts callback failed', cause);
     }
   }, [result]);
   useEffect(() => {
     try {
       onCompileResultRef.current?.(result.compileResult);
     } catch (cause) {
-      if (process.env.NODE_ENV !== 'production')
-        console.warn('[retikz] <Layout> onCompileResult callback failed', cause);
+      if (__DEV__) console.warn('[retikz] <Layout> onCompileResult callback failed', cause);
     }
   }, [result]);
 

@@ -175,6 +175,7 @@ Control: <human-directed|llm-autonomous>
 
 ## 代码风格
 
+- 仅用于开发调试的代码及其专属计算统一放入 `if (__DEV__)`；生产必需的校验、异常和用户诊断回调不得受此开关控制。Vite 入口接入共享 DEV 插件，仓库内 Node/tsx 源码入口预加载 `config/dev-runtime.mjs`；库产物保留环境判断，由消费方生产构建裁剪。业务源码不自行读取 `NODE_ENV` 或定义运行时 DEV 常量。
 - TypeScript ESM；目录、文件、符号、enum、registry 和组件命名统一遵循 `standard-name`。
 - 内部代码依赖明确的 TypeScript 类型契约，不为纯 JavaScript 调用额外维护 `unknown`、`typeof`、`Array.isArray`、对象结构探测、重复 `throw` 或错误分支；纯 JavaScript 调用方自行负责类型校验。
 - `packages/**/src` 由 Retikz 主动创建的错误必须是 `RetikzError` 或其子类，自定义错误类统一命名为 `RetikzXxxError`；每个发布包一般只保留一个统一的 `Retikz<Package>Error`，通过 code、message、details 与 cause 区分失败。只有错误边界独立且调用方确实需要按 class 分支，或存在额外稳定结构字段时，才允许增加专用错误类型。生产源码不得创建原生 `Error`；第三方或用户回调异常在 Retikz API 边界包装为 owner 错误并原样保留为 `cause`，测试可用原生 `Error` 模拟外部失败。

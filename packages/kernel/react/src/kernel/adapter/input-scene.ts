@@ -237,7 +237,7 @@ const readEdgeLabel = (children: ReactNode): InputStepLabel | undefined => {
       const props = child.props as EdgeLabelElementProps;
       if (typeof props.children !== 'string') return;
       if (result !== undefined) {
-        if (process.env.NODE_ENV !== 'production') {
+        if (__DEV__) {
           console.warn('[retikz] <Step> 含多个 <EdgeLabel>，仅首个生效、其余被忽略');
         }
 
@@ -535,7 +535,7 @@ const readSceneChildren = (children: ReactNode, context: InputContext): Readonly
         return;
       }
 
-      if (process.env.NODE_ENV !== 'production') {
+      if (__DEV__) {
         console.warn(
           `[retikz] <Layout> children 含无法识别的元素 <${componentLabel(child.type)}>，已忽略。只有 Kernel、Sugar 与 React.Fragment 会被转换为 Input`,
         );

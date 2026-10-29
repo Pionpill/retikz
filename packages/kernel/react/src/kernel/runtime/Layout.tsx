@@ -138,7 +138,7 @@ const deliverProcessingDiagnostics = (
     try {
       callback(diagnostic);
     } catch (cause) {
-      if (process.env.NODE_ENV !== 'production') console.warn('[retikz] <Layout> onDiagnostic callback failed', cause);
+      if (__DEV__) console.warn('[retikz] <Layout> onDiagnostic callback failed', cause);
     }
   }
 };
@@ -467,9 +467,10 @@ export const Layout: FC<LayoutProps> = props => {
 
   const ambientTheme = useTheme();
   const scopeStyle = useMemo(() => rootScope ?? {}, [rootScope]);
-  const hasScopeStyle = Object.keys(pickScopeStyle(scopeStyle)).length > 0;
-  if (process.env.NODE_ENV !== 'production' && irFromProp !== undefined && hasScopeStyle) {
-    warnOnce('[retikz] <Layout>：同时提供 `ir` 与 `rootScope` 时，`rootScope` 被忽略，`ir` 已是完整 IR');
+  if (__DEV__) {
+    if (irFromProp !== undefined && Object.keys(pickScopeStyle(scopeStyle)).length > 0) {
+      warnOnce('[retikz] <Layout>：同时提供 `ir` 与 `rootScope` 时，`rootScope` 被忽略，`ir` 已是完整 IR');
+    }
   }
 
   const reactInput = useMemo(() => {

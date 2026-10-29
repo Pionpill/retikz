@@ -4,6 +4,8 @@ import type { LibraryOptions, PluginOption, UserConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import { defineConfig } from 'vitest/config';
 
+import { createRetikzDevPlugin } from './dev-plugin';
+
 /** 可发布包中用于 external 判定的 manifest 字段。 */
 export type PublishablePackageManifest = {
   name: string;
@@ -48,6 +50,7 @@ export const defineRetikzLibraryConfig = ({
 
   return defineConfig({
     plugins: [
+      createRetikzDevPlugin(),
       ...plugins,
       dts({
         compilerOptions: {
@@ -55,7 +58,7 @@ export const defineRetikzLibraryConfig = ({
           types: ['node'],
         },
         entryRoot: path.resolve(packageRoot, 'src'),
-        include: ['src'],
+        include: ['src', path.resolve(packageRoot, '../../../config/dev.d.ts')],
         tsconfigPath: path.resolve(packageRoot, 'tsconfig.json'),
         outDir: 'dist/types',
       }),

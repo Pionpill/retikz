@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from 'vitest/config';
 
+import { createRetikzDevPlugin } from '../../../config/vite/dev-plugin';
 import { BenchmarkReporter } from '../../../scripts/benchmarks/reporter';
 import { resolveCoreBudget } from './benchmarks/_budgets';
 
@@ -9,6 +10,7 @@ import { resolveCoreBudget } from './benchmarks/_budgets';
 const coreEntry = fileURLToPath(new URL('./src/index.ts', import.meta.url));
 
 export default defineConfig({
+  plugins: [createRetikzDevPlugin()],
   resolve: {
     alias: [{ find: /^@retikz\/core$/, replacement: coreEntry }],
   },

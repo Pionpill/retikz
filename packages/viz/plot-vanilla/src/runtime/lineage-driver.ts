@@ -53,7 +53,7 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
             try {
               notify();
             } catch (cause) {
-              if (process.env.NODE_ENV !== 'production') console.warn('[retikz] Plot onLineage callback failed', cause);
+              if (__DEV__) console.warn('[retikz] Plot onLineage callback failed', cause);
             }
           }
         },

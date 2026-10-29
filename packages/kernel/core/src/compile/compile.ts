@@ -32,8 +32,9 @@ const dispatchCompileDiagnostics = (
   const warningSink =
     onWarn ??
     ((warning: CompileWarning): void => {
-      if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
-      console.warn(formatCompileWarning(warning));
+      if (__DEV__) {
+        console.warn(formatCompileWarning(warning));
+      }
     });
   diagnostics.forEach(warningSink);
 };

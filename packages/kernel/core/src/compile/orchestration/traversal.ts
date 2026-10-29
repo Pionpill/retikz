@@ -2066,10 +2066,7 @@ export const compileChildrenToPrimitives = (
   }
 
   if (runtime.state.placeholderBalance !== 0) {
-    const detail =
-      typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
-        ? ` at ${collectPlaceholderLocators(runtime.state.primitives).join(', ')}`
-        : '';
+    const detail = __DEV__ ? ` at ${collectPlaceholderLocators(runtime.state.primitives).join(', ')}` : '';
     throw createCompileInvariantError(
       `internal: ${runtime.state.placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`,
     );

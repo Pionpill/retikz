@@ -5,6 +5,7 @@
   "scripts": {
     "adr:search": "node scripts/adr-search.mjs",
     "test:adr-search": "node --experimental-strip-types --test tests/adr-search.test.ts",
+    "test:dev-build": "node --experimental-strip-types --test tests/dev-build.test.ts",
     "build": "pnpm -r --if-present run build",
     "check": "pnpm run check:full",
     "check:apps": "pnpm run lint:apps && pnpm run typecheck:apps",

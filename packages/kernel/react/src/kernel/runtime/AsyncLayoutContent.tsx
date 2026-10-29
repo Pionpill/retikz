@@ -71,7 +71,7 @@ export const AsyncLayoutContent: FC<AsyncLayoutContentProps> = props => {
     const fail = (cause: unknown): void => {
       if (!active || signal.aborted) return;
       if (resultRef.current === undefined) setInitialError(() => cause);
-      else if (process.env.NODE_ENV !== 'production') console.warn('[retikz] async Layout preparation failed', cause);
+      else if (__DEV__) console.warn('[retikz] async Layout preparation failed', cause);
     };
 
     if (mode === 'static') {

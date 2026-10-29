@@ -30,7 +30,7 @@ const mergeElement = (registry: Map<string, ElementHandlers>, id: unknown, handl
   const eventNames = Object.keys(handlers);
   if (eventNames.length === 0) return;
   if (typeof id !== 'string' || id.length === 0) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (__DEV__) {
       console.warn(
         '[retikz] 水合：元素带事件 handler 但缺少 `id`，无法定位挂点——该元素的 handler 被跳过。给它加一个 `id` 即可绑定。',
       );
@@ -45,7 +45,7 @@ const mergeElement = (registry: Map<string, ElementHandlers>, id: unknown, handl
     return;
   }
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (__DEV__) {
     console.warn(`[retikz] 水合：重复 id "${id}"——合并各元素的事件 handler，同一事件以后出现者覆盖先出现者。`);
   }
 

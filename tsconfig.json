@@ -18,6 +18,7 @@
     "target": "ESNext",
     "lib": ["ESNext"]
   },
+  "files": ["config/dev.d.ts"],
   "include": ["packages/*/*/src", "apps/*/src", "config/vite/**/*.ts"],
   "exclude": ["node_modules"]
 }

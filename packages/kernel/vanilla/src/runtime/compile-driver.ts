@@ -144,7 +144,7 @@ export const commitVanillaCompileOutput = (
   try {
     session.commit?.(output);
   } catch (cause) {
-    if (process.env.NODE_ENV !== 'production') console.warn('[retikz] Vanilla compile driver commit failed', cause);
+    if (__DEV__) console.warn('[retikz] Vanilla compile driver commit failed', cause);
   }
 };
 

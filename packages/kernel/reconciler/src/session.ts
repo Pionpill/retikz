@@ -230,8 +230,7 @@ export class ReconcilerSession {
       for (const warning of candidate.compilation.diagnostics) {
         try {
           if (options.onWarn !== undefined) options.onWarn(warning);
-          else if (typeof process === 'undefined' || process.env.NODE_ENV !== 'production')
-            console.warn(formatCompileWarning(warning));
+          else if (__DEV__) console.warn(formatCompileWarning(warning));
         } catch (cause) {
           this.diagnosticQueue.push(cause);
         }

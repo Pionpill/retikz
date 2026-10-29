@@ -45,8 +45,9 @@ export const createCompileContext = (
   const onWarn =
     options.onWarn ??
     ((warning: InputCompileWarning): void => {
-      if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
-      console.warn(formatCompileWarning({ ...warning, origin: warning.origin ?? { kind: 'primary' } }));
+      if (__DEV__) {
+        console.warn(formatCompileWarning({ ...warning, origin: warning.origin ?? { kind: 'primary' } }));
+      }
     });
   return {
     ...environment,
