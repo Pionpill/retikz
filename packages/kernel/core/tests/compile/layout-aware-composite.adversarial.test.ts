@@ -38,9 +38,9 @@ import {
 } from '../../src';
 import { createFullCompileContext } from '../../src/compile/context';
 import { NamespaceStack } from '../../src/compile/namespace';
-import * as compileProvenance from '../../src/compile/orchestration/provenance';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 import { createCompileInvariantError, wrapLayoutProbeError } from '../../src/compile/probe-failure';
+import * as compileProvenance from '../../src/compile/provenance';
 import { snapshotProviderPosition } from '../../src/compile/scene-primitive';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';
 import { isLayoutProbeRecoverableError } from '../../src/resolve/diagnostics';

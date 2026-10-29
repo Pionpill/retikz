@@ -384,7 +384,7 @@ const result = compileToScene(
 for (const artifact of result.artifacts) {
   if (artifact.type !== 'flexLayout') continue;
   console.log(artifact.namespace); // 'layout'
-  console.log(artifact.occurrence); // { sourcePath: 'children[0]', expansionPath: [] }
+  console.log(artifact.occurrence); // { sourcePath: ['children', 0], expansionPath: [] }
   console.log(artifact.value.kind); // 'flex'
   console.log(artifact.value.items.length); // 2
   console.log(artifact.value.lines.length); // 1
@@ -400,18 +400,24 @@ for (const artifact of result.artifacts) {
 
 普通入口通过 `onWarn` 派发警告；没有自定义出口时沿用默认警告行为。绘图错误仍终止本次编译，失败候选不会交付部分资源或领域产物。
 
-## 编译准备与来源
+警告的 `path`、输入定位的 `irPath` 与产物的 `occurrence.sourcePath` 使用 Foundation 的 `PropertyPath`：字符串表示属性名，数字表示数组下标，空数组表示根对象。例如 `['children', 0, 'style', 'fill']` 可相对输入 IR 读取颜色字段；路径不包含 `.node`、`.path` 等实体类型标记。生成内容的展开位置另存于 `expansionPath`，不伪装成原始输入属性。
 
-`compileSceneSnapshot(ir, options, execution)` 返回 `result`、`diagnostics` 和按需收集的 `provenance`，不派发警告。`options` 不包含 `onWarn`；`execution.captureProvenance` 控制是否收集来源。来源信息用于图元身份关联与提交，内部布局继续服务测量、引用和重放。
+需要展示时使用 `formatPropertyPath`，比较路径使用 `isPropertyPathEqual`，以路径建立索引使用 `encodePropertyPath`；不要用数组引用比较或 `join('.')` 代替。
+
+## 编译快照与来源
+
+`compileSceneSnapshot(ir, compileOptions, executeOptions)` 返回 `result`、`diagnostics` 和按需收集的 `provenance`，不派发警告。`compileOptions` 不包含 `onWarn`；`executeOptions.captureProvenance` 控制是否收集来源。来源信息用于图元身份关联与提交，内部布局继续服务测量、引用和重放。
 
 <SourceLinks
   sources={[
-    { label: '编译准备入口', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: '来源契约', path: 'packages/kernel/core/src/compile/provenance.ts' },
+    { label: '编译快照入口', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: '来源契约', path: 'packages/kernel/core/src/compile/provenance/types.ts' },
   ]}
 />
 
 ## 完整实现流程
+
+来源中的 `primitivePath` 相对完整 Scene，例如 `['primitives', 2, 'children', 1]`。Reconciler 的完整 topology 沿用这个根；Patch 子树 topology 则相对根图元，根路径为 `[]`，其子图元路径为 `['children', 1]`。两者均可通过 `readPropertyPath` 读取，但必须传入各自对应的根对象。
 
 `compileChildrenToPrimitives` 完成遍历、延迟路径回填、布局汇总和最终领域产物排序。`assembleSceneCompilationSnapshot` 汇总图元、资源与画布；`compileSceneSnapshot` 返回完整快照；`compileToScene` 再派发警告并返回 `scene` 与 `artifacts`。
 

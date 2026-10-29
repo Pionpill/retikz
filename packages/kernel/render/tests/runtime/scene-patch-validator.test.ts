@@ -68,7 +68,7 @@ const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>
         semanticOwner: identity,
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         publicId: identifier,
       };
     }),
@@ -76,6 +76,19 @@ const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>
 };
 
 describe('Scene 补丁验证器', () => {
+  it('要求完整 Scene 属性路径，拒绝数字链、字符串下标与错误根属性', () => {
+    const snapshot = createRectSnapshot(0, ['a']);
+    expect(() => assertSceneRuntimeSnapshot(snapshot)).not.toThrow();
+    for (const primitivePath of [[0], ['primitives', '0'], ['children', 0], ['primitives', 0, 'children', 0]]) {
+      expect(() =>
+        assertSceneRuntimeSnapshot({
+          ...snapshot,
+          topology: [{ ...snapshot.topology[0], primitivePath }],
+        }),
+      ).toThrow();
+    }
+  });
+
   it('接受 canonical clip path，并在 full snapshot 拒绝旧 shape 与 malformed path', () => {
     const valid = createRectSnapshot(0, ['a']);
     const canonical: SceneRuntimeSnapshot = {

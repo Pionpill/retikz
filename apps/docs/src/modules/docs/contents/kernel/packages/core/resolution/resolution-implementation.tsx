@@ -17,7 +17,7 @@ const ResolutionImplementation: FC<ResolutionImplementationProps> = props => {
   const lang = props.lang ?? ((i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en');
   const text = resolutionImplementationI18n[lang];
   const stages = [
-    { id: 'setup', name: 'createCompileContext' },
+    { id: 'setup', name: 'createFullCompileContext' },
     { id: 'scope', name: 'resolveScopeDefaults' },
     { id: 'merge', name: 'mergeNodeStyle' },
     { id: 'colors', name: 'resolveNodePrimaryColors' },

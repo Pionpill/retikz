@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { ClipDefinition } from '../../contract';
 import type { ProviderRegistry } from '../../providers';
 import { getProviderDefinition } from '../../providers';
@@ -11,7 +13,7 @@ type ClipResolveContext = Readonly<{
   /** 当前可用的裁剪定义注册表 */
   clipRegistry: ProviderRegistry<ClipDefinition>;
   /** 当前裁剪配置的 IR 路径，用于参数校验错误定位 */
-  irPath?: string;
+  irPath?: PropertyPath;
 }>;
 
 /** 查找裁剪定义并按其 schema 解析配置，返回供编译阶段生成裁剪几何的绑定结果 */
@@ -21,7 +23,7 @@ export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipReso
   const params = parseProviderPayload({
     capability: 'clip',
     providerName: kind,
-    irPath: context.irPath ?? 'clip',
+    irPath: context.irPath ?? [],
     payloadName: 'schema',
     schema: definition.schema,
     value: clip,

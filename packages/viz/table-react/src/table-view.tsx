@@ -1,5 +1,6 @@
 import type { CompositeArtifact } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import { isPropertyPathEqual } from '@retikz/foundation';
 import { Layout } from '@retikz/react';
 import type { TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
@@ -30,7 +31,7 @@ TableRuntimeEmbed.inputEmbedAdapter = tableInputEmbedAdapter;
 const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableCompileArtifact =>
   artifact.namespace === TABLE_NAMESPACE &&
   artifact.type === TableComposite.Table &&
-  artifact.occurrence.sourcePath === 'children[0]' &&
+  isPropertyPathEqual(artifact.occurrence.sourcePath, ['children', 0]) &&
   artifact.occurrence.expansionPath.length === 0;
 
 /** 共享 standalone Table runtime view，不作为公开组件导出 */

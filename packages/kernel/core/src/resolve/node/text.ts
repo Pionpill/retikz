@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { ParsedCssColor } from '@retikz/foundation';
 import { parseStaticCssColor } from '@retikz/foundation';
 
@@ -180,14 +181,14 @@ const resolveInlineSegmentColor = (
   segment: IRTextSegment | IRMathSegment,
   masterColor: string | undefined,
   mode: NodeResolveContext['mode'],
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): InlineSegmentColorSource => {
   const { fill, ...source } = segment;
   return {
     ...source,
     ...(fill === undefined
       ? {}
-      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }) }),
+      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: [...fieldPath, 'fill'] }) }),
   };
 };
 
@@ -196,7 +197,7 @@ const resolveNodeLineColors = (
   line: IRLine,
   masterColor: string | undefined,
   mode: NodeResolveContext['mode'],
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): ColorResolvedTextLine => {
   if (typeof line === 'string') return line;
   if ('segments' in line) {
@@ -205,9 +206,9 @@ const resolveNodeLineColors = (
       fill:
         line.fill === undefined
           ? undefined
-          : resolveContextualColor(line.fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }),
+          : resolveContextualColor(line.fill, { masterColor, mode, fieldPath: [...fieldPath, 'fill'] }),
       segments: line.segments.map((segment, index) =>
-        resolveInlineSegmentColor(segment, masterColor, mode, `${fieldPath}.segments[${index}]`),
+        resolveInlineSegmentColor(segment, masterColor, mode, [...fieldPath, 'segments', index]),
       ),
     };
   }
@@ -218,7 +219,7 @@ const resolveNodeLineColors = (
     ...source,
     ...(fill === undefined
       ? {}
-      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }) }),
+      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: [...fieldPath, 'fill'] }) }),
   };
 };
 
@@ -228,7 +229,7 @@ const resolveNodeLabelColors = (
   labelMasterColor: string | undefined,
   inheritedTextColor: string | undefined,
   context: NodeResolveContext,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): CanonicalNodeLabel => {
   const { textColor, text, pin, ...source } = label;
   const resolvedTextColor =
@@ -237,7 +238,7 @@ const resolveNodeLabelColors = (
       : resolveContextualColor(textColor, {
           masterColor: labelMasterColor,
           mode: context.mode,
-          fieldPath: `${fieldPath}.textColor`,
+          fieldPath: [...fieldPath, 'textColor'],
         });
   const textMaster = resolvedTextColor ?? inheritedTextColor;
   let resolvedPin: boolean | CanonicalNodeLabelPin | undefined;
@@ -254,9 +255,13 @@ const resolveNodeLabelColors = (
                 : resolveContextualColor(stroke, {
                     masterColor: textMaster,
                     mode: context.mode,
-                    fieldPath: `${fieldPath}.pin.stroke`,
+                    fieldPath: [...fieldPath, 'pin', 'stroke'],
                   }),
-              { patternRegistry: context.patternRegistry, round: context.round, irPath: `${fieldPath}.pin.stroke` },
+              {
+                patternRegistry: context.patternRegistry,
+                round: context.round,
+                irPath: [...fieldPath, 'pin', 'stroke'],
+              },
             ),
           }),
     };
@@ -271,7 +276,7 @@ const resolveNodeLabelColors = (
       typeof text === 'string'
         ? text
         : text.map((line, index) =>
-            resolveNodeLineColors(line, textMaster, context.mode, `${fieldPath}.text[${index}]`),
+            resolveNodeLineColors(line, textMaster, context.mode, [...fieldPath, 'text', index]),
           ),
     ...(resolvedPin === undefined ? {} : { pin: resolvedPin }),
   };
@@ -296,7 +301,7 @@ export const resolveNodeDependentColors = (
             typeof text === 'string'
               ? text
               : text.map((line, index) =>
-                  resolveNodeLineColors(line, textMaster, context.mode, `${context.irPath}.text[${index}]`),
+                  resolveNodeLineColors(line, textMaster, context.mode, [...context.irPath, 'text', index]),
                 ),
         }),
     ...(label === undefined
@@ -308,7 +313,7 @@ export const resolveNodeDependentColors = (
               labelDefault.color ?? node.style?.color,
               textMaster,
               context,
-              labelWasArray ? `${context.irPath}.label[${index}]` : `${context.irPath}.label`,
+              labelWasArray ? [...context.irPath, 'label', index] : [...context.irPath, 'label'],
             ),
           ),
         }),

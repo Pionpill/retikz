@@ -1,3 +1,6 @@
+import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
+
 import type { CompileOccurrenceLocator, LayoutChildFailure } from '../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { LayoutProbeRecoverableError } from '../resolve/diagnostics';
@@ -36,7 +39,7 @@ export type LayoutProbeFailureEntry = Readonly<{
   /** 最接近失败位置的 provider 标识 */
   providerKey: string;
   /** 失败子项在原始 IR 中的路径 */
-  sourcePath: string;
+  sourcePath: PropertyPath;
   /** 保留复合展开路径的完整失败位置 */
   occurrence: CompileOccurrenceLocator;
   /** 用于重新抛出时构造诊断的失败详情 */
@@ -134,7 +137,7 @@ export const raiseLayoutChildFailure = (
 
   entry.consumed = true;
   throw createLayoutProbeRecoverableError(
-    `Layout child provider '${entry.providerKey}' failed at ${entry.sourcePath} (${formatCompileOccurrence(entry.occurrence)}): ${entry.detail}`,
+    `Layout child provider '${entry.providerKey}' failed at ${formatPropertyPath(entry.sourcePath)} (${formatCompileOccurrence(entry.occurrence)}): ${entry.detail}`,
     { cause: entry.cause, detail: entry.detail, providerKey: entry.providerKey, occurrence: entry.occurrence },
   );
 };

@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { CurveSegmentSample } from '@retikz/math';
 
 import type { PathCommand, ScenePrimitive } from '../../../contract';
@@ -113,7 +114,7 @@ type InputStrokeSamplingCollector = {
   /** 可选 TeX 降级能力 */
   lowerTex?: TexLowerer;
   /** path warning 收集器 */
-  warn: (code: string, message: string, subPath?: string) => void;
+  warn: (code: string, message: string, subPath?: PropertyPath) => void;
 };
 
 /**
@@ -149,7 +150,7 @@ export const createStrokeSamplingCollector = ({
       tex: {
         lowerTex,
         gatingOn: lowerTex !== undefined,
-        warn: (code, message) => warn(code, message, 'label'),
+        warn: (code, message) => warn(code, message, ['label']),
       },
     });
     labelPrimitives.push(result.primitive);
@@ -212,7 +213,7 @@ export const createStrokeSamplingCollector = ({
         tex: {
           lowerTex,
           gatingOn: lowerTex !== undefined,
-          warn: (code, message) => warn(code, message, 'label'),
+          warn: (code, message) => warn(code, message, ['label']),
         },
       });
       labelPrimitives.push(result.primitive);

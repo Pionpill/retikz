@@ -1,5 +1,6 @@
-import { formatCompileChildPath } from '@retikz/core';
+import { createCompileChildPath } from '@retikz/core';
 import type { ElementCompileOptions, IRChild, IRComposite } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { readWeaveCurrent } from './transaction';
@@ -74,16 +75,16 @@ export class WeaveEditor {
   }
 
   /** 根据已提交声明结构记录旧路径，key 为稳定节点，value 为操作前的 irPath */
-  captureNodeIrPaths(): Map<WeaveNode, string> {
-    const paths = new Map<WeaveNode, string>();
-    const visit = (container: WeaveRoot | WeaveScopeNode, prefix: string): void => {
+  captureNodeIrPaths(): Map<WeaveNode, PropertyPath> {
+    const paths = new Map<WeaveNode, PropertyPath>();
+    const visit = (container: WeaveRoot | WeaveScopeNode, prefix: PropertyPath): void => {
       for (const [index, child] of readWeaveCurrent(container).children.entries()) {
-        const path = formatCompileChildPath(prefix, index, child.type);
+        const path = createCompileChildPath(prefix, index);
         paths.set(child, path);
-        if (child.type === 'scope') visit(child, `${path}.`);
+        if (child.type === 'scope') visit(child, path);
       }
     };
-    visit(this.root, '');
+    visit(this.root, []);
     return paths;
   }
 

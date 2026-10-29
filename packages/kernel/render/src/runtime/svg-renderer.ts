@@ -1,4 +1,6 @@
 import type { IRAnimationTrack, Scene } from '@retikz/core';
+import { encodePropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 import type {
   RuntimeScenePrimitive,
   ScenePatch,
@@ -504,7 +506,7 @@ const canApplyEntityPatch = (
       operation.kind === 'move',
   );
 
-const topologyPathKey = (path: ReadonlyArray<number>): string => path.join('.');
+const topologyPathKey = (path: PropertyPath): string => encodePropertyPath(path);
 
 /** 统计当前播放或截帧配置下实际会物化的动画 wrapper */
 const animationWrapperCount = (
@@ -673,7 +675,7 @@ const buildFullElementIndex = (
     primitive: RuntimeScenePrimitive,
     primitiveDescriptor: SvgNode,
     element: SVGElement,
-    path: ReadonlyArray<number>,
+    path: PropertyPath,
   ): void => {
     const topology = topologyByPath.get(topologyPathKey(path));
     if (topology === undefined)
@@ -695,7 +697,7 @@ const buildFullElementIndex = (
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG group topology element is missing');
       }
 
-      visit(child, childDescriptor as SvgNode, childElement, [...path, index]);
+      visit(child, childDescriptor as SvgNode, childElement, [...path, 'children', index]);
     });
   };
 
@@ -710,7 +712,7 @@ const buildFullElementIndex = (
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG root topology element is missing');
     }
 
-    visit(primitive, primitiveDescriptor as SvgNode, element, [index]);
+    visit(primitive, primitiveDescriptor as SvgNode, element, ['primitives', index]);
   });
 
   return createSceneIdentityMap(entries);
@@ -725,7 +727,7 @@ const reconcilePrimitiveSubtree = (
   config: RenderRuntimeConfig,
   currentElements: SceneIdentityMap<SVGElement>,
   journal: MutationJournal,
-  path: ReadonlyArray<number> = [],
+  path: PropertyPath = [],
 ): void => {
   if (primitive.type !== 'group') {
     reconcileElement(element, descriptor, journal, false);
@@ -739,7 +741,7 @@ const reconcilePrimitiveSubtree = (
   const desiredChildren = content.descriptor.children ?? [];
   primitive.children.forEach((child, index) => {
     const childDescriptor: unknown = Reflect.get(desiredChildren, index);
-    const topology = topologyByPath.get(topologyPathKey([...path, index]));
+    const topology = topologyByPath.get(topologyPathKey([...path, 'children', index]));
     if (typeof childDescriptor !== 'object' || childDescriptor === null || topology === undefined) {
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG subtree topology is incomplete');
     }
@@ -765,6 +767,7 @@ const reconcilePrimitiveSubtree = (
 
     reconcilePrimitiveSubtree(candidate, descriptorNode, child, subtree, config, currentElements, journal, [
       ...path,
+      'children',
       index,
     ]);
   });
@@ -787,7 +790,7 @@ const indexSubtreeElements = (
 ): void => {
   const topologyByPath = new Map(subtree.topology.map(node => [topologyPathKey(node.primitivePath), node]));
 
-  const visit = (primitive: RuntimeScenePrimitive, element: SVGElement, path: ReadonlyArray<number>): void => {
+  const visit = (primitive: RuntimeScenePrimitive, element: SVGElement, path: PropertyPath): void => {
     const topology = topologyByPath.get(topologyPathKey(path));
     if (topology === undefined || !target.set(topology.identity, element)) {
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG candidate topology index is invalid');
@@ -801,7 +804,7 @@ const indexSubtreeElements = (
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG candidate group element is missing');
       }
 
-      visit(child, childElement, [...path, index]);
+      visit(child, childElement, [...path, 'children', index]);
     });
   };
 
@@ -818,9 +821,9 @@ const buildRootSubtree = (
     Object.freeze({
       identity: node.identity,
       semanticOwner: node.semanticOwner,
-      ...(node.primitivePath.length === 1 ? {} : { parent: node.parent }),
+      ...(node.primitivePath.length === 2 ? {} : { parent: node.parent }),
       order: node.order,
-      primitivePath: Object.freeze(node.primitivePath.slice(1)),
+      primitivePath: Object.freeze(node.primitivePath.slice(2)),
       ...(node.publicId === undefined ? {} : { publicId: node.publicId }),
     }),
   );
@@ -855,7 +858,7 @@ const reconcileFullIdentityDocument = (
   const plan = buildRootDescriptorPlan(snapshot, descriptor, config);
   const topologyByRoot = new Map<number, Array<SceneRuntimeNode>>();
   for (const node of snapshot.topology) {
-    const rootIndex = node.primitivePath[0];
+    const rootIndex = node.primitivePath[1] as number;
     const topology = topologyByRoot.get(rootIndex);
     if (topology === undefined) topologyByRoot.set(rootIndex, [node]);
     else topology.push(node);

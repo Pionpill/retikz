@@ -1,3 +1,6 @@
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { createLayoutProbeRecoverableError } from '../../resolve/diagnostics';
@@ -22,7 +25,7 @@ type ScopeGeometryContext = Readonly<{
   /** 当前位置读取能力 */
   positionContext: PositionTargetResolveContext;
   /** 当前诊断位置 */
-  irPath: string;
+  irPath: PropertyPath;
   /** 当前诊断接收器 */
   onWarn: (warning: InputCompileWarning) => void;
 }>;
@@ -52,7 +55,7 @@ export const resolveScopePositionTarget = (
   const scopeIrPath = context.irPath;
   if (target.id === child.id) {
     throw createLayoutProbeRecoverableError(
-      `Cannot resolve scope position target '${target.id}' at ${scopeIrPath}: self target is not allowed`,
+      `Cannot resolve scope position target '${target.id}' at ${formatPropertyPath(scopeIrPath)}: self target is not allowed`,
     );
   }
 
@@ -60,7 +63,7 @@ export const resolveScopePositionTarget = (
   const reference = positionContext.lookupReference(target.id);
   if (reference === undefined || reference.state !== 'resolved') {
     throw createLayoutProbeRecoverableError(
-      `Cannot resolve scope position target '${target.id}' at ${scopeIrPath}: target must be defined and fully resolved before this Scope`,
+      `Cannot resolve scope position target '${target.id}' at ${formatPropertyPath(scopeIrPath)}: target must be defined and fully resolved before this Scope`,
     );
   }
 
@@ -68,7 +71,7 @@ export const resolveScopePositionTarget = (
   if (resolution.referencePoint === null) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `Cannot resolve scope position target '${target.id}' at ${scopeIrPath}`,
+      `Cannot resolve scope position target '${target.id}' at ${formatPropertyPath(scopeIrPath)}`,
     );
   }
 
@@ -140,7 +143,7 @@ export const resolveFinalScopeTransforms = (
     context.onWarn({
       code: transformWarnCode(failedTransform),
       message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin / between endpoints) is undefined or defined later in the IR`,
-      path: `${scopeIrPath}.transforms`,
+      path: [...scopeIrPath, 'transforms'],
     });
   }
 
@@ -204,7 +207,7 @@ export const resolvePreliminaryScopeTransforms = (
   context.onWarn({
     code: transformWarnCode(failedTransform),
     message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin / between endpoints) is undefined or defined later in the IR`,
-    path: `${context.irPath}.transforms`,
+    path: [...context.irPath, 'transforms'],
   });
 
   return Array.isArray(child.position) && (child.position[0] !== 0 || child.position[1] !== 0)

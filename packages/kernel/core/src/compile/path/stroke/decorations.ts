@@ -1,4 +1,7 @@
-﻿import type { CompiledArrowEnd, ScenePrimitive } from '../../../contract';
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
+
+import type { CompiledArrowEnd, ScenePrimitive } from '../../../contract';
 import type { SceneResource } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalPath, StrokePathResolution } from '../../../resolve';
@@ -35,7 +38,7 @@ type EmitPathEndpointArrowsContext = {
   /** 绘制资源解析函数 */
   resolvePaint: PaintResolver;
   /** 宿主 IR 位置 */
-  irPath: string;
+  irPath: PropertyPath;
 };
 
 /** 仅消费显式端点箭头，标记位置不影响截断 */
@@ -56,7 +59,7 @@ export const emitPathEndpointArrows = (
     if (resolution === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
-        `Missing arrow binding at ${context.irPath}.arrow.${endpoint}`,
+        `Missing arrow binding at ${formatPropertyPath(context.irPath)}.arrow.${endpoint}`,
       );
     const emitted = emitEndpointArrowMark(resolution, arrow.endpointOverlap ?? 0, context.round, context.resolvePaint);
     if (endpoint === 'start') {
@@ -89,7 +92,7 @@ type InputPathMarkEmission = {
   /** 绘制资源解析函数 */
   resolvePaint: PaintResolver;
   /** 宿主 IR 位置 */
-  irPath: string;
+  irPath: PropertyPath;
 };
 
 /** 沿截断前路径的累计弧长放置标记内容 */
@@ -110,7 +113,7 @@ export const emitPathMarks = ({
     if (sample === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
-        `Cannot locate mark on a zero-length path at ${irPath}.marks[${index}]`,
+        `Cannot locate mark on a zero-length path at ${formatPropertyPath(irPath)}.marks[${index}]`,
       );
     const context = {
       strokeWidth: baseProps.strokeWidth,
@@ -120,11 +123,11 @@ export const emitPathMarks = ({
       rotate: placement.rotate,
     };
     const resolution = markResolutions.get(placement);
-    const location = `${irPath}.marks[${index}]`;
+    const location = [...irPath, 'marks', index];
     if (resolution === undefined)
-      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Missing mark binding at ${location}`);
+      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Missing mark binding at ${formatPropertyPath(location)}`);
     const content = emitMarkPrimitives(resolution, round, resolvePaint, {
-      label: `Mark '${resolution.definition.name}' at ${location}`,
+      label: `Mark '${resolution.definition.name}' at ${formatPropertyPath(location)}`,
       providerKey: `mark:${resolution.definition.name}`,
     });
     primitives.push(

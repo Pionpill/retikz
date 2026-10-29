@@ -1,4 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
+import type { PropertyPath, ValueOf } from '@retikz/foundation';
+import { comparePropertyPaths, isPropertyPathEqual } from '@retikz/foundation';
 
 /** compile occurrence 展开路径的阶段类别 */
 export const CompileExpansionKind = {
@@ -26,14 +27,14 @@ export type CompileExpansionSegment = Readonly<{
 /** 同一次 canonical compile 内确定的 occurrence locator */
 export type CompileOccurrenceLocator = Readonly<{
   /** 最近的原始输入 IR occurrence */
-  sourcePath: string;
+  sourcePath: PropertyPath;
   /** 从原始 occurrence 到 provider 产物的结构化索引链 */
   expansionPath: ReadonlyArray<CompileExpansionSegment>;
 }>;
 
 /** 判断两个编译 occurrence 是否完全相同 */
 export const isCompileOccurrenceEqual = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): boolean =>
-  left.sourcePath === right.sourcePath &&
+  isPropertyPathEqual(left.sourcePath, right.sourcePath) &&
   left.expansionPath.length === right.expansionPath.length &&
   left.expansionPath.every(
     (segment, index) =>
@@ -54,14 +55,7 @@ const compareIndexes = (left: ReadonlyArray<number>, right: ReadonlyArray<number
 
 /** 按 canonical 逻辑树 preorder 比较两个 compile occurrence */
 export const compareCompileOccurrences = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): number => {
-  /** 从 Source 路径提取子项索引，供树遍历顺序比较 */
-  const collectSourceIndexes = (sourcePath: string): Array<number> =>
-    Array.from(sourcePath.matchAll(/children\[(\d+)\]/g), match => Number(match[1]));
-
-  const sourceDifference = compareIndexes(
-    collectSourceIndexes(left.sourcePath),
-    collectSourceIndexes(right.sourcePath),
-  );
+  const sourceDifference = comparePropertyPaths(left.sourcePath, right.sourcePath);
   if (sourceDifference !== 0) return sourceDifference;
 
   return compareIndexes(

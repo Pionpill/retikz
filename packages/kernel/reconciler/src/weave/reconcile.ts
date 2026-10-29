@@ -26,13 +26,15 @@ import {
   createSharedCompileContext,
   createCompileNamespaceRegistry,
   createCompileProvenanceTracker,
-  formatCompileChildPath,
+  createCompileChildPath,
   prepareScopeCompilation,
   projectCompileReference,
   projectPublishedCompileLayout,
   projectScopeCompileLayouts,
   resolveScopeContext,
 } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
+import { isPropertyPathEqual } from '@retikz/foundation';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
@@ -92,7 +94,7 @@ type WeaveContainerCompileContext = {
   /** 容器的来源归属 */
   owner: CompileOwnerKey;
   /** 子声明路径前缀 */
-  prefix: string;
+  prefix: PropertyPath;
 };
 
 /** 单个声明元素的编译调用与来源上下文 */
@@ -135,7 +137,7 @@ export class WeaveReconciler {
   /** 本批强制重算元素，但保留稳定声明节点与操作校验 */
   private forceFull = false;
   /** key 为稳定节点，value 为批次操作前的声明 irPath；路径变化时禁止复用旧位置的编译缓存 */
-  private previousNodeIrPaths = new Map<WeaveNode, string>();
+  private previousNodeIrPaths = new Map<WeaveNode, PropertyPath>();
   /** 最近一次挂载或 finish 后的完整结果，供空批次复用；准备与 commit 不替换此值 */
   private completed: WeaveCompilation | undefined;
 
@@ -272,7 +274,7 @@ export class WeaveReconciler {
   private canNodeReuse(node: WeaveNode, compileOptions: ElementCompileOptions): boolean {
     if (this.forceFull || !this.updating || node.current === null || this.tracker.isNodeDirty(node)) return false;
     if (
-      this.previousNodeIrPaths.get(node) !== compileOptions.irPath ||
+      !isPropertyPathEqual(this.previousNodeIrPaths.get(node) ?? [], compileOptions.irPath) ||
       !jsonStructuralEquals(node.current.input.context, compileOptions.context)
     )
       return false;
@@ -345,7 +347,12 @@ export class WeaveReconciler {
   }
 
   /** 登记引用名称及用户索引，并归集重名诊断 */
-  private registerReference(node: WeaveNode, name: string, path: string, element: WeaveElementCompileContext): void {
+  private registerReference(
+    node: WeaveNode,
+    name: string,
+    path: PropertyPath,
+    element: WeaveElementCompileContext,
+  ): void {
     const { namespaceRegistry, ids } = element.container;
     const compileOptions = element.options;
     const warningCount = this.diagnostics.length;
@@ -399,9 +406,9 @@ export class WeaveReconciler {
     state.input = { ...state.input, context: options.context };
     state.pendingInputs = [];
     if (state.input.own.id) {
-      this.registerReference(node, state.input.own.id, `${options.irPath}.id`, element);
+      this.registerReference(node, state.input.own.id, [...options.irPath, 'id'], element);
       state.input.own.aliasIds?.forEach((id, index) =>
-        this.registerReference(node, id, `${options.irPath}.aliasIds[${index}]`, element),
+        this.registerReference(node, id, [...options.irPath, 'aliasIds', index], element),
       );
     }
     return {
@@ -429,7 +436,7 @@ export class WeaveReconciler {
     } else state.compiled = this.reuseCompiledNode(node, state.compiled, options);
     state.input = { ...state.input, context: options.context };
     state.pendingInputs = [];
-    this.registerReference(node, state.compiled.id, `${options.irPath}.id`, element);
+    this.registerReference(node, state.compiled.id, [...options.irPath, 'id'], element);
     return {
       output: undefined,
       layout: this.projectNodeReference(node, []),
@@ -486,7 +493,7 @@ export class WeaveReconciler {
     else delete state.ids;
     // 进入准备阶段
     const prepared = this.recordCompilation(node, prepareScopeCompilation(state.input.own, compileOptions));
-    if (child.id !== undefined) this.registerReference(node, child.id, `${irPath}.id`, element);
+    if (child.id !== undefined) this.registerReference(node, child.id, [...irPath, 'id'], element);
     const nestedNamespaceRegistry = child.localNamespace
       ? createCompileNamespaceRegistry(namespaceRegistry.namespace, warning => this.diagnostics.push(warning))
       : namespaceRegistry;
@@ -505,7 +512,7 @@ export class WeaveReconciler {
         ancestorScopes: new Set([...(context.ancestorScopes ?? []), node]),
       },
       owner: semanticOwner,
-      prefix: `${irPath}.`,
+      prefix: irPath,
     });
     if (reusable && previousCompiled !== null && !this.tracker.isNodeDirty(node))
       state.compiled = this.recordCompilation(node, {
@@ -565,9 +572,9 @@ export class WeaveReconciler {
       parent: this.root,
       namespaceRegistry: this.namespace,
       ids: this.transaction.editNodeAttribute(this.root, 'ids'),
-      options: { context: resolveScopeContext(this.source, this.shared), irPath: 'scene' },
+      options: { context: resolveScopeContext(this.source, this.shared), irPath: [] },
       owner: this.provenance.root,
-      prefix: '',
+      prefix: [],
     },
   ): {
     outputs: (transforms?: ReadonlyArray<Transform>) => Array<CompileOutput>;
@@ -588,7 +595,7 @@ export class WeaveReconciler {
           RetikzReconcilerErrorCode.Contract,
           'Composite input requires the Core full preparation boundary',
         );
-      const irPath = formatCompileChildPath(prefix, index, child.type);
+      const irPath = createCompileChildPath(prefix, index);
       const occurrence = { sourcePath: irPath, expansionPath: [] };
       const compileOptions: WeaveElementCompileContext['options'] = {
         ...context,

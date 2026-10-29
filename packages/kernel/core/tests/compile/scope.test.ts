@@ -754,7 +754,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
 
     expect(dups).toHaveLength(1);
     expect(dups[0].message).toContain("'A'");
-    expect(dups[0].path).toContain('children[1].node.id');
+    expect(dups[0].path).toEqual(['children', 1, 'id']);
 
     // last-wins：path 端点应接近 second 全局中心 (50, 0)
     const path = compiled.primitives.find(p => p.type === 'path');
@@ -776,7 +776,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     const dups = warnings.filter(w => w.code === BuiltinCompileWarningCode.DuplicateNodeId);
 
     expect(dups).toHaveLength(1);
-    expect(dups[0].path).toContain('coordinate.id');
+    expect(dups[0].path).toEqual(['children', 1, 'id']);
   });
 
   it('duplicate_same_frame_node_vs_scope_id_warn：node + scope.id 同名 → 1 条 warn', () => {
@@ -802,8 +802,8 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     const dups = warnings.filter(w => w.code === BuiltinCompileWarningCode.DuplicateNodeId);
 
     expect(dups).toHaveLength(2);
-    expect(dups[0].path).toContain('children[1].node.id');
-    expect(dups[1].path).toContain('children[2].node.id');
+    expect(dups[0].path).toEqual(['children', 1, 'id']);
+    expect(dups[1].path).toEqual(['children', 2, 'id']);
   });
 
   it('duplicate 不抛错；compile 仍正常完成', () => {

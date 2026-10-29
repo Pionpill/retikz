@@ -16,6 +16,7 @@ import {
   defineTransformImplementation,
 } from '@retikz/data';
 import { pathClipProvider } from '@retikz/extension';
+import type { PropertyPath } from '@retikz/foundation';
 import type { JsonObject } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { FlexLayoutArtifactSchema } from '@retikz/layout';
@@ -1030,7 +1031,7 @@ describe('Chart 提供者通过 Core 编译', () => {
         marks: [{ kind: 'annotation', override: true }],
       },
     });
-    const warnings: Array<{ code: string; path: string }> = [];
+    const warnings: Array<{ code: string; path: PropertyPath }> = [];
 
     const result = compileToScene(sceneOf(source), {
       ...compileDefinitionsOf([createChartProviderContribution({ family: 'fixture', recipe })]),
@@ -1041,7 +1042,7 @@ describe('Chart 提供者通过 Core 编译', () => {
     expect(warnings).toEqual([
       {
         code: ChartWarningCode.MarkOverrideTargetNotFound,
-        path: 'children[0].recipe.marks[0].override',
+        path: ['children', 0, 'recipe', 'marks', 0, 'override'],
       },
     ]);
   });

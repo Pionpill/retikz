@@ -56,3 +56,6 @@ export type WithOptionalProperties<T, TKey extends keyof T> = Omit<T, TKey> & Pa
  * @template T 数组元素类型
  */
 export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];
+
+/** 相对明确根对象的属性路径；字符串为对象属性，数字为数组下标 */
+export type PropertyPath = ReadonlyArray<string | number>;

@@ -27,9 +27,9 @@ import {
 } from '../../src';
 import { createFullCompileContext } from '../../src/compile/context';
 import { NamespaceStack } from '../../src/compile/namespace';
-import { createCompileProvenanceTracker } from '../../src/compile/orchestration/provenance';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 import type { CompositeCompileSession } from '../../src/compile/orchestration/types';
+import { createCompileProvenanceTracker } from '../../src/compile/provenance';
 import { sceneRectangles } from '../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({

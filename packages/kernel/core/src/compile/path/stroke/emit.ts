@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
 import { isFinitePoint } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../../contract';
@@ -48,8 +50,8 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Emi
   const canonicalSteps = path.children ?? [];
   const irPath = resolution.irPath;
 
-  const warn = (code: string, message: string, subPath = ''): void => {
-    pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
+  const warn = (code: string, message: string, subPath: PropertyPath = []): void => {
+    pathEmitOptions.onWarn?.({ code, message, path: [...irPath, ...subPath] });
   };
 
   const scopeChain = pathEmitOptions.scopeChain ?? [];
@@ -61,11 +63,14 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Emi
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
   if (steps.length < 2 && !soloSelfContained) {
     if (path.marks?.length)
-      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Cannot locate marks on an empty path at ${irPath}.marks`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        `Cannot locate marks on an empty path at ${formatPropertyPath(irPath)}.marks`,
+      );
     warn(
       BuiltinCompileWarningCode.PathTooShort,
       `Path requires at least 2 steps (got ${steps.length}); the entire path is skipped`,
-      'children',
+      ['children'],
     );
     return null;
   }
@@ -223,7 +228,7 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Emi
       warn(
         BuiltinCompileWarningCode.PathTooShort,
         `Step '${step.kind}' requires a previous position; the entire path is skipped`,
-        `children[${i}]`,
+        ['children', i],
       );
       return null;
     }
@@ -305,8 +310,8 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
   if (geometry === null) return null;
   const { commands, stepIndexes, boundsPoints, endpointSource, sampling, roundedCommands } = geometry;
   const { labelPrimitives: labelPrims } = sampling;
-  const warn = (code: string, message: string, subPath = ''): void => {
-    pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
+  const warn = (code: string, message: string, subPath: PropertyPath = []): void => {
+    pathEmitOptions.onWarn?.({ code, message, path: [...irPath, ...subPath] });
   };
   const resolvePaint: PaintResolver =
     pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
@@ -329,7 +334,7 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
       tex: {
         lowerTex: pathEmitOptions.lowerTex,
         gatingOn: pathEmitOptions.lowerTex !== undefined,
-        warn: (code, message) => warn(code, message, 'label'),
+        warn: (code, message) => warn(code, message, ['label']),
       },
     });
     boundsPoints.push(...result.boundsPoints);

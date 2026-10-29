@@ -198,7 +198,7 @@ describe('Path 注册表', () => {
     ]);
 
     expect(() => compileToScene(input, { paths: [custom] })).toThrow(
-      /children\[0\]\.path\.arrow\.end\.endpointOverlap.*built-in Stroke path/,
+      /children\[0\]\.arrow\.end\.endpointOverlap.*built-in Stroke path/,
     );
   });
 
@@ -316,7 +316,7 @@ describe('Path 注册表', () => {
     ] as IRScene['children']);
 
     expect(() => compileToScene(ir, { paths: [highlight] }).scene).toThrow(/path 'highlight'/);
-    expect(() => compileToScene(ir, { paths: [highlight] }).scene).toThrow(/children\[0\]\.path\.kindOptions\.stroke/);
+    expect(() => compileToScene(ir, { paths: [highlight] }).scene).toThrow(/children\[0\]\.kindOptions\.stroke/);
   });
 });
 
@@ -486,7 +486,7 @@ describe('Path 输出环绕', () => {
       compile: context => {
         const commands = context.materializePath();
         const labels = context.emitBoundaryLabels([
-          { label: { text: 'target' }, point: [100, 0], outward: [1, 0], sourcePath: 'kindOptions.label' },
+          { label: { text: 'target' }, point: [100, 0], outward: [1, 0], sourcePath: ['kindOptions', 'label'] },
         ]);
 
         return context.wrapOutput({

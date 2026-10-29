@@ -1,4 +1,7 @@
 import type { SceneClipPath } from '@retikz/core';
+import { comparePropertyPaths, encodePropertyPath } from '@retikz/foundation';
+import { readPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 import type {
   RuntimeScene,
   RuntimeScenePrimitive,
@@ -182,31 +185,18 @@ const assertPrimitiveArray: (
 
 const primitiveAtPath = (
   primitives: ReadonlyArray<RuntimeScenePrimitive>,
-  path: ReadonlyArray<number>,
-): RuntimeScenePrimitive | undefined => {
-  let current: ReadonlyArray<RuntimeScenePrimitive> = primitives;
-  let primitive: RuntimeScenePrimitive | undefined;
-
-  for (const index of path) {
-    const candidate: unknown = Reflect.get(current, index);
-    if (candidate === undefined) return undefined;
-
-    primitive = candidate as RuntimeScenePrimitive;
-    current = primitive.type === 'group' ? primitive.children : [];
-  }
-
-  return primitive;
-};
+  path: PropertyPath,
+): RuntimeScenePrimitive | undefined => readPropertyPath({ primitives }, path) as RuntimeScenePrimitive | undefined;
 
 const primitivePaths = (
   primitives: ReadonlyArray<RuntimeScenePrimitive>,
-  prefix: ReadonlyArray<number> = [],
-): Array<ReadonlyArray<number>> => {
-  const paths: Array<ReadonlyArray<number>> = [];
+  prefix: PropertyPath = ['primitives'],
+): Array<PropertyPath> => {
+  const paths: Array<PropertyPath> = [];
   primitives.forEach((primitive, index) => {
     const path = [...prefix, index];
     paths.push(path);
-    if (primitive.type === 'group') paths.push(...primitivePaths(primitive.children, path));
+    if (primitive.type === 'group') paths.push(...primitivePaths(primitive.children, [...path, 'children']));
   });
 
   return paths;
@@ -235,14 +225,14 @@ const assertTopology = (
       node.order < 0 ||
       !isDenseArray(
         node.primitivePath,
-        index => typeof index === 'number' && Number.isSafeInteger(index) && index >= 0,
+        index => typeof index === 'string' || (typeof index === 'number' && Number.isSafeInteger(index) && index >= 0),
       ) ||
       (node.publicId !== undefined && typeof node.publicId !== 'string')
     ) {
       topologyError({ reason: 'invalid-node', node });
     }
 
-    const path = node.primitivePath.join('.');
+    const path = encodePropertyPath(node.primitivePath);
     if (sceneIdentityEquals(node.identity, root) || !identities.set(node.identity, true) || byPath.has(path)) {
       topologyError({ reason: 'duplicate-node', node });
     }
@@ -251,12 +241,12 @@ const assertTopology = (
   }
 
   for (const path of expectedPaths) {
-    const node = byPath.get(path.join('.'));
+    const node = byPath.get(encodePropertyPath(path));
     const primitive = primitiveAtPath(primitives, path);
     if (node === undefined || primitive === undefined) return topologyError({ reason: 'missing-node', path });
 
-    const parentPath = path.slice(0, -1);
-    const parent = parentPath.length === 0 ? root : byPath.get(parentPath.join('.'))?.identity;
+    const parentPath = path.slice(0, -2);
+    const parent = parentPath.length === 0 ? root : byPath.get(encodePropertyPath(parentPath))?.identity;
     if (parent === undefined || !sceneIdentityEquals(node.parent, parent) || node.order !== path.at(-1)) {
       topologyError({ reason: 'parent-order-mismatch', node });
     }
@@ -275,7 +265,7 @@ const assertSubtree = (subtree: SceneRuntimeSubtree): void => {
   }
 
   assertPrimitiveArray([subtree.primitive]);
-  const paths = primitivePaths([subtree.primitive]).map(path => path.slice(1));
+  const paths = primitivePaths([subtree.primitive]).map(path => path.slice(2));
   if (paths.length !== subtree.topology.length) topologyError({ reason: 'subtree-cardinality', subtree });
   const byPath = new Map<string, SceneRuntimeSubtreeNode>();
   const identities = createSceneIdentityMap<true>([]);
@@ -290,12 +280,15 @@ const assertSubtree = (subtree: SceneRuntimeSubtree): void => {
       (node.parent !== undefined && !isSceneIdentity(node.parent)) ||
       !Number.isSafeInteger(node.order) ||
       node.order < 0 ||
-      !isDenseArray(node.primitivePath, index => typeof index === 'number' && Number.isSafeInteger(index) && index >= 0)
+      !isDenseArray(
+        node.primitivePath,
+        index => typeof index === 'string' || (typeof index === 'number' && Number.isSafeInteger(index) && index >= 0),
+      )
     ) {
       topologyError({ reason: 'invalid-subtree-node', node });
     }
 
-    const path = node.primitivePath.join('.');
+    const path = encodePropertyPath(node.primitivePath);
     if (!identities.set(node.identity, true) || byPath.has(path)) {
       topologyError({ reason: 'duplicate-subtree-node', node });
     }
@@ -304,11 +297,11 @@ const assertSubtree = (subtree: SceneRuntimeSubtree): void => {
   }
 
   for (const path of paths) {
-    const node = byPath.get(path.join('.'));
+    const node = byPath.get(encodePropertyPath(path));
     if (node === undefined) return topologyError({ reason: 'missing-subtree-node', path });
 
-    const parentPath = path.slice(0, -1);
-    const parent = path.length === 0 ? undefined : byPath.get(parentPath.join('.'))?.identity;
+    const parentPath = path.slice(0, -2);
+    const parent = path.length === 0 ? undefined : byPath.get(encodePropertyPath(parentPath))?.identity;
     if (
       (node.parent === undefined
         ? parent !== undefined
@@ -319,7 +312,7 @@ const assertSubtree = (subtree: SceneRuntimeSubtree): void => {
     }
   }
 
-  const rootNode = byPath.get('');
+  const rootNode = byPath.get(encodePropertyPath([]));
   if (
     rootNode === undefined ||
     !sceneIdentityEquals(rootNode.identity, subtree.root) ||
@@ -386,16 +379,16 @@ const detach = (node: MutableSceneNode): void => {
 
 const buildMutableTree = (snapshot: SceneRuntimeSnapshot): MutableSceneRoot => {
   const root: MutableSceneRoot = { identity: snapshot.root };
-  const topologyByPath = new Map(snapshot.topology.map(node => [node.primitivePath.join('.'), node]));
+  const topologyByPath = new Map(snapshot.topology.map(node => [encodePropertyPath(node.primitivePath), node]));
   const nodesByPath = new Map<string, MutableSceneNode>();
 
   for (const path of primitivePaths(snapshot.scene.primitives)) {
-    const topology = topologyByPath.get(path.join('.'));
+    const topology = topologyByPath.get(encodePropertyPath(path));
     const primitive = primitiveAtPath(snapshot.scene.primitives, path);
     if (topology === undefined || primitive === undefined) return topologyError({ reason: 'tree-build', path });
 
-    const parentPath = path.slice(0, -1);
-    const parent = parentPath.length === 0 ? root : nodesByPath.get(parentPath.join('.'));
+    const parentPath = path.slice(0, -2);
+    const parent = parentPath.length === 0 ? root : nodesByPath.get(encodePropertyPath(parentPath));
     if (parent === undefined) return topologyError({ reason: 'tree-parent', path });
 
     const node: MutableSceneNode = {
@@ -406,7 +399,7 @@ const buildMutableTree = (snapshot: SceneRuntimeSnapshot): MutableSceneRoot => {
       parent,
     };
     insertNodeBefore(parent, node, undefined);
-    nodesByPath.set(path.join('.'), node);
+    nodesByPath.set(encodePropertyPath(path), node);
   }
 
   return root;
@@ -416,16 +409,17 @@ const buildMutableSubtree = (
   subtree: SceneRuntimeSubtree,
   parent: MutableSceneNode | MutableSceneRoot,
 ): MutableSceneNode => {
-  const topologyByPath = new Map(subtree.topology.map(node => [node.primitivePath.join('.'), node]));
+  const topologyByPath = new Map(subtree.topology.map(node => [encodePropertyPath(node.primitivePath), node]));
   const nodesByPath = new Map<string, MutableSceneNode>();
   let rootNode: MutableSceneNode | undefined;
 
-  for (const path of primitivePaths([subtree.primitive]).map(value => value.slice(1))) {
-    const topology = topologyByPath.get(path.join('.'));
-    const primitive = path.length === 0 ? subtree.primitive : primitiveAtPath([subtree.primitive], [0, ...path]);
+  for (const path of primitivePaths([subtree.primitive]).map(value => value.slice(2))) {
+    const topology = topologyByPath.get(encodePropertyPath(path));
+    const primitive =
+      path.length === 0 ? subtree.primitive : primitiveAtPath([subtree.primitive], ['primitives', 0, ...path]);
     if (topology === undefined || primitive === undefined) return topologyError({ reason: 'subtree-build', path });
 
-    const nodeParent = path.length === 0 ? parent : nodesByPath.get(path.slice(0, -1).join('.'));
+    const nodeParent = path.length === 0 ? parent : nodesByPath.get(encodePropertyPath(path.slice(0, -2)));
     if (nodeParent === undefined) return topologyError({ reason: 'subtree-build-parent', path });
 
     const node: MutableSceneNode = {
@@ -436,7 +430,7 @@ const buildMutableSubtree = (
       parent: nodeParent,
     };
     if (path.length > 0) insertNodeBefore(nodeParent, node, undefined);
-    nodesByPath.set(path.join('.'), node);
+    nodesByPath.set(encodePropertyPath(path), node);
     if (path.length === 0) rootNode = node;
   }
 
@@ -489,19 +483,19 @@ const materializeChildren = (parent: MutableSceneParent): Array<RuntimeScenePrim
 const materializeTopology = (root: MutableSceneRoot): Array<SceneRuntimeNode> => {
   const result: Array<SceneRuntimeNode> = [];
 
-  const visit = (node: MutableSceneNode, path: ReadonlyArray<number>): void => {
+  const visit = (node: MutableSceneNode, path: PropertyPath): void => {
     result.push({
       identity: node.identity,
       semanticOwner: node.semanticOwner,
       parent: node.parent.identity,
-      order: path.at(-1) ?? 0,
+      order: path.at(-1) as number,
       primitivePath: path,
       ...(node.publicId === undefined ? {} : { publicId: node.publicId }),
     });
-    forEachChild(node, (child, index) => visit(child, [...path, index]));
+    forEachChild(node, (child, index) => visit(child, [...path, 'children', index]));
   };
 
-  forEachChild(root, (node, index) => visit(node, [index]));
+  forEachChild(root, (node, index) => visit(node, ['primitives', index]));
 
   return result;
 };
@@ -590,18 +584,7 @@ const assertOperationShape = (operation: ScenePatchOperation): void => {
   return patchError({ reason: 'unknown-operation-kind', operation });
 };
 
-const comparePrimitivePaths = (left: ReadonlyArray<number>, right: ReadonlyArray<number>): number => {
-  const length = Math.min(left.length, right.length);
-
-  for (let index = 0; index < length; index += 1) {
-    const difference = left[index] - right[index];
-    if (difference !== 0) return difference;
-  }
-
-  return left.length - right.length;
-};
-
-const pathContains = (ancestor: ReadonlyArray<number>, descendant: ReadonlyArray<number>): boolean =>
+const pathContains = (ancestor: PropertyPath, descendant: PropertyPath): boolean =>
   ancestor.length < descendant.length && ancestor.every((segment, index) => segment === descendant[index]);
 
 const assertNonOverlappingTargets = (
@@ -613,7 +596,7 @@ const assertNonOverlappingTargets = (
     const paths = snapshot.topology
       .filter(node => targets.has(node.identity))
       .map(node => node.primitivePath)
-      .sort(comparePrimitivePaths);
+      .sort(comparePropertyPaths);
 
     for (let index = 1; index < paths.length; index += 1) {
       const previous = paths[index - 1];

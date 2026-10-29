@@ -249,8 +249,8 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
   } else {
     for (const [index, primitive] of next.scene.primitives.entries()) {
       if (JSON.stringify(primitive) === JSON.stringify(current.scene.primitives[index])) continue;
-      const nodes = next.topology.filter(node => node.primitivePath[0] === index);
-      const root = nodes.find(node => node.primitivePath.length === 1)!;
+      const nodes = next.topology.filter(node => node.primitivePath[1] === index);
+      const root = nodes.find(node => node.primitivePath.length === 2)!;
       operations.push({
         kind: 'update',
         identity: root.identity,
@@ -260,7 +260,7 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
           topology: nodes.map(node => ({
             ...node,
             parent: node === root ? undefined : node.parent,
-            primitivePath: node.primitivePath.slice(1),
+            primitivePath: node.primitivePath.slice(2),
           })),
         },
       });
@@ -823,7 +823,7 @@ describe('内置保留渲染器', () => {
           semanticOwner: owner,
           parent: root,
           order: 0,
-          primitivePath: [0],
+          primitivePath: ['primitives', 0],
           publicId: 'owner',
         },
         {
@@ -831,7 +831,7 @@ describe('内置保留渲染器', () => {
           semanticOwner: owner,
           parent: root,
           order: 1,
-          primitivePath: [1],
+          primitivePath: ['primitives', 1],
           publicId: 'owner',
         },
         {
@@ -839,7 +839,7 @@ describe('内置保留渲染器', () => {
           semanticOwner: owner,
           parent: root,
           order: 2,
-          primitivePath: [2],
+          primitivePath: ['primitives', 2],
         },
       ],
     };
@@ -1019,7 +1019,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identity,
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         publicId: index === 0 ? 'a' : 'b',
       })),
     };
@@ -2464,7 +2464,16 @@ describe('内置保留渲染器', () => {
         animations: [rootAnimation(duration)],
         primitives: [primitive],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0], publicId: 'node' }],
+      topology: [
+        {
+          identity,
+          semanticOwner: identity,
+          parent: root,
+          order: 0,
+          primitivePath: ['primitives', 0],
+          publicId: 'node',
+        },
+      ],
     });
     const current = snapshot(0, 300);
     const next = snapshot(1, 600);
@@ -3218,7 +3227,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identities[index],
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         publicId: item.id,
       })),
     });
@@ -3377,7 +3386,16 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0], publicId: 'node' }],
+      topology: [
+        {
+          identity,
+          semanticOwner: identity,
+          parent: root,
+          order: 0,
+          primitivePath: ['primitives', 0],
+          publicId: 'node',
+        },
+      ],
     });
     const current = snapshot(0, currentPrimitive);
     const next = snapshot(1, nextPrimitive);
@@ -3721,7 +3739,16 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0], publicId: 'node' }],
+      topology: [
+        {
+          identity,
+          semanticOwner: identity,
+          parent: root,
+          order: 0,
+          primitivePath: ['primitives', 0],
+          publicId: 'node',
+        },
+      ],
     });
     const current = snapshot(0, 100);
     const next = snapshot(1, 120);
@@ -3815,7 +3842,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identities[index],
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         publicId: primitive.id,
       })),
     };
@@ -4654,7 +4681,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identities[index],
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         ...(primitive.id === undefined ? {} : { publicId: primitive.id }),
       })),
     });
@@ -5138,7 +5165,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identities[index],
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
         publicId: item.id,
       })),
     });
@@ -5271,7 +5298,7 @@ describe('内置保留渲染器', () => {
         semanticOwner: identities[index],
         parent: root,
         order: index,
-        primitivePath: [index],
+        primitivePath: ['primitives', index],
       })),
     });
     const current = snapshot(0, currentPrimitives);
@@ -5366,7 +5393,7 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive(duration)],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0] }],
+      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: ['primitives', 0] }],
     });
     const current = snapshot(0, 300);
     const next = snapshot(1, 600);
@@ -5461,7 +5488,7 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive(duration)],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0] }],
+      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: ['primitives', 0] }],
     });
     const current = snapshot(0, 300);
     const next = snapshot(1, 600);
@@ -5562,7 +5589,16 @@ describe('内置保留渲染器', () => {
           },
         ],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0], publicId: 'node' }],
+      topology: [
+        {
+          identity,
+          semanticOwner: identity,
+          parent: root,
+          order: 0,
+          primitivePath: ['primitives', 0],
+          publicId: 'node',
+        },
+      ],
     });
     const current = snapshot(0, 'manual');
     const next = snapshot(1, 'visible');
@@ -5652,7 +5688,16 @@ describe('内置保留渲染器', () => {
         animations: [],
         primitives: [primitive(fill)],
       },
-      topology: [{ identity, semanticOwner: identity, parent: root, order: 0, primitivePath: [0], publicId: 'node' }],
+      topology: [
+        {
+          identity,
+          semanticOwner: identity,
+          parent: root,
+          order: 0,
+          primitivePath: ['primitives', 0],
+          publicId: 'node',
+        },
+      ],
     });
     const current = snapshot(0, '#ef4444');
     const next = snapshot(1, '#22c55e');

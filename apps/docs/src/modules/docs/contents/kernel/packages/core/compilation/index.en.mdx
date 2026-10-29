@@ -186,7 +186,7 @@ export type CanonicalNode = Omit<
 
 ```ts
 export type NodeResolution = Readonly<{
-  irPath: string;
+  irPath: ReadonlyArray<string | number>;
   node: CanonicalNode;
   shape: ShapeResolution;
   boundary: BoundaryReferenceResolution;
@@ -217,7 +217,7 @@ export type NodeLayoutGeometry = {
 };
 
 export type NodeCompilation = {
-  irPath: string;
+  irPath: ReadonlyArray<string | number>;
   properties: NodeResolvedProperties;
   layout: CompiledNodeLayout;
 };
@@ -480,7 +480,7 @@ These entries provide Core's scheduling primitives. Reconciler owns name mapping
 
 ## Weave integration
 
-Core and Weave share `formatCompileChildPath(prefix, index, type?)` to construct declaration source paths. The prefix is empty or ends with a dot; basic elements supply a type suffix, while Composite declarations omit it. These paths identify source locations for provenance and diagnostics, not identities across versions.
+Core and Weave share `createCompileChildPath(prefix, index, type?)` to construct declaration source paths. The prefix is empty or ends with a dot; basic elements supply a type suffix, while Composite declarations omit it. These paths identify source locations for provenance and diagnostics, not identities across versions.
 
 Weave is the compilation tree retained by Reconciler. Each node holds its own input, effective context and Core compilation state. The root holds the shared context, Scene configuration, container index and version-specific read records. Automatically assigned Scope addresses stay outside the IR and do not affect drawing envelopes.
 

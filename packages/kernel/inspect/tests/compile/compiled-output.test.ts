@@ -118,7 +118,7 @@ describe('公开编译结果检查', () => {
           {
             namespace: 'domain',
             type: 'box',
-            occurrence: { sourcePath: 'children[0]', expansionPath: [] },
+            occurrence: { sourcePath: ['children', 0], expansionPath: [] },
             value: { x: 10 },
           },
         ],

@@ -371,12 +371,12 @@ describe('布局感知的复合事务和产物', () => {
     expect(result.artifacts).toMatchObject([
       {
         type: 'parent',
-        occurrence: { sourcePath: 'children[0]', expansionPath: [] },
+        occurrence: { sourcePath: ['children', 0], expansionPath: [] },
       },
       {
         type: 'child',
         occurrence: {
-          sourcePath: 'children[0]',
+          sourcePath: ['children', 0],
           expansionPath: [{ kind: 'replay', index: 0 }],
         },
       },
@@ -409,7 +409,7 @@ describe('布局感知的复合事务和产物', () => {
     });
 
     expect(result.artifacts[0]?.occurrence).toEqual({
-      sourcePath: 'children[0]',
+      sourcePath: ['children', 0],
       expansionPath: [{ kind: 'output', index: 0 }],
     });
   });
@@ -454,14 +454,14 @@ describe('布局感知的复合事务和产物', () => {
 
     expect(result.artifacts.map(artifact => artifact.occurrence)).toEqual([
       {
-        sourcePath: 'children[0]',
+        sourcePath: ['children', 0],
         expansionPath: [
           { kind: 'output', index: 0 },
           { kind: 'scopeChild', index: 0 },
         ],
       },
       {
-        sourcePath: 'children[1].scope.children[0]',
+        sourcePath: ['children', 1, 'children', 0],
         expansionPath: [],
       },
     ]);
@@ -507,7 +507,7 @@ describe('布局感知的复合事务和产物', () => {
 
     expect(result.artifacts).toHaveLength(1);
     expect(result.artifacts[0]?.occurrence).toEqual({
-      sourcePath: 'children[0]',
+      sourcePath: ['children', 0],
       expansionPath: [
         { kind: 'replay', index: 0 },
         { kind: 'scopeChild', index: 0 },

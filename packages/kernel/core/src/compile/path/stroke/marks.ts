@@ -1,3 +1,5 @@
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
@@ -15,7 +17,7 @@ type MarkResourceContext = {
   /** 按 id 索引的资源 Map */
   resourceMap: ReadonlyMap<string, SceneResource>;
   /** 宿主路径与标记下标 */
-  irPath: string;
+  irPath: PropertyPath;
 };
 
 /** 在放置内容的同一轮递归中检查资源引用 */
@@ -25,7 +27,10 @@ const assertMarkResource = (
   kind: SceneResource['kind'],
 ): void => {
   if (context !== undefined && context.resourceMap.get(id)?.kind !== kind)
-    throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Expected ${kind} resource '${id}' at ${context.irPath}`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `Expected ${kind} resource '${id}' at ${formatPropertyPath(context.irPath)}`,
+    );
 };
 
 const resolveMarkerContextFill = (value: PaintValue, contextStroke: PaintValue): PaintValue =>

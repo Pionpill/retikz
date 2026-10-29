@@ -8,6 +8,7 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '@retikz/core';
+import { isPropertyPathEqual } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject, enum as zodEnum } from 'zod';
@@ -445,7 +446,9 @@ describe('Table 布局事务', () => {
     ]);
     expect(result.manifest).toBe(
       artifacts.find(
-        artifact => artifact.occurrence.sourcePath === 'children[0]' && artifact.occurrence.expansionPath.length === 0,
+        artifact =>
+          isPropertyPathEqual(artifact.occurrence.sourcePath, ['children', 0]) &&
+          artifact.occurrence.expansionPath.length === 0,
       )?.value,
     );
     expect(result.manifest.allocationBounds).toEqual({ x: 0, y: 0, width: 50, height: 30 });

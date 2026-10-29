@@ -1,3 +1,4 @@
+import { readPropertyPath } from '@retikz/foundation';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { strictObject } from 'zod';
 
@@ -44,7 +45,7 @@ describe('CompileOptions.onWarn', () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
       code: BuiltinCompileWarningCode.PathTooShort,
-      path: 'children[0].path.children',
+      path: ['children', 0, 'children'],
       origin: { kind: 'primary' },
     });
     expect(warnings[0].message).toContain('at least 2 steps');
@@ -66,7 +67,7 @@ describe('CompileOptions.onWarn', () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
       code: BuiltinCompileWarningCode.PathTooShort,
-      path: 'children[0].path.children[0]',
+      path: ['children', 0, 'children', 0],
     });
     expect(warnings[0].message).toContain('requires a previous position');
   });
@@ -88,7 +89,8 @@ describe('CompileOptions.onWarn', () => {
 
     const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
 
-    expect(unresolved!.path).toBe('children[0].path.children[0].to');
+    expect(unresolved!.path).toEqual(['children', 0, 'children', 0, 'to']);
+    expect(readPropertyPath(ir, unresolved!.path)).toEqual({ id: 'bogus' });
     expect(unresolved!.message).toContain("'bogus'");
   });
 
@@ -107,7 +109,7 @@ describe('CompileOptions.onWarn', () => {
     const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
 
     expect(unresolved).toBeDefined();
-    expect(unresolved!.path).toBe('children[0].path.children[0].to');
+    expect(unresolved!.path).toEqual(['children', 0, 'children', 0, 'to']);
     expect(unresolved!.message).toContain("'bogus'");
   });
 
@@ -144,7 +146,7 @@ describe('CompileOptions.onWarn', () => {
     compileToScene(ir, { onWarn: w => warnings.push(w) });
     const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
 
-    expect(unresolved!.path).toBe('children[1].path.children[1].to');
+    expect(unresolved!.path).toEqual(['children', 1, 'children', 1, 'to']);
   });
 
   it('多个 silent fail → onWarn 按发生顺序同步触发', () => {
@@ -214,7 +216,7 @@ describe('CompileOptions.onWarn', () => {
     expect(warnings.filter(warning => warning.code === BuiltinCompileWarningCode.BoundaryTightFallback)).toEqual([
       expect.objectContaining({
         code: BuiltinCompileWarningCode.BoundaryTightFallback,
-        path: 'children[0].node',
+        path: ['children', 0],
         message: expect.stringContaining("Shape 'custom-without-envelope'"),
       }),
     ]);
@@ -242,7 +244,7 @@ describe('CompileOptions.onWarn 缺省行为', () => {
 
     expect(msg).toContain('[retikz]');
     expect(msg).toContain(BuiltinCompileWarningCode.PathTooShort);
-    expect(msg).toContain('children[0].path.children');
+    expect(msg).toContain('children[0].children');
   });
 
   it('不传 onWarn + 显式传 onWarn=空函数 → console.warn 不触发（用户接管）', () => {
@@ -270,7 +272,7 @@ describe('scope.transforms warn code 指向真正失败的那个 transform', () 
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const w = warnings.find(x => x.path.endsWith('.scope.transforms'));
+    const w = warnings.find(x => x.path.at(-1) === 'transforms');
 
     expect(w).toBeDefined();
 
@@ -284,7 +286,7 @@ describe('BuiltinCompileWarningCode 导出', () => {
     const msg = formatCompileWarning({
       code: BuiltinCompileWarningCode.UnresolvedNodeReference,
       message: "references undefined node id 'x'",
-      path: 'children[0].to',
+      path: ['children', 0, 'to'],
       origin: { kind: 'primary' },
     });
 

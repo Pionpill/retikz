@@ -1,4 +1,5 @@
 import type { CompileNamespaceKey, CompileOwnerKey, CompileProvenance } from '@retikz/core';
+import { encodePropertyPath } from '@retikz/foundation';
 
 import { CORE_SOURCE_KEY } from '../constants';
 import { createSceneIdentity } from './identity-value';
@@ -46,7 +47,7 @@ export const createPrimitiveIdentityIndex = (
   const result = new Map<string, Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity }>>();
   for (const emission of provenance.emissions) {
     const semanticOwner = identityOf(emission.owner);
-    result.set(emission.primitivePath.join('.'), {
+    result.set(encodePropertyPath(emission.primitivePath), {
       semanticOwner,
       identity: createSceneIdentity(CORE_SOURCE_KEY, [
         ...semanticOwner.path,

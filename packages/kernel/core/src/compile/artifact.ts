@@ -1,15 +1,18 @@
+import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
+
 import type { CompileOccurrenceLocator } from '../contract';
 
 /** 把结构化 occurrence locator 格式化为唯一调试字符串 */
 export const formatCompileOccurrence = (locator: CompileOccurrenceLocator): string =>
-  locator.sourcePath + locator.expansionPath.map(({ kind, index }) => `::${kind}[${index}]`).join('');
+  formatPropertyPath(locator.sourcePath) +
+  locator.expansionPath.map(({ kind, index }) => `::${kind}[${index}]`).join('');
 
 /**
- * 格式化声明子元素的来源路径；prefix 为空或以点结尾
- * @remarks 基础元素附带 type，Composite 声明不附带类型后缀；路径仅用于来源与诊断
+ * 创建声明子元素相对输入根的完整属性路径
  */
-export const formatCompileChildPath = (
-  prefix: string,
-  index: number,
-  type?: 'node' | 'coordinate' | 'path' | 'scope',
-): string => `${prefix}children[${index}]${type === undefined ? '' : `.${type}`}`;
+export const createCompileChildPath = (prefix: PropertyPath, index: number): PropertyPath => [
+  ...prefix,
+  'children',
+  index,
+];

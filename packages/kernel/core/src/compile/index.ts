@@ -1,5 +1,5 @@
-export { formatCompileChildPath, formatCompileOccurrence } from './artifact';
-export { compileToScene, compileSceneSnapshot } from './compile';
+export { createCompileChildPath, formatCompileOccurrence } from './artifact';
+export { compileSceneSnapshot, compileToScene } from './compile';
 export { BuiltinCompileWarningCode, type CompileWarningCode } from './constants';
 export { samplePathRoute } from './path';
 export { computeLayout } from './scene';
@@ -43,6 +43,3 @@ export type { SceneCompilationMetadata } from './output';
 export * from './provenance';
 
 export type { CompiledNodeLayout, NodeCompilation, NodeLabelResolution, NodeResolvedProperties } from './node';
-
-export { createCompileProvenanceTracker } from './orchestration';
-export type { CompileProvenanceTracker } from './orchestration';

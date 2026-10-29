@@ -1,3 +1,6 @@
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
+
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { DEFAULT_RESOLVED_THEME, resolveScopeDefaults, resolveTheme } from '../../resolve';
 import { resolveNodeBoundary } from '../../resolve';
@@ -14,14 +17,14 @@ export const resolveScopeContext = (
   scope: Pick<IRScope, 'defaults' | 'theme'>,
   shared: SharedCompileContext,
   parent?: ElementCompileContext,
-  irPath = 'scene',
+  irPath: PropertyPath = [],
 ): ElementCompileContext =>
   Object.freeze({
     defaults: resolveScopeDefaults(scope, parent?.defaults),
     theme: resolveTheme(
       parent?.theme ?? DEFAULT_RESOLVED_THEME,
       scope.theme,
-      `${irPath}.theme`,
+      formatPropertyPath([...irPath, 'theme']),
       shared.registries.themeRegistry,
     ),
   });
@@ -106,8 +109,12 @@ export const runElementCompilation = <TCompiled>(
       return Object.freeze({ status: 'pending', reads: Object.freeze(workspace.reads) });
     }
     if (error instanceof RetikzCoreError) throw error;
-    throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Element compilation failed at ${options.irPath}`, {
-      cause: error,
-    });
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `Element compilation failed at ${formatPropertyPath(options.irPath)}`,
+      {
+        cause: error,
+      },
+    );
   }
 };

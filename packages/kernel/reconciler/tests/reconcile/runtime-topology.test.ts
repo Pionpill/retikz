@@ -19,6 +19,7 @@ import {
 } from '@retikz/core';
 import { compileSceneSnapshot } from '@retikz/core';
 import type { CompileOptions, AnyCompositeDefinition } from '@retikz/core';
+import { readPropertyPath } from '@retikz/foundation';
 import type { SceneIdentity, SceneRevision } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
@@ -40,12 +41,7 @@ const compileWithTopology = <const T extends ReadonlyArray<AnyCompositeDefinitio
   );
   const primitiveRecords: PrimitiveRecords = new WeakMap();
   for (const node of snapshot.topology) {
-    let children = compiled.result.scene.primitives;
-    let primitive: ScenePrimitive | undefined;
-    for (const index of node.primitivePath) {
-      primitive = children[index];
-      if (primitive.type === 'group') children = primitive.children;
-    }
+    const primitive = readPropertyPath(compiled.result.scene, node.primitivePath) as ScenePrimitive | undefined;
     if (primitive !== undefined)
       primitiveRecords.set(primitive, { identity: node.identity, semanticOwner: node.semanticOwner });
   }
@@ -717,9 +713,9 @@ describe('Core 编译警告集合', () => {
     compileToScene(ir, { composites: [], onWarn: warning => warnings.push(warning) });
 
     expect(warnings.map(warning => warning.path)).toEqual([
-      'children[0].path.children[0].to',
-      'children[0].path.children[1]',
-      'children[1]',
+      ['children', 0, 'children', 0, 'to'],
+      ['children', 0, 'children', 1],
+      ['children', 1],
     ]);
   });
 

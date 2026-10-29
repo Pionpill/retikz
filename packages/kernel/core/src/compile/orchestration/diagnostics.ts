@@ -1,3 +1,5 @@
+import { formatPropertyPath } from '@retikz/foundation';
+
 import type { CompileOccurrenceLocator } from '../../contract';
 import { compareCompileOccurrences } from '../../contract';
 import type { IRTransform } from '../../schemas';
@@ -32,13 +34,14 @@ export const createDuplicateWarning = (info: DuplicateRegisterInfo): InputCompil
     info.frameDepth === 0
       ? 'frame depth: 0 (root namespace)'
       : `frame depth: ${info.frameDepth} (under <Scope localNamespace>)`;
-  const firstLoc = info.firstIrPath ?? '(unknown earlier location)';
-  const secondLoc = info.secondIrPath ?? '(unknown current location)';
+  const firstLoc = info.firstIrPath === undefined ? '(unknown earlier location)' : formatPropertyPath(info.firstIrPath);
+  const secondLoc =
+    info.secondIrPath === undefined ? '(unknown current location)' : formatPropertyPath(info.secondIrPath);
 
   return {
     code: BuiltinCompileWarningCode.DuplicateNodeId,
     message: `Duplicate id '${info.id}' registered in the same namespace frame (${frameNote}); first defined at ${firstLoc}, redefined at ${secondLoc}. The later definition overrides the earlier one (last-wins).`,
-    path: secondLoc,
+    path: info.secondIrPath ?? [],
   };
 };
 

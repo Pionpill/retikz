@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { PatternDefinition } from '../../contract';
 import type { ProviderRegistry } from '../../providers';
 import { getProviderDefinition } from '../../providers';
@@ -16,7 +18,7 @@ type PaintResolveContext = Readonly<{
   /** 圆整尺寸，保持资源与 Scene 几何一致 */
   round: (value: number) => number;
   /** 调用方传入的 IR 路径；当前图案解析未使用此字段 */
-  irPath?: string;
+  irPath?: PropertyPath;
 }>;
 
 /** 查找图案定义，确定尺寸并解析图案线型 */

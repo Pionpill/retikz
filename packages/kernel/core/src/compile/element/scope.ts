@@ -63,7 +63,7 @@ export const compileScope = (
       group.clipRef = workspace.clipRegistry.register(
         resolveClip(input.clip, {
           clipRegistry: context.shared.registries.clipRegistry,
-          irPath: `${context.irPath}.clip`,
+          irPath: [...context.irPath, 'clip'],
         }),
       );
     }

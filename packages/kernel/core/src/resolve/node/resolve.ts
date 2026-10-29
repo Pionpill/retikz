@@ -1,3 +1,6 @@
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
+
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRAxisScale, IRBoxSize, IRNode, IRPaintValue } from '../../schemas';
 import { NodeSchema } from '../../schemas';
@@ -73,7 +76,7 @@ type NodeColorContext = Readonly<{
   /** 当前主题明暗模式 */
   mode: NodeResolveContext['mode'];
   /** 当前节点的 IR 路径 */
-  irPath: string;
+  irPath: PropertyPath;
 }>;
 
 /** 将数值颜色按节点主色与主题混色，字符串和绘制资源配置保持不变 */
@@ -87,7 +90,7 @@ const resolveNodePaint = (
     ? resolveContextualColor(value, {
         masterColor,
         mode: context.mode,
-        fieldPath: `${context.irPath}.style.${field}`,
+        fieldPath: [...context.irPath, 'style', field],
       })
     : value;
 
@@ -108,7 +111,7 @@ const resolveNodePrimaryColors = (node: NodeLabelSource, context: NodeColorConte
             textColor: resolveContextualColor(textColor, {
               masterColor: node.style?.color,
               mode: context.mode,
-              fieldPath: `${context.irPath}.style.textColor`,
+              fieldPath: [...context.irPath, 'style', 'textColor'],
             }),
           }),
     },
@@ -139,7 +142,7 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
   if (node.width !== undefined && node.width < node.minimumSize.width) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
-      `${context.irPath}.layout.width must not be smaller than the effective minimum width`,
+      `${formatPropertyPath(context.irPath)}.layout.width must not be smaller than the effective minimum width`,
     );
   }
 

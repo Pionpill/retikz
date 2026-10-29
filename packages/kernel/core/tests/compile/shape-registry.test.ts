@@ -353,7 +353,7 @@ describe('形状注册表 - 错误路径', () => {
     };
 
     expect(() => compileToScene(ir, { shapes: [strictShape] }).scene).toThrow(/shape 'scaledBox'/);
-    expect(() => compileToScene(ir, { shapes: [strictShape] }).scene).toThrow(/children\[0\]\.node\.shape\.params/);
+    expect(() => compileToScene(ir, { shapes: [strictShape] }).scene).toThrow(/children\[0\]\.shape\.params/);
   });
 
   it('custom_shape_anchor_only_center: canonical anchor (top) 通过 AABB 上提不再 throw', () => {

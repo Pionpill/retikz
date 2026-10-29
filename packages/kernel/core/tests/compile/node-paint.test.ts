@@ -9,7 +9,7 @@ import { flattenPrims } from '../helpers/flatten';
 describe('节点有效属性与布局复用', () => {
   it('节点与标签引线的虚线变化复用布局并更新绘制输出', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, context: resolveScopeContext({}, shared), irPath: 'root' };
+    const context = { shared, context: resolveScopeContext({}, shared), irPath: ['root'] };
     const source: IRNode = {
       type: 'node',
       position: [0, 0],
@@ -55,10 +55,10 @@ describe('节点有效属性与布局复用', () => {
           { text: 'ccc', fill: 'blue' },
         ],
       },
-      { shared, context: resolveScopeContext({}, shared), irPath: 'root' },
+      { shared, context: resolveScopeContext({}, shared), irPath: ['root'] },
     );
     if (result.status !== 'compiled') throw new Error('expected compiled node');
-    expect(result.compiled.irPath).toBe('root');
+    expect(result.compiled.irPath).toEqual(['root']);
     const measured = measureText.mock.calls.length;
     const output = JSON.stringify(result.compiled.output);
     const properties = {
@@ -86,7 +86,7 @@ describe('节点有效属性与布局复用', () => {
 
   it('颜色改变有效属性但不改变布局，静态与单元素输出保持一致', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, context: resolveScopeContext({}, shared), irPath: 'root' };
+    const context = { shared, context: resolveScopeContext({}, shared), irPath: ['root'] };
     const source: IRNode = {
       type: 'node',
       id: 'a',

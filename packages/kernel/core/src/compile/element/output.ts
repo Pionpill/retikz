@@ -2,9 +2,8 @@ import { boundsToRect } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../contract';
 import type { SharedCompileContext } from '../context';
-import type { CompileProvenanceTracker } from '../orchestration';
 import { collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../orchestration';
-import type { CompileSemanticOwner } from '../orchestration';
+import type { CompileOwnerKey, CompileProvenanceTracker } from '../provenance';
 import { createClipRegistry, createPaintRegistry, importSceneResources, remapPrimitiveResources } from '../resource';
 import { applyTransformChain } from '../transform';
 import type { CompiledScope, CompileOutput } from './types';
@@ -42,7 +41,7 @@ export const assembleScopeOutput = (
   children: ReadonlyArray<CompileOutput>,
   shared: SharedCompileContext,
   provenance?: CompileProvenanceTracker,
-  owner?: CompileSemanticOwner,
+  owner?: CompileOwnerKey,
 ): CompileOutput => {
   const ownGroup = { ...scope.group, children: scope.output.primitives };
   const childOutput = assembleCompileOutputs(children, shared, provenance);

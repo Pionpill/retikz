@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { registerFatalProbeError } from '../resolve/diagnostics';
 import type { CompiledNodeLayout } from './node';
@@ -12,7 +14,7 @@ export type NamespaceEntryState = 'resolved' | 'scope-placeholder';
 /** namespace 中带生命周期状态的内部条目 */
 export type NamespaceEntry = {
   /** 当前名称绑定的来源路径 */
-  irPath?: string;
+  irPath?: PropertyPath;
   /** 可供既有引用解析逻辑消费的布局 */
   layout: CompiledNodeLayout;
   /** 区分合法已解析布局与尚未闭合的 Scope 占位布局 */
@@ -28,9 +30,9 @@ export type DuplicateRegisterInfo = {
   /** 当前 frame 在栈中的深度（0 = 根 frame；每层 pushFrame 自增 1） */
   frameDepth: number;
   /** 先注册的那一条的 IR locator（jq-like 路径），register 时传入；缺失则 undefined */
-  firstIrPath?: string;
+  firstIrPath?: PropertyPath;
   /** 后注册（本次触发覆盖）的那一条的 IR locator */
-  secondIrPath?: string;
+  secondIrPath?: PropertyPath;
   /** 本次覆盖的 entry 是否来自创建 fork 时的同一 frame baseline */
   overwroteForkBaseline: boolean;
 };
@@ -42,7 +44,7 @@ type NamespaceRegisterInfo = {
   /** 当前 frame 深度 */
   frameDepth: number;
   /** register 调用方提供的 IR locator */
-  irPath?: string;
+  irPath?: PropertyPath;
   /** 是否覆盖同 frame 既有注册 */
   wasOverwritten: boolean;
 };
@@ -62,7 +64,7 @@ export type NamespaceFrameChange = {
   /** probe 完成后的 entry */
   entry: NamespaceEntry;
   /** probe 中首次注册该 id 的诊断路径 */
-  irPath?: string;
+  irPath?: PropertyPath;
   /** probe 首次注册该 id 时是否已覆盖创建 fork 时的 baseline */
   overwroteBaseline: boolean;
   /** 创建 fork 时顶层 frame 的原始 entry，用于识别 replay 是否仍提交到同一 frame */
@@ -81,7 +83,7 @@ export class NamespaceStack {
   private readonly frames: Array<Map<string, NamespaceEntry>>;
 
   /** 与每个 frame 对应的"已注册 id → 首次 register 时的 irPath"映射，用于 duplicate warn 复述位置 */
-  private readonly firstIrPaths: Array<Map<string, string | undefined>>;
+  private readonly firstIrPaths: Array<Map<string, PropertyPath | undefined>>;
 
   /** fork 创建时的 frame 快照，只用于区分 baseline collision 与 probe 内部 duplicate */
   private forkBaselineFrames?: Array<Map<string, NamespaceEntry>>;
@@ -213,7 +215,12 @@ export class NamespaceStack {
   }
 
   /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值 */
-  register(id: string, layout: CompiledNodeLayout, irPath?: string, state: NamespaceEntryState = 'resolved'): boolean {
+  register(
+    id: string,
+    layout: CompiledNodeLayout,
+    irPath?: PropertyPath,
+    state: NamespaceEntryState = 'resolved',
+  ): boolean {
     if (this.currentPhase !== 'registering') {
       throw createCompileInvariantError(
         `NamespaceStack.register('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,

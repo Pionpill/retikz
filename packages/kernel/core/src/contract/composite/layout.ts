@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { JsonValue, ValueOf } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
@@ -274,7 +275,7 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
      * @param message 面向调用方的英文消息
      * @param subPath 相对当前 composite Source occurrence 的可选 jq-like 路径
      */
-    warn: (code: string, message: string, subPath?: string) => void;
+    warn: (code: string, message: string, subPath?: PropertyPath) => void;
     /** 在完整编译环境中试算任意子项的布局 */
     layoutChild: (child: IRChild | CompositeBoundChild, proposal: LayoutProposal) => LayoutChildProbe;
     /** 隔离绑定真实 child 后查询有序目标，不提交 probe 绘图或修改作者点列 */

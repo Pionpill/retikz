@@ -93,7 +93,7 @@ const resolveSyntheticLayout = (
     boundaryRegistry: boundaries,
     patternRegistry: new Map(),
     round: value => value,
-    irPath: `synthetic.${input.id}`,
+    irPath: [],
     warn: () => {},
     labelDistance: DEFAULT_LABEL_DISTANCE,
   });

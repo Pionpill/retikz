@@ -154,14 +154,14 @@ describe('NamespaceStack onDuplicate 回调', () => {
     const stack = new NamespaceStack({
       onDuplicate: info => events.push(info),
     });
-    stack.register('A', makeLayout('A', 0), 'children[0].node.id');
-    stack.register('A', makeLayout('A', 10), 'children[1].node.id');
+    stack.register('A', makeLayout('A', 0), ['children', 0, 'id']);
+    stack.register('A', makeLayout('A', 10), ['children', 1, 'id']);
 
     expect(events).toHaveLength(1);
     expect(events[0].id).toBe('A');
     expect(events[0].frameDepth).toBe(0);
-    expect(events[0].firstIrPath).toBe('children[0].node.id');
-    expect(events[0].secondIrPath).toBe('children[1].node.id');
+    expect(events[0].firstIrPath).toEqual(['children', 0, 'id']);
+    expect(events[0].secondIrPath).toEqual(['children', 1, 'id']);
   });
 
   it('首次 register 不触发回调', () => {
@@ -175,25 +175,25 @@ describe('NamespaceStack onDuplicate 回调', () => {
   it('同 frame 三次 register 触发两次回调（不合并），各自携带前一次 irPath', () => {
     const events: Array<DuplicateRegisterInfo> = [];
     const stack = new NamespaceStack({ onDuplicate: info => events.push(info) });
-    stack.register('A', makeLayout('A', 0), 'p1');
-    stack.register('A', makeLayout('A', 1), 'p2');
-    stack.register('A', makeLayout('A', 2), 'p3');
+    stack.register('A', makeLayout('A', 0), ['p1']);
+    stack.register('A', makeLayout('A', 1), ['p2']);
+    stack.register('A', makeLayout('A', 2), ['p3']);
 
     expect(events).toHaveLength(2);
-    expect(events[0].secondIrPath).toBe('p2');
-    expect(events[1].secondIrPath).toBe('p3');
+    expect(events[0].secondIrPath).toEqual(['p2']);
+    expect(events[1].secondIrPath).toEqual(['p3']);
 
     // 第二次 duplicate 时 firstIrPath 仍指向最初 register 的 p1（locator 不被中间覆盖污染）
-    expect(events[0].firstIrPath).toBe('p1');
-    expect(events[1].firstIrPath).toBe('p1');
+    expect(events[0].firstIrPath).toEqual(['p1']);
+    expect(events[1].firstIrPath).toEqual(['p1']);
   });
 
   it('跨 frame 同 id 不触发 duplicate 回调', () => {
     const cb = vi.fn();
     const stack = new NamespaceStack({ onDuplicate: cb });
-    stack.register('A', makeLayout('A'), 'root');
+    stack.register('A', makeLayout('A'), ['root']);
     stack.pushFrame();
-    stack.register('A', makeLayout('A'), 'inner');
+    stack.register('A', makeLayout('A'), ['inner']);
 
     expect(cb).not.toHaveBeenCalled();
   });
@@ -202,8 +202,8 @@ describe('NamespaceStack onDuplicate 回调', () => {
     const events: Array<DuplicateRegisterInfo> = [];
     const stack = new NamespaceStack({ onDuplicate: info => events.push(info) });
     stack.pushFrame();
-    stack.register('A', makeLayout('A'), 'p1');
-    stack.register('A', makeLayout('A'), 'p2');
+    stack.register('A', makeLayout('A'), ['p1']);
+    stack.register('A', makeLayout('A'), ['p2']);
 
     expect(events[0].frameDepth).toBe(1);
   });

@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { IRAnimationTrack } from '../../schemas';
 import { BuiltinCompileWarningCode } from '../constants';
 import type { InputCompileWarning } from '../warning';
@@ -9,7 +11,7 @@ type FilterAnimationsContext = {
   /** warning 收集器 */
   onWarn: (warning: InputCompileWarning) => void;
   /** 当前 IR locator */
-  irPath: string;
+  irPath: PropertyPath;
 };
 
 /**
@@ -33,7 +35,7 @@ export const filterAnimations = (
           target === 'root'
             ? `Scene-root animation must use the "viewBox" property (camera); got "${track.property}". Track dropped.`
             : `Animation property "viewBox" is camera-only (scene root), not valid on an element. Track dropped.`,
-        path: `${irPath}.animations[${index}]`,
+        path: [...irPath, 'animations', index],
       });
       return false;
     }

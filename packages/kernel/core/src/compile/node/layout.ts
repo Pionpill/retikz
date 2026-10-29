@@ -1,3 +1,4 @@
+import { formatPropertyPath } from '@retikz/foundation';
 import { DEG_TO_RAD } from '@retikz/math';
 
 import type { LayoutAxisProposal, ShapeCircumscribedGeometry, Transform } from '../../contract';
@@ -320,7 +321,7 @@ export const compileNodeResolution = (resolution: NodeResolution, context: NodeL
   if (fixedVisualWidth !== undefined && selectedCandidate.visualWidth > fixedVisualWidth) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `${resolution.irPath}.layout.width cannot contain the Node content, padding, and shape geometry`,
+      `${formatPropertyPath(resolution.irPath)}.layout.width cannot contain the Node content, padding, and shape geometry`,
     );
   }
 

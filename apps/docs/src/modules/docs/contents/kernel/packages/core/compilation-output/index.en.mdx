@@ -392,7 +392,7 @@ const result = compileToScene(
 for (const artifact of result.artifacts) {
   if (artifact.type !== 'flexLayout') continue;
   console.log(artifact.namespace); // 'layout'
-  console.log(artifact.occurrence); // { sourcePath: 'children[0]', expansionPath: [] }
+  console.log(artifact.occurrence); // { sourcePath: ['children', 0], expansionPath: [] }
   console.log(artifact.value.kind); // 'flex'
   console.log(artifact.value.items.length); // 2
   console.log(artifact.value.lines.length); // 1
@@ -408,18 +408,24 @@ Composite artifacts are always collected; discarded candidates contribute none.
 
 The ordinary entry dispatches warnings through `onWarn`, or through its default warning behavior when no callback is supplied. Drawing errors still terminate compilation. Failed candidates deliver no partial resources or artifacts.
 
-## Compilation preparation and provenance
+Warning `path`, input `irPath`, and artifact `occurrence.sourcePath` use Foundation's `PropertyPath`: strings name properties, numbers index arrays, and an empty array selects the root. For example, `['children', 0, 'style', 'fill']` reads a color field from the input IR. Paths contain no entity type markers such as `.node` or `.path`. Generated occurrences keep their expansion positions separately in `expansionPath` rather than treating them as original input properties.
 
-`compileSceneSnapshot(ir, options, execution)` returns `result`, `diagnostics`, and optional `provenance` without dispatching warnings. `options` excludes `onWarn`; `execution.captureProvenance` enables provenance collection. Provenance supports primitive identity and commits; internal layout still supports measurement, references, and replay.
+Use `formatPropertyPath` for display, `isPropertyPathEqual` for comparison, and `encodePropertyPath` for index keys. Array reference equality and `join('.')` do not preserve these semantics.
+
+## Compilation snapshots and provenance
+
+`compileSceneSnapshot(ir, compileOptions, executeOptions)` returns `result`, `diagnostics`, and optional `provenance` without dispatching warnings. `compileOptions` excludes `onWarn`; `executeOptions.captureProvenance` enables provenance collection. Provenance supports primitive identity and commits; internal layout still supports measurement, references, and replay.
 
 <SourceLinks
   sources={[
-    { label: 'Preparation entry', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: 'Provenance contract', path: 'packages/kernel/core/src/compile/provenance.ts' },
+    { label: 'Snapshot compilation entry', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'Provenance contract', path: 'packages/kernel/core/src/compile/provenance/types.ts' },
   ]}
 />
 
 ## Implementation flow
+
+Provenance `primitivePath` is relative to the complete Scene, for example `['primitives', 2, 'children', 1]`. Reconciler full topology uses the same root. Patch subtree topology is relative to its root primitive: `[]` selects that primitive, and `['children', 1]` selects a child. Both work with `readPropertyPath` when given the corresponding root object.
 
 `compileChildrenToPrimitives` completes traversal, deferred paths, layout aggregation, and final artifact ordering. `assembleSceneCompilationSnapshot` assembles primitives, resources, and canvas bounds. `compileSceneSnapshot` returns the snapshot; `compileToScene` dispatches warnings and returns `scene` and `artifacts`.
 

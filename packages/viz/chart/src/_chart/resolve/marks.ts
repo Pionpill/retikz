@@ -173,7 +173,7 @@ export const resolveChartSemanticMarks = (
       warnings.push({
         code: ChartWarningCode.MarkOverrideTargetNotFound,
         message: `Chart mark "${mark.kind}" requested override, but the recipe produced no semantic mark group with that kind; the authored mark was appended.`,
-        subPath: `recipe.marks[${mark.index}].override`,
+        subPath: ['recipe', 'marks', mark.index, 'override'],
       });
       continue;
     }

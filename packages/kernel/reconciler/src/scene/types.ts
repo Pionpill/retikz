@@ -1,4 +1,5 @@
 import type { Scene, ScenePrimitive, SceneResource } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
 
 import type { SceneIdentity, SceneRevision } from './identity-value';
 
@@ -39,8 +40,8 @@ export type SceneRuntimeNode = Readonly<{
   parent: SceneIdentity;
   /** 在同一 parent 内的 canonical 顺序 */
   order: number;
-  /** 从 Scene primitives 根数组开始的 zero-based occurrence path */
-  primitivePath: ReadonlyArray<number>;
+  /** 相对完整 Scene 的属性路径，如 ['primitives', 0, 'children', 1] */
+  primitivePath: PropertyPath;
   /** 可选用户公开 id */
   publicId?: string;
 }>;
@@ -55,8 +56,8 @@ export type SceneRuntimeSubtreeNode = Readonly<{
   parent?: SceneIdentity;
   /** 在同一 parent 内的 canonical 顺序 */
   order: number;
-  /** 从 subtree root primitive 开始的相对 occurrence path */
-  primitivePath: ReadonlyArray<number>;
+  /** 相对子树根图元的属性路径；根为 []，子项为 ['children', index] */
+  primitivePath: PropertyPath;
   /** 可选用户公开 id */
   publicId?: string;
 }>;

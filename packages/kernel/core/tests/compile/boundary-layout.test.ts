@@ -29,7 +29,7 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
     boundaryRegistry: boundaries,
     patternRegistry: resolvePatternRegistry(),
     round: value => value,
-    irPath: 'node',
+    irPath: [],
     warn: () => {},
     labelDistance: 12,
   });

@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 import type { ShapeDefinition } from '../../contract';
@@ -20,7 +21,7 @@ type InputNodeShapeResolve = {
   /** y 轴缩放 */
   scaleY: number;
   /** 当前节点的 IR 路径，用于形状参数校验错误定位 */
-  irPath?: string;
+  irPath?: PropertyPath;
 };
 
 /** 形状简写展开后的定义名称与参数 */
@@ -77,9 +78,9 @@ const scaleJsonObjectNumbers = (value: JsonObject, factor: number): JsonObject =
  * @description 优先使用定义提供的 scaleParams；未提供时，将参数中的所有数值乘以两轴缩放系数的几何平均值
  */
 export const resolveNodeShape = (input: InputNodeShapeResolve): ShapeResolution => {
-  const { node, shapeRegistry, scaleX, scaleY, irPath = 'node' } = input;
+  const { node, shapeRegistry, scaleX, scaleY, irPath = [] } = input;
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
-  const shapeParamsPath = `${irPath}.shape.params`;
+  const shapeParamsPath = [...irPath, 'shape', 'params'];
   const shapeDefinition = getProviderDefinition(shapeRegistry, shapeName);
   const parsedShapeParams: JsonObject = parseProviderPayload({
     capability: 'shape',

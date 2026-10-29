@@ -15,7 +15,7 @@ const round = createRound(3);
 const patternContext = (patterns: ReadonlyArray<PatternDefinition> = []) => ({
   patternRegistry: resolvePatternRegistry(patterns),
   round,
-  irPath: 'children[0].node.fill',
+  irPath: ['children', 0, 'fill'],
 });
 
 const sceneWithPaint = (paint: IRPaint): IRScene => ({
@@ -161,7 +161,7 @@ describe('解析/资源裁剪', () => {
           ],
         },
       },
-      { clipRegistry: resolveClipRegistry([polygon]), irPath: 'children[0].scope.clip' },
+      { clipRegistry: resolveClipRegistry([polygon]), irPath: ['children', 0, 'clip'] },
     );
 
     expect(resolved.kind).toBe('polygon');
@@ -210,7 +210,7 @@ describe('解析/资源裁剪', () => {
     const clips = resolveClipRegistry([wrapper, leaf]);
     const resolution = resolveClip(
       { kind: 'wrapper', params: { child: { kind: 'leaf', params: { radius: 3 } } } },
-      { clipRegistry: clips, irPath: 'children[0].scope.clip' },
+      { clipRegistry: clips, irPath: ['children', 0, 'clip'] },
     );
 
     expect(wrapperLower).not.toHaveBeenCalled();

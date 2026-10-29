@@ -5,7 +5,6 @@ export * from './diagnostics';
 export * from './path-target';
 export * from './position-context';
 export * from './primitive';
-export * from './provenance';
 export * from './traversal';
 export * from './types';
 export * from './visual-bounds';

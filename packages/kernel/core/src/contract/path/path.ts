@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import type { IRBoundaryLabel, IRPathBase, IRPathLabel, IRPosition, IRStep } from '../../schemas';
@@ -39,7 +40,7 @@ export type PathLabel = Omit<IRPathLabel, 'position' | 'side' | 'distance' | 'in
 /** Path 请求宿主标签编译时提供的已定位几何信息 */
 export type InputPathLabel = Readonly<{
   /** 标签配置相对宿主的来源路径，用于诊断 */
-  sourcePath: string;
+  sourcePath: PropertyPath;
   /** 按请求顺序排列的宿主标签 */
   labels: ReadonlyArray<PathLabel>;
   /** 与标签逐项对应的几何采样点及切线 */
@@ -64,7 +65,7 @@ export type InputPathBoundaryLabel = Readonly<{
   /** 单位外向向量 */
   outward: IRPosition;
   /** 相对宿主的字段路径，用于失败诊断 */
-  sourcePath: string;
+  sourcePath: PropertyPath;
 }>;
 
 /**

@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import {
   collectArcBoundingCandidates,
   collectEllipseArcBoundingCandidates,
@@ -31,7 +32,7 @@ type ShapeStepLoweringContext = {
   /** 当前 scope 的累计变换链 */
   scopeChain: ReadonlyArray<Transform>;
   /** path warning 回调 */
-  warn: (code: string, message: string, subPath?: string) => void;
+  warn: (code: string, message: string, subPath?: PropertyPath) => void;
   /** path command 写入器 */
   commandEmitter: PathCommandEmitter;
   /** step 游标 */
@@ -61,7 +62,7 @@ const resolvePartialClosed = (
     warn(
       BuiltinCompileWarningCode.PartialArcClosedInvalid,
       "Partial circle/ellipse (with angles) cannot use closed:'closed'; falling back to 'chord'",
-      `children[${index}]`,
+      ['children', index],
     );
   }
 
@@ -116,7 +117,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
         warn(
           BuiltinCompileWarningCode.UnresolvedNodeReference,
           `Rectangle from references undefined node id '${fromId}'; the entire path is skipped`,
-          `children[${index}].from`,
+          ['children', index, 'from'],
         );
       }
 
@@ -124,7 +125,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
         warn(
           BuiltinCompileWarningCode.UnresolvedNodeReference,
           `Rectangle to references undefined node id '${toId}'; the entire path is skipped`,
-          `children[${index}].to`,
+          ['children', index, 'to'],
         );
       }
 
@@ -167,7 +168,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
     warn(
       BuiltinCompileWarningCode.PathTooShort,
       `Step '${step.kind}' requires a previous position; the entire path is skipped`,
-      `children[${index}]`,
+      ['children', index],
     );
     return false;
   }
@@ -182,7 +183,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
           warn(
             BuiltinCompileWarningCode.UnresolvedNodeReference,
             `Arc step center references undefined node id '${centerId}'; the entire path is skipped`,
-            `children[${index}].center`,
+            ['children', index, 'center'],
           );
         }
 
@@ -264,11 +265,10 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
       return true;
     }
 
-    warn(
-      BuiltinCompileWarningCode.ArcMissingRadius,
-      'Arc step requires radius; the entire path is skipped',
-      `children[${index}]`,
-    );
+    warn(BuiltinCompileWarningCode.ArcMissingRadius, 'Arc step requires radius; the entire path is skipped', [
+      'children',
+      index,
+    ]);
 
     return false;
   }
@@ -327,7 +327,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
       warn(
         BuiltinCompileWarningCode.PartialArcNeedsBothAngles,
         'circlePath needs both startAngle and endAngle for a partial circle; treated as a full circle',
-        `children[${index}]`,
+        ['children', index],
       );
     }
 
@@ -393,7 +393,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
       warn(
         BuiltinCompileWarningCode.PartialArcNeedsBothAngles,
         'ellipsePath needs both startAngle and endAngle for a partial ellipse; treated as a full ellipse',
-        `children[${index}]`,
+        ['children', index],
       );
     }
 
@@ -425,7 +425,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
         warn(
           BuiltinCompileWarningCode.UnresolvedNodeReference,
           `Smooth step point references undefined node id '${pointId}'; the entire path is skipped`,
-          `children[${index}].points[${pointIndex}]`,
+          ['children', index, 'points', pointIndex],
         );
       }
 

@@ -103,7 +103,7 @@ const resultOf = (
   samples: ReadonlyArray<Readonly<{ point: [number, number]; tangent: [number, number]; sideOffset?: number }>> = [],
 ): PathCompileResult => {
   const labelPrimitives: ReadonlyArray<ScenePrimitive> =
-    labels.length === 0 ? [] : context.emitHostLabels({ labels, samples, sourcePath: 'kindOptions.label' });
+    labels.length === 0 ? [] : context.emitHostLabels({ labels, samples, sourcePath: ['kindOptions', 'label'] });
   return {
     primitives: [styledPrimitiveFromOutline(ribbon, outline, context.appearance), ...labelPrimitives],
     boundsPoints: [...outline.points, ...samples.map(sample => sample.point)],

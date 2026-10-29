@@ -5,7 +5,7 @@ import type { CompositeArtifact } from '../types';
 /** 创建递归冻结的 occurrence locator */
 export const freezeOccurrence = (occurrence: CompileOccurrenceLocator): CompileOccurrenceLocator =>
   Object.freeze({
-    sourcePath: occurrence.sourcePath,
+    sourcePath: Object.freeze([...occurrence.sourcePath]),
     expansionPath: Object.freeze(
       occurrence.expansionPath.map(segment => Object.freeze({ kind: segment.kind, index: segment.index })),
     ),

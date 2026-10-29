@@ -550,7 +550,7 @@ describe('Flow 弯曲布线', () => {
     );
 
     expect(warnings).toHaveLength(1);
-    expect(JSON.stringify(warnings[0])).toContain('relations[0]');
+    expect(warnings[0]).toMatchObject({ path: ['children', 0, 'relations', 0] });
     expect(
       flatten(result.scene.primitives).some(
         item => item.type === 'path' && item.commands.some(command => command.kind === 'cubic'),

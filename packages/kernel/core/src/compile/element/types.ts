@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type {
   CompileOccurrenceLocator,
   GroupPrimitive,
@@ -28,7 +30,7 @@ export type CompileBinding =
       state: 'ready';
       binding: object;
       /** 被引用元素的来源路径 */
-      irPath?: string;
+      irPath?: PropertyPath;
       layout: CompiledNodeLayout;
     }>;
 
@@ -59,7 +61,7 @@ export type ElementCompileOptions = Readonly<{
   /** 父级有效上下文 */
   context: ElementCompileContext;
   /** 诊断位置，不作为元素身份 */
-  irPath: string;
+  irPath: PropertyPath;
   /** 当前声明位置可见的名称空间 */
   namespace?: CompileNamespace;
   /** 禁止后代几何引用的祖先 Scope 绑定 */
@@ -105,7 +107,7 @@ export type CompiledNode = Readonly<
 /** 坐标编译状态，不创建虚构的可见图元 */
 export type CompiledCoordinate = Readonly<{
   /** 元素在 IR 树中的来源路径 */
-  irPath: string;
+  irPath: PropertyPath;
   /** 供名称登记的作者 id */
   id: string;
   /** 本地位置 */
@@ -115,7 +117,7 @@ export type CompiledCoordinate = Readonly<{
 /** Path 完整编译状态，自定义路径不要求具有单一中心线 */
 export type CompiledPath = Readonly<{
   /** 元素在 IR 树中的来源路径 */
-  irPath: string;
+  irPath: PropertyPath;
   /** 完成宿主处理后的本地输出，空输出也是合法完成状态 */
   output: CompileOutput;
 }>;
@@ -133,7 +135,7 @@ export type ScopeCompilationPreparation = Readonly<{
 /** Scope 编译状态，仅持有自身包络、输出与组装属性 */
 export type CompiledScope = Readonly<{
   /** 元素在 IR 树中的来源路径 */
-  irPath: string;
+  irPath: PropertyPath;
   /** 局部内容包络，包含空内容时的既有退化布局 */
   envelope: CompiledNodeLayout;
   /** Scope 输出的包装属性，不包含 children */

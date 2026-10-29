@@ -1,13 +1,17 @@
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { ScenePrimitive } from '../../contract';
 import type { IRChild } from '../../schemas';
 import { createCompileInvariantError } from '../probe-failure';
 import type {
   CompileNamespaceKey,
+  CompileOwnerKey,
   CompileProvenanceBinding,
   CompileProvenanceEmission,
   CompileProvenanceOwner,
-} from '../provenance';
-import type { CompileProvenanceTracker, CompileSemanticOwner } from './types';
+  CompileProvenanceTracker,
+} from './types';
 
 /** 为重复使用同一对象的 provider 分离实际图元 occurrence */
 const clonePrimitiveOccurrence = (primitive: ScenePrimitive): ScenePrimitive =>
@@ -17,7 +21,7 @@ const clonePrimitiveOccurrence = (primitive: ScenePrimitive): ScenePrimitive =>
 
 /** 收集单次编译的来源事实，不判断跨次身份或绑定 revision */
 export const createCompileProvenanceTracker = (): CompileProvenanceTracker => {
-  const root = Object.freeze({}) as CompileSemanticOwner;
+  const root = Object.freeze({}) as CompileOwnerKey;
   const owners: Array<CompileProvenanceOwner> = [
     Object.freeze({ key: root, kind: 'root', index: 0, generated: false }),
   ];
@@ -25,20 +29,15 @@ export const createCompileProvenanceTracker = (): CompileProvenanceTracker => {
   const frames: Array<CompileNamespaceKey> = [Object.freeze({}) as CompileNamespaceKey];
   const rootNamespace = frames[0];
   const records = new WeakMap<ScenePrimitive, Omit<CompileProvenanceEmission, 'primitivePath'>>();
-  const ordinals = new WeakMap<CompileSemanticOwner, Map<string, number>>();
+  const ordinals = new WeakMap<CompileOwnerKey, Map<string, number>>();
 
-  const register = (name: string, owner: CompileSemanticOwner): void => {
+  const register = (name: string, owner: CompileOwnerKey): void => {
     const namespace = frames.at(-1);
     if (namespace === undefined) throw createCompileInvariantError('Missing compile namespace frame');
     bindings.push(Object.freeze({ namespace, name, owner }));
   };
-  const createOwner = (
-    child: IRChild,
-    index: number,
-    parent: CompileSemanticOwner,
-    generated: boolean,
-  ): CompileSemanticOwner => {
-    const key = Object.freeze({}) as CompileSemanticOwner;
+  const createOwner = (child: IRChild, index: number, parent: CompileOwnerKey, generated: boolean): CompileOwnerKey => {
+    const key = Object.freeze({}) as CompileOwnerKey;
     const id =
       !('namespace' in child) && 'id' in child && child.id !== undefined && child.id.length > 0 ? child.id : undefined;
     owners.push(
@@ -102,17 +101,17 @@ export const createCompileProvenanceTracker = (): CompileProvenanceTracker => {
     },
     capture: primitives => {
       const emissions: Array<CompileProvenanceEmission> = [];
-      const visit = (items: ReadonlyArray<ScenePrimitive>, prefix: ReadonlyArray<number>): void => {
+      const visit = (items: ReadonlyArray<ScenePrimitive>, prefix: PropertyPath): void => {
         items.forEach((primitive, index) => {
           const primitivePath = Object.freeze([...prefix, index]);
           const record = records.get(primitive);
           if (record === undefined)
-            throw createCompileInvariantError(`Missing compile provenance at ${primitivePath.join('.')}`);
+            throw createCompileInvariantError(`Missing compile provenance at ${formatPropertyPath(primitivePath)}`);
           emissions.push(Object.freeze({ ...record, primitivePath }));
-          if (primitive.type === 'group') visit(primitive.children, primitivePath);
+          if (primitive.type === 'group') visit(primitive.children, [...primitivePath, 'children']);
         });
       };
-      visit(primitives, []);
+      visit(primitives, ['primitives']);
       return Object.freeze({
         root,
         owners: Object.freeze([...owners]),

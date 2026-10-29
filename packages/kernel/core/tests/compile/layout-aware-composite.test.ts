@@ -188,7 +188,7 @@ describe('布局感知复合', () => {
         type: literal('warning'),
       }),
       compile: (_node, context) => {
-        context.warn('TEST_COMPOSITE_WARNING', 'Composite warning', 'recipe.marks[0].override');
+        context.warn('TEST_COMPOSITE_WARNING', 'Composite warning', ['recipe', 'marks', 0, 'override']);
         return { children: [] };
       },
     });
@@ -203,7 +203,7 @@ describe('布局感知复合', () => {
       expect.objectContaining({
         code: 'TEST_COMPOSITE_WARNING',
         message: 'Composite warning',
-        path: 'children[0].recipe.marks[0].override',
+        path: ['children', 0, 'recipe', 'marks', 0, 'override'],
       }),
     ]);
   });
@@ -286,7 +286,7 @@ describe('布局感知复合', () => {
       {
         namespace: 'test',
         type: 'layout',
-        occurrence: { sourcePath: 'children[0]', expansionPath: [] },
+        occurrence: { sourcePath: ['children', 0], expansionPath: [] },
         value: { naturalWidth: 50, rangeWidth: 20 },
       },
     ]);
@@ -355,7 +355,7 @@ describe('布局感知复合', () => {
         namespace: 'test',
         type: 'nestedConstraint',
         occurrence: {
-          sourcePath: 'children[0]',
+          sourcePath: ['children', 0],
           expansionPath: [
             { kind: 'replay', index: 0 },
             { kind: 'scopeChild', index: 0 },

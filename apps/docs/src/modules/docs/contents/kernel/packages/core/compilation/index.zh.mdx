@@ -181,7 +181,7 @@ export type CanonicalNode = Omit<
 
 ```ts
 export type NodeResolution = Readonly<{
-  irPath: string;
+  irPath: ReadonlyArray<string | number>;
   node: CanonicalNode;
   shape: ShapeResolution;
   boundary: BoundaryReferenceResolution;
@@ -212,7 +212,7 @@ export type NodeLayoutGeometry = {
 };
 
 export type NodeCompilation = {
-  irPath: string;
+  irPath: ReadonlyArray<string | number>;
   properties: NodeResolvedProperties;
   layout: CompiledNodeLayout;
 };
@@ -459,7 +459,7 @@ Scope 分两步计算：先 `prepareScopeCompilation` 得到有效继承上下�
 
 ## Weave 接入
 
-Core 与 Weave 共用 `formatCompileChildPath(prefix, index, type?)` 生成声明来源路径。`prefix` 为空或以点结尾；基础元素传入类型后缀，Composite 声明省略类型。该路径用于来源与诊断，不作为跨版本身份。
+Core 与 Weave 共用 `createCompileChildPath(prefix, index, type?)` 生成声明来源路径。`prefix` 为空或以点结尾；基础元素传入类型后缀，Composite 声明省略类型。该路径用于来源与诊断，不作为跨版本身份。
 
 Weave 是 Reconciler 持有的编译树：每个节点保留自身输入、有效上下文与 Core 编译状态。Root 统一持有编译环境、Scene 配置、容器定位索引和本版本的读取记录；Scope 的自动定位 id 不写回 IR，也不参与绘图包络计算。
 

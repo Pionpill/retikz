@@ -16,13 +16,13 @@ const identityKey = (identity: { owner: string; path: ReadonlyArray<string> }): 
 
 const primitivePaths = (
   primitives: ReadonlyArray<RuntimeScenePrimitive>,
-  prefix: ReadonlyArray<number> = [],
-): Array<ReadonlyArray<number>> => {
-  const paths: Array<ReadonlyArray<number>> = [];
+  prefix: ReadonlyArray<string | number> = ['primitives'],
+): Array<ReadonlyArray<string | number>> => {
+  const paths: Array<ReadonlyArray<string | number>> = [];
   primitives.forEach((primitive, index) => {
     const path = [...prefix, index];
     paths.push(path);
-    if (primitive.type === 'group') paths.push(...primitivePaths(primitive.children, path));
+    if (primitive.type === 'group') paths.push(...primitivePaths(primitive.children, [...path, 'children']));
   });
 
   return paths;
@@ -73,14 +73,14 @@ describe('Core Runtime 计算初始完整运行', () => {
       expect(node.identity.path.slice(0, node.semanticOwner.path.length)).toEqual(node.semanticOwner.path);
       expect(node.identity.path[node.semanticOwner.path.length]).toBe('emission');
 
-      const parentPath = node.primitivePath.slice(0, -1).join('.');
+      const parentPath = node.primitivePath.slice(0, -2).join('.');
       const parentNode = topologyByPath.get(parentPath);
       let expectedParent = snapshot.root;
-      if (node.primitivePath.length > 1 && parentNode === undefined) {
+      if (node.primitivePath.length > 2 && parentNode === undefined) {
         throw new Error(`missing topology parent at ${parentPath}`);
       }
 
-      if (node.primitivePath.length > 1 && parentNode !== undefined) expectedParent = parentNode.identity;
+      if (node.primitivePath.length > 2 && parentNode !== undefined) expectedParent = parentNode.identity;
 
       expect(identityKey(node.parent)).toBe(identityKey(expectedParent));
       expect(node.order).toBe(node.primitivePath.at(-1));

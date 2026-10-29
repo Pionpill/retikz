@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
@@ -45,7 +46,7 @@ export type BoundaryGeometryResolveContext = {
   /** 节点视觉 shape 参数 */
   visualParams: JsonObject;
   /** 当前 node 的 IR 路径 */
-  irPath?: string;
+  irPath?: PropertyPath;
   /** shape-aware envelope 缓存 */
   connectionEnvelopeCache?: Map<string, CenteredBox>;
   /** tight fallback warning 去重集合 */
@@ -91,7 +92,7 @@ export type NodeLabelResolution = Omit<CanonicalNodeLabel, 'text' | 'font'> & {
 /** 分别持有有效属性与计算布局的节点编译状态 */
 export type NodeCompilation = {
   /** 元素在 IR 树中的来源路径 */
-  irPath: string;
+  irPath: PropertyPath;
   /** 当前有效语义属性 */
   properties: NodeResolvedProperties;
   /** 已计算的几何与排版结果 */

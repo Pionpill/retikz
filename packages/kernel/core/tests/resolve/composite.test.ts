@@ -61,7 +61,7 @@ describe('resolveComposite', () => {
     const binding = bindComposite(source(), resolveCompositeRegistry([expandDefinition]));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
 
-    const resolution = resolveComposite(binding, 'children[0]');
+    const resolution = resolveComposite(binding, ['children', 0]);
 
     expect(resolution).toMatchObject({ kind: 'compile', key: 'test.box', node: source() });
 
@@ -72,7 +72,7 @@ describe('resolveComposite', () => {
     const binding = bindComposite(source({ type: 'layout' }), resolveCompositeRegistry([layoutDefinition]));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
 
-    const resolution = resolveComposite(binding, 'children[0]');
+    const resolution = resolveComposite(binding, ['children', 0]);
 
     expect(resolution).toMatchObject({ kind: 'compile', key: 'test.layout', node: source({ type: 'layout' }) });
 
@@ -83,7 +83,7 @@ describe('resolveComposite', () => {
     const binding = bindComposite(source({ value: 'invalid' }), resolveCompositeRegistry([expandDefinition]));
     if (binding.kind === 'unregistered') throw new Error('expected registered binding');
 
-    expect(() => resolveComposite(binding, 'children[2]')).toThrow(
+    expect(() => resolveComposite(binding, ['children', 2])).toThrow(
       /composite 'test\.box' failed payload validation at children\[2\]/u,
     );
   });

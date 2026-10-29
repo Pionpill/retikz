@@ -1,3 +1,6 @@
+import { encodePropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
 import type { JsonValue } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 import { boundsToRect } from '@retikz/math';
@@ -51,7 +54,7 @@ import type { IRChild, IRPosition, IRTarget } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
 import { cloneAndFreezeJson } from '../../shared/json';
-import { formatCompileChildPath, formatCompileOccurrence } from '../artifact';
+import { createCompileChildPath, formatCompileOccurrence } from '../artifact';
 import { BuiltinCompileWarningCode } from '../constants';
 import type { FullCompileContext } from '../context';
 import { createWorkspaceCompileContext } from '../context';
@@ -75,6 +78,8 @@ import {
   raiseLayoutChildFailure,
   wrapLayoutProbeError,
 } from '../probe-failure';
+import type { CompileOwnerKey } from '../provenance';
+import { createCompileProvenanceTracker } from '../provenance';
 import { importSceneResources, remapPrimitiveResources } from '../resource';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 import {
@@ -114,8 +119,6 @@ import {
   sealSink,
   stableSortByZIndex,
 } from './primitive';
-import { createCompileProvenanceTracker } from './provenance';
-import type { CompileSemanticOwner } from './types';
 import type {
   CompositeCompileOwner,
   CompositeReplayMaterializeContext,
@@ -344,10 +347,10 @@ export const compileChildrenToPrimitives = (
     index: number,
     frame: TraversalFrame,
     occurrence?: CompileOccurrenceLocator,
-    semanticOwner?: CompileSemanticOwner,
+    semanticOwner?: CompileOwnerKey,
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, scopeDefaults } = frame;
-    const nodeIrPath = formatCompileChildPath(locatorPrefix, index, 'node');
+    const nodeIrPath = createCompileChildPath(locatorPrefix, index);
 
     const compilation = compileNodeState(child, nodeIrPath, {
       ...runtime.context,
@@ -362,9 +365,9 @@ export const compileChildrenToPrimitives = (
     const { layout, properties } = compilation;
     const globalLayout = scopeTransformsContext.project(layout, scopeChain);
     if (child.id) {
-      runtime.state.namespaceStack.register(child.id, globalLayout, `${nodeIrPath}.id`);
+      runtime.state.namespaceStack.register(child.id, globalLayout, [...nodeIrPath, 'id']);
       child.aliasIds?.forEach((id, aliasIndex) =>
-        runtime.state.namespaceStack.register(id, globalLayout, `${nodeIrPath}.aliasIds[${aliasIndex}]`),
+        runtime.state.namespaceStack.register(id, globalLayout, [...nodeIrPath, 'aliasIds', aliasIndex]),
       );
     }
 
@@ -396,7 +399,9 @@ export const compileChildrenToPrimitives = (
     pushAllocation(frame.allocationSink, nodeBoundsPoints, frame.allocationBoundary);
     const alignmentGuides = alignmentGuidesOfNode(layout, runtime.context.shared.layout.round);
     if (alignmentGuides !== undefined) {
-      frame.alignmentGuideSink.push(...cloneAlignmentGuides(alignmentGuides, `Node '${nodeIrPath}'`));
+      frame.alignmentGuideSink.push(
+        ...cloneAlignmentGuides(alignmentGuides, `Node '${formatPropertyPath(nodeIrPath)}'`),
+      );
     }
 
     layoutSink.push(layout);
@@ -405,7 +410,7 @@ export const compileChildrenToPrimitives = (
   /** 解析 coordinate 位置并注册为零尺寸 layout，供后续命名引用使用 */
   const registerCoordinateChild = (child: CoordinateChild, index: number, frame: TraversalFrame): void => {
     const { scopeChain, locatorPrefix, layoutSink } = frame;
-    const coordinateIrPath = formatCompileChildPath(locatorPrefix, index, 'coordinate');
+    const coordinateIrPath = createCompileChildPath(locatorPrefix, index);
     const localCenter = resolvePosition(child.position, positionContextOf(scopeChain))?.localPoint;
     if (localCenter === undefined) {
       throw createLayoutProbeRecoverableError(
@@ -428,7 +433,7 @@ export const compileChildrenToPrimitives = (
         boundaries: runtime.context.shared.registries.boundaryRegistry,
       },
     );
-    runtime.state.namespaceStack.register(child.id, coordinateLayout, `${coordinateIrPath}.id`);
+    runtime.state.namespaceStack.register(child.id, coordinateLayout, [...coordinateIrPath, 'id']);
     frame.publicationSink.push(coordinateLayout);
     pushAllocation(frame.allocationSink, [localCenter], frame.allocationBoundary);
     layoutSink.push(localCoordinateLayout);
@@ -440,10 +445,10 @@ export const compileChildrenToPrimitives = (
     index: number,
     frame: TraversalFrame,
     occurrence: CompileOccurrenceLocator,
-    semanticOwner?: CompileSemanticOwner,
+    semanticOwner?: CompileOwnerKey,
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, pathSink, scopeDefaults } = frame;
-    const pathIrPath = formatCompileChildPath(locatorPrefix, index, 'path');
+    const pathIrPath = createCompileChildPath(locatorPrefix, index);
     const placeholder = createPathPlaceholder();
     primitiveSink.push(placeholder);
     const pending: PendingPathEmission = {
@@ -478,7 +483,7 @@ export const compileChildrenToPrimitives = (
   ): ScopeLayoutPlaceholder => {
     const { index, frame } = input;
     const { locatorPrefix } = frame;
-    const scopeIrPath = formatCompileChildPath(locatorPrefix, index, 'scope');
+    const scopeIrPath = createCompileChildPath(locatorPrefix, index);
     const parentFrameDepth = runtime.state.namespaceStack.depth - 1;
     if (child.id === undefined) {
       return { parentFrameDepth };
@@ -488,7 +493,7 @@ export const compileChildrenToPrimitives = (
       shapes: runtime.context.shared.registries.shapeRegistry,
       boundaries: runtime.context.shared.registries.boundaryRegistry,
     });
-    runtime.state.namespaceStack.register(child.id, placeholderLayout, `${scopeIrPath}.id`, 'scope-placeholder');
+    runtime.state.namespaceStack.register(child.id, placeholderLayout, [...scopeIrPath, 'id'], 'scope-placeholder');
 
     return { parentFrameDepth, placeholderLayout };
   };
@@ -497,7 +502,7 @@ export const compileChildrenToPrimitives = (
   const emitScopeGroup = (child: ScopeChild, input: EmitScopeGroupContext): string | undefined => {
     const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipPath, semanticOwner } = input;
     const { primitiveSink, locatorPrefix } = frame;
-    const scopeIrPath = formatCompileChildPath(locatorPrefix, index, 'scope');
+    const scopeIrPath = createCompileChildPath(locatorPrefix, index);
     const hasScopeTransforms = scopeTransforms.length > 0;
     const isPrunable =
       scopePrimitiveSink.length === 0 && !hasScopeTransforms && child.id === undefined && child.clip === undefined;
@@ -522,7 +527,7 @@ export const compileChildrenToPrimitives = (
       group.clipRef = runtime.context.workspace.clipRegistry.register(
         resolveClipValue(child.clip, {
           clipRegistry: runtime.context.shared.registries.clipRegistry,
-          irPath: `${scopeIrPath}.clip`,
+          irPath: [...scopeIrPath, 'clip'],
         }),
       );
     }
@@ -541,7 +546,7 @@ export const compileChildrenToPrimitives = (
     frame: TraversalFrame,
     generatedOccurrence?: CompileOccurrenceLocator,
     compositeDepth = options.compositeDepth ?? 0,
-    semanticOwner?: CompileSemanticOwner,
+    semanticOwner?: CompileOwnerKey,
     compileNested?: (scopeFrame: TraversalFrame, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
     preResolvedClipPath?: SceneClipPath,
   ): void => {
@@ -549,12 +554,12 @@ export const compileChildrenToPrimitives = (
 
     const themePath =
       generatedOccurrence === undefined
-        ? `${formatCompileChildPath(locatorPrefix, index, 'scope')}.theme`
+        ? formatPropertyPath([...createCompileChildPath(locatorPrefix, index), 'theme'])
         : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
     const theme = resolveTheme(frame.theme, child.theme, themePath, context.shared.registries.themeRegistry);
     const scopeGeometryContext = {
       positionContext: positionContextOf(frame.scopeChain),
-      irPath: formatCompileChildPath(locatorPrefix, index, 'scope'),
+      irPath: createCompileChildPath(locatorPrefix, index),
       onWarn: runtime.context.workspace.diagnostics.collect,
     };
     const positionTarget = resolveScopePositionTarget(child, scopeGeometryContext);
@@ -593,7 +598,7 @@ export const compileChildrenToPrimitives = (
         childProposal: frame.childProposal,
         scopeChain: preliminaryScopeChain,
         primitiveSink: scopePrimitiveSink,
-        locatorPrefix: `${formatCompileChildPath(locatorPrefix, index, 'scope')}.`,
+        locatorPrefix: createCompileChildPath(locatorPrefix, index),
         layoutSink: scopeLayouts,
         pathSink: scopePendingPaths,
         scopeDefaults: resolveScopeDefaults(child, scopeDefaults),
@@ -838,7 +843,7 @@ export const compileChildrenToPrimitives = (
     occurrence: CompileOccurrenceLocator,
     outputIndex: number,
     preparedReplays: ReadonlyMap<CompositeReplay, PreparedReplay>,
-    semanticOwner?: CompileSemanticOwner,
+    semanticOwner?: CompileOwnerKey,
     authoredPreliminaryTransforms?: ReadonlyArray<Transform>,
   ): void => {
     const prepared = preparedReplays.get(token);
@@ -1057,7 +1062,7 @@ export const compileChildrenToPrimitives = (
             : runtime.context.workspace.clipRegistry.lower(
                 resolveClipValue(entry.child.props.clip, {
                   clipRegistry: runtime.context.shared.registries.clipRegistry,
-                  irPath: 'clip',
+                  irPath: ['clip'],
                 }),
               );
         preparedOutputs.set(handle, {
@@ -1102,7 +1107,7 @@ export const compileChildrenToPrimitives = (
           : runtime.context.workspace.clipRegistry.lower(
               resolveClipValue(entry.child.wrapper.clip, {
                 clipRegistry: runtime.context.shared.registries.clipRegistry,
-                irPath: 'clip',
+                irPath: ['clip'],
               }),
             );
       assertReplayResourceRefs(transaction);
@@ -1146,7 +1151,7 @@ export const compileChildrenToPrimitives = (
     compositeDepth: number,
     owner: CompositeCompileOwner,
     prepared: PreparedCompositeOutputs,
-    semanticOwner?: CompileSemanticOwner,
+    semanticOwner?: CompileOwnerKey,
     preparedScopeClipPath?: SceneClipPath,
     authoredPreliminaryTransforms?: ReadonlyArray<Transform>,
   ): void => {
@@ -1255,9 +1260,9 @@ export const compileChildrenToPrimitives = (
     frame: TraversalFrame,
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
-    semanticOwner?: CompileSemanticOwner,
+    semanticOwner?: CompileOwnerKey,
   ): void => {
-    const compositeIrPath = formatCompileChildPath(frame.locatorPrefix, index);
+    const compositeIrPath = createCompileChildPath(frame.locatorPrefix, index);
     const binding = bindComposite(child, runtime.context.shared.registries.compositeRegistry);
     const { key } = binding;
     if (binding.kind === 'unregistered') {
@@ -1280,7 +1285,7 @@ export const compileChildrenToPrimitives = (
     if (compositeDepth >= runtime.context.shared.limits.maxCompositeDepth) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
-        `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${runtime.context.shared.limits.maxCompositeDepth} levels at ${occurrence.sourcePath}`,
+        `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${runtime.context.shared.limits.maxCompositeDepth} levels at ${formatPropertyPath(occurrence.sourcePath)}`,
       );
     }
 
@@ -1499,7 +1504,12 @@ export const compileChildrenToPrimitives = (
         theme,
         withTheme: override =>
           createLayoutContext(
-            resolveTheme(theme, override, `${compositeIrPath}.theme`, context.shared.registries.themeRegistry),
+            resolveTheme(
+              theme,
+              override,
+              formatPropertyPath([...compositeIrPath, 'theme']),
+              context.shared.registries.themeRegistry,
+            ),
           ),
         proposal: cloneLayoutProposal(frame.childProposal ?? naturalLayoutProposal, key, occurrence),
         evaluation:
@@ -1678,12 +1688,12 @@ export const compileChildrenToPrimitives = (
                 markRegistry: context.shared.registries.markRegistry,
                 patternRegistry: context.shared.registries.patternRegistry,
                 round: context.shared.layout.round,
-                irPath: 'query',
+                irPath: ['query'],
               },
             );
 
-            const pointAt = (locator: string, field: string): IRPosition => {
-              const point = queryResolution.targets.get(locator)?.point;
+            const pointAt = (locator: PropertyPath, field: string): IRPosition => {
+              const point = queryResolution.targets.get(encodePropertyPath(locator))?.point;
               if (point === undefined || point === null || !point.every(Number.isFinite))
                 throw new RetikzCoreError({
                   code: RetikzCoreErrorCode.Compile,
@@ -1695,9 +1705,9 @@ export const compileChildrenToPrimitives = (
             };
 
             return {
-              source: pointAt('query.children[0].to', 'source'),
+              source: pointAt(['query', 'children', 0, 'to'], 'source'),
               points: query.points.map((_point, pointIndex) =>
-                pointAt(`query.children[1].points[${pointIndex}]`, `points[${pointIndex}]`),
+                pointAt(['query', 'children', 1, 'points', pointIndex], `points[${pointIndex}]`),
               ),
             };
           } finally {
@@ -1708,7 +1718,7 @@ export const compileChildrenToPrimitives = (
           runtime.context.workspace.diagnostics.collect({
             code,
             message,
-            path: subPath === undefined || subPath.length === 0 ? compositeIrPath : `${compositeIrPath}.${subPath}`,
+            path: subPath === undefined || subPath.length === 0 ? compositeIrPath : [...compositeIrPath, ...subPath],
           }),
         layoutChild: (nextChild, proposal) => {
           const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
@@ -1957,7 +1967,7 @@ export const compileChildrenToPrimitives = (
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
     generated: boolean,
-    semanticOwner?: CompileSemanticOwner,
+    semanticOwner?: CompileOwnerKey,
   ): void => {
     try {
       withWarningOccurrence(occurrence, () => {
@@ -2011,7 +2021,7 @@ export const compileChildrenToPrimitives = (
         : runtime.state.provenanceTracker.createChildOwners(children, frame.semanticOwner, generated);
 
     for (const [i, child] of children.entries()) {
-      const entityPath = formatCompileChildPath(frame.locatorPrefix, i);
+      const entityPath = createCompileChildPath(frame.locatorPrefix, i);
       const occurrence = generatedScopeOccurrence
         ? {
             sourcePath: generatedScopeOccurrence.sourcePath,
@@ -2023,7 +2033,7 @@ export const compileChildrenToPrimitives = (
         : useProvidedOccurrence && options.occurrence !== undefined && children.length === 1
           ? options.occurrence
           : {
-              sourcePath: 'namespace' in child ? entityPath : `${entityPath}.${child.type}`,
+              sourcePath: entityPath,
               expansionPath: [],
             };
       const runtimeInputs =
@@ -2050,7 +2060,7 @@ export const compileChildrenToPrimitives = (
       runtimeInputs: options.runtimeInputs ?? context.compositeInputs,
       scopeChain: options.scopeChain ?? [],
       primitiveSink: runtime.state.primitives,
-      locatorPrefix: '',
+      locatorPrefix: [],
       layoutSink: rootLayouts,
       pathSink: rootPendingPaths,
       scopeDefaults: options.scopeDefaults ?? {},

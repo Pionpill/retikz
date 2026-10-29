@@ -1,4 +1,5 @@
 import type { CompileOptions, Scene } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
 import type { JsonObject } from '@retikz/foundation';
 import type { AffineMatrix } from '@retikz/math';
 
@@ -44,7 +45,7 @@ export type InspectionDiagnostic = Readonly<{
   /** 检查请求及片段定位 */
   origin: InspectionDiagnosticOrigin;
   /** 原始警告的代码、消息与可选路径 */
-  cause: Readonly<{ code: string; message: string; path?: string }>;
+  cause: Readonly<{ code: string; message: string; path?: PropertyPath }>;
 }>;
 
 /** 已独立编译、可交给普通只读图层的结果 */

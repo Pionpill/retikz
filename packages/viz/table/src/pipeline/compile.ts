@@ -1,6 +1,7 @@
 import type { AnyCompositeDefinition, CompositeArtifact } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import { isPropertyPathEqual } from '@retikz/foundation';
 
 import { RetikzTableError } from '../error';
 import type { IRTable } from '../schemas';
@@ -11,7 +12,7 @@ import type { CompileTableOptions, CompileTableResult, TableCompileArtifact } fr
 const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableCompileArtifact =>
   artifact.namespace === TABLE_NAMESPACE &&
   artifact.type === TableComposite.Table &&
-  artifact.occurrence.sourcePath === 'children[0]' &&
+  isPropertyPathEqual(artifact.occurrence.sourcePath, ['children', 0]) &&
   artifact.occurrence.expansionPath.length === 0;
 
 /**

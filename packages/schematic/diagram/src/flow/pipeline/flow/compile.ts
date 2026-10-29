@@ -209,7 +209,7 @@ export const createCompileFlowDiagram =
           context.warn(
             'FlowSmoothObstacleConflict',
             `Smooth reference curve conflicts with ${conflicts.join(', ')}; keep authored waypoints and inspect the final drawing.`,
-            `relations[${index}].routing.points`,
+            ['relations', index, 'routing', 'points'],
           );
         continue;
       }
@@ -226,7 +226,7 @@ export const createCompileFlowDiagram =
           context.warn(
             isFlowAutomaticRouting(relation.routing) ? 'FlowBezierSearchExhausted' : 'FlowBezierObstacleConflict',
             `Bezier reference geometry conflicts with ${conflicts.relatedIds.join(', ')}; inspect the final drawing.`,
-            `relations[${index}]`,
+            ['relations', index],
           );
         continue;
       }
@@ -245,7 +245,7 @@ export const createCompileFlowDiagram =
           context.warn(
             'FlowOrthogonalObstacleConflict',
             'Orthogonal reference route conflicts with nodes or labels; the best available route is retained.',
-            `relations[${index}]`,
+            ['relations', index],
           );
         continue;
       }
@@ -269,10 +269,7 @@ export const createCompileFlowDiagram =
         context.warn(
           'FlowBendObstacleConflict',
           'Bend reference curve may intersect node bounds; inspect the drawing and adjust routing if needed.',
-          diagram.relations[index].path
-            .map(part => (typeof part === 'number' ? `[${part}]` : `.${part}`))
-            .join('')
-            .replace(/^\./, ''),
+          diagram.relations[index].path,
         );
     }
 

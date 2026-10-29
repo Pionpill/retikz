@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type {
   CompiledPathAppearance,
   InputPathBoundaryLabel,
@@ -62,7 +64,7 @@ export const emitDefinedPath = (
 ) => {
   const { path, scopeChain } = pendingPath;
   const { irPath } = resolution;
-  const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
+  const targetWarn = (code: string, message: string, node?: { irPath?: PropertyPath }): void =>
     context.workspace.diagnostics.collect({ code, message, path: node?.irPath ?? irPath });
   const targetView = pathTargetViewOf(
     resolution.targets,
@@ -186,7 +188,7 @@ export const emitDefinedPath = (
     input.labels.flatMap((label, index) => {
       const sample = input.samples[index];
       const labelDefault = pendingPath.scopeDefaults.path?.label ?? {};
-      const sourcePath = `${irPath}.${input.sourcePath}[${index}]`;
+      const sourcePath = [...irPath, ...input.sourcePath, index];
       const { side, ...labelSource } = label;
       const styled = resolvePathLabelColors(
         labelSource,
@@ -221,7 +223,7 @@ export const emitDefinedPath = (
         resolvePathLabel(request.label, labelDefault, resolution.path.color),
         labelDefault.color ?? resolution.path.color,
         { mode: pendingPath.theme.mode },
-        `${irPath}.${request.sourcePath}`,
+        [...irPath, ...request.sourcePath],
       );
       const emitted = emitBoundaryLabelPrimitive(request, styled, {
         measureText: context.shared.host.measureText,
@@ -231,7 +233,7 @@ export const emitDefinedPath = (
         tex: {
           lowerTex: context.shared.host.lowerTex,
           gatingOn: context.shared.host.lowerTex !== undefined,
-          warn: (code, message) => targetWarn(code, message, { irPath: `${irPath}.${request.sourcePath}` }),
+          warn: (code, message) => targetWarn(code, message, { irPath: [...irPath, ...request.sourcePath] }),
         },
       });
       hostLabelBoundsPoints.push(...emitted.boundsPoints);

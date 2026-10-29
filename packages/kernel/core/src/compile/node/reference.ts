@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { NodeReferenceGeometry } from '../../resolve';
 import type { NodeBoundaryContext } from './boundary-context';
 import type { CompiledNodeLayout } from './types';
@@ -7,7 +9,7 @@ export const createNodeReferenceGeometry = (
   layout: CompiledNodeLayout,
   context?: NodeBoundaryContext,
   id?: string,
-  irPath?: string,
+  irPath?: PropertyPath,
 ): NodeReferenceGeometry => {
   const reference: NodeReferenceGeometry = {
     id,

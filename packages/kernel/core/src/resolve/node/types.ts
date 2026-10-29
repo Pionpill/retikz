@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox } from '@retikz/math';
 
@@ -197,19 +198,19 @@ export type NodeReferenceGeometry = Readonly<{
   /** 已绑定的默认连接面定义与参数 */
   boundaryResolution: BoundaryResolution;
   /** 当前节点 IR 路径 */
-  irPath?: string;
+  irPath?: PropertyPath;
 }>;
 
 /** 结合节点视觉形状解析连接面定义与参数的回调 */
 export type NodeBoundaryResolver = (
   boundary: IRBoundary | undefined,
-  context: Readonly<{ visualDef: ShapeDefinition; visualParams: JsonObject; irPath?: string }>,
+  context: Readonly<{ visualDef: ShapeDefinition; visualParams: JsonObject; irPath?: PropertyPath }>,
 ) => BoundaryResolution;
 
 /** 已解析的节点输入、形状与默认连接面 */
 export type NodeResolution = Readonly<{
   /** 当前节点的 IR 路径，用于布局与扩展定义的错误定位 */
-  irPath: string;
+  irPath: PropertyPath;
   /** 已完成样式继承、颜色和绘制资源解析并补齐默认值的节点 */
   node: CanonicalNode;
   /** 节点视觉形状 */
@@ -233,7 +234,7 @@ export type NodeResolveContext = {
   /** 资源尺寸圆整规则 */
   round: (value: number) => number;
   /** 当前节点的 IR 路径 */
-  irPath: string;
+  irPath: PropertyPath;
   /** 接收节点解析警告的回调 */
   warn: (code: string, message: string) => void;
   /** 节点标签缺省距离 */

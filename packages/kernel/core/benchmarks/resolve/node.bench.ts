@@ -26,7 +26,7 @@ for (const kind of ['simple', 'inherited', 'contrast', 'pattern', 'labels'] as c
         boundaryRegistry: resolveBoundaryRegistry(),
         patternRegistry: resolvePatternRegistry(),
         round: value => value,
-        irPath: 'node',
+        irPath: [],
         warn: () => {},
         labelDistance: 12,
       };

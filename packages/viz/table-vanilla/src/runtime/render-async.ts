@@ -1,4 +1,5 @@
 import type { CompositeArtifact } from '@retikz/core';
+import { isPropertyPathEqual } from '@retikz/foundation';
 import type { IRTable, TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import { processToStaticInputResultAsync, renderToSvgString, scene } from '@retikz/vanilla';
@@ -12,7 +13,7 @@ import type { AsyncTableRenderer, TableRenderArtifactResult, TableRenderAsyncCom
 const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableCompileArtifact =>
   artifact.namespace === TABLE_NAMESPACE &&
   artifact.type === TableComposite.Table &&
-  artifact.occurrence.sourcePath === 'children[0]' &&
+  isPropertyPathEqual(artifact.occurrence.sourcePath, ['children', 0]) &&
   artifact.occurrence.expansionPath.length === 0;
 
 /** 共享Vanilla准备、编译和提交，不建立Table私有异步状态机 */

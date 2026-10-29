@@ -7,12 +7,11 @@ import type { SceneCompilationSnapshot } from './compile';
 import type { SharedCompileContext } from './context';
 import type { CompileOutput } from './element';
 import { assembleCompileOutputs } from './element';
-import type { CompileProvenanceTracker } from './orchestration';
 import { orderCompileArtifacts } from './orchestration';
 import { filterAnimations } from './orchestration/animation';
 import { collectLayoutBounds } from './orchestration/bounds';
 import { orderCompileWarnings } from './orchestration/diagnostics';
-import type { CompileProvenance } from './provenance';
+import type { CompileProvenance, CompileProvenanceTracker } from './provenance';
 import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
 import type { CompileResult, CompositeArtifact, CompositeArtifactOf } from './types';
 import type { CompileWarning, InputCompileWarning } from './warning';
@@ -43,7 +42,7 @@ export const assembleSceneCompilationSnapshot = <
   const diagnostics: Array<InputCompileWarning> = [...(metadata.diagnostics ?? [])];
   const animations = filterAnimations(root.animations, {
     target: 'root',
-    irPath: 'scene',
+    irPath: [],
     onWarn: warning => {
       diagnostics.push(warning);
     },

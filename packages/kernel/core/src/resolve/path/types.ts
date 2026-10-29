@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { AnyPathDefinition, ArrowDefinition, MarkDefinition, PatternDefinition, Transform } from '../../contract';
 import type { ProviderRegistry } from '../../providers';
 import type {
@@ -270,7 +272,7 @@ export type PathResolveContext = Readonly<{
   /** 填充资源尺寸的数值舍入函数 */
   round: (value: number) => number;
   /** 当前路径的 IR 路径，用于扩展参数校验错误定位，缺省为 path */
-  irPath?: string;
+  irPath?: PropertyPath;
 }>;
 
 /** 单个路径目标的坐标与节点绑定结果 */
@@ -290,10 +292,10 @@ export type TargetResolution = Readonly<{
 /** 路径输入经样式解析、默认值补全与目标绑定后的结果 */
 export type PathResolution = Readonly<{
   /** 当前路径的 IR 路径，用于扩展定义与输出的错误定位 */
-  irPath: string;
+  irPath: PropertyPath;
   /** 已补齐默认值并解析绘制资源、供后续编译使用的路径 */
   path: CanonicalPath;
-  /** 按步骤字段的 IR 路径保存的目标绑定 */
+  /** 按步骤字段的完整 IR 路径经 encodePropertyPath 编码后保存的目标绑定 */
   targets: ReadonlyMap<string, TargetResolution>;
   /** 与当前路径匹配的定义 */
   definition: AnyPathDefinition;

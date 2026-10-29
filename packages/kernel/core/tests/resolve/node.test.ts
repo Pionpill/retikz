@@ -31,7 +31,7 @@ const resolve = (source: IRNode, scopeDefaults: MergedScopeDefaults = {}) =>
     boundaryRegistry: resolveBoundaryRegistry(),
     patternRegistry: resolvePatternRegistry(),
     round: value => value,
-    irPath: 'node',
+    irPath: [],
     warn: () => {},
     labelDistance: 12,
   });

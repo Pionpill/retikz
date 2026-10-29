@@ -320,7 +320,7 @@ describe('三层布局提案关闭', () => {
 
     expect(parentArtifact?.value).toEqual({ role: 'parent' });
     expect(nestedArtifact?.value).toEqual({ role: 'nested', x: 'exact', y: 'intrinsic' });
-    expect(formatCompileOccurrence(nestedArtifact?.occurrence ?? { sourcePath: '', expansionPath: [] })).toBe(
+    expect(formatCompileOccurrence(nestedArtifact?.occurrence ?? { sourcePath: [], expansionPath: [] })).toBe(
       'children[0]::replay[0]',
     );
   });

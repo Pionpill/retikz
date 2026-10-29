@@ -75,7 +75,7 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
       boundaryRegistry: boundaries,
       patternRegistry: resolvePatternRegistry(),
       round: value => value,
-      irPath: 'node',
+      irPath: [],
       warn: () => {},
       labelDistance: 12,
     });

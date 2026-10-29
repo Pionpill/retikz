@@ -10,7 +10,7 @@ describe('resolveContextualColor', () => {
       resolveContextualColor('var(--exact-color)', {
         masterColor: 'currentColor',
         mode: ThemeMode.Light,
-        fieldPath: 'children[0].node.fill',
+        fieldPath: ['children', 0, 'fill'],
       }),
     ).toBe('var(--exact-color)');
   });
@@ -23,7 +23,7 @@ describe('resolveContextualColor', () => {
       resolveContextualColor(0.2, {
         masterColor: '#336699',
         mode,
-        fieldPath: 'children[0].node.fill',
+        fieldPath: ['children', 0, 'fill'],
       }),
     ).toBe(expected);
   });
@@ -34,7 +34,7 @@ describe('resolveContextualColor', () => {
     try {
       resolveContextualColor(0.2, {
         mode: ThemeMode.Light,
-        fieldPath: 'children[1].path.stroke',
+        fieldPath: ['children', 1, 'stroke'],
       });
     } catch (thrown) {
       expect(thrown).toBeInstanceOf(RetikzCoreError);
@@ -42,8 +42,8 @@ describe('resolveContextualColor', () => {
       const error = thrown as RetikzCoreError;
 
       expect(error.code).toBe(RetikzCoreErrorCode.Color);
-      expect(error.message).toContain('children[1].path.stroke');
-      expect(error.details).toMatchObject({ fieldPath: 'children[1].path.stroke' });
+      expect(error.message).toContain('children[1].stroke');
+      expect(error.details).toMatchObject({ fieldPath: ['children', 1, 'stroke'] });
       expect(error.cause).toBeUndefined();
     }
   });
@@ -55,7 +55,7 @@ describe('resolveContextualColor', () => {
       resolveContextualColor(0.2, {
         masterColor: 'currentColor',
         mode: ThemeMode.Dark,
-        fieldPath: 'children[0].node.textColor',
+        fieldPath: ['children', 0, 'textColor'],
       });
     } catch (thrown) {
       expect(thrown).toBeInstanceOf(RetikzCoreError);
@@ -63,9 +63,9 @@ describe('resolveContextualColor', () => {
       const error = thrown as RetikzCoreError;
 
       expect(error.code).toBe(RetikzCoreErrorCode.Color);
-      expect(error.message).toContain('children[0].node.textColor');
+      expect(error.message).toContain('children[0].textColor');
       expect(error.details).toMatchObject({
-        fieldPath: 'children[0].node.textColor',
+        fieldPath: ['children', 0, 'textColor'],
         masterColor: 'currentColor',
       });
       expect(error.cause).toBeInstanceOf(RetikzFoundationError);

@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { LayoutProposal, Transform } from '../../contract';
 import type { MergedScopeDefaults } from '../../resolve';
 import { resolveNode } from '../../resolve';
@@ -34,7 +36,7 @@ type NodeLayoutCompileContext = {
 /** 从自身输入完成节点解析、测量和定位；不登记名称或写入外部输出容器 */
 export const compileNodeState = (
   child: IRNode,
-  nodeIrPath: string,
+  nodeIrPath: PropertyPath,
   context: NodeLayoutCompileContext,
 ): NodeCompilation => {
   const scopeChain = context.scopeChain;

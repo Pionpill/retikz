@@ -1,4 +1,54 @@
 import { RetikzFoundationError, RetikzFoundationErrorCode } from './error';
+import type { PropertyPath } from './types';
+
+/** 按路径段内容与类型判断路径是否相等 */
+export const isPropertyPathEqual = (left: PropertyPath, right: PropertyPath): boolean =>
+  left.length === right.length && left.every((segment, index) => segment === right[index]);
+
+/** 判断路径是否位于指定前缀内，包含前缀自身 */
+export const hasPropertyPathPrefix = (path: PropertyPath, prefix: PropertyPath): boolean =>
+  prefix.length <= path.length && prefix.every((segment, index) => segment === path[index]);
+
+/** 按段排序，数字按数值比较，同前缀时祖先先于后代 */
+export const comparePropertyPaths = (left: PropertyPath, right: PropertyPath): number => {
+  for (let index = 0; index < Math.min(left.length, right.length); index++) {
+    const a = left[index];
+    const b = right[index];
+    if (a === b) continue;
+    if (typeof a === 'number' && typeof b === 'number') return a - b;
+    if (typeof a !== typeof b) return typeof a === 'number' ? -1 : 1;
+    return a < b ? -1 : 1;
+  }
+  return left.length - right.length;
+};
+
+/** 编码供 Map 索引使用的路径键，保留数字与字符串区别 */
+export const encodePropertyPath = (path: PropertyPath): string => JSON.stringify(path);
+
+/** 将路径格式化为可读属性访问表达式，空路径显示为根对象 */
+export const formatPropertyPath = (path: PropertyPath): string => {
+  let formatted = '';
+  for (const segment of path) {
+    if (typeof segment === 'number') formatted += `[${segment}]`;
+    else if (/^[A-Za-z_$][\w$]*$/u.test(segment)) formatted += `${formatted.length === 0 ? '' : '.'}${segment}`;
+    else formatted += `[${JSON.stringify(segment)}]`;
+  }
+  return formatted || '$';
+};
+
+/** 读取 JSON 对象的自身属性；路径类型不匹配或属性缺失时返回 undefined */
+export const readPropertyPath = (root: unknown, path: PropertyPath): unknown => {
+  let current = root;
+  for (const segment of path) {
+    if (current === null || typeof current !== 'object') return undefined;
+    if (Array.isArray(current)) {
+      if (typeof segment !== 'number' || !Number.isSafeInteger(segment) || segment < 0) return undefined;
+    } else if (typeof segment !== 'string') return undefined;
+    if (!Object.hasOwn(current, segment)) return undefined;
+    current = (current as Record<string | number, unknown>)[segment];
+  }
+  return current;
+};
 
 /** 在一次调用内校验容器并按需复制，错误路径只在失败时组装 */
 const inspectPlainData = (value: unknown, path: string, shouldCloneJson: boolean): unknown => {

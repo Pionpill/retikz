@@ -1,4 +1,6 @@
-﻿import type { CompileOccurrenceLocator } from '../../contract';
+import type { PropertyPath } from '@retikz/foundation';
+
+import type { CompileOccurrenceLocator } from '../../contract';
 import { createDuplicateWarning, orderCompileWarnings, withCompileWarningOccurrence } from '../orchestration';
 import type { CompileWarning } from '../warning';
 import type { CompileBinding, CompileNamespace } from './types';
@@ -8,7 +10,7 @@ export type CompileNamespaceRegistry = {
   /** 供元素读取的命名空间视图 */
   namespace: CompileNamespace;
   /** 按声明顺序登记名称，保留 Core 同 frame last-wins 诊断 */
-  register: (name: string, binding: CompileBinding, path: string, occurrence: CompileOccurrenceLocator) => void;
+  register: (name: string, binding: CompileBinding, path: PropertyPath, occurrence: CompileOccurrenceLocator) => void;
   /** 更新同一绑定的结果，不重放名称注册或覆盖后来同名声明 */
   replace: (binding: object, value: CompileBinding) => void;
 };
@@ -19,7 +21,7 @@ export const createCompileNamespaceRegistry = (
   onWarning?: (warning: CompileWarning) => void,
 ): CompileNamespaceRegistry => {
   const bindings = new Map<string, CompileBinding>();
-  const paths = new Map<string, string>();
+  const paths = new Map<string, PropertyPath>();
   let depth = 0;
   for (let outer = parent; outer !== undefined; outer = outer.parent) depth++;
   return {

@@ -1,3 +1,6 @@
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
+
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { getProviderDefinition } from '../../providers';
 import type { IRArrowStyle, IRPathBase } from '../../schemas';
@@ -24,7 +27,7 @@ const ARROW_PATH_CONTACT_OVERLAP = 0.5;
 export const resolvePathDefinition = (
   path: PathColorSource,
   context: PathResolveContext,
-  irPath: string,
+  irPath: PropertyPath,
 ): PathDefinitionResolution => {
   const kind = path.kind ?? 'stroke';
   const definition = getProviderDefinition(context.pathRegistry, kind);
@@ -125,7 +128,7 @@ export const resolveStrokePathProviders = (
     if (definition === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Provider,
-        `Unknown provider '${shape}' at ${context.irPath}.marks[${index}].shape; available: ${[...(context.markRegistry?.keys() ?? [])].sort().join(', ') || '(none registered)'}.`,
+        `Unknown provider '${shape}' at ${formatPropertyPath(context.irPath ?? [])}.marks[${index}].shape; available: ${[...(context.markRegistry?.keys() ?? [])].sort().join(', ') || '(none registered)'}.`,
       );
     marks.set(placement, resolveMarkStyle(placement, definition, context));
   }

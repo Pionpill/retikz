@@ -1,3 +1,4 @@
+import { encodePropertyPath } from '@retikz/foundation';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
@@ -53,7 +54,9 @@ for (const count of [16, 1_000, 10_000]) {
             expect(result.path.stroke).toBe('blue');
             expect(result.path.children).toHaveLength(kind === 'smooth' ? 1 : count);
             expect(result.targets.size).toBe(count);
-            const key = kind === 'smooth' ? `path.children[0].points[${count - 1}]` : `path.children[${count - 1}].to`;
+            const key = encodePropertyPath(
+              kind === 'smooth' ? ['children', 0, 'points', count - 1] : ['children', count - 1, 'to'],
+            );
             expect(result.targets.get(key)?.point).toEqual([count - 1, 0]);
             if (kind === 'smooth') expect(result.path.children?.[0]).toMatchObject({ kind: 'smooth', tension: 1 });
             if (kind === 'labels')

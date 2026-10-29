@@ -53,7 +53,7 @@ Composite 继续通过 `artifactSchema` 声明 JSON-safe 领域产物契约，�
 
 只发布最终可达输出中的产物，丢弃的试算候选不进入结果；数组保持最终逻辑树的确定顺序。没有产物时返回空数组，不提供开启产物收集的选项。
 
-`occurrence` 保留来源路径和结构化展开路径，不承担跨 revision 稳定身份。用于 Composite 输出、试算和重放的定位继续存在；仅用于观测 Clip 应用的 `clip` 路径类别删除，正常裁剪与裁剪资源不受影响。
+`occurrence` 保留来源路径和结构化展开路径，不承担跨 revision 稳定身份。来源路径采用 [079](./079-structured-property-paths.md) 的完整属性路径：字符串表示属性、数字表示数组下标，展开链独立保存。用于 Composite 输出、试算和重放的定位继续存在；仅用于观测 Clip 应用的 `clip` 路径类别删除，正常裁剪与裁剪资源不受影响。
 
 Composite artifact 不新增通用 transform、祖先链、主题或检查配置。其坐标语义由领域契约明确，Core 不猜测 `value` 中的几何，也不把领域值自动转换为世界坐标。删除 qualified spatial handles 的声明、发布、世界坐标投影、索引与查询契约，包括 CompileResult.spatialHandles、Composite 返回值及 createScope 参数中的空间声明、selectSpatialHandles 和 resolveSpatialHandle。正常 Scope 变换、布局边界、引用定位与 renderer 命中语义继续保留。
 

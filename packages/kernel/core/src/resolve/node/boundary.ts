@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { JsonObject } from '@retikz/foundation';
 
 import type { BoundaryDefinition, ShapeDefinition } from '../../contract';
@@ -18,7 +19,7 @@ type NodeBoundaryResolveContext = {
   /** 连接面定义注册表 */
   boundaryRegistry: ProviderRegistry<BoundaryDefinition>;
   /** 当前节点的 IR 路径，用于参数校验错误定位 */
-  irPath?: string;
+  irPath?: PropertyPath;
 };
 
 /**
@@ -40,7 +41,7 @@ export const resolveNodeBoundary = (
 
   const type = typeof boundary === 'string' ? boundary : boundary.type;
   const rawParams = typeof boundary === 'string' ? {} : (boundary.params ?? {});
-  const paramsPath = `${context.irPath ?? 'node'}.boundary.params`;
+  const paramsPath = [...(context.irPath ?? []), 'boundary', 'params'];
   const boundaryDef = context.boundaryRegistry.get(type);
   if (boundaryDef !== undefined) {
     return {

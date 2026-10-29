@@ -32,11 +32,12 @@ describe('Composite 产物交付', () => {
       [0, 2].map(index => ({
         namespace: 'test',
         type: 'artifact',
-        occurrence: { sourcePath: `children[${index}]`, expansionPath: [] },
+        occurrence: { sourcePath: ['children', index], expansionPath: [] },
         value: { nested: { count: 1 } },
       })),
     );
     expect(Object.isFrozen(result.artifacts)).toBe(true);
+    expect(Object.isFrozen(result.artifacts[0].occurrence.sourcePath)).toBe(true);
     expect(Object.isFrozen(result.artifacts[0].value.nested)).toBe(true);
   });
 
@@ -68,7 +69,7 @@ describe('Composite 产物交付', () => {
       {
         namespace: 'test',
         type: 'nullable',
-        occurrence: { sourcePath: 'children[1]', expansionPath: [] },
+        occurrence: { sourcePath: ['children', 1], expansionPath: [] },
         value: null,
       },
     ]);

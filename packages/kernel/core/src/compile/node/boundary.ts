@@ -1,3 +1,5 @@
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 import type { CenteredBox, Position } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelope, ConnectionEnvelopeKind, ShapeDefinition } from '../../contract';
@@ -25,20 +27,20 @@ const resolveConnectionEnvelope = (
   shapeName: string,
   kind: ConnectionEnvelopeKind,
   envelope: ConnectionEnvelope,
-  irPath?: string,
+  irPath?: PropertyPath,
 ): Readonly<{ halfWidth: number; halfHeight: number }> => {
-  const path = irPath ?? 'node';
+  const path = irPath ?? [];
   const { halfWidth, halfHeight } = envelope;
   if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth <= 0 || halfHeight <= 0) {
     throw createCompositeContractError(
-      `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected finite positive half-axes, received [${halfWidth}, ${halfHeight}]`,
+      `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${formatPropertyPath(path)}: expected finite positive half-axes, received [${halfWidth}, ${halfHeight}]`,
     );
   }
 
   const tolerance = Number.EPSILON * Math.max(1, halfWidth, halfHeight) * 8;
   if (kind === 'circle' && Math.abs(halfWidth - halfHeight) > tolerance) {
     throw createCompositeContractError(
-      `Shape '${shapeName}' returned an invalid circle connection envelope at ${path}: half-axes must be equal, received [${halfWidth}, ${halfHeight}]`,
+      `Shape '${shapeName}' returned an invalid circle connection envelope at ${formatPropertyPath(path)}: half-axes must be equal, received [${halfWidth}, ${halfHeight}]`,
     );
   }
 
@@ -78,7 +80,7 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: BoundaryGeo
 };
 
 /** 校验 Boundary provider 解析出的最终矩形 */
-const resolveBoundaryRect = (providerName: string, value: CenteredBox, irPath?: string) => {
+const resolveBoundaryRect = (providerName: string, value: CenteredBox, irPath?: PropertyPath) => {
   const { x, y, width, height, rotate } = value;
   if (
     !Number.isFinite(x) ||
@@ -90,7 +92,7 @@ const resolveBoundaryRect = (providerName: string, value: CenteredBox, irPath?: 
     height <= 0
   ) {
     throw createCompositeContractError(
-      `Boundary '${providerName}' resolved an invalid rect at ${irPath ?? 'node'}: expected finite positive width and height`,
+      `Boundary '${providerName}' resolved an invalid rect at ${formatPropertyPath(irPath ?? [])}: expected finite positive width and height`,
     );
   }
 
@@ -127,7 +129,7 @@ export const resolveBoundary = (
 
       const message = safeThrownDetail(error);
       throw createLayoutProbeRecoverableError(
-        `Boundary '${resolution.name}' failed to resolve its rect at ${context.irPath ?? 'node'}: ${message}`,
+        `Boundary '${resolution.name}' failed to resolve its rect at ${formatPropertyPath(context.irPath ?? [])}: ${message}`,
         { cause: error, providerKey: `boundary:${resolution.name}` },
       );
     }

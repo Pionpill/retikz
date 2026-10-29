@@ -1,3 +1,5 @@
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 import { ZodError } from 'zod';
 
@@ -19,7 +21,7 @@ type InputProviderPayloadParsing<TOutput> = {
   /** 能力提供者的注册键 */
   providerName: string;
   /** 用户应修改的 IR 路径 */
-  irPath: string;
+  irPath: PropertyPath;
   /** 待校验数据的名称，用于诊断文案 */
   payloadName: string;
   /** 扩展定义声明的数据 schema */
@@ -28,29 +30,18 @@ type InputProviderPayloadParsing<TOutput> = {
   value: unknown;
 };
 
-/** 将校验错误的字段路径转换为点号与数组下标形式 */
-const formatIssuePath = (path: ReadonlyArray<PropertyKey>): string => {
-  let formatted = '';
-
-  for (const segment of path) {
-    if (typeof segment === 'number') {
-      formatted += `[${segment}]`;
-    } else {
-      formatted += `${formatted.length === 0 ? '' : '.'}${String(segment)}`;
-    }
-  }
-
-  return formatted;
-};
-
-/** 路径整体校验失败时，将首条 Zod 错误的字段路径追加到 IR 路径 */
-const appendPathIssuePath = (capability: string, payloadName: string, irPath: string, error: unknown): string => {
+/** 将首个 schema 问题定位到输入属性路径 */
+const appendPathIssuePath = (
+  capability: string,
+  payloadName: string,
+  irPath: PropertyPath,
+  error: unknown,
+): PropertyPath => {
   if (capability !== 'path' || payloadName !== 'path' || !(error instanceof ZodError)) return irPath;
-
-  const issuePath = formatIssuePath(error.issues[0]?.path ?? []);
-  if (issuePath.length === 0) return irPath;
-
-  return `${irPath}${issuePath.startsWith('[') ? '' : '.'}${issuePath}`;
+  return [
+    ...irPath,
+    ...(error.issues[0]?.path ?? []).map(segment => (typeof segment === 'symbol' ? String(segment) : segment)),
+  ];
 };
 
 /**
@@ -71,7 +62,7 @@ export const parseProviderPayload = <TOutput>({
     const message = safeThrownDetail(error);
     const locator = appendPathIssuePath(capability, payloadName, irPath, error);
     throw createLayoutProbeRecoverableError(
-      `${capability} '${providerName}' failed ${payloadName} validation at ${locator}: ${message}`,
+      `${capability} '${providerName}' failed ${payloadName} validation at ${formatPropertyPath(locator)}: ${message}`,
       { cause: error, providerKey: providerName },
     );
   }

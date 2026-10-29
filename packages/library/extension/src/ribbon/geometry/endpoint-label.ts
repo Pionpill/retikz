@@ -35,7 +35,7 @@ export const endpointLabelInput = (
       label: config.label,
       point: [center[0] + h * outward[0], center[1] + h * outward[1]],
       outward,
-      sourcePath: `kindOptions.${endpoint}.label`,
+      sourcePath: ['kindOptions', endpoint, 'label'],
     },
   ];
 };

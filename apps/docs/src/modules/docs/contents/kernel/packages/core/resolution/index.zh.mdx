@@ -18,7 +18,7 @@ description: 追踪 Core 如何合并作用域样式、解析主题颜色，并�
 
 ```ts
 export type NodeResolution = Readonly<{
-  irPath: string;
+  irPath: ReadonlyArray<string | number>;
   node: CanonicalNode;
   shape: ShapeResolution;
   boundary: BoundaryReferenceResolution;
@@ -30,7 +30,7 @@ export type NodeResolution = Readonly<{
 
 ```ts
 export type PathResolution = Readonly<{
-  irPath: string;
+  irPath: ReadonlyArray<string | number>;
   path: CanonicalPath;
   targets: ReadonlyMap<string, TargetResolution>;
   kind: PathDefinitionResolution;
@@ -54,7 +54,7 @@ export type PathResolution = Readonly<{
 
 Definition 保存一种能力的实现与参数契约。IR 中的 `shape: 'rectangle'` 只是名称，布局需要的是矩形定义及其已解析参数。registry 是两者之间的查询表。
 
-`createCompileContext` 按能力建立各自的注册表，先加入内置定义，再加入 `CompileOptions` 提供的外部定义。同一个注册表中的名称必须唯一，外部定义与内置定义重名也会报错。
+`createFullCompileContext` 按能力建立各自的注册表，先加入内置定义，再加入 `CompileOptions` 提供的外部定义。同一个注册表中的名称必须唯一，外部定义与内置定义重名也会报错。
 
 | 注册表                  | 提供的能力         | 何时消费                        |
 | ----------------------- | ------------------ | ------------------------------- |
@@ -72,7 +72,7 @@ Node 的连接边界随后通过 `resolveBoundaryReference` 解析。它可以�
 
 <SourceLinks
   sources={[
-    { label: '上下文与注册表装配', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: '上下文与注册表装配', path: 'packages/kernel/core/src/compile/context/full.ts' },
     { label: '重名检查与名称查询', path: 'packages/kernel/core/src/providers/registry.ts' },
     { label: '形状名称、参数与能力绑定', path: 'packages/kernel/core/src/resolve/node/shape.ts' },
     { label: '连接边界解析', path: 'packages/kernel/core/src/resolve/node/boundary.ts' },
@@ -294,7 +294,7 @@ Label 的默认外观来自 Label 通道，标签位置等静态配置在路径�
   </DocTab>
 </DocTabs>
 
-阅读时先看 `createCompileContext` 的注册表与根主题。Node 从遍历中的 `emitNodeChild` 进入 `resolveNode`；Path 从延迟任务处理进入 `resolvePath`，再按输出类型继续绑定次级能力。Path 图将颜色解析的两次调用合在同一说明中，目标绑定只标出交接点。本页重点到配置结果为止，测量、边界求交和最终图元分别见[节点编译](/kernel/packages/core/node-compilation)与[路径编译](/kernel/packages/core/path-compilation)。
+阅读时先看 `createFullCompileContext` 的注册表与根主题。Node 从遍历中的 `emitNodeChild` 进入 `resolveNode`；Path 从延迟任务处理进入 `resolvePath`，再按输出类型继续绑定次级能力。Path 图将颜色解析的两次调用合在同一说明中，目标绑定只标出交接点。本页重点到配置结果为止，测量、边界求交和最终图元分别见[节点编译](/kernel/packages/core/node-compilation)与[路径编译](/kernel/packages/core/path-compilation)。
 
 <SourceLinks
   sources={[

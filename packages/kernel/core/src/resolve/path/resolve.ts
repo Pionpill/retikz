@@ -1,3 +1,6 @@
+import { encodePropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 import { pointAtArcAngle } from '@retikz/math';
 
 import type { Transform } from '../../contract';
@@ -55,44 +58,48 @@ const hasNoEffectivePathFill = (path: PathColorSource): boolean =>
   path.style?.fill === undefined || path.style.fill === 'none';
 
 /** 检查标签断线配置：显式设置仅限内置 Stroke 路径，开启时要求路径无填充 */
-const assertPathLabelInterruption = (label: PathLabelColorSource, path: PathColorSource, labelPath: string): void => {
+const assertPathLabelInterruption = (
+  label: PathLabelColorSource,
+  path: PathColorSource,
+  labelPath: PropertyPath,
+): void => {
   if (label.interrupt === undefined) return;
   if (!isBuiltinStrokePath(path)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
-      `Path label interruption at ${labelPath}.interrupt is only supported by an unfilled built-in Stroke path.`,
+      `Path label interruption at ${formatPropertyPath(labelPath)}.interrupt is only supported by an unfilled built-in Stroke path.`,
     );
   }
 
   if (label.interrupt && !hasNoEffectivePathFill(path)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
-      `Path label interruption at ${labelPath}.interrupt cannot be used on a filled Stroke path.`,
+      `Path label interruption at ${formatPropertyPath(labelPath)}.interrupt cannot be used on a filled Stroke path.`,
     );
   }
 };
 
 /** 检查路径和步骤标签是否满足断线条件 */
-const assertPathLabelInterruptionPolicy = (path: PathColorSource, irPath: string): void => {
+const assertPathLabelInterruptionPolicy = (path: PathColorSource, irPath: PropertyPath): void => {
   if (path.label !== undefined) {
     if (Array.isArray(path.label)) {
       for (const [index, label] of path.label.entries()) {
-        assertPathLabelInterruption(label, path, `${irPath}.label[${index}]`);
+        assertPathLabelInterruption(label, path, [...irPath, 'label', index]);
       }
     } else {
-      assertPathLabelInterruption(path.label, path, `${irPath}.label`);
+      assertPathLabelInterruption(path.label, path, [...irPath, 'label']);
     }
   }
 
   for (const [index, step] of (path.children ?? []).entries()) {
     if ('label' in step && step.label !== undefined) {
-      assertPathLabelInterruption(step.label, path, `${irPath}.children[${index}].label`);
+      assertPathLabelInterruption(step.label, path, [...irPath, 'children', index, 'label']);
     }
   }
 };
 
 /** 检查端点箭头重叠配置是否用于内置 Stroke 路径 */
-const assertPathEndpointOverlapHost = (path: PathColorSource, irPath: string): void => {
+const assertPathEndpointOverlapHost = (path: PathColorSource, irPath: PropertyPath): void => {
   if (isBuiltinStrokePath(path)) return;
 
   for (const [index, placement] of Object.entries(path.arrow ?? {})) {
@@ -100,7 +107,7 @@ const assertPathEndpointOverlapHost = (path: PathColorSource, irPath: string): v
 
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
-      `Path endpoint arrow overlap at ${irPath}.arrow.${index}.endpointOverlap is only supported by a built-in Stroke path.`,
+      `Path endpoint arrow overlap at ${formatPropertyPath(irPath)}.arrow.${index}.endpointOverlap is only supported by a built-in Stroke path.`,
     );
   }
 };
@@ -207,7 +214,7 @@ const resolvePathPaint = (
   value: IRPaintValue | undefined,
   masterColor: string | undefined,
   context: PathResolveContext,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): Exclude<IRPaintValue, number> | undefined =>
   typeof value === 'number' ? resolveContextualColor(value, { masterColor, mode: context.mode, fieldPath }) : value;
 
@@ -216,7 +223,7 @@ const resolveLabelSegmentColor = (
   segment: IRTextSegment | IRMathSegment,
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): InlineSegmentColorSource => {
   const { fill, ...source } = segment;
   return {
@@ -227,7 +234,7 @@ const resolveLabelSegmentColor = (
           fill: resolveContextualColor(fill, {
             masterColor,
             mode: context.mode,
-            fieldPath: `${fieldPath}.fill`,
+            fieldPath: [...fieldPath, 'fill'],
           }),
         }),
   };
@@ -238,7 +245,7 @@ const resolvePathLabelTextLine = (
   text: IRLine,
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): ColorResolvedTextLine => {
   if (typeof text === 'string') return text;
   if ('segments' in text) {
@@ -247,9 +254,9 @@ const resolvePathLabelTextLine = (
       fill:
         text.fill === undefined
           ? undefined
-          : resolveContextualColor(text.fill, { masterColor, mode: context.mode, fieldPath: `${fieldPath}.fill` }),
+          : resolveContextualColor(text.fill, { masterColor, mode: context.mode, fieldPath: [...fieldPath, 'fill'] }),
       segments: text.segments.map((segment, index) =>
-        resolveLabelSegmentColor(segment, masterColor, context, `${fieldPath}.segments[${index}]`),
+        resolveLabelSegmentColor(segment, masterColor, context, [...fieldPath, 'segments', index]),
       ),
     };
   }
@@ -260,7 +267,7 @@ const resolvePathLabelTextLine = (
     ...style,
     ...(fill === undefined
       ? {}
-      : { fill: resolveContextualColor(fill, { masterColor, mode: context.mode, fieldPath: `${fieldPath}.fill` }) }),
+      : { fill: resolveContextualColor(fill, { masterColor, mode: context.mode, fieldPath: [...fieldPath, 'fill'] }) }),
   };
 };
 
@@ -269,10 +276,10 @@ const resolvePathLabelText = (
   text: IRPathLabel['text'],
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): LabelTextColorSource =>
   Array.isArray(text)
-    ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, context, `${fieldPath}[${index}]`))
+    ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, context, [...fieldPath, index]))
     : text;
 
 /** 确定路径标签的文字主色，并据此解析行级与片段颜色 */
@@ -280,7 +287,7 @@ export const resolvePathLabelColors = (
   label: IRPathLabel,
   masterColor: string | undefined,
   context: Pick<PathResolveContext, 'mode'>,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): PathLabelColorSource => {
   const { textColor, text, ...source } = label;
   const resolvedTextColor =
@@ -289,14 +296,14 @@ export const resolvePathLabelColors = (
       : resolveContextualColor(textColor, {
           masterColor,
           mode: context.mode,
-          fieldPath: `${fieldPath}.textColor`,
+          fieldPath: [...fieldPath, 'textColor'],
         });
   const textMaster = resolvedTextColor ?? masterColor;
 
   return {
     ...source,
     ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
-    text: resolvePathLabelText(text, textMaster, context, `${fieldPath}.text`),
+    text: resolvePathLabelText(text, textMaster, context, [...fieldPath, 'text']),
   };
 };
 
@@ -305,7 +312,7 @@ const resolveStepLabelColors = (
   step: IRStep,
   masterColor: string | undefined,
   context: PathResolveContext,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): StepColorSource => {
   if (!('label' in step)) return step as StepColorSource;
 
@@ -314,7 +321,7 @@ const resolveStepLabelColors = (
 
   return {
     ...source,
-    label: resolvePathLabelColors(label, masterColor, context, `${fieldPath}.label`),
+    label: resolvePathLabelColors(label, masterColor, context, [...fieldPath, 'label']),
   };
 };
 
@@ -323,7 +330,7 @@ const resolveMarkColors = (
   mark: IRMarkStyle,
   masterColor: string | undefined,
   context: PathResolveContext,
-  fieldPath: string,
+  fieldPath: PropertyPath,
 ): MarkColorSource => {
   const { color, fill, stroke, ...source } = mark;
   const resolvedColor =
@@ -332,7 +339,7 @@ const resolveMarkColors = (
       : resolveContextualColor(color, {
           masterColor,
           mode: context.mode,
-          fieldPath: `${fieldPath}.color`,
+          fieldPath: [...fieldPath, 'color'],
         });
 
   return {
@@ -346,7 +353,7 @@ const resolveMarkColors = (
               : resolveContextualColor(stroke, {
                   masterColor: resolvedColor,
                   mode: context.mode,
-                  fieldPath: `${fieldPath}.stroke`,
+                  fieldPath: [...fieldPath, 'stroke'],
                 }),
         }),
     ...(resolvedColor === undefined ? {} : { color: resolvedColor }),
@@ -359,7 +366,7 @@ const resolveMarkColors = (
               : resolveContextualColor(fill, {
                   masterColor: resolvedColor,
                   mode: context.mode,
-                  fieldPath: `${fieldPath}.fill`,
+                  fieldPath: [...fieldPath, 'fill'],
                 }),
         }),
   };
@@ -369,7 +376,7 @@ const resolveMarkColors = (
 const resolvePathContextualColors = (
   path: IRPathBase,
   context: PathResolveContext,
-  irPath: string,
+  irPath: PropertyPath,
   labelMasterColor: string | undefined,
 ): PathColorSource => {
   const { style, children, label, marks, arrow, ...source } = path;
@@ -380,9 +387,9 @@ const resolvePathContextualColors = (
       ? undefined
       : Array.isArray(label)
         ? label.map((item, index) =>
-            resolvePathLabelColors(item, labelMasterColor, context, `${irPath}.label[${index}]`),
+            resolvePathLabelColors(item, labelMasterColor, context, [...irPath, 'label', index]),
           )
-        : resolvePathLabelColors(label, labelMasterColor, context, `${irPath}.label`);
+        : resolvePathLabelColors(label, labelMasterColor, context, [...irPath, 'label']);
 
   return {
     ...source,
@@ -394,7 +401,7 @@ const resolvePathContextualColors = (
               ? {}
               : {
                   start: {
-                    ...resolveMarkColors(arrow.start, masterColor, context, `${irPath}.arrow.start`),
+                    ...resolveMarkColors(arrow.start, masterColor, context, [...irPath, 'arrow', 'start']),
                     endpointOverlap: arrow.start.endpointOverlap,
                   },
                 }),
@@ -402,7 +409,7 @@ const resolvePathContextualColors = (
               ? {}
               : {
                   end: {
-                    ...resolveMarkColors(arrow.end, masterColor, context, `${irPath}.arrow.end`),
+                    ...resolveMarkColors(arrow.end, masterColor, context, [...irPath, 'arrow', 'end']),
                     endpointOverlap: arrow.end.endpointOverlap,
                   },
                 }),
@@ -410,16 +417,18 @@ const resolvePathContextualColors = (
         }),
     style: {
       ...visual,
-      ...(fill === undefined ? {} : { fill: resolvePathPaint(fill, masterColor, context, `${irPath}.style.fill`) }),
+      ...(fill === undefined
+        ? {}
+        : { fill: resolvePathPaint(fill, masterColor, context, [...irPath, 'style', 'fill']) }),
       ...(stroke === undefined && masterColor === undefined
         ? {}
-        : { stroke: resolvePathPaint(stroke ?? masterColor, masterColor, context, `${irPath}.style.stroke`) }),
+        : { stroke: resolvePathPaint(stroke ?? masterColor, masterColor, context, [...irPath, 'style', 'stroke']) }),
     },
     ...(children === undefined
       ? {}
       : {
           children: children.map((step, index) =>
-            resolveStepLabelColors(step, labelMasterColor, context, `${irPath}.children[${index}]`),
+            resolveStepLabelColors(step, labelMasterColor, context, [...irPath, 'children', index]),
           ),
         }),
     ...(resolvedHostLabel === undefined ? {} : { label: resolvedHostLabel }),
@@ -427,7 +436,7 @@ const resolvePathContextualColors = (
       ? {}
       : {
           marks: marks.map((item, index) => ({
-            ...resolveMarkColors(item, masterColor, context, `${irPath}.marks[${index}]`),
+            ...resolveMarkColors(item, masterColor, context, [...irPath, 'marks', index]),
             pos: item.pos,
             rotate: item.rotate,
           })),
@@ -465,7 +474,7 @@ const resolveSteps = (
   steps: ReadonlyArray<CanonicalStep>,
   context: PathResolveContext,
   targets: Map<string, TargetResolution>,
-  prefix: string,
+  prefix: PropertyPath,
 ): Array<CanonicalStep> => {
   const resolver = context.targetResolver;
   const scopeChain = context.scopeChain ?? [];
@@ -473,7 +482,7 @@ const resolveSteps = (
   let deferRelative = false;
   const out: Array<CanonicalStep> = [];
 
-  const resolve = (target: IRTarget, key: string): IRTarget => {
+  const resolve = (target: IRTarget, key: PropertyPath): IRTarget => {
     let value = target;
     if (isRelativeTargetLike(target) && !deferRelative) {
       const base = previous ?? [0, 0];
@@ -483,7 +492,7 @@ const resolveSteps = (
       value = [base[0] + target.relativeAccumulate[0], base[1] + target.relativeAccumulate[1]];
     }
 
-    targets.set(key, bindTarget(value, context, scopeChain));
+    targets.set(encodePropertyPath(key), bindTarget(value, context, scopeChain));
 
     return value;
   };
@@ -497,14 +506,14 @@ const resolveSteps = (
 
     if (step.kind === 'axis-line') {
       deferRelative = true;
-      const value = resolve(step.to, `${prefix}.children[${index}].to`) as typeof step.to;
+      const value = resolve(step.to, [...prefix, 'children', index, 'to']) as typeof step.to;
       out.push({ ...step, to: value });
       continue;
     }
 
     if (step.kind === 'arc') {
       const center =
-        step.center === undefined ? undefined : resolve(step.center, `${prefix}.children[${index}].center`);
+        step.center === undefined ? undefined : resolve(step.center, [...prefix, 'children', index, 'center']);
       out.push(center === undefined ? step : { ...step, center });
       if (previous && typeof step.radius === 'number' && step.center === undefined) {
         previous = pointAtArcAngle(previous, step.radius, step.endAngle);
@@ -515,7 +524,7 @@ const resolveSteps = (
     if (step.kind === 'smooth') {
       let smoothPrevious: IRPosition | null = previous;
       const points = step.points.map((target, pointIndex) => {
-        const key = `${prefix}.children[${index}].points[${pointIndex}]`;
+        const key = [...prefix, 'children', index, 'points', pointIndex];
         let value: IRTarget = target;
         if (isRelativeTargetLike(target) && !deferRelative) {
           const base = smoothPrevious ?? [0, 0];
@@ -526,7 +535,7 @@ const resolveSteps = (
         }
 
         const binding = bindTarget(value, context, scopeChain);
-        targets.set(key, binding);
+        targets.set(encodePropertyPath(key), binding);
         const point = binding.point;
         if (point && !isRelativeTargetLike(target)) smoothPrevious = point;
         if (point && isRelativeAccumulateTargetLike(target)) smoothPrevious = point;
@@ -540,13 +549,13 @@ const resolveSteps = (
     }
 
     if (step.kind === 'rectangle') {
-      const from = resolve(step.from, `${prefix}.children[${index}].from`);
-      const to = resolve(step.to, `${prefix}.children[${index}].to`);
+      const from = resolve(step.from, [...prefix, 'children', index, 'from']);
+      const to = resolve(step.to, [...prefix, 'children', index, 'to']);
       out.push({ ...step, from, to });
       continue;
     }
 
-    const value = resolve(step.to, `${prefix}.children[${index}].to`);
+    const value = resolve(step.to, [...prefix, 'children', index, 'to']);
     out.push({ ...step, to: value });
     if (!isRelativeTargetLike(step.to)) {
       const point = pointOfTarget(value, resolver, scopeChain);
@@ -563,7 +572,7 @@ const resolveSteps = (
  */
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
   const styled = context.scopeDefaults === undefined ? path : mergePathStyle(path, context.scopeDefaults);
-  const irPath = context.irPath ?? 'path';
+  const irPath = context.irPath ?? [];
   const labelDefault = context.scopeDefaults?.path?.label ?? {};
   const labelMasterColor = labelDefault.color ?? styled.style?.color;
   const colorsResolved = resolvePathContextualColors(styled, context, irPath, labelMasterColor);

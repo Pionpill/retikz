@@ -137,7 +137,7 @@ describe('Node 自动对比消费者和警告', () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
       code: BuiltinCompileWarningCode.TextAutoContrastUnresolved,
-      path: 'children[0].node',
+      path: ['children', 0],
     });
     expect(warnings[0]?.message).toContain('linearGradient');
     expect(warnings[0]?.message).toContain('currentColor');

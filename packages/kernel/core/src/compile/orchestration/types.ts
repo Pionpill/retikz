@@ -1,3 +1,4 @@
+import type { PropertyPath } from '@retikz/foundation';
 import type { AxisAlignedBounds } from '@retikz/math';
 
 import type {
@@ -24,7 +25,7 @@ import type { WorkspaceCompileContext, SharedCompileContext } from '../context';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { CompiledNodeLayout } from '../node';
 import type { LayoutProbeFailureEntry } from '../probe-failure';
-import type { CompileOwnerKey, CompileProvenance } from '../provenance';
+import type { CompileOwnerKey, CompileProvenanceTracker } from '../provenance';
 import type { CompositeArtifact } from '../types';
 import type { InputCompileWarning } from '../warning';
 import type { InternalScenePrimitive, PathPlaceholder, PrimitiveZIndexTable } from './primitive';
@@ -34,7 +35,7 @@ export type PendingPathEmission = {
   /** path Source IR，样式与动态 target 解析延迟到 resolving phase */
   path: IRPathBase;
   /** warning 与诊断使用的 IR locator */
-  irPath: string;
+  irPath: PropertyPath;
   /** path 所在 scope 的累计 transform */
   scopeChain: ReadonlyArray<Transform>;
   /** path 几何完成后写入的当前 frame bbox 贡献 */
@@ -57,7 +58,7 @@ export type PendingPathEmission = {
   /** Path occurrence 捕获的有效默认配置 */
   scopeDefaults: MergedScopeDefaults;
   /** 产生 path primitive 的语义 owner */
-  semanticOwner?: CompileSemanticOwner;
+  semanticOwner?: CompileOwnerKey;
   /** 编译期排序用 zIndex，不写入 Scene primitive */
   zIndex?: number;
 };
@@ -244,7 +245,7 @@ export type TraversalCompileOptions = {
   /** 按需收集同次编译来源 */
   provenanceTracker?: CompileProvenanceTracker;
   /** 隔离 traversal 继承的 semantic owner */
-  semanticOwner?: CompileSemanticOwner;
+  semanticOwner?: CompileOwnerKey;
   /** 向隔离 namespace callback 暴露当前 warning occurrence */
   observeWarningOccurrence?: (occurrence: CompileOccurrenceLocator | undefined) => void;
 };
@@ -296,7 +297,7 @@ export type TraversalFrame = {
   /** 当前层 primitive 输出容器 */
   primitiveSink: Array<InternalScenePrimitive>;
   /** 当前层 IR locator 前缀 */
-  locatorPrefix: string;
+  locatorPrefix: PropertyPath;
   /** 向父 scope 汇报 bbox 输入 layout */
   layoutSink: Array<CompiledNodeLayout>;
   /** 当前层延迟 emit 的 path 任务 */
@@ -318,41 +319,8 @@ export type TraversalFrame = {
   /** 最终逻辑树 artifact 输出容器 */
   artifactSink: Array<CompositeArtifact>;
   /** 当前 frame 的编译来源 */
-  semanticOwner?: CompileSemanticOwner;
+  semanticOwner?: CompileOwnerKey;
 };
-
-/** 同次编译的逻辑来源句柄 */
-export type CompileSemanticOwner = CompileOwnerKey;
-
-/** canonical traversal 使用的编译来源收集器 */
-export type CompileProvenanceTracker = Readonly<{
-  /** 文档根身份 */
-  root: CompileSemanticOwner;
-  /** 为同一 parent boundary 的 children 分配 semantic owners */
-  createChildOwners: (
-    children: ReadonlyArray<IRChild>,
-    parent: CompileSemanticOwner,
-    generated: boolean,
-  ) => ReadonlyArray<CompileSemanticOwner>;
-  /** 为 Composite 直接产出的单个 child 记录生成来源 */
-  createGeneratedOwner: (child: IRChild, index: number, parent: CompileSemanticOwner) => CompileSemanticOwner;
-  /** 把选中 replay 引入的 id 登记到当前 namespace frame */
-  registerGeneratedIdentity: (id: string, owner: CompileSemanticOwner) => void;
-  /** 与 NamespaceStack 同步推入 local namespace frame */
-  pushNamespaceFrame: () => void;
-  /** 与 NamespaceStack 同步弹出 local namespace frame */
-  popNamespaceFrame: () => void;
-  /** 读取 root namespace frame 内按 occurrence 保留的 identity registrations */
-  rootIdentityRegistrations: () => ReadonlyArray<string>;
-  /** 把 provider 输出物化为对象引用互不复用的 primitive occurrences */
-  materializePrimitives: (primitives: ReadonlyArray<ScenePrimitive>) => Array<ScenePrimitive>;
-  /** 记录 owner 产生的 primitive tree，不覆盖已登记的 descendant owner */
-  recordPrimitives: (primitives: ReadonlyArray<ScenePrimitive>, owner: CompileSemanticOwner, role: string) => void;
-  /** 将同构复制的来源转移到新图元 */
-  transferPrimitives: (original: ReadonlyArray<ScenePrimitive>, copied: ReadonlyArray<ScenePrimitive>) => void;
-  /** 完整编译后关联最终图元位置并捕获来源结果 */
-  capture: (primitives: ReadonlyArray<ScenePrimitive>) => CompileProvenance;
-}>;
 
 export type NodeChild = Extract<IRChild, { type: 'node' }>;
 
@@ -391,7 +359,7 @@ export type EmitScopeGroupContext = {
   /** runtime Scope 预检阶段已生成且尚未登记的裁剪路径 */
   resolvedClipPath?: SceneClipPath;
   /** Scope child 的 semantic owner */
-  semanticOwner?: CompileSemanticOwner;
+  semanticOwner?: CompileOwnerKey;
 };
 
 /** 自动 viewBox 的当前 frame 几何贡献 */

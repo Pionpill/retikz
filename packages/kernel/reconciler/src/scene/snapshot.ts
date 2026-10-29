@@ -1,4 +1,6 @@
 import type { CompileProvenance, Scene } from '@retikz/core';
+import { encodePropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 
 import { CORE_SOURCE_KEY } from '../constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
@@ -34,15 +36,15 @@ const createFullTopology = (
   const visit = (
     items: ReadonlyArray<RuntimeScenePrimitive>,
     parent: SceneRuntimeNode['parent'],
-    parentPath: ReadonlyArray<number>,
+    parentPath: PropertyPath,
   ): void => {
     items.forEach((primitive, order) => {
       const primitivePath = Object.freeze([...parentPath, order]);
-      const record = metadata.get(primitivePath.join('.'));
+      const record = metadata.get(encodePropertyPath(primitivePath));
       if (record === undefined) {
         throw new RetikzReconcilerError(
           RetikzReconcilerErrorCode.Compile,
-          `createFullSceneRuntimeSnapshot: missing primitive identity at ${primitivePath.join('.')}`,
+          `createFullSceneRuntimeSnapshot: missing primitive identity at ${encodePropertyPath(primitivePath)}`,
         );
       }
 
@@ -56,11 +58,11 @@ const createFullTopology = (
           ...(primitive.id === undefined ? {} : { publicId: primitive.id }),
         }),
       );
-      if (primitive.type === 'group') visit(primitive.children, record.identity, primitivePath);
+      if (primitive.type === 'group') visit(primitive.children, record.identity, [...primitivePath, 'children']);
     });
   };
 
-  visit(primitives, rootIdentity, []);
+  visit(primitives, rootIdentity, ['primitives']);
 
   return Object.freeze(topology);
 };

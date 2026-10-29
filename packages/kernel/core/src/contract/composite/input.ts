@@ -1,11 +1,12 @@
-import { jsonStructuralEquals } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
+import { encodePropertyPath, hasPropertyPathPrefix, readPropertyPath, jsonStructuralEquals } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRChild, IRScene } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
 
 /** 精确 Source 属性路径，数字表示数组下标 */
-export type CompositeInputPath = ReadonlyArray<string | number>;
+export type CompositeInputPath = PropertyPath;
 
 /** 一个 composite 实例的已准备同步运行时输入 */
 export type CompositeInputBinding = Readonly<{
@@ -50,28 +51,13 @@ const inputScopeMap = new WeakMap<CompositeInputBindings, CompositeInputScope>()
 
 /** 精确读取 Source 路径，不使用继承属性或模糊字段匹配 */
 const readSourceAtPath = (source: unknown, path: CompositeInputPath): unknown => {
-  let current = source;
-
-  for (const segment of path) {
-    if (
-      (Array.isArray(current) && (typeof segment !== 'number' || !Number.isSafeInteger(segment) || segment < 0)) ||
-      (!Array.isArray(current) && typeof segment !== 'string')
-    )
-      throw new RetikzCoreError(
-        RetikzCoreErrorCode.CompositeContractViolation,
-        `Composite input path ${JSON.stringify(path)} must use numeric array indices and string object fields`,
-      );
-
-    if (current === null || typeof current !== 'object' || !Object.hasOwn(current, segment))
-      throw new RetikzCoreError(
-        RetikzCoreErrorCode.CompositeContractViolation,
-        `Composite input path ${JSON.stringify(path)} does not exist in Source`,
-      );
-
-    current = (current as Record<string | number, unknown>)[segment];
-  }
-
-  return current;
+  const target = readPropertyPath(source, path);
+  if (target === undefined)
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.CompositeContractViolation,
+      `Composite input path ${encodePropertyPath(path)} does not exist in Source`,
+    );
+  return target;
 };
 
 /** 分离 Source 配对事实和路径，借用调用方只读输入 */
@@ -83,7 +69,7 @@ export const captureCompositeInputScope = (
   /** 本次捕获中已绑定的精确路径，用序列化形式检测重复 */
   const boundPaths = new Set<string>();
   const captured = bindings.map(binding => {
-    const key = JSON.stringify(binding.path);
+    const key = encodePropertyPath(binding.path);
     if (boundPaths.has(key))
       throw new RetikzCoreError(
         RetikzCoreErrorCode.CompositeContractViolation,
@@ -129,7 +115,7 @@ export const selectCompositeInputScope = (
   source: readSourceAtPath(scope.source, path),
   sourcePath: [...(scope.sourcePath ?? []), ...path],
   bindings: scope.bindings
-    .filter(binding => path.every((segment, index) => binding.path[index] === segment))
+    .filter(binding => hasPropertyPathPrefix(binding.path, path))
     .map(binding => ({ path: binding.path.slice(path.length), input: binding.input })),
 });
 

@@ -91,7 +91,7 @@ describe('解析/路径提供者绑定', () => {
   it('从解析器报告未知的箭头名称', () => {
     expect(() =>
       resolveStrokePathWithBuiltinProviders(path({ arrow: { end: { shape: 'missing-arrow' } } }), {
-        irPath: 'children[0].path',
+        irPath: ['children', 0],
       }),
     ).toThrow(/Unknown provider 'missing-arrow'.*available:/s);
   });

@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { Transform } from '../../../contract';
 import type { CanonicalStep, PathTargetView } from '../../../resolve';
 import { nodeIdFromResolvableTarget } from '../../../resolve/position';
@@ -57,7 +59,7 @@ type InputStrokeCursor = {
   /** 当前 scope 的累积变换链 */
   scopeChain: ReadonlyArray<Transform>;
   /** path warning 收集器 */
-  warn: (code: string, message: string, subPath?: string) => void;
+  warn: (code: string, message: string, subPath?: PropertyPath) => void;
   /** Path target 已在 resolving 阶段绑定；此处不再访问 namespace 或 provider */
 };
 
@@ -84,7 +86,7 @@ export const createStrokeCursor = ({ steps, targetView, scopeChain, warn }: Inpu
       warn(
         BuiltinCompileWarningCode.UnresolvedNodeReference,
         `Step.to references undefined node id '${targetId}'; the entire path is skipped`,
-        `children[${index}].to`,
+        ['children', index, 'to'],
       );
     }
 

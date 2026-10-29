@@ -18,7 +18,7 @@ The tabs show the two return types from source, with comments omitted. Reference
 
 ```ts
 export type NodeResolution = Readonly<{
-  irPath: string;
+  irPath: ReadonlyArray<string | number>;
   node: CanonicalNode;
   shape: ShapeResolution;
   boundary: BoundaryReferenceResolution;
@@ -30,7 +30,7 @@ export type NodeResolution = Readonly<{
 
 ```ts
 export type PathResolution = Readonly<{
-  irPath: string;
+  irPath: ReadonlyArray<string | number>;
   path: CanonicalPath;
   targets: ReadonlyMap<string, TargetResolution>;
   kind: PathDefinitionResolution;
@@ -54,7 +54,7 @@ The preview uses this same IR with `light` mode fixed. The following sections sh
 
 A Definition contains a capability's implementation and parameter contract. `shape: 'rectangle'` in IR is a name; layout needs the rectangle Definition and its resolved parameters. A registry provides that lookup.
 
-`createCompileContext` builds a separate registry for each capability, adding builtins before external definitions from `CompileOptions`. Names must be unique within a registry. An external definition that collides with a builtin also causes an error.
+`createFullCompileContext` builds a separate registry for each capability, adding builtins before external definitions from `CompileOptions`. Names must be unique within a registry. An external definition that collides with a builtin also causes an error.
 
 | Registry                | Capability                            | Consumer                                               |
 | ----------------------- | ------------------------------------- | ------------------------------------------------------ |
@@ -72,7 +72,7 @@ Path looks up a path by `kind`, using builtin `stroke` when the field is omitted
 
 <SourceLinks
   sources={[
-    { label: 'Compile context and registries', path: 'packages/kernel/core/src/compile/orchestration/context.ts' },
+    { label: 'Compile context and registries', path: 'packages/kernel/core/src/compile/context/full.ts' },
     { label: 'Duplicate checks and lookup', path: 'packages/kernel/core/src/providers/registry.ts' },
     { label: 'Shape names, parameters, and binding', path: 'packages/kernel/core/src/resolve/node/shape.ts' },
     { label: 'Connection boundary resolution', path: 'packages/kernel/core/src/resolve/node/boundary.ts' },
@@ -297,7 +297,7 @@ The tabs show the Node and Path call chains. The Node diagram follows environmen
   </DocTab>
 </DocTabs>
 
-Start with the registries and root theme in `createCompileContext`. Node enters `resolveNode` through traversal's `emitNodeChild`. Deferred path processing enters `resolvePath`, then binds secondary capabilities according to the emitter. The Path diagram groups the two color-resolution calls in one note and marks target binding only as a handoff. This page focuses on configuration results; [Node Compilation](/kernel/packages/core/node-compilation) and [Path Compilation](/kernel/packages/core/path-compilation) cover measurement, boundary intersections and final primitives.
+Start with the registries and root theme in `createFullCompileContext`. Node enters `resolveNode` through traversal's `emitNodeChild`. Deferred path processing enters `resolvePath`, then binds secondary capabilities according to the emitter. The Path diagram groups the two color-resolution calls in one note and marks target binding only as a handoff. This page focuses on configuration results; [Node Compilation](/kernel/packages/core/node-compilation) and [Path Compilation](/kernel/packages/core/path-compilation) cover measurement, boundary intersections and final primitives.
 
 <SourceLinks
   sources={[

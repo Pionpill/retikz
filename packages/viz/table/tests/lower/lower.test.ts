@@ -44,7 +44,7 @@ describe('Table 布局感知下沉', () => {
     expect(tableArtifacts[0]).toMatchObject({
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      occurrence: { sourcePath: 'children[0]', expansionPath: [] },
+      occurrence: { sourcePath: ['children', 0], expansionPath: [] },
     });
     expect(result.manifest).toBe(tableArtifacts[0]?.value);
     expect(result.manifest).toMatchObject({

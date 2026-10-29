@@ -1,7 +1,8 @@
+import { readPropertyPath } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IRScene } from '../../src';
-import { compileToScene, createCompositeInputBindings, compileSceneSnapshot, RetikzCoreErrorCode } from '../../src';
+import { compileSceneSnapshot, compileToScene, createCompositeInputBindings, RetikzCoreErrorCode } from '../../src';
 
 const scene: IRScene = {
   version: 1,
@@ -12,11 +13,11 @@ const scene: IRScene = {
   ],
 };
 
-describe('静态编译准备', () => {
+describe('静态编译快照', () => {
   it('默认结果等价且不收集来源', () => {
-    const prepared = compileSceneSnapshot(scene);
-    expect(prepared.result).toEqual(compileToScene(scene));
-    expect(prepared.provenance).toBeUndefined();
+    const snapshot = compileSceneSnapshot(scene);
+    expect(snapshot.result).toEqual(compileToScene(scene));
+    expect(snapshot.provenance).toBeUndefined();
   });
 
   it('来源逐项对应最终图元，且相同名称的注册不会合并', () => {
@@ -29,21 +30,26 @@ describe('静态编译准备', () => {
     };
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     try {
-      const prepared = compileSceneSnapshot(input, {}, { captureProvenance: true });
-      const provenance = prepared.provenance!;
-      expect(prepared.diagnostics.length).toBeGreaterThan(0);
+      const snapshot = compileSceneSnapshot(input, {}, { captureProvenance: true });
+      const provenance = snapshot.provenance!;
+      expect(snapshot.diagnostics.length).toBeGreaterThan(0);
       expect(warning).not.toHaveBeenCalled();
       expect(provenance.bindings.filter(binding => binding.name === 'same')).toHaveLength(2);
-      const paths: Array<Array<number>> = [];
-      const visit = (items: typeof prepared.result.scene.primitives, parent: Array<number>): void => {
+      const paths: Array<Array<string | number>> = [];
+      const visit = (items: typeof snapshot.result.scene.primitives, parent: Array<string | number>): void => {
         items.forEach((primitive, index) => {
           const path = [...parent, index];
           paths.push(path);
-          if (primitive.type === 'group') visit(primitive.children, path);
+          if (primitive.type === 'group') visit(primitive.children, [...path, 'children']);
         });
       };
-      visit(prepared.result.scene.primitives, []);
+      visit(snapshot.result.scene.primitives, ['primitives']);
       expect(provenance.emissions.map(emission => emission.primitivePath)).toEqual(paths);
+      for (const emission of provenance.emissions) {
+        const primitive = readPropertyPath(snapshot.result.scene, emission.primitivePath);
+        expect(primitive).toHaveProperty('type');
+        expect(Object.isFrozen(emission.primitivePath)).toBe(true);
+      }
       expect(provenance.owners.some(owner => owner.key === provenance.root)).toBe(true);
       expect(
         provenance.emissions.every(emission => provenance.owners.some(owner => owner.key === emission.owner)),

@@ -1,4 +1,7 @@
 import type { Scene } from '@retikz/core';
+import { encodePropertyPath } from '@retikz/foundation';
+import { readPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 import type { RuntimeScenePrimitive, ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import type { SceneIdentity, ReconcilerPreparedCommit } from '@retikz/reconciler';
 import { sceneIdentityEquals } from '@retikz/reconciler';
@@ -53,25 +56,8 @@ const prepareCanvasScene = (snapshot: SceneRuntimeSnapshot): Scene =>
   prepareRuntimeSceneContent(snapshot.scene as unknown as Scene);
 
 /** 按 snapshot primitive path 读取 exact occurrence */
-const primitiveAtPath = (
-  snapshot: SceneRuntimeSnapshot,
-  path: ReadonlyArray<number>,
-): RuntimeScenePrimitive | undefined => {
-  let primitives = snapshot.scene.primitives;
-
-  for (let depth = 0; depth < path.length; depth += 1) {
-    const candidate: unknown = Reflect.get(primitives, path[depth]);
-    if (typeof candidate !== 'object' || candidate === null) return undefined;
-
-    const primitive = candidate as RuntimeScenePrimitive;
-    if (depth === path.length - 1) return primitive;
-    if (primitive.type !== 'group') return undefined;
-
-    primitives = primitive.children;
-  }
-
-  return undefined;
-};
+const primitiveAtPath = (snapshot: SceneRuntimeSnapshot, path: PropertyPath): RuntimeScenePrimitive | undefined =>
+  readPropertyPath(snapshot.scene, path) as RuntimeScenePrimitive | undefined;
 
 /** 读取单个 occurrence 自身动画 descriptor 的有限结束时刻 */
 const primitiveAnimationDurationMs = (
@@ -525,7 +511,7 @@ const buildDisplayList = (snapshot: SceneRuntimeSnapshot): ReadonlyArray<CanvasD
 
   const topologyByIndex = new Map(
     snapshot.topology.flatMap(node =>
-      node.primitivePath.length === 1 ? ([[node.primitivePath[0], node]] as const) : [],
+      node.primitivePath.length === 2 ? ([[node.primitivePath[1], node]] as const) : [],
     ),
   );
   if (topologyByIndex.size !== snapshot.scene.primitives.length) return undefined;
@@ -841,16 +827,13 @@ const createCanvasHydration = (
   animation: CanvasAnimationState | undefined,
 ): HydrationController | undefined => {
   const scene = prepareCanvasScene(snapshot);
-  const topologyByPath = new Map(snapshot.topology.map(node => [node.primitivePath.join('.'), node]));
+  const topologyByPath = new Map(snapshot.topology.map(node => [encodePropertyPath(node.primitivePath), node]));
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
   const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology);
 
   /** 给内部 trigger collector 注入与 hydration target 相同的 semantic-owner public id 口径 */
-  const stampAnimationOwners = (
-    primitive: RuntimeScenePrimitive,
-    path: ReadonlyArray<number>,
-  ): Scene['primitives'][number] => {
-    const topology = topologyByPath.get(path.join('.'));
+  const stampAnimationOwners = (primitive: RuntimeScenePrimitive, path: PropertyPath): Scene['primitives'][number] => {
+    const topology = topologyByPath.get(encodePropertyPath(path));
     if (topology === undefined)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas hydration topology is incomplete');
 
@@ -860,22 +843,28 @@ const createCanvasHydration = (
       ...(primitive as unknown as Scene['primitives'][number]),
       ...(publicId === undefined ? {} : { id: publicId }),
       ...(primitive.type === 'group'
-        ? { children: primitive.children.map((child, index) => stampAnimationOwners(child, [...path, index])) }
+        ? {
+            children: primitive.children.map((child, index) =>
+              stampAnimationOwners(child, [...path, 'children', index]),
+            ),
+          }
         : {}),
     };
   };
 
   const animationOwnerScene = prepareRuntimeSceneContent({
     ...scene,
-    primitives: snapshot.scene.primitives.map((primitive, index) => stampAnimationOwners(primitive, [index])),
+    primitives: snapshot.scene.primitives.map((primitive, index) =>
+      stampAnimationOwners(primitive, ['primitives', index]),
+    ),
   });
   const handlers = withCanvasAnimationEventHandlers(animationOwnerScene, mergeRenderHandlers(config));
   if (Object.keys(handlers).length === 0) return undefined;
 
   const targets = new Map<string, HydrationTarget>();
 
-  const stamp = (primitive: RuntimeScenePrimitive, path: ReadonlyArray<number>): Scene['primitives'][number] => {
-    const token = path.join('.');
+  const stamp = (primitive: RuntimeScenePrimitive, path: PropertyPath): Scene['primitives'][number] => {
+    const token = encodePropertyPath(path);
     const topology = topologyByPath.get(token);
     if (topology === undefined)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas hydration topology is incomplete');
@@ -895,14 +884,14 @@ const createCanvasHydration = (
       ...(primitive as unknown as Scene['primitives'][number]),
       id: token,
       ...(primitive.type === 'group'
-        ? { children: primitive.children.map((child, index) => stamp(child, [...path, index])) }
+        ? { children: primitive.children.map((child, index) => stamp(child, [...path, 'children', index])) }
         : {}),
     };
   };
 
   const hitScene = prepareRuntimeSceneContent({
     ...scene,
-    primitives: snapshot.scene.primitives.map((primitive, index) => stamp(primitive, [index])),
+    primitives: snapshot.scene.primitives.map((primitive, index) => stamp(primitive, ['primitives', index])),
   });
 
   const locateTarget = (event: Event): HydrationTarget | null => {
@@ -949,7 +938,7 @@ const createCanvasAnimationOccurrenceIndex = (
     if (!tokenByIdentity.set(node.identity, token))
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas animation topology has duplicate identity');
 
-    tokenByPath.set(node.primitivePath.join('.'), token);
+    tokenByPath.set(encodePropertyPath(node.primitivePath), token);
     const publicId = node.publicId ?? publicIdByOwner.get(node.semanticOwner);
     if (publicId !== undefined) {
       const tokens = tokensByPublicId.get(publicId) ?? [];
@@ -958,8 +947,8 @@ const createCanvasAnimationOccurrenceIndex = (
     }
   }
 
-  const stamp = (primitive: RuntimeScenePrimitive, path: ReadonlyArray<number>): Scene['primitives'][number] => {
-    const token = tokenByPath.get(path.join('.'));
+  const stamp = (primitive: RuntimeScenePrimitive, path: PropertyPath): Scene['primitives'][number] => {
+    const token = tokenByPath.get(encodePropertyPath(path));
     if (token === undefined)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas animation topology is incomplete');
 
@@ -967,7 +956,7 @@ const createCanvasAnimationOccurrenceIndex = (
       ...(primitive as unknown as Scene['primitives'][number]),
       id: token,
       ...(primitive.type === 'group'
-        ? { children: primitive.children.map((child, index) => stamp(child, [...path, index])) }
+        ? { children: primitive.children.map((child, index) => stamp(child, [...path, 'children', index])) }
         : {}),
     };
   };
@@ -975,7 +964,7 @@ const createCanvasAnimationOccurrenceIndex = (
   return Object.freeze({
     scene: prepareRuntimeSceneContent({
       ...(snapshot.scene as unknown as Scene),
-      primitives: snapshot.scene.primitives.map((primitive, index) => stamp(primitive, [index])),
+      primitives: snapshot.scene.primitives.map((primitive, index) => stamp(primitive, ['primitives', index])),
     }),
     tokenByIdentity,
     tokensByPublicId: new Map(

@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   CompileOptions,
   IRChild,
   IRScene,
@@ -394,7 +394,7 @@ describe('Layout Core 布局能力门', () => {
 
     expect(nestedArtifacts).toHaveLength(1);
     expect(nestedArtifacts[0]?.value).toEqual({ proposal: 'exact' });
-    expect(formatCompileOccurrence(nestedArtifacts[0]?.occurrence ?? { sourcePath: '', expansionPath: [] })).toBe(
+    expect(formatCompileOccurrence(nestedArtifacts[0]?.occurrence ?? { sourcePath: [], expansionPath: [] })).toBe(
       'children[0]::replay[0]',
     );
 

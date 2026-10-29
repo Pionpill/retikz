@@ -21,8 +21,8 @@ const sceneWith = (pathValue: IRPathBase): IRScene => ({
 
 describe('resolvePath', () => {
   it('解决有效宽度和描边绘制默认值，而不更改显式值', () => {
-    const resolved = resolvePathWithBuiltinProviders(path(), { irPath: 'children[2].path' });
-    expect(resolved.irPath).toBe('children[2].path');
+    const resolved = resolvePathWithBuiltinProviders(path(), { irPath: ['children', 2] });
+    expect(resolved.irPath).toEqual(['children', 2]);
     expect(resolved.path.strokeWidth).toBe(1);
     expect(resolveStrokePathWithBuiltinProviders(path()).path).toMatchObject({
       strokeWidth: 1,
