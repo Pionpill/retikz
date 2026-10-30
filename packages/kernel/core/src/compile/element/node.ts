@@ -1,3 +1,5 @@
+import { formatPropertyPath } from '@retikz/foundation';
+
 import type { IRNode } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect } from '../../shared/geometry';
@@ -23,6 +25,7 @@ export const compileNode = (input: IRNode, context: NodeCompileContext): Element
     });
     const { layout, properties } = compilation;
     const primitives = emitNodePrimitives(compilation, context.shared.layout.round, workspace.paintRegistry.register);
+    workspace.paintRegistry.collectReferences(primitives, `Node at ${formatPropertyPath(context.irPath)}`);
     const outer = outerRectOf(layout);
     return Object.freeze({
       irPath: compilation.irPath,

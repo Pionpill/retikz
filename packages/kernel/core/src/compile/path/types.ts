@@ -1,6 +1,6 @@
 import type { SceneResource, Transform } from '../../contract';
 import type { PathTargetView } from '../../resolve';
-import type { PaintResolver } from '../resource';
+import type { PaintRegistry, PaintResolver } from '../resource';
 import type { TexLowerer } from '../text';
 import type { InputCompileWarning } from '../warning';
 
@@ -8,6 +8,8 @@ import type { InputCompileWarning } from '../warning';
 export type PathEmitOptions = {
   /** 当前编译资源，用于标记可视边界计算 */
   resources?: () => ReadonlyArray<SceneResource>;
+  /** 在标记输出处保留引用的宿主诊断位置 */
+  collectResourceReferences?: PaintRegistry['collectReferences'];
   /**
    * 警告收集器（由 compileToScene 传入）
    * 缺省时不发出警告

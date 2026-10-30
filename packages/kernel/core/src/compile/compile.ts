@@ -3,7 +3,7 @@ import type { IRScene } from '../schemas';
 import { createFullCompileContext } from './context';
 import { compileChildrenToPrimitives, orderCompileWarnings } from './orchestration';
 import { assembleSceneCompilationSnapshot } from './output';
-import type { CompileProvenance } from './provenance';
+import type { CompileProvenanceSnapshot } from './provenance';
 import { CompileProvenanceTracker } from './provenance';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from './types';
 import type { CompileWarning } from './warning';
@@ -46,7 +46,7 @@ export type SceneCompilationSnapshot<TComposites extends ReadonlyArray<AnyCompos
   /** 仅在完整 compile 成功后可提交的 canonical warnings */
   diagnostics: ReadonlyArray<CompileWarning>;
   /** 按需收集的编译来源信息 */
-  provenance?: CompileProvenance;
+  provenance?: CompileProvenanceSnapshot;
 }>;
 
 /** 编译执行时的运行配置项 */
@@ -66,10 +66,10 @@ export const compileSceneSnapshot = <const TComposites extends ReadonlyArray<Any
 ): SceneCompilationSnapshot<TComposites> => {
   const context = createFullCompileContext(ir, compileOptions ?? {});
   const { diagnostics, paintRegistry, clipRegistry } = context.workspace;
-  const provenanceTracker = executeOptions.captureProvenance === true ? new CompileProvenanceTracker() : undefined;
 
+  const provenanceTracker = executeOptions.captureProvenance === true ? new CompileProvenanceTracker() : undefined;
   const { primitives, layoutBounds, artifacts } = compileChildrenToPrimitives(ir.children, context, {
-    ...(provenanceTracker === undefined ? {} : { provenanceTracker }),
+    provenanceTracker,
   });
   const resources = [...paintRegistry.resources(), ...clipRegistry.resources()];
   const snapshot = assembleSceneCompilationSnapshot<TComposites>(
@@ -81,8 +81,9 @@ export const compileSceneSnapshot = <const TComposites extends ReadonlyArray<Any
     {
       artifacts,
       diagnostics: orderCompileWarnings(diagnostics.warnings),
-      ...(provenanceTracker === undefined ? {} : { provenance: provenanceTracker.capture(primitives) }),
+      provenanceTracker,
     },
+    compileOptions?.padding,
   );
 
   return snapshot;

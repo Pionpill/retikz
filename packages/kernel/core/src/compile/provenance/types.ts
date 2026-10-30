@@ -37,7 +37,7 @@ export type CompileProvenanceEmission = Readonly<{
 }>;
 
 /** 与单次编译结果配对的来源 sidecar，不包含跨 revision 身份 */
-export type CompileProvenance = Readonly<{
+export type CompileProvenanceSnapshot = Readonly<{
   /** 文档根实体键 */
   root: CompileOwnerKey;
   /** 输入和生成实体来源 */

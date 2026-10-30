@@ -1,4 +1,4 @@
-import type { CompileNamespaceKey, CompileOwnerKey, CompileProvenance } from '@retikz/core';
+import type { CompileNamespaceKey, CompileOwnerKey, CompileProvenanceSnapshot } from '@retikz/core';
 import { formatPropertyPath, readPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 
@@ -11,7 +11,7 @@ import type { RuntimeScenePrimitive } from './types';
 /** 从单次编译来源计算当前候选版本的图元身份 */
 export const createPrimitiveIdentityIndex = (
   primitives: ReadonlyArray<RuntimeScenePrimitive>,
-  provenance: CompileProvenance,
+  provenance: CompileProvenanceSnapshot,
   revision: SceneRevision,
 ): WeakMap<
   RuntimeScenePrimitive,

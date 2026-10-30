@@ -5,6 +5,7 @@ import type {
   PatternEmitOutput,
   CompiledPatternTile,
   SceneResource,
+  ScenePrimitive,
 } from '../../contract';
 import {
   createCompositeContractError,
@@ -12,6 +13,8 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { PaintResolution, InputPaintResolution, PatternResolution } from '../../resolve/resource';
+import { collectPrimitiveResourceReferences, validateCompileResourceReferences } from './references';
+import type { CompileResourceReference } from './references';
 import { materializeScenePrimitives } from './scene-content';
 
 /** Paint resource registry 输入：resolve 阶段已绑定的 paint */
@@ -28,6 +31,10 @@ export type PaintRegistry = {
   importResolved: (resource: Extract<SceneResource, { kind: 'paint' }>) => PaintValue;
   /** 读取当前已登记的绘制资源 */
   resources: () => Array<SceneResource>;
+  /** 收集 provider 图元输出中的资源引用，延迟到工作区完成时检查 */
+  collectReferences: (primitives: ReadonlyArray<ScenePrimitive>, owner: string) => void;
+  /** 检查当前工作区的资源引用及依赖，不遍历最终 Scene */
+  validateReferences: (clips: ReadonlyArray<SceneResource>) => void;
 };
 
 /** 区分完整 tile 输出与可能携带单个同名元数据字段的图元 iterable */
@@ -94,6 +101,10 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
 export const createPaintRegistry = (round: (n: number) => number): PaintRegistry => {
   const idByKey = new Map<string, string>();
   const list: Array<SceneResource> = [];
+  /** 图元引用按种类与 ID 去重，保留首次输出处的诊断位置 */
+  const references = new Map<string, CompileResourceReference>();
+  /** Pattern 资源间的引用边，不保存图元副本 */
+  const dependencies = new Map<string, Array<CompileResourceReference>>();
   let counter = 0;
 
   const insert = (key: string, resourceOf: (id: string) => SceneResource): string => {
@@ -105,6 +116,10 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     idByKey.set(key, id);
     const resource = resourceOf(id);
     list.push(resource);
+    if (resource.kind === 'paint' && 'tile' in resource) {
+      const resourceReferences = collectPrimitiveResourceReferences(resource.tile.motif, `resource '${id}'.motif`);
+      if (resourceReferences.length > 0) dependencies.set(id, resourceReferences);
+    }
     if (resource.kind === 'paint')
       idByKey.set(paintKeyOf({ spec: resource.spec, tile: 'tile' in resource ? resource.tile : undefined }), id);
 
@@ -139,5 +154,19 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     return { kind: 'resourceRef', id };
   };
 
-  return { register, importResolved, resources: () => list };
+  return {
+    register,
+    importResolved,
+    resources: () => list,
+    collectReferences: (primitives, owner) => {
+      for (const reference of collectPrimitiveResourceReferences(primitives, owner)) {
+        const key = `${reference.kind}:${reference.id}`;
+        if (!references.has(key)) references.set(key, reference);
+      }
+    },
+    validateReferences: clips => {
+      if (references.size === 0 && dependencies.size === 0) return;
+      validateCompileResourceReferences(references.values(), dependencies, [...list, ...clips]);
+    },
+  };
 };

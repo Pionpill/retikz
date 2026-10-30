@@ -8,6 +8,19 @@ const round2 = createRound(2);
 const noRound = (n: number) => n;
 
 describe('computeLayout', () => {
+  it('有限输入在边界相减、留白扩张或舍入中溢出时拒绝输出', () => {
+    const wideBounds: AxisAlignedBounds = { minX: -1e308, maxX: 1e308, minY: 0, maxY: 1 };
+    const smallBounds: AxisAlignedBounds = { minX: 0, maxX: 1, minY: 0, maxY: 1 };
+    const largeBounds: AxisAlignedBounds = { minX: 0, maxX: 1e308, minY: 0, maxY: 1 };
+    for (const calculate of [
+      () => computeLayoutFromBounds(wideBounds, 0, noRound),
+      () => computeLayoutFromBounds(smallBounds, 1e308, noRound),
+      () => computeLayoutFromBounds(largeBounds, 0, round2),
+    ]) {
+      expect(calculate).toThrow(/Scene layout produced non-finite bounds/);
+    }
+  });
+
   it('空点集返回 100×100 兜底框（不抛错）', () => {
     expect(computeLayout([], 10, round2)).toEqual({ x: 0, y: 0, width: 100, height: 100 });
   });

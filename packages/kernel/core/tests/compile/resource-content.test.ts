@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene, definePattern, visitSceneContent } from '../../src';
-import type { TextPrimitive, Scene, GroupPrimitive } from '../../src';
+import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../src';
 import {
   createClipRegistry,
   createPaintRegistry,
@@ -40,6 +40,89 @@ describe('资源内容复用基础图元', () => {
 });
 
 describe('Scene 资源依赖关闭', () => {
+  const patternScene: IRScene = {
+    type: 'scene',
+    version: 1,
+    children: ['first', 'second'].map(shape => ({
+      type: 'node',
+      position: [0, 0],
+      style: { fill: { kind: 'pattern', shape } },
+    })),
+  };
+  const rectangle: ScenePrimitive = { type: 'rect', x: 0, y: 0, width: 1, height: 1 };
+
+  it('先输出的 Pattern 可以引用当前工作区稍后注册的资源', () => {
+    const scene = compileToScene(patternScene, {
+      patterns: [
+        definePattern({ name: 'first', emit: () => [{ ...rectangle, fill: { kind: 'resourceRef', id: 'paint-2' } }] }),
+        definePattern({ name: 'second', emit: () => [rectangle] }),
+      ],
+    }).scene;
+    expect(scene.resources).toHaveLength(2);
+    expect(() => visitSceneContent(scene)).not.toThrow();
+  });
+
+  it('工作区完成时拒绝缺失资源和错误资源类型', () => {
+    for (const primitive of [
+      { ...rectangle, fill: { kind: 'resourceRef', id: 'missing' } } satisfies ScenePrimitive,
+      { type: 'group', clipRef: 'paint-1', children: [] } satisfies ScenePrimitive,
+    ]) {
+      expect(() =>
+        compileToScene(patternScene, {
+          patterns: [
+            definePattern({ name: 'first', emit: () => [primitive] }),
+            definePattern({ name: 'second', emit: () => [rectangle] }),
+          ],
+        }),
+      ).toThrow(/expected (paint|clip) resource/);
+    }
+  });
+
+  it('资源依赖成环时拒绝输出，即使 provider 返回的是无环 JSON', () => {
+    expect(() =>
+      compileToScene(patternScene, {
+        patterns: [
+          definePattern({
+            name: 'first',
+            emit: () => [{ ...rectangle, fill: { kind: 'resourceRef', id: 'paint-2' } }],
+          }),
+          definePattern({
+            name: 'second',
+            emit: () => [{ ...rectangle, fill: { kind: 'resourceRef', id: 'paint-1' } }],
+          }),
+        ],
+      }),
+    ).toThrow(/cyclic resource dependency/);
+  });
+
+  it('检查 Pattern 内嵌套箭头的资源引用', () => {
+    expect(() =>
+      compileToScene(patternScene, {
+        patterns: [
+          definePattern({
+            name: 'first',
+            emit: () => [
+              {
+                type: 'path',
+                commands: [],
+                arrowEnd: {
+                  shape: 'nested',
+                  baseSize: 1,
+                  refX: 0,
+                  refY: 0,
+                  markerWidth: 1,
+                  markerHeight: 1,
+                  marker: [{ ...rectangle, fill: { kind: 'resourceRef', id: 'missing' } }],
+                },
+              },
+            ],
+          }),
+          definePattern({ name: 'second', emit: () => [rectangle] }),
+        ],
+      }),
+    ).toThrow(/arrowEnd.marker\[0\].fill.*missing/);
+  });
+
   it('资源依赖失败时不向目标注册表发布部分内容', () => {
     const paint = createPaintRegistry(value => value);
     const clip = createClipRegistry(value => value);

@@ -18,9 +18,6 @@ import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
 import type { CompileHostOptions, CompileLayoutOptions, CompileOptions } from '../types';
 
-/** 自动 layout 默认留白 */
-const DEFAULT_LAYOUT_PADDING = 10;
-
 /** 复合组件递归深度上限 */
 const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
 
@@ -59,8 +56,6 @@ export type CompileContextLayout = Readonly<
   Required<Pick<CompileLayoutOptions, 'nodeDistance' | 'labelDistance'>> & {
     /** Scene 输出 rounder，由 precision 创建 */
     round: (n: number) => number;
-    /** 自动 layout padding */
-    padding: NonNullable<CompileLayoutOptions['padding']>;
     /** preset 与 rem 字号解析的根字号 */
     rootFontSize: NonNullable<CompileLayoutOptions['fontSize']>;
   }
@@ -87,7 +82,7 @@ export type SharedCompileContext = Readonly<{
 }>;
 
 /** 共享编译上下文的创建选项，不包含单次输入、观测及诊断接收器 */
-export type SharedCompileContextOptions = Omit<CompileOptions, 'onWarn' | 'trace' | 'compositeInputs'>;
+export type SharedCompileContextOptions = Omit<CompileOptions, 'onWarn' | 'trace' | 'compositeInputs' | 'padding'>;
 
 /** 创建共享编译上下文；服务或定义行为变化时必须替换共享上下文 */
 export const createSharedCompileContext = (options: SharedCompileContextOptions = {}): SharedCompileContext => {
@@ -96,14 +91,6 @@ export const createSharedCompileContext = (options: SharedCompileContextOptions 
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `CompileOptions.precision '${precision}' must be a non-negative integer with a finite rounding factor`,
-    );
-  }
-
-  const padding = options.padding ?? DEFAULT_LAYOUT_PADDING;
-  if (!Number.isFinite(padding) || padding < 0) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Compile,
-      `CompileOptions.padding '${padding}' must be a non-negative finite number`,
     );
   }
 
@@ -156,7 +143,6 @@ export const createSharedCompileContext = (options: SharedCompileContextOptions 
     }),
     layout: Object.freeze({
       round: createRound(precision),
-      padding,
       nodeDistance,
       labelDistance,
       rootFontSize,

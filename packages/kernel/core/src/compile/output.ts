@@ -1,7 +1,7 @@
 import type { AxisAlignedBounds } from '@retikz/math';
 
 import type { AnyCompositeDefinition, Scene, ScenePrimitive, SceneResource } from '../contract';
-import { visitSceneContent } from '../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRScene } from '../schemas';
 import type { SceneCompilationSnapshot } from './compile';
 import type { SharedCompileContext } from './context';
@@ -11,20 +11,21 @@ import { orderCompileArtifacts } from './orchestration';
 import { filterAnimations } from './orchestration/animation';
 import { collectLayoutBounds } from './orchestration/bounds';
 import { orderCompileWarnings } from './orchestration/diagnostics';
-import type { CompileProvenance, CompileProvenanceTracker } from './provenance';
-import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
+import type { CompileProvenanceTracker } from './provenance';
+import { computeLayoutFromBounds, viewBoxToLayout } from './scene';
 import type { CompileResult, CompositeArtifact, CompositeArtifactOf } from './types';
 import type { CompileWarning, InputCompileWarning } from './warning';
 
-/** 与最终输出同版本的已完成附属贡献 */
+/** Scene 自动边界的默认留白 */
+const DEFAULT_LAYOUT_PADDING = 10;
+
+/** Scene 组装所需的附属贡献与来源记录 */
 export type SceneCompilationMetadata = Readonly<{
   /** 按声明顺序整理的产物 */
   artifacts?: ReadonlyArray<CompositeArtifact>;
   /** 已完成计算的诊断 */
   diagnostics?: ReadonlyArray<CompileWarning>;
-  /** 与输出顺序配对的来源信息 */
-  provenance?: CompileProvenance;
-  /** 本次来源记录，组装时随图元复制同步转移 */
+  /** 本次来源记录，随图元复制同步转移，并在最终组装时生成快照 */
   provenanceTracker?: CompileProvenanceTracker;
 }>;
 
@@ -38,7 +39,15 @@ export const assembleSceneCompilationSnapshot = <
   layoutBounds: AxisAlignedBounds | undefined,
   shared: SharedCompileContext,
   metadata: SceneCompilationMetadata,
+  padding = DEFAULT_LAYOUT_PADDING,
 ): SceneCompilationSnapshot<TComposites> => {
+  if (!Number.isFinite(padding) || padding < 0) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `CompileOptions.padding '${padding}' must be a non-negative finite number`,
+    );
+  }
+
   const diagnostics: Array<InputCompileWarning> = [...(metadata.diagnostics ?? [])];
   const animations = filterAnimations(root.animations, {
     target: 'root',
@@ -51,19 +60,20 @@ export const assembleSceneCompilationSnapshot = <
     primitives,
     layout:
       root.viewBox === undefined
-        ? assertFiniteLayout(computeLayoutFromBounds(layoutBounds, shared.layout.padding, shared.layout.round))
+        ? computeLayoutFromBounds(layoutBounds, padding, shared.layout.round)
         : viewBoxToLayout(root.viewBox, shared.layout.round),
     ...(resources.length === 0 ? {} : { resources }),
     ...(animations === undefined ? {} : { animations }),
   };
-  visitSceneContent(scene);
+  const provenance = metadata.provenanceTracker?.capture(primitives);
+
   return Object.freeze({
     result: Object.freeze({
       scene,
       artifacts: Object.freeze([...(metadata.artifacts ?? [])]),
     }) as CompileResult<CompositeArtifactOf<TComposites[number]>>,
     diagnostics: Object.freeze(orderCompileWarnings(diagnostics)),
-    ...(metadata.provenance === undefined ? {} : { provenance: metadata.provenance }),
+    ...(provenance === undefined ? {} : { provenance }),
   });
 };
 
@@ -73,6 +83,7 @@ export const assembleSceneCompilation = <const TComposites extends ReadonlyArray
   outputs: ReadonlyArray<CompileOutput>,
   shared: SharedCompileContext,
   metadata: SceneCompilationMetadata = {},
+  padding?: number,
 ): SceneCompilationSnapshot<TComposites> => {
   const output = assembleCompileOutputs(outputs, shared, metadata.provenanceTracker);
   let bounds: AxisAlignedBounds | undefined;
@@ -81,10 +92,17 @@ export const assembleSceneCompilation = <const TComposites extends ReadonlyArray
   }
   const artifacts = [...(metadata.artifacts ?? [])];
   const diagnostics: Array<InputCompileWarning> = [...(metadata.diagnostics ?? [])];
-  return assembleSceneCompilationSnapshot<TComposites>(root, output.primitives, output.resources, bounds, shared, {
-    ...metadata,
-    provenance: metadata.provenanceTracker?.capture(output.primitives) ?? metadata.provenance,
-    artifacts: orderCompileArtifacts(artifacts),
-    diagnostics: orderCompileWarnings(diagnostics),
-  });
+  return assembleSceneCompilationSnapshot<TComposites>(
+    root,
+    output.primitives,
+    output.resources,
+    bounds,
+    shared,
+    {
+      ...metadata,
+      artifacts: orderCompileArtifacts(artifacts),
+      diagnostics: orderCompileWarnings(diagnostics),
+    },
+    padding,
+  );
 };

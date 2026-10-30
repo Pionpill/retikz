@@ -120,6 +120,8 @@ export const isWeaveScene = (source: IRScene): boolean => {
 /** 协调声明树、Core 编译与依赖记录；当前每次准备独占可变状态 */
 export class WeaveReconciler {
   private readonly shared: ReturnType<typeof createSharedCompileContext>;
+  /** Scene 最终组装的留白，不参与元素编译 */
+  private readonly padding: CompileOptions['padding'];
   /** 本次准备结果的警告列表，收集编译与名称注册警告，在重新编译前重置 */
   private diagnostics: Array<CompileWarning> = [];
   private namespace = createCompileNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
@@ -147,6 +149,7 @@ export class WeaveReconciler {
     private readonly execution: ExecuteOptions = {},
   ) {
     this.shared = createSharedCompileContext(options);
+    this.padding = options.padding;
     this.treeId = `weave-${nextTreeId++}`;
     const { children, ...own } = source;
     void children;
@@ -176,10 +179,16 @@ export class WeaveReconciler {
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave is already mounted');
     try {
       const result = this.reconcileChildren();
-      const compilation = assembleSceneCompilation(this.source, result.outputs(), this.shared, {
-        diagnostics: this.diagnostics,
-        provenanceTracker: this.provenance,
-      });
+      const compilation = assembleSceneCompilation(
+        this.source,
+        result.outputs(),
+        this.shared,
+        {
+          diagnostics: this.diagnostics,
+          provenanceTracker: this.provenance,
+        },
+        this.padding,
+      );
       // 新树尚未对外发布；Runtime 再原子发布整棵树及输出
       this.transaction.commit();
       this.transaction.finish();
@@ -238,10 +247,16 @@ export class WeaveReconciler {
         // 输出遍历重放名称声明，避免把最终名称表当成声明位置的引用环境
         this.transaction.editNode(this.root).ids = new Map();
         const result = this.reconcileChildren();
-        const compilation = assembleSceneCompilation(this.source, result.outputs(), this.shared, {
-          diagnostics: this.diagnostics,
-          provenanceTracker: this.provenance,
-        });
+        const compilation = assembleSceneCompilation(
+          this.source,
+          result.outputs(),
+          this.shared,
+          {
+            diagnostics: this.diagnostics,
+            provenanceTracker: this.provenance,
+          },
+          this.padding,
+        );
         prepared = { root: this.root, visited: this.visited, compilation };
       }
       let closed = false;

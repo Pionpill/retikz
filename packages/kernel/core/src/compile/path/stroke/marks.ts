@@ -1,37 +1,12 @@
-import { formatPropertyPath } from '@retikz/foundation';
-import type { PropertyPath } from '@retikz/foundation';
 import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
 
 import type { GroupPrimitive, PaintValue, ScenePrimitive, CompiledArrowEnd, Transform } from '../../../contract';
-import type { SceneResource } from '../../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { MarkResolution } from '../../../resolve';
 import { createLayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';
 import { materializeScenePrimitives } from '../../resource';
 import type { PaintResolver } from '../../resource';
 import { combineOpacity } from '../../text';
-
-/** 标记输出的资源引用及诊断位置 */
-type MarkResourceContext = {
-  /** 按 id 索引的资源 Map */
-  resourceMap: ReadonlyMap<string, SceneResource>;
-  /** 宿主路径与标记下标 */
-  irPath: PropertyPath;
-};
-
-/** 在放置内容的同一轮递归中检查资源引用 */
-const assertMarkResource = (
-  context: MarkResourceContext | undefined,
-  id: string,
-  kind: SceneResource['kind'],
-): void => {
-  if (context !== undefined && context.resourceMap.get(id)?.kind !== kind)
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Compile,
-      `Expected ${kind} resource '${id}' at ${formatPropertyPath(context.irPath)}`,
-    );
-};
 
 const resolveMarkerContextFill = (value: PaintValue, contextStroke: PaintValue): PaintValue =>
   typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
@@ -53,30 +28,20 @@ type MarkMarkerGroupContext = {
 };
 
 /** 保留标记结构，递归解析宿主描边色并将透明度因子应用到绘制图元 */
-const markerPrimToScene = (
-  prim: ScenePrimitive,
-  contextStroke: PaintValue,
-  hostOpacity?: number,
-  resources?: MarkResourceContext,
-): ScenePrimitive => {
+const markerPrimToScene = (prim: ScenePrimitive, contextStroke: PaintValue, hostOpacity?: number): ScenePrimitive => {
   const content = { ...prim };
   delete content.id;
   delete content.meta;
   if (content.type === 'group') {
-    if (content.clipRef !== undefined) assertMarkResource(resources, content.clipRef, 'clip');
     return {
       ...content,
-      children: content.children.map(c => markerPrimToScene(c, contextStroke, hostOpacity, resources)),
+      children: content.children.map(c => markerPrimToScene(c, contextStroke, hostOpacity)),
     };
   }
 
   const opacity = combineOpacity(content.opacity, hostOpacity);
   const appearance = opacity === undefined ? {} : { opacity };
   if (content.type === 'text') return { ...content, ...appearance };
-
-  for (const paint of [content.fill, content.stroke]) {
-    if (typeof paint === 'object' && paint.kind === 'resourceRef') assertMarkResource(resources, paint.id, 'paint');
-  }
 
   return {
     ...content,
@@ -123,7 +88,6 @@ export const placeMarkPrimitives = (
   resolution: MarkResolution,
   sample: CurveSegmentSample,
   context: MarkMarkerGroupContext,
-  resources: MarkResourceContext,
 ): GroupPrimitive => ({
   type: 'group',
   transforms: [
@@ -148,12 +112,7 @@ export const placeMarkPrimitives = (
     },
   ],
   children: primitives.map(primitive =>
-    markerPrimToScene(
-      primitive,
-      context.contextStroke,
-      combineOpacity(resolution.mark.opacity, context.hostOpacity),
-      resources,
-    ),
+    markerPrimToScene(primitive, context.contextStroke, combineOpacity(resolution.mark.opacity, context.hostOpacity)),
   ),
 });
 

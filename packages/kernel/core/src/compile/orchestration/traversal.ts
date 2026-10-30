@@ -379,6 +379,10 @@ export const compileChildrenToPrimitives = (
       runtime.context.workspace.paintRegistry.register,
     );
     const emittedPrimitives = runtime.state.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
+    runtime.context.workspace.paintRegistry.collectReferences(
+      rawPrimitives,
+      `Node at ${formatPropertyPath(nodeIrPath)}`,
+    );
     if (semanticOwner !== undefined) {
       runtime.state.provenanceTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
     }
@@ -806,35 +810,6 @@ export const compileChildrenToPrimitives = (
     wrapperClipPath?: SceneClipPath;
   }>;
 
-  /** replay transaction 捕获的 primitive resource ref 必须在提交前完整可解析 */
-  const assertReplayResourceRefs = (transaction: CompositeReplayTransaction): void => {
-    const replayResourceIds = new Set(transaction.resources.map(resource => resource.id));
-
-    const visit = (primitive: ScenePrimitive): void => {
-      if (primitive.type === 'group') {
-        if (primitive.clipRef !== undefined && !replayResourceIds.has(primitive.clipRef)) {
-          throw createCompileInvariantError(`internal: replay clip resource '${primitive.clipRef}' was not captured`);
-        }
-
-        primitive.children.forEach(visit);
-
-        return;
-      }
-
-      if (primitive.type === 'text') return;
-
-      for (const paint of [primitive.fill, primitive.stroke]) {
-        if (paint !== undefined && typeof paint === 'object' && paint.kind !== 'contextStroke') {
-          if (!replayResourceIds.has(paint.id)) {
-            throw createCompileInvariantError(`internal: replay paint resource '${paint.id}' was not captured`);
-          }
-        }
-      }
-    };
-
-    transaction.primitives.forEach(visit);
-  };
-
   const commitReplay = (
     token: CompositeReplay,
     wrapper: CompositeReplayWrapper | undefined,
@@ -859,7 +834,6 @@ export const compileChildrenToPrimitives = (
             theme: frame.theme,
           })
         : prepared.transaction;
-    assertReplayResourceRefs(transaction);
 
     const transforms = wrapper?.transforms;
     const authoredPreliminary = transaction.scopeChainApplied ? undefined : authoredPreliminaryTransforms;
@@ -1116,7 +1090,6 @@ export const compileChildrenToPrimitives = (
                 irPath: ['clip'],
               }),
             );
-      assertReplayResourceRefs(transaction);
       preparedReplays.set(entry.child.replay, {
         transaction,
         ...(wrapperClipPath === undefined ? {} : { wrapperClipPath }),
@@ -2136,6 +2109,7 @@ export const compileChildrenToPrimitives = (
 
   const primitives = stableSortByZIndex(sealSink(runtime.state.primitives), runtime.state.zIndexOf);
   const alignmentGuides = resolveStructuralAlignmentGuides(rootAlignmentGuides);
+  runtime.context.workspace.paintRegistry.validateReferences(runtime.context.workspace.clipRegistry.resources());
 
   return {
     primitives,

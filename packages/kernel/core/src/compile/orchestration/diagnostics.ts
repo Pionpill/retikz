@@ -71,29 +71,21 @@ export const compileWarningOccurrenceOf = (warning: InputCompileWarning): Compil
     expansionPath: [],
   };
 
-/** 按 canonical occurrence 排序 warning，并保留同 occurrence 的 emission 顺序 */
+/** 按 canonical occurrence 排序 warning，稳定排序保留同 occurrence 的 emission 顺序 */
 export const orderCompileWarnings = (warnings: ReadonlyArray<InputCompileWarning>): Array<CompileWarning> =>
   warnings
-    .map((warning, emissionOrder) => ({
-      warning,
-      emissionOrder,
-      occurrence: compileWarningOccurrenceOf(warning),
-    }))
-    .sort(
-      (left, right) =>
-        compareCompileOccurrences(left.occurrence, right.occurrence) || left.emissionOrder - right.emissionOrder,
-    )
-    .map(
-      ({ warning, occurrence }) =>
-        Object.freeze(
-          replaceCompileWarningOccurrence(
-            {
-              code: warning.code,
-              message: warning.message,
-              path: warning.path,
-              origin: warning.origin ?? ({ kind: 'primary' } as const),
-            },
-            occurrence,
-          ),
-        ) as CompileWarning,
+    .map(warning => {
+      const ordered: CompileWarning = {
+        code: warning.code,
+        message: warning.message,
+        path: warning.path,
+        origin: warning.origin ?? { kind: 'primary' },
+      };
+      Object.defineProperty(ordered, compileWarningOccurrence, {
+        value: freezeOccurrence(compileWarningOccurrenceOf(warning)),
+      });
+      return Object.freeze(ordered);
+    })
+    .sort((left, right) =>
+      compareCompileOccurrences(compileWarningOccurrenceOf(left), compileWarningOccurrenceOf(right)),
     );

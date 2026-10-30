@@ -1,4 +1,4 @@
-import type { CompileProvenance, Scene } from '@retikz/core';
+import type { CompileProvenanceSnapshot, Scene } from '@retikz/core';
 
 import { CORE_SOURCE_KEY } from '../constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
@@ -64,7 +64,7 @@ const createFullTopology = (
 export const createFullSceneRuntimeSnapshot = (
   scene: Scene,
   revision: SceneRevision,
-  provenance: CompileProvenance,
+  provenance: CompileProvenanceSnapshot,
 ): SceneRuntimeSnapshot => {
   const runtimeScene = freezeComputationOutput({
     ...scene,

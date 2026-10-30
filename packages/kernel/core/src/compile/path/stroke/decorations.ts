@@ -2,11 +2,10 @@ import { formatPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompiledArrowEnd, ScenePrimitive } from '../../../contract';
-import type { SceneResource } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalPath, StrokePathResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import type { PaintResolver } from '../../resource';
+import type { PaintRegistry, PaintResolver } from '../../resource';
 import type { StrokePathGeometry } from './interruption';
 import { sampleStrokeMarkGeometry } from './interruption';
 import { emitMarkPrimitives, placeMarkPrimitives } from './marks';
@@ -77,8 +76,8 @@ export const emitPathEndpointArrows = (
 
 /** 沿线标记生成上下文 */
 type InputPathMarkEmission = {
-  /** 当前编译资源，用于普通标记的引用诊断 */
-  resources?: () => ReadonlyArray<SceneResource>;
+  /** 记录标记引用的原始位置，资源完整后再校验 */
+  collectResourceReferences?: PaintRegistry['collectReferences'];
   /** 截断前路径几何 */
   geometry: StrokePathGeometry;
   /** 按绘制顺序保存的标记放置列表 */
@@ -97,7 +96,7 @@ type InputPathMarkEmission = {
 
 /** 沿截断前路径的累计弧长放置标记内容 */
 export const emitPathMarks = ({
-  resources,
+  collectResourceReferences,
   geometry,
   placements,
   markResolutions,
@@ -130,12 +129,8 @@ export const emitPathMarks = ({
       label: `Mark '${resolution.definition.name}' at ${formatPropertyPath(location)}`,
       providerKey: `mark:${resolution.definition.name}`,
     });
-    primitives.push(
-      placeMarkPrimitives(content, resolution, sample, context, {
-        resourceMap: new Map((resources?.() ?? []).map(resource => [resource.id, resource])),
-        irPath: location,
-      }),
-    );
+    collectResourceReferences?.(content, `Mark at ${formatPropertyPath(location)}`);
+    primitives.push(placeMarkPrimitives(content, resolution, sample, context));
     boundsPoints.push(sample.point);
   }
   return { primitives, boundsPoints };

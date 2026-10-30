@@ -1,4 +1,4 @@
-import type { CompileProvenance, IRScene, ScenePrimitive } from '@retikz/core';
+import type { CompileProvenanceSnapshot, IRScene, ScenePrimitive } from '@retikz/core';
 import { compileSceneSnapshot, compileToScene, definePath, PathSchema } from '@retikz/core';
 import { encodePropertyPath } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -6,7 +6,7 @@ import { literal } from 'zod';
 
 import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
 
-const readEmissions = (provenance: CompileProvenance) =>
+const readEmissions = (provenance: CompileProvenanceSnapshot) =>
   [...provenance.ownerMap.values()]
     .flatMap(owner => owner.emissions)
     .sort((left, right) =>
@@ -30,6 +30,11 @@ const scene: IRScene = {
 };
 
 describe('Weave 编译构建', () => {
+  it.each([0, 7])('外层 Scene 留白 %s 与全量编译一致', padding => {
+    const prepared = new WeaveReconciler(scene, { padding }).mount();
+    expect(prepared.compilation.result).toEqual(compileToScene(scene, { padding }));
+  });
+
   it('保留跨 Scope 延后路径、声明结构和完整来源', () => {
     const prepared = new WeaveReconciler(scene).mount();
     expect(prepared.compilation.result).toEqual(compileToScene(scene));

@@ -76,6 +76,7 @@ export const emitDefinedPath = (
   const kind = definition.name;
 
   const emitOptions = {
+    collectResourceReferences: context.workspace.paintRegistry.collectReferences,
     resources: () => [...context.workspace.paintRegistry.resources(), ...context.workspace.clipRegistry.resources()],
     onWarn: context.workspace.diagnostics.collect,
     scopeChain,
@@ -274,5 +275,6 @@ export const emitDefinedPath = (
     return null;
   }
 
+  context.workspace.paintRegistry.collectReferences(validated.result.primitives, `Path '${kind}'`);
   return validated.result;
 };

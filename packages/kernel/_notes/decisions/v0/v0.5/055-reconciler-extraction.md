@@ -41,7 +41,7 @@ Core 保留 `compileToScene`、`observeCompileToScene` 及现有结果语义，�
 | `result`          | 完整 `CompileResult`，保留 Composite artifact 的泛型关联                                    |
 | `diagnostics`     | 本次成功编译产生、按 canonical 顺序排列的完整 warnings；不派发 warning 回调或默认控制台警告 |
 | `observerOutputs` | 本次显式观察器输出；未提供观察器时为空                                                      |
-| `provenance`      | 仅在请求收集时存在的 `CompileProvenance`；只关联本次结果，不承诺跨次身份                    |
+| `provenance`      | 仅在请求收集时存在的 `CompileProvenanceSnapshot`；只关联本次结果，不承诺跨次身份            |
 
 普通完整入口与快照入口消费同一绘图编译语义。普通入口保持成功后派发 warning 的行为；Reconciler 在候选内使用快照入口，成功提交后才派发 warning。观察器仍按已有编译观察语义执行，不因快照入口而获得宿主事务回滚能力。
 
@@ -51,7 +51,7 @@ Core 保留 `compileToScene`、`observeCompileToScene` 及现有结果语义，�
 
 Core 公开 `validateCompositeInputBindings(source: IRScene, inputs: CompositeInputBindings | undefined): void`，验证 opaque bindings 与完整输入的配对关系。未提供 bindings 时通过；无效来源或不匹配时沿用 `RetikzCoreError` 的 `CompositeContractViolation`。该能力不执行编译、不产生 warning、不返回私有 scope；静态编译与 Reconciler 复用同一校验语义。
 
-Core 提供只读 `CompileProvenance`，描述本次编译的来源事实，不提供 Runtime identity 或稳定性结论。其跨包数据由以下集合组成：
+Core 提供只读 `CompileProvenanceSnapshot`，描述本次编译的来源事实，不提供 Runtime identity 或稳定性结论。其跨包数据由以下集合组成：
 
 | 集合              | 必需信息                                                                                                                                                                                             |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

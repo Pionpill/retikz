@@ -7,7 +7,7 @@ import { createCompileInvariantError } from '../probe-failure';
 import type {
   CompileNamespaceKey,
   CompileOwnerKey,
-  CompileProvenance,
+  CompileProvenanceSnapshot,
   CompileProvenanceEmission,
   CompileProvenanceOwner,
 } from './types';
@@ -78,7 +78,7 @@ export class CompileProvenanceTracker {
 
   /** 将选中试算的来源挂到当前实体，图元必须与试算快照保持同构且尚未添加外层包装 */
   importProvenance(
-    provenance: CompileProvenance,
+    provenance: CompileProvenanceSnapshot,
     primitives: ReadonlyArray<ScenePrimitive>,
     parent: CompileOwnerKey,
     index: number,
@@ -130,7 +130,7 @@ export class CompileProvenanceTracker {
   }
 
   /** 按最终 Scene 位置生成独立快照，后续收集不修改已交付结果 */
-  capture(primitives: ReadonlyArray<ScenePrimitive>): CompileProvenance {
+  capture(primitives: ReadonlyArray<ScenePrimitive>): CompileProvenanceSnapshot {
     /** 当前快照按来源聚合图元，保留没有发射图元的实体 */
     const ownerMap = new Map<
       CompileOwnerKey,
