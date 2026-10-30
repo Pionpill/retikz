@@ -4,12 +4,7 @@ import type { AnyCompositeDefinition, Scene, ScenePrimitive, SceneResource } fro
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRScene } from '../schemas';
 import type { SceneCompilationSnapshot } from './compile';
-import type { SharedCompileContext } from './context';
-import type { CompileOutput } from './element';
-import { assembleCompileOutputs } from './element';
-import { orderCompileArtifacts } from './orchestration';
 import { filterAnimations } from './orchestration/animation';
-import { collectLayoutBounds } from './orchestration/bounds';
 import { orderCompileWarnings } from './orchestration/diagnostics';
 import type { CompileProvenanceTracker } from './provenance';
 import { computeLayoutFromBounds, viewBoxToLayout } from './scene';
@@ -19,8 +14,20 @@ import type { CompileWarning, InputCompileWarning } from './warning';
 /** Scene 自动边界的默认留白 */
 const DEFAULT_LAYOUT_PADDING = 10;
 
-/** Scene 组装所需的附属贡献与来源记录 */
-export type SceneCompilationMetadata = Readonly<{
+/** 已合并的编译内容与 Scene 快照组装配置 */
+export type InputSceneCompilationSnapshot = Readonly<{
+  /** Scene 根级视口与动画声明 */
+  root: Pick<IRScene, 'viewBox' | 'animations'>;
+  /** 已完成合并的图元 */
+  primitives: Array<ScenePrimitive>;
+  /** 已完成合并的资源 */
+  resources: Array<SceneResource>;
+  /** 图元贡献的布局边界 */
+  layoutBounds: AxisAlignedBounds | undefined;
+  /** 布局数值的舍入函数 */
+  round: (value: number) => number;
+  /** 自动布局的留白，默认 10 */
+  padding?: number;
   /** 按声明顺序整理的产物 */
   artifacts?: ReadonlyArray<CompositeArtifact>;
   /** 已完成计算的诊断 */
@@ -33,14 +40,17 @@ export type SceneCompilationMetadata = Readonly<{
 export const assembleSceneCompilationSnapshot = <
   const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly [],
 >(
-  root: Pick<IRScene, 'viewBox' | 'animations'>,
-  primitives: Array<ScenePrimitive>,
-  resources: Array<SceneResource>,
-  layoutBounds: AxisAlignedBounds | undefined,
-  shared: SharedCompileContext,
-  metadata: SceneCompilationMetadata,
-  padding = DEFAULT_LAYOUT_PADDING,
+  input: InputSceneCompilationSnapshot,
 ): SceneCompilationSnapshot<TComposites> => {
+  const {
+    root,
+    primitives,
+    resources,
+    layoutBounds,
+    round,
+    padding = DEFAULT_LAYOUT_PADDING,
+    provenanceTracker,
+  } = input;
   if (!Number.isFinite(padding) || padding < 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -48,7 +58,7 @@ export const assembleSceneCompilationSnapshot = <
     );
   }
 
-  const diagnostics: Array<InputCompileWarning> = [...(metadata.diagnostics ?? [])];
+  const diagnostics: Array<InputCompileWarning> = [...(input.diagnostics ?? [])];
   const animations = filterAnimations(root.animations, {
     target: 'root',
     irPath: [],
@@ -60,49 +70,19 @@ export const assembleSceneCompilationSnapshot = <
     primitives,
     layout:
       root.viewBox === undefined
-        ? computeLayoutFromBounds(layoutBounds, padding, shared.layout.round)
-        : viewBoxToLayout(root.viewBox, shared.layout.round),
+        ? computeLayoutFromBounds(layoutBounds, padding, round)
+        : viewBoxToLayout(root.viewBox, round),
     ...(resources.length === 0 ? {} : { resources }),
     ...(animations === undefined ? {} : { animations }),
   };
-  const provenance = metadata.provenanceTracker?.capture(primitives);
+  const provenance = provenanceTracker?.capture(primitives);
 
   return Object.freeze({
     result: Object.freeze({
       scene,
-      artifacts: Object.freeze([...(metadata.artifacts ?? [])]),
+      artifacts: Object.freeze([...(input.artifacts ?? [])]),
     }) as CompileResult<CompositeArtifactOf<TComposites[number]>>,
     diagnostics: Object.freeze(orderCompileWarnings(diagnostics)),
     ...(provenance === undefined ? {} : { provenance }),
   });
-};
-
-/** 按声明顺序组装局部输出与同版本附属贡献，不重算任何元素 */
-export const assembleSceneCompilation = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
-  root: Pick<IRScene, 'viewBox' | 'animations'>,
-  outputs: ReadonlyArray<CompileOutput>,
-  shared: SharedCompileContext,
-  metadata: SceneCompilationMetadata = {},
-  padding?: number,
-): SceneCompilationSnapshot<TComposites> => {
-  const output = assembleCompileOutputs(outputs, shared, metadata.provenanceTracker);
-  let bounds: AxisAlignedBounds | undefined;
-  for (const contribution of output.bounds) {
-    bounds = collectLayoutBounds(bounds, contribution.boundsPoints, contribution.shadow);
-  }
-  const artifacts = [...(metadata.artifacts ?? [])];
-  const diagnostics: Array<InputCompileWarning> = [...(metadata.diagnostics ?? [])];
-  return assembleSceneCompilationSnapshot<TComposites>(
-    root,
-    output.primitives,
-    output.resources,
-    bounds,
-    shared,
-    {
-      ...metadata,
-      artifacts: orderCompileArtifacts(artifacts),
-      diagnostics: orderCompileWarnings(diagnostics),
-    },
-    padding,
-  );
 };

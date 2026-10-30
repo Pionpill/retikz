@@ -1,4 +1,5 @@
 import { boundsToRect } from '@retikz/math';
+import type { AxisAlignedBounds } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../contract';
 import type { SharedCompileContext } from '../context';
@@ -7,6 +8,15 @@ import type { CompileOwnerKey, CompileProvenanceTracker } from '../provenance';
 import { createClipRegistry, createPaintRegistry, importSceneResources, remapPrimitiveResources } from '../resource';
 import { applyTransformChain } from '../transform';
 import type { CompiledScope, CompileOutput } from './types';
+
+/** 汇总输出的可见布局边界，保留各项阴影扩张语义 */
+export const computeCompileOutputBounds = (output: Pick<CompileOutput, 'bounds'>): AxisAlignedBounds | undefined => {
+  let bounds: AxisAlignedBounds | undefined;
+  for (const contribution of output.bounds) {
+    bounds = collectLayoutBounds(bounds, contribution.boundsPoints, contribution.shadow);
+  }
+  return bounds;
+};
 
 /** 按声明顺序导入局部输出及资源，不重新运行 provider */
 export const assembleCompileOutputs = (

@@ -1,6 +1,5 @@
 import type {
   SharedCompileContext,
-  CompileRead,
   CompileWarning,
   CompiledNode,
   CompiledCoordinate,
@@ -14,6 +13,7 @@ import type {
   IRScene,
 } from '@retikz/core';
 
+import type { WeaveCompileRead } from './compile';
 import type { WeaveChangeKind, WeaveChangeSource } from './constants';
 
 /**
@@ -128,7 +128,7 @@ type WeaveRootState = {
   records: ReadonlyMap<
     WeaveNode,
     Readonly<{
-      reads: ReadonlyArray<CompileRead>;
+      reads: ReadonlyArray<WeaveCompileRead>;
       diagnostics: ReadonlyArray<CompileWarning>;
     }>
   >;

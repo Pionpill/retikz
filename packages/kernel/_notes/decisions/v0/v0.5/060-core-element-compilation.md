@@ -65,7 +65,7 @@ Core 提供环境准备契约，将编译配置、内置与自定义 Definition 
 
 单元素计算接受自身输入、有效上下文、显式环境与必要依赖读取能力，返回该元素的编译状态及必要输出贡献。调用不得隐式依赖此前全量遍历遗留的可变上下文，不得为了单元素结果暗中重新编译整棵 Scene，也不得修改其它已提交元素。
 
-Core 保留默认值、名称可见性、Definition 查找、坐标变换、锚点、布局和绘制语义。Reconciler 提供候选版本中可读取的结果，并记录 Core 的语义读取事实，不自行复制这些解析规则。
+Core 保留默认值、名称可见性规则、Definition 查找、坐标变换、锚点、布局和绘制语义。Reconciler 按这些规则维护候选版本的名称 frame、绑定和读取记录，通过窄查询回调提供声明位置可见的引用结果；Core 不接收可变名称图或版本内节点身份。重复名称的诊断构造复用 Core 能力，几何解析不移入 Reconciler。
 
 依赖契约至少区分目标不存在与结果尚未就绪，并保留影响绑定的命名空间及未命中查找事实，使新增、删除、遮蔽或重新绑定可以正确失效。Core 不直接返回 WeaveNode；读取关联由 Reconciler 映射到对应版本的节点。前向引用、环检测以及尚未就绪结果的处理须明确，不能用旧缓存伪装已就绪。
 
@@ -77,7 +77,7 @@ Core 保留默认值、名称可见性、Definition 查找、坐标变换、锚�
 
 compile-local token、可变名称栈、资源序号及观察收集器不能直接当作跨次稳定状态。保留的绘制贡献必须在新结果组装时维持资源引用、声明顺序、变换、裁剪、provenance、artifacts、空间句柄与诊断的一致性；删除元素不能残留其贡献。
 
-Core 提供从完成状态到完整编译输出的组装能力。candidate 计算及输出准备成功后，Reconciler 才提交配对的树与输出版本。Render 消费绘制输出，不读取或修改 WeaveRoot；绘制层局部更新与 Patch 优化另行设计。
+Core 提供片段资源合并、可见边界汇总及 Scene 收尾能力。Reconciler 选择本批有效输出，组织合并与收尾调用；Core 统一处理资源重映射、zIndex、viewBox、padding、根动画及最终诊断与来源。candidate 计算及输出准备成功后，Reconciler 才提交配对的树与输出版本。Render 消费绘制输出，不读取或修改 WeaveRoot；绘制层局部更新与 Patch 优化另行设计。
 
 ## 全量复用、失败与兼容性
 
@@ -91,4 +91,6 @@ Core 提供从完成状态到完整编译输出的组装能力。candidate 计�
 
 React、Vanilla 的作者输入与使用方式不因本次对接改变。完整元素状态通过 output 持有必要的局部输出贡献，不在 WeaveNode 维护平行贡献字段；无可见输出的 Coordinate 不强制持有空包装。
 
-单元素调用返回 compiled / pending 判别结果。完成分支包含 compiled、reads 与 diagnostics；pending 分支只包含读取事实，不暴露半成品或发布诊断。真实输入及 provider 错误沿用 Core 错误边界。读取事实包含 namespace/name 与不透明 binding，Core 执行可见性规则，Reconciler 映射到对应版本节点；pending 不放宽声明顺序限制。
+单元素调用返回 compiled / pending 判别结果。完成分支包含 compiled 与 diagnostics；pending 分支只表达未就绪，不暴露半成品或发布诊断。查询回调返回就绪引用的布局与可选来源路径、pending、受限祖先引用，或用 undefined 表示缺失。Core 保持未就绪与缺失的不同语义，拒绝祖先包络引用，并将查询回调及 provider 的真实异常沿用 Core 错误边界包装、保留 cause。
+
+读取事实由 Reconciler 在回调执行期间收集，包含实际经过的 namespace/name、missing/pending/ready 与命中的 binding；复用结果时通过同一名称查询逻辑刷新。Core 不返回 reads 或维护依赖边，pending 不放宽声明顺序限制。移除旧的 Core namespace registry、binding/read 公共类型与局部贡献编排入口，不保留兼容转发。

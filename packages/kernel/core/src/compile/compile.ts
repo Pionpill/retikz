@@ -72,19 +72,17 @@ export const compileSceneSnapshot = <const TComposites extends ReadonlyArray<Any
     provenanceTracker,
   });
   const resources = [...paintRegistry.resources(), ...clipRegistry.resources()];
-  const snapshot = assembleSceneCompilationSnapshot<TComposites>(
-    ir,
+  const snapshot = assembleSceneCompilationSnapshot<TComposites>({
+    root: ir,
     primitives,
     resources,
     layoutBounds,
-    context.shared,
-    {
-      artifacts,
-      diagnostics: orderCompileWarnings(diagnostics.warnings),
-      provenanceTracker,
-    },
-    compileOptions?.padding,
-  );
+    round: context.shared.layout.round,
+    artifacts,
+    diagnostics: orderCompileWarnings(diagnostics.warnings),
+    provenanceTracker,
+    padding: compileOptions?.padding,
+  });
 
   return snapshot;
 };

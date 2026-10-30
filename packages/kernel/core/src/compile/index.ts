@@ -38,8 +38,10 @@ export type {
   SharedCompileContext,
   SharedCompileContextOptions,
 } from './context';
-export { assembleSceneCompilation } from './output';
-export type { SceneCompilationMetadata } from './output';
+export { assembleSceneCompilationSnapshot } from './output';
+export type { InputSceneCompilationSnapshot } from './output';
 export * from './provenance';
 
 export type { CompiledNodeLayout, NodeCompilation, NodeLabelResolution, NodeResolvedProperties } from './node';
+
+export { createDuplicateCompileWarning } from './orchestration';

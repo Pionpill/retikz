@@ -1,5 +1,7 @@
-import type { CompileRead, CompileWarning, ElementCompileOptions } from '@retikz/core';
+import type { CompileWarning } from '@retikz/core';
 
+import type { WeaveCompileRead, WeaveCompileOptions } from './compile';
+import { lookupWeaveBinding } from './compile';
 import { readWeaveCurrent } from './transaction';
 import type { WeaveTransaction } from './transaction';
 import type { WeaveNode, WeaveRoot, WeaveScopeNode } from './types';
@@ -56,19 +58,13 @@ export class WeaveTracker {
   }
 
   /** 把复用产物的读取记录关联到本批名称 frame，避免保留旧工作区 */
-  refreshCompileReads(reads: ReadonlyArray<CompileRead>, compileOptions: ElementCompileOptions): Array<CompileRead> {
-    const refreshed: Array<CompileRead> = [];
+  refreshCompileReads(
+    reads: ReadonlyArray<WeaveCompileRead>,
+    compileOptions: WeaveCompileOptions,
+  ): Array<WeaveCompileRead> {
+    const refreshed: Array<WeaveCompileRead> = [];
     for (const name of new Set(reads.map(read => read.name))) {
-      for (let namespace = compileOptions.namespace; namespace !== undefined; namespace = namespace.parent) {
-        const binding = namespace.bindings.get(name);
-        refreshed.push({
-          namespace,
-          name,
-          state: binding?.state ?? 'missing',
-          ...(binding === undefined ? {} : { binding: binding.binding }),
-        });
-        if (binding !== undefined) break;
-      }
+      lookupWeaveBinding(compileOptions.namespace, name, refreshed);
     }
     return refreshed;
   }
@@ -76,7 +72,7 @@ export class WeaveTracker {
   /** 保存读取与诊断，并以最新读取事实重建节点的双向计算依赖 */
   recordNodeReads(
     node: WeaveNode,
-    compileReads: ReadonlyArray<CompileRead>,
+    compileReads: ReadonlyArray<WeaveCompileRead>,
     diagnostics: ReadonlyArray<CompileWarning>,
     append = false,
   ): void {

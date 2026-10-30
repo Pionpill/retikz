@@ -10,7 +10,7 @@ import { createWorkspaceCompileContext } from '../context';
 import { orderCompileWarnings, withCompileWarningOccurrence } from '../orchestration';
 import { createPositionResolveContext } from '../orchestration';
 import { composeScopeTransform } from '../transform';
-import type { CompileRead, ElementCompileContext, ElementCompileOptions, ElementCompileResult } from './types';
+import type { ElementCompileContext, ElementCompileOptions, ElementCompileResult } from './types';
 
 /** 解析 Scope 子元素继承上下文；不编译 children 或聚合几何 */
 export const resolveScopeContext = (
@@ -32,7 +32,6 @@ export const resolveScopeContext = (
 /** 创建独占的资源、诊断与引用读取工作区 */
 const createElementWorkspace = (options: ElementCompileOptions) => {
   const workspace = createWorkspaceCompileContext(options.shared);
-  const reads: Array<CompileRead> = [];
   const pending = new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Element dependency is pending');
   const scopeChain = options.transforms ?? [];
   const composedTransform = composeScopeTransform(scopeChain);
@@ -42,27 +41,16 @@ const createElementWorkspace = (options: ElementCompileOptions) => {
     composedTransform,
     nodeBoundaryContext: workspace.nodeBoundaryContext,
     lookupReference: name => {
-      for (let namespace = options.namespace; namespace !== undefined; namespace = namespace.parent) {
-        const entry = namespace.bindings.get(name);
-        reads.push(
-          Object.freeze({
-            namespace,
-            name,
-            state: entry?.state ?? 'missing',
-            ...(entry === undefined ? {} : { binding: entry.binding }),
-          }),
+      const entry = options.lookupReference?.(name);
+      if (entry === undefined) return undefined;
+      if (entry.state === 'ancestor') {
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
+          `Geometry reference cannot target ancestor Scope '${name}'`,
         );
-        if (entry === undefined) continue;
-        if (options.ancestorScopes?.has(entry.binding)) {
-          throw new RetikzCoreError(
-            RetikzCoreErrorCode.Compile,
-            `Geometry reference cannot target ancestor Scope '${name}'`,
-          );
-        }
-        if (entry.state === 'pending') throw pending;
-        return { layout: entry.layout, irPath: entry.irPath, state: 'resolved' };
       }
-      return undefined;
+      if (entry.state === 'pending') throw pending;
+      return { layout: entry.layout, irPath: entry.irPath, state: 'resolved' };
     },
     resolveExplicitBoundary: (boundary, reference) =>
       resolveNodeBoundary(boundary, {
@@ -75,7 +63,6 @@ const createElementWorkspace = (options: ElementCompileOptions) => {
   });
   return {
     ...workspace,
-    reads,
     pending,
     scopeChain,
     composedTransform,
@@ -98,7 +85,6 @@ export const runElementCompilation = <TCompiled>(
     return Object.freeze({
       status: 'compiled',
       compiled,
-      reads: Object.freeze(workspace.reads),
       diagnostics: Object.freeze(
         orderCompileWarnings(
           workspace.diagnostics.warnings.map(warning => withCompileWarningOccurrence(warning, options.occurrence)),
@@ -107,7 +93,7 @@ export const runElementCompilation = <TCompiled>(
     });
   } catch (error) {
     if (error === workspace.pending) {
-      return Object.freeze({ status: 'pending', reads: Object.freeze(workspace.reads) });
+      return Object.freeze({ status: 'pending' });
     }
     if (error instanceof RetikzCoreError) throw error;
     throw new RetikzCoreError(

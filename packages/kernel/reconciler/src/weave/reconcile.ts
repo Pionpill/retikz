@@ -1,14 +1,11 @@
 import type {
   CompileCompositeOptions,
   CompiledNodeLayout,
-  CompileNamespaceRegistry,
   CompileOccurrenceLocator,
   CompileOptions,
   CompileOutput,
   CompileOwnerKey,
   CompileWarning,
-  ElementCompileOptions,
-  ElementCompileResult,
   ExecuteOptions,
   IRChild,
   IRScene,
@@ -17,14 +14,12 @@ import type {
   Transform,
 } from '@retikz/core';
 import {
-  assembleSceneCompilation,
   assembleScopeOutput,
   compileCoordinate,
   compileNode,
   compilePath,
   compileScope,
   createSharedCompileContext,
-  createCompileNamespaceRegistry,
   CompileProvenanceTracker,
   createCompileChildPath,
   prepareScopeCompilation,
@@ -38,7 +33,12 @@ import { isPropertyPathEqual } from '@retikz/foundation';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
+import { lookupWeaveBinding, runWeaveCompilation } from './compile';
+import type { WeaveCompileOptions, WeaveCompileResult } from './compile';
 import { WeaveEditor } from './editor';
+import { createWeaveNamespaceRegistry } from './namespace';
+import type { WeaveNamespaceRegistry } from './namespace';
+import { assembleWeaveCompilation } from './output';
 import { WeaveTracker } from './tracker';
 import { WeaveTransaction } from './transaction';
 import type {
@@ -74,7 +74,7 @@ export type WeavePreparedUpdate = WeaveCompilation & {
 /** 已发布几何及其名称 frame，用于 Scope 收尾时投影 */
 type Publication = {
   /** 所属名称 frame */
-  namespaceRegistry: CompileNamespaceRegistry;
+  namespaceRegistry: WeaveNamespaceRegistry;
   /** 绑定对应的候选节点 */
   node: WeaveNode;
   /** 当前已发布坐标系中的布局 */
@@ -86,11 +86,11 @@ type WeaveContainerCompileContext = {
   /** 子元素所属的声明容器 */
   parent: WeaveRoot | WeaveScopeNode;
   /** 当前可见的名称注册表 */
-  namespaceRegistry: CompileNamespaceRegistry;
+  namespaceRegistry: WeaveNamespaceRegistry;
   /** 当前命名空间的用户 id 索引，key 为声明 id，value 为对应的稳定节点对象 */
   ids: Map<string, WeaveNode>;
   /** 子元素共享的继承、变换与祖先约束 */
-  options: Omit<ElementCompileOptions, 'shared'>;
+  options: Omit<WeaveCompileOptions, 'shared'>;
   /** 容器的来源归属 */
   owner: CompileOwnerKey;
   /** 子声明路径前缀 */
@@ -102,7 +102,7 @@ type WeaveElementCompileContext = {
   /** 所属容器的遍历上下文 */
   container: WeaveContainerCompileContext;
   /** 本元素的 Core 调用参数与明确来源位置 */
-  options: ElementCompileOptions & { occurrence: CompileOccurrenceLocator };
+  options: WeaveCompileOptions & { occurrence: CompileOccurrenceLocator };
   /** 本元素的发射归属 */
   owner: CompileOwnerKey;
 };
@@ -124,7 +124,7 @@ export class WeaveReconciler {
   private readonly padding: CompileOptions['padding'];
   /** 本次准备结果的警告列表，收集编译与名称注册警告，在重新编译前重置 */
   private diagnostics: Array<CompileWarning> = [];
-  private namespace = createCompileNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
+  private namespace = createWeaveNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
   private provenance = new CompileProvenanceTracker(this.namespace.identity);
   /** 本树固定的 scopeId 前缀，同时作为根节点的 scopeId */
   private readonly treeId: string;
@@ -179,16 +179,14 @@ export class WeaveReconciler {
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave is already mounted');
     try {
       const result = this.reconcileChildren();
-      const compilation = assembleSceneCompilation(
-        this.source,
-        result.outputs(),
-        this.shared,
-        {
-          diagnostics: this.diagnostics,
-          provenanceTracker: this.provenance,
-        },
-        this.padding,
-      );
+      const compilation = assembleWeaveCompilation({
+        root: this.source,
+        outputs: result.outputs(),
+        shared: this.shared,
+        diagnostics: this.diagnostics,
+        provenanceTracker: this.provenance,
+        padding: this.padding,
+      });
       // 新树尚未对外发布；Runtime 再原子发布整棵树及输出
       this.transaction.commit();
       this.transaction.finish();
@@ -241,22 +239,20 @@ export class WeaveReconciler {
             .children.map(node => this.editor.serializeNodeDeclaration(node)),
         };
         this.diagnostics = [];
-        this.namespace = createCompileNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
+        this.namespace = createWeaveNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
         this.provenance = new CompileProvenanceTracker(this.namespace.identity);
         this.visited = 0;
         // 输出遍历重放名称声明，避免把最终名称表当成声明位置的引用环境
         this.transaction.editNode(this.root).ids = new Map();
         const result = this.reconcileChildren();
-        const compilation = assembleSceneCompilation(
-          this.source,
-          result.outputs(),
-          this.shared,
-          {
-            diagnostics: this.diagnostics,
-            provenanceTracker: this.provenance,
-          },
-          this.padding,
-        );
+        const compilation = assembleWeaveCompilation({
+          root: this.source,
+          outputs: result.outputs(),
+          shared: this.shared,
+          diagnostics: this.diagnostics,
+          provenanceTracker: this.provenance,
+          padding: this.padding,
+        });
         prepared = { root: this.root, visited: this.visited, compilation };
       }
       let closed = false;
@@ -286,7 +282,7 @@ export class WeaveReconciler {
   }
 
   /** 校验当前位置的缓存输入及实际名称绑定，不用旧索引推断新引用 */
-  private canNodeReuse(node: WeaveNode, compileOptions: ElementCompileOptions): boolean {
+  private canNodeReuse(node: WeaveNode, compileOptions: WeaveCompileOptions): boolean {
     if (this.forceFull || !this.updating || node.current === null || this.tracker.isNodeDirty(node)) return false;
     if (
       !isPropertyPathEqual(this.previousNodeIrPaths.get(node) ?? [], compileOptions.irPath) ||
@@ -297,21 +293,15 @@ export class WeaveReconciler {
     if (records === undefined || records.diagnostics.length > 0) return false;
     const names = new Map(records.reads.map(read => [read.name, read.binding]));
     for (const [name, binding] of names) {
-      let actual: object | undefined;
-      for (let namespace = compileOptions.namespace; namespace !== undefined; namespace = namespace.parent) {
-        const entry = namespace.bindings.get(name);
-        if (entry === undefined) continue;
-        if (entry.state !== 'ready') return false;
-        actual = entry.binding;
-        break;
-      }
-      if (actual !== binding) return false;
+      const entry = lookupWeaveBinding(compileOptions.namespace, name);
+      if (entry !== undefined && entry.state !== 'ready') return false;
+      if (entry?.binding !== binding) return false;
     }
     return true;
   }
 
   /** 复用只读产物，重新归属读取事实及双向关系 */
-  private reuseCompiledNode<T>(node: WeaveNode, compiled: T, compileOptions: ElementCompileOptions): T {
+  private reuseCompiledNode<T>(node: WeaveNode, compiled: T, compileOptions: WeaveCompileOptions): T {
     return this.recordCompilation(node, {
       status: 'compiled',
       compiled,
@@ -324,7 +314,7 @@ export class WeaveReconciler {
   }
 
   /** 保存本元素读取与诊断，建立本版本双向计算关联 */
-  private recordCompilation<T>(node: WeaveNode, result: ElementCompileResult<T>, append = false): T {
+  private recordCompilation<T>(node: WeaveNode, result: WeaveCompileResult<T>, append = false): T {
     this.tracker.recordNodeReads(node, result.reads, result.status === 'compiled' ? result.diagnostics : [], append);
     // 兜底报错，逻辑上不会走到这里
     if (result.status === 'pending') {
@@ -416,7 +406,10 @@ export class WeaveReconciler {
     if (!this.canNodeReuse(node, options) || state.compiled === null) {
       this.tracker.invalidateNode(node);
       this.visited++;
-      state.compiled = this.recordCompilation(node, compileNode(state.input.own, options));
+      state.compiled = this.recordCompilation(
+        node,
+        runWeaveCompilation(options, coreOptions => compileNode(state.input.own, coreOptions)),
+      );
     } else state.compiled = this.reuseCompiledNode(node, state.compiled, options);
     state.input = { ...state.input, context: options.context };
     state.pendingInputs = [];
@@ -447,7 +440,10 @@ export class WeaveReconciler {
     if (!this.canNodeReuse(node, options) || state.compiled === null) {
       this.tracker.invalidateNode(node);
       this.visited++;
-      state.compiled = this.recordCompilation(node, compileCoordinate(state.input.own, options));
+      state.compiled = this.recordCompilation(
+        node,
+        runWeaveCompilation(options, coreOptions => compileCoordinate(state.input.own, coreOptions)),
+      );
     } else state.compiled = this.reuseCompiledNode(node, state.compiled, options);
     state.input = { ...state.input, context: options.context };
     state.pendingInputs = [];
@@ -475,10 +471,9 @@ export class WeaveReconciler {
       this.visited++;
       state.compiled = this.recordCompilation(
         node,
-        compilePath(state.input.own, {
-          ...compileOptions,
-          transforms: transforms ?? compileOptions.transforms,
-        }),
+        runWeaveCompilation({ ...compileOptions, transforms: transforms ?? compileOptions.transforms }, coreOptions =>
+          compilePath(state.input.own, coreOptions),
+        ),
       );
     } else state.compiled = this.reuseCompiledNode(node, state.compiled, compileOptions);
     state.input = { ...state.input, context: compileOptions.context };
@@ -507,10 +502,13 @@ export class WeaveReconciler {
     if (child.localNamespace) state.ids = new Map();
     else delete state.ids;
     // 进入准备阶段
-    const prepared = this.recordCompilation(node, prepareScopeCompilation(state.input.own, compileOptions));
+    const prepared = this.recordCompilation(
+      node,
+      runWeaveCompilation(compileOptions, coreOptions => prepareScopeCompilation(state.input.own, coreOptions)),
+    );
     if (child.id !== undefined) this.registerReference(node, child.id, [...irPath, 'id'], element);
     const nestedNamespaceRegistry = child.localNamespace
-      ? createCompileNamespaceRegistry(namespaceRegistry.namespace, warning => this.diagnostics.push(warning))
+      ? createWeaveNamespaceRegistry(namespaceRegistry.namespace, warning => this.diagnostics.push(warning))
       : namespaceRegistry;
     const preliminary = prepared.preliminaryTransforms ?? [];
     const nested = this.reconcileChildren(child.children, {
@@ -539,7 +537,9 @@ export class WeaveReconciler {
       this.visited++;
       state.compiled = this.recordCompilation(
         node,
-        compileScope(state.input.own, prepared, nested.layouts, compileOptions),
+        runWeaveCompilation(compileOptions, coreOptions =>
+          compileScope(state.input.own, prepared, nested.layouts, coreOptions),
+        ),
         true,
       );
     }

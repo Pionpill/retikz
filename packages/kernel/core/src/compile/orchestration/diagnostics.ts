@@ -10,6 +10,15 @@ import { freezeOccurrence } from './artifact';
 
 const compileWarningOccurrence = Symbol('compileWarningOccurrence');
 
+/** 为调用方维护的名称 frame 生成与全量编译一致的重名诊断 */
+export const createDuplicateCompileWarning = (
+  info: Pick<DuplicateRegisterInfo, 'id' | 'frameDepth' | 'firstIrPath' | 'secondIrPath'>,
+  occurrence?: CompileOccurrenceLocator,
+): CompileWarning =>
+  orderCompileWarnings([
+    withCompileWarningOccurrence(createDuplicateWarning({ ...info, overwroteForkBaseline: false }), occurrence),
+  ])[0];
+
 type OrderedCompileWarning = InputCompileWarning & {
   [compileWarningOccurrence]?: CompileOccurrenceLocator;
 };

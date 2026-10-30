@@ -6,4 +6,3 @@ export * from './path';
 export * from './reference';
 export * from './scope';
 export * from './types';
-export * from './namespace';

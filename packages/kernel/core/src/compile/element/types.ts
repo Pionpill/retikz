@@ -23,36 +23,16 @@ export type ElementCompileContext = Readonly<{
   theme: CanonicalTheme;
 }>;
 
-/** 一个版本中的名称绑定；对象身份由调用者映射到其节点 */
-export type CompileBinding =
-  | Readonly<{ state: 'pending'; binding: object }>
+/** 单次引用查询结果；不携带调用方的名称 frame 或节点身份 */
+export type ElementCompileReference =
+  | Readonly<{ state: 'pending' }>
+  | Readonly<{ state: 'ancestor' }>
   | Readonly<{
       state: 'ready';
-      binding: object;
       /** 被引用元素的来源路径 */
       irPath?: PropertyPath;
       layout: CompiledNodeLayout;
     }>;
-
-/** 声明位置可见的名称空间；父引用形成 inside-out 查找链 */
-export type CompileNamespace = Readonly<{
-  /** 当前命名空间的可见绑定，同名覆盖由声明顺序决定 */
-  bindings: ReadonlyMap<string, CompileBinding>;
-  /** 外层命名空间 */
-  parent?: CompileNamespace;
-}>;
-
-/** 包含未命中的一次名称读取，用于绑定与状态失效 */
-export type CompileRead = Readonly<{
-  /** 本次实际访问的命名空间 */
-  namespace: CompileNamespace;
-  /** 作者引用的名称 */
-  name: string;
-  /** 缺失、待计算或完成 */
-  state: 'missing' | 'pending' | 'ready';
-  /** 命中时的版本内绑定 */
-  binding?: object;
-}>;
 
 /** 单元素调用共享的显式输入，不拥有调度器 */
 export type ElementCompileOptions = Readonly<{
@@ -62,10 +42,8 @@ export type ElementCompileOptions = Readonly<{
   context: ElementCompileContext;
   /** 诊断位置，不作为元素身份 */
   irPath: PropertyPath;
-  /** 当前声明位置可见的名称空间 */
-  namespace?: CompileNamespace;
-  /** 禁止后代几何引用的祖先 Scope 绑定 */
-  ancestorScopes?: ReadonlySet<object>;
+  /** 查询声明位置可见的引用；缺失返回 undefined，读取追踪由调用方负责 */
+  lookupReference?: (name: string) => ElementCompileReference | undefined;
   /** 已就绪的父变换 */
   transforms?: ReadonlyArray<Transform>;
   /** 布局分配约束 */
@@ -149,7 +127,6 @@ export type ElementCompileResult<TCompiled> =
   | Readonly<{
       status: 'compiled';
       compiled: TCompiled;
-      reads: ReadonlyArray<CompileRead>;
       diagnostics: ReadonlyArray<CompileWarning>;
     }>
-  | Readonly<{ status: 'pending'; reads: ReadonlyArray<CompileRead> }>;
+  | Readonly<{ status: 'pending' }>;

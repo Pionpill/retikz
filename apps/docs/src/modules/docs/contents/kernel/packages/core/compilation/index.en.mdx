@@ -431,17 +431,24 @@ Start in `compileSceneSnapshot` to see context creation, traversal, and assembly
 
 A caller that schedules elements itself can retain a `SharedCompileContext` and compile one basic element through these entries. They share resolve, layout and emit logic with full compilation, do not recursively compile other elements, and do not register names automatically.
 
-| Entry               | Completed state      | Retained data                                                                            |
-| ------------------- | -------------------- | ---------------------------------------------------------------------------------------- |
-| `compileNode`       | `CompiledNode`       | CompiledNodeLayout in `layout`; drawing, resources and selected observations in `output` |
-| `compileCoordinate` | `CompiledCoordinate` | `id` and local `position`; `output` only when observation is selected                    |
-| `compilePath`       | `CompiledPath`       | Complete `output`, including host processing for custom kinds                            |
-| `compileScope`      | `CompiledScope`      | `envelope`, `group` without children, and its own `output`                               |
+| Entry               | Completed state      | Retained data                                                                        |
+| ------------------- | -------------------- | ------------------------------------------------------------------------------------ |
+| `compileNode`       | `CompiledNode`       | CompiledNodeLayout in `layout`; primitives, resources and visible bounds in `output` |
+| `compileCoordinate` | `CompiledCoordinate` | `id` and local `position`; no visible output                                         |
+| `compilePath`       | `CompiledPath`       | Complete `output`, including host processing for custom kinds                        |
+| `compileScope`      | `CompiledScope`      | `envelope`, `group` without children, and its own `output`                           |
 
-`NodeLayoutObservation`, previously named `CompiledNodeLayout`, is a public observation projection. It lacks the complete state required for drawing reuse; cache `CompiledNode` instead.
+`CompiledNodeLayout` contains geometry used by reference and layout calculations. Cache `CompiledNode` when reusing the complete element result, including its drawing state and output.
 
 ```ts
-import { assembleSceneCompilation, compileNode, createSharedCompileContext, resolveScopeContext } from '@retikz/core';
+import {
+  assembleCompileOutputs,
+  assembleSceneCompilationSnapshot,
+  compileNode,
+  computeCompileOutputBounds,
+  createSharedCompileContext,
+  resolveScopeContext,
+} from '@retikz/core';
 
 const shared = createSharedCompileContext();
 const result = compileNode(
@@ -449,23 +456,31 @@ const result = compileNode(
   {
     shared,
     context: resolveScopeContext({}, shared),
-    irPath: 'children[0].node',
+    irPath: ['children', 0],
   },
 );
 
 if (result.status === 'compiled') {
-  const prepared = assembleSceneCompilation({}, [result.compiled.output], shared, {
+  const output = assembleCompileOutputs([result.compiled.output], shared);
+  const prepared = assembleSceneCompilationSnapshot({
+    root: {},
+    primitives: output.primitives,
+    resources: output.resources,
+    layoutBounds: computeCompileOutputBounds(output),
+    round: shared.layout.round,
     diagnostics: result.diagnostics,
   });
   // prepared.result.scene is ready for a renderer; diagnostics are not dispatched
 }
 ```
 
-An element call returns `compiled` or `pending`. The former includes complete state, `reads` and diagnostics; the latter includes reads only and publishes no partial result. Names are searched inside-out along a `CompileNamespace` parent chain; reads include both missing and matched bindings. Supply an explicit empty namespace to track names that may be added later. Omitting namespace means there are no queryable bindings for this call. Register only names visible at the declaration site: pending must not enable forward references for Node / Scope. Path can still wait for its references. `projectCompileReference` projects completed state into registerable reference geometry.
+An element call returns `compiled` or `pending`. The completed branch contains the compiled state and diagnostics; pending publishes neither partial state nor diagnostics. The caller supplies `lookupReference(name)`: return `undefined` for a missing name, `ready` with a `layout` and optional `irPath` for a completed reference, `pending` for an unfinished reference, or `ancestor` for a forbidden ancestor Scope. Core converts unfinished references to a pending result and reports ancestor references as drawing errors. Other lookup callback failures are retained as the cause of a Core error.
+
+The caller owns name registration, namespaces and read records. Reconciler searches parent frames inside-out and records each missed or matched frame for binding checks and dependency refresh. Register only names visible at the declaration site: pending must not enable forward references for Node / Scope. Path can wait for its references. `projectCompileReference` projects completed state into registerable reference geometry.
 
 Scope calculation has two stages. `prepareScopeCompilation` resolves inherited context and preliminary transforms; `compileScope` consumes completed child layouts to determine the envelope and final transforms. Pass the established ancestor transforms when compiling children. Envelope-dependent placement is projected after Scope completion. `assembleScopeOutput` combines the Scope's own output with child outputs without running providers again or storing a duplicate subtree in cached state.
 
-Resource IDs are local to each output fragment. `assembleScopeOutput` / `assembleSceneCompilation` import and remap resources, stably order sibling zIndex values, apply final transforms, and assemble Scene. Selected node layout artifacts and owner observations travel with the fragments. Create an observation session with `createCompileObservationRuntime`, pass it to element calls and final assembly, and do not reuse it across batches after completion. Other completed Composite artifacts, spatial handles and provenance are supplied through metadata from the same version; assembly does not infer this orchestration data.
+Resource IDs are local to each output fragment. `assembleCompileOutputs` imports and remaps resources and stably sorts sibling zIndex values; `assembleScopeOutput` also handles Scope wrapping, clipping and bounds. The caller selects the current output contributions, aggregates their visible bounds with `computeCompileOutputBounds`, then calls `assembleSceneCompilationSnapshot` to finalize viewBox, padding, root animations, diagnostics and provenance. Supplied Composite artifacts must already be in final declaration order and belong to this result. Assembly does not recompile elements or determine incremental reuse.
 
 These entries provide Core's scheduling primitives. Reconciler owns name mapping, dependency invalidation, version isolation and publication; the interface does not construct or update the Weave tree automatically. Callers must not mutate data reachable from published compiled state. Changes to shared definitions or measurement services invalidate affected caches. Compiled state containing Definitions and text emit functions cannot be serialized directly into Worker messages.
 
@@ -480,17 +495,17 @@ These entries provide Core's scheduling primitives. Reconciler owns name mapping
 
 ## Weave integration
 
-Core and Weave share `createCompileChildPath(prefix, index, type?)` to construct declaration source paths. The prefix is empty or ends with a dot; basic elements supply a type suffix, while Composite declarations omit it. These paths identify source locations for provenance and diagnostics, not identities across versions.
+Core and Weave share `createCompileChildPath(prefix, index)`, which appends `'children'` and a numeric index to a property-path array. The path identifies source and diagnostic locations, not cross-version identity.
 
 Weave is the compilation tree retained by Reconciler. Each node holds its own input, effective context and Core compilation state. The root holds the shared context, Scene configuration, container index and version-specific read records. Automatically assigned Scope addresses stay outside the IR and do not affect drawing envelopes.
 
 The Reconciler session holds a stable WeaveRoot through its Weave reconciler as the tree entry. Nodes and Root each retain committed current and candidate pending states; parent-child links, dependencies and indexes reference stable node objects. Candidate writes isolate the affected state and mutable collections while sharing unchanged Core products read-only. Changing a child’s properties does not copy its Scope’s children array; changing membership does. Commit switches the states touched by the batch and retains recovery references until confirmation. A node reference does not provide a historical snapshot.
 
-Basic elements create nodes and bindings in declaration order. Node and Coordinate consume references visible at their declaration site. Scope prepares context, compiles its children and envelope, then completes its deferred paths. A top-level Path can wait for nodes in both Scopes to be published. `createCompileNamespaceRegistry` preserves same-frame replacement diagnostics; `projectScopeCompileLayouts` and `projectPublishedCompileLayout` reuse Core's envelope-contribution and final reference-projection rules.
+Basic elements create nodes and bindings in declaration order. Node and Coordinate consume references visible at their declaration site. Scope prepares context, compiles its children and envelope, then completes its deferred paths. A top-level Path can wait for nodes in both Scopes to be published. Reconciler owns name registration and binding replacement, using Core's `createDuplicateCompileWarning` for same-frame replacement diagnostics; `projectScopeCompileLayouts` and `projectPublishedCompileLayout` reuse Core's envelope-contribution and final reference-projection rules.
 
 Reconciler then asks Core to assemble the complete output. `CompileProvenanceTracker` retains primitive ownership through resource remapping and Scope wrapping, pairing final provenance paths with the sorted Scene without another full compilation. The Reconciler session retains the previous result if preparation fails and publishes the matching tree and output only after success.
 
-The internal Weave reconciler accepts WeaveBatch on a mounted Root: it applies insert, update and remove operations in order, then computes from the final inputs. Context follows declaration links and dependency invalidation follows consumers. Scope preparation, child layout, envelopes and final projections follow Core's evaluation order, preserving deferred Path references. Unaffected compiled products can be reused while their inputs, declaration positions and name bindings remain valid. Active observation sessions or diagnostics that require regeneration cause the relevant elements to be recomputed. Invalidation is conservative: a Scope change may recompute its entire subtree, without style/layout filtering.
+The internal Weave reconciler accepts WeaveBatch on a mounted Root: it applies insert, update and remove operations in order, then computes from the final inputs. Context follows declaration links and dependency invalidation follows consumers. Scope preparation, child layout, envelopes and final projections follow Core's evaluation order, preserving deferred Path references. Unaffected compiled products can be reused while their inputs, declaration positions and name bindings remain valid. Diagnostics that require regeneration cause the relevant elements to be recomputed. Invalidation is conservative: a Scope change may recompute its entire subtree, without style/layout filtering.
 
 Updates return complete output with commit, finish and rollback operations. Preparation preserves committed state; rollback remains available after commit until final confirmation releases recovery references. Rebuilding name indexes, provenance and output may still traverse the whole tree, so local compilation does not imply local total update cost.
 

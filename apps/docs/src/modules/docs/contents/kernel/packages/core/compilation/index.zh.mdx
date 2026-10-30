@@ -410,17 +410,24 @@ Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物
 
 需要自行调度元素时，调用方可持有 `SharedCompileContext`，并通过以下入口计算一个基础元素。它们复用全量编译的 resolve、layout 和 emit 实现，不递归编译其他元素，也不自动注册名称。
 
-| 入口                | 完成状态             | 保存的内容                                                              |
-| ------------------- | -------------------- | ----------------------------------------------------------------------- |
-| `compileNode`       | `CompiledNode`       | `layout` 保存 CompiledNodeLayout，`output` 保存绘制、资源和必要观察贡献 |
-| `compileCoordinate` | `CompiledCoordinate` | `id` 与局部 `position`；选中观察时才有 `output`                         |
-| `compilePath`       | `CompiledPath`       | `output` 保存完整路径输出，包括定制 kind 的宿主处理                     |
-| `compileScope`      | `CompiledScope`      | `envelope`、不含 children 的 `group` 和自身 `output`                    |
+| 入口                | 完成状态             | 保存的内容                                                          |
+| ------------------- | -------------------- | ------------------------------------------------------------------- |
+| `compileNode`       | `CompiledNode`       | `layout` 保存 CompiledNodeLayout，`output` 保存图元、资源和可见边界 |
+| `compileCoordinate` | `CompiledCoordinate` | `id` 与局部 `position`，不产生可见输出                              |
+| `compilePath`       | `CompiledPath`       | `output` 保存完整路径输出，包括定制 kind 的宿主处理                 |
+| `compileScope`      | `CompiledScope`      | `envelope`、不含 children 的 `group` 和自身 `output`                |
 
-`NodeLayoutObservation` 是面向调用方的节点布局观察投影，原名为 `CompiledNodeLayout`。它不包含重新绘制所需的完整编译状态；缓存应使用 `CompiledNode`。
+`CompiledNodeLayout` 保存引用和布局计算需要的几何；复用完整元素结果时保存 `CompiledNode`，其中还包含绘制所需的状态与输出。
 
 ```ts
-import { assembleSceneCompilation, compileNode, createSharedCompileContext, resolveScopeContext } from '@retikz/core';
+import {
+  assembleCompileOutputs,
+  assembleSceneCompilationSnapshot,
+  compileNode,
+  computeCompileOutputBounds,
+  createSharedCompileContext,
+  resolveScopeContext,
+} from '@retikz/core';
 
 const shared = createSharedCompileContext();
 const result = compileNode(
@@ -428,23 +435,31 @@ const result = compileNode(
   {
     shared,
     context: resolveScopeContext({}, shared),
-    irPath: 'children[0].node',
+    irPath: ['children', 0],
   },
 );
 
 if (result.status === 'compiled') {
-  const prepared = assembleSceneCompilation({}, [result.compiled.output], shared, {
+  const output = assembleCompileOutputs([result.compiled.output], shared);
+  const prepared = assembleSceneCompilationSnapshot({
+    root: {},
+    primitives: output.primitives,
+    resources: output.resources,
+    layoutBounds: computeCompileOutputBounds(output),
+    round: shared.layout.round,
     diagnostics: result.diagnostics,
   });
   // prepared.result.scene 可交给 renderer，diagnostics 尚未派发
 }
 ```
 
-单元素调用返回 `compiled` 或 `pending`。前者包含完整状态、`reads` 与诊断；后者只包含读取事实，不发布半成品。名称由 `CompileNamespace` 的父链从内向外查找，`reads` 同时记录未命中和命中的绑定。需要跟踪后续新增名称时，必须提供显式的空命名空间；省略 namespace 表示本次没有可查询的绑定。调用方只登记声明位置可见的名称，不能用 pending 放宽 Node / Scope 的前向引用限制；Path 仍可等到引用就绪后编译。`projectCompileReference` 负责将完成状态投影为可登记的引用几何。
+单元素调用返回 `compiled` 或 `pending`。前者包含完整状态与诊断；后者不发布半成品或诊断。调用方通过 `lookupReference(name)` 提供引用：缺失返回 `undefined`，就绪返回包含 `layout` 与可选 `irPath` 的 `ready` 结果，未就绪返回 `pending`，禁止引用的祖先 Scope 返回 `ancestor`。Core 将未就绪转换为 pending 结果，将祖先引用报告为绘图错误；查询回调的其他异常保留为 Core 错误的 cause。
+
+名称注册、命名空间和读取记录由调用方持有。Reconciler 按父链从内向外查找，并记录每层未命中或命中的事实，用于后续绑定检查与依赖刷新。只登记声明位置可见的名称，不能用 pending 放宽 Node / Scope 的前向引用限制；Path 仍可等到引用就绪后编译。`projectCompileReference` 负责将完成状态投影为可登记的引用几何。
 
 Scope 分两步计算：先 `prepareScopeCompilation` 得到有效继承上下文与初步变换，再以已完成的子布局调用 `compileScope`，确定包络与最终变换。子元素编译必须接收所属层级已确定的变换；最终包络相关的放置由 Scope 完成后投影。`assembleScopeOutput` 将 Scope 自身输出与子输出组装，不重新运行 provider，也不把重复子树写入缓存。
 
-输出中的资源编号属于局部片段。`assembleScopeOutput` / `assembleSceneCompilation` 会导入并重映射资源、稳定排序同层 zIndex、应用最终变换，再组装 Scene。选中的节点布局产物和 owner 观察贡献随片段一起传递；观察会话由 `createCompileObservationRuntime` 创建，并传给元素调用及最终组装，一次组装完成后不可跨批次复用。其他已完成的 Composite artifacts、空间句柄和 provenance 通过同版本 metadata 传入，组装函数不会推断这些编排信息。
+输出中的资源编号属于局部片段。`assembleCompileOutputs` 导入并重映射资源，按同层 zIndex 稳定排序；`assembleScopeOutput` 进一步处理 Scope 包装、裁剪与边界。调用方选择本次有效的输出贡献，使用 `computeCompileOutputBounds` 汇总可见边界，再交给 `assembleSceneCompilationSnapshot` 完成 viewBox、padding、根动画、诊断与 provenance 收尾。传入的 Composite artifacts 应已按最终声明顺序整理，并与本次结果配对；组装不重新编译元素，也不推断增量复用策略。
 
 这些入口是 Core 提供的调度基础。Reconciler 负责名称映射、依赖失效、版本隔离和提交；本接口不自动构建或更新 Weave 树。调用方不得修改已发布的 compiled 可达数据，环境定义或测量服务改变时也必须使相关缓存失效。包含 Definition 与文本 emit 函数的编译状态不能直接作为 Worker 消息序列化。
 
@@ -459,17 +474,17 @@ Scope 分两步计算：先 `prepareScopeCompilation` 得到有效继承上下�
 
 ## Weave 接入
 
-Core 与 Weave 共用 `createCompileChildPath(prefix, index, type?)` 生成声明来源路径。`prefix` 为空或以点结尾；基础元素传入类型后缀，Composite 声明省略类型。该路径用于来源与诊断，不作为跨版本身份。
+Core 与 Weave 共用 `createCompileChildPath(prefix, index)` 生成声明来源路径，在属性路径数组后追加 `'children'` 与数字下标。该路径用于来源与诊断，不作为跨版本身份。
 
 Weave 是 Reconciler 持有的编译树：每个节点保留自身输入、有效上下文与 Core 编译状态。Root 统一持有编译环境、Scene 配置、容器定位索引和本版本的读取记录；Scope 的自动定位 id 不写回 IR，也不参与绘图包络计算。
 
 Reconciler 会话通过 Weave 协调器持有稳定 WeaveRoot，作为整棵树的入口。节点和 Root 各自保存已提交的 current 与候选 pending 状态；父子关系、依赖和索引引用稳定节点对象。候选修改先隔离对应状态与可变集合，未变的 Core 产物只读共享。只修改子节点属性时，Scope 的 children 无需复制；增删成员时才取得独立数组。提交逐个切换本批触及的状态，完成前保留恢复依据，节点引用本身不提供历史快照。
 
-基础元素输入按声明顺序建立节点与名称绑定。Node 和 Coordinate 使用当前位置可见的引用；Scope 先准备上下文，再计算子元素和包络，最后完成所属路径。顶层 Path 可等到两侧 Scope 的节点发布后计算。名称注册由 `createCompileNamespaceRegistry` 保持同层覆盖诊断，`projectScopeCompileLayouts` 与 `projectPublishedCompileLayout` 复用 Core 的包络贡献和最终引用投影规则。
+基础元素输入按声明顺序建立节点与名称绑定。Node 和 Coordinate 使用当前位置可见的引用；Scope 先准备上下文，再计算子元素和包络，最后完成所属路径。顶层 Path 可等到两侧 Scope 的节点发布后计算。Reconciler 自己维护名称注册与 binding 替换，通过 Core 的 `createDuplicateCompileWarning` 生成同层覆盖诊断；`projectScopeCompileLayouts` 与 `projectPublishedCompileLayout` 复用 Core 的包络贡献和最终引用投影规则。
 
 编译完成后，Reconciler 通过 Core 组装完整输出。`CompileProvenanceTracker` 保存图元来源，在资源重映射和 Scope 包装时转移到新图元；最终来源路径与排序后的 Scene 配对，不需要再次完整编译补齐。候选计算失败时，Reconciler 会话保留旧结果；成功后才发布配对的树与输出。
 
-内部 Weave 协调器支持在已构建的 Root 上处理 WeaveBatch：先按顺序应用增删改，再基于最终输入计算。上下文沿声明结构传递，依赖失效沿消费者传播；Scope 准备、子布局、包络与最终投影遵守 Core 的计算顺序，Path 保留延后引用能力。未受影响且输入、声明位置和名称绑定仍有效的编译产物可以复用；启用观察会话或需要重新生成诊断时重新计算相关元素。当前采用保守失效，Scope 变化可能使整个子树重新计算，尚不按 style / layout 粒度过滤。
+内部 Weave 协调器支持在已构建的 Root 上处理 WeaveBatch：先按顺序应用增删改，再基于最终输入计算。上下文沿声明结构传递，依赖失效沿消费者传播；Scope 准备、子布局、包络与最终投影遵守 Core 的计算顺序，Path 保留延后引用能力。未受影响且输入、声明位置和名称绑定仍有效的编译产物可以复用；需要重新生成诊断时重新计算相关元素。当前采用保守失效，Scope 变化可能使整个子树重新计算，尚不按 style / layout 粒度过滤。
 
 更新返回完整输出和提交、确认、回滚操作。准备期间旧状态保持不变；提交后仍可恢复，最终确认才释放恢复依据。名称索引恢复、来源与输出组装仍可能遍历完整树，局部编译不等于整次更新具有局部成本。
 
