@@ -2,7 +2,7 @@ import type { DataTransformModel, DataFieldType } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 
 import type { ChannelResolution } from '../../../contract';
-import { channelField } from '../../../contract';
+import { channelField, channelScale } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotChannel } from '../../../schemas';
 
@@ -47,6 +47,8 @@ export const createMarkValueResolver = <T>(
   options: MarkValueResolverOptions<T>,
 ): MarkValueResolution<T> | undefined => {
   if (encoding === undefined) return undefined;
+  if (channelScale(encoding) !== undefined)
+    throw new RetikzPlotError(`${options.channelName} does not support scale mapping`);
   const field = channelField(encoding);
   const fieldType = model.find(definition => definition.name === field)?.type;
   if (options.expectedFieldType !== undefined && fieldType !== undefined && fieldType !== options.expectedFieldType) {

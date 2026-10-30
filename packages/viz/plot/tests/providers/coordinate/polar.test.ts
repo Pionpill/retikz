@@ -1,13 +1,12 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
-import { DataFieldType } from '@retikz/data';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { DataFieldType, resolveScale } from '@retikz/data';
+import { defineScale } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
-import { literal, strictObject } from 'zod';
+import { strictObject } from 'zod';
 
-import { defineScale } from '../../../src/contract';
 import type { PlotsLoweringOptions } from '../../../src/pipeline/expand';
 import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
-import { isPolarCoordinateFrame, linearPositionScale, resolveLinearScale } from '../../../src/providers';
+import { isPolarCoordinateFrame } from '../../../src/providers';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 import { measureLabel } from '../../helpers/text-measurement';
@@ -114,20 +113,11 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     ['continuous', PolarInterpolation.Polar],
     ['discrete', PolarInterpolation.Chord],
   ] as const)('使用自定义位置刻度连续性=%s', (continuity, expected) => {
-    const CustomAngleSchema = strictObject({ type: literal(`custom-${continuity}`), name: NonBlankStringSchema });
     const customScale = defineScale({
-      family: 'position',
-      continuity,
-      schema: CustomAngleSchema,
+      type: `custom-${continuity}`,
+      paramsSchema: strictObject({}),
       isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
-      resolve: (_definition, values, range) =>
-        linearPositionScale(
-          resolveLinearScale(
-            { type: 'linear', name: `custom-${continuity}`, domain: [0, 1] },
-            values.filter((value): value is number => typeof value === 'number'),
-            range,
-          ),
-        ),
+      resolve: context => resolveScale({ type: 'linear', domain: [0, 1] }, context),
     });
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -148,7 +138,24 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     });
 
     expect(
-      resolvedInterpolationOf(spec, { d: [{ angle: 0, value: 1 }] }, { definitions: { scales: [customScale] } }),
+      resolvedInterpolationOf(
+        spec,
+        { d: [{ angle: 0, value: 1 }] },
+        {
+          definitions: {
+            scales: [customScale],
+            channels: [
+              {
+                kind: 'position',
+                channel: 'custom-x',
+                role: 'x',
+                pick: () => 'angle',
+                scales: { [customScale.type]: { continuity, allowsBaseline: true } },
+              },
+            ],
+          },
+        },
+      ),
     ).toBe(expected);
   });
 

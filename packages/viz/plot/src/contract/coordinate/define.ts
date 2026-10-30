@@ -122,7 +122,7 @@ export type CoordinateDefinitionResolveContext = {
     range: readonly [number, number],
   ) => PositionScale;
   /** 校验 interval / area 等依赖 baseline 的 mark 是否可安全使用当前 scale 类型（type 串，含自定义） */
-  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<IRPlotMark>) => void;
+  assertBaselineScaleCompatible: (scaleType: string, marks: ReadonlyArray<IRPlotMark>, role?: DimensionRole) => void;
   /** 当前 plot 内所有 axis guide；definition 决定如何将其下沉到 grid / axis 层 */
   axisGuides: ReadonlyArray<IRPlotAxisGuide>;
   /** 下沉直线 / 内置 guide 的通用入口 */

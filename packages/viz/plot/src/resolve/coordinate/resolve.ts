@@ -1,4 +1,4 @@
-import type { ExternalRow, DataFieldType, IRDataFieldDefinition } from '@retikz/data';
+﻿import type { ExternalRow, DataFieldType, IRDataFieldDefinition } from '@retikz/data';
 import {
   createDataView,
   BuiltinFieldOrderMode,
@@ -26,7 +26,6 @@ import type {
   IRPlotPositionInput,
   IRPlot,
   IRPlotAxisGuide,
-  IRPlotDomainPadding,
   IRPlotChannel,
   IRPlotCoordinateOperation,
   IRPlotIntervalMark,
@@ -41,7 +40,9 @@ import {
   derivePositionScale,
   resolvePositionScale,
   resolvePositionScaleContinuity,
-  resolveScaleDefinition,
+  resolvePositionScalePolicy,
+  resolvePositionMapping,
+  domainPaddingScaleOf,
   resolveBuiltinPositionOperation,
   markDomainPaddingOf,
   resolvePointPadding,
@@ -242,7 +243,7 @@ export const resolveCoordinateFrame = (
   const roles = coordinateDefinition.roles;
   const axisGuides = (node.guides ?? []).filter((guide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis);
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
-  const positionChannels = createPositionChannelDefinitions(roles);
+  const positionChannels = createPositionChannelDefinitions(roles, context.channels);
 
   // 建 frame 前校验：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
   assertValidGuideDimensions(coordinateOperation.type, roles, axisGuides);
@@ -407,7 +408,11 @@ export const resolveCoordinateFrame = (
       if (!found) throw new RetikzPlotError(`lowerPlots: coordinate.${role} references unknown scale "${scaleName}"`);
       if (node.data.model !== undefined) {
         for (const type of types)
-          assertScaleFieldCompatible(role, found.type, type, scaleName, { registry: scaleRegistry });
+          assertScaleFieldCompatible(role, found.type, type, scaleName, {
+            registry: scaleRegistry,
+            channels: context.channels,
+            role,
+          });
       }
 
       def = found;
@@ -454,9 +459,7 @@ export const resolveCoordinateFrame = (
     values: Array<unknown>,
   ): IRPlotScaleOperation => {
     const operation = resolveScaleForRole(role, scaleName, roleChannelOf(role), values);
-    const explicit = ('domainPadding' in operation ? operation.domainPadding : undefined) as
-      | IRPlotDomainPadding
-      | undefined;
+    const explicit = 'domainPadding' in operation ? operation.domainPadding : undefined;
     if (
       typeof explicit === 'number' ||
       (explicit !== undefined &&
@@ -477,16 +480,24 @@ export const resolveCoordinateFrame = (
       role,
       cartesian,
       increasing,
-      resolvePositionScaleContinuity(operation, { registry: scaleRegistry }) === 'continuous',
+      resolvePositionScaleContinuity(operation, {
+        registry: scaleRegistry,
+        channels: context.channels,
+        role,
+      }) === 'continuous',
+      context.markPadding?.maximumRadiusOf,
     );
     automaticPadding.set(role, automatic);
-    const scaleDefinition = resolveScaleDefinition(operation, { registry: scaleRegistry });
+    const scaleDefinition = resolvePositionScalePolicy(operation.type, {
+      registry: scaleRegistry,
+      channels: context.channels,
+      role,
+    });
     if (
       automatic.points.length > 0 ||
       ((automatic.minimum.lower > 0 || automatic.minimum.upper > 0) &&
         coordinateDefinition.domainPadding?.roles.includes(role) &&
-        scaleDefinition.family === 'position' &&
-        scaleDefinition.domainPadding !== undefined)
+        scaleDefinition !== undefined)
     )
       return {
         ...operation,
@@ -544,18 +555,30 @@ export const resolveCoordinateFrame = (
         typeof scaleName === 'string' ? scaleName : undefined,
         values,
       );
-      const definition = resolveScaleDefinition(operation, { registry: scaleRegistry });
-      if (definition.family !== 'position' || definition.domainPadding === undefined) {
+      const definition = resolvePositionScalePolicy(operation.type, {
+        registry: scaleRegistry,
+        channels: context.channels,
+        role,
+      });
+      if (definition === undefined) {
         throw new RetikzPlotError(`scale "${operation.name}" does not support mark domainPadding`);
       }
 
-      const capability = definition.domainPadding;
+      const positionPolicy = definition;
       const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
       mappingsByRole.set(
         role,
         context.markPadding.mappingOf(group, () => {
           const effective = resolveBuiltinPositionOperation({ ...operation, domainPadding: undefined }, values, [0, 1]);
-          return capability(definition.schema.parse(effective) as never, values);
+          return domainPaddingScaleOf(
+            resolvePositionMapping(effective, values, [0, 1], {
+              registry: scaleRegistry,
+              channels: context.channels,
+              role,
+            }),
+            operation.name,
+            positionPolicy,
+          );
         }),
       );
     }
@@ -566,10 +589,15 @@ export const resolveCoordinateFrame = (
     values: Array<unknown>,
     range: readonly [number, number],
   ): PositionScale => {
-    const padding = markDomainPaddingOf(operation);
-    if (padding === undefined) return resolvePositionScale(operation, values, range, { registry: scaleRegistry });
-
     const role = roleByScale.get(operation);
+    const padding = markDomainPaddingOf(operation);
+    if (padding === undefined)
+      return resolvePositionScale(operation, values, range, {
+        registry: scaleRegistry,
+        channels: context.channels,
+        role,
+      });
+
     const existing = role === undefined ? undefined : paddedScales.get(role);
     if (existing !== undefined) return existing;
 
@@ -725,10 +753,15 @@ export const resolveCoordinateFrame = (
     resolveGuideTicks: context.resolveGuideTicks,
     resolveVisibleGuideTicks: context.resolveVisibleGuideTicks,
     resolveScaleForRole: resolveScaleForDefinitionRole,
-    resolvePositionScaleContinuity: operation => resolvePositionScaleContinuity(operation, { registry: scaleRegistry }),
+    resolvePositionScaleContinuity: operation =>
+      resolvePositionScaleContinuity(operation, {
+        registry: scaleRegistry,
+        channels: context.channels,
+        role: roleByScale.get(operation),
+      }),
     buildPositionScale,
-    assertBaselineScaleCompatible: (scaleType, marks) =>
-      assertBaselineScaleCompatible(scaleType, marks, { registry: scaleRegistry }),
+    assertBaselineScaleCompatible: (scaleType, marks, role) =>
+      assertBaselineScaleCompatible(scaleType, marks, { registry: scaleRegistry, channels: context.channels, role }),
     axisGuides,
     lowerGuide,
     lowerCustomAxis,

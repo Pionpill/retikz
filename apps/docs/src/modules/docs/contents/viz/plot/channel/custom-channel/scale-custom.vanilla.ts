@@ -2,14 +2,14 @@ import type { IRPlot } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
 
 import { scaleCustomRows } from './scale-custom.data';
-import { brandColorScale, easePositionScale } from './scale-custom.definition';
+import { brandColorScale, easePositionScale, easePositionChannel } from './scale-custom.definition';
 
 const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'points' },
   scales: [
-    { type: 'ease-position', name: 'x', exponent: 1.8 },
+    { type: 'ease-position', name: 'x', params: { exponent: 1.8 } },
     { type: 'linear', name: 'y' },
     { type: 'brand', name: 'tier-color' },
   ],
@@ -32,5 +32,8 @@ const spec: IRPlot = {
 export const svg = renderPlot(
   spec,
   { points: scaleCustomRows },
-  { layout: { width: 420, height: 260 }, definitions: { scales: [easePositionScale, brandColorScale] } },
+  {
+    layout: { width: 420, height: 260 },
+    definitions: { scales: [easePositionScale, brandColorScale], channels: [easePositionChannel] },
+  },
 );

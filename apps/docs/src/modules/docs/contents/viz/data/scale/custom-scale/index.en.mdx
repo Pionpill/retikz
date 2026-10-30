@@ -40,7 +40,7 @@ const scale = resolveScale(operation, { values: [50] }, registry);
 scale.map(50); // 0.25
 ```
 
-Only the operation is persisted as JSON. Definition functions and registries are not part of the declaration. Using the same mapping in Plot also requires its [custom scale](/viz/plot/scale/custom-scale) position policies where applicable.
+Only the operation is persisted as JSON. Definition functions and registries are not part of the declaration. Existing Plot attribute channels can consume compatible mathematical definitions. Position use requires an explicit [position channel policy](/viz/plot/channel/custom-channel).
 
 ## Errors and limits
 
@@ -83,9 +83,9 @@ Custom results only require map, domain, and range. Add optional inverse mapping
       url: '/viz/data/scale/reference',
     },
     {
-      title: 'Plot custom scales',
+      title: 'Plot channel integration',
       description: 'Use mappings for coordinate roles and mark properties.',
-      url: '/viz/plot/scale/custom-scale',
+      url: '/viz/plot/channel/custom-channel',
     },
   ]}
 />

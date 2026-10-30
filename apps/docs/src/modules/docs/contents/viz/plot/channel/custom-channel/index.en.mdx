@@ -8,7 +8,7 @@ After learning [field and constant bindings](/viz/plot/channel/binding), you can
 ## Applicability
 
 - Define a custom channel when you need a new `encodings.<name>` that participates in field / constant binding, per-row evaluation, and legend descriptors.
-- Use a [Custom Scale](/viz/plot/scale/custom-scale) only when changing value-to-coordinate or value-to-color mapping. Other visual properties such as size and opacity are still evaluated and delivered by their channels.
+- Define a [Data scale](/viz/data/scale/custom-scale) to add a mathematical mapping. Existing compatible attribute channels can consume it directly; a position channel must also declare its position policy.
 - Field preparation, aggregation, and filtering belong to [Data Extensions](/viz/data/model/extensions), not a channel resolver.
 
 <ComponentAlert
@@ -38,7 +38,7 @@ Use `defineScopeChannel`, `defineNodeChannel`, `definePathChannel`, or the gener
 
 | Field     | Purpose                                                                                                    |
 | --------- | ---------------------------------------------------------------------------------------------------------- |
-| `channel` | Unique registry name used by `encodings.<name>`                                                    |
+| `channel` | Unique registry name used by `encodings.<name>`                                                            |
 | `output`  | Declares output type and optional range / palette / clamp metadata; it does not map or clamp values itself |
 | `legend?` | Declares the legend form                                                                                   |
 | `resolve` | Reads a field or constant binding, performs mapping and clamp, and returns a resolver plus descriptor      |
@@ -48,8 +48,6 @@ This example uses `defineNodeChannel` because opacity is delivered to each point
 
 ```ts
 import { channelField, defineNodeChannel, markChannelEncoding } from '@retikz/plot';
-
-const clampIntensity = (value: number): number => Math.min(1, Math.max(0.3, value));
 
 /** 自定义 intensity 通道：字段值映射到 opacity，固定透明度使用 properties.opacity */
 export const intensityChannel = defineNodeChannel<number>({
@@ -63,9 +61,11 @@ export const intensityChannel = defineNodeChannel<number>({
     const values = ctx.rows.map(row => Number(row[field])).filter(Number.isFinite);
     if (values.length === 0) return undefined;
 
-    const lo = Math.min(...values);
-    const hi = Math.max(...values);
-    const map = (value: number): number => clampIntensity(0.3 + (hi === lo ? 0.5 : (value - lo) / (hi - lo)) * 0.7);
+    const mapping = ctx.resolveScaleMapping(
+      { type: 'linear', name: 'intensity', range: [0.3, 1], clamp: true },
+      { values },
+    );
+    const map = (value: number): number => Number(mapping.map(value));
 
     return {
       resolver: row => {
@@ -75,8 +75,9 @@ export const intensityChannel = defineNodeChannel<number>({
       descriptor: {
         channel: 'intensity',
         scaleType: 'linear',
-        domain: [lo, hi],
-        range: [0.3, 1],
+        domain: mapping.domain,
+        range: mapping.range,
+        mapping,
         field,
         fieldType: ctx.model.find(definition => definition.name === field)?.type,
       },
@@ -109,7 +110,7 @@ Inject the definition on `Plot`, then reference its registered name in the child
 
 ```tsx
 <Plot data={customChannelPoints} definitions={{ channels: [intensityChannel] }}>
-  <PointMark encodings={{ intensity: 'score', position: { x: "x", y: "y" } }} />
+  <PointMark encodings={{ intensity: 'score', position: { x: 'x', y: 'y' } }} />
 </Plot>
 ```
 
@@ -204,7 +205,11 @@ These are the entries used by this example. See the [encoding reference](/viz/pl
       description: 'Look up host injection and compilation options.',
       url: '/viz/plot/reference/runtime',
     },
-    { title: 'Custom scales', description: 'Extend position or color mappings.', url: '/viz/plot/scale/custom-scale' },
+    {
+      title: 'Custom scales',
+      description: 'Extend position or color mappings.',
+      url: '/viz/plot/channel/custom-channel',
+    },
     {
       title: 'API Reference',
       description: 'Look up public definitions, registration, resolution, and delivery contracts',
@@ -212,3 +217,24 @@ These are the entries used by this example. See the [encoding reference](/viz/pl
     },
   ]}
 />
+
+## Consuming mathematical mappings
+
+A channel can call `ctx.resolveScaleMapping(operation, context)` to use the Data definitions registered with Plot. The channel selects defaults and field semantics, checks the output against attribute constraints, then delivers it to Core. A legend descriptor's `mapping` retains that same resolved mapping so the legend does not recompute size or opacity from a type name.
+
+The intensity example uses this entry for linear mapping. `output` and `legend` declare consumption semantics; they do not perform mapping or validation on behalf of the channel.
+
+## Custom position consumption
+
+A position channel declares policies by mathematical type in `scales`. `continuity` specifies continuous or discrete positions; `allowsBaseline` grants zero-baseline permission. A custom mapping without a policy cannot drive a coordinate role. `role` names the coordinate role, and `pick` reads its field binding. Register the mathematical definition through `definitions.scales` and the position channel through `definitions.channels`.
+
+The ease-position mapping adjusts positions with an exponent. The ease-x position channel explicitly accepts it as a continuous position mapping. The existing color channel consumes the brand-color mapping without an additional channel definition. Change the exponent to observe the position mapping.
+
+<ComponentPreview
+  files={['scale-custom', 'scale-custom.preview.tsx', 'scale-custom.definition.ts', 'scale-custom.data.ts']}
+  size="lg"
+  caption="The exponent changes positions while category colors remain unchanged."
+  defaultSourceFile="scale-custom.preview.tsx"
+/>
+
+Coordinate range updates require `rebuild`; axes require `ticks`. Automatic padding also needs the appropriate inverse mapping. This example provides no invert method and explicitly disables `autoPadding`. These requirements belong to the consumer, not to business metadata on a Data definition.

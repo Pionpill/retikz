@@ -3,9 +3,9 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { discretizationValues } from '../../src/modules/docs/contents/viz/plot/scale/color/scale-discretization.data';
+import { discretizationValues } from '../../src/modules/docs/contents/viz/plot/scale/mark-attributes/scale-discretization.data';
 
-const scaleColorRoot = resolve('src/modules/docs/contents/viz/plot/scale/color');
+const scaleColorRoot = resolve('src/modules/docs/contents/viz/plot/scale/mark-attributes');
 
 const chinesePage = readFileSync(resolve(scaleColorRoot, 'index.zh.mdx'), 'utf8');
 
@@ -51,8 +51,8 @@ describe('颜色比例尺文档结构', () => {
     expect(englishPage).not.toContain('## React DSL and the full spec');
     expect(englishPage).not.toContain('## Implementation sources');
 
-    expect(chinesePage).toContain('<ComponentPreview files="scale-color-flow" size="xs" hideCode />');
-    expect(englishPage).toContain('<ComponentPreview files="scale-color-flow" size="xs" hideCode />');
+    expect(chinesePage).toContain('<ComponentPreview mode="showcase" files="scale-color-flow" size="xs" hideCode />');
+    expect(englishPage).toContain('<ComponentPreview mode="showcase" files="scale-color-flow" size="xs" hideCode />');
 
     const flowDemo = readRequiredFile('scale-color-flow.demo.tsx');
     const nodeTags = flowDemo.match(/<Node[\s\S]*?>/g) ?? [];
@@ -62,7 +62,7 @@ describe('颜色比例尺文档结构', () => {
     for (const nodeTag of nodeTags) {
       expect(nodeTag).toContain("stroke: 'gray'");
       expect(nodeTag).toContain("fill: 'gray'");
-      expect(nodeTag).toContain('fillOpacity: 0.08');
+      expect(nodeTag).toContain('opacity: { fill: 0.08 }');
       expect(nodeTag).toContain('cornerRadius={4}');
     }
   });
@@ -97,8 +97,8 @@ describe('颜色比例尺文档结构', () => {
   it('自动 color scale 的 SourceLink 指向真实派生分支', () => {
     for (const page of [chinesePage, englishPage]) {
       expect(page).toContain("path: 'packages/viz/plot-vanilla/src/normalize/plot/scale-coordinate.ts'");
-      expect(page).toContain('startLine: 20');
-      expect(page).toContain('endLine: 31');
+      expect(page).toContain('startLine: 26');
+      expect(page).toContain('endLine: 37');
       expect(page).not.toContain('startLine: 1657');
     }
   });

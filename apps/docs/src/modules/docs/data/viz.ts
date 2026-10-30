@@ -548,13 +548,7 @@ export const vizSection: Array<Section> = [
         sidebarGroup: 'viz.plotGrammar',
         children: [
           { id: 'position', label: 'viz.grammarScalePosition', difficulty: DocDifficulty.Advanced },
-          { id: 'color', label: 'viz.grammarScaleColor', difficulty: DocDifficulty.Advanced },
-          {
-            id: 'custom-scale',
-            label: 'viz.grammarScaleCustom',
-            difficulty: DocDifficulty.Internals,
-            meta: extensionGuide('plot.scale.extensions'),
-          },
+          { id: 'mark-attributes', label: 'viz.grammarScaleAttributes', difficulty: DocDifficulty.Advanced },
         ],
       },
       {

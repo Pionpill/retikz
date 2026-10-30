@@ -61,6 +61,25 @@ export const createMarkPaddingContext = (
   };
 
   return {
+    /** 使用尺寸通道的实际输出确定留白上界，包含自定义映射的观测结果 */
+    maximumRadiusOf: (view: MarkDataView): number => {
+      const resolved = resolveMarkChannels(view.mark, {
+        ...channels,
+        rows: view.dataView.rows,
+        model: view.dataView.model,
+      });
+      const descriptor = resolved.descriptors?.find(item => item.channel === 'size');
+      const delivery = resolved.nodeDeliveries?.find(item => item.channel === 'size');
+      let maximum = 0;
+      for (const value of descriptor?.range ?? []) {
+        if (typeof value === 'number' && Number.isFinite(value)) maximum = Math.max(maximum, value);
+      }
+      for (const row of view.dataView.rows) {
+        const value = delivery?.resolver(row);
+        if (typeof value === 'number' && Number.isFinite(value)) maximum = Math.max(maximum, value);
+      }
+      return maximum;
+    },
     get revision() {
       return revision;
     },
@@ -341,7 +360,5 @@ export const createMarkPaddingContext = (
 /** 读取公开 mark 分支，普通 padding 不进入逐点路径 */
 export const markDomainPaddingOf = (scale: IRPlotScaleOperation): IRPlotMarkDomainPadding | undefined => {
   const padding = 'domainPadding' in scale ? scale.domainPadding : undefined;
-  return typeof padding === 'object' && padding !== null && 'kind' in padding && padding.kind === 'mark'
-    ? (padding as IRPlotMarkDomainPadding)
-    : undefined;
+  return typeof padding === 'object' && 'kind' in padding && padding.kind === 'mark' ? padding : undefined;
 };

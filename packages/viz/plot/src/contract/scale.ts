@@ -1,12 +1,8 @@
 import type { DataFieldType, IRDataScalarValue } from '@retikz/data';
 import type { ValueOf } from '@retikz/foundation';
-import type { ZodType } from 'zod';
-import { ZodLiteral, ZodObject } from 'zod';
 
-import { RetikzPlotError } from '../error';
 import type { IRPlotScale, IRPlotScaleOperation } from '../schemas';
 import { BUILTIN_SCALE_TYPES } from '../schemas';
-import type { DomainPaddingScale } from './domain-padding';
 
 /** 刻度值 + 标签集（axis 与同维 grid 复用同一份） */
 export type TickSet = {
@@ -96,113 +92,6 @@ export type ChannelScaleResolution = {
   scaleType: string;
 };
 
-/**
- * position 族：value → 坐标，喂 coordinate 投影 + guide 刻度（经 PositionScale 接口）
- * @template TScaleOperation 尺度 schema 解析的操作类型，关联定义域能力与尺度解析
- */
-export type PositionScaleDefinition<TScaleOperation extends IRPlotScaleOperation = IRPlotScaleOperation> = {
-  /** 族判别：position scale 产坐标数值 */
-  family: 'position';
-  /** 在基准域上提供不钳位归一化与留白后的最终映射 */
-  domainPadding?: (operation: TScaleOperation, values: Array<unknown>) => DomainPaddingScale;
-  /** 位置域是否在相邻值之间连续，用于 coordinate 选择空间插值默认 */
-  continuity: PositionScaleContinuity;
-  /** 完整 scale operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
-  schema: ZodType<TScaleOperation>;
-  /** 字段兼容谓词（连续 scale 仅拒 categorical、band/point 仅拒 temporal）；undefined 字段类型放行 */
-  isFieldCompatible: (fieldType: DataFieldType | undefined) => boolean;
-  /** 能否作 interval / area 值轴（baseline 含 0）；默认 true，log/pow/sqrt → false */
-  allowsBaseline?: boolean;
-  /** 建 PositionScale（coordinate / bandwidth / ticks / range / setRange 全实现）；guide 经 ticks() 自动适配 */
-  resolve: (def: TScaleOperation, values: Array<unknown>, fallbackRange: readonly [number, number]) => PositionScale;
-};
-
-/**
- * channel 族：value → 视觉量（颜色），喂 color 通道 + legend；resolve 单次产 evaluator + legend 同源数据
- * @template TScaleOperation 尺度 schema 解析的操作类型，关联定义域能力与尺度解析
- */
-export type ChannelScaleDefinition<TScaleOperation extends IRPlotScaleOperation = IRPlotScaleOperation> = {
-  /** 族判别：channel scale 产视觉量（颜色） */
-  family: 'channel';
-  /** 完整 scale operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
-  schema: ZodType<TScaleOperation>;
-  /** 字段兼容谓词（sequential 接 continuous + temporal、ordinal 接 categorical / 未知） */
-  isFieldCompatible: (fieldType: DataFieldType | undefined) => boolean;
-  /** 单次建 ChannelScaleResolution：实绘 evaluator + legend 同源数据（不拆 resolve / legend 两函数，守实绘 / legend 同源） */
-  resolve: (def: TScaleOperation, values: Array<unknown>, ctx: ChannelScaleResolveContext) => ChannelScaleResolution;
-};
-
-/**
- * 比例尺的运行时定义
- * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ type, name, ...config }` 形态的 scale operation。
- *   family 判别 position（坐标）vs channel（颜色），两族产出契约不同
- * @template TScaleOperation 尺度 schema 解析的操作类型，关联定义域能力与尺度解析
- */
-export type ScaleDefinition<TScaleOperation extends IRPlotScaleOperation = IRPlotScaleOperation> =
-  | PositionScaleDefinition<TScaleOperation>
-  | ChannelScaleDefinition<TScaleOperation>;
-
-/**
- * 定义一个 scale definition，保留 resolve 对 scale operation 的强类型（对齐 core defineComposite / defineTransform / defineCoordinate）
- * @description 内置 15 个与自定义 scale 都经同一 registry 入口分派；family 决定 position / channel 解析通路
- * @remarks 当前 helper 只做 `ScaleDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook
- * @template TScaleOperation 尺度 schema 解析的操作类型，关联定义域能力与尺度解析
- */
-export const defineScale = <TScaleOperation extends IRPlotScaleOperation>(
-  def: ScaleDefinition<TScaleOperation>,
-): ScaleDefinition<TScaleOperation> => def;
-
-/**
- * registry 内部使用的宽类型
- * @description registry 存放不同 scale operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄（resolve 入参用 never 防误调）
- */
-export type AnyScaleDefinition =
-  | {
-      /** 区分位置数值尺度与视觉通道尺度 */
-      family: 'position';
-      /** 注册定义提供的仿射域留白能力 */
-      domainPadding?: (operation: never, values: Array<unknown>) => DomainPaddingScale;
-      /** 位置映射在相邻输入之间是否连续 */
-      continuity: PositionScaleContinuity;
-      /** 解析尺度操作的 schema，type 字面量作为注册键 */
-      schema: ZodType;
-      /** 判断字段类型能否由该尺度消费 */
-      isFieldCompatible: (fieldType: DataFieldType | undefined) => boolean;
-      /** 是否允许作为包含零基线的区间或面积值轴 */
-      allowsBaseline?: boolean;
-      /** 结合已解析操作与有效数据构造该族尺度的运行时映射 */
-      resolve: (def: never, values: Array<unknown>, fallbackRange: readonly [number, number]) => PositionScale;
-    }
-  | {
-      /** 区分位置数值尺度与视觉通道尺度 */
-      family: 'channel';
-      /** 解析尺度操作的 schema，type 字面量作为注册键 */
-      schema: ZodType;
-      /** 判断字段类型能否由该尺度消费 */
-      isFieldCompatible: (fieldType: DataFieldType | undefined) => boolean;
-      /** 结合已解析操作与有效数据构造该族尺度的运行时映射 */
-      resolve: (def: never, values: Array<unknown>, ctx: ChannelScaleResolveContext) => ChannelScaleResolution;
-    };
-
-/**
- * 从 scale definition schema 中提取 registry key
- * @description definition schema 必须是含 `type: z.literal('<scale-type>')` 的 ZodObject；该 literal 值就是 registry 唯一键
- */
-export const extractScaleType = (schema: ZodType): string => {
-  if (!(schema instanceof ZodObject)) {
-    throw new RetikzPlotError('lowerPlots: scale registration schema must be a ZodObject with a literal type field');
-  }
-
-  const typeSchema = schema.shape.type;
-  if (!(typeSchema instanceof ZodLiteral) || typeof typeSchema.value !== 'string' || typeSchema.value.length === 0) {
-    throw new RetikzPlotError(
-      'lowerPlots: scale registration schema must declare type as a non-empty z.literal string',
-    );
-  }
-
-  return typeSchema.value;
-};
-
-/** scale operation 是否内置（type 在内置集）；用于把 registry 取出的 operation 收窄回精确 Scale */
+/** 判断内置映射声明以读取其精确配置 */
 export const isBuiltinScaleOperation = (operation: IRPlotScaleOperation): operation is IRPlotScale =>
   BUILTIN_SCALE_TYPES.has(operation.type);

@@ -1,3 +1,4 @@
+import type { ScaleDefinition } from '@retikz/data';
 import type {
   AnyTransformDefinition,
   ApplyTransformsOptions,
@@ -29,7 +30,7 @@ import {
   resolveRegressionImplementationRegistry,
 } from '@retikz/data';
 
-import type { AnyPositionAdjustmentDefinition, AnyScaleDefinition } from '../../contract';
+import type { AnyPositionAdjustmentDefinition } from '../../contract';
 import { markPositionInputs, positionField } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import type { AnyMarkDefinition } from '../../providers';
@@ -107,7 +108,7 @@ export const prepareRows = (
   normalized: Array<ExternalRow>;
   transformRegistry: Map<string, AnyTransformDefinition>;
   transformContext: TransformContext;
-  scaleRegistry: Map<string, AnyScaleDefinition>;
+  scaleRegistry: Map<string, ScaleDefinition>;
   markRegistry: Readonly<Record<IRPlotMark['type'], AnyMarkDefinition>>;
   positionAdjustmentRegistry: Map<string, AnyPositionAdjustmentDefinition>;
   fieldOrderRegistry: ReturnType<typeof resolveFieldOrderRegistry>;

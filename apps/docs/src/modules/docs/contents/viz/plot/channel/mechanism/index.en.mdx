@@ -97,7 +97,7 @@ A definition receives the data context and current mark together through `resolv
 
 For `size`, resolution determines the field, domain, and square-root scale, then returns `resolver(row)`. Each point uses that function to read its row value and calculate a radius. These are two distinct tasks: preparing a mapping for the current mark, then applying it to each row. The per-row calculation does not need to prepare the scale again.
 
-`resolveSizeChannel` reads the mark's `size` binding. Field mode requires continuous, non-negative data. Without an explicit scale, it creates a square-root scale with domain `[0, largest positive value]` and range `[2, 20]`; an explicitly referenced scale must also be a sqrt scale. Constant mode returns the supplied radius directly, bypassing scales.
+`resolveSizeChannel` reads the mark's `size` binding. Field mode requires continuous, non-negative data. Without an explicit scale, it creates a square-root scale with domain `[0, largest positive value]` and range `[2, 20]`; an explicitly referenced scale may use any compatible mathematical definition that produces finite non-negative radii. Constant mode returns the supplied radius directly, bypassing scales.
 
 Field mode returns both a per-row resolver and a legend descriptor containing the field, scale name, domain, and range. When no domain is authored and the data has no positive values, the mapping stays at the lower range bound. Missing or non-finite row values produce `undefined`; negative values or a non-continuous field cause an error.
 
@@ -166,8 +166,8 @@ Paths need not correspond one-to-one with data rows. A line path can contain mul
     {
       label: 'Convert size radius to node layout',
       path: 'packages/viz/plot/src/providers/channel/features/node.ts',
-      startLine: 634,
-      endLine: 642,
+      startLine: 536,
+      endLine: 546,
     },
     {
       label: 'Per-row evaluation and point delivery',

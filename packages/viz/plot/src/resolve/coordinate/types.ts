@@ -1,10 +1,11 @@
 import type { IRScope } from '@retikz/core';
+import type { ScaleDefinition } from '@retikz/data';
 import type { DataTransformModel, DataView, FieldOrderDefinition, ExternalRow, IRDataScalarValue } from '@retikz/data';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
 import type {
   AnyCoordinateDefinition,
-  AnyScaleDefinition,
+  AnyChannelDefinition,
   CoordinateFrame,
   DimensionRole,
   GuideLowerer,
@@ -41,6 +42,8 @@ type CoordinateAxisLowerer = (
  * @description source IR 通过 resolveCoordinateFrame 的首个参数传入；context 只携带数据、registry、布局输入与 pipeline 注入的下沉回调
  */
 export type CoordinateResolveContext = {
+  /** 位置通道对自定义数学映射的消费策略 */
+  channels?: ReadonlyArray<AnyChannelDefinition>;
   /** 当前 Core 编译环境的标签测量 */
   textMeasurer: PlotLabelMeasure;
   /** 当前请求的分类顺序定义 */
@@ -84,7 +87,7 @@ export type CoordinateResolveContext = {
   markRegistry: Readonly<Record<IRPlotMark['type'], AnyMarkDefinition>>;
   coordinateRegistry: ReadonlyMap<string, AnyCoordinateDefinition>;
   /** 已合并的 scale definitions */
-  scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
+  scaleRegistry: ReadonlyMap<string, ScaleDefinition>;
   /** 按 mark 切分的数据视图 */
   markDataViews?: Array<MarkDataView>;
   /** 某 role 的共享数据视图覆盖 */

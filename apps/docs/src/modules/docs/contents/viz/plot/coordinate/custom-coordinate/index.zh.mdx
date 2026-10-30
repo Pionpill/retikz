@@ -9,7 +9,7 @@ description: 用 CoordinateDefinition 声明位置 role、比例尺和投影 fra
 
 - 需要新的位置 role、投影函数、曲线轴或特殊空间时，定义自定义 coordinate。
 - React `<PointMark>` 当前直接暴露 `x` / `y` / `z`；任意 `u` / `v` role 通过完整 `spec` 或 Vanilla 的 `encoding` 表达。
-- 只改变值域映射而不改变空间投影时，使用[自定义比例尺](/viz/plot/scale/custom-scale)。
+- 只改变值域映射而不改变空间投影时，使用[自定义比例尺](/viz/plot/channel/custom-channel)。
 - 坐标 definition 负责 frame 与 guides，不应直接生成业务图元或包含 renderer 专属对象。
 
 ## 定义能力

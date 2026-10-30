@@ -356,7 +356,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     const yValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true });
     const xScaleDef = ctx.resolveScaleForRole('x', coordinate.x, xValues);
     const yScaleDef = ctx.resolveScaleForRole('y', coordinate.y, yValues);
-    ctx.assertBaselineScaleCompatible(yScaleDef.type, ctx.marks);
+    ctx.assertBaselineScaleCompatible(yScaleDef.type, ctx.marks, 'y');
 
     const xScale = ctx.buildPositionScale(xScaleDef, xValues, [0, ctx.width]);
     const yScale = ctx.buildPositionScale(yScaleDef, yValues, [ctx.height, 0]);

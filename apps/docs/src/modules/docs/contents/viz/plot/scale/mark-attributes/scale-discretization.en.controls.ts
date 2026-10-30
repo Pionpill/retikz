@@ -3,42 +3,53 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { discretizationValues } from './scale-discretization.data';
 
-/** 离散化颜色比例尺 playground 的中文属性面板 */
+/** English panel for the discretized color scale playground */
 export const scaleDiscretizationControls = definePreviewControls({
   presentation: 'panel',
-  title: '离散化颜色比例尺',
+  title: 'Discretized color scales',
   sections: [
     {
-      label: '数据',
+      label: 'Data',
       defaultCollapsed: true,
       controls: [
         {
           kind: 'table',
           id: 'values',
-          label: '偏斜连续值',
+          label: 'Skewed continuous values',
           rows: discretizationValues,
           columns: [{ key: 'x' }, { key: 'y' }, { key: 'value' }],
         },
       ],
     },
     {
-      label: '分档规则',
+      label: 'Bin rules',
       controls: [
         {
           kind: 'select',
+          id: 'target',
+          label: 'Target',
+          defaultValue: 'color',
+          options: [
+            { value: 'color', label: 'Color' },
+            { value: 'size', label: 'Size' },
+            { value: 'opacity', label: 'Opacity' },
+          ],
+        },
+        {
+          kind: 'select',
           id: 'scaleType',
-          label: '比例尺类型',
+          label: 'Scale type',
           defaultValue: 'quantize',
           options: [
-            { value: 'quantize', label: '等宽分档 quantize' },
-            { value: 'threshold', label: '业务阈值 threshold' },
-            { value: 'quantile', label: '等频分档 quantile' },
+            { value: 'quantize', label: 'Equal-width quantize' },
+            { value: 'threshold', label: 'Business threshold' },
+            { value: 'quantile', label: 'Equal-frequency quantile' },
           ],
         },
         {
           kind: 'range',
           id: 'count',
-          label: '颜色档数',
+          label: 'Color bins',
           defaultValue: 4,
           min: 3,
           max: 7,
@@ -48,22 +59,22 @@ export const scaleDiscretizationControls = definePreviewControls({
         {
           kind: 'select',
           id: 'thresholdPreset',
-          label: '业务阈值',
+          label: 'Business thresholds',
           defaultValue: 'risk',
           options: [
-            { value: 'risk', label: '风险等级 10 / 30 / 60' },
-            { value: 'service', label: '服务等级 20 / 50 / 80' },
+            { value: 'risk', label: 'Risk levels 10 / 30 / 60' },
+            { value: 'service', label: 'Service levels 20 / 50 / 80' },
           ],
           visibleWhen: { controlId: 'scaleType', oneOf: ['threshold'] },
         },
         {
           kind: 'select',
           id: 'scheme',
-          label: '分档配色',
+          label: 'Bin palette',
           defaultValue: 'blues',
           options: [
-            { value: 'blues', label: '蓝色 Blues' },
-            { value: 'greens', label: '绿色 Greens' },
+            { value: 'blues', label: 'Blues' },
+            { value: 'greens', label: 'Greens' },
             { value: 'magma', label: 'Magma' },
           ],
         },
@@ -72,10 +83,11 @@ export const scaleDiscretizationControls = definePreviewControls({
   ],
 });
 
-/** 离散化颜色比例尺 playground 的稳定文档契约 */
+/** Stable contract for the discretized color scale playground */
 export const previewControlContract = {
   controls: scaleDiscretizationControls,
   canonicalValues: {
+    target: 'color',
     scaleType: 'quantize',
     count: 4,
     thresholdPreset: 'risk',
@@ -84,8 +96,9 @@ export const previewControlContract = {
   presets: [
     {
       id: 'quantize',
-      label: '等宽四档',
+      label: 'Four equal-width bins',
       values: {
+        target: 'color',
         scaleType: 'quantize',
         count: 4,
         thresholdPreset: 'risk',
@@ -94,8 +107,9 @@ export const previewControlContract = {
     },
     {
       id: 'threshold',
-      label: '业务阈值',
+      label: 'Business thresholds',
       values: {
+        target: 'color',
         scaleType: 'threshold',
         count: 4,
         thresholdPreset: 'risk',
@@ -104,8 +118,9 @@ export const previewControlContract = {
     },
     {
       id: 'quantile',
-      label: '等频四档',
+      label: 'Four equal-frequency bins',
       values: {
+        target: 'color',
         scaleType: 'quantile',
         count: 4,
         thresholdPreset: 'risk',

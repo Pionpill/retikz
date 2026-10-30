@@ -1,16 +1,7 @@
-import { inferCategoryDomain } from '@retikz/data';
-import { DataFieldType } from '@retikz/data';
+import { inferCategoryDomain, resolveScale } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
-import {
-  scaleLinear as d3ScaleLinear,
-  scaleOrdinal as d3ScaleOrdinal,
-  scaleQuantile as d3ScaleQuantile,
-  scaleQuantize as d3ScaleQuantize,
-  scaleThreshold as d3ScaleThreshold,
-} from 'd3-scale';
+import { scaleQuantile as d3ScaleQuantile } from 'd3-scale';
 
-import type { AnyScaleDefinition, ChannelScaleResolution, ChannelScaleResolveContext } from '../../../contract';
-import { defineScale } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type {
   IRPlotDivergingColorScale,
@@ -20,16 +11,7 @@ import type {
   IRPlotSequentialColorScale,
   IRPlotThresholdColorScale,
 } from '../../../schemas';
-import {
-  DivergingColorScaleSchema,
-  OrdinalScaleSchema,
-  BuiltinPlotColorScheme,
-  BuiltinPlotScale,
-  QuantileColorScaleSchema,
-  QuantizeColorScaleSchema,
-  SequentialColorScaleSchema,
-  ThresholdColorScaleSchema,
-} from '../../../schemas';
+import { BuiltinPlotColorScheme, BuiltinPlotScale } from '../../../schemas';
 import type { ColorScaleEvaluator, ColorSchemeResolver } from '../shared';
 import {
   builtinColorSchemeInterpolator,
@@ -38,6 +20,13 @@ import {
   sampleSchemeColors,
   toHexColor,
 } from '../shared';
+
+/** Validate color ranges at the consuming boundary */
+const colorRange = (range: ReadonlyArray<string | number> | undefined): Array<string> | undefined =>
+  range?.map(value => {
+    if (typeof value !== 'string') throw new RetikzPlotError('color scale requires string outputs');
+    return value;
+  });
 
 /** sequential 缺省配色（感知均匀、色盲友好） */
 const DEFAULT_SEQUENTIAL_SCHEME = BuiltinPlotColorScheme.Viridis;
@@ -60,13 +49,16 @@ export const resolveOrdinalScale = (
   values: Array<unknown>,
 ): ((value: string | number) => string) => {
   const domain = def?.domain ?? inferCategoryDomain(values);
-  const range = def?.range ?? DEFAULT_PLOT_COLORS;
+  const range = colorRange(def?.range) ?? DEFAULT_PLOT_COLORS;
   const step = def?.rangeIndex?.step ?? 1;
   const offset = def?.rangeIndex?.offset ?? 0;
   const indexedRange = range.map((_color, index) => range[(index * step + offset) % range.length]);
-  const scale = d3ScaleOrdinal<string | number, string>().domain(domain).range(indexedRange);
+  const mapping = resolveScale(
+    { type: 'ordinal', domain, range: indexedRange, params: { unknown: 'extend' } },
+    { values: [] },
+  );
 
-  return value => scale(value);
+  return value => mapping.map(value) as string;
 };
 
 // ── 连续 → 颜色（sequential / diverging）+ 离散化分箱（quantize / threshold / quantile）──
@@ -90,7 +82,6 @@ export const resolveSequentialColorScale = (
   values: Array<number>,
   resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
 ): ColorScaleEvaluator => {
-  const [lo, hi] = def.domain ?? safeExtent(values);
   if (def.domain && !(isFiniteNumber(def.domain[0]) && isFiniteNumber(def.domain[1]))) {
     throw new RetikzPlotError(
       `lowerPlots: sequential color scale "${def.name}" domain endpoints must be finite numbers (got [${def.domain[0]}, ${def.domain[1]}])`,
@@ -103,20 +94,12 @@ export const resolveSequentialColorScale = (
     );
   }
 
-  if (def.range) {
-    const scale = d3ScaleLinear<string, string>().domain([lo, hi]).range([def.range[0], def.range[1]]).clamp(true);
-    return value => toHexColor(scale(value));
-  }
-
-  const interpolator = resolveScheme(def.scheme ?? DEFAULT_SEQUENTIAL_SCHEME);
-
-  // 退化 domain（min == max）→ position 恒 0.5；正常 domain 线性归一化到 [0, 1] 再喂 interpolator
-  const span = hi - lo;
-
-  return value => {
-    const t = span === 0 ? 0.5 : Math.max(0, Math.min(1, (value - lo) / span));
-    return toHexColor(interpolator(t));
-  };
+  const scheme = def.scheme ?? DEFAULT_SEQUENTIAL_SCHEME;
+  const mapping = resolveScale(
+    { type: 'sequential', domain: def.domain, range: def.range, params: { scheme } },
+    { values, interpolators: def.range === undefined ? new Map([[scheme, resolveScheme(scheme)]]) : undefined },
+  );
+  return value => toHexColor(mapping.map(value) as string);
 };
 
 /**
@@ -146,33 +129,14 @@ export const resolveDivergingColorScale = (
         `lowerPlots: diverging color scale "${def.name}" domain must satisfy low < mid < high (got [${low}, ${mid}, ${high}])`,
       );
     }
-  } else {
-    const [lo, hi] = safeExtent(values);
-    low = lo;
-    high = hi;
-    mid = (lo + hi) / 2;
   }
 
-  if (def.range) {
-    const scale = d3ScaleLinear<string, string>()
-      .domain([low, mid, high])
-      .range([def.range[0], def.range[1], def.range[2]])
-      .clamp(true);
-    return value => toHexColor(scale(value));
-  }
-
-  const interpolator = resolveScheme(def.scheme ?? DEFAULT_DIVERGING_SCHEME);
-
-  // [low, mid, high] → interpolator 的 [0, 0.5, 1]：两段线性，退化段（low==mid 等）由分支守住不除零
-  return value => {
-    let t: number;
-    if (value <= low) t = 0;
-    else if (value >= high) t = 1;
-    else if (value <= mid) t = mid === low ? 0 : (0.5 * (value - low)) / (mid - low);
-    else t = high === mid ? 1 : 0.5 + (0.5 * (value - mid)) / (high - mid);
-
-    return toHexColor(interpolator(t));
-  };
+  const scheme = def.scheme ?? DEFAULT_DIVERGING_SCHEME;
+  const mapping = resolveScale(
+    { type: 'diverging', domain: def.domain, range: def.range, params: { scheme } },
+    { values, interpolators: def.range === undefined ? new Map([[scheme, resolveScheme(scheme)]]) : undefined },
+  );
+  return value => toHexColor(mapping.map(value) as string);
 };
 
 /**
@@ -192,11 +156,11 @@ export const resolveQuantizeColorScale = (
   }
 
   const binCount = def.range ? def.range.length : (def.count ?? DEFAULT_DISCRETE_BIN_COUNT);
-  const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
+  const colors = discreteBinColors(colorRange(def.range), def.scheme, binCount, resolveScheme);
   const [lo, hi] = def.domain ?? safeExtent(values);
-  const scale = d3ScaleQuantize<string>().domain([lo, hi]).range(colors);
+  const mapping = resolveScale({ type: 'quantize', domain: [lo, hi], range: colors }, { values });
 
-  return value => scale(value);
+  return value => mapping.map(value) as string;
 };
 
 /**
@@ -224,12 +188,13 @@ export const resolveThresholdColorScale = (
     );
   }
 
-  const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
-  const scale = d3ScaleThreshold<number, string>()
-    .domain([...def.breakpoints])
-    .range(colors);
+  const colors = discreteBinColors(colorRange(def.range), def.scheme, binCount, resolveScheme);
+  const mapping = resolveScale(
+    { type: 'threshold', range: colors, params: { breakpoints: [...def.breakpoints] } },
+    { values: [] },
+  );
 
-  return value => scale(value);
+  return value => mapping.map(value) as string;
 };
 
 /**
@@ -249,7 +214,7 @@ export const resolveQuantileColorScale = (
   }
 
   const binCount = def.range ? def.range.length : (def.count ?? DEFAULT_DISCRETE_BIN_COUNT);
-  const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
+  const colors = discreteBinColors(colorRange(def.range), def.scheme, binCount, resolveScheme);
   const scale = d3ScaleQuantile<string>()
     .domain([...values])
     .range(colors);
@@ -284,7 +249,7 @@ export const discretizedBins = (
   if (def.type === BuiltinPlotScale.Threshold) {
     const edges = [...def.breakpoints];
     const binCount = edges.length + 1;
-    const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
+    const colors = def.range ? colorRange(def.range)! : sampleSchemeColors(def.scheme, binCount, resolveScheme);
 
     return { colors, edges };
   }
@@ -295,7 +260,7 @@ export const discretizedBins = (
     const edges = Array.from({ length: Math.max(0, binCount - 1) }, (_unused, index) =>
       quantileAt(sorted, (index + 1) / binCount),
     );
-    const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
+    const colors = def.range ? colorRange(def.range)! : sampleSchemeColors(def.scheme, binCount, resolveScheme);
 
     return { colors, edges };
   }
@@ -307,176 +272,9 @@ export const discretizedBins = (
     { length: Math.max(0, binCount - 1) },
     (_unused, index) => lo + ((index + 1) * (hi - lo)) / binCount,
   );
-  const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
+  const colors = def.range ? colorRange(def.range)! : sampleSchemeColors(def.scheme, binCount, resolveScheme);
 
   return { colors, edges };
 };
 
 // ── channel 族 scale definition ───────────────────────────────────────────────────
-
-/** 建 channel 取值用的数值序列：temporal 字段过 coerceTimestamp，其余取有限数 */
-const numericValuesOf = (values: Array<unknown>, ctx: ChannelScaleResolveContext): Array<number> => {
-  const toNumber = ctx.fieldType === DataFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
-  return values.map(toNumber).filter((value): value is number => value !== null);
-};
-
-const continuousColorOf = (
-  ctx: ChannelScaleResolveContext,
-  evaluate: ColorScaleEvaluator,
-): ((value: unknown) => string | undefined) => {
-  const toNumber = ctx.fieldType === DataFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
-  return value => {
-    const numeric = toNumber(value);
-    return numeric === null ? undefined : evaluate(numeric);
-  };
-};
-
-const withSequentialTheme = <TDef extends { range?: unknown; scheme?: string }>(
-  def: TDef,
-  ctx: ChannelScaleResolveContext,
-): TDef =>
-  def.range !== undefined || def.scheme !== undefined || ctx.defaultSequentialScheme === undefined
-    ? def
-    : { ...def, scheme: ctx.defaultSequentialScheme };
-
-const withDivergingTheme = <TDef extends { range?: unknown; scheme?: string }>(
-  def: TDef,
-  ctx: ChannelScaleResolveContext,
-): TDef =>
-  def.range !== undefined || def.scheme !== undefined || ctx.defaultDivergingScheme === undefined
-    ? def
-    : { ...def, scheme: ctx.defaultDivergingScheme };
-
-const ordinalScaleDefinition = defineScale<IRPlotOrdinalScale>({
-  family: 'channel',
-  schema: OrdinalScaleSchema,
-  // ordinal 接分类与未知（旧 makeColorResolver 把 undefined 字段类型当分类走 ordinal）
-  isFieldCompatible: fieldType => fieldType === undefined || fieldType === DataFieldType.Categorical,
-  resolve: (def, values, ctx) => {
-    // range 缺省取 plot 默认调色板（与旧 withPlotColorRange 一致）；domain 缺省按数据序去重
-    const withPalette: IRPlotOrdinalScale =
-      def.range !== undefined ? def : ctx.defaultColors !== undefined ? { ...def, range: [...ctx.defaultColors] } : def;
-    const ordinal = resolveOrdinalScale(withPalette, values);
-    const domain = withPalette.domain ?? inferCategoryDomain(values);
-
-    return {
-      of: value => (typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined),
-      legendForm: 'swatch',
-      domain,
-      range: domain.map(category => ordinal(category)),
-      scaleType: BuiltinPlotScale.Ordinal,
-    };
-  },
-});
-
-const sequentialScaleDefinition = defineScale<IRPlotSequentialColorScale>({
-  family: 'channel',
-  schema: SequentialColorScaleSchema,
-  isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
-  resolve: (def, values, ctx) => {
-    const numeric = numericValuesOf(values, ctx);
-    const themedDef = withSequentialTheme(def, ctx);
-    const evaluate = resolveSequentialColorScale(themedDef, numeric, ctx.resolveColorScheme);
-    const [lo, hi] = def.domain ?? (numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)]);
-
-    return {
-      of: continuousColorOf(ctx, evaluate),
-      legendForm: 'ramp',
-      domain: [lo, hi],
-      range: [],
-      scaleType: BuiltinPlotScale.Sequential,
-    };
-  },
-});
-
-const divergingScaleDefinition = defineScale<IRPlotDivergingColorScale>({
-  family: 'channel',
-  schema: DivergingColorScaleSchema,
-  // diverging 中点对时间无意义 → 仅接连续数值，拒 temporal（与旧 makeColorResolver temporal+diverging fail-loud 对齐）
-  isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous,
-  resolve: (def, values, ctx) => {
-    const numeric = numericValuesOf(values, ctx);
-    const themedDef = withDivergingTheme(def, ctx);
-    const evaluate = resolveDivergingColorScale(themedDef, numeric, ctx.resolveColorScheme);
-    const extentRange: [number, number] = numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)];
-    const [lo, hi] = def.domain ? [def.domain[0], def.domain[def.domain.length - 1]] : extentRange;
-
-    return {
-      of: continuousColorOf(ctx, evaluate),
-      legendForm: 'ramp',
-      domain: [lo, hi],
-      range: [],
-      scaleType: BuiltinPlotScale.Diverging,
-    };
-  },
-});
-
-const discretizedResolution = (
-  scaleType: string,
-  def: IRPlotQuantizeColorScale | IRPlotThresholdColorScale | IRPlotQuantileColorScale,
-  values: Array<unknown>,
-  ctx: ChannelScaleResolveContext,
-  evaluate: ColorScaleEvaluator,
-): ChannelScaleResolution => {
-  const numeric = numericValuesOf(values, ctx);
-  const { colors, edges } = discretizedBins(def, numeric, ctx.resolveColorScheme);
-  return { of: continuousColorOf(ctx, evaluate), legendForm: 'swatch', domain: [], range: colors, edges, scaleType };
-};
-
-const quantizeScaleDefinition = defineScale<IRPlotQuantizeColorScale>({
-  family: 'channel',
-  schema: QuantizeColorScaleSchema,
-  isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
-  resolve: (def, values, ctx) => {
-    const themedDef = withSequentialTheme(def, ctx);
-    return discretizedResolution(
-      BuiltinPlotScale.Quantize,
-      themedDef,
-      values,
-      ctx,
-      resolveQuantizeColorScale(themedDef, numericValuesOf(values, ctx), ctx.resolveColorScheme),
-    );
-  },
-});
-
-const thresholdScaleDefinition = defineScale<IRPlotThresholdColorScale>({
-  family: 'channel',
-  schema: ThresholdColorScaleSchema,
-  isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
-  resolve: (def, values, ctx) => {
-    const themedDef = withSequentialTheme(def, ctx);
-    return discretizedResolution(
-      BuiltinPlotScale.Threshold,
-      themedDef,
-      values,
-      ctx,
-      resolveThresholdColorScale(themedDef, ctx.resolveColorScheme),
-    );
-  },
-});
-
-const quantileScaleDefinition = defineScale<IRPlotQuantileColorScale>({
-  family: 'channel',
-  schema: QuantileColorScaleSchema,
-  isFieldCompatible: fieldType => fieldType === DataFieldType.Continuous || fieldType === DataFieldType.Temporal,
-  resolve: (def, values, ctx) => {
-    const themedDef = withSequentialTheme(def, ctx);
-    return discretizedResolution(
-      BuiltinPlotScale.Quantile,
-      themedDef,
-      values,
-      ctx,
-      resolveQuantileColorScale(themedDef, numericValuesOf(values, ctx), ctx.resolveColorScheme),
-    );
-  },
-});
-
-/** channel 族 scale definition（分类 1 + 连续色 2 + 离散化 3 = 6）：产视觉量（颜色），喂 color 通道 + legend */
-export const COLOR_SCALE_DEFINITIONS: ReadonlyArray<AnyScaleDefinition> = [
-  ordinalScaleDefinition,
-  sequentialScaleDefinition,
-  divergingScaleDefinition,
-  quantizeScaleDefinition,
-  thresholdScaleDefinition,
-  quantileScaleDefinition,
-] as ReadonlyArray<AnyScaleDefinition>;

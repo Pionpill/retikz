@@ -12,7 +12,7 @@ export const intervalPullChannel: MarkChannelDefinition<number> = {
     if (mark.type !== BuiltinPlotMark.Interval) return undefined;
     const binding = mark.encodings?.pull;
     if (binding === undefined) return undefined;
-    const resolution = resolveNumericChannel(context.node, context.rows, context.model, binding, 'pull');
+    const resolution = resolveNumericChannel(context, binding, 'pull');
     if (resolution === undefined) return undefined;
     return {
       resolver: row => {

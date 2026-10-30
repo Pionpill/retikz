@@ -25,9 +25,7 @@ const labelChannel = (
       const numeric =
         mapping === 'opacity' || (mapping === 'number' && channelScale(binding) !== undefined)
           ? resolveNumericNodeChannel(
-              context.node,
-              context.rows,
-              context.model,
+              context,
               binding,
               `label.${target}`,
               mapping === 'opacity' ? { range: [OPACITY_MIN, 1], clamp: true } : {},

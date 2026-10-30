@@ -37,7 +37,10 @@ export type InputChartRecipeProviderContribution<TSource extends IRChartSource> 
 
 /** Chart encoding resolve需要与Plot共享的runtime Definition输入 */
 export type ChartRuntimeDefinitionOptions = Readonly<
-  Pick<PlotDefinitions, 'coordinates' | 'transforms' | 'statisticsReducers' | 'regressions' | 'rowSelectors' | 'scales'>
+  Pick<
+    PlotDefinitions,
+    'coordinates' | 'transforms' | 'statisticsReducers' | 'regressions' | 'rowSelectors' | 'scales' | 'channels'
+  >
 >;
 
 /** 当前 Core compile 边界实际安装的 Chart recipe registry */

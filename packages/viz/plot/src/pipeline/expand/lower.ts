@@ -7,6 +7,7 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
+import type { ScaleDefinition } from '@retikz/data';
 import { assertFieldOrders, resolveCategoryDomain } from '@retikz/data';
 import type { DataLineageOptions, DataLineageRun, DataTransformResult, DataView, ExternalDatasets } from '@retikz/data';
 import {
@@ -21,7 +22,7 @@ import type { JsonObject } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
 import type {
-  AnyScaleDefinition,
+  AnyChannelDefinition,
   CoordinateFrame,
   DatumIdRegistrar,
   DimensionRole,
@@ -78,6 +79,7 @@ import type { CoordinateFrameResolution, CoordinateResolveContext } from '../../
 import { resolveCoordinateFrame } from '../../resolve/coordinate';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import { collectMarkFields, resolveMarkOperation } from '../../resolve/mark';
+import { resolveAttributeMapping } from '../../resolve/scale';
 import {
   createMarkPaddingContext,
   markDomainPaddingOf,
@@ -147,7 +149,8 @@ const assertPlacementRangeCompatible = (
   role: DimensionRole,
   candidateRange: readonly [number, number],
   boundaryRange: readonly [number, number] | undefined,
-  scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
+  scaleRegistry: ReadonlyMap<string, ScaleDefinition>,
+  channels: ReadonlyArray<AnyChannelDefinition> | undefined,
 ): void => {
   if (boundaryRange === undefined || rangesEqual(candidateRange, boundaryRange)) return;
 
@@ -162,7 +165,8 @@ const assertPlacementRangeCompatible = (
     !Array.isArray(authoredRange) ||
     authoredRange.length !== 2 ||
     !authoredRange.every(value => typeof value === 'number') ||
-    resolvePositionScaleContinuity(scaleOperation, { registry: scaleRegistry }) !== PositionScaleContinuity.Continuous
+    resolvePositionScaleContinuity(scaleOperation, { registry: scaleRegistry, channels, role }) !==
+      PositionScaleContinuity.Continuous
   ) {
     return;
   }
@@ -543,6 +547,7 @@ export const lowerPlotWithDataArtifact = (
     overrides: Partial<CoordinateResolveContext> = {},
   ): CoordinateResolveContext => ({
     coordinate: source.coordinate,
+    channels: options.definitions?.channels,
     markPadding,
     rows: frameDataView.rows,
     model: frameDataView.model,
@@ -572,6 +577,8 @@ export const lowerPlotWithDataArtifact = (
     resolveLabel: options.resolveLabel,
   });
   const channelCtx: ChannelResolveContext = {
+    resolveScaleMapping: (operation, context = {}) =>
+      resolveAttributeMapping(operation, context, { registry: scaleRegistry }),
     node,
     rows: rootDataView.rows,
     model: rootDataView.model,
@@ -734,6 +741,7 @@ export const lowerPlotWithDataArtifact = (
             candidateRange,
             boundaryRangesByScope.get(scopeId)?.[role],
             scaleRegistry,
+            options.definitions?.channels,
           );
         }
 
@@ -1191,6 +1199,7 @@ export const lowerPlotWithDataArtifact = (
                 candidateRange,
                 boundaryRanges[role],
                 scaleRegistry,
+                options.definitions?.channels,
               );
             }
 

@@ -1,9 +1,23 @@
 ---
-title: Color Scales
-description: Color scales map categorical, continuous, and midpoint-centered data to discrete colors, continuous ramps, or binned colors.
+title: Mark Attribute Mapping
+description: Bind scales to color, size, opacity, stroke width, and shape; each channel owns defaults and output constraints.
 ---
 
-A color scale answers which color a data value should use. The scale establishes the data-to-color mapping; `Legend` then explains that mapping to the reader. Adding a legend does not change the scale type or palette.
+A scale can drive several mark attributes. Data supplies the algorithm; Plot channels choose defaults, validate outputs, and determine how legends explain them. Color is one application.
+
+Fixed properties use their target values directly. Field strings use channel defaults; `{ field, scale }` references a named mapping. Opacity retains separate bindings at `encodings.opacity.overall / fill / stroke`.
+
+| Attribute                         | Default field mapping                                   | Explicit mapping output    |
+| --------------------------------- | ------------------------------------------------------- | -------------------------- |
+| `color / fill / stroke`           | ordinal for categories; sequential for numbers and time | Valid colors               |
+| `size`                            | sqrt radii, range 2–20                                  | Finite nonnegative numbers |
+| `strokeWidth`                     | linear, range 0.5–4                                     | Finite nonnegative numbers |
+| `opacity.overall / fill / stroke` | linear, range 0.2–1                                     | Finite numbers within 0–1  |
+| `shape`                           | Categories to the theme's shape sequence                | Supported shape names      |
+
+The same algorithm can produce different outputs: threshold with `range: [4, 8, 12]` drives size, while a color range drives fill. Built-in and custom mappings pass through the consuming channel's checks. Numeric output does not grant position compatibility. Text, ordering, and object attributes do not automatically gain scale support.
+
+The examples below cover color mappings. See [custom channels](/viz/plot/channel/custom-channel) for numeric mapping and custom consumption.
 
 | Data and task                              | Recommended scale                     | Legend form  |
 | ------------------------------------------ | ------------------------------------- | ------------ |
@@ -17,6 +31,7 @@ A color scale answers which color a data value should use. The scale establishes
 Bind `color` to a categorical field and `<Plot>` derives `ordinal`, assigning one discrete color per category. A categorical color field also splits path data into multiple series when no explicit series is present.
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-ordinal', 'scale-ordinal.preview.tsx', 'scale-ordinal.data.ts']}
   caption="Switch discrete palettes and show or hide the legend to inspect the separate responsibilities of color mapping and legend explanation."
@@ -30,6 +45,7 @@ Bind `color` to a categorical field and `<Plot>` derives `ordinal`, assigning on
 `sequential` uses one low-to-high ramp for a continuous quantity. `diverging` uses a three-value domain for the low end, center, and high end, which suits profit/loss, deviation, temperature delta, and other data centered on a reference value.
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-continuous', 'scale-continuous.preview.tsx', 'scale-continuous.data.ts']}
   caption="Switch between sequential and diverging, choose a scheme, and move the midpoint. The same -50 to 50 values reveal the mapping difference immediately."
@@ -56,6 +72,7 @@ A discretization scale still consumes continuous data, but returns only a finite
 | `quantile`  | derive quantiles with roughly equal sample count | skewed distributions, reduced outlier impact |
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-discretization', 'scale-discretization.preview.tsx', 'scale-discretization.data.ts']}
   caption="Switch among quantize, threshold, and quantile. Tune the bin count, business thresholds, and palette to compare how the same skewed data falls into different color bins."
@@ -67,7 +84,7 @@ Configuration constraints:
 - `threshold.breakpoints` must be strictly ascending; bin count is one more than the breakpoint count, and an explicit `range` must match
 - `count` defaults to `5` for `quantize` / `quantile`; when only `range` is given, its length becomes the bin count
 - when both `count` and `range` are present, their lengths must agree
-- `quantile` derives boundaries from the actual data and does not use an explicit numeric domain
+- `quantile` derives boundaries from the actual data and does not use an explicit numeric domain; without valid samples, neither the bin legend nor its title is generated
 
 ## How it works
 
@@ -80,7 +97,7 @@ Configure `diverging`, the three discretization scales, and explicit scheme / ra
 
 Auto-derivation and explicit configuration are only two entry points: both are resolved by the same scale definition and resolver path, rather than creating separate color semantics.
 
-<ComponentPreview files="scale-color-flow" size="xs" hideCode />
+<ComponentPreview mode="showcase" files="scale-color-flow" size="xs" hideCode />
 
 The resolver derives the domain, bin boundaries, and scheme / range for the selected scale type, producing one resolved scale with its color mapping and required boundary metadata. Marks use it to color data, while Legend reads that same result to generate a ramp or bin swatches, so adding a legend does not change the mapping.
 
@@ -94,15 +111,15 @@ The resolver derives the domain, bin boundaries, and scheme / range for the sele
     },
     {
       label: 'Resolve ordinal, sequential, and diverging color',
-      path: 'packages/viz/plot/src/providers/scale/features/color.ts',
-      startLine: 349,
-      endLine: 422,
+      path: 'packages/viz/plot/src/resolve/scale/mapping.ts',
+      startLine: 188,
+      endLine: 246,
     },
     {
       label: 'Resolve quantize, threshold, and quantile color',
-      path: 'packages/viz/plot/src/providers/scale/features/color.ts',
-      startLine: 425,
-      endLine: 481,
+      path: 'packages/viz/data/src/scale/builtins.ts',
+      startLine: 394,
+      endLine: 437,
     },
   ]}
 />
@@ -169,7 +186,7 @@ An explicit `range` overrides `scheme`. When `quantize` / `quantile` provide bot
     {
       title: 'Custom scales',
       description: 'Register a scale definition for domain-specific mappings',
-      url: '/viz/plot/scale/custom-scale',
+      url: '/viz/plot/channel/custom-channel',
     },
   ]}
 />

@@ -1,3 +1,4 @@
+import type { ScaleDefinition } from '@retikz/data';
 import type {
   AnyRegressionDefinition,
   AnyRowSelectorDefinition,
@@ -7,9 +8,9 @@ import type {
   IRDataTransformDeclaration,
 } from '@retikz/data';
 import type { JsonObject, NonEmptyReadonlyArray, ValueOf } from '@retikz/foundation';
+import type { AnyChannelDefinition } from '@retikz/plot';
 import type {
   AnyCoordinateDefinition,
-  AnyScaleDefinition,
   IRPlot,
   IRPlotCoordinateOperation,
   IRPlotFacetOptions,
@@ -25,6 +26,8 @@ import type { ChartMarkBinding } from './mark';
 
 /** encoding resolve使用的owner Definition注册表 */
 export type ChartEncodingRuntime = Readonly<{
+  /** 位置通道的比例尺消费策略 */
+  channels?: ReadonlyArray<AnyChannelDefinition>;
   /** Data / Plot transform Definition注册表 */
   transforms: ReadonlyMap<string, AnyTransformDefinition>;
 
@@ -35,7 +38,7 @@ export type ChartEncodingRuntime = Readonly<{
   /** Data row selector Definition注册表 */
   selectors: ReadonlyMap<string, AnyRowSelectorDefinition>;
   /** Plot scale Definition注册表 */
-  scales: ReadonlyMap<string, AnyScaleDefinition>;
+  scales: ReadonlyMap<string, ScaleDefinition>;
   /** 与Plot lowering共享的coordinate Definition注册表 */
   coordinates: ReadonlyMap<string, AnyCoordinateDefinition>;
 }>;

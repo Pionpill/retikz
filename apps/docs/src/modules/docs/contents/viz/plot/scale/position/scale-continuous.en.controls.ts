@@ -84,6 +84,7 @@ export const scaleContinuousControls = definePreviewControls({
 /** 连续位置比例尺 playground 的英文稳定文档契约 */
 export const previewControlContract = {
   controls: scaleContinuousControls,
+  presetSelector: { label: 'Preset', customLabel: 'Custom' },
   canonicalValues: {
     scaleType: 'linear',
     dataVariant: 'positive',

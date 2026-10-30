@@ -40,7 +40,7 @@ const scale = resolveScale(operation, { values: [50] }, registry);
 scale.map(50); // 0.25
 ```
 
-只有 operation 可以保存为 JSON。definition 中的函数和 registry 不进入声明。Plot 接入同一个数学定义时，还要满足其[自定义比例尺](/viz/plot/scale/custom-scale)的位置消费策略。
+只有 operation 可以保存为 JSON。definition 中的函数和 registry 不进入声明。Plot 的已有属性通道可以消费适用的数学定义；用于位置时，需要在[位置通道](/viz/plot/channel/custom-channel)中显式声明消费策略。
 
 ## 错误与限制
 
@@ -74,9 +74,9 @@ scale.map(50); // 0.25
   items={[
     { title: 'API 参考', description: '查询 Definition、上下文和结果能力。', url: '/viz/data/scale/reference' },
     {
-      title: 'Plot 自定义比例尺',
+      title: 'Plot 通道接入',
       description: '把数学映射接入坐标角色或图元属性。',
-      url: '/viz/plot/scale/custom-scale',
+      url: '/viz/plot/channel/custom-channel',
     },
   ]}
 />

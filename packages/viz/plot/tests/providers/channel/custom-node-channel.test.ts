@@ -38,6 +38,11 @@ const intensityChannel = defineNodeChannel<number>({
       },
       descriptor: {
         channel: 'intensity',
+        mapping: {
+          domain: [lo, hi],
+          range: [0.3, 1],
+          map: value => (typeof value === 'number' ? map(value) : undefined),
+        },
         scaleType: 'linear',
         domain: [lo, hi],
         range: [0.3, 1],

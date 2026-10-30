@@ -1,3 +1,4 @@
+import { resolvePositionScalePolicy } from '@retikz/plot';
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
 import { PlotGuide, PositionScaleContinuity, readCoordinateScaleNames } from '@retikz/plot';
 
@@ -38,6 +39,7 @@ const invalidStripTopology = (message: string, path: ReadonlyArray<string | numb
 
 const scaleContinuityOf = (
   scale: IRPlotScaleOperation,
+  role: string,
   context: ChartGuideDefaultsResolveContext,
 ): 'continuous' | 'discrete' => {
   const definition = context.runtime.scales.get(scale.type);
@@ -45,14 +47,19 @@ const scaleContinuityOf = (
     throw invalidStripTopology(`Strip position scale type "${scale.type}" is not registered`, ['recipe', 'encodings']);
   }
 
-  if (definition.family !== 'position') {
+  const policy = resolvePositionScalePolicy(scale.type, {
+    registry: context.runtime.scales,
+    channels: context.runtime.channels,
+    role,
+  });
+  if (policy === undefined) {
     throw invalidStripTopology(`Strip scale "${scale.name}" must use a position Scale Definition`, [
       'recipe',
       'encodings',
     ]);
   }
 
-  return definition.continuity;
+  return policy.continuity;
 };
 
 const stripContinuityByRole = (
@@ -87,7 +94,7 @@ const stripContinuityByRole = (
       ]);
     }
 
-    continuityByRole[role] = scaleContinuityOf(scale, context);
+    continuityByRole[role] = scaleContinuityOf(scale, role, context);
   }
 
   return continuityByRole as Readonly<Record<'x' | 'y', 'continuous' | 'discrete'>>;

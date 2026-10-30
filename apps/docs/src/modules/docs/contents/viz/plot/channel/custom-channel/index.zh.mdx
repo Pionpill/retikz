@@ -8,7 +8,7 @@ description: 用 ChannelDefinition 把字段解析为既有 Core 属性，并通
 ## 适用边界
 
 - 需要新的 `encodings.<name>`，并希望它参与字段绑定、逐行求值和图例描述时，定义自定义通道。
-- 只改变“值 → 坐标”或“值 → 颜色”规则时，使用[自定义比例尺](/viz/plot/scale/custom-scale)；大小、透明度等其它视觉属性仍由对应通道负责求值和交付。
+- 只改变数学映射时，使用 [Data 自定义比例尺](/viz/data/scale/custom-scale)，通过 `definitions.scales` 注入。已有通道可直接消费适用的新算法；属性校验、交付和图例仍由通道负责。
 - 字段准备、聚合或筛选属于[数据扩展](/viz/data/model/extensions)，不放进通道 resolver。
 
 <ComponentAlert
@@ -38,7 +38,7 @@ description: 用 ChannelDefinition 把字段解析为既有 Core 属性，并通
 
 | 字段      | 作用                                                                            |
 | --------- | ------------------------------------------------------------------------------- |
-| `channel` | 唯一注册名，对应 `encodings.<name>`                                     |
+| `channel` | 唯一注册名，对应 `encodings.<name>`                                             |
 | `output`  | 声明输出类型及可选的 range / palette / clamp 元数据；不会自动映射或截断值       |
 | `legend?` | 声明图例形态                                                                    |
 | `resolve` | 读取字段或常量绑定，自行完成映射与 clamp，并返回逐行 resolver 和可选 descriptor |
@@ -48,8 +48,6 @@ description: 用 ChannelDefinition 把字段解析为既有 Core 属性，并通
 
 ```ts
 import { channelField, defineNodeChannel, markChannelEncoding } from '@retikz/plot';
-
-const clampIntensity = (value: number): number => Math.min(1, Math.max(0.3, value));
 
 /** 自定义 intensity 通道：字段值映射到 opacity，固定透明度使用 properties.opacity */
 export const intensityChannel = defineNodeChannel<number>({
@@ -63,9 +61,11 @@ export const intensityChannel = defineNodeChannel<number>({
     const values = ctx.rows.map(row => Number(row[field])).filter(Number.isFinite);
     if (values.length === 0) return undefined;
 
-    const lo = Math.min(...values);
-    const hi = Math.max(...values);
-    const map = (value: number): number => clampIntensity(0.3 + (hi === lo ? 0.5 : (value - lo) / (hi - lo)) * 0.7);
+    const mapping = ctx.resolveScaleMapping(
+      { type: 'linear', name: 'intensity', range: [0.3, 1], clamp: true },
+      { values },
+    );
+    const map = (value: number): number => Number(mapping.map(value));
 
     return {
       resolver: row => {
@@ -75,8 +75,9 @@ export const intensityChannel = defineNodeChannel<number>({
       descriptor: {
         channel: 'intensity',
         scaleType: 'linear',
-        domain: [lo, hi],
-        range: [0.3, 1],
+        domain: mapping.domain,
+        range: mapping.range,
+        mapping,
         field,
         fieldType: ctx.model.find(definition => definition.name === field)?.type,
       },
@@ -109,7 +110,7 @@ React 和 Vanilla 共用前面的 definition，选择与你的项目一致的宿
 
 ```tsx
 <Plot data={customChannelPoints} definitions={{ channels: [intensityChannel] }}>
-  <PointMark encodings={{ intensity: 'score', position: { x: "x", y: "y" } }} />
+  <PointMark encodings={{ intensity: 'score', position: { x: 'x', y: 'y' } }} />
 </Plot>
 ```
 
@@ -192,7 +193,28 @@ definition 始终留在运行时，不进入 Plot IR。
     { title: '实现原理', description: '追踪通道注册、解析、属性交付与图例生成。', url: '/viz/plot/channel/mechanism' },
     { title: '编码参考', description: '查看字段、常量和扩展通道绑定结构。', url: '/viz/plot/reference/encoding' },
     { title: '运行时参考', description: '查看宿主注入与编译选项。', url: '/viz/plot/reference/runtime' },
-    { title: '自定义比例尺', description: '扩展位置或颜色的映射规则。', url: '/viz/plot/scale/custom-scale' },
+    { title: '自定义比例尺', description: '扩展位置或颜色的映射规则。', url: '/viz/plot/channel/custom-channel' },
     { title: 'API 参考', description: '查询通道定义、注册与解析交付的公开契约', url: '/viz/plot/channel/reference' },
   ]}
 />
+
+## 消费数学映射
+
+通道可调用 `ctx.resolveScaleMapping(operation, context)`，使用 Plot 当前注册的 Data 定义。通道确定默认配置和输入字段语义，检查返回值是否符合属性约束，再通过 `deliver` 写入 Core 属性。图例描述符的 `mapping` 保留同一次解析结果，避免按类型重新计算尺寸或透明度。
+
+本页 intensity 示例使用该入口完成线性映射。`output` 和 `legend` 声明消费语义，本身不会替通道执行映射或校验。
+
+## 自定义位置消费
+
+位置通道通过 `scales` 按数学 type 声明策略。`continuity` 指定连续或离散位置，`allowsBaseline` 指定零基线许可；省略策略的自定义映射不能用于坐标角色。`role` 对应坐标角色，`pick` 读取该角色的字段绑定。数学定义与位置通道分别通过 `definitions.scales` 和 `definitions.channels` 注入。
+
+下面的 ease-position 数学映射用指数调整位置；ease-x 位置通道显式允许它作为连续位置。品牌色数学映射由已有颜色通道消费，不需要额外通道定义。调整指数可以观察位置变化。
+
+<ComponentPreview
+  files={['scale-custom', 'scale-custom.preview.tsx', 'scale-custom.definition.ts', 'scale-custom.data.ts']}
+  size="lg"
+  caption="指数改变位置映射，类别颜色保持不变。"
+  defaultSourceFile="scale-custom.preview.tsx"
+/>
+
+坐标范围更新需要 `rebuild`，轴刻度需要 `ticks`；自动留白还需要相应的反向映射能力。示例未提供 invert，明确关闭 `autoPadding`。这些要求由消费方提出，不进入 Data 定义的业务元数据。

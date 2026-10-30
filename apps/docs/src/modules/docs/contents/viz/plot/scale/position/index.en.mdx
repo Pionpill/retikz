@@ -28,6 +28,7 @@ Plot uses the inferred continuous domain directly and adds no implicit boundary 
 A bare number and an object without `kind` use scale-range output units, so x and y receive the same physical gap; for example, `10` reserves 10 user units at each end. Only `{ kind: 'ratio', lower?, upper? }` explicitly uses a fraction of the source-domain span, with every ratio constrained to `0 <= value < 1`. An object may set one end only; the omitted end remains `0`.
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-continuous', 'scale-continuous.preview.tsx', 'scale-continuous.data.ts']}
   caption="Switch between positive and zero-crossing data to compare four continuous positional scales. Tune the log base, symlog linear region, and domain padding."
@@ -47,6 +48,7 @@ The `size` channel also uses `sqrt` so point area tracks magnitude, but that map
 `radial` maps values to radii so the **area** of a sector or ring stays proportional to the value. It starts from a zero baseline and is designed for the polar radial value axis, so it can be used with intervals and path closures; the square-root-style `sqrt` scale cannot.
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-radial', 'scale-radial.preview.tsx', 'scale-radial.data.ts']}
   caption="Choose a data distribution, then compare linear radius and area-proportional radial mapping side by side; both plots share the same maximum radius."
@@ -71,22 +73,23 @@ The mark branch accepts `clearance`, a nonnegative minimum distance from protect
 
 `clearance` accepts a number or `{ lower?: number, upper?: number }`. A number applies to both ends; omitted object ends use `0`. These ends follow domain order and range direction, rather than fixed visual left/right. Chart maps its four-sided clearance to these per-axis ends.
 
-Built-in support covers Cartesian2D and Polar2D with all continuous position scales, band/point categorical scales, Point marks, and projected Relation endpoints. Role-space placement uses adjusted positions. Categorical scales preserve their domains and compress output ranges. Polar boundaries include circles, annuli, and sectors; full-circle angular axes do not gain a seam. Empty data adds no automatic padding. Points outside the baseline domain do not constrain padding and retain existing rendering/clipping semantics. Shared scales use one final domain; incompatible fixed ends and missing capabilities produce errors. Chart generates this branch for its `point-aware` policy.
+Built-in support covers Cartesian2D and Polar2D with all continuous position scales, band/point categorical scales, and Point marks. Role-space placement uses adjusted positions. Categorical scales preserve their domains and compress output ranges. Polar boundaries include circles, annuli, and sectors; full-circle angular axes do not gain a seam. Empty data adds no automatic padding. Points outside the baseline domain do not constrain padding and retain existing rendering/clipping semantics. Shared scales use one final domain; incompatible fixed ends and missing capabilities produce errors. Chart generates this branch for its `point-aware` policy.
 
-Built-in marks provide targets/extents. Custom position Scale and Coordinate definitions can expose `domainPadding` capabilities for baseline normalization and final mapping, and coordinate boundary measurements. They use the existing registries; size evaluation must not depend on the position padding being solved. See [PointMark padding comparison](/viz/plot/mark/point#edge-padding).
+Built-in marks provide targets/extents. Custom mathematical scales provide `invert` and `rebuild` for position padding; position channels declare continuity and baseline policies. Coordinate definitions provide boundary measurements through `domainPadding`. They use the existing registries; size evaluation must not depend on the position padding being solved. See [PointMark padding comparison](/viz/plot/mark/point#edge-padding).
 
 ## Time
 
 A `temporal` field defaults to `time` on positional channels. It remains continuous, but ticks land on month starts, quarters, whole hours, and other readable boundaries, while labels are formatted as time. Declare the field as `temporal` in the model and no `<PlotScale>` is needed.
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-time', 'scale-time.preview.tsx', 'scale-time.data.ts']}
   defaultSourceFile="scale-time.preview.tsx"
   caption="The x channel does not declare PlotScale explicitly; the temporal model field derives a time scale and formats quarterly dates at readable time boundaries."
 />
 
-Dates can be ISO strings or timestamps. See [Data Intake](/viz/data/model/intake) for parsing rules. Binding a temporal field to `color` derives a continuous `sequential` band; see [Color Scales](/viz/plot/scale/color).
+Dates can be ISO strings or timestamps. See [Data Intake](/viz/data/model/intake) for parsing rules. Binding a temporal field to `color` derives a continuous `sequential` band; see [Color Scales](/viz/plot/scale/mark-attributes).
 
 ## Categories: band and point
 
@@ -98,6 +101,7 @@ Categorical fields have no continuous numeric order. The default `band` scale gi
 | `point` | One evenly spaced point, with no slot width | categorical lines and scatter |
 
 <ComponentPreview
+  mode="showcase"
   size="lg"
   files={['scale-band', 'scale-band.preview.tsx', 'scale-band.data.ts']}
   caption="Switch scales: band supplies bandwidth to intervals, while point provides evenly spaced positions for lines and points; the panel only shows padding for the current type."
@@ -120,7 +124,7 @@ A categorical line can opt into point positions:
 
 A positional scale gains its full context during lowering. In the figure, `derive` combines the field type, mark structure, and an explicit `<PlotScale>` to select a type. `validate` then checks field compatibility, valid domains, and baseline constraints. The resolver takes a domain from bound data or explicit configuration and a range from the available coordinate extent.
 
-<ComponentPreview files="scale-position-flow" size="xs" hideCode />
+<ComponentPreview mode="showcase" files="scale-position-flow" size="xs" hideCode />
 
 The resolved scale serves both marks and guides: continuous scales output numeric coordinates, `band` also supplies bandwidth, and `point` supplies discrete positions only. Axis ticks come from that same resolved scale, so mark positions, bandwidth, and axes do not maintain separate mappings.
 
@@ -191,7 +195,7 @@ The complete `IRPlotScale` surface can also name a scale, set an output `range`,
     {
       title: 'Color Scales',
       description: 'Map categorical, continuous, and temporal fields to color',
-      url: '/viz/plot/scale/color',
+      url: '/viz/plot/scale/mark-attributes',
     },
     {
       title: 'Axis',
@@ -206,7 +210,7 @@ The complete `IRPlotScale` surface can also name a scale, set an output `range`,
     {
       title: 'Custom scales',
       description: 'Register a scale definition for domain-specific mappings',
-      url: '/viz/plot/scale/custom-scale',
+      url: '/viz/plot/channel/custom-channel',
     },
   ]}
 />

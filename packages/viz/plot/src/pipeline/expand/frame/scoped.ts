@@ -1,9 +1,10 @@
 import type { IRScope } from '@retikz/core';
+import type { ScaleDefinition } from '@retikz/data';
 import type { DataView, FieldOrderDefinition } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
-import type { AnyScaleDefinition, CoordinateFrame, DimensionRole } from '../../../contract';
+import type { CoordinateFrame, DimensionRole } from '../../../contract';
 import type { ProvenanceContext } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import { MARK_REGISTRY } from '../../../providers';
@@ -60,7 +61,7 @@ type ScopedFramesResolveContext = {
   /** 本次下沉的数据来源追踪上下文 */
   provenance?: ProvenanceContext;
   /** 按类型索引的有效尺度定义 */
-  scaleRegistry: Map<string, AnyScaleDefinition>;
+  scaleRegistry: Map<string, ScaleDefinition>;
   /** 当前请求共享的分类顺序注册表 */
   fieldOrderRegistry?: ReadonlyMap<string, FieldOrderDefinition>;
   /** 各 mark 局部变换后的有效数据视图 */
@@ -144,6 +145,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     overrides: Partial<CoordinateResolveContext> = {},
   ): CoordinateResolveContext => ({
     coordinate: source.coordinate,
+    channels: options.definitions?.channels,
     markPadding: context.markPadding,
     rows: dataView.rows,
     model: dataView.model,
