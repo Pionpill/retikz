@@ -1,5 +1,5 @@
 import { CssColorSchema } from '@retikz/core';
-import { scaleLinear as d3ScaleLinear } from 'd3-scale';
+import { resolveScale } from '@retikz/data';
 import { number, strictObject, tuple } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
@@ -36,12 +36,16 @@ export const SEQUENTIAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
     }
 
     const range: [string, string] = [selectedRange[0], selectedRange[1]];
-    const scale = d3ScaleLinear<string>().domain(domain).range(range).clamp(true);
+    const mapping = resolveScale(
+      { type: 'linear', domain, range, params: { interpolation: 'color', clamp: true } },
+      { values },
+    );
 
     return {
       of: value => {
         if (typeof value !== 'number') throw new RetikzTableError('sequential-color values must be numbers');
-        return scale(value);
+        const mapped = mapping.map(value);
+        return typeof mapped === 'string' ? mapped : undefined;
       },
       legendForm: 'ramp',
       domain,
