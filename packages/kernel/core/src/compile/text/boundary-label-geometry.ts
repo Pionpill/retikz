@@ -1,5 +1,5 @@
-import { DEG_TO_RAD, RAD_TO_DEG, normalizeDegrees } from '@retikz/math';
 import type { Position } from '@retikz/math';
+import { DEG_TO_RAD, RAD_TO_DEG, normalizeDegrees } from '@retikz/math';
 
 import type { IRBoundaryLabel } from '../../schemas';
 

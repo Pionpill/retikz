@@ -1,5 +1,5 @@
-import { formatPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
 import type { CenteredBox, Position } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelope, ConnectionEnvelopeKind, ShapeDefinition } from '../../contract';

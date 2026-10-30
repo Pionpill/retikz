@@ -1,10 +1,10 @@
 import type { AnyCompositeDefinition } from '../contract';
 import type { IRScene } from '../schemas';
 import { createFullCompileContext } from './context';
-import { compileChildrenToPrimitives, orderCompileWarnings } from './orchestration';
-import { assembleSceneCompilationSnapshot } from './output';
+import { compileChildrenToPrimitives } from './orchestration';
 import type { CompileProvenanceSnapshot } from './provenance';
 import { CompileProvenanceTracker } from './provenance';
+import { assembleSceneCompilationSnapshot } from './scene';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from './types';
 import type { CompileWarning } from './warning';
 import { formatCompileWarning } from './warning';
@@ -79,7 +79,7 @@ export const compileSceneSnapshot = <const TComposites extends ReadonlyArray<Any
     layoutBounds,
     round: context.shared.layout.round,
     artifacts,
-    diagnostics: orderCompileWarnings(diagnostics.warnings),
+    diagnostics: diagnostics.warnings,
     provenanceTracker,
     padding: compileOptions?.padding,
   });

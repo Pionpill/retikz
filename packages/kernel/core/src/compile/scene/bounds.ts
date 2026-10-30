@@ -1,7 +1,7 @@
 import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
 import { boundsOf, expandBounds, mergeBounds } from '@retikz/math';
 
-import type { IRPosition, CanonicalDropShadow } from '../../schemas';
+import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 
 /** 把 bounds 字段中的负零规范化为稳定的正零 */
 export const canonicalizeBoundsRect = (bounds: Readonly<BoundsRect>): Readonly<BoundsRect> =>

@@ -1,12 +1,12 @@
-import { DEFAULT_EPSILON, DEG_TO_RAD } from '@retikz/math';
 import type { Position } from '@retikz/math';
+import { DEFAULT_EPSILON, DEG_TO_RAD } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
 import { anchorUnitVectorByAnchor } from '../../../shared';
 import { placeBoundaryLabelBox, resolveBoundaryLabelRotation } from '../../text';
 import { anchorOf, angleBoundaryOf } from '../anchors';
-import type { MeasuredNodeLabel, NodeLabelLayout, NodeLabelResolution, CompiledNodeLayout } from '../types';
+import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout, NodeLabelResolution } from '../types';
 
 const isLabelBoundaryPosition = (
   position: NodeLabelResolution['position'],

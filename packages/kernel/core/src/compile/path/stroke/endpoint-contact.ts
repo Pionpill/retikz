@@ -1,9 +1,9 @@
 import { curve, point, vector2 } from '@retikz/math';
 
-import type { PathCommand, CompiledArrowEnd } from '../../../contract';
+import type { CompiledArrowEnd, PathCommand } from '../../../contract';
 import type { IRPosition } from '../../../schemas';
-import { createStrokePathGeometry, curveSegmentOfOccurrence, sliceOccurrenceCommand } from './interruption';
 import type { StrokeCommandOccurrence } from './interruption';
+import { createStrokePathGeometry, curveSegmentOfOccurrence, sliceOccurrenceCommand } from './interruption';
 
 /** 路径首尾箭头 */
 export type EndpointArrowSpecs = {

@@ -5,11 +5,11 @@ import type { PositionReferenceView, PositionTargetResolveContext } from '../../
 import { resolvePositionTarget } from '../../resolve/position';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
 import type { NamespaceEntry } from '../namespace';
-import { createNodeReferenceGeometry } from '../node';
 import type { NodeBoundaryContext } from '../node';
-import { resolveAnchorRef } from '../reference';
+import { createNodeReferenceGeometry } from '../node';
 import type { ComposedScopeTransform } from '../transform';
-import { applyScopeTransform, inverseScopeTransform, composeScopeTransform } from '../transform';
+import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../transform';
+import { resolveAnchorRef } from './anchor-cache';
 
 /** 把视觉 shape 绑定为默认连接面 resolution */
 const shapeBoundaryResolutionOf = (node: NodeReferenceGeometry): BoundaryResolution => ({

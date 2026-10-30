@@ -1,19 +1,18 @@
-import { DEG_TO_RAD, point } from '@retikz/math';
 import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
+import { DEG_TO_RAD, point } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryResolution, NodeReferenceGeometry } from '../../resolve';
+import { boundaryKey } from '../../resolve';
 import type { IRBoundary } from '../../schemas';
+import { CenterAnchor, isAnchor } from '../../shared';
+import { snapshotProviderPosition } from '../scene-primitive';
+import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
 import type { NodeBoundaryState } from './boundary-context';
 import { createNodeReferenceGeometry } from './reference';
 import type { CompiledNodeLayout } from './types';
 
 type NodeAnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
-
-import { boundaryKey } from '../../resolve';
-import { CenterAnchor, isAnchor } from '../../shared';
-import { snapshotProviderPosition } from '../scene-primitive';
-import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
 
 /** 保留合法 undefined fallback，并校验 provider 实际返回的二维坐标 */
 const snapshotOptionalProviderPosition = (owner: string, value: unknown): Position | undefined =>

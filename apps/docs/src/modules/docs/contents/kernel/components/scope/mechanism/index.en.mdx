@@ -48,19 +48,15 @@ For the coordinate calculations, see Math's [Coordinate transforms](/kernel/pack
   sources={[
     {
       label: 'Freeze the position target before children',
-      path: 'packages/kernel/core/src/compile/scope/compile.ts',
-      startLine: 42,
+      path: 'packages/kernel/core/src/compile/scope/geometry.ts',
     },
     {
       label: 'Envelope anchors, final translation, and early resolution',
-      path: 'packages/kernel/core/src/compile/scope/compile.ts',
-      startLine: 121,
+      path: 'packages/kernel/core/src/compile/scope/geometry.ts',
     },
     {
       label: 'Lower to translation, rotation, and scaling',
       path: 'packages/kernel/core/src/compile/scope/layout.ts',
-      startLine: 53,
-      endLine: 111,
     },
   ]}
 />
@@ -101,20 +97,15 @@ A scale of `0` can flatten a drawing, but then a canvas position cannot be conve
     },
     {
       label: 'Bind forward and inverse projection',
-      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
-      startLine: 68,
-      endLine: 88,
+      path: 'packages/kernel/core/src/compile/reference/position-context.ts',
     },
     {
       label: 'Inverse transforms and zero-scale failure',
       path: 'packages/kernel/core/src/compile/transform.ts',
-      startLine: 36,
-      endLine: 69,
     },
     {
       label: 'Apply final transforms to deferred results',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 838,
     },
   ]}
 />
@@ -143,25 +134,18 @@ Replacing a lookup entry does not delete the earlier element's drawing output. A
     {
       label: 'Push and pop namespace frames',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 166,
-      endLine: 184,
     },
     {
       label: 'Register and diagnose same-frame repositions',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 197,
-      endLine: 229,
     },
     {
       label: 'Return immediately on a match',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 260,
-      endLine: 273,
     },
     {
       label: 'Register the group id before entering its local frame',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 736,
     },
   ]}
 />
@@ -187,24 +171,19 @@ Once the children finish, `replaceLayout` updates the placeholder to a resolved 
   sources={[
     {
       label: 'Build rectangular or circular bounds from layouts',
-      path: 'packages/kernel/core/src/compile/scope/compile.ts',
-      startLine: 79,
+      path: 'packages/kernel/core/src/compile/scope/geometry.ts',
     },
     {
       label: 'Reserve a placeholder in the parent frame',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 635,
     },
     {
       label: 'Publish the final envelope or pass child layouts upward',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 885,
     },
     {
       label: 'Update in place and check placeholder identity',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 232,
-      endLine: 257,
     },
   ]}
 />
@@ -239,19 +218,14 @@ A group is emitted when there are child primitives, effective transforms, an id,
     {
       label: 'Resolve Clip Definitions and lower paths',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 231,
-      endLine: 259,
     },
     {
       label: 'Deduplicate resources within a compilation',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 261,
-      endLine: 276,
     },
     {
       label: 'Group pruning, transforms, and clipRef',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 657,
     },
     {
       label: 'Build the SVG clipPath',

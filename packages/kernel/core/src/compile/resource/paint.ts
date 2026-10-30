@@ -1,20 +1,20 @@
 import type {
+  CompiledPatternTile,
   PaintValue,
   PatternEmitContext,
-  PatternEmitResult,
   PatternEmitOutput,
-  CompiledPatternTile,
-  SceneResource,
+  PatternEmitResult,
   ScenePrimitive,
+  SceneResource,
 } from '../../contract';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
-import type { PaintResolution, InputPaintResolution, PatternResolution } from '../../resolve/resource';
-import { collectPrimitiveResourceReferences, validateCompileResourceReferences } from './references';
+import type { InputPaintResolution, PaintResolution, PatternResolution } from '../../resolve/resource';
 import type { CompileResourceReference } from './references';
+import { collectPrimitiveResourceReferences, validateCompileResourceReferences } from './references';
 import { materializeScenePrimitives } from './scene-content';
 
 /** Paint resource registry 输入：resolve 阶段已绑定的 paint */

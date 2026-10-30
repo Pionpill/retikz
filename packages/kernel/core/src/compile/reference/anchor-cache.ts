@@ -2,17 +2,15 @@ import type { Position } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryResolution, NodeReferenceGeometry } from '../../resolve';
+import { boundaryKey } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { Side } from '../../shared';
-import type { CompiledNodeLayout } from '../node';
+import { isAnchor } from '../../shared';
+import type { CompiledNodeLayout, NodeBoundaryState } from '../node';
+import { anchorOf, angleBoundaryOf, createNodeReferenceGeometry } from '../node';
+import { snapshotProviderPosition } from '../scene-primitive';
 
 type AnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
-
-import { boundaryKey } from '../../resolve';
-import { isAnchor } from '../../shared';
-import { anchorOf, angleBoundaryOf, createNodeReferenceGeometry } from '../node';
-import type { NodeBoundaryState } from '../node';
-import { snapshotProviderPosition } from '../scene-primitive';
 
 /** 单个 CompiledNodeLayout 生命周期内的 anchor 坐标缓存 */
 const cache = new WeakMap<AnchorLayout, Map<string, IRPosition>>();

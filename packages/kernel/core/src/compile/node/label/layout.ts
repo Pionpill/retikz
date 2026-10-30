@@ -4,10 +4,10 @@ import type { TextMeasurer } from '../../text';
 import { layoutInlineLine, resolveTextMetrics } from '../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content/text';
 import type {
-  MeasuredNodeLabel,
-  NodeLabelResolution,
-  NodeLabelLayout,
   CompiledNodeLayout,
+  MeasuredNodeLabel,
+  NodeLabelLayout,
+  NodeLabelResolution,
   NodeTextLayoutContext,
 } from '../types';
 import { resolveNodeLabelGeometry } from './geometry';

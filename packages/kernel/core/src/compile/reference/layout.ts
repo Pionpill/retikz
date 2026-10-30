@@ -1,15 +1,16 @@
 import type { Transform } from '../../contract';
-import type { IRScope, IRPosition } from '../../schemas';
+import type { IRPosition, IRScope } from '../../schemas';
 import type { SharedCompileContext } from '../context';
+import type { CompiledCoordinate } from '../coordinate';
+import type { CompiledNode, CompiledNodeLayout } from '../node';
 import { createSyntheticRectangleLayout } from '../node';
-import type { CompiledNodeLayout } from '../node';
+import type { CompiledScope } from '../scope';
 import {
   applyTransformChain,
-  inverseTransformChain,
   composeScopeTransform,
+  inverseTransformChain,
   projectLayoutWithTransform,
 } from '../transform';
-import type { CompiledCoordinate, CompiledNode, CompiledScope } from './types';
 
 /** 可提供命名几何的已完成元素，Path 不提供节点定位几何 */
 export type CompileReferenceSource =

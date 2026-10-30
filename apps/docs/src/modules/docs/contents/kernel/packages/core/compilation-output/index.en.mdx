@@ -274,12 +274,12 @@ With no layout bounds, the automatic canvas is `{ x: 0, y: 0, width: 100, height
   sources={[
     {
       label: 'Layout contributions and shadow overflow',
-      path: 'packages/kernel/core/src/compile/orchestration/bounds.ts',
+      path: 'packages/kernel/core/src/compile/scene/bounds.ts',
     },
     { label: 'Canvas rectangle structure', path: 'packages/kernel/math/src/primitives/bounds.ts' },
     { label: 'Automatic canvas and empty scenes', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
     { label: 'Explicit viewBox', path: 'packages/kernel/core/src/compile/scene/view-box.ts' },
-    { label: 'Primitive visual bounds', path: 'packages/kernel/core/src/compile/orchestration/visual-bounds.ts' },
+    { label: 'Primitive visual bounds', path: 'packages/kernel/core/src/compile/scene/visual-bounds.ts' },
   ]}
 />
 
@@ -315,7 +315,7 @@ Core filters tracks by their target level during compilation. Non-`viewBox` trac
 <SourceLinks
   sources={[
     { label: 'Animation tracks and keyframes', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
-    { label: 'Root and element track filtering', path: 'packages/kernel/core/src/compile/orchestration/animation.ts' },
+    { label: 'Root and element track filtering', path: 'packages/kernel/core/src/compile/animation.ts' },
     { label: 'Scene animation assembly', path: 'packages/kernel/core/src/compile/compile.ts' },
   ]}
 />
@@ -443,7 +443,7 @@ Start at the snapshot compilation entry, then follow traversal and Scene assembl
   sources={[
     { label: 'Compilation entry', path: 'packages/kernel/core/src/compile/compile.ts' },
     { label: 'Traversal and replay', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
-    { label: 'Scene assembly', path: 'packages/kernel/core/src/compile/output.ts' },
+    { label: 'Scene assembly', path: 'packages/kernel/core/src/compile/scene/output.ts' },
   ]}
 />
 

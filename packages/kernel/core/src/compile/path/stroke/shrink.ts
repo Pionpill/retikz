@@ -1,9 +1,9 @@
-import type { PathCommand, CompiledArrowEnd } from '../../../contract';
+import type { CompiledArrowEnd, PathCommand } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { ArrowMarkResolution } from '../../../resolve';
 import type { PaintResolver } from '../../resource';
-import { shortenEndpointContacts } from './endpoint-contact';
 import type { EndpointArrowSpecs } from './endpoint-contact';
+import { shortenEndpointContacts } from './endpoint-contact';
 import { emitMarkPrimitives } from './marks';
 
 /** 把箭头视觉输入物化为 Scene 端点箭头描述 */

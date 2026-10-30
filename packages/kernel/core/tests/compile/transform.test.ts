@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
+import { createPositionResolveContext } from '../../src/compile/reference/position-context';
 import { applyTransformChain, inverseTransformChain, createScopeTransformContext } from '../../src/compile/transform';
 import type { Transform } from '../../src/contract';
 

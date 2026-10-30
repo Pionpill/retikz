@@ -1,5 +1,5 @@
-import { formatPropertyPath, readPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath, readPropertyPath } from '@retikz/foundation';
 
 import type { ScenePrimitive } from '../../contract';
 import type { IRChild } from '../../schemas';
@@ -7,9 +7,9 @@ import { createCompileInvariantError } from '../probe-failure';
 import type {
   CompileNamespaceKey,
   CompileOwnerKey,
-  CompileProvenanceSnapshot,
   CompileProvenanceEmission,
   CompileProvenanceOwner,
+  CompileProvenanceSnapshot,
 } from './types';
 
 /** 收集单次编译的来源事实，不判断跨次身份或绑定 revision */

@@ -3,13 +3,14 @@ import type {
   CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplayWrapper,
-} from '../../contract';
-import type { CompositeInputScope } from '../../contract/composite';
-import { createCompositeContractError } from '../../resolve/diagnostics';
-import type { IRChild } from '../../schemas';
-import { cloneAndFreezeJson } from '../../shared/json';
-import { withProviderOutputValidationBoundary } from '../scene-primitive';
-import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOutputChild } from './types';
+} from '../../../contract';
+import type { CompositeInputScope } from '../../../contract/composite';
+import { createCompositeContractError } from '../../../resolve/diagnostics';
+import type { IRChild } from '../../../schemas';
+import { cloneAndFreezeJson } from '../../../shared/json';
+import { withProviderOutputValidationBoundary } from '../../scene-primitive';
+import type { CompositeCompileSession } from './session';
+import type { CompositeCompileOwner, CompositeRuntimeOutputChild } from './types';
 
 const builtinChildTypes = new Set(['node', 'path', 'coordinate', 'scope']);
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRAnimationTrack, IRScene, PathCommand, ScenePrimitive, SceneResource, TextPrimitive } from '../../src';
 import { compileToScene, defineArrow } from '../../src';
-import { visualBoundsOfPrimitives } from '../../src/compile/orchestration/visual-bounds';
+import { visualBoundsOfPrimitives } from '../../src/compile/scene/visual-bounds';
 
 const boundsOf = (primitives: ReadonlyArray<ScenePrimitive>, resources: ReadonlyArray<SceneResource> = []) =>
   visualBoundsOfPrimitives(primitives, resources);

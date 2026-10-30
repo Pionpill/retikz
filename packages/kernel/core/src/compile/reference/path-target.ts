@@ -6,9 +6,9 @@ import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTa
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import type { NodeBoundaryContext } from '../node';
 import { boundaryPointOf, clipNodePolyline, createNodeBoundaryContext } from '../node';
-import { resolveAnchorRef } from '../reference';
 import type { ComposedScopeTransform } from '../transform';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../transform';
+import { resolveAnchorRef } from './anchor-cache';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);

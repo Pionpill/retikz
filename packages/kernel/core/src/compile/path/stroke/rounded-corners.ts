@@ -1,5 +1,5 @@
-import { DEG_TO_RAD } from '@retikz/math';
 import type { ContourCommand, ContourSegment, FilletSolution } from '@retikz/math';
+import { DEG_TO_RAD } from '@retikz/math';
 
 import type { PathCommand } from '../../../contract';
 import { contourCommands, filletContour } from '../../../shared/geometry';

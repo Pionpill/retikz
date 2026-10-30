@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import * as core from '../../../src';
 import { NamespaceStack } from '../../../src/compile/namespace';
 import { angleBoundaryOf, boundaryPointOf, compileNodeResolution } from '../../../src/compile/node';
-import { createPositionResolveContext } from '../../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../../src/compile/reference';
-import * as core from '../../../src/index';
+import { createPositionResolveContext } from '../../../src/compile/reference/position-context';
 import { resolveBoundaryRegistry } from '../../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';

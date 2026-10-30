@@ -1,5 +1,5 @@
-import { formatPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompiledArrowEnd, ScenePrimitive } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';

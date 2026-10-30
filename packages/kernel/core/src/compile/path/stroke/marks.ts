@@ -1,11 +1,11 @@
-import { RAD_TO_DEG } from '@retikz/math';
 import type { CurveSegmentSample } from '@retikz/math';
+import { RAD_TO_DEG } from '@retikz/math';
 
-import type { GroupPrimitive, PaintValue, ScenePrimitive, CompiledArrowEnd, Transform } from '../../../contract';
+import type { CompiledArrowEnd, GroupPrimitive, PaintValue, ScenePrimitive, Transform } from '../../../contract';
 import type { MarkResolution } from '../../../resolve';
 import { createLayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';
-import { materializeScenePrimitives } from '../../resource';
 import type { PaintResolver } from '../../resource';
+import { materializeScenePrimitives } from '../../resource';
 import { combineOpacity } from '../../text';
 
 const resolveMarkerContextFill = (value: PaintValue, contextStroke: PaintValue): PaintValue =>

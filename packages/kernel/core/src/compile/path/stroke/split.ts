@@ -1,10 +1,10 @@
 import type {
+  CompiledArrowEnd,
   PathCommand,
   PathPrimitive,
   PathPrimitiveAppearance,
-  ScenePrimitiveBase,
-  CompiledArrowEnd,
   ScenePrimitive,
+  ScenePrimitiveBase,
 } from '../../../contract';
 import type { StrokeCommandFragment } from './interruption';
 

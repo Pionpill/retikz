@@ -3,7 +3,7 @@ import { curve } from '@retikz/math';
 import type { Transform } from '../../../contract';
 import type { CanonicalStep, PathTargetView } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import { BendOutAngleSchema, BendInAngleSchema, BendLoosenessSchema } from '../../../schemas';
+import { BendInAngleSchema, BendLoosenessSchema, BendOutAngleSchema } from '../../../schemas';
 import { bendControlPoints, foldSegmentSample, outInControlPoints } from '../../../shared/geometry';
 import { clipTarget, foldCornersOf, isAutoBoundaryTarget, samePoint } from '../host';
 import type { PathCommandEmitter } from './commands';

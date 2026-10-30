@@ -17,18 +17,18 @@ import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/posit
 import { resolveFont, resolveTextLineHeight } from '../../resolve/text';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import { CenterAnchor } from '../../shared';
-import { DEFAULT_FONT_SIZE } from '../constants';
 import type { CompileWarningCode } from '../constants';
+import { DEFAULT_FONT_SIZE } from '../constants';
 import { resolveAnchorRefUncached } from '../reference';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
 import type { TextMeasurer } from '../text';
 import type { ComposedScopeTransform } from '../transform';
 import { composeScopeTransform, inverseScopeTransform, projectLayoutWithTransform } from '../transform';
-import { createNodeBoundaryContext } from './boundary-context';
 import type { NodeBoundaryContext } from './boundary-context';
+import { createNodeBoundaryContext } from './boundary-context';
 import { layoutNodeContent } from './content/layout';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
-import type { NodeCompilation, CompiledNodeLayout, TexLoweringContext } from './types';
+import type { CompiledNodeLayout, NodeCompilation, TexLoweringContext } from './types';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;

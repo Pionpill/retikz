@@ -6,8 +6,8 @@ import {
   compileNodeResolution,
   createNodeReferenceGeometry,
 } from '../../src/compile/node';
-import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../src/compile/reference';
+import { createPositionResolveContext } from '../../src/compile/reference/position-context';
 import { composeScopeTransform, projectLayoutWithTransform } from '../../src/compile/transform';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';

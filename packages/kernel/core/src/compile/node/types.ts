@@ -1,5 +1,4 @@
-import type { PropertyPath } from '@retikz/foundation';
-import type { JsonObject } from '@retikz/foundation';
+import type { JsonObject, PropertyPath } from '@retikz/foundation';
 import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 
 import type { ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
@@ -12,6 +11,7 @@ import type {
 } from '../../resolve';
 import type { IRFont } from '../../schemas';
 import type { CompileWarningCode } from '../constants';
+import type { CompileOutput } from '../output';
 import type { InlineLineLayout, TexLowerer, TextFont, TextMeasurer } from '../text';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
@@ -177,3 +177,11 @@ export type TexLoweringContext = {
   /** 分发公式降级或布局过程中产生的编译诊断 */
   warn: (code: CompileWarningCode, message: string) => void;
 };
+
+/** 节点完整编译状态，布局与绘制使用同一次解析结果 */
+export type CompiledNode = Readonly<
+  NodeCompilation & {
+    /** 本地绘制输出 */
+    output: CompileOutput;
+  }
+>;

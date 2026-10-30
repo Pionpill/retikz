@@ -28,20 +28,34 @@ export type { CompileWarning } from './warning';
 export { formatCompileWarning } from './warning';
 
 export type { ExecuteOptions, SceneCompilationSnapshot } from './compile';
-export * from './element';
-export { createSharedCompileContext } from './context';
+export { createSharedCompileContext, resolveScopeContext } from './context';
 export type {
   CompileContextHost,
   CompileContextLayout,
   CompileContextLimits,
   CompileContextRegistries,
+  ElementCompileContext,
+  ElementCompileOptions,
+  ElementCompileReference,
+  ElementCompileResult,
   SharedCompileContext,
   SharedCompileContextOptions,
 } from './context';
-export { assembleSceneCompilationSnapshot } from './output';
-export type { InputSceneCompilationSnapshot } from './output';
+export { compileCoordinate } from './coordinate';
+export type { CompiledCoordinate, CoordinateCompileContext } from './coordinate';
+export { compileNode } from './node';
+export type { CompiledNode, NodeCompileContext } from './node';
+export * from './output';
+export { compilePath } from './path';
+export type { CompiledPath, PathElementCompileContext } from './path';
 export * from './provenance';
+export { projectCompileReference, projectPublishedCompileLayout, projectScopeCompileLayouts } from './reference';
+export type { CompileReferenceSource } from './reference';
+export { assembleSceneCompilationSnapshot } from './scene';
+export type { InputSceneCompilationSnapshot } from './scene';
+export { assembleScopeOutput, compileScope, prepareScopeCompilation } from './scope';
+export type { CompiledScope, ScopeCompilationPreparation, ScopeCompileContext } from './scope';
 
 export type { CompiledNodeLayout, NodeCompilation, NodeLabelResolution, NodeResolvedProperties } from './node';
 
-export { createDuplicateCompileWarning } from './orchestration';
+export { createDuplicateCompileWarning } from './diagnostics';

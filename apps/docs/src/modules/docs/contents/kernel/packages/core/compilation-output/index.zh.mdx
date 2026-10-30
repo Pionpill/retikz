@@ -268,10 +268,10 @@ type BoundsRect = {
 <SourceLinks
   sources={[
     { label: '画布矩形结构', path: 'packages/kernel/math/src/primitives/bounds.ts' },
-    { label: '布局贡献与阴影外溢', path: 'packages/kernel/core/src/compile/orchestration/bounds.ts' },
+    { label: '布局贡献与阴影外溢', path: 'packages/kernel/core/src/compile/scene/bounds.ts' },
     { label: '自动画布与空场景', path: 'packages/kernel/core/src/compile/scene/layout.ts' },
     { label: '显式 viewBox', path: 'packages/kernel/core/src/compile/scene/view-box.ts' },
-    { label: '图元视觉边界', path: 'packages/kernel/core/src/compile/orchestration/visual-bounds.ts' },
+    { label: '图元视觉边界', path: 'packages/kernel/core/src/compile/scene/visual-bounds.ts' },
   ]}
 />
 
@@ -307,7 +307,7 @@ Core 在编译时筛选轨道所属层级：根级的非 `viewBox` 轨道、元�
 <SourceLinks
   sources={[
     { label: '动画轨道与关键帧', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
-    { label: '根级与元素级轨道筛选', path: 'packages/kernel/core/src/compile/orchestration/animation.ts' },
+    { label: '根级与元素级轨道筛选', path: 'packages/kernel/core/src/compile/animation.ts' },
     { label: '场景动画装配', path: 'packages/kernel/core/src/compile/compile.ts' },
   ]}
 />
@@ -435,7 +435,7 @@ for (const artifact of result.artifacts) {
   sources={[
     { label: '编译入口', path: 'packages/kernel/core/src/compile/compile.ts' },
     { label: '遍历与重放', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
-    { label: 'Scene 装配', path: 'packages/kernel/core/src/compile/output.ts' },
+    { label: 'Scene 装配', path: 'packages/kernel/core/src/compile/scene/output.ts' },
   ]}
 />
 

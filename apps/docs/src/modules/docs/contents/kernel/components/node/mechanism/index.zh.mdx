@@ -26,8 +26,6 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
     {
       label: '正文与间距参与形状布局',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 145,
-      endLine: 328,
     },
   ]}
 />
@@ -45,8 +43,6 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
     {
       label: '标签视觉框与附着偏移',
       path: 'packages/kernel/core/src/compile/node/label/geometry.ts',
-      startLine: 147,
-      endLine: 179,
     },
   ]}
 />
@@ -56,7 +52,6 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
     {
       label: '节点与标签分别收集内容范围',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 486,
     },
   ]}
 />
@@ -84,8 +79,6 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
     {
       label: 'tight 包络、fallback 与缓存',
       path: 'packages/kernel/core/src/compile/node/boundary.ts',
-      startLine: 51,
-      endLine: 100,
     },
     {
       label: '内置 boundary 的 fit 与 gap',
@@ -96,14 +89,10 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
     {
       label: '视觉轮廓、连接面与 anchor 分流',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 93,
-      endLine: 209,
     },
     {
       label: 'margin 与锚点类型的解析边界',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 15,
-      endLine: 74,
     },
   ]}
 />
@@ -128,17 +117,14 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
 
 <SourceLinks
   sources={[
-    { label: '命名栈与条目结构', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 5, endLine: 83 },
+    { label: '命名栈与条目结构', path: 'packages/kernel/core/src/compile/namespace.ts' },
     {
       label: 'CompiledNodeLayout 的几何字段',
       path: 'packages/kernel/core/src/compile/node/types.ts',
-      startLine: 74,
-      endLine: 119,
     },
     {
       label: '布局投影与 id 登记',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 455,
     },
   ]}
 />
@@ -158,22 +144,18 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
 
 <SourceLinks
   sources={[
-    { label: '由内向外查找', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 260, endLine: 273 },
+    { label: '由内向外查找', path: 'packages/kernel/core/src/compile/namespace.ts' },
     {
       label: '布局投影为定位查询视图',
-      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
-      startLine: 67,
-      endLine: 96,
+      path: 'packages/kernel/core/src/compile/reference/position-context.ts',
     },
     {
       label: '路径入队并保留绘制位置',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 549,
     },
     {
       label: '解析路径与回填占位',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 378,
     },
   ]}
 />
@@ -195,23 +177,18 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     {
       label: '写入、覆盖与状态替换',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 195,
-      endLine: 257,
     },
     {
       label: 'Scope 先登记占位，再进入局部 frame',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 635,
     },
     {
       label: 'localNamespace 的入栈条件',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 745,
     },
     {
       label: '发布包围盒、消费路径并出栈',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 885,
     },
   ]}
 />
@@ -269,8 +246,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
   sources={[
     {
       label: '样式级联后解析',
-      path: 'packages/kernel/core/src/compile/node/compile.ts',
-      startLine: 40,
+      path: 'packages/kernel/core/src/compile/node/state.ts',
     },
     {
       label: 'Node 对比色解析',
@@ -281,8 +257,6 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     {
       label: 'Node 正文文本布局',
       path: 'packages/kernel/core/src/compile/node/content/layout.ts',
-      startLine: 42,
-      endLine: 145,
     },
   ]}
 />
@@ -304,7 +278,6 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     {
       label: 'Coordinate 位置解析与登记',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 514,
     },
     {
       label: '定位引用解析',
@@ -333,20 +306,14 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     {
       label: '零尺寸几何记录构造',
       path: 'packages/kernel/core/src/compile/node/synthetic.ts',
-      startLine: 64,
-      endLine: 122,
     },
     {
       label: '命名 anchor 解析',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 145,
-      endLine: 209,
     },
     {
       label: '零尺寸边上比例点拒绝',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 28,
-      endLine: 53,
     },
   ]}
 />
@@ -399,8 +366,6 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     {
       label: '文字与 padding 到形状边界的布局',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 189,
-      endLine: 253,
     },
     {
       label: '矩形轮廓、anchor 与边界交点',

@@ -29,12 +29,7 @@ export const recordPrimitiveZIndex = (
 
 /** 按 zIndex 升序稳定排序，同 zIndex 保持原顺序 */
 export const stableSortByZIndex = (arr: Array<ScenePrimitive>, table: PrimitiveZIndexTable): Array<ScenePrimitive> => {
-  const decorated = arr.map((prim, index) => ({ prim, index, z: table.get(prim) ?? 0 }));
-  decorated.sort((a, b) => a.z - b.z || a.index - b.index);
-
-  for (let i = 0; i < arr.length; i++) arr[i] = decorated[i].prim;
-
-  return arr;
+  return arr.sort((a, b) => (table.get(a) ?? 0) - (table.get(b) ?? 0));
 };
 
 /** 开发诊断：递归找出残留占位的 index 路径 */

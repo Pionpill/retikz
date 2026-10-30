@@ -1,7 +1,7 @@
 import type { InputPathBoundaryLabel, ScenePrimitive } from '../../../contract';
 import type { PathLabelColorSource } from '../../../resolve';
-import { BoundaryLabelSchema } from '../../../schemas';
 import type { IRPosition } from '../../../schemas';
+import { BoundaryLabelSchema } from '../../../schemas';
 import { placeBoundaryLabelBox } from '../../text';
 import type { EmitLabelPrimitiveContext } from './label';
 import { emitLabelPrimitive } from './label';

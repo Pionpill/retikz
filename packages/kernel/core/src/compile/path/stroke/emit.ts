@@ -8,8 +8,8 @@ import type { CanonicalStep, PathResolution, PathTargetView, StrokePathResolutio
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { BuiltinCompileWarningCode } from '../../constants';
-import { optionalVisualBoundsOfPrimitives } from '../../orchestration';
 import type { PaintResolver } from '../../resource';
+import { optionalVisualBoundsOfPrimitives } from '../../scene';
 import type { TextMeasurer } from '../../text';
 import { fallbackMeasurer } from '../../text';
 import { emitLabelPrimitive, pointOfTarget } from '../host';

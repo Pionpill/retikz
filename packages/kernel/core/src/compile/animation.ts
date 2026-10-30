@@ -1,8 +1,8 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { IRAnimationTrack } from '../../schemas';
-import { BuiltinCompileWarningCode } from '../constants';
-import type { InputCompileWarning } from '../warning';
+import type { IRAnimationTrack } from '../schemas';
+import { BuiltinCompileWarningCode } from './constants';
+import type { InputCompileWarning } from './warning';
 
 /** animation 过滤上下文 */
 type FilterAnimationsContext = {

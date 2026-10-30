@@ -27,8 +27,8 @@ import {
 } from '../../src';
 import { createFullCompileContext } from '../../src/compile/context';
 import { NamespaceStack } from '../../src/compile/namespace';
+import { CompositeCompileSession } from '../../src/compile/orchestration/composite/session';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
-import type { CompositeCompileSession } from '../../src/compile/orchestration/types';
 import { CompileProvenanceTracker } from '../../src/compile/provenance';
 import { sceneRectangles } from '../helpers/scene-rectangles';
 
@@ -572,16 +572,7 @@ describe('布局感知复合运行时包装树', () => {
     const context = createFullCompileContext(failingIr, options);
     const namespaceStack = new NamespaceStack();
     const provenanceTracker = new CompileProvenanceTracker(namespaceStack.identity);
-    const session: CompositeCompileSession = {
-      measurements: new Map(),
-      measurementIdentities: new WeakMap(),
-      measurementPrimitiveIdentities: new Map(),
-      nextMeasurementIdentity: 0,
-      replayTransactions: new WeakMap(),
-      layoutResults: new WeakMap(),
-      outputChildren: new WeakMap(),
-      failures: new WeakMap(),
-    };
+    const session = new CompositeCompileSession();
 
     expect(() =>
       compileChildrenToPrimitives(failingIr.children, context, {

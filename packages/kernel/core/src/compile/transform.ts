@@ -1,5 +1,5 @@
-import { AFFINE_IDENTITY, DEG_TO_RAD, applyAffine, multiplyAffine } from '@retikz/math';
 import type { AffineMatrix } from '@retikz/math';
+import { AFFINE_IDENTITY, DEG_TO_RAD, applyAffine, multiplyAffine } from '@retikz/math';
 
 import type { Transform } from '../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';

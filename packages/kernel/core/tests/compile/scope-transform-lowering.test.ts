@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { NamespaceStack } from '../../src/compile/namespace';
 import type { CompiledNodeLayout } from '../../src/compile/node';
-import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
+import { createPositionResolveContext } from '../../src/compile/reference/position-context';
 import { lowerScopeTransforms } from '../../src/compile/scope';
 import { composeScopeTransform, projectLayoutWithTransform } from '../../src/compile/transform';
 import type { Transform } from '../../src/contract';

@@ -1,7 +1,6 @@
-import { DEG_TO_RAD, boundsOf, boundsToRect } from '@retikz/math';
 import type { BoundsRect } from '@retikz/math';
+import { DEG_TO_RAD, boundsOf, boundsToRect } from '@retikz/math';
 
-import { computeSceneTextBounds } from '../../contract';
 import type {
   GroupPrimitive,
   PathCommand,
@@ -10,7 +9,8 @@ import type {
   SceneResource,
   Transform,
 } from '../../contract';
-import type { IRPosition, CanonicalDropShadow } from '../../schemas';
+import { computeSceneTextBounds } from '../../contract';
+import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import { CANONICAL_STROKE_MITER_LIMIT } from '../constants';
 import { buildMarkMarkerGroup } from '../path';
 import { createCompileInvariantError } from '../probe-failure';
