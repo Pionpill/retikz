@@ -1,10 +1,15 @@
 import { formatPropertyPath } from '@retikz/foundation';
 import { boundsToRect } from '@retikz/math';
 
-import type { CompileOccurrenceLocator, GroupPrimitive, SceneClipPath, Transform } from '../../contract';
+import type {
+  CompileOccurrenceLocator,
+  GroupPrimitive,
+  SceneClipPath,
+  ScenePrimitive,
+  Transform,
+} from '../../contract';
 import { CompileExpansionKind, naturalLayoutProposal } from '../../contract';
 import { selectCompositeInputScope } from '../../contract/composite';
-import type { NodeBoundaryResolver } from '../../resolve';
 import { resolveNodeBoundary, resolveScopeDefaults, resolveTheme } from '../../resolve';
 import {
   createLayoutProbeRecoverableError,
@@ -16,10 +21,7 @@ import type { PositionTargetResolveContext } from '../../resolve/position';
 import type { IRChild } from '../../schemas';
 import { filterAnimations } from '../animation';
 import { createCompileChildPath, formatCompileOccurrence, orderCompileArtifacts } from '../artifact';
-import type { FullCompileContext } from '../context';
 import { resolveCoordinatePosition } from '../coordinate';
-import { createDuplicateWarning, withCompileWarningOccurrence } from '../diagnostics';
-import { NamespaceStack } from '../namespace';
 import type { CompiledNodeLayout } from '../node';
 import {
   alignmentGuidesOfNode,
@@ -38,174 +40,129 @@ import {
   projectScopeCompileLayouts,
 } from '../reference';
 import { collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../scene';
-import {
-  createIntrinsicScopeLayout,
-  createScopeGroup,
-  resolveFinalScopeTransforms,
-  resolvePreliminaryScopeTransforms,
-  resolveScopePositionTarget,
-} from '../scope';
-import { createScopeTransformContext } from '../transform';
-import type { InputCompileWarning } from '../warning';
+import { compileScopeGeometry, createScopeGroup, prepareScopeGeometry } from '../scope';
 import { cloneAlignmentGuides, resolveStructuralAlignmentGuides, transformAlignmentGuides } from './alignment-guide';
 import { effectiveAllocations, pushAllocation } from './allocation';
 import { CompositeCompiler } from './composite';
 import { allocationPointsOf } from './composite/layout';
-import { CompositeCompileSession } from './composite/session';
-import type { InternalScenePrimitive } from './primitive';
+import type { InternalScenePrimitive, PrimitiveZIndexTable } from './primitive';
 import {
   collectPlaceholderLocators,
   createPathPlaceholder,
   recordPrimitiveZIndex,
-  sealSink,
   stableSortByZIndex,
 } from './primitive';
 import type {
+  CompileExecutionContext,
+  ScopeCompileHost,
   CoordinateChild,
   EmitScopeGroupContext,
   NodeChild,
   PathChild,
   PendingPathEmission,
   ScopeChild,
+  ScopeCompileFrame,
+  ScopeCompilerOptions,
   ScopeLayoutPlaceholder,
   ScopeLayoutPlaceholderContext,
-  TraversalCompileOptions,
-  TraversalFrame,
-  TraversalResult,
-  TraversalRuntime,
+  ScopeOutputContribution,
+  SubtreeCompilation,
 } from './types';
 
-/** 单次子树编译的调度器；隔离试编译使用独立实例 */
-export class CompileTraversal {
-  private readonly scopeTransformsContext = createScopeTransformContext();
-
-  private readonly warningOccurrences: Array<CompileOccurrenceLocator> = [];
-
-  private readonly runtime: TraversalRuntime;
-
-  private readonly composite: CompositeCompiler;
-
-  private dispatchWarning = (warning: InputCompileWarning): void => {
-    this.context.workspace.diagnostics.collect(withCompileWarningOccurrence(warning, this.warningOccurrences.at(-1)));
-  };
-
-  resolveExplicitBoundary: NodeBoundaryResolver = (boundary, referenceContext) => {
-    return resolveNodeBoundary(boundary, {
-      visualDef: referenceContext.visualDef,
-      visualParams: referenceContext.visualParams,
-      shapeRegistry: this.runtime.context.shared.registries.shapeRegistry,
-      boundaryRegistry: this.runtime.context.shared.registries.boundaryRegistry,
-      irPath: referenceContext.irPath,
-    });
-  };
+/** 调度一个子树执行，继承状态由递归帧持有，隔离与会话生命周期由宿主负责 */
+export class ScopeCompiler {
+  /** 首次遇到复合组件时创建，同次子树执行复用 */
+  private compositeCompiler: CompositeCompiler | undefined;
+  /** 当前子树的图元排序旁路表 */
+  private readonly zIndexOf: PrimitiveZIndexTable = new WeakMap();
+  /** 当前子树尚未回填的路径占位数量 */
+  private placeholderBalance = 0;
 
   constructor(
     private readonly rootChildren: ReadonlyArray<IRChild>,
-    private readonly context: FullCompileContext,
-    private readonly options: TraversalCompileOptions = {},
-  ) {
-    const session = this.options.session ?? new CompositeCompileSession();
-    this.runtime = {
-      context: {
-        shared: this.context.shared,
-        workspace: {
-          ...this.context.workspace,
-          diagnostics: { ...this.context.workspace.diagnostics, collect: this.dispatchWarning },
-        },
-        session,
+    private readonly context: CompileExecutionContext,
+    private readonly host: ScopeCompileHost,
+    private readonly options: ScopeCompilerOptions,
+  ) {}
+
+  /** 按需建立复合组件执行器及其宿主回调 */
+  private getCompositeCompiler(): CompositeCompiler {
+    return (this.compositeCompiler ??= new CompositeCompiler(
+      this.context,
+      {
+        compileSubtree: this.host.compileSubtree,
+        acceptContribution: (frame, contribution) => this.acceptContribution(frame, contribution),
+        compileChild: (...args) => this.compileChild(...args),
+        compileScopeChild: (...args) => this.compileScopeChild(...args),
       },
-      state: {
-        primitives: [],
-        layoutBounds: undefined,
-        namespaceStack:
-          this.options.namespaceStack ??
-          new NamespaceStack({
-            rootIdentity: this.options.provenanceTracker?.rootNamespace,
-            onDuplicate: info => this.dispatchWarning(createDuplicateWarning(info)),
-          }),
-        zIndexOf: new WeakMap(),
-        placeholderBalance: 0,
-        ...(this.options.provenanceTracker === undefined ? {} : { provenanceTracker: this.options.provenanceTracker }),
+      {
+        rootChild: this.rootChildren[0],
+        probe: this.options.probe,
+        measurementAxis: this.options.measurementAxis,
       },
-    };
-    this.composite = new CompositeCompiler(
-      rootChildren,
-      options,
-      this.runtime,
-      this.scopeTransformsContext,
-      this,
-      compileChildrenToPrimitives,
-    );
+    ));
   }
 
   /** 编译当前子树并完成延迟输出与边界收集 */
-  run(): TraversalResult {
+  run(): SubtreeCompilation {
+    const rootPrimitives: Array<InternalScenePrimitive> = [];
     const rootPendingPaths: Array<PendingPathEmission> = [];
-
-    const rootBounds: TraversalFrame['boundsSink'] = [];
-
-    const rootAllocations: TraversalFrame['allocationSink'] = [];
-
-    const rootLayouts: TraversalFrame['layoutSink'] = [];
-
-    const rootArtifacts: TraversalFrame['artifactSink'] = [];
-
-    const rootAlignmentGuides: TraversalFrame['alignmentGuideSink'] = [];
+    const rootBounds: ScopeCompileFrame['boundsSink'] = [];
+    const rootAllocations: ScopeCompileFrame['allocationSink'] = [];
+    const rootLayouts: ScopeCompileFrame['layoutSink'] = [];
+    const rootArtifacts: ScopeCompileFrame['artifactSink'] = [];
+    const rootAlignmentGuides: ScopeCompileFrame['alignmentGuideSink'] = [];
 
     this.compileChildren(
       this.rootChildren,
       {
-        childProposal: this.options.proposal ?? naturalLayoutProposal,
-        runtimeInputs: this.options.runtimeInputs ?? this.context.compositeInputs,
-        scopeChain: this.options.scopeChain ?? [],
-        primitiveSink: this.runtime.state.primitives,
+        childProposal: this.options.initial.proposal ?? naturalLayoutProposal,
+        runtimeInputs: this.options.initial.compositeInputs,
+        scopeChain: this.options.initial.scopeChain ?? [],
+        primitiveSink: rootPrimitives,
         locatorPrefix: [],
         layoutSink: rootLayouts,
         pathSink: rootPendingPaths,
-        scopeDefaults: this.options.scopeDefaults ?? {},
-        theme: this.options.theme ?? this.context.theme,
+        scopeDefaults: this.options.initial.scopeDefaults ?? {},
+        theme: this.options.initial.theme,
         publicationSink: [],
         boundsSink: rootBounds,
         allocationSink: rootAllocations,
         alignmentGuideSink: rootAlignmentGuides,
         artifactSink: rootArtifacts,
-        ...(this.options.semanticOwner === undefined && this.runtime.state.provenanceTracker === undefined
-          ? {}
-          : { semanticOwner: this.options.semanticOwner ?? this.runtime.state.provenanceTracker?.root }),
+        ...(this.context.provenanceTracker === undefined ? {} : { semanticOwner: this.context.provenanceTracker.root }),
       },
       true,
     );
 
     this.flushPendingPathEmissions(rootPendingPaths);
 
+    let layoutBounds: SubtreeCompilation['layoutBounds'];
     for (const contribution of rootBounds) {
-      this.runtime.state.layoutBounds = collectLayoutBounds(
-        this.runtime.state.layoutBounds,
-        contribution.boundsPoints,
-        contribution.shadow,
-      );
+      layoutBounds = collectLayoutBounds(layoutBounds, contribution.boundsPoints, contribution.shadow);
     }
 
-    if (this.runtime.state.placeholderBalance !== 0) {
-      const detail = __DEV__ ? ` at ${collectPlaceholderLocators(this.runtime.state.primitives).join(', ')}` : '';
+    if (this.placeholderBalance !== 0) {
+      const detail = __DEV__ ? ` at ${collectPlaceholderLocators(rootPrimitives).join(', ')}` : '';
       throw createCompileInvariantError(
-        `internal: ${this.runtime.state.placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`,
+        `internal: ${this.placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`,
       );
     }
 
-    const primitives = stableSortByZIndex(sealSink(this.runtime.state.primitives), this.runtime.state.zIndexOf);
+    // 延迟路径已回填，输出容器中不再包含占位项
+    const primitives = stableSortByZIndex(rootPrimitives as Array<ScenePrimitive>, this.zIndexOf);
 
     const alignmentGuides = resolveStructuralAlignmentGuides(rootAlignmentGuides);
 
-    this.runtime.context.workspace.paintRegistry.validateReferences(
-      this.runtime.context.workspace.clipRegistry.resources(),
-    );
+    this.context.workspace.paintRegistry.validateReferences(this.context.workspace.clipRegistry.resources());
 
     return {
       primitives,
-      primitiveZIndices: primitives.map(primitive => this.runtime.state.zIndexOf.get(primitive)),
-      ...(this.composite.rootContribution === undefined ? {} : { contribution: this.composite.rootContribution }),
-      layoutBounds: this.runtime.state.layoutBounds,
+      primitiveZIndices: primitives.map(primitive => this.zIndexOf.get(primitive)),
+      ...(this.compositeCompiler?.rootContribution === undefined
+        ? {}
+        : { contribution: this.compositeCompiler.rootContribution }),
+      layoutBounds,
       layouts: rootLayouts,
       bounds: rootBounds,
       allocations: effectiveAllocations(rootAllocations),
@@ -214,28 +171,18 @@ export class CompileTraversal {
     };
   }
 
-  /** 在同步 child 编译或延迟 emit 期间绑定当前 warning occurrence */
-  withWarningOccurrence<T>(occurrence: CompileOccurrenceLocator, execute: () => T): T {
-    this.warningOccurrences.push(occurrence);
-    this.options.observeWarningOccurrence?.(occurrence);
-
-    try {
-      return execute();
-    } finally {
-      this.warningOccurrences.pop();
-      this.options.observeWarningOccurrence?.(this.warningOccurrences.at(-1));
-    }
-  }
-
   /** 编排单个 scope 子树，处理命名空间、局部输出容器、延迟 path 和 scope group 输出 */
-  compileScopeChild(
+  private compileScopeChild(
     child: ScopeChild,
     index: number,
-    frame: TraversalFrame,
+    frame: ScopeCompileFrame,
     generatedOccurrence?: CompileOccurrenceLocator,
-    compositeDepth = this.options.compositeDepth ?? 0,
+    compositeDepth = this.options.initial.compositeDepth ?? 0,
     semanticOwner?: CompileOwnerKey,
-    compileNested?: (scopeFrame: TraversalFrame, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
+    compileNested?: (
+      scopeFrame: ScopeCompileFrame,
+      preliminaryTransforms: ReadonlyArray<Transform> | undefined,
+    ) => void,
     preResolvedClipPath?: SceneClipPath,
   ): void {
     const { locatorPrefix, scopeDefaults } = frame;
@@ -248,39 +195,39 @@ export class CompileTraversal {
     const scopeGeometryContext = {
       positionContext: this.positionContextOf(frame.scopeChain),
       irPath: createCompileChildPath(locatorPrefix, index),
-      onWarn: this.runtime.context.workspace.diagnostics.collect,
+      onWarn: this.context.workspace.diagnostics.collect,
     };
-    const positionTarget = resolveScopePositionTarget(child, scopeGeometryContext);
+    const preparation = prepareScopeGeometry(child, scopeGeometryContext);
 
     // runtime Scope 可能包住在当前 frame 外完成的 replay probe，因此它的数值 transform
     // 必须在 Scope 收尾时统一投影到普通 child 与 replay 导入的 布局发布结果
-    const preliminaryTransforms = resolvePreliminaryScopeTransforms(child, scopeGeometryContext);
+    const { preliminaryTransforms } = preparation;
     const preliminaryScopeChain =
       preliminaryTransforms === undefined
         ? frame.scopeChain
-        : this.scopeTransformsContext.append(frame.scopeChain, preliminaryTransforms);
+        : this.context.scopeTransformComposer.append(frame.scopeChain, preliminaryTransforms);
     const layoutPlaceholder = this.registerScopeLayoutPlaceholder(child, { index, frame });
     if (layoutPlaceholder.placeholderLayout !== undefined) {
-      this.runtime.state.namespaceStack.enterScope(layoutPlaceholder.placeholderLayout, child.id!);
+      this.context.namespaceStack.enterScope(layoutPlaceholder.placeholderLayout, child.id!);
     }
 
     const didPushNamespaceFrame = child.localNamespace === true;
     if (didPushNamespaceFrame) {
-      this.runtime.state.namespaceStack.pushFrame();
+      this.context.namespaceStack.pushFrame();
     }
 
     const scopePrimitiveSink: Array<InternalScenePrimitive> = [];
     const scopeLayouts: Array<CompiledNodeLayout> = [];
     const scopePendingPaths: Array<PendingPathEmission> = [];
     const scopePublications: Array<CompiledNodeLayout> = [];
-    const scopeBounds: TraversalFrame['boundsSink'] = [];
-    const scopeAllocations: TraversalFrame['allocationSink'] = [];
-    const scopeAlignmentGuides: TraversalFrame['alignmentGuideSink'] = [];
-    const scopeArtifacts: TraversalFrame['artifactSink'] = [];
+    const scopeBounds: ScopeCompileFrame['boundsSink'] = [];
+    const scopeAllocations: ScopeCompileFrame['allocationSink'] = [];
+    const scopeAlignmentGuides: ScopeCompileFrame['alignmentGuideSink'] = [];
+    const scopeArtifacts: ScopeCompileFrame['artifactSink'] = [];
     let scopeTransforms: Array<Transform> = [];
 
     try {
-      const scopeFrame: TraversalFrame = {
+      const scopeFrame: ScopeCompileFrame = {
         runtimeInputs: frame.runtimeInputs,
         childProposal: frame.childProposal,
         scopeChain: preliminaryScopeChain,
@@ -304,15 +251,15 @@ export class CompileTraversal {
         compileNested(scopeFrame, preliminaryTransforms);
       }
 
-      const intrinsicLayout = createIntrinsicScopeLayout(child, scopeLayouts, this.runtime.context.shared);
-
-      scopeTransforms = resolveFinalScopeTransforms(
+      const geometry = compileScopeGeometry(
         child,
+        preparation,
+        scopeLayouts,
+        this.context.shared,
         scopeGeometryContext,
-        intrinsicLayout,
-        positionTarget,
-        preliminaryTransforms,
       );
+      const intrinsicLayout = geometry.envelope;
+      scopeTransforms = geometry.transforms;
 
       const postTransforms =
         preliminaryTransforms === undefined
@@ -321,14 +268,14 @@ export class CompileTraversal {
 
       for (const layout of scopePublications) {
         const projected = projectPublishedCompileLayout(layout, frame.scopeChain, postTransforms);
-        this.runtime.state.namespaceStack.replacePublishedLayout(layout, projected);
+        this.context.namespaceStack.replacePublishedLayout(layout, projected);
         frame.publicationSink.push(projected);
       }
 
       frame.artifactSink.push(...scopeArtifacts);
 
       for (const pendingPath of scopePendingPaths) {
-        pendingPath.scopeChain = this.scopeTransformsContext.insert(
+        pendingPath.scopeChain = this.context.scopeTransformComposer.insert(
           pendingPath.scopeChain,
           frame.scopeChain.length,
           postTransforms,
@@ -338,11 +285,11 @@ export class CompileTraversal {
       const finalEnvelope =
         scopeTransforms.length === 0
           ? intrinsicLayout
-          : this.scopeTransformsContext.project(intrinsicLayout, scopeTransforms);
+          : this.context.scopeTransformComposer.project(intrinsicLayout, scopeTransforms);
       frame.layoutSink.push(...projectScopeCompileLayouts(child, intrinsicLayout, scopeLayouts, scopeTransforms));
       if (child.id !== undefined) {
-        const globalEnvelope = this.scopeTransformsContext.project(finalEnvelope, frame.scopeChain);
-        this.runtime.state.namespaceStack.replaceLayout(
+        const globalEnvelope = this.context.scopeTransformComposer.project(finalEnvelope, frame.scopeChain);
+        this.context.namespaceStack.replaceLayout(
           child.id,
           globalEnvelope,
           layoutPlaceholder.parentFrameDepth,
@@ -354,14 +301,14 @@ export class CompileTraversal {
       this.flushPendingPathEmissions(scopePendingPaths);
       this.options.captureScopeTargets?.(
         child,
-        this.runtime.state.namespaceStack,
-        this.scopeTransformsContext.append(frame.scopeChain, scopeTransforms),
+        this.context.namespaceStack,
+        this.context.scopeTransformComposer.append(frame.scopeChain, scopeTransforms),
       );
 
       for (const contribution of effectiveAllocations(scopeAllocations)) {
         pushAllocation(
           frame.allocationSink,
-          contribution.boundsPoints.map(point => this.scopeTransformsContext.apply(point, scopeTransforms)),
+          contribution.boundsPoints.map(point => this.context.scopeTransformComposer.apply(point, scopeTransforms)),
           frame.allocationBoundary,
         );
       }
@@ -370,9 +317,9 @@ export class CompileTraversal {
       const transformedGuides = transformAlignmentGuides(structuralGuides, scopeTransforms);
       if (transformedGuides !== undefined) frame.alignmentGuideSink.push(...transformedGuides);
     } finally {
-      if (layoutPlaceholder.placeholderLayout !== undefined) this.runtime.state.namespaceStack.leaveScope();
+      if (layoutPlaceholder.placeholderLayout !== undefined) this.context.namespaceStack.leaveScope();
       if (didPushNamespaceFrame) {
-        this.runtime.state.namespaceStack.popFrame();
+        this.context.namespaceStack.popFrame();
       }
     }
 
@@ -407,7 +354,7 @@ export class CompileTraversal {
       } else {
         frame.boundsSink.push({
           boundsPoints: contribution.boundsPoints.map(point =>
-            this.scopeTransformsContext.apply(point, scopeTransforms),
+            this.context.scopeTransformComposer.apply(point, scopeTransforms),
           ),
           shadow: contribution.shadow,
         });
@@ -415,19 +362,19 @@ export class CompileTraversal {
     }
   }
 
-  compileChild(
+  private compileChild(
     child: IRChild,
     index: number,
-    frame: TraversalFrame,
+    frame: ScopeCompileFrame,
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
     generated: boolean,
     semanticOwner?: CompileOwnerKey,
   ): void {
     try {
-      this.withWarningOccurrence(occurrence, () => {
+      this.context.withWarningOccurrence(occurrence, () => {
         if ('namespace' in child) {
-          this.composite.compile(child, index, frame, occurrence, compositeDepth, semanticOwner);
+          this.getCompositeCompiler().compile(child, index, frame, occurrence, compositeDepth, semanticOwner);
           return;
         }
 
@@ -468,15 +415,37 @@ export class CompileTraversal {
     }
   }
 
-  /** 从当前 traversal 状态投影 resolver 所需的窄位置上下文 */
+  /** 接受已重映射的子树输出，统一维护当前帧的收集容器 */
+  private acceptContribution(frame: ScopeCompileFrame, contribution: ScopeOutputContribution): void {
+    for (const [index, primitive] of contribution.primitives.entries()) {
+      frame.primitiveSink.push(primitive);
+      recordPrimitiveZIndex(this.zIndexOf, primitive, contribution.primitiveZIndices[index]);
+    }
+    frame.layoutSink.push(...contribution.layouts);
+    frame.publicationSink.push(...contribution.publications);
+    frame.boundsSink.push(...contribution.bounds);
+    for (const allocation of contribution.allocations) {
+      pushAllocation(frame.allocationSink, allocation.boundsPoints, frame.allocationBoundary);
+    }
+    frame.artifactSink.push(...contribution.artifacts);
+  }
+
+  /** 从当前执行状态投影 resolver 所需的窄位置上下文 */
   private positionContextOf(scopeChain: ReadonlyArray<Transform>): PositionTargetResolveContext {
     return createPositionResolveContext({
-      nodeBoundaryContext: this.runtime.context.workspace.nodeBoundaryContext,
-      lookupReference: id => this.runtime.state.namespaceStack.lookupReference(id),
-      nodeDistance: this.runtime.context.shared.layout.nodeDistance,
+      nodeBoundaryContext: this.context.workspace.nodeBoundaryContext,
+      lookupReference: id => this.context.namespaceStack.lookupReference(id),
+      nodeDistance: this.context.shared.layout.nodeDistance,
       scopeChain,
-      resolveExplicitBoundary: this.resolveExplicitBoundary,
-      composedTransform: this.scopeTransformsContext.resolve(scopeChain),
+      resolveExplicitBoundary: (boundary, referenceContext) =>
+        resolveNodeBoundary(boundary, {
+          visualDef: referenceContext.visualDef,
+          visualParams: referenceContext.visualParams,
+          shapeRegistry: this.context.shared.registries.shapeRegistry,
+          boundaryRegistry: this.context.shared.registries.boundaryRegistry,
+          irPath: referenceContext.irPath,
+        }),
+      composedTransform: this.context.scopeTransformComposer.resolve(scopeChain),
     });
   }
 
@@ -484,19 +453,19 @@ export class CompileTraversal {
   private flushPendingPathEmissions(pendingPaths: ReadonlyArray<PendingPathEmission>): void {
     if (pendingPaths.length === 0) return;
 
-    this.runtime.state.namespaceStack.enterResolvingPhase();
+    this.context.namespaceStack.enterResolvingPhase();
 
     try {
       for (const pendingPath of pendingPaths) {
         const targetResolver = createPathTargetResolver(chain => this.positionContextOf(chain));
-        const { result, resolution } = this.withWarningOccurrence(pendingPath.occurrence, () =>
+        const { result, resolution } = this.context.withWarningOccurrence(pendingPath.occurrence, () =>
           compilePathState(pendingPath, targetResolver, {
-            ...this.runtime.context,
-            resolveTransform: this.scopeTransformsContext.resolve,
+            ...this.context,
+            resolveTransform: this.context.scopeTransformComposer.resolve,
           }),
         );
         const rawPrimitives = result?.primitives ?? [];
-        const primitives = this.runtime.state.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
+        const primitives = this.context.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
         const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
         if (idx === -1) {
           throw createCompileInvariantError('internal: path placeholder missing from its sink');
@@ -504,12 +473,12 @@ export class CompileTraversal {
 
         pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
         if (pendingPath.semanticOwner !== undefined) {
-          this.runtime.state.provenanceTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
+          this.context.provenanceTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
         }
 
-        this.runtime.state.placeholderBalance--;
+        this.placeholderBalance--;
 
-        for (const prim of primitives) recordPrimitiveZIndex(this.runtime.state.zIndexOf, prim, pendingPath.zIndex);
+        for (const prim of primitives) recordPrimitiveZIndex(this.zIndexOf, prim, pendingPath.zIndex);
         if (result !== null) {
           pendingPath.boundsSink.push({
             boundsPoints: [...result.boundsPoints],
@@ -519,7 +488,7 @@ export class CompileTraversal {
         }
       }
     } finally {
-      this.runtime.state.namespaceStack.exitResolvingPhase();
+      this.context.namespaceStack.exitResolvingPhase();
     }
   }
 
@@ -527,7 +496,7 @@ export class CompileTraversal {
   private emitNodeChild(
     child: NodeChild,
     index: number,
-    frame: TraversalFrame,
+    frame: ScopeCompileFrame,
     occurrence?: CompileOccurrenceLocator,
     semanticOwner?: CompileOwnerKey,
   ): void {
@@ -535,40 +504,40 @@ export class CompileTraversal {
     const nodeIrPath = createCompileChildPath(locatorPrefix, index);
 
     const compilation = compileNodeState(child, nodeIrPath, {
-      ...this.runtime.context,
+      ...this.context,
       scopeDefaults,
       mode: frame.theme.mode,
       scopeChain,
       positionContext: this.positionContextOf(scopeChain),
-      composedTransform: this.scopeTransformsContext.resolve(scopeChain),
+      composedTransform: this.context.scopeTransformComposer.resolve(scopeChain),
       childProposal: frame.childProposal,
     });
 
     const { layout } = compilation;
-    const globalLayout = this.scopeTransformsContext.project(layout, scopeChain);
+    const globalLayout = this.context.scopeTransformComposer.project(layout, scopeChain);
     if (child.id) {
-      this.runtime.state.namespaceStack.register(child.id, globalLayout, [...nodeIrPath, 'id']);
+      this.context.namespaceStack.register(child.id, globalLayout, [...nodeIrPath, 'id']);
       child.aliasIds?.forEach((id, aliasIndex) =>
-        this.runtime.state.namespaceStack.register(id, globalLayout, [...nodeIrPath, 'aliasIds', aliasIndex]),
+        this.context.namespaceStack.register(id, globalLayout, [...nodeIrPath, 'aliasIds', aliasIndex]),
       );
     }
 
     frame.publicationSink.push(globalLayout);
-    const output = emitNodeOutput(compilation, this.runtime.context.shared, this.runtime.context.workspace);
+    const output = emitNodeOutput(compilation, this.context.shared, this.context.workspace);
     const emittedPrimitives =
-      this.runtime.state.provenanceTracker?.materializePrimitives(output.primitives) ?? output.primitives;
+      this.context.provenanceTracker?.materializePrimitives(output.primitives) ?? output.primitives;
     if (semanticOwner !== undefined) {
-      this.runtime.state.provenanceTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
+      this.context.provenanceTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
     }
 
     for (const prim of emittedPrimitives) {
       primitiveSink.push(prim);
-      recordPrimitiveZIndex(this.runtime.state.zIndexOf, prim, child.zIndex);
+      recordPrimitiveZIndex(this.zIndexOf, prim, child.zIndex);
     }
 
     frame.boundsSink.push(...output.bounds);
     pushAllocation(frame.allocationSink, output.bounds[0].boundsPoints, frame.allocationBoundary);
-    const alignmentGuides = alignmentGuidesOfNode(layout, this.runtime.context.shared.layout.round);
+    const alignmentGuides = alignmentGuidesOfNode(layout, this.context.shared.layout.round);
     if (alignmentGuides !== undefined) {
       frame.alignmentGuideSink.push(
         ...cloneAlignmentGuides(alignmentGuides, `Node '${formatPropertyPath(nodeIrPath)}'`),
@@ -579,28 +548,28 @@ export class CompileTraversal {
   }
 
   /** 解析 coordinate 位置并注册为零尺寸 layout，供后续命名引用使用 */
-  private registerCoordinateChild(child: CoordinateChild, index: number, frame: TraversalFrame): void {
+  private registerCoordinateChild(child: CoordinateChild, index: number, frame: ScopeCompileFrame): void {
     const { scopeChain, locatorPrefix, layoutSink } = frame;
     const coordinateIrPath = createCompileChildPath(locatorPrefix, index);
     const localCenter = resolveCoordinatePosition(child, this.positionContextOf(scopeChain));
 
     const globalCenter =
-      scopeChain.length === 0 ? localCenter : this.scopeTransformsContext.apply(localCenter, scopeChain);
+      scopeChain.length === 0 ? localCenter : this.context.scopeTransformComposer.apply(localCenter, scopeChain);
     const localCoordinateLayout = createSyntheticRectangleLayout(
       { id: child.id, rect: { x: localCenter[0], y: localCenter[1], width: 0, height: 0, rotate: 0 } },
       {
-        shapes: this.runtime.context.shared.registries.shapeRegistry,
-        boundaries: this.runtime.context.shared.registries.boundaryRegistry,
+        shapes: this.context.shared.registries.shapeRegistry,
+        boundaries: this.context.shared.registries.boundaryRegistry,
       },
     );
     const coordinateLayout = createSyntheticRectangleLayout(
       { id: child.id, rect: { x: globalCenter[0], y: globalCenter[1], width: 0, height: 0, rotate: 0 } },
       {
-        shapes: this.runtime.context.shared.registries.shapeRegistry,
-        boundaries: this.runtime.context.shared.registries.boundaryRegistry,
+        shapes: this.context.shared.registries.shapeRegistry,
+        boundaries: this.context.shared.registries.boundaryRegistry,
       },
     );
-    this.runtime.state.namespaceStack.register(child.id, coordinateLayout, [...coordinateIrPath, 'id']);
+    this.context.namespaceStack.register(child.id, coordinateLayout, [...coordinateIrPath, 'id']);
     frame.publicationSink.push(coordinateLayout);
     pushAllocation(frame.allocationSink, [localCenter], frame.allocationBoundary);
     layoutSink.push(localCoordinateLayout);
@@ -610,7 +579,7 @@ export class CompileTraversal {
   private queuePathChild(
     child: PathChild,
     index: number,
-    frame: TraversalFrame,
+    frame: ScopeCompileFrame,
     occurrence: CompileOccurrenceLocator,
     semanticOwner?: CompileOwnerKey,
   ): void {
@@ -623,7 +592,7 @@ export class CompileTraversal {
         ...child,
         animations: filterAnimations(child.animations, {
           target: 'element',
-          onWarn: this.runtime.context.workspace.diagnostics.collect,
+          onWarn: this.context.workspace.diagnostics.collect,
           irPath: pathIrPath,
         }),
       },
@@ -639,7 +608,7 @@ export class CompileTraversal {
       ...(semanticOwner === undefined ? {} : { semanticOwner }),
       zIndex: child.zIndex,
     };
-    this.runtime.state.placeholderBalance++;
+    this.placeholderBalance++;
     pathSink.push(pending);
   }
 
@@ -651,21 +620,16 @@ export class CompileTraversal {
     const { index, frame } = input;
     const { locatorPrefix } = frame;
     const scopeIrPath = createCompileChildPath(locatorPrefix, index);
-    const parentFrameDepth = this.runtime.state.namespaceStack.depth - 1;
+    const parentFrameDepth = this.context.namespaceStack.depth - 1;
     if (child.id === undefined) {
       return { parentFrameDepth };
     }
 
     const placeholderLayout = createScopePlaceholderLayout(child.id, frame.scopeChain, {
-      shapes: this.runtime.context.shared.registries.shapeRegistry,
-      boundaries: this.runtime.context.shared.registries.boundaryRegistry,
+      shapes: this.context.shared.registries.shapeRegistry,
+      boundaries: this.context.shared.registries.boundaryRegistry,
     });
-    this.runtime.state.namespaceStack.register(
-      child.id,
-      placeholderLayout,
-      [...scopeIrPath, 'id'],
-      'scope-placeholder',
-    );
+    this.context.namespaceStack.register(child.id, placeholderLayout, [...scopeIrPath, 'id'], 'scope-placeholder');
 
     return { parentFrameDepth, placeholderLayout };
   }
@@ -684,40 +648,41 @@ export class CompileTraversal {
       ...createScopeGroup(
         child,
         scopeTransforms,
-        this.runtime.context.shared,
-        this.runtime.context.workspace,
+        this.context.shared,
+        this.context.workspace,
         scopeIrPath,
         resolvedClipPath,
       ),
-      children: stableSortByZIndex(sealSink(scopePrimitiveSink), this.runtime.state.zIndexOf),
+      // 当前 Scope 的延迟路径已在收尾阶段回填
+      children: stableSortByZIndex(scopePrimitiveSink as Array<ScenePrimitive>, this.zIndexOf),
     };
     primitiveSink.push(group);
-    if (semanticOwner !== undefined)
-      this.runtime.state.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
-    recordPrimitiveZIndex(this.runtime.state.zIndexOf, group, child.zIndex);
+    if (semanticOwner !== undefined) this.context.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
+    recordPrimitiveZIndex(this.zIndexOf, group, child.zIndex);
 
     return group.clipRef;
   }
 
   private compileChildren(
     children: ReadonlyArray<IRChild>,
-    frame: TraversalFrame,
+    frame: ScopeCompileFrame,
     useProvidedOccurrence = false,
     generatedScopeOccurrence?: CompileOccurrenceLocator,
-    compositeDepth = this.options.compositeDepth ?? 0,
+    compositeDepth = this.options.initial.compositeDepth ?? 0,
   ): void {
     const generated =
-      generatedScopeOccurrence !== undefined || (useProvidedOccurrence ? (this.options.generated ?? false) : false);
+      generatedScopeOccurrence !== undefined ||
+      (useProvidedOccurrence ? (this.options.initial.generated ?? false) : false);
     for (const [i, child] of children.entries()) {
       const semanticOwner =
         frame.semanticOwner === undefined
           ? undefined
-          : this.runtime.state.provenanceTracker?.createOwner(
+          : this.context.provenanceTracker?.createOwner(
               child,
               i,
               frame.semanticOwner,
               generated,
-              this.runtime.state.namespaceStack.identity,
+              this.context.namespaceStack.identity,
             );
       const entityPath = createCompileChildPath(frame.locatorPrefix, i);
       const occurrence = generatedScopeOccurrence
@@ -728,15 +693,15 @@ export class CompileTraversal {
               { kind: CompileExpansionKind.ScopeChild, index: i },
             ],
           }
-        : useProvidedOccurrence && this.options.occurrence !== undefined && children.length === 1
-          ? this.options.occurrence
+        : useProvidedOccurrence && this.options.initial.occurrence !== undefined && children.length === 1
+          ? this.options.initial.occurrence
           : {
               sourcePath: entityPath,
               expansionPath: [],
             };
       const runtimeInputs =
-        useProvidedOccurrence && this.options.occurrence !== undefined && children.length === 1
-          ? this.options.runtimeInputs
+        useProvidedOccurrence && this.options.initial.occurrence !== undefined && children.length === 1
+          ? this.options.initial.compositeInputs
           : frame.runtimeInputs === undefined
             ? undefined
             : selectCompositeInputScope(frame.runtimeInputs, ['children', i]);
@@ -744,9 +709,3 @@ export class CompileTraversal {
     }
   }
 }
-/** 编译子树；每次调用独占遍历状态 */
-export const compileChildrenToPrimitives = (
-  rootChildren: ReadonlyArray<IRChild>,
-  context: FullCompileContext,
-  options: TraversalCompileOptions = {},
-): TraversalResult => new CompileTraversal(rootChildren, context, options).run();

@@ -4,7 +4,7 @@ import type { TexLowerer, TextMeasurer } from '../../src/compile';
 import { BuiltinCompileWarningCode } from '../../src/compile';
 import { createFullCompileContext, createSharedCompileContext } from '../../src/compile/context';
 import type { CompiledNodeLayout } from '../../src/compile/node';
-import { compileChildrenToPrimitives } from '../../src/compile/orchestration';
+import { CompileManager } from '../../src/compile/orchestration';
 import type { InputCompileWarning } from '../../src/compile/warning';
 import type { TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -66,7 +66,7 @@ const collectLayouts = (
 
     ...(options.withTex === true ? { lowerTex } : {}),
   });
-  const out = compileChildrenToPrimitives(ir.children, context);
+  const out = new CompileManager(context).compileSubtree(ir.children);
   const layouts = out.layouts;
   const textPrims = flattenPrims(out.primitives).filter((prim): prim is TextPrimitive => prim.type === 'text');
 
@@ -85,9 +85,9 @@ describe('Node 内容测量', () => {
     const ir = scene([{ type: 'node', position: [0, 0], text: 'shared context' }]);
     const firstContext = createFullCompileContext(ir, {}, shared);
     const secondContext = createFullCompileContext(ir, {}, shared);
-    const first = compileChildrenToPrimitives(ir.children, firstContext);
+    const first = new CompileManager(firstContext).compileSubtree(ir.children);
     const firstCalls = calls;
-    const second = compileChildrenToPrimitives(ir.children, secondContext);
+    const second = new CompileManager(secondContext).compileSubtree(ir.children);
 
     expect(firstCalls).toBeGreaterThan(0);
     expect(calls).toBe(firstCalls * 2);

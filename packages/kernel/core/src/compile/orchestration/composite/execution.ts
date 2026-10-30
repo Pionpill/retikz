@@ -1,7 +1,20 @@
-import type { CompositeBoundChild, CompositeCompileChild, CompositeReplay, SceneClipPath } from '../../../contract';
-import type { createScopeTransformContext } from '../../transform';
-import type { CompileTraversal } from '../traversal';
-import type { TraversalRuntime } from '../types';
+import type {
+  CompileOccurrenceLocator,
+  CompositeBoundChild,
+  CompositeCompileChild,
+  CompositeReplay,
+  SceneClipPath,
+  Transform,
+} from '../../../contract';
+import type { IRChild } from '../../../schemas';
+import type { CompileOwnerKey } from '../../provenance';
+import type {
+  CompileExecutionContext,
+  ScopeChild,
+  ScopeCompileFrame,
+  ScopeOutputContribution,
+  ScopeCompileHost,
+} from '../types';
 import type { CompositeReplayTransaction, CompositeRuntimeOutputChild } from './types';
 
 /** 完成预检的重放事务及外层裁剪 */
@@ -28,22 +41,41 @@ export type PreparedCompositeOutputs = Readonly<{
   replays: ReadonlyMap<CompositeReplay, PreparedReplay>;
 }>;
 /** Composite 执行所需的遍历操作，不持有遍历器的私有状态 */
-export type CompositeCompileHost = Pick<
-  CompileTraversal,
-  'withWarningOccurrence' | 'compileChild' | 'compileScopeChild' | 'resolveExplicitBoundary'
->;
+export type CompositeCompileHost = ScopeCompileHost & {
+  /** 接受已选择和重映射的子树贡献，输出容器由宿主维护 */
+  acceptContribution: (frame: ScopeCompileFrame, contribution: ScopeOutputContribution) => void;
+  /** 编译一个已绑定输入或生成的子项 */
+  compileChild: (
+    child: IRChild,
+    index: number,
+    frame: ScopeCompileFrame,
+    occurrence: CompileOccurrenceLocator,
+    compositeDepth: number,
+    generated: boolean,
+    semanticOwner?: CompileOwnerKey,
+  ) => void;
+  /** 编译生成的 Scope，允许其内容使用已预检的输出句柄 */
+  compileScopeChild: (
+    child: ScopeChild,
+    index: number,
+    frame: ScopeCompileFrame,
+    occurrence?: CompileOccurrenceLocator,
+    compositeDepth?: number,
+    semanticOwner?: CompileOwnerKey,
+    compileNested?: (frame: ScopeCompileFrame, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
+    clipPath?: SceneClipPath,
+  ) => void;
+};
 /** 重放与输出提交的显式依赖 */
 export type CompositeExecutionContext = {
   /** 当前编译的工作区与名称环境 */
-  runtime: TraversalRuntime;
-  /** 本次遍历的变换计算缓存 */
-  scopeTransformsContext: ReturnType<typeof createScopeTransformContext>;
+  context: CompileExecutionContext;
   /** 递归与诊断调度能力 */
   host: CompositeCompileHost;
 };
 /** 只按本次会话登记的对象身份识别组件输出句柄 */
 export const isCompositeOutputHandle = (
-  runtime: TraversalRuntime,
+  context: CompileExecutionContext,
   output: unknown,
 ): output is CompositeCompileChild | CompositeBoundChild =>
-  output !== null && typeof output === 'object' && runtime.context.session.outputChildren.has(output);
+  output !== null && typeof output === 'object' && context.compositeSession.outputChildren.has(output);

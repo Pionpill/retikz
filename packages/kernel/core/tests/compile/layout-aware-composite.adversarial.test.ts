@@ -38,7 +38,7 @@ import {
 } from '../../src';
 import { createFullCompileContext } from '../../src/compile/context';
 import { NamespaceStack } from '../../src/compile/namespace';
-import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
+import { CompileManager } from '../../src/compile/orchestration';
 import { createCompileInvariantError, wrapLayoutProbeError } from '../../src/compile/probe-failure';
 import * as compileProvenance from '../../src/compile/provenance';
 import { snapshotProviderPosition } from '../../src/compile/scene-primitive';
@@ -961,7 +961,9 @@ describe('布局感知的复契约束和边界', () => {
       });
     const context = createFullCompileContext(ir, { composites: [parent] });
 
-    expect(() => compileChildrenToPrimitives(ir.children, context, { provenanceTracker: outer })).toThrow(invariant);
+    expect(() => new CompileManager(context).compileSubtree(ir.children, { provenanceTracker: outer })).toThrow(
+      invariant,
+    );
 
     captureProbe.mockRestore();
   });

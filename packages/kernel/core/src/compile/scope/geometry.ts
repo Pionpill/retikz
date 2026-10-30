@@ -21,7 +21,7 @@ import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms
 export type InputScopeCompile = Omit<IRScope, 'children'>;
 
 /** Scope 单次几何计算环境 */
-type ScopeGeometryContext = Readonly<{
+export type ScopeGeometryContext = Readonly<{
   /** 当前位置读取能力 */
   positionContext: PositionTargetResolveContext;
   /** 当前诊断位置 */

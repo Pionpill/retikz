@@ -20,17 +20,14 @@ import { CompileProvenanceTracker } from '../../provenance';
 import { visualBoundsOfPrimitives } from '../../scene';
 import type { InputCompileWarning } from '../../warning';
 import { resolveLayoutSlotSize } from '../layout-proposal';
-import type { compileChildrenToPrimitives } from '../traversal';
-import type { TraversalCompileOptions, TraversalFrame, TraversalRuntime } from '../types';
+import type { CompileExecutionContext, ScopeCompileHost, ScopeCompileFrame, SubtreeCompileOptions } from '../types';
 import { boundsRectOf, replayStyleFingerprint, replayThemeFingerprint, snapshotAllocationBounds } from './layout';
 import type { CompositeCompileOwner, CompositeReplayTransaction } from './types';
 
 /** 单次组件回调的隔离试编译依赖 */
 export type CompositeProbeContext = {
-  /** 本次编译共享的能力与配置 */
-  shared: FullCompileContext['shared'];
   /** 用于 fork 名称环境的外层编译状态 */
-  runtime: TraversalRuntime;
+  context: CompileExecutionContext;
   /** 试编译结果所属回调 */
   owner: CompositeCompileOwner;
   /** 组件定义的完整名称 */
@@ -39,27 +36,26 @@ export type CompositeProbeContext = {
   occurrence: CompileOccurrenceLocator;
   /** 当前组件递归深度 */
   compositeDepth: number;
-  /** 使用新遍历实例编译隔离子树 */
-  compileChildren: typeof compileChildrenToPrimitives;
+  /** 在同一会话内以独占执行状态编译隔离子树 */
+  host: ScopeCompileHost;
 };
 
 /** 在隔离工作区执行子布局并收集未提交贡献 */
 export const evaluateCompositeLayout = (
-  context: CompositeProbeContext,
+  probeContext: CompositeProbeContext,
   clonedChild: IRChild,
   clonedProposal: LayoutProposal,
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
-  probeScopeDefaults: TraversalFrame['scopeDefaults'],
-  probeTheme: TraversalFrame['theme'],
-  scopeChainApplied = false,
+  probeScopeDefaults: ScopeCompileFrame['scopeDefaults'],
+  probeTheme: ScopeCompileFrame['theme'],
   probeInputs?: CompositeInputScope,
-  captureScopeTargets?: TraversalCompileOptions['captureScopeTargets'],
+  captureScopeTargets?: SubtreeCompileOptions['captureScopeTargets'],
   measurementAxis?: LayoutMeasurementAxis,
 ) => {
-  const { key, occurrence, compositeDepth } = context;
+  const { key, occurrence, compositeDepth } = probeContext;
 
-  const workspace = createWorkspaceCompileContext(context.shared);
+  const workspace = createWorkspaceCompileContext(probeContext.context.shared);
   const warnings = workspace.diagnostics.warnings;
   const namespaceBaselineWarnings: Array<{ id: string; warning: InputCompileWarning }> = [];
 
@@ -82,7 +78,7 @@ export const evaluateCompositeLayout = (
   let probeWarningOccurrence = probeOccurrence;
   const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
   const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
-  const namespaceBaseline = context.runtime.state.namespaceStack.fork();
+  const namespaceBaseline = probeContext.context.namespaceStack.fork();
   const namespaceStack = namespaceBaseline.fork({
     onDuplicate: info => {
       const warning = withCompileWarningOccurrence(createDuplicateWarning(info), probeWarningOccurrence);
@@ -94,12 +90,12 @@ export const evaluateCompositeLayout = (
   });
 
   const probeProvenanceTracker =
-    context.runtime.state.provenanceTracker === undefined
+    probeContext.context.provenanceTracker === undefined
       ? undefined
       : new CompileProvenanceTracker(namespaceStack.identity);
 
   const sandboxContext: FullCompileContext = {
-    shared: context.shared,
+    shared: probeContext.context.shared,
     workspace: {
       ...workspace,
       diagnostics: { ...workspace.diagnostics, collect: captureWarning },
@@ -108,25 +104,26 @@ export const evaluateCompositeLayout = (
     theme: probeTheme,
   };
 
-  const laid = context.compileChildren([clonedChild], sandboxContext, {
-    namespaceStack,
-    scopeChain: probeScopeChain,
-    scopeDefaults: probeScopeDefaults,
-    theme: probeTheme,
-    occurrence: probeOccurrence,
-    compositeDepth: compositeDepth + 1,
-    generated: true,
-    probe: true,
-    proposal: clonedProposal,
-    ...(measurementAxis === undefined ? {} : { measurementAxis }),
-    session: context.runtime.context.session,
-    runtimeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
-    ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),
-    ...(probeProvenanceTracker === undefined ? {} : { provenanceTracker: probeProvenanceTracker }),
-    observeWarningOccurrence: current => {
-      probeWarningOccurrence = current ?? probeOccurrence;
+  const laid = probeContext.host.compileSubtree(
+    [clonedChild],
+    {
+      namespaceStack,
+      scopeChain: probeScopeChain,
+      scopeDefaults: probeScopeDefaults,
+      occurrence: probeOccurrence,
+      compositeDepth: compositeDepth + 1,
+      generated: true,
+      probe: true,
+      proposal: clonedProposal,
+      ...(measurementAxis === undefined ? {} : { measurementAxis }),
+      ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),
+      ...(probeProvenanceTracker === undefined ? {} : { provenanceTracker: probeProvenanceTracker }),
+      observeWarningOccurrence: current => {
+        probeWarningOccurrence = current ?? probeOccurrence;
+      },
     },
-  });
+    sandboxContext,
+  );
 
   return {
     laid,
@@ -144,22 +141,22 @@ export const evaluateCompositeLayout = (
 
 /** 将隔离布局结果封装为可选择重放的事务 */
 export const probeCompositeLayout = (
-  context: CompositeProbeContext,
+  probeContext: CompositeProbeContext,
   clonedChild: IRChild,
   clonedProposal: LayoutProposal,
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
-  probeScopeDefaults: TraversalFrame['scopeDefaults'],
-  probeTheme: TraversalFrame['theme'],
+  probeScopeDefaults: ScopeCompileFrame['scopeDefaults'],
+  probeTheme: ScopeCompileFrame['theme'],
   scopeChainApplied = false,
   probeInputs?: CompositeInputScope,
-  captureScopeTargets?: TraversalCompileOptions['captureScopeTargets'],
+  captureScopeTargets?: SubtreeCompileOptions['captureScopeTargets'],
 ): Readonly<{
   layoutResult: LayoutChildResult;
   transaction: CompositeReplayTransaction;
   namespaceStack: NamespaceStack;
 }> => {
-  const { owner, key } = context;
+  const { owner, key } = probeContext;
 
   const {
     laid,
@@ -172,14 +169,13 @@ export const probeCompositeLayout = (
     warnings,
     probeProvenanceTracker,
   } = evaluateCompositeLayout(
-    context,
+    probeContext,
     clonedChild,
     clonedProposal,
     probeOccurrence,
     probeScopeChain,
     probeScopeDefaults,
     probeTheme,
-    scopeChainApplied,
     probeInputs,
     captureScopeTargets,
   );

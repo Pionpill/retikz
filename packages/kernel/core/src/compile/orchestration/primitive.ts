@@ -15,9 +15,6 @@ export type PrimitiveZIndexTable = WeakMap<ScenePrimitive, number>;
 /** 创建遍历占位项，使路径可以在节点及目标位置确定后按原顺序替换 */
 export const createPathPlaceholder = (): PathPlaceholder => ({ type: 'path-placeholder' });
 
-/** 把占位已回填的内部 sink 收窄回公开 ScenePrimitive[] */
-export const sealSink = (sink: Array<InternalScenePrimitive>): Array<ScenePrimitive> => sink as Array<ScenePrimitive>;
-
 /** 记录 primitive 的显式 zIndex */
 export const recordPrimitiveZIndex = (
   table: PrimitiveZIndexTable,

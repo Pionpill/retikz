@@ -14,14 +14,14 @@ import type { IRPosition } from '../../../schemas';
 import { formatCompileOccurrence } from '../../artifact';
 import { canonicalizeBoundsRect, collectLayoutBounds } from '../../scene';
 import { resolveLayoutAxisSlotSize } from '../layout-proposal';
-import type { ScopeChild, TraversalFrame, TraversalResult } from '../types';
+import type { ScopeChild, ScopeCompileFrame, SubtreeCompilation } from '../types';
 
 /** 按有效默认配置判断 replay 是否需要重新物化 */
-export const replayStyleFingerprint = (scopeDefaults: TraversalFrame['scopeDefaults']): string =>
+export const replayStyleFingerprint = (scopeDefaults: ScopeCompileFrame['scopeDefaults']): string =>
   JSON.stringify(scopeDefaults);
 
 /** 对 resolved Theme 做 compile-local 稳定比较 */
-export const replayThemeFingerprint = (theme: TraversalFrame['theme']): string => JSON.stringify(theme);
+export const replayThemeFingerprint = (theme: ScopeCompileFrame['theme']): string => JSON.stringify(theme);
 
 /** 从真实边界提取指定轴，不补齐未查询的尺寸 */
 export const contributionOfBounds = (axis: LayoutMeasurementAxis, bounds: Readonly<BoundsRect>): LayoutContribution =>
@@ -44,8 +44,8 @@ export const projectContribution = (contribution: LayoutContribution, proposal: 
   });
 };
 /** 汇总对父布局可见的分配贡献；空内容保留零尺寸边界 */
-export const boundsRectOf = (result: TraversalResult): Readonly<BoundsRect> => {
-  let allocation: TraversalResult['layoutBounds'];
+export const boundsRectOf = (result: SubtreeCompilation): Readonly<BoundsRect> => {
+  let allocation: SubtreeCompilation['layoutBounds'];
   for (const contribution of result.allocations) {
     if (contribution.allocationBoundary === undefined)
       allocation = collectLayoutBounds(allocation, contribution.boundsPoints);

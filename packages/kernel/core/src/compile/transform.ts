@@ -101,7 +101,7 @@ const IDENTITY_SCOPE_TRANSFORM: ComposedScopeTransform = Object.freeze({
 });
 
 /** 由 Scene transform 声明构造正向或逆向矩阵，不使用行列式阈值 */
-const matrixOfTransform = (transform: Transform, inverse: boolean): AffineMatrix => {
+const computeTransformToMatrix = (transform: Transform, inverse = false): AffineMatrix => {
   if (transform.kind === 'translate')
     return [1, 0, 0, 1, inverse ? -transform.x : transform.x, inverse ? -transform.y : transform.y];
   if (transform.kind === 'scale')
@@ -134,13 +134,19 @@ export const composeScopeTransform = (
   let scaleX = parent.scaleX;
   let scaleY = parent.scaleY;
   for (const transform of transforms) {
-    forward = multiplyAffine(forward, matrixOfTransform(transform, false));
+    forward = multiplyAffine(forward, computeTransformToMatrix(transform));
     if (transform.kind === 'scale') {
       scaleX *= transform.x;
       scaleY *= transform.y ?? transform.x;
       if (transform.x === 0 || (transform.y ?? transform.x) === 0) inverse = null;
     } else if (transform.kind === 'rotate') rotation += transform.degrees * DEG_TO_RAD;
-    if (inverse !== null) inverse = multiplyAffine(matrixOfTransform(transform, true), inverse);
+    if (inverse !== null) inverse = multiplyAffine(computeTransformToMatrix(transform, true), inverse);
+  }
+  if (__DEV__) {
+    // 仅在本层首次产生不可逆变换时提示，避免后代继承同一状态而重复报警
+    if (inverse === null && parent.inverse !== null) {
+      console.warn('Scope transform contains a zero scale axis; inverse coordinate projection is unavailable.');
+    }
   }
   const finiteForward = forward.every(Number.isFinite);
   const finiteInverse = inverse !== null && inverse.every(Number.isFinite);
@@ -204,35 +210,49 @@ export const projectLayoutWithTransform = (
 };
 
 /**
- * 创建单次 traversal 的只读变换链消费器
- * @description 所有插入均返回新链，旧链与其合成结果永不原位修改；同一父链/插入序列共享结果
+ * 单次编译遍历共享的 Scope 变换组合器
+ * @description 当前变换链由调用方传入，本对象不维护当前 Scope；组合操作不原位修改输入链或已有合成结果
+ * @remarks 缓存按数组对象身份命中，内容相同但引用不同的链不共享缓存；输入链及其变换项在缓存期间应保持不变
  */
-export const createScopeTransformContext = () => {
-  const transformCache = new WeakMap<ReadonlyArray<Transform>, ComposedScopeTransform>();
-  const insertions = new WeakMap<
+export class ScopeTransformComposer {
+  /** 按变换链数组身份缓存合成矩阵及累计旋转、缩放信息 */
+  private readonly transformCache = new WeakMap<ReadonlyArray<Transform>, ComposedScopeTransform>();
+  /** 按原链、插入序列的数组身份及插入位置缓存组合后的链，复用数组身份以命中合成结果缓存 */
+  private readonly insertions = new WeakMap<
     ReadonlyArray<Transform>,
     WeakMap<ReadonlyArray<Transform>, Map<number, ReadonlyArray<Transform>>>
   >();
-  const resolve = (chain: ReadonlyArray<Transform>): ComposedScopeTransform => {
+
+  /** 获取变换链的合成结果；空链复用单位变换，非空链仅在首次访问时计算 */
+  readonly resolve = (chain: ReadonlyArray<Transform>): ComposedScopeTransform => {
     if (chain.length === 0) return IDENTITY_SCOPE_TRANSFORM;
-    let value = transformCache.get(chain);
+    let value = this.transformCache.get(chain);
     if (value === undefined) {
       value = composeScopeTransform(chain);
-      transformCache.set(chain, value);
+      this.transformCache.set(chain, value);
     }
     return value;
   };
-  const insert = (
+
+  /**
+   * 将一组变换插入原链指定位置，并缓存组合链与合成结果
+   * @param chain 按祖先到当前层排列的原变换链
+   * @param index 插入位置，等于原链长度时表示追加
+   * @param transforms 保持自身顺序插入的变换序列
+   * @returns 非空组合返回新链或已有缓存；任一输入为空时直接复用另一输入
+   */
+  readonly insert = (
     chain: ReadonlyArray<Transform>,
     index: number,
     transforms: ReadonlyArray<Transform>,
   ): ReadonlyArray<Transform> => {
     if (transforms.length === 0) return chain;
     if (chain.length === 0) return transforms;
-    let byTransforms = insertions.get(chain);
+    // 逐层定位原链、插入序列和位置，避免重复构造同一组合的数组
+    let byTransforms = this.insertions.get(chain);
     if (byTransforms === undefined) {
       byTransforms = new WeakMap();
-      insertions.set(chain, byTransforms);
+      this.insertions.set(chain, byTransforms);
     }
     let byIndex = byTransforms.get(transforms);
     if (byIndex === undefined) {
@@ -245,20 +265,29 @@ export const createScopeTransformContext = () => {
       index === chain.length
         ? [...chain, ...transforms]
         : [...chain.slice(0, index), ...transforms, ...chain.slice(index)];
+    // 尾部追加可复用原链合成结果；中间插入改变组合顺序，需要重新合成完整链
     const value =
-      index === chain.length ? composeScopeTransform(transforms, resolve(chain), next) : composeScopeTransform(next);
-    transformCache.set(next, value);
+      index === chain.length
+        ? composeScopeTransform(transforms, this.resolve(chain), next)
+        : composeScopeTransform(next);
+    this.transformCache.set(next, value);
     byIndex.set(index, next);
     return next;
   };
-  return {
-    resolve,
-    insert,
-    append: (chain: ReadonlyArray<Transform>, transforms: ReadonlyArray<Transform>) =>
-      insert(chain, chain.length, transforms),
-    apply: (point: IRPosition, chain: ReadonlyArray<Transform>) => applyScopeTransform(point, resolve(chain)),
-    inverse: (point: IRPosition, chain: ReadonlyArray<Transform>) => inverseScopeTransform(point, resolve(chain)),
-    project: (layout: CompiledNodeLayout, chain: ReadonlyArray<Transform>) =>
-      projectLayoutWithTransform(layout, resolve(chain)),
-  };
-};
+
+  /** 在祖先链末尾追加当前层变换，复用插入缓存 */
+  readonly append = (chain: ReadonlyArray<Transform>, transforms: ReadonlyArray<Transform>) =>
+    this.insert(chain, chain.length, transforms);
+
+  /** 将局部点按给定链投影到全局坐标，复用合成结果 */
+  readonly apply = (point: IRPosition, chain: ReadonlyArray<Transform>) =>
+    applyScopeTransform(point, this.resolve(chain));
+
+  /** 将全局点反投影到给定链的局部坐标；链包含零缩放轴时抛出不可逆错误 */
+  readonly inverse = (point: IRPosition, chain: ReadonlyArray<Transform>) =>
+    inverseScopeTransform(point, this.resolve(chain));
+
+  /** 按既有布局口径投影位置、累计旋转、尺寸与 margin，不重新计算几何包络 */
+  readonly project = (layout: CompiledNodeLayout, chain: ReadonlyArray<Transform>) =>
+    projectLayoutWithTransform(layout, this.resolve(chain));
+}

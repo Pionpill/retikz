@@ -2,13 +2,8 @@ import type { ElementCompileOptions, ElementCompileResult } from '../context';
 import { resolveScopeContext, runElementCompilation } from '../context';
 import type { CompiledNodeLayout } from '../node';
 import type { InputScopeCompile } from './geometry';
-import {
-  createIntrinsicScopeLayout,
-  resolveFinalScopeTransforms,
-  resolvePreliminaryScopeTransforms,
-  resolveScopePositionTarget,
-} from './geometry';
 import { createScopeGroup } from './group';
+import { compileScopeGeometry, prepareScopeGeometry } from './state';
 import type { CompiledScope, ScopeCompilationPreparation } from './types';
 
 /** Scope 自身编译上下文，子布局由调用者按依赖就绪顺序提供 */
@@ -27,8 +22,7 @@ export const prepareScopeCompilation = (
     };
     return Object.freeze({
       scope: resolveScopeContext(input, context.shared, context.context, context.irPath),
-      positionTarget: resolveScopePositionTarget(input, geometry),
-      preliminaryTransforms: resolvePreliminaryScopeTransforms(input, geometry),
+      ...prepareScopeGeometry(input, geometry),
     });
   });
 
@@ -40,14 +34,11 @@ export const compileScope = (
   context: ScopeCompileContext,
 ): ElementCompileResult<CompiledScope> =>
   runElementCompilation(context, workspace => {
-    const envelope = createIntrinsicScopeLayout(input, layouts, context.shared);
-    const transforms = resolveFinalScopeTransforms(
-      input,
-      { positionContext: workspace.positionContext, onWarn: workspace.diagnostics.collect, irPath: context.irPath },
-      envelope,
-      preparation.positionTarget,
-      preparation.preliminaryTransforms,
-    );
+    const { envelope, transforms } = compileScopeGeometry(input, preparation, layouts, context.shared, {
+      positionContext: workspace.positionContext,
+      onWarn: workspace.diagnostics.collect,
+      irPath: context.irPath,
+    });
     const group = createScopeGroup(input, transforms, context.shared, workspace, context.irPath);
     return Object.freeze({
       irPath: context.irPath,

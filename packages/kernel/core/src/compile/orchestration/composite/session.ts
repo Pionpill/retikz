@@ -22,11 +22,12 @@ export class CompositeCompileSession {
   /** LayoutChildResult identity → replay token；拒绝复制或伪造 result */
   readonly layoutResults: WeakMap<object, CompositeLayoutResultEntry> = new WeakMap();
 
-  /** opaque handle → runtime output 节点；不跨 compile 共享 */
+  /** opaque handle → context output 节点；不跨 compile 共享 */
   readonly outputChildren: WeakMap<object, CompositeRuntimeOutputEntry> = new WeakMap();
 
   /** 以不透明布局失败标识索引当前回调或编译内的失败元数据 */
   readonly failures: WeakMap<object, LayoutProbeFailureEntry> = new WeakMap();
+
   /** 为运行时依赖分配编译内身份，不将其写入作者输入 */
   identityOf(dependency: unknown): number {
     if ((typeof dependency !== 'object' || dependency === null) && typeof dependency !== 'function') {
@@ -43,6 +44,7 @@ export class CompositeCompileSession {
     this.measurementIdentities.set(dependency, identity);
     return identity;
   }
+
   /** 读取成功测量并更新最近使用顺序 */
   getMeasurement(key: string): LayoutContribution | undefined {
     const result = this.measurements.get(key);
@@ -52,6 +54,7 @@ export class CompositeCompileSession {
     }
     return result;
   }
+
   /** 保存成功贡献并限制同次编译的缓存规模 */
   setMeasurement(key: string, result: LayoutContribution): void {
     this.measurements.set(key, result);

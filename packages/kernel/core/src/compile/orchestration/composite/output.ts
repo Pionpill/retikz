@@ -2,7 +2,7 @@ import type { CompileOccurrenceLocator, SceneClipPath, Transform } from '../../.
 import { CompileExpansionKind } from '../../../contract';
 import { createCompileInvariantError } from '../../probe-failure';
 import type { CompileOwnerKey } from '../../provenance';
-import type { TraversalFrame } from '../types';
+import type { ScopeCompileFrame } from '../types';
 import type { CompositeExecutionContext, PreparedCompositeOutputs } from './execution';
 import { isCompositeOutputHandle } from './execution';
 import { runtimeScopeChildOf } from './layout';
@@ -11,10 +11,10 @@ import type { CompositeCompileOwner, CompositeRuntimeOutputChild } from './types
 
 /** 编译组件句柄所表示的绑定子项、重放或作用域 */
 export const compileCompositeOutput = (
-  context: CompositeExecutionContext,
+  execution: CompositeExecutionContext,
   output: CompositeRuntimeOutputChild,
   index: number,
-  frame: TraversalFrame,
+  frame: ScopeCompileFrame,
   parentOccurrence: CompileOccurrenceLocator,
   ownerOccurrence: CompileOccurrenceLocator,
   scopeSegment:
@@ -33,7 +33,7 @@ export const compileCompositeOutput = (
       sourcePath: parentOccurrence.sourcePath,
       expansionPath: [...parentOccurrence.expansionPath, { kind: scopeSegment, index }],
     };
-    context.host.compileChild(
+    execution.host.compileChild(
       output.child,
       index,
       { ...frame, runtimeInputs: output.runtimeInputs },
@@ -42,12 +42,12 @@ export const compileCompositeOutput = (
       true,
       semanticOwner === undefined
         ? undefined
-        : context.runtime.state.provenanceTracker?.createOwner(
+        : execution.context.provenanceTracker?.createOwner(
             output.child,
             index,
             semanticOwner,
             true,
-            context.runtime.state.namespaceStack.identity,
+            execution.context.namespaceStack.identity,
           ),
     );
 
@@ -56,7 +56,7 @@ export const compileCompositeOutput = (
 
   if (output.kind === 'replay') {
     commitCompositeReplay(
-      context,
+      execution,
       output.replay,
       output.wrapper,
       frame,
@@ -73,18 +73,18 @@ export const compileCompositeOutput = (
   const scopeSemanticOwner =
     semanticOwner === undefined
       ? undefined
-      : context.runtime.state.provenanceTracker?.createOwner(
+      : execution.context.provenanceTracker?.createOwner(
           runtimeScopeChild,
           index,
           semanticOwner,
           true,
-          context.runtime.state.namespaceStack.identity,
+          execution.context.namespaceStack.identity,
         );
   const scopeOccurrence: CompileOccurrenceLocator = {
     sourcePath: parentOccurrence.sourcePath,
     expansionPath: [...parentOccurrence.expansionPath, { kind: scopeSegment, index }],
   };
-  context.host.compileScopeChild(
+  execution.host.compileScopeChild(
     runtimeScopeChild,
     index,
     frame,
@@ -93,7 +93,7 @@ export const compileCompositeOutput = (
     scopeSemanticOwner,
     (scopeFrame, scopePreliminaryTransforms) => {
       for (const [childIndex, child] of output.children.entries()) {
-        if (!isCompositeOutputHandle(context.runtime, child)) {
+        if (!isCompositeOutputHandle(execution.context, child)) {
           const childOccurrence: CompileOccurrenceLocator = {
             sourcePath: scopeOccurrence.sourcePath,
             expansionPath: [
@@ -101,7 +101,7 @@ export const compileCompositeOutput = (
               { kind: CompileExpansionKind.ScopeChild, index: childIndex },
             ],
           };
-          context.host.compileChild(
+          execution.host.compileChild(
             child,
             childIndex,
             { ...scopeFrame, runtimeInputs: undefined },
@@ -110,12 +110,12 @@ export const compileCompositeOutput = (
             true,
             scopeSemanticOwner === undefined
               ? undefined
-              : context.runtime.state.provenanceTracker?.createOwner(
+              : execution.context.provenanceTracker?.createOwner(
                   child,
                   childIndex,
                   scopeSemanticOwner,
                   true,
-                  context.runtime.state.namespaceStack.identity,
+                  execution.context.namespaceStack.identity,
                 ),
           );
           continue;
@@ -123,11 +123,11 @@ export const compileCompositeOutput = (
 
         const preparedChild = prepared.outputs.get(child);
         if (preparedChild === undefined) {
-          throw createCompileInvariantError('internal: runtime Scope output child was not preflighted');
+          throw createCompileInvariantError('internal: execution Scope output child was not preflighted');
         }
 
         compileCompositeOutput(
-          context,
+          execution,
           preparedChild.output,
           childIndex,
           scopeFrame,

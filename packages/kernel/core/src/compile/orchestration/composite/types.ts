@@ -77,7 +77,7 @@ export type CompositeReplayTransaction = {
   materialize?: (context: CompositeReplayMaterializeContext) => CompositeReplayTransaction;
 };
 
-/** runtime output tree 中的递归节点 */
+/** context output tree 中的递归节点 */
 export type CompositeRuntimeOutputChild =
   | Readonly<{
       /** 区分绑定输入的子项、布局重放与作用域输出 */
@@ -104,13 +104,13 @@ export type CompositeRuntimeOutputChild =
       children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
     }>;
 
-/** 单个 layout-aware composite callback 的 runtime owner */
+/** 单个 layout-aware composite callback 的 context owner */
 export type CompositeCompileOwner = Readonly<{
   /** 错误消息使用的 composite key 与 occurrence */
   label: string;
 }>;
 
-/** opaque output handle 对应的 callback-local runtime entry */
+/** opaque output handle 对应的 callback-local context entry */
 export type CompositeRuntimeOutputEntry = Readonly<{
   /** 创建该输出句柄的复合组件回调身份 */
   owner: CompositeCompileOwner;

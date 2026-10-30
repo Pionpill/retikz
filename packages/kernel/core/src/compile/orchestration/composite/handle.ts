@@ -90,7 +90,7 @@ export const createCompositeReplayChild = (
     return handle;
   });
 
-/** 创建 callback-local runtime Scope output child */
+/** 创建 callback-local context Scope output child */
 export const createCompositeScopeChild = (
   session: CompositeCompileSession,
   owner: CompositeCompileOwner,
@@ -99,7 +99,7 @@ export const createCompositeScopeChild = (
 ): CompositeCompileChild =>
   withProviderOutputValidationBoundary(owner.label, () => {
     if (!Array.isArray(children)) {
-      throw createCompositeContractError(`${owner.label} received invalid runtime Scope children.`);
+      throw createCompositeContractError(`${owner.label} received invalid context Scope children.`);
     }
 
     const clonedChildren = Array.from(children, (child: unknown, index) => {

@@ -12,7 +12,7 @@ import type { CompositeCompileOwner, CompositeReplayTransaction } from './types'
 
 /** 预检完整输出树并在成功后消费句柄 */
 export const preflightCompositeOutputs = (
-  context: CompositeExecutionContext,
+  execution: CompositeExecutionContext,
   outputs: ReadonlyArray<unknown>,
   owner: CompositeCompileOwner,
 ): PreparedCompositeOutputs => {
@@ -26,7 +26,7 @@ export const preflightCompositeOutputs = (
       throw createCompositeContractError(`${owner.label} received an invalid or forged output child.`);
     }
 
-    const entry = context.runtime.context.session.outputChildren.get(handle);
+    const entry = execution.context.compositeSession.outputChildren.get(handle);
     if (entry === undefined) {
       throw createCompositeContractError(
         `${owner.label} received an output child that does not belong to this compile or was forged.`,
@@ -57,9 +57,9 @@ export const preflightCompositeOutputs = (
       const scopeClipPath =
         entry.child.props.clip === undefined
           ? undefined
-          : context.runtime.context.workspace.clipRegistry.lower(
+          : execution.context.workspace.clipRegistry.lower(
               resolveClipValue(entry.child.props.clip, {
-                clipRegistry: context.runtime.context.shared.registries.clipRegistry,
+                clipRegistry: execution.context.shared.registries.clipRegistry,
                 irPath: ['clip'],
               }),
             );
@@ -68,13 +68,14 @@ export const preflightCompositeOutputs = (
         ...(scopeClipPath === undefined ? {} : { scopeClipPath }),
       });
 
-      for (const child of entry.child.children) if (isCompositeOutputHandle(context.runtime, child)) visitHandle(child);
+      for (const child of entry.child.children)
+        if (isCompositeOutputHandle(execution.context, child)) visitHandle(child);
 
       return;
     }
 
     preparedOutputs.set(handle, { output: entry.child });
-    const transaction = context.runtime.context.session.replayTransactions.get(entry.child.replay);
+    const transaction = execution.context.compositeSession.replayTransactions.get(entry.child.replay);
     if (transaction === undefined) {
       throw createCompositeContractError(
         `${owner.label} received a replay token that does not belong to this compile or was forged.`,
@@ -102,9 +103,9 @@ export const preflightCompositeOutputs = (
     const wrapperClipPath =
       entry.child.wrapper?.clip === undefined
         ? undefined
-        : context.runtime.context.workspace.clipRegistry.lower(
+        : execution.context.workspace.clipRegistry.lower(
             resolveClipValue(entry.child.wrapper.clip, {
-              clipRegistry: context.runtime.context.shared.registries.clipRegistry,
+              clipRegistry: execution.context.shared.registries.clipRegistry,
               irPath: ['clip'],
             }),
           );
@@ -115,7 +116,7 @@ export const preflightCompositeOutputs = (
     transactionsToConsume.push(transaction);
   };
 
-  for (const output of outputs) if (isCompositeOutputHandle(context.runtime, output)) visitHandle(output);
+  for (const output of outputs) if (isCompositeOutputHandle(execution.context, output)) visitHandle(output);
   entriesToConsume.forEach(entry => (entry.used = true));
   transactionsToConsume.forEach(transaction => (transaction.used = true));
 

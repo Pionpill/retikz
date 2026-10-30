@@ -27,8 +27,8 @@ import {
 } from '../../src';
 import { createFullCompileContext } from '../../src/compile/context';
 import { NamespaceStack } from '../../src/compile/namespace';
+import { CompileManager } from '../../src/compile/orchestration';
 import { CompositeCompileSession } from '../../src/compile/orchestration/composite/session';
-import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 import { CompileProvenanceTracker } from '../../src/compile/provenance';
 import { sceneRectangles } from '../helpers/scene-rectangles';
 
@@ -575,8 +575,7 @@ describe('布局感知复合运行时包装树', () => {
     const session = new CompositeCompileSession();
 
     expect(() =>
-      compileChildrenToPrimitives(failingIr.children, context, {
-        session,
+      new CompileManager(context, session).compileSubtree(failingIr.children, {
         namespaceStack,
         provenanceTracker,
       }),

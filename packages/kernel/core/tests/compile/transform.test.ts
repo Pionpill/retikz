@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { createPositionResolveContext } from '../../src/compile/reference/position-context';
-import { applyTransformChain, inverseTransformChain, createScopeTransformContext } from '../../src/compile/transform';
+import { applyTransformChain, inverseTransformChain, ScopeTransformComposer } from '../../src/compile/transform';
 import type { Transform } from '../../src/contract';
 
 describe('坐标变换的数值与可逆边界', () => {
   it('补入父级变换后更新坐标且不污染原链与兄弟 Scope', () => {
-    const transforms = createScopeTransformContext();
+    const transforms = new ScopeTransformComposer();
     const parent = [{ kind: 'translate', x: 10, y: 20 }] as const;
     const child = transforms.append(parent, [{ kind: 'scale', x: 2, y: 3 }]);
     expect(transforms.apply([4, 5], child)).toEqual([18, 35]);
@@ -22,7 +22,7 @@ describe('坐标变换的数值与可逆边界', () => {
   });
 
   it('多层旋转、非均匀负缩放与 pivot 保持逐项变换的几何结果', () => {
-    const transforms = createScopeTransformContext();
+    const transforms = new ScopeTransformComposer();
     let chain: ReadonlyArray<Transform> = [];
     for (let level = 0; level < 32; level++) {
       chain = transforms.append(chain, [

@@ -10,12 +10,19 @@ import type {
   CompositeContributionResult,
   CompositeRuntimeInputContext,
   LayoutContribution,
+  LayoutMeasurementAxis,
   Transform,
 } from '../../../contract';
 import { CompileExpansionKind, LayoutChildProbeKind, naturalLayoutProposal } from '../../../contract';
 import { captureCompositeInputScope, selectCompositeInputScope } from '../../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import { bindComposite, resolveComposite, resolvePath as resolvePathValue, resolveTheme } from '../../../resolve';
+import {
+  bindComposite,
+  resolveComposite,
+  resolveNodeBoundary,
+  resolvePath as resolvePathValue,
+  resolveTheme,
+} from '../../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -43,13 +50,12 @@ import {
 import type { CompileOwnerKey } from '../../provenance';
 import { bindPathTarget, createPositionResolveContext } from '../../reference';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
-import type { createScopeTransformContext } from '../../transform';
 import type { CompositeArtifact } from '../../types';
 import { cloneAlignmentGuides } from '../alignment-guide';
 import { pushAllocation } from '../allocation';
 import { cloneLayoutProposal } from '../layout-proposal';
-import type { compileChildrenToPrimitives, CompileTraversal } from '../traversal';
-import type { TraversalCompileOptions, TraversalFrame, TraversalRuntime } from '../types';
+import type { ScopeCompileFrame, CompileExecutionContext } from '../types';
+import type { CompositeCompileHost } from './execution';
 import { isCompositeOutputHandle } from './execution';
 import {
   createCompositeBoundChild,
@@ -71,34 +77,38 @@ import type { CompositeProbeContext } from './probe';
 import { evaluateCompositeLayout, probeCompositeLayout } from './probe';
 import type { CompositeCompileOwner, CompositeReplayMaterializeContext } from './types';
 
+/** 复合组件执行策略及按需测量的根元素 */
+export type CompositeCompilerOptions = {
+  /** 当前子树首个元素，仅该元素允许返回测量贡献 */
+  rootChild: IRChild | undefined;
+  /** 是否在隔离试编译中执行 */
+  probe?: boolean;
+  /** 本次根组件的测量轴，省略时生成完整输出 */
+  measurementAxis?: LayoutMeasurementAxis;
+};
+
 /** 执行复合组件、预检输出并提交选中的布局重放 */
 export class CompositeCompiler {
   /** 根组件在按需测量模式下产生的分配贡献 */
   rootContribution: LayoutContribution | undefined;
 
   constructor(
-    private readonly rootChildren: ReadonlyArray<IRChild>,
-    private readonly options: TraversalCompileOptions,
-    readonly runtime: TraversalRuntime,
-    readonly scopeTransformsContext: ReturnType<typeof createScopeTransformContext>,
-    readonly host: Pick<
-      CompileTraversal,
-      'withWarningOccurrence' | 'compileChild' | 'compileScopeChild' | 'resolveExplicitBoundary'
-    >,
-    private readonly compileChildren: typeof compileChildrenToPrimitives,
+    readonly context: CompileExecutionContext,
+    readonly host: CompositeCompileHost,
+    private readonly options: CompositeCompilerOptions,
   ) {}
 
   /** 执行组件回调并按声明顺序编译其最终输出 */
   compile(
     child: Extract<IRChild, { namespace: string }>,
     index: number,
-    frame: TraversalFrame,
+    frame: ScopeCompileFrame,
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
     semanticOwner?: CompileOwnerKey,
   ): void {
     const compositeIrPath = createCompileChildPath(frame.locatorPrefix, index);
-    const binding = bindComposite(child, this.runtime.context.shared.registries.compositeRegistry);
+    const binding = bindComposite(child, this.context.shared.registries.compositeRegistry);
     const { key } = binding;
     if (binding.kind === 'unregistered') {
       if (this.options.probe === true) {
@@ -108,7 +118,7 @@ export class CompositeCompiler {
         );
       }
 
-      this.runtime.context.workspace.diagnostics.collect({
+      this.context.workspace.diagnostics.collect({
         code: BuiltinCompileWarningCode.CompositeNotRegistered,
         message: `No composite registered for '${key}'; the node is skipped.`,
         path: compositeIrPath,
@@ -117,10 +127,10 @@ export class CompositeCompiler {
       return;
     }
 
-    if (compositeDepth >= this.runtime.context.shared.limits.maxCompositeDepth) {
+    if (compositeDepth >= this.context.shared.limits.maxCompositeDepth) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
-        `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${this.runtime.context.shared.limits.maxCompositeDepth} levels at ${formatPropertyPath(occurrence.sourcePath)}`,
+        `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${this.context.shared.limits.maxCompositeDepth} levels at ${formatPropertyPath(occurrence.sourcePath)}`,
       );
     }
 
@@ -139,7 +149,7 @@ export class CompositeCompiler {
         if (existing !== undefined) return existing;
 
         const selected = createCompositeBoundChild(
-          this.runtime.context.session,
+          this.context.compositeSession,
           owner,
           selectCompositeInputScope(sourceInputs, path),
         );
@@ -148,16 +158,15 @@ export class CompositeCompiler {
         return selected;
       },
       bindChild: (nextChild, inputs) =>
-        createCompositeBoundChild(this.runtime.context.session, owner, captureCompositeInputScope(nextChild, inputs)),
+        createCompositeBoundChild(this.context.compositeSession, owner, captureCompositeInputScope(nextChild, inputs)),
     });
     const probeContext: CompositeProbeContext = {
-      shared: this.runtime.context.shared,
-      runtime: this.runtime,
+      context: this.context,
       owner,
       key,
       occurrence,
       compositeDepth,
-      compileChildren: this.compileChildren,
+      host: this.host,
     };
     const callable = resolution;
     let callbackResult: unknown;
@@ -167,10 +176,10 @@ export class CompositeCompiler {
       string,
       Readonly<{ namespaceStack: NamespaceStack; scopeChain: ReadonlyArray<Transform> }>
     >();
-    let queryNamespaceIdentity = this.runtime.state.namespaceStack.measurementIdentity;
+    let queryNamespaceIdentity = this.context.namespaceStack.measurementIdentity;
 
     try {
-      const createLayoutContext = (theme: TraversalFrame['theme']): CompositeCompileContext => ({
+      const createLayoutContext = (theme: ScopeCompileFrame['theme']): CompositeCompileContext => ({
         ...runtimeInputContext,
         theme,
         withTheme: override =>
@@ -179,17 +188,17 @@ export class CompositeCompiler {
               theme,
               override,
               formatPropertyPath([...compositeIrPath, 'theme']),
-              this.runtime.context.shared.registries.themeRegistry,
+              this.context.shared.registries.themeRegistry,
             ),
           ),
         proposal: cloneLayoutProposal(frame.childProposal ?? naturalLayoutProposal, key, occurrence),
         evaluation:
-          this.options.measurementAxis !== undefined && child === this.rootChildren[0]
+          this.options.measurementAxis !== undefined && child === this.options.rootChild
             ? { kind: 'contribution', axis: this.options.measurementAxis }
             : { kind: 'layout' },
         measureChild: (nextChild, proposal, axis) => {
           const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
-          const inputEntry = this.runtime.context.session.outputChildren.get(nextChild);
+          const inputEntry = this.context.compositeSession.outputChildren.get(nextChild);
           if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
             throw createCompositeContractError(`${owner.label} measureChild requires a child from this callback`);
           const inputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
@@ -208,8 +217,8 @@ export class CompositeCompiler {
             ],
           });
           const cacheKey = JSON.stringify([
-            this.runtime.context.session.identityOf(inputs?.source ?? nextChild),
-            inputs === undefined ? this.runtime.context.session.identityOf(owner) : null,
+            this.context.compositeSession.identityOf(inputs?.source ?? nextChild),
+            inputs === undefined ? this.context.compositeSession.identityOf(owner) : null,
             inputs?.sourcePath,
             clonedChild,
             axis,
@@ -217,11 +226,11 @@ export class CompositeCompiler {
             frame.scopeDefaults,
             theme,
             frame.scopeChain,
-            inputs?.bindings.map(input => [input.path, this.runtime.context.session.identityOf(input.input)]),
-            this.runtime.context.session.identityOf(this.runtime.state.namespaceStack.measurementIdentity),
+            inputs?.bindings.map(input => [input.path, this.context.compositeSession.identityOf(input.input)]),
+            this.context.compositeSession.identityOf(this.context.namespaceStack.measurementIdentity),
             compositeDepth,
           ]);
-          const cached = this.runtime.context.session.getMeasurement(cacheKey);
+          const cached = this.context.compositeSession.getMeasurement(cacheKey);
           if (cached !== undefined) {
             return { kind: 'resolved', result: cached };
           }
@@ -234,19 +243,18 @@ export class CompositeCompiler {
               frame.scopeChain,
               frame.scopeDefaults,
               theme,
-              false,
               inputs,
               undefined,
               axis,
             );
             const allocation = laid.contribution ?? contributionOfBounds(axis, boundsRectOf(laid));
             const result = projectContribution(allocation, clonedProposal);
-            this.runtime.context.session.setMeasurement(cacheKey, result);
+            this.context.compositeSession.setMeasurement(cacheKey, result);
             return { kind: 'resolved', result };
           } catch (thrown) {
             if (isFatalProbeError(thrown)) throw thrown;
             const failure = createLayoutChildFailure(
-              this.runtime.context.session.failures,
+              this.context.compositeSession.failures,
               owner,
               wrapLayoutProbeError(thrown),
               'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type,
@@ -257,7 +265,7 @@ export class CompositeCompiler {
         },
         resolvePathTargets: query => {
           const queryChild = snapshotCompositeLayoutChild(owner.label, query.child, layoutProbeIndex++);
-          const namespaceIdentity = this.runtime.state.namespaceStack.measurementIdentity;
+          const namespaceIdentity = this.context.namespaceStack.measurementIdentity;
           if (queryNamespaceIdentity !== namespaceIdentity) {
             queryEnvironments.clear();
             queryNamespaceIdentity = namespaceIdentity;
@@ -297,11 +305,18 @@ export class CompositeCompiler {
           const targetNamespace = shared.namespaceStack.fork();
           const queryChain = shared.scopeChain;
           const positionContext = createPositionResolveContext({
-            nodeBoundaryContext: this.runtime.context.workspace.nodeBoundaryContext,
+            nodeBoundaryContext: this.context.workspace.nodeBoundaryContext,
             lookupReference: id => targetNamespace.lookupReference(id),
-            nodeDistance: this.runtime.context.shared.layout.nodeDistance,
+            nodeDistance: this.context.shared.layout.nodeDistance,
             scopeChain: queryChain,
-            resolveExplicitBoundary: this.host.resolveExplicitBoundary,
+            resolveExplicitBoundary: (boundary, referenceContext) =>
+              resolveNodeBoundary(boundary, {
+                visualDef: referenceContext.visualDef,
+                visualParams: referenceContext.visualParams,
+                shapeRegistry: this.context.shared.registries.shapeRegistry,
+                boundaryRegistry: this.context.shared.registries.boundaryRegistry,
+                irPath: referenceContext.irPath,
+              }),
           });
           targetNamespace.enterResolvingPhase();
 
@@ -337,11 +352,11 @@ export class CompositeCompiler {
                   pointOfTarget: target => bindingOf(target)?.point ?? null,
                   bindTarget: target => bindingOf(target),
                 },
-                pathRegistry: this.runtime.context.shared.registries.pathRegistry,
-                arrowRegistry: this.runtime.context.shared.registries.arrowRegistry,
-                markRegistry: this.runtime.context.shared.registries.markRegistry,
-                patternRegistry: this.runtime.context.shared.registries.patternRegistry,
-                round: this.runtime.context.shared.layout.round,
+                pathRegistry: this.context.shared.registries.pathRegistry,
+                arrowRegistry: this.context.shared.registries.arrowRegistry,
+                markRegistry: this.context.shared.registries.markRegistry,
+                patternRegistry: this.context.shared.registries.patternRegistry,
+                round: this.context.shared.layout.round,
                 irPath: ['query'],
               },
             );
@@ -369,14 +384,14 @@ export class CompositeCompiler {
           }
         },
         warn: (code, message, subPath) =>
-          this.runtime.context.workspace.diagnostics.collect({
+          this.context.workspace.diagnostics.collect({
             code,
             message,
             path: subPath === undefined || subPath.length === 0 ? compositeIrPath : [...compositeIrPath, ...subPath],
           }),
         layoutChild: (nextChild, proposal) => {
           const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
-          const inputEntry = this.runtime.context.session.outputChildren.get(nextChild);
+          const inputEntry = this.context.compositeSession.outputChildren.get(nextChild);
           if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
             throw createCompositeContractError(
               `${owner.label} layoutChild requires an authored or bound child from this callback`,
@@ -425,8 +440,8 @@ export class CompositeCompiler {
                 true,
                 probeInputs,
               ).transaction;
-            this.runtime.context.session.replayTransactions.set(layoutResult.replay, transaction);
-            this.runtime.context.session.layoutResults.set(layoutResult, { owner, replay: layoutResult.replay });
+            this.context.compositeSession.replayTransactions.set(layoutResult.replay, transaction);
+            this.context.compositeSession.layoutResults.set(layoutResult, { owner, replay: layoutResult.replay });
 
             return Object.freeze({ kind: LayoutChildProbeKind.Resolved, result: layoutResult });
           } catch (thrown) {
@@ -436,7 +451,7 @@ export class CompositeCompiler {
             const fallbackProviderKey =
               'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type;
             const failure = createLayoutChildFailure(
-              this.runtime.context.session.failures,
+              this.context.compositeSession.failures,
               owner,
               error,
               fallbackProviderKey,
@@ -447,10 +462,10 @@ export class CompositeCompiler {
           }
         },
         replay: (layoutResult, wrapper) =>
-          createCompositeReplayChild(this.runtime.context.session, owner, layoutResult, wrapper),
-        raise: failure => raiseLayoutChildFailure(this.runtime.context.session.failures, owner, failure),
+          createCompositeReplayChild(this.context.compositeSession, owner, layoutResult, wrapper),
+        raise: failure => raiseLayoutChildFailure(this.context.compositeSession.failures, owner, failure),
         createScope: (props, children) =>
-          createCompositeScopeChild(this.runtime.context.session, owner, props, children),
+          createCompositeScopeChild(this.context.compositeSession, owner, props, children),
       });
 
       callbackResult = callable.compile(callable.node, createLayoutContext(frame.theme));
@@ -473,7 +488,7 @@ export class CompositeCompiler {
         'kind' in callbackResult &&
         callbackResult.kind === 'contribution'
       ) {
-        if (this.options.measurementAxis === undefined || child !== this.rootChildren[0])
+        if (this.options.measurementAxis === undefined || child !== this.options.rootChild)
           throw createCompositeContractError(`${owner.label} returned a contribution during full layout`);
         const candidate = callbackResult as CompositeContributionResult;
         const contribution = candidate.contribution;
@@ -521,7 +536,7 @@ export class CompositeCompiler {
       const children = Array.from(
         resultChildren,
         (output, outputIndex): IRChild | CompositeCompileChild | CompositeBoundChild => {
-          if (isCompositeOutputHandle(this.runtime, output)) return output;
+          if (isCompositeOutputHandle(this.context, output)) return output;
           return snapshotCompositeOutputChild(owner.label, output, outputIndex);
         },
       );
@@ -563,7 +578,7 @@ export class CompositeCompiler {
 
     const { children, explicitAllocation, explicitAlignmentGuides, compositeArtifact } = validatedResult;
 
-    const outputFrame: TraversalFrame = {
+    const outputFrame: ScopeCompileFrame = {
       ...frame,
       runtimeInputs: undefined,
       alignmentGuideSink: [],
@@ -573,7 +588,7 @@ export class CompositeCompiler {
     if (compositeArtifact !== undefined) frame.artifactSink.push(compositeArtifact);
 
     for (const [outputIndex, output] of children.entries()) {
-      if (!isCompositeOutputHandle(this.runtime, output)) {
+      if (!isCompositeOutputHandle(this.context, output)) {
         const outputOccurrence: CompileOccurrenceLocator = {
           sourcePath: occurrence.sourcePath,
           expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Output, index: outputIndex }],
@@ -587,12 +602,12 @@ export class CompositeCompiler {
           true,
           semanticOwner === undefined
             ? undefined
-            : this.runtime.state.provenanceTracker?.createOwner(
+            : this.context.provenanceTracker?.createOwner(
                 output,
                 outputIndex,
                 semanticOwner,
                 true,
-                this.runtime.state.namespaceStack.identity,
+                this.context.namespaceStack.identity,
               ),
         );
         continue;

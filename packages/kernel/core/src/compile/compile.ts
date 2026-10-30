@@ -1,10 +1,8 @@
 import type { AnyCompositeDefinition } from '../contract';
 import type { IRScene } from '../schemas';
 import { createFullCompileContext } from './context';
-import { compileChildrenToPrimitives } from './orchestration';
+import { CompileManager } from './orchestration';
 import type { CompileProvenanceSnapshot } from './provenance';
-import { CompileProvenanceTracker } from './provenance';
-import { assembleSceneCompilationSnapshot } from './scene';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from './types';
 import type { CompileWarning } from './warning';
 import { formatCompileWarning } from './warning';
@@ -65,26 +63,7 @@ export const compileSceneSnapshot = <const TComposites extends ReadonlyArray<Any
   executeOptions: ExecuteOptions = {},
 ): SceneCompilationSnapshot<TComposites> => {
   const context = createFullCompileContext(ir, compileOptions ?? {});
-  const { diagnostics, paintRegistry, clipRegistry } = context.workspace;
-
-  const provenanceTracker = executeOptions.captureProvenance === true ? new CompileProvenanceTracker() : undefined;
-  const { primitives, layoutBounds, artifacts } = compileChildrenToPrimitives(ir.children, context, {
-    provenanceTracker,
-  });
-  const resources = [...paintRegistry.resources(), ...clipRegistry.resources()];
-  const snapshot = assembleSceneCompilationSnapshot<TComposites>({
-    root: ir,
-    primitives,
-    resources,
-    layoutBounds,
-    round: context.shared.layout.round,
-    artifacts,
-    diagnostics: diagnostics.warnings,
-    provenanceTracker,
-    padding: compileOptions?.padding,
-  });
-
-  return snapshot;
+  return new CompileManager(context).compileScene<TComposites>(ir, compileOptions?.padding, executeOptions);
 };
 
 /**

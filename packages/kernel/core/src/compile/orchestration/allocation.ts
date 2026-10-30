@@ -1,5 +1,5 @@
 import type { IRPosition } from '../../schemas';
-import type { TraversalFrame } from './types';
+import type { ScopeCompileFrame } from './types';
 
 /** 选择对当前父布局可见的贡献 */
 export const effectiveAllocations = <T extends { allocationBoundary?: object }>(values: ReadonlyArray<T>): Array<T> => {
@@ -8,7 +8,7 @@ export const effectiveAllocations = <T extends { allocationBoundary?: object }>(
 
 /** 收集属于当前显式分配边界的布局贡献 */
 export const pushAllocation = (
-  sink: TraversalFrame['allocationSink'],
+  sink: ScopeCompileFrame['allocationSink'],
   boundsPoints: Array<IRPosition>,
   allocationBoundary?: object,
 ): void => {

@@ -50,7 +50,9 @@ describe('解析源结构', () => {
 
   it('保持位置解析独立于编译编排', () => {
     const offenders = sourceFiles('src/resolve/position')
-      .filter(path => /from\s+['"][^'"]*compile|NamespaceStack|FullCompileContext|TraversalFrame/u.test(source(path)))
+      .filter(path =>
+        /from\s+['"][^'"]*compile|NamespaceStack|FullCompileContext|ScopeCompileFrame/u.test(source(path)),
+      )
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
 
     expect(offenders).toEqual([]);
@@ -60,8 +62,8 @@ describe('解析源结构', () => {
   it('在解析中保持复合提供者绑定', () => {
     expect(source('src/resolve/index.ts')).toContain("export * from './composite';");
 
-    const lower = source('src/compile/orchestration/composite-output.ts');
-    const traversal = source('src/compile/orchestration/traversal.ts');
+    const lower = source('src/compile/orchestration/composite/output.ts');
+    const traversal = source('src/compile/orchestration/scope.ts');
 
     expect(lower).not.toContain('parseProviderPayload');
     expect(lower).not.toContain('registry.get(');
