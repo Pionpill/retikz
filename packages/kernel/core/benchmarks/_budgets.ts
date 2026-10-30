@@ -1,4 +1,4 @@
-import type { BenchmarkBudget, BenchmarkScenario } from '../../../../scripts/benchmarks/types';
+﻿import type { BenchmarkBudget, BenchmarkScenario } from '../../../../scripts/benchmarks/types';
 
 /** 单次操作的消费预算；次数是规划假设，不代表代码硬上限或实测业务分布 */
 type CoreBudgetPolicy = {
@@ -19,7 +19,16 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
     return undefined;
   }
   let policy: CoreBudgetPolicy;
-  if (layer === 'providers') {
+  if (layer === 'compile' && family === 'full' && variant === 'mixed') {
+    const count = Number(scale);
+    if (![100, 500, 1000].includes(count)) throw new Error(`Missing Core compile scale budget: ${identity}`);
+    policy = {
+      warningMs: count === 100 ? 8 : count === 500 ? 25 : 50,
+      errorMs: count === 100 ? 16.6 : count === 500 ? 50 : 100,
+      rationale:
+        '一次完整流程图编译，无provenance；每10节点12路径、两层Scope。假设100节点用于频繁小图更新（8/16.6ms），500节点用于编辑后刷新（25/50ms），1000节点用于大图完整更新（50/100ms），中大型不承诺60FPS；不含输入构造和renderer，首次采样前固定',
+    };
+  } else if (layer === 'providers') {
     switch (family) {
       case 'shape':
       case 'boundary':
