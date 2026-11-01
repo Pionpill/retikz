@@ -5,8 +5,8 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRScene } from '../../schemas';
 import type { CompileProvenanceTracker } from '../provenance';
 import { filterAnimations, orderCompileWarnings } from '../shared';
-import type { CompileWarning, CompositeArtifact } from '../shared';
-import type { SceneCompilationSnapshot, CompileResult, CompositeArtifactOf } from '../types';
+import type { CompileWarning, CompositeArtifact, CompositeArtifactOf } from '../shared';
+import type { SceneCompilationSnapshot, CompileResult } from '../types';
 import { computeLayoutFromBounds } from './layout';
 import { viewBoxToLayout } from './view-box';
 

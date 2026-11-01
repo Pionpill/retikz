@@ -9,7 +9,7 @@ description: Use when changing Retikz package structure, dependencies, schemas, 
 
 ## 必须保持
 
-- 顶级成员声明之间留一个空行；成员有 JSDoc 或前置注释时，空行放在注释之前，注释紧贴对应声明。
+- 顶级成员声明之间留一个空行；连续 re-export 声明之间不留空行。成员有 JSDoc 或前置注释时，空行放在注释之前，注释紧贴对应声明。
 - 函数、类等成员内部，职责或处理阶段明确不同的逻辑段之间留一个空行；同一逻辑段内不逐句插入空行。逻辑分段由 LLM 自审，不以格式化通过代替检查。
 - 领域包拥有 schema、resolve、lowering 与 Scene 语义；Vanilla 组装 Input → IR，React 等 adapter 调度 Vanilla，不绕开它新建 IR builder。
 - 添加校验前先追踪数据来源，尽量在 schema、parse、定义或注册等最早具备完整信息的上游入口建立约束；上游已保证的约束，下游不得重复校验。仅当后续变换可能破坏该约束，或出现新的领域不变量、真实上下文错误时检查，并明确检查依据。外部 unknown 在入口校验，内部按类型契约消费。

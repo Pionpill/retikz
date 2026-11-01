@@ -6,11 +6,25 @@ import { createLayoutProbeRecoverableError } from '../../../resolve/diagnostics'
 import { resolvePositionTargetWorld } from '../../../resolve/position';
 import type { IRPosition, IRScopePositionTarget, IRScopeSelfPoint, IRTransform } from '../../../schemas';
 import { resolveAnchorRefUncached } from '../../reference';
-import { applyTransformChain, composeScopeTransform, transformWarnCode } from '../../shared';
+import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../../shared';
 import { projectLayoutWithTransform } from '../node';
 import type { CompiledNodeLayout } from '../node';
 import { lowerScopeTransforms } from './transform';
 import type { InputScopeCompile, ScopeGeometryContext } from './types';
+
+/** 按 transform 失败来源选择 warning code */
+const getTransformWarningCode = (failed: IRTransform | undefined): BuiltinCompileWarningCode => {
+  switch (failed?.kind) {
+    case 'offset-translate':
+      return BuiltinCompileWarningCode.OffsetBaseUnresolved;
+    case 'at-translate':
+      return BuiltinCompileWarningCode.AtTargetUnresolved;
+    case 'polar-translate':
+      return BuiltinCompileWarningCode.PolarOriginUnresolved;
+    default:
+      return BuiltinCompileWarningCode.UnresolvedNodeReference;
+  }
+};
 
 /** 拒绝非 finite 的 Scope position 中间结果 */
 const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition => {
@@ -106,7 +120,7 @@ export const resolveFinalScopeTransforms = (
     });
   if (loweredOwn === null) {
     context.onWarn({
-      code: transformWarnCode(failedTransform),
+      code: getTransformWarningCode(failedTransform),
       message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin / between endpoints) is undefined or defined later in the IR`,
       path: [...scopeIrPath, 'transforms'],
     });
@@ -170,7 +184,7 @@ export const resolvePreliminaryScopeTransforms = (
   }
 
   context.onWarn({
-    code: transformWarnCode(failedTransform),
+    code: getTransformWarningCode(failedTransform),
     message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin / between endpoints) is undefined or defined later in the IR`,
     path: [...context.irPath, 'transforms'],
   });

@@ -1,4 +1,5 @@
 import type { IRKeyframe } from '@retikz/core';
+
 /**
  * SVG 动画播放共享映射（纯函数）：property 分类、value→SVG、origin 支点解析、easing→CSS、prim 几何
  * @description CSS @keyframes（keyframes.ts）与 WAAPI 描述（waapi.ts）共用本模块，避免两端映射漂移

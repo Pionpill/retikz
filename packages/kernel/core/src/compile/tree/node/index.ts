@@ -1,25 +1,13 @@
 export * from './anchors';
-
 export * from './boundary';
-
 export * from './boundary-context';
-
 export * from './compile';
-
 export * from './emit';
-
 export * from './label/geometry';
-
 export * from './layout';
-
 export * from './layout-metrics';
-
 export * from './output';
-
 export * from './projection';
-
 export * from './reference';
-
 export * from './synthetic';
-
 export * from './types';

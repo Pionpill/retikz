@@ -3,7 +3,6 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompileOccurrenceLocator } from '../../contract';
 import { compareCompileOccurrences } from '../../contract';
-import type { IRTransform } from '../../schemas';
 import { freezeOccurrence } from './artifact';
 import { BuiltinCompileWarningCode, compileWarningOccurrence } from './warning';
 import type { CompileWarning } from './warning';
@@ -27,20 +26,6 @@ export const createDuplicateCompileWarning = (
 ): CompileWarning => {
   const warning = createDuplicateWarning(info);
   return Object.freeze(replaceCompileWarningOccurrence(warning, occurrence ?? compileWarningOccurrenceOf(warning)));
-};
-
-/** 按 transform 失败来源选择 warning code */
-export const transformWarnCode = (failed: IRTransform | undefined): CompileWarning['code'] => {
-  switch (failed?.kind) {
-    case 'offset-translate':
-      return BuiltinCompileWarningCode.OffsetBaseUnresolved;
-    case 'at-translate':
-      return BuiltinCompileWarningCode.AtTargetUnresolved;
-    case 'polar-translate':
-      return BuiltinCompileWarningCode.PolarOriginUnresolved;
-    default:
-      return BuiltinCompileWarningCode.UnresolvedNodeReference;
-  }
 };
 
 /** 格式化重复 id warning */

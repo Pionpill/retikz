@@ -1,6 +1,3 @@
-import type { JsonValue } from '@retikz/foundation';
-import type { ZodType } from 'zod';
-
 import type {
   AnyCompositeDefinition,
   CompositeInputBindings,
@@ -9,7 +6,7 @@ import type {
   ThemeDefinition,
 } from '../contract';
 import type { CompileProvenanceSnapshot } from './provenance';
-import type { CompileWarning, CompositeArtifact } from './shared';
+import type { CompileWarning, CompositeArtifact, CompositeArtifactOf } from './shared';
 import type { TexLowerer, TextMeasurer } from './text';
 
 /**
@@ -22,18 +19,6 @@ export type CompileResult<TCompositeArtifact extends CompositeArtifact = Composi
   /** 本次编译收集的复合组件产物 */
   artifacts: ReadonlyArray<TCompositeArtifact>;
 }>;
-
-/**
- * 从精确 composite definition 推导 artifact envelope
- * @template TDefinition 用于推导命名空间、类型标识与产物值的复合组件定义
- */
-export type CompositeArtifactOf<TDefinition> = TDefinition extends {
-  namespace: infer TNamespace extends string;
-  type: infer TType extends string;
-  artifactSchema: ZodType<infer TArtifact extends JsonValue>;
-}
-  ? CompositeArtifact<TNamespace, TType, TArtifact>
-  : never;
 
 /** 宿主环境注入的 compile 能力 */
 export type CompileHostOptions = {

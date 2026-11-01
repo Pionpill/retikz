@@ -1,5 +1,6 @@
 import type { JsonValue, PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
+import type { ZodType } from 'zod';
 
 import type { CompileOccurrenceLocator } from '../../contract';
 import { compareCompileOccurrences } from '../../contract';
@@ -24,6 +25,18 @@ export type CompositeArtifact<
   /** 组件声明的领域结果 */
   value: TValue;
 }>;
+
+/**
+ * 从精确 composite definition 推导 artifact envelope
+ * @template TDefinition 用于推导命名空间、类型标识与产物值的复合组件定义
+ */
+export type CompositeArtifactOf<TDefinition> = TDefinition extends {
+  namespace: infer TNamespace extends string;
+  type: infer TType extends string;
+  artifactSchema: ZodType<infer TArtifact extends JsonValue>;
+}
+  ? CompositeArtifact<TNamespace, TType, TArtifact>
+  : never;
 
 /** 把结构化 occurrence locator 格式化为唯一调试字符串 */
 export const formatCompileOccurrence = (locator: CompileOccurrenceLocator): string =>
