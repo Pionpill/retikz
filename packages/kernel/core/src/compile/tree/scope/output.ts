@@ -4,7 +4,7 @@ import type { GroupPrimitive, ScenePrimitive } from '../../../contract';
 import type { SharedCompileContext } from '../../context';
 import { assembleCompileOutputs } from '../../output';
 import type { CompileOwnerKey, CompileProvenanceTracker } from '../../provenance';
-import { collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../../scene';
+import { collectLayoutBounds, calculateBoundsOfPrimitives } from '../../scene';
 import { applyTransformChain, createCompileChildPath } from '../../shared';
 import type { CompileBounds, CompileOutput } from '../../shared';
 import type { CompileExecutionContext } from '../context/execution';
@@ -46,7 +46,7 @@ export const assembleScopeOutput = (
       if (contribution.decoration) {
         const box = collectLayoutBounds(undefined, contribution.boundsPoints);
         if (box !== undefined) {
-          const projected = optionalVisualBoundsOfPrimitives(
+          const projected = calculateBoundsOfPrimitives(
             [{ ...group, children: [{ type: 'rect', ...boundsToRect(box), fill: 'black' }] }],
             merged.resources,
           );
@@ -71,7 +71,7 @@ export const assembleScopeOutput = (
       });
     }
   }
-  const decoration = optionalVisualBoundsOfPrimitives([{ ...group, children: frame }], merged.resources);
+  const decoration = calculateBoundsOfPrimitives([{ ...group, children: frame }], merged.resources);
   if (decoration !== undefined) {
     const { x, y, width, height } = decoration;
     bounds.push({

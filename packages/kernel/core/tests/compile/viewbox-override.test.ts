@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRChild, IRScene } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import { computeLayout, createRound } from '../../src/compile/scene';
+import { createRound } from '../../src/compile/scene';
 
 /** 一个尺寸固定、与文字度量无关的稳定内容节点（circle + minimumSize），落在给定中心 */
 const circleNode = (id: string, position: [number, number], minimumSize = 40): IRChild => ({
@@ -94,11 +94,11 @@ describe('IR 根含小数 viewBox 按精度 round', () => {
 });
 
 describe('IR 根无 viewBox 时回退自动算 layout', () => {
-  it('空场景无 viewBox → 回退 computeLayout 兜底框', () => {
+  it('空场景无 viewBox → 回退 computeLayoutFromBounds 兜底框', () => {
     const ir = scene([]);
     const result = compileToScene(ir).scene;
 
-    expect(result.layout).toEqual(computeLayout([], 10, createRound(2)));
+    expect(result.layout).toEqual({ x: 0, y: 0, width: 100, height: 100 });
   });
 
   it('带内容无 viewBox → padding 影响 layout（回退行为，与既有一致）', () => {
@@ -106,7 +106,7 @@ describe('IR 根无 viewBox 时回退自动算 layout', () => {
     const withSmallPadding = compileToScene(scene(content), { padding: 10 }).scene;
     const withLargePadding = compileToScene(scene(content), { padding: 50 }).scene;
 
-    // 回退到 computeLayout：padding 越大 layout 越大（证明未走 override 分支）
+    // 回退到 computeLayoutFromBounds：padding 越大 layout 越大（证明未走 override 分支）
     expect(withLargePadding.layout.width).toBeGreaterThan(withSmallPadding.layout.width);
     expect(withLargePadding.layout.height).toBeGreaterThan(withSmallPadding.layout.height);
   });

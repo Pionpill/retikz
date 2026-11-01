@@ -1,4 +1,7 @@
-import type { PaintValue, ScenePrimitive } from '../../../../contract';
+import type { CurveSegmentSample } from '@retikz/math';
+import { RAD_TO_DEG } from '@retikz/math';
+
+import type { GroupPrimitive, PaintValue, ScenePrimitive } from '../../../../contract';
 import type { MarkResolution } from '../../../../resolve';
 import {
   createCompositeContractError,
@@ -7,7 +10,10 @@ import {
   safeThrownDetail,
 } from '../../../../resolve/diagnostics';
 import type { RegisterPaint } from '../../../resource';
+import { materializeMarkerPrimitive } from '../../../scene';
+import type { MarkerPlacementContext } from '../../../scene';
 import { materializeScenePrimitives } from '../../../shared';
+import { combineOpacity } from '../../../text';
 
 /** 由共同定义生成箭头或沿线标记的局部图元 */
 export const emitMarkPrimitives = (
@@ -49,3 +55,41 @@ export const emitMarkPrimitives = (
   }
   return materializeScenePrimitives(owner.label, emitted, allowedResourceIds);
 };
+
+/** 按统一尺寸和局部锚点放置标记图元 */
+export const placeMarkPrimitives = (
+  primitives: Array<ScenePrimitive>,
+  resolution: MarkResolution,
+  sample: CurveSegmentSample,
+  context: MarkerPlacementContext,
+): GroupPrimitive => ({
+  type: 'group',
+  transforms: [
+    { kind: 'translate', x: context.round(sample.point[0]), y: context.round(sample.point[1]) },
+    {
+      kind: 'rotate',
+      degrees: context.round(
+        typeof context.rotate === 'number'
+          ? context.rotate
+          : Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG,
+      ),
+    },
+    {
+      kind: 'scale',
+      x: context.round((resolution.geometry.resolvedLength * context.strokeWidth) / resolution.geometry.baseSize),
+      y: context.round((resolution.geometry.resolvedWidth * context.strokeWidth) / resolution.geometry.baseSize),
+    },
+    {
+      kind: 'translate',
+      x: context.round(-resolution.geometry.anchor[0]),
+      y: context.round(-resolution.geometry.anchor[1]),
+    },
+  ],
+  children: primitives.map(primitive =>
+    materializeMarkerPrimitive(
+      primitive,
+      context.contextStroke,
+      combineOpacity(resolution.mark.opacity, context.hostOpacity),
+    ),
+  ),
+});

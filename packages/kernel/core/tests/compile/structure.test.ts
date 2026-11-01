@@ -27,7 +27,7 @@ describe('编译源结构', () => {
       'compileScope',
       'compileToScene',
       'computeCompileOutputBounds',
-      'computeLayout',
+      'computeLayoutFromBounds',
       'createCompileChildPath',
       'createDuplicateCompileWarning',
       'createSharedCompileContext',

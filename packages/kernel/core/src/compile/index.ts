@@ -18,7 +18,7 @@ export * from './output';
 export * from './provenance';
 export { projectCompileReference } from './tree/reference';
 export type { CompileReferenceSource } from './tree/reference';
-export { assembleSceneCompilationSnapshot, computeLayout } from './scene';
+export { assembleSceneCompilationSnapshot, computeLayoutFromBounds } from './scene';
 export type { InputSceneCompilationSnapshot } from './scene';
 export {
   BuiltinCompileWarningCode,

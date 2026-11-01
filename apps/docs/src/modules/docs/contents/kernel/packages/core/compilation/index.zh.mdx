@@ -461,6 +461,8 @@ Scope 分两步计算：先 `prepareScopeCompilation` 得到有效继承上下�
 
 资源 id 在生成时由内容确定。`assembleCompileOutputs` 合并去重资源，保留图元引用，按同层 zIndex 稳定排序；`assembleScopeOutput` 进一步处理 Scope 包装、裁剪与边界。调用方选择本次有效的输出贡献，使用 `computeCompileOutputBounds` 汇总可见边界，再交给 `assembleSceneCompilationSnapshot` 完成 viewBox、padding、根动画、诊断与 provenance 收尾。传入的 Composite artifacts 应已按最终声明顺序整理，并与本次结果配对；组装不重新编译元素，也不推断增量复用策略。
 
+只需从已有轴对齐边界计算布局矩形时，可调用 Core 公开的 `computeLayoutFromBounds(bounds, padding, round)`。它应用留白和输出精度；`bounds` 为 `undefined` 时返回位于原点的 100×100 兜底框。持有点集的调用方先用 `@retikz/math` 的 `boundsOf` 求边界。
+
 这些入口是 Core 提供的调度基础。Reconciler 负责名称映射、依赖失效、版本隔离和提交；本接口不自动构建或更新 Weave 树。调用方不得修改已发布的 compiled 可达数据，环境定义或测量服务改变时也必须使相关缓存失效。包含 Definition 与文本 emit 函数的编译状态不能直接作为 Worker 消息序列化。
 
 <SourceLinks

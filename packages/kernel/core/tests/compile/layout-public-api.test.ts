@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  computeLayout,
+  computeLayoutFromBounds,
   LayoutAlignmentGuideDimension,
   BuiltinLayoutAlignmentGuideName,
   LayoutAxisProposalKind,
@@ -13,14 +13,7 @@ import { createRound } from '../../src/compile/scene';
 
 describe('布局公共 API', () => {
   it('从公开入口计算包含 padding 的布局边界', () => {
-    const layout = computeLayout(
-      [
-        [0, 0],
-        [10, 20],
-      ],
-      5,
-      createRound(2),
-    );
+    const layout = computeLayoutFromBounds({ minX: 0, minY: 0, maxX: 10, maxY: 20 }, 5, createRound(2));
 
     expect(layout).toEqual({ x: -5, y: -5, width: 20, height: 30 });
   });

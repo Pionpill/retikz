@@ -8,7 +8,7 @@ import type {
 import { CompileExpansionKind } from '../../../contract';
 import type { CompileOwnerKey } from '../../provenance';
 import { importSceneResources } from '../../resource';
-import { allocationPointsOf, optionalVisualBoundsOfPrimitives } from '../../scene';
+import { allocationPointsOf, calculateBoundsOfPrimitives } from '../../scene';
 import {
   compileWarningOccurrenceOf,
   createCompileInvariantError,
@@ -142,7 +142,7 @@ export const commitCompositeReplay = (
       });
     }
   } else {
-    const visualBounds = optionalVisualBoundsOfPrimitives(committedPrimitives, [
+    const visualBounds = calculateBoundsOfPrimitives(committedPrimitives, [
       ...execution.context.workspace.paintRegistry.getResources(),
       ...execution.context.workspace.clipRegistry.getResources(),
     ]);

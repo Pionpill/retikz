@@ -4,7 +4,7 @@ import { boundsToRect } from '@retikz/math';
 import type { CompileOccurrenceLocator, SceneClipPath, Transform } from '../../../contract';
 import { resolveScopeDefaults, resolveTheme } from '../../../resolve';
 import type { CompileOwnerKey } from '../../provenance';
-import { allocationPointsOf, collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../../scene';
+import { allocationPointsOf, collectLayoutBounds, calculateBoundsOfPrimitives } from '../../scene';
 import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
 import { resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../alignment-guide';
 import { effectiveAllocations, pushAllocation } from '../allocation';
@@ -208,7 +208,7 @@ export const visitScope = (
       if (bounds === undefined) continue;
 
       const rectangle = boundsToRect(bounds);
-      const projected = optionalVisualBoundsOfPrimitives(
+      const projected = calculateBoundsOfPrimitives(
         [
           {
             type: 'group',

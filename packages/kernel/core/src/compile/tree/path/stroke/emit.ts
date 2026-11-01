@@ -8,7 +8,7 @@ import type { CanonicalStep, PathResolution, PathTargetView, StrokePathResolutio
 import type { IRPosition, IRTarget } from '../../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../../shared';
 import type { RegisterPaint } from '../../../resource';
-import { optionalVisualBoundsOfPrimitives } from '../../../scene';
+import { calculateBoundsOfPrimitives } from '../../../scene';
 import { BuiltinCompileWarningCode } from '../../../shared';
 import type { TextMeasurer } from '../../../text';
 import { fallbackMeasurer } from '../../../text';
@@ -404,7 +404,7 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
   const markBounds =
     marks.primitives.length === 0
       ? undefined
-      : optionalVisualBoundsOfPrimitives(marks.primitives, pathEmitOptions.resources?.() ?? []);
+      : calculateBoundsOfPrimitives(marks.primitives, pathEmitOptions.resources?.() ?? []);
   if (markBounds !== undefined)
     boundsPoints.push(
       [markBounds.x, markBounds.y],

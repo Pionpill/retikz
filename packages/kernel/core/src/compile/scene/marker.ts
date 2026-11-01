@@ -2,14 +2,10 @@ import type { CurveSegmentSample } from '@retikz/math';
 import { RAD_TO_DEG } from '@retikz/math';
 
 import type { CompiledArrowEnd, GroupPrimitive, PaintValue, ScenePrimitive, Transform } from '../../contract';
-import type { MarkResolution } from '../../resolve';
 import { combineOpacity } from '../text';
 
-const resolveMarkerContextFill = (value: PaintValue, contextStroke: PaintValue): PaintValue =>
-  typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
-
 /** marker 放置所需上下文 */
-type MarkMarkerGroupContext = {
+export type MarkerPlacementContext = {
   /** 标记的固定角度或切线定向 */
   rotate?: 'auto' | number;
   /** 标记放置缩放 */
@@ -25,14 +21,21 @@ type MarkMarkerGroupContext = {
 };
 
 /** 保留标记结构，递归解析宿主描边色并将透明度因子应用到绘制图元 */
-const markerPrimToScene = (prim: ScenePrimitive, contextStroke: PaintValue, hostOpacity?: number): ScenePrimitive => {
+export const materializeMarkerPrimitive = (
+  prim: ScenePrimitive,
+  contextStroke: PaintValue,
+  hostOpacity?: number,
+): ScenePrimitive => {
+  const resolveMarkerContextFill = (value: PaintValue): PaintValue =>
+    typeof value === 'object' && value.kind === 'contextStroke' ? contextStroke : value;
+
   const content = { ...prim };
   delete content.id;
   delete content.meta;
   if (content.type === 'group') {
     return {
       ...content,
-      children: content.children.map(c => markerPrimToScene(c, contextStroke, hostOpacity)),
+      children: content.children.map(c => materializeMarkerPrimitive(c, contextStroke, hostOpacity)),
     };
   }
 
@@ -43,8 +46,8 @@ const markerPrimToScene = (prim: ScenePrimitive, contextStroke: PaintValue, host
   return {
     ...content,
     ...appearance,
-    ...(content.fill !== undefined && { fill: resolveMarkerContextFill(content.fill, contextStroke) }),
-    ...(content.stroke !== undefined && { stroke: resolveMarkerContextFill(content.stroke, contextStroke) }),
+    ...(content.fill !== undefined && { fill: resolveMarkerContextFill(content.fill) }),
+    ...(content.stroke !== undefined && { stroke: resolveMarkerContextFill(content.stroke) }),
   };
 };
 
@@ -55,7 +58,7 @@ const markerPrimToScene = (prim: ScenePrimitive, contextStroke: PaintValue, host
 export const buildMarkMarkerGroup = (
   spec: CompiledArrowEnd,
   sample: CurveSegmentSample,
-  context: MarkMarkerGroupContext,
+  context: MarkerPlacementContext,
 ): GroupPrimitive => {
   const { strokeWidth, round, contextStroke } = context;
   const angleDeg =
@@ -74,41 +77,7 @@ export const buildMarkMarkerGroup = (
     type: 'group',
     transforms,
     children: spec.marker.map(p =>
-      markerPrimToScene(p, contextStroke, combineOpacity(spec.opacity, context.hostOpacity)),
+      materializeMarkerPrimitive(p, contextStroke, combineOpacity(spec.opacity, context.hostOpacity)),
     ),
   };
 };
-
-/** 按统一尺寸和局部锚点放置标记图元 */
-export const placeMarkPrimitives = (
-  primitives: Array<ScenePrimitive>,
-  resolution: MarkResolution,
-  sample: CurveSegmentSample,
-  context: MarkMarkerGroupContext,
-): GroupPrimitive => ({
-  type: 'group',
-  transforms: [
-    { kind: 'translate', x: context.round(sample.point[0]), y: context.round(sample.point[1]) },
-    {
-      kind: 'rotate',
-      degrees: context.round(
-        typeof context.rotate === 'number'
-          ? context.rotate
-          : Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG,
-      ),
-    },
-    {
-      kind: 'scale',
-      x: context.round((resolution.geometry.resolvedLength * context.strokeWidth) / resolution.geometry.baseSize),
-      y: context.round((resolution.geometry.resolvedWidth * context.strokeWidth) / resolution.geometry.baseSize),
-    },
-    {
-      kind: 'translate',
-      x: context.round(-resolution.geometry.anchor[0]),
-      y: context.round(-resolution.geometry.anchor[1]),
-    },
-  ],
-  children: primitives.map(primitive =>
-    markerPrimToScene(primitive, context.contextStroke, combineOpacity(resolution.mark.opacity, context.hostOpacity)),
-  ),
-});

@@ -7,8 +7,7 @@ import type { CompileProvenanceTracker } from '../provenance';
 import { filterAnimations, orderCompileWarnings } from '../shared';
 import type { CompileWarning, CompositeArtifact, CompositeArtifactOf } from '../shared';
 import type { SceneCompilationSnapshot, CompileResult } from '../types';
-import { computeLayoutFromBounds } from './layout';
-import { viewBoxToLayout } from './view-box';
+import { computeLayoutFromBounds, viewBoxToLayout } from './layout';
 
 /** Scene 自动边界的默认留白 */
 const DEFAULT_LAYOUT_PADDING = 10;

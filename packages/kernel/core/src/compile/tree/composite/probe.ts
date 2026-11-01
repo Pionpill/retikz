@@ -11,7 +11,7 @@ import type { CompositeInputScope } from '../../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { IRChild } from '../../../schemas';
 import { CompileProvenanceTracker } from '../../provenance';
-import { visualBoundsOfPrimitives } from '../../scene';
+import { calculateBoundsOfPrimitives } from '../../scene';
 import {
   BuiltinCompileWarningCode,
   createDuplicateWarning,
@@ -197,7 +197,8 @@ export const probeCompositeLayout = (
   const layoutResult: LayoutChildResult = Object.freeze({
     allocationBounds,
     slotSize: resolveLayoutSlotSize(allocationBounds, clonedProposal),
-    visualBounds: visualBoundsOfPrimitives(laid.primitives, resources),
+    visualBounds:
+      calculateBoundsOfPrimitives(laid.primitives, resources) ?? Object.freeze({ x: 0, y: 0, width: 0, height: 0 }),
     ...(laid.alignmentGuides === undefined ? {} : { alignmentGuides: laid.alignmentGuides }),
     replay: token,
   });

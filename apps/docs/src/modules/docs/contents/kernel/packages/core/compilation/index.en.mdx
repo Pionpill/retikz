@@ -482,6 +482,8 @@ Scope calculation has two stages. `prepareScopeCompilation` resolves inherited c
 
 Resource IDs are derived from content when resources are created. `assembleCompileOutputs` deduplicates resources, preserves primitive references and stably sorts sibling zIndex values; `assembleScopeOutput` also handles Scope wrapping, clipping and bounds. The caller selects the current output contributions, aggregates their visible bounds with `computeCompileOutputBounds`, then calls `assembleSceneCompilationSnapshot` to finalize viewBox, padding, root animations, diagnostics and provenance. Supplied Composite artifacts must already be in final declaration order and belong to this result. Assembly does not recompile elements or determine incremental reuse.
 
+To calculate a layout rectangle from existing axis-aligned bounds, call Core's public `computeLayoutFromBounds(bounds, padding, round)`. It applies padding and output precision, returning a 100×100 fallback rectangle at the origin when `bounds` is `undefined`. Callers with a point set first compute its bounds using `boundsOf` from `@retikz/math`.
+
 These entries provide Core's scheduling primitives. Reconciler owns name mapping, dependency invalidation, version isolation and publication; the interface does not construct or update the Weave tree automatically. Callers must not mutate data reachable from published compiled state. Changes to shared definitions or measurement services invalidate affected caches. Compiled state containing Definitions and text emit functions cannot be serialized directly into Worker messages.
 
 <SourceLinks

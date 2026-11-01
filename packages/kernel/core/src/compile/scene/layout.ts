@@ -1,8 +1,8 @@
 import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
-import { boundsOf, boundsToRect, expandBounds, isFiniteBoundsRect } from '@retikz/math';
+import { boundsToRect, expandBounds, isFiniteBoundsRect, isPositiveBoundsRect } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { IRPosition } from '../../schemas';
+import type { IRViewBox } from '../../schemas';
 
 /** 对 layout 四字段应用输出精度 */
 export const roundLayout = ({ height, width, x, y }: BoundsRect, round: (n: number) => number): BoundsRect => ({
@@ -32,9 +32,15 @@ export const computeLayoutFromBounds = (
   return layout;
 };
 
-/** 由 bbox 候选点算出布局边界；保留给既有调用方使用 */
-export const computeLayout = (
-  boundsPoints: ReadonlyArray<IRPosition>,
-  padding: number,
-  round: (n: number) => number,
-): BoundsRect => computeLayoutFromBounds(boundsOf(boundsPoints), padding, round);
+/** 把显式 viewBox 转为 Scene.layout，确保取整后坐标有限且宽高为正 */
+export const viewBoxToLayout = (viewBox: IRViewBox, round: (n: number) => number): BoundsRect => {
+  const layout = roundLayout(viewBox, round);
+  if (!isPositiveBoundsRect(layout)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `viewBox rounds to an invalid layout (x=${String(layout.x)}, y=${String(layout.y)}, width=${String(layout.width)}, height=${String(layout.height)}); check precision and coordinate magnitude.`,
+    );
+  }
+
+  return layout;
+};

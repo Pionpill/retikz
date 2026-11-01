@@ -1,13 +1,13 @@
 import type { AxisAlignedBounds } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { computeLayout, computeLayoutFromBounds, createRound } from '../../src/compile/scene';
+import { computeLayoutFromBounds, createRound } from '../../src/compile/scene';
 
 const round2 = createRound(2);
 
 const noRound = (n: number) => n;
 
-describe('computeLayout', () => {
+describe('computeLayoutFromBounds', () => {
   it('有限输入在边界相减、留白扩张或舍入中溢出时拒绝输出', () => {
     const wideBounds: AxisAlignedBounds = { minX: -1e308, maxX: 1e308, minY: 0, maxY: 1 };
     const smallBounds: AxisAlignedBounds = { minX: 0, maxX: 1, minY: 0, maxY: 1 };
@@ -21,26 +21,12 @@ describe('computeLayout', () => {
     }
   });
 
-  it('空点集返回 100×100 兜底框（不抛错）', () => {
-    expect(computeLayout([], 10, round2)).toEqual({ x: 0, y: 0, width: 100, height: 100 });
-  });
-
-  it('bounds 入口与点集入口计算结果一致', () => {
-    const points: Array<[number, number]> = [
-      [-10, -5],
-      [10, 5],
-    ];
-    const bounds: AxisAlignedBounds = { minX: -10, minY: -5, maxX: 10, maxY: 5 };
-
-    expect(computeLayoutFromBounds(bounds, 4, noRound)).toEqual(computeLayout(points, 4, noRound));
-  });
-
   it('bounds 入口为空时返回自动 layout 兜底框', () => {
     expect(computeLayoutFromBounds(undefined, 10, round2)).toEqual({ x: 0, y: 0, width: 100, height: 100 });
   });
 
   it('单个点：bbox 为 0×0 + 四周 padding', () => {
-    expect(computeLayout([[5, 7]], 4, noRound)).toEqual({
+    expect(computeLayoutFromBounds({ minX: 5, minY: 7, maxX: 5, maxY: 7 }, 4, noRound)).toEqual({
       x: 1, // 5 - 4
       y: 3, // 7 - 4
       width: 8, // 0 + 2×4
@@ -48,17 +34,8 @@ describe('computeLayout', () => {
     });
   });
 
-  it('两个对角点：bbox = 对角差 + padding 各两边', () => {
-    expect(
-      computeLayout(
-        [
-          [0, 0],
-          [10, 20],
-        ],
-        5,
-        noRound,
-      ),
-    ).toEqual({
+  it('边界四周扩展 padding', () => {
+    expect(computeLayoutFromBounds({ minX: 0, minY: 0, maxX: 10, maxY: 20 }, 5, noRound)).toEqual({
       x: -5,
       y: -5,
       width: 20, // 10 + 2×5
@@ -66,17 +43,8 @@ describe('computeLayout', () => {
     });
   });
 
-  it('负坐标也参与 min/max', () => {
-    expect(
-      computeLayout(
-        [
-          [-10, -5],
-          [10, 5],
-        ],
-        0,
-        noRound,
-      ),
-    ).toEqual({
+  it('负坐标边界保持位置和尺寸', () => {
+    expect(computeLayoutFromBounds({ minX: -10, minY: -5, maxX: 10, maxY: 5 }, 0, noRound)).toEqual({
       x: -10,
       y: -5,
       width: 20,
@@ -85,16 +53,7 @@ describe('computeLayout', () => {
   });
 
   it('round 回调被应用于全部 4 个字段', () => {
-    expect(
-      computeLayout(
-        [
-          [0.111, 0.222],
-          [10.337, 20.448],
-        ],
-        1,
-        round2,
-      ),
-    ).toEqual({
+    expect(computeLayoutFromBounds({ minX: 0.111, minY: 0.222, maxX: 10.337, maxY: 20.448 }, 1, round2)).toEqual({
       x: -0.89, // 0.111 - 1 = -0.889 → -0.89
       y: -0.78, // 0.222 - 1 = -0.778 → -0.78
       width: 12.23, // 10.337 - 0.111 + 2 = 12.226 → 12.23
@@ -103,17 +62,7 @@ describe('computeLayout', () => {
   });
 
   it('padding=0 时 bbox 紧贴极值点', () => {
-    expect(
-      computeLayout(
-        [
-          [1, 2],
-          [3, 4],
-          [5, 6],
-        ],
-        0,
-        noRound,
-      ),
-    ).toEqual({
+    expect(computeLayoutFromBounds({ minX: 1, minY: 2, maxX: 5, maxY: 6 }, 0, noRound)).toEqual({
       x: 1,
       y: 2,
       width: 4,
@@ -122,16 +71,7 @@ describe('computeLayout', () => {
   });
 
   it('所有点重合：bbox 为 0×0 + padding（不退化为兜底框）', () => {
-    expect(
-      computeLayout(
-        [
-          [3, 3],
-          [3, 3],
-        ],
-        2,
-        noRound,
-      ),
-    ).toEqual({
+    expect(computeLayoutFromBounds({ minX: 3, minY: 3, maxX: 3, maxY: 3 }, 2, noRound)).toEqual({
       x: 1,
       y: 1,
       width: 4,

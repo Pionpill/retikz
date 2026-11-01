@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 
 import type { IRAnimationTrack, IRScene, PathCommand, ScenePrimitive, SceneResource, TextPrimitive } from '../../src';
 import { compileToScene, defineArrow } from '../../src';
-import { visualBoundsOfPrimitives } from '../../src/compile/scene/visual-bounds';
+import { calculateBoundsOfPrimitives } from '../../src/compile/scene/bounds';
 
 const boundsOf = (primitives: ReadonlyArray<ScenePrimitive>, resources: ReadonlyArray<SceneResource> = []) =>
-  visualBoundsOfPrimitives(primitives, resources);
+  calculateBoundsOfPrimitives(primitives, resources);
 
 it('箭头中的已度量文本和裁剪共同决定可视边界', () => {
   const text: TextPrimitive = {
@@ -51,6 +51,7 @@ it('箭头中的已度量文本和裁剪共同决定可视边界', () => {
       },
     ],
   );
+  assert(full !== undefined && clipped !== undefined);
   expect(full.x + full.width).toBe(50);
   expect(clipped.x + clipped.width).toBe(35);
   expect(full.y).toBe(15);
@@ -132,6 +133,7 @@ describe('规范的视觉边界', () => {
       },
     ]);
 
+    assert(ellipse !== undefined && ellipseArc !== undefined);
     expect(ellipse.x).toBeCloseTo(-5);
     expect(ellipse.y).toBeCloseTo(-10);
     expect(ellipse.width).toBeCloseTo(10);
@@ -236,7 +238,7 @@ describe('规范的视觉边界', () => {
           opacity: 0,
         },
       ]),
-    ).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+    ).toBeUndefined();
   });
 
   it('当所属路径的不透明度为零时，抑制箭头标记边界', () => {
@@ -271,7 +273,7 @@ describe('规范的视觉边界', () => {
           },
         },
       ]),
-    ).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+    ).toBeUndefined();
   });
 
   it('计算路径视觉边界时使用端点重叠命令', () => {
@@ -302,6 +304,7 @@ describe('规范的视觉边界', () => {
       const scene = compileToScene(ir, { arrows: [arrow], padding: 0 }).scene;
       const bounds = boundsOf(scene.primitives, scene.resources);
 
+      assert(bounds !== undefined);
       return bounds.x + bounds.width;
     };
 
@@ -383,14 +386,13 @@ describe('规范的视觉边界', () => {
           ],
           [{ kind: 'clip', id: 'clip-1', path: { commands, fillRule: 'nonzero' } }],
         ),
-      ).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+      ).toBeUndefined();
     },
   );
 
-  it('返回一个有限的不可变零矩形作为空输出', () => {
+  it('没有可见内容时返回 undefined', () => {
     const bounds = boundsOf([]);
 
-    expect(bounds).toEqual({ x: 0, y: 0, width: 0, height: 0 });
-    expect(Object.isFrozen(bounds)).toBe(true);
+    expect(bounds).toBeUndefined();
   });
 });
