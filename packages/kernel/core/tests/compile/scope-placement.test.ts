@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { GroupPrimitive, IRScene, ScenePrimitive } from '../../src';
 import { compileToScene } from '../../src';
-import { applyTransformChain } from '../../src/compile/transform';
+import { applyTransformChain } from '../../src/compile/shared';
 import { sceneRectangles } from '../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({

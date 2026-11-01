@@ -10,14 +10,18 @@ import type {
 import type { CompositeInputScope } from '../../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { IRChild } from '../../../schemas';
-import { formatCompileOccurrence, freezeOccurrence } from '../../artifact';
 import type { FullCompileContext } from '../../context';
 import { createWorkspaceCompileContext } from '../../context';
-import { createDuplicateWarning, withCompileWarningOccurrence } from '../../diagnostics';
 import { CompileProvenanceTracker } from '../../provenance';
 import { visualBoundsOfPrimitives } from '../../scene';
-import { BuiltinCompileWarningCode } from '../../warning';
-import type { CompileWarning } from '../../warning';
+import {
+  BuiltinCompileWarningCode,
+  createDuplicateWarning,
+  formatCompileOccurrence,
+  freezeOccurrence,
+  withCompileWarningOccurrence,
+} from '../../shared';
+import type { CompileWarning } from '../../shared';
 import type { CompileExecutionContext } from '../context';
 import type { TreeCompileFrame } from '../frame';
 import type { NamespaceStack } from '../namespace';

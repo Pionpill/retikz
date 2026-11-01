@@ -1,10 +1,9 @@
 import type { AffineMatrix } from '@retikz/math';
 import { AFFINE_IDENTITY, DEG_TO_RAD, applyAffine, multiplyAffine } from '@retikz/math';
 
-import type { Transform } from '../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
-import type { IRPosition } from '../schemas';
-import type { CompiledNodeLayout } from './tree/node';
+import type { Transform } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { IRPosition } from '../../schemas';
 
 /** 将局部点按 transform chain 投影到全局坐标 */
 export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {
@@ -177,34 +176,4 @@ export const inverseScopeTransform = (point: IRPosition, transform: ComposedScop
   return transform.finiteInverse
     ? applyAffine(transform.inverse, point)
     : inverseTransformChain(point, transform.chain);
-};
-
-/** 保持既有布局投影口径，只复用合成的点变换与旋转/缩放累计量 */
-export const projectLayoutWithTransform = (
-  layout: CompiledNodeLayout,
-  transform: ComposedScopeTransform,
-): CompiledNodeLayout => {
-  const [x, y] = applyScopeTransform([layout.geometry.rect.x, layout.geometry.rect.y], transform);
-  const scaleX = Math.abs(transform.scaleX);
-  const scaleY = Math.abs(transform.scaleY);
-  return {
-    ...layout,
-    geometry: {
-      ...layout.geometry,
-      rect: {
-        ...layout.geometry.rect,
-        x,
-        y,
-        rotate: (layout.geometry.rect.rotate ?? 0) + transform.rotation,
-        width: layout.geometry.rect.width * scaleX,
-        height: layout.geometry.rect.height * scaleY,
-      },
-      margin: {
-        top: layout.geometry.margin.top * scaleY,
-        right: layout.geometry.margin.right * scaleX,
-        bottom: layout.geometry.margin.bottom * scaleY,
-        left: layout.geometry.margin.left * scaleX,
-      },
-    },
-  };
 };

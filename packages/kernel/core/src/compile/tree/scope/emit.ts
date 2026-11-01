@@ -2,8 +2,8 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import type { GroupPrimitive, SceneClipPath, Transform } from '../../../contract';
 import { resolveClip } from '../../../resolve/resource';
-import { filterAnimations } from '../../animation';
 import type { SharedCompileContext, WorkspaceCompileContext } from '../../context';
+import { filterAnimations } from '../../shared';
 import type { InputScopeCompile } from './types';
 
 /** 生成 Scope 自身的绘制属性，子图元与名称发布由调用方组织 */

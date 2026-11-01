@@ -1,4 +1,4 @@
-import { createCompileChildPath } from '../../artifact';
+import { createCompileChildPath } from '../../shared';
 import { pushAllocation } from '../allocation';
 import { createTreePositionContext } from '../context';
 import type { CompileExecutionContext } from '../context';

@@ -1,6 +1,8 @@
 import type { AnyCompositeDefinition } from '../contract';
 import type { IRScene } from '../schemas';
 import { createFullCompileContext } from './context';
+import type { CompileWarning } from './shared';
+import { formatCompileWarning } from './shared';
 import { CompileManager } from './tree';
 import type {
   ExecuteOptions,
@@ -9,10 +11,8 @@ import type {
   CompileResult,
   CompositeArtifactOf,
 } from './types';
-import type { CompileWarning } from './warning';
-import { formatCompileWarning } from './warning';
 
-export { BuiltinCompileWarningCode, type CompileWarningCode } from './warning';
+export { BuiltinCompileWarningCode, type CompileWarningCode } from './shared';
 
 export type {
   CompileCompositeOptions,
@@ -21,10 +21,8 @@ export type {
   CompileOptions,
   CompileProviderOptions,
   CompileResult,
-  CompositeArtifact,
 } from './types';
-
-export type { CompileWarning } from './warning';
+export type { CompileWarning, CompositeArtifact } from './shared';
 
 /** 把完整编译产生的 canonical warning 派发到调用方或默认开发期出口 */
 const dispatchCompileDiagnostics = (

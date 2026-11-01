@@ -9,8 +9,8 @@ import {
   isLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../../resolve/diagnostics';
-import { snapshotScenePrimitives } from '../../provider';
 import type { PaintResolver } from '../../resource';
+import { snapshotScenePrimitives } from '../../shared';
 import { emitInlineLine, inlineSegmentPaintsOf, toAlphabeticBaselineY } from '../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';

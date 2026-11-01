@@ -3,36 +3,14 @@ import type { ZodType } from 'zod';
 
 import type {
   AnyCompositeDefinition,
-  CompileOccurrenceLocator,
   CompositeInputBindings,
   CoreProviderDefinitions,
   Scene,
   ThemeDefinition,
 } from '../contract';
 import type { CompileProvenanceSnapshot } from './provenance';
+import type { CompileWarning, CompositeArtifact } from './shared';
 import type { TexLowerer, TextMeasurer } from './text';
-import type { CompileWarning } from './warning';
-
-/**
- * layout-aware composite 返回的显式领域产物
- * @template TNamespace 产生该产物的复合组件命名空间
- * @template TType 产生该产物的复合组件类型标识
- * @template TValue 复合组件声明的 JSON 值类型
- */
-export type CompositeArtifact<
-  TNamespace extends string = string,
-  TType extends string = string,
-  TValue extends JsonValue = JsonValue,
-> = Readonly<{
-  /** 产物所属复合组件的注册命名空间 */
-  namespace: TNamespace;
-  /** 产物所属复合组件的注册类型 */
-  type: TType;
-  /** 产生该产物的最终编译出现位置 */
-  occurrence: CompileOccurrenceLocator;
-  /** 组件声明的领域结果 */
-  value: TValue;
-}>;
 
 /**
  * `compileToScene()` 的显式 Scene + artifact 结果

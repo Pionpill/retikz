@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
+import { BuiltinCompileWarningCode } from '../../src/compile/shared';
+import type { CompileWarning } from '../../src/compile/shared';
 import type { TexLowerer, TextMeasurer, TextMetrics } from '../../src/compile/text';
 import { resolveTextMetrics } from '../../src/compile/text';
-import { BuiltinCompileWarningCode } from '../../src/compile/warning';
-import type { CompileWarning } from '../../src/compile/warning';
 import type { PathPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import { RetikzCoreError } from '../../src/error';
 import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';

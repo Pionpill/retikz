@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import { DEFAULT_LABEL_DISTANCE } from '../../src/compile/constants';
+import { DEFAULT_LABEL_DISTANCE } from '../../src/compile/shared';
 import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 

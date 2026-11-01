@@ -8,8 +8,8 @@ import type {
   LayoutProposal,
 } from '../../../contract';
 import { createCompositeContractError } from '../../../resolve/diagnostics';
-import { formatCompileOccurrence } from '../../artifact';
 import { canonicalizeBoundsRect, collectLayoutBounds } from '../../scene';
+import { formatCompileOccurrence } from '../../shared';
 import type { SubtreeCompilation } from '../types';
 import { resolveLayoutAxisSlotSize } from './proposal';
 

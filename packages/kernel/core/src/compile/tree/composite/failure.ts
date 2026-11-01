@@ -4,7 +4,7 @@ import { formatPropertyPath } from '@retikz/foundation';
 import type { CompileOccurrenceLocator, LayoutChildFailure } from '../../../contract';
 import type { LayoutProbeRecoverableError } from '../../../resolve/diagnostics';
 import { createCompositeContractError, createLayoutProbeRecoverableError } from '../../../resolve/diagnostics';
-import { formatCompileOccurrence } from '../../artifact';
+import { formatCompileOccurrence } from '../../shared';
 
 /** 单个 callback 的 failure owner identity */
 type LayoutProbeFailureOwner = Readonly<{

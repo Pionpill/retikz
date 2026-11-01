@@ -3,11 +3,10 @@ import type { AxisAlignedBounds } from '@retikz/math';
 import type { AnyCompositeDefinition, Scene, ScenePrimitive, SceneResource } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRScene } from '../../schemas';
-import { filterAnimations } from '../animation';
-import { orderCompileWarnings } from '../diagnostics';
 import type { CompileProvenanceTracker } from '../provenance';
-import type { SceneCompilationSnapshot, CompileResult, CompositeArtifact, CompositeArtifactOf } from '../types';
-import type { CompileWarning } from '../warning';
+import { filterAnimations, orderCompileWarnings } from '../shared';
+import type { CompileWarning, CompositeArtifact } from '../shared';
+import type { SceneCompilationSnapshot, CompileResult, CompositeArtifactOf } from '../types';
 import { computeLayoutFromBounds } from './layout';
 import { viewBoxToLayout } from './view-box';
 

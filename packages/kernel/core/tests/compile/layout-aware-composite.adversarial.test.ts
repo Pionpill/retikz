@@ -37,9 +37,8 @@ import {
   PathSchema,
 } from '../../src';
 import { createFullCompileContext } from '../../src/compile/context';
-import { createCompileInvariantError, wrapLayoutProbeError } from '../../src/compile/errors';
 import * as compileProvenance from '../../src/compile/provenance';
-import { snapshotProviderPosition } from '../../src/compile/provider';
+import { createCompileInvariantError, snapshotProviderPosition, wrapLayoutProbeError } from '../../src/compile/shared';
 import { CompileManager } from '../../src/compile/tree';
 import { NamespaceStack } from '../../src/compile/tree/namespace';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';

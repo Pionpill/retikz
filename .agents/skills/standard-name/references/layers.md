@@ -20,6 +20,7 @@
 
 ## 内部领域目录与公共边界
 
+- 领域内部共享基础使用 `<domain>/shared/`，仅收录已有多个消费方的基础类型与工具，不依赖该领域的功能模块或整合入口；专属逻辑留在对应 owner，具体依赖边界见分层规范的 shared reference
 - 在包或能力家族内，具有独立领域职责、被多个具体 owner 复用且不作为独立公共组件或 package subpath 的基础模块，目录使用 `_<domain>`，如 `_chart`、`_diagram`；放在实际消费方的最近共同领域下，不使用 `_shared`、`_internal` 等泛化名称
 - 包级基础 owner 放 `src/_<domain>`，家族内部基础 owner 放 `<family>/_<domain>`，与其消费方 owner 同级；目录提升不自动扩大能力归属或公共导出
 - `shared/` 承载稳定词汇和纯工具；拥有领域 schema、resolve 或 pipeline 的基础模块使用语义 owner，不因多个消费者共用而塞进 `shared/`

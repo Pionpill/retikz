@@ -1,8 +1,8 @@
 import type { ClipRegistry, PaintRegistry } from '../resource';
 import { createClipRegistry, createPaintRegistry } from '../resource';
+import type { CompileWarning } from '../shared';
 import type { NodeBoundaryContext } from '../tree/node';
 import { createNodeBoundaryContext } from '../tree/node';
-import type { CompileWarning } from '../warning';
 import type { SharedCompileContext } from './shared';
 
 /** 单次计算独占的几何、资源与诊断工作区 */

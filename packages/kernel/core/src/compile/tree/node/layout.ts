@@ -18,17 +18,20 @@ import { resolvePosition, resolvePositionTargetWorld } from '../../../resolve/po
 import { resolveFont, resolveTextLineHeight } from '../../../resolve/text';
 import type { IRAnchorPosition, IRPosition } from '../../../schemas';
 import { CenterAnchor } from '../../../shared';
-import { DEFAULT_FONT_SIZE } from '../../constants';
-import { snapshotProviderPosition } from '../../provider';
 import { resolveAnchorRefUncached } from '../../reference';
+import {
+  DEFAULT_FONT_SIZE,
+  composeScopeTransform,
+  inverseScopeTransform,
+  snapshotProviderPosition,
+} from '../../shared';
+import type { CompileWarningCode, ComposedScopeTransform } from '../../shared';
 import type { TextMeasurer } from '../../text';
-import type { ComposedScopeTransform } from '../../transform';
-import { composeScopeTransform, inverseScopeTransform, projectLayoutWithTransform } from '../../transform';
-import type { CompileWarningCode } from '../../warning';
 import type { NodeBoundaryContext } from './boundary-context';
 import { createNodeBoundaryContext } from './boundary-context';
 import { layoutNodeContent } from './content/layout';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
+import { projectLayoutWithTransform } from './projection';
 import type { CompiledNodeLayout, NodeCompilation, TexLoweringContext } from './types';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */

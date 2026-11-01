@@ -1,6 +1,6 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { IRAnimationTrack } from '../schemas';
+import type { IRAnimationTrack } from '../../schemas';
 import { BuiltinCompileWarningCode } from './warning';
 import type { CompileWarning } from './warning';
 

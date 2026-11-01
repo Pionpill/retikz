@@ -4,7 +4,7 @@ import { boundaryKey } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { Side } from '../../shared';
 import { isAnchor } from '../../shared';
-import { snapshotProviderPosition } from '../provider';
+import { snapshotProviderPosition } from '../shared';
 import type { CompiledNodeLayout, NodeBoundaryState } from '../tree/node';
 import { anchorOf, angleBoundaryOf, createNodeReferenceGeometry } from '../tree/node';
 

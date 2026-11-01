@@ -6,7 +6,6 @@ import { resolveNode } from '../../../resolve';
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { IRNode } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
-import { filterAnimations } from '../../animation';
 import type {
   ElementCompileOptions,
   ElementCompileResult,
@@ -14,8 +13,8 @@ import type {
   WorkspaceCompileContext,
 } from '../../context';
 import { runElementCompilation } from '../../context';
-import type { ComposedScopeTransform } from '../../transform';
-import type { CompileWarningCode } from '../../warning';
+import { filterAnimations } from '../../shared';
+import type { CompileWarningCode, ComposedScopeTransform } from '../../shared';
 import { compileNodeResolution } from './layout';
 import { emitNodeOutput } from './output';
 import type { CompiledNode, NodeCompilation } from './types';

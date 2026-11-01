@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../../src';
 import type { IRScene, IRStep, PathPrimitive, CompiledArrowEnd } from '../../../src';
-import { applyTransformChain } from '../../../src/compile/transform';
+import { applyTransformChain } from '../../../src/compile/shared';
 import { createStrokePathGeometry, curveSegmentOfOccurrence } from '../../../src/compile/tree/path/stroke/interruption';
 import { flattenPrims } from '../../helpers/flatten';
 

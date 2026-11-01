@@ -10,9 +10,8 @@ import type {
   TextLineResolution,
 } from '../../../resolve';
 import type { IRFont } from '../../../schemas';
-import type { CompileOutput } from '../../output';
+import type { CompileOutput, CompileWarningCode } from '../../shared';
 import type { InlineLineLayout, TexLowerer, TextFont, TextMeasurer } from '../../text';
-import type { CompileWarningCode } from '../../warning';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
 type NodeFontWeight = NonNullable<IRFont['weight']>;

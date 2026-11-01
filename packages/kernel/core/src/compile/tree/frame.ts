@@ -5,7 +5,7 @@ import type { CompositeInputScope } from '../../contract/composite';
 import type { MergedScopeDefaults } from '../../resolve';
 import type { CanonicalTheme } from '../../shared';
 import type { CompileOwnerKey } from '../provenance';
-import type { CompositeArtifact } from '../types';
+import type { CompositeArtifact } from '../shared';
 import type { CompiledNodeLayout } from './node';
 import type { InternalScenePrimitive } from './output';
 import type { PendingPathEmission } from './path/deferred';

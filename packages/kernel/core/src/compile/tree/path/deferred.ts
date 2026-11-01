@@ -1,9 +1,7 @@
 import type { CompileOccurrenceLocator } from '../../../contract';
-import { filterAnimations } from '../../animation';
-import { createCompileChildPath } from '../../artifact';
-import { createCompileInvariantError } from '../../errors';
 import type { CompileOwnerKey } from '../../provenance';
 import { createPathTargetResolver } from '../../reference';
+import { createCompileChildPath, createCompileInvariantError, filterAnimations } from '../../shared';
 import { pushAllocation } from '../allocation';
 import { createTreePositionContext } from '../context';
 import type { CompileExecutionContext } from '../context';

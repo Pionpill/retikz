@@ -6,7 +6,7 @@ import type { BoundaryResolution, NodeReferenceGeometry } from '../../../resolve
 import { boundaryKey } from '../../../resolve';
 import type { IRBoundary } from '../../../schemas';
 import { CenterAnchor, isAnchor } from '../../../shared';
-import { snapshotProviderPosition } from '../../provider';
+import { snapshotProviderPosition } from '../../shared';
 import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
 import type { NodeBoundaryState } from './boundary-context';
 import { createNodeReferenceGeometry } from './reference';

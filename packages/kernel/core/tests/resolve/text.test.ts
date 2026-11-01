@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { BuiltinCompileWarningCode } from '../../src/compile/warning';
+import { BuiltinCompileWarningCode } from '../../src/compile/shared';
 import {
   parseInlineSegments,
   resolveFont,

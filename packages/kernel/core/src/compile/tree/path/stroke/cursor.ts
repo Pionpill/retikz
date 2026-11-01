@@ -4,7 +4,7 @@ import type { Transform } from '../../../../contract';
 import type { CanonicalStep, PathTargetView } from '../../../../resolve';
 import { nodeIdFromResolvableTarget } from '../../../../resolve/position';
 import type { IRPosition, IRTarget } from '../../../../schemas';
-import { BuiltinCompileWarningCode } from '../../../warning';
+import { BuiltinCompileWarningCode } from '../../../shared';
 import { pointOfTarget } from '../host';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */

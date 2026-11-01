@@ -1,12 +1,12 @@
-import type { CompileOccurrenceLocator } from '../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
-import type { LayoutProbeRecoverableError } from '../resolve/diagnostics';
+import type { CompileOccurrenceLocator } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { LayoutProbeRecoverableError } from '../../resolve/diagnostics';
 import {
   createLayoutProbeRecoverableError,
   isLayoutProbeRecoverableError,
   registerFatalProbeError,
   safeErrorMessage,
-} from '../resolve/diagnostics';
+} from '../../resolve/diagnostics';
 
 /** 创建 Core compile transaction 内部不可能状态错误 */
 export const createCompileInvariantError = (message: string, options?: ErrorOptions): RetikzCoreError => {

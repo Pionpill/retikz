@@ -1,21 +1,33 @@
 import { formatPropertyPath } from '@retikz/foundation';
+import type { PropertyPath } from '@retikz/foundation';
 
-import type { CompileOccurrenceLocator } from '../contract';
-import { compareCompileOccurrences } from '../contract';
-import type { IRTransform } from '../schemas';
+import type { CompileOccurrenceLocator } from '../../contract';
+import { compareCompileOccurrences } from '../../contract';
+import type { IRTransform } from '../../schemas';
 import { freezeOccurrence } from './artifact';
-import type { DuplicateRegisterInfo } from './tree/namespace';
 import { BuiltinCompileWarningCode, compileWarningOccurrence } from './warning';
 import type { CompileWarning } from './warning';
 
+/** 同一命名空间内重名诊断所需的注册信息 */
+type DuplicateCompileWarningContext = {
+  /** 重复名称 */
+  id: string;
+  /** 命名空间深度 */
+  frameDepth: number;
+  /** 首次声明位置 */
+  firstIrPath?: PropertyPath;
+  /** 重复声明位置 */
+  secondIrPath?: PropertyPath;
+};
+
 /** 为调用方维护的名称 frame 生成与全量编译一致的重名诊断 */
 export const createDuplicateCompileWarning = (
-  info: Pick<DuplicateRegisterInfo, 'id' | 'frameDepth' | 'firstIrPath' | 'secondIrPath'>,
+  info: DuplicateCompileWarningContext,
   occurrence?: CompileOccurrenceLocator,
-): CompileWarning =>
-  orderCompileWarnings([
-    withCompileWarningOccurrence(createDuplicateWarning({ ...info, overwroteForkBaseline: false }), occurrence),
-  ])[0];
+): CompileWarning => {
+  const warning = createDuplicateWarning(info);
+  return Object.freeze(replaceCompileWarningOccurrence(warning, occurrence ?? compileWarningOccurrenceOf(warning)));
+};
 
 /** 按 transform 失败来源选择 warning code */
 export const transformWarnCode = (failed: IRTransform | undefined): CompileWarning['code'] => {
@@ -32,7 +44,7 @@ export const transformWarnCode = (failed: IRTransform | undefined): CompileWarni
 };
 
 /** 格式化重复 id warning */
-export const createDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => {
+export const createDuplicateWarning = (info: DuplicateCompileWarningContext): CompileWarning => {
   const frameNote =
     info.frameDepth === 0
       ? 'frame depth: 0 (root namespace)'

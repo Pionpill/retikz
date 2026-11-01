@@ -1,7 +1,7 @@
 import type { CompileOccurrenceLocator, SceneClipPath, Transform, CompositeCompileScopeProps } from '../../../contract';
 import { CompileExpansionKind } from '../../../contract';
-import { createCompileInvariantError } from '../../errors';
 import type { CompileOwnerKey } from '../../provenance';
+import { createCompileInvariantError } from '../../shared';
 import type { TreeCompileFrame } from '../frame';
 import type { ScopeChild } from '../types';
 import { isCompositeOutputHandle } from './handle';

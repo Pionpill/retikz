@@ -1,8 +1,8 @@
 import type { Position } from '@retikz/math';
 
-import type { PathPrimitiveAppearance, ScenePrimitive } from '../contract';
-import { guardProviderOutput } from '../resolve';
-import { createCompositeContractError } from '../resolve/diagnostics';
+import type { PathPrimitiveAppearance, ScenePrimitive } from '../../contract';
+import { guardProviderOutput } from '../../resolve';
+import { createCompositeContractError } from '../../resolve/diagnostics';
 
 /** 校验并脱离 provider 返回的有限二维坐标 */
 export const snapshotProviderPosition = (owner: string, value: Position): Position =>

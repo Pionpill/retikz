@@ -1,6 +1,6 @@
 import type { CenteredBox } from '@retikz/math';
 
-import { applyTransformChain } from '../../src/compile/transform';
+import { applyTransformChain } from '../../src/compile/shared';
 import type { Scene, ScenePrimitive, Transform } from '../../src/contract';
 
 /** 从实际绘制的矩形读取世界坐标几何，用于定位和变换行为断言 */

@@ -12,8 +12,7 @@ import type {
 } from '../../../contract';
 import { CompileExpansionKind } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import { bindComposite, resolveComposite } from '../../../resolve';
-import { guardProviderOutput } from '../../../resolve';
+import { bindComposite, guardProviderOutput, resolveComposite } from '../../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -24,12 +23,16 @@ import {
 } from '../../../resolve/diagnostics';
 import type { IRChild } from '../../../schemas';
 import { cloneAndFreezeJson } from '../../../shared/json';
-import { createCompileChildPath, formatCompileOccurrence, freezeCompileArtifact } from '../../artifact';
-import { createCompileInvariantError } from '../../errors';
 import type { CompileOwnerKey } from '../../provenance';
 import { allocationPointsOf } from '../../scene';
-import type { CompositeArtifact } from '../../types';
-import { BuiltinCompileWarningCode } from '../../warning';
+import {
+  BuiltinCompileWarningCode,
+  createCompileChildPath,
+  createCompileInvariantError,
+  formatCompileOccurrence,
+  freezeCompileArtifact,
+} from '../../shared';
+import type { CompositeArtifact } from '../../shared';
 import { cloneAlignmentGuides } from '../alignment-guide';
 import { pushAllocation } from '../allocation';
 import type { CompileExecutionContext } from '../context';

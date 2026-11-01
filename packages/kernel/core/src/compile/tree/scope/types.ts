@@ -4,9 +4,8 @@ import type { CompileOccurrenceLocator, GroupPrimitive, Transform, SceneClipPath
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { IRChild, IRPosition, IRScope } from '../../../schemas';
 import type { ElementCompileContext } from '../../context';
-import type { CompileOutput } from '../../output';
 import type { CompileOwnerKey } from '../../provenance';
-import type { CompileWarning } from '../../warning';
+import type { CompileOutput, CompileWarning } from '../../shared';
 import type { TreeCompileFrame } from '../frame';
 import type { CompiledNodeLayout } from '../node';
 import type { InternalScenePrimitive } from '../output';

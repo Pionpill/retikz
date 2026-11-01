@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
+import { BuiltinCompileWarningCode } from '../../src/compile/shared';
+import type { CompileWarning } from '../../src/compile/shared';
 import type { TexLowerer } from '../../src/compile/text';
-import { BuiltinCompileWarningCode } from '../../src/compile/warning';
-import type { CompileWarning } from '../../src/compile/warning';
 import type { PathPrimitive, ScenePrimitive, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';

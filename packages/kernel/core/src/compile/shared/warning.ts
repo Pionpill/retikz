@@ -1,7 +1,7 @@
 import type { PropertyPath, ValueOf } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 
-import type { CompileOccurrenceLocator } from '../contract';
+import type { CompileOccurrenceLocator } from '../../contract';
 
 /** 内置编译警告码 */
 export const BuiltinCompileWarningCode = {

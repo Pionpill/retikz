@@ -3,10 +3,10 @@ import { boundsToRect } from '@retikz/math';
 
 import type { CompileOccurrenceLocator, SceneClipPath, Transform } from '../../../contract';
 import { resolveScopeDefaults, resolveTheme } from '../../../resolve';
-import { createCompileChildPath, formatCompileOccurrence } from '../../artifact';
 import type { CompileOwnerKey } from '../../provenance';
 import { projectPublishedCompileLayout, projectScopeCompileLayouts } from '../../reference';
 import { allocationPointsOf, collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../../scene';
+import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
 import { resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../alignment-guide';
 import { effectiveAllocations, pushAllocation } from '../allocation';
 import type { CompileExecutionContext } from '../context';

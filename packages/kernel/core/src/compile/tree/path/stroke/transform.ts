@@ -3,7 +3,7 @@ import { boundsOf, centerOfBounds, isFinitePoint } from '@retikz/math';
 import type { Transform } from '../../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
 import type { IRPathScale, IRPosition } from '../../../../schemas';
-import { applyTransformChain } from '../../../transform';
+import { applyTransformChain } from '../../../shared';
 
 /** 一组点的 axis-aligned 包围盒中心 */
 export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {

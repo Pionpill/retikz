@@ -1,9 +1,29 @@
-import type { PropertyPath } from '@retikz/foundation';
+import type { JsonValue, PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 
-import type { CompileOccurrenceLocator } from '../contract';
-import { compareCompileOccurrences } from '../contract';
-import type { CompositeArtifact } from './types';
+import type { CompileOccurrenceLocator } from '../../contract';
+import { compareCompileOccurrences } from '../../contract';
+
+/**
+ * layout-aware composite 返回的显式领域产物
+ * @template TNamespace 产生该产物的复合组件命名空间
+ * @template TType 产生该产物的复合组件类型标识
+ * @template TValue 复合组件声明的 JSON 值类型
+ */
+export type CompositeArtifact<
+  TNamespace extends string = string,
+  TType extends string = string,
+  TValue extends JsonValue = JsonValue,
+> = Readonly<{
+  /** 产物所属复合组件的注册命名空间 */
+  namespace: TNamespace;
+  /** 产物所属复合组件的注册类型 */
+  type: TType;
+  /** 产生该产物的最终编译出现位置 */
+  occurrence: CompileOccurrenceLocator;
+  /** 组件声明的领域结果 */
+  value: TValue;
+}>;
 
 /** 把结构化 occurrence locator 格式化为唯一调试字符串 */
 export const formatCompileOccurrence = (locator: CompileOccurrenceLocator): string =>

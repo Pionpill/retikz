@@ -2,12 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { resolveAnchor } from '../../src/compile/reference';
 import { createPositionResolveContext } from '../../src/compile/reference/position-context';
-import { composeScopeTransform, projectLayoutWithTransform } from '../../src/compile/transform';
+import { composeScopeTransform } from '../../src/compile/shared';
 import {
   boundaryPointOf,
-  createNodeBoundaryContext,
   compileNodeResolution,
+  createNodeBoundaryContext,
   createNodeReferenceGeometry,
+  projectLayoutWithTransform,
 } from '../../src/compile/tree/node';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';

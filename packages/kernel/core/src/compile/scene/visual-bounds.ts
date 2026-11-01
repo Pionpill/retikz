@@ -11,9 +11,7 @@ import type {
 } from '../../contract';
 import { computeSceneTextBounds } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
-import { CANONICAL_STROKE_MITER_LIMIT } from '../constants';
-import { createCompileInvariantError } from '../errors';
-import { applyTransformChain } from '../transform';
+import { CANONICAL_STROKE_MITER_LIMIT, applyTransformChain, createCompileInvariantError } from '../shared';
 import { buildMarkMarkerGroup } from '../tree/path';
 import { canonicalizeBoundsRect, expandBoundsForShadow } from './bounds';
 

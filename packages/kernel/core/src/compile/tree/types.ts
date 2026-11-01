@@ -13,7 +13,7 @@ import type { MergedScopeDefaults } from '../../resolve';
 import type { CanonicalDropShadow, IRChild, IRPosition } from '../../schemas';
 import type { FullCompileContext } from '../context';
 import type { CompileProvenanceTracker } from '../provenance';
-import type { CompositeArtifact } from '../types';
+import type { CompositeArtifact } from '../shared';
 import type { NamespaceStack } from './namespace';
 import type { CompiledNodeLayout } from './node';
 

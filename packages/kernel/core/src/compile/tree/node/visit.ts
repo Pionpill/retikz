@@ -1,8 +1,8 @@
 import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompileOccurrenceLocator } from '../../../contract';
-import { createCompileChildPath } from '../../artifact';
 import type { CompileOwnerKey } from '../../provenance';
+import { createCompileChildPath } from '../../shared';
 import { cloneAlignmentGuides } from '../alignment-guide';
 import { pushAllocation } from '../allocation';
 import { createTreePositionContext } from '../context';

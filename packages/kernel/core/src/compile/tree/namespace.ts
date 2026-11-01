@@ -2,8 +2,8 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { registerFatalProbeError } from '../../resolve/diagnostics';
-import { createCompileInvariantError } from '../errors';
 import type { CompileNamespaceKey } from '../provenance';
+import { createCompileInvariantError } from '../shared';
 import type { CompiledNodeLayout } from './node';
 
 /** namespace 栈当前写入/解析阶段 */

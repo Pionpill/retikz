@@ -8,10 +8,14 @@ import {
   safeErrorMessage,
 } from '../../resolve/diagnostics';
 import type { IRChild } from '../../schemas';
-import { createCompileChildPath, orderCompileArtifacts } from '../artifact';
-import { createCompileInvariantError, enrichLayoutProbeError } from '../errors';
 import type { CompileOwnerKey } from '../provenance';
 import { collectLayoutBounds } from '../scene';
+import {
+  createCompileChildPath,
+  createCompileInvariantError,
+  enrichLayoutProbeError,
+  orderCompileArtifacts,
+} from '../shared';
 import { resolveStructuralAlignmentGuides } from './alignment-guide';
 import { effectiveAllocations } from './allocation';
 import { CompositeCompiler } from './composite';

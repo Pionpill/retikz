@@ -2,7 +2,7 @@ import type { PathCommand } from '../../contract';
 import { guardProviderOutput } from '../../resolve';
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import type { IRTexContent } from '../../schemas';
-import { assertProviderOutputNonNegative, snapshotProviderOutputJson } from '../provider';
+import { assertProviderOutputNonNegative, snapshotProviderOutputJson } from '../shared';
 
 /** TeX 字形路径的绘制通道 */
 export type LoweredTexPaint =

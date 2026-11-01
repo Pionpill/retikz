@@ -6,11 +6,10 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { MergedScopeDefaults } from '../../resolve';
 import { resolveNodeBoundary } from '../../resolve';
 import type { CanonicalTheme } from '../../shared';
-import { orderCompileWarnings, withCompileWarningOccurrence } from '../diagnostics';
 import { createPositionResolveContext } from '../reference';
-import { composeScopeTransform } from '../transform';
+import { composeScopeTransform, orderCompileWarnings, withCompileWarningOccurrence } from '../shared';
+import type { CompileWarning } from '../shared';
 import type { CompiledNodeLayout } from '../tree/node';
-import type { CompileWarning } from '../warning';
 import type { SharedCompileContext } from './shared';
 import { createWorkspaceCompileContext } from './workspace';
 

@@ -1,12 +1,8 @@
 import type { Transform } from '../../contract';
 import type { IRPosition } from '../../schemas';
-import type { ComposedScopeTransform } from '../transform';
-import {
-  composeScopeTransform,
-  applyScopeTransform,
-  inverseScopeTransform,
-  projectLayoutWithTransform,
-} from '../transform';
+import type { ComposedScopeTransform } from '../shared';
+import { composeScopeTransform, applyScopeTransform, inverseScopeTransform } from '../shared';
+import { projectLayoutWithTransform } from './node';
 import type { CompiledNodeLayout } from './node';
 
 /**

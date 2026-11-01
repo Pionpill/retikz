@@ -220,7 +220,7 @@ A 收尾时，b 还未注册，因此 A 中的 Path 无法引用 b。退出普�
       label: '位置上下文的 toLocal / toWorld',
       path: 'packages/kernel/core/src/compile/reference/position-context.ts',
     },
-    { label: '正向、逆向变换与布局投影', path: 'packages/kernel/core/src/compile/transform.ts' },
+    { label: '正向与逆向变换', path: 'packages/kernel/core/src/compile/shared/transform.ts' },
     { label: 'NodeTarget 世界偏移与插值', path: 'packages/kernel/core/src/resolve/position/target.ts' },
   ]}
 />
@@ -233,7 +233,7 @@ A 收尾时，b 还未注册，因此 A 中的 Path 无法引用 b。退出普�
 
 <SourceLinks
   sources={[
-    { label: '局部布局到世界引用几何的投影', path: 'packages/kernel/core/src/compile/transform.ts' },
+    { label: '局部布局到世界引用几何的投影', path: 'packages/kernel/core/src/compile/tree/node/projection.ts' },
     {
       label: 'emitScopeGroup：局部图元与分组变换的交付',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',

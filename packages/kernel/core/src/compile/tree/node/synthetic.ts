@@ -9,9 +9,8 @@ import { resolveNode } from '../../../resolve';
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { IRNode, IRPosition } from '../../../schemas';
 import { ThemeMode } from '../../../shared';
-import { DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE } from '../../constants';
+import { DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE, applyTransformChain } from '../../shared';
 import { fallbackMeasurer } from '../../text';
-import { applyTransformChain } from '../../transform';
 import { compileNodeResolution } from './layout';
 import type { CompiledNodeLayout } from './types';
 

@@ -1,13 +1,12 @@
 import { boundsToRect } from '@retikz/math';
 
 import type { GroupPrimitive, ScenePrimitive } from '../../../contract';
-import { createCompileChildPath } from '../../artifact';
 import type { SharedCompileContext } from '../../context';
-import type { CompileBounds, CompileOutput } from '../../output';
 import { assembleCompileOutputs } from '../../output';
 import type { CompileOwnerKey, CompileProvenanceTracker } from '../../provenance';
 import { collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../../scene';
-import { applyTransformChain } from '../../transform';
+import { applyTransformChain, createCompileChildPath } from '../../shared';
+import type { CompileBounds, CompileOutput } from '../../shared';
 import type { CompileExecutionContext } from '../context';
 import type { TreeOutputState } from '../output';
 import { recordPrimitiveZIndex, stableSortByZIndex } from '../output';

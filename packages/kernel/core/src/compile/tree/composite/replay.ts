@@ -6,15 +6,17 @@ import type {
   Transform,
 } from '../../../contract';
 import { CompileExpansionKind } from '../../../contract';
-import { freezeCompileArtifact } from '../../artifact';
-import { compileWarningOccurrenceOf, replaceCompileWarningOccurrence } from '../../diagnostics';
-import { createCompileInvariantError } from '../../errors';
 import type { CompileOwnerKey } from '../../provenance';
 import { projectPublishedCompileLayout } from '../../reference';
 import { importSceneResources, remapPrimitiveResources } from '../../resource';
-import { optionalVisualBoundsOfPrimitives } from '../../scene';
-import { allocationPointsOf } from '../../scene';
-import type { CompileWarning } from '../../warning';
+import { allocationPointsOf, optionalVisualBoundsOfPrimitives } from '../../scene';
+import {
+  compileWarningOccurrenceOf,
+  createCompileInvariantError,
+  freezeCompileArtifact,
+  replaceCompileWarningOccurrence,
+} from '../../shared';
+import type { CompileWarning } from '../../shared';
 import { effectiveAllocations } from '../allocation';
 import type { TreeCompileFrame } from '../frame';
 import type { CompiledNodeLayout } from '../node';

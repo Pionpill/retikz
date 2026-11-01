@@ -18,7 +18,7 @@ import {
   safeThrownDetail,
 } from '../../../resolve/diagnostics';
 import { boundsConnectionEnvelope, isDirectionalAnchor, rect as rectOps } from '../../../shared';
-import { BuiltinCompileWarningCode } from '../../warning';
+import { BuiltinCompileWarningCode } from '../../shared';
 import type { BoundaryGeometryDefinition, BoundaryGeometryResolution, BoundaryGeometryResolveContext } from './types';
 
 /** 同一 layout 在局部 / 全局投影后尺寸可能不同，缓存 key 必须包含 rect 几何 */

@@ -21,9 +21,9 @@ import {
   resolveThemeRegistry,
 } from '../../providers';
 import type { CompositeRegistry } from '../../resolve';
-import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE } from '../constants';
 import { DEFAULT_MAX_CLIP_DEPTH } from '../resource';
 import { DEFAULT_PRECISION, createRound } from '../scene';
+import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE } from '../shared';
 import { fallbackMeasurer } from '../text';
 import type { CompileHostOptions, CompileLayoutOptions, CompileOptions } from '../types';
 

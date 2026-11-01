@@ -19,9 +19,9 @@ import {
 } from '../../../resolve';
 import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
 import type { SharedCompileContext, WorkspaceCompileContext } from '../../context';
-import { snapshotProviderPosition, snapshotScenePrimitives } from '../../provider';
 import { pathTargetViewOf } from '../../reference';
-import type { ComposedScopeTransform } from '../../transform';
+import { snapshotProviderPosition, snapshotScenePrimitives } from '../../shared';
+import type { ComposedScopeTransform } from '../../shared';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
 import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';
 import type { InputPathCompilation } from './types';

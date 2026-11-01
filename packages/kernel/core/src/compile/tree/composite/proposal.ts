@@ -3,7 +3,7 @@ import type { BoundsRect } from '@retikz/math';
 import type { CompileOccurrenceLocator, LayoutAxisProposal, LayoutProposal } from '../../../contract';
 import { LayoutAxisProposalKind } from '../../../contract';
 import { createCompositeContractError, isCompositeContractError } from '../../../resolve/diagnostics';
-import { formatCompileOccurrence } from '../../artifact';
+import { formatCompileOccurrence } from '../../shared';
 
 /** 把负零规范化为稳定的正零 */
 const canonicalizeZero = (value: number): number => (Object.is(value, -0) ? 0 : value);

@@ -1,11 +1,10 @@
 import type { PathTargetResolver } from '../../../resolve';
 import { resolvePath } from '../../../resolve';
 import type { IRPathBase } from '../../../schemas';
-import { filterAnimations } from '../../animation';
 import type { ElementCompileOptions, ElementCompileResult } from '../../context';
 import { runElementCompilation } from '../../context';
 import { createPathTargetResolver } from '../../reference';
-import { composeScopeTransform } from '../../transform';
+import { composeScopeTransform, filterAnimations } from '../../shared';
 import type { PathCompileHost } from './emit';
 import { emitDefinedPath } from './emit';
 import type { CompiledPath, InputPathCompilation } from './types';

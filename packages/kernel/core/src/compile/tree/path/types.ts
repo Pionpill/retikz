@@ -4,10 +4,9 @@ import type { CompileOccurrenceLocator, SceneResource, Transform } from '../../.
 import type { MergedScopeDefaults, PathTargetView } from '../../../resolve';
 import type { IRPathBase } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
-import type { CompileOutput } from '../../output';
 import type { PaintRegistry, PaintResolver } from '../../resource';
+import type { CompileOutput, CompileWarning } from '../../shared';
 import type { TexLowerer } from '../../text';
-import type { CompileWarning } from '../../warning';
 
 /** path emit 阶段的可选服务与诊断上下文 */
 export type PathEmitOptions = {
