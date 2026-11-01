@@ -99,11 +99,11 @@ export const importSceneResources = (
     const resource = resourceMap.get(id);
     if (!resource) throw createCompileInvariantError(`resource '${id}' was not imported`);
     if (resource.kind === 'clip') {
-      ids.set(id, clip.importPath(resource.path));
+      ids.set(id, clip.importResource(resource.path));
       return;
     }
     if ('tile' in resource) dependencies(resource.tile.motif);
-    const imported = paint.importResolved(
+    const imported = paint.importResource(
       'tile' in resource
         ? {
             ...resource,

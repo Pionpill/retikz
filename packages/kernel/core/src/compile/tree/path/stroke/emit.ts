@@ -7,7 +7,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
 import type { CanonicalStep, PathResolution, PathTargetView, StrokePathResolution } from '../../../../resolve';
 import type { IRPosition, IRTarget } from '../../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../../shared';
-import type { PaintResolver } from '../../../resource';
+import type { RegisterPaint } from '../../../resource';
 import { optionalVisualBoundsOfPrimitives } from '../../../scene';
 import { BuiltinCompileWarningCode } from '../../../shared';
 import type { TextMeasurer } from '../../../text';
@@ -313,11 +313,11 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
   const warn = (code: string, message: string, subPath: PropertyPath = []): void => {
     pathEmitOptions.onWarn?.({ code, message, path: [...irPath, ...subPath] });
   };
-  const resolvePaint: PaintResolver =
-    pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
+  const registerPaint: RegisterPaint =
+    pathEmitOptions.registerPaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
 
   const baseProps = emitPathBaseProps(path, {
-    resolvePaint,
+    registerPaint,
   });
   const strokeWidth = baseProps.strokeWidth;
   const logicalGeometry = createStrokePathGeometry(commands, stepIndexes);
@@ -345,7 +345,7 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
   });
 
   const arrows = emitPathEndpointArrows(path.arrow, {
-    resolvePaint,
+    registerPaint,
     arrowResolutions: resolution.arrows,
     round,
     irPath,
@@ -397,7 +397,7 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
     placements: path.marks ?? [],
     markResolutions: resolution.marks,
     irPath,
-    resolvePaint,
+    registerPaint,
     baseProps,
     round,
   });

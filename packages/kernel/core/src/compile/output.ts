@@ -38,7 +38,7 @@ export const assembleCompileOutputs = (
   }
   return Object.freeze({
     primitives: fragments.sort((a, b) => a.zIndex - b.zIndex).flatMap(fragment => fragment.primitives),
-    resources: [...paint.resources(), ...clip.resources()],
+    resources: [...paint.getResources(), ...clip.getResources()],
     bounds,
   });
 };

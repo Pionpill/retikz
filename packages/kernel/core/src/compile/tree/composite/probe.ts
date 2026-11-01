@@ -188,8 +188,8 @@ export const probeCompositeLayout = (
   );
   const token = Object.freeze({}) as CompositeReplay;
   const resources: Array<SceneResource> = [
-    ...workspace.paintRegistry.resources(),
-    ...workspace.clipRegistry.resources(),
+    ...workspace.paintRegistry.getResources(),
+    ...workspace.clipRegistry.getResources(),
   ];
   const namespaceChanges = namespaceStack.diffTopFrame(namespaceBaseline);
   const probeFrameDepth = namespaceStack.depth - 1;

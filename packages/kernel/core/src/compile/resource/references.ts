@@ -1,6 +1,9 @@
 import type { ScenePrimitive, SceneResource } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
+/** 在图元输出处收集资源引用并保留诊断位置 */
+export type CollectResourceReferences = (primitives: ReadonlyArray<ScenePrimitive>, owner: string) => void;
+
 /** provider 输出中的资源引用，不保存图元树 */
 export type CompileResourceReference = {
   /** 被引用的资源标识 */
@@ -39,12 +42,20 @@ export const collectPrimitiveResourceReferences = (
   return references;
 };
 
-/** 当前资源收集完成后检查引用关系，不重新遍历图元 */
+/** 资源齐备后检查图元引用与 Pattern 依赖，不重新遍历宿主图元 */
 export const validateCompileResourceReferences = (
   references: Iterable<CompileResourceReference>,
-  dependencies: ReadonlyMap<string, ReadonlyArray<CompileResourceReference>>,
   resources: ReadonlyArray<SceneResource>,
 ): void => {
+  const dependencies = new Map<string, Array<CompileResourceReference>>();
+  for (const resource of resources) {
+    if (resource.kind !== 'paint' || !('tile' in resource)) continue;
+    const resourceReferences = collectPrimitiveResourceReferences(
+      resource.tile.motif,
+      `resource '${resource.id}'.motif`,
+    );
+    if (resourceReferences.length > 0) dependencies.set(resource.id, resourceReferences);
+  }
   // ID 唯一性由 paint / clip registry 的独立前缀与递增分配保证
   const resourceMap = new Map(resources.map(resource => [resource.id, resource]));
   const validate = (reference: CompileResourceReference): void => {

@@ -583,8 +583,8 @@ describe('布局感知复合运行时包装树', () => {
     expect(warnings).toEqual([]);
     expect(clipLowerCalls).toBe(1);
     expect(context.workspace.diagnostics.warnings).toEqual([]);
-    expect(context.workspace.paintRegistry.resources()).toEqual([]);
-    expect(context.workspace.clipRegistry.resources()).toEqual([]);
+    expect(context.workspace.paintRegistry.getResources()).toEqual([]);
+    expect(context.workspace.clipRegistry.getResources()).toEqual([]);
     expect(namespaceStack.lookupEntry('same')?.layout).toBeUndefined();
     expect([...provenanceTracker.capture([]).ownerMap.values()].filter(owner => owner.id !== undefined)).toEqual([]);
     expect(session.outputChildren.get(replayHandle!)).toMatchObject({ used: false });

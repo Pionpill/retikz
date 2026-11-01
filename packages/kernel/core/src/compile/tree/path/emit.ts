@@ -75,11 +75,14 @@ export const emitDefinedPath = (
   const kind = definition.name;
 
   const emitOptions = {
-    collectResourceReferences: context.workspace.paintRegistry.collectReferences,
-    resources: () => [...context.workspace.paintRegistry.resources(), ...context.workspace.clipRegistry.resources()],
+    collectResourceReferences: context.workspace.collectResourceReferences,
+    resources: () => [
+      ...context.workspace.paintRegistry.getResources(),
+      ...context.workspace.clipRegistry.getResources(),
+    ],
     onWarn: context.workspace.diagnostics.collect,
     scopeChain,
-    resolvePaint: context.workspace.paintRegistry.register,
+    registerPaint: context.workspace.paintRegistry.register,
     targetView,
     lowerTex: context.shared.host.lowerTex,
     rootFontSize: context.shared.layout.rootFontSize,
@@ -161,9 +164,9 @@ export const emitDefinedPath = (
     return geometry?.commands ?? [];
   };
 
-  const resolvedFill = resolution.path.fill === undefined ? undefined : emitOptions.resolvePaint(resolution.path.fill);
+  const resolvedFill = resolution.path.fill === undefined ? undefined : emitOptions.registerPaint(resolution.path.fill);
   const resolvedStroke =
-    resolution.path.stroke === undefined ? undefined : emitOptions.resolvePaint(resolution.path.stroke);
+    resolution.path.stroke === undefined ? undefined : emitOptions.registerPaint(resolution.path.stroke);
   const appearance: CompiledPathAppearance = Object.freeze({
     ...(resolution.path.color === undefined ? {} : { color: resolution.path.color }),
     ...(resolvedFill === undefined ? {} : { fill: resolvedFill }),
@@ -274,6 +277,6 @@ export const emitDefinedPath = (
     return null;
   }
 
-  context.workspace.paintRegistry.collectReferences(validated.result.primitives, `Path '${kind}'`);
+  context.workspace.collectResourceReferences(validated.result.primitives, `Path '${kind}'`);
   return validated.result;
 };

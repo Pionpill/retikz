@@ -1,14 +1,14 @@
 import type { PaintValue, ScenePrimitive } from '../../../../contract';
 import type { MarkResolution } from '../../../../resolve';
 import { createLayoutProbeRecoverableError, safeThrownDetail } from '../../../../resolve/diagnostics';
-import type { PaintResolver } from '../../../resource';
+import type { RegisterPaint } from '../../../resource';
 import { materializeScenePrimitives } from '../../../resource';
 
 /** 由共同定义生成箭头或沿线标记的局部图元 */
 export const emitMarkPrimitives = (
   resolution: Pick<MarkResolution, 'source' | 'mark' | 'definition'>,
   round: (value: number) => number,
-  resolvePaint: PaintResolver,
+  registerPaint: RegisterPaint,
   owner: { label: string; providerKey: string },
 ): Array<ScenePrimitive> => {
   const { source, mark, definition } = resolution;
@@ -18,8 +18,8 @@ export const emitMarkPrimitives = (
     emitted = Array.from(
       definition.emit({
         params: source.params ?? {},
-        stroke: resolvePaint(mark.stroke) ?? contextStroke,
-        fill: definition.hollow ? contextStroke : (resolvePaint(mark.fill) ?? contextStroke),
+        stroke: registerPaint(mark.stroke) ?? contextStroke,
+        fill: definition.hollow ? contextStroke : (registerPaint(mark.fill) ?? contextStroke),
         lineWidth: mark.lineWidth,
         dashPattern: mark.dashPattern,
         dashOffset: mark.dashOffset,

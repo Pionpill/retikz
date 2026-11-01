@@ -22,7 +22,7 @@ export const emitNodeOutput = (
 } => {
   const { layout, properties } = compilation;
   const primitives = emitNodePrimitives(compilation, shared.layout.round, workspace.paintRegistry.register);
-  workspace.paintRegistry.collectReferences(primitives, `Node at ${formatPropertyPath(compilation.irPath)}`);
+  workspace.collectResourceReferences(primitives, `Node at ${formatPropertyPath(compilation.irPath)}`);
   const outer = outerRectOf(layout);
   return {
     primitives,

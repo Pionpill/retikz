@@ -4,7 +4,7 @@ import type { CompileOccurrenceLocator, SceneResource, Transform } from '../../.
 import type { MergedScopeDefaults, PathTargetView } from '../../../resolve';
 import type { IRPathBase } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
-import type { PaintRegistry, PaintResolver } from '../../resource';
+import type { CollectResourceReferences, RegisterPaint } from '../../resource';
 import type { CompileOutput, CompileWarning } from '../../shared';
 import type { TexLowerer } from '../../text';
 
@@ -13,7 +13,7 @@ export type PathEmitOptions = {
   /** 当前编译资源，用于标记可视边界计算 */
   resources?: () => ReadonlyArray<SceneResource>;
   /** 在标记输出处保留引用的宿主诊断位置 */
-  collectResourceReferences?: PaintRegistry['collectReferences'];
+  collectResourceReferences?: CollectResourceReferences;
   /**
    * 警告收集器（由 compileToScene 传入）
    * 缺省时不发出警告
@@ -22,10 +22,10 @@ export type PathEmitOptions = {
   /** 该 path 所属 scope 的累积 transform 链 */
   scopeChain?: ReadonlyArray<Transform>;
   /**
-   * paint 解析器（IRPaint → resourceRef + 登记资源）；缺省时纯色透传、IRPaint 退化为无填充 / currentColor
+   * paint 登记函数（已解析绘制值 → resourceRef）；缺省时纯色透传、IRPaint 退化为无填充 / currentColor
    * @default undefined
    */
-  resolvePaint?: PaintResolver;
+  registerPaint?: RegisterPaint;
   /** resolving 阶段绑定的 target geometry view（由 emit context 提供） */
   targetView?: PathTargetView;
   /** 注入的 TeX 降级能力 */

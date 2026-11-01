@@ -1,7 +1,7 @@
 import type { GroupPrimitive, ScenePrimitive } from '../../../../contract';
 import type { CanonicalPath } from '../../../../resolve';
 import type { IRPosition } from '../../../../schemas';
-import type { PaintResolver } from '../../../resource';
+import type { RegisterPaint } from '../../../resource';
 import type { PathBaseProps } from './split';
 import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
 
@@ -14,7 +14,7 @@ export type PathBasePropsWithStrokeWidth = PathBaseProps & {
 /** path 输出样式物化上下文 */
 type EmitPathBasePropsContext = {
   /** IRPaint 物化器 */
-  resolvePaint: PaintResolver;
+  registerPaint: RegisterPaint;
 };
 
 /** 将已解析 path 样式物化为 PathPrimitive 公共属性 */
@@ -22,11 +22,11 @@ export const emitPathBaseProps = (
   path: CanonicalPath,
   context: EmitPathBasePropsContext,
 ): PathBasePropsWithStrokeWidth => {
-  const { resolvePaint } = context;
+  const { registerPaint } = context;
   return {
-    stroke: resolvePaint(path.stroke) ?? 'currentColor',
+    stroke: registerPaint(path.stroke) ?? 'currentColor',
     strokeWidth: path.strokeWidth,
-    fill: resolvePaint(path.fill) ?? 'none',
+    fill: registerPaint(path.fill) ?? 'none',
     fillRule: path.fillRule,
     dashPattern: path.dashPattern,
     dashOffset: path.dashOffset,

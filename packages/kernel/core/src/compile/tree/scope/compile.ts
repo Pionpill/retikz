@@ -53,7 +53,7 @@ export const compileScope = (
       output: Object.freeze({
         zIndex: input.zIndex,
         primitives: [],
-        resources: [...workspace.paintRegistry.resources(), ...workspace.clipRegistry.resources()],
+        resources: [...workspace.paintRegistry.getResources(), ...workspace.clipRegistry.getResources()],
         bounds: [],
       }),
     });

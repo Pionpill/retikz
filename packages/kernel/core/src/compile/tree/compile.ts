@@ -29,7 +29,7 @@ export class CompileManager {
     return assembleSceneCompilationSnapshot<TComposites>({
       root,
       primitives,
-      resources: [...paintRegistry.resources(), ...clipRegistry.resources()],
+      resources: [...paintRegistry.getResources(), ...clipRegistry.getResources()],
       layoutBounds,
       round: this.context.shared.layout.round,
       artifacts,

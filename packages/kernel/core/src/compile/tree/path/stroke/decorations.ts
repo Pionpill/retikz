@@ -5,7 +5,7 @@ import type { CompiledArrowEnd, ScenePrimitive } from '../../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
 import type { CanonicalPath, StrokePathResolution } from '../../../../resolve';
 import type { IRPosition } from '../../../../schemas';
-import type { PaintRegistry, PaintResolver } from '../../../resource';
+import type { CollectResourceReferences, RegisterPaint } from '../../../resource';
 import { placeMarkPrimitives } from '../../../scene';
 import type { StrokePathGeometry } from './interruption';
 import { sampleStrokeMarkGeometry } from './interruption';
@@ -35,8 +35,8 @@ type EmitPathEndpointArrowsContext = {
   arrowResolutions: StrokePathResolution['arrows'];
   /** 坐标取整函数 */
   round: (value: number) => number;
-  /** 绘制资源解析函数 */
-  resolvePaint: PaintResolver;
+  /** 绘制资源登记函数 */
+  registerPaint: RegisterPaint;
   /** 宿主 IR 位置 */
   irPath: PropertyPath;
 };
@@ -61,7 +61,7 @@ export const emitPathEndpointArrows = (
         RetikzCoreErrorCode.Compile,
         `Missing arrow binding at ${formatPropertyPath(context.irPath)}.arrow.${endpoint}`,
       );
-    const emitted = emitEndpointArrowMark(resolution, arrow.endpointOverlap ?? 0, context.round, context.resolvePaint);
+    const emitted = emitEndpointArrowMark(resolution, arrow.endpointOverlap ?? 0, context.round, context.registerPaint);
     if (endpoint === 'start') {
       arrows.arrowStart = emitted.spec;
       arrows.shrinkStart = emitted.shrink;
@@ -78,7 +78,7 @@ export const emitPathEndpointArrows = (
 /** 沿线标记生成上下文 */
 type InputPathMarkEmission = {
   /** 记录标记引用的原始位置，资源完整后再校验 */
-  collectResourceReferences?: PaintRegistry['collectReferences'];
+  collectResourceReferences?: CollectResourceReferences;
   /** 截断前路径几何 */
   geometry: StrokePathGeometry;
   /** 按绘制顺序保存的标记放置列表 */
@@ -89,8 +89,8 @@ type InputPathMarkEmission = {
   baseProps: PathBasePropsWithStrokeWidth;
   /** 坐标取整函数 */
   round: (value: number) => number;
-  /** 绘制资源解析函数 */
-  resolvePaint: PaintResolver;
+  /** 绘制资源登记函数 */
+  registerPaint: RegisterPaint;
   /** 宿主 IR 位置 */
   irPath: PropertyPath;
 };
@@ -103,7 +103,7 @@ export const emitPathMarks = ({
   markResolutions,
   baseProps,
   round,
-  resolvePaint,
+  registerPaint,
   irPath,
 }: InputPathMarkEmission) => {
   const primitives: Array<ScenePrimitive> = [];
@@ -126,7 +126,7 @@ export const emitPathMarks = ({
     const location = [...irPath, 'marks', index];
     if (resolution === undefined)
       throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Missing mark binding at ${formatPropertyPath(location)}`);
-    const content = emitMarkPrimitives(resolution, round, resolvePaint, {
+    const content = emitMarkPrimitives(resolution, round, registerPaint, {
       label: `Mark '${resolution.definition.name}' at ${formatPropertyPath(location)}`,
       providerKey: `mark:${resolution.definition.name}`,
     });

@@ -217,7 +217,7 @@ export const visitScope = (
             children: [{ type: 'rect', ...rectangle, fill: 'black' }],
           },
         ],
-        context.workspace.clipRegistry.resources(),
+        context.workspace.clipRegistry.getResources(),
       );
       if (projected !== undefined)
         frame.boundsSink.push({ boundsPoints: allocationPointsOf(projected), decoration: true });

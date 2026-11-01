@@ -44,7 +44,7 @@ export const compilePath = (
       output: Object.freeze({
         zIndex: input.zIndex,
         primitives: result?.primitives ?? [],
-        resources: workspace.paintRegistry.resources(),
+        resources: workspace.paintRegistry.getResources(),
         bounds: result === null ? [] : [{ boundsPoints: result.boundsPoints, shadow: resolution.path.shadow }],
       }),
     });

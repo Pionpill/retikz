@@ -40,7 +40,7 @@ export const compileNode = (input: IRNode, context: NodeCompileContext): Element
       output: Object.freeze({
         zIndex: input.zIndex,
         ...output,
-        resources: workspace.paintRegistry.resources(),
+        resources: workspace.paintRegistry.getResources(),
       }),
     });
   });

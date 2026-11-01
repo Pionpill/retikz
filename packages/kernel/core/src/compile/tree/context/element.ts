@@ -70,7 +70,7 @@ export const runElementCompilation = <TCompiled>(
   const workspace = createElementWorkspace(options);
   try {
     const compiled = compute(workspace);
-    workspace.paintRegistry.validateReferences(workspace.clipRegistry.resources());
+    workspace.validateResourceReferences();
     return Object.freeze({
       status: 'compiled',
       compiled,

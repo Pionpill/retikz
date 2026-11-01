@@ -1,7 +1,7 @@
 import type { CompiledArrowEnd, PathCommand } from '../../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
 import type { ArrowMarkResolution } from '../../../../resolve';
-import type { PaintResolver } from '../../../resource';
+import type { RegisterPaint } from '../../../resource';
 import type { EndpointArrowSpecs } from './endpoint-contact';
 import { shortenEndpointContacts } from './endpoint-contact';
 import { emitMarkPrimitives } from './marks';
@@ -10,10 +10,10 @@ import { emitMarkPrimitives } from './marks';
 const emitArrowEnd = (
   resolution: ArrowMarkResolution,
   round: (n: number) => number,
-  resolvePaint: PaintResolver,
+  registerPaint: RegisterPaint,
 ): CompiledArrowEnd => {
   const { mark, geometry } = resolution;
-  const marker = emitMarkPrimitives(resolution, round, resolvePaint, {
+  const marker = emitMarkPrimitives(resolution, round, registerPaint, {
     label: `Arrow '${mark.shape}'`,
     providerKey: `arrow:${mark.shape}`,
   });
@@ -45,10 +45,10 @@ export const emitEndpointArrowMark = (
   resolution: ArrowMarkResolution,
   endpointOverlap: number,
   round: (n: number) => number,
-  resolvePaint: PaintResolver,
+  registerPaint: RegisterPaint,
 ): EndpointArrowMarkEmission => {
   const { geometry } = resolution;
-  const spec = emitArrowEnd(resolution, round, resolvePaint);
+  const spec = emitArrowEnd(resolution, round, registerPaint);
   // 将半线宽接缝重叠放在线接触点内侧，尖端的目标位置保持不变
   const contactWithOverlap = geometry.tipX - (geometry.shrink * geometry.baseSize) / geometry.resolvedLength;
   spec.refX += (contactWithOverlap - geometry.contactX) * (1 - endpointOverlap);

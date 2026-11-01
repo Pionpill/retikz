@@ -59,7 +59,9 @@ export const commitCompositeReplay = (
   );
 
   const wrapperClipRef =
-    wrapperClipPath === undefined ? undefined : execution.context.workspace.clipRegistry.importPath(wrapperClipPath);
+    wrapperClipPath === undefined
+      ? undefined
+      : execution.context.workspace.clipRegistry.importResource(wrapperClipPath);
   const replayedPrimitives = transaction.primitives.map(primitive => remapPrimitiveResources(primitive, resourceIds));
   if (semanticOwner !== undefined && execution.context.provenanceTracker !== undefined) {
     if (transaction.provenance === undefined) throw createCompileInvariantError('Missing replay provenance');
@@ -142,8 +144,8 @@ export const commitCompositeReplay = (
     }
   } else {
     const visualBounds = optionalVisualBoundsOfPrimitives(committedPrimitives, [
-      ...execution.context.workspace.paintRegistry.resources(),
-      ...execution.context.workspace.clipRegistry.resources(),
+      ...execution.context.workspace.paintRegistry.getResources(),
+      ...execution.context.workspace.clipRegistry.getResources(),
     ]);
     if (visualBounds !== undefined)
       contribution.bounds.push({

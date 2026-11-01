@@ -123,7 +123,7 @@ export class SubtreeCompiler {
 
     const alignmentGuides = resolveStructuralAlignmentGuides(rootAlignmentGuides);
 
-    this.context.workspace.paintRegistry.validateReferences(this.context.workspace.clipRegistry.resources());
+    this.context.workspace.validateResourceReferences();
 
     return {
       primitives,

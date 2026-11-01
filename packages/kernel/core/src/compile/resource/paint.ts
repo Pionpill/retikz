@@ -3,7 +3,6 @@ import type {
   PaintValue,
   PatternEmitContext,
   PatternEmitOutput,
-  PatternEmitResult,
   ScenePrimitive,
   SceneResource,
 } from '../../contract';
@@ -13,33 +12,20 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { InputPaintResolution, PaintResolution, PatternResolution } from '../../resolve/resource';
-import type { CompileResourceReference } from './references';
-import { collectPrimitiveResourceReferences, validateCompileResourceReferences } from './references';
 import { materializeScenePrimitives } from './scene-content';
 
-/** Paint resource registry 输入：resolve 阶段已绑定的 paint */
-type InputPaint = InputPaintResolution;
-
-/** paint resolver 只负责把已解析值注册为 resourceRef */
-export type PaintResolver = (paint: InputPaint | undefined) => PaintValue | undefined;
+/** 登记已解析的绘制资源，普通颜色直接返回 */
+export type RegisterPaint = (paint: InputPaintResolution | undefined) => PaintValue | undefined;
 
 /** paint 资源注册表：仅负责 cache、去重和 Scene resource materialization */
 export type PaintRegistry = {
-  /** 解析颜色或登记可复用绘制资源，返回场景可引用的 paint */
-  register: PaintResolver;
-  /** 提交 probe 已解析的 paint resource，不再调用 pattern provider */
-  importResolved: (resource: Extract<SceneResource, { kind: 'paint' }>) => PaintValue;
+  /** 透传颜色或登记绘制资源，返回场景可引用的绘制值 */
+  register: RegisterPaint;
+  /** 导入已生成的绘制资源，不再调用 Pattern provider */
+  importResource: (resource: Extract<SceneResource, { kind: 'paint' }>) => PaintValue;
   /** 读取当前已登记的绘制资源 */
-  resources: () => Array<SceneResource>;
-  /** 收集 provider 图元输出中的资源引用，延迟到工作区完成时检查 */
-  collectReferences: (primitives: ReadonlyArray<ScenePrimitive>, owner: string) => void;
-  /** 检查当前工作区的资源引用及依赖，不遍历最终 Scene */
-  validateReferences: (clips: ReadonlyArray<SceneResource>) => void;
+  getResources: () => Array<SceneResource>;
 };
-
-/** 区分完整 tile 输出与可能携带单个同名元数据字段的图元 iterable */
-const isPatternEmitResult = (value: PatternEmitOutput): value is PatternEmitResult =>
-  'tileSize' in value && 'motif' in value;
 
 /** 生成与对象属性插入顺序无关的 paint resource key */
 const paintKeyOf = (value: unknown): string => {
@@ -55,7 +41,7 @@ const paintKeyOf = (value: unknown): string => {
 };
 
 /** compile 仅消费 resolve 阶段已绑定的 pattern 并调用 provider emit */
-const resolvePatternTile = (resolution: PatternResolution, round: (n: number) => number): CompiledPatternTile => {
+const emitPatternTile = (resolution: PatternResolution, round: (n: number) => number): CompiledPatternTile => {
   const { spec, definition, size, style } = resolution;
   const ctx: PatternEmitContext = {
     size,
@@ -78,8 +64,10 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
   }
 
   let tileSize = size;
-  const emittedMotif = isPatternEmitResult(emitted) ? emitted.motif : emitted;
-  if (isPatternEmitResult(emitted)) {
+  let emittedMotif: Iterable<ScenePrimitive>;
+  // 同时检查两个字段，避免将携带单个同名元数据字段的 iterable 误判为完整 tile
+  if ('tileSize' in emitted && 'motif' in emitted) {
+    emittedMotif = emitted.motif;
     if (!Number.isFinite(emitted.tileSize) || emitted.tileSize <= 0) {
       throw createCompositeContractError(
         `Pattern '${spec.shape}' emit returned an invalid tileSize (${String(emitted.tileSize)}); it must be a finite number greater than 0.`,
@@ -87,6 +75,8 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
     }
 
     tileSize = round(emitted.tileSize);
+  } else {
+    emittedMotif = emitted;
   }
 
   const motif = materializeScenePrimitives(`Pattern '${spec.shape}' motif`, emittedMotif);
@@ -101,10 +91,6 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
 export const createPaintRegistry = (round: (n: number) => number): PaintRegistry => {
   const idByKey = new Map<string, string>();
   const list: Array<SceneResource> = [];
-  /** 图元引用按种类与 ID 去重，保留首次输出处的诊断位置 */
-  const references = new Map<string, CompileResourceReference>();
-  /** Pattern 资源间的引用边，不保存图元副本 */
-  const dependencies = new Map<string, Array<CompileResourceReference>>();
   let counter = 0;
 
   const insert = (key: string, resourceOf: (id: string) => SceneResource): string => {
@@ -116,17 +102,13 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     idByKey.set(key, id);
     const resource = resourceOf(id);
     list.push(resource);
-    if (resource.kind === 'paint' && 'tile' in resource) {
-      const resourceReferences = collectPrimitiveResourceReferences(resource.tile.motif, `resource '${id}'.motif`);
-      if (resourceReferences.length > 0) dependencies.set(id, resourceReferences);
-    }
     if (resource.kind === 'paint')
       idByKey.set(paintKeyOf({ spec: resource.spec, tile: 'tile' in resource ? resource.tile : undefined }), id);
 
     return id;
   };
 
-  const register: PaintResolver = paint => {
+  const register: RegisterPaint = paint => {
     if (paint === undefined) return undefined;
     if (typeof paint === 'string') return paint;
 
@@ -138,7 +120,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
           kind: 'paint',
           id: nextId,
           spec: resolution.spec,
-          tile: resolvePatternTile(resolution.pattern, round),
+          tile: emitPatternTile(resolution.pattern, round),
         };
       }
       const spec = resolution.spec;
@@ -148,7 +130,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     return { kind: 'resourceRef', id };
   };
 
-  const importResolved = (resource: Extract<SceneResource, { kind: 'paint' }>): PaintValue => {
+  const importResource = (resource: Extract<SceneResource, { kind: 'paint' }>): PaintValue => {
     const key = paintKeyOf({ spec: resource.spec, tile: 'tile' in resource ? resource.tile : undefined });
     const id = insert(key, nextId => ({ ...resource, id: nextId }));
     return { kind: 'resourceRef', id };
@@ -156,17 +138,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
 
   return {
     register,
-    importResolved,
-    resources: () => list,
-    collectReferences: (primitives, owner) => {
-      for (const reference of collectPrimitiveResourceReferences(primitives, owner)) {
-        const key = `${reference.kind}:${reference.id}`;
-        if (!references.has(key)) references.set(key, reference);
-      }
-    },
-    validateReferences: clips => {
-      if (references.size === 0 && dependencies.size === 0) return;
-      validateCompileResourceReferences(references.values(), dependencies, [...list, ...clips]);
-    },
+    importResource,
+    getResources: () => list,
   };
 };

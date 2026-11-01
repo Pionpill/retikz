@@ -9,7 +9,7 @@ import {
   isLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../../resolve/diagnostics';
-import type { PaintResolver } from '../../resource';
+import type { RegisterPaint } from '../../resource';
 import { snapshotScenePrimitives } from '../../shared';
 import { emitInlineLine, inlineSegmentPaintsOf, toAlphabeticBaselineY } from '../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
@@ -72,10 +72,10 @@ const nodeBaselineYsOf = (layout: CompiledNodeLayout, round: Round): Array<numbe
 };
 
 /** 从 CompiledNodeLayout 收敛 shape emit 所需的视觉样式 */
-const toShapeStyle = (properties: NodeShapeProperties, resolvePaint: PaintResolver): CompiledShapeStyle => ({
-  fill: resolvePaint(properties.fill),
+const toShapeStyle = (properties: NodeShapeProperties, registerPaint: RegisterPaint): CompiledShapeStyle => ({
+  fill: registerPaint(properties.fill),
   fillOpacity: properties.fillOpacity,
-  stroke: resolvePaint(properties.stroke) ?? 'currentColor',
+  stroke: registerPaint(properties.stroke) ?? 'currentColor',
   strokeOpacity: properties.strokeOpacity,
   strokeWidth: properties.strokeWidth,
   dashPattern: properties.dashPattern,
@@ -93,7 +93,7 @@ const emitNodeShapePrimitives = (
   layout: CompiledNodeLayout,
   properties: NodeShapeProperties,
   round: Round,
-  resolvePaint: PaintResolver,
+  registerPaint: RegisterPaint,
 ): Array<ScenePrimitive> => {
   const axisAlignedRect: CenteredBox = { ...layout.geometry.rect, rotate: 0 };
   let emitted: Iterable<ScenePrimitive>;
@@ -101,7 +101,7 @@ const emitNodeShapePrimitives = (
   try {
     emitted = layout.shape.definition.emit(
       axisAlignedRect,
-      toShapeStyle(properties, resolvePaint),
+      toShapeStyle(properties, registerPaint),
       round,
       layout.shape.params,
     );
@@ -195,7 +195,7 @@ const emitNodeLabelPinPrimitive = (
   properties: NodeResolvedProperties,
   labelCenterPosition: [number, number],
   round: Round,
-  resolvePaint: PaintResolver,
+  registerPaint: RegisterPaint,
 ): ScenePrimitive | undefined => {
   if (!labelProperties.pin) return undefined;
 
@@ -216,7 +216,7 @@ const emitNodeLabelPinPrimitive = (
       { kind: 'move', to: [round(bx), round(by)] },
       { kind: 'line', to: [round(nx), round(ny)] },
     ],
-    stroke: resolvePaint(style?.stroke) ?? labelProperties.textColor ?? 'currentColor',
+    stroke: registerPaint(style?.stroke) ?? labelProperties.textColor ?? 'currentColor',
     strokeWidth: style?.strokeWidth ?? 1,
     dashPattern: style?.dashPattern,
     dashOffset: style?.dashOffset,
@@ -291,7 +291,7 @@ const emitNodeLabelPrimitives = (
   labelProperties: NodeLabelResolution,
   properties: NodeResolvedProperties,
   round: Round,
-  resolvePaint: PaintResolver,
+  registerPaint: RegisterPaint,
 ): Array<ScenePrimitive> => {
   const labelCenterPosition = labelCenter(layout, label);
   const [lx, ly] = labelCenterPosition;
@@ -303,7 +303,7 @@ const emitNodeLabelPrimitives = (
     properties,
     labelCenterPosition,
     round,
-    resolvePaint,
+    registerPaint,
   );
   if (pinPrimitive !== undefined) primitives.push(pinPrimitive);
 
@@ -379,15 +379,15 @@ const wrapNodeGroupPrimitive = (
 export const emitNodePrimitives = (
   compilation: NodeCompilation,
   round: Round,
-  resolvePaint: PaintResolver,
+  registerPaint: RegisterPaint,
 ): Array<ScenePrimitive> => {
   const { layout, properties } = compilation;
-  const shapePrimitives = emitNodeShapePrimitives(layout, properties, round, resolvePaint);
+  const shapePrimitives = emitNodeShapePrimitives(layout, properties, round, registerPaint);
   const inner: Array<ScenePrimitive> = [
     ...shapePrimitives,
     ...emitNodeContentPrimitives(layout, properties, round),
     ...(layout.labels?.flatMap((label, index) =>
-      emitNodeLabelPrimitives(layout, label, properties.label![index], properties, round, resolvePaint),
+      emitNodeLabelPrimitives(layout, label, properties.label![index], properties, round, registerPaint),
     ) ?? []),
   ];
 

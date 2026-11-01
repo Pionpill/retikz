@@ -139,8 +139,8 @@ describe('Scene 资源依赖关闭', () => {
       },
     ];
     expect(() => importSceneResources(resources, paint, clip)).toThrow(/cyclic/);
-    expect(paint.resources()).toEqual([]);
-    expect(clip.resources()).toEqual([]);
+    expect(paint.getResources()).toEqual([]);
+    expect(clip.getResources()).toEqual([]);
   });
   it('重映射 Pattern 与嵌套箭头引用，保留相同 spec 的不同内容', () => {
     const resources: NonNullable<Scene['resources']> = [
@@ -200,7 +200,7 @@ describe('Scene 资源依赖关闭', () => {
       ids,
     );
     const owners: Array<string | undefined> = [];
-    visitSceneContent({ primitives: [host], resources: [...paint.resources(), ...clip.resources()] }, (_, site) =>
+    visitSceneContent({ primitives: [host], resources: [...paint.getResources(), ...clip.getResources()] }, (_, site) =>
       owners.push(site.hostId),
     );
     expect(owners).toEqual(['host', 'host', 'host', 'host', 'host']);
