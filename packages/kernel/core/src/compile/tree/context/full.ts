@@ -1,11 +1,11 @@
-import type { CompositeInputScope } from '../../contract/composite';
-import { resolveCompositeInputScope } from '../../contract/composite';
-import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
-import type { IRScene } from '../../schemas';
-import type { CanonicalTheme } from '../../shared';
-import type { CompileOptions } from '../types';
-import type { SharedCompileContext } from './shared';
-import { createSharedCompileContext } from './shared';
+import type { CompositeInputScope } from '../../../contract/composite';
+import { resolveCompositeInputScope } from '../../../contract/composite';
+import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../../resolve';
+import type { IRScene } from '../../../schemas';
+import type { CanonicalTheme } from '../../../shared';
+import type { SharedCompileContext } from '../../context';
+import { createSharedCompileContext } from '../../context';
+import type { CompileOptions } from '../../types';
 import type { WorkspaceCompileContext } from './workspace';
 import { createWorkspaceCompileContext } from './workspace';
 

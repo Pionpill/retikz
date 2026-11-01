@@ -35,7 +35,7 @@ import {
 import type { CompositeArtifact } from '../../shared';
 import { cloneAlignmentGuides } from '../alignment-guide';
 import { pushAllocation } from '../allocation';
-import type { CompileExecutionContext } from '../context';
+import type { CompileExecutionContext } from '../context/execution';
 import type { TreeCompileFrame } from '../frame';
 import { createCompositeCallbackContext } from './context';
 import { isCompositeOutputHandle, snapshotCompositeOutputChild } from './handle';

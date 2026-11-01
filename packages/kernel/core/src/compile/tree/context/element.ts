@@ -1,16 +1,16 @@
 import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 
-import type { CompileOccurrenceLocator, LayoutProposal, Transform } from '../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { MergedScopeDefaults } from '../../resolve';
-import { resolveNodeBoundary } from '../../resolve';
-import type { CanonicalTheme } from '../../shared';
+import type { CompileOccurrenceLocator, LayoutProposal, Transform } from '../../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { MergedScopeDefaults } from '../../../resolve';
+import { resolveNodeBoundary } from '../../../resolve';
+import type { CanonicalTheme } from '../../../shared';
+import type { SharedCompileContext } from '../../context';
+import { composeScopeTransform, orderCompileWarnings, withCompileWarningOccurrence } from '../../shared';
+import type { CompileWarning } from '../../shared';
+import type { CompiledNodeLayout } from '../node';
 import { createPositionResolveContext } from '../reference';
-import { composeScopeTransform, orderCompileWarnings, withCompileWarningOccurrence } from '../shared';
-import type { CompileWarning } from '../shared';
-import type { CompiledNodeLayout } from '../tree/node';
-import type { SharedCompileContext } from './shared';
 import { createWorkspaceCompileContext } from './workspace';
 
 /** 创建独占的资源、诊断与引用读取工作区 */

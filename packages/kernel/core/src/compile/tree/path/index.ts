@@ -4,3 +4,5 @@ export * from './emit';
 export * from './host';
 export * from './stroke';
 export * from './types';
+export * from './target';
+export * from './target-resolver';

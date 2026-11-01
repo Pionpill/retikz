@@ -1,13 +1,15 @@
 import type { CenteredBox } from '@retikz/math';
 import { boundsOf, centerOfBounds } from '@retikz/math';
 
-import type { IRPosition } from '../../../schemas';
+import type { Transform } from '../../../contract';
+import type { IRPosition, IRScope } from '../../../schemas';
 import { ScopeBoundingShape } from '../../../schemas';
 import { Anchor } from '../../../shared';
 import { rect as rectOps } from '../../../shared/geometry';
 import type { SharedCompileContext } from '../../context';
+import { composeScopeTransform } from '../../shared';
+import { createScopeCircleLayout, createScopeRectangleLayout, outerRectOf, projectLayoutWithTransform } from '../node';
 import type { CompiledNodeLayout } from '../node';
-import { createScopeCircleLayout, createScopeRectangleLayout, outerRectOf } from '../node';
 import type { InputScopeCompile } from './types';
 
 /** 收集一组 CompiledNodeLayout 的全局 4 角点，供 AABB / MEC 等包络复用 */
@@ -53,4 +55,15 @@ export const createIntrinsicScopeLayout = (
         { id, bbox: computeScopeBoundingBox(scopeLayouts), fallbackOrigin: [0, 0] },
         { shapes: registries.shapeRegistry, boundaries: registries.boundaryRegistry },
       );
+};
+
+/** 按 Core 包络规则向父 Scope 贡献布局；匿名 Scope 透传子布局 */
+export const projectScopeCompileLayouts = (
+  input: Pick<IRScope, 'id'>,
+  envelope: CompiledNodeLayout,
+  children: ReadonlyArray<CompiledNodeLayout>,
+  transforms: ReadonlyArray<Transform>,
+): Array<CompiledNodeLayout> => {
+  const transform = composeScopeTransform(transforms);
+  return (input.id === undefined ? children : [envelope]).map(layout => projectLayoutWithTransform(layout, transform));
 };

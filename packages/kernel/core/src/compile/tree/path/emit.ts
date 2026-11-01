@@ -18,11 +18,12 @@ import {
   resolveStrokePathProviders,
 } from '../../../resolve';
 import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
-import type { SharedCompileContext, WorkspaceCompileContext } from '../../context';
-import { pathTargetViewOf } from '../../reference';
+import type { SharedCompileContext } from '../../context';
 import { snapshotProviderPosition, snapshotScenePrimitives } from '../../shared';
 import type { ComposedScopeTransform } from '../../shared';
+import type { WorkspaceCompileContext } from '../context';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
+import { pathTargetViewOf } from './index';
 import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';
 import type { InputPathCompilation } from './types';
 

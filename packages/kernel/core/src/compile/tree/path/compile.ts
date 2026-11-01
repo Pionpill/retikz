@@ -1,12 +1,12 @@
 import type { PathTargetResolver } from '../../../resolve';
 import { resolvePath } from '../../../resolve';
 import type { IRPathBase } from '../../../schemas';
-import type { ElementCompileOptions, ElementCompileResult } from '../../context';
-import { runElementCompilation } from '../../context';
-import { createPathTargetResolver } from '../../reference';
 import { composeScopeTransform, filterAnimations } from '../../shared';
+import type { ElementCompileOptions, ElementCompileResult } from '../context';
+import { runElementCompilation } from '../context';
 import type { PathCompileHost } from './emit';
 import { emitDefinedPath } from './emit';
+import { createPathTargetResolver } from './index';
 import type { CompiledPath, InputPathCompilation } from './types';
 
 /** Path 单元素编译上下文 */

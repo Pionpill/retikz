@@ -7,7 +7,6 @@ import type {
 } from '../../../contract';
 import { CompileExpansionKind } from '../../../contract';
 import type { CompileOwnerKey } from '../../provenance';
-import { projectPublishedCompileLayout } from '../../reference';
 import { importSceneResources, remapPrimitiveResources } from '../../resource';
 import { allocationPointsOf, optionalVisualBoundsOfPrimitives } from '../../scene';
 import {
@@ -19,6 +18,7 @@ import {
 import type { CompileWarning } from '../../shared';
 import { effectiveAllocations } from '../allocation';
 import type { TreeCompileFrame } from '../frame';
+import { projectPublishedCompileLayout } from '../node';
 import type { CompiledNodeLayout } from '../node';
 import type { SubtreeOutputContribution } from '../types';
 import type { CompositeExecutionContext, PreparedReplay } from './types';

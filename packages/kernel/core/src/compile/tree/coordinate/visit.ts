@@ -1,7 +1,7 @@
 import { createCompileChildPath } from '../../shared';
 import { pushAllocation } from '../allocation';
-import { createTreePositionContext } from '../context';
-import type { CompileExecutionContext } from '../context';
+import { createTreePositionContext } from '../context/execution';
+import type { CompileExecutionContext } from '../context/execution';
 import type { TreeCompileFrame } from '../frame';
 import { createSyntheticRectangleLayout } from '../node';
 import type { CoordinateChild } from '../types';

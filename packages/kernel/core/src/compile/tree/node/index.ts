@@ -11,3 +11,4 @@ export * from './projection';
 export * from './reference';
 export * from './synthetic';
 export * from './types';
+export * from './anchor-cache';

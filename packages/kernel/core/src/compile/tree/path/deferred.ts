@@ -1,15 +1,15 @@
 import type { CompileOccurrenceLocator } from '../../../contract';
 import type { CompileOwnerKey } from '../../provenance';
-import { createPathTargetResolver } from '../../reference';
 import { createCompileChildPath, createCompileInvariantError, filterAnimations } from '../../shared';
 import { pushAllocation } from '../allocation';
-import { createTreePositionContext } from '../context';
-import type { CompileExecutionContext } from '../context';
+import { createTreePositionContext } from '../context/execution';
+import type { CompileExecutionContext } from '../context/execution';
 import type { TreeCompileFrame } from '../frame';
 import type { TreeOutputState, InternalScenePrimitive } from '../output';
 import { recordPrimitiveZIndex } from '../output';
 import type { LayoutBoundsContribution, PathChild } from '../types';
 import { compilePathState } from './compile';
+import { createPathTargetResolver } from './index';
 import type { InputPathCompilation } from './types';
 
 /** 等待命名引用完成注册后再 emit 的 path 任务 */

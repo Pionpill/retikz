@@ -1,11 +1,11 @@
 import type { AnyCompositeDefinition } from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
-import type { FullCompileContext } from '../context';
 import { CompileProvenanceTracker } from '../provenance';
 import { assembleSceneCompilationSnapshot } from '../scene';
 import type { ExecuteOptions, SceneCompilationSnapshot, CompileOptions } from '../types';
 import { CompositeCompileSession } from './composite/session';
-import { createTreeExecutionContext } from './context';
+import type { FullCompileContext } from './context';
+import { createTreeExecutionContext } from './context/execution';
 import { SubtreeCompiler } from './traversal';
 import type { SubtreeCompilation, SubtreeCompileOptions } from './types';
 

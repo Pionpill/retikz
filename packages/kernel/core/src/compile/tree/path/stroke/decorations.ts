@@ -6,9 +6,10 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
 import type { CanonicalPath, StrokePathResolution } from '../../../../resolve';
 import type { IRPosition } from '../../../../schemas';
 import type { PaintRegistry, PaintResolver } from '../../../resource';
+import { placeMarkPrimitives } from '../../../scene';
 import type { StrokePathGeometry } from './interruption';
 import { sampleStrokeMarkGeometry } from './interruption';
-import { emitMarkPrimitives, placeMarkPrimitives } from './marks';
+import { emitMarkPrimitives } from './marks';
 import type { PathBasePropsWithStrokeWidth } from './output';
 import { emitEndpointArrowMark } from './shrink';
 

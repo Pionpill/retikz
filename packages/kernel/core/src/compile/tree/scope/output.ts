@@ -7,7 +7,7 @@ import type { CompileOwnerKey, CompileProvenanceTracker } from '../../provenance
 import { collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../../scene';
 import { applyTransformChain, createCompileChildPath } from '../../shared';
 import type { CompileBounds, CompileOutput } from '../../shared';
-import type { CompileExecutionContext } from '../context';
+import type { CompileExecutionContext } from '../context/execution';
 import type { TreeOutputState } from '../output';
 import { recordPrimitiveZIndex, stableSortByZIndex } from '../output';
 import type { ScopeChild } from '../types';

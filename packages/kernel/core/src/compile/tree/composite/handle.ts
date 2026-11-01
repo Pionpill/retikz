@@ -9,7 +9,7 @@ import { guardProviderOutput } from '../../../resolve';
 import { createCompositeContractError } from '../../../resolve/diagnostics';
 import type { IRChild } from '../../../schemas';
 import { cloneAndFreezeJson } from '../../../shared/json';
-import type { CompileExecutionContext } from '../context';
+import type { CompileExecutionContext } from '../context/execution';
 import type { CompositeCompileSession } from './session';
 import type { CompositeCompileOwner, CompositeRuntimeOutputChild } from './types';
 

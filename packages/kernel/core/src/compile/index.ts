@@ -5,17 +5,19 @@ export type {
   CompileContextLayout,
   CompileContextLimits,
   CompileContextRegistries,
+  SharedCompileContext,
+  SharedCompileContextOptions,
+} from './context';
+export type {
   ElementCompileContext,
   ElementCompileOptions,
   ElementCompileReference,
   ElementCompileResult,
-  SharedCompileContext,
-  SharedCompileContextOptions,
-} from './context';
+} from './tree/context';
 export * from './output';
 export * from './provenance';
-export { projectCompileReference, projectPublishedCompileLayout, projectScopeCompileLayouts } from './reference';
-export type { CompileReferenceSource } from './reference';
+export { projectCompileReference } from './tree/reference';
+export type { CompileReferenceSource } from './tree/reference';
 export { assembleSceneCompilationSnapshot, computeLayout } from './scene';
 export type { InputSceneCompilationSnapshot } from './scene';
 export {
@@ -45,7 +47,7 @@ export type {
 } from './text';
 export { compileCoordinate } from './tree/coordinate';
 export type { CompiledCoordinate, CoordinateCompileContext } from './tree/coordinate';
-export { compileNode } from './tree/node';
+export { compileNode, projectPublishedCompileLayout } from './tree/node';
 export type {
   CompiledNode,
   CompiledNodeLayout,
@@ -56,7 +58,13 @@ export type {
 } from './tree/node';
 export { compilePath, samplePathRoute } from './tree/path';
 export type { CompiledPath, PathElementCompileContext } from './tree/path';
-export { assembleScopeOutput, compileScope, prepareScopeCompilation, resolveScopeContext } from './tree/scope';
+export {
+  assembleScopeOutput,
+  compileScope,
+  prepareScopeCompilation,
+  projectScopeCompileLayouts,
+  resolveScopeContext,
+} from './tree/scope';
 export type { CompiledScope, ScopeCompilationPreparation, ScopeCompileContext } from './tree/scope';
 export type {
   CompileCompositeOptions,

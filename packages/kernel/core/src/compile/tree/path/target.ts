@@ -1,20 +1,25 @@
-import type { Transform } from '../../contract';
-import type { NodeReferenceGeometry, PathTargetView, TargetResolution } from '../../resolve';
-import type { PositionTargetResolveContext } from '../../resolve/position';
-import { resolvePositionTarget } from '../../resolve/position';
-import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
-import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
-import type { ComposedScopeTransform } from '../shared';
-import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../shared';
-import type { NodeBoundaryContext } from '../tree/node';
-import { boundaryPointOf, clipNodePolyline, createNodeBoundaryContext } from '../tree/node';
-import { resolveAnchorRef } from './anchor-cache';
+import type { Transform } from '../../../contract';
+import type { NodeReferenceGeometry, PathTargetView, TargetResolution } from '../../../resolve';
+import type { PositionTargetResolveContext } from '../../../resolve/position';
+import { resolvePositionTarget } from '../../../resolve/position';
+import type {
+  IRNodeTarget,
+  IRPosition,
+  IRRelativeAccumulateTarget,
+  IRRelativeTarget,
+  IRTarget,
+} from '../../../schemas';
+import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
+import type { ComposedScopeTransform } from '../../shared';
+import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../../shared';
+import type { NodeBoundaryContext } from '../node';
+import { boundaryPointOf, clipNodePolyline, createNodeBoundaryContext, resolveAnchorRef } from '../node';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);
 
 /** 判断 target 是否需要由节点边界自动裁剪决定端点 */
-const isAutoBoundaryTarget = (target: IRTarget): boolean =>
+export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
   isNodeTarget(target) && target.anchor === undefined && target.offset === undefined;
 
 /** 判断 target 是否为进入 emit 前应被 path 游标归一化的相对端点 */

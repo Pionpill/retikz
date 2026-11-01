@@ -4,3 +4,4 @@ export * from './output';
 export * from './precision';
 export * from './view-box';
 export * from './visual-bounds';
+export * from './marker';

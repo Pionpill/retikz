@@ -1,8 +1,8 @@
-import type { Transform } from '../../contract';
-import type { PathTargetResolver, TargetResolution } from '../../resolve';
-import type { PositionTargetResolveContext } from '../../resolve/position';
-import type { IRTarget } from '../../schemas';
-import { bindPathTarget, targetKeyOf } from './path-target';
+import type { Transform } from '../../../contract';
+import type { PathTargetResolver, TargetResolution } from '../../../resolve';
+import type { PositionTargetResolveContext } from '../../../resolve/position';
+import type { IRTarget } from '../../../schemas';
+import { bindPathTarget, targetKeyOf } from './target';
 
 /** 在一次 Path 计算内按变换链复用目标绑定；不持有调用方名称树 */
 export const createPathTargetResolver = (

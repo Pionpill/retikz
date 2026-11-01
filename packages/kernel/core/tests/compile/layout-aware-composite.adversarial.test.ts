@@ -36,10 +36,10 @@ import {
   naturalLayoutProposal,
   PathSchema,
 } from '../../src';
-import { createFullCompileContext } from '../../src/compile/context';
 import * as compileProvenance from '../../src/compile/provenance';
 import { createCompileInvariantError, snapshotProviderPosition, wrapLayoutProbeError } from '../../src/compile/shared';
 import { CompileManager } from '../../src/compile/tree';
+import { createFullCompileContext } from '../../src/compile/tree/context';
 import { NamespaceStack } from '../../src/compile/tree/namespace';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';
 import { isLayoutProbeRecoverableError } from '../../src/resolve/diagnostics';

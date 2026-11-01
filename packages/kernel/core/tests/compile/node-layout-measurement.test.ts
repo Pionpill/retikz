@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import type { TexLowerer, TextMeasurer } from '../../src/compile';
 import { BuiltinCompileWarningCode } from '../../src/compile';
-import { createFullCompileContext, createSharedCompileContext } from '../../src/compile/context';
+import { createSharedCompileContext } from '../../src/compile/context';
 import type { CompileWarning } from '../../src/compile/shared';
 import { CompileManager } from '../../src/compile/tree';
+import { createFullCompileContext } from '../../src/compile/tree/context';
 import type { CompiledNodeLayout } from '../../src/compile/tree/node';
 import type { TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';

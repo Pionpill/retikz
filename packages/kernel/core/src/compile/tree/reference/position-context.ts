@@ -1,16 +1,15 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { Transform } from '../../contract';
-import type { BoundaryResolution, NodeBoundaryResolver, NodeReferenceGeometry } from '../../resolve';
-import { boundaryKey } from '../../resolve';
-import type { PositionReferenceView, PositionTargetResolveContext } from '../../resolve/position';
-import { resolvePositionTarget } from '../../resolve/position';
-import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
-import type { ComposedScopeTransform } from '../shared';
-import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../shared';
-import type { CompiledNodeLayout, NodeBoundaryContext } from '../tree/node';
-import { createNodeReferenceGeometry } from '../tree/node';
-import { resolveAnchorRef } from './anchor-cache';
+import type { Transform } from '../../../contract';
+import type { BoundaryResolution, NodeBoundaryResolver, NodeReferenceGeometry } from '../../../resolve';
+import { boundaryKey } from '../../../resolve';
+import type { PositionReferenceView, PositionTargetResolveContext } from '../../../resolve/position';
+import { resolvePositionTarget } from '../../../resolve/position';
+import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../../schemas';
+import type { ComposedScopeTransform } from '../../shared';
+import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../../shared';
+import type { CompiledNodeLayout, NodeBoundaryContext } from '../node';
+import { createNodeReferenceGeometry, resolveAnchorRef } from '../node';
 
 /** 把视觉 shape 绑定为默认连接面 resolution */
 const shapeBoundaryResolutionOf = (node: NodeReferenceGeometry): BoundaryResolution => ({

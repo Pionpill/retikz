@@ -4,11 +4,6 @@ import type { Transform } from '../../../../contract';
 import type { PathTargetView } from '../../../../resolve';
 import type { IRPosition, IRTarget } from '../../../../schemas';
 import { FoldStepVia } from '../../../../schemas';
-import { isNodeTargetLike } from '../../../../shared';
-
-/** 判断 target 是否为自动边界裁剪的节点引用 */
-export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
-  isNodeTargetLike(target) && target.anchor === undefined && target.offset === undefined;
 
 /** 使用 resolving phase 绑定的 target view 获取局部参考点 */
 export const pointOfTarget = (

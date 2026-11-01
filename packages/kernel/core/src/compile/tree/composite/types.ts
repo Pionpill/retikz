@@ -16,7 +16,7 @@ import type { IRChild } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
 import type { CompileProvenanceSnapshot, CompileOwnerKey } from '../../provenance';
 import type { CompileWarning, CompositeArtifact } from '../../shared';
-import type { CompileExecutionContext } from '../context';
+import type { CompileExecutionContext } from '../context/execution';
 import type { TreeCompileFrame } from '../frame';
 import type { NamespaceFrameChange } from '../namespace';
 import type { CompiledNodeLayout } from '../node';

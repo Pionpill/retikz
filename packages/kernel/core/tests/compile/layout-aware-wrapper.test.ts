@@ -25,10 +25,10 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../src';
-import { createFullCompileContext } from '../../src/compile/context';
 import { CompileProvenanceTracker } from '../../src/compile/provenance';
 import { CompileManager } from '../../src/compile/tree';
 import { CompositeCompileSession } from '../../src/compile/tree/composite/session';
+import { createFullCompileContext } from '../../src/compile/tree/context';
 import { NamespaceStack } from '../../src/compile/tree/namespace';
 import { sceneRectangles } from '../helpers/scene-rectangles';
 

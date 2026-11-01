@@ -12,8 +12,8 @@ import type {
 import { computeSceneTextBounds } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import { CANONICAL_STROKE_MITER_LIMIT, applyTransformChain, createCompileInvariantError } from '../shared';
-import { buildMarkMarkerGroup } from '../tree/path';
 import { canonicalizeBoundsRect, expandBoundsForShadow } from './bounds';
+import { buildMarkMarkerGroup } from './index';
 
 type MutableRect = { x: number; y: number; width: number; height: number };
 

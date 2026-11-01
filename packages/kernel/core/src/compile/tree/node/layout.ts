@@ -18,7 +18,6 @@ import { resolvePosition, resolvePositionTargetWorld } from '../../../resolve/po
 import { resolveFont, resolveTextLineHeight } from '../../../resolve/text';
 import type { IRAnchorPosition, IRPosition } from '../../../schemas';
 import { CenterAnchor } from '../../../shared';
-import { resolveAnchorRefUncached } from '../../reference';
 import {
   DEFAULT_FONT_SIZE,
   composeScopeTransform,
@@ -27,6 +26,7 @@ import {
 } from '../../shared';
 import type { CompileWarningCode, ComposedScopeTransform } from '../../shared';
 import type { TextMeasurer } from '../../text';
+import { resolveAnchorRefUncached } from './anchor-cache';
 import type { NodeBoundaryContext } from './boundary-context';
 import { createNodeBoundaryContext } from './boundary-context';
 import { layoutNodeContent } from './content/layout';

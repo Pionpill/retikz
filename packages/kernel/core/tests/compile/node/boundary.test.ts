@@ -1,18 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import * as core from '../../../src';
-import { resolveAnchor } from '../../../src/compile/reference';
-import { createPositionResolveContext } from '../../../src/compile/reference/position-context';
 import { NamespaceStack } from '../../../src/compile/tree/namespace';
-import { angleBoundaryOf, boundaryPointOf, compileNodeResolution } from '../../../src/compile/tree/node';
+import { angleBoundaryOf, boundaryPointOf, compileNodeResolution, resolveAnchor } from '../../../src/compile/tree/node';
+import { createPositionResolveContext } from '../../../src/compile/tree/reference';
 import { resolveBoundaryRegistry } from '../../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';
 import { resolveNode } from '../../../src/resolve/node';
 import type { IRNode } from '../../../src/schemas';
-import { BuiltinBoundary, BoundarySchema } from '../../../src/schemas';
-import { NodeSchema } from '../../../src/schemas';
-import { NodeTargetSchema } from '../../../src/schemas';
+import { BoundarySchema, BuiltinBoundary, NodeSchema, NodeTargetSchema } from '../../../src/schemas';
 
 describe('BoundarySchema', () => {
   it('解析保留关键字和注册名称', () => {

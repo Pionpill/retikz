@@ -11,9 +11,9 @@ import type {
 } from '../../contract';
 import type { MergedScopeDefaults } from '../../resolve';
 import type { CanonicalDropShadow, IRChild, IRPosition } from '../../schemas';
-import type { FullCompileContext } from '../context';
 import type { CompileProvenanceTracker } from '../provenance';
 import type { CompositeArtifact } from '../shared';
+import type { FullCompileContext } from './context';
 import type { NamespaceStack } from './namespace';
 import type { CompiledNodeLayout } from './node';
 

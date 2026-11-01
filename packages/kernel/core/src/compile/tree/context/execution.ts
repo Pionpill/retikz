@@ -1,15 +1,17 @@
-import type { CompileOccurrenceLocator, Transform } from '../../contract';
-import { resolveNodeBoundary } from '../../resolve';
-import type { PositionTargetResolveContext } from '../../resolve/position';
-import type { SharedCompileContext, WorkspaceCompileContext, FullCompileContext } from '../context';
-import type { CompileProvenanceTracker } from '../provenance';
+import type { CompileOccurrenceLocator, Transform } from '../../../contract';
+import { resolveNodeBoundary } from '../../../resolve';
+import type { PositionTargetResolveContext } from '../../../resolve/position';
+import type { SharedCompileContext } from '../../context';
+import type { CompileProvenanceTracker } from '../../provenance';
+import { createDuplicateWarning, withCompileWarningOccurrence } from '../../shared';
+import type { CompileWarning } from '../../shared';
+import type { CompositeCompileSession } from '../composite/session';
+import { NamespaceStack } from '../namespace';
 import { createPositionResolveContext } from '../reference';
-import { createDuplicateWarning, withCompileWarningOccurrence } from '../shared';
-import type { CompileWarning } from '../shared';
-import type { CompositeCompileSession } from './composite/session';
-import { NamespaceStack } from './namespace';
-import { ScopeTransformComposer } from './transform-cache';
-import type { SubtreeCompileOptions } from './types';
+import { ScopeTransformComposer } from '../transform-cache';
+import type { SubtreeCompileOptions } from '../types';
+import type { FullCompileContext } from './full';
+import type { WorkspaceCompileContext } from './workspace';
 
 /** 单次子树执行共享的依赖和操作；隔离 probe 创建独立上下文 */
 export type CompileExecutionContext = {

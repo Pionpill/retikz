@@ -10,8 +10,6 @@ import type {
 import type { CompositeInputScope } from '../../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { IRChild } from '../../../schemas';
-import type { FullCompileContext } from '../../context';
-import { createWorkspaceCompileContext } from '../../context';
 import { CompileProvenanceTracker } from '../../provenance';
 import { visualBoundsOfPrimitives } from '../../scene';
 import {
@@ -22,7 +20,9 @@ import {
   withCompileWarningOccurrence,
 } from '../../shared';
 import type { CompileWarning } from '../../shared';
-import type { CompileExecutionContext } from '../context';
+import type { FullCompileContext } from '../context';
+import { createWorkspaceCompileContext } from '../context';
+import type { CompileExecutionContext } from '../context/execution';
 import type { TreeCompileFrame } from '../frame';
 import type { NamespaceStack } from '../namespace';
 import type { SubtreeCompileHost, SubtreeCompileOptions } from '../types';

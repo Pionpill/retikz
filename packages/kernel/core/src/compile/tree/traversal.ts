@@ -19,7 +19,7 @@ import {
 import { resolveStructuralAlignmentGuides } from './alignment-guide';
 import { effectiveAllocations } from './allocation';
 import { CompositeCompiler } from './composite';
-import type { CompileExecutionContext } from './context';
+import type { CompileExecutionContext } from './context/execution';
 import { visitCoordinate } from './coordinate/visit';
 import { createCompileSinks } from './frame';
 import type { TreeCompileFrame } from './frame';

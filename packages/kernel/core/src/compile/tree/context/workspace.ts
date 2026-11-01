@@ -1,9 +1,9 @@
-import type { ClipRegistry, PaintRegistry } from '../resource';
-import { createClipRegistry, createPaintRegistry } from '../resource';
-import type { CompileWarning } from '../shared';
-import type { NodeBoundaryContext } from '../tree/node';
-import { createNodeBoundaryContext } from '../tree/node';
-import type { SharedCompileContext } from './shared';
+import type { SharedCompileContext } from '../../context';
+import type { ClipRegistry, PaintRegistry } from '../../resource';
+import { createClipRegistry, createPaintRegistry } from '../../resource';
+import type { CompileWarning } from '../../shared';
+import type { NodeBoundaryContext } from '../node';
+import { createNodeBoundaryContext } from '../node';
 
 /** 单次计算独占的几何、资源与诊断工作区 */
 export type WorkspaceCompileContext = {

@@ -1,9 +1,9 @@
 import type { AnyCompositeDefinition } from '../contract';
 import type { IRScene } from '../schemas';
-import { createFullCompileContext } from './context';
 import type { CompileWarning, CompositeArtifactOf } from './shared';
 import { formatCompileWarning } from './shared';
 import { CompileManager } from './tree';
+import { createFullCompileContext } from './tree/context';
 import type { ExecuteOptions, SceneCompilationSnapshot, CompileOptions, CompileResult } from './types';
 
 export { BuiltinCompileWarningCode, type CompileWarningCode } from './shared';

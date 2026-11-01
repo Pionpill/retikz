@@ -1,12 +1,14 @@
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { BoundaryResolution, NodeReferenceGeometry } from '../../resolve';
-import { boundaryKey } from '../../resolve';
-import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
-import type { Side } from '../../shared';
-import { isAnchor } from '../../shared';
-import { snapshotProviderPosition } from '../shared';
-import type { CompiledNodeLayout, NodeBoundaryState } from '../tree/node';
-import { anchorOf, angleBoundaryOf, createNodeReferenceGeometry } from '../tree/node';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { BoundaryResolution, NodeReferenceGeometry } from '../../../resolve';
+import { boundaryKey } from '../../../resolve';
+import type { IRAnchorRef, IRBoundary, IRPosition } from '../../../schemas';
+import type { Side } from '../../../shared';
+import { isAnchor } from '../../../shared';
+import { snapshotProviderPosition } from '../../shared';
+import { anchorOf, angleBoundaryOf } from './anchors';
+import type { NodeBoundaryState } from './boundary-context';
+import { createNodeReferenceGeometry } from './reference';
+import type { CompiledNodeLayout } from './types';
 
 type AnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
 

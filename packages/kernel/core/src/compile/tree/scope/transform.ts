@@ -3,8 +3,8 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import { resolveTransformTranslation } from '../../../resolve/position';
 import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../../schemas';
-import { resolveAnchorRefUncached } from '../../reference';
 import { createCompileInvariantError } from '../../shared';
+import { resolveAnchorRefUncached } from '../node';
 import type { CompiledNodeLayout } from '../node';
 
 /** scope transform lowering 所需的编译上下文 */
