@@ -27,7 +27,7 @@ export const createScopeGroup = (
   });
   if (animations !== undefined) group.animations = animations;
   if (resolvedClipPath !== undefined) {
-    group.clipRef = workspace.clipRegistry.importResource(resolvedClipPath);
+    group.clipRef = workspace.clipRegistry.registerPath(resolvedClipPath);
   } else if (input.clip !== undefined) {
     group.clipRef = workspace.clipRegistry.register(
       resolveClip(input.clip, {

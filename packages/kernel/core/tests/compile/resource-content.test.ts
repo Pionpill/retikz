@@ -261,7 +261,7 @@ describe('Scene 资源依赖关闭', () => {
     ];
     const paint = createPaintRegistry(value => value);
     const clip = createClipRegistry(value => value);
-    const windowId = clip.importResource({ fillRule: 'nonzero', commands: [] });
+    const windowId = clip.registerPath({ fillRule: 'nonzero', commands: [] });
     resources.push(...clip.getResources());
     importSceneResources(resources, paint, clip);
     importSceneResources(resources, paint, clip);

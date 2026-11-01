@@ -17,7 +17,9 @@ export type ClipRegistry = {
   /** 生成路径并登记裁剪资源 */
   register: (clip: ClipResolution) => string;
   /** 登记已生成的规范路径 */
-  importResource: (path: SceneClipPath) => string;
+  registerPath: (path: SceneClipPath) => string;
+  /** 导入完整资源并保留内容身份 */
+  importResource: (resource: ClipResource) => string;
   /** 按首次登记顺序返回裁剪资源 */
   getResources: () => Array<ClipResource>;
 };
@@ -193,15 +195,18 @@ export const createClipRegistry = (
     }
   };
 
-  const importResource = (path: SceneClipPath): string => {
-    const id = createResourceId('clip', serializeResourceContent(path));
-    storeSceneResource({ kind: 'clip', id, path }, resources);
+  const importResource = (resource: ClipResource): string => {
+    storeSceneResource(resource, resources);
+    return resource.id;
+  };
 
-    return id;
+  const registerPath = (path: SceneClipPath): string => {
+    const id = createResourceId('clip', serializeResourceContent(path));
+    return importResource({ kind: 'clip', id, path });
   };
 
   const lower = (clip: ClipResolution): SceneClipPath =>
     lowerClip(clip, { visited: 0, max: maxClipDepth, active: new WeakSet() });
-  const register = (clip: ClipResolution): string => importResource(lower(clip));
-  return { lower, register, importResource, getResources: () => [...resources.values()] };
+  const register = (clip: ClipResolution): string => registerPath(lower(clip));
+  return { lower, register, registerPath, importResource, getResources: () => [...resources.values()] };
 };

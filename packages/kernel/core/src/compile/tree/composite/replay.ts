@@ -59,9 +59,7 @@ export const commitCompositeReplay = (
   );
 
   const wrapperClipRef =
-    wrapperClipPath === undefined
-      ? undefined
-      : execution.context.workspace.clipRegistry.importResource(wrapperClipPath);
+    wrapperClipPath === undefined ? undefined : execution.context.workspace.clipRegistry.registerPath(wrapperClipPath);
   const replayedPrimitives =
     execution.context.provenanceTracker?.materializePrimitives(transaction.primitives) ?? transaction.primitives;
   if (semanticOwner !== undefined && execution.context.provenanceTracker !== undefined) {

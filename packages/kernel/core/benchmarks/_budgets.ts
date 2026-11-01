@@ -19,7 +19,16 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
     return undefined;
   }
   let policy: CoreBudgetPolicy;
-  if (layer === 'compile' && family === 'full' && variant === 'mixed') {
+  if (layer === 'compile' && family === 'resource') {
+    const count = Number(scale);
+    if (![10, 100, 1000].includes(count)) throw new Error(`Missing Core resource scale budget: ${identity}`);
+    policy = {
+      warningMs: count === 10 ? 1 : count === 100 ? 4 : 8,
+      errorMs: count === 10 ? 4 : count === 100 ? 8 : 16.6,
+      rationale:
+        '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；假设10次为局部编辑（1/4ms），100次为普通更新（4/8ms），1000次为大批资源处理（8/16.6ms）。该阶段接近一帧即有同步阻塞风险，复杂Pattern不放宽预算；不含输入解析和renderer，不代表整帧保证或稳定回归上限',
+    };
+  } else if (layer === 'compile' && family === 'full' && variant === 'mixed') {
     const count = Number(scale);
     if (![100, 500, 1000].includes(count)) throw new Error(`Missing Core compile scale budget: ${identity}`);
     policy = {

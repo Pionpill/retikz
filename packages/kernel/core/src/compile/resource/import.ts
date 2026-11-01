@@ -10,7 +10,7 @@ export const importSceneResources = (
 ): void => {
   for (const resource of resources) {
     if (resource.kind === 'clip') {
-      clip.importResource(resource.path);
+      clip.importResource(resource);
     } else {
       paint.importResource(resource);
     }
