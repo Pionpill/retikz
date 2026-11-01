@@ -13,6 +13,7 @@ import type {
 import { CompileExpansionKind } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { bindComposite, resolveComposite } from '../../../resolve';
+import { guardProviderOutput } from '../../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -26,7 +27,6 @@ import { cloneAndFreezeJson } from '../../../shared/json';
 import { createCompileChildPath, formatCompileOccurrence, freezeCompileArtifact } from '../../artifact';
 import { createCompileInvariantError } from '../../errors';
 import type { CompileOwnerKey } from '../../provenance';
-import { withProviderOutputValidationBoundary } from '../../provider-output';
 import { allocationPointsOf } from '../../scene';
 import type { CompositeArtifact } from '../../types';
 import { BuiltinCompileWarningCode } from '../../warning';
@@ -138,7 +138,7 @@ export class CompositeCompiler {
       callbackContext.dispose();
     }
 
-    const handledContribution = withProviderOutputValidationBoundary(owner.label, () => {
+    const handledContribution = guardProviderOutput(owner.label, () => {
       if (
         callbackResult !== null &&
         typeof callbackResult === 'object' &&
@@ -167,7 +167,7 @@ export class CompositeCompiler {
     });
     if (handledContribution) return;
 
-    const validatedResult = withProviderOutputValidationBoundary(owner.label, () => {
+    const validatedResult = guardProviderOutput(owner.label, () => {
       if (
         callbackResult === null ||
         typeof callbackResult !== 'object' ||

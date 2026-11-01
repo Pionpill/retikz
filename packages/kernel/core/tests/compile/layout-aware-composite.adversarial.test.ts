@@ -39,7 +39,7 @@ import {
 import { createFullCompileContext } from '../../src/compile/context';
 import { createCompileInvariantError, wrapLayoutProbeError } from '../../src/compile/errors';
 import * as compileProvenance from '../../src/compile/provenance';
-import { snapshotProviderPosition } from '../../src/compile/provider-output';
+import { snapshotProviderPosition } from '../../src/compile/provider';
 import { CompileManager } from '../../src/compile/tree';
 import { NamespaceStack } from '../../src/compile/tree/namespace';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';
@@ -1512,8 +1512,8 @@ describe('布局感知的复契约束和边界', () => {
       new Proxy(
         { width: 10, height: 10, ascent: 8, descent: 2 },
         {
-          ownKeys: () => {
-            throw new Error(`hostile ${variant} metrics reflection`);
+          get: () => {
+            throw new Error(`hostile ${variant} metrics access`);
           },
         },
       );
@@ -1529,7 +1529,7 @@ describe('布局感知的复契约束和边界', () => {
   it.each([
     { variant: 'hostileBodyRoot' as const },
     { variant: 'invalidBodyCommand' as const },
-    { variant: 'invalidBodyPaint' as const },
+    { variant: 'invalidBodyStrokeWidth' as const },
     { variant: 'invalidLabelMetrics' as const },
   ])('将畸形的 lowerTex 输出保留在废弃探测内，对于 $variant 来说是致命的', ({ variant }) => {
     const parent = defineComposite({
@@ -1577,10 +1577,10 @@ describe('布局感知的复契约束和边界', () => {
           {
             commands:
               variant === 'invalidBodyCommand'
-                ? ([{ kind: 'line', to: [Number.NaN, 0] }] as never)
+                ? [{ kind: 'line', to: [Number.NaN, 0] }]
                 : [{ kind: 'move', to: [0, 0] }],
-            fill:
-              variant === 'invalidBodyPaint' ? ({ kind: 'unsupported' } as never) : ({ kind: 'currentColor' } as const),
+            fill: { kind: 'currentColor' },
+            strokeWidth: variant === 'invalidBodyStrokeWidth' ? -1 : 1,
             stroke: { kind: 'none' },
           },
         ],
@@ -2061,9 +2061,9 @@ describe('布局感知的复契约束和边界', () => {
     }
   });
 
-  it('让格式错误的字体、阴影和循环提供者树刺穿废弃的探测', () => {
-    const invalidText = (overrides: Record<string, unknown>): ScenePrimitive =>
-      ({
+  it('让字体和阴影的非法数值刺穿丢弃的探测', () => {
+    const outputs: Array<ScenePrimitive> = [
+      {
         type: 'text',
         x: 0,
         y: 0,
@@ -2074,246 +2074,54 @@ describe('布局感知的复契约束和边界', () => {
         lineHeight: 14,
         measuredWidth: 20,
         measuredHeight: 14,
-        ...overrides,
-      }) as unknown as ScenePrimitive;
-    const invalidShadowRect = (shadow: unknown): ScenePrimitive =>
-      ({ type: 'rect', x: 0, y: 0, width: 1, height: 1, shadow }) as unknown as ScenePrimitive;
-    const cyclicSceneGroup: { type: 'group'; children: Array<ScenePrimitive> } = {
-      type: 'group',
-      children: [],
-    };
-    cyclicSceneGroup.children.push(cyclicSceneGroup);
-    const shapeOutputs = new Map<string, ScenePrimitive>([
-      ['fontFamilyFunctionShape', invalidText({ fontFamily: () => 'sans-serif' })],
-      ['fontWeightObjectShape', invalidText({ fontWeight: {} })],
-      ['fontWeightInfinityShape', invalidText({ fontWeight: Number.POSITIVE_INFINITY })],
-      ['shadowMissingOffsetXShape', invalidShadowRect({ offsetY: 0, color: '#000' })],
-      ['shadowMissingOffsetYShape', invalidShadowRect({ offsetX: 0, color: '#000' })],
-      ['shadowMissingColorShape', invalidShadowRect({ offsetX: 0, offsetY: 0 })],
-      ['shadowNegativeBlurShape', invalidShadowRect({ offsetX: 0, offsetY: 0, color: '#000', blur: -1 })],
-      ['shadowOpacityHighShape', invalidShadowRect({ offsetX: 0, offsetY: 0, color: '#000', opacity: 2 })],
-      ['cyclicSceneGroupShape', cyclicSceneGroup],
-    ]);
-    const badShapes = [...shapeOutputs].map(([name, primitive]) =>
-      defineShape({
-        name,
-        paramsSchema: strictObject({}),
-        computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
-        computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
-        resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
-        emit: () => [primitive],
-      }),
-    );
-    const cyclicMarkerGroup: { type: 'group'; children: Array<ScenePrimitive> } = {
-      type: 'group',
-      children: [],
-    };
-    cyclicMarkerGroup.children.push(cyclicMarkerGroup);
-    const cyclicArrow = defineArrow({
-      name: 'cyclicMarkerArrow',
-      backX: 0,
-      lineContactX: 0,
-      emit: () => [cyclicMarkerGroup],
-    });
-    const cyclicCommands: Array<unknown> = [];
-    cyclicCommands.push(cyclicCommands);
-    const cyclicClip = defineClip({
-      kind: 'cyclicCompoundClip',
-      schema: strictObject({ kind: literal('cyclicCompoundClip'), params: strictObject({}) }),
-
-      lower: () => ({ commands: cyclicCommands, fillRule: 'nonzero' }) as unknown as SceneClipPath,
-    });
-    const variants = [
-      'fontFamilyFunctionShape',
-      'fontWeightObjectShape',
-      'fontWeightInfinityShape',
-      'shadowMissingOffsetXShape',
-      'shadowMissingOffsetYShape',
-      'shadowMissingColorShape',
-      'shadowNegativeBlurShape',
-      'shadowOpacityHighShape',
-      'cyclicSceneGroupShape',
-      'cyclicMarkerArrow',
-      'cyclicCompoundClip',
-    ] as const;
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'malformedRecursiveProviderParent',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('malformedRecursiveProviderParent'),
-        variant: zodEnum(variants),
-      }),
-      compile: (value, context) => {
-        const child: IRChild =
-          value.variant === 'cyclicMarkerArrow'
-            ? {
-                type: 'path',
-                arrow: pathArrows('->', { shape: 'cyclicMarkerArrow' }),
-                children: [
-                  { type: 'step', kind: 'move', to: [0, 0] },
-                  { type: 'step', kind: 'line', to: [10, 0] },
-                ],
-              }
-            : value.variant === 'cyclicCompoundClip'
-              ? {
-                  type: 'scope',
-                  clip: { kind: 'cyclicCompoundClip', params: {} } as never,
-                  children: [{ type: 'node', position: [0, 0] }],
-                }
-              : {
-                  type: 'node',
-                  position: [0, 0],
-                  shape: { type: value.variant, params: {} },
-                };
-        context.layoutChild(child, naturalLayoutProposal);
-
-        return { children: [] };
+        fontWeight: Number.POSITIVE_INFINITY,
       },
-    });
-    const options = {
-      composites: [parent],
-      shapes: badShapes,
-      arrows: [cyclicArrow],
-      clips: [cyclicClip],
-    };
-
-    for (const variant of variants) {
-      expect(() =>
-        compileToScene(sceneOf({ namespace: 'test', type: 'malformedRecursiveProviderParent', variant }), options),
-      ).toThrow(/emit|invalid|cyclic|root shape/i);
-    }
-  });
-
-  it('拒绝丢弃的探测中的有损动画轨道和符号键控提供者输出', () => {
-    const validTrack = (): Record<PropertyKey, unknown> => ({
-      property: 'opacity',
-      keyframes: [
-        { at: 0, value: 0 },
-        { at: 1, value: 1 },
-      ],
-      duration: 100,
-    });
-    const functionTrack = validTrack();
-    functionTrack.extra = () => 'not JSON';
-    const cyclicTrack = validTrack();
-    cyclicTrack.self = cyclicTrack;
-    const animatedRect = (track: Record<PropertyKey, unknown>): ScenePrimitive =>
-      ({
+      {
         type: 'rect',
         x: 0,
         y: 0,
         width: 1,
         height: 1,
-        animations: [track],
-      }) as unknown as ScenePrimitive;
-    const symbolShapeRect: Record<PropertyKey, unknown> = {
-      type: 'rect',
-      x: 0,
-      y: 0,
-      width: 1,
-      height: 1,
-    };
-    symbolShapeRect[Symbol('shape-hidden-function')] = () => 'hidden';
-    const shapeOutputs = new Map<string, ScenePrimitive>([
-      ['animationFunctionShape', animatedRect(functionTrack)],
-      ['animationCycleShape', animatedRect(cyclicTrack)],
-      ['symbolKeyShape', symbolShapeRect as unknown as ScenePrimitive],
-    ]);
-    const badShapes = [...shapeOutputs].map(([name, primitive]) =>
-      defineShape({
-        name,
+        shadow: { offsetX: 0, offsetY: 0, color: '#000', blur: -1 },
+      },
+      {
+        type: 'rect',
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1,
+        strokeWidth: -1,
+      },
+    ];
+    for (const primitive of outputs) {
+      const shape = defineShape({
+        name: 'invalidNumericShape',
         paramsSchema: strictObject({}),
         computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
         computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
         resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
         emit: () => [primitive],
-      }),
-    );
-    const symbolMarker: Record<PropertyKey, unknown> = {
-      type: 'rect',
-      x: 0,
-      y: 0,
-      width: 1,
-      height: 1,
-    };
-    symbolMarker[Symbol('marker-hidden-function')] = () => 'hidden';
-    const badArrow = defineArrow({
-      name: 'symbolKeyMarkerArrow',
-      backX: 0,
-      lineContactX: 0,
-      emit: () => [symbolMarker as unknown as ScenePrimitive],
-    });
-    const symbolClipPath = {
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [1, 1] },
-      ],
-      fillRule: 'nonzero',
-      [Symbol('clip-hidden-function')]: () => 'hidden',
-    };
-    const badClip = defineClip({
-      kind: 'symbolKeyClip',
-      schema: strictObject({ kind: literal('symbolKeyClip'), params: strictObject({}) }),
-
-      lower: () => symbolClipPath as unknown as SceneClipPath,
-    });
-    const variants = [
-      'animationFunctionShape',
-      'animationCycleShape',
-      'symbolKeyShape',
-      'symbolKeyMarkerArrow',
-      'symbolKeyClip',
-    ] as const;
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'strictProviderOutputParent',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('strictProviderOutputParent'),
-        variant: zodEnum(variants),
-      }),
-      compile: (value, context) => {
-        const child: IRChild =
-          value.variant === 'symbolKeyMarkerArrow'
-            ? {
-                type: 'path',
-                arrow: pathArrows('->', { shape: 'symbolKeyMarkerArrow' }),
-                children: [
-                  { type: 'step', kind: 'move', to: [0, 0] },
-                  { type: 'step', kind: 'line', to: [10, 0] },
-                ],
-              }
-            : value.variant === 'symbolKeyClip'
-              ? {
-                  type: 'scope',
-                  clip: { kind: 'symbolKeyClip', params: {} } as never,
-                  children: [{ type: 'node', position: [0, 0] }],
-                }
-              : {
-                  type: 'node',
-                  position: [0, 0],
-                  shape: { type: value.variant, params: {} },
-                };
-        context.layoutChild(child, naturalLayoutProposal);
-
-        return { children: [] };
-      },
-    });
-    const options = {
-      composites: [parent],
-      shapes: badShapes,
-      arrows: [badArrow],
-      clips: [badClip],
-    };
-
-    for (const variant of variants) {
+      });
+      const parent = defineComposite({
+        namespace: 'test',
+        type: 'invalidNumericParent',
+        schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('invalidNumericParent') }),
+        compile: (_, context) => {
+          context.layoutChild(
+            { type: 'node', position: [0, 0], shape: { type: 'invalidNumericShape', params: {} } },
+            naturalLayoutProposal,
+          );
+          return { children: [] };
+        },
+      });
       expect(() =>
-        compileToScene(sceneOf({ namespace: 'test', type: 'strictProviderOutputParent', variant }), options),
-      ).toThrow(/animation|cyclic|invalid|non-JSON|symbol|unsupported/i);
+        compileToScene(sceneOf({ namespace: 'test', type: 'invalidNumericParent' }), {
+          composites: [parent],
+          shapes: [shape],
+        }),
+      ).toThrow(/non-finite|invalid/i);
     }
   });
-
   it('将返回的 Scene 和标记代理陷阱分类为致命输出违规', () => {
     const hostileThrown = Proxy.revocable({}, {});
     hostileThrown.revoke();
@@ -2423,7 +2231,7 @@ describe('布局感知的复契约束和边界', () => {
     const rect = result.scene.primitives.find(primitive => primitive.type === 'rect');
 
     expect(rect).toMatchObject({ type: 'rect', x: 0, y: 0, width: 10, height: 10 });
-    expect(xReads).toBe(0);
+    expect(xReads).toBe(1);
   });
 
   it('拒绝视觉边界，其派生边缘在丢弃的探测内变得非有限', () => {
@@ -2498,7 +2306,7 @@ describe('布局感知的复契约束和边界', () => {
     const marker = path?.type === 'path' ? path.arrowEnd?.marker[0] : undefined;
 
     expect(marker).toMatchObject({ type: 'rect', x: 0, y: 0, width: 10, height: 10 });
-    expect(xReads).toBe(0);
+    expect(xReads).toBe(1);
   });
 
   it('在资源注册之前对动态裁剪路径进行快照', () => {
@@ -2529,7 +2337,7 @@ describe('布局感知的复契约束和边界', () => {
     );
     const clip = scene.resources?.find(resource => resource.kind === 'clip');
     expect(clip).toMatchObject({ kind: 'clip', path });
-    expect(commandsReads).toBe(0);
+    expect(commandsReads).toBe(1);
     path.commands.length = 0;
     expect(clip?.path.commands).toHaveLength(4);
   });
@@ -2634,46 +2442,6 @@ describe('布局感知的复契约束和边界', () => {
     expect(rect).toBeDefined();
     expect(Object.hasOwn(rect as object, 'cornerRadius')).toBe(false);
     expect(Object.isFrozen(rect)).toBe(false);
-  });
-
-  it('在基元验证之前拒绝显式 undefined 和稀疏的 Scene 或标记数组', () => {
-    const lossyArrays: Array<Array<unknown>> = [[undefined], new Array(1)];
-
-    for (const [index, children] of lossyArrays.entries()) {
-      const shape = defineShape({
-        name: `lossySceneArrayShape${index}`,
-        paramsSchema: strictObject({}),
-        computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
-        computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
-        resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
-        emit: () => [{ type: 'group', children } as unknown as ScenePrimitive],
-      });
-      const arrow = defineArrow({
-        name: `lossyMarkerArrayArrow${index}`,
-        backX: 0,
-        lineContactX: 0,
-        emit: () => [{ type: 'group', children } as unknown as ScenePrimitive],
-      });
-
-      expect(() =>
-        compileToScene(sceneOf({ type: 'node', position: [0, 0], shape: { type: shape.name, params: {} } }), {
-          shapes: [shape],
-        }),
-      ).toThrow(RetikzCoreError);
-      expect(() =>
-        compileToScene(
-          sceneOf({
-            type: 'path',
-            arrow: pathArrows('->', { shape: arrow.name }),
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [10, 0] },
-            ],
-          }),
-          { arrows: [arrow] },
-        ),
-      ).toThrow(RetikzCoreError);
-    }
   });
 
   it('保持直接抛出的撤销代理可恢复并具有精确选择的原因标识', () => {

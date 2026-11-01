@@ -9,6 +9,7 @@ import type {
   ShapeDefinition,
 } from '../../../contract';
 import type { BoundaryResolution } from '../../../resolve';
+import { guardProviderOutput } from '../../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -17,7 +18,6 @@ import {
   safeThrownDetail,
 } from '../../../resolve/diagnostics';
 import { boundsConnectionEnvelope, isDirectionalAnchor, rect as rectOps } from '../../../shared';
-import { withProviderOutputValidationBoundary } from '../../provider-output';
 import { BuiltinCompileWarningCode } from '../../warning';
 import type { BoundaryGeometryDefinition, BoundaryGeometryResolution, BoundaryGeometryResolveContext } from './types';
 
@@ -62,7 +62,7 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: BoundaryGeo
   const own =
     rawOwn === undefined
       ? undefined
-      : withProviderOutputValidationBoundary(`Shape '${context.visualDef.name}' connectionEnvelope`, () =>
+      : guardProviderOutput(`Shape '${context.visualDef.name}' connectionEnvelope`, () =>
           resolveConnectionEnvelope(context.visualDef.name, kind, rawOwn, context.irPath),
         );
   const envelope = own ?? boundsConnectionEnvelope(context.visualRect, kind);
@@ -139,7 +139,7 @@ export const resolveBoundary = (
       );
     }
 
-    rect = withProviderOutputValidationBoundary(`Boundary '${resolution.name}' resolveRect`, () =>
+    rect = guardProviderOutput(`Boundary '${resolution.name}' resolveRect`, () =>
       resolveBoundaryRect(resolution.name, rawRect, context.irPath),
     );
   }

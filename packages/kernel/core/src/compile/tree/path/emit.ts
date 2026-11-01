@@ -15,14 +15,11 @@ import {
   resolvePathLabelColors,
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
+  guardProviderOutput,
 } from '../../../resolve';
 import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
 import type { SharedCompileContext, WorkspaceCompileContext } from '../../context';
-import {
-  snapshotProviderPosition,
-  snapshotScenePrimitives,
-  withProviderOutputValidationBoundary,
-} from '../../provider-output';
+import { snapshotProviderPosition, snapshotScenePrimitives } from '../../provider';
 import { pathTargetViewOf } from '../../reference';
 import type { ComposedScopeTransform } from '../../transform';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
@@ -40,8 +37,8 @@ export type PathCompileHost = {
 };
 
 /** 校验并脱离 BuiltinPath provider 返回的 primitive 与 bounds point */
-const assertPathCompileResult = (kind: string, value: PathCompileResult | null) =>
-  withProviderOutputValidationBoundary(`Path '${kind}'`, () => {
+const snapshotPathCompileResult = (kind: string, value: PathCompileResult | null) =>
+  guardProviderOutput(`Path '${kind}'`, () => {
     if (value === null) return null;
     const result = value;
     const primitives = snapshotScenePrimitives(`Path '${kind}'`, result.primitives);
@@ -253,7 +250,7 @@ export const emitDefinedPath = (
     resolveHostLabel,
     emitBoundaryLabels,
     wrapOutput: output =>
-      withProviderOutputValidationBoundary(`Path '${kind}'`, () => {
+      guardProviderOutput(`Path '${kind}'`, () => {
         const boundsPoints = [...output.boundsPoints, ...hostLabelBoundsPoints];
         const primitives = [...output.primitives];
         const primitive = primitives.at(0);
@@ -271,7 +268,7 @@ export const emitDefinedPath = (
     round: context.shared.layout.round,
   });
 
-  const validated = assertPathCompileResult(kind, produced);
+  const validated = snapshotPathCompileResult(kind, produced);
   if (validated === null) {
     return null;
   }

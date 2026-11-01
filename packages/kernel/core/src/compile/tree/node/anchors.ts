@@ -6,7 +6,7 @@ import type { BoundaryResolution, NodeReferenceGeometry } from '../../../resolve
 import { boundaryKey } from '../../../resolve';
 import type { IRBoundary } from '../../../schemas';
 import { CenterAnchor, isAnchor } from '../../../shared';
-import { snapshotProviderPosition } from '../../provider-output';
+import { snapshotProviderPosition } from '../../provider';
 import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
 import type { NodeBoundaryState } from './boundary-context';
 import { createNodeReferenceGeometry } from './reference';
@@ -15,7 +15,7 @@ import type { CompiledNodeLayout } from './types';
 type NodeAnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
 
 /** 保留合法 undefined fallback，并校验 provider 实际返回的二维坐标 */
-const snapshotOptionalProviderPosition = (owner: string, value: unknown): Position | undefined =>
+const snapshotOptionalProviderPosition = (owner: string, value: Position | undefined): Position | undefined =>
   value === undefined ? undefined : snapshotProviderPosition(owner, value);
 
 const isZeroInsets = (m: BoundsInsets): boolean => m.top === 0 && m.right === 0 && m.bottom === 0 && m.left === 0;

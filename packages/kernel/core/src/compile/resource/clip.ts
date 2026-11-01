@@ -1,4 +1,5 @@
 import type { ClipResource, PathCommand, SceneClipPath } from '../../contract';
+import { guardProviderOutput } from '../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -7,7 +8,6 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { ClipResolution } from '../../resolve/resource';
-import { snapshotProviderOutputJson, withProviderOutputValidationBoundary } from '../provider-output';
 
 /** 生成裁剪路径并登记可复用资源 */
 export type ClipRegistry = {
@@ -205,12 +205,13 @@ const assertClipPathGrammar = (commands: ReadonlyArray<PathCommand>, owner: stri
 
 /** 物化并规范化裁剪路径，建立唯一 SceneClipPath 字段顺序 */
 const canonicalizeClipPath = (path: SceneClipPath, owner: string, round: (n: number) => number): SceneClipPath =>
-  withProviderOutputValidationBoundary(owner, () => {
-    const { commands, fillRule } = snapshotProviderOutputJson(owner, path, 'root path');
+  guardProviderOutput(owner, () => {
+    const { commands: sourceCommands, fillRule } = path;
+    const commands = sourceCommands.map(command => roundCommand(command, round));
     assertClipPathGrammar(commands, owner);
 
     return {
-      commands: commands.map(command => roundCommand(command, round)),
+      commands,
       fillRule,
     };
   });

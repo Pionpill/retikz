@@ -1,10 +1,6 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { guardProviderOutput } from '../../resolve';
 import { createCompositeContractError } from '../../resolve/diagnostics';
-import {
-  assertProviderOutputKeys,
-  providerOutputRecord,
-  withProviderOutputValidationBoundary,
-} from '../provider-output';
 
 /** 字体规格：传给 TextMeasurer 的最小信息 */
 export type TextFont = {
@@ -59,16 +55,11 @@ export type CanonicalTextMetrics = {
 
 /** 校验并规范化单次文字度量结果 */
 export const resolveTextMetrics = (metrics: TextMetrics): CanonicalTextMetrics =>
-  withProviderOutputValidationBoundary('resolveTextMetrics', () => {
-    const candidate = providerOutputRecord('resolveTextMetrics', metrics, 'text metrics');
-    assertProviderOutputKeys('resolveTextMetrics', candidate, ['width', 'height', 'ascent', 'descent'], 'text metrics');
-    const width = candidate.width;
-    const height = candidate.height;
-    const rawAscent = candidate.ascent;
-    const rawDescent = candidate.descent;
+  guardProviderOutput('resolveTextMetrics', () => {
+    const { width, height, ascent: rawAscent, descent: rawDescent } = metrics;
 
-    const assertMetric = (name: keyof TextMetrics, value: unknown): number => {
-      if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    const assertMetric = (name: keyof TextMetrics, value: number): number => {
+      if (!Number.isFinite(value) || value < 0) {
         throw createCompositeContractError(
           `resolveTextMetrics: invalid ${name} '${String(value)}'; must be a non-negative finite number`,
         );

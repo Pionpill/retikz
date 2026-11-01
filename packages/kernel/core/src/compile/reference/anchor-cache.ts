@@ -1,12 +1,10 @@
-import type { Position } from '@retikz/math';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryResolution, NodeReferenceGeometry } from '../../resolve';
 import { boundaryKey } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { Side } from '../../shared';
 import { isAnchor } from '../../shared';
-import { snapshotProviderPosition } from '../provider-output';
+import { snapshotProviderPosition } from '../provider';
 import type { CompiledNodeLayout, NodeBoundaryState } from '../tree/node';
 import { anchorOf, angleBoundaryOf, createNodeReferenceGeometry } from '../tree/node';
 
@@ -18,9 +16,6 @@ const cache = new WeakMap<AnchorLayout, Map<string, IRPosition>>();
 /** 角度字符串识别规则，与文本 target parser 保持一致 */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
 
-/** geometry Position 转 IRPosition 元组 */
-const positionToIR = (position: Position): IRPosition => [position[0], position[1]];
-
 /** 不经过 WeakMap 缓存解析命名或角度 anchor */
 const computeAnchor = (
   layout: AnchorLayout,
@@ -30,10 +25,10 @@ const computeAnchor = (
   state?: NodeBoundaryState,
 ): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
-    return positionToIR(angleBoundaryOf(layout, Number(anchorName), boundary, true, boundaryResolution, state));
+    return angleBoundaryOf(layout, Number(anchorName), boundary, true, boundaryResolution, state);
   }
 
-  return positionToIR(anchorOf(layout, anchorName, boundary, isAnchor(anchorName), boundaryResolution, state));
+  return anchorOf(layout, anchorName, boundary, isAnchor(anchorName), boundaryResolution, state);
 };
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
@@ -56,7 +51,7 @@ const computeEdgePoint = (input: AnchorLayout, side: Side, fraction: number): IR
 
   const raw = edgePoint(layout.rect, side, fraction, layout.shapeParams);
 
-  return positionToIR(snapshotProviderPosition(`Shape '${layout.shapeName}' edgePoint`, raw));
+  return snapshotProviderPosition(`Shape '${layout.shapeName}' edgePoint`, raw);
 };
 
 /**

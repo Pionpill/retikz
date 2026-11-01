@@ -1,17 +1,8 @@
 import type { PathCommand } from '../../contract';
+import { guardProviderOutput } from '../../resolve';
+import { createCompositeContractError } from '../../resolve/diagnostics';
 import type { IRTexContent } from '../../schemas';
-import { cloneAndFreezeJson } from '../../shared/json';
-import {
-  assertProviderOutputFinite,
-  assertProviderOutputKeys,
-  assertProviderOutputOptionalFinite,
-  assertProviderOutputUnitInterval,
-  failProviderOutput,
-  providerOutputArray,
-  providerOutputRecord,
-  snapshotProviderOutputJson,
-  withProviderOutputValidationBoundary,
-} from '../provider-output';
+import { assertProviderOutputNonNegative, snapshotProviderOutputJson } from '../provider';
 
 /** TeX 字形路径的绘制通道 */
 export type LoweredTexPaint =
@@ -62,83 +53,21 @@ export type LoweredTex = {
   depth: number;
 };
 
-/** 校验并复制 TeX paint 通道 */
-const snapshotLoweredTexPaint = (owner: string, value: unknown, path: string): LoweredTexPaint => {
-  const paint = providerOutputRecord(owner, value, path);
-  if (paint.kind === 'none' || paint.kind === 'currentColor') {
-    assertProviderOutputKeys(owner, paint, ['kind'], path);
-    return { kind: paint.kind };
-  }
-
-  if (paint.kind === 'color') {
-    assertProviderOutputKeys(owner, paint, ['kind', 'value'], path);
-    const color = paint.value;
-    if (typeof color === 'string') return { kind: 'color', value: color };
-
-    return failProviderOutput(owner, `an invalid ${path}.value`);
-  }
-
-  return failProviderOutput(owner, `an invalid ${path}.kind`);
-};
-
-/** 校验并复制一条 TeX path */
-const snapshotLoweredTexPath = (owner: string, value: unknown, index: number): LoweredTexPath => {
-  const pathName = `paths[${index}]`;
-  const path = providerOutputRecord(owner, value, pathName);
-  assertProviderOutputKeys(
-    owner,
-    path,
-    ['commands', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'strokeOpacity', 'opacity', 'fillRule'],
-    pathName,
-  );
-  assertProviderOutputUnitInterval(owner, path, 'fillOpacity', pathName);
-  assertProviderOutputOptionalFinite(owner, path, 'strokeWidth', pathName, true);
-  assertProviderOutputUnitInterval(owner, path, 'strokeOpacity', pathName);
-  assertProviderOutputUnitInterval(owner, path, 'opacity', pathName);
-  if (path.fillRule !== undefined && path.fillRule !== 'nonzero' && path.fillRule !== 'evenodd') {
-    failProviderOutput(owner, `an invalid ${pathName}.fillRule`);
-  }
-
-  const commands = path.commands as LoweredTexPath['commands'];
-
-  return {
-    commands,
-    fill: snapshotLoweredTexPaint(owner, path.fill, `${pathName}.fill`),
-    ...(path.fillOpacity === undefined ? {} : { fillOpacity: path.fillOpacity as number }),
-    stroke: snapshotLoweredTexPaint(owner, path.stroke, `${pathName}.stroke`),
-    ...(path.strokeWidth === undefined ? {} : { strokeWidth: path.strokeWidth as number }),
-    ...(path.strokeOpacity === undefined ? {} : { strokeOpacity: path.strokeOpacity as number }),
-    ...(path.opacity === undefined ? {} : { opacity: path.opacity as number }),
-    ...(path.fillRule === undefined ? {} : { fillRule: path.fillRule as 'nonzero' | 'evenodd' }),
-  };
-};
-
-/** 校验、脱离并冻结 lowerTex 返回的 renderer-neutral 公式结果 */
-export const snapshotLoweredTex = (value: unknown): LoweredTex =>
-  withProviderOutputValidationBoundary('lowerTex', () => {
+/** 校验数值约束并脱离 lowerTex 返回的公式结果 */
+export const snapshotLoweredTex = (value: LoweredTex): LoweredTex =>
+  guardProviderOutput('lowerTex', () => {
     const snapshot = snapshotProviderOutputJson('lowerTex', value, 'result');
-    const lowered = providerOutputRecord('lowerTex', snapshot, 'result');
-    assertProviderOutputKeys('lowerTex', lowered, ['paths', 'width', 'height', 'depth'], 'result');
-    assertProviderOutputFinite('lowerTex', lowered.width, 'result.width', true);
-    assertProviderOutputFinite('lowerTex', lowered.height, 'result.height', true);
-    assertProviderOutputFinite('lowerTex', lowered.depth, 'result.depth', true);
-    if ((lowered.depth as number) > (lowered.height as number)) {
-      failProviderOutput('lowerTex', 'result.depth greater than result.height');
+    assertProviderOutputNonNegative('lowerTex', snapshot.width, 'result.width');
+    assertProviderOutputNonNegative('lowerTex', snapshot.height, 'result.height');
+    assertProviderOutputNonNegative('lowerTex', snapshot.depth, 'result.depth');
+    if (snapshot.depth > snapshot.height) {
+      throw createCompositeContractError('lowerTex emit produced result.depth greater than result.height.');
     }
-
-    const paths = providerOutputArray('lowerTex', lowered.paths, 'result.paths').map((path, index) =>
-      snapshotLoweredTexPath('lowerTex', path, index),
-    );
-
-    return cloneAndFreezeJson(
-      {
-        paths,
-        width: lowered.width as number,
-        height: lowered.height as number,
-        depth: lowered.depth as number,
-      },
-      'lowerTex result',
-    );
+    snapshot.paths.forEach((path, index) => {
+      const pathName = `paths[${index}]`;
+      assertProviderOutputNonNegative('lowerTex', path.strokeWidth, `${pathName}.strokeWidth`);
+    });
+    return snapshot;
   });
 
 /** 按字号降解公式；宿主颜色由绘制阶段解析，无法解析时返回 null */

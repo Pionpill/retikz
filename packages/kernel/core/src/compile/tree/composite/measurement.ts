@@ -1,9 +1,9 @@
 import type { CompositeCompileContext } from '../../../contract';
 import { CompileExpansionKind, LayoutChildProbeKind } from '../../../contract';
+import { guardProviderOutput } from '../../../resolve';
 import { createCompositeContractError, isFatalProbeError } from '../../../resolve/diagnostics';
 import { freezeOccurrence } from '../../artifact';
 import { wrapLayoutProbeError } from '../../errors';
-import { withProviderOutputValidationBoundary } from '../../provider-output';
 import type { TreeCompileFrame } from '../frame';
 import { createLayoutChildFailure } from './failure';
 import { snapshotCompositeLayoutChild } from './handle';
@@ -31,7 +31,7 @@ export const createCompositeMeasurementMethods = (
       if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
         throw createCompositeContractError(`${owner.label} measureChild requires a child from this callback`);
       const inputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
-      const clonedChild = withProviderOutputValidationBoundary(owner.label, () =>
+      const clonedChild = guardProviderOutput(owner.label, () =>
         snapshotCompositeLayoutChild(
           owner.label,
           inputEntry?.child.kind === 'bound' ? inputEntry.child.child : nextChild,
@@ -101,7 +101,7 @@ export const createCompositeMeasurementMethods = (
         );
 
       const probeInputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
-      const clonedChild = withProviderOutputValidationBoundary(owner.label, () =>
+      const clonedChild = guardProviderOutput(owner.label, () =>
         snapshotCompositeLayoutChild(
           owner.label,
           inputEntry?.child.kind === 'bound' ? inputEntry.child.child : nextChild,

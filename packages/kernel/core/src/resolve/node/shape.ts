@@ -7,7 +7,7 @@ import type { ProviderRegistry } from '../../providers';
 import { getProviderDefinition } from '../../providers';
 import type { IRNode, IRShapeRef } from '../../schemas';
 import { BuiltinShape } from '../../schemas';
-import { parseProviderPayload, withProviderOutputValidationBoundary } from '../provider';
+import { parseProviderPayload, guardProviderOutput } from '../provider';
 import type { ShapeResolution } from './types';
 
 /** 节点形状解析所需的输入与缩放参数 */
@@ -104,7 +104,7 @@ export const resolveNodeShape = (input: InputNodeShapeResolve): ShapeResolution 
     shapeParams = scaleJsonObjectNumbers(mergedShapeParams, shapeScale);
   } else {
     const rawScaledParams = shapeDefinition.scaleParams(mergedShapeParams, scaleX, scaleY);
-    shapeParams = withProviderOutputValidationBoundary(`Shape '${shapeName}' scaleParams`, () =>
+    shapeParams = guardProviderOutput(`Shape '${shapeName}' scaleParams`, () =>
       shapeDefinition.paramsSchema.parse(rawScaledParams),
     );
   }

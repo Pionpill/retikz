@@ -4,6 +4,28 @@ import { emitInlineLine, fallbackMeasurer, layoutInlineLine, snapshotLoweredTex 
 import type { GroupPrimitive, PathPrimitive } from '../../src/contract';
 
 describe('[tex-lowering]多路径契约', () => {
+  it.each([
+    { width: -1, height: 8, depth: 2 },
+    { width: 10, height: -1, depth: 0 },
+    { width: 10, height: 8, depth: -1 },
+    { width: 10, height: 8, depth: 9 },
+    { width: Number.NaN, height: 8, depth: 2 },
+    { width: 10, height: Number.POSITIVE_INFINITY, depth: 2 },
+  ])('拒绝无法用于公式布局的尺寸 %j', metrics => {
+    expect(() => snapshotLoweredTex({ paths: [], ...metrics })).toThrow(/invalid|non-finite|depth greater/);
+  });
+
+  it.each([{ strokeWidth: -1 }, { opacity: Number.NaN }])('拒绝非法描边尺寸或非有限的公式属性 %j', style => {
+    expect(() =>
+      snapshotLoweredTex({
+        paths: [{ commands: [], fill: { kind: 'none' }, stroke: { kind: 'currentColor' }, ...style }],
+        width: 10,
+        height: 8,
+        depth: 2,
+      }),
+    ).toThrow(/invalid|non-finite/);
+  });
+
   it('按 paint order 输出多条路径并解析宿主颜色与透明度', () => {
     const line = layoutInlineLine([{ tex: 'x', fontSize: 16 }], {
       measureText: fallbackMeasurer,
@@ -97,7 +119,7 @@ describe('[tex-lowering]多路径契约', () => {
     expect(path.stroke).toBe('currentColor');
   });
 
-  it('在 lowerTex 返回后脱离并冻结路径快照', () => {
+  it('在 lowerTex 返回后复制独立的路径快照', () => {
     const command = { kind: 'move' as const, to: [0, 0] as [number, number] };
     const lowered = {
       paths: [
@@ -127,7 +149,7 @@ describe('[tex-lowering]多路径契约', () => {
     expect(path.commands).toEqual([{ kind: 'move', to: [0, 0] }]);
   });
 
-  it('从属性描述符快照动态 lowerTex 结果后再校验与消费', () => {
+  it('只读取一次动态 lowerTex 结果后再校验与消费', () => {
     let widthReads = 0;
     let commandKindReads = 0;
     let paintKindReads = 0;
@@ -189,9 +211,9 @@ describe('[tex-lowering]多路径契约', () => {
       depth: 0,
     });
     expect({ widthReads, commandKindReads, paintKindReads }).toEqual({
-      widthReads: 0,
-      commandKindReads: 0,
-      paintKindReads: 0,
+      widthReads: 1,
+      commandKindReads: 1,
+      paintKindReads: 1,
     });
   });
 });

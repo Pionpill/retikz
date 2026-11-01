@@ -5,6 +5,7 @@ import type { LayoutAxisProposal, ShapeCircumscribedGeometry, Transform } from '
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalNode, NodeResolution } from '../../../resolve';
+import { guardProviderOutput } from '../../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -18,7 +19,7 @@ import { resolveFont, resolveTextLineHeight } from '../../../resolve/text';
 import type { IRAnchorPosition, IRPosition } from '../../../schemas';
 import { CenterAnchor } from '../../../shared';
 import { DEFAULT_FONT_SIZE } from '../../constants';
-import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../../provider-output';
+import { snapshotProviderPosition } from '../../provider';
 import { resolveAnchorRefUncached } from '../../reference';
 import type { TextMeasurer } from '../../text';
 import type { ComposedScopeTransform } from '../../transform';
@@ -246,7 +247,7 @@ export const compileNodeResolution = (resolution: NodeResolution, context: NodeL
       );
     }
 
-    return withProviderOutputValidationBoundary(`Shape '${shapeDef.name}' circumscribe`, () => {
+    return guardProviderOutput(`Shape '${shapeDef.name}' circumscribe`, () => {
       const { halfWidth, halfHeight } = raw;
       if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth < 0 || halfHeight < 0) {
         throw createCompositeContractError(

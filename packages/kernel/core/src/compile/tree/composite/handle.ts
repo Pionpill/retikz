@@ -5,10 +5,10 @@ import type {
   CompositeReplayWrapper,
 } from '../../../contract';
 import type { CompositeInputScope } from '../../../contract/composite';
+import { guardProviderOutput } from '../../../resolve';
 import { createCompositeContractError } from '../../../resolve/diagnostics';
 import type { IRChild } from '../../../schemas';
 import { cloneAndFreezeJson } from '../../../shared/json';
-import { withProviderOutputValidationBoundary } from '../../provider-output';
 import type { CompileExecutionContext } from '../context';
 import type { CompositeCompileSession } from './session';
 import type { CompositeCompileOwner, CompositeRuntimeOutputChild } from './types';
@@ -63,7 +63,7 @@ export const createCompositeReplayChild = (
   result: unknown,
   wrapper?: CompositeReplayWrapper,
 ): CompositeCompileChild =>
-  withProviderOutputValidationBoundary(owner.label, () => {
+  guardProviderOutput(owner.label, () => {
     if (result === null || typeof result !== 'object') {
       throw createCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
     }
@@ -98,7 +98,7 @@ export const createCompositeScopeChild = (
   props: CompositeCompileScopeProps,
   children: unknown,
 ): CompositeCompileChild =>
-  withProviderOutputValidationBoundary(owner.label, () => {
+  guardProviderOutput(owner.label, () => {
     if (!Array.isArray(children)) {
       throw createCompositeContractError(`${owner.label} received invalid context Scope children.`);
     }
