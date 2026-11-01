@@ -36,7 +36,7 @@ export const resolvePointScaleDefaults = (
     !coordinates.every(coordinate => coordinate.type === BuiltinPlotCoordinate.Cartesian2D)
   ) {
     throw new RetikzChartError({
-      code: RetikzChartErrorCode.InvalidResolvedPlot,
+      code: RetikzChartErrorCode.ResolvePlotInvalid,
       message: 'Specific Point domain padding sides require a Cartesian coordinate',
       details: { path: ['recipe', 'properties', 'domainPadding', specificSide] },
     });

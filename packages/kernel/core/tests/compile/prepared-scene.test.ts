@@ -103,7 +103,7 @@ describe('静态编译快照', () => {
     const bindings = createCompositeInputBindings(scene, []);
     expect(compileToScene(scene, { compositeInputs: bindings })).toEqual(compileToScene(scene));
     expect(() => compileToScene({ ...scene, children: [] }, { compositeInputs: bindings })).toThrow(
-      expect.objectContaining({ code: RetikzCoreErrorCode.CompositeContractViolation }),
+      expect.objectContaining({ code: RetikzCoreErrorCode.ContractViolation }),
     );
   });
 });

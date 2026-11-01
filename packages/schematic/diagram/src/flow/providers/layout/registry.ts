@@ -27,7 +27,7 @@ export type FlowLayoutRegistryResolution = Readonly<{
 
 const invalidDefinition = (definition: FlowLayoutDefinition, reason: string, cause?: unknown): never => {
   throw new RetikzDiagramError({
-    code: RetikzDiagramErrorCode.DefinitionInvalid,
+    code: RetikzDiagramErrorCode.ProviderDefinitionInvalid,
     message: `Flow Layout Definition '${definition.name}' is invalid: ${reason}`,
     details: { capability: 'flow-layout', key: definition.name, reason },
     cause,
@@ -110,7 +110,7 @@ export const resolveFlowLayoutRegistry = (options: FlowLayoutRegistryOptions = {
     if (existing === definition) continue;
     if (existing !== undefined) {
       throw new RetikzDiagramError({
-        code: RetikzDiagramErrorCode.DefinitionDuplicate,
+        code: RetikzDiagramErrorCode.ProviderDefinitionDuplicate,
         message: `Flow Layout Definition '${definition.name}' is already registered.`,
         details: { capability: 'flow-layout', key: definition.name, availableKeys: [...layouts.keys()] },
       });
@@ -123,7 +123,7 @@ export const resolveFlowLayoutRegistry = (options: FlowLayoutRegistryOptions = {
   const defaultLayout = layouts.get(defaultName);
   if (defaultLayout === undefined) {
     throw new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionNotRegistered,
+      code: RetikzDiagramErrorCode.ProviderDefinitionNotRegistered,
       message: `Default Flow Layout '${defaultName}' is not registered.`,
       details: { capability: 'flow-layout', key: defaultName, availableKeys: [...layouts.keys()] },
     });

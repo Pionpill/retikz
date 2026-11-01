@@ -88,7 +88,7 @@ const resolveRegisteredDefaults = (
   const definition = registry.get(theme.name);
   if (definition === undefined) {
     throw new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionNotRegistered,
+      code: RetikzDiagramErrorCode.ProviderDefinitionNotRegistered,
       message: `Diagram theme '${theme.name}' is not registered.`,
       details: { capability: 'diagram-theme', key: theme.name, availableKeys: [...registry.keys()] },
     });
@@ -98,7 +98,7 @@ const resolveRegisteredDefaults = (
     return structuredClone(definition.resolve(theme));
   } catch (cause) {
     throw new RetikzDiagramError({
-      code: RetikzDiagramErrorCode.DefinitionCallbackFailed,
+      code: RetikzDiagramErrorCode.ProviderDefinitionCallbackFailed,
       message: `Diagram theme '${theme.name}' resolution failed.`,
       details: { capability: 'diagram-theme', key: theme.name },
       cause,

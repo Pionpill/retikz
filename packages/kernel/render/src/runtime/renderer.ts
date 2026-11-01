@@ -220,7 +220,7 @@ const defineRetainedRendererUnsafe = (input: InputRetainedRendererDefinition): R
   const runtimeBackend: unknown = backend;
   const validHost = runtimeBackend === 'svg' ? isSvgHost(host) : runtimeBackend === 'canvas' && isCanvasHost(host);
   if (!validHost) {
-    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause: input });
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid, cause: input });
   }
 
   const token = Object.freeze({
@@ -232,7 +232,7 @@ const defineRetainedRendererUnsafe = (input: InputRetainedRendererDefinition): R
   let state: 'live' | 'disposing' | 'disposed' = 'live';
 
   const assertLive = (): void => {
-    if (state !== 'live') throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
+    if (state !== 'live') throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererDisposed });
   };
 
   retainedRendererExecutors.set(
@@ -269,7 +269,7 @@ const defineRetainedRendererImplementation = (input: InputRetainedRendererDefini
     return defineRetainedRendererUnsafe(input);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;
-    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause });
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid, cause });
   }
 };
 

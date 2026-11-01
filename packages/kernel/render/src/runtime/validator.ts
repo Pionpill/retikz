@@ -45,15 +45,15 @@ const topologyError = (cause: unknown): never => {
 };
 
 const patchError = (cause: unknown): never => {
-  throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchInvalid, cause });
+  throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid, cause });
 };
 
 const mismatchError = (cause: unknown): never => {
-  throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch, cause });
+  throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch, cause });
 };
 
 const revisionError = (cause: unknown): never => {
-  throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchRevisionMismatch, cause });
+  throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchRevisionMismatch, cause });
 };
 
 const isDenseArray = (value: unknown, predicate: (item: unknown) => boolean): value is ReadonlyArray<unknown> => {

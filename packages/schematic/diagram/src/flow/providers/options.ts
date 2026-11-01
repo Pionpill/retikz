@@ -28,7 +28,7 @@ const mergeNamedDefinitions = <TDefinition extends NamedDefinition>(
 
       if (!Object.is(existingDefinition, definition)) {
         throw new RetikzDiagramError({
-          code: RetikzDiagramErrorCode.DefinitionDuplicate,
+          code: RetikzDiagramErrorCode.ProviderDefinitionDuplicate,
           message: `${capability} '${definition.name}' received different definition objects in one provider assembly.`,
           details: { capability, key: definition.name },
         });
@@ -44,7 +44,7 @@ const mergeDefaultFlowLayout = (optionSets: ReadonlyArray<FlowDiagramDefinitionO
   if (names.length <= 1) return names[0];
 
   throw new RetikzDiagramError({
-    code: RetikzDiagramErrorCode.DefinitionInvalid,
+    code: RetikzDiagramErrorCode.ProviderDefinitionInvalid,
     message: 'Flow Diagram provider assembly received conflicting default Flow Layout names.',
     details: { capability: 'flow-layout', availableKeys: names },
   });

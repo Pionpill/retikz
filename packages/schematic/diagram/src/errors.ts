@@ -3,10 +3,14 @@ import { RetikzError } from '@retikz/foundation';
 
 /** Diagram package 的稳定错误码 */
 export const RetikzDiagramErrorCode = {
-  DefinitionDuplicate: 'DIAGRAM_DEFINITION_DUPLICATE',
-  DefinitionInvalid: 'DIAGRAM_DEFINITION_INVALID',
-  DefinitionNotRegistered: 'DIAGRAM_DEFINITION_NOT_REGISTERED',
-  DefinitionCallbackFailed: 'DIAGRAM_DEFINITION_CALLBACK_FAILED',
+  /** Provider definition 的名称重复 */
+  ProviderDefinitionDuplicate: 'DIAGRAM_PROVIDER_DEFINITION_DUPLICATE',
+  /** Provider definition 的配置无效 */
+  ProviderDefinitionInvalid: 'DIAGRAM_PROVIDER_DEFINITION_INVALID',
+  /** 引用的 provider definition 未注册 */
+  ProviderDefinitionNotRegistered: 'DIAGRAM_PROVIDER_DEFINITION_NOT_REGISTERED',
+  /** Provider definition 的回调执行或结果无效 */
+  ProviderDefinitionCallbackFailed: 'DIAGRAM_PROVIDER_DEFINITION_CALLBACK_FAILED',
   ResolveInvalid: 'DIAGRAM_RESOLVE_INVALID',
   BranchReferenceInvalid: 'DIAGRAM_BRANCH_REFERENCE_INVALID',
   BranchTopologyInvalid: 'DIAGRAM_BRANCH_TOPOLOGY_INVALID',

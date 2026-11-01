@@ -21,7 +21,7 @@ const assertConsumedSlots = (
       if (consumers.has(slot)) continue;
 
       throw new RetikzChartError({
-        code: RetikzChartErrorCode.InvalidChartIR,
+        code: RetikzChartErrorCode.ResolveInputInvalid,
         message: `Chart ${owner} slot "${slot}" has no active consumer`,
         details: { path: ['recipe', owner, slot], slot, owner },
       });

@@ -153,7 +153,7 @@ describe('Scene 补丁验证器', () => {
         } as unknown as ScenePatch,
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }));
 
     const invalidReplacement = {
       ...next,
@@ -215,12 +215,12 @@ describe('Scene 补丁验证器', () => {
     const { current, next, patch } = createIncrementalPair();
 
     expect(() => assertScenePatch(current, { ...patch, nextRevision: next.revision + 1 }, next)).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchRevisionMismatch }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchRevisionMismatch }),
     );
 
     expect(() =>
       assertScenePatch(current, { ...patch, operations: [{ kind: 'unknown' }] } as unknown as ScenePatch, next),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }));
 
     expect(() =>
       assertScenePatch(
@@ -234,7 +234,7 @@ describe('Scene 补丁验证器', () => {
         },
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }));
   });
 
   it('拒绝 operation 固定顺序错误与 Patch/next coherence 漏项', () => {
@@ -253,7 +253,7 @@ describe('Scene 补丁验证器', () => {
         },
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }));
 
     const mismatchingNext: SceneRuntimeSnapshot = {
       ...next,
@@ -264,7 +264,7 @@ describe('Scene 补丁验证器', () => {
     };
 
     expect(() => assertScenePatch(current, patch, mismatchingNext)).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch }),
     );
   });
 
@@ -362,7 +362,7 @@ describe('Scene 补丁验证器', () => {
     }
 
     expect(() => assertScenePatch(valid, null as unknown as ScenePatch, valid)).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }),
     );
 
     const next = { ...valid, revision: 1 as SceneRuntimeSnapshot['revision'] };
@@ -378,7 +378,7 @@ describe('Scene 补丁验证器', () => {
         },
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid }));
     expect(runtimeStructuralEquals(Array(1), [undefined])).toBe(false);
   });
 

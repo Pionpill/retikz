@@ -7,6 +7,7 @@ import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import { RetikzDiagramReactError, RetikzDiagramReactErrorCode } from '../src';
 import * as FlowReact from '../src/flow';
 
 /** 本组验证同步 Flow authoring；遇到异步 adapter 时显式失败 */
@@ -489,7 +490,7 @@ describe('@retikz/diagram-react/flow', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'CORE_LAYOUT_PROBE_RECOVERABLE',
+        code: 'CORE_COMPILE_LAYOUT_PROBE_RECOVERABLE',
         cause: expect.objectContaining({ code: 'DIAGRAM_FLOW_DUPLICATE_ID' }),
       }),
     );
@@ -731,13 +732,23 @@ describe('@retikz/diagram-react/flow', () => {
           createElement(FlowGroup, { id: 'group' }, createElement(FlowRelation, { source: 'a', target: 'b' })),
         ),
       ),
-    ).toThrowError(expect.objectContaining({ code: 'DIAGRAM_REACT_FLOW_CHILD_INVALID' }));
+    ).toThrowError(
+      expect.objectContaining({
+        constructor: RetikzDiagramReactError,
+        code: RetikzDiagramReactErrorCode.FlowChildInvalid,
+      }),
+    );
 
     expect(() =>
       createInputScene(
         createElement(FlowDiagram, { width: undefined }, createElement(FlowEntity, { id: 'only', text: 'Only' })),
       ),
-    ).toThrowError(expect.objectContaining({ code: 'DIAGRAM_REACT_FLOW_HOST_PROPS_INVALID' }));
+    ).toThrowError(
+      expect.objectContaining({
+        constructor: RetikzDiagramReactError,
+        code: RetikzDiagramReactErrorCode.FlowHostPropsInvalid,
+      }),
+    );
   });
 
   it('将 Layout 重用于独立 SSR，而不触发宿主生命周期回调', () => {

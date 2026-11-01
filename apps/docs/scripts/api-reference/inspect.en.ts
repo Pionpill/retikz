@@ -211,7 +211,7 @@ const translations: Record<string, string> = {
     'Fixed registry with optional selection and commit callbacks; omitting selection uses only authoring requests',
   '供 Vanilla 宿主接入的编译驱动；诊断通知先于 onCommit，通知失败不回滚已提交结果':
     'A compilation driver for Vanilla hosts; diagnostics are delivered before onCommit, and callback failure does not roll back committed results',
-  '面向调用方的错误消息，错误码为 INSPECTION_ERROR': 'Error message for callers; the error code is INSPECTION_ERROR',
+  '面向调用方的错误消息，错误码为 INSPECT_ERROR': 'Error message for callers; the error code is INSPECT_ERROR',
   '错误码、消息与可选详情、原始原因；省略 details 时使用包含 code 的只读对象':
     'Error code, message, optional details and original cause; omitted details use a readonly object containing code',
   用于调用方分支处理的稳定错误码: 'Stable error code for caller-side branching',

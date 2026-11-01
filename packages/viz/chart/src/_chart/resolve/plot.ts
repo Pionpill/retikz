@@ -27,7 +27,7 @@ import type { IRChartPlotExtension, IRChartSource } from '../schemas';
 
 const invalidPlot = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
   new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidResolvedPlot,
+    code: RetikzChartErrorCode.ResolvePlotInvalid,
     message,
     details: { path },
     ...(cause === undefined ? {} : { cause }),

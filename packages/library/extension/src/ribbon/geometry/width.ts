@@ -77,7 +77,7 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
   const params = resolution.params;
   if (profile === undefined || params === undefined) {
     throw new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.ResolutionInvalid,
+      code: RetikzExtensionErrorCode.ResolveInvalid,
       message: `Ribbon width profile '${width.name}' has no resolving-phase provider binding.`,
       details: { profile: width.name },
     });
@@ -92,7 +92,7 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
       if (cause instanceof RetikzExtensionError) throw cause;
 
       throw new RetikzExtensionError({
-        code: RetikzExtensionErrorCode.ResolutionInvalid,
+        code: RetikzExtensionErrorCode.ResolveInvalid,
         message: `Ribbon width profile '${width.name}' widthAt failed at offset ${String(offset)}.`,
         details: { length: totalLength, offset, profile: width.name },
         cause,

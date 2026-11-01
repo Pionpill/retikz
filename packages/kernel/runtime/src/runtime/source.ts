@@ -33,7 +33,7 @@ export const prepareRuntimeInitialSources = (
     const commandExecutor = getRuntimeSourceCommandExecutor(command);
     if (sources.find(command.source.key) !== command.source || commands.has(command.source)) {
       throw createRuntimeContractError(
-        RetikzRuntimeErrorCode.InitialSourceMismatch,
+        RetikzRuntimeErrorCode.TransactionInitialSourceMismatch,
         'initial',
         command,
         command.source.key,
@@ -44,7 +44,11 @@ export const prepareRuntimeInitialSources = (
   }
 
   if (commands.size !== sources.definitions().length) {
-    throw createRuntimeContractError(RetikzRuntimeErrorCode.InitialSourceMismatch, 'initial', initialSnapshots);
+    throw createRuntimeContractError(
+      RetikzRuntimeErrorCode.TransactionInitialSourceMismatch,
+      'initial',
+      initialSnapshots,
+    );
   }
 
   const states = new Map<RuntimeSourceToken, RuntimeSourceState>();
@@ -53,7 +57,12 @@ export const prepareRuntimeInitialSources = (
     for (const source of sources.definitions()) {
       const command = commands.get(source);
       if (command === undefined) {
-        throw createRuntimeContractError(RetikzRuntimeErrorCode.InitialSourceMismatch, 'initial', source, source.key);
+        throw createRuntimeContractError(
+          RetikzRuntimeErrorCode.TransactionInitialSourceMismatch,
+          'initial',
+          source,
+          source.key,
+        );
       }
 
       states.set(source, Object.freeze({ command, prepared: command.prepare(executor).value }));
@@ -118,7 +127,7 @@ export const assertRuntimeChangeSetRevisions = (
   for (const [source, executor] of commands) {
     if (executor.changeSetBaseRevision !== undefined && executor.changeSetBaseRevision !== baseRevision) {
       throw createRuntimeContractError(
-        RetikzRuntimeErrorCode.ChangeSetRevisionMismatch,
+        RetikzRuntimeErrorCode.TransactionChangeSetRevisionMismatch,
         'change-set',
         executor.changeSetBaseRevision,
         source.key,

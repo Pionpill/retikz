@@ -29,7 +29,7 @@ const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, ca
   if (definition !== undefined) return definition;
 
   throw new RetikzGraphError({
-    code: RetikzGraphErrorCode.DefinitionNotRegistered,
+    code: RetikzGraphErrorCode.ProviderDefinitionNotRegistered,
     message: `${capability} '${key}' is not registered.`,
     details: { capability, key, availableKeys: [...registry.keys()] },
   });
@@ -139,7 +139,7 @@ const resolvePredicateStructure = (relation: CanonicalRelation): IRGraphRelation
     return structure;
   } catch (cause) {
     throw new RetikzGraphError({
-      code: RetikzGraphErrorCode.DefinitionCallbackFailed,
+      code: RetikzGraphErrorCode.ProviderDefinitionCallbackFailed,
       message: `relation-predicate '${predicate.definition.name}' structure resolution failed.`,
       details: { capability: 'relation-predicate', key: predicate.definition.name },
       cause,

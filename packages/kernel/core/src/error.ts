@@ -5,28 +5,37 @@ import { RetikzError } from '@retikz/foundation';
 export const RetikzCoreErrorCode = {
   /** 未被更精确分类覆盖的 Core 错误 */
   Default: 'CORE_ERROR',
+
+  /** 输入或扩展产物违反公共契约 */
+  ContractViolation: 'CORE_CONTRACT_VIOLATION',
+  /** 公共 contract 无效 */
+  Contract: 'CORE_CONTRACT_ERROR',
+
   /** 颜色处理失败 */
   Color: 'CORE_COLOR_ERROR',
+
   /** 编译阶段失败 */
   Compile: 'CORE_COMPILE_ERROR',
   /** 编译内部不变量被破坏 */
   CompileInvariantViolation: 'CORE_COMPILE_INVARIANT_VIOLATION',
-  /** Composite contract 被破坏 */
-  CompositeContractViolation: 'CORE_COMPOSITE_CONTRACT_VIOLATION',
-  /** 公共 contract 无效 */
-  Contract: 'CORE_CONTRACT_ERROR',
+  /** Layout probe 可恢复失败 */
+  CompileLayoutProbeRecoverable: 'CORE_COMPILE_LAYOUT_PROBE_RECOVERABLE',
+
   /** 几何计算失败 */
   Geometry: 'CORE_GEOMETRY_ERROR',
+
   /** JSON 数据无效 */
   Json: 'CORE_JSON_ERROR',
-  /** Layout probe 可恢复失败 */
-  LayoutProbeRecoverable: 'CORE_LAYOUT_PROBE_RECOVERABLE',
+
   /** 解析输入失败 */
   Parse: 'CORE_PARSE_ERROR',
+
   /** Provider 注册或解析失败 */
   Provider: 'CORE_PROVIDER_ERROR',
+
   /** 领域解析失败 */
   Resolve: 'CORE_RESOLVE_ERROR',
+
   /** Schema 构造或校验失败 */
   Schema: 'CORE_SCHEMA_ERROR',
 } as const;

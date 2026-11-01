@@ -4,7 +4,7 @@ These options configure the built-in inspectors. Defaults apply only when a requ
 
 ## Result inspection
 
-#### <ApiSourceLink label={"InspectionCompileOptions"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={19}>InspectionCompileOptions</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionCompileOptions"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={20}>InspectionCompileOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -36,7 +36,7 @@ export type InspectionCompileOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionCompileResult"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={66}>InspectionCompileResult</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionCompileResult"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={67}>InspectionCompileResult</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -66,7 +66,7 @@ export type InspectionCompileResult = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionRequest"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={9}>InspectionRequest</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionRequest"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={10}>InspectionRequest</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -146,7 +146,7 @@ export type InspectionTarget =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionDiagnostic"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={43}>InspectionDiagnostic</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionDiagnostic"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={44}>InspectionDiagnostic</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -154,10 +154,10 @@ export type InspectionTarget =
 
 <ApiTable>
 
-| Member            | Type                                                                                      | Default | Description                                       |
-| ----------------- | ----------------------------------------------------------------------------------------- | ------- | ------------------------------------------------- |
-| `readonly cause`  | `Readonly<{`<br />`code: string;`<br />`message: string;`<br />`path?: string;`<br />`}>` | —       | Original warning code, message, and optional path |
-| `readonly origin` | `InspectionDiagnosticOrigin`                                                              | —       | Inspection request and fragment location          |
+| Member            | Type                                                                                            | Default | Description                                       |
+| ----------------- | ----------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------- |
+| `readonly cause`  | `Readonly<{`<br />`code: string;`<br />`message: string;`<br />`path?: PropertyPath;`<br />`}>` | —       | Original warning code, message, and optional path |
+| `readonly origin` | `InspectionDiagnosticOrigin`                                                                    | —       | Inspection request and fragment location          |
 
 </ApiTable>
 
@@ -171,7 +171,7 @@ export type InspectionDiagnostic = Readonly<{
   cause: Readonly<{
     code: string;
     message: string;
-    path?: string;
+    path?: PropertyPath;
   }>;
 }>;
 ```
@@ -180,7 +180,7 @@ export type InspectionDiagnostic = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionDiagnosticOrigin"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={29}>InspectionDiagnosticOrigin</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionDiagnosticOrigin"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={30}>InspectionDiagnosticOrigin</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -216,7 +216,7 @@ export type InspectionDiagnosticOrigin = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionPlane"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={63}>InspectionPlane</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionPlane"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={64}>InspectionPlane</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -244,7 +244,7 @@ export type InspectionPlane = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionPlaneEntry"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={51}>InspectionPlaneEntry</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionPlaneEntry"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={52}>InspectionPlaneEntry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -319,7 +319,7 @@ export declare const compileInspectionToScene: (
 
 | Member        | Signature                                                                                                                                                                                                                    | Description                                                                                                                                                                                                                                                         |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `constructor` | `(message: string)`                                                                                                                                                                                                          | Creates an Inspect error with the default error code<br />`message`: Error message for callers; the error code is INSPECTION_ERROR                                                                                                                                  |
+| `constructor` | `(message: string)`                                                                                                                                                                                                          | Creates an Inspect error with the default error code<br />`message`: Error message for callers; the error code is INSPECT_ERROR                                                                                                                                     |
 |               | `(options: RetikzInspectErrorOptions)`                                                                                                                                                                                       | Creates an Inspect error from structured options<br />`options`: Error code, message, optional details and original cause; omitted details use a readonly object containing code                                                                                    |
 |               | `(code: RetikzInspectErrorCode, message: string, options?: Readonly<Pick<Readonly<{ cause?: unknown; code: RetikzInspectErrorCode; details?: Readonly<Record<string, unknown>>; message: string }>, 'details' \| 'cause'>>)` | Creates an Inspect error with an explicit error code<br />`code`: Stable error code for caller-side branching<br />`message`: Error message for callers<br />`options?`: Optional details and original cause; omitted details use a readonly object containing code |
 
@@ -379,11 +379,11 @@ export type RetikzInspectErrorOptions = Readonly<{
 
 ```ts
 export const RetikzInspectErrorCode = {
-  Default: 'INSPECTION_ERROR',
-  Compile: 'INSPECTION_COMPILE_ERROR',
-  CompileFailed: 'INSPECTION_COMPILE_FAILED',
-  Contract: 'INSPECTION_CONTRACT_ERROR',
-  Registry: 'INSPECTION_REGISTRY_ERROR',
+  Default: 'INSPECT_ERROR',
+  Compile: 'INSPECT_COMPILE_ERROR',
+  CompileFailed: 'INSPECT_COMPILE_FAILED',
+  Contract: 'INSPECT_CONTRACT_ERROR',
+  Registry: 'INSPECT_REGISTRY_ERROR',
 } as const;
 
 export type RetikzInspectErrorCode = ValueOf<typeof RetikzInspectErrorCode>;

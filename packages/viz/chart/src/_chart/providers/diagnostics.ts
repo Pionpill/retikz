@@ -28,7 +28,7 @@ export const contextualizeChartFailure = (source: IRChartSource, cause: unknown)
       const path = find(source.recipe as JsonValue, ['recipe']);
       if (path !== undefined)
         return new RetikzChartError({
-          code: RetikzChartErrorCode.InvalidChartIR,
+          code: RetikzChartErrorCode.ResolveInputInvalid,
           message: `Chart regression failed at ${path.join('.')}`,
           details: { path },
           cause,

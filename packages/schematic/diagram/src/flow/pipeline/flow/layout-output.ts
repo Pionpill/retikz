@@ -51,7 +51,7 @@ const invalidOutput = (
 
 const callbackFailed = (definition: FlowLayoutDefinition, reason: string, cause?: unknown): never => {
   throw new RetikzDiagramError({
-    code: RetikzDiagramErrorCode.DefinitionCallbackFailed,
+    code: RetikzDiagramErrorCode.ProviderDefinitionCallbackFailed,
     message: `Flow Layout Definition '${definition.name}' callback failed: ${reason}`,
     details: { capability: 'flow-layout', definition: definition.name, reason },
     cause,

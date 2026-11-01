@@ -4,13 +4,13 @@ import { RetikzError } from '@retikz/foundation';
 /** Graph package 的稳定错误码 */
 export const RetikzGraphErrorCode = {
   /** Graph definition key 重复 */
-  DefinitionDuplicate: 'GRAPH_DEFINITION_DUPLICATE',
+  ProviderDefinitionDuplicate: 'GRAPH_PROVIDER_DEFINITION_DUPLICATE',
   /** 一次 Graph provider assembly 收到不一致的 definition */
-  DefinitionConflict: 'GRAPH_DEFINITION_CONFLICT',
+  ProviderDefinitionConflict: 'GRAPH_PROVIDER_DEFINITION_CONFLICT',
   /** Graph definition key 未注册 */
-  DefinitionNotRegistered: 'GRAPH_DEFINITION_NOT_REGISTERED',
+  ProviderDefinitionNotRegistered: 'GRAPH_PROVIDER_DEFINITION_NOT_REGISTERED',
   /** Graph definition 的用户回调或回调结果无效 */
-  DefinitionCallbackFailed: 'GRAPH_DEFINITION_CALLBACK_FAILED',
+  ProviderDefinitionCallbackFailed: 'GRAPH_PROVIDER_DEFINITION_CALLBACK_FAILED',
   /** Graph Source data 与当前 definitions 或引用上下文不一致 */
   ResolveInvalid: 'GRAPH_RESOLVE_INVALID',
   /** Graph 编译内部不变量被破坏 */

@@ -204,7 +204,7 @@ Runtime 的更新执行是同步的，交错发生在调用方准备数据与提
   description={
     <>
       {' '}
-      版本过期会抛出 <code>RetikzRuntimeErrorCode.RevisionStale</code>
+      版本过期会抛出 <code>RetikzRuntimeErrorCode.TransactionRevisionStale</code>
       对应的错误。捕获后可丢弃旧结果，或读取最新快照、重新应用修改意图后提交；不要只替换版本号重发旧数据。若携带
       ChangeSet，也应重新生成。{' '}
     </>

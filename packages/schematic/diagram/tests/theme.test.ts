@@ -55,7 +55,7 @@ describe('Diagram 主题 Definition 和注册表', () => {
 
         expect(error.details).toMatchObject({ capability: 'diagram-theme' });
 
-        if (error.code === RetikzDiagramErrorCode.DefinitionDuplicate) {
+        if (error.code === RetikzDiagramErrorCode.ProviderDefinitionDuplicate) {
           expect(error.details).toMatchObject({ key: 'brand', availableKeys: ['brand'] });
         }
       }
@@ -173,7 +173,7 @@ describe('Diagram 主题级联', () => {
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
 
-      expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionNotRegistered);
+      expect(error.code).toBe(RetikzDiagramErrorCode.ProviderDefinitionNotRegistered);
       expect(error.details).toMatchObject({
         capability: 'diagram-theme',
         key: 'missing',
@@ -198,7 +198,7 @@ describe('Diagram 主题级联', () => {
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
 
-      expect(error.code).toBe(RetikzDiagramErrorCode.DefinitionCallbackFailed);
+      expect(error.code).toBe(RetikzDiagramErrorCode.ProviderDefinitionCallbackFailed);
       expect(error.cause).toBe(cause);
     }
   });

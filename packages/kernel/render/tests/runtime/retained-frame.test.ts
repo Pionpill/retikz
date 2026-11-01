@@ -124,7 +124,7 @@ describe('保留渲染帧契约', () => {
 
     expect(() => createHarness('unsupported', { onPrepareMount, resolveReadonlyLayers: layersFrom })).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRendererReadonlyLayerUnsupported,
+        code: RetikzRenderErrorCode.RuntimeRendererReadonlyLayerUnsupported,
       }),
     );
     expect(onPrepareMount).not.toHaveBeenCalled();
@@ -175,7 +175,7 @@ describe('保留渲染帧契约', () => {
 
     expect(() => harness.session.replace(source('rejected'))).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRendererPrepareFailed,
+        code: RetikzRenderErrorCode.RuntimeRendererPrepareFailed,
         cause: expect.objectContaining({ message: 'layer resolver failed' }),
       }),
     );
@@ -196,7 +196,7 @@ describe('保留渲染帧契约', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRendererInitialFrameMismatch,
+        code: RetikzRenderErrorCode.RuntimeRendererInitialFrameMismatch,
       }),
     );
   });

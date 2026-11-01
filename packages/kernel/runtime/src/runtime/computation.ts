@@ -95,7 +95,7 @@ const createCandidateView = (
     source: string,
   ) => {
     const error = createRuntimeContractError(
-      RetikzRuntimeErrorCode.UndeclaredDependency,
+      RetikzRuntimeErrorCode.DependencyUndeclared,
       candidatePhase,
       cause,
       source,

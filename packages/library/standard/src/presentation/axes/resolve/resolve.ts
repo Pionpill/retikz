@@ -96,7 +96,7 @@ const resolveAxis = (source: IRAxes['x'], key: 'x' | 'y'): CanonicalAxesAxis => 
 const checkDefaultDependentValues = (source: IRAxes['x'], axis: CanonicalAxesAxis, key: string): void => {
   const fail = (message: string, path: Array<string | number>): never => {
     throw new RetikzStandardError({
-      code: RetikzStandardErrorCode.ResolutionInvalid,
+      code: RetikzStandardErrorCode.ResolveInvalid,
       message,
       details: { path: [key, ...path] },
     });

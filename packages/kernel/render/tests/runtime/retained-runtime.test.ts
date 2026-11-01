@@ -119,14 +119,14 @@ describe('@retikz/render/runtime 公共契约', () => {
     const cause = new Error('invalid patch');
     const details = { source: 'test' };
     const error = new RetikzRenderError({
-      code: RetikzRenderErrorCode.ScenePatchInvalid,
+      code: RetikzRenderErrorCode.RuntimeScenePatchInvalid,
       cause,
       details,
     });
 
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe('RetikzRenderError');
-    expect(error.code).toBe(RetikzRenderErrorCode.ScenePatchInvalid);
+    expect(error.code).toBe(RetikzRenderErrorCode.RuntimeScenePatchInvalid);
     expect(error.cause).toBe(cause);
     expect(error.details).toBe(details);
     expect(Object.isFrozen(error.details)).toBe(false);
@@ -134,16 +134,16 @@ describe('@retikz/render/runtime 公共契约', () => {
     expect(Object.hasOwn(error, 'cause')).toBe(true);
     expect(Object.getOwnPropertyNames(error)).toContain('cause');
     expect(isRetikzRenderError(error)).toBe(true);
-    expect(isRetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchInvalid })).toBe(false);
+    expect(isRetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid })).toBe(false);
   });
 
   it('省略时保留自己的 undefined 原因', () => {
-    const error = new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
+    const error = new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererDisposed });
 
     expect(error).toBeInstanceOf(RetikzRenderError);
     expect(error.name).toBe('RetikzRenderError');
-    expect(error.message).toBe(RetikzRenderErrorCode.RetainedRendererDisposed);
-    expect(error.details).toEqual({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
+    expect(error.message).toBe(RetikzRenderErrorCode.RuntimeRendererDisposed);
+    expect(error.details).toEqual({ code: RetikzRenderErrorCode.RuntimeRendererDisposed });
     expect(Object.isFrozen(error.details)).toBe(true);
     expect(Object.hasOwn(error, 'cause')).toBe(true);
     expect(error.cause).toBeUndefined();
@@ -191,7 +191,7 @@ describe('@retikz/render/runtime 公共契约', () => {
         },
         dispose: () => undefined,
       } as unknown as Parameters<typeof defineRetainedRenderer>[0]),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRendererInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeRendererInvalid }));
   });
 
   it('把 renderer Proxy getter throw 收敛为稳定 renderer error', () => {
@@ -204,7 +204,7 @@ describe('@retikz/render/runtime 公共契约', () => {
 
     expect(() => defineRetainedRenderer(input)).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRendererInvalid,
+        code: RetikzRenderErrorCode.RuntimeRendererInvalid,
         cause: getterFailure,
       }),
     );
@@ -271,7 +271,7 @@ describe('captureRuntimeConfig', () => {
       } catch (error) {
         expect(error).toEqual(
           expect.objectContaining({
-            code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
+            code: RetikzRenderErrorCode.RuntimeInputInvalid,
           }),
         );
       }
@@ -287,7 +287,7 @@ describe('captureRuntimeConfig', () => {
 
     expect(() => captureRuntimeConfig({ animation })).toThrow(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
+        code: RetikzRenderErrorCode.RuntimeInputInvalid,
       }),
     );
     expect(getter).not.toHaveBeenCalled();
@@ -301,7 +301,7 @@ describe('captureRuntimeConfig', () => {
       }),
     ).toThrow(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
+        code: RetikzRenderErrorCode.RuntimeInputInvalid,
       }),
     );
 
@@ -523,7 +523,7 @@ describe('createRetainedRenderTarget', () => {
     } catch (error) {
       expect(error).toEqual(
         expect.objectContaining({
-          code: RetikzRenderErrorCode.RetainedRendererInvalid,
+          code: RetikzRenderErrorCode.RuntimeRendererInvalid,
           cause: expect.objectContaining({ renderer: mismatching, disposeFailure }),
         }),
       );
@@ -588,7 +588,7 @@ describe('createRetainedRenderTarget', () => {
       expect.objectContaining({ code: 'RECONCILER_CLEANUP_FAILED', cause: disposeFailure }),
     ]);
     expect(() => handle.read()).toThrowError(
-      expect.objectContaining({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch }),
     );
 
     expect(() => session.dispose()).not.toThrow();
@@ -607,7 +607,7 @@ describe('createRetainedRenderTarget', () => {
         immutableOptions: { backend: 'svg', idPrefix: 'invalid' },
         configuration: () => ({}),
       }),
-    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeParticipantInputInvalid }));
     expect(factory).not.toHaveBeenCalled();
   });
 
@@ -621,7 +621,7 @@ describe('createRetainedRenderTarget', () => {
 
     expect(() => createRetainedRenderTarget(options)).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid,
+        code: RetikzRenderErrorCode.RuntimeParticipantInputInvalid,
         cause: getterFailure,
       }),
     );
@@ -660,14 +660,14 @@ describe('createRetainedRenderTarget', () => {
 
       const runtime = error as RetikzRenderError;
 
-      expect(runtime.code).toBe(RetikzRenderErrorCode.RetainedRendererPrepareFailed);
+      expect(runtime.code).toBe(RetikzRenderErrorCode.RuntimeRendererPrepareFailed);
       expect(runtime.cause).toEqual(expect.objectContaining({ message: 'renderer failed' }));
     }
   });
 
   it('保留 renderer prepare 已抛出的 RetikzRenderError identity 与 code', () => {
     const expected = new RetikzRenderError({
-      code: RetikzRenderErrorCode.ScenePatchInvalid,
+      code: RetikzRenderErrorCode.RuntimeScenePatchInvalid,
       cause: Object.freeze({ fixture: true }),
     });
 
@@ -740,7 +740,7 @@ describe('createRetainedRenderTarget', () => {
 
       const runtime = error as RetikzRenderError;
 
-      expect(runtime.code).toBe(RetikzRenderErrorCode.ScenePatchSnapshotMismatch);
+      expect(runtime.code).toBe(RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch);
       expect(runtime.cause).toBe(getterFailure);
     }
   });
@@ -777,7 +777,7 @@ describe('createRetainedRenderTarget', () => {
       ),
     ).toThrowError(
       expect.objectContaining({
-        code: RetikzRenderErrorCode.RetainedRendererInvalid,
+        code: RetikzRenderErrorCode.RuntimeRendererInvalid,
       }),
     );
   });

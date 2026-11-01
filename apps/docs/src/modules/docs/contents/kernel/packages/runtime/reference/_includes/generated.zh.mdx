@@ -18,7 +18,7 @@
 |        | `TChange` | —                                                         | 领域变更提示的单项类型，由消费它的计算校验并用于增量处理  |
 | 参数   | `input`   | `InputRuntimeSourceDefinition<TInput, TValue, TRead>`     | 来源键及值的捕获、读取、比较和释放契约                    |
 | 返回值 | —         | `RuntimeSourceDefinition<TInput, TValue, TRead, TChange>` | 冻结的来源凭证；回调由运行时私有保存                      |
-| 错误   | —         | —                                                         | 来源键为空时抛出 TokenInvalid                             |
+| 错误   | —         | —                                                         | 来源键为空时抛出 SourceTokenInvalid                       |
 
 </ApiTable>
 
@@ -211,7 +211,7 @@ export type RuntimeSourceRegistry = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createRuntimeSourceInput"} path={"packages/kernel/runtime/src/transaction/factories.ts"} startLine={191}>createRuntimeSourceInput</ApiSourceLink>
+#### <ApiSourceLink label={"createRuntimeSourceInput"} path={"packages/kernel/runtime/src/transaction/factories.ts"} startLine={203}>createRuntimeSourceInput</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -256,7 +256,7 @@ export type InputRuntimeSource = Readonly<{
 }>;
 ```
 
-#### <ApiSourceLink label={"createRuntimeSourceUpdate"} path={"packages/kernel/runtime/src/transaction/factories.ts"} startLine={215}>createRuntimeSourceUpdate</ApiSourceLink>
+#### <ApiSourceLink label={"createRuntimeSourceUpdate"} path={"packages/kernel/runtime/src/transaction/factories.ts"} startLine={227}>createRuntimeSourceUpdate</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -264,17 +264,17 @@ export type InputRuntimeSource = Readonly<{
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称         | 类型 / 签名                                               | 说明                                                      |
-| ------ | ------------ | --------------------------------------------------------- | --------------------------------------------------------- |
-| 泛型   | `TInput`     | —                                                         | Source 接收的完整作者输入，由 capture 转为运行时持有值    |
-|        | `TValue`     | —                                                         | Source 经 capture 产生并由运行时持有、比较和释放的值      |
-|        | `TRead`      | —                                                         | Source 的只读视图类型，由 read 从持有值生成并通过快照暴露 |
-|        | `TChange`    | —                                                         | 领域变更提示的单项类型，由消费它的计算校验并用于增量处理  |
-| 参数   | `source`     | `RuntimeSourceDefinition<TInput, TValue, TRead, TChange>` | 待更新的来源定义                                          |
-|        | `value`      | `TInput`                                                  | 完整下一份输入；capture 在 Runtime 更新时执行             |
-|        | `changeSet?` | `RuntimeChangeSet<TChange>`                               | 可选增量提示；不替代完整输入                              |
-| 返回值 | —            | `RuntimeSourceUpdate`                                     | 供 RuntimeUpdate.sources 使用的不透明更新命令             |
-| 错误   | —            | —                                                         | changeSet 不是由当前工厂创建时抛出 ChangeSetInvalid       |
+| 类别   | 名称         | 类型 / 签名                                               | 说明                                                           |
+| ------ | ------------ | --------------------------------------------------------- | -------------------------------------------------------------- |
+| 泛型   | `TInput`     | —                                                         | Source 接收的完整作者输入，由 capture 转为运行时持有值         |
+|        | `TValue`     | —                                                         | Source 经 capture 产生并由运行时持有、比较和释放的值           |
+|        | `TRead`      | —                                                         | Source 的只读视图类型，由 read 从持有值生成并通过快照暴露      |
+|        | `TChange`    | —                                                         | 领域变更提示的单项类型，由消费它的计算校验并用于增量处理       |
+| 参数   | `source`     | `RuntimeSourceDefinition<TInput, TValue, TRead, TChange>` | 待更新的来源定义                                               |
+|        | `value`      | `TInput`                                                  | 完整下一份输入；capture 在 Runtime 更新时执行                  |
+|        | `changeSet?` | `RuntimeChangeSet<TChange>`                               | 可选增量提示；不替代完整输入                                   |
+| 返回值 | —            | `RuntimeSourceUpdate`                                     | 供 RuntimeUpdate.sources 使用的不透明更新命令                  |
+| 错误   | —            | —                                                         | changeSet 不是由当前工厂创建时抛出 TransactionChangeSetInvalid |
 
 </ApiTable>
 
@@ -304,7 +304,7 @@ export type RuntimeSourceUpdate = Readonly<{
 }>;
 ```
 
-#### <ApiSourceLink label={"createRuntimeChangeSet"} path={"packages/kernel/runtime/src/transaction/factories.ts"} startLine={108}>createRuntimeChangeSet</ApiSourceLink>
+#### <ApiSourceLink label={"createRuntimeChangeSet"} path={"packages/kernel/runtime/src/transaction/factories.ts"} startLine={120}>createRuntimeChangeSet</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -318,7 +318,7 @@ export type RuntimeSourceUpdate = Readonly<{
 | 参数   | `baseRevision` | `RuntimeRevision`           | 变更提示所基于的已发布版本                               |
 |        | `changes`      | `ReadonlyArray<TChange>`    | 领域变更提示；仅复制并冻结数组，不克隆其中的元素         |
 | 返回值 | —              | `RuntimeChangeSet<TChange>` | 绑定版本并由当前工厂标记的变更提示                       |
-| 错误   | —              | —                           | baseRevision 无效时抛出 RevisionInvalid                  |
+| 错误   | —              | —                           | baseRevision 无效时抛出 TransactionRevisionInvalid       |
 
 </ApiTable>
 
@@ -1379,11 +1379,11 @@ export type RuntimeUpdateStrategy = ValueOf<typeof RuntimeUpdateStrategy>;
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称    | 类型 / 签名       | 说明                                       |
-| ------ | ------- | ----------------- | ------------------------------------------ |
-| 参数   | `value` | `number`          | 非负安全整数                               |
-| 返回值 | —       | `RuntimeRevision` | 带 RuntimeRevision 类型品牌的原数值        |
-| 错误   | —       | —                 | 数值不是非负安全整数时抛出 RevisionInvalid |
+| 类别   | 名称    | 类型 / 签名       | 说明                                                  |
+| ------ | ------- | ----------------- | ----------------------------------------------------- |
+| 参数   | `value` | `number`          | 非负安全整数                                          |
+| 返回值 | —       | `RuntimeRevision` | 带 RuntimeRevision 类型品牌的原数值                   |
+| 错误   | —       | —                 | 数值不是非负安全整数时抛出 TransactionRevisionInvalid |
 
 </ApiTable>
 
@@ -2208,40 +2208,39 @@ export type RuntimeDiagnostic = Readonly<{
 
 ```ts
 export const RetikzRuntimeErrorCode = {
-  Duplicate: 'RUNTIME_SOURCE_DUPLICATE',
-  Unknown: 'RUNTIME_SOURCE_UNKNOWN',
-  TokenInvalid: 'RUNTIME_SOURCE_TOKEN_INVALID',
   IdentityInvalid: 'RUNTIME_IDENTITY_INVALID',
-  CaptureFailed: 'RUNTIME_SOURCE_CAPTURE_FAILED',
-  CollectIdentitiesFailed: 'RUNTIME_SOURCE_COLLECT_IDENTITIES_FAILED',
-  ReadFailed: 'RUNTIME_SOURCE_READ_FAILED',
-  CompareFailed: 'RUNTIME_SOURCE_COMPARE_FAILED',
   InternalInvariant: 'RUNTIME_INTERNAL_INVARIANT',
+  RegistryMismatch: 'RUNTIME_REGISTRY_MISMATCH',
+  DependencyUndeclared: 'RUNTIME_DEPENDENCY_UNDECLARED',
+  Reentrant: 'RUNTIME_REENTRANT',
+  Disposed: 'RUNTIME_DISPOSED',
+  SourceDuplicate: 'RUNTIME_SOURCE_DUPLICATE',
+  SourceUnknown: 'RUNTIME_SOURCE_UNKNOWN',
+  SourceTokenInvalid: 'RUNTIME_SOURCE_TOKEN_INVALID',
+  SourceCaptureFailed: 'RUNTIME_SOURCE_CAPTURE_FAILED',
+  SourceCollectIdentitiesFailed: 'RUNTIME_SOURCE_COLLECT_IDENTITIES_FAILED',
+  SourceReadFailed: 'RUNTIME_SOURCE_READ_FAILED',
+  SourceCompareFailed: 'RUNTIME_SOURCE_COMPARE_FAILED',
+  SourceOwnershipAlias: 'RUNTIME_SOURCE_OWNERSHIP_ALIAS',
+  SourceCommandInvalid: 'RUNTIME_SOURCE_COMMAND_INVALID',
   ComputationIdInvalid: 'RUNTIME_COMPUTATION_ID_INVALID',
   ComputationDuplicate: 'RUNTIME_COMPUTATION_DUPLICATE',
   ComputationUnknown: 'RUNTIME_COMPUTATION_UNKNOWN',
   ComputationTokenInvalid: 'RUNTIME_COMPUTATION_TOKEN_INVALID',
   ComputationCycle: 'RUNTIME_COMPUTATION_CYCLE',
-  TraceDefinitionInvalid: 'RUNTIME_TRACE_DEFINITION_INVALID',
-  RegistryMismatch: 'RUNTIME_REGISTRY_MISMATCH',
-  UpdateStrategyInvalid: 'RUNTIME_UPDATE_STRATEGY_INVALID',
-  InitialSourceMismatch: 'RUNTIME_INITIAL_SOURCE_MISMATCH',
-  RevisionStale: 'RUNTIME_REVISION_STALE',
-  RevisionExhausted: 'RUNTIME_REVISION_EXHAUSTED',
-  ChangeSetRevisionMismatch: 'RUNTIME_CHANGESET_REVISION_MISMATCH',
-  UndeclaredDependency: 'RUNTIME_UNDECLARED_DEPENDENCY',
   ComputationRunFailed: 'RUNTIME_COMPUTATION_RUN_FAILED',
   ComputationUpdateFailed: 'RUNTIME_COMPUTATION_UPDATE_FAILED',
-  ResultCaptureFailed: 'RUNTIME_RESULT_CAPTURE_FAILED',
-  ResultComputationReadFailed: 'RUNTIME_RESULT_COMPUTATION_READ_FAILED',
-  ResultPublicReadFailed: 'RUNTIME_RESULT_PUBLIC_READ_FAILED',
-  SourceOwnershipAlias: 'RUNTIME_SOURCE_OWNERSHIP_ALIAS',
-  ResultOwnershipAlias: 'RUNTIME_RESULT_OWNERSHIP_ALIAS',
-  Reentrant: 'RUNTIME_REENTRANT',
-  Disposed: 'RUNTIME_DISPOSED',
-  RevisionInvalid: 'RUNTIME_REVISION_INVALID',
-  ChangeSetInvalid: 'RUNTIME_CHANGESET_INVALID',
-  SourceCommandInvalid: 'RUNTIME_SOURCE_COMMAND_INVALID',
+  ComputationResultCaptureFailed: 'RUNTIME_COMPUTATION_RESULT_CAPTURE_FAILED',
+  ComputationResultReadFailed: 'RUNTIME_COMPUTATION_RESULT_READ_FAILED',
+  ComputationResultPublicReadFailed: 'RUNTIME_COMPUTATION_RESULT_PUBLIC_READ_FAILED',
+  ComputationResultOwnershipAlias: 'RUNTIME_COMPUTATION_RESULT_OWNERSHIP_ALIAS',
+  TransactionUpdateStrategyInvalid: 'RUNTIME_TRANSACTION_UPDATE_STRATEGY_INVALID',
+  TransactionInitialSourceMismatch: 'RUNTIME_TRANSACTION_INITIAL_SOURCE_MISMATCH',
+  TransactionRevisionStale: 'RUNTIME_TRANSACTION_REVISION_STALE',
+  TransactionRevisionExhausted: 'RUNTIME_TRANSACTION_REVISION_EXHAUSTED',
+  TransactionChangeSetRevisionMismatch: 'RUNTIME_TRANSACTION_CHANGE_SET_REVISION_MISMATCH',
+  TransactionRevisionInvalid: 'RUNTIME_TRANSACTION_REVISION_INVALID',
+  TransactionChangeSetInvalid: 'RUNTIME_TRANSACTION_CHANGE_SET_INVALID',
   ParticipantTokenInvalid: 'RUNTIME_PARTICIPANT_TOKEN_INVALID',
   ParticipantDuplicate: 'RUNTIME_PARTICIPANT_DUPLICATE',
   ParticipantDependencyInvalid: 'RUNTIME_PARTICIPANT_DEPENDENCY_INVALID',
@@ -2253,6 +2252,7 @@ export const RetikzRuntimeErrorCode = {
   ParticipantRollbackFailed: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
   ParticipantTokenDisposeFailed: 'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED',
   ParticipantDisposeFailed: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
+  TraceDefinitionInvalid: 'RUNTIME_TRACE_DEFINITION_INVALID',
 } as const;
 
 export type RetikzRuntimeErrorCode = ValueOf<typeof RetikzRuntimeErrorCode>;

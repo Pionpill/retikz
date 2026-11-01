@@ -54,7 +54,7 @@ const readSourceAtPath = (source: unknown, path: CompositeInputPath): unknown =>
   const target = readPropertyPath(source, path);
   if (target === undefined)
     throw new RetikzCoreError(
-      RetikzCoreErrorCode.CompositeContractViolation,
+      RetikzCoreErrorCode.ContractViolation,
       `Composite input path ${encodePropertyPath(path)} does not exist in Source`,
     );
   return target;
@@ -71,16 +71,13 @@ export const captureCompositeInputScope = (
   const captured = bindings.map(binding => {
     const key = encodePropertyPath(binding.path);
     if (boundPaths.has(key))
-      throw new RetikzCoreError(
-        RetikzCoreErrorCode.CompositeContractViolation,
-        `Duplicate composite input path ${key}`,
-      );
+      throw new RetikzCoreError(RetikzCoreErrorCode.ContractViolation, `Duplicate composite input path ${key}`);
 
     boundPaths.add(key);
     const target = readSourceAtPath(snapshot, binding.path);
     if (target === null || typeof target !== 'object' || !('namespace' in target) || !('type' in target))
       throw new RetikzCoreError(
-        RetikzCoreErrorCode.CompositeContractViolation,
+        RetikzCoreErrorCode.ContractViolation,
         `Composite input path ${key} must select a composite Source`,
       );
 
@@ -100,7 +97,7 @@ export const resolveCompositeInputScope = (
   const snapshot = inputScopeMap.get(inputs);
   if (snapshot === undefined || !jsonStructuralEquals(snapshot.source, source))
     throw new RetikzCoreError(
-      RetikzCoreErrorCode.CompositeContractViolation,
+      RetikzCoreErrorCode.ContractViolation,
       'Composite input bindings do not match this Source',
     );
 

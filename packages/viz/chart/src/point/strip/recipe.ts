@@ -31,7 +31,7 @@ const stripPropertySlots = [...pointPropertySlots, 'jitter', 'domainPadding'] as
 
 const invalidStripTopology = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
   new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidResolvedPlot,
+    code: RetikzChartErrorCode.ResolvePlotInvalid,
     message,
     details: { path },
   });

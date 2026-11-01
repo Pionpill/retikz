@@ -93,7 +93,7 @@ describe('静态标记几何注册准入', () => {
   it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('未被使用的箭头也拒绝无效基准尺寸 %s', baseSize => {
     const arrow = { name: 'invalid-base', baseSize, backX: 0, lineContactX: 0, emit: () => [] };
     expect(() => resolveArrowRegistry([arrow])).toThrow(
-      expect.objectContaining({ code: RetikzCoreErrorCode.CompositeContractViolation }),
+      expect.objectContaining({ code: RetikzCoreErrorCode.ContractViolation }),
     );
   });
 

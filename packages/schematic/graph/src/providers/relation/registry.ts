@@ -5,21 +5,21 @@ import { BUILTIN_RELATION_ROLE_DEFINITIONS } from './definitions';
 
 const duplicateDefinition = (capability: string, key: string): RetikzGraphError =>
   new RetikzGraphError({
-    code: RetikzGraphErrorCode.DefinitionDuplicate,
+    code: RetikzGraphErrorCode.ProviderDefinitionDuplicate,
     message: `${capability} '${key}' is already registered.`,
     details: { capability, key },
   });
 
 const missingDefinition = (capability: string, key: string, availableKeys: Iterable<string>): RetikzGraphError =>
   new RetikzGraphError({
-    code: RetikzGraphErrorCode.DefinitionNotRegistered,
+    code: RetikzGraphErrorCode.ProviderDefinitionNotRegistered,
     message: `${capability} '${key}' is not registered.`,
     details: { capability, key, availableKeys: [...availableKeys] },
   });
 
 const conflictingDefinition = (capability: string, key: string, reason: string): RetikzGraphError =>
   new RetikzGraphError({
-    code: RetikzGraphErrorCode.DefinitionConflict,
+    code: RetikzGraphErrorCode.ProviderDefinitionConflict,
     message: `${capability} '${key}' ${reason}`,
     details: { capability, key, reason },
   });

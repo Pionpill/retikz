@@ -9,9 +9,9 @@ import type { LayoutExtensions, LayoutProps, ReactInputEmbedContext } from '@ret
 import type { ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
+import { RetikzDiagramReactError, RetikzDiagramReactErrorCode } from '..';
 import { Branch } from './Branch';
 import { BranchNode } from './BranchNode';
-import { RetikzDiagramReactBranchError, RetikzDiagramReactBranchErrorCode } from './errors';
 
 export type BranchDiagramLayoutHostProps = Pick<
   LayoutProps & LayoutExtensions,
@@ -112,8 +112,8 @@ export const collectBranchDiagramInput = (
   rejectHostProps: boolean,
 ): BranchDiagramInputEmbedProps => {
   if (rejectHostProps && branchDiagramLayoutHostPropKeys.some(key => Object.hasOwn(props, key)))
-    throw new RetikzDiagramReactBranchError({
-      code: RetikzDiagramReactBranchErrorCode.ChildInvalid,
+    throw new RetikzDiagramReactError({
+      code: RetikzDiagramReactErrorCode.BranchHostPropsInvalid,
       message: 'Embedded BranchDiagram host properties belong on the outer Layout.',
       details: { label: 'BranchDiagram', reason: 'invalid-authoring' },
     });
@@ -196,8 +196,8 @@ export const collectBranchDiagramInput = (
         return;
       }
 
-      throw new RetikzDiagramReactBranchError({
-        code: RetikzDiagramReactBranchErrorCode.ChildInvalid,
+      throw new RetikzDiagramReactError({
+        code: RetikzDiagramReactErrorCode.BranchChildInvalid,
         message: 'BranchDiagram only accepts flat BranchNode and Branch declarations.',
         details: { label: 'BranchDiagram', reason: 'invalid-authoring' },
       });

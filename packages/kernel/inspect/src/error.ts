@@ -4,15 +4,15 @@ import { RetikzError } from '@retikz/foundation';
 /** Inspect 包稳定错误码 */
 export const RetikzInspectErrorCode = {
   /** 未被更精确分类覆盖的 Inspect 错误 */
-  Default: 'INSPECTION_ERROR',
+  Default: 'INSPECT_ERROR',
   /** 编译输出或选择无效 */
-  Compile: 'INSPECTION_COMPILE_ERROR',
+  Compile: 'INSPECT_COMPILE_ERROR',
   /** Inspection 编译失败 */
-  CompileFailed: 'INSPECTION_COMPILE_FAILED',
+  CompileFailed: 'INSPECT_COMPILE_FAILED',
   /** Inspection contract 无效 */
-  Contract: 'INSPECTION_CONTRACT_ERROR',
+  Contract: 'INSPECT_CONTRACT_ERROR',
   /** Inspector registry 无效 */
-  Registry: 'INSPECTION_REGISTRY_ERROR',
+  Registry: 'INSPECT_REGISTRY_ERROR',
 } as const;
 
 /** Inspect 包稳定错误码取值 */
@@ -36,7 +36,7 @@ type RetikzInspectErrorCauseOptions = Readonly<Pick<RetikzInspectErrorOptions, '
 export class RetikzInspectError extends RetikzError<RetikzInspectErrorCode, Readonly<Record<string, unknown>>> {
   /** 使用默认错误码创建 Inspect 错误
    *
-   * @param message 面向调用方的错误消息，错误码为 INSPECTION_ERROR
+   * @param message 面向调用方的错误消息，错误码为 INSPECT_ERROR
    */
   constructor(message: string);
   /** 使用结构化参数创建 Inspect 错误

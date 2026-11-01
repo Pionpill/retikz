@@ -11,7 +11,7 @@ import type { LayoutExtensions, LayoutProps, ReactInputEmbedContext } from '@ret
 import type { FC, ReactElement, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-import { RetikzDiagramReactFlowError, RetikzDiagramReactFlowErrorCode } from './errors';
+import { RetikzDiagramReactError, RetikzDiagramReactErrorCode } from '..';
 import type { FlowEntitiesProps, FlowEntityItem } from './FlowEntities';
 import type { FlowRelationItem, FlowRelationsProps } from './FlowRelations';
 
@@ -139,8 +139,8 @@ const invalidChild = (label: string, child: ReactNode, reason: string): never =>
   };
 
   const received = childLabelOf(child);
-  throw new RetikzDiagramReactFlowError({
-    code: RetikzDiagramReactFlowErrorCode.ChildInvalid,
+  throw new RetikzDiagramReactError({
+    code: RetikzDiagramReactErrorCode.FlowChildInvalid,
     message: `${label} received unsupported child '${received}'.`,
     details: { label, reason, received: [received] },
   });
@@ -300,8 +300,8 @@ export const collectFlowDiagramInput = (
 ): FlowDiagramInputEmbedProps => {
   const unsupported = flowDiagramLayoutHostPropKeys.filter(key => Object.hasOwn(props, key));
   if (rejectHostProps && unsupported.length > 0) {
-    throw new RetikzDiagramReactFlowError({
-      code: RetikzDiagramReactFlowErrorCode.HostPropsInvalid,
+    throw new RetikzDiagramReactError({
+      code: RetikzDiagramReactErrorCode.FlowHostPropsInvalid,
       message: `embedded FlowDiagram does not support standalone Layout props: ${unsupported.join(', ')}; move them to the outer <Layout>`,
       details: { label: 'FlowDiagram', reason: 'standalone-host-props-in-embedded-mode', received: unsupported },
     });

@@ -68,7 +68,7 @@ const createCodeBlockContentDefinition = <TSource extends IRCodeBlock>(
         };
       } catch (cause) {
         throw new RetikzGraphError({
-          code: RetikzGraphErrorCode.DefinitionCallbackFailed,
+          code: RetikzGraphErrorCode.ProviderDefinitionCallbackFailed,
           message: `Code block '${definition.namespace}.${definition.type}' composition failed.`,
           details: {
             capability: 'code-block-compose',

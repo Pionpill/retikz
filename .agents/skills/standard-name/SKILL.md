@@ -10,6 +10,8 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 ## 通用形式
 
 - 错误码 const object enum 的成员名使用 PascalCase，字符串值使用 UPPER_SNAKE_CASE，并包含明确的包或领域前缀
+- 模块专属错误码按职责归属命名：成员为 `<Module><Reason>`，值为 `<PACKAGE>_<MODULE>_<REASON>`；通用错误省略模块段。归属按错误语义判断，不按抛错文件目录或单个消费方判断
+- 包内错误码集中在统一对象中按模块分组；无必要细分时保留模块兜底码，如 `Compile` / `CORE_COMPILE_ERROR`，不为命名整齐新增分类或拆分错误码对象
 
 - 泛型参数使用 `T` 或 `T` 开头的 PascalCase 语义名，匹配 `^(T|T[A-Z][A-Za-z]+)$`，禁止首尾下划线；由 LLM 自审
 - 同组 re-export 按来源路径排序，具名导出成员按名称排序；存在初始化副作用依赖时保留执行次序，不为排序改变语义；由 LLM 自审

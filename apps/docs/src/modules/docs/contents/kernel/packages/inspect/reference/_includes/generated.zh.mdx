@@ -4,7 +4,7 @@
 
 ## 结果检查
 
-#### <ApiSourceLink label={"InspectionCompileOptions"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={19}>InspectionCompileOptions</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionCompileOptions"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={20}>InspectionCompileOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -36,7 +36,7 @@ export type InspectionCompileOptions = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionCompileResult"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={66}>InspectionCompileResult</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionCompileResult"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={67}>InspectionCompileResult</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -66,7 +66,7 @@ export type InspectionCompileResult = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionRequest"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={9}>InspectionRequest</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionRequest"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={10}>InspectionRequest</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -146,7 +146,7 @@ export type InspectionTarget =
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionDiagnostic"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={43}>InspectionDiagnostic</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionDiagnostic"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={44}>InspectionDiagnostic</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -154,10 +154,10 @@ export type InspectionTarget =
 
 <ApiTable>
 
-| 成员              | 类型                                                                                      | 默认值 | 说明                           |
-| ----------------- | ----------------------------------------------------------------------------------------- | ------ | ------------------------------ |
-| `readonly cause`  | `Readonly<{`<br />`code: string;`<br />`message: string;`<br />`path?: string;`<br />`}>` | —      | 原始警告的代码、消息与可选路径 |
-| `readonly origin` | `InspectionDiagnosticOrigin`                                                              | —      | 检查请求及片段定位             |
+| 成员              | 类型                                                                                            | 默认值 | 说明                           |
+| ----------------- | ----------------------------------------------------------------------------------------------- | ------ | ------------------------------ |
+| `readonly cause`  | `Readonly<{`<br />`code: string;`<br />`message: string;`<br />`path?: PropertyPath;`<br />`}>` | —      | 原始警告的代码、消息与可选路径 |
+| `readonly origin` | `InspectionDiagnosticOrigin`                                                                    | —      | 检查请求及片段定位             |
 
 </ApiTable>
 
@@ -171,7 +171,7 @@ export type InspectionDiagnostic = Readonly<{
   cause: Readonly<{
     code: string;
     message: string;
-    path?: string;
+    path?: PropertyPath;
   }>;
 }>;
 ```
@@ -180,7 +180,7 @@ export type InspectionDiagnostic = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionDiagnosticOrigin"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={29}>InspectionDiagnosticOrigin</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionDiagnosticOrigin"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={30}>InspectionDiagnosticOrigin</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -216,7 +216,7 @@ export type InspectionDiagnosticOrigin = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionPlane"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={63}>InspectionPlane</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionPlane"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={64}>InspectionPlane</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -244,7 +244,7 @@ export type InspectionPlane = Readonly<{
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InspectionPlaneEntry"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={51}>InspectionPlaneEntry</ApiSourceLink>
+#### <ApiSourceLink label={"InspectionPlaneEntry"} path={"packages/kernel/inspect/src/compile/types.ts"} startLine={52}>InspectionPlaneEntry</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -319,7 +319,7 @@ export declare const compileInspectionToScene: (
 
 | 成员          | 签名                                                                                                                                                                                                                         | 说明                                                                                                                                                                                          |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `constructor` | `(message: string)`                                                                                                                                                                                                          | 使用默认错误码创建 Inspect 错误<br />`message`: 面向调用方的错误消息，错误码为 INSPECTION_ERROR                                                                                               |
+| `constructor` | `(message: string)`                                                                                                                                                                                                          | 使用默认错误码创建 Inspect 错误<br />`message`: 面向调用方的错误消息，错误码为 INSPECT_ERROR                                                                                                  |
 |               | `(options: RetikzInspectErrorOptions)`                                                                                                                                                                                       | 使用结构化参数创建 Inspect 错误<br />`options`: 错误码、消息与可选详情、原始原因；省略 details 时使用包含 code 的只读对象                                                                     |
 |               | `(code: RetikzInspectErrorCode, message: string, options?: Readonly<Pick<Readonly<{ cause?: unknown; code: RetikzInspectErrorCode; details?: Readonly<Record<string, unknown>>; message: string }>, 'details' \| 'cause'>>)` | 使用显式错误码创建 Inspect 错误<br />`code`: 用于调用方分支处理的稳定错误码<br />`message`: 面向调用方的错误消息<br />`options?`: 可选详情与原始原因；省略 details 时使用包含 code 的只读对象 |
 
@@ -379,11 +379,11 @@ export type RetikzInspectErrorOptions = Readonly<{
 
 ```ts
 export const RetikzInspectErrorCode = {
-  Default: 'INSPECTION_ERROR',
-  Compile: 'INSPECTION_COMPILE_ERROR',
-  CompileFailed: 'INSPECTION_COMPILE_FAILED',
-  Contract: 'INSPECTION_CONTRACT_ERROR',
-  Registry: 'INSPECTION_REGISTRY_ERROR',
+  Default: 'INSPECT_ERROR',
+  Compile: 'INSPECT_COMPILE_ERROR',
+  CompileFailed: 'INSPECT_COMPILE_FAILED',
+  Contract: 'INSPECT_CONTRACT_ERROR',
+  Registry: 'INSPECT_REGISTRY_ERROR',
 } as const;
 
 export type RetikzInspectErrorCode = ValueOf<typeof RetikzInspectErrorCode>;

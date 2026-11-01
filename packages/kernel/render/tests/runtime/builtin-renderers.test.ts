@@ -3057,7 +3057,7 @@ describe('内置保留渲染器', () => {
 
     expect(failure).toMatchObject({
       name: 'RetikzRenderError',
-      code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
+      code: RetikzRenderErrorCode.AnimationWaapiBindingSetupFailed,
       cause: expect.objectContaining({ message: 'binding setup rejected' }),
       details: expect.objectContaining({
         cleanupCause: expect.objectContaining({ message: 'setup cleanup rejected' }),
@@ -3116,7 +3116,7 @@ describe('内置保留渲染器', () => {
 
     expect(failure).toMatchObject({
       name: 'RetikzRenderError',
-      code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
+      code: RetikzRenderErrorCode.AnimationWaapiBindingSetupFailed,
       cause: expect.objectContaining({ message: 'manual pause rejected' }),
       details: expect.objectContaining({
         cleanupCause: expect.objectContaining({ message: 'pause cleanup rejected' }),

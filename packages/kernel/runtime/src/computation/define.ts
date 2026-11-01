@@ -215,9 +215,9 @@ export const defineRuntimeComputation = <
   /** 创建带稳定 Computation context 的 result lifecycle primary error */
   const resultError = (
     code:
-      | typeof RetikzRuntimeErrorCode.ResultCaptureFailed
-      | typeof RetikzRuntimeErrorCode.ResultComputationReadFailed
-      | typeof RetikzRuntimeErrorCode.ResultPublicReadFailed,
+      | typeof RetikzRuntimeErrorCode.ComputationResultCaptureFailed
+      | typeof RetikzRuntimeErrorCode.ComputationResultReadFailed
+      | typeof RetikzRuntimeErrorCode.ComputationResultPublicReadFailed,
     phase: 'result-capture' | 'result-computation-read' | 'result-public-read',
     cause: unknown,
     diagnostics: ReadonlyArray<RuntimeDiagnostic> = [],
@@ -248,12 +248,12 @@ export const defineRuntimeComputation = <
       try {
         result = capture(source);
       } catch (cause) {
-        throw resultError(RetikzRuntimeErrorCode.ResultCaptureFailed, 'result-capture', cause);
+        throw resultError(RetikzRuntimeErrorCode.ComputationResultCaptureFailed, 'result-capture', cause);
       }
 
       if (current !== undefined && dispose !== undefined && result === current.result) {
         throw new RetikzRuntimeError({
-          code: RetikzRuntimeErrorCode.ResultOwnershipAlias,
+          code: RetikzRuntimeErrorCode.ComputationResultOwnershipAlias,
           phase: 'result-capture',
           owner: copiedId.owner,
           computation: copiedId,
@@ -267,7 +267,7 @@ export const defineRuntimeComputation = <
         computationRead = readForComputation(result);
       } catch (cause) {
         throw resultError(
-          RetikzRuntimeErrorCode.ResultComputationReadFailed,
+          RetikzRuntimeErrorCode.ComputationResultReadFailed,
           'result-computation-read',
           cause,
           retireResult(result),
@@ -280,7 +280,7 @@ export const defineRuntimeComputation = <
         publicRead = read(result);
       } catch (cause) {
         throw resultError(
-          RetikzRuntimeErrorCode.ResultPublicReadFailed,
+          RetikzRuntimeErrorCode.ComputationResultPublicReadFailed,
           'result-public-read',
           cause,
           retireResult(result),
