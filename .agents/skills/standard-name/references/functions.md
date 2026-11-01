@@ -4,6 +4,8 @@
 
 函数名使用 camelCase 和完整语义词。语义准确优先于套模板；普通函数使用动宾结构，纯投影、表示转换和完整调用表达式可以使用下表中的稳定形式。
 
+以数值、几何或算法求值为主要职责的函数，通常使用 `calculateXxx`，不与 `computeXxx` 混用；已有更准确的操作动词（如 `merge`、`intersect`、`sort`）或阶段动词（如 `resolve`、`layout`）时优先保留，不因内部包含计算而统一改名。
+
 函数内部的具名 helper 也须表达动作与对象；存在不同对象或操作时，不单独使用 `walk`、`enter`、`fail`。例如使用 `visitPrimitive`、`withActiveObject`、`throwSceneContentError`；负责临时状态或资源作用域的 helper 应以 JSDoc 说明进入、退出和异常时的清理行为。
 
 | 形式                                 | 作用                                                                    | 边界                                                           |
