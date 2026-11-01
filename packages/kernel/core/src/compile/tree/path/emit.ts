@@ -17,8 +17,10 @@ import {
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
 } from '../../../resolve';
+import { createCompositeContractError } from '../../../resolve/diagnostics';
 import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
 import type { SharedCompileContext } from '../../context';
+import type { RegisterPaint } from '../../resource';
 import { snapshotProviderPosition, snapshotScenePrimitives } from '../../shared';
 import type { ComposedScopeTransform } from '../../shared';
 import type { WorkspaceCompileContext } from '../context';
@@ -38,11 +40,17 @@ export type PathCompileHost = {
 };
 
 /** 校验并脱离 BuiltinPath provider 返回的 primitive 与 bounds point */
-const snapshotPathCompileResult = (kind: string, value: PathCompileResult | null) =>
+const snapshotPathCompileResult = (
+  kind: string,
+  value: PathCompileResult | null,
+  allowedResourceIds: ReadonlySet<string>,
+) =>
   guardProviderOutput(`Path '${kind}'`, () => {
     if (value === null) return null;
+    if ('resources' in value)
+      throw createCompositeContractError(`Path '${kind}' output: provider cannot declare resources.`);
     const result = value;
-    const primitives = snapshotScenePrimitives(`Path '${kind}'`, result.primitives);
+    const primitives = snapshotScenePrimitives(`Path '${kind}'`, result.primitives, allowedResourceIds);
     const rawBoundsPoints = result.boundsPoints;
     const boundsPoints = Array.from(rawBoundsPoints, (point, index): IRPosition =>
       snapshotProviderPosition(`Path '${kind}' bounds point at index ${index}`, point),
@@ -73,16 +81,21 @@ export const emitDefinedPath = (
   );
   const { definition } = resolution;
   const kind = definition.name;
+  const allowedResourceIds = new Set<string>();
+  const registerPaint: RegisterPaint = paint => {
+    const registered = context.workspace.paintRegistry.register(paint);
+    if (typeof registered === 'object' && registered.kind === 'resourceRef') allowedResourceIds.add(registered.id);
+    return registered;
+  };
 
   const emitOptions = {
-    collectResourceReferences: context.workspace.collectResourceReferences,
     resources: () => [
       ...context.workspace.paintRegistry.getResources(),
       ...context.workspace.clipRegistry.getResources(),
     ],
     onWarn: context.workspace.diagnostics.collect,
     scopeChain,
-    registerPaint: context.workspace.paintRegistry.register,
+    registerPaint,
     targetView,
     lowerTex: context.shared.host.lowerTex,
     rootFontSize: context.shared.layout.rootFontSize,
@@ -272,11 +285,10 @@ export const emitDefinedPath = (
     round: context.shared.layout.round,
   });
 
-  const validated = snapshotPathCompileResult(kind, produced);
+  const validated = snapshotPathCompileResult(kind, produced, allowedResourceIds);
   if (validated === null) {
     return null;
   }
 
-  context.workspace.collectResourceReferences(validated.result.primitives, `Path '${kind}'`);
   return validated.result;
 };

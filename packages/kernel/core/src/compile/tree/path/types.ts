@@ -4,7 +4,7 @@ import type { CompileOccurrenceLocator, SceneResource, Transform } from '../../.
 import type { MergedScopeDefaults, PathTargetView } from '../../../resolve';
 import type { IRPathBase } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
-import type { CollectResourceReferences, RegisterPaint } from '../../resource';
+import type { RegisterPaint } from '../../resource';
 import type { CompileOutput, CompileWarning } from '../../shared';
 import type { TexLowerer } from '../../text';
 
@@ -12,8 +12,6 @@ import type { TexLowerer } from '../../text';
 export type PathEmitOptions = {
   /** 当前编译资源，用于标记可视边界计算 */
   resources?: () => ReadonlyArray<SceneResource>;
-  /** 在标记输出处保留引用的宿主诊断位置 */
-  collectResourceReferences?: CollectResourceReferences;
   /**
    * 警告收集器（由 compileToScene 传入）
    * 缺省时不发出警告

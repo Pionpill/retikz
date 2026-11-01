@@ -126,6 +126,8 @@ const view = mount(document.getElementById('diagram')!, input, {
 
 ## 错误与限制
 
+输出不得携带 `resources` 或 `clipRef`。资源引用只能透传本次 `appearance` 或 `emitStroke` 生成的值；通过输入属性选择渐变或已注册的图案，由 Core 负责注册资源。手写其他资源 ID 会在 provider 输出边界报错，嵌套图元遵循相同规则。
+
 | 情况                                            | 结果                                         |
 | ----------------------------------------------- | -------------------------------------------- |
 | definition `name` 为空或不是字符串              | `definePath` 立即拒绝                        |

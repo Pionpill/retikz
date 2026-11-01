@@ -1,5 +1,3 @@
-import { formatPropertyPath } from '@retikz/foundation';
-
 import type { ScenePrimitive } from '../../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../../schemas';
 import { Anchor } from '../../../shared';
@@ -22,7 +20,6 @@ export const emitNodeOutput = (
 } => {
   const { layout, properties } = compilation;
   const primitives = emitNodePrimitives(compilation, shared.layout.round, workspace.paintRegistry.register);
-  workspace.collectResourceReferences(primitives, `Node at ${formatPropertyPath(compilation.irPath)}`);
   const outer = outerRectOf(layout);
   return {
     primitives,

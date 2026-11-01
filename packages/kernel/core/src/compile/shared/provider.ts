@@ -18,18 +18,43 @@ export const snapshotProviderPosition = (owner: string, value: Position): Positi
  * 复制已类型化的 provider JSON 输出，校验有限数并省略对象的可选 undefined 字段
  * @template T 提供者输出类型
  */
-export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: string): T => {
-  const snapshot = (input: unknown, currentPath: string): unknown => {
+export const snapshotProviderOutputJson = <T>(
+  owner: string,
+  value: T,
+  path: string,
+  allowedResourceIds?: ReadonlySet<string>,
+): T => {
+  const snapshot = (
+    input: unknown,
+    currentPath: string,
+    checkResources = allowedResourceIds !== undefined,
+  ): unknown => {
     if (typeof input === 'number' && !Number.isFinite(input)) {
       throw createCompositeContractError(`${owner} emit produced a ${currentPath} with a non-finite number.`);
     }
     if (input === null || typeof input !== 'object') return input;
     if (Array.isArray(input)) {
-      return input.map((entry, index) => snapshot(entry, `${currentPath}[${index}]`));
+      return input.map((entry, index) => snapshot(entry, `${currentPath}[${index}]`, checkResources));
+    }
+    if (checkResources) {
+      if ('resources' in input || ('clipRef' in input && input.clipRef !== undefined)) {
+        throw createCompositeContractError(
+          `${owner} output ${currentPath}: provider cannot declare resources or clipRef; use input properties instead.`,
+        );
+      }
+      if (
+        'kind' in input &&
+        input.kind === 'resourceRef' &&
+        (!('id' in input) || !allowedResourceIds?.has(input.id as string))
+      ) {
+        throw createCompositeContractError(
+          `${owner} output ${currentPath}: resource reference '${'id' in input ? String(input.id) : ''}' was not supplied to this provider; use input fill or stroke instead.`,
+        );
+      }
     }
     const output = Object.create(null) as Record<string, unknown>;
     for (const [key, entry] of Object.entries(input)) {
-      if (entry !== undefined) output[key] = snapshot(entry, `${currentPath}.${key}`);
+      if (entry !== undefined) output[key] = snapshot(entry, `${currentPath}.${key}`, checkResources && key !== 'meta');
     }
     return output;
   };
@@ -94,11 +119,17 @@ const assertScenePrimitive = (owner: string, value: ScenePrimitive, path: string
 };
 
 /** 在统一 fatal boundary 内物化并校验 Shape provider 发出的 Scene primitive 列表 */
-export const snapshotScenePrimitives = (owner: string, emitted: Iterable<ScenePrimitive>): Array<ScenePrimitive> =>
-  guardProviderOutput(owner, () =>
-    Array.from(emitted, primitive => {
-      const snapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive');
+export const snapshotScenePrimitives = (
+  owner: string,
+  emitted: Iterable<ScenePrimitive>,
+  allowedResourceIds: ReadonlySet<string> = new Set(),
+): Array<ScenePrimitive> =>
+  guardProviderOutput(owner, () => {
+    if ('resources' in emitted)
+      throw createCompositeContractError(`${owner} output: provider cannot declare resources.`);
+    return Array.from(emitted, primitive => {
+      const snapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive', allowedResourceIds);
       assertScenePrimitive(owner, snapshot, 'Scene primitive');
       return snapshot;
-    }),
-  );
+    });
+  });

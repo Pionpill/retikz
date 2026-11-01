@@ -22,7 +22,7 @@ export type PaintRegistry = {
   /** 透传颜色或登记绘制资源，返回场景可引用的绘制值 */
   register: RegisterPaint;
   /** 导入已生成的绘制资源，不再调用 Pattern provider */
-  importResource: (resource: Extract<SceneResource, { kind: 'paint' }>) => PaintValue;
+  importResource: (resource: Extract<SceneResource, { kind: 'paint' }>) => Extract<PaintValue, { kind: 'resourceRef' }>;
   /** 读取当前已登记的绘制资源 */
   getResources: () => Array<SceneResource>;
 };
@@ -64,6 +64,9 @@ const emitPatternTile = (resolution: PatternResolution, round: (n: number) => nu
   }
 
   let tileSize = size;
+  if ('resources' in emitted) {
+    throw createCompositeContractError(`Pattern '${spec.shape}' output: provider cannot declare resources.`);
+  }
   let emittedMotif: Iterable<ScenePrimitive>;
   // 同时检查两个字段，避免将携带单个同名元数据字段的 iterable 误判为完整 tile
   if ('tileSize' in emitted && 'motif' in emitted) {
@@ -130,7 +133,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     return { kind: 'resourceRef', id };
   };
 
-  const importResource = (resource: Extract<SceneResource, { kind: 'paint' }>): PaintValue => {
+  const importResource: PaintRegistry['importResource'] = resource => {
     const key = paintKeyOf({ spec: resource.spec, tile: 'tile' in resource ? resource.tile : undefined });
     const id = insert(key, nextId => ({ ...resource, id: nextId }));
     return { kind: 'resourceRef', id };

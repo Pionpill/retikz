@@ -392,7 +392,6 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
   );
 
   const marks = emitPathMarks({
-    collectResourceReferences: pathEmitOptions.collectResourceReferences,
     geometry: logicalGeometry,
     placements: path.marks ?? [],
     markResolutions: resolution.marks,

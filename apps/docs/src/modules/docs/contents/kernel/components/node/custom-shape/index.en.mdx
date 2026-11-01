@@ -92,6 +92,8 @@ The IR stores only the registry name or parametric reference; the host must prov
 
 ## Errors and limitations
 
+Output must not carry `resources` or `clipRef`. Paint references may only pass through this invocation's `style.fill` / `style.stroke`. Select gradients or registered Patterns through input properties so the compiler creates the resources. Other handwritten resource IDs fail at the provider output boundary; nested primitives follow the same rules.
+
 | Case                                             | Result and diagnostic                                                               |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | Empty `name`                                     | Registration rejects a provider key that is not a non-empty string                  |

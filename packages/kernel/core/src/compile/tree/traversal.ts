@@ -123,8 +123,6 @@ export class SubtreeCompiler {
 
     const alignmentGuides = resolveStructuralAlignmentGuides(rootAlignmentGuides);
 
-    this.context.workspace.validateResourceReferences();
-
     return {
       primitives,
       primitiveZIndices: primitives.map(primitive => this.output.zIndexOf.get(primitive)),

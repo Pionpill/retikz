@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { literal } from 'zod';
 
-import { compileToScene, definePattern, visitSceneContent } from '../../src';
+import { compileToScene, defineMark, definePath, definePattern, PathSchema, visitSceneContent } from '../../src';
 import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../src';
 import {
   createClipRegistry,
@@ -8,6 +9,7 @@ import {
   importSceneResources,
   remapPrimitiveResources,
 } from '../../src/compile/resource';
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 describe('资源内容复用基础图元', () => {
   it('自定义 Pattern 保留已度量文本和基础图元样式', () => {
@@ -51,34 +53,124 @@ describe('Scene 资源依赖关闭', () => {
   };
   const rectangle: ScenePrimitive = { type: 'rect', x: 0, y: 0, width: 1, height: 1 };
 
-  it('先输出的 Pattern 可以引用当前工作区稍后注册的资源', () => {
-    const scene = compileToScene(patternScene, {
-      patterns: [
-        definePattern({ name: 'first', emit: () => [{ ...rectangle, fill: { kind: 'resourceRef', id: 'paint-2' } }] }),
-        definePattern({ name: 'second', emit: () => [rectangle] }),
+  it('Shape 只能透传本次输入的绘制资源，不能借用其他节点的资源', () => {
+    const base = BUILTIN_SHAPES.get('rectangle')!;
+    const valid = {
+      ...base,
+      name: 'passthrough',
+      emit: (_rect: Parameters<typeof base.emit>[0], style: Parameters<typeof base.emit>[1]) => [
+        { ...rectangle, fill: style.fill },
       ],
-    }).scene;
-    expect(scene.resources).toHaveLength(2);
-    expect(() => visitSceneContent(scene)).not.toThrow();
-  });
-
-  it('工作区完成时拒绝缺失资源和错误资源类型', () => {
-    for (const primitive of [
-      { ...rectangle, fill: { kind: 'resourceRef', id: 'missing' } } satisfies ScenePrimitive,
-      { type: 'group', clipRef: 'paint-1', children: [] } satisfies ScenePrimitive,
-    ]) {
-      expect(() =>
-        compileToScene(patternScene, {
-          patterns: [
-            definePattern({ name: 'first', emit: () => [primitive] }),
-            definePattern({ name: 'second', emit: () => [rectangle] }),
+    };
+    const input: IRScene = {
+      ...patternScene,
+      children: [
+        { type: 'node', shape: 'passthrough', position: [0, 0], style: { fill: { kind: 'pattern', shape: 'first' } } },
+      ],
+    };
+    const patterns = [definePattern({ name: 'first', emit: () => [rectangle] })];
+    const result = compileToScene(input, { shapes: [valid], patterns }).scene;
+    expect(() => visitSceneContent(result)).not.toThrow();
+    expect(result.resources).toHaveLength(1);
+    expect(() =>
+      compileToScene(
+        { ...input, children: [...input.children, { type: 'node', shape: 'foreign', position: [2, 0] }] },
+        {
+          patterns,
+          shapes: [
+            valid,
+            { ...base, name: 'foreign', emit: () => [{ ...rectangle, fill: { kind: 'resourceRef', id: 'paint-1' } }] },
           ],
-        }),
-      ).toThrow(/expected (paint|clip) resource/);
-    }
+        },
+      ),
+    ).toThrow(/not supplied/);
   });
 
-  it('资源依赖成环时拒绝输出，即使 provider 返回的是无环 JSON', () => {
+  it('Mark 透传输入绘制资源并拒绝自行声明资源', () => {
+    const input: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+          marks: [{ pos: 0.5, shape: 'custom', fill: { kind: 'pattern', shape: 'first' } }],
+        },
+      ],
+    };
+    const patterns = [definePattern({ name: 'first', emit: () => [rectangle] })];
+    const result = compileToScene(input, {
+      patterns,
+      marks: [defineMark({ name: 'custom', emit: context => [{ ...rectangle, fill: context.fill }] })],
+    }).scene;
+    expect(result.resources).toHaveLength(1);
+    expect(() => visitSceneContent(result)).not.toThrow();
+    expect(() =>
+      compileToScene(input, {
+        patterns,
+        marks: [defineMark({ name: 'custom', emit: () => Object.assign([rectangle], { resources: [] }) })],
+      }),
+    ).toThrow(/cannot declare resources/);
+    expect(() =>
+      compileToScene(input, {
+        patterns,
+        marks: [
+          defineMark({ name: 'custom', emit: () => [{ ...rectangle, fill: { kind: 'resourceRef', id: 'foreign' } }] }),
+        ],
+      }),
+    ).toThrow(/not supplied/);
+  });
+
+  it('Path 可透传 Core 描边服务生成的资源，但不能输出资源声明', () => {
+    const input: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'path',
+          kind: 'custom',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const patterns = [definePattern({ name: 'first', emit: () => [rectangle] })];
+    const path = definePath({
+      name: 'custom',
+      schema: PathSchema.extend({ kind: literal('custom') }),
+      compile: context =>
+        context.emitStroke({ ...context.path, style: { stroke: { kind: 'pattern', shape: 'first' } } }),
+    });
+    const result = compileToScene(input, { patterns, paths: [path] }).scene;
+    expect(result.resources).toHaveLength(1);
+    expect(() => visitSceneContent(result)).not.toThrow();
+    expect(() =>
+      compileToScene(input, {
+        paths: [{ ...path, compile: () => ({ primitives: [rectangle], boundsPoints: [], resources: [] }) }],
+      }),
+    ).toThrow(/cannot declare resources/);
+    expect(() =>
+      compileToScene(input, {
+        paths: [
+          {
+            ...path,
+            compile: () => ({
+              primitives: [{ ...rectangle, fill: { kind: 'resourceRef', id: 'foreign' } }],
+              boundsPoints: [],
+            }),
+          },
+        ],
+      }),
+    ).toThrow(/not supplied/);
+  });
+
+  it('在 Pattern 输出时拒绝手写引用，不等待后续资源注册', () => {
+    let secondCalled = false;
     expect(() =>
       compileToScene(patternScene, {
         patterns: [
@@ -88,123 +180,115 @@ describe('Scene 资源依赖关闭', () => {
           }),
           definePattern({
             name: 'second',
-            emit: () => [{ ...rectangle, fill: { kind: 'resourceRef', id: 'paint-1' } }],
+            emit: () => {
+              secondCalled = true;
+              return [rectangle];
+            },
           }),
         ],
       }),
-    ).toThrow(/cyclic resource dependency/);
+    ).toThrow(/Pattern 'first'.*fill.*paint-2.*not supplied/);
+    expect(secondCalled).toBe(false);
   });
 
-  it('检查 Pattern 内嵌套箭头的资源引用', () => {
-    expect(() =>
-      compileToScene(patternScene, {
-        patterns: [
-          definePattern({
-            name: 'first',
-            emit: () => [
-              {
-                type: 'path',
-                commands: [],
-                arrowEnd: {
-                  shape: 'nested',
-                  baseSize: 1,
-                  refX: 0,
-                  refY: 0,
-                  markerWidth: 1,
-                  markerHeight: 1,
-                  marker: [{ ...rectangle, fill: { kind: 'resourceRef', id: 'missing' } }],
-                },
-              },
-            ],
-          }),
-          definePattern({ name: 'second', emit: () => [rectangle] }),
-        ],
-      }),
-    ).toThrow(/arrowEnd.marker\[0\].fill.*missing/);
-  });
-
-  it('资源依赖失败时不向目标注册表发布部分内容', () => {
-    const paint = createPaintRegistry(value => value);
-    const clip = createClipRegistry(value => value);
-    const resources: NonNullable<Scene['resources']> = [
-      { kind: 'clip', id: 'window', path: { fillRule: 'nonzero', commands: [] } },
+  it('拒绝嵌套图元的裁剪和资源引用', () => {
+    const primitives: Array<ScenePrimitive> = [
+      { type: 'group', clipRef: 'clip-1', children: [] },
+      { type: 'group', children: [{ ...rectangle, fill: { kind: 'resourceRef', id: 'foreign' } }] },
       {
-        kind: 'paint',
-        id: 'tile',
-        spec: { kind: 'pattern', shape: 'custom' },
-        tile: {
-          size: 10,
-          motif: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: { kind: 'resourceRef', id: 'tile' } }],
+        type: 'path',
+        commands: [],
+        arrowEnd: {
+          shape: 'nested',
+          baseSize: 1,
+          refX: 0,
+          markerWidth: 1,
+          markerHeight: 1,
+          marker: [{ ...rectangle, stroke: { kind: 'resourceRef', id: 'foreign' } }],
         },
       },
     ];
-    expect(() => importSceneResources(resources, paint, clip)).toThrow(/cyclic/);
-    expect(paint.getResources()).toEqual([]);
-    expect(clip.getResources()).toEqual([]);
+    for (const primitive of primitives) {
+      expect(() =>
+        compileToScene(patternScene, {
+          patterns: [definePattern({ name: 'first', emit: () => [primitive] })],
+        }),
+      ).toThrow(/Pattern 'first'.*(clipRef|not supplied)/);
+    }
   });
-  it('重映射 Pattern 与嵌套箭头引用，保留相同 spec 的不同内容', () => {
+
+  it('拒绝返回值及图元携带资源声明', () => {
+    const outputs = [{ tileSize: 10, motif: [rectangle], resources: [] }, [{ ...rectangle, resources: [] }]];
+    for (const output of outputs) {
+      expect(() =>
+        compileToScene(patternScene, {
+          patterns: [definePattern({ name: 'first', emit: () => output })],
+        }),
+      ).toThrow(/cannot declare resources/);
+    }
+  });
+
+  it('元数据中的同名字段不属于渲染资源', () => {
+    const meta = { resources: [], clipRef: 'user-value', example: { kind: 'resourceRef', id: 'user-value' } };
+    const scene = compileToScene(
+      { ...patternScene, children: patternScene.children.slice(0, 1) },
+      {
+        patterns: [definePattern({ name: 'first', emit: () => [{ ...rectangle, meta }] })],
+      },
+    ).scene;
+    const resource = scene.resources?.find(item => item.kind === 'paint' && 'tile' in item);
+    expect(resource?.tile.motif[0].meta).toEqual(meta);
+  });
+
+  it('线性导入独立资源并重映射宿主及嵌套箭头的引用', () => {
     const resources: NonNullable<Scene['resources']> = [
       {
         kind: 'paint',
-        id: 'outer',
+        id: 'first',
         spec: { kind: 'pattern', shape: 'custom' },
-        tile: {
-          size: 10,
-          motif: [
-            {
-              type: 'group',
-              clipRef: 'window',
-              children: [
-                { type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: { kind: 'resourceRef', id: 'inner' } },
-              ],
-            },
-          ],
-        },
+        tile: { size: 10, motif: [{ ...rectangle, fill: 'red' }] },
       },
       {
         kind: 'paint',
-        id: 'inner',
+        id: 'second',
         spec: { kind: 'pattern', shape: 'custom' },
-        tile: { size: 10, motif: [{ type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: 'red' }] },
+        tile: { size: 10, motif: [{ ...rectangle, fill: 'blue' }] },
       },
       { kind: 'clip', id: 'window', path: { fillRule: 'nonzero', commands: [] } },
     ];
     const paint = createPaintRegistry(value => value);
     const clip = createClipRegistry(value => value);
     const ids = importSceneResources(resources, paint, clip);
-    expect(ids.get('outer')).not.toBe(ids.get('inner'));
-    const host = remapPrimitiveResources(
-      {
-        type: 'path',
-        id: 'host',
-        commands: [],
-        arrowEnd: {
-          shape: 'test',
-          baseSize: 10,
-          refX: 0,
-          markerWidth: 10,
-          markerHeight: 10,
-          marker: [
-            {
-              type: 'rect',
-              id: 'local',
-              x: 0,
-              y: 0,
-              width: 10,
-              height: 10,
-              fill: { kind: 'resourceRef', id: 'outer' },
-            },
-          ],
+    expect(ids.get('first')).not.toBe(ids.get('second'));
+    const source: GroupPrimitive = {
+      type: 'group',
+      clipRef: 'window',
+      children: [
+        {
+          type: 'path',
+          commands: [],
+          fill: { kind: 'resourceRef', id: 'first' },
+          arrowEnd: {
+            shape: 'test',
+            baseSize: 10,
+            refX: 0,
+            markerWidth: 10,
+            markerHeight: 10,
+            marker: [{ ...rectangle, fill: { kind: 'resourceRef', id: 'second' } }],
+          },
         },
-      },
-      ids,
-    );
-    const owners: Array<string | undefined> = [];
-    visitSceneContent({ primitives: [host], resources: [...paint.getResources(), ...clip.getResources()] }, (_, site) =>
-      owners.push(site.hostId),
-    );
-    expect(owners).toEqual(['host', 'host', 'host', 'host', 'host']);
-    expect(resources[0].id).toBe('outer');
+      ],
+    };
+    const host = remapPrimitiveResources(source, ids);
+    expect(host).toMatchObject({
+      clipRef: ids.get('window'),
+      children: [{ fill: { id: ids.get('first') }, arrowEnd: { marker: [{ fill: { id: ids.get('second') } }] } }],
+    });
+    expect(() =>
+      visitSceneContent({ primitives: [host], resources: [...paint.getResources(), ...clip.getResources()] }),
+    ).not.toThrow();
+    expect(source.clipRef).toBe('window');
+    expect(resources[0].id).toBe('first');
   });
   it('拒绝丢失和错误类型的资源引用及其使用路径', () => {
     const scene: Scene = {

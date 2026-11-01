@@ -116,9 +116,9 @@ const { scene } = compileToScene(
 | An unregistered `shape` is referenced                                    | Compilation reports the mark location and available names |
 | An ordinary mark is used in `arrow.start` / `end`                        | The arrow registry cannot resolve its name                |
 | `emit` throws                                                            | Core wraps the error and preserves its original `cause`   |
-| The path has no locatable length, or output references missing resources | Compilation rejects the invalid result                    |
+| The path has no locatable length, or output references resources not supplied as input | Compilation rejects the invalid result                    |
 
-Emit basic Scene primitives, not DOM, ReactNode, or unmeasured text. Existing scene paints and clipping resources may be referenced, but references must resolve to provided resources. Definitions stay outside IR. Generate content for each instance to avoid sharing mutable primitives.
+Emit basic Scene primitives, not DOM, ReactNode, or unmeasured text. Resource references may only pass through this invocation's `fill` / `stroke`; `contextStroke` is also supported. Do not invent other resource IDs, declare `resources`, or set `clipRef`. These rules also apply to nested primitives; violations fail at the provider output boundary. Select gradients or registered Patterns through input properties. Definitions stay outside IR. Generate content for each instance to avoid sharing mutable primitives.
 
 ## Related properties
 

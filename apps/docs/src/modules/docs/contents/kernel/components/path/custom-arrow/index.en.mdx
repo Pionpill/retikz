@@ -75,7 +75,7 @@ The effective Path `color` overrides the arrow's own `color`; explicit arrow `st
     { label: 'Arrow geometry contract', path: 'packages/kernel/core/src/contract/path/arrow.ts' },
     {
       label: 'Inherited color and marker materialization',
-      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      path: 'packages/kernel/core/src/compile/tree/path/stroke/shrink.ts',
       startLine: 42,
     },
   ]}
@@ -149,7 +149,7 @@ Without a fixed color, the same arrow definition follows each path stroke. Compa
 | Unknown `arrow.end.shape`                               | Compile lists available names and `options.arrows` |
 | Invalid `baseSize`, back / contact / tip, or dimensions | Compile rejects invalid marker geometry            |
 
-`emit` returns `Iterable<ScenePrimitive>` with the full path, ellipse, rect, text, and group contracts. Text must already be measured. Paint and clip references must exist in the same Scene; missing, wrong-kind, or cyclic references fail. Finite nested arrows and Patterns are supported. Definition-side wrappers may derive from basic primitives and must be converted before returning. Set `fill: 'none'` explicitly for hollow content; defaults match ordinary primitives.
+`emit` returns `Iterable<ScenePrimitive>` using the path, ellipse, rect, text, and group contracts. Text must already be measured. Paint references may only pass through this invocation's `fill` / `stroke`; `contextStroke` is also supported. Do not invent other resource IDs, declare `resources`, or set `clipRef`. These rules also apply to nested content, and violations fail at the provider output boundary. Select gradients or Patterns through input properties so the compiler creates the resources. Definition-side wrappers may derive from basic primitives and must be converted before returning. Set `fill: 'none'` explicitly for hollow content; defaults match ordinary primitives.
 
 Content animations share the scene clock with independent playback origins per host: triggering A does not restart B. Local `id` and `meta` do not create independent update nodes. Arrow hits belong to the host; `pointerEvents: "none"` excludes the corresponding subtree.
 

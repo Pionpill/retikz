@@ -96,15 +96,15 @@ const emitNodeShapePrimitives = (
   registerPaint: RegisterPaint,
 ): Array<ScenePrimitive> => {
   const axisAlignedRect: CenteredBox = { ...layout.geometry.rect, rotate: 0 };
+  const style = toShapeStyle(properties, registerPaint);
+  const allowedResourceIds = new Set<string>();
+  for (const paint of [style.fill, style.stroke]) {
+    if (typeof paint === 'object' && paint.kind === 'resourceRef') allowedResourceIds.add(paint.id);
+  }
   let emitted: Iterable<ScenePrimitive>;
 
   try {
-    emitted = layout.shape.definition.emit(
-      axisAlignedRect,
-      toShapeStyle(properties, registerPaint),
-      round,
-      layout.shape.params,
-    );
+    emitted = layout.shape.definition.emit(axisAlignedRect, style, round, layout.shape.params);
   } catch (thrown) {
     if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
 
@@ -114,7 +114,7 @@ const emitNodeShapePrimitives = (
     });
   }
 
-  return snapshotScenePrimitives(`Shape '${layout.shape.name}'`, emitted);
+  return snapshotScenePrimitives(`Shape '${layout.shape.name}'`, emitted, allowedResourceIds);
 };
 
 /** 发出节点正文图元 */

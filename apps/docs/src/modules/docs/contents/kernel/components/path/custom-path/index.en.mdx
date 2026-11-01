@@ -126,6 +126,8 @@ const view = mount(document.getElementById('diagram')!, input, {
 
 ## Errors and limitations
 
+Output must not carry `resources` or `clipRef`. Resource references may only pass through this invocation's `appearance` or values produced by `emitStroke`. Select gradients or registered Patterns through input properties; Core registers the resources. Other handwritten resource IDs fail at the provider output boundary, including in nested primitives.
+
 | Case                                            | Result                                                    |
 | ----------------------------------------------- | --------------------------------------------------------- |
 | Empty or non-string definition `name`           | `definePath` rejects it immediately                       |
