@@ -2,7 +2,7 @@ import type { ClipRegistry, PaintRegistry } from '../resource';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import type { NodeBoundaryContext } from '../tree/node';
 import { createNodeBoundaryContext } from '../tree/node';
-import type { InputCompileWarning } from '../warning';
+import type { CompileWarning } from '../warning';
 import type { SharedCompileContext } from './shared';
 
 /** 单次计算独占的几何、资源与诊断工作区 */
@@ -16,15 +16,15 @@ export type WorkspaceCompileContext = {
   /** 当前计算的诊断收集器，失败或丢弃时不发布 */
   diagnostics: {
     /** 已收集的诊断，只通过 collect 追加 */
-    readonly warnings: ReadonlyArray<InputCompileWarning>;
+    readonly warnings: ReadonlyArray<CompileWarning>;
     /** 收集本次计算产生的诊断 */
-    collect: (warning: InputCompileWarning) => void;
+    collect: (warning: CompileWarning) => void;
   };
 };
 
 /** 为一次全量、元素或探测计算创建隔离的工作区 */
 export const createWorkspaceCompileContext = (shared: SharedCompileContext): WorkspaceCompileContext => {
-  const warnings: Array<InputCompileWarning> = [];
+  const warnings: Array<CompileWarning> = [];
   return {
     nodeBoundaryContext: createNodeBoundaryContext(),
     paintRegistry: createPaintRegistry(shared.layout.round),

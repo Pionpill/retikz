@@ -6,7 +6,7 @@ import type { IRChild, IRPosition, IRScope } from '../../../schemas';
 import type { ElementCompileContext } from '../../context';
 import type { CompileOutput } from '../../output';
 import type { CompileOwnerKey } from '../../provenance';
-import type { InputCompileWarning } from '../../warning';
+import type { CompileWarning } from '../../warning';
 import type { TreeCompileFrame } from '../frame';
 import type { CompiledNodeLayout } from '../node';
 import type { InternalScenePrimitive } from '../output';
@@ -43,7 +43,7 @@ export type ScopeGeometryContext = Readonly<{
   /** 当前诊断位置 */
   irPath: PropertyPath;
   /** 当前诊断接收器 */
-  onWarn: (warning: InputCompileWarning) => void;
+  onWarn: (warning: CompileWarning) => void;
 }>;
 
 /** scope.id layout 占位注册结果 */

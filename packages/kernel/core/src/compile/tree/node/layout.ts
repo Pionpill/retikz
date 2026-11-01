@@ -17,13 +17,13 @@ import { resolvePosition, resolvePositionTargetWorld } from '../../../resolve/po
 import { resolveFont, resolveTextLineHeight } from '../../../resolve/text';
 import type { IRAnchorPosition, IRPosition } from '../../../schemas';
 import { CenterAnchor } from '../../../shared';
-import type { CompileWarningCode } from '../../constants';
 import { DEFAULT_FONT_SIZE } from '../../constants';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../../provider-output';
 import { resolveAnchorRefUncached } from '../../reference';
 import type { TextMeasurer } from '../../text';
 import type { ComposedScopeTransform } from '../../transform';
 import { composeScopeTransform, inverseScopeTransform, projectLayoutWithTransform } from '../../transform';
+import type { CompileWarningCode } from '../../warning';
 import type { NodeBoundaryContext } from './boundary-context';
 import { createNodeBoundaryContext } from './boundary-context';
 import { layoutNodeContent } from './content/layout';

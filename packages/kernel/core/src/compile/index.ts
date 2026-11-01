@@ -1,6 +1,5 @@
 export { createCompileChildPath, formatCompileOccurrence } from './artifact';
 export { compileSceneSnapshot, compileToScene } from './compile';
-export { BuiltinCompileWarningCode, type CompileWarningCode } from './constants';
 export { createSharedCompileContext } from './context';
 export type {
   CompileContextHost,
@@ -58,5 +57,5 @@ export type {
   ExecuteOptions,
   SceneCompilationSnapshot,
 } from './types';
-export { formatCompileWarning } from './warning';
-export type { CompileWarning } from './warning';
+export { BuiltinCompileWarningCode, formatCompileWarning } from './warning';
+export type { CompileWarning, CompileWarningCode } from './warning';

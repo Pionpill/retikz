@@ -5,7 +5,7 @@ import { BuiltinCompileWarningCode } from '../../src/compile';
 import { createFullCompileContext, createSharedCompileContext } from '../../src/compile/context';
 import { CompileManager } from '../../src/compile/tree';
 import type { CompiledNodeLayout } from '../../src/compile/tree/node';
-import type { InputCompileWarning } from '../../src/compile/warning';
+import type { CompileWarning } from '../../src/compile/warning';
 import type { TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
@@ -57,7 +57,7 @@ const collectLayouts = (
   } = {},
 ): {
   layouts: Array<CompiledNodeLayout>;
-  warnings: ReadonlyArray<InputCompileWarning>;
+  warnings: ReadonlyArray<CompileWarning>;
   textPrims: Array<TextPrimitive>;
 } => {
   const context = createFullCompileContext(ir, {

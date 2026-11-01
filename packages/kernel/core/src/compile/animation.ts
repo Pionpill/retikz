@@ -1,15 +1,15 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { IRAnimationTrack } from '../schemas';
-import { BuiltinCompileWarningCode } from './constants';
-import type { InputCompileWarning } from './warning';
+import { BuiltinCompileWarningCode } from './warning';
+import type { CompileWarning } from './warning';
 
 /** animation 过滤上下文 */
 type FilterAnimationsContext = {
   /** 校验目标层级 */
   target: 'element' | 'root';
   /** warning 收集器 */
-  onWarn: (warning: InputCompileWarning) => void;
+  onWarn: (warning: CompileWarning) => void;
   /** 当前 IR locator */
   irPath: PropertyPath;
 };

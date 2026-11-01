@@ -1,7 +1,7 @@
 import type { GroupPrimitive, PathPrimitive, ScenePrimitive, TextPrimitive } from '../../contract';
 import type { CanonicalInlineSegment } from '../../resolve';
-import type { CompileWarningCode } from '../constants';
-import { BuiltinCompileWarningCode } from '../constants';
+import type { CompileWarningCode } from '../warning';
+import { BuiltinCompileWarningCode } from '../warning';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
 import type { TextFont, TextMeasurer } from './metrics';
 import { resolveTextMetrics } from './metrics';

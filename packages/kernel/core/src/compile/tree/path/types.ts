@@ -7,7 +7,7 @@ import type { CanonicalTheme } from '../../../shared';
 import type { CompileOutput } from '../../output';
 import type { PaintRegistry, PaintResolver } from '../../resource';
 import type { TexLowerer } from '../../text';
-import type { InputCompileWarning } from '../../warning';
+import type { CompileWarning } from '../../warning';
 
 /** path emit 阶段的可选服务与诊断上下文 */
 export type PathEmitOptions = {
@@ -19,7 +19,7 @@ export type PathEmitOptions = {
    * 警告收集器（由 compileToScene 传入）
    * 缺省时不发出警告
    */
-  onWarn?: (warning: InputCompileWarning) => void;
+  onWarn?: (warning: CompileWarning) => void;
   /** 该 path 所属 scope 的累积 transform 链 */
   scopeChain?: ReadonlyArray<Transform>;
   /**

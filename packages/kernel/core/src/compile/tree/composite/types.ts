@@ -16,7 +16,7 @@ import type { IRChild } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
 import type { CompileProvenanceSnapshot, CompileOwnerKey } from '../../provenance';
 import type { CompositeArtifact } from '../../types';
-import type { InputCompileWarning } from '../../warning';
+import type { CompileWarning } from '../../warning';
 import type { CompileExecutionContext } from '../context';
 import type { TreeCompileFrame } from '../frame';
 import type { NamespaceFrameChange } from '../namespace';
@@ -62,12 +62,12 @@ export type CompositeReplayTransaction = {
     /** 与探测起始命名空间发生冲突的标识 */
     id: string;
     /** 重放时需要重新判断是否发布的重名诊断 */
-    warning: InputCompileWarning;
+    warning: CompileWarning;
   }>;
   /** probe 已解析资源 */
   resources: Array<SceneResource>;
   /** 仅在 replay 时发布的 warning */
-  warnings: Array<InputCompileWarning>;
+  warnings: Array<CompileWarning>;
   /** 仅在 replay 时发布的 artifacts */
   artifacts: Array<CompositeArtifact>;
   /** probe 时的有效样式语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */

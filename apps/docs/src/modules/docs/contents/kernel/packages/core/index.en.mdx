@@ -49,6 +49,8 @@ For stroke schema composition, `GraphicStrokeSchema` provides width, dash length
 
 Use `BuiltinBoundary` for built-in connection surface names and register custom surfaces through the `boundaries` compile option. `IRBoundary` accepts built-in names, custom boundary or shape names, and `{ type, params }` references. Use `BuiltinCompileWarningCode` for built-in compilation warning codes; the open `CompileWarningCode` type also accepts custom codes.
 
+`CompileOptions.onWarn` receives a `CompileWarning` with three fields: `code` identifies the warning, `message` describes it in English, and `path` locates it relative to the input root. These are the only fields included when enumerating the warning object or serializing it to JSON.
+
 Use Core IR types such as `IRScene` to declare drawings, and Core's `PathCommand` for compiled path commands. Import the plain coordinate and vector types `Position` and `Vector2` from `@retikz/math`.
 
 Core provides a framework-independent TypeScript compilation API. This example uses the same A-to-B connection with default node layout:

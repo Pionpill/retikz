@@ -11,13 +11,13 @@ import type { CompositeInputScope } from '../../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { IRChild } from '../../../schemas';
 import { formatCompileOccurrence, freezeOccurrence } from '../../artifact';
-import { BuiltinCompileWarningCode } from '../../constants';
 import type { FullCompileContext } from '../../context';
 import { createWorkspaceCompileContext } from '../../context';
 import { createDuplicateWarning, withCompileWarningOccurrence } from '../../diagnostics';
 import { CompileProvenanceTracker } from '../../provenance';
 import { visualBoundsOfPrimitives } from '../../scene';
-import type { InputCompileWarning } from '../../warning';
+import { BuiltinCompileWarningCode } from '../../warning';
+import type { CompileWarning } from '../../warning';
 import type { CompileExecutionContext } from '../context';
 import type { TreeCompileFrame } from '../frame';
 import type { NamespaceStack } from '../namespace';
@@ -60,9 +60,9 @@ export const evaluateCompositeLayout = (
 
   const workspace = createWorkspaceCompileContext(probeContext.context.shared);
   const warnings = workspace.diagnostics.warnings;
-  const namespaceBaselineWarnings: Array<{ id: string; warning: InputCompileWarning }> = [];
+  const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }> = [];
 
-  const captureWarning = (warning: InputCompileWarning): void => {
+  const captureWarning = (warning: CompileWarning): void => {
     if (
       warning.code === BuiltinCompileWarningCode.UnresolvedNodeReference ||
       warning.code === BuiltinCompileWarningCode.OffsetBaseUnresolved ||

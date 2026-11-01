@@ -5,7 +5,7 @@ import type { SharedCompileContext, WorkspaceCompileContext, FullCompileContext 
 import { createDuplicateWarning, withCompileWarningOccurrence } from '../diagnostics';
 import type { CompileProvenanceTracker } from '../provenance';
 import { createPositionResolveContext } from '../reference';
-import type { InputCompileWarning } from '../warning';
+import type { CompileWarning } from '../warning';
 import type { CompositeCompileSession } from './composite/session';
 import { NamespaceStack } from './namespace';
 import { ScopeTransformComposer } from './transform-cache';
@@ -60,7 +60,7 @@ const createTreeWarningScope = (
   observeWarningOccurrence: SubtreeCompileOptions['observeWarningOccurrence'],
 ) => {
   const warningOccurrences: Array<CompileOccurrenceLocator> = [];
-  const dispatchWarning = (warning: InputCompileWarning): void => {
+  const dispatchWarning = (warning: CompileWarning): void => {
     diagnostics.collect(withCompileWarningOccurrence(warning, warningOccurrences.at(-1)));
   };
   const withWarningOccurrence: WithCompileWarningOccurrence = (occurrence, execute) => {

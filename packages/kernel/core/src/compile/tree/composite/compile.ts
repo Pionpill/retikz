@@ -24,12 +24,12 @@ import {
 import type { IRChild } from '../../../schemas';
 import { cloneAndFreezeJson } from '../../../shared/json';
 import { createCompileChildPath, formatCompileOccurrence, freezeCompileArtifact } from '../../artifact';
-import { BuiltinCompileWarningCode } from '../../constants';
 import { createCompileInvariantError } from '../../errors';
 import type { CompileOwnerKey } from '../../provenance';
 import { withProviderOutputValidationBoundary } from '../../provider-output';
 import { allocationPointsOf } from '../../scene';
 import type { CompositeArtifact } from '../../types';
+import { BuiltinCompileWarningCode } from '../../warning';
 import { cloneAlignmentGuides } from '../alignment-guide';
 import { pushAllocation } from '../allocation';
 import type { CompileExecutionContext } from '../context';

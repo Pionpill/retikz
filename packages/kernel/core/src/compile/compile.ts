@@ -12,7 +12,7 @@ import type {
 import type { CompileWarning } from './warning';
 import { formatCompileWarning } from './warning';
 
-export { BuiltinCompileWarningCode, type CompileWarningCode } from './constants';
+export { BuiltinCompileWarningCode, type CompileWarningCode } from './warning';
 
 export type {
   CompileCompositeOptions,

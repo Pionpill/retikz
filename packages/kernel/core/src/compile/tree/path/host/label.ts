@@ -5,7 +5,6 @@ import type { GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../../../
 import type { CanonicalFont, CanonicalPathLabel } from '../../../../resolve';
 import { resolveFont, resolveTextLine } from '../../../../resolve';
 import type { IRPosition } from '../../../../schemas';
-import type { CompileWarningCode } from '../../../constants';
 import { DEFAULT_FONT_SIZE } from '../../../constants';
 import type { LineLayoutContext, TexLowerer, TextMeasurer } from '../../../text';
 import {
@@ -16,6 +15,7 @@ import {
   resolveTextMetrics,
   toAlphabeticBaselineY,
 } from '../../../text';
+import type { CompileWarningCode } from '../../../warning';
 
 /** 边标注默认行高 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;

@@ -7,7 +7,7 @@ import { filterAnimations } from '../animation';
 import { orderCompileWarnings } from '../diagnostics';
 import type { CompileProvenanceTracker } from '../provenance';
 import type { SceneCompilationSnapshot, CompileResult, CompositeArtifact, CompositeArtifactOf } from '../types';
-import type { InputCompileWarning } from '../warning';
+import type { CompileWarning } from '../warning';
 import { computeLayoutFromBounds } from './layout';
 import { viewBoxToLayout } from './view-box';
 
@@ -31,7 +31,7 @@ export type InputSceneCompilationSnapshot = Readonly<{
   /** 按声明顺序整理的产物 */
   artifacts?: ReadonlyArray<CompositeArtifact>;
   /** 已完成计算的诊断 */
-  diagnostics?: ReadonlyArray<InputCompileWarning>;
+  diagnostics?: ReadonlyArray<CompileWarning>;
   /** 本次来源记录，随图元复制同步转移，并在最终组装时生成快照 */
   provenanceTracker?: CompileProvenanceTracker;
 }>;
@@ -58,7 +58,7 @@ export const assembleSceneCompilationSnapshot = <
     );
   }
 
-  const diagnostics: Array<InputCompileWarning> = [...(input.diagnostics ?? [])];
+  const diagnostics: Array<CompileWarning> = [...(input.diagnostics ?? [])];
   const animations = filterAnimations(root.animations, {
     target: 'root',
     irPath: [],

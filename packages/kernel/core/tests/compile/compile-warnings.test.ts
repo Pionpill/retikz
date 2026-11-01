@@ -46,9 +46,14 @@ describe('CompileOptions.onWarn', () => {
     expect(warnings[0]).toMatchObject({
       code: BuiltinCompileWarningCode.PathTooShort,
       path: ['children', 0, 'children'],
-      origin: { kind: 'primary' },
     });
     expect(warnings[0].message).toContain('at least 2 steps');
+    expect(Object.keys(warnings[0]).sort()).toEqual(['code', 'message', 'path']);
+    expect(JSON.parse(JSON.stringify(warnings[0]))).toEqual({
+      code: warnings[0].code,
+      message: warnings[0].message,
+      path: warnings[0].path,
+    });
   });
 
   it('PATH_TOO_SHORT：首个绘制 step 缺少前驱位置时触发 warning', () => {
@@ -287,7 +292,6 @@ describe('BuiltinCompileWarningCode 导出', () => {
       code: BuiltinCompileWarningCode.UnresolvedNodeReference,
       message: "references undefined node id 'x'",
       path: ['children', 0, 'to'],
-      origin: { kind: 'primary' },
     });
 
     expect(msg).toContain('[retikz]');

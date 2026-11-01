@@ -13,7 +13,7 @@ import type { CanonicalStep, PathTargetView } from '../../../../resolve';
 import { nodeIdFromResolvableTarget } from '../../../../resolve/position';
 import type { IRPosition } from '../../../../schemas';
 import { rectPerimeterSample } from '../../../../shared/geometry';
-import { BuiltinCompileWarningCode } from '../../../constants';
+import { BuiltinCompileWarningCode } from '../../../warning';
 import { clipTarget, isAutoBoundaryTarget, pointOfTarget, samePoint } from '../host';
 import type { PathCommandEmitter } from './commands';
 import type { StrokeCursor } from './cursor';

@@ -14,7 +14,7 @@ import { projectPublishedCompileLayout } from '../../reference';
 import { importSceneResources, remapPrimitiveResources } from '../../resource';
 import { optionalVisualBoundsOfPrimitives } from '../../scene';
 import { allocationPointsOf } from '../../scene';
-import type { InputCompileWarning } from '../../warning';
+import type { CompileWarning } from '../../warning';
 import { effectiveAllocations } from '../allocation';
 import type { TreeCompileFrame } from '../frame';
 import type { CompiledNodeLayout } from '../node';
@@ -90,7 +90,7 @@ export const commitCompositeReplay = (
     execution.context.provenanceTracker?.recordPrimitives(committedPrimitives, semanticOwner, 'composite-replay');
   }
 
-  const suppressedNamespaceWarnings = new Set<InputCompileWarning>();
+  const suppressedNamespaceWarnings = new Set<CompileWarning>();
   const namespaceParentChain =
     authoredPreliminary === undefined
       ? frame.scopeChain
