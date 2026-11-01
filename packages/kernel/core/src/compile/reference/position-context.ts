@@ -1,14 +1,15 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { Transform } from '../../contract';
 import type { BoundaryResolution, NodeBoundaryResolver, NodeReferenceGeometry } from '../../resolve';
 import { boundaryKey } from '../../resolve';
 import type { PositionReferenceView, PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePositionTarget } from '../../resolve/position';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
-import type { NamespaceEntry } from '../namespace';
-import type { NodeBoundaryContext } from '../node';
-import { createNodeReferenceGeometry } from '../node';
 import type { ComposedScopeTransform } from '../transform';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../transform';
+import type { CompiledNodeLayout, NodeBoundaryContext } from '../tree/node';
+import { createNodeReferenceGeometry } from '../tree/node';
 import { resolveAnchorRef } from './anchor-cache';
 
 /** 把视觉 shape 绑定为默认连接面 resolution */
@@ -40,7 +41,16 @@ const targetBoundaryResolutionOf = (
 /** 创建 position resolver context 所需的 compile 状态投影 */
 type InputPositionResolveContext = Readonly<{
   /** 当前命名空间 */
-  lookupReference: (id: string) => NamespaceEntry | undefined;
+  lookupReference: (id: string) =>
+    | Readonly<{
+        /** 引用的布局解析阶段 */
+        state: PositionReferenceView['state'];
+        /** 引用目标的几何布局 */
+        layout: CompiledNodeLayout;
+        /** 引用目标的来源路径 */
+        irPath?: PropertyPath;
+      }>
+    | undefined;
   /** 与节点布局及路径裁剪共享的几何消费状态 */
   nodeBoundaryContext?: NodeBoundaryContext;
   /** 相对定位默认距离 */

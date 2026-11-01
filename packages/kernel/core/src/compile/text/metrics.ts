@@ -4,7 +4,7 @@ import {
   assertProviderOutputKeys,
   providerOutputRecord,
   withProviderOutputValidationBoundary,
-} from '../scene-primitive';
+} from '../provider-output';
 
 /** 字体规格：传给 TextMeasurer 的最小信息 */
 export type TextFont = {

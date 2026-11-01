@@ -3,7 +3,7 @@ import { formatPropertyPath, readPropertyPath } from '@retikz/foundation';
 
 import type { ScenePrimitive } from '../../contract';
 import type { IRChild } from '../../schemas';
-import { createCompileInvariantError } from '../probe-failure';
+import { createCompileInvariantError } from '../errors';
 import type {
   CompileNamespaceKey,
   CompileOwnerKey,

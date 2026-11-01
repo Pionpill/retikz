@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { compileNode, compileToScene, createSharedCompileContext, resolveScopeContext } from '../../src';
 import type { IRNode } from '../../src';
-import { emitNodePrimitives } from '../../src/compile/node';
 import { createPaintRegistry } from '../../src/compile/resource';
+import { emitNodePrimitives } from '../../src/compile/tree/node';
 import { flattenPrims } from '../helpers/flatten';
 
 describe('节点有效属性与布局复用', () => {

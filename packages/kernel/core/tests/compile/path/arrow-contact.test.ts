@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../../src';
 import type { IRScene, IRStep, PathPrimitive, CompiledArrowEnd } from '../../../src';
-import { createStrokePathGeometry, curveSegmentOfOccurrence } from '../../../src/compile/path/stroke/interruption';
 import { applyTransformChain } from '../../../src/compile/transform';
+import { createStrokePathGeometry, curveSegmentOfOccurrence } from '../../../src/compile/tree/path/stroke/interruption';
 import { flattenPrims } from '../../helpers/flatten';
 
 describe('端点箭头触点', () => {

@@ -1,10 +1,12 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 declare const compileOwnerKeyBrand: unique symbol;
+
 declare const compileNamespaceKeyBrand: unique symbol;
 
 /** 仅在同次编译来源结果内可关联的实体键 */
 export type CompileOwnerKey = Readonly<{ [compileOwnerKeyBrand]: never }>;
+
 /** 仅在同次编译来源结果内可关联的命名空间键 */
 export type CompileNamespaceKey = Readonly<{ [compileNamespaceKeyBrand]: never }>;
 

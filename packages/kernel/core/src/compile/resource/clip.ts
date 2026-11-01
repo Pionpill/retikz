@@ -7,7 +7,7 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { ClipResolution } from '../../resolve/resource';
-import { snapshotProviderOutputJson, withProviderOutputValidationBoundary } from '../scene-primitive';
+import { snapshotProviderOutputJson, withProviderOutputValidationBoundary } from '../provider-output';
 
 /** 生成裁剪路径并登记可复用资源 */
 export type ClipRegistry = {

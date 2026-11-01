@@ -26,10 +26,10 @@ import {
   naturalLayoutProposal,
 } from '../../src';
 import { createFullCompileContext } from '../../src/compile/context';
-import { NamespaceStack } from '../../src/compile/namespace';
-import { CompileManager } from '../../src/compile/orchestration';
-import { CompositeCompileSession } from '../../src/compile/orchestration/composite/session';
 import { CompileProvenanceTracker } from '../../src/compile/provenance';
+import { CompileManager } from '../../src/compile/tree';
+import { CompositeCompileSession } from '../../src/compile/tree/composite/session';
+import { NamespaceStack } from '../../src/compile/tree/namespace';
 import { sceneRectangles } from '../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({

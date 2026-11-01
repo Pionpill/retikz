@@ -1,6 +1,6 @@
 import type { PaintValue, ScenePrimitive, SceneResource } from '../../contract';
 import { visitSceneContent } from '../../contract';
-import { createCompileInvariantError } from '../probe-failure';
+import { createCompileInvariantError } from '../errors';
 import type { ClipRegistry } from './clip';
 import type { PaintRegistry } from './paint';
 

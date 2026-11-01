@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { createPositionResolveContext } from '../../src/compile/reference/position-context';
-import { applyTransformChain, inverseTransformChain, ScopeTransformComposer } from '../../src/compile/transform';
+import { applyTransformChain, inverseTransformChain } from '../../src/compile/transform';
+import { ScopeTransformComposer } from '../../src/compile/tree/transform-cache';
 import type { Transform } from '../../src/contract';
 
 describe('坐标变换的数值与可逆边界', () => {

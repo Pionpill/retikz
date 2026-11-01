@@ -37,11 +37,11 @@ import {
   PathSchema,
 } from '../../src';
 import { createFullCompileContext } from '../../src/compile/context';
-import { NamespaceStack } from '../../src/compile/namespace';
-import { CompileManager } from '../../src/compile/orchestration';
-import { createCompileInvariantError, wrapLayoutProbeError } from '../../src/compile/probe-failure';
+import { createCompileInvariantError, wrapLayoutProbeError } from '../../src/compile/errors';
 import * as compileProvenance from '../../src/compile/provenance';
-import { snapshotProviderPosition } from '../../src/compile/scene-primitive';
+import { snapshotProviderPosition } from '../../src/compile/provider-output';
+import { CompileManager } from '../../src/compile/tree';
+import { NamespaceStack } from '../../src/compile/tree/namespace';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';
 import { isLayoutProbeRecoverableError } from '../../src/resolve/diagnostics';
 import { cloneAndFreezeJson } from '../../src/shared/json';

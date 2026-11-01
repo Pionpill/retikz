@@ -5,7 +5,7 @@ import { compareCompileOccurrences } from '../contract';
 import type { IRTransform } from '../schemas';
 import { freezeOccurrence } from './artifact';
 import { BuiltinCompileWarningCode } from './constants';
-import type { DuplicateRegisterInfo } from './namespace';
+import type { DuplicateRegisterInfo } from './tree/namespace';
 import type { CompileWarning, InputCompileWarning } from './warning';
 
 const compileWarningOccurrence = Symbol('compileWarningOccurrence');

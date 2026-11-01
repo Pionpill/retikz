@@ -1,7 +1,7 @@
-import type { NodeBoundaryContext } from '../node';
-import { createNodeBoundaryContext } from '../node';
 import type { ClipRegistry, PaintRegistry } from '../resource';
 import { createClipRegistry, createPaintRegistry } from '../resource';
+import type { NodeBoundaryContext } from '../tree/node';
+import { createNodeBoundaryContext } from '../tree/node';
 import type { InputCompileWarning } from '../warning';
 import type { SharedCompileContext } from './shared';
 

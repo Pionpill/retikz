@@ -4,10 +4,10 @@ import type { PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePositionTarget } from '../../resolve/position';
 import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
-import type { NodeBoundaryContext } from '../node';
-import { boundaryPointOf, clipNodePolyline, createNodeBoundaryContext } from '../node';
 import type { ComposedScopeTransform } from '../transform';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../transform';
+import type { NodeBoundaryContext } from '../tree/node';
+import { boundaryPointOf, clipNodePolyline, createNodeBoundaryContext } from '../tree/node';
 import { resolveAnchorRef } from './anchor-cache';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */

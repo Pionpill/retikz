@@ -12,9 +12,9 @@ import type {
 import { computeSceneTextBounds } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
 import { CANONICAL_STROKE_MITER_LIMIT } from '../constants';
-import { buildMarkMarkerGroup } from '../path';
-import { createCompileInvariantError } from '../probe-failure';
+import { createCompileInvariantError } from '../errors';
 import { applyTransformChain } from '../transform';
+import { buildMarkMarkerGroup } from '../tree/path';
 import { canonicalizeBoundsRect, expandBoundsForShadow } from './bounds';
 
 type MutableRect = { x: number; y: number; width: number; height: number };

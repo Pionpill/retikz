@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import type { CompiledNodeLayout } from '../../src/compile/node';
-import { createScopeCircleLayout } from '../../src/compile/node';
-import { collectScopeCornerPoints } from '../../src/compile/scope';
+import type { CompiledNodeLayout } from '../../src/compile/tree/node';
+import { createScopeCircleLayout } from '../../src/compile/tree/node';
+import { collectScopeCornerPoints } from '../../src/compile/tree/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const scene = (children: IRScene['children']): IRScene => ({

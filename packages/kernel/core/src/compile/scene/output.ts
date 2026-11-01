@@ -4,10 +4,9 @@ import type { AnyCompositeDefinition, Scene, ScenePrimitive, SceneResource } fro
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRScene } from '../../schemas';
 import { filterAnimations } from '../animation';
-import type { SceneCompilationSnapshot } from '../compile';
 import { orderCompileWarnings } from '../diagnostics';
 import type { CompileProvenanceTracker } from '../provenance';
-import type { CompileResult, CompositeArtifact, CompositeArtifactOf } from '../types';
+import type { SceneCompilationSnapshot, CompileResult, CompositeArtifact, CompositeArtifactOf } from '../types';
 import type { InputCompileWarning } from '../warning';
 import { computeLayoutFromBounds } from './layout';
 import { viewBoxToLayout } from './view-box';

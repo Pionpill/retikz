@@ -6,9 +6,9 @@ import { boundaryKey } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { Side } from '../../shared';
 import { isAnchor } from '../../shared';
-import type { CompiledNodeLayout, NodeBoundaryState } from '../node';
-import { anchorOf, angleBoundaryOf, createNodeReferenceGeometry } from '../node';
-import { snapshotProviderPosition } from '../scene-primitive';
+import { snapshotProviderPosition } from '../provider-output';
+import type { CompiledNodeLayout, NodeBoundaryState } from '../tree/node';
+import { anchorOf, angleBoundaryOf, createNodeReferenceGeometry } from '../tree/node';
 
 type AnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
 

@@ -11,7 +11,7 @@ import {
   providerOutputRecord,
   snapshotProviderOutputJson,
   withProviderOutputValidationBoundary,
-} from '../scene-primitive';
+} from '../provider-output';
 
 /** TeX 字形路径的绘制通道 */
 export type LoweredTexPaint =

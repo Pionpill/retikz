@@ -40,3 +40,13 @@ export const collectLayoutBounds = (
   const bounds = boundsOf(boundsPoints);
   return mergeBounds(mergeBounds(current, bounds), expandBoundsForShadow(bounds, shadow));
 };
+
+/** 将分配矩形转换为四角贡献点 */
+export const allocationPointsOf = (bounds: Readonly<BoundsRect>): Array<IRPosition> => {
+  return [
+    [bounds.x, bounds.y],
+    [bounds.x + bounds.width, bounds.y],
+    [bounds.x, bounds.y + bounds.height],
+    [bounds.x + bounds.width, bounds.y + bounds.height],
+  ];
+};

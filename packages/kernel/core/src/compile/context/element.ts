@@ -4,33 +4,15 @@ import { formatPropertyPath } from '@retikz/foundation';
 import type { CompileOccurrenceLocator, LayoutProposal, Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { MergedScopeDefaults } from '../../resolve';
-import { DEFAULT_RESOLVED_THEME, resolveNodeBoundary, resolveScopeDefaults, resolveTheme } from '../../resolve';
-import type { IRScope } from '../../schemas';
+import { resolveNodeBoundary } from '../../resolve';
 import type { CanonicalTheme } from '../../shared';
 import { orderCompileWarnings, withCompileWarningOccurrence } from '../diagnostics';
-import type { CompiledNodeLayout } from '../node';
 import { createPositionResolveContext } from '../reference';
 import { composeScopeTransform } from '../transform';
+import type { CompiledNodeLayout } from '../tree/node';
 import type { CompileWarning } from '../warning';
 import type { SharedCompileContext } from './shared';
 import { createWorkspaceCompileContext } from './workspace';
-
-/** 解析 Scope 子元素继承上下文；不编译 children 或聚合几何 */
-export const resolveScopeContext = (
-  scope: Pick<IRScope, 'defaults' | 'theme'>,
-  shared: SharedCompileContext,
-  parent?: ElementCompileContext,
-  irPath: PropertyPath = [],
-): ElementCompileContext =>
-  Object.freeze({
-    defaults: resolveScopeDefaults(scope, parent?.defaults),
-    theme: resolveTheme(
-      parent?.theme ?? DEFAULT_RESOLVED_THEME,
-      scope.theme,
-      formatPropertyPath([...irPath, 'theme']),
-      shared.registries.themeRegistry,
-    ),
-  });
 
 /** 创建独占的资源、诊断与引用读取工作区 */
 const createElementWorkspace = (options: ElementCompileOptions) => {
