@@ -293,7 +293,13 @@ describe('三层布局提案关闭', () => {
       selectedObservation.text.allocationBounds.y + selectedObservation.text.allocationBounds.height,
     );
 
-    expect(run.result.scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: selectedPaint }]);
+    expect(run.result.scene.resources).toEqual([
+      {
+        kind: 'paint',
+        id: run.result.scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+        spec: selectedPaint,
+      },
+    ]);
     expect(run.warnings).toEqual([]);
     expect(run.warnings.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toEqual([]);
     expect(run.warnings.filter(warning => warning.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toEqual(

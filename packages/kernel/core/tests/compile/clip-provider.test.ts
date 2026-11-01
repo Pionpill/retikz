@@ -85,12 +85,15 @@ describe('裁剪提供者', () => {
     expect(scene.resources ?? []).toHaveLength(1);
     expect((scene.resources ?? [])[0]).toMatchObject({
       kind: 'clip',
-      id: 'clip-1',
+      id: scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
       path: {
         fillRule: 'evenodd' as const,
       },
     });
-    expect(scene.primitives[0]).toMatchObject({ type: 'group', clipRef: 'clip-1' });
+    expect(scene.primitives[0]).toMatchObject({
+      type: 'group',
+      clipRef: scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+    });
   });
 
   it('当没有注册提供者时，自定义裁剪类型在编译时被拒绝', () => {

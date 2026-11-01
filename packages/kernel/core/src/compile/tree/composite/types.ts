@@ -157,7 +157,7 @@ export type PreparedCompositeOutputs = Readonly<{
 
 /** Composite 执行所需的遍历操作，不持有遍历器的私有状态 */
 export type CompositeCompileHost = SubtreeCompileHost & {
-  /** 接受已选择和重映射的子树贡献，输出容器由宿主维护 */
+  /** 接受已选择的子树贡献，输出容器由宿主维护 */
   acceptContribution: (frame: TreeCompileFrame, contribution: SubtreeOutputContribution) => void;
   /** 编译一个已绑定输入或生成的子项 */
   compileChild: (

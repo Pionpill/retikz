@@ -25,8 +25,7 @@ describe('静态编译快照', () => {
     const group: ScenePrimitive = { type: 'group', children: [child] };
     tracker.recordPrimitives([child], generated, 'generated');
     tracker.recordPrimitives([group], first, 'node');
-    const copied = tracker.materializePrimitives([group]);
-    tracker.transferPrimitives([group], copied);
+    const copied = [group];
     const snapshot = tracker.capture(copied);
 
     expect(first).not.toBe(second);

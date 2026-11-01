@@ -219,9 +219,9 @@ Core 支持节点形状等多种自定义能力，其中许多会在编译过程
 
 <ComponentPreview files="output-resources" size="lg" hideCode type="illustration" />
 
-两个 `fill.id` 都指向同一个 `paint-1`。这个 id 是当前注册表分配的引用标识，应用不应把它当作跨编译稳定的业务身份。图案资源还会保存 Definition 生成的 tile 几何，供渲染器消费；渲染时无需再次调用图案 Definition。
+两个 `fill.id` 指向同一个资源，图中用 `paint-1` 简写其 id。实际 id 在资源生成时由规范内容确定，不受登记顺序影响；相同内容跨编译保持相同 id，内容改变则产生不同 id。应用应将它作为不透明的资源引用，不解析其格式或用作业务身份。图案资源的身份还包含 Definition 生成的 tile 几何，因此相同声明产生不同 tile 时不会混用；渲染时无需再次调用图案 Definition。
 
-裁剪采用对应的 clip 注册表：裁剪能力先生成形状，再降低为 Scene 裁剪路径，分组用 `clipRef` 引用它。编译末尾把 paint 与 clip 资源合并到 Scene；没有资源时省略 `resources` 字段。复合布局重放会导入选中结果的资源并重映射引用，相关隔离过程见[复合编译](/kernel/packages/core/composite-compilation)。
+裁剪采用对应的 clip 注册表：裁剪能力先生成形状，再降低为 Scene 裁剪路径，分组用 `clipRef` 引用它。编译末尾把 paint 与 clip 资源合并到 Scene；没有资源时省略 `resources` 字段。复合布局重放会导入选中结果的资源，保留原 id 与图元引用，并按内容身份去重，相关隔离过程见[复合编译](/kernel/packages/core/composite-compilation)。
 
 <SourceLinks
   sources={[

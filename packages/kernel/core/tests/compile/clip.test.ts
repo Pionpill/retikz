@@ -58,7 +58,7 @@ describe('clip 资源生成 + GroupPrimitive.clipRef 挂载', () => {
     expect(group?.clipRef).toBe(clips[0].id);
   });
 
-  it('clip 资源 id 用 clip-N 命名空间', () => {
+  it('相同裁剪内容跨次编译保持同一身份', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -68,7 +68,17 @@ describe('clip 资源生成 + GroupPrimitive.clipRef 挂载', () => {
     ]);
     const compiled = compileToScene(ir).scene;
 
-    expect(clipResources(compiled.resources)[0].id).toBe('clip-1');
+    expect(clipResources(compiled.resources)[0].id).toBe(clipResources(compileToScene(ir).scene.resources)[0].id);
+    const reordered = compileToScene(
+      scene([
+        { type: 'scope', clip: { kind: 'rect', params: { x: 0, y: 0, width: 20, height: 20 } }, children: [] },
+        ...ir.children,
+      ]),
+    ).scene;
+    const reorderedClips = clipResources(reordered.resources);
+    expect(reorderedClips).toHaveLength(2);
+    expect(reorderedClips[0].id).not.toBe(reorderedClips[1].id);
+    expect(reorderedClips[1].id).toBe(clipResources(compiled.resources)[0].id);
   });
 });
 
@@ -158,7 +168,7 @@ describe('带 clip 的 scope 不被 prune', () => {
 });
 
 describe('交互：paint + clip 资源共存 / transformed scope path ownership', () => {
-  it('同 scene 既有 paint 又有 clip 资源 → 两类共存、id 命名空间不撞（paint-N / clip-N）', () => {
+  it('同 scene 既有 paint 又有 clip 资源，两类共存且身份不冲突', () => {
     const ir = scene([
       {
         type: 'node',
@@ -179,8 +189,6 @@ describe('交互：paint + clip 资源共存 / transformed scope path ownership'
 
     expect(paints).toHaveLength(1);
     expect(clips).toHaveLength(1);
-    expect(paints[0].id).toBe('paint-1');
-    expect(clips[0].id).toBe('clip-1');
 
     const allIds = (compiled.resources ?? []).map(r => r.id);
 

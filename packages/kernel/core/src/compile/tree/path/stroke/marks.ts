@@ -7,7 +7,7 @@ import {
   safeThrownDetail,
 } from '../../../../resolve/diagnostics';
 import type { RegisterPaint } from '../../../resource';
-import { materializeScenePrimitives } from '../../../resource';
+import { materializeScenePrimitives } from '../../../shared';
 
 /** 由共同定义生成箭头或沿线标记的局部图元 */
 export const emitMarkPrimitives = (

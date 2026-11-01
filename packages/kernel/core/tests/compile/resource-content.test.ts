@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { compileToScene, defineMark, definePath, definePattern, PathSchema, visitSceneContent } from '../../src';
-import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../src';
 import {
-  createClipRegistry,
-  createPaintRegistry,
-  importSceneResources,
-  remapPrimitiveResources,
-} from '../../src/compile/resource';
+  assembleCompileOutputs,
+  createSharedCompileContext,
+  compileToScene,
+  defineMark,
+  definePath,
+  definePattern,
+  PathSchema,
+  visitSceneContent,
+} from '../../src';
+import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../src';
+import { createClipRegistry, createPaintRegistry, importSceneResources } from '../../src/compile/resource';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 describe('资源内容复用基础图元', () => {
@@ -240,7 +244,7 @@ describe('Scene 资源依赖关闭', () => {
     expect(resource?.tile.motif[0].meta).toEqual(meta);
   });
 
-  it('线性导入独立资源并重映射宿主及嵌套箭头的引用', () => {
+  it('重复导入保留宿主及嵌套箭头的资源引用', () => {
     const resources: NonNullable<Scene['resources']> = [
       {
         kind: 'paint',
@@ -254,15 +258,18 @@ describe('Scene 资源依赖关闭', () => {
         spec: { kind: 'pattern', shape: 'custom' },
         tile: { size: 10, motif: [{ ...rectangle, fill: 'blue' }] },
       },
-      { kind: 'clip', id: 'window', path: { fillRule: 'nonzero', commands: [] } },
     ];
     const paint = createPaintRegistry(value => value);
     const clip = createClipRegistry(value => value);
-    const ids = importSceneResources(resources, paint, clip);
-    expect(ids.get('first')).not.toBe(ids.get('second'));
+    const windowId = clip.importResource({ fillRule: 'nonzero', commands: [] });
+    resources.push(...clip.getResources());
+    importSceneResources(resources, paint, clip);
+    importSceneResources(resources, paint, clip);
+    expect(paint.getResources()).toHaveLength(2);
+    expect(clip.getResources()).toHaveLength(1);
     const source: GroupPrimitive = {
       type: 'group',
-      clipRef: 'window',
+      clipRef: windowId,
       children: [
         {
           type: 'path',
@@ -279,16 +286,45 @@ describe('Scene 资源依赖关闭', () => {
         },
       ],
     };
-    const host = remapPrimitiveResources(source, ids);
+    const host = source;
     expect(host).toMatchObject({
-      clipRef: ids.get('window'),
-      children: [{ fill: { id: ids.get('first') }, arrowEnd: { marker: [{ fill: { id: ids.get('second') } }] } }],
+      clipRef: windowId,
+      children: [{ fill: { id: 'first' }, arrowEnd: { marker: [{ fill: { id: 'second' } }] } }],
     });
     expect(() =>
       visitSceneContent({ primitives: [host], resources: [...paint.getResources(), ...clip.getResources()] }),
     ).not.toThrow();
-    expect(source.clipRef).toBe('window');
+    expect(source.clipRef).toBe(windowId);
     expect(resources[0].id).toBe('first');
+  });
+  it('相同声明采用不同 Pattern 输出时资源独立，合并保留图元和资源引用', () => {
+    const input: IRScene = { ...patternScene, children: patternScene.children.slice(0, 1) };
+    const compile = (fill: string) =>
+      compileToScene(input, {
+        patterns: [definePattern({ name: 'first', emit: () => [{ ...rectangle, fill }] })],
+      }).scene;
+    const red = compile('red');
+    const blue = compile('blue');
+    const repeated = compile('red');
+    expect(red.resources![0].id).toBe(repeated.resources![0].id);
+    expect(red.resources![0].id).not.toBe(blue.resources![0].id);
+
+    const shared = createSharedCompileContext();
+    const outputs = [red, blue, repeated].map(scene => ({
+      primitives: scene.primitives,
+      resources: scene.resources!,
+      bounds: [],
+    }));
+    const merged = assembleCompileOutputs(outputs, shared);
+    expect(merged.resources).toHaveLength(2);
+    expect(merged.primitives[0]).toBe(red.primitives[0]);
+    expect(merged.primitives[1]).toBe(blue.primitives[0]);
+    expect(merged.primitives[2]).toBe(repeated.primitives[0]);
+    expect(() => visitSceneContent(merged)).not.toThrow();
+    const reversed = assembleCompileOutputs([...outputs].reverse(), shared);
+    expect(new Set(reversed.resources.map(resource => resource.id))).toEqual(
+      new Set(merged.resources.map(resource => resource.id)),
+    );
   });
   it('拒绝丢失和错误类型的资源引用及其使用路径', () => {
     const scene: Scene = {

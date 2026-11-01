@@ -169,7 +169,12 @@ describe('布局感知复合运行时包装树', () => {
     });
     const outer = result.scene.primitives[0];
 
-    expect(outer).toMatchObject({ type: 'group', id: 'cell', meta: { role: 'cell' }, clipRef: 'clip-1' });
+    expect(outer).toMatchObject({
+      type: 'group',
+      id: 'cell',
+      meta: { role: 'cell' },
+      clipRef: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+    });
     expect(outer).not.toHaveProperty('transforms');
 
     if (outer.type !== 'group') throw new Error('expected outer wrapper group');
@@ -185,7 +190,7 @@ describe('布局感知复合运行时包装树', () => {
     expect(result.scene.resources).toEqual([
       {
         kind: 'clip',
-        id: 'clip-1',
+        id: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
         path: {
           commands: [
             { kind: 'move', to: [0, 0] },
@@ -744,7 +749,7 @@ describe('布局感知复合运行时包装树', () => {
     ).toThrow(/layout|replay|forged|belong/i);
   });
 
-  it('仅导入一次嵌套回放的绘制及裁剪资源并重映射图元引用', () => {
+  it('仅导入一次嵌套回放的绘制及裁剪资源，图元引用保持有效', () => {
     const paint: IRPaint = {
       kind: 'linearGradient',
       stops: [
@@ -1008,7 +1013,10 @@ describe('布局感知复合运行时包装树', () => {
     });
     const outer = result.scene.primitives[0];
 
-    expect(outer).toMatchObject({ type: 'group', clipRef: 'clip-1' });
+    expect(outer).toMatchObject({
+      type: 'group',
+      clipRef: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+    });
     expect(outer).not.toHaveProperty('transforms');
 
     if (outer.type !== 'group') throw new Error('expected replay clip group');
@@ -1102,7 +1110,12 @@ describe('布局感知复合运行时包装树', () => {
 
     expect(root.children).toHaveLength(3);
     expect(groups(root.children)).toContainEqual(
-      expect.objectContaining({ type: 'group', id: 'cell-0-0', meta: { row: 0, column: 0 }, clipRef: 'clip-1' }),
+      expect.objectContaining({
+        type: 'group',
+        id: 'cell-0-0',
+        meta: { row: 0, column: 0 },
+        clipRef: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+      }),
     );
     expect(JSON.stringify(root.children).match(/content/g)).toHaveLength(1);
     expect(JSON.stringify(root.children).match(/border/g)).toHaveLength(1);

@@ -293,7 +293,7 @@ describe('clip 编译确定性：同 IR 编译两次产同 id', () => {
 });
 
 describe('clip + paint 资源命名空间：大量混合不撞、稳定', () => {
-  it('多 paint + 多 clip 交错 → paint-N / clip-N 各自递增、全局 id 唯一', () => {
+  it('多个绘制与裁剪资源交错登记，各自保持独立身份', () => {
     const grad2: IRPaint = {
       kind: 'linearGradient',
       angle: 0,
@@ -334,8 +334,6 @@ describe('clip + paint 资源命名空间：大量混合不撞、稳定', () => 
 
     expect(paints).toHaveLength(2);
     expect(clips).toHaveLength(2);
-    expect(paints.map(p => p.id)).toEqual(['paint-1', 'paint-2']);
-    expect(clips.map(c => c.id)).toEqual(['clip-1', 'clip-2']);
 
     const allIds = (compiled.resources ?? []).map(r => r.id);
 

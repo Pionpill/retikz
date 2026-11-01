@@ -7,7 +7,7 @@ import type {
 } from '../../../contract';
 import { CompileExpansionKind } from '../../../contract';
 import type { CompileOwnerKey } from '../../provenance';
-import { importSceneResources, remapPrimitiveResources } from '../../resource';
+import { importSceneResources } from '../../resource';
 import { allocationPointsOf, optionalVisualBoundsOfPrimitives } from '../../scene';
 import {
   compileWarningOccurrenceOf,
@@ -52,7 +52,7 @@ export const commitCompositeReplay = (
 
   const transforms = wrapper?.transforms;
   const authoredPreliminary = transaction.scopeChainApplied ? undefined : authoredPreliminaryTransforms;
-  const resourceIds = importSceneResources(
+  importSceneResources(
     transaction.resources,
     execution.context.workspace.paintRegistry,
     execution.context.workspace.clipRegistry,
@@ -62,7 +62,8 @@ export const commitCompositeReplay = (
     wrapperClipPath === undefined
       ? undefined
       : execution.context.workspace.clipRegistry.importResource(wrapperClipPath);
-  const replayedPrimitives = transaction.primitives.map(primitive => remapPrimitiveResources(primitive, resourceIds));
+  const replayedPrimitives =
+    execution.context.provenanceTracker?.materializePrimitives(transaction.primitives) ?? transaction.primitives;
   if (semanticOwner !== undefined && execution.context.provenanceTracker !== undefined) {
     if (transaction.provenance === undefined) throw createCompileInvariantError('Missing replay provenance');
     execution.context.provenanceTracker.importProvenance(

@@ -41,7 +41,7 @@ export const collectPlaceholderLocators = (
   return locators;
 };
 
-/** 接受已重映射的子树输出，统一维护当前帧的收集容器 */
+/** 接受已提交的子树输出，统一维护当前帧的收集容器 */
 export const acceptTreeContribution = (
   output: TreeOutputState,
   frame: TreeCompileFrame,

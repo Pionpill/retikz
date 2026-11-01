@@ -98,7 +98,13 @@ describe('布局感知的复合事务和产物', () => {
     expect(serialized).toContain('exact-only');
     expect(serialized).not.toContain('minimum-only');
     expect(serialized).not.toContain('natural-only');
-    expect(result.scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: gradient('#500', '#600') }]);
+    expect(result.scene.resources).toEqual([
+      {
+        kind: 'paint',
+        id: result.scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+        spec: gradient('#500', '#600'),
+      },
+    ]);
     expect(result.artifacts).toEqual([]);
   });
 
@@ -137,7 +143,13 @@ describe('布局感知的复合事务和产物', () => {
       composites: [definition],
     });
 
-    expect(result.scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: selected }]);
+    expect(result.scene.resources).toEqual([
+      {
+        kind: 'paint',
+        id: result.scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+        spec: selected,
+      },
+    ]);
   });
 
   it('丢弃探测警告，直到选择相应的回放', () => {

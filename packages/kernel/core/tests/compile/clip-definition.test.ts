@@ -24,7 +24,7 @@ describe('Core 的 rect 裁剪定义', () => {
     expect(scene.resources).toEqual([
       {
         kind: 'clip',
-        id: 'clip-1',
+        id: scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
         path: { commands: rectCommands, fillRule: 'nonzero' },
       },
     ]);
@@ -36,7 +36,7 @@ describe('Core 的 rect 裁剪定义', () => {
     expect(scene.resources).toEqual([
       {
         kind: 'clip',
-        id: 'clip-1',
+        id: scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
         path: {
           commands: [
             { kind: 'move', to: [1, 2] },

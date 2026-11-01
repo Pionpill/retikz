@@ -2,8 +2,7 @@ import type { AxisAlignedBounds } from '@retikz/math';
 
 import type { ScenePrimitive } from '../contract';
 import type { SharedCompileContext } from './context';
-import type { CompileProvenanceTracker } from './provenance';
-import { createClipRegistry, createPaintRegistry, importSceneResources, remapPrimitiveResources } from './resource';
+import { createClipRegistry, createPaintRegistry, importSceneResources } from './resource';
 import { collectLayoutBounds } from './scene';
 import type { CompileBounds, CompileOutput } from './shared';
 
@@ -20,19 +19,16 @@ export const computeCompileOutputBounds = (contributions: CompileOutput['bounds'
 export const assembleCompileOutputs = (
   outputs: ReadonlyArray<CompileOutput>,
   shared: SharedCompileContext,
-  provenance?: CompileProvenanceTracker,
 ): CompileOutput => {
   const paint = createPaintRegistry(shared.layout.round);
   const clip = createClipRegistry(shared.layout.round, shared.limits.maxClipDepth);
   const fragments: Array<{ zIndex: number; primitives: Array<ScenePrimitive> }> = [];
   const bounds: Array<CompileBounds> = [];
   for (const output of outputs) {
-    const ids = importSceneResources(output.resources, paint, clip);
-    const primitives = output.primitives.map(primitive => remapPrimitiveResources(primitive, ids));
-    provenance?.transferPrimitives(output.primitives, primitives);
+    importSceneResources(output.resources, paint, clip);
     fragments.push({
       zIndex: output.zIndex ?? 0,
-      primitives,
+      primitives: output.primitives,
     });
     bounds.push(...output.bounds);
   }

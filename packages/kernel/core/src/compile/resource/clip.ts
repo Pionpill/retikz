@@ -8,6 +8,7 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { ClipResolution } from '../../resolve/resource';
+import { createResourceId, serializeResourceContent, storeSceneResource } from './identity';
 
 /** 生成裁剪路径并登记可复用资源 */
 export type ClipRegistry = {
@@ -145,10 +146,7 @@ export const createClipRegistry = (
     readonly active: WeakSet<object>;
   };
 
-  const idByKey = new Map<string, string>();
-
-  const list: Array<ClipResource> = [];
-  let counter = 0;
+  const resources = new Map<string, ClipResource>();
 
   const lowerClip = (resolution: ClipResolution, guard: ClipTraversalGuard): SceneClipPath => {
     const { kind, definition, params } = resolution;
@@ -196,14 +194,8 @@ export const createClipRegistry = (
   };
 
   const importResource = (path: SceneClipPath): string => {
-    const key = JSON.stringify(path);
-    let id = idByKey.get(key);
-    if (id === undefined) {
-      counter += 1;
-      id = `clip-${counter}`;
-      idByKey.set(key, id);
-      list.push({ kind: 'clip', id, path });
-    }
+    const id = createResourceId('clip', serializeResourceContent(path));
+    storeSceneResource({ kind: 'clip', id, path }, resources);
 
     return id;
   };
@@ -211,5 +203,5 @@ export const createClipRegistry = (
   const lower = (clip: ClipResolution): SceneClipPath =>
     lowerClip(clip, { visited: 0, max: maxClipDepth, active: new WeakSet() });
   const register = (clip: ClipResolution): string => importResource(lower(clip));
-  return { lower, register, importResource, getResources: () => list };
+  return { lower, register, importResource, getResources: () => [...resources.values()] };
 };

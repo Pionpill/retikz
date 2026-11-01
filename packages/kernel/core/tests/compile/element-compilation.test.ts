@@ -280,7 +280,7 @@ describe('独立元素编译', () => {
     expect(assembled.result.scene).toEqual(full.scene);
   });
 
-  it('资源局部编号在组装时重映射，旧片段保持不变', () => {
+  it('独立编译时区分资源身份，组装保留原资源及片段', () => {
     const shared = createSharedCompileContext();
     const context = { shared, context: resolveScopeContext({}, shared), irPath: [] };
     const first = compileNode(
@@ -326,7 +326,11 @@ describe('独立元素编译', () => {
     });
     expect(output.result.scene.primitives).toHaveLength(2);
     expect(output.result.scene.resources).toHaveLength(2);
-    expect(first.compiled.output.resources[0].id).toBe(second.compiled.output.resources[0].id);
+    expect(first.compiled.output.resources[0].id).not.toBe(second.compiled.output.resources[0].id);
+    expect(output.result.scene.resources).toEqual([
+      ...first.compiled.output.resources,
+      ...second.compiled.output.resources,
+    ]);
     expect(new Set(output.result.scene.resources?.map(resource => resource.id)).size).toBe(2);
     expect(first.compiled.output).toEqual(before);
   });

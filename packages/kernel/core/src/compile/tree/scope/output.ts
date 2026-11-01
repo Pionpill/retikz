@@ -23,11 +23,10 @@ export const assembleScopeOutput = (
   owner?: CompileOwnerKey,
 ): CompileOutput => {
   const ownGroup = { ...scope.group, children: scope.output.primitives };
-  const childOutput = assembleCompileOutputs(children, shared, provenance);
+  const childOutput = assembleCompileOutputs(children, shared);
   const merged = assembleCompileOutputs(
     [childOutput, { ...scope.output, zIndex: undefined, primitives: [ownGroup] }],
     shared,
-    provenance,
   );
   const group = merged.primitives[merged.primitives.length - 1] as typeof ownGroup;
   const frame = group.children;

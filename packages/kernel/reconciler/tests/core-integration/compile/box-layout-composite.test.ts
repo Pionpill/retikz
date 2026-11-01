@@ -526,7 +526,7 @@ describe('盒子 Layout 综合契约', () => {
     expect(result.scene.resources).toEqual([
       expect.objectContaining({
         kind: 'clip',
-        id: 'clip-1',
+        id: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
         path: {
           commands: [
             { kind: 'move', to: [8, 18] },
@@ -541,7 +541,7 @@ describe('盒子 Layout 综合契约', () => {
     ]);
     expect(primitive).toMatchObject({
       type: 'group',
-      clipRef: 'clip-1',
+      clipRef: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
     });
     expect(primitive).not.toHaveProperty('transforms');
 
@@ -616,7 +616,10 @@ describe('盒子 Layout 综合契约', () => {
 
     const primitive = result.scene.primitives[0];
 
-    expect(primitive).toMatchObject({ type: 'group', clipRef: 'clip-1' });
+    expect(primitive).toMatchObject({
+      type: 'group',
+      clipRef: result.scene.resources!.filter(resource => resource.kind === 'clip')[0].id,
+    });
 
     if (primitive.type !== 'group') throw new Error('expected replay clip group');
 

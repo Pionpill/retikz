@@ -83,7 +83,7 @@ export type SubtreeCompilerOptions = Pick<
 
 /** 选中隔离子树后交给宿主接受的局部输出，不包含可写工作区或递归调度器 */
 export type SubtreeOutputContribution = {
-  /** 已完成资源重映射及包装的图元 */
+  /** 已完成重放实例化及包装的图元 */
   primitives: Array<ScenePrimitive>;
   /** 与图元一一对应的编译期排序值 */
   primitiveZIndices: ReadonlyArray<number | undefined>;

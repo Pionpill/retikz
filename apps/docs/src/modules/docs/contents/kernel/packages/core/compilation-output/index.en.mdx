@@ -221,9 +221,9 @@ The diagram shows only the relevant fill and resource fields. The key/value bloc
 
 <ComponentPreview files="output-resources" size="lg" hideCode type="illustration" />
 
-Both `fill.id` values point to `paint-1`. This id is allocated by the current registry; applications should not treat it as a stable business identity across compilations. Pattern resources also retain tile geometry produced by their Definition, so the renderer does not need to invoke that Definition again.
+Both `fill.id` values point to the same resource, labeled `paint-1` for brevity in the diagram. The actual id is derived from canonical content when the resource is created, independently of registration order. Equal content retains the same id across compilations; different content receives a different id. Applications should treat it as an opaque resource reference, without parsing its format or using it as business identity. Pattern identity also includes tile geometry emitted by the Definition, so equal specifications that produce different tiles remain distinct. The renderer does not need to invoke the Definition again.
 
-Clips use their own registry: the clipping capability produces a shape, which is lowered to a Scene clip path and referenced through a group's `clipRef`. At the end of compilation, paint and clip resources are combined. The `resources` field is omitted when none exist. Composite replay imports resources from the selected result and remaps references; see [Composite Compilation](/kernel/packages/core/composite-compilation) for isolation during probing.
+Clips use their own registry: the clipping capability produces a shape, which is lowered to a Scene clip path and referenced through a group's `clipRef`. At the end of compilation, paint and clip resources are combined. The `resources` field is omitted when none exist. Composite replay imports resources from the selected result, preserves their ids and primitive references, and deduplicates them by content identity; see [Composite Compilation](/kernel/packages/core/composite-compilation) for isolation during probing.
 
 <SourceLinks
   sources={[

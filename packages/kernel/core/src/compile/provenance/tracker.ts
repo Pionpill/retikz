@@ -20,7 +20,7 @@ export class CompileProvenanceTracker {
   /** 按实体键存储来源事实，最终图元路径由 capture 生成 */
   private readonly ownerMap = new Map<CompileOwnerKey, Omit<CompileProvenanceOwner, 'emissions'>>();
 
-  /** 图元对象对应的来源记录，复制时转移，capture 时补全最终路径 */
+  /** 图元对象对应的来源记录，capture 时补全最终路径 */
   private readonly primitiveRecordMap = new WeakMap<
     ScenePrimitive,
     Readonly<{ owner: CompileOwnerKey; role: string; ordinal: number }>
@@ -64,18 +64,6 @@ export class CompileProvenanceTracker {
     primitives.forEach(visit);
   }
 
-  /** 将同构复制的来源转移到新图元 */
-  transferPrimitives(original: ReadonlyArray<ScenePrimitive>, copied: ReadonlyArray<ScenePrimitive>): void {
-    const transfer = (source: ScenePrimitive, target: ScenePrimitive): void => {
-      const record = this.primitiveRecordMap.get(source);
-      if (record !== undefined) this.primitiveRecordMap.set(target, record);
-      if (source.type === 'group' && target.type === 'group') {
-        source.children.forEach((child, index) => transfer(child, target.children[index]));
-      }
-    };
-    original.forEach((source, index) => transfer(source, copied[index]));
-  }
-
   /** 将选中试算的来源挂到当前实体，图元必须与试算快照保持同构且尚未添加外层包装 */
   importProvenance(
     provenance: CompileProvenanceSnapshot,
@@ -112,7 +100,7 @@ export class CompileProvenanceTracker {
       });
 
       for (const emission of emissions) {
-        // 路径来自同次 capture；资源重映射只改变字段值，不改变图元树结构
+        // 重放实例与 capture 时的图元树同构，路径可直接复用
         const primitive = readPropertyPath({ primitives }, emission.primitivePath) as ScenePrimitive | undefined;
         if (primitive === undefined)
           throw createCompileInvariantError(

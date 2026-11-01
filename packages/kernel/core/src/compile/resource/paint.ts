@@ -1,10 +1,10 @@
 import type {
   CompiledPatternTile,
   PaintValue,
+  PaintResource,
   PatternEmitContext,
   PatternEmitOutput,
   ScenePrimitive,
-  SceneResource,
 } from '../../contract';
 import {
   createCompositeContractError,
@@ -12,7 +12,8 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import type { InputPaintResolution, PaintResolution, PatternResolution } from '../../resolve/resource';
-import { materializeScenePrimitives } from './scene-content';
+import { materializeScenePrimitives } from '../shared';
+import { createResourceId, serializeResourceContent, storeSceneResource } from './identity';
 
 /** 登记已解析的绘制资源，普通颜色直接返回 */
 export type RegisterPaint = (paint: InputPaintResolution | undefined) => PaintValue | undefined;
@@ -22,22 +23,9 @@ export type PaintRegistry = {
   /** 透传颜色或登记绘制资源，返回场景可引用的绘制值 */
   register: RegisterPaint;
   /** 导入已生成的绘制资源，不再调用 Pattern provider */
-  importResource: (resource: Extract<SceneResource, { kind: 'paint' }>) => Extract<PaintValue, { kind: 'resourceRef' }>;
+  importResource: (resource: PaintResource) => Extract<PaintValue, { kind: 'resourceRef' }>;
   /** 读取当前已登记的绘制资源 */
-  getResources: () => Array<SceneResource>;
-};
-
-/** 生成与对象属性插入顺序无关的 paint resource key */
-const paintKeyOf = (value: unknown): string => {
-  if (Array.isArray(value)) return `[${value.map(paintKeyOf).join(',')}]`;
-  if (value !== null && typeof value === 'object') {
-    return `{${Object.keys(value)
-      .sort()
-      .map(key => `${JSON.stringify(key)}:${paintKeyOf(Reflect.get(value, key))}`)
-      .join(',')}}`;
-  }
-
-  return JSON.stringify(value);
+  getResources: () => Array<PaintResource>;
 };
 
 /** compile 仅消费 resolve 阶段已绑定的 pattern 并调用 provider emit */
@@ -92,56 +80,42 @@ const emitPatternTile = (resolution: PatternResolution, round: (n: number) => nu
 
 /** 创建 compile resource 注册表 */
 export const createPaintRegistry = (round: (n: number) => number): PaintRegistry => {
-  const idByKey = new Map<string, string>();
-  const list: Array<SceneResource> = [];
-  let counter = 0;
+  /** 当前编译内已发射的声明；导入内容不能代替本地 provider 的输出 */
+  const idBySpec = new Map<string, string>();
+  /** 按最终内容身份保存资源，保持首次登记顺序 */
+  const resources = new Map<string, PaintResource>();
 
-  const insert = (key: string, resourceOf: (id: string) => SceneResource): string => {
-    let id = idByKey.get(key);
-    if (id !== undefined) return id;
-
-    counter += 1;
-    id = `paint-${counter}`;
-    idByKey.set(key, id);
-    const resource = resourceOf(id);
-    list.push(resource);
-    if (resource.kind === 'paint')
-      idByKey.set(paintKeyOf({ spec: resource.spec, tile: 'tile' in resource ? resource.tile : undefined }), id);
-
-    return id;
+  const importResource: PaintRegistry['importResource'] = resource => {
+    storeSceneResource(resource, resources);
+    return { kind: 'resourceRef', id: resource.id };
   };
 
   const register: RegisterPaint = paint => {
-    if (paint === undefined) return undefined;
-    if (typeof paint === 'string') return paint;
+    if (paint === undefined || typeof paint === 'string') return paint;
 
     const resolution: PaintResolution = paint;
-    const key = paintKeyOf(resolution.spec);
-    const id = insert(key, nextId => {
-      if ('pattern' in resolution) {
-        return {
-          kind: 'paint',
-          id: nextId,
-          spec: resolution.spec,
-          tile: emitPatternTile(resolution.pattern, round),
-        };
-      }
-      const spec = resolution.spec;
-      return spec.kind === 'image' ? { kind: 'paint', id: nextId, spec } : { kind: 'paint', id: nextId, spec };
-    });
+    const specKey = serializeResourceContent(resolution.spec);
+    const existingId = idBySpec.get(specKey);
+    if (existingId !== undefined) return { kind: 'resourceRef', id: existingId };
 
-    return { kind: 'resourceRef', id };
+    const resource: PaintResource =
+      'pattern' in resolution
+        ? { kind: 'paint', id: '', spec: resolution.spec, tile: emitPatternTile(resolution.pattern, round) }
+        : resolution.spec.kind === 'image'
+          ? { kind: 'paint', id: '', spec: resolution.spec }
+          : { kind: 'paint', id: '', spec: resolution.spec };
+    const id = createResourceId(
+      'paint',
+      serializeResourceContent({
+        spec: resource.spec,
+        tile: 'tile' in resource ? resource.tile : undefined,
+      }),
+    );
+    resource.id = id;
+    const reference = importResource(resource);
+    idBySpec.set(specKey, id);
+    return reference;
   };
 
-  const importResource: PaintRegistry['importResource'] = resource => {
-    const key = paintKeyOf({ spec: resource.spec, tile: 'tile' in resource ? resource.tile : undefined });
-    const id = insert(key, nextId => ({ ...resource, id: nextId }));
-    return { kind: 'resourceRef', id };
-  };
-
-  return {
-    register,
-    importResource,
-    getResources: () => list,
-  };
+  return { register, importResource, getResources: () => [...resources.values()] };
 };

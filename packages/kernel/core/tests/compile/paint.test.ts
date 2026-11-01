@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
+import { createSharedCompileContext } from '../../src/compile/context';
+import { createPaintRegistry } from '../../src/compile/resource';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../src/contract';
+import { definePattern } from '../../src/contract';
+import { resolvePaint } from '../../src/resolve/resource';
 import type { IRPaint, IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 import { pathArrows } from '../helpers/path-arrows';
@@ -14,6 +18,65 @@ const grad: IRPaint = {
     { offset: 1, color: '#08f' },
   ],
 };
+
+describe('绘制资源内容身份', () => {
+  it('内容决定身份，注册顺序和对象字段顺序不影响结果', () => {
+    const first = createPaintRegistry(value => value);
+    const second = createPaintRegistry(value => value);
+    const original = first.register({ kind: 'paint', spec: grad });
+    const reversed = second.register({ kind: 'paint', spec: { ...grad, stops: [...grad.stops].reverse() } });
+    const reordered = second.register({
+      kind: 'paint',
+      spec: {
+        stops: grad.stops.map(stop => ({ color: stop.color, offset: stop.offset })),
+        angle: 90,
+        kind: 'linearGradient',
+      },
+    });
+    expect(reordered).toEqual(original);
+    expect(reversed).not.toEqual(original);
+    expect(first.importResource(second.getResources()[1])).toEqual(original);
+    expect(first.getResources()).toHaveLength(1);
+  });
+
+  it('导入保留身份，后续登记相同内容不新增资源', () => {
+    const source = createPaintRegistry(value => value);
+    const original = source.register({ kind: 'paint', spec: grad });
+    const registry = createPaintRegistry(value => value);
+    const resource = source.getResources()[0];
+    expect(registry.importResource(resource)).toEqual(original);
+    expect(registry.register({ kind: 'paint', spec: grad })).toEqual(original);
+    expect(registry.getResources()).toEqual([resource]);
+    expect(registry.getResources()[0]).toBe(resource);
+  });
+
+  it('同一身份对应冲突内容时明确失败', () => {
+    const registry = createPaintRegistry(value => value);
+    registry.register({ kind: 'paint', spec: grad });
+    const resource = registry.getResources()[0];
+    expect(() => registry.importResource({ ...resource, spec: { ...grad, angle: 45 } })).toThrow(/conflicting content/);
+  });
+
+  it('导入相同声明的图案后，仍按本地 provider 生成内容身份', () => {
+    const spec: IRPaint = { kind: 'pattern', shape: 'custom' };
+    const resolve = (fill: string) => {
+      const shared = createSharedCompileContext({
+        patterns: [
+          definePattern({ name: 'custom', emit: () => [{ type: 'rect', x: 0, y: 0, width: 1, height: 1, fill }] }),
+        ],
+      });
+      return resolvePaint(spec, { patternRegistry: shared.registries.patternRegistry, round: shared.layout.round });
+    };
+    const source = createPaintRegistry(value => value);
+    const original = source.register(resolve('red'));
+    const registry = createPaintRegistry(value => value);
+    registry.importResource(source.getResources()[0]);
+    const local = registry.register(resolve('blue'));
+    expect(local).not.toEqual(original);
+    expect(registry.register(resolve('blue'))).toEqual(local);
+    expect(registry.getResources()).toHaveLength(2);
+  });
+});
 
 const rectsOf = (prims: Array<ScenePrimitive>): Array<RectPrimitive> =>
   flattenPrims(prims).filter((p): p is RectPrimitive => p.type === 'rect');
@@ -39,8 +102,13 @@ describe('node IRPaint fill → 资源表 + resourceRef', () => {
     const scene = compileToScene(ir).scene;
     const rect = rectsOf(scene.primitives)[0];
 
-    expect(rect.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
+    expect(rect.fill).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
+    expect(scene.resources).toEqual([
+      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: grad },
+    ]);
   });
 
   it('纯色 string → primitive.fill 原样、resources 省略', () => {
@@ -89,8 +157,14 @@ describe('去重 + 稳定 id', () => {
     const scene = compileToScene(ir).scene;
     const rects = rectsOf(scene.primitives);
 
-    expect(rects[0].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(rects[1].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(rects[0].fill).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
+    expect(rects[1].fill).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
     expect(scene.resources).toHaveLength(1);
   });
 
@@ -119,7 +193,10 @@ describe('去重 + 稳定 id', () => {
     const scene = compileToScene(ir).scene;
 
     expect(scene.resources).toHaveLength(2);
-    expect(scene.resources?.map(r => r.id)).toEqual(['paint-1', 'paint-2']);
+    expect(scene.resources?.map(r => r.id)).toEqual([
+      scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+      scene.resources!.filter(resource => resource.kind === 'paint')[1].id,
+    ]);
   });
 
   it('同一 IR 编译两次 → 资源 id 完全一致（确定性）', () => {
@@ -162,7 +239,10 @@ describe('IRPaint 填充路径', () => {
     const scene = compileToScene(ir).scene;
     const path = flattenPrims(scene.primitives).find(p => p.type === 'path');
 
-    expect(path?.type === 'path' && path.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(path?.type === 'path' && path.fill).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
     expect(scene.resources).toHaveLength(1);
   });
 });
@@ -186,9 +266,17 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
     const scene = compileToScene(ir).scene;
     const rects = rectsOf(scene.primitives);
 
-    expect(rects[0].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(rects[1].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
+    expect(rects[0].fill).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
+    expect(rects[1].fill).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
+    expect(scene.resources).toEqual([
+      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: grad },
+    ]);
   });
 
   it('纯色与渐变同场景 → 纯色不进表、渐变进表，互不干扰', () => {
@@ -216,8 +304,13 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
     const rects = rectsOf(scene.primitives);
 
     expect(rects[0].fill).toBe('lightblue');
-    expect(rects[1].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
+    expect(rects[1].fill).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
+    expect(scene.resources).toEqual([
+      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: grad },
+    ]);
   });
 });
 
@@ -239,8 +332,13 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     };
     const scene = compileToScene(ir).scene;
 
-    expect(pathsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
+    expect(pathsOf(scene.primitives)[0].stroke).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
+    expect(scene.resources).toEqual([
+      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: grad },
+    ]);
   });
 
   it('节点行程 radialGradient → RectPrimitive.stroke = resourceRef', () => {
@@ -260,8 +358,13 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     };
     const scene = compileToScene(ir).scene;
 
-    expect(rectsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: radial }]);
+    expect(rectsOf(scene.primitives)[0].stroke).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
+    expect(scene.resources).toEqual([
+      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: radial },
+    ]);
   });
 
   it('scope stroke IRPaint 级联到 node/path，并共用同一个 resourceRef', () => {
@@ -287,8 +390,14 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     };
     const scene = compileToScene(ir).scene;
 
-    expect(rectsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(pathsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(rectsOf(scene.primitives)[0].stroke).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
+    expect(pathsOf(scene.primitives)[0].stroke).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
     expect(scene.resources).toHaveLength(1);
   });
 
@@ -312,8 +421,14 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     const scene = compileToScene(ir).scene;
     const path = pathsOf(scene.primitives)[0];
 
-    expect(path.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
-    expect(path.stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(path.fill).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
+    expect(path.stroke).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
     expect(scene.resources).toHaveLength(1);
   });
 
@@ -378,9 +493,14 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     const scene = compileToScene(ir).scene;
     const path = pathsOf(scene.primitives)[0];
 
-    expect(path.stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(path.stroke).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
     expect(path.arrowEnd?.marker[0]).toMatchObject({ fill: { kind: 'contextStroke' } });
-    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
+    expect(scene.resources).toEqual([
+      { kind: 'paint', id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id, spec: grad },
+    ]);
   });
 
   it('arrow × gradient stroke：显式 arrowDetail.color 时允许，marker 使用纯色', () => {
@@ -402,7 +522,10 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     const scene = compileToScene(ir).scene;
     const path = pathsOf(scene.primitives)[0];
 
-    expect(path.stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(path.stroke).toEqual({
+      kind: 'resourceRef',
+      id: scene.resources!.filter(resource => resource.kind === 'paint')[0].id,
+    });
     expect(path.arrowEnd?.marker[0]).toMatchObject({ fill: '#111' });
   });
 });

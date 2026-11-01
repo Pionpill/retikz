@@ -24,7 +24,7 @@ export const assembleWeaveCompilation = (
     padding?: number;
   }>,
 ) => {
-  const output = assembleCompileOutputs(input.outputs, input.shared, input.provenanceTracker);
+  const output = assembleCompileOutputs(input.outputs, input.shared);
   return assembleSceneCompilationSnapshot({
     root: input.root,
     primitives: output.primitives,
