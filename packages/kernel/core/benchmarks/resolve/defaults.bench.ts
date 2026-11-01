@@ -9,7 +9,9 @@ for (const kind of ['inherit', 'merge', 'reset'] as const) {
     { id: `resolve/defaults/${kind}`, dimensions: ['Scope 默认值', kind, '单层，node/path 通道'] },
     () => {
       const parent = resolveScopeDefaults({
-        defaults: { style: { stroke: 'blue' }, node: { layout: { padding: 3 } }, path: { style: { strokeWidth: 2 } } },
+        style: { stroke: 'blue' },
+        node: { layout: { padding: 3 } },
+        path: { style: { strokeWidth: 2 } },
       });
       const source: Pick<IRScope, 'defaults'> =
         kind === 'inherit'
@@ -22,7 +24,7 @@ for (const kind of ['inherit', 'merge', 'reset'] as const) {
             };
       const original = JSON.stringify(parent);
       return {
-        run: () => resolveScopeDefaults(source, parent),
+        run: () => resolveScopeDefaults(source.defaults, parent),
         verify: result => {
           if (kind === 'inherit') expect(result).toBe(parent);
           else {

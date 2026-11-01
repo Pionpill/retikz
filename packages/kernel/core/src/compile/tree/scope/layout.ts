@@ -7,7 +7,7 @@ import { Anchor } from '../../../shared';
 import { rect as rectOps } from '../../../shared/geometry';
 import type { SharedCompileContext } from '../../context';
 import type { CompiledNodeLayout } from '../node';
-import { outerRectOf, createScopeCircleLayout, createScopeRectangleLayout } from '../node';
+import { createScopeCircleLayout, createScopeRectangleLayout, outerRectOf } from '../node';
 import type { InputScopeCompile } from './types';
 
 /** 收集一组 CompiledNodeLayout 的全局 4 角点，供 AABB / MEC 等包络复用 */
@@ -41,16 +41,16 @@ export const computeScopeBoundingBox = (layouts: ReadonlyArray<CompiledNodeLayou
 export const createIntrinsicScopeLayout = (
   child: InputScopeCompile,
   scopeLayouts: ReadonlyArray<CompiledNodeLayout>,
-  shared: Pick<SharedCompileContext, 'registries'>,
+  registries: SharedCompileContext['registries'],
 ): CompiledNodeLayout => {
   const id = child.id ?? '__anonymous_scope__';
   return child.boundingShape === ScopeBoundingShape.Circle
     ? createScopeCircleLayout(
         { id, cornerPoints: collectScopeCornerPoints(scopeLayouts), fallbackOrigin: [0, 0] },
-        { shapes: shared.registries.shapeRegistry, boundaries: shared.registries.boundaryRegistry },
+        { shapes: registries.shapeRegistry, boundaries: registries.boundaryRegistry },
       )
     : createScopeRectangleLayout(
         { id, bbox: computeScopeBoundingBox(scopeLayouts), fallbackOrigin: [0, 0] },
-        { shapes: shared.registries.shapeRegistry, boundaries: shared.registries.boundaryRegistry },
+        { shapes: registries.shapeRegistry, boundaries: registries.boundaryRegistry },
       );
 };

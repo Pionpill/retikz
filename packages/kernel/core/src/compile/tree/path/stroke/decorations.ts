@@ -42,7 +42,7 @@ type EmitPathEndpointArrowsContext = {
 
 /** 仅消费显式端点箭头，标记位置不影响截断 */
 export const emitPathEndpointArrows = (
-  path: Pick<CanonicalPath, 'arrow'>,
+  endpointArrows: CanonicalPath['arrow'],
   context: EmitPathEndpointArrowsContext,
 ): PathEndpointArrows => {
   const arrows: PathEndpointArrows = {
@@ -52,7 +52,7 @@ export const emitPathEndpointArrows = (
     boundaryOuterInsetEnd: 0,
   };
   for (const endpoint of ['start', 'end'] as const) {
-    const arrow = path.arrow?.[endpoint];
+    const arrow = endpointArrows?.[endpoint];
     if (arrow === undefined) continue;
     const resolution = context.arrowResolutions.get(arrow);
     if (resolution === undefined)

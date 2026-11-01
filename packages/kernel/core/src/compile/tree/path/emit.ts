@@ -11,11 +11,11 @@ import type {
 } from '../../../contract';
 import type { PathResolution, PathTargetResolver } from '../../../resolve';
 import {
+  guardProviderOutput,
   resolvePathLabel,
   resolvePathLabelColors,
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
-  guardProviderOutput,
 } from '../../../resolve';
 import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
 import type { SharedCompileContext, WorkspaceCompileContext } from '../../context';
@@ -192,7 +192,7 @@ export const emitDefinedPath = (
       const styled = resolvePathLabelColors(
         labelSource,
         labelDefault.color ?? resolution.path.color,
-        { mode: pendingPath.theme.mode },
+        pendingPath.theme.mode,
         sourcePath,
       );
       const emittedLabel = emitLabelPrimitive(
@@ -221,7 +221,7 @@ export const emitDefinedPath = (
       const styled = resolvePathLabelColors(
         resolvePathLabel(request.label, labelDefault, resolution.path.color),
         labelDefault.color ?? resolution.path.color,
-        { mode: pendingPath.theme.mode },
+        pendingPath.theme.mode,
         [...irPath, ...request.sourcePath],
       );
       const emitted = emitBoundaryLabelPrimitive(request, styled, {

@@ -30,9 +30,9 @@ export type CompileOutput = Readonly<{
 }>;
 
 /** 汇总输出的可见布局边界，保留各项阴影扩张语义 */
-export const computeCompileOutputBounds = (output: Pick<CompileOutput, 'bounds'>): AxisAlignedBounds | undefined => {
+export const computeCompileOutputBounds = (contributions: CompileOutput['bounds']): AxisAlignedBounds | undefined => {
   let bounds: AxisAlignedBounds | undefined;
-  for (const contribution of output.bounds) {
+  for (const contribution of contributions) {
     bounds = collectLayoutBounds(bounds, contribution.boundsPoints, contribution.shadow);
   }
   return bounds;
@@ -47,7 +47,7 @@ export const assembleCompileOutputs = (
   const paint = createPaintRegistry(shared.layout.round);
   const clip = createClipRegistry(shared.layout.round, shared.limits.maxClipDepth);
   const fragments: Array<{ zIndex: number; primitives: Array<ScenePrimitive> }> = [];
-  const bounds: Array<CompileOutput['bounds'][number]> = [];
+  const bounds: Array<CompileBounds> = [];
   for (const output of outputs) {
     const ids = importSceneResources(output.resources, paint, clip);
     const primitives = output.primitives.map(primitive => remapPrimitiveResources(primitive, ids));

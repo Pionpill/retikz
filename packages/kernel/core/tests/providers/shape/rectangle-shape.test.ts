@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../../src/compile/compile';
 import type { ScenePrimitive } from '../../../src/contract';
 import { rectangle } from '../../../src/providers/shape';
-import type { IRScene } from '../../../src/schemas';
+import type { IRChild, IRScene } from '../../../src/schemas';
 import { NodeSchema, ShapeRefSchema } from '../../../src/schemas';
 import { flattenPrims } from '../../helpers/flatten';
 
@@ -15,7 +15,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-const rectNode = (extra: Record<string, unknown> = {}): IRScene['children'][number] => ({
+const rectNode = (extra: Record<string, unknown> = {}): IRChild => ({
   type: 'node',
   id: 'r',
   position: [0, 0],

@@ -163,24 +163,19 @@ describe('resolveNode', () => {
 
   it('将有效标签默认值具体化到每个规范标签中', () => {
     const frame = resolveScopeDefaults({
-      type: 'scope',
-      children: [],
-
-      defaults: {
-        style: { color: 'red' },
-        node: {
-          label: {
-            textColor: 'blue',
-            opacity: 0.5,
-            font: { family: 'default', size: 20, weight: 'bold' },
-          },
+      style: { color: 'red' },
+      node: {
+        label: {
+          textColor: 'blue',
+          opacity: 0.5,
+          font: { family: 'default', size: 20, weight: 'bold' },
         },
-        path: {
-          label: {
-            textColor: 'blue',
-            opacity: 0.5,
-            font: { family: 'default', size: 20, weight: 'bold' },
-          },
+      },
+      path: {
+        label: {
+          textColor: 'blue',
+          opacity: 0.5,
+          font: { family: 'default', size: 20, weight: 'bold' },
         },
       },
     });

@@ -16,7 +16,7 @@ describe('路径宿主样式', () => {
   ])('保持 %s 颜色有效，直到所选路径消费它', (_, style, defaults, color) => {
     const resolved = mergePathStyle(
       { type: 'path', kind: 'custom', children: [], style },
-      resolveScopeDefaults({ type: 'scope', children: [], defaults }),
+      resolveScopeDefaults(defaults),
     );
     expect(resolved.style?.color).toBe(color);
     expect(resolved.style?.stroke).toBeUndefined();
@@ -34,11 +34,7 @@ describe('路径宿主样式', () => {
           ],
         },
         {
-          scopeDefaults: resolveScopeDefaults({
-            type: 'scope',
-            children: [],
-            defaults: { path: { style: { fill: 'red' } } },
-          }),
+          scopeDefaults: resolveScopeDefaults({ path: { style: { fill: 'red' } } }),
         },
       ),
     ).toThrow(/label\.interrupt.*filled stroke path/i);

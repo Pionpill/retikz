@@ -1,8 +1,7 @@
-import type { PropertyPath } from '@retikz/foundation';
-import type { JsonValue, ValueOf } from '@retikz/foundation';
+import type { JsonValue, PropertyPath, ValueOf } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
-import type { IRChild, IRClip, IRPosition, IRScopeProps, IRTarget } from '../../schemas';
+import type { IRAnimationTrack, IRChild, IRClip, IRPosition, IRScopeProps, IRTarget, IRTransform } from '../../schemas';
 import type { CanonicalTheme } from '../../shared';
 import type { Transform } from '../scene';
 import type { CompositeBoundChild, CompositeRuntimeInputContext } from './input';
@@ -182,9 +181,9 @@ export type CompositeCompileChild = Readonly<{
 export type CompositeCompileScopeProps = Readonly<
   Omit<IRScopeProps, 'transforms' | 'animations'> & {
     /** Scope authored transform，沿普通 Scope pipeline 在 compile 阶段 lowering */
-    transforms?: ReadonlyArray<NonNullable<IRScopeProps['transforms']>[number]>;
+    transforms?: ReadonlyArray<IRTransform>;
     /** Scope group 的声明式动画轨道 */
-    animations?: ReadonlyArray<NonNullable<IRScopeProps['animations']>[number]>;
+    animations?: ReadonlyArray<IRAnimationTrack>;
   }
 >;
 

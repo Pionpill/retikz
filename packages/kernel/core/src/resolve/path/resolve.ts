@@ -1,6 +1,5 @@
-import { encodePropertyPath } from '@retikz/foundation';
-import { formatPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
+import { encodePropertyPath, formatPropertyPath } from '@retikz/foundation';
 import { pointAtArcAngle } from '@retikz/math';
 
 import type { Transform } from '../../contract';
@@ -20,21 +19,21 @@ import type {
 import { BendAngleSchema, BuiltinPath, SmoothTensionSchema } from '../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import { resolvePaint } from '../resource';
-import { resolveContextualColor, resolveDropShadow, mergePathStyle, resolveGraphicOpacity } from '../style';
-import type { InlineSegmentColorSource, LabelTextColorSource, ColorResolvedTextLine } from '../text';
+import { mergePathStyle, resolveContextualColor, resolveDropShadow, resolveGraphicOpacity } from '../style';
+import type { ColorResolvedTextLine, InlineSegmentColorSource, LabelTextColorSource } from '../text';
 import { resolvePathDefinition } from './provider';
 import type {
   CanonicalPath,
   CanonicalPathLabel,
   CanonicalPathLabelPlacement,
   CanonicalStep,
+  MarkColorSource,
+  PathColorSource,
+  PathLabelColorSource,
   PathLabelGeometryOptions,
   PathResolution,
   PathResolveContext,
   PathTargetResolver,
-  MarkColorSource,
-  PathLabelColorSource,
-  PathColorSource,
   StepColorSource,
   TargetResolution,
 } from './types';
@@ -222,7 +221,7 @@ const resolvePathPaint = (
 const resolveLabelSegmentColor = (
   segment: IRTextSegment | IRMathSegment,
   masterColor: string | undefined,
-  context: Pick<PathResolveContext, 'mode'>,
+  mode: PathResolveContext['mode'],
   fieldPath: PropertyPath,
 ): InlineSegmentColorSource => {
   const { fill, ...source } = segment;
@@ -233,7 +232,7 @@ const resolveLabelSegmentColor = (
       : {
           fill: resolveContextualColor(fill, {
             masterColor,
-            mode: context.mode,
+            mode,
             fieldPath: [...fieldPath, 'fill'],
           }),
         }),
@@ -244,7 +243,7 @@ const resolveLabelSegmentColor = (
 const resolvePathLabelTextLine = (
   text: IRLine,
   masterColor: string | undefined,
-  context: Pick<PathResolveContext, 'mode'>,
+  mode: PathResolveContext['mode'],
   fieldPath: PropertyPath,
 ): ColorResolvedTextLine => {
   if (typeof text === 'string') return text;
@@ -254,9 +253,9 @@ const resolvePathLabelTextLine = (
       fill:
         text.fill === undefined
           ? undefined
-          : resolveContextualColor(text.fill, { masterColor, mode: context.mode, fieldPath: [...fieldPath, 'fill'] }),
+          : resolveContextualColor(text.fill, { masterColor, mode, fieldPath: [...fieldPath, 'fill'] }),
       segments: text.segments.map((segment, index) =>
-        resolveLabelSegmentColor(segment, masterColor, context, [...fieldPath, 'segments', index]),
+        resolveLabelSegmentColor(segment, masterColor, mode, [...fieldPath, 'segments', index]),
       ),
     };
   }
@@ -267,7 +266,7 @@ const resolvePathLabelTextLine = (
     ...style,
     ...(fill === undefined
       ? {}
-      : { fill: resolveContextualColor(fill, { masterColor, mode: context.mode, fieldPath: [...fieldPath, 'fill'] }) }),
+      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: [...fieldPath, 'fill'] }) }),
   };
 };
 
@@ -275,18 +274,18 @@ const resolvePathLabelTextLine = (
 const resolvePathLabelText = (
   text: IRPathLabel['text'],
   masterColor: string | undefined,
-  context: Pick<PathResolveContext, 'mode'>,
+  mode: PathResolveContext['mode'],
   fieldPath: PropertyPath,
 ): LabelTextColorSource =>
   Array.isArray(text)
-    ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, context, [...fieldPath, index]))
+    ? text.map((line, index) => resolvePathLabelTextLine(line, masterColor, mode, [...fieldPath, index]))
     : text;
 
 /** 确定路径标签的文字主色，并据此解析行级与片段颜色 */
 export const resolvePathLabelColors = (
   label: IRPathLabel,
   masterColor: string | undefined,
-  context: Pick<PathResolveContext, 'mode'>,
+  mode: PathResolveContext['mode'],
   fieldPath: PropertyPath,
 ): PathLabelColorSource => {
   const { textColor, text, ...source } = label;
@@ -295,7 +294,7 @@ export const resolvePathLabelColors = (
       ? masterColor
       : resolveContextualColor(textColor, {
           masterColor,
-          mode: context.mode,
+          mode,
           fieldPath: [...fieldPath, 'textColor'],
         });
   const textMaster = resolvedTextColor ?? masterColor;
@@ -303,7 +302,7 @@ export const resolvePathLabelColors = (
   return {
     ...source,
     ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
-    text: resolvePathLabelText(text, textMaster, context, [...fieldPath, 'text']),
+    text: resolvePathLabelText(text, textMaster, mode, [...fieldPath, 'text']),
   };
 };
 
@@ -321,7 +320,7 @@ const resolveStepLabelColors = (
 
   return {
     ...source,
-    label: resolvePathLabelColors(label, masterColor, context, [...fieldPath, 'label']),
+    label: resolvePathLabelColors(label, masterColor, context.mode, [...fieldPath, 'label']),
   };
 };
 
@@ -387,9 +386,9 @@ const resolvePathContextualColors = (
       ? undefined
       : Array.isArray(label)
         ? label.map((item, index) =>
-            resolvePathLabelColors(item, labelMasterColor, context, [...irPath, 'label', index]),
+            resolvePathLabelColors(item, labelMasterColor, context.mode, [...irPath, 'label', index]),
           )
-        : resolvePathLabelColors(label, labelMasterColor, context, [...irPath, 'label']);
+        : resolvePathLabelColors(label, labelMasterColor, context.mode, [...irPath, 'label']);
 
   return {
     ...source,

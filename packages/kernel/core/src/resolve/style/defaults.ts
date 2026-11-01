@@ -10,14 +10,12 @@ import type { MergedScopeDefaults } from './types';
 /**
  * 合并当前作用域与父级的默认配置，供子元素继续继承
  * @description 先按 reset 清除指定通道的继承值，再依次合入共同样式与节点、路径各自的配置；颜色保留到元素解析时确定
- * @template TScope 提供 defaults 字段的作用域类型
  * @returns 未提供 defaults 时返回 parent 原对象，否则返回合并后的配置
  */
-export const resolveScopeDefaults = <TScope extends Pick<IRScope, 'defaults'>>(
-  scope: TScope,
+export const resolveScopeDefaults = (
+  defaults: IRScope['defaults'],
   parent: MergedScopeDefaults = {},
 ): MergedScopeDefaults => {
-  const defaults = scope.defaults;
   if (defaults === undefined) return parent;
 
   const { style, reset } = defaults;

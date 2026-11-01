@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrimitive, IRScene, ScenePrimitive, TextPrimitive } from '../../src';
+import type { GroupPrimitive, IRScene, PathCommand, ScenePrimitive, TextPrimitive } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { PathPrimitive } from '../../src/contract';
 import type { IRPath } from '../../src/schemas';
@@ -366,9 +366,7 @@ describe('cornerRadius 交互', () => {
     );
     const arcs = fragments
       .flatMap(fragment => fragment.commands)
-      .filter(
-        (command): command is Extract<PathPrimitive['commands'][number], { kind: 'arc' }> => command.kind === 'arc',
-      );
+      .filter((command): command is Extract<PathCommand, { kind: 'arc' }> => command.kind === 'arc');
     const rotationCenter = labelRotationCenter(compiledScene.primitives, label.text);
 
     expect(rotationCenter[0]).toBeCloseTo(roundedAnchor[0], 2);

@@ -9,7 +9,7 @@ import {
   resolvePreliminaryScopeTransforms,
   resolveScopePositionTarget,
 } from './placement';
-import type { InputScopeCompile, CompiledScope, ScopeCompilationPreparation, ScopeGeometryContext } from './types';
+import type { CompiledScope, InputScopeCompile, ScopeCompilationPreparation, ScopeGeometryContext } from './types';
 
 /** Scope 自身编译上下文，子布局由调用者按依赖就绪顺序提供 */
 export type ScopeCompileContext = ElementCompileOptions;
@@ -72,7 +72,7 @@ export const compileScopeGeometry = (
   shared: SharedCompileContext,
   context: ScopeGeometryContext,
 ) => {
-  const envelope = createIntrinsicScopeLayout(input, layouts, shared);
+  const envelope = createIntrinsicScopeLayout(input, layouts, shared.registries);
   const transforms = resolveFinalScopeTransforms(
     input,
     context,

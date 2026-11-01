@@ -2,7 +2,7 @@ import { readPropertyPath } from '@retikz/foundation';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { strictObject } from 'zod';
 
-import type { CompileWarning, IRScene } from '../../src';
+import type { CompileWarning, IRChild, IRScene } from '../../src';
 import { BUILTIN_SHAPES, BuiltinCompileWarningCode, defineShape, formatCompileWarning } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 
@@ -14,7 +14,7 @@ const scene = (children: IRScene['children']): IRScene => ({
 
 describe('CompileOptions.onWarn', () => {
   it('使 PATH_TOO_SHORT 保持在未使用的箭头和生成器查找之前', () => {
-    const cases: Array<IRScene['children'][number]> = [
+    const cases: Array<IRChild> = [
       {
         type: 'path',
         arrow: { end: { shape: 'missing-arrow' } },

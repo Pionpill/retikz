@@ -3,12 +3,14 @@ import type {
   IRPlot,
   IRPlotCoordinateOperation,
   IRPlotDefaults,
+  IRPlotGuide,
+  IRPlotMark,
   IRPlotScaleOperation,
 } from '@retikz/plot';
 import {
+  PlotSchema,
   bindCoordinateScaleNames,
   mergePlotDefaults,
-  PlotSchema,
   readCoordinateScaleNames,
   resolvePlotFacetComposition,
 } from '@retikz/plot';
@@ -263,7 +265,7 @@ const resolveChartPlotSpatial = (
 const resolveChartPlotGuides = (
   recipe: ChartRecipeResolution,
   extension: IRChartPlotExtension | undefined,
-): ReadonlyArray<NonNullable<IRPlot['guides']>[number]> | undefined => {
+): ReadonlyArray<IRPlotGuide> | undefined => {
   const authored = extension?.guides;
   const scaffold = recipe.scaffold.guides;
   if (authored === undefined) return scaffold?.value;
@@ -281,7 +283,7 @@ export const resolveChartPlot = (
   definition: Pick<ChartRecipeDefinition, 'resolveGuideDefaults' | 'resolveScaleDefaults'>,
   recipe: ChartRecipeResolution,
   encodings: ChartEncodingResolution,
-  chartMarks: ReadonlyArray<IRPlot['marks'][number]>,
+  chartMarks: ReadonlyArray<IRPlotMark>,
   runtime: ChartEncodingRuntime,
   themePlotDefaults: IRPlotDefaults | undefined,
 ): IRPlot => {
@@ -289,7 +291,7 @@ export const resolveChartPlot = (
   const spatial = resolveChartPlotSpatial(recipe, encodings, source.coordinate, extension, runtime);
   const mergedGuides = resolveChartPlotGuides(recipe, extension);
   const mergedScales = resolveChartPlotScales(recipe, encodings, extension);
-  const identifiedMarks = new Map<number, IRPlot['marks'][number]>();
+  const identifiedMarks = new Map<number, IRPlotMark>();
 
   const identifyMark = (index: number): string => {
     const previous = identifiedMarks.get(index);

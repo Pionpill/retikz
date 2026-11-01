@@ -344,7 +344,7 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
     ];
   });
 
-  const arrows = emitPathEndpointArrows(path, {
+  const arrows = emitPathEndpointArrows(path.arrow, {
     resolvePaint,
     arrowResolutions: resolution.arrows,
     round,

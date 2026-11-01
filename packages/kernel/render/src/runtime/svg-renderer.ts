@@ -1,16 +1,16 @@
-import type { IRAnimationTrack, Scene } from '@retikz/core';
-import { encodePropertyPath } from '@retikz/foundation';
+import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
+import { encodePropertyPath } from '@retikz/foundation';
 import type {
+  ReconcilerPreparedCommit,
   RuntimeScenePrimitive,
+  SceneIdentity,
   ScenePatch,
   ScenePatchOperation,
   SceneRuntimeNode,
   SceneRuntimeSnapshot,
   SceneRuntimeSubtree,
 } from '@retikz/reconciler';
-import type { SceneIdentity } from '@retikz/reconciler';
-import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 
 import type { AnimationControls } from '../animation';
 import { classifyProperty, evaluateTrack, isAutoplayTrigger, sceneHasAnimations } from '../animation';
@@ -38,7 +38,7 @@ import { snapshotReadonlyLayers } from './readonly-layer';
 import type { RetainedSvgRenderer, RetainedSvgRendererImmutableOptions } from './renderer';
 import { defineRetainedRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
-import { diffSceneAnimationDescriptors, SceneAnimationOccurrenceChangeKind } from './runtime-options';
+import { SceneAnimationOccurrenceChangeKind, diffSceneAnimationDescriptors } from './runtime-options';
 import type { SceneIdentityMap } from './shared';
 import {
   createHydrationCleanupQueue,
@@ -625,7 +625,7 @@ const buildSubtreeDescriptor = (
   const descriptor = buildSvgDocument(
     {
       ...(snapshot.scene as unknown as Scene),
-      primitives: [subtree.primitive as unknown as Scene['primitives'][number]],
+      primitives: [subtree.primitive as unknown as ScenePrimitive],
       resources: [],
       animations: [],
     },

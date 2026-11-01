@@ -1,4 +1,13 @@
-import type { CoreProviderDefinitions, ThemeDefinition } from '../../contract';
+import type {
+  AnyPathDefinition,
+  ArrowDefinition,
+  BoundaryDefinition,
+  ClipDefinition,
+  MarkDefinition,
+  PatternDefinition,
+  ShapeDefinition,
+  ThemeDefinition,
+} from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import {
   resolveArrowRegistry,
@@ -14,7 +23,7 @@ import {
 import type { CompositeRegistry } from '../../resolve';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE } from '../constants';
 import { DEFAULT_MAX_CLIP_DEPTH } from '../resource';
-import { createRound, DEFAULT_PRECISION } from '../scene';
+import { DEFAULT_PRECISION, createRound } from '../scene';
 import { fallbackMeasurer } from '../text';
 import type { CompileHostOptions, CompileLayoutOptions, CompileOptions } from '../types';
 
@@ -24,19 +33,19 @@ const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
 /** 已合并内置与调用方定义的有效编译注册表 */
 export type CompileContextRegistries = Readonly<{
   /** 形状定义索引 */
-  shapeRegistry: ReadonlyMap<string, NonNullable<CoreProviderDefinitions['shapes']>[number]>;
+  shapeRegistry: ReadonlyMap<string, ShapeDefinition>;
   /** 连接面定义索引 */
-  boundaryRegistry: ReadonlyMap<string, NonNullable<CoreProviderDefinitions['boundaries']>[number]>;
+  boundaryRegistry: ReadonlyMap<string, BoundaryDefinition>;
   /** 裁剪定义索引 */
-  clipRegistry: ReadonlyMap<string, NonNullable<CoreProviderDefinitions['clips']>[number]>;
+  clipRegistry: ReadonlyMap<string, ClipDefinition>;
   /** 箭头定义索引 */
-  arrowRegistry: ReadonlyMap<string, NonNullable<CoreProviderDefinitions['arrows']>[number]>;
+  arrowRegistry: ReadonlyMap<string, ArrowDefinition>;
   /** 路径标记定义索引 */
-  markRegistry: ReadonlyMap<string, NonNullable<CoreProviderDefinitions['marks']>[number]>;
+  markRegistry: ReadonlyMap<string, MarkDefinition>;
   /** 图案定义索引 */
-  patternRegistry: ReadonlyMap<string, NonNullable<CoreProviderDefinitions['patterns']>[number]>;
+  patternRegistry: ReadonlyMap<string, PatternDefinition>;
   /** 路径定义索引 */
-  pathRegistry: ReadonlyMap<string, NonNullable<CoreProviderDefinitions['paths']>[number]>;
+  pathRegistry: ReadonlyMap<string, AnyPathDefinition>;
   /** 按命名空间与类型索引的复合定义 */
   compositeRegistry: CompositeRegistry;
   /** 主题定义索引 */

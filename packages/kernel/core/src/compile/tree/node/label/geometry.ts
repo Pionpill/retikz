@@ -72,25 +72,22 @@ const labelTangentVector = (position: NodeLabelResolution['position']): Position
 };
 
 /** label 在 node 边界上的附着点 */
-export const labelBorderPoint = (
-  layout: CompiledNodeLayout,
-  label: Pick<NodeLabelResolution, 'position'>,
-): Position => {
-  if (label.position === 'center') return [layout.geometry.rect.x, layout.geometry.rect.y];
+export const labelBorderPoint = (layout: CompiledNodeLayout, position: NodeLabelResolution['position']): Position => {
+  if (position === 'center') return [layout.geometry.rect.x, layout.geometry.rect.y];
 
   const aaLayout: CompiledNodeLayout = {
     ...layout,
     geometry: { ...layout.geometry, rect: { ...layout.geometry.rect, rotate: 0 } },
   };
-  if (isLabelBoundaryPosition(label.position)) {
-    return labelBoundaryPoint(aaLayout, label.position);
+  if (isLabelBoundaryPosition(position)) {
+    return labelBoundaryPoint(aaLayout, position);
   }
 
-  if (typeof label.position === 'number') {
-    return angleBoundaryOf(aaLayout, label.position);
+  if (typeof position === 'number') {
+    return angleBoundaryOf(aaLayout, position);
   }
 
-  return anchorOf(aaLayout, label.position);
+  return anchorOf(aaLayout, position);
 };
 
 /** 将标签相对节点中心的偏移换算为当前布局坐标中的中心点 */
@@ -169,7 +166,7 @@ export const resolveNodeLabelGeometry = (
       placement: properties.placement,
       align: properties.align,
     },
-    point: labelBorderPoint(layout, properties),
+    point: labelBorderPoint(layout, properties.position),
     outward: labelPlacementVector(properties.position),
     tangent: labelTangentVector(properties.position),
     width: label.measuredWidth,

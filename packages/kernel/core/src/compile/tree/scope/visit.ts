@@ -6,21 +6,20 @@ import { resolveScopeDefaults, resolveTheme } from '../../../resolve';
 import { createCompileChildPath, formatCompileOccurrence } from '../../artifact';
 import type { CompileOwnerKey } from '../../provenance';
 import { projectPublishedCompileLayout, projectScopeCompileLayouts } from '../../reference';
-import { collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../../scene';
-import { allocationPointsOf } from '../../scene';
+import { allocationPointsOf, collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../../scene';
 import { resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../alignment-guide';
 import { effectiveAllocations, pushAllocation } from '../allocation';
-import { createTreePositionContext } from '../context';
 import type { CompileExecutionContext } from '../context';
-import { createCompileSinks } from '../frame';
+import { createTreePositionContext } from '../context';
 import type { TreeCompileFrame } from '../frame';
+import { createCompileSinks } from '../frame';
 import { createScopePlaceholderLayout } from '../node';
 import type { TreeOutputState } from '../output';
 import { flushPendingPathEmissions } from '../path/deferred';
 import type { ScopeChild, SubtreeCompilerOptions } from '../types';
 import { compileScopeGeometry, prepareScopeGeometry } from './compile';
 import { emitScopeGroup } from './output';
-import type { ScopeVisitHost, ScopeLayoutPlaceholder, ScopeLayoutPlaceholderContext } from './types';
+import type { ScopeLayoutPlaceholder, ScopeLayoutPlaceholderContext, ScopeVisitHost } from './types';
 
 /** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换 */
 const registerScopeLayoutPlaceholder = (
@@ -112,7 +111,7 @@ export const visitScope = (
       locatorPrefix: createCompileChildPath(locatorPrefix, index),
       layoutSink: scopeLayouts,
       pathSink: scopePendingPaths,
-      scopeDefaults: resolveScopeDefaults(child, scopeDefaults),
+      scopeDefaults: resolveScopeDefaults(child.defaults, scopeDefaults),
       theme,
       publicationSink: scopePublications,
       boundsSink: scopeBounds,

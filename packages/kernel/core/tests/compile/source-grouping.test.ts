@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { compileToScene, SceneSchema } from '../../src';
-import { resolveScopeDefaults, mergeNodeStyle } from '../../src/resolve/style';
+import { SceneSchema, compileToScene } from '../../src';
+import { mergeNodeStyle, resolveScopeDefaults } from '../../src/resolve/style';
 import { NodeSchema, ScopeSchema } from '../../src/schemas';
 
 describe('分组 Source 解析与编译', () => {
@@ -34,7 +34,7 @@ describe('分组 Source 解析与编译', () => {
           style: { stroke: 'blue' },
           node: { style: { font: { family: 'serif', size: 20 } }, layout: { minimumSize: 30 } },
         },
-      }),
+      }).defaults,
     );
     const node = NodeSchema.parse({
       type: 'node',
@@ -76,7 +76,7 @@ describe('分组 Source 解析与编译', () => {
     expect(compileToScene(SceneSchema.parse(JSON.parse(JSON.stringify(source)))).scene).toEqual(output);
 
     const frame = resolveScopeDefaults(
-      ScopeSchema.parse({ type: 'scope', children: [], defaults: { style: { fill: 'red' } } }),
+      ScopeSchema.parse({ type: 'scope', children: [], defaults: { style: { fill: 'red' } } }).defaults,
     );
 
     expect(

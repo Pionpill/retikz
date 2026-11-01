@@ -445,7 +445,7 @@ if (result.status === 'compiled') {
     root: {},
     primitives: output.primitives,
     resources: output.resources,
-    layoutBounds: computeCompileOutputBounds(output),
+    layoutBounds: computeCompileOutputBounds(output.bounds),
     round: shared.layout.round,
     diagnostics: result.diagnostics,
   });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { InputFlowLayoutRelation } from '../../src/flow';
 import { FlowDiagramSchema, FlowRoutingSchema } from '../../src/flow';
 import { evaluateFlowBezierConflicts, flowRouteLabelBounds } from '../../src/flow/providers';
 
@@ -59,7 +60,7 @@ const elements: FlowLayoutOutput['elements'] = [
   { id: 'obstacle', bounds: { x: 90, y: -15, width: 20, height: 30 } },
 ];
 
-const inputFor = (routing: InputFlowLayoutComputation['relations'][number]['routing']): InputFlowLayoutComputation => ({
+const inputFor = (routing: InputFlowLayoutRelation['routing']): InputFlowLayoutComputation => ({
   layout: { direction: 'right', nodeGap: 48, rankGap: 48, routing: { kind: 'straight' } },
   elements: elements.map(element => ({
     kind: 'leaf',
@@ -168,7 +169,7 @@ import type { CompileWarning, ScenePrimitive } from '@retikz/core';
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 
 import type { FlowLayoutDefinition, IRFlowRouting } from '../../src/flow';
-import { createFlowDiagramProviderContribution, FlowDiagramArtifactSchema } from '../../src/flow';
+import { FlowDiagramArtifactSchema, createFlowDiagramProviderContribution } from '../../src/flow';
 
 const flatten = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));

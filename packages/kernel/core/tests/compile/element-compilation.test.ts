@@ -1,30 +1,30 @@
 import { describe, expect, it } from 'vitest';
 
 import type {
-  ElementCompileReference,
-  SharedCompileContext,
   CompileOutput,
+  ElementCompileReference,
   IRCoordinate,
   IRNode,
   IRPathBase,
   IRScope,
   ShapeDefinition,
+  SharedCompileContext,
 } from '../../src';
 import {
-  assembleSceneCompilationSnapshot,
-  assembleCompileOutputs,
-  computeCompileOutputBounds,
-  assembleScopeOutput,
   BUILTIN_SHAPES,
+  RetikzCoreError,
+  assembleCompileOutputs,
+  assembleSceneCompilationSnapshot,
+  assembleScopeOutput,
   compileCoordinate,
   compileNode,
   compilePath,
   compileScope,
   compileToScene,
+  computeCompileOutputBounds,
   createSharedCompileContext,
   prepareScopeCompilation,
   projectCompileReference,
-  RetikzCoreError,
   resolveScopeContext,
 } from '../../src';
 
@@ -34,7 +34,7 @@ const finalizeOutputs = (input: { root: {}; outputs: ReadonlyArray<CompileOutput
     root: input.root,
     primitives: output.primitives,
     resources: output.resources,
-    layoutBounds: computeCompileOutputBounds(output),
+    layoutBounds: computeCompileOutputBounds(output.bounds),
     round: input.shared.layout.round,
   });
 };

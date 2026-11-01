@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { array, literal, number, strictObject, tuple } from 'zod';
 
-import type { ClipResource, GroupPrimitive, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
+import type { ClipResource, GroupPrimitive, IRChild, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
 import { compileToScene, defineClip } from '../../src';
 
 const polygonClip = defineClip<{
@@ -60,7 +60,7 @@ const grad: IRPaint = {
 const handcraftedScope = (
   clip: unknown,
   children: IRScene['children'] = [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
-): IRScene => scene([{ type: 'scope', clip, children } as unknown as IRScene['children'][number]]);
+): IRScene => scene([{ type: 'scope', clip, children } as unknown as IRChild]);
 
 describe('clip 非 finite 守卫：必须编译期抛、绝不进 Scene', () => {
   const cases: Array<{ name: string; clip: unknown }> = [
@@ -174,12 +174,12 @@ describe('clip dedup 边界', () => {
         type: 'scope',
         clip: clipA,
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
-      } as unknown as IRScene['children'][number],
+      } as unknown as IRChild,
       {
         type: 'scope',
         clip: clipB,
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
-      } as unknown as IRScene['children'][number],
+      } as unknown as IRChild,
     ]);
     const compiled = compileToScene(ir, polygonOptions).scene;
 

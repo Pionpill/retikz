@@ -201,7 +201,7 @@ const emitNodeLabelPinPrimitive = (
 
   const style = typeof labelProperties.pin === 'object' ? labelProperties.pin : undefined;
   const [lx, ly] = labelCenterPosition;
-  const [bx, by] = labelBorderPoint(layout, labelProperties);
+  const [bx, by] = labelBorderPoint(layout, labelProperties.position);
   const [nx, ny] = labelBoxEdgeToward({
     center: [lx, ly],
     border: [bx, by],

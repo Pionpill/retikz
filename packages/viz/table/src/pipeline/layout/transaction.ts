@@ -1,21 +1,21 @@
 import type {
   CompositeCompileChild,
+  CompositeCompileContext,
   IRChild,
   LayoutAxisProposal,
   LayoutChildProbe,
   LayoutChildResult,
-  CompositeCompileContext,
 } from '@retikz/core';
 import {
   ChildSchema,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
+  ThemeMode,
   naturalLayoutProposal,
   resolveDefaultCoreThemeColors,
-  ThemeMode,
 } from '@retikz/core';
-import type { ExternalDatasets, DataTransformResult } from '@retikz/data';
+import type { DataTransformResult, ExternalDatasets } from '@retikz/data';
 import { ScalarValueSchema } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -41,8 +41,12 @@ import { emitTableBorderScope, emitTableBoundsSentinel, emitTableCellBackground 
 import { buildTableLayoutManifest } from '../manifest';
 import { resolveTableData } from '../preparation';
 import { presentTable } from '../presentation';
-import type { TableDefaultsResolution } from '../rule';
-import type { TablePlanResolution, TableCellAppearanceTrace } from '../rule';
+import type {
+  TableCellAppearanceTrace,
+  TableDefaultsLayer,
+  TableDefaultsResolution,
+  TablePlanResolution,
+} from '../rule';
 import { presentationInputsOfTableCellPlans, resolveTableCellPlans } from '../rule';
 import { resolveTableStructure } from '../structure';
 import type { TablesLoweringOptions } from '../types';
@@ -58,8 +62,8 @@ import type {
   CanonicalTableTrackSize,
   CompiledTableCellLayout,
   CompiledTableLayout,
-  TableTrackContribution,
   CompiledTableTrackLayout,
+  TableTrackContribution,
 } from './types';
 
 /** 同次 Table compile transaction 的输出 */
@@ -240,7 +244,7 @@ const resolveTableDefaults = (
   tableThemeDefinitions: TablesLoweringOptions['tableThemeDefinitions'] | undefined,
 ): TableDefaultsResolution => {
   const base = resolveTableThemeDefaults(theme, tableThemeDefinitions);
-  const layers: Array<TableDefaultsResolution['layers'][number]> = [...base.layers];
+  const layers: Array<TableDefaultsLayer> = [...base.layers];
 
   const append = (path: string, defaults: IRTableDefaults): void => {
     layers.push({ kind: 'source', path, defaults: structuredClone(defaults) });
@@ -761,7 +765,7 @@ const resolvePresentedTableTransaction = (
       ...(meta === undefined ? {} : { meta }),
     },
     [
-      emitTableBoundsSentinel(layout),
+      emitTableBoundsSentinel(layout.allocationBounds),
       ...backgroundOutputs,
       ...cellOutputs,
       ...(borderResult === undefined ? [] : [context.replay(borderResult)]),

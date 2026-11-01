@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrimitive, IRPathBase, IRScene, PathCommand, PathPrimitive } from '../../../src';
+import type { GroupPrimitive, IRChild, IRPathBase, IRScene, PathCommand, PathPrimitive } from '../../../src';
 import { compileToScene } from '../../../src';
 import { flattenPrims } from '../../helpers/flatten';
 
@@ -185,7 +185,7 @@ describe('编译路径：端点箭头重叠', () => {
     ];
 
     const endX = (endpointOverlap: number | undefined) => {
-      const path: IRScene['children'][number] = {
+      const path: IRChild = {
         type: 'path',
         arrow: { end: { shape: 'normal', endpointOverlap } },
         children: curveSteps,

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../../src/compile/compile';
 import type { ScenePrimitive } from '../../../src/contract';
 import { polygon } from '../../../src/providers/shape';
-import type { IRScene } from '../../../src/schemas';
+import type { IRChild, IRScene } from '../../../src/schemas';
 import { NodeSchema, ShapeRefSchema } from '../../../src/schemas';
 import { flattenPrims } from '../../helpers/flatten';
 
@@ -48,7 +48,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 const polyNode = (
   params: { sides: number; rotate?: number; aspectRatio?: number },
   extra: Record<string, unknown> = {},
-): IRScene['children'][number] => ({
+): IRChild => ({
   type: 'node',
   id: 'poly',
   position: [0, 0],

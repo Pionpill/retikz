@@ -1,6 +1,12 @@
 import type { IRScene } from '@retikz/core';
 import { compileSceneSnapshot } from '@retikz/core';
-import type { ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
+import type {
+  RuntimeScenePrimitive,
+  RuntimeSceneResource,
+  ScenePatch,
+  SceneRuntimeNode,
+  SceneRuntimeSnapshot,
+} from '@retikz/reconciler';
 import { createFullSceneRuntimeSnapshot, createSceneIdentity } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
@@ -324,19 +330,19 @@ describe('Scene 补丁验证器', () => {
       ...createRectSnapshot(0, []),
       root: { owner: 'validator', path: [] },
     } as unknown as SceneRuntimeSnapshot;
-    const sparseTopology = Array<SceneRuntimeSnapshot['topology'][number]>(1);
+    const sparseTopology = Array<SceneRuntimeNode>(1);
     const invalidTopology = { ...valid, topology: sparseTopology } as SceneRuntimeSnapshot;
     const nullTopology = { ...valid, topology: [null] } as unknown as SceneRuntimeSnapshot;
     const malformedGroup = {
       ...valid,
       scene: { ...valid.scene, primitives: [{ type: 'group', children: undefined }] },
     } as unknown as SceneRuntimeSnapshot;
-    const sparsePrimitives = Array<SceneRuntimeSnapshot['scene']['primitives'][number]>(1);
+    const sparsePrimitives = Array<RuntimeScenePrimitive>(1);
     const sparsePrimitiveSnapshot = {
       ...valid,
       scene: { ...valid.scene, primitives: sparsePrimitives },
     } as SceneRuntimeSnapshot;
-    const sparseChildren = Array<SceneRuntimeSnapshot['scene']['primitives'][number]>(1);
+    const sparseChildren = Array<RuntimeScenePrimitive>(1);
     const sparseGroupSnapshot = {
       ...valid,
       scene: { ...valid.scene, primitives: [{ type: 'group', children: sparseChildren }] },
@@ -360,7 +366,7 @@ describe('Scene 补丁验证器', () => {
     );
 
     const next = { ...valid, revision: 1 as SceneRuntimeSnapshot['revision'] };
-    const sparseResources = Array<SceneRuntimeSnapshot['scene']['resources'][number]>(1);
+    const sparseResources = Array<RuntimeSceneResource>(1);
 
     expect(() =>
       assertScenePatch(

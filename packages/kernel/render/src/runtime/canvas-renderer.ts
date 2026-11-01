@@ -1,9 +1,13 @@
-import type { Scene } from '@retikz/core';
-import { encodePropertyPath } from '@retikz/foundation';
-import { readPropertyPath } from '@retikz/foundation';
+import type { Scene, ScenePrimitive } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
-import type { RuntimeScenePrimitive, ScenePatch, SceneRuntimeSnapshot } from '@retikz/reconciler';
-import type { SceneIdentity, ReconcilerPreparedCommit } from '@retikz/reconciler';
+import { encodePropertyPath, readPropertyPath } from '@retikz/foundation';
+import type {
+  ReconcilerPreparedCommit,
+  RuntimeScenePrimitive,
+  SceneIdentity,
+  ScenePatch,
+  SceneRuntimeSnapshot,
+} from '@retikz/reconciler';
 import { sceneIdentityEquals } from '@retikz/reconciler';
 
 import type { AnimationControls, IdClockRegistry } from '../animation';
@@ -37,9 +41,9 @@ import type { RetainedCanvasRenderer, RetainedCanvasRendererImmutableOptions } f
 import { defineRetainedRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import {
+  SceneAnimationOccurrenceChangeKind,
   diffSceneAnimationDescriptors,
   occurrenceAnimationTracks,
-  SceneAnimationOccurrenceChangeKind,
 } from './runtime-options';
 import type { SceneIdentityMap } from './shared';
 import {
@@ -694,7 +698,7 @@ const createIncrementalBitmap = (
 
   const primitives = update.items
     .filter(item => boundsIntersect(item.bounds, update.dirty))
-    .map(item => item.primitive as unknown as Scene['primitives'][number]);
+    .map(item => item.primitive as unknown as ScenePrimitive);
   renderToCanvas(
     bitmap,
     { ...(snapshot.scene as unknown as Scene), primitives },
@@ -832,7 +836,7 @@ const createCanvasHydration = (
   const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology);
 
   /** 给内部 trigger collector 注入与 hydration target 相同的 semantic-owner public id 口径 */
-  const stampAnimationOwners = (primitive: RuntimeScenePrimitive, path: PropertyPath): Scene['primitives'][number] => {
+  const stampAnimationOwners = (primitive: RuntimeScenePrimitive, path: PropertyPath): ScenePrimitive => {
     const topology = topologyByPath.get(encodePropertyPath(path));
     if (topology === undefined)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas hydration topology is incomplete');
@@ -840,7 +844,7 @@ const createCanvasHydration = (
     const publicId = topology.publicId ?? publicIdByOwner.get(topology.semanticOwner);
 
     return {
-      ...(primitive as unknown as Scene['primitives'][number]),
+      ...(primitive as unknown as ScenePrimitive),
       ...(publicId === undefined ? {} : { id: publicId }),
       ...(primitive.type === 'group'
         ? {
@@ -863,7 +867,7 @@ const createCanvasHydration = (
 
   const targets = new Map<string, HydrationTarget>();
 
-  const stamp = (primitive: RuntimeScenePrimitive, path: PropertyPath): Scene['primitives'][number] => {
+  const stamp = (primitive: RuntimeScenePrimitive, path: PropertyPath): ScenePrimitive => {
     const token = encodePropertyPath(path);
     const topology = topologyByPath.get(token);
     if (topology === undefined)
@@ -881,7 +885,7 @@ const createCanvasHydration = (
     );
 
     return {
-      ...(primitive as unknown as Scene['primitives'][number]),
+      ...(primitive as unknown as ScenePrimitive),
       id: token,
       ...(primitive.type === 'group'
         ? { children: primitive.children.map((child, index) => stamp(child, [...path, 'children', index])) }
@@ -947,13 +951,13 @@ const createCanvasAnimationOccurrenceIndex = (
     }
   }
 
-  const stamp = (primitive: RuntimeScenePrimitive, path: PropertyPath): Scene['primitives'][number] => {
+  const stamp = (primitive: RuntimeScenePrimitive, path: PropertyPath): ScenePrimitive => {
     const token = tokenByPath.get(encodePropertyPath(path));
     if (token === undefined)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas animation topology is incomplete');
 
     return {
-      ...(primitive as unknown as Scene['primitives'][number]),
+      ...(primitive as unknown as ScenePrimitive),
       id: token,
       ...(primitive.type === 'group'
         ? { children: primitive.children.map((child, index) => stamp(child, [...path, 'children', index])) }

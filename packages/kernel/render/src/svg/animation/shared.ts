@@ -1,3 +1,4 @@
+import type { IRKeyframe } from '@retikz/core';
 /**
  * SVG 动画播放共享映射（纯函数）：property 分类、value→SVG、origin 支点解析、easing→CSS、prim 几何
  * @description CSS @keyframes（keyframes.ts）与 WAAPI 描述（waapi.ts）共用本模块，避免两端映射漂移
@@ -5,7 +6,7 @@
 import type { IRAnimationTrack, ScenePrimitive } from '@retikz/core';
 import { AnimationProperty } from '@retikz/core';
 
-import { classifyProperty, animationSkipReason, resolveTransformOrigin, sampleAnimationTrack } from '../../animation';
+import { animationSkipReason, classifyProperty, resolveTransformOrigin, sampleAnimationTrack } from '../../animation';
 
 /** CSS 直属通道 → SVG/CSS 属性名（opacity / fill / stroke / stroke-width） */
 const cssPropertyName = (property: IRAnimationTrack['property']): string => {
@@ -93,7 +94,7 @@ export const expandTrack = (track: IRAnimationTrack, prim: ScenePrimitive): Expa
   if (reason !== undefined) return { skip: reason };
 
   // 变换通道把有效缓动交给每个关键帧区间；采样通道已应用缓动，只在线性区间内播放
-  const ease = (kf: IRAnimationTrack['keyframes'][number]): { easing?: string } => ({
+  const ease = (kf: IRKeyframe): { easing?: string } => ({
     easing: easingToCss(kf.easing ?? track.easing),
   });
 

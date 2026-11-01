@@ -1,4 +1,4 @@
-import type { CompileWarning, IRNode } from '@retikz/core';
+import type { CompileWarning, IRNode, ScenePrimitive } from '@retikz/core';
 import { compileToScene, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -187,8 +187,7 @@ describe('Group 布局感知下沉', () => {
     );
     const textPrimitives = (output: typeof defaultTitle.output) =>
       primitivesOf(output.scene.primitives).filter(
-        (primitive): primitive is Extract<(typeof output.scene.primitives)[number], { type: 'text' }> =>
-          primitive.type === 'text',
+        (primitive): primitive is Extract<ScenePrimitive, { type: 'text' }> => primitive.type === 'text',
       );
 
     expect(textPrimitives(defaultTitle.output)).toEqual([
@@ -204,8 +203,7 @@ describe('Group 布局感知下沉', () => {
       Graph.createGraphDefinitions(),
     );
     const text = primitivesOf(output.scene.primitives).filter(
-      (primitive): primitive is Extract<(typeof output.scene.primitives)[number], { type: 'text' }> =>
-        primitive.type === 'text',
+      (primitive): primitive is Extract<ScenePrimitive, { type: 'text' }> => primitive.type === 'text',
     );
 
     expect(text).toHaveLength(1);
@@ -228,8 +226,7 @@ describe('Group 布局感知下沉', () => {
     );
     const textPrimitives = (output: typeof defaultLabel.output) =>
       primitivesOf(output.scene.primitives).filter(
-        (primitive): primitive is Extract<(typeof output.scene.primitives)[number], { type: 'text' }> =>
-          primitive.type === 'text',
+        (primitive): primitive is Extract<ScenePrimitive, { type: 'text' }> => primitive.type === 'text',
       );
 
     expect(textPrimitives(defaultLabel.output)).toEqual([expect.objectContaining({ fontSize: 12, fill: 'gray' })]);
@@ -243,8 +240,7 @@ describe('Group 布局感知下沉', () => {
       Graph.createGraphDefinitions(),
     );
     const text = primitivesOf(output.scene.primitives).filter(
-      (primitive): primitive is Extract<(typeof output.scene.primitives)[number], { type: 'text' }> =>
-        primitive.type === 'text',
+      (primitive): primitive is Extract<ScenePrimitive, { type: 'text' }> => primitive.type === 'text',
     );
 
     expect(text).toHaveLength(1);

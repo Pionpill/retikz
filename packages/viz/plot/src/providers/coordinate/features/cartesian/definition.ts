@@ -1,4 +1,4 @@
-import type { IRNode, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
 import type {
@@ -22,11 +22,11 @@ import type {
 } from '../../../../schemas';
 import {
   AxisPlacementKind,
+  BuiltinPlotCoordinate,
+  BuiltinPlotScale,
   Cartesian1DOrientation,
   Cartesian1DSchema,
   Cartesian2DSchema,
-  BuiltinPlotCoordinate,
-  BuiltinPlotScale,
 } from '../../../../schemas';
 import type { PlotLabelMeasure } from '../../../../shared';
 import { assertUniqueAxisPlacement } from '../../shared';
@@ -98,11 +98,9 @@ const textNodeBoundsOf = (
   };
 };
 
-const isNodeChild = (child: IRScope['children'][number]): child is IRNode =>
-  child.type === 'node' && 'position' in child;
+const isNodeChild = (child: IRChild): child is IRNode => child.type === 'node' && 'position' in child;
 
-const isScopeChild = (child: IRScope['children'][number]): child is IRScope =>
-  child.type === 'scope' && 'children' in child;
+const isScopeChild = (child: IRChild): child is IRScope => child.type === 'scope' && 'children' in child;
 
 /** 收集轴层中的文本节点；mark 与 grid 不参与坐标轴外延测量 */
 const collectAxisTextNodes = (scope: IRScope): Array<IRNode> =>

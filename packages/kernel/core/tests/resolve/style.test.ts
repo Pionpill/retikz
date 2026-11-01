@@ -1,20 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  resolveScopeDefaults,
-  resolveDashPattern,
-  resolveDropShadow,
   mergeNodeStyle,
   mergePathStyle,
+  resolveDashPattern,
+  resolveDropShadow,
+  resolveScopeDefaults,
 } from '../../src/resolve/style';
-import type { IRPathBase, IRScope, IRScopeDefaults } from '../../src/schemas';
-import { PathLabelSchema, NodeSchema, PathSchema, SHADOW_PRESETS } from '../../src/schemas';
-
-const styleScope = (properties: Partial<IRScope>): IRScope => ({
-  type: 'scope',
-  children: [],
-  ...properties,
-});
+import type { IRPathBase, IRScopeDefaults } from '../../src/schemas';
+import { NodeSchema, PathLabelSchema, PathSchema, SHADOW_PRESETS } from '../../src/schemas';
 
 const pathOf = (properties: Partial<IRPathBase> = {}): IRPathBase =>
   PathSchema.parse({
@@ -28,22 +22,16 @@ const pathOf = (properties: Partial<IRPathBase> = {}): IRPathBase =>
 
 describe('Scope 有效默认值', () => {
   it('按层合并共同样式与通道样式，实例主色在继承完成后展开', () => {
-    const parent = resolveScopeDefaults(
-      styleScope({
-        defaults: {
-          style: { color: 'red' },
-          node: { style: { stroke: 'blue', opacity: 0.8 } },
-          path: { style: { stroke: 'blue' } },
-        },
-      }),
-    );
+    const parent = resolveScopeDefaults({
+      style: { color: 'red' },
+      node: { style: { stroke: 'blue', opacity: 0.8 } },
+      path: { style: { stroke: 'blue' } },
+    });
     const child = resolveScopeDefaults(
-      styleScope({
-        defaults: {
-          style: { stroke: 'green', opacity: 0 },
-          node: { style: { stroke: undefined } },
-        },
-      }),
+      {
+        style: { stroke: 'green', opacity: 0 },
+        node: { style: { stroke: undefined } },
+      },
       parent,
     );
     const node = mergeNodeStyle({ type: 'node', position: [0, 0], style: { color: 'gold' } }, child);
@@ -57,19 +45,12 @@ describe('Scope 有效默认值', () => {
   });
 
   it('子层 reset 和元素箭头主色不污染兄弟使用的配置', () => {
-    const parent = resolveScopeDefaults(
-      styleScope({
-        defaults: {
-          style: { color: 'red' },
-          node: { style: { fill: 'blue' }, label: { textColor: 'orange' } },
-          path: { label: { textColor: 'orange' }, arrow: { color: 'purple', end: { color: 'green', scale: 2 } } },
-        },
-      }),
-    );
-    const child = resolveScopeDefaults(
-      styleScope({ defaults: { reset: ['node', 'path'], path: { arrow: {} } } }),
-      parent,
-    );
+    const parent = resolveScopeDefaults({
+      style: { color: 'red' },
+      node: { style: { fill: 'blue' }, label: { textColor: 'orange' } },
+      path: { label: { textColor: 'orange' }, arrow: { color: 'purple', end: { color: 'green', scale: 2 } } },
+    });
+    const child = resolveScopeDefaults({ reset: ['node', 'path'], path: { arrow: {} } }, parent);
     expect(mergeNodeStyle({ type: 'node', position: [0, 0] }, child).style).toEqual({});
     expect(child.node?.label).toBeUndefined();
     expect(child.path?.label).toEqual({});
@@ -92,19 +73,15 @@ describe('Scope 有效默认值', () => {
     { reset: false, keepNode: true, keepPath: true },
     { reset: undefined, keepNode: true, keepPath: true },
   ])('按 reset=$reset 决定节点和路径是否继承父级默认值', ({ reset, keepNode, keepPath }) => {
-    const parent = resolveScopeDefaults(styleScope({ defaults: { style: { color: 'red' } } }));
-    const child = resolveScopeDefaults(styleScope({ defaults: { reset } }), parent);
+    const parent = resolveScopeDefaults({ style: { color: 'red' } });
+    const child = resolveScopeDefaults({ reset }, parent);
 
     expect(child.node).toEqual(keepNode ? parent.node : undefined);
     expect(child.path).toEqual(keepPath ? parent.path : undefined);
   });
 
   it('将范围主颜色传播到节点和路径通道', () => {
-    const frame = resolveScopeDefaults(
-      styleScope({
-        defaults: { style: { color: 'red' } },
-      }),
-    );
+    const frame = resolveScopeDefaults({ style: { color: 'red' } });
     const node = NodeSchema.parse({ type: 'node', position: [0, 0] });
 
     expect(mergeNodeStyle(node, frame)).toMatchObject({
@@ -116,14 +93,10 @@ describe('Scope 有效默认值', () => {
   });
 
   it('按每个字段优先级应用标签字体字段', () => {
-    const frame = resolveScopeDefaults(
-      styleScope({
-        defaults: {
-          node: { label: { font: { family: 'default', size: 20, weight: 'bold' } } },
-          path: { label: { font: { family: 'default', size: 20, weight: 'bold' } } },
-        },
-      }),
-    );
+    const frame = resolveScopeDefaults({
+      node: { label: { font: { family: 'default', size: 20, weight: 'bold' } } },
+      path: { label: { font: { family: 'default', size: 20, weight: 'bold' } } },
+    });
     const label = PathLabelSchema.parse({ text: 'x', font: { family: 'label', size: 10 } });
     const resolved = mergePathStyle(pathOf({ label }), frame);
 
@@ -133,20 +106,16 @@ describe('Scope 有效默认值', () => {
   });
 
   it('在共享默认值后应用箭头开始和结束覆盖', () => {
-    const frame = resolveScopeDefaults(
-      styleScope({
-        defaults: {
-          path: {
-            arrow: {
-              shape: 'stealth',
-              scale: 2,
-              start: { shape: 'triangle' },
-              end: { shape: 'circle' },
-            },
-          },
+    const frame = resolveScopeDefaults({
+      path: {
+        arrow: {
+          shape: 'stealth',
+          scale: 2,
+          start: { shape: 'triangle' },
+          end: { shape: 'circle' },
         },
-      }),
-    );
+      },
+    });
     const resolved = mergePathStyle(
       pathOf({
         arrow: { start: {}, end: { scale: 3 } },

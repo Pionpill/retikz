@@ -14,7 +14,7 @@ export const resolveScopeContext = (
   irPath: PropertyPath = [],
 ): ElementCompileContext =>
   Object.freeze({
-    defaults: resolveScopeDefaults(scope, parent?.defaults),
+    defaults: resolveScopeDefaults(scope.defaults, parent?.defaults),
     theme: resolveTheme(
       parent?.theme ?? DEFAULT_RESOLVED_THEME,
       scope.theme,

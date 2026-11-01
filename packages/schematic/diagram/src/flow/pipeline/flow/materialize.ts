@@ -1,10 +1,10 @@
 import type { IRChild } from '@retikz/core';
 import type { IRGraph, IRGraphRelation } from '@retikz/graph';
-import { createGroupBodyAllocation, GraphType } from '@retikz/graph';
+import { GraphType, createGroupBodyAllocation } from '@retikz/graph';
 import type { BoundsRect, Position } from '@retikz/math';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { FlowLayoutOutput, FlowLayoutElementOutput } from '../../contract';
+import type { FlowLayoutElementOutput, FlowLayoutOutput, FlowLayoutRelationOutput } from '../../contract';
 import type { CanonicalFlowElement, CanonicalFlowEntity, CanonicalFlowRelation } from '../../resolve';
 import type { FlowElementMeasurement, FlowMeasurement } from './types';
 
@@ -94,10 +94,7 @@ const materializeElements = (
     };
   });
 
-const materializeRelation = (
-  relation: CanonicalFlowRelation,
-  output: FlowLayoutOutput['relations'][number],
-): IRGraphRelation => {
+const materializeRelation = (relation: CanonicalFlowRelation, output: FlowLayoutRelationOutput): IRGraphRelation => {
   const { route: routing } = output;
   const innerPoints = routing.points.slice(1, -1);
   const labelSource = relation.source.label;

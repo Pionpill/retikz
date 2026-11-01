@@ -1,4 +1,3 @@
-import { assembleCompileOutputs, assembleSceneCompilationSnapshot, computeCompileOutputBounds } from '@retikz/core';
 import type {
   CompileOutput,
   CompileProvenanceTracker,
@@ -6,6 +5,7 @@ import type {
   IRScene,
   SharedCompileContext,
 } from '@retikz/core';
+import { assembleCompileOutputs, assembleSceneCompilationSnapshot, computeCompileOutputBounds } from '@retikz/core';
 
 /** 将本批有效片段交给 Core 合并并完成 Scene 收尾 */
 export const assembleWeaveCompilation = (
@@ -29,7 +29,7 @@ export const assembleWeaveCompilation = (
     root: input.root,
     primitives: output.primitives,
     resources: output.resources,
-    layoutBounds: computeCompileOutputBounds(output),
+    layoutBounds: computeCompileOutputBounds(output.bounds),
     round: input.shared.layout.round,
     diagnostics: input.diagnostics,
     provenanceTracker: input.provenanceTracker,

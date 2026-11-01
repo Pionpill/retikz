@@ -4,10 +4,10 @@ import { describe, expect, it } from 'vitest';
 
 import type { FlowLayoutOutput, FlowLayoutRoute, InputFlowLayoutComputation } from '../../src/flow';
 import {
-  createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,
   FlowDiagramSchema,
   FlowRouteArtifactSchema,
+  createFlowDiagramProviderContribution,
   layeredFlowLayoutDefinition,
 } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
@@ -399,7 +399,7 @@ describe('Flow 弯曲布线', () => {
       scoreFlowBendNodes(
         output[0].route,
         input.relations[0],
-        flowRelationObstacles(input, { elements: blocked }, input.relations[0]),
+        flowRelationObstacles(input, blocked, input.relations[0]),
       )[0],
     ).toBe(1);
 
@@ -481,7 +481,7 @@ describe('Flow 弯曲布线', () => {
     };
     const obstacles = flowRelationObstacles(
       grouped,
-      { elements: [{ id: 'g', bounds: { x: -10, y: -80, width: 220, height: 100 } }, ...routingElements] },
+      [{ id: 'g', bounds: { x: -10, y: -80, width: 220, height: 100 } }, ...routingElements],
       input.relations[0],
     );
 

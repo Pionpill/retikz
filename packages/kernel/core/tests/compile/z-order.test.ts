@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IRScene } from '../../src';
+import type { CompileWarning, IRChild, IRScene } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { GroupPrimitive, ScenePrimitive } from '../../src/contract';
@@ -12,10 +12,10 @@ import type { GroupPrimitive, ScenePrimitive } from '../../src/contract';
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
 /** 文本性 node（无 text、默认 rectangle、无 rotate）→ emit 恰好 1 个 RectPrimitive */
-const node = (position: [number, number]): IRScene['children'][number] => ({ type: 'node', position });
+const node = (position: [number, number]): IRChild => ({ type: 'node', position });
 
 /** 直线 path（move [0,0] → line to）→ emit 1 个 PathPrimitive */
-const line = (to: [number, number]): IRScene['children'][number] => ({
+const line = (to: [number, number]): IRChild => ({
   type: 'path',
   children: [
     { type: 'step', kind: 'move', to: [0, 0] },

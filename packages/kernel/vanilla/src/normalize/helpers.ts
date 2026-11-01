@@ -37,7 +37,7 @@ export const path = (config: Omit<InputPath, 'type'>): InputPath => ({ ...config
  */
 export const scope = (
   config: Omit<InputScope, 'type' | 'children'>,
-  children: ReadonlyArray<InputScope['children'][number]>,
+  children: ReadonlyArray<InputChild>,
 ): InputScope => ({ ...config, children });
 
 /**

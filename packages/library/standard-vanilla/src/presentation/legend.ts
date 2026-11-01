@@ -1,16 +1,17 @@
-import type { InputLegendConfig } from '@retikz/standard/presentation';
+import type { AnyCoreDependencyProvider, CoreProviderKey } from '@retikz/core';
+import type { IRLegendItem, IRLegendTick, InputLegendConfig } from '@retikz/standard/presentation';
 import {
-  createLegend,
-  legendProvider,
   RetikzStandardError,
   RetikzStandardErrorCode,
+  createLegend,
+  legendProvider,
 } from '@retikz/standard/presentation';
 import type {
   InputChild,
   InputEmbed,
-  SynchronousInputEmbedAdapter,
+  InputEmbedAuthoringSite,
   InputEmbedContext,
-  InputEmbedContribution,
+  SynchronousInputEmbedAdapter,
 } from '@retikz/vanilla';
 
 import { standardLegendEmbedKind } from '../shared/constants';
@@ -19,7 +20,7 @@ type InputLegendChild = InputChild;
 
 type InputLegendItemsContent = Omit<Extract<InputLegendConfig['content'], { kind: 'items' }>, 'items'> & {
   items: Array<
-    Omit<Extract<InputLegendConfig['content'], { kind: 'items' }>['items'][number], 'sample' | 'label'> & {
+    Omit<IRLegendItem, 'sample' | 'label'> & {
       sample: InputLegendChild;
       label?: InputLegendChild;
     }
@@ -29,7 +30,7 @@ type InputLegendItemsContent = Omit<Extract<InputLegendConfig['content'], { kind
 type InputLegendRampContent = Omit<Extract<InputLegendConfig['content'], { kind: 'ramp' }>, 'sample' | 'ticks'> & {
   sample: InputLegendChild;
   ticks: Array<
-    Omit<Extract<InputLegendConfig['content'], { kind: 'ramp' }>['ticks'][number], 'label'> & {
+    Omit<IRLegendTick, 'label'> & {
       label?: InputLegendChild;
     }
   >;
@@ -44,9 +45,9 @@ export type InputLegend = Omit<InputLegendConfig, 'title' | 'content'> & {
 };
 
 type CollectedLegendSlots = Readonly<{
-  roots: Array<InputEmbedContribution['providerDependencies']['roots'][number]>;
-  providers: Array<InputEmbedContribution['providerDependencies']['providers'][number]>;
-  authoringSites: Array<NonNullable<InputEmbedContribution['authoringSites']>[number]>;
+  roots: Array<CoreProviderKey>;
+  providers: Array<AnyCoreDependencyProvider>;
+  authoringSites: Array<InputEmbedAuthoringSite>;
 }>;
 
 /** 在当前根 Scene traversal 中归一化 Legend 的一个必填 slot */

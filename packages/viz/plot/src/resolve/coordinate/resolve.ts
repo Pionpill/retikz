@@ -1,60 +1,71 @@
-import type { ExternalRow, DataFieldType, IRDataFieldDefinition } from '@retikz/data';
+import type { DataFieldType, ExternalRow, IRDataFieldDefinition } from '@retikz/data';
 import {
-  createDataView,
   BuiltinFieldOrderMode,
-  resolveFieldPath,
-  resolveCategoryDomain,
   assertFieldOrders,
+  createDataView,
+  resolveCategoryDomain,
+  resolveFieldPath,
 } from '@retikz/data';
 
-import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
-import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
-import { isBuiltinScaleOperation, readCoordinateScaleNames } from '../../contract';
-import { markPositionInputs, positionValue, positionField } from '../../contract';
+import type {
+  AnyCoordinateDefinition,
+  CoordinateFrame,
+  DimensionRole,
+  DomainPaddingScale,
+  PositionScale,
+  TickSet,
+} from '../../contract';
+import {
+  isBuiltinScaleOperation,
+  markPositionInputs,
+  positionField,
+  positionValue,
+  readCoordinateScaleNames,
+} from '../../contract';
 import { RetikzPlotError } from '../../error';
 import {
   buildProportionalIntervals,
   createPositionChannelDefinitions,
-  proportionalIntervalDomainValues,
-  resolveIntervalBound,
+  fixedRoleValue,
   intervalBoundField,
   intervalBoundInput,
   pathBaselineField,
-  fixedRoleValue,
+  proportionalIntervalDomainValues,
+  resolveIntervalBound,
 } from '../../providers';
 import type {
-  IRPlotPositionInput,
   IRPlot,
   IRPlotAxisGuide,
-  IRPlotDomainPadding,
   IRPlotChannel,
   IRPlotCoordinateOperation,
+  IRPlotDomainPadding,
   IRPlotIntervalMark,
   IRPlotMark,
+  IRPlotPositionInput,
   IRPlotScaleOperation,
 } from '../../schemas';
-import { IntervalBoundKind, PathClosureKind, PlotGuide, BuiltinPlotMark, BuiltinPlotScale } from '../../schemas';
+import { BuiltinPlotMark, BuiltinPlotScale, IntervalBoundKind, PathClosureKind, PlotGuide } from '../../schemas';
 import { isSingleMark } from '../mark';
+import type { PointPaddingResolution } from '../scale';
 import {
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
   derivePositionScale,
+  markDomainPaddingOf,
+  resolveBuiltinPositionOperation,
+  resolvePointPadding,
   resolvePositionScale,
   resolvePositionScaleContinuity,
   resolveScaleDefinition,
-  resolveBuiltinPositionOperation,
-  markDomainPaddingOf,
-  resolvePointPadding,
 } from '../scale';
-import type { PointPaddingResolution } from '../scale';
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from './types';
 
 /** 查找当前 coordinate operation 对应的 definition，并集中报告未注册坐标系 */
 export const resolveCoordinateDefinition = (
   operation: IRPlotCoordinateOperation,
-  context: Pick<CoordinateResolveContext, 'coordinateRegistry'>,
+  registry: CoordinateResolveContext['coordinateRegistry'],
 ): AnyCoordinateDefinition => {
-  const definition = context.coordinateRegistry.get(operation.type);
+  const definition = registry.get(operation.type);
   if (definition === undefined) {
     throw new RetikzPlotError(
       `lowerPlots: coordinate type "${operation.type}" is not registered; pass a CoordinateDefinition via options.definitions.coordinates`,
@@ -238,7 +249,7 @@ export const resolveCoordinateFrame = (
     throw new RetikzPlotError('lowerPlots: default coordinate view is not registered');
   }
 
-  const coordinateDefinition = resolveCoordinateDefinition(coordinateOperation, { coordinateRegistry });
+  const coordinateDefinition = resolveCoordinateDefinition(coordinateOperation, coordinateRegistry);
   const roles = coordinateDefinition.roles;
   const axisGuides = (node.guides ?? []).filter((guide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis);
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));

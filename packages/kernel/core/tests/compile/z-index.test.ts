@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
 import type { GroupPrimitive, ScenePrimitive } from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
+import type { IRChild, IRScene } from '../../src/schemas';
 import { NodeSchema, ScopeSchema } from '../../src/schemas';
 
 // ---------------------------------------------------------------------------
@@ -11,13 +11,13 @@ import { NodeSchema, ScopeSchema } from '../../src/schemas';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
-const node = (position: [number, number], zIndex?: number): IRScene['children'][number] => ({
+const node = (position: [number, number], zIndex?: number): IRChild => ({
   type: 'node',
   position,
   ...(zIndex !== undefined && { zIndex }),
 });
 
-const line = (to: [number, number], zIndex?: number): IRScene['children'][number] => ({
+const line = (to: [number, number], zIndex?: number): IRChild => ({
   type: 'path',
   ...(zIndex !== undefined && { zIndex }),
   children: [

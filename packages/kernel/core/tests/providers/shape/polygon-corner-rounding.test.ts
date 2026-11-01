@@ -1,6 +1,7 @@
 import type { CenteredBox, Position } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
+import type { PathCommand } from '../../../src';
 import { polygon } from '../../../src/providers/shape';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
@@ -71,9 +72,7 @@ describe('多边形 cornerRadius — 发射', () => {
     const path = prims[0];
     if (path.type !== 'path') throw new Error('expected path');
 
-    const arcs = path.commands.filter(
-      (cmd): cmd is Extract<(typeof path.commands)[number], { kind: 'arc' }> => cmd.kind === 'arc',
-    );
+    const arcs = path.commands.filter((cmd): cmd is Extract<PathCommand, { kind: 'arc' }> => cmd.kind === 'arc');
 
     expect(arcs.length).toBe(6);
 

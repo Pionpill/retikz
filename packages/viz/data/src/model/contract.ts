@@ -1,7 +1,7 @@
 import type { DataLineageRun } from '../provenance';
 import type { ExternalRow } from '../shared';
 import type { DataFieldType } from './constants';
-import type { IRDataModel } from './types';
+import type { IRDataFieldDefinition } from './types';
 
 /** 逻辑字段名到字段测量类型的运行时映射；由 data.model、自动推断和 resolver 合成，不进入 IR */
 export type DataFieldTypeMap = Map<string, DataFieldType>;
@@ -52,10 +52,10 @@ export type FieldCollector = {
 };
 
 /** 规范逻辑字段模型；不重复执行源格式解析 */
-export type DataTransformModel = Array<DataTransformField<IRDataModel[number]>>;
+export type DataTransformModel = Array<DataTransformField<IRDataFieldDefinition>>;
 
 /** 按字段分支投影，保留测量类型与分类顺序的关联 */
-type DataTransformField<TField extends IRDataModel[number]> = TField extends IRDataModel[number]
+type DataTransformField<TField extends IRDataFieldDefinition> = TField extends IRDataFieldDefinition
   ? Pick<TField, 'name' | 'type' | 'order'>
   : never;
 

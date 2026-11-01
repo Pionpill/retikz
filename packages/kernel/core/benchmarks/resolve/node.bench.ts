@@ -2,8 +2,8 @@ import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
 import { resolveBoundaryRegistry, resolvePatternRegistry, resolveShapeRegistry } from '../../src/providers';
-import { resolveNode } from '../../src/resolve/node';
 import type { NodeResolveContext } from '../../src/resolve/node';
+import { resolveNode } from '../../src/resolve/node';
 import { resolveScopeDefaults } from '../../src/resolve/style';
 import type { IRNode } from '../../src/schemas';
 
@@ -16,10 +16,8 @@ for (const kind of ['simple', 'inherited', 'contrast', 'pattern', 'labels'] as c
         scopeDefaults:
           kind === 'inherited'
             ? resolveScopeDefaults({
-                defaults: {
-                  style: { stroke: 'blue' },
-                  node: { style: { font: { family: 'serif', size: 20 } }, layout: { padding: 3 } },
-                },
+                style: { stroke: 'blue' },
+                node: { style: { font: { family: 'serif', size: 20 } }, layout: { padding: 3 } },
               })
             : {},
         shapeRegistry: resolveShapeRegistry(),

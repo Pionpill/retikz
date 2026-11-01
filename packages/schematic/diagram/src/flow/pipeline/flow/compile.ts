@@ -17,7 +17,7 @@ import {
   isFlowAutomaticRouting,
   scoreFlowBendNodes,
 } from '../../providers';
-import type { CanonicalFlowDiagram } from '../../resolve';
+import type { CanonicalFlowDiagram, CanonicalFlowElement } from '../../resolve';
 import { assertFlowLayoutCapabilities, resolveFlowDiagram } from '../../resolve';
 import type { FlowDiagramArtifact, IRFlowDiagram } from '../../schemas';
 import { createFlowDiagramArtifact } from './artifact';
@@ -96,9 +96,7 @@ const drawingFailureContext = (
     };
   }
 
-  const elements = (
-    values: CanonicalFlowDiagram['elements'],
-  ): ReadonlyArray<CanonicalFlowDiagram['elements'][number]> =>
+  const elements = (values: CanonicalFlowDiagram['elements']): ReadonlyArray<CanonicalFlowElement> =>
     values.flatMap(element => [element, ...(element.type === 'entity' ? [] : elements(element.elements))]);
   const authoredElements = elements(diagram.elements);
 
@@ -203,7 +201,7 @@ export const createCompileFlowDiagram =
         const conflicts = flowSmoothConflicts(
           geometry.route,
           relation,
-          flowRelationObstacles(measurement.input, output, relation),
+          flowRelationObstacles(measurement.input, output.elements, relation),
         );
         if (conflicts.length > 0)
           context.warn(
@@ -219,7 +217,7 @@ export const createCompileFlowDiagram =
         const conflicts = evaluateFlowBezierConflicts(
           geometry.route,
           relation,
-          flowRelationObstacles(measurement.input, output, relation),
+          flowRelationObstacles(measurement.input, output.elements, relation),
           flowPriorLabelReservations(measurement.input.relations, output.relations, index),
         );
         if (conflicts.nodes > 0 || conflicts.labelConflicts > 0)
@@ -238,7 +236,7 @@ export const createCompileFlowDiagram =
         const { score } = evaluateFlowOrthogonalConflicts(
           geometry.route,
           relation,
-          flowRelationObstacles(measurement.input, output, relation),
+          flowRelationObstacles(measurement.input, output.elements, relation),
           flowPriorLabelReservations(measurement.input.relations, output.relations, index),
         );
         if (score[0] > 0 || score[2] > 0)
@@ -259,7 +257,7 @@ export const createCompileFlowDiagram =
         [conflictCount] = scoreFlowBendNodes(
           geometry.route,
           relation,
-          flowRelationObstacles(measurement.input, output, relation),
+          flowRelationObstacles(measurement.input, output.elements, relation),
         );
       } catch (cause) {
         return flowBendGeometryFailure(index, relation, cause);

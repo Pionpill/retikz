@@ -1,9 +1,9 @@
-import type { CoreProviderContribution, IRScene } from '@retikz/core';
+import type { CoreProviderContribution, IRChild, IRScene } from '@retikz/core';
 import {
+  ThemeMode,
   compileToScene,
   resolveCoreProviderDependencies,
   resolveDefaultCoreThemeColors,
-  ThemeMode,
 } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import {
@@ -16,12 +16,11 @@ import {
   defineTransformImplementation,
 } from '@retikz/data';
 import { pathClipProvider } from '@retikz/extension';
-import type { PropertyPath } from '@retikz/foundation';
-import type { JsonObject } from '@retikz/foundation';
+import type { JsonObject, PropertyPath } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { FlexLayoutArtifactSchema } from '@retikz/layout';
 import type { PlotsLoweringOptions } from '@retikz/plot';
-import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
+import { PointMarkSchema, createPlotProviderContribution } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { array, boolean, literal, number, strictObject, string } from 'zod';
 
@@ -34,10 +33,10 @@ import {
   ConnectedScatterChartSchema,
   createConnectedScatterChartProviderContribution,
 } from '../../src/point/connected-scatter';
-import { createRangedDotChartProviderContribution, RangedDotChartSchema } from '../../src/point/ranged-dot';
-import { createRegressionChartProviderContribution, RegressionChartSchema } from '../../src/point/regression';
-import { createScatterChartProviderContribution, ScatterChartSchema } from '../../src/point/scatter';
-import { createStripChartProviderContribution, StripChartSchema } from '../../src/point/strip';
+import { RangedDotChartSchema, createRangedDotChartProviderContribution } from '../../src/point/ranged-dot';
+import { RegressionChartSchema, createRegressionChartProviderContribution } from '../../src/point/regression';
+import { ScatterChartSchema, createScatterChartProviderContribution } from '../../src/point/scatter';
+import { StripChartSchema, createStripChartProviderContribution } from '../../src/point/strip';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
   encodings: context.encodings as JsonObject,
@@ -97,7 +96,7 @@ const compileDefinitionsOf = (
   });
 };
 
-const sceneOf = (source: IRScene['children'][number]): IRScene => ({
+const sceneOf = (source: IRChild): IRScene => ({
   version: 1,
   type: 'scene',
   children: [source],
@@ -231,7 +230,7 @@ describe('Chart 提供者通过 Core 编译', () => {
   it('对未分组的点复合标记中的每个图元使用第一个系列调色板颜色', () => {
     const defaultColor = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical[0];
     const fixtures: ReadonlyArray<{
-      source: IRScene['children'][number];
+      source: IRChild;
       contribution: CoreProviderContribution;
       datasets: ExternalDatasets;
     }> = [

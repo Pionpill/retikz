@@ -1,9 +1,9 @@
 import { boundsToRect } from '@retikz/math';
 
-import type { ScenePrimitive, GroupPrimitive } from '../../../contract';
+import type { GroupPrimitive, ScenePrimitive } from '../../../contract';
 import { createCompileChildPath } from '../../artifact';
 import type { SharedCompileContext } from '../../context';
-import type { CompileOutput } from '../../output';
+import type { CompileBounds, CompileOutput } from '../../output';
 import { assembleCompileOutputs } from '../../output';
 import type { CompileOwnerKey, CompileProvenanceTracker } from '../../provenance';
 import { collectLayoutBounds, optionalVisualBoundsOfPrimitives } from '../../scene';
@@ -42,7 +42,7 @@ export const assembleScopeOutput = (
     group.clipRef === undefined;
   const primitives: Array<ScenePrimitive> = prunable ? [] : [{ ...group, children: [...frame, ...nested] }];
   if (owner !== undefined) provenance?.recordPrimitives(primitives, owner, 'scope');
-  const bounds: Array<CompileOutput['bounds'][number]> = [];
+  const bounds: Array<CompileBounds> = [];
   for (const child of children) {
     for (const contribution of child.bounds) {
       if (contribution.decoration) {

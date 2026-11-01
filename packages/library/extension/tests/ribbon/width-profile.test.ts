@@ -1,4 +1,4 @@
-import type { IRScene, PathPrimitive, ScenePrimitive } from '@retikz/core';
+import type { IRScene, PathCommand, PathPrimitive, ScenePrimitive } from '@retikz/core';
 import { compileToScene as compileCoreToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -27,7 +27,7 @@ const firstPathPrim = (primitives: Array<ScenePrimitive>): PathPrimitive => {
   return prim;
 };
 
-const commandPoint = (command: PathPrimitive['commands'][number]): [number, number] => {
+const commandPoint = (command: PathCommand): [number, number] => {
   if (!('to' in command)) throw new Error(`Expected a point command, got ${command.kind}.`);
   return command.to;
 };
@@ -119,7 +119,7 @@ describe('延长色带宽度轮廓', () => {
   });
 
   it('凸出峰等于基底且峰小于基底', () => {
-    const commandsFor = (base: number, peak: number): Array<PathPrimitive['commands'][number]> =>
+    const commandsFor = (base: number, peak: number): Array<PathCommand> =>
       firstPathPrim(
         compileToRibbonScene(
           scene([

@@ -3,10 +3,10 @@ import { number, strictObject } from 'zod';
 
 import type { CompileOptions } from '../../../src/compile/compile';
 import { compileToScene } from '../../../src/compile/compile';
-import type { BoundaryDefinition, ScenePrimitive } from '../../../src/contract';
+import type { BoundaryDefinition, PathCommand, ScenePrimitive } from '../../../src/contract';
 import { defineBoundary, defineShape } from '../../../src/contract';
 import { BUILTIN_BOUNDARIES } from '../../../src/providers/boundary';
-import type { IRBoundary, IRScene } from '../../../src/schemas';
+import type { IRBoundary, IRChild, IRScene } from '../../../src/schemas';
 import { BoundarySchema } from '../../../src/schemas';
 import { flattenPrims } from '../../helpers/flatten';
 
@@ -17,7 +17,7 @@ const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, 
     position: [0, 0],
     boundary,
     layout: { minimumSize: 40 },
-  } satisfies IRScene['children'][number];
+  } satisfies IRChild;
   const ir: IRScene = {
     version: 1,
     type: 'scene',
@@ -40,7 +40,7 @@ const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, 
   if (prim === undefined) throw new Error('expected connection path');
 
   const line = prim.commands.find(
-    (command): command is Extract<(typeof prim.commands)[number], { kind: 'line' }> => command.kind === 'line',
+    (command): command is Extract<PathCommand, { kind: 'line' }> => command.kind === 'line',
   );
   if (line === undefined) throw new Error('expected line command');
 

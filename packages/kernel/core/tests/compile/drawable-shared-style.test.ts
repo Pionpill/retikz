@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRScene, PathPrimitive, ScenePrimitive } from '../../src';
-import { compileToScene, PathDefaultSchema, ScopeSchema } from '../../src';
+import type { IRChild, IRScene, PathPrimitive, ScenePrimitive } from '../../src';
+import { PathDefaultSchema, ScopeSchema, compileToScene } from '../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -14,7 +14,7 @@ const scene = (children: IRScene['children']): IRScene => ({
   children,
 });
 
-const linePath = (overrides: Record<string, unknown> = {}): IRScene['children'][number] => ({
+const linePath = (overrides: Record<string, unknown> = {}): IRChild => ({
   type: 'path',
   children: steps,
   ...overrides,
