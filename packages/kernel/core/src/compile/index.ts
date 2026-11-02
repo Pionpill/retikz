@@ -36,15 +36,7 @@ export type {
   CompositeArtifactOf,
 } from './shared';
 export { fallbackMeasurer } from './text';
-export type {
-  LoweredTex,
-  LoweredTexPaint,
-  LoweredTexPath,
-  TexLowerer,
-  TextFont,
-  TextMeasurer,
-  TextMetrics,
-} from './text';
+export type { LoweredTex, LoweredTexPaint, LoweredTexPath, TexLowerer } from './text';
 export { compileCoordinate } from './tree/coordinate';
 export type { CompiledCoordinate, CoordinateCompileContext } from './tree/coordinate';
 export { compileNode, projectPublishedCompileLayout } from './tree/node';

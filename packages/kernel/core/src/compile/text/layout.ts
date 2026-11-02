@@ -1,44 +1,44 @@
-import type { GroupPrimitive, PathPrimitive, ScenePrimitive, TextPrimitive } from '../../contract';
+import type {
+  TextFont,
+  TextMeasurer,
+  GroupPrimitive,
+  PathPrimitive,
+  ScenePrimitive,
+  TextPrimitive,
+} from '../../contract';
+import { resolveTextMetrics } from '../../resolve';
 import type { CanonicalInlineSegment } from '../../resolve';
+import { combineOpacity, BuiltinCompileWarningCode } from '../shared';
 import type { CompileWarningCode } from '../shared';
-import { BuiltinCompileWarningCode } from '../shared';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
-import type { TextFont, TextMeasurer } from './metrics';
-import { resolveTextMetrics } from './metrics';
 import type { LoweredTexPaint, LoweredTexPath, TexLowerer } from './tex';
 import { snapshotLoweredTex } from './tex';
 
 /** 行高近似系数 */
 const LINE_HEIGHT_FACTOR = 1.2;
 
-type Round = (n: number) => number;
-
 /** 布局阶段消费的文字或公式输入，不含宿主外观 */
 type InputInlineSegmentLayout =
   | Omit<Extract<CanonicalInlineSegment, { text: string }>, 'fill' | 'opacity'>
   | Omit<Extract<CanonicalInlineSegment, { tex: string }>, 'fill' | 'opacity'>;
 
-/** 按原始 segment 顺序保存的外观覆盖 */
+/** 绘制阶段只读的片段外观覆盖 */
 type InlineSegmentPaint = {
   /** 显式文字或公式宿主颜色 */
-  fill?: string;
+  readonly fill?: string;
   /** 与块透明度相乘的 segment 透明度 */
-  opacity?: number;
+  readonly opacity?: number;
 };
 
 /** 混排行当前外观，独立于测量结果 */
 type InlineLinePaint = {
   /** 块继承色 */
-  color?: string;
+  readonly color?: string;
   /** 块透明度 */
-  opacity?: number;
+  readonly opacity?: number;
   /** 原始 segment 顺序，包含未能降解的公式 */
-  segments: Array<InlineSegmentPaint>;
+  readonly segments: ReadonlyArray<InlineSegmentPaint>;
 };
-
-/** 从已解析的行提取独立外观，不复制文字和字体 */
-export const inlineSegmentPaintsOf = (segments: Array<CanonicalInlineSegment>): Array<InlineSegmentPaint> =>
-  segments.map(segment => ({ fill: segment.fill, opacity: segment.opacity }));
 
 /** 混排行布局服务与块级字体，不接收宿主外观 */
 export type LineLayoutContext = {
@@ -51,10 +51,6 @@ export type LineLayoutContext = {
   /** 接收混排行布局与公式降解产生的诊断 */
   warn: (code: CompileWarningCode, message: string) => void;
 };
-
-/** segment 自身 opacity 与宿主 opacity 相乘（任一缺省取另一个） */
-export const combineOpacity = (segment?: number, host?: number): number | undefined =>
-  segment !== undefined ? (host !== undefined ? segment * host : segment) : host;
 
 /** 一行混排的布局结果 */
 export type InlineLineLayout = {
@@ -183,7 +179,7 @@ export const emitInlineLine = (
   paint: InlineLinePaint,
   originX: number,
   baselineY: number,
-  round: Round,
+  round: (value: number) => number,
 ): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
 

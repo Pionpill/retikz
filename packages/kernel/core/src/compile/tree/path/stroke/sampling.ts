@@ -1,10 +1,10 @@
 import type { PropertyPath } from '@retikz/foundation';
 import type { CurveSegmentSample } from '@retikz/math';
 
-import type { PathCommand, ScenePrimitive } from '../../../../contract';
+import type { TextMeasurer, PathCommand, ScenePrimitive } from '../../../../contract';
 import type { CanonicalPathLabel, CanonicalStep } from '../../../../resolve';
 import type { IRPosition } from '../../../../schemas';
-import type { TexLowerer, TextMeasurer } from '../../../text';
+import type { TexLowerer } from '../../../text';
 import { emitLabelPrimitive } from '../host';
 import { sampleStrokePathGeometry, sampleStrokeStepParameterGeometry } from './interruption';
 import { sampleRoundedCommands } from './rounded-corners';

@@ -1,7 +1,7 @@
+import { resolveAnimations, resolvePath } from '../../../resolve';
 import type { PathTargetResolver } from '../../../resolve';
-import { resolvePath } from '../../../resolve';
 import type { IRPathBase } from '../../../schemas';
-import { composeScopeTransform, filterAnimations } from '../../shared';
+import { composeScopeTransform } from '../../shared';
 import type { ElementCompileOptions, ElementCompileResult } from '../context';
 import { runElementCompilation } from '../context';
 import type { PathCompileHost } from './emit';
@@ -20,7 +20,7 @@ export const compilePath = (
   runElementCompilation(context, workspace => {
     const path = {
       ...input,
-      animations: filterAnimations(input.animations, {
+      animations: resolveAnimations(input.animations, {
         target: 'element',
         onWarn: workspace.diagnostics.collect,
         irPath: context.irPath,

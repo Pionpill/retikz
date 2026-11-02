@@ -19,7 +19,7 @@ type InputAlphabeticBaseline = {
 };
 
 /** 把文本块垂直锚点折算成首行 alphabetic 基线 y */
-export const toAlphabeticBaselineY = (input: InputAlphabeticBaseline): number => {
+export const calculateAlphabeticBaselineY = (input: InputAlphabeticBaseline): number => {
   const { y, baseline, lineCount, lineHeight, fontSize } = input;
   const asc = fontSize * ASCENT_FACTOR;
   const desc = fontSize * DESCENT_FACTOR;

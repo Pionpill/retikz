@@ -2,7 +2,7 @@ import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 import { isFinitePoint } from '@retikz/math';
 
-import type { ScenePrimitive } from '../../../../contract';
+import type { TextMeasurer, ScenePrimitive } from '../../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
 import type { CanonicalStep, PathResolution, PathTargetView, StrokePathResolution } from '../../../../resolve';
 import type { IRPosition, IRTarget } from '../../../../schemas';
@@ -10,7 +10,6 @@ import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../.
 import type { RegisterPaint } from '../../../resource';
 import { calculateBoundsOfPrimitives } from '../../../scene';
 import { BuiltinCompileWarningCode } from '../../../shared';
-import type { TextMeasurer } from '../../../text';
 import { fallbackMeasurer } from '../../../text';
 import { emitLabelPrimitive, pointOfTarget } from '../host';
 import type { PathEmitOptions } from '../types';

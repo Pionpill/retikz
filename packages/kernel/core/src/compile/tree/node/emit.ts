@@ -11,7 +11,7 @@ import {
 } from '../../../resolve/diagnostics';
 import type { RegisterPaint } from '../../resource';
 import { snapshotScenePrimitives } from '../../shared';
-import { emitInlineLine, inlineSegmentPaintsOf, toAlphabeticBaselineY } from '../../text';
+import { emitInlineLine, calculateAlphabeticBaselineY } from '../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
 import type {
@@ -60,7 +60,7 @@ const nodeBaselineYsOf = (layout: CompiledNodeLayout, round: Round): Array<numbe
   const firstBaseline =
     baselineOffsets !== undefined && baselineOffsets.length === lineCount
       ? blockTop + baselineOffsets[0]
-      : toAlphabeticBaselineY({
+      : calculateAlphabeticBaselineY({
           y: layout.geometry.contentCenter[1],
           baseline: 'middle',
           lineCount,
@@ -141,7 +141,7 @@ const emitNodeContentPrimitives = (
         {
           color: properties.textColor,
           opacity: properties.opacity,
-          segments: inlineSegmentPaintsOf(properties.text![index].segments),
+          segments: properties.text![index].segments,
         },
         originX,
         baselineYs[index],
@@ -253,7 +253,7 @@ const emitNodeLabelContentPrimitive = (
           {
             color: labelProperties.textColor,
             opacity: labelProperties.opacity ?? properties.opacity,
-            segments: inlineSegmentPaintsOf(labelProperties.text[index].segments),
+            segments: labelProperties.text[index].segments,
           },
           lx - laid.width / 2,
           baselineY,

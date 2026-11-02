@@ -15,4 +15,5 @@ export * from './provider';
 export * from './scene';
 export * from './scope';
 export * from './style';
+export * from './text';
 export * from './theme';

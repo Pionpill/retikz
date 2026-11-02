@@ -1,9 +1,9 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { GroupPrimitive, SceneClipPath, Transform } from '../../../contract';
+import { resolveAnimations } from '../../../resolve';
 import { resolveClip } from '../../../resolve/resource';
 import type { SharedCompileContext } from '../../context';
-import { filterAnimations } from '../../shared';
 import type { WorkspaceCompileContext } from '../context';
 import type { InputScopeCompile } from './types';
 
@@ -20,7 +20,7 @@ export const createScopeGroup = (
   if (input.id !== undefined) group.id = input.id;
   if (input.meta !== undefined) group.meta = input.meta;
   if (transforms.length > 0) group.transforms = [...transforms];
-  const animations = filterAnimations(input.animations, {
+  const animations = resolveAnimations(input.animations, {
     target: 'element',
     onWarn: workspace.diagnostics.collect,
     irPath,

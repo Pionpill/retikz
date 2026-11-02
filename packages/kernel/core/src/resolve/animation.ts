@@ -1,26 +1,31 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { IRAnimationTrack } from '../../schemas';
-import { BuiltinCompileWarningCode } from './warning';
-import type { CompileWarning } from './warning';
+import type { IRAnimationTrack } from '../schemas';
 
-/** animation 过滤上下文 */
-type FilterAnimationsContext = {
+/** 动画轨道的目标层级与诊断上下文 */
+export type AnimationResolveContext = {
   /** 校验目标层级 */
   target: 'element' | 'root';
-  /** warning 收集器 */
-  onWarn: (warning: CompileWarning) => void;
+  /** 接收不适用于当前目标的轨道诊断 */
+  onWarn: (warning: {
+    /** 动画目标约束的诊断码 */
+    code: 'ANIMATION_INVALID_PROPERTY';
+    /** 被丢弃轨道的原因 */
+    message: string;
+    /** 轨道在 Source IR 中的位置 */
+    path: PropertyPath;
+  }) => void;
   /** 当前 IR locator */
   irPath: PropertyPath;
 };
 
 /**
- * 校验 animation tracks 的 scene 根约束
+ * 按根级或元素级上下文确定可用动画轨道
  * @description 非法 track 会触发 warning 并被丢弃；全空返回 undefined
  */
-export const filterAnimations = (
+export const resolveAnimations = (
   tracks: ReadonlyArray<IRAnimationTrack> | undefined,
-  context: FilterAnimationsContext,
+  context: AnimationResolveContext,
 ): Array<IRAnimationTrack> | undefined => {
   const { target, onWarn, irPath } = context;
   if (tracks === undefined) return undefined;
@@ -30,7 +35,7 @@ export const filterAnimations = (
     const valid = target === 'root' ? isViewBox : !isViewBox;
     if (!valid) {
       onWarn({
-        code: BuiltinCompileWarningCode.AnimationInvalidProperty,
+        code: 'ANIMATION_INVALID_PROPERTY',
         message:
           target === 'root'
             ? `Scene-root animation must use the "viewBox" property (camera); got "${track.property}". Track dropped.`

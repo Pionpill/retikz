@@ -12,8 +12,7 @@ import {
 import type { RegisterPaint } from '../../../resource';
 import { materializeMarkerPrimitive } from '../../../scene';
 import type { MarkerPlacementContext } from '../../../scene';
-import { materializeScenePrimitives } from '../../../shared';
-import { combineOpacity } from '../../../text';
+import { combineOpacity, materializeScenePrimitives } from '../../../shared';
 
 /** 由共同定义生成箭头或沿线标记的局部图元 */
 export const emitMarkPrimitives = (

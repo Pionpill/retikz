@@ -1,7 +1,7 @@
+import type { TextMeasurer } from '../../../../contract';
+import { resolveTextMetrics, resolveFont, resolveTextLine } from '../../../../resolve';
 import type { CanonicalFont } from '../../../../resolve';
-import { resolveFont, resolveTextLine } from '../../../../resolve';
-import type { TextMeasurer } from '../../../text';
-import { layoutInlineLine, resolveTextMetrics } from '../../../text';
+import { layoutInlineLine } from '../../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content/text';
 import type {
   CompiledNodeLayout,

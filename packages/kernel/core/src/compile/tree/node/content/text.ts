@@ -1,4 +1,4 @@
-import type { TextFont, TextMeasurer } from '../../../text';
+import type { TextFont, TextMeasurer } from '../../../../contract';
 
 /** 行高倍率 */
 export const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;

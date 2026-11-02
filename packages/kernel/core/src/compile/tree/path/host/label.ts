@@ -1,21 +1,14 @@
 import type { CurveSegmentSample } from '@retikz/math';
 import { RAD_TO_DEG } from '@retikz/math';
 
-import type { GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../../../contract';
+import type { TextMeasurer, GroupPrimitive, ScenePrimitive, TextPrimitive } from '../../../../contract';
+import { resolveTextMetrics, resolveFont, resolveTextLine } from '../../../../resolve';
 import type { CanonicalFont, CanonicalPathLabel } from '../../../../resolve';
-import { resolveFont, resolveTextLine } from '../../../../resolve';
 import type { IRPosition } from '../../../../schemas';
-import { DEFAULT_FONT_SIZE } from '../../../shared';
+import { combineOpacity, DEFAULT_FONT_SIZE } from '../../../shared';
 import type { CompileWarningCode } from '../../../shared';
-import type { LineLayoutContext, TexLowerer, TextMeasurer } from '../../../text';
-import {
-  combineOpacity,
-  emitInlineLine,
-  inlineSegmentPaintsOf,
-  layoutInlineLine,
-  resolveTextMetrics,
-  toAlphabeticBaselineY,
-} from '../../../text';
+import type { LineLayoutContext, TexLowerer } from '../../../text';
+import { emitInlineLine, layoutInlineLine, calculateAlphabeticBaselineY } from '../../../text';
 
 /** 边标注默认行高 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
@@ -150,7 +143,7 @@ export const emitLabelPrimitive = (
         {
           color: label.textColor,
           opacity: labelOpacity,
-          segments: inlineSegmentPaintsOf(resolvedLines[index].segments),
+          segments: resolvedLines[index].segments,
         },
         left + (blockWidth - laid.width) / 2,
         baselineY,
@@ -228,7 +221,7 @@ export const emitLabelPrimitive = (
   const textPrim: TextPrimitive = {
     type: 'text',
     x: round(x),
-    y: round(toAlphabeticBaselineY({ y, baseline, lineCount: 1, lineHeight: emittedLineHeight, fontSize })),
+    y: round(calculateAlphabeticBaselineY({ y, baseline, lineCount: 1, lineHeight: emittedLineHeight, fontSize })),
     lines: [{ text }],
     fontSize,
     align,

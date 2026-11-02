@@ -1,5 +1,5 @@
 export * from './baseline';
-export * from './boundary-label-geometry';
+export * from './boundary-label';
 export * from './layout';
-export * from './metrics';
+export * from './measurement';
 export * from './tex';

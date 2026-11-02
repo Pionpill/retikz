@@ -2,9 +2,10 @@ import type { AxisAlignedBounds } from '@retikz/math';
 
 import type { AnyCompositeDefinition, Scene, ScenePrimitive, SceneResource } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { resolveAnimations } from '../../resolve';
 import type { IRScene } from '../../schemas';
 import type { CompileProvenanceTracker } from '../provenance';
-import { filterAnimations, orderCompileWarnings } from '../shared';
+import { orderCompileWarnings } from '../shared';
 import type { CompileWarning, CompositeArtifact, CompositeArtifactOf } from '../shared';
 import type { SceneCompilationSnapshot, CompileResult } from '../types';
 import { computeLayoutFromBounds, viewBoxToLayout } from './layout';
@@ -57,7 +58,7 @@ export const assembleSceneCompilationSnapshot = <
   }
 
   const diagnostics: Array<CompileWarning> = [...(input.diagnostics ?? [])];
-  const animations = filterAnimations(root.animations, {
+  const animations = resolveAnimations(root.animations, {
     target: 'root',
     irPath: [],
     onWarn: warning => {

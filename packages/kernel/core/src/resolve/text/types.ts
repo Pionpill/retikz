@@ -116,3 +116,15 @@ export type TextLineResolveContext = FontResolveContext &
     /** 未闭合公式分隔符的自定义警告文案 */
     warningMessage?: string;
   }>;
+
+/** 已规范化的文字度量结果 */
+export type CanonicalTextMetrics = {
+  /** 文本宽度 */
+  width: number;
+  /** 文本视觉盒高度 */
+  height: number;
+  /** 规范化后的基线上伸 */
+  ascent: number;
+  /** 规范化后的基线下伸 */
+  descent: number;
+};

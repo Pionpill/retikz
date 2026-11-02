@@ -1,6 +1,7 @@
 import type { CompileOccurrenceLocator } from '../../../contract';
+import { resolveAnimations } from '../../../resolve';
 import type { CompileOwnerKey } from '../../provenance';
-import { createCompileChildPath, createCompileInvariantError, filterAnimations } from '../../shared';
+import { createCompileChildPath, createCompileInvariantError } from '../../shared';
 import { pushAllocation } from '../allocation';
 import { createTreePositionContext } from '../context/execution';
 import type { CompileExecutionContext } from '../context/execution';
@@ -50,7 +51,7 @@ export const queuePathChild = (
   const pending: PendingPathEmission = {
     path: {
       ...child,
-      animations: filterAnimations(child.animations, {
+      animations: resolveAnimations(child.animations, {
         target: 'element',
         onWarn: context.workspace.diagnostics.collect,
         irPath: pathIrPath,

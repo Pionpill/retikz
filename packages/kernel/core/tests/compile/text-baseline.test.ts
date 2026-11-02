@@ -18,7 +18,7 @@ import {
   naturalLayoutProposal,
 } from '../../src';
 import type { TexLowerer } from '../../src/compile/text';
-import { ASCENT_FACTOR, DESCENT_FACTOR, toAlphabeticBaselineY } from '../../src/compile/text';
+import { ASCENT_FACTOR, DESCENT_FACTOR, calculateAlphabeticBaselineY } from '../../src/compile/text';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: text.length * 10,
@@ -142,13 +142,13 @@ const emittedFirstLastBaselines = (primitives: ReadonlyArray<ScenePrimitive>): A
  *   消除「同名异义」导致的跨后端基线漂移。断言折算后文本块的视觉边界落在关键字所指位置，
  *   对 ascent/descent 近似常量的取值鲁棒
  */
-describe('toAlphabeticBaselineY', () => {
+describe('calculateAlphabeticBaselineY', () => {
   const fontSize = 16;
   const lineHeight = 20;
   const asc = fontSize * ASCENT_FACTOR;
   const desc = fontSize * DESCENT_FACTOR;
   const baselineY = (baseline: 'top' | 'middle' | 'bottom' | 'alphabetic', lineCount: number) =>
-    toAlphabeticBaselineY({ y: 100, baseline, lineCount, lineHeight, fontSize });
+    calculateAlphabeticBaselineY({ y: 100, baseline, lineCount, lineHeight, fontSize });
 
   it('alphabetic 锚点原样返回（首行基线 = 锚点）', () => {
     expect(baselineY('alphabetic', 1)).toBe(100);

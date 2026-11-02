@@ -39,7 +39,9 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
 
 <SourceLinks
   sources={[
-    { label: '文字度量契约与缺省估算', path: 'packages/kernel/core/src/compile/text/metrics.ts' },
+    { label: '缺省文字估算器', path: 'packages/kernel/core/src/compile/text/measurement.ts' },
+    { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
+    { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
     { label: '正文分支与物理行汇总', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
     { label: '普通文本折行', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
     { label: '混排行的度量与基线对齐', path: 'packages/kernel/core/src/compile/text/layout.ts' },

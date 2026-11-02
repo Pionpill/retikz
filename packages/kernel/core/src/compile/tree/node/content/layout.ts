@@ -1,7 +1,8 @@
+import type { TextFont } from '../../../../contract';
+import { resolveTextMetrics, resolveTextLine } from '../../../../resolve';
 import type { CanonicalFont, TextLineResolution } from '../../../../resolve';
-import { resolveTextLine } from '../../../../resolve';
-import type { InlineLineLayout, LineLayoutContext, TextFont } from '../../../text';
-import { layoutInlineLine, resolveTextMetrics } from '../../../text';
+import type { InlineLineLayout, LineLayoutContext } from '../../../text';
+import { layoutInlineLine } from '../../../text';
 import type { NodeTextLayoutContext, NodeTextLineLayout } from '../types';
 import { measureMinimumTextWidth, wrapText } from './text';
 

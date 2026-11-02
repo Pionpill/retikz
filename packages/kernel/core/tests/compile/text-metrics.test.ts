@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TextFont } from '../../src/compile/text';
 import { fallbackMeasurer } from '../../src/compile/text';
+import type { TextFont } from '../../src/contract';
 
 const font14: TextFont = { size: 14 };
 

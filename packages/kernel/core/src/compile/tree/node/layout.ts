@@ -1,7 +1,7 @@
 import { formatPropertyPath } from '@retikz/foundation';
 import { DEG_TO_RAD } from '@retikz/math';
 
-import type { LayoutAxisProposal, ShapeCircumscribedGeometry, Transform } from '../../../contract';
+import type { TextMeasurer, LayoutAxisProposal, ShapeCircumscribedGeometry, Transform } from '../../../contract';
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalNode, NodeResolution } from '../../../resolve';
@@ -25,7 +25,6 @@ import {
   snapshotProviderPosition,
 } from '../../shared';
 import type { CompileWarningCode, ComposedScopeTransform } from '../../shared';
-import type { TextMeasurer } from '../../text';
 import { resolveAnchorRefUncached } from './anchor-cache';
 import type { NodeBoundaryContext } from './boundary-context';
 import { createNodeBoundaryContext } from './boundary-context';

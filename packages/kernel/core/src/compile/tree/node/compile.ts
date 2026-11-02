@@ -1,13 +1,12 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { LayoutProposal, Transform } from '../../../contract';
+import { resolveAnimations, resolveNode } from '../../../resolve';
 import type { MergedScopeDefaults } from '../../../resolve';
-import { resolveNode } from '../../../resolve';
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { IRNode } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
 import type { SharedCompileContext } from '../../context';
-import { filterAnimations } from '../../shared';
 import type { CompileWarningCode, ComposedScopeTransform } from '../../shared';
 import type { ElementCompileOptions, ElementCompileResult, WorkspaceCompileContext } from '../context';
 import { runElementCompilation } from '../context';
@@ -87,7 +86,7 @@ export const compileNodeState = (
   });
   const canonicalNode = {
     ...resolvedNode.node,
-    animations: filterAnimations(resolvedNode.node.animations, {
+    animations: resolveAnimations(resolvedNode.node.animations, {
       target: 'element',
       onWarn: context.workspace.diagnostics.collect,
       irPath: nodeIrPath,

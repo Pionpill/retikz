@@ -1,4 +1,5 @@
 import type {
+  TextMeasurer,
   AnyCompositeDefinition,
   CompositeInputBindings,
   CoreProviderDefinitions,
@@ -7,7 +8,7 @@ import type {
 } from '../contract';
 import type { CompileProvenanceSnapshot } from './provenance';
 import type { CompileWarning, CompositeArtifact, CompositeArtifactOf } from './shared';
-import type { TexLowerer, TextMeasurer } from './text';
+import type { TexLowerer } from './text';
 
 /**
  * `compileToScene()` 的显式 Scene + artifact 结果
