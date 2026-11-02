@@ -23,6 +23,36 @@ const scene: IRScene = {
 };
 
 describe('Weave 批次更新', () => {
+  it('匿名 Scope 身份跨更新保留，回滚不复用编号，不同会话使用不同根身份', () => {
+    const input: IRScene = { type: 'scene', version: 1, children: [{ type: 'scope', children: [] }] };
+    const session = new WeaveReconciler(input);
+    const { root } = session.mount();
+    const initial = readWeaveCurrent(root).children[0];
+    if (initial.type !== 'scope') throw new Error('Expected scope');
+    const initialId = initial.scopeId;
+    const insert = () =>
+      session.update({
+        operations: [{ kind: 'insert', parentId: root.scopeId, index: 0, elements: [{ type: 'scope', children: [] }] }],
+      });
+    const first = insert();
+    first.commit();
+    const discarded = readWeaveCurrent(root).children[0];
+    if (discarded.type !== 'scope') throw new Error('Expected scope');
+    first.rollback();
+    const second = insert();
+    second.commit();
+    const current = readWeaveCurrent(root).children;
+    const inserted = current[0];
+    if (inserted.type !== 'scope') throw new Error('Expected scope');
+    expect(inserted.scopeId).not.toBe(discarded.scopeId);
+    expect(current[1]).toBe(initial);
+    expect(initial.scopeId).toBe(initialId);
+    expect(new WeaveReconciler(input).mount().root.scopeId).not.toBe(root.scopeId);
+    expect(second.compilation.result).toEqual(
+      compileToScene({ ...input, children: [{ type: 'scope', children: [] }, ...input.children] }),
+    );
+  });
+
   it('删除已编译子树不发布其新状态，提交后回滚恢复原结构与依赖', () => {
     const input: IRScene = {
       type: 'scene',

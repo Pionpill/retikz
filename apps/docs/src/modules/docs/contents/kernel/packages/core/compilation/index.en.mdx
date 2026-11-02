@@ -86,6 +86,8 @@ The diagram follows a full compilation at the root. Each Scope performs its own 
 
 ## Compilation context
 
+Core and Reconciler use Foundation's `createIdAllocator(prefix)` to allocate runtime Scope IDs unique within a tree, including anonymous Scopes. Callers own Scope prefixes and root identity. Each tree owns an allocator, shared by its speculative compilation branches; deletion, rollback, or discarding a branch never reuses allocated IDs. Hosts that address multiple trees must supply non-overlapping prefix namespaces. Reconciler preserves identity for each element instance's lifetime. Runtime IDs are not written into author `id` fields or Scene output and do not change local name shadowing.
+
 Core needs a way to measure text, resolve shapes, and collect shared drawing resources. Two concepts describe how capabilities are supplied:
 
 - Definition: an implementation of a shape, path, or composite capability.

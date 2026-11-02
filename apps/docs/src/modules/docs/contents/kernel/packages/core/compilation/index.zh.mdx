@@ -84,6 +84,8 @@ const result = compileToScene(ir, { padding: 10 });
 
 ## 编译上下文
 
+Core 和 Reconciler 使用 Foundation 的 `createIdAllocator(prefix)` 分配树内唯一的运行时 Scope ID，匿名 Scope 同样参与分配。Scope 前缀和树根身份由调用方维护。每棵树持有独立分配器，试编译分支共享该分配器；已分配编号不因删除、回滚或丢弃试编译而复用。需要跨树寻址时，宿主必须提供互不重叠的前缀命名域。Reconciler 负责在元素实例存续期间保留其身份。运行时 ID 不回写作者的 `id` 或 Scene，也不改变局部名称的遮蔽规则。
+
 进入编译前，Core 需要知道怎样量文字、按什么规则解析形状，以及把共享的绘制资源放在哪里。这里涉及两个概念：
 
 - Definition：一种形状、路径或复合组件的具体能力定义。

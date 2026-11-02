@@ -21,19 +21,26 @@ describe('基础公共面', () => {
         'assertNonEmptyString',
         'assertPositiveNumber',
         'cloneAndFreezeJson',
+        'comparePropertyPaths',
         'compositeOpaqueColor',
+        'createIdAllocator',
         'createOpenStringSchema',
         'createReadonlyMap',
+        'encodePropertyPath',
+        'formatPropertyPath',
+        'hasPropertyPathPrefix',
+        'isPropertyPathEqual',
         'isRetikzError',
         'jsonStructuralEquals',
         'mergeDefinedProperties',
         'mergeProperties',
         'parseStaticCssColor',
+        'readPropertyPath',
       ].sort(),
     );
   });
 
-  it.each(['types', 'schema', 'assert', 'collections', 'objects', 'color', 'error', 'json'])(
+  it.each(['types', 'schema', 'assert', 'collections', 'objects', 'color', 'error', 'id', 'json'])(
     '拒绝 %s 子路径',
     async subpath => {
       await expect(import(/* @vite-ignore */ `@retikz/foundation/${subpath}`)).rejects.toThrow();

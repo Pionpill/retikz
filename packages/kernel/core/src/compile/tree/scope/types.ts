@@ -49,12 +49,12 @@ export type ScopeGeometryContext = Readonly<{
 export type ScopeLayoutPlaceholder = {
   /** scope.id 所在父 namespace frame 深度 */
   parentFrameDepth: number;
-  /** scope.id 初始占位 layout；无 id 时不存在 */
-  placeholderLayout?: CompiledNodeLayout;
 };
 
 /** 创建 Scope 布局占位项所需的遍历位置与父帧 */
 export type ScopeLayoutPlaceholderContext = {
+  /** 本次 Scope 实例的内部身份 */
+  scopeId: string;
   /** 当前作用域在父层子项中的索引 */
   index: number;
   /** 登记占位布局所使用的父遍历帧 */

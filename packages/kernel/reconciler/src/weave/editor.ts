@@ -1,6 +1,6 @@
 import { createCompileChildPath } from '@retikz/core';
 import type { ElementCompileOptions, IRChild, IRComposite } from '@retikz/core';
-import type { PropertyPath } from '@retikz/foundation';
+import type { IdAllocator, PropertyPath } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { readWeaveCurrent } from './transaction';
@@ -28,12 +28,10 @@ type WeaveEditResult = {
 
 /** 编辑候选声明树与寻址索引，不负责依赖传播、Core 编译或事务提交 */
 export class WeaveEditor {
-  /** 本树递增的 Scope 编号，删除或回滚不会复用已分配编号 */
-  private nextScopeId = 0;
-
   constructor(
     private readonly root: WeaveRoot,
     private transaction: WeaveTransaction,
+    private readonly scopeIds: IdAllocator,
   ) {}
 
   /** 切换后续编辑使用的事务，保留本树 Scope 编号 */
@@ -121,7 +119,7 @@ export class WeaveEditor {
         void nested;
         node = {
           type: 'scope',
-          scopeId: `${this.root.scopeId}/scope-${this.nextScopeId++}`,
+          scopeId: this.scopeIds.next(),
           current: null,
           pending: {
             ...base,

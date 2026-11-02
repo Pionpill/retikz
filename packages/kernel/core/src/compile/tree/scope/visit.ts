@@ -28,7 +28,7 @@ const registerScopeLayoutPlaceholder = (
   child: IRScope,
   input: ScopeLayoutPlaceholderContext,
 ): ScopeLayoutPlaceholder => {
-  const { index, frame } = input;
+  const { index, frame, scopeId } = input;
   const { locatorPrefix } = frame;
   const scopeIrPath = createCompileChildPath(locatorPrefix, index);
   const parentFrameDepth = context.execution.namespaceStack.depth - 1;
@@ -40,9 +40,15 @@ const registerScopeLayoutPlaceholder = (
     shapes: context.shared.registries.shapeRegistry,
     boundaries: context.shared.registries.boundaryRegistry,
   });
-  context.execution.namespaceStack.register(child.id, placeholderLayout, [...scopeIrPath, 'id'], 'scope-placeholder');
+  context.execution.namespaceStack.register(
+    child.id,
+    placeholderLayout,
+    [...scopeIrPath, 'id'],
+    'scope-placeholder',
+    scopeId,
+  );
 
-  return { parentFrameDepth, placeholderLayout };
+  return { parentFrameDepth };
 };
 
 /** 编排单个 scope 子树，处理命名空间、局部输出容器、延迟 path 和 scope group 输出 */
@@ -81,10 +87,8 @@ export const visitScope = (
     preliminaryTransforms === undefined
       ? frame.scopeChain
       : context.execution.scopeTransformComposer.append(frame.scopeChain, preliminaryTransforms);
-  const layoutPlaceholder = registerScopeLayoutPlaceholder(context, child, { index, frame });
-  if (layoutPlaceholder.placeholderLayout !== undefined) {
-    context.execution.namespaceStack.enterScope(layoutPlaceholder.placeholderLayout, child.id!);
-  }
+  const scopeId = context.execution.namespaceStack.enterScope(child.id);
+  const layoutPlaceholder = registerScopeLayoutPlaceholder(context, child, { index, frame, scopeId });
 
   const didPushNamespaceFrame = child.localNamespace === true;
   if (didPushNamespaceFrame) {
@@ -170,7 +174,7 @@ export const visitScope = (
         child.id,
         globalEnvelope,
         layoutPlaceholder.parentFrameDepth,
-        layoutPlaceholder.placeholderLayout,
+        scopeId,
       );
       frame.publicationSink.push(globalEnvelope);
     }
@@ -194,7 +198,7 @@ export const visitScope = (
     const transformedGuides = transformAlignmentGuides(structuralGuides, scopeTransforms);
     if (transformedGuides !== undefined) frame.alignmentGuideSink.push(...transformedGuides);
   } finally {
-    if (layoutPlaceholder.placeholderLayout !== undefined) context.execution.namespaceStack.leaveScope();
+    context.execution.namespaceStack.leaveScope();
     if (didPushNamespaceFrame) {
       context.execution.namespaceStack.popFrame();
     }

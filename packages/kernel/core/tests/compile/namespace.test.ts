@@ -242,16 +242,46 @@ describe('NamespaceStack resolving phase 禁止 register', () => {
 });
 
 describe('NamespaceStack Scope placeholder 生命周期', () => {
+  it('fork 保留祖先身份，匿名和同名 Scope 分配不同身份，投影及回放不丢失身份', () => {
+    const stack = new NamespaceStack();
+    const ancestorId = stack.enterScope('scope');
+    stack.register('scope', makeLayout('scope'), undefined, 'scope-placeholder', ancestorId);
+    const fork = stack.fork();
+    expect(() => fork.lookupReference('scope')).toThrow(/ancestor Scope/);
+
+    const anonymousId = fork.enterScope();
+    fork.leaveScope();
+    fork.pushFrame();
+    const childId = fork.enterScope('scope');
+    const placeholder = makeLayout('scope');
+    fork.register('scope', placeholder, undefined, 'scope-placeholder', childId);
+    fork.replacePublishedLayout(placeholder, makeLayout('scope', 10));
+    expect(() => fork.lookupReference('scope')).toThrow(/ancestor Scope/);
+    fork.replaceLayout('scope', makeLayout('scope', 20), 1, childId);
+    fork.leaveScope();
+    expect(fork.lookupReference('scope')?.scopeId).toBe(childId);
+    stack.pushFrame();
+    for (const change of fork.diffTopFrame(stack)) stack.commitForkChange(change);
+    expect(stack.lookupReference('scope')?.scopeId).toBe(childId);
+    const nextId = stack.enterScope();
+    expect(new Set([ancestorId, anonymousId, childId, nextId]).size).toBe(4);
+    stack.leaveScope();
+    stack.popFrame();
+    expect(() => stack.lookupReference('scope')).toThrow(/ancestor Scope/);
+  });
+
   it('lookupReference 区分 placeholder 与合法 resolved 零尺寸 layout', () => {
     const stack = new NamespaceStack();
     const placeholder = makeLayout('scope');
     const resolved = makeLayout('scope');
 
-    stack.register('scope', placeholder, undefined, 'scope-placeholder');
+    const scopeId = stack.enterScope('scope');
+    stack.register('scope', placeholder, undefined, 'scope-placeholder', scopeId);
+    stack.leaveScope();
 
     expect(stack.lookupReference('scope')).toMatchObject({ layout: placeholder, state: 'scope-placeholder' });
 
-    expect(stack.replaceLayout('scope', resolved, 0, placeholder)).toBe(true);
+    expect(stack.replaceLayout('scope', resolved, 0, scopeId)).toBe(true);
     expect(stack.lookupReference('scope')).toMatchObject({ layout: resolved, state: 'resolved' });
   });
 
@@ -261,10 +291,12 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
     const childWithSameId = makeLayout('scope', 10, 20);
     const resolvedScope = makeLayout('scope', 30, 40);
 
-    stack.register('scope', placeholder, undefined, 'scope-placeholder');
+    const scopeId = stack.enterScope('scope');
+    stack.register('scope', placeholder, undefined, 'scope-placeholder', scopeId);
+    stack.leaveScope();
     stack.register('scope', childWithSameId);
 
-    expect(stack.replaceLayout('scope', resolvedScope, 0, placeholder)).toBe(false);
+    expect(stack.replaceLayout('scope', resolvedScope, 0, scopeId)).toBe(false);
     expect(stack.lookupReference('scope')).toEqual({ layout: childWithSameId, state: 'resolved' });
   });
 });

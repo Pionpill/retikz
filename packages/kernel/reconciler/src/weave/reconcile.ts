@@ -29,8 +29,7 @@ import {
   resolveScopeStyle,
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
-import { isPropertyPathEqual } from '@retikz/foundation';
-import { jsonStructuralEquals } from '@retikz/foundation';
+import { createIdAllocator, isPropertyPathEqual, jsonStructuralEquals } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { lookupWeaveBinding, runWeaveCompilation } from './compile';
@@ -126,8 +125,6 @@ export class WeaveReconciler {
   private diagnostics: Array<CompileWarning> = [];
   private namespace = createWeaveNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
   private provenance = new CompileProvenanceTracker(this.namespace.identity);
-  /** 本树固定的 scopeId 前缀，同时作为根节点的 scopeId */
-  private readonly treeId: string;
   /** 本次实际执行元素编译的次数，缓存复用不计入 */
   private visited = 0;
   private readonly root: WeaveRoot;
@@ -150,12 +147,13 @@ export class WeaveReconciler {
   ) {
     this.shared = createSharedCompileContext(options);
     this.padding = options.padding;
-    this.treeId = `weave-${nextTreeId++}`;
+    const rootId = `weave-${nextTreeId++}`;
+    const scopeIds = createIdAllocator(`${rootId}/scope`);
     const { children, ...own } = source;
     void children;
     this.root = {
       type: 'root',
-      scopeId: this.treeId,
+      scopeId: rootId,
       current: null,
       pending: {
         parent: null,
@@ -169,7 +167,7 @@ export class WeaveReconciler {
     };
     this.transaction = new WeaveTransaction(this.root);
     this.transaction.editNodeAttribute(this.root, 'scopeIds').set(this.root.scopeId, this.root);
-    this.editor = new WeaveEditor(this.root, this.transaction);
+    this.editor = new WeaveEditor(this.root, this.transaction, scopeIds);
     this.tracker = new WeaveTracker(this.root, this.transaction);
   }
 

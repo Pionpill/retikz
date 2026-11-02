@@ -1,4 +1,5 @@
 import type { PropertyPath } from '@retikz/foundation';
+import { createIdAllocator } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { registerFatalProbeError } from '../../resolve/diagnostics';
@@ -20,8 +21,8 @@ export type NamespaceEntry = {
   layout: CompiledNodeLayout;
   /** 区分合法已解析布局与尚未闭合的 Scope 占位布局 */
   state: NamespaceEntryState;
-  /** Scope 占位到最终布局共享的对象身份，用于引用归属检查 */
-  scopeOwner?: CompiledNodeLayout;
+  /** Scope 自身的内部身份，不随占位布局替换或投影改变 */
+  scopeId?: string;
 };
 
 /** 同一 namespace frame 内重复 id 的诊断载荷 */
@@ -79,8 +80,8 @@ export type NamespaceFrameChange = {
  * @description register 写入栈顶，lookup 按 inside-out 查找；同 frame 重名 last-wins 并触发诊断
  */
 export class NamespaceStack {
-  /** 正在编译的命名 Scope；fork 保留祖先归属 */
-  private readonly scopeAncestors: Array<{ layout: CompiledNodeLayout; id: string }> = [];
+  /** 正在编译的 Scope；匿名 Scope 也分配身份，fork 保留祖先归属 */
+  private readonly scopeAncestors: Array<{ scopeId: string; id?: string }> = [];
 
   /** 栈式 frame 容器；栈底为根 frame，栈顶为当前 frame */
   private readonly frames: Array<{ identity: CompileNamespaceKey; entries: Map<string, NamespaceEntry> }>;
@@ -104,7 +105,10 @@ export class NamespaceStack {
   /** 当前阶段；registering 允许写入，resolving 只允许 lookup */
   private currentPhase: NamespacePhase = 'registering';
 
-  constructor(options: NamespaceStackOptions = {}) {
+  constructor(
+    options: NamespaceStackOptions = {},
+    private readonly scopeIds = createIdAllocator('compile/scope'),
+  ) {
     this.frames = [
       { identity: options.rootIdentity ?? (Object.freeze({}) as CompileNamespaceKey), entries: new Map() },
     ];
@@ -118,7 +122,7 @@ export class NamespaceStack {
    * @description frame 容器会复制，既有 layout 只共享读取；后续 register / replace 不回写父栈
    */
   fork(options: NamespaceStackOptions = {}): NamespaceStack {
-    const fork = new NamespaceStack(options);
+    const fork = new NamespaceStack(options, this.scopeIds);
     fork.frames.splice(
       0,
       fork.frames.length,
@@ -179,7 +183,7 @@ export class NamespaceStack {
       return true;
     }
 
-    this.register(change.id, change.entry.layout, change.irPath, change.entry.state);
+    this.register(change.id, change.entry.layout, change.irPath, change.entry.state, change.entry.scopeId);
 
     return false;
   }
@@ -234,6 +238,7 @@ export class NamespaceStack {
     layout: CompiledNodeLayout,
     irPath?: PropertyPath,
     state: NamespaceEntryState = 'resolved',
+    scopeId?: string,
   ): boolean {
     if (this.currentPhase !== 'registering') {
       throw createCompileInvariantError(
@@ -258,7 +263,7 @@ export class NamespaceStack {
     }
 
     this.snapshotIdentity = {};
-    topFrame.set(id, { layout, irPath, state, ...(state === 'scope-placeholder' ? { scopeOwner: layout } : {}) });
+    topFrame.set(id, { layout, irPath, state, ...(scopeId === undefined ? {} : { scopeId }) });
     this.onRegister?.({
       id,
       frameDepth: this.frames.length - 1,
@@ -270,12 +275,7 @@ export class NamespaceStack {
   }
 
   /** 替换指定 frame 内已注册的 layout；用于 scope 占位升级，不触发重复 id 诊断 */
-  replaceLayout(
-    id: string,
-    layout: CompiledNodeLayout,
-    frameDepth: number,
-    expectedCurrent?: CompiledNodeLayout,
-  ): boolean {
+  replaceLayout(id: string, layout: CompiledNodeLayout, frameDepth: number, expectedScopeId?: string): boolean {
     if (this.currentPhase !== 'registering') {
       throw createCompileInvariantError(
         `NamespaceStack.replaceLayout('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
@@ -296,7 +296,7 @@ export class NamespaceStack {
     }
 
     const current = targetFrame.get(id);
-    if (expectedCurrent !== undefined && current?.layout !== expectedCurrent) return false;
+    if (expectedScopeId !== undefined && current?.scopeId !== expectedScopeId) return false;
 
     this.snapshotIdentity = {};
     targetFrame.set(id, { ...current, layout, state: 'resolved' });
@@ -316,12 +316,14 @@ export class NamespaceStack {
     }
   }
 
-  /** 进入命名 Scope 的后代求值区间 */
-  enterScope(owner: CompiledNodeLayout, id: string): void {
-    this.scopeAncestors.push({ layout: owner, id });
+  /** 为新 Scope 分配内部身份并进入其后代求值区间，作者 id 仅用于诊断 */
+  enterScope(id?: string): string {
+    const scopeId = this.scopeIds.next();
+    this.scopeAncestors.push({ scopeId, id });
+    return scopeId;
   }
 
-  /** 离开命名 Scope 的后代求值区间 */
+  /** 离开当前 Scope 的后代求值区间 */
   leaveScope(): void {
     this.scopeAncestors.pop();
   }
@@ -329,8 +331,8 @@ export class NamespaceStack {
   /** 解析作者几何引用，拒绝实际绑定到祖先 Scope 的目标 */
   lookupReference(id: string): NamespaceEntry | undefined {
     const entry = this.lookupEntry(id);
-    if (entry?.scopeOwner !== undefined && this.scopeAncestors.some(ancestor => ancestor.layout === entry.scopeOwner)) {
-      const source = this.scopeAncestors.at(-1)?.id;
+    if (entry?.scopeId !== undefined && this.scopeAncestors.some(ancestor => ancestor.scopeId === entry.scopeId)) {
+      const source = this.scopeAncestors.findLast(ancestor => ancestor.id !== undefined)?.id;
       const error = new RetikzCoreError({
         code: RetikzCoreErrorCode.Compile,
         message: `Geometry reference from a descendant of Scope '${source}' cannot target ancestor Scope '${id}'`,

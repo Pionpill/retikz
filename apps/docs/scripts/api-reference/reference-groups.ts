@@ -391,6 +391,11 @@ export const referenceGroups: Readonly<Partial<Record<string, ReadonlyArray<Refe
   ],
   'kernel/packages/foundation': [
     {
+      title: { zh: 'ID 分配', en: 'ID allocation' },
+      members: ['IdAllocator', 'createIdAllocator'],
+      schemas: [],
+    },
+    {
       title: {
         zh: '错误契约',
         en: 'Error contracts',

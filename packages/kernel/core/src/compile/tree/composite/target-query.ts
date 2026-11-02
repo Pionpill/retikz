@@ -62,7 +62,7 @@ export const createCompositeTargetQuery = (
             if (scope !== queryChild) return;
             queryNamespace = namespace.fork();
             // 查询者位于被测子项之外；保留真正的祖先，但不把子项自身视为查询者的祖先
-            if (scope.id !== undefined) queryNamespace.leaveScope();
+            queryNamespace.leaveScope();
             queryChain = chain;
           },
         );
