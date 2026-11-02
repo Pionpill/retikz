@@ -1,6 +1,5 @@
 export * from './anchors';
 export * from './boundary';
-export * from './boundary-context';
 export * from './compile';
 export * from './emit';
 export * from './label/geometry';

@@ -1,14 +1,13 @@
 import type { CompositeReplay } from '../../../contract';
 import { createCompositeContractError } from '../../../resolve/diagnostics';
 import { resolveClip as resolveClipValue } from '../../../resolve/resource';
+import type { CompositeCompileOwner, CompositeReplayTransaction } from '../../context';
 import { isCompositeOutputHandle } from './handle';
 import type {
   CompositeExecutionContext,
   PreparedCompositeOutputs,
   PreparedReplay,
   PreparedRuntimeOutput,
-  CompositeCompileOwner,
-  CompositeReplayTransaction,
 } from './types';
 
 /** 预检完整输出树并在成功后消费句柄 */
@@ -27,7 +26,7 @@ export const preflightCompositeOutputs = (
       throw createCompositeContractError(`${owner.label} received an invalid or forged output child.`);
     }
 
-    const entry = execution.context.compositeSession.outputChildren.get(handle);
+    const entry = execution.context.session.outputChildren.get(handle);
     if (entry === undefined) {
       throw createCompositeContractError(
         `${owner.label} received an output child that does not belong to this compile or was forged.`,
@@ -76,7 +75,7 @@ export const preflightCompositeOutputs = (
     }
 
     preparedOutputs.set(handle, { output: entry.child });
-    const transaction = execution.context.compositeSession.replayTransactions.get(entry.child.replay);
+    const transaction = execution.context.session.replayTransactions.get(entry.child.replay);
     if (transaction === undefined) {
       throw createCompositeContractError(
         `${owner.label} received a replay token that does not belong to this compile or was forged.`,

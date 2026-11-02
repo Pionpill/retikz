@@ -23,6 +23,7 @@ import {
 } from '../../../resolve/diagnostics';
 import type { IRChild } from '../../../schemas';
 import { cloneAndFreezeJson } from '../../../shared/json';
+import type { TreeCompileContext, CompositeCompileOwner } from '../../context';
 import type { CompileOwnerKey } from '../../provenance';
 import { allocationPointsOf } from '../../scene';
 import {
@@ -35,7 +36,6 @@ import {
 import type { CompositeArtifact } from '../../shared';
 import { cloneAlignmentGuides } from '../alignment-guide';
 import { pushAllocation } from '../allocation';
-import type { CompileExecutionContext } from '../context/execution';
 import type { TreeCompileFrame } from '../frame';
 import { createCompositeCallbackContext } from './context';
 import { isCompositeOutputHandle, snapshotCompositeOutputChild } from './handle';
@@ -43,7 +43,7 @@ import { snapshotAllocationBounds } from './layout';
 import { compileCompositeOutput } from './output';
 import { preflightCompositeOutputs } from './preflight';
 import type { CompositeProbeContext } from './probe';
-import type { CompositeCompileHost, CompositeCompileOwner } from './types';
+import type { CompositeCompileHost } from './types';
 
 /** 复合组件执行策略及按需测量的根元素 */
 export type CompositeCompilerOptions = {
@@ -61,7 +61,7 @@ export class CompositeCompiler {
   rootContribution: LayoutContribution | undefined;
 
   constructor(
-    readonly context: CompileExecutionContext,
+    readonly context: TreeCompileContext,
     readonly host: CompositeCompileHost,
     private readonly options: CompositeCompilerOptions,
   ) {}
@@ -262,12 +262,12 @@ export class CompositeCompiler {
           true,
           semanticOwner === undefined
             ? undefined
-            : this.context.provenanceTracker?.createOwner(
+            : this.context.tree.provenanceTracker?.createOwner(
                 output,
                 outputIndex,
                 semanticOwner,
                 true,
-                this.context.namespaceStack.identity,
+                this.context.tree.namespaceStack.identity,
               ),
         );
         continue;

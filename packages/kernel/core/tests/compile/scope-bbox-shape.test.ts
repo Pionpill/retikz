@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import type { CompiledNodeLayout } from '../../src/compile/tree/node';
+import type { CompiledNodeLayout } from '../../src/compile/layout';
 import { createScopeCircleLayout } from '../../src/compile/tree/node';
 import { collectScopeCornerPoints } from '../../src/compile/tree/scope';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';

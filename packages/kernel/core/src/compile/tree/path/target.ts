@@ -10,10 +10,11 @@ import type {
   IRTarget,
 } from '../../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
+import type { NodeBoundaryContext } from '../../context';
+import { createNodeBoundaryContext } from '../../context';
 import type { ComposedScopeTransform } from '../../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../../shared';
-import type { NodeBoundaryContext } from '../node';
-import { boundaryPointOf, clipNodePolyline, createNodeBoundaryContext, resolveAnchorRef } from '../node';
+import { boundaryPointOf, clipNodePolyline, resolveAnchorRef } from '../node';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);

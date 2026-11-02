@@ -2,7 +2,7 @@ import { RAD_TO_DEG } from '@retikz/math';
 
 import type { LayoutAlignmentGuide } from '../../../contract';
 import { BuiltinLayoutAlignmentGuideName, LayoutAlignmentGuideDimension } from '../../../contract';
-import type { CompiledNodeLayout } from './types';
+import type { CompiledNodeLayout } from '../../layout';
 
 const isEffectiveIdentityRotation = (degrees: number): boolean => Object.is(degrees % 360, -0) || degrees % 360 === 0;
 

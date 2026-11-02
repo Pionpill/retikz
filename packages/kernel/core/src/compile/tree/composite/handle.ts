@@ -3,15 +3,18 @@ import type {
   CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplayWrapper,
+  CompositeInputScope,
 } from '../../../contract';
-import type { CompositeInputScope } from '../../../contract/composite';
 import { guardProviderOutput } from '../../../resolve';
 import { createCompositeContractError } from '../../../resolve/diagnostics';
 import type { IRChild } from '../../../schemas';
 import { cloneAndFreezeJson } from '../../../shared/json';
-import type { CompileExecutionContext } from '../context/execution';
-import type { CompositeCompileSession } from './session';
-import type { CompositeCompileOwner, CompositeRuntimeOutputChild } from './types';
+import type {
+  TreeCompileContext,
+  CompositeCompileSession,
+  CompositeCompileOwner,
+  CompositeRuntimeOutputChild,
+} from '../../context';
 
 const builtinChildTypes = new Set(['node', 'path', 'coordinate', 'scope']);
 
@@ -145,7 +148,7 @@ export const createCompositeBoundChild = (
 
 /** 只按本次会话登记的对象身份识别组件输出句柄 */
 export const isCompositeOutputHandle = (
-  context: CompileExecutionContext,
+  context: TreeCompileContext,
   output: unknown,
 ): output is CompositeCompileChild | CompositeBoundChild =>
-  output !== null && typeof output === 'object' && context.compositeSession.outputChildren.has(output);
+  output !== null && typeof output === 'object' && context.session.outputChildren.has(output);

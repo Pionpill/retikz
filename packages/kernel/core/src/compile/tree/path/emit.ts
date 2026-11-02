@@ -19,11 +19,10 @@ import {
 } from '../../../resolve';
 import { createCompositeContractError } from '../../../resolve/diagnostics';
 import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
-import type { SharedCompileContext } from '../../context';
+import type { SharedCompileContext, WorkspaceCompileContext } from '../../context';
 import type { RegisterPaint } from '../../resource';
 import { snapshotProviderPosition, snapshotScenePrimitives } from '../../shared';
 import type { ComposedScopeTransform } from '../../shared';
-import type { WorkspaceCompileContext } from '../context';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
 import { pathTargetViewOf } from './index';
 import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';

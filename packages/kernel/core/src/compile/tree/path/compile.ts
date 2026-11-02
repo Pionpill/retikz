@@ -1,9 +1,9 @@
 import { resolveAnimations, resolvePath } from '../../../resolve';
 import type { PathTargetResolver } from '../../../resolve';
 import type { IRPathBase } from '../../../schemas';
+import type { ElementCompileOptions, ElementCompileResult } from '../../context';
 import { composeScopeTransform } from '../../shared';
-import type { ElementCompileOptions, ElementCompileResult } from '../context';
-import { runElementCompilation } from '../context';
+import { runElementCompilation } from '../element';
 import type { PathCompileHost } from './emit';
 import { emitDefinedPath } from './emit';
 import { createPathTargetResolver } from './index';

@@ -6,11 +6,11 @@ import type { BoundaryResolution, NodeReferenceGeometry } from '../../../resolve
 import { boundaryKey } from '../../../resolve';
 import type { IRBoundary } from '../../../schemas';
 import { CenterAnchor, isAnchor } from '../../../shared';
+import type { NodeBoundaryState } from '../../context';
+import type { CompiledNodeLayout } from '../../layout';
 import { snapshotProviderPosition } from '../../shared';
 import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
-import type { NodeBoundaryState } from './boundary-context';
 import { createNodeReferenceGeometry } from './reference';
-import type { CompiledNodeLayout } from './types';
 
 type NodeAnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
 

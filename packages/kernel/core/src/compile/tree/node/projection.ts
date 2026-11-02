@@ -1,8 +1,8 @@
 import type { Transform } from '../../../contract';
 import type { IRPosition } from '../../../schemas';
+import type { CompiledNodeLayout } from '../../layout';
 import { applyScopeTransform, applyTransformChain, inverseTransformChain } from '../../shared';
 import type { ComposedScopeTransform } from '../../shared';
-import type { CompiledNodeLayout } from './types';
 
 /** 保持既有布局投影口径，只复用合成的点变换与旋转/缩放累计量 */
 export const projectLayoutWithTransform = (

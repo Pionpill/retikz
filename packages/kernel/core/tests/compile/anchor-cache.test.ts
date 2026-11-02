@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
+import type { CompiledNodeLayout } from '../../src/compile/layout';
 import { resolveAnchor, resolveAnchorRef } from '../../src/compile/tree/node';
-import type { CompiledNodeLayout } from '../../src/compile/tree/node';
 import type { ShapeDefinition } from '../../src/contract';
 import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';

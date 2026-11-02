@@ -1,6 +1,5 @@
 import type { CompileOccurrenceLocator, ScenePrimitive } from '../../contract';
-import { CompileExpansionKind, naturalLayoutProposal } from '../../contract';
-import { selectCompositeInputScope } from '../../contract/composite';
+import { CompileExpansionKind, naturalLayoutProposal, selectCompositeInputScope } from '../../contract';
 import {
   createLayoutProbeRecoverableError,
   isFatalProbeError,
@@ -8,6 +7,7 @@ import {
   safeErrorMessage,
 } from '../../resolve/diagnostics';
 import type { IRChild } from '../../schemas';
+import type { TreeCompileContext } from '../context';
 import type { CompileOwnerKey } from '../provenance';
 import { collectLayoutBounds } from '../scene';
 import {
@@ -19,7 +19,6 @@ import {
 import { resolveStructuralAlignmentGuides } from './alignment-guide';
 import { effectiveAllocations } from './allocation';
 import { CompositeCompiler } from './composite';
-import type { CompileExecutionContext } from './context/execution';
 import { visitCoordinate } from './coordinate/visit';
 import { createCompileSinks } from './frame';
 import type { TreeCompileFrame } from './frame';
@@ -40,7 +39,7 @@ export class SubtreeCompiler {
 
   constructor(
     private readonly rootChildren: ReadonlyArray<IRChild>,
-    private readonly context: CompileExecutionContext,
+    private readonly context: TreeCompileContext,
     private readonly host: SubtreeCompileHost,
     private readonly options: SubtreeCompilerOptions,
   ) {}
@@ -99,7 +98,9 @@ export class SubtreeCompiler {
         allocationSink: rootAllocations,
         alignmentGuideSink: rootAlignmentGuides,
         artifactSink: rootArtifacts,
-        ...(this.context.provenanceTracker === undefined ? {} : { semanticOwner: this.context.provenanceTracker.root }),
+        ...(this.context.tree.provenanceTracker === undefined
+          ? {}
+          : { semanticOwner: this.context.tree.provenanceTracker.root }),
       },
       true,
     );
@@ -148,7 +149,7 @@ export class SubtreeCompiler {
     semanticOwner?: CompileOwnerKey,
   ): void {
     try {
-      this.context.withWarningOccurrence(occurrence, () => {
+      this.context.tree.withWarningOccurrence(occurrence, () => {
         if ('namespace' in child) {
           this.getOrCreateCompositeCompiler().compile(child, index, frame, occurrence, compositeDepth, semanticOwner);
           return;
@@ -209,12 +210,12 @@ export class SubtreeCompiler {
       const semanticOwner =
         frame.semanticOwner === undefined
           ? undefined
-          : this.context.provenanceTracker?.createOwner(
+          : this.context.tree.provenanceTracker?.createOwner(
               child,
               i,
               frame.semanticOwner,
               generated,
-              this.context.namespaceStack.identity,
+              this.context.tree.namespaceStack.identity,
             );
       const entityPath = createCompileChildPath(frame.locatorPrefix, i);
       const occurrence = generatedScopeOccurrence

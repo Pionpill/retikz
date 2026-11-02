@@ -6,6 +6,7 @@ import type {
   Transform,
 } from '../../../contract';
 import { CompileExpansionKind } from '../../../contract';
+import type { CompiledNodeLayout } from '../../layout';
 import type { CompileOwnerKey } from '../../provenance';
 import { importSceneResources } from '../../resource';
 import { allocationPointsOf, calculateBoundsOfPrimitives } from '../../scene';
@@ -18,8 +19,7 @@ import {
 import type { CompileWarning } from '../../shared';
 import { effectiveAllocations } from '../allocation';
 import type { TreeCompileFrame } from '../frame';
-import { projectPublishedCompileLayout } from '../node';
-import type { CompiledNodeLayout } from '../node';
+import { projectLayoutWithTransform, projectPublishedCompileLayout } from '../node';
 import type { SubtreeOutputContribution } from '../types';
 import type { CompositeExecutionContext, PreparedReplay } from './types';
 
@@ -61,15 +61,15 @@ export const commitCompositeReplay = (
   const wrapperClipRef =
     wrapperClipPath === undefined ? undefined : execution.context.workspace.clipRegistry.registerPath(wrapperClipPath);
   const replayedPrimitives =
-    execution.context.provenanceTracker?.materializePrimitives(transaction.primitives) ?? transaction.primitives;
-  if (semanticOwner !== undefined && execution.context.provenanceTracker !== undefined) {
+    execution.context.tree.provenanceTracker?.materializePrimitives(transaction.primitives) ?? transaction.primitives;
+  if (semanticOwner !== undefined && execution.context.tree.provenanceTracker !== undefined) {
     if (transaction.provenance === undefined) throw createCompileInvariantError('Missing replay provenance');
-    execution.context.provenanceTracker.importProvenance(
+    execution.context.tree.provenanceTracker.importProvenance(
       transaction.provenance,
       replayedPrimitives,
       semanticOwner,
       outputIndex,
-      execution.context.namespaceStack.identity,
+      execution.context.tree.namespaceStack.identity,
     );
   }
   const committedPrimitives = replayedPrimitives.map((primitive): ScenePrimitive => {
@@ -90,7 +90,7 @@ export const commitCompositeReplay = (
   };
 
   if (semanticOwner !== undefined) {
-    execution.context.provenanceTracker?.recordPrimitives(committedPrimitives, semanticOwner, 'composite-replay');
+    execution.context.tree.provenanceTracker?.recordPrimitives(committedPrimitives, semanticOwner, 'composite-replay');
   }
 
   const suppressedNamespaceWarnings = new Set<CompileWarning>();
@@ -109,9 +109,9 @@ export const commitCompositeReplay = (
     const projectedChange = { ...change, entry: { ...change.entry, layout: projectedLayout } };
 
     const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
-    const committedAgainstBaseline = execution.context.withWarningOccurrence(
+    const committedAgainstBaseline = execution.context.tree.withWarningOccurrence(
       replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, changeOccurrence),
-      () => execution.context.namespaceStack.commitForkChange(projectedChange),
+      () => execution.context.tree.namespaceStack.commitForkChange(projectedChange),
     );
     if (change.overwroteBaseline && !committedAgainstBaseline) {
       const baselineWarning = transaction.namespaceBaselineWarnings.find(candidate => candidate.id === change.id);
@@ -126,7 +126,7 @@ export const commitCompositeReplay = (
     contribution.layouts.push(
       transforms === undefined || transforms.length === 0
         ? layout
-        : execution.context.scopeTransformComposer.project(layout, transforms),
+        : projectLayoutWithTransform(layout, execution.context.tree.scopeTransformComposer.resolve(transforms)),
     );
   }
 
@@ -136,7 +136,7 @@ export const commitCompositeReplay = (
         boundsPoints:
           transforms === undefined || transforms.length === 0
             ? bounds.boundsPoints
-            : bounds.boundsPoints.map(point => execution.context.scopeTransformComposer.apply(point, transforms)),
+            : bounds.boundsPoints.map(point => execution.context.tree.scopeTransformComposer.apply(point, transforms)),
         shadow: bounds.shadow,
         ...(bounds.decoration === undefined ? {} : { decoration: bounds.decoration }),
       });
@@ -158,7 +158,9 @@ export const commitCompositeReplay = (
       boundsPoints:
         transforms === undefined || transforms.length === 0
           ? allocation.boundsPoints
-          : allocation.boundsPoints.map(point => execution.context.scopeTransformComposer.apply(point, transforms)),
+          : allocation.boundsPoints.map(point =>
+              execution.context.tree.scopeTransformComposer.apply(point, transforms),
+            ),
     });
   }
 

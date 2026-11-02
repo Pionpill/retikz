@@ -6,10 +6,14 @@ import type { MergedScopeDefaults } from '../../../resolve';
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { IRNode } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
-import type { SharedCompileContext } from '../../context';
+import type {
+  SharedCompileContext,
+  ElementCompileOptions,
+  ElementCompileResult,
+  WorkspaceCompileContext,
+} from '../../context';
 import type { CompileWarningCode, ComposedScopeTransform } from '../../shared';
-import type { ElementCompileOptions, ElementCompileResult, WorkspaceCompileContext } from '../context';
-import { runElementCompilation } from '../context';
+import { runElementCompilation } from '../element';
 import { compileNodeResolution } from './layout';
 import { emitNodeOutput } from './output';
 import type { CompiledNode, NodeCompilation } from './types';

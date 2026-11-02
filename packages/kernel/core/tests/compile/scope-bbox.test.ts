@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import type { CompiledNodeLayout } from '../../src/compile/tree/node';
+import type { CompiledNodeLayout } from '../../src/compile/layout';
 import { createScopeRectangleLayout } from '../../src/compile/tree/node';
 import { computeScopeBoundingBox } from '../../src/compile/tree/scope';
 import type { TextMeasurer } from '../../src/contract';

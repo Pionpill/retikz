@@ -10,12 +10,10 @@ import type {
   Transform,
 } from '../../contract';
 import type { MergedScopeDefaults } from '../../resolve';
-import type { CanonicalDropShadow, IRChild, IRPosition } from '../../schemas';
-import type { CompileProvenanceTracker } from '../provenance';
+import type { IRChild, IRScope } from '../../schemas';
+import type { TreeCompileContext, NamespaceStack } from '../context';
+import type { LayoutBoundsContribution, CompiledNodeLayout } from '../layout';
 import type { CompositeArtifact } from '../shared';
-import type { FullCompileContext } from './context';
-import type { NamespaceStack } from './namespace';
-import type { CompiledNodeLayout } from './node';
 
 /** child 遍历编译后的 primitive 与自动 layout bbox */
 export type SubtreeCompilation = {
@@ -40,11 +38,11 @@ export type SubtreeCompilation = {
 };
 
 /** 子树调度继承的初始位置和执行策略，不持有工作区或会话 */
-export type SubtreeInitialOptions = {
+export type SubtreeCompileOptions = {
   /** 仅作用于本次执行根组件的需求 */
   measurementAxis?: LayoutMeasurementAxis;
   /** 查询 probe 在 Scope 出栈前读取最终引用环境，不向公共 context 暴露可变状态 */
-  captureScopeTargets?: (child: ScopeChild, namespace: NamespaceStack, chain: ReadonlyArray<Transform>) => void;
+  captureScopeTargets?: (child: IRScope, namespace: NamespaceStack, chain: ReadonlyArray<Transform>) => void;
   /** 当前执行是否为 layoutChild 隔离 probe */
   probe?: boolean;
   /** probe 继承的当前 scope chain */
@@ -61,24 +59,14 @@ export type SubtreeInitialOptions = {
   proposal?: LayoutProposal;
 };
 
-/** 执行入口接收的隔离状态，管理器建立环境后只传递调度所需选项 */
-export type SubtreeCompileOptions = SubtreeInitialOptions & {
-  /** probe 继承的 namespace snapshot */
-  namespaceStack?: NamespaceStack;
-  /** 按需收集同次编译来源 */
-  provenanceTracker?: CompileProvenanceTracker;
-  /** 向隔离 namespace callback 暴露当前 warning occurrence */
-  observeWarningOccurrence?: (occurrence: CompileOccurrenceLocator | undefined) => void;
-};
-
 /** 子树执行策略与初始继承值，不持有工作区或宿主操作 */
 export type SubtreeCompilerOptions = Pick<
-  SubtreeInitialOptions,
+  SubtreeCompileOptions,
   'probe' | 'measurementAxis' | 'captureScopeTargets'
 > & {
   /** 进入遍历前的继承位置与输入，递归时派生为局部帧 */
-  initial: Omit<SubtreeInitialOptions, 'probe' | 'measurementAxis' | 'captureScopeTargets'> &
-    Pick<FullCompileContext, 'theme' | 'compositeInputs'>;
+  initial: Omit<SubtreeCompileOptions, 'probe' | 'measurementAxis' | 'captureScopeTargets'> &
+    TreeCompileContext['initial'];
 };
 
 /** 选中隔离子树后交给宿主接受的局部输出，不包含可写工作区或递归调度器 */
@@ -99,31 +87,11 @@ export type SubtreeOutputContribution = {
   artifacts: Array<CompositeArtifact>;
 };
 
-export type NodeChild = Extract<IRChild, { type: 'node' }>;
-
-export type CoordinateChild = Extract<IRChild, { type: 'coordinate' }>;
-
-export type ScopeChild = Extract<IRChild, { type: 'scope' }>;
-
-export type PathChild = Extract<IRChild, { type: 'path' }>;
-
-/** 自动 viewBox 的当前 frame 几何贡献 */
-export type LayoutBoundsContribution = {
-  /** 包络装饰的可见范围，需要沿祖先裁剪收敛 */
-  decoration?: true;
-  /** 当前 frame 中的几何点 */
-  boundsPoints: Array<IRPosition>;
-  /** 与该点集关联的阴影外溢 */
-  shadow?: CanonicalDropShadow;
-  /** 位于该显式 composite allocation boundary 内时不直接贡献到外层 */
-  allocationBoundary?: object;
-};
-
 /** 使用独占工作区与名称环境执行子树；实现由全量会话持有 */
 export type CompileSubtree = (
   children: ReadonlyArray<IRChild>,
   options: SubtreeCompileOptions,
-  context: FullCompileContext,
+  context: TreeCompileContext,
 ) => SubtreeCompilation;
 
 /** 子树编译器所需的宿主调度能力，不暴露具体管理器 */

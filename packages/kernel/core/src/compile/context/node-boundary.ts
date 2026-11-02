@@ -1,11 +1,22 @@
-import type { NodeReferenceGeometry } from '../../../resolve';
-import type { BoundaryGeometryResolveContext, CompiledNodeLayout } from './types';
+import type { PropertyPath } from '@retikz/foundation';
+import type { CenteredBox } from '@retikz/math';
+
+import type { ConnectionEnvelopeKind } from '../../contract';
+import type { NodeReferenceGeometry } from '../../resolve';
+import type { CompiledNodeLayout } from '../layout';
+import type { CompileWarningCode } from '../shared';
 
 /** 连接面消费过程中的缓存和诊断状态 */
-export type NodeBoundaryState = Pick<
-  BoundaryGeometryResolveContext,
-  'connectionEnvelopeCache' | 'connectionEnvelopeWarnings' | 'warn' | 'irPath'
->;
+export type NodeBoundaryState = {
+  /** 按连接面缓存已计算的包络 */
+  connectionEnvelopeCache?: Map<string, CenteredBox>;
+  /** 已发布回退诊断的连接面种类 */
+  connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
+  /** 当前节点的诊断出口 */
+  warn?: (code: CompileWarningCode, message: string) => void;
+  /** 当前节点的来源路径 */
+  irPath?: PropertyPath;
+};
 
 /** 编译调用持有的节点连接边界上下文，不进入布局结果 */
 export type NodeBoundaryContext = {

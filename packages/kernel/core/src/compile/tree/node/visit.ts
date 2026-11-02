@@ -1,25 +1,26 @@
 import { formatPropertyPath } from '@retikz/foundation';
 
+import { projectLayoutWithTransform } from '.';
 import type { CompileOccurrenceLocator } from '../../../contract';
+import type { IRNode } from '../../../schemas';
+import type { TreeCompileContext } from '../../context';
 import type { CompileOwnerKey } from '../../provenance';
 import { createCompileChildPath } from '../../shared';
 import { cloneAlignmentGuides } from '../alignment-guide';
 import { pushAllocation } from '../allocation';
-import { createTreePositionContext } from '../context/execution';
-import type { CompileExecutionContext } from '../context/execution';
 import type { TreeCompileFrame } from '../frame';
 import type { TreeOutputState } from '../output';
 import { recordPrimitiveZIndex } from '../output';
-import type { NodeChild } from '../types';
+import { createTreePositionContext } from '../reference';
 import { compileNodeState } from './compile';
 import { alignmentGuidesOfNode } from './layout-metrics';
 import { emitNodeOutput } from './output';
 
 /** 布局并 emit node，同时注册 id、收集边界点和父 scope layout 输入 */
 export const visitNode = (
-  context: CompileExecutionContext,
+  context: TreeCompileContext,
   outputState: TreeOutputState,
-  child: NodeChild,
+  child: IRNode,
   index: number,
   frame: TreeCompileFrame,
   occurrence?: CompileOccurrenceLocator,
@@ -34,24 +35,25 @@ export const visitNode = (
     mode: frame.theme.mode,
     scopeChain,
     positionContext: createTreePositionContext(context, scopeChain),
-    composedTransform: context.scopeTransformComposer.resolve(scopeChain),
+    composedTransform: context.tree.scopeTransformComposer.resolve(scopeChain),
     childProposal: frame.childProposal,
   });
 
   const { layout } = compilation;
-  const globalLayout = context.scopeTransformComposer.project(layout, scopeChain);
+  const globalLayout = projectLayoutWithTransform(layout, context.tree.scopeTransformComposer.resolve(scopeChain));
   if (child.id) {
-    context.namespaceStack.register(child.id, globalLayout, [...nodeIrPath, 'id']);
+    context.tree.namespaceStack.register(child.id, globalLayout, [...nodeIrPath, 'id']);
     child.aliasIds?.forEach((id, aliasIndex) =>
-      context.namespaceStack.register(id, globalLayout, [...nodeIrPath, 'aliasIds', aliasIndex]),
+      context.tree.namespaceStack.register(id, globalLayout, [...nodeIrPath, 'aliasIds', aliasIndex]),
     );
   }
 
   frame.publicationSink.push(globalLayout);
   const output = emitNodeOutput(compilation, context.shared, context.workspace);
-  const emittedPrimitives = context.provenanceTracker?.materializePrimitives(output.primitives) ?? output.primitives;
+  const emittedPrimitives =
+    context.tree.provenanceTracker?.materializePrimitives(output.primitives) ?? output.primitives;
   if (semanticOwner !== undefined) {
-    context.provenanceTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
+    context.tree.provenanceTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
   }
 
   for (const prim of emittedPrimitives) {

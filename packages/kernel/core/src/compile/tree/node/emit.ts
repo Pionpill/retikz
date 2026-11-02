@@ -9,18 +9,13 @@ import {
   isLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../../resolve/diagnostics';
+import type { CompiledNodeLayout, NodeLabelLayout } from '../../layout';
 import type { RegisterPaint } from '../../resource';
 import { snapshotScenePrimitives } from '../../shared';
 import { emitInlineLine, calculateAlphabeticBaselineY } from '../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
-import type {
-  CompiledNodeLayout,
-  NodeCompilation,
-  NodeLabelLayout,
-  NodeLabelResolution,
-  NodeResolvedProperties,
-} from './types';
+import type { NodeCompilation, NodeLabelResolution, NodeResolvedProperties } from './types';
 
 /** 节点形状绘制使用的有效样式 */
 type NodeShapeProperties = Pick<

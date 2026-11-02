@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { createNodeBoundaryContext } from '../../src/compile/context';
 import { composeScopeTransform } from '../../src/compile/shared';
 import {
   boundaryPointOf,
   compileNodeResolution,
-  createNodeBoundaryContext,
   createNodeReferenceGeometry,
   projectLayoutWithTransform,
   resolveAnchor,

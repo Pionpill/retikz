@@ -1,17 +1,13 @@
 import type { CompileOccurrenceLocator, SceneClipPath, Transform, CompositeCompileScopeProps } from '../../../contract';
 import { CompileExpansionKind } from '../../../contract';
+import type { IRScope } from '../../../schemas';
+import type { CompositeCompileOwner, CompositeRuntimeOutputChild } from '../../context';
 import type { CompileOwnerKey } from '../../provenance';
 import { createCompileInvariantError } from '../../shared';
 import type { TreeCompileFrame } from '../frame';
-import type { ScopeChild } from '../types';
 import { isCompositeOutputHandle } from './handle';
 import { commitCompositeReplay } from './replay';
-import type {
-  CompositeExecutionContext,
-  PreparedCompositeOutputs,
-  CompositeCompileOwner,
-  CompositeRuntimeOutputChild,
-} from './types';
+import type { CompositeExecutionContext, PreparedCompositeOutputs } from './types';
 
 /** 编译组件句柄所表示的绑定子项、重放或作用域 */
 export const compileCompositeOutput = (
@@ -46,12 +42,12 @@ export const compileCompositeOutput = (
       true,
       semanticOwner === undefined
         ? undefined
-        : execution.context.provenanceTracker?.createOwner(
+        : execution.context.tree.provenanceTracker?.createOwner(
             output.child,
             index,
             semanticOwner,
             true,
-            execution.context.namespaceStack.identity,
+            execution.context.tree.namespaceStack.identity,
           ),
     );
 
@@ -77,12 +73,12 @@ export const compileCompositeOutput = (
   const scopeSemanticOwner =
     semanticOwner === undefined
       ? undefined
-      : execution.context.provenanceTracker?.createOwner(
+      : execution.context.tree.provenanceTracker?.createOwner(
           runtimeScopeChild,
           index,
           semanticOwner,
           true,
-          execution.context.namespaceStack.identity,
+          execution.context.tree.namespaceStack.identity,
         );
   const scopeOccurrence: CompileOccurrenceLocator = {
     sourcePath: parentOccurrence.sourcePath,
@@ -114,12 +110,12 @@ export const compileCompositeOutput = (
             true,
             scopeSemanticOwner === undefined
               ? undefined
-              : execution.context.provenanceTracker?.createOwner(
+              : execution.context.tree.provenanceTracker?.createOwner(
                   child,
                   childIndex,
                   scopeSemanticOwner,
                   true,
-                  execution.context.namespaceStack.identity,
+                  execution.context.tree.namespaceStack.identity,
                 ),
           );
           continue;
@@ -152,7 +148,7 @@ export const compileCompositeOutput = (
 };
 
 /** 将组件生成的 Scope 属性转换为普通作用域声明 */
-export const runtimeScopeChildOf = (props: CompositeCompileScopeProps): ScopeChild => {
+export const runtimeScopeChildOf = (props: CompositeCompileScopeProps): IRScope => {
   const { transforms, animations, ...rest } = props;
   return {
     type: 'scope',

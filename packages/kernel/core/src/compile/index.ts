@@ -13,7 +13,7 @@ export type {
   ElementCompileOptions,
   ElementCompileReference,
   ElementCompileResult,
-} from './tree/context';
+} from './context';
 export * from './output';
 export * from './provenance';
 export { projectCompileReference } from './tree/reference';
@@ -42,12 +42,12 @@ export type { CompiledCoordinate, CoordinateCompileContext } from './tree/coordi
 export { compileNode, projectPublishedCompileLayout } from './tree/node';
 export type {
   CompiledNode,
-  CompiledNodeLayout,
   NodeCompilation,
   NodeCompileContext,
   NodeLabelResolution,
   NodeResolvedProperties,
 } from './tree/node';
+export type { CompiledNodeLayout } from './layout';
 export { compilePath, samplePathRoute } from './tree/path';
 export type { CompiledPath, PathElementCompileContext } from './tree/path';
 export {

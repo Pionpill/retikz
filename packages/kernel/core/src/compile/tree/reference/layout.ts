@@ -1,9 +1,10 @@
 import type { Transform } from '../../../contract';
 import type { SharedCompileContext } from '../../context';
+import type { CompiledNodeLayout } from '../../layout';
 import { composeScopeTransform } from '../../shared';
 import type { CompiledCoordinate } from '../coordinate';
 import { createSyntheticRectangleLayout, projectLayoutWithTransform } from '../node';
-import type { CompiledNode, CompiledNodeLayout } from '../node';
+import type { CompiledNode } from '../node';
 import type { CompiledScope } from '../scope';
 
 /** 可提供命名几何的已完成元素，Path 不提供节点定位几何 */

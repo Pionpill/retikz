@@ -1,15 +1,13 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { LayoutAlignmentGuide, LayoutProposal, Transform } from '../../contract';
-import type { CompositeInputScope } from '../../contract/composite';
+import type { LayoutAlignmentGuide, LayoutProposal, Transform, CompositeInputScope } from '../../contract';
 import type { MergedScopeDefaults } from '../../resolve';
 import type { CanonicalTheme } from '../../shared';
+import type { CompiledNodeLayout, LayoutBoundsContribution } from '../layout';
 import type { CompileOwnerKey } from '../provenance';
 import type { CompositeArtifact } from '../shared';
-import type { CompiledNodeLayout } from './node';
 import type { InternalScenePrimitive } from './output';
 import type { PendingPathEmission } from './path/deferred';
-import type { LayoutBoundsContribution } from './types';
 
 /** 递归处理一层 child 时的上下文 */
 export type TreeCompileFrame = {

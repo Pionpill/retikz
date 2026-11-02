@@ -9,10 +9,10 @@ import { resolveNode } from '../../../resolve';
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { IRNode, IRPosition } from '../../../schemas';
 import { ThemeMode } from '../../../shared';
+import type { CompiledNodeLayout } from '../../layout';
 import { DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE, applyTransformChain } from '../../shared';
 import { fallbackMeasurer } from '../../text';
 import { compileNodeResolution } from './layout';
-import type { CompiledNodeLayout } from './types';
 
 /** synthetic Node 只消费字面量坐标，因此使用无引用的恒等 position context */
 const SYNTHETIC_POSITION_CONTEXT: PositionTargetResolveContext = {

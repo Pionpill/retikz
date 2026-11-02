@@ -6,10 +6,17 @@ import type {
   LayoutProposal,
   SceneResource,
   Transform,
+  CompositeInputScope,
 } from '../../../contract';
-import type { CompositeInputScope } from '../../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { IRChild } from '../../../schemas';
+import { createWorkspaceCompileContext, createTreeCompileEnvironment } from '../../context';
+import type {
+  TreeCompileContext,
+  NamespaceStack,
+  CompositeCompileOwner,
+  CompositeReplayTransaction,
+} from '../../context';
 import { CompileProvenanceTracker } from '../../provenance';
 import { calculateBoundsOfPrimitives } from '../../scene';
 import {
@@ -20,21 +27,16 @@ import {
   withCompileWarningOccurrence,
 } from '../../shared';
 import type { CompileWarning } from '../../shared';
-import type { FullCompileContext } from '../context';
-import { createWorkspaceCompileContext } from '../context';
-import type { CompileExecutionContext } from '../context/execution';
 import type { TreeCompileFrame } from '../frame';
-import type { NamespaceStack } from '../namespace';
 import type { SubtreeCompileHost, SubtreeCompileOptions } from '../types';
 import { boundsRectOf, snapshotAllocationBounds } from './layout';
 import { resolveLayoutSlotSize } from './proposal';
 import { replayStyleFingerprint, replayThemeFingerprint } from './replay';
-import type { CompositeCompileOwner, CompositeReplayTransaction } from './types';
 
 /** 单次组件回调的隔离试编译依赖 */
 export type CompositeProbeContext = {
   /** 用于 fork 名称环境的外层编译状态 */
-  context: CompileExecutionContext;
+  context: TreeCompileContext;
   /** 试编译结果所属回调 */
   owner: CompositeCompileOwner;
   /** 组件定义的完整名称 */
@@ -85,7 +87,7 @@ export const evaluateCompositeLayout = (
   let probeWarningOccurrence = probeOccurrence;
   const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
   const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
-  const namespaceBaseline = probeContext.context.namespaceStack.fork();
+  const namespaceBaseline = probeContext.context.tree.namespaceStack.fork();
   const namespaceStack = namespaceBaseline.fork({
     onDuplicate: info => {
       const warning = withCompileWarningOccurrence(createDuplicateWarning(info), probeWarningOccurrence);
@@ -97,24 +99,35 @@ export const evaluateCompositeLayout = (
   });
 
   const probeProvenanceTracker =
-    probeContext.context.provenanceTracker === undefined
+    probeContext.context.tree.provenanceTracker === undefined
       ? undefined
       : new CompileProvenanceTracker(namespaceStack.identity);
 
-  const sandboxContext: FullCompileContext = {
+  const sandboxContext: TreeCompileContext = {
     shared: probeContext.context.shared,
-    workspace: {
-      ...workspace,
-      diagnostics: { ...workspace.diagnostics, collect: captureWarning },
+    session: probeContext.context.session,
+    ...createTreeCompileEnvironment(
+      {
+        ...workspace,
+        diagnostics: { ...workspace.diagnostics, collect: captureWarning },
+      },
+      {
+        namespaceStack,
+        provenanceTracker: probeProvenanceTracker,
+        observeWarningOccurrence: current => {
+          probeWarningOccurrence = current ?? probeOccurrence;
+        },
+      },
+    ),
+    initial: {
+      compositeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
+      theme: probeTheme,
     },
-    compositeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
-    theme: probeTheme,
   };
 
   const laid = probeContext.host.compileSubtree(
     [clonedChild],
     {
-      namespaceStack,
       scopeChain: probeScopeChain,
       scopeDefaults: probeScopeDefaults,
       occurrence: probeOccurrence,
@@ -124,10 +137,6 @@ export const evaluateCompositeLayout = (
       proposal: clonedProposal,
       ...(measurementAxis === undefined ? {} : { measurementAxis }),
       ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),
-      ...(probeProvenanceTracker === undefined ? {} : { provenanceTracker: probeProvenanceTracker }),
-      observeWarningOccurrence: current => {
-        probeWarningOccurrence = current ?? probeOccurrence;
-      },
     },
     sandboxContext,
   );

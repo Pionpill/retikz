@@ -51,7 +51,7 @@ describe('解析源结构', () => {
   it('保持位置解析独立于编译编排', () => {
     const offenders = sourceFiles('src/resolve/position')
       .filter(path =>
-        /from\s+['"][^'"]*compile|NamespaceStack|FullCompileContext|ScopeCompileFrame/u.test(source(path)),
+        /from\s+['"][^'"]*compile|NamespaceStack|TreeCompileContext|ScopeCompileFrame/u.test(source(path)),
       )
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
 

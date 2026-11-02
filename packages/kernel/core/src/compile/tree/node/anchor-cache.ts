@@ -4,11 +4,11 @@ import { boundaryKey } from '../../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../../schemas';
 import type { Side } from '../../../shared';
 import { isAnchor } from '../../../shared';
+import type { NodeBoundaryState } from '../../context';
+import type { CompiledNodeLayout } from '../../layout';
 import { snapshotProviderPosition } from '../../shared';
 import { anchorOf, angleBoundaryOf } from './anchors';
-import type { NodeBoundaryState } from './boundary-context';
 import { createNodeReferenceGeometry } from './reference';
-import type { CompiledNodeLayout } from './types';
 
 type AnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
 

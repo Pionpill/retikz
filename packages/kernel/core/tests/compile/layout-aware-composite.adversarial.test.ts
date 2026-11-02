@@ -36,11 +36,11 @@ import {
   naturalLayoutProposal,
   PathSchema,
 } from '../../src';
+import { createTreeCompileContext } from '../../src/compile/context';
+import { NamespaceStack } from '../../src/compile/context';
 import * as compileProvenance from '../../src/compile/provenance';
 import { createCompileInvariantError, snapshotProviderPosition, wrapLayoutProbeError } from '../../src/compile/shared';
 import { CompileManager } from '../../src/compile/tree';
-import { createFullCompileContext } from '../../src/compile/tree/context';
-import { NamespaceStack } from '../../src/compile/tree/namespace';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';
 import { isLayoutProbeRecoverableError } from '../../src/resolve/diagnostics';
 import { cloneAndFreezeJson } from '../../src/shared/json';
@@ -951,18 +951,15 @@ describe('布局感知的复契约束和边界', () => {
       },
     });
     const ir = sceneOf({ namespace: 'test', type: 'compileProvenanceInvariantParent' });
-    const outer = new compileProvenance.CompileProvenanceTracker();
     const invariant = createCompileInvariantError('Missing compile provenance');
     const captureProbe = vi
       .spyOn(compileProvenance.CompileProvenanceTracker.prototype, 'capture')
       .mockImplementation(() => {
         throw invariant;
       });
-    const context = createFullCompileContext(ir, { composites: [parent] });
+    const context = createTreeCompileContext(ir, { composites: [parent] }, { captureProvenance: true });
 
-    expect(() => new CompileManager(context).compileSubtree(ir.children, { provenanceTracker: outer })).toThrow(
-      invariant,
-    );
+    expect(() => new CompileManager(context).compileScene(ir)).toThrow(invariant);
 
     captureProbe.mockRestore();
   });

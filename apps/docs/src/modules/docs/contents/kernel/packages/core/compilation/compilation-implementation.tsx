@@ -18,7 +18,7 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
   const text = compilationImplementationI18n[lang];
   const stages = [
     { id: 'entry', name: 'compileSceneSnapshot', detail: text.entry },
-    { id: 'context', name: 'createFullCompileContext', detail: text.context },
+    { id: 'context', name: 'createTreeCompileContext', detail: text.context },
     { id: 'visit', name: 'compileChildrenToPrimitives', detail: text.visit },
     { id: 'flush', name: 'flushPendingPathEmissions', detail: text.flush },
     { id: 'sort', name: 'stableSortByZIndex', detail: text.sort },
@@ -26,7 +26,7 @@ const CompilationImplementation: FC<CompilationImplementationProps> = props => {
   ];
   const products = [
     { id: 'input', name: 'IRScene + CompileOptions', detail: text.input },
-    { id: 'dependencies', name: 'FullCompileContext', detail: text.dependencies },
+    { id: 'dependencies', name: 'TreeCompileContext', detail: text.dependencies },
     { id: 'layouts', name: 'CompiledNodeLayout', detail: text.layouts },
     { id: 'pending', name: 'PendingPathEmission', detail: text.pending },
     { id: 'paths', name: 'PathPrimitive / GroupPrimitive', detail: text.paths },

@@ -1,7 +1,6 @@
-import type { SharedCompileContext } from '../../context';
-import type { ElementCompileOptions, ElementCompileResult } from '../context';
-import { runElementCompilation } from '../context';
-import type { CompiledNodeLayout } from '../node';
+import type { SharedCompileContext, ElementCompileOptions, ElementCompileResult } from '../../context';
+import type { CompiledNodeLayout } from '../../layout';
+import { runElementCompilation } from '../element';
 import { resolveScopeContext } from './context';
 import { createScopeGroup } from './emit';
 import { createIntrinsicScopeLayout } from './layout';

@@ -1,16 +1,16 @@
+import type { IRCoordinate } from '../../../schemas';
+import type { TreeCompileContext } from '../../context';
 import { createCompileChildPath } from '../../shared';
 import { pushAllocation } from '../allocation';
-import { createTreePositionContext } from '../context/execution';
-import type { CompileExecutionContext } from '../context/execution';
 import type { TreeCompileFrame } from '../frame';
 import { createSyntheticRectangleLayout } from '../node';
-import type { CoordinateChild } from '../types';
+import { createTreePositionContext } from '../reference';
 import { resolveCoordinatePosition } from './compile';
 
 /** 解析 coordinate 位置并注册为零尺寸 layout，供后续命名引用使用 */
 export const visitCoordinate = (
-  context: CompileExecutionContext,
-  child: CoordinateChild,
+  context: TreeCompileContext,
+  child: IRCoordinate,
   index: number,
   frame: TreeCompileFrame,
 ): void => {
@@ -19,7 +19,7 @@ export const visitCoordinate = (
   const localCenter = resolveCoordinatePosition(child, createTreePositionContext(context, scopeChain));
 
   const globalCenter =
-    scopeChain.length === 0 ? localCenter : context.scopeTransformComposer.apply(localCenter, scopeChain);
+    scopeChain.length === 0 ? localCenter : context.tree.scopeTransformComposer.apply(localCenter, scopeChain);
   const localCoordinateLayout = createSyntheticRectangleLayout(
     { id: child.id, rect: { x: localCenter[0], y: localCenter[1], width: 0, height: 0, rotate: 0 } },
     {
@@ -34,7 +34,7 @@ export const visitCoordinate = (
       boundaries: context.shared.registries.boundaryRegistry,
     },
   );
-  context.namespaceStack.register(child.id, coordinateLayout, [...coordinateIrPath, 'id']);
+  context.tree.namespaceStack.register(child.id, coordinateLayout, [...coordinateIrPath, 'id']);
   frame.publicationSink.push(coordinateLayout);
   pushAllocation(frame.allocationSink, [localCenter], frame.allocationBoundary);
   layoutSink.push(localCoordinateLayout);

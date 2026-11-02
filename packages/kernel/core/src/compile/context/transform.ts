@@ -2,8 +2,6 @@ import type { Transform } from '../../contract';
 import type { IRPosition } from '../../schemas';
 import type { ComposedScopeTransform } from '../shared';
 import { composeScopeTransform, applyScopeTransform, inverseScopeTransform } from '../shared';
-import { projectLayoutWithTransform } from './node';
-import type { CompiledNodeLayout } from './node';
 
 /**
  * 单次编译遍历共享的 Scope 变换组合器
@@ -82,8 +80,4 @@ export class ScopeTransformComposer {
   /** 将全局点反投影到给定链的局部坐标；链包含零缩放轴时抛出不可逆错误 */
   readonly inverse = (point: IRPosition, chain: ReadonlyArray<Transform>) =>
     inverseScopeTransform(point, this.resolve(chain));
-
-  /** 按既有布局口径投影位置、累计旋转、尺寸与 margin，不重新计算几何包络 */
-  readonly project = (layout: CompiledNodeLayout, chain: ReadonlyArray<Transform>) =>
-    projectLayoutWithTransform(layout, this.resolve(chain));
 }

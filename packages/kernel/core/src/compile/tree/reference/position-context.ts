@@ -6,9 +6,10 @@ import { boundaryKey } from '../../../resolve';
 import type { PositionReferenceView, PositionTargetResolveContext } from '../../../resolve/position';
 import { resolvePositionTarget } from '../../../resolve/position';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../../schemas';
+import type { NodeBoundaryContext } from '../../context';
+import type { CompiledNodeLayout } from '../../layout';
 import type { ComposedScopeTransform } from '../../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../../shared';
-import type { CompiledNodeLayout, NodeBoundaryContext } from '../node';
 import { createNodeReferenceGeometry, resolveAnchorRef } from '../node';
 
 /** 把视觉 shape 绑定为默认连接面 resolution */

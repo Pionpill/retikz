@@ -1,12 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { TexLowerer } from '../../src/compile';
 import { BuiltinCompileWarningCode } from '../../src/compile';
 import { createSharedCompileContext } from '../../src/compile/context';
+import { createTreeCompileContext } from '../../src/compile/context';
+import type { CompiledNodeLayout } from '../../src/compile/layout';
 import type { CompileWarning } from '../../src/compile/shared';
 import { CompileManager } from '../../src/compile/tree';
-import { createFullCompileContext } from '../../src/compile/tree/context';
-import type { CompiledNodeLayout } from '../../src/compile/tree/node';
+import { SubtreeCompiler } from '../../src/compile/tree/subtree';
 import type { TextMeasurer, TextPrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
@@ -61,17 +62,30 @@ const collectLayouts = (
   warnings: ReadonlyArray<CompileWarning>;
   textPrims: Array<TextPrimitive>;
 } => {
-  const context = createFullCompileContext(ir, {
+  const context = createTreeCompileContext(ir, {
     measureText: options.measurer ?? measureText,
     precision: options.precision,
 
     ...(options.withTex === true ? { lowerTex } : {}),
   });
-  const out = new CompileManager(context).compileSubtree(ir.children);
-  const layouts = out.layouts;
-  const textPrims = flattenPrims(out.primitives).filter((prim): prim is TextPrimitive => prim.type === 'text');
-
-  return { layouts, warnings: context.workspace.diagnostics.warnings, textPrims };
+  let layouts: Array<CompiledNodeLayout> = [];
+  const run = SubtreeCompiler.prototype.run;
+  const observeLayouts = vi
+    .spyOn(SubtreeCompiler.prototype, 'run')
+    .mockImplementation(function (this: SubtreeCompiler) {
+      const out = run.call(this);
+      layouts = out.layouts;
+      return out;
+    });
+  try {
+    const { result } = new CompileManager(context).compileScene(ir);
+    const textPrims = flattenPrims(result.scene.primitives).filter(
+      (prim): prim is TextPrimitive => prim.type === 'text',
+    );
+    return { layouts, warnings: context.workspace.diagnostics.warnings, textPrims };
+  } finally {
+    observeLayouts.mockRestore();
+  }
 };
 
 describe('Node 内容测量', () => {
@@ -84,16 +98,15 @@ describe('Node 内容测量', () => {
       },
     });
     const ir = scene([{ type: 'node', position: [0, 0], text: 'shared context' }]);
-    const firstContext = createFullCompileContext(ir, {}, shared);
-    const secondContext = createFullCompileContext(ir, {}, shared);
-    const first = new CompileManager(firstContext).compileSubtree(ir.children);
+    const firstContext = createTreeCompileContext(ir, {}, {}, shared);
+    const secondContext = createTreeCompileContext(ir, {}, {}, shared);
+    const first = new CompileManager(firstContext).compileScene(ir);
     const firstCalls = calls;
-    const second = new CompileManager(secondContext).compileSubtree(ir.children);
+    const second = new CompileManager(secondContext).compileScene(ir);
 
     expect(firstCalls).toBeGreaterThan(0);
     expect(calls).toBe(firstCalls * 2);
-    expect(second.primitives).toEqual(first.primitives);
-    expect(second.layouts[0].geometry.contentSize).toEqual(first.layouts[0].geometry.contentSize);
+    expect(second.result.scene).toEqual(first.result.scene);
     expect(firstContext.workspace.diagnostics.warnings).toEqual([]);
     expect(secondContext.workspace.diagnostics.warnings).toEqual([]);
   });

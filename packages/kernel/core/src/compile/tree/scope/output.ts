@@ -1,16 +1,15 @@
 import { boundsToRect } from '@retikz/math';
 
 import type { GroupPrimitive, ScenePrimitive } from '../../../contract';
-import type { SharedCompileContext } from '../../context';
+import type { IRScope } from '../../../schemas';
+import type { SharedCompileContext, TreeCompileContext } from '../../context';
 import { assembleCompileOutputs } from '../../output';
 import type { CompileOwnerKey, CompileProvenanceTracker } from '../../provenance';
 import { collectLayoutBounds, calculateBoundsOfPrimitives } from '../../scene';
 import { applyTransformChain, createCompileChildPath } from '../../shared';
 import type { CompileBounds, CompileOutput } from '../../shared';
-import type { CompileExecutionContext } from '../context/execution';
 import type { TreeOutputState } from '../output';
 import { recordPrimitiveZIndex, stableSortByZIndex } from '../output';
-import type { ScopeChild } from '../types';
 import { createScopeGroup } from './emit';
 import type { CompiledScope, EmitScopeGroupContext } from './types';
 
@@ -94,9 +93,9 @@ export const assembleScopeOutput = (
 
 /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画 */
 export const emitScopeGroup = (
-  context: CompileExecutionContext,
+  context: TreeCompileContext,
   output: TreeOutputState,
-  child: ScopeChild,
+  child: IRScope,
   input: EmitScopeGroupContext,
 ): string | undefined => {
   const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipPath, semanticOwner } = input;
@@ -113,7 +112,7 @@ export const emitScopeGroup = (
     children: stableSortByZIndex(scopePrimitiveSink as Array<ScenePrimitive>, output.zIndexOf),
   };
   primitiveSink.push(group);
-  if (semanticOwner !== undefined) context.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
+  if (semanticOwner !== undefined) context.tree.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
   recordPrimitiveZIndex(output.zIndexOf, group, child.zIndex);
 
   return group.clipRef;

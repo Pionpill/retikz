@@ -7,9 +7,9 @@ import { ScopeBoundingShape } from '../../../schemas';
 import { Anchor } from '../../../shared';
 import { rect as rectOps } from '../../../shared/geometry';
 import type { SharedCompileContext } from '../../context';
+import type { CompiledNodeLayout } from '../../layout';
 import { composeScopeTransform } from '../../shared';
 import { createScopeCircleLayout, createScopeRectangleLayout, outerRectOf, projectLayoutWithTransform } from '../node';
-import type { CompiledNodeLayout } from '../node';
 import type { InputScopeCompile } from './types';
 
 /** 收集一组 CompiledNodeLayout 的全局 4 角点，供 AABB / MEC 等包络复用 */

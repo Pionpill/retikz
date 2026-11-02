@@ -2,8 +2,7 @@ import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompositeBoundChild, CompositeCompileContext, CompositeRuntimeInputContext } from '../../../contract';
-import { naturalLayoutProposal } from '../../../contract';
-import { captureCompositeInputScope, selectCompositeInputScope } from '../../../contract/composite';
+import { naturalLayoutProposal, captureCompositeInputScope, selectCompositeInputScope } from '../../../contract';
 import { resolveTheme } from '../../../resolve';
 import type { IRChild } from '../../../schemas';
 import type { TreeCompileFrame } from '../frame';
@@ -33,17 +32,13 @@ export const createCompositeCallbackContext = (
       const existing = authoredChildren.get(pathKey);
       if (existing !== undefined) return existing;
 
-      const selected = createCompositeBoundChild(
-        context.compositeSession,
-        owner,
-        selectCompositeInputScope(sourceInputs, path),
-      );
+      const selected = createCompositeBoundChild(context.session, owner, selectCompositeInputScope(sourceInputs, path));
       authoredChildren.set(pathKey, selected);
 
       return selected;
     },
     bindChild: (nextChild, inputs) =>
-      createCompositeBoundChild(context.compositeSession, owner, captureCompositeInputScope(nextChild, inputs)),
+      createCompositeBoundChild(context.session, owner, captureCompositeInputScope(nextChild, inputs)),
   });
 
   /** 当前作者回调的探测序号，所有派生主题共用 */
@@ -72,10 +67,9 @@ export const createCompositeCallbackContext = (
         message,
         path: subPath === undefined || subPath.length === 0 ? compositeIrPath : [...compositeIrPath, ...subPath],
       }),
-    replay: (layoutResult, wrapper) =>
-      createCompositeReplayChild(context.compositeSession, owner, layoutResult, wrapper),
-    raise: failure => raiseLayoutChildFailure(context.compositeSession.failures, owner, failure),
-    createScope: (props, children) => createCompositeScopeChild(context.compositeSession, owner, props, children),
+    replay: (layoutResult, wrapper) => createCompositeReplayChild(context.session, owner, layoutResult, wrapper),
+    raise: failure => raiseLayoutChildFailure(context.session.failures, owner, failure),
+    createScope: (props, children) => createCompositeScopeChild(context.session, owner, props, children),
   });
   return { createContext: createLayoutContext, dispose: targetQuery.clear };
 };

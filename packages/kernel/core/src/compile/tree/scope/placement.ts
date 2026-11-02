@@ -5,9 +5,9 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { createLayoutProbeRecoverableError } from '../../../resolve/diagnostics';
 import { resolvePositionTargetWorld } from '../../../resolve/position';
 import type { IRPosition, IRScopePositionTarget, IRScopeSelfPoint, IRTransform } from '../../../schemas';
+import type { CompiledNodeLayout } from '../../layout';
 import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../../shared';
 import { projectLayoutWithTransform, resolveAnchorRefUncached } from '../node';
-import type { CompiledNodeLayout } from '../node';
 import { lowerScopeTransforms } from './transform';
 import type { InputScopeCompile, ScopeGeometryContext } from './types';
 

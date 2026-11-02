@@ -1,8 +1,8 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { NodeReferenceGeometry } from '../../../resolve';
-import type { NodeBoundaryContext } from './boundary-context';
-import type { CompiledNodeLayout } from './types';
+import type { NodeBoundaryContext } from '../../context';
+import type { CompiledNodeLayout } from '../../layout';
 
 /** 从节点布局提取供引用解析使用的几何信息 */
 export const createNodeReferenceGeometry = (

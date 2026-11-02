@@ -25,11 +25,8 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../src';
-import { CompileProvenanceTracker } from '../../src/compile/provenance';
+import { createTreeCompileContext } from '../../src/compile/context';
 import { CompileManager } from '../../src/compile/tree';
-import { CompositeCompileSession } from '../../src/compile/tree/composite/session';
-import { createFullCompileContext } from '../../src/compile/tree/context';
-import { NamespaceStack } from '../../src/compile/tree/namespace';
 import { sceneRectangles } from '../helpers/scene-rectangles';
 
 const scene = (children: IRScene['children']): IRScene => ({
@@ -574,24 +571,18 @@ describe('布局感知复合运行时包装树', () => {
     };
 
     const failingIr = scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: true }]);
-    const context = createFullCompileContext(failingIr, options);
-    const namespaceStack = new NamespaceStack();
-    const provenanceTracker = new CompileProvenanceTracker(namespaceStack.identity);
-    const session = new CompositeCompileSession();
-
-    expect(() =>
-      new CompileManager(context, session).compileSubtree(failingIr.children, {
-        namespaceStack,
-        provenanceTracker,
-      }),
-    ).toThrow(/runtime Scope clip failed/i);
+    const context = createTreeCompileContext(failingIr, options, { captureProvenance: true });
+    const { session } = context;
+    const { namespaceStack, provenanceTracker } = context.tree;
+    expect(() => new CompileManager(context).compileScene(failingIr)).toThrow(/runtime Scope clip failed/i);
+    expect(provenanceTracker).toBeDefined();
     expect(warnings).toEqual([]);
     expect(clipLowerCalls).toBe(1);
     expect(context.workspace.diagnostics.warnings).toEqual([]);
     expect(context.workspace.paintRegistry.getResources()).toEqual([]);
     expect(context.workspace.clipRegistry.getResources()).toEqual([]);
     expect(namespaceStack.lookupEntry('same')?.layout).toBeUndefined();
-    expect([...provenanceTracker.capture([]).ownerMap.values()].filter(owner => owner.id !== undefined)).toEqual([]);
+    expect([...provenanceTracker!.capture([]).ownerMap.values()].filter(owner => owner.id !== undefined)).toEqual([]);
     expect(session.outputChildren.get(replayHandle!)).toMatchObject({ used: false });
     expect(session.outputChildren.get(scopeHandle!)).toMatchObject({ used: false });
 

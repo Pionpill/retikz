@@ -89,24 +89,28 @@ const result = compileToScene(ir, { padding: 10 });
 - Definition：一种形状、路径或复合组件的具体能力定义。
 - registry：本次编译按名称查找 Definition 的注册表。
 
-`createSharedCompileContext` 把内置能力与调用方注入的定义整理到只读注册表，并保存测量服务和数值配置。内部的 `createFullCompileContext` 基于这个环境准备单次工作区，解析根主题，建立独占的几何状态、paint / clip 资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
+`createSharedCompileContext` 把内置能力与调用方注入的定义整理到只读注册表，并保存测量服务和数值配置。内部的 `createTreeCompileContext` 基于这个环境准备单次工作区，解析根主题，建立独占的几何状态、paint / clip 资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
 
-`FullCompileContext` 顶层持有 `shared`、`workspace`、`compositeInputs` 和 `theme`。`shared` 持有可复用的 `registries`、`host`、`layout` 和 `limits`；`CompileContextRegistries` 包含 `shapeRegistry`、`boundaryRegistry`、`clipRegistry`、`arrowRegistry`、`markRegistry`、`patternRegistry`、`pathRegistry`、`compositeRegistry` 和 `themeRegistry`。输入配置仍使用 `shapes`、`clips` 等定义数组字段。
+`TreeCompileContext` 按生命周期组织为 `shared`、`session`、`workspace`、`tree`、`initial` 和 `padding`。`shared` 持有可跨编译复用的注册表、宿主服务和配置；`session` 仅在根编译与其试编译之间共享组件句柄和测量缓存；`initial` 保存入口主题与组件输入；`padding` 仅用于最终 Scene 自动视口。输入配置仍使用 `shapes`、`clips` 等定义数组字段。
 
-全量编译、单元素编译和探测计算都通过 `createWorkspaceCompileContext` 创建独立的 `WorkspaceCompileContext`，统一持有 `nodeBoundaryContext`、`paintRegistry`、`clipRegistry` 和 `diagnostics`。诊断通过 `diagnostics.collect` 追加，通过只读的 `diagnostics.warnings` 查看；对外的 `CompileOptions.onWarn` 仍在成功后接收诊断。全量上下文在公共工作区之外持有根 `theme` 和 `compositeInputs`；单元素计算另带引用读取与位置解析状态。共享的是创建和消费方式，每次计算的可变状态仍然隔离；生成资源和诊断只随成功结果发布。
+全量编译、单元素编译和探测计算都通过 `createWorkspaceCompileContext` 创建独立工作区，持有 `nodeBoundaryContext`、`paintRegistry`、`clipRegistry` 和 `diagnostics`。树编译使用相同的工作区契约，将名称栈、可选来源追踪、变换缓存和诊断来源绑定放在 `tree` 中。`createTreeCompileEnvironment` 创建树状态并为诊断收集绑定当前来源，不修改传入的工作区。试编译创建独立工作区和树状态，复用外层会话。诊断通过 `diagnostics.collect` 追加，通过只读的 `diagnostics.warnings` 查看；对外的 `CompileOptions.onWarn` 仍在成功后接收诊断。
+
+上下文只持有配置与计算状态：名称栈、连接面缓存、变换缓存及组件会话由 `compile/context` 管理，共享布局结果契约定义在 `compile/layout.ts`。节点布局投影、位置引用适配和单元素执行仍由树编译负责。依赖从树编译指向上下文，上下文不导入树编译实现。
 
 环境按职责分为四组：
 
-| 分组         | 内容                                           |
-| ------------ | ---------------------------------------------- |
-| `registries` | 已合并内置与外部定义的注册表                   |
-| `host`       | 文字测量和 TeX lowering 服务                   |
-| `layout`     | 布局留白、节点和标签距离、根字号及输出 rounder |
-| `limits`     | 复合展开和裁剪转换的深度限制                   |
+| 分组         | 内容                                 |
+| ------------ | ------------------------------------ |
+| `registries` | 已合并内置与外部定义的注册表         |
+| `host`       | 文字测量和 TeX lowering 服务         |
+| `layout`     | 节点和标签距离、根字号及输出 rounder |
+| `limits`     | 复合展开和裁剪转换的深度限制         |
 
 编译通过 `shared.host.measureText` 使用宿主测量服务，消费测量结果时统一规范化指标。上下文不另设测量入口或编译级文字缓存。Weave 可在同一实例的增量更新中复用环境，资源工作区仍按计算调用隔离。输入侧 `CompileOptions` 的字段保持扁平，环境侧按分组保存已补齐的配置。
 
-创建共享上下文时会校验数值配置，即使场景为空也不跳过：`padding` 和 `labelDistance` 必须非负且有限，`fontSize` 必须大于零且有限；`nodeDistance` 必须有限，允许负值表示反方向偏移。`precision` 必须是非负整数且 `10 ** precision` 有限；这不保证任意极大坐标参与运算时都不会溢出。`maxCompositeDepth` 和 `maxClipDepth` 必须是非负安全整数，其中 `maxCompositeDepth: 0` 禁止展开复合组件。
+创建共享上下文时会校验数值配置，即使场景为空也不跳过：`labelDistance` 必须非负且有限，`fontSize` 必须大于零且有限；`nodeDistance` 必须有限，允许负值表示反方向偏移。`precision` 必须是非负整数且 `10 ** precision` 有限；这不保证任意极大坐标参与运算时都不会溢出。`maxCompositeDepth` 和 `maxClipDepth` 必须是非负安全整数，其中 `maxCompositeDepth: 0` 禁止展开复合组件。
+
+Scene 组装时单独校验 `padding` 非负且有限，显式提供 viewBox 时也会校验。
 
 本例没有额外定义，因此使用内置矩形和路径能力。编译直接遍历传入的 IR，复合组件会在遍历遇到时处理。
 
@@ -114,7 +118,7 @@ const result = compileToScene(ir, { padding: 10 });
 
 <SourceLinks
   sources={[
-    { label: '依赖与资源上下文', path: 'packages/kernel/core/src/compile/tree/context/full.ts' },
+    { label: '依赖与资源上下文', path: 'packages/kernel/core/src/compile/context/tree.ts' },
     { label: '内置与外部定义的注册', path: 'packages/kernel/core/src/providers/registry.ts' },
     { label: '遍历状态与命名查询', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
   ]}
@@ -467,8 +471,8 @@ Scope 分两步计算：先 `prepareScopeCompilation` 得到有效继承上下�
 
 <SourceLinks
   sources={[
-    { label: '单元素类型与上下文', path: 'packages/kernel/core/src/compile/tree/context/element.ts' },
-    { label: '稳定编译环境', path: 'packages/kernel/core/src/compile/context.ts' },
+    { label: '单元素类型与上下文', path: 'packages/kernel/core/src/compile/context/element.ts' },
+    { label: '稳定编译环境', path: 'packages/kernel/core/src/compile/context/shared.ts' },
     { label: '局部输出组装', path: 'packages/kernel/core/src/compile/output.ts' },
     { label: 'Scene 与附属产物组装', path: 'packages/kernel/core/src/compile/scene/output.ts' },
   ]}

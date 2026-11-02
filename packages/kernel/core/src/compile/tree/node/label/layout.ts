@@ -1,15 +1,10 @@
 import type { TextMeasurer } from '../../../../contract';
 import { resolveTextMetrics, resolveFont, resolveTextLine } from '../../../../resolve';
 import type { CanonicalFont } from '../../../../resolve';
+import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout } from '../../../layout';
 import { layoutInlineLine } from '../../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content/text';
-import type {
-  CompiledNodeLayout,
-  MeasuredNodeLabel,
-  NodeLabelLayout,
-  NodeLabelResolution,
-  NodeTextLayoutContext,
-} from '../types';
+import type { NodeLabelResolution, NodeTextLayoutContext } from '../types';
 import { resolveNodeLabelGeometry } from './geometry';
 
 /** 节点附属 label 布局输入 */

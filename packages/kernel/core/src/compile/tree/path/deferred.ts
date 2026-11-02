@@ -1,14 +1,15 @@
 import type { CompileOccurrenceLocator } from '../../../contract';
 import { resolveAnimations } from '../../../resolve';
+import type { IRPathBase } from '../../../schemas';
+import type { TreeCompileContext } from '../../context';
+import type { LayoutBoundsContribution } from '../../layout';
 import type { CompileOwnerKey } from '../../provenance';
 import { createCompileChildPath, createCompileInvariantError } from '../../shared';
 import { pushAllocation } from '../allocation';
-import { createTreePositionContext } from '../context/execution';
-import type { CompileExecutionContext } from '../context/execution';
 import type { TreeCompileFrame } from '../frame';
 import type { TreeOutputState, InternalScenePrimitive } from '../output';
 import { recordPrimitiveZIndex } from '../output';
-import type { LayoutBoundsContribution, PathChild } from '../types';
+import { createTreePositionContext } from '../reference';
 import { compilePathState } from './compile';
 import { createPathTargetResolver } from './index';
 import type { InputPathCompilation } from './types';
@@ -36,9 +37,9 @@ export type PendingPathEmission = InputPathCompilation & {
 
 /** 合并 path 样式并加入延迟 emit 队列，保留顶层绘制顺序占位 */
 export const queuePathChild = (
-  context: CompileExecutionContext,
+  context: TreeCompileContext,
   output: TreeOutputState,
-  child: PathChild,
+  child: IRPathBase,
   index: number,
   frame: TreeCompileFrame,
   occurrence: CompileOccurrenceLocator,
@@ -75,25 +76,25 @@ export const queuePathChild = (
 
 /** 在命名引用可查阶段 emit 延迟 path，并把结果回填到对应输出容器 */
 export const flushPendingPathEmissions = (
-  context: CompileExecutionContext,
+  context: TreeCompileContext,
   output: TreeOutputState,
   pendingPaths: ReadonlyArray<PendingPathEmission>,
 ): void => {
   if (pendingPaths.length === 0) return;
 
-  context.namespaceStack.enterResolvingPhase();
+  context.tree.namespaceStack.enterResolvingPhase();
 
   try {
     for (const pendingPath of pendingPaths) {
       const targetResolver = createPathTargetResolver(chain => createTreePositionContext(context, chain));
-      const { result, resolution } = context.withWarningOccurrence(pendingPath.occurrence, () =>
+      const { result, resolution } = context.tree.withWarningOccurrence(pendingPath.occurrence, () =>
         compilePathState(pendingPath, targetResolver, {
           ...context,
-          resolveTransform: context.scopeTransformComposer.resolve,
+          resolveTransform: context.tree.scopeTransformComposer.resolve,
         }),
       );
       const rawPrimitives = result?.primitives ?? [];
-      const primitives = context.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
+      const primitives = context.tree.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
       const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
       if (idx === -1) {
         throw createCompileInvariantError('internal: path placeholder missing from its sink');
@@ -101,7 +102,7 @@ export const flushPendingPathEmissions = (
 
       pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
       if (pendingPath.semanticOwner !== undefined) {
-        context.provenanceTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
+        context.tree.provenanceTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
       }
 
       output.pendingPathCount--;
@@ -116,7 +117,7 @@ export const flushPendingPathEmissions = (
       }
     }
   } finally {
-    context.namespaceStack.exitResolvingPhase();
+    context.tree.namespaceStack.exitResolvingPhase();
   }
 };
 
