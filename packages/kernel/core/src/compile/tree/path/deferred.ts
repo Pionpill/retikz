@@ -82,7 +82,7 @@ export const flushPendingPathEmissions = (
 ): void => {
   if (pendingPaths.length === 0) return;
 
-  context.execution.namespaceStack.enterResolvingPhase();
+  context.execution.namespaceStack.setPhase('resolving');
 
   try {
     for (const pendingPath of pendingPaths) {
@@ -117,7 +117,7 @@ export const flushPendingPathEmissions = (
       }
     }
   } finally {
-    context.execution.namespaceStack.exitResolvingPhase();
+    context.execution.namespaceStack.setPhase('registering');
   }
 };
 

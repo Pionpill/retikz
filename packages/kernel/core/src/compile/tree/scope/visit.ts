@@ -40,13 +40,12 @@ const registerScopeLayoutPlaceholder = (
     shapes: context.shared.registries.shapeRegistry,
     boundaries: context.shared.registries.boundaryRegistry,
   });
-  context.execution.namespaceStack.register(
-    child.id,
-    placeholderLayout,
-    [...scopeIrPath, 'id'],
-    'scope-placeholder',
+  context.execution.namespaceStack.register(child.id, {
+    layout: placeholderLayout,
+    irPath: [...scopeIrPath, 'id'],
+    state: 'scope-placeholder',
     scopeId,
-  );
+  });
 
   return { parentFrameDepth };
 };

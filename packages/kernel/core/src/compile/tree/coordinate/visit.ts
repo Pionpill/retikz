@@ -34,7 +34,10 @@ export const visitCoordinate = (
       boundaries: context.shared.registries.boundaryRegistry,
     },
   );
-  context.execution.namespaceStack.register(child.id, coordinateLayout, [...coordinateIrPath, 'id']);
+  context.execution.namespaceStack.register(child.id, {
+    layout: coordinateLayout,
+    irPath: [...coordinateIrPath, 'id'],
+  });
   frame.publicationSink.push(coordinateLayout);
   pushAllocation(frame.allocationSink, [localCenter], frame.allocationBoundary);
   layoutSink.push(localCoordinateLayout);

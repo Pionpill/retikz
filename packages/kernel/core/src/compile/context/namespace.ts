@@ -1,4 +1,4 @@
-import type { PropertyPath } from '@retikz/foundation';
+import type { PropertyPath, WithOptionalProperties } from '@retikz/foundation';
 import { createIdAllocator } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
@@ -69,17 +69,25 @@ export type NamespaceFrameChange = {
   irPaths: ReadonlyArray<PropertyPath>;
 };
 
+/** 单层命名空间的身份、有效绑定与声明记录 */
+type NamespaceFrame = {
+  /** 注册覆盖不改变的命名空间身份 */
+  identity: CompileNamespaceKey;
+  /** 各 id 当前生效的绑定 */
+  entryMap: Map<string, NamespaceEntry>;
+  /** 各 id 按声明顺序记录的完整 IR 位置，覆盖绑定时仍保留 */
+  pathMap: Map<string, ReadonlyArray<PropertyPath>>;
+};
+
 /**
  * 栈式 namespace frame
  * @description register 写入栈顶，lookup 按 inside-out 查找；同 frame 重名 last-wins 并触发诊断
  */
 export class NamespaceStack {
   /** 正在编译的 Scope；匿名 Scope 也分配身份，fork 保留祖先归属 */
-  private readonly scopeAncestors: Array<{ scopeId: string; id?: string }> = [];
+  private readonly scopeAncestorStack: Array<{ scopeId: string; id?: string }> = [];
   /** 栈式 frame 容器；栈底为根 frame，栈顶为当前 frame */
-  private readonly frames: Array<{ identity: CompileNamespaceKey; entries: Map<string, NamespaceEntry> }>;
-  /** 每个 frame 内各 id 的完整注册路径，覆盖绑定时仍保留声明顺序 */
-  private readonly registrationPaths: Array<Map<string, ReadonlyArray<PropertyPath>>>;
+  private readonly frameStack: Array<NamespaceFrame>;
   private readonly onDuplicate?: (info: DuplicateRegisterInfo) => void;
   private readonly onRegister?: (info: NamespaceRegisterInfo) => void;
   /** 引用环境的不可变快照身份，fork 未写入时保持一致 */
@@ -97,10 +105,13 @@ export class NamespaceStack {
     options: NamespaceStackOptions = {},
     private readonly scopeIds = createIdAllocator('compile/scope'),
   ) {
-    this.frames = [
-      { identity: options.rootIdentity ?? (Object.freeze({}) as CompileNamespaceKey), entries: new Map() },
+    this.frameStack = [
+      {
+        identity: options.rootIdentity ?? (Object.freeze({}) as CompileNamespaceKey),
+        entryMap: new Map(),
+        pathMap: new Map(),
+      },
     ];
-    this.registrationPaths = [new Map()];
     this.onDuplicate = options.onDuplicate;
     this.onRegister = options.onRegister;
   }
@@ -111,17 +122,16 @@ export class NamespaceStack {
    */
   fork(options: NamespaceStackOptions = {}): NamespaceStack {
     const fork = new NamespaceStack(options, this.scopeIds);
-    fork.frames.splice(
+    fork.frameStack.splice(
       0,
-      fork.frames.length,
-      ...this.frames.map(frame => ({ identity: frame.identity, entries: new Map(frame.entries) })),
+      fork.frameStack.length,
+      ...this.frameStack.map(frame => ({
+        identity: frame.identity,
+        entryMap: new Map(frame.entryMap),
+        pathMap: new Map(frame.pathMap),
+      })),
     );
-    fork.registrationPaths.splice(
-      0,
-      fork.registrationPaths.length,
-      ...this.registrationPaths.map(paths => new Map(paths)),
-    );
-    fork.scopeAncestors.push(...this.scopeAncestors);
+    fork.scopeAncestorStack.push(...this.scopeAncestorStack);
     fork.currentPhase = this.currentPhase;
     fork.snapshotIdentity = this.snapshotIdentity;
 
@@ -130,14 +140,14 @@ export class NamespaceStack {
 
   /** 返回当前顶层 frame 相对 base 的新增或覆盖项 */
   diffTopFrame(base: NamespaceStack): Array<NamespaceFrameChange> {
-    if (this.frames.length !== base.frames.length) {
+    if (this.frameStack.length !== base.frameStack.length) {
       throw createCompileInvariantError('NamespaceStack.diffTopFrame: frame depth mismatch after isolated layout');
     }
 
-    const frameIndex = this.frames.length - 1;
-    const current = this.frames[frameIndex].entries;
-    const baseline = base.frames[frameIndex].entries;
-    const paths = this.registrationPaths[frameIndex];
+    const frameIndex = this.frameStack.length - 1;
+    const current = this.frameStack[frameIndex].entryMap;
+    const baseline = base.frameStack[frameIndex].entryMap;
+    const paths = this.frameStack[frameIndex].pathMap;
     const changes: Array<NamespaceFrameChange> = [];
 
     for (const [id, entry] of current) {
@@ -146,7 +156,7 @@ export class NamespaceStack {
       changes.push({
         id,
         entry,
-        irPaths: paths.get(id)!.slice(base.registrationPaths[frameIndex].get(id)?.length ?? 0),
+        irPaths: paths.get(id)!.slice(base.frameStack[frameIndex].pathMap.get(id)?.length ?? 0),
       });
     }
 
@@ -156,75 +166,66 @@ export class NamespaceStack {
   /** 将 probe 的全部新增声明提交到实际目标 frame，按当地历史重新生成重名诊断 */
   commitForkChange(change: NamespaceFrameChange): void {
     for (const irPath of change.irPaths) {
-      this.register(change.id, change.entry.layout, irPath, change.entry.state, change.entry.scopeId);
+      this.register(change.id, { ...change.entry, irPath });
     }
   }
 
   /** 当前栈深（≥ 1；根 frame 永远存在） */
   get depth(): number {
-    return this.frames.length;
+    return this.frameStack.length;
   }
 
   /** 当前作用域身份；注册覆盖不改变身份，fork 共享已有 frame 的身份 */
   get identity(): CompileNamespaceKey {
-    return this.frames[this.frames.length - 1].identity;
+    return this.frameStack[this.frameStack.length - 1].identity;
   }
 
   /** 推入新 frame；通常对应 `<Scope localNamespace>` 入场 */
   pushFrame(): void {
     this.snapshotIdentity = {};
-    this.frames.push({ identity: Object.freeze({}) as CompileNamespaceKey, entries: new Map() });
-    this.registrationPaths.push(new Map());
+    this.frameStack.push({
+      identity: Object.freeze({}) as CompileNamespaceKey,
+      entryMap: new Map(),
+      pathMap: new Map(),
+    });
   }
 
   /** 弹出栈顶 frame；根 frame 不可弹出 */
   popFrame(): void {
-    if (this.frames.length <= 1) {
+    if (this.frameStack.length <= 1) {
       throw createCompileInvariantError(
         'NamespaceStack.popFrame: cannot pop the root frame (internal invariant violated)',
       );
     }
 
     this.snapshotIdentity = {};
-    this.frames.pop();
-    this.registrationPaths.pop();
+    this.frameStack.pop();
   }
 
-  /** 切换到 resolving 阶段；切换后 register / replaceLayout 一律抛 internal error */
-  enterResolvingPhase(): void {
+  /** 设置名称处理阶段并更新快照身份；resolving 阶段禁止 register / replaceLayout */
+  setPhase(phase: NamespacePhase): void {
     this.snapshotIdentity = {};
-    this.currentPhase = 'resolving';
-  }
-
-  /** 切回 registering 阶段；用于 pending path 解析完成后继续处理上层 scope 子树 */
-  exitResolvingPhase(): void {
-    this.snapshotIdentity = {};
-    this.currentPhase = 'registering';
+    this.currentPhase = phase;
   }
 
   /** 注册 id 到栈顶 frame；返回是否覆盖了同 frame 旧值 */
-  register(
-    id: string,
-    layout: CompiledNodeLayout,
-    irPath: PropertyPath,
-    state: NamespaceEntryState = 'resolved',
-    scopeId?: string,
-  ): boolean {
+  register(id: string, entry: WithOptionalProperties<NamespaceEntry, 'state'>): boolean {
+    const { layout, irPath, state = 'resolved', scopeId } = entry;
     if (this.currentPhase !== 'registering') {
       throw createCompileInvariantError(
         `NamespaceStack.register('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
 
-    const topFrame = this.frames[this.frames.length - 1].entries;
-    const paths = this.registrationPaths[this.registrationPaths.length - 1];
+    const topFrame = this.frameStack[this.frameStack.length - 1].entryMap;
+    const paths = this.frameStack[this.frameStack.length - 1].pathMap;
     const isOverwrite = topFrame.has(id);
     const duplicateIrPaths = [...(paths.get(id) ?? []), irPath];
     paths.set(id, duplicateIrPaths);
     if (isOverwrite) {
       this.onDuplicate?.({
         id,
-        frameDepth: this.frames.length - 1,
+        frameDepth: this.frameStack.length - 1,
         namespace: this.identity,
         duplicateIrPaths,
       });
@@ -234,7 +235,7 @@ export class NamespaceStack {
     topFrame.set(id, { layout, irPath, state, ...(scopeId === undefined ? {} : { scopeId }) });
     this.onRegister?.({
       id,
-      frameDepth: this.frames.length - 1,
+      frameDepth: this.frameStack.length - 1,
       irPath,
       isOverwrite,
     });
@@ -250,13 +251,13 @@ export class NamespaceStack {
       );
     }
 
-    if (frameDepth < 0 || frameDepth >= this.frames.length) {
+    if (frameDepth < 0 || frameDepth >= this.frameStack.length) {
       throw createCompileInvariantError(
-        `NamespaceStack.replaceLayout('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frames.length})`,
+        `NamespaceStack.replaceLayout('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frameStack.length})`,
       );
     }
 
-    const targetFrame = this.frames[frameDepth].entries;
+    const targetFrame = this.frameStack[frameDepth].entryMap;
     if (!targetFrame.has(id)) {
       throw createCompileInvariantError(
         `NamespaceStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`,
@@ -275,7 +276,7 @@ export class NamespaceStack {
   /** 用新的投影替换本次名称绑定，不原位修改布局或 fork 共享的 entry */
   replacePublishedLayout(previous: CompiledNodeLayout, next: CompiledNodeLayout): void {
     if (previous === next) return;
-    for (const { entries: frame } of this.frames) {
+    for (const { entryMap: frame } of this.frameStack) {
       for (const [id, entry] of frame) {
         if (entry.layout !== previous) continue;
         frame.set(id, { ...entry, layout: next });
@@ -287,20 +288,20 @@ export class NamespaceStack {
   /** 为新 Scope 分配内部身份并进入其后代求值区间，作者 id 仅用于诊断 */
   enterScope(id?: string): string {
     const scopeId = this.scopeIds.next();
-    this.scopeAncestors.push({ scopeId, id });
+    this.scopeAncestorStack.push({ scopeId, id });
     return scopeId;
   }
 
   /** 离开当前 Scope 的后代求值区间 */
   leaveScope(): void {
-    this.scopeAncestors.pop();
+    this.scopeAncestorStack.pop();
   }
 
   /** 解析作者几何引用，拒绝实际绑定到祖先 Scope 的目标 */
   lookupReference(id: string): NamespaceEntry | undefined {
     const entry = this.lookupEntry(id);
-    if (entry?.scopeId !== undefined && this.scopeAncestors.some(ancestor => ancestor.scopeId === entry.scopeId)) {
-      const source = this.scopeAncestors.findLast(ancestor => ancestor.id !== undefined)?.id;
+    if (entry?.scopeId !== undefined && this.scopeAncestorStack.some(ancestor => ancestor.scopeId === entry.scopeId)) {
+      const source = this.scopeAncestorStack.findLast(ancestor => ancestor.id !== undefined)?.id;
       const error = new RetikzCoreError({
         code: RetikzCoreErrorCode.Compile,
         message: `Geometry reference from a descendant of Scope '${source}' cannot target ancestor Scope '${id}'`,
@@ -314,8 +315,8 @@ export class NamespaceStack {
 
   /** 按 inside-out 规则查找 id 对应的 layout 与生命周期状态 */
   private lookupEntry(id: string): NamespaceEntry | undefined {
-    for (let i = this.frames.length - 1; i >= 0; i--) {
-      const entry = this.frames[i].entries.get(id);
+    for (let i = this.frameStack.length - 1; i >= 0; i--) {
+      const entry = this.frameStack[i].entryMap.get(id);
       if (entry !== undefined) return entry;
     }
 

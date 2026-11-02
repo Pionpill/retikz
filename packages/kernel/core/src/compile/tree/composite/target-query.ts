@@ -90,7 +90,7 @@ export const createCompositeTargetQuery = (
             irPath: referenceContext.irPath,
           }),
       });
-      targetNamespace.enterResolvingPhase();
+      targetNamespace.setPhase('resolving');
 
       try {
         const bindingOf = (target: IRTarget) => {
@@ -152,7 +152,7 @@ export const createCompositeTargetQuery = (
           ),
         };
       } finally {
-        targetNamespace.exitResolvingPhase();
+        targetNamespace.setPhase('registering');
       }
     },
     /** 释放本次作者回调的查询环境 */

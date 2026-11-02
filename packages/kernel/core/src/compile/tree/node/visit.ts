@@ -42,9 +42,12 @@ export const visitNode = (
   const { layout } = compilation;
   const globalLayout = projectLayoutWithTransform(layout, context.execution.scopeTransformComposer.resolve(scopeChain));
   if (child.id) {
-    context.execution.namespaceStack.register(child.id, globalLayout, [...nodeIrPath, 'id']);
+    context.execution.namespaceStack.register(child.id, { layout: globalLayout, irPath: [...nodeIrPath, 'id'] });
     child.aliasIds?.forEach((id, aliasIndex) =>
-      context.execution.namespaceStack.register(id, globalLayout, [...nodeIrPath, 'aliasIds', aliasIndex]),
+      context.execution.namespaceStack.register(id, {
+        layout: globalLayout,
+        irPath: [...nodeIrPath, 'aliasIds', aliasIndex],
+      }),
     );
   }
 

@@ -31,7 +31,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
         isShape: true,
       },
     };
-    stack.register(id, layout, ['children', index, 'id']);
+    stack.register(id, { layout, irPath: ['children', index, 'id'] });
   }
 
   return stack;
