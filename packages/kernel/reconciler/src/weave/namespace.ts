@@ -22,26 +22,29 @@ export const createWeaveNamespaceRegistry = (
   onWarning?: (warning: CompileWarning) => void,
 ): WeaveNamespaceRegistry => {
   const bindings = new Map<string, WeaveBinding>();
-  const paths = new Map<string, PropertyPath>();
+  const paths = new Map<string, ReadonlyArray<PropertyPath>>();
+  const identity = Object.freeze({}) as CompileNamespaceKey;
   let depth = 0;
   for (let outer = parent; outer !== undefined; outer = outer.parent) depth++;
   return {
-    identity: Object.freeze({}) as CompileNamespaceKey,
+    identity,
     namespace: { bindings, ...(parent === undefined ? {} : { parent }) },
     register: (name, binding, path, occurrence) => {
+      const duplicateIrPaths = [...(paths.get(name) ?? []), path];
+      paths.set(name, duplicateIrPaths);
       if (bindings.has(name)) {
         onWarning?.(
           createDuplicateCompileWarning(
             {
               id: name,
               frameDepth: depth,
-              firstIrPath: paths.get(name),
-              secondIrPath: path,
+              namespace: identity,
+              duplicateIrPaths,
             },
             occurrence,
           ),
         );
-      } else paths.set(name, path);
+      }
       bindings.set(name, binding);
     },
     replace: (binding, value) => {

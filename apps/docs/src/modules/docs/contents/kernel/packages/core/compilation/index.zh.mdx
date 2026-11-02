@@ -97,6 +97,8 @@ Core 和 Reconciler 使用 Foundation 的 `createIdAllocator(prefix)` 分配树�
 
 全量编译、单元素编译和探测计算都通过 `createWorkspaceCompileContext` 创建独立工作区，持有 `nodeBoundaryContext`、`paintRegistry`、`clipRegistry` 和 `diagnostics`。树编译使用相同的工作区契约，将名称栈、可选来源追踪、变换缓存和诊断来源绑定放在 `execution` 中。`createTreeCompileEnvironment` 创建树状态并为诊断收集绑定当前来源，不修改传入的工作区。试编译创建独立工作区和树状态，复用外层会话。诊断通过 `diagnostics.collect` 追加，通过只读的 `diagnostics.warnings` 查看；对外的 `CompileOptions.onWarn` 仍在成功后接收诊断。
 
+同一命名空间内重复声明的 ID 在编译成功后汇总为一条 `DUPLICATE_NODE_ID` 诊断。消息按声明顺序列出全部位置，`path` 指向最后一次声明；名称绑定仍由最后一次声明覆盖。独立命名空间中的同名 ID 分别处理。试编译的声明仅在选中重放后计入实际目标命名空间，未选中的试编译不发布诊断。
+
 上下文只持有配置与计算状态：名称栈、连接面缓存、变换缓存及组件会话由 `compile/context` 管理，共享布局结果契约定义在 `compile/layout.ts`。节点布局投影、位置引用适配和单元素执行仍由树编译负责。依赖从树编译指向上下文，上下文不导入树编译实现。
 
 环境按职责分为四组：

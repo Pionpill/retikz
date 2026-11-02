@@ -66,7 +66,6 @@ export const evaluateCompositeLayout = (
 
   const workspace = createWorkspaceCompileContext(probeContext.context.shared);
   const warnings = workspace.diagnostics.warnings;
-  const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarning }> = [];
 
   const captureWarning = (warning: CompileWarning): void => {
     if (
@@ -90,9 +89,9 @@ export const evaluateCompositeLayout = (
   const namespaceBaseline = probeContext.context.execution.namespaceStack.fork();
   const namespaceStack = namespaceBaseline.fork({
     onDuplicate: info => {
+      if (info.namespace === namespaceBaseline.identity) return;
       const warning = withCompileWarningOccurrence(createDuplicateWarning(info), probeWarningOccurrence);
       captureWarning(warning);
-      if (info.overwroteForkBaseline) namespaceBaselineWarnings.push({ id: info.id, warning });
     },
     onRegister: info =>
       registrationOccurrences.set(registrationKey(info.frameDepth, info.id), freezeOccurrence(probeWarningOccurrence)),
@@ -149,7 +148,6 @@ export const evaluateCompositeLayout = (
     registrationOccurrences,
     registrationKey,
     probeOccurrence,
-    namespaceBaselineWarnings,
     warnings,
     probeProvenanceTracker,
   };
@@ -181,7 +179,6 @@ export const probeCompositeLayout = (
     namespaceBaseline,
     registrationOccurrences,
     registrationKey,
-    namespaceBaselineWarnings,
     warnings,
     probeProvenanceTracker,
   } = evaluateCompositeLayout(
@@ -226,7 +223,6 @@ export const probeCompositeLayout = (
       change => registrationOccurrences.get(registrationKey(probeFrameDepth, change.id)) ?? probeOccurrence,
     ),
     ...(probeProvenanceTracker === undefined ? {} : { provenance: probeProvenanceTracker.capture(laid.primitives) }),
-    namespaceBaselineWarnings,
     resources,
     warnings: [...warnings],
     artifacts: laid.artifacts,

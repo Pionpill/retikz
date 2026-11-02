@@ -55,13 +55,6 @@ export type CompositeReplayTransaction = {
   namespaceChangeOccurrences: Array<CompileOccurrenceLocator>;
   /** 与 probe 图元树配对的完整来源，仅在选中重放时导入 */
   provenance?: CompileProvenanceSnapshot;
-  /** probe 中由 fork baseline collision 产生的 duplicate warning */
-  namespaceBaselineWarnings: Array<{
-    /** 与探测起始命名空间发生冲突的标识 */
-    id: string;
-    /** 重放时需要重新判断是否发布的重名诊断 */
-    warning: CompileWarning;
-  }>;
   /** probe 已解析资源 */
   resources: Array<SceneResource>;
   /** 仅在 replay 时发布的 warning */

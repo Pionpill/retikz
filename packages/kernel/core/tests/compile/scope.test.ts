@@ -791,7 +791,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     expect(dups).toHaveLength(1);
   });
 
-  it('duplicate_same_frame_three_times_warn_each：三个同 id → 2 条 warn（N - 1）', () => {
+  it('同 frame 三个同 id 汇总为一条诊断，包含全部位置并定位最后声明', () => {
     const ir = scene([
       { type: 'node', id: 'A', position: [0, 0], text: '1' },
       { type: 'node', id: 'A', position: [10, 0], text: '2' },
@@ -801,9 +801,26 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     compileToScene(ir, { onWarn: w => warnings.push(w) });
     const dups = warnings.filter(w => w.code === BuiltinCompileWarningCode.DuplicateNodeId);
 
-    expect(dups).toHaveLength(2);
-    expect(dups[0].path).toEqual(['children', 1, 'id']);
-    expect(dups[1].path).toEqual(['children', 2, 'id']);
+    expect(dups).toHaveLength(1);
+    expect(dups[0].path).toEqual(['children', 2, 'id']);
+    for (const index of [0, 1, 2]) expect(dups[0].message).toContain(`children[${index}].id`);
+  });
+
+  it('同深度兄弟命名空间的同名冲突分别汇总', () => {
+    const ir = scene(
+      [0, 1].map(() => ({
+        type: 'scope',
+        localNamespace: true,
+        children: [0, 1, 2].map(x => ({ type: 'node', id: 'A', position: [x, 0] })),
+      })),
+    );
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: warning => warnings.push(warning) });
+    const duplicates = warnings.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId);
+    expect(duplicates.map(warning => warning.path)).toEqual([
+      ['children', 0, 'children', 2, 'id'],
+      ['children', 1, 'children', 2, 'id'],
+    ]);
   });
 
   it('duplicate 不抛错；compile 仍正常完成', () => {

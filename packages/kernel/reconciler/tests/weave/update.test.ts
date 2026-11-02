@@ -1,5 +1,5 @@
 import type { IRPath, IRScene, MarkEmitContext, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene, compileSceneSnapshot, BuiltinCompileWarningCode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
@@ -23,6 +23,36 @@ const scene: IRScene = {
 };
 
 describe('Weave 批次更新', () => {
+  it('重名诊断在删除后重新汇总，与全量一致且不修改已发布快照', () => {
+    const input: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [0, 10, 20].map(x => ({ type: 'node', id: 'same', position: [x, 0] })),
+    };
+    const session = new WeaveReconciler(input);
+    const mounted = session.mount();
+    const before = mounted.compilation.diagnostics;
+    expect(before).toEqual(compileSceneSnapshot(input).diagnostics);
+    expect(before.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId)).toHaveLength(1);
+    expect(before[0].path).toEqual(['children', 2, 'id']);
+    const remove = () =>
+      session.update({
+        operations: [{ kind: 'remove', target: { kind: 'child', scopeId: mounted.root.scopeId, index: 0 } }],
+      });
+    const first = remove();
+    expect(first.compilation.diagnostics).toEqual(
+      compileSceneSnapshot({ ...input, children: input.children.slice(1) }).diagnostics,
+    );
+    expect(first.compilation.diagnostics[0].path).toEqual(['children', 1, 'id']);
+    first.commit();
+    first.finish();
+    const second = remove();
+    expect(second.compilation.diagnostics).toEqual([]);
+    expect(before[0].path).toEqual(['children', 2, 'id']);
+    expect(before[0].message.match(/\.id/g)).toHaveLength(3);
+    second.rollback();
+  });
+
   it('匿名 Scope 身份跨更新保留，回滚不复用编号，不同会话使用不同根身份', () => {
     const input: IRScene = { type: 'scene', version: 1, children: [{ type: 'scope', children: [] }] };
     const session = new WeaveReconciler(input);

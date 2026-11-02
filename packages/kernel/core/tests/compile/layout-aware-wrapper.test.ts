@@ -532,6 +532,7 @@ describe('布局感知复合运行时包装树', () => {
                 },
               },
               node('same', [40, 0]),
+              { type: 'path', children: [] },
             ],
           },
         ],
@@ -879,6 +880,32 @@ describe('布局感知复合运行时包装树', () => {
 
     expect(groups(result.scene.primitives)).toContainEqual(expect.objectContaining({ id: 'local' }));
     expect(warnings).not.toContainEqual(expect.objectContaining({ code: BuiltinCompileWarningCode.DuplicateNodeId }));
+  });
+
+  it('选中 replay 的全部重名声明与前后声明合并，未选 probe 不计入', () => {
+    const warnings: Array<{ code: string; message: string; path: unknown }> = [];
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'duplicateGroup',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('duplicateGroup') }),
+      compile: (_value, context) => {
+        resolvedResultOf(context, { type: 'scope', children: [node('discarded'), node('discarded')] });
+        const laid = resolvedResultOf(context, {
+          type: 'scope',
+          children: [node('shared', [10, 0]), node('shared', [20, 0]), node('shared', [30, 0])],
+        });
+        return { children: [context.replay(laid)] };
+      },
+    });
+    compileToScene(scene([node('shared'), { namespace: 'test', type: 'duplicateGroup' }, node('shared', [40, 0])]), {
+      composites: [definition],
+      onWarn: warning => warnings.push(warning),
+    });
+    const duplicates = warnings.filter(warning => warning.code === BuiltinCompileWarningCode.DuplicateNodeId);
+    expect(duplicates).toHaveLength(1);
+    expect(duplicates[0].path).toEqual(['children', 2, 'id']);
+    expect(duplicates[0].message).not.toContain('discarded');
+    expect(duplicates[0].message.match(/\.id/g)).toHaveLength(5);
   });
 
   it('在抑制过时的父碰撞时保留探测本地重复警告', () => {

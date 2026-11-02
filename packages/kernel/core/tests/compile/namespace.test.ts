@@ -25,9 +25,9 @@ describe('NamespaceStack 基本 register / lookup', () => {
   it('作用域身份不随名称写入变化，fork 共享已有作用域并隔离新建作用域', () => {
     const stack = new NamespaceStack();
     const root = stack.identity;
-    stack.register('same', makeLayout('same'));
+    stack.register('same', makeLayout('same'), ['children', 0, 'id']);
     const fork = stack.fork();
-    fork.register('same', makeLayout('same', 20));
+    fork.register('same', makeLayout('same', 20), ['children', 0, 'id']);
     expect(stack.identity).toBe(root);
     expect(fork.identity).toBe(root);
     expect(stack.lookupReference('same')?.layout.geometry.rect.x).toBe(0);
@@ -46,7 +46,7 @@ describe('NamespaceStack 基本 register / lookup', () => {
   it('名称堆栈基本寄存器查找', () => {
     const stack = new NamespaceStack();
     const layout = makeLayout('A', 10, 20);
-    stack.register('A', layout);
+    stack.register('A', layout, ['children', 0, 'id']);
 
     expect(stack.lookupReference('A')?.layout).toBe(layout);
   });
@@ -72,7 +72,7 @@ describe('NamespaceStack push / pop frame 隔离', () => {
     expect(stack.depth).toBe(2);
 
     const inner = makeLayout('A', 100);
-    stack.register('A', inner);
+    stack.register('A', inner, ['children', 0, 'id']);
 
     expect(stack.lookupReference('A')?.layout).toBe(inner);
 
@@ -85,7 +85,7 @@ describe('NamespaceStack push / pop frame 隔离', () => {
   it('外层 register 后 push frame，外层 id 在内层仍可见（inside-out 落到外层 frame）', () => {
     const stack = new NamespaceStack();
     const outer = makeLayout('outer', 1);
-    stack.register('outer', outer);
+    stack.register('outer', outer, ['children', 0, 'id']);
     stack.pushFrame();
 
     expect(stack.lookupReference('outer')?.layout).toBe(outer);
@@ -96,10 +96,10 @@ describe('NamespaceStack 由内而外的阴影', () => {
   it('名称堆栈查找由内而外的阴影', () => {
     const stack = new NamespaceStack();
     const outer = makeLayout('A', 0);
-    stack.register('A', outer);
+    stack.register('A', outer, ['children', 0, 'id']);
     stack.pushFrame();
     const inner = makeLayout('A', 50);
-    stack.register('A', inner);
+    stack.register('A', inner, ['children', 0, 'id']);
 
     expect(stack.lookupReference('A')?.layout).toBe(inner);
 
@@ -113,11 +113,11 @@ describe('NamespaceStack 由内而外的阴影', () => {
     const a0 = makeLayout('A', 0);
     const a1 = makeLayout('A', 1);
     const a2 = makeLayout('A', 2);
-    stack.register('A', a0);
+    stack.register('A', a0, ['children', 0, 'id']);
     stack.pushFrame();
-    stack.register('A', a1);
+    stack.register('A', a1, ['children', 0, 'id']);
     stack.pushFrame();
-    stack.register('A', a2);
+    stack.register('A', a2, ['children', 0, 'id']);
 
     expect(stack.lookupReference('A')?.layout).toBe(a2);
 
@@ -155,22 +155,22 @@ describe('NamespaceStack register 返回 overwritten flag', () => {
     const first = makeLayout('A', 0);
     const second = makeLayout('A', 10);
 
-    expect(stack.register('A', first)).toBe(false);
-    expect(stack.register('A', second)).toBe(true);
+    expect(stack.register('A', first, ['children', 0, 'id'])).toBe(false);
+    expect(stack.register('A', second, ['children', 0, 'id'])).toBe(true);
     expect(stack.lookupReference('A')?.layout).toBe(second);
   });
 
   it('跨 frame 同 id 不算 overwritten（push frame 内首次 register 返回 false）', () => {
     const stack = new NamespaceStack();
-    stack.register('A', makeLayout('A', 0));
+    stack.register('A', makeLayout('A', 0), ['children', 0, 'id']);
     stack.pushFrame();
 
-    expect(stack.register('A', makeLayout('A', 10))).toBe(false);
+    expect(stack.register('A', makeLayout('A', 10), ['children', 0, 'id'])).toBe(false);
   });
 });
 
 describe('NamespaceStack onDuplicate 回调', () => {
-  it('同 frame 第二次 register 触发回调，含 id + frameDepth + 双 irPath', () => {
+  it('同 frame 第二次 register 触发回调，包含 id、frameDepth 和完整声明路径', () => {
     const events: Array<DuplicateRegisterInfo> = [];
     const stack = new NamespaceStack({
       onDuplicate: info => events.push(info),
@@ -181,19 +181,21 @@ describe('NamespaceStack onDuplicate 回调', () => {
     expect(events).toHaveLength(1);
     expect(events[0].id).toBe('A');
     expect(events[0].frameDepth).toBe(0);
-    expect(events[0].firstIrPath).toEqual(['children', 0, 'id']);
-    expect(events[0].secondIrPath).toEqual(['children', 1, 'id']);
+    expect(events[0].duplicateIrPaths).toEqual([
+      ['children', 0, 'id'],
+      ['children', 1, 'id'],
+    ]);
   });
 
   it('首次 register 不触发回调', () => {
     const cb = vi.fn();
     const stack = new NamespaceStack({ onDuplicate: cb });
-    stack.register('A', makeLayout('A'));
+    stack.register('A', makeLayout('A'), ['children', 0, 'id']);
 
     expect(cb).not.toHaveBeenCalled();
   });
 
-  it('同 frame 三次 register 触发两次回调（不合并），各自携带前一次 irPath', () => {
+  it('同 frame 多次注册提供完整独立路径快照', () => {
     const events: Array<DuplicateRegisterInfo> = [];
     const stack = new NamespaceStack({ onDuplicate: info => events.push(info) });
     stack.register('A', makeLayout('A', 0), ['p1']);
@@ -201,12 +203,23 @@ describe('NamespaceStack onDuplicate 回调', () => {
     stack.register('A', makeLayout('A', 2), ['p3']);
 
     expect(events).toHaveLength(2);
-    expect(events[0].secondIrPath).toEqual(['p2']);
-    expect(events[1].secondIrPath).toEqual(['p3']);
+    expect(events[0].duplicateIrPaths).toEqual([['p1'], ['p2']]);
+    expect(events[1].duplicateIrPaths).toEqual([['p1'], ['p2'], ['p3']]);
+    expect(events[0].namespace).toBe(events[1].namespace);
+  });
 
-    // 第二次 duplicate 时 firstIrPath 仍指向最初 register 的 p1（locator 不被中间覆盖污染）
-    expect(events[0].firstIrPath).toEqual(['p1']);
-    expect(events[1].firstIrPath).toEqual(['p1']);
+  it('fork 隔离声明历史，提交时结合目标命名空间完整历史', () => {
+    const events: Array<DuplicateRegisterInfo> = [];
+    const stack = new NamespaceStack({ onDuplicate: info => events.push(info) });
+    stack.register('A', makeLayout('A'), ['original']);
+    const baseline = stack.fork();
+    const fork = baseline.fork();
+    fork.register('A', makeLayout('A', 1), ['probe1']);
+    fork.register('A', makeLayout('A', 2), ['probe2']);
+    stack.register('A', makeLayout('A', 3), ['between']);
+    for (const change of fork.diffTopFrame(baseline)) stack.commitForkChange(change);
+    expect(events.at(-1)?.duplicateIrPaths).toEqual([['original'], ['between'], ['probe1'], ['probe2']]);
+    expect(stack.lookupReference('A')?.layout).toBe(fork.lookupReference('A')?.layout);
   });
 
   it('跨 frame 同 id 不触发 duplicate 回调', () => {
@@ -233,11 +246,13 @@ describe('NamespaceStack onDuplicate 回调', () => {
 describe('NamespaceStack resolving phase 禁止 register', () => {
   it('解析期间的命名空间堆栈寄存器', () => {
     const stack = new NamespaceStack();
-    stack.register('A', makeLayout('A'));
+    stack.register('A', makeLayout('A'), ['children', 0, 'id']);
     stack.enterResolvingPhase();
 
     expect(stack.lookupReference('A')?.layout).toBeDefined();
-    expect(() => stack.register('B', makeLayout('B'))).toThrow(/only allowed during registering/);
+    expect(() => stack.register('B', makeLayout('B'), ['children', 0, 'id'])).toThrow(
+      /only allowed during registering/,
+    );
   });
 });
 
@@ -245,7 +260,7 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
   it('fork 保留祖先身份，匿名和同名 Scope 分配不同身份，投影及回放不丢失身份', () => {
     const stack = new NamespaceStack();
     const ancestorId = stack.enterScope('scope');
-    stack.register('scope', makeLayout('scope'), undefined, 'scope-placeholder', ancestorId);
+    stack.register('scope', makeLayout('scope'), ['children', 0, 'id'], 'scope-placeholder', ancestorId);
     const fork = stack.fork();
     expect(() => fork.lookupReference('scope')).toThrow(/ancestor Scope/);
 
@@ -254,7 +269,7 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
     fork.pushFrame();
     const childId = fork.enterScope('scope');
     const placeholder = makeLayout('scope');
-    fork.register('scope', placeholder, undefined, 'scope-placeholder', childId);
+    fork.register('scope', placeholder, ['children', 0, 'id'], 'scope-placeholder', childId);
     fork.replacePublishedLayout(placeholder, makeLayout('scope', 10));
     expect(() => fork.lookupReference('scope')).toThrow(/ancestor Scope/);
     fork.replaceLayout('scope', makeLayout('scope', 20), 1, childId);
@@ -276,7 +291,7 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
     const resolved = makeLayout('scope');
 
     const scopeId = stack.enterScope('scope');
-    stack.register('scope', placeholder, undefined, 'scope-placeholder', scopeId);
+    stack.register('scope', placeholder, ['children', 0, 'id'], 'scope-placeholder', scopeId);
     stack.leaveScope();
 
     expect(stack.lookupReference('scope')).toMatchObject({ layout: placeholder, state: 'scope-placeholder' });
@@ -292,12 +307,16 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
     const resolvedScope = makeLayout('scope', 30, 40);
 
     const scopeId = stack.enterScope('scope');
-    stack.register('scope', placeholder, undefined, 'scope-placeholder', scopeId);
+    stack.register('scope', placeholder, ['children', 0, 'id'], 'scope-placeholder', scopeId);
     stack.leaveScope();
-    stack.register('scope', childWithSameId);
+    stack.register('scope', childWithSameId, ['children', 0, 'id']);
 
     expect(stack.replaceLayout('scope', resolvedScope, 0, scopeId)).toBe(false);
-    expect(stack.lookupReference('scope')).toEqual({ layout: childWithSameId, state: 'resolved' });
+    expect(stack.lookupReference('scope')).toEqual({
+      layout: childWithSameId,
+      irPath: ['children', 0, 'id'],
+      state: 'resolved',
+    });
   });
 });
 
@@ -310,12 +329,12 @@ it('保留未更改的分叉的测量身份，并使每个名称空间突变无�
     identity = stack.measurementIdentity;
     expect(stack.fork().measurementIdentity).toBe(identity);
   };
-  stack.register('target', makeLayout('target', 10));
+  stack.register('target', makeLayout('target', 10), ['children', 0, 'id']);
   changed();
   stack.replaceLayout('target', makeLayout('target', 20), 0);
   changed();
   const fork = stack.fork();
-  fork.register('other', makeLayout('other', 30));
+  fork.register('other', makeLayout('other', 30), ['children', 0, 'id']);
   expect(stack.lookupReference('other')?.layout).toBeUndefined();
   for (const change of fork.diffTopFrame(stack)) stack.commitForkChange(change);
   changed();

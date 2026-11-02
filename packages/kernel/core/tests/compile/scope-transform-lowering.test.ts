@@ -15,7 +15,7 @@ import type { IRTransform } from '../../src/schemas';
 const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack => {
   const stack = new NamespaceStack();
 
-  for (const [id, [x, y]] of entries) {
+  for (const [index, [id, [x, y]]] of entries.entries()) {
     const layout: CompiledNodeLayout = {
       shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
       geometry: {
@@ -31,7 +31,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
         isShape: true,
       },
     };
-    stack.register(id, layout);
+    stack.register(id, layout, ['children', index, 'id']);
   }
 
   return stack;

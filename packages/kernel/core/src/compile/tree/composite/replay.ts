@@ -16,7 +16,6 @@ import {
   freezeCompileArtifact,
   replaceCompileWarningOccurrence,
 } from '../../shared';
-import type { CompileWarning } from '../../shared';
 import { effectiveAllocations } from '../allocation';
 import type { TreeCompileFrame } from '../frame';
 import { projectLayoutWithTransform, projectPublishedCompileLayout } from '../node';
@@ -98,7 +97,6 @@ export const commitCompositeReplay = (
     );
   }
 
-  const suppressedNamespaceWarnings = new Set<CompileWarning>();
   const namespaceParentChain =
     authoredPreliminary === undefined
       ? frame.scopeChain
@@ -114,14 +112,10 @@ export const commitCompositeReplay = (
     const projectedChange = { ...change, entry: { ...change.entry, layout: projectedLayout } };
 
     const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
-    const committedAgainstBaseline = execution.context.execution.withWarningOccurrence(
+    execution.context.execution.withWarningOccurrence(
       replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, changeOccurrence),
       () => execution.context.execution.namespaceStack.commitForkChange(projectedChange),
     );
-    if (change.overwroteBaseline && !committedAgainstBaseline) {
-      const baselineWarning = transaction.namespaceBaselineWarnings.find(candidate => candidate.id === change.id);
-      if (baselineWarning !== undefined) suppressedNamespaceWarnings.add(baselineWarning.warning);
-    }
 
     if (alreadyPublished === undefined) contribution.publications.push(projectedLayout);
     publishedLayouts.set(previousLayout, projectedLayout);
@@ -172,14 +166,12 @@ export const commitCompositeReplay = (
   }
 
   for (const warning of transaction.warnings) {
-    if (!suppressedNamespaceWarnings.has(warning)) {
-      execution.context.workspace.diagnostics.collect(
-        replaceCompileWarningOccurrence(
-          warning,
-          replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, compileWarningOccurrenceOf(warning)),
-        ),
-      );
-    }
+    execution.context.workspace.diagnostics.collect(
+      replaceCompileWarningOccurrence(
+        warning,
+        replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, compileWarningOccurrenceOf(warning)),
+      ),
+    );
   }
 
   for (const artifact of transaction.artifacts) {
