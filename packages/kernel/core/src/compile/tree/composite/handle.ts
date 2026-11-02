@@ -151,4 +151,4 @@ export const isCompositeOutputHandle = (
   context: TreeCompileContext,
   output: unknown,
 ): output is CompositeCompileChild | CompositeBoundChild =>
-  output !== null && typeof output === 'object' && context.session.outputChildren.has(output);
+  output !== null && typeof output === 'object' && context.composite.outputChildren.has(output);

@@ -46,7 +46,7 @@ Core 的 `ElementCompileResult` 区分 compiled 与 pending。pending 只记录�
 
 环境由 `createSharedCompileContext` 准备，包含 shapes、boundaries、clips、arrows、patterns、pathGenerators、pathKinds、composites 和 themeStyles 等 Core 注册表。Weave 不逐节点复制注册表，不维护内置能力白名单。Definition 或服务行为改变必须显式替换环境；无法证明缓存仍有效时重新计算。
 
-input.context 表示元素消费的有效继承上下文，Scope 为其 children 解析出的上下文由 Core 产生。根上下文通过 `resolveScopeContext` 从 Scene 默认配置与主题建立。布局 proposal、祖先 Scope 约束、调用位置、坐标变换和 observation 不是该样式上下文的一部分，由调用工作区按 `ElementCompileOptions` 显式传入。
+input.context 表示元素消费的有效继承上下文，Scope 为其 children 解析出的上下文由 Core 产生。根上下文通过 `resolveScopeStyle` 从 Scene 默认配置与主题建立。布局 proposal、祖先 Scope 约束、调用位置、坐标变换和 observation 不是该样式上下文的一部分，由调用工作区按 `ElementCompileOptions` 显式传入。
 
 ## 声明结构与定位
 
@@ -70,7 +70,7 @@ Root 的容器索引覆盖自身与全部 Scope；Root / 局部命名空间 Scop
 
 Scope 上下文下传与包络上收是独立的计算职责：
 
-- `resolveScopeContext` 解析有效继承上下文；`prepareScopeCompilation` 准备 Scope 放置目标与可提前确定的变换，可能等待外部引用
+- `resolveScopeStyle` 解析有效继承上下文；`prepareScopeCompilation` 准备 Scope 放置目标与可提前确定的变换，可能等待外部引用
 - 子元素在自身实际依赖就绪后调用对应 Core 编译入口，不把父 Scope 包络完成作为所有子元素的前置条件
 - `compileScope` 消费 Core 语义要求的局部子布局，生成 Scope 包络、最终变换与自身装饰；不递归编译 children
 - 引用布局由 Core 投影到正确坐标系；最终子输出通过 `assembleScopeOutput` 包装，不能重复应用变换

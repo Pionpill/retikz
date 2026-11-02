@@ -3,7 +3,7 @@ import type { PropertyPath } from '@retikz/foundation';
 import type { CompileOccurrenceLocator, GroupPrimitive, Transform, SceneClipPath } from '../../../contract';
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { IRChild, IRPosition, IRScope } from '../../../schemas';
-import type { ElementCompileContext } from '../../context';
+import type { CompileStyle } from '../../context';
 import type { CompiledNodeLayout } from '../../layout';
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileOutput, CompileWarning } from '../../shared';
@@ -13,7 +13,7 @@ import type { InternalScenePrimitive } from '../output';
 /** Scope 子元素计算前的准备状态，不代表包络已就绪 */
 export type ScopeCompilationPreparation = Readonly<{
   /** 子元素有效继承上下文 */
-  scope: ElementCompileContext;
+  scope: CompileStyle;
   /** 已在父坐标系解析的放置目标 */
   positionTarget?: IRPosition;
   /** 不依赖包络时可提前使用的自身变换 */

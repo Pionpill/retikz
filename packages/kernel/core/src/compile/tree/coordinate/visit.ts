@@ -19,7 +19,7 @@ export const visitCoordinate = (
   const localCenter = resolveCoordinatePosition(child, createTreePositionContext(context, scopeChain));
 
   const globalCenter =
-    scopeChain.length === 0 ? localCenter : context.tree.scopeTransformComposer.apply(localCenter, scopeChain);
+    scopeChain.length === 0 ? localCenter : context.execution.scopeTransformComposer.apply(localCenter, scopeChain);
   const localCoordinateLayout = createSyntheticRectangleLayout(
     { id: child.id, rect: { x: localCenter[0], y: localCenter[1], width: 0, height: 0, rotate: 0 } },
     {
@@ -34,7 +34,7 @@ export const visitCoordinate = (
       boundaries: context.shared.registries.boundaryRegistry,
     },
   );
-  context.tree.namespaceStack.register(child.id, coordinateLayout, [...coordinateIrPath, 'id']);
+  context.execution.namespaceStack.register(child.id, coordinateLayout, [...coordinateIrPath, 'id']);
   frame.publicationSink.push(coordinateLayout);
   pushAllocation(frame.allocationSink, [localCenter], frame.allocationBoundary);
   layoutSink.push(localCoordinateLayout);

@@ -32,13 +32,17 @@ export const createCompositeCallbackContext = (
       const existing = authoredChildren.get(pathKey);
       if (existing !== undefined) return existing;
 
-      const selected = createCompositeBoundChild(context.session, owner, selectCompositeInputScope(sourceInputs, path));
+      const selected = createCompositeBoundChild(
+        context.composite,
+        owner,
+        selectCompositeInputScope(sourceInputs, path),
+      );
       authoredChildren.set(pathKey, selected);
 
       return selected;
     },
     bindChild: (nextChild, inputs) =>
-      createCompositeBoundChild(context.session, owner, captureCompositeInputScope(nextChild, inputs)),
+      createCompositeBoundChild(context.composite, owner, captureCompositeInputScope(nextChild, inputs)),
   });
 
   /** 当前作者回调的探测序号，所有派生主题共用 */
@@ -67,9 +71,9 @@ export const createCompositeCallbackContext = (
         message,
         path: subPath === undefined || subPath.length === 0 ? compositeIrPath : [...compositeIrPath, ...subPath],
       }),
-    replay: (layoutResult, wrapper) => createCompositeReplayChild(context.session, owner, layoutResult, wrapper),
-    raise: failure => raiseLayoutChildFailure(context.session.failures, owner, failure),
-    createScope: (props, children) => createCompositeScopeChild(context.session, owner, props, children),
+    replay: (layoutResult, wrapper) => createCompositeReplayChild(context.composite, owner, layoutResult, wrapper),
+    raise: failure => raiseLayoutChildFailure(context.composite.failures, owner, failure),
+    createScope: (props, children) => createCompositeScopeChild(context.composite, owner, props, children),
   });
   return { createContext: createLayoutContext, dispose: targetQuery.clear };
 };

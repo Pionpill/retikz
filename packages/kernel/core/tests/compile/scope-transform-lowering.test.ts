@@ -170,8 +170,8 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
     const out = lower([{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 }], idx, {
       resolveBetweenGlobal: between => {
         const [a, b] = between.between;
-        const aLayout = 'id' in a ? idx.lookupEntry(a.id)?.layout : null;
-        const bLayout = 'id' in b ? idx.lookupEntry(b.id)?.layout : null;
+        const aLayout = 'id' in a ? idx.lookupReference(a.id)?.layout : null;
+        const bLayout = 'id' in b ? idx.lookupReference(b.id)?.layout : null;
         if (!aLayout || !bLayout) return null;
 
         return [
@@ -317,8 +317,8 @@ describe('lowerScopeTransforms 链复合', () => {
     const out = lower(transforms, idx, {
       resolveBetweenGlobal: between => {
         const [a, b] = between.between;
-        const aLayout = 'id' in a ? idx.lookupEntry(a.id)?.layout : null;
-        const bLayout = 'id' in b ? idx.lookupEntry(b.id)?.layout : null;
+        const aLayout = 'id' in a ? idx.lookupReference(a.id)?.layout : null;
+        const bLayout = 'id' in b ? idx.lookupReference(b.id)?.layout : null;
         if (!aLayout || !bLayout) return null;
 
         return [

@@ -1,7 +1,7 @@
 import type { SharedCompileContext, ElementCompileOptions, ElementCompileResult } from '../../context';
 import type { CompiledNodeLayout } from '../../layout';
 import { runElementCompilation } from '../element';
-import { resolveScopeContext } from './context';
+import { resolveScopeStyle } from './context';
 import { createScopeGroup } from './emit';
 import { createIntrinsicScopeLayout } from './layout';
 import {
@@ -26,7 +26,7 @@ export const prepareScopeCompilation = (
       irPath: context.irPath,
     };
     return Object.freeze({
-      scope: resolveScopeContext(input, context.shared, context.context, context.irPath),
+      scope: resolveScopeStyle(input, context.shared, context.style, context.irPath),
       ...prepareScopeGeometry(input, geometry),
     });
   });

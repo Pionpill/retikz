@@ -35,25 +35,25 @@ export const visitNode = (
     mode: frame.theme.mode,
     scopeChain,
     positionContext: createTreePositionContext(context, scopeChain),
-    composedTransform: context.tree.scopeTransformComposer.resolve(scopeChain),
+    composedTransform: context.execution.scopeTransformComposer.resolve(scopeChain),
     childProposal: frame.childProposal,
   });
 
   const { layout } = compilation;
-  const globalLayout = projectLayoutWithTransform(layout, context.tree.scopeTransformComposer.resolve(scopeChain));
+  const globalLayout = projectLayoutWithTransform(layout, context.execution.scopeTransformComposer.resolve(scopeChain));
   if (child.id) {
-    context.tree.namespaceStack.register(child.id, globalLayout, [...nodeIrPath, 'id']);
+    context.execution.namespaceStack.register(child.id, globalLayout, [...nodeIrPath, 'id']);
     child.aliasIds?.forEach((id, aliasIndex) =>
-      context.tree.namespaceStack.register(id, globalLayout, [...nodeIrPath, 'aliasIds', aliasIndex]),
+      context.execution.namespaceStack.register(id, globalLayout, [...nodeIrPath, 'aliasIds', aliasIndex]),
     );
   }
 
   frame.publicationSink.push(globalLayout);
   const output = emitNodeOutput(compilation, context.shared, context.workspace);
   const emittedPrimitives =
-    context.tree.provenanceTracker?.materializePrimitives(output.primitives) ?? output.primitives;
+    context.execution.provenanceTracker?.materializePrimitives(output.primitives) ?? output.primitives;
   if (semanticOwner !== undefined) {
-    context.tree.provenanceTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
+    context.execution.provenanceTracker?.recordPrimitives(emittedPrimitives, semanticOwner, 'node');
   }
 
   for (const prim of emittedPrimitives) {

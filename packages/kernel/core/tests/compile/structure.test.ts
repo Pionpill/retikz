@@ -38,7 +38,7 @@ describe('编译源结构', () => {
       'projectCompileReference',
       'projectPublishedCompileLayout',
       'projectScopeCompileLayouts',
-      'resolveScopeContext',
+      'resolveScopeStyle',
       'samplePathRoute',
     ]);
   });

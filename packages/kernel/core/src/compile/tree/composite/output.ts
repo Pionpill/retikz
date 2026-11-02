@@ -42,12 +42,12 @@ export const compileCompositeOutput = (
       true,
       semanticOwner === undefined
         ? undefined
-        : execution.context.tree.provenanceTracker?.createOwner(
+        : execution.context.execution.provenanceTracker?.createOwner(
             output.child,
             index,
             semanticOwner,
             true,
-            execution.context.tree.namespaceStack.identity,
+            execution.context.execution.namespaceStack.identity,
           ),
     );
 
@@ -73,12 +73,12 @@ export const compileCompositeOutput = (
   const scopeSemanticOwner =
     semanticOwner === undefined
       ? undefined
-      : execution.context.tree.provenanceTracker?.createOwner(
+      : execution.context.execution.provenanceTracker?.createOwner(
           runtimeScopeChild,
           index,
           semanticOwner,
           true,
-          execution.context.tree.namespaceStack.identity,
+          execution.context.execution.namespaceStack.identity,
         );
   const scopeOccurrence: CompileOccurrenceLocator = {
     sourcePath: parentOccurrence.sourcePath,
@@ -110,12 +110,12 @@ export const compileCompositeOutput = (
             true,
             scopeSemanticOwner === undefined
               ? undefined
-              : execution.context.tree.provenanceTracker?.createOwner(
+              : execution.context.execution.provenanceTracker?.createOwner(
                   child,
                   childIndex,
                   scopeSemanticOwner,
                   true,
-                  execution.context.tree.namespaceStack.identity,
+                  execution.context.execution.namespaceStack.identity,
                 ),
           );
           continue;

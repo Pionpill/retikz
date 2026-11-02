@@ -26,7 +26,7 @@ import {
   projectCompileReference,
   projectPublishedCompileLayout,
   projectScopeCompileLayouts,
-  resolveScopeContext,
+  resolveScopeStyle,
 } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { isPropertyPathEqual } from '@retikz/foundation';
@@ -216,7 +216,7 @@ export class WeaveReconciler {
 
       let modified = false;
       for (const operation of batch.operations) {
-        const changes = this.editor.applyOperation(operation, resolveScopeContext(this.source, this.shared));
+        const changes = this.editor.applyOperation(operation, resolveScopeStyle(this.source, this.shared));
         if (changes === undefined) continue;
         for (const node of changes.insertedNodes) this.tracker.registerNodeBinding(node);
         for (const node of changes.changedNodes) this.tracker.invalidateNode(node);
@@ -286,7 +286,7 @@ export class WeaveReconciler {
     if (this.forceFull || !this.updating || node.current === null || this.tracker.isNodeDirty(node)) return false;
     if (
       !isPropertyPathEqual(this.previousNodeIrPaths.get(node) ?? [], compileOptions.irPath) ||
-      !jsonStructuralEquals(node.current.input.context, compileOptions.context)
+      !jsonStructuralEquals(node.current.input.context, compileOptions.style)
     )
       return false;
     const records = this.transaction.readNode(this.root).records.get(node);
@@ -411,7 +411,7 @@ export class WeaveReconciler {
         runWeaveCompilation(options, coreOptions => compileNode(state.input.own, coreOptions)),
       );
     } else state.compiled = this.reuseCompiledNode(node, state.compiled, options);
-    state.input = { ...state.input, context: options.context };
+    state.input = { ...state.input, context: options.style };
     state.pendingInputs = [];
     if (state.input.own.id) {
       this.registerReference(node, state.input.own.id, [...options.irPath, 'id'], element);
@@ -445,7 +445,7 @@ export class WeaveReconciler {
         runWeaveCompilation(options, coreOptions => compileCoordinate(state.input.own, coreOptions)),
       );
     } else state.compiled = this.reuseCompiledNode(node, state.compiled, options);
-    state.input = { ...state.input, context: options.context };
+    state.input = { ...state.input, context: options.style };
     state.pendingInputs = [];
     this.registerReference(node, state.compiled.id, [...options.irPath, 'id'], element);
     return {
@@ -476,7 +476,7 @@ export class WeaveReconciler {
         ),
       );
     } else state.compiled = this.reuseCompiledNode(node, state.compiled, compileOptions);
-    state.input = { ...state.input, context: compileOptions.context };
+    state.input = { ...state.input, context: compileOptions.style };
     state.pendingInputs = [];
     return this.collectOutput(state.compiled.output, 'path', element.owner);
   }
@@ -497,7 +497,7 @@ export class WeaveReconciler {
     const previousReads = this.transaction.readNode(this.root).records.get(node)?.reads ?? [];
     if (!reusable) this.tracker.invalidateNode(node);
     state.compiled = null;
-    state.input = { ...state.input, context: compileOptions.context };
+    state.input = { ...state.input, context: compileOptions.style };
     state.pendingInputs = [];
     if (child.localNamespace) state.ids = new Map();
     else delete state.ids;
@@ -519,7 +519,7 @@ export class WeaveReconciler {
         ...context,
         irPath,
         occurrence,
-        context: prepared.scope,
+        style: prepared.scope,
         transforms: [...(context.transforms ?? []), ...preliminary],
         ancestorScopes: new Set([...(context.ancestorScopes ?? []), node]),
       },
@@ -585,7 +585,7 @@ export class WeaveReconciler {
       parent: this.root,
       namespaceRegistry: this.namespace,
       ids: this.transaction.editNodeAttribute(this.root, 'ids'),
-      options: { context: resolveScopeContext(this.source, this.shared), irPath: [] },
+      options: { style: resolveScopeStyle(this.source, this.shared), irPath: [] },
       owner: this.provenance.root,
       prefix: [],
     },
@@ -620,9 +620,9 @@ export class WeaveReconciler {
       const element: WeaveElementCompileContext = { container, options: compileOptions, owner: semanticOwner };
       const node = this.updating
         ? this.transaction.readNode(parent).children[index]
-        : this.editor.createNode(child, parent, context.context);
+        : this.editor.createNode(child, parent, context.style);
       if (!this.updating) this.tracker.registerNodeBinding(node);
-      if (!jsonStructuralEquals(this.transaction.readNode(node).input.context, context.context)) {
+      if (!jsonStructuralEquals(this.transaction.readNode(node).input.context, context.style)) {
         this.transaction
           .editNodeAttribute(node, 'pendingInputs')
           .push({ source: 'context', changes: new Set(['style', 'layout']) });

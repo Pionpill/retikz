@@ -82,19 +82,19 @@ export const flushPendingPathEmissions = (
 ): void => {
   if (pendingPaths.length === 0) return;
 
-  context.tree.namespaceStack.enterResolvingPhase();
+  context.execution.namespaceStack.enterResolvingPhase();
 
   try {
     for (const pendingPath of pendingPaths) {
       const targetResolver = createPathTargetResolver(chain => createTreePositionContext(context, chain));
-      const { result, resolution } = context.tree.withWarningOccurrence(pendingPath.occurrence, () =>
+      const { result, resolution } = context.execution.withWarningOccurrence(pendingPath.occurrence, () =>
         compilePathState(pendingPath, targetResolver, {
           ...context,
-          resolveTransform: context.tree.scopeTransformComposer.resolve,
+          resolveTransform: context.execution.scopeTransformComposer.resolve,
         }),
       );
       const rawPrimitives = result?.primitives ?? [];
-      const primitives = context.tree.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
+      const primitives = context.execution.provenanceTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
       const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
       if (idx === -1) {
         throw createCompileInvariantError('internal: path placeholder missing from its sink');
@@ -102,7 +102,7 @@ export const flushPendingPathEmissions = (
 
       pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
       if (pendingPath.semanticOwner !== undefined) {
-        context.tree.provenanceTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
+        context.execution.provenanceTracker?.recordPrimitives(primitives, pendingPath.semanticOwner, 'path');
       }
 
       output.pendingPathCount--;
@@ -117,7 +117,7 @@ export const flushPendingPathEmissions = (
       }
     }
   } finally {
-    context.tree.namespaceStack.exitResolvingPhase();
+    context.execution.namespaceStack.exitResolvingPhase();
   }
 };
 

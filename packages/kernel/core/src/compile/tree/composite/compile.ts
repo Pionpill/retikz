@@ -262,12 +262,12 @@ export class CompositeCompiler {
           true,
           semanticOwner === undefined
             ? undefined
-            : this.context.tree.provenanceTracker?.createOwner(
+            : this.context.execution.provenanceTracker?.createOwner(
                 output,
                 outputIndex,
                 semanticOwner,
                 true,
-                this.context.tree.namespaceStack.identity,
+                this.context.execution.namespaceStack.identity,
               ),
         );
         continue;

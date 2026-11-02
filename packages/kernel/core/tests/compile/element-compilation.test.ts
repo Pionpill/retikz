@@ -25,7 +25,7 @@ import {
   createSharedCompileContext,
   prepareScopeCompilation,
   projectCompileReference,
-  resolveScopeContext,
+  resolveScopeStyle,
 } from '../../src';
 
 const finalizeOutputs = (input: { root: {}; outputs: ReadonlyArray<CompileOutput>; shared: SharedCompileContext }) => {
@@ -49,7 +49,7 @@ describe('独立元素编译', () => {
         { type: 'coordinate', id: 'b', position: { direction: 'right' as const, of: 'a', distance: 10 } },
         {
           shared,
-          context: resolveScopeContext({}, shared),
+          style: resolveScopeStyle({}, shared),
           irPath: ['children', 1],
           lookupReference: () => {
             throw failure;
@@ -65,7 +65,7 @@ describe('独立元素编译', () => {
 
   it('顶层 Path 等待两个 Scope 的节点投影后编译，保持声明绘制顺序', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, context: resolveScopeContext({}, shared), irPath: ['root'] };
+    const context = { shared, style: resolveScopeStyle({}, shared), irPath: ['root'] };
     const bindings = new Map<string, ElementCompileReference>();
     const outputs: Array<CompileOutput> = [];
     const scopes: Array<IRScope> = [];
@@ -77,7 +77,7 @@ describe('独立元素编译', () => {
       if (prepared.status !== 'compiled') throw new Error('expected scope');
       const node = compileNode(input, {
         ...context,
-        context: prepared.compiled.scope,
+        style: prepared.compiled.scope,
         transforms: prepared.compiled.preliminaryTransforms,
       });
       if (node.status !== 'compiled') throw new Error('expected node');
@@ -136,7 +136,7 @@ describe('独立元素编译', () => {
       { type: 'node', position: [2, 3], shape: 'counted' },
       {
         shared,
-        context: resolveScopeContext({}, shared),
+        style: resolveScopeStyle({}, shared),
         irPath: ['children', 0],
       },
     );
@@ -161,7 +161,7 @@ describe('独立元素编译', () => {
 
   it('嵌套作用域经过祖先裁剪时保持全量可见边界和资源语义', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, context: resolveScopeContext({}, shared), irPath: ['children', 0] };
+    const context = { shared, style: resolveScopeStyle({}, shared), irPath: ['children', 0] };
     const outer: Omit<IRScope, 'children'> = {
       type: 'scope',
       id: 'outer',
@@ -172,10 +172,10 @@ describe('独立元素编译', () => {
     const input: IRNode = { type: 'node', position: [0, 0], text: 'A' };
     const a = prepareScopeCompilation(outer, context);
     if (a.status !== 'compiled') throw new Error('expected outer');
-    const innerContext = { ...context, context: a.compiled.scope, irPath: ['children', 0, 'children', 0] };
+    const innerContext = { ...context, style: a.compiled.scope, irPath: ['children', 0, 'children', 0] };
     const b = prepareScopeCompilation(inner, innerContext);
     if (b.status !== 'compiled') throw new Error('expected inner');
-    const node = compileNode(input, { ...innerContext, context: b.compiled.scope });
+    const node = compileNode(input, { ...innerContext, style: b.compiled.scope });
     if (node.status !== 'compiled') throw new Error('expected node');
     const child = compileScope(inner, b.compiled, [node.compiled.layout], innerContext);
     if (child.status !== 'compiled') throw new Error('expected inner compiled');
@@ -207,7 +207,7 @@ describe('独立元素编译', () => {
 
   it('引用从 pending 就绪后可重算，祖先包络引用仍报错', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, context: resolveScopeContext({}, shared), irPath: ['a'] };
+    const context = { shared, style: resolveScopeStyle({}, shared), irPath: ['a'] };
     const input: IRCoordinate = { type: 'coordinate', id: 'c', position: { direction: 'right', of: 'a' } };
     expect(compileCoordinate(input, { ...context, lookupReference: () => ({ state: 'pending' }) })).toEqual({
       status: 'pending',
@@ -232,7 +232,7 @@ describe('独立元素编译', () => {
 
   it('同层 zIndex 排序与删除资源不重算旧状态', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, context: resolveScopeContext({}, shared), irPath: ['a'] };
+    const context = { shared, style: resolveScopeStyle({}, shared), irPath: ['a'] };
     const a: IRNode = { type: 'node', id: 'a', position: [0, 0], zIndex: 3 };
     const b: IRNode = { type: 'node', id: 'b', position: [40, 0], zIndex: -1 };
     const first = compileNode(a, context);
@@ -256,15 +256,15 @@ describe('独立元素编译', () => {
 
   it('已编译 Scope 与子节点组装后等价于全量输出', () => {
     const shared = createSharedCompileContext();
-    const parent = resolveScopeContext({}, shared);
+    const parent = resolveScopeStyle({}, shared);
     const scopeInput = { type: 'scope' as const, position: [30, 40] as [number, number] };
-    const context = { shared, context: parent, irPath: ['scene', 'children', 0] };
+    const context = { shared, style: parent, irPath: ['scene', 'children', 0] };
     const prepared = prepareScopeCompilation(scopeInput, context);
     if (prepared.status !== 'compiled') throw new Error('expected scope preparation');
     const input: IRNode = { type: 'node', id: 'a', position: [12, 24], text: 'hello' };
     const node = compileNode(input, {
       ...context,
-      context: prepared.compiled.scope,
+      style: prepared.compiled.scope,
       irPath: [...context.irPath, 'children', 0],
     });
     if (node.status !== 'compiled') throw new Error('expected node');
@@ -282,7 +282,7 @@ describe('独立元素编译', () => {
 
   it('独立编译时区分资源身份，组装保留原资源及片段', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, context: resolveScopeContext({}, shared), irPath: [] };
+    const context = { shared, style: resolveScopeStyle({}, shared), irPath: [] };
     const first = compileNode(
       {
         type: 'node',
@@ -340,7 +340,7 @@ describe('独立元素编译', () => {
       { type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } },
       {
         shared,
-        context: resolveScopeContext({}, shared),
+        style: resolveScopeStyle({}, shared),
         irPath: ['b'],
         lookupReference: () => ({ state: 'pending' }),
       },
@@ -355,7 +355,7 @@ describe('独立元素编译', () => {
       },
       {
         shared,
-        context: resolveScopeContext({}, shared),
+        style: resolveScopeStyle({}, shared),
         irPath: [],
         lookupReference: () => ({ state: 'pending' }),
       },
@@ -378,7 +378,7 @@ describe('独立元素编译', () => {
     };
     const result = compilePath(input, {
       shared,
-      context: resolveScopeContext({}, shared),
+      style: resolveScopeStyle({}, shared),
       irPath: ['scene', 'children', 0],
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');
@@ -395,7 +395,7 @@ describe('独立元素编译', () => {
     const shared = createSharedCompileContext();
     const result = compileNode(input, {
       shared,
-      context: resolveScopeContext({}, shared),
+      style: resolveScopeStyle({}, shared),
       irPath: ['scene', 'children', 0],
     });
     expect(result.status).toBe('compiled');
@@ -413,7 +413,7 @@ describe('独立元素编译', () => {
     const input: IRNode = { type: 'node', position: [0, 0] };
     const result = compileNode(input, {
       shared,
-      context: resolveScopeContext(scope, shared),
+      style: resolveScopeStyle(scope, shared),
       irPath: ['scene', 'children', 0, 'children', 0],
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');

@@ -5,7 +5,7 @@ import type {
   CompiledCoordinate,
   CompiledPath,
   CompiledScope,
-  ElementCompileContext,
+  CompileStyle,
   IRCoordinate,
   IRNode,
   IRPathBase,
@@ -28,7 +28,7 @@ type InputWeave<TInput> = {
   /** Core 定义的自身输入 */
   own: TInput;
   /** Core 负责解析的有效继承上下文 */
-  context: ElementCompileContext;
+  context: CompileStyle;
 };
 
 /** 节点的可替换逻辑状态，集合写入由候选工作区隔离 */

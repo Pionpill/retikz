@@ -26,7 +26,7 @@ export const createCompositeMeasurementMethods = (
   return {
     measureChild: (nextChild, proposal, axis) => {
       const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
-      const inputEntry = context.session.outputChildren.get(nextChild);
+      const inputEntry = context.composite.outputChildren.get(nextChild);
       if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
         throw createCompositeContractError(`${owner.label} measureChild requires a child from this callback`);
       const inputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
@@ -45,8 +45,8 @@ export const createCompositeMeasurementMethods = (
         ],
       });
       const cacheKey = JSON.stringify([
-        context.session.identityOf(inputs?.source ?? nextChild),
-        inputs === undefined ? context.session.identityOf(owner) : null,
+        context.composite.identityOf(inputs?.source ?? nextChild),
+        inputs === undefined ? context.composite.identityOf(owner) : null,
         inputs?.sourcePath,
         clonedChild,
         axis,
@@ -54,11 +54,11 @@ export const createCompositeMeasurementMethods = (
         frame.scopeDefaults,
         theme,
         frame.scopeChain,
-        inputs?.bindings.map(input => [input.path, context.session.identityOf(input.input)]),
-        context.session.identityOf(context.tree.namespaceStack.measurementIdentity),
+        inputs?.bindings.map(input => [input.path, context.composite.identityOf(input.input)]),
+        context.composite.identityOf(context.execution.namespaceStack.measurementIdentity),
         compositeDepth,
       ]);
-      const cached = context.session.getMeasurement(cacheKey);
+      const cached = context.composite.getMeasurement(cacheKey);
       if (cached !== undefined) {
         return { kind: 'resolved', result: cached };
       }
@@ -77,12 +77,12 @@ export const createCompositeMeasurementMethods = (
         );
         const allocation = laid.contribution ?? contributionOfBounds(axis, boundsRectOf(laid));
         const result = projectContribution(allocation, clonedProposal);
-        context.session.setMeasurement(cacheKey, result);
+        context.composite.setMeasurement(cacheKey, result);
         return { kind: 'resolved', result };
       } catch (thrown) {
         if (isFatalProbeError(thrown)) throw thrown;
         const failure = createLayoutChildFailure(
-          context.session.failures,
+          context.composite.failures,
           owner,
           wrapLayoutProbeError(thrown),
           'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type,
@@ -93,7 +93,7 @@ export const createCompositeMeasurementMethods = (
     },
     layoutChild: (nextChild, proposal) => {
       const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
-      const inputEntry = context.session.outputChildren.get(nextChild);
+      const inputEntry = context.composite.outputChildren.get(nextChild);
       if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
         throw createCompositeContractError(
           `${owner.label} layoutChild requires an authored or bound child from this callback`,
@@ -142,8 +142,8 @@ export const createCompositeMeasurementMethods = (
             true,
             probeInputs,
           ).transaction;
-        context.session.replayTransactions.set(layoutResult.replay, transaction);
-        context.session.layoutResults.set(layoutResult, { owner, replay: layoutResult.replay });
+        context.composite.replayTransactions.set(layoutResult.replay, transaction);
+        context.composite.layoutResults.set(layoutResult, { owner, replay: layoutResult.replay });
 
         return Object.freeze({ kind: LayoutChildProbeKind.Resolved, result: layoutResult });
       } catch (thrown) {
@@ -153,7 +153,7 @@ export const createCompositeMeasurementMethods = (
         const fallbackProviderKey =
           'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type;
         const failure = createLayoutChildFailure(
-          context.session.failures,
+          context.composite.failures,
           owner,
           error,
           fallbackProviderKey,

@@ -91,9 +91,9 @@ const result = compileToScene(ir, { padding: 10 });
 
 `createSharedCompileContext` 把内置能力与调用方注入的定义整理到只读注册表，并保存测量服务和数值配置。内部的 `createTreeCompileContext` 基于这个环境准备单次工作区，解析根主题，建立独占的几何状态、paint / clip 资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
 
-`TreeCompileContext` 按生命周期组织为 `shared`、`session`、`workspace`、`tree`、`initial` 和 `padding`。`shared` 持有可跨编译复用的注册表、宿主服务和配置；`session` 仅在根编译与其试编译之间共享组件句柄和测量缓存；`initial` 保存入口主题与组件输入；`padding` 仅用于最终 Scene 自动视口。输入配置仍使用 `shapes`、`clips` 等定义数组字段。
+`TreeCompileContext` 按生命周期组织为 `shared`、`composite`、`workspace`、`execution`、`initial` 和 `padding`。`shared` 持有可跨编译复用的注册表、宿主服务和配置；`composite` 仅在根编译与其试编译之间共享组件句柄和测量缓存；`initial` 保存入口主题与组件输入；`padding` 仅用于最终 Scene 自动视口。输入配置仍使用 `shapes`、`clips` 等定义数组字段。
 
-全量编译、单元素编译和探测计算都通过 `createWorkspaceCompileContext` 创建独立工作区，持有 `nodeBoundaryContext`、`paintRegistry`、`clipRegistry` 和 `diagnostics`。树编译使用相同的工作区契约，将名称栈、可选来源追踪、变换缓存和诊断来源绑定放在 `tree` 中。`createTreeCompileEnvironment` 创建树状态并为诊断收集绑定当前来源，不修改传入的工作区。试编译创建独立工作区和树状态，复用外层会话。诊断通过 `diagnostics.collect` 追加，通过只读的 `diagnostics.warnings` 查看；对外的 `CompileOptions.onWarn` 仍在成功后接收诊断。
+全量编译、单元素编译和探测计算都通过 `createWorkspaceCompileContext` 创建独立工作区，持有 `nodeBoundaryContext`、`paintRegistry`、`clipRegistry` 和 `diagnostics`。树编译使用相同的工作区契约，将名称栈、可选来源追踪、变换缓存和诊断来源绑定放在 `execution` 中。`createTreeCompileEnvironment` 创建树状态并为诊断收集绑定当前来源，不修改传入的工作区。试编译创建独立工作区和树状态，复用外层会话。诊断通过 `diagnostics.collect` 追加，通过只读的 `diagnostics.warnings` 查看；对外的 `CompileOptions.onWarn` 仍在成功后接收诊断。
 
 上下文只持有配置与计算状态：名称栈、连接面缓存、变换缓存及组件会话由 `compile/context` 管理，共享布局结果契约定义在 `compile/layout.ts`。节点布局投影、位置引用适配和单元素执行仍由树编译负责。依赖从树编译指向上下文，上下文不导入树编译实现。
 
@@ -430,7 +430,7 @@ import {
   compileNode,
   computeCompileOutputBounds,
   createSharedCompileContext,
-  resolveScopeContext,
+  resolveScopeStyle,
 } from '@retikz/core';
 
 const shared = createSharedCompileContext();
@@ -438,7 +438,7 @@ const result = compileNode(
   { type: 'node', id: 'A', position: [0, 0], text: 'A' },
   {
     shared,
-    context: resolveScopeContext({}, shared),
+    style: resolveScopeStyle({}, shared),
     irPath: ['children', 0],
   },
 );

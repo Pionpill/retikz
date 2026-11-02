@@ -61,15 +61,16 @@ export const commitCompositeReplay = (
   const wrapperClipRef =
     wrapperClipPath === undefined ? undefined : execution.context.workspace.clipRegistry.registerPath(wrapperClipPath);
   const replayedPrimitives =
-    execution.context.tree.provenanceTracker?.materializePrimitives(transaction.primitives) ?? transaction.primitives;
-  if (semanticOwner !== undefined && execution.context.tree.provenanceTracker !== undefined) {
+    execution.context.execution.provenanceTracker?.materializePrimitives(transaction.primitives) ??
+    transaction.primitives;
+  if (semanticOwner !== undefined && execution.context.execution.provenanceTracker !== undefined) {
     if (transaction.provenance === undefined) throw createCompileInvariantError('Missing replay provenance');
-    execution.context.tree.provenanceTracker.importProvenance(
+    execution.context.execution.provenanceTracker.importProvenance(
       transaction.provenance,
       replayedPrimitives,
       semanticOwner,
       outputIndex,
-      execution.context.tree.namespaceStack.identity,
+      execution.context.execution.namespaceStack.identity,
     );
   }
   const committedPrimitives = replayedPrimitives.map((primitive): ScenePrimitive => {
@@ -90,7 +91,11 @@ export const commitCompositeReplay = (
   };
 
   if (semanticOwner !== undefined) {
-    execution.context.tree.provenanceTracker?.recordPrimitives(committedPrimitives, semanticOwner, 'composite-replay');
+    execution.context.execution.provenanceTracker?.recordPrimitives(
+      committedPrimitives,
+      semanticOwner,
+      'composite-replay',
+    );
   }
 
   const suppressedNamespaceWarnings = new Set<CompileWarning>();
@@ -109,9 +114,9 @@ export const commitCompositeReplay = (
     const projectedChange = { ...change, entry: { ...change.entry, layout: projectedLayout } };
 
     const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
-    const committedAgainstBaseline = execution.context.tree.withWarningOccurrence(
+    const committedAgainstBaseline = execution.context.execution.withWarningOccurrence(
       replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, changeOccurrence),
-      () => execution.context.tree.namespaceStack.commitForkChange(projectedChange),
+      () => execution.context.execution.namespaceStack.commitForkChange(projectedChange),
     );
     if (change.overwroteBaseline && !committedAgainstBaseline) {
       const baselineWarning = transaction.namespaceBaselineWarnings.find(candidate => candidate.id === change.id);
@@ -126,7 +131,7 @@ export const commitCompositeReplay = (
     contribution.layouts.push(
       transforms === undefined || transforms.length === 0
         ? layout
-        : projectLayoutWithTransform(layout, execution.context.tree.scopeTransformComposer.resolve(transforms)),
+        : projectLayoutWithTransform(layout, execution.context.execution.scopeTransformComposer.resolve(transforms)),
     );
   }
 
@@ -136,7 +141,9 @@ export const commitCompositeReplay = (
         boundsPoints:
           transforms === undefined || transforms.length === 0
             ? bounds.boundsPoints
-            : bounds.boundsPoints.map(point => execution.context.tree.scopeTransformComposer.apply(point, transforms)),
+            : bounds.boundsPoints.map(point =>
+                execution.context.execution.scopeTransformComposer.apply(point, transforms),
+              ),
         shadow: bounds.shadow,
         ...(bounds.decoration === undefined ? {} : { decoration: bounds.decoration }),
       });
@@ -159,7 +166,7 @@ export const commitCompositeReplay = (
         transforms === undefined || transforms.length === 0
           ? allocation.boundsPoints
           : allocation.boundsPoints.map(point =>
-              execution.context.tree.scopeTransformComposer.apply(point, transforms),
+              execution.context.execution.scopeTransformComposer.apply(point, transforms),
             ),
     });
   }

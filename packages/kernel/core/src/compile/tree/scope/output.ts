@@ -112,7 +112,8 @@ export const emitScopeGroup = (
     children: stableSortByZIndex(scopePrimitiveSink as Array<ScenePrimitive>, output.zIndexOf),
   };
   primitiveSink.push(group);
-  if (semanticOwner !== undefined) context.tree.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
+  if (semanticOwner !== undefined)
+    context.execution.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
   recordPrimitiveZIndex(output.zIndexOf, group, child.zIndex);
 
   return group.clipRef;

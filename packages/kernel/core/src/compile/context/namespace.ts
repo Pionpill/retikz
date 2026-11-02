@@ -343,7 +343,7 @@ export class NamespaceStack {
   }
 
   /** 按 inside-out 规则查找 id 对应的 layout 与生命周期状态 */
-  lookupEntry(id: string): NamespaceEntry | undefined {
+  private lookupEntry(id: string): NamespaceEntry | undefined {
     for (let i = this.frames.length - 1; i >= 0; i--) {
       const entry = this.frames[i].entries.get(id);
       if (entry !== undefined) return entry;

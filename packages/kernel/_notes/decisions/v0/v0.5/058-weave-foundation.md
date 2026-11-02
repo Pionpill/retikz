@@ -33,7 +33,7 @@ Scope、Node、Coordinate、Path 组成按 `type` 区分的联合，复用 Core 
 
 `input` 不重复保存合并后的输入，默认与覆盖语义由 Core 决定；Scope 的 own 不携带递归 children。输入相同不能掩盖依赖变化。`compiled` 仅持有和传递，不强转或探测内部结构；由 [060](./060-core-element-compilation.md) 定义 Core 完整状态及输出贡献，按元素区分明确类型，消费者只读访问其可达状态。
 
-`pendingInputs` 不是完整 props 数组：自身修改保持命令顺序，通知按来源与影响范围合并，不统一采用后来者覆盖，也不入队即编译。有效上下文采用 Core 的 `ElementCompileContext`，依赖读取需求仍由后续调度契约确定；待处理条目由 [059](./059-weave-batch-operations.md) 定义为固定来源与影响范围的联合，不再保留任意条目的泛型参数。
+`pendingInputs` 不是完整 props 数组：自身修改保持命令顺序，通知按来源与影响范围合并，不统一采用后来者覆盖，也不入队即编译。有效上下文采用 Core 的 `CompileStyle`，依赖读取需求仍由后续调度契约确定；待处理条目由 [059](./059-weave-batch-operations.md) 定义为固定来源与影响范围的联合，不再保留任意条目的泛型参数。
 
 ## 声明结构与索引
 

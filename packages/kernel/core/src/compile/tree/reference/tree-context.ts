@@ -11,7 +11,7 @@ export const createTreePositionContext = (
 ): PositionTargetResolveContext =>
   createPositionResolveContext({
     nodeBoundaryContext: context.workspace.nodeBoundaryContext,
-    lookupReference: id => context.tree.namespaceStack.lookupReference(id),
+    lookupReference: id => context.execution.namespaceStack.lookupReference(id),
     nodeDistance: context.shared.layout.nodeDistance,
     scopeChain,
     resolveExplicitBoundary: (boundary, referenceContext) =>
@@ -22,5 +22,5 @@ export const createTreePositionContext = (
         boundaryRegistry: context.shared.registries.boundaryRegistry,
         irPath: referenceContext.irPath,
       }),
-    composedTransform: context.tree.scopeTransformComposer.resolve(scopeChain),
+    composedTransform: context.execution.scopeTransformComposer.resolve(scopeChain),
   });

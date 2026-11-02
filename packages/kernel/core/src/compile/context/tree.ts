@@ -15,6 +15,18 @@ import { ScopeTransformComposer } from './transform';
 import { createWorkspaceCompileContext } from './workspace';
 import type { WorkspaceCompileContext } from './workspace';
 
+/** 单次树执行独占的名称、来源、变换与诊断绑定状态 */
+export type TreeCompileExecution = {
+  /** 当前执行的名称注册与查找栈 */
+  namespaceStack: NamespaceStack;
+  /** 当前执行的可选来源记录 */
+  provenanceTracker?: CompileProvenanceTracker;
+  /** 当前执行的变换组合缓存 */
+  scopeTransformComposer: ScopeTransformComposer;
+  /** 执行回调时绑定诊断来源，退出时恢复父来源 */
+  withWarningOccurrence: <T>(occurrence: CompileOccurrenceLocator, execute: () => T) => T;
+};
+
 /** 根编译与隔离子树共用的上下文结构 */
 export type TreeCompileContext = {
   /** 可跨编译复用的配置、定义与宿主服务 */
@@ -22,18 +34,9 @@ export type TreeCompileContext = {
   /** 当前计算独占的资源、诊断与几何工作区，与元素编译共用同一契约 */
   workspace: WorkspaceCompileContext;
   /** 根编译及其试编译共享的组件句柄和测量缓存 */
-  session: CompositeCompileSession;
+  composite: CompositeCompileSession;
   /** 树执行专有的递归状态，试编译独立创建 */
-  tree: {
-    /** 当前执行的名称注册与查找栈 */
-    namespaceStack: NamespaceStack;
-    /** 当前执行的可选来源记录 */
-    provenanceTracker?: CompileProvenanceTracker;
-    /** 当前执行的变换组合缓存 */
-    scopeTransformComposer: ScopeTransformComposer;
-    /** 执行回调时绑定诊断来源，退出时恢复父来源 */
-    withWarningOccurrence: <T>(occurrence: CompileOccurrenceLocator, execute: () => T) => T;
-  };
+  execution: TreeCompileExecution;
   /** 子树入口初始环境，递归继承值由 frame 持有 */
   initial: {
     /** 当前输入树的组件实例输入 */
@@ -59,13 +62,13 @@ export type InputTreeCompileEnvironment = {
 export const createTreeCompileEnvironment = (
   workspace: WorkspaceCompileContext,
   options: InputTreeCompileEnvironment = {},
-): Pick<TreeCompileContext, 'workspace' | 'tree'> => {
+): Pick<TreeCompileContext, 'workspace' | 'execution'> => {
   const { namespaceStack, provenanceTracker, observeWarningOccurrence } = options;
   const warningOccurrences: Array<CompileOccurrenceLocator> = [];
   const collect = (warning: CompileWarning): void => {
     workspace.diagnostics.collect(withCompileWarningOccurrence(warning, warningOccurrences.at(-1)));
   };
-  const withWarningOccurrence: TreeCompileContext['tree']['withWarningOccurrence'] = (occurrence, execute) => {
+  const withWarningOccurrence: TreeCompileExecution['withWarningOccurrence'] = (occurrence, execute) => {
     warningOccurrences.push(occurrence);
     observeWarningOccurrence?.(occurrence);
     try {
@@ -77,7 +80,7 @@ export const createTreeCompileEnvironment = (
   };
   return {
     workspace: { ...workspace, diagnostics: { ...workspace.diagnostics, collect } },
-    tree: {
+    execution: {
       namespaceStack:
         namespaceStack ??
         new NamespaceStack({
@@ -99,7 +102,7 @@ export const createTreeCompileContext = (
   shared = createSharedCompileContext(options),
 ): TreeCompileContext => ({
   shared,
-  session: new CompositeCompileSession(),
+  composite: new CompositeCompileSession(),
   ...createTreeCompileEnvironment(createWorkspaceCompileContext(shared), {
     provenanceTracker: executeOptions.captureProvenance === true ? new CompileProvenanceTracker() : undefined,
   }),

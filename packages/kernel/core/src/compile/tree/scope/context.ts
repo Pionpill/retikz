@@ -3,15 +3,15 @@ import { formatPropertyPath } from '@retikz/foundation';
 
 import { DEFAULT_RESOLVED_THEME, resolveScopeDefaults, resolveTheme } from '../../../resolve';
 import type { IRScope } from '../../../schemas';
-import type { SharedCompileContext, ElementCompileContext } from '../../context';
+import type { SharedCompileContext, CompileStyle } from '../../context';
 
-/** 解析 Scope 子元素继承上下文；不编译 children 或聚合几何 */
-export const resolveScopeContext = (
+/** 解析 Scope 子元素的有效样式配置；不编译 children 或聚合几何 */
+export const resolveScopeStyle = (
   scope: Pick<IRScope, 'defaults' | 'theme'>,
   shared: SharedCompileContext,
-  parent?: ElementCompileContext,
+  parent?: CompileStyle,
   irPath: PropertyPath = [],
-): ElementCompileContext =>
+): CompileStyle =>
   Object.freeze({
     defaults: resolveScopeDefaults(scope.defaults, parent?.defaults),
     theme: resolveTheme(

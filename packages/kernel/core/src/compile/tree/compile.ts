@@ -14,7 +14,7 @@ export class CompileManager {
   compileScene<TComposites extends ReadonlyArray<AnyCompositeDefinition>>(
     root: IRScene,
   ): SceneCompilationSnapshot<TComposites> {
-    const { provenanceTracker } = this.context.tree;
+    const { provenanceTracker } = this.context.execution;
     const { primitives, layoutBounds, artifacts } = this.compileSubtree(root.children);
     const { paintRegistry, clipRegistry, diagnostics } = this.context.workspace;
     return assembleSceneCompilationSnapshot<TComposites>({

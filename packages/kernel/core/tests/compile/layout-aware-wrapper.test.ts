@@ -572,8 +572,8 @@ describe('布局感知复合运行时包装树', () => {
 
     const failingIr = scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: true }]);
     const context = createTreeCompileContext(failingIr, options, { captureProvenance: true });
-    const { session } = context;
-    const { namespaceStack, provenanceTracker } = context.tree;
+    const { composite } = context;
+    const { namespaceStack, provenanceTracker } = context.execution;
     expect(() => new CompileManager(context).compileScene(failingIr)).toThrow(/runtime Scope clip failed/i);
     expect(provenanceTracker).toBeDefined();
     expect(warnings).toEqual([]);
@@ -581,12 +581,12 @@ describe('布局感知复合运行时包装树', () => {
     expect(context.workspace.diagnostics.warnings).toEqual([]);
     expect(context.workspace.paintRegistry.getResources()).toEqual([]);
     expect(context.workspace.clipRegistry.getResources()).toEqual([]);
-    expect(namespaceStack.lookupEntry('same')?.layout).toBeUndefined();
+    expect(namespaceStack.lookupReference('same')?.layout).toBeUndefined();
     expect([...provenanceTracker!.capture([]).ownerMap.values()].filter(owner => owner.id !== undefined)).toEqual([]);
-    expect(session.outputChildren.get(replayHandle!)).toMatchObject({ used: false });
-    expect(session.outputChildren.get(scopeHandle!)).toMatchObject({ used: false });
+    expect(composite.outputChildren.get(replayHandle!)).toMatchObject({ used: false });
+    expect(composite.outputChildren.get(scopeHandle!)).toMatchObject({ used: false });
 
-    const transaction = session.replayTransactions.get(retainedResult!.replay);
+    const transaction = composite.replayTransactions.get(retainedResult!.replay);
 
     expect(transaction).toMatchObject({ used: false });
     expect(transaction?.primitives.length).toBeGreaterThan(0);

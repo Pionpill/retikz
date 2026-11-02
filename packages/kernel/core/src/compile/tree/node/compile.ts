@@ -30,8 +30,8 @@ export const compileNode = (input: IRNode, context: NodeCompileContext): Element
       positionContext: workspace.positionContext,
       scopeChain: workspace.scopeChain,
       composedTransform: workspace.composedTransform,
-      scopeDefaults: context.context.defaults,
-      mode: context.context.theme.mode,
+      scopeDefaults: context.style.defaults,
+      mode: context.style.theme.mode,
       childProposal: context.proposal,
     });
     const { layout, properties } = compilation;

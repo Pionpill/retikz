@@ -7,8 +7,8 @@ import type { CompiledNodeLayout } from '../layout';
 import type { CompileWarning } from '../shared';
 import type { SharedCompileContext } from './shared';
 
-/** 元素接收到的有效样式与主题，不包含资源工作区 */
-export type ElementCompileContext = Readonly<{
+/** 编译时生效的样式默认配置与主题 */
+export type CompileStyle = Readonly<{
   /** 按 Core 继承规则解析的默认配置 */
   defaults: MergedScopeDefaults;
   /** 有效主题 */
@@ -30,8 +30,8 @@ export type ElementCompileReference =
 export type ElementCompileOptions = Readonly<{
   /** 稳定编译配置、能力定义与服务 */
   shared: SharedCompileContext;
-  /** 父级有效上下文 */
-  context: ElementCompileContext;
+  /** 从父级继承的有效样式配置 */
+  style: CompileStyle;
   /** 诊断位置，不作为元素身份 */
   irPath: PropertyPath;
   /** 查询声明位置可见的引用；缺失返回 undefined，读取追踪由调用方负责 */

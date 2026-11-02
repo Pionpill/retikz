@@ -8,12 +8,7 @@ export type {
   SharedCompileContext,
   SharedCompileContextOptions,
 } from './context';
-export type {
-  ElementCompileContext,
-  ElementCompileOptions,
-  ElementCompileReference,
-  ElementCompileResult,
-} from './context';
+export type { CompileStyle, ElementCompileOptions, ElementCompileReference, ElementCompileResult } from './context';
 export * from './output';
 export * from './provenance';
 export { projectCompileReference } from './tree/reference';
@@ -55,7 +50,7 @@ export {
   compileScope,
   prepareScopeCompilation,
   projectScopeCompileLayouts,
-  resolveScopeContext,
+  resolveScopeStyle,
 } from './tree/scope';
 export type { CompiledScope, ScopeCompilationPreparation, ScopeCompileContext } from './tree/scope';
 export type {

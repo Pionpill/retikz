@@ -87,7 +87,7 @@ export const evaluateCompositeLayout = (
   let probeWarningOccurrence = probeOccurrence;
   const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
   const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
-  const namespaceBaseline = probeContext.context.tree.namespaceStack.fork();
+  const namespaceBaseline = probeContext.context.execution.namespaceStack.fork();
   const namespaceStack = namespaceBaseline.fork({
     onDuplicate: info => {
       const warning = withCompileWarningOccurrence(createDuplicateWarning(info), probeWarningOccurrence);
@@ -99,13 +99,13 @@ export const evaluateCompositeLayout = (
   });
 
   const probeProvenanceTracker =
-    probeContext.context.tree.provenanceTracker === undefined
+    probeContext.context.execution.provenanceTracker === undefined
       ? undefined
       : new CompileProvenanceTracker(namespaceStack.identity);
 
   const sandboxContext: TreeCompileContext = {
     shared: probeContext.context.shared,
-    session: probeContext.context.session,
+    composite: probeContext.context.composite,
     ...createTreeCompileEnvironment(
       {
         ...workspace,

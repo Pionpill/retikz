@@ -93,9 +93,9 @@ Core needs a way to measure text, resolve shapes, and collect shared drawing res
 
 `createSharedCompileContext` assembles built-in and caller-provided definitions into read-only registries and retains measurement services and numeric settings. The internal `createTreeCompileContext` uses that shared context to create a per-call workspace: the root theme, isolated geometry state, paint / clip resources, and warning collection. Without injected text measurement, it uses an approximate built-in measurer. Core itself does not read the DOM.
 
-`TreeCompileContext` groups state by lifetime into `shared`, `session`, `workspace`, `tree`, `initial`, and `padding`. `shared` holds registries, host services, and configuration reusable across compilations. `session` shares composite handles and measurement caches only between a root compilation and its probes. `initial` holds the entry theme and composite inputs; `padding` applies only to the final automatic Scene viewport. Input options still use definition-array fields such as `shapes` and `clips`.
+`TreeCompileContext` groups state by lifetime into `shared`, `composite`, `workspace`, `execution`, `initial`, and `padding`. `shared` holds registries, host services, and configuration reusable across compilations. `composite` shares composite handles and measurement caches only between a root compilation and its probes. `initial` holds the entry theme and composite inputs; `padding` applies only to the final automatic Scene viewport. Input options still use definition-array fields such as `shapes` and `clips`.
 
-Full compilation, element compilation, and probes each create an isolated base workspace through `createWorkspaceCompileContext`, holding `nodeBoundaryContext`, `paintRegistry`, `clipRegistry`, and `diagnostics`. Tree compilation keeps that same workspace contract and stores its namespace stack, optional provenance tracking, transform cache, and diagnostic occurrence binding in `tree`. `createTreeCompileEnvironment` creates this tree state and binds diagnostic collection to the current occurrence without mutating the supplied workspace. Probes create independent workspaces and tree state while reusing the parent session. Diagnostics are appended through `diagnostics.collect` and exposed through the read-only `diagnostics.warnings`; the external `CompileOptions.onWarn` still receives diagnostics after success.
+Full compilation, element compilation, and probes each create an isolated base workspace through `createWorkspaceCompileContext`, holding `nodeBoundaryContext`, `paintRegistry`, `clipRegistry`, and `diagnostics`. Tree compilation keeps that same workspace contract and stores its namespace stack, optional provenance tracking, transform cache, and diagnostic occurrence binding in `execution`. `createTreeCompileEnvironment` creates this tree state and binds diagnostic collection to the current occurrence without mutating the supplied workspace. Probes create independent workspaces and tree state while reusing the parent session. Diagnostics are appended through `diagnostics.collect` and exposed through the read-only `diagnostics.warnings`; the external `CompileOptions.onWarn` still receives diagnostics after success.
 
 Contexts hold configuration and computation state: `compile/context` owns namespace stacks, boundary and transform caches, and composite sessions. Shared layout result contracts live in `compile/layout.ts`. Node layout projection, position-reference adaptation, and element execution remain in tree compilation. Tree compilation depends on contexts; contexts do not import tree compilation implementations.
 
@@ -451,7 +451,7 @@ import {
   compileNode,
   computeCompileOutputBounds,
   createSharedCompileContext,
-  resolveScopeContext,
+  resolveScopeStyle,
 } from '@retikz/core';
 
 const shared = createSharedCompileContext();
@@ -459,7 +459,7 @@ const result = compileNode(
   { type: 'node', id: 'A', position: [0, 0], text: 'A' },
   {
     shared,
-    context: resolveScopeContext({}, shared),
+    style: resolveScopeStyle({}, shared),
     irPath: ['children', 0],
   },
 );

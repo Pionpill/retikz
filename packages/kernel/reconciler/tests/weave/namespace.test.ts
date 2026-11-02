@@ -3,7 +3,7 @@ import {
   compileNode,
   compileToScene,
   createSharedCompileContext,
-  resolveScopeContext,
+  resolveScopeStyle,
 } from '@retikz/core';
 import type { CompileWarning } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -15,7 +15,7 @@ import { createWeaveNamespaceRegistry } from '../../src/weave/namespace';
 describe('版本内名称与读取', () => {
   it('保留未命中 frame，pending 就绪后使用新结果，祖先引用不放宽', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, context: resolveScopeContext({}, shared), irPath: [] };
+    const context = { shared, style: resolveScopeStyle({}, shared), irPath: [] };
     const outer = createWeaveNamespaceRegistry();
     const inner = createWeaveNamespaceRegistry(outer.namespace);
     const binding = {};

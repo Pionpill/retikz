@@ -28,7 +28,7 @@ export const createCompositeTargetQuery = (
     string,
     Readonly<{ namespaceStack: NamespaceStack; scopeChain: ReadonlyArray<Transform> }>
   >();
-  let queryNamespaceIdentity = context.tree.namespaceStack.measurementIdentity;
+  let queryNamespaceIdentity = context.execution.namespaceStack.measurementIdentity;
 
   return {
     /** 在指定主题下查询目标点，缓存不保存可消费的重放凭证 */
@@ -37,7 +37,7 @@ export const createCompositeTargetQuery = (
       query: Parameters<CompositeCompileContext['resolvePathTargets']>[0],
     ): ReturnType<CompositeCompileContext['resolvePathTargets']> => {
       const queryChild = snapshotCompositeLayoutChild(owner.label, query.child, probeSequence.index++);
-      const namespaceIdentity = context.tree.namespaceStack.measurementIdentity;
+      const namespaceIdentity = context.execution.namespaceStack.measurementIdentity;
       if (queryNamespaceIdentity !== namespaceIdentity) {
         queryEnvironments.clear();
         queryNamespaceIdentity = namespaceIdentity;

@@ -30,7 +30,7 @@ describe('NamespaceStack 基本 register / lookup', () => {
     fork.register('same', makeLayout('same', 20));
     expect(stack.identity).toBe(root);
     expect(fork.identity).toBe(root);
-    expect(stack.lookupEntry('same')?.layout.geometry.rect.x).toBe(0);
+    expect(stack.lookupReference('same')?.layout.geometry.rect.x).toBe(0);
 
     stack.pushFrame();
     fork.pushFrame();
@@ -48,13 +48,13 @@ describe('NamespaceStack 基本 register / lookup', () => {
     const layout = makeLayout('A', 10, 20);
     stack.register('A', layout);
 
-    expect(stack.lookupEntry('A')?.layout).toBe(layout);
+    expect(stack.lookupReference('A')?.layout).toBe(layout);
   });
 
   it('lookup 未注册 id 返回 undefined', () => {
     const stack = new NamespaceStack();
 
-    expect(stack.lookupEntry('ghost')?.layout).toBeUndefined();
+    expect(stack.lookupReference('ghost')?.layout).toBeUndefined();
   });
 
   it('构造后初始 depth = 1（根 frame 存在）', () => {
@@ -74,12 +74,12 @@ describe('NamespaceStack push / pop frame 隔离', () => {
     const inner = makeLayout('A', 100);
     stack.register('A', inner);
 
-    expect(stack.lookupEntry('A')?.layout).toBe(inner);
+    expect(stack.lookupReference('A')?.layout).toBe(inner);
 
     stack.popFrame();
 
     expect(stack.depth).toBe(1);
-    expect(stack.lookupEntry('A')?.layout).toBeUndefined();
+    expect(stack.lookupReference('A')?.layout).toBeUndefined();
   });
 
   it('外层 register 后 push frame，外层 id 在内层仍可见（inside-out 落到外层 frame）', () => {
@@ -88,7 +88,7 @@ describe('NamespaceStack push / pop frame 隔离', () => {
     stack.register('outer', outer);
     stack.pushFrame();
 
-    expect(stack.lookupEntry('outer')?.layout).toBe(outer);
+    expect(stack.lookupReference('outer')?.layout).toBe(outer);
   });
 });
 
@@ -101,11 +101,11 @@ describe('NamespaceStack 由内而外的阴影', () => {
     const inner = makeLayout('A', 50);
     stack.register('A', inner);
 
-    expect(stack.lookupEntry('A')?.layout).toBe(inner);
+    expect(stack.lookupReference('A')?.layout).toBe(inner);
 
     stack.popFrame();
 
-    expect(stack.lookupEntry('A')?.layout).toBe(outer);
+    expect(stack.lookupReference('A')?.layout).toBe(outer);
   });
 
   it('三层嵌套各自有 id="A" 时 lookup 命中栈顶', () => {
@@ -119,15 +119,15 @@ describe('NamespaceStack 由内而外的阴影', () => {
     stack.pushFrame();
     stack.register('A', a2);
 
-    expect(stack.lookupEntry('A')?.layout).toBe(a2);
+    expect(stack.lookupReference('A')?.layout).toBe(a2);
 
     stack.popFrame();
 
-    expect(stack.lookupEntry('A')?.layout).toBe(a1);
+    expect(stack.lookupReference('A')?.layout).toBe(a1);
 
     stack.popFrame();
 
-    expect(stack.lookupEntry('A')?.layout).toBe(a0);
+    expect(stack.lookupReference('A')?.layout).toBe(a0);
   });
 });
 
@@ -157,7 +157,7 @@ describe('NamespaceStack register 返回 overwritten flag', () => {
 
     expect(stack.register('A', first)).toBe(false);
     expect(stack.register('A', second)).toBe(true);
-    expect(stack.lookupEntry('A')?.layout).toBe(second);
+    expect(stack.lookupReference('A')?.layout).toBe(second);
   });
 
   it('跨 frame 同 id 不算 overwritten（push frame 内首次 register 返回 false）', () => {
@@ -236,23 +236,23 @@ describe('NamespaceStack resolving phase 禁止 register', () => {
     stack.register('A', makeLayout('A'));
     stack.enterResolvingPhase();
 
-    expect(stack.lookupEntry('A')?.layout).toBeDefined();
+    expect(stack.lookupReference('A')?.layout).toBeDefined();
     expect(() => stack.register('B', makeLayout('B'))).toThrow(/only allowed during registering/);
   });
 });
 
 describe('NamespaceStack Scope placeholder 生命周期', () => {
-  it('lookupEntry 区分 placeholder 与合法 resolved 零尺寸 layout', () => {
+  it('lookupReference 区分 placeholder 与合法 resolved 零尺寸 layout', () => {
     const stack = new NamespaceStack();
     const placeholder = makeLayout('scope');
     const resolved = makeLayout('scope');
 
     stack.register('scope', placeholder, undefined, 'scope-placeholder');
 
-    expect(stack.lookupEntry('scope')).toMatchObject({ layout: placeholder, state: 'scope-placeholder' });
+    expect(stack.lookupReference('scope')).toMatchObject({ layout: placeholder, state: 'scope-placeholder' });
 
     expect(stack.replaceLayout('scope', resolved, 0, placeholder)).toBe(true);
-    expect(stack.lookupEntry('scope')).toMatchObject({ layout: resolved, state: 'resolved' });
+    expect(stack.lookupReference('scope')).toMatchObject({ layout: resolved, state: 'resolved' });
   });
 
   it('placeholder 被同 frame 的合法同名 layout 覆盖后不再回填旧 Scope', () => {
@@ -265,7 +265,7 @@ describe('NamespaceStack Scope placeholder 生命周期', () => {
     stack.register('scope', childWithSameId);
 
     expect(stack.replaceLayout('scope', resolvedScope, 0, placeholder)).toBe(false);
-    expect(stack.lookupEntry('scope')).toEqual({ layout: childWithSameId, state: 'resolved' });
+    expect(stack.lookupReference('scope')).toEqual({ layout: childWithSameId, state: 'resolved' });
   });
 });
 
@@ -284,10 +284,10 @@ it('保留未更改的分叉的测量身份，并使每个名称空间突变无�
   changed();
   const fork = stack.fork();
   fork.register('other', makeLayout('other', 30));
-  expect(stack.lookupEntry('other')?.layout).toBeUndefined();
+  expect(stack.lookupReference('other')?.layout).toBeUndefined();
   for (const change of fork.diffTopFrame(stack)) stack.commitForkChange(change);
   changed();
-  expect(stack.lookupEntry('other')?.layout).toBe(fork.lookupEntry('other')?.layout);
+  expect(stack.lookupReference('other')?.layout).toBe(fork.lookupReference('other')?.layout);
   stack.pushFrame();
   changed();
   stack.popFrame();

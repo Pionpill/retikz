@@ -26,7 +26,7 @@ export const preflightCompositeOutputs = (
       throw createCompositeContractError(`${owner.label} received an invalid or forged output child.`);
     }
 
-    const entry = execution.context.session.outputChildren.get(handle);
+    const entry = execution.context.composite.outputChildren.get(handle);
     if (entry === undefined) {
       throw createCompositeContractError(
         `${owner.label} received an output child that does not belong to this compile or was forged.`,
@@ -75,7 +75,7 @@ export const preflightCompositeOutputs = (
     }
 
     preparedOutputs.set(handle, { output: entry.child });
-    const transaction = execution.context.session.replayTransactions.get(entry.child.replay);
+    const transaction = execution.context.composite.replayTransactions.get(entry.child.replay);
     if (transaction === undefined) {
       throw createCompositeContractError(
         `${owner.label} received a replay token that does not belong to this compile or was forged.`,
