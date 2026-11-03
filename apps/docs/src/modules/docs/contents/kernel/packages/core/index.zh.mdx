@@ -1,9 +1,9 @@
 ---
 title: 编译核心 · core
-description: 用 @retikz/core 将图形声明编译为已确定几何与样式的 Scene，了解核心契约、编译过程与包边界
+description: 了解 @retikz/core 的原子编译阶段及其与 Reconciler 的协作，了解核心契约、编译过程与包边界
 ---
 
-图形声明可以写“连接 A 和 B”，但渲染器需要知道线段从哪里开始、在哪里结束。`@retikz/core` 负责解析这些声明，计算节点布局、坐标和路径，将结果组织成不绑定渲染后端的 Scene。
+图形声明可以写“连接 A 和 B”，但渲染器需要知道线段从哪里开始、在哪里结束。`@retikz/core` 负责解析这些声明，计算节点布局、坐标和路径，返回共享的解析、布局与图元产物，由 Reconciler 组织成 Scene。
 
 本包面向编写领域组件、扩展能力或接入编译器的开发者。普通绘图通常从 React 或 Vanilla 入口开始，由适配层组织 Core 输入，再将编译结果交给渲染器。
 
@@ -17,7 +17,7 @@ description: 用 @retikz/core 将图形声明编译为已确定几何与样式�
 | Definition / registry | 定义并绑定形状、路径定义、复合组件等能力 | 查找节点形状与路径处理能力                   |
 | 编译器                | 解析配置、完成布局、求解坐标与路径       | 根据节点边界确定连线端点                     |
 | Scene                 | 保存已确定的图元、资源与画布等绘制信息   | 矩形、文字和连接线的绘制数据                 |
-| CompileResult         | 汇总场景、附加产物与空间句柄             | 向渲染器交付 Scene，向其他消费方提供所需数据 |
+| CompileResult         | 由 Reconciler 汇总 Scene 与附加产物      | 向渲染器交付 Scene，向其他消费方提供所需数据 |
 
 IR 描述作者希望画什么，Scene 保存编译后怎样绘制。Definition 是能力的定义，registry 负责按名称查找这些定义；内置能力与自定义能力通过对应契约参与编译。
 
@@ -41,7 +41,7 @@ Core 先解析节点的样式和形状，结合文字度量确定尺寸，再解
 
 ## 安装与使用
 
-<PackageManagerInstall packages="@retikz/core" />
+<PackageManagerInstall packages={['@retikz/core', '@retikz/reconciler']} />
 
 `PathTransformSchema` 只包含整条路径的 `rotate` 与 `scale`；`cornerRadius` 属于 `PathGeometrySchema`，用于将折线拐角改成圆角。
 
@@ -53,10 +53,11 @@ Core 先解析节点的样式和形状，结合文字度量确定尺寸，再解
 
 声明图形时使用 Core 的 `IRScene` 等 IR 类型；处理编译后的路径命令时使用 Core 的 `PathCommand`。纯坐标和向量类型 `Position`、`Vector2` 从 `@retikz/math` 导入。
 
-Core 提供无框架差异的 TypeScript 编译入口。下面使用同样的 A、B 连线关系，节点尺寸采用默认布局：
+Reconciler 提供无框架差异的完整 TypeScript 编译入口，Core 提供 IR 与原子阶段。下面使用同样的 A、B 连线关系，节点尺寸采用默认布局：
 
 ```ts
-import { compileToScene, type IRScene } from '@retikz/core';
+import { type IRScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 
 const ir: IRScene = {
   type: 'scene',

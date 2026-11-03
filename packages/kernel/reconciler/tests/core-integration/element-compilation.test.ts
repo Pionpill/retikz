@@ -1,28 +1,12 @@
-import type {
-  CompileOutput,
-  CompiledScope,
-  IRCoordinate,
-  IRNode,
-  IRPathBase,
-  IRScope,
-  ShapeDefinition,
-  SharedCompileContext,
-} from '@retikz/core';
-import {
-  BUILTIN_SHAPES,
-  assembleCompileOutputs,
-  assembleSceneCompilationSnapshot,
-  assembleScopeOutput,
-  compileToScene,
-  computeCompileOutputBounds,
-  createSharedCompileContext,
-  projectCompileReference,
-  resolveScopeStyle,
-} from '@retikz/core';
+import type { CompileOutput, IRCoordinate, IRNode, IRPathBase, IRScope, ShapeDefinition } from '@retikz/core';
+import { BUILTIN_SHAPES, computeCompileOutputBounds, projectCompileReference, resolveScopeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import type { SharedCompileContext } from '../../src/compile';
+import { assembleSceneCompilationSnapshot, compileToScene, createSharedCompileContext } from '../../src/compile';
+import { assembleCompileOutputs } from '../../src/compile/index';
 import { RetikzReconcilerError } from '../../src/error';
-import type { WeaveBinding } from '../../src/weave/compile';
+import type { WeaveBinding } from '../helpers/atomic-runtime';
 import {
   testCompileNode,
   testCompileCoordinate,
@@ -30,9 +14,11 @@ import {
   testCompileScope,
   testPrepareScopeCompilation,
 } from '../helpers/element';
+import { assembleScopeOutput } from '../helpers/scope-output';
+import type { ScopeOutput } from '../helpers/scope-output';
 
 const assembleTestScopeOutput = (
-  scope: CompiledScope,
+  scope: ScopeOutput,
   children: ReadonlyArray<CompileOutput>,
   shared: SharedCompileContext,
 ) =>
@@ -103,15 +89,13 @@ describe('独立元素编译', () => {
         transforms: prepared.compiled.preliminaryTransforms,
       });
       if (node.status !== 'compiled') throw new Error('expected node');
-      const scope = testCompileScope(scopeInput, prepared.compiled, [node.compiled.layout], context);
+      const scope = testCompileScope(scopeInput, prepared.compiled, [node.compiled.compiled.layout], context);
       if (scope.status !== 'compiled') throw new Error('expected scope');
-      expect(scope.compiled.irPath).toBe(context.irPath);
       bindings.set(id, {
         state: 'ready',
         binding: {},
         layout: projectCompileReference(
-          { type: 'node', compiled: node.compiled },
-          shared.registries,
+          { type: 'node', compiled: node.compiled.compiled },
           scope.compiled.group.transforms,
         ),
       });
@@ -129,7 +113,6 @@ describe('独立元素编译', () => {
       namespace: { bindings },
     });
     if (path.status !== 'compiled') throw new Error('expected path');
-    expect(path.compiled.irPath).toBe(context.irPath);
     expect(
       finalizeOutputs({
         root: {},
@@ -160,7 +143,7 @@ describe('独立元素编译', () => {
       },
     );
     if (result.status !== 'compiled') throw new Error('expected node');
-    const rectangle = { ...result.compiled.layout.geometry.rect };
+    const rectangle = { ...result.compiled.compiled.layout.geometry.rect };
     const count = emitted;
     const first = finalizeOutputs({
       root: {},
@@ -172,10 +155,10 @@ describe('独立元素编译', () => {
       outputs: [result.compiled.output],
       shared,
     });
-    projectCompileReference({ type: 'node', compiled: result.compiled }, shared.registries, [
+    projectCompileReference({ type: 'node', compiled: result.compiled.compiled }, [
       { kind: 'translate', x: 20, y: 30 },
     ]);
-    expect(result.compiled.layout.geometry.rect).toEqual(rectangle);
+    expect(result.compiled.compiled.layout.geometry.rect).toEqual(rectangle);
     expect(next.result.scene).toEqual(first.result.scene);
     expect(emitted).toBe(count);
   });
@@ -198,12 +181,12 @@ describe('独立元素编译', () => {
     if (b.status !== 'compiled') throw new Error('expected inner');
     const node = testCompileNode(input, { ...innerContext, style: b.compiled.scope });
     if (node.status !== 'compiled') throw new Error('expected node');
-    const child = testCompileScope(inner, b.compiled, [node.compiled.layout], innerContext);
+    const child = testCompileScope(inner, b.compiled, [node.compiled.compiled.layout], innerContext);
     if (child.status !== 'compiled') throw new Error('expected inner compiled');
     const parent = testCompileScope(
       outer,
       a.compiled,
-      [projectCompileReference({ type: 'scope', compiled: child.compiled }, shared.registries)],
+      [projectCompileReference({ type: 'scope', compiled: child.compiled.compiled })],
       context,
     );
     if (parent.status !== 'compiled') throw new Error('expected outer compiled');
@@ -256,7 +239,7 @@ describe('独立元素编译', () => {
             {
               state: 'ready',
               binding: {},
-              layout: projectCompileReference({ type: 'node', compiled: node.compiled }, shared.registries),
+              layout: projectCompileReference({ type: 'node', compiled: node.compiled.compiled }),
             },
           ],
         ]),
@@ -264,8 +247,7 @@ describe('独立元素编译', () => {
     });
     expect(result.status).toBe('compiled');
     if (result.status !== 'compiled') throw new Error('expected coordinate');
-    expect(result.compiled.irPath).toBe(context.irPath);
-    expect(result.compiled.position[0]).toBeGreaterThan(30);
+    expect(result.compiled.geometry.rect.x).toBeGreaterThan(30);
   });
 
   it('同层 zIndex 排序与删除资源不重算旧状态', () => {
@@ -306,7 +288,7 @@ describe('独立元素编译', () => {
       irPath: [...context.irPath, 'children', 0],
     });
     if (node.status !== 'compiled') throw new Error('expected node');
-    const scope = testCompileScope(scopeInput, prepared.compiled, [node.compiled.layout], context);
+    const scope = testCompileScope(scopeInput, prepared.compiled, [node.compiled.compiled.layout], context);
     if (scope.status !== 'compiled') throw new Error('expected scope');
     const output = assembleTestScopeOutput(scope.compiled, [node.compiled.output], shared);
     const assembled = finalizeOutputs({
@@ -438,8 +420,8 @@ describe('独立元素编译', () => {
     });
     expect(result.status).toBe('compiled');
     if (result.status !== 'compiled') return;
-    expect(result.compiled.layout.geometry.rect.x).toBe(12);
-    expect(result.compiled.layout.geometry.rect.y).toBe(24);
+    expect(result.compiled.compiled.layout.geometry.rect.x).toBe(12);
+    expect(result.compiled.compiled.layout.geometry.rect.y).toBe(24);
     expect(result.compiled.output.primitives).toEqual(
       compileToScene({ version: 1, type: 'scene', children: [input] }).scene.primitives,
     );

@@ -10,7 +10,6 @@ import type {
 import {
   BuiltinCompileWarningCode,
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
@@ -21,6 +20,8 @@ import {
 import { ReconcilerSession } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject, string } from 'zod';
+
+import { compileToScene } from '../../../src/compile';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: text.length * 10,

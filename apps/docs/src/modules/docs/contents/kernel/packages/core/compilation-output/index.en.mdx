@@ -33,8 +33,8 @@ The following sections use two rectangular cards sharing a gradient inside a tra
 
 <SourceLinks
   sources={[
-    { label: 'Full compilation', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: 'Result types', path: 'packages/kernel/core/src/compile/types.ts' },
+    { label: 'Full compilation', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: 'Result types', path: 'packages/kernel/reconciler/src/compile/types.ts' },
   ]}
 />
 
@@ -316,7 +316,7 @@ Core filters tracks by their target level during compilation. Non-`viewBox` trac
   sources={[
     { label: 'Animation tracks and keyframes', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
     { label: 'Root and element track filtering', path: 'packages/kernel/core/src/resolve/animation.ts' },
-    { label: 'Scene animation assembly', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'Scene animation assembly', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
   ]}
 />
 
@@ -373,7 +373,7 @@ Core continues compiling `children`, while `artifact` retains container bounds, 
 The following example compiles a FlexLayout containing two nodes and reads its artifact from the returned array. Registering the Definition also preserves the specific artifact type in the result:
 
 ```ts
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
 
 const layout = createFlexLayout({
@@ -424,8 +424,8 @@ Replaying a selected layout probe preserves its internal entities and primitive 
 
 <SourceLinks
   sources={[
-    { label: 'Snapshot compilation entry', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: 'Provenance contract', path: 'packages/kernel/core/src/compile/provenance/types.ts' },
+    { label: 'Snapshot compilation entry', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: 'Provenance contract', path: 'packages/kernel/reconciler/src/compile/provenance/types.ts' },
   ]}
 />
 
@@ -441,9 +441,9 @@ Start at the snapshot compilation entry, then follow traversal and Scene assembl
 
 <SourceLinks
   sources={[
-    { label: 'Compilation entry', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: 'Traversal and replay', path: 'packages/kernel/core/src/compile/tree/subtree.ts' },
-    { label: 'Scene assembly', path: 'packages/kernel/core/src/compile/scene/output.ts' },
+    { label: 'Compilation entry', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: 'Traversal and replay', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
+    { label: 'Scene assembly', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
   ]}
 />
 

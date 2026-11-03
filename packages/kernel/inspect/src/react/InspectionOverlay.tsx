@@ -1,4 +1,4 @@
-﻿import type { CompileResult } from '@retikz/core';
+﻿import type { CompileResult } from '@retikz/reconciler';
 import type { FC } from 'react';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 

@@ -1,11 +1,12 @@
-import { compileToScene, createSharedCompileContext, resolveScopeStyle } from '@retikz/core';
+import { resolveScopeStyle } from '@retikz/core';
 import type { CompileWarning } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { lookupWeaveBinding, runWeaveCompilation } from '../../src/weave/compile';
-import type { WeaveCompileRead, WeaveBinding } from '../../src/weave/compile';
-import { compileWeaveNode, compileWeaveCoordinate } from '../../src/weave/element';
-import { createWeaveNamespaceRegistry } from '../../src/weave/namespace';
+import { compileToScene, createSharedCompileContext } from '../../src/compile';
+import { compileWeaveNode, compileWeaveCoordinate } from '../helpers/atomic-elements';
+import { createWeaveNamespaceRegistry } from '../helpers/atomic-namespace';
+import { lookupWeaveBinding, runWeaveCompilation } from '../helpers/atomic-runtime';
+import type { WeaveCompileRead, WeaveBinding } from '../helpers/atomic-runtime';
 
 describe('版本内名称与读取', () => {
   it('保留未命中 frame，pending 就绪后使用新结果，祖先引用不放宽', () => {
@@ -37,11 +38,11 @@ describe('版本内名称与读取', () => {
       compileWeaveNode({ type: 'node', position: [30, 10] }, runtime),
     );
     if (node.status !== 'compiled') throw new Error('expected node');
-    outer.replace(binding, { state: 'ready', binding, layout: node.compiled.layout });
+    outer.replace(binding, { state: 'ready', binding, layout: node.compiled.compiled.layout });
     const ready = runWeaveCompilation(options, core => compileWeaveCoordinate(input, core));
     expect(ready.reads.map(read => read.state)).toEqual(['missing', 'ready']);
     if (ready.status !== 'compiled') throw new Error('expected coordinate');
-    expect(ready.compiled.position).toEqual([40, 10]);
+    expect(ready.compiled.geometry.rect).toMatchObject({ x: 40, y: 10 });
 
     const replacement = createWeaveNamespaceRegistry();
     replacement.register('a', { state: 'pending', binding: {} }, ['children', 0, 'id'], occurrence);

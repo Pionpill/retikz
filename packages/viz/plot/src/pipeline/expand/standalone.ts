@@ -1,6 +1,8 @@
-import type { CompileOptions, IRScene, IRScope } from '@retikz/core';
-import { compileToScene, defineComposite } from '@retikz/core';
+import type { IRScene, IRScope } from '@retikz/core';
+import { defineComposite } from '@retikz/core';
 import type { DataLineageOptions, ExternalDatasets } from '@retikz/data';
+import type { CompileOptions } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/reconciler';
 
 import type { PreparedPlotData } from '../../contract';
 import type { IRPlot } from '../../schemas';

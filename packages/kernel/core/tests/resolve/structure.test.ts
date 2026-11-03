@@ -62,14 +62,6 @@ describe('解析源结构', () => {
 
   it('在解析中保持复合提供者绑定', () => {
     expect(source('src/resolve/index.ts')).toContain("export * from './composite';");
-
-    const lower = source('src/compile/tree/composite/output.ts');
-    const traversal = source('src/compile/tree/scope/visit.ts');
-
-    expect(lower).not.toContain('parseProviderPayload');
-    expect(lower).not.toContain('registry.get(');
-    expect(traversal).not.toContain('parseProviderPayload');
-    expect(traversal).not.toContain('runtime.context.composites.get(');
   });
 
   it('在解析中保留文本 Source IR 确定', () => {

@@ -1,13 +1,13 @@
 ﻿import type { GroupPrimitive, IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
 import {
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { LayoutAlignment } from '@retikz/layout';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, string } from 'zod';
 

@@ -1,6 +1,5 @@
 import type { AnyCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import {
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   defineTheme,
@@ -8,6 +7,7 @@ import {
   RetikzCoreError,
   RetikzCoreErrorCode,
 } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 

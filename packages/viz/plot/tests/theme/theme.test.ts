@@ -1,5 +1,6 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
-import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots } from '../../src/pipeline';

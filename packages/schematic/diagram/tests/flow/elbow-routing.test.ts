@@ -1,6 +1,7 @@
 import type { ScenePrimitive } from '@retikz/core';
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import type { Position } from '@retikz/math';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramErrorCode } from '../../src/errors';

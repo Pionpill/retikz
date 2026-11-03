@@ -14,10 +14,10 @@ import type {
   IRTarget,
 } from '../../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
-import type { NodeBoundaryStore } from '../../runtime';
-import { createNodeBoundaryStore } from '../../runtime';
 import type { ComposedScopeTransform } from '../../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../../shared';
+import type { NodeBoundaryStore } from '../node';
+import { createNodeBoundaryStore } from '../node';
 import { boundaryPointOf, clipNodePolyline, resolveAnchorRef } from '../node';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */

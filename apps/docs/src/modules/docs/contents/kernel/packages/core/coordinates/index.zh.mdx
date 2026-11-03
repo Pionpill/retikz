@@ -27,7 +27,7 @@ description: 追踪 Core 如何解析位置、查找名称与锚点，并在 Sco
   sources={[
     {
       label: '遍历中的位置上下文、布局注册与 Scope 收尾',
-      path: 'packages/kernel/core/src/compile/tree/subtree.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts',
     },
     { label: '局部点与世界点的解析结果', path: 'packages/kernel/core/src/resolve/position/types.ts' },
   ]}
@@ -155,10 +155,13 @@ Scope 自己的 `id` 注册在父命名空间，早于它为子元素推入的�
 
 <SourceLinks
   sources={[
-    { label: 'NamespaceStack：栈顶注册与由内向外查找', path: 'packages/kernel/core/src/compile/runtime/namespace.ts' },
+    {
+      label: 'NamespaceStack：栈顶注册与由内向外查找',
+      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
+    },
     {
       label: 'visitScope：Scope 名称注册与局部 Map 出入栈',
-      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
   ]}
 />
@@ -191,7 +194,7 @@ A 收尾时，b 还未注册，因此 A 中的 Path 无法引用 b。退出普�
 <SourceLinks
   sources={[
     { label: '节点布局失败与引用检查', path: 'packages/kernel/core/src/compile/tree/node/layout.ts' },
-    { label: '坐标注册、路径入队与回填顺序', path: 'packages/kernel/core/src/compile/tree/subtree.ts' },
+    { label: '坐标注册、路径入队与回填顺序', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
   ]}
 />
 
@@ -268,9 +271,9 @@ Scope 的包络要等子布局完成才知道。Core 从 Node、Coordinate、子
     { label: '包络汇总与自身 pivot 解析', path: 'packages/kernel/core/src/compile/tree/scope/layout.ts' },
     {
       label: 'Scope target 限制、占位注册与包络替换',
-      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
-    { label: 'NamespaceEntry 的布局生命周期', path: 'packages/kernel/core/src/compile/runtime/namespace.ts' },
+    { label: 'NamespaceEntry 的布局生命周期', path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts' },
   ]}
 />
 
@@ -294,7 +297,7 @@ $$
       label: 'lowerScopeTransforms：引用平移与包络 pivot',
       path: 'packages/kernel/core/src/compile/tree/scope/transform.ts',
     },
-    { label: '预备变换、最终对齐与发布几何更新', path: 'packages/kernel/core/src/compile/tree/scope/visit.ts' },
+    { label: '预备变换、最终对齐与发布几何更新', path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts' },
     { label: 'Scope 原点与锚点定位契约', path: 'packages/kernel/core/src/schemas/scope/defaults.ts' },
   ]}
 />
@@ -311,7 +314,7 @@ $$
 
 <SourceLinks
   sources={[
-    { label: 'visitScope 完整调用链', path: 'packages/kernel/core/src/compile/tree/scope/visit.ts' },
+    { label: 'visitScope 完整调用链', path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts' },
     {
       label: 'compile 状态到位置 resolver 的适配边界',
       path: 'packages/kernel/core/src/compile/tree/reference/position-context.ts',

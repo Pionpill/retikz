@@ -1,11 +1,12 @@
 import type {
-  SharedCompileContext,
   CompileWarning,
   CompiledNode,
-  CompiledCoordinate,
+  emitNodeOutput,
+  CompiledNodeLayout,
   CompiledPath,
   CompiledScope,
   ScopeStyleResolution,
+  IRComposite,
   IRCoordinate,
   IRNode,
   IRPathBase,
@@ -13,6 +14,8 @@ import type {
   IRScene,
 } from '@retikz/core';
 
+import type { SharedCompileContext } from '../compile';
+import type { CompileStageRecord } from '../compile/runtime';
 import type { WeaveCompileRead } from './compile';
 import type { WeaveChangeKind, WeaveChangeSource } from './constants';
 
@@ -33,6 +36,8 @@ type InputWeave<TInput> = {
 
 /** 节点的可替换逻辑状态，集合写入由候选工作区隔离 */
 type WeaveNodeStateBase<TInput> = {
+  /** 阶段复用依据；实际产物仅保存在 compiled / output */
+  cache?: Omit<CompileStageRecord, 'value'>;
   /** 所属声明容器，引用稳定对象 */
   parent: WeaveRoot | WeaveScopeNode;
   /** 自身输入与有效上下文，替换对象而非修改共享内容 */
@@ -49,12 +54,14 @@ type WeaveNodeStateBase<TInput> = {
 type WeaveShapeState = WeaveNodeStateBase<IRNode> & {
   /** Core 完整编译产物，只读复用 */
   compiled: CompiledNode | null;
+  /** 独立绘制阶段结果，资源与图元一同复用 */
+  output: ReturnType<typeof emitNodeOutput> | null;
 };
 
 /** 坐标状态 */
 type WeaveCoordinateState = WeaveNodeStateBase<IRCoordinate> & {
   /** Core 完整编译产物，只读复用 */
-  compiled: CompiledCoordinate | null;
+  compiled: CompiledNodeLayout | null;
 };
 
 /** 路径状态 */
@@ -107,8 +114,16 @@ export type WeaveScopeNode = WeaveNodeVersions<WeaveScopeState> & {
   readonly scopeId: string;
 };
 
-/** 基础元素联合，不包含 Composite 或声明根 */
-export type WeaveNode = WeaveCoordinateNode | WeavePathNode | WeaveScopeNode | WeaveShapeNode;
+/** 作者 Composite 的不透明更新边界，不公开生成节点 */
+export type WeaveCompositeNode = WeaveNodeVersions<
+  WeaveNodeStateBase<IRComposite> & { /** 生成结果由统一执行器管理，不暴露基础元素产物 */ compiled?: never }
+> & {
+  /** 稳定的作者声明类别 */
+  readonly type: 'composite';
+};
+
+/** 作者元素联合，不包含生成节点或声明根 */
+export type WeaveNode = WeaveCompositeNode | WeaveCoordinateNode | WeavePathNode | WeaveScopeNode | WeaveShapeNode;
 
 /** 根状态，集合、记录与输入随候选隔离 */
 type WeaveRootState = {

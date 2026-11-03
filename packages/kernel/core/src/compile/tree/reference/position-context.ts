@@ -11,9 +11,9 @@ import type {
 import { boundaryKey, resolvePositionTarget } from '../../../resolve';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../../schemas';
 import type { CompiledNodeLayout } from '../../layout';
-import type { NodeBoundaryStore } from '../../runtime';
 import type { ComposedScopeTransform } from '../../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../../shared';
+import type { NodeBoundaryStore } from '../node';
 import { createNodeReferenceGeometry, resolveAnchorRef } from '../node';
 
 /** 把视觉 shape 绑定为默认连接面 resolution */

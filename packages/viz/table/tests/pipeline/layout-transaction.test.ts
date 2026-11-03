@@ -1,6 +1,5 @@
 import type { CompositeCompileContext, ScenePrimitive, Transform } from '@retikz/core';
 import {
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
@@ -10,6 +9,7 @@ import {
 } from '@retikz/core';
 import { isPropertyPathEqual } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject, enum as zodEnum } from 'zod';
 

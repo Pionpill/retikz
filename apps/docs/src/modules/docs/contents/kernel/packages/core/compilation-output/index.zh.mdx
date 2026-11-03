@@ -5,7 +5,7 @@ description: 追踪 Core 如何汇总 Scene、资源与画布，并交付领域�
 
 [节点编译](/kernel/packages/core/node-compilation)、[路径编译](/kernel/packages/core/path-compilation)和[复合编译](/kernel/packages/core/composite-compilation)解释了图元怎样产生。本页从这些局部结果出发，追踪一次完整编译怎样收尾，以及调用方最终拿到什么。阅读前需要了解[编译流程](/kernel/packages/core/compilation)中的遍历与延迟路径回填。
 
-本文追踪单次完整编译的输出。Core 负责绘图语义与单元素计算，Reconciler 负责缓存复用和增量调度，Runtime 提供事务与执行基础。局部缓存怎样组装为完整输出见[独立编译与可复用状态](/kernel/packages/core/compilation#独立编译与可复用状态)。SVG / Canvas 的具体更新策略由渲染层处理。
+本文追踪单次完整编译的输出。Core 负责绘图语义与原子阶段，Reconciler 负责完整与增量编译、缓存复用和输出事务。局部缓存怎样组装为完整输出见[独立编译与可复用状态](/kernel/packages/core/compilation#独立编译与可复用状态)。SVG / Canvas 的具体更新策略由渲染层处理。
 
 ## 整体流程
 
@@ -33,8 +33,8 @@ type CompileResult = Readonly<{
 
 <SourceLinks
   sources={[
-    { label: '完整编译', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: '结果类型', path: 'packages/kernel/core/src/compile/types.ts' },
+    { label: '完整编译', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: '结果类型', path: 'packages/kernel/reconciler/src/compile/types.ts' },
   ]}
 />
 
@@ -308,7 +308,7 @@ Core 在编译时筛选轨道所属层级：根级的非 `viewBox` 轨道、元�
   sources={[
     { label: '动画轨道与关键帧', path: 'packages/kernel/core/src/schemas/scene/animation.ts' },
     { label: '根级与元素级轨道筛选', path: 'packages/kernel/core/src/resolve/animation.ts' },
-    { label: '场景动画装配', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: '场景动画装配', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
   ]}
 />
 
@@ -365,7 +365,7 @@ return {
 下面编译一个包含两个节点的 FlexLayout，并从返回数组中读取产物。注册的 Definition 同时让返回值保留具体的产物类型：
 
 ```ts
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
 
 const layout = createFlexLayout({
@@ -416,8 +416,8 @@ for (const artifact of result.artifacts) {
 
 <SourceLinks
   sources={[
-    { label: '编译快照入口', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: '来源契约', path: 'packages/kernel/core/src/compile/provenance/types.ts' },
+    { label: '编译快照入口', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: '来源契约', path: 'packages/kernel/reconciler/src/compile/provenance/types.ts' },
   ]}
 />
 
@@ -433,9 +433,9 @@ for (const artifact of result.artifacts) {
 
 <SourceLinks
   sources={[
-    { label: '编译入口', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: '遍历与重放', path: 'packages/kernel/core/src/compile/tree/subtree.ts' },
-    { label: 'Scene 装配', path: 'packages/kernel/core/src/compile/scene/output.ts' },
+    { label: '编译入口', path: 'packages/kernel/reconciler/src/compile/compile.ts' },
+    { label: '遍历与重放', path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts' },
+    { label: 'Scene 装配', path: 'packages/kernel/reconciler/src/compile/scene/output.ts' },
   ]}
 />
 

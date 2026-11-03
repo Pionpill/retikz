@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
 import type { IRScene, Scene } from '@retikz/core';
-import { compileSceneSnapshot } from '@retikz/core';
+import { compileSceneSnapshot } from '@retikz/reconciler';
 import type { RuntimeScenePrimitive, ScenePatch, ScenePatchOperation, SceneRuntimeSnapshot } from '@retikz/reconciler';
 import {
   ReconcilerSession,

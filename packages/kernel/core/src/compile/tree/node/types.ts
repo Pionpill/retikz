@@ -1,13 +1,13 @@
-import type { JsonObject, PropertyPath } from '@retikz/foundation';
+import type { JsonObject } from '@retikz/foundation';
 import type { CenteredBox, Position } from '@retikz/math';
 
 import type { TextFont, TextMeasurer, ShapeDefinition } from '../../../contract';
 import type { CanonicalFont, CanonicalNode, CanonicalNodeLabel, TextLineResolution } from '../../../resolve';
 import type { IRFont } from '../../../schemas';
 import type { CompiledNodeLayout } from '../../layout';
-import type { NodeBoundaryState } from '../../runtime';
-import type { CompileOutput, CompileWarningCode } from '../../shared';
+import type { CompileWarningCode } from '../../shared';
 import type { TexLowerer } from '../../text';
+import type { NodeBoundaryState } from './boundary-store';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
 type NodeFontWeight = NonNullable<IRFont['weight']>;
@@ -77,9 +77,7 @@ export type NodeLabelResolution = Omit<CanonicalNodeLabel, 'text' | 'font'> & {
 };
 
 /** 分别持有有效属性与计算布局的节点编译状态 */
-export type NodeCompilation = {
-  /** 元素在 IR 树中的来源路径 */
-  irPath: PropertyPath;
+export type CompiledNode = {
   /** 当前有效语义属性 */
   properties: NodeResolvedProperties;
   /** 已计算的几何与排版结果 */
@@ -93,11 +91,3 @@ export type TexLoweringContext = {
   /** 分发公式降级或布局过程中产生的编译诊断 */
   warn: (code: CompileWarningCode, message: string) => void;
 };
-
-/** 节点完整编译状态，布局与绘制使用同一次解析结果 */
-export type CompiledNode = Readonly<
-  NodeCompilation & {
-    /** 本地绘制输出 */
-    output: CompileOutput;
-  }
->;

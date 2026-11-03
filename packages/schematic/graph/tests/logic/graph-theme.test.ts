@@ -1,6 +1,5 @@
 import type { CompileWarning, CanonicalTheme } from '@retikz/core';
 import {
-  compileToScene,
   DEFAULT_RESOLVED_THEME,
   defineTheme,
   resolveCoreProviderDependencies,
@@ -8,6 +7,7 @@ import {
   RetikzCoreErrorCode,
   ThemeMode,
 } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';

@@ -1,6 +1,7 @@
 import type { CompileWarning, IRChild, ScenePrimitive } from '@retikz/core';
-import { BuiltinCompileWarningCode, compileToScene } from '@retikz/core';
+import { BuiltinCompileWarningCode } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { arrayDefinition, mapDefinition } from '../../../src/collection';

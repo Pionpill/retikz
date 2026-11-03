@@ -117,7 +117,10 @@ export class WeaveTransaction {
     this.assertPreparing();
     // 先验证全部状态，避免检查失败时产生部分切换
     for (const node of this.previous.keys()) {
-      if (node.pending === null || (node.type !== 'root' && node.pending.compiled === null))
+      if (
+        node.pending === null ||
+        (node.type !== 'root' && node.type !== 'composite' && node.pending.compiled === null)
+      )
         throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Compile, 'Cannot commit unfinished Weave state');
     }
     for (const node of this.previous.keys()) {

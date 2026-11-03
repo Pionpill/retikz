@@ -1,6 +1,7 @@
 import type { ScenePrimitive } from '@retikz/core';
-import { compileToScene, DEFAULT_RESOLVED_THEME, resolveCoreProviderDependencies } from '@retikz/core';
+import { DEFAULT_RESOLVED_THEME, resolveCoreProviderDependencies } from '@retikz/core';
 import { GroupCaptionSchema } from '@retikz/graph';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Flow from '../../src/flow';

@@ -1,12 +1,12 @@
 import type { CompileWarning, IRNode, LayoutProposal } from '@retikz/core';
 import {
   BuiltinCompileWarningCode,
-  compileToScene,
   defineTheme,
   LayoutAxisProposalKind,
   resolveCoreProviderDependencies,
 } from '@retikz/core';
 import type { FlexLayoutCompileArtifact } from '@retikz/layout';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';

@@ -1,11 +1,6 @@
-import type {
-  AnyCompositeDefinition,
-  CompileOptions,
-  CompileResult,
-  CompositeArtifact,
-  CompositeArtifactOf,
-  IRScene,
-} from '@retikz/core';
+import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
+import type { CompositeArtifact, CompositeArtifactOf } from '@retikz/reconciler';
+import type { CompileOptions, CompileResult } from '@retikz/reconciler';
 import type { output as ZodOutput } from 'zod';
 
 import type {

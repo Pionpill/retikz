@@ -27,7 +27,7 @@ Outer A is at `[0, 0]`. The origin of `cluster` moves to `[180, -40]`, so inner 
   sources={[
     {
       label: 'Position contexts, layout registration, and Scope finalization',
-      path: 'packages/kernel/core/src/compile/tree/subtree.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts',
     },
     { label: 'Local and world position results', path: 'packages/kernel/core/src/resolve/position/types.ts' },
   ]}
@@ -169,11 +169,11 @@ The Scope's own `id` is registered in its parent namespace before pushing the ch
   sources={[
     {
       label: 'NamespaceStack: top-frame registration and inside-out lookup',
-      path: 'packages/kernel/core/src/compile/runtime/namespace.ts',
+      path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts',
     },
     {
       label: 'visitScope: Scope registration and local Map lifecycle',
-      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
   ]}
 />
@@ -211,7 +211,7 @@ A failed ordinary reference produces an empty resolver result; the consumer dete
     },
     {
       label: 'Coordinate registration, deferred paths, and flush order',
-      path: 'packages/kernel/core/src/compile/tree/subtree.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts',
     },
   ]}
 />
@@ -301,9 +301,9 @@ The target is determined before entering children. Scope anchor placement theref
     },
     {
       label: 'Scope target restrictions, placeholder registration, and replacement',
-      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
-    { label: 'NamespaceEntry layout lifecycle', path: 'packages/kernel/core/src/compile/runtime/namespace.ts' },
+    { label: 'NamespaceEntry layout lifecycle', path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts' },
   ]}
 />
 
@@ -329,7 +329,7 @@ During finalization, Core adds only transforms that have not already been applie
     },
     {
       label: 'Preliminary transforms, final alignment, and geometry publication',
-      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
     { label: 'Scope origin and anchor placement contract', path: 'packages/kernel/core/src/schemas/scope/defaults.ts' },
   ]}
@@ -349,7 +349,7 @@ The overview's positioning and layout step, followed by world reference registra
   sources={[
     {
       label: 'visitScope complete call chain',
-      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
+      path: 'packages/kernel/reconciler/src/compile/tree/scope/visit.ts',
     },
     {
       label: 'Compilation state to position resolver adaptation',

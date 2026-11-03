@@ -4,9 +4,6 @@ import type {
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
-  CompileOptions,
-  CompileResult,
-  CompositeArtifact,
   IRAnimationTrack,
   IRScene,
   IRViewBox,
@@ -17,6 +14,8 @@ import type {
   TextMeasurer,
   ThemeDefinition,
 } from '@retikz/core';
+import type { CompositeArtifact } from '@retikz/reconciler';
+import type { CompileOptions, CompileResult } from '@retikz/reconciler';
 import type { ReconcilerDiagnostic } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';

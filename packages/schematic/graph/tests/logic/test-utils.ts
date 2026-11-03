@@ -8,13 +8,13 @@ import type {
 } from '@retikz/core';
 import {
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import { compileToScene } from '@retikz/reconciler';
 import type { infer as ZodInfer } from 'zod';
 import { boolean, custom, literal, number } from 'zod';
 

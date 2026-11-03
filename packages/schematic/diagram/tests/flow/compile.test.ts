@@ -1,7 +1,8 @@
 import type { CoreProviderContribution, GroupPrimitive, IRChild, ScenePrimitive, TextPrimitive } from '@retikz/core';
-import { compileToScene, DEFAULT_RESOLVED_THEME, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
+import { DEFAULT_RESOLVED_THEME, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
 import { defineGraphTheme, defineRelationRole } from '@retikz/graph';
 import { createFlexLayout, FlexLayoutArtifactSchema, LayoutItemKind } from '@retikz/layout';
+import { compileToScene } from '@retikz/reconciler';
 import { LegendSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 

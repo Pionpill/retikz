@@ -1,4 +1,6 @@
-import type { CompileResult, CompositeArtifact, Scene } from '@retikz/core';
+import type { Scene } from '@retikz/core';
+import type { CompositeArtifact } from '@retikz/reconciler';
+import type { CompileResult } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import {
   bindWaapiDescriptors,

@@ -1,5 +1,6 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { pathClipProvider } from '@retikz/extension';
+import { compileToScene } from '@retikz/reconciler';
 import { createSurface, surfaceProvider } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 

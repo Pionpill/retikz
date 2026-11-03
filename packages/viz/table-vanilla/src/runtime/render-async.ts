@@ -1,5 +1,5 @@
-import type { CompositeArtifact } from '@retikz/core';
 import { isPropertyPathEqual } from '@retikz/foundation';
+import type { CompositeArtifact } from '@retikz/reconciler';
 import type { IRTable, TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import { processToStaticInputResultAsync, renderToSvgString, scene } from '@retikz/vanilla';

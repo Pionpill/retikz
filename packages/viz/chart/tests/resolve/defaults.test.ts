@@ -1,7 +1,8 @@
 import type { ScenePrimitive } from '@retikz/core';
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { pathClipProvider } from '@retikz/extension';
 import { createPlotProviderContribution } from '@retikz/plot';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createScatterChartProviderContribution, ScatterChartSchema } from '../../src/point/scatter';

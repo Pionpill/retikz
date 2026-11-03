@@ -1,17 +1,8 @@
-import type {
-  CompileOptions,
-  CompileWarning,
-  ExecuteOptions,
-  IRScene,
-  SceneCompilationSnapshot,
-  SharedCompileContext,
-} from '@retikz/core';
-import { CompileProvenanceTracker } from '@retikz/core';
+import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import type { IdAllocator, PropertyPath } from '@retikz/foundation';
 
+import type { CompileOptions, ExecuteOptions, SceneCompilationSnapshot, SharedCompileContext } from '../compile';
 import { WeaveEditor } from './editor';
-import { createWeaveNamespaceRegistry } from './namespace';
-import type { WeaveNamespaceRegistry } from './namespace';
 import { WeaveTracker } from './tracker';
 import { WeaveTransaction } from './transaction';
 import type { WeaveNode, WeaveRoot } from './types';
@@ -21,7 +12,7 @@ export type WeaveCompilation = {
   /** 保持身份稳定的声明根 */
   root: WeaveRoot;
   /** 可交给输出事务提交的完整快照 */
-  compilation: SceneCompilationSnapshot<readonly []>;
+  compilation: SceneCompilationSnapshot<ReadonlyArray<AnyCompositeDefinition>>;
   /** 本次实际编译的元素数，不含缓存复用 */
   visited: number;
 };
@@ -60,17 +51,6 @@ export type WeaveBatchState = {
   readonly editor: WeaveEditor;
   /** 当前批次的依赖失效追踪器 */
   readonly tracker: WeaveTracker;
-  /** 按当前声明顺序建立的名称注册表 */
-  readonly namespace: WeaveNamespaceRegistry;
-  /** 本批输出的来源记录 */
-  readonly provenanceTracker: CompileProvenanceTracker;
-  /** 本批诊断收集器，发布前不修改旧快照 */
-  readonly diagnosticCollector: Readonly<{
-    /** 已收集的诊断 */
-    warnings: ReadonlyArray<CompileWarning>;
-    /** 追加本批诊断 */
-    collect: (warning: CompileWarning) => void;
-  }>;
   /** 当前批次是否复用已挂载树 */
   readonly updating: boolean;
   /** 当前批次是否强制重新计算 */
@@ -97,19 +77,11 @@ export const createWeaveBatchState = (
 ): WeaveBatchState => {
   const transaction = new WeaveTransaction(persistent.root);
   const editor = new WeaveEditor(persistent.root, transaction, persistent.scopeIds);
-  const warnings: Array<CompileWarning> = [];
-  const collect = (warning: CompileWarning): void => {
-    warnings.push(warning);
-  };
-  const namespace = createWeaveNamespaceRegistry(undefined, collect);
   return {
     source: persistent.source,
     transaction,
     editor,
     tracker: new WeaveTracker(persistent.root, transaction, persistent.bindings),
-    namespace,
-    provenanceTracker: new CompileProvenanceTracker(namespace.identity),
-    diagnosticCollector: { warnings, collect },
     updating,
     forceFull,
     previousNodeIrPaths: updating ? editor.captureNodeIrPaths() : new Map(),

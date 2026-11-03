@@ -2,6 +2,10 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import type {
   CompiledPathAppearance,
+  AnyPathDefinition,
+  ArrowDefinition,
+  MarkDefinition,
+  PatternDefinition,
   InputPathBoundaryLabel,
   InputPathLabel,
   PathCompileContext,
@@ -22,10 +26,10 @@ import {
 } from '../../../resolve';
 import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
 import type { RegisterPaint } from '../../resource';
-import type { CompileContextRegistries, NodeBoundaryStore } from '../../runtime';
 import { snapshotProviderPosition, snapshotScenePrimitives } from '../../shared';
 import type { ComposedScopeTransform, CompileWarning } from '../../shared';
 import type { TexLowerer } from '../../text';
+import type { NodeBoundaryStore } from '../node';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
 import { pathTargetViewOf } from './index';
 import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';
@@ -34,7 +38,16 @@ import type { InputPathCompilation } from './types';
 /** Path 宿主编译所需的显式服务与本次工作区 */
 export type PathHostCompileContext = Readonly<{
   /** 路径与装饰解析所需的定义 */
-  registries: Pick<CompileContextRegistries, 'pathRegistry' | 'arrowRegistry' | 'markRegistry' | 'patternRegistry'>;
+  registries: Readonly<{
+    /** 路径主体定义 */
+    pathRegistry: ReadonlyMap<string, AnyPathDefinition>;
+    /** 箭头定义 */
+    arrowRegistry: ReadonlyMap<string, ArrowDefinition>;
+    /** 路径标记定义 */
+    markRegistry: ReadonlyMap<string, MarkDefinition>;
+    /** 图案定义 */
+    patternRegistry: ReadonlyMap<string, PatternDefinition>;
+  }>;
   /** 数值圆整 */
   round: (value: number) => number;
   /** 根字号 */

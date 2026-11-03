@@ -1,5 +1,6 @@
 import type { CompileWarning, IRNode, ScenePrimitive } from '@retikz/core';
-import { compileToScene, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
+import { defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';

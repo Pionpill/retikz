@@ -8,7 +8,6 @@ import type {
   ScenePrimitive,
 } from '@retikz/core';
 import {
-  compileToScene,
   BuiltinCompileWarningCode,
   CompositeBaseSchema,
   defineComposite,
@@ -17,13 +16,15 @@ import {
   naturalLayoutProposal,
   PathSchema,
 } from '@retikz/core';
-import { compileSceneSnapshot } from '@retikz/core';
-import type { CompileOptions, AnyCompositeDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import { readPropertyPath } from '@retikz/foundation';
 import type { SceneIdentity, SceneRevision } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
+import { compileToScene } from '../../src/compile';
+import { compileSceneSnapshot } from '../../src/compile';
+import type { CompileOptions } from '../../src/compile';
 import { createFullSceneRuntimeSnapshot } from '../../src/scene';
 
 type PrimitiveRecords = WeakMap<ScenePrimitive, Readonly<{ identity: SceneIdentity; semanticOwner: SceneIdentity }>>;

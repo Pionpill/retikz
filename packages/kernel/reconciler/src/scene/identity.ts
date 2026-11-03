@@ -1,7 +1,7 @@
-import type { CompileNamespaceKey, CompileOwnerKey, CompileProvenanceSnapshot } from '@retikz/core';
 import { formatPropertyPath, readPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 
+import type { CompileNamespaceKey, CompileOwnerKey, CompileProvenanceSnapshot } from '../compile/provenance';
 import { CORE_SOURCE_KEY } from '../constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { createSceneIdentity } from './identity-value';

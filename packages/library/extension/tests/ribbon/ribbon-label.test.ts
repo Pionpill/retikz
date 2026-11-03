@@ -7,8 +7,9 @@ import type {
   ScenePrimitive,
   TextPrimitive,
 } from '@retikz/core';
-import { compileToScene as compileCoreToScene, PathLabelSchema } from '@retikz/core';
+import { PathLabelSchema } from '@retikz/core';
 import { curve } from '@retikz/math';
+import { compileToScene as compileCoreToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { RibbonLabelSchema, ribbonPathDefinition, RibbonPathSchema } from '../../src/ribbon';

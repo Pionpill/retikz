@@ -1,7 +1,8 @@
-import type { AnyCompositeDefinition, CompositeArtifact } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import { isPropertyPathEqual } from '@retikz/foundation';
+import type { CompositeArtifact } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/reconciler';
 
 import { RetikzTableError } from '../error';
 import type { IRTable } from '../schemas';

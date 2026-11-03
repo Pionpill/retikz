@@ -1,0 +1,87 @@
+import { describe, expect, it } from 'vitest';
+
+import { SceneSchema } from '../../../../core/src';
+import { mergeNodeStyle, resolveScopeDefaults } from '../../../../core/src/resolve';
+import { NodeSchema, ScopeSchema } from '../../../../core/src/schemas';
+import { compileToScene } from '../../../src/compile';
+
+describe('分组 Source 解析与编译', () => {
+  it('诊断区分样式路径与标签路径', () => {
+    const node = { type: 'node', position: [0, 0], style: { color: 'var(--color)', fill: 0.5 } };
+
+    expect(() => compileToScene(SceneSchema.parse({ version: 1, type: 'scene', children: [node] }))).toThrow(
+      /children\[0\].*style\.fill/,
+    );
+
+    const labeled = {
+      type: 'node',
+      position: [0, 0],
+      style: { color: 'var(--color)' },
+      label: { text: 'label', textColor: 0.5 },
+    };
+
+    expect(() => compileToScene(SceneSchema.parse({ version: 1, type: 'scene', children: [labeled] }))).toThrow(
+      /children\[0\].*label\.textColor/,
+    );
+  });
+
+  it('实例单字段覆盖保留其它继承字段，节点字体按字段继承', () => {
+    const frame = resolveScopeDefaults(
+      ScopeSchema.parse({
+        type: 'scope',
+        children: [],
+
+        defaults: {
+          style: { stroke: 'blue' },
+          node: { style: { font: { family: 'serif', size: 20 } }, layout: { minimumSize: 30 } },
+        },
+      }).defaults,
+    );
+    const node = NodeSchema.parse({
+      type: 'node',
+      position: [0, 0],
+      style: { fill: 'red', font: { size: 12 } },
+      layout: { padding: 0 },
+    });
+
+    expect(mergeNodeStyle(node, frame)).toMatchObject({
+      style: { fill: 'red', stroke: 'blue', font: { size: 12 } },
+      layout: { padding: 0, minimumSize: 30 },
+    });
+    expect(mergeNodeStyle(node, frame)).toMatchObject({ style: { font: { family: 'serif', size: 12 } } });
+  });
+
+  it('空分组不清除继承，JSON 往返保持绘图结果', () => {
+    const source = SceneSchema.parse({
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+
+          defaults: { style: { fill: 'red', stroke: 'blue' }, reset: false },
+          children: [
+            {
+              type: 'node',
+              id: 'n',
+              position: [0, 0],
+              style: { fill: undefined },
+              layout: {},
+            },
+          ],
+        },
+      ],
+    });
+    const output = compileToScene(source).scene;
+
+    expect(compileToScene(SceneSchema.parse(JSON.parse(JSON.stringify(source)))).scene).toEqual(output);
+
+    const frame = resolveScopeDefaults(
+      ScopeSchema.parse({ type: 'scope', children: [], defaults: { style: { fill: 'red' } } }).defaults,
+    );
+
+    expect(
+      mergeNodeStyle(NodeSchema.parse({ type: 'node', position: [0, 0], style: {}, layout: {} }), frame),
+    ).toMatchObject({ style: { fill: 'red' } });
+  });
+});

@@ -1,6 +1,6 @@
 import type { IRChild, IRNode, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { IRArray, IRMap } from '../../../src/collection';

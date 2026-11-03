@@ -1,13 +1,8 @@
-import type {
-  CompileResult,
-  CompositeArtifact,
-  CoreSemanticColors,
-  CssColorValue,
-  IRChild,
-  ScenePrimitive,
-} from '@retikz/core';
+import type { CoreSemanticColors, CssColorValue, IRChild, ScenePrimitive } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { AffineMatrix } from '@retikz/math';
+import type { CompositeArtifact } from '@retikz/reconciler';
+import type { CompileResult } from '@retikz/reconciler';
 import type { ZodType } from 'zod';
 
 /** 编译结果的递归只读视图，不改变原对象 */

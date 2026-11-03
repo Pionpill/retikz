@@ -1,9 +1,11 @@
-import type { CompileProvenanceSnapshot, IRScene, IRScope, ScenePrimitive } from '@retikz/core';
-import { compileSceneSnapshot, compileToScene, definePath, PathSchema } from '@retikz/core';
+import type { IRScene, IRScope, ScenePrimitive } from '@retikz/core';
+import { definePath, PathSchema } from '@retikz/core';
 import { encodePropertyPath } from '@retikz/foundation';
+import type { CompileProvenanceSnapshot } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
+import { compileSceneSnapshot, compileToScene } from '../../src/compile';
 import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
 
 const readEmissions = (provenance: CompileProvenanceSnapshot) =>
@@ -36,7 +38,7 @@ describe('Weave 编译构建', () => {
   });
 
   it('保留跨 Scope 延后路径、声明结构和完整来源', () => {
-    const prepared = new WeaveReconciler(scene).mount();
+    const prepared = new WeaveReconciler(scene, {}, { captureProvenance: true }).mount();
     expect(prepared.compilation.result).toEqual(compileToScene(scene));
     expect(prepared.root.pending).toBeNull();
     expect(readWeaveCurrent(prepared.root).children.every(node => node.pending === null)).toBe(true);
@@ -53,7 +55,7 @@ describe('Weave 编译构建', () => {
   });
 
   it('失败的新候选不改变此前树、索引和已完成输出', () => {
-    const previous = new WeaveReconciler(scene).mount();
+    const previous = new WeaveReconciler(scene, {}, { captureProvenance: true }).mount();
     const output = JSON.stringify(previous.compilation.result);
     const nodes = [...readWeaveCurrent(previous.root).scopeIds.values()];
     expect(() =>
@@ -175,7 +177,7 @@ describe('Weave 与 Core 可观察等价', () => {
   ];
   it.each(inputs)('保持引用、变换、排序、诊断与发射归属', input => {
     const full = compileSceneSnapshot(input, {}, { captureProvenance: true });
-    const weave = new WeaveReconciler(input, {}).mount().compilation;
+    const weave = new WeaveReconciler(input, {}, { captureProvenance: true }).mount().compilation;
     expect(weave.result).toEqual(full.result);
     expect(weave.diagnostics).toEqual(full.diagnostics);
     expect(
@@ -253,7 +255,7 @@ it('嵌套旋转缩放后的引用、渐变资源与观察结果保持同版本'
     ],
   };
   const full = compileSceneSnapshot(input, {});
-  const weave = new WeaveReconciler(input, {}).mount().compilation;
+  const weave = new WeaveReconciler(input, {}, { captureProvenance: true }).mount().compilation;
   expect(weave.result).toEqual(full.result);
 });
 
@@ -337,7 +339,7 @@ it('自定义 Path 重用相同图元对象时保留各自的发射来源', () =
       },
     ],
   };
-  const prepared = new WeaveReconciler(input, { paths: [kind] }).mount();
+  const prepared = new WeaveReconciler(input, { paths: [kind] }, { captureProvenance: true }).mount();
   expect(prepared.compilation.result).toEqual(compileToScene(input, { paths: [kind] }));
   const owners = [...prepared.compilation.provenance!.ownerMap.values()].filter(owner => owner.emissions.length > 0);
   expect(owners).toHaveLength(2);

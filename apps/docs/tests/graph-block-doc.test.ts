@@ -1,6 +1,7 @@
 import type { ScenePrimitive } from '@retikz/core';
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { GraphSchema } from '@retikz/graph';
+import { compileToScene } from '@retikz/reconciler';
 import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 

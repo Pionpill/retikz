@@ -1,7 +1,8 @@
 import type { IRPath, IRScene, MarkEmitContext, ScenePrimitive } from '@retikz/core';
-import { compileToScene, compileSceneSnapshot, BuiltinCompileWarningCode } from '@retikz/core';
+import { BuiltinCompileWarningCode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
+import { compileToScene, compileSceneSnapshot } from '../../src/compile';
 import { readWeaveCurrent, WeaveReconciler } from '../../src/weave';
 
 const scene: IRScene = {

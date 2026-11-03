@@ -1,7 +1,6 @@
 import type { CompositeBoundChild, CompositeCompileContext, IRChild, IRScene } from '@retikz/core';
 import {
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   createCompositeInputBindings,
   defineComposite,
@@ -12,6 +11,8 @@ import {
 import { ReconcilerSession } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
+
+import { compileToScene } from '../../../src/compile';
 
 const leaf = (): IRChild => ({ namespace: 'fixture', type: 'prepared' });
 

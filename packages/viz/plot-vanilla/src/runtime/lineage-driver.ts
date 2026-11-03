@@ -1,5 +1,5 @@
-import type { CompileResult } from '@retikz/core';
 import { lowerPlotWithLineage } from '@retikz/plot';
+import type { CompileResult } from '@retikz/reconciler';
 import type { InputVanillaCompileDriver, VanillaCompileDriver, VanillaCompileDriverSession } from '@retikz/vanilla';
 
 import type { PreparedPlotLineageNotification } from '../spec';

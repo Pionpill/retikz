@@ -1,6 +1,7 @@
 import type { LayoutProposal, PathPrimitive, ScenePrimitive } from '@retikz/core';
-import { ChildSchema, compileToScene, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
+import { ChildSchema, CompositeBaseSchema, defineComposite, LayoutChildProbeKind } from '@retikz/core';
 import { pathClipDefinition } from '@retikz/extension';
+import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 

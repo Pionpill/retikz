@@ -1,6 +1,7 @@
-import type { CompileResult } from '@retikz/core';
-import { categoricalColorAt, compileToScene, DEFAULT_RESOLVED_THEME } from '@retikz/core';
+import { categoricalColorAt, DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { AFFINE_IDENTITY } from '@retikz/math';
+import type { CompileResult } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/reconciler';
 
 import type { InspectorOutput } from '../contract';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';

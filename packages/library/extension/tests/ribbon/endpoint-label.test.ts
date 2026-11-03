@@ -1,5 +1,5 @@
 import type { AnyPathDefinition, IRBoundaryLabel, IRScene, ScenePrimitive } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 

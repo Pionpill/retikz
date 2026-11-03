@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
-import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
 import type {
   InputRetainedRendererFactory,
@@ -781,7 +782,7 @@ describe('@retikz/vanilla 保留安装座', () => {
     expect(view.root).toBe(root);
     expect(view.root.querySelector('[data-retikz-id="changed"]')?.getAttribute('fill')).toBe('#22c55e');
     expect(view.runtimeMeta.layers).toHaveLength(1);
-    expect(view.artifacts.length).toBeGreaterThan(0);
+    expect(view.artifacts).toEqual([]);
   });
 
   it('IR/InputScene Canvas static view 完整重绘并复用 root', () => {

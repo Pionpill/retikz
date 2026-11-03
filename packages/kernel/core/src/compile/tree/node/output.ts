@@ -6,7 +6,7 @@ import type { RegisterPaint } from '../../resource';
 import { outerRectOf } from './anchors';
 import { emitNodePrimitives } from './emit';
 import { labelExtentPoints } from './label';
-import type { NodeCompilation } from './types';
+import type { CompiledNode } from './types';
 
 /** 节点输出所需的圆整与资源登记能力 */
 export type NodeEmitContext = Readonly<{
@@ -18,7 +18,7 @@ export type NodeEmitContext = Readonly<{
 
 /** 从已完成的节点布局生成图元及边界，资源通过显式能力登记 */
 export const emitNodeOutput = (
-  compilation: NodeCompilation,
+  compilation: CompiledNode,
   context: NodeEmitContext,
 ): {
   primitives: Array<ScenePrimitive>;

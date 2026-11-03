@@ -1,6 +1,6 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
 import { createDataTransformExecutor } from '@retikz/data';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { MarkChannels } from '../../src/contract';

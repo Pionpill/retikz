@@ -1,7 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { contourShapeDefinition } from '@retikz/extension';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 

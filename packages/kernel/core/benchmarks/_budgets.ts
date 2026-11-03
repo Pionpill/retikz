@@ -28,15 +28,6 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
       rationale:
         '一次工作区或结果组装中的完整注册表生命周期，包含创建及N次登记/导入；假设10次为局部编辑（1/4ms），100次为普通更新（4/8ms），1000次为大批资源处理（8/16.6ms）。该阶段接近一帧即有同步阻塞风险，复杂Pattern不放宽预算；不含输入解析和renderer，不代表整帧保证或稳定回归上限',
     };
-  } else if (layer === 'compile' && family === 'full' && variant === 'mixed') {
-    const count = Number(scale);
-    if (![100, 500, 1000].includes(count)) throw new Error(`Missing Core compile scale budget: ${identity}`);
-    policy = {
-      warningMs: count === 100 ? 8 : count === 500 ? 25 : 50,
-      errorMs: count === 100 ? 16.6 : count === 500 ? 50 : 100,
-      rationale:
-        '一次完整流程图编译，无provenance；每10节点12路径、两层Scope。假设100节点用于频繁小图更新（8/16.6ms），500节点用于编辑后刷新（25/50ms），1000节点用于大图完整更新（50/100ms），中大型不承诺60FPS；不含输入构造和renderer，首次采样前固定',
-    };
   } else if (layer === 'providers') {
     switch (family) {
       case 'shape':

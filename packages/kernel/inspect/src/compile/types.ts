@@ -1,7 +1,8 @@
-import type { CompileOptions, Scene } from '@retikz/core';
+import type { Scene } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import type { JsonObject } from '@retikz/foundation';
 import type { AffineMatrix } from '@retikz/math';
+import type { CompileOptions } from '@retikz/reconciler';
 
 import type { InspectionTarget, InspectorKey } from '../contract';
 import type { InspectorRegistry } from '../providers';

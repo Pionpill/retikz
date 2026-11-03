@@ -1,5 +1,6 @@
-import type { AnyCompositeDefinition, CompileOptions, IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
+import type { CompileOptions } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/reconciler';
 import type { ReconcilerOutput } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '@retikz/render/runtime';

@@ -87,6 +87,7 @@
     "@retikz/graph": "workspace:^",
     "@retikz/layout": "workspace:^",
     "@retikz/math": "workspace:^",
+    "@retikz/reconciler": "workspace:^",
     "@retikz/standard": "workspace:^",
     "zod": "catalog:"
   },

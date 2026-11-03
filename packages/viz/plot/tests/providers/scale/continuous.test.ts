@@ -1,5 +1,5 @@
 import type { IRPath, IRScope, IRStep } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../src/contract';

@@ -1,10 +1,5 @@
 import type { CoreProviderContribution, IRChild, IRScene } from '@retikz/core';
-import {
-  ThemeMode,
-  compileToScene,
-  resolveCoreProviderDependencies,
-  resolveDefaultCoreThemeColors,
-} from '@retikz/core';
+import { ThemeMode, resolveCoreProviderDependencies, resolveDefaultCoreThemeColors } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import {
   DataTransformBindingClass,
@@ -21,6 +16,7 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { FlexLayoutArtifactSchema } from '@retikz/layout';
 import type { PlotsLoweringOptions } from '@retikz/plot';
 import { PointMarkSchema, createPlotProviderContribution } from '@retikz/plot';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { array, boolean, literal, number, strictObject, string } from 'zod';
 

@@ -20,8 +20,6 @@ import {
 import type { IRAnchorPosition, IRPosition } from '../../../schemas';
 import { CenterAnchor } from '../../../shared';
 import type { CompiledNodeLayout } from '../../layout';
-import type { NodeBoundaryStore } from '../../runtime';
-import { createNodeBoundaryStore } from '../../runtime';
 import {
   DEFAULT_FONT_SIZE,
   composeScopeTransform,
@@ -30,10 +28,12 @@ import {
 } from '../../shared';
 import type { CompileWarningCode, ComposedScopeTransform } from '../../shared';
 import { resolveAnchorRefUncached } from './anchor-cache';
+import type { NodeBoundaryStore } from './boundary-store';
+import { createNodeBoundaryStore } from './boundary-store';
 import { layoutNodeContent } from './content';
 import { layoutNodeLabels, measureNodeLabels } from './label';
 import { projectLayoutWithTransform } from './projection';
-import type { NodeCompilation, TexLoweringContext } from './types';
+import type { CompiledNode, TexLoweringContext } from './types';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
@@ -152,7 +152,7 @@ export type NodeLayoutContext = {
 };
 
 /** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
-export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContext): NodeCompilation => {
+export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContext): CompiledNode => {
   const { node, shape: shapeResolution, boundary: boundaryResolution } = resolution;
   const {
     measureText,
@@ -429,7 +429,6 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
       )
     : resolved;
   return {
-    irPath: resolution.irPath,
     layout,
     properties: {
       ...node,

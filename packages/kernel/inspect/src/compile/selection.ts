@@ -1,7 +1,9 @@
-import type { CompileResult, CompositeArtifact, ScenePrimitive, Transform } from '@retikz/core';
+import type { ScenePrimitive, Transform } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 import { AFFINE_IDENTITY, multiplyAffine } from '@retikz/math';
 import type { AffineMatrix } from '@retikz/math';
+import type { CompositeArtifact } from '@retikz/reconciler';
+import type { CompileResult } from '@retikz/reconciler';
 
 import type { AnyInspectorDefinition, InspectionTarget, InspectorSubject } from '../contract';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';

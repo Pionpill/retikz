@@ -1,6 +1,5 @@
 import type { LayoutChildResult, LayoutProposal } from '@retikz/core';
 import {
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
@@ -8,6 +7,7 @@ import {
   naturalLayoutProposal,
 } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 

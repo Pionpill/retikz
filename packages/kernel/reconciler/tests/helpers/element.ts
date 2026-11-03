@@ -7,15 +7,15 @@ import type {
   CompiledNodeLayout,
 } from '@retikz/core';
 
-import { runWeaveCompilation } from '../../src/weave/compile';
-import type { WeaveCompileOptions } from '../../src/weave/compile';
 import {
   compileWeaveNode,
   compileWeaveCoordinate,
   compileWeavePath,
   compileWeaveScope,
   prepareWeaveScope,
-} from '../../src/weave/element';
+} from '../helpers/atomic-elements';
+import { runWeaveCompilation } from '../helpers/atomic-runtime';
+import type { WeaveCompileOptions } from '../helpers/atomic-runtime';
 
 /** 在真实 Weave 候选工作区中组合节点，供行为测试使用 */
 export const testCompileNode = (input: IRNode, options: WeaveCompileOptions) =>

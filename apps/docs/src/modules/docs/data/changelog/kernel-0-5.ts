@@ -373,10 +373,20 @@ export const kernelV05: Release = {
       pkg: '@retikz/core',
       version: 'v0.5',
       description: {
-        zh: '节点与分组更容易对齐，连线和标签获得更精细的控制；Core 专注静态编译，增量复用由 Reconciler 承担。',
-        en: 'Makes nodes and groups easier to align and adds finer path and label control. Core focuses on static compilation; Reconciler owns incremental reuse.',
+        zh: '节点与分组更容易对齐，连线和标签获得更精细的控制；Core 提供原子阶段，Reconciler 统一完整与增量编译。',
+        en: 'Makes nodes and groups easier to align and adds finer path and label control. Core supplies atomic stages; Reconciler unifies complete and incremental compilation.',
       },
       highlights: [
+        {
+          label: {
+            zh: '待发布：BREAKING 编译入口迁至 Reconciler',
+            en: 'Unreleased: BREAKING compilation APIs move to Reconciler',
+          },
+          content: {
+            zh: 'compileToScene、compileSceneSnapshot、CompileOptions、CompileResult、ExecuteOptions 与 SceneCompilationSnapshot 改从 @retikz/reconciler 导入，Core 不保留转发出口。Core 保留原子阶段与共享产物；全量、增量首轮及 Composite 使用同一执行器。ReconcilerSession 的 incremental 默认 true；false 不保留 Weave，支持 mount/replace，拒绝 update 与 updateStrategy。含 Composite 场景可批次更新作者基础元素，生成内容不可直接编辑。',
+            en: 'Import compileToScene, compileSceneSnapshot, CompileOptions, CompileResult, ExecuteOptions, SceneCompilationSnapshot, CompileProvenanceSnapshot, CompositeArtifact / CompositeArtifactOf, and compilation option groups from @retikz/reconciler; Core keeps no forwarding exports. Core supplies atomic stages and shared products. Complete compilation, incremental initialization, and Composites share one executor. ReconcilerSession incremental defaults to true; false retains no Weave, supports mount/replace, and rejects update and updateStrategy. Composite scenes allow batch edits to authored basic elements, excluding generated content.',
+          },
+        },
         {
           label: { zh: '待发布：BREAKING 冗余 API 清理', en: 'Unreleased: BREAKING unused API cleanup' },
           content: {

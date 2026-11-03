@@ -1,5 +1,5 @@
 import type { ScenePrimitive, TextMeasurer } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createPlotLineageLocator, createPlotLocator, lowerPlotWithLineage } from '../../src';

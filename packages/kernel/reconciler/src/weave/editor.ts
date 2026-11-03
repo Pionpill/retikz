@@ -1,7 +1,7 @@
-import { createCompileChildPath } from '@retikz/core';
-import type { ScopeStyleResolution, IRChild, IRComposite } from '@retikz/core';
+import type { ScopeStyleResolution, IRChild } from '@retikz/core';
 import type { IdAllocator, PropertyPath } from '@retikz/foundation';
 
+import { createCompileChildPath } from '../compile/shared';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { readWeaveCurrent } from './transaction';
 import type { WeaveTransaction } from './transaction';
@@ -53,6 +53,11 @@ export class WeaveEditor {
       if (parent.type === 'scope') changes.changedNodes.push(parent);
     } else {
       const node = this.findTargetNode(operation.target);
+      if (node.type === 'composite')
+        throw new RetikzReconcilerError(
+          RetikzReconcilerErrorCode.Contract,
+          'Replace the scene to edit a Composite declaration',
+        );
       changes.changedNodes.push(node);
       if (operation.kind === 'update') this.replaceNodeInput(node, operation.input);
       else {
@@ -83,7 +88,7 @@ export class WeaveEditor {
 
   /** 创建声明节点并登记本次编译的节点与容器索引 */
   createNode(
-    childElement: Exclude<IRChild, IRComposite>,
+    childElement: IRChild,
     parentWeaveNode: WeaveRoot | WeaveScopeNode,
     context: ScopeStyleResolution,
   ): WeaveNode {
@@ -94,53 +99,56 @@ export class WeaveEditor {
       consumers: new Set<WeaveNode>(),
     };
     let node: WeaveNode;
-    switch (childElement.type) {
-      case 'node':
-        node = {
-          type: 'node',
-          current: null,
-          pending: { ...base, input: { own: childElement, context }, compiled: null },
-        };
-        break;
-      case 'coordinate':
-        node = {
-          type: 'coordinate',
-          current: null,
-          pending: { ...base, input: { own: childElement, context }, compiled: null },
-        };
-        break;
-      case 'scope': {
-        const { children: nested, ...scopeInput } = childElement;
-        void nested;
-        node = {
-          type: 'scope',
-          scopeId: this.scopeIds.next(),
-          current: null,
-          pending: {
-            ...base,
-            input: { own: scopeInput, context },
-            compiled: null,
-            children: [],
-            ...(childElement.localNamespace ? { ids: new Map<string, WeaveNode>() } : {}),
-          },
-        };
-        this.transaction.editNodeAttribute(this.root, 'scopeIds').set(node.scopeId, node);
-        break;
+    if ('namespace' in childElement) {
+      node = { type: 'composite', current: null, pending: { ...base, input: { own: childElement, context } } };
+    } else
+      switch (childElement.type) {
+        case 'node':
+          node = {
+            type: 'node',
+            current: null,
+            pending: { ...base, input: { own: childElement, context }, compiled: null, output: null },
+          };
+          break;
+        case 'coordinate':
+          node = {
+            type: 'coordinate',
+            current: null,
+            pending: { ...base, input: { own: childElement, context }, compiled: null },
+          };
+          break;
+        case 'scope': {
+          const { children: nested, ...scopeInput } = childElement;
+          void nested;
+          node = {
+            type: 'scope',
+            scopeId: this.scopeIds.next(),
+            current: null,
+            pending: {
+              ...base,
+              input: { own: scopeInput, context },
+              compiled: null,
+              children: [],
+              ...(childElement.localNamespace ? { ids: new Map<string, WeaveNode>() } : {}),
+            },
+          };
+          this.transaction.editNodeAttribute(this.root, 'scopeIds').set(node.scopeId, node);
+          break;
+        }
+        default:
+          node = {
+            type: 'path',
+            current: null,
+            pending: { ...base, input: { own: childElement, context }, compiled: null },
+          };
       }
-      default:
-        node = {
-          type: 'path',
-          current: null,
-          pending: { ...base, input: { own: childElement, context }, compiled: null },
-        };
-    }
     this.transaction.editNode(node);
     this.transaction.editNodeAttribute(parentWeaveNode, 'children').push(node);
     return node;
   }
 
   /** 序列化候选声明供 Core 组装和来源遍历，不比较新旧完整 IR */
-  serializeNodeDeclaration(node: WeaveNode): InputWeaveElement {
+  serializeNodeDeclaration(node: WeaveNode): IRChild {
     if (node.type === 'scope') {
       const state = this.transaction.readNode(node);
       return { ...state.input.own, children: state.children.map(child => this.serializeNodeDeclaration(child)) };
@@ -163,8 +171,10 @@ export class WeaveEditor {
       else delete state.ids;
     }
     for (const child of this.transaction.readNode(container).children) {
-      const own = this.transaction.readNode(child).input.own;
-      if (own.id !== undefined) ids.set(own.id, child);
+      if (child.type !== 'composite') {
+        const own = this.transaction.readNode(child).input.own;
+        if (own.id !== undefined) ids.set(own.id, child);
+      }
       if (child.type === 'node') {
         for (const id of this.transaction.readNode(child).input.own.aliasIds ?? []) ids.set(id, child);
       }

@@ -1,5 +1,6 @@
 import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
-import { compileToScene, defineBoundary, defineClip } from '@retikz/core';
+import { defineBoundary, defineClip } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, number, strictObject } from 'zod';

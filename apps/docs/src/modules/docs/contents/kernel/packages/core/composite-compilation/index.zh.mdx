@@ -22,7 +22,7 @@ Definition 统一提供 `compile(node, context)`。`node` 是 schema 解析后�
 <SourceLinks
   sources={[
     { label: '复合组件回调与上下文契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
-    { label: '遍历器中的复合组件调度', path: 'packages/kernel/core/src/compile/tree/composite/compile.ts' },
+    { label: '遍历器中的复合组件调度', path: 'packages/kernel/reconciler/src/compile/tree/composite/compile.ts' },
   ]}
 />
 
@@ -71,7 +71,7 @@ Definition 统一提供 `compile(node, context)`。`node` 是 schema 解析后�
     { label: 'Vanilla 编译准备入口', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     { label: 'Chart 的布局依赖', path: 'packages/viz/chart/src/_chart/providers/provider.ts' },
     { label: 'Chart 标题与绘图区的纵向排布', path: 'packages/viz/chart/src/_chart/resolve/presentation.ts' },
-    { label: '注册表进入编译上下文', path: 'packages/kernel/core/src/compile/runtime/runtime.ts' },
+    { label: '注册表进入编译上下文', path: 'packages/kernel/reconciler/src/compile/runtime/runtime.ts' },
     { label: '定义绑定与输入解析', path: 'packages/kernel/core/src/resolve/composite/resolve.ts' },
   ]}
 />
@@ -114,7 +114,7 @@ const definition = defineComposite({
 <SourceLinks
   sources={[
     { label: '统一 compile 与上下文契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
-    { label: '输出子项与运行时句柄', path: 'packages/kernel/core/src/compile/tree/composite/handle.ts' },
+    { label: '输出子项与运行时句柄', path: 'packages/kernel/reconciler/src/compile/tree/composite/handle.ts' },
   ]}
 />
 
@@ -192,11 +192,11 @@ Core 根据真实占用解析槽位：`intrinsic` 取实际尺寸，`range` 将�
 
 <SourceLinks
   sources={[
-    { label: '提案校验与槽位尺寸计算', path: 'packages/kernel/core/src/compile/tree/composite/proposal.ts' },
+    { label: '提案校验与槽位尺寸计算', path: 'packages/kernel/reconciler/src/compile/tree/composite/proposal.ts' },
     { label: '提案、布局结果与对齐线契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
       label: 'Node、Path 与 Scope 的提案行为验证',
-      path: 'packages/kernel/core/tests/compile/layout-proposal-builtins.test.ts',
+      path: 'packages/kernel/reconciler/tests/core/compile/layout-proposal-builtins.test.ts',
     },
   ]}
 />
@@ -261,7 +261,7 @@ export type LayoutChildResult = Readonly<{
 <SourceLinks
   sources={[
     { label: '测量结果与对齐线契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
-    { label: '从布局占用计算槽位', path: 'packages/kernel/core/src/compile/tree/composite/proposal.ts' },
+    { label: '从布局占用计算槽位', path: 'packages/kernel/reconciler/src/compile/tree/composite/proposal.ts' },
   ]}
 />
 
@@ -362,8 +362,8 @@ export type LayoutMeasurementProbe =
 <SourceLinks
   sources={[
     { label: '贡献与完整输出契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
-    { label: '隔离求值与贡献复用', path: 'packages/kernel/core/src/compile/tree/composite/measurement.ts' },
-    { label: '宿主测量服务', path: 'packages/kernel/core/src/compile/runtime/context.ts' },
+    { label: '隔离求值与贡献复用', path: 'packages/kernel/reconciler/src/compile/tree/composite/measurement.ts' },
+    { label: '宿主测量服务', path: 'packages/kernel/reconciler/src/compile/runtime/context.ts' },
     { label: 'Flow 路线与端点查询复用', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
   ]}
 />
@@ -399,9 +399,9 @@ Core 因此把每次完整布局查询作为一次隔离试算：它可以读取
 
 <SourceLinks
   sources={[
-    { label: '试算环境与结果捕获', path: 'packages/kernel/core/src/compile/tree/composite/probe.ts' },
-    { label: '重放事务保存的贡献', path: 'packages/kernel/core/src/compile/runtime/composite.ts', startLine: 35 },
-    { label: '试算失败分类与提升', path: 'packages/kernel/core/src/compile/tree/composite/failure.ts' },
+    { label: '试算环境与结果捕获', path: 'packages/kernel/reconciler/src/compile/tree/composite/probe.ts' },
+    { label: '重放事务保存的贡献', path: 'packages/kernel/reconciler/src/compile/runtime/composite.ts', startLine: 35 },
+    { label: '试算失败分类与提升', path: 'packages/kernel/reconciler/src/compile/tree/composite/failure.ts' },
   ]}
 />
 
@@ -432,8 +432,8 @@ Core 因此把每次完整布局查询作为一次隔离试算：它可以读取
 
 <SourceLinks
   sources={[
-    { label: '重放句柄与 Scope 输出创建', path: 'packages/kernel/core/src/compile/tree/composite/handle.ts' },
-    { label: '输出预检、资源导入与重放提交', path: 'packages/kernel/core/src/compile/tree/composite/compile.ts' },
+    { label: '重放句柄与 Scope 输出创建', path: 'packages/kernel/reconciler/src/compile/tree/composite/handle.ts' },
+    { label: '输出预检、资源导入与重放提交', path: 'packages/kernel/reconciler/src/compile/tree/composite/compile.ts' },
     { label: '放置外壳与容器输出契约', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
   ]}
 />
@@ -488,8 +488,8 @@ const definition = defineComposite({
 
 <SourceLinks
   sources={[
-    { label: '复合实例的完整调度与提交', path: 'packages/kernel/core/src/compile/tree/composite/compile.ts' },
-    { label: '试算会话与结果关联', path: 'packages/kernel/core/src/compile/runtime/composite.ts', startLine: 35 },
+    { label: '复合实例的完整调度与提交', path: 'packages/kernel/reconciler/src/compile/tree/composite/compile.ts' },
+    { label: '试算会话与结果关联', path: 'packages/kernel/reconciler/src/compile/runtime/composite.ts', startLine: 35 },
   ]}
 />
 

@@ -1,26 +1,22 @@
-import type {
-  AnyCompositeDefinition,
-  CompileOptions,
-  ExecuteOptions,
-  IRScene,
-  SceneCompilationSnapshot,
-} from '@retikz/core';
-import { compileSceneSnapshot, formatCompileWarning } from '@retikz/core';
+import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
+import { formatCompileWarning } from '@retikz/core';
 import type { PerformanceTraceSink } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
 
+import type { CompileOptions, ExecuteOptions, SceneCompilationSnapshot } from './compile';
+import { compileSceneSnapshot } from './compile';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from './error';
 import { ReconcilerTracePhase, ReconcilerTraceUnit } from './trace';
 import type { WeaveBatch, WeavePreparedUpdate, WeaveRoot } from './weave';
-import { isWeaveScene, WeaveReconciler } from './weave';
+import { WeaveReconciler } from './weave';
 
 /** 同一会话发布的完整编译结果 */
 export type ReconcilerResult = Readonly<{
   /** 会话内的已提交版本，首次发布为零 */
   revision: number;
-  /** Core 的完整编译产物，不强制生成渲染快照 */
+  /** 统一执行器的完整编译产物，不强制生成渲染快照 */
   compilation: SceneCompilationSnapshot<ReadonlyArray<AnyCompositeDefinition>>;
-  /** 基础元素场景的稳定根，Composite 完整编译不提供此字段 */
+  /** 增量模式的稳定作者声明根，非增量模式不保留此字段 */
   root?: WeaveRoot;
 }>;
 
@@ -45,6 +41,8 @@ export type ReconcilerCommitTarget = Readonly<{
 /** 编译会话的输出接线 */
 export type ReconcilerSessionOptions = ExecuteOptions &
   Readonly<{
+    /** 是否保留用于后续更新的 Weave 阶段缓存，默认 true */
+    incremental?: boolean;
     /** 可选宿主目标；省略时仅提交计算状态 */
     target?: ReconcilerCommitTarget;
     /** 基础批次是否强制重算全部元素，完整输入替换始终完整编译 */
@@ -65,7 +63,10 @@ export class ReconcilerSession {
   constructor(
     private options: CompileOptions<ReadonlyArray<AnyCompositeDefinition>> = {},
     private readonly execution: ReconcilerSessionOptions = {},
-  ) {}
+  ) {
+    if (execution.incremental === false && execution.updateStrategy !== undefined)
+      throw this.contractError('A non-incremental session cannot configure an update strategy');
+  }
 
   /** 首次建立计算状态并发布完整结果 */
   mount(source: IRScene): ReconcilerResult {
@@ -79,7 +80,8 @@ export class ReconcilerSession {
     this.assertIdle();
     this.status = 'preparing';
     try {
-      const weave = isWeaveScene(source) ? new WeaveReconciler(source, options, this.execution) : undefined;
+      const weave =
+        this.execution.incremental === false ? undefined : new WeaveReconciler(source, options, this.execution);
       const prepared = weave?.mount();
       const compilation = prepared?.compilation ?? compileSceneSnapshot(source, options, this.execution);
       const candidate: ReconcilerResult = {
@@ -111,7 +113,7 @@ export class ReconcilerSession {
   update(batch: WeaveBatch, expected: ReconcilerResult = this.read()): ReconcilerResult {
     this.assertIdle();
     if (expected !== this.current) throw this.contractError('The update belongs to a stale session result');
-    if (this.weave === undefined) throw this.contractError('Composite scenes do not support Weave batches');
+    if (this.weave === undefined) throw this.contractError('Non-incremental sessions do not support Weave batches');
     if (batch.operations.length === 0) return expected;
     this.status = 'preparing';
     try {

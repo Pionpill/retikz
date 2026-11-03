@@ -1,0 +1,156 @@
+import { describe, expect, it } from 'vitest';
+import { literal, string } from 'zod';
+
+import type { CompileWarning, IRScene, ScenePrimitive } from '../../../../../core/src';
+import { BuiltinCompileWarningCode, CompositeBaseSchema, defineComposite } from '../../../../../core/src';
+import { flattenPrims } from '../../../../../core/tests/helpers/flatten';
+import { compileToScene } from '../../../../src/compile';
+
+const findByType = <T extends ScenePrimitive['type']>(
+  prims: Array<ScenePrimitive>,
+  type: T,
+): Extract<ScenePrimitive, { type: T }> | undefined =>
+  flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
+
+const labeledBox = defineComposite({
+  namespace: 'example',
+  type: 'labeledBox',
+  schema: CompositeBaseSchema.extend({
+    namespace: literal('example'),
+    type: literal('labeledBox'),
+    text: string(),
+  }),
+  compile: node => ({
+    children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }],
+  }),
+});
+
+describe('lowerComposites — 对抗性', () => {
+  it('duplicate-registration-throws: 两个 def 同 namespace.type → 注册期 throw（即使 IR 无 tier2）', () => {
+    const dupA = defineComposite({
+      namespace: 'x',
+      type: 'y',
+      schema: CompositeBaseSchema.extend({ namespace: literal('x'), type: literal('y') }),
+      compile: () => ({ children: [] }),
+    });
+    const dupB = defineComposite({
+      namespace: 'x',
+      type: 'y',
+      schema: CompositeBaseSchema.extend({ namespace: literal('x'), type: literal('y') }),
+      compile: () => ({ children: [] }),
+    });
+    const ir: IRScene = { version: 1, type: 'scene', children: [] };
+
+    expect(() => compileToScene(ir, { composites: [dupA, dupB] }).scene).toThrow(
+      /duplicate composite registration: "x\.y"/,
+    );
+  });
+
+  it('same-namespace-different-type-is-allowed: namespace 只是路由前缀，不维护官方白名单', () => {
+    const first = defineComposite({
+      namespace: 'standard',
+      type: 'userExtensionA',
+      schema: CompositeBaseSchema.extend({ namespace: literal('standard'), type: literal('userExtensionA') }),
+      compile: () => ({ children: [{ type: 'node', id: 'first', position: [0, 0], text: 'first' }] }),
+    });
+    const second = defineComposite({
+      namespace: 'standard',
+      type: 'userExtensionB',
+      schema: CompositeBaseSchema.extend({ namespace: literal('standard'), type: literal('userExtensionB') }),
+      compile: () => ({ children: [{ type: 'node', id: 'second', position: [20, 0], text: 'second' }] }),
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { namespace: 'standard', type: 'userExtensionA' },
+        { namespace: 'standard', type: 'userExtensionB' },
+      ],
+    };
+    const scene = compileToScene(ir, { composites: [first, second] }).scene;
+
+    expect(flattenPrims(scene.primitives).filter(primitive => primitive.type === 'text')).toHaveLength(2);
+  });
+
+  it('mutual-cycle-throws: A 展开 B、B 展开 A → 深度守卫 throw、非死循环', () => {
+    const aDef = defineComposite({
+      namespace: 'm',
+      type: 'a',
+      schema: CompositeBaseSchema.extend({ namespace: literal('m'), type: literal('a') }),
+      compile: () => ({ children: [{ namespace: 'm', type: 'b' }] }),
+    });
+    const bDef = defineComposite({
+      namespace: 'm',
+      type: 'b',
+      schema: CompositeBaseSchema.extend({ namespace: literal('m'), type: literal('b') }),
+      compile: () => ({ children: [{ namespace: 'm', type: 'a' }] }),
+    });
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'm', type: 'a' }] };
+
+    expect(() => compileToScene(ir, { composites: [aDef, bDef] }).scene).toThrow(/COMPOSITE_NEST_TOO_DEEP/);
+  });
+
+  it('custom-maxdepth-respected: maxCompositeDepth=0 → 任何 tier2 即 throw', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
+    };
+
+    expect(() => compileToScene(ir, { composites: [labeledBox], maxCompositeDepth: 0 }).scene).toThrow(
+      /COMPOSITE_NEST_TOO_DEEP/,
+    );
+
+    // 默认 32 下同 IR 正常
+    expect(findByType(compileToScene(ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
+  });
+
+  it('scope-nested-tier2-expands: scope.children 含 tier2 → 递归展开（与手写 scope 等价）', () => {
+    const irComposite: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'scope', children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }] }],
+    };
+    const irManual: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'scope', children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'Hi' }] },
+      ],
+    };
+
+    expect(compileToScene(irComposite, { composites: [labeledBox] }).scene).toEqual(compileToScene(irManual).scene);
+  });
+
+  it('tier1-with-namespace-skipped: tier1 节点误带 namespace → 视 tier2、未注册 warn + 跳过（设计陷阱可诊断）', () => {
+    const warnings: Array<CompileWarning> = [];
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ namespace: 'core', type: 'node', position: [0, 0], text: 'A' }],
+    };
+    const scene = compileToScene(ir, { composites: [], onWarn: w => warnings.push(w) }).scene;
+
+    expect(warnings.some(w => w.code === BuiltinCompileWarningCode.CompositeNotRegistered)).toBe(true);
+    expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'text')).toHaveLength(0); // 节点被跳过
+  });
+
+  it('expand-mixed-tier1-and-tier2: children 含 tier1 与 tier2 → tier2 继续展开、tier1 原样', () => {
+    const mixed = defineComposite({
+      namespace: 'mix',
+      type: 'pair',
+      schema: CompositeBaseSchema.extend({ namespace: literal('mix'), type: literal('pair') }),
+      compile: () => ({
+        children: [
+          { type: 'node', id: 'kept', position: [0, 0], text: 'kept' },
+          { namespace: 'example', type: 'labeledBox', text: 'inner' },
+        ],
+      }),
+    });
+    const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'mix', type: 'pair' }] };
+    const scene = compileToScene(ir, { composites: [mixed, labeledBox] }).scene;
+
+    // 两个 node（kept + 展开的 lb）都产 rect/text
+    expect(flattenPrims(scene.primitives).filter(p => p.type === 'rect').length).toBeGreaterThanOrEqual(1);
+  });
+});

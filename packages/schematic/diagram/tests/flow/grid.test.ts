@@ -1,5 +1,6 @@
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS } from '@retikz/layout';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowDiagramDefinitionOptions } from '../../src/flow';

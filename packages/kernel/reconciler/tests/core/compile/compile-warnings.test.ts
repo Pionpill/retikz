@@ -1,0 +1,301 @@
+import { readPropertyPath } from '@retikz/foundation';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { strictObject } from 'zod';
+
+import type { CompileWarning, IRChild, IRScene } from '../../../../core/src';
+import { BUILTIN_SHAPES, BuiltinCompileWarningCode, defineShape, formatCompileWarning } from '../../../../core/src';
+import { compileToScene } from '../../../src/compile';
+
+const scene = (children: IRScene['children']): IRScene => ({
+  version: 1,
+  type: 'scene',
+  children,
+});
+
+describe('CompileOptions.onWarn', () => {
+  it('使 PATH_TOO_SHORT 保持在未使用的箭头和生成器查找之前', () => {
+    const cases: Array<IRChild> = [
+      {
+        type: 'path',
+        arrow: { end: { shape: 'missing-arrow' } },
+        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
+      },
+    ];
+
+    for (const child of cases) {
+      const warnings: Array<CompileWarning> = [];
+      const result = compileToScene(scene([child]), { onWarn: warning => warnings.push(warning) }).scene;
+
+      expect(result.primitives).toEqual([]);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toMatchObject({ code: BuiltinCompileWarningCode.PathTooShort });
+    }
+  });
+
+  it('PATH_TOO_SHORT：path 仅含 1 个 step → 触发 warning + path 字段含 IR locator', () => {
+    const ir = scene([
+      {
+        type: 'path',
+        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatchObject({
+      code: BuiltinCompileWarningCode.PathTooShort,
+      path: ['children', 0, 'children'],
+    });
+    expect(warnings[0].message).toContain('at least 2 steps');
+    expect(Object.keys(warnings[0]).sort()).toEqual(['code', 'message', 'path']);
+    expect(JSON.parse(JSON.stringify(warnings[0]))).toEqual({
+      code: warnings[0].code,
+      message: warnings[0].message,
+      path: warnings[0].path,
+    });
+  });
+
+  it('PATH_TOO_SHORT：首个绘制 step 缺少前驱位置时触发 warning', () => {
+    const ir = scene([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'line', to: [10, 0] },
+          { type: 'step', kind: 'line', to: [20, 0] },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatchObject({
+      code: BuiltinCompileWarningCode.PathTooShort,
+      path: ['children', 0, 'children', 0],
+    });
+    expect(warnings[0].message).toContain('requires a previous position');
+  });
+
+  it('UNRESOLVED_NODE_REFERENCE：step.to 引用未定义节点 id → warning + path locator 指向具体 step', () => {
+    const ir = scene([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'bogus' } },
+          { type: 'step', kind: 'line', to: [10, 0] },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+
+    expect(warnings.some(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference)).toBe(true);
+
+    const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
+
+    expect(unresolved!.path).toEqual(['children', 0, 'children', 0, 'to']);
+    expect(readPropertyPath(ir, unresolved!.path)).toEqual({ id: 'bogus' });
+    expect(unresolved!.message).toContain("'bogus'");
+  });
+
+  it('UNRESOLVED_NODE_REFERENCE：step.to 用 offset position { of } 引用未定义节点 → 不再静默丢弃', () => {
+    const ir = scene([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { of: 'bogus', offset: [1, 1] } },
+          { type: 'step', kind: 'line', to: [10, 0] },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
+
+    expect(unresolved).toBeDefined();
+    expect(unresolved!.path).toEqual(['children', 0, 'children', 0, 'to']);
+    expect(unresolved!.message).toContain("'bogus'");
+  });
+
+  it('UNRESOLVED_NODE_REFERENCE：step.to 用 polar position { origin } 引用未定义节点 → 不再静默丢弃', () => {
+    const ir = scene([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { origin: 'bogus', angle: 45, radius: 10 } },
+          { type: 'step', kind: 'line', to: [10, 0] },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
+
+    expect(unresolved).toBeDefined();
+    expect(unresolved!.message).toContain("'bogus'");
+  });
+
+  it('未定义节点 id 出现在中段 → path locator 指向中段 index', () => {
+    const ir = scene([
+      { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'line', to: { id: 'bogus' } },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const unresolved = warnings.find(w => w.code === BuiltinCompileWarningCode.UnresolvedNodeReference);
+
+    expect(unresolved!.path).toEqual(['children', 1, 'children', 1, 'to']);
+  });
+
+  it('多个 silent fail → onWarn 按发生顺序同步触发', () => {
+    const ir = scene([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'bogus1' } },
+          { type: 'step', kind: 'line', to: { id: 'bogus2' } },
+        ],
+      },
+    ]);
+    const codes: Array<string> = [];
+    compileToScene(ir, { onWarn: w => codes.push(w.code) });
+
+    expect(codes.filter(c => c === BuiltinCompileWarningCode.UnresolvedNodeReference)).toHaveLength(2);
+  });
+
+  it('happy path 不触发 onWarn', () => {
+    const ir = scene([
+      { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'line', to: [100, 0] },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+
+    expect(warnings).toHaveLength(0);
+  });
+
+  it('自定义 shape 缺少 connectionEnvelope 时 tight boundary 只发一次结构化 fallback warning', () => {
+    const customShape = defineShape({
+      name: 'custom-without-envelope',
+      paramsSchema: strictObject({}),
+      computeCircumscribedGeometry: BUILTIN_SHAPES.get('rectangle')!.computeCircumscribedGeometry,
+      computeBoundaryPoint: BUILTIN_SHAPES.get('rectangle')!.computeBoundaryPoint,
+      resolveAnchor: BUILTIN_SHAPES.get('rectangle')!.resolveAnchor,
+      emit: BUILTIN_SHAPES.get('rectangle')!.emit,
+    });
+    const ir = scene([
+      {
+        type: 'node',
+        id: 'A',
+        position: [0, 0],
+        text: 'A',
+        shape: 'custom-without-envelope',
+        boundary: { type: 'circle', params: { fit: 'tight' } },
+      },
+      { type: 'node', id: 'B', position: [100, 0], text: 'B' },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+
+    compileToScene(ir, { shapes: [customShape], onWarn: warning => warnings.push(warning) });
+
+    expect(warnings.filter(warning => warning.code === BuiltinCompileWarningCode.BoundaryTightFallback)).toEqual([
+      expect.objectContaining({
+        code: BuiltinCompileWarningCode.BoundaryTightFallback,
+        path: ['children', 0],
+        message: expect.stringContaining("Shape 'custom-without-envelope'"),
+      }),
+    ]);
+  });
+});
+
+describe('CompileOptions.onWarn 缺省行为', () => {
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleWarnSpy.mockRestore();
+  });
+
+  it('不传 onWarn + dev 模式 → 默认 console.warn 触发，含 code / path / message', () => {
+    const ir = scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]);
+    compileToScene(ir);
+
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+
+    const msg = consoleWarnSpy.mock.calls[0][0] as string;
+
+    expect(msg).toContain('[retikz]');
+    expect(msg).toContain(BuiltinCompileWarningCode.PathTooShort);
+    expect(msg).toContain('children[0].children');
+  });
+
+  it('不传 onWarn + 显式传 onWarn=空函数 → console.warn 不触发（用户接管）', () => {
+    const ir = scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]);
+    compileToScene(ir, { onWarn: () => {} });
+
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('scope.transforms warn code 指向真正失败的那个 transform', () => {
+  it('前一个 translate 变体解析成功、后一个失败 → 报后者的成因 code（非首个变体）', () => {
+    const ir = scene([
+      { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+      {
+        type: 'scope',
+        transforms: [
+          // polar-translate 引用已存在的 A → 解析成功
+          { kind: 'polar-translate', origin: 'A', angle: 0, radius: 1 },
+          // offset-translate 引用未定义节点 → 真正失败的那个
+          { kind: 'offset-translate', of: 'missing', offset: [0, 0] },
+        ],
+        children: [],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const w = warnings.find(x => x.path.at(-1) === 'transforms');
+
+    expect(w).toBeDefined();
+
+    // 旧实现取首个 translate 变体 → 误报 POLAR_ORIGIN_UNRESOLVED；现报实际失败的 offset
+    expect(w!.code).toBe(BuiltinCompileWarningCode.OffsetBaseUnresolved);
+  });
+});
+
+describe('BuiltinCompileWarningCode 导出', () => {
+  it('formatCompileWarning 从包根导出，可格式化为人类可读字符串', () => {
+    const msg = formatCompileWarning({
+      code: BuiltinCompileWarningCode.UnresolvedNodeReference,
+      message: "references undefined node id 'x'",
+      path: ['children', 0, 'to'],
+    });
+
+    expect(msg).toContain('[retikz]');
+    expect(msg).toContain(BuiltinCompileWarningCode.UnresolvedNodeReference);
+    expect(msg).toContain('children[0].to');
+  });
+});

@@ -1,7 +1,6 @@
 import type { CompileWarning } from '@retikz/core';
 
-import type { WeaveCompileRead, WeaveCompileOptions } from './compile';
-import { lookupWeaveBinding } from './compile';
+import type { WeaveCompileRead } from './compile';
 import { readWeaveCurrent } from './transaction';
 import type { WeaveTransaction } from './transaction';
 import type { WeaveNode, WeaveRoot, WeaveScopeNode } from './types';
@@ -48,18 +47,6 @@ export class WeaveTracker {
         this.invalidateNode(child);
       }
     }
-  }
-
-  /** 把复用产物的读取记录关联到本批名称 frame，避免保留旧工作区 */
-  refreshCompileReads(
-    reads: ReadonlyArray<WeaveCompileRead>,
-    compileOptions: WeaveCompileOptions,
-  ): Array<WeaveCompileRead> {
-    const refreshed: Array<WeaveCompileRead> = [];
-    for (const name of new Set(reads.map(read => read.name))) {
-      lookupWeaveBinding(compileOptions.namespace, name, refreshed);
-    }
-    return refreshed;
   }
 
   /** 保存读取与诊断，并以最新读取事实重建节点的双向计算依赖 */

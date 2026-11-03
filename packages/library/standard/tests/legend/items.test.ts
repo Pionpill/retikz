@@ -10,13 +10,13 @@ import type {
 import {
   BuiltinCompileWarningCode,
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { LayoutAlignment } from '@retikz/layout';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, strictObject, string } from 'zod';
 

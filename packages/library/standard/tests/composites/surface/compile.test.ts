@@ -1,12 +1,12 @@
 import type { IRChild, LayoutChildResult, LayoutProposal } from '@retikz/core';
 import {
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 

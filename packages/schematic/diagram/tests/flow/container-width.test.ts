@@ -1,6 +1,7 @@
 import type { ScenePrimitive } from '@retikz/core';
-import { compileToScene, defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
+import { defineTheme, resolveCoreProviderDependencies } from '@retikz/core';
 import { defineGraphTheme } from '@retikz/graph';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { DiagramThemeDefinition } from '../../src/_diagram';

@@ -1,0 +1,101 @@
+import { describe, expect, it } from 'vitest';
+
+import type { IRScene, ScenePrimitive } from '../../../../core/src';
+import { rectPerimeterSample } from '../../../../core/src/shared';
+import { compileToScene } from '../../../src/compile';
+
+/** mark marker group 的签名：transforms = [translate(point), rotate, scale, translate]；取首个 translate 为落点 */
+const findMarkPoint = (prims: ReadonlyArray<ScenePrimitive>): [number, number] | undefined => {
+  for (const p of prims) {
+    if (p.type !== 'group') continue;
+
+    const t = p.transforms;
+    if (t && t.length === 4 && t[0].kind === 'translate' && t[1].kind === 'rotate' && t[2].kind === 'scale') {
+      return [t[0].x, t[0].y];
+    }
+
+    const inner = findMarkPoint(p.children);
+    if (inner) return inner;
+  }
+
+  return undefined;
+};
+
+describe('rectPerimeterSample（矩形周长采样，CW from 左上）', () => {
+  const from: [number, number] = [0, 0];
+  const to: [number, number] = [40, 20];
+  it('四角：t=0/0.25/0.5/0.75 → 左上 / 右上 / 右下 / 左下', () => {
+    expect(rectPerimeterSample(from, to, 0).point).toEqual([0, 0]);
+    expect(rectPerimeterSample(from, to, 0.25).point).toEqual([40, 0]);
+    expect(rectPerimeterSample(from, to, 0.5).point).toEqual([40, 20]);
+    expect(rectPerimeterSample(from, to, 0.75).point).toEqual([0, 20]);
+  });
+
+  it('上边切线沿 +x，右边切线沿 +y（顺时针 y-down）', () => {
+    expect(rectPerimeterSample(from, to, 0.1).tangent).toEqual([1, 0]);
+    expect(rectPerimeterSample(from, to, 0.35).tangent).toEqual([0, 1]);
+  });
+
+  it('对角任意顺序归一化（to/from 互换结果相同）', () => {
+    expect(rectPerimeterSample([40, 20], [0, 0], 0.5).point).toEqual([40, 20]);
+  });
+});
+
+describe('C7：cycle 闭合段可承载 mark', () => {
+  it('三角形闭合路径，按累计弧长落在闭合段中点 (2.5, 4)', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          marks: [{ pos: (10 + 1.5 * Math.hypot(5, 8)) / (10 + 2 * Math.hypot(5, 8)), shape: 'stealth' }],
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [5, 8] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+
+    // 已走过前两段，加上闭合段的一半，再除以总弧长
+    // → 闭合段 (5,8)→(0,0) 中点 (2.5, 4)
+    const pt = findMarkPoint(compileToScene(ir).scene.primitives);
+
+    expect(pt).toBeDefined();
+    expect(pt![0]).toBeCloseTo(2.5, 5);
+    expect(pt![1]).toBeCloseTo(4, 5);
+  });
+});
+
+describe('C7：rectangle 段计入段数并可承载 mark', () => {
+  const rectPath = (pos: number): IRScene => ({
+    version: 1,
+    type: 'scene',
+    children: [
+      {
+        type: 'path',
+        marks: [{ pos, shape: 'stealth' }],
+        children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [40, 20] }],
+      },
+    ],
+  });
+
+  it('pos=0.5 → 矩形周长右下角 (40, 20)', () => {
+    const pt = findMarkPoint(compileToScene(rectPath(0.5)).scene.primitives);
+
+    expect(pt).toBeDefined();
+    expect(pt![0]).toBeCloseTo(40, 5);
+    expect(pt![1]).toBeCloseTo(20, 5);
+  });
+
+  it('pos=0.25 → 矩形周长右上角 (40, 0)', () => {
+    const pt = findMarkPoint(compileToScene(rectPath(1 / 3)).scene.primitives);
+
+    expect(pt).toBeDefined();
+    expect(pt![0]).toBeCloseTo(40, 5);
+    expect(pt![1]).toBeCloseTo(0, 5);
+  });
+});

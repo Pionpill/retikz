@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import type { IRScene, Scene } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
+import { literal, string } from 'zod';
 
 import { renderToSvgString } from '../../src';
 import { mountSvg } from '../../src/dom';
@@ -76,23 +78,27 @@ describe('@retikz/vanilla mountSvg', () => {
   });
 
   it('view artifacts 与 update 的 Scene 原子切换', () => {
+    const marker = defineComposite({
+      namespace: 'test',
+      type: 'marker',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('marker'), label: string() }),
+      artifactSchema: string(),
+      compile: input => ({ children: [{ type: 'node', id: input.label, position: [0, 0] }], artifact: input.label }),
+    });
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'first', position: [0, 0], text: 'A' }],
+      children: [{ namespace: 'test', type: 'marker', label: 'first' }],
     };
     const c = document.createElement('div');
-    const view = mountSvg(c, ir, { compile: {} });
-
-    expect(view.artifacts).toMatchObject([{ kind: 'nodeLayout', value: { id: 'first' } }]);
-
-    view.update({
-      version: 1,
-      type: 'scene',
-      children: [{ type: 'node', id: 'second', position: [0, 0], text: 'B' }],
-    });
-
-    expect(view.artifacts).toMatchObject([{ kind: 'nodeLayout', value: { id: 'second' } }]);
+    const view = mountSvg(c, ir, { compile: { composites: [marker] } });
+    expect(view.artifacts).toMatchObject([{ namespace: 'test', type: 'marker', value: 'first' }]);
+    expect(view.root.querySelector('[data-retikz-id="first"]')).not.toBeNull();
+    view.update({ version: 1, type: 'scene', children: [{ namespace: 'test', type: 'marker', label: 'second' }] });
+    expect(view.artifacts).toMatchObject([{ namespace: 'test', type: 'marker', value: 'second' }]);
+    expect(view.root.querySelector('[data-retikz-id="first"]')).toBeNull();
+    expect(view.root.querySelector('[data-retikz-id="second"]')).not.toBeNull();
+    view.dispose();
   });
 
   it('idprefix-ssr-mount-parity：同 idPrefix 下 SSR 串与 DOM 的资源 id 一致', () => {

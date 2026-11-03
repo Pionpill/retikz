@@ -1,13 +1,8 @@
-﻿import type {
-  AnyCompositeDefinition,
-  CompositeCompileContext,
-  CompositeEvaluationResult,
-  CompileOptions,
-  IRChild,
-} from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+﻿import type { AnyCompositeDefinition, CompositeCompileContext, CompositeEvaluationResult, IRChild } from '@retikz/core';
 import type { JsonValue } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
+import type { CompileOptions } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/reconciler';
 
 /** 在正常编译回调中读取根组件声明的分配，不改变输入或增加布局试算 */
 export const compileMeasured = (child: IRChild, options: CompileOptions) => {

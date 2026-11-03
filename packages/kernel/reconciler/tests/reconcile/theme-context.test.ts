@@ -1,8 +1,10 @@
 import type { IRScene } from '@retikz/core';
-import { compileToScene, CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
 import { ReconcilerSession } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
+
+import { compileToScene } from '../../src/compile';
 
 const themedComposite = defineComposite({
   namespace: 'theme-test',

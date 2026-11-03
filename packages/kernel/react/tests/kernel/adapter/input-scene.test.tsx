@@ -1,5 +1,6 @@
 import type { IRScene, IRPath } from '@retikz/core';
-import { compileToScene, SceneSchema } from '@retikz/core';
+import { SceneSchema } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 

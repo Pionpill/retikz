@@ -166,7 +166,8 @@ describe('贝塞尔曲线布局', () => {
 });
 
 import type { CompileWarning, ScenePrimitive } from '@retikz/core';
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 
 import type { FlowLayoutDefinition, IRFlowRouting } from '../../src/flow';
 import { FlowDiagramArtifactSchema, createFlowDiagramProviderContribution } from '../../src/flow';

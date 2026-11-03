@@ -2,7 +2,7 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import type { NodeReferenceGeometry } from '../../../resolve';
 import type { CompiledNodeLayout } from '../../layout';
-import type { NodeBoundaryStore } from '../../runtime';
+import type { NodeBoundaryStore } from './boundary-store';
 
 /** 从节点布局提取供引用解析使用的几何信息 */
 export const createNodeReferenceGeometry = (

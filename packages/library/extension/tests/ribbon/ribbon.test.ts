@@ -1,5 +1,5 @@
 import type { IRPathBase, IRScene, IRStep, PathCommand, PathPrimitive, ScenePrimitive } from '@retikz/core';
-import { compileToScene as compileCoreToScene } from '@retikz/core';
+import { compileToScene as compileCoreToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { IRRibbonPathOptions } from '../../src/ribbon';

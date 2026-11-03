@@ -15,7 +15,7 @@ import { snapshotScenePrimitives } from '../../shared';
 import { emitInlineLine, calculateAlphabeticBaselineY } from '../../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label';
-import type { NodeCompilation, NodeLabelResolution, NodeResolvedProperties } from './types';
+import type { CompiledNode, NodeLabelResolution, NodeResolvedProperties } from './types';
 
 /** 节点形状绘制使用的有效样式 */
 type NodeShapeProperties = Pick<
@@ -372,7 +372,7 @@ const wrapNodeGroupPrimitive = (
  * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive
  */
 export const emitNodePrimitives = (
-  compilation: NodeCompilation,
+  compilation: CompiledNode,
   round: Round,
   registerPaint: RegisterPaint,
 ): Array<ScenePrimitive> => {

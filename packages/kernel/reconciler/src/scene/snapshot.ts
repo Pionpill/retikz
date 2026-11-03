@@ -1,5 +1,6 @@
-import type { CompileProvenanceSnapshot, Scene } from '@retikz/core';
+import type { Scene } from '@retikz/core';
 
+import type { CompileProvenanceSnapshot } from '../compile/provenance';
 import { CORE_SOURCE_KEY } from '../constants';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import type { RuntimeScene, RuntimeScenePrimitive, SceneRuntimeNode, SceneRuntimeSnapshot } from '../scene';

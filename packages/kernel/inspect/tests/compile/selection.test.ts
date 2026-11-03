@@ -1,4 +1,4 @@
-import type { CompileResult } from '@retikz/core';
+import type { CompileResult } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { compileInspectionToScene, createInspectorRegistry, defineInspector } from '../../src';

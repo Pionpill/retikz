@@ -1,7 +1,8 @@
 import type { CompositeCompileContext, IRChild } from '@retikz/core';
-import { compileToScene, CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineTheme } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 

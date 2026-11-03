@@ -3,7 +3,7 @@ import type { CompiledNodeLayout } from '../../layout';
 import type { SyntheticLayoutRegistryContext } from '../node';
 import { createIntrinsicScopeLayout } from './layout';
 import { calculateScopePlacementTransforms, lowerPreliminaryScopeTransforms } from './placement';
-import type { InputScopeCompile, ScopeGeometryPreparation, ScopeGeometryContext } from './types';
+import type { CompiledScope, InputScopeCompile, ScopeGeometryPreparation, ScopeGeometryContext } from './types';
 
 /** 在子树执行前冻结 Scope 放置引用与不依赖包络的变换 */
 export const prepareScopeGeometry = (input: InputScopeCompile, context: ScopeGeometryContext) => ({
@@ -18,7 +18,7 @@ export const compileScopeGeometry = (
   layouts: ReadonlyArray<CompiledNodeLayout>,
   registries: SyntheticLayoutRegistryContext,
   context: ScopeGeometryContext,
-) => {
+): CompiledScope => {
   const envelope = createIntrinsicScopeLayout(input, layouts, registries);
   const transforms = calculateScopePlacementTransforms(
     input,

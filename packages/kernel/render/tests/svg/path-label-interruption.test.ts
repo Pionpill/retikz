@@ -1,5 +1,5 @@
 import type { IRPath, IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { renderToSvgString } from '../../src/svg/serialize/to-string';

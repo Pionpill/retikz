@@ -42,11 +42,11 @@ This path does not use the generic Runtime package's Source / Computation regist
 
 ## Compilation and reuse
 
-Complete replacement selects a compilation entry by input kind. Basic elements build a Weave tree and use Core element compilation. Documents containing Composites use Core full preparation, preserving probes, instance inputs, artifacts and spatial handles.
+One-shot compilation, complete replacement, and batch updates share Reconciler’s executor for both basic elements and Composites. `incremental` defaults to `true`, retaining authored Weave nodes and actual stage products. With `false`, mount and replace run without retained caches; update and updateStrategy are rejected. Probes, instance inputs, and artifacts keep the same semantics in both modes.
 
 <ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 
-Weave retains input, context, compiled state and dependencies. `ReconcilerSession.update(batch, expected)` applies a `WeaveBatch` to an existing basic-element tree. `expected` must be the current session result; stale results are rejected. Composite scenes do not support this entry, and empty batches retain the current result.
+Weave retains input, context, compiled state and dependencies. `ReconcilerSession.update(batch, expected)` applies a `WeaveBatch` to an existing basic-element tree. `expected` must be the current session result; stale results are rejected. Scenes containing Composites support edits to authored basic elements. Generated children cannot be addressed; use replace to change Composite author input. Empty incremental batches retain the current result.
 
 Batches recompute affected elements from final inputs and reuse valid products. Context follows declaration structure and invalidation follows dependencies; a Scope change can recompute its whole subtree. Name indexing and output assembly can still traverse the tree, so local compilation does not imply local total update cost. Ordinary React and Vanilla input updates do not yet use this batch entry.
 
@@ -102,7 +102,7 @@ This diagram locates an ordinary Vanilla DOM input replacement. Member names are
 
 <ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
 
-Start at `prepareProcessingInput` and the controller, then follow `ReconcilerSession.replace` through the Weave / Composite branches. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
+Start at `prepareProcessingInput` and the controller, then follow `ReconcilerSession.replace` through the shared executor and optional Weave cache. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
 
 ## Further reading
 

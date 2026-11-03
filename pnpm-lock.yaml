@@ -429,6 +429,9 @@ importers:
         specifier: 'catalog:'
         version: 5.0.12(@types/react@18.2.79)(react@18.2.0)(use-sync-external-store@1.6.0(react@18.2.0))
     devDependencies:
+      '@retikz/reconciler':
+        specifier: workspace:*
+        version: link:../../packages/kernel/reconciler
       '@tailwindcss/vite':
         specifier: 'catalog:'
         version: 4.2.4(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
@@ -486,6 +489,9 @@ importers:
       '@retikz/core':
         specifier: workspace:*
         version: link:../../packages/kernel/core
+      '@retikz/reconciler':
+        specifier: workspace:*
+        version: link:../../packages/kernel/reconciler
       ai:
         specifier: 'catalog:'
         version: 6.0.204(zod@4.4.3)
@@ -567,6 +573,9 @@ importers:
       '@retikz/math':
         specifier: workspace:*
         version: link:../math
+      '@retikz/reconciler':
+        specifier: workspace:*
+        version: link:../reconciler
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -689,6 +698,9 @@ importers:
       '@retikz/foundation':
         specifier: workspace:*
         version: link:../foundation
+      '@retikz/math':
+        specifier: workspace:*
+        version: link:../math
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -783,6 +795,9 @@ importers:
         specifier: workspace:*
         version: link:../math
     devDependencies:
+      '@retikz/reconciler':
+        specifier: workspace:*
+        version: link:../reconciler
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -863,6 +878,9 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -890,6 +908,9 @@ importers:
       '@retikz/math':
         specifier: workspace:^
         version: link:../../kernel/math
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -998,6 +1019,9 @@ importers:
       '@retikz/math':
         specifier: workspace:^
         version: link:../../kernel/math
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -1085,6 +1109,9 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/vanilla
     devDependencies:
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -1118,6 +1145,9 @@ importers:
       '@retikz/math':
         specifier: workspace:^
         version: link:../../kernel/math
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@retikz/standard':
         specifier: workspace:^
         version: link:../../library/standard
@@ -1242,6 +1272,9 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -1368,6 +1401,9 @@ importers:
       '@retikz/extension':
         specifier: workspace:^
         version: link:../../library/extension
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -1468,6 +1504,9 @@ importers:
       '@retikz/plot-vanilla':
         specifier: workspace:^
         version: link:../plot-vanilla
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@retikz/vanilla':
         specifier: workspace:^
         version: link:../../kernel/vanilla
@@ -1545,6 +1584,9 @@ importers:
       '@retikz/math':
         specifier: workspace:^
         version: link:../../kernel/math
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@types/d3-scale':
         specifier: 'catalog:'
         version: 4.0.9
@@ -1616,6 +1658,9 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/react
     devDependencies:
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@retikz/vanilla':
         specifier: workspace:^
         version: link:../../kernel/vanilla
@@ -1667,6 +1712,9 @@ importers:
       '@retikz/plot':
         specifier: workspace:*
         version: link:../plot
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@retikz/vanilla':
         specifier: workspace:^
         version: link:../../kernel/vanilla
@@ -1704,6 +1752,9 @@ importers:
       '@retikz/math':
         specifier: workspace:^
         version: link:../../kernel/math
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       d3-format:
         specifier: 'catalog:'
         version: 3.1.2
@@ -1756,6 +1807,9 @@ importers:
       '@retikz/react':
         specifier: workspace:^
         version: link:../../kernel/react
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@retikz/table':
         specifier: workspace:*
         version: link:../table
@@ -1811,6 +1865,9 @@ importers:
       '@retikz/foundation':
         specifier: workspace:^
         version: link:../../kernel/foundation
+      '@retikz/reconciler':
+        specifier: workspace:^
+        version: link:../../kernel/reconciler
       '@retikz/table':
         specifier: workspace:*
         version: link:../table

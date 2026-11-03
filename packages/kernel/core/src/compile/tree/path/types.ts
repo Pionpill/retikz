@@ -1,11 +1,11 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { SceneResource, Transform } from '../../../contract';
-import type { MergedScopeDefaults, PathTargetView } from '../../../resolve';
-import type { IRPathBase } from '../../../schemas';
+import type { ScenePrimitive, SceneResource, Transform } from '../../../contract';
+import type { MergedScopeDefaults, PathResolution, PathTargetView } from '../../../resolve';
+import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
 import type { RegisterPaint } from '../../resource';
-import type { CompileOutput, CompileWarning } from '../../shared';
+import type { CompileWarning } from '../../shared';
 import type { TexLowerer } from '../../text';
 
 /** path emit 阶段的可选服务与诊断上下文 */
@@ -32,12 +32,17 @@ export type PathEmitOptions = {
   rootFontSize?: number;
 };
 
-/** Path 完整编译状态，自定义路径不要求具有单一中心线 */
+/** Path 宿主阶段产物，自定义路径不要求具有单一中心线 */
 export type CompiledPath = Readonly<{
-  /** 元素在 IR 树中的来源路径 */
-  irPath: PropertyPath;
-  /** 完成宿主处理后的本地输出，空输出也是合法完成状态 */
-  output: CompileOutput;
+  /** 当前路径已绑定的语义与目标 */
+  resolution: PathResolution;
+  /** 已校验且物化的输出，null 表示合法空结果 */
+  result: {
+    /** 路径局部绘制图元 */
+    primitives: Array<ScenePrimitive>;
+    /** 路径局部布局贡献 */
+    boundsPoints: Array<IRPosition>;
+  } | null;
 }>;
 
 /** 引用就绪后的路径编译输入，不包含遍历队列或输出容器 */

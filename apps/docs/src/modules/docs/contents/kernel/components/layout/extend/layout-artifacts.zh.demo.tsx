@@ -1,6 +1,7 @@
-import type { CompositeArtifact, IRScene } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 import { createFlexLayout, flexLayoutDefinition } from '@retikz/layout';
 import { Layout } from '@retikz/react';
+import type { CompositeArtifact } from '@retikz/reconciler';
 import type { FC } from 'react';
 import { useState } from 'react';
 

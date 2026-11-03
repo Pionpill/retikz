@@ -1,6 +1,7 @@
 import type { IRScene } from '@retikz/core';
-import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies, RetikzCoreErrorCode } from '@retikz/core';
+import { CURRENT_IR_VERSION, resolveCoreProviderDependencies, RetikzCoreErrorCode } from '@retikz/core';
 import { BUILTIN_RIBBON_WIDTH_PROFILES, ribbonPathDefinition } from '@retikz/extension';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotsLoweringOptions, PlotDefinitions, PlotImplementations } from '../../src/pipeline/expand';

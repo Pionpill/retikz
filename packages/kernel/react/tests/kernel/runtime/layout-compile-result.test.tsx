@@ -1,6 +1,8 @@
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+
 // @vitest-environment jsdom
-import type { CompileResult } from '@retikz/core';
-import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import type { CompileResult } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/reconciler';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';

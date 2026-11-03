@@ -1,5 +1,6 @@
 import type { ScenePrimitive } from '@retikz/core';
-import { compileToScene, DEFAULT_RESOLVED_THEME } from '@retikz/core';
+import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots, PlotSchema, resolvePlotTheme } from '../../src';

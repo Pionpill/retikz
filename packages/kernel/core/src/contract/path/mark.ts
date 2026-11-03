@@ -1,4 +1,4 @@
-﻿import type { JsonObject } from '@retikz/foundation';
+import type { JsonObject } from '@retikz/foundation';
 
 import type { IRMarkStyle, IRPosition } from '../../schemas';
 import type { PaintValue, ScenePrimitive } from '../scene';

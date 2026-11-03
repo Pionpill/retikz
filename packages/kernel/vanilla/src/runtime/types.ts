@@ -1,4 +1,6 @@
-import type { CompileOptions, CompileResult, CompositeArtifact, IRScene, Scene } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
+import type { CompositeArtifact } from '@retikz/reconciler';
+import type { CompileOptions, CompileResult } from '@retikz/reconciler';
 import type { ReconcilerDiagnostic, ReconcilerUpdateStrategy } from '@retikz/reconciler';
 import type { AnimationControls } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';

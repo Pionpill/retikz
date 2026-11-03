@@ -1,5 +1,6 @@
 import type { IRChild } from '@retikz/core';
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 
 import type { BranchDiagramDefinitionOptions, BranchLayoutOutput } from '../../src/branch';

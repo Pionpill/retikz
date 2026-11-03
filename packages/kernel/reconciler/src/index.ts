@@ -19,3 +19,5 @@ export { createSceneIdentity, createSceneIdentityLookup, sceneIdentityEquals } f
 export type { SceneIdentity, SceneIdentityLookup, SceneRevision } from './scene';
 export type { WeaveBatch, WeaveOperation, WeaveTarget } from './weave';
 export { createFullSceneRuntimeSnapshot } from './scene';
+
+export * from './compile';

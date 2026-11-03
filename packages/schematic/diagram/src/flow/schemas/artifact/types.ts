@@ -1,4 +1,4 @@
-import type { CompositeArtifact } from '@retikz/core';
+import type { CompositeArtifact } from '@retikz/reconciler';
 import type { infer as ZodInfer } from 'zod';
 
 import type {

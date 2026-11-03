@@ -1,4 +1,4 @@
-import type { CompileResult } from '@retikz/core';
+import type { CompileResult } from '@retikz/reconciler';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 

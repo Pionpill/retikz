@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
-import { compileToScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
+import { compileToScene } from '@retikz/reconciler';
 import type { ReconcilerOutput } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { describe, expect, it, vi } from 'vitest';

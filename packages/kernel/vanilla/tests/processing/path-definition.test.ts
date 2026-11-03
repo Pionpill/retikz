@@ -1,5 +1,6 @@
 import type { AnyPathDefinition, IRScene } from '@retikz/core';
-import { compileToScene, PathSchema } from '@retikz/core';
+import { PathSchema } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 

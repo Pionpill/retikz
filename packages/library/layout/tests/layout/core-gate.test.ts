@@ -1,27 +1,20 @@
-import type {
-  CompileOptions,
-  IRChild,
-  IRScene,
-  LayoutChildResult,
-  LayoutProposal,
-  ScenePrimitive,
-  TextMeasurer,
-} from '@retikz/core';
+import type { IRChild, IRScene, LayoutChildResult, LayoutProposal, ScenePrimitive, TextMeasurer } from '@retikz/core';
 import {
   BUILTIN_SHAPES,
   BuiltinLayoutAlignmentGuideName,
   ChildSchema,
-  compileToScene,
   CompositeBaseSchema,
   defineComposite,
   defineShape,
-  formatCompileOccurrence,
   LayoutAlignmentGuideDimension,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '@retikz/core';
+import { formatCompileOccurrence } from '@retikz/reconciler';
+import type { CompileOptions } from '@retikz/reconciler';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, enum as zodEnum } from 'zod';
 

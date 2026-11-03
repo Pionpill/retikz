@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { CompileResult } from '@retikz/core';
+import type { CompileResult } from '@retikz/reconciler';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { describe, expect, it, vi } from 'vitest';

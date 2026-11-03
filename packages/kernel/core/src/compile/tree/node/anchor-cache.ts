@@ -5,9 +5,9 @@ import type { IRAnchorRef, IRBoundary, IRPosition } from '../../../schemas';
 import type { Side } from '../../../shared';
 import { isAnchor } from '../../../shared';
 import type { CompiledNodeLayout } from '../../layout';
-import type { NodeBoundaryState } from '../../runtime';
 import { snapshotProviderPosition } from '../../shared';
 import { anchorOf, angleBoundaryOf } from './anchors';
+import type { NodeBoundaryState } from './boundary-store';
 import { createNodeReferenceGeometry } from './reference';
 
 type AnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;

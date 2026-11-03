@@ -1,11 +1,6 @@
-import type {
-  AnyCompositeDefinition,
-  CompileOptions,
-  CompileResult,
-  CompositeArtifact,
-  IRScene,
-  Scene,
-} from '@retikz/core';
+import type { AnyCompositeDefinition, IRScene, Scene } from '@retikz/core';
+import type { CompositeArtifact } from '@retikz/reconciler';
+import type { CompileOptions, CompileResult } from '@retikz/reconciler';
 import type { ReconcilerUpdateStrategy } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 

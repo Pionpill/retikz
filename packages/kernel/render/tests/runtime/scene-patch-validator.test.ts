@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { compileSceneSnapshot } from '@retikz/core';
+import { compileSceneSnapshot } from '@retikz/reconciler';
 import type {
   RuntimeScenePrimitive,
   RuntimeSceneResource,

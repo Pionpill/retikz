@@ -17,7 +17,8 @@
     "@ai-sdk/openai": "catalog:",
     "@retikz/core": "workspace:*",
     "ai": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@retikz/reconciler": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

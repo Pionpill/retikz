@@ -7,9 +7,9 @@ import { boundaryKey } from '../../../resolve';
 import type { IRBoundary } from '../../../schemas';
 import { CenterAnchor, isAnchor } from '../../../shared';
 import type { CompiledNodeLayout } from '../../layout';
-import type { NodeBoundaryState } from '../../runtime';
 import { snapshotProviderPosition } from '../../shared';
 import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
+import type { NodeBoundaryState } from './boundary-store';
 import { createNodeReferenceGeometry } from './reference';
 
 type NodeAnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;

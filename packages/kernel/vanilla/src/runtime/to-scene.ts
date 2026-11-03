@@ -1,4 +1,6 @@
-import type { CompileResult, CompositeArtifact, Scene } from '@retikz/core';
+import type { Scene } from '@retikz/core';
+import type { CompositeArtifact } from '@retikz/reconciler';
+import type { CompileResult } from '@retikz/reconciler';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 

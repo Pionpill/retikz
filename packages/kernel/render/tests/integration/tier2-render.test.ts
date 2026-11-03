@@ -1,5 +1,6 @@
 import type { IRScene } from '@retikz/core';
-import { compileToScene, CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 

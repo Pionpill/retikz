@@ -1,7 +1,7 @@
-import type { CompositeArtifact } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import { isPropertyPathEqual } from '@retikz/foundation';
 import { Layout } from '@retikz/react';
+import type { CompositeArtifact } from '@retikz/reconciler';
 import type { TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import type { InputTable, InputTableVariant } from '@retikz/table-vanilla';

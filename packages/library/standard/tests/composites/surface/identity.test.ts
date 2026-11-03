@@ -1,6 +1,7 @@
 import type { GroupPrimitive, IRChild, PathPrimitive, ScenePrimitive } from '@retikz/core';
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { pathClipDefinition, pathClipProvider } from '@retikz/extension';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import { createSurface, surfaceDefinition, surfaceProvider } from '../../../src/presentation';

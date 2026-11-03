@@ -5,4 +5,3 @@ export * from './output';
 export * from './placement';
 export * from './transform';
 export * from './types';
-export * from './visit';

@@ -1,6 +1,7 @@
 import type { IRChild, ScenePrimitive } from '@retikz/core';
-import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import { compileToScene } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 

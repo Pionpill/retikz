@@ -1,5 +1,6 @@
-﻿import type { CompileResult, PathCommand, ScenePrimitive } from '@retikz/core';
+﻿import type { PathCommand, ScenePrimitive } from '@retikz/core';
 import { visitSceneContent } from '@retikz/core';
+import type { CompileResult } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
 import {

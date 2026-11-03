@@ -1,5 +1,5 @@
-import type { CompileResult } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
+import type { CompileResult } from '@retikz/reconciler';
 import { renderFrameToCanvas } from '@retikz/render/canvas';
 import type { StaticRenderFrame } from '@retikz/render/runtime';
 import { renderFrameToSvgString } from '@retikz/render/svg';
