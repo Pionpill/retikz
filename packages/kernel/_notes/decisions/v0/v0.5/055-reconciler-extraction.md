@@ -12,6 +12,8 @@ keywords: Reconciler、Core、Runtime、迁移、编译来源、ScenePatch、静
 
 > 后续调整：[061](./061-weave-core-integration.md) 已替代本文的 CoreChange 提示、快照 diff 索引与 mismatch 诊断约定；完整输入和 Scene 提交边界继续保留。
 
+> 编译执行归属与中间产物决策由 [ADR-080](./080-unified-reconciler-compilation.md) 部分替代：完整入口、遍历、试算与输出生命周期归 Reconciler；Core 保留原子阶段及权威产物。本篇其余绘图语义与事务约束继续有效。
+
 ## 背景与目标
 
 Core 当前同时提供静态绘图编译和跨 revision 的增量执行。Source 捕获、身份匹配、Computation、运行时快照与 Patch 同绘图编译绑定，导致静态编译包直接依赖 Runtime。仅搬迁 Computation 无法解除这种关系：编译还接收 candidate revision，生成 Runtime identity，并公开 Runtime trace 类型。

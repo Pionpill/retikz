@@ -184,6 +184,8 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 
 领域图形、自动图布局、编辑器与单一 renderer 特性不进入 Kernel；候选是否进入执行须独立确认。
 
+- 统一全量与增量编译执行：Core 提供原子阶段及共享产物，Reconciler 负责组装与生命周期，Weave 按增量模式保留结果：[080](./080-unified-reconciler-compilation.md)。覆盖 Composite 与布局试算，完整编译 API 直接迁移，不保留双驱动。
+
 - Scope 不再绘制外框，保留包络与引用：[068](./068-remove-scope-frame.md)
 
 - 主题名称与定义入口统一命名：[069](./069-theme-naming.md)

@@ -9,6 +9,8 @@ keywords: Core、Weave、单元素编译、compiled、CompiledNodeLayout、注�
 - 决策日期：2026-10-20
 - 关联：[版本目标](./roadmap.md)、[055](./055-reconciler-extraction.md)、[057](./057-scope-acyclic-geometry-references.md)、[058](./058-weave-foundation.md)、[059](./059-weave-batch-operations.md)
 
+> 编译执行归属与中间产物决策由 [ADR-080](./080-unified-reconciler-compilation.md) 部分替代：完整入口、遍历、试算与输出生命周期归 Reconciler；Core 保留原子阶段及权威产物。本篇其余绘图语义与事务约束继续有效。
+
 ## 背景与目标
 
 Weave 已确定节点缓存、候选版本和批次输入，但 compiled 仍为不透明占位。Core 现有全量编排把注册表、继承上下文、名称绑定、布局、资源与输出收集组织在一次遍历中，仅公开结果类型不足以支持独立调度。

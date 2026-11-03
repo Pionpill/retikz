@@ -9,6 +9,8 @@ keywords: Weave、Core、编译接入、compiled、SharedCompileContext、上下
 - 决策日期：2026-10-20
 - 关联：[版本目标](./roadmap.md)、[057](./057-scope-acyclic-geometry-references.md)、[058](./058-weave-foundation.md)、[059](./059-weave-batch-operations.md)、[060](./060-core-element-compilation.md)
 
+> 编译执行归属与中间产物决策由 [ADR-080](./080-unified-reconciler-compilation.md) 部分替代：完整入口、遍历、试算与输出生命周期归 Reconciler；Core 保留原子阶段及权威产物。本篇其余绘图语义与事务约束继续有效。
+
 ## 背景与目标
 
 Core 已提供基础元素编译状态、显式环境、读取事实与输出组装能力，Weave 已持有相应类型，但尚未形成声明树到编译产物的实际接线。本决策确定这些能力在 Weave 中的持有位置与消费契约，使后续批次执行和依赖调度基于同一套编译接入能力。

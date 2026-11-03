@@ -19,12 +19,12 @@ Drawing Complete 不表示 core 内置所有 shape、diagram preset 或视觉效
 | 角色         | 包                                | 责任                                                                                                | 不拥有                                                       |
 | ------------ | --------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | 计算底座     | `@retikz/math`                    | 零依赖纯几何、向量、仿射、求交和曲线计算                                                            | IR、Scene、layout 语义                                       |
-| 执行底座     | `@retikz/runtime`                 | identity、ownership、program、transaction、revision 与 trace；协调 Core 等领域 program              | Core IR、Scene、几何、renderer                               |
-| 主责包       | `@retikz/core`                    | Core IR、definition / registry、compile、Scene、Composite assembly 与 headless sidecar              | DOM、renderer 实例、框架状态                                 |
+| 执行底座     | `@retikz/reconciler`              | 完整与增量编译执行、Composite 试算/重放、Weave 缓存、transaction、revision 与 trace                 | Core IR、Scene、几何、renderer                               |
+| 主责包       | `@retikz/core`                    | Core IR、definition / registry、原子编译阶段、共享产物、Scene 与 Composite 契约                     | DOM、renderer 实例、框架状态                                 |
 | Scene 执行包 | `@retikz/render`                  | 把 Scene 映射到 SVG / Canvas 等后端，报告能力降级                                                   | 新图形 IR、上层领域语义                                      |
 | API 基础包   | `@retikz/vanilla`                 | `InputXxx -> Core IR`、编译 / runtime 选项与 framework-neutral processing session / readonly result | Core 图形语义、DOM 与框架生命周期                            |
 | 框架宿主     | `@retikz/react` 等                | 框架语法到 Vanilla Input、框架生命周期、订阅结果与宿主桥接                                          | Core IR builder、compile driver、Runtime、平行 renderer 编排 |
-| 上层消费方   | plot / table / standard 等 Tier 2 | lowering 到 Core IR，复用 Core contract；按需把领域 program 装配到 `@retikz/runtime`                | Core 的通用图形、几何和 renderer 语义                        |
+| 上层消费方   | plot / table / standard 等 Tier 2 | lowering 到 Core IR，复用 Core contract；由 `@retikz/reconciler` 统一执行生成内容                   | Core 的通用图形、几何和 renderer 语义                        |
 
 完整闭环可以跨包，但语义所有权不能漂移。比如 renderer 负责实现 blur，不等于 blur 可以只存在于 SVG descriptor；React 负责 JSX authoring，不等于 shape extension 可以只存在于组件映射。
 
@@ -36,7 +36,7 @@ Core IR / schema
   -> contribution / dependency provider graph assembly
   -> provider / registry
   -> Theme selector context / style registry resolution
-  -> compile / lowering
+  -> Reconciler execution + Core atomic compile / lowering
   -> Scene / headless manifest
   -> runtime coordination / render execution / adapter integration
 ```
@@ -60,7 +60,7 @@ Core IR / schema
 
 Interaction Readiness 是横切闭环条件，不把 Drawing Complete 扩张成交互运行时。静态图形可以没有交互 intent；一旦声明交互语义，就必须可追踪、可定位且不依赖 adapter 从 primitive 反推。
 
-Composite assembly 与 composite registry 是相邻但不同的契约：registry 负责 compile dispatch，provider graph 负责从显式 roots 解析跨 namespace 的传递 definition / dataset 闭包。两者都由 Core 解释，React、Vanilla 与领域包不得建立内置白名单、私有 bundle 或不同的冲突规则。
+Composite assembly 与 composite registry 是相邻但不同的契约：registry 负责 compile dispatch，provider graph 负责从显式 roots 解析跨 namespace 的传递 definition / dataset 闭包。能力键与闭包规则由 Core 定义，Reconciler 负责按 registry 执行，React、Vanilla 与领域包不得建立内置白名单、私有 bundle 或不同的冲突规则。
 
 Spatial sidecar 与 Scene 也是相邻但不同的产物：Scene 只承载 renderer execution；qualified handles 与 Scene、artifacts、diagnostics provenance 在同一 compile revision 生成和提交，但由 Core query / tooling 消费。外层 Composite 只能为 descendant owner path 增加前缀，不能复制、重命名或丢弃内部 handle。
 
@@ -141,3 +141,7 @@ docs / notes 可解释
 - `develop-completeness` 用本文能力面做阶段性横向审计。
 
 本文负责稳定边界，不负责维护具体功能清单。改变 Drawing Complete 的问题范围、主责包或 Scene / manifest 基本输出，需要先更新架构决策，不能由单个 renderer 或 adapter 实现倒推。
+
+## 编译执行归属
+
+Core 拥有绘图语义、原子解析 / layout / emit 与共享阶段产物。Reconciler 拥有完整编译 API、遍历、Composite 试算与重放、资源工作区及输出事务；完整与增量首轮共用执行器，Weave 只保留增量所需的实际产物与执行记录。参见 [ADR-080](../decisions/v0/v0.5/080-unified-reconciler-compilation.md)。

@@ -4,7 +4,7 @@
 
 不拥有主图编译、几何求解、主图排版、renderer 语义或领域产物的空间映射。只能消费公开编译结果；缺少事实时缩减能力或报告 `UnsupportedGeometry`，不得要求基础包增加检查专用字段。
 
-根入口依赖 Core、Foundation、Math 与 Zod；可选宿主位于 React / Vanilla 子入口，使用普通 Render 只读层，不增加 Inspect 专用 renderer 入口。
+根入口依赖 Core、Reconciler、Foundation、Math 与 Zod；可选宿主位于 React / Vanilla 子入口，使用普通 Render 只读层，不增加 Inspect 专用 renderer 入口。
 
 请求属于运行时消费配置，不进入主图 IR 或 Scene。primitive 只遍历 Scene 图元树；artifact 仅使用领域公开事实，不从 occurrence 推导空间。内置与第三方共用 Definition、registry 和编译链。传给扩展的嵌套数据必须隔离；辅助输出移除公共 identity、meta 与 animation，保留内部资源引用。
 

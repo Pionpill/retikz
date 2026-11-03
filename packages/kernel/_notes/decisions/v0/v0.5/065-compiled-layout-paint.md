@@ -11,6 +11,8 @@ keywords: Core、Weave、Reconciler、Render、compiled、layout、paint、有�
 - 修订日期：2026-10-22
 - 关联：[Roadmap](./roadmap.md)、[060](./060-core-element-compilation.md)、[063](./063-weave-incremental-update.md)、[064](./064-remove-runtime.md)、[Drawing Complete](../../../architecture/core-drawing-complete.md)
 
+> 编译执行归属与中间产物决策由 [ADR-080](./080-unified-reconciler-compilation.md) 部分替代：完整入口、遍历、试算与输出生命周期归 Reconciler；Core 保留原子阶段及权威产物。本篇其余绘图语义与事务约束继续有效。
+
 ## 背景与目标
 
 增量编译需要判断一次输入变化是否要求重新测量、定位或绘制，并在依赖者消费的结果没有变化时停止传播。将所有属性物理拆成 layout 与 paint 并不能自动完成这些判断，还会把同一文字、描边或标签的语义属性分散到不同对象。

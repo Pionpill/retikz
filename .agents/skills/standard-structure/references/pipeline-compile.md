@@ -2,12 +2,12 @@
 
 `pipeline/` 和 `compile/` 是编排与消费层。公开编译入口接收已类型化的 Source IR 后，创建并维护 registry、引用、host、data、theme、measurement 等 context，在依赖就绪点调度纵向领域 `resolveXxx`，再执行 lowering / layout / emit，输出 Kernel IR 或 Scene primitive。默认、优先级、lookup、领域值转换和 Canonical 数据结构属于 `resolve/`；不要散落到 pipeline / compile。
 
-`compileToScene` 保持 Core 完整 Scene 编译的主入口，接收 `IRScene`；允许职责明确的编译准备、单元素计算及产物组装契约，不新增同义的 `compileIRToScene`，各入口必须复用同一绘图语义。`InputXxx -> IRXxx` 的 authoring normalize 属于 Vanilla，`unknown -> IRXxx` 的 parse 属于 parse / schema 边界。
+`compileToScene` 是 Reconciler 完整 Scene 编译的主入口，接收 `IRScene`；允许职责明确的编译准备、单元素计算及产物组装契约，不新增同义的 `compileIRToScene`，各入口必须复用同一绘图语义。`InputXxx -> IRXxx` 的 authoring normalize 属于 Vanilla，`unknown -> IRXxx` 的 parse 属于 parse / schema 边界。
 
 ## 分工
 
 - `pipeline/`：Tier 2 到 Kernel IR 的 lowering 编排，例如 plot 的 data / scale / coordinate / transform / mark / guide 阶段。
-- `compile/`：Kernel IR 到 Scene primitive 的确定性编译，例如 core 的 context 生命周期、坐标、路径、节点、命名空间和 warning 调度。
+- `compile/`：Kernel IR 到 Scene primitive 的确定性编译，Core 提供坐标、路径、节点等原子阶段；Reconciler 管理完整 context 生命周期、遍历、命名空间、Composite 调度与输出组装。
 
 具体规则回到拥有概念的层：schema 形态回 `schemas`，能力协议回 `contract`，内置实现回 `providers`，通用纯函数回 `shared`，unknown、字符串或 DSL 到 IR 的 eager 解析回 `parse/`。
 
@@ -23,13 +23,15 @@
 - 回调不自动保证隔离：可丢弃计算的资源与诊断写入本次工作区，失败或未就绪不得污染已提交结果。等待与重试归驱动，不能把未就绪当作缺失或真实错误；原子阶段不发布结果、不维护驱动依赖图
 - 解析、布局、输出的共享边界必须覆盖默认值、坐标、范围和资源等领域语义，不能只共享底层算法而让驱动各自解释规则。阶段拆分不自动代表可独立缓存或增量复用，复用条件由能力 owner 明确
 
+Core 不持有完整编译入口或反向依赖 Reconciler。全量与增量首轮共用 Reconciler 执行器，是否增量只决定 Weave 缓存的保留；缓存直接保存 Core 实际阶段产物，不另建简化模型。
+
 ## 确定性
 
 `compileToScene` 必须保持纯函数：相同 IR + 相同 options 得到相同 Scene。不要用 `Math.random()`、`Date.now()` 或 module-level mutable state 影响输出。
 
 ## Public options
 
-- core compile options 用能力复数名：`shapes`、`boundaries`、`clips`、`arrows`、`patterns`、`pathGenerators`、`pathKinds`、`composites`。
+- 完整 compile options 由 Reconciler 持有，绘图能力使用复数名：`shapes`、`boundaries`、`clips`、`arrows`、`patterns`、`pathGenerators`、`pathKinds`、`composites`。
 - plot 新增 registry option 优先用 `xxxDefinitions`；既有 `coordinates` 是历史例外，除非保持同一能力兼容，否则不要复制。
 - options 只传 definition 或编排策略，不传函数进 IR schema。
 

@@ -34,11 +34,15 @@ Retikz 将领域语义、无框架 API 和框架适配分为三组。右侧包�
 
 ### 2.1 `@retikz/core`
 
-Core 是通用绘图领域的唯一 owner。它定义 JSON-safe 的 Core Source IR schema 与 `IRXxx` 类型，维护通用 Definition / registry，负责将 Core Source IR 编译为 renderer-agnostic Scene。
+Core 是通用绘图领域的唯一 owner。它定义 JSON-safe 的 Core Source IR schema 与 `IRXxx` 类型，维护通用 Definition / registry，提供将 Core IR 片段解析、布局并生成 renderer-agnostic 图元的原子阶段。
 
-Core 还拥有 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution` 的领域 resolve：统一处理 IR 等价简写、领域默认、继承与覆盖优先级、registry / reference / host lookup、Canonical 化后出现的领域不变量及颜色等领域值转换，使所有 compile 内部消费收敛到唯一结构。`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在领域 `resolve/<domain>/types.ts`，由同目录 `resolveXxx` 产出。compile 创建和维护 context、决定 traversal 与阶段顺序，并在上下文就绪点调度 resolver；它不重复数据结构确定化。只有 `IRXxx` 由 Zod schema 派生。Core 对外的编译入口保持为接收 `IRScene` 的 `compileToScene`；不新增同义的 `compileIRToScene`。
+Core 还拥有 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution` 的领域 resolve：统一处理 IR 等价简写、领域默认、继承与覆盖优先级、registry / reference / host lookup、Canonical 化后出现的领域不变量及颜色等领域值转换，使所有 compile 内部消费收敛到唯一结构。`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在领域 `resolve/<domain>/types.ts`，由同目录 `resolveXxx` 产出。Reconciler 创建和维护执行 context、决定 traversal 与阶段顺序，并在上下文就绪点调度 resolver；它不重复数据结构确定化。只有 `IRXxx` 由 Zod schema 派生。Reconciler 对外的完整编译入口为接收 `IRScene` 的 `compileToScene`；不新增同义的 `compileIRToScene`。
 
 Core 不提供框架通用 authoring Input，不持有 JSX、DOM、框架调度或浏览器挂载能力。它也不因上层 API 的便利需求扩展持久化 IR 以外的平行输入模型。
+
+### Reconciler 的执行边界
+
+Reconciler 组合 Core 的原子阶段，拥有完整编译入口、遍历、Composite 试算与重放、资源工作区、来源记录和输出事务。全量与增量首轮共用执行器；增量模式的 Weave 保存实际阶段产物及其复用依据，非增量模式不保留缓存。Core 不反向依赖 Reconciler，绘图语义与产物结构仍由 Core 定义。
 
 ### 2.2 `@retikz/plot`
 

@@ -9,6 +9,8 @@ keywords: Weave、WeaveNode、WeaveRoot、compiled、pendingInputs、依赖、�
 - 决策日期：2026-10-20
 - 关联：[版本目标](./roadmap.md)、[Reconciler 包归属](./055-reconciler-extraction.md)、[Scope 无环几何引用](./057-scope-acyclic-geometry-references.md)
 
+> 编译执行归属与中间产物决策由 [ADR-080](./080-unified-reconciler-compilation.md) 部分替代：完整入口、遍历、试算与输出生命周期归 Reconciler；Core 保留原子阶段及权威产物。本篇其余绘图语义与事务约束继续有效。
+
 ## 目标与职责
 
 以单一 Weave 节点体系承载输入、编译状态和关联，区分声明层级与计算依赖，不重复维护同构的输入树和编译树。Core 拥有绘图解析与编译产物；Reconciler 只读持有产物并管理关联，不建立平行布局模型。
