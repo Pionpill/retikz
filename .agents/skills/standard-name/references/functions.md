@@ -8,27 +8,30 @@
 
 函数内部的具名 helper 也须表达动作与对象；存在不同对象或操作时，不单独使用 `walk`、`enter`、`fail`。例如使用 `visitPrimitive`、`withActiveObject`、`throwSceneContentError`；负责临时状态或资源作用域的 helper 应以 JSDoc 说明进入、退出和异常时的清理行为。
 
-| 形式                                 | 作用                                                                    | 边界                                                           |
-| ------------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `parseXxx`                           | 把 unknown、JSON、字符串或序列化 DSL 解析为 IR                          | 不接收编译 context，不承担 Vanilla authoring 组装              |
-| `normalizeXxx`                       | 在 Vanilla API 中把 `InputXxx` 组装为 IR                                | 不承担外部 unknown 校验或内部领域确定化                        |
-| `resolveXxx`                         | 结合 context 把内部数据确定为 Canonical / Resolution                    | 不 parse unknown，不 emit Scene / primitive                    |
-| `createXxx`                          | 创建新实例、context、registry、session、controller 或带独立生命周期的值 | 不用于字符串格式化、直接索引或既有字段投影                     |
-| `buildXxx`                           | 从多段输入组装完整结构或描述符                                          | 不暗示独立生命周期，不用于 lookup 或 cache accessor            |
-| `formatXxx`                          | 产生稳定字符串表示，用于展示、诊断或机器 key                            | 不查 registry、不写 cache；稳定序列化使用 `serializeXxx`       |
-| `readXxx`                            | 从已有结构、宿主、流或 adapter 输入读取内容                             | 不创建缺失项、不写 cache；解释 unknown 或字符串使用 `parseXxx` |
-| `getXxx`                             | 获取调用时已经可得的值，可包含轻量派生                                  | 不隐藏创建、cache 写入、资源分配、解析或阶段推进               |
-| `findXxx`                            | 搜索集合、树或候选空间                                                  | 未找到是正常结果，返回 `undefined`、`null` 或空结果，不抛错    |
-| `requireXxx`                         | 获取契约上必须存在的值                                                  | 缺失时抛出 owner error，不用于一般校验                         |
-| `getOrCreateXxx`                     | 读取已有项，缺失时创建并登记                                            | 必须显式暴露写入与生命周期变化，不简写为 `getXxx`              |
-| `xxxOfYyy` / `xxxDefinitionOf`       | 从单一主体纯投影稳定属性或直接索引                                      | 不承担 fallback、合并、资源分配或 context 解析                 |
-| `xxxFromYyy` / `xxxToYyy`            | 明确来源或表示转换                                                      | 输入与输出表示均须清楚；原地施加变换使用 `applyXxx`            |
-| `snapshotXxx` / `sealXxx`            | 分别表达脱离复制，或移除不允许语义并最终冻结                            | 内部包含校验时仍按主要产物动作命名，并在 JSDoc 说明校验        |
-| `tryXxx`                             | 尝试可能失败的动作，将预期失败编码进返回值                              | 成功必然发生或失败仍抛错时不得添加 `try`                       |
-| `lowerXxx` / `layoutXxx` / `emitXxx` | 分别表达语义下沉、布局计算和 Scene / primitive 输出                     | 不使用 `processXxx`、`handleXxx`、`completeXxx` 等泛化阶段词   |
-| `collectXxx`                         | 遍历并收集明确领域对象或 diagnostics                                    | 名称必须说明收集对象；不是所有返回数组的函数都叫 `collect`     |
-| `defineXxx`                          | 声明并返回具体 `XxxDefinition`                                          | 不使用泛化 `createDefinition`                                  |
-| `resolveXxxRegistry`                 | 合并并解析 registry                                                     | 可表达优先级或诊断，不与直接 lookup 混用                       |
+| 形式                                 | 作用                                                                    | 边界                                                            |
+| ------------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `parseXxx`                           | 把 unknown、JSON、字符串或序列化 DSL 解析为 IR                          | 不接收编译 context，不承担 Vanilla authoring 组装               |
+| `normalizeXxx`                       | 在 Vanilla API 中把 `InputXxx` 组装为 IR                                | 不承担外部 unknown 校验或内部领域确定化                         |
+| `resolveXxx`                         | 结合窄语义上下文把内部数据确定为 Canonical / Resolution                 | 不依赖编译执行状态，不 parse unknown，不 emit Scene / primitive |
+| `compileXxx`                         | 组合解析、布局、lowering 或输出等多个阶段，完成明确的领域编译任务       | 不作为单阶段 helper 的通用前缀；树调度、等待重试与提交归驱动    |
+| `createXxx`                          | 创建新实例、context、registry、session、controller 或带独立生命周期的值 | 不用于字符串格式化、直接索引或既有字段投影                      |
+| `buildXxx`                           | 从多段输入组装完整结构或描述符                                          | 不暗示独立生命周期，不用于 lookup 或 cache accessor             |
+| `formatXxx`                          | 产生稳定字符串表示，用于展示、诊断或机器 key                            | 不查 registry、不写 cache；稳定序列化使用 `serializeXxx`        |
+| `readXxx`                            | 从已有结构、宿主、流或 adapter 输入读取内容                             | 不创建缺失项、不写 cache；解释 unknown 或字符串使用 `parseXxx`  |
+| `getXxx`                             | 获取调用时已经可得的值，可包含轻量派生                                  | 不隐藏创建、cache 写入、资源分配、解析或阶段推进                |
+| `findXxx`                            | 搜索集合、树或候选空间                                                  | 未找到是正常结果，返回 `undefined`、`null` 或空结果，不抛错     |
+| `requireXxx`                         | 获取契约上必须存在的值                                                  | 缺失时抛出 owner error，不用于一般校验                          |
+| `getOrCreateXxx`                     | 读取已有项，缺失时创建并登记                                            | 必须显式暴露写入与生命周期变化，不简写为 `getXxx`               |
+| `xxxOfYyy` / `xxxDefinitionOf`       | 从单一主体纯投影稳定属性或直接索引                                      | 不承担 fallback、合并、资源分配或 context 解析                  |
+| `xxxFromYyy` / `xxxToYyy`            | 明确来源或表示转换                                                      | 输入与输出表示均须清楚；原地施加变换使用 `applyXxx`             |
+| `snapshotXxx` / `sealXxx`            | 分别表达脱离复制，或移除不允许语义并最终冻结                            | 内部包含校验时仍按主要产物动作命名，并在 JSDoc 说明校验         |
+| `tryXxx`                             | 尝试可能失败的动作，将预期失败编码进返回值                              | 成功必然发生或失败仍抛错时不得添加 `try`                        |
+| `lowerXxx` / `layoutXxx` / `emitXxx` | 分别表达语义下沉、布局计算和 Scene / primitive 输出                     | 不使用 `processXxx`、`handleXxx`、`completeXxx` 等泛化阶段词    |
+| `collectXxx`                         | 遍历并收集明确领域对象或 diagnostics                                    | 名称必须说明收集对象；不是所有返回数组的函数都叫 `collect`      |
+| `defineXxx`                          | 声明并返回具体 `XxxDefinition`                                          | 不使用泛化 `createDefinition`                                   |
+| `resolveXxxRegistry`                 | 合并并解析 registry                                                     | 可表达优先级或诊断，不与直接 lookup 混用                        |
+
+处理阶段使用 `parse` / `normalize` / `resolve` / `layout` / `lower` / `emit` / `compile`，按实际职责与产物选词，不按是否有 context 参数分类。`resolve` 可以读取继承、定义、数据和引用等窄能力；`layout` 负责测量、排版与定位；`emit` 负责图元及资源输出。普通计算、投影与收集仍使用准确操作动词，不冒充新的处理阶段。
 
 `makeXxx` 仅保留给已有 factory callback、Definition contract 或 owner 已明确的工厂成员；新增顶层函数在 `createXxx` 与 `buildXxx` 中择一。`ensureXxx` 容易混淆“断言存在”“缺失时创建”和“推进状态”，默认不用；确需保留时必须由 JSDoc 明确副作用。`loadXxx` 只用于 I/O、动态模块或延迟资源边界。
 

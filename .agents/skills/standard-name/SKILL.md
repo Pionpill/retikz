@@ -56,11 +56,11 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 
 ## 按需读取
 
-| 修改对象                                                       | 必读 reference                          |
-| -------------------------------------------------------------- | --------------------------------------- |
-| Source IR 一级属性或 defaults 通道                             | [字段语义](references/source-fields.md) |
-| 函数、谓词、阶段动词                                           | [函数](references/functions.md)         |
-| 变量、属性、参数、具名结构角色                                 | [变量与角色](references/variables.md)   |
-| schema / Input / Canonical / Definition / registry、目录或文件 | [分层命名](references/layers.md)        |
+| 修改对象                                                                                  | 必读 reference                          |
+| ----------------------------------------------------------------------------------------- | --------------------------------------- |
+| Source IR 一级属性或 defaults 通道                                                        | [字段语义](references/source-fields.md) |
+| 函数、谓词、阶段动词                                                                      | [函数](references/functions.md)         |
+| 变量、属性、参数、具名结构角色                                                            | [变量与角色](references/variables.md)   |
+| schema / Input / Canonical / Definition / registry、Context / State / Runtime、目录或文件 | [分层命名](references/layers.md)        |
 
 按真实输入、输出、副作用和 owner 判断名称；检查 get 是否隐藏创建、parse/normalize/resolve 是否混用、局部简称是否泄漏到公共面。通用短名只在相邻类型与表达式已唯一限定时使用，不为缩短名字牺牲语义。

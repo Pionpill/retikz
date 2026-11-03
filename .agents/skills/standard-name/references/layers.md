@@ -28,6 +28,13 @@
 - 不因“未公开”给所有目录和文件加 `_`：`resolve/`、`pipeline/` 等阶段目录和普通 helper 文件保持语义名，不使用 `_xxx.ts`；领域目录内部也不重复添加前缀
 - `_notes/`、`_scratch/`、`__snapshots__/` 等文档、临时产物和测试工具目录遵循各自规则，不作为源码领域命名依据
 
+## 上下文、状态与运行时
+
+- `<Domain><Stage>Context` 声明阶段所需的只读条件与能力，如 `NodeLayoutContext`、`PathEmitContext`；只读成员可包含显式受控操作，不表示回调无副作用
+- `<Domain><Stage>State` 表示该计算维护的可变工作状态；`<Domain><Stage>Runtime` 仅在 context 与 state 确需共同传递时组合二者，生命周期由调用方管理
+- 按实际职责省略不必要的领域或阶段部分；没有跨阶段共享状态时保留函数局部变量，不为每个领域配齐 Context / State / Runtime，不新增无区分价值的纯类型别名
+- 共享能力按能力本身命名，领域上下文按需求组合；具体边界见 [pipeline / compile](../../standard-structure/references/pipeline-compile.md#原子阶段与驱动)
+
 ## 按语义阶段命名符号
 
 按 [类型名称的组合](../SKILL.md#类型名称的组合)，resolve 与 compile / pipeline 阶段的数据类型遵循：**前缀表示数据处理阶段，主体及后缀表示数据是什么、用于什么**。阶段与用途独立组合，不把 `Layout`、`Style` 等用途词当作阶段。
