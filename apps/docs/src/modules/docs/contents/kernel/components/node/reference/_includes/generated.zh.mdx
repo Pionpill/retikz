@@ -460,7 +460,7 @@ export type InputBoundaryDefinition<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={192}>ShapeDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={179}>ShapeDefinition</ApiSourceLink>
 
 所有函数收 `JsonObject`（实际类型由 `paramsSchema.parse` 在编译期保证）；registry 同构
 不泛型化（避免逆变 / 落 any）。定义点用 `defineShape<TParams>` 拿类型安全
@@ -616,7 +616,7 @@ export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
 ]);
 ```
 
-#### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={58}>defineBoundary</ApiSourceLink>
+#### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={51}>defineBoundary</ApiSourceLink>
 
 将返回值加入 CompileOptions.boundaries 后，节点或路径端点可通过 boundary 引用其 name。此函数不注册连接面，也不解析实例参数
 
@@ -648,7 +648,7 @@ export declare const defineBoundary: <TParams extends JsonObject>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={201}>defineShape</ApiSourceLink>
+#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={188}>defineShape</ApiSourceLink>
 
 将返回值加入 CompileOptions.shapes 后，节点可通过 shape 引用其 name。此函数不注册形状，也不解析实例参数
 

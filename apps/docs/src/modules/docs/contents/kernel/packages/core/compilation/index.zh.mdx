@@ -277,8 +277,8 @@ export type NodeTextLayout = {
 <SourceLinks
   sources={[
     { label: 'resolveNode：有效配置与能力绑定', path: 'packages/kernel/core/src/resolve/node/resolve.ts' },
-    { label: '节点布局', path: 'packages/kernel/core/src/compile/node/layout.ts' },
-    { label: '节点图元生成', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    { label: '节点布局', path: 'packages/kernel/core/src/compile/tree/node/layout.ts' },
+    { label: '节点图元生成', path: 'packages/kernel/core/src/compile/tree/node/emit.ts' },
   ]}
 />
 
@@ -318,8 +318,8 @@ A、B 登记完成后，`flushPendingPathEmissions` 查询目标布局，解析�
 
 <SourceLinks
   sources={[
-    { label: '路径入队与回填', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
-    { label: '占位与稳定排序', path: 'packages/kernel/core/src/compile/orchestration/primitive.ts' },
+    { label: '路径入队与回填', path: 'packages/kernel/core/src/compile/tree/path/deferred.ts' },
+    { label: '占位与稳定排序', path: 'packages/kernel/core/src/compile/tree/shared/output.ts' },
     { label: '绘制顺序与失败路径的功能测试', path: 'packages/kernel/core/tests/compile/z-order.test.ts' },
   ]}
 />
@@ -351,8 +351,8 @@ Scene 输出可以保留局部几何和 Group 变换。命名查询使用所需�
 
 <SourceLinks
   sources={[
-    { label: 'Scope 的递归遍历与收尾', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
-    { label: '命名帧的注册、查找与出栈', path: 'packages/kernel/core/src/compile/namespace.ts' },
+    { label: 'Scope 的递归遍历与收尾', path: 'packages/kernel/core/src/compile/tree/scope/visit.ts' },
+    { label: '命名帧的注册、查找与出栈', path: 'packages/kernel/core/src/compile/runtime/namespace.ts' },
   ]}
 />
 
@@ -392,7 +392,7 @@ Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物
 <SourceLinks
   sources={[
     { label: '从同步入口进入完整编译', path: 'packages/kernel/core/src/compile/compile.ts' },
-    { label: '子项分派、递归与收尾', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '子项分派、递归与收尾', path: 'packages/kernel/core/src/compile/tree/subtree.ts' },
   ]}
 />
 

@@ -285,8 +285,8 @@ The layout border uses a center position; a Scene rectangle uses its top-left co
       label: 'resolveNode: effective configuration and bindings',
       path: 'packages/kernel/core/src/resolve/node/resolve.ts',
     },
-    { label: 'Node layout', path: 'packages/kernel/core/src/compile/node/layout.ts' },
-    { label: 'Node primitive emission', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    { label: 'Node layout', path: 'packages/kernel/core/src/compile/tree/node/layout.ts' },
+    { label: 'Node primitive emission', path: 'packages/kernel/core/src/compile/tree/node/emit.ts' },
   ]}
 />
 
@@ -326,8 +326,8 @@ Deferred work runs when its enclosing group finishes. It supports this example's
 
 <SourceLinks
   sources={[
-    { label: 'Queue and emit pending paths', path: 'packages/kernel/core/src/compile/tree/runtime.ts' },
-    { label: 'Placeholders and stable sorting', path: 'packages/kernel/core/src/compile/orchestration/primitive.ts' },
+    { label: 'Queue and emit pending paths', path: 'packages/kernel/core/src/compile/tree/path/deferred.ts' },
+    { label: 'Placeholders and stable sorting', path: 'packages/kernel/core/src/compile/tree/shared/output.ts' },
     {
       label: 'Functional tests for order and failed paths',
       path: 'packages/kernel/core/tests/compile/z-order.test.ts',
@@ -364,9 +364,9 @@ Composite entries join compilation through registered Definitions, and the basic
   sources={[
     {
       label: 'Scope traversal and finalization',
-      path: 'packages/kernel/core/src/compile/tree/runtime.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
     },
-    { label: 'Namespace registration, lookup, and pop', path: 'packages/kernel/core/src/compile/namespace.ts' },
+    { label: 'Namespace registration, lookup, and pop', path: 'packages/kernel/core/src/compile/runtime/namespace.ts' },
   ]}
 />
 
@@ -408,7 +408,7 @@ Start in `compileSceneSnapshot` to see context creation, traversal, and assembly
     { label: 'From the synchronous entry to full compilation', path: 'packages/kernel/core/src/compile/compile.ts' },
     {
       label: 'Child dispatch, recursion, and completion',
-      path: 'packages/kernel/core/src/compile/tree/runtime.ts',
+      path: 'packages/kernel/core/src/compile/tree/subtree.ts',
     },
   ]}
 />

@@ -47,8 +47,12 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 <SourceLinks
   sources={[
-    { label: '游标与最近 move 目标', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts', startLine: 88 },
-    { label: '逐步生成路径命令', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts', startLine: 60 },
+    {
+      label: '游标与最近 move 目标',
+      path: 'packages/kernel/core/src/compile/tree/path/stroke/cursor.ts',
+      startLine: 79,
+    },
+    { label: '逐步生成路径命令', path: 'packages/kernel/core/src/compile/tree/path/stroke/emit.ts', startLine: 46 },
   ]}
 />
 
@@ -68,13 +72,13 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
   sources={[
     {
       label: '路径排队与绘制顺序占位',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 549,
+      path: 'packages/kernel/core/src/compile/tree/path/deferred.ts',
+      startLine: 38,
     },
     {
       label: '解析待处理路径并回填',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 378,
+      path: 'packages/kernel/core/src/compile/tree/path/deferred.ts',
+      startLine: 86,
     },
   ]}
 />
@@ -93,10 +97,10 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
 
 <SourceLinks
   sources={[
-    { label: '从 Step 生成命令', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts', startLine: 50 },
+    { label: '从 Step 生成命令', path: 'packages/kernel/core/src/compile/tree/path/stroke/emit.ts', startLine: 46 },
     {
       label: '建立绘制段及距离范围',
-      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+      path: 'packages/kernel/core/src/compile/tree/path/stroke/interruption.ts',
       startLine: 201,
     },
   ]}
@@ -118,13 +122,13 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
   sources={[
     {
       label: '定位标签并保留路径采样结果',
-      path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts',
-      startLine: 235,
+      path: 'packages/kernel/core/src/compile/tree/path/stroke/sampling.ts',
+      startLine: 232,
     },
     {
       label: '文字边界生成并合并断口区间',
-      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
-      startLine: 353,
+      path: 'packages/kernel/core/src/compile/tree/path/stroke/interruption.ts',
+      startLine: 370,
     },
   ]}
 />
@@ -145,13 +149,13 @@ description: 解释路径写法、游标、端点引用、箭头接合与标签�
   sources={[
     {
       label: '按原曲线类型生成切片命令',
-      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
-      startLine: 459,
+      path: 'packages/kernel/core/src/compile/tree/path/stroke/interruption.ts',
+      startLine: 481,
     },
     {
       label: '组织截断后的独立片段',
-      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
-      startLine: 540,
+      path: 'packages/kernel/core/src/compile/tree/path/stroke/interruption.ts',
+      startLine: 562,
     },
   ]}
 />

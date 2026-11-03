@@ -459,7 +459,7 @@ export type InputBoundaryDefinition<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={192}>ShapeDefinition</ApiSourceLink>
+#### <ApiSourceLink label={"ShapeDefinition"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={179}>ShapeDefinition</ApiSourceLink>
 
 All functions receive `JsonObject`; `paramsSchema.parse` guarantees the concrete type during compilation. The registry is homogeneous and non-generic to avoid variance issues or any. Use `defineShape<TParams>` for type safety at the definition site.
 
@@ -613,7 +613,7 @@ export const BUILTIN_SHAPES: ReadonlyMap<string, ShapeDefinition> = new Map([
 ]);
 ```
 
-#### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={58}>defineBoundary</ApiSourceLink>
+#### <ApiSourceLink label={"defineBoundary"} path={"packages/kernel/core/src/contract/node/boundary.ts"} startLine={51}>defineBoundary</ApiSourceLink>
 
 Add the result to CompileOptions.boundaries so nodes or path endpoints can reference its name through boundary. This function does not register the boundary or parse instance parameters
 
@@ -645,7 +645,7 @@ export declare const defineBoundary: <TParams extends JsonObject>(
 
 </DocTabs>
 
-#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={201}>defineShape</ApiSourceLink>
+#### <ApiSourceLink label={"defineShape"} path={"packages/kernel/core/src/contract/node/shape.ts"} startLine={188}>defineShape</ApiSourceLink>
 
 Add the result to CompileOptions.shapes so nodes can reference its name through shape. This function does not register the shape or parse instance parameters
 

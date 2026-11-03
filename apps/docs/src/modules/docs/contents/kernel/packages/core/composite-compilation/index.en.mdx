@@ -25,7 +25,7 @@ The example throughout this page uses a parent container and a child path. The p
       label: 'Composite callback and context contracts',
       path: 'packages/kernel/core/src/contract/composite/layout.ts',
     },
-    { label: 'Composite dispatch in traversal', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Composite dispatch in traversal', path: 'packages/kernel/core/src/compile/tree/composite/compile.ts' },
   ]}
 />
 
@@ -119,7 +119,7 @@ Combining the child path and a text node needs no probe; use layout methods when
     { label: 'Unified compile and context contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
       label: 'Output children and runtime handles',
-      path: 'packages/kernel/core/src/compile/orchestration/composite/handle.ts',
+      path: 'packages/kernel/core/src/compile/tree/composite/handle.ts',
     },
   ]}
 />
@@ -206,7 +206,7 @@ Core resolves the slot from actual occupancy: `intrinsic` uses the actual size, 
   sources={[
     {
       label: 'Proposal validation and slot calculation',
-      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+      path: 'packages/kernel/core/src/compile/tree/composite/proposal.ts',
     },
     { label: 'Proposal, result, and guide contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
@@ -281,7 +281,7 @@ These measurements let the parent compare candidates. Core also needs to retain 
     },
     {
       label: 'Slot calculation from layout occupancy',
-      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+      path: 'packages/kernel/core/src/compile/tree/composite/proposal.ts',
     },
   ]}
 />
@@ -389,7 +389,7 @@ This cache is released when the callback ends and is not shared across callbacks
     { label: 'Contribution and full-output contracts', path: 'packages/kernel/core/src/contract/composite/layout.ts' },
     {
       label: 'Isolated evaluation and contribution reuse',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/composite/measurement.ts',
     },
     { label: 'Host measurement service', path: 'packages/kernel/core/src/compile/runtime/context.ts' },
     {
@@ -435,15 +435,16 @@ A probe returns `resolved` or `failed`. Recoverable errors become callback-owned
   sources={[
     {
       label: 'Probe environment and captured results',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/composite/probe.ts',
     },
     {
       label: 'Contributions held by replay transactions',
-      path: 'packages/kernel/core/src/compile/orchestration/types.ts',
+      path: 'packages/kernel/core/src/compile/runtime/composite.ts',
+      startLine: 35,
     },
     {
       label: 'Probe failure classification and propagation',
-      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      path: 'packages/kernel/core/src/compile/tree/composite/failure.ts',
     },
   ]}
 />
@@ -477,11 +478,11 @@ The parent may itself be a child of an outer container, so it also reports layou
   sources={[
     {
       label: 'Replay handles and Scope output creation',
-      path: 'packages/kernel/core/src/compile/orchestration/composite/handle.ts',
+      path: 'packages/kernel/core/src/compile/tree/composite/handle.ts',
     },
     {
       label: 'Preflight, resource import, and replay commit',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/composite/compile.ts',
     },
     {
       label: 'Placement wrapper and container output contracts',
@@ -545,10 +546,11 @@ Once the layout is settled, Core checks the final output tree returned by the ca
 
 <SourceLinks
   sources={[
-    { label: 'Composite dispatch and commit', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Composite dispatch and commit', path: 'packages/kernel/core/src/compile/tree/composite/compile.ts' },
     {
       label: 'Probe sessions and result associations',
-      path: 'packages/kernel/core/src/compile/orchestration/types.ts',
+      path: 'packages/kernel/core/src/compile/runtime/composite.ts',
+      startLine: 35,
     },
   ]}
 />

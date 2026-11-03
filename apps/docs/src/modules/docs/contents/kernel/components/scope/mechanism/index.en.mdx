@@ -48,15 +48,15 @@ For the coordinate calculations, see Math's [Coordinate transforms](/kernel/pack
   sources={[
     {
       label: 'Freeze the position target before children',
-      path: 'packages/kernel/core/src/compile/scope/geometry.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/placement.ts',
     },
     {
       label: 'Envelope anchors, final translation, and early resolution',
-      path: 'packages/kernel/core/src/compile/scope/geometry.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/placement.ts',
     },
     {
       label: 'Lower to translation, rotation, and scaling',
-      path: 'packages/kernel/core/src/compile/scope/layout.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/transform.ts',
     },
   ]}
 />
@@ -105,7 +105,7 @@ A scale of `0` can flatten a drawing, but then a canvas position cannot be conve
     },
     {
       label: 'Apply final transforms to deferred results',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
     },
   ]}
 />
@@ -133,19 +133,19 @@ Replacing a lookup entry does not delete the earlier element's drawing output. A
   sources={[
     {
       label: 'Push and pop namespace frames',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
+      path: 'packages/kernel/core/src/compile/runtime/namespace.ts',
     },
     {
       label: 'Register and diagnose same-frame repositions',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
+      path: 'packages/kernel/core/src/compile/runtime/namespace.ts',
     },
     {
       label: 'Return immediately on a match',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
+      path: 'packages/kernel/core/src/compile/runtime/namespace.ts',
     },
     {
       label: 'Register the group id before entering its local frame',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
     },
   ]}
 />
@@ -171,19 +171,19 @@ Once the children finish, `replaceLayout` updates the placeholder to a resolved 
   sources={[
     {
       label: 'Build rectangular or circular bounds from layouts',
-      path: 'packages/kernel/core/src/compile/scope/geometry.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/layout.ts',
     },
     {
       label: 'Reserve a placeholder in the parent frame',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
     },
     {
       label: 'Publish the final envelope or pass child layouts upward',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
     },
     {
       label: 'Update in place and check placeholder identity',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
+      path: 'packages/kernel/core/src/compile/runtime/namespace.ts',
     },
   ]}
 />
@@ -225,7 +225,7 @@ A group is emitted when there are child primitives, effective transforms, an id,
     },
     {
       label: 'Group pruning, transforms, and clipRef',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/output.ts',
     },
     {
       label: 'Build the SVG clipPath',

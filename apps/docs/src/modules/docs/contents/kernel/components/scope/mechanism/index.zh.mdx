@@ -48,15 +48,15 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
   sources={[
     {
       label: '进入子树前冻结 position 目标',
-      path: 'packages/kernel/core/src/compile/scope/geometry.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/placement.ts',
     },
     {
       label: '包络锚点、最终平移与预解析分支',
-      path: 'packages/kernel/core/src/compile/scope/geometry.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/placement.ts',
     },
     {
       label: '变换收敛为平移、旋转与缩放',
-      path: 'packages/kernel/core/src/compile/scope/layout.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/transform.ts',
     },
   ]}
 />
@@ -105,7 +105,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
     },
     {
       label: '补入最终变换并同步延迟结果',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
     },
   ]}
 />
@@ -133,16 +133,16 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
   sources={[
     {
       label: 'frame 的压入与弹出',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
+      path: 'packages/kernel/core/src/compile/runtime/namespace.ts',
     },
     {
       label: '同层注册与覆盖诊断',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
+      path: 'packages/kernel/core/src/compile/runtime/namespace.ts',
     },
-    { label: '首次命中即返回', path: 'packages/kernel/core/src/compile/namespace.ts' },
+    { label: '首次命中即返回', path: 'packages/kernel/core/src/compile/runtime/namespace.ts' },
     {
       label: '先登记整体 id，再进入局部 frame',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
     },
   ]}
 />
@@ -168,19 +168,19 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
   sources={[
     {
       label: '按布局生成矩形或圆形包络',
-      path: 'packages/kernel/core/src/compile/scope/geometry.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/layout.ts',
     },
     {
       label: '父 frame 中的占位条目',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
     },
     {
       label: '最终包络发布与无 id 分支',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/visit.ts',
     },
     {
       label: '原位更新与占位身份检查',
-      path: 'packages/kernel/core/src/compile/namespace.ts',
+      path: 'packages/kernel/core/src/compile/runtime/namespace.ts',
     },
   ]}
 />
@@ -222,7 +222,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
     },
     {
       label: 'Group 剪枝、变换与 clipRef',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/scope/output.ts',
     },
     {
       label: 'SVG 生成裁剪路径',
