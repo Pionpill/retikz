@@ -3,7 +3,8 @@ import { formatPropertyPath } from '@retikz/foundation';
 
 import { DEFAULT_RESOLVED_THEME, resolveScopeDefaults, resolveTheme } from '../../../resolve';
 import type { IRScope } from '../../../schemas';
-import type { SharedCompileContext, CompileStyle } from '../../runtime';
+import type { SharedCompileContext } from '../../runtime';
+import type { CompileStyle } from '../shared';
 
 /** 解析 Scope 子元素的有效样式配置；不编译 children 或聚合几何 */
 export const resolveScopeStyle = (

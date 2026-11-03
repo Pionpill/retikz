@@ -3,7 +3,7 @@ import { resolveTextMetrics, resolveFont, resolveTextLine } from '../../../../re
 import type { CanonicalFont } from '../../../../resolve';
 import type { CompiledNodeLayout, MeasuredNodeLabel, NodeLabelLayout } from '../../../layout';
 import { layoutInlineLine } from '../../../text';
-import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content/text';
+import { DEFAULT_LINE_HEIGHT_FACTOR } from '../content';
 import type { NodeLabelResolution, NodeTextLayoutContext } from '../types';
 import { resolveNodeLabelGeometry } from './geometry';
 

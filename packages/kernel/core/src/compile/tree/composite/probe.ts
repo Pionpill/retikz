@@ -122,21 +122,17 @@ export const evaluateCompositeLayout = (
     },
   };
 
-  const laid = probeContext.host.compileSubtree(
-    [clonedChild],
-    {
-      scopeChain: probeScopeChain,
-      scopeDefaults: probeScopeDefaults,
-      occurrence: probeOccurrence,
-      compositeDepth: compositeDepth + 1,
-      generated: true,
-      probe: true,
-      proposal: clonedProposal,
-      ...(measurementAxis === undefined ? {} : { measurementAxis }),
-      ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),
-    },
-    sandboxRuntime,
-  );
+  const laid = probeContext.host.compileSubtree([clonedChild], sandboxRuntime, {
+    transformChains: probeScopeChain,
+    scopeDefaults: probeScopeDefaults,
+    occurrence: probeOccurrence,
+    compositeDepth: compositeDepth + 1,
+    generated: true,
+    probe: true,
+    proposal: clonedProposal,
+    ...(measurementAxis === undefined ? {} : { measurementAxis }),
+    ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),
+  });
 
   return {
     laid,

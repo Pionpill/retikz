@@ -56,7 +56,7 @@ type InputPositionResolveContext = Readonly<{
   /** 相对定位默认距离 */
   nodeDistance: number;
   /** 当前 Scope 累积 transform */
-  scopeChain?: ReadonlyArray<Transform>;
+  transformChain?: ReadonlyArray<Transform>;
   /** traversal 已合成的当前 Scope 变换 */
   composedTransform?: ComposedScopeTransform;
   /** 显式连接面绑定能力 */
@@ -68,9 +68,9 @@ type InputPositionResolveContext = Readonly<{
  * @description NamespaceStack、CompiledNodeLayout 与 transform helper 不会越过该适配边界进入 resolve
  */
 export const createPositionResolveContext = (input: InputPositionResolveContext): PositionTargetResolveContext => {
-  const { nodeDistance, scopeChain = [], resolveExplicitBoundary } = input;
+  const { nodeDistance, transformChain = [], resolveExplicitBoundary } = input;
 
-  const transform = input.composedTransform ?? composeScopeTransform(scopeChain);
+  const transform = input.composedTransform ?? composeScopeTransform(transformChain);
 
   const lookupReference = (id: string): PositionReferenceView | undefined => {
     const entry = input.lookupReference(id);
@@ -83,9 +83,9 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
   };
 
   const toLocal = (world: IRPosition): IRPosition =>
-    scopeChain.length === 0 ? [world[0], world[1]] : inverseScopeTransform(world, transform);
+    transformChain.length === 0 ? [world[0], world[1]] : inverseScopeTransform(world, transform);
   const toWorld = (local: IRPosition): IRPosition =>
-    scopeChain.length === 0 ? [local[0], local[1]] : applyScopeTransform(local, transform);
+    transformChain.length === 0 ? [local[0], local[1]] : applyScopeTransform(local, transform);
   const boundaryResolutionOf = (target: IRNodeTarget, reference: PositionReferenceView) =>
     targetBoundaryResolutionOf(reference.node, target, resolveExplicitBoundary);
 

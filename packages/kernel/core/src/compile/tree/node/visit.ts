@@ -6,12 +6,10 @@ import type { IRNode } from '../../../schemas';
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
-import { cloneAlignmentGuides } from '../alignment-guide';
-import { pushAllocation } from '../allocation';
-import type { TreeOutputState } from '../output';
-import { recordPrimitiveZIndex } from '../output';
 import { createTreePositionContext } from '../reference';
 import type { SubtreeCompileRuntime } from '../runtime';
+import { cloneAlignmentGuides } from '../shared';
+import type { TreeOutputState } from '../shared';
 import { compileNodeState } from './compile';
 import { alignmentGuidesOfNode } from './layout-metrics';
 import { emitNodeOutput } from './output';
@@ -28,11 +26,11 @@ export const visitNode = (
 ): void => {
   const {
     context: {
-      scopeChain,
-      locatorPrefix,
+      transformChains: scopeChain,
+      pathPrefix: locatorPrefix,
       style: { defaults: scopeDefaults },
     },
-    state: { primitiveSink, layoutSink },
+    state: { primitives, layouts },
   } = frame;
   const nodeIrPath = createCompileChildPath(locatorPrefix, index);
 
@@ -44,15 +42,15 @@ export const visitNode = (
     scopeChain,
     positionContext: createTreePositionContext(runtime, scopeChain),
     composedTransform: runtime.state.execution.scopeTransformComposer.resolve(scopeChain),
-    childProposal: frame.context.childProposal,
+    childProposal: frame.context.layout?.childProposal,
   });
 
   const { layout } = compilation;
-  const globalLayout = projectLayoutWithTransform(
-    layout,
-    runtime.state.execution.scopeTransformComposer.resolve(scopeChain),
-  );
   if (child.id) {
+    const globalLayout = projectLayoutWithTransform(
+      layout,
+      runtime.state.execution.scopeTransformComposer.resolve(scopeChain),
+    );
     runtime.state.execution.namespaceStack.register(child.id, { layout: globalLayout, irPath: [...nodeIrPath, 'id'] });
     child.aliasIds?.forEach((id, aliasIndex) =>
       runtime.state.execution.namespaceStack.register(id, {
@@ -60,9 +58,9 @@ export const visitNode = (
         irPath: [...nodeIrPath, 'aliasIds', aliasIndex],
       }),
     );
+    frame.state.publications.push(globalLayout);
   }
 
-  frame.state.publicationSink.push(globalLayout);
   const output = emitNodeOutput(compilation, runtime.context, runtime.state.workspace);
   const emittedPrimitives =
     runtime.state.execution.provenanceTracker?.materializePrimitives(output.primitives) ?? output.primitives;
@@ -71,18 +69,21 @@ export const visitNode = (
   }
 
   for (const prim of emittedPrimitives) {
-    primitiveSink.push(prim);
-    recordPrimitiveZIndex(outputState.zIndexOf, prim, child.zIndex);
+    primitives.push(prim);
+    if (child.zIndex !== undefined) outputState.zIndexOf.set(prim, child.zIndex);
   }
 
-  frame.state.boundsSink.push(...output.bounds);
-  pushAllocation(frame.state.allocationSink, output.bounds[0].boundsPoints, frame.context.allocationBoundary);
+  frame.state.bounds.push(...output.bounds);
+  frame.state.allocations.push({
+    boundsPoints: output.bounds[0].boundsPoints,
+    skipAllocation: frame.context.layout?.skipAllocation,
+  });
   const alignmentGuides = alignmentGuidesOfNode(layout, runtime.context.layout.round);
   if (alignmentGuides !== undefined) {
-    frame.state.alignmentGuideSink.push(
+    frame.state.alignmentGuides.push(
       ...cloneAlignmentGuides(alignmentGuides, `Node '${formatPropertyPath(nodeIrPath)}'`),
     );
   }
 
-  layoutSink.push(layout);
+  layouts.push(layout);
 };

@@ -34,9 +34,8 @@ import {
   freezeCompileArtifact,
 } from '../../shared';
 import type { CompositeArtifact } from '../../shared';
-import { cloneAlignmentGuides } from '../alignment-guide';
-import { pushAllocation } from '../allocation';
 import type { SubtreeCompileRuntime } from '../runtime';
+import { cloneAlignmentGuides } from '../shared';
 import { createCompositeCallbackContext } from './context';
 import { isCompositeOutputHandle, snapshotCompositeOutputChild } from './handle';
 import { snapshotAllocationBounds } from './layout';
@@ -75,7 +74,7 @@ export class CompositeCompiler {
     compositeDepth: number,
     semanticOwner?: CompileOwnerKey,
   ): void {
-    const compositeIrPath = createCompileChildPath(frame.context.locatorPrefix, index);
+    const compositeIrPath = createCompileChildPath(frame.context.pathPrefix, index);
     const binding = bindComposite(child, this.runtime.context.registries.compositeRegistry);
     const { key } = binding;
     if (binding.kind === 'unregistered') {
@@ -241,13 +240,13 @@ export class CompositeCompiler {
     const outputFrame: SubtreeCompileRuntime = {
       context: {
         ...frame.context,
-        runtimeInputs: undefined,
-        ...(explicitAllocation === undefined ? {} : { allocationBoundary: {} }),
+        compositeInput: undefined,
+        ...(explicitAllocation === undefined ? {} : { layout: { ...frame.context.layout, skipAllocation: true } }),
       },
-      state: { ...frame.state, alignmentGuideSink: [] },
+      state: { ...frame.state, alignmentGuides: [] },
     };
     const preparedOutputs = preflightCompositeOutputs(this, children, owner);
-    if (compositeArtifact !== undefined) frame.state.artifactSink.push(compositeArtifact);
+    if (compositeArtifact !== undefined) frame.state.artifacts.push(compositeArtifact);
 
     for (const [outputIndex, output] of children.entries()) {
       if (!isCompositeOutputHandle(this.runtime, output)) {
@@ -295,13 +294,12 @@ export class CompositeCompiler {
     }
 
     if (explicitAllocation !== undefined) {
-      pushAllocation(
-        frame.state.allocationSink,
-        allocationPointsOf(explicitAllocation),
-        frame.context.allocationBoundary,
-      );
+      frame.state.allocations.push({
+        boundsPoints: allocationPointsOf(explicitAllocation),
+        skipAllocation: frame.context.layout?.skipAllocation,
+      });
     }
 
-    if (explicitAlignmentGuides !== undefined) frame.state.alignmentGuideSink.push(...explicitAlignmentGuides);
+    if (explicitAlignmentGuides !== undefined) frame.state.alignmentGuides.push(...explicitAlignmentGuides);
   }
 }

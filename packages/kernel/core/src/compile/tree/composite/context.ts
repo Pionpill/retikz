@@ -23,7 +23,7 @@ export const createCompositeCallbackContext = (
   evaluation: CompositeCompileContext['evaluation'],
 ) => {
   const { runtime, owner, key, occurrence } = probeContext;
-  const sourceInputs = frame.context.runtimeInputs ?? { source: child, bindings: [] };
+  const sourceInputs = frame.context.compositeInput ?? { source: child, bindings: [] };
   const authoredChildren = new Map<string, CompositeBoundChild>();
   const runtimeInputContext: CompositeRuntimeInputContext = Object.freeze({
     runtimeInput: sourceInputs.bindings.find(input => input.path.length === 0)?.input,
@@ -61,7 +61,7 @@ export const createCompositeCallbackContext = (
           runtime.context.registries.themeRegistry,
         ),
       ),
-    proposal: cloneLayoutProposal(frame.context.childProposal ?? naturalLayoutProposal, key, occurrence),
+    proposal: cloneLayoutProposal(frame.context.layout?.childProposal ?? naturalLayoutProposal, key, occurrence),
     evaluation: { ...evaluation },
     ...createCompositeMeasurementMethods(probeContext, frame, probeSequence, theme),
     resolvePathTargets: query => targetQuery.resolve(theme, query),

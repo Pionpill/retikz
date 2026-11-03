@@ -1,3 +1,4 @@
+export * from './anchor-cache';
 export * from './anchors';
 export * from './boundary';
 export * from './compile';
@@ -10,4 +11,4 @@ export * from './projection';
 export * from './reference';
 export * from './synthetic';
 export * from './types';
-export * from './anchor-cache';
+export * from './visit';

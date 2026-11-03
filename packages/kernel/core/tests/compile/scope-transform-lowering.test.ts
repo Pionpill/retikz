@@ -69,7 +69,7 @@ const lower = (
   const base = createPositionResolveContext({
     lookupReference: id => namespaceStack.lookupReference(id),
     nodeDistance,
-    scopeChain,
+    transformChain: scopeChain,
   });
   const positionContext = { ...base, resolveBetweenWorld: resolveBetweenGlobal };
 

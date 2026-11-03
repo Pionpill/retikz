@@ -8,8 +8,8 @@ import type { SharedCompileContext, CompileRuntime } from '../../runtime';
 import { collectLayoutBounds, calculateBoundsOfPrimitives } from '../../scene';
 import { applyTransformChain, createCompileChildPath } from '../../shared';
 import type { CompileBounds, CompileOutput } from '../../shared';
-import type { TreeOutputState } from '../output';
-import { recordPrimitiveZIndex, stableSortByZIndex } from '../output';
+import type { TreeOutputState } from '../shared';
+import { stableSortByZIndex } from '../shared';
 import { createScopeGroup } from './emit';
 import type { CompiledScope, EmitScopeGroupContext } from './types';
 
@@ -98,15 +98,15 @@ export const emitScopeGroup = (
   child: IRScope,
   input: EmitScopeGroupContext,
 ): string | undefined => {
-  const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipPath, semanticOwner } = input;
+  const { index, scopeTransforms, scopePrimitives, frame, resolvedClipPath, semanticOwner } = input;
   const {
-    state: { primitiveSink },
-    context: { locatorPrefix },
+    state: { primitives },
+    context: { pathPrefix: locatorPrefix },
   } = frame;
   const scopeIrPath = createCompileChildPath(locatorPrefix, index);
   const hasScopeTransforms = scopeTransforms.length > 0;
   const isPrunable =
-    scopePrimitiveSink.length === 0 && !hasScopeTransforms && child.id === undefined && child.clip === undefined;
+    scopePrimitives.length === 0 && !hasScopeTransforms && child.id === undefined && child.clip === undefined;
   if (isPrunable) return;
 
   const group: GroupPrimitive = {
@@ -119,12 +119,12 @@ export const emitScopeGroup = (
       resolvedClipPath,
     ),
     // 当前 Scope 的延迟路径已在收尾阶段回填
-    children: stableSortByZIndex(scopePrimitiveSink as Array<ScenePrimitive>, output.zIndexOf),
+    children: stableSortByZIndex(scopePrimitives as Array<ScenePrimitive>, output.zIndexOf),
   };
-  primitiveSink.push(group);
+  primitives.push(group);
   if (semanticOwner !== undefined)
     runtime.state.execution.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
-  recordPrimitiveZIndex(output.zIndexOf, group, child.zIndex);
+  if (child.zIndex !== undefined) output.zIndexOf.set(group, child.zIndex);
 
   return group.clipRef;
 };

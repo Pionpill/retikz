@@ -13,8 +13,8 @@ import type { CompiledNodeLayout, NodeLabelLayout } from '../../layout';
 import type { RegisterPaint } from '../../resource';
 import { snapshotScenePrimitives } from '../../shared';
 import { emitInlineLine, calculateAlphabeticBaselineY } from '../../text';
-import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
-import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
+import { DEFAULT_LINE_HEIGHT_FACTOR } from './content';
+import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label';
 import type { NodeCompilation, NodeLabelResolution, NodeResolvedProperties } from './types';
 
 /** 节点形状绘制使用的有效样式 */

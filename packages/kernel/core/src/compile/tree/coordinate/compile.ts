@@ -4,8 +4,8 @@ import { createLayoutProbeRecoverableError } from '../../../resolve/diagnostics'
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import { resolvePosition } from '../../../resolve/position';
 import type { IRCoordinate, IRPosition } from '../../../schemas';
-import type { ElementCompileOptions, ElementCompileResult } from '../../runtime';
-import { runElementCompilation } from '../element';
+import type { ElementCompileOptions, ElementCompileResult } from '../shared';
+import { runElementCompilation } from '../shared';
 
 /** 坐标单元素编译上下文 */
 export type CoordinateCompileContext = ElementCompileOptions;
@@ -15,8 +15,8 @@ export const compileCoordinate = (
   input: IRCoordinate,
   context: CoordinateCompileContext,
 ): ElementCompileResult<CompiledCoordinate> =>
-  runElementCompilation(context, workspace => {
-    const position = resolveCoordinatePosition(input, workspace.positionContext);
+  runElementCompilation(context, runtime => {
+    const position = resolveCoordinatePosition(input, runtime.context.positionContext);
     return Object.freeze({
       irPath: context.irPath,
       id: input.id,

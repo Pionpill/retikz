@@ -1,6 +1,5 @@
 export * from './composite';
 export * from './context';
-export * from './element';
 export * from './namespace';
 export * from './node-boundary';
 export * from './runtime';

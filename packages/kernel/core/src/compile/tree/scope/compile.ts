@@ -1,6 +1,7 @@
 import type { CompiledNodeLayout } from '../../layout';
-import type { SharedCompileContext, ElementCompileOptions, ElementCompileResult } from '../../runtime';
-import { runElementCompilation } from '../element';
+import type { SharedCompileContext } from '../../runtime';
+import type { ElementCompileOptions, ElementCompileResult } from '../shared';
+import { runElementCompilation } from '../shared';
 import { resolveScopeStyle } from './context';
 import { createScopeGroup } from './emit';
 import { createIntrinsicScopeLayout } from './layout';
@@ -19,9 +20,10 @@ export const prepareScopeCompilation = (
   input: InputScopeCompile,
   context: ScopeCompileContext,
 ): ElementCompileResult<ScopeCompilationPreparation> =>
-  runElementCompilation(context, workspace => {
+  runElementCompilation(context, runtime => {
+    const { workspace } = runtime.state;
     const geometry = {
-      positionContext: workspace.positionContext,
+      positionContext: runtime.context.positionContext,
       onWarn: workspace.diagnosticCollector.collect,
       irPath: context.irPath,
     };
@@ -38,9 +40,10 @@ export const compileScope = (
   layouts: ReadonlyArray<CompiledNodeLayout>,
   context: ScopeCompileContext,
 ): ElementCompileResult<CompiledScope> =>
-  runElementCompilation(context, workspace => {
+  runElementCompilation(context, runtime => {
+    const { workspace } = runtime.state;
     const { envelope, transforms } = compileScopeGeometry(input, preparation, layouts, context.shared, {
-      positionContext: workspace.positionContext,
+      positionContext: runtime.context.positionContext,
       onWarn: workspace.diagnosticCollector.collect,
       irPath: context.irPath,
     });

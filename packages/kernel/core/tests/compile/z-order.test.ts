@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRChild, IRScene } from '../../src';
 import { BuiltinCompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
+import { PATH_PLACEHOLDER } from '../../src/compile/tree/shared';
 import type { GroupPrimitive, ScenePrimitive } from '../../src/contract';
 
 // ---------------------------------------------------------------------------
@@ -154,7 +155,7 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
     // 占位被 splice 移除：输出里不存在 path-placeholder（强转 string 比较，避开公开 union 不含此 type）
     const types = result.primitives.map(p => p.type as string);
 
-    expect(types).not.toContain('path-placeholder');
+    expect(types).not.toContain(PATH_PLACEHOLDER);
 
     // 两个 node 的 rect 仍按声明序在位、无空洞（toEqual 密集比较覆盖长度 / 内容 / undefined 空洞）
     expect(types).toEqual(['rect', 'rect']);
@@ -186,7 +187,7 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
     for (const ir of cases) {
       const result = compileToScene(ir, silent).scene;
 
-      expect(collectTypes(result.primitives)).not.toContain('path-placeholder');
+      expect(collectTypes(result.primitives)).not.toContain(PATH_PLACEHOLDER);
     }
   });
 });

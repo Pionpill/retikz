@@ -5,7 +5,7 @@ import { rect } from '../../../shared/geometry';
 import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';
 import { outerRectOf } from './anchors';
 import { emitNodePrimitives } from './emit';
-import { labelExtentPoints } from './label/geometry';
+import { labelExtentPoints } from './label';
 import type { NodeCompilation } from './types';
 
 /** 从已完成的节点布局生成图元及边界；资源和诊断归属显式工作区 */

@@ -55,7 +55,7 @@ describe('坐标变换的数值与可逆边界', () => {
     const context = createPositionResolveContext({
       lookupReference: () => undefined,
       nodeDistance: 24,
-      scopeChain: chain,
+      transformChain: chain,
     });
     const world = context.toWorld([4, 5]);
     expect(world[0]).toBeCloseTo(1, 12);
@@ -69,7 +69,7 @@ describe('坐标变换的数值与可逆边界', () => {
     const context = createPositionResolveContext({
       lookupReference: () => undefined,
       nodeDistance: 24,
-      scopeChain: [{ kind: 'scale', x: 0, y: 2 }],
+      transformChain: [{ kind: 'scale', x: 0, y: 2 }],
     });
     expect(context.toWorld([5, 7])).toEqual([0, 14]);
     expect(() => context.toLocal([0, 14])).toThrow('non-invertible scope transform');
@@ -79,7 +79,7 @@ describe('坐标变换的数值与可逆边界', () => {
     const context = createPositionResolveContext({
       lookupReference: () => undefined,
       nodeDistance: 24,
-      scopeChain: [{ kind: 'scale', x: scale, y: scale }],
+      transformChain: [{ kind: 'scale', x: scale, y: scale }],
     });
     const local = context.toLocal([scale, scale]);
     expect(local).toEqual([1, 1]);
@@ -90,7 +90,7 @@ describe('坐标变换的数值与可逆边界', () => {
       const context = createPositionResolveContext({
         lookupReference: () => undefined,
         nodeDistance: 24,
-        scopeChain: [{ kind: 'translate', x, y: 4 }],
+        transformChain: [{ kind: 'translate', x, y: 4 }],
       });
       expect(context.toWorld([2, 3])).toEqual([x + 2, 7]);
     }
@@ -114,7 +114,7 @@ describe('坐标变换的数值与可逆边界', () => {
     const context = createPositionResolveContext({
       lookupReference: () => undefined,
       nodeDistance: 24,
-      scopeChain: chain,
+      transformChain: chain,
     });
     expect(context.toWorld([1e200, 1e200])).toEqual(applyTransformChain([1e200, 1e200], chain));
   });

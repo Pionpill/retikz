@@ -38,8 +38,7 @@ export const projectContribution = (contribution: LayoutContribution, proposal: 
 export const boundsRectOf = (result: SubtreeCompilation): Readonly<BoundsRect> => {
   let allocation: SubtreeCompilation['layoutBounds'];
   for (const contribution of result.allocations) {
-    if (contribution.allocationBoundary === undefined)
-      allocation = collectLayoutBounds(allocation, contribution.boundsPoints);
+    if (contribution.skipAllocation !== true) allocation = collectLayoutBounds(allocation, contribution.boundsPoints);
   }
   return canonicalizeBoundsRect(
     allocation === undefined ? { x: 0, y: 0, width: 0, height: 0 } : boundsToRect(allocation),

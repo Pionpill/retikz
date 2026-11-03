@@ -13,7 +13,7 @@ export const createTreePositionContext = (
     nodeBoundaryStore: runtime.state.workspace.nodeBoundaryStore,
     lookupReference: id => runtime.state.execution.namespaceStack.lookupReference(id),
     nodeDistance: runtime.context.layout.nodeDistance,
-    scopeChain,
+    transformChain: scopeChain,
     resolveExplicitBoundary: (boundary, referenceContext) =>
       resolveNodeBoundary(boundary, {
         visualDef: referenceContext.visualDef,

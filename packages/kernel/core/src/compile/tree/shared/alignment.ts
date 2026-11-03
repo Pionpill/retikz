@@ -1,6 +1,6 @@
-import type { LayoutAlignmentGuide, Transform } from '../../contract';
-import { LayoutAlignmentGuideDimension } from '../../contract';
-import { createCompositeContractError } from '../../resolve/diagnostics';
+import type { LayoutAlignmentGuide, Transform } from '../../../contract';
+import { LayoutAlignmentGuideDimension } from '../../../contract';
+import { createCompositeContractError } from '../../../resolve/diagnostics';
 
 const canonicalNumber = (value: number): number => (Object.is(value, -0) ? 0 : value);
 

@@ -5,10 +5,9 @@ import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { IRChild, IRPosition, IRScope } from '../../../schemas';
 import type { CompiledNodeLayout } from '../../layout';
 import type { CompileOwnerKey } from '../../provenance';
-import type { CompileStyle } from '../../runtime';
 import type { CompileOutput, CompileWarning } from '../../shared';
-import type { InternalScenePrimitive } from '../output';
 import type { SubtreeCompileRuntime } from '../runtime';
+import type { CompileStyle, InternalScenePrimitive } from '../shared';
 
 /** Scope 子元素计算前的准备状态，不代表包络已就绪 */
 export type ScopeCompilationPreparation = Readonly<{
@@ -68,7 +67,7 @@ export type EmitScopeGroupContext = {
   /** 施加于该作用域场景分组的变换链 */
   scopeTransforms: ReadonlyArray<Transform>;
   /** 已收集的作用域子图元及待回填占位项 */
-  scopePrimitiveSink: Array<InternalScenePrimitive>;
+  scopePrimitives: Array<InternalScenePrimitive>;
   /** 接收作用域输出和布局贡献的父遍历帧 */
   frame: SubtreeCompileRuntime;
   /** runtime Scope 预检阶段已生成且尚未登记的裁剪路径 */
@@ -83,7 +82,8 @@ export type ScopeVisitHost = {
   compileChildren: (
     children: ReadonlyArray<IRChild>,
     frame: SubtreeCompileRuntime,
-    useProvidedOccurrence: boolean,
+    /** 是否处于本次子树编译的根层，不一定是 Scene 根层 */
+    isRoot: boolean,
     occurrence: CompileOccurrenceLocator | undefined,
     compositeDepth: number,
   ) => void;

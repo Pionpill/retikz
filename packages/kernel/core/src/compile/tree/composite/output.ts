@@ -36,7 +36,7 @@ export const compileCompositeOutput = (
     execution.host.compileChild(
       output.child,
       index,
-      { context: { ...frame.context, runtimeInputs: output.runtimeInputs }, state: frame.state },
+      { context: { ...frame.context, compositeInput: output.runtimeInputs }, state: frame.state },
       boundOccurrence,
       compositeDepth,
       true,
@@ -104,7 +104,7 @@ export const compileCompositeOutput = (
           execution.host.compileChild(
             child,
             childIndex,
-            { context: { ...scopeFrame.context, runtimeInputs: undefined }, state: scopeFrame.state },
+            { context: { ...scopeFrame.context, compositeInput: undefined }, state: scopeFrame.state },
             childOccurrence,
             compositeDepth,
             true,

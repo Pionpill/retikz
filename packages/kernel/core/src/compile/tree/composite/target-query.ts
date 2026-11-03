@@ -43,17 +43,17 @@ export const createCompositeTargetQuery = (
         queryNamespaceIdentity = namespaceIdentity;
       }
       // Definition、测量器、绑定所有者与递归预算在当前回调内固定；派生 theme 按值区分
-      const queryKey = JSON.stringify([queryChild, theme, frame.context.style.defaults, frame.context.scopeChain]);
+      const queryKey = JSON.stringify([queryChild, theme, frame.context.style.defaults, frame.context.transformChains]);
       let shared = queryEnvironments.get(queryKey);
       if (shared === undefined) {
         let queryNamespace: NamespaceStack | undefined;
-        let queryChain = frame.context.scopeChain;
+        let queryChain = frame.context.transformChains;
         const probe = probeCompositeLayout(
           probeContext,
           queryChild,
           naturalLayoutProposal,
           occurrence,
-          frame.context.scopeChain,
+          frame.context.transformChains,
           frame.context.style.defaults,
           theme,
           false,
@@ -80,7 +80,7 @@ export const createCompositeTargetQuery = (
         nodeBoundaryStore: runtime.state.workspace.nodeBoundaryStore,
         lookupReference: id => targetNamespace.lookupReference(id),
         nodeDistance: runtime.context.layout.nodeDistance,
-        scopeChain: queryChain,
+        transformChain: queryChain,
         resolveExplicitBoundary: (boundary, referenceContext) =>
           resolveNodeBoundary(boundary, {
             visualDef: referenceContext.visualDef,

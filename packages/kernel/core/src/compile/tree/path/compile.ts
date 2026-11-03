@@ -1,9 +1,9 @@
 import { resolveAnimations, resolvePath } from '../../../resolve';
 import type { PathTargetResolver } from '../../../resolve';
 import type { IRPathBase } from '../../../schemas';
-import type { ElementCompileOptions, ElementCompileResult } from '../../runtime';
 import { composeScopeTransform } from '../../shared';
-import { runElementCompilation } from '../element';
+import type { ElementCompileOptions, ElementCompileResult } from '../shared';
+import { runElementCompilation } from '../shared';
 import type { PathCompileHost } from './emit';
 import { emitDefinedPath } from './emit';
 import { createPathTargetResolver } from './index';
@@ -17,7 +17,8 @@ export const compilePath = (
   input: IRPathBase,
   context: PathElementCompileContext,
 ): ElementCompileResult<CompiledPath> =>
-  runElementCompilation(context, workspace => {
+  runElementCompilation(context, runtime => {
+    const { workspace } = runtime.state;
     const path = {
       ...input,
       animations: resolveAnimations(input.animations, {
@@ -26,12 +27,12 @@ export const compilePath = (
         irPath: context.irPath,
       }),
     };
-    const targetResolver = createPathTargetResolver(() => workspace.positionContext);
+    const targetResolver = createPathTargetResolver(() => runtime.context.positionContext);
     const { result, resolution } = compilePathState(
       {
         path,
         irPath: context.irPath,
-        scopeChain: workspace.scopeChain,
+        scopeChain: runtime.context.transformChain,
         scopeDefaults: context.style.defaults,
         theme: context.style.theme,
         occurrence: context.occurrence ?? { sourcePath: context.irPath, expansionPath: [] },

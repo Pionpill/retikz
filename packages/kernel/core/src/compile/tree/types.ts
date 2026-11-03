@@ -46,7 +46,7 @@ export type SubtreeCompileOptions = {
   /** 当前执行是否为 layoutChild 隔离 probe */
   probe?: boolean;
   /** probe 继承的当前 scope chain */
-  scopeChain?: ReadonlyArray<Transform>;
+  transformChains?: ReadonlyArray<Transform>;
   /** probe 继承的有效默认配置 */
   scopeDefaults?: MergedScopeDefaults;
   /** 当前 child 根 occurrence；省略时按 canonical IR path 分配 */
@@ -57,16 +57,6 @@ export type SubtreeCompileOptions = {
   generated?: boolean;
   /** 当前 root child 收到的完整双轴 proposal */
   proposal?: LayoutProposal;
-};
-
-/** 子树执行策略与初始继承值，不持有工作区或宿主操作 */
-export type SubtreeCompilerOptions = Pick<
-  SubtreeCompileOptions,
-  'probe' | 'measurementAxis' | 'captureScopeTargets'
-> & {
-  /** 进入遍历前的继承位置与输入，递归时派生为局部帧 */
-  initial: Omit<SubtreeCompileOptions, 'probe' | 'measurementAxis' | 'captureScopeTargets'> &
-    Pick<CompileRuntime['context'], 'theme' | 'compositeInputs'>;
 };
 
 /** 选中隔离子树后交给宿主接受的局部输出，不包含可写工作区或递归调度器 */
@@ -90,8 +80,8 @@ export type SubtreeOutputContribution = {
 /** 使用独占工作区与名称环境执行子树；实现由全量会话持有 */
 export type CompileSubtree = (
   children: ReadonlyArray<IRChild>,
-  options: SubtreeCompileOptions,
   runtime: CompileRuntime,
+  options: SubtreeCompileOptions,
 ) => SubtreeCompilation;
 
 /** 子树编译器所需的宿主调度能力，不暴露具体管理器 */

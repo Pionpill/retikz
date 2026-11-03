@@ -84,6 +84,6 @@ export type LayoutBoundsContribution = {
   boundsPoints: Array<IRPosition>;
   /** 与该点集关联的阴影外溢 */
   shadow?: CanonicalDropShadow;
-  /** 位于该显式 composite allocation boundary 内时不直接贡献到外层 */
-  allocationBoundary?: object;
+  /** 为 true 时跳过该贡献的父布局占位汇总；省略或 false 时正常参与，不影响实际几何边界 */
+  skipAllocation?: boolean;
 };

@@ -6,14 +6,10 @@ import type { MergedScopeDefaults } from '../../../resolve';
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { IRNode } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
-import type {
-  SharedCompileContext,
-  ElementCompileOptions,
-  ElementCompileResult,
-  WorkspaceCompileState,
-} from '../../runtime';
+import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';
 import type { CompileWarningCode, ComposedScopeTransform } from '../../shared';
-import { runElementCompilation } from '../element';
+import type { ElementCompileOptions, ElementCompileResult } from '../shared';
+import { runElementCompilation } from '../shared';
 import { compileNodeResolution } from './layout';
 import { emitNodeOutput } from './output';
 import type { CompiledNode, NodeCompilation } from './types';
@@ -23,13 +19,14 @@ export type NodeCompileContext = ElementCompileOptions;
 
 /** 独立编译节点，不登记名称、不递归编译其它元素 */
 export const compileNode = (input: IRNode, context: NodeCompileContext): ElementCompileResult<CompiledNode> =>
-  runElementCompilation(context, workspace => {
+  runElementCompilation(context, runtime => {
+    const { workspace } = runtime.state;
     const compilation = compileNodeState(input, context.irPath, {
       shared: context.shared,
       workspace,
-      positionContext: workspace.positionContext,
-      scopeChain: workspace.scopeChain,
-      composedTransform: workspace.composedTransform,
+      positionContext: runtime.context.positionContext,
+      scopeChain: runtime.context.transformChain,
+      composedTransform: runtime.context.composedTransform,
       scopeDefaults: context.style.defaults,
       mode: context.style.theme.mode,
       childProposal: context.proposal,

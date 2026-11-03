@@ -1,7 +1,6 @@
 import type { IRCoordinate } from '../../../schemas';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
-import { pushAllocation } from '../allocation';
 import { createSyntheticRectangleLayout } from '../node';
 import { createTreePositionContext } from '../reference';
 import type { SubtreeCompileRuntime } from '../runtime';
@@ -15,8 +14,8 @@ export const visitCoordinate = (
   frame: SubtreeCompileRuntime,
 ): void => {
   const {
-    context: { scopeChain, locatorPrefix },
-    state: { layoutSink },
+    context: { transformChains: scopeChain, pathPrefix: locatorPrefix },
+    state: { layouts },
   } = frame;
   const coordinateIrPath = createCompileChildPath(locatorPrefix, index);
   const localCenter = resolveCoordinatePosition(child, createTreePositionContext(runtime, scopeChain));
@@ -43,7 +42,7 @@ export const visitCoordinate = (
     layout: coordinateLayout,
     irPath: [...coordinateIrPath, 'id'],
   });
-  frame.state.publicationSink.push(coordinateLayout);
-  pushAllocation(frame.state.allocationSink, [localCenter], frame.context.allocationBoundary);
-  layoutSink.push(localCoordinateLayout);
+  frame.state.publications.push(coordinateLayout);
+  frame.state.allocations.push({ boundsPoints: [localCenter], skipAllocation: frame.context.layout?.skipAllocation });
+  layouts.push(localCoordinateLayout);
 };

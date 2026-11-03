@@ -29,8 +29,8 @@ import {
 } from '../../shared';
 import type { CompileWarningCode, ComposedScopeTransform } from '../../shared';
 import { resolveAnchorRefUncached } from './anchor-cache';
-import { layoutNodeContent } from './content/layout';
-import { layoutNodeLabels, measureNodeLabels } from './label/layout';
+import { layoutNodeContent } from './content';
+import { layoutNodeLabels, measureNodeLabels } from './label';
 import { projectLayoutWithTransform } from './projection';
 import type { NodeCompilation, TexLoweringContext } from './types';
 

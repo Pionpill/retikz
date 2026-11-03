@@ -16,7 +16,6 @@ import {
   freezeCompileArtifact,
   replaceCompileWarningOccurrence,
 } from '../../shared';
-import { effectiveAllocations } from '../allocation';
 import { projectLayoutWithTransform, projectPublishedCompileLayout } from '../node';
 import type { SubtreeCompileRuntime } from '../runtime';
 import type { SubtreeOutputContribution } from '../types';
@@ -43,7 +42,7 @@ export const commitCompositeReplay = (
     (prepared.transaction.styleFingerprint !== replayStyleFingerprint(frame.context.style.defaults) ||
       prepared.transaction.themeFingerprint !== replayThemeFingerprint(frame.context.style.theme))
       ? prepared.transaction.materialize({
-          scopeChain: frame.context.scopeChain,
+          scopeChain: frame.context.transformChains,
           scopeDefaults: frame.context.style.defaults,
           theme: frame.context.style.theme,
         })
@@ -101,8 +100,8 @@ export const commitCompositeReplay = (
 
   const namespaceParentChain =
     authoredPreliminary === undefined
-      ? frame.context.scopeChain
-      : frame.context.scopeChain.slice(0, frame.context.scopeChain.length - authoredPreliminary.length);
+      ? frame.context.transformChains
+      : frame.context.transformChains.slice(0, frame.context.transformChains.length - authoredPreliminary.length);
   const namespaceTransforms = [...(authoredPreliminary ?? []), ...(transforms ?? [])];
   const publishedLayouts = new Map<CompiledNodeLayout, CompiledNodeLayout>();
 
@@ -159,7 +158,8 @@ export const commitCompositeReplay = (
       });
   }
 
-  for (const allocation of effectiveAllocations(transaction.allocations)) {
+  for (const allocation of transaction.allocations) {
+    if (allocation.skipAllocation === true) continue;
     contribution.allocations.push({
       boundsPoints:
         transforms === undefined || transforms.length === 0

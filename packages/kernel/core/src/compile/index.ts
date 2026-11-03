@@ -8,7 +8,7 @@ export type {
   SharedCompileContext,
   SharedCompileContextOptions,
 } from './runtime';
-export type { CompileStyle, ElementCompileOptions, ElementCompileReference, ElementCompileResult } from './runtime';
+export type { CompileStyle, ElementCompileOptions, ElementCompileReference, ElementCompileResult } from './tree';
 export * from './output';
 export * from './provenance';
 export { projectCompileReference } from './tree/reference';

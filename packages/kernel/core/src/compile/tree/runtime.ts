@@ -3,47 +3,49 @@ import type { PropertyPath } from '@retikz/foundation';
 import type { LayoutAlignmentGuide, LayoutProposal, Transform, CompositeInputScope } from '../../contract';
 import type { CompiledNodeLayout, LayoutBoundsContribution } from '../layout';
 import type { CompileOwnerKey } from '../provenance';
-import type { CompileStyle } from '../runtime';
 import type { CompositeArtifact } from '../shared';
-import type { InternalScenePrimitive } from './output';
-import type { PendingPathEmission } from './path/deferred';
+import type { PendingPathEmission } from './path';
+import type { CompileStyle, InternalScenePrimitive } from './shared';
 
 /** 当前递归子树的继承环境和布局输入 */
 export type SubtreeCompileContext = Readonly<{
-  /** 当前 Source 容器的实例输入，生成的普通 child 不继承 */
-  runtimeInputs?: CompositeInputScope;
-  /** 只供直接 child 消费的父布局约束 */
-  childProposal?: LayoutProposal;
+  /** 当前原始 Source 子树及其组件运行时输入绑定，生成的普通 child 不继承 */
+  compositeInput?: CompositeInputScope;
+  /** 子树的布局约束与父布局占位策略，省略时使用默认行为 */
+  layout?: Readonly<{
+    /** 当前子树接收的父布局约束，普通 Scope 会继续透传 */
+    childProposal?: LayoutProposal;
+    /** 祖先组件已显式声明占位时，跳过内部贡献的父布局占位汇总，不影响实际几何边界 */
+    skipAllocation?: boolean;
+  }>;
   /** 当前 scope 累计变换 */
-  scopeChain: ReadonlyArray<Transform>;
+  transformChains: ReadonlyArray<Transform>;
   /** 当前层声明路径前缀 */
-  locatorPrefix: PropertyPath;
+  pathPrefix: PropertyPath;
   /** 有效默认配置与主题 */
   style: CompileStyle;
-  /** 最近一层显式组件分配边界 */
-  allocationBoundary?: object;
-  /** 当前子树的编译来源 */
-  semanticOwner?: CompileOwnerKey;
+  /** 当前子树的编译溯源归属标识，仅在开启来源追踪时提供 */
+  compileOwner?: CompileOwnerKey;
 }>;
 
 /** 当前递归子树正在构建的输出与延迟任务 */
 export type SubtreeCompileState = Readonly<{
-  /** 当前层图元 */
-  primitiveSink: Array<InternalScenePrimitive>;
-  /** 向父 scope 汇报的布局 */
-  layoutSink: Array<CompiledNodeLayout>;
-  /** 当前层延迟发射的路径任务 */
-  pathSink: Array<PendingPathEmission>;
-  /** Scope 收尾时升级为最终几何的已发布布局 */
-  publicationSink: Array<CompiledNodeLayout>;
-  /** 自动视口的几何贡献 */
-  boundsSink: Array<LayoutBoundsContribution>;
-  /** 父布局的分配几何贡献 */
-  allocationSink: Array<LayoutBoundsContribution>;
-  /** 后代对齐参考线贡献 */
-  alignmentGuideSink: Array<LayoutAlignmentGuide>;
-  /** 最终逻辑树产物 */
-  artifactSink: Array<CompositeArtifact>;
+  /** 用于组装 Scene 的图元及待回填的路径占位项 */
+  primitives: Array<InternalScenePrimitive>;
+  /** 用于计算当前 Scope 包络及相关变换的子元素布局 */
+  layouts: Array<CompiledNodeLayout>;
+  /** 等待命名目标和 Scope 几何确定后执行的路径编译任务 */
+  paths: Array<PendingPathEmission>;
+  /** 供祖先 Scope 补齐变换并更新命名空间绑定的已发布布局 */
+  publications: Array<CompiledNodeLayout>;
+  /** 用于计算整体边界和自动 viewBox 的几何贡献，包含附属 label 和阴影 */
+  bounds: Array<LayoutBoundsContribution>;
+  /** 用于父布局测量的占位贡献，默认不额外计入 Node 附属 label 和阴影 */
+  allocations: Array<LayoutBoundsContribution>;
+  /** 用于布局对齐的参考线，如文字基线 */
+  alignmentGuides: Array<LayoutAlignmentGuide>;
+  /** 汇入最终编译结果、供调用方读取的 Composite 领域产物 */
+  artifacts: Array<CompositeArtifact>;
 }>;
 
 /** 当前递归子树的输入环境与收集状态 */
@@ -53,15 +55,3 @@ export type SubtreeCompileRuntime = Readonly<{
   /** 当前子树的可变收集容器 */
   state: SubtreeCompileState;
 }>;
-
-/** 为一层子树创建独立的输出收集容器 */
-export const createSubtreeCompileState = (): SubtreeCompileState => ({
-  primitiveSink: [],
-  layoutSink: [],
-  pathSink: [],
-  publicationSink: [],
-  boundsSink: [],
-  allocationSink: [],
-  alignmentGuideSink: [],
-  artifactSink: [],
-});
