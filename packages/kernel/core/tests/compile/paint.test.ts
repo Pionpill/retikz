@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
-import { createSharedCompileContext } from '../../src/compile/context';
 import { createPaintRegistry } from '../../src/compile/resource';
+import { createSharedCompileContext } from '../../src/compile/runtime';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../src/contract';
 import { definePattern } from '../../src/contract';
 import { resolvePaint } from '../../src/resolve/resource';

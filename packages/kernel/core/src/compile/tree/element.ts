@@ -2,14 +2,14 @@ import { formatPropertyPath } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { resolveNodeBoundary } from '../../resolve';
-import type { ElementCompileOptions, ElementCompileResult } from '../context';
-import { createWorkspaceCompileContext } from '../context';
+import type { ElementCompileOptions, ElementCompileResult } from '../runtime';
+import { createWorkspaceCompileState } from '../runtime';
 import { composeScopeTransform, orderCompileWarnings, withCompileWarningOccurrence } from '../shared';
 import { createPositionResolveContext } from './reference';
 
 /** 创建独占的资源、诊断与引用读取工作区 */
 const createElementWorkspace = (options: ElementCompileOptions) => {
-  const workspace = createWorkspaceCompileContext(options.shared);
+  const workspace = createWorkspaceCompileState(options.shared);
   let pending: RetikzCoreError | undefined;
   const scopeChain = options.transforms ?? [];
   const composedTransform = composeScopeTransform(scopeChain);
@@ -17,7 +17,7 @@ const createElementWorkspace = (options: ElementCompileOptions) => {
     nodeDistance: options.shared.layout.nodeDistance,
     scopeChain,
     composedTransform,
-    nodeBoundaryContext: workspace.nodeBoundaryContext,
+    nodeBoundaryStore: workspace.nodeBoundaryStore,
     lookupReference: name => {
       const entry = options.lookupReference?.(name);
       if (entry === undefined) return undefined;
@@ -69,7 +69,9 @@ export const runElementCompilation = <TCompiled>(
       compiled,
       diagnostics: Object.freeze(
         orderCompileWarnings(
-          workspace.diagnostics.warnings.map(warning => withCompileWarningOccurrence(warning, options.occurrence)),
+          workspace.diagnosticCollector.warnings.map(warning =>
+            withCompileWarningOccurrence(warning, options.occurrence),
+          ),
         ),
       ),
     });

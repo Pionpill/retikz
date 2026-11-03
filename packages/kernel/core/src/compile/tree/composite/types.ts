@@ -1,8 +1,8 @@
 import type { CompileOccurrenceLocator, CompositeReplay, Transform, SceneClipPath } from '../../../contract';
 import type { IRChild, IRScope } from '../../../schemas';
-import type { CompositeReplayTransaction, CompositeRuntimeOutputChild, TreeCompileContext } from '../../context';
 import type { CompileOwnerKey } from '../../provenance';
-import type { TreeCompileFrame } from '../frame';
+import type { CompositeReplayTransaction, CompositeRuntimeOutputChild, CompileRuntime } from '../../runtime';
+import type { SubtreeCompileRuntime } from '../runtime';
 import type { SubtreeOutputContribution, SubtreeCompileHost } from '../types';
 
 /** 完成预检的重放事务及外层裁剪 */
@@ -32,12 +32,12 @@ export type PreparedCompositeOutputs = Readonly<{
 /** Composite 执行所需的遍历操作，不持有遍历器的私有状态 */
 export type CompositeCompileHost = SubtreeCompileHost & {
   /** 接受已选择的子树贡献，输出容器由宿主维护 */
-  acceptContribution: (frame: TreeCompileFrame, contribution: SubtreeOutputContribution) => void;
+  acceptContribution: (frame: SubtreeCompileRuntime, contribution: SubtreeOutputContribution) => void;
   /** 编译一个已绑定输入或生成的子项 */
   compileChild: (
     child: IRChild,
     index: number,
-    frame: TreeCompileFrame,
+    frame: SubtreeCompileRuntime,
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
     generated: boolean,
@@ -47,11 +47,11 @@ export type CompositeCompileHost = SubtreeCompileHost & {
   compileScopeChild: (
     child: IRScope,
     index: number,
-    frame: TreeCompileFrame,
+    frame: SubtreeCompileRuntime,
     occurrence?: CompileOccurrenceLocator,
     compositeDepth?: number,
     semanticOwner?: CompileOwnerKey,
-    compileNested?: (frame: TreeCompileFrame, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
+    compileNested?: (frame: SubtreeCompileRuntime, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
     clipPath?: SceneClipPath,
   ) => void;
 };
@@ -59,7 +59,7 @@ export type CompositeCompileHost = SubtreeCompileHost & {
 /** 重放与输出提交的显式依赖 */
 export type CompositeExecutionContext = {
   /** 当前编译的工作区与名称环境 */
-  context: TreeCompileContext;
+  runtime: CompileRuntime;
   /** 递归与诊断调度能力 */
   host: CompositeCompileHost;
 };

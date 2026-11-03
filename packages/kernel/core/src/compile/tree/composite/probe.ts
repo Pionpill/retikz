@@ -10,14 +10,9 @@ import type {
 } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { IRChild } from '../../../schemas';
-import { createWorkspaceCompileContext, createTreeCompileEnvironment } from '../../context';
-import type {
-  TreeCompileContext,
-  NamespaceStack,
-  CompositeCompileOwner,
-  CompositeReplayTransaction,
-} from '../../context';
 import { CompileProvenanceTracker } from '../../provenance';
+import { createWorkspaceCompileState, createCompileEnvironment } from '../../runtime';
+import type { CompileRuntime, NamespaceStack, CompositeCompileOwner, CompositeReplayTransaction } from '../../runtime';
 import { calculateBoundsOfPrimitives } from '../../scene';
 import {
   BuiltinCompileWarningCode,
@@ -27,7 +22,7 @@ import {
   withCompileWarningOccurrence,
 } from '../../shared';
 import type { CompileWarning } from '../../shared';
-import type { TreeCompileFrame } from '../frame';
+import type { SubtreeCompileRuntime } from '../runtime';
 import type { SubtreeCompileHost, SubtreeCompileOptions } from '../types';
 import { boundsRectOf, snapshotAllocationBounds } from './layout';
 import { resolveLayoutSlotSize } from './proposal';
@@ -36,7 +31,7 @@ import { replayStyleFingerprint, replayThemeFingerprint } from './replay';
 /** 单次组件回调的隔离试编译依赖 */
 export type CompositeProbeContext = {
   /** 用于 fork 名称环境的外层编译状态 */
-  context: TreeCompileContext;
+  runtime: CompileRuntime;
   /** 试编译结果所属回调 */
   owner: CompositeCompileOwner;
   /** 组件定义的完整名称 */
@@ -56,16 +51,16 @@ export const evaluateCompositeLayout = (
   clonedProposal: LayoutProposal,
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
-  probeScopeDefaults: TreeCompileFrame['scopeDefaults'],
-  probeTheme: TreeCompileFrame['theme'],
+  probeScopeDefaults: SubtreeCompileRuntime['context']['style']['defaults'],
+  probeTheme: SubtreeCompileRuntime['context']['style']['theme'],
   probeInputs?: CompositeInputScope,
   captureScopeTargets?: SubtreeCompileOptions['captureScopeTargets'],
   measurementAxis?: LayoutMeasurementAxis,
 ) => {
   const { key, occurrence, compositeDepth } = probeContext;
 
-  const workspace = createWorkspaceCompileContext(probeContext.context.shared);
-  const warnings = workspace.diagnostics.warnings;
+  const workspace = createWorkspaceCompileState(probeContext.runtime.context);
+  const warnings = workspace.diagnosticCollector.warnings;
 
   const captureWarning = (warning: CompileWarning): void => {
     if (
@@ -80,13 +75,13 @@ export const evaluateCompositeLayout = (
       );
     }
 
-    workspace.diagnostics.collect(warning);
+    workspace.diagnosticCollector.collect(warning);
   };
 
   let probeWarningOccurrence = probeOccurrence;
   const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
   const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
-  const namespaceBaseline = probeContext.context.execution.namespaceStack.fork();
+  const namespaceBaseline = probeContext.runtime.state.execution.namespaceStack.fork();
   const namespaceStack = namespaceBaseline.fork({
     onDuplicate: info => {
       if (info.namespace === namespaceBaseline.identity) return;
@@ -98,29 +93,32 @@ export const evaluateCompositeLayout = (
   });
 
   const probeProvenanceTracker =
-    probeContext.context.execution.provenanceTracker === undefined
+    probeContext.runtime.state.execution.provenanceTracker === undefined
       ? undefined
       : new CompileProvenanceTracker(namespaceStack.identity);
 
-  const sandboxContext: TreeCompileContext = {
-    shared: probeContext.context.shared,
-    composite: probeContext.context.composite,
-    ...createTreeCompileEnvironment(
-      {
-        ...workspace,
-        diagnostics: { ...workspace.diagnostics, collect: captureWarning },
-      },
-      {
-        namespaceStack,
-        provenanceTracker: probeProvenanceTracker,
-        observeWarningOccurrence: current => {
-          probeWarningOccurrence = current ?? probeOccurrence;
-        },
-      },
-    ),
-    initial: {
+  const sandboxRuntime: CompileRuntime = {
+    context: {
+      ...probeContext.runtime.context,
       compositeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
       theme: probeTheme,
+      padding: undefined,
+    },
+    state: {
+      composite: probeContext.runtime.state.composite,
+      ...createCompileEnvironment(
+        {
+          ...workspace,
+          diagnosticCollector: { ...workspace.diagnosticCollector, collect: captureWarning },
+        },
+        {
+          namespaceStack,
+          provenanceTracker: probeProvenanceTracker,
+          observeWarningOccurrence: current => {
+            probeWarningOccurrence = current ?? probeOccurrence;
+          },
+        },
+      ),
     },
   };
 
@@ -137,7 +135,7 @@ export const evaluateCompositeLayout = (
       ...(measurementAxis === undefined ? {} : { measurementAxis }),
       ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),
     },
-    sandboxContext,
+    sandboxRuntime,
   );
 
   return {
@@ -160,8 +158,8 @@ export const probeCompositeLayout = (
   clonedProposal: LayoutProposal,
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
-  probeScopeDefaults: TreeCompileFrame['scopeDefaults'],
-  probeTheme: TreeCompileFrame['theme'],
+  probeScopeDefaults: SubtreeCompileRuntime['context']['style']['defaults'],
+  probeTheme: SubtreeCompileRuntime['context']['style']['theme'],
   scopeChainApplied = false,
   probeInputs?: CompositeInputScope,
   captureScopeTargets?: SubtreeCompileOptions['captureScopeTargets'],

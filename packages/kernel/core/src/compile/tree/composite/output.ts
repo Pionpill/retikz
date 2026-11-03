@@ -1,10 +1,10 @@
 import type { CompileOccurrenceLocator, SceneClipPath, Transform, CompositeCompileScopeProps } from '../../../contract';
 import { CompileExpansionKind } from '../../../contract';
 import type { IRScope } from '../../../schemas';
-import type { CompositeCompileOwner, CompositeRuntimeOutputChild } from '../../context';
 import type { CompileOwnerKey } from '../../provenance';
+import type { CompositeCompileOwner, CompositeRuntimeOutputChild } from '../../runtime';
 import { createCompileInvariantError } from '../../shared';
-import type { TreeCompileFrame } from '../frame';
+import type { SubtreeCompileRuntime } from '../runtime';
 import { isCompositeOutputHandle } from './handle';
 import { commitCompositeReplay } from './replay';
 import type { CompositeExecutionContext, PreparedCompositeOutputs } from './types';
@@ -14,7 +14,7 @@ export const compileCompositeOutput = (
   execution: CompositeExecutionContext,
   output: CompositeRuntimeOutputChild,
   index: number,
-  frame: TreeCompileFrame,
+  frame: SubtreeCompileRuntime,
   parentOccurrence: CompileOccurrenceLocator,
   ownerOccurrence: CompileOccurrenceLocator,
   scopeSegment:
@@ -36,18 +36,18 @@ export const compileCompositeOutput = (
     execution.host.compileChild(
       output.child,
       index,
-      { ...frame, runtimeInputs: output.runtimeInputs },
+      { context: { ...frame.context, runtimeInputs: output.runtimeInputs }, state: frame.state },
       boundOccurrence,
       compositeDepth,
       true,
       semanticOwner === undefined
         ? undefined
-        : execution.context.execution.provenanceTracker?.createOwner(
+        : execution.runtime.state.execution.provenanceTracker?.createOwner(
             output.child,
             index,
             semanticOwner,
             true,
-            execution.context.execution.namespaceStack.identity,
+            execution.runtime.state.execution.namespaceStack.identity,
           ),
     );
 
@@ -73,12 +73,12 @@ export const compileCompositeOutput = (
   const scopeSemanticOwner =
     semanticOwner === undefined
       ? undefined
-      : execution.context.execution.provenanceTracker?.createOwner(
+      : execution.runtime.state.execution.provenanceTracker?.createOwner(
           runtimeScopeChild,
           index,
           semanticOwner,
           true,
-          execution.context.execution.namespaceStack.identity,
+          execution.runtime.state.execution.namespaceStack.identity,
         );
   const scopeOccurrence: CompileOccurrenceLocator = {
     sourcePath: parentOccurrence.sourcePath,
@@ -93,7 +93,7 @@ export const compileCompositeOutput = (
     scopeSemanticOwner,
     (scopeFrame, scopePreliminaryTransforms) => {
       for (const [childIndex, child] of output.children.entries()) {
-        if (!isCompositeOutputHandle(execution.context, child)) {
+        if (!isCompositeOutputHandle(execution.runtime, child)) {
           const childOccurrence: CompileOccurrenceLocator = {
             sourcePath: scopeOccurrence.sourcePath,
             expansionPath: [
@@ -104,18 +104,18 @@ export const compileCompositeOutput = (
           execution.host.compileChild(
             child,
             childIndex,
-            { ...scopeFrame, runtimeInputs: undefined },
+            { context: { ...scopeFrame.context, runtimeInputs: undefined }, state: scopeFrame.state },
             childOccurrence,
             compositeDepth,
             true,
             scopeSemanticOwner === undefined
               ? undefined
-              : execution.context.execution.provenanceTracker?.createOwner(
+              : execution.runtime.state.execution.provenanceTracker?.createOwner(
                   child,
                   childIndex,
                   scopeSemanticOwner,
                   true,
-                  execution.context.execution.namespaceStack.identity,
+                  execution.runtime.state.execution.namespaceStack.identity,
                 ),
           );
           continue;

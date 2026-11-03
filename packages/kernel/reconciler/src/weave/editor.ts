@@ -30,14 +30,9 @@ type WeaveEditResult = {
 export class WeaveEditor {
   constructor(
     private readonly root: WeaveRoot,
-    private transaction: WeaveTransaction,
+    private readonly transaction: WeaveTransaction,
     private readonly scopeIds: IdAllocator,
   ) {}
-
-  /** 切换后续编辑使用的事务，保留本树 Scope 编号 */
-  useTransaction(transaction: WeaveTransaction): void {
-    this.transaction = transaction;
-  }
 
   /** 应用一条操作并刷新候选地址；空插入仍校验位置，但不产生变化 */
   applyOperation(operation: WeaveOperation, context: ElementCompileOptions['style']): WeaveEditResult | undefined {

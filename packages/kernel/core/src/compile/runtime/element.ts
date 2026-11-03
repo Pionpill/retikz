@@ -5,7 +5,7 @@ import type { MergedScopeDefaults } from '../../resolve';
 import type { CanonicalTheme } from '../../shared';
 import type { CompiledNodeLayout } from '../layout';
 import type { CompileWarning } from '../shared';
-import type { SharedCompileContext } from './shared';
+import type { SharedCompileContext } from './context';
 
 /** 编译时生效的样式默认配置与主题 */
 export type CompileStyle = Readonly<{

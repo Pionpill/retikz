@@ -21,7 +21,7 @@ const sourceFiles = (directory: string): Array<string> => {
 
 describe('解析源结构', () => {
   it('仅保持内置路径发射器解析结果', () => {
-    const stroke = source('src/compile/path/stroke/emit.ts');
+    const stroke = source('src/compile/tree/path/stroke/emit.ts');
 
     expect(stroke).not.toContain('normalizePath(');
     expect(stroke).not.toContain('resolvePathValue');
@@ -34,14 +34,14 @@ describe('解析源结构', () => {
   });
 
   it('使节点布局不受提供者查找编排的影响', () => {
-    const text = source('src/compile/node/layout.ts');
+    const text = source('src/compile/tree/node/layout.ts');
 
     expect(text).not.toContain('getProviderDefinition(');
     expect(text).not.toContain('resolveShapeRegistry(');
   });
 
   it('使所有路径编译文件免于直接提供者查找', () => {
-    const offenders = sourceFiles('src/compile/path')
+    const offenders = sourceFiles('src/compile/tree/path')
       .filter(path => /getProviderDefinition\(|resolve[A-Z][A-Za-z]*Registry\s*\(/u.test(source(path)))
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
 
@@ -51,7 +51,9 @@ describe('解析源结构', () => {
   it('保持位置解析独立于编译编排', () => {
     const offenders = sourceFiles('src/resolve/position')
       .filter(path =>
-        /from\s+['"][^'"]*compile|NamespaceStack|TreeCompileContext|ScopeCompileFrame/u.test(source(path)),
+        /from\s+['"][^'"]*compile|NamespaceStack|Compile(?:Context|Runtime)|SubtreeCompileRuntime|ScopeCompileFrame/u.test(
+          source(path),
+        ),
       )
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
 
@@ -62,8 +64,8 @@ describe('解析源结构', () => {
   it('在解析中保持复合提供者绑定', () => {
     expect(source('src/resolve/index.ts')).toContain("export * from './composite';");
 
-    const lower = source('src/compile/orchestration/composite/output.ts');
-    const traversal = source('src/compile/orchestration/scope.ts');
+    const lower = source('src/compile/tree/composite/output.ts');
+    const traversal = source('src/compile/tree/scope/visit.ts');
 
     expect(lower).not.toContain('parseProviderPayload');
     expect(lower).not.toContain('registry.get(');
@@ -76,11 +78,11 @@ describe('解析源结构', () => {
 
     const compileText = sourceFiles('src/compile/text').map(source).join('\n');
     const nodeLayout = [
-      source('src/compile/node/layout.ts'),
-      source('src/compile/node/content/layout.ts'),
-      source('src/compile/node/label/layout.ts'),
+      source('src/compile/tree/node/layout.ts'),
+      source('src/compile/tree/node/content/layout.ts'),
+      source('src/compile/tree/node/label/layout.ts'),
     ].join('\n');
-    const pathLabel = source('src/compile/path/host/label.ts');
+    const pathLabel = source('src/compile/tree/path/host/label.ts');
 
     expect(compileText).not.toContain('parseInlineSegments');
     expect(compileText).not.toContain('resolveFontSize');
@@ -91,7 +93,7 @@ describe('解析源结构', () => {
   });
 
   it('在位置解析中保持 Scope 平移 Source IR 确定', () => {
-    const scope = source('src/compile/scope/layout.ts');
+    const scope = source('src/compile/tree/scope/transform.ts');
 
     expect(scope).toContain('resolveTransformTranslation');
     expect(scope).not.toContain('resolvePosition(');

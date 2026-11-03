@@ -143,7 +143,7 @@ export type LayoutProbeFailureEntry = Readonly<{
 };
 
 /** 单次顶层编译共享的组件句柄和有界测量缓存，隔离试编译复用同一会话 */
-export class CompositeCompileSession {
+export class CompositeCompileState {
   /** 有界的编译内成功贡献缓存 */
   private measurements: Map<string, LayoutContribution> = new Map();
 

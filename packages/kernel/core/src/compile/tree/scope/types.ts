@@ -3,12 +3,12 @@ import type { PropertyPath } from '@retikz/foundation';
 import type { CompileOccurrenceLocator, GroupPrimitive, Transform, SceneClipPath } from '../../../contract';
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { IRChild, IRPosition, IRScope } from '../../../schemas';
-import type { CompileStyle } from '../../context';
 import type { CompiledNodeLayout } from '../../layout';
 import type { CompileOwnerKey } from '../../provenance';
+import type { CompileStyle } from '../../runtime';
 import type { CompileOutput, CompileWarning } from '../../shared';
-import type { TreeCompileFrame } from '../frame';
 import type { InternalScenePrimitive } from '../output';
+import type { SubtreeCompileRuntime } from '../runtime';
 
 /** Scope 子元素计算前的准备状态，不代表包络已就绪 */
 export type ScopeCompilationPreparation = Readonly<{
@@ -58,7 +58,7 @@ export type ScopeLayoutPlaceholderContext = {
   /** 当前作用域在父层子项中的索引 */
   index: number;
   /** 登记占位布局所使用的父遍历帧 */
-  frame: TreeCompileFrame;
+  frame: SubtreeCompileRuntime;
 };
 
 /** 将已编译的 Scope 子树封装为场景分组所需的坐标、裁剪与身份上下文 */
@@ -70,7 +70,7 @@ export type EmitScopeGroupContext = {
   /** 已收集的作用域子图元及待回填占位项 */
   scopePrimitiveSink: Array<InternalScenePrimitive>;
   /** 接收作用域输出和布局贡献的父遍历帧 */
-  frame: TreeCompileFrame;
+  frame: SubtreeCompileRuntime;
   /** runtime Scope 预检阶段已生成且尚未登记的裁剪路径 */
   resolvedClipPath?: SceneClipPath;
   /** Scope child 的 semantic owner */
@@ -82,7 +82,7 @@ export type ScopeVisitHost = {
   /** 按当前帧遍历后代，来源和深度沿用当前编译 */
   compileChildren: (
     children: ReadonlyArray<IRChild>,
-    frame: TreeCompileFrame,
+    frame: SubtreeCompileRuntime,
     useProvidedOccurrence: boolean,
     occurrence: CompileOccurrenceLocator | undefined,
     compositeDepth: number,

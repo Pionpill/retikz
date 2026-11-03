@@ -4,8 +4,8 @@ import type { CenteredBox, Position } from '@retikz/math';
 import type { TextFont, TextMeasurer, ShapeDefinition } from '../../../contract';
 import type { CanonicalFont, CanonicalNode, CanonicalNodeLabel, TextLineResolution } from '../../../resolve';
 import type { IRFont } from '../../../schemas';
-import type { NodeBoundaryState } from '../../context';
 import type { CompiledNodeLayout } from '../../layout';
+import type { NodeBoundaryState } from '../../runtime';
 import type { CompileOutput, CompileWarningCode } from '../../shared';
 import type { TexLowerer } from '../../text';
 

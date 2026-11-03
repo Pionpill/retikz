@@ -5,12 +5,10 @@ import type {
   CompileOptions,
   CompileOutput,
   CompileOwnerKey,
-  CompileWarning,
   ExecuteOptions,
   IRChild,
   IRScene,
   IRScope,
-  SceneCompilationSnapshot,
   Transform,
 } from '@retikz/core';
 import {
@@ -20,7 +18,6 @@ import {
   compilePath,
   compileScope,
   createSharedCompileContext,
-  CompileProvenanceTracker,
   createCompileChildPath,
   prepareScopeCompilation,
   projectCompileReference,
@@ -34,12 +31,11 @@ import { createIdAllocator, isPropertyPathEqual, jsonStructuralEquals } from '@r
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { lookupWeaveBinding, runWeaveCompilation } from './compile';
 import type { WeaveCompileOptions, WeaveCompileResult } from './compile';
-import { WeaveEditor } from './editor';
 import { createWeaveNamespaceRegistry } from './namespace';
 import type { WeaveNamespaceRegistry } from './namespace';
 import { assembleWeaveCompilation } from './output';
-import { WeaveTracker } from './tracker';
-import { WeaveTransaction } from './transaction';
+import { createWeaveBatchState } from './runtime';
+import type { WeaveBatchState, WeaveCompilation, WeaveCompileContext, WeaveCompileState } from './runtime';
 import type {
   WeaveBatch,
   WeaveCoordinateNode,
@@ -49,16 +45,6 @@ import type {
   WeaveScopeNode,
   WeaveShapeNode,
 } from './types';
-
-/** 本次完整基础树准备结果 */
-type WeaveCompilation = {
-  /** 已完成编译的声明根 */
-  root: WeaveRoot;
-  /** 可交给 Runtime 提交的完整输出 */
-  compilation: SceneCompilationSnapshot<readonly []>;
-  /** 本次实际执行元素编译的次数，不含缓存复用与 Scope 上下文准备 */
-  visited: number;
-};
 
 /** 已准备的批次结果，发布者负责提交、最终确认或恢复 */
 export type WeavePreparedUpdate = WeaveCompilation & {
@@ -118,40 +104,22 @@ export const isWeaveScene = (source: IRScene): boolean => {
 
 /** 协调声明树、Core 编译与依赖记录；当前每次准备独占可变状态 */
 export class WeaveReconciler {
-  private readonly shared: ReturnType<typeof createSharedCompileContext>;
-  /** Scene 最终组装的留白，不参与元素编译 */
-  private readonly padding: CompileOptions['padding'];
-  /** 本次准备结果的警告列表，收集编译与名称注册警告，在重新编译前重置 */
-  private diagnostics: Array<CompileWarning> = [];
-  private namespace = createWeaveNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
-  private provenance = new CompileProvenanceTracker(this.namespace.identity);
-  /** 本次实际执行元素编译的次数，缓存复用不计入 */
-  private visited = 0;
-  private readonly root: WeaveRoot;
-  private transaction: WeaveTransaction;
-  private readonly editor: WeaveEditor;
-  private readonly tracker: WeaveTracker;
-  /** 是否已进入更新模式；此后遍历复用既有子节点，不再按首次挂载方式创建 */
-  private updating = false;
-  /** 本批强制重算元素，但保留稳定声明节点与操作校验 */
-  private forceFull = false;
-  /** key 为稳定节点，value 为批次操作前的声明 irPath；路径变化时禁止复用旧位置的编译缓存 */
-  private previousNodeIrPaths = new Map<WeaveNode, PropertyPath>();
-  /** 最近一次挂载或 finish 后的完整结果，供空批次复用；准备与 commit 不替换此值 */
-  private completed: WeaveCompilation | undefined;
+  /** 会话稳定配置，与可变批次分离 */
+  private readonly context: WeaveCompileContext;
+  /** 跨批次事实源与当前候选状态 */
+  private readonly state: WeaveCompileState;
 
   constructor(
-    private source: IRScene,
+    source: IRScene,
     options: Omit<CompileOptions, keyof CompileCompositeOptions> = {},
-    private readonly execution: ExecuteOptions = {},
+    execution: ExecuteOptions = {},
   ) {
-    this.shared = createSharedCompileContext(options);
-    this.padding = options.padding;
+    const shared = createSharedCompileContext(options);
+    this.context = { shared, output: { padding: options.padding }, execution };
     const rootId = `weave-${nextTreeId++}`;
-    const scopeIds = createIdAllocator(`${rootId}/scope`);
     const { children, ...own } = source;
     void children;
-    this.root = {
+    const root: WeaveRoot = {
       type: 'root',
       scopeId: rootId,
       current: null,
@@ -159,99 +127,96 @@ export class WeaveReconciler {
         parent: null,
         input: own,
         children: [],
-        shared: this.shared,
+        shared,
         ids: new Map(),
         scopeIds: new Map(),
         records: new Map(),
       },
     };
-    this.transaction = new WeaveTransaction(this.root);
-    this.transaction.editNodeAttribute(this.root, 'scopeIds').set(this.root.scopeId, this.root);
-    this.editor = new WeaveEditor(this.root, this.transaction, scopeIds);
-    this.tracker = new WeaveTracker(this.root, this.transaction);
+    this.state = {
+      persistent: { root, source, scopeIds: createIdAllocator(`${rootId}/scope`), bindings: new Map() },
+      batch: undefined,
+    };
+    this.state.batch = createWeaveBatchState(this.state.persistent, false);
+    this.batch.transaction.editNodeAttribute(root, 'scopeIds').set(root.scopeId, root);
   }
 
   /** 首次编译基础树并组装可提交产物 */
   mount(): WeaveCompilation {
-    if (this.completed !== undefined)
+    const persistent = this.state.persistent;
+    if (persistent.completed !== undefined)
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave is already mounted');
+    const batch = this.batch;
     try {
       const result = this.reconcileChildren();
       const compilation = assembleWeaveCompilation({
-        root: this.source,
+        root: batch.source,
         outputs: result.outputs(),
-        shared: this.shared,
-        diagnostics: this.diagnostics,
-        provenanceTracker: this.provenance,
-        padding: this.padding,
+        shared: this.context.shared,
+        diagnostics: batch.diagnosticCollector.warnings,
+        provenanceTracker: batch.provenanceTracker,
+        padding: this.context.output.padding,
       });
       // 新树尚未对外发布；Runtime 再原子发布整棵树及输出
-      this.transaction.commit();
-      this.transaction.finish();
-      this.completed = { root: this.root, visited: this.visited, compilation };
-      return this.completed;
+      batch.transaction.commit();
+      batch.transaction.finish();
+      persistent.completed = { root: persistent.root, visited: batch.visited, compilation };
+      this.state.batch = undefined;
+      return persistent.completed;
     } catch (error) {
-      this.transaction.rollback();
+      batch.transaction.rollback();
+      batch.tracker.pruneUncommittedBindings();
+      this.state.batch = undefined;
       throw error;
     }
   }
 
   /** 在既有树上准备一批更新；返回值与当前树在提交前互相隔离 */
-  update(batch: WeaveBatch, forceFull = false): WeavePreparedUpdate {
-    const completed = this.completed;
+  update(input: WeaveBatch, forceFull = false): WeavePreparedUpdate {
+    const persistent = this.state.persistent;
+    const completed = persistent.completed;
     if (completed === undefined)
       throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Mount Weave before updating');
-    this.transaction = new WeaveTransaction(this.root);
-    const transaction = this.transaction;
-    const previousSource = this.source;
+    if (this.state.batch !== undefined)
+      throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave tree already has a candidate');
+    const batch = createWeaveBatchState(persistent, true, forceFull);
+    this.state.batch = batch;
+    const { transaction, editor, tracker } = batch;
 
     try {
-      this.updating = true;
-      this.forceFull = forceFull;
-      this.editor.useTransaction(transaction);
-      this.tracker.beginBatch(transaction);
-      this.previousNodeIrPaths = this.editor.captureNodeIrPaths();
-
       let modified = false;
-      for (const operation of batch.operations) {
-        const changes = this.editor.applyOperation(operation, resolveScopeStyle(this.source, this.shared));
+      for (const operation of input.operations) {
+        const changes = editor.applyOperation(operation, resolveScopeStyle(batch.source, this.context.shared));
         if (changes === undefined) continue;
-        for (const node of changes.insertedNodes) this.tracker.registerNodeBinding(node);
-        for (const node of changes.changedNodes) this.tracker.invalidateNode(node);
+        for (const node of changes.insertedNodes) tracker.registerNodeBinding(node);
+        for (const node of changes.changedNodes) tracker.invalidateNode(node);
         // 子节点先解绑，避免清理子节点时重新编辑已丢弃的父 Scope
         for (let index = changes.removedNodes.length - 1; index >= 0; index--) {
           const node = changes.removedNodes[index];
-          this.tracker.detachNodeDependencies(node);
+          tracker.detachNodeDependencies(node);
           transaction.discardNode(node);
         }
         modified = true;
       }
 
-      // 按需重新编译
       let prepared = { ...completed, visited: 0 };
       if (modified) {
-        this.source = {
-          ...this.transaction.readNode(this.root).input,
-          children: this.transaction
-            .readNode(this.root)
-            .children.map(node => this.editor.serializeNodeDeclaration(node)),
+        batch.source = {
+          ...transaction.readNode(persistent.root).input,
+          children: transaction.readNode(persistent.root).children.map(node => editor.serializeNodeDeclaration(node)),
         };
-        this.diagnostics = [];
-        this.namespace = createWeaveNamespaceRegistry(undefined, warning => this.diagnostics.push(warning));
-        this.provenance = new CompileProvenanceTracker(this.namespace.identity);
-        this.visited = 0;
         // 输出遍历重放名称声明，避免把最终名称表当成声明位置的引用环境
-        this.transaction.editNode(this.root).ids = new Map();
+        transaction.editNode(persistent.root).ids = new Map();
         const result = this.reconcileChildren();
         const compilation = assembleWeaveCompilation({
-          root: this.source,
+          root: batch.source,
           outputs: result.outputs(),
-          shared: this.shared,
-          diagnostics: this.diagnostics,
-          provenanceTracker: this.provenance,
-          padding: this.padding,
+          shared: this.context.shared,
+          diagnostics: batch.diagnosticCollector.warnings,
+          provenanceTracker: batch.provenanceTracker,
+          padding: this.context.output.padding,
         });
-        prepared = { root: this.root, visited: this.visited, compilation };
+        prepared = { root: persistent.root, visited: batch.visited, compilation };
       }
       let closed = false;
       return {
@@ -259,35 +224,46 @@ export class WeaveReconciler {
         commit: () => transaction.commit(),
         finish: () => {
           transaction.finish();
-          this.completed = prepared;
+          persistent.completed = prepared;
+          persistent.source = batch.source;
           closed = true;
-          this.tracker.pruneRemovedBindings();
+          tracker.pruneRemovedBindings();
+          this.state.batch = undefined;
         },
         rollback: () => {
           if (closed) return;
           transaction.rollback();
-          this.source = previousSource;
           closed = true;
-          this.tracker.pruneUncommittedBindings();
+          tracker.pruneUncommittedBindings();
+          this.state.batch = undefined;
         },
       };
     } catch (error) {
       transaction.rollback();
-      this.source = previousSource;
-      this.tracker.pruneUncommittedBindings();
+      batch.tracker.pruneUncommittedBindings();
+      this.state.batch = undefined;
       throw error;
     }
   }
 
+  /** 内部编译操作只能在活动候选批次中执行 */
+  private get batch(): WeaveBatchState {
+    const batch = this.state.batch;
+    if (batch === undefined)
+      throw new RetikzReconcilerError(RetikzReconcilerErrorCode.Contract, 'Weave has no active compilation batch');
+    return batch;
+  }
+
   /** 校验当前位置的缓存输入及实际名称绑定，不用旧索引推断新引用 */
   private canNodeReuse(node: WeaveNode, compileOptions: WeaveCompileOptions): boolean {
-    if (this.forceFull || !this.updating || node.current === null || this.tracker.isNodeDirty(node)) return false;
+    if (this.batch.forceFull || !this.batch.updating || node.current === null || this.batch.tracker.isNodeDirty(node))
+      return false;
     if (
-      !isPropertyPathEqual(this.previousNodeIrPaths.get(node) ?? [], compileOptions.irPath) ||
+      !isPropertyPathEqual(this.batch.previousNodeIrPaths.get(node) ?? [], compileOptions.irPath) ||
       !jsonStructuralEquals(node.current.input.context, compileOptions.style)
     )
       return false;
-    const records = this.transaction.readNode(this.root).records.get(node);
+    const records = this.batch.transaction.readNode(this.state.persistent.root).records.get(node);
     if (records === undefined || records.diagnostics.length > 0) return false;
     const names = new Map(records.reads.map(read => [read.name, read.binding]));
     for (const [name, binding] of names) {
@@ -303,8 +279,8 @@ export class WeaveReconciler {
     return this.recordCompilation(node, {
       status: 'compiled',
       compiled,
-      reads: this.tracker.refreshCompileReads(
-        this.transaction.readNode(this.root).records.get(node)?.reads ?? [],
+      reads: this.batch.tracker.refreshCompileReads(
+        this.batch.transaction.readNode(this.state.persistent.root).records.get(node)?.reads ?? [],
         compileOptions,
       ),
       diagnostics: [],
@@ -313,7 +289,12 @@ export class WeaveReconciler {
 
   /** 保存本元素读取与诊断，建立本版本双向计算关联 */
   private recordCompilation<T>(node: WeaveNode, result: WeaveCompileResult<T>, append = false): T {
-    this.tracker.recordNodeReads(node, result.reads, result.status === 'compiled' ? result.diagnostics : [], append);
+    this.batch.tracker.recordNodeReads(
+      node,
+      result.reads,
+      result.status === 'compiled' ? result.diagnostics : [],
+      append,
+    );
     // 兜底报错，逻辑上不会走到这里
     if (result.status === 'pending') {
       throw new RetikzReconcilerError(
@@ -322,7 +303,7 @@ export class WeaveReconciler {
         { details: { names: result.reads.map(read => read.name) } },
       );
     }
-    this.diagnostics.push(...result.diagnostics);
+    for (const warning of result.diagnostics) this.batch.diagnosticCollector.collect(warning);
     return result.compiled;
   }
 
@@ -330,19 +311,21 @@ export class WeaveReconciler {
   private projectNodeReference(node: WeaveNode, transforms: ReadonlyArray<Transform>): CompiledNodeLayout {
     switch (node.type) {
       case 'node': {
-        const compiled = this.transaction.readNode(node).compiled;
-        if (compiled !== null) return projectCompileReference({ type: 'node', compiled }, this.shared, transforms);
+        const compiled = this.batch.transaction.readNode(node).compiled;
+        if (compiled !== null)
+          return projectCompileReference({ type: 'node', compiled }, this.context.shared, transforms);
         break;
       }
       case 'coordinate': {
-        const compiled = this.transaction.readNode(node).compiled;
+        const compiled = this.batch.transaction.readNode(node).compiled;
         if (compiled !== null)
-          return projectCompileReference({ type: 'coordinate', compiled }, this.shared, transforms);
+          return projectCompileReference({ type: 'coordinate', compiled }, this.context.shared, transforms);
         break;
       }
       case 'scope': {
-        const compiled = this.transaction.readNode(node).compiled;
-        if (compiled !== null) return projectCompileReference({ type: 'scope', compiled }, this.shared, transforms);
+        const compiled = this.batch.transaction.readNode(node).compiled;
+        if (compiled !== null)
+          return projectCompileReference({ type: 'scope', compiled }, this.context.shared, transforms);
         break;
       }
     }
@@ -358,10 +341,10 @@ export class WeaveReconciler {
   ): void {
     const { namespaceRegistry, ids } = element.container;
     const compileOptions = element.options;
-    const warningCount = this.diagnostics.length;
+    const warningCount = this.batch.diagnosticCollector.warnings.length;
     namespaceRegistry.register(
       name,
-      this.transaction.readNode(node).compiled === null
+      this.batch.transaction.readNode(node).compiled === null
         ? { state: 'pending', binding: node }
         : {
             state: 'ready',
@@ -373,11 +356,11 @@ export class WeaveReconciler {
       compileOptions.occurrence,
     );
     ids.set(name, node);
-    const entry = this.transaction.readNode(this.root).records.get(node);
-    if (entry !== undefined && this.diagnostics.length > warningCount) {
-      this.transaction.editNodeAttribute(this.root, 'records').set(node, {
+    const entry = this.batch.transaction.readNode(this.state.persistent.root).records.get(node);
+    if (entry !== undefined && this.batch.diagnosticCollector.warnings.length > warningCount) {
+      this.batch.transaction.editNodeAttribute(this.state.persistent.root, 'records').set(node, {
         ...entry,
-        diagnostics: [...entry.diagnostics, ...this.diagnostics.slice(warningCount)],
+        diagnostics: [...entry.diagnostics, ...this.batch.diagnosticCollector.warnings.slice(warningCount)],
       });
     }
   }
@@ -389,8 +372,11 @@ export class WeaveReconciler {
     owner: CompileOwnerKey,
   ): CompileOutput | undefined {
     if (output === undefined) return;
-    const contribution = { ...output, primitives: this.provenance.materializePrimitives(output.primitives) };
-    this.provenance.recordPrimitives(contribution.primitives, owner, role);
+    const contribution = {
+      ...output,
+      primitives: this.batch.provenanceTracker.materializePrimitives(output.primitives),
+    };
+    this.batch.provenanceTracker.recordPrimitives(contribution.primitives, owner, role);
     return contribution;
   }
 
@@ -399,11 +385,11 @@ export class WeaveReconciler {
     node: WeaveShapeNode,
     element: WeaveElementCompileContext,
   ): { output: CompileOutput | undefined; layout: CompiledNodeLayout; publication: Publication } {
-    const state = this.transaction.editNode(node);
+    const state = this.batch.transaction.editNode(node);
     const { options, container, owner } = element;
     if (!this.canNodeReuse(node, options) || state.compiled === null) {
-      this.tracker.invalidateNode(node);
-      this.visited++;
+      this.batch.tracker.invalidateNode(node);
+      this.batch.visited++;
       state.compiled = this.recordCompilation(
         node,
         runWeaveCompilation(options, coreOptions => compileNode(state.input.own, coreOptions)),
@@ -433,11 +419,11 @@ export class WeaveReconciler {
     node: WeaveCoordinateNode,
     element: WeaveElementCompileContext,
   ): { output: CompileOutput | undefined; layout: CompiledNodeLayout; publication: Publication } {
-    const state = this.transaction.editNode(node);
+    const state = this.batch.transaction.editNode(node);
     const { options, container } = element;
     if (!this.canNodeReuse(node, options) || state.compiled === null) {
-      this.tracker.invalidateNode(node);
-      this.visited++;
+      this.batch.tracker.invalidateNode(node);
+      this.batch.visited++;
       state.compiled = this.recordCompilation(
         node,
         runWeaveCompilation(options, coreOptions => compileCoordinate(state.input.own, coreOptions)),
@@ -463,10 +449,10 @@ export class WeaveReconciler {
     element: WeaveElementCompileContext,
     transforms?: ReadonlyArray<Transform>,
   ): CompileOutput | undefined {
-    const state = this.transaction.editNode(node);
+    const state = this.batch.transaction.editNode(node);
     const compileOptions = element.options;
     if (!this.canNodeReuse(node, compileOptions) || state.compiled === null) {
-      this.visited++;
+      this.batch.visited++;
       state.compiled = this.recordCompilation(
         node,
         runWeaveCompilation({ ...compileOptions, transforms: transforms ?? compileOptions.transforms }, coreOptions =>
@@ -485,15 +471,15 @@ export class WeaveReconciler {
     child: IRScope,
     element: WeaveElementCompileContext,
   ): { output: CompileOutput; layouts: Array<CompiledNodeLayout>; publications: Array<Publication> } {
-    const state = this.transaction.editNode(node);
+    const state = this.batch.transaction.editNode(node);
     const { namespaceRegistry, ids, options: context } = element.container;
     const { options: compileOptions, owner: semanticOwner } = element;
     const occurrence = compileOptions.occurrence;
     const irPath = compileOptions.irPath;
     const reusable = this.canNodeReuse(node, compileOptions);
     const previousCompiled = state.compiled;
-    const previousReads = this.transaction.readNode(this.root).records.get(node)?.reads ?? [];
-    if (!reusable) this.tracker.invalidateNode(node);
+    const previousReads = this.batch.transaction.readNode(this.state.persistent.root).records.get(node)?.reads ?? [];
+    if (!reusable) this.batch.tracker.invalidateNode(node);
     state.compiled = null;
     state.input = { ...state.input, context: compileOptions.style };
     state.pendingInputs = [];
@@ -506,13 +492,13 @@ export class WeaveReconciler {
     );
     if (child.id !== undefined) this.registerReference(node, child.id, [...irPath, 'id'], element);
     const nestedNamespaceRegistry = child.localNamespace
-      ? createWeaveNamespaceRegistry(namespaceRegistry.namespace, warning => this.diagnostics.push(warning))
+      ? createWeaveNamespaceRegistry(namespaceRegistry.namespace, this.batch.diagnosticCollector.collect)
       : namespaceRegistry;
     const preliminary = prepared.preliminaryTransforms ?? [];
     const nested = this.reconcileChildren(child.children, {
       parent: node,
       namespaceRegistry: nestedNamespaceRegistry,
-      ids: state.ids === undefined ? ids : this.transaction.editNodeAttribute(node, 'ids'),
+      ids: state.ids === undefined ? ids : this.batch.transaction.editNodeAttribute(node, 'ids'),
       options: {
         ...context,
         irPath,
@@ -524,15 +510,15 @@ export class WeaveReconciler {
       owner: semanticOwner,
       prefix: irPath,
     });
-    if (reusable && previousCompiled !== null && !this.tracker.isNodeDirty(node))
+    if (reusable && previousCompiled !== null && !this.batch.tracker.isNodeDirty(node))
       state.compiled = this.recordCompilation(node, {
         status: 'compiled',
         compiled: previousCompiled,
-        reads: this.tracker.refreshCompileReads(previousReads, compileOptions),
+        reads: this.batch.tracker.refreshCompileReads(previousReads, compileOptions),
         diagnostics: [],
       });
     else {
-      this.visited++;
+      this.batch.visited++;
       state.compiled = this.recordCompilation(
         node,
         runWeaveCompilation(compileOptions, coreOptions =>
@@ -541,7 +527,7 @@ export class WeaveReconciler {
         true,
       );
     }
-    this.tracker.recordScopeLayoutDependencies(node);
+    this.batch.tracker.recordScopeLayoutDependencies(node);
     const transforms = state.compiled.group.transforms ?? [];
     const postTransforms =
       prepared.preliminaryTransforms === undefined
@@ -552,7 +538,7 @@ export class WeaveReconciler {
       publication.namespaceRegistry.replace(publication.node, {
         state: 'ready',
         binding: publication.node,
-        irPath: this.transaction.readNode(publication.node).compiled?.irPath,
+        irPath: this.batch.transaction.readNode(publication.node).compiled?.irPath,
         layout: publication.layout,
       });
     }
@@ -568,8 +554,8 @@ export class WeaveReconciler {
     const output = assembleScopeOutput(
       state.compiled,
       nested.outputs([...(context.transforms ?? []), ...transforms]),
-      this.shared,
-      this.provenance,
+      this.context.shared,
+      this.batch.provenanceTracker,
       semanticOwner,
     );
     publications.push({ namespaceRegistry, node, layout: this.projectNodeReference(node, context.transforms ?? []) });
@@ -578,13 +564,13 @@ export class WeaveReconciler {
 
   /** 保持 Core 的声明可见性顺序，Path 在所属容器收尾后计算 */
   private reconcileChildren(
-    input: ReadonlyArray<IRChild> = this.source.children,
+    input: ReadonlyArray<IRChild> = this.batch.source.children,
     container: WeaveContainerCompileContext = {
-      parent: this.root,
-      namespaceRegistry: this.namespace,
-      ids: this.transaction.editNodeAttribute(this.root, 'ids'),
-      options: { style: resolveScopeStyle(this.source, this.shared), irPath: [] },
-      owner: this.provenance.root,
+      parent: this.state.persistent.root,
+      namespaceRegistry: this.batch.namespace,
+      ids: this.batch.transaction.editNodeAttribute(this.state.persistent.root, 'ids'),
+      options: { style: resolveScopeStyle(this.batch.source, this.context.shared), irPath: [] },
+      owner: this.batch.provenanceTracker.root,
       prefix: [],
     },
   ): {
@@ -609,22 +595,28 @@ export class WeaveReconciler {
       const occurrence = { sourcePath: irPath, expansionPath: [] };
       const compileOptions: WeaveElementCompileContext['options'] = {
         ...context,
-        shared: this.shared,
+        shared: this.context.shared,
         namespace: namespaceRegistry.namespace,
         irPath,
         occurrence,
       };
-      const semanticOwner = this.provenance.createOwner(child, index, owner, false, namespaceRegistry.identity);
+      const semanticOwner = this.batch.provenanceTracker.createOwner(
+        child,
+        index,
+        owner,
+        false,
+        namespaceRegistry.identity,
+      );
       const element: WeaveElementCompileContext = { container, options: compileOptions, owner: semanticOwner };
-      const node = this.updating
-        ? this.transaction.readNode(parent).children[index]
-        : this.editor.createNode(child, parent, context.style);
-      if (!this.updating) this.tracker.registerNodeBinding(node);
-      if (!jsonStructuralEquals(this.transaction.readNode(node).input.context, context.style)) {
-        this.transaction
+      const node = this.batch.updating
+        ? this.batch.transaction.readNode(parent).children[index]
+        : this.batch.editor.createNode(child, parent, context.style);
+      if (!this.batch.updating) this.batch.tracker.registerNodeBinding(node);
+      if (!jsonStructuralEquals(this.batch.transaction.readNode(node).input.context, context.style)) {
+        this.batch.transaction
           .editNodeAttribute(node, 'pendingInputs')
           .push({ source: 'context', changes: new Set(['style', 'layout']) });
-        this.tracker.invalidateNode(node);
+        this.batch.tracker.invalidateNode(node);
       }
       if (node.type === 'path') {
         const pathNode = node;
@@ -648,7 +640,7 @@ export class WeaveReconciler {
     return {
       outputs: transforms => {
         pathCompileQueue.forEach(compile => compile(transforms));
-        return this.transaction.readNode(parent).children.flatMap(node => {
+        return this.batch.transaction.readNode(parent).children.flatMap(node => {
           const output = outputs.get(node);
           return output === undefined ? [] : [output];
         });

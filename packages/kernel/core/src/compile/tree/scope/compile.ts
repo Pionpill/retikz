@@ -1,5 +1,5 @@
-import type { SharedCompileContext, ElementCompileOptions, ElementCompileResult } from '../../context';
 import type { CompiledNodeLayout } from '../../layout';
+import type { SharedCompileContext, ElementCompileOptions, ElementCompileResult } from '../../runtime';
 import { runElementCompilation } from '../element';
 import { resolveScopeStyle } from './context';
 import { createScopeGroup } from './emit';
@@ -22,7 +22,7 @@ export const prepareScopeCompilation = (
   runElementCompilation(context, workspace => {
     const geometry = {
       positionContext: workspace.positionContext,
-      onWarn: workspace.diagnostics.collect,
+      onWarn: workspace.diagnosticCollector.collect,
       irPath: context.irPath,
     };
     return Object.freeze({
@@ -41,7 +41,7 @@ export const compileScope = (
   runElementCompilation(context, workspace => {
     const { envelope, transforms } = compileScopeGeometry(input, preparation, layouts, context.shared, {
       positionContext: workspace.positionContext,
-      onWarn: workspace.diagnostics.collect,
+      onWarn: workspace.diagnosticCollector.collect,
       irPath: context.irPath,
     });
     const group = createScopeGroup(input, transforms, context.shared, workspace, context.irPath);

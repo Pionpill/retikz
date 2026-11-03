@@ -10,8 +10,8 @@ import type {
   SharedCompileContext,
   ElementCompileOptions,
   ElementCompileResult,
-  WorkspaceCompileContext,
-} from '../../context';
+  WorkspaceCompileState,
+} from '../../runtime';
 import type { CompileWarningCode, ComposedScopeTransform } from '../../shared';
 import { runElementCompilation } from '../element';
 import { compileNodeResolution } from './layout';
@@ -53,7 +53,7 @@ type NodeLayoutCompileContext = {
   /** 共享定义与配置 */
   shared: SharedCompileContext;
   /** 当前计算的公共工作区 */
-  workspace: WorkspaceCompileContext;
+  workspace: WorkspaceCompileState;
   /** 有效样式默认配置 */
   scopeDefaults: MergedScopeDefaults;
   /** 有效主题模式 */
@@ -76,7 +76,7 @@ export const compileNodeState = (
 ): NodeCompilation => {
   const scopeChain = context.scopeChain;
   const warn = (code: CompileWarningCode, message: string): void =>
-    context.workspace.diagnostics.collect({ code, message, path: nodeIrPath });
+    context.workspace.diagnosticCollector.collect({ code, message, path: nodeIrPath });
   const resolvedNode = resolveNode(child, {
     scopeDefaults: context.scopeDefaults,
     mode: context.mode,
@@ -92,7 +92,7 @@ export const compileNodeState = (
     ...resolvedNode.node,
     animations: resolveAnimations(resolvedNode.node.animations, {
       target: 'element',
-      onWarn: context.workspace.diagnostics.collect,
+      onWarn: context.workspace.diagnosticCollector.collect,
       irPath: nodeIrPath,
     }),
   };
@@ -101,7 +101,7 @@ export const compileNodeState = (
     { ...resolvedNode, node: canonicalNode },
     {
       measureText: context.shared.host.measureText,
-      nodeBoundaryContext: context.workspace.nodeBoundaryContext,
+      nodeBoundaryStore: context.workspace.nodeBoundaryStore,
       positionContext: context.positionContext,
       composedTransform: context.composedTransform,
       rootFontSize: context.shared.layout.rootFontSize,
@@ -110,7 +110,7 @@ export const compileNodeState = (
       ...(context.childProposal?.x === undefined ? {} : { allocationWidthProposal: context.childProposal.x }),
       texLowering: {
         lowerTex: context.shared.host.lowerTex,
-        warn: (code, message) => context.workspace.diagnostics.collect({ code, message, path: nodeIrPath }),
+        warn: (code, message) => context.workspace.diagnosticCollector.collect({ code, message, path: nodeIrPath }),
       },
     },
   );

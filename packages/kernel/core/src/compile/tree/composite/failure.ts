@@ -3,7 +3,7 @@ import { formatPropertyPath } from '@retikz/foundation';
 import type { CompileOccurrenceLocator, LayoutChildFailure } from '../../../contract';
 import type { LayoutProbeRecoverableError } from '../../../resolve/diagnostics';
 import { createCompositeContractError, createLayoutProbeRecoverableError } from '../../../resolve/diagnostics';
-import type { LayoutProbeFailureEntry } from '../../context';
+import type { LayoutProbeFailureEntry } from '../../runtime';
 import { formatCompileOccurrence } from '../../shared';
 
 /** 单个 callback 的 failure owner identity */

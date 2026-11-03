@@ -23,8 +23,8 @@ import {
 } from '../../../resolve/diagnostics';
 import type { IRChild } from '../../../schemas';
 import { cloneAndFreezeJson } from '../../../shared/json';
-import type { TreeCompileContext, CompositeCompileOwner } from '../../context';
 import type { CompileOwnerKey } from '../../provenance';
+import type { CompileRuntime, CompositeCompileOwner } from '../../runtime';
 import { allocationPointsOf } from '../../scene';
 import {
   BuiltinCompileWarningCode,
@@ -36,7 +36,7 @@ import {
 import type { CompositeArtifact } from '../../shared';
 import { cloneAlignmentGuides } from '../alignment-guide';
 import { pushAllocation } from '../allocation';
-import type { TreeCompileFrame } from '../frame';
+import type { SubtreeCompileRuntime } from '../runtime';
 import { createCompositeCallbackContext } from './context';
 import { isCompositeOutputHandle, snapshotCompositeOutputChild } from './handle';
 import { snapshotAllocationBounds } from './layout';
@@ -61,7 +61,7 @@ export class CompositeCompiler {
   rootContribution: LayoutContribution | undefined;
 
   constructor(
-    readonly context: TreeCompileContext,
+    readonly runtime: CompileRuntime,
     readonly host: CompositeCompileHost,
     private readonly options: CompositeCompilerOptions,
   ) {}
@@ -70,13 +70,13 @@ export class CompositeCompiler {
   compile(
     child: Extract<IRChild, { namespace: string }>,
     index: number,
-    frame: TreeCompileFrame,
+    frame: SubtreeCompileRuntime,
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
     semanticOwner?: CompileOwnerKey,
   ): void {
-    const compositeIrPath = createCompileChildPath(frame.locatorPrefix, index);
-    const binding = bindComposite(child, this.context.shared.registries.compositeRegistry);
+    const compositeIrPath = createCompileChildPath(frame.context.locatorPrefix, index);
+    const binding = bindComposite(child, this.runtime.context.registries.compositeRegistry);
     const { key } = binding;
     if (binding.kind === 'unregistered') {
       if (this.options.probe === true) {
@@ -86,7 +86,7 @@ export class CompositeCompiler {
         );
       }
 
-      this.context.workspace.diagnostics.collect({
+      this.runtime.state.workspace.diagnosticCollector.collect({
         code: BuiltinCompileWarningCode.CompositeNotRegistered,
         message: `No composite registered for '${key}'; the node is skipped.`,
         path: compositeIrPath,
@@ -95,10 +95,10 @@ export class CompositeCompiler {
       return;
     }
 
-    if (compositeDepth >= this.context.shared.limits.maxCompositeDepth) {
+    if (compositeDepth >= this.runtime.context.limits.maxCompositeDepth) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
-        `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${this.context.shared.limits.maxCompositeDepth} levels at ${formatPropertyPath(occurrence.sourcePath)}`,
+        `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${this.runtime.context.limits.maxCompositeDepth} levels at ${formatPropertyPath(occurrence.sourcePath)}`,
       );
     }
 
@@ -108,7 +108,7 @@ export class CompositeCompiler {
     };
 
     const probeContext: CompositeProbeContext = {
-      context: this.context,
+      runtime: this.runtime,
       owner,
       key,
       occurrence,
@@ -128,7 +128,7 @@ export class CompositeCompiler {
     );
 
     try {
-      callbackResult = callable.compile(callable.node, callbackContext.createContext(frame.theme));
+      callbackResult = callable.compile(callable.node, callbackContext.createContext(frame.context.style.theme));
     } catch (thrown) {
       if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
 
@@ -196,7 +196,7 @@ export class CompositeCompiler {
       const children = Array.from(
         resultChildren,
         (output, outputIndex): IRChild | CompositeCompileChild | CompositeBoundChild => {
-          if (isCompositeOutputHandle(this.context, output)) return output;
+          if (isCompositeOutputHandle(this.runtime, output)) return output;
           return snapshotCompositeOutputChild(owner.label, output, outputIndex);
         },
       );
@@ -238,17 +238,19 @@ export class CompositeCompiler {
 
     const { children, explicitAllocation, explicitAlignmentGuides, compositeArtifact } = validatedResult;
 
-    const outputFrame: TreeCompileFrame = {
-      ...frame,
-      runtimeInputs: undefined,
-      alignmentGuideSink: [],
-      ...(explicitAllocation === undefined ? {} : { allocationBoundary: {} }),
+    const outputFrame: SubtreeCompileRuntime = {
+      context: {
+        ...frame.context,
+        runtimeInputs: undefined,
+        ...(explicitAllocation === undefined ? {} : { allocationBoundary: {} }),
+      },
+      state: { ...frame.state, alignmentGuideSink: [] },
     };
     const preparedOutputs = preflightCompositeOutputs(this, children, owner);
-    if (compositeArtifact !== undefined) frame.artifactSink.push(compositeArtifact);
+    if (compositeArtifact !== undefined) frame.state.artifactSink.push(compositeArtifact);
 
     for (const [outputIndex, output] of children.entries()) {
-      if (!isCompositeOutputHandle(this.context, output)) {
+      if (!isCompositeOutputHandle(this.runtime, output)) {
         const outputOccurrence: CompileOccurrenceLocator = {
           sourcePath: occurrence.sourcePath,
           expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Output, index: outputIndex }],
@@ -262,12 +264,12 @@ export class CompositeCompiler {
           true,
           semanticOwner === undefined
             ? undefined
-            : this.context.execution.provenanceTracker?.createOwner(
+            : this.runtime.state.execution.provenanceTracker?.createOwner(
                 output,
                 outputIndex,
                 semanticOwner,
                 true,
-                this.context.execution.namespaceStack.identity,
+                this.runtime.state.execution.namespaceStack.identity,
               ),
         );
         continue;
@@ -293,9 +295,13 @@ export class CompositeCompiler {
     }
 
     if (explicitAllocation !== undefined) {
-      pushAllocation(frame.allocationSink, allocationPointsOf(explicitAllocation), frame.allocationBoundary);
+      pushAllocation(
+        frame.state.allocationSink,
+        allocationPointsOf(explicitAllocation),
+        frame.context.allocationBoundary,
+      );
     }
 
-    if (explicitAlignmentGuides !== undefined) frame.alignmentGuideSink.push(...explicitAlignmentGuides);
+    if (explicitAlignmentGuides !== undefined) frame.state.alignmentGuideSink.push(...explicitAlignmentGuides);
   }
 }

@@ -1,7 +1,7 @@
 import type { ScenePrimitive } from '../../contract';
 import { pushAllocation } from './allocation';
-import type { TreeCompileFrame } from './frame';
 import type { PathPlaceholder } from './path';
+import type { SubtreeCompileRuntime } from './runtime';
 import type { SubtreeOutputContribution } from './types';
 
 /** compile 内部 sink 元素类型：真 Scene primitive 或编译期占位 */
@@ -44,20 +44,20 @@ export const collectPlaceholderLocators = (
 /** 接受已提交的子树输出，统一维护当前帧的收集容器 */
 export const acceptTreeContribution = (
   output: TreeOutputState,
-  frame: TreeCompileFrame,
+  frame: SubtreeCompileRuntime,
   contribution: SubtreeOutputContribution,
 ): void => {
   for (const [index, primitive] of contribution.primitives.entries()) {
-    frame.primitiveSink.push(primitive);
+    frame.state.primitiveSink.push(primitive);
     recordPrimitiveZIndex(output.zIndexOf, primitive, contribution.primitiveZIndices[index]);
   }
-  frame.layoutSink.push(...contribution.layouts);
-  frame.publicationSink.push(...contribution.publications);
-  frame.boundsSink.push(...contribution.bounds);
+  frame.state.layoutSink.push(...contribution.layouts);
+  frame.state.publicationSink.push(...contribution.publications);
+  frame.state.boundsSink.push(...contribution.bounds);
   for (const allocation of contribution.allocations) {
-    pushAllocation(frame.allocationSink, allocation.boundsPoints, frame.allocationBoundary);
+    pushAllocation(frame.state.allocationSink, allocation.boundsPoints, frame.context.allocationBoundary);
   }
-  frame.artifactSink.push(...contribution.artifacts);
+  frame.state.artifactSink.push(...contribution.artifacts);
 };
 
 /** 当前子树输出的排序记录与尚未回填的路径数 */

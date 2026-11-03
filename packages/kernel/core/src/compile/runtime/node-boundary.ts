@@ -19,7 +19,7 @@ export type NodeBoundaryState = {
 };
 
 /** 编译调用持有的节点连接边界上下文，不进入布局结果 */
-export type NodeBoundaryContext = {
+export type NodeBoundaryStore = {
   /** 读取节点消费状态；布局投影按共享的 shape 解析对象关联 */
   get: (layout: CompiledNodeLayout | NodeReferenceGeometry) => NodeBoundaryState;
   /** 将 resolver 引用视图关联到原节点的消费状态 */
@@ -27,7 +27,7 @@ export type NodeBoundaryContext = {
 };
 
 /** 为一次编译创建独立的连接面缓存与诊断容器 */
-export const createNodeBoundaryContext = (): NodeBoundaryContext => {
+export const createNodeBoundaryStore = (): NodeBoundaryStore => {
   const states = new WeakMap<object, NodeBoundaryState>();
   const get = (layout: CompiledNodeLayout | NodeReferenceGeometry): NodeBoundaryState => {
     const key = 'geometry' in layout ? layout.shape : layout;

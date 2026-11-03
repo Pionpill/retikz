@@ -7,8 +7,8 @@ import {
   safeErrorMessage,
 } from '../../resolve/diagnostics';
 import type { IRChild } from '../../schemas';
-import type { TreeCompileContext } from '../context';
 import type { CompileOwnerKey } from '../provenance';
+import type { CompileRuntime } from '../runtime';
 import { collectLayoutBounds } from '../scene';
 import {
   createCompileChildPath,
@@ -20,12 +20,12 @@ import { resolveStructuralAlignmentGuides } from './alignment-guide';
 import { effectiveAllocations } from './allocation';
 import { CompositeCompiler } from './composite';
 import { visitCoordinate } from './coordinate/visit';
-import { createCompileSinks } from './frame';
-import type { TreeCompileFrame } from './frame';
 import { visitNode } from './node/visit';
 import { acceptTreeContribution, collectPlaceholderLocators, stableSortByZIndex } from './output';
 import type { TreeOutputState } from './output';
 import { queuePathChild, flushPendingPathEmissions } from './path/deferred';
+import { createSubtreeCompileState } from './runtime';
+import type { SubtreeCompileRuntime } from './runtime';
 import { visitScope } from './scope/visit';
 import type { SubtreeCompileHost, SubtreeCompilerOptions, SubtreeCompilation } from './types';
 
@@ -39,7 +39,7 @@ export class SubtreeCompiler {
 
   constructor(
     private readonly rootChildren: ReadonlyArray<IRChild>,
-    private readonly context: TreeCompileContext,
+    private readonly runtime: CompileRuntime,
     private readonly host: SubtreeCompileHost,
     private readonly options: SubtreeCompilerOptions,
   ) {}
@@ -47,14 +47,14 @@ export class SubtreeCompiler {
   /** 按需建立复合组件执行器及其宿主回调 */
   private getOrCreateCompositeCompiler(): CompositeCompiler {
     return (this.compositeCompiler ??= new CompositeCompiler(
-      this.context,
+      this.runtime,
       {
         compileSubtree: this.host.compileSubtree,
         acceptContribution: (frame, contribution) => acceptTreeContribution(this.output, frame, contribution),
         compileChild: (...args) => this.compileChild(...args),
         compileScopeChild: (...args) =>
           visitScope(
-            this.context,
+            this.runtime,
             this.output,
             { compileChildren: this.compileChildren.bind(this) },
             this.options,
@@ -79,33 +79,36 @@ export class SubtreeCompiler {
       layoutSink: rootLayouts,
       artifactSink: rootArtifacts,
       alignmentGuideSink: rootAlignmentGuides,
-    } = createCompileSinks();
+    } = createSubtreeCompileState();
 
     this.compileChildren(
       this.rootChildren,
       {
-        childProposal: this.options.initial.proposal ?? naturalLayoutProposal,
-        runtimeInputs: this.options.initial.compositeInputs,
-        scopeChain: this.options.initial.scopeChain ?? [],
-        primitiveSink: rootPrimitives,
-        locatorPrefix: [],
-        layoutSink: rootLayouts,
-        pathSink: rootPendingPaths,
-        scopeDefaults: this.options.initial.scopeDefaults ?? {},
-        theme: this.options.initial.theme,
-        publicationSink: [],
-        boundsSink: rootBounds,
-        allocationSink: rootAllocations,
-        alignmentGuideSink: rootAlignmentGuides,
-        artifactSink: rootArtifacts,
-        ...(this.context.execution.provenanceTracker === undefined
-          ? {}
-          : { semanticOwner: this.context.execution.provenanceTracker.root }),
+        context: {
+          childProposal: this.options.initial.proposal ?? naturalLayoutProposal,
+          runtimeInputs: this.options.initial.compositeInputs,
+          scopeChain: this.options.initial.scopeChain ?? [],
+          locatorPrefix: [],
+          ...(this.runtime.state.execution.provenanceTracker === undefined
+            ? {}
+            : { semanticOwner: this.runtime.state.execution.provenanceTracker.root }),
+          style: { defaults: this.options.initial.scopeDefaults ?? {}, theme: this.options.initial.theme },
+        },
+        state: {
+          primitiveSink: rootPrimitives,
+          layoutSink: rootLayouts,
+          pathSink: rootPendingPaths,
+          publicationSink: [],
+          boundsSink: rootBounds,
+          allocationSink: rootAllocations,
+          alignmentGuideSink: rootAlignmentGuides,
+          artifactSink: rootArtifacts,
+        },
       },
       true,
     );
 
-    flushPendingPathEmissions(this.context, this.output, rootPendingPaths);
+    flushPendingPathEmissions(this.runtime, this.output, rootPendingPaths);
 
     let layoutBounds: SubtreeCompilation['layoutBounds'];
     for (const contribution of rootBounds) {
@@ -142,14 +145,14 @@ export class SubtreeCompiler {
   private compileChild(
     child: IRChild,
     index: number,
-    frame: TreeCompileFrame,
+    frame: SubtreeCompileRuntime,
     occurrence: CompileOccurrenceLocator,
     compositeDepth: number,
     generated: boolean,
     semanticOwner?: CompileOwnerKey,
   ): void {
     try {
-      this.context.execution.withWarningOccurrence(occurrence, () => {
+      this.runtime.state.execution.withWarningOccurrence(occurrence, () => {
         if ('namespace' in child) {
           this.getOrCreateCompositeCompiler().compile(child, index, frame, occurrence, compositeDepth, semanticOwner);
           return;
@@ -157,14 +160,14 @@ export class SubtreeCompiler {
 
         switch (child.type) {
           case 'node':
-            visitNode(this.context, this.output, child, index, frame, occurrence, semanticOwner);
+            visitNode(this.runtime, this.output, child, index, frame, occurrence, semanticOwner);
             break;
           case 'coordinate':
-            visitCoordinate(this.context, child, index, frame);
+            visitCoordinate(this.runtime, child, index, frame);
             break;
           case 'scope':
             visitScope(
-              this.context,
+              this.runtime,
               this.output,
               { compileChildren: this.compileChildren.bind(this) },
               this.options,
@@ -177,7 +180,7 @@ export class SubtreeCompiler {
             );
             break;
           default:
-            queuePathChild(this.context, this.output, child, index, frame, occurrence, semanticOwner);
+            queuePathChild(this.runtime, this.output, child, index, frame, occurrence, semanticOwner);
         }
       });
     } catch (thrown) {
@@ -198,7 +201,7 @@ export class SubtreeCompiler {
 
   private compileChildren(
     children: ReadonlyArray<IRChild>,
-    frame: TreeCompileFrame,
+    frame: SubtreeCompileRuntime,
     useProvidedOccurrence = false,
     generatedScopeOccurrence?: CompileOccurrenceLocator,
     compositeDepth = this.options.initial.compositeDepth ?? 0,
@@ -208,16 +211,16 @@ export class SubtreeCompiler {
       (useProvidedOccurrence ? (this.options.initial.generated ?? false) : false);
     for (const [i, child] of children.entries()) {
       const semanticOwner =
-        frame.semanticOwner === undefined
+        frame.context.semanticOwner === undefined
           ? undefined
-          : this.context.execution.provenanceTracker?.createOwner(
+          : this.runtime.state.execution.provenanceTracker?.createOwner(
               child,
               i,
-              frame.semanticOwner,
+              frame.context.semanticOwner,
               generated,
-              this.context.execution.namespaceStack.identity,
+              this.runtime.state.execution.namespaceStack.identity,
             );
-      const entityPath = createCompileChildPath(frame.locatorPrefix, i);
+      const entityPath = createCompileChildPath(frame.context.locatorPrefix, i);
       const occurrence = generatedScopeOccurrence
         ? {
             sourcePath: generatedScopeOccurrence.sourcePath,
@@ -235,10 +238,18 @@ export class SubtreeCompiler {
       const runtimeInputs =
         useProvidedOccurrence && this.options.initial.occurrence !== undefined && children.length === 1
           ? this.options.initial.compositeInputs
-          : frame.runtimeInputs === undefined
+          : frame.context.runtimeInputs === undefined
             ? undefined
-            : selectCompositeInputScope(frame.runtimeInputs, ['children', i]);
-      this.compileChild(child, i, { ...frame, runtimeInputs }, occurrence, compositeDepth, generated, semanticOwner);
+            : selectCompositeInputScope(frame.context.runtimeInputs, ['children', i]);
+      this.compileChild(
+        child,
+        i,
+        { context: { ...frame.context, runtimeInputs }, state: frame.state },
+        occurrence,
+        compositeDepth,
+        generated,
+        semanticOwner,
+      );
     }
   }
 }

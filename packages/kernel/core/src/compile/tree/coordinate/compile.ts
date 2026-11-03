@@ -4,7 +4,7 @@ import { createLayoutProbeRecoverableError } from '../../../resolve/diagnostics'
 import type { PositionTargetResolveContext } from '../../../resolve/position';
 import { resolvePosition } from '../../../resolve/position';
 import type { IRCoordinate, IRPosition } from '../../../schemas';
-import type { ElementCompileOptions, ElementCompileResult } from '../../context';
+import type { ElementCompileOptions, ElementCompileResult } from '../../runtime';
 import { runElementCompilation } from '../element';
 
 /** 坐标单元素编译上下文 */

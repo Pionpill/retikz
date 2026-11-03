@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import * as core from '../../../src';
-import { NamespaceStack } from '../../../src/compile/context';
+import { NamespaceStack } from '../../../src/compile/runtime';
 import { angleBoundaryOf, boundaryPointOf, compileNodeResolution, resolveAnchor } from '../../../src/compile/tree/node';
 import { createPositionResolveContext } from '../../../src/compile/tree/reference';
 import { resolveBoundaryRegistry } from '../../../src/providers/boundary';

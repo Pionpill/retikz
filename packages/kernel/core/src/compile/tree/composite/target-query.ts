@@ -7,10 +7,10 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { resolveNodeBoundary, resolvePath as resolvePathValue } from '../../../resolve';
 import { isFatalProbeError } from '../../../resolve/diagnostics';
 import type { IRPosition, IRTarget } from '../../../schemas';
-import type { NamespaceStack } from '../../context';
-import type { TreeCompileFrame } from '../frame';
+import type { NamespaceStack } from '../../runtime';
 import { bindPathTarget } from '../path';
 import { createPositionResolveContext } from '../reference';
+import type { SubtreeCompileRuntime } from '../runtime';
 import { snapshotCompositeLayoutChild } from './handle';
 import type { CompositeProbeSequence } from './measurement';
 import type { CompositeProbeContext } from './probe';
@@ -19,42 +19,42 @@ import { probeCompositeLayout } from './probe';
 /** 创建回调级路径目标查询服务，派生主题共享环境缓存，结束回调时显式清理 */
 export const createCompositeTargetQuery = (
   probeContext: CompositeProbeContext,
-  frame: TreeCompileFrame,
+  frame: SubtreeCompileRuntime,
   probeSequence: CompositeProbeSequence,
 ) => {
-  const { context, owner, occurrence } = probeContext;
+  const { runtime, owner, occurrence } = probeContext;
   // 回调内只保留查询事实，不持有可消费的 replay 或目标解析游标
   const queryEnvironments = new Map<
     string,
     Readonly<{ namespaceStack: NamespaceStack; scopeChain: ReadonlyArray<Transform> }>
   >();
-  let queryNamespaceIdentity = context.execution.namespaceStack.measurementIdentity;
+  let queryNamespaceIdentity = runtime.state.execution.namespaceStack.measurementIdentity;
 
   return {
     /** 在指定主题下查询目标点，缓存不保存可消费的重放凭证 */
     resolve: (
-      theme: TreeCompileFrame['theme'],
+      theme: SubtreeCompileRuntime['context']['style']['theme'],
       query: Parameters<CompositeCompileContext['resolvePathTargets']>[0],
     ): ReturnType<CompositeCompileContext['resolvePathTargets']> => {
       const queryChild = snapshotCompositeLayoutChild(owner.label, query.child, probeSequence.index++);
-      const namespaceIdentity = context.execution.namespaceStack.measurementIdentity;
+      const namespaceIdentity = runtime.state.execution.namespaceStack.measurementIdentity;
       if (queryNamespaceIdentity !== namespaceIdentity) {
         queryEnvironments.clear();
         queryNamespaceIdentity = namespaceIdentity;
       }
       // Definition、测量器、绑定所有者与递归预算在当前回调内固定；派生 theme 按值区分
-      const queryKey = JSON.stringify([queryChild, theme, frame.scopeDefaults, frame.scopeChain]);
+      const queryKey = JSON.stringify([queryChild, theme, frame.context.style.defaults, frame.context.scopeChain]);
       let shared = queryEnvironments.get(queryKey);
       if (shared === undefined) {
         let queryNamespace: NamespaceStack | undefined;
-        let queryChain = frame.scopeChain;
+        let queryChain = frame.context.scopeChain;
         const probe = probeCompositeLayout(
           probeContext,
           queryChild,
           naturalLayoutProposal,
           occurrence,
-          frame.scopeChain,
-          frame.scopeDefaults,
+          frame.context.scopeChain,
+          frame.context.style.defaults,
           theme,
           false,
           undefined,
@@ -77,16 +77,16 @@ export const createCompositeTargetQuery = (
       const targetNamespace = shared.namespaceStack.fork();
       const queryChain = shared.scopeChain;
       const positionContext = createPositionResolveContext({
-        nodeBoundaryContext: context.workspace.nodeBoundaryContext,
+        nodeBoundaryStore: runtime.state.workspace.nodeBoundaryStore,
         lookupReference: id => targetNamespace.lookupReference(id),
-        nodeDistance: context.shared.layout.nodeDistance,
+        nodeDistance: runtime.context.layout.nodeDistance,
         scopeChain: queryChain,
         resolveExplicitBoundary: (boundary, referenceContext) =>
           resolveNodeBoundary(boundary, {
             visualDef: referenceContext.visualDef,
             visualParams: referenceContext.visualParams,
-            shapeRegistry: context.shared.registries.shapeRegistry,
-            boundaryRegistry: context.shared.registries.boundaryRegistry,
+            shapeRegistry: runtime.context.registries.shapeRegistry,
+            boundaryRegistry: runtime.context.registries.boundaryRegistry,
             irPath: referenceContext.irPath,
           }),
       });
@@ -124,11 +124,11 @@ export const createCompositeTargetQuery = (
               pointOfTarget: target => bindingOf(target)?.point ?? null,
               bindTarget: target => bindingOf(target),
             },
-            pathRegistry: context.shared.registries.pathRegistry,
-            arrowRegistry: context.shared.registries.arrowRegistry,
-            markRegistry: context.shared.registries.markRegistry,
-            patternRegistry: context.shared.registries.patternRegistry,
-            round: context.shared.layout.round,
+            pathRegistry: runtime.context.registries.pathRegistry,
+            arrowRegistry: runtime.context.registries.arrowRegistry,
+            markRegistry: runtime.context.registries.markRegistry,
+            patternRegistry: runtime.context.registries.patternRegistry,
+            round: runtime.context.layout.round,
             irPath: ['query'],
           },
         );

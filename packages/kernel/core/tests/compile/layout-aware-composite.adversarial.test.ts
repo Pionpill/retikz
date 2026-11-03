@@ -36,9 +36,9 @@ import {
   naturalLayoutProposal,
   PathSchema,
 } from '../../src';
-import { createTreeCompileContext } from '../../src/compile/context';
-import { NamespaceStack } from '../../src/compile/context';
 import * as compileProvenance from '../../src/compile/provenance';
+import { createCompileRuntime } from '../../src/compile/runtime';
+import { NamespaceStack } from '../../src/compile/runtime';
 import { createCompileInvariantError, snapshotProviderPosition, wrapLayoutProbeError } from '../../src/compile/shared';
 import { CompileManager } from '../../src/compile/tree';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';
@@ -957,7 +957,7 @@ describe('布局感知的复契约束和边界', () => {
       .mockImplementation(() => {
         throw invariant;
       });
-    const context = createTreeCompileContext(ir, { composites: [parent] }, { captureProvenance: true });
+    const context = createCompileRuntime(ir, { composites: [parent] }, { captureProvenance: true });
 
     expect(() => new CompileManager(context).compileScene(ir)).toThrow(invariant);
 

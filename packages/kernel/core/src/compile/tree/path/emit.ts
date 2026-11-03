@@ -19,8 +19,8 @@ import {
 } from '../../../resolve';
 import { createCompositeContractError } from '../../../resolve/diagnostics';
 import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
-import type { SharedCompileContext, WorkspaceCompileContext } from '../../context';
 import type { RegisterPaint } from '../../resource';
+import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';
 import { snapshotProviderPosition, snapshotScenePrimitives } from '../../shared';
 import type { ComposedScopeTransform } from '../../shared';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
@@ -33,7 +33,7 @@ export type PathCompileHost = {
   /** 共享定义与配置 */
   shared: SharedCompileContext;
   /** 当前计算的公共工作区 */
-  workspace: WorkspaceCompileContext;
+  workspace: WorkspaceCompileState;
   /** Core 提供的坐标变换解析 */
   resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform;
 };
@@ -71,11 +71,11 @@ export const emitDefinedPath = (
   const { path, scopeChain } = pendingPath;
   const { irPath } = resolution;
   const targetWarn = (code: string, message: string, node?: { irPath?: PropertyPath }): void =>
-    context.workspace.diagnostics.collect({ code, message, path: node?.irPath ?? irPath });
+    context.workspace.diagnosticCollector.collect({ code, message, path: node?.irPath ?? irPath });
   const targetView = pathTargetViewOf(
     resolution.targets,
     targetWarn,
-    context.workspace.nodeBoundaryContext,
+    context.workspace.nodeBoundaryStore,
     context.resolveTransform,
   );
   const { definition } = resolution;
@@ -92,7 +92,7 @@ export const emitDefinedPath = (
       ...context.workspace.paintRegistry.getResources(),
       ...context.workspace.clipRegistry.getResources(),
     ],
-    onWarn: context.workspace.diagnostics.collect,
+    onWarn: context.workspace.diagnosticCollector.collect,
     scopeChain,
     registerPaint,
     targetView,
@@ -130,7 +130,7 @@ export const emitDefinedPath = (
     const emittedTargetView = pathTargetViewOf(
       strokeResolution.targets,
       targetWarn,
-      context.workspace.nodeBoundaryContext,
+      context.workspace.nodeBoundaryStore,
       context.resolveTransform,
     );
     const emitted = emitPathPrimitive(strokeResolution, {
@@ -165,7 +165,7 @@ export const emitDefinedPath = (
       targetView: pathTargetViewOf(
         emittedResolution.targets,
         targetWarn,
-        context.workspace.nodeBoundaryContext,
+        context.workspace.nodeBoundaryStore,
         context.resolveTransform,
       ),
       round: context.shared.layout.round,

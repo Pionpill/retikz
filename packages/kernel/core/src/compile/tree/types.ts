@@ -11,8 +11,8 @@ import type {
 } from '../../contract';
 import type { MergedScopeDefaults } from '../../resolve';
 import type { IRChild, IRScope } from '../../schemas';
-import type { TreeCompileContext, NamespaceStack } from '../context';
 import type { LayoutBoundsContribution, CompiledNodeLayout } from '../layout';
+import type { CompileRuntime, NamespaceStack } from '../runtime';
 import type { CompositeArtifact } from '../shared';
 
 /** child 遍历编译后的 primitive 与自动 layout bbox */
@@ -66,7 +66,7 @@ export type SubtreeCompilerOptions = Pick<
 > & {
   /** 进入遍历前的继承位置与输入，递归时派生为局部帧 */
   initial: Omit<SubtreeCompileOptions, 'probe' | 'measurementAxis' | 'captureScopeTargets'> &
-    TreeCompileContext['initial'];
+    Pick<CompileRuntime['context'], 'theme' | 'compositeInputs'>;
 };
 
 /** 选中隔离子树后交给宿主接受的局部输出，不包含可写工作区或递归调度器 */
@@ -91,7 +91,7 @@ export type SubtreeOutputContribution = {
 export type CompileSubtree = (
   children: ReadonlyArray<IRChild>,
   options: SubtreeCompileOptions,
-  context: TreeCompileContext,
+  runtime: CompileRuntime,
 ) => SubtreeCompilation;
 
 /** 子树编译器所需的宿主调度能力，不暴露具体管理器 */

@@ -17,8 +17,8 @@ import {
   replaceCompileWarningOccurrence,
 } from '../../shared';
 import { effectiveAllocations } from '../allocation';
-import type { TreeCompileFrame } from '../frame';
 import { projectLayoutWithTransform, projectPublishedCompileLayout } from '../node';
+import type { SubtreeCompileRuntime } from '../runtime';
 import type { SubtreeOutputContribution } from '../types';
 import type { CompositeExecutionContext, PreparedReplay } from './types';
 
@@ -27,7 +27,7 @@ export const commitCompositeReplay = (
   execution: CompositeExecutionContext,
   token: CompositeReplay,
   wrapper: CompositeReplayWrapper | undefined,
-  frame: TreeCompileFrame,
+  frame: SubtreeCompileRuntime,
   occurrence: CompileOccurrenceLocator,
   outputIndex: number,
   preparedReplays: ReadonlyMap<CompositeReplay, PreparedReplay>,
@@ -40,12 +40,12 @@ export const commitCompositeReplay = (
   const { wrapperClipPath } = prepared;
   const transaction =
     prepared.transaction.materialize !== undefined &&
-    (prepared.transaction.styleFingerprint !== replayStyleFingerprint(frame.scopeDefaults) ||
-      prepared.transaction.themeFingerprint !== replayThemeFingerprint(frame.theme))
+    (prepared.transaction.styleFingerprint !== replayStyleFingerprint(frame.context.style.defaults) ||
+      prepared.transaction.themeFingerprint !== replayThemeFingerprint(frame.context.style.theme))
       ? prepared.transaction.materialize({
-          scopeChain: frame.scopeChain,
-          scopeDefaults: frame.scopeDefaults,
-          theme: frame.theme,
+          scopeChain: frame.context.scopeChain,
+          scopeDefaults: frame.context.style.defaults,
+          theme: frame.context.style.theme,
         })
       : prepared.transaction;
 
@@ -53,23 +53,25 @@ export const commitCompositeReplay = (
   const authoredPreliminary = transaction.scopeChainApplied ? undefined : authoredPreliminaryTransforms;
   importSceneResources(
     transaction.resources,
-    execution.context.workspace.paintRegistry,
-    execution.context.workspace.clipRegistry,
+    execution.runtime.state.workspace.paintRegistry,
+    execution.runtime.state.workspace.clipRegistry,
   );
 
   const wrapperClipRef =
-    wrapperClipPath === undefined ? undefined : execution.context.workspace.clipRegistry.registerPath(wrapperClipPath);
+    wrapperClipPath === undefined
+      ? undefined
+      : execution.runtime.state.workspace.clipRegistry.registerPath(wrapperClipPath);
   const replayedPrimitives =
-    execution.context.execution.provenanceTracker?.materializePrimitives(transaction.primitives) ??
+    execution.runtime.state.execution.provenanceTracker?.materializePrimitives(transaction.primitives) ??
     transaction.primitives;
-  if (semanticOwner !== undefined && execution.context.execution.provenanceTracker !== undefined) {
+  if (semanticOwner !== undefined && execution.runtime.state.execution.provenanceTracker !== undefined) {
     if (transaction.provenance === undefined) throw createCompileInvariantError('Missing replay provenance');
-    execution.context.execution.provenanceTracker.importProvenance(
+    execution.runtime.state.execution.provenanceTracker.importProvenance(
       transaction.provenance,
       replayedPrimitives,
       semanticOwner,
       outputIndex,
-      execution.context.execution.namespaceStack.identity,
+      execution.runtime.state.execution.namespaceStack.identity,
     );
   }
   const committedPrimitives = replayedPrimitives.map((primitive): ScenePrimitive => {
@@ -90,7 +92,7 @@ export const commitCompositeReplay = (
   };
 
   if (semanticOwner !== undefined) {
-    execution.context.execution.provenanceTracker?.recordPrimitives(
+    execution.runtime.state.execution.provenanceTracker?.recordPrimitives(
       committedPrimitives,
       semanticOwner,
       'composite-replay',
@@ -99,8 +101,8 @@ export const commitCompositeReplay = (
 
   const namespaceParentChain =
     authoredPreliminary === undefined
-      ? frame.scopeChain
-      : frame.scopeChain.slice(0, frame.scopeChain.length - authoredPreliminary.length);
+      ? frame.context.scopeChain
+      : frame.context.scopeChain.slice(0, frame.context.scopeChain.length - authoredPreliminary.length);
   const namespaceTransforms = [...(authoredPreliminary ?? []), ...(transforms ?? [])];
   const publishedLayouts = new Map<CompiledNodeLayout, CompiledNodeLayout>();
 
@@ -112,9 +114,9 @@ export const commitCompositeReplay = (
     const projectedChange = { ...change, entry: { ...change.entry, layout: projectedLayout } };
 
     const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
-    execution.context.execution.withWarningOccurrence(
+    execution.runtime.state.execution.withWarningOccurrence(
       replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, changeOccurrence),
-      () => execution.context.execution.namespaceStack.commitForkChange(projectedChange),
+      () => execution.runtime.state.execution.namespaceStack.commitForkChange(projectedChange),
     );
 
     if (alreadyPublished === undefined) contribution.publications.push(projectedLayout);
@@ -125,7 +127,10 @@ export const commitCompositeReplay = (
     contribution.layouts.push(
       transforms === undefined || transforms.length === 0
         ? layout
-        : projectLayoutWithTransform(layout, execution.context.execution.scopeTransformComposer.resolve(transforms)),
+        : projectLayoutWithTransform(
+            layout,
+            execution.runtime.state.execution.scopeTransformComposer.resolve(transforms),
+          ),
     );
   }
 
@@ -136,7 +141,7 @@ export const commitCompositeReplay = (
           transforms === undefined || transforms.length === 0
             ? bounds.boundsPoints
             : bounds.boundsPoints.map(point =>
-                execution.context.execution.scopeTransformComposer.apply(point, transforms),
+                execution.runtime.state.execution.scopeTransformComposer.apply(point, transforms),
               ),
         shadow: bounds.shadow,
         ...(bounds.decoration === undefined ? {} : { decoration: bounds.decoration }),
@@ -144,8 +149,8 @@ export const commitCompositeReplay = (
     }
   } else {
     const visualBounds = calculateBoundsOfPrimitives(committedPrimitives, [
-      ...execution.context.workspace.paintRegistry.getResources(),
-      ...execution.context.workspace.clipRegistry.getResources(),
+      ...execution.runtime.state.workspace.paintRegistry.getResources(),
+      ...execution.runtime.state.workspace.clipRegistry.getResources(),
     ]);
     if (visualBounds !== undefined)
       contribution.bounds.push({
@@ -160,13 +165,13 @@ export const commitCompositeReplay = (
         transforms === undefined || transforms.length === 0
           ? allocation.boundsPoints
           : allocation.boundsPoints.map(point =>
-              execution.context.execution.scopeTransformComposer.apply(point, transforms),
+              execution.runtime.state.execution.scopeTransformComposer.apply(point, transforms),
             ),
     });
   }
 
   for (const warning of transaction.warnings) {
-    execution.context.workspace.diagnostics.collect(
+    execution.runtime.state.workspace.diagnosticCollector.collect(
       replaceCompileWarningOccurrence(
         warning,
         replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, compileWarningOccurrenceOf(warning)),
@@ -186,11 +191,12 @@ export const commitCompositeReplay = (
 };
 
 /** 按有效默认配置判断 replay 是否需要重新物化 */
-export const replayStyleFingerprint = (scopeDefaults: TreeCompileFrame['scopeDefaults']): string =>
+export const replayStyleFingerprint = (scopeDefaults: SubtreeCompileRuntime['context']['style']['defaults']): string =>
   JSON.stringify(scopeDefaults);
 
 /** 对 resolved Theme 做 compile-local 稳定比较 */
-export const replayThemeFingerprint = (theme: TreeCompileFrame['theme']): string => JSON.stringify(theme);
+export const replayThemeFingerprint = (theme: SubtreeCompileRuntime['context']['style']['theme']): string =>
+  JSON.stringify(theme);
 
 /** 将试编译内的出现位置重定位到最终重放位置，保留内部展开后缀 */
 export const replayOccurrence = (

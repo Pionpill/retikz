@@ -3,7 +3,7 @@ import type { PropertyPath } from '@retikz/foundation';
 import type { GroupPrimitive, SceneClipPath, Transform } from '../../../contract';
 import { resolveAnimations } from '../../../resolve';
 import { resolveClip } from '../../../resolve/resource';
-import type { SharedCompileContext, WorkspaceCompileContext } from '../../context';
+import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';
 import type { InputScopeCompile } from './types';
 
 /** 生成 Scope 自身的绘制属性，子图元与名称发布由调用方组织 */
@@ -11,7 +11,7 @@ export const createScopeGroup = (
   input: InputScopeCompile,
   transforms: ReadonlyArray<Transform>,
   shared: SharedCompileContext,
-  workspace: WorkspaceCompileContext,
+  workspace: WorkspaceCompileState,
   irPath: PropertyPath,
   resolvedClipPath?: SceneClipPath,
 ): Omit<GroupPrimitive, 'children'> => {
@@ -21,7 +21,7 @@ export const createScopeGroup = (
   if (transforms.length > 0) group.transforms = [...transforms];
   const animations = resolveAnimations(input.animations, {
     target: 'element',
-    onWarn: workspace.diagnostics.collect,
+    onWarn: workspace.diagnosticCollector.collect,
     irPath,
   });
   if (animations !== undefined) group.animations = animations;

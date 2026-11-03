@@ -10,11 +10,11 @@ import { createCompositeContractError } from '../../../resolve/diagnostics';
 import type { IRChild } from '../../../schemas';
 import { cloneAndFreezeJson } from '../../../shared/json';
 import type {
-  TreeCompileContext,
-  CompositeCompileSession,
+  CompileRuntime,
+  CompositeCompileState,
   CompositeCompileOwner,
   CompositeRuntimeOutputChild,
-} from '../../context';
+} from '../../runtime';
 
 const builtinChildTypes = new Set(['node', 'path', 'coordinate', 'scope']);
 
@@ -61,7 +61,7 @@ const cloneReplayWrapper = (wrapper: CompositeReplayWrapper | undefined): Compos
 
 /** 创建 callback-local replay output child */
 export const createCompositeReplayChild = (
-  session: CompositeCompileSession,
+  session: CompositeCompileState,
   owner: CompositeCompileOwner,
   result: unknown,
   wrapper?: CompositeReplayWrapper,
@@ -96,7 +96,7 @@ export const createCompositeReplayChild = (
 
 /** 创建 callback-local context Scope output child */
 export const createCompositeScopeChild = (
-  session: CompositeCompileSession,
+  session: CompositeCompileState,
   owner: CompositeCompileOwner,
   props: CompositeCompileScopeProps,
   children: unknown,
@@ -135,7 +135,7 @@ export const createCompositeScopeChild = (
 
 /** 创建携带准确 Source 子树输入的 callback-local 子项 */
 export const createCompositeBoundChild = (
-  session: CompositeCompileSession,
+  session: CompositeCompileState,
   owner: CompositeCompileOwner,
   scope: CompositeInputScope,
 ): CompositeBoundChild => {
@@ -148,7 +148,7 @@ export const createCompositeBoundChild = (
 
 /** 只按本次会话登记的对象身份识别组件输出句柄 */
 export const isCompositeOutputHandle = (
-  context: TreeCompileContext,
+  runtime: CompileRuntime,
   output: unknown,
 ): output is CompositeCompileChild | CompositeBoundChild =>
-  output !== null && typeof output === 'object' && context.composite.outputChildren.has(output);
+  output !== null && typeof output === 'object' && runtime.state.composite.outputChildren.has(output);

@@ -4,18 +4,18 @@ import { boundsToRect } from '@retikz/math';
 import type { CompileOccurrenceLocator, SceneClipPath, Transform } from '../../../contract';
 import { resolveScopeDefaults, resolveTheme } from '../../../resolve';
 import type { IRScope } from '../../../schemas';
-import type { TreeCompileContext } from '../../context';
 import type { CompileOwnerKey } from '../../provenance';
+import type { CompileRuntime } from '../../runtime';
 import { allocationPointsOf, collectLayoutBounds, calculateBoundsOfPrimitives } from '../../scene';
 import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
 import { resolveStructuralAlignmentGuides, transformAlignmentGuides } from '../alignment-guide';
 import { effectiveAllocations, pushAllocation } from '../allocation';
-import type { TreeCompileFrame } from '../frame';
-import { createCompileSinks } from '../frame';
 import { projectLayoutWithTransform, createScopePlaceholderLayout, projectPublishedCompileLayout } from '../node';
 import type { TreeOutputState } from '../output';
 import { flushPendingPathEmissions } from '../path/deferred';
 import { createTreePositionContext } from '../reference';
+import type { SubtreeCompileRuntime } from '../runtime';
+import { createSubtreeCompileState } from '../runtime';
 import type { SubtreeCompilerOptions } from '../types';
 import { compileScopeGeometry, prepareScopeGeometry } from './compile';
 import { projectScopeCompileLayouts } from './index';
@@ -24,23 +24,25 @@ import type { ScopeLayoutPlaceholder, ScopeLayoutPlaceholderContext, ScopeVisitH
 
 /** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换 */
 const registerScopeLayoutPlaceholder = (
-  context: TreeCompileContext,
+  runtime: CompileRuntime,
   child: IRScope,
   input: ScopeLayoutPlaceholderContext,
 ): ScopeLayoutPlaceholder => {
   const { index, frame, scopeId } = input;
-  const { locatorPrefix } = frame;
+  const {
+    context: { locatorPrefix },
+  } = frame;
   const scopeIrPath = createCompileChildPath(locatorPrefix, index);
-  const parentFrameDepth = context.execution.namespaceStack.depth - 1;
+  const parentFrameDepth = runtime.state.execution.namespaceStack.depth - 1;
   if (child.id === undefined) {
     return { parentFrameDepth };
   }
 
-  const placeholderLayout = createScopePlaceholderLayout(child.id, frame.scopeChain, {
-    shapes: context.shared.registries.shapeRegistry,
-    boundaries: context.shared.registries.boundaryRegistry,
+  const placeholderLayout = createScopePlaceholderLayout(child.id, frame.context.scopeChain, {
+    shapes: runtime.context.registries.shapeRegistry,
+    boundaries: runtime.context.registries.boundaryRegistry,
   });
-  context.execution.namespaceStack.register(child.id, {
+  runtime.state.execution.namespaceStack.register(child.id, {
     layout: placeholderLayout,
     irPath: [...scopeIrPath, 'id'],
     state: 'scope-placeholder',
@@ -52,30 +54,43 @@ const registerScopeLayoutPlaceholder = (
 
 /** 编排单个 scope 子树，处理命名空间、局部输出容器、延迟 path 和 scope group 输出 */
 export const visitScope = (
-  context: TreeCompileContext,
+  runtime: CompileRuntime,
   output: TreeOutputState,
   host: ScopeVisitHost,
   options: SubtreeCompilerOptions,
   child: IRScope,
   index: number,
-  frame: TreeCompileFrame,
+  frame: SubtreeCompileRuntime,
   generatedOccurrence?: CompileOccurrenceLocator,
   compositeDepth = options.initial.compositeDepth ?? 0,
   semanticOwner?: CompileOwnerKey,
-  compileNested?: (scopeFrame: TreeCompileFrame, preliminaryTransforms: ReadonlyArray<Transform> | undefined) => void,
+  compileNested?: (
+    scopeFrame: SubtreeCompileRuntime,
+    preliminaryTransforms: ReadonlyArray<Transform> | undefined,
+  ) => void,
   preResolvedClipPath?: SceneClipPath,
 ): void => {
-  const { locatorPrefix, scopeDefaults } = frame;
+  const {
+    context: {
+      locatorPrefix,
+      style: { defaults: scopeDefaults },
+    },
+  } = frame;
 
   const themePath =
     generatedOccurrence === undefined
       ? formatPropertyPath([...createCompileChildPath(locatorPrefix, index), 'theme'])
       : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
-  const theme = resolveTheme(frame.theme, child.theme, themePath, context.shared.registries.themeRegistry);
+  const theme = resolveTheme(
+    frame.context.style.theme,
+    child.theme,
+    themePath,
+    runtime.context.registries.themeRegistry,
+  );
   const scopeGeometryContext = {
-    positionContext: createTreePositionContext(context, frame.scopeChain),
+    positionContext: createTreePositionContext(runtime, frame.context.scopeChain),
     irPath: createCompileChildPath(locatorPrefix, index),
-    onWarn: context.workspace.diagnostics.collect,
+    onWarn: runtime.state.workspace.diagnosticCollector.collect,
   };
   const preparation = prepareScopeGeometry(child, scopeGeometryContext);
 
@@ -84,14 +99,14 @@ export const visitScope = (
   const { preliminaryTransforms } = preparation;
   const preliminaryScopeChain =
     preliminaryTransforms === undefined
-      ? frame.scopeChain
-      : context.execution.scopeTransformComposer.append(frame.scopeChain, preliminaryTransforms);
-  const scopeId = context.execution.namespaceStack.enterScope(child.id);
-  const layoutPlaceholder = registerScopeLayoutPlaceholder(context, child, { index, frame, scopeId });
+      ? frame.context.scopeChain
+      : runtime.state.execution.scopeTransformComposer.append(frame.context.scopeChain, preliminaryTransforms);
+  const scopeId = runtime.state.execution.namespaceStack.enterScope(child.id);
+  const layoutPlaceholder = registerScopeLayoutPlaceholder(runtime, child, { index, frame, scopeId });
 
   const didPushNamespaceFrame = child.localNamespace === true;
   if (didPushNamespaceFrame) {
-    context.execution.namespaceStack.pushFrame();
+    runtime.state.execution.namespaceStack.pushFrame();
   }
 
   const {
@@ -103,27 +118,32 @@ export const visitScope = (
     allocationSink: scopeAllocations,
     alignmentGuideSink: scopeAlignmentGuides,
     artifactSink: scopeArtifacts,
-  } = createCompileSinks();
+  } = createSubtreeCompileState();
   let scopeTransforms: Array<Transform> = [];
 
   try {
-    const scopeFrame: TreeCompileFrame = {
-      runtimeInputs: frame.runtimeInputs,
-      childProposal: frame.childProposal,
-      scopeChain: preliminaryScopeChain,
-      primitiveSink: scopePrimitiveSink,
-      locatorPrefix: createCompileChildPath(locatorPrefix, index),
-      layoutSink: scopeLayouts,
-      pathSink: scopePendingPaths,
-      scopeDefaults: resolveScopeDefaults(child.defaults, scopeDefaults),
-      theme,
-      publicationSink: scopePublications,
-      boundsSink: scopeBounds,
-      allocationSink: scopeAllocations,
-      alignmentGuideSink: scopeAlignmentGuides,
-      ...(frame.allocationBoundary === undefined ? {} : { allocationBoundary: frame.allocationBoundary }),
-      artifactSink: scopeArtifacts,
-      ...(semanticOwner === undefined ? {} : { semanticOwner }),
+    const scopeFrame: SubtreeCompileRuntime = {
+      context: {
+        runtimeInputs: frame.context.runtimeInputs,
+        childProposal: frame.context.childProposal,
+        scopeChain: preliminaryScopeChain,
+        locatorPrefix: createCompileChildPath(locatorPrefix, index),
+        ...(frame.context.allocationBoundary === undefined
+          ? {}
+          : { allocationBoundary: frame.context.allocationBoundary }),
+        ...(semanticOwner === undefined ? {} : { semanticOwner }),
+        style: { defaults: resolveScopeDefaults(child.defaults, scopeDefaults), theme },
+      },
+      state: {
+        primitiveSink: scopePrimitiveSink,
+        layoutSink: scopeLayouts,
+        pathSink: scopePendingPaths,
+        publicationSink: scopePublications,
+        boundsSink: scopeBounds,
+        allocationSink: scopeAllocations,
+        alignmentGuideSink: scopeAlignmentGuides,
+        artifactSink: scopeArtifacts,
+      },
     };
     if (compileNested === undefined) {
       host.compileChildren(child.children, scopeFrame, false, generatedOccurrence, compositeDepth);
@@ -131,7 +151,7 @@ export const visitScope = (
       compileNested(scopeFrame, preliminaryTransforms);
     }
 
-    const geometry = compileScopeGeometry(child, preparation, scopeLayouts, context.shared, scopeGeometryContext);
+    const geometry = compileScopeGeometry(child, preparation, scopeLayouts, runtime.context, scopeGeometryContext);
     const intrinsicLayout = geometry.envelope;
     scopeTransforms = geometry.transforms;
 
@@ -141,17 +161,17 @@ export const visitScope = (
         : scopeTransforms.slice(0, scopeTransforms.length - preliminaryTransforms.length);
 
     for (const layout of scopePublications) {
-      const projected = projectPublishedCompileLayout(layout, frame.scopeChain, postTransforms);
-      context.execution.namespaceStack.replacePublishedLayout(layout, projected);
-      frame.publicationSink.push(projected);
+      const projected = projectPublishedCompileLayout(layout, frame.context.scopeChain, postTransforms);
+      runtime.state.execution.namespaceStack.replacePublishedLayout(layout, projected);
+      frame.state.publicationSink.push(projected);
     }
 
-    frame.artifactSink.push(...scopeArtifacts);
+    frame.state.artifactSink.push(...scopeArtifacts);
 
     for (const pendingPath of scopePendingPaths) {
-      pendingPath.scopeChain = context.execution.scopeTransformComposer.insert(
+      pendingPath.scopeChain = runtime.state.execution.scopeTransformComposer.insert(
         pendingPath.scopeChain,
-        frame.scopeChain.length,
+        frame.context.scopeChain.length,
         postTransforms,
       );
     }
@@ -161,49 +181,51 @@ export const visitScope = (
         ? intrinsicLayout
         : projectLayoutWithTransform(
             intrinsicLayout,
-            context.execution.scopeTransformComposer.resolve(scopeTransforms),
+            runtime.state.execution.scopeTransformComposer.resolve(scopeTransforms),
           );
-    frame.layoutSink.push(...projectScopeCompileLayouts(child, intrinsicLayout, scopeLayouts, scopeTransforms));
+    frame.state.layoutSink.push(...projectScopeCompileLayouts(child, intrinsicLayout, scopeLayouts, scopeTransforms));
     if (child.id !== undefined) {
       const globalEnvelope = projectLayoutWithTransform(
         finalEnvelope,
-        context.execution.scopeTransformComposer.resolve(frame.scopeChain),
+        runtime.state.execution.scopeTransformComposer.resolve(frame.context.scopeChain),
       );
-      context.execution.namespaceStack.replaceLayout(
+      runtime.state.execution.namespaceStack.replaceLayout(
         child.id,
         globalEnvelope,
         layoutPlaceholder.parentFrameDepth,
         scopeId,
       );
-      frame.publicationSink.push(globalEnvelope);
+      frame.state.publicationSink.push(globalEnvelope);
     }
 
-    flushPendingPathEmissions(context, output, scopePendingPaths);
+    flushPendingPathEmissions(runtime, output, scopePendingPaths);
     options.captureScopeTargets?.(
       child,
-      context.execution.namespaceStack,
-      context.execution.scopeTransformComposer.append(frame.scopeChain, scopeTransforms),
+      runtime.state.execution.namespaceStack,
+      runtime.state.execution.scopeTransformComposer.append(frame.context.scopeChain, scopeTransforms),
     );
 
     for (const contribution of effectiveAllocations(scopeAllocations)) {
       pushAllocation(
-        frame.allocationSink,
-        contribution.boundsPoints.map(point => context.execution.scopeTransformComposer.apply(point, scopeTransforms)),
-        frame.allocationBoundary,
+        frame.state.allocationSink,
+        contribution.boundsPoints.map(point =>
+          runtime.state.execution.scopeTransformComposer.apply(point, scopeTransforms),
+        ),
+        frame.context.allocationBoundary,
       );
     }
 
     const structuralGuides = resolveStructuralAlignmentGuides(scopeAlignmentGuides);
     const transformedGuides = transformAlignmentGuides(structuralGuides, scopeTransforms);
-    if (transformedGuides !== undefined) frame.alignmentGuideSink.push(...transformedGuides);
+    if (transformedGuides !== undefined) frame.state.alignmentGuideSink.push(...transformedGuides);
   } finally {
-    context.execution.namespaceStack.leaveScope();
+    runtime.state.execution.namespaceStack.leaveScope();
     if (didPushNamespaceFrame) {
-      context.execution.namespaceStack.popFrame();
+      runtime.state.execution.namespaceStack.popFrame();
     }
   }
 
-  const clipRef = emitScopeGroup(context, output, child, {
+  const clipRef = emitScopeGroup(runtime, output, child, {
     index,
     scopeTransforms,
     scopePrimitiveSink,
@@ -227,14 +249,14 @@ export const visitScope = (
             children: [{ type: 'rect', ...rectangle, fill: 'black' }],
           },
         ],
-        context.workspace.clipRegistry.getResources(),
+        runtime.state.workspace.clipRegistry.getResources(),
       );
       if (projected !== undefined)
-        frame.boundsSink.push({ boundsPoints: allocationPointsOf(projected), decoration: true });
+        frame.state.boundsSink.push({ boundsPoints: allocationPointsOf(projected), decoration: true });
     } else {
-      frame.boundsSink.push({
+      frame.state.boundsSink.push({
         boundsPoints: contribution.boundsPoints.map(point =>
-          context.execution.scopeTransformComposer.apply(point, scopeTransforms),
+          runtime.state.execution.scopeTransformComposer.apply(point, scopeTransforms),
         ),
         shadow: contribution.shadow,
       });

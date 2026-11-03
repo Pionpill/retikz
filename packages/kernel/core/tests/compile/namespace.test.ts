@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { DuplicateRegisterInfo } from '../../src/compile/context';
-import { NamespaceStack } from '../../src/compile/context';
 import type { CompiledNodeLayout } from '../../src/compile/layout';
+import type { DuplicateRegisterInfo } from '../../src/compile/runtime';
+import { NamespaceStack } from '../../src/compile/runtime';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const makeLayout = (_id: string, x = 0, y = 0): CompiledNodeLayout => ({

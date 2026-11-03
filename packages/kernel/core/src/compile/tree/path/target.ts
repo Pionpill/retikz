@@ -10,8 +10,8 @@ import type {
   IRTarget,
 } from '../../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
-import type { NodeBoundaryContext } from '../../context';
-import { createNodeBoundaryContext } from '../../context';
+import type { NodeBoundaryStore } from '../../runtime';
+import { createNodeBoundaryStore } from '../../runtime';
 import type { ComposedScopeTransform } from '../../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../../shared';
 import { boundaryPointOf, clipNodePolyline, resolveAnchorRef } from '../node';
@@ -68,7 +68,7 @@ export const targetKeyOf = (target: IRTarget): string => {
 export const pathTargetViewOf = (
   targets: ReadonlyMap<string, TargetResolution>,
   warn?: (code: string, message: string, node?: NodeReferenceGeometry) => void,
-  nodeBoundaryContext: NodeBoundaryContext = createNodeBoundaryContext(),
+  nodeBoundaryStore: NodeBoundaryStore = createNodeBoundaryStore(),
   resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform = composeScopeTransform,
 ): PathTargetView => {
   const byTarget = new Map<string, TargetResolution>();
@@ -101,7 +101,7 @@ export const pathTargetViewOf = (
         target.boundary ?? node.boundary,
         binding.boundaryResolution,
         warn === undefined ? undefined : (code, message) => warn(code, message, node),
-        nodeBoundaryContext.get(node),
+        nodeBoundaryStore.get(node),
       );
       return clipped.map(position => inverseScopeTransform(position, transform));
     },
@@ -121,9 +121,9 @@ export const pathTargetViewOf = (
               boundary,
               binding.boundaryResolution,
               warn === undefined ? undefined : (code, message) => warn(code, message, node),
-              nodeBoundaryContext.get(node),
+              nodeBoundaryStore.get(node),
             )
-          : resolveAnchorRef(node, target.anchor, boundary, binding.boundaryResolution, nodeBoundaryContext.get(node));
+          : resolveAnchorRef(node, target.anchor, boundary, binding.boundaryResolution, nodeBoundaryStore.get(node));
       const global = addOffset(base, target.offset);
 
       return scopeChain.length === 0 ? global : inverseScopeTransform(global, transform);

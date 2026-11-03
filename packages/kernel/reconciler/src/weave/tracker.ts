@@ -8,21 +8,14 @@ import type { WeaveNode, WeaveRoot, WeaveScopeNode } from './types';
 
 /** 维护编译读取、双向依赖与批次失效，不编辑声明结构或执行编译 */
 export class WeaveTracker {
-  /** Core binding 对象到稳定节点的映射，跨批保留，确认或回滚时清理失效绑定 */
-  private readonly bindings = new Map<object, WeaveNode>();
   /** 本批已失效节点，用于传播去重与阻止缓存复用，不是待执行队列 */
   private readonly dirtyNodes = new Set<WeaveNode>();
 
   constructor(
     private readonly root: WeaveRoot,
-    private transaction: WeaveTransaction,
+    private readonly transaction: WeaveTransaction,
+    private readonly bindings: Map<object, WeaveNode>,
   ) {}
-
-  /** 开始新批次，切换事务并清空上批失效标记 */
-  beginBatch(transaction: WeaveTransaction): void {
-    this.transaction = transaction;
-    this.dirtyNodes.clear();
-  }
 
   /** 将节点登记为可被 Core 读取记录引用的生产者 */
   registerNodeBinding(node: WeaveNode): void {

@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition } from '../contract';
 import type { IRScene } from '../schemas';
-import { createTreeCompileContext } from './context';
+import { createCompileRuntime } from './runtime';
 import type { CompileWarning, CompositeArtifactOf } from './shared';
 import { formatCompileWarning } from './shared';
 import { CompileManager } from './tree';
@@ -41,8 +41,8 @@ export const compileSceneSnapshot = <const TComposites extends ReadonlyArray<Any
   compileOptions?: Omit<CompileOptions<TComposites>, 'onWarn'>,
   executeOptions: ExecuteOptions = {},
 ): SceneCompilationSnapshot<TComposites> => {
-  const context = createTreeCompileContext(ir, compileOptions ?? {}, executeOptions);
-  return new CompileManager(context).compileScene<TComposites>(ir);
+  const runtime = createCompileRuntime(ir, compileOptions ?? {}, executeOptions);
+  return new CompileManager(runtime).compileScene<TComposites>(ir);
 };
 
 /**

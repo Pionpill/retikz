@@ -93,15 +93,25 @@ Core needs a way to measure text, resolve shapes, and collect shared drawing res
 - Definition: an implementation of a shape, path, or composite capability.
 - Registry: a lookup table used to find a Definition by name during this compilation.
 
-`createSharedCompileContext` assembles built-in and caller-provided definitions into read-only registries and retains measurement services and numeric settings. The internal `createTreeCompileContext` uses that shared context to create a per-call workspace: the root theme, isolated geometry state, paint / clip resources, and warning collection. Without injected text measurement, it uses an approximate built-in measurer. Core itself does not read the DOM.
+`createSharedCompileContext` assembles built-in and caller-provided definitions into read-only registries and retains measurement services and numeric settings. The internal `createCompileRuntime` uses that shared context to create a per-call workspace: the root theme, isolated geometry state, paint / clip resources, and warning collection. Without injected text measurement, it uses an approximate built-in measurer. Core itself does not read the DOM.
 
-`TreeCompileContext` groups state by lifetime into `shared`, `composite`, `workspace`, `execution`, `initial`, and `padding`. `shared` holds registries, host services, and configuration reusable across compilations. `composite` shares composite handles and measurement caches only between a root compilation and its probes. `initial` holds the entry theme and composite inputs; `padding` applies only to the final automatic Scene viewport. Input options still use definition-array fields such as `shapes` and `clips`.
+`CompileRuntime` separates stable inputs in `context` from mutable `state`. `CompileContext` extends `SharedCompileContext` directly with the entry `theme`, `compositeInputs`, and final Scene viewport `padding`, retaining the `registries`, `host`, `layout`, and `limits` groups. Probes reuse these groups, override the entry theme and component inputs, and clear `padding` to keep final viewport configuration out of subtree measurement. Input options keep definition arrays such as `shapes` and `clips`.
 
-Full compilation, element compilation, and probes each create an isolated base workspace through `createWorkspaceCompileContext`, holding `nodeBoundaryContext`, `paintRegistry`, `clipRegistry`, and `diagnostics`. Tree compilation keeps that same workspace contract and stores its namespace stack, optional provenance tracking, transform cache, and diagnostic occurrence binding in `execution`. `createTreeCompileEnvironment` creates this tree state and binds diagnostic collection to the current occurrence without mutating the supplied workspace. Probes create independent workspaces and tree state while reusing the parent session. Diagnostics are appended through `diagnostics.collect` and exposed through the read-only `diagnostics.warnings`; the external `CompileOptions.onWarn` still receives diagnostics after success.
+State is grouped by its isolation boundary:
+
+| Group       | Contents                                                                    | During a probe                                            |
+| ----------- | --------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `workspace` | Boundary caches, paint / clip resources, diagnostic collection              | Created independently                                     |
+| `execution` | Namespace stack, provenance, transform cache, diagnostic occurrence binding | Namespace is forked; other state is created independently |
+| `composite` | Component handles, measurement cache, replay tokens                         | Shared with the owning root compilation                   |
+
+Full compilation, element compilation, and probes create isolated workspaces through `createWorkspaceCompileState`. `createCompileEnvironment` creates tree execution state and binds diagnostic collection to the current occurrence without modifying the supplied base workspace. Diagnostics are appended through `diagnosticCollector.collect` and read through `diagnosticCollector.warnings`; external `CompileOptions.onWarn` callbacks still receive diagnostics after success.
+
+Each recursive subtree uses `SubtreeCompileRuntime`: its `context` holds effective styles, accumulated transforms, layout constraints, and declaration positions; its `state` collects primitives, layouts, bounds, deferred paths, and artifacts. Entering a child Scope derives a new inherited context. Output containers are isolated or explicitly shared according to their subtree ownership. Reconciler supplies only `ElementCompileOptions` to element compilation. Core creates its workspace internally and returns a complete result, so Reconciler does not need tree traversal state.
 
 After successful compilation, repeated declarations of an ID in the same namespace produce one `DUPLICATE_NODE_ID` diagnostic. Its message lists every location in declaration order, and `path` points to the last declaration; the last declaration still wins name resolution. Independent namespaces are handled separately. Probed declarations count toward the actual destination namespace only when selected for replay; discarded probes publish no diagnostics.
 
-Contexts hold configuration and computation state: `compile/context` owns namespace stacks, boundary and transform caches, and composite sessions. Shared layout result contracts live in `compile/layout.ts`. Node layout projection, position-reference adaptation, and element execution remain in tree compilation. Tree compilation depends on contexts; contexts do not import tree compilation implementations.
+Stable environments and base compilation state are owned by `compile/runtime`, including namespaces, boundary caches, transform caches, and component state. Shared layout result contracts live in `compile/layout.ts`. Layout projection, position reference adaptation, and element execution remain in tree compilation. Tree compilation depends on these contracts; the context owner does not import tree implementations.
 
 The shared context has four groups:
 
@@ -124,12 +134,12 @@ Traversal also creates state for this execution: emitted primitives, accumulated
 
 <SourceLinks
   sources={[
-    { label: 'Dependency and resource context', path: 'packages/kernel/core/src/compile/context/tree.ts' },
+    { label: 'Dependency and resource context', path: 'packages/kernel/core/src/compile/runtime/runtime.ts' },
     {
       label: 'Register built-in and external definitions',
       path: 'packages/kernel/core/src/providers/registry.ts',
     },
-    { label: 'Traversal state and named lookup', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Traversal state and named lookup', path: 'packages/kernel/core/src/compile/tree/runtime.ts' },
   ]}
 />
 
@@ -316,7 +326,7 @@ Deferred work runs when its enclosing group finishes. It supports this example's
 
 <SourceLinks
   sources={[
-    { label: 'Queue and emit pending paths', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Queue and emit pending paths', path: 'packages/kernel/core/src/compile/tree/runtime.ts' },
     { label: 'Placeholders and stable sorting', path: 'packages/kernel/core/src/compile/orchestration/primitive.ts' },
     {
       label: 'Functional tests for order and failed paths',
@@ -354,7 +364,7 @@ Composite entries join compilation through registered Definitions, and the basic
   sources={[
     {
       label: 'Scope traversal and finalization',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/runtime.ts',
     },
     { label: 'Namespace registration, lookup, and pop', path: 'packages/kernel/core/src/compile/namespace.ts' },
   ]}
@@ -398,7 +408,7 @@ Start in `compileSceneSnapshot` to see context creation, traversal, and assembly
     { label: 'From the synchronous entry to full compilation', path: 'packages/kernel/core/src/compile/compile.ts' },
     {
       label: 'Child dispatch, recursion, and completion',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      path: 'packages/kernel/core/src/compile/tree/runtime.ts',
     },
   ]}
 />
@@ -496,8 +506,8 @@ These entries provide Core's scheduling primitives. Reconciler owns name mapping
 
 <SourceLinks
   sources={[
-    { label: 'Element types and context', path: 'packages/kernel/core/src/compile/context/element.ts' },
-    { label: 'Shared compilation context', path: 'packages/kernel/core/src/compile/context/shared.ts' },
+    { label: 'Element types and context', path: 'packages/kernel/core/src/compile/runtime/element.ts' },
+    { label: 'Shared compilation context', path: 'packages/kernel/core/src/compile/runtime/context.ts' },
     { label: 'Local output assembly', path: 'packages/kernel/core/src/compile/output.ts' },
     { label: 'Scene and metadata assembly', path: 'packages/kernel/core/src/compile/scene/output.ts' },
   ]}
@@ -515,6 +525,8 @@ Basic elements create nodes and bindings in declaration order. Node and Coordina
 
 Reconciler then asks Core to assemble the complete output. `CompileProvenanceTracker` records primitive ownership. Assembly reuses the original primitives, while replay creates separate instances when provenance is collected. Final provenance paths are paired with the sorted Scene without another full compilation. The Reconciler session retains the previous result if preparation fails and publishes the matching tree and output only after success.
 
+The Weave coordinator also separates stable configuration from mutable state. Its context reuses Core's shared environment. Persistent state holds the declaration root, Scope ID allocator, stable binding map, and latest completed result. Each batch creates its own transaction, editor, dependency tracker, namespace, provenance, and diagnostic collector. Candidate input belongs to the batch; only final confirmation replaces persistent input and the completed result. Failure or rollback releases the batch state. Component measurement caches and replay tokens remain local to a Core compilation and are not reused across batches.
+
 The internal Weave reconciler accepts WeaveBatch on a mounted Root: it applies insert, update and remove operations in order, then computes from the final inputs. Context follows declaration links and dependency invalidation follows consumers. Scope preparation, child layout, envelopes and final projections follow Core's evaluation order, preserving deferred Path references. Unaffected compiled products can be reused while their inputs, declaration positions and name bindings remain valid. Diagnostics that require regeneration cause the relevant elements to be recomputed. Invalidation is conservative: a Scope change may recompute its entire subtree, without style/layout filtering.
 
 Updates return complete output with commit, finish and rollback operations. Preparation preserves committed state; rollback remains available after commit until final confirmation releases recovery references. Rebuilding name indexes, provenance and output may still traverse the whole tree, so local compilation does not imply local total update cost.
@@ -525,6 +537,7 @@ Reconciler `replace` accepts complete IR and recompiles it; `update` accepts a `
   sources={[
     { label: 'Weave construction and Core calls', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
     { label: 'Weave state ownership', path: 'packages/kernel/reconciler/src/weave/types.ts' },
+    { label: 'Persistent state and batch isolation', path: 'packages/kernel/reconciler/src/weave/runtime.ts' },
     { label: 'Candidate isolation and recovery', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
     { label: 'Reconciler session and publication boundary', path: 'packages/kernel/reconciler/src/session.ts' },
   ]}

@@ -1,8 +1,8 @@
 import type { AxisAlignedBounds } from '@retikz/math';
 
 import type { ScenePrimitive } from '../contract';
-import type { SharedCompileContext } from './context';
 import { createClipRegistry, createPaintRegistry, importSceneResources } from './resource';
+import type { SharedCompileContext } from './runtime';
 import { collectLayoutBounds } from './scene';
 import type { CompileBounds, CompileOutput } from './shared';
 

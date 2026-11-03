@@ -1,5 +1,5 @@
 export { compileSceneSnapshot, compileToScene } from './compile';
-export { createSharedCompileContext } from './context';
+export { createSharedCompileContext } from './runtime';
 export type {
   CompileContextHost,
   CompileContextLayout,
@@ -7,8 +7,8 @@ export type {
   CompileContextRegistries,
   SharedCompileContext,
   SharedCompileContextOptions,
-} from './context';
-export type { CompileStyle, ElementCompileOptions, ElementCompileReference, ElementCompileResult } from './context';
+} from './runtime';
+export type { CompileStyle, ElementCompileOptions, ElementCompileReference, ElementCompileResult } from './runtime';
 export * from './output';
 export * from './provenance';
 export { projectCompileReference } from './tree/reference';

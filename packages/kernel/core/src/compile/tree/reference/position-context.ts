@@ -6,8 +6,8 @@ import { boundaryKey } from '../../../resolve';
 import type { PositionReferenceView, PositionTargetResolveContext } from '../../../resolve/position';
 import { resolvePositionTarget } from '../../../resolve/position';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../../schemas';
-import type { NodeBoundaryContext } from '../../context';
 import type { CompiledNodeLayout } from '../../layout';
+import type { NodeBoundaryStore } from '../../runtime';
 import type { ComposedScopeTransform } from '../../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../../shared';
 import { createNodeReferenceGeometry, resolveAnchorRef } from '../node';
@@ -52,7 +52,7 @@ type InputPositionResolveContext = Readonly<{
       }>
     | undefined;
   /** 与节点布局及路径裁剪共享的几何消费状态 */
-  nodeBoundaryContext?: NodeBoundaryContext;
+  nodeBoundaryStore?: NodeBoundaryStore;
   /** 相对定位默认距离 */
   nodeDistance: number;
   /** 当前 Scope 累积 transform */
@@ -78,7 +78,7 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
       ? undefined
       : {
           state: entry.state,
-          node: createNodeReferenceGeometry(entry.layout, input.nodeBoundaryContext, id, entry.irPath),
+          node: createNodeReferenceGeometry(entry.layout, input.nodeBoundaryStore, id, entry.irPath),
         };
   };
 
@@ -101,7 +101,7 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
       target.anchor,
       target.boundary ?? node.boundary,
       boundaryResolution,
-      input.nodeBoundaryContext?.get(node),
+      input.nodeBoundaryStore?.get(node),
     );
   };
 

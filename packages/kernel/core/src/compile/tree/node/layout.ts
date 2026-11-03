@@ -18,9 +18,9 @@ import { resolvePosition, resolvePositionTargetWorld } from '../../../resolve/po
 import { resolveFont, resolveTextLineHeight } from '../../../resolve/text';
 import type { IRAnchorPosition, IRPosition } from '../../../schemas';
 import { CenterAnchor } from '../../../shared';
-import type { NodeBoundaryContext } from '../../context';
-import { createNodeBoundaryContext } from '../../context';
 import type { CompiledNodeLayout } from '../../layout';
+import type { NodeBoundaryStore } from '../../runtime';
+import { createNodeBoundaryStore } from '../../runtime';
 import {
   DEFAULT_FONT_SIZE,
   composeScopeTransform,
@@ -68,7 +68,7 @@ const placeAnchorPositionedLayout = (
   provisional: CompiledNodeLayout,
   positionContext: PositionTargetResolveContext,
   transform: ComposedScopeTransform,
-  nodeBoundaryContext: NodeBoundaryContext,
+  nodeBoundaryStore: NodeBoundaryStore,
 ): CompiledNodeLayout => {
   if (node.id === position.target.id || node.aliasIds?.includes(position.target.id)) {
     throw new RetikzCoreError(
@@ -106,7 +106,7 @@ const placeAnchorPositionedLayout = (
     position.selfAnchor ?? CenterAnchor.Center,
     node.boundary,
     undefined,
-    nodeBoundaryContext.get(provisional),
+    nodeBoundaryStore.get(provisional),
   );
   const deltaGlobal: IRPosition = [target.referencePoint[0] - selfPoint[0], target.referencePoint[1] - selfPoint[1]];
   const deltaLocal = localDeltaOf(deltaGlobal, [projected.geometry.rect.x, projected.geometry.rect.y], transform);
@@ -133,7 +133,7 @@ type NodeLayoutContext = {
   /** 文本测量函数 */
   measureText: TextMeasurer;
   /** 当前编译共享的连接面缓存与诊断状态 */
-  nodeBoundaryContext?: NodeBoundaryContext;
+  nodeBoundaryStore?: NodeBoundaryStore;
   /** Position/Target Source IR 确定化上下文 */
   positionContext: PositionTargetResolveContext;
   /** preset 与 rem 字号解析的根字号 */
@@ -161,7 +161,7 @@ export const compileNodeResolution = (resolution: NodeResolution, context: NodeL
     texLowering,
     warn,
     allocationWidthProposal,
-    nodeBoundaryContext = createNodeBoundaryContext(),
+    nodeBoundaryStore = createNodeBoundaryStore(),
   } = context;
 
   // 缩放影响节点尺寸与字体。
@@ -410,8 +410,8 @@ export const compileNodeResolution = (resolution: NodeResolution, context: NodeL
             },
     boundary: boundaryResolution,
   };
-  nodeBoundaryContext.get(provisional).warn = warn;
-  nodeBoundaryContext.get(provisional).irPath = resolution.irPath;
+  nodeBoundaryStore.get(provisional).warn = warn;
+  nodeBoundaryStore.get(provisional).irPath = resolution.irPath;
   const resolved: CompiledNodeLayout = {
     ...provisional,
     labels: layoutNodeLabels(provisional, measuredLabels),
@@ -424,7 +424,7 @@ export const compileNodeResolution = (resolution: NodeResolution, context: NodeL
         resolved,
         positionContext,
         context.composedTransform ?? composeScopeTransform(scopeChain),
-        nodeBoundaryContext,
+        nodeBoundaryStore,
       )
     : resolved;
   return {

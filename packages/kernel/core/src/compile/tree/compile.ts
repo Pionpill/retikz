@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition } from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
-import type { TreeCompileContext } from '../context';
+import type { CompileRuntime } from '../runtime';
 import { assembleSceneCompilationSnapshot } from '../scene';
 import type { SceneCompilationSnapshot } from '../types';
 import { SubtreeCompiler } from './subtree';
@@ -8,25 +8,24 @@ import type { SubtreeCompilation, SubtreeCompileOptions } from './types';
 
 /** 管理一次全量编译及其隔离试编译的会话、执行环境和最终快照 */
 export class CompileManager {
-  constructor(private readonly context: TreeCompileContext) {}
+  constructor(private readonly runtime: CompileRuntime) {}
 
   /** 完成根子树并组装 Scene；padding 只在最终组装时使用 */
   compileScene<TComposites extends ReadonlyArray<AnyCompositeDefinition>>(
     root: IRScene,
   ): SceneCompilationSnapshot<TComposites> {
-    const { provenanceTracker } = this.context.execution;
     const { primitives, layoutBounds, artifacts } = this.compileSubtree(root.children);
-    const { paintRegistry, clipRegistry, diagnostics } = this.context.workspace;
+    const { paintRegistry, clipRegistry, diagnosticCollector } = this.runtime.state.workspace;
     return assembleSceneCompilationSnapshot<TComposites>({
       root,
       primitives,
       resources: [...paintRegistry.getResources(), ...clipRegistry.getResources()],
       layoutBounds,
-      round: this.context.shared.layout.round,
+      round: this.runtime.context.layout.round,
       artifacts,
-      diagnostics: diagnostics.warnings,
-      provenanceTracker,
-      padding: this.context.padding,
+      diagnostics: diagnosticCollector.warnings,
+      provenanceTracker: this.runtime.state.execution.provenanceTracker,
+      padding: this.runtime.context.padding,
     });
   }
 
@@ -34,7 +33,7 @@ export class CompileManager {
   private compileSubtree(
     children: ReadonlyArray<IRChild>,
     options: SubtreeCompileOptions = {},
-    context: TreeCompileContext = this.context,
+    runtime: CompileRuntime = this.runtime,
   ): SubtreeCompilation {
     const {
       probe,
@@ -49,7 +48,7 @@ export class CompileManager {
     } = options;
     return new SubtreeCompiler(
       children,
-      context,
+      runtime,
       {
         compileSubtree: this.compileSubtree.bind(this),
       },
@@ -64,8 +63,8 @@ export class CompileManager {
           compositeDepth,
           generated,
           proposal,
-          theme: context.initial.theme,
-          compositeInputs: context.initial.compositeInputs,
+          theme: runtime.context.theme,
+          compositeInputs: runtime.context.compositeInputs,
         },
       },
     ).run();

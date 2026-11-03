@@ -2,9 +2,9 @@ import type { CompositeCompileContext } from '../../../contract';
 import { CompileExpansionKind, LayoutChildProbeKind } from '../../../contract';
 import { guardProviderOutput } from '../../../resolve';
 import { createCompositeContractError, isFatalProbeError } from '../../../resolve/diagnostics';
-import type { CompositeReplayMaterializeContext } from '../../context';
+import type { CompositeReplayMaterializeContext } from '../../runtime';
 import { freezeOccurrence, wrapLayoutProbeError } from '../../shared';
-import type { TreeCompileFrame } from '../frame';
+import type { SubtreeCompileRuntime } from '../runtime';
 import { createLayoutChildFailure } from './failure';
 import { snapshotCompositeLayoutChild } from './handle';
 import { boundsRectOf, contributionOfBounds, projectContribution } from './layout';
@@ -18,15 +18,15 @@ export type CompositeProbeSequence = { /** 下一个探测位置序号 */ index:
 /** 创建当前主题下的测量操作，探测序号与会话缓存保持回调级共享 */
 export const createCompositeMeasurementMethods = (
   probeContext: CompositeProbeContext,
-  frame: TreeCompileFrame,
+  frame: SubtreeCompileRuntime,
   probeSequence: CompositeProbeSequence,
-  theme: TreeCompileFrame['theme'],
+  theme: SubtreeCompileRuntime['context']['style']['theme'],
 ): Pick<CompositeCompileContext, 'measureChild' | 'layoutChild'> => {
-  const { context, owner, key, occurrence, compositeDepth } = probeContext;
+  const { runtime, owner, key, occurrence, compositeDepth } = probeContext;
   return {
     measureChild: (nextChild, proposal, axis) => {
       const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
-      const inputEntry = context.composite.outputChildren.get(nextChild);
+      const inputEntry = runtime.state.composite.outputChildren.get(nextChild);
       if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
         throw createCompositeContractError(`${owner.label} measureChild requires a child from this callback`);
       const inputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
@@ -45,20 +45,20 @@ export const createCompositeMeasurementMethods = (
         ],
       });
       const cacheKey = JSON.stringify([
-        context.composite.identityOf(inputs?.source ?? nextChild),
-        inputs === undefined ? context.composite.identityOf(owner) : null,
+        runtime.state.composite.identityOf(inputs?.source ?? nextChild),
+        inputs === undefined ? runtime.state.composite.identityOf(owner) : null,
         inputs?.sourcePath,
         clonedChild,
         axis,
         clonedProposal,
-        frame.scopeDefaults,
+        frame.context.style.defaults,
         theme,
-        frame.scopeChain,
-        inputs?.bindings.map(input => [input.path, context.composite.identityOf(input.input)]),
-        context.composite.identityOf(context.execution.namespaceStack.measurementIdentity),
+        frame.context.scopeChain,
+        inputs?.bindings.map(input => [input.path, runtime.state.composite.identityOf(input.input)]),
+        runtime.state.composite.identityOf(runtime.state.execution.namespaceStack.measurementIdentity),
         compositeDepth,
       ]);
-      const cached = context.composite.getMeasurement(cacheKey);
+      const cached = runtime.state.composite.getMeasurement(cacheKey);
       if (cached !== undefined) {
         return { kind: 'resolved', result: cached };
       }
@@ -68,8 +68,8 @@ export const createCompositeMeasurementMethods = (
           clonedChild,
           clonedProposal,
           probeOccurrence,
-          frame.scopeChain,
-          frame.scopeDefaults,
+          frame.context.scopeChain,
+          frame.context.style.defaults,
           theme,
           inputs,
           undefined,
@@ -77,12 +77,12 @@ export const createCompositeMeasurementMethods = (
         );
         const allocation = laid.contribution ?? contributionOfBounds(axis, boundsRectOf(laid));
         const result = projectContribution(allocation, clonedProposal);
-        context.composite.setMeasurement(cacheKey, result);
+        runtime.state.composite.setMeasurement(cacheKey, result);
         return { kind: 'resolved', result };
       } catch (thrown) {
         if (isFatalProbeError(thrown)) throw thrown;
         const failure = createLayoutChildFailure(
-          context.composite.failures,
+          runtime.state.composite.failures,
           owner,
           wrapLayoutProbeError(thrown),
           'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type,
@@ -93,7 +93,7 @@ export const createCompositeMeasurementMethods = (
     },
     layoutChild: (nextChild, proposal) => {
       const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
-      const inputEntry = context.composite.outputChildren.get(nextChild);
+      const inputEntry = runtime.state.composite.outputChildren.get(nextChild);
       if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
         throw createCompositeContractError(
           `${owner.label} layoutChild requires an authored or bound child from this callback`,
@@ -119,8 +119,8 @@ export const createCompositeMeasurementMethods = (
           clonedChild,
           clonedProposal,
           probeOccurrence,
-          frame.scopeChain,
-          frame.scopeDefaults,
+          frame.context.scopeChain,
+          frame.context.style.defaults,
           theme,
           false,
           probeInputs,
@@ -142,8 +142,8 @@ export const createCompositeMeasurementMethods = (
             true,
             probeInputs,
           ).transaction;
-        context.composite.replayTransactions.set(layoutResult.replay, transaction);
-        context.composite.layoutResults.set(layoutResult, { owner, replay: layoutResult.replay });
+        runtime.state.composite.replayTransactions.set(layoutResult.replay, transaction);
+        runtime.state.composite.layoutResults.set(layoutResult, { owner, replay: layoutResult.replay });
 
         return Object.freeze({ kind: LayoutChildProbeKind.Resolved, result: layoutResult });
       } catch (thrown) {
@@ -153,7 +153,7 @@ export const createCompositeMeasurementMethods = (
         const fallbackProviderKey =
           'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type;
         const failure = createLayoutChildFailure(
-          context.composite.failures,
+          runtime.state.composite.failures,
           owner,
           error,
           fallbackProviderKey,

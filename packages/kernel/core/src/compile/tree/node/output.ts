@@ -2,7 +2,7 @@ import type { ScenePrimitive } from '../../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../../schemas';
 import { Anchor } from '../../../shared';
 import { rect } from '../../../shared/geometry';
-import type { SharedCompileContext, WorkspaceCompileContext } from '../../context';
+import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';
 import { outerRectOf } from './anchors';
 import { emitNodePrimitives } from './emit';
 import { labelExtentPoints } from './label/geometry';
@@ -12,7 +12,7 @@ import type { NodeCompilation } from './types';
 export const emitNodeOutput = (
   compilation: NodeCompilation,
   shared: SharedCompileContext,
-  workspace: WorkspaceCompileContext,
+  workspace: WorkspaceCompileState,
 ): {
   primitives: Array<ScenePrimitive>;
   bounds: Array<{ boundsPoints: Array<IRPosition>; shadow?: CanonicalDropShadow }>;

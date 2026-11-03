@@ -91,15 +91,25 @@ Core 和 Reconciler 使用 Foundation 的 `createIdAllocator(prefix)` 分配树�
 - Definition：一种形状、路径或复合组件的具体能力定义。
 - registry：本次编译按名称查找 Definition 的注册表。
 
-`createSharedCompileContext` 把内置能力与调用方注入的定义整理到只读注册表，并保存测量服务和数值配置。内部的 `createTreeCompileContext` 基于这个环境准备单次工作区，解析根主题，建立独占的几何状态、paint / clip 资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
+`createSharedCompileContext` 把内置能力与调用方注入的定义整理到只读注册表，并保存测量服务和数值配置。内部的 `createCompileRuntime` 基于这个环境准备单次工作区，解析根主题，建立独占的几何状态、paint / clip 资源表和警告收集入口。没有注入文字测量时，使用内置近似度量；Core 自身不读取 DOM。
 
-`TreeCompileContext` 按生命周期组织为 `shared`、`composite`、`workspace`、`execution`、`initial` 和 `padding`。`shared` 持有可跨编译复用的注册表、宿主服务和配置；`composite` 仅在根编译与其试编译之间共享组件句柄和测量缓存；`initial` 保存入口主题与组件输入；`padding` 仅用于最终 Scene 自动视口。输入配置仍使用 `shapes`、`clips` 等定义数组字段。
+`CompileRuntime` 将稳定输入 `context` 与可变状态 `state` 分开。`CompileContext` 在 `SharedCompileContext` 上直接扩展入口主题 `theme`、组件输入 `compositeInputs` 和最终 Scene 自动视口留白 `padding`，保留 `registries`、`host`、`layout`、`limits` 功能分组。试编译复用这些分组，覆盖入口主题与组件输入，并清空 `padding`，避免最终视口配置参与子树测量。输入配置仍使用 `shapes`、`clips` 等定义数组字段。
 
-全量编译、单元素编译和探测计算都通过 `createWorkspaceCompileContext` 创建独立工作区，持有 `nodeBoundaryContext`、`paintRegistry`、`clipRegistry` 和 `diagnostics`。树编译使用相同的工作区契约，将名称栈、可选来源追踪、变换缓存和诊断来源绑定放在 `execution` 中。`createTreeCompileEnvironment` 创建树状态并为诊断收集绑定当前来源，不修改传入的工作区。试编译创建独立工作区和树状态，复用外层会话。诊断通过 `diagnostics.collect` 追加，通过只读的 `diagnostics.warnings` 查看；对外的 `CompileOptions.onWarn` 仍在成功后接收诊断。
+`state` 按隔离范围分为三组：
+
+| 分组        | 持有内容                                  | 试编译时                    |
+| ----------- | ----------------------------------------- | --------------------------- |
+| `workspace` | 连接面缓存、paint / clip 资源、诊断收集器 | 独立创建                    |
+| `execution` | 名称栈、来源记录、变换缓存、诊断来源绑定  | fork 名称环境，其余独立创建 |
+| `composite` | 组件句柄、测量缓存与重放凭证              | 与所属根编译共享            |
+
+全量编译、单元素编译和探测计算通过 `createWorkspaceCompileState` 创建独立工作区。`createCompileEnvironment` 为树执行建立状态，并将诊断收集绑定到当前来源，不修改传入的基础工作区。诊断通过 `diagnosticCollector.collect` 追加，通过 `diagnosticCollector.warnings` 查看；对外的 `CompileOptions.onWarn` 仍在成功后接收诊断。
+
+递归子树使用 `SubtreeCompileRuntime`：`context` 保存有效样式、累计变换、布局约束和声明位置；`state` 收集当前子树的图元、布局、边界、延迟路径和产物。进入子 Scope 时派生新的继承环境，输出容器按所属子树隔离或显式共享。Reconciler 调用单元素入口时只提供 `ElementCompileOptions`，Core 在调用内部创建工作区并返回完整结果，不要求 Reconciler 持有树遍历状态。
 
 同一命名空间内重复声明的 ID 在编译成功后汇总为一条 `DUPLICATE_NODE_ID` 诊断。消息按声明顺序列出全部位置，`path` 指向最后一次声明；名称绑定仍由最后一次声明覆盖。独立命名空间中的同名 ID 分别处理。试编译的声明仅在选中重放后计入实际目标命名空间，未选中的试编译不发布诊断。
 
-上下文只持有配置与计算状态：名称栈、连接面缓存、变换缓存及组件会话由 `compile/context` 管理，共享布局结果契约定义在 `compile/layout.ts`。节点布局投影、位置引用适配和单元素执行仍由树编译负责。依赖从树编译指向上下文，上下文不导入树编译实现。
+稳定环境与编译状态的基础契约由 `compile/runtime` 管理，其中包含名称栈、连接面缓存、变换缓存及组件状态，共享布局结果契约定义在 `compile/layout.ts`。节点布局投影、位置引用适配和单元素执行仍由树编译负责。依赖从树编译指向上下文，上下文不导入树编译实现。
 
 环境按职责分为四组：
 
@@ -122,9 +132,9 @@ Scene 组装时单独校验 `padding` 非负且有限，显式提供 viewBox 时
 
 <SourceLinks
   sources={[
-    { label: '依赖与资源上下文', path: 'packages/kernel/core/src/compile/context/tree.ts' },
+    { label: '依赖与资源上下文', path: 'packages/kernel/core/src/compile/runtime/runtime.ts' },
     { label: '内置与外部定义的注册', path: 'packages/kernel/core/src/providers/registry.ts' },
-    { label: '遍历状态与命名查询', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '子树执行与输出收集', path: 'packages/kernel/core/src/compile/tree/runtime.ts' },
   ]}
 />
 
@@ -475,8 +485,8 @@ Scope 分两步计算：先 `prepareScopeCompilation` 得到有效继承上下�
 
 <SourceLinks
   sources={[
-    { label: '单元素类型与上下文', path: 'packages/kernel/core/src/compile/context/element.ts' },
-    { label: '稳定编译环境', path: 'packages/kernel/core/src/compile/context/shared.ts' },
+    { label: '单元素类型与上下文', path: 'packages/kernel/core/src/compile/runtime/element.ts' },
+    { label: '稳定编译环境', path: 'packages/kernel/core/src/compile/runtime/context.ts' },
     { label: '局部输出组装', path: 'packages/kernel/core/src/compile/output.ts' },
     { label: 'Scene 与附属产物组装', path: 'packages/kernel/core/src/compile/scene/output.ts' },
   ]}
@@ -494,6 +504,8 @@ Reconciler 会话通过 Weave 协调器持有稳定 WeaveRoot，作为整棵树�
 
 编译完成后，Reconciler 通过 Core 组装完整输出。`CompileProvenanceTracker` 保存图元来源，组装直接复用原图元；重放在收集来源时创建独立图元实例。最终来源路径与排序后的 Scene 配对，不需要再次完整编译补齐。候选计算失败时，Reconciler 会话保留旧结果；成功后才发布配对的树与输出。
 
+Weave 协调器也分开稳定配置与可变状态。稳定配置复用 Core 的共享环境；持久状态保存声明根、Scope 编号分配器、稳定绑定表和最近完成的结果。每批更新独立创建事务、编辑器、依赖追踪器、名称表、来源记录及诊断收集器。候选输入只保存在当前批次，最终确认时才替换持久输入与完成结果；失败或回滚后释放批次状态。组件测量缓存与重放凭证仍由 Core 单轮编译持有，不作为跨批次缓存。
+
 内部 Weave 协调器支持在已构建的 Root 上处理 WeaveBatch：先按顺序应用增删改，再基于最终输入计算。上下文沿声明结构传递，依赖失效沿消费者传播；Scope 准备、子布局、包络与最终投影遵守 Core 的计算顺序，Path 保留延后引用能力。未受影响且输入、声明位置和名称绑定仍有效的编译产物可以复用；需要重新生成诊断时重新计算相关元素。当前采用保守失效，Scope 变化可能使整个子树重新计算，尚不按 style / layout 粒度过滤。
 
 更新返回完整输出和提交、确认、回滚操作。准备期间旧状态保持不变；提交后仍可恢复，最终确认才释放恢复依据。名称索引恢复、来源与输出组装仍可能遍历完整树，局部编译不等于整次更新具有局部成本。
@@ -503,7 +515,8 @@ Reconciler 的 `replace` 接收完整 IR 并重新编译，`update` 接收已有
 <SourceLinks
   sources={[
     { label: 'Weave 构建与 Core 调用', path: 'packages/kernel/reconciler/src/weave/reconcile.ts' },
-    { label: 'Weave 状态归属', path: 'packages/kernel/reconciler/src/weave/types.ts' },
+    { label: 'Weave 节点状态', path: 'packages/kernel/reconciler/src/weave/types.ts' },
+    { label: '持久状态与批次隔离', path: 'packages/kernel/reconciler/src/weave/runtime.ts' },
     { label: '候选状态隔离与恢复', path: 'packages/kernel/reconciler/src/weave/transaction.ts' },
     { label: 'Reconciler 会话与发布边界', path: 'packages/kernel/reconciler/src/session.ts' },
   ]}

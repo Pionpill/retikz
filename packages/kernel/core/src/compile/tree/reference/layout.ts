@@ -1,6 +1,6 @@
 import type { Transform } from '../../../contract';
-import type { SharedCompileContext } from '../../context';
 import type { CompiledNodeLayout } from '../../layout';
+import type { SharedCompileContext } from '../../runtime';
 import { composeScopeTransform } from '../../shared';
 import type { CompiledCoordinate } from '../coordinate';
 import { createSyntheticRectangleLayout, projectLayoutWithTransform } from '../node';

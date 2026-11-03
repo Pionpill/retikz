@@ -2,9 +2,9 @@ import { boundsToRect } from '@retikz/math';
 
 import type { GroupPrimitive, ScenePrimitive } from '../../../contract';
 import type { IRScope } from '../../../schemas';
-import type { SharedCompileContext, TreeCompileContext } from '../../context';
 import { assembleCompileOutputs } from '../../output';
 import type { CompileOwnerKey, CompileProvenanceTracker } from '../../provenance';
+import type { SharedCompileContext, CompileRuntime } from '../../runtime';
 import { collectLayoutBounds, calculateBoundsOfPrimitives } from '../../scene';
 import { applyTransformChain, createCompileChildPath } from '../../shared';
 import type { CompileBounds, CompileOutput } from '../../shared';
@@ -93,13 +93,16 @@ export const assembleScopeOutput = (
 
 /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画 */
 export const emitScopeGroup = (
-  context: TreeCompileContext,
+  runtime: CompileRuntime,
   output: TreeOutputState,
   child: IRScope,
   input: EmitScopeGroupContext,
 ): string | undefined => {
   const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipPath, semanticOwner } = input;
-  const { primitiveSink, locatorPrefix } = frame;
+  const {
+    state: { primitiveSink },
+    context: { locatorPrefix },
+  } = frame;
   const scopeIrPath = createCompileChildPath(locatorPrefix, index);
   const hasScopeTransforms = scopeTransforms.length > 0;
   const isPrunable =
@@ -107,13 +110,20 @@ export const emitScopeGroup = (
   if (isPrunable) return;
 
   const group: GroupPrimitive = {
-    ...createScopeGroup(child, scopeTransforms, context.shared, context.workspace, scopeIrPath, resolvedClipPath),
+    ...createScopeGroup(
+      child,
+      scopeTransforms,
+      runtime.context,
+      runtime.state.workspace,
+      scopeIrPath,
+      resolvedClipPath,
+    ),
     // 当前 Scope 的延迟路径已在收尾阶段回填
     children: stableSortByZIndex(scopePrimitiveSink as Array<ScenePrimitive>, output.zIndexOf),
   };
   primitiveSink.push(group);
   if (semanticOwner !== undefined)
-    context.execution.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
+    runtime.state.execution.provenanceTracker?.recordPrimitives([group], semanticOwner, 'scope');
   recordPrimitiveZIndex(output.zIndexOf, group, child.zIndex);
 
   return group.clipRef;

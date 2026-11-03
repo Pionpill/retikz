@@ -25,7 +25,7 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../src';
-import { createTreeCompileContext } from '../../src/compile/context';
+import { createCompileRuntime } from '../../src/compile/runtime';
 import { CompileManager } from '../../src/compile/tree';
 import { sceneRectangles } from '../helpers/scene-rectangles';
 
@@ -572,16 +572,18 @@ describe('布局感知复合运行时包装树', () => {
     };
 
     const failingIr = scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: true }]);
-    const context = createTreeCompileContext(failingIr, options, { captureProvenance: true });
-    const { composite } = context;
-    const { namespaceStack, provenanceTracker } = context.execution;
+    const context = createCompileRuntime(failingIr, options, { captureProvenance: true });
+    const {
+      state: { composite },
+    } = context;
+    const { namespaceStack, provenanceTracker } = context.state.execution;
     expect(() => new CompileManager(context).compileScene(failingIr)).toThrow(/runtime Scope clip failed/i);
     expect(provenanceTracker).toBeDefined();
     expect(warnings).toEqual([]);
     expect(clipLowerCalls).toBe(1);
-    expect(context.workspace.diagnostics.warnings).toEqual([]);
-    expect(context.workspace.paintRegistry.getResources()).toEqual([]);
-    expect(context.workspace.clipRegistry.getResources()).toEqual([]);
+    expect(context.state.workspace.diagnosticCollector.warnings).toEqual([]);
+    expect(context.state.workspace.paintRegistry.getResources()).toEqual([]);
+    expect(context.state.workspace.clipRegistry.getResources()).toEqual([]);
     expect(namespaceStack.lookupReference('same')?.layout).toBeUndefined();
     expect([...provenanceTracker!.capture([]).ownerMap.values()].filter(owner => owner.id !== undefined)).toEqual([]);
     expect(composite.outputChildren.get(replayHandle!)).toMatchObject({ used: false });

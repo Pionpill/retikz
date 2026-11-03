@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ScopeTransformComposer } from '../../src/compile/context';
+import { ScopeTransformComposer } from '../../src/compile/runtime';
 import { applyTransformChain, inverseTransformChain } from '../../src/compile/shared';
 import { createPositionResolveContext } from '../../src/compile/tree/reference';
 import type { Transform } from '../../src/contract';

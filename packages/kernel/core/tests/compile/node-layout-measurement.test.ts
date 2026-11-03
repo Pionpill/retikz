@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { TexLowerer } from '../../src/compile';
 import { BuiltinCompileWarningCode } from '../../src/compile';
-import { createSharedCompileContext } from '../../src/compile/context';
-import { createTreeCompileContext } from '../../src/compile/context';
 import type { CompiledNodeLayout } from '../../src/compile/layout';
+import { createSharedCompileContext } from '../../src/compile/runtime';
+import { createCompileRuntime } from '../../src/compile/runtime';
 import type { CompileWarning } from '../../src/compile/shared';
 import { CompileManager } from '../../src/compile/tree';
 import { SubtreeCompiler } from '../../src/compile/tree/subtree';
@@ -62,7 +62,7 @@ const collectLayouts = (
   warnings: ReadonlyArray<CompileWarning>;
   textPrims: Array<TextPrimitive>;
 } => {
-  const context = createTreeCompileContext(ir, {
+  const context = createCompileRuntime(ir, {
     measureText: options.measurer ?? measureText,
     precision: options.precision,
 
@@ -82,7 +82,7 @@ const collectLayouts = (
     const textPrims = flattenPrims(result.scene.primitives).filter(
       (prim): prim is TextPrimitive => prim.type === 'text',
     );
-    return { layouts, warnings: context.workspace.diagnostics.warnings, textPrims };
+    return { layouts, warnings: context.state.workspace.diagnosticCollector.warnings, textPrims };
   } finally {
     observeLayouts.mockRestore();
   }
@@ -98,8 +98,8 @@ describe('Node 内容测量', () => {
       },
     });
     const ir = scene([{ type: 'node', position: [0, 0], text: 'shared context' }]);
-    const firstContext = createTreeCompileContext(ir, {}, {}, shared);
-    const secondContext = createTreeCompileContext(ir, {}, {}, shared);
+    const firstContext = createCompileRuntime(ir, {}, {}, shared);
+    const secondContext = createCompileRuntime(ir, {}, {}, shared);
     const first = new CompileManager(firstContext).compileScene(ir);
     const firstCalls = calls;
     const second = new CompileManager(secondContext).compileScene(ir);
@@ -107,8 +107,8 @@ describe('Node 内容测量', () => {
     expect(firstCalls).toBeGreaterThan(0);
     expect(calls).toBe(firstCalls * 2);
     expect(second.result.scene).toEqual(first.result.scene);
-    expect(firstContext.workspace.diagnostics.warnings).toEqual([]);
-    expect(secondContext.workspace.diagnostics.warnings).toEqual([]);
+    expect(firstContext.state.workspace.diagnosticCollector.warnings).toEqual([]);
+    expect(secondContext.state.workspace.diagnosticCollector.warnings).toEqual([]);
   });
 
   it('根据文本指标报告纯节点内容大小', () => {

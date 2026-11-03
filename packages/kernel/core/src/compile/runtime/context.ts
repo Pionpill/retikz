@@ -1,3 +1,4 @@
+import type { CompositeInputScope } from '../../contract';
 import type {
   AnyPathDefinition,
   ArrowDefinition,
@@ -21,6 +22,7 @@ import {
   resolveThemeRegistry,
 } from '../../providers';
 import type { CompositeRegistry } from '../../resolve';
+import type { CanonicalTheme } from '../../shared';
 import { DEFAULT_MAX_CLIP_DEPTH } from '../resource';
 import { DEFAULT_PRECISION, createRound } from '../scene';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE } from '../shared';
@@ -173,3 +175,14 @@ export const createSharedCompileContext = (options: SharedCompileContextOptions 
     }),
   });
 };
+
+/** 整次树编译的稳定输入环境 */
+export type CompileContext = SharedCompileContext &
+  Readonly<{
+    /** 当前编译入口的组件实例输入 */
+    compositeInputs: CompositeInputScope;
+    /** 当前编译入口的有效主题，递归时派生新的继承环境 */
+    theme: CanonicalTheme;
+    /** 最终 Scene 自动视口留白，不参与子树测量 */
+    padding?: CompileOptions['padding'];
+  }>;
