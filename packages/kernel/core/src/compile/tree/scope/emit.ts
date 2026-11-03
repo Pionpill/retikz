@@ -1,35 +1,39 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { GroupPrimitive, SceneClipPath, Transform } from '../../../contract';
-import { resolveAnimations, resolveClip } from '../../../resolve';
-import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';
+import { resolveClip } from '../../../resolve';
+import type { ClipResolveContext } from '../../../resolve';
+import type { ClipRegistry } from '../../resource';
 import type { InputScopeCompile } from './types';
+
+/** Scope 自身分组属性所需的裁剪能力 */
+export type ScopeEmitContext = Readonly<{
+  /** 裁剪定义解析 */
+  clipRegistry: ClipResolveContext['clipRegistry'];
+  /** 登记已确定的裁剪 */
+  registerClip: ClipRegistry['register'];
+  /** 登记预解析的裁剪路径 */
+  registerClipPath: ClipRegistry['registerPath'];
+}>;
 
 /** 生成 Scope 自身的绘制属性，子图元与名称发布由调用方组织 */
 export const createScopeGroup = (
-  input: InputScopeCompile,
+  input: Pick<InputScopeCompile, 'id' | 'meta' | 'clip'>,
   transforms: ReadonlyArray<Transform>,
-  shared: SharedCompileContext,
-  workspace: WorkspaceCompileState,
+  context: ScopeEmitContext,
   irPath: PropertyPath,
   resolvedClipPath?: SceneClipPath,
-): Omit<GroupPrimitive, 'children'> => {
-  const group: Omit<GroupPrimitive, 'children'> = { type: 'group' };
+): Omit<GroupPrimitive, 'children' | 'animations'> => {
+  const group: Omit<GroupPrimitive, 'children' | 'animations'> = { type: 'group' };
   if (input.id !== undefined) group.id = input.id;
   if (input.meta !== undefined) group.meta = input.meta;
   if (transforms.length > 0) group.transforms = [...transforms];
-  const animations = resolveAnimations(input.animations, {
-    target: 'element',
-    onWarn: workspace.diagnosticCollector.collect,
-    irPath,
-  });
-  if (animations !== undefined) group.animations = animations;
   if (resolvedClipPath !== undefined) {
-    group.clipRef = workspace.clipRegistry.registerPath(resolvedClipPath);
+    group.clipRef = context.registerClipPath(resolvedClipPath);
   } else if (input.clip !== undefined) {
-    group.clipRef = workspace.clipRegistry.register(
+    group.clipRef = context.registerClip(
       resolveClip(input.clip, {
-        clipRegistry: shared.registries.clipRegistry,
+        clipRegistry: context.clipRegistry,
         irPath: [...irPath, 'clip'],
       }),
     );

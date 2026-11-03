@@ -13,13 +13,9 @@ import type {
 } from '@retikz/core';
 import {
   assembleScopeOutput,
-  compileCoordinate,
-  compileNode,
-  compilePath,
-  compileScope,
+  withCompileWarningOccurrence,
   createSharedCompileContext,
   createCompileChildPath,
-  prepareScopeCompilation,
   projectCompileReference,
   projectPublishedCompileLayout,
   projectScopeCompileLayouts,
@@ -31,6 +27,13 @@ import { createIdAllocator, isPropertyPathEqual, jsonStructuralEquals } from '@r
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 import { lookupWeaveBinding, runWeaveCompilation } from './compile';
 import type { WeaveCompileOptions, WeaveCompileResult } from './compile';
+import {
+  compileWeaveCoordinate,
+  compileWeaveNode,
+  compileWeavePath,
+  compileWeaveScope,
+  prepareWeaveScope,
+} from './element';
 import { createWeaveNamespaceRegistry } from './namespace';
 import type { WeaveNamespaceRegistry } from './namespace';
 import { assembleWeaveCompilation } from './output';
@@ -186,7 +189,10 @@ export class WeaveReconciler {
     try {
       let modified = false;
       for (const operation of input.operations) {
-        const changes = editor.applyOperation(operation, resolveScopeStyle(batch.source, this.context.shared));
+        const changes = editor.applyOperation(
+          operation,
+          resolveScopeStyle(batch.source, this.context.shared.registries.themeRegistry),
+        );
         if (changes === undefined) continue;
         for (const node of changes.insertedNodes) tracker.registerNodeBinding(node);
         for (const node of changes.changedNodes) tracker.invalidateNode(node);
@@ -313,19 +319,19 @@ export class WeaveReconciler {
       case 'node': {
         const compiled = this.batch.transaction.readNode(node).compiled;
         if (compiled !== null)
-          return projectCompileReference({ type: 'node', compiled }, this.context.shared, transforms);
+          return projectCompileReference({ type: 'node', compiled }, this.context.shared.registries, transforms);
         break;
       }
       case 'coordinate': {
         const compiled = this.batch.transaction.readNode(node).compiled;
         if (compiled !== null)
-          return projectCompileReference({ type: 'coordinate', compiled }, this.context.shared, transforms);
+          return projectCompileReference({ type: 'coordinate', compiled }, this.context.shared.registries, transforms);
         break;
       }
       case 'scope': {
         const compiled = this.batch.transaction.readNode(node).compiled;
         if (compiled !== null)
-          return projectCompileReference({ type: 'scope', compiled }, this.context.shared, transforms);
+          return projectCompileReference({ type: 'scope', compiled }, this.context.shared.registries, transforms);
         break;
       }
     }
@@ -392,7 +398,7 @@ export class WeaveReconciler {
       this.batch.visited++;
       state.compiled = this.recordCompilation(
         node,
-        runWeaveCompilation(options, coreOptions => compileNode(state.input.own, coreOptions)),
+        runWeaveCompilation(options, elementRuntime => compileWeaveNode(state.input.own, elementRuntime)),
       );
     } else state.compiled = this.reuseCompiledNode(node, state.compiled, options);
     state.input = { ...state.input, context: options.style };
@@ -426,7 +432,7 @@ export class WeaveReconciler {
       this.batch.visited++;
       state.compiled = this.recordCompilation(
         node,
-        runWeaveCompilation(options, coreOptions => compileCoordinate(state.input.own, coreOptions)),
+        runWeaveCompilation(options, elementRuntime => compileWeaveCoordinate(state.input.own, elementRuntime)),
       );
     } else state.compiled = this.reuseCompiledNode(node, state.compiled, options);
     state.input = { ...state.input, context: options.style };
@@ -455,8 +461,9 @@ export class WeaveReconciler {
       this.batch.visited++;
       state.compiled = this.recordCompilation(
         node,
-        runWeaveCompilation({ ...compileOptions, transforms: transforms ?? compileOptions.transforms }, coreOptions =>
-          compilePath(state.input.own, coreOptions),
+        runWeaveCompilation(
+          { ...compileOptions, transforms: transforms ?? compileOptions.transforms },
+          elementRuntime => compileWeavePath(state.input.own, elementRuntime),
         ),
       );
     } else state.compiled = this.reuseCompiledNode(node, state.compiled, compileOptions);
@@ -488,7 +495,7 @@ export class WeaveReconciler {
     // 进入准备阶段
     const prepared = this.recordCompilation(
       node,
-      runWeaveCompilation(compileOptions, coreOptions => prepareScopeCompilation(state.input.own, coreOptions)),
+      runWeaveCompilation(compileOptions, elementRuntime => prepareWeaveScope(state.input.own, elementRuntime)),
     );
     if (child.id !== undefined) this.registerReference(node, child.id, [...irPath, 'id'], element);
     const nestedNamespaceRegistry = child.localNamespace
@@ -521,8 +528,8 @@ export class WeaveReconciler {
       this.batch.visited++;
       state.compiled = this.recordCompilation(
         node,
-        runWeaveCompilation(compileOptions, coreOptions =>
-          compileScope(state.input.own, prepared, nested.layouts, coreOptions),
+        runWeaveCompilation(compileOptions, elementRuntime =>
+          compileWeaveScope(state.input.own, prepared, nested.layouts, elementRuntime),
         ),
         true,
       );
@@ -554,7 +561,12 @@ export class WeaveReconciler {
     const output = assembleScopeOutput(
       state.compiled,
       nested.outputs([...(context.transforms ?? []), ...transforms]),
-      this.context.shared,
+      {
+        round: this.context.shared.layout.round,
+        maxClipDepth: this.context.shared.limits.maxClipDepth,
+        onWarn: warning => this.batch.diagnosticCollector.collect(withCompileWarningOccurrence(warning, occurrence)),
+      },
+      state.input.own,
       this.batch.provenanceTracker,
       semanticOwner,
     );
@@ -569,7 +581,10 @@ export class WeaveReconciler {
       parent: this.state.persistent.root,
       namespaceRegistry: this.batch.namespace,
       ids: this.batch.transaction.editNodeAttribute(this.state.persistent.root, 'ids'),
-      options: { style: resolveScopeStyle(this.batch.source, this.context.shared), irPath: [] },
+      options: {
+        style: resolveScopeStyle(this.batch.source, this.context.shared.registries.themeRegistry),
+        irPath: [],
+      },
       owner: this.batch.provenanceTracker.root,
       prefix: [],
     },

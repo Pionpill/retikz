@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import * as core from '../../../src';
 import { NamespaceStack } from '../../../src/compile/runtime';
-import { angleBoundaryOf, boundaryPointOf, compileNodeResolution, resolveAnchor } from '../../../src/compile/tree/node';
+import { angleBoundaryOf, boundaryPointOf, layoutNode, resolveAnchor } from '../../../src/compile/tree/node';
 import { createPositionResolveContext } from '../../../src/compile/tree/reference';
 import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../../src/providers';
 import { resolveNode } from '../../../src/resolve';
@@ -75,7 +75,7 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
       labelDistance: 12,
     });
 
-    return compileNodeResolution(resolution, {
+    return layoutNode(resolution, {
       measureText,
       positionContext: createPositionResolveContext({
         lookupReference: id => namespaceStack.lookupReference(id),

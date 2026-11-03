@@ -107,7 +107,7 @@ State is grouped by its isolation boundary:
 
 Full compilation, element compilation, and probes create isolated workspaces through `createWorkspaceCompileState`. `createCompileEnvironment` creates tree execution state and binds diagnostic collection to the current occurrence without modifying the supplied base workspace. Diagnostics are appended through `diagnosticCollector.collect` and read through `diagnosticCollector.warnings`; external `CompileOptions.onWarn` callbacks still receive diagnostics after success.
 
-Each recursive subtree uses `SubtreeCompileRuntime`: its `context` holds effective styles, accumulated transforms, layout constraints, and declaration positions; its `state` collects primitives, layouts, bounds, deferred paths, and artifacts. Entering a child Scope derives a new inherited context. Output containers are isolated or explicitly shared according to their subtree ownership. Reconciler supplies only `ElementCompileOptions` to element compilation. Core creates its workspace internally and returns a complete result, so Reconciler does not need tree traversal state.
+Each recursive subtree uses `SubtreeCompileRuntime`: its `context` holds effective styles, accumulated transforms, layout constraints, and declaration positions; its `state` collects primitives, layouts, bounds, deferred paths, and artifacts. Entering a child Scope derives a new inherited context. Output containers are isolated or explicitly shared according to their subtree ownership. Reconciler creates its candidate workspace and adapts reference lookup, measurement, resource registration, and diagnostics to each stage’s narrow context. The full Core driver calls the same stages.
 
 After successful compilation, repeated declarations of an ID in the same namespace produce one `DUPLICATE_NODE_ID` diagnostic. Its message lists every location in declaration order, and `path` points to the last declaration; the last declaration still wins name resolution. Independent namespaces are handled separately. Probed declarations count toward the actual destination namespace only when selected for replay; discarded probes publish no diagnostics.
 
@@ -265,7 +265,7 @@ export type NodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` determines effective configuration and capability bindings. `compileNodeResolution` then prepares body and label text properties and computes typesetting, node size, and position. The returned `properties` field holds complete effective properties and identity, while `layout` holds computed geometry and typesetting. Stroke width, color, and dashes share one property source; label pins also retain their complete configuration. `emitNodePrimitives` consumes layout and current properties to produce Scene primitives. Physical text lines retain their authored-line index so painting can read current line styles without wrapping again. This structure does not replace change-impact analysis; Weave still needs a separate capability contract for classified scheduling.
+`resolveNode` determines effective configuration and capability bindings. `layoutNode` then prepares body and label text properties and computes typesetting, node size, and position. The returned `properties` field holds complete effective properties and identity, while `layout` holds computed geometry and typesetting. Stroke width, color, and dashes share one property source; label pins also retain their complete configuration. `emitNodePrimitives` consumes layout and current properties to produce Scene primitives. Physical text lines retain their authored-line index so painting can read current line styles without wrapping again. This structure does not replace change-impact analysis; Weave still needs a separate capability contract for classified scheduling.
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -447,56 +447,59 @@ Start in `compileSceneSnapshot` to see context creation, traversal, and assembly
 
 ## Independent compilation and reusable state
 
-A caller that schedules elements itself can retain a `SharedCompileContext` and compile one basic element through these entries. They share resolve, layout and emit logic with full compilation, do not recursively compile other elements, and do not register names automatically.
+Core provides composable domain stages. The full driver and Reconciler each own traversal, dependency waiting, and workspace lifetime while calling the same resolution, layout, and output rules.
 
-| Entry               | Completed state      | Retained data                                                                        |
-| ------------------- | -------------------- | ------------------------------------------------------------------------------------ |
-| `compileNode`       | `CompiledNode`       | CompiledNodeLayout in `layout`; primitives, resources and visible bounds in `output` |
-| `compileCoordinate` | `CompiledCoordinate` | `id` and local `position`; no visible output                                         |
-| `compilePath`       | `CompiledPath`       | Complete `output`, including host processing for custom kinds                        |
-| `compileScope`      | `CompiledScope`      | `envelope`, `group` without children, and its own `output`                           |
+| Element    | Shared stages                                                                           | Facts retained by the driver                               |
+| ---------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                                         | Effective properties, layout, output, and paired resources |
+| Coordinate | `resolveCoordinatePosition`; `createCoordinateLayout` for references                    | id and local position                                      |
+| Path       | `resolvePathAnimations` → `compilePath`                                                 | Kind-host output, resources, and bounds                    |
+| Scope      | `resolveScopeStyle`, `prepareScopeGeometry`, `compileScopeGeometry`, `createScopeGroup` | Envelope, own group properties, and output                 |
 
-`CompiledNodeLayout` contains geometry used by reference and layout calculations. Cache `CompiledNode` when reusing the complete element result, including its drawing state and output.
+Resolution may use semantic context such as registries and position lookup, but does not read compilation execution state. Layout and output require their own measurement, position, and resource capabilities. The caller owns the complete `SharedCompileContext` and workspace. This example composes the stages for a node without references; `undefined` from lookup means no named target is visible.
 
 ```ts
 import {
-  assembleCompileOutputs,
-  assembleSceneCompilationSnapshot,
-  compileNode,
-  computeCompileOutputBounds,
+  createPositionResolveContext,
   createSharedCompileContext,
-  resolveScopeStyle,
+  createWorkspaceCompileState,
+  emitNodeOutput,
+  layoutNode,
+  resolveNode,
 } from '@retikz/core';
 
 const shared = createSharedCompileContext();
-const result = compileNode(
+const workspace = createWorkspaceCompileState(shared);
+const resolution = resolveNode(
   { type: 'node', id: 'A', position: [0, 0], text: 'A' },
   {
-    shared,
-    style: resolveScopeStyle({}, shared),
+    ...shared.registries,
+    ...shared.layout,
+    scopeDefaults: {},
+    mode: 'light',
     irPath: ['children', 0],
+    warn: (code, message, path = ['children', 0]) => workspace.diagnosticCollector.collect({ code, message, path }),
   },
 );
-
-if (result.status === 'compiled') {
-  const output = assembleCompileOutputs([result.compiled.output], shared);
-  const prepared = assembleSceneCompilationSnapshot({
-    root: {},
-    primitives: output.primitives,
-    resources: output.resources,
-    layoutBounds: computeCompileOutputBounds(output.bounds),
-    round: shared.layout.round,
-    diagnostics: result.diagnostics,
-  });
-  // prepared.result.scene is ready for a renderer; diagnostics are not dispatched
-}
+const compilation = layoutNode(resolution, {
+  measureText: shared.host.measureText,
+  positionContext: createPositionResolveContext({
+    nodeDistance: shared.layout.nodeDistance,
+    lookupReference: () => undefined,
+  }),
+});
+const output = emitNodeOutput(compilation, {
+  round: shared.layout.round,
+  registerPaint: workspace.paintRegistry.register,
+});
+const resources = workspace.paintRegistry.getResources();
 ```
 
-An element call returns `compiled` or `pending`. The completed branch contains the compiled state and diagnostics; pending publishes neither partial state nor diagnostics. The caller supplies `lookupReference(name)`: return `undefined` for a missing name, `ready` with a `layout` and optional `irPath` for a completed reference, `pending` for an unfinished reference, or `ancestor` for a forbidden ancestor Scope. Core converts unfinished references to a pending result and reports ancestor references as drawing errors. Other lookup callback failures are retained as the cause of a Core error.
+Keep the resource references in `output` together with `resources`. This example only composes node calculation; the driver decides when to publish names, dispatch diagnostics, and assemble the Scene. `CompiledNodeLayout` retains layout geometry; `CompiledNode` also retains effective properties and drawing contributions. Separate calls do not imply unconditional independent caching.
 
-The caller owns name registration, namespaces and read records. Reconciler searches parent frames inside-out and records each missed or matched frame for binding checks and dependency refresh. Register only names visible at the declaration site: pending must not enable forward references for Node / Scope. Path can wait for its references. `projectCompileReference` projects completed state into registerable reference geometry.
+Waiting is a Reconciler scheduling state. When a reference is unfinished, its candidate executor interrupts the attempt, retains read records, and discards resources, diagnostics, and partial output. A retry gets a new workspace. Core provider and probe recovery boundaries propagate this controlled interruption; real errors retain their cause. The driver’s reference adapter owns registration, declaration visibility, and ancestor restrictions. `projectCompileReference` produces geometry suitable for registration.
 
-Scope calculation has two stages. `prepareScopeCompilation` resolves inherited context and preliminary transforms; `compileScope` consumes completed child layouts to determine the envelope and final transforms. Pass the established ancestor transforms when compiling children. Envelope-dependent placement is projected after Scope completion. `assembleScopeOutput` combines the Scope's own output with child outputs without running providers again or storing a duplicate subtree in cached state.
+Scope resolves inherited styles and prepares placement before its children. Once child layouts are ready, it computes the envelope and final transforms, then prepares group properties without animation. After actual child output is available, assembly prunes empty groups before resolving animations; pruned Scopes produce no animation diagnostics. Children receive established ancestor transforms; the driver projects envelope-dependent placement after completion. `assembleScopeOutput` receives the Scope state, ordered child output, narrow resource and diagnostic context, and own animation input. It uses Core’s empty-group pruning, bounds projection, and resource rules without rerunning providers.
 
 Resource IDs are derived from content when resources are created. `assembleCompileOutputs` deduplicates resources, preserves primitive references and stably sorts sibling zIndex values; `assembleScopeOutput` also handles Scope wrapping, clipping and bounds. The caller selects the current output contributions, aggregates their visible bounds with `computeCompileOutputBounds`, then calls `assembleSceneCompilationSnapshot` to finalize viewBox, padding, root animations, diagnostics and provenance. Supplied Composite artifacts must already be in final declaration order and belong to this result. Assembly does not recompile elements or determine incremental reuse.
 
@@ -506,7 +509,9 @@ These entries provide Core's scheduling primitives. Reconciler owns name mapping
 
 <SourceLinks
   sources={[
-    { label: 'Element types and context', path: 'packages/kernel/core/src/compile/tree/shared/element.ts' },
+    { label: 'Node stage composition', path: 'packages/kernel/core/src/compile/tree/node/visit.ts' },
+    { label: 'Candidate workspace and waiting', path: 'packages/kernel/reconciler/src/weave/compile.ts' },
+    { label: 'Weave stage composition', path: 'packages/kernel/reconciler/src/weave/element.ts' },
     { label: 'Shared compilation context', path: 'packages/kernel/core/src/compile/runtime/context.ts' },
     { label: 'Local output assembly', path: 'packages/kernel/core/src/compile/output.ts' },
     { label: 'Scene and metadata assembly', path: 'packages/kernel/core/src/compile/scene/output.ts' },

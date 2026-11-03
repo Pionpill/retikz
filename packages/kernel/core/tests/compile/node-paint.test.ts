@@ -1,15 +1,50 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { compileNode, compileToScene, createSharedCompileContext, resolveScopeStyle } from '../../src';
-import type { IRNode } from '../../src';
+import {
+  resolveNode,
+  layoutNode,
+  emitNodeOutput,
+  createPositionResolveContext,
+  compileToScene,
+  createSharedCompileContext,
+  resolveScopeStyle,
+} from '../../src';
+import type { IRNode, SharedCompileContext, ScopeStyleResolution } from '../../src';
 import { createPaintRegistry } from '../../src/compile/resource';
 import { emitNodePrimitives } from '../../src/compile/tree/node';
 import { flattenPrims } from '../helpers/flatten';
 
+const compileTestNode = (
+  input: IRNode,
+  context: { shared: SharedCompileContext; style: ScopeStyleResolution; irPath: Array<string> },
+) => {
+  const { shared, style, irPath } = context;
+  const resolution = resolveNode(input, {
+    ...shared.registries,
+    ...shared.layout,
+    scopeDefaults: style.defaults,
+    mode: style.theme.mode,
+    irPath,
+    warn: () => {},
+  });
+  const compilation = layoutNode(resolution, {
+    measureText: shared.host.measureText,
+    positionContext: createPositionResolveContext({
+      nodeDistance: shared.layout.nodeDistance,
+      lookupReference: () => undefined,
+    }),
+  });
+  const output = emitNodeOutput(compilation, {
+    round: shared.layout.round,
+    registerPaint: createPaintRegistry(shared.layout.round).register,
+  });
+  return { ...compilation, output };
+};
+
 describe('节点有效属性与布局复用', () => {
   it('节点与标签引线的虚线变化复用布局并更新绘制输出', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared), irPath: ['root'] };
+    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['root'] };
     const source: IRNode = {
       type: 'node',
       position: [0, 0],
@@ -22,16 +57,15 @@ describe('节点有效属性与布局复用', () => {
       style: { stroke: 'black', dashPattern: [6, 7], dashOffset: 3 },
       label: [{ text: 'label', position: 'top', pin: { stroke: 'red', dashPattern: [8, 9], dashOffset: 4 } }],
     };
-    const first = compileNode(source, context);
-    const next = compileNode(nextSource, context);
-    if (first.status !== 'compiled' || next.status !== 'compiled') throw new Error('expected compiled node');
-    expect(next.compiled.layout).toEqual(first.compiled.layout);
+    const first = compileTestNode(source, context);
+    const next = compileTestNode(nextSource, context);
+    expect(next.layout).toEqual(first.layout);
     const reused = emitNodePrimitives(
-      { ...first.compiled, properties: next.compiled.properties },
+      { ...first, properties: next.properties },
       shared.layout.round,
       createPaintRegistry(shared.layout.round).register,
     );
-    expect(reused).toEqual(next.compiled.output.primitives);
+    expect(reused).toEqual(next.output.primitives);
     const strokes = flattenPrims(reused).filter(primitive => primitive.type === 'path' || primitive.type === 'rect');
     expect(strokes).toEqual(
       expect.arrayContaining([
@@ -39,13 +73,13 @@ describe('节点有效属性与布局复用', () => {
         expect.objectContaining({ stroke: 'red', dashPattern: [8, 9], dashOffset: 4 }),
       ]),
     );
-    expect(first.compiled.properties.dashPattern).toEqual([2, 3]);
+    expect(first.properties.dashPattern).toEqual([2, 3]);
   });
 
   it('复用折行布局绘制当前作者行外观，不重复度量且不修改旧输出', () => {
     const measureText = vi.fn((text: string) => ({ width: text.length, height: 14 }));
     const shared = createSharedCompileContext({ measureText });
-    const result = compileNode(
+    const result = compileTestNode(
       {
         type: 'node',
         position: [0, 0],
@@ -55,22 +89,21 @@ describe('节点有效属性与布局复用', () => {
           { text: 'ccc', fill: 'blue' },
         ],
       },
-      { shared, style: resolveScopeStyle({}, shared), irPath: ['root'] },
+      { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['root'] },
     );
-    if (result.status !== 'compiled') throw new Error('expected compiled node');
-    expect(result.compiled.irPath).toEqual(['root']);
+    expect(result.irPath).toEqual(['root']);
     const measured = measureText.mock.calls.length;
-    const output = JSON.stringify(result.compiled.output);
+    const output = JSON.stringify(result.output);
     const properties = {
-      ...result.compiled.properties,
-      text: result.compiled.properties.text?.map((line, index) => ({
+      ...result.properties,
+      text: result.properties.text?.map((line, index) => ({
         ...line,
         style: { ...line.style, fill: index === 0 ? 'green' : 'purple' },
         segments: line.segments.map(segment => ({ ...segment, fill: index === 0 ? 'green' : 'purple' })),
       })),
     };
     const primitives = emitNodePrimitives(
-      { ...result.compiled, properties },
+      { ...result, properties },
       shared.layout.round,
       createPaintRegistry(shared.layout.round).register,
     );
@@ -81,12 +114,12 @@ describe('节点有效属性与布局复用', () => {
       { text: 'ccc', fill: 'purple' },
     ]);
     expect(measureText).toHaveBeenCalledTimes(measured);
-    expect(JSON.stringify(result.compiled.output)).toBe(output);
+    expect(JSON.stringify(result.output)).toBe(output);
   });
 
   it('颜色改变有效属性但不改变布局，静态与单元素输出保持一致', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared), irPath: ['root'] };
+    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['root'] };
     const source: IRNode = {
       type: 'node',
       id: 'a',
@@ -94,13 +127,12 @@ describe('节点有效属性与布局复用', () => {
       text: 'hello',
       style: { fill: 'red', textColor: 'blue' },
     };
-    const first = compileNode(source, context);
-    const next = compileNode({ ...source, style: { fill: 'green', textColor: 'purple' } }, context);
-    if (first.status !== 'compiled' || next.status !== 'compiled') throw new Error('expected compiled node');
-    expect(next.compiled.layout).toEqual(first.compiled.layout);
-    expect(next.compiled.properties).not.toEqual(first.compiled.properties);
-    expect(next.compiled.properties.id).toBe('a');
-    expect(first.compiled.output.primitives).toEqual(
+    const first = compileTestNode(source, context);
+    const next = compileTestNode({ ...source, style: { fill: 'green', textColor: 'purple' } }, context);
+    expect(next.layout).toEqual(first.layout);
+    expect(next.properties).not.toEqual(first.properties);
+    expect(next.properties.id).toBe('a');
+    expect(first.output.primitives).toEqual(
       compileToScene({ type: 'scene', version: 1, children: [source] }).scene.primitives,
     );
   });

@@ -1,10 +1,10 @@
+import { resolveCoordinatePosition } from '../../../resolve';
 import type { IRCoordinate } from '../../../schemas';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
-import { createSyntheticRectangleLayout } from '../node';
 import { createTreePositionContext } from '../reference';
 import type { SubtreeCompileRuntime } from '../runtime';
-import { resolveCoordinatePosition } from './compile';
+import { createCoordinateLayout } from './layout';
 
 /** 解析 coordinate 位置并注册为零尺寸 layout，供后续命名引用使用 */
 export const visitCoordinate = (
@@ -24,20 +24,12 @@ export const visitCoordinate = (
     scopeChain.length === 0
       ? localCenter
       : runtime.state.execution.scopeTransformComposer.apply(localCenter, scopeChain);
-  const localCoordinateLayout = createSyntheticRectangleLayout(
-    { id: child.id, rect: { x: localCenter[0], y: localCenter[1], width: 0, height: 0, rotate: 0 } },
-    {
-      shapes: runtime.context.registries.shapeRegistry,
-      boundaries: runtime.context.registries.boundaryRegistry,
-    },
-  );
-  const coordinateLayout = createSyntheticRectangleLayout(
-    { id: child.id, rect: { x: globalCenter[0], y: globalCenter[1], width: 0, height: 0, rotate: 0 } },
-    {
-      shapes: runtime.context.registries.shapeRegistry,
-      boundaries: runtime.context.registries.boundaryRegistry,
-    },
-  );
+  const geometryContext = {
+    shapes: runtime.context.registries.shapeRegistry,
+    boundaries: runtime.context.registries.boundaryRegistry,
+  };
+  const localCoordinateLayout = createCoordinateLayout(child.id, localCenter, geometryContext);
+  const coordinateLayout = createCoordinateLayout(child.id, globalCenter, geometryContext);
   runtime.state.execution.namespaceStack.register(child.id, {
     layout: coordinateLayout,
     irPath: [...coordinateIrPath, 'id'],

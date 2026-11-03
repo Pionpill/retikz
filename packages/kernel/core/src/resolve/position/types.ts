@@ -1,3 +1,5 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type {
   IRAbsoluteTarget,
   IRBetweenPosition,
@@ -80,3 +82,11 @@ export type ResolvablePosition =
   | IROffsetPosition
   | IRBetweenPosition
   | string;
+
+/** Scope 放置目标解析只需要父空间引用查询与来源 */
+export type ScopePositionResolveContext = Readonly<{
+  /** 父坐标系的位置查询与转换 */
+  positionContext: PositionTargetResolveContext;
+  /** Scope 声明来源 */
+  irPath: PropertyPath;
+}>;

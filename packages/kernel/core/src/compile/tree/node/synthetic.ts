@@ -12,7 +12,7 @@ import { ThemeMode } from '../../../shared';
 import type { CompiledNodeLayout } from '../../layout';
 import { DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE, applyTransformChain } from '../../shared';
 import { fallbackMeasurer } from '../../text';
-import { compileNodeResolution } from './layout';
+import { layoutNode } from './layout';
 
 /** synthetic Node 只消费字面量坐标，因此使用无引用的恒等 position context */
 const SYNTHETIC_POSITION_CONTEXT: PositionTargetResolveContext = {
@@ -24,7 +24,7 @@ const SYNTHETIC_POSITION_CONTEXT: PositionTargetResolveContext = {
 };
 
 /** synthetic layout 构造使用的 shape / boundary 注册表 */
-type SyntheticLayoutRegistryContext = {
+export type SyntheticLayoutRegistryContext = {
   /** shape 注册表 */
   shapes?: ProviderRegistry<ShapeDefinition>;
   /** boundary 注册表 */
@@ -75,7 +75,7 @@ const syntheticNode = (
   };
 };
 
-/** 通过 resolveNode + compileNodeResolution 构造 synthetic layout */
+/** 通过 resolveNode + layoutNode 构造 synthetic layout */
 const resolveSyntheticLayout = (
   input: InputSyntheticRectangleLayout,
   shape: 'rectangle' | 'ellipse',
@@ -96,7 +96,7 @@ const resolveSyntheticLayout = (
     warn: () => {},
     labelDistance: DEFAULT_LABEL_DISTANCE,
   });
-  const { layout } = compileNodeResolution(resolution, {
+  const { layout } = layoutNode(resolution, {
     measureText: fallbackMeasurer,
     positionContext: SYNTHETIC_POSITION_CONTEXT,
   });

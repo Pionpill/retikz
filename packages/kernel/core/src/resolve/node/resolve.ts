@@ -4,6 +4,7 @@ import type { PropertyPath } from '@retikz/foundation';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRAxisScale, IRBoxSize, IRNode, IRPaintValue } from '../../schemas';
 import { NodeSchema } from '../../schemas';
+import { resolveAnimations } from '../animation';
 import { resolvePaint } from '../resource';
 import { resolveBoxSpacing } from '../spacing';
 import { resolveGraphicOpacity } from '../style';
@@ -170,5 +171,19 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     round: context.round,
     irPath: context.irPath,
   });
-  return { irPath: context.irPath, node: { ...node, fill, stroke }, shape, boundary };
+  return {
+    irPath: context.irPath,
+    node: {
+      ...node,
+      fill,
+      stroke,
+      animations: resolveAnimations(node.animations, {
+        target: 'element',
+        irPath: context.irPath,
+        onWarn: warning => context.warn(warning.code, warning.message, warning.path),
+      }),
+    },
+    shape,
+    boundary,
+  };
 };

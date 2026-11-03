@@ -1,6 +1,6 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { CompileOccurrenceLocator, SceneResource, Transform } from '../../../contract';
+import type { SceneResource, Transform } from '../../../contract';
 import type { MergedScopeDefaults, PathTargetView } from '../../../resolve';
 import type { IRPathBase } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
@@ -48,8 +48,6 @@ export type InputPathCompilation = {
   scopeChain: ReadonlyArray<Transform>;
   /** 诊断位置 */
   irPath: PropertyPath;
-  /** 路径出现位置 */
-  occurrence: CompileOccurrenceLocator;
   /** 有效样式默认值 */
   scopeDefaults: MergedScopeDefaults;
   /** 当前主题 */

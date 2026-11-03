@@ -1,5 +1,10 @@
 export { compileSceneSnapshot, compileToScene } from './compile';
-export { createSharedCompileContext } from './runtime';
+export { createSharedCompileContext, createWorkspaceCompileState } from './runtime';
+export type { WorkspaceCompileState, NodeBoundaryStore } from './runtime';
+export { composeScopeTransform, orderCompileWarnings, withCompileWarningOccurrence } from './shared';
+export type { ComposedScopeTransform } from './shared';
+export { createPositionResolveContext } from './tree/reference';
+export type { InputPositionResolveContext } from './tree/reference';
 export type {
   CompileContextHost,
   CompileContextLayout,
@@ -8,7 +13,6 @@ export type {
   SharedCompileContext,
   SharedCompileContextOptions,
 } from './runtime';
-export type { CompileStyle, ElementCompileOptions, ElementCompileReference, ElementCompileResult } from './tree';
 export * from './output';
 export * from './provenance';
 export { projectCompileReference } from './tree/reference';
@@ -32,27 +36,30 @@ export type {
 } from './shared';
 export { fallbackMeasurer } from './text';
 export type { LoweredTex, LoweredTexPaint, LoweredTexPath, TexLowerer } from './text';
-export { compileCoordinate } from './tree/coordinate';
-export type { CompiledCoordinate, CoordinateCompileContext } from './tree/coordinate';
-export { compileNode, projectPublishedCompileLayout } from './tree/node';
-export type {
-  CompiledNode,
-  NodeCompilation,
-  NodeCompileContext,
-  NodeLabelResolution,
-  NodeResolvedProperties,
-} from './tree/node';
+export { createCoordinateLayout } from './tree/coordinate';
+export type { CompiledCoordinate } from './tree/coordinate';
+export { layoutNode, emitNodeOutput, projectPublishedCompileLayout } from './tree/node';
+export type { NodeLayoutContext, NodeEmitContext, SyntheticLayoutRegistryContext } from './tree/node';
+export type { CompiledNode, NodeCompilation, NodeLabelResolution, NodeResolvedProperties } from './tree/node';
 export type { CompiledNodeLayout } from './layout';
-export { compilePath, samplePathRoute } from './tree/path';
-export type { CompiledPath, PathElementCompileContext } from './tree/path';
+export { compilePath, createPathTargetResolver, samplePathRoute } from './tree/path';
+export type { InputPathCompilation, PathHostCompileContext } from './tree/path';
+export type { CompiledPath } from './tree/path';
 export {
   assembleScopeOutput,
-  compileScope,
-  prepareScopeCompilation,
+  compileScopeGeometry,
+  createScopeGroup,
+  prepareScopeGeometry,
   projectScopeCompileLayouts,
-  resolveScopeStyle,
 } from './tree/scope';
-export type { CompiledScope, ScopeCompilationPreparation, ScopeCompileContext } from './tree/scope';
+export type {
+  CompiledScope,
+  ScopeGeometryPreparation,
+  ScopeGeometryContext,
+  ScopeEmitContext,
+  ScopeOutputContext,
+  InputScopeCompile,
+} from './tree/scope';
 export type {
   CompileCompositeOptions,
   CompileHostOptions,

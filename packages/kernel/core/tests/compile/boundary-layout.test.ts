@@ -4,7 +4,7 @@ import { createNodeBoundaryStore } from '../../src/compile/runtime';
 import { composeScopeTransform } from '../../src/compile/shared';
 import {
   boundaryPointOf,
-  compileNodeResolution,
+  layoutNode,
   createNodeReferenceGeometry,
   projectLayoutWithTransform,
   resolveAnchor,
@@ -33,7 +33,7 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
     labelDistance: 12,
   });
 
-  return compileNodeResolution(resolution, {
+  return layoutNode(resolution, {
     measureText,
     positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
   }).layout;

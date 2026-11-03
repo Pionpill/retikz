@@ -105,7 +105,7 @@ Core 和 Reconciler 使用 Foundation 的 `createIdAllocator(prefix)` 分配树�
 
 全量编译、单元素编译和探测计算通过 `createWorkspaceCompileState` 创建独立工作区。`createCompileEnvironment` 为树执行建立状态，并将诊断收集绑定到当前来源，不修改传入的基础工作区。诊断通过 `diagnosticCollector.collect` 追加，通过 `diagnosticCollector.warnings` 查看；对外的 `CompileOptions.onWarn` 仍在成功后接收诊断。
 
-递归子树使用 `SubtreeCompileRuntime`：`context` 保存有效样式、累计变换、布局约束和声明位置；`state` 收集当前子树的图元、布局、边界、延迟路径和产物。进入子 Scope 时派生新的继承环境，输出容器按所属子树隔离或显式共享。Reconciler 调用单元素入口时只提供 `ElementCompileOptions`，Core 在调用内部创建工作区并返回完整结果，不要求 Reconciler 持有树遍历状态。
+递归子树使用 `SubtreeCompileRuntime`：`context` 保存有效样式、累计变换、布局约束和声明位置；`state` 收集当前子树的图元、布局、边界、延迟路径和产物。进入子 Scope 时派生新的继承环境，输出容器按所属子树隔离或显式共享。Reconciler 自己创建候选工作区，将引用查询、测量、资源登记和诊断收集适配为各阶段需要的窄上下文；Core 全量驱动也调用这些阶段。
 
 同一命名空间内重复声明的 ID 在编译成功后汇总为一条 `DUPLICATE_NODE_ID` 诊断。消息按声明顺序列出全部位置，`path` 指向最后一次声明；名称绑定仍由最后一次声明覆盖。独立命名空间中的同名 ID 分别处理。试编译的声明仅在选中重放后计入实际目标命名空间，未选中的试编译不发布诊断。
 
@@ -260,7 +260,7 @@ export type NodeTextLayout = {
 
 </DocTabs>
 
-`resolveNode` 先确定有效配置和能力绑定，`compileNodeResolution` 再确定正文与标签的文字属性，计算排版、节点尺寸及位置。返回的 `properties` 保存完整有效属性及身份，`layout` 保存计算后的几何与排版。描边宽度、颜色和虚线保持在同一属性来源；标签引线也保留完整配置。`emitNodePrimitives` 消费布局与当前属性生成 Scene 图元；普通文本通过作者行索引读取当前行样式，改色时无需重新折行。这里的数据结构不代替变化影响判断，Weave 的分类调度仍需要独立的能力契约。
+`resolveNode` 先确定有效配置和能力绑定，`layoutNode` 再确定正文与标签的文字属性，计算排版、节点尺寸及位置。返回的 `properties` 保存完整有效属性及身份，`layout` 保存计算后的几何与排版。描边宽度、颜色和虚线保持在同一属性来源；标签引线也保留完整配置。`emitNodePrimitives` 消费布局与当前属性生成 Scene 图元；普通文本通过作者行索引读取当前行样式，改色时无需重新折行。这里的数据结构不代替变化影响判断，Weave 的分类调度仍需要独立的能力契约。
 
 <ComponentPreview files="compilation-node" size="lg" hideCode type="illustration" />
 
@@ -426,56 +426,59 @@ Scene 之外，`artifacts` 保存 Composite 返回的领域产物；没有产物
 
 ## 独立编译与可复用状态
 
-需要自行调度元素时，调用方可持有 `SharedCompileContext`，并通过以下入口计算一个基础元素。它们复用全量编译的 resolve、layout 和 emit 实现，不递归编译其他元素，也不自动注册名称。
+Core 提供可组合的领域阶段。全量驱动和 Reconciler 各自管理遍历、依赖等待与工作区，并调用同一套解析、布局和输出规则。
 
-| 入口                | 完成状态             | 保存的内容                                                          |
-| ------------------- | -------------------- | ------------------------------------------------------------------- |
-| `compileNode`       | `CompiledNode`       | `layout` 保存 CompiledNodeLayout，`output` 保存图元、资源和可见边界 |
-| `compileCoordinate` | `CompiledCoordinate` | `id` 与局部 `position`，不产生可见输出                              |
-| `compilePath`       | `CompiledPath`       | `output` 保存完整路径输出，包括定制 kind 的宿主处理                 |
-| `compileScope`      | `CompiledScope`      | `envelope`、不含 children 的 `group` 和自身 `output`                |
+| 元素       | 共享阶段                                                                                | 驱动保存的事实                       |
+| ---------- | --------------------------------------------------------------------------------------- | ------------------------------------ |
+| Node       | `resolveNode` → `layoutNode` → `emitNodeOutput`                                         | 有效属性、布局，以及配套的输出和资源 |
+| Coordinate | `resolveCoordinatePosition`，引用时用 `createCoordinateLayout`                          | id 与局部位置                        |
+| Path       | `resolvePathAnimations` → `compilePath`                                                 | kind 宿主产生的输出、资源和边界      |
+| Scope      | `resolveScopeStyle`、`prepareScopeGeometry`、`compileScopeGeometry`、`createScopeGroup` | 包络、自身分组属性和输出             |
 
-`CompiledNodeLayout` 保存引用和布局计算需要的几何；复用完整元素结果时保存 `CompiledNode`，其中还包含绘制所需的状态与输出。
+`resolve` 可使用注册表和位置查询等语义上下文，不读取编译执行状态。布局和输出阶段分别要求测量、位置解析、资源登记等能力；完整 `SharedCompileContext` 和工作区由调用方持有。下面以无引用节点说明阶段组合，位置查询返回 `undefined` 表示没有可见的命名目标。
 
 ```ts
 import {
-  assembleCompileOutputs,
-  assembleSceneCompilationSnapshot,
-  compileNode,
-  computeCompileOutputBounds,
+  createPositionResolveContext,
   createSharedCompileContext,
-  resolveScopeStyle,
+  createWorkspaceCompileState,
+  emitNodeOutput,
+  layoutNode,
+  resolveNode,
 } from '@retikz/core';
 
 const shared = createSharedCompileContext();
-const result = compileNode(
+const workspace = createWorkspaceCompileState(shared);
+const resolution = resolveNode(
   { type: 'node', id: 'A', position: [0, 0], text: 'A' },
   {
-    shared,
-    style: resolveScopeStyle({}, shared),
+    ...shared.registries,
+    ...shared.layout,
+    scopeDefaults: {},
+    mode: 'light',
     irPath: ['children', 0],
+    warn: (code, message, path = ['children', 0]) => workspace.diagnosticCollector.collect({ code, message, path }),
   },
 );
-
-if (result.status === 'compiled') {
-  const output = assembleCompileOutputs([result.compiled.output], shared);
-  const prepared = assembleSceneCompilationSnapshot({
-    root: {},
-    primitives: output.primitives,
-    resources: output.resources,
-    layoutBounds: computeCompileOutputBounds(output.bounds),
-    round: shared.layout.round,
-    diagnostics: result.diagnostics,
-  });
-  // prepared.result.scene 可交给 renderer，diagnostics 尚未派发
-}
+const compilation = layoutNode(resolution, {
+  measureText: shared.host.measureText,
+  positionContext: createPositionResolveContext({
+    nodeDistance: shared.layout.nodeDistance,
+    lookupReference: () => undefined,
+  }),
+});
+const output = emitNodeOutput(compilation, {
+  round: shared.layout.round,
+  registerPaint: workspace.paintRegistry.register,
+});
+const resources = workspace.paintRegistry.getResources();
 ```
 
-单元素调用返回 `compiled` 或 `pending`。前者包含完整状态与诊断；后者不发布半成品或诊断。调用方通过 `lookupReference(name)` 提供引用：缺失返回 `undefined`，就绪返回包含 `layout` 与可选 `irPath` 的 `ready` 结果，未就绪返回 `pending`，禁止引用的祖先 Scope 返回 `ancestor`。Core 将未就绪转换为 pending 结果，将祖先引用报告为绘图错误；查询回调的其他异常保留为 Core 错误的 cause。
+`output` 的资源引用需要与 `resources` 一起保存。该例只组合节点计算；名称发布、诊断派发和最终 Scene 组装由驱动决定。`CompiledNodeLayout` 保存布局几何，完整 `CompiledNode` 还保存有效属性和绘制贡献。阶段可单独调用并不表示它们可无条件独立缓存。
 
-名称注册、命名空间和读取记录由调用方持有。Reconciler 按父链从内向外查找，并记录每层未命中或命中的事实，用于后续绑定检查与依赖刷新。只登记声明位置可见的名称，不能用 pending 放宽 Node / Scope 的前向引用限制；Path 仍可等到引用就绪后编译。`projectCompileReference` 负责将完成状态投影为可登记的引用几何。
+等待是 Reconciler 的调度状态。候选执行器在引用未就绪时中断本次计算，保留读取记录并丢弃资源、诊断及半成品；重试使用新工作区。Core 的 provider 和试算恢复边界透传这类受控中断，真实错误仍保留 cause。名称注册、声明位置可见性与祖先引用约束由驱动的引用适配边界维护，`projectCompileReference` 生成可登记的引用几何。
 
-Scope 分两步计算：先 `prepareScopeCompilation` 得到有效继承上下文与初步变换，再以已完成的子布局调用 `compileScope`，确定包络与最终变换。子元素编译必须接收所属层级已确定的变换；最终包络相关的放置由 Scope 完成后投影。`assembleScopeOutput` 将 Scope 自身输出与子输出组装，不重新运行 provider，也不把重复子树写入缓存。
+Scope 在子元素之前解析有效样式并准备放置，子布局就绪后计算包络与最终变换，准备不含动画的自身分组属性。真实子输出就绪后，输出组装才统一裁去空分组、解析动画；被裁掉的 Scope 不产生动画诊断。子元素接收已确定的祖先变换；包络相关的后置放置由驱动在完成后投影。`assembleScopeOutput` 接收 Scope 状态、有序子输出、窄资源与诊断上下文及自身动画输入，复用 Core 的空分组裁剪、边界投影与资源规则，不重复运行 provider。
 
 资源 id 在生成时由内容确定。`assembleCompileOutputs` 合并去重资源，保留图元引用，按同层 zIndex 稳定排序；`assembleScopeOutput` 进一步处理 Scope 包装、裁剪与边界。调用方选择本次有效的输出贡献，使用 `computeCompileOutputBounds` 汇总可见边界，再交给 `assembleSceneCompilationSnapshot` 完成 viewBox、padding、根动画、诊断与 provenance 收尾。传入的 Composite artifacts 应已按最终声明顺序整理，并与本次结果配对；组装不重新编译元素，也不推断增量复用策略。
 
@@ -485,7 +488,9 @@ Scope 分两步计算：先 `prepareScopeCompilation` 得到有效继承上下�
 
 <SourceLinks
   sources={[
-    { label: '单元素类型与上下文', path: 'packages/kernel/core/src/compile/tree/shared/element.ts' },
+    { label: '节点阶段组合', path: 'packages/kernel/core/src/compile/tree/node/visit.ts' },
+    { label: '候选工作区与等待', path: 'packages/kernel/reconciler/src/weave/compile.ts' },
+    { label: 'Weave 阶段组合', path: 'packages/kernel/reconciler/src/weave/element.ts' },
     { label: '稳定编译环境', path: 'packages/kernel/core/src/compile/runtime/context.ts' },
     { label: '局部输出组装', path: 'packages/kernel/core/src/compile/output.ts' },
     { label: 'Scene 与附属产物组装', path: 'packages/kernel/core/src/compile/scene/output.ts' },

@@ -1,5 +1,4 @@
 export * from './compile';
-export * from './context';
 export * from './emit';
 export * from './layout';
 export * from './output';

@@ -1,7 +1,6 @@
 export * from './anchor-cache';
 export * from './anchors';
 export * from './boundary';
-export * from './compile';
 export * from './emit';
 export * from './label/geometry';
 export * from './layout';

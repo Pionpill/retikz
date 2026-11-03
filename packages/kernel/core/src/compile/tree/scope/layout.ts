@@ -7,8 +7,8 @@ import { ScopeBoundingShape } from '../../../schemas';
 import { Anchor } from '../../../shared';
 import { rect as rectOps } from '../../../shared/geometry';
 import type { CompiledNodeLayout } from '../../layout';
-import type { SharedCompileContext } from '../../runtime';
 import { composeScopeTransform } from '../../shared';
+import type { SyntheticLayoutRegistryContext } from '../node';
 import { createScopeCircleLayout, createScopeRectangleLayout, outerRectOf, projectLayoutWithTransform } from '../node';
 import type { InputScopeCompile } from './types';
 
@@ -43,17 +43,17 @@ export const computeScopeBoundingBox = (layouts: ReadonlyArray<CompiledNodeLayou
 export const createIntrinsicScopeLayout = (
   child: InputScopeCompile,
   scopeLayouts: ReadonlyArray<CompiledNodeLayout>,
-  registries: SharedCompileContext['registries'],
+  registries: SyntheticLayoutRegistryContext,
 ): CompiledNodeLayout => {
   const id = child.id ?? '__anonymous_scope__';
   return child.boundingShape === ScopeBoundingShape.Circle
     ? createScopeCircleLayout(
         { id, cornerPoints: collectScopeCornerPoints(scopeLayouts), fallbackOrigin: [0, 0] },
-        { shapes: registries.shapeRegistry, boundaries: registries.boundaryRegistry },
+        registries,
       )
     : createScopeRectangleLayout(
         { id, bbox: computeScopeBoundingBox(scopeLayouts), fallbackOrigin: [0, 0] },
-        { shapes: registries.shapeRegistry, boundaries: registries.boundaryRegistry },
+        registries,
       );
 };
 

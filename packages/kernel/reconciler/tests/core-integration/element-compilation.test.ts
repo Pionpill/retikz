@@ -1,35 +1,53 @@
-import { describe, expect, it } from 'vitest';
-
 import type {
   CompileOutput,
-  ElementCompileReference,
+  CompiledScope,
   IRCoordinate,
   IRNode,
   IRPathBase,
   IRScope,
   ShapeDefinition,
   SharedCompileContext,
-} from '../../src';
+} from '@retikz/core';
 import {
   BUILTIN_SHAPES,
-  RetikzCoreError,
   assembleCompileOutputs,
   assembleSceneCompilationSnapshot,
   assembleScopeOutput,
-  compileCoordinate,
-  compileNode,
-  compilePath,
-  compileScope,
   compileToScene,
   computeCompileOutputBounds,
   createSharedCompileContext,
-  prepareScopeCompilation,
   projectCompileReference,
   resolveScopeStyle,
-} from '../../src';
+} from '@retikz/core';
+import { describe, expect, it } from 'vitest';
+
+import { RetikzReconcilerError } from '../../src/error';
+import type { WeaveBinding } from '../../src/weave/compile';
+import {
+  testCompileNode,
+  testCompileCoordinate,
+  testCompilePath,
+  testCompileScope,
+  testPrepareScopeCompilation,
+} from '../helpers/element';
+
+const assembleTestScopeOutput = (
+  scope: CompiledScope,
+  children: ReadonlyArray<CompileOutput>,
+  shared: SharedCompileContext,
+) =>
+  assembleScopeOutput(
+    scope,
+    children,
+    { round: shared.layout.round, maxClipDepth: shared.limits.maxClipDepth, onWarn: () => {} },
+    {},
+  );
 
 const finalizeOutputs = (input: { root: {}; outputs: ReadonlyArray<CompileOutput>; shared: SharedCompileContext }) => {
-  const output = assembleCompileOutputs(input.outputs, input.shared);
+  const output = assembleCompileOutputs(input.outputs, {
+    round: input.shared.layout.round,
+    maxClipDepth: input.shared.limits.maxClipDepth,
+  });
   return assembleSceneCompilationSnapshot({
     root: input.root,
     primitives: output.primitives,
@@ -39,60 +57,65 @@ const finalizeOutputs = (input: { root: {}; outputs: ReadonlyArray<CompileOutput
   });
 };
 
+const ancestor = {};
+
 describe('独立元素编译', () => {
   it('查询回调真实异常保留 cause，不误判为依赖等待', () => {
     const shared = createSharedCompileContext();
     const failure = new Error('lookup failed');
+    const bindings = new Map<string, WeaveBinding>();
+    bindings.get = () => {
+      throw failure;
+    };
     let caught: unknown;
     try {
-      compileCoordinate(
+      testCompileCoordinate(
         { type: 'coordinate', id: 'b', position: { direction: 'right' as const, of: 'a', distance: 10 } },
         {
           shared,
-          style: resolveScopeStyle({}, shared),
+          style: resolveScopeStyle({}, shared.registries.themeRegistry),
           irPath: ['children', 1],
-          lookupReference: () => {
-            throw failure;
-          },
+          namespace: { bindings },
         },
       );
     } catch (error) {
       caught = error;
     }
-    expect(caught).toBeInstanceOf(RetikzCoreError);
+    expect(caught).toBeInstanceOf(RetikzReconcilerError);
     expect(caught).toHaveProperty('cause', failure);
   });
 
   it('顶层 Path 等待两个 Scope 的节点投影后编译，保持声明绘制顺序', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared), irPath: ['root'] };
-    const bindings = new Map<string, ElementCompileReference>();
+    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['root'] };
+    const bindings = new Map<string, WeaveBinding>();
     const outputs: Array<CompileOutput> = [];
     const scopes: Array<IRScope> = [];
     for (const [index, id] of ['a', 'b'].entries()) {
       const input: IRNode = { type: 'node', id, position: [0, 0], text: id };
       const scopeInput: IRScope = { type: 'scope', position: [index * 100, index * 30], children: [input] };
       scopes.push(scopeInput);
-      const prepared = prepareScopeCompilation(scopeInput, context);
+      const prepared = testPrepareScopeCompilation(scopeInput, context);
       if (prepared.status !== 'compiled') throw new Error('expected scope');
-      const node = compileNode(input, {
+      const node = testCompileNode(input, {
         ...context,
         style: prepared.compiled.scope,
         transforms: prepared.compiled.preliminaryTransforms,
       });
       if (node.status !== 'compiled') throw new Error('expected node');
-      const scope = compileScope(scopeInput, prepared.compiled, [node.compiled.layout], context);
+      const scope = testCompileScope(scopeInput, prepared.compiled, [node.compiled.layout], context);
       if (scope.status !== 'compiled') throw new Error('expected scope');
       expect(scope.compiled.irPath).toBe(context.irPath);
       bindings.set(id, {
         state: 'ready',
+        binding: {},
         layout: projectCompileReference(
           { type: 'node', compiled: node.compiled },
-          shared,
+          shared.registries,
           scope.compiled.group.transforms,
         ),
       });
-      outputs.push(assembleScopeOutput(scope.compiled, [node.compiled.output], shared));
+      outputs.push(assembleTestScopeOutput(scope.compiled, [node.compiled.output], shared));
     }
     const pathInput: IRPathBase = {
       type: 'path',
@@ -101,13 +124,9 @@ describe('独立元素编译', () => {
         { type: 'step', kind: 'line', to: { id: 'b' } },
       ],
     };
-    const reads: Array<string> = [];
-    const path = compilePath(pathInput, {
+    const path = testCompilePath(pathInput, {
       ...context,
-      lookupReference: name => {
-        reads.push(name);
-        return bindings.get(name);
-      },
+      namespace: { bindings },
     });
     if (path.status !== 'compiled') throw new Error('expected path');
     expect(path.compiled.irPath).toBe(context.irPath);
@@ -118,7 +137,7 @@ describe('独立元素编译', () => {
         shared,
       }).result.scene,
     ).toEqual(compileToScene({ type: 'scene', version: 1, children: [pathInput, ...scopes] }).scene);
-    expect(new Set(reads)).toEqual(new Set(['a', 'b']));
+    expect(new Set(path.reads.map(read => read.name))).toEqual(new Set(['a', 'b']));
   });
 
   it('复用绘制片段不再次调用自定义 shape provider，引用投影不修改旧布局', () => {
@@ -132,11 +151,11 @@ describe('独立元素编译', () => {
       },
     };
     const shared = createSharedCompileContext({ shapes: [definition] });
-    const result = compileNode(
+    const result = testCompileNode(
       { type: 'node', position: [2, 3], shape: 'counted' },
       {
         shared,
-        style: resolveScopeStyle({}, shared),
+        style: resolveScopeStyle({}, shared.registries.themeRegistry),
         irPath: ['children', 0],
       },
     );
@@ -153,7 +172,9 @@ describe('独立元素编译', () => {
       outputs: [result.compiled.output],
       shared,
     });
-    projectCompileReference({ type: 'node', compiled: result.compiled }, shared, [{ kind: 'translate', x: 20, y: 30 }]);
+    projectCompileReference({ type: 'node', compiled: result.compiled }, shared.registries, [
+      { kind: 'translate', x: 20, y: 30 },
+    ]);
     expect(result.compiled.layout.geometry.rect).toEqual(rectangle);
     expect(next.result.scene).toEqual(first.result.scene);
     expect(emitted).toBe(count);
@@ -161,7 +182,7 @@ describe('独立元素编译', () => {
 
   it('嵌套作用域经过祖先裁剪时保持全量可见边界和资源语义', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared), irPath: ['children', 0] };
+    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['children', 0] };
     const outer: Omit<IRScope, 'children'> = {
       type: 'scope',
       id: 'outer',
@@ -170,25 +191,25 @@ describe('独立元素编译', () => {
     };
     const inner: Omit<IRScope, 'children'> = { type: 'scope', id: 'inner', position: [5, 8] };
     const input: IRNode = { type: 'node', position: [0, 0], text: 'A' };
-    const a = prepareScopeCompilation(outer, context);
+    const a = testPrepareScopeCompilation(outer, context);
     if (a.status !== 'compiled') throw new Error('expected outer');
     const innerContext = { ...context, style: a.compiled.scope, irPath: ['children', 0, 'children', 0] };
-    const b = prepareScopeCompilation(inner, innerContext);
+    const b = testPrepareScopeCompilation(inner, innerContext);
     if (b.status !== 'compiled') throw new Error('expected inner');
-    const node = compileNode(input, { ...innerContext, style: b.compiled.scope });
+    const node = testCompileNode(input, { ...innerContext, style: b.compiled.scope });
     if (node.status !== 'compiled') throw new Error('expected node');
-    const child = compileScope(inner, b.compiled, [node.compiled.layout], innerContext);
+    const child = testCompileScope(inner, b.compiled, [node.compiled.layout], innerContext);
     if (child.status !== 'compiled') throw new Error('expected inner compiled');
-    const parent = compileScope(
+    const parent = testCompileScope(
       outer,
       a.compiled,
-      [projectCompileReference({ type: 'scope', compiled: child.compiled }, shared)],
+      [projectCompileReference({ type: 'scope', compiled: child.compiled }, shared.registries)],
       context,
     );
     if (parent.status !== 'compiled') throw new Error('expected outer compiled');
-    const output = assembleScopeOutput(
+    const output = assembleTestScopeOutput(
       parent.compiled,
-      [assembleScopeOutput(child.compiled, [node.compiled.output], shared)],
+      [assembleTestScopeOutput(child.compiled, [node.compiled.output], shared)],
       shared,
     );
     const full = compileToScene({
@@ -207,22 +228,39 @@ describe('独立元素编译', () => {
 
   it('引用从 pending 就绪后可重算，祖先包络引用仍报错', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared), irPath: ['a'] };
+    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['a'] };
     const input: IRCoordinate = { type: 'coordinate', id: 'c', position: { direction: 'right', of: 'a' } };
-    expect(compileCoordinate(input, { ...context, lookupReference: () => ({ state: 'pending' }) })).toEqual({
+    expect(
+      testCompileCoordinate(input, {
+        ...context,
+        namespace: { bindings: new Map([['a', { state: 'pending', binding: ancestor }]]) },
+      }),
+    ).toMatchObject({
       status: 'pending',
     });
-    expect(() => compileCoordinate(input, { ...context, lookupReference: () => ({ state: 'ancestor' }) })).toThrow(
-      'ancestor Scope',
-    );
-    const node = compileNode({ type: 'node', id: 'a', position: [30, 10] }, context);
-    if (node.status !== 'compiled') throw new Error('expected node');
-    const result = compileCoordinate(input, {
-      ...context,
-      lookupReference: () => ({
-        state: 'ready',
-        layout: projectCompileReference({ type: 'node', compiled: node.compiled }, shared),
+    expect(() =>
+      testCompileCoordinate(input, {
+        ...context,
+        namespace: { bindings: new Map([['a', { state: 'pending', binding: ancestor }]]) },
+        ancestorScopes: new Set([ancestor]),
       }),
+    ).toThrow('ancestor Scope');
+    const node = testCompileNode({ type: 'node', id: 'a', position: [30, 10] }, context);
+    if (node.status !== 'compiled') throw new Error('expected node');
+    const result = testCompileCoordinate(input, {
+      ...context,
+      namespace: {
+        bindings: new Map([
+          [
+            'a',
+            {
+              state: 'ready',
+              binding: {},
+              layout: projectCompileReference({ type: 'node', compiled: node.compiled }, shared.registries),
+            },
+          ],
+        ]),
+      },
     });
     expect(result.status).toBe('compiled');
     if (result.status !== 'compiled') throw new Error('expected coordinate');
@@ -232,11 +270,11 @@ describe('独立元素编译', () => {
 
   it('同层 zIndex 排序与删除资源不重算旧状态', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared), irPath: ['a'] };
+    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: ['a'] };
     const a: IRNode = { type: 'node', id: 'a', position: [0, 0], zIndex: 3 };
     const b: IRNode = { type: 'node', id: 'b', position: [40, 0], zIndex: -1 };
-    const first = compileNode(a, context);
-    const second = compileNode(b, context);
+    const first = testCompileNode(a, context);
+    const second = testCompileNode(b, context);
     if (first.status !== 'compiled' || second.status !== 'compiled') throw new Error('expected nodes');
     expect(
       finalizeOutputs({
@@ -256,21 +294,21 @@ describe('独立元素编译', () => {
 
   it('已编译 Scope 与子节点组装后等价于全量输出', () => {
     const shared = createSharedCompileContext();
-    const parent = resolveScopeStyle({}, shared);
+    const parent = resolveScopeStyle({}, shared.registries.themeRegistry);
     const scopeInput = { type: 'scope' as const, position: [30, 40] as [number, number] };
     const context = { shared, style: parent, irPath: ['scene', 'children', 0] };
-    const prepared = prepareScopeCompilation(scopeInput, context);
+    const prepared = testPrepareScopeCompilation(scopeInput, context);
     if (prepared.status !== 'compiled') throw new Error('expected scope preparation');
     const input: IRNode = { type: 'node', id: 'a', position: [12, 24], text: 'hello' };
-    const node = compileNode(input, {
+    const node = testCompileNode(input, {
       ...context,
       style: prepared.compiled.scope,
       irPath: [...context.irPath, 'children', 0],
     });
     if (node.status !== 'compiled') throw new Error('expected node');
-    const scope = compileScope(scopeInput, prepared.compiled, [node.compiled.layout], context);
+    const scope = testCompileScope(scopeInput, prepared.compiled, [node.compiled.layout], context);
     if (scope.status !== 'compiled') throw new Error('expected scope');
-    const output = assembleScopeOutput(scope.compiled, [node.compiled.output], shared);
+    const output = assembleTestScopeOutput(scope.compiled, [node.compiled.output], shared);
     const assembled = finalizeOutputs({
       root: {},
       outputs: [output],
@@ -282,8 +320,8 @@ describe('独立元素编译', () => {
 
   it('独立编译时区分资源身份，组装保留原资源及片段', () => {
     const shared = createSharedCompileContext();
-    const context = { shared, style: resolveScopeStyle({}, shared), irPath: [] };
-    const first = compileNode(
+    const context = { shared, style: resolveScopeStyle({}, shared.registries.themeRegistry), irPath: [] };
+    const first = testCompileNode(
       {
         type: 'node',
         position: [0, 0],
@@ -300,7 +338,7 @@ describe('独立元素编译', () => {
       },
       context,
     );
-    const second = compileNode(
+    const second = testCompileNode(
       {
         type: 'node',
         position: [40, 0],
@@ -336,16 +374,16 @@ describe('独立元素编译', () => {
   });
   it('未就绪引用返回 pending，不暴露半成品', () => {
     const shared = createSharedCompileContext();
-    const pending = compileCoordinate(
+    const pending = testCompileCoordinate(
       { type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } },
       {
         shared,
-        style: resolveScopeStyle({}, shared),
+        style: resolveScopeStyle({}, shared.registries.themeRegistry),
         irPath: ['b'],
-        lookupReference: () => ({ state: 'pending' }),
+        namespace: { bindings: new Map([['a', { state: 'pending', binding: ancestor }]]) },
       },
     );
-    const pendingPath = compilePath(
+    const pendingPath = testCompilePath(
       {
         type: 'path',
         children: [
@@ -355,9 +393,9 @@ describe('独立元素编译', () => {
       },
       {
         shared,
-        style: resolveScopeStyle({}, shared),
+        style: resolveScopeStyle({}, shared.registries.themeRegistry),
         irPath: [],
-        lookupReference: () => ({ state: 'pending' }),
+        namespace: { bindings: new Map([['a', { state: 'pending', binding: ancestor }]]) },
       },
     );
     expect(pendingPath.status).toBe('pending');
@@ -376,9 +414,9 @@ describe('独立元素编译', () => {
         { type: 'step' as const, kind: 'line' as const, to: [30, 20] as [number, number] },
       ],
     };
-    const result = compilePath(input, {
+    const result = testCompilePath(input, {
       shared,
-      style: resolveScopeStyle({}, shared),
+      style: resolveScopeStyle({}, shared.registries.themeRegistry),
       irPath: ['scene', 'children', 0],
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');
@@ -393,9 +431,9 @@ describe('独立元素编译', () => {
   it('节点使用完整编译相同的测量与绘制语义', () => {
     const input: IRNode = { type: 'node', id: 'a', position: [12, 24], text: 'hello' };
     const shared = createSharedCompileContext();
-    const result = compileNode(input, {
+    const result = testCompileNode(input, {
       shared,
-      style: resolveScopeStyle({}, shared),
+      style: resolveScopeStyle({}, shared.registries.themeRegistry),
       irPath: ['scene', 'children', 0],
     });
     expect(result.status).toBe('compiled');
@@ -411,9 +449,9 @@ describe('独立元素编译', () => {
     const shared = createSharedCompileContext();
     const scope = { defaults: { node: { style: { fill: 'red' } } } };
     const input: IRNode = { type: 'node', position: [0, 0] };
-    const result = compileNode(input, {
+    const result = testCompileNode(input, {
       shared,
-      style: resolveScopeStyle(scope, shared),
+      style: resolveScopeStyle(scope, shared.registries.themeRegistry),
       irPath: ['scene', 'children', 0, 'children', 0],
     });
     if (result.status !== 'compiled') throw new Error('expected compiled');

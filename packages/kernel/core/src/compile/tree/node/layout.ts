@@ -130,7 +130,7 @@ const placeAnchorPositionedLayout = (
 };
 
 /** 节点 layout 阶段使用的编译依赖 */
-type NodeLayoutContext = {
+export type NodeLayoutContext = {
   /** 文本测量函数 */
   measureText: TextMeasurer;
   /** 当前编译共享的连接面缓存与诊断状态 */
@@ -152,7 +152,7 @@ type NodeLayoutContext = {
 };
 
 /** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
-export const compileNodeResolution = (resolution: NodeResolution, context: NodeLayoutContext): NodeCompilation => {
+export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContext): NodeCompilation => {
   const { node, shape: shapeResolution, boundary: boundaryResolution } = resolution;
   const {
     measureText,

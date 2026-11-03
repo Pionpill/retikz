@@ -2,23 +2,30 @@ import type { ScenePrimitive } from '../../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../../schemas';
 import { Anchor } from '../../../shared';
 import { rect } from '../../../shared/geometry';
-import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';
+import type { RegisterPaint } from '../../resource';
 import { outerRectOf } from './anchors';
 import { emitNodePrimitives } from './emit';
 import { labelExtentPoints } from './label';
 import type { NodeCompilation } from './types';
 
-/** 从已完成的节点布局生成图元及边界；资源和诊断归属显式工作区 */
+/** 节点输出所需的圆整与资源登记能力 */
+export type NodeEmitContext = Readonly<{
+  /** 输出数值圆整 */
+  round: (value: number) => number;
+  /** 将绘制值登记到调用方工作区 */
+  registerPaint: RegisterPaint;
+}>;
+
+/** 从已完成的节点布局生成图元及边界，资源通过显式能力登记 */
 export const emitNodeOutput = (
   compilation: NodeCompilation,
-  shared: SharedCompileContext,
-  workspace: WorkspaceCompileState,
+  context: NodeEmitContext,
 ): {
   primitives: Array<ScenePrimitive>;
   bounds: Array<{ boundsPoints: Array<IRPosition>; shadow?: CanonicalDropShadow }>;
 } => {
   const { layout, properties } = compilation;
-  const primitives = emitNodePrimitives(compilation, shared.layout.round, workspace.paintRegistry.register);
+  const primitives = emitNodePrimitives(compilation, context.round, context.registerPaint);
   const outer = outerRectOf(layout);
   return {
     primitives,

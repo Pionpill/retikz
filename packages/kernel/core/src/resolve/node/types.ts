@@ -236,7 +236,7 @@ export type NodeResolveContext = {
   /** 当前节点的 IR 路径 */
   irPath: PropertyPath;
   /** 接收节点解析警告的回调 */
-  warn: (code: string, message: string) => void;
+  warn: (code: string, message: string, path?: PropertyPath) => void;
   /** 节点标签缺省距离 */
   labelDistance: number;
 };

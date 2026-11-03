@@ -170,6 +170,12 @@ export {
 } from './providers';
 export {
   DEFAULT_RESOLVED_THEME,
+  resolveNode,
+  resolveNodeBoundary,
+  resolveCoordinatePosition,
+  resolvePathAnimations,
+  resolveScopeStyle,
+  registerFatalProbeError,
   mergeArrowDefaults,
   mergeGraphicStyle,
   mergeNodeLabelDefaults,
@@ -178,7 +184,15 @@ export {
   resolvePathLabelPlacement,
   resolveTheme,
 } from './resolve';
-export type { CanonicalPathLabelPlacement, GraphicOpacityResolution, PathLabelGeometryOptions } from './resolve';
+export type {
+  CanonicalPathLabelPlacement,
+  GraphicOpacityResolution,
+  PathLabelGeometryOptions,
+  NodeResolveContext,
+  NodeResolution,
+  PositionTargetResolveContext,
+  ScopeStyleResolution,
+} from './resolve';
 export {
   AbsoluteTargetSchema,
   AnchorPositionSchema,

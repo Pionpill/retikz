@@ -1,11 +1,12 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { LayoutAlignmentGuide, LayoutProposal, Transform, CompositeInputScope } from '../../contract';
+import type { ScopeStyleResolution } from '../../resolve';
 import type { CompiledNodeLayout, LayoutBoundsContribution } from '../layout';
 import type { CompileOwnerKey } from '../provenance';
 import type { CompositeArtifact } from '../shared';
 import type { PendingPathEmission } from './path';
-import type { CompileStyle, InternalScenePrimitive } from './shared';
+import type { InternalScenePrimitive } from './shared';
 
 /** 当前递归子树的继承环境和布局输入 */
 export type SubtreeCompileContext = Readonly<{
@@ -23,7 +24,7 @@ export type SubtreeCompileContext = Readonly<{
   /** 当前层声明路径前缀 */
   pathPrefix: PropertyPath;
   /** 有效默认配置与主题 */
-  style: CompileStyle;
+  style: ScopeStyleResolution;
   /** 当前子树的编译溯源归属标识，仅在开启来源追踪时提供 */
   compileOwner?: CompileOwnerKey;
 }>;

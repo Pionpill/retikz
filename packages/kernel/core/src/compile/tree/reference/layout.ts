@@ -1,9 +1,10 @@
 import type { Transform } from '../../../contract';
 import type { CompiledNodeLayout } from '../../layout';
-import type { SharedCompileContext } from '../../runtime';
+import type { CompileContextRegistries } from '../../runtime';
 import { composeScopeTransform } from '../../shared';
 import type { CompiledCoordinate } from '../coordinate';
-import { createSyntheticRectangleLayout, projectLayoutWithTransform } from '../node';
+import { createCoordinateLayout } from '../coordinate';
+import { projectLayoutWithTransform } from '../node';
 import type { CompiledNode } from '../node';
 import type { CompiledScope } from '../scope';
 
@@ -16,7 +17,7 @@ export type CompileReferenceSource =
 /** 将元素局部状态投影为可登记的引用布局，不修改原编译状态 */
 export const projectCompileReference = (
   source: CompileReferenceSource,
-  shared: SharedCompileContext,
+  registries: Pick<CompileContextRegistries, 'shapeRegistry' | 'boundaryRegistry'>,
   parentTransforms: ReadonlyArray<Transform> = [],
 ): CompiledNodeLayout => {
   if (source.type === 'node') {
@@ -28,13 +29,9 @@ export const projectCompileReference = (
       composeScopeTransform([...parentTransforms, ...(source.compiled.group.transforms ?? [])]),
     );
   }
-  const [x, y] = source.compiled.position;
-  const local = createSyntheticRectangleLayout(
-    {
-      id: source.compiled.id,
-      rect: { x, y, width: 0, height: 0, rotate: 0 },
-    },
-    { shapes: shared.registries.shapeRegistry, boundaries: shared.registries.boundaryRegistry },
-  );
+  const local = createCoordinateLayout(source.compiled.id, source.compiled.position, {
+    shapes: registries.shapeRegistry,
+    boundaries: registries.boundaryRegistry,
+  });
   return projectLayoutWithTransform(local, composeScopeTransform(parentTransforms));
 };

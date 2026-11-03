@@ -1,5 +1,5 @@
 import { createCompileChildPath } from '@retikz/core';
-import type { ElementCompileOptions, IRChild, IRComposite } from '@retikz/core';
+import type { ScopeStyleResolution, IRChild, IRComposite } from '@retikz/core';
 import type { IdAllocator, PropertyPath } from '@retikz/foundation';
 
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
@@ -35,7 +35,7 @@ export class WeaveEditor {
   ) {}
 
   /** 应用一条操作并刷新候选地址；空插入仍校验位置，但不产生变化 */
-  applyOperation(operation: WeaveOperation, context: ElementCompileOptions['style']): WeaveEditResult | undefined {
+  applyOperation(operation: WeaveOperation, context: ScopeStyleResolution): WeaveEditResult | undefined {
     const changes: WeaveEditResult = { changedNodes: [], insertedNodes: [], removedNodes: [] };
     if (operation.kind === 'insert') {
       const parent = this.findScope(operation.parentId);
@@ -85,7 +85,7 @@ export class WeaveEditor {
   createNode(
     childElement: Exclude<IRChild, IRComposite>,
     parentWeaveNode: WeaveRoot | WeaveScopeNode,
-    context: ElementCompileOptions['style'],
+    context: ScopeStyleResolution,
   ): WeaveNode {
     const base = {
       parent: parentWeaveNode,
@@ -227,7 +227,7 @@ export class WeaveEditor {
   private insertSubtree(
     input: InputWeaveElement,
     parent: WeaveRoot | WeaveScopeNode,
-    context: ElementCompileOptions['style'],
+    context: ScopeStyleResolution,
     insertedNodes: Array<WeaveNode>,
   ): WeaveNode {
     const node = this.createNode(input, parent, context);

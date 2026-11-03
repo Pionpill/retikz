@@ -1,7 +1,7 @@
 import type { ContourSegment } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { boundaryPointOf, compileNodeResolution } from '../../src/compile/tree/node';
+import { boundaryPointOf, layoutNode } from '../../src/compile/tree/node';
 import { createPositionResolveContext } from '../../src/compile/tree/reference';
 import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../src/providers';
 import { resolveNode } from '../../src/resolve';
@@ -29,7 +29,7 @@ const layoutSquare = (node: IRNode) => {
     labelDistance: 12,
   });
 
-  return compileNodeResolution(resolution, {
+  return layoutNode(resolution, {
     measureText,
     positionContext: createPositionResolveContext({ lookupReference: () => undefined, nodeDistance: 24 }),
   }).layout;

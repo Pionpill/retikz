@@ -1,4 +1,4 @@
-import type { CompileProvenanceSnapshot, IRScene, ScenePrimitive } from '@retikz/core';
+import type { CompileProvenanceSnapshot, IRScene, IRScope, ScenePrimitive } from '@retikz/core';
 import { compileSceneSnapshot, compileToScene, definePath, PathSchema } from '@retikz/core';
 import { encodePropertyPath } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -341,4 +341,29 @@ it('自定义 Path 重用相同图元对象时保留各自的发射来源', () =
   expect(prepared.compilation.result).toEqual(compileToScene(input, { paths: [kind] }));
   const owners = [...prepared.compilation.provenance!.ownerMap.values()].filter(owner => owner.emissions.length > 0);
   expect(owners).toHaveLength(2);
+});
+
+it.each(['empty', 'null-path', 'retained'] as const)('Scope 裁空与动画诊断在两驱动一致：%s', variant => {
+  const scope: IRScope = {
+    type: 'scope',
+    ...(variant === 'retained' ? { id: 'retained' } : {}),
+    animations: [{ property: 'viewBox', duration: 100, keyframes: [{ at: 0, value: [0, 0, 10, 10] }] }],
+    children: variant === 'null-path' ? [{ type: 'path', kind: 'empty-output' }] : [],
+  };
+  const input: IRScene = { type: 'scene', version: 1, children: [scope] };
+  const options = {
+    paths: [
+      definePath({
+        name: 'empty-output',
+        schema: PathSchema.extend({ kind: literal('empty-output') }),
+        compile: () => null,
+      }),
+    ],
+  };
+  const full = compileSceneSnapshot(input, options);
+  const weave = new WeaveReconciler(input, options).mount().compilation;
+  expect(weave.result).toEqual(full.result);
+  expect(weave.diagnostics).toEqual(full.diagnostics);
+  expect(weave.diagnostics).toHaveLength(variant === 'retained' ? 1 : 0);
+  expect(weave.result.scene.primitives).toHaveLength(variant === 'retained' ? 1 : 0);
 });

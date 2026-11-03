@@ -502,8 +502,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '单元素编译与可复用状态', en: 'Element compilation and reusable state' },
           content: {
-            zh: 'Core 新增 compileNode / compileCoordinate / compilePath / compileScope 与对应 CompiledXxx 状态、显式 SharedCompileContext、引用读取和输出组装能力，供 Reconciler 持有与调度。Scope 保留准备与包络完成两个阶段；本次不实现 Weave 调度算法。',
-            en: 'Core adds compileNode / compileCoordinate / compilePath / compileScope, matching CompiledXxx states, explicit SharedCompileContext, reference reads and output assembly for Reconciler. Scope retains separate preparation and envelope completion phases; Weave scheduling is not implemented in this change.',
+            zh: 'Core 提供共享的 resolve、layout、emit 与 Path 宿主编译阶段，各阶段使用窄上下文。全量驱动与 Reconciler 自行组合并持有工作区，等待重试和提交归 Reconciler；Scope 保留前置准备与后置包络。',
+            en: 'Core provides shared resolution, layout, emission, and Path-host compilation stages with narrow contexts. Full and Reconciler drivers compose them and own workspace lifetime; Reconciler owns waiting, retries, and commits. Scope retains preparation and envelope completion phases.',
           },
         },
         {

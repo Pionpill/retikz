@@ -43,7 +43,7 @@ const targetBoundaryResolutionOf = (
 };
 
 /** 创建 position resolver context 所需的 compile 状态投影 */
-type InputPositionResolveContext = Readonly<{
+export type InputPositionResolveContext = Readonly<{
   /** 当前命名空间 */
   lookupReference: (id: string) =>
     | Readonly<{

@@ -1,5 +1,5 @@
 import type { CompileOccurrenceLocator } from '../../../contract';
-import { resolveAnimations } from '../../../resolve';
+import { resolvePathAnimations } from '../../../resolve';
 import type { IRPathBase } from '../../../schemas';
 import type { LayoutBoundsContribution } from '../../layout';
 import type { CompileOwnerKey } from '../../provenance';
@@ -9,12 +9,14 @@ import { createTreePositionContext } from '../reference';
 import type { SubtreeCompileRuntime } from '../runtime';
 import { PATH_PLACEHOLDER } from '../shared';
 import type { TreeOutputState, InternalScenePrimitive } from '../shared';
-import { compilePathState } from './compile';
+import { compilePath } from './compile';
 import { createPathTargetResolver } from './index';
 import type { InputPathCompilation } from './types';
 
 /** 等待命名引用完成注册后再 emit 的 path 任务 */
 export type PendingPathEmission = InputPathCompilation & {
+  /** 入队时的编译出现位置，仅供驱动绑定诊断 */
+  occurrence: CompileOccurrenceLocator;
   /** path 几何完成后写入的当前 frame bbox 贡献 */
   bounds: Array<LayoutBoundsContribution>;
   /** path allocation 几何贡献 */
@@ -56,14 +58,7 @@ export const queuePathChild = (
   const placeholder = { type: PATH_PLACEHOLDER } as const;
   primitives.push(placeholder);
   const pending: PendingPathEmission = {
-    path: {
-      ...child,
-      animations: resolveAnimations(child.animations, {
-        target: 'element',
-        onWarn: runtime.state.workspace.diagnosticCollector.collect,
-        irPath: pathIrPath,
-      }),
-    },
+    path: resolvePathAnimations(child, pathIrPath, runtime.state.workspace.diagnosticCollector.collect),
     irPath: pathIrPath,
     scopeChain,
     bounds: frame.state.bounds,
@@ -96,9 +91,17 @@ export const flushPendingPathEmissions = (
     for (const pendingPath of pendingPaths) {
       const targetResolver = createPathTargetResolver(chain => createTreePositionContext(runtime, chain));
       const { result, resolution } = runtime.state.execution.withWarningOccurrence(pendingPath.occurrence, () =>
-        compilePathState(pendingPath, targetResolver, {
-          shared: runtime.context,
-          workspace: runtime.state.workspace,
+        compilePath(pendingPath, targetResolver, {
+          registries: runtime.context.registries,
+          ...runtime.context.layout,
+          ...runtime.context.host,
+          nodeBoundaryStore: runtime.state.workspace.nodeBoundaryStore,
+          registerPaint: runtime.state.workspace.paintRegistry.register,
+          resources: () => [
+            ...runtime.state.workspace.paintRegistry.getResources(),
+            ...runtime.state.workspace.clipRegistry.getResources(),
+          ],
+          onWarn: runtime.state.workspace.diagnosticCollector.collect,
           resolveTransform: runtime.state.execution.scopeTransformComposer.resolve,
         }),
       );

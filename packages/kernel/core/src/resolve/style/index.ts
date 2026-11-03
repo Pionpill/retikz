@@ -7,3 +7,4 @@ export * from './node';
 export * from './opacity';
 export * from './path';
 export * from './types';
+export * from './scope';

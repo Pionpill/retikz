@@ -315,13 +315,14 @@ describe('Scene 资源依赖关闭', () => {
       resources: scene.resources!,
       bounds: [],
     }));
-    const merged = assembleCompileOutputs(outputs, shared);
+    const context = { round: shared.layout.round, maxClipDepth: shared.limits.maxClipDepth };
+    const merged = assembleCompileOutputs(outputs, context);
     expect(merged.resources).toHaveLength(2);
     expect(merged.primitives[0]).toBe(red.primitives[0]);
     expect(merged.primitives[1]).toBe(blue.primitives[0]);
     expect(merged.primitives[2]).toBe(repeated.primitives[0]);
     expect(() => visitSceneContent(merged)).not.toThrow();
-    const reversed = assembleCompileOutputs([...outputs].reverse(), shared);
+    const reversed = assembleCompileOutputs([...outputs].reverse(), context);
     expect(new Set(reversed.resources.map(resource => resource.id))).toEqual(
       new Set(merged.resources.map(resource => resource.id)),
     );

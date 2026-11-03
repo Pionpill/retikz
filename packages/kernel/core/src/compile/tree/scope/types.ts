@@ -7,12 +7,10 @@ import type { CompiledNodeLayout } from '../../layout';
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileOutput, CompileWarning } from '../../shared';
 import type { SubtreeCompileRuntime } from '../runtime';
-import type { CompileStyle, InternalScenePrimitive } from '../shared';
+import type { InternalScenePrimitive } from '../shared';
 
 /** Scope 子元素计算前的准备状态，不代表包络已就绪 */
-export type ScopeCompilationPreparation = Readonly<{
-  /** 子元素有效继承上下文 */
-  scope: CompileStyle;
+export type ScopeGeometryPreparation = Readonly<{
   /** 已在父坐标系解析的放置目标 */
   positionTarget?: IRPosition;
   /** 不依赖包络时可提前使用的自身变换 */
@@ -26,7 +24,7 @@ export type CompiledScope = Readonly<{
   /** 局部内容包络，包含空内容时的既有退化布局 */
   envelope: CompiledNodeLayout;
   /** Scope 输出的包装属性，不包含 children */
-  group: Omit<GroupPrimitive, 'children'>;
+  group: Omit<GroupPrimitive, 'children' | 'animations'>;
   /** 自身装饰及其资源，不重复持有子输出 */
   output: CompileOutput;
 }>;

@@ -300,7 +300,12 @@ describe('compile 校验：viewBox ⇔ 根', () => {
     const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA] }]), c).scene
       .primitives;
 
-    expect(c.warnings.some(w => w.code === BuiltinCompileWarningCode.AnimationInvalidProperty)).toBe(true);
+    expect(c.warnings).toContainEqual(
+      expect.objectContaining({
+        code: BuiltinCompileWarningCode.AnimationInvalidProperty,
+        path: ['children', 0, 'animations', 0],
+      }),
+    );
 
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toBeUndefined();
   });

@@ -1,12 +1,10 @@
 import { formatPropertyPath } from '@retikz/foundation';
-import { boundsToRect } from '@retikz/math';
 
 import type { CompileOccurrenceLocator, SceneClipPath, Transform } from '../../../contract';
-import { resolveScopeDefaults, resolveTheme } from '../../../resolve';
+import { resolveScopeStyle } from '../../../resolve';
 import type { IRScope } from '../../../schemas';
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
-import { allocationPointsOf, collectLayoutBounds, calculateBoundsOfPrimitives } from '../../scene';
 import { createCompileChildPath, formatCompileOccurrence } from '../../shared';
 import { projectLayoutWithTransform, createScopePlaceholderLayout, projectPublishedCompileLayout } from '../node';
 import { flushPendingPathEmissions } from '../path';
@@ -17,7 +15,7 @@ import type { TreeOutputState } from '../shared';
 import type { SubtreeCompileOptions } from '../types';
 import { compileScopeGeometry, prepareScopeGeometry } from './compile';
 import { projectScopeCompileLayouts } from './layout';
-import { emitScopeGroup } from './output';
+import { emitScopeGroup, projectScopeOutputBounds } from './output';
 import type { ScopeLayoutPlaceholder, ScopeLayoutPlaceholderContext, ScopeVisitHost } from './types';
 
 /** 有 scope.id 时先注册占位 layout，等子树 bbox 算出后再替换 */
@@ -69,21 +67,19 @@ export const visitScope = (
   preResolvedClipPath?: SceneClipPath,
 ): void => {
   const {
-    context: {
-      pathPrefix: locatorPrefix,
-      style: { defaults: scopeDefaults },
-    },
+    context: { pathPrefix: locatorPrefix },
   } = frame;
 
   const themePath =
     generatedOccurrence === undefined
       ? formatPropertyPath([...createCompileChildPath(locatorPrefix, index), 'theme'])
       : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
-  const theme = resolveTheme(
-    frame.context.style.theme,
-    child.theme,
-    themePath,
+  const style = resolveScopeStyle(
+    child,
     runtime.context.registries.themeRegistry,
+    frame.context.style,
+    createCompileChildPath(locatorPrefix, index),
+    themePath,
   );
   const scopeGeometryContext = {
     positionContext: createTreePositionContext(runtime, frame.context.transformChains),
@@ -127,7 +123,7 @@ export const visitScope = (
         transformChains: preliminaryScopeChain,
         pathPrefix: createCompileChildPath(locatorPrefix, index),
         ...(semanticOwner === undefined ? {} : { compileOwner: semanticOwner }),
-        style: { defaults: resolveScopeDefaults(child.defaults, scopeDefaults), theme },
+        style,
       },
       state,
     };
@@ -137,7 +133,13 @@ export const visitScope = (
       compileNested(scopeFrame, preliminaryTransforms);
     }
 
-    const geometry = compileScopeGeometry(child, preparation, state.layouts, runtime.context, scopeGeometryContext);
+    const geometry = compileScopeGeometry(
+      child,
+      preparation,
+      state.layouts,
+      { shapes: runtime.context.registries.shapeRegistry, boundaries: runtime.context.registries.boundaryRegistry },
+      scopeGeometryContext,
+    );
     const intrinsicLayout = geometry.envelope;
     scopeTransforms = geometry.transforms;
 
@@ -220,32 +222,11 @@ export const visitScope = (
     ...(preResolvedClipPath === undefined ? {} : { resolvedClipPath: preResolvedClipPath }),
   });
 
-  for (const contribution of state.bounds) {
-    if (contribution.decoration === true) {
-      const bounds = collectLayoutBounds(undefined, contribution.boundsPoints);
-      if (bounds === undefined) continue;
-
-      const rectangle = boundsToRect(bounds);
-      const projected = calculateBoundsOfPrimitives(
-        [
-          {
-            type: 'group',
-            transforms: scopeTransforms,
-            ...(clipRef === undefined ? {} : { clipRef }),
-            children: [{ type: 'rect', ...rectangle, fill: 'black' }],
-          },
-        ],
-        runtime.state.workspace.clipRegistry.getResources(),
-      );
-      if (projected !== undefined)
-        frame.state.bounds.push({ boundsPoints: allocationPointsOf(projected), decoration: true });
-    } else {
-      frame.state.bounds.push({
-        boundsPoints: contribution.boundsPoints.map(point =>
-          runtime.state.execution.scopeTransformComposer.apply(point, scopeTransforms),
-        ),
-        shadow: contribution.shadow,
-      });
-    }
-  }
+  frame.state.bounds.push(
+    ...projectScopeOutputBounds(
+      state.bounds,
+      { type: 'group', transforms: scopeTransforms, ...(clipRef === undefined ? {} : { clipRef }) },
+      runtime.state.workspace.clipRegistry.getResources(),
+    ),
+  );
 };

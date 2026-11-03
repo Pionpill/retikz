@@ -24,7 +24,10 @@ export const assembleWeaveCompilation = (
     padding?: number;
   }>,
 ) => {
-  const output = assembleCompileOutputs(input.outputs, input.shared);
+  const output = assembleCompileOutputs(input.outputs, {
+    round: input.shared.layout.round,
+    maxClipDepth: input.shared.limits.maxClipDepth,
+  });
   return assembleSceneCompilationSnapshot({
     root: input.root,
     primitives: output.primitives,

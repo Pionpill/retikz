@@ -1,7 +1,9 @@
+import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 
 import { projectLayoutWithTransform } from '.';
 import type { CompileOccurrenceLocator } from '../../../contract';
+import { resolveNode } from '../../../resolve';
 import type { IRNode } from '../../../schemas';
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
@@ -10,7 +12,7 @@ import { createTreePositionContext } from '../reference';
 import type { SubtreeCompileRuntime } from '../runtime';
 import { cloneAlignmentGuides } from '../shared';
 import type { TreeOutputState } from '../shared';
-import { compileNodeState } from './compile';
+import { layoutNode } from './layout';
 import { alignmentGuidesOfNode } from './layout-metrics';
 import { emitNodeOutput } from './output';
 
@@ -34,15 +36,26 @@ export const visitNode = (
   } = frame;
   const nodeIrPath = createCompileChildPath(locatorPrefix, index);
 
-  const compilation = compileNodeState(child, nodeIrPath, {
-    shared: runtime.context,
-    workspace: runtime.state.workspace,
+  const warn = (code: string, message: string, path: PropertyPath = nodeIrPath): void =>
+    runtime.state.workspace.diagnosticCollector.collect({ code, message, path });
+  const resolution = resolveNode(child, {
+    ...runtime.context.registries,
+    ...runtime.context.layout,
     scopeDefaults,
     mode: frame.context.style.theme.mode,
-    scopeChain,
+    irPath: nodeIrPath,
+    warn,
+  });
+  const compilation = layoutNode(resolution, {
+    measureText: runtime.context.host.measureText,
+    nodeBoundaryStore: runtime.state.workspace.nodeBoundaryStore,
     positionContext: createTreePositionContext(runtime, scopeChain),
     composedTransform: runtime.state.execution.scopeTransformComposer.resolve(scopeChain),
-    childProposal: frame.context.layout?.childProposal,
+    scopeChain,
+    rootFontSize: runtime.context.layout.rootFontSize,
+    allocationWidthProposal: frame.context.layout?.childProposal?.x,
+    texLowering: { lowerTex: runtime.context.host.lowerTex, warn },
+    warn,
   });
 
   const { layout } = compilation;
@@ -61,7 +74,10 @@ export const visitNode = (
     frame.state.publications.push(globalLayout);
   }
 
-  const output = emitNodeOutput(compilation, runtime.context, runtime.state.workspace);
+  const output = emitNodeOutput(compilation, {
+    round: runtime.context.layout.round,
+    registerPaint: runtime.state.workspace.paintRegistry.register,
+  });
   const emittedPrimitives =
     runtime.state.execution.provenanceTracker?.materializePrimitives(output.primitives) ?? output.primitives;
   if (semanticOwner !== undefined) {

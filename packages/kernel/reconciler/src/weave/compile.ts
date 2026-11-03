@@ -1,5 +1,30 @@
-import type { CompiledNodeLayout, ElementCompileOptions, ElementCompileResult } from '@retikz/core';
+import type {
+  CompiledNodeLayout,
+  CompileOccurrenceLocator,
+  CompileWarning,
+  LayoutProposal,
+  Transform,
+  SharedCompileContext,
+  ScopeStyleResolution,
+  PositionTargetResolveContext,
+  WorkspaceCompileState,
+  ComposedScopeTransform,
+} from '@retikz/core';
+import {
+  createWorkspaceCompileState,
+  createPositionResolveContext,
+  composeScopeTransform,
+  resolveNodeBoundary,
+  RetikzCoreError,
+  RetikzCoreErrorCode,
+  orderCompileWarnings,
+  withCompileWarningOccurrence,
+  registerFatalProbeError,
+} from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
+
+import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
 
 /** 候选版本中的名称绑定，身份对应稳定的 Weave 节点 */
 export type WeaveBinding =
@@ -20,25 +45,51 @@ export type WeaveCompileRead = Readonly<{
   namespace: WeaveNamespace;
   /** 查询名称 */
   name: string;
-  /** 当前 frame 中的查询结果 */
+  /** 查询结果 */
   state: 'missing' | 'pending' | 'ready';
   /** 命中项对应的稳定节点 */
   binding?: object;
 }>;
 
-/** Weave 调用位置状态；名称图不越过 Core 边界 */
-export type WeaveCompileOptions = Omit<ElementCompileOptions, 'lookupReference'> &
-  Readonly<{
-    /** 声明位置的可见名称链 */
-    namespace?: WeaveNamespace;
-    /** 不允许后代引用包络的祖先绑定 */
-    ancestorScopes?: ReadonlySet<object>;
-  }>;
+/** Weave 驱动独有的计算输入，不传入 Core 原子阶段 */
+export type WeaveCompileOptions = Readonly<{
+  /** 稳定环境 */
+  shared: SharedCompileContext;
+  /** 当前有效样式 */
+  style: ScopeStyleResolution;
+  /** 来源路径 */
+  irPath: PropertyPath;
+  /** 祖先变换 */
+  transforms?: ReadonlyArray<Transform>;
+  /** 布局提案 */
+  proposal?: LayoutProposal;
+  /** 编译出现位置 */
+  occurrence?: CompileOccurrenceLocator;
+  /** 声明位置可见的名称链 */
+  namespace?: WeaveNamespace;
+  /** 禁止引用的祖先绑定 */
+  ancestorScopes?: ReadonlySet<object>;
+}>;
 
-/** Core 计算结果与本次调用的读取事实 */
-export type WeaveCompileResult<TCompiled> = ElementCompileResult<TCompiled> &
+/** 一次候选尝试的环境与独占工作区，仅供驱动组合阶段 */
+export type WeaveElementRuntime = Readonly<{
+  /** 驱动输入 */
+  options: WeaveCompileOptions;
+  /** 当前局部坐标解释能力 */
+  positionContext: PositionTargetResolveContext;
+  /** 已合成变换 */
+  composedTransform: ComposedScopeTransform;
+  /** 本次尝试独占资源、几何缓存与诊断 */
+  workspace: WorkspaceCompileState;
+}>;
+
+/** 等待不携带半成品，读取事实由驱动保留 */
+export type WeaveCompileResult<TCompiled> = (
+  | Readonly<{ status: 'compiled'; compiled: TCompiled; diagnostics: ReadonlyArray<CompileWarning> }>
+  | Readonly<{ status: 'pending' }>
+) &
   Readonly<{
-    /** 编译期间实际发生的名称读取 */
+    /** 本次实际读取的名称与绑定 */
     reads: ReadonlyArray<WeaveCompileRead>;
   }>;
 
@@ -63,23 +114,68 @@ export const lookupWeaveBinding = (
   return undefined;
 };
 
-/** 将版本内查询适配到 Core，并持有调用过程中收集的读取记录 */
+/** 隔离一次候选计算，适配引用并在成功时收集产物与诊断 */
 export const runWeaveCompilation = <TCompiled>(
   options: WeaveCompileOptions,
-  compile: (options: ElementCompileOptions) => ElementCompileResult<TCompiled>,
+  compile: (runtime: WeaveElementRuntime) => TCompiled,
 ): WeaveCompileResult<TCompiled> => {
-  const { namespace, ancestorScopes, ...coreOptions } = options;
   const reads: Array<WeaveCompileRead> = [];
-  const result = compile({
-    ...coreOptions,
+  const workspace = createWorkspaceCompileState(options.shared);
+  const transforms = options.transforms ?? [];
+  const composedTransform = composeScopeTransform(transforms);
+  let pending: RetikzReconcilerError | undefined;
+  const positionContext = createPositionResolveContext({
+    nodeDistance: options.shared.layout.nodeDistance,
+    transformChain: transforms,
+    composedTransform,
+    nodeBoundaryStore: workspace.nodeBoundaryStore,
     lookupReference: name => {
-      const entry = lookupWeaveBinding(namespace, name, reads);
+      const entry = lookupWeaveBinding(options.namespace, name, reads);
       if (entry === undefined) return undefined;
-      if (ancestorScopes?.has(entry.binding)) return { state: 'ancestor' };
-      return entry.state === 'pending'
-        ? { state: 'pending' }
-        : { state: 'ready', layout: entry.layout, irPath: entry.irPath };
+      if (options.ancestorScopes?.has(entry.binding)) {
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
+          `Geometry reference cannot target ancestor Scope '${name}'`,
+        );
+      }
+      if (entry.state === 'pending') {
+        if (pending === undefined) {
+          pending = new RetikzReconcilerError(RetikzReconcilerErrorCode.Compile, 'Element dependency is pending');
+          registerFatalProbeError(pending);
+        }
+        throw pending;
+      }
+      return { state: 'resolved', layout: entry.layout, irPath: entry.irPath };
     },
+    resolveExplicitBoundary: (boundary, reference) =>
+      resolveNodeBoundary(boundary, {
+        ...reference,
+        shapeRegistry: options.shared.registries.shapeRegistry,
+        boundaryRegistry: options.shared.registries.boundaryRegistry,
+      }),
   });
-  return { ...result, reads: Object.freeze(reads) };
+  try {
+    const compiled = compile({ options, workspace, positionContext, composedTransform });
+    return Object.freeze({
+      status: 'compiled',
+      compiled,
+      reads: Object.freeze(reads),
+      diagnostics: Object.freeze(
+        orderCompileWarnings(
+          workspace.diagnosticCollector.warnings.map(warning =>
+            withCompileWarningOccurrence(warning, options.occurrence),
+          ),
+        ),
+      ),
+    });
+  } catch (error) {
+    if (pending !== undefined && error === pending)
+      return Object.freeze({ status: 'pending', reads: Object.freeze(reads) });
+    if (error instanceof RetikzCoreError) throw error;
+    throw new RetikzReconcilerError(
+      RetikzReconcilerErrorCode.Compile,
+      `Element compilation failed at ${formatPropertyPath(options.irPath)}`,
+      { cause: error },
+    );
+  }
 };

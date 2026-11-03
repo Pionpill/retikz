@@ -1,9 +1,6 @@
-import { formatPropertyPath } from '@retikz/foundation';
-
 import type { Transform } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import { createLayoutProbeRecoverableError, resolvePositionTargetWorld } from '../../../resolve';
-import type { IRPosition, IRScopePositionTarget, IRScopeSelfPoint, IRTransform } from '../../../schemas';
+import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../../schemas';
 import type { CompiledNodeLayout } from '../../layout';
 import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../../shared';
 import { projectLayoutWithTransform, resolveAnchorRefUncached } from '../node';
@@ -33,48 +30,8 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition =>
   return point;
 };
 
-/**
- * 在 children 编译前冻结 Scope position target
- * @description 只允许父 frame 显式坐标或此前已完成的 namespace entry，避免 descendant / self / placeholder cycle
- */
-export const resolveScopePositionTarget = (
-  child: InputScopeCompile,
-  context: ScopeGeometryContext,
-): IRPosition | undefined => {
-  const target: IRScopePositionTarget | undefined = Array.isArray(child.position) ? undefined : child.position?.target;
-  if (target === undefined) return undefined;
-  if (Array.isArray(target)) {
-    return assertFiniteScopePoint([target[0], target[1]], 'scope position target');
-  }
-
-  const scopeIrPath = context.irPath;
-  if (target.id === child.id) {
-    throw createLayoutProbeRecoverableError(
-      `Cannot resolve scope position target '${target.id}' at ${formatPropertyPath(scopeIrPath)}: self target is not allowed`,
-    );
-  }
-
-  const positionContext = context.positionContext;
-  const reference = positionContext.lookupReference(target.id);
-  if (reference === undefined || reference.state !== 'resolved') {
-    throw createLayoutProbeRecoverableError(
-      `Cannot resolve scope position target '${target.id}' at ${formatPropertyPath(scopeIrPath)}: target must be defined and fully resolved before this Scope`,
-    );
-  }
-
-  const resolution = resolvePositionTargetWorld(target, positionContext);
-  if (resolution.referencePoint === null) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Compile,
-      `Cannot resolve scope position target '${target.id}' at ${formatPropertyPath(scopeIrPath)}`,
-    );
-  }
-
-  return assertFiniteScopePoint(positionContext.toLocal(resolution.referencePoint), 'scope position target');
-};
-
 /** anchor position self point：anchor 在 transformed envelope 上解析；origin / 显式点先按 own chain 投影 */
-const resolveTransformedSelfPoint = (
+const calculateTransformedSelfPoint = (
   point: IRScopeSelfPoint,
   transformedLayout: CompiledNodeLayout,
   scopeTransforms: ReadonlyArray<Transform>,
@@ -98,7 +55,7 @@ const resolveTransformedSelfPoint = (
 };
 
 /** children intrinsic layout 完成后解析 pivot，并生成最终 own chain */
-export const resolveFinalScopeTransforms = (
+export const calculateScopePlacementTransforms = (
   child: InputScopeCompile,
   context: ScopeGeometryContext,
   intrinsicLayout: CompiledNodeLayout,
@@ -136,7 +93,7 @@ export const resolveFinalScopeTransforms = (
     scopeTransforms.length === 0
       ? intrinsicLayout
       : projectLayoutWithTransform(intrinsicLayout, composeScopeTransform(scopeTransforms));
-  const selfPoint = resolveTransformedSelfPoint(
+  const selfPoint = calculateTransformedSelfPoint(
     (!Array.isArray(child.position) ? child.position?.selfAnchor : undefined) ?? 'center',
     transformedLayout,
     scopeTransforms,
@@ -155,7 +112,7 @@ export const resolveFinalScopeTransforms = (
  * 不依赖 intrinsic envelope 的既有 transform 可在 children 前冻结
  * @description 保持 v0.4 Scope transform 下跨 frame relative 定位语义；anchor pivot 才进入完整两阶段收尾
  */
-export const resolvePreliminaryScopeTransforms = (
+export const lowerPreliminaryScopeTransforms = (
   child: InputScopeCompile,
   context: ScopeGeometryContext,
 ): Array<Transform> | undefined => {
