@@ -112,7 +112,7 @@ Each recursive subtree uses `SubtreeCompileRuntime`: its `context` holds effecti
 
 After successful compilation, repeated declarations of an ID in the same namespace produce one `DUPLICATE_NODE_ID` diagnostic. Its message lists every location in declaration order, and `path` points to the last declaration; the last declaration still wins name resolution. Independent namespaces are handled separately. Probed declarations count toward the actual destination namespace only when selected for replay; discarded probes publish no diagnostics.
 
-Stable environments and base compilation state are owned by `compile/runtime`, including namespaces, boundary caches, transform caches, and component state. Shared layout result contracts live in `compile/layout.ts`. Layout projection, position reference adaptation, and element execution remain in tree compilation. Tree compilation depends on these contracts; the context owner does not import tree implementations.
+Reconciler owns stable environments and per-execution workspaces in `compile/runtime`, including namespaces, transform caches, and component state. Core organizes atomic computation by domain under `compile`: node, path, and scope. Node layout types live in `compile/node/types.ts`; Scope bounds contributions live in `compile/scope/types.ts`. Layout projection and position reference adaptation belong to Core; tree traversal and stage scheduling belong to Reconciler.
 
 The shared context has four groups:
 
@@ -284,8 +284,8 @@ The layout border uses a center position; a Scene rectangle uses its top-left co
       label: 'resolveNode: effective configuration and bindings',
       path: 'packages/kernel/core/src/resolve/node/resolve.ts',
     },
-    { label: 'Node layout', path: 'packages/kernel/core/src/compile/tree/node/layout.ts' },
-    { label: 'Node primitive emission', path: 'packages/kernel/core/src/compile/tree/node/emit.ts' },
+    { label: 'Node layout', path: 'packages/kernel/core/src/compile/node/layout.ts' },
+    { label: 'Node primitive emission', path: 'packages/kernel/core/src/compile/node/emit.ts' },
   ]}
 />
 

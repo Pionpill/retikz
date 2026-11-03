@@ -25,7 +25,7 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
   sources={[
     {
       label: '正文与间距参与形状布局',
-      path: 'packages/kernel/core/src/compile/tree/node/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
   ]}
 />
@@ -42,7 +42,7 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
   sources={[
     {
       label: '标签视觉框与附着偏移',
-      path: 'packages/kernel/core/src/compile/tree/node/label/geometry.ts',
+      path: 'packages/kernel/core/src/compile/node/label/geometry.ts',
     },
   ]}
 />
@@ -51,7 +51,7 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
   sources={[
     {
       label: '节点与标签分别收集内容范围',
-      path: 'packages/kernel/core/src/compile/tree/node/output.ts',
+      path: 'packages/kernel/core/src/compile/node/output.ts',
     },
   ]}
 />
@@ -78,7 +78,7 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
   sources={[
     {
       label: 'tight 包络、fallback 与缓存',
-      path: 'packages/kernel/core/src/compile/tree/node/boundary.ts',
+      path: 'packages/kernel/core/src/compile/node/boundary.ts',
     },
     {
       label: '内置 boundary 的 fit 与 gap',
@@ -88,11 +88,11 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
     },
     {
       label: '视觉轮廓、连接面与 anchor 分流',
-      path: 'packages/kernel/core/src/compile/tree/node/anchors.ts',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
     },
     {
       label: 'margin 与锚点类型的解析边界',
-      path: 'packages/kernel/core/src/compile/tree/node/anchor-cache.ts',
+      path: 'packages/kernel/core/src/compile/node/anchor-cache.ts',
     },
   ]}
 />
@@ -120,7 +120,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     { label: '命名栈与条目结构', path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts' },
     {
       label: 'CompiledNodeLayout 的几何字段',
-      path: 'packages/kernel/core/src/compile/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/types.ts',
       startLine: 42,
     },
     {
@@ -148,7 +148,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     { label: '由内向外查找', path: 'packages/kernel/reconciler/src/compile/runtime/namespace.ts' },
     {
       label: '布局投影为定位查询视图',
-      path: 'packages/kernel/core/src/compile/tree/reference/position-context.ts',
+      path: 'packages/kernel/core/src/compile/reference/position-context.ts',
     },
     {
       label: '路径入队并保留绘制位置',
@@ -257,7 +257,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     },
     {
       label: 'Node 正文文本布局',
-      path: 'packages/kernel/core/src/compile/tree/node/content/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
     },
   ]}
 />
@@ -306,15 +306,15 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
   sources={[
     {
       label: '零尺寸几何记录构造',
-      path: 'packages/kernel/core/src/compile/tree/node/synthetic.ts',
+      path: 'packages/kernel/core/src/compile/node/synthetic.ts',
     },
     {
       label: '命名 anchor 解析',
-      path: 'packages/kernel/core/src/compile/tree/node/anchors.ts',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
     },
     {
       label: '零尺寸边上比例点拒绝',
-      path: 'packages/kernel/core/src/compile/tree/node/anchor-cache.ts',
+      path: 'packages/kernel/core/src/compile/node/anchor-cache.ts',
     },
   ]}
 />
@@ -366,7 +366,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
     },
     {
       label: '文字与 padding 到形状边界的布局',
-      path: 'packages/kernel/core/src/compile/tree/node/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
     {
       label: '矩形轮廓、anchor 与边界交点',

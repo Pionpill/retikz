@@ -20,7 +20,7 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 <SourceLinks
   sources={[
     { label: '路径解析入口', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: '描边路径输出入口', path: 'packages/kernel/core/src/compile/tree/path/stroke/emit.ts' },
+    { label: '描边路径输出入口', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
   ]}
 />
 
@@ -40,7 +40,7 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
   sources={[
     { label: '延迟队列及占位回填', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
     { label: '目标绑定与确定化路径', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: '编译阶段的目标查询', path: 'packages/kernel/core/src/compile/tree/path/host/target.ts' },
+    { label: '编译阶段的目标查询', path: 'packages/kernel/core/src/compile/path/host/target.ts' },
   ]}
 />
 
@@ -70,9 +70,9 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '游标状态与推进', path: 'packages/kernel/core/src/compile/tree/path/stroke/cursor.ts' },
-    { label: '直线、折线与曲线', path: 'packages/kernel/core/src/compile/tree/path/stroke/segments.ts' },
-    { label: '形状步骤与笔位交接', path: 'packages/kernel/core/src/compile/tree/path/stroke/shapes.ts' },
+    { label: '游标状态与推进', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts' },
+    { label: '直线、折线与曲线', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
+    { label: '形状步骤与笔位交接', path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts' },
   ]}
 />
 
@@ -112,12 +112,12 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '目标查询与坐标转换', path: 'packages/kernel/core/src/compile/tree/path/target.ts' },
-    { label: '边界点与折线出界点计算', path: 'packages/kernel/core/src/compile/tree/node/anchors.ts' },
-    { label: '连接边界几何', path: 'packages/kernel/core/src/compile/tree/node/boundary.ts' },
-    { label: '各类路径段的方向与命令', path: 'packages/kernel/core/src/compile/tree/path/stroke/segments.ts' },
-    { label: '命令及来源记录', path: 'packages/kernel/core/src/compile/tree/path/stroke/commands.ts' },
-    { label: '折线接缝圆角', path: 'packages/kernel/core/src/compile/tree/path/stroke/rounded-corners.ts' },
+    { label: '目标查询与坐标转换', path: 'packages/kernel/core/src/compile/path/target.ts' },
+    { label: '边界点与折线出界点计算', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
+    { label: '连接边界几何', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
+    { label: '各类路径段的方向与命令', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
+    { label: '命令及来源记录', path: 'packages/kernel/core/src/compile/path/stroke/commands.ts' },
+    { label: '折线接缝圆角', path: 'packages/kernel/core/src/compile/path/stroke/rounded-corners.ts' },
   ]}
 />
 
@@ -131,11 +131,11 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '步骤与路径级标签采样', path: 'packages/kernel/core/src/compile/tree/path/stroke/sampling.ts' },
-    { label: '标签文字与方向', path: 'packages/kernel/core/src/compile/tree/path/host/label.ts' },
-    { label: '留白区间与线条拆分', path: 'packages/kernel/core/src/compile/tree/path/stroke/interruption.ts' },
-    { label: '箭头与沿线标记', path: 'packages/kernel/core/src/compile/tree/path/stroke/decorations.ts' },
-    { label: '首尾线段缩短', path: 'packages/kernel/core/src/compile/tree/path/stroke/shrink.ts' },
+    { label: '步骤与路径级标签采样', path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts' },
+    { label: '标签文字与方向', path: 'packages/kernel/core/src/compile/path/host/label.ts' },
+    { label: '留白区间与线条拆分', path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts' },
+    { label: '箭头与沿线标记', path: 'packages/kernel/core/src/compile/path/stroke/decorations.ts' },
+    { label: '首尾线段缩短', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
   ]}
 />
 
@@ -158,10 +158,10 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '箭头接合系数与接缝重叠', path: 'packages/kernel/core/src/compile/tree/path/stroke/shrink.ts' },
-    { label: '原曲线接合点与箭头朝向', path: 'packages/kernel/core/src/compile/tree/path/stroke/endpoint-contact.ts' },
-    { label: '保形曲线切片', path: 'packages/kernel/core/src/compile/tree/path/stroke/interruption.ts' },
-    { label: '标签断口与端点接合顺序', path: 'packages/kernel/core/src/compile/tree/path/stroke/emit.ts' },
+    { label: '箭头接合系数与接缝重叠', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
+    { label: '原曲线接合点与箭头朝向', path: 'packages/kernel/core/src/compile/path/stroke/endpoint-contact.ts' },
+    { label: '保形曲线切片', path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts' },
+    { label: '标签断口与端点接合顺序', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
   ]}
 />
 
@@ -177,10 +177,10 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <SourceLinks
   sources={[
-    { label: '步骤循环与后处理顺序', path: 'packages/kernel/core/src/compile/tree/path/stroke/emit.ts' },
-    { label: '子路径拆分与端点箭头归属', path: 'packages/kernel/core/src/compile/tree/path/stroke/split.ts' },
-    { label: '图元组合与路径变换', path: 'packages/kernel/core/src/compile/tree/path/stroke/output.ts' },
-    { label: '输出契约', path: 'packages/kernel/core/src/compile/tree/path/types.ts' },
+    { label: '步骤循环与后处理顺序', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
+    { label: '子路径拆分与端点箭头归属', path: 'packages/kernel/core/src/compile/path/stroke/split.ts' },
+    { label: '图元组合与路径变换', path: 'packages/kernel/core/src/compile/path/stroke/output.ts' },
+    { label: '输出契约', path: 'packages/kernel/core/src/compile/path/types.ts' },
   ]}
 />
 

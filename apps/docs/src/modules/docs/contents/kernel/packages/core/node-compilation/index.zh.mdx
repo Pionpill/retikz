@@ -21,9 +21,13 @@ description: 追踪 Core 如何把文字度量和形状约束转为节点尺寸�
 
 <SourceLinks
   sources={[
-    { label: 'layoutNode：节点布局入口', path: 'packages/kernel/core/src/compile/tree/node/layout.ts' },
+    { label: 'layoutNode：节点布局入口', path: 'packages/kernel/core/src/compile/node/layout.ts' },
     { label: 'NodeResolution：布局输入', path: 'packages/kernel/core/src/resolve/node/types.ts' },
-    { label: 'CompiledNodeLayout：几何与排版结果', path: 'packages/kernel/core/src/compile/layout.ts', startLine: 42 },
+    {
+      label: 'CompiledNodeLayout：几何与排版结果',
+      path: 'packages/kernel/core/src/compile/node/types.ts',
+      startLine: 42,
+    },
   ]}
 />
 
@@ -42,8 +46,8 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
     { label: '缺省文字估算器', path: 'packages/kernel/core/src/compile/text/measurement.ts' },
     { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
-    { label: '正文分支与物理行汇总', path: 'packages/kernel/core/src/compile/tree/node/content/layout.ts' },
-    { label: '普通文本折行', path: 'packages/kernel/core/src/compile/tree/node/content/text.ts' },
+    { label: '正文分支与物理行汇总', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: '普通文本折行', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
     { label: '混排行的度量与基线对齐', path: 'packages/kernel/core/src/compile/text/layout.ts' },
   ]}
 />
@@ -81,7 +85,7 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
   sources={[
     {
       label: '内容预算、computeCircumscribedGeometry 与尺寸约束',
-      path: 'packages/kernel/core/src/compile/tree/node/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
     { label: '形状定义的包围契约', path: 'packages/kernel/core/src/contract/node/shape.ts' },
   ]}
@@ -101,10 +105,10 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
 
 <SourceLinks
   sources={[
-    { label: '正文行高与基线偏移', path: 'packages/kernel/core/src/compile/tree/node/content/layout.ts' },
-    { label: '标签测量与放置', path: 'packages/kernel/core/src/compile/tree/node/label/layout.ts' },
-    { label: '标签净距与视觉范围', path: 'packages/kernel/core/src/compile/tree/node/label/geometry.ts' },
-    { label: '绘制与观测共用的物理行基线', path: 'packages/kernel/core/src/compile/tree/node/emit.ts' },
+    { label: '正文行高与基线偏移', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: '标签测量与放置', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
+    { label: '标签净距与视觉范围', path: 'packages/kernel/core/src/compile/node/label/geometry.ts' },
+    { label: '绘制与观测共用的物理行基线', path: 'packages/kernel/core/src/compile/node/emit.ts' },
   ]}
 />
 
@@ -122,9 +126,9 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
 
 <SourceLinks
   sources={[
-    { label: '连接面绑定到节点几何', path: 'packages/kernel/core/src/compile/tree/node/boundary.ts' },
-    { label: '标准锚点与形状锚点分流', path: 'packages/kernel/core/src/compile/tree/node/anchors.ts' },
-    { label: '单份布局的锚点复用', path: 'packages/kernel/core/src/compile/tree/node/anchor-cache.ts' },
+    { label: '连接面绑定到节点几何', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
+    { label: '标准锚点与形状锚点分流', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
+    { label: '单份布局的锚点复用', path: 'packages/kernel/core/src/compile/node/anchor-cache.ts' },
   ]}
 />
 
@@ -140,8 +144,8 @@ Core 通过注入的 `measureText` 取得度量，不直接读取 DOM。测量�
 
 <SourceLinks
   sources={[
-    { label: '布局结果的数据结构', path: 'packages/kernel/core/src/compile/layout.ts', startLine: 42 },
-    { label: '节点布局到图元', path: 'packages/kernel/core/src/compile/tree/node/emit.ts' },
+    { label: '布局结果的数据结构', path: 'packages/kernel/core/src/compile/node/types.ts', startLine: 42 },
+    { label: '节点布局到图元', path: 'packages/kernel/core/src/compile/node/emit.ts' },
     { label: '布局、引用注册与绘制的交接', path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts' },
   ]}
 />

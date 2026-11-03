@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyArrowShrinks } from '../../../../../core/src/compile/tree/path/stroke/shrink';
+import { applyArrowShrinks } from '../../../../../core/src/compile/path/stroke/shrink';
 import type { PathCommand } from '../../../../../core/src/contract';
 
 const identity = (value: number) => value;

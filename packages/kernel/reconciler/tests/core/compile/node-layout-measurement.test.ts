@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { TexLowerer } from '../../../../core/src/compile';
 import { BuiltinCompileWarningCode } from '../../../../core/src/compile';
-import type { CompiledNodeLayout } from '../../../../core/src/compile/layout';
+import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import type { CompileWarning } from '../../../../core/src/compile/shared';
 import type { TextMeasurer, TextPrimitive } from '../../../../core/src/contract';
 import type { IRScene } from '../../../../core/src/schemas';

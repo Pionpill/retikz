@@ -20,7 +20,7 @@ This page follows the built-in stroke path. Custom Path definitions emit primiti
 <SourceLinks
   sources={[
     { label: 'Path resolution entry', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: 'Stroke emission entry', path: 'packages/kernel/core/src/compile/tree/path/stroke/emit.ts' },
+    { label: 'Stroke emission entry', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
   ]}
 />
 
@@ -43,7 +43,7 @@ Resolved targets retain the points and reference geometry needed by subsequent c
       path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts',
     },
     { label: 'Target binding and canonical paths', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
-    { label: 'Target queries during compilation', path: 'packages/kernel/core/src/compile/tree/path/host/target.ts' },
+    { label: 'Target queries during compilation', path: 'packages/kernel/core/src/compile/path/host/target.ts' },
   ]}
 />
 
@@ -73,9 +73,9 @@ Relative targets that can be determined early become local coordinates during re
 
 <SourceLinks
   sources={[
-    { label: 'Cursor state and advancement', path: 'packages/kernel/core/src/compile/tree/path/stroke/cursor.ts' },
-    { label: 'Lines, folds, and curves', path: 'packages/kernel/core/src/compile/tree/path/stroke/segments.ts' },
-    { label: 'Shape steps and pen handoff', path: 'packages/kernel/core/src/compile/tree/path/stroke/shapes.ts' },
+    { label: 'Cursor state and advancement', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts' },
+    { label: 'Lines, folds, and curves', path: 'packages/kernel/core/src/compile/path/stroke/segments.ts' },
+    { label: 'Shape steps and pen handoff', path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts' },
   ]}
 />
 
@@ -117,16 +117,16 @@ Segment construction also records commands, bounds samples, and source steps. Wi
   sources={[
     {
       label: 'Target queries and coordinate conversion',
-      path: 'packages/kernel/core/src/compile/tree/path/target.ts',
+      path: 'packages/kernel/core/src/compile/path/target.ts',
     },
-    { label: 'Boundary points and polyline crossings', path: 'packages/kernel/core/src/compile/tree/node/anchors.ts' },
-    { label: 'Connection boundary geometry', path: 'packages/kernel/core/src/compile/tree/node/boundary.ts' },
+    { label: 'Boundary points and polyline crossings', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
+    { label: 'Connection boundary geometry', path: 'packages/kernel/core/src/compile/node/boundary.ts' },
     {
       label: 'Segment directions and commands',
-      path: 'packages/kernel/core/src/compile/tree/path/stroke/segments.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/segments.ts',
     },
-    { label: 'Commands and source records', path: 'packages/kernel/core/src/compile/tree/path/stroke/commands.ts' },
-    { label: 'Rounded line joins', path: 'packages/kernel/core/src/compile/tree/path/stroke/rounded-corners.ts' },
+    { label: 'Commands and source records', path: 'packages/kernel/core/src/compile/path/stroke/commands.ts' },
+    { label: 'Rounded line joins', path: 'packages/kernel/core/src/compile/path/stroke/rounded-corners.ts' },
   ]}
 />
 
@@ -142,15 +142,15 @@ In the opening example, node boundaries determine the contact points, the label 
   sources={[
     {
       label: 'Step and path-level label sampling',
-      path: 'packages/kernel/core/src/compile/tree/path/stroke/sampling.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts',
     },
-    { label: 'Label text and orientation', path: 'packages/kernel/core/src/compile/tree/path/host/label.ts' },
+    { label: 'Label text and orientation', path: 'packages/kernel/core/src/compile/path/host/label.ts' },
     {
       label: 'Gap intervals and stroke splitting',
-      path: 'packages/kernel/core/src/compile/tree/path/stroke/interruption.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
     },
-    { label: 'Arrows and inline marks', path: 'packages/kernel/core/src/compile/tree/path/stroke/decorations.ts' },
-    { label: 'Terminal segment shortening', path: 'packages/kernel/core/src/compile/tree/path/stroke/shrink.ts' },
+    { label: 'Arrows and inline marks', path: 'packages/kernel/core/src/compile/path/stroke/decorations.ts' },
+    { label: 'Terminal segment shortening', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts' },
   ]}
 />
 
@@ -175,19 +175,19 @@ Gray shows the original path below; blue is the actual compiled Path with an end
   sources={[
     {
       label: 'Contact coefficients and seam overlap',
-      path: 'packages/kernel/core/src/compile/tree/path/stroke/shrink.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
     },
     {
       label: 'Curve contacts and arrow orientation',
-      path: 'packages/kernel/core/src/compile/tree/path/stroke/endpoint-contact.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/endpoint-contact.ts',
     },
     {
       label: 'Shape-preserving curve slices',
-      path: 'packages/kernel/core/src/compile/tree/path/stroke/interruption.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
     },
     {
       label: 'Label gaps and endpoint contact order',
-      path: 'packages/kernel/core/src/compile/tree/path/stroke/emit.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
     },
   ]}
 />
@@ -204,16 +204,16 @@ An unresolved ordinary target or a missing required predecessor produces a warni
 
 <SourceLinks
   sources={[
-    { label: 'Step loop and post-processing order', path: 'packages/kernel/core/src/compile/tree/path/stroke/emit.ts' },
+    { label: 'Step loop and post-processing order', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts' },
     {
       label: 'Subpaths and endpoint-arrow ownership',
-      path: 'packages/kernel/core/src/compile/tree/path/stroke/split.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/split.ts',
     },
     {
       label: 'Primitive grouping and path transforms',
-      path: 'packages/kernel/core/src/compile/tree/path/stroke/output.ts',
+      path: 'packages/kernel/core/src/compile/path/stroke/output.ts',
     },
-    { label: 'Output contract', path: 'packages/kernel/core/src/compile/tree/path/types.ts' },
+    { label: 'Output contract', path: 'packages/kernel/core/src/compile/path/types.ts' },
   ]}
 />
 

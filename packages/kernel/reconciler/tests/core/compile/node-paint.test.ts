@@ -8,8 +8,8 @@ import {
   resolveScopeStyle,
 } from '../../../../core/src';
 import type { IRNode, ScopeStyleResolution } from '../../../../core/src';
+import { emitNodePrimitives } from '../../../../core/src/compile/node';
 import { createPaintRegistry } from '../../../../core/src/compile/resource';
-import { emitNodePrimitives } from '../../../../core/src/compile/tree/node';
 import { flattenPrims } from '../../../../core/tests/helpers/flatten';
 import { compileToScene, createSharedCompileContext } from '../../../src/compile';
 import type { SharedCompileContext } from '../../../src/compile';

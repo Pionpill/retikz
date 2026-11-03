@@ -11,6 +11,7 @@ import type {
 } from '../../contract';
 import { computeSceneTextBounds } from '../../contract';
 import type { CanonicalDropShadow, IRPosition } from '../../schemas';
+import type { CompileOutput } from '../shared';
 import { CANONICAL_STROKE_MITER_LIMIT, applyTransformChain, createCompileInvariantError } from '../shared';
 import { buildMarkMarkerGroup } from './marker';
 
@@ -383,4 +384,13 @@ export const calculateBoundsOfPrimitives = (
   }
 
   return canonicalizeBoundsRect(bounds);
+};
+
+/** 汇总输出的可见布局边界，保留各项阴影扩张语义 */
+export const computeCompileOutputBounds = (contributions: CompileOutput['bounds']): AxisAlignedBounds | undefined => {
+  let bounds: AxisAlignedBounds | undefined;
+  for (const contribution of contributions) {
+    bounds = collectLayoutBounds(bounds, contribution.boundsPoints, contribution.shadow);
+  }
+  return bounds;
 };

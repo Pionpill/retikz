@@ -104,11 +104,11 @@ Aligning a Node's own anchor requires a provisional layout because its dimension
     },
     {
       label: 'Anchor point calculation and caching',
-      path: 'packages/kernel/core/src/compile/tree/node/anchor-cache.ts',
+      path: 'packages/kernel/core/src/compile/node/anchor-cache.ts',
     },
     {
       label: 'placeAnchorPositionedLayout: final self-anchor alignment',
-      path: 'packages/kernel/core/src/compile/tree/node/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
   ]}
 />
@@ -207,7 +207,7 @@ A failed ordinary reference produces an empty resolver result; the consumer dete
   sources={[
     {
       label: 'Node positioning failures and reference checks',
-      path: 'packages/kernel/core/src/compile/tree/node/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
     {
       label: 'Coordinate registration, deferred paths, and flush order',
@@ -239,7 +239,7 @@ The first follows the current Scope's scaling and rotation. The second always ad
   sources={[
     {
       label: 'Position context toLocal / toWorld',
-      path: 'packages/kernel/core/src/compile/tree/reference/position-context.ts',
+      path: 'packages/kernel/core/src/compile/reference/position-context.ts',
     },
     {
       label: 'Forward and inverse transforms',
@@ -262,11 +262,11 @@ Registered world geometry serves reference lookup. Drawing geometry in Scene can
   sources={[
     {
       label: 'Project local layouts into world reference geometry',
-      path: 'packages/kernel/core/src/compile/tree/node/projection.ts',
+      path: 'packages/kernel/core/src/compile/node/projection.ts',
     },
     {
       label: 'emitScopeGroup: local primitives and group transforms',
-      path: 'packages/kernel/core/src/compile/tree/scope/output.ts',
+      path: 'packages/kernel/core/src/compile/scope/output.ts',
     },
   ]}
 />
@@ -297,7 +297,7 @@ The target is determined before entering children. Scope anchor placement theref
   sources={[
     {
       label: 'Envelope collection and self-pivot resolution',
-      path: 'packages/kernel/core/src/compile/tree/scope/layout.ts',
+      path: 'packages/kernel/core/src/compile/scope/layout.ts',
     },
     {
       label: 'Scope target restrictions, placeholder registration, and replacement',
@@ -325,7 +325,7 @@ During finalization, Core adds only transforms that have not already been applie
   sources={[
     {
       label: 'lowerScopeTransforms: referenced translation and envelope pivots',
-      path: 'packages/kernel/core/src/compile/tree/scope/transform.ts',
+      path: 'packages/kernel/core/src/compile/scope/transform.ts',
     },
     {
       label: 'Preliminary transforms, final alignment, and geometry publication',
@@ -353,7 +353,7 @@ The overview's positioning and layout step, followed by world reference registra
     },
     {
       label: 'Compilation state to position resolver adaptation',
-      path: 'packages/kernel/core/src/compile/tree/reference/position-context.ts',
+      path: 'packages/kernel/core/src/compile/reference/position-context.ts',
     },
     { label: 'Narrow position contexts and result types', path: 'packages/kernel/core/src/resolve/position/types.ts' },
   ]}

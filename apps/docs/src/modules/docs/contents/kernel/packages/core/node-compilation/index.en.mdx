@@ -23,12 +23,12 @@ The text is first split into the lines that will actually be displayed, called *
   sources={[
     {
       label: 'layoutNode: layout entry point',
-      path: 'packages/kernel/core/src/compile/tree/node/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
     { label: 'NodeResolution: layout input', path: 'packages/kernel/core/src/resolve/node/types.ts' },
     {
       label: 'CompiledNodeLayout: geometry and text layout',
-      path: 'packages/kernel/core/src/compile/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/types.ts',
       startLine: 42,
     },
   ]}
@@ -51,9 +51,9 @@ Within one plain-text layout pass, repeated measurements of the same text and fo
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
     {
       label: 'Content branches and physical lines',
-      path: 'packages/kernel/core/src/compile/tree/node/content/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
     },
-    { label: 'Plain-text wrapping', path: 'packages/kernel/core/src/compile/tree/node/content/text.ts' },
+    { label: 'Plain-text wrapping', path: 'packages/kernel/core/src/compile/node/content/text.ts' },
     { label: 'Mixed-line measurement and baseline alignment', path: 'packages/kernel/core/src/compile/text/layout.ts' },
   ]}
 />
@@ -91,7 +91,7 @@ Asymmetric padding can also make the visual box center differ from the content c
   sources={[
     {
       label: 'Content budgets, circumscribe, and size constraints',
-      path: 'packages/kernel/core/src/compile/tree/node/layout.ts',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
     },
     { label: 'Shape containment contract', path: 'packages/kernel/core/src/contract/node/shape.ts' },
   ]}
@@ -111,15 +111,15 @@ When placement aligns a node's own anchor with a target, Core first needs a prov
 
 <SourceLinks
   sources={[
-    { label: 'Line height and baseline offsets', path: 'packages/kernel/core/src/compile/tree/node/content/layout.ts' },
-    { label: 'Label measurement and placement', path: 'packages/kernel/core/src/compile/tree/node/label/layout.ts' },
+    { label: 'Line height and baseline offsets', path: 'packages/kernel/core/src/compile/node/content/layout.ts' },
+    { label: 'Label measurement and placement', path: 'packages/kernel/core/src/compile/node/label/layout.ts' },
     {
       label: 'Label clearance and visual extents',
-      path: 'packages/kernel/core/src/compile/tree/node/label/geometry.ts',
+      path: 'packages/kernel/core/src/compile/node/label/geometry.ts',
     },
     {
       label: 'Physical baselines shared by emission and observation',
-      path: 'packages/kernel/core/src/compile/tree/node/emit.ts',
+      path: 'packages/kernel/core/src/compile/node/emit.ts',
     },
   ]}
 />
@@ -140,10 +140,10 @@ When the same layout is referenced repeatedly, Core reuses calculated connection
   sources={[
     {
       label: 'Binding connection surfaces to node geometry',
-      path: 'packages/kernel/core/src/compile/tree/node/boundary.ts',
+      path: 'packages/kernel/core/src/compile/node/boundary.ts',
     },
-    { label: 'Standard versus shape-specific anchors', path: 'packages/kernel/core/src/compile/tree/node/anchors.ts' },
-    { label: 'Anchor reuse within a layout', path: 'packages/kernel/core/src/compile/tree/node/anchor-cache.ts' },
+    { label: 'Standard versus shape-specific anchors', path: 'packages/kernel/core/src/compile/node/anchors.ts' },
+    { label: 'Anchor reuse within a layout', path: 'packages/kernel/core/src/compile/node/anchor-cache.ts' },
   ]}
 />
 
@@ -159,8 +159,8 @@ Traversal then projects geometry into world space for named references. Emission
 
 <SourceLinks
   sources={[
-    { label: 'Layout result structure', path: 'packages/kernel/core/src/compile/layout.ts', startLine: 42 },
-    { label: 'From node layout to primitives', path: 'packages/kernel/core/src/compile/tree/node/emit.ts' },
+    { label: 'Layout result structure', path: 'packages/kernel/core/src/compile/node/types.ts', startLine: 42 },
+    { label: 'From node layout to primitives', path: 'packages/kernel/core/src/compile/node/emit.ts' },
     {
       label: 'Layout, registration, and emission handoff',
       path: 'packages/kernel/reconciler/src/compile/tree/node/visit.ts',

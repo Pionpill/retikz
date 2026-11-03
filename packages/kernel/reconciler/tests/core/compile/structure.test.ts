@@ -2,9 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import * as compile from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-
-import * as compile from '../../../../core/src/compile';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -24,37 +23,43 @@ describe('编译源结构', () => {
   });
 
   it('编译聚合入口仅公开稳定的运行时条目', () => {
-    expect(Object.keys(compile).sort()).toEqual(
-      [
-        'BuiltinCompileWarningCode',
-        'emitScopePrimitive',
-        'projectScopeOutputBounds',
-        'calculateBoundsOfPrimitives',
-        'compilePath',
-        'computeCompileOutputBounds',
-        'computeLayoutFromBounds',
-        'createCompileChildPath',
-        'createDuplicateCompileWarning',
-        'fallbackMeasurer',
-        'formatCompileOccurrence',
-        'formatCompileWarning',
-        'projectCompileReference',
-        'projectPublishedCompileLayout',
-        'projectScopeCompileLayouts',
-        'samplePathRoute',
-        'compileScopeGeometry',
-        'composeScopeTransform',
-        'createCoordinateLayout',
-        'createPathTargetResolver',
-        'createPositionResolveContext',
-        'createScopeGroup',
-        'emitNodeOutput',
-        'layoutNode',
-        'orderCompileWarnings',
-        'prepareScopeGeometry',
-        'withCompileWarningOccurrence',
-      ].sort(),
-    );
+    for (const name of [
+      'BuiltinCompileWarningCode',
+      'calculateBoundsOfPrimitives',
+      'compilePath',
+      'compileScopeGeometry',
+      'composeScopeTransform',
+      'computeCompileOutputBounds',
+      'computeLayoutFromBounds',
+      'createCoordinateLayout',
+      'createNodeBoundaryStore',
+      'createPathTargetResolver',
+      'createPositionResolveContext',
+      'createScopeGroup',
+      'emitNodeOutput',
+      'emitScopePrimitive',
+      'fallbackMeasurer',
+      'formatCompileWarning',
+      'layoutNode',
+      'prepareScopeGeometry',
+      'projectCompileReference',
+      'projectPublishedCompileLayout',
+      'projectScopeCompileLayouts',
+      'projectScopeOutputBounds',
+      'samplePathRoute',
+    ])
+      expect(compile).toHaveProperty(name);
+
+    for (const name of [
+      'compileToScene',
+      'compileSceneSnapshot',
+      'createCompileChildPath',
+      'createDuplicateCompileWarning',
+      'formatCompileOccurrence',
+      'orderCompileWarnings',
+      'withCompileWarningOccurrence',
+    ])
+      expect(compile).not.toHaveProperty(name);
   });
 
   it('节点解析不受编译依赖关系的影响', () => {

@@ -2,11 +2,11 @@ import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene, IRStep, PathPrimitive, CompiledArrowEnd } from '../../../../../core/src';
-import { applyTransformChain } from '../../../../../core/src/compile/shared';
 import {
   createStrokePathGeometry,
   curveSegmentOfOccurrence,
-} from '../../../../../core/src/compile/tree/path/stroke/interruption';
+} from '../../../../../core/src/compile/path/stroke/interruption';
+import { applyTransformChain } from '../../../../../core/src/compile/shared';
 import { flattenPrims } from '../../../../../core/tests/helpers/flatten';
 import { compileToScene } from '../../../../src/compile';
 

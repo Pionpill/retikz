@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompiledNodeLayout } from '../../../../core/src/compile/layout';
+import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
+import { projectLayoutWithTransform } from '../../../../core/src/compile/node';
+import { createPositionResolveContext } from '../../../../core/src/compile/reference';
+import { lowerScopeTransforms } from '../../../../core/src/compile/scope/transform';
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
-import { projectLayoutWithTransform } from '../../../../core/src/compile/tree/node';
-import { createPositionResolveContext } from '../../../../core/src/compile/tree/reference';
-import { lowerScopeTransforms } from '../../../../core/src/compile/tree/scope/transform';
 import type { Transform } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import type { PositionResolveContext } from '../../../../core/src/resolve';

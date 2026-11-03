@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../../core/src';
 import { BuiltinCompileWarningCode } from '../../../../core/src';
-import type { CompiledNodeLayout } from '../../../../core/src/compile/layout';
-import { createScopeRectangleLayout } from '../../../../core/src/compile/tree/node';
-import { computeScopeBoundingBox } from '../../../../core/src/compile/tree/scope';
+import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
+import { createScopeRectangleLayout } from '../../../../core/src/compile/node';
+import { computeScopeBoundingBox } from '../../../../core/src/compile/scope';
 import type { TextMeasurer } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import { compileToScene } from '../../../src/compile';

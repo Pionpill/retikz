@@ -43,9 +43,7 @@ import { cloneAndFreezeJson } from '../../../../core/src/shared';
 import { pathArrows } from '../../../../core/tests/helpers/path-arrows';
 import { compileToScene } from '../../../src/compile';
 import * as compileProvenance from '../../../src/compile/provenance/tracker';
-import { createExecutionInvariantError } from '../../../src/compile/runtime';
-import { createCompileRuntime } from '../../../src/compile/runtime';
-import { NamespaceStack } from '../../../src/compile/runtime';
+import { createExecutionInvariantError, createCompileRuntime, NamespaceStack } from '../../../src/compile/runtime';
 import { CompileManager } from '../../../src/compile/tree';
 
 const fixedMeasurer: TextMeasurer = text => ({

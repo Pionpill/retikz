@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import { BuiltinCompileWarningCode } from '../../../../core/src';
-import type { BoundaryGeometryResolveContext } from '../../../../core/src/compile/tree/node';
-import { resolveBoundary as resolveBoundaryGeometry } from '../../../../core/src/compile/tree/node';
+import type { BoundaryGeometryResolveContext } from '../../../../core/src/compile/node';
+import { resolveBoundary as resolveBoundaryGeometry } from '../../../../core/src/compile/node';
 import type { BoundaryDefinition, ShapeDefinition } from '../../../../core/src/contract';
 import { defineBoundary } from '../../../../core/src/contract';
 import { resolveBoundaryRegistry, ellipseShape, rectangle } from '../../../../core/src/providers';

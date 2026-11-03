@@ -1,3 +1,4 @@
+export * from './alignment';
 export * from './constants';
 export * from './errors';
 export * from './opacity';

@@ -1,15 +1,15 @@
 import { createNodeBoundaryStore } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import {
   boundaryPointOf,
   layoutNode,
   createNodeReferenceGeometry,
   projectLayoutWithTransform,
   resolveAnchor,
-} from '../../../../core/src/compile/tree/node';
-import { createPositionResolveContext } from '../../../../core/src/compile/tree/reference';
+} from '../../../../core/src/compile/node';
+import { createPositionResolveContext } from '../../../../core/src/compile/reference';
+import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import { resolveBoundaryRegistry, resolvePatternRegistry, resolveShapeRegistry } from '../../../../core/src/providers';
 import { resolveNode } from '../../../../core/src/resolve';
 

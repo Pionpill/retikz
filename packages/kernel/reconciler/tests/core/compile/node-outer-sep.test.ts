@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompiledNodeLayout } from '../../../../core/src/compile/layout';
-import { resolveAnchor, resolveAnchorRef } from '../../../../core/src/compile/tree/node';
+import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
+import { resolveAnchor, resolveAnchorRef } from '../../../../core/src/compile/node';
 import type { ScenePrimitive, TextPrimitive } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
 import type { IRScene } from '../../../../core/src/schemas';

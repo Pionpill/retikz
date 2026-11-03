@@ -48,15 +48,15 @@ For the coordinate calculations, see Math's [Coordinate transforms](/kernel/pack
   sources={[
     {
       label: 'Freeze the position target before children',
-      path: 'packages/kernel/core/src/compile/tree/scope/placement.ts',
+      path: 'packages/kernel/core/src/compile/scope/placement.ts',
     },
     {
       label: 'Envelope anchors, final translation, and early resolution',
-      path: 'packages/kernel/core/src/compile/tree/scope/placement.ts',
+      path: 'packages/kernel/core/src/compile/scope/placement.ts',
     },
     {
       label: 'Lower to translation, rotation, and scaling',
-      path: 'packages/kernel/core/src/compile/tree/scope/transform.ts',
+      path: 'packages/kernel/core/src/compile/scope/transform.ts',
     },
   ]}
 />
@@ -97,7 +97,7 @@ A scale of `0` can flatten a drawing, but then a canvas position cannot be conve
     },
     {
       label: 'Bind forward and inverse projection',
-      path: 'packages/kernel/core/src/compile/tree/reference/position-context.ts',
+      path: 'packages/kernel/core/src/compile/reference/position-context.ts',
     },
     {
       label: 'Inverse transforms and zero-scale failure',
@@ -171,7 +171,7 @@ Once the children finish, `replaceLayout` updates the placeholder to a resolved 
   sources={[
     {
       label: 'Build rectangular or circular bounds from layouts',
-      path: 'packages/kernel/core/src/compile/tree/scope/layout.ts',
+      path: 'packages/kernel/core/src/compile/scope/layout.ts',
     },
     {
       label: 'Reserve a placeholder in the parent frame',
@@ -225,7 +225,7 @@ A group is emitted when there are child primitives, effective transforms, an id,
     },
     {
       label: 'Group pruning, transforms, and clipRef',
-      path: 'packages/kernel/core/src/compile/tree/scope/output.ts',
+      path: 'packages/kernel/core/src/compile/scope/output.ts',
     },
     {
       label: 'Build the SVG clipPath',
