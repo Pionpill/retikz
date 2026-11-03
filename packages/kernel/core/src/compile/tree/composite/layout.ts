@@ -7,7 +7,7 @@ import type {
   LayoutMeasurementAxis,
   LayoutProposal,
 } from '../../../contract';
-import { createCompositeContractError } from '../../../resolve/diagnostics';
+import { createCompositeContractError } from '../../../resolve';
 import { canonicalizeBoundsRect, collectLayoutBounds } from '../../scene';
 import { formatCompileOccurrence } from '../../shared';
 import type { SubtreeCompilation } from '../types';

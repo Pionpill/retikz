@@ -1,7 +1,6 @@
 import type { CompositeCompileContext } from '../../../contract';
 import { CompileExpansionKind, LayoutChildProbeKind } from '../../../contract';
-import { guardProviderOutput } from '../../../resolve';
-import { createCompositeContractError, isFatalProbeError } from '../../../resolve/diagnostics';
+import { guardProviderOutput, createCompositeContractError, isFatalProbeError } from '../../../resolve';
 import type { CompositeReplayMaterializeContext } from '../../runtime';
 import { freezeOccurrence, wrapLayoutProbeError } from '../../shared';
 import type { SubtreeCompileRuntime } from '../runtime';

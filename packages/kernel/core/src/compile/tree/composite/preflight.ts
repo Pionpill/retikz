@@ -1,6 +1,5 @@
 import type { CompositeReplay } from '../../../contract';
-import { createCompositeContractError } from '../../../resolve/diagnostics';
-import { resolveClip as resolveClipValue } from '../../../resolve/resource';
+import { createCompositeContractError, resolveClip as resolveClipValue } from '../../../resolve';
 import type { CompositeCompileOwner, CompositeReplayTransaction } from '../../runtime';
 import { isCompositeOutputHandle } from './handle';
 import type {

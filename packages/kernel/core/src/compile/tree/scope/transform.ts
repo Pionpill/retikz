@@ -1,7 +1,7 @@
 import type { Transform } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { PositionTargetResolveContext } from '../../../resolve/position';
-import { resolveTransformTranslation } from '../../../resolve/position';
+import type { PositionTargetResolveContext } from '../../../resolve';
+import { resolveTransformTranslation } from '../../../resolve';
 import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../../schemas';
 import type { CompiledNodeLayout } from '../../layout';
 import { createCompileInvariantError } from '../../shared';

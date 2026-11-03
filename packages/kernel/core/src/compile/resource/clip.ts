@@ -1,13 +1,13 @@
 import type { ClipResource, PathCommand, SceneClipPath } from '../../contract';
-import { guardProviderOutput } from '../../resolve';
 import {
+  guardProviderOutput,
   createCompositeContractError,
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   safeThrownDetail,
-} from '../../resolve/diagnostics';
-import type { ClipResolution } from '../../resolve/resource';
+} from '../../resolve';
+import type { ClipResolution } from '../../resolve';
 import { createResourceId, serializeResourceContent, storeSceneResource } from './identity';
 
 /** 生成裁剪路径并登记可复用资源 */

@@ -13,7 +13,7 @@ import {
 } from '../../src';
 import type { TextPrimitive, Scene, GroupPrimitive, ScenePrimitive, IRScene } from '../../src';
 import { createClipRegistry, createPaintRegistry, importSceneResources } from '../../src/compile/resource';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { BUILTIN_SHAPES } from '../../src/providers';
 
 describe('资源内容复用基础图元', () => {
   it('自定义 Pattern 保留已度量文本和基础图元样式', () => {

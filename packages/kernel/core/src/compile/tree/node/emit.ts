@@ -8,7 +8,7 @@ import {
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   safeThrownDetail,
-} from '../../../resolve/diagnostics';
+} from '../../../resolve';
 import type { CompiledNodeLayout, NodeLabelLayout } from '../../layout';
 import type { RegisterPaint } from '../../resource';
 import { snapshotScenePrimitives } from '../../shared';

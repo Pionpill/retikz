@@ -2,8 +2,7 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import type { LayoutProposal, Transform } from '../../../contract';
 import { resolveAnimations, resolveNode } from '../../../resolve';
-import type { MergedScopeDefaults } from '../../../resolve';
-import type { PositionTargetResolveContext } from '../../../resolve/position';
+import type { MergedScopeDefaults, PositionTargetResolveContext } from '../../../resolve';
 import type { IRNode } from '../../../schemas';
 import type { CanonicalTheme } from '../../../shared';
 import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';

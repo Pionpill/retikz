@@ -1,8 +1,7 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { GroupPrimitive, SceneClipPath, Transform } from '../../../contract';
-import { resolveAnimations } from '../../../resolve';
-import { resolveClip } from '../../../resolve/resource';
+import { resolveAnimations, resolveClip } from '../../../resolve';
 import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';
 import type { InputScopeCompile } from './types';
 

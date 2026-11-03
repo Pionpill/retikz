@@ -3,7 +3,7 @@ import { encodePropertyPath, hasPropertyPathPrefix, readPropertyPath, jsonStruct
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRChild, IRScene } from '../../schemas';
-import { cloneAndFreezeJson } from '../../shared/json';
+import { cloneAndFreezeJson } from '../../shared';
 
 /** 精确 Source 属性路径，数字表示数组下标 */
 export type CompositeInputPath = PropertyPath;

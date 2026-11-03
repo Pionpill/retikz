@@ -3,12 +3,10 @@ import { describe, expect, it } from 'vitest';
 
 import { boundaryPointOf, compileNodeResolution } from '../../src/compile/tree/node';
 import { createPositionResolveContext } from '../../src/compile/tree/reference';
-import { resolveBoundaryRegistry } from '../../src/providers/boundary';
-import { resolvePatternRegistry } from '../../src/providers/pattern';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
-import { resolveNode } from '../../src/resolve/node';
+import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../src/providers';
+import { resolveNode } from '../../src/resolve';
 import type { IRNode } from '../../src/schemas';
-import { filletContour } from '../../src/shared/geometry/path';
+import { filletContour } from '../../src/shared';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({
   width: 10,

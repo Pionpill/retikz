@@ -16,8 +16,8 @@ import {
   resolvePathLabelColors,
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
+  createCompositeContractError,
 } from '../../../resolve';
-import { createCompositeContractError } from '../../../resolve/diagnostics';
 import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
 import type { RegisterPaint } from '../../resource';
 import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';

@@ -1,7 +1,7 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompileOccurrenceLocator, GroupPrimitive, Transform, SceneClipPath } from '../../../contract';
-import type { PositionTargetResolveContext } from '../../../resolve/position';
+import type { PositionTargetResolveContext } from '../../../resolve';
 import type { IRChild, IRPosition, IRScope } from '../../../schemas';
 import type { CompiledNodeLayout } from '../../layout';
 import type { CompileOwnerKey } from '../../provenance';

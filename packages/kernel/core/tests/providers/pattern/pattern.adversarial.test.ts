@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileOptions } from '../../../src/compile/compile';
-import { compileToScene } from '../../../src/compile/compile';
+import type { CompileOptions } from '../../../src/compile';
+import { compileToScene } from '../../../src/compile';
 import type {
   ScenePrimitive,
   PatternResource,

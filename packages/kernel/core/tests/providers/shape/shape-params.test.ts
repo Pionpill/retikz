@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
 import { number, object, strictObject } from 'zod';
 
-import { compileToScene } from '../../../src/compile/compile';
+import { compileToScene } from '../../../src/compile';
 import type { ScenePrimitive, ShapeDefinition } from '../../../src/contract';
 import { defineShape } from '../../../src/contract';
 import type { IRScene } from '../../../src/schemas';

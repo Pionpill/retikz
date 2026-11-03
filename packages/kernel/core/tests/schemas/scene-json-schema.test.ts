@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { toJSONSchema } from 'zod';
 
-import { compileToScene } from '../../src/compile/compile';
+import { compileToScene } from '../../src/compile';
 import type { IRScene } from '../../src/schemas';
 import { SceneSchema } from '../../src/schemas';
 

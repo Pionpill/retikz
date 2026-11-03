@@ -7,8 +7,8 @@ import { projectLayoutWithTransform } from '../../src/compile/tree/node';
 import { createPositionResolveContext } from '../../src/compile/tree/reference';
 import { lowerScopeTransforms } from '../../src/compile/tree/scope/transform';
 import type { Transform } from '../../src/contract';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
-import type { PositionResolveContext } from '../../src/resolve/position';
+import { BUILTIN_SHAPES } from '../../src/providers';
+import type { PositionResolveContext } from '../../src/resolve';
 import type { IRTransform } from '../../src/schemas';
 
 /** 把 id → 中心 entries 灌进新建的 namespaceStack，便于 lower 单测验证 referent lookup */

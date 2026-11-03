@@ -7,7 +7,7 @@ import type { CompiledNodeLayout } from '../../src/compile/layout';
 import { createScopeRectangleLayout } from '../../src/compile/tree/node';
 import { computeScopeBoundingBox } from '../../src/compile/tree/scope';
 import type { TextMeasurer } from '../../src/contract';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { BUILTIN_SHAPES } from '../../src/providers';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,

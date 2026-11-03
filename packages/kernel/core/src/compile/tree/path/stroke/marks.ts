@@ -8,7 +8,7 @@ import {
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   safeThrownDetail,
-} from '../../../../resolve/diagnostics';
+} from '../../../../resolve';
 import type { RegisterPaint } from '../../../resource';
 import { materializeMarkerPrimitive } from '../../../scene';
 import type { MarkerPlacementContext } from '../../../scene';

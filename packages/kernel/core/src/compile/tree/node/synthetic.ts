@@ -6,7 +6,7 @@ import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../../co
 import type { ProviderRegistry } from '../../../providers';
 import { BUILTIN_BOUNDARIES, BUILTIN_SHAPES } from '../../../providers';
 import { resolveNode } from '../../../resolve';
-import type { PositionTargetResolveContext } from '../../../resolve/position';
+import type { PositionTargetResolveContext } from '../../../resolve';
 import type { IRNode, IRPosition } from '../../../schemas';
 import { ThemeMode } from '../../../shared';
 import type { CompiledNodeLayout } from '../../layout';

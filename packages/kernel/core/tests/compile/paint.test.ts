@@ -5,7 +5,7 @@ import { createPaintRegistry } from '../../src/compile/resource';
 import { createSharedCompileContext } from '../../src/compile/runtime';
 import type { PathPrimitive, RectPrimitive, ScenePrimitive } from '../../src/contract';
 import { definePattern } from '../../src/contract';
-import { resolvePaint } from '../../src/resolve/resource';
+import { resolvePaint } from '../../src/resolve';
 import type { IRPaint, IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 import { pathArrows } from '../helpers/path-arrows';

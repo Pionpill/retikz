@@ -1,8 +1,7 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import { createLayoutProbeRecoverableError } from '../../../resolve/diagnostics';
-import type { PositionTargetResolveContext } from '../../../resolve/position';
-import { resolvePosition } from '../../../resolve/position';
+import { createLayoutProbeRecoverableError, resolvePosition } from '../../../resolve';
+import type { PositionTargetResolveContext } from '../../../resolve';
 import type { IRCoordinate, IRPosition } from '../../../schemas';
 import type { ElementCompileOptions, ElementCompileResult } from '../shared';
 import { runElementCompilation } from '../shared';

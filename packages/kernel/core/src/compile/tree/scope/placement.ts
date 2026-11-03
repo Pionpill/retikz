@@ -2,8 +2,7 @@ import { formatPropertyPath } from '@retikz/foundation';
 
 import type { Transform } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import { createLayoutProbeRecoverableError } from '../../../resolve/diagnostics';
-import { resolvePositionTargetWorld } from '../../../resolve/position';
+import { createLayoutProbeRecoverableError, resolvePositionTargetWorld } from '../../../resolve';
 import type { IRPosition, IRScopePositionTarget, IRScopeSelfPoint, IRTransform } from '../../../schemas';
 import type { CompiledNodeLayout } from '../../layout';
 import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../../shared';

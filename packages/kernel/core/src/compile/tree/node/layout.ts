@@ -4,18 +4,19 @@ import { DEG_TO_RAD } from '@retikz/math';
 import type { TextMeasurer, LayoutAxisProposal, ShapeCircumscribedGeometry, Transform } from '../../../contract';
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalNode, NodeResolution } from '../../../resolve';
-import { guardProviderOutput } from '../../../resolve';
+import type { CanonicalNode, NodeResolution, PositionTargetResolveContext } from '../../../resolve';
 import {
+  guardProviderOutput,
   createCompositeContractError,
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   safeThrownDetail,
-} from '../../../resolve/diagnostics';
-import type { PositionTargetResolveContext } from '../../../resolve/position';
-import { resolvePosition, resolvePositionTargetWorld } from '../../../resolve/position';
-import { resolveFont, resolveTextLineHeight } from '../../../resolve/text';
+  resolvePosition,
+  resolvePositionTargetWorld,
+  resolveFont,
+  resolveTextLineHeight,
+} from '../../../resolve';
 import type { IRAnchorPosition, IRPosition } from '../../../schemas';
 import { CenterAnchor } from '../../../shared';
 import type { CompiledNodeLayout } from '../../layout';

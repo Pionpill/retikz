@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { BUILTIN_SHAPES } from '../../src/providers';
 import type { BoundaryResolution, NodeReferenceGeometry } from '../../src/resolve';
 import type { PositionReferenceView, PositionTargetResolveContext } from '../../src/resolve/position';
 import { resolvePosition, resolvePositionTarget, resolveTransformTranslation } from '../../src/resolve/position';

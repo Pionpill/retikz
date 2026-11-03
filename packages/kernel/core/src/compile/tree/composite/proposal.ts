@@ -2,7 +2,7 @@ import type { BoundsRect } from '@retikz/math';
 
 import type { CompileOccurrenceLocator, LayoutAxisProposal, LayoutProposal } from '../../../contract';
 import { LayoutAxisProposalKind } from '../../../contract';
-import { createCompositeContractError, isCompositeContractError } from '../../../resolve/diagnostics';
+import { createCompositeContractError, isCompositeContractError } from '../../../resolve';
 import { formatCompileOccurrence } from '../../shared';
 
 /** 把负零规范化为稳定的正零 */

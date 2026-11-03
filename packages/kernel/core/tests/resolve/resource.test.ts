@@ -1,12 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { array, literal, number, strictObject, tuple } from 'zod';
 
-import { compileToScene } from '../../src/compile/compile';
+import { compileToScene } from '../../src/compile';
 import { createRound } from '../../src/compile/scene';
 import type { ClipDefinition, ClipLowerContext, ScenePrimitive, PatternDefinition } from '../../src/contract';
 import { defineClip, definePattern } from '../../src/contract';
-import { resolveClipRegistry } from '../../src/providers/clip';
-import { resolvePatternRegistry } from '../../src/providers/pattern';
+import { resolveClipRegistry, resolvePatternRegistry } from '../../src/providers';
 import { resolveClip, resolvePaint } from '../../src/resolve/resource';
 import type { IRClip, IRPaint, IRScene } from '../../src/schemas';
 

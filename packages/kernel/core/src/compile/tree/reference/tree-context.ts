@@ -1,6 +1,6 @@
 import type { Transform } from '../../../contract';
 import { resolveNodeBoundary } from '../../../resolve';
-import type { PositionTargetResolveContext } from '../../../resolve/position';
+import type { PositionTargetResolveContext } from '../../../resolve';
 import type { CompileRuntime } from '../../runtime';
 import { createPositionResolveContext } from './position-context';
 

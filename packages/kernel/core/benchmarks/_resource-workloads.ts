@@ -3,10 +3,9 @@ import { literal, number, strictObject } from 'zod';
 import { createRound } from '../src/compile/scene';
 import type { ClipDefinition, PathCommand, ScenePrimitive } from '../src/contract';
 import { defineClip, definePattern } from '../src/contract';
-import { resolveClipRegistry } from '../src/providers/clip';
-import { resolvePatternRegistry } from '../src/providers/pattern';
-import { resolveClip, resolvePaint } from '../src/resolve/resource';
-import type { ClipResolution, InputPaintResolution } from '../src/resolve/resource';
+import { resolveClipRegistry, resolvePatternRegistry } from '../src/providers';
+import { resolveClip, resolvePaint } from '../src/resolve';
+import type { ClipResolution, InputPaintResolution } from '../src/resolve';
 
 /** 统一使用默认两位小数精度 */
 export const resourceRound = createRound(2);

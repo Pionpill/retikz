@@ -1,10 +1,14 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { Transform } from '../../../contract';
-import type { BoundaryResolution, NodeBoundaryResolver, NodeReferenceGeometry } from '../../../resolve';
-import { boundaryKey } from '../../../resolve';
-import type { PositionReferenceView, PositionTargetResolveContext } from '../../../resolve/position';
-import { resolvePositionTarget } from '../../../resolve/position';
+import type {
+  BoundaryResolution,
+  NodeBoundaryResolver,
+  NodeReferenceGeometry,
+  PositionReferenceView,
+  PositionTargetResolveContext,
+} from '../../../resolve';
+import { boundaryKey, resolvePositionTarget } from '../../../resolve';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../../schemas';
 import type { CompiledNodeLayout } from '../../layout';
 import type { NodeBoundaryStore } from '../../runtime';

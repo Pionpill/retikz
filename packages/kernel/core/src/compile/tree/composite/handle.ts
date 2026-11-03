@@ -5,10 +5,9 @@ import type {
   CompositeReplayWrapper,
   CompositeInputScope,
 } from '../../../contract';
-import { guardProviderOutput } from '../../../resolve';
-import { createCompositeContractError } from '../../../resolve/diagnostics';
+import { guardProviderOutput, createCompositeContractError } from '../../../resolve';
 import type { IRChild } from '../../../schemas';
-import { cloneAndFreezeJson } from '../../../shared/json';
+import { cloneAndFreezeJson } from '../../../shared';
 import type {
   CompileRuntime,
   CompositeCompileState,

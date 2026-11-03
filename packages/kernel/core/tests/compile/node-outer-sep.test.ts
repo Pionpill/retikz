@@ -4,7 +4,7 @@ import { compileToScene } from '../../src/compile/compile';
 import type { CompiledNodeLayout } from '../../src/compile/layout';
 import { resolveAnchor, resolveAnchorRef } from '../../src/compile/tree/node';
 import type { ScenePrimitive, TextPrimitive } from '../../src/contract';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { BUILTIN_SHAPES } from '../../src/providers';
 import type { IRScene } from '../../src/schemas';
 import { NodeSchema } from '../../src/schemas';
 import { line, move } from '../helpers/path-command-factory';

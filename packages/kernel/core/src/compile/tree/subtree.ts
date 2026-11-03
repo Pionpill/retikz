@@ -5,7 +5,7 @@ import {
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   safeErrorMessage,
-} from '../../resolve/diagnostics';
+} from '../../resolve';
 import type { IRChild } from '../../schemas';
 import type { CompileOwnerKey } from '../provenance';
 import type { CompileRuntime } from '../runtime';

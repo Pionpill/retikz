@@ -1,7 +1,11 @@
 import type { Transform } from '../../../contract';
-import type { NodeReferenceGeometry, PathTargetView, TargetResolution } from '../../../resolve';
-import type { PositionTargetResolveContext } from '../../../resolve/position';
-import { resolvePositionTarget } from '../../../resolve/position';
+import type {
+  NodeReferenceGeometry,
+  PathTargetView,
+  TargetResolution,
+  PositionTargetResolveContext,
+} from '../../../resolve';
+import { resolvePositionTarget } from '../../../resolve';
 import type {
   IRNodeTarget,
   IRPosition,

@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { compileToScene } from '../../src/compile/compile';
+import { compileToScene } from '../../src/compile';
 import type { RetikzCoreError } from '../../src/error';
 import { RetikzCoreErrorCode } from '../../src/error';
-import { resolveBoundaryRegistry } from '../../src/providers/boundary';
-import { resolvePatternRegistry } from '../../src/providers/pattern';
-import { resolveShapeRegistry } from '../../src/providers/shape';
+import { resolveBoundaryRegistry, resolvePatternRegistry, resolveShapeRegistry } from '../../src/providers';
 import { resolveNode } from '../../src/resolve/node';
 import type { MergedScopeDefaults } from '../../src/resolve/style';
 import { resolveScopeDefaults } from '../../src/resolve/style';

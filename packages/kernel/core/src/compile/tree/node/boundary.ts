@@ -9,14 +9,14 @@ import type {
   ShapeDefinition,
 } from '../../../contract';
 import type { BoundaryResolution } from '../../../resolve';
-import { guardProviderOutput } from '../../../resolve';
 import {
+  guardProviderOutput,
   createCompositeContractError,
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   safeThrownDetail,
-} from '../../../resolve/diagnostics';
+} from '../../../resolve';
 import { boundsConnectionEnvelope, isDirectionalAnchor, rect as rectOps } from '../../../shared';
 import { BuiltinCompileWarningCode } from '../../shared';
 import type { BoundaryGeometryDefinition, BoundaryGeometryResolution, BoundaryGeometryResolveContext } from './types';

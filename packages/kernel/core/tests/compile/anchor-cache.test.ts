@@ -5,7 +5,7 @@ import type { CompiledNodeLayout } from '../../src/compile/layout';
 import { resolveAnchor, resolveAnchorRef } from '../../src/compile/tree/node';
 import type { ShapeDefinition } from '../../src/contract';
 import { defineShape } from '../../src/contract';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { BUILTIN_SHAPES } from '../../src/providers';
 import type { BuiltinShape } from '../../src/schemas';
 
 /** 构造一个最简 CompiledNodeLayout，rect 已是全局坐标 */

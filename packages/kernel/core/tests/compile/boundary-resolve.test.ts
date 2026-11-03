@@ -7,10 +7,9 @@ import type { BoundaryGeometryResolveContext } from '../../src/compile/tree/node
 import { resolveBoundary as resolveBoundaryGeometry } from '../../src/compile/tree/node';
 import type { BoundaryDefinition, ShapeDefinition } from '../../src/contract';
 import { defineBoundary } from '../../src/contract';
-import { resolveBoundaryRegistry } from '../../src/providers/boundary';
-import type { ProviderRegistry } from '../../src/providers/registry';
-import { ellipseShape, rectangle } from '../../src/providers/shape';
-import { boundaryKey, resolveNodeBoundary } from '../../src/resolve/node';
+import { resolveBoundaryRegistry, ellipseShape, rectangle } from '../../src/providers';
+import type { ProviderRegistry } from '../../src/providers';
+import { boundaryKey, resolveNodeBoundary } from '../../src/resolve';
 
 const visualRect: CenteredBox = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
 

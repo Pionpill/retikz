@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { SceneSchema, compileToScene } from '../../src';
-import { mergeNodeStyle, resolveScopeDefaults } from '../../src/resolve/style';
+import { mergeNodeStyle, resolveScopeDefaults } from '../../src/resolve';
 import { NodeSchema, ScopeSchema } from '../../src/schemas';
 
 describe('分组 Source 解析与编译', () => {

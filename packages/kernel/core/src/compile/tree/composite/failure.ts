@@ -1,8 +1,8 @@
 import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompileOccurrenceLocator, LayoutChildFailure } from '../../../contract';
-import type { LayoutProbeRecoverableError } from '../../../resolve/diagnostics';
-import { createCompositeContractError, createLayoutProbeRecoverableError } from '../../../resolve/diagnostics';
+import type { LayoutProbeRecoverableError } from '../../../resolve';
+import { createCompositeContractError, createLayoutProbeRecoverableError } from '../../../resolve';
 import type { LayoutProbeFailureEntry } from '../../runtime';
 import { formatCompileOccurrence } from '../../shared';
 

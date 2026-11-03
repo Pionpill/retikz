@@ -2,7 +2,7 @@ import type { PropertyPath, WithOptionalProperties } from '@retikz/foundation';
 import { createIdAllocator } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { registerFatalProbeError } from '../../resolve/diagnostics';
+import { registerFatalProbeError } from '../../resolve';
 import type { CompiledNodeLayout } from '../layout';
 import type { CompileNamespaceKey } from '../provenance';
 import { createCompileInvariantError } from '../shared';

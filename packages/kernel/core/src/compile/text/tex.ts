@@ -1,6 +1,5 @@
 import type { PathCommand } from '../../contract';
-import { guardProviderOutput } from '../../resolve';
-import { createCompositeContractError } from '../../resolve/diagnostics';
+import { guardProviderOutput, createCompositeContractError } from '../../resolve';
 import type { IRTexContent } from '../../schemas';
 import { assertProviderOutputNonNegative, snapshotProviderOutputJson } from '../shared';
 

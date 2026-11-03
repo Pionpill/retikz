@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { number, strictObject } from 'zod';
 
-import type { CompileOptions } from '../../../src/compile/compile';
-import { compileToScene } from '../../../src/compile/compile';
+import type { CompileOptions } from '../../../src/compile';
+import { compileToScene } from '../../../src/compile';
 import type { BoundaryDefinition, PathCommand, ScenePrimitive } from '../../../src/contract';
 import { defineBoundary, defineShape } from '../../../src/contract';
 import { BUILTIN_BOUNDARIES } from '../../../src/providers/boundary';

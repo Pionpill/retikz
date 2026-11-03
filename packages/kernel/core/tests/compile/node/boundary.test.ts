@@ -4,10 +4,8 @@ import * as core from '../../../src';
 import { NamespaceStack } from '../../../src/compile/runtime';
 import { angleBoundaryOf, boundaryPointOf, compileNodeResolution, resolveAnchor } from '../../../src/compile/tree/node';
 import { createPositionResolveContext } from '../../../src/compile/tree/reference';
-import { resolveBoundaryRegistry } from '../../../src/providers/boundary';
-import { resolvePatternRegistry } from '../../../src/providers/pattern';
-import { BUILTIN_SHAPES } from '../../../src/providers/shape';
-import { resolveNode } from '../../../src/resolve/node';
+import { resolveBoundaryRegistry, resolvePatternRegistry, BUILTIN_SHAPES } from '../../../src/providers';
+import { resolveNode } from '../../../src/resolve';
 import type { IRNode } from '../../../src/schemas';
 import { BoundarySchema, BuiltinBoundary, NodeSchema, NodeTargetSchema } from '../../../src/schemas';
 

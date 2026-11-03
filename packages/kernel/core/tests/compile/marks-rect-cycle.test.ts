@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRScene, ScenePrimitive } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-import { rectPerimeterSample } from '../../src/shared/geometry/path';
+import { rectPerimeterSample } from '../../src/shared';
 
 /** mark marker group 的签名：transforms = [translate(point), rotate, scale, translate]；取首个 translate 为落点 */
 const findMarkPoint = (prims: ReadonlyArray<ScenePrimitive>): [number, number] | undefined => {

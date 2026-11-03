@@ -10,10 +10,8 @@ import {
   resolveAnchor,
 } from '../../src/compile/tree/node';
 import { createPositionResolveContext } from '../../src/compile/tree/reference';
-import { resolveBoundaryRegistry } from '../../src/providers/boundary';
-import { resolvePatternRegistry } from '../../src/providers/pattern';
-import { resolveShapeRegistry } from '../../src/providers/shape';
-import { resolveNode } from '../../src/resolve/node';
+import { resolveBoundaryRegistry, resolvePatternRegistry, resolveShapeRegistry } from '../../src/providers';
+import { resolveNode } from '../../src/resolve';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({
   width: 10,

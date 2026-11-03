@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseInlineSegments } from '../../src/resolve/text';
+import { parseInlineSegments } from '../../src/resolve';
 
 describe('行内 TeX 的 parseInlineSegments', () => {
   it('当门控关闭时保留整个字符串字面量（无 lowerTex）', () => {

@@ -5,7 +5,7 @@ import { number, strictObject } from 'zod';
 import { compileToScene } from '../../src/compile/compile';
 import type { ScenePrimitive, ShapeDefinition } from '../../src/contract';
 import { defineShape } from '../../src/contract';
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { BUILTIN_SHAPES } from '../../src/providers';
 import type { IRScene } from '../../src/schemas';
 import { NodeSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';

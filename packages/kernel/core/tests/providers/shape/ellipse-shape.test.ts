@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compileToScene } from '../../../src/compile/compile';
+import { compileToScene } from '../../../src/compile';
 import type { ScenePrimitive } from '../../../src/contract';
 import { ellipseShape } from '../../../src/providers/shape';
 import type { IRScene } from '../../../src/schemas';

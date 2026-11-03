@@ -42,8 +42,8 @@ import { NamespaceStack } from '../../src/compile/runtime';
 import { createCompileInvariantError, snapshotProviderPosition, wrapLayoutProbeError } from '../../src/compile/shared';
 import { CompileManager } from '../../src/compile/tree';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';
-import { isLayoutProbeRecoverableError } from '../../src/resolve/diagnostics';
-import { cloneAndFreezeJson } from '../../src/shared/json';
+import { isLayoutProbeRecoverableError } from '../../src/resolve';
+import { cloneAndFreezeJson } from '../../src/shared';
 import { pathArrows } from '../helpers/path-arrows';
 
 const fixedMeasurer: TextMeasurer = text => ({

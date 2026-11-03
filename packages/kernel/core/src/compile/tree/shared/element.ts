@@ -3,9 +3,8 @@ import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompileOccurrenceLocator, LayoutProposal, Transform } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { MergedScopeDefaults } from '../../../resolve';
+import type { MergedScopeDefaults, PositionTargetResolveContext } from '../../../resolve';
 import { resolveNodeBoundary } from '../../../resolve';
-import type { PositionTargetResolveContext } from '../../../resolve/position';
 import type { CanonicalTheme } from '../../../shared';
 import type { CompiledNodeLayout } from '../../layout';
 import type { SharedCompileContext, WorkspaceCompileState } from '../../runtime';

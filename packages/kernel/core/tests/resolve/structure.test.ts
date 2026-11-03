@@ -58,7 +58,6 @@ describe('解析源结构', () => {
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
 
     expect(offenders).toEqual([]);
-    expect(source('src/resolve/index.ts')).not.toContain("export * from './position';");
   });
 
   it('在解析中保持复合提供者绑定', () => {

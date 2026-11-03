@@ -6,12 +6,8 @@ import type {
   PatternEmitOutput,
   ScenePrimitive,
 } from '../../contract';
-import {
-  createCompositeContractError,
-  createLayoutProbeRecoverableError,
-  safeThrownDetail,
-} from '../../resolve/diagnostics';
-import type { InputPaintResolution, PaintResolution, PatternResolution } from '../../resolve/resource';
+import { createCompositeContractError, createLayoutProbeRecoverableError, safeThrownDetail } from '../../resolve';
+import type { InputPaintResolution, PaintResolution, PatternResolution } from '../../resolve';
 import { materializeScenePrimitives } from '../shared';
 import { createResourceId, serializeResourceContent, storeSceneResource } from './identity';
 

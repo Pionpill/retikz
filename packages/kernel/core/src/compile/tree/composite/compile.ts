@@ -12,17 +12,19 @@ import type {
 } from '../../../contract';
 import { CompileExpansionKind } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import { bindComposite, guardProviderOutput, resolveComposite } from '../../../resolve';
 import {
+  bindComposite,
+  guardProviderOutput,
+  resolveComposite,
   createCompositeContractError,
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   safeErrorMessage,
   safeThrownDetail,
-} from '../../../resolve/diagnostics';
+} from '../../../resolve';
 import type { IRChild } from '../../../schemas';
-import { cloneAndFreezeJson } from '../../../shared/json';
+import { cloneAndFreezeJson } from '../../../shared';
 import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime, CompositeCompileOwner } from '../../runtime';
 import { allocationPointsOf } from '../../scene';
