@@ -1,9 +1,12 @@
 import { resolveArrowRegistry, resolvePathRegistry, resolvePatternRegistry } from '../../src';
-import type { PathResolution, PathResolveContext, StrokePathResolution } from '../../src/resolve/path';
+import type { BoundPathResolution, PathTargetContext } from '../../src/compile/path';
+import { bindPathTargets } from '../../src/compile/path';
+import type { PathResolveContext, StrokePathResolution } from '../../src/resolve/path';
 import { resolvePath, resolveStrokePathProviders } from '../../src/resolve/path';
 import type { IRPathBase } from '../../src/schemas';
 
-type BuiltinProviderContext = Omit<Partial<PathResolveContext>, 'pathRegistry' | 'arrowRegistry'> &
+type BuiltinProviderContext = PathTargetContext &
+  Omit<Partial<PathResolveContext>, 'pathRegistry' | 'arrowRegistry'> &
   Partial<Pick<PathResolveContext, 'pathRegistry' | 'arrowRegistry' | 'patternRegistry' | 'round'>>;
 
 const contextWithBuiltinProviders = (context: BuiltinProviderContext): PathResolveContext => ({
@@ -19,13 +22,13 @@ const contextWithBuiltinProviders = (context: BuiltinProviderContext): PathResol
 export const resolvePathWithBuiltinProviders = (
   path: IRPathBase,
   context: BuiltinProviderContext = {},
-): PathResolution => resolvePath(path, contextWithBuiltinProviders(context));
+): BoundPathResolution => bindPathTargets(resolvePath(path, contextWithBuiltinProviders(context)), context);
 
 /** resolve/path 测试统一绑定 stroke emitter 所需的 provider */
 export const resolveStrokePathWithBuiltinProviders = (
   path: IRPathBase,
   context: BuiltinProviderContext = {},
-): StrokePathResolution => {
+): BoundPathResolution & StrokePathResolution => {
   const providerContext = contextWithBuiltinProviders(context);
-  return resolveStrokePathProviders(resolvePath(path, providerContext), providerContext);
+  return resolveStrokePathProviders(bindPathTargets(resolvePath(path, providerContext), context), providerContext);
 };

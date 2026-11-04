@@ -34,12 +34,12 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 第二列新增 B 的几何与图元，P 仍占据原来的数组位置；第三列将该占位替换为 Path P。为突出数组变化，这里用一条无标签直线表示 P，用 A、B 表示对应节点图元。
 
-解析后的目标保留后续计算需要的点与引用几何。编译阶段通过 `PathTargetView` 查询局部参考点及边界交点。对 A 到 B 的连线，先取得两个参考点，再由连线方向求出实际端点。
+`bindPathTargets` 在编译阶段绑定目标，保留计算后的点并直接引用完整节点布局；引用来源与布局分别保存。后续通过 `PathTargetView` 查询局部参考点及边界交点。对 A 到 B 的连线，先取得两个参考点，再由连线方向求出实际端点。
 
 <SourceLinks
   sources={[
     { label: '延迟队列及占位回填', path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts' },
-    { label: '目标绑定与确定化路径', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
+    { label: '目标绑定与确定化路径', path: 'packages/kernel/core/src/compile/path/bind.ts' },
     { label: '编译阶段的目标查询', path: 'packages/kernel/core/src/compile/path/host/target.ts' },
   ]}
 />
@@ -57,7 +57,7 @@ description: 追踪 Core 如何把路径目标和步骤转为几何命令，再�
 
 <ComponentPreview files="path-relative" size="md" hideCode type="illustration" />
 
-能提前确定的相对目标在解析阶段转为局部坐标；依赖 axis-line 投影等运行结果的后续目标，在消费步骤时继续计算。`move` 开启新的笔位，普通直线、折线和曲线逐段转为命令；圆弧、闭合形状、平滑曲线由各自分支处理，并交接后续笔位。
+能提前确定的相对目标在编译阶段绑定为局部坐标；依赖 axis-line 投影等运行结果的后续目标，在消费步骤时继续计算。`move` 开启新的笔位，普通直线、折线和曲线逐段转为命令；圆弧、闭合形状、平滑曲线由各自分支处理，并交接后续笔位。
 
 | 输入步骤                                   | 几何变化                                             |
 | ------------------------------------------ | ---------------------------------------------------- |

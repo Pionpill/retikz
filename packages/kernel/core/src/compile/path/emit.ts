@@ -1,38 +1,40 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type {
-  CompiledPathAppearance,
   AnyPathDefinition,
   ArrowDefinition,
-  MarkDefinition,
-  PatternDefinition,
+  CompiledPathAppearance,
   InputPathBoundaryLabel,
   InputPathLabel,
+  MarkDefinition,
   PathCompileContext,
   PathCompileResult,
+  PatternDefinition,
   ScenePrimitive,
   SceneResource,
   TextMeasurer,
   Transform,
 } from '../../contract';
-import type { PathResolution, PathTargetResolver } from '../../resolve';
 import {
+  createCompositeContractError,
   guardProviderOutput,
   resolvePathLabel,
   resolvePathLabelColors,
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
-  createCompositeContractError,
 } from '../../resolve';
 import type { IRPathBase, IRPosition, IRStep } from '../../schemas';
 import type { NodeBoundaryStore } from '../node';
 import type { RegisterPaint } from '../resource';
+import type { CompileWarning, ComposedScopeTransform } from '../shared';
 import { snapshotProviderPosition, snapshotScenePrimitives } from '../shared';
-import type { ComposedScopeTransform, CompileWarning } from '../shared';
 import type { TexLowerer } from '../text';
+import { bindPathTargets } from './bind';
 import { emitBoundaryLabelPrimitive, emitLabelPrimitive } from './host';
 import { pathTargetViewOf } from './index';
 import { emitPathPrimitive, lowerStrokePathGeometry, wrapPathPrimitiveOutput } from './stroke';
+import type { PathTargetResolver } from './types';
+import type { BoundPathResolution } from './types';
 import type { InputPathCompilation } from './types';
 
 /** Path 宿主编译所需的显式服务与本次工作区 */
@@ -91,10 +93,10 @@ const snapshotPathCompileResult = (
     };
   });
 
-/** 消费 resolve/path 已绑定的 path，并提供内置 stroke emit 回调 */
+/** 消费已完成配置解析与目标绑定的路径，并提供内置 stroke emit 回调 */
 export const emitDefinedPath = (
   pendingPath: InputPathCompilation,
-  resolution: PathResolution,
+  resolution: BoundPathResolution,
   targetResolver: PathTargetResolver,
   context: PathHostCompileContext,
 ) => {
@@ -126,21 +128,22 @@ export const emitDefinedPath = (
     lowerTex: context.lowerTex,
     rootFontSize: context.rootFontSize,
   };
-  const resolutionOf = (nextPath: IRPathBase): PathResolution =>
+  const resolutionOf = (nextPath: IRPathBase): BoundPathResolution =>
     nextPath === path
       ? resolution
-      : resolvePathValue(nextPath, {
-          scopeDefaults: pendingPath.scopeDefaults,
-          mode: pendingPath.theme.mode,
-          scopeChain,
-          targetResolver,
-          pathRegistry: context.registries.pathRegistry,
-          arrowRegistry: context.registries.arrowRegistry,
-          markRegistry: context.registries.markRegistry,
-          patternRegistry: context.registries.patternRegistry,
-          round: context.round,
-          irPath,
-        });
+      : bindPathTargets(
+          resolvePathValue(nextPath, {
+            scopeDefaults: pendingPath.scopeDefaults,
+            mode: pendingPath.theme.mode,
+            pathRegistry: context.registries.pathRegistry,
+            arrowRegistry: context.registries.arrowRegistry,
+            markRegistry: context.registries.markRegistry,
+            patternRegistry: context.registries.patternRegistry,
+            round: context.round,
+            irPath,
+          }),
+          { scopeChain, targetResolver },
+        );
 
   const emitStroke = (nextPath?: IRPathBase) => {
     const source = nextPath ?? path;

@@ -7,7 +7,7 @@ import type {
   IRTranslateTransform,
   PolarPosition,
 } from '../../schemas';
-import { resolvePosition } from './resolve';
+import { resolvePosition } from './position';
 import type { PositionResolution, PositionResolveContext } from './types';
 
 /** 位置解析器支持的平移配置 */

@@ -53,7 +53,7 @@ export const resolvePosition = (
   if (typeof position === 'string') {
     const reference = context.lookupReference(position);
     if (reference === undefined) return null;
-    return resolutionOfWorld([reference.node.rect.x, reference.node.rect.y], context);
+    return resolutionOfWorld([reference.node.geometry.rect.x, reference.node.geometry.rect.y], context);
   }
 
   if (isPositionTuple(position)) return resolutionOfLocal([position[0], position[1]], context);
@@ -61,7 +61,7 @@ export const resolvePosition = (
     const reference = context.lookupReference(position.of);
     if (reference === undefined) return null;
 
-    const referenceLocal = context.toLocal([reference.node.rect.x, reference.node.rect.y]);
+    const referenceLocal = context.toLocal([reference.node.geometry.rect.x, reference.node.geometry.rect.y]);
     const distance = position.distance ?? context.nodeDistance;
     const [dx, dy] = anchorUnitVectorByAnchor[position.direction];
 

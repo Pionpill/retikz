@@ -2,17 +2,14 @@ import type { BoundsInsets, CenteredBox, Position } from '@retikz/math';
 import { DEG_TO_RAD, point } from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { BoundaryResolution, NodeReferenceGeometry } from '../../resolve';
+import type { BoundaryResolution } from '../../resolve';
 import { boundaryKey } from '../../resolve';
 import type { IRBoundary } from '../../schemas';
 import { CenterAnchor, isAnchor } from '../../shared';
 import { snapshotProviderPosition } from '../shared';
 import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
 import type { NodeBoundaryState } from './boundary-store';
-import { createNodeReferenceGeometry } from './reference';
 import type { CompiledNodeLayout } from './types';
-
-type NodeAnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
 
 /** 保留合法 undefined fallback，并校验 provider 实际返回的二维坐标 */
 const snapshotOptionalProviderPosition = (owner: string, value: Position | undefined): Position | undefined =>
@@ -43,40 +40,39 @@ const inflateRect = (r: CenteredBox, m: BoundsInsets): CenteredBox => {
 export const outerRectOf = (layout: CompiledNodeLayout): CenteredBox =>
   inflateRect(layout.geometry.rect, layout.geometry.margin);
 
-const shapeBoundaryResolutionOf = (layout: NodeReferenceGeometry): BoundaryResolution => ({
-  name: layout.shapeName,
-  definition: layout.shapeDef,
-  params: layout.shapeParams,
+const shapeBoundaryResolutionOf = (layout: CompiledNodeLayout): BoundaryResolution => ({
+  name: layout.shape.name,
+  definition: layout.shape.definition,
+  params: layout.shape.params,
   isShape: true,
 });
 
 const resolveBoundaryOf = (
-  input: NodeAnchorLayout,
+  layout: CompiledNodeLayout,
   boundary: IRBoundary | undefined,
   boundaryResolution?: BoundaryResolution,
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ) => {
-  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const resolution =
     boundaryResolution ??
     (boundary === undefined || boundary === 'shape'
       ? shapeBoundaryResolutionOf(layout)
-      : boundary === layout.boundary || boundaryKey(boundary) === boundaryKey(layout.boundary)
-        ? layout.boundaryResolution
+      : boundary === layout.boundarySource || boundaryKey(boundary) === boundaryKey(layout.boundarySource)
+        ? layout.boundary
         : undefined);
   if (resolution === undefined) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `Boundary '${boundaryKey(boundary)}' was not resolved for node '${layout.id ?? '(unnamed)'}'`,
+      `Boundary '${boundaryKey(boundary)}' was not resolved for shape '${layout.shape.name}'`,
     );
   }
 
   return resolveBoundaryGeometry(resolution, {
-    visualDef: layout.shapeDef,
-    visualRect: layout.rect,
-    visualParams: layout.shapeParams,
-    irPath: layout.irPath,
+    visualDef: layout.shape.definition,
+    visualRect: layout.geometry.rect,
+    visualParams: layout.shape.params,
+    irPath: state?.irPath,
     ...state,
     warn: state?.warn ?? warn,
   });
@@ -84,31 +80,29 @@ const resolveBoundaryOf = (
 
 /** 取节点 shape 在 toward 方向的附着点 */
 export const boundaryPointOf = (
-  input: NodeAnchorLayout,
+  layout: CompiledNodeLayout,
   toward: Position,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryResolution,
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ): Position => {
-  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
-  const raw = def.computeBoundaryPoint(inflateRect(rect, layout.margin), toward, params);
+  const raw = def.computeBoundaryPoint(inflateRect(rect, layout.geometry.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };
 
 /** 沿折线移除起始节点连接面内的前缀，保留原线段上的出界交点 */
 export const clipNodePolyline = (
-  input: NodeAnchorLayout,
+  layout: CompiledNodeLayout,
   points: ReadonlyArray<Position>,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryResolution,
   warn?: (code: string, message: string) => void,
   state?: NodeBoundaryState,
 ): Array<Position> => {
-  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn, state);
-  const outer = inflateRect(rect, layout.margin);
+  const outer = inflateRect(rect, layout.geometry.margin);
   const center: Position = [outer.x, outer.y];
   const boundaryAt = (position: Position): Position =>
     snapshotProviderPosition(
@@ -140,45 +134,46 @@ export const clipNodePolyline = (
 
 /** 取节点 shape 的命名 anchor；标准 anchor 可选在 boundary 拟合后应用 margin */
 export const anchorOf = (
-  input: NodeAnchorLayout,
+  layout: CompiledNodeLayout,
   name: string,
   boundary?: IRBoundary,
   applyMargin = false,
   boundaryResolution?: BoundaryResolution,
   state?: NodeBoundaryState,
 ): Position => {
-  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
       const own = snapshotOptionalProviderPosition(
-        `Shape '${layout.shapeName}' anchor`,
-        layout.shapeDef.resolveAnchor(layout.rect, CenterAnchor.Center, layout.shapeParams),
+        `Shape '${layout.shape.name}' anchor`,
+        layout.shape.definition.resolveAnchor(layout.geometry.rect, CenterAnchor.Center, layout.shape.params),
       );
-      return own ?? [layout.rect.x, layout.rect.y];
+      return own ?? [layout.geometry.rect.x, layout.geometry.rect.y];
     }
 
     // 标准方位名优先走视觉 shape 自身 anchor；未实现时回退外接 AABB。
     if (boundary === 'shape') {
-      const shapeRect = applyMargin ? inflateRect(layout.rect, layout.margin) : layout.rect;
+      const shapeRect = applyMargin ? inflateRect(layout.geometry.rect, layout.geometry.margin) : layout.geometry.rect;
       const own = snapshotOptionalProviderPosition(
-        `Shape '${layout.shapeName}' anchor`,
-        layout.shapeDef.resolveAnchor(shapeRect, name, layout.shapeParams),
+        `Shape '${layout.shape.name}' anchor`,
+        layout.shape.definition.resolveAnchor(shapeRect, name, layout.shape.params),
       );
       if (own !== undefined) return own;
 
-      const fallbackRect = applyMargin ? inflateRect(layout.rect, layout.margin) : layout.rect;
+      const fallbackRect = applyMargin
+        ? inflateRect(layout.geometry.rect, layout.geometry.margin)
+        : layout.geometry.rect;
       const p = fallbackBoundaryAnchor(fallbackRect, name);
       if (p === undefined)
         throw new RetikzCoreError(
           RetikzCoreErrorCode.Compile,
-          `Unknown anchor '${name}' for shape '${layout.shapeName}'`,
+          `Unknown anchor '${name}' for shape '${layout.shape.name}'`,
         );
 
       return p;
     }
 
     const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, undefined, state);
-    const anchorRect = applyMargin ? inflateRect(rect, layout.margin) : rect;
+    const anchorRect = applyMargin ? inflateRect(rect, layout.geometry.margin) : rect;
     const raw = def.resolveAnchor?.(anchorRect, name, params);
     const p =
       snapshotOptionalProviderPosition(`Boundary '${boundaryKey(boundary)}' anchor`, raw) ??
@@ -186,7 +181,7 @@ export const anchorOf = (
     if (p === undefined)
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
-        `Unknown anchor '${name}' for shape '${layout.shapeName}'`,
+        `Unknown anchor '${name}' for shape '${layout.shape.name}'`,
       );
 
     return p;
@@ -194,11 +189,11 @@ export const anchorOf = (
 
   // 形状专属命名 anchor 恒走视觉形状。
   const p = snapshotOptionalProviderPosition(
-    `Shape '${layout.shapeName}' anchor`,
-    layout.shapeDef.resolveAnchor(layout.rect, name, layout.shapeParams),
+    `Shape '${layout.shape.name}' anchor`,
+    layout.shape.definition.resolveAnchor(layout.geometry.rect, name, layout.shape.params),
   );
   if (p === undefined) {
-    throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Unknown anchor '${name}' for shape '${layout.shapeName}'`);
+    throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Unknown anchor '${name}' for shape '${layout.shape.name}'`);
   }
 
   return p;
@@ -206,19 +201,18 @@ export const anchorOf = (
 
 /** 取节点 shape 在指定角度方向的边界点 */
 export const angleBoundaryOf = (
-  input: NodeAnchorLayout,
+  layout: CompiledNodeLayout,
   angleDeg: number,
   boundary?: IRBoundary,
   applyMargin = false,
   boundaryResolution?: BoundaryResolution,
   state?: NodeBoundaryState,
 ): Position => {
-  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
   const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);
   const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, undefined, state);
-  const boundaryRect = applyMargin ? inflateRect(rect, layout.margin) : rect;
+  const boundaryRect = applyMargin ? inflateRect(rect, layout.geometry.margin) : rect;
   const rot = boundaryRect.rotate ?? 0;
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);

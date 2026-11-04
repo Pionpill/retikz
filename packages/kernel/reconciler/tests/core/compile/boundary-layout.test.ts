@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   boundaryPointOf,
   layoutNode,
-  createNodeReferenceGeometry,
   projectLayoutWithTransform,
   resolveAnchor,
 } from '../../../../core/src/compile/node';
@@ -48,9 +47,8 @@ describe('CompiledNodeLayout 边界/形状', () => {
     const layout = layoutOf({ type: 'node', position: [0, 0], boundary: 'circle' }, shapes);
     const context = createNodeBoundaryStore();
     const projected = projectLayoutWithTransform(layout, composeScopeTransform([]));
-    const reference = createNodeReferenceGeometry(projected, context);
     const first = boundaryPointOf(layout, [100, 0], 'circle', undefined, undefined, context.get(layout));
-    expect(boundaryPointOf(reference, [100, 0], 'circle', undefined, undefined, context.get(reference))).toEqual(first);
+    expect(boundaryPointOf(projected, [100, 0], 'circle', undefined, undefined, context.get(projected))).toEqual(first);
     expect(envelope).toHaveBeenCalledTimes(1);
 
     const moved = projectLayoutWithTransform(layout, composeScopeTransform([{ kind: 'translate', x: 10, y: 0 }]));

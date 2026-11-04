@@ -263,7 +263,6 @@ export {
   registerFatalProbeError,
   resolveAnimations,
   resolveBoxSpacing,
-  resolveCoordinatePosition,
   resolveGraphicOpacity,
   resolveNode,
   resolveNodeBoundary,
@@ -281,7 +280,6 @@ export type {
   NodeResolution,
   NodeResolveContext,
   PathLabelGeometryOptions,
-  PositionTargetResolveContext,
   ScopeStyleResolution,
 } from './resolve';
 export { bindComposite, resolveComposite } from './resolve/composite';
@@ -642,3 +640,13 @@ export type {
   SharedRelativeTargetLike,
   ThemeName,
 } from './shared';
+
+export { bindPathTargets } from './compile/path';
+export type {
+  BoundPathResolution,
+  PathTargetContext,
+  PathTargetResolver,
+  PathTargetView,
+  TargetResolution,
+} from './compile/path';
+export * from './compile/reference';

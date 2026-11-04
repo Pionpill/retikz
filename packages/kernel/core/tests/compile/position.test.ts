@@ -1,9 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
+import type { PositionReferenceView, PositionTargetResolveContext } from '../../src/compile';
+import {
+  composeScopeTransform,
+  createNodeBoundaryStore,
+  createPositionResolveContext,
+  createSyntheticRectangleLayout,
+  projectLayoutWithTransform,
+  resolvePosition,
+  resolvePositionTarget,
+  resolveTransformTranslation,
+} from '../../src/compile';
+import type { CompiledNodeLayout } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers';
-import type { BoundaryResolution, NodeReferenceGeometry } from '../../src/resolve';
-import type { PositionReferenceView, PositionTargetResolveContext } from '../../src/resolve/position';
-import { resolvePosition, resolvePositionTarget, resolveTransformTranslation } from '../../src/resolve/position';
+import type { BoundaryResolution } from '../../src/resolve';
 import type { IRNodeTarget, IRPosition, IRTransform } from '../../src/schemas';
 
 const rectangleBoundary: BoundaryResolution = {
@@ -18,35 +28,80 @@ const reference = (
   center: IRPosition,
   state: PositionReferenceView['state'] = 'resolved',
 ): PositionReferenceView => {
-  const node: NodeReferenceGeometry = {
-    id,
-    shapeName: 'rectangle',
-    shapeDef: BUILTIN_SHAPES.get('rectangle')!,
-    shapeParams: {},
-    rect: { x: center[0], y: center[1], width: 20, height: 10 },
-    margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    boundaryResolution: rectangleBoundary,
+  const node: CompiledNodeLayout = {
+    shape: { name: 'rectangle', definition: BUILTIN_SHAPES.get('rectangle')!, params: {} },
+    geometry: {
+      rect: { x: center[0], y: center[1], width: 20, height: 10 },
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      contentCenter: center,
+      contentSize: { width: 0, height: 0 },
+    },
+    boundary: rectangleBoundary,
   };
-  return { state, node };
+  return { state, node, id };
 };
 
 const contextOf = (references: ReadonlyArray<PositionReferenceView> = []): PositionTargetResolveContext => {
-  const byId = new Map(references.map(item => [item.node.id, item]));
+  const byId = new Map(references.map(item => [item.id, item]));
   return {
     nodeDistance: 24,
     lookupReference: id => byId.get(id),
     toLocal: world => [world[0] - 100, world[1] - 50],
     toWorld: local => [local[0] + 100, local[1] + 50],
-    boundaryResolutionOf: (_target, item) => item.node.boundaryResolution,
+    boundaryResolutionOf: (_target, item) => item.node.boundary,
     pointOfNodeTarget: (target, item) => {
       if (target.anchor === 'right') {
-        return [item.node.rect.x + item.node.rect.width / 2, item.node.rect.y];
+        return [item.node.geometry.rect.x + item.node.geometry.rect.width / 2, item.node.geometry.rect.y];
       }
 
-      return [item.node.rect.x, item.node.rect.y];
+      return [item.node.geometry.rect.x, item.node.geometry.rect.y];
     },
   };
 };
+
+describe('compiled layout references', () => {
+  it('保留别名来源并直接复用布局，不修改共享诊断状态', () => {
+    const layout = createSyntheticRectangleLayout({ id: 'A', rect: { x: 10, y: 20, width: 40, height: 20 } });
+    const store = createNodeBoundaryStore();
+    store.get(layout).irPath = ['original'];
+    const paths: Array<unknown> = [];
+    const context = createPositionResolveContext({
+      nodeDistance: 24,
+      nodeBoundaryStore: store,
+      lookupReference: id => ({ state: 'resolved', layout, irPath: ['aliases', id] }),
+      resolveExplicitBoundary: (_boundary, input) => {
+        paths.push(input.irPath);
+        return rectangleBoundary;
+      },
+    });
+    for (const id of ['A', 'B']) {
+      const result = resolvePositionTarget({ id, anchor: 'right', boundary: 'rectangle' }, context);
+      expect(result.reference?.node).toBe(layout);
+      expect(result.reference?.id).toBe(id);
+      expect(result.reference?.irPath).toEqual(['aliases', id]);
+      expect(result.point).toEqual([30, 20]);
+    }
+    expect(paths).toEqual([
+      ['aliases', 'A'],
+      ['aliases', 'B'],
+    ]);
+    expect(store.get(layout).irPath).toEqual(['original']);
+  });
+
+  it('重新发布变换后的布局时重新计算锚点', () => {
+    const original = createSyntheticRectangleLayout({ id: 'A', rect: { x: 10, y: 20, width: 40, height: 20 } });
+    let layout = original;
+    const context = createPositionResolveContext({
+      nodeDistance: 24,
+      nodeBoundaryStore: createNodeBoundaryStore(),
+      lookupReference: () => ({ state: 'resolved', layout }),
+    });
+    expect(resolvePositionTarget({ id: 'A', anchor: 'right' }, context).point).toEqual([30, 20]);
+    layout = projectLayoutWithTransform(original, composeScopeTransform([{ kind: 'translate', x: 100, y: 50 }]));
+    expect(resolvePositionTarget({ id: 'A', anchor: 'right' }, context).point).toEqual([130, 70]);
+    expect(original.geometry.rect.x).toBe(10);
+  });
+});
 
 describe('resolvePosition', () => {
   it('同时保留 tuple 的局部点与投影后的世界点', () => {

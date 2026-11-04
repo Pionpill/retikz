@@ -1,26 +1,26 @@
 import { formatPropertyPath } from '@retikz/foundation';
 import { DEG_TO_RAD } from '@retikz/math';
 
-import type { TextMeasurer, LayoutAxisProposal, ShapeCircumscribedGeometry, Transform } from '../../contract';
+import type { LayoutAxisProposal, ShapeCircumscribedGeometry, TextMeasurer, Transform } from '../../contract';
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { CanonicalNode, NodeResolution, PositionTargetResolveContext } from '../../resolve';
+import type { CanonicalNode, NodeResolution } from '../../resolve';
 import {
-  guardProviderOutput,
   createCompositeContractError,
   createLayoutProbeRecoverableError,
+  guardProviderOutput,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
-  safeThrownDetail,
-  resolvePosition,
-  resolvePositionTargetWorld,
   resolveFont,
   resolveTextLineHeight,
+  safeThrownDetail,
 } from '../../resolve';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import { CenterAnchor } from '../../shared';
-import { composeScopeTransform, inverseScopeTransform, snapshotProviderPosition } from '../shared';
+import type { PositionTargetResolveContext } from '../reference';
+import { resolvePosition, resolvePositionTargetWorld } from '../reference';
 import type { CompileWarningCode, ComposedScopeTransform } from '../shared';
+import { composeScopeTransform, inverseScopeTransform, snapshotProviderPosition } from '../shared';
 import { DEFAULT_FONT_SIZE } from '../text';
 import { resolveAnchorRefUncached } from './anchor-cache';
 import type { NodeBoundaryStore } from './boundary-store';
@@ -28,7 +28,7 @@ import { createNodeBoundaryStore } from './boundary-store';
 import { layoutNodeContent } from './content';
 import { layoutNodeLabels, measureNodeLabels } from './label';
 import { projectLayoutWithTransform } from './projection';
-import type { CompiledNodeLayout, CompiledNode, TexLoweringContext } from './types';
+import type { CompiledNode, CompiledNodeLayout, TexLoweringContext } from './types';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;

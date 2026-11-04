@@ -9,6 +9,5 @@ export * from './layout';
 export * from './layout-metrics';
 export * from './output';
 export * from './projection';
-export * from './reference';
 export * from './synthetic';
 export * from './types';

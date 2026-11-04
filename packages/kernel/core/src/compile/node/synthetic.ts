@@ -6,9 +6,9 @@ import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contr
 import type { ProviderRegistry } from '../../providers';
 import { BUILTIN_BOUNDARIES, BUILTIN_SHAPES } from '../../providers';
 import { resolveNode } from '../../resolve';
-import type { PositionTargetResolveContext } from '../../resolve';
 import type { IRNode, IRPosition } from '../../schemas';
 import { ThemeMode } from '../../shared';
+import type { PositionTargetResolveContext } from '../reference';
 import { applyTransformChain } from '../shared';
 import { fallbackMeasurer } from '../text';
 import { layoutNode } from './layout';
@@ -26,7 +26,7 @@ const SYNTHETIC_POSITION_CONTEXT: PositionTargetResolveContext = {
   lookupReference: () => undefined,
   toLocal: point => [point[0], point[1]],
   toWorld: point => [point[0], point[1]],
-  pointOfNodeTarget: (_target, reference) => [reference.node.rect.x, reference.node.rect.y],
+  pointOfNodeTarget: (_target, reference) => [reference.node.geometry.rect.x, reference.node.geometry.rect.y],
 };
 
 /** synthetic layout 构造使用的 shape / boundary 注册表 */

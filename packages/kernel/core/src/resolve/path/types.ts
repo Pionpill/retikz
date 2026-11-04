@@ -1,24 +1,22 @@
 import type { PropertyPath } from '@retikz/foundation';
 
-import type { AnyPathDefinition, ArrowDefinition, MarkDefinition, PatternDefinition, Transform } from '../../contract';
+import type { AnyPathDefinition, ArrowDefinition, MarkDefinition, PatternDefinition } from '../../contract';
 import type { ProviderRegistry } from '../../providers';
 import type {
-  IRMarkStyle,
-  IRPathMark,
+  CanonicalDropShadow,
   IRArrowStyle,
+  IRMarkStyle,
   IRPaint,
   IRPathBase,
   IRPathLabel,
+  IRPathMark,
   IRPathStyle,
   IRPosition,
   IRStep,
-  IRTarget,
-  CanonicalDropShadow,
 } from '../../schemas';
 import type { ThemeMode } from '../../shared';
-import type { BoundaryResolution, NodeReferenceGeometry } from '../node';
 import type { InputPaintResolution } from '../resource';
-import type { MergedScopeDefaults, GraphicOpacityResolution } from '../style';
+import type { GraphicOpacityResolution, MergedScopeDefaults } from '../style';
 import type { LabelTextColorSource } from '../text';
 
 /** 已解析文字主色与行内片段颜色的路径标签 */
@@ -225,42 +223,12 @@ export type ArrowMarkResolution = Readonly<{
   geometry: ArrowMarkGeometry;
 }>;
 
-/** 路径解析所需的目标坐标与节点绑定查询能力 */
-export type PathTargetResolver = Readonly<{
-  /** 查询目标在当前作用域中的局部坐标，无法定位时返回 null */
-  pointOfTarget: (target: IRTarget, scopeChain: ReadonlyArray<Transform>) => IRPosition | null;
-  /** 查询目标的世界参考点；未提供或返回空值时，解析器沿用局部坐标 */
-  refPointOfTarget?: (target: IRTarget, scopeChain: ReadonlyArray<Transform>) => IRPosition | null;
-  /** 查询目标坐标及所引用的节点与连接面，返回空值时改用坐标查询 */
-  bindTarget?: (target: IRTarget, scopeChain: ReadonlyArray<Transform>) => TargetResolution | null;
-}>;
-
-/** 基于已绑定目标提供的坐标查询与边界裁剪能力 */
-export type PathTargetView = Readonly<{
-  /** 读取目标的局部坐标，无法定位时返回 null */
-  pointOfTarget: (target: IRTarget, scopeChain: ReadonlyArray<Transform>) => IRPosition | null;
-  /** 读取绑定中保存的参考点，未绑定时尝试使用局部坐标 */
-  referenceOfTarget: (target: IRTarget, scopeChain: ReadonlyArray<Transform>) => IRPosition | null;
-  /** 沿局部坐标 toward 的方向求节点连接面上的点，返回局部坐标 */
-  clipTarget: (target: IRTarget, toward: IRPosition, scopeChain: ReadonlyArray<Transform>) => IRPosition | null;
-  /** 移除以自动节点目标为起点的折线内部前缀；空数组表示没有外部可见部分 */
-  clipPolylineTarget: (
-    target: IRTarget,
-    points: ReadonlyArray<IRPosition>,
-    scopeChain: ReadonlyArray<Transform>,
-  ) => Array<IRPosition>;
-}>;
-
 /** 路径解析所需的作用域配置、目标查询与扩展定义 */
 export type PathResolveContext = Readonly<{
-  /** 当前作用域的变换链，省略时按无变换处理 */
-  scopeChain?: ReadonlyArray<Transform>;
   /** 当前作用域的默认配置，省略时不执行作用域样式合并 */
   scopeDefaults?: MergedScopeDefaults;
   /** 当前路径使用的主题明暗模式 */
   mode: ThemeMode;
-  /** 目标坐标与引用查询能力；省略时目标绑定中的坐标为空 */
-  targetResolver?: PathTargetResolver;
   /** 路径定义能力注册表 */
   pathRegistry: ProviderRegistry<AnyPathDefinition>;
   /** 箭头能力注册表 */
@@ -275,28 +243,12 @@ export type PathResolveContext = Readonly<{
   irPath?: PropertyPath;
 }>;
 
-/** 单个路径目标的坐标与节点绑定结果 */
-export type TargetResolution = Readonly<{
-  /** 参与绑定的目标，可能已由相对偏移转换为坐标 */
-  target: IRTarget;
-  /** 当前作用域中的局部坐标，无法定位时为 null */
-  point: IRPosition | null;
-  /** 绑定器提供的世界参考点；未提供时可能沿用局部坐标，无法定位时为 null */
-  referencePoint: IRPosition | null;
-  /** 直接引用的节点、坐标或作用域几何，普通坐标目标不设置 */
-  node?: NodeReferenceGeometry;
-  /** 节点目标选用的连接面，普通坐标目标不设置 */
-  boundaryResolution?: BoundaryResolution;
-}>;
-
-/** 路径输入经样式解析、默认值补全与目标绑定后的结果 */
+/** 路径输入经样式解析、定义绑定与默认值补全后的结果 */
 export type PathResolution = Readonly<{
   /** 当前路径的 IR 路径，用于扩展定义与输出的错误定位 */
   irPath: PropertyPath;
   /** 已补齐默认值并解析绘制资源、供后续编译使用的路径 */
   path: CanonicalPath;
-  /** 按步骤字段的完整 IR 路径经 encodePropertyPath 编码后保存的目标绑定 */
-  targets: ReadonlyMap<string, TargetResolution>;
   /** 与当前路径匹配的定义 */
   definition: AnyPathDefinition;
   /** 经过定义 schema 解析、供自定义路径编译回调使用的输入 */

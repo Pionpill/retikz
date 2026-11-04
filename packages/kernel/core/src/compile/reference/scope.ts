@@ -1,8 +1,8 @@
 import { formatPropertyPath } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { createLayoutProbeRecoverableError } from '../../resolve';
 import type { IRPosition, IRScope, IRScopePositionTarget } from '../../schemas';
-import { createLayoutProbeRecoverableError } from '../diagnostics';
 import { resolvePositionTargetWorld } from './target';
 import type { ScopePositionResolveContext } from './types';
 

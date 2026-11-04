@@ -2,9 +2,9 @@ import type { PropertyPath } from '@retikz/foundation';
 import { formatPropertyPath } from '@retikz/foundation';
 import { isFinitePoint } from '@retikz/math';
 
-import type { TextMeasurer, ScenePrimitive } from '../../../contract';
+import type { ScenePrimitive, TextMeasurer } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalStep, PathResolution, PathTargetView, StrokePathResolution } from '../../../resolve';
+import type { CanonicalStep, PathResolution, StrokePathResolution } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import type { RegisterPaint } from '../../resource';
@@ -12,6 +12,7 @@ import { calculateBoundsOfPrimitives } from '../../scene';
 import { BuiltinCompileWarningCode } from '../../shared';
 import { fallbackMeasurer } from '../../text';
 import { emitLabelPrimitive, pointOfTarget } from '../host';
+import type { PathTargetView } from '../types';
 import type { PathEmitOptions } from '../types';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
@@ -55,7 +56,7 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Emi
 
   const scopeChain = pathEmitOptions.scopeChain ?? [];
 
-  // relative/relativeAccumulate target 已由 resolving 阶段绑定为当前 scope 的局部坐标
+  // relative/relativeAccumulate target 已由 compile 目标绑定阶段绑定为当前 scope 的局部坐标
   const steps = [...canonicalSteps];
 
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；其余 step 至少需要起点和一段绘制

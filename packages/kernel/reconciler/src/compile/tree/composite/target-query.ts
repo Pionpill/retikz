@@ -3,6 +3,7 @@ import {
   RetikzCoreError,
   RetikzCoreErrorCode,
   bindPathTarget,
+  bindPathTargets,
   createPositionResolveContext,
   isFatalProbeError,
   naturalLayoutProposal,
@@ -112,27 +113,31 @@ export const createCompositeTargetQuery = (
           }
         };
 
-        const queryResolution = resolvePathValue(
+        const queryResolution = bindPathTargets(
+          resolvePathValue(
+            {
+              type: 'path',
+              children: [
+                { type: 'step', kind: 'move', to: query.source },
+                { type: 'step', kind: 'smooth', points: [...query.points] },
+              ],
+            },
+            {
+              mode: theme.mode,
+              pathRegistry: runtime.context.registries.pathRegistry,
+              arrowRegistry: runtime.context.registries.arrowRegistry,
+              markRegistry: runtime.context.registries.markRegistry,
+              patternRegistry: runtime.context.registries.patternRegistry,
+              round: runtime.context.layout.round,
+              irPath: ['query'],
+            },
+          ),
           {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: query.source },
-              { type: 'step', kind: 'smooth', points: [...query.points] },
-            ],
-          },
-          {
-            mode: theme.mode,
             scopeChain: queryChain,
             targetResolver: {
               pointOfTarget: target => bindingOf(target)?.point ?? null,
               bindTarget: target => bindingOf(target),
             },
-            pathRegistry: runtime.context.registries.pathRegistry,
-            arrowRegistry: runtime.context.registries.arrowRegistry,
-            markRegistry: runtime.context.registries.markRegistry,
-            patternRegistry: runtime.context.registries.patternRegistry,
-            round: runtime.context.layout.round,
-            irPath: ['query'],
           },
         );
 

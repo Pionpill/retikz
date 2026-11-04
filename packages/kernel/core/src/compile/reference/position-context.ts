@@ -1,47 +1,44 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { Transform } from '../../contract';
-import type {
-  BoundaryResolution,
-  NodeBoundaryResolver,
-  NodeReferenceGeometry,
-  PositionReferenceView,
-  PositionTargetResolveContext,
-} from '../../resolve';
-import { boundaryKey, resolvePositionTarget } from '../../resolve';
+import type { BoundaryResolution, NodeBoundaryResolver } from '../../resolve';
+import { boundaryKey } from '../../resolve';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
 import type { CompiledNodeLayout, NodeBoundaryStore } from '../node';
-import { createNodeReferenceGeometry, resolveAnchorRef } from '../node';
+import { resolveAnchorRef } from '../node';
 import type { ComposedScopeTransform } from '../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../shared';
+import { resolvePositionTarget } from './target';
+import type { PositionReferenceView, PositionTargetResolveContext } from './types';
 
 /** 把视觉 shape 绑定为默认连接面 resolution */
-const shapeBoundaryResolutionOf = (node: NodeReferenceGeometry): BoundaryResolution => ({
-  name: node.shapeName,
-  definition: node.shapeDef,
-  params: node.shapeParams,
+const shapeBoundaryResolutionOf = (node: CompiledNodeLayout): BoundaryResolution => ({
+  name: node.shape.name,
+  definition: node.shape.definition,
+  params: node.shape.params,
   isShape: true,
 });
 
 /** 绑定 NodeTarget 选择的连接面，不执行 layout geometry */
 const targetBoundaryResolutionOf = (
-  node: NodeReferenceGeometry,
+  node: CompiledNodeLayout,
   target: IRNodeTarget,
   resolveExplicitBoundary?: NodeBoundaryResolver,
+  irPath?: PropertyPath,
 ): BoundaryResolution | undefined => {
-  const boundary = target.boundary ?? node.boundary;
+  const boundary = target.boundary ?? node.boundarySource;
   if (boundary === undefined || boundary === 'shape') return shapeBoundaryResolutionOf(node);
-  if (boundaryKey(boundary) === boundaryKey(node.boundary)) return node.boundaryResolution;
+  if (boundaryKey(boundary) === boundaryKey(node.boundarySource)) return node.boundary;
   if (resolveExplicitBoundary === undefined) return undefined;
 
   return resolveExplicitBoundary(boundary, {
-    visualDef: node.shapeDef,
-    visualParams: node.shapeParams,
-    irPath: node.irPath,
+    visualDef: node.shape.definition,
+    visualParams: node.shape.params,
+    irPath,
   });
 };
 
-/** 创建 position resolver context 所需的 compile 状态投影 */
+/** 创建位置求值上下文所需的编译状态 */
 export type InputPositionResolveContext = Readonly<{
   /** 当前命名空间 */
   lookupReference: (id: string) =>
@@ -67,8 +64,8 @@ export type InputPositionResolveContext = Readonly<{
 }>;
 
 /**
- * 从 compile 动态状态创建窄 Position/Target resolver context
- * @description NamespaceStack、CompiledNodeLayout 与 transform helper 不会越过该适配边界进入 resolve
+ * 从编译状态创建位置与目标求值上下文
+ * @description 引用直接持有完整布局，标识与来源路径保存在引用记录上
  */
 export const createPositionResolveContext = (input: InputPositionResolveContext): PositionTargetResolveContext => {
   const { nodeDistance, transformChain = [], resolveExplicitBoundary } = input;
@@ -81,7 +78,9 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
       ? undefined
       : {
           state: entry.state,
-          node: createNodeReferenceGeometry(entry.layout, input.nodeBoundaryStore, id, entry.irPath),
+          node: entry.layout,
+          id,
+          irPath: entry.irPath,
         };
   };
 
@@ -90,7 +89,7 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
   const toWorld = (local: IRPosition): IRPosition =>
     transformChain.length === 0 ? [local[0], local[1]] : applyScopeTransform(local, transform);
   const boundaryResolutionOf = (target: IRNodeTarget, reference: PositionReferenceView) =>
-    targetBoundaryResolutionOf(reference.node, target, resolveExplicitBoundary);
+    targetBoundaryResolutionOf(reference.node, target, resolveExplicitBoundary, reference.irPath);
 
   const pointOfNodeTarget = (
     target: IRNodeTarget,
@@ -98,14 +97,12 @@ export const createPositionResolveContext = (input: InputPositionResolveContext)
     boundaryResolution: BoundaryResolution | undefined,
   ): IRPosition => {
     const node = reference.node;
-    if (target.anchor === undefined) return [node.rect.x, node.rect.y];
-    return resolveAnchorRef(
-      node,
-      target.anchor,
-      target.boundary ?? node.boundary,
-      boundaryResolution,
-      input.nodeBoundaryStore?.get(node),
-    );
+    if (target.anchor === undefined) return [node.geometry.rect.x, node.geometry.rect.y];
+    const state = input.nodeBoundaryStore?.get(node);
+    return resolveAnchorRef(node, target.anchor, target.boundary ?? node.boundarySource, boundaryResolution, {
+      ...state,
+      irPath: reference.irPath ?? state?.irPath,
+    });
   };
 
   const resolveBetweenWorld = (between: IRBetweenPosition): IRPosition | null =>

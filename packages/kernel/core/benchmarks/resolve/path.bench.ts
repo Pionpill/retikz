@@ -2,6 +2,8 @@ import { encodePropertyPath } from '@retikz/foundation';
 import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
+import { bindPathTargets } from '../../src/compile/path';
+import type { PathTargetContext } from '../../src/compile/path';
 import { resolveArrowRegistry, resolvePathRegistry, resolvePatternRegistry } from '../../src/providers';
 import { resolvePath } from '../../src/resolve/path';
 import type { PathResolveContext } from '../../src/resolve/path';
@@ -19,7 +21,7 @@ for (const count of [16, 1_000, 10_000]) {
         const positions = new Map<string, IRPosition>(
           Array.from({ length: count }, (_, index) => [`p${index}`, [index, 0]]),
         );
-        const context: PathResolveContext = {
+        const context: PathResolveContext & PathTargetContext = {
           mode: 'light',
           pathRegistry: resolvePathRegistry(),
           arrowRegistry: resolveArrowRegistry(),
@@ -49,7 +51,7 @@ for (const count of [16, 1_000, 10_000]) {
         const source: IRPathBase = { type: 'path', children, style: { stroke: 'blue' } };
         const original = JSON.stringify(source);
         return {
-          run: () => resolvePath(source, context),
+          run: () => bindPathTargets(resolvePath(source, context), context),
           verify: result => {
             expect(result.path.stroke).toBe('blue');
             expect(result.path.children).toHaveLength(kind === 'smooth' ? 1 : count);

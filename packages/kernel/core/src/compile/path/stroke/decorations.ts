@@ -3,7 +3,8 @@ import { formatPropertyPath } from '@retikz/foundation';
 
 import type { CompiledArrowEnd, ScenePrimitive } from '../../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import type { CanonicalPath, StrokePathResolution } from '../../../resolve';
+import type { CanonicalPath } from '../../../resolve';
+import type { StrokePathResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { RegisterPaint } from '../../resource';
 import type { StrokePathGeometry } from './interruption';

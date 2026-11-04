@@ -1,11 +1,12 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { Transform } from '../../../contract';
-import type { CanonicalStep, PathTargetView } from '../../../resolve';
-import { nodeIdFromResolvableTarget } from '../../../resolve';
+import type { CanonicalStep } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
+import { nodeIdFromResolvableTarget } from '../../reference';
 import { BuiltinCompileWarningCode } from '../../shared';
 import { pointOfTarget } from '../host';
+import type { PathTargetView } from '../types';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */
 type StrokeTargetStep = Exclude<
@@ -54,13 +55,13 @@ export type StrokeCursor = {
 type InputStrokeCursor = {
   /** 已归一化的 path steps */
   steps: Array<CanonicalStep>;
-  /** resolving 阶段绑定的 target view */
+  /** compile 目标绑定阶段绑定的 target view */
   targetView: PathTargetView;
   /** 当前 scope 的累积变换链 */
   scopeChain: ReadonlyArray<Transform>;
   /** path warning 收集器 */
   warn: (code: string, message: string, subPath?: PropertyPath) => void;
-  /** Path target 已在 resolving 阶段绑定；此处不再访问 namespace 或 provider */
+  /** Path target 已在 compile 目标绑定阶段绑定；此处不再访问 namespace 或 provider */
 };
 
 /** 判断 step 是否具有普通 `to` 目标 */

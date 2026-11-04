@@ -1,3 +1,4 @@
+export * from './bind';
 export * from './compile';
 export * from './emit';
 export * from './host';

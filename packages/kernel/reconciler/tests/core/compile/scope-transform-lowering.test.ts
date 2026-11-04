@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { PositionResolveContext } from '../../../../core/src/compile';
 import type { CompiledNodeLayout } from '../../../../core/src/compile/node';
 import { projectLayoutWithTransform } from '../../../../core/src/compile/node';
 import { createPositionResolveContext } from '../../../../core/src/compile/reference';
@@ -7,7 +8,6 @@ import { lowerScopeTransforms } from '../../../../core/src/compile/scope/transfo
 import { composeScopeTransform } from '../../../../core/src/compile/shared';
 import type { Transform } from '../../../../core/src/contract';
 import { BUILTIN_SHAPES } from '../../../../core/src/providers';
-import type { PositionResolveContext } from '../../../../core/src/resolve';
 import type { IRTransform } from '../../../../core/src/schemas';
 import { NamespaceStack } from '../../../src/compile/runtime';
 

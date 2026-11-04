@@ -3,7 +3,6 @@ export * from './composite';
 export * from './diagnostics';
 export * from './node';
 export * from './path';
-export * from './position';
 export * from './provider';
 export * from './resource';
 export * from './spacing';

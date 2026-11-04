@@ -2,7 +2,7 @@ import { lerp } from '@retikz/math';
 
 import type { IRAbsoluteTarget, IRNodeTarget, IRPosition } from '../../schemas';
 import { isBetweenPositionLike, isNodeTargetLike } from '../../shared';
-import { resolvePosition } from './resolve';
+import { resolvePosition } from './position';
 import type { PositionTargetResolution, PositionTargetResolveContext, PositionTargetWorldResolution } from './types';
 
 /** 在节点目标的世界坐标上叠加 offset */

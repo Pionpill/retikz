@@ -1,6 +1,6 @@
+import { createLayoutProbeRecoverableError } from '../../resolve';
 import type { IRCoordinate, IRPosition } from '../../schemas';
-import { createLayoutProbeRecoverableError } from '../diagnostics';
-import { resolvePosition } from './resolve';
+import { resolvePosition } from './position';
 import type { PositionTargetResolveContext } from './types';
 
 /** 解析坐标声明的局部位置，不登记名称或创建输出 */

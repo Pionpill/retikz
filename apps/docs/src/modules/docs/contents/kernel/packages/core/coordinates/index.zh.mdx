@@ -7,6 +7,8 @@ description: 追踪 Core 如何解析位置、查找名称与锚点，并在 Sco
 
 阅读前可先了解 [Node 定位](/kernel/components/node/usage)、[Coordinate](/kernel/components/node/coordinate) 与 [Scope](/kernel/components/scope/usage) 的写法。本页止于位置、引用几何和分组变换的交付；文字测量、路径裁剪与渲染器内部绘制分别由后续主题承接。
 
+位置与目标求值属于 compile：引用记录直接持有 `CompiledNodeLayout`，并单独记录标识、来源路径与就绪状态，不复制一份引用几何。
+
 ## 整体流程
 
 位置解析同时面对两个空间：局部坐标是当前 Scope 内使用的坐标，世界坐标是应用当前 Scope 及祖先 Scope 的变换后、用于跨作用域引用的坐标。没有 Scope 变换时，两者相同。
@@ -29,7 +31,7 @@ description: 追踪 Core 如何解析位置、查找名称与锚点，并在 Sco
       label: '遍历中的位置上下文、布局注册与 Scope 收尾',
       path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts',
     },
-    { label: '局部点与世界点的解析结果', path: 'packages/kernel/core/src/resolve/position/types.ts' },
+    { label: '局部点与世界点的解析结果', path: 'packages/kernel/core/src/compile/reference/types.ts' },
   ]}
 />
 
@@ -69,9 +71,12 @@ position: {
   sources={[
     {
       label: 'resolvePosition：坐标、极坐标、方向与偏移',
-      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
+      path: 'packages/kernel/core/src/compile/reference/position.ts',
     },
-    { label: 'resolvePositionTarget：节点目标与两点插值', path: 'packages/kernel/core/src/resolve/position/target.ts' },
+    {
+      label: 'resolvePositionTarget：节点目标与两点插值',
+      path: 'packages/kernel/core/src/compile/reference/target.ts',
+    },
     { label: 'Node 锚点定位的输入契约', path: 'packages/kernel/core/src/schemas/position/anchor.ts' },
   ]}
 />
@@ -224,7 +229,7 @@ A 收尾时，b 还未注册，因此 A 中的 Path 无法引用 b。退出普�
       path: 'packages/kernel/core/src/compile/reference/position-context.ts',
     },
     { label: '正向与逆向变换', path: 'packages/kernel/core/src/compile/shared/transform.ts' },
-    { label: 'NodeTarget 世界偏移与插值', path: 'packages/kernel/core/src/resolve/position/target.ts' },
+    { label: 'NodeTarget 世界偏移与插值', path: 'packages/kernel/core/src/compile/reference/target.ts' },
   ]}
 />
 
@@ -319,7 +324,7 @@ $$
       label: 'compile 状态到位置 resolver 的适配边界',
       path: 'packages/kernel/core/src/compile/reference/position-context.ts',
     },
-    { label: '位置解析的窄上下文与输出类型', path: 'packages/kernel/core/src/resolve/position/types.ts' },
+    { label: '位置解析的窄上下文与输出类型', path: 'packages/kernel/core/src/compile/reference/types.ts' },
   ]}
 />
 

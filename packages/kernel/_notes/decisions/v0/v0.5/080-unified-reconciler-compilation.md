@@ -90,6 +90,8 @@ IR → Reconciler 执行与组装 → Core 原子阶段 → 共享阶段结果
 
 资源引用与其定义必须随可复用输出配套保存。Reconciler 管理资源工作区及导入时机，复用 Core 资源算法生成本次引用，不原位修改旧片段。输出顺序、裁剪、动画、可见边界、Scene 布局和 artifact 出现顺序在两种模式下相同。
 
+Core 的 resolve 阶段负责默认值、样式与定义解析；依赖已编译布局的位置求值、目标绑定与边界计算属于 compile。引用直接消费完整布局，标识、来源与就绪状态独立保存；Weave 复用已有编译产物，不持久化可由布局派生的引用几何副本。
+
 ## Composite 与布局执行
 
 内置和自定义 Composite、实例输入、布局 proposal、几何查询、probe 和 replay 均进入同一 Reconciler 执行链路。Definition 和 lowering 语义仍由 Core 与相应领域包定义；涉及子树执行的能力由 Reconciler 注入，不允许 Core 在内部重新启动完整 Scene 驱动。

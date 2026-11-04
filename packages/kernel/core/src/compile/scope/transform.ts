@@ -1,10 +1,10 @@
 import type { Transform } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { PositionTargetResolveContext } from '../../resolve';
-import { resolveTransformTranslation } from '../../resolve';
 import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../schemas';
 import type { CompiledNodeLayout } from '../node';
 import { resolveAnchorRefUncached } from '../node';
+import type { PositionTargetResolveContext } from '../reference';
+import { resolveTransformTranslation } from '../reference';
 import { createCompileInvariantError } from '../shared';
 
 /** scope transform lowering 所需的编译上下文 */

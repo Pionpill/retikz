@@ -1,12 +1,13 @@
 import { curve } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { CanonicalStep, PathTargetView } from '../../../resolve';
+import type { CanonicalStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { BendInAngleSchema, BendLoosenessSchema, BendOutAngleSchema } from '../../../schemas';
 import { bendControlPoints, foldSegmentSample, outInControlPoints } from '../../../shared/geometry';
 import { clipTarget, foldCornersOf, samePoint } from '../host';
 import { isAutoBoundaryTarget } from '../target';
+import type { PathTargetView } from '../types';
 import type { PathCommandEmitter } from './commands';
 import type { StrokePreviousTarget } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
@@ -16,7 +17,7 @@ type StrokeSegmentStep = Extract<CanonicalStep, { kind: 'line' | 'axis-line' | '
 
 /** 普通 segment step 降级所需的共享上下文 */
 type SegmentStepLoweringContext = {
-  /** resolving 阶段绑定的 target view */
+  /** compile 目标绑定阶段绑定的 target view */
   targetView: PathTargetView;
   /** 当前 scope 的累计变换链 */
   scopeChain: ReadonlyArray<Transform>;

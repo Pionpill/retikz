@@ -9,13 +9,14 @@ import {
 } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { CanonicalStep, PathTargetView } from '../../../resolve';
-import { nodeIdFromResolvableTarget } from '../../../resolve';
+import type { CanonicalStep } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { rectPerimeterSample } from '../../../shared/geometry';
+import { nodeIdFromResolvableTarget } from '../../reference';
 import { BuiltinCompileWarningCode } from '../../shared';
 import { clipTarget, pointOfTarget, samePoint } from '../host';
 import { isAutoBoundaryTarget } from '../target';
+import type { PathTargetView } from '../types';
 import type { PathCommandEmitter } from './commands';
 import type { StrokeCursor } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
@@ -28,7 +29,7 @@ type StrokeShapeStep = Extract<
 
 /** shape step 降级所需的共享上下文 */
 type ShapeStepLoweringContext = {
-  /** resolving 阶段绑定的 target view */
+  /** compile 目标绑定阶段绑定的 target view */
   targetView: PathTargetView;
   /** 当前 scope 的累计变换链 */
   scopeChain: ReadonlyArray<Transform>;

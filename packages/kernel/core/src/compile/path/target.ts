@@ -1,17 +1,15 @@
+import type { PropertyPath } from '@retikz/foundation';
+
 import type { Transform } from '../../contract';
-import type {
-  NodeReferenceGeometry,
-  PathTargetView,
-  TargetResolution,
-  PositionTargetResolveContext,
-} from '../../resolve';
-import { resolvePositionTarget } from '../../resolve';
 import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import type { NodeBoundaryStore } from '../node';
-import { createNodeBoundaryStore, boundaryPointOf, clipNodePolyline, resolveAnchorRef } from '../node';
+import { boundaryPointOf, clipNodePolyline, createNodeBoundaryStore, resolveAnchorRef } from '../node';
+import type { PositionTargetResolveContext } from '../reference';
+import { resolvePositionTarget } from '../reference';
 import type { ComposedScopeTransform } from '../shared';
 import { applyScopeTransform, composeScopeTransform, inverseScopeTransform } from '../shared';
+import type { PathTargetView, TargetResolution } from './types';
 
 /** 判断 target 是否为按 id 引用节点或坐标的对象目标 */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);
@@ -28,7 +26,7 @@ const isRelative = (t: IRTarget): t is IRRelativeTarget | IRRelativeAccumulateTa
 const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition =>
   offset ? [base[0] + offset[0], base[1] + offset[1]] : base;
 
-/** 在 resolving 阶段绑定 Path target，并压缩为既有公开 TargetResolution */
+/** 在编译阶段绑定路径目标，保留布局引用与来源 */
 export const bindPathTarget = (target: IRTarget, context: PositionTargetResolveContext): TargetResolution | null => {
   if (isRelative(target)) return null;
 
@@ -38,12 +36,14 @@ export const bindPathTarget = (target: IRTarget, context: PositionTargetResolveC
     target,
     point: resolution.point,
     referencePoint: resolution.referencePoint,
-    ...(resolution.reference === undefined ? {} : { node: resolution.reference.node }),
+    ...(resolution.reference === undefined
+      ? {}
+      : { node: resolution.reference.node, irPath: resolution.reference.irPath }),
     ...(resolution.boundaryResolution === undefined ? {} : { boundaryResolution: resolution.boundaryResolution }),
   };
 };
 
-/** 稳定序列化 target，供 resolving 绑定与 compile 消费共享同一查找键 */
+/** 稳定序列化目标，使绑定与几何消费共享同一查找键 */
 export const targetKeyOf = (target: IRTarget): string => {
   const stable = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(stable);
@@ -61,10 +61,10 @@ export const targetKeyOf = (target: IRTarget): string => {
   return JSON.stringify(stable(target));
 };
 
-/** 从 resolving 结果构造只读 target view；该 view 不再访问 NamespaceStack 或 provider registry */
+/** 从目标绑定结果构造只读查询视图，不再访问命名空间或定义注册表 */
 export const pathTargetViewOf = (
   targets: ReadonlyMap<string, TargetResolution>,
-  warn?: (code: string, message: string, node?: NodeReferenceGeometry) => void,
+  warn?: (code: string, message: string, reference?: { irPath?: PropertyPath }) => void,
   nodeBoundaryStore: NodeBoundaryStore = createNodeBoundaryStore(),
   resolveTransform: (chain: ReadonlyArray<Transform>) => ComposedScopeTransform = composeScopeTransform,
 ): PathTargetView => {
@@ -95,10 +95,10 @@ export const pathTargetViewOf = (
       const clipped = clipNodePolyline(
         node,
         points.map(position => applyScopeTransform(position, transform)),
-        target.boundary ?? node.boundary,
+        target.boundary ?? node.boundarySource,
         binding.boundaryResolution,
-        warn === undefined ? undefined : (code, message) => warn(code, message, node),
-        nodeBoundaryStore.get(node),
+        warn === undefined ? undefined : (code, message) => warn(code, message, binding),
+        { ...nodeBoundaryStore.get(node), irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath },
       );
       return clipped.map(position => inverseScopeTransform(position, transform));
     },
@@ -108,7 +108,7 @@ export const pathTargetViewOf = (
 
       const transform = resolveTransform(scopeChain);
       const node = binding.node;
-      const boundary = target.boundary ?? node.boundary;
+      const boundary = target.boundary ?? node.boundarySource;
       const towardGlobal = scopeChain.length === 0 ? toward : applyScopeTransform(toward, transform);
       const base =
         target.anchor === undefined
@@ -117,10 +117,13 @@ export const pathTargetViewOf = (
               towardGlobal,
               boundary,
               binding.boundaryResolution,
-              warn === undefined ? undefined : (code, message) => warn(code, message, node),
-              nodeBoundaryStore.get(node),
+              warn === undefined ? undefined : (code, message) => warn(code, message, binding),
+              { ...nodeBoundaryStore.get(node), irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath },
             )
-          : resolveAnchorRef(node, target.anchor, boundary, binding.boundaryResolution, nodeBoundaryStore.get(node));
+          : resolveAnchorRef(node, target.anchor, boundary, binding.boundaryResolution, {
+              ...nodeBoundaryStore.get(node),
+              irPath: binding.irPath ?? nodeBoundaryStore.get(node).irPath,
+            });
       const global = addOffset(base, target.offset);
 
       return scopeChain.length === 0 ? global : inverseScopeTransform(global, transform);

@@ -1,9 +1,9 @@
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { ScenePrimitive, SceneResource, Transform } from '../../contract';
-import type { PositionTargetResolveContext } from '../../resolve';
 import type { CanonicalDropShadow, IRPosition, IRScope } from '../../schemas';
 import type { CompiledNodeLayout } from '../node';
+import type { PositionTargetResolveContext } from '../reference';
 import type { CompileWarning } from '../shared';
 
 /** Scope 子元素计算前的准备状态，不代表包络已就绪 */

@@ -29,7 +29,7 @@ const ResolutionPath: FC<ResolutionPathProps> = props => {
     { id: 'bound', name: 'PathDefinitionResolution' },
     { id: 'path', name: 'Expanded path fields' },
     { id: 'resolved', name: 'CanonicalPath' },
-    { id: 'extras', name: 'irPath / targets' },
+    { id: 'extras', name: 'irPath / source' },
     { id: 'stroke', name: 'StrokePathResolution' },
   ] as const;
   return (

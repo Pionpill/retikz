@@ -1,15 +1,16 @@
 import type { PropertyPath } from '@retikz/foundation';
 
+import type { BoundaryResolution } from '../../resolve';
 import type {
   IRAbsoluteTarget,
+  IRAtPosition,
   IRBetweenPosition,
   IRNodeTarget,
+  IROffsetPosition,
   IRPosition,
   PolarPosition,
-  IRAtPosition,
-  IROffsetPosition,
 } from '../../schemas';
-import type { BoundaryResolution, NodeReferenceGeometry } from '../node';
+import type { CompiledNodeLayout } from '../node';
 
 /** 引用的布局状态：已完成布局，或暂用作用域占位几何 */
 type PositionReferenceState = 'resolved' | 'scope-placeholder';
@@ -19,7 +20,11 @@ export type PositionReferenceView = Readonly<{
   /** 引用当前是否已经完成布局 */
   state: PositionReferenceState;
   /** 由编译阶段提供的只读节点几何 */
-  node: NodeReferenceGeometry;
+  node: CompiledNodeLayout;
+  /** 本次引用的名称 */
+  id?: string;
+  /** 引用声明来源 */
+  irPath?: PropertyPath;
 }>;
 
 /** 位置解析所需的引用查询与坐标转换能力 */

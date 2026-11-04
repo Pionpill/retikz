@@ -32,8 +32,8 @@ export type NodeResolution = Readonly<{
 export type PathResolution = Readonly<{
   irPath: ReadonlyArray<string | number>;
   path: CanonicalPath;
-  targets: ReadonlyMap<string, TargetResolution>;
-  kind: PathDefinitionResolution;
+  definition: AnyPathDefinition;
+  source: IRPathBase;
 }>;
 ```
 
@@ -250,19 +250,19 @@ The example's `NodeResolution` has four fields:
 
 That schema may supply fields, so contextual colors are resolved again afterward. `canonicalizePath` then expands path fields: it collects `style` fields into the path, turns labels into arrays, and supplies static defaults for label placement and steps such as bend and smooth. The result is not yet final drawing commands.
 
-P inherits master color `'#204060'`; its stroke resolves to `'#90a0b0'` in Light mode, with width 3. Its two absolute-coordinate steps retain their positions. `resolvePath` also binds targets, records `irPath`, and writes resolved paint and effective stroke width into `CanonicalPath`. The compile context supplies the transform chain. Target references and relative coordinates belong to the path geometry topic.
+P inherits master color `'#204060'`; its stroke resolves to `'#90a0b0'` in Light mode, with width 3. Its two absolute-coordinate steps retain their positions. `resolvePath` records the source path and definition-parsed input, and writes resolved paint and effective stroke width into `CanonicalPath`. The compile-stage `bindPathTargets` then uses the transform chain and node layouts to produce `BoundPathResolution`. Target references and relative coordinates belong to the path geometry topic.
 
-| Field                | Content                                                                  | Downstream use                      |
-| -------------------- | ------------------------------------------------------------------------ | ----------------------------------- |
-| `path`               | `CanonicalPath` with resolved paint, effective styles, steps, and labels | Main path compilation input         |
-| `kind`               | Kind name, Definition, and schema result                                 | Invoke the selected path capability |
-| `irPath` / `targets` | Source path and target bindings                                          | Diagnostics and subsequent geometry |
+| Field               | Content                                                                  | Downstream use                      |
+| ------------------- | ------------------------------------------------------------------------ | ----------------------------------- |
+| `path`              | `CanonicalPath` with resolved paint, effective styles, steps, and labels | Main path compilation input         |
+| `definition`        | Definition for the selected path kind                                    | Invoke the selected path capability |
+| `irPath` / `source` | Source path and definition-parsed input                                  | Diagnostics and subsequent geometry |
 
 ```ts
 // Selected PathResolution fields
 {
   path: { id: 'P', color: '#204060', stroke: '#90a0b0', strokeWidth: 3 },
-  kind: { name: 'stroke' },
+  definition: { name: 'stroke' },
 }
 ```
 

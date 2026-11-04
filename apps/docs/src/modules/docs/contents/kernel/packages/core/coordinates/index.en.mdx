@@ -7,6 +7,8 @@ description: Follow how Core resolves positions, names, and anchors, then determ
 
 Start with the authoring forms in [Node positioning](/kernel/components/node/usage), [Coordinate](/kernel/components/node/coordinate), and [Scope](/kernel/components/scope/usage). This page stops at resolved positions, reference geometry, and group transforms. Text measurement, path clipping, and renderer internals belong to the following topics.
 
+Position and target evaluation belong to compile. Each reference holds a `CompiledNodeLayout` directly, with identity, source path, and readiness stored separately; no reference-geometry copy is created.
+
 ## Overall flow
 
 Position resolution uses two spaces. Local coordinates belong to the current Scope. World coordinates include transforms from the current Scope and its ancestors and allow references across scopes. Without Scope transforms, the two are identical.
@@ -29,7 +31,7 @@ Outer A is at `[0, 0]`. The origin of `cluster` moves to `[180, -40]`, so inner 
       label: 'Position contexts, layout registration, and Scope finalization',
       path: 'packages/kernel/reconciler/src/compile/tree/subtree.ts',
     },
-    { label: 'Local and world position results', path: 'packages/kernel/core/src/resolve/position/types.ts' },
+    { label: 'Local and world position results', path: 'packages/kernel/core/src/compile/reference/types.ts' },
   ]}
 />
 
@@ -69,11 +71,11 @@ The branches differ in their starting space. Local expressions calculate before 
   sources={[
     {
       label: 'resolvePosition: tuples, polar, direction, and offset',
-      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
+      path: 'packages/kernel/core/src/compile/reference/position.ts',
     },
     {
       label: 'resolvePositionTarget: node targets and interpolation',
-      path: 'packages/kernel/core/src/resolve/position/target.ts',
+      path: 'packages/kernel/core/src/compile/reference/target.ts',
     },
     {
       label: 'Node anchor placement input',
@@ -247,7 +249,7 @@ The first follows the current Scope's scaling and rotation. The second always ad
     },
     {
       label: 'NodeTarget world offsets and interpolation',
-      path: 'packages/kernel/core/src/resolve/position/target.ts',
+      path: 'packages/kernel/core/src/compile/reference/target.ts',
     },
   ]}
 />
@@ -355,7 +357,7 @@ The overview's positioning and layout step, followed by world reference registra
       label: 'Compilation state to position resolver adaptation',
       path: 'packages/kernel/core/src/compile/reference/position-context.ts',
     },
-    { label: 'Narrow position contexts and result types', path: 'packages/kernel/core/src/resolve/position/types.ts' },
+    { label: 'Narrow position contexts and result types', path: 'packages/kernel/core/src/compile/reference/types.ts' },
   ]}
 />
 

@@ -1,5 +1,5 @@
-import { formatPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
+import { formatPropertyPath } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { getProviderDefinition } from '../../providers';
@@ -11,12 +11,12 @@ import { resolveMarkStyle } from './mark';
 import type {
   ArrowMarkGeometry,
   ArrowMarkResolution,
+  MarkColorSource,
   MarkResolution,
+  PathColorSource,
   PathDefinitionResolution,
   PathResolution,
   PathResolveContext,
-  MarkColorSource,
-  PathColorSource,
   StrokePathResolution,
 } from './types';
 
@@ -105,10 +105,10 @@ const resolveEndpointArrowProviders = (
  * 为 Stroke 路径补齐缺省填充和描边，并绑定箭头与沿线标记定义
  * @description 不足以绘制的步骤序列返回空绑定表，单个矩形步骤除外
  */
-export const resolveStrokePathProviders = (
-  resolution: PathResolution,
+export const resolveStrokePathProviders = <TResolution extends PathResolution>(
+  resolution: TResolution,
   context: PathResolveContext,
-): StrokePathResolution => {
+): TResolution & StrokePathResolution => {
   const path = {
     ...resolution.path,
     fill: resolution.path.fill ?? 'none',

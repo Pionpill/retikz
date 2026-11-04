@@ -1,9 +1,9 @@
 import { point } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { PathTargetView } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { FoldStepVia } from '../../../schemas';
+import type { PathTargetView } from '../types';
 
 /** 使用 resolving phase 绑定的 target view 获取局部参考点 */
 export const pointOfTarget = (

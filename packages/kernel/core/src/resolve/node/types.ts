@@ -1,10 +1,10 @@
-import type { PropertyPath } from '@retikz/foundation';
-import type { JsonObject } from '@retikz/foundation';
-import type { BoundsInsets, CenteredBox } from '@retikz/math';
+import type { JsonObject, PropertyPath } from '@retikz/foundation';
+import type { BoundsInsets } from '@retikz/math';
 
 import type { BoundaryDefinition, PatternDefinition, ShapeDefinition } from '../../contract';
 import type { ProviderRegistry } from '../../providers';
 import type {
+  CanonicalDropShadow,
   IRBoundary,
   IRNode,
   IRNodeLabel,
@@ -15,13 +15,12 @@ import type {
   NodeLabelPlacement,
   NodeLabelPosition,
   NodeTextAlign,
-  CanonicalDropShadow,
   StrokeDashPattern,
 } from '../../schemas';
 import type { ThemeMode } from '../../shared';
 import type { InputPaintResolution } from '../resource';
-import type { MergedScopeDefaults, GraphicOpacityResolution } from '../style';
-import type { LabelTextColorSource, ColorResolvedTextLine } from '../text';
+import type { GraphicOpacityResolution, MergedScopeDefaults } from '../style';
+import type { ColorResolvedTextLine, LabelTextColorSource } from '../text';
 
 /** 已解析描边颜色与绘制资源的节点标签引线 */
 export type CanonicalNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
@@ -175,31 +174,6 @@ export type BoundaryResolution = {
   /** 是否使用形状定义；既可为节点自身形状，也可为另行指定的形状 */
   isShape: boolean;
 };
-
-/**
- * 位置引用与路径连接所需的只读节点几何
- * @description 由编译阶段从节点布局中提取，供解析器查询节点位置、形状和连接面
- */
-export type NodeReferenceGeometry = Readonly<{
-  /** 节点 id */
-  id?: string;
-  /** 节点形状名称 */
-  shapeName: string;
-  /** 节点视觉形状定义 */
-  shapeDef: ShapeDefinition;
-  /** 已解析并应用缩放的形状参数 */
-  shapeParams: JsonObject;
-  /** 节点视觉外框，x、y 表示中心，rotate 使用弧度 */
-  rect: CenteredBox;
-  /** 节点外边距 */
-  margin: BoundsInsets;
-  /** 节点自身默认连接面 */
-  boundary?: IRBoundary;
-  /** 已绑定的默认连接面定义与参数 */
-  boundaryResolution: BoundaryResolution;
-  /** 当前节点 IR 路径 */
-  irPath?: PropertyPath;
-}>;
 
 /** 结合节点视觉形状解析连接面定义与参数的回调 */
 export type NodeBoundaryResolver = (

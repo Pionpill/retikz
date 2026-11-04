@@ -32,8 +32,8 @@ export type NodeResolution = Readonly<{
 export type PathResolution = Readonly<{
   irPath: ReadonlyArray<string | number>;
   path: CanonicalPath;
-  targets: ReadonlyMap<string, TargetResolution>;
-  kind: PathDefinitionResolution;
+  definition: AnyPathDefinition;
+  source: IRPathBase;
 }>;
 ```
 
@@ -247,19 +247,19 @@ Node 与 Path 都将稀疏声明整理为后续编译可用的结果，但它们
 
 定义的 schema 可能补充字段，因此返回后会再次确定上下文颜色，再由 `canonicalizePath` 展开路径字段：将 `style` 字段合入路径、标签统一为数组，并补齐标签位置、距离及 bend、smooth 等步骤的静态默认值。它尚不是最终的路径指令。
 
-本例 P 的主色继承为 `'#204060'`，描边在 Light 下变成 `'#90a0b0'`，线宽为 3。两个绝对坐标步骤保持原有位置。`resolvePath` 还处理目标绑定，保存 `irPath`，并将已解析 paint 与有效线宽写入 `CanonicalPath`；变换链由编译上下文传递。目标引用和相对坐标的细节留给路径几何专题。
+本例 P 的主色继承为 `'#204060'`，描边在 Light 下变成 `'#90a0b0'`，线宽为 3。两个绝对坐标步骤保持原有位置。`resolvePath` 保存来源路径与定义解析后的输入，并将已解析 paint 与有效线宽写入 `CanonicalPath`。随后 compile 中的 `bindPathTargets` 使用变换链和节点布局绑定目标，产出 `BoundPathResolution`。目标引用和相对坐标的细节留给路径几何专题。
 
-| 字段                 | 内容                                                    | 后续用途               |
-| -------------------- | ------------------------------------------------------- | ---------------------- |
-| `path`               | `CanonicalPath`，包含已解析 paint、有效样式、步骤和标签 | 路径编译的主体输入     |
-| `kind`               | 路径类型名称、Definition 及其 schema 解析结果           | 调用对应类型的处理能力 |
-| `irPath` / `targets` | 来源路径与目标绑定                                      | 诊断定位与后续几何计算 |
+| 字段                | 内容                                                    | 后续用途               |
+| ------------------- | ------------------------------------------------------- | ---------------------- |
+| `path`              | `CanonicalPath`，包含已解析 paint、有效样式、步骤和标签 | 路径编译的主体输入     |
+| `definition`        | 当前路径类型的 Definition                               | 调用对应类型的处理能力 |
+| `irPath` / `source` | 来源路径与定义解析后的输入                              | 诊断定位与后续几何计算 |
 
 ```ts
 // PathResolution 的字段摘录
 {
   path: { id: 'P', color: '#204060', stroke: '#90a0b0', strokeWidth: 3 },
-  kind: { name: 'stroke' },
+  definition: { name: 'stroke' },
 }
 ```
 

@@ -34,7 +34,7 @@ These snapshots follow declarations `Node A → Path P(A, B) → Node B` within 
 
 The second column adds B geometry and primitives while retaining the slot for P. The third replaces that slot with Path P. Here P is a plain line without labels, and A and B stand for the node primitives.
 
-Resolved targets retain the points and reference geometry needed by subsequent calculations. During compilation, `PathTargetView` provides local reference points and boundary intersections. For A to B, Core first obtains the reference points, then uses the connection direction to find the actual endpoints.
+`bindPathTargets` binds targets during compilation, retaining computed points and direct references to complete node layouts. Reference provenance is stored separately from the layout. `PathTargetView` provides local reference points and boundary intersections. For A to B, Core first obtains the reference points, then uses the connection direction to find the actual endpoints.
 
 <SourceLinks
   sources={[
@@ -42,7 +42,7 @@ Resolved targets retain the points and reference geometry needed by subsequent c
       label: 'Deferred queue and placeholder replacement',
       path: 'packages/kernel/reconciler/src/compile/tree/path/deferred.ts',
     },
-    { label: 'Target binding and canonical paths', path: 'packages/kernel/core/src/resolve/path/resolve.ts' },
+    { label: 'Target binding and canonical paths', path: 'packages/kernel/core/src/compile/path/bind.ts' },
     { label: 'Target queries during compilation', path: 'packages/kernel/core/src/compile/path/host/target.ts' },
   ]}
 />
@@ -60,7 +60,7 @@ Both paths below start at `[0, 0]` and apply `[60, 30]` twice. `relative` keeps 
 
 <ComponentPreview files="path-relative" size="md" hideCode type="illustration" />
 
-Relative targets that can be determined early become local coordinates during resolution. Targets that depend on runtime results, such as axis-line projection, are calculated while consuming steps. A `move` starts a new pen position. Lines, folds, and curves become commands segment by segment; arcs, closed shapes, and smooth curves use dedicated branches and pass on their pen positions.
+Relative targets that can be determined early become local coordinates during compile-stage target binding. Targets that depend on runtime results, such as axis-line projection, are calculated while consuming steps. A `move` starts a new pen position. Lines, folds, and curves become commands segment by segment; arcs, closed shapes, and smooth curves use dedicated branches and pass on their pen positions.
 
 | Input step                                 | Geometry change                                                                               |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------- |

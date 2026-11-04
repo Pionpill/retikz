@@ -1,5 +1,5 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { BoundaryResolution, NodeReferenceGeometry } from '../../resolve';
+import type { BoundaryResolution } from '../../resolve';
 import { boundaryKey } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { Side } from '../../shared';
@@ -7,20 +7,17 @@ import { isAnchor } from '../../shared';
 import { snapshotProviderPosition } from '../shared';
 import { anchorOf, angleBoundaryOf } from './anchors';
 import type { NodeBoundaryState } from './boundary-store';
-import { createNodeReferenceGeometry } from './reference';
 import type { CompiledNodeLayout } from './types';
 
-type AnchorLayout = CompiledNodeLayout | NodeReferenceGeometry;
-
 /** 单个 CompiledNodeLayout 生命周期内的 anchor 坐标缓存 */
-const cache = new WeakMap<AnchorLayout, Map<string, IRPosition>>();
+const cache = new WeakMap<CompiledNodeLayout, Map<string, IRPosition>>();
 
 /** 角度字符串识别规则，与文本 target parser 保持一致 */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
 
 /** 不经过 WeakMap 缓存解析命名或角度 anchor */
 const computeAnchor = (
-  layout: AnchorLayout,
+  layout: CompiledNodeLayout,
   anchorName: string,
   boundary: IRBoundary | undefined,
   boundaryResolution?: BoundaryResolution,
@@ -34,26 +31,25 @@ const computeAnchor = (
 };
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
-const computeEdgePoint = (input: AnchorLayout, side: Side, fraction: number): IRPosition => {
-  const layout = 'geometry' in input ? createNodeReferenceGeometry(input) : input;
-  const { computeEdgePoint: edgePoint } = layout.shapeDef;
+const computeEdgePoint = (layout: CompiledNodeLayout, side: Side, fraction: number): IRPosition => {
+  const { computeEdgePoint: edgePoint } = layout.shape.definition;
   if (!edgePoint) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `shape '${layout.shapeName}' does not support side anchors ({ side, fraction })`,
+      `shape '${layout.shape.name}' does not support side anchors ({ side, fraction })`,
     );
   }
 
-  if (layout.rect.width === 0 && layout.rect.height === 0) {
+  if (layout.geometry.rect.width === 0 && layout.geometry.rect.height === 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `{ side, fraction } is not meaningful on a zero-size target (shape '${layout.shapeName}')`,
+      `{ side, fraction } is not meaningful on a zero-size target (shape '${layout.shape.name}')`,
     );
   }
 
-  const raw = edgePoint(layout.rect, side, fraction, layout.shapeParams);
+  const raw = edgePoint(layout.geometry.rect, side, fraction, layout.shape.params);
 
-  return snapshotProviderPosition(`Shape '${layout.shapeName}' edgePoint`, raw);
+  return snapshotProviderPosition(`Shape '${layout.shape.name}' edgePoint`, raw);
 };
 
 /**
@@ -61,7 +57,7 @@ const computeEdgePoint = (input: AnchorLayout, side: Side, fraction: number): IR
  * @description 供仍会整体平移的 provisional layout 使用，避免缓存平移前坐标
  */
 export const resolveAnchorRefUncached = (
-  layout: AnchorLayout,
+  layout: CompiledNodeLayout,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryResolution,
@@ -74,7 +70,7 @@ export const resolveAnchorRefUncached = (
 
 /** 取节点 anchor 的全局坐标 */
 export const resolveAnchor = (
-  layout: AnchorLayout,
+  layout: CompiledNodeLayout,
   anchorName: string,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryResolution,
@@ -97,7 +93,7 @@ export const resolveAnchor = (
 };
 
 /** 取节点边上比例点的全局坐标 */
-const resolveEdgePoint = (layout: AnchorLayout, side: Side, t: number): IRPosition => {
+const resolveEdgePoint = (layout: CompiledNodeLayout, side: Side, t: number): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
     layoutCache = new Map<string, IRPosition>();
@@ -116,7 +112,7 @@ const resolveEdgePoint = (layout: AnchorLayout, side: Side, t: number): IRPositi
 
 /** 使用既有 WeakMap 缓存解析完整 anchor 引用 */
 export const resolveAnchorRef = (
-  layout: AnchorLayout,
+  layout: CompiledNodeLayout,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryResolution,
