@@ -15,8 +15,8 @@ export const visitCoordinate = (
   frame: SubtreeCompileRuntime,
 ): void => {
   const {
-    context: { transformChains: scopeChain, pathPrefix: locatorPrefix },
-    state: { layouts },
+    context: { transformChains: scopeChain, pathPrefix: locatorPrefix, layout },
+    state: { layouts, publications, allocations },
   } = frame;
   const coordinateIrPath = createCompileChildPath(locatorPrefix, index);
   const localCoordinateLayout = runCompileStage(
@@ -45,7 +45,7 @@ export const visitCoordinate = (
     layout: coordinateLayout,
     irPath: [...coordinateIrPath, 'id'],
   });
-  frame.state.publications.push(coordinateLayout);
-  frame.state.allocations.push({ boundsPoints: [localCenter], skipAllocation: frame.context.layout?.skipAllocation });
+  publications.push(coordinateLayout);
+  allocations.push({ boundsPoints: [localCenter], skipAllocation: layout?.skipAllocation });
   layouts.push(localCoordinateLayout);
 };

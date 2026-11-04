@@ -90,11 +90,12 @@ export class CompileProvenanceTracker {
       }
       const ownerKey = ownerKeyMap.get(sourceKey)!;
       const { emissions, ...owner } = sourceOwner;
+      const { parent: sourceOwnerParent, index: sourceOwnerIndex } = owner;
       this.ownerMap.set(ownerKey, {
         ...owner,
-        parent: ownerKeyMap.get(sourceOwner.parent!)!,
+        parent: ownerKeyMap.get(sourceOwnerParent!)!,
         namespace,
-        index: sourceOwner.parent === provenance.root ? index : sourceOwner.index,
+        index: sourceOwnerParent === provenance.root ? index : sourceOwnerIndex,
         generated: true,
       });
 

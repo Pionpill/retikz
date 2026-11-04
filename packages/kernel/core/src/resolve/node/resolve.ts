@@ -53,6 +53,7 @@ const expandNodeFields = (
   node: NodeColorSource,
 ): Omit<CanonicalNode, 'fill' | 'stroke'> & Pick<NonNullable<NodeColorSource['style']>, 'fill' | 'stroke'> => {
   const { style, layout, ...structure } = node;
+  const { scale, text, label, rotate } = structure;
   const { dashed, dotted, opacity, ...visual } = style ?? {};
   const source = { ...structure, ...visual, ...resolveGraphicOpacity(opacity), ...layout };
 
@@ -62,11 +63,11 @@ const expandNodeFields = (
     padding: resolveBoxSpacing(source.padding, DEFAULT_NODE_PADDING),
     margin: resolveBoxSpacing(source.margin, 0),
     minimumSize: expandBoxSize(source.minimumSize),
-    scale: expandAxisScale(node.scale),
-    text: expandNodeText(node.text),
-    label: node.label,
+    scale: expandAxisScale(scale),
+    text: expandNodeText(text),
+    label,
     align: source.align ?? 'middle',
-    rotate: node.rotate ?? 0,
+    rotate: rotate ?? 0,
     dashPattern: resolveDashPattern(source.dashPattern, dashed, dotted),
     shadow: resolveDropShadow(source.shadow),
   };
@@ -104,13 +105,13 @@ const resolveNodePrimaryColors = (node: NodeLabelSource, context: NodeColorConte
     ...source,
     style: {
       ...visual,
-      ...(fill === undefined ? {} : { fill: resolveNodePaint(fill, node.style?.color, context, 'fill') }),
-      ...(stroke === undefined ? {} : { stroke: resolveNodePaint(stroke, node.style?.color, context, 'stroke') }),
+      ...(fill === undefined ? {} : { fill: resolveNodePaint(fill, style?.color, context, 'fill') }),
+      ...(stroke === undefined ? {} : { stroke: resolveNodePaint(stroke, style?.color, context, 'stroke') }),
       ...(textColor === undefined
         ? {}
         : {
             textColor: resolveContextualColor(textColor, {
-              masterColor: node.style?.color,
+              masterColor: style?.color,
               mode: context.mode,
               fieldPath: [...context.irPath, 'style', 'textColor'],
             }),

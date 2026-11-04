@@ -25,14 +25,14 @@ export const compileInspectionToScene = (
   const entries: Array<InspectionPlaneEntry> = [];
   const diagnostics: Array<InspectionDiagnostic> = [];
   for (const [colorScope, request] of requests.entries()) {
-    const { definition, site, requestIndex } = request;
+    const { definition, site, requestIndex, options: requestOptions } = request;
     const inspector = snapshotInspectionValue({ namespace: definition.namespace, type: definition.type });
     const origin = { stage: 'inspect' as const, requestIndex, inspector, target: site.target };
     const context = Object.freeze({
       inspectorKey: inspector,
       target: snapshotInspectionValue(site.target),
       result: snapshot,
-      options: snapshotInspectionValue(request.options),
+      options: snapshotInspectionValue(requestOptions),
       appearance: snapshotInspectionValue({
         colorScope,
         scopeColor: categoricalColorAt(DEFAULT_RESOLVED_THEME.colors.categorical, colorScope),

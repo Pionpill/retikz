@@ -87,19 +87,17 @@ export const legendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> 
   kind: standardLegendEmbedKind,
   lower: (props, context) => {
     const collected: CollectedLegendSlots = { roots: [], providers: [], authoringSites: [] };
-    const { title: _title, content: _content, ...sourceProps } = props;
-    void _title;
-    void _content;
+    const { title: sourceTitle, content: sourceContent, ...sourceProps } = props;
 
     const title =
-      props.title === undefined
+      sourceTitle === undefined
         ? undefined
-        : normalizeLegendSlot(props.title, 'Standard Legend title', context, collected);
+        : normalizeLegendSlot(sourceTitle, 'Standard Legend title', context, collected);
     const content =
-      props.content.kind === 'items'
+      sourceContent.kind === 'items'
         ? {
-            ...props.content,
-            items: props.content.items.map(({ sample, label, ...item }) => ({
+            ...sourceContent,
+            items: sourceContent.items.map(({ sample, label, ...item }) => ({
               ...item,
               sample: normalizeLegendSlot(sample, `Standard Legend item '${item.key}' sample`, context, collected),
               ...(label === undefined
@@ -110,9 +108,9 @@ export const legendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> 
             })),
           }
         : {
-            ...props.content,
-            sample: normalizeLegendSlot(props.content.sample, 'Standard Legend ramp sample', context, collected),
-            ticks: props.content.ticks.map(({ label, ...tick }) => ({
+            ...sourceContent,
+            sample: normalizeLegendSlot(sourceContent.sample, 'Standard Legend ramp sample', context, collected),
+            ticks: sourceContent.ticks.map(({ label, ...tick }) => ({
               ...tick,
               ...(label === undefined
                 ? {}

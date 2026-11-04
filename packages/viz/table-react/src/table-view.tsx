@@ -36,11 +36,22 @@ const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableComp
 
 /** 共享 standalone Table runtime view，不作为公开组件导出 */
 export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({ runtime }) => {
-  const { table, lowerOptions, composites, onManifest, display } = runtime;
+  const {
+    table,
+    lowerOptions,
+    composites,
+    onManifest,
+    display,
+    datasetReference,
+    datasetSource,
+    dataBindings,
+    dataTransformExecutor,
+    signal,
+  } = runtime;
   const { shapes, boundaries, clips, arrows, patterns, paths, themeDefinitions, ...hostProps } = display;
   const tableKey = JSON.stringify(table);
   const stableTable = useMemo<InputTableVariant>(() => JSON.parse(tableKey) as InputTableVariant, [tableKey]);
-  const { datasetReference, datasetSource } = runtime;
+
   const stableDatasets = useMemo<ExternalDatasets>(
     () =>
       datasetReference === undefined
@@ -116,21 +127,13 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
   const input = useMemo<InputTable<unknown>>(
     () => ({
       table: stableTable,
-      ...(runtime.dataBindings === undefined ? { data: stableDatasets } : { dataBindings: runtime.dataBindings }),
-      dataTransformExecutor: runtime.dataTransformExecutor,
-      signal: runtime.signal,
+      ...(dataBindings === undefined ? { data: stableDatasets } : { dataBindings }),
+      dataTransformExecutor,
+      signal,
       lowerOptions: stableLowerOptions,
       composites,
     }),
-    [
-      composites,
-      stableDatasets,
-      stableLowerOptions,
-      stableTable,
-      runtime.dataBindings,
-      runtime.dataTransformExecutor,
-      runtime.signal,
-    ],
+    [composites, stableDatasets, stableLowerOptions, stableTable, dataBindings, dataTransformExecutor, signal],
   );
   const inputChild = useMemo(() => <TableRuntimeEmbed {...input} />, [input]);
 
@@ -156,7 +159,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
 
   return (
     <Layout
-      runtime={{ preparation: 'async', signal: runtime.signal }}
+      runtime={{ preparation: 'async', signal }}
       onArtifacts={onManifest === undefined ? undefined : handleArtifacts}
       {...hostProps}
       extensions={{ shapes, boundaries, clips, arrows, patterns, paths, themeDefinitions }}

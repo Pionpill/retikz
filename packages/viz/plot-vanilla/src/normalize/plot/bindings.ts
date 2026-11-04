@@ -318,11 +318,12 @@ const normalizeScaffold = (scaffold: InputPlotScaffold, coordinate: IRPlotCoordi
   };
 
   const { coordinate: scaffoldCoordinate, spacing, resolve, ...rest } = scaffold;
+  const { tracks } = rest;
   return {
     ...rest,
     kind: 'tracks',
     coordinate: fillCoordinateScaleBindings(scaffoldCoordinate ?? coordinate, coordinate),
-    tracks: scaffold.tracks.map(track => ({ ...track, view: scaffoldTrackViewIdOf(scaffold, track) })),
+    tracks: tracks.map(track => ({ ...track, view: scaffoldTrackViewIdOf(scaffold, track) })),
     ...(spacing !== undefined ? { spacing } : {}),
     ...(resolve !== undefined ? { resolve } : {}),
   };

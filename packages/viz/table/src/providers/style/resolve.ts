@@ -134,7 +134,7 @@ export const resolveTableThemeDefaults = (
   effectiveTheme: TableThemeContext = defaultTheme,
   tableThemeDefinitions: ReadonlyArray<TableThemeDefinition> | undefined = undefined,
 ): TableThemeDefaultsResolution => {
-  const { name, mode } = effectiveTheme;
+  const { name, mode, colors } = effectiveTheme;
   const definitions = resolveTableThemeRegistry(tableThemeDefinitions);
   const definition = name === undefined ? undefined : definitions.get(name);
   if (name !== undefined && definition === undefined) {
@@ -142,7 +142,7 @@ export const resolveTableThemeDefaults = (
   }
 
   const neutralDefaults = mergeTableDefaults(getDefaultTableDefaults(mode), {
-    defaultVisual: { categorical: [...effectiveTheme.colors.categorical] },
+    defaultVisual: { categorical: [...colors.categorical] },
   });
   const layers: Array<TableThemeDefaultsSource> = [
     { kind: 'neutral', path: `$default/${mode}`, defaults: neutralDefaults },

@@ -150,7 +150,7 @@ export class WeaveReconciler {
       };
     } catch (error) {
       transaction.rollback();
-      batch.tracker.pruneUncommittedBindings();
+      tracker.pruneUncommittedBindings();
       this.state.batch = undefined;
       throw error;
     }

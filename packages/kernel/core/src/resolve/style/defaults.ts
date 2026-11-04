@@ -18,7 +18,7 @@ export const resolveScopeDefaults = (
 ): MergedScopeDefaults => {
   if (defaults === undefined) return parent;
 
-  const { style, reset } = defaults;
+  const { style, reset, node: nodeDefaults, path: pathDefaults } = defaults;
   /** 判断 reset 是否要求停止继承当前通道的父级默认配置 */
   const cutsStyleChannel = (channel: StyleChannel): boolean => {
     if (reset === undefined || reset === false) return false;
@@ -28,8 +28,8 @@ export const resolveScopeDefaults = (
   let node = cutsStyleChannel('node') ? undefined : parent.node;
   let path = cutsStyleChannel('path') ? undefined : parent.path;
 
-  if (style !== undefined || defaults.node !== undefined) {
-    const { style: nodeStyle, layout, label, ...geometry } = defaults.node ?? {};
+  if (style !== undefined || nodeDefaults !== undefined) {
+    const { style: nodeStyle, layout, label, ...geometry } = nodeDefaults ?? {};
     node = {
       geometry: mergeDefinedProperties([node?.geometry, geometry]),
       style: {
@@ -41,8 +41,8 @@ export const resolveScopeDefaults = (
     };
   }
 
-  if (style !== undefined || defaults.path !== undefined) {
-    const { style: pathStyle, label, arrow, ...geometry } = defaults.path ?? {};
+  if (style !== undefined || pathDefaults !== undefined) {
+    const { style: pathStyle, label, arrow, ...geometry } = pathDefaults ?? {};
     path = {
       geometry: mergeDefinedProperties([path?.geometry, geometry]),
       style: mergeGraphicStyle(path?.style, style, pathStyle),

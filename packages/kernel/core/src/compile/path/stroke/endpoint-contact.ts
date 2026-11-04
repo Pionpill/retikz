@@ -131,9 +131,9 @@ export const shortenEndpointContacts = (
     round: (value: number) => number;
   },
 ): EndpointArrowSpecs => {
-  const { round, strokeWidth } = context;
-  if (context.shrinkStart === 0 && context.shrinkEnd === 0) {
-    return { arrowStart: context.arrowStart, arrowEnd: context.arrowEnd };
+  const { round, strokeWidth, shrinkStart, shrinkEnd, arrowStart, arrowEnd } = context;
+  if (shrinkStart === 0 && shrinkEnd === 0) {
+    return { arrowStart, arrowEnd };
   }
   const occurrences = createStrokePathGeometry(
     commands,
@@ -141,8 +141,8 @@ export const shortenEndpointContacts = (
   ).occurrences.filter(item => item.command.kind !== 'close');
   if (occurrences.length === 0) return {};
   if (occurrences.every(item => item.logicalEnd - item.logicalStart <= 1e-10)) return {};
-  let startDistance = context.shrinkStart * strokeWidth;
-  let endDistance = context.shrinkEnd * strokeWidth;
+  let startDistance = shrinkStart * strokeWidth;
+  let endDistance = shrinkEnd * strokeWidth;
   const first = occurrences[0];
   const last = occurrences[occurrences.length - 1];
   let startScale = 1;
@@ -200,7 +200,7 @@ export const shortenEndpointContacts = (
   const startTangent = curve.sampleAt(curveSegmentOfOccurrence(shortened[0]), 0).tangent;
   const endTangent = curve.sampleAt(curveSegmentOfOccurrence(shortened[shortened.length - 1]), 1).tangent;
   return {
-    arrowStart: orientArrow(context.arrowStart, start, startTangent, true),
-    arrowEnd: orientArrow(context.arrowEnd, end, endTangent, false),
+    arrowStart: orientArrow(arrowStart, start, startTangent, true),
+    arrowEnd: orientArrow(arrowEnd, end, endTangent, false),
   };
 };

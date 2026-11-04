@@ -32,7 +32,7 @@ const registerScopeLayoutPlaceholder = (
 ): ScopeLayoutPlaceholder => {
   const { index, frame, scopeId } = input;
   const {
-    context: { pathPrefix: locatorPrefix },
+    context: { pathPrefix: locatorPrefix, transformChains },
   } = frame;
   const scopeIrPath = createCompileChildPath(locatorPrefix, index);
   const parentFrameDepth = runtime.state.execution.namespaceStack.depth - 1;
@@ -40,7 +40,7 @@ const registerScopeLayoutPlaceholder = (
     return { parentFrameDepth };
   }
 
-  const placeholderLayout = createScopePlaceholderLayout(child.id, frame.context.transformChains, {
+  const placeholderLayout = createScopePlaceholderLayout(child.id, transformChains, {
     shapes: runtime.context.registries.shapeRegistry,
     boundaries: runtime.context.registries.boundaryRegistry,
   });
@@ -73,7 +73,14 @@ export const visitScope = (
   preResolvedClipPath?: SceneClipPath,
 ): void => {
   const {
-    context: { pathPrefix: locatorPrefix },
+    context: {
+      pathPrefix: locatorPrefix,
+      transformChains,
+      style: inheritedStyle,
+      compositeInput,
+      layout: layoutContext,
+    },
+    state: frameState,
   } = frame;
 
   const themePath =
@@ -83,12 +90,12 @@ export const visitScope = (
   const style = resolveScopeStyle(
     child,
     runtime.context.registries.themeRegistry,
-    frame.context.style,
+    inheritedStyle,
     createCompileChildPath(locatorPrefix, index),
     themePath,
   );
   const scopeGeometryContext = {
-    positionContext: createTreePositionContext(runtime, frame.context.transformChains),
+    positionContext: createTreePositionContext(runtime, transformChains),
     irPath: createCompileChildPath(locatorPrefix, index),
     onWarn: runtime.state.workspace.diagnosticCollector.collect,
   };
@@ -99,8 +106,8 @@ export const visitScope = (
   const { preliminaryTransforms } = preparation;
   const preliminaryScopeChain =
     preliminaryTransforms === undefined
-      ? frame.context.transformChains
-      : runtime.state.execution.scopeTransformComposer.append(frame.context.transformChains, preliminaryTransforms);
+      ? transformChains
+      : runtime.state.execution.scopeTransformComposer.append(transformChains, preliminaryTransforms);
   const scopeId = runtime.state.execution.namespaceStack.enterScope(child.id);
   const layoutPlaceholder = registerScopeLayoutPlaceholder(runtime, child, { index, frame, scopeId });
 
@@ -124,8 +131,8 @@ export const visitScope = (
   try {
     const scopeFrame: SubtreeCompileRuntime = {
       context: {
-        compositeInput: frame.context.compositeInput,
-        layout: frame.context.layout,
+        compositeInput,
+        layout: layoutContext,
         transformChains: preliminaryScopeChain,
         pathPrefix: createCompileChildPath(locatorPrefix, index),
         ...(semanticOwner === undefined ? {} : { compileOwner: semanticOwner }),
@@ -147,7 +154,7 @@ export const visitScope = (
         child: { ...child, children: undefined },
         preparation,
         layouts: state.layouts,
-        scopeChain: frame.context.transformChains,
+        scopeChain: transformChains,
       },
       () =>
         compileScopeGeometry(
@@ -168,17 +175,17 @@ export const visitScope = (
         : scopeTransforms.slice(0, scopeTransforms.length - preliminaryTransforms.length);
 
     for (const layout of state.publications) {
-      const projected = projectPublishedCompileLayout(layout, frame.context.transformChains, postTransforms);
+      const projected = projectPublishedCompileLayout(layout, transformChains, postTransforms);
       runtime.state.execution.namespaceStack.replacePublishedLayout(layout, projected);
-      frame.state.publications.push(projected);
+      frameState.publications.push(projected);
     }
 
-    frame.state.artifacts.push(...state.artifacts);
+    frameState.artifacts.push(...state.artifacts);
 
     for (const pendingPath of state.paths) {
       pendingPath.scopeChain = runtime.state.execution.scopeTransformComposer.insert(
         pendingPath.scopeChain,
-        frame.context.transformChains.length,
+        transformChains.length,
         postTransforms,
       );
     }
@@ -190,11 +197,11 @@ export const visitScope = (
             intrinsicLayout,
             runtime.state.execution.scopeTransformComposer.resolve(scopeTransforms),
           );
-    frame.state.layouts.push(...projectScopeCompileLayouts(child, intrinsicLayout, state.layouts, scopeTransforms));
+    frameState.layouts.push(...projectScopeCompileLayouts(child, intrinsicLayout, state.layouts, scopeTransforms));
     if (child.id !== undefined) {
       const globalEnvelope = projectLayoutWithTransform(
         finalEnvelope,
-        runtime.state.execution.scopeTransformComposer.resolve(frame.context.transformChains),
+        runtime.state.execution.scopeTransformComposer.resolve(transformChains),
       );
       runtime.state.execution.namespaceStack.replaceLayout(
         child.id,
@@ -202,29 +209,29 @@ export const visitScope = (
         layoutPlaceholder.parentFrameDepth,
         scopeId,
       );
-      frame.state.publications.push(globalEnvelope);
+      frameState.publications.push(globalEnvelope);
     }
 
     flushPendingPathEmissions(runtime, output, state.paths);
     options.captureScopeTargets?.(
       child,
       runtime.state.execution.namespaceStack,
-      runtime.state.execution.scopeTransformComposer.append(frame.context.transformChains, scopeTransforms),
+      runtime.state.execution.scopeTransformComposer.append(transformChains, scopeTransforms),
     );
 
     for (const contribution of state.allocations) {
       if (contribution.skipAllocation === true) continue;
-      frame.state.allocations.push({
+      frameState.allocations.push({
         boundsPoints: contribution.boundsPoints.map(point =>
           runtime.state.execution.scopeTransformComposer.apply(point, scopeTransforms),
         ),
-        skipAllocation: frame.context.layout?.skipAllocation,
+        skipAllocation: layoutContext?.skipAllocation,
       });
     }
 
     const structuralGuides = resolveStructuralAlignmentGuides(state.alignmentGuides);
     const transformedGuides = transformAlignmentGuides(structuralGuides, scopeTransforms);
-    if (transformedGuides !== undefined) frame.state.alignmentGuides.push(...transformedGuides);
+    if (transformedGuides !== undefined) frameState.alignmentGuides.push(...transformedGuides);
   } finally {
     runtime.state.execution.namespaceStack.leaveScope();
     if (didPushNamespaceFrame) {
@@ -241,7 +248,7 @@ export const visitScope = (
     ...(preResolvedClipPath === undefined ? {} : { resolvedClipPath: preResolvedClipPath }),
   });
 
-  frame.state.bounds.push(
+  frameState.bounds.push(
     ...projectScopeOutputBounds(
       state.bounds,
       { type: 'group', transforms: scopeTransforms, ...(clipRef === undefined ? {} : { clipRef }) },

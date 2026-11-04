@@ -8,11 +8,12 @@ import type { CanonicalArray } from './types';
 /** 解析 Array 的结构默认与每格样式，不改写稀疏 Source */
 export const resolveArray = (source: IRArray): CanonicalArray => {
   const { data, items, skeleton, cellIdMode, dataExpand, ...input } = source;
+  const { defaultCell, id: sourceId, layout, index } = input;
   const cells =
     items ??
     expandLinearCells(
       data !== undefined ? { data, dataExpand } : { skeleton },
-      source.defaultCell?.layout?.width === 'content',
+      defaultCell?.layout?.width === 'content',
     );
 
   return {
@@ -22,11 +23,11 @@ export const resolveArray = (source: IRArray): CanonicalArray => {
         typeof cell === 'string'
           ? { content: cell, ...(cellIdMode === ArrayCellIdMode.String ? { id: cell } : {}) }
           : cell,
-        { overallStyle: source.defaultCell?.style, overallLayout: source.defaultCell?.layout },
+        { overallStyle: defaultCell?.style, overallLayout: defaultCell?.layout },
       );
       if (cellIdMode !== ArrayCellIdMode.Index) return resolved;
 
-      const id = `${source.id}-${cellIndex}`;
+      const id = `${sourceId}-${cellIndex}`;
 
       return {
         ...resolved,
@@ -35,10 +36,10 @@ export const resolveArray = (source: IRArray): CanonicalArray => {
       };
     }),
     layout: {
-      ...source.layout,
-      direction: source.layout?.direction ?? ArrayLayoutSchema.shape.direction.parse(undefined),
-      gap: source.layout?.gap ?? ArrayLayoutSchema.shape.gap.parse(undefined),
+      ...layout,
+      direction: layout?.direction ?? ArrayLayoutSchema.shape.direction.parse(undefined),
+      gap: layout?.gap ?? ArrayLayoutSchema.shape.gap.parse(undefined),
     },
-    index: resolveCollectionIndex(source.index, source.defaultCell?.style),
+    index: resolveCollectionIndex(index, defaultCell?.style),
   };
 };

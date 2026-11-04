@@ -52,13 +52,10 @@ export const queuePathChild = (
   semanticOwner?: CompileOwnerKey,
 ): void => {
   const {
-    context: {
-      transformChains: scopeChain,
-      pathPrefix: locatorPrefix,
-      style: { defaults: scopeDefaults },
-    },
-    state: { primitives, paths },
+    context: { transformChains: scopeChain, pathPrefix: locatorPrefix, style, layout },
+    state: { primitives, paths, bounds, allocations },
   } = frame;
+  const { defaults: scopeDefaults, theme } = style;
   const pathIrPath = createCompileChildPath(locatorPrefix, index);
   const placeholder = { type: PATH_PLACEHOLDER } as const;
   primitives.push(placeholder);
@@ -67,14 +64,12 @@ export const queuePathChild = (
     path: resolvePathAnimations(child, pathIrPath, runtime.state.workspace.diagnosticCollector.collect),
     irPath: pathIrPath,
     scopeChain,
-    bounds: frame.state.bounds,
-    allocations: frame.state.allocations,
-    ...(frame.context.layout?.skipAllocation === undefined
-      ? {}
-      : { skipAllocation: frame.context.layout.skipAllocation }),
+    bounds,
+    allocations,
+    ...(layout?.skipAllocation === undefined ? {} : { skipAllocation: layout.skipAllocation }),
     placeholderSlot: { primitives, placeholder },
     occurrence,
-    theme: frame.context.style.theme,
+    theme,
     scopeDefaults,
     ...(semanticOwner === undefined ? {} : { semanticOwner }),
     zIndex: child.zIndex,

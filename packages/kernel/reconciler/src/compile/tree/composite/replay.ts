@@ -37,17 +37,17 @@ export const commitCompositeReplay = (
   const prepared = preparedReplays.get(token);
   if (prepared === undefined) throw createExecutionInvariantError('internal: replay was not preflighted before commit');
 
-  const { wrapperClipPath } = prepared;
+  const { wrapperClipPath, transaction: preparedTransaction } = prepared;
   const transaction =
-    prepared.transaction.materialize !== undefined &&
-    (prepared.transaction.styleFingerprint !== replayStyleFingerprint(frame.context.style.defaults) ||
-      prepared.transaction.themeFingerprint !== replayThemeFingerprint(frame.context.style.theme))
-      ? prepared.transaction.materialize({
+    preparedTransaction.materialize !== undefined &&
+    (preparedTransaction.styleFingerprint !== replayStyleFingerprint(frame.context.style.defaults) ||
+      preparedTransaction.themeFingerprint !== replayThemeFingerprint(frame.context.style.theme))
+      ? preparedTransaction.materialize({
           scopeChain: frame.context.transformChains,
           scopeDefaults: frame.context.style.defaults,
           theme: frame.context.style.theme,
         })
-      : prepared.transaction;
+      : preparedTransaction;
 
   const transforms = wrapper?.transforms;
   const authoredPreliminary = transaction.scopeChainApplied ? undefined : authoredPreliminaryTransforms;

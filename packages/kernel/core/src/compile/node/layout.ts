@@ -148,7 +148,7 @@ export type NodeLayoutContext = {
 
 /** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
 export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContext): CompiledNode => {
-  const { node, shape: shapeResolution, boundary: boundaryResolution } = resolution;
+  const { node, shape: shapeResolution, boundary: boundaryResolution, irPath } = resolution;
   const {
     measureText,
     positionContext,
@@ -158,6 +158,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
     warn,
     allocationWidthProposal,
     nodeBoundaryStore = createNodeBoundaryStore(),
+    composedTransform,
   } = context;
 
   // 缩放影响节点尺寸与字体。
@@ -247,14 +248,13 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
     }
 
     return guardProviderOutput(`Shape '${shapeDef.name}' circumscribe`, () => {
-      const { halfWidth, halfHeight } = raw;
+      const { halfWidth, halfHeight, offset: rawOffset } = raw;
       if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth < 0 || halfHeight < 0) {
         throw createCompositeContractError(
           `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
         );
       }
 
-      const rawOffset = raw.offset;
       const offset =
         rawOffset === undefined
           ? undefined
@@ -321,12 +321,12 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
   if (fixedVisualWidth !== undefined && selectedCandidate.visualWidth > fixedVisualWidth) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `${formatPropertyPath(resolution.irPath)}.layout.width cannot contain the Node content, padding, and shape geometry`,
+      `${formatPropertyPath(irPath)}.layout.width cannot contain the Node content, padding, and shape geometry`,
     );
   }
 
   const { contentLayout, circumscribed } = selectedCandidate;
-  const { textWidth, textHeight, textBaselineOffsets, lines, inlineBlock } = contentLayout;
+  const { textWidth, textHeight, textBaselineOffsets, lines, inlineBlock, resolvedLines } = contentLayout;
 
   const paddingOffsetX = (paddingRight - paddingLeft) / 2;
   const paddingOffsetY = (paddingBottom - paddingTop) / 2;
@@ -407,7 +407,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
     boundary: boundaryResolution,
   };
   nodeBoundaryStore.get(provisional).warn = warn;
-  nodeBoundaryStore.get(provisional).irPath = resolution.irPath;
+  nodeBoundaryStore.get(provisional).irPath = irPath;
   const resolved: CompiledNodeLayout = {
     ...provisional,
     labels: layoutNodeLabels(provisional, measuredLabels),
@@ -419,7 +419,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
         anchorPosition,
         resolved,
         positionContext,
-        context.composedTransform ?? composeScopeTransform(scopeChain),
+        composedTransform ?? composeScopeTransform(scopeChain),
         nodeBoundaryStore,
       )
     : resolved;
@@ -427,7 +427,7 @@ export const layoutNode = (resolution: NodeResolution, context: NodeLayoutContex
     layout,
     properties: {
       ...node,
-      text: node.text === undefined ? undefined : contentLayout.resolvedLines,
+      text: node.text === undefined ? undefined : resolvedLines,
       label: measuredLabels?.map(label => label.properties),
     },
   };

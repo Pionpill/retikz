@@ -103,11 +103,18 @@ class RuntimeManager {
   private hasRetiredResources = false;
   /** 固定注册表并接管宿主，初始化成功前不暴露实例 */
   constructor(options: RuntimeOptions) {
-    const { sources, computations, trace, initialSnapshots } = options;
+    const {
+      sources,
+      computations,
+      trace,
+      initialSnapshots,
+      updateStrategy: configuredUpdateStrategy,
+      participants,
+    } = options;
     assertRuntimeRegistryBinding(sources, computations);
 
-    const updateStrategy = options.updateStrategy ?? RuntimeUpdateStrategy.Auto;
-    this.participantManager = new RuntimeParticipantManager(options.participants ?? [], sources, computations, trace);
+    const updateStrategy = configuredUpdateStrategy ?? RuntimeUpdateStrategy.Auto;
+    this.participantManager = new RuntimeParticipantManager(participants ?? [], sources, computations, trace);
 
     this.sources = sources;
     this.computations = computations;

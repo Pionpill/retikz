@@ -59,6 +59,8 @@ export const assembleSceneCompilationSnapshot = <
     round,
     padding = DEFAULT_LAYOUT_PADDING,
     provenanceTracker,
+    diagnostics: inputDiagnostics,
+    artifacts,
   } = input;
   if (!Number.isFinite(padding) || padding < 0) {
     throw new RetikzCoreError(
@@ -67,7 +69,7 @@ export const assembleSceneCompilationSnapshot = <
     );
   }
 
-  const diagnostics: Array<CompileWarning> = [...(input.diagnostics ?? [])];
+  const diagnostics: Array<CompileWarning> = [...(inputDiagnostics ?? [])];
   const animations = resolveAnimations(root.animations, {
     target: 'root',
     irPath: [],
@@ -89,7 +91,7 @@ export const assembleSceneCompilationSnapshot = <
   return Object.freeze({
     result: Object.freeze({
       scene,
-      artifacts: Object.freeze([...(input.artifacts ?? [])]),
+      artifacts: Object.freeze([...(artifacts ?? [])]),
     }) as CompileResult<CompositeArtifactOf<TComposites[number]>>,
     diagnostics: Object.freeze(orderCompileWarnings(diagnostics)),
     ...(provenance === undefined ? {} : { provenance }),

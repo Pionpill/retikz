@@ -42,7 +42,7 @@ export type WeaveNodeCompilation = {
 /** 在候选工作区组合节点解析、布局与输出，不发布结果 */
 export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): WeaveNodeCompilation => {
   const { options, workspace, positionContext, composedTransform } = runtime;
-  const { shared, style, irPath } = options;
+  const { shared, style, irPath, transforms, proposal } = options;
   const warn = (code: string, message: string, path: PropertyPath = irPath): void =>
     workspace.diagnosticCollector.collect({ code, message, path });
   const resolution = resolveNode(input, {
@@ -58,9 +58,9 @@ export const compileWeaveNode = (input: IRNode, runtime: WeaveElementRuntime): W
     positionContext,
     composedTransform,
     nodeBoundaryStore: workspace.nodeBoundaryStore,
-    scopeChain: options.transforms,
+    scopeChain: transforms,
     rootFontSize: shared.layout.rootFontSize,
-    allocationWidthProposal: options.proposal?.x,
+    allocationWidthProposal: proposal?.x,
     warn,
     texLowering: { lowerTex: shared.host.lowerTex, warn },
   });
@@ -92,13 +92,13 @@ export type WeavePathCompilation = {
 /** 在引用就绪点组合路径准备与 kind 宿主计算 */
 export const compileWeavePath = (input: IRPathBase, runtime: WeaveElementRuntime): WeavePathCompilation => {
   const { options, workspace, positionContext } = runtime;
-  const { shared, style, irPath } = options;
+  const { shared, style, irPath, transforms } = options;
   const path = resolvePathAnimations(input, irPath, workspace.diagnosticCollector.collect);
   const compiled = compilePath(
     {
       path,
       irPath,
-      scopeChain: options.transforms ?? [],
+      scopeChain: transforms ?? [],
       scopeDefaults: style.defaults,
       theme: style.theme,
     },

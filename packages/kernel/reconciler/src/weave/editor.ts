@@ -119,6 +119,7 @@ export class WeaveEditor {
           break;
         case 'scope': {
           const { children: nested, ...scopeInput } = childElement;
+          const { localNamespace } = scopeInput;
           void nested;
           node = {
             type: 'scope',
@@ -129,7 +130,7 @@ export class WeaveEditor {
               input: { own: scopeInput, context },
               compiled: null,
               children: [],
-              ...(childElement.localNamespace ? { ids: new Map<string, WeaveNode>() } : {}),
+              ...(localNamespace ? { ids: new Map<string, WeaveNode>() } : {}),
             },
           };
           this.transaction.editNodeAttribute(this.root, 'scopeIds').set(node.scopeId, node);

@@ -498,17 +498,17 @@ const resolvePresentedTableTransaction = (
   input: InputPresentedTableTransaction,
   context: CompositeCompileContext,
 ): TableTransactionCompilation => {
-  const { tableId, meta, presented } = input;
+  const { tableId, meta, presented, layout: inputLayout, theme, defaultTable: configuredDefaultTable, plan } = input;
   assertPresentedAlignment(presented);
   const semantic = presented.semantic;
-  const resolved = resolveTableLayout(input.layout);
+  const resolved = resolveTableLayout(inputLayout);
   const manifestTheme =
-    input.theme ??
+    theme ??
     ({
       mode: ThemeMode.Light,
       colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
     } as const);
-  const defaultTable = input.defaultTable ?? resolveTableDefaults(manifestTheme, undefined, undefined);
+  const defaultTable = configuredDefaultTable ?? resolveTableDefaults(manifestTheme, undefined, undefined);
   const manifestThemeName = defaultTable.name;
   const cellContentMasterColor = (index: number): string =>
     presented.cells[index].appearance.content?.defaults?.style?.color ??
@@ -718,7 +718,7 @@ const resolvePresentedTableTransaction = (
             borders: resolveCellBorders(
               presented.cells[index].appearance.borders,
               cellContentMasterColor(index),
-              input.plan?.cells[index].trace.appearance,
+              plan?.cells[index].trace.appearance,
             ),
           }),
     })),
@@ -779,8 +779,8 @@ const resolvePresentedTableTransaction = (
       themeMode: manifestTheme.mode,
       defaultTable,
       presented,
-      ...(input.plan === undefined ? {} : { plans: input.plan.cells, encodings: input.plan.encodings }),
-      legendDescriptors: input.plan?.legendDescriptors ?? [],
+      ...(plan === undefined ? {} : { plans: plan.cells, encodings: plan.encodings }),
+      legendDescriptors: plan?.legendDescriptors ?? [],
     }),
   };
 };

@@ -64,8 +64,8 @@ type InputSectorGeometry = Pick<SectorShapeParams, 'innerRadius' | 'outerRadius'
 
 /** 计算 Sector 的极坐标范围、AABB 和局部参考点 */
 const computeSectorGeometry = (params: InputSectorGeometry): SectorGeometry => {
-  const { innerRadius, outerRadius } = params;
-  const range = normalizeAngleRange(params.startAngle, params.endAngle);
+  const { innerRadius, outerRadius, startAngle, endAngle } = params;
+  const range = normalizeAngleRange(startAngle, endAngle);
   const apex: Position = [0, 0];
   const candidates: Array<Position> = innerRadius === 0 ? [apex] : [];
   candidates.push(

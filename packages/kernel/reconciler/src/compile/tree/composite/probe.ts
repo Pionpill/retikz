@@ -61,9 +61,9 @@ export const evaluateCompositeLayout = (
   captureScopeTargets?: SubtreeCompileOptions['captureScopeTargets'],
   measurementAxis?: LayoutMeasurementAxis,
 ) => {
-  const { key, occurrence, compositeDepth } = probeContext;
+  const { key, occurrence, compositeDepth, runtime, host } = probeContext;
 
-  const workspace = createWorkspaceCompileState(probeContext.runtime.context);
+  const workspace = createWorkspaceCompileState(runtime.context);
   const warnings = workspace.diagnosticCollector.warnings;
 
   const captureWarning = (warning: CompileWarning): void => {
@@ -85,7 +85,7 @@ export const evaluateCompositeLayout = (
   let probeWarningOccurrence = probeOccurrence;
   const registrationOccurrences = new Map<string, CompileOccurrenceLocator>();
   const registrationKey = (frameDepth: number, id: string): string => `${frameDepth}\u0000${id}`;
-  const namespaceBaseline = probeContext.runtime.state.execution.namespaceStack.fork();
+  const namespaceBaseline = runtime.state.execution.namespaceStack.fork();
   const namespaceStack = namespaceBaseline.fork({
     onDuplicate: info => {
       if (info.namespace === namespaceBaseline.identity) return;
@@ -97,19 +97,19 @@ export const evaluateCompositeLayout = (
   });
 
   const probeProvenanceTracker =
-    probeContext.runtime.state.execution.provenanceTracker === undefined
+    runtime.state.execution.provenanceTracker === undefined
       ? undefined
       : new CompileProvenanceTracker(namespaceStack.identity);
 
   const sandboxRuntime: CompileRuntime = {
     context: {
-      ...probeContext.runtime.context,
+      ...runtime.context,
       compositeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
       theme: probeTheme,
       padding: undefined,
     },
     state: {
-      composite: probeContext.runtime.state.composite,
+      composite: runtime.state.composite,
       ...createCompileEnvironment(
         {
           ...workspace,
@@ -126,7 +126,7 @@ export const evaluateCompositeLayout = (
     },
   };
 
-  const laid = probeContext.host.compileSubtree([clonedChild], sandboxRuntime, {
+  const laid = host.compileSubtree([clonedChild], sandboxRuntime, {
     transformChains: probeScopeChain,
     scopeDefaults: probeScopeDefaults,
     occurrence: probeOccurrence,

@@ -290,7 +290,8 @@ export const resolveNodeDependentColors = (
   labelWasArray: boolean,
 ): NodeColorSource => {
   const { text, label, ...source } = node;
-  const textMaster = node.style?.textColor;
+  const { style } = source;
+  const textMaster = style?.textColor;
 
   return {
     ...source,
@@ -310,7 +311,7 @@ export const resolveNodeDependentColors = (
           label: (Array.isArray(label) ? label : [label]).map((item, index) =>
             resolveNodeLabelColors(
               item,
-              labelDefault.color ?? node.style?.color,
+              labelDefault.color ?? style?.color,
               textMaster,
               context,
               labelWasArray ? [...context.irPath, 'label', index] : [...context.irPath, 'label'],

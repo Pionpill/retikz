@@ -151,9 +151,9 @@ export const createClipRegistry = (
   const resources = new Map<string, ClipResource>();
 
   const lowerClip = (resolution: ClipResolution, guard: ClipTraversalGuard): SceneClipPath => {
-    const { kind, definition, params } = resolution;
+    const { kind, definition, params, spec } = resolution;
     const entered: Array<object> = [];
-    for (const value of [resolution.spec, params]) {
+    for (const value of [spec, params]) {
       if (entered.includes(value)) continue;
       if (guard.active.has(value)) {
         throw createCompositeContractError('Clip traversal detected a cyclic clip object.');

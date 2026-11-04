@@ -95,7 +95,7 @@ const materializeElements = (
   });
 
 const materializeRelation = (relation: CanonicalFlowRelation, output: FlowLayoutRelationOutput): IRGraphRelation => {
-  const { route: routing } = output;
+  const { route: routing, source, target } = output;
   const innerPoints = routing.points.slice(1, -1);
   const labelSource = relation.source.label;
   const label =
@@ -113,16 +113,16 @@ const materializeRelation = (relation: CanonicalFlowRelation, output: FlowLayout
 
   return {
     ...relation.graph,
-    source: output.source,
-    target: output.target,
+    source,
+    target,
     route: [
-      { type: 'step', kind: 'move', to: output.source },
+      { type: 'step', kind: 'move', to: source },
       ...(routing.kind === 'smooth'
         ? [
             {
               type: 'step' as const,
               kind: 'smooth' as const,
-              points: [...innerPoints.map(point => [point[0], point[1]] as Position), output.target],
+              points: [...innerPoints.map(point => [point[0], point[1]] as Position), target],
               tension: routing.tension,
             },
           ]
@@ -131,7 +131,7 @@ const materializeRelation = (relation: CanonicalFlowRelation, output: FlowLayout
               {
                 type: 'step' as const,
                 kind: 'curve' as const,
-                to: output.target,
+                to: target,
                 control: [...routing.control] as [number, number],
               },
             ]
@@ -140,20 +140,20 @@ const materializeRelation = (relation: CanonicalFlowRelation, output: FlowLayout
                 {
                   type: 'step' as const,
                   kind: 'cubic' as const,
-                  to: output.target,
+                  to: target,
                   control1: [...routing.control1] as [number, number],
                   control2: [...routing.control2] as [number, number],
                 },
               ]
             : bend !== undefined
-              ? [{ type: 'step' as const, kind: 'bend' as const, to: output.target, ...bend }]
+              ? [{ type: 'step' as const, kind: 'bend' as const, to: target, ...bend }]
               : [
                   ...innerPoints.map(point => ({
                     type: 'step' as const,
                     kind: 'line' as const,
                     to: [point[0], point[1]] as [number, number],
                   })),
-                  { type: 'step' as const, kind: 'line' as const, to: output.target },
+                  { type: 'step' as const, kind: 'line' as const, to: target },
                 ]),
     ],
     ...('cornerRadius' in routing && routing.cornerRadius > 0 ? { cornerRadius: routing.cornerRadius } : {}),

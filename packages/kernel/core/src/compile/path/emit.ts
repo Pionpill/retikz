@@ -100,17 +100,12 @@ export const emitDefinedPath = (
   targetResolver: PathTargetResolver,
   context: PathHostCompileContext,
 ) => {
-  const { path, scopeChain } = pendingPath;
-  const { irPath } = resolution;
+  const { path, scopeChain, scopeDefaults, theme } = pendingPath;
+  const { irPath, definition, targets, path: canonicalPath, source: pathSource } = resolution;
   const targetWarn = (code: string, message: string, node?: { irPath?: PropertyPath }): void =>
     context.onWarn({ code, message, path: node?.irPath ?? irPath });
-  const targetView = pathTargetViewOf(
-    resolution.targets,
-    targetWarn,
-    context.nodeBoundaryStore,
-    context.resolveTransform,
-  );
-  const { definition } = resolution;
+  const targetView = pathTargetViewOf(targets, targetWarn, context.nodeBoundaryStore, context.resolveTransform);
+
   const kind = definition.name;
   const allowedResourceIds = new Set<string>();
   const registerPaint: RegisterPaint = paint => {
@@ -133,8 +128,8 @@ export const emitDefinedPath = (
       ? resolution
       : bindPathTargets(
           resolvePathValue(nextPath, {
-            scopeDefaults: pendingPath.scopeDefaults,
-            mode: pendingPath.theme.mode,
+            scopeDefaults,
+            mode: theme.mode,
             pathRegistry: context.registries.pathRegistry,
             arrowRegistry: context.registries.arrowRegistry,
             markRegistry: context.registries.markRegistry,
@@ -149,7 +144,7 @@ export const emitDefinedPath = (
     const source = nextPath ?? path;
     const sourceResolution = resolutionOf(source);
     const strokeResolution = resolveStrokePathProviders(sourceResolution, {
-      mode: pendingPath.theme.mode,
+      mode: theme.mode,
       pathRegistry: context.registries.pathRegistry,
       arrowRegistry: context.registries.arrowRegistry,
       markRegistry: context.registries.markRegistry,
@@ -206,49 +201,50 @@ export const emitDefinedPath = (
     return geometry?.commands ?? [];
   };
 
-  const resolvedFill = resolution.path.fill === undefined ? undefined : emitOptions.registerPaint(resolution.path.fill);
+  const resolvedFill = canonicalPath.fill === undefined ? undefined : emitOptions.registerPaint(canonicalPath.fill);
   const resolvedStroke =
-    resolution.path.stroke === undefined ? undefined : emitOptions.registerPaint(resolution.path.stroke);
+    canonicalPath.stroke === undefined ? undefined : emitOptions.registerPaint(canonicalPath.stroke);
   const appearance: CompiledPathAppearance = Object.freeze({
-    ...(resolution.path.color === undefined ? {} : { color: resolution.path.color }),
+    ...(canonicalPath.color === undefined ? {} : { color: canonicalPath.color }),
     ...(resolvedFill === undefined ? {} : { fill: resolvedFill }),
     ...(resolvedStroke === undefined ? {} : { stroke: resolvedStroke }),
-    ...(resolution.path.fillRule === undefined ? {} : { fillRule: resolution.path.fillRule }),
-    strokeWidth: resolution.path.strokeWidth,
-    ...(resolution.path.dashPattern === undefined ? {} : { dashPattern: resolution.path.dashPattern }),
-    ...(resolution.path.dashOffset === undefined ? {} : { dashOffset: resolution.path.dashOffset }),
-    ...(resolution.path.lineCap === undefined ? {} : { lineCap: resolution.path.lineCap }),
-    ...(resolution.path.lineJoin === undefined ? {} : { lineJoin: resolution.path.lineJoin }),
-    ...(resolution.path.opacity === undefined ? {} : { opacity: resolution.path.opacity }),
-    ...(resolution.path.fillOpacity === undefined ? {} : { fillOpacity: resolution.path.fillOpacity }),
-    ...(resolution.path.strokeOpacity === undefined ? {} : { strokeOpacity: resolution.path.strokeOpacity }),
-    ...(resolution.path.shadow === undefined ? {} : { shadow: resolution.path.shadow }),
-    ...(resolution.path.blendMode === undefined ? {} : { blendMode: resolution.path.blendMode }),
+    ...(canonicalPath.fillRule === undefined ? {} : { fillRule: canonicalPath.fillRule }),
+    strokeWidth: canonicalPath.strokeWidth,
+    ...(canonicalPath.dashPattern === undefined ? {} : { dashPattern: canonicalPath.dashPattern }),
+    ...(canonicalPath.dashOffset === undefined ? {} : { dashOffset: canonicalPath.dashOffset }),
+    ...(canonicalPath.lineCap === undefined ? {} : { lineCap: canonicalPath.lineCap }),
+    ...(canonicalPath.lineJoin === undefined ? {} : { lineJoin: canonicalPath.lineJoin }),
+    ...(canonicalPath.opacity === undefined ? {} : { opacity: canonicalPath.opacity }),
+    ...(canonicalPath.fillOpacity === undefined ? {} : { fillOpacity: canonicalPath.fillOpacity }),
+    ...(canonicalPath.strokeOpacity === undefined ? {} : { strokeOpacity: canonicalPath.strokeOpacity }),
+    ...(canonicalPath.shadow === undefined ? {} : { shadow: canonicalPath.shadow }),
+    ...(canonicalPath.blendMode === undefined ? {} : { blendMode: canonicalPath.blendMode }),
   });
 
   const hostLabelBoundsPoints: Array<IRPosition> = [];
   const resolveHostLabel: PathCompileContext['resolveHostLabel'] = label =>
-    resolvePathLabel(label, pendingPath.scopeDefaults.path?.label ?? {}, resolution.path.color);
+    resolvePathLabel(label, scopeDefaults.path?.label ?? {}, canonicalPath.color);
   const emitHostLabels = (input: InputPathLabel): ReadonlyArray<ScenePrimitive> =>
     input.labels.flatMap((label, index) => {
       const sample = input.samples[index];
-      const labelDefault = pendingPath.scopeDefaults.path?.label ?? {};
+      const labelDefault = scopeDefaults.path?.label ?? {};
       const sourcePath = [...irPath, ...input.sourcePath, index];
       const { side, ...labelSource } = label;
+      const { position, distance } = labelSource;
       const styled = resolvePathLabelColors(
         labelSource,
-        labelDefault.color ?? resolution.path.color,
-        pendingPath.theme.mode,
+        labelDefault.color ?? canonicalPath.color,
+        theme.mode,
         sourcePath,
       );
       const emittedLabel = emitLabelPrimitive(
-        { ...styled, position: label.position, side, distance: label.distance, interrupt: false, gap: 0 },
+        { ...styled, position, side, distance, interrupt: false, gap: 0 },
         sample,
         {
           measureText: context.measureText,
           round: context.round,
           rootFontSize: context.rootFontSize,
-          hostOpacity: resolution.path.opacity,
+          hostOpacity: canonicalPath.opacity,
           placement: { sideOffset: sample.sideOffset },
           tex: {
             lowerTex: context.lowerTex,
@@ -263,18 +259,18 @@ export const emitDefinedPath = (
     });
   const emitBoundaryLabels = (input: ReadonlyArray<InputPathBoundaryLabel>): ReadonlyArray<ScenePrimitive> =>
     input.map(request => {
-      const labelDefault = pendingPath.scopeDefaults.path?.label ?? {};
+      const labelDefault = scopeDefaults.path?.label ?? {};
       const styled = resolvePathLabelColors(
-        resolvePathLabel(request.label, labelDefault, resolution.path.color),
-        labelDefault.color ?? resolution.path.color,
-        pendingPath.theme.mode,
+        resolvePathLabel(request.label, labelDefault, canonicalPath.color),
+        labelDefault.color ?? canonicalPath.color,
+        theme.mode,
         [...irPath, ...request.sourcePath],
       );
       const emitted = emitBoundaryLabelPrimitive(request, styled, {
         measureText: context.measureText,
         round: context.round,
         rootFontSize: context.rootFontSize,
-        hostOpacity: resolution.path.opacity,
+        hostOpacity: canonicalPath.opacity,
         tex: {
           lowerTex: context.lowerTex,
           gatingOn: context.lowerTex !== undefined,
@@ -289,7 +285,7 @@ export const emitDefinedPath = (
 
   const compilePath = definition.compile as (context: PathCompileContext) => PathCompileResult | null;
   const produced = compilePath({
-    path: resolution.source,
+    path: pathSource,
     materializePath,
     emitStroke,
     emitHostLabels,
@@ -303,7 +299,7 @@ export const emitDefinedPath = (
         if (primitive === undefined) return { primitives, boundsPoints };
 
         return wrapPathPrimitiveOutput({
-          path: resolution.path,
+          path: canonicalPath,
           primitive,
           bodyPrims: primitives,
           boundsPoints,

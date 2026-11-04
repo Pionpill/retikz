@@ -176,11 +176,11 @@ export const defineRuntimeComputation = <
     input.result?.readForComputation ?? ((value: TResult) => value as unknown as TComputationRead);
   const read = input.result?.read ?? ((value: TResult) => value as unknown as TPublicRead);
   const dispose = input.result?.dispose;
-  const { run, update, observeCommit } = input;
+  const { run, update, observeCommit, sources, computations, tracePhases } = input;
   const copiedId = Object.freeze({ owner, key });
-  const copiedSources = Object.freeze([...input.sources]);
-  const copiedComputations = Object.freeze([...(input.computations ?? [])]);
-  const copiedTracePhases = copyTracePhases(input.tracePhases ?? []);
+  const copiedSources = Object.freeze([...sources]);
+  const copiedComputations = Object.freeze([...(computations ?? [])]);
+  const copiedTracePhases = copyTracePhases(tracePhases ?? []);
   const token = Object.freeze({ id: copiedId }) as RuntimeComputationDefinition<
     TResultInput,
     TResult,

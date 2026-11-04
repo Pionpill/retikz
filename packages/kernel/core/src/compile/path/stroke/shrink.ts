@@ -47,7 +47,7 @@ export const emitEndpointArrowMark = (
   round: (n: number) => number,
   registerPaint: RegisterPaint,
 ): EndpointArrowMarkEmission => {
-  const { geometry } = resolution;
+  const { geometry, mark } = resolution;
   const spec = emitArrowEnd(resolution, round, registerPaint);
   // 将半线宽接缝重叠放在线接触点内侧，尖端的目标位置保持不变
   const contactWithOverlap = geometry.tipX - (geometry.shrink * geometry.baseSize) / geometry.resolvedLength;
@@ -64,7 +64,7 @@ export const emitEndpointArrowMark = (
   if (!Number.isFinite(fullEntryShrink)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `Arrow '${resolution.mark.shape}' full-entry shrink is non-finite; use smaller back/contact/length/scale values.`,
+      `Arrow '${mark.shape}' full-entry shrink is non-finite; use smaller back/contact/length/scale values.`,
     );
   }
 
@@ -72,7 +72,7 @@ export const emitEndpointArrowMark = (
   if (!Number.isFinite(endpointShrink)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
-      `Arrow '${resolution.mark.shape}' endpoint-overlap shrink is non-finite; use smaller geometry values.`,
+      `Arrow '${mark.shape}' endpoint-overlap shrink is non-finite; use smaller geometry values.`,
     );
   }
 

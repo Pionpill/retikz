@@ -74,8 +74,8 @@ const maxAbsCos = (params: PolygonParams): number => {
  * @description polygon 是文本容器 shape，尺寸由内框推导而不是由 params 直接指定
  */
 const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number => {
-  const { sides } = params;
-  const startDeg = params.rotate ?? 0;
+  const { sides, rotate } = params;
+  const startDeg = rotate ?? 0;
   const stepDeg = 360 / sides;
   const apothemFactor = Math.cos(Math.PI / sides);
   let maxSupport = 0;

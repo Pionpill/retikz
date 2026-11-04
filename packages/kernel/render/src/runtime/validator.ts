@@ -362,14 +362,14 @@ const insertNodeBefore = (
 };
 
 const detach = (node: MutableSceneNode): void => {
-  const { parent, previous, next } = node;
+  const { parent, previous, next, identity } = node;
   if (previous === undefined) {
-    if (parent.firstChild !== node) return patchError({ reason: 'detached-node', identity: node.identity });
+    if (parent.firstChild !== node) return patchError({ reason: 'detached-node', identity });
     parent.firstChild = next;
   } else previous.next = next;
 
   if (next === undefined) {
-    if (parent.lastChild !== node) return patchError({ reason: 'detached-node', identity: node.identity });
+    if (parent.lastChild !== node) return patchError({ reason: 'detached-node', identity });
     parent.lastChild = previous;
   } else next.previous = previous;
 

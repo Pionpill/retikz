@@ -46,9 +46,8 @@ type EmitPathPrimitiveContext = {
 /** 将路径步骤转换为共享的几何命令与采样数据 */
 export const lowerStrokePathGeometry = (resolution: PathResolution, context: EmitPathPrimitiveContext) => {
   const { targetView, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
-  const { path } = resolution;
+  const { path, irPath } = resolution;
   const canonicalSteps = path.children ?? [];
-  const irPath = resolution.irPath;
 
   const warn = (code: string, message: string, subPath: PropertyPath = []): void => {
     pathEmitOptions.onWarn?.({ code, message, path: [...irPath, ...subPath] });
@@ -305,11 +304,11 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Emi
 /** 将标准描边几何编译为场景图元 */
 const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: EmitPathPrimitiveContext) => {
   const { round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
-  const { path, irPath } = resolution;
+  const { path, irPath, arrows: resolutionArrows, marks: resolutionMarks } = resolution;
   const geometry = lowerStrokePathGeometry(resolution, context);
   if (geometry === null) return null;
   const { commands, stepIndexes, boundsPoints, endpointSource, sampling, roundedCommands } = geometry;
-  const { labelPrimitives: labelPrims } = sampling;
+  const { labelPrimitives: labelPrims, materializeStepLabels, sampleHostLabel } = sampling;
   const warn = (code: string, message: string, subPath: PropertyPath = []): void => {
     pathEmitOptions.onWarn?.({ code, message, path: [...irPath, ...subPath] });
   };
@@ -321,9 +320,9 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
   });
   const strokeWidth = baseProps.strokeWidth;
   const logicalGeometry = createStrokePathGeometry(commands, stepIndexes);
-  const stepLabels = sampling.materializeStepLabels(logicalGeometry);
+  const stepLabels = materializeStepLabels(logicalGeometry);
   const hostLabels = (path.label ?? []).flatMap(label => {
-    const labelSample = sampling.sampleHostLabel(logicalGeometry, label.position, roundedCommands);
+    const labelSample = sampleHostLabel(logicalGeometry, label.position, roundedCommands);
     if (labelSample === undefined) return [];
 
     const result = emitLabelPrimitive(label, labelSample.visualSample, {
@@ -346,7 +345,7 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
 
   const arrows = emitPathEndpointArrows(path.arrow, {
     registerPaint,
-    arrowResolutions: resolution.arrows,
+    arrowResolutions: resolutionArrows,
     round,
     irPath,
   });
@@ -394,7 +393,7 @@ const emitCanonicalPathPrimitive = (resolution: StrokePathResolution, context: E
   const marks = emitPathMarks({
     geometry: logicalGeometry,
     placements: path.marks ?? [],
-    markResolutions: resolution.marks,
+    markResolutions: resolutionMarks,
     irPath,
     registerPaint,
     baseProps,

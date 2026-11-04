@@ -29,20 +29,17 @@ export const visitNode = (
   semanticOwner?: CompileOwnerKey,
 ): void => {
   const {
-    context: {
-      transformChains: scopeChain,
-      pathPrefix: locatorPrefix,
-      style: { defaults: scopeDefaults },
-    },
-    state: { primitives, layouts },
+    context: { transformChains: scopeChain, pathPrefix: locatorPrefix, style, layout: layoutContext },
+    state: { primitives, layouts, publications, bounds, allocations, alignmentGuides: frameAlignmentGuides },
   } = frame;
+  const { defaults: scopeDefaults, theme } = style;
   const nodeIrPath = createCompileChildPath(locatorPrefix, index);
 
   const staged = runCompileStage(
     runtime,
     nodeIrPath,
     'node',
-    { child, style: frame.context.style, scopeChain, proposal: frame.context.layout?.childProposal },
+    { child, style, scopeChain, proposal: layoutContext?.childProposal },
     stageRuntime => {
       const warn = (code: string, message: string, path: PropertyPath = nodeIrPath): void =>
         stageRuntime.state.workspace.diagnosticCollector.collect({ code, message, path });
@@ -50,7 +47,7 @@ export const visitNode = (
         ...stageRuntime.context.registries,
         ...stageRuntime.context.layout,
         scopeDefaults,
-        mode: frame.context.style.theme.mode,
+        mode: theme.mode,
         irPath: nodeIrPath,
         warn,
       });
@@ -61,7 +58,7 @@ export const visitNode = (
         composedTransform: stageRuntime.state.execution.scopeTransformComposer.resolve(scopeChain),
         scopeChain,
         rootFontSize: stageRuntime.context.layout.rootFontSize,
-        allocationWidthProposal: frame.context.layout?.childProposal?.x,
+        allocationWidthProposal: layoutContext?.childProposal?.x,
         texLowering: { lowerTex: stageRuntime.context.host.lowerTex, warn },
         warn,
       });
@@ -94,7 +91,7 @@ export const visitNode = (
         irPath: [...nodeIrPath, 'aliasIds', aliasIndex],
       }),
     );
-    frame.state.publications.push(globalLayout);
+    publications.push(globalLayout);
   }
 
   const output = staged.output;
@@ -109,16 +106,14 @@ export const visitNode = (
     if (child.zIndex !== undefined) outputState.zIndexOf.set(prim, child.zIndex);
   }
 
-  frame.state.bounds.push(...output.bounds);
-  frame.state.allocations.push({
+  bounds.push(...output.bounds);
+  allocations.push({
     boundsPoints: output.bounds[0].boundsPoints,
-    skipAllocation: frame.context.layout?.skipAllocation,
+    skipAllocation: layoutContext?.skipAllocation,
   });
   const alignmentGuides = alignmentGuidesOfNode(layout, runtime.context.layout.round);
   if (alignmentGuides !== undefined) {
-    frame.state.alignmentGuides.push(
-      ...cloneAlignmentGuides(alignmentGuides, `Node '${formatPropertyPath(nodeIrPath)}'`),
-    );
+    frameAlignmentGuides.push(...cloneAlignmentGuides(alignmentGuides, `Node '${formatPropertyPath(nodeIrPath)}'`));
   }
 
   layouts.push(layout);

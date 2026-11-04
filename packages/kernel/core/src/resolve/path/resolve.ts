@@ -185,16 +185,17 @@ const canonicalizePath = (
 ): Omit<CanonicalPath, 'fill' | 'stroke' | 'strokeWidth'> &
   Pick<NonNullable<PathColorSource['style']>, 'fill' | 'stroke' | 'strokeWidth'> => {
   const { style, ...source } = path;
+  const { children, label: pathLabel } = source;
   const { opacity, ...visual } = style ?? {};
   return {
     ...source,
     ...visual,
     ...resolveGraphicOpacity(opacity),
-    children: canonicalizeSteps(path.children, canAutomaticallyInterrupt),
+    children: canonicalizeSteps(children, canAutomaticallyInterrupt),
     label:
-      path.label === undefined
+      pathLabel === undefined
         ? undefined
-        : (Array.isArray(path.label) ? path.label : [path.label]).map(label =>
+        : (Array.isArray(pathLabel) ? pathLabel : [pathLabel]).map(label =>
             canonicalizeLabel(label, canAutomaticallyInterrupt),
           ),
     shadow: resolveDropShadow(style?.shadow),
@@ -373,7 +374,7 @@ const resolvePathContextualColors = (
 ): PathColorSource => {
   const { style, children, label, marks, arrow, ...source } = path;
   const { fill, stroke, ...visual } = style ?? {};
-  const masterColor = path.style?.color;
+  const masterColor = style?.color;
   const resolvedHostLabel =
     label === undefined
       ? undefined

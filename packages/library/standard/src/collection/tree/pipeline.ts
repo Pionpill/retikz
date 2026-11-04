@@ -134,15 +134,15 @@ export const compileTree = (source: IRTree, context: CompositeCompileContext): C
   const paths: Array<IRPath> = [];
   for (const item of all) {
     if (item.item === null) continue;
-    const { result } = item;
-    const output = item.item.node.id === undefined ? anonymousNodes : nodes;
+    const { result, item: treeItem, x, y } = item;
+    const output = treeItem.node.id === undefined ? anonymousNodes : nodes;
     output.push(
       context.replay(result, {
         transforms: [
           {
             kind: 'translate',
-            x: item.x - result.slotSize.width / 2 - result.allocationBounds.x,
-            y: item.y - result.slotSize.height / 2 - result.allocationBounds.y,
+            x: x - result.slotSize.width / 2 - result.allocationBounds.x,
+            y: y - result.slotSize.height / 2 - result.allocationBounds.y,
           },
         ],
       }),

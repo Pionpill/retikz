@@ -133,6 +133,8 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     allGuides,
     allGuidesWithCompositionGap,
     placementRoleRangeOverridesByScope,
+    markPadding,
+    fieldOrderRegistry,
   } = context;
 
   const coordinateRegistry = resolveCoordinateRegistry(options.definitions?.coordinates);
@@ -143,7 +145,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     overrides: Partial<CoordinateResolveContext> = {},
   ): CoordinateResolveContext => ({
     coordinate: source.coordinate,
-    markPadding: context.markPadding,
+    markPadding,
     rows: dataView.rows,
     model: dataView.model,
     width,
@@ -154,7 +156,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     provenance,
     coordinateRegistry,
     markRegistry: MARK_REGISTRY,
-    fieldOrderRegistry: context.fieldOrderRegistry,
+    fieldOrderRegistry,
     scaleRegistry,
     legendReserve: legendReserveOf(guides.flatMap(guide => (guide.type === PlotGuide.Legend ? [guide] : []))),
     lowerGuide: (guide, ctx, guideProvenance) =>

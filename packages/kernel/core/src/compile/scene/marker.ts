@@ -60,11 +60,10 @@ export const buildMarkMarkerGroup = (
   sample: CurveSegmentSample,
   context: MarkerPlacementContext,
 ): GroupPrimitive => {
-  const { strokeWidth, round, contextStroke } = context;
-  const angleDeg =
-    typeof context.rotate === 'number' ? context.rotate : Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
-  const sx = (spec.markerWidth * strokeWidth * (context.scale ?? 1)) / spec.baseSize;
-  const sy = (spec.markerHeight * strokeWidth * (context.scale ?? 1)) / spec.baseSize;
+  const { strokeWidth, round, contextStroke, rotate, scale, hostOpacity } = context;
+  const angleDeg = typeof rotate === 'number' ? rotate : Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
+  const sx = (spec.markerWidth * strokeWidth * (scale ?? 1)) / spec.baseSize;
+  const sy = (spec.markerHeight * strokeWidth * (scale ?? 1)) / spec.baseSize;
   const refY = spec.baseSize / 2;
   const transforms: Array<Transform> = [
     { kind: 'translate', x: round(sample.point[0]), y: round(sample.point[1]) },
@@ -77,7 +76,7 @@ export const buildMarkMarkerGroup = (
     type: 'group',
     transforms,
     children: spec.marker.map(p =>
-      materializeMarkerPrimitive(p, contextStroke, combineOpacity(spec.opacity, context.hostOpacity)),
+      materializeMarkerPrimitive(p, contextStroke, combineOpacity(spec.opacity, hostOpacity)),
     ),
   };
 };

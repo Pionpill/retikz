@@ -77,8 +77,18 @@ const resolvePartialClosed = (
  */
 export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: ShapeStepLoweringContext): boolean => {
   const { targetView, scopeChain, warn, commandEmitter, cursor, sampling } = context;
-  const { boundsPoints, emitMove, emitLine, emitClose, emitCubic, emitArc, emitEllipseArc, startSegment } =
-    commandEmitter;
+  const {
+    boundsPoints,
+    emitMove,
+    emitLine,
+    emitClose,
+    emitCubic,
+    emitArc,
+    emitEllipseArc,
+    startSegment,
+    getLastEnd,
+    getSubPathStart,
+  } = commandEmitter;
 
   if (step.kind === 'cycle') {
     const usedOverride = cursor.takePenOverride();
@@ -98,7 +108,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
     if (!fromClip || !toClip) return false;
 
     sampling.addSampler(t => curve.sampleAt({ kind: 'line', from: fromClip, to: toClip }, t));
-    if (samePoint(fromClip, commandEmitter.getLastEnd()) && samePoint(toClip, commandEmitter.getSubPathStart())) {
+    if (samePoint(fromClip, getLastEnd()) && samePoint(toClip, getSubPathStart())) {
       emitClose();
       return true;
     }
@@ -499,7 +509,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Sh
       localT,
     );
   });
-  cursor.setPenOverride(commandEmitter.getLastEnd());
+  cursor.setPenOverride(getLastEnd());
 
   return true;
 };

@@ -235,16 +235,27 @@ export const resolveCoordinateFrame = (
     coordinateRegistry,
     lowerGuide,
     lowerCustomAxis,
+    markDataViews: providedMarkDataViews,
+    fieldOrderRegistry,
+    roleMarkDataViews,
+    coordinate,
+    markRegistry,
+    markPadding,
+    paddingMarkDataViews,
+    domainPaddingScope,
+    legendReserve,
+    textMeasurer,
+    resolveGuideTicks,
+    resolveVisibleGuideTicks,
   } = context;
   const node = source;
   const rootDataView = createDataView(rows, model);
   const markDataViews =
-    context.markDataViews ?? node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }));
-  assertFieldOrders(model, context.fieldOrderRegistry);
-  for (const entry of markDataViews) assertFieldOrders(entry.dataView.model, context.fieldOrderRegistry);
-  const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
-    context.roleMarkDataViews?.[role] ?? markDataViews;
-  const coordinateOperation = context.coordinate ?? node.coordinate;
+    providedMarkDataViews ?? node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }));
+  assertFieldOrders(model, fieldOrderRegistry);
+  for (const entry of markDataViews) assertFieldOrders(entry.dataView.model, fieldOrderRegistry);
+  const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> => roleMarkDataViews?.[role] ?? markDataViews;
+  const coordinateOperation = coordinate ?? node.coordinate;
   if (coordinateOperation === undefined) {
     throw new RetikzPlotError('lowerPlots: default coordinate view is not registered');
   }
@@ -274,7 +285,7 @@ export const resolveCoordinateFrame = (
 
     for (const { mark, dataView } of sourceViews) {
       if (mark.contributeToDomain === false) continue;
-      const inputs: Array<ExternalRow | undefined> = isSingleMark(mark, { registry: context.markRegistry })
+      const inputs: Array<ExternalRow | undefined> = isSingleMark(mark, { registry: markRegistry })
         ? [undefined]
         : dataView.rows;
       if (mark.type === BuiltinPlotMark.Interval) {
@@ -440,7 +451,7 @@ export const resolveCoordinateFrame = (
       (def.type === BuiltinPlotScale.Band || def.type === BuiltinPlotScale.Point) &&
       def.domain === undefined
     ) {
-      return { ...def, domain: resolveCategoryDomain(values, order, context.fieldOrderRegistry) };
+      return { ...def, domain: resolveCategoryDomain(values, order, fieldOrderRegistry) };
     }
 
     return def;
@@ -540,7 +551,7 @@ export const resolveCoordinateFrame = (
   });
   const mappingsByRole = new Map<string, DomainPaddingScale>();
   if (hasMarkPadding) {
-    if (context.markPadding === undefined || coordinateDefinition.domainPadding === undefined) {
+    if (markPadding === undefined || coordinateDefinition.domainPadding === undefined) {
       throw new RetikzPlotError(`coordinate "${coordinateOperation.type}" has no mark domainPadding capability`);
     }
 
@@ -561,10 +572,10 @@ export const resolveCoordinateFrame = (
       }
 
       const capability = definition.domainPadding;
-      const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
+      const group = markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
       mappingsByRole.set(
         role,
-        context.markPadding.mappingOf(group, () => {
+        markPadding.mappingOf(group, () => {
           const effective = resolveBuiltinPositionOperation({ ...operation, domainPadding: undefined }, values, [0, 1]);
           return capability(definition.schema.parse(effective) as never, values);
         }),
@@ -585,14 +596,14 @@ export const resolveCoordinateFrame = (
     if (existing !== undefined) return existing;
 
     const mapping = role === undefined ? undefined : mappingsByRole.get(role);
-    if (role === undefined || mapping === undefined || context.markPadding === undefined)
+    if (role === undefined || mapping === undefined || markPadding === undefined)
       throw new RetikzPlotError(`scale "${operation.name}" has no padding role`);
 
     const roleIndex = roles.indexOf(role);
-    const localViews = context.paddingMarkDataViews ?? markDataViews;
-    const paddingContext = context.markPadding;
+    const localViews = paddingMarkDataViews ?? markDataViews;
+    const paddingContext = markPadding;
     const automatic = automaticPadding.get(role);
-    const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
+    const group = markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
 
     const samples = () => {
       const constraints = [];
@@ -699,9 +710,9 @@ export const resolveCoordinateFrame = (
       return constraints;
     };
 
-    const scale = context.markPadding.scaleOf(
+    const scale = markPadding.scaleOf(
       group,
-      context.domainPaddingScope ?? 'root',
+      domainPaddingScope ?? 'root',
       padding,
       samples,
       mapping,
@@ -722,8 +733,8 @@ export const resolveCoordinateFrame = (
     ...(labelGap !== undefined ? { labelGap } : {}),
     ...(margin !== undefined ? { margin } : {}),
     ...(layoutReserve !== undefined ? { layoutReserve } : {}),
-    legendReserve: context.legendReserve ?? {},
-    textMeasurer: context.textMeasurer,
+    legendReserve: legendReserve ?? {},
+    textMeasurer,
     ...(plotAreaOverride !== undefined ? { plotAreaOverride } : {}),
     ...(roleRangeOverrides !== undefined ? { roleRangeOverrides } : {}),
     ...(guideRoleRangeOverrides !== undefined ? { guideRoleRangeOverrides } : {}),
@@ -733,8 +744,8 @@ export const resolveCoordinateFrame = (
     collectPositionValues: (role, opts) =>
       collectValues(role, opts?.axis, roleChannelOf(role), opts?.includeBaseline ?? false),
     collectAxisTicks,
-    resolveGuideTicks: context.resolveGuideTicks,
-    resolveVisibleGuideTicks: context.resolveVisibleGuideTicks,
+    resolveGuideTicks,
+    resolveVisibleGuideTicks,
     resolveScaleForRole: resolveScaleForDefinitionRole,
     resolvePositionScaleContinuity: operation => resolvePositionScaleContinuity(operation, { registry: scaleRegistry }),
     buildPositionScale,
